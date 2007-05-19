@@ -207,6 +207,10 @@
   "Keyword">
 <!ENTITY col.description.label
   "Description">
+<!ENTITY col.dateadded.label
+  "Added">
+<!ENTITY col.lastmodified.label
+  "Last Modified">
 
 <!ENTITY search.label
   "Search:">

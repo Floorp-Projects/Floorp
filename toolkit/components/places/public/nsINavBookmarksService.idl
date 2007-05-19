@@ -170,7 +170,7 @@ interface nsINavBookmarkObserver : nsISupports
  * folders.  A URI in history can be contained in one or more such folders.
  */
 
-[scriptable, uuid(d0dcc4b9-3f41-4489-aec5-117f8ed26a68)]
+[scriptable, uuid(5e44a4e2-5db6-412a-b153-c732c9c62fd5)]
 interface nsINavBookmarksService : nsISupports
 {
   /**
@@ -353,6 +353,24 @@ interface nsINavBookmarksService : nsISupports
    *  @returns The title of the item.
    */
   AString getItemTitle(in long long aItemId);
+
+  /**
+   * Set the date added time for an item.
+   */
+  void setItemDateAdded(in long long aItemId, in PRTime aDateAdded);
+  /**
+   * Get the date added time for an item.
+   */
+  PRTime getItemDateAdded(in long long aItemId);
+
+  /**
+   * Set the last modified time for an item.
+   */
+  void setItemLastModified(in long long aItemId, in PRTime aLastModified);
+  /**
+   * Get the last modified time for an item.
+   */
+  PRTime getItemLastModified(in long long aItemId);
 
   /**
    * Get the URI for a bookmark item.
