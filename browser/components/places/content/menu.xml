@@ -63,6 +63,7 @@
       
       <destructor><![CDATA[
         this._result = null;
+        this._resultNode = null;
       ]]></destructor>
 
       <method name="_init">
