@@ -58,9 +58,8 @@
       ]]></constructor>
 
       <destructor><![CDATA[ 
-        var resultview = this.getResultView();
-        if (resultview)
-          resultview.removeViewObserver(this._viewObserver);
+        this._result.view = null
+        this._result = null;
       ]]></destructor>
 
       <property name="controller"
@@ -78,8 +77,10 @@
           if (resultview)
             resultview.removeViewObserver(this._viewObserver);
           this.treeBoxObject.view = val;
-          val.QueryInterface(Ci.nsINavHistoryResultViewer).addViewObserver(
-            this._viewObserver, false);
+          if (val) {
+            val.QueryInterface(Ci.nsINavHistoryResultViewer)
+               .addViewObserver(this._viewObserver, false);
+          }
         ]]></setter>
       </property>
       
