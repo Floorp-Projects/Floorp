@@ -208,6 +208,12 @@ sub execute_tests {
         if ($last_suite ne $suite || $last_test_dir ne $test_dir) {
             $shell_command = &xp_path($engine_command);
 
+            $path = &xp_path($opt_suite_path ."shell.js");
+            if (-f $path) {
+                $shell_command = &append_file_to_command($shell_command,
+                                                         $path);
+            }
+
             $path = &xp_path($opt_suite_path . $suite . "/shell.js");
             if (-f $path) {
                 $shell_command = &append_file_to_command($shell_command,
