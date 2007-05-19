@@ -104,6 +104,7 @@
         this.genericAnnoObserver.removeObserver("bookmarks/generatedTitle",
                                                 this._generatedTitleAnnoObserver);
         PlacesUtils.annotations.removeObserver(this.genericAnnoObserver);
+        this._result = null;
       ]]></destructor>
 
       <property name="controller"

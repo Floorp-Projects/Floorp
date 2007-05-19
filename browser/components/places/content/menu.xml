@@ -62,6 +62,7 @@
       ]]></constructor>
       
       <destructor><![CDATA[
+        this._result = null;
       ]]></destructor>
 
       <method name="_init">
