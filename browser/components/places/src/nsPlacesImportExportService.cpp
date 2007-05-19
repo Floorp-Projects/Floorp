@@ -63,7 +63,7 @@
  *   ICON_URI is new for places bookmarks.html, it refers to the original
  *     URI of the favicon so we don't have to make up favicon URLs.
  *   Text of the <a> container is the name of the bookmark
- *   Ignored: ADD_DATE, LAST_VISIT, LAST_MODIFIED, ID
+ *   Ignored: LAST_VISIT, ID (writing out non-RDF IDs can confuse Firefox 2)
  * Bookmark comment := dd
  *   This affects the previosly added bookmark
  * Separator := hr
@@ -116,10 +116,12 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 #define KEY_ICON_URI_LOWER "icon_uri"
 #define KEY_SHORTCUTURL_LOWER "shortcuturl"
 #define KEY_POST_DATA_LOWER "post_data"
-#define KEY_ID_LOWER "id"
+#define KEY_ITEM_ID_LOWER "item_id"
 #define KEY_NAME_LOWER "name"
 #define KEY_MICSUM_GEN_URI_LOWER "micsum_gen_uri"
-#define KEY_GENERATED_TITLE "generated_title"
+#define KEY_GENERATED_TITLE_LOWER "generated_title"
+#define KEY_DATE_ADDED_LOWER "add_date"
+#define KEY_LAST_MODIFIED_LOWER "last_modified"
 
 #define LOAD_IN_SIDEBAR_ANNO NS_LITERAL_CSTRING("bookmarkProperties/loadInSidebar")
 #define DESCRIPTION_ANNO NS_LITERAL_CSTRING("bookmarkProperties/description")
@@ -149,7 +151,10 @@ public:
       mContainerID(aID),
       mContainerNesting(0),
       mLastContainerType(Container_Normal),
-      mInDescription(PR_FALSE)
+      mInDescription(PR_FALSE),
+      mPreviousId(0),
+      mPreviousDateAdded(0),
+      mPreviousLastModifiedDate(0)
   {
   }
 
@@ -217,6 +222,11 @@ public:
 
   // Contains the id of an imported, or newly created bookmark.
   PRInt64 mPreviousId;
+
+  // Contains the date-added and last-modified-date of an imported item.
+  // Used to override the values set by insertItem, createFolder, etc.
+  PRTime mPreviousDateAdded;
+  PRTime mPreviousLastModifiedDate;
 };
 
 /**
@@ -392,6 +402,11 @@ protected:
     NS_ASSERTION(mFrames.Length() > 0, "Asking for frame when there are none!");
     return mFrames[mFrames.Length() - 1];
   }
+  BookmarkImportFrame& PreviousFrame()
+  {
+    NS_ASSERTION(mFrames.Length() > 1, "Asking for frame when there are not enough!");
+    return mFrames[mFrames.Length() - 2];
+  }
   nsresult NewFrame();
   nsresult PopFrame();
 
@@ -400,6 +415,7 @@ protected:
   nsresult SetFaviconForFolder(PRInt64 aFolder, const nsACString& aFavicon);
 
   PRInt64 ConvertImportedIdToInternalId(const nsCString& aId);
+  PRTime ConvertImportedDateToInternalDate(const nsACString& aDate);
 
 #ifdef DEBUG_IMPORT
   // prints spaces for indenting to the current frame depth
@@ -493,13 +509,15 @@ BookmarkContentSink::OpenContainer(const nsIParserNode& aNode)
 NS_IMETHODIMP
 BookmarkContentSink::CloseContainer(const nsHTMLTag aTag)
 {
+  BookmarkImportFrame& frame = CurFrame();
+
   // see the comment for the definition of mInDescription. Basically, we commit
   // any text in mPreviousText to the description of the node/folder if there
   // is any.
-  BookmarkImportFrame& frame = CurFrame();
   if (frame.mInDescription) {
     frame.mPreviousText.Trim(kWhitespace); // important!
     if (!frame.mPreviousText.IsEmpty()) {
+
       PRInt64 itemId = !frame.mPreviousLink ?
                        frame.mContainerID : frame.mPreviousId;
                     
@@ -513,6 +531,29 @@ BookmarkContentSink::CloseContainer(const nsHTMLTag aTag)
                                                     nsIAnnotationService::EXPIRE_NEVER);
       }
       frame.mPreviousText.Truncate();
+
+      // Set last-modified a 2nd time for all items with descriptions
+      // we need to set last-modified as the *last* step in processing 
+      // any item type in the bookmarks.html file, so that we do
+      // not overwrite the imported value. for items without descriptions, 
+      // setting this value after setting the item title is that 
+      // last point at which we can save this value before it gets reset.
+      // for items with descriptions, it must set after that point.
+      // however, at the point at which we set the title, there's no way 
+      // to determine if there will be a description following, 
+      // so we need to set the last-modified-date at both places.
+
+      PRTime lastModified;
+      if (!frame.mPreviousLink) {
+        lastModified = PreviousFrame().mPreviousLastModifiedDate;
+      } else {
+        lastModified = frame.mPreviousLastModifiedDate;
+      }
+
+      if (itemId > 0 && lastModified > 0) {
+        rv = mBookmarksService->SetItemLastModified(itemId, lastModified);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "SetItemLastModified failed");
+      }
     }
     frame.mInDescription = PR_FALSE;
   }
@@ -693,9 +734,15 @@ BookmarkContentSink::HandleHeadBegin(const nsIParserNode& node)
       } else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_PLACESROOT_LOWER)) {
         frame.mLastContainerType = BookmarkImportFrame::Container_Places;
         break;
-      } else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_ID_LOWER)) {
+      } else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_ITEM_ID_LOWER)) {
         frame.mLastContainerId =
           ConvertImportedIdToInternalId(NS_ConvertUTF16toUTF8(node.GetValueAt(i)));
+      } else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_DATE_ADDED_LOWER)) {
+        frame.mPreviousDateAdded =
+          ConvertImportedDateToInternalDate(NS_ConvertUTF16toUTF8(node.GetValueAt(i)));
+      } else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_LAST_MODIFIED_LOWER)) {
+        frame.mPreviousLastModifiedDate =
+          ConvertImportedDateToInternalDate(NS_ConvertUTF16toUTF8(node.GetValueAt(i)));
       }
     }
   }
@@ -737,7 +784,7 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
 
   // mPreviousText will hold our link text, clear it so that can be appended to
   frame.mPreviousText.Truncate();
-
+  
   // get the attributes we care about
   nsAutoString href;
   nsAutoString feedUrl;
@@ -747,9 +794,12 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   nsAutoString keyword;
   nsAutoString postData;
   nsAutoString webPanel;
-  nsAutoString id;
+  nsAutoString itemId;
   nsAutoString micsumGenURI;
   nsAutoString generatedTitle;
+  nsAutoString dateAdded;
+  nsAutoString lastModified;
+
   PRInt32 attrCount = node.GetAttributeCount();
   for (PRInt32 i = 0; i < attrCount; i ++) {
     const nsAString& key = node.GetKeyAt(i);
@@ -769,12 +819,16 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
       postData = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_WEB_PANEL_LOWER)) {
       webPanel = node.GetValueAt(i);
-    } else if (key.LowerCaseEqualsLiteral(KEY_ID_LOWER)) {
-      id = node.GetValueAt(i);
+    } else if (key.LowerCaseEqualsLiteral(KEY_ITEM_ID_LOWER)) {
+      itemId = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_MICSUM_GEN_URI_LOWER)) {
       micsumGenURI = node.GetValueAt(i);
-    } else if (key.LowerCaseEqualsLiteral(KEY_GENERATED_TITLE)) {
+    } else if (key.LowerCaseEqualsLiteral(KEY_GENERATED_TITLE_LOWER)) {
       generatedTitle = node.GetValueAt(i);
+    } else if (key.LowerCaseEqualsLiteral(KEY_DATE_ADDED_LOWER)) {
+      dateAdded = node.GetValueAt(i);
+    } else if (key.LowerCaseEqualsLiteral(KEY_LAST_MODIFIED_LOWER)) {
+      lastModified = node.GetValueAt(i);
     }
   }
   href.Trim(kWhitespace);
@@ -785,9 +839,11 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   keyword.Trim(kWhitespace);
   postData.Trim(kWhitespace);
   webPanel.Trim(kWhitespace);
-  id.Trim(kWhitespace);
+  itemId.Trim(kWhitespace);
   micsumGenURI.Trim(kWhitespace);
   generatedTitle.Trim(kWhitespace);
+  dateAdded.Trim(kWhitespace);
+  lastModified.Trim(kWhitespace);
 
   // For feeds, get the feed URL. If it is invalid, it will leave mPreviousFeed
   // NULL and we'll continue trying to create it as a normal bookmark.
@@ -816,8 +872,13 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
     }
   }
 
-  // if there's a pre-existing Places bookmark id, use it
-  frame.mPreviousId = ConvertImportedIdToInternalId(NS_ConvertUTF16toUTF8(id));
+  // if there's a pre-existing Places bookmark ITEM_ID, use it
+  frame.mPreviousId = ConvertImportedIdToInternalId(NS_ConvertUTF16toUTF8(itemId));
+
+  // Save last-modified-date, for setting after all the bookmark properties have been set.
+  if (!lastModified.IsEmpty()) {
+    frame.mPreviousLastModifiedDate = ConvertImportedDateToInternalDate(NS_ConvertUTF16toUTF8(lastModified));
+  }
 
   // if there is a feedURL, this is a livemark, which is a special case
   // that we handle in HandleLinkEnd(): don't create normal bookmarks
@@ -838,6 +899,17 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
     rv = mBookmarksService->InsertItem(frame.mContainerID, frame.mPreviousLink,
                                        mBookmarksService->DEFAULT_INDEX, &frame.mPreviousId);
     NS_ASSERTION(NS_SUCCEEDED(rv), "InsertItem failed");
+
+    // set the date added value, if we have it
+    // important:  this has to happen after InsertItem
+    // so that we set the imported value
+    if (!dateAdded.IsEmpty()) {
+      PRTime convertedDateAdded = ConvertImportedDateToInternalDate(NS_ConvertUTF16toUTF8(dateAdded));
+      if (convertedDateAdded) {
+        rv = mBookmarksService->SetItemDateAdded(frame.mPreviousId, convertedDateAdded);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "SetItemDateAdded failed");
+      }
+    }
   }
 
   // save the favicon, ignore errors
@@ -940,11 +1012,6 @@ BookmarkContentSink::HandleLinkEnd()
     }
 
     if (!isLivemark) {
-#ifdef DEBUG_IMPORT
-      PrintNesting();
-      printf("Creating livemark '%s' %lld\n",
-             NS_ConvertUTF16toUTF8(frame.mPreviousText).get(), frame.mPreviousId);
-#endif
       if (mIsImportDefaults) {
         rv = mLivemarkService->CreateLivemarkFolderOnly(mBookmarksService,
                                                    frame.mContainerID,
@@ -963,16 +1030,32 @@ BookmarkContentSink::HandleLinkEnd()
                                          &frame.mPreviousId);
         NS_ASSERTION(NS_SUCCEEDED(rv), "CreateLivemark failed!");
       }
+#ifdef DEBUG_IMPORT
+      PrintNesting();
+      printf("Creating livemark '%s' %lld\n",
+             NS_ConvertUTF16toUTF8(frame.mPreviousText).get(), frame.mPreviousId);
+#endif
     }
   }
   else if (frame.mPreviousLink) {
 #ifdef DEBUG_IMPORT
     PrintNesting();
-    printf("Creating bookmark '%s'\n",
-           NS_ConvertUTF16toUTF8(frame.mPreviousText).get());
+    printf("Creating bookmark '%s' %lld\n",
+           NS_ConvertUTF16toUTF8(frame.mPreviousText).get(), frame.mPreviousId);
 #endif
     mBookmarksService->SetItemTitle(frame.mPreviousId, frame.mPreviousText);
   }
+
+  // Set last-modified-date for bookmarks and livemarks here so that the
+  // imported date overrides the date from the call to that sets the description
+  // that we made above.
+  if (frame.mPreviousId > 0 && frame.mPreviousLastModifiedDate > 0) {
+    rv = mBookmarksService->SetItemLastModified(frame.mPreviousId, frame.mPreviousLastModifiedDate);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "SetItemLastModified failed");
+    // Note: don't clear mPreviousLastModifiedDate, because if this item has a
+    // description, we'll need to set it again.
+  }
+
   frame.mPreviousText.Truncate();
 }
 
@@ -987,17 +1070,17 @@ BookmarkContentSink::HandleSeparator(const nsIParserNode& aNode)
 
   // check for pre-existing id
   PRInt64 id = 0;
-  nsAutoString idAttr;
+  nsAutoString itemIdAttr;
   PRInt32 attrCount = aNode.GetAttributeCount();
   for (PRInt32 i = 0; i < attrCount; i ++) {
     const nsAString& key = aNode.GetKeyAt(i);
-    if (key.LowerCaseEqualsLiteral(KEY_ID_LOWER)) {
-      idAttr = aNode.GetValueAt(i);
+    if (key.LowerCaseEqualsLiteral(KEY_ITEM_ID_LOWER)) {
+      itemIdAttr = aNode.GetValueAt(i);
     }
   }
 
-  idAttr.Trim(kWhitespace);
-  id = ConvertImportedIdToInternalId(NS_ConvertUTF16toUTF8(idAttr));
+  itemIdAttr.Trim(kWhitespace);
+  id = ConvertImportedIdToInternalId(NS_ConvertUTF16toUTF8(itemIdAttr));
 
   // check id validity
   if (id > 0) {
@@ -1040,6 +1123,11 @@ BookmarkContentSink::HandleSeparator(const nsIParserNode& aNode)
 
     if (!name.IsEmpty())
       mBookmarksService->SetItemTitle(itemId, name);
+
+    // Note: we do not need to import ADD_DATE or LAST_MODIFIED for separators
+    // because pre-Places bookmarks does not support them.
+    // and we can't write them out because attributes other than NAME make Firefox 2.x
+    // crash/hang - see bug #381129
   }
 }
 
@@ -1142,6 +1230,18 @@ BookmarkContentSink::NewFrame()
   printf("\n");
 #endif
 
+  BookmarkImportFrame& frame = CurFrame();
+  if (frame.mPreviousDateAdded > 0) {
+    nsresult rv = mBookmarksService->SetItemDateAdded(ourID, frame.mPreviousDateAdded);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "SetItemDateAdded failed");
+    frame.mPreviousDateAdded = 0;
+  }
+  if (frame.mPreviousLastModifiedDate > 0) {
+    nsresult rv = mBookmarksService->SetItemLastModified(ourID, frame.mPreviousLastModifiedDate);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "SetItemLastModified failed");
+    // don't clear last-modified, in case there's a description
+  }
+
   if (!mFrames.AppendElement(BookmarkImportFrame(ourID)))
     return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
@@ -1211,7 +1311,7 @@ BookmarkContentSink::SetFaviconForURI(nsIURI* aPageURI, nsIURI* aIconURI,
     faviconSpec.AssignLiteral("http://www.mozilla.org/2005/made-up-favicon/");
     faviconSpec.AppendInt(serialNumber);
     faviconSpec.AppendLiteral("-");
-    faviconSpec.AppendInt(PR_Now());
+    faviconSpec.AppendInt(PR_Now()); // casting from PRInt64 -> PRInt32, data loss, fix me
     rv = NS_NewURI(getter_AddRefs(faviconURI), faviconSpec);
     NS_ENSURE_SUCCESS(rv, rv);
     serialNumber ++;
@@ -1295,11 +1395,11 @@ BookmarkContentSink::SetFaviconForFolder(PRInt64 aFolder,
   return faviconService->SetFaviconUrlForPage(folderURI, faviconURI);
 }
 
-// Converts a string id (legacy rdf or contemporary) into an int id
+// Converts a string id (ITEM_ID) into an int id
 PRInt64
 BookmarkContentSink::ConvertImportedIdToInternalId(const nsCString& aId) {
   PRInt64 intId = 0;
-  if (aId.IsEmpty() || Substring(aId, 0, 4).Equals(NS_LITERAL_CSTRING("rdf:"), CaseInsensitiveCompare))
+  if (aId.IsEmpty())
     return intId;
   nsresult rv;
   intId = aId.ToInteger(&rv);
@@ -1308,6 +1408,22 @@ BookmarkContentSink::ConvertImportedIdToInternalId(const nsCString& aId) {
   return intId;
 }
 
+// Converts a string date in seconds to an int date in microseconds
+PRTime
+BookmarkContentSink::ConvertImportedDateToInternalDate(const nsACString& aDate) {
+  PRTime convertedDate = 0;
+  if (!aDate.IsEmpty()) {
+    nsresult rv;
+    convertedDate = aDate.ToInteger(&rv);
+    if (NS_SUCCEEDED(rv)) {
+      convertedDate *= 1000000; // in bookmarks.html this value is in seconds, not microseconds
+    }
+    else {
+      convertedDate = 0;
+    }
+  }
+  return convertedDate;
+}
 
 // SyncChannelStatus
 //
@@ -1363,9 +1479,11 @@ static const char kFeedURIAttribute[] = " FEEDURL=\"";
 static const char kWebPanelAttribute[] = " WEB_PANEL=\"true\"";
 static const char kKeywordAttribute[] = " SHORTCUTURL=\"";
 static const char kPostDataAttribute[] = " POST_DATA=\"";
-static const char kIdAttribute[] = " ID=\"";
+static const char kItemIdAttribute[] = " ITEM_ID=\"";
 static const char kNameAttribute[] = " NAME=\"";
-static const char kMicsumGenURIEquals[]    = " MICSUM_GEN_URI=\"";
+static const char kMicsumGenURIAttribute[]    = " MICSUM_GEN_URI=\"";
+static const char kDateAddedAttribute[] = " ADD_DATE=\"";
+static const char kLastModifiedAttribute[] = " LAST_MODIFIED=\"";
 
 // WriteContainerPrologue
 //
@@ -1491,6 +1609,27 @@ WriteFaviconAttribute(const nsACString& aURI, nsIOutputStream* aOutput)
   return NS_OK;
 }
 
+// WriteDateAttribute
+//
+//    This writes the '{attr value=}"{time in seconds}"' attribute for
+//    an item.
+
+static nsresult
+WriteDateAttribute(const char aAttributeStart[], PRInt32 aLength, PRTime aAttributeValue, nsIOutputStream* aOutput)
+{
+  // write attribute start
+  PRUint32 dummy;
+  nsresult rv = aOutput->Write(aAttributeStart, aLength, &dummy);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // write attribute value
+  nsCAutoString dateInSeconds;
+  aAttributeValue/= 1000000; // in bookmarks.html this value is in seconds, not microseconds
+  dateInSeconds.AppendInt(aAttributeValue);  // casting from PRInt64 -> PRInt32, data loss, fix me
+  rv = aOutput->Write(dateInSeconds.get(), dateInSeconds.Length(), &dummy);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
+}
+
 
 // nsPlacesImportExportService::WriteContainer
 //
@@ -1537,6 +1676,26 @@ nsPlacesImportExportService::WriteContainerHeader(PRInt64 aFolder, const nsACStr
   rv = aOutput->Write(kContainerIntro, sizeof(kContainerIntro)-1, &dummy);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // write ADD_DATE
+  PRTime dateAdded = 0;
+  rv = mBookmarksService->GetItemDateAdded(aFolder, &dateAdded);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (dateAdded) {
+    rv = WriteDateAttribute(kDateAddedAttribute, sizeof(kDateAddedAttribute)-1, dateAdded, aOutput);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // write LAST_MODIFIED
+  PRTime lastModified = 0;
+  rv = mBookmarksService->GetItemLastModified(aFolder, &lastModified);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (lastModified) {
+    rv = WriteDateAttribute(kLastModifiedAttribute, sizeof(kLastModifiedAttribute)-1, lastModified, aOutput);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   PRInt64 placesRoot;
   rv = mBookmarksService->GetPlacesRoot(&placesRoot);
   NS_ENSURE_SUCCESS(rv,rv);
@@ -1560,13 +1719,13 @@ nsPlacesImportExportService::WriteContainerHeader(PRInt64 aFolder, const nsACStr
     rv = aOutput->Write(kToolbarFolderAttribute, sizeof(kToolbarFolderAttribute)-1, &dummy);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  // id
-  rv = aOutput->Write(kIdAttribute, sizeof(kIdAttribute)-1, &dummy);
+  
+  // write id as ITEM_ID as non-rdf IDs can confuse Firefox 2
+  rv = aOutput->Write(kItemIdAttribute, sizeof(kItemIdAttribute)-1, &dummy);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCAutoString id;
-  id.AppendInt(aFolder);
-  rv = aOutput->Write(id.get(), id.Length(), &dummy);
+  nsCAutoString itemIdAttr;
+  itemIdAttr.AppendInt(aFolder); // casting from PRInt64 -> PRInt32, data loss, fix me
+  rv = aOutput->Write(itemIdAttr.get(), itemIdAttr.Length(), &dummy);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1692,6 +1851,26 @@ nsPlacesImportExportService::WriteItem(nsINavHistoryResultNode* aItem,
   rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // write ADD_DATE
+  PRTime dateAdded = 0;
+  rv = aItem->GetDateAdded(&dateAdded);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (dateAdded) {
+    rv = WriteDateAttribute(kDateAddedAttribute, sizeof(kDateAddedAttribute)-1, dateAdded, aOutput);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // write LAST_MODIFIED
+  PRTime lastModified = 0;
+  rv = aItem->GetLastModified(&lastModified);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (lastModified) {
+    rv = WriteDateAttribute(kLastModifiedAttribute, sizeof(kLastModifiedAttribute)-1, lastModified, aOutput);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   // ' ICON="..."'
   rv = WriteFaviconAttribute(uri, aOutput);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1701,12 +1880,12 @@ nsPlacesImportExportService::WriteItem(nsINavHistoryResultNode* aItem,
   rv = aItem->GetItemId(&itemId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // write id
-  rv = aOutput->Write(kIdAttribute, sizeof(kIdAttribute)-1, &dummy);
+  // write id as ITEM_ID as non-rdf IDs can confuse Firefox 2
+  rv = aOutput->Write(kItemIdAttribute, sizeof(kItemIdAttribute)-1, &dummy);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCAutoString id;
-  id.AppendInt(itemId);
-  rv = aOutput->Write(id.get(), id.Length(), &dummy);
+  nsCAutoString itemIdAttr;
+  itemIdAttr.AppendInt(itemId); // casting from PRInt64 -> PRInt32, data loss, fix me
+  rv = aOutput->Write(itemIdAttr.get(), itemIdAttr.Length(), &dummy);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1775,7 +1954,7 @@ nsPlacesImportExportService::WriteItem(nsINavHistoryResultNode* aItem,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // write out generator URI
-    rv = aOutput->Write(kMicsumGenURIEquals, sizeof(kMicsumGenURIEquals)-1, &dummy);
+    rv = aOutput->Write(kMicsumGenURIAttribute, sizeof(kMicsumGenURIAttribute)-1, &dummy);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = WriteEscapedUrl(spec, aOutput);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1868,12 +2047,12 @@ nsPlacesImportExportService::WriteLivemark(PRInt64 aFolderId, const nsACString& 
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // write id
-  rv = aOutput->Write(kIdAttribute, sizeof(kIdAttribute)-1, &dummy);
+  // write id as ITEM_ID as non-rdf IDs can confuse Firefox 2
+  rv = aOutput->Write(kItemIdAttribute, sizeof(kItemIdAttribute)-1, &dummy);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCAutoString id;
-  id.AppendInt(aFolderId);
-  rv = aOutput->Write(id.get(), id.Length(), &dummy);
+  nsCAutoString itemIdAttr;
+  itemIdAttr.AppendInt(aFolderId); // casting from PRInt64 -> PRInt32, data loss, fix me
+  rv = aOutput->Write(itemIdAttr.get(), itemIdAttr.Length(), &dummy);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1925,7 +2104,7 @@ nsPlacesImportExportService::WriteSeparator(nsINavHistoryResultNode* aItem,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Note: we can't write the separator ID or anything else other than NAME
-  // because it makes Firefox 2.x crash/hang - see bug 381129
+  // because it makes Firefox 2.x crash/hang - see bug #381129
 
   nsAutoString title;
   rv = mBookmarksService->GetItemTitle(itemId, title);

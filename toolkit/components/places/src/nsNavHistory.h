@@ -221,6 +221,8 @@ public:
   static const PRInt32 kGetInfoIndex_RevHost;
   static const PRInt32 kGetInfoIndex_VisitCount;
   static const PRInt32 kGetInfoIndex_ItemId;
+  static const PRInt32 kGetInfoIndex_ItemDateAdded;
+  static const PRInt32 kGetInfoIndex_ItemLastModified;
 
   // select a history row by URL, with visit date info (extra work)
   mozIStorageStatement* DBGetURLPageInfoFull()

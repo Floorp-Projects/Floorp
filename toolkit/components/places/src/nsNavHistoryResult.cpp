@@ -116,6 +116,8 @@ nsNavHistoryResultNode::nsNavHistoryResultNode(
   mFaviconURI(aIconURI),
   mBookmarkIndex(-1),
   mItemId(-1),
+  mDateAdded(0),
+  mLastModified(0),
   mIndentLevel(-1),
   mViewIndex(-1)
 {
@@ -595,6 +597,14 @@ nsNavHistoryContainerResultNode::GetSortingComparator(PRUint16 aSortType)
       return &SortComparison_AnnotationLess;
     case nsINavHistoryQueryOptions::SORT_BY_ANNOTATION_DESCENDING:
       return &SortComparison_AnnotationGreater;
+    case nsINavHistoryQueryOptions::SORT_BY_DATEADDED_ASCENDING:
+      return &SortComparison_DateAddedLess;
+    case nsINavHistoryQueryOptions::SORT_BY_DATEADDED_DESCENDING:
+      return &SortComparison_DateAddedGreater;
+    case nsINavHistoryQueryOptions::SORT_BY_LASTMODIFIED_ASCENDING:
+      return &SortComparison_LastModifiedLess;
+    case nsINavHistoryQueryOptions::SORT_BY_LASTMODIFIED_DESCENDING:
+      return &SortComparison_LastModifiedGreater;
     default:
       NS_NOTREACHED("Bad sorting type");
       return nsnull;
@@ -789,6 +799,48 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_DateGreater(
   return -nsNavHistoryContainerResultNode::SortComparison_DateLess(a, b, closure);
 }
 
+// nsNavHistoryContainerResultNode::SortComparison_DateAdded*
+//
+
+PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_DateAddedLess(
+    nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
+{
+  PRInt32 value = ComparePRTime(a->mDateAdded, b->mDateAdded);
+  if (value == 0) {
+    value = SortComparison_StringLess(NS_ConvertUTF8toUTF16(a->mTitle),
+                                      NS_ConvertUTF8toUTF16(b->mTitle));
+    if (value == 0)
+      value = nsNavHistoryContainerResultNode::SortComparison_Bookmark(a, b, closure);
+  }
+  return value;
+}
+PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_DateAddedGreater(
+    nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
+{
+  return -nsNavHistoryContainerResultNode::SortComparison_DateAddedLess(a, b, closure);
+}
+
+
+// nsNavHistoryContainerResultNode::SortComparison_LastModified*
+//
+
+PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_LastModifiedLess(
+    nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
+{
+  PRInt32 value = ComparePRTime(a->mLastModified, b->mLastModified);
+  if (value == 0) {
+    value = SortComparison_StringLess(NS_ConvertUTF8toUTF16(a->mTitle),
+                                      NS_ConvertUTF8toUTF16(b->mTitle));
+    if (value == 0)
+      value = nsNavHistoryContainerResultNode::SortComparison_Bookmark(a, b, closure);
+  }
+  return value;
+}
+PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_LastModifiedGreater(
+    nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
+{
+  return -nsNavHistoryContainerResultNode::SortComparison_LastModifiedLess(a, b, closure);
+}
 
 // nsNavHistoryContainerResultNode::SortComparison_URI*
 //
@@ -2515,6 +2567,7 @@ nsNavHistoryQueryResultNode::OnItemChanged(PRInt64 aItemId,
   NS_NOTREACHED("Everything observers should not get OnItemChanged, but should get the corresponding history notifications instead");
   return NS_OK;
 }
+
 NS_IMETHODIMP
 nsNavHistoryQueryResultNode::OnItemVisited(PRInt64 aItemId,
                                            PRInt64 aVisitId, PRTime aTime)
@@ -3121,6 +3174,27 @@ nsNavHistoryFolderResultNode::OnItemChanged(PRInt64 aItemId,
     NS_NOTREACHED("Unknown bookmark property changing.");
   }
 
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarks, NS_ERROR_UNEXPECTED);
+
+  PRTime lastModified;
+  nsresult rv = bookmarks->GetItemLastModified(aItemId, &lastModified);
+  if (NS_SUCCEEDED(rv)) {
+    node->mLastModified = lastModified;
+  }
+  else {
+    node->mLastModified = 0;
+  }
+
+  PRTime dateAdded;
+  rv = bookmarks->GetItemDateAdded(aItemId, &dateAdded);
+  if (NS_SUCCEEDED(rv)) {
+    node->mDateAdded = dateAdded;
+  }
+  else {
+    node->mDateAdded = 0;
+  }
+
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
 
@@ -3143,7 +3217,6 @@ nsNavHistoryFolderResultNode::OnItemChanged(PRInt64 aItemId,
 
   return NS_OK;
 }
-
 
 // nsNavHistoryFolderResultNode::OnItemVisited (nsINavBookmarkObserver)
 //
@@ -3737,7 +3810,6 @@ nsNavHistoryResult::OnItemChanged(PRInt64 aItemId,
   // instead.
   return NS_OK;
 }
-
 
 // nsNavHistoryResult::OnItemVisited (nsINavBookmarkObserver)
 

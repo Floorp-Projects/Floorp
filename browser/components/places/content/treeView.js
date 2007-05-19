@@ -387,7 +387,35 @@ PlacesTreeView.prototype = {
     aShowThisOne.value = aTop.time < aNext.time;
     return true;
   },
+  
+  _convertPRTimeToString: function PTV__convertPRTimeToString(aTime) {
+    var timeInMilliseconds = aTime / 1000; // PRTime is in microseconds
+    var timeObj = new Date(timeInMilliseconds);
 
+    // Check if it is today and only display the time.  Only bother
+    // checking for today if it's within the last 24 hours, since
+    // computing midnight is not really cheap. Sometimes we may get dates
+    // in the future, so always show those.
+    var ago = new Date(Date.now() - timeInMilliseconds);
+    var dateFormat = Ci.nsIScriptableDateFormat.dateFormatShort;
+    if (ago > -10000 && ago < (1000 * 24 * 60 * 60)) {
+      var midnight = new Date(timeInMilliseconds);
+      midnight.setHours(0);
+      midnight.setMinutes(0);
+      midnight.setSeconds(0);
+      midnight.setMilliseconds(0);
+
+      if (timeInMilliseconds > midnight.getTime())
+        dateFormat = Ci.nsIScriptableDateFormat.dateFormatNone;
+    }
+
+    return (this._dateService.FormatDateTime("", dateFormat,
+      Ci.nsIScriptableDateFormat.timeFormatNoSeconds,
+      timeObj.getFullYear(), timeObj.getMonth() + 1,
+      timeObj.getDate(), timeObj.getHours(),
+      timeObj.getMinutes(), timeObj.getSeconds()));
+  },
+  
   COLUMN_TYPE_UNKNOWN: 0,
   COLUMN_TYPE_TITLE: 1,
   COLUMN_TYPE_URI: 2,
@@ -395,6 +423,8 @@ PlacesTreeView.prototype = {
   COLUMN_TYPE_VISITCOUNT: 4,
   COLUMN_TYPE_KEYWORD: 5,
   COLUMN_TYPE_DESCRIPTION: 6,
+  COLUMN_TYPE_DATEADDED: 7,
+  COLUMN_TYPE_LASTMODIFIED: 8,
 
   _getColumnType: function PTV__getColumnType(aColumn) {
     switch (aColumn.id) {
@@ -410,6 +440,10 @@ PlacesTreeView.prototype = {
         return this.COLUMN_TYPE_KEYWORD;
       case "description":
         return this.COLUMN_TYPE_DESCRIPTION;
+      case "dateAdded":
+        return this.COLUMN_TYPE_DATEADDED;
+      case "lastModified":
+        return this.COLUMN_TYPE_LASTMODIFIED;
     }
     return this.COLUMN_TYPE_UNKNOWN;
   },
@@ -421,9 +455,9 @@ PlacesTreeView.prototype = {
       case Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_DESCENDING:
         return [this.COLUMN_TYPE_TITLE, true];
       case Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_ASCENDING:
-        return [this.COLUMN_TYPE_DATA, false];
+        return [this.COLUMN_TYPE_DATE, false];
       case Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING:
-        return [this.COLUMN_TYPE_DATA, true];
+        return [this.COLUMN_TYPE_DATE, true];
       case Ci.nsINavHistoryQueryOptions.SORT_BY_URI_ASCENDING:
         return [this.COLUMN_TYPE_URI, false];
       case Ci.nsINavHistoryQueryOptions.SORT_BY_URI_DESCENDING:
@@ -443,6 +477,14 @@ PlacesTreeView.prototype = {
       case Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_DESCENDING:
         if (this._result.sortingAnnotation == DESCRIPTION_ANNO)
           return [this.COLUMN_TYPE_DESCRIPTION, true];
+      case Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_ASCENDING:
+        return [this.COLUMN_TYPE_DATEADDED, false];
+      case Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING:
+        return [this.COLUMN_TYPE_DATEADDED, true];
+      case Ci.nsINavHistoryQueryOptions.SORT_BY_LASTMODIFIED_ASCENDING:
+        return [this.COLUMN_TYPE_LASTMODIFIED, false];
+      case Ci.nsINavHistoryQueryOptions.SORT_BY_LASTMODIFIED_DESCENDING:
+        return [this.COLUMN_TYPE_LASTMODIFIED, true];
     }
     return [this.COLUMN_TYPE_UNKNOWN, false];
   },
@@ -976,7 +1018,6 @@ PlacesTreeView.prototype = {
       case this.COLUMN_TYPE_URI:
         if (PlacesUtils.nodeIsURI(node))
           return node.uri;
-
         return "";
       case this.COLUMN_TYPE_DATE:
         if (node.time == 0 || !PlacesUtils.nodeIsURI(node)) {
@@ -987,33 +1028,8 @@ PlacesTreeView.prototype = {
           // Only show this for URI-based items.
           return "";
         }
-        if (this._getRowSessionStatus(aRow) != this.SESSION_STATUS_CONTINUE) {
-          var nodeTime = node.time / 1000; // PRTime is in microseconds
-          var nodeTimeObj = new Date(nodeTime);
-
-          // Check if it is today and only display the time.  Only bother
-          // checking for today if it's within the last 24 hours, since
-          // computing midnight is not really cheap. Sometimes we may get dates
-          // in the future, so always show those.
-          var ago = new Date(Date.now() - nodeTime);
-          var dateFormat = Ci.nsIScriptableDateFormat.dateFormatShort;
-          if (ago > -10000 && ago < (1000 * 24 * 60 * 60)) {
-            var midnight = new Date(nodeTime);
-            midnight.setHours(0);
-            midnight.setMinutes(0);
-            midnight.setSeconds(0);
-            midnight.setMilliseconds(0);
-
-            if (nodeTime > midnight.getTime())
-              dateFormat = Ci.nsIScriptableDateFormat.dateFormatNone;
-          }
-
-          return (this._dateService.FormatDateTime("", dateFormat,
-            Ci.nsIScriptableDateFormat.timeFormatNoSeconds,
-            nodeTimeObj.getFullYear(), nodeTimeObj.getMonth() + 1,
-            nodeTimeObj.getDate(), nodeTimeObj.getHours(),
-            nodeTimeObj.getMinutes(), nodeTimeObj.getSeconds()));
-        }
+        if (this._getRowSessionStatus(aRow) != this.SESSION_STATUS_CONTINUE)
+          return this._convertPRTimeToString(node.time);
         return "";
       case this.COLUMN_TYPE_VISITCOUNT:
         return node.accessCount;
@@ -1025,7 +1041,14 @@ PlacesTreeView.prototype = {
         const annos = PlacesUtils.annotations;
         if (annos.itemHasAnnotation(node.itemId, DESCRIPTION_ANNO))
           return annos.getItemAnnotationString(node.itemId, DESCRIPTION_ANNO)
-
+        return "";
+      case this.COLUMN_TYPE_DATEADDED:
+        if (node.dateAdded)
+          return this._convertPRTimeToString(node.dateAdded);
+        return "";
+      case this.COLUMN_TYPE_LASTMODIFIED:
+        if (node.lastModified)
+          return this._convertPRTimeToString(node.lastModified);
         return "";
     }
     return "";
@@ -1161,6 +1184,26 @@ PlacesTreeView.prototype = {
           newSort = NHQO.SORT_BY_ANNOTATION_ASCENDING;
           newSortingAnnotation = DESCRIPTION_ANNO;
         }
+        break;
+      case this.COLUMN_TYPE_DATEADDED:
+        if (oldSort == NHQO.SORT_BY_DATEADDED_ASCENDING)
+          newSort = NHQO.SORT_BY_DATEADDED_DESCENDING;
+        else if (allowTriState &&
+                 oldSort == NHQO.SORT_BY_DATEADDED_DESCENDING)
+          newSort = NHQO.SORT_BY_NONE;
+        else
+          newSort = NHQO.SORT_BY_DATEADDED_ASCENDING;
+
+        break;
+      case this.COLUMN_TYPE_LASTMODIFIED:
+        if (oldSort == NHQO.SORT_BY_LASTMODIFIED_ASCENDING)
+          newSort = NHQO.SORT_BY_LASTMODIFIED_DESCENDING;
+        else if (allowTriState &&
+                 oldSort == NHQO.SORT_BY_LASTMODIFIED_DESCENDING)
+          newSort = NHQO.SORT_BY_NONE;
+        else
+          newSort = NHQO.SORT_BY_LASTMODIFIED_ASCENDING;
+
         break;
       default:
         throw Cr.NS_ERROR_INVALID_ARG;

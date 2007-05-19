@@ -190,6 +190,8 @@ private:
   static const PRInt32 kGetItemPropertiesIndex_Parent;
   static const PRInt32 kGetItemPropertiesIndex_Type;
   static const PRInt32 kGetItemPropertiesIndex_FolderType;
+  static const PRInt32 kGetItemPropertiesIndex_DateAdded;
+  static const PRInt32 kGetItemPropertiesIndex_LastModified;
 
   nsCOMPtr<mozIStorageStatement> mDBGetRedirectDestinations;
 

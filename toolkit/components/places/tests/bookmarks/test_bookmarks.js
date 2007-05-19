@@ -136,17 +136,43 @@ function run_test() {
   do_check_eq(bmsvc.getItemType(testRoot), bmsvc.TYPE_FOLDER);
 
   // insert a bookmark 
+  // the time before we insert, in microseconds
+  var beforeInsert = Date.now() * 1000;
+  do_check_true(beforeInsert > 0);
+
   var newId = bmsvc.insertItem(testRoot, uri("http://google.com/"), bmsvc.DEFAULT_INDEX);
   do_check_eq(observer._itemAddedId, newId);
   do_check_eq(observer._itemAddedParent, testRoot);
   do_check_eq(observer._itemAddedIndex, testStartIndex);
   do_check_eq(bmsvc.getBookmarkURI(newId).spec, "http://google.com/");
 
+  var dateAdded = bmsvc.getItemDateAdded(newId);
+  // dateAdded can equal beforeInsert
+  do_check_true(dateAdded >= beforeInsert);
+
+  // after just inserting, modified should not be set
+  var lastModified = bmsvc.getItemLastModified(newId);
+  do_check_eq(lastModified, 0);
+
+  // the time before we set the title, in microseconds
+  var beforeSetTitle = Date.now() * 1000;
+  do_check_true(beforeSetTitle >= beforeInsert);
+
   // set bookmark title
   bmsvc.setItemTitle(newId, "Google");
   do_check_eq(observer._itemChangedId, newId);
   do_check_eq(observer._itemChangedProperty, "title");
   do_check_eq(observer._itemChangedValue, "Google");
+
+  // check that dateAdded hasn't changed
+  var dateAdded2 = bmsvc.getItemDateAdded(newId);
+  do_check_eq(dateAdded2, dateAdded);
+
+  // check lastModified after we set the title
+  var lastModified2 = bmsvc.getItemLastModified(newId);
+  do_check_true(lastModified2 > lastModified);
+  do_check_true(lastModified2 >= dateAdded);
+  do_check_true(lastModified2 >= beforeSetTitle);
 
   // get item title
   var title = bmsvc.getItemTitle(newId);
@@ -298,14 +324,24 @@ function run_test() {
   var tmpFolder = bmsvc.createFolder(testRoot, "tmp", 2);
   do_check_eq(bmsvc.getItemIndex(tmpFolder), 2);
 
-  // test setKeywordForURI
+  // test setKeywordForBookmark
   var kwTestItemId = bmsvc.insertItem(testRoot, uri("http://keywordtest.com"), bmsvc.DEFAULT_INDEX);
   try {
+    var dateAdded = bmsvc.getItemDateAdded(kwTestItemId);
+    // after just inserting, modified should not be set
+    var lastModified = bmsvc.getItemLastModified(kwTestItemId);
+    do_check_eq(lastModified, 0);
+
     bmsvc.setKeywordForBookmark(kwTestItemId, "bar");
+
+    var lastModified2 = bmsvc.getItemLastModified(kwTestItemId);
+    do_check_true(lastModified2 > lastModified);
+    do_check_true(lastModified2 >= dateAdded);
   } catch(ex) {
     do_throw("setKeywordForBookmark: " + ex);
   }
 
+  var lastModified3 = bmsvc.getItemLastModified(kwTestItemId);
   // test getKeywordForBookmark
   var k = bmsvc.getKeywordForBookmark(kwTestItemId);
   do_check_eq("bar", k);
@@ -411,7 +447,18 @@ function run_test() {
 
   // test change bookmark uri
   var newId10 = bmsvc.insertItem(testRoot, uri("http://foo10.com/"), bmsvc.DEFAULT_INDEX);
+  var dateAdded = bmsvc.getItemDateAdded(newId10);
+  // after just inserting, modified should not be set
+  var lastModified = bmsvc.getItemLastModified(newId10);
+  do_check_eq(lastModified, 0);
+
   bmsvc.changeBookmarkURI(newId10, uri("http://foo11.com/"));
+
+  // check that lastModified is set after we change the bookmark uri
+  var lastModified2 = bmsvc.getItemLastModified(newId10);
+  do_check_true(lastModified2 > lastModified);
+  do_check_true(lastModified2 >= dateAdded);
+
   do_check_eq(observer._itemChangedId, newId10);
   do_check_eq(observer._itemChangedProperty, "uri");
   do_check_eq(observer._itemChangedValue, "http://foo11.com/");
@@ -486,6 +533,76 @@ function run_test() {
     do_throw("bookmarks query: " + ex);
   }
 
+  // test dateAdded and lastModified properties
+  // for a search query
+  try {
+    var options = histsvc.getNewQueryOptions();
+    options.excludeQueries = 1;
+    options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
+    var query = histsvc.getNewQuery();
+    query.onlyBookmarked = true;
+    query.searchTerms = "ZZZXXXYYY";
+    var result = histsvc.executeQuery(query, options);
+    var rootNode = result.root;
+    rootNode.containerOpen = true;
+    var cc = rootNode.childCount;
+    do_check_eq(cc, 1);
+    var node = rootNode.getChild(0);
+
+    do_check_eq(typeof node.dateAdded, "number");
+    do_check_true(node.dateAdded > 0);
+    
+    do_check_eq(typeof node.lastModified, "number");
+    do_check_true(node.lastModified > 0);
+
+    rootNode.containerOpen = false;
+  }
+  catch(ex) {
+    do_throw("bookmarks query: " + ex);
+  }
+
+  // test dateAdded and lastModified properties
+  // for a folder query
+  try {
+    var options = histsvc.getNewQueryOptions();
+    options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
+    var query = histsvc.getNewQuery();
+    query.setFolders([testRoot], 1);
+    var result = histsvc.executeQuery(query, options);
+    var rootNode = result.root;
+    rootNode.containerOpen = true;
+    var cc = rootNode.childCount;
+    for (var i = 0; i < cc; i++) {
+      var node = rootNode.getChild(i);
+
+      if (node.type == node.RESULT_TYPE_URI) {
+        do_check_eq(typeof node.dateAdded, "number");
+        do_check_true(node.dateAdded > 0);
+
+        do_check_eq(typeof node.lastModified, "number");
+        do_check_true(node.lastModified > 0);
+        break;
+      }
+    }
+    rootNode.containerOpen = false;
+  }
+  catch(ex) {
+    do_throw("bookmarks query: " + ex);
+  }
+
+  // check setItemLastModified() and setItemDateAdded()
+  var newId14 = bmsvc.insertItem(testRoot, uri("http://bar.tld/"), bmsvc.DEFAULT_INDEX);
+  var dateAdded = bmsvc.getItemDateAdded(newId14);
+  var lastModified = bmsvc.getItemLastModified(newId14);
+  do_check_eq(lastModified, 0);
+  do_check_true(dateAdded > lastModified);
+  bmsvc.setItemLastModified(newId14, 1234);
+  var fakeLastModified = bmsvc.getItemLastModified(newId14);
+  do_check_eq(fakeLastModified, 1234);
+  bmsvc.setItemDateAdded(newId14, 4321);
+  var fakeDateAdded = bmsvc.getItemDateAdded(newId14);
+  do_check_eq(fakeDateAdded, 4321);
+  
   // ensure that removing an item removes its annotations
   do_check_true(annosvc.itemHasAnnotation(newId3, "test-annotation"));
   bmsvc.removeItem(newId3);
@@ -500,8 +617,30 @@ function run_test() {
 }
 
 function testSimpleFolderResult() {
+  // the time before we create a folder, in microseconds
+  var beforeCreate = Date.now() * 1000;
+  do_check_true(beforeCreate > 0);
+
+  // create a folder
   var parent = bmsvc.createFolder(root, "test", bmsvc.DEFAULT_INDEX);
+
+  var dateCreated = bmsvc.getItemDateAdded(parent);
+  do_check_true(dateCreated > 0);
+  // dateCreated can equal beforeCreate
+  do_check_true(dateCreated >= beforeCreate);
+
+  // the time before we insert, in microseconds
+  var beforeInsert = Date.now() * 1000;
+  do_check_true(beforeInsert > 0);
+
+  // insert a separator 
   var sep = bmsvc.insertSeparator(parent, bmsvc.DEFAULT_INDEX);
+
+  var dateAdded = bmsvc.getItemDateAdded(sep);
+  do_check_true(dateAdded > 0);
+  // dateAdded can equal beforeInsert
+  do_check_true(dateAdded >= beforeInsert);
+
   var item = bmsvc.insertItem(parent, uri("about:blank"), bmsvc.DEFAULT_INDEX);
   bmsvc.setItemTitle(item, "test bookmark");
   var folder = bmsvc.createFolder(parent, "test folder", bmsvc.DEFAULT_INDEX);
