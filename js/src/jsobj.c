@@ -964,7 +964,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                     vchars++;
                 vchars = js_strchr_limit(vchars, '(', vchars + vlength);
                 JS_ASSERT(vchars && *vchars);
-                vlength -= vchars - start;
+                vlength -= vchars - start + 1;
             }
 #else
             needOldStyleGetterSetter = JS_TRUE;
