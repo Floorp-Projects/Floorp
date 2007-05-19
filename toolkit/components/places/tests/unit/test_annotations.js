@@ -115,12 +115,27 @@ function run_test() {
 
   // string item-annotation
   try {
+    var lastModified = bmsvc.getItemLastModified(testItemId);
+    // verify that lastModified is 0 before we set the annotation
+    do_check_eq(lastModified, 0);
     annosvc.setItemAnnotationString(testItemId, testAnnoName, testAnnoVal, 0, 0);
+    var lastModified2 = bmsvc.getItemLastModified(testItemId);
+    // verify that setting the annotation updates the last modified time
+    do_check_true(lastModified2 > lastModified);
   } catch(ex) {
     do_throw("unable to add item annotation");
   }
   do_check_eq(annoObserver.ITEM_lastSet_Id, testItemId);
   do_check_eq(annoObserver.ITEM_lastSet_AnnoName, testAnnoName);
+
+  try {
+    var lastModified = bmsvc.getItemLastModified(testItemId);
+    var annoVal = annosvc.getItemAnnotationString(testItemId, testAnnoName);
+    // verify the anno value
+    do_check_eq(testAnnoVal, annoVal);
+  } catch(ex) {
+    do_throw("unable to get item annotation");
+  }
 
   // test getPagesWithAnnotation
   var uri2 = uri("http://www.tests.tld");
@@ -318,7 +333,14 @@ function run_test() {
 
   // test annotation removal
   annosvc.removePageAnnotation(testURI, int32Key);
+
+  annosvc.setItemAnnotationString(testItemId, testAnnoName, testAnnoVal, 0, 0);
+  // verify that removing an annotation updates the last modified date
+  var lastModified3 = bmsvc.getItemLastModified(testItemId);
   annosvc.removeItemAnnotation(testItemId, int32Key);
+  var lastModified4 = bmsvc.getItemLastModified(testItemId);
+  do_check_true(lastModified4 >= lastModified3);
+
   do_check_eq(annoObserver.PAGE_lastRemoved_URI, testURI.spec);
   do_check_eq(annoObserver.PAGE_lastRemoved_AnnoName, int32Key);
   do_check_eq(annoObserver.ITEM_lastRemoved_Id, testItemId);

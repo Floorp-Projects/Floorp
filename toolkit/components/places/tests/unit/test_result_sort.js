@@ -145,6 +145,9 @@ function run_test() {
   // id1 precedes id2 per title-descending fallback
   checkOrder(id3, id1, id2);
 
+  // XXXtodo:  test dateAdded sort
+  // XXXtodo:  test lastModified sort
+  
   // test live update
   annosvc.setItemAnnotationString(id1, "testAnno", "c", 0, 0);
   checkOrder(id1, id3, id2);

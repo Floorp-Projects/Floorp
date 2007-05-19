@@ -49,7 +49,7 @@ interface nsINavHistoryResult;
 interface nsITreeColumn;
 interface nsIWritablePropertyBag;
 
-[scriptable, uuid(2cce631e-d7dd-4162-a05b-e8ecfbc34367)]
+[scriptable, uuid(ff6f0168-f3f6-4f3a-9dfb-810a8eb4e545)]
 interface nsINavHistoryResultNode : nsISupports
 {
   /**
@@ -163,6 +163,18 @@ interface nsINavHistoryResultNode : nsISupports
    * set to -1.
    */
   readonly attribute PRInt64 itemId;
+
+  /**
+   * If the node is an item (bookmark, folder or a separator) this value is the 
+   * time that the item was created. For other nodes, this value is 0.
+   */
+  readonly attribute PRTime dateAdded;
+
+  /**
+   * If the node is an item (bookmark, folder or a separator) this value is the 
+   * time that the item was last modified. For other nodes, this value is 0.
+   */
+  readonly attribute PRTime lastModified;
 };
 
 
@@ -990,8 +1002,13 @@ interface nsINavHistoryQueryOptions : nsISupports
   const unsigned short SORT_BY_VISITCOUNT_DESCENDING = 8;
   const unsigned short SORT_BY_KEYWORD_ASCENDING = 9;
   const unsigned short SORT_BY_KEYWORD_DESCENDING = 10;
-  const unsigned short SORT_BY_ANNOTATION_ASCENDING = 11;
-  const unsigned short SORT_BY_ANNOTATION_DESCENDING = 12;
+  const unsigned short SORT_BY_DATEADDED_ASCENDING = 11;
+  const unsigned short SORT_BY_DATEADDED_DESCENDING = 12;
+  const unsigned short SORT_BY_LASTMODIFIED_ASCENDING = 13;
+  const unsigned short SORT_BY_LASTMODIFIED_DESCENDING = 14;
+  const unsigned short SORT_BY_ANNOTATION_ASCENDING = 15;
+  const unsigned short SORT_BY_ANNOTATION_DESCENDING = 16;
+
 
   /**
    * "URI" results, one for each URI visited in the range. Individual result

@@ -225,7 +225,12 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResult, NS_NAVHISTORYRESULT_IID)
   NS_IMETHOD GetBookmarkIndex(PRInt32* aIndex) \
     { *aIndex = mBookmarkIndex; return NS_OK; } \
   NS_IMETHOD GetItemId(PRInt64* aId) \
-    { *aId= mItemId; return NS_OK; }
+    { *aId= mItemId; return NS_OK; } \
+  NS_IMETHOD GetDateAdded(PRTime* aDateAdded) \
+    { *aDateAdded = mDateAdded; return NS_OK; } \
+  NS_IMETHOD GetLastModified(PRTime* aLastModified) \
+    { *aLastModified = mLastModified; return NS_OK; }
+
 
 // This is used by the base classes instead of
 // NS_FORWARD_NSINAVHISTORYRESULTNODE(nsNavHistoryResultNode) because they
@@ -365,6 +370,8 @@ public:
   nsCString mFaviconURI;
   PRInt32 mBookmarkIndex;
   PRInt64 mItemId;
+  PRTime mDateAdded;
+  PRTime mLastModified;
 
   // The indent level of this node. The root node will have a value of -1.  The
   // root's children will have a value of 0, and so on.
@@ -577,6 +584,14 @@ public:
   PR_STATIC_CALLBACK(int) SortComparison_AnnotationLess(
       nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
   PR_STATIC_CALLBACK(int) SortComparison_AnnotationGreater(
+      nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
+  PR_STATIC_CALLBACK(int) SortComparison_DateAddedLess(
+      nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
+  PR_STATIC_CALLBACK(int) SortComparison_DateAddedGreater(
+      nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
+  PR_STATIC_CALLBACK(int) SortComparison_LastModifiedLess(
+      nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
+  PR_STATIC_CALLBACK(int) SortComparison_LastModifiedGreater(
       nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
 
   // finding children: THESE DO NOT ADDREF
