@@ -48,6 +48,7 @@
 #include "nsTArray.h"
 #include "nsInterfaceHashtable.h"
 #include "nsDataHashtable.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsNavHistory;
 class nsIDateTimeFormat;
@@ -655,7 +656,11 @@ public:
                               const nsCOMArray<nsNavHistoryQuery>& aQueries,
                               nsNavHistoryQueryOptions* aOptions);
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_NSINAVHISTORYQUERYRESULTNODE
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsNavHistoryQueryResultNode, nsNavHistoryResultNode)
+
   NS_FORWARD_COMMON_RESULTNODE_TO_BASE
   NS_IMETHOD GetType(PRUint32* type)
     { *type = nsNavHistoryResultNode::RESULT_TYPE_QUERY; return NS_OK; }
@@ -664,7 +669,7 @@ public:
   NS_IMETHOD GetHasChildren(PRBool* aHasChildren);
   NS_IMETHOD GetChildrenReadOnly(PRBool *aChildrenReadOnly)
     { return nsNavHistoryContainerResultNode::GetChildrenReadOnly(aChildrenReadOnly); }
-  NS_DECL_NSINAVHISTORYQUERYRESULTNODE
+
 
   PRBool CanExpand();
 
