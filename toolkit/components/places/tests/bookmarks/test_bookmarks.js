@@ -119,7 +119,8 @@ function run_test() {
   // test roots
   do_check_true(bmsvc.placesRoot > 0);
   do_check_true(bmsvc.bookmarksRoot > 0);
-  do_check_true(bmsvc.toolbarFolder > 0);
+  // XXX bug 381237
+  //do_check_true(bmsvc.toolbarFolder > 0);
 
   // create a folder to hold all the tests
   // this makes the tests more tolerant of changes to default_places.html
