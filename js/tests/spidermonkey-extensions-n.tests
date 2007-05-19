@@ -133,9 +133,6 @@
 ./js1_5/extensions/regress-350312-02.js
 ./js1_5/extensions/regress-350312-03.js
 ./js1_5/extensions/regress-350531.js
-./js1_5/extensions/regress-351102-01.js
-./js1_5/extensions/regress-351102-02.js
-./js1_5/extensions/regress-351102-06.js
 ./js1_5/extensions/regress-351448.js
 ./js1_5/extensions/regress-351973.js
 ./js1_5/extensions/regress-352060.js
@@ -152,7 +149,6 @@
 ./js1_5/extensions/regress-354541-04.js
 ./js1_5/extensions/regress-355339.js
 ./js1_5/extensions/regress-355497.js
-./js1_5/extensions/regress-355655.js
 ./js1_5/extensions/regress-355736.js
 ./js1_5/extensions/regress-355820.js
 ./js1_5/extensions/regress-355982.js
@@ -167,7 +163,6 @@
 ./js1_5/extensions/regress-361964.js
 ./js1_5/extensions/regress-363988.js
 ./js1_5/extensions/regress-365527.js
-./js1_5/extensions/regress-365692.js
 ./js1_5/extensions/regress-365869.js
 ./js1_5/extensions/regress-366288.js
 ./js1_5/extensions/regress-366292.js
@@ -178,18 +173,11 @@
 ./js1_5/extensions/regress-367119-02.js
 ./js1_5/extensions/regress-367120-01.js
 ./js1_5/extensions/regress-367120-02.js
-./js1_5/extensions/regress-367501-01.js
-./js1_5/extensions/regress-367501-02.js
-./js1_5/extensions/regress-367501-03.js
-./js1_5/extensions/regress-367501-04.js
 ./js1_5/extensions/regress-367589.js
-./js1_5/extensions/regress-367630.js
 ./js1_5/extensions/regress-367923.js
 ./js1_5/extensions/regress-368859.js
 ./js1_5/extensions/regress-369404.js
-./js1_5/extensions/regress-372309.js
 ./js1_5/extensions/regress-374589.js
-./js1_5/extensions/regress-375183.js
 ./js1_5/extensions/regress-376052.js
 ./js1_5/extensions/regress-44009.js
 ./js1_5/extensions/regress-50447-1.js
@@ -212,10 +200,6 @@
 ./js1_7/extensions/regress-349619.js
 ./js1_7/extensions/regress-350312.js
 ./js1_7/extensions/regress-351070-02.js
-./js1_7/extensions/regress-351102-03.js
-./js1_7/extensions/regress-351102-04.js
-./js1_7/extensions/regress-351102-05.js
-./js1_7/extensions/regress-351102-07.js
 ./js1_7/extensions/regress-352797-01.js
 ./js1_7/extensions/regress-352885-01.js
 ./js1_7/extensions/regress-352885-02.js
