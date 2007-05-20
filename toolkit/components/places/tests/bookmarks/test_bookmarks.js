@@ -659,6 +659,9 @@ function testSimpleFolderResult() {
   bmsvc.setItemTitle(item, "test bookmark");
   var folder = bmsvc.createFolder(parent, "test folder", bmsvc.DEFAULT_INDEX);
 
+  // re-set the folder title so we can test nodes' lastModified
+  bmsvc.setItemTitle(folder, "test folder");
+
   var options = histsvc.getNewQueryOptions();
   var query = histsvc.getNewQuery();
   query.setFolders([parent], 1);
@@ -668,14 +671,20 @@ function testSimpleFolderResult() {
   do_check_eq(rootNode.childCount, 3);
 
   var node = rootNode.getChild(0);
+  do_check_true(node.dateAdded > 0);
+  do_check_eq(node.lastModified, 0);
   do_check_eq(node.itemId, sep);
   do_check_eq(node.title, "");
   node = rootNode.getChild(1);
   do_check_eq(node.itemId, item);
+  do_check_true(node.dateAdded > 0);
+  do_check_true(node.lastModified > 0);
   do_check_eq(node.title, "test bookmark");
   node = rootNode.getChild(2);
   do_check_eq(node.itemId, folder);
   do_check_eq(node.title, "test folder");
+  do_check_true(node.dateAdded > 0);
+  do_check_true(node.lastModified > 0);
 
   rootNode.containerOpen = false;
 }

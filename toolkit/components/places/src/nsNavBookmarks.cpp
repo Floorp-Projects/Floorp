@@ -1764,8 +1764,14 @@ nsNavBookmarks::ResultNodeForFolder(PRInt64 aID,
   rv = mDBGetItemProperties->GetUTF8String(kGetItemPropertiesIndex_Title, title);
 
   *aNode = new nsNavHistoryFolderResultNode(title, aOptions, aID, folderType);
-  if (! *aNode)
+  if (!*aNode)
     return NS_ERROR_OUT_OF_MEMORY;
+
+  (*aNode)->mDateAdded =
+    mDBGetItemProperties->AsInt64(kGetItemPropertiesIndex_DateAdded);
+  (*aNode)->mLastModified =
+    mDBGetItemProperties->AsInt64(kGetItemPropertiesIndex_LastModified);
+
   NS_ADDREF(*aNode);
   return NS_OK;
 }
@@ -1865,6 +1871,12 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolderId,
       // the next else block);
       node->mItemId =
         mDBGetChildren->AsInt64(nsNavHistory::kGetInfoIndex_ItemId);
+
+      // date-added and last-modified
+      node->mDateAdded =
+        mDBGetChildren->AsInt64(nsNavHistory::kGetInfoIndex_ItemDateAdded);
+      node->mLastModified =
+        mDBGetChildren->AsInt64(nsNavHistory::kGetInfoIndex_ItemLastModified);
     } else {
       rv = History()->RowToResult(mDBGetChildren, options,
                                   getter_AddRefs(node));
