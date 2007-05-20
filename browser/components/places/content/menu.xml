@@ -610,7 +610,7 @@
           this._self._selection = event.target.node;
           if (event.ctrlKey)
             dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
-          xferData.data = this._controller.getTransferData(dragAction.action);
+          xferData.data = this._self._controller.getTransferData(dragAction.action);
         },
         
         canDrop: function TBV_DO_canDrop(event, session) {
