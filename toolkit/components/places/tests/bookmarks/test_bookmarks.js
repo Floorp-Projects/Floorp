@@ -119,8 +119,7 @@ function run_test() {
   // test roots
   do_check_true(bmsvc.placesRoot > 0);
   do_check_true(bmsvc.bookmarksRoot > 0);
-  // XXX bug 381237
-  //do_check_true(bmsvc.toolbarFolder > 0);
+  do_check_true(bmsvc.toolbarFolder > 0);
 
   // create a folder to hold all the tests
   // this makes the tests more tolerant of changes to default_places.html
@@ -411,6 +410,7 @@ function run_test() {
     var rootNode = result.root;
     rootNode.containerOpen = true;
     var cc = rootNode.childCount;
+    do_check_true(cc > 0);
     for (var i=0; i < cc; ++i) {
       var node = rootNode.getChild(i);
       if (node.type == node.RESULT_TYPE_FOLDER)
@@ -586,6 +586,7 @@ function run_test() {
     var rootNode = result.root;
     rootNode.containerOpen = true;
     var cc = rootNode.childCount;
+    do_check_true(cc > 0);
     for (var i = 0; i < cc; i++) {
       var node = rootNode.getChild(i);
 
