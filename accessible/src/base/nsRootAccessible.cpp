@@ -959,7 +959,7 @@ NS_IMETHODIMP nsRootAccessible::GetAccessibleRelated(PRUint32 aRelationType,
 {
   *aRelated = nsnull;
 
-  if (!mDOMNode || aRelationType != RELATION_EMBEDS) {
+  if (!mDOMNode || aRelationType != nsIAccessibleRelation::RELATION_EMBEDS) {
     return nsDocAccessibleWrap::GetAccessibleRelated(aRelationType, aRelated);
   }
 

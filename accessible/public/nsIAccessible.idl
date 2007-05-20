@@ -44,6 +44,7 @@
 
 interface nsIPersistentProperties;
 interface nsIDOMDOMStringList;
+interface nsIAccessibleRelation;
 
 /**
  * A cross-platform interface that supports platform-specific 
@@ -57,7 +58,7 @@ interface nsIDOMDOMStringList;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(b3674866-49a9-4cf2-bfea-c00be2d4a695)]
+[scriptable, uuid(004b6882-2df1-49df-bb5f-0fb81a5b1edf)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -222,9 +223,27 @@ interface nsIAccessible : nsISupports
   nsIAccessible getAccessibleBelow();
 
   /**
-   * Accessible node related to this one 
+   * Return accessible related to this one by the given relation type (see.
+   * constants defined in nsIAccessibleRelation).
    */
   nsIAccessible getAccessibleRelated(in unsigned long aRelationType);
+
+  /**
+   * Returns the number of accessible relations for this object.
+   */
+  readonly attribute unsigned long relationsCount;
+
+  /**
+   * Returns one accessible relation for this object.
+   *
+   * @param index - relation index (0-based)
+   */
+  nsIAccessibleRelation getRelation(in unsigned long index);
+
+  /**
+   * Returns multiple accessible relations for this object.
+   */
+  nsIArray getRelations();
 
   /**
    * Return accessible's x and y coordinates relative to the screen and
@@ -284,81 +303,5 @@ interface nsIAccessible : nsISupports
    * to the OS/accessibility toolkit we're running on.
    */
   [noscript] void getNativeInterface(out voidPtr aOutAccessible);
-
-  /**
-   * API states we map from opposite states
-   *   VISIBLE -- mapped as the opposite of INVISIBLE
-   *   SHOWING -- mapped as the opposite of OFFSCREEN
-   *
-   * ATK states we don't have in nsIAccessible:
-   *   ARMED -- no clear use case, used briefly when button is activated
-   *   HAS_TOOLTIP -- no known use case
-   *   ICONIFIED -- Mozilla does not have elements which are collapsable into icons
-   *   TRUNCATED -- need use case. Indicates that an object's onscreen content is truncated, e.g. a text value in a spreadsheet cell. No IA2 state.
-   */   
-
-/**
- * Relation Types -- most of these come from ATK's atkrelationtype.h
- * When adding support for relations, make sure to add them to appropriate
- * places in nsAccessibleWrap implementations
- * RELATION_NULL:
- * RELATION_CONTROLLED_BY:    Controlled by one or more target objects.
- * RELATION_CONTROLLER_FOR:   Controller for one or more target objects.
- * RELATION_LABEL_FOR:        Label for one or more target objects.
- * RELATION_LABELLED_BY:      Labelled by one or more target objects.
- * RELATION_MEMBER_OF:        Member of a group of one or more target objects.
- * RELATION_NODE_CHILD_OF:    Cell in a treetable which is displayed because a
- *                            cell in the same col is expanded & identifies it.
- * RELATION_FLOWS_TO:         Has content that flows logically to another
- *                            object in a sequential way, e.g. text flow.
- * RELATION_FLOWS_FROM:       Has content that flows logically from another
- *                            object in a sequential way, e.g. text flow.
- * RELATION_SUBWINDOW_OF:     Subwindow attached to a component but otherwise 
- *                            not connected in the UI hierarchy to that component.
- * RELATION_EMBEDS:           Visually embeds another object's content, i.e.
- *                            this object's content flows around another's content.
- * RELATION_EMBEDDED_BY:      Inverse of RELATION_EMBEDS; this object's content
- *                            is visually embedded in another object.
- * RELATION_POPUP_FOR:        Popup for another object.
- * RELATION_PARENT_WINDOW_OF: Parent window of another object.
- * RELATION_DEFAULT_BUTTON:   Part of a form/dialog with a related default button.
- * RELATION_DESCRIBED_BY:     Described by one or more target objects.
- * RELATION_DESCRIPTION_FOR:  Description for one or more target objects.
- */
-
-  const unsigned long RELATION_NUL = 0x00;               // ATK_RELATION_NUL
-  const unsigned long RELATION_CONTROLLED_BY = 0x01;     // ATK_RELATION_CONTROLLED_BY
-  const unsigned long RELATION_CONTROLLER_FOR = 0x02;    // ATK_RELATION_CONTROLLER_FOR
-  const unsigned long RELATION_LABEL_FOR = 0x03;         // ATK_RELATION_LABEL_FOR
-  const unsigned long RELATION_LABELLED_BY = 0x04;       // ATK_RELATION_LABELLED_BY
-  const unsigned long RELATION_MEMBER_OF = 0x05;         // ATK_RELATION_MEMBER_OF
-  const unsigned long RELATION_NODE_CHILD_OF = 0x06;     // ATK_RELATION_NODE_CHILD_OF
-  const unsigned long RELATION_FLOWS_TO = 0x07;          // ATK_RELATION_FLOWS_TO
-  const unsigned long RELATION_FLOWS_FROM = 0x08;        // ATK_RELATION_FLOWS_FROM
-  const unsigned long RELATION_SUBWINDOW_OF = 0x09;      // ATK_RELATION_SUBWINDOW_OF
-  const unsigned long RELATION_EMBEDS = 0x0a;            // ATK_RELATION_EMBEDS
-  const unsigned long RELATION_EMBEDDED_BY = 0x0b;       // ATK_RELATION_EMBEDDED_BY
-  const unsigned long RELATION_POPUP_FOR = 0x0c;         // ATK_RELATION_POPUP_FOR
-  const unsigned long RELATION_PARENT_WINDOW_OF = 0x0d;  // ATK_RELATION_PARENT_WINDOW_OF
-  const unsigned long RELATION_DESCRIBED_BY = 0x0e;      // ATK_RELATION_DESCRIBED_BY
-  const unsigned long RELATION_DESCRIPTION_FOR = 0x0f;   // ATK_RELATION_DESCRIPTION_FOR
-  const unsigned long RELATION_DEFAULT_BUTTON = 0x4000;  // MSAA only, no ATK relation
-
-// MSAA relationship extensions to accNavigate
-  const unsigned long NAVRELATION_CONTROLLED_BY = 0x1000;
-  const unsigned long NAVRELATION_CONTROLLER_FOR = 0x1001;
-  const unsigned long NAVRELATION_LABEL_FOR = 0x1002;
-  const unsigned long NAVRELATION_LABELLED_BY = 0x1003;
-  const unsigned long NAVRELATION_MEMBER_OF = 0x1004;
-  const unsigned long NAVRELATION_NODE_CHILD_OF = 0x1005;
-  const unsigned long NAVRELATION_FLOWS_TO = 0x1006;
-  const unsigned long NAVRELATION_FLOWS_FROM = 0x1007;
-  const unsigned long NAVRELATION_SUBWINDOW_OF = 0x1008;
-  const unsigned long NAVRELATION_EMBEDS = 0x1009;
-  const unsigned long NAVRELATION_EMBEDDED_BY = 0x100a;
-  const unsigned long NAVRELATION_POPUP_FOR = 0x100b;
-  const unsigned long NAVRELATION_PARENT_WINDOW_OF = 0x100c;
-  const unsigned long NAVRELATION_DEFAULT_BUTTON = 0x100d;
-  const unsigned long NAVRELATION_DESCRIBED_BY = 0x100e;
-  const unsigned long NAVRELATION_DESCRIPTION_FOR = 0x100f;
 };
+

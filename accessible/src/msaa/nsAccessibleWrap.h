@@ -315,6 +315,25 @@ protected:
   // Should this accessible be allowed to have any MSAA children
   static PRBool MustPrune(nsIAccessible *accessible)
     { PRUint32 role; return NS_SUCCEEDED(accessible->GetRole(&role)) && (role == nsIAccessibleRole::ROLE_ENTRY || role == nsIAccessibleRole::ROLE_PASSWORD_TEXT || role == nsIAccessibleRole::ROLE_PUSHBUTTON); }
+
+  enum navRelations {
+    NAVRELATION_CONTROLLED_BY = 0x1000,
+    NAVRELATION_CONTROLLER_FOR = 0x1001,
+    NAVRELATION_LABEL_FOR = 0x1002,
+    NAVRELATION_LABELLED_BY = 0x1003,
+    NAVRELATION_MEMBER_OF = 0x1004,
+    NAVRELATION_NODE_CHILD_OF = 0x1005,
+    NAVRELATION_FLOWS_TO = 0x1006,
+    NAVRELATION_FLOWS_FROM = 0x1007,
+    NAVRELATION_SUBWINDOW_OF = 0x1008,
+    NAVRELATION_EMBEDS = 0x1009,
+    NAVRELATION_EMBEDDED_BY = 0x100a,
+    NAVRELATION_POPUP_FOR = 0x100b,
+    NAVRELATION_PARENT_WINDOW_OF = 0x100c,
+    NAVRELATION_DEFAULT_BUTTON = 0x100d,
+    NAVRELATION_DESCRIBED_BY = 0x100e,
+    NAVRELATION_DESCRIPTION_FOR = 0x100f
+  };
 };
 
 // Define unsupported wrap classes here
