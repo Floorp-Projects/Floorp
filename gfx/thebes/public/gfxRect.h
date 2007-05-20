@@ -86,6 +86,12 @@ struct THEBES_API gfxRect {
     gfxPoint TopRight() const { return pos + gfxSize(size.width, 0.0); }
     gfxPoint BottomLeft() const { return pos + gfxSize(0.0, size.height); }
     gfxPoint BottomRight() const { return pos + size; }
+
+    /* Conditions this border to Cairo's max coordinate space.
+     * The caller can check IsEmpty() after Condition() -- if it's TRUE,
+     * the caller can possibly avoid doing any extra rendering.
+     */
+    void Condition();
 };
 
 #endif /* GFX_RECT_H */
