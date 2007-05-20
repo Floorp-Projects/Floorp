@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *    Robert Sayre <sayrer@gmail.com> (original author)
+ *    Alexander J. Vincent <ajvincent@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -66,5 +67,19 @@ function run_test() {
   }
   do_check_true(didThrow);
  
-}
+  // try to create a component
+  do_load_module("/js/src/xpconnect/tests/unit/component_import.js");
+  const contractID = "@mozilla.org/tests/module-importer;";
+  do_check_true((contractID + "1") in Components.classes);
+  var foo = Components.classes[contractID + "1"]
+                      .createInstance(Components.interfaces.nsIClassInfo);
+  do_check_true(Boolean(foo));
+  do_check_true(foo.contractID == contractID + "1");
 
+  // try to create another component which doesn't directly implement QI
+  do_check_true((contractID + "2") in Components.classes);
+  var bar = Components.classes[contractID + "2"]
+                      .createInstance(Components.interfaces.nsIClassInfo);
+  do_check_true(Boolean(bar));
+  do_check_true(bar.contractID == contractID + "2");
+}
