@@ -3652,7 +3652,7 @@ nsBrowserStatusHandler.prototype =
         .getService(Components.interfaces.nsIFaviconService);
       var uri = Components.classes["@mozilla.org/network/io-service;1"]
         .getService(Components.interfaces.nsIIOService).newURI(aBrowser.mIconURL, null, null);
-      //faviconService.setAndLoadFaviconForPage(aBrowser.currentURI, uri, false);
+      faviconService.setAndLoadFaviconForPage(aBrowser.currentURI, uri, false);
     }
 #endif
   },
