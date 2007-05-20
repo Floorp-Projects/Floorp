@@ -48,8 +48,7 @@ nsAccessibleRelation::
 }
 
 // nsISupports
-NS_IMPL_ISUPPORTS1(nsAccessibleRelation, nsIAccessibleRelation);
-
+NS_IMPL_ISUPPORTS1(nsAccessibleRelation, nsIAccessibleRelation)
 
 // nsIAccessibleRelation
 NS_IMETHODIMP
