@@ -182,7 +182,7 @@ BrowserGlue.prototype = {
 
   /**
    * Initialize Places
-   * - imports the bookmarks html file if bookmarks datastore is empty
+   * - imports bookmarks.html if bookmarks datastore is empty
    */
   _initPlaces: function bg__initPlaces() {
 #ifdef MOZ_PLACES_BOOKMARKS
@@ -205,11 +205,13 @@ BrowserGlue.prototype = {
 
     var dirService = Components.classes["@mozilla.org/file/directory_service;1"]
                                .getService(Components.interfaces.nsIProperties);
+    var profDir = dirService.get("ProfD", Components.interfaces.nsILocalFile);
 
-    var bookmarksFile = dirService.get("BMarks", Components.interfaces.nsILocalFile);
+    var bookmarksFile = profDir.clone(); // bookmarks.html
+    bookmarksFile.append("bookmarks.html");
 
     if (bookmarksFile.exists()) {
-      // import the file
+      // import bookmarks.html
       try {
         var importer = 
           Components.classes["@mozilla.org/browser/places/import-export-service;1"]
@@ -222,7 +224,6 @@ BrowserGlue.prototype = {
 
       // backup pre-places bookmarks.html
       // XXXtodo remove this before betas, after import/export is solid
-      var profDir = dirService.get("ProfD", Components.interfaces.nsILocalFile);
       var bookmarksBackup = profDir.clone();
       bookmarksBackup.append("bookmarks.preplaces.html");
       if (!bookmarksBackup.exists()) {
