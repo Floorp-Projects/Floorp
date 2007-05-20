@@ -1451,6 +1451,9 @@ SyncChannelStatus(nsIChannel* channel, nsresult status)
 static char kFileIntro[] =
     "<!DOCTYPE NETSCAPE-Bookmark-file-1>" NS_LINEBREAK
     // Note: we write bookmarks in UTF-8
+    "<!-- This is an automatically generated file." NS_LINEBREAK
+    "     It will be read and overwritten." NS_LINEBREAK
+    "     DO NOT EDIT! -->" NS_LINEBREAK
     "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">" NS_LINEBREAK
     "<TITLE>Bookmarks</TITLE>" NS_LINEBREAK;
 static const char kRootIntro[] = "<H1";
