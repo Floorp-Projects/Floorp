@@ -130,7 +130,8 @@
                                                                 'chrome://mozapps/content/downloads/downloads.xul',
                                                                 'chrome,dialog=no,resizable');"/>
     <command id="Tools:Addons" oncommand="BrowserOpenAddonsMgr();"/>
-    <command id="Tools:Sanitize" oncommand="gBrowserGlue.sanitize(window || null);"/>
+    <command id="Tools:Sanitize"
+     oncommand="Cc[GLUE_CID].getService(Ci.nsIBrowserGlue).sanitize(window || null);"/>
     <command id="History:UndoCloseTab" oncommand="undoCloseTab();"/>
   </commandset>
 
