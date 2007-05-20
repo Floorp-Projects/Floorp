@@ -57,10 +57,14 @@
         setTimeout(function() { self.place = self.place; }, 0);
       ]]></constructor>
 
-      <destructor><![CDATA[ 
-        this._result.viewer = null;
+      <destructor><![CDATA[
+        // Break the treeviewer->result->treeviewer cycle.
+        // Note: unsetting the result's viewer also unsets
+        // the viewer's reference to our treeBoxObject.
+        var result = this.getResult();
+        if (result)
+          result.viewer = null;
         this.view = null;
-        this._result = null;
       ]]></destructor>
 
       <property name="controller"
@@ -84,7 +88,7 @@
           }
         ]]></setter>
       </property>
-      
+
       <method name="getBestOptions">
         <body><![CDATA[
           // Get the best set of grouping options to use, either reuse the 
@@ -95,7 +99,7 @@
           return options;
         ]]></body>
       </method>
-      
+
       <method name="applyFilter">
         <parameter name="filterString"/>
         <parameter name="onlyBookmarks"/>
@@ -639,21 +643,21 @@
           // Drag and Drop does not work while a tree view is sorted.
           if (this.getAttribute("sortActive") == "true")
             throw Cr.NS_OK;
-          
-          // Items that are "static" - i.e. above the user-configurable area
-          // of the view - can not be moved. 
+
           var nodes = this.getSelectionNodes();
           for (var i = 0; i < nodes.length; ++i) {
             var node = nodes[i];
-            
+ 
             // If this node is part of a readonly container (e.g. a livemark) it 
             // cannot be moved, only copied, so we must change the action used
             // by the drag session.
             var parent = node.parent;
-            if (PlacesUtils.nodeIsReadOnly(parent))
+            if (PlacesUtils.nodeIsReadOnly(parent)) {
               dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
+              break;
+            }
           }
-          
+ 
           // XXXben - the drag wrapper should do this automatically.
           if (event.ctrlKey)
             dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
@@ -728,7 +732,7 @@
             for (var i = 0; i < cc; ++i) {
               var node = aContainer.getChild(i);
               if (PlacesUtils.nodeIsFolder(node)) {
-                if (folder.itemId == aItemId) {
+                if (node.itemId == aItemId) {
                   foundNode = node;
                   break;
                 }
@@ -795,9 +799,6 @@
           var result = this._self.getResult();
           var resultview = this._self.getResultView();
           var node = index != -1 ? resultview.nodeForTreeIndex(index) : result.root;
-          // Cannot drop before fixed items in the list. 
-          if (node.parent == result.root && orientation != NHRVO.DROP_ON)
-            return false;
 
           if (orientation == NHRVO.DROP_ON) {
             // The user cannot drop an item into itself or a read-only container
@@ -809,10 +810,10 @@
           } 
           else if (node.parent && PlacesUtils.nodeIsReadOnly(node.parent))
             return false;
-          
+
           return PlacesControllerDragHelper.canDrop(this._self, orientation);
         },
-        
+
         /**
          * Adjusts an InsertionPoint's insertion index using these rules:
          *  XXXben define rules
