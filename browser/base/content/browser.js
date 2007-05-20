@@ -80,8 +80,9 @@ const BROWSER_ADD_BM_FEATURES = "centerscreen,chrome,dialog,resizable,dependent"
 const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
 const TYPE_XUL = "application/vnd.mozilla.xul+xml";
 
-var gBrowserGlue = Components.classes["@mozilla.org/browser/browserglue;1"]
-                             .getService(Components.interfaces.nsIBrowserGlue);
+// We use this once, for Clear Private Data
+const GLUE_CID = "@mozilla.org/browser/browserglue;1";
+
 var gRDF = null;
 var gGlobalHistory = null;
 var gURIFixup = null;
