@@ -57,6 +57,7 @@ function PrefHandler(pref, defaultValue, serializable) {
     getService(Components.interfaces.nsIPrefBranch2);
   this._pb.addObserver(this._pref, this, false);
 }
+
 PrefHandler.prototype = {
   /**
    * Clean up when the window is going away to avoid leaks. 
@@ -291,5 +292,5 @@ var OptionsFilter = {
     var options = queryNode.queryOptions.clone();
     options.sortingMode = result.sortingMode;
     this.getHandler(queries).value = options;
-  },
+  }
 };
