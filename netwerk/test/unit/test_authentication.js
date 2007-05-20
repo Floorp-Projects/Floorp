@@ -253,15 +253,10 @@ function makeChan(url) {
   return chan;
 }
 
-/*
 var tests = [test_noauth, test_returnfalse1, test_wrongpw1, test_prompt1,
              test_returnfalse2, test_wrongpw2, test_prompt2, test_ntlm,
              test_auth, test_digest_noauth, test_digest,
              test_digest_bogus_user];
-*/
-var tests = [test_noauth, test_returnfalse1, test_wrongpw1, test_prompt1,
-             test_returnfalse2, test_wrongpw2, test_prompt2, test_ntlm,
-             test_auth];
 
 var current_test = 0;
 
