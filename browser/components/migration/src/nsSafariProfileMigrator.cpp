@@ -974,8 +974,20 @@ nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
     if (::CFNumberGetValue(intValue, kCFNumberSInt32Type, &value) && value ==1) {
       CFArrayRef children =
         (CFArrayRef)::CFDictionaryGetValue(safariBookmarks, CFSTR("Children"));
-      if (children)
+      if (children) {
         rv = ParseBookmarksFolder(children, folder, bms, PR_TRUE);
+#ifdef MOZ_PLACES_BOOKMARKS
+        if (NS_SUCCEEDED(rv) {
+          // after importing the favorites, 
+          // we need to set this pref so that on startup
+          // we don't blow away what we just imported
+          nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
+          NS_ENSURE_TRUE(pref, NS_ERROR_FAILURE);
+          rv = pref->SetBoolPref("browser.places.importBookmarksHTML", PR_FALSE);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+#endif
+      }
     }
   }
   ::CFRelease(safariBookmarks);
