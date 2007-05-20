@@ -1618,6 +1618,11 @@ DrawBorderSides(gfxContext *ctx,
     radiiPtr = &radii[0];
   }
 
+  // if this got through, and it shouldn't have (see bug 379419),
+  // just ignore this.
+  if (borderRenderStyle & NS_STYLE_BORDER_STYLE_RULES_MARKER)
+    return;
+
   // disable pretty drawing of dotted/dashed borders if
   // we have a border radius
   if (radiiPtr)
