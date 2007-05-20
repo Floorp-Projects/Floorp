@@ -225,6 +225,9 @@ NS_IMETHODIMP nsXULTreeAccessible::GetValue(nsAString& _retval)
 
 NS_IMETHODIMP nsXULTreeAccessible::Shutdown()
 {
+  mTree = nsnull;
+  mTreeView = nsnull;
+
   nsXULSelectableAccessible::Shutdown();
 
   if (mAccessNodeCache) {
@@ -232,6 +235,7 @@ NS_IMETHODIMP nsXULTreeAccessible::Shutdown()
     delete mAccessNodeCache;
     mAccessNodeCache = nsnull;
   }
+
   return NS_OK;
 }
 
@@ -600,8 +604,8 @@ nsXULTreeitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     mTreeView->IsContainerEmpty(mRow, &isContainerEmpty);
     if (!isContainerEmpty) {
       mTreeView->IsContainerOpen(mRow, &isContainerOpen);
-      *aState |= isContainerOpen? nsIAccessibleStates::STATE_EXPANDED:
-                                  nsIAccessibleStates::STATE_COLLAPSED;
+      *aState |= isContainerOpen? PRUint32(nsIAccessibleStates::STATE_EXPANDED):
+                                  PRUint32(nsIAccessibleStates::STATE_COLLAPSED);
     }
   }
 
