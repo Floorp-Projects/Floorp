@@ -49,9 +49,14 @@ gfxImageSurface::gfxImageSurface(const gfxIntSize& size, gfxImageFormat format) 
     if (!CheckSurfaceSize(size))
         return;
 
-    mData = (unsigned char *) malloc(mSize.height * mStride);
-    if (!mData)
-        return;
+    // if we have a zero-sized surface, just set mData to nsnull
+    if (mSize.height * mStride > 0) {
+        mData = (unsigned char *) malloc(mSize.height * mStride);
+        if (!mData)
+            return;
+    } else {
+        mData = nsnull;
+    }
 
     mOwnsData = PR_TRUE;
 
