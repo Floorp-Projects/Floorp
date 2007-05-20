@@ -63,6 +63,10 @@ PrefHandler.prototype = {
    */
   destroy: function PC_PH_destroy() {
     this._pb.removeObserver(this._pref, this);
+    this._pref = null;
+    this._pb = null;
+    this._defaultValue = null;
+    this._serializable = null;
   },
 
   /** 
