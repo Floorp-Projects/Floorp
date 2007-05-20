@@ -298,8 +298,7 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
   NS_ENSURE_TRUE(localFile, NS_ERROR_FAILURE);
   nsCOMPtr<nsIPlacesImportExportService> importer = do_GetService(NS_PLACESIMPORTEXPORTSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = importer->ImportHTMLFromFileToFolder(localFile, folder, PR_TRUE);
-  return rv;
+  rv = importer->ImportHTMLFromFileToFolder(localFile, folder, PR_FALSE);
 #else
   nsCOMPtr<nsIRDFResource> folder;
   bms->CreateFolderInContainer(importedBookmarksTitle.get(), root, -1,
