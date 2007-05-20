@@ -410,7 +410,6 @@ function run_test() {
     var rootNode = result.root;
     rootNode.containerOpen = true;
     var cc = rootNode.childCount;
-    do_check_true(cc > 0);
     for (var i=0; i < cc; ++i) {
       var node = rootNode.getChild(i);
       if (node.type == node.RESULT_TYPE_FOLDER)
@@ -586,7 +585,6 @@ function run_test() {
     var rootNode = result.root;
     rootNode.containerOpen = true;
     var cc = rootNode.childCount;
-    do_check_true(cc > 0);
     for (var i = 0; i < cc; i++) {
       var node = rootNode.getChild(i);
 
