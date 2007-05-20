@@ -1001,6 +1001,7 @@ PlacesController.prototype = {
     var selectedNode = this._view.selectedNode;
     var txn = new PlacesSetBookmarksToolbarTransaction(selectedNode.itemId);
     PlacesUtils.tm.doTransaction(txn);
+    return true;
   },
 
 
