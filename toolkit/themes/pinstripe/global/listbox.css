@@ -76,8 +76,8 @@ listitem[selected="true"] {
 }
 
 listbox:focus > listitem[selected="true"] {  
-   background-color: -moz-mac-alternateprimaryhighlight;
-   color: #FFFFFF;
+   background-color: Highlight;
+   color: HighlightText;
 }
 
 /* ::::: listheader ::::: */
