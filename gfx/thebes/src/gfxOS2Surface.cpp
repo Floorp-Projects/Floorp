@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * Peter Weilbacher <mozilla@Weilbacher.org>.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Portions created by the Initial Developer are Copyright (C) 2006-2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -46,14 +46,14 @@
 gfxOS2Surface::gfxOS2Surface(HPS aPS, const gfxIntSize& aSize)
     : mOwnsPS(PR_FALSE), mPS(aPS), mSize(aSize)
 {
-#ifdef DEBUG_thebes
+#ifdef DEBUG_thebes_2
     printf("gfxOS2Surface::gfxOS2Surface(HPS, ...)\n");
 #endif
 
     cairo_surface_t *surf = cairo_os2_surface_create(mPS, mSize.width, mSize.height);
-#ifdef DEBUG_thebes
-    printf("  type(%#x)=%d (own=%d, h/w=%d/%d)\n", surf, cairo_surface_get_type(surf),
-           mOwnsPS, mSize.width, mSize.height);
+#ifdef DEBUG_thebes_2
+    printf("  type(%#x)=%d (own=%d, h/w=%d/%d)\n", (unsigned int)surf,
+           cairo_surface_get_type(surf), mOwnsPS, mSize.width, mSize.height);
 #endif
     cairo_surface_mark_dirty(surf);
     Init(surf);
@@ -61,7 +61,7 @@ gfxOS2Surface::gfxOS2Surface(HPS aPS, const gfxIntSize& aSize)
 
 gfxOS2Surface::gfxOS2Surface(HWND aWnd)
 {
-#ifdef DEBUG_thebes
+#ifdef DEBUG_thebes_2
     printf("gfxOS2Surface::gfxOS2Surface(HWND)\n");
 #endif
 
@@ -80,8 +80,8 @@ gfxOS2Surface::gfxOS2Surface(HWND aWnd)
     if (mSize.width == 0) mSize.width = 10;   // XXX fake some surface area to make
     if (mSize.height == 0) mSize.height = 10; // cairo_os2_surface_create() return something sensible
     cairo_surface_t *surf = cairo_os2_surface_create(mPS, mSize.width, mSize.height);
-#ifdef DEBUG_thebes
-    printf("  type(%#x)=%d (own=%d, h/w=%d/%d)\n", surf,
+#ifdef DEBUG_thebes_2
+    printf("  type(%#x)=%d (own=%d, h/w=%d/%d)\n", (unsigned int)surf,
            cairo_surface_get_type(surf), mOwnsPS, mSize.width, mSize.height);
 #endif
     cairo_os2_surface_set_hwnd(surf, aWnd); // XXX is this needed here??
@@ -91,7 +91,7 @@ gfxOS2Surface::gfxOS2Surface(HWND aWnd)
 
 gfxOS2Surface::~gfxOS2Surface()
 {
-#ifdef DEBUG_thebes
+#ifdef DEBUG_thebes_2
     printf("gfxOS2Surface::~gfxOS2Surface()\n");
 #endif
 
