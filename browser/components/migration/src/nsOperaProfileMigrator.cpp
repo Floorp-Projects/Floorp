@@ -1042,8 +1042,8 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
 
   nsCOMPtr<nsILineInputStream> lineInputStream(do_QueryInterface(fileInputStream));
 
-#ifdef MOZ_PLACES_BOOKMARKS
   nsresult rv;
+#ifdef MOZ_PLACES_BOOKMARKS
   nsCOMPtr<nsINavBookmarksService> bms(do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
   PRInt64 root;
@@ -1106,7 +1106,19 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
     ClearToolbarFolder(bms, toolbar);
 #endif
 
-  return ParseBookmarksFolder(lineInputStream, parentFolder, toolbar, bms);
+  rv = ParseBookmarksFolder(lineInputStream, parentFolder, toolbar, bms);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef MOZ_PLACES_BOOKMARKS
+  // after importing the favorites, 
+  // we need to set this pref so that on startup
+  // we don't blow away what we just imported
+  nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  NS_ENSURE_TRUE(pref, NS_ERROR_FAILURE);
+  rv = pref->SetBoolPref("browser.places.importBookmarksHTML", PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
+  return rv;
 }
 
 #if defined(XP_WIN) || (defined(XP_UNIX) && !defined(XP_MACOSX))
