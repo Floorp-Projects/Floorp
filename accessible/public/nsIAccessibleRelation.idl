@@ -1,0 +1,164 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Alexander Surkov <surkov.alexander@gmail.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+
+interface nsIAccessible;
+
+/**
+ * This interface gives access to an accessible's set of relations.
+ * Be carefull, do not change constants until ATK has a structure to map gecko
+ * constants into ATK constants.
+ */
+[scriptable, uuid(f42a1589-70ab-4704-877f-4a9162bbe188)]
+interface nsIAccessibleRelation : nsISupports
+{
+
+  const unsigned long RELATION_NUL = 0x00;
+
+  /**
+   * Some attribute of this object is affected by a target object.
+   */
+  const unsigned long RELATION_CONTROLLED_BY = 0x01;
+
+  /**
+   * This object is interactive and controls some attribute of a target object.
+   */
+  const unsigned long RELATION_CONTROLLER_FOR = 0x02;
+
+  /**
+   * This object is label for a target object.
+   */
+  const unsigned long RELATION_LABEL_FOR = 0x03;
+
+  /**
+   * This object is labelled by a target object.
+   */
+  const unsigned long RELATION_LABELLED_BY = 0x04;
+
+  /**
+   * This object is a member of a group of one or more objects. When there is
+   * more than one object in the group each member may have one and the same
+   * target, e.g. a grouping object.  It is also possible that each member has
+   * multiple additional targets, e.g. one for every other member in the group.
+   */
+  const unsigned long RELATION_MEMBER_OF = 0x05;
+
+  /**
+   * This object is a child of a target object.
+   */
+  const unsigned long RELATION_NODE_CHILD_OF = 0x06;
+
+  /**
+   * Content flows from this object to a target object, i.e. has content that
+   * flows logically to another object in a sequential way, e.g. text flow.
+   */
+  const unsigned long RELATION_FLOWS_TO = 0x07;
+
+  /**
+   * Content flows to this object from a target object, i.e. has content that
+   * flows logically from another object in a sequential way, e.g. text flow.
+   */
+  const unsigned long RELATION_FLOWS_FROM = 0x08;
+
+  /**
+   * This object is a sub window of a target object.
+   */
+  const unsigned long RELATION_SUBWINDOW_OF = 0x09;
+
+  /**
+   * This object embeds a target object. This relation can be used on the
+   * OBJID_CLIENT accessible for a top level window to show where the content
+   * areas are.
+   */
+  const unsigned long RELATION_EMBEDS = 0x0a;
+
+  /**
+   * This object is embedded by a target object.
+   */
+  const unsigned long RELATION_EMBEDDED_BY = 0x0b;
+
+  /**
+   * This object is a transient component related to the target object. When
+   * this object is activated the target object doesn't loose focus.
+   */
+  const unsigned long RELATION_POPUP_FOR = 0x0c;
+
+  /**
+   * This object is a parent window of the target object.
+   */
+  const unsigned long RELATION_PARENT_WINDOW_OF = 0x0d;
+
+  /**
+   * This object is described by the target object.
+   */
+  const unsigned long RELATION_DESCRIBED_BY = 0x0e;
+
+  /**
+   * This object is describes the target object.
+   */
+  const unsigned long RELATION_DESCRIPTION_FOR = 0x0f;
+
+  /**
+   * Part of a form/dialog with a related default button. It is used for
+   * MSAA only, no for IA2 nor ATK.
+   */
+  const unsigned long RELATION_DEFAULT_BUTTON = 0x4000;
+
+  /**
+   * Returns the type of the relation.
+   */
+  readonly attribute unsigned long relationType;
+
+  /**
+   * Returns the number of targets for this relation.
+   */
+  readonly attribute unsigned long targetsCount;
+
+  /**
+   * Returns one accessible relation target.
+   * @param index - 0 based index of relation target.
+   */
+  nsIAccessible getTarget(in unsigned long index);
+
+  /**
+   * Returns multiple accessible relation targets.
+   */
+  nsIArray getTargets();
+};

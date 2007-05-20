@@ -997,16 +997,16 @@ refRelationSetCB(AtkObject *aAtkObj)
     AtkObject *accessible_array[1];
     AtkRelation* relation;
     
-    PRUint32 relationType[] = {nsIAccessible::RELATION_LABELLED_BY,
-                               nsIAccessible::RELATION_LABEL_FOR,
-                               nsIAccessible::RELATION_NODE_CHILD_OF,
-                               nsIAccessible::RELATION_CONTROLLED_BY,
-                               nsIAccessible::RELATION_CONTROLLER_FOR,
-                               nsIAccessible::RELATION_EMBEDS,
-                               nsIAccessible::RELATION_FLOWS_TO,
-                               nsIAccessible::RELATION_FLOWS_FROM,
-                               nsIAccessible::RELATION_DESCRIBED_BY,
-                               nsIAccessible::RELATION_DESCRIPTION_FOR,
+    PRUint32 relationType[] = {nsIAccessibleRelation::RELATION_LABELLED_BY,
+                               nsIAccessibleRelation::RELATION_LABEL_FOR,
+                               nsIAccessibleRelation::RELATION_NODE_CHILD_OF,
+                               nsIAccessibleRelation::RELATION_CONTROLLED_BY,
+                               nsIAccessibleRelation::RELATION_CONTROLLER_FOR,
+                               nsIAccessibleRelation::RELATION_EMBEDS,
+                               nsIAccessibleRelation::RELATION_FLOWS_TO,
+                               nsIAccessibleRelation::RELATION_FLOWS_FROM,
+                               nsIAccessibleRelation::RELATION_DESCRIBED_BY,
+                               nsIAccessibleRelation::RELATION_DESCRIPTION_FOR,
                                };
 
     for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(relationType); i++) {

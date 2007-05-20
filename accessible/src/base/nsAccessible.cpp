@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAccessible.h"
+#include "nsAccessibleRelation.h"
 #include "nsIAccessibleDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMNSDocument.h"
@@ -2687,7 +2688,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
   // Search for the related DOM node according to the specified "relation type"
   switch (aRelationType)
   {
-  case RELATION_LABEL_FOR:
+  case nsIAccessibleRelation::RELATION_LABEL_FOR:
     {
       if (content->Tag() == nsAccessibilityAtoms::label) {
         nsIAtom *relatedIDAttr = content->IsNodeOfType(nsINode::eHTML) ?
@@ -2701,7 +2702,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
       }
       break;
     }
-  case RELATION_LABELLED_BY:
+  case nsIAccessibleRelation::RELATION_LABELLED_BY:
     {
       content->GetAttr(kNameSpaceID_WAIProperties,
                        nsAccessibilityAtoms::labelledby, relatedID);
@@ -2710,7 +2711,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
       }
       break;
     }
-  case RELATION_DESCRIBED_BY:
+  case nsIAccessibleRelation::RELATION_DESCRIBED_BY:
     {
       content->GetAttr(kNameSpaceID_WAIProperties,
                        nsAccessibilityAtoms::describedby, relatedID);
@@ -2724,7 +2725,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
       }
       break;
     }
-  case RELATION_DESCRIPTION_FOR:
+  case nsIAccessibleRelation::RELATION_DESCRIPTION_FOR:
     {
       const PRUint32 kAncestorLevelsToSearch = 3;
       relatedNode =
@@ -2741,35 +2742,35 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
       }
       break;
     }
-  case RELATION_NODE_CHILD_OF:
+  case nsIAccessibleRelation::RELATION_NODE_CHILD_OF:
     {
       relatedNode = FindNeighbourPointingToThis(nsAccessibilityAtoms::owns);
       break;
     }
-  case RELATION_CONTROLLED_BY:
+  case nsIAccessibleRelation::RELATION_CONTROLLED_BY:
     {
       relatedNode = FindNeighbourPointingToThis(nsAccessibilityAtoms::controls);
       break;
     }
-  case RELATION_CONTROLLER_FOR:
+  case nsIAccessibleRelation::RELATION_CONTROLLER_FOR:
     {
       content->GetAttr(kNameSpaceID_WAIProperties,
                        nsAccessibilityAtoms::controls, relatedID);
       break;
     }
-  case RELATION_FLOWS_TO:
+  case nsIAccessibleRelation::RELATION_FLOWS_TO:
     {
       content->GetAttr(kNameSpaceID_WAIProperties,
                        nsAccessibilityAtoms::flowto, relatedID);
       break;
     }
-  case RELATION_FLOWS_FROM:
+  case nsIAccessibleRelation::RELATION_FLOWS_FROM:
     {
       relatedNode = FindNeighbourPointingToThis(nsAccessibilityAtoms::flowto);
       break;
     }
 
-  case RELATION_DEFAULT_BUTTON:
+  case nsIAccessibleRelation::RELATION_DEFAULT_BUTTON:
     {
       if (content->IsNodeOfType(nsINode::eHTML)) {
         nsCOMPtr<nsIForm> form;
@@ -2837,12 +2838,70 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
 
   // Return the corresponding accessible if the related DOM node is found
   if (relatedNode) {
-    nsCOMPtr<nsIAccessibilityService> accService =
-      do_GetService("@mozilla.org/accessibilityService;1");
+    nsCOMPtr<nsIAccessibilityService> accService = GetAccService();
     NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
     return accService->GetAccessibleInWeakShell(relatedNode, mWeakShell, aRelated);
   }
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsAccessible::GetRelationsCount(PRUint32 *aCount)
+{
+  NS_ENSURE_ARG_POINTER(aCount);
+  *aCount = 0;
+
+  nsCOMPtr<nsIArray> relations;
+  nsresult rv = GetRelations(getter_AddRefs(relations));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return relations->GetLength(aCount);
+}
+
+NS_IMETHODIMP
+nsAccessible::GetRelation(PRUint32 aIndex, nsIAccessibleRelation **aRelation)
+{
+  NS_ENSURE_ARG_POINTER(aRelation);
+  *aRelation = nsnull;
+
+  nsCOMPtr<nsIArray> relations;
+  nsresult rv = GetRelations(getter_AddRefs(relations));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIAccessibleRelation> relation;
+  rv = relations->QueryElementAt(aIndex, NS_GET_IID(nsIAccessibleRelation),
+                                 getter_AddRefs(relation));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_IF_ADDREF(*aRelation = relation);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsAccessible::GetRelations(nsIArray **aRelations)
+{
+  NS_ENSURE_ARG_POINTER(aRelations);
+
+  nsCOMPtr<nsIMutableArray> relations = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  NS_ENSURE_TRUE(relations, NS_ERROR_OUT_OF_MEMORY);
+
+  // Latest nsIAccessibleRelation is RELATION_DESCRIPTION_FOR (0xof)
+  for (PRUint32 relType = 0; relType < 0x0f; ++relType) {
+    nsCOMPtr<nsIAccessible> accessible;
+    nsresult rv = GetAccessibleRelated(relType, getter_AddRefs(accessible));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (accessible) {
+      nsCOMPtr<nsIAccessibleRelation> relation =
+        new nsAccessibleRelation(relType, accessible);
+      NS_ENSURE_TRUE(relation, NS_ERROR_OUT_OF_MEMORY);
+
+      relations->AppendElement(relation, PR_FALSE);
+    }
+  }
+
+  NS_ADDREF(*aRelations = relations);
+  return NS_OK;
 }
 
 /* void extendSelection (); */

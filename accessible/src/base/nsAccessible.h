@@ -39,15 +39,18 @@
 #ifndef _nsAccessible_H_
 #define _nsAccessible_H_
 
-#include "nsIAccessibleRole.h"
-#include "nsIAccessibleStates.h"
 #include "nsAccessNodeWrap.h"
 #include "nsAccessibilityUtils.h"
+
 #include "nsIAccessible.h"
 #include "nsPIAccessible.h"
 #include "nsIAccessibleHyperLink.h"
 #include "nsIAccessibleSelectable.h"
 #include "nsIAccessibleValue.h"
+#include "nsIAccessibleRole.h"
+#include "nsIAccessibleStates.h"
+#include "nsIAccessibleRelation.h"
+
 #include "nsIDOMNodeList.h"
 #include "nsINameSpaceManager.h"
 #include "nsWeakReference.h"
