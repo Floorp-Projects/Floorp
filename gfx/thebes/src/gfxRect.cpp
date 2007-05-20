@@ -87,3 +87,48 @@ gfxRect::Round()
     size.width = x1 - x0;
     size.height = y1 - y0;
 }
+
+/* Clamp r to CAIRO_COORD_MIN .. CAIRO_COORD_MAX
+ * these are to be device coordinates.
+ */
+
+#define CAIRO_COORD_MAX (16382.0)
+#define CAIRO_COORD_MIN (-16383.0)
+
+void
+gfxRect::Condition()
+{
+    // if either x or y is way out of bounds;
+    // note that we don't handle negative w/h here
+    if (pos.x > CAIRO_COORD_MAX) {
+        pos.x = CAIRO_COORD_MAX;
+        size.width = 0.0;
+    } 
+
+    if (pos.y > CAIRO_COORD_MAX) {
+        pos.y = CAIRO_COORD_MAX;
+        size.height = 0.0;
+    }
+
+    if (pos.x < CAIRO_COORD_MIN) {
+        size.width += pos.x - CAIRO_COORD_MIN;
+        if (size.width < 0.0)
+            size.width = 0.0;
+        pos.x = CAIRO_COORD_MIN;
+    }
+
+    if (pos.y < CAIRO_COORD_MIN) {
+        size.height += pos.y - CAIRO_COORD_MIN;
+        if (size.height < 0.0)
+            size.height = 0.0;
+        pos.y = CAIRO_COORD_MIN;
+    }
+
+    if (pos.x + size.width > CAIRO_COORD_MAX) {
+        size.width = CAIRO_COORD_MAX - pos.x;
+    }
+
+    if (pos.y + size.height > CAIRO_COORD_MAX) {
+        size.height = CAIRO_COORD_MAX - pos.y;
+    }
+}
