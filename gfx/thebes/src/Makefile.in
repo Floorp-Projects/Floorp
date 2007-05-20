@@ -77,6 +77,7 @@ CPPSRCS	+=	gfxOS2Fonts.cpp \
 		gfxOS2Platform.cpp \
 		gfxOS2Surface.cpp \
 		nsUnicodeRange.cpp \
+		gfxFontconfigUtils.cpp \
 		$(NULL)
 EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS)
 REQUIRES += uconv
@@ -150,5 +151,9 @@ CXXFLAGS += $(MOZ_PANGO_CFLAGS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
+CXXFLAGS += $(CAIRO_FT_CFLAGS)
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CXXFLAGS += $(CAIRO_FT_CFLAGS)
 endif
