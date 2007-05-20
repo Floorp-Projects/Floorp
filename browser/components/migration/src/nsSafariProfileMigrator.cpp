@@ -977,7 +977,7 @@ nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
       if (children) {
         rv = ParseBookmarksFolder(children, folder, bms, PR_TRUE);
 #ifdef MOZ_PLACES_BOOKMARKS
-        if (NS_SUCCEEDED(rv) {
+        if (NS_SUCCEEDED(rv)) {
           // after importing the favorites, 
           // we need to set this pref so that on startup
           // we don't blow away what we just imported
