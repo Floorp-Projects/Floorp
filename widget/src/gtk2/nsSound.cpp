@@ -96,7 +96,8 @@ nsSound::~nsSound()
     /* see above comment */
     if (esdref != -1) {
         EsdCloseType EsdClose = (EsdCloseType) PR_FindFunctionSymbol(elib, "esd_close");
-        (*EsdClose)(esdref);
+        if (EsdClose)
+            (*EsdClose)(esdref);
         esdref = -1;
     }
 }
@@ -179,6 +180,11 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
     PRUint16 format, channels = 1, bits_per_sample = 0;
     const PRUint8 *audio = nsnull;
     size_t audio_len = 0;
+
+    if (dataLen < 4) {
+        NS_WARNING("Sound stream too short to determine its type");
+        return NS_ERROR_FAILURE;
+    }
 
     if (memcmp(data, "RIFF", 4)) {
 #ifdef DEBUG
@@ -270,7 +276,8 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
     EsdPlayStreamType EsdPlayStream = 
         (EsdPlayStreamType) PR_FindFunctionSymbol(elib, 
                                                   "esd_play_stream");
-    // XXX what if that fails? (Bug 241738)
+    if (!EsdPlayStream)
+        return NS_ERROR_FAILURE;
 
     mask = ESD_PLAY | ESD_STREAM;
 
@@ -310,6 +317,10 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
       EsdAudioOpenType EsdAudioOpen = (EsdAudioOpenType) PR_FindFunctionSymbol(elib, "esd_audio_open");
       EsdAudioWriteType EsdAudioWrite = (EsdAudioWriteType) PR_FindFunctionSymbol(elib, "esd_audio_write");
       EsdAudioCloseType EsdAudioClose = (EsdAudioCloseType) PR_FindFunctionSymbol(elib, "esd_audio_close");
+
+      if (!esd_audio_format || !esd_audio_rate ||
+          !EsdAudioOpen || !EsdAudioWrite || !EsdAudioClose)
+          return NS_ERROR_FAILURE;
 
       *esd_audio_format = mask;
       *esd_audio_rate = samples_per_sec;
