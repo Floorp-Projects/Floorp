@@ -937,6 +937,9 @@ static inline void SF(const char *fmt, ...) {}
 static inline void SX(gfxContext *ctx) {}
 #endif
 
+// the static order in which we paint sides
+static const PRUint8 gBorderSideOrder[] = { NS_SIDE_TOP, NS_SIDE_RIGHT, NS_SIDE_BOTTOM, NS_SIDE_LEFT };
+
 /*
  * Figure out whether we need to draw using separate side rendering or
  * not.
@@ -957,10 +960,8 @@ ShouldDoSeparateSides (const nsStyleBorder& aBorderStyle,
   nscolor sideColor;
   nsBorderColors* compositeColors = nsnull;
 
-  static PRUint8 sideOrder[] = { NS_SIDE_BOTTOM, NS_SIDE_LEFT, NS_SIDE_TOP, NS_SIDE_RIGHT };
-
   for (int i = 0; i < 4; i++) {
-    PRUint8 side = sideOrder[i];
+    PRUint8 side = gBorderSideOrder[i];
     PRUint8 borderRenderStyle = aBorderStyle.GetBorderStyle(side);
 
     // always do separate sides for borders where all 4 sides wouldn't
@@ -1454,7 +1455,7 @@ DoSideClipPath(gfxContext *ctx,
         end[1] = end[0] + ps * k;
       }
     }
-  } else if (startType == SIDE_CLIP_RECTANGLE) {
+  } else if (endType == SIDE_CLIP_RECTANGLE) {
     switch (whichSide) {
       case NS_SIDE_TOP:
         end[0] = gfxPoint(iRect.TopRight().x, oRect.TopRight().y);
@@ -2214,8 +2215,6 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   /* Get our conversion values */
   nscoord twipsPerPixel = aPresContext->DevPixelsToAppUnits(1);
 
-  static PRUint8 sideOrder[] = { NS_SIDE_BOTTOM, NS_SIDE_LEFT, NS_SIDE_TOP, NS_SIDE_RIGHT };
-
   nsRefPtr<gfxContext> ctx = (gfxContext*)
     aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
 
@@ -2346,10 +2345,10 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   // DrawBorderSides draws the entire border in one go.
   int numSides = doSeparateSides ? 4 : 1;
   for (int i = 0; i < numSides; i++) {
-    PRUint8 side = sideOrder[i];
+    PRUint8 side = gBorderSideOrder[i];
 
-    // skip this side if it's, well, skipped
     if (doSeparateSides) {
+      // skip this side if it's, well, skipped
       if (aSkipSides & (1 << side))
         continue;
 
@@ -2371,6 +2370,16 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
       // corners of iRect and oRect.
       DoSideClipPath(ctx, iRect, oRect, lRect, side, aBorderStyle, borderRadii);
       ctx->Clip();
+
+#if 0
+      switch (i) {
+      case 0: ctx->SetColor(gfxRGBA(0.0,1.0,0.0,0.5)); break;
+      case 1: ctx->SetColor(gfxRGBA(1.0,0.0,0.0,0.5)); break;
+      case 2: ctx->SetColor(gfxRGBA(0.0,1.0,1.0,0.5)); break;
+      case 3: ctx->SetColor(gfxRGBA(0.0,0.0,1.0,0.5)); break;
+      }
+      ctx->Paint();
+#endif
     }
 
     // Draw the whole border along lRect.  If we're not doing doSeparateSides,
@@ -2401,6 +2410,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
                       doSeparateSides, side, aSkipSides,
                       twipsPerPixel,
                       haveBorderRadius ? borderRadii : nsnull);
+      SN("----------------");
     }
 
     if (doSeparateSides)
@@ -2634,11 +2644,9 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
   // (since all 4 are identical) and not set any clip so that
   // DrawBorderSides draws the entire border in one go.
 
-  static PRUint8 sideOrder[] = { NS_SIDE_BOTTOM, NS_SIDE_LEFT, NS_SIDE_TOP, NS_SIDE_RIGHT };
-
   int numSides = doSeparateSides ? 4 : 1;
   for (int i = 0; i < numSides; i++) {
-    PRUint8 side = sideOrder[i];
+    PRUint8 side = gBorderSideOrder[i];
 
     // skip this side if it's, well, skipped
     if (doSeparateSides) {
