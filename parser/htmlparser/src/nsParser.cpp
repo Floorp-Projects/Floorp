@@ -1038,6 +1038,12 @@ nsParser::GetRootContextKey()
 NS_IMETHODIMP
 nsParser::Terminate(void)
 {
+  // We should only call DidBuildModel once, so don't do anything if this is
+  // the second time that Terminate has been called.
+  if (mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING) {
+    return NS_OK;
+  }
+
   nsresult result = NS_OK;
   // XXX - [ until we figure out a way to break parser-sink circularity ]
   // Hack - Hold a reference until we are completely done...
