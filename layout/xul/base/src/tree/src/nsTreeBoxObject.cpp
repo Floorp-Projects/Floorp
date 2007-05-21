@@ -120,9 +120,12 @@ static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
       *aResult = content;
       NS_ADDREF(*aResult);
       break;
-    }
-    else if (content->IsNodeOfType(nsINode::eELEMENT) &&
-             !ni->Equals(nsGkAtoms::_template, kNameSpaceID_XUL)) {
+    } else if (ni->Equals(nsGkAtoms::tree, kNameSpaceID_XUL)) {
+      // There are nesting tree elements. Only the innermost should
+      // find the treechilren.
+      break;
+    } else if (content->IsNodeOfType(nsINode::eELEMENT) &&
+               !ni->Equals(nsGkAtoms::_template, kNameSpaceID_XUL)) {
       FindBodyElement(content, aResult);
       if (*aResult)
         break;
