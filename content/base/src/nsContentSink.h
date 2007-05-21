@@ -218,6 +218,7 @@ private:
 protected:
 
   void ContinueInterruptedParsingAsync();
+  void ContinueInterruptedParsingIfEnabled();
   void ContinueInterruptedParsing();
 
   nsCOMPtr<nsIDocument>         mDocument;
