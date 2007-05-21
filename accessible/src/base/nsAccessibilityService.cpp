@@ -1216,8 +1216,9 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   // say what kind of accessible to create.
   nsresult rv = GetAccessibleByType(aNode, getter_AddRefs(newAcc));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!newAcc && !content->IsNodeOfType(nsINode::eHTML)) {
+  
+  PRBool isHTML = content->IsNodeOfType(nsINode::eHTML);
+  if (!newAcc && !isHTML) {
     if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
              content->Tag() == nsAccessibilityAtoms::svg) {
       newAcc = new nsEnumRoleAccessible(aNode, aWeakShell,
@@ -1278,7 +1279,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   // correspond to the doc accessible and will be created in any case
   if (!newAcc && content->Tag() != nsAccessibilityAtoms::body && content->GetParent() && 
       (content->IsFocusable() ||
-       nsAccessibilityUtils::HasListener(content, NS_LITERAL_STRING("click")) ||
+      (isHTML && nsAccessibilityUtils::HasListener(content, NS_LITERAL_STRING("click"))) ||
        content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::describedby) ||
        content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::labelledby) ||
        content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::required) ||
@@ -1287,7 +1288,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     // This content is focusable or has an interesting dynamic content accessibility property.
     // If it's interesting we need it in the accessibility hierarchy so that events or
     // other accessibles can point to it, or so that it can hold a state, etc.
-    if (content->IsNodeOfType(nsINode::eHTML)) {
+    if (isHTML) {
       // Interesting HTML container which may have selectable text and/or embedded objects
       CreateHyperTextAccessible(frame, getter_AddRefs(newAcc));
     }
