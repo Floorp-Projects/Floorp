@@ -637,7 +637,13 @@ NS_IMETHODIMP nsXULMenupopupAccessible::GetName(nsAString& _retval)
 
 NS_IMETHODIMP nsXULMenupopupAccessible::GetRole(PRUint32 *aRole)
 {
-  if (mParent && Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX) {
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    return NS_ERROR_FAILURE;
+  }
+  if ((mParent && Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX) ||
+      content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                           nsAccessibilityAtoms::autocomplete, eIgnoreCase)) {
     *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
   }
   else {
