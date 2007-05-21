@@ -348,8 +348,8 @@ nsSVGFilterResource::AcquireTargetImage(nsIDOMSVGAnimatedString* aResult,
   }
 
   if (aSurface) {
-    NS_ADDREF(mTargetImage);
     *aSurface = mTargetImage;
+    NS_ADDREF(*aSurface);
   }
   mTargetData = mTargetImage->Data();
   mStride = mTargetImage->Stride();
