@@ -1529,10 +1529,18 @@ nsContentSink::ContinueInterruptedParsing()
 }
 
 void
+nsContentSink::ContinueInterruptedParsingIfEnabled()
+{
+  if (mParser && mParser->IsParserEnabled()) {
+    mParser->ContinueInterruptedParsing();
+  }
+}
+
+void
 nsContentSink::ContinueInterruptedParsingAsync()
 {
   nsCOMPtr<nsIRunnable> ev = new nsRunnableMethod<nsContentSink>(this,
-    &nsContentSink::ContinueInterruptedParsing);
+    &nsContentSink::ContinueInterruptedParsingIfEnabled);
 
   NS_DispatchToCurrentThread(ev);
 }
