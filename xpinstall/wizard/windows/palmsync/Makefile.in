@@ -55,22 +55,10 @@ CPPSRCS		= PalmSyncInstall.cpp
 
 ifdef MOZ_XUL_APP
 XPI_NAME               = palmsync
-USE_EXTENSION_MANIFEST = 1
-NO_JAR_AUTO_REG        = 1
 # make this id as short as possible due to a bug with the palm deskop and long path names.
-# Change /mailnews/extensions/palmsync/Makefile.in and nsPalmSyncSupport.cpp if this changes.
+# Change ../Makefile.in and nsPalmSyncSupport.cpp if this changes.
 INSTALL_EXTENSION_ID   = p@m
 XPI_PKGNAME            = palmsync-$(MOZ_APP_VERSION)
-
-# We should really pull THUNDERBIRD_VERSION from
-# mail/config/version.txt but we can't be assured
-# that we've even pulled that file. So we hardcode them.
-
-XULAPP_DEFINES = \
-	-DTHUNDERBIRD_VERSION=$(THUNDERBIRD_VERSION) \
-	-DEXTENSION_VERSION=$(MOZILLA_VERSION) \
-	$(NULL)
-
 endif
 
 
