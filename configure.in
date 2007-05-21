@@ -7488,7 +7488,7 @@ if test "$MOZ_LDAP_XPCOM"; then
         else
             LDAP_LIBS='$(DIST)/lib/$(LIB_PREFIX)nsldap32v60.${IMPORT_LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)nsldappr32v60.${IMPORT_LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)nsldif32v60.${IMPORT_LIB_SUFFIX}'
         fi
-    elif test "$VACPP"; then
+    elif test "$OS_ARCH" = "OS2"; then
             LDAP_LIBS='$(DIST)/lib/$(LIB_PREFIX)ldap60.${IMPORT_LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)prldap60.${IMPORT_LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)ldif60.${IMPORT_LIB_SUFFIX}'
     else
         LDAP_LIBS='-L${DIST}/bin -L${DIST}/lib -lldap60 -lprldap60 -lldif60'
