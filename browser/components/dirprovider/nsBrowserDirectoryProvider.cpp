@@ -113,12 +113,16 @@ nsBrowserDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
   nsCOMPtr<nsIFile> file;
 
   char const* leafName = nsnull;
+#ifndef MOZ_PLACES_BOOKMARKS
   PRBool restoreBookmarksBackup = PR_FALSE;
   PRBool ensureFilePermissions = PR_FALSE;
+#endif
 
   if (!strcmp(aKey, NS_APP_BOOKMARKS_50_FILE)) {
+#ifndef MOZ_PLACES_BOOKMARKS
     ensureFilePermissions = PR_TRUE;
     restoreBookmarksBackup = PR_TRUE;
+#endif
     leafName = "bookmarks.html";
 
     nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
@@ -180,7 +184,7 @@ nsBrowserDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
 
     file->AppendNative(leafstr);
   }
-
+#ifndef MOZ_PLACES_BOOKMARKS
   PRBool exists;
   rv = file->Exists(&exists);
 
@@ -212,7 +216,7 @@ nsBrowserDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
       }
     }
   }
-
+#endif
   *aPersist = PR_TRUE;
   NS_ADDREF(*aResult = file);
 
@@ -334,7 +338,7 @@ static const nsModuleComponentInfo components[] = {
 };
 
 NS_IMPL_NSGETMODULE(BrowserDirProvider, components)
-
+#ifndef MOZ_PLACES_BOOKMARKS
 nsresult
 nsBrowserDirectoryProvider::RestoreBookmarksFromBackup(const nsACString& aLeafName,
 						       nsIFile* aParentDir,
@@ -379,7 +383,7 @@ nsBrowserDirectoryProvider::EnsureProfileFile(const nsACString& aLeafName,
 
   defaults->CopyToNative(aParentDir, aLeafName);
 }
-
+#endif
 NS_IMPL_ISUPPORTS1(nsBrowserDirectoryProvider::AppendingEnumerator,
                    nsISimpleEnumerator)
 
