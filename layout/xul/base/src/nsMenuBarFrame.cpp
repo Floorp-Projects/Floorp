@@ -621,7 +621,6 @@ nsMenuBarFrame::Escape(PRBool& aHandledFlag)
       mCurrentMenu->OpenMenu(PR_FALSE);
       NS_ENSURE_TRUE(weakFrame.IsAlive(), NS_OK);
     }
-    nsMenuDismissalListener::Shutdown();
     return NS_OK;
   }
 
