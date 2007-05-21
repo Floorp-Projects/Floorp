@@ -79,6 +79,11 @@
 #define NS_NEVER_INLINE
 #endif
 
+#ifdef __SUNPRO_C
+static int StackGrowthDirection(int *dummy1addr);
+#pragma no_inline(StackGrowthDirection)
+#endif
+
 typedef void *prword;
 
 struct align_short {
