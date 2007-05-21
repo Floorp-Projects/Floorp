@@ -411,8 +411,8 @@ gfxWindowsFont::FillLogFont(gfxFloat aSize, PRInt16 aWeight)
     mLogFont.lfWidth          = 0; 
     mLogFont.lfEscapement     = 0;
     mLogFont.lfOrientation    = 0;
-    mLogFont.lfUnderline      = (GetStyle()->decorations & NS_FONT_DECORATION_UNDERLINE) ? TRUE : FALSE;
-    mLogFont.lfStrikeOut      = (GetStyle()->decorations & NS_FONT_DECORATION_LINE_THROUGH) ? TRUE : FALSE;
+    mLogFont.lfUnderline      = FALSE;
+    mLogFont.lfStrikeOut      = FALSE;
     mLogFont.lfCharSet        = DEFAULT_CHARSET;
 #ifndef WINCE
     mLogFont.lfOutPrecision   = OUT_TT_PRECIS;
