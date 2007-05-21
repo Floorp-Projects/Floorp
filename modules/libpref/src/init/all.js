@@ -50,7 +50,6 @@
 pref("keyword.URL", "http://www.google.com/search?ie=UTF-8&oe=utf-8&q=");
 pref("keyword.enabled", false);
 pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
-pref("general.useragent.contentlocale", "chrome://navigator-region/locale/region.properties");
 
 pref("general.config.obscure_value", 13); // for MCD .cfg files
 
