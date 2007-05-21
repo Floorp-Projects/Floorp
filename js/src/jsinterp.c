@@ -3588,8 +3588,8 @@ interrupt:
                 ok = js_NewNumberValue(cx, d, &rtmp);                         \
                 if (!ok)                                                      \
                     goto out;                                                 \
-                *vp = rtmp;                                                   \
             }                                                                 \
+            *vp = rtmp;                                                       \
             (cs->format & JOF_INC) ? d++ : d--;                               \
             ok = js_NewNumberValue(cx, d, &rval);                             \
         } else {                                                              \
