@@ -85,6 +85,8 @@ nsMenuDismissalListener::GetInstance()
 nsMenuDismissalListener::Shutdown()
 {
   if (sInstance) {
+    if (sInstance->mMenuParent)
+      sInstance->mMenuParent->RemoveKeyboardNavigator();
     sInstance->Unregister();
     NS_RELEASE(sInstance);
   }
