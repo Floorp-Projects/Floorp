@@ -904,6 +904,21 @@ PostLayoutOperationCallback(ATSULayoutOperationSelector iCurrentOperation,
     return noErr;
 }
 
+static void
+AddGlyphRun(gfxTextRun *aRun, gfxAtsuiFont *aFont, PRUint32 aOffset)
+{
+    aRun->AddGlyphRun(aFont, aOffset);
+    if (!aRun->IsClusterStart(aOffset)) {
+        // Glyph runs must start at cluster boundaries. However, sometimes
+        // ATSUI matches different fonts for characters in the same cluster.
+        // If this happens, break up the cluster. It's not clear what else
+        // we can do.
+        NS_WARNING("Font mismatch inside cluster");
+        gfxTextRun::CompressedGlyph g;
+        aRun->SetCharacterGlyph(aOffset, g.SetMissing());
+    }
+}
+
 PRBool
 gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
                                const PRUnichar *aString, PRUint32 aLength,
@@ -997,7 +1012,7 @@ gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
         if (status == noErr) {
             //fprintf (stderr, "ATSUMatchFontsToText returned noErr\n");
             // everything's good, finish up
-            aRun->AddGlyphRun(atsuiFont, aSegmentStart + runStart - headerChars);
+            AddGlyphRun(aRun, atsuiFont, aSegmentStart + runStart - headerChars);
             break;
         } else if (status == kATSUFontsMatched) {
             //fprintf (stderr, "ATSUMatchFontsToText returned kATSUFontsMatched: FID %d\n", substituteFontID);
@@ -1013,14 +1028,14 @@ gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
             ATSUSetAttributes (subStyle, 1, fontTags, fontArgSizes, fontArgs);
 
             if (changedOffset > runStart) {
-                aRun->AddGlyphRun(atsuiFont, aSegmentStart + runStart - headerChars);
+                AddGlyphRun(aRun, atsuiFont, aSegmentStart + runStart - headerChars);
             }
 
             ATSUSetRunStyle (layout, subStyle, changedOffset, changedLength);
 
             gfxAtsuiFont *font = FindFontFor(substituteFontID);
             if (font) {
-                aRun->AddGlyphRun(font, aSegmentStart + changedOffset - headerChars);
+                AddGlyphRun(aRun, font, aSegmentStart + changedOffset - headerChars);
             }
             
             stylesToDispose.AppendElement(subStyle);
@@ -1028,7 +1043,7 @@ gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
             //fprintf (stderr, "ATSUMatchFontsToText returned kATSUFontsNotMatched\n");
             /* I need to select the last resort font; how the heck do I do that? */
             // Record which font is associated with these glyphs, anyway
-            aRun->AddGlyphRun(atsuiFont, aSegmentStart + runStart - headerChars);
+            AddGlyphRun(aRun, atsuiFont, aSegmentStart + runStart - headerChars);
             
             if (!closure.mUnmatchedChars) {
                 closure.mUnmatchedChars = new PRPackedBool[aLength];
