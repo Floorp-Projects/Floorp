@@ -406,7 +406,10 @@ nsSubDocumentFrame::Reflow(nsPresContext*          aPresContext,
   // Determine if we need to repaint our border, background or outline
   CheckInvalidateSizeChange(aPresContext, aDesiredSize, aReflowState);
 
+  FinishAndStoreOverflow(&aDesiredSize);
+
   // Invalidate the frame contents
+  // XXX is this really needed?
   nsRect rect(nsPoint(0, 0), GetSize());
   Invalidate(rect, PR_FALSE);
 
