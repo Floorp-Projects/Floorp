@@ -1038,7 +1038,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     // See if we can place the frame. If we can't fit it, then we
     // return now.
     if (CanPlaceFrame(pfd, reflowState, notSafeToBreak, continuingTextRun,
-                      metrics, aReflowStatus)) {
+                      savedOptionalBreakContent != nsnull, metrics,
+                      aReflowStatus)) {
       // Place the frame, updating aBounds with the final size and
       // location.  Then apply the bottom+right margins (as
       // appropriate) to the frame.
@@ -1141,6 +1142,17 @@ nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
   }
 }
 
+nscoord
+nsLineLayout::GetCurrentFrameXDistanceFromBlock()
+{
+  PerSpanData* psd;
+  nscoord x = 0;
+  for (psd = mCurrentSpan; psd; psd = psd->mParent) {
+    x += psd->mX;
+  }
+  return x;
+}
+
 /**
  * See if the frame can be placed now that we know it's desired size.
  * We can always place the frame if the line is empty. Note that we
@@ -1156,6 +1168,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
                             const nsHTMLReflowState& aReflowState,
                             PRBool aNotSafeToBreak,
                             PRBool aFrameCanContinueTextRun,
+                            PRBool aCanRollBackBeforeFrame,
                             nsHTMLReflowMetrics& aMetrics,
                             nsReflowStatus& aStatus)
 {
@@ -1288,7 +1301,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 #ifdef NOISY_CAN_PLACE_FRAME
     printf("   ==> placing overflowing textrun, requesting backup\n");
 #endif
-    if (!mLastOptionalBreakContent) {
+    if (!aCanRollBackBeforeFrame) {
       // Nowhere to roll back to, so make this fit
       return PR_TRUE;
     }
