@@ -923,6 +923,7 @@ suite/build/Makefile
 suite/common/Makefile
 suite/components/Makefile
 suite/components/xulappinfo/Makefile
+suite/installer/Makefile
 suite/locales/Makefile
 suite/profile/Makefile
 suite/profile/migration/Makefile
