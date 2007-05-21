@@ -114,6 +114,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsIFocusController.h"
 #include "nsIControllers.h"
+#include "nsXBLInsertionPoint.h"
 
 
 #include "nsCycleCollectionParticipant.h"
@@ -1692,6 +1693,20 @@ nsGenericElement::Normalize()
   return result;
 }
 
+static nsXBLBinding*
+GetFirstBindingWithContent(nsBindingManager* aBmgr, nsIContent* aBoundElem)
+{
+  nsXBLBinding* binding = aBmgr->GetBinding(aBoundElem);
+  while (binding) {
+    if (binding->GetAnonymousContent()) {
+      return binding;
+    }
+    binding = binding->GetBaseBinding();
+  }
+  
+  return nsnull;
+}
+
 nsresult
 nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                              nsIContent* aBindingParent,
@@ -1712,6 +1727,9 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                   (!aBindingParent && aParent &&
                    aParent->GetBindingParent() == GetBindingParent()),
                   "Already have a binding parent.  Unbind first!");
+  NS_PRECONDITION(!aParent || !aDocument ||
+                  !aParent->HasFlag(NODE_FORCE_XBL_BINDINGS),
+                  "Parent in document but flagged as forcing XBL");
   // XXXbz XUL's SetNativeAnonymous is all weird, so can't assert
   // anything here
   NS_PRECONDITION(IsNodeOfType(eXUL) ||
@@ -1739,6 +1757,8 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
       slots->mBindingParent = aBindingParent; // Weak, so no addref happens.
     }
   }
+
+  PRBool hadForceXBL = HasFlag(NODE_FORCE_XBL_BINDINGS);
 
   // Now set the parent and set the "Force attach xbl" flag if needed.
   if (aParent) {
@@ -1772,8 +1792,58 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     UnsetFlags(NODE_FORCE_XBL_BINDINGS);
   }
 
-  // Now recurse into our kids
+  // If NODE_FORCE_XBL_BINDINGS was set we might have anonymous children
+  // that also need to be told that they are moving.
   nsresult rv;
+  if (hadForceXBL) {
+    nsIDocument* ownerDoc = GetOwnerDoc();
+    if (ownerDoc) {
+      nsBindingManager* bmgr = ownerDoc->BindingManager();
+
+      // First check if we have a binding...
+      nsXBLBinding* contBinding =
+        GetFirstBindingWithContent(bmgr, this);
+      if (contBinding) {
+        nsCOMPtr<nsIContent> anonRoot = contBinding->GetAnonymousContent();
+        PRBool allowScripts = contBinding->AllowScripts();
+        PRUint32 i;
+        for (i = 0; i < anonRoot->GetChildCount(); ++i) {
+          nsCOMPtr<nsIContent> child = anonRoot->GetChildAt(i);
+          rv = child->BindToTree(aDocument, this, this, allowScripts);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+      }
+
+      // ...then check if we have content in insertion points
+      if (aBindingParent) {
+        nsXBLBinding* binding = bmgr->GetBinding(aBindingParent);
+        NS_ASSERTION(binding, "huh, no binding?");
+        if (binding) {
+          // These should be refcounted.
+          nsInsertionPointList* inserts =
+            binding->GetExistingInsertionPointsFor(this);
+          if (inserts) {
+            PRBool allowScripts = binding->AllowScripts();
+            PRUint32 i;
+            for (i = 0; i < inserts->Length(); ++i) {
+              nsCOMPtr<nsIContent> insertRoot =
+                inserts->ElementAt(i)->GetDefaultContent();
+              if (insertRoot) {
+                PRUint32 j;
+                for (j = 0; j < insertRoot->GetChildCount(); ++j) {
+                  nsCOMPtr<nsIContent> child = insertRoot->GetChildAt(j);
+                  rv = child->BindToTree(aDocument, this, aBindingParent, allowScripts);
+                  NS_ENSURE_SUCCESS(rv, rv);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Now recurse into our kids
   PRUint32 i;
   // Don't call GetChildCount() here since that'll make XUL generate
   // template children, which we're not in a consistent enough state for.

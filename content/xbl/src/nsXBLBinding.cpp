@@ -1252,6 +1252,18 @@ nsXBLBinding::GetInsertionPointsFor(nsIContent* aParent,
   return NS_OK;
 }
 
+nsInsertionPointList*
+nsXBLBinding::GetExistingInsertionPointsFor(nsIContent* aParent)
+{
+  if (!mInsertionPointTable) {
+    return nsnull;
+  }
+
+  nsInsertionPointList* result = nsnull;
+  mInsertionPointTable->Get(aParent, &result);
+  return result;
+}
+
 nsIContent*
 nsXBLBinding::GetInsertionPoint(nsIContent* aChild, PRUint32* aIndex)
 {
