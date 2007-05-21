@@ -116,7 +116,6 @@ nsSystemFontsMac::GetSystemFont(nsSystemFontID aID, nsString *aFontName,
     {
         aFontStyle->style       = FONT_STYLE_NORMAL;
         aFontStyle->weight      = FONT_WEIGHT_NORMAL;
-        aFontStyle->decorations = FONT_DECORATION_NONE;
 
         aFontName->AssignLiteral("sans-serif");
         aFontStyle->size = 14;
@@ -183,8 +182,6 @@ nsSystemFontsMac::GetSystemFont(nsSystemFontID aID, nsString *aFontName,
         aFontStyle->weight = FONT_WEIGHT_BOLD;
     if (fontStyle & italic)
         aFontStyle->style = FONT_STYLE_ITALIC;
-    if (fontStyle & underline)
-        aFontStyle->decorations = FONT_DECORATION_UNDERLINE;
 
     aFontStyle->systemFont = PR_TRUE;
 

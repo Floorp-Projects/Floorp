@@ -121,20 +121,16 @@ nsSystemFontsGTK2::nsSystemFontsGTK2()
   , mButtonFontName(NS_LITERAL_STRING("sans-serif"))
   , mFieldFontName(NS_LITERAL_STRING("sans-serif"))
   , mMenuFontName(NS_LITERAL_STRING("sans-serif"))
-  , mDefaultFontStyle(FONT_STYLE_NORMAL, FONT_VARIANT_NORMAL,
-                 FONT_WEIGHT_NORMAL, FONT_DECORATION_NONE,
+  , mDefaultFontStyle(FONT_STYLE_NORMAL, FONT_WEIGHT_NORMAL,
                  DEFAULT_PIXEL_FONT_SIZE, NS_LITERAL_CSTRING(""),
                  0.0f, PR_TRUE, PR_FALSE)
-  , mButtonFontStyle(FONT_STYLE_NORMAL, FONT_VARIANT_NORMAL,
-                FONT_WEIGHT_NORMAL, FONT_DECORATION_NONE,
+  , mButtonFontStyle(FONT_STYLE_NORMAL, FONT_WEIGHT_NORMAL,
                 DEFAULT_PIXEL_FONT_SIZE, NS_LITERAL_CSTRING(""),
                 0.0f, PR_TRUE, PR_FALSE)
-  , mFieldFontStyle(FONT_STYLE_NORMAL, FONT_VARIANT_NORMAL,
-               FONT_WEIGHT_NORMAL, FONT_DECORATION_NONE,
+  , mFieldFontStyle(FONT_STYLE_NORMAL, FONT_WEIGHT_NORMAL,
                DEFAULT_PIXEL_FONT_SIZE, NS_LITERAL_CSTRING(""),
                0.0f, PR_TRUE, PR_FALSE)
-  , mMenuFontStyle(FONT_STYLE_NORMAL, FONT_VARIANT_NORMAL,
-               FONT_WEIGHT_NORMAL, FONT_DECORATION_NONE,
+  , mMenuFontStyle(FONT_STYLE_NORMAL, FONT_WEIGHT_NORMAL,
                DEFAULT_PIXEL_FONT_SIZE, NS_LITERAL_CSTRING(""),
                0.0f, PR_TRUE, PR_FALSE)
 {
@@ -217,7 +213,6 @@ nsSystemFontsGTK2::GetSystemFontInfo(GtkWidget *aWidget, nsString *aFontName,
     GtkSettings *settings = gtk_widget_get_settings(aWidget);
 
     aFontStyle->style       = FONT_STYLE_NORMAL;
-    aFontStyle->decorations = FONT_DECORATION_NONE;
 
     gchar *fontname;
     g_object_get(settings, "gtk-font-name", &fontname, NULL);

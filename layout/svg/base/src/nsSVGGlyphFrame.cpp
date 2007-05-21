@@ -140,11 +140,9 @@ nsSVGGlyphFrame::DidSetStyleContext()
     langGroup.Assign(lg);
   }
 
-  // XXX decorations are ignored by gfxFontStyle - still need to implement
-  mFontStyle = new gfxFontStyle(font.style, font.variant,
-                                font.weight, font.decorations,
-                                size, langGroup, font.sizeAdjust,
-                                font.systemFont, font.familyNameQuirks);
+  mFontStyle = new gfxFontStyle(font.style, font.weight, size, langGroup,
+                                font.sizeAdjust, font.systemFont,
+                                font.familyNameQuirks);
 
   if (mFontStyle) {
     mFontGroup =

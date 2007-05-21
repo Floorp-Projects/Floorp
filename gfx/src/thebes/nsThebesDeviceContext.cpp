@@ -399,9 +399,8 @@ nsThebesDeviceContext::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
     }
 
     nsString fontName;
-    gfxFontStyle fontStyle(NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-                           FONT_WEIGHT_NORMAL, FONT_DECORATION_NONE,
-                           16.0f, NS_LITERAL_CSTRING(""), 0.0f, PR_TRUE,
+    gfxFontStyle fontStyle(NS_FONT_STYLE_NORMAL, FONT_WEIGHT_NORMAL, 16.0f,
+                           NS_LITERAL_CSTRING(""), 0.0f, PR_TRUE,
                            PR_FALSE);
     nsresult rv = gSystemFonts->GetSystemFont(aID, &fontName, &fontStyle);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -409,10 +408,10 @@ nsThebesDeviceContext::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
     aFont->name = fontName;
     aFont->style = fontStyle.style;
     aFont->systemFont = fontStyle.systemFont;
-    aFont->variant = fontStyle.variant;
+    aFont->variant = NS_FONT_VARIANT_NORMAL;
     aFont->familyNameQuirks = fontStyle.familyNameQuirks;
     aFont->weight = fontStyle.weight;
-    aFont->decorations = fontStyle.decorations;
+    aFont->decorations = NS_FONT_DECORATION_NONE;
     aFont->size = NSFloatPixelsToAppUnits(fontStyle.size, AppUnitsPerDevPixel());
     //aFont->langGroup = fontStyle.langGroup;
     aFont->sizeAdjust = fontStyle.sizeAdjust;

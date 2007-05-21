@@ -61,20 +61,11 @@ typedef struct _cairo cairo_t;
 #define FONT_STYLE_ITALIC              1
 #define FONT_STYLE_OBLIQUE             2
 
-#define FONT_VARIANT_NORMAL            0
-#define FONT_VARIANT_SMALL_CAPS        1
-
-#define FONT_DECORATION_NONE           0x0
-#define FONT_DECORATION_UNDERLINE      0x1
-#define FONT_DECORATION_OVERLINE       0x2
-#define FONT_DECORATION_STRIKEOUT      0x4
-
 #define FONT_WEIGHT_NORMAL             400
 #define FONT_WEIGHT_BOLD               700
 
 struct THEBES_API gfxFontStyle {
-    gfxFontStyle(PRUint8 aStyle, PRUint8 aVariant,
-                 PRUint16 aWeight, PRUint8 aDecoration, gfxFloat aSize,
+    gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, gfxFloat aSize,
                  const nsACString& aLangGroup,
                  float aSizeAdjust, PRPackedBool aSystemFont,
                  PRPackedBool aFamilyNameQuirks);
@@ -88,9 +79,6 @@ struct THEBES_API gfxFontStyle {
     // sources.
     PRPackedBool systemFont : 1;
 
-    // The variant of the font (normal, small-caps)
-    PRUint8 variant : 7;
-
     // True if the character set quirks (for treatment of "Symbol",
     // "Wingdings", etc.) should be applied.
     PRPackedBool familyNameQuirks : 1;
@@ -101,10 +89,6 @@ struct THEBES_API gfxFontStyle {
     // 400, 700, and 900, a weight of 898 should lead to the weight 400
     // font being used, since it is two weights lighter than 900.
     PRUint16 weight;
-
-    // The decorations on the font (underline, overline,
-    // line-through). The decorations can be binary or'd together.
-    PRUint8 decorations;
 
     // The logical size of the font, in pixels
     gfxFloat size;
