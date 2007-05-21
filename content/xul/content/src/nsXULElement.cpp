@@ -786,6 +786,28 @@ nsXULElement::MaybeAddPopupListener(nsIAtom* aLocalName)
 //
 
 void
+nsXULElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+{
+    // mControllers can own objects that are implemented
+    // in JavaScript (such as some implementations of
+    // nsIControllers.  These objects prevent their global
+    // object's script object from being garbage collected,
+    // which means JS continues to hold an owning reference
+    // to the nsGlobalWindow, which owns the document,
+    // which owns this content.  That's a cycle, so we break
+    // it here.  (It might be better to break this by releasing
+    // mDocument in nsGlobalWindow::SetDocShell, but I'm not
+    // sure whether that would fix all possible cycles through
+    // mControllers.)
+    nsDOMSlots* slots = GetExistingDOMSlots();
+    if (slots) {
+        NS_IF_RELEASE(slots->mControllers);
+    }
+
+    nsGenericElement::UnbindFromTree(aDeep, aNullParent);
+}
+
+void
 nsXULElement::SetNativeAnonymous(PRBool aAnonymous)
 {
     // XXX Workaround for bug 280541, wallpaper for bug 326644
