@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ f/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -411,8 +411,8 @@ gfxWindowsFont::FillLogFont(gfxFloat aSize, PRInt16 aWeight)
     mLogFont.lfWidth          = 0; 
     mLogFont.lfEscapement     = 0;
     mLogFont.lfOrientation    = 0;
-    mLogFont.lfUnderline      = (GetStyle()->decorations & FONT_DECORATION_UNDERLINE) ? TRUE : FALSE;
-    mLogFont.lfStrikeOut      = (GetStyle()->decorations & FONT_DECORATION_STRIKEOUT) ? TRUE : FALSE;
+    mLogFont.lfUnderline      = (GetStyle()->decorations & NS_FONT_DECORATION_UNDERLINE) ? TRUE : FALSE;
+    mLogFont.lfStrikeOut      = (GetStyle()->decorations & NS_FONT_DECORATION_LINE_THROUGH) ? TRUE : FALSE;
     mLogFont.lfCharSet        = DEFAULT_CHARSET;
 #ifndef WINCE
     mLogFont.lfOutPrecision   = OUT_TT_PRECIS;
