@@ -3204,6 +3204,11 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     /* XXX get the height right! */
     availHeight = aState.mAvailSpaceRect.height;
   }
+
+  // Make sure to enable resize optimization before we call BeginLineReflow
+  // because it might get disabled there
+  aLine->EnableResizeReflowOptimization();
+
   aLineLayout.BeginLineReflow(x, aState.mY,
                               availWidth, availHeight,
                               impactedByFloats,
@@ -3224,7 +3229,6 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   LineReflowStatus lineReflowStatus = LINE_REFLOW_OK;
   PRInt32 i;
   nsIFrame* frame = aLine->mFirstChild;
-  aLine->EnableResizeReflowOptimization();
 
   // Determine whether this is a line of placeholders for out-of-flow
   // continuations
