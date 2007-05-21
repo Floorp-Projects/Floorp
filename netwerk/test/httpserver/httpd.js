@@ -49,9 +49,10 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
+const CC = Components.Constructor;
 
 /** True if debugging output is enabled, false otherwise. */
-const DEBUG = false; // tweak manually during server hacking
+var DEBUG = false; // non-const *only* so tweakable in server tests
 
 /**
  * Asserts that the given condition holds.  If it doesn't, the given message is
@@ -131,12 +132,54 @@ function range(x, y)
 /** An object (hash) whose fields are the numbers of all HTTP error codes. */
 const HTTP_ERROR_CODES = array2obj(range(400, 417).concat(range(500, 505)));
 
+
+/**
+ * The character used to distinguish hidden files from non-hidden files, a la
+ * the leading dot in Apache.  Since that mechanism also hides files from
+ * easy display in LXR, ls output, etc. however, we choose instead to use a
+ * suffix character.  If a requested file ends with it, we append another
+ * when getting the file on the server.  If it doesn't, we just look up that
+ * file.  Therefore, any file whose name ends with exactly one of the character
+ * is "hidden" and available for use by the server.
+ */
+const HIDDEN_CHAR = "^";
+
+/**
+ * The file name suffix indicating the file containing overridden headers for
+ * a requested file.
+ */
+const HEADERS_SUFFIX = HIDDEN_CHAR + "headers" + HIDDEN_CHAR;
+
+
 /** dump(str) with a trailing "\n" -- only outputs if DEBUG */
 function dumpn(str)
 {
   if (DEBUG)
     dump(str + "\n");
 }
+
+
+/**
+ * JavaScript constructors for commonly-used classes; precreating these is a
+ * speedup over doing the same from base principles.  See the docs at
+ * http://developer.mozilla.org/en/docs/Components.Constructor for details.
+ */
+const Pipe = CC("@mozilla.org/pipe;1",
+                "nsIPipe",
+                "init");
+const FileInputStream = CC("@mozilla.org/network/file-input-stream;1",
+                           "nsIFileInputStream",
+                           "init");
+const StreamCopier = CC("@mozilla.org/network/async-stream-copier;1",
+                        "nsIAsyncStreamCopier",
+                        "init");
+const ConverterInputStream = CC("@mozilla.org/intl/converter-input-stream;1",
+                                "nsIConverterInputStream",
+                                "init");
+const WritablePropertyBag = CC("@mozilla.org/hash-property-bag;1",
+                               "nsIWritablePropertyBag2");
+const SupportsString = CC("@mozilla.org/supports-string;1",
+                          "nsISupportsString");
 
 
 /**
@@ -553,7 +596,7 @@ function defaultIndexHandler(metadata, response)
 {
   response.setHeader("Content-Type", "text/html", false);
 
-  var path = htmlEscape(metadata.path);
+  var path = htmlEscape(decodeURI(metadata.path));
 
   //
   // Just do a very basic bit of directory listings -- no need for too much
@@ -577,7 +620,10 @@ function defaultIndexHandler(metadata, response)
   while (files.hasMoreElements())
   {
     var f = files.getNext().QueryInterface(Ci.nsIFile);
-    if (!f.isHidden())
+    var name = f.leafName;
+    if (!f.isHidden() &&
+        (name.charAt(name.length - 1) != HIDDEN_CHAR ||
+         name.charAt(name.length - 2) == HIDDEN_CHAR))
       fileList.push(f);
   }
 
@@ -589,6 +635,8 @@ function defaultIndexHandler(metadata, response)
     try
     {
       var name = file.leafName;
+      if (name.charAt(name.length - 1) == HIDDEN_CHAR)
+        name = name.substring(0, name.length - 1);
       var sep = file.isDirectory() ? "/" : "";
 
       // Note: using " to delimit the attribute here because encodeURIComponent
@@ -623,6 +671,122 @@ function fileSort(a, b)
 
   var namea = a.leafName.toLowerCase(), nameb = b.leafName.toLowerCase();
   return nameb > namea ? -1 : 1;
+}
+
+
+/**
+ * Converts an externally-provided path into an internal path for use in
+ * determining file mappings.
+ *
+ * @param path
+ *   the path to convert
+ * @param encoded
+ *   true if the given path should be passed through decodeURI prior to
+ *   conversion
+ * @throws URIError
+ *   if path is incorrectly encoded
+ */
+function toInternalPath(path, encoded)
+{
+  if (encoded)
+    path = decodeURI(path);
+
+  var comps = path.split("/");
+  for (var i = 0, sz = comps.length; i < sz; i++)
+  {
+    var comp = comps[i];
+    if (comp.charAt(comp.length - 1) == HIDDEN_CHAR)
+      comps[i] = comp + HIDDEN_CHAR;
+  }
+  return comps.join("/");
+}
+
+
+/**
+ * Adds custom-specified headers for the given file to the given response, if
+ * any such headers are specified.
+ *
+ * @param file
+ *   the file on the disk which is to be written
+ * @param metadata
+ *   metadata about the incoming request
+ * @param response
+ *   the Response to which any specified headers/data should be written
+ * @throws HTTP_500
+ *   if an error occurred while processing custom-specified headers
+ */
+function maybeAddHeaders(file, metadata, response)
+{
+  var name = file.leafName;
+  if (name.charAt(name.length - 1) == HIDDEN_CHAR)
+    name = name.substring(0, name.length - 1);
+
+  var headerFile = file.parent;
+  headerFile.append(name + HEADERS_SUFFIX);
+
+  if (!headerFile.exists())
+    return;
+
+  const PR_RDONLY = 0x01;
+  var fis = new FileInputStream(headerFile, PR_RDONLY, 0444,
+                                Ci.nsIFileInputStream.CLOSE_ON_EOF);
+
+  var lis = new ConverterInputStream(fis, "UTF-8", 1024, 0x0);
+  lis.QueryInterface(Ci.nsIUnicharLineInputStream);
+
+  try
+  {
+    var line = {value: ""};
+    var more = lis.readLine(line);
+
+    if (!more && line.value == "")
+      return;
+
+
+    // request line
+
+    var status = line.value;
+    if (status.indexOf("HTTP ") == 0)
+    {
+      status = status.substring(5);
+      var space = status.indexOf(" ");
+      var code, description;
+      if (space < 0)
+      {
+        code = status;
+        description = "";
+      }
+      else
+      {
+        code = status.substring(0, space);
+        description = status.substring(space + 1, status.length);
+      }
+    
+      response.setStatusLine(metadata.httpVersion, parseInt(code, 10), description);
+
+      line.value = "";
+      more = lis.readLine(line);
+    }
+
+    // headers
+    while (more || line.value != "")
+    {
+      var header = line.value;
+      var colon = header.indexOf(":");
+
+      response.setHeader(header.substring(0, colon),
+                         header.substring(colon + 1, header.length),
+                         false); // allow overriding server-set headers
+
+      line.value = "";
+      more = lis.readLine(line);
+    }
+  }
+  catch (e)
+  {
+    dumpn("WARNING: error in headers for " + metadata.path + ": " + e);
+    throw HTTP_500;
+  }
 }
 
 
@@ -792,6 +956,8 @@ ServerHandler.prototype =
           // and clean up the response
           throw e;
         }
+
+        maybeAddHeaders(file, metadata, response);
       };
   },
 
@@ -817,6 +983,13 @@ ServerHandler.prototype =
     // conditional is required here to deal with "/".substring(1, 0) being
     // converted to "/".substring(0, 1) per the JS specification
     var key = path.length == 1 ? "" : path.substring(1, path.length - 1);
+
+    // the path-to-directory mapping code requires that the first character not
+    // be "/", or it will go into an infinite loop
+    if (key.charAt(0) == "/")
+      throw Cr.NS_ERROR_INVALID_ARG;
+
+    key = toInternalPath(key, false);
 
     if (directory)
     {
@@ -866,7 +1039,8 @@ ServerHandler.prototype =
    * @param key
    *   The field name of the handler.
    */
-  _handlerToField: function(handler, dict, key) {
+  _handlerToField: function(handler, dict, key)
+  {
     // for convenience, handler can be a function if this is run from xpcshell
     if (typeof(handler) == "function")
       dict[key] = handler;
@@ -935,6 +1109,8 @@ ServerHandler.prototype =
       // finally...
       dumpn("*** handling '" + path + "' as mapping to " + file.path);
       this._writeFileResponse(file, response);
+
+      maybeAddHeaders(file, metadata, response);
     }
     catch (e)
     {
@@ -964,10 +1140,9 @@ ServerHandler.prototype =
 
     response.setHeader("Content-Type", getTypeFromFile(file), false);
 
-    var fis = Cc["@mozilla.org/network/file-input-stream;1"]
-                .createInstance(Ci.nsIFileInputStream);
     const PR_RDONLY = 0x01;
-    fis.init(file, PR_RDONLY, 0444, Ci.nsIFileInputStream.CLOSE_ON_EOF);
+    var fis = new FileInputStream(file, PR_RDONLY, 0444,
+                                  Ci.nsIFileInputStream.CLOSE_ON_EOF);
     response.bodyOutputStream.writeFrom(fis, file.fileSize);
     fis.close();
   },
@@ -987,12 +1162,10 @@ ServerHandler.prototype =
    */
   _getFileForPath: function(path)
   {
-    var pathMap = this._pathDirectoryMap;
-
-    // first, decode path and strip the leading '/'
+    // decode and add underscores as necessary
     try
     {
-      path = decodeURI(path);
+      path = toInternalPath(path, true);
     }
     catch (e)
     {
@@ -1000,6 +1173,7 @@ ServerHandler.prototype =
     }
 
     // next, get the directory which contains this path
+    var pathMap = this._pathDirectoryMap;
 
     // An example progression of tmp for a path "/foo/bar/baz/" might be:
     // "foo/bar/baz/", "foo/bar/baz", "foo/bar", "foo", ""
@@ -1295,9 +1469,8 @@ ServerHandler.prototype =
 
         // body -- written async, because pipes deadlock if we do
         // |outStream.writeFrom(bodyStream, bodyStream.available());|
-        var copier = Cc["@mozilla.org/network/async-stream-copier;1"]
-                       .createInstance(Ci.nsIAsyncStreamCopier);
-        copier.init(bodyStream, outStream, null, true, true, 8192);
+        var copier = new StreamCopier(bodyStream, outStream, null,
+                                      true, true, 8192);
         copier.asyncCopy(copyObserver, null);
       }
       else
@@ -1565,10 +1738,8 @@ Response.prototype =
 
     if (!this._bodyOutputStream && !this._outputProcessed)
     {
-      var pipe = Cc["@mozilla.org/pipe;1"]
-                   .createInstance(Ci.nsIPipe);
       const PR_UINT32_MAX = Math.pow(2, 32) - 1;
-      pipe.init(false, false, 0, PR_UINT32_MAX, null);
+      var pipe = new Pipe(false, false, 0, PR_UINT32_MAX, null);
       this._bodyOutputStream = pipe.outputStream;
       this._bodyInputStream = pipe.inputStream;
     }
@@ -1838,16 +2009,19 @@ const headerUtils =
    */
   normalizeFieldName: function(fieldName)
   {
-     for (var i = 0, sz = fieldName.length; i < sz; i++)
-     {
-       if (!IS_TOKEN_ARRAY[fieldName.charCodeAt(i)])
-       {
-         dumpn(fieldName + " is not a valid header field name!");
-         throw Cr.NS_ERROR_INVALID_ARG;
-       }
-     }
+    if (fieldName == "")
+      throw Cr.NS_ERROR_INVALID_ARG;
 
-     return fieldName.toLowerCase();
+    for (var i = 0, sz = fieldName.length; i < sz; i++)
+    {
+      if (!IS_TOKEN_ARRAY[fieldName.charCodeAt(i)])
+      {
+        dumpn(fieldName + " is not a valid header field name!");
+        throw Cr.NS_ERROR_INVALID_ARG;
+      }
+    }
+
+    return fieldName.toLowerCase();
   },
 
   /**
@@ -2072,8 +2246,7 @@ nsHttpHeaders.prototype =
     var headers = [];
     for (var i in this._headers)
     {
-      var supports = Cc["@mozilla.org/supports-string;1"]
-                       .createInstance(Ci.nsISupportsString);
+      var supports = new SupportsString();
       supports.data = i;
       headers.push(supports);
     }
@@ -2145,8 +2318,7 @@ function RequestMetadata(port)
    * For the addition of ad-hoc properties and new functionality
    * without having to tweak nsIHttpRequestMetadata every time.
    */
-  this._bag = Cc["@mozilla.org/hash-property-bag;1"]
-                .createInstance(Ci.nsIWritablePropertyBag2);
+  this._bag = new WritablePropertyBag();
 
   /**
    * The numeric HTTP error, if any, associated with this request.  This value
@@ -2288,11 +2460,8 @@ RequestMetadata.prototype =
 
     // read the input line by line; the first line either tells us the requested
     // path or is empty, in which case the second line contains the path
-    var is = Cc["@mozilla.org/intl/converter-input-stream;1"]
-               .createInstance(Ci.nsIConverterInputStream);
-    is.init(input, "ISO-8859-1", 1024, 0xFFFD);
-
-    var lis = is.QueryInterface(Ci.nsIUnicharLineInputStream);
+    var lis = new ConverterInputStream(input, "ISO-8859-1", 1024, 0xFFFD);
+    lis.QueryInterface(Ci.nsIUnicharLineInputStream);
 
 
     this._parseRequestLine(lis);
@@ -2592,11 +2761,7 @@ const module =
 };
 
 
-/**
- * NSGetModule, so this code can be used as a JS component.  Whether multiple
- * servers can run at once is currently questionable, but the code certainly
- * isn't very far from supporting it.
- */
+/** NSGetModule, so this code can be used as a JS component. */
 function NSGetModule(compMgr, fileSpec)
 {
   return module;
@@ -2639,6 +2804,9 @@ function server(port, basePath)
     lp.initWithPath(basePath);
   }
 
+  // if you're running this, you probably want to see debugging info
+  DEBUG = true;
+
   var srv = new nsHttpServer();
   if (lp)
     srv.registerDirectory("/", lp);
@@ -2653,4 +2821,6 @@ function server(port, basePath)
   // get rid of any pending requests
   while (thread.hasPendingEvents())
     thread.processNextEvent(true);
+
+  DEBUG = false;
 }

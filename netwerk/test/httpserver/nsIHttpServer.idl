@@ -123,7 +123,7 @@ interface nsIHttpServer : nsIServerSocketListener
    *   handler if one exists or the server default handler otherwise.  Fallback
    *   will never occur from a user-provided handler that throws to the same
    *   handler as provided by the server, e.g. a throwing user 404 falls back to
-   *   400, not a server-provided 400 that might not throw.
+   *   400, not a server-provided 404 that might not throw.
    * @note
    *   If the error handler handles HTTP 500 and throws, behavior is undefined.
    */
