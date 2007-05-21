@@ -4177,7 +4177,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                               rval);
 #else
                 if (lastop == JSOP_GETTER || lastop == JSOP_SETTER) {
-                    if (!ATOM_IS_STRING(atom) ||
+                    if (!atom || !ATOM_IS_STRING(atom) ||
                         !ATOM_IS_IDENTIFIER(atom) ||
                         ATOM_IS_KEYWORD(atom) ||
                         ((ss->opcodes[ss->top+1] != JSOP_ANONFUNOBJ ||
