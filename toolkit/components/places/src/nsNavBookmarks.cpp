@@ -2172,7 +2172,7 @@ nsNavBookmarks::SetKeywordForBookmark(PRInt64 aBookmarkId, const nsAString& aKey
   mozStorageTransaction transaction(DBConn(), PR_FALSE);
   nsresult rv;
   PRBool results;
-  PRInt64 keywordId;
+  PRInt64 keywordId = 0;
 
   if (!kwd.IsEmpty()) {
     //  Attempt to find pre-existing keyword record
