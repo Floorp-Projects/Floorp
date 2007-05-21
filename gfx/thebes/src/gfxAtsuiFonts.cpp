@@ -476,9 +476,17 @@ FindTextRunSegmentLength(gfxTextRun *aTextRun, PRUint32 aOffset, PRUint32 aMaxLe
 PRUint32
 gfxAtsuiFontGroup::GuessMaximumStringLength()
 {
-    gfxFloat maxAdvance = GetFontAt(0)->GetMetrics().maxAdvance;
-    // ATSUI can't handle offsets of more than 32K pixels
-    PRUint32 chars = 0x7FFF/PRUint32(maxAdvance);
+    // ATSUI can't handle offsets of more than 32K pixels. This function
+    // guesses a string length that ATSUI will be able to handle. We want to
+    // get the right answer most of the time, but if we're wrong in either
+    // direction, we won't break things: if we guess too large, our glyph
+    // processing will detect ATSUI's failure and retry with a smaller limit.
+    // If we guess too small, we'll just break the string into more pieces
+    // than we strictly needed to.
+    // The basic calculation is just 32k pixels divided by the font max-advance,
+    // but we need to be a bit careful to avoid math errors.
+    PRUint32 maxAdvance = PRUint32(GetFontAt(0)->GetMetrics().maxAdvance);
+    PRUint32 chars = 0x7FFF/PR_MAX(1, maxAdvance);
     return PR_MAX(1, chars);
 }
 
