@@ -59,7 +59,7 @@
 #include "nsIDocument.h"
 #include "nsIFrame.h"
 #include "nsSVGAnimatedInteger.h"
-#include "gfxColor.h"
+#include "gfxContext.h"
 
 nsSVGElement::LengthInfo nsSVGFE::sLengthInfo[4] =
 {
@@ -235,7 +235,7 @@ public:
    */
   nsresult AcquireSourceImage(nsIDOMSVGAnimatedString* aIn,
                               nsSVGFE* aFilter, PRUint8** aSourceData,
-                              cairo_surface_t** aSurface = 0);
+                              gfxImageSurface** aSurface = 0);
   /*
    * Acquiring a target image will create a new surface to be used as the
    * target image.
@@ -247,7 +247,7 @@ public:
    */
   nsresult AcquireTargetImage(nsIDOMSVGAnimatedString* aResult,
                               PRUint8** aTargetData,
-                              cairo_surface_t** aSurface = 0);
+                              gfxImageSurface** aSurface = 0);
   const nsRect& GetRect() {
     return mRect;
   }
@@ -282,7 +282,7 @@ private:
 
   nsAutoString mInput, mResult;
   nsRect mRect;
-  cairo_surface_t *mTargetImage;
+  nsRefPtr<gfxImageSurface> mTargetImage;
   nsSVGFilterInstance* mInstance;
   PRUint8 *mSourceData, *mTargetData;
   PRUint32 mWidth, mHeight;
@@ -311,24 +311,26 @@ nsSVGFilterResource::~nsSVGFilterResource()
 nsresult
 nsSVGFilterResource::AcquireSourceImage(nsIDOMSVGAnimatedString* aIn,
                                         nsSVGFE* aFilter, PRUint8** aSourceData,
-                                        cairo_surface_t** aSurface)
+                                        gfxImageSurface** aSurface)
 {
   aIn->GetAnimVal(mInput);
 
   nsRect defaultRect;
-  cairo_surface_t *surface;
-  mInstance->LookupImage(mInput, &surface, &defaultRect, mColorModel);
+  nsRefPtr<gfxImageSurface> surface;
+  mInstance->LookupImage(mInput, getter_AddRefs(surface),
+                         &defaultRect, mColorModel);
   if (!surface) {
     return NS_ERROR_FAILURE;
   }
 
   if (aSurface) {
-    *aSurface = surface;
+    *aSurface = nsnull;
+    surface.swap(*aSurface);
   }
   mInstance->GetFilterSubregion(aFilter, defaultRect, &mRect);
 
-  mSourceData = cairo_image_surface_get_data(surface);
-  mStride = cairo_image_surface_get_stride(surface);
+  mSourceData = surface->Data();
+  mStride = surface->Stride();
 
   *aSourceData = mSourceData;
   return NS_OK;
@@ -337,7 +339,7 @@ nsSVGFilterResource::AcquireSourceImage(nsIDOMSVGAnimatedString* aIn,
 nsresult
 nsSVGFilterResource::AcquireTargetImage(nsIDOMSVGAnimatedString* aResult,
                                         PRUint8** aTargetData,
-                                        cairo_surface_t** aSurface)
+                                        gfxImageSurface** aSurface)
 {
   aResult->GetAnimVal(mResult);
   mTargetImage = mInstance->GetImage();
@@ -346,12 +348,14 @@ nsSVGFilterResource::AcquireTargetImage(nsIDOMSVGAnimatedString* aResult,
   }
 
   if (aSurface) {
+    NS_ADDREF(mTargetImage);
     *aSurface = mTargetImage;
   }
-  mTargetData = cairo_image_surface_get_data(mTargetImage);
-  mStride = cairo_image_surface_get_stride(mTargetImage);
-  mWidth = cairo_image_surface_get_width(mTargetImage);
-  mHeight = cairo_image_surface_get_height(mTargetImage);
+  mTargetData = mTargetImage->Data();
+  mStride = mTargetImage->Stride();
+  gfxIntSize size = mTargetImage->GetSize();
+  mWidth = size.width;
+  mHeight = size.height;
 
   *aTargetData = mTargetData;
   return NS_OK;
@@ -365,8 +369,6 @@ nsSVGFilterResource::ReleaseTarget()
   }
   mInstance->DefineImage(mResult, mTargetImage, mRect, mColorModel);
 
-  // filter instance now owns the image
-  cairo_surface_destroy(mTargetImage);
   mTargetImage = nsnull;
 }
 
@@ -1510,13 +1512,15 @@ nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance)
 {
   nsresult rv;
   PRUint8 *sourceData, *targetData;
-  cairo_surface_t *sourceSurface, *targetSurface;
+  nsRefPtr<gfxImageSurface> sourceSurface, targetSurface;
 
   nsSVGFilterResource fr(instance,
                          GetColorModel(nsSVGFilterInstance::ColorModel::PREMULTIPLIED));
-  rv = fr.AcquireSourceImage(mIn2, this, &sourceData, &sourceSurface);
+  rv = fr.AcquireSourceImage(mIn2, this, &sourceData,
+                             getter_AddRefs(sourceSurface));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = fr.AcquireTargetImage(mResult, &targetData, &targetSurface);
+  rv = fr.AcquireTargetImage(mResult, &targetData,
+                             getter_AddRefs(targetSurface));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint16 op;
@@ -1568,29 +1572,27 @@ nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance)
   }
 
   // Cairo supports the operation we are trying to perform
-  cairo_t *cr = cairo_create(targetSurface);
-  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS) {
-    cairo_destroy(cr);
-    return NS_ERROR_FAILURE;
-  }
+  gfxContext ctx(targetSurface);
 
-  cairo_set_source_surface(cr, sourceSurface, 0, 0);
-  cairo_paint(cr);
+  ctx.SetSource(sourceSurface);
+  ctx.Paint();
 
   if (op < SVG_OPERATOR_OVER || op > SVG_OPERATOR_XOR) {
-    cairo_destroy(cr);
     return NS_ERROR_FAILURE;
   }
-  cairo_operator_t opMap[] = { CAIRO_OPERATOR_DEST, CAIRO_OPERATOR_OVER,
-                               CAIRO_OPERATOR_IN, CAIRO_OPERATOR_OUT,
-                               CAIRO_OPERATOR_ATOP, CAIRO_OPERATOR_XOR };
-  cairo_set_operator(cr, opMap[op]);
+  gfxContext::GraphicsOperator opMap[] = { gfxContext::OPERATOR_DEST,
+                                           gfxContext::OPERATOR_OVER,
+                                           gfxContext::OPERATOR_IN,
+                                           gfxContext::OPERATOR_OUT,
+                                           gfxContext::OPERATOR_ATOP,
+                                           gfxContext::OPERATOR_XOR };
+  ctx.SetOperator(opMap[op]);
 
-  rv = fr.AcquireSourceImage(mIn1, this, &sourceData, &sourceSurface);
+  rv = fr.AcquireSourceImage(mIn1, this, &sourceData,
+                             getter_AddRefs(sourceSurface));
   NS_ENSURE_SUCCESS(rv, rv);
-  cairo_set_source_surface(cr, sourceSurface, 0, 0);
-  cairo_paint(cr);
-  cairo_destroy(cr);
+  ctx.SetSource(sourceSurface);
+  ctx.Paint();
   return NS_OK;
 }
 
@@ -2266,18 +2268,15 @@ nsSVGFEMergeElement::Filter(nsSVGFilterInstance *instance)
 {
   nsresult rv;
   PRUint8 *sourceData, *targetData;
-  cairo_surface_t *sourceSurface, *targetSurface;
+  nsRefPtr<gfxImageSurface> sourceSurface, targetSurface;
 
   nsSVGFilterResource fr(instance,
                          GetColorModel(nsSVGFilterInstance::ColorModel::PREMULTIPLIED));
-  rv = fr.AcquireTargetImage(mResult, &targetData, &targetSurface);
+  rv = fr.AcquireTargetImage(mResult, &targetData,
+                             getter_AddRefs(targetSurface));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  cairo_t *cr = cairo_create(targetSurface);
-  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS) {
-    cairo_destroy(cr);
-    return NS_ERROR_FAILURE;
-  }
+  gfxContext ctx(targetSurface);
 
   PRUint32 count = GetChildCount();
   for (PRUint32 i = 0; i < count; i++) {
@@ -2288,13 +2287,13 @@ nsSVGFEMergeElement::Filter(nsSVGFilterInstance *instance)
     nsCOMPtr<nsIDOMSVGAnimatedString> str;
     node->GetIn1(getter_AddRefs(str));
 
-    rv = fr.AcquireSourceImage(str, this, &sourceData, &sourceSurface);
+    rv = fr.AcquireSourceImage(str, this, &sourceData,
+                               getter_AddRefs(sourceSurface));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    cairo_set_source_surface(cr, sourceSurface, 0, 0);
-    cairo_paint(cr);
+    ctx.SetSource(sourceSurface);
+    ctx.Paint();
   }
-  cairo_destroy(cr);
   return NS_OK;
 }
 
@@ -2705,7 +2704,7 @@ nsSVGFEFloodElement::Filter(nsSVGFilterInstance *instance)
 {
   nsresult rv;
   PRUint8 *sourceData, *targetData;
-  cairo_surface_t *targetSurface;
+  nsRefPtr<gfxImageSurface> targetSurface;
   // flood colour is sRGB
   nsSVGFilterInstance::ColorModel
     colorModel(nsSVGFilterInstance::ColorModel::SRGB, 
@@ -2714,7 +2713,8 @@ nsSVGFEFloodElement::Filter(nsSVGFilterInstance *instance)
 
   rv = fr.AcquireSourceImage(mIn1, this, &sourceData);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = fr.AcquireTargetImage(mResult, &targetData, &targetSurface);
+  rv = fr.AcquireTargetImage(mResult, &targetData,
+                             getter_AddRefs(targetSurface));
   NS_ENSURE_SUCCESS(rv, rv);
   nsRect rect = fr.GetRect();
 
@@ -2725,19 +2725,13 @@ nsSVGFEFloodElement::Filter(nsSVGFilterInstance *instance)
   nscolor floodColor = style->GetStyleSVGReset()->mFloodColor;
   float floodOpacity = style->GetStyleSVGReset()->mFloodOpacity;
 
-  cairo_t *cr = cairo_create(targetSurface);
-  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS) {
-    cairo_destroy(cr);
-    return NS_ERROR_FAILURE;
-  }
-  cairo_set_source_rgba(cr, 
-                        NS_GET_R(floodColor) / 255.0,
-                        NS_GET_G(floodColor) / 255.0,
-                        NS_GET_B(floodColor) / 255.0,
-                        NS_GET_A(floodColor) / 255.0 * floodOpacity);
-  cairo_rectangle(cr, rect.x, rect.y, rect.width, rect.height);
-  cairo_fill(cr);
-  cairo_destroy(cr);
+  gfxContext ctx(targetSurface);
+  ctx.SetColor(gfxRGBA(NS_GET_R(floodColor) / 255.0,
+                       NS_GET_G(floodColor) / 255.0,
+                       NS_GET_B(floodColor) / 255.0,
+                       NS_GET_A(floodColor) / 255.0 * floodOpacity));
+  ctx.Rectangle(gfxRect(rect.x, rect.y, rect.width, rect.height));
+  ctx.Fill();
   return NS_OK;
 }
 
