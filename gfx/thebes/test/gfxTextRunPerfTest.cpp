@@ -90,9 +90,7 @@ void
 RunTest (TestEntry *test, gfxContext *ctx) {
     if (!lastFamilies || strcmp(lastFamilies, test->mFamilies)) {
         gfxFontStyle style_western_normal_16 (FONT_STYLE_NORMAL,
-                                              FONT_VARIANT_NORMAL,
                                               400,
-                                              FONT_DECORATION_NONE,
                                               16.0,
                                               nsDependentCString("x-western"),
                                               0.0,

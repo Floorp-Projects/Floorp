@@ -552,14 +552,13 @@ gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, PRUint32 aFlags)
     return textRun.forget();
 }
 
-gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint8 aVariant,
-                           PRUint16 aWeight, PRUint8 aDecoration, gfxFloat aSize,
+gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, gfxFloat aSize,
                            const nsACString& aLangGroup,
                            float aSizeAdjust, PRPackedBool aSystemFont,
                            PRPackedBool aFamilyNameQuirks) :
-    style(aStyle), systemFont(aSystemFont), variant(aVariant),
+    style(aStyle), systemFont(aSystemFont),
     familyNameQuirks(aFamilyNameQuirks), weight(aWeight),
-    decorations(aDecoration), size(PR_MIN(aSize, 5000)), langGroup(aLangGroup), sizeAdjust(aSizeAdjust)
+    size(PR_MIN(aSize, 5000)), langGroup(aLangGroup), sizeAdjust(aSizeAdjust)
 {
     if (weight > 900)
         weight = 900;
@@ -573,10 +572,10 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint8 aVariant,
 }
 
 gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
-    style(aStyle.style), systemFont(aStyle.systemFont), variant(aStyle.variant),
+    style(aStyle.style), systemFont(aStyle.systemFont),
     familyNameQuirks(aStyle.familyNameQuirks), weight(aStyle.weight),
-    decorations(aStyle.decorations), size(aStyle.size),
-    langGroup(aStyle.langGroup), sizeAdjust(aStyle.sizeAdjust)
+    size(aStyle.size), langGroup(aStyle.langGroup),
+    sizeAdjust(aStyle.sizeAdjust)
 {
 }
 

@@ -52,16 +52,13 @@ nsSystemFontsBeOS::nsSystemFontsBeOS()
   : mDefaultFontName(NS_LITERAL_STRING("sans-serif"))
   , mMenuFontName(NS_LITERAL_STRING("sans-serif"))
   , mCaptionFontName(NS_LITERAL_STRING("sans-serif"))
-  , mDefaultFontStyle(FONT_STYLE_NORMAL, FONT_VARIANT_NORMAL,
-                 FONT_WEIGHT_NORMAL, FONT_DECORATION_NONE,
+  , mDefaultFontStyle(FONT_STYLE_NORMAL, FONT_WEIGHT_NORMAL,
                  DEFAULT_PIXEL_FONT_SIZE, NS_LITERAL_CSTRING(""),
                  0.0f, PR_TRUE, PR_FALSE)
-  , mMenuFontStyle(FONT_STYLE_NORMAL, FONT_VARIANT_NORMAL,
-               FONT_WEIGHT_NORMAL, FONT_DECORATION_NONE,
+  , mMenuFontStyle(FONT_STYLE_NORMAL, FONT_WEIGHT_NORMAL,
                DEFAULT_PIXEL_FONT_SIZE, NS_LITERAL_CSTRING(""),
                0.0f, PR_TRUE, PR_FALSE)
-  , mCaptionFontStyle(FONT_STYLE_NORMAL, FONT_VARIANT_NORMAL,
-               FONT_WEIGHT_NORMAL, FONT_DECORATION_NONE,
+  , mCaptionFontStyle(FONT_STYLE_NORMAL, FONT_WEIGHT_NORMAL,
                DEFAULT_PIXEL_FONT_SIZE, NS_LITERAL_CSTRING(""),
                0.0f, PR_TRUE, PR_FALSE)
 {

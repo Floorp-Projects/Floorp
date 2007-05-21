@@ -66,23 +66,9 @@ nsresult nsSystemFontsWin::CopyLogFontToNSFont(HDC* aHDC, const LOGFONT* ptrLogF
   }
   // XXX What about oblique?
 
-  aFontStyle->variant = FONT_VARIANT_NORMAL;
-
   // Do Weight
   aFontStyle->weight = (ptrLogFont->lfWeight == FW_BOLD ? 
             FONT_WEIGHT_BOLD : FONT_WEIGHT_NORMAL);
-
-  // Do decorations
-  aFontStyle->decorations = FONT_DECORATION_NONE;
-  if (ptrLogFont->lfUnderline)
-  {
-    aFontStyle->decorations |= FONT_DECORATION_UNDERLINE;
-  }
-  if (ptrLogFont->lfStrikeOut)
-  {
-    aFontStyle->decorations |= FONT_DECORATION_STRIKEOUT;
-  }
-
 
   // XXX mPixelScale is currently hardcoded to 1 in thebes gfx...
   float mPixelScale = 1.0f;
