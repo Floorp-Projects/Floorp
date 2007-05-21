@@ -882,6 +882,8 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                         ATOM_TO_STRING(cx->runtime->atomState.getterAtom);
                     gsop[valcnt] =
                         ATOM_TO_STRING(cx->runtime->atomState.getAtom);
+
+                    valcnt++;
                 }
                 if (attrs & JSPROP_SETTER) {
                     val[valcnt] = (jsval) ((JSScopeProperty *)prop)->setter;
@@ -889,8 +891,9 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                         ATOM_TO_STRING(cx->runtime->atomState.setterAtom);
                     gsop[valcnt] =
                         ATOM_TO_STRING(cx->runtime->atomState.setAtom);
+
+                    valcnt++;
                 }
-                valcnt++;
             } else {
                 valcnt = 1;
                 gsop[0] = NULL;
