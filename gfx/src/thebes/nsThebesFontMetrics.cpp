@@ -84,10 +84,9 @@ nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLangGroup,
         langGroup.Assign(lg);
     }
 
-    mFontStyle = new gfxFontStyle(aFont.style, aFont.variant,
-                                  aFont.weight, aFont.decorations,
-                                  size, langGroup, aFont.sizeAdjust,
-                                  aFont.systemFont, aFont.familyNameQuirks);
+    mFontStyle = new gfxFontStyle(aFont.style, aFont.weight, size, langGroup,
+                                  aFont.sizeAdjust, aFont.systemFont,
+                                  aFont.familyNameQuirks);
 
     mFontGroup =
         gfxPlatform::GetPlatform()->CreateFontGroup(aFont.name, mFontStyle);
