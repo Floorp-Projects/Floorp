@@ -46,7 +46,7 @@
 #include "nsIContent.h"
 #include "nsAutoPtr.h"
 
-#include "cairo.h"
+#include "gfxImageSurface.h"
 
 class nsSVGLength2;
 class nsSVGElement;
@@ -75,13 +75,13 @@ public:
                           nsRect defaultRegion,
                           nsRect *result);
 
-  cairo_surface_t *GetImage();
+  already_AddRefed<gfxImageSurface> GetImage();
   void LookupImage(const nsAString &aName,
-                   cairo_surface_t **aImage,
+                   gfxImageSurface **aImage,
                    nsRect *aRegion,
                    const ColorModel &aColorModel);
   void DefineImage(const nsAString &aName,
-                   cairo_surface_t *aImage,
+                   gfxImageSurface *aImage,
                    const nsRect &aRegion,
                    const ColorModel &aColorModel);
   void GetFilterBox(float *x, float *y, float *width, float *height) {
@@ -110,17 +110,13 @@ public:
 private:
   class ImageEntry {
   public:
-    ImageEntry(cairo_surface_t *aImage,
+    ImageEntry(gfxImageSurface *aImage,
                const nsRect &aRegion,
                const ColorModel &aColorModel) :
       mImage(aImage), mRegion(aRegion), mColorModel(aColorModel) {
-      cairo_surface_reference(aImage); 
-    }
-    ~ImageEntry() {
-      cairo_surface_destroy(mImage);
     }
 
-    cairo_surface_t *mImage;
+    nsRefPtr<gfxImageSurface> mImage;
     nsRect mRegion;
     ColorModel mColorModel;
   };
