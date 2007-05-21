@@ -266,7 +266,7 @@
               var siteURIString;
               try {
                 siteURIString = 
-                  PlaceUtils.annotations.getItemAnnotationString(folder, "livemark/siteURI");
+                  PlacesUtils.annotations.getItemAnnotationString(folder, "livemark/siteURI");
               }
               catch (ex) {}
               // end duplication
