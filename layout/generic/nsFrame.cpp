@@ -3801,6 +3801,7 @@ nsFrame::CheckInvalidateSizeChange(nsPresContext* aPresContext,
   nsRect r = ComputeOutlineRect(this, &anyOutline,
                                 aDesiredSize.mOverflowArea);
   if (anyOutline) {
+    r.UnionRect(GetOverflowRect(), r);
     Invalidate(r);
     return;
   }

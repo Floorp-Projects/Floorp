@@ -1120,10 +1120,10 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
     aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, childBounds);
   }
 
-  FinishAndStoreOverflow(&aMetrics);
-
   // Determine if we need to repaint our border, background or outline
   CheckInvalidateSizeChange(aPresContext, aMetrics, aReflowState);
+
+  FinishAndStoreOverflow(&aMetrics);
 
   // Clear the space manager pointer in the block reflow state so we
   // don't waste time translating the coordinate system back on a dead
