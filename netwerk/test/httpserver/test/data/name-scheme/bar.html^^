@@ -1,0 +1,10 @@
+<html>
+<head>
+  <title>Welcome to bar.html^</title>
+</head>
+<body>
+<p>This file is named with two trailing carets, so the last is stripped
+  away, producing bar.html^ as the final name.</p>
+</body>
+</html>
+

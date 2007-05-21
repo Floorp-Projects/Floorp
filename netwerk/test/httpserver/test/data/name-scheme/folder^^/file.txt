@@ -1,0 +1,2 @@
+File in a directory named with a trailing caret (in the virtual FS; on disk it
+actually ends with two carets).
