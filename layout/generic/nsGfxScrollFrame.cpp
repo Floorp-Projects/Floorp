@@ -1651,7 +1651,8 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   }
 
   // The anonymous <div> used by <inputs> never gets scrollbars.
-  nsCOMPtr<nsITextControlFrame> textFrame(do_QueryInterface(parent));
+  nsITextControlFrame* textFrame = nsnull;
+  CallQueryInterface(parent, &textFrame);
   if (textFrame) {
     // Make sure we are not a text area.
     nsCOMPtr<nsIDOMHTMLTextAreaElement> textAreaElement(do_QueryInterface(parent->GetContent()));
