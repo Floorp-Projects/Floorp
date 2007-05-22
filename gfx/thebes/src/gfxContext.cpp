@@ -593,6 +593,14 @@ gfxContext::UpdateSurfaceClip()
     Fill();
 }
 
+gfxRect
+gfxContext::GetClipExtents()
+{
+    double xmin, ymin, xmax, ymax;
+    cairo_clip_extents(mCairo, &xmin, &ymin, &xmax, &ymax);
+    return gfxRect(xmin, ymin, xmax - xmin, ymax - ymin);
+}
+
 // rendering sources
 
 void
