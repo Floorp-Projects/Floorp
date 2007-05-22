@@ -91,6 +91,7 @@
 #include "nsNodeUtils.h"
 #include "nsIDOMNode.h"
 #include "nsThreadUtils.h"
+#include "nsPresShellIterator.h"
 
 PRLogModuleInfo* gContentSinkLogModuleInfo;
 
@@ -949,32 +950,30 @@ nsContentSink::ScrollToRef()
   // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
   NS_ConvertUTF8toUTF16 ref(unescapedRef);
 
-  PRInt32 i, ns = mDocument->GetNumberOfShells();
-  for (i = 0; i < ns; i++) {
-    nsIPresShell* shell = mDocument->GetShellAt(i);
-    if (shell) {
-      // Check an empty string which might be caused by the UTF-8 conversion
-      if (!ref.IsEmpty()) {
-        // Note that GoToAnchor will handle flushing layout as needed.
+  nsPresShellIterator iter(mDocument);
+  nsCOMPtr<nsIPresShell> shell;
+  while ((shell = iter.GetNextShell())) {
+    // Check an empty string which might be caused by the UTF-8 conversion
+    if (!ref.IsEmpty()) {
+      // Note that GoToAnchor will handle flushing layout as needed.
+      rv = shell->GoToAnchor(ref, mChangeScrollPosWhenScrollingToRef);
+    } else {
+      rv = NS_ERROR_FAILURE;
+    }
+
+    // If UTF-8 URI failed then try to assume the string as a
+    // document's charset.
+
+    if (NS_FAILED(rv)) {
+      const nsACString &docCharset = mDocument->GetDocumentCharacterSet();
+
+      rv = nsContentUtils::ConvertStringFromCharset(docCharset, unescapedRef, ref);
+
+      if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
         rv = shell->GoToAnchor(ref, mChangeScrollPosWhenScrollingToRef);
-      } else {
-        rv = NS_ERROR_FAILURE;
-      }
-
-      // If UTF-8 URI failed then try to assume the string as a
-      // document's charset.
-
-      if (NS_FAILED(rv)) {
-        const nsACString &docCharset = mDocument->GetDocumentCharacterSet();
-
-        rv = nsContentUtils::ConvertStringFromCharset(docCharset, unescapedRef, ref);
-
-        if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
-          rv = shell->GoToAnchor(ref, mChangeScrollPosWhenScrollingToRef);
-      }
-      if (NS_SUCCEEDED(rv)) {
-        mScrolledToRefAlready = PR_TRUE;
-      }
+    }
+    if (NS_SUCCEEDED(rv)) {
+      mScrolledToRefAlready = PR_TRUE;
     }
   }
 }
@@ -1029,46 +1028,40 @@ nsContentSink::StartLayout(PRBool aIgnorePendingSheets)
 
   mLayoutStarted = PR_TRUE;
   mLastNotificationTime = PR_Now();
-  
-  PRUint32 i;
 
-  // XXXbz Shells can get removed (or added!) as we iterate through this loop.
-  // We should try to use an nsTObserverArray for this.
-  for (i = 0; i < mDocument->GetNumberOfShells(); i++) {
-    nsIPresShell *shell = mDocument->GetShellAt(i);
+  nsPresShellIterator iter(mDocument);
+  nsCOMPtr<nsIPresShell> shell;
+  while ((shell = iter.GetNextShell())) {
+    // Make sure we don't call InitialReflow() for a shell that has
+    // already called it. This can happen when the layout frame for
+    // an iframe is constructed *between* the Embed() call for the
+    // docshell in the iframe, and the content sink's call to OpenBody().
+    // (Bug 153815)
 
-    if (shell) {
-      // Make sure we don't call InitialReflow() for a shell that has
-      // already called it. This can happen when the layout frame for
-      // an iframe is constructed *between* the Embed() call for the
-      // docshell in the iframe, and the content sink's call to OpenBody().
-      // (Bug 153815)
+    PRBool didInitialReflow = PR_FALSE;
+    shell->GetDidInitialReflow(&didInitialReflow);
+    if (didInitialReflow) {
+      // XXX: The assumption here is that if something already
+      // called InitialReflow() on this shell, it also did some of
+      // the setup below, so we do nothing and just move on to the
+      // next shell in the list.
 
-      PRBool didInitialReflow = PR_FALSE;
-      shell->GetDidInitialReflow(&didInitialReflow);
-      if (didInitialReflow) {
-        // XXX: The assumption here is that if something already
-        // called InitialReflow() on this shell, it also did some of
-        // the setup below, so we do nothing and just move on to the
-        // next shell in the list.
-
-        continue;
-      }
-
-      // Make shell an observer for next time
-      shell->BeginObservingDocument();
-
-      // Resize-reflow this time
-      nsRect r = shell->GetPresContext()->GetVisibleArea();
-      nsCOMPtr<nsIPresShell> shellGrip = shell;
-      nsresult rv = shell->InitialReflow(r.width, r.height);
-      if (NS_FAILED(rv)) {
-        return;
-      }
-
-      // Now trigger a refresh
-      RefreshIfEnabled(shell->GetViewManager());
+      continue;
     }
+
+    // Make shell an observer for next time
+    shell->BeginObservingDocument();
+
+    // Resize-reflow this time
+    nsRect r = shell->GetPresContext()->GetVisibleArea();
+    nsCOMPtr<nsIPresShell> shellGrip = shell;
+    nsresult rv = shell->InitialReflow(r.width, r.height);
+    if (NS_FAILED(rv)) {
+      return;
+    }
+
+    // Now trigger a refresh
+    RefreshIfEnabled(shell->GetViewManager());
   }
 
   // If the document we are loading has a reference or it is a

@@ -131,6 +131,7 @@
 #include "nsIProperties.h"
 #include "nsISupportsPrimitives.h"
 #include "nsEventDispatcher.h"
+#include "nsPresShellIterator.h"
 
 #ifdef XP_MACOSX
 #include <Events.h>
@@ -1987,9 +1988,9 @@ nsEventStateManager::GetParentScrollingView(nsInputEvent *aEvent,
   }
 
   nsIPresShell *pPresShell = nsnull;
-  for (PRUint32 i = 0; i < parentDoc->GetNumberOfShells(); i++) {
-    nsIPresShell *tmpPresShell = parentDoc->GetShellAt(i);
-    NS_ENSURE_TRUE(tmpPresShell, NS_ERROR_FAILURE);
+  nsPresShellIterator iter(parentDoc);
+  nsCOMPtr<nsIPresShell> tmpPresShell;
+  while ((tmpPresShell = iter.GetNextShell())) {
     NS_ENSURE_TRUE(tmpPresShell->GetPresContext(), NS_ERROR_FAILURE);
     if (tmpPresShell->GetPresContext()->Type() == aPresContext->Type()) {
       pPresShell = tmpPresShell;
