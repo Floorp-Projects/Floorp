@@ -87,6 +87,7 @@ REQUIRES = 	\
 		alerts \
 		url-classifier \
 		feeds \
+		storage \
 		$(NULL)
 
 EXPORTS = nsToolkitCompsCID.h

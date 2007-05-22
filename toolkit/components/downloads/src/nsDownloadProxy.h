@@ -39,7 +39,6 @@
 #ifndef downloadproxy___h___
 #define downloadproxy___h___
 
-#include "nsIDownload.h"
 #include "nsIDownloadManager.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
@@ -49,7 +48,7 @@
 #define PREF_BDM_SHOWWHENSTARTING "browser.download.manager.showWhenStarting"
 #define PREF_BDM_USEWINDOW "browser.download.manager.useWindow"
 
-class nsDownloadProxy : public nsIDownload
+class nsDownloadProxy : public nsITransfer
 {
 public:
 
@@ -67,96 +66,33 @@ public:
                      nsICancelable* aCancelable) {
     nsresult rv;
     nsCOMPtr<nsIDownloadManager> dm = do_GetService("@mozilla.org/download-manager;1", &rv);
-    if (NS_FAILED(rv))
-      return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
     
     rv = dm->AddDownload(nsIDownloadManager::DOWNLOAD_TYPE_DOWNLOAD, aSource,
                          aTarget, aDisplayName, EmptyString(), aMIMEInfo,
                          aStartTime, aTempFile, aCancelable,
                          getter_AddRefs(mInner));
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
 
     PRBool showDM = PR_TRUE;
-    branch->GetBoolPref(PREF_BDM_SHOWWHENSTARTING , &showDM);
+    if (branch)
+      branch->GetBoolPref(PREF_BDM_SHOWWHENSTARTING , &showDM);
 
     PRBool useWindow = PR_TRUE;
-    branch->GetBoolPref(PREF_BDM_USEWINDOW, &useWindow);
+    if (branch)
+      branch->GetBoolPref(PREF_BDM_USEWINDOW, &useWindow);
+    
     if (showDM && useWindow) {
-      nsAutoString path;
+      PRUint32 id;
+      mInner->GetId(&id);
 
-      nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aTarget, &rv);
-      if (NS_FAILED(rv)) return rv;
-
-      nsCOMPtr<nsIFile> file;
-      rv = fileURL->GetFile(getter_AddRefs(file));
-      if (NS_FAILED(rv)) return rv;
-
-      rv = file->GetPath(path);
-      if (NS_FAILED(rv)) return rv;
-
-      return dm->Open(nsnull, path.get());
+      return dm->Open(nsnull, id);
     }
     return rv;
-  }
-
- 
-  NS_IMETHODIMP GetDisplayName(PRUnichar** aDisplayName)
-  {
-    return mInner->GetDisplayName(aDisplayName);
-  }
-  
-  NS_IMETHODIMP GetMIMEInfo(nsIMIMEInfo** aMIMEInfo)
-  {
-    return mInner->GetMIMEInfo(aMIMEInfo);
-  }
-  
-  NS_IMETHODIMP GetSource(nsIURI** aSource)
-  {
-    return mInner->GetSource(aSource);
-  }
-  
-  NS_IMETHODIMP GetTarget(nsIURI** aTarget)
-  {
-    return mInner->GetTarget(aTarget);
-  }
-  
-  NS_IMETHODIMP GetStartTime(PRInt64* aStartTime)
-  {
-    return mInner->GetStartTime(aStartTime);
-  }
-
-  NS_IMETHODIMP GetPercentComplete(PRInt32* aPercentComplete)
-  {
-    return mInner->GetPercentComplete(aPercentComplete);
-  }
-
-  NS_IMETHODIMP GetAmountTransferred(PRUint64* aAmountTransferred)
-  {
-    return mInner->GetAmountTransferred(aAmountTransferred);
-  }
-  
-  NS_IMETHODIMP GetSize(PRUint64* aSize)
-  {
-    return mInner->GetSize(aSize);
-  }
-
-  NS_IMETHODIMP GetCancelable(nsICancelable** aCancelable)
-  {
-    return mInner->GetCancelable(aCancelable);
-  }
-
-  NS_IMETHODIMP GetTargetFile(nsILocalFile** aTargetFile)
-  {
-    return mInner->GetTargetFile(aTargetFile);
-  }
-
-  NS_IMETHODIMP GetSpeed(double* aSpeed)
-  {
-    return mInner->GetSpeed(aSpeed);
   }
 
   NS_IMETHODIMP OnStateChange(nsIWebProgress* aWebProgress,
@@ -245,7 +181,7 @@ private:
   nsCOMPtr<nsIDownload> mInner;
 };
 
-NS_IMPL_ISUPPORTS4(nsDownloadProxy, nsIDownload, nsITransfer,
+NS_IMPL_ISUPPORTS3(nsDownloadProxy, nsITransfer,
                    nsIWebProgressListener, nsIWebProgressListener2)
 
 #endif

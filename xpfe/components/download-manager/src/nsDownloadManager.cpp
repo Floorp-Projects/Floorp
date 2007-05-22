@@ -1367,9 +1367,9 @@ nsDownload::Init(nsIURI* aSource,
 }
 
 NS_IMETHODIMP
-nsDownload::GetDisplayName(PRUnichar** aDisplayName)
+nsDownload::GetDisplayName(nsAString &aDisplayName)
 {
-  *aDisplayName = ToNewUnicode(mDisplayName);
+  *aDisplayName = mDisplayName;
   return NS_OK;
 }
 
@@ -1452,6 +1452,19 @@ NS_IMETHODIMP
 nsDownload::GetSpeed(double* aSpeed)
 {
   *aSpeed = mSpeed;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownload::GetId(PRUint64 *aId)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDownload::GetState(PRInt16 *aState)
+{
+  *aState = mDownloadState;
   return NS_OK;
 }
 

@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Blake Ross <blaker@netscape.com>
  *   Ben Goodger <ben@netscape.com>
+ *   Shawn Wilsher <me@shawnwilsher.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,28 +45,28 @@
 #include "nsIXPInstallManagerUI.h"
 #include "nsIDownloadProgressListener.h"
 #include "nsIDownload.h"
-#include "nsIRDFDataSource.h"
-#include "nsIRDFRemoteDataSource.h"
-#include "nsIRDFService.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventListener.h"
-#include "nsIRDFContainerUtils.h"
 #include "nsIWebProgressListener.h"
 #include "nsIWebProgressListener2.h"
 #include "nsIXPIProgressDialog.h"
 #include "nsIURI.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsILocalFile.h"
-#include "nsHashtable.h"
 #include "nsIRequest.h"
 #include "nsIObserver.h"
+#include "nsString.h"
 #include "nsIStringBundle.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIProgressDialog.h"
 #include "nsIMIMEInfo.h"
 #include "nsITimer.h"
-#include "nsIAlertsService.h"
-#include "nsCycleCollectionParticipant.h"
+#include "mozIStorageConnection.h"
+#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
+#include "nsArrayEnumerator.h"
+#include "nsAutoPtr.h"
+#include "nsIObserverService.h"
 
 typedef PRInt16 DownloadState;
 typedef PRInt16 DownloadType;
@@ -85,34 +86,50 @@ public:
 
   nsresult Init();
 
-  nsDownloadManager();
   virtual ~nsDownloadManager();
 
-  static PRInt32 PR_CALLBACK CancelAllDownloads(nsHashKey* aKey, void* aData, void* aClosure);
-  static PRInt32 PR_CALLBACK BuildActiveDownloadsList(nsHashKey* aKey, void* aData, void* aClosure);
-  nsresult DownloadEnded(const PRUnichar* aPersistentDescriptor, const PRUnichar* aMessage); 
-
-public:
-  nsresult AssertProgressInfoFor(const PRUnichar* aPersistentDescriptor);
-
 protected:
-  nsresult GetDownloadsContainer(nsIRDFContainer** aResult);
-  nsresult GetProfileDownloadsFileURL(nsCString& aDownloadsFileURL);
-  nsresult GetDataSource(nsIRDFDataSource** aDataSource);
-  nsresult DownloadStarted(const PRUnichar* aPersistentDescriptor);
-  nsresult GetInternalListener(nsIDownloadProgressListener** aListener);
-  nsresult PauseResumeDownload(const PRUnichar* aPath, PRBool aPause);
-  nsresult RemoveDownload(nsIRDFResource* aDownload);
-  nsresult ValidateDownloadsContainer();
+  struct TimerParams {
+    nsRefPtr<nsDownload> download;
+    nsCOMPtr<nsIDOMWindow> parent;
+  };
+  nsresult InitDB(PRBool *aDoImport);
+  nsresult CreateTable();
+  nsresult ImportDownloadHistory();
 
-  void     ConfirmCancelDownloads(PRInt32 aCount, nsISupportsPRBool* aCancelDownloads,
+  /**
+   * Adds a download with the specified information to the DB.
+   *
+   * @return The id of the download, or 0 if there was an error.
+   */
+  PRInt64 AddDownloadToDB(const nsAString &aName,
+                          const nsACString &aSource,
+                          const nsACString &aTarget,
+                          const nsAString &aIconURL,
+                          PRInt64 aStartTime,
+                          PRInt64 aEndTime,
+                          PRInt32 aState);
+
+  nsDownload *FindDownload(PRUint32 aID);
+  nsresult PauseResumeDownload(PRUint32 aID, PRBool aPause);
+  nsresult CancelAllDownloads();
+  inline PRBool RemoveDownloadFromCurrent(nsDownload *aDownload)
+  {
+    return mCurrentDownloads.RemoveObject(aDownload);
+  }
+
+
+  void     ConfirmCancelDownloads(PRInt32 aCount,
+                                  nsISupportsPRBool* aCancelDownloads,
                                   const PRUnichar* aTitle, 
                                   const PRUnichar* aCancelMessageMultiple, 
                                   const PRUnichar* aCancelMessageSingle,
                                   const PRUnichar* aDontCancelButton);
 
-  static void     OpenTimerCallback(nsITimer* aTimer, void* aClosure);
-  static nsresult OpenDownloadManager(PRBool aShouldFocus, PRInt32 aFlashCount, nsIDownload* aDownload, nsIDOMWindow* aParent);
+  static void OpenTimerCallback(nsITimer* aTimer, void* aClosure);
+  static nsresult OpenDownloadManager(PRBool aShouldFocus, PRInt32 aFlashCount,
+                                      nsIDownload* aDownload,
+                                      nsIDOMWindow* aParent);
 
   PRBool   NeedsUIUpdate() { return mListener != nsnull; }
   PRInt32  GetRetentionBehavior();
@@ -141,15 +158,13 @@ protected:
 
 private:
   nsCOMPtr<nsIDownloadProgressListener> mListener;
-  nsCOMPtr<nsIRDFDataSource> mDataSource;
   nsCOMPtr<nsIXPIProgressDialog> mXPIProgress;
-  nsCOMPtr<nsIRDFContainer> mDownloadsContainer;
-  nsCOMPtr<nsIRDFContainerUtils> mRDFContainerUtils;
   nsCOMPtr<nsIStringBundle> mBundle;
   nsCOMPtr<nsITimer> mDMOpenTimer;
-  PRInt32 mBatches;
-  nsHashtable mCurrDownloads;
-  
+  nsCOMPtr<mozIStorageConnection> mDBConn;
+  nsCOMArray<nsDownload> mCurrentDownloads;
+  nsCOMPtr<nsIObserverService> mObserverService;
+
   friend class nsDownload;
 };
 
@@ -170,30 +185,9 @@ public:
 protected:
   void RemoveDownloadAtIndex(PRUint32 aIndex);
 
-  inline void AssertProgressInfoForDownload(nsDownload* aDownload);
-
 private:
   nsDownloadManager* mDownloadManager;
   nsCOMPtr<nsISupportsArray> mDownloads;
-};
-
-class nsDownloadsDataSource : public nsIRDFDataSource, 
-                              public nsIRDFRemoteDataSource
-{
-public:
-  NS_DECL_NSIRDFDATASOURCE
-  NS_DECL_NSIRDFREMOTEDATASOURCE
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDownloadsDataSource,
-                                           nsIRDFDataSource)
-
-  nsDownloadsDataSource() { }
-  virtual ~nsDownloadsDataSource() { }
-
-  nsresult LoadDataSource();
-
-private:
-  nsCOMPtr<nsIRDFDataSource> mInner;
 };
 
 class nsDownload : public nsIDownload
@@ -209,37 +203,21 @@ public:
   virtual ~nsDownload();
 
 public:
-  DownloadState GetDownloadState();
-  void SetDownloadState(DownloadState aState);
+  /**
+   * This method MUST be called when changing states on a download.  It will
+   * notify the download listener when a change happens.
+   */
+  void SetState(DownloadState aState);
+
   DownloadType GetDownloadType();
   void SetDownloadType(DownloadType aType);
 
+  nsresult UpdateDB();
+
 protected:
-  nsresult SetDownloadManager(nsDownloadManager* aDownloadManager);
-  nsresult SetDialogListener(nsIWebProgressListener* aInternalListener);
-  nsresult GetDialogListener(nsIWebProgressListener** aInternalListener);
-  nsresult SetDialog(nsIProgressDialog* aDialog);
-  nsresult GetDialog(nsIProgressDialog** aDialog);
-  nsresult SetTempFile(nsILocalFile* aTempFile);
-  nsresult GetTempFile(nsILocalFile** aTempFile);
-  nsresult SetCancelable(nsICancelable* aCancelable);
-  nsresult SetTarget(nsIURI* aTarget);
-  nsresult SetDisplayName(const PRUnichar* aDisplayName);
-  nsresult SetSource(nsIURI* aSource);
-  nsresult SetMIMEInfo(nsIMIMEInfo* aMIMEInfo);
-  nsresult SetStartTime(PRInt64 aStartTime);
+  void SetStartTime(PRInt64 aStartTime);
 
-  void Pause(PRBool aPaused);
-  PRBool IsPaused();
-
-  struct TransferInformation {
-    PRInt64 mCurrBytes, mMaxBytes;
-    TransferInformation(PRInt64 aCurr, PRInt64 aMax) :
-      mCurrBytes(aCurr),
-      mMaxBytes(aMax)
-      {}
-  };
-  TransferInformation GetTransferInformation();
+  nsresult PauseResume(PRBool aPause);
 
   nsDownloadManager* mDownloadManager;
   nsCOMPtr<nsIURI> mTarget;
@@ -248,7 +226,6 @@ private:
   nsString mDisplayName;
 
   nsCOMPtr<nsIURI> mSource;
-  nsCOMPtr<nsIWebProgressListener> mDialogListener;
   nsCOMPtr<nsICancelable> mCancelable;
   nsCOMPtr<nsIRequest> mRequest;
   nsCOMPtr<nsIProgressDialog> mDialog;
@@ -258,12 +235,13 @@ private:
   DownloadState mDownloadState;
   DownloadType  mDownloadType;
 
-  PRBool  mPaused;
+  PRUint32 mID;
   PRInt32 mPercentComplete;
   PRUint64 mCurrBytes;
   PRUint64 mMaxBytes;
   PRTime mStartTime;
   PRTime mLastUpdate;
+  PRBool mPaused;
   double mSpeed;
 
   friend class nsDownloadManager;

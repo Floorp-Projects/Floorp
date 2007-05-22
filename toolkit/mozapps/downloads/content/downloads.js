@@ -44,11 +44,18 @@
 // Globals
 
 const kObserverServiceProgID = "@mozilla.org/observer-service;1";
-const NC_NS = "http://home.netscape.com/NC-rdf#";
+const kDlmgrContractID = "@mozilla.org/download-manager;1";
+const nsIDownloadManager = Components.interfaces.nsIDownloadManager;
+const nsIXPInstallManagerUI = Components.interfaces.nsIXPInstallManagerUI;
 const PREF_BDM_CLOSEWHENDONE = "browser.download.manager.closeWhenDone";
 const PREF_BDM_ALERTONEXEOPEN = "browser.download.manager.alertOnEXEOpen";
+const PREF_BDM_RETENTION = "browser.download.manager.retention";
 
-var gDownloadManager  = null;
+const nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
+                                           "nsILocalFile", "initWithPath");
+
+var gDownloadManager  = Components.classes[kDlmgrContractID]
+                                  .getService(nsIDownloadManager);
 var gDownloadListener = null;
 var gDownloadsView    = null;
 var gUserInterfered   = false;
@@ -68,54 +75,34 @@ var gUserInteracted = false;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions 
-function setRDFProperty(aID, aProperty, aValue)
-{
-  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-
-  var db = gDownloadManager.datasource;
-  var propertyArc = rdf.GetResource(NC_NS + aProperty);
-  
-  var res = rdf.GetResource(aID);
-  var node = db.GetTarget(res, propertyArc, true);
-  if (node)
-    db.Change(res, propertyArc, node, rdf.GetLiteral(aValue));
-  else
-    db.Assert(res, propertyArc, rdf.GetLiteral(aValue), true);
-}
-
-function getRDFProperty(aID, aProperty)
-{
-  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-
-  var db = gDownloadManager.datasource;
-  var propertyArc = rdf.GetResource(NC_NS + aProperty);
-  
-  var res = rdf.GetResource(aID);
-  var node = db.GetTarget(res, propertyArc, true);
-  if (!node) return "";
-  try {
-    node = node.QueryInterface(Components.interfaces.nsIRDFLiteral);
-    return node.Value;
-  }
-  catch (e) {
-    try {
-      node = node.QueryInterface(Components.interfaces.nsIRDFInt);
-      return node.Value;
-    }
-    catch (e) {
-      node = node.QueryInterface(Components.interfaces.nsIRDFResource);
-      return node.Value;
-    }
-  }
-  return "";
-}
-
 function fireEventForElement(aElement, aEventType)
 {
   var e = document.createEvent("Events");
   e.initEvent("download-" + aEventType, true, true);
   
   aElement.dispatchEvent(e);
+}
+
+function createDownloadItem(aID, aFile, aImage, aTarget, aURI, aState,
+                            aAnimated, aStatus, aProgress)
+{
+  var dl = document.createElement("download");
+  dl.setAttribute("id", "dl" + aID);
+  dl.setAttribute("dlid", aID);
+  dl.setAttribute("image", aImage);
+  dl.setAttribute("file", aFile);
+  dl.setAttribute("target", aTarget);
+  dl.setAttribute("uri", aURI);
+  dl.setAttribute("state", aState);
+  dl.setAttribute("animated", aAnimated);
+  dl.setAttribute("status", aStatus);
+  dl.setAttribute("progress", aProgress);
+  return dl;
+}
+
+function getDownload(aID)
+{
+  return document.getElementById("dl" + aID);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -126,41 +113,21 @@ function downloadCompleted(aDownload)
   // it doesn't really matter if it fails then since well.. we're shutting down
   // and there's no UI to update!
   try {
-    var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-    var rdfc = Components.classes["@mozilla.org/rdf/container;1"].createInstance(Components.interfaces.nsIRDFContainer);
-
-    var db = gDownloadManager.datasource;
-    
-    rdfc.Init(db, rdf.GetResource("NC:DownloadsRoot"));
-
-    var id = aDownload.targetFile.path;
-    
     // getTypeFromFile fails if it can't find a type for this file. Handle this gracefully.
     try {
       // Refresh the icon, so that executable icons are shown.
       var mimeService = Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"].getService(Components.interfaces.nsIMIMEService);
       var contentType = mimeService.getTypeFromFile(aDownload.targetFile);
 
-      var listItem = document.getElementById(id);
+      var listItem = getDownload(aDownload.id)
       var oldImage = listItem.getAttribute("image");
       // I tack on the content-type here as a hack to bypass the cache which seems
       // to be interfering despite the fact the image has 'validate="always"' set
       // on it. 
       listItem.setAttribute("image", oldImage + "&contentType=" + contentType);
-    } catch (e) {
-    }
+    } catch (e) { }
     
-    var dlRes = rdf.GetUnicodeResource(id);
-  
     var insertIndex = gDownloadManager.activeDownloadCount + 1;
-    // Don't bother inserting the item into the same place!
-    if (insertIndex != rdfc.IndexOf(dlRes)) {
-      rdfc.RemoveElement(dlRes, true);
-      if (insertIndex == rdfc.GetCount() || insertIndex < 1) 
-        rdfc.AppendElement(dlRes);
-      else
-        rdfc.InsertElementAt(dlRes, insertIndex, true);      
-    }
         
     // Remove the download from our book-keeping list and if the count
     // falls to zero, update the title here, since we won't be getting
@@ -177,21 +144,33 @@ function downloadCompleted(aDownload)
     if (gActiveDownloads.length == 0)
       document.title = document.documentElement.getAttribute("statictitle");
   }
-  catch (e) {
-  }
+  catch (e) { }
 }
 
-function autoClose(aDownload)
+function autoRemoveAndClose(aDownload)
 {
+  var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                       .getService(Components.interfaces.nsIPrefBranch);
+
+  var autoRemove = false;
+  try {
+    // this can throw, since it doesn't exist
+    autoRemove = pref.getBoolPref(PREF_BDM_RETENTION);
+  } catch (e) { }
+  if (dl && autoRemove) {
+    // The download manager backed removes this, but we have to update the UI!
+    var dl = getDownload(aDownload.id);
+    dl.parentNode.removeChild(dl);
+  }
+  
   if (gDownloadManager.activeDownloadCount == 0) {
     // For the moment, just use the simple heuristic that if this window was
     // opened by the download process, rather than by the user, it should auto-close
     // if the pref is set that way. If the user opened it themselves, it should
     // not close until they explicitly close it.
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch);
-    var autoClose = pref.getBoolPref(PREF_BDM_CLOSEWHENDONE)
-    if (autoClose && (!window.opener || window.opener.location.href == window.location.href) &&
+    var autoClose = pref.getBoolPref(PREF_BDM_CLOSEWHENDONE);
+    if (autoClose && (!window.opener ||
+                      window.opener.location.href == window.location.href) &&
         gCanAutoClose && !gUserInteracted)
       gCloseDownloadManager();
   }
@@ -209,10 +188,12 @@ var gDownloadObserver = {
   {
     switch (aTopic) {
     case "dl-done":
+      gDownloadViewController.onCommandUpdate();
+      
       var dl = aSubject.QueryInterface(Components.interfaces.nsIDownload);
       downloadCompleted(dl);
       
-      autoClose(dl);      
+      autoRemoveAndClose(dl);
       break;
     case "dl-failed":
     case "dl-cancel":
@@ -220,14 +201,22 @@ var gDownloadObserver = {
       downloadCompleted(dl);
       break;
     case "dl-start":
-      // whenever a new download starts, it is added to the top, so switch the
-      // view to it
-      gDownloadsView.selectedIndex = 0;
-
       // Add this download to the percentage average tally
       var dl = aSubject.QueryInterface(Components.interfaces.nsIDownload);
       gActiveDownloads.push(dl);
 
+      // Adding to the UI
+      var uri = Components.classes["@mozilla.org/network/util;1"]
+                          .getService(Components.interfaces.nsIIOService)
+                          .newFileURI(dl.targetFile);
+      var img = "moz-icon://" + uri.spec + "?size=32";
+      var itm = createDownloadItem(dl.id, uri.spec, img, dl.displayName,
+                                   dl.source.spec, dl.state, "",
+                                   dl.percentComplete);
+      gDownloadsView.insertBefore(itm, gDownloadsView.firstChild);
+
+      // switch view to it
+      gDownloadsView.selectedIndex = 0;
       break;
     case "xpinstall-download-started":
       var windowArgs = aSubject.QueryInterface(Components.interfaces.nsISupportsArray);
@@ -241,7 +230,7 @@ var gDownloadObserver = {
       if ("gDownloadManager" in window) {
         var mgr = gDownloadManager.QueryInterface(Components.interfaces.nsIXPInstallManagerUI);
         gCanAutoClose = mgr.hasActiveXPIOperations;
-        autoClose();
+        autoRemoveAndClose();
       }
       break;          
     }
@@ -255,9 +244,7 @@ function onDownloadCancel(aEvent)
 {
   var selectedIndex = gDownloadsView.selectedIndex;
 
-  gDownloadManager.cancelDownload(aEvent.target.id);
-
-  setRDFProperty(aEvent.target.id, "DownloadAnimated", "false");
+  gDownloadManager.cancelDownload(aEvent.target.getAttribute("dlid"));
 
   // XXXben - 
   // If we got here because we resumed the download, we weren't using a temp file
@@ -265,7 +252,7 @@ function onDownloadCancel(aEvent)
   // employed by the helper app service isn't fully accessible yet... should be fixed...
   // talk to bz...)
   // the upshot is we have to delete the file if it exists. 
-  var f = getLocalFileFromNativePathOrUrl(aEvent.target.id);
+  var f = getLocalFileFromNativePathOrUrl(aEvent.target.getAttribute("file"));
 
   if (f.exists()) 
     f.remove(false);
@@ -285,10 +272,8 @@ function onDownloadPause(aEvent)
 {
   var selectedIndex = gDownloadsView.selectedIndex;
 
-  var uri = aEvent.target.id;
-  gDownloadManager.pauseDownload(uri);
-  setRDFProperty(uri, "DownloadStatus", aEvent.target.getAttribute("status-internal"));
-  setRDFProperty(uri, "ProgressPercent", aEvent.target.getAttribute("progress"));
+  var id = aEvent.target.getAttribute("dlid");
+  gDownloadManager.pauseDownload(id);
 
   // now reset the richlistbox
   gDownloadsView.clearSelection();
@@ -303,7 +288,7 @@ function onDownloadResume(aEvent)
 {
   var selectedIndex = gDownloadsView.selectedIndex;
 
-  gDownloadManager.resumeDownload(aEvent.target.id);
+  gDownloadManager.resumeDownload(aEvent.target.getAttribute("dlid"));
 
   // now reset the richlistbox
   gDownloadsView.clearSelection();
@@ -318,14 +303,15 @@ function onDownloadRemove(aEvent)
 {
   if (aEvent.target.removable) {
     var selectedIndex = gDownloadsView.selectedIndex;
-    gDownloadManager.removeDownload(aEvent.target.id);
+    gDownloadManager.removeDownload(aEvent.target.getAttribute("dlid"));
+    aEvent.target.parentNode.removeChild(aEvent.target);
     gDownloadViewController.onCommandUpdate();
   }
 }
 
 function onDownloadShow(aEvent)
 {
-  var f = getLocalFileFromNativePathOrUrl(aEvent.target.id);
+  var f = getLocalFileFromNativePathOrUrl(aEvent.target.getAttribute("file"));
 
   if (f.exists()) {
     try {
@@ -361,12 +347,12 @@ function onDownloadOpen(aEvent)
   var download = aEvent.target;
   if (download.localName == "download") {
     if (download.openable) {
-      var f = getLocalFileFromNativePathOrUrl(aEvent.target.id);
+      var f = getLocalFileFromNativePathOrUrl(aEvent.target.getAttribute("file"));
       if (f.exists()) {
         if (f.isExecutable()) {
           var dontAsk = false;
           var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                              .getService(Components.interfaces.nsIPrefBranch);
+                               .getService(Components.interfaces.nsIPrefBranch);
           try {
             dontAsk = !pref.getBoolPref(PREF_BDM_ALERTONEXEOPEN);
           }
@@ -433,16 +419,14 @@ function onDownloadProperties(aEvent)
 function onDownloadAnimated(aEvent)
 {
   gDownloadViewController.onCommandUpdate();    
-
-  setRDFProperty(aEvent.target.id, "DownloadAnimated", "true");
 }
 
 function onDownloadRetry(aEvent)
 {
   var download = aEvent.target;
   if (download.localName == "download") {
-    var src = getRDFProperty(download.id, "URL");
-    var f = getLocalFileFromNativePathOrUrl(aEvent.target.id);
+    var src = document.getElementById(download.id).getAttribute("uri");
+    var f = getLocalFileFromNativePathOrUrl(aEvent.target.getAttribute("file"));
     saveURL(src, f, null, true, true);
   }
   
@@ -470,6 +454,9 @@ function onUpdateProgress()
   var dl = null;
   for (var i = 0; i < numActiveDownloads; ++i) {
     dl = gActiveDownloads[i];
+
+    // Update progress
+    getDownload(dl.id).setAttribute("progress", dl.percentComplete);
 
     // gActiveDownloads is screwed so it's possible 
     // to have more files than we're really downloading.
@@ -511,10 +498,20 @@ function Startup()
 {
   gDownloadsView = document.getElementById("downloadView");
 
-  const dlmgrContractID = "@mozilla.org/download-manager;1";
-  const dlmgrIID = Components.interfaces.nsIDownloadManager;
-  gDownloadManager = Components.classes[dlmgrContractID].getService(dlmgrIID);
-  
+  var db = gDownloadManager.DBConnection;
+  var stmt = db.createStatement("SELECT id, target, iconURL, name, source," +
+                                "state " +
+                                "FROM moz_downloads " +
+                                "ORDER BY startTime DESC");
+  while (stmt.executeStep()) {
+    var i = stmt.getString(2) == "" ?
+      "moz-icon://" + stmt.getString(1) + "?size=32" : stmt.getString(2);
+    var dl = createDownloadItem(stmt.getInt64(0), stmt.getString(1), i,
+                                stmt.getString(3), stmt.getString(4),
+                                stmt.getInt32(5), "", "", "100");
+    gDownloadsView.appendChild(dl);
+  }
+
   // The DownloadProgressListener (DownloadProgressListener.js) handles progress
   // notifications. 
   var downloadStrings = document.getElementById("downloadStrings");
@@ -524,9 +521,10 @@ function Startup()
   // The active downloads list is created by the front end only when the download starts,  
   // so we need to pre-populate it with any downloads that were already going. 
   var activeDownloads = gDownloadManager.activeDownloads;
-  var count = activeDownloads.Count();
-  for (var i = 0; i < count; ++i)
-    gActiveDownloads.push(activeDownloads.QueryElementAt(i, Components.interfaces.nsIDownload));
+  while (activeDownloads.hasMoreElements()) {
+    var download = activeDownloads.getNext().QueryInterface(Ci.nsIDownload);
+    gActiveDownloads.push(download);
+  }
 
   // Handlers for events generated by the UI (downloads, list view)
   gDownloadsView.addEventListener("download-cancel",      onDownloadCancel,     false);
@@ -572,20 +570,13 @@ function Startup()
   // non-active downloads before it can be enabled. 
   gDownloadsView.controllers.appendController(gDownloadViewController);
 
-  // Finally, update the UI. 
-  gDownloadsView.database.AddDataSource(gDownloadManager.datasource);
-  gDownloadsView.builder.rebuild();
-  
   // downloads can finish before Startup() does, so check if the window should close
-  autoClose();
+  autoRemoveAndClose();
 }
 
 function Shutdown() 
 {
   gDownloadManager.listener = null;
-
-  // Assert the current progress for all the downloads in case the window is reopened
-  gDownloadManager.saveState();
 
   var pbi = Components.classes["@mozilla.org/preferences-service;1"]
                       .getService(Components.interfaces.nsIPrefBranch2);
@@ -746,6 +737,20 @@ var gDownloadViewController = {
   {
     if (aCommand == "cmd_cleanUp" && this.isCommandEnabled(aCommand)) {
       gDownloadManager.cleanUp();
+
+      // Update UI
+      for (var i = gDownloadsView.children.length - 1; i >= 0; --i) {
+        var elm = gDownloadsView.children[i];
+        var state = elm.getAttribute("state");
+
+        if (state != nsIDownloadManager.DOWNLOAD_NOTSTARTED &&
+            state != nsIDownloadManager.DOWNLOAD_DOWNLOADING &&
+            state != nsIDownloadManager.DOWNLOAD_PAUSED &&
+            state != nsIXPInstallManagerUI.INSTALL_DOWNLOADING &&
+            state != nsIXPInstallManagerUI.INSTALL_INSTALLING)
+          gDownloadsView.removeChild(gDownloadsView.children[i]);
+      }
+
       this.onCommandUpdate();
     }
   },  
@@ -802,7 +807,7 @@ function initAutoDownloadDisplay()
       var dir = fileLocator.get(getSpecialFolderKey(aFolder), Components.interfaces.nsILocalFile);
       
       var bundle = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                              .getService(Components.interfaces.nsIStringBundleService);
+                             .getService(Components.interfaces.nsIStringBundleService);
       bundle = bundle.createBundle("chrome://mozapps/locale/downloads/unknownContentType.properties");
 
       var description = bundle.GetStringFromName("myDownloads");
@@ -912,9 +917,7 @@ function getLocalFileFromNativePathOrUrl(aPathOrUrl)
   } else {
 
     // if it's a pathname, create the nsILocalFile directly
-    var f = Components.classes["@mozilla.org/file/local;1"].
-      createInstance(Components.interfaces.nsILocalFile);
-    f.initWithPath(aPathOrUrl);
+    var f = new nsLocalFile(aPathOrUrl);
 
     return f;
   }
