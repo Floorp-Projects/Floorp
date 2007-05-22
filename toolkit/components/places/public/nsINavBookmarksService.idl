@@ -54,7 +54,7 @@ interface nsITransaction;
  * Observer for bookmark changes.
  */
 
-[scriptable, uuid(7A553BA3-5381-4A66-95D9-C7BA3895603C)]
+[scriptable, uuid(73d28ab9-0360-4077-845e-543d1aedba1d)]
 interface nsINavBookmarkObserver : nsISupports
 {
   /**
@@ -137,21 +137,21 @@ interface nsINavBookmarkObserver : nsISupports
                      in PRTime time);
 
   /**
-   * Notify this observer that a bookmark folder has been moved.
-   *  @param aFolder
-   *         The id of the folder that was moved.
+   * Notify this observer that an item has been moved.
+   *  @param aItemId
+   *         The id of the item that was moved.
    *  @param aOldParent
-   *         The id of the folder's old parent.
+   *         The id of the old parent.
    *  @param aOldIndex
-   *         The folder's old index inside oldParent.
+   *         The old index inside aOldParent.
    *  @param aNewParent
-   *         The id of the folder's new parent.
+   *         The id of the new parent.
    *  @param aNewIndex
-   *         The folder's index inside newParent.
+   *         The foindex inside aNewParent.
    */
-  void onFolderMoved(in long long aFolder,
-                     in long long aOldParent, in long aOldIndex,
-                     in long long aNewParent, in long aNewIndex);
+  void onItemMoved(in long long aItemId,
+                   in long long aOldParent, in long aOldIndex,
+                   in long long aNewParent, in long aNewIndex);
 
   /**
    * Notify this observer that a bookmark folder's information has changed.
@@ -293,15 +293,15 @@ interface nsINavBookmarksService : nsISupports
   void removeFolderChildren(in long long aFolder);
 
   /**
-   * Moves a folder to a different container, preserving its contents.
-   *  @param aFolder
-   *         The folder to move
+   * Moves an item to a different container, preserving its contents.
+   *  @param aItemId
+   *         The id of the item to move
    *  @param aNewParent
-   *         The id of the folder's new parent
+   *         The id of the new parent
    *  @param aIndex
-   *         The folder's index under newParent, or -1 to append
+   *         The index under aNewParent, or -1 to append
    */
-  void moveFolder(in long long aFolder, in long long newParent, in long aIndex);
+  void moveItem(in long long aFolder, in long long newParent, in long aIndex);
 
   /**
    * Returns the ID of a child folder with the given name. This does not

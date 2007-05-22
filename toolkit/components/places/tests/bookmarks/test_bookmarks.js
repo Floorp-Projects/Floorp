@@ -87,12 +87,12 @@ var observer = {
     this._itemVisitedVistId = visitID;
     this._itemVisitedTime = time;
   },
-  onFolderMoved: function(folder, oldParent, oldIndex, newParent, newIndex) {
-    this._folderMoved = folder;
-    this._folderMovedOldParent = oldParent;
-    this._folderMovedOldIndex = oldIndex;
-    this._folderMovedNewParent = newParent;
-    this._folderMovedNewIndex = newIndex;
+  onItemMoved: function(id, oldParent, oldIndex, newParent, newIndex) {
+    this._itemMovedId = id
+    this._itemMovedOldParent = oldParent;
+    this._itemMovedOldIndex = oldIndex;
+    this._itemMovedNewParent = newParent;
+    this._itemMovedNewIndex = newIndex;
   },
   onFolderChanged: function(folder, property) {
     this._folderChanged = folder;
@@ -271,12 +271,12 @@ function run_test() {
 
   // move folder, appending, to different folder
   var oldParentCC = getChildCount(testRoot);
-  bmsvc.moveFolder(workFolder, homeFolder, bmsvc.DEFAULT_INDEX);
-  do_check_eq(observer._folderMoved, workFolder);
-  do_check_eq(observer._folderMovedOldParent, testRoot);
-  do_check_eq(observer._folderMovedOldIndex, 0);
-  do_check_eq(observer._folderMovedNewParent, homeFolder);
-  do_check_eq(observer._folderMovedNewIndex, 1);
+  bmsvc.moveItem(workFolder, homeFolder, bmsvc.DEFAULT_INDEX);
+  do_check_eq(observer._itemMovedId, workFolder);
+  do_check_eq(observer._itemMovedOldParent, testRoot);
+  do_check_eq(observer._itemMovedOldIndex, 0);
+  do_check_eq(observer._itemMovedNewParent, homeFolder);
+  do_check_eq(observer._itemMovedNewIndex, 1);
 
   // test that the new index is properly stored
   do_check_eq(bmsvc.getItemIndex(workFolder), 1);
@@ -292,7 +292,14 @@ function run_test() {
   // XXX move folder, specify same index, within the same folder
   // XXX move folder, appending, within the same folder
 
-  // XXX move item, appending, to different folder 
+  // move item, appending, to different folder
+  bmsvc.moveItem(newId5, testRoot, bmsvc.DEFAULT_INDEX);
+  do_check_eq(observer._itemMovedId, newId5);
+  do_check_eq(observer._itemMovedOldParent, homeFolder);
+  do_check_eq(observer._itemMovedOldIndex, 0);
+  do_check_eq(observer._itemMovedNewParent, testRoot);
+  do_check_eq(observer._itemMovedNewIndex, 3);
+
   // XXX move item, specified index, to different folder 
   // XXX move item, specified index, within the same folder 
   // XXX move item, specify same index, within the same folder
@@ -300,8 +307,8 @@ function run_test() {
 
   // Test expected failure of moving a folder to be its own parent
   try {
-    bmsvc.moveFolder(workFolder, workFolder, bmsvc.DEFAULT_INDEX);
-    do_throw("moveFolder() allowed moving a folder to be it's own parent.");
+    bmsvc.moveItem(workFolder, workFolder, bmsvc.DEFAULT_INDEX);
+    do_throw("moveItem() allowed moving a folder to be it's own parent.");
   } catch (e) {}
 
   // test insertSeparator and removeChildAt
@@ -508,7 +515,7 @@ function run_test() {
   var newId13 = bmsvc.insertItem(testRoot, uri("http://foobarcheese.com/"), bmsvc.DEFAULT_INDEX);
   do_check_eq(observer._itemAddedId, newId13);
   do_check_eq(observer._itemAddedParent, testRoot);
-  do_check_eq(observer._itemAddedIndex, 12);
+  do_check_eq(observer._itemAddedIndex, 13);
 
   // set bookmark title
   bmsvc.setItemTitle(newId13, "ZZZXXXYYY");
