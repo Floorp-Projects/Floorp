@@ -1422,7 +1422,7 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
         NS_ENSURE_SUCCESS(rv, rv);
         
         nsAutoString path;
-        rv = file->GetPath(&path);
+        rv = file->GetPath(path);
         NS_ENSURE_SUCCESS(rv, rv);
 
         PRUnichar *filePath = ToNewUnicode(path);
