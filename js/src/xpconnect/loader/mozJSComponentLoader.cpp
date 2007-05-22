@@ -1289,7 +1289,8 @@ mozJSComponentLoader::UnloadModules()
 #endif
 }
 
-/* void import (in AUTF8String registryLocation); */
+/* [JSObject] import (in AUTF8String registryLocation,
+                      [optional] in JSObject targetObj ); */
 NS_IMETHODIMP
 mozJSComponentLoader::Import(const nsACString & registryLocation)
 {
