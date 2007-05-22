@@ -225,8 +225,8 @@ function run_test()
   print("*** DOWNLOAD MANAGER TEST - server started");
 */
 
+  print("Try creating listener...")
   // our download listener
-/*
   var listener = {
     onDownloadStateChange: function(aState, aDownload)
     {
@@ -251,6 +251,7 @@ function run_test()
   };
   dm.listener = listener;
 
+  print("Try creating observer...");
   var observer = {
     observe: function(aSubject, aTopic, aData) {
       var dl = aSubject.QueryInterface(Ci.nsIDownload);
@@ -291,10 +292,11 @@ function run_test()
   os.addObserver(observer, "dl-failed", false);
   os.addObserver(observer, "dl-cancel", false);
   os.addObserver(observer, "dl-done", false);
-*/
 
-  for (var i = 0; i < tests.length; i++)
-    tests[i]();
+  print("Made it through adding observers.");
+
+//  for (var i = 0; i < tests.length; i++)
+//    tests[i]();
 
   //cleanup();
 
