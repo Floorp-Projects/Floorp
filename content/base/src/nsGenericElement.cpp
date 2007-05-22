@@ -1817,7 +1817,6 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
       // ...then check if we have content in insertion points
       if (aBindingParent) {
         nsXBLBinding* binding = bmgr->GetBinding(aBindingParent);
-        NS_ASSERTION(binding, "huh, no binding?");
         if (binding) {
           // These should be refcounted.
           nsInsertionPointList* inserts =
