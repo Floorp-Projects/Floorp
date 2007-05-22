@@ -47,7 +47,6 @@ class nsITheme;
 #define NS_STATE_IS_ROOT        0x01000000
 #define NS_STATE_SET_TO_DEBUG   0x04000000
 #define NS_STATE_DEBUG_WAS_SET  0x08000000
-#define NS_STATE_STYLE_CHANGE   0x20000000
 
 class nsBox : public nsIFrame {
 

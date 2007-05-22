@@ -5606,7 +5606,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
                                              PRBool                   aAppendToExisting,
                                              nsFrameItems&            aChildItems)
 {
-  nsCOMPtr<nsIAnonymousContentCreator> creator(do_QueryInterface(aParentFrame));
+  nsIAnonymousContentCreator* creator = nsnull;
+  CallQueryInterface(aParentFrame, &creator);
   if (!creator)
     return NS_OK;
 

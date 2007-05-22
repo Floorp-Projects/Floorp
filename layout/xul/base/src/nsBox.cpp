@@ -645,9 +645,6 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
                              flags);
   } 
 
-  if (IsBoxFrame())
-    mState &= ~(NS_STATE_STYLE_CHANGE);
-
   return NS_OK;
 }
 
