@@ -3541,7 +3541,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
 }
 #endif /* !XPCONNECT_STANDALONE */
 
-/* JSObject import (in AUTF8String moduleURL,
+/* JSObject import (in AUTF8String registryLocation,
  *                  [optional] in JSObject targetObj);
  */
 NS_IMETHODIMP
