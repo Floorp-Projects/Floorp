@@ -1413,6 +1413,17 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       LPSHELLFOLDER lpShellFolder = NULL;
 
       if (SUCCEEDED(::SHGetDesktopFolder(&lpShellFolder))) {
+        nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsIFile> file;
+        rv = fileURL->GetFile(getter_Addrefs(file));
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        nsAutoString path;
+        rv = file->GetPath(&path);
+        NS_ENSURE_SUCCESS(rv, rv);
+
         PRUnichar *filePath = ToNewUnicode(path);
         LPITEMIDLIST lpItemIDList = NULL;
         if (SUCCEEDED(lpShellFolder->ParseDisplayName(NULL, NULL, filePath, NULL, &lpItemIDList, NULL))) {
