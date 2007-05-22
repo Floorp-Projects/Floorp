@@ -1049,7 +1049,7 @@ nsSVGUtils::PaintChildWithEffects(nsSVGRenderState *aContext,
     opacity = 1.0f;
 
   gfxContext *gfx = aContext->GetGfxContext();
-  cairo_t *ctx = nsnull;
+  PRBool complexEffects = PR_FALSE;
 
   nsSVGClipPathFrame *clipPathFrame = GetClipPathFrame(state, aFrame);
   PRBool isTrivialClip = clipPathFrame ? clipPathFrame->IsTrivial() : PR_TRUE;
@@ -1062,9 +1062,9 @@ nsSVGUtils::PaintChildWithEffects(nsSVGRenderState *aContext,
   /* Check if we need to do additional operations on this child's
    * rendering, which necessitates rendering into another surface. */
   if (opacity != 1.0f || maskFrame || (clipPathFrame && !isTrivialClip)) {
-    ctx = gfx->GetCairo();
-    cairo_save(ctx);
-    cairo_push_group(ctx);
+    complexEffects = PR_TRUE;
+    gfx->Save();
+    gfx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
   }
 
   /* If this frame has only a trivial clipPath, set up cairo's clipping now so
@@ -1088,46 +1088,41 @@ nsSVGUtils::PaintChildWithEffects(nsSVGRenderState *aContext,
   }
 
   /* No more effects, we're done. */
-  if (!ctx)
+  if (!complexEffects)
     return;
 
-  cairo_pop_group_to_source(ctx);
+  gfx->PopGroupToSource();
 
-  cairo_pattern_t *maskSurface =
+  nsRefPtr<gfxPattern> maskSurface =
     maskFrame ? maskFrame->ComputeMaskAlpha(aContext, svgChildFrame,
                                             matrix, opacity) : nsnull;
 
-  cairo_pattern_t *clipMaskSurface = nsnull;
+  nsRefPtr<gfxPattern> clipMaskSurface;
   if (clipPathFrame && !isTrivialClip) {
-    cairo_push_group(ctx);
+    gfx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
 
     nsresult rv = clipPathFrame->ClipPaint(aContext, svgChildFrame, matrix);
-    clipMaskSurface = cairo_pop_group(ctx);
+    clipMaskSurface = gfx->PopGroup();
 
     if (NS_SUCCEEDED(rv) && clipMaskSurface) {
       // Still more set after clipping, so clip to another surface
       if (maskSurface || opacity != 1.0f) {
-        cairo_push_group(ctx);
-        cairo_mask(ctx, clipMaskSurface);
-        cairo_pop_group_to_source(ctx);
+        gfx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+        gfx->Mask(clipMaskSurface);
+        gfx->PopGroupToSource();
       } else {
-        cairo_mask(ctx, clipMaskSurface);
+        gfx->Mask(clipMaskSurface);
       }
     }
   }
 
   if (maskSurface) {
-    cairo_mask(ctx, maskSurface);
+    gfx->Mask(maskSurface);
   } else if (opacity != 1.0f) {
-    cairo_paint_with_alpha(ctx, opacity);
+    gfx->Paint(opacity);
   }
 
-  cairo_restore(ctx);
-
-  if (maskSurface)
-    cairo_pattern_destroy(maskSurface);
-  if (clipMaskSurface)
-    cairo_pattern_destroy(clipMaskSurface);
+  gfx->Restore();
 }
 
 void
