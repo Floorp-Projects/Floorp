@@ -107,21 +107,19 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
   PRUnichar* outputStart = aOutput;
 
   if (!aCompressWhitespace) {
-    // Convert tabs and formfeeds to spaces and skip discardables.
+    // Skip discardables.
     PRUint32 i;
     for (i = 0; i < aLength; ++i) {
       PRUnichar ch = *aText++;
-      if (ch == '\t') {
-        flags |= TEXT_HAS_TAB|TEXT_WAS_TRANSFORMED;
-        aSkipChars->KeepChar();
-        *aOutput++ = ' ';
-      } else if (IsDiscardable(ch, &flags)) {
+      if (IsDiscardable(ch, &flags)) {
         aSkipChars->SkipChar();
       } else {
         aSkipChars->KeepChar();
         if (ch == CH_NBSP) {
           ch = ' ';
           flags |= TEXT_WAS_TRANSFORMED;
+        } else if (ch == '\t') {
+          flags |= TEXT_HAS_TAB;
         }
         *aOutput++ = ch;
       }
@@ -197,21 +195,19 @@ nsTextFrameUtils::TransformText(const PRUint8* aText, PRUint32 aLength,
   PRUint8* outputStart = aOutput;
 
   if (!aCompressWhitespace) {
-    // Convert tabs to spaces and skip discardables.
+    // Skip discardables.
     PRUint32 i;
     for (i = 0; i < aLength; ++i) {
       PRUint8 ch = *aText++;
-      if (ch == '\t') {
-        flags |= TEXT_HAS_TAB|TEXT_WAS_TRANSFORMED;
-        aSkipChars->KeepChar();
-        *aOutput++ = ' ';
-      } else if (IsDiscardable(ch, &flags)) {
+      if (IsDiscardable(ch, &flags)) {
         aSkipChars->SkipChar();
       } else {
         aSkipChars->KeepChar();
         if (ch == CH_NBSP) {
           ch = ' ';
           flags |= TEXT_WAS_TRANSFORMED;
+        } else if (ch == '\t') {
+          flags |= TEXT_HAS_TAB;
         }
         *aOutput++ = ch;
       }

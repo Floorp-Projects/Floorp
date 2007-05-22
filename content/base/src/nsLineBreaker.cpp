@@ -40,21 +40,18 @@
 #include "nsContentUtils.h"
 #include "nsILineBreaker.h"
 
-// We only operate on post-transformation text, so we don't see tabs
+#define UNICODE_ZWSP 0x200b
+
 static inline int
 IS_SPACE(PRUnichar u)
 {
-  NS_ASSERTION(u != 0x0009, "Tabs should have been eliminated");
-  // \r characters are just ignored
-  return u == 0x0020 || u == 0x000a || u == 0x200b;
+  return u == 0x0020 || u == UNICODE_ZWSP;
 }
 
 static inline int
 IS_SPACE(PRUint8 u)
 {
-  NS_ASSERTION(u != 0x0009, "Tabs should have been eliminated");
-  // \r characters are just ignored
-  return u == 0x0020 || u == 0x000a;
+  return u == 0x0020;
 }
 
 static inline int
@@ -67,7 +64,8 @@ IS_CJK_CHAR(PRUnichar u)
 }
 
 nsLineBreaker::nsLineBreaker()
-  : mCurrentWordContainsCJK(PR_FALSE), mBreakBeforeNextWord(PR_FALSE)
+  : mCurrentWordContainsCJK(PR_FALSE),
+    mBreakBeforeNonWhitespace(PR_FALSE)
 {
 }
 
@@ -129,7 +127,7 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
     nsresult rv = FlushCurrentWord();
     if (NS_FAILED(rv))
       return rv;
-    mBreakBeforeNextWord |= (aFlags & BREAK_WHITESPACE) != 0;
+    mBreakBeforeNonWhitespace = (aFlags & BREAK_WHITESPACE_END) != 0;
     return NS_OK;
   }
 
@@ -137,7 +135,7 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
 
   // Continue the current word
   if (mCurrentWord.Length() > 0) {
-    NS_ASSERTION(!mBreakBeforeNextWord, "This should not be set");
+    NS_ASSERTION(!mBreakBeforeNonWhitespace, "These should not be set");
 
     while (offset < aLength && !IS_SPACE(aText[offset])) {
       mCurrentWord.AppendElement(aText[offset]);
@@ -168,13 +166,13 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
   PRUint32 wordStart = offset;
   PRBool wordHasCJK = PR_FALSE;
 
-  PRBool breakNext = mBreakBeforeNextWord;
+  PRBool breakNextIfNonWhitespace = mBreakBeforeNonWhitespace;
   for (;;) {
     PRUnichar ch = aText[offset];
     PRBool isSpace = IS_SPACE(ch);
 
-    breakState[offset] = breakNext;
-    breakNext = PR_FALSE;
+    breakState[offset] = breakNextIfNonWhitespace && !isSpace;
+    breakNextIfNonWhitespace = PR_FALSE;
 
     if (isSpace) {
       if (offset > wordStart && wordHasCJK) {
@@ -190,10 +188,8 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
         wordHasCJK = PR_FALSE;
       }
 
-      if (aFlags & BREAK_WHITESPACE) {
-        // Allow break either side of the whitespace
-        breakState[offset] = PR_TRUE;
-        breakNext = PR_TRUE;
+      if (aFlags & BREAK_WHITESPACE_END) {
+        breakNextIfNonWhitespace = PR_TRUE;
       }
       ++offset;
       if (offset >= aLength)
@@ -221,7 +217,7 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
   }
 
   aSink->SetBreaks(start, offset - start, breakState.Elements() + start);
-  mBreakBeforeNextWord = breakNext;
+  mBreakBeforeNonWhitespace = breakNextIfNonWhitespace;
   return NS_OK;
 }
 
@@ -234,7 +230,7 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
     nsresult rv = FlushCurrentWord();
     if (NS_FAILED(rv))
       return rv;
-    mBreakBeforeNextWord |= (aFlags & BREAK_WHITESPACE) != 0;
+    mBreakBeforeNonWhitespace = (aFlags & BREAK_WHITESPACE_END) != 0;
     return NS_OK;
   }
 
@@ -242,7 +238,7 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
 
   // Continue the current word
   if (mCurrentWord.Length() > 0) {
-    NS_ASSERTION(!mBreakBeforeNextWord, "This should not be set");
+    NS_ASSERTION(!mBreakBeforeNonWhitespace, "These should not be set");
 
     while (offset < aLength && !IS_SPACE(aText[offset])) {
       mCurrentWord.AppendElement(aText[offset]);
@@ -271,19 +267,17 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
   PRUint32 start = offset;
   PRUint32 wordStart = offset;
 
-  PRBool breakNext = mBreakBeforeNextWord;
+  PRBool breakNextIfNonWhitespace = mBreakBeforeNonWhitespace;
   for (;;) {
     PRUint8 ch = aText[offset];
     PRBool isSpace = IS_SPACE(ch);
 
-    breakState[offset] = breakNext;
-    breakNext = PR_FALSE;
+    breakState[offset] = breakNextIfNonWhitespace && !isSpace;
+    breakNextIfNonWhitespace = PR_FALSE;
 
     if (isSpace) {
-      if (aFlags & BREAK_WHITESPACE) {
-        // Allow break either side of the whitespace
-        breakState[offset] = PR_TRUE;
-        breakNext = PR_TRUE;
+      if (aFlags & BREAK_WHITESPACE_END) {
+        breakNextIfNonWhitespace = PR_TRUE;
       }
       ++offset;
       if (offset >= aLength)
@@ -313,6 +307,6 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
   }
 
   aSink->SetBreaks(start, offset - start, breakState.Elements() + start);
-  mBreakBeforeNextWord = breakNext;
+  mBreakBeforeNonWhitespace = breakNextIfNonWhitespace;
   return NS_OK;
 }
