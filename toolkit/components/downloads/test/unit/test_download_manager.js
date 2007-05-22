@@ -96,7 +96,7 @@ function cleanup()
   if (destFile.exists()) destFile.remove(true);
 }
 
-cleanup();
+//cleanup();
 
 const nsIDownloadManager = Ci.nsIDownloadManager;
 const dm = Cc["@mozilla.org/download-manager;1"].getService(nsIDownloadManager);
