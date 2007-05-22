@@ -741,14 +741,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.height = mRect.height;
   aDesiredSize.ascent = ascent;
 
-  // NS_FRAME_OUTSIDE_CHILDREN is set in SetBounds() above
-  if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
-    nsRect* overflowArea = GetOverflowAreaProperty();
-    NS_ASSERTION(overflowArea, "Failed to set overflow area property");
-    aDesiredSize.mOverflowArea = *overflowArea;
-  } else {
-    aDesiredSize.mOverflowArea = nsRect(nsPoint(0, 0), GetSize());
-  }
+  aDesiredSize.mOverflowArea = GetOverflowRect();
 
 #ifdef DO_NOISY_REFLOW
   {
@@ -1438,18 +1431,6 @@ nsBoxFrame::PaintXULDebugOverlay(nsIRenderingContext& aRenderingContext,
 }
 #endif
 
-NS_IMETHODIMP_(nsrefcnt) 
-nsBoxFrame::AddRef(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-nsBoxFrame::Release(void)
-{
-    return NS_OK;
-}
-
 #ifdef DEBUG_LAYOUT
 void
 nsBoxFrame::GetBoxName(nsAutoString& aName)
@@ -1511,14 +1492,6 @@ nsBoxFrame::GetDebug(PRBool& aDebug)
 // This new behaviour is implemented in nsDisplayList::HitTest. 
 // REVIEW: This debug-box stuff is annoying. I'm just going to put debug boxes
 // in the outline layer and avoid GetDebugBoxAt.
-nsIBox*
-nsBoxFrame::GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor)
-{
-  if (aFrame && !aFrame->IsBoxFrame())
-    aIsAdaptor = PR_TRUE;
-
-  return aFrame;
-}
 
 // REVIEW: GetCursor had debug-only event dumping code. I have replaced it
 // with instrumentation in nsDisplayXULDebug.
@@ -1531,6 +1504,7 @@ nsBoxFrame::GetContentOf(nsIContent** aContent)
       *aContent = frame->GetContent();
       if (*aContent) {
         NS_ADDREF(*aContent);
+        NS_ASSERTION(*aContent == GetContent(), "Can't happen");
         return NS_OK;
       }
 
