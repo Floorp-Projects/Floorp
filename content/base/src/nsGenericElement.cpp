@@ -1707,6 +1707,37 @@ GetFirstBindingWithContent(nsBindingManager* aBmgr, nsIContent* aBoundElem)
   return nsnull;
 }
 
+static nsresult
+BindNodesInInsertPoints(nsXBLBinding* aBinding, nsIContent* aInsertParent,
+                        nsIDocument* aDocument)
+{
+  NS_PRECONDITION(aBinding && aInsertParent, "Missing arguments");
+
+  nsresult rv;
+  // These should be refcounted or otherwise protectable.
+  nsInsertionPointList* inserts =
+    aBinding->GetExistingInsertionPointsFor(aInsertParent);
+  if (inserts) {
+    PRBool allowScripts = aBinding->AllowScripts();
+    PRUint32 i;
+    for (i = 0; i < inserts->Length(); ++i) {
+      nsCOMPtr<nsIContent> insertRoot =
+        inserts->ElementAt(i)->GetDefaultContent();
+      if (insertRoot) {
+        PRUint32 j;
+        for (j = 0; j < insertRoot->GetChildCount(); ++j) {
+          nsCOMPtr<nsIContent> child = insertRoot->GetChildAt(j);
+          rv = child->BindToTree(aDocument, aInsertParent,
+                                 aBinding->GetBoundElement(), allowScripts);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
 nsresult
 nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                              nsIContent* aBindingParent,
@@ -1812,31 +1843,20 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
           rv = child->BindToTree(aDocument, this, this, allowScripts);
           NS_ENSURE_SUCCESS(rv, rv);
         }
+
+        // ...then check if we have content in insertion points that are
+        // direct children of the <content>
+        rv = BindNodesInInsertPoints(contBinding, this, aDocument);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // ...then check if we have content in insertion points
+      // ...and finally check if we're in a binding where we have content in
+      // insertion points.
       if (aBindingParent) {
         nsXBLBinding* binding = bmgr->GetBinding(aBindingParent);
         if (binding) {
-          // These should be refcounted.
-          nsInsertionPointList* inserts =
-            binding->GetExistingInsertionPointsFor(this);
-          if (inserts) {
-            PRBool allowScripts = binding->AllowScripts();
-            PRUint32 i;
-            for (i = 0; i < inserts->Length(); ++i) {
-              nsCOMPtr<nsIContent> insertRoot =
-                inserts->ElementAt(i)->GetDefaultContent();
-              if (insertRoot) {
-                PRUint32 j;
-                for (j = 0; j < insertRoot->GetChildCount(); ++j) {
-                  nsCOMPtr<nsIContent> child = insertRoot->GetChildAt(j);
-                  rv = child->BindToTree(aDocument, this, aBindingParent, allowScripts);
-                  NS_ENSURE_SUCCESS(rv, rv);
-                }
-              }
-            }
-          }
+          rv = BindNodesInInsertPoints(binding, this, aDocument);
+          NS_ENSURE_SUCCESS(rv, rv);
         }
       }
     }
