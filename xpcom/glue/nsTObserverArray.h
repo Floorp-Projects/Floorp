@@ -40,7 +40,7 @@
 
 #include "nsVoidArray.h"
 
-class nsTObserverArray_base {
+class NS_COM_GLUE nsTObserverArray_base {
   public:
     class Iterator_base;
     friend class Iterator_base;
@@ -169,7 +169,7 @@ class nsTObserverArray : public nsTObserverArray_base {
       return mObservers.Count() == 0;
     }
 
-    T* SafeObserverAt(PRInt32 aIndex) {
+    T* SafeObserverAt(PRInt32 aIndex) const {
       return NS_STATIC_CAST(T*, mObservers.SafeElementAt(aIndex));
     }
 
