@@ -74,6 +74,7 @@
 #include "nsGkAtoms.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
+#include "nsPresShellIterator.h"
 
 // Concrete classes
 #include "nsFrameLoader.h"
@@ -543,9 +544,9 @@ nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
       return NS_OK;
     }
 
-    PRUint32 numShells = doc->GetNumberOfShells();
-    for (PRUint32 i = 0; i < numShells; ++i) {
-      nsIPresShell* shell = doc->GetShellAt(i);
+    nsPresShellIterator iter(doc);
+    nsCOMPtr<nsIPresShell> shell;
+    while ((shell = iter.GetNextShell())) {
       shell->RecreateFramesFor(thisContent);
     }
 
@@ -1175,9 +1176,9 @@ nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
     // If our state changed, then we already recreated frames
     // Otherwise, need to do that here
 
-    PRUint32 numShells = doc->GetNumberOfShells();
-    for (PRUint32 i = 0; i < numShells; ++i) {
-      nsIPresShell* shell = doc->GetShellAt(i);
+    nsPresShellIterator iter(doc);
+    nsCOMPtr<nsIPresShell> shell;
+    while ((shell = iter.GetNextShell())) {
       shell->RecreateFramesFor(thisContent);
     }
   }

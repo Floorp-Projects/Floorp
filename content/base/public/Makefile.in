@@ -74,6 +74,7 @@ nsCopySupport.h \
 nsContentCreatorFunctions.h \
 nsLineBreaker.h \
 nsXMLNameSpaceMap.h \
+nsPresShellIterator.h \
 $(NULL)
 
 ifndef DISABLE_XFORMS_HOOKS

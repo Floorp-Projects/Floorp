@@ -44,6 +44,7 @@
 #include "nsDisplayList.h"
 #include "nsStubMutationObserver.h"
 #include "gfxContext.h"
+#include "nsPresShellIterator.h"
 
 #if defined(DEBUG) && defined(SVG_DEBUG_PRINTING)
 #include "nsIDeviceContext.h"
@@ -88,9 +89,10 @@ nsSVGMutationObserver::AttributeChanged(nsIDocument *aDocument,
     return;
   }
 
-  PRUint32 count = aDocument->GetNumberOfShells();
-  for (PRUint32 i = 0; i < count; ++i) {
-    nsIFrame *frame = aDocument->GetShellAt(i)->GetPrimaryFrameFor(aContent);
+  nsPresShellIterator iter(aDocument);
+  nsCOMPtr<nsIPresShell> shell;
+  while ((shell = iter.GetNextShell())) {
+    nsIFrame *frame = shell->GetPrimaryFrameFor(aContent);
     if (!frame) {
       continue;
     }

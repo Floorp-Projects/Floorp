@@ -150,6 +150,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsXBLBinding.h"
 #include "nsEventDispatcher.h"
+#include "nsPresShellIterator.h"
 
 /**
  * Three bits are used for XUL Element's lazy state.
@@ -1889,10 +1890,10 @@ nsXULElement::Focus()
         return NS_OK;
 
     // Obtain a presentation context and then call SetFocus.
-    if (doc->GetNumberOfShells() == 0)
-        return NS_OK;
 
     nsIPresShell *shell = doc->GetPrimaryShell();
+    if (!shell)
+        return NS_OK;
 
     // Set focus
     nsCOMPtr<nsPresContext> context = shell->GetPresContext();
@@ -1910,10 +1911,9 @@ nsXULElement::Blur()
         return NS_OK;
 
     // Obtain a presentation context and then call SetFocus.
-    if (doc->GetNumberOfShells() == 0)
-        return NS_OK;
-
     nsIPresShell *shell = doc->GetPrimaryShell();
+    if (!shell)
+        return NS_OK;
 
     // Set focus
     nsCOMPtr<nsPresContext> context = shell->GetPresContext();
@@ -1931,13 +1931,11 @@ nsXULElement::Click()
 
     nsCOMPtr<nsIDocument> doc = GetCurrentDoc(); // Strong just in case
     if (doc) {
-        PRUint32 numShells = doc->GetNumberOfShells();
-        // strong ref to PresContext so events don't destroy it
-        nsCOMPtr<nsPresContext> context;
-
-        for (PRUint32 i = 0; i < numShells; ++i) {
-            nsIPresShell *shell = doc->GetShellAt(i);
-            context = shell->GetPresContext();
+        nsPresShellIterator iter(doc);
+        nsCOMPtr<nsIPresShell> shell;
+        while ((shell = iter.GetNextShell())) {
+            // strong ref to PresContext so events don't destroy it
+            nsCOMPtr<nsPresContext> context = shell->GetPresContext();
 
             PRBool isCallerChrome = nsContentUtils::IsCallerChrome();
 
@@ -1974,13 +1972,10 @@ nsXULElement::DoCommand()
 {
     nsCOMPtr<nsIDocument> doc = GetCurrentDoc(); // strong just in case
     if (doc) {
-        PRUint32 numShells = doc->GetNumberOfShells();
-        nsCOMPtr<nsPresContext> context;
-
-        for (PRUint32 i = 0; i < numShells; ++i) {
-            nsIPresShell *shell = doc->GetShellAt(i);
-            context = shell->GetPresContext();
-
+        nsPresShellIterator iter(doc);
+        nsCOMPtr<nsIPresShell> shell;
+        while ((shell = iter.GetNextShell())) {
+            nsCOMPtr<nsPresContext> context = shell->GetPresContext();
             nsEventStatus status = nsEventStatus_eIgnore;
             nsXULCommandEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull);
             nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this),

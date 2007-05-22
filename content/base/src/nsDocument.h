@@ -101,6 +101,7 @@
 #include "pldhash.h"
 #include "nsAttrAndChildArray.h"
 #include "nsDOMAttributeMap.h"
+#include "nsPresShellIterator.h"
 
 #define XML_DECLARATION_BITS_DECLARATION_EXISTS   (1 << 0)
 #define XML_DECLARATION_BITS_ENCODING_EXISTS      (1 << 1)
@@ -374,10 +375,7 @@ public:
                                nsStyleSet* aStyleSet,
                                nsIPresShell** aInstancePtrResult);
   virtual PRBool DeleteShell(nsIPresShell* aShell);
-  virtual PRUint32 GetNumberOfShells() const;
-  virtual nsIPresShell *GetShellAt(PRUint32 aIndex) const;
   virtual nsIPresShell *GetPrimaryShell() const;
-  virtual void SetShellsHidden(PRBool aHide);
 
   virtual nsresult SetSubDocumentFor(nsIContent *aContent,
                                      nsIDocument* aSubDoc);
@@ -765,8 +763,6 @@ protected:
   // True if the document "page" is not hidden
   PRPackedBool mVisible:1;
 
-  PRPackedBool mShellsAreHidden:1;
-
   PRUint8 mXMLDeclarationBits;
 
   PRUint8 mDefaultElementType;
@@ -806,8 +802,6 @@ private:
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);
   nsDocument& operator=(const nsDocument& aOther);
-
-  nsSmallVoidArray mPresShells;
 
   nsCOMPtr<nsISupports> mXPathEvaluatorTearoff;
 
