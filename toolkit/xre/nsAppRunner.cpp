@@ -2184,32 +2184,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     NS_BREAK();
 #endif
 
-#ifdef MOZ_AIRBAG
-  //XXX: remove me when we turn this on by default
-  const char* airbagEnv = PR_GetEnv("MOZ_AIRBAG");
-  //XXX: can't set the flag here, since aAppData is const
-  if (((airbagEnv && *airbagEnv) ||
-      ((aAppData->flags & NS_XRE_ENABLE_CRASH_REPORTER) &&
-       aAppData->crashReporterURL)) &&
-      NS_SUCCEEDED(CrashReporter::SetExceptionHandler(aAppData->xreDirectory,
-                                                      aAppData->crashReporterURL)))
-    {
-    // pass some basic info from the app data
-    if (aAppData->vendor)
-      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Vendor"),
-                                     nsDependentCString(aAppData->vendor));
-    if (aAppData->name)
-      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ProductName"),
-                                     nsDependentCString(aAppData->name));
-    if (aAppData->version)
-      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Version"),
-                                     nsDependentCString(aAppData->version));
-    if (aAppData->buildID)
-      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("BuildID"),
-                                     nsDependentCString(aAppData->buildID));
-  }
-#endif
-
 #ifdef XP_WIN32
   // Suppress the "DLL Foo could not be found" dialog, such that if dependent
   // libraries (such as GDI+) are not preset, we gracefully fail to load those
@@ -2312,13 +2286,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     }
   }
 
-#ifdef MOZ_AIRBAG
-  //XXX: remove me when this is on by default
-  if (airbagEnv && *airbagEnv) {
-    appData.flags |= NS_XRE_ENABLE_CRASH_REPORTER;
-  }
-#endif
-
   ScopedLogging log;
 
   if (!appData.xreDirectory) {
@@ -2336,6 +2303,33 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     if (NS_FAILED(rv))
       return 2;
   }
+
+#ifdef MOZ_AIRBAG
+  //XXX: remove me when this is on by default
+  const char* airbagEnv = PR_GetEnv("MOZ_AIRBAG");
+  if (airbagEnv && *airbagEnv) {
+    appData.flags |= NS_XRE_ENABLE_CRASH_REPORTER;
+  }
+
+  if ((appData.flags & NS_XRE_ENABLE_CRASH_REPORTER) &&
+      NS_SUCCEEDED(
+         CrashReporter::SetExceptionHandler(appData.xreDirectory,
+                                            appData.crashReporterURL))) {
+    // pass some basic info from the app data
+    if (appData.vendor)
+      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Vendor"),
+                                     nsDependentCString(appData.vendor));
+    if (appData.name)
+      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ProductName"),
+                                     nsDependentCString(appData.name));
+    if (appData.version)
+      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Version"),
+                                     nsDependentCString(appData.version));
+    if (appData.buildID)
+      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("BuildID"),
+                                     nsDependentCString(appData.buildID));
+  }
+#endif
 
 #ifdef XP_MACOSX
   if (PR_GetEnv("MOZ_LAUNCHED_CHILD")) {

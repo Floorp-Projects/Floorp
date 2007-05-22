@@ -116,6 +116,11 @@ foreach my $dbgfile (@ARGV) {
       my $a = '';
       $a = "-a $arch" if $arch ne '';
       system("${dump_syms} ${a} ${dbgfile} > ${symfile}");
+      # remove empty sym file, probably no debug symbols in that file
+      if (-s $symfile == 0) {
+	  unlink($symfile);
+	  next;
+      }
       my $newpath = rename_symbol_file $symfile, $symbol_path;
       if ($copy_dbg && $newpath ne "") {
         my $out = $newpath;
