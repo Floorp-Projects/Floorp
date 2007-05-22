@@ -450,7 +450,7 @@ var PlacesUtils = {
       // bookmarks folder: <itemId>\n<>\n<parentId>\n<indexInParent>
       // uri:              0\n<uri>\n<parentId>\n<indexInParent>
       // bookmark:         <itemId>\n<uri>\n<parentId>\n<indexInParent>
-      // separator:        0\n<>\n<parentId>\n<indexInParent>
+      // separator:        <itemId>\n<>\n<parentId>\n<indexInParent>
       var wrapped = "";
       if (aNode.itemId != -1) // 
         wrapped += aNode.itemId + NEWLINE;
@@ -655,50 +655,46 @@ var PlacesUtils = {
                                                index, copy) {
     switch (type) {
     case this.TYPE_X_MOZ_PLACE_CONTAINER:
-      if (data.id > 0 && data.uri == null) {
+      if (data.id > 0) {
         // Place is a folder.
         if (copy)
           return this._getFolderCopyTransaction(data, container, index);
-        return new PlacesMoveFolderTransaction(data.id, data.parent,
-                                               data.index, container,
-                                               index);
       }
+      break;
     case this.TYPE_X_MOZ_PLACE:
-      if (data.id > 0) {
-        if (copy) {
-          // Copying a child of a live-bookmark by itself should result
-          // as a new normal bookmark item (bug 376731)
-          var copyBookmarkAnno = 
-            this._getBookmarkItemCopyTransaction(data.id, container, index,
-                                                 ["livemark/bookmarkFeedURI"]);
-          return copyBookmarkAnno;
-        }
-        return new PlacesMoveItemTransaction(data.id, data.uri, data.parent,
-                                             data.index, container,
-                                             index);
+      if (data.id <= 0)
+        return this._getURIItemCopyTransaction(data.uri, container, index);
+  
+      if (copy) {
+        // Copying a child of a live-bookmark by itself should result
+        // as a new normal bookmark item (bug 376731)
+        var copyBookmarkAnno = 
+          this._getBookmarkItemCopyTransaction(data.id, container, index,
+                                               ["livemark/bookmarkFeedURI"]);
+        return copyBookmarkAnno;
       }
-      return this._getURIItemCopyTransaction(data.uri, container, index);
+      break;
     case this.TYPE_X_MOZ_PLACE_SEPARATOR:
       if (copy) {
         // There is no data in a separator, so copying it just amounts to
         // inserting a new separator.
         return new PlacesCreateSeparatorTransaction(container, index);
       }
-      // Similarly, moving a separator is just removing the old one and
-      // then creating a new one.
-      var removeTxn =
-        new PlacesRemoveSeparatorTransaction(data.parent, data.index);
-      var createTxn =
-        new PlacesCreateSeparatorTransaction(container, index);
-      return new PlacesAggregateTransaction("SeparatorMove", [removeTxn, createTxn]);
+      break;
     case this.TYPE_X_MOZ_URL:
     case this.TYPE_UNICODE:
       var title = type == this.TYPE_X_MOZ_URL ? data.title : data.uri;
       var createTxn =
         new PlacesCreateItemTransaction(data.uri, container, index, title);
       return createTxn;
+    default:
+      return null;
     }
-    return null;
+    if (data.id <= 0)
+      return null;
+
+    // Move the item otherwise
+    return new PlacesMoveItemTransaction(data.id, container, index);
   },
 
   /**

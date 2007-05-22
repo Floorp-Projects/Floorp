@@ -1219,7 +1219,7 @@ BookmarkContentSink::NewFrame()
 
   if (updateFolder) {
     // move the menu folder to the current position
-    mBookmarksService->MoveFolder(ourID, CurFrame().mContainerID, -1);
+    mBookmarksService->MoveItem(ourID, CurFrame().mContainerID, -1);
     mBookmarksService->SetItemTitle(ourID, containerName);
 #ifdef DEBUG_IMPORT
     printf(" [reparenting]");

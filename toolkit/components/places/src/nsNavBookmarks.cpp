@@ -1353,14 +1353,14 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolder)
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::MoveFolder(PRInt64 aFolder, PRInt64 aNewParent, PRInt32 aIndex)
+nsNavBookmarks::MoveItem(PRInt64 aItemId, PRInt64 aNewParent, PRInt32 aIndex)
 {
   // You can pass -1 to indicate append, but no other negative number is allowed
   if (aIndex < -1)
     return NS_ERROR_INVALID_ARG;
 
   // Disallow making a folder it's own parent.
-  if (aFolder == aNewParent)
+  if (aItemId == aNewParent)
     return NS_ERROR_INVALID_ARG;
 
   mozIStorageConnection *dbConn = DBConn();
@@ -1370,10 +1370,11 @@ nsNavBookmarks::MoveFolder(PRInt64 aFolder, PRInt64 aNewParent, PRInt32 aIndex)
   nsresult rv;
   PRInt64 oldParent;
   PRInt32 oldIndex;
-  nsCAutoString type;
+  PRInt32 itemType;
+  nsCAutoString folderType;
   {
     mozStorageStatementScoper scope(mDBGetItemProperties);
-    rv = mDBGetItemProperties->BindInt64Parameter(0, aFolder);
+    rv = mDBGetItemProperties->BindInt64Parameter(0, aItemId);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool results;
@@ -1385,8 +1386,12 @@ nsNavBookmarks::MoveFolder(PRInt64 aFolder, PRInt64 aNewParent, PRInt32 aIndex)
 
     oldParent = mDBGetItemProperties->AsInt64(kGetItemPropertiesIndex_Parent);
     oldIndex = mDBGetItemProperties->AsInt32(kGetItemPropertiesIndex_Position);
-    rv = mDBGetItemProperties->GetUTF8String(kGetItemPropertiesIndex_FolderType, type);
-    NS_ENSURE_SUCCESS(rv, rv);
+    itemType = mDBGetItemProperties->AsInt32(kGetItemPropertiesIndex_Type);
+    if (itemType == TYPE_FOLDER) {
+      rv = mDBGetItemProperties->GetUTF8String(kGetItemPropertiesIndex_FolderType,
+                                               folderType);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   // if parent and index are the same, nothing to do
@@ -1394,12 +1399,12 @@ nsNavBookmarks::MoveFolder(PRInt64 aFolder, PRInt64 aNewParent, PRInt32 aIndex)
     return NS_OK;
 
   // Make sure aNewParent is not aFolder or a subfolder of aFolder
-  {
+  if (itemType == TYPE_FOLDER) {
     mozStorageStatementScoper scope(mDBGetItemProperties);
     PRInt64 p = aNewParent;
 
     while (p) {
-      if (p == aFolder) {
+      if (p == aItemId) {
         return NS_ERROR_INVALID_ARG;
       }
 
@@ -1455,7 +1460,7 @@ nsNavBookmarks::MoveFolder(PRInt64 aFolder, PRInt64 aNewParent, PRInt32 aIndex)
     buffer.AppendInt(newIndex);
   }
   buffer.AppendLiteral(" WHERE id = ");
-  buffer.AppendInt(aFolder);
+  buffer.AppendInt(aItemId);
   rv = dbConn->ExecuteSimpleSQL(buffer);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1484,14 +1489,15 @@ nsNavBookmarks::MoveFolder(PRInt64 aFolder, PRInt64 aNewParent, PRInt32 aIndex)
 
   // notify bookmark observers
   ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
-                      OnFolderMoved(aFolder, oldParent, oldIndex,
-                                    aNewParent, newIndex))
+                      OnItemMoved(aItemId, oldParent, oldIndex, aNewParent,
+                                  newIndex))
 
   // notify remote container provider if there is one
-  if (!type.IsEmpty()) {
-    nsCOMPtr<nsIRemoteContainer> container = do_GetService(type.get(), &rv);
+  if (!folderType.IsEmpty()) {
+    nsCOMPtr<nsIRemoteContainer> container =
+      do_GetService(folderType.get(), &rv);
     if (NS_SUCCEEDED(rv)) {
-      rv = container->OnContainerMoved(aFolder, aNewParent, newIndex);
+      rv = container->OnContainerMoved(aItemId, aNewParent, newIndex);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }

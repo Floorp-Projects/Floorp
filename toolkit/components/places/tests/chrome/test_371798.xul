@@ -67,12 +67,8 @@ var observer =
     bmsvc.removeObserver(this);
   },
   onItemVisited: function(bookmarkId, bookmark, aVisitID, time){},
-  onFolderAdded: function(folder, parent, index){},
-  onFolderRemoved: function(folder, parent, index){},
-  onFolderMoved: function(folder, oldParent, oldIndex, newParent, newIndex){},
-  onFolderChanged: function(folder, property){},
-  onSeparatorAdded: function(parent, index){},
-  onSeparatorRemoved: function(parent, index){}
+  onItemMoved: function(itemId, oldParent, oldIndex, newParent, newIndex){},
+  onFolderChanged: function(folder, property){}
 };
 bmsvc.addObserver(observer, false);
 

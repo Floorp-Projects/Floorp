@@ -2595,7 +2595,7 @@ nsNavHistoryQueryResultNode::OnItemVisited(PRInt64 aItemId,
   return NS_OK;
 }
 NS_IMETHODIMP
-nsNavHistoryQueryResultNode::OnFolderMoved(PRInt64 aFolder, PRInt64 aOldParent,
+nsNavHistoryQueryResultNode::OnItemMoved(PRInt64 aFolder, PRInt64 aOldParent,
                                             PRInt32 aOldIndex, PRInt64 aNewParent,
                                             PRInt32 aNewIndex)
 {
@@ -3294,12 +3294,12 @@ nsNavHistoryFolderResultNode::OnItemVisited(PRInt64 aItemId,
   return NS_OK;
 }
 
-// nsNavHistoryFolderResultNode::OnFolderMoved (nsINavBookmarkObserver)
+// nsNavHistoryFolderResultNode::OnItemMoved (nsINavBookmarkObserver)
 
 NS_IMETHODIMP
-nsNavHistoryFolderResultNode::OnFolderMoved(PRInt64 aFolder, PRInt64 aOldParent,
-                                            PRInt32 aOldIndex, PRInt64 aNewParent,
-                                            PRInt32 aNewIndex)
+nsNavHistoryFolderResultNode::OnItemMoved(PRInt64 aItemId, PRInt64 aOldParent,
+                                          PRInt32 aOldIndex, PRInt64 aNewParent,
+                                          PRInt32 aNewIndex)
 {
   NS_ASSERTION(aOldParent == mItemId || aNewParent == mItemId,
                "Got a bookmark message that doesn't belong to us");
@@ -3315,8 +3315,8 @@ nsNavHistoryFolderResultNode::OnFolderMoved(PRInt64 aFolder, PRInt64 aOldParent,
     ReindexRange(aNewIndex, PR_INT32_MAX, 1);
 
     PRUint32 index;
-    nsNavHistoryFolderResultNode* node = FindChildFolder(aFolder, &index);
-    if (! node) {
+    nsNavHistoryResultNode* node = FindChildById(aItemId, &index);
+    if (!node) {
       NS_NOTREACHED("Can't find folder that is moving!");
       return NS_ERROR_FAILURE;
     }
@@ -3332,7 +3332,7 @@ nsNavHistoryFolderResultNode::OnFolderMoved(PRInt64 aFolder, PRInt64 aOldParent,
     if (DoesChildNeedResorting(index, comparator, sortingAnnotation.get())) {
       // needs resorting, this will cause everything to be redrawn, so we
       // don't need to do that explicitly later.
-      nsRefPtr<nsNavHistoryContainerResultNode> lock(node);
+      nsRefPtr<nsNavHistoryResultNode> lock(node);
       RemoveChildAt(index, PR_TRUE);
       InsertChildAt(node,
                     FindInsertionPoint(node, comparator, sortingAnnotation.get()),
@@ -3343,9 +3343,9 @@ nsNavHistoryFolderResultNode::OnFolderMoved(PRInt64 aFolder, PRInt64 aOldParent,
   } else {
     // moving between two different folders, just do a remove and an add
     if (aOldParent == mItemId)
-      OnItemRemoved(aFolder, aOldParent, aOldIndex);
+      OnItemRemoved(aItemId, aOldParent, aOldIndex);
     if (aNewParent == mItemId)
-      OnItemAdded(aFolder, aNewParent, aNewIndex);
+      OnItemAdded(aItemId, aNewParent, aNewIndex);
   }
   return NS_OK;
 }
@@ -3854,26 +3854,26 @@ nsNavHistoryResult::OnItemVisited(PRInt64 aItemId, PRInt64 aVisitId,
 }
 
 
-// nsNavHistoryResult::OnFolderMoved (nsINavBookmarkObserver)
+// nsNavHistoryResult::OnItemMoved (nsINavBookmarkObserver)
 //
 //    Need to notify both the source and the destination folders (if they
 //    are different).
 
 NS_IMETHODIMP
-nsNavHistoryResult::OnFolderMoved(PRInt64 aFolder,
-                                  PRInt64 aOldParent, PRInt32 aOldIndex,
-                                  PRInt64 aNewParent, PRInt32 aNewIndex)
+nsNavHistoryResult::OnItemMoved(PRInt64 aItemId,
+                                PRInt64 aOldParent, PRInt32 aOldIndex,
+                                PRInt64 aNewParent, PRInt32 aNewIndex)
 {
   { // scope for loop index for VC6's broken for loop scoping
     ENUMERATE_BOOKMARK_OBSERVERS_FOR_FOLDER(aOldParent,
-        OnFolderMoved(aFolder, aOldParent, aOldIndex, aNewParent, aNewIndex));
+        OnItemMoved(aItemId, aOldParent, aOldIndex, aNewParent, aNewIndex));
   }
   if (aNewParent != aOldParent) {
     ENUMERATE_BOOKMARK_OBSERVERS_FOR_FOLDER(aNewParent,
-        OnFolderMoved(aFolder, aOldParent, aOldIndex, aNewParent, aNewIndex));
+        OnItemMoved(aItemId, aOldParent, aOldIndex, aNewParent, aNewIndex));
   }
-  ENUMERATE_HISTORY_OBSERVERS(OnFolderMoved(aFolder, aOldParent, aOldIndex,
-                                            aNewParent, aNewIndex));
+  ENUMERATE_HISTORY_OBSERVERS(OnItemMoved(aItemId, aOldParent, aOldIndex,
+                                          aNewParent, aNewIndex));
   return NS_OK;
 }
 

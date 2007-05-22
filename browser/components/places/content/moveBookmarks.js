@@ -65,37 +65,12 @@ var gMoveBookmarksDialog = {
 
     var transactions = [];
     for (var i=0; i < this._nodes.length; i++) {
-      var parentId = this._nodes[i].parent.itemId;
-
       // Nothing to do if the node is already under the selected folder
-      if (parentId == selectedFolderID)
+      if (this._nodes[i].parent.itemId == selectedFolderID)
         continue;
 
-      var nodeIndex = PlacesUtils.getIndexOfNode(this._nodes[i]);
-      if (PlacesUtils.nodeIsFolder(this._nodes[i])) {
-        // Disallow moving a folder into itself
-        if (this._nodes[i].itemId != selectedFolderID) {
-          transactions.push(new
-            PlacesMoveFolderTransaction(this._nodes[i].itemId,
-                                        parentId, nodeIndex,
-                                        selectedFolderID, -1));
-        }
-      }
-      else if (PlacesUtils.nodeIsBookmark(this._nodes[i])) {
-        transactions.push(new
-          PlacesMoveItemTransaction(this._nodes[i].itemId,
-                                    PlacesUtils._uri(this._nodes[i].uri),
-                                    parentId, nodeIndex, selectedFolderID, -1));
-      }
-      else if (PlacesUtils.nodeIsSeparator(this._nodes[i])) { 
-        // See makeTransaction in utils.js
-        var removeTxn =
-          new PlacesRemoveSeparatorTransaction(parentId, nodeIndex);
-        var createTxn =
-          new PlacesCreateSeparatorTransaction(selectedFolderID, -1);
-        transactions.push(new
-          PlacesAggregateTransaction("SeparatorMove", [removeTxn, createTxn]));
-      }
+      transactions.push(new
+        PlacesMoveItemTransaction(this._nodes[i].itemId, selectedFolderID, -1));
     }
 
     if (transactions.length != 0) {
