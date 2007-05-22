@@ -103,6 +103,7 @@ const dm = Cc["@mozilla.org/download-manager;1"].getService(nsIDownloadManager);
 
 function test_get_download_empty_queue()
 {
+  print("*** DOWNLOAD MANAGER TEST - test_get_download_empty_queue");
   try {
     dm.getDownload(0);
     do_throw("Hey!  We expect to get an excpetion with this!");
@@ -113,6 +114,7 @@ function test_get_download_empty_queue()
 
 function test_connection()
 {
+  print("*** DOWNLOAD MANAGER TEST - test_connection");
   var ds = dm.DBConnection;
 
   do_check_true(ds.connectionReady);
@@ -122,6 +124,7 @@ function test_connection()
 
 function test_count_empty_queue()
 {
+  print("*** DOWNLOAD MANAGER TEST - test_count_empty_queue");
   do_check_eq(0, dm.activeDownloadCount);
 
   do_check_false(dm.activeDownloads.hasMoreElements());
@@ -129,11 +132,13 @@ function test_count_empty_queue()
 
 function test_canCleanUp_empty_queue()
 {
+  print("*** DOWNLOAD MANAGER TEST - test_canCleanUp_empty_queue");
   do_check_false(dm.canCleanUp);
 }
 
 function test_pauseDownload_empty_queue()
 {
+  print("*** DOWNLOAD MANAGER TEST - test_pauseDownload_empty_queue");
   try {
     dm.pauseDownload(0);
     do_throw("This should not be reached");
@@ -144,6 +149,7 @@ function test_pauseDownload_empty_queue()
 
 function test_resumeDownload_empty_queue()
 {
+  print("*** DOWNLOAD MANAGER TEST - test_resumeDownload_empty_queue");
   try {
     dm.resumeDownload(0);
     do_throw("This should not be reached");
@@ -211,9 +217,11 @@ var gDownloadCount = 0;
 var httpserv = null;
 function run_test()
 {
+  print("*** DOWNLOAD MANAGER TEST - starting tests");
   httpserv = new nsHttpServer();
   httpserv.registerDirectory("/", dirSvc.get("ProfD", Ci.nsILocalFile));
   httpserv.start(4444);
+  print("*** DOWNLOAD MANAGER TEST - server started");
 
   // our download listener
   var listener = {
