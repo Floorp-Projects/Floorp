@@ -1418,7 +1418,7 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsCOMPtr<nsIFile> file;
-        rv = fileURL->GetFile(getter_Addrefs(file));
+        rv = fileURL->GetFile(getter_AddRefs(file));
         NS_ENSURE_SUCCESS(rv, rv);
         
         nsAutoString path;
