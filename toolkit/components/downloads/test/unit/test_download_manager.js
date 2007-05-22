@@ -226,6 +226,7 @@ function run_test()
 */
 
   // our download listener
+/*
   var listener = {
     onDownloadStateChange: function(aState, aDownload)
     {
@@ -290,11 +291,12 @@ function run_test()
   os.addObserver(observer, "dl-failed", false);
   os.addObserver(observer, "dl-cancel", false);
   os.addObserver(observer, "dl-done", false);
+*/
 
   for (var i = 0; i < tests.length; i++)
     tests[i]();
 
-  cleanup();
+  //cleanup();
 
 /*
   try {
