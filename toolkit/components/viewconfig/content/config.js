@@ -519,9 +519,6 @@ function updateContextMenu()
   var toggleSelected = document.getElementById("toggleSelected");
   toggleSelected.setAttribute("disabled", isLocked);
   toggleSelected.hidden = !canToggle;
-
-  document.getElementById("lockSelected").hidden = !prefSelected || isLocked;
-  document.getElementById("unlockSelected").hidden = !prefSelected || !isLocked;
 }
 
 function copyPref()
@@ -618,16 +615,3 @@ function ModifyPref(entry)
 
   return true;
 }
-
-function LockSelected()
-{
-  var entry = gPrefView[view.selection.currentIndex];
-  gPrefBranch.lockPref(entry.prefCol);
-}
-
-function UnlockSelected()
-{
-  var entry = gPrefView[view.selection.currentIndex];
-  gPrefBranch.unlockPref(entry.prefCol);
-}
-

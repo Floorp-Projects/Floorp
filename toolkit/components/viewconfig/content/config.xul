@@ -69,8 +69,6 @@
   <menuitem id="toggleSelected" label="&toggle.label;" accesskey="&toggle.accesskey;" oncommand="ModifySelected();"/>
   <menuitem id="modifySelected" label="&modify.label;" accesskey="&modify.accesskey;" oncommand="ModifySelected();"/>
   <menuitem id="resetSelected" label="&reset.label;" accesskey="&reset.accesskey;" oncommand="ResetSelected();"/>
-  <menuitem id="lockSelected" label="&lock.label;" accesskey="&lock.accesskey;" oncommand="LockSelected();"/>
-  <menuitem id="unlockSelected" label="&unlock.label;" accesskey="&unlock.accesskey;" oncommand="UnlockSelected();"/>
 </popup>
 
 <keyset>
