@@ -1762,65 +1762,28 @@ PlacesCreateLivemarkTransaction.prototype = {
 };
 
 /**
- * Move a Folder
- */
-function PlacesMoveFolderTransaction(id, oldContainer, oldIndex, newContainer, newIndex) {
-  NS_ASSERT(!isNaN(id + oldContainer + oldIndex + newContainer + newIndex), "Parameter is NaN!");
-  NS_ASSERT(newIndex >= -1, "invalid insertion index");
-  this._id = id;
-  this._oldContainer = oldContainer;
-  this._oldIndex = oldIndex;
-  this._newContainer = newContainer;
-  this._newIndex = newIndex;
-  this.redoTransaction = this.doTransaction;
-}
-PlacesMoveFolderTransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype,
-
-  doTransaction: function PMFT_doTransaction() {
-    this.LOG("Move Folder: " + this._id + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
-    this.bookmarks.moveFolder(this._id, this._newContainer, this._newIndex);
-  },
-
-  undoTransaction: function PMFT_undoTransaction() {
-    this.LOG("UNMove Folder: " + this._id + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
-    this.bookmarks.moveFolder(this._id, this._oldContainer, this._oldIndex);
-  }
-};
-
-/**
  * Move an Item
  */
-function PlacesMoveItemTransaction(id, uri, oldContainer, oldIndex, newContainer, newIndex) {
-  this._id = id;
-  this._uri = uri;
-  this._oldContainer = oldContainer;
-  this._oldIndex = oldIndex;
-  this._newContainer = newContainer;
-  this._newIndex = newIndex;
+function PlacesMoveItemTransaction(aItemId, aNewContainer, aNewIndex) {
+  NS_ASSERT(!isNaN(aItemId + aNewContainer + aNewIndex), "Parameter is NaN!");
+  NS_ASSERT(aNewIndex >= -1, "invalid insertion index");
+  this._id = aItemId;
+  this._oldContainer = this.utils.bookmarks.getFolderIdForItem(this._id);
+  this._oldIndex = this.utils.bookmarks.getItemIndex(this._id);
+  NS_ASSERT(this._oldContainer > 0 && this._oldIndex >= 0, "invalid item");
+  this._newContainer = aNewContainer;
+  this._newIndex = aNewIndex;
   this.redoTransaction = this.doTransaction;
 }
 PlacesMoveItemTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
 
   doTransaction: function PMIT_doTransaction() {
-    this.LOG("Move Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
-    var title = this.bookmarks.getItemTitle(this._id);
-    var annotations = this.utils.getAnnotationsForItem(this._id);
-    this.bookmarks.removeItem(this._id);
-    this._id = this.bookmarks.insertItem(this._newContainer, this._uri, this._newIndex);
-    this.bookmarks.setItemTitle(this._id, title);
-    this.utils.setAnnotationsForItem(this._id, annotations);
+    this.bookmarks.moveItem(this._id, this._newContainer, this._newIndex);
   },
 
   undoTransaction: function PMIT_undoTransaction() {
-    this.LOG("UNMove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
-    var title = this.bookmarks.getItemTitle(this._id);
-    var annotations = this.utils.getAnnotationsForItem(this._id);
-    this.bookmarks.removeItem(this._id);
-    this._id = this.bookmarks.insertItem(this._oldContainer, this._uri, this._oldIndex);
-    this.bookmarks.setItemTitle(this._id, title);
-    this.utils.setAnnotationsForItem(this._id, annotations);
+    this.bookmarks.moveItem(this._id, this._oldContainer, this._oldIndex);
   }
 };
 
