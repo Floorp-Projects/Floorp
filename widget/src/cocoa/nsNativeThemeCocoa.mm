@@ -1283,12 +1283,6 @@ PRBool
 nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame,
                                       PRUint8 aWidgetType)
 {
-#ifndef MOZ_MACBROWSER
-  // Only support HTML widgets in Camino builds
-  if (aFrame && aFrame->GetContent()->IsNodeOfType(nsINode::eHTML))
-    return PR_FALSE;
-#endif
-
   if (aPresContext && !aPresContext->PresShell()->IsThemeSupportEnabled())
     return PR_FALSE;
 
