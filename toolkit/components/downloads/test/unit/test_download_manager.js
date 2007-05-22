@@ -154,6 +154,7 @@ function test_resumeDownload_empty_queue()
 
 function addDownload()
 {
+  print("*** DOWNLOAD MANAGER TEST - Adding a download");
   const nsIWBP = Ci.nsIWebBrowserPersist;
   var persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
                 .createInstance(Ci.nsIWebBrowserPersist);
@@ -181,16 +182,19 @@ function addDownload()
   persist.progressListener = dl.QueryInterface(Ci.nsIWebProgressListener);
   persist.saveURI(dl.source, null, null, null, null, dl.targetFile);
 
+  print("*** DOWNLOAD MANAGER TEST - Adding a download worked");
   return dl;
 }
 
 function test_addDownload_normal()
 {
+  print("*** DOWNLOAD MANAGER TEST - Testing normal download adding");
   addDownload();
 }
 
 function test_addDownload_cancel()
 {
+  print("*** DOWNLOAD MANAGER TEST - Testing download cancel");
   var dl = addDownload();
 
   dm.cancelDownload(dl.id);
