@@ -158,6 +158,12 @@ SYM_FIND_CMD := find -L $(SYM_DIST) -type f -a -perm -100 -o -name "*.dylib" \
     | xargs file -L | grep "Mach-O" | grep -v "for architecture" | cut -f1 -d':'
 DUMP_SYMS_BIN := $(DIST)/host/bin/dump_syms
 endif
+ifeq ($(OS_ARCH),Linux)
+MAKE_SYM_STORE_ARGS :=
+SYM_FIND_CMD := find -L $(DIST)/bin -type f -a -perm -100 -o -name "*.so" \
+    | xargs file -L | grep "ELF" | cut -f1 -d':'
+DUMP_SYMS_BIN := $(DIST)/host/bin/dump_syms
+endif
 
 buildsymbols:
 ifdef MOZ_AIRBAG
