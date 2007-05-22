@@ -86,15 +86,10 @@ public:
   PRBool ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType);
   PRBool ThemeNeedsComboboxDropmarker();
 
-protected:
-
-  // Some widths and margins. You'd think there would be metrics for these, but no.
-  static const int kAquaDropdownLeftEndcap = 9;
-  static const int kAquaDropwdonRightEndcap = 20; // wider on right to encompass the button
+protected:  
 
   nsresult GetSystemColor(PRUint8 aWidgetType, nsILookAndFeel::nsColorID& aColorID);
   nsresult GetSystemFont(PRUint8 aWidgetType, nsSystemFontID& aFont);
-
 
   // HITheme drawing routines
   void DrawFrame (CGContextRef context, HIThemeFrameKind inKind,

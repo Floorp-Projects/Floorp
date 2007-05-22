@@ -852,6 +852,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   return NS_OK;
 }
 
+static const int kAquaDropdownLeftBorder = 5;
+static const int kAquaDropdownRightBorder = 22;
 
 NS_IMETHODIMP
 nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext, 
@@ -872,8 +874,7 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
     case NS_THEME_DROPDOWN_BUTTON:
       // Top has a single pixel line, bottom has a single pixel line plus a single
       // pixel shadow
-      aResult->SizeTo(kAquaDropdownLeftEndcap, 1, 
-                      kAquaDropwdonRightEndcap, 2);
+      aResult->SizeTo(kAquaDropdownLeftBorder, 1, kAquaDropdownRightBorder, 2);
       break;
     
     case NS_THEME_TEXTFIELD: {
