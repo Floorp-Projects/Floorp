@@ -1369,7 +1369,7 @@ nsDownload::Init(nsIURI* aSource,
 NS_IMETHODIMP
 nsDownload::GetDisplayName(nsAString &aDisplayName)
 {
-  *aDisplayName = mDisplayName;
+  aDisplayName = mDisplayName;
   return NS_OK;
 }
 
@@ -1456,7 +1456,7 @@ nsDownload::GetSpeed(double* aSpeed)
 }
 
 NS_IMETHODIMP
-nsDownload::GetId(PRUint64 *aId)
+nsDownload::GetId(PRUint32 *aId)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
