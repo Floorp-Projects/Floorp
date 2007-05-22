@@ -422,7 +422,8 @@ var PlacesUtils = {
     var wasOpen = parent.containerOpen;
     parent.containerOpen = true;
     var cc = parent.childCount;
-    for (var i = 0; i < cc && asContainer(parent).getChild(i) != aNode; ++i);
+    asContainer(parent);
+    for (var i = 0; i < cc && parent.getChild(i) != aNode; ++i);
     parent.containerOpen = wasOpen;
     return i < cc ? i : -1;
   },
