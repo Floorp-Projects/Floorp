@@ -95,11 +95,17 @@ public:
   // a) whether whitespace in this text induces breaks b) whether we can
   // break between nonwhitespace inside this text and c) whether we can break
   // between nonwhitespace between the last text and this text.
+  //
+  // "Whitespace" below means Unicode ZWSP (U+200B) and ASCII space (U+0020). We
+  // operate on text after whitespace processing has been applied, so
+  // other characters (e.g. tabs and newlines) may have been converted to
+  // spaces.
   enum {
     /**
-     * Allow breaks before and after whitespace in this block of text
+     * Allow breaks where a non-whitespace character in this block of text
+     * is preceded by a whitespace character.
      */
-    BREAK_WHITESPACE           = 0x01,
+    BREAK_WHITESPACE_END       = 0x01,
     /**
      * Allow breaks between eligible nonwhitespace characters when the break
      * is in the interior of this block of text.
@@ -162,8 +168,8 @@ private:
   PRPackedBool                mCurrentWordContainsCJK;
 
   // When mCurrentWord is empty, this indicates whether we should allow a break
-  // before the next text.
-  PRPackedBool             mBreakBeforeNextWord;
+  // before the next text if it starts with non-whitespace.
+  PRPackedBool                mBreakBeforeNonWhitespace;
 };
 
 #endif /*NSLINEBREAKER_H_*/
