@@ -94,10 +94,6 @@ var observer = {
     this._itemMovedNewParent = newParent;
     this._itemMovedNewIndex = newIndex;
   },
-  onFolderChanged: function(folder, property) {
-    this._folderChanged = folder;
-    this._folderChangedProperty = property;
-  },
   QueryInterface: function(iid) {
     if (iid.equals(Ci.nsINavBookmarkObserver) ||
         iid.equals(Ci.nsISupports)) {

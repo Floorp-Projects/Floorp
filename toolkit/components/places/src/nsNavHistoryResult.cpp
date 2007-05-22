@@ -2603,14 +2603,6 @@ nsNavHistoryQueryResultNode::OnItemMoved(PRInt64 aFolder, PRInt64 aOldParent,
     return Refresh();
   return NS_OK;
 }
-NS_IMETHODIMP
-nsNavHistoryQueryResultNode::OnFolderChanged(PRInt64 aFolder,
-                                              const nsACString& property)
-{
-  if (mLiveUpdate == QUERYUPDATE_COMPLEX_WITH_BOOKMARKS)
-    return Refresh();
-  return NS_OK;
-}
 
 // nsNavHistoryFolderResultNode ************************************************
 //
@@ -3351,62 +3343,6 @@ nsNavHistoryFolderResultNode::OnItemMoved(PRInt64 aItemId, PRInt64 aOldParent,
 }
 
 
-// nsNavHistoryFolderResultNode::OnFolderChanged (nsINavBookmarkObserver)
-//
-//    Unlike some of the other notifications that are sent to the parent of
-//    the item that's changing, this one is sent to the folder that's
-//    changing.
-
-NS_IMETHODIMP
-nsNavHistoryFolderResultNode::OnFolderChanged(PRInt64 aFolder,
-                                              const nsACString& property)
-{
-  // Do NOT call StartIncrementalUpdate here. That call is not appropriate
-  // because it assumes a child has changed. Here, our folder itself is
-  // changing. Updating a folder is very easy and isn't affected by filtering,
-  // so we can always do incremental updates.
-
-  if (property.EqualsLiteral("title")) {
-    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-    NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-
-    nsAutoString title;
-    bookmarks->GetItemTitle(mItemId, title);
-    mTitle = NS_ConvertUTF16toUTF8(title);
-
-    PRInt32 sortType = GetSortType();
-    if ((sortType == nsINavHistoryQueryOptions::SORT_BY_TITLE_ASCENDING ||
-         sortType == nsINavHistoryQueryOptions::SORT_BY_TITLE_DESCENDING) &&
-        mParent) {
-      PRInt32 ourIndex = mParent->FindChild(this);
-      SortComparator comparator = GetSortingComparator(sortType);
-      nsCAutoString sortingAnnotation;
-      GetSortingAnnotation(sortingAnnotation);
-      if (mParent->DoesChildNeedResorting(ourIndex, comparator, sortingAnnotation.get())) {
-        // needs resorting, this will cause everything to be redrawn, so we
-        // don't need to do that explicitly later.
-        mParent->RemoveChildAt(ourIndex, PR_TRUE);
-        mParent->InsertChildAt(this,
-                               mParent->FindInsertionPoint(this, comparator, sortingAnnotation.get()),
-                               PR_TRUE);
-        return NS_OK;
-      }
-    }
-  } else {
-    NS_NOTREACHED("Unknown folder change event");
-    return NS_ERROR_FAILURE;
-  }
-
-  // update folder if visible
-  nsNavHistoryResult* result = GetResult();
-  NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
-  if (result->GetView())
-    result->GetView()->ItemChanged(
-        NS_STATIC_CAST(nsNavHistoryResultNode*, this));
-  return NS_OK;
-}
-
-
 // nsNavHistorySeparatorResultNode
 //
 // Separator nodes do not hold any data
@@ -3876,20 +3812,6 @@ nsNavHistoryResult::OnItemMoved(PRInt64 aItemId,
                                           aNewParent, aNewIndex));
   return NS_OK;
 }
-
-
-// nsNavHistoryResult::OnFolderChanged (nsINavBookmarkObserver)
-
-NS_IMETHODIMP
-nsNavHistoryResult::OnFolderChanged(PRInt64 aFolder,
-                                   const nsACString &aProperty)
-{
-  ENUMERATE_BOOKMARK_OBSERVERS_FOR_FOLDER(aFolder,
-      OnFolderChanged(aFolder, aProperty));
-  ENUMERATE_HISTORY_OBSERVERS(OnFolderChanged(aFolder, aProperty));
-  return NS_OK;
-}
-
 
 // nsNavHistoryResult::OnVisit (nsINavHistoryObserver)
 

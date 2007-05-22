@@ -54,7 +54,7 @@ interface nsITransaction;
  * Observer for bookmark changes.
  */
 
-[scriptable, uuid(73d28ab9-0360-4077-845e-543d1aedba1d)]
+[scriptable, uuid(ef368152-354a-4a2b-92e4-910a80153c6f)]
 interface nsINavBookmarkObserver : nsISupports
 {
   /**
@@ -101,11 +101,11 @@ interface nsINavBookmarkObserver : nsISupports
                      in long aIndex);
 
   /**
-   * Notify this observer that a bookmark's information has changed.  This
+   * Notify this observer that an item's information has changed.  This
    * will be called whenever any attributes like "title" are changed.
    * 
-   * @param aBookmarkId
-   *        The id of the bookmark that was changed.
+   * @param aItemId
+   *        The id of the item that was changed.
    * @param aProperty
    *        The property which changed.
    * @param aIsAnnotationProperty
@@ -152,16 +152,6 @@ interface nsINavBookmarkObserver : nsISupports
   void onItemMoved(in long long aItemId,
                    in long long aOldParent, in long aOldIndex,
                    in long long aNewParent, in long aNewIndex);
-
-  /**
-   * Notify this observer that a bookmark folder's information has changed.
-   * This will be called whenever any attributes like "title" are changed.
-   *  @param aFolder
-   *         The id of the folder that was changed.
-   *  @param aProperty
-   *         The property that was changed.
-   */
-  void onFolderChanged(in long long aFolder, in ACString aProperty);
 };
 
 /**
