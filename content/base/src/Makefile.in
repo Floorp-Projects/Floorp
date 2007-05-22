@@ -95,7 +95,6 @@ EXPORTS		= \
 		nsStubImageDecoderObserver.h \
 		nsStubMutationObserver.h \
 		nsTextFragment.h \
-		nsTObserverArray.h \
 		$(NULL)
 
 CPPSRCS		= \
@@ -130,7 +129,7 @@ CPPSRCS		= \
 		nsGkAtoms.cpp \
 		nsHTMLContentSerializer.cpp \
 		nsImageLoadingContent.cpp \
-                nsLineBreaker.cpp \
+		nsLineBreaker.cpp \
 		nsLoadListenerProxy.cpp \
 		nsMappedAttributes.cpp \
 		nsNameSpaceManager.cpp \
@@ -153,7 +152,6 @@ CPPSRCS		= \
 		nsSyncLoadService.cpp \
 		nsTextFragment.cpp \
 		nsTextNode.cpp \
-		nsTObserverArray.cpp \
 		nsTreeWalker.cpp \
 		nsXMLContentSerializer.cpp \
 		nsXMLHttpRequest.cpp \
