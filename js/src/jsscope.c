@@ -978,6 +978,7 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
     JSScopeProperty **spp, *sprop, *overwriting, **spvec, **spp2, child;
     uint32 size, splen, i;
     int change;
+    JSTempValueRooter tvr;
 
     JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, scope));
     CHECK_ANCESTOR_LINE(scope, JS_TRUE);
@@ -1249,7 +1250,9 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
          */
         if (!JS_CLIST_IS_EMPTY(&cx->runtime->watchPointList) &&
             js_FindWatchPoint(cx->runtime, scope, id)) {
+            JS_PUSH_TEMP_ROOT_SPROP(cx, overwriting, &tvr);
             setter = js_WrapWatchedSetter(cx, id, attrs, setter);
+            JS_POP_TEMP_ROOT(cx, &tvr);
             if (!setter)
                 goto fail_overwrite;
         }
