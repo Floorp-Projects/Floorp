@@ -83,11 +83,6 @@ public:
     PRBool HasGlyph(const PRUint32 aChar);
     PRUint32 GetGlyph(const PRUint32 aChar);
 
-    virtual gfxTextRun::Metrics Measure(gfxTextRun *aTextRun,
-                                        PRUint32 aStart, PRUint32 aEnd,
-                                        PRBool aTightBoundingBox,
-                                        Spacing *aSpacing);
-
     virtual nsString GetUniqueName();
 
     // Get the glyphID of a space
