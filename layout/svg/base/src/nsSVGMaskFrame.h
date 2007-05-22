@@ -38,7 +38,7 @@
 #define __NS_SVGMASKFRAME_H__
 
 #include "nsSVGContainerFrame.h"
-#include "cairo.h"
+#include "gfxPattern.h"
 
 class gfxContext;
 
@@ -55,10 +55,10 @@ class nsSVGMaskFrame : public nsSVGMaskFrameBase
 
  public:
   // nsSVGMaskFrame method:
-  cairo_pattern_t *ComputeMaskAlpha(nsSVGRenderState *aContext,
-                                    nsISVGChildFrame* aParent,
-                                    nsIDOMSVGMatrix* aMatrix,
-                                    float aOpacity = 1.0f);
+  already_AddRefed<gfxPattern> ComputeMaskAlpha(nsSVGRenderState *aContext,
+                                                nsISVGChildFrame* aParent,
+                                                nsIDOMSVGMatrix* aMatrix,
+                                                float aOpacity = 1.0f);
 
   /**
    * Get the "type" of the frame

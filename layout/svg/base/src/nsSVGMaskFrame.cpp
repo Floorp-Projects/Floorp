@@ -42,6 +42,7 @@
 #include "nsIDOMSVGMatrix.h"
 #include "gfxContext.h"
 #include "nsIDOMSVGRect.h"
+#include "gfxImageSurface.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -81,16 +82,15 @@ nsSVGMaskFrame::InitSVG()
 }
 
 
-cairo_pattern_t *
+already_AddRefed<gfxPattern>
 nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
                                  nsISVGChildFrame* aParent,
                                  nsIDOMSVGMatrix* aMatrix,
                                  float aOpacity)
 {
   gfxContext *gfx = aContext->GetGfxContext();
-  cairo_t *ctx = gfx->GetCairo();
 
-  cairo_push_group(ctx);
+  gfx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
 
   {
     nsIFrame *frame;
@@ -164,45 +164,36 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
 
   gfx->Restore();
 
-  cairo_pattern_t *pattern = cairo_pop_group(ctx);
+  nsRefPtr<gfxPattern> pattern = gfx->PopGroup();
   if (!pattern)
     return nsnull;
 
-  cairo_matrix_t patternMatrix;
-  cairo_pattern_get_matrix(pattern, &patternMatrix);
+  nsRefPtr<gfxASurface> surface = pattern->GetSurface();
 
-  cairo_surface_t *surface = nsnull;
-  cairo_pattern_get_surface(pattern, &surface);
+  gfxRect clipExtents = gfx->GetClipExtents();
 
-  double x1, y1, x2, y2;
-  cairo_clip_extents(ctx, &x1, &y1, &x2, &y2);
+#ifdef DEBUG_tor
+  fprintf(stderr, "clip extent: %f,%f %fx%f\n",
+          clipExtents.X(), clipExtents.Y(),
+          clipExtents.Width(), clipExtents.Height());
+#endif
 
-  PRUint32 clipWidth = PRUint32(ceil(x2) - floor(x1));
-  PRUint32 clipHeight = PRUint32(ceil(y2) - floor(y1));
-
-  cairo_surface_t *image = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
-                                                      clipWidth, clipHeight);
+  gfxIntSize clipSize(PRInt32(clipExtents.Width() + 0.5),
+                      PRInt32(clipExtents.Height() + 0.5));
+  nsRefPtr<gfxImageSurface> image =
+    new gfxImageSurface(clipSize, gfxASurface::ImageFormatARGB32);
   if (!image)
     return nsnull;
 
-  cairo_t *transferCtx = cairo_create(image);
-  if (cairo_status(transferCtx) != CAIRO_STATUS_SUCCESS) {
-    cairo_destroy(transferCtx);
-    cairo_surface_destroy(image);
-    cairo_pattern_destroy(pattern);
-    return nsnull;
-  }
+  gfxContext transferCtx(image);
+  transferCtx.SetOperator(gfxContext::OPERATOR_SOURCE);
+  transferCtx.SetSource(surface, -clipExtents.pos);
+  transferCtx.Paint();
 
-  cairo_set_source_surface(transferCtx, surface, 0, 0);
-  cairo_paint(transferCtx);
-
-  cairo_destroy(transferCtx);
-  cairo_pattern_destroy(pattern);
-
-  PRUint32 width  = cairo_image_surface_get_width(image);
-  PRUint32 height = cairo_image_surface_get_height(image);
-  PRUint8 *data   = cairo_image_surface_get_data(image);
-  PRInt32  stride = cairo_image_surface_get_stride(image);
+  PRUint32 width  = clipSize.width;
+  PRUint32 height = clipSize.height;
+  PRUint8 *data   = image->Data();
+  PRInt32  stride = image->Stride();
 
   nsRect rect(0, 0, width, height);
   nsSVGUtils::UnPremultiplyImageDataAlpha(data, stride, rect);
@@ -223,12 +214,11 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
       memset(pixel, alpha, 4);
     }
 
-  cairo_pattern_t *retval = cairo_pattern_create_for_surface(image);
-  cairo_surface_destroy(image);
-
-  if (retval)
-    cairo_pattern_set_matrix(retval, &patternMatrix);
-
+  gfxPattern *retval = new gfxPattern(image);
+  if (retval) {
+    retval->SetMatrix(gfxMatrix().Translate(-clipExtents.pos));
+    NS_ADDREF(retval);
+  }
   return retval;
 }
 
