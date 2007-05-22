@@ -1413,6 +1413,7 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       LPSHELLFOLDER lpShellFolder = NULL;
 
       if (SUCCEEDED(::SHGetDesktopFolder(&lpShellFolder))) {
+        nsresult rv;
         nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
 
