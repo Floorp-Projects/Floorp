@@ -475,6 +475,17 @@
         ]]></getter>
       </property>
       
+      <method name="_disallowInsertion">
+        <parameter name="aContainer"/>
+        <body><![CDATA[
+          // Disallow insertion of items under readonly folders
+          // Disallow insertion of items under the places root
+          return (!PlacesUtils.nodeIsFolder(aContainer) ||
+                   PlacesUtils.nodeIsReadOnly(aContainer) ||
+                   aContainer.itemId == PlacesUtils.placesRootId);
+        ]]></body>
+      </method>
+
       <method name="_getInsertionPoint">
         <parameter name="index"/>
         <parameter name="orientation"/>
@@ -498,18 +509,21 @@
               // an item at the root is the result itself, which can be QI'ed to 
               // nsINavHistoryResult
               container = lastSelected.parent;
+ 
+              // avoid the potentially expensive call to getIndexOfNode() 
+              // if we know this container doesn't allow insertion
+              if (this._disallowInsertion(container))
+                return null;
+
               var lsi = PlacesUtils.getIndexOfNode(lastSelected);
               index = orientation == NHRVO.DROP_BEFORE ? lsi : lsi + 1;
             }
           }
 
-          // * Disallow insertion of items under readonly folders
-          // * Disallow insertion of items under the places root
-          if (PlacesUtils.nodeIsFolder(container) &&
-              !PlacesUtils.nodeIsReadOnly(container) &&
-              container.itemId != PlacesUtils.placesRootId) 
-            return new InsertionPoint(container.itemId, index, orientation);
-          return null;
+          if (this._disallowInsertion(container))
+            return null;
+
+          return new InsertionPoint(container.itemId, index, orientation);
         ]]></body>
       </method>
 
