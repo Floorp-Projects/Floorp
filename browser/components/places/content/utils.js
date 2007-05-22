@@ -1113,7 +1113,7 @@ var PlacesUtils = {
                             getService(Ci.nsIPromptService);
 
         var errorStr = this.getString("load-js-data-url-error");
-        promptService.alert(window, brandStr, errorStr);
+        promptService.alert(window, brandShortName, errorStr);
         return false;
       }
     }
