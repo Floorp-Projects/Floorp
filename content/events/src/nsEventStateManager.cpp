@@ -928,7 +928,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
             // in the Ender widget case.
             nsCOMPtr<nsIDocument> doc = gLastFocusedContent->GetDocument();
             if (doc) {
-              nsIPresShell *shell = doc->GetShellAt(0);
+              nsIPresShell *shell = doc->GetPrimaryShell();
               if (shell) {
                 nsCOMPtr<nsPresContext> oldPresContext =
                   shell->GetPresContext();
