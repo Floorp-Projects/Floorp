@@ -729,6 +729,12 @@ public:
      * linebreak before aStart. If false, then we will check the internal
      * line break opportunity state before deciding whether to return 0 as the
      * character to break before.
+     * @param aTrimWhitespace if non-null, then we allow a trailing run of
+     * spaces to be trimmed; the width of the space(s) will not be included in
+     * the measured string width for comparison with the limit aWidth, and
+     * trimmed spaces will not be included in returned metrics. The width
+     * of the trimmed spaces will be returned in aTrimWhitespace.
+     * Trimmed spaces are still counted in the "characters fit" result.
      * @param aMetrics if non-null, we fill this in for the returned substring.
      * If a hyphenation break was used, the hyphen is NOT included in the returned metrics.
      * @param aTightBoundingBox if true, we make the bounding box in aMetrics tight
@@ -748,6 +754,7 @@ public:
                                  PRBool aLineBreakBefore, gfxFloat aWidth,
                                  PropertyProvider *aProvider,
                                  PRBool aSuppressInitialBreak,
+                                 gfxFloat *aTrimWhitespace,
                                  Metrics *aMetrics, PRBool aTightBoundingBox,
                                  PRBool *aUsedHyphenation,
                                  PRUint32 *aLastBreak);

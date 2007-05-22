@@ -1228,6 +1228,7 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
                                 PRBool aLineBreakBefore, gfxFloat aWidth,
                                 PropertyProvider *aProvider,
                                 PRBool aSuppressInitialBreak,
+                                gfxFloat *aTrimWhitespace,
                                 Metrics *aMetrics, PRBool aTightBoundingBox,
                                 PRBool *aUsedHyphenation,
                                 PRUint32 *aLastBreak)
@@ -1260,6 +1261,8 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
 
     gfxFloat width = 0;
     gfxFloat advance = 0;
+    gfxFloat trimmableAdvance = 0;
+    PRUint32 trimmableChars = 0;
     PRInt32 lastBreak = -1;
     PRBool aborted = PR_FALSE;
     PRUint32 end = aStart + aMaxLength;
@@ -1293,8 +1296,8 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
             if (hyphenation) {
                 hyphenatedAdvance += aProvider->GetHyphenWidth();
             }
-
-            if (lastBreak < 0 || width + hyphenatedAdvance <= aWidth) {
+            
+            if (lastBreak < 0 || width + hyphenatedAdvance - trimmableAdvance <= aWidth) {
                 // We can break here.
                 lastBreak = i;
                 lastBreakUsedHyphenation = hyphenation;
@@ -1302,22 +1305,23 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
 
             width += advance;
             advance = 0;
-            if (width > aWidth) {
+            if (width - trimmableAdvance > aWidth) {
                 // No more text fits. Abort
                 aborted = PR_TRUE;
                 break;
             }
         }
         
+        gfxFloat charAdvance = 0;
         if (i >= ligatureRunStart && i < ligatureRunEnd) {
             CompressedGlyph *glyphData = &charGlyphs[i];
             if (glyphData->IsSimpleGlyph()) {
-                advance += glyphData->GetSimpleAdvance();
+                charAdvance = glyphData->GetSimpleAdvance();
             } else if (glyphData->IsComplexOrMissing()) {
                 const DetailedGlyph *details = GetDetailedGlyphs(i);
                 if (details) {
                     while (1) {
-                        advance += details->mAdvance;
+                        charAdvance += details->mAdvance;
                         if (details->mIsLastGlyph)
                             break;
                         ++details;
@@ -1326,10 +1330,21 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
             }
             if (haveSpacing) {
                 PropertyProvider::Spacing *space = &spacingBuffer[i - bufferStart];
-                advance += space->mBefore + space->mAfter;
+                charAdvance += space->mBefore + space->mAfter;
             }
         } else {
-            advance += GetPartialLigatureWidth(i, i + 1, aProvider);
+            charAdvance += GetPartialLigatureWidth(i, i + 1, aProvider);
+        }
+        
+        advance += charAdvance;
+        if (aTrimWhitespace) {
+            if (GetChar(i) == ' ') {
+                ++trimmableChars;
+                trimmableAdvance += charAdvance;
+            } else {
+                trimmableAdvance = 0;
+                trimmableChars = 0;
+            }
         }
     }
 
@@ -1342,7 +1357,7 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
     // 2) some of the text fit up to a break opportunity (width > aWidth && lastBreak >= 0)
     // 3) none of the text fits before a break opportunity (width > aWidth && lastBreak < 0)
     PRUint32 charsFit;
-    if (width <= aWidth) {
+    if (width - trimmableAdvance <= aWidth) {
         charsFit = aMaxLength;
     } else if (lastBreak >= 0) {
         charsFit = lastBreak - aStart;
@@ -1351,7 +1366,10 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
     }
 
     if (aMetrics) {
-        *aMetrics = MeasureText(aStart, charsFit, aTightBoundingBox, aProvider);
+        *aMetrics = MeasureText(aStart, charsFit - trimmableChars, aTightBoundingBox, aProvider);
+    }
+    if (aTrimWhitespace) {
+        *aTrimWhitespace = trimmableAdvance;
     }
     if (aUsedHyphenation) {
         *aUsedHyphenation = lastBreakUsedHyphenation;
