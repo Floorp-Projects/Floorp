@@ -98,6 +98,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollector.h"
 #include "nsThreadUtils.h"
+#include "nsTObserverArray.h"
 
 #if !defined(WINCE) && !defined(XP_OS2)
 #include "nsWindowsRegKey.h"
@@ -122,6 +123,13 @@ void XXXNeverCalled()
       array2.InsertElementAt(b, 0);
       array2.InsertElementAt(c, 0);
       array1.AppendElements(array2);
+    }
+    {
+      nsTObserverArray<PRBool> dummyObserverArray;
+      PRBool a = PR_FALSE;
+      dummyObserverArray.AppendObserver(&a);
+      dummyObserverArray.RemoveObserver(&a);
+      dummyObserverArray.Clear();
     }
     nsStringHashSet();
     nsCStringHashSet();
