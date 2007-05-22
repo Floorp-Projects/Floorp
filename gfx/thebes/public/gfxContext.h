@@ -503,7 +503,12 @@ public:
      * Useful if you are doing native drawing.
      */
     void UpdateSurfaceClip();
-    
+
+    /**
+     * This will return the current bounds of the clip region.
+     */
+    gfxRect GetClipExtents();
+
     /**
      * Groups
      */
