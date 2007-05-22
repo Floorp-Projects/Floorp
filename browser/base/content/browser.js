@@ -339,8 +339,7 @@ var gBookmarksObserver = {
   },
   
   onItemVisited: function() { },
-  onItemMoved: function() { },
-  onFolderChanged: function() { }
+  onItemMoved: function() { }
 };
 
 /**
