@@ -45,7 +45,7 @@ interface nsICancelable;
 interface nsIWebProgressListener;
 interface nsIMIMEInfo;
 
-[scriptable, uuid(07910093-d70b-4621-9888-b811f42293c3)]
+[scriptable, uuid(974db2c6-fbd2-4de1-8d24-f54ce4f3e8bc)]
 interface nsIDownload : nsITransfer {
     
     /**
@@ -89,7 +89,7 @@ interface nsIDownload : nsITransfer {
     /**
      * The user-readable description of the transfer.
      */
-    readonly attribute wstring displayName;
+    readonly attribute AString displayName;
 
     /**
      * The time a transfer was started.
@@ -107,6 +107,17 @@ interface nsIDownload : nsITransfer {
      * executed.
      */
     readonly attribute nsIMIMEInfo MIMEInfo;
+
+    /**
+     * The id of the download that is stored in the database.
+     */
+    readonly attribute unsigned long id;
+
+    /**
+     * The state of the download.
+     * @see nsIDownloadManager and nsIXPInstallManagerUI
+     */
+    readonly attribute short state;
 };
 
 %{C++

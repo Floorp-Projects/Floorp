@@ -1,5 +1,4 @@
-#! gmake
-# 
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -13,15 +12,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is Mozilla code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2000
+# Mozilla Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2007
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Stuart Parmenter <pavlov@netscape.com>
+#	  Shawn Wilsher <me@shawnwilsher.com> (Original Author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,35 +43,9 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE    = downloads
-LIBRARY_NAME  = download_s
-FORCE_STATIC_LIB = 1
-LIBXUL_LIBRARY = 1
+MODULE = test_dm
 
-REQUIRES  = xpcom \
-            string \
-            rdf \
-            uriloader \
-            mimetype \
-            necko \
-            pref \
-            progressDlg \
-            intl \
-            windowwatcher \
-            webbrowserpersist \
-            appshell \
-            dom \
-            xpinstall \
-            embed_base \
-            alerts \
-            storage \
-            $(NULL)
-
-CPPSRCS   = \
-    nsDownloadManager.cpp \
-    $(NULL)
+XPCSHELL_TESTS = unit
 
 include $(topsrcdir)/config/rules.mk
-
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 
