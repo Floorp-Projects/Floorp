@@ -2792,19 +2792,24 @@ function openHomeDialog(aURL)
   }
 }
 
-#ifndef MOZ_PLACES_BOOKMARKS
 var bookmarksButtonObserver = {
   onDrop: function (aEvent, aXferData, aDragSession)
   {
     var split = aXferData.data.split("\n");
     var url = split[0];
     if (url != aXferData.data) {  //do nothing if it's not a valid URL
+#ifndef MOZ_PLACES_BOOKMARKS
       var dialogArgs = {
         name: split[1],
         url: url
       }
       openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
                  BROWSER_ADD_BM_FEATURES, dialogArgs);
+#else
+      var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+      var uri = ios.newURI(url, null, null);
+      PlacesUtils.showAddBookmarkUI(uri, split[1]);
+#endif
     }
   },
 
@@ -2830,7 +2835,6 @@ var bookmarksButtonObserver = {
     return flavourSet;
   }
 }
-#endif
 
 var newTabButtonObserver = {
   onDragOver: function(aEvent, aFlavour, aDragSession)
