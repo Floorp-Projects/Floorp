@@ -1078,6 +1078,10 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
+
 protected:
   nsComboboxControlFrame* mComboBox;
 };
@@ -1109,6 +1113,26 @@ nsComboboxDisplayFrame::Reflow(nsPresContext*           aPresContext,
   state.SetComputedWidth(computedWidth);
 
   return nsBlockFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
+}
+
+NS_IMETHODIMP
+nsComboboxDisplayFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                         const nsRect&           aDirtyRect,
+                                         const nsDisplayListSet& aLists)
+{
+  nsDisplayListCollection set;
+  nsresult rv = nsBlockFrame::BuildDisplayList(aBuilder, aDirtyRect, set);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // remove background items if parent frame is themed
+  if (mComboBox->IsThemed()) {
+    set.BorderBackground()->DeleteAll();
+  }
+
+  set.MoveTo(aLists);
+
+  return NS_OK;
 }
 
 nsIFrame*
