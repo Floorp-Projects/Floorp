@@ -2352,7 +2352,7 @@ nsHTMLDocument::Close()
     // it be for now, though.  In any case, there's no reason to do
     // this if we have no presshell, since in that case none of the
     // above about reusing frames applies.
-    if (GetNumberOfShells() != 0) {
+    if (GetPrimaryShell()) {
       FlushPendingNotifications(Flush_Layout);
     }
 

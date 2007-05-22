@@ -100,6 +100,7 @@
 #include "nsIXPConnect.h"
 #include "nsIXULAppInfo.h"
 #include "nsIXULRuntime.h"
+#include "nsPresShellIterator.h"
 
 #ifdef MOZ_XUL
 // keep all the RDF stuff together, in case we can remove it in the far future
@@ -923,10 +924,9 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow,
     return NS_OK;
 
   // Deal with the agent sheets first.  Have to do all the style sets by hand.
-  PRUint32 shellCount = document->GetNumberOfShells();
-  for (PRUint32 k = 0; k < shellCount; k++) {
-    nsIPresShell *shell = document->GetShellAt(k);
-
+  nsPresShellIterator iter(document);
+  nsCOMPtr<nsIPresShell> shell;
+  while ((shell = iter.GetNextShell())) {
     // Reload only the chrome URL agent style sheets.
     nsCOMArray<nsIStyleSheet> agentSheets;
     rv = shell->GetAgentStyleSheets(agentSheets);

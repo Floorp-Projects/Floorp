@@ -901,9 +901,9 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
         // |onbroadcast| event handler
         nsEvent event(PR_TRUE, NS_XUL_BROADCAST);
 
-        PRInt32 j = GetNumberOfShells();
-        while (--j >= 0) {
-            nsCOMPtr<nsIPresShell> shell = GetShellAt(j);
+        nsPresShellIterator iter(this);
+        nsCOMPtr<nsIPresShell> shell;
+        while ((shell = iter.GetNextShell())) {
 
             nsCOMPtr<nsPresContext> aPresContext = shell->GetPresContext();
 
@@ -1973,10 +1973,9 @@ nsXULDocument::StartLayout(void)
         return NS_OK;
     }
 
-    // XXXbz Shells can get removed (or added!) as we iterate through this
-    // loop.  We should try to use an nsTObserverArray for this.
-    for (PRUint32 i = 0; i < GetNumberOfShells(); ++i) {
-        nsIPresShell *shell = GetShellAt(i);
+    nsPresShellIterator iter(this);
+    nsCOMPtr<nsIPresShell> shell;
+    while ((shell = iter.GetNextShell())) {
 
         // Resize-reflow this time
         nsPresContext *cx = shell->GetPresContext();

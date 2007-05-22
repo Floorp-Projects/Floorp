@@ -49,6 +49,7 @@
 #include "mozFlushType.h"
 #include "nsIAtom.h"
 #include "nsCompatibility.h"
+#include "nsTObserverArray.h"
 
 class nsIContent;
 class nsPresContext;
@@ -94,8 +95,8 @@ class mozAutoSubtreeModified;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0xb7f930df, 0x1c61, 0x410f, \
- { 0xab, 0x3c, 0xe2, 0x53, 0xca, 0x8d, 0x85, 0x49 } }
+{ 0x7dd5790f, 0x110d, 0x4bf6, \
+  { 0x83, 0x50, 0x4b, 0xe3, 0x5d, 0xdc, 0xe1, 0x1e } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -349,10 +350,9 @@ public:
                                nsStyleSet* aStyleSet,
                                nsIPresShell** aInstancePtrResult) = 0;
   virtual PRBool DeleteShell(nsIPresShell* aShell) = 0;
-  virtual PRUint32 GetNumberOfShells() const = 0;
-  virtual nsIPresShell *GetShellAt(PRUint32 aIndex) const = 0;
   virtual nsIPresShell *GetPrimaryShell() const = 0;
-  virtual void SetShellsHidden(PRBool aHide) = 0;
+  void SetShellsHidden(PRBool aHide) { mShellsAreHidden = aHide; }
+  PRBool ShellsAreHidden() const { return mShellsAreHidden; }
 
   /**
    * Return the parent document of this document. Will return null
@@ -891,6 +891,7 @@ protected:
   virtual void WillDispatchMutationEvent(nsINode* aTarget) = 0;
   virtual void MutationEventDispatched(nsINode* aTarget) = 0;
   friend class mozAutoSubtreeModified;
+  friend class nsPresShellIterator;
 
   nsString mDocumentTitle;
   nsCOMPtr<nsIURI> mDocumentURI;
@@ -932,6 +933,8 @@ protected:
   // document in it.
   PRPackedBool mIsInitialDocumentInWindow;
 
+  PRPackedBool mShellsAreHidden;
+
   // The bidi options for this document.  What this bitfield means is
   // defined in nsBidiUtils.h
   PRUint32 mBidiOptions;
@@ -949,6 +952,8 @@ protected:
   // Cycle collector generation in which we're certain that this document
   // won't be collected
   PRUint32 mMarkedCCGeneration;
+
+  nsTObserverArray<nsIPresShell> mPresShells;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)

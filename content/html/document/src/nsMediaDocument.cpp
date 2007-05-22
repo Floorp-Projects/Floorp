@@ -266,12 +266,9 @@ nsMediaDocument::CreateSyntheticDocument()
 nsresult
 nsMediaDocument::StartLayout()
 {
-  PRUint32 numberOfShells = GetNumberOfShells();
-  // XXXbz Shells can get removed (or added!) as we iterate through this loop.
-  // We should try to use an nsTObserverArray for this.
-  for (PRUint32 i = 0; i < numberOfShells; i++) {
-    nsIPresShell *shell = GetShellAt(i);
-
+  nsPresShellIterator iter(this);
+  nsCOMPtr<nsIPresShell> shell;
+  while ((shell = iter.GetNextShell())) {
     // Make shell an observer for next time.
     shell->BeginObservingDocument();
 
