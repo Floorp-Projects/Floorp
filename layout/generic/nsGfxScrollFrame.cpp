@@ -851,14 +851,6 @@ nsHTMLScrollFrame::CurPosAttributeChanged(nsIContent* aChild,
   mInner.CurPosAttributeChanged(aChild);
 }
 
-nsresult 
-nsHTMLScrollFrame::GetContentOf(nsIContent** aContent)
-{
-  *aContent = GetContent();
-  NS_IF_ADDREF(*aContent);
-  return NS_OK;
-}
-
 NS_INTERFACE_MAP_BEGIN(nsHTMLScrollFrame)
   NS_INTERFACE_MAP_ENTRY(nsIAnonymousContentCreator)
 #ifdef NS_DEBUG
@@ -1194,15 +1186,6 @@ nsXULScrollFrame::DoLayout(nsBoxLayoutState& aState)
 
   nsBox::DoLayout(aState);
   return rv;
-}
-
-
-nsresult 
-nsXULScrollFrame::GetContentOf(nsIContent** aContent)
-{
-  *aContent = GetContent();
-  NS_IF_ADDREF(*aContent);
-  return NS_OK;
 }
 
 NS_INTERFACE_MAP_BEGIN(nsXULScrollFrame)
