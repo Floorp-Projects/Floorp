@@ -56,7 +56,7 @@ interface nsIDOMCSSPrimitiveValue;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(0120eb06-3df3-49bf-95b1-2e2593a59265)]
+[scriptable, uuid(71a3b4e7-e83d-45cf-a20e-9ce292bcf19f)]
 interface nsIAccessNode : nsISupports
 {
   /**
@@ -166,5 +166,10 @@ interface nsIAccessNode : nsISupports
    */
   nsIDOMCSSPrimitiveValue getComputedStyleCSSValue(in DOMString pseudoElt,
                                                    in DOMString propertyName);
+
+  /**
+   * The language for the current DOM node, e.g. en, de, etc.
+   */
+  readonly attribute DOMString language;
 };
 
