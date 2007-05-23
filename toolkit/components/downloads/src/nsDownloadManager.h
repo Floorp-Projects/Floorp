@@ -205,9 +205,10 @@ public:
 public:
   /**
    * This method MUST be called when changing states on a download.  It will
-   * notify the download listener when a change happens.
+   * notify the download listener when a change happens.  This also updates the
+   * database, by calling UpdateDB().
    */
-  void SetState(DownloadState aState);
+  nsresult SetState(DownloadState aState);
 
   DownloadType GetDownloadType();
   void SetDownloadType(DownloadType aType);

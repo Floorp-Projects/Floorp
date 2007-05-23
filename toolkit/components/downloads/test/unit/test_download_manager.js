@@ -262,10 +262,12 @@ function run_test()
           break;
         case "dl-failed":
           do_check_eq(nsIDownloadManager.DOWNLOAD_FAILED, dl.state);
+          do_check_true(dm.canCleanUp);
           do_test_finished();
           break;
         case "dl-cancel":
           do_check_eq(nsIDownloadManager.DOWNLOAD_CANCELED, dl.state);
+          do_check_true(dm.canCleanUp);
           do_test_finished();
           break;
         case "dl-done":
@@ -281,6 +283,7 @@ function run_test()
           stmt.reset();
 
           do_check_eq(nsIDownloadManager.DOWNLOAD_FINISHED, dl.state);
+          do_check_true(dm.canCleanUp);
           do_test_finished();
           break;
       };
