@@ -408,11 +408,6 @@ modules/plugin/tools/sdk/samples/simple/Makefile
 modules/plugin/tools/sdk/samples/winless/windows/Makefile
 "
 
-MAKEFILES_access_builtin="
-extensions/access-builtin/Makefile
-extensions/access-builtin/accessproxy/Makefile
-"
-
 MAKEFILES_netwerk="
 netwerk/Makefile
 netwerk/base/Makefile
@@ -839,47 +834,6 @@ content/base/public/Makefile
 intl/locale/public/Makefile
 "
 
-MAKEFILES_inspector="
-extensions/inspector/Makefile
-extensions/inspector/base/Makefile
-extensions/inspector/build/Makefile
-extensions/inspector/resources/Makefile
-extensions/inspector/resources/locale/Makefile
-"
-
-MAKEFILES_spatialnavigation="
-extensions/spatialnavigation/Makefile
-extensions/spatialnavigation/public/Makefile
-extensions/spatialnavigation/src/Makefile
-"
-
-MAKEFILES_sroaming="
-extensions/sroaming/Makefile
-extensions/sroaming/src/Makefile
-"
-
-MAKEFILES_tridentprofile="
-extensions/tridentprofile/Makefile
-extensions/tridentprofile/public/Makefile
-extensions/tridentprofile/resources/Makefile
-extensions/tridentprofile/src/Makefile
-"
-
-MAKEFILES_typeaheadfind="
-extensions/typeaheadfind/public/Makefile
-extensions/typeaheadfind/resources/Makefile
-extensions/typeaheadfind/src/Makefile
-extensions/typeaheadfind/Makefile
-"
-
-MAKEFILES_metrics="
-extensions/metrics/Makefile
-extensions/metrics/build/Makefile
-extensions/metrics/public/Makefile
-extensions/metrics/src/Makefile
-extensions/metrics/test/Makefile
-"
-
 MAKEFILES_phoenix="
 browser/Makefile
 browser/app/Makefile
@@ -1101,23 +1055,6 @@ MAKEFILES_macbrowser="
 camino/Makefile
 camino/flashblock/Makefile
 camino/installer/Makefile
-"
-
-MAKEFILES_sql="
-extensions/sql/Makefile
-extensions/sql/base/Makefile
-extensions/sql/base/public/Makefile
-extensions/sql/base/src/Makefile
-extensions/sql/base/resources/Makefile
-extensions/sql/pgsql/public/Makefile
-extensions/sql/pgsql/src/Makefile
-extensions/sql/odbc/Makefile
-extensions/sql/odbc/public/Makefile
-extensions/sql/odbc/src/Makefile
-extensions/sql/build/Makefile
-extensions/sql/build/src/Makefile
-extensions/sql/sqltest/Makefile
-extensions/sql/tests/Makefile
 "
 
 if [ "$MOZ_MAIL_NEWS" ]; then
@@ -1412,142 +1349,13 @@ fi
 fi
 
 if [ "$MOZ_PREF_EXTENSIONS" ]; then
-    MAKEFILES_extensions="$MAKEFILES_extensions
-        extensions/pref/Makefile
-        extensions/pref/autoconfig/Makefile
-        extensions/pref/autoconfig/public/Makefile
-        extensions/pref/autoconfig/src/Makefile
-        extensions/pref/autoconfig/resources/Makefile
-"
+  MOZ_EXTENSIONS="$MOZ_EXTENSIONS pref"
 fi
 
 for extension in $MOZ_EXTENSIONS; do
-    case "$extension" in
-        access-builtin ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/access-builtin/Makefile
-            extensions/access-builtin/accessproxy/Makefile
-            " ;;
-        cookie ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/cookie/Makefile
-            " ;;
-        cview ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/cview/Makefile
-            extensions/cview/resources/Makefile
-            " ;;
-        datetime ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/datetime/Makefile
-            " ;;
-        finger ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/finger/Makefile
-            " ;;
-        gnomevfs ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/gnomevfs/Makefile
-            " ;;
-        help ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/help/Makefile
-            extensions/help/resources/Makefile
-            " ;;
-        inspector ) MAKEFILES_extensions="$MAKEFILES_extensions
-            $MAKEFILES_inspector"
-            ;;
-        spatialnavigation ) MAKEFILES_extensions="$MAKEFILES_extensions
-            $MAKEFILES_spatialnavigation"
-            ;;
-        typeaheadfind ) MAKEFILES_extensions="$MAKEFILES_extensions
-            $MAKEFILES_typeaheadfind"
-            ;;
-        irc ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/irc/Makefile
-            " ;;
-        layout-debug ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/layout-debug/Makefile
-            extensions/layout-debug/src/Makefile
-            extensions/layout-debug/ui/Makefile
-            " ;;
-        p3p ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/p3p/Makefile
-            extensions/p3p/public/Makefile
-            extensions/p3p/src/Makefile
-            " ;;
-        reporter ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/reporter/Makefile
-	    extensions/reporter/locales/Makefile
-            " ;;
-
-        tasks ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/tasks/Makefile
-            " ;;
-        sroaming ) MAKEFILES_extensions="$MAKEFILES_extensions
-            $MAKEFILES_sroaming"
-            ;;
-        transformiix ) MAKEFILES_extensions="$MAKEFILES_extensions
-            $MAKEFILES_transformiix"
-            ;;
-        tridentprofile ) MAKEFILES_extensions="$MAKEFILES_extensions
-            $MAKEFILES_tridentprofile"
-            ;;
-        venkman ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/venkman/Makefile
-            extensions/venkman/resources/Makefile
-            " ;;
-        wallet ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/wallet/Makefile
-            extensions/wallet/public/Makefile
-            extensions/wallet/src/Makefile
-            extensions/wallet/editor/Makefile
-            extensions/wallet/signonviewer/Makefile
-            extensions/wallet/walletpreview/Makefile
-            extensions/wallet/build/Makefile
-            " ;;
-        xforms ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/xforms/Makefile
-            " ;;
-        xml-rpc ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/xml-rpc/Makefile
-            extensions/xml-rpc/idl/Makefile
-            extensions/xml-rpc/src/Makefile
-            " ;;
-        xmlterm ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/xmlterm/Makefile
-            extensions/xmlterm/base/Makefile
-            extensions/xmlterm/geckoterm/Makefile
-            extensions/xmlterm/linetest/Makefile
-            extensions/xmlterm/scripts/Makefile
-            extensions/xmlterm/tests/Makefile
-            extensions/xmlterm/ui/Makefile
-            " ;;
-        python ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/python/Makefile
-            " ;;
-        python/xpcom ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/python/xpcom/Makefile
-            extensions/python/xpcom/components/Makefile
-            extensions/python/xpcom/src/Makefile
-            extensions/python/xpcom/src/loader/Makefile
-            extensions/python/xpcom/src/module/Makefile
-            extensions/python/xpcom/test/Makefile
-            extensions/python/xpcom/test/test_component/Makefile
-            " ;;
-        python/dom ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/python/dom/Makefile
-            extensions/python/dom/test/Makefile
-            extensions/python/dom/test/pyxultest/Makefile
-            extensions/python/dom/src/Makefile
-            extensions/python/dom/nsdom/Makefile
-            extensions/python/dom/nsdom/test/Makefile
-            " ;;
-        sql ) MAKEFILES_extensions="$MAKEFILES_extensions
-            $MAKEFILES_sql"
-            ;;
-        schema-validation ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/schema-validation/Makefile
-            extensions/schema-validation/public/Makefile
-            extensions/schema-validation/src/Makefile
-            " ;;
-        permissions ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/permissions/Makefile
-            " ;;
-    esac
+  if [ -f "${srcdir}/extensions/${extension}/makefiles.sh" ]; then
+    source "${srcdir}/extensions/${extension}/makefiles.sh"
+  fi
 done
 
 MAKEFILES_themes=`cat ${srcdir}/themes/makefiles`
@@ -1677,4 +1485,8 @@ fi
 
 if test -n "$MOZ_STORAGE"; then
     add_makefiles "$MAKEFILES_storage"
+fi
+
+if test -f "${srcdir}/${MOZ_BUILD_APP}/makefiles.sh"; then
+  source "${srcdir}/${MOZ_BUILD_APP}/makefiles.sh"
 fi
