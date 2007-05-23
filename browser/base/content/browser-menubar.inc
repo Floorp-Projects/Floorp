@@ -355,7 +355,7 @@
 
                 <menuitem label="&historyHomeCmd.label;"
                           command="Browser:Home"
-                          key="historyHome"/>
+                          key="goHome"/>
                 <menuseparator id="startHistorySeparator" builder="start"/>
                 <menuseparator id="endHistorySeparator" builder="end"/>
                 <menu id="historyUndoMenu" label="&historyUndoMenu.label;" disabled="true">
