@@ -700,7 +700,9 @@ SetupTextRunFromGlyphs(gfxTextRun *aRun, WCHAR *aGlyphs, HDC aDC,
         lastWidth = partialWidthArray[i];
         PRInt32 advanceAppUnits = advancePixels*appUnitsPerDevPixel;
         WCHAR glyph = aGlyphs[i];
-        if (advanceAppUnits >= 0 &&
+        if (gfxFontGroup::IsInvisibleChar(aRun->GetChar(i))) {
+            aRun->SetCharacterGlyph(i, g.SetMissing());
+        } else if (advanceAppUnits >= 0 &&
             gfxTextRun::CompressedGlyph::IsSimpleAdvance(advanceAppUnits) &&
             gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph)) {
             aRun->SetCharacterGlyph(i, g.SetSimpleGlyph(advanceAppUnits, glyph));
@@ -1202,7 +1204,9 @@ public:
                 }
                 PRInt32 advance = mAdvances[k]*appUnitsPerDevUnit;
                 WORD glyph = mGlyphs[k];
-                if (missing) {
+                if (gfxFontGroup::IsInvisibleChar(mString[offset])) {
+                    aRun->SetCharacterGlyph(runOffset, g.SetMissing());
+                } else if (missing) {
                     aRun->SetMissingGlyph(runOffset, mString[offset]);
                 } else if (glyphCount == 1 && advance >= 0 &&
                     mOffsets[k].dv == 0 && mOffsets[k].du == 0 &&
