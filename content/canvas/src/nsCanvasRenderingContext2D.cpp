@@ -1091,7 +1091,7 @@ nsCanvasRenderingContext2D::GetInputStream(const nsACString& aMimeType,
                               imgIEncoder::INPUT_FORMAT_HOSTARGB,
                               aEncoderOptions);
     } else {
-        nsAutoArrayPtr<PRUint8> imageBuffer(new PRUint8[mWidth * mHeight * 4]);
+        nsAutoArrayPtr<PRUint8> imageBuffer(new (std::nothrow) PRUint8[mWidth * mHeight * 4]);
         if (!imageBuffer)
             return NS_ERROR_FAILURE;
 
@@ -2876,7 +2876,7 @@ nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
 
     // Create a temporary surface to hold the full-size image in cairo
     // image format.
-    nsAutoArrayPtr<PRUint8> tmpBuf(new PRUint8[aSurfaceSize.width*aSurfaceSize.height*4]);
+    nsAutoArrayPtr<PRUint8> tmpBuf(new (std::nothrow) PRUint8[aSurfaceSize.width*aSurfaceSize.height*4]);
     if (!tmpBuf) {
         aBlackSurface->Unlock();
         return NS_ERROR_OUT_OF_MEMORY;
@@ -3009,7 +3009,7 @@ nsCanvasRenderingContext2D::GetImageData()
     int surfaceDataOffset = (surfaceDataStride * y) + (x * 4);
 
     if (!surfaceData) {
-        allocatedSurfaceData = new PRUint8[w * h * 4];
+        allocatedSurfaceData = new (std::nothrow) PRUint8[w * h * 4];
         if (!allocatedSurfaceData)
             return NS_ERROR_OUT_OF_MEMORY;
         surfaceData = allocatedSurfaceData.get();
@@ -3032,7 +3032,7 @@ nsCanvasRenderingContext2D::GetImageData()
     if (len > (((PRUint32)0xfff00000)/sizeof(jsval)))
         return NS_ERROR_INVALID_ARG;
 
-    nsAutoArrayPtr<jsval> jsvector(new jsval[w * h * 4]);
+    nsAutoArrayPtr<jsval> jsvector(new (std::nothrow) jsval[w * h * 4]);
     if (!jsvector)
         return NS_ERROR_OUT_OF_MEMORY;
     jsval *dest = jsvector.get();
@@ -3144,7 +3144,7 @@ nsCanvasRenderingContext2D::PutImageData()
         arrayLen < (jsuint)(w * h * 4))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
-    nsAutoArrayPtr<PRUint8> imageBuffer(new PRUint8[w * h * 4]);
+    nsAutoArrayPtr<PRUint8> imageBuffer(new (std::nothrow) PRUint8[w * h * 4]);
     cairo_surface_t *imgsurf;
     PRUint8 *imgPtr = imageBuffer.get();
     jsval vr, vg, vb, va;
