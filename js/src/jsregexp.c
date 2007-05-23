@@ -981,8 +981,14 @@ lexHex:
                                          JSMSG_BAD_CLASS_RANGE);
                     return JS_FALSE;
                 }
-                target->u.ucclass.bmsize = 65535;
-                return JS_TRUE;
+                max = 65535;
+
+                /*
+                 * If this is the start of a range, ensure that it's less than
+                 * the end.
+                 */
+                localMax = 0;
+                break;
               case '0':
               case '1':
               case '2':
