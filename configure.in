@@ -41,6 +41,7 @@ dnl   Mark Mentovai <mark@moxienet.com>:
 dnl   Mac OS X 10.4 support
 dnl   Giorgio Maone <g.maone@informaction.com>
 dnl   MSVC l10n compatible version check
+dnl   Ben Turner <mozilla@songbirdnest.com>
 dnl
 dnl Alternatively, the contents of this file may be used under the terms of
 dnl either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -4167,6 +4168,7 @@ MOZ_ARG_ENABLE_STRING(application,
 [ MOZ_BUILD_APP=$enableval ] )
 
 if test "$MOZ_BUILD_APP" = "macbrowser"; then
+    AC_MSG_WARN([--enable-application=macbrowser is deprecated. Use --enable-application=camino.])
     MOZ_BUILD_APP=camino
 fi
 
@@ -4306,186 +4308,86 @@ AC_SUBST(MOZ_EMBEDDING_LEVEL_DEFAULT)
 AC_SUBST(MOZ_EMBEDDING_LEVEL_BASIC)
 AC_SUBST(MOZ_EMBEDDING_LEVEL_MINIMAL)
 
+if test -z "$MOZ_BUILD_APP"; then
+  AC_MSG_ERROR([--enable-application=APP was not specified and is required.])
+else
+  # We have a valid application only if it has a build.mk file in its top
+  # directory.
+  if test ! -f "${srcdir}/${MOZ_BUILD_APP}/build.mk" ; then
+    AC_MSG_ERROR([--enable-application value not recognized (${MOZ_BUILD_APP}/build.mk does not exist).])
+  fi
+fi
+
+# Allow the application to influence configure with a confvars.sh script.
+
+AC_MSG_CHECKING([if app-specific confvars.sh exists])
+if test -f "${srcdir}/${MOZ_BUILD_APP}/confvars.sh" ; then
+  AC_MSG_RESULT([${srcdir}/${MOZ_BUILD_APP}/confvars.sh])
+  source "${srcdir}/${MOZ_BUILD_APP}/confvars.sh"
+else
+  AC_MSG_RESULT([no])
+fi
+
+# Now is a good time to test for logic errors, define mismatches, etc.
 case "$MOZ_BUILD_APP" in
-suite)
-  MOZ_APP_NAME=seamonkey
-  MOZ_APP_DISPLAYNAME=SeaMonkey
-  MOZ_MAIL_NEWS=1
-  MOZ_LDAP_XPCOM=1
-  MOZ_COMPOSER=1
-  MOZ_SUITE=1
-  MOZ_PROFILESHARING=
-  MOZ_APP_VERSION=$SEAMONKEY_VERSION
-  if test "$MOZ_XUL_APP"; then
-    MOZ_NO_XPCOM_OBSOLETE=1
-    MOZ_EXTENSIONS_DEFAULT=" wallet xml-rpc venkman inspector irc typeaheadfind gnomevfs reporter"
-  else
-    MOZ_EXTENSIONS_DEFAULT=" wallet xml-rpc help venkman inspector irc typeaheadfind gnomevfs sroaming reporter"
-  fi
-  AC_DEFINE(MOZ_SUITE)
-  ;;
-
-browser)
-  MOZ_APP_NAME=firefox
-  MOZ_XUL_APP=1
-  MOZ_UPDATER=1
-  MOZ_PHOENIX=1
-  MOZ_PLACES=1
-  MOZ_PLACES_BOOKMARKS=1
-  # always enabled for form history
-  MOZ_MORKREADER=1
-  MOZ_SAFE_BROWSING=1
-  MOZ_APP_VERSION=$FIREFOX_VERSION
-  MOZ_NO_XPCOM_OBSOLETE=1
-  MOZ_EXTENSIONS_DEFAULT=" xml-rpc inspector gnomevfs reporter"
-  AC_DEFINE(MOZ_PHOENIX)
-  # MOZ_APP_DISPLAYNAME will be set by branding/configure.sh
-  ;;
-
-minimo)
-  MOZ_APP_NAME=minimo
-  MOZ_APP_DISPLAYNAME=minimo
-  AC_DEFINE(MINIMO)
-  MINIMO=1
-  MOZ_APP_VERSION=`cat $topsrcdir/minimo/config/version.txt`
-  ;;
-
-mail)
-  MOZ_APP_NAME=thunderbird
-  MOZ_APP_DISPLAYNAME=Thunderbird
-  MOZ_XUL_APP=1
-  MOZ_UPDATER=1
-  MOZ_THUNDERBIRD=1
-  MOZ_MATHML=
-  MOZ_NO_ACTIVEX_SUPPORT=1
-  MOZ_ACTIVEX_SCRIPTING_SUPPORT=
-  ENABLE_TESTS=
-  MOZ_OJI=
-  NECKO_DISK_CACHE=
-  NECKO_PROTOCOLS_DEFAULT="http file viewsource res data"
-  MOZ_ENABLE_CANVAS=
-  MOZ_IMG_DECODERS_DEFAULT=`echo "$MOZ_IMG_DECODERS_DEFAULT" | sed "s/ xbm//"`
-  MOZ_MAIL_NEWS=1
-  MOZ_LDAP_XPCOM=1
-  MOZ_STATIC_MAIL_BUILD=1
-  MOZ_COMPOSER=1
-  MOZ_SAFE_BROWSING=1
-  MOZ_SVG=
-  MOZ_APP_VERSION=$THUNDERBIRD_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" wallet"
-  AC_DEFINE(MOZ_THUNDERBIRD)
-  ;;
-
-composer)
-  MOZ_APP_NAME=nvu
-  MOZ_APP_DISPLAYNAME=NVU
-  MOZ_XUL_APP=1
-  MOZ_UPDATER=1
-  MOZ_STANDALONE_COMPOSER=1
-  MOZ_COMPOSER=1
-  MOZ_APP_VERSION=0.17+
-  AC_DEFINE(MOZ_STANDALONE_COMPOSER)
-  ;;
-
-calendar)
-  MOZ_APP_NAME=sunbird
-  MOZ_APP_DISPLAYNAME=Calendar
-  MOZ_XUL_APP=1
-  MOZ_UPDATER=1
-  MOZ_SUNBIRD=1
-  MOZ_CALENDAR=1
-  MOZ_APP_VERSION=$SUNBIRD_VERSION
-  MOZ_PLAINTEXT_EDITOR_ONLY=1
-  NECKO_PROTOCOLS_DEFAULT="about http ftp file res viewsource"
-  MOZ_NO_ACTIVEX_SUPPORT=1
-  MOZ_ACTIVEX_SCRIPTING_SUPPORT=
-  MOZ_INSTALLER=
-  MOZ_MATHML=
-  NECKO_DISK_CACHE=
-  MOZ_OJI=
-  MOZ_PLUGINS=
-  NECKO_COOKIES=
-  MOZ_NO_XPCOM_OBSOLETE=1
-  MOZ_EXTENSIONS_DEFAULT=
-  MOZ_UNIVERSALCHARDET=
-  AC_DEFINE(MOZ_SUNBIRD)
-  ;;
-
 xulrunner)
-  MOZ_APP_NAME=xulrunner
-  MOZ_APP_DISPLAYNAME=XULRunner
-  MOZ_XUL_APP=1
-  MOZ_UPDATER=1
-  MOZ_XULRUNNER=1
-  MOZ_ENABLE_LIBXUL=1
-  MOZ_APP_VERSION=$MOZILLA_VERSION
-  MOZ_JAVAXPCOM=1
-  if test "$MOZ_STORAGE"; then
-    MOZ_PLACES=1
-  fi
-  MOZ_EXTENSIONS_DEFAULT=" xml-rpc gnomevfs"
-  MOZ_NO_XPCOM_OBSOLETE=1
-  AC_DEFINE(MOZ_XULRUNNER)
-
   if test "$LIBXUL_SDK"; then
     AC_MSG_ERROR([Building XULRunner --with-libxul-sdk doesn't make sense; XULRunner provides the libxul SDK.])
   fi
   ;;
+*)
+  # Fix this case for folks who forget. Warn them.
+  if test -n "$LIBXUL_SDK" -a -z "$MOZ_XUL_APP"; then
+    AC_MSG_WARN([Setting MOZ_XUL_APP since LIBXUL_SDK was set. Add to confvars.sh!])
+    MOZ_XUL_APP=1
+  fi
+  ;;
+esac
+
+# Special cases where we need to AC_DEFINE something. Also a holdover for apps
+# that haven't made a confvars.sh yet. Don't add new stuff here, use
+# MOZ_BUILD_APP.
+case "$MOZ_BUILD_APP" in
+suite)
+  AC_DEFINE(MOZ_SUITE)
+  ;;
+
+browser)
+  AC_DEFINE(MOZ_PHOENIX)
+  ;;
+
+minimo)
+  AC_DEFINE(MINIMO)
+  ;;
+
+mail)
+  AC_DEFINE(MOZ_THUNDERBIRD)
+  ;;
+
+composer)
+  AC_DEFINE(MOZ_STANDALONE_COMPOSER)
+  ;;
+
+calendar)
+  AC_DEFINE(MOZ_SUNBIRD)
+  ;;
+
+xulrunner)
+  AC_DEFINE(MOZ_XULRUNNER)
+  ;;
 
 camino) 
-  MOZ_APP_NAME=mozilla
-  ENABLE_TESTS=
-  ACCESSIBILITY=
-  MOZ_JSDEBUGGER=
-  MOZ_SINGLE_PROFILE=1
-  MOZ_PROFILESHARING=
-  MOZ_APP_DISPLAYNAME=Mozilla
-  MOZ_APP_VERSION=$MOZILLA_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" typeaheadfind"
-# MOZ_XUL_APP=1
-  MOZ_PREF_EXTENSIONS=
-  MOZ_WEBSERVICES=
   AC_DEFINE(MOZ_MACBROWSER)
   ;;
 
 content/xslt)
-  MOZ_APP_NAME=mozilla
-  MOZ_EXTENSIONS_DEFAULT=""
   AC_DEFINE(TX_EXE)
-  MOZ_XSLT_STANDALONE=1
-  MOZ_APP_VERSION=$MOZILLA_VERSION
-  ;;
-
-netwerk)
-  MOZ_APP_NAME=mozilla
-  MOZ_EXTENSIONS_DEFAULT=""
-  MOZ_APP_VERSION=$MOZILLA_VERSION
-  MOZ_NO_XPCOM_OBSOLETE=1
-  MOZ_SINGLE_PROFILE=1
-  MOZ_PROFILESHARING=
-  MOZ_XPINSTALL=
   ;;
 
 standalone) 
   MOZ_APP_NAME=mozilla
   MOZ_APP_DISPLAYNAME=Mozilla
   MOZ_APP_VERSION=$MOZILLA_VERSION
-  ;;
-
-tools/update-packaging)
-  MOZ_APP_NAME=mozilla
-  MOZ_APP_DISPLAYNAME=Mozilla
-  MOZ_APP_VERSION=$MOZILLA_VERSION
-  MOZ_UPDATE_PACKAGING=1
-  MOZ_UPDATER=1
-  ;;
-
-*)
-  if test -z "$MOZ_BUILD_APP"; then
-    AC_MSG_ERROR([--enable-application=APP is required.])
-  else
-    AC_MSG_ERROR([--enable-application value not recognized.])
-  fi
   ;;
 
 esac
