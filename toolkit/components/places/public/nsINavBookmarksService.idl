@@ -439,7 +439,7 @@ interface nsINavBookmarksService : nsISupports
   /**
    * Get the parent folder's id for an item.
    */
-  long long getFolderIdForItem(in PRInt64 aItemId);
+  long long getFolderIdForItem(in long long aItemId);
 
   /**
    * Returns the list of bookmark ids that contain the given URI.
