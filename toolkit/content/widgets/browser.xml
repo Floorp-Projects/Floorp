@@ -48,7 +48,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="browser" extends="xul:browser">
-    <implementation type="application/x-javascript" implements="nsIAccessibleProvider, nsIObserver, nsIDOMEventListener">
+    <implementation type="application/javascript" implements="nsIAccessibleProvider, nsIObserver, nsIDOMEventListener">
       <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[

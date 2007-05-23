@@ -6,7 +6,7 @@
     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-    <script type="application/x-javascript" src="chrome://global/content/charsetOverlay.js"/>
+    <script type="application/javascript" src="chrome://global/content/charsetOverlay.js"/>
 
     <!-- Composer Charset Menu -->
     <menu id="composerCharsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:ComposerCharsetMenuRoot" oncommand="ComposerMultiplexHandler(event)" onpopupshowing="CreateMenu('composer');UpdateMenus()" onpopupshown="CreateMenu('more-menu');">

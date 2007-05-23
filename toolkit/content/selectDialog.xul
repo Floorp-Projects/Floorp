@@ -45,7 +45,7 @@
       ondialogaccept="return commonDialogOnOK();"
       ondialogcancel="return commonDialogOnCancel();">
 
-  <script type="application/x-javascript" src="chrome://global/content/selectDialog.js" />
+  <script type="application/javascript" src="chrome://global/content/selectDialog.js" />
   <keyset id="dialogKeys"/>
   <vbox style="width: 24em;margin: 5px;">
     <label id="info.txt"/>

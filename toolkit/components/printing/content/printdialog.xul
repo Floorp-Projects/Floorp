@@ -54,8 +54,8 @@
   persist="screenX screenY"
   screenX="24" screenY="24">
 
-  <script type="application/x-javascript" src="chrome://global/content/printdialog.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/javascript" src="chrome://global/content/printdialog.js"/>
+  <script type="application/javascript" src="chrome://global/content/strres.js"/>
 
   <groupbox>
     <caption label="&printer.label;"/>
