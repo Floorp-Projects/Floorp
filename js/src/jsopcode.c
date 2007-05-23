@@ -2684,7 +2684,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_YIELD:
                 op = JSOP_SETNAME;      /* turn off most parens */
 
-                if (!ss->inGenExp || !(sn = js_GetSrcNote(jp->script, pc))) {
+#if JS_HAS_GENERATOR_EXPRS
+                if (!ss->inGenExp || !(sn = js_GetSrcNote(jp->script, pc)))
+#endif
+                {
                     rval = POP_STR();
                     todo = (*rval != '\0')
                            ? Sprint(&ss->sprinter,
@@ -2696,8 +2699,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                            : SprintCString(&ss->sprinter, js_yield_str);
                     break;
                 }
+#if JS_HAS_GENERATOR_EXPRS
                 LOCAL_ASSERT(SN_TYPE(sn) == SRC_HIDDEN);
                 /* FALL THROUGH */
+#endif
 
               case JSOP_ARRAYPUSH:
               {
@@ -2737,6 +2742,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     --pos;
                 }
 
+#if JS_HAS_GENERATOR_EXPRS
                 if (saveop == JSOP_YIELD) {
                     /*
                      * Generator expression: decompile just rval followed by
@@ -2756,6 +2762,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     ++ss->top;
                     return pc;
                 }
+#endif /* JS_HAS_GENERATOR_EXPRS */
 
                 /*
                  * Array comprehension: retract the sprinter to the beginning
@@ -3715,6 +3722,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               END_LITOPX_CASE
 
               case JSOP_ANONFUNOBJ:
+#if JS_HAS_GENERATOR_EXPRS
                 sn = js_GetSrcNote(jp->script, pc);
                 if (sn && SN_TYPE(sn) == SRC_GENEXP) {
                     JSScript *inner, *outer;
@@ -3758,7 +3766,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                      * Advance over this op and its null |this| push, and
                      * arrange to advance over the call to this lambda.
                      */
-                    pc2 = pc;
                     pc += len;
                     LOCAL_ASSERT(*pc == JSOP_NULL);
                     pc += JSOP_NULL_LENGTH;
@@ -3769,32 +3776,38 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     /*
                      * Arrange to parenthesize this genexp unless:
                      *
-                     *  1. It is consumed by a control flow bytecode such
-                     *     as JSOP_TABLESWITCH (the syntax from which such ops
-                     *     come always parenthesizes the controlling expression).
+                     *  1. It is the complete expression consumed by a control
+                     *     flow bytecode such as JSOP_TABLESWITCH whose syntax
+                     *     always parenthesizes the controlling expression.
                      *  2. It is the sole argument to a function call.
                      *  3. It is the condition of an if statement and not of a
                      *     ?: expression.
                      *
-                     * But always parenthesize if this genexp is an operand in
-                     * a comma expression (i.e. if JSOP_ANONFUNOBJ is preceded
-                     * immediately by JSOP_POP with SRC_PCDELTA).
+                     * But (first, before anything else) always parenthesize
+                     * if this genexp runs up against endpc and the next op is
+                     * not a while or do-while loop JSOP_IFNE* opcode. In such
+                     * cases, this Decompile activation has been recursively
+                     * called by a comma operator, &&, or || bytecode.
                      */
+                    LOCAL_ASSERT(pc + len < endpc ||
+                                 endpc < outer->code + outer->length);
                     LOCAL_ASSERT(ss2.top == 1);
                     ss2.opcodes[0] = JSOP_POP;
-                    op = (JSOp) pc[len];
-                    op = (((js_CodeSpec[op].format & JOF_PARENHEAD) ||
-                           ((js_CodeSpec[op].format & JOF_INVOKE) &&
-                            GET_ARGC(pc + len) == 1) ||
-                           (((op == JSOP_IFEQ || op == JSOP_IFEQX) &&
-                            (sn2 = js_GetSrcNote(outer, pc + len)) &&
-                            SN_TYPE(sn2) != SRC_COND))) &&
-                          !(pc2 > outer->main &&
-                            pc2[-1] == JSOP_POP &&
-                            (sn2 = js_GetSrcNote(outer, pc2 - 1)) &&
-                            SN_TYPE(sn2) == SRC_PCDELTA))
-                         ? JSOP_POP
-                         : JSOP_SETNAME;
+                    if (pc + len == endpc &&
+                        ((JSOp) *endpc != JSOP_IFNE &&
+                         (JSOp) *endpc != JSOP_IFNEX)) {
+                        op = JSOP_SETNAME;
+                    } else {
+                        op = (JSOp) pc[len];
+                        op = ((js_CodeSpec[op].format & JOF_PARENHEAD) ||
+                              ((js_CodeSpec[op].format & JOF_INVOKE) &&
+                               GET_ARGC(pc + len) == 1) ||
+                              (((op == JSOP_IFEQ || op == JSOP_IFEQX) &&
+                               (sn2 = js_GetSrcNote(outer, pc + len)) &&
+                               SN_TYPE(sn2) != SRC_COND)))
+                             ? JSOP_POP
+                             : JSOP_SETNAME;
+                    }
 
                     /*
                      * Alas, we have to malloc a copy of the result left on
@@ -3810,6 +3823,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     break;
                 }
                 /* FALL THROUGH */
+#endif /* JS_HAS_GENERATOR_EXPRS */
 
               case JSOP_OBJECT:
               case JSOP_REGEXP:
