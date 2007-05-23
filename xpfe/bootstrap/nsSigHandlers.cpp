@@ -44,9 +44,11 @@
 
 #include <signal.h>
 #include <stdio.h>
+#include <string.h>
 #include "prthread.h"
 #include "plstr.h"
 #include "prenv.h"
+#include "nsDebug.h"
 
 #if defined(LINUX)
 #include <sys/time.h>
@@ -70,7 +72,6 @@
 
 #ifdef MOZ_WIDGET_PHOTON
 #include <photon/PhProto.h>
-#include <string.h>
 #endif
 
 static char _progname[1024] = "huh?";
@@ -157,7 +158,7 @@ void beos_signal_handler(int signum) {
 }
 #endif
 
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK2 && GLIB_CHECK_VERSION(2,6,0)
 
 #include <glib.h>
 
@@ -254,7 +255,7 @@ void InstallUnixSignalHandlers(const char *ProgramName)
 	signal(SIGTERM, beos_signal_handler);
 #endif
 
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK2 && GLIB_CHECK_VERSION(2,6,0)
   const char *assertString = PR_GetEnv("XPCOM_DEBUG_BREAK");
   if (assertString &&
       (!strcmp(assertString, "suspend") ||
