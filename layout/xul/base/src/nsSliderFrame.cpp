@@ -56,15 +56,12 @@
 #include "nsCSSRendering.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIViewManager.h"
-#include "nsIWidget.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDocument.h"
 #include "nsScrollbarButtonFrame.h"
 #include "nsIScrollbarListener.h"
 #include "nsIScrollbarMediator.h"
 #include "nsIScrollbarFrame.h"
-#include "nsISupportsArray.h"
-#include "nsIScrollableView.h"
 #include "nsILookAndFeel.h"
 #include "nsRepeatService.h"
 #include "nsBoxLayoutState.h"
@@ -134,8 +131,7 @@ nsSliderFrame::RemoveFrame(nsIAtom*        aListName,
                            nsIFrame*       aOldFrame)
 {
   nsresult rv = nsBoxFrame::RemoveFrame(aListName, aOldFrame);
-  PRInt32 start = GetChildCount();
-  if (start == 0)
+  if (mFrames.IsEmpty())
     RemoveListener();
 
   return rv;
@@ -146,9 +142,9 @@ nsSliderFrame::InsertFrames(nsIAtom*        aListName,
                             nsIFrame*       aPrevFrame,
                             nsIFrame*       aFrameList)
 {
-  PRInt32 start = GetChildCount();
+  PRBool wasEmpty = mFrames.IsEmpty();
   nsresult rv = nsBoxFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
-  if (start == 0)
+  if (wasEmpty)
     AddListener();
 
   return rv;
@@ -160,9 +156,9 @@ nsSliderFrame::AppendFrames(nsIAtom*        aListName,
 {
   // if we have no children and on was added then make sure we add the
   // listener
-  PRInt32 start = GetChildCount();
+  PRBool wasEmpty = mFrames.IsEmpty();
   nsresult rv = nsBoxFrame::AppendFrames(aListName, aFrameList);
-  if (start == 0)
+  if (wasEmpty)
     AddListener();
 
   return rv;

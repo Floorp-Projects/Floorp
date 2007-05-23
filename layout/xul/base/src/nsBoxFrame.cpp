@@ -292,15 +292,12 @@ nsBoxFrame::CacheAttributes()
 PRBool
 nsBoxFrame::GetInitialDebug(PRBool& aDebug)
 {
-  nsCOMPtr<nsIContent> content;
-  GetContentOf(getter_AddRefs(content));
-
-  if (!content)
+  if (!GetContent())
     return PR_FALSE;
 
   static nsIContent::AttrValuesArray strings[] =
     {&nsGkAtoms::_false, &nsGkAtoms::_true, nsnull};
-  PRInt32 index = content->FindAttrValueIn(kNameSpaceID_None,
+  PRInt32 index = GetContent()->FindAttrValueIn(kNameSpaceID_None,
       nsGkAtoms::debug, strings, eCaseMatters);
   if (index >= 0) {
     aDebug = index == 1;
@@ -314,16 +311,14 @@ nsBoxFrame::GetInitialDebug(PRBool& aDebug)
 PRBool
 nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
 {
-  nsCOMPtr<nsIContent> content;
-  GetContentOf(getter_AddRefs(content));
-  if (!content)
+  if (!GetContent())
     return PR_FALSE;
 
   // XXXdwh Everything inside this if statement is deprecated code.
   static nsIContent::AttrValuesArray alignStrings[] =
     {&nsGkAtoms::left, &nsGkAtoms::right, nsnull};
   static const Halignment alignValues[] = {hAlign_Left, hAlign_Right};
-  PRInt32 index = content->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::align,
+  PRInt32 index = GetContent()->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::align,
       alignStrings, eCaseMatters);
   if (index >= 0) {
     aHalign = alignValues[index];
@@ -338,7 +333,7 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
     {&nsGkAtoms::_empty, &nsGkAtoms::start, &nsGkAtoms::center, &nsGkAtoms::end, nsnull};
   static const Halignment values[] =
     {hAlign_Left/*not used*/, hAlign_Left, hAlign_Center, hAlign_Right};
-  index = content->FindAttrValueIn(kNameSpaceID_None, attrName,
+  index = GetContent()->FindAttrValueIn(kNameSpaceID_None, attrName,
       strings, eCaseMatters);
 
   if (index == nsIContent::ATTR_VALUE_NO_MATCH) {
@@ -391,16 +386,14 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
 PRBool
 nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
 {
-  nsCOMPtr<nsIContent> content;
-  GetContentOf(getter_AddRefs(content));
-  if (!content)
+  if (!GetContent())
     return PR_FALSE;
 
   static nsIContent::AttrValuesArray valignStrings[] =
     {&nsGkAtoms::top, &nsGkAtoms::baseline, &nsGkAtoms::middle, &nsGkAtoms::bottom, nsnull};
   static const Valignment valignValues[] =
     {vAlign_Top, vAlign_BaseLine, vAlign_Middle, vAlign_Bottom};
-  PRInt32 index = content->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::valign,
+  PRInt32 index = GetContent()->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::valign,
       valignStrings, eCaseMatters);
   if (index >= 0) {
     aValign = valignValues[index];
@@ -416,7 +409,7 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
      &nsGkAtoms::baseline, &nsGkAtoms::end, nsnull};
   static const Valignment values[] =
     {vAlign_Top/*not used*/, vAlign_Top, vAlign_Middle, vAlign_BaseLine, vAlign_Bottom};
-  index = content->FindAttrValueIn(kNameSpaceID_None, attrName,
+  index = GetContent()->FindAttrValueIn(kNameSpaceID_None, attrName,
       strings, eCaseMatters);
   if (index == nsIContent::ATTR_VALUE_NO_MATCH) {
     // The attr was present but had a nonsensical value. Revert to the default.
@@ -472,10 +465,7 @@ void
 nsBoxFrame::GetInitialOrientation(PRBool& aIsHorizontal)
 {
  // see if we are a vertical or horizontal box.
-  nsCOMPtr<nsIContent> content;
-  GetContentOf(getter_AddRefs(content));
-
-  if (!content)
+  if (!GetContent())
     return;
 
   // Check the style system first.
@@ -489,7 +479,7 @@ nsBoxFrame::GetInitialOrientation(PRBool& aIsHorizontal)
   // the style system value.
   static nsIContent::AttrValuesArray strings[] =
     {&nsGkAtoms::vertical, &nsGkAtoms::horizontal, nsnull};
-  PRInt32 index = content->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::orient,
+  PRInt32 index = GetContent()->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::orient,
       strings, eCaseMatters);
   if (index >= 0) {
     aIsHorizontal = index == 1;
@@ -499,10 +489,7 @@ nsBoxFrame::GetInitialOrientation(PRBool& aIsHorizontal)
 void
 nsBoxFrame::GetInitialDirection(PRBool& aIsNormal)
 {
-  nsCOMPtr<nsIContent> content;
-  GetContentOf(getter_AddRefs(content));
-
-  if (!content)
+  if (!GetContent())
     return;
 
   if (IsHorizontal()) {
@@ -522,7 +509,7 @@ nsBoxFrame::GetInitialDirection(PRBool& aIsNormal)
   // the style system value.
   static nsIContent::AttrValuesArray strings[] =
     {&nsGkAtoms::reverse, &nsGkAtoms::ltr, &nsGkAtoms::rtl, nsnull};
-  PRInt32 index = content->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::dir,
+  PRInt32 index = GetContent()->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::dir,
       strings, eCaseMatters);
   if (index >= 0) {
     PRPackedBool values[] = {!aIsNormal, PR_TRUE, PR_FALSE};
@@ -536,17 +523,14 @@ PRBool
 nsBoxFrame::GetInitialEqualSize(PRBool& aEqualSize)
 {
  // see if we are a vertical or horizontal box.
-  nsCOMPtr<nsIContent> content;
-  GetContentOf(getter_AddRefs(content));
-
-  if (!content)
+  if (!GetContent())
      return PR_FALSE;
-  
-  if (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::equalsize,
+
+  if (GetContent()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::equalsize,
                            nsGkAtoms::always, eCaseMatters)) {
     aEqualSize = PR_TRUE;
     return PR_TRUE;
-  } 
+  }
 
   return PR_FALSE;
 }
@@ -556,16 +540,13 @@ nsBoxFrame::GetInitialEqualSize(PRBool& aEqualSize)
 PRBool
 nsBoxFrame::GetInitialAutoStretch(PRBool& aStretch)
 {
-  nsCOMPtr<nsIContent> content;
-  GetContentOf(getter_AddRefs(content));
-
-  if (!content)
+  if (!GetContent())
      return PR_FALSE;
   
   // Check the align attribute.
   static nsIContent::AttrValuesArray strings[] =
     {&nsGkAtoms::_empty, &nsGkAtoms::stretch, nsnull};
-  PRInt32 index = content->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::align,
+  PRInt32 index = GetContent()->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::align,
       strings, eCaseMatters);
   if (index != nsIContent::ATTR_MISSING && index != 0) {
     aStretch = index == 1;
@@ -1495,25 +1476,6 @@ nsBoxFrame::GetDebug(PRBool& aDebug)
 
 // REVIEW: GetCursor had debug-only event dumping code. I have replaced it
 // with instrumentation in nsDisplayXULDebug.
-nsresult 
-nsBoxFrame::GetContentOf(nsIContent** aContent)
-{
-    // If we don't have a content node find a parent that does.
-    nsIFrame *frame = this;
-    while (frame) {
-      *aContent = frame->GetContent();
-      if (*aContent) {
-        NS_ADDREF(*aContent);
-        NS_ASSERTION(*aContent == GetContent(), "Can't happen");
-        return NS_OK;
-      }
-
-      frame = frame->GetParent();
-    }
-
-    *aContent = nsnull;
-    return NS_OK;
-}
 
 #ifdef DEBUG_LAYOUT
 void
@@ -1594,7 +1556,6 @@ nsBoxFrame::GetDebugPadding(nsMargin& aPadding)
 {
     aPadding.SizeTo(2,2,2,2);
 }
-#endif
 
 void 
 nsBoxFrame::PixelMarginToTwips(nsPresContext* aPresContext, nsMargin& aMarginPixels)
@@ -1606,8 +1567,6 @@ nsBoxFrame::PixelMarginToTwips(nsPresContext* aPresContext, nsMargin& aMarginPix
   aMarginPixels.bottom *= onePixel;
 }
 
-
-#ifdef DEBUG_LAYOUT
 void
 nsBoxFrame::GetValue(nsPresContext* aPresContext, const nsSize& a, const nsSize& b, char* ch) 
 {
@@ -1774,7 +1733,6 @@ nsBoxFrame::SetDebugOnChildList(nsBoxLayoutState& aState, nsIBox* aChild, PRBool
         child = child->GetNextBox();
      }
 }
-#endif
 
 nsresult
 nsBoxFrame::GetFrameSizeWithMargin(nsIBox* aBox, nsSize& aSize)
@@ -1787,6 +1745,7 @@ nsBoxFrame::GetFrameSizeWithMargin(nsIBox* aBox, nsSize& aSize)
   aSize.height = rect.height;
   return NS_OK;
 }
+#endif
 
 /**
  * Boxed don't support fixed positionioning of their children.
