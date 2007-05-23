@@ -593,15 +593,16 @@ nsComboboxControlFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   // of our display frame plus a scrollbar.  This can happen, eg, if the
   // dropdown is empty.
   if (NS_LIKELY(mListControlFrame && mDisplayFrame)) {
-    nsIScrollableFrame* scrollable;
-    CallQueryInterface(mListControlFrame, &scrollable);
-    NS_ASSERTION(scrollable, "List must be a scrollable frame");
-    nsBoxLayoutState bls(PresContext(), aRenderingContext);
-    nscoord displayResult =
-      scrollable->GetDesiredScrollbarSizes(&bls).LeftRight() +
-      nsLayoutUtils::IntrinsicForContainer(aRenderingContext, mDisplayFrame,
-                                           nsLayoutUtils::PREF_WIDTH);
-
+    nscoord displayResult = nsLayoutUtils::IntrinsicForContainer(aRenderingContext, mDisplayFrame,
+                                                                 nsLayoutUtils::PREF_WIDTH);
+    nsPresContext *presContext = PresContext();
+    if (!IsThemed() || presContext->GetTheme()->ThemeNeedsComboboxDropmarker()) {
+      nsIScrollableFrame* scrollable;
+      CallQueryInterface(mListControlFrame, &scrollable);
+      NS_ASSERTION(scrollable, "List must be a scrollable frame");
+      nsBoxLayoutState bls(presContext, aRenderingContext);
+      displayResult += scrollable->GetDesiredScrollbarSizes(&bls).LeftRight();
+    }
     result = PR_MAX(result, displayResult);
   }
 
