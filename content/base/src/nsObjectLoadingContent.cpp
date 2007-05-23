@@ -1294,20 +1294,34 @@ nsObjectLoadingContent::GetFrame()
     do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
   NS_ASSERTION(thisContent, "must be a content");
 
-  nsIDocument* doc = thisContent->GetCurrentDoc();
-  if (!doc) {
-    return nsnull; // No current doc -> no frame
-  }
+  PRBool flushed = PR_FALSE;
+  nsIFrame* frame;
+  do {
+    nsIDocument* doc = thisContent->GetCurrentDoc();
+    if (!doc) {
+      return nsnull; // No current doc -> no frame
+    }
 
-  nsIPresShell* shell = doc->GetPrimaryShell();
-  if (!shell) {
-    return nsnull; // No presentation -> no frame
-  }
+    nsIPresShell* shell = doc->GetPrimaryShell();
+    if (!shell) {
+      return nsnull; // No presentation -> no frame
+    }
 
-  nsIFrame* frame = shell->GetPrimaryFrameFor(thisContent);
-  if (!frame) {
-    return nsnull;
-  }
+    frame = shell->GetPrimaryFrameFor(thisContent);
+    if (!frame) {
+      return nsnull;
+    }
+
+    if (flushed) {
+      break;
+    }
+    
+    // OK, let's flush out and try again.  Note that we want to reget
+    // the document, etc, since flushing might run script.
+    doc->FlushPendingNotifications(Flush_ContentAndNotify);
+
+    flushed = PR_TRUE;
+  } while (1);
 
   nsIObjectFrame* objFrame;
   CallQueryInterface(frame, &objFrame);
