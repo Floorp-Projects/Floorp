@@ -158,7 +158,7 @@ void beos_signal_handler(int signum) {
 }
 #endif
 
-#ifdef MOZ_WIDGET_GTK2 && (GLIB_MAJOR_VERSION > 2 || (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 6))
+#if defined(MOZ_WIDGET_GTK2) && (GLIB_MAJOR_VERSION > 2 || (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 6))
 
 #include <glib.h>
 
@@ -255,7 +255,7 @@ void InstallUnixSignalHandlers(const char *ProgramName)
 	signal(SIGTERM, beos_signal_handler);
 #endif
 
-#ifdef MOZ_WIDGET_GTK2 && (GLIB_MAJOR_VERSION > 2 || (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 6))
+#if defined(MOZ_WIDGET_GTK2) && (GLIB_MAJOR_VERSION > 2 || (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 6))
   const char *assertString = PR_GetEnv("XPCOM_DEBUG_BREAK");
   if (assertString &&
       (!strcmp(assertString, "suspend") ||
