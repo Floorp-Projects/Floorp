@@ -91,15 +91,6 @@ public:
                          nsGUIEvent*    aEvent,
                          nsEventStatus* aEventStatus) = 0;
 
-  /**
-   * This is temporary until nsIViewManager::RenderOffscreen goes away (which
-   * will happen when views, and hence this entire interface, go away!).
-   */
-  NS_IMETHOD RenderOffscreen(nsRect aRect, PRBool aUntrusted,
-                             PRBool aIgnoreViewportScrolling,
-                             nscolor aBackgroundColor,
-                             nsIRenderingContext** aRenderedContext) = 0;
-
   /* called when the view has been resized and the
    * content within the view needs to be reflowed.
    * @param aWidth - new width of view

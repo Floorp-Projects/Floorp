@@ -199,6 +199,8 @@
 
 // Content viewer interfaces
 #include "nsIContentViewer.h"
+#include "imgIEncoder.h"
+#include "gfxPlatform.h"
 
 #include "nsContentCID.h"
 static NS_DEFINE_CID(kCSSStyleSheetCID, NS_CSS_STYLESHEET_CID);
@@ -873,10 +875,10 @@ public:
   virtual void Freeze();
   virtual void Thaw();
   
-  NS_IMETHOD RenderOffscreen(nsRect aRect, PRBool aUntrusted,
-                             PRBool aIgnoreViewportScrolling,
-                             nscolor aBackgroundColor,
-                             nsIRenderingContext** aRenderedContext);
+  NS_IMETHOD RenderDocument(const nsRect& aRect, PRBool aUntrusted,
+                            PRBool aIgnoreViewportScrolling,
+                            nscolor aBackgroundColor,
+                            gfxContext* aThebesContext);
 
   virtual already_AddRefed<gfxASurface> RenderNode(nsIDOMNode* aNode,
                                                    nsIRegion* aRegion,
@@ -2918,6 +2920,8 @@ nsIPresShell::GetRootScrollFrameAsScrollable() const
     return nsnull;
   nsIScrollableFrame* scrollableFrame = nsnull;
   CallQueryInterface(frame, &scrollableFrame);
+  NS_ASSERTION(scrollableFrame,
+               "All scroll frames must implement nsIScrollableFrame");
   return scrollableFrame;
 }
 
@@ -3082,6 +3086,7 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
   if (mInVerifyReflow) {
     return NS_OK;
   }
+
   if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
     printf("\nPresShell@%p: frame %p needs reflow\n", (void*)this, (void*)aFrame);
     if (VERIFY_REFLOW_REALLY_NOISY_RC & gVerifyReflowFlags) {
@@ -4633,83 +4638,76 @@ PresShell::ComputeRepaintRegionForCopy(nsIView*      aRootView,
 }
 
 NS_IMETHODIMP
-PresShell::RenderOffscreen(nsRect aRect, PRBool aUntrusted,
-                           PRBool aIgnoreViewportScrolling,
-                           nscolor aBackgroundColor,
-                           nsIRenderingContext** aRenderedContext)
+PresShell::RenderDocument(const nsRect& aRect, PRBool aUntrusted,
+                          PRBool aIgnoreViewportScrolling,
+                          nscolor aBackgroundColor,
+                          gfxContext* aThebesContext)
 {
-  nsIView* rootView;
-  mViewManager->GetRootView(rootView);
-  NS_ASSERTION(rootView, "No root view?");
-  nsIWidget* rootWidget = rootView->GetWidget();
-  NS_ASSERTION(rootWidget, "No root widget?");
+  NS_ENSURE_TRUE(!aUntrusted, NS_ERROR_NOT_IMPLEMENTED);
 
-  *aRenderedContext = nsnull;
+  aThebesContext->PushGroup(NS_GET_A(aBackgroundColor) == 0xff ?
+                            gfxASurface::CONTENT_COLOR :
+                            gfxASurface::CONTENT_COLOR_ALPHA);
 
-  NS_ASSERTION(!aUntrusted, "We don't support untrusted yet");
-  if (aUntrusted)
-    return NS_ERROR_NOT_IMPLEMENTED;
+  aThebesContext->Save();
 
-  nsCOMPtr<nsIRenderingContext> tmpContext;
-  mPresContext->DeviceContext()->CreateRenderingContext(rootWidget, 
-      *getter_AddRefs(tmpContext));
-  if (!tmpContext)
-    return NS_ERROR_FAILURE;
-
-  nsRect bounds(nsPoint(0, 0), aRect.Size());
-  bounds.ScaleRoundOut(1.0f / mPresContext->AppUnitsPerDevPixel());
-  
-  nsIDrawingSurface* surface;
-  nsresult rv
-    = tmpContext->CreateDrawingSurface(bounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS,
-                                       surface);
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIRenderingContext> localcx;
-  rv = nsLayoutUtils::CreateOffscreenContext(mPresContext->DeviceContext(),
-      surface, aRect, getter_AddRefs(localcx));
-  if (NS_FAILED(rv)) {
-    tmpContext->DestroyDrawingSurface(surface);
-    return NS_ERROR_FAILURE;
+  // draw background color
+  if (NS_GET_A(aBackgroundColor) > 0) {
+    aThebesContext->SetColor(gfxRGBA(aBackgroundColor));
+    aThebesContext->SetOperator(gfxContext::OPERATOR_SOURCE);
+    aThebesContext->Paint();
   }
-  // clipping and translation is set by CreateOffscreenContext
 
-  localcx->SetColor(aBackgroundColor);
-  localcx->FillRect(aRect);
+  // we want the window to be composited as a single image using
+  // whatever operator was set, so set this to the default OVER;
+  // the original operator will be present when we PopGroup
+  aThebesContext->SetOperator(gfxContext::OPERATOR_OVER);
 
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
-  if (!rootFrame) {
-    localcx.swap(*aRenderedContext);
-    return NS_OK;
+  if (rootFrame) {
+    nsDisplayListBuilder builder(rootFrame, PR_FALSE, PR_FALSE);
+    nsDisplayList list;
+
+    nsRect rect(aRect);
+    nsIFrame* rootScrollFrame = GetRootScrollFrame();
+    if (aIgnoreViewportScrolling && rootScrollFrame) {
+      nsPoint pos = GetRootScrollFrameAsScrollable()->GetScrollPosition();
+      rect.MoveBy(-pos);
+      builder.SetIgnoreScrollFrame(rootScrollFrame);
+    }
+
+    builder.EnterPresShell(rootFrame, rect);
+
+    nsresult rv = rootFrame->BuildDisplayListForStackingContext(&builder, rect, &list);   
+
+    builder.LeavePresShell(rootFrame, rect);
+
+    if (NS_SUCCEEDED(rv)) {
+      nscoord appUnitsPerDevPixel = mPresContext->AppUnitsPerDevPixel();
+      // Ensure that r.x,r.y gets drawn at (0,0)
+      aThebesContext->Save();
+      aThebesContext->Translate(gfxPoint(-NSAppUnitsToFloatPixels(rect.x,appUnitsPerDevPixel),
+                                         -NSAppUnitsToFloatPixels(rect.y,appUnitsPerDevPixel)));
+
+      nsIDeviceContext* devCtx = mPresContext->DeviceContext();
+      nsCOMPtr<nsIRenderingContext> rc;
+      devCtx->CreateRenderingContextInstance(*getter_AddRefs(rc));
+      rc->Init(devCtx, aThebesContext);
+
+      nsRegion region(rect);
+      list.OptimizeVisibility(&builder, &region);
+      list.Paint(&builder, rc, rect);
+      // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
+      list.DeleteAll();
+
+      aThebesContext->Restore();
+    }
   }
-  
-  nsDisplayListBuilder builder(rootFrame, PR_FALSE, PR_FALSE);
-  nsDisplayList list;
-  nsIScrollableView* scrollingView = nsnull;
-  mViewManager->GetRootScrollableView(&scrollingView);
-  nsRect r = aRect;
-  if (aIgnoreViewportScrolling && scrollingView) {
-    nscoord x, y;
-    scrollingView->GetScrollPosition(x, y);
-    localcx->Translate(x, y);
-    r.MoveBy(-x, -y);
-    builder.SetIgnoreScrollFrame(GetRootScrollFrame());
-  }
 
-  builder.EnterPresShell(rootFrame, r);
+  aThebesContext->Restore();
+  aThebesContext->PopGroupToSource();
+  aThebesContext->Paint();
 
-  rv = rootFrame->BuildDisplayListForStackingContext(&builder, r, &list);
-
-  builder.LeavePresShell(rootFrame, r);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsRegion region(r);
-  list.OptimizeVisibility(&builder, &region);
-  list.Paint(&builder, localcx, r);
-  // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
-  list.DeleteAll();
-
-  localcx.swap(*aRenderedContext);
   return NS_OK;
 }
 
@@ -6442,6 +6440,10 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
 {
   if (!aFirstPresContext || !aFirstFrame || !aSecondPresContext || !aSecondFrame)
     return PR_TRUE;
+  // XXX Evil hack to reduce false positives; I can't seem to figure
+  // out how to flush scrollbar changes correctly
+  //if (aFirstFrame->GetType() == nsGkAtoms::scrollbarFrame)
+  //  return PR_TRUE;
   PRBool ok = PR_TRUE;
   nsIAtom* listName = nsnull;
   PRInt32 listIndex = 0;
@@ -6706,12 +6708,16 @@ PresShell::CloneStyleSet(nsStyleSet* aSet, nsStyleSet** aResult)
       clone->AppendStyleSheet(nsStyleSet::eOverrideSheet, ss);
   }
 
+  // The document expects to insert document stylesheets itself
+#if 0
   n = aSet->SheetCount(nsStyleSet::eDocSheet);
   for (i = 0; i < n; i++) {
     nsIStyleSheet* ss = aSet->StyleSheetAt(nsStyleSet::eDocSheet, i);
     if (ss)
       clone->AddDocStyleSheet(ss, mDocument);
   }
+#endif
+
   n = aSet->SheetCount(nsStyleSet::eUserSheet);
   for (i = 0; i < n; i++) {
     nsIStyleSheet* ss = aSet->StyleSheetAt(nsStyleSet::eUserSheet, i);
@@ -6728,6 +6734,66 @@ PresShell::CloneStyleSet(nsStyleSet* aSet, nsStyleSet** aResult)
   *aResult = clone;
   return NS_OK;
 }
+
+#ifdef DEBUG_Eli
+static nsresult
+DumpToPNG(nsIPresShell* shell, nsAString& name) {
+  PRInt32 width=1000, height=1000;
+  nsRect r(0, 0, shell->GetPresContext()->DevPixelsToAppUnits(width),
+                 shell->GetPresContext()->DevPixelsToAppUnits(height));
+
+  nsRefPtr<gfxImageSurface> imgSurface =
+     new gfxImageSurface(gfxIntSize(width, height),
+                         gfxImageSurface::ImageFormatARGB32);
+  NS_ENSURE_TRUE(imgSurface, NS_ERROR_OUT_OF_MEMORY);
+
+  nsRefPtr<gfxContext> imgContext = new gfxContext(imgSurface);
+
+  nsRefPtr<gfxASurface> surface = 
+    gfxPlatform::GetPlatform()->
+    CreateOffscreenSurface(gfxIntSize(width, height),
+      gfxASurface::ImageFormatARGB32);
+  NS_ENSURE_TRUE(surface, NS_ERROR_OUT_OF_MEMORY);
+
+  nsRefPtr<gfxContext> context = new gfxContext(surface);
+  NS_ENSURE_TRUE(context, NS_ERROR_OUT_OF_MEMORY);
+
+  nsresult rv = shell->RenderDocument(r, PR_FALSE, PR_FALSE,
+                                      NS_RGB(255, 255, 0), context);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  imgContext->DrawSurface(surface, gfxSize(width, height));
+
+  nsCOMPtr<imgIEncoder> encoder = do_CreateInstance("@mozilla.org/image/encoder;2?type=image/png");
+  NS_ENSURE_TRUE(encoder, NS_ERROR_FAILURE);
+  encoder->InitFromData(imgSurface->Data(), imgSurface->Stride() * height,
+                        width, height, imgSurface->Stride(),
+                        imgIEncoder::INPUT_FORMAT_HOSTARGB, EmptyString());
+
+  // XXX not sure if this is the right way to write to a file
+  nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
+  NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
+  rv = file->InitWithPath(name);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 length;
+  encoder->Available(&length);
+
+  nsCOMPtr<nsIOutputStream> outputStream;
+  rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), file);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIOutputStream> bufferedOutputStream;
+  rv = NS_NewBufferedOutputStream(getter_AddRefs(bufferedOutputStream),
+                                  outputStream, length);
+
+  PRUint32 numWritten;
+  rv = bufferedOutputStream->WriteFrom(encoder, length, &numWritten);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+#endif
 
 // After an incremental reflow, we verify the correctness by doing a
 // full reflow into a fresh frame tree.
@@ -6796,6 +6862,9 @@ PresShell::VerifyIncrementalReflow()
   mDocument->BindingManager()->ProcessAttachedQueue();
   sh->FlushPendingNotifications(Flush_Layout);
   sh->SetVerifyReflowEnable(PR_TRUE);  // turn on verify reflow again now that we're done reflowing the test frame tree
+  // Force the non-primary presshell to unsuppress; it doesn't want to normally
+  // because it thinks it's hidden
+  ((PresShell*)sh.get())->mPaintingSuppressed = PR_FALSE;
   if (VERIFY_REFLOW_NOISY & gVerifyReflowFlags) {
      printf("Verification Tree built, comparing...\n");
   }
@@ -6817,6 +6886,25 @@ PresShell::VerifyIncrementalReflow()
       frameDebug->List(stdout, 0);
     }
   }
+
+#ifdef DEBUG_Eli
+  // Sample code for dumping page to png
+  // XXX Needs to be made more flexible
+  if (!ok) {
+    nsString stra;
+    static int num = 0;
+    stra.AppendLiteral("C:\\mozilla\\mozilla\\debug\\filea");
+    stra.AppendInt(num);
+    stra.AppendLiteral(".png");
+    DumpToPNG(sh, stra);
+    nsString strb;
+    strb.AppendLiteral("C:\\mozilla\\mozilla\\debug\\fileb");
+    strb.AppendInt(num);
+    strb.AppendLiteral(".png");
+    DumpToPNG(this, strb);
+    ++num;
+  }
+#endif
 
   sh->EndObservingDocument();
   sh->Destroy();
