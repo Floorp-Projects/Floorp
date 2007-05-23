@@ -250,15 +250,12 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
   gfx->Save();
 
   if (GetStyleDisplay()->IsScrollableOverflow()) {
-    nsCOMPtr<nsIDOMSVGMatrix> ctm = GetCanvasTM();
+    float x, y, width, height;
+    NS_STATIC_CAST(nsSVGElement*, mContent)->
+      GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
 
-    if (ctm) {
-      float x, y, width, height;
-      nsSVGElement *element = NS_STATIC_CAST(nsSVGElement*, mContent);
-      element->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
-
-      nsSVGUtils::SetClipRect(gfx, ctm, x, y, width, height);
-    }
+    // tm already includes the x,y offset
+    nsSVGUtils::SetClipRect(gfx, tm, 0.0f, 0.0f, width, height);
   }
 
   gfx->Multiply(matrix);
