@@ -912,7 +912,7 @@ if test -n "$CROSS_COMPILE"; then
     OS_RELEASE=
     OS_TEST="${target_cpu}"
     case "${target_os}" in
-        linux*)       OS_ARCH=Linux ;;
+        linux*)       OS_ARCH=Linux OS_TARGET=Linux ;;
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
         mingw*)       OS_ARCH=WINNT ;;
         wince*)       OS_ARCH=WINCE ;;
