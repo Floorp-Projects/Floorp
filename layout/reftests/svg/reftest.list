@@ -20,3 +20,4 @@ skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") == pseudo-classes-02.svg pseudo-classes-02-r
 == stroke-width-percentage-01.svg pass.svg
 skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") == text-in-link-01.svg text-in-link-01-ref.svg # bug 379600 (crashes linux)
 == viewport-percent-graphic-user-01.svg pass.svg
+== dynamic-reflow-01.svg dynamic-reflow-01-ref.svg
