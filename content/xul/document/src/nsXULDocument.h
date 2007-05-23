@@ -188,8 +188,7 @@ protected:
     nsresult
     RemoveElementFromMap(nsIContent* aElement);
 
-    nsresult GetPixelDimensions(nsIPresShell* aShell, PRInt32* aWidth,
-                                PRInt32* aHeight);
+    nsresult GetViewportSize(PRInt32* aWidth, PRInt32* aHeight);
 
     static PRIntn
     RemoveElementsFromMapByContent(const PRUnichar* aID,

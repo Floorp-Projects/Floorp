@@ -1371,46 +1371,25 @@ nsXULDocument::Persist(nsIContent* aElement, PRInt32 aNameSpaceID,
 
 
 nsresult
-nsXULDocument::GetPixelDimensions(nsIPresShell* aShell, PRInt32* aWidth,
-                                  PRInt32* aHeight)
+nsXULDocument::GetViewportSize(PRInt32* aWidth,
+                               PRInt32* aHeight)
 {
-    nsresult result = NS_OK;
-    nsSize size;
+    *aWidth = *aHeight = 0;
 
     FlushPendingNotifications(Flush_Layout);
 
-    nsIFrame* frame =
-        mRootContent ? aShell->GetPrimaryFrameFor(mRootContent) : nsnull;
-    if (frame) {
-        nsIView* view = frame->GetView();
-        // If we have a view check if it's scrollable. If not,
-        // just use the view size itself
-        if (view) {
-            nsIScrollableView* scrollableView = view->ToScrollableView();
+    nsIPresShell *shell = GetPrimaryShell();
+    NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
 
-            if (scrollableView) {
-                scrollableView->GetScrolledView(view);
-            }
+    nsIFrame* frame = shell->GetRootFrame();
+    NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
-            nsRect r = view->GetBounds();
-            size.height = r.height;
-            size.width = r.width;
-        }
-        // If we don't have a view, use the frame size
-        else {
-            size = frame->GetSize();
-        }
+    nsSize size = frame->GetSize();
 
-        *aWidth = nsPresContext::AppUnitsToIntCSSPixels(size.width);
-        *aHeight = nsPresContext::AppUnitsToIntCSSPixels(size.height);
-    }
-    else {
-        *aWidth = 0;
-        *aHeight = 0;
-        result = NS_ERROR_FAILURE;
-    }
+    *aWidth = nsPresContext::AppUnitsToIntCSSPixels(size.width);
+    *aHeight = nsPresContext::AppUnitsToIntCSSPixels(size.height);
 
-    return result;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1418,20 +1397,8 @@ nsXULDocument::GetWidth(PRInt32* aWidth)
 {
     NS_ENSURE_ARG_POINTER(aWidth);
 
-    nsresult rv = NS_OK;
-
-    // We make the assumption that the first presentation shell
-    // is the one for which we need information.
-    nsIPresShell *shell = GetPrimaryShell();
-    if (shell) {
-        PRInt32 width, height;
-
-        rv = GetPixelDimensions(shell, &width, &height);
-        *aWidth = width;
-    } else
-        *aWidth = 0;
-
-    return rv;
+    PRInt32 height;
+    return GetViewportSize(aWidth, &height);
 }
 
 NS_IMETHODIMP
@@ -1439,20 +1406,8 @@ nsXULDocument::GetHeight(PRInt32* aHeight)
 {
     NS_ENSURE_ARG_POINTER(aHeight);
 
-    nsresult rv = NS_OK;
-
-    // We make the assumption that the first presentation shell
-    // is the one for which we need information.
-    nsIPresShell *shell = GetPrimaryShell();
-    if (shell) {
-        PRInt32 width, height;
-
-        rv = GetPixelDimensions(shell, &width, &height);
-        *aHeight = height;
-    } else
-        *aHeight = 0;
-
-    return rv;
+    PRInt32 width;
+    return GetViewportSize(&width, aHeight);
 }
 
 //----------------------------------------------------------------------
