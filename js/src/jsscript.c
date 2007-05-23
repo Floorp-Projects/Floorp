@@ -796,6 +796,7 @@ script_thaw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     jsval v;
     JSScript *script, *oldscript;
     JSBool ok, hasMagic;
+    jsint execDepth;
 
     if (!JS_InstanceOf(cx, obj, &js_ScriptClass, argv))
         return JS_FALSE;
