@@ -499,8 +499,9 @@ public:
  * gfxFont. The glyphs are associated with a string of source text, and the
  * gfxTextRun APIs take parameters that are offsets into that source text.
  * 
- * \r and \n characters must be ignored completely. Substring operations
- * will not normally include these characters.
+ * \r, \t and \n characters (for which gfxFontGroup::IsInvisibleChar returns
+ * PR_TRUE) should be set to a CompressedGlyph with SetMissing() to make them
+ * invisible and zero-width. 
  * 
  * gfxTextRuns are not refcounted. They should be deleted when no longer required.
  * 
@@ -1122,6 +1123,13 @@ public:
     const gfxFontStyle *GetStyle() const { return &mStyle; }
 
     virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle) = 0;
+
+    /**
+     * Tabs, CRs and LFs should be zero-width and invisible.
+     */
+    static PRBool IsInvisibleChar(PRUnichar ch) {
+        return ch == '\t' || ch == '\r' || ch == '\n';
+    }
 
     /**
      * Make a textrun for an empty string. This is fast; if you call it,
