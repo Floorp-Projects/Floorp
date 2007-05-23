@@ -32,11 +32,11 @@ var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
 var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
               getService(Ci.nsINavBookmarksService);
 
-// add 2 bookmarks to the toolbar, same URI, different titles
+// add 2 bookmarks to the toolbar, same URI, different titles (set later)
 var toolbarFolderId = bmsvc.toolbarFolder;
 var testURI = uri("http://foo.com");
-var bm1 = bmsvc.insertItem(toolbarFolderId, testURI, bmsvc.DEFAULT_INDEX);
-var bm2 = bmsvc.insertItem(toolbarFolderId, testURI, bmsvc.DEFAULT_INDEX);
+var bm1 = bmsvc.insertBookmark(toolbarFolderId, testURI, bmsvc.DEFAULT_INDEX, "");
+var bm2 = bmsvc.insertBookmark(toolbarFolderId, testURI, bmsvc.DEFAULT_INDEX, "");
 
 // query for bookmarks
 var options = histsvc.getNewQueryOptions();

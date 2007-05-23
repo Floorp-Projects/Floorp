@@ -136,7 +136,8 @@ function run_test() {
   var beforeInsert = Date.now() * 1000;
   do_check_true(beforeInsert > 0);
 
-  var newId = bmsvc.insertItem(testRoot, uri("http://google.com/"), bmsvc.DEFAULT_INDEX);
+  var newId = bmsvc.insertBookmark(testRoot, uri("http://google.com/"),
+                                   bmsvc.DEFAULT_INDEX, "");
   do_check_eq(observer._itemAddedId, newId);
   do_check_eq(observer._itemAddedParent, testRoot);
   do_check_eq(observer._itemAddedIndex, testStartIndex);
@@ -208,7 +209,8 @@ function run_test() {
   do_check_eq(bmsvc.getItemTitle(workFolder), "Work #");
 
   // add item into subfolder, specifying index
-  var newId2 = bmsvc.insertItem(workFolder, uri("http://developer.mozilla.org/"), 0);
+  var newId2 = bmsvc.insertBookmark(workFolder, uri("http://developer.mozilla.org/"),
+                                    0, "");
   do_check_eq(observer._itemAddedId, newId2);
   do_check_eq(observer._itemAddedParent, workFolder);
   do_check_eq(observer._itemAddedIndex, 0);
@@ -218,7 +220,8 @@ function run_test() {
   do_check_eq(observer._itemChangedProperty, "title");
 
   // insert item into subfolder
-  var newId3 = bmsvc.insertItem(workFolder, uri("http://msdn.microsoft.com/"), bmsvc.DEFAULT_INDEX);
+  var newId3 = bmsvc.insertBookmark(workFolder, uri("http://msdn.microsoft.com/"),
+                                    bmsvc.DEFAULT_INDEX, "");
   do_check_eq(observer._itemAddedId, newId3);
   do_check_eq(observer._itemAddedParent, workFolder);
   do_check_eq(observer._itemAddedIndex, 1);
@@ -234,7 +237,8 @@ function run_test() {
   do_check_eq(observer._itemRemovedIndex, 0);
 
   // insert item into subfolder
-  var newId4 = bmsvc.insertItem(workFolder, uri("http://developer.mozilla.org/"), bmsvc.DEFAULT_INDEX);
+  var newId4 = bmsvc.insertBookmark(workFolder, uri("http://developer.mozilla.org/"),
+                                    bmsvc.DEFAULT_INDEX, "");
   do_check_eq(observer._itemAddedId, newId4);
   do_check_eq(observer._itemAddedParent, workFolder);
   do_check_eq(observer._itemAddedIndex, 1);
@@ -246,7 +250,8 @@ function run_test() {
   do_check_eq(observer._itemAddedIndex, 2);
 
   // insert item
-  var newId5 = bmsvc.insertItem(homeFolder, uri("http://espn.com/"), bmsvc.DEFAULT_INDEX);
+  var newId5 = bmsvc.insertBookmark(homeFolder, uri("http://espn.com/"),
+                                    bmsvc.DEFAULT_INDEX, "");
   do_check_eq(observer._itemAddedId, newId5);
   do_check_eq(observer._itemAddedParent, homeFolder);
   do_check_eq(observer._itemAddedIndex, 0);
@@ -257,7 +262,8 @@ function run_test() {
   do_check_eq(observer._itemChangedProperty, "title");
 
   // insert query item
-  var newId6 = bmsvc.insertItem(testRoot, uri("place:domain=google.com&group=1"), bmsvc.DEFAULT_INDEX);
+  var newId6 = bmsvc.insertBookmark(testRoot, uri("place:domain=google.com&group=1"),
+                                    bmsvc.DEFAULT_INDEX, "");
   do_check_eq(observer._itemAddedParent, testRoot);
   do_check_eq(observer._itemAddedIndex, 3);
 
@@ -325,7 +331,7 @@ function run_test() {
   bmsvc.removeChildAt(testRoot, 1);
 
   // removeChildAt w/ bookmark
-  bmsvc.insertItem(root, uri("http://blah.com"), 1);
+  bmsvc.insertBookmark(root, uri("http://blah.com"), 1, "");
   bmsvc.removeChildAt(root, 1);
 
   // test get folder's index 
@@ -333,7 +339,8 @@ function run_test() {
   do_check_eq(bmsvc.getItemIndex(tmpFolder), 2);
 
   // test setKeywordForBookmark
-  var kwTestItemId = bmsvc.insertItem(testRoot, uri("http://keywordtest.com"), bmsvc.DEFAULT_INDEX);
+  var kwTestItemId = bmsvc.insertBookmark(testRoot, uri("http://keywordtest.com"),
+                                          bmsvc.DEFAULT_INDEX, "");
   try {
     var dateAdded = bmsvc.getItemDateAdded(kwTestItemId);
     // after just inserting, modified should not be set
@@ -367,14 +374,16 @@ function run_test() {
   do_check_eq("http://keywordtest.com/", u.spec);
 
   // test getBookmarkIdsForURI
-  var newId8 = bmsvc.insertItem(testRoot, uri("http://foo8.com/"), bmsvc.DEFAULT_INDEX);
+  var newId8 = bmsvc.insertBookmark(testRoot, uri("http://foo8.com/"),
+                                    bmsvc.DEFAULT_INDEX, "");
   var b = bmsvc.getBookmarkIdsForURI(uri("http://foo8.com/"), {});
   do_check_eq(b[0], newId8);
 
   // test removeFolderChildren
   // 1) add/remove each child type (bookmark, separator, folder)
   var tmpFolder = bmsvc.createFolder(testRoot, "removeFolderChildren", bmsvc.DEFAULT_INDEX);
-  bmsvc.insertItem(tmpFolder, uri("http://foo9.com/"), bmsvc.DEFAULT_INDEX);
+  bmsvc.insertBookmark(tmpFolder, uri("http://foo9.com/"), bmsvc.DEFAULT_INDEX,
+                       "");
   bmsvc.createFolder(tmpFolder, "subfolder", bmsvc.DEFAULT_INDEX);
   bmsvc.insertSeparator(tmpFolder, bmsvc.DEFAULT_INDEX);
   // 2) confirm that folder has 3 children
@@ -434,10 +443,8 @@ function run_test() {
 
     var testFolder = bmsvc.createFolder(testRoot, "test Folder", bmsvc.DEFAULT_INDEX);
     // add 2 bookmarks
-    bmsvc.setItemTitle(bmsvc.insertItem(testFolder, mURI, bmsvc.DEFAULT_INDEX),
-                       "title 1");
-    bmsvc.setItemTitle(bmsvc.insertItem(testFolder, mURI, bmsvc.DEFAULT_INDEX),
-                       "title 2");
+    bmsvc.insertBookmark(testFolder, mURI, bmsvc.DEFAULT_INDEX, "title 1");
+    bmsvc.insertBookmark(testFolder, mURI, bmsvc.DEFAULT_INDEX, "title 2");
 
     // query
     var options = histsvc.getNewQueryOptions();
@@ -458,7 +465,8 @@ function run_test() {
   }
 
   // test change bookmark uri
-  var newId10 = bmsvc.insertItem(testRoot, uri("http://foo10.com/"), bmsvc.DEFAULT_INDEX);
+  var newId10 = bmsvc.insertBookmark(testRoot, uri("http://foo10.com/"),
+                                     bmsvc.DEFAULT_INDEX, "");
   var dateAdded = bmsvc.getItemDateAdded(newId10);
   // after just inserting, modified should not be set
   var lastModified = bmsvc.getItemLastModified(newId10);
@@ -480,7 +488,8 @@ function run_test() {
   do_check_eq(observer._itemChangedValue, "http://foo11.com/");
 
   // test getBookmarkURI
-  var newId11 = bmsvc.insertItem(testRoot, uri("http://foo11.com/"), bmsvc.DEFAULT_INDEX);
+  var newId11 = bmsvc.insertBookmark(testRoot, uri("http://foo11.com/"),
+                                     bmsvc.DEFAULT_INDEX, "");
   var bmURI = bmsvc.getBookmarkURI(newId11);
   do_check_eq("http://foo11.com/", bmURI.spec);
 
@@ -491,7 +500,7 @@ function run_test() {
   } catch(ex) {}
 
   // test getItemIndex
-  var newId12 = bmsvc.insertItem(testRoot, uri("http://foo11.com/"), 1);
+  var newId12 = bmsvc.insertBookmark(testRoot, uri("http://foo11.com/"), 1, "");
   var bmIndex = bmsvc.getItemIndex(newId12);
   do_check_eq(1, bmIndex);
 
@@ -508,7 +517,8 @@ function run_test() {
   // this test confirms that we can find bookmarks that we haven't visited
   // (which are "hidden") and that we can find by title.
   // see bug #369887 for more details
-  var newId13 = bmsvc.insertItem(testRoot, uri("http://foobarcheese.com/"), bmsvc.DEFAULT_INDEX);
+  var newId13 = bmsvc.insertBookmark(testRoot, uri("http://foobarcheese.com/"),
+                                     bmsvc.DEFAULT_INDEX, "");
   do_check_eq(observer._itemAddedId, newId13);
   do_check_eq(observer._itemAddedParent, testRoot);
   do_check_eq(observer._itemAddedIndex, 13);
@@ -607,7 +617,8 @@ function run_test() {
   }
 
   // check setItemLastModified() and setItemDateAdded()
-  var newId14 = bmsvc.insertItem(testRoot, uri("http://bar.tld/"), bmsvc.DEFAULT_INDEX);
+  var newId14 = bmsvc.insertBookmark(testRoot, uri("http://bar.tld/"),
+                                     bmsvc.DEFAULT_INDEX, "");
   var dateAdded = bmsvc.getItemDateAdded(newId14);
   var lastModified = bmsvc.getItemLastModified(newId14);
   do_check_eq(lastModified, 0);
@@ -626,7 +637,7 @@ function run_test() {
 
   // bug 378820
   var uri1 = uri("http://foo.tld/a");
-  bmsvc.insertItem(testRoot, uri1, bmsvc.DEFAULT_INDEX);
+  bmsvc.insertBookmark(testRoot, uri1, bmsvc.DEFAULT_INDEX, "");
   histsvc.addVisit(uri1, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
 
   testSimpleFolderResult();
@@ -657,11 +668,13 @@ function testSimpleFolderResult() {
   // dateAdded can equal beforeInsert
   do_check_true(dateAdded >= beforeInsert);
 
-  var item = bmsvc.insertItem(parent, uri("about:blank"), bmsvc.DEFAULT_INDEX);
+  // re-set item title separately so can test nodes' last modified
+  var item = bmsvc.insertBookmark(parent, uri("about:blank"),
+                                  bmsvc.DEFAULT_INDEX, "");
   bmsvc.setItemTitle(item, "test bookmark");
-  var folder = bmsvc.createFolder(parent, "test folder", bmsvc.DEFAULT_INDEX);
 
-  // re-set the folder title so we can test nodes' lastModified
+  // see above
+  var folder = bmsvc.createFolder(parent, "test folder", bmsvc.DEFAULT_INDEX);
   bmsvc.setItemTitle(folder, "test folder");
 
   var options = histsvc.getNewQueryOptions();

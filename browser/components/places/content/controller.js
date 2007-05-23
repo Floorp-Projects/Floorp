@@ -1660,9 +1660,8 @@ PlacesCreateItemTransaction.prototype = {
 
   doTransaction: function PCIT_doTransaction() {
     var bookmarks = this.utils.bookmarks;
-    this._id = bookmarks.insertItem(this.container, this._uri, this._index);
-    if (this._title)
-      bookmarks.setItemTitle(this._id, this._title);
+    this._id = bookmarks.insertBookmark(this.container, this._uri, this._index,
+                                        this._title);
     if (this._keyword)
       bookmarks.setKeywordForBookmark(this._id, this._keyword);
     if (this._annotations && this._annotations.length > 0)
@@ -1880,8 +1879,8 @@ PlacesRemoveItemTransaction.prototype = {
   
   undoTransaction: function PRIT_undoTransaction() {
     this.LOG("UNRemove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex);
-    this._id = this.bookmarks.insertItem(this._oldContainer, this._uri, this._oldIndex);
-    this.bookmarks.setItemTitle(this._id, this._title);
+    this._id = this.bookmarks.insertBookmark(this._oldContainer, this._uri,
+                                             this._oldIndex, this._title);
     this.utils.setAnnotationsForItem(this._id, this._annotations);
   }
 };

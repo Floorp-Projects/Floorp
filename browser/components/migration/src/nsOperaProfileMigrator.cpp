@@ -1230,9 +1230,9 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
 
 #ifdef MOZ_PLACES_BOOKMARKS
     PRInt64 newId;
-    rv = aBMS->InsertItem(keywordsFolder, uri, nsINavBookmarksService::DEFAULT_INDEX, &newId);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = aBMS->SetItemTitle(newId, nameStr);
+    rv = aBMS->InsertBookmark(keywordsFolder, uri,
+                              nsINavBookmarksService::DEFAULT_INDEX,
+                              nameStr, &newId);
     NS_ENSURE_SUCCESS(rv, rv);
     // TODO -- set bookmark keyword to keyword and description to keywordDesc.
 #else
@@ -1410,11 +1410,9 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
           if (NS_FAILED(rv))
             continue;
           PRInt64 id;
-          rv = aBMS->InsertItem(onToolbar ? aToolbar : aParent,
-                                uri, nsINavBookmarksService::DEFAULT_INDEX, &id);
-          if (NS_FAILED(rv))
-            continue;
-          rv = aBMS->SetItemTitle(id, name);
+          rv = aBMS->InsertBookmark(onToolbar ? aToolbar : aParent,
+                                    uri, nsINavBookmarksService::DEFAULT_INDEX,
+                                    name, &id);
           if (NS_FAILED(rv))
             continue;
 #else
