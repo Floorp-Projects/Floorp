@@ -210,9 +210,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLDocument, nsDocument)
 
 protected:
-  nsresult GetPixelDimensions(nsIPresShell* aShell,
-                              PRInt32* aWidth,
-                              PRInt32* aHeight);
+  nsresult GetBodySize(PRInt32* aWidth,
+                       PRInt32* aHeight);
 
   nsresult RegisterNamedItems(nsIContent *aContent);
   nsresult UnregisterNamedItems(nsIContent *aContent);
