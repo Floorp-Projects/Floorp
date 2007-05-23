@@ -107,7 +107,6 @@ static bool DoAddressMapTest() {
   ASSERT_EQ(entry->id(), 1);
   ASSERT_EQ(address, 10);
   ASSERT_TRUE(test_map.Retrieve(11, &entry, &address));
-  ASSERT_FALSE(test_map.Retrieve(11, NULL, &address));  // parameter error
   ASSERT_TRUE(test_map.Retrieve(11, &entry, NULL));     // NULL ok here
 
   // Add some more elements.
