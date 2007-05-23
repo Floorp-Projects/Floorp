@@ -1825,8 +1825,8 @@ static PRBool IsInBounds(const gfxSkipCharsIterator& aStart, PRInt32 aContentLen
   if (aStart.GetSkippedOffset() > aOffset)
     return PR_FALSE;
   gfxSkipCharsIterator iter(aStart);
-  iter.AdvanceSkipped(aLength);
-  return iter.GetOriginalOffset() <= aStart.GetOriginalOffset() + aContentLength;
+  iter.AdvanceOriginal(aContentLength);
+  return iter.GetSkippedOffset() >= aOffset + aLength;
 }
 #endif
 
