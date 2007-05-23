@@ -1262,7 +1262,8 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
         aAttribute == nsWidgetAtoms::checked ||
         aAttribute == nsWidgetAtoms::selected ||
         aAttribute == nsWidgetAtoms::mozmenuactive ||
-        aAttribute == nsWidgetAtoms::sortdirection)
+        aAttribute == nsWidgetAtoms::sortdirection ||
+        aAttribute == nsWidgetAtoms::_default)
       *aShouldRepaint = PR_TRUE;
   }
 
