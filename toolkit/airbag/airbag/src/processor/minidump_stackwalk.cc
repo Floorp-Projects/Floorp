@@ -255,7 +255,8 @@ static void PrintModules(const CodeModules *modules) {
 // PrintModulesMachineReadable outputs a list of loaded modules,
 // one per line, in the following machine-readable pipe-delimited
 // text format:
-// Module|{Module Filename}|{Version}|{Base Address}|{Max Address}|{Main}
+// Module|{Module Filename}|{Version}|{Debug Filename}|{Debug Identifier}|
+// {Base Address}|{Max Address}|{Main}
 static void PrintModulesMachineReadable(const CodeModules *modules) {
   if (!modules)
     return;
@@ -272,10 +273,14 @@ static void PrintModulesMachineReadable(const CodeModules *modules) {
        ++module_sequence) {
     const CodeModule *module = modules->GetModuleAtSequence(module_sequence);
     u_int64_t base_address = module->base_address();
-    printf("Module%c%s%c%s%c0x%08llx%c0x%08llx%c%d\n",
+    printf("Module%c%s%c%s%c%s%c%s%c0x%08llx%c0x%08llx%c%d\n",
            kOutputSeparator,
            StripSeparator(PathnameStripper::File(module->code_file())).c_str(),
            kOutputSeparator, StripSeparator(module->version()).c_str(),
+           kOutputSeparator,
+           StripSeparator(PathnameStripper::File(module->debug_file())).c_str(),
+           kOutputSeparator,
+           StripSeparator(module->debug_identifier()).c_str(),
            kOutputSeparator, base_address,
            kOutputSeparator, base_address + module->size() - 1,
            kOutputSeparator, base_address == main_address ? 1 : 0);
