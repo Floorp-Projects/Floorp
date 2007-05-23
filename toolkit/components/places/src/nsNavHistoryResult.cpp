@@ -70,7 +70,6 @@
 #include "prprf.h"
 #include "mozStorageHelper.h"
 #include "nsAnnotationService.h"
-#include "nsCycleCollectionParticipant.h"
 
 #define ICONURI_QUERY "chrome://browser/skin/places/query.png"
 
@@ -1849,27 +1848,9 @@ nsNavHistoryContainerResultNode::ClearContents()
 //    to a message without doing a requery. For complex changes or complex
 //    queries, we give up and requery.
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsNavHistoryQueryResultNode)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsNavHistoryQueryResultNode)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mQueries)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsNavHistoryQueryResultNode)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mQueries)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsNavHistoryQueryResultNode, nsINavHistoryQueryResultNode)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsNavHistoryQueryResultNode, nsINavHistoryQueryResultNode)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNavHistoryQueryResultNode)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsINavHistoryResultNode, nsINavHistoryQueryResultNode)
-  NS_INTERFACE_MAP_ENTRY(nsNavHistoryResultNode)
-  NS_INTERFACE_MAP_STATIC_AMBIGUOUS(nsNavHistoryContainerResultNode)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsINavHistoryContainerResultNode, nsINavHistoryQueryResultNode)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsINavHistoryQueryResultNode)
-  NS_INTERFACE_MAP_ENTRY(nsINavHistoryQueryResultNode)
-  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsNavHistoryQueryResultNode)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS_INHERITED1(nsNavHistoryQueryResultNode,
+                             nsNavHistoryContainerResultNode,
+                             nsINavHistoryQueryResultNode)
 
 nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
     const nsACString& aTitle, const nsACString& aIconURI,
