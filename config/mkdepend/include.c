@@ -45,7 +45,7 @@ static int
 does_file_exist(char *file)
 {
   struct stat sb;
-  return stat(file, &sb) == 0 && !IS_DIR(sb.st_mode);
+  return stat(file, &sb) == 0 && !S_ISDIR(sb.st_mode);
 }
 #endif
 
