@@ -56,8 +56,8 @@
         persist="width height"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script type="application/x-javascript" src="chrome://global/content/customizeToolbar.js"/>
-<script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+<script type="application/javascript" src="chrome://global/content/customizeToolbar.js"/>
+<script type="application/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 
 <stringbundle id="stringBundle" src="chrome://global/locale/customizeToolbar.properties"/>
 

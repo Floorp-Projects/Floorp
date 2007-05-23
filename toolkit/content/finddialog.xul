@@ -58,7 +58,7 @@
   title="&findDialog.title;"
   persist="screenX screenY">
 
-  <script type="application/x-javascript" src="chrome://global/content/finddialog.js"/>
+  <script type="application/javascript" src="chrome://global/content/finddialog.js"/>
   <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
 
   <hbox flex="1">

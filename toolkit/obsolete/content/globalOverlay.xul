@@ -3,7 +3,7 @@
 <overlay id="globalOverlay"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
 
   <popupset id="aTooltipSet">
     <popup id="aTooltip" class="tooltip" onpopupshowing="return FillInTooltip(document.tooltipNode);" > 
