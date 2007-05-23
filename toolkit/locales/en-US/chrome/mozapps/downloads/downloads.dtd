@@ -36,7 +36,7 @@
 <!ENTITY cmd.close2.commandKey            "j">
 <!ENTITY cmd.close2Unix.commandKey        "y">
 <!ENTITY cmd.cleanUp.label                "Clean Up">
-<!ENTITY cmd.cleanUp.tooltip              "Removes completed, canceled and failed downloads from the list">
+<!ENTITY cmd.cleanUp.tooltip              "Removes completed, canceled, and failed downloads from the list">
 <!ENTITY cmd.cleanUp.accesskey            "C">
 
 <!ENTITY closeWhenDone.label              "Close when downloads complete">
