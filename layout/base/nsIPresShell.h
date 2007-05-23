@@ -97,14 +97,15 @@ template<class E> class nsCOMArray;
 class nsWeakFrame;
 class nsIScrollableFrame;
 class gfxASurface;
+class gfxContext;
 
 typedef short SelectionType;
 typedef PRUint32 nsFrameState;
 
-// DC543B71-6F1A-4B9F-B4CF-693AEC4BA24A
+// 9562bb2b-990c-4875-aafd-bd46fc9a4fc1
 #define NS_IPRESSHELL_IID \
-{ 0xdc543b71, 0x6f1a, 0x4b9f, \
-  { 0xb4, 0xcf, 0x69, 0x3a, 0xec, 0x4b, 0xa2, 0x4a } }
+{ 0x9562bb2b, 0x990c, 0x4875, \
+  { 0xaa, 0xfd, 0xbd, 0x46, 0xfc, 0x9a, 0x4f, 0xc1 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -672,7 +673,10 @@ public:
   }
   
   /**
-   * Dump window contents into a new offscreen rendering context.
+   * Render the document into an arbitrary gfxContext
+   * Designed for getting a picture of a document or a piece of a document
+   * Note that callers will generally want to call FlushPendingNotifications
+   * to get an up-to-date view of the document
    * @param aRect is the region to capture into the offscreen buffer, in the
    * root frame's coordinate system (if aIgnoreViewportScrolling is false)
    * or in the root scrolled frame's coordinate system
@@ -684,15 +688,12 @@ public:
    * @param aIgnoreViewportScrolling ignore clipping/scrolling/scrollbar painting
    * due to scrolling in the viewport
    * @param aBackgroundColor a background color to render onto
-   * @param aRenderedContext gets set to a rendering context whose offscreen
-   * buffer can be locked to get the data. The buffer's size will be aRect's size.
-   * In all cases the caller must clean it up by calling
-   * cx->DestroyDrawingSurface(cx->GetDrawingSurface()).
+   * @param aRenderedContext the gfxContext to render to
    */
-  NS_IMETHOD RenderOffscreen(nsRect aRect, PRBool aUntrusted,
-                             PRBool aIgnoreViewportScrolling,
-                             nscolor aBackgroundColor,
-                             nsIRenderingContext** aRenderedContext) = 0;
+  NS_IMETHOD RenderDocument(const nsRect& aRect, PRBool aUntrusted,
+                            PRBool aIgnoreViewportScrolling,
+                            nscolor aBackgroundColor,
+                            gfxContext* aRenderedContext) = 0;
 
   /**
    * Renders a node aNode to a surface and returns it. The aRegion may be used
