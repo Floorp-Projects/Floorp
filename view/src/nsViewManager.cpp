@@ -483,13 +483,8 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
 
   ctx->Save();
 
-  nsPoint vtowoffset = aView->ViewToWidgetOffset();
-  ctx->Translate(gfxPoint(gfxFloat(vtowoffset.x) / p2a,
-                          gfxFloat(vtowoffset.y) / p2a));
-
-  NS_ASSERTION(!viewRect.x && !viewRect.y, "When exactly is this supposed to be non-zero?");
-  ctx->Translate(gfxPoint(gfxFloat(viewRect.x) / p2a,
-                          gfxFloat(viewRect.y) / p2a));
+  ctx->Translate(gfxPoint(NSAppUnitsToIntPixels(viewRect.x, p2a),
+                          NSAppUnitsToIntPixels(viewRect.y, p2a)));
 
   nsRegion opaqueRegion;
   AddCoveringWidgetsToOpaqueRegion(opaqueRegion, mContext, aView);
