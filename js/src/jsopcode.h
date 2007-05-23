@@ -114,6 +114,10 @@ typedef enum JSOpLength {
                                      parenthesized statement head */
 #define JOF_INVOKE      0x200000  /* JSOP_CALL, JSOP_NEW, JSOP_EVAL */
 
+/* Shorthands for mode from format and mode from opcode. */
+#define JOF_MODE(fmt)   ((fmt) & JOF_MODEMASK)
+#define JOF_OPMODE(op)  JOF_MODE(js_CodeSpec[op].format)
+
 #define JOF_TYPE_IS_EXTENDED_JUMP(t) \
     ((unsigned)((t) - JOF_JUMPX) <= (unsigned)(JOF_LOOKUPSWITCHX - JOF_JUMPX))
 

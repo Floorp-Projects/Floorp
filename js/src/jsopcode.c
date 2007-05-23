@@ -1359,8 +1359,7 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
             todo = SprintCString(&ss->sprinter, lval);
         } else {
             todo = Sprint(&ss->sprinter,
-                          (js_CodeSpec[ss->opcodes[ss->top+1]].format
-                           & JOF_XMLNAME)
+                          (JOF_OPMODE(ss->opcodes[ss->top+1]) == JOF_XMLNAME)
                           ? "%s.%s"
                           : "%s[%s]",
                           lval, xval);
@@ -1771,7 +1770,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                  (pc == startpc && cs->nuses != 0)) &&
                 format & (JOF_SET|JOF_DEL|JOF_INCDEC|JOF_IMPORT|JOF_FOR|
                           JOF_VARPROP)) {
-                mode = (format & JOF_MODEMASK);
+                mode = JOF_MODE(format);
                 if (mode == JOF_NAME) {
                     /*
                      * JOF_NAME does not imply JOF_CONST, so we must check for
@@ -3072,7 +3071,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 } else if (xval) {
                     LOCAL_ASSERT(*xval != '\0');
                     ok = (Sprint(&ss->sprinter,
-                                 (js_CodeSpec[lastop].format & JOF_XMLNAME)
+                                 (JOF_OPMODE(lastop) == JOF_XMLNAME)
                                  ? ".%s"
                                  : "[%s]",
                                  xval)
@@ -3384,7 +3383,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 if (*xval == '\0')
                     goto do_delete_lval;
                 todo = Sprint(&ss->sprinter,
-                              (js_CodeSpec[lastop].format & JOF_XMLNAME)
+                              (JOF_OPMODE(lastop) == JOF_XMLNAME)
                               ? "%s %s.%s"
                               : "%s %s[%s]",
                               js_delete_str, lval, xval);
@@ -3459,7 +3458,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 lval = POP_STR();
                 if (*xval != '\0') {
                     todo = Sprint(&ss->sprinter,
-                                  (js_CodeSpec[lastop].format & JOF_XMLNAME)
+                                  (JOF_OPMODE(lastop) == JOF_XMLNAME)
                                   ? predot_format
                                   : preindex_format,
                                   js_incop_strs[!(cs->format & JOF_INC)],
@@ -3520,7 +3519,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 lval = POP_STR();
                 if (*xval != '\0') {
                     todo = Sprint(&ss->sprinter,
-                                  (js_CodeSpec[lastop].format & JOF_XMLNAME)
+                                  (JOF_OPMODE(lastop) == JOF_XMLNAME)
                                   ? postdot_format
                                   : postindex_format,
                                   lval, xval,
@@ -3614,7 +3613,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     todo = Sprint(&ss->sprinter, "%s", lval);
                 } else {
                     todo = Sprint(&ss->sprinter,
-                                  (js_CodeSpec[lastop].format & JOF_XMLNAME)
+                                  (JOF_OPMODE(lastop) == JOF_XMLNAME)
                                   ? dot_format
                                   : index_format,
                                   lval, xval);
@@ -3633,7 +3632,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     goto do_setlval;
                 sn = js_GetSrcNote(jp->script, pc - 1);
                 todo = Sprint(&ss->sprinter,
-                              (cs->format & JOF_XMLNAME)
+                              (JOF_MODE(cs->format) == JOF_XMLNAME)
                               ? "%s.%s %s= %s"
                               : "%s[%s] %s= %s",
                               lval, xval,
@@ -4100,7 +4099,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_IMPORTELEM:
                 xval = POP_STR();
                 op = JSOP_GETELEM;
-                if (js_CodeSpec[lastop].format & JOF_XMLNAME)
+                if (JOF_OPMODE(lastop) == JOF_XMLNAME)
                     goto do_importprop;
                 lval = POP_STR();
                 js_printf(jp, "\timport %s[%s];\n", lval, xval);
@@ -4913,7 +4912,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
     cs = &js_CodeSpec[op];
     begin = pc;
     end = pc + cs->length;
-    switch (cs->format & JOF_MODEMASK) {
+    switch (JOF_MODE(cs->format)) {
       case JOF_PROP:
       case JOF_ELEM:
       case JOF_XMLNAME:
