@@ -201,7 +201,6 @@ gfxPangoFontGroup::Copy(const gfxFontStyle *aStyle)
 static void
 (* PTR_pango_font_description_set_absolute_size)(PangoFontDescription*, double)
     = nsnull;
-static PRLibrary *gPangoLib = nsnull;
 
 static void InitPangoLib()
 {
@@ -212,31 +211,26 @@ static void InitPangoLib()
 
     g_type_init();
 
-    gPangoLib = PR_LoadLibrary("libpango-1.0.so");
-    if (!gPangoLib)
-        return;
-
+    PRLibrary *pangoLib = nsnull;
     PTR_pango_font_description_set_absolute_size =
         (void (*)(PangoFontDescription*, double))
-        PR_FindFunctionSymbol(gPangoLib,
-                              "pango_font_description_set_absolute_size");
+        PR_FindFunctionSymbolAndLibrary("pango_font_description_set_absolute_size",
+                                        &pangoLib);
+    if (pangoLib)
+        PR_UnloadLibrary(pangoLib);
 
-    PRLibrary *lib = nsnull;
+    PRLibrary *xftLib = nsnull;
     int *xft_max_freetype_files_ptr = nsnull;
-    xft_max_freetype_files_ptr = (int*) PR_FindSymbolAndLibrary("XftMaxFreeTypeFiles", &lib);
+    xft_max_freetype_files_ptr = (int*) PR_FindSymbolAndLibrary("XftMaxFreeTypeFiles", &xftLib);
     if (xft_max_freetype_files_ptr && *xft_max_freetype_files_ptr < 50)
         *xft_max_freetype_files_ptr = 50;
-    if (lib)
-        PR_UnloadLibrary(lib);
+    if (xftLib)
+        PR_UnloadLibrary(xftLib);
 }
 
 static void
 ShutdownPangoLib()
 {
-    if (gPangoLib) {
-        PR_UnloadLibrary(gPangoLib);
-        gPangoLib = nsnull;
-    }
 }
 
 static void
