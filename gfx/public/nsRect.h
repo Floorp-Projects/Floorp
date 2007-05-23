@@ -159,15 +159,8 @@ struct NS_GFX nsRect {
                                           height = NSToCoordRound(height * aScale); 
                                           return *this;}
 
-  // Scale by aScale, converting coordinates to integers so that the result
-  // is the smallest integer-coordinate rectangle containing the unrounded result
-  nsRect& ScaleRoundOut(float aScale);
-  // Scale by aScale, converting coordinates to integers so that the result
-  // is the larges integer-coordinate rectangle contained in the unrounded result
-  nsRect& ScaleRoundIn(float aScale);
-  // Scale by aScale, converting coordinates to integers so that the result
-  // contains the same pixel centers as the unrounded result
-  nsRect& ScaleRoundPreservingCenters(float aScale);
+  nsRect& ScaleRoundOut(const float aScale);
+  nsRect& ScaleRoundIn(const float aScale);
 
   // Helpers for accessing the vertices
   nsPoint TopLeft() const { return nsPoint(x, y); }
