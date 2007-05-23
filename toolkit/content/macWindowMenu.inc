@@ -1,4 +1,4 @@
-    <script type="application/x-javascript" src="chrome://global/content/macWindowMenu.js"/>
+    <script type="application/javascript" src="chrome://global/content/macWindowMenu.js"/>
     <commandset id="baseMenuCommandSet">
         <command id="minimizeWindow"
                  label="&minimizeWindow.label;"

@@ -67,12 +67,12 @@
         screenX="10" screenY="10"
         persist="screenX screenY width height sizemode">
 
-  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/viewSource.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/javascript" src="chrome://global/content/printUtils.js"/>
+  <script type="application/javascript" src="chrome://global/content/viewSource.js"/>
+  <script type="application/javascript" src="chrome://global/content/viewZoomOverlay.js"/>
+  <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
+  <script type="application/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   
   <stringbundle id="viewSourceBundle" src="chrome://global/locale/viewSource.properties"/>
 

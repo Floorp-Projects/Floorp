@@ -62,7 +62,7 @@
         onwizardnext="gUpdates.onWizardNext();"        
         onload="gUpdates.onLoad();">
 
-  <script type="application/x-javascript" src="chrome://mozapps/content/update/updates.js"/>
+  <script type="application/javascript" src="chrome://mozapps/content/update/updates.js"/>
   
   <stringbundleset id="updateSet">
     <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
