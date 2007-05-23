@@ -868,23 +868,6 @@ browser/themes/winstripe/browser/Makefile
 browser/themes/winstripe/Makefile
 "
 
-MAKEFILES_suite="
-suite/Makefile
-suite/app/Makefile
-suite/branding/Makefile
-suite/browser/Makefile
-suite/build/Makefile
-suite/common/Makefile
-suite/components/Makefile
-suite/components/xulappinfo/Makefile
-suite/installer/Makefile
-suite/locales/Makefile
-suite/profile/Makefile
-suite/profile/migration/Makefile
-suite/profile/migration/public/Makefile
-suite/profile/migration/src/Makefile
-"
-
 MAKEFILES_xulrunner="
 xulrunner/Makefile
 xulrunner/app/Makefile
@@ -1435,10 +1418,6 @@ fi
 
 if test -n "$MOZ_PHOENIX"; then
     add_makefiles "$MAKEFILES_phoenix"
-fi
-
-if test -n "$MOZ_SUITE"; then
-    add_makefiles "$MAKEFILES_suite"
 fi
 
 if test -n "$MOZ_XUL_APP"; then
