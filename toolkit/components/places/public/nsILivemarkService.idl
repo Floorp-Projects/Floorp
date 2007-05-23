@@ -55,21 +55,21 @@ interface nsILivemarkService : nsIRemoteContainer
    * @param index       The index to insert at, or -1 to append
    * @returns the ID of the folder for the livemark
    */
-  PRInt64 createLivemark(in PRInt64 folder,
-                         in AString name,
-                         in nsIURI siteURI,
-                         in nsIURI feedURI,
-                         in PRInt32 index);
+  long long createLivemark(in long long folder,
+                           in AString name,
+                           in nsIURI siteURI,
+                           in nsIURI feedURI,
+                           in long index);
 
   /**
    * Same as above, use during startup to avoid HTTP traffic
    */
-  PRInt64 createLivemarkFolderOnly(in nsINavBookmarksService bms,
-                                   in PRInt64 folder,
-                                   in AString name,
-                                   in nsIURI siteURI,
-                                   in nsIURI feedURI,
-                                   in PRInt32 index);
+  long long createLivemarkFolderOnly(in nsINavBookmarksService bms,
+                                     in long long folder,
+                                     in AString name,
+                                     in nsIURI siteURI,
+                                     in nsIURI feedURI,
+                                     in long index);
 
   /**
    * Determines whether the folder with the given folder ID identifies
@@ -82,7 +82,7 @@ interface nsILivemarkService : nsIRemoteContainer
    *
    * @throws NS_ERROR_INVALID_ARG if the folder ID isn't known
    */
-  boolean isLivemark(in PRInt64 folder);
+  boolean isLivemark(in long long folder);
 
   /**
    * Gets the URI of the website associated with a livemark container.
@@ -97,7 +97,7 @@ interface nsILivemarkService : nsIRemoteContainer
    * @throws NS_ERROR_MALFORMED_URI if the site URI annotation has
    *         somehow been corrupted (and can't be turned into an nsIURI)
    */
-  nsIURI getSiteURI(in PRInt64 container);
+  nsIURI getSiteURI(in long long container);
 
   /**
    * Sets the URI of the website associated with a livemark container.
@@ -110,7 +110,7 @@ interface nsILivemarkService : nsIRemoteContainer
    *         a folder that isn't a livemark container; also if the siteURI
    *         argument isn't a valid nsIURI object (or null)
    */
-  void setSiteURI(in PRInt64 container, in nsIURI siteURI);
+  void setSiteURI(in long long container, in nsIURI siteURI);
 
   /**
    * Gets the URI of the syndication feed associated with a livemark container.
@@ -126,7 +126,7 @@ interface nsILivemarkService : nsIRemoteContainer
    * @throws NS_ERROR_MALFORMED_URI if the site URI annotation has
    *         somehow been corrupted (and can't be turned into an nsIURI)
    */
-  nsIURI getFeedURI(in PRInt64 container);
+  nsIURI getFeedURI(in long long container);
 
   /**
    * Sets the URI of the feed associated with a livemark container.
@@ -142,7 +142,7 @@ interface nsILivemarkService : nsIRemoteContainer
    *         a folder that isn't a livemark container; also if the feedURI
    *         argument isn't a valid nsIURI object
    */
-  void setFeedURI(in PRInt64 container, in nsIURI feedURI);
+  void setFeedURI(in long long container, in nsIURI feedURI);
 
 	/**
 	 * Reloads all livemark subscriptions, whether or not they've expired.
@@ -153,5 +153,5 @@ interface nsILivemarkService : nsIRemoteContainer
 	 * Reloads the livemark with this folder ID, whether or not it's expired.
 	 * @param folderID		The ID of the folder to be reloaded
 	 */
-  void reloadLivemarkFolder(in PRInt64 folderID);
+  void reloadLivemarkFolder(in long long folderID);
 };

@@ -74,16 +74,16 @@ interface nsINavHistoryResultNode : nsISupports
    * remote container API (these are the entrypoints for the API) and may
    * have a remote container type as well.
    */
-  const PRUint32 RESULT_TYPE_URI = 0;              // nsINavHistoryResultNode
-  const PRUint32 RESULT_TYPE_VISIT = 1;            // nsINavHistoryVisitResultNode
-  const PRUint32 RESULT_TYPE_FULL_VISIT = 2;       // nsINavHistoryFullVisitResultNode
-  const PRUint32 RESULT_TYPE_HOST = 3;             // nsINavHistoryContainerResultNode
-  const PRUint32 RESULT_TYPE_REMOTE_CONTAINER = 4; // nsINavHistoryContainerResultNode
-  const PRUint32 RESULT_TYPE_QUERY = 5;            // nsINavHistoryQueryResultNode
-  const PRUint32 RESULT_TYPE_FOLDER = 6;           // nsINavHistoryQueryResultNode
-  const PRUint32 RESULT_TYPE_SEPARATOR = 7;        // nsINavHistoryResultNode
-  const PRUint32 RESULT_TYPE_DAY = 8;              // nsINavHistoryContainerResultNode
-  readonly attribute PRUint32 type;
+  const unsigned long RESULT_TYPE_URI = 0;              // nsINavHistoryResultNode
+  const unsigned long RESULT_TYPE_VISIT = 1;            // nsINavHistoryVisitResultNode
+  const unsigned long RESULT_TYPE_FULL_VISIT = 2;       // nsINavHistoryFullVisitResultNode
+  const unsigned long RESULT_TYPE_HOST = 3;             // nsINavHistoryContainerResultNode
+  const unsigned long RESULT_TYPE_REMOTE_CONTAINER = 4; // nsINavHistoryContainerResultNode
+  const unsigned long RESULT_TYPE_QUERY = 5;            // nsINavHistoryQueryResultNode
+  const unsigned long RESULT_TYPE_FOLDER = 6;           // nsINavHistoryQueryResultNode
+  const unsigned long RESULT_TYPE_SEPARATOR = 7;        // nsINavHistoryResultNode
+  const unsigned long RESULT_TYPE_DAY = 8;              // nsINavHistoryContainerResultNode
+  readonly attribute unsigned long type;
 
   /**
    * Title of the web page, or of the node's grouping (day, host, folder, etc)
@@ -96,7 +96,7 @@ interface nsINavHistoryResultNode : nsISupports
    * been accessed (this would require an additional query, so is not given
    * by default when most of the time it is never needed).
    */
-  readonly attribute PRUint32 accessCount;
+  readonly attribute unsigned long accessCount;
 
   /**
    * This is the time the user accessed the page.
@@ -133,14 +133,14 @@ interface nsINavHistoryResultNode : nsISupports
    * children have indentLevel = 1, etc. The indent level of the root node is
    * set to -1.
    */
-  readonly attribute PRInt32 indentLevel;
+  readonly attribute long indentLevel;
 
   /**
    * Value with undefined meaning for use by the view. Its initial value will
    * be -1. The tree view uses this value to indicate the row in the tree that
    * this node is at. Other views may use this value however they choose.
    */
-  attribute PRInt32 viewIndex;
+  attribute long viewIndex;
 
   /**
    * You can use this to associate temporary information with the result node.
@@ -155,14 +155,14 @@ interface nsINavHistoryResultNode : nsISupports
    * increase in the order that they appear in the bookmark folder. For items
    * that are not in a bookmark folder, this value is -1.
    */
-  readonly attribute PRInt32 bookmarkIndex;
+  readonly attribute long bookmarkIndex;
 
   /**
    * If the node is an item (bookmark, folder or a separator) this value is the
    * row ID of that bookmark in the database. For other nodes, this value is
    * set to -1.
    */
-  readonly attribute PRInt64 itemId;
+  readonly attribute long long itemId;
 
   /**
    * If the node is an item (bookmark, folder or a separator) this value is the 
@@ -190,7 +190,7 @@ interface nsINavHistoryVisitResultNode : nsINavHistoryResultNode
    * This indicates the session ID of the * visit. This is used for session
    * grouping when a tree view is sorted by date.
    */
-  readonly attribute PRInt64 sessionId;
+  readonly attribute long long sessionId;
 };
 
 
@@ -205,19 +205,19 @@ interface nsINavHistoryFullVisitResultNode : nsINavHistoryVisitResultNode
   /**
    * This indicates the visit ID of the visit.
    */
-  readonly attribute PRInt64 visitId;
+  readonly attribute long long visitId;
 
   /**
    * This indicates the referring visit ID of the visit. The referrer should
    * have the same sessionId.
    */
-  readonly attribute PRInt64 referringVisitId;
+  readonly attribute long long referringVisitId;
 
   /**
    * Indicates the transition type of the visit.
    * One of nsINavHistoryService.TRANSITION_*
    */
-  readonly attribute PRInt32 transitionType;
+  readonly attribute long transitionType;
 };
 
 
@@ -260,8 +260,8 @@ interface nsINavHistoryContainerResultNode : nsINavHistoryResultNode
    *
    * @throws NS_ERROR_NOT_AVAILABLE if containerOpen is false.
    */
-  readonly attribute PRUint32 childCount;
-  nsINavHistoryResultNode getChild(in PRUint32 index);
+  readonly attribute unsigned long childCount;
+  nsINavHistoryResultNode getChild(in unsigned long aIndex);
 
   /**
    * Returns false if this node's list of children can be modified
@@ -491,7 +491,7 @@ interface nsINavHistoryResultViewer : nsISupports
    */
   void itemInserted(in nsINavHistoryContainerResultNode parent,
                     in nsINavHistoryResultNode item,
-                    in PRUint32 newIndex);
+                    in unsigned long newIndex);
 
   /**
    * Called whan 'item' is removed from 'parent' at 'oldIndex'. The item may be
@@ -501,7 +501,7 @@ interface nsINavHistoryResultViewer : nsISupports
    */
   void itemRemoved(in nsINavHistoryContainerResultNode parent,
                    in nsINavHistoryResultNode item,
-                   in PRUint32 oldIndex);
+                   in unsigned long oldIndex);
 
   /**
    * Called when an item has been changed and should be repainted. This only
@@ -519,7 +519,7 @@ interface nsINavHistoryResultViewer : nsISupports
   void itemReplaced(in nsINavHistoryContainerResultNode parent,
                     in nsINavHistoryResultNode oldItem,
                     in nsINavHistoryResultNode newItem,
-                    in PRUint32 index);
+                    in unsigned long index);
 
   /**
    * Called after a container node went from closed to opened.
@@ -617,13 +617,13 @@ interface nsINavHistoryResultTreeViewer : nsINavHistoryResultViewer
    * QI to nsITreeView, and this will be the same as nsITreeView.rowCount.
    * This is only valid when a tree is attached, the result will be 0 otherwise.
    */
-  readonly attribute PRUint32 flatItemCount;
+  readonly attribute unsigned long flatItemCount;
 
   /**
    * This allows you to get at the real node for a given row index. This is
    * only valid when a tree is attached.
    */
-  nsINavHistoryResultNode nodeForTreeIndex(in PRUint32 aIndex);
+  nsINavHistoryResultNode nodeForTreeIndex(in unsigned long aIndex);
 
   /**
    * Reverse of nodeForFlatIndex, returns the row index for a given result node.
@@ -637,8 +637,8 @@ interface nsINavHistoryResultTreeViewer : nsINavHistoryResultViewer
    *       function will always return the index of that node in the tree that
    *       is attached to that result.
    */
-  const PRUint32 INDEX_INVISIBLE = 0xffffffff;
-  PRUint32 treeIndexForNode(in nsINavHistoryResultNode aNode);
+  const unsigned long INDEX_INVISIBLE = 0xffffffff;
+  unsigned long treeIndexForNode(in nsINavHistoryResultNode aNode);
 };
 
 
@@ -739,9 +739,9 @@ interface nsINavHistoryObserver : nsISupports
    * @param aReferringID    The ID of the visit the user came from. 0 if empty.
    * @param aTransitionType One of nsINavHistory.TRANSITION_*
    */
-  void onVisit(in nsIURI aURI, in PRInt64 aVisitID, in PRTime aTime,
-               in PRInt64 aSessionID, in PRInt64 aReferringID,
-               in PRUint32 aTransitionType);
+  void onVisit(in nsIURI aURI, in long long aVisitID, in PRTime aTime,
+               in long long aSessionID, in long long aReferringID,
+               in unsigned long aTransitionType);
 
   /**
    * Called whenever either the "real" title or the custom title of the page
@@ -784,8 +784,8 @@ interface nsINavHistoryObserver : nsISupports
    * A page has had some attribute on it changed. Note that for TYPED and
    * HIDDEN, the page may not necessarily have been added yet.
    */
-  const PRUint32 ATTRIBUTE_FAVICON = 3; // favicon updated, aString = favicon annotation URI
-  void onPageChanged(in nsIURI aURI, in PRUint32 aWhat, in AString aValue);
+  const unsigned long ATTRIBUTE_FAVICON = 3; // favicon updated, aString = favicon annotation URI
+  void onPageChanged(in nsIURI aURI, in unsigned long aWhat, in AString aValue);
 
   /**
    * Called when a history entry expires. You will recieve notifications that
@@ -840,17 +840,17 @@ interface nsINavHistoryQuery : nsISupports
    * You can read absolute*Time to get the time value that the currently loaded
    * reference points + offset resolve to.
    */
-  const PRUint32 TIME_RELATIVE_EPOCH = 0;
-  const PRUint32 TIME_RELATIVE_TODAY = 1;
-  const PRUint32 TIME_RELATIVE_NOW = 2;
+  const unsigned long TIME_RELATIVE_EPOCH = 0;
+  const unsigned long TIME_RELATIVE_TODAY = 1;
+  const unsigned long TIME_RELATIVE_NOW = 2;
 
   attribute PRTime beginTime;
-  attribute PRUint32 beginTimeReference;
+  attribute unsigned long beginTimeReference;
   readonly attribute boolean hasBeginTime;
   readonly attribute PRTime absoluteBeginTime;
 
   attribute PRTime endTime;
-  attribute PRUint32 endTimeReference;
+  attribute unsigned long endTimeReference;
   readonly attribute boolean hasEndTime;
   readonly attribute PRTime absoluteEndTime;
 
@@ -865,8 +865,8 @@ interface nsINavHistoryQuery : nsISupports
    * visited.  The default is -1, and in that case all items are
    * matched regardless of their visit count.
    */
-  attribute PRInt32 minVisits;
-  attribute PRInt32 maxVisits;
+  attribute long minVisits;
+  attribute long maxVisits;
 
   /**
    * When set, returns only bookmarked items, when unset, returns anything. Setting this
@@ -929,12 +929,12 @@ interface nsINavHistoryQuery : nsISupports
   /**
    * Limit results to items that are in all of the given folders.
    */
-  void getFolders(out PRUint32 count,
-                  [retval,array,size_is(count)] out PRInt64 folders);
-  readonly attribute PRUint32 folderCount;
+  void getFolders(out unsigned long count,
+                  [retval,array,size_is(count)] out long long folders);
+  readonly attribute unsigned long folderCount;
 
-  void setFolders([const,array, size_is(folderCount)] in PRInt64 folders,
-                  in PRUint32 folderCount);
+  void setFolders([const,array, size_is(folderCount)] in long long folders,
+                  in unsigned long folderCount);
 
   /**
    * Creates a new query item with the same parameters of this one.
@@ -1040,10 +1040,10 @@ interface nsINavHistoryQueryOptions : nsISupports
    * third level is a list of pages in those domains.
    * If you don't want grouping, you can specify an empty array.
    */
-  void getGroupingMode(out PRUint32 groupCount,
-                       [retval,array,size_is(groupCount)] out PRUint16 groupingMode);
-  void setGroupingMode([const,array,size_is(groupCount)] in PRUint16 groupingMode,
-                       in PRUint32 groupCount);
+  void getGroupingMode(out unsigned long groupCount,
+                       [retval,array,size_is(groupCount)] out unsigned short groupingMode);
+  void setGroupingMode([const,array,size_is(groupCount)] in unsigned short groupingMode,
+                       in unsigned long groupCount);
 
   /**
    * The sorting mode to be used for this query.
@@ -1151,19 +1151,19 @@ interface nsINavHistoryService : nsISupports
    * This transition type means the user followed a link and got a new toplevel
    * window.
    */
-  const PRUint32 TRANSITION_LINK = 1;
+  const unsigned long TRANSITION_LINK = 1;
 
   /**
    * This transition type means that the user typed the page's URL in the
    * URL bar.
    */
-  const PRUint32 TRANSITION_TYPED = 2;
+  const unsigned long TRANSITION_TYPED = 2;
 
   /**
    * This transition is set when the user followed a bookmark to get to the
    * page.
    */
-  const PRUint32 TRANSITION_BOOKMARK = 3;
+  const unsigned long TRANSITION_BOOKMARK = 3;
 
   /**
    * This transition type is set when some inner content is loaded. This is
@@ -1171,17 +1171,17 @@ interface nsINavHistoryService : nsISupports
    * true of any content in a frame, regardless if whether or not the user
    * clicked something to get there.
    */
-  const PRUint32 TRANSITION_EMBED = 4;
+  const unsigned long TRANSITION_EMBED = 4;
 
   /**
    * Set when the transition was a permanent redirect.
    */
-  const PRUint32 TRANSITION_REDIRECT_PERMANENT = 5;
+  const unsigned long TRANSITION_REDIRECT_PERMANENT = 5;
 
   /**
    * Set when the transition was a temporary redirect.
    */
-  const PRUint32 TRANSITION_REDIRECT_TEMPORARY = 6;
+  const unsigned long TRANSITION_REDIRECT_TEMPORARY = 6;
 
   /**
    * True if there is any history. This can be used in UI to determine whether
@@ -1239,7 +1239,7 @@ interface nsINavHistoryService : nsISupports
    * @param aTyped      True if this URI has ever been typed.
    */
   void setPageDetails(in nsIURI aURI, in AString aTitle, in AString aUserTitle,
-                      in PRUint32 aVisitCount, in boolean aHidden,
+                      in unsigned long aVisitCount, in boolean aHidden,
                       in boolean aTyped);
 
   /**
@@ -1266,9 +1266,9 @@ interface nsINavHistoryService : nsISupports
    * @returns The ID of the created visit. This will be 0 if the URI is not
    *          valid for adding to history (canAddURI = false).
    */
-  PRInt64 addVisit(in nsIURI aURI, in PRTime aTime, in PRInt64 aReferringVisit,
-                   in PRInt32 aTransitionType, in boolean aIsRedirect,
-                   in PRInt64 aSessionID);
+  long long addVisit(in nsIURI aURI, in PRTime aTime,
+                     in long long aReferringVisit, in long aTransitionType,
+                     in boolean aIsRedirect, in long long aSessionID);
 
   /**
    * This returns a new query object that you can pass to executeQuer[y/ies].
@@ -1294,7 +1294,8 @@ interface nsINavHistoryService : nsISupports
    * executeQuery. See executeQuery()
    */
   nsINavHistoryResult executeQueries(
-    [array,size_is(aQueryCount)] in nsINavHistoryQuery aQueries, in PRUint32 aQueryCount,
+    [array,size_is(aQueryCount)] in nsINavHistoryQuery aQueries,
+    in unsigned long aQueryCount,
     in nsINavHistoryQueryOptions options);
 
   /**
@@ -1304,7 +1305,8 @@ interface nsINavHistoryService : nsISupports
    * (if nothing is defined, it will just have the default values).
    */
   void queryStringToQueries(in AUTF8String aQueryString,
-    [array, size_is(aResultCount)] out nsINavHistoryQuery aQueries, out PRUint32 aResultCount,
+    [array, size_is(aResultCount)] out nsINavHistoryQuery aQueries,
+    out unsigned long aResultCount,
     out nsINavHistoryQueryOptions options);
 
   /**
@@ -1312,7 +1314,8 @@ interface nsINavHistoryService : nsISupports
    * of queryStringToQueries()
    */
   AUTF8String queriesToQueryString(
-    [array, size_is(aQueryCount)] in nsINavHistoryQuery aQueries, in PRUint32 aQueryCount,
+    [array, size_is(aQueryCount)] in nsINavHistoryQuery aQueries,
+    in unsigned long aQueryCount,
     in nsINavHistoryQueryOptions options);
 
   /**
