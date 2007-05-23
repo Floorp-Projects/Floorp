@@ -72,10 +72,10 @@ getDocumentLocaleCB(AtkDocument *aDocument)
     nsCOMPtr<nsIAccessNode> docAccessNode;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessNode),
                             getter_AddRefs(docAccessNode));
-    NS_ENSURE_TRUE(accDocument, nsnull);
+    NS_ENSURE_TRUE(docAccessNode, nsnull);
 
     nsAutoString locale;
-    docAccessNode->GetLanguage(getter_AddRefs(locale));
+    docAccessNode->GetLanguage(locale);
     if (locale.IsEmpty()) {
       return nsnull;
     }
