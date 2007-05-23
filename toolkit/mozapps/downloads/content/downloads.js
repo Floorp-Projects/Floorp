@@ -54,6 +54,8 @@ const PREF_BDM_RETENTION = "browser.download.manager.retention";
 const nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
                                            "nsILocalFile", "initWithPath");
 
+const Ci = Components.interfaces;
+
 var gDownloadManager  = Components.classes[kDlmgrContractID]
                                   .getService(nsIDownloadManager);
 var gDownloadListener = null;
@@ -197,6 +199,8 @@ var gDownloadObserver = {
       break;
     case "dl-failed":
     case "dl-cancel":
+      gDownloadViewController.onCommandUpdate();
+      
       var dl = aSubject.QueryInterface(Components.interfaces.nsIDownload);
       downloadCompleted(dl);
       break;
