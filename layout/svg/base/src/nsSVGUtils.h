@@ -45,7 +45,6 @@
 #include "nsCOMPtr.h"
 #include "nsISVGValue.h"
 #include "nsRect.h"
-#include "cairo.h"
 
 class nsIDocument;
 class nsPresContext;
@@ -305,19 +304,11 @@ public:
   ToBoundingPixelRect(const gfxRect& rect);
 
   /*
-   * Get a pointer to a surface that can be used to create cairo
+   * Get a pointer to a surface that can be used to create thebes
    * contexts for various measurement purposes.
    */
-  static cairo_surface_t *
-  GetCairoComputationalSurface();
   static gfxASurface *
   GetThebesComputationalSurface();
-
-  /*
-   * Convert a nsIDOMSVGMatrix to a cairo_matrix_t.
-   */
-  static cairo_matrix_t
-  ConvertSVGMatrixToCairo(nsIDOMSVGMatrix *aMatrix);
 
   /*
    * Convert a nsIDOMSVGMatrix to a gfxMatrix.
@@ -333,13 +324,6 @@ public:
               float aRX, float aRY, float aRWidth, float aRHeight,
               float aX, float aY);
 
-  /*
-   * Convert a rectangle from cairo user space to device space.
-   */
-  static void
-  UserToDeviceBBox(cairo_t *ctx,
-                   double *xmin, double *ymin,
-                   double *xmax, double *ymax);
 
   static void CompositeSurfaceMatrix(gfxContext *aContext,
                                      gfxASurface *aSurface,
@@ -359,7 +343,6 @@ public:
 
 private:
   /* Computational (nil) surfaces */
-  static cairo_surface_t *mCairoComputationalSurface;
   static gfxASurface *mThebesComputationalSurface;
 };
 

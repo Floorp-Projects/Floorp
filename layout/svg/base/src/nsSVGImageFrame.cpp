@@ -46,7 +46,6 @@
 #include "nsSVGElement.h"
 #include "nsSVGUtils.h"
 #include "nsSVGMatrix.h"
-#include "cairo.h"
 #include "gfxContext.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsThebesImage.h"

@@ -112,9 +112,6 @@ EXPORTS = \
 
 include $(topsrcdir)/config/rules.mk
 
-CFLAGS		+= $(MOZ_CAIRO_CFLAGS)
-CXXFLAGS	+= $(MOZ_CAIRO_CFLAGS)
-
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../../base \
 		-I$(srcdir)/../../../generic \
