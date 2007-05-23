@@ -75,6 +75,8 @@ src_libbreakpad_la_SOURCES = \
 	src/processor/contained_range_map.h \
 	src/processor/contained_range_map-inl.h \
 	src/processor/linked_ptr.h \
+	src/processor/logging.h \
+	src/processor/logging.cc \
 	src/processor/minidump.cc \
 	src/processor/minidump_processor.cc \
 	src/processor/pathname_stripper.cc \
@@ -126,14 +128,22 @@ TESTS_ENVIRONMENT =
 
 src_processor_address_map_unittest_SOURCES = \
 	src/processor/address_map_unittest.cc
+src_processor_address_map_unittest_LDADD = \
+	src/processor/logging.lo \
+	src/processor/pathname_stripper.lo
 
 src_processor_basic_source_line_resolver_unittest_SOURCES = \
 	src/processor/basic_source_line_resolver_unittest.cc
 src_processor_basic_source_line_resolver_unittest_LDADD = \
-	src/processor/basic_source_line_resolver.lo
+	src/processor/basic_source_line_resolver.lo \
+	src/processor/pathname_stripper.lo \
+	src/processor/logging.lo
 
 src_processor_contained_range_map_unittest_SOURCES = \
 	src/processor/contained_range_map_unittest.cc
+src_processor_contained_range_map_unittest_LDADD = \
+	src/processor/logging.lo \
+	src/processor/pathname_stripper.lo
 
 src_processor_minidump_processor_unittest_SOURCES = \
 	src/processor/minidump_processor_unittest.cc
@@ -141,8 +151,10 @@ src_processor_minidump_processor_unittest_LDADD = \
 	src/processor/basic_code_modules.lo \
 	src/processor/basic_source_line_resolver.lo \
 	src/processor/call_stack.lo \
+	src/processor/logging.lo \
 	src/processor/minidump_processor.lo \
 	src/processor/minidump.lo \
+	src/processor/pathname_stripper.lo \
 	src/processor/process_state.lo \
 	src/processor/stackwalker.lo \
 	src/processor/stackwalker_ppc.lo \
@@ -155,9 +167,15 @@ src_processor_pathname_stripper_unittest_LDADD = \
 
 src_processor_postfix_evaluator_unittest_SOURCES = \
 	src/processor/postfix_evaluator_unittest.cc
+src_processor_postfix_evaluator_unittest_LDADD = \
+	src/processor/logging.lo \
+	src/processor/pathname_stripper.lo
 
 src_processor_range_map_unittest_SOURCES = \
 	src/processor/range_map_unittest.cc
+src_processor_range_map_unittest_LDADD = \
+	src/processor/logging.lo \
+	src/processor/pathname_stripper.lo
 
 src_processor_stackwalker_selftest_SOURCES = \
 	src/processor/stackwalker_selftest.cc
@@ -165,7 +183,9 @@ src_processor_stackwalker_selftest_LDADD = \
 	src/processor/basic_code_modules.lo \
 	src/processor/basic_source_line_resolver.lo \
 	src/processor/call_stack.lo \
+	src/processor/logging.lo \
 	src/processor/minidump.lo \
+	src/processor/pathname_stripper.lo \
 	src/processor/stackwalker.lo \
 	src/processor/stackwalker_ppc.lo \
 	src/processor/stackwalker_x86.lo
@@ -178,7 +198,9 @@ src_processor_minidump_dump_SOURCES = \
 	src/processor/minidump_dump.cc
 src_processor_minidump_dump_LDADD = \
 	src/processor/basic_code_modules.lo \
-	src/processor/minidump.lo
+	src/processor/logging.lo \
+	src/processor/minidump.lo \
+	src/processor/pathname_stripper.lo
 
 src_processor_minidump_stackwalk_SOURCES = \
 	src/processor/minidump_stackwalk.cc
@@ -186,6 +208,7 @@ src_processor_minidump_stackwalk_LDADD = \
 	src/processor/basic_code_modules.lo \
 	src/processor/basic_source_line_resolver.lo \
 	src/processor/call_stack.lo \
+	src/processor/logging.lo \
 	src/processor/minidump.lo \
 	src/processor/minidump_processor.lo \
 	src/processor/pathname_stripper.lo \

@@ -276,11 +276,8 @@ static const int kTextSection = 1;
   
   int line = list->n_desc;
   
-  // We only care about line number information in __TEXT __text
+  // __TEXT __text section
   uint32_t mainSection = [[sectionNumbers_ objectForKey:@"__TEXT__text" ] unsignedLongValue];
-  if(list->n_sect != mainSection) {
-    line = 0;
-  }
 
   // Extract debugging information:
   // Doc: http://developer.apple.com/documentation/DeveloperTools/gdb/stabs/stabs_toc.html

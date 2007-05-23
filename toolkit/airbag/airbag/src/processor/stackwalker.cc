@@ -45,6 +45,7 @@
 #include "google_breakpad/processor/stack_frame.h"
 #include "google_breakpad/processor/symbol_supplier.h"
 #include "processor/linked_ptr.h"
+#include "processor/logging.h"
 #include "processor/scoped_ptr.h"
 #include "processor/stack_frame_info.h"
 #include "processor/stackwalker_ppc.h"
@@ -67,6 +68,7 @@ Stackwalker::Stackwalker(const SystemInfo *system_info,
 
 
 bool Stackwalker::Walk(CallStack *stack) {
+  BPLOG_IF(ERROR, !stack) << "Stackwalker::Walk requires |stack|";
   assert(stack);
   stack->Clear();
 
@@ -139,8 +141,10 @@ Stackwalker* Stackwalker::StackwalkerForCPU(
     const CodeModules *modules,
     SymbolSupplier *supplier,
     SourceLineResolverInterface *resolver) {
-  if (!context)
+  if (!context) {
+    BPLOG(ERROR) << "Can't choose a stackwalker implementation without context";
     return NULL;
+  }
 
   Stackwalker *cpu_stackwalker = NULL;
 
@@ -161,6 +165,9 @@ Stackwalker* Stackwalker::StackwalkerForCPU(
       break;
   }
 
+  BPLOG_IF(ERROR, !cpu_stackwalker) << "Unknown CPU type " << HexString(cpu) <<
+                                       ", can't choose a stackwalker "
+                                       "implementation";
   return cpu_stackwalker;
 }
 
