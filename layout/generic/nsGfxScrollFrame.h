@@ -373,8 +373,6 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-  virtual nsresult GetContentOf(nsIContent** aContent);
-
   PRBool DidHistoryRestore() { return mInner.mDidHistoryRestore; }
 
 #ifdef ACCESSIBILITY
@@ -571,8 +569,6 @@ public:
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
-
-  virtual nsresult GetContentOf(nsIContent** aContent);
 
 protected:
   nsXULScrollFrame(nsIPresShell* aShell, nsStyleContext* aContext, PRBool aIsRoot);
