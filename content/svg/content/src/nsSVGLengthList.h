@@ -44,6 +44,6 @@
 class nsSVGElement;
 
 nsresult
-NS_NewSVGLengthList(nsIDOMSVGLengthList** result, nsSVGElement *aContext);
+NS_NewSVGLengthList(nsIDOMSVGLengthList** result, nsSVGElement *aContext, PRUint8 aCtxType);
 
 #endif //__NS_SVGLENGTHLIST_H__
