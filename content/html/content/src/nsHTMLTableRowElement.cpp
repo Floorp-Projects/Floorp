@@ -49,11 +49,6 @@
 #include "nsHTMLParts.h"
 #include "nsRuleData.h"
 
-// temporary
-#include "nsIDocument.h"
-#include "nsIPresShell.h"
-#include "nsIFrame.h"
-
 class nsHTMLTableRowElement : public nsGenericHTMLElement,
                               public nsIDOMHTMLTableRowElement
 {
@@ -92,31 +87,6 @@ protected:
   nsresult GetTable(nsIDOMHTMLTableElement** aTable);
   nsRefPtr<nsContentList> mCells;
 };
-
-#ifdef XXX_debugging
-static
-void DebugList(nsIDOMHTMLTableElement* aTable) {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aTable);
-  if (content) {
-    nsCOMPtr<nsIDocument> doc;
-    result = content->GetDocument(getter_AddRefs(doc));
-    if (doc) {
-      nsCOMPtr<nsIContent> root;
-      doc->GetRootContent(getter_AddRefs(root));
-      if (root) {
-        root->List();
-      }
-      nsIPresShell *shell = doc->GetPrimaryShell();
-      if (shell) {
-        nsIFrame* rootFrame = shell->FrameManager()->GetRootFrame();
-        if (rootFrame) {
-          rootFrame->List(stdout, 0);
-        }
-      }
-    }
-  }
-}
-#endif 
 
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(TableRow)
