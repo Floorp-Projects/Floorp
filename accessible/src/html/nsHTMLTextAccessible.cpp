@@ -234,7 +234,7 @@ NS_IMETHODIMP nsHTMLLabelAccessible::GetChildCount(PRInt32 *aAccChildCount)
 
 nsHTMLLIAccessible::nsHTMLLIAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell, 
                    nsIFrame *aBulletFrame, const nsAString& aBulletText):
-  nsHyperTextAccessibleWrap(aDOMNode, aShell)
+  nsLinkableAccessible(aDOMNode, aShell)
 {
   if (!aBulletText.IsEmpty()) {
     mBulletAccessible = new nsHTMLListBulletAccessible(mDOMNode, mWeakShell, 
@@ -252,7 +252,7 @@ NS_IMETHODIMP nsHTMLLIAccessible::Shutdown()
     // Ensure that weak pointer to this is nulled out
     mBulletAccessible->Shutdown();
   }
-  nsresult rv = nsHyperTextAccessibleWrap::Shutdown();
+  nsresult rv = nsLinkableAccessible::Shutdown();
   mBulletAccessible = nsnull;
   return rv;
 }
@@ -372,7 +372,6 @@ nsHTMLListAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
   *aState |= nsIAccessibleStates::STATE_READONLY;
   return NS_OK;
 }
