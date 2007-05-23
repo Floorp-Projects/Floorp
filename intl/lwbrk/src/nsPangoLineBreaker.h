@@ -15,11 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Theppitak Karoonboonyanan <thep@linux.thai.net>.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * - Theppitak Karoonboonyanan <thep@linux.thai.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -34,19 +35,25 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsLWIMP_h__
-#define nsLWIMP_h__
+#ifndef nsPangoLineBreaker_h__
+#define nsPangoLineBreaker_h__
 
-#ifdef MOZ_ENABLE_PANGO
-# include "nsPangoLineBreaker.h"
-# define LINEBREAKER nsPangoLineBreaker
-#else
-# include "nsJISx4501LineBreaker.h"
-# define LINEBREAKER nsJISx4501LineBreaker
-#endif
+#include "nsILineBreaker.h"
 
-#include "nsSampleWordBreaker.h"
+class nsPangoLineBreaker : public nsILineBreaker
+{
+  NS_DECL_ISUPPORTS
 
-#define WORDBREAKER nsSampleWordBreaker
+public:
+  PRBool BreakInBetween(const PRUnichar* aText1 , PRUint32 aTextLen1,
+                        const PRUnichar* aText2 , PRUint32 aTextLen2);
 
-#endif  /* nsLWIMP_h__ */
+  PRInt32 Next(const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
+
+  PRInt32 Prev(const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
+
+  void GetJISx4051Breaks(const PRUnichar* aText, PRUint32 aLen,
+                         PRPackedBool* aBreakBefore);
+};
+
+#endif  /* nsPangoLineBreaker_h__ */
