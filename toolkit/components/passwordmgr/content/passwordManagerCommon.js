@@ -254,6 +254,7 @@ function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending, 
  * Case insensitive string comparator.
  */
 function CompareLowerCase(first, second) {
+  var firstLower, secondLower;
 
   // Are we sorting nsILoginInfo entries or just strings?
   if (first.hostname) {
