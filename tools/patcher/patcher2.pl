@@ -1077,6 +1077,11 @@ sub CreatePartialPatchinfo {
         my $complete_url = $complete->{'url'};
 
         my $currentUpdateRcInfo = $u_config->{$u}->{'rc'};
+        # Used in the case where we never released rc1, so rc2 or 3 or 4 is
+        # actually the "first" release rc.
+        my $disableCompleteJumpForRcs =
+         exists($u_config->{$u}->{'DisableCompleteJump'}) && 
+         int($u_config->{$u}->{'DisableCompleteJump'});
 
         my @channels = @{$u_config->{$u}->{'all_channels'}};
         my $channel = $u_config->{$u}->{'channel'};
@@ -1162,6 +1167,7 @@ sub CreatePartialPatchinfo {
                              $currentUpdateRcInfo->{$channel};
 
                             $serveCompleteUpdateToRcs =
+                             (!$disableCompleteJumpForRcs) &&
                              (int($currentUpdateRcInfo->{$channel}) > 1);
 
                             if ($serveCompleteUpdateToRcs) {

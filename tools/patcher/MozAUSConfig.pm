@@ -430,6 +430,13 @@ sub CreateUpdateGraph
         $u_config->{$u_key}->{'rc'} = {};
         if (defined($u_rcInfo)) {
             foreach my $channel (keys(%{$u_rcInfo})) {
+                # Such a hack... this isn't a channel name at all; it's a config
+                # variable, to control the behavior of sending the complete 
+                # "jump" updates to the RC channels...
+                if ($channel eq 'DisableCompleteJump') {
+                    $u_config->{$u_key}->{'DisableCompleteJump'} = $u_rcInfo->{$channel};
+                    next;
+                }
                 $u_config->{$u_key}->{'rc'}->{$channel} = $u_rcInfo->{$channel};
             }
         }
