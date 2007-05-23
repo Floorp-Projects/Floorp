@@ -386,11 +386,11 @@ void nsView::DoResetWidgetBounds(PRBool aMoveOnly,
     }
   }
 
-  nsRect newBounds(NSAppUnitsToIntPixels((mDimBounds.x + offset.x), p2a),
-                   NSAppUnitsToIntPixels((mDimBounds.y + offset.y), p2a),
-                   NSAppUnitsToIntPixels(mDimBounds.width, p2a),
-                   NSAppUnitsToIntPixels(mDimBounds.height, p2a));
-    
+  nsRect viewBounds(mDimBounds + offset);
+
+  nsRect newBounds(viewBounds);
+  newBounds.ScaleRoundPreservingCenters(1.0f / p2a);
+
   PRBool changedPos = PR_TRUE;
   PRBool changedSize = PR_TRUE;
   if (!(mVFlags & NS_VIEW_FLAG_HAS_POSITIONED_WIDGET)) {
@@ -412,6 +412,10 @@ void nsView::DoResetWidgetBounds(PRBool aMoveOnly,
       mWindow->Resize(newBounds.width, newBounds.height, aInvalidateChangedSize);
     } // else do nothing!
   }
+
+  nsPoint roundedOffset(NSIntPixelsToAppUnits(newBounds.x, p2a),
+                        NSIntPixelsToAppUnits(newBounds.y, p2a));
+  mViewToWidgetOffset = viewBounds.TopLeft() - roundedOffset;
 }
 
 void nsView::SetDimensions(const nsRect& aRect, PRBool aPaint, PRBool aResizeWidget)
@@ -858,7 +862,8 @@ nsIWidget* nsIView::GetNearestWidget(nsPoint* aOffset) const
   // not coincide with v's origin
   if (aOffset) {
     nsRect vBounds = v->GetBounds();
-    *aOffset = pt + v->GetPosition() -  nsPoint(vBounds.x, vBounds.y);
+    *aOffset = pt + v->GetPosition() -  nsPoint(vBounds.x, vBounds.y) -
+               v->ViewToWidgetOffset();
   }
   return v->GetWidget();
 }
