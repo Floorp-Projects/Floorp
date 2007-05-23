@@ -407,7 +407,6 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun)
       AppendTextRun(aTextRun, child, runStart);
 
       runStart = i;
-      runIsLowercase = isLowercase;
       styleArray.Clear();
       canBreakBeforeArray.Clear();
       lineBreakBeforeArray.Clear();
@@ -417,6 +416,7 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun)
     }
 
     if (i < length) {
+      runIsLowercase = isLowercase;
       styleArray.AppendElement(styles[i]);
       canBreakBeforeArray.AppendElement(aTextRun->CanBreakLineBefore(i));
     }
