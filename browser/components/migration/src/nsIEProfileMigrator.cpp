@@ -1326,9 +1326,9 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
           }
 #ifdef MOZ_PLACES_BOOKMARKS
           PRInt64 id;
-          bms->InsertItem(keywordsFolder, uri,
-                          nsINavBookmarksService::DEFAULT_INDEX, &id);
-          bms->SetItemTitle(id, keyName);
+          bms->InsertBookmark(keywordsFolder, uri,
+                              nsINavBookmarksService::DEFAULT_INDEX, keyName,
+                              &id);
 #else
           nsCAutoString hostCStr;
           uri->GetHost(hostCStr);
@@ -1469,10 +1469,9 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
       rv = NS_NewFileURI(getter_AddRefs(bookmarkURI), localFile);
       NS_ENSURE_SUCCESS(rv, rv);
       PRInt64 id;
-      rv = aBookmarksService->InsertItem(aParentFolder, bookmarkURI,
-                                         nsINavBookmarksService::DEFAULT_INDEX, &id);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = aBookmarksService->SetItemTitle(id, bookmarkName);
+      rv = aBookmarksService->InsertBookmark(aParentFolder, bookmarkURI,
+                                             nsINavBookmarksService::DEFAULT_INDEX,
+                                             bookmarkName, &id);
       NS_ENSURE_SUCCESS(rv, rv);
 #else
       nsCAutoString spec;
@@ -1574,10 +1573,10 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
       rv = NS_NewURI(getter_AddRefs(resolvedURI), resolvedURL);
       NS_ENSURE_SUCCESS(rv, rv);
       PRInt64 id;
-      rv = aBookmarksService->InsertItem(aParentFolder, resolvedURI,
-                                         nsINavBookmarksService::DEFAULT_INDEX, &id);
+      rv = aBookmarksService->InsertBookmark(aParentFolder, resolvedURI,
+                                             nsINavBookmarksService::DEFAULT_INDEX,
+                                             name, &id);
       if (NS_FAILED(rv)) continue;
-      rv = aBookmarksService->SetItemTitle(id, name);
 #else
       nsCOMPtr<nsIRDFResource> bookmark;
       // As far as I can tell reading the MSDN API document,

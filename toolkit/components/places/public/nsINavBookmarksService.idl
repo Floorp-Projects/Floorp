@@ -160,7 +160,7 @@ interface nsINavBookmarkObserver : nsISupports
  * folders.  A URI in history can be contained in one or more such folders.
  */
 
-[scriptable, uuid(5e44a4e2-5db6-412a-b153-c732c9c62fd5)]
+[scriptable, uuid(c3307160-525d-4d3c-9d75-b4f13a9ca05d)]
 interface nsINavBookmarksService : nsISupports
 {
   /**
@@ -198,7 +198,7 @@ interface nsINavBookmarksService : nsISupports
   const unsigned short TYPE_SEPARATOR = 3;
 
   /**
-   * Inserts a child item into the given folder. If this item already exists in
+   * Inserts a child bookmark into the given folder. If this item already exists in
    * the given folder, it will be moved to the new position.
    *  @param aParentFolder
    *         The id of the parent folder
@@ -206,10 +206,12 @@ interface nsINavBookmarksService : nsISupports
    *         The URI to insert
    *  @param aIndex
    *         The index to insert at, or -1 to append
+   *  @param aTitle
+   *         The title for the new bookmark
    *  @returns The ID of the newly-created bookmark
    */
-  long long insertItem(in long long aParentFolder, in nsIURI aURI,
-                       in long aIndex);
+  long long insertBookmark(in long long aParentFolder, in nsIURI aURI,
+                           in long aIndex, in AString aTitle);
 
   /**
    * Removes a child item. Used to delete a bookmark or separator.

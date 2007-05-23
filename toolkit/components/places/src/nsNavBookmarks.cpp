@@ -854,7 +854,9 @@ nsNavBookmarks::GetTagRoot(PRInt64 *aRoot)
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::InsertItem(PRInt64 aFolder, nsIURI *aItem, PRInt32 aIndex, PRInt64 *aNewBookmarkId)
+nsNavBookmarks::InsertBookmark(PRInt64 aFolder, nsIURI *aItem, PRInt32 aIndex,
+                               const nsAString& aTitle,
+                               PRInt64 *aNewBookmarkId)
 {
   // You can pass -1 to indicate append, but no other negative number is allowed
   if (aIndex < nsINavBookmarksService::DEFAULT_INDEX)
@@ -873,20 +875,27 @@ nsNavBookmarks::InsertItem(PRInt64 aFolder, nsIURI *aItem, PRInt32 aIndex, PRInt
   rv = AdjustIndices(aFolder, index, PR_INT32_MAX, 1);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString buffer;
-  buffer.AssignLiteral("INSERT INTO moz_bookmarks (fk, type, parent, position, dateAdded) VALUES (");
-  buffer.AppendInt(childID);
-  buffer.AppendLiteral(", ");
-  buffer.AppendInt(TYPE_BOOKMARK);
-  buffer.AppendLiteral(", ");
-  buffer.AppendInt(aFolder);
-  buffer.AppendLiteral(", ");
-  buffer.AppendInt(index);
-  buffer.AppendLiteral(", ");
-  buffer.AppendInt(PR_Now());  
-  buffer.AppendLiteral(")");
+  nsCOMPtr<mozIStorageStatement> statement;
+  rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO moz_bookmarks "
+                               "(fk, type, parent, position, title, dateAdded) "
+                               "VALUES (?1, ?2, ?3, ?4, ?5, ?6)"),
+                               getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = dbConn->ExecuteSimpleSQL(buffer);
+  rv = statement->BindInt64Parameter(0, childID);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindInt32Parameter(1, TYPE_BOOKMARK);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindInt64Parameter(2, aFolder);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindInt32Parameter(3, index);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindStringParameter(4, aTitle);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindInt64Parameter(5, PR_Now());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // get row id of the new bookmark

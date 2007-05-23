@@ -181,8 +181,8 @@ LivemarkService.prototype = {
 
   insertLivemarkLoadingItem: function LS_insertLivemarkLoading(bms, folderId) {
     var loadingURI = gIoService.newURI("about:livemark-loading", null, null);
-    var id = bms.insertItem(folderId, loadingURI, bms.DEFAULT_INDEX);
-    bms.setItemTitle(id, this._loading);
+    var id = bms.insertBookmark(folderId, loadingURI, bms.DEFAULT_INDEX,
+                                this._loading);
   },
 
   _updateLivemarkChildren:
@@ -490,14 +490,14 @@ LivemarkLoadListener.prototype = {
 
   insertLivemarkFailedItem: function LS_insertLivemarkFailed(folderId) {
     var failedURI = gIoService.newURI("about:livemark-failed", null, null);
-    var id = this._bms.insertItem(folderId, failedURI, this._bms.DEFAULT_INDEX);
-    this._bms.setItemTitle(id, this._failed);
+    var id = this._bms.insertBookmark(folderId, failedURI, this._bms.DEFAULT_INDEX,
+                                      this._failed);
   },
 
   insertLivemarkChild:
   function LS_insertLivemarkChild(folderId, uri, title) {
-    var id = this._bms.insertItem(folderId, uri, this._bms.DEFAULT_INDEX);
-    this._bms.setItemTitle(id, title);
+    var id = this._bms.insertBookmark(folderId, uri, this._bms.DEFAULT_INDEX,
+                                      title);
     this._ans.setItemAnnotationString(id, LMANNO_BMANNO, uri.spec, 0,
                                       this._ans.EXPIRE_NEVER);
   },

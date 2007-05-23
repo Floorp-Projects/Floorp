@@ -78,14 +78,10 @@ function run_test() {
                                     bmsvc.DEFAULT_INDEX);
   var uri1 = uri("http://foo.tld/a");
   var uri2 = uri("http://foo.tld/b");
-  var id1 = bmsvc.insertItem(testRoot, uri1, bmsvc.DEFAULT_INDEX);
-  bmsvc.setItemTitle(id1, "b");
-  var id2 = bmsvc.insertItem(testRoot, uri2, bmsvc.DEFAULT_INDEX);
-  bmsvc.setItemTitle(id2, "a");
-
+  var id1 = bmsvc.insertBookmark(testRoot, uri1, bmsvc.DEFAULT_INDEX, "b");
+  var id2 = bmsvc.insertBookmark(testRoot, uri2, bmsvc.DEFAULT_INDEX, "a");
   // url of id1, title of id2
-  var id3 = bmsvc.insertItem(testRoot, uri1, bmsvc.DEFAULT_INDEX);
-  bmsvc.setItemTitle(id3, "a");
+  var id3 = bmsvc.insertBookmark(testRoot, uri1, bmsvc.DEFAULT_INDEX, "a");
 
   // query with natural order
   var options = histsvc.getNewQueryOptions();

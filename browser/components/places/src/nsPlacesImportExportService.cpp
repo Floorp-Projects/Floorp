@@ -224,7 +224,7 @@ public:
   PRInt64 mPreviousId;
 
   // Contains the date-added and last-modified-date of an imported item.
-  // Used to override the values set by insertItem, createFolder, etc.
+  // Used to override the values set by insertBookmark, createFolder, etc.
   PRTime mPreviousDateAdded;
   PRTime mPreviousLastModifiedDate;
 };
@@ -896,12 +896,15 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   // if no previous id (or a legacy id), create a new bookmark
   if (frame.mPreviousId == 0) {
     // create the bookmark
-    rv = mBookmarksService->InsertItem(frame.mContainerID, frame.mPreviousLink,
-                                       mBookmarksService->DEFAULT_INDEX, &frame.mPreviousId);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "InsertItem failed");
+    rv = mBookmarksService->InsertBookmark(frame.mContainerID,
+                                           frame.mPreviousLink,
+                                           mBookmarksService->DEFAULT_INDEX,
+                                           EmptyString(),
+                                           &frame.mPreviousId);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "InsertBookmark failed");
 
     // set the date added value, if we have it
-    // important:  this has to happen after InsertItem
+    // important:  this has to happen after InsertBookmark
     // so that we set the imported value
     if (!dateAdded.IsEmpty()) {
       PRTime convertedDateAdded = ConvertImportedDateToInternalDate(NS_ConvertUTF16toUTF8(dateAdded));
