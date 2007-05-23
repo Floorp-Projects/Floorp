@@ -584,7 +584,8 @@ nsDownloadManager::CancelDownload(PRUint32 aID)
   // 2) when the dl-cancel observer is dispatched, the same conditions for 1
   //    must be true as well as the state being up to date.
   RemoveDownloadFromCurrent(dl);
-  dl->SetState(nsIDownloadManager::DOWNLOAD_CANCELED);
+  nsresult rv = dl->SetState(nsIDownloadManager::DOWNLOAD_CANCELED);
+  NS_ENSURE_SUCCESS(rv, rv);
   mObserverService->NotifyObservers(dl, "dl-cancel", nsnull);
 
   // if there's a progress dialog open for the item,
@@ -594,7 +595,7 @@ nsDownloadManager::CancelDownload(PRUint32 aID)
     observer->Observe(dl, "oncancel", nsnull);
   }
 
-  return dl->UpdateDB();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1077,11 +1078,13 @@ nsXPIProgressListener::OnStateChange(PRUint32 aIndex, PRInt16 aState, PRInt32 aV
 
   nsCOMPtr<nsIObserverService> os;
   
+  DownloadState newState = aState;
   switch (aState) {
   case nsIXPIProgressDialog::DOWNLOAD_START:
     wpl->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_START, 0);
 
-    dl->SetState(nsIXPInstallManagerUI::INSTALL_DOWNLOADING);
+    newState = nsIXPInstallManagerUI::INSTALL_DOWNLOADING;
+    
     os = do_GetService("@mozilla.org/observer-service;1");
     if (os)
       os->NotifyObservers(dl, "dl-start", nsnull);
@@ -1089,12 +1092,12 @@ nsXPIProgressListener::OnStateChange(PRUint32 aIndex, PRInt16 aState, PRInt32 aV
   case nsIXPIProgressDialog::DOWNLOAD_DONE:
     break;
   case nsIXPIProgressDialog::INSTALL_START:
-    dl->SetState(nsIXPInstallManagerUI::INSTALL_INSTALLING);
+    newState = nsIXPInstallManagerUI::INSTALL_INSTALLING;
     break;
   case nsIXPIProgressDialog::INSTALL_DONE:
     wpl->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, 0);
     
-    dl->SetState(nsIXPInstallManagerUI::INSTALL_FINISHED);
+    newState = nsIXPInstallManagerUI::INSTALL_FINISHED;
     
     // Now, remove it from our internal bookkeeping list. 
     RemoveDownloadAtIndex(aIndex);
@@ -1124,7 +1127,7 @@ nsXPIProgressListener::OnStateChange(PRUint32 aIndex, PRInt16 aState, PRInt32 aV
     break;
   }
 
-  return dl->UpdateDB();
+  return dl->SetState(newState);
 }
 
 NS_IMETHODIMP
@@ -1158,17 +1161,24 @@ nsDownload::~nsDownload()
 {  
 }
 
-void
+nsresult
 nsDownload::SetState(DownloadState aState)
 {
   if (mDownloadState == aState)
-    return;
+    return NS_OK;
 
   PRInt16 oldState = mDownloadState;
   mDownloadState = aState;
 
+  // Before notifying the listener, we must update the database so that calls
+  // to it work out properly.
+  nsresult rv = UpdateDB();
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   if (mDownloadManager->mListener)
     mDownloadManager->mListener->OnDownloadStateChange(oldState, this);
+
+  return NS_OK;
 }
 
 DownloadType
@@ -1207,11 +1217,9 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
   mLastUpdate = now;
 
   if (mDownloadState == nsIDownloadManager::DOWNLOAD_NOTSTARTED) {
-    SetState(nsIDownloadManager::DOWNLOAD_DOWNLOADING);
-    mDownloadManager->mObserverService->NotifyObservers(this, "dl-start", nsnull);
-
-    nsresult rv = UpdateDB();
+    nsresult rv = SetState(nsIDownloadManager::DOWNLOAD_DOWNLOADING);
     NS_ENSURE_SUCCESS(rv, rv);
+    mDownloadManager->mObserverService->NotifyObservers(this, "dl-start", nsnull);
   }
 
   // Calculate the speed using the elapsed delta time and bytes downloaded
@@ -1291,8 +1299,6 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
   if (NS_FAILED(aStatus)) {
     SetState(nsIDownloadManager::DOWNLOAD_FAILED);
     mDownloadManager->mObserverService->NotifyObservers(this, "dl-failed", nsnull);
-
-    UpdateDB();
 
     mDownloadManager->RemoveDownloadFromCurrent(this);
 
@@ -1451,9 +1457,7 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       dpl->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus, this);
   }
 
-  nsresult rv = UpdateDB();
-
-  return rv;
+  return UpdateDB();
 }
 
 NS_IMETHODIMP
@@ -1588,23 +1592,20 @@ nsDownload::GetId(PRUint32 *aId)
 nsresult
 nsDownload::PauseResume(PRBool aPause)
 {
-  if (mPaused != aPause && mRequest) {
-    if (aPause) {
-      nsresult rv = mRequest->Suspend();
-      NS_ENSURE_SUCCESS(rv, rv);
-      mPaused = PR_TRUE;
-      SetState(nsIDownloadManager::DOWNLOAD_PAUSED);
-    } else {
-      nsresult rv = mRequest->Resume();
-      NS_ENSURE_SUCCESS(rv, rv);
-      mPaused = PR_FALSE;
-      SetState(nsIDownloadManager::DOWNLOAD_DOWNLOADING);
-    }
-  
-    return UpdateDB();
+  if (mPaused == aPause || !mRequest)
+    return NS_OK;
+
+  if (aPause) {
+    nsresult rv = mRequest->Suspend();
+    NS_ENSURE_SUCCESS(rv, rv);
+    mPaused = PR_TRUE;
+    return SetState(nsIDownloadManager::DOWNLOAD_PAUSED);
   }
 
-  return NS_OK;
+  nsresult rv = mRequest->Resume();
+  NS_ENSURE_SUCCESS(rv, rv);
+  mPaused = PR_FALSE;
+  return SetState(nsIDownloadManager::DOWNLOAD_DOWNLOADING);
 }
 
 nsresult
