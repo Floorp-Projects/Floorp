@@ -59,13 +59,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSemanticUnitScanner)
 static nsModuleComponentInfo components[] =
 {
  // lwbrk
-#ifdef MOZ_ENABLE_PANGO
-  { "Line Breaker", NS_LBRK_CID, 
-    NS_LBRK_CONTRACTID, nsPangoLineBreakerConstructor},
-#else
   { "Line Breaker", NS_LBRK_CID, 
     NS_LBRK_CONTRACTID, nsJISx4051LineBreakerConstructor},
-#endif
   { "Word Breaker", NS_WBRK_CID,
     NS_WBRK_CONTRACTID, nsSampleWordBreakerConstructor},
   { "Semantic Unit Scanner", NS_SEMANTICUNITSCANNER_CID,
