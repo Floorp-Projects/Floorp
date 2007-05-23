@@ -894,110 +894,6 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
   return rv;
 }
 
-void
-DocumentViewerImpl::DumpContentToPPM(const char* aFileName)
-{
-  mDocument->FlushPendingNotifications(Flush_Display);
-
-  nsIScrollableView* scrollableView;
-  mViewManager->GetRootScrollableView(&scrollableView);
-  nsIView* view;
-  if (scrollableView) {
-    scrollableView->GetScrolledView(view);
-  } else {
-    mViewManager->GetRootView(view);
-  }
-  nsRect r = view->GetBounds() - view->GetPosition();
-  // Limit the bitmap size to 5000x5000
-  nscoord twipLimit = mPresContext->DevPixelsToAppUnits(5000);
-  if (r.height > twipLimit)
-    r.height = twipLimit;
-  if (r.width > twipLimit)
-    r.width = twipLimit;
-
-  const char* status;
-
-  if (r.IsEmpty()) {
-    status = "EMPTY";
-  } else {
-    nsCOMPtr<nsIRenderingContext> context;
-    nsresult rv = mPresShell->RenderOffscreen(r, PR_FALSE, PR_TRUE, 
-                                              NS_RGB(255, 255, 255),
-                                              getter_AddRefs(context));
-
-    if (NS_FAILED(rv)) {
-      status = "FAILEDRENDER";
-    } else {
-      nsIDrawingSurface* surface;
-      context->GetDrawingSurface(&surface);
-      if (!surface) {
-        status = "NOSURFACE";
-      } else {
-        PRUint32 width = mPresContext->AppUnitsToDevPixels(view->GetBounds().width);
-        PRUint32 height = mPresContext->AppUnitsToDevPixels(view->GetBounds().height);
-
-        PRUint8* data;
-        PRInt32 rowLen, rowSpan;
-        rv = surface->Lock(0, 0, width, height, (void**)&data, &rowSpan, &rowLen,
-                           NS_LOCK_SURFACE_READ_ONLY);
-        if (NS_FAILED(rv)) {
-          status = "FAILEDLOCK";
-        } else {
-          PRUint32 bytesPerPix = rowLen/width;
-          nsPixelFormat format;
-          surface->GetPixelFormat(&format);
-
-          PRUint8* buf = new PRUint8[3*width];
-          if (buf) {
-            FILE* f = fopen(aFileName, "wb");
-            if (!f) {
-              status = "FOPENFAILED";
-            } else {
-              fprintf(f, "P6\n%d\n%d\n255\n", width, height);
-              for (PRUint32 i = 0; i < height; ++i) {
-                PRUint8* src = data + i*rowSpan;
-                PRUint8* dest = buf;
-                for (PRUint32 j = 0; j < width; ++j) {
-                  /* v is the pixel value */
-#ifdef IS_BIG_ENDIAN
-                  PRUint32 v = (src[0] << 24) | (src[1] << 16) | (src[2] << 8) | src[3];
-                  v >>= (32 - 8*bytesPerPix);
-#else
-                  PRUint32 v = src[0] | (src[1] << 8) | (src[2] << 16) | (src[3] << 24);
-#endif
-                  dest[0] = ((v & format.mRedMask) >> format.mRedShift) << (8 - format.mRedCount);
-                  dest[1] = ((v & format.mGreenMask) >> format.mGreenShift) << (8 - format.mGreenCount);
-                  dest[2] = ((v & format.mBlueMask) >> format.mBlueShift) << (8 - format.mBlueCount);
-                  src += bytesPerPix;
-                  dest += 3;
-                }
-                fwrite(buf, 3, width, f);
-              }
-              fclose(f);
-              status = "OK";
-            }
-            
-            delete[] buf;
-          }
-          else {
-            status = "OOM";
-          }
-          surface->Unlock();
-        }
-        context->DestroyDrawingSurface(surface);
-      }
-    }
-  }
-
-  nsIURI *uri = mDocument->GetDocumentURI();
-  nsCAutoString spec;
-  if (uri) {
-    uri->GetAsciiSpec(spec);
-  }
-  printf("GECKO: PAINT FORCED AFTER ONLOAD: %s %s (%s)\n", spec.get(), aFileName, status);
-  fflush(stdout);
-}
-
 //
 // LoadComplete(aStatus)
 //
@@ -1090,17 +986,6 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   if (mPresShell && !mStopped) {
     nsCOMPtr<nsIPresShell> shellDeathGrip(mPresShell); // bug 378682
     mPresShell->UnsuppressPainting();
-  }
-
-  static PRBool forcePaint
-    = PR_GetEnv("MOZ_FORCE_PAINT_AFTER_ONLOAD") != nsnull;
-  static PRUint32 index = 0;
-  if (forcePaint) {
-    nsCAutoString name(PR_GetEnv("MOZ_FORCE_PAINT_AFTER_ONLOAD"));
-    name.AppendLiteral("-");
-    ++index;
-    name.AppendInt(index);
-    DumpContentToPPM(name.get());
   }
 
   nsJSContext::LoadEnd();
