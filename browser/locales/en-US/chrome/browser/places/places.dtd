@@ -123,14 +123,10 @@
   "Open All in Tabs">
 <!ENTITY cmd.open_all_in_tabs.accesskey
   "O">
-<!ENTITY cmd.show_infoWin.label
+<!ENTITY cmd.properties.label
   "Properties">
-<!ENTITY cmd.show_infoWin.accesskey
+<!ENTITY cmd.properties.accesskey
   "i">
-<!ENTITY cmd.show_infoMac.label
-  "Get Info">
-<!ENTITY cmd.show_infoMac.accesskey
-  "I">
 <!ENTITY cmd.show_info.key
   "i">
 <!ENTITY cmd.rename.label

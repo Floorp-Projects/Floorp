@@ -227,13 +227,8 @@
           <menuitem id="properties"
                     command="placesCmd_show:info"
                     key="placesKey_show:info"
-#ifdef XP_MACOSX
-                    label="&cmd.show_infoMac.label;" 
-                    accesskey="&cmd.show_infoMac.accesskey;"/>
-#else
-                    label="&cmd.show_infoWin.label;" 
-                    accesskey="&cmd.show_infoWin.accesskey;"/>
-#endif
+                    label="&cmd.properties.label;" 
+                    accesskey="&cmd.properties.accesskey;"/>
         </menupopup>
       </menu>
       <menu id="viewMenu" label="&view.label;" accesskey="&view.accesskey;"
@@ -297,13 +292,8 @@
       <toolbarseparator/>
       <toolbarbutton id="properties"
                      command="placesCmd_show:info"
-#ifdef XP_MACOSX
-                     label="&cmd.show_infoMac.label;" 
-                     accesskey="&cmd.show_infoMac.accesskey;"/>
-#else
-                     label="&cmd.show_infoWin.label;" 
-                     accesskey="&cmd.show_infoWin.accesskey;"/>
-#endif
+                     label="&cmd.properties.label;" 
+                     accesskey="&cmd.properties.accesskey;"/>
       <toolbarbutton id="rename"
                      command="placesCmd_rename"
                      label="&cmd.rename.label;"
