@@ -51,6 +51,8 @@
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIDOMHTMLElement.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIDOMWindow.h"
@@ -792,3 +794,47 @@ already_AddRefed<nsIDOMNode> nsAccessNode::GetCurrentFocus()
 
   return focusedNode;
 }
+
+NS_IMETHODIMP
+nsAccessNode::GetLanguage(nsAString& aLanguage)
+{
+  aLanguage.Truncate();
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    // For documents make sure we look for lang attribute on
+    // document element
+    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mDOMNode));
+    if (domDoc) {
+      nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(mDOMNode));
+      if (htmlDoc) {
+        // Make sure we look for lang attribute on HTML <body>
+        nsCOMPtr<nsIDOMHTMLElement> bodyElement;
+        htmlDoc->GetBody(getter_AddRefs(bodyElement));
+        content = do_QueryInterface(bodyElement);
+      }
+      if (!content) {
+        nsCOMPtr<nsIDOMElement> docElement;
+        domDoc->GetDocumentElement(getter_AddRefs(docElement));
+        content = do_QueryInterface(docElement);
+      }
+    }
+    if (!content) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  nsIContent *walkUp = content;
+  while (walkUp && !walkUp->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::lang, aLanguage)) {
+    walkUp = walkUp->GetParent();
+  }
+
+  if (aLanguage.IsEmpty()) { // Nothing found, so use document's language
+    nsIDocument *doc = content->GetOwnerDoc();
+    if (doc) {
+      doc->GetHeaderData(nsAccessibilityAtoms::headerContentLanguage, aLanguage);
+    }
+  }
+ 
+  return NS_OK;
+}
+
