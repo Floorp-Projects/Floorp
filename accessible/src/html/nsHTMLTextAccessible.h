@@ -42,6 +42,7 @@
 
 #include "nsTextAccessibleWrap.h"
 #include "nsAutoPtr.h"
+#include "nsBaseWidgetAccessible.h"
 
 class nsIWeakReference;
 
@@ -132,7 +133,7 @@ public:
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
-class nsHTMLLIAccessible : public nsHyperTextAccessibleWrap
+class nsHTMLLIAccessible : public nsLinkableAccessible
 {
 public:
   nsHTMLLIAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell, 
