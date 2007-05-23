@@ -73,7 +73,6 @@
 #include "nsAttrValue.h"
 #include "nsSVGGeometryFrame.h"
 #include "nsIScriptError.h"
-#include "cairo.h"
 #include "gfxContext.h"
 #include "gfxMatrix.h"
 #include "gfxRect.h"
@@ -352,7 +351,6 @@ nsSVGMaskProperty::ParentChainChanged(nsIContent *aContent)
   mFrame->DeleteProperty(nsGkAtoms::mask);
 }
 
-cairo_surface_t *nsSVGUtils::mCairoComputationalSurface = nsnull;
 gfxASurface     *nsSVGUtils::mThebesComputationalSurface = nsnull;
 
 // c = n / 255
@@ -1257,16 +1255,6 @@ nsSVGUtils::ToBoundingPixelRect(const gfxRect& rect)
                 nscoord(ceil(rect.YMost()) - floor(rect.Y())));
 }
 
-cairo_surface_t *
-nsSVGUtils::GetCairoComputationalSurface()
-{
-  if (!mCairoComputationalSurface)
-    mCairoComputationalSurface =
-      cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 1, 1);
-
-  return mCairoComputationalSurface;
-}
-
 gfxASurface *
 nsSVGUtils::GetThebesComputationalSurface()
 {
@@ -1280,20 +1268,6 @@ nsSVGUtils::GetThebesComputationalSurface()
   }
 
   return mThebesComputationalSurface;
-}
-
-cairo_matrix_t
-nsSVGUtils::ConvertSVGMatrixToCairo(nsIDOMSVGMatrix *aMatrix)
-{
-  float A, B, C, D, E, F;
-  aMatrix->GetA(&A);
-  aMatrix->GetB(&B);
-  aMatrix->GetC(&C);
-  aMatrix->GetD(&D);
-  aMatrix->GetE(&E);
-  aMatrix->GetF(&F);
-  cairo_matrix_t m = { A, B, C, D, E, F };
-  return m;
 }
 
 gfxMatrix
@@ -1317,48 +1291,18 @@ nsSVGUtils::HitTestRect(nsIDOMSVGMatrix *aMatrix,
   PRBool result = PR_TRUE;
 
   if (aMatrix) {
-    cairo_matrix_t matrix = ConvertSVGMatrixToCairo(aMatrix);
-    cairo_t *ctx = cairo_create(GetCairoComputationalSurface());
-    if (cairo_status(ctx) != CAIRO_STATUS_SUCCESS) {
-      cairo_destroy(ctx);
-      return PR_FALSE;
-    }
-    cairo_set_tolerance(ctx, 1.0);
+    gfxContext ctx(GetThebesComputationalSurface());
+    ctx.SetMatrix(ConvertSVGMatrixToThebes(aMatrix));
 
-    cairo_set_matrix(ctx, &matrix);
-    cairo_new_path(ctx);
-    cairo_rectangle(ctx, aRX, aRY, aRWidth, aRHeight);
-    cairo_identity_matrix(ctx);
+    ctx.NewPath();
+    ctx.Rectangle(gfxRect(aRX, aRY, aRWidth, aRHeight));
+    ctx.IdentityMatrix();
 
-    if (!cairo_in_fill(ctx, aX, aY))
+    if (!ctx.PointInFill(gfxPoint(aX, aY)))
       result = PR_FALSE;
-
-    cairo_destroy(ctx);
   }
 
   return result;
-}
-
-void
-nsSVGUtils::UserToDeviceBBox(cairo_t *ctx,
-                             double *xmin, double *ymin,
-                             double *xmax, double *ymax)
-{
-  double x[3], y[3];
-  x[0] = *xmin;  y[0] = *ymax;
-  x[1] = *xmax;  y[1] = *ymax;
-  x[2] = *xmax;  y[2] = *ymin;
-
-  cairo_user_to_device(ctx, xmin, ymin);
-  *xmax = *xmin;
-  *ymax = *ymin;
-  for (int i = 0; i < 3; i++) {
-    cairo_user_to_device(ctx, &x[i], &y[i]);
-    *xmin = PR_MIN(*xmin, x[i]);
-    *xmax = PR_MAX(*xmax, x[i]);
-    *ymin = PR_MIN(*ymin, y[i]);
-    *ymax = PR_MAX(*ymax, y[i]);
-  }
 }
 
 void
