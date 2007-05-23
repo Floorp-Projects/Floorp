@@ -53,7 +53,6 @@
 #include "nsIPresShell.h"
 #include "nsPIDOMWindow.h"
 #include "nsIServiceManager.h"
-#include "nsIServiceManager.h"
 #include "nsAttrName.h"
 
 /// the accessible library and cached methods
@@ -481,26 +480,10 @@ nsAccessNodeWrap::get_innerHTML(BSTR __RPC_FAR *aInnerHTML)
 STDMETHODIMP 
 nsAccessNodeWrap::get_language(BSTR __RPC_FAR *aLanguage)
 {
-  *aLanguage = nsnull;
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content) {
+  nsAutoString language;
+  if (NS_FAILED(GetLanguage(language))) {
     return E_FAIL;
   }
-
-  nsAutoString language;
-  for (nsIContent *walkUp = content; walkUp = walkUp->GetParent(); walkUp) {
-    if (walkUp->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::lang, language)) {
-      break;
-    }
-  }
-
-  if (language.IsEmpty()) { // Nothing found, so use document's language
-    nsIDocument *doc = content->GetOwnerDoc();
-    if (doc) {
-      doc->GetHeaderData(nsAccessibilityAtoms::headerContentLanguage, language);
-    }
-  }
- 
   *aLanguage = ::SysAllocString(language.get());
   return S_OK;
 }
