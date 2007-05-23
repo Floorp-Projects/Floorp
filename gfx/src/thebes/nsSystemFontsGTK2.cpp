@@ -60,7 +60,6 @@
 static gboolean
 (* PTR_pango_font_description_get_size_is_absolute)(PangoFontDescription*)
     = nsnull;
-static PRLibrary *gPangoLib = nsnull;
 
 static void InitPangoLib()
 {
@@ -69,23 +68,18 @@ static void InitPangoLib()
         return;
     initialized = PR_TRUE;
 
-    gPangoLib = PR_LoadLibrary("libpango-1.0.so");
-    if (!gPangoLib)
-        return;
-
+    PRLibrary *pangoLib = nsnull;
     PTR_pango_font_description_get_size_is_absolute =
         (gboolean (*)(PangoFontDescription*))
-        PR_FindFunctionSymbol(gPangoLib,
-                              "pango_font_description_get_size_is_absolute");
+        PR_FindFunctionSymbolAndLibrary("pango_font_description_get_size_is_absolute",
+                                        &pangoLib);
+    if (pangoLib)
+        PR_UnloadLibrary(pangoLib);
 }
 
 static void
 ShutdownPangoLib()
 {
-    if (gPangoLib) {
-        PR_UnloadLibrary(gPangoLib);
-        gPangoLib = nsnull;
-    }
 }
 
 static gboolean
