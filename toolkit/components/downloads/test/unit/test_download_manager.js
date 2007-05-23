@@ -37,48 +37,6 @@
 
 // This file tests the download manager backend
 
-do_import_script("netwerk/test/httpserver/httpd.js");
-
-function createURI(aObj)
-{
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
-  return (aObj instanceof Ci.nsIFile) ? ios.newFileURI(aObj) :
-                                        ios.newURI(aObj, null, null);
-}
-
-var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties);
-var profileDir = null;
-try {
-  profileDir = dirSvc.get("ProfD", Ci.nsIFile);
-} catch (e) { }
-if (!profileDir) {
-  // Register our own provider for the profile directory.
-  // It will simply return the current directory.
-  var provider = {
-    getFile: function(prop, persistent) {
-      persistent.value = true;
-      if (prop == "ProfD") {
-        return dirSvc.get("CurProcD", Ci.nsILocalFile);
-      } else if (prop = "DLoads") {
-        var file = dirSvc.get("CurProcD", Ci.nsILocalFile);
-        file.append("downloads.rdf");
-        return file;
-      }
-      throw Cr.NS_ERROR_FAILURE;
-    },
-    QueryInterface: function(iid) {
-      if (iid.equals(Ci.nsIDirectoryProvider) ||
-          iid.equals(Ci.nsISupports)) {
-        return this;
-      }
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
-  };
-  dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
-}
-
 function cleanup()
 {
   // removing rdf
@@ -96,7 +54,7 @@ function cleanup()
   if (destFile.exists()) destFile.remove(true);
 }
 
-//cleanup();
+cleanup();
 
 const nsIDownloadManager = Ci.nsIDownloadManager;
 const dm = Cc["@mozilla.org/download-manager;1"].getService(nsIDownloadManager);
@@ -143,7 +101,7 @@ function test_pauseDownload_empty_queue()
     dm.pauseDownload(0);
     do_throw("This should not be reached");
   } catch (e) {
-    do_check_eq(Cr.NS_ERROR_FAILED, e.error);
+    do_check_eq(Cr.NS_ERROR_FAILURE, e.result);
   }
 }
 
@@ -154,7 +112,7 @@ function test_resumeDownload_empty_queue()
     dm.resumeDownload(0);
     do_throw("This should not be reached");
   } catch (e) {
-    do_check_eq(Cr.NS_ERROR_FAILED, e.error);
+    do_check_eq(Cr.NS_ERROR_FAILURE, e.result);
   }
 }
 
@@ -218,12 +176,10 @@ var httpserv = null;
 function run_test()
 {
   print("*** DOWNLOAD MANAGER TEST - starting tests");
-/*
   httpserv = new nsHttpServer();
   httpserv.registerDirectory("/", dirSvc.get("ProfD", Ci.nsILocalFile));
   httpserv.start(4444);
   print("*** DOWNLOAD MANAGER TEST - server started");
-*/
 
   print("Try creating listener...")
   // our download listener
@@ -273,9 +229,9 @@ function run_test()
         case "dl-done":
           dm.removeDownload(dl.id);
 
-          var stmt = dm.DBConnection.createStmt("SELECT COUNT(*) " +
-                                                "FROM moz_downloads " +
-                                                "WHERE id = ?1");
+          var stmt = dm.DBConnection.createStatement("SELECT COUNT(*) " +
+                                                     "FROM moz_downloads " +
+                                                     "WHERE id = ?1");
           stmt.bindInt32Parameter(0, dl.id);
           stmt.executeStep();
 
@@ -298,12 +254,11 @@ function run_test()
 
   print("Made it through adding observers.");
 
-//  for (var i = 0; i < tests.length; i++)
-//    tests[i]();
+  for (var i = 0; i < tests.length; i++)
+    tests[i]();
 
-  //cleanup();
+  cleanup();
 
-/*
   try {
     var thread = Cc["@mozilla.org/thread-manager;1"]
                  .getService().currentThread;
@@ -317,5 +272,4 @@ function run_test()
   } catch (e) {
     print(e);
   }
-*/
 }
