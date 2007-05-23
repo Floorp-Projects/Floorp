@@ -2916,41 +2916,44 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
     // and 'position'.  Since generated content can't be floated or
     // positioned, we can deal with it here.
 
-    // 1) if float is not none, and display is not none, then we must
-    // set a block-level 'display' type per CSS2.1 section 9.7.
-    if (display->mFloats != NS_STYLE_FLOAT_NONE) {
-      EnsureBlockDisplay(display->mDisplay);
-      
-      // We can't cache the data in the rule tree since if a more specific
-      // rule has 'float: none' we'll end up with the wrong 'display'
-      // property.
-      inherited = PR_TRUE;
-    } else if (nsCSSPseudoElements::firstLetter == pseudoTag) {
+    if (nsCSSPseudoElements::firstLetter == pseudoTag) {
       // a non-floating first-letter must be inline
       // XXX this fix can go away once bug 103189 is fixed correctly
       display->mDisplay = NS_STYLE_DISPLAY_INLINE;
-      
+
       // We can't cache the data in the rule tree since if a more specific
       // rule has 'float: left' we'll end up with the wrong 'display'
       // property.
       inherited = PR_TRUE;
     }
-    
-    // 2) if position is 'absolute' or 'fixed' then display must be
-    // block-level and float must be 'none'
+
     if (display->IsAbsolutelyPositioned()) {
+      // 1) if position is 'absolute' or 'fixed' then display must be
+      // block-level and float must be 'none'
+
       // Backup original display value for calculation of a hypothetical
       // box (CSS2 10.6.4/10.6.5).
       // See nsHTMLReflowState::CalculateHypotheticalBox
       display->mOriginalDisplay = display->mDisplay;
       EnsureBlockDisplay(display->mDisplay);
       display->mFloats = NS_STYLE_FLOAT_NONE;
-      
+
       // We can't cache the data in the rule tree since if a more specific
       // rule has 'position: static' we'll end up with problems with the
       // 'display' and 'float' properties.
       inherited = PR_TRUE;
+    } else if (display->mFloats != NS_STYLE_FLOAT_NONE) {
+      // 2) if float is not none, and display is not none, then we must
+      // set a block-level 'display' type per CSS2.1 section 9.7.
+
+      EnsureBlockDisplay(display->mDisplay);
+
+      // We can't cache the data in the rule tree since if a more specific
+      // rule has 'float: none' we'll end up with the wrong 'display'
+      // property.
+      inherited = PR_TRUE;
     }
+
   }
 
   COMPUTE_END_RESET(Display, display)
