@@ -54,7 +54,7 @@
             style="width: &window.width; !important;">
 
   <prefpane id="OCSPDialogPane" onpaneload="gOCSPDialog.init();">
-    <script type="application/x-javascript" src="chrome://mozapps/content/preferences/ocsp.js"/>
+    <script type="application/javascript" src="chrome://mozapps/content/preferences/ocsp.js"/>
 
     <preferences>
       <preference id="security.OCSP.enabled"    name="security.OCSP.enabled"   type="int"/>

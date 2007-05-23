@@ -53,7 +53,7 @@
         ondialogaccept="setPassword();" 
         onload="init()">
 
-  <script type="application/x-javascript" src="chrome://mozapps/content/preferences/changemp.js"/>
+  <script type="application/javascript" src="chrome://mozapps/content/preferences/changemp.js"/>
 
   <stringbundle id="bundlePreferences" src="chrome://mozapps/locale/preferences/preferences.properties"/>
 
