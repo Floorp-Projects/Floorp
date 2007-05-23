@@ -218,10 +218,6 @@ public:
 
   virtual ~nsView();
 
-  nsPoint ViewToWidgetOffset() const {
-    return mViewToWidgetOffset;
-  }
-
 protected:
   // Do the actual work of ResetWidgetBounds, unconditionally.  Don't
   // call this method if we have no widget.
@@ -232,7 +228,6 @@ protected:
   // mClipRect is relative to the view's origin.
   nsRect*      mClipRect;
   nsRegion*    mDirtyRegion;
-  nsPoint      mViewToWidgetOffset;
   PRPackedBool mChildRemoved;
 };
 
