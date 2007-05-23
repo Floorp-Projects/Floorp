@@ -2084,6 +2084,9 @@ TAGS: $(SUBMAKEFILES) $(CSRCS) $(CPPSRCS) $(wildcard *.h)
 	-etags $(CSRCS) $(CPPSRCS) $(wildcard *.h)
 	+$(LOOP_OVER_DIRS)
 
+echo-variable-%:
+	@echo $($*)
+
 echo-tiers:
 	@echo $(TIERS)
 
