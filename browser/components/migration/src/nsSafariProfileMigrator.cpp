@@ -1087,9 +1087,9 @@ nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
         nsCOMPtr<nsIURI> uri;
         PRInt64 id;
         rv |= NS_NewURI(getter_AddRefs(uri), url);
-        rv |= aBookmarksService->InsertItem(aParentFolder, uri,
-                                            nsINavBookmarksService::DEFAULT_INDEX, &id);
-        rv |= aBookmarksService->SetItemTitle(id, title);
+        rv |= aBookmarksService->InsertBookmark(aParentFolder, uri,
+                                                nsINavBookmarksService::DEFAULT_INDEX,
+                                                title, &id);
 #else
         nsCOMPtr<nsIRDFResource> bookmark;
         rv |= aBookmarksService->CreateBookmarkInContainer(title.get(),
