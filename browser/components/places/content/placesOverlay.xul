@@ -187,13 +187,8 @@
     <menuseparator id="placesContext_sortSeparator"/>
     <menuitem id="placesContext_show:info"
               command="placesCmd_show:info"
-#ifdef XP_MACOSX
-              label="&cmd.show_infoMac.label;" 
-              accesskey="&cmd.show_infoMac.accesskey;"
-#else
-              label="&cmd.show_infoWin.label;" 
-              accesskey="&cmd.show_infoWin.accesskey;"
-#endif
+              label="&cmd.properties.label;" 
+              accesskey="&cmd.properties.accesskey;"
               selection="bookmark|folder"
               forcehideselection="livemark/bookmarkFeedURI"/>
   </popup>
