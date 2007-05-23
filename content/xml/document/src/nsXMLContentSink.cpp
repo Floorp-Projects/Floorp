@@ -96,6 +96,7 @@
 #include "nsIDOMProcessingInstruction.h"
 #include "nsNodeUtils.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsEventDispatcher.h"
 
 #ifdef MOZ_SVG
 #include "nsGUIEvent.h"
@@ -1098,14 +1099,22 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
 #ifdef MOZ_SVG
   if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
       content->HasAttr(kNameSpaceID_None, nsGkAtoms::onload)) {
-    nsEventStatus status = nsEventStatus_eIgnore;
+    FlushTags();
+
     nsEvent event(PR_TRUE, NS_SVG_LOAD);
     event.eventStructType = NS_SVG_EVENT;
-    nsCOMPtr<nsIPresShell> presShell = mDocument->GetPrimaryShell();
-    if (presShell) {
-      FlushTags();
-      presShell->HandleDOMEventWithTarget(content, &event, &status);
+    event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+
+    // Do we care about forcing presshell creation if it hasn't happened yet?
+    // That is, should this code flush or something?  Does it really matter?
+    // For that matter, do we really want to try getting the prescontext?  Does
+    // this event ever want one?
+    nsRefPtr<nsPresContext> ctx;
+    nsCOMPtr<nsIPresShell> shell = mDocument->GetPrimaryShell();
+    if (shell) {
+      ctx = shell->GetPresContext();
     }
+    nsEventDispatcher::Dispatch(content, ctx, &event);
   }
 #endif
 
