@@ -29,16 +29,17 @@ except ImportError:
                 cmd = popenargs[0]
                 raise Exception("Command '%s' returned non-zero exit status %i" % (cmd, retcode))
 
-def do_hg_checkout(dir, remote, hgroot, hg):
-    fulldir = os.path.join(topsrcdir, dir)
-    repository = '%s/%s' % (hgroot, remote)
-    check_call([hg, 'clone', repository, fulldir])
-
 def do_hg_pull(dir, remote, hgroot, hg):
     fulldir = os.path.join(topsrcdir, dir)
-    repository = '%s/%s' % (hgroot, remote)
-    cmd = [hg, 'pull', '-R', fulldir, repository]
-    check_call(cmd)
+    # clone if the dir doesn't exist, pull if it does
+    if not os.path.exists(fulldir):
+        fulldir = os.path.join(topsrcdir, dir)
+        repository = '%s/%s' % (hgroot, remote)
+        check_call([hg, 'clone', repository, fulldir])
+    else:
+        repository = '%s/%s' % (hgroot, remote)
+        cmd = [hg, 'pull', '-u', '-R', fulldir, repository]
+        check_call(cmd)
 
 def do_cvs_checkout(modules, tag, cvsroot, cvs):
     """Check out a CVS directory.
@@ -51,7 +52,7 @@ def do_cvs_checkout(modules, tag, cvsroot, cvs):
                     'mozilla/%s' % module],
                    cwd=os.path.join(topsrcdir, parent))
 
-o = OptionParser(usage="client.py [options] {checkout|update}")
+o = OptionParser(usage="client.py [options] checkout")
 o.add_option("-m", "--mozilla-repo", dest="mozilla_repo",
              default="mozilla-central",
              help="Specify the Mozilla repository to pull from, default 'mozilla-central'")
@@ -75,10 +76,6 @@ except ValueError:
     sys.exit(2)
 
 if action in ('checkout', 'co'):
-    do_cvs_checkout(NSPR_DIRS, NSPR_CO_TAG, options.cvsroot, options.cvs)
-    do_cvs_checkout(NSS_DIRS, NSS_CO_TAG, options.cvsroot, options.cvs)
-    do_hg_checkout('js/tamarin', options.tamarin_repo, options.hgroot, options.hg)
-elif action in ('update', 'up', 'pull'):
     do_cvs_checkout(NSPR_DIRS, NSPR_CO_TAG, options.cvsroot, options.cvs)
     do_cvs_checkout(NSS_DIRS, NSS_CO_TAG, options.cvsroot, options.cvs)
     do_hg_pull('js/tamarin', options.tamarin_repo, options.hgroot, options.hg)
