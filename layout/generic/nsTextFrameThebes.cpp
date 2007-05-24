@@ -517,7 +517,7 @@ public:
    * content offset
    */
   gfxSkipCharsIterator EnsureTextRun(nsIRenderingContext* aRC = nsnull,
-                                     nsBlockFrame* aBlock = nsnull,
+                                     nsIFrame* aLineContainer = nsnull,
                                      const nsLineList::iterator* aLine = nsnull,
                                      PRUint32* aFlowEndInTextRun = nsnull);
 
@@ -805,9 +805,8 @@ static PRUint32 GetWhitespaceCount(const nsTextFragment* frag, PRInt32 aStartOff
  */
 class BuildTextRunsScanner {
 public:
-  BuildTextRunsScanner(nsPresContext* aPresContext, nsBlockFrame* aBlockFrame,
-                       gfxContext* aContext) :
-    mCurrentFramesAllSameTextRun(nsnull), mBlockFrame(aBlockFrame),
+  BuildTextRunsScanner(nsPresContext* aPresContext, gfxContext* aContext) :
+    mCurrentFramesAllSameTextRun(nsnull),
     mContext(aContext), mBidiEnabled(aPresContext->BidiEnabled()),
     mTrimNextRunLeadingWhitespace(PR_FALSE) {
     ResetRunInfo();
@@ -890,7 +889,6 @@ private:
   nsAutoTArray<nsAutoPtr<BreakSink>,10> mBreakSinks;
   nsLineBreaker                 mLineBreaker;
   gfxTextRun*                   mCurrentFramesAllSameTextRun;
-  nsBlockFrame*                 mBlockFrame;
   gfxContext*                   mContext;
   nsTextFrame*                  mLastFrame;
   // The common ancestor of the current frame and the previous text frame
@@ -905,6 +903,15 @@ private:
   PRPackedBool                  mTrimNextRunLeadingWhitespace;
   PRPackedBool                  mCurrentRunTrimLeadingWhitespace;
 };
+
+static nsIFrame*
+FindLineContainer(nsIFrame* aFrame)
+{
+  while (aFrame && aFrame->IsFrameOfType(nsIFrame::eLineParticipant)) {
+    aFrame = aFrame->GetParent();
+  }
+  return aFrame;
+}
 
 /**
  * General routine for building text runs. This is hairy because of the need
@@ -922,16 +929,39 @@ private:
  */
 static void
 BuildTextRuns(nsIRenderingContext* aRC, nsTextFrame* aForFrame,
-              nsBlockFrame* aBlockFrame, const nsLineList::iterator* aForFrameLine)
+              nsIFrame* aLineContainer, const nsLineList::iterator* aForFrameLine)
 {
-  if (!aBlockFrame) {
-    aBlockFrame = nsLayoutUtils::FindNearestBlockAncestor(aForFrame);
+  if (!aLineContainer) {
+    aLineContainer = FindLineContainer(aForFrame);
+  } else {
+    NS_ASSERTION(aLineContainer == FindLineContainer(aForFrame), "Wrong line container hint");
   }
-  // XXX Need to do something here to detect situations where we're not in a block
-  // context (e.g., MathML). Need to detect the true container and scan it
-  // as if it was one line.
 
   nsPresContext* presContext = aForFrame->PresContext();
+  gfxContext* ctx = NS_STATIC_CAST(gfxContext*,
+    aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  BuildTextRunsScanner scanner(presContext, ctx);
+
+  scanner.SetAtStartOfLine();
+  scanner.SetCommonAncestorWithLastFrame(nsnull);
+
+  nsBlockFrame* block = nsnull;
+  aLineContainer->QueryInterface(kBlockFrameCID, (void**)&block);
+
+  if (!block) {
+    // Just loop through all the children of the linecontainer ... it's really
+    // just one line
+    nsIFrame* child = aLineContainer->GetFirstChild(nsnull);
+    while (child) {
+      scanner.ScanFrame(child);
+      scanner.LiftCommonAncestorWithLastFrameToParent(aLineContainer);
+      child = child->GetNextSibling();
+    }
+    // Set mStartOfLine so FlushFrames knows its textrun ends a line
+    scanner.SetAtStartOfLine();
+    scanner.FlushFrames(PR_TRUE);
+    return;
+  }
 
   // Find line where we can start building text runs. It's the first line at
   // or before aForFrameLine that's after a hard break.
@@ -940,18 +970,18 @@ BuildTextRuns(nsIRenderingContext* aRC, nsTextFrame* aForFrame,
     line = *aForFrameLine;
   } else {
     nsIFrame* immediateChild =
-      nsLayoutUtils::FindChildContainingDescendant(aBlockFrame, aForFrame);
+      nsLayoutUtils::FindChildContainingDescendant(block, aForFrame);
     // This may be a float e.g. for a floated first-letter
     if (immediateChild->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
       immediateChild =
-        nsLayoutUtils::FindChildContainingDescendant(aBlockFrame,
+        nsLayoutUtils::FindChildContainingDescendant(block,
           presContext->FrameManager()->GetPlaceholderFrameFor(immediateChild));
     }
-    line = aBlockFrame->FindLineFor(immediateChild);
-    NS_ASSERTION(line != aBlockFrame->end_lines(),
+    line = block->FindLineFor(immediateChild);
+    NS_ASSERTION(line != block->end_lines(),
                  "Frame is not in the block!!!");
   }
-  nsBlockFrame::line_iterator firstLine = aBlockFrame->begin_lines();
+  nsBlockFrame::line_iterator firstLine = block->begin_lines();
   while (line != firstLine) {
     --line;
     if (line->IsBlock()) {
@@ -964,10 +994,7 @@ BuildTextRuns(nsIRenderingContext* aRC, nsTextFrame* aForFrame,
   // text frames will be accumulated into textRunFrames as we go. When a
   // text run boundary is required we flush textRunFrames ((re)building their
   // gfxTextRuns as necessary).
-  nsBlockFrame::line_iterator endLines = aBlockFrame->end_lines();
-  gfxContext* ctx = NS_STATIC_CAST(gfxContext*,
-    aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
-  BuildTextRunsScanner scanner(presContext, aBlockFrame, ctx);
+  nsBlockFrame::line_iterator endLines = block->end_lines();
   NS_ASSERTION(line != endLines && !line->IsBlock(), "Where is this frame anyway??");
   nsIFrame* child = line->mFirstChild;
   do {
@@ -976,7 +1003,7 @@ BuildTextRuns(nsIRenderingContext* aRC, nsTextFrame* aForFrame,
     PRInt32 i;
     for (i = line->GetChildCount() - 1; i >= 0; --i) {
       scanner.ScanFrame(child);
-      scanner.LiftCommonAncestorWithLastFrameToParent(aBlockFrame);
+      scanner.LiftCommonAncestorWithLastFrameToParent(block);
       child = child->GetNextSibling();
     }
     ++line;
@@ -1630,7 +1657,7 @@ GetReferenceRenderingContext(nsTextFrame* aTextFrame, nsIRenderingContext* aRC)
 }
 
 gfxSkipCharsIterator
-nsTextFrame::EnsureTextRun(nsIRenderingContext* aRC, nsBlockFrame* aBlock,
+nsTextFrame::EnsureTextRun(nsIRenderingContext* aRC, nsIFrame* aLineContainer,
                            const nsLineList::iterator* aLine,
                            PRUint32* aFlowEndInTextRun)
 {
@@ -1642,7 +1669,7 @@ nsTextFrame::EnsureTextRun(nsIRenderingContext* aRC, nsBlockFrame* aBlock,
     nsCOMPtr<nsIRenderingContext> rendContext =
       GetReferenceRenderingContext(this, aRC);
     if (rendContext) {
-      BuildTextRuns(rendContext, this, aBlock, aLine);
+      BuildTextRuns(rendContext, this, aLineContainer, aLine);
     }
     if (!mTextRun) {
       // A text run was not constructed for this frame. This is bad. The caller
@@ -4769,12 +4796,8 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
 
   PRUint32 flowEndInTextRun;
   nsIFrame* lineContainer = lineLayout.GetLineContainerFrame();
-  // Sometimes the line layout's container isn't really a block (hello
-  // floating first-letter!!)
-  nsBlockFrame* blockContainer = nsnull;
-  lineContainer->QueryInterface(kBlockFrameCID, (void**)&blockContainer);
   gfxSkipCharsIterator iter =
-    EnsureTextRun(aReflowState.rendContext, blockContainer,
+    EnsureTextRun(aReflowState.rendContext, lineContainer,
                   lineLayout.GetLine(), &flowEndInTextRun);
 
   if (!mTextRun) {
