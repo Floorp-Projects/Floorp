@@ -1144,7 +1144,7 @@ FindAndMarkObjectsToClose(JSTracer *trc, JSGCInvocationKind gckind)
 
             *genp = gen->next;
             if (gen->state == JSGEN_OPEN &&
-                js_FindFinallyHandler(gen->frame.script, gen->frame.pc) &&
+                js_IsInsideTryWithFinally(gen->frame.script, gen->frame.pc) &&
                 CanScheduleCloseHook(gen)) {
                 /*
                  * Generator yielded inside a try with a finally block.

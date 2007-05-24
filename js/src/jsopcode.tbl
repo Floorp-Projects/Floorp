@@ -262,7 +262,7 @@ OPDEF(JSOP_RETSUB,    115,"retsub",     NULL,         1,  0,  0,  0,  JOF_BYTE)
 
 /* More exception handling ops. */
 OPDEF(JSOP_EXCEPTION, 116,"exception",  NULL,         1,  0,  1,  0,  JOF_BYTE)
-OPDEF(JSOP_SETSP,     117,"setsp",      NULL,         3,  0,  0,  0,  JOF_UINT16)
+OPDEF(JSOP_UNUSED117, 117,"",           NULL,         0,  0,  0,  0,  0)
 
 /*
  * ECMA-compliant switch statement ops.

@@ -390,6 +390,54 @@ out:
 
 #endif /* JS_HAS_SCRIPT_OBJECT */
 
+
+/*
+ * JSTryNoteArray is allocated after script notes and an extra gap to ensure
+ * that JSTryNoteArray is alligned on sizeof(uint32) boundary, the maximum
+ * size of JSTryNoteArray.length and JSTryNote fields.
+ */
+JS_STATIC_ASSERT(sizeof(JSTryNote) == 3 * sizeof(uint32));
+JS_STATIC_ASSERT(sizeof(JSTryNoteArray) == 4 * sizeof(uint32));
+
+#define JSTRYNOTE_ALIGNMASK     (sizeof(uint32) - 1)
+
+/*
+ * Calculate the amount of memory required for a script.
+ */
+static size_t
+GetScriptSize(uint32 bytecodeLength, uint32 nsrcnotes, uint32 ntrynotes)
+{
+    size_t size;
+
+    size = sizeof(JSScript) +
+           bytecodeLength * sizeof(jsbytecode) +
+           nsrcnotes * sizeof(jssrcnote);
+    if (ntrynotes != 0) {
+        size += JSTRYNOTE_ALIGNMASK +
+                offsetof(JSTryNoteArray, notes) +
+                ntrynotes * sizeof(JSTryNote);
+    }
+    return size;
+}
+
+static void
+InitScriptTryNotes(JSScript *script, uint32 bytecodeLength, uint32 nsrcnotes,
+                   uint32 ntrynotes)
+{
+    size_t offset;
+
+    JS_ASSERT(ntrynotes != 0);
+    offset = sizeof(JSScript) +
+             bytecodeLength * sizeof(jsbytecode) +
+             nsrcnotes * sizeof(jssrcnote) +
+             JSTRYNOTE_ALIGNMASK;
+    script->trynotes = (JSTryNoteArray *)(((jsword)script + offset) &
+                                          ~(jsword)JSTRYNOTE_ALIGNMASK);
+    script->trynotes->length = ntrynotes;
+    memset(script->trynotes->notes, 0,
+           ntrynotes * sizeof script->trynotes->notes[0]);
+}
+
 #if JS_HAS_XDR
 
 static JSBool
@@ -517,12 +565,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         nsrcnotes = PTRDIFF(sn, notes, jssrcnote);
         nsrcnotes++;            /* room for the terminator */
 
-        /* Count the trynotes. */
-        if (script->trynotes) {
-            while (script->trynotes[ntrynotes].catchStart)
-                ntrynotes++;
-            ntrynotes++;        /* room for the end marker */
-        }
+        ntrynotes = script->trynotes ? script->trynotes->length : 0;
     }
 
     if (!JS_XDRUint32(xdr, &length))
@@ -649,53 +692,47 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         script->depth = (uintN)depth;
 
         if (magic < JSXDR_MAGIC_SCRIPT_4) {
+            size_t scriptSize;
+
             /*
              * Argh, we have to reallocate script, copy notes into the extra
              * space after the bytecodes, and free the temporary notes vector.
              * First, add enough slop to nsrcnotes so we can align the address
              * after the srcnotes of the first trynote.
              */
-            uint32 osrcnotes = nsrcnotes;
-
-            if (ntrynotes)
-                nsrcnotes += JSTRYNOTE_ALIGNMASK;
-            newscript = (JSScript *) JS_realloc(cx, script,
-                                                sizeof(JSScript) +
-                                                length * sizeof(jsbytecode) +
-                                                nsrcnotes * sizeof(jssrcnote) +
-                                                ntrynotes * sizeof(JSTryNote));
+            scriptSize = GetScriptSize(length, nsrcnotes, ntrynotes);
+            newscript = (JSScript *) JS_realloc(cx, script, scriptSize);
             if (!newscript)
                 goto error;
 
             *scriptp = script = newscript;
             script->code = (jsbytecode *)(script + 1);
             script->main = script->code + prologLength;
-            memcpy(script->code + length, notes, osrcnotes * sizeof(jssrcnote));
+            memcpy(script->code + length, notes, nsrcnotes * sizeof(jssrcnote));
             JS_free(cx, (void *) notes);
             notes = NULL;
-            if (ntrynotes) {
-                script->trynotes = (JSTryNote *)
-                                   ((jsword)(SCRIPT_NOTES(script) + nsrcnotes) &
-                                    ~(jsword)JSTRYNOTE_ALIGNMASK);
-                memset(script->trynotes, 0, ntrynotes * sizeof(JSTryNote));
-            }
+            if (ntrynotes)
+                InitScriptTryNotes(script, length, nsrcnotes, ntrynotes);
         }
     }
 
     while (ntrynotes) {
-        JSTryNote *tn = &script->trynotes[--ntrynotes];
-        uint32 start = (uint32) tn->start,
-               catchLength = (uint32) tn->length,
-               catchStart = (uint32) tn->catchStart;
+        /*
+         * We combine kind and stackDepth when serializing as XDR is not
+         * efficient when serializing small integer types.
+         */
+        JSTryNote *tn = &script->trynotes->notes[--ntrynotes];
+        uint32 kindAndDepth = ((uint32)tn->kind << 16) | (uint32)tn->stackDepth;
+        JS_STATIC_ASSERT(sizeof(tn->kind) == sizeof(uint8));
+        JS_STATIC_ASSERT(sizeof(tn->stackDepth) == sizeof(uint16));
 
-        if (!JS_XDRUint32(xdr, &start) ||
-            !JS_XDRUint32(xdr, &catchLength) ||
-            !JS_XDRUint32(xdr, &catchStart)) {
+        if (!JS_XDRUint32(xdr, &kindAndDepth) ||
+            !JS_XDRUint32(xdr, &tn->start) ||
+            !JS_XDRUint32(xdr, &tn->length)) {
             goto error;
         }
-        tn->start = (ptrdiff_t) start;
-        tn->length = (ptrdiff_t) catchLength;
-        tn->catchStart = (ptrdiff_t) catchStart;
+        tn->kind = (uint8)(kindAndDepth >> 16);
+        tn->stackDepth = (uint16)kindAndDepth;
     }
 
     xdr->script = oldscript;
@@ -1345,26 +1382,16 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 ntrynotes)
 {
     JSScript *script;
 
-    /* Round up source note count to align script->trynotes for its type. */
-    if (ntrynotes)
-        nsrcnotes += JSTRYNOTE_ALIGNMASK;
-    script = (JSScript *) JS_malloc(cx,
-                                    sizeof(JSScript) +
-                                    length * sizeof(jsbytecode) +
-                                    nsrcnotes * sizeof(jssrcnote) +
-                                    ntrynotes * sizeof(JSTryNote));
+    script = (JSScript *) JS_malloc(cx, GetScriptSize(length, nsrcnotes,
+                                                      ntrynotes));
     if (!script)
         return NULL;
     memset(script, 0, sizeof(JSScript));
     script->code = script->main = (jsbytecode *)(script + 1);
     script->length = length;
     script->version = cx->version;
-    if (ntrynotes) {
-        script->trynotes = (JSTryNote *)
-                           ((jsword)(SCRIPT_NOTES(script) + nsrcnotes) &
-                            ~(jsword)JSTRYNOTE_ALIGNMASK);
-        memset(script->trynotes, 0, ntrynotes * sizeof(JSTryNote));
-    }
+    if (ntrynotes != 0)
+        InitScriptTryNotes(script, length, nsrcnotes, ntrynotes);
     return script;
 }
 
@@ -1378,7 +1405,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun)
     mainLength = CG_OFFSET(cg);
     prologLength = CG_PROLOG_OFFSET(cg);
     CG_COUNT_FINAL_SRCNOTES(cg, nsrcnotes);
-    CG_COUNT_FINAL_TRYNOTES(cg, ntrynotes);
+    ntrynotes = (uint32)(cg->tryNext - cg->tryBase);
     script = js_NewScript(cx, prologLength + mainLength, nsrcnotes, ntrynotes);
     if (!script)
         return NULL;
@@ -1680,40 +1707,30 @@ js_GetScriptLineExtent(JSScript *script)
 
 #if JS_HAS_GENERATORS
 
-jsbytecode *
-js_FindFinallyHandler(JSScript *script, jsbytecode *pc)
+JSBool
+js_IsInsideTryWithFinally(JSScript *script, jsbytecode *pc)
 {
-    JSTryNote *tn;
-    ptrdiff_t off;
-    JSOp op2;
+    JSTryNote *tn, *tnlimit;
+    uint32 off;
 
-    tn = script->trynotes;
-    if (!tn)
-        return NULL;
+    JS_ASSERT(script->code <= pc);
+    JS_ASSERT(pc < script->code + script->length);
 
-    off = pc - script->main;
-    if (off < 0)
-        return NULL;
+    if (!script->trynotes)
+        return JS_FALSE;
+    JS_ASSERT(script->trynotes->length != 0);
 
-    JS_ASSERT(tn->catchStart != 0);
+    tn = script->trynotes->notes;
+    tnlimit = tn + script->trynotes->length;
+    off = (uint32)(pc - script->main);
     do {
-        if ((jsuword)(off - tn->start) < (jsuword)tn->length) {
-            /*
-             * We have a handler: is it the finally one, or a catch handler?
-             *
-             * Catch bytecode begins with:   JSOP_SETSP JSOP_ENTERBLOCK
-             * Finally bytecode begins with: JSOP_SETSP JSOP_(GOSUB|EXCEPTION)
-             */
-            pc = script->main + tn->catchStart;
-            JS_ASSERT(*pc == JSOP_SETSP);
-            op2 = pc[JSOP_SETSP_LENGTH];
-            if (op2 != JSOP_ENTERBLOCK) {
-                JS_ASSERT(op2 == JSOP_GOSUB || op2 == JSOP_EXCEPTION);
-                return pc;
-            }
+        if (off - tn->start < tn->length) {
+            if (tn->kind == JSTN_FINALLY)
+                return JS_TRUE;
+            JS_ASSERT(tn->kind == JSTN_CATCH);
         }
-    } while ((++tn)->catchStart != 0);
-    return NULL;
+    } while (++tn != tnlimit);
+    return JS_FALSE;
 }
 
 #endif

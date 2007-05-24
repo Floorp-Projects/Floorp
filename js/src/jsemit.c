@@ -1079,16 +1079,6 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
             sd2 = FindNearestSpanDep(cg, offset + length, sd - sdbase, &guard);
             if (sd2 != sd)
                 tn->length = length + sd2->offset - sd2->before - delta;
-
-            /*
-             * Finally, adjust tn->catchStart upward only if it is non-zero,
-             * and provided there are spandeps below it that grew.
-             */
-            offset = tn->catchStart;
-            if (offset != 0) {
-                sd = FindNearestSpanDep(cg, offset, sd2 - sdbase, &guard);
-                tn->catchStart = offset + sd->offset - sd->before;
-            }
         }
     }
 
@@ -4812,11 +4802,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
       case TOK_TRY:
       {
-        ptrdiff_t start, end, catchJump, catchStart, finallyCatch;
+        ptrdiff_t tryStart, tryEnd, catchJump, finallyStart;
         intN depth;
         JSParseNode *lastCatch;
 
-        catchJump = catchStart = finallyCatch = -1;
+        catchJump = -1;
 
         /*
          * Push stmtInfo to track jumps-over-catches and gosubs-to-finally
@@ -4832,22 +4822,20 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                          CG_OFFSET(cg));
 
         /*
-         * About JSOP_SETSP: an exception can be thrown while the stack is in
-         * an unbalanced state, and this imbalance causes problems with things
-         * like function invocation later on.
+         * Since an exception can be thrown at any place inside the try block,
+         * we need to restore the stack and the scope chain before we transfer
+         * the control to the exception handler.
          *
-         * To fix this, we compute the 'balanced' stack depth upon try entry,
-         * and then restore the stack to this depth when we hit the first catch
-         * or finally block.  We can't just zero the stack, because things like
-         * for/in and with that are active upon entry to the block keep state
-         * variables on the stack.
+         * For that we store in a try note associated with the catch or
+         * finally block the stack depth upon the try entry. The interpreter
+         * uses this depth to properly unwind the stack and the scope chain.
          */
         depth = cg->stackDepth;
 
         /* Mark try location for decompilation, then emit try block. */
         if (js_Emit1(cx, cg, JSOP_TRY) < 0)
             return JS_FALSE;
-        start = CG_OFFSET(cg);
+        tryStart = CG_OFFSET(cg);
         if (!js_EmitTree(cx, cg, pn->pn_kid1))
             return JS_FALSE;
 
@@ -4870,15 +4858,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (jmp < 0)
             return JS_FALSE;
 
-        end = CG_OFFSET(cg);
+        tryEnd = CG_OFFSET(cg);
 
         /* If this try has a catch block, emit it. */
         pn2 = pn->pn_kid2;
         lastCatch = NULL;
         if (pn2) {
             jsint count = 0;    /* previous catch block's population */
-
-            catchStart = end;
 
             /*
              * The emitted code for a catch block looks like:
@@ -4905,12 +4891,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
                 ptrdiff_t guardJump, catchNote;
 
+                JS_ASSERT(cg->stackDepth == depth);
                 guardJump = GUARDJUMP(stmtInfo);
-                if (guardJump == -1) {
-                    /* Set stack to original depth (see SETSP comment above). */
-                    EMIT_UINT16_IMM_OP(JSOP_SETSP, (jsatomid)depth);
-                    cg->stackDepth = depth;
-                } else {
+                if (guardJump != -1) {
                     /* Fix up and clean up previous catch block. */
                     CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, guardJump);
 
@@ -4918,7 +4901,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                      * Account for the pushed exception object that we still
                      * have after the jumping from the previous guard.
                      */
-                    JS_ASSERT(cg->stackDepth == depth);
                     cg->stackDepth = depth + 1;
 
                     /*
@@ -5017,24 +4999,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         JS_ASSERT(cg->stackDepth == depth);
 
         /* Emit finally handler if any. */
+        finallyStart = 0;   /* to quell GCC uninitialized warnings */
         if (pn->pn_kid3) {
-            /*
-             * We emit [setsp][gosub] to call try-finally when an exception is
-             * thrown from try or try-catch blocks. The [gosub] and [retsub]
-             * opcodes will take care of stacking and rethrowing any exception
-             * pending across the finally.
-             */
-            finallyCatch = CG_OFFSET(cg);
-            EMIT_UINT16_IMM_OP(JSOP_SETSP, (jsatomid)depth);
-
-            jmp = EmitBackPatchOp(cx, cg, JSOP_BACKPATCH,
-                                  &GOSUBS(stmtInfo));
-            if (jmp < 0)
-                return JS_FALSE;
-
-            JS_ASSERT(cg->stackDepth == depth);
-            JS_ASSERT((uintN)depth <= cg->maxStackDepth);
-
             /*
              * Fix up the gosubs that might have been emitted before non-local
              * jumps to the finally code.
@@ -5042,13 +5008,20 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!BackPatch(cx, cg, GOSUBS(stmtInfo), CG_NEXT(cg), JSOP_GOSUB))
                 return JS_FALSE;
 
+            finallyStart = CG_OFFSET(cg);
+
             /*
-             * The stack budget must be balanced at this point.  All [gosub]
-             * calls emitted before this point will push two stack slots, one
-             * for the pending exception (or JSVAL_HOLE if there is no pending
-             * exception) and one for the [retsub] pc-index.
+             * The stack depth at the begining of finally must match the try
+             * depth plus 2 slots. The interpreter uses these two slots to
+             * either push (true, exception) pair when it transfers control
+             * flow to the finally after capturing an exception, or to push
+             * (false, pc-index) when it calls finally from [gosub]. The first
+             * element of the pair indicates for [retsub] that it should
+             * either rethrow the pending exception or transfer the control
+             * back to the caller of finally.
              */
             JS_ASSERT(cg->stackDepth == depth);
+            JS_ASSERT((uintN)depth <= cg->maxStackDepth);
             cg->stackDepth += 2;
             if ((uintN)cg->stackDepth > cg->maxStackDepth)
                 cg->maxStackDepth = cg->stackDepth;
@@ -5083,10 +5056,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * Add the try note last, to let post-order give us the right ordering
          * (first to last for a given nesting level, inner to outer by level).
          */
-        if (pn->pn_kid2) {
-            JS_ASSERT(end != -1 && catchStart != -1);
-            if (!js_NewTryNote(cx, cg, start, end, catchStart))
-                return JS_FALSE;
+        if (pn->pn_kid2 &&
+            !js_NewTryNote(cx, cg, JSTN_CATCH, depth, tryStart, tryEnd)) {
+            return JS_FALSE;
         }
 
         /*
@@ -5094,10 +5066,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * trynote to catch exceptions (re)thrown from a catch block or
          * for the try{}finally{} case.
          */
-        if (pn->pn_kid3) {
-            JS_ASSERT(finallyCatch != -1);
-            if (!js_NewTryNote(cx, cg, start, finallyCatch, finallyCatch))
-                return JS_FALSE;
+        if (pn->pn_kid3 &&
+            !js_NewTryNote(cx, cg, JSTN_FINALLY, depth, tryStart,
+                           finallyStart)) {
+            return JS_FALSE;
         }
         break;
       }
@@ -6910,31 +6882,29 @@ js_AllocTryNotes(JSContext *cx, JSCodeGenerator *cg)
 }
 
 JSTryNote *
-js_NewTryNote(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t start,
-              ptrdiff_t end, ptrdiff_t catchStart)
+js_NewTryNote(JSContext *cx, JSCodeGenerator *cg, JSTryNoteKind kind,
+              uintN stackDepth, size_t start, size_t end)
 {
     JSTryNote *tn;
 
     JS_ASSERT(cg->tryBase <= cg->tryNext);
-    JS_ASSERT(catchStart >= 0);
+    JS_ASSERT(kind == JSTN_FINALLY || kind == JSTN_CATCH);
+    JS_ASSERT((uintN)(uint16)stackDepth == stackDepth);
+    JS_ASSERT(start <= end);
+    JS_ASSERT((size_t)(uint32)start == start);
+    JS_ASSERT((size_t)(uint32)end == end);
     tn = cg->tryNext++;
-    tn->start = start;
-    tn->length = end - start;
-    tn->catchStart = catchStart;
+    tn->kind = kind;
+    tn->stackDepth = (uint16)stackDepth;
+    tn->start = (uint32)start;
+    tn->length = (uint32)(end - start);
     return tn;
 }
 
 void
-js_FinishTakingTryNotes(JSContext *cx, JSCodeGenerator *cg, JSTryNote *notes)
+js_FinishTakingTryNotes(JSContext *cx, JSCodeGenerator *cg,
+                        JSTryNoteArray *array)
 {
-    uintN count;
-
-    count = PTRDIFF(cg->tryNext, cg->tryBase, JSTryNote);
-    if (!count)
-        return;
-
-    memcpy(notes, cg->tryBase, TRYNOTE_SIZE(count));
-    notes[count].start = 0;
-    notes[count].length = CG_OFFSET(cg);
-    notes[count].catchStart = 0;
+    JS_ASSERT(cg->tryNext - cg->tryBase == array->length);
+    memcpy(array->notes, cg->tryBase, TRYNOTE_SIZE(array->length));
 }
