@@ -279,9 +279,11 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
 void
 nsXBLProtoImplMethod::Traverse(nsCycleCollectionTraversalCallback &cb) const
 {
+/*
   if (mIsCompiled) {
     cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, mJSMethodObject);
   }
+*/
 }
 
 nsresult
