@@ -2893,7 +2893,7 @@ nsAccessible::GetRelations(nsIArray **aRelations)
 
     if (accessible) {
       nsCOMPtr<nsIAccessibleRelation> relation =
-        new nsAccessibleRelation(relType, accessible);
+        new nsAccessibleRelationWrap(relType, accessible);
       NS_ENSURE_TRUE(relation, NS_ERROR_OUT_OF_MEMORY);
 
       relations->AppendElement(relation, PR_FALSE);
