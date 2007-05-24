@@ -1093,24 +1093,82 @@ nsAccessibleWrap::Reset(void)
 // IAccessible2
 
 STDMETHODIMP
-nsAccessibleWrap::get_nRelations(long *nRelations)
+nsAccessibleWrap::get_nRelations(long *aNRelations)
 {
-  return E_NOTIMPL;
+  PRUint32 count = 0;
+  nsresult rv = GetRelationsCount(&count);
+  *aNRelations = count;
+
+  return NS_FAILED(rv) ? E_FAIL : S_OK;
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_relation(long relationIndex,
-                               IAccessibleRelation **relation)
+nsAccessibleWrap::get_relation(long aRelationIndex,
+                               IAccessibleRelation **aRelation)
 {
-  return E_NOTIMPL;
+  nsCOMPtr<nsIAccessibleRelation> relation;
+  nsresult rv = GetRelation(aRelationIndex, getter_AddRefs(relation));
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryInterface(relation));
+  if (!winAccessNode)
+    return E_FAIL;
+
+  void *instancePtr = NULL;
+  rv =  winAccessNode->QueryNativeInterface(IID_IAccessibleRelation,
+                                            &instancePtr);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  *aRelation = NS_STATIC_CAST(IAccessibleRelation*, instancePtr);
+  return S_OK;
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_relations(long maxRelations,
-                                IAccessibleRelation **relation,
-                                long *nRelations)
+nsAccessibleWrap::get_relations(long aMaxRelations,
+                                IAccessibleRelation **aRelation,
+                                long *aNRelations)
 {
-  return E_NOTIMPL;
+  *aNRelations = 0;
+
+  nsCOMPtr<nsIArray> relations;
+  nsresult rv = GetRelations(getter_AddRefs(relations));
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  PRUint32 length = 0;
+  rv = relations->GetLength(&length);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  PRUint32 count = length < (PRUint32)aMaxRelations ? length : aMaxRelations;
+
+  PRUint32 index = 0;
+  for (; index < count; index++) {
+    nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryElementAt(relations, index, &rv));
+    if (NS_FAILED(rv) || !winAccessNode)
+      break;
+
+    void *instancePtr = NULL;
+    nsresult rv =  winAccessNode->QueryNativeInterface(IID_IAccessibleRelation,
+                                                       &instancePtr);
+    if (NS_FAILED(rv))
+      break;
+
+    aRelation[index] = NS_STATIC_CAST(IAccessibleRelation*, instancePtr);
+  }
+
+  if (NS_FAILED(rv)) {
+    for (PRUint32 index2 = 0; index2 < index; index2++) {
+      aRelation[index2]->Release();
+      aRelation[index2] = NULL;
+    }
+    return E_FAIL;
+  }
+
+  *aNRelations = count;
+  return S_OK;
 }
 
 STDMETHODIMP
