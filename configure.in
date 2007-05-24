@@ -4065,7 +4065,7 @@ MOZ_BRANDING_DIRECTORY=
 MOZ_CALENDAR=
 MOZ_DBGRINFO_MODULES=
 MOZ_ENABLE_CANVAS=1
-MOZ_EXTENSIONS_ALL=" wallet xml-rpc help p3p venkman inspector irc typeaheadfind gnomevfs sroaming datetime finger cview layout-debug tasks sql xforms schema-validation reporter"
+MOZ_EXTENSIONS_ALL=" wallet help p3p venkman inspector irc typeaheadfind gnomevfs sroaming datetime finger cview layout-debug tasks sql xforms schema-validation reporter"
 MOZ_FEEDS=1
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm icon"
 MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
@@ -4119,8 +4119,6 @@ MOZ_URL_CLASSIFIER=
 MOZ_USE_NATIVE_UCONV=
 MOZ_V1_STRING_ABI=1
 MOZ_VIEW_SOURCE=1
-MOZ_WEBSERVICES=1
-MOZ_XMLEXTRAS=1
 MOZ_XPFE_COMPONENTS=1
 MOZ_XPINSTALL=1
 MOZ_XSLT_STANDALONE=
@@ -4326,9 +4324,9 @@ suite)
   MOZ_PROFILESHARING=
   MOZ_APP_VERSION=$SEAMONKEY_VERSION
   if test "$MOZ_XUL_APP"; then
-    MOZ_EXTENSIONS_DEFAULT=" wallet xml-rpc p3p venkman inspector irc typeaheadfind gnomevfs sroaming reporter"
+    MOZ_EXTENSIONS_DEFAULT=" wallet p3p venkman inspector irc typeaheadfind gnomevfs sroaming reporter"
   else
-    MOZ_EXTENSIONS_DEFAULT=" wallet xml-rpc help p3p venkman inspector irc typeaheadfind gnomevfs sroaming reporter"
+    MOZ_EXTENSIONS_DEFAULT=" wallet help p3p venkman inspector irc typeaheadfind gnomevfs sroaming reporter"
   fi
   AC_DEFINE(MOZ_SUITE)
   ;;
@@ -4345,7 +4343,7 @@ browser)
   MOZ_SAFE_BROWSING=1
   MOZ_APP_VERSION=$FIREFOX_VERSION
   MOZ_NO_XPCOM_OBSOLETE=1
-  MOZ_EXTENSIONS_DEFAULT=" xml-rpc inspector gnomevfs reporter"
+  MOZ_EXTENSIONS_DEFAULT=" inspector gnomevfs reporter"
   AC_DEFINE(MOZ_PHOENIX)
   # MOZ_APP_DISPLAYNAME will be set by branding/configure.sh
   ;;
@@ -4431,7 +4429,7 @@ xulrunner)
   if test "$MOZ_STORAGE"; then
     MOZ_PLACES=1
   fi
-  MOZ_EXTENSIONS_DEFAULT=" xml-rpc gnomevfs"
+  MOZ_EXTENSIONS_DEFAULT=" gnomevfs"
   MOZ_NO_XPCOM_OBSOLETE=1
   AC_DEFINE(MOZ_XULRUNNER)
 
@@ -4452,7 +4450,6 @@ camino)
   MOZ_EXTENSIONS_DEFAULT=" typeaheadfind"
 # MOZ_XUL_APP=1
   MOZ_PREF_EXTENSIONS=
-  MOZ_WEBSERVICES=
   AC_DEFINE(MOZ_MACBROWSER)
   ;;
 
@@ -5499,22 +5496,6 @@ MOZ_ARG_DISABLE_BOOL(inspector-apis,
     MOZ_NO_INSPECTOR_APIS= )
 
 dnl ========================================================
-dnl XMLExtras
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(xmlextras,
-[  --disable-xmlextras Disable XMLExtras such as XPointer support ],
-    MOZ_XMLEXTRAS=,
-    MOZ_XMLEXTRAS=1 )
-
-dnl ========================================================
-dnl Webservices
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(webservices,
-[  --disable-webservices Disable Webservices/SOAP support ],
-    MOZ_WEBSERVICES=,
-    MOZ_WEBSERVICES=1 )
-
-dnl ========================================================
 dnl Pref extensions (autoconfig and system-pref)
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(pref-extensions,
@@ -5690,19 +5671,9 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c auth` -ne 0; then
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|auth||g'`
 fi
 
-if test `echo "$MOZ_EXTENSIONS" | grep -c xmlextras` -ne 0; then
-    AC_MSG_WARN([xmlextras is no longer an extension, use --disable-xmlextras to disable.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xmlextras||g'`
-fi
-
 if test `echo "$MOZ_EXTENSIONS" | grep -c 'cookie\|permissions'` -ne 0; then
     AC_MSG_WARN([cookie and permissions are no longer extensions, use --disable-permissions to disable.])
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|cookie||g; s|permissions||g'`
-fi
-
-if test `echo "$MOZ_EXTENSIONS" | grep -c webservices` -ne 0; then
-    AC_MSG_WARN([webservices is no longer an extension, use --disable-webservices to disable.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|webservices||g'`
 fi
 
 if test `echo "$MOZ_EXTENSIONS" | grep -c pref` -ne 0; then
@@ -7612,9 +7583,7 @@ AC_SUBST(MOZ_AUTH_EXTENSION)
 AC_SUBST(MOZ_MATHML)
 AC_SUBST(MOZ_PERMISSIONS)
 AC_SUBST(MOZ_XTF)
-AC_SUBST(MOZ_XMLEXTRAS)
 AC_SUBST(MOZ_NO_INSPECTOR_APIS)
-AC_SUBST(MOZ_WEBSERVICES)
 AC_SUBST(MOZ_PREF_EXTENSIONS)
 AC_SUBST(MOZ_SVG)
 AC_SUBST(MOZ_SVG_FOREIGNOBJECT)
