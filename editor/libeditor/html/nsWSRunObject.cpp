@@ -877,7 +877,7 @@ nsWSRunObject::GetWSNodes()
             mFirstNBSPOffset = pos;
           }
         }
-        end.SetPoint(mNode,pos);
+        end.SetPoint(mNode,pos+1);
       }
     }
   }
