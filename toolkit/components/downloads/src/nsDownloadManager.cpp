@@ -1164,8 +1164,8 @@ nsDownload::~nsDownload()
 nsresult
 nsDownload::SetState(DownloadState aState)
 {
-  if (mDownloadState == aState)
-    return NS_OK;
+  NS_ASSERTION(mDownloadState != aState,
+               "Trying to set the download state to what it already is set to!");
 
   PRInt16 oldState = mDownloadState;
   mDownloadState = aState;
