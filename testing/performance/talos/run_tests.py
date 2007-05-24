@@ -139,8 +139,12 @@ def test_file(filename):
 
   print "finished ts"
   sys.stdout.flush()
+  for ts_set in ts_times:
+    if len(ts_set) == 0:
+	print "FAIL:no ts results:something bad happened:BAD BUILD"
+	sys.exit(0)
 
-  (r_strings, tp_times, tp_counters) = tp.RunPltTests(test_configs,
+  (res, r_strings, tp_times, tp_counters) = tp.RunPltTests(test_configs,
                                            config.TP_NUM_CYCLES,
                                            config.COUNTERS,
                                            config.TP_RESOLUTION)
@@ -148,6 +152,11 @@ def test_file(filename):
   print "finished tp"
   sys.stdout.flush()
 
+
+  if not res:
+    print "something bad happened during tp"
+    print "FAIL:" + r_strings[0]
+    sys.exit(0)
 
   #TODO: place this in its own file
   #send results to the graph server
