@@ -177,7 +177,6 @@ public:
   static PRUint32 gRefCnt;
  
   static nsFixedSizeAllocator* kAttrPool;
-  static nsFixedSizeAllocator* kInsPool;
 
 // Internal member functions.
 // XXXbz GetImmediateChild needs to be public to be called by SetAttrs,
