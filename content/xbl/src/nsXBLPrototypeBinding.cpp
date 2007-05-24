@@ -158,16 +158,51 @@ public:
   void SetDefaultContent(nsIContent* aChildren) { mDefaultContent = aChildren; }
 
 
+  // We keep kPool alive as long as there is at least either a
+  // nsXBLPrototypeBinding or a nsXBLInsertionPointEntry alive.
+  // nsXBLPrototypeBinding has its own global refcount so it only adds 1 to
+  // nsXBLInsertionPointEntry::gRefCnt as long as there's at least one
+  // nsXBLPrototypeBinding alive.
+
+  static void InitPool(PRInt32 aInitialSize)
+  {
+    if (++gRefCnt == 1) {
+      kPool = new nsFixedSizeAllocator();
+      if (kPool) {
+        static const size_t kBucketSizes[] = {
+          sizeof(nsXBLInsertionPointEntry)
+        };
+        kPool->Init("XBL Insertion Point Entries", kBucketSizes,
+                    NS_ARRAY_LENGTH(kBucketSizes), aInitialSize);
+      }
+    }
+  }
+  static PRBool PoolInited()
+  {
+    return kPool != nsnull;
+  }
+  static void ReleasePool()
+  {
+    if (--gRefCnt == 0) {
+      delete kPool;
+    }
+  }
+
   static nsXBLInsertionPointEntry*
   Create(nsIContent* aParent) {
-    void* place = nsXBLPrototypeBinding::kInsPool->Alloc(sizeof(nsXBLInsertionPointEntry));
-    return place ? ::new (place) nsXBLInsertionPointEntry(aParent) : nsnull;
+    void* place = kPool->Alloc(sizeof(nsXBLInsertionPointEntry));
+    if (!place) {
+      return nsnull;
+    }
+    ++gRefCnt;
+    return ::new (place) nsXBLInsertionPointEntry(aParent);
   }
 
   static void
   Destroy(nsXBLInsertionPointEntry* aSelf) {
     aSelf->~nsXBLInsertionPointEntry();
-    nsXBLPrototypeBinding::kInsPool->Free(aSelf, sizeof(*aSelf));
+    kPool->Free(aSelf, sizeof(*aSelf));
+    nsXBLInsertionPointEntry::ReleasePool();
   }
 
   nsrefcnt AddRef() {
@@ -201,7 +236,13 @@ private:
   // allocate and deallocate from the heap
   static void* operator new(size_t) CPP_THROW_NEW { return 0; }
   static void operator delete(void*, size_t) {}
+
+  static nsFixedSizeAllocator* kPool;
+  static PRUint32 gRefCnt;
 };
+
+PRUint32 nsXBLInsertionPointEntry::gRefCnt = 0;
+nsFixedSizeAllocator* nsXBLInsertionPointEntry::kPool;
 
 NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(nsXBLInsertionPointEntry)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXBLInsertionPointEntry)
@@ -227,7 +268,6 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsXBLInsertionPointEntry, Release)
 PRUint32 nsXBLPrototypeBinding::gRefCnt = 0;
 
 nsFixedSizeAllocator* nsXBLPrototypeBinding::kAttrPool;
-nsFixedSizeAllocator* nsXBLPrototypeBinding::kInsPool;
 
 static const PRInt32 kNumElements = 128;
 
@@ -238,11 +278,6 @@ static const size_t kAttrBucketSizes[] = {
 static const PRInt32 kAttrNumBuckets = sizeof(kAttrBucketSizes)/sizeof(size_t);
 static const PRInt32 kAttrInitialSize = (NS_SIZE_IN_HEAP(sizeof(nsXBLAttributeEntry))) * kNumElements;
 
-static const size_t kInsBucketSizes[] = {
-  sizeof(nsXBLInsertionPointEntry)
-};
-
-static const PRInt32 kInsNumBuckets = sizeof(kInsBucketSizes)/sizeof(size_t);
 static const PRInt32 kInsInitialSize = (NS_SIZE_IN_HEAP(sizeof(nsXBLInsertionPointEntry))) * kNumElements;
 
 // Implementation /////////////////////////////////////////////////////////////////
@@ -267,10 +302,7 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding()
     if (kAttrPool) {
       kAttrPool->Init("XBL Attribute Entries", kAttrBucketSizes, kAttrNumBuckets, kAttrInitialSize);
     }
-    kInsPool = new nsFixedSizeAllocator();
-    if (kInsPool) {
-      kInsPool->Init("XBL Insertion Point Entries", kInsBucketSizes, kInsNumBuckets, kInsInitialSize);
-    }
+    nsXBLInsertionPointEntry::InitPool(kInsInitialSize);
   }
 }
 
@@ -279,7 +311,7 @@ nsXBLPrototypeBinding::Init(const nsACString& aID,
                             nsIXBLDocumentInfo* aInfo,
                             nsIContent* aElement)
 {
-  if (!kAttrPool || !kInsPool) {
+  if (!kAttrPool || !nsXBLInsertionPointEntry::PoolInited()) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -356,7 +388,7 @@ nsXBLPrototypeBinding::~nsXBLPrototypeBinding(void)
   gRefCnt--;
   if (gRefCnt == 0) {
     delete kAttrPool;
-    delete kInsPool;
+    nsXBLInsertionPointEntry::ReleasePool();
   }
   MOZ_COUNT_DTOR(nsXBLPrototypeBinding);
 }
