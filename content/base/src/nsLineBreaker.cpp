@@ -57,10 +57,12 @@ IS_SPACE(PRUint8 u)
 static inline int
 IS_CJK_CHAR(PRUnichar u)
 {
-  return (0x1100 <= u && u <= 0x11ff) ||
-         (0x2e80 <= u && u <= 0xd7ff) ||
-         (0xf900 <= u && u <= 0xfaff) ||
-         (0xff00 <= u && u <= 0xffef);
+  // CJK plus other scripts that require special line breaking treatment
+  return (0x0e01 <= u && u <= 0x0e5f) || // Thai
+         (0x1100 <= u && u <= 0x11ff) || // Hangul Jamo
+         (0x2e80 <= u && u <= 0xd7ff) || // several CJK blocks
+         (0xf900 <= u && u <= 0xfaff) || // CJK Compatibility Idographs
+         (0xff00 <= u && u <= 0xffef);   // Halfwidth and Fullwidth Forms
 }
 
 nsLineBreaker::nsLineBreaker()

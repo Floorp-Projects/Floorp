@@ -55,9 +55,29 @@ REQUIRES	= xpcom \
 CSRCS		= rulebrk.c
 
 CPPSRCS		= \
-		nsJISx4501LineBreaker.cpp \
 		nsSampleWordBreaker.cpp \
 		nsSemanticUnitScanner.cpp \
 		$(NULL)
 
+ifdef MOZ_ENABLE_PANGO
+CPPSRCS		+= \
+		nsPangoLineBreaker.cpp \
+		$(NULL)
+else
+CPPSRCS		+= \
+		nsJISx4501LineBreaker.cpp \
+		$(NULL)
+endif
+
 include $(topsrcdir)/config/rules.mk
+
+ifdef MOZ_ENABLE_PANGO
+CXXFLAGS		+= \
+			$(MOZ_PANGO_CFLAGS) \
+			$(NULL)
+
+EXTRA_DSO_LDOPTS	+= \
+			$(MOZ_PANGO_LIBS) \
+			$(NULL)
+endif
+
