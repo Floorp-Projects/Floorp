@@ -119,7 +119,6 @@ nsPangoLineBreaker::GetJISx4051Breaks(const PRUnichar* aText, PRUint32 aLen,
                                       PRPackedBool* aBreakBefore)
 {
   NS_ASSERTION(aText, "aText shouldn't be null");
-  NS_ASSERTION(aLen > aPos, "Illegal value (length > position)");
 
   nsAutoTArray<PangoLogAttr, 2000> attrBuffer;
   if (!attrBuffer.AppendElements(aLen + 1))
