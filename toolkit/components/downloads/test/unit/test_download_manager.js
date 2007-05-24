@@ -46,7 +46,8 @@ function cleanup()
   // removing database
   var dbFile = dirSvc.get("ProfD", Ci.nsIFile);
   dbFile.append("downloads.sqlite");
-  if (dbFile.exists()) dbFile.remove(true);
+  if (dbFile.exists())
+    try { dbFile.remove(true); } catch(e) { /* stupid windows box */ }
 
   // removing downloaded file
   var destFile = dirSvc.get("ProfD", Ci.nsIFile);
