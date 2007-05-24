@@ -1492,7 +1492,6 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
     JSObject *obj;
     jsatomid i;
     jssrcnote *sn, *notes;
-    JSTryNote *tn, *tnotes;
     JSPrincipals *principals;
 
     nbytes = sizeof *script;
@@ -1513,11 +1512,9 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
         continue;
     nbytes += (sn - notes + 1) * sizeof *sn;
 
-    tnotes = script->trynotes;
-    if (tnotes) {
-        for (tn = tnotes; tn->catchStart; tn++)
-            continue;
-        nbytes += (tn - tnotes + 1) * sizeof *tn;
+    if (script->trynotes) {
+        nbytes += offsetof(JSTryNoteArray, notes) +
+                  script->trynotes->length * sizeof script->trynotes->notes[0];
     }
 
     principals = script->principals;

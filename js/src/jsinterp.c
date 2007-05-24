@@ -5291,65 +5291,15 @@ interrupt:
           EMPTY_CASE(JSOP_TRY)
           EMPTY_CASE(JSOP_FINALLY)
 
-          /* Reset the stack to the given depth. */
-          BEGIN_CASE(JSOP_SETSP)
-            i = (jsint) GET_UINT16(pc);
-
-            for (obj = fp->blockChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
-                JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
-                if (OBJ_BLOCK_DEPTH(cx, obj) < i)
-                    break;
-            }
-            fp->blockChain = obj;
-
-            JS_ASSERT(ok);
-            for (obj = fp->scopeChain;
-                 (clasp = OBJ_GET_CLASS(cx, obj)) == &js_WithClass ||
-                 clasp == &js_BlockClass;
-                 obj = OBJ_GET_PARENT(cx, obj)) {
-                if (JS_GetPrivate(cx, obj) != fp ||
-                    OBJ_BLOCK_DEPTH(cx, obj) < i) {
-                    break;
-                }
-                if (clasp == &js_BlockClass)
-                    ok &= js_PutBlockObject(cx, obj);
-                else
-                    JS_SetPrivate(cx, obj, NULL);
-            }
-
-            fp->scopeChain = obj;
-
-            /* Set sp after js_PutBlockObject to avoid potential GC hazards. */
-            sp = fp->spbase + i;
-
-            /* Don't fail until after we've updated all stacks. */
-            if (!ok)
-                goto out;
-          END_CASE(JSOP_SETSP)
-
           BEGIN_CASE(JSOP_GOSUB)
-            JS_ASSERT(cx->exception != JSVAL_HOLE);
-            if (!cx->throwing) {
-                lval = JSVAL_HOLE;
-            } else {
-                lval = cx->exception;
-                cx->throwing = JS_FALSE;
-            }
-            PUSH(lval);
+            PUSH(JSVAL_FALSE);
             i = PTRDIFF(pc, script->main, jsbytecode) + JSOP_GOSUB_LENGTH;
             len = GET_JUMP_OFFSET(pc);
             PUSH(INT_TO_JSVAL(i));
           END_VARLEN_CASE
 
           BEGIN_CASE(JSOP_GOSUBX)
-            JS_ASSERT(cx->exception != JSVAL_HOLE);
-            if (!cx->throwing) {
-                lval = JSVAL_HOLE;
-            } else {
-                lval = cx->exception;
-                cx->throwing = JS_FALSE;
-            }
-            PUSH(lval);
+            PUSH(JSVAL_FALSE);
             i = PTRDIFF(pc, script->main, jsbytecode) + JSOP_GOSUBX_LENGTH;
             len = GET_JUMPX_OFFSET(pc);
             PUSH(INT_TO_JSVAL(i));
@@ -5357,9 +5307,9 @@ interrupt:
 
           BEGIN_CASE(JSOP_RETSUB)
             rval = POP();
-            JS_ASSERT(JSVAL_IS_INT(rval));
             lval = POP();
-            if (lval != JSVAL_HOLE) {
+            JS_ASSERT(JSVAL_IS_BOOLEAN(lval));
+            if (JSVAL_TO_BOOLEAN(lval)) {
                 /*
                  * Exception was pending during finally, throw it *before* we
                  * adjust pc, because pc indexes into script->trynotes.  This
@@ -5367,10 +5317,11 @@ interrupt:
                  * it points out a FIXME: 350509, due to Igor Bukanov.
                  */
                 cx->throwing = JS_TRUE;
-                cx->exception = lval;
+                cx->exception = rval;
                 ok = JS_FALSE;
                 goto out;
             }
+            JS_ASSERT(JSVAL_IS_INT(rval));
             len = JSVAL_TO_INT(rval);
             pc = script->main;
           END_VARLEN_CASE
@@ -5993,6 +5944,7 @@ interrupt:
 #if JS_THREADED_INTERP
           L_JSOP_BACKPATCH:
           L_JSOP_BACKPATCH_POP:
+          L_JSOP_UNUSED117:
 #else
           default:
 #endif
@@ -6050,6 +6002,7 @@ interrupt:
 #endif /* !JS_THREADED_INTERP */
 
 out:
+    JS_ASSERT((size_t)(pc - script->code) < script->length);
     if (!ok) {
         /*
          * Has an exception been raised?  Also insist that we are not in an
@@ -6076,10 +6029,14 @@ out:
          * FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=309894
          */
         if (cx->throwing && !(fp->flags & JSFRAME_FILTERING)) {
+            JSTrapHandler handler;
+            JSTryNote *tn, *tnlimit;
+            uint32 offset;
+
             /*
              * Call debugger throw hook if set (XXX thread safety?).
              */
-            JSTrapHandler handler = rt->throwHook;
+            handler = rt->throwHook;
             if (handler) {
                 SAVE_SP_AND_PC(fp);
                 switch (handler(cx, script, pc, &rval, rt->throwHookData)) {
@@ -6102,27 +6059,100 @@ out:
             /*
              * Look for a try block in script that can catch this exception.
              */
+            if (!script->trynotes)
+                goto no_catch;
+
+            offset = (uint32)(pc - script->main);
+            tn = script->trynotes->notes;
+            tnlimit = tn + script->trynotes->length;
+            for (;;) {
+                if (offset - tn->start < tn->length) {
+                    if (tn->kind == JSTN_FINALLY)
+                        break;
+                    JS_ASSERT(tn->kind == JSTN_CATCH);
 #if JS_HAS_GENERATORS
-            if (JS_LIKELY(cx->exception != JSVAL_ARETURN)) {
-                SCRIPT_FIND_CATCH_START(script, pc, pc);
-                if (!pc)
-                    goto no_catch;
-            } else {
-                pc = js_FindFinallyHandler(script, pc);
-                if (!pc) {
-                    cx->throwing = JS_FALSE;
-                    ok = JS_TRUE;
-                    fp->rval = JSVAL_VOID;
+                    /* Catch can not intercept closing of a generator. */
+                    if (JS_LIKELY(cx->exception != JSVAL_ARETURN))
+                        break;
+#else
+                    break;
+#endif
+                }
+                if (++tn == tnlimit) {
+#if JS_HAS_GENERATORS
+                    if (JS_UNLIKELY(cx->exception == JSVAL_ARETURN)) {
+                        cx->throwing = JS_FALSE;
+                        ok = JS_TRUE;
+                        fp->rval = JSVAL_VOID;
+                    }
+#endif
                     goto no_catch;
                 }
             }
-#else
-            SCRIPT_FIND_CATCH_START(script, pc, pc);
-            if (!pc)
-                goto no_catch;
-#endif
 
-            /* Don't clear cx->throwing to save cx->exception from GC. */
+            ok = JS_TRUE;
+
+            /*
+             * Unwind the block and scope chains until we match the stack
+             * depth of the try note.
+             */
+            i = tn->stackDepth;
+            for (obj = fp->blockChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
+                JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
+                if (OBJ_BLOCK_DEPTH(cx, obj) < i)
+                    break;
+            }
+            fp->blockChain = obj;
+
+            JS_ASSERT(ok);
+            for (obj = fp->scopeChain;
+                 (clasp = OBJ_GET_CLASS(cx, obj)) == &js_WithClass ||
+                 clasp == &js_BlockClass;
+                 obj = OBJ_GET_PARENT(cx, obj)) {
+                if (JS_GetPrivate(cx, obj) != fp ||
+                    OBJ_BLOCK_DEPTH(cx, obj) < i) {
+                    break;
+                }
+                if (clasp == &js_BlockClass) {
+                    /* Don't fail until after we've updated all stacks. */
+                    ok &= js_PutBlockObject(cx, obj);
+                } else {
+                    JS_SetPrivate(cx, obj, NULL);
+                }
+            }
+
+            fp->scopeChain = obj;
+
+            /* Set sp after js_PutBlockObject to avoid potential GC hazards. */
+            sp = fp->spbase + i;
+
+            /* The catch or finally begins right after the code they protect. */
+            pc = (script)->main + tn->start + tn->length;
+
+            /*
+             * When failing during the scope recovery, restart the exception
+             * search with the updated stack and pc.
+             */
+            if (!ok)
+                goto out;
+
+            JS_ASSERT(cx->exception != JSVAL_HOLE);
+            if (tn->kind == JSTN_FINALLY) {
+                /*
+                 * Push (false, exception) pair for finally to indicate that
+                 * [retsub] should rethrow the exception.
+                 */
+                PUSH(JSVAL_TRUE);
+                PUSH(cx->exception);
+                cx->throwing = JS_FALSE;
+            } else {
+                /*
+                 * Don't clear cx->throwing to save cx->exception from GC
+                 * until it is pushed to the stack via [exception] in the
+                 * catch block.
+                 */
+            }
+
             len = 0;
             ok = JS_TRUE;
             DO_NEXT_OP(len);
