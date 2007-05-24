@@ -68,6 +68,7 @@ elif config.OS == "win32":
 # Regular expression to get stats for page load test (Tp)
 TP_REGEX = re.compile('__start_page_load_report(.*)__end_page_load_report',
                       re.DOTALL | re.MULTILINE)
+TP_REGEX_FAIL = re.compile('__FAIL(.*)__FAIL', re.DOTALL|re.MULTILINE)
 
 
 def RunPltTests(profile_configs,
@@ -96,7 +97,8 @@ def RunPltTests(profile_configs,
         [{"counter1": [1, 2, 3], "counter2":[4,5,6]},
          {"counter1":[1,3,5], "counter2":[2,4,6]}]
   """
-  
+ 
+  res = 0
   counter_data = []
   plt_results = []
   results_string = []
@@ -156,6 +158,12 @@ def RunPltTests(profile_configs,
       if match:
         rstring += match.group(1)
         plt_results.append(match.group(1))
+	res = 1
+        break
+      match = TP_REGEX_FAIL.search(output)
+      if match:
+        rstring += match.group(1)
+        plt_results.append(match.group(1))
         break
 
     cm.stopMonitor()
@@ -177,4 +185,4 @@ def RunPltTests(profile_configs,
     counter_data.append(counts)
     results_string.append(rstring)
 
-  return (results_string, plt_results, counter_data)
+  return (res, results_string, plt_results, counter_data)

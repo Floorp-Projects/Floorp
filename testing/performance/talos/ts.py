@@ -136,7 +136,7 @@ def RunStartupTests(profile_configs, num_runs):
     ffprofile.InitializeNewProfile(config[2], profile_dir)
 
     # Run the startup tests for this profile and log the results.
-    times = RunStartupTest(config[2], profile_dir, 5, 30)
+    times = RunStartupTest(config[2], profile_dir, 5, 10)
     all_times.append(times)
 
     # Delete the temp profile directory.  Make it writeable first,

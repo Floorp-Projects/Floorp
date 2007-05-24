@@ -4,6 +4,8 @@
 
   var NUM_PAGES;
   var NUM_CYCLES;
+  var DEFAULT_TIMEOUT = 5000; //how long any given page can take to load
+  var t; 
 
   function parseParams() {
     var s = document.location.search.substring(1);
@@ -178,19 +180,25 @@
     }
   }
 
+  function loadFail() {
+    dump("__FAILtimeout:" + frames["content"].document.location.href + "__FAIL");
+    window.close();
+  }
+
   function loadPage(i) {
     tstart = new Date();
+    t = setTimeout('loadFail()', DEFAULT_TIMEOUT);
     frames["content"].document.location = pages[i];
   }
 
   function frameLoad() {
+    clearTimeout(t);
     if (cycle == NUM_CYCLES) {
       showReport();
       dumpReport();
       window.close();
       return;
     }
-
     var tend = new Date();
     var href = frames["content"].document.location.href;
     if (href == "about:blank")
