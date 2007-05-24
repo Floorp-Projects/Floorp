@@ -38,9 +38,9 @@ fails == 25888-2l.html 25888-2l-ref.html # bug 25888
 fails == 25888-2r.html 25888-2r-ref.html # bug 25888
 fails == 25888-3l.html 25888-3l-ref.html # bug 25888
 fails == 25888-3r.html 25888-3r-ref.html # bug 25888
-== 28811-1a.html 28811-1-ref.html # bug 381765
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 28811-1a.html 28811-1-ref.html # bug 381765
 == 28811-1b.html 28811-1-ref.html
-== 28811-2a.html 28811-2-ref.html # bug 381765
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 28811-2a.html 28811-2-ref.html # bug 381765
 == 28811-2b.html 28811-2-ref.html
 == 40596-1a.html 40596-1-ref.html
 != 40596-1b.html 40596-1-ref.html
@@ -122,12 +122,12 @@ random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 339289-1.html 339289-1-ref.html
 == 341043-1a.html 341043-1-ref.html
 != 341043-1b.html 341043-1-ref.html
-== 346774-1a.html 346774-1-ref.html
-== 346774-1b.html 346774-1-ref.html
-== 346774-1c.html 346774-1-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 346774-1a.html 346774-1-ref.html # bug 381831
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 346774-1b.html 346774-1-ref.html # bug 381831
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 346774-1c.html 346774-1-ref.html # bug 381831
 == 347912-1.html 347912-1-ref.html
-== 348516-1.html 348516-1-ref.html
-== 348516-2.html 348516-2-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 348516-1.html 348516-1-ref.html # bug 381834
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 348516-2.html 348516-2-ref.html # bug 381834
 != 348516-2.html 348516-2-notref.html
 != 348516-3.html 348516-3-notref.html
 == 348809-1a.html 348809-1-ref.html
@@ -148,7 +148,7 @@ random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 351641-1b.html 351641-1-ref.html
 == 351641-2a.html 351641-2-ref.html
 fails == 351641-2b.html 351641-2-ref.html # bug 358433 (2006-10-19)
-== 359903-1.html 359903-1-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 359903-1.html 359903-1-ref.html # bug 381835
 == 359903-2.html 359903-2-ref.html
 == 360065-1.html 360065-1-ref.html
 == 360746-1.html 360746-1-ref.html
