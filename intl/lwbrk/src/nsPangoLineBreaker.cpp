@@ -119,6 +119,7 @@ nsPangoLineBreaker::GetJISx4051Breaks(const PRUnichar* aText, PRUint32 aLen,
                                       PRPackedBool* aBreakBefore)
 {
   NS_ASSERTION(aText, "aText shouldn't be null");
+  NS_ASSERTION(aLen > aPos, "Illegal value (length > position)");
 
   nsAutoTArray<PangoLogAttr, 2000> attrBuffer;
   if (!attrBuffer.AppendElements(aLen + 1))
@@ -130,12 +131,11 @@ nsPangoLineBreaker::GetJISx4051Breaks(const PRUnichar* aText, PRUint32 aLen,
   const gchar* end = p + aUTF8.Length();
   PRUint32     u16Offset = 0;
 
-  static PangoLanguage* language = pango_language_from_string("en");
-
   while (p < end)
   {
     PangoLogAttr* attr = attrBuffer.Elements();
-    pango_get_log_attrs(p, end - p, -1, language, attr, attrBuffer.Length());
+    pango_get_log_attrs(p, end - p, -1, pango_language_get_default(),
+                        attr, attrBuffer.Length());
 
     while (p < end)
     {
