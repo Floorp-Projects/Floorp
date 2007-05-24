@@ -105,6 +105,9 @@ nsAlertsService::ShowAlertNotification(const nsAString& aImageUrl,
   NS_ASSERTION(mDelegate->delegate == [GrowlApplicationBridge growlDelegate],
                "Growl Delegate was not registered properly.");
 
+  if ([GrowlApplicationBridge isGrowlRunning] == NO)
+    return NS_ERROR_NOT_AVAILABLE;
+
   PRUint32 ind = 0;
   if (aAlertListener)
     ind = [mDelegate->delegate addObserver: aAlertListener];
