@@ -45,6 +45,7 @@
 #include "nsIStyleRuleProcessor.h"
 #include "nsClassHashtable.h"
 #include "nsTArray.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsXBLPrototypeBinding;
 class nsIContent;
@@ -94,6 +95,8 @@ public:
     }
     return mRefCnt;
   }
+
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsXBLBinding)
 
   nsXBLPrototypeBinding* PrototypeBinding() { return mPrototypeBinding; }
   nsIContent* GetAnonymousContent() { return mContent.get(); }

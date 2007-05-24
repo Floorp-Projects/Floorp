@@ -147,7 +147,9 @@ public:
       mDefaultContent->UnbindFromTree();
     }      
   }
-  
+
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsXBLInsertionPointEntry)
+
   nsIContent* GetInsertionParent() { return mInsertionParent; }
   PRUint32 GetInsertionIndex() { return mInsertionIndex; }
   void SetInsertionIndex(PRUint32 aIndex) { mInsertionIndex = aIndex; }
@@ -188,12 +190,11 @@ protected:
   nsCOMPtr<nsIContent> mInsertionParent;
   nsCOMPtr<nsIContent> mDefaultContent;
   PRUint32 mInsertionIndex;
-  nsrefcnt mRefCnt;
+  nsAutoRefCnt mRefCnt;
 
   nsXBLInsertionPointEntry(nsIContent* aParent)
     : mInsertionParent(aParent),
-      mInsertionIndex(0),
-      mRefCnt(0) { }
+      mInsertionIndex(0) { }
 
 private:
   // Hide so that only Create() and Destroy() can be used to
@@ -201,6 +202,24 @@ private:
   static void* operator new(size_t) CPP_THROW_NEW { return 0; }
   static void operator delete(void*, size_t) {}
 };
+
+NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(nsXBLInsertionPointEntry)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXBLInsertionPointEntry)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mInsertionParent)
+  if (tmp->mDefaultContent) {
+    // mDefaultContent is a sort of anonymous content within the XBL
+    // document, and we own and manage it.  Unhook it here, since we're going
+    // away.
+    tmp->mDefaultContent->UnbindFromTree();
+    tmp->mDefaultContent = nsnull;
+  }      
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXBLInsertionPointEntry)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mInsertionParent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDefaultContent)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsXBLInsertionPointEntry, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsXBLInsertionPointEntry, Release)
 
 // =============================================================================
 
@@ -279,13 +298,39 @@ nsXBLPrototypeBinding::Init(const nsACString& aID,
   return NS_OK;
 }
 
+PR_STATIC_CALLBACK(PRIntn)
+TraverseInsertionPoint(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  nsCycleCollectionTraversalCallback &cb = 
+    *NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aClosure);
+  nsXBLInsertionPointEntry* entry =
+    NS_STATIC_CAST(nsXBLInsertionPointEntry*, aData);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(entry,
+                                               nsXBLInsertionPointEntry)
+  return kHashEnumerateNext;
+}
+
+PR_STATIC_CALLBACK(PRBool)
+TraverseBinding(nsHashKey *aKey, void *aData, void* aClosure)
+{
+  nsCycleCollectionTraversalCallback *cb = 
+    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aClosure);
+  cb->NoteXPCOMChild(NS_STATIC_CAST(nsISupports*, aData));
+  return kHashEnumerateNext;
+}
+
 void
 nsXBLPrototypeBinding::Traverse(nsCycleCollectionTraversalCallback &cb) const
 {
   cb.NoteXPCOMChild(mBinding);
-  // XXX mInsertionPointTable!
+  if (mImplementation)
+    mImplementation->Traverse(cb);
   if (mResources)
     cb.NoteXPCOMChild(mResources->mLoader);
+  if (mInsertionPointTable)
+    mInsertionPointTable->Enumerate(TraverseInsertionPoint, &cb);
+  if (mInterfaceTable)
+    mInterfaceTable->Enumerate(TraverseBinding, &cb);
 }
 
 void

@@ -76,6 +76,8 @@ public:
 
   void SetMemberList(nsXBLProtoImplMember* aMemberList) { delete mMembers; mMembers = aMemberList; }
 
+  void Traverse(nsCycleCollectionTraversalCallback &cb) const;
+
 protected:
   // Function to call if compilation of a member fails.  When this is called,
   // all members before aBrokenMember are compiled, compilation of

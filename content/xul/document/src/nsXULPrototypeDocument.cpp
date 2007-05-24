@@ -196,8 +196,9 @@ nsXULPrototypeDocument::~nsXULPrototypeDocument()
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULPrototypeDocument)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsXULPrototypeDocument)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULPrototypeDocument)
-  // XXX Can't traverse tmp->mRoot, non-XPCOM refcounted object
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGlobalObject)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mRoot,
+                                                    nsXULPrototypeElement)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGlobalObject)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULPrototypeDocument)

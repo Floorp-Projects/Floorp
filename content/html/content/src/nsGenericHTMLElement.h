@@ -1062,7 +1062,7 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
   {                                                                           \
     NS_ENSURE_ARG_POINTER(aInstancePtr);                                      \
                                                                               \
-    if ( aIID.Equals(NS_GET_IID(nsCycleCollectionParticipant)) ) {            \
+    if ( aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant)) ) {       \
       *aInstancePtr = &NS_CYCLE_COLLECTION_NAME(_class);                      \
       return NS_OK;                                                           \
     }                                                                         \

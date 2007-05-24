@@ -599,59 +599,31 @@ nsXPConnect::FinishCycleCollection()
     return NS_OK;
 }
 
-nsresult 
-nsXPConnect::Root(const nsDeque &nodes)
+NS_IMETHODIMP
+nsXPConnect::Root(void *p)
 {
-    if(!mCycleCollectionContext)
+    if(!mCycleCollectionContext ||
+       !JS_LockGCThing(*mCycleCollectionContext, NS_STATIC_CAST(JSObject*, p)))
         return NS_ERROR_FAILURE;
-
-    JSContext *cx = mCycleCollectionContext->GetJSContext();
-    for (PRInt32 i = 0; i < nodes.GetSize(); ++i)
-    {
-        void *p = nodes.ObjectAt(i);
-        if (!p)
-            continue;
-        JSObject *obj = NS_STATIC_CAST(JSObject*, p);
-        if (!JS_LockGCThing(cx, obj))
-            return NS_ERROR_FAILURE;
-    }
     return NS_OK;
 }
 
-nsresult 
-nsXPConnect::Unlink(const nsDeque &nodes)
+NS_IMETHODIMP
+nsXPConnect::Unlink(void *p)
 {
     if(!mCycleCollectionContext)
         return NS_ERROR_FAILURE;
-
-    JSContext *cx = mCycleCollectionContext->GetJSContext();
-    for (PRInt32 i = 0; i < nodes.GetSize(); ++i)
-    {
-        void *p = nodes.ObjectAt(i);
-        if (!p)
-            continue;
-        JSObject *obj = NS_STATIC_CAST(JSObject*, p);
-        JS_ClearScope(cx, obj);
-    }
+    JS_ClearScope(*mCycleCollectionContext, NS_STATIC_CAST(JSObject*, p));
     return NS_OK;
 }
 
-nsresult 
-nsXPConnect::Unroot(const nsDeque &nodes)
+NS_IMETHODIMP
+nsXPConnect::Unroot(void *p)
 {
-    if(!mCycleCollectionContext)
+    if(!mCycleCollectionContext ||
+       !JS_UnlockGCThing(*mCycleCollectionContext,
+                         NS_STATIC_CAST(JSObject*, p)))
         return NS_ERROR_FAILURE;
-
-    JSContext *cx = mCycleCollectionContext->GetJSContext();
-    for (PRInt32 i = 0; i < nodes.GetSize(); ++i)
-    {
-        void *p = nodes.ObjectAt(i);
-        if (!p)
-            continue;
-        JSObject *obj = NS_STATIC_CAST(JSObject*, p);
-        if (!JS_UnlockGCThing(cx, obj))
-            return NS_ERROR_FAILURE;
-    }
     return NS_OK;
 }
 
@@ -671,8 +643,9 @@ TraverseJSScript(JSScript* script, nsCycleCollectionTraversalCallback& cb)
     }
 }
 
-nsresult 
-nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
+NS_IMETHODIMP
+nsXPConnect::Traverse(void *p,
+                      nsCycleCollectionTraversalCallback &cb)
 {
     if(!mCycleCollectionContext)
         return NS_ERROR_FAILURE;
