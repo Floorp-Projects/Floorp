@@ -353,6 +353,13 @@ NS_NewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
 //----------------------------------------------------------------------
 // nsISupports interface
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULElement,
+                                                  nsGenericElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mPrototype,
+                                                  nsXULPrototypeElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_ADDREF_INHERITED(nsXULElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsXULElement, nsGenericElement)
 
@@ -362,6 +369,10 @@ nsXULElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ENSURE_ARG_POINTER(aInstancePtr);
     *aInstancePtr = nsnull;
 
+    if ( aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant)) ) {
+      *aInstancePtr = &NS_CYCLE_COLLECTION_NAME(nsXULElement);
+      return NS_OK;
+    }
 
     nsresult rv = nsGenericElement::QueryInterface(aIID, aInstancePtr);
     if (NS_SUCCEEDED(rv))
@@ -2277,6 +2288,29 @@ nsXULElement::RecompileScriptEventListeners()
         }
     }
 }
+
+NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(nsXULPrototypeNode)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_NATIVE_0(nsXULPrototypeNode)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXULPrototypeNode)
+    if (tmp->mType == nsXULPrototypeNode::eType_Element) {
+        nsXULPrototypeElement *elem =
+            NS_STATIC_CAST(nsXULPrototypeElement*, tmp);
+        PRUint32 i;
+        for (i = 0; i < elem->mNumAttributes; ++i) {
+            cb.NoteScriptChild(elem->mScriptTypeID,
+                               elem->mAttributes[i].mEventHandler);
+        }
+        for (i = 0; i < elem->mNumChildren; ++i) {
+            NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(elem->mChildren[i],
+                                                         nsXULPrototypeNode)
+        }
+    }
+    else if (tmp->mType == nsXULPrototypeNode::eType_Script) {
+        NS_STATIC_CAST(nsXULPrototypeScript*, tmp)->mScriptObject.traverse(cb);
+    }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsXULPrototypeNode, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsXULPrototypeNode, Release)
 
 //----------------------------------------------------------------------
 //

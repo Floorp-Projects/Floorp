@@ -49,7 +49,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsXPCWrappedJS)
 
 NS_IMETHODIMP
 NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
-   (nsISupports *s, nsCycleCollectionTraversalCallback &cb)
+   (void *p, nsCycleCollectionTraversalCallback &cb)
 {
     // REVIEW ME PLEASE: this is a very odd area and it's easy to get
     // it wrong. I'm not sure I got it right.
@@ -68,7 +68,8 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
     {
         // Put the nsCOMPtr in a local scope, to avoid messing up the refcount
         // below.
-        nsCOMPtr<nsIXPConnectWrappedJS> owner = do_QueryInterface(s, &rv);
+        nsCOMPtr<nsIXPConnectWrappedJS> owner =
+            do_QueryInterface(NS_STATIC_CAST(nsISupports*, p), &rv);
         if (NS_FAILED(rv))
             return rv;
 
@@ -112,7 +113,7 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
 }
 
 NS_IMETHODIMP
-NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Unlink(nsISupports *s)
+NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Unlink(void *p)
 {
     // NB: We might unlink our outgoing references in the future; for
     // now we do nothing. This is a harmless conservative behavior; it
@@ -156,7 +157,7 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     }
 
-    if ( aIID.Equals(NS_GET_IID(nsCycleCollectionParticipant)) ) {
+    if ( aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant)) ) {
         *aInstancePtr = & NS_CYCLE_COLLECTION_NAME(nsXPCWrappedJS);
         return NS_OK;
     }

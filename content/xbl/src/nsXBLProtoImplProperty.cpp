@@ -343,3 +343,15 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
   
   return rv;
 }
+
+void
+nsXBLProtoImplProperty::Traverse(nsCycleCollectionTraversalCallback &cb) const
+{
+  if (mJSAttributes & JSPROP_GETTER) {
+    cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, mJSGetterObject);
+  }
+
+  if (mJSAttributes & JSPROP_SETTER) {
+    cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, mJSSetterObject);
+  }
+}

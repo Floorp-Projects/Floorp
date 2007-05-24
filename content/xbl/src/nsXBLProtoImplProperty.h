@@ -72,6 +72,8 @@ public:
                                  const nsCString& aClassStr,
                                  void* aClassObject);
 
+  virtual void Traverse(nsCycleCollectionTraversalCallback &cb) const;
+
 protected:
   union {
     // The raw text for the getter (prior to compilation).

@@ -427,7 +427,8 @@ struct JSObjectRefcounts;
 
 class nsXPConnect : public nsIXPConnect,
                     public nsSupportsWeakReference,
-                    public nsCycleCollectionLanguageRuntime
+                    public nsCycleCollectionLanguageRuntime,
+                    public nsCycleCollectionParticipant
 {
 public:
     // all the interface method declarations...
@@ -475,13 +476,16 @@ public:
     nsresult GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info);
     nsresult GetInfoForName(const char * name, nsIInterfaceInfo** info);
 
-    // from nsCycleCollectionLanguageRuntime
+    // from nsCycleCollectionLanguageRuntime and nsCycleCollectionParticipant
     nsresult BeginCycleCollection();
-    nsresult Root(const nsDeque &nodes);
-    nsresult Unlink(const nsDeque &nodes);
-    nsresult Unroot(const nsDeque &nodes);
-    nsresult Traverse(void *p, nsCycleCollectionTraversalCallback &cb);
+    NS_IMETHOD Root(void *p);
+    NS_IMETHOD Unlink(void *p);
+    NS_IMETHOD Unroot(void *p);
+    NS_IMETHOD Traverse(void *p,
+                        nsCycleCollectionTraversalCallback &cb);
     nsresult FinishCycleCollection();
+    nsCycleCollectionParticipant *ToParticipant(void *p) {return this;}
+
     JSObjectRefcounts* GetJSObjectRefcounts() {return mObjRefcounts;}
 #ifndef XPCONNECT_STANDALONE
     void RecordTraversal(void *p, nsISupports *s);

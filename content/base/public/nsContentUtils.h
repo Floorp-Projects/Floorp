@@ -996,6 +996,10 @@ public:
       }
       return rv;
     }
+    void traverse(nsCycleCollectionTraversalCallback &cb)
+    {
+      cb.NoteScriptChild(mLangID, mObject);
+    }
     PRUint32 mLangID;
     void *mObject;
   };

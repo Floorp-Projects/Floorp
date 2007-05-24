@@ -87,12 +87,14 @@
 // = nsAnonymousContentList 
 // ==================================================================
 
-class nsAnonymousContentList : public nsGenericDOMNodeList
+class nsAnonymousContentList : public nsIDOMNodeList
 {
 public:
   nsAnonymousContentList(nsInsertionPointList* aElements);
   virtual ~nsAnonymousContentList();
 
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsAnonymousContentList)
   // nsIDOMNodeList interface
   NS_DECL_NSIDOMNODELIST
 
@@ -119,6 +121,29 @@ nsAnonymousContentList::~nsAnonymousContentList()
   MOZ_COUNT_DTOR(nsAnonymousContentList);
   delete mElements;
 }
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsAnonymousContentList)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsAnonymousContentList)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsAnonymousContentList)
+
+NS_INTERFACE_MAP_BEGIN(nsAnonymousContentList)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNodeList)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(NodeList)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsAnonymousContentList)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsAnonymousContentList)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsAnonymousContentList)
+  {
+    PRInt32 i, count = tmp->mElements->Length();
+    for (i = 0; i < count; ++i) {
+      NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mElements->ElementAt(i),
+                                                      nsXBLInsertionPoint);
+    }
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMETHODIMP
 nsAnonymousContentList::GetLength(PRUint32* aLength)
@@ -309,7 +334,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsBindingManager)
     PL_DHashTableFinish(&(tmp->mWrapperTable));
   tmp->mWrapperTable.ops = nsnull;
 
-  tmp->mAttachedStack.Clear();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSTARRAY(mAttachedStack)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
@@ -341,6 +366,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsBindingManager)
       tmp->mDocumentTable.EnumerateRead(&DocumentInfoHashtableTraverser, &cb);
   if (tmp->mLoadingDocTable.IsInitialized())
       tmp->mLoadingDocTable.EnumerateRead(&LoadingDocHashtableTraverser, &cb);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY_MEMBER(mAttachedStack,
+                                                    nsXBLBinding)
   // No need to traverse mProcessAttachedQueueEvent, since it'll just
   // fire at some point.
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -1365,9 +1392,8 @@ nsBindingManager::Traverse(nsIContent *aContent,
 
   nsXBLBinding *binding = GetBinding(aContent);
   if (binding) {
-    // XXX nsXBLBinding isn't nsISupports but it is refcounted, so we can't
-    //     traverse it.
     cb.NoteXPCOMChild(aContent);
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(binding, nsXBLBinding)
   }
   nsISupports *value;
   if (mContentListTable.ops &&

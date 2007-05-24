@@ -240,13 +240,14 @@ XULContentSinkImpl::~XULContentSinkImpl()
                 nsXULPrototypeNode* child =
                     NS_REINTERPRET_CAST(nsXULPrototypeNode*, children->ElementAt(i));
 
-                delete child;
+                child->Release();
             }
         }
 
         nsXULPrototypeNode* node;
         rv = mContextStack.GetTopNode(&node);
-        if (NS_SUCCEEDED(rv)) delete node;
+        if (NS_SUCCEEDED(rv))
+            node->Release();
 
         State state;
         mContextStack.Pop(&state);
@@ -761,7 +762,7 @@ XULContentSinkImpl::ReportError(const PRUnichar* aErrorText,
         nsXULPrototypeNode* child =
             NS_REINTERPRET_CAST(nsXULPrototypeNode*, children->ElementAt(i));
 
-        delete child;
+        child->Release();
       }
     }
 
@@ -909,7 +910,7 @@ XULContentSinkImpl::OpenRoot(const PRUnichar** aAttributes,
     // containers will hook up to us as their parent.
     rv = mContextStack.Push(element, mState);
     if (NS_FAILED(rv)) {
-        delete element;
+        element->Release();
         return rv;
     }
 

@@ -193,7 +193,7 @@ public:
 
     Type                     mType;
 
-    PRInt32                  mRefCnt;
+    nsAutoRefCnt             mRefCnt;
 
     virtual ~nsXULPrototypeNode() {}
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
@@ -221,6 +221,8 @@ public:
             delete this;
     }
     virtual void ReleaseSubtree() { Release(); }
+
+    NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsXULPrototypeNode)
 
 protected:
     nsXULPrototypeNode(Type aType)
@@ -476,6 +478,8 @@ public:
 
     // nsISupports
     NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsXULElement,
+                                                       nsGenericElement)
 
     // nsINode
     virtual PRUint32 GetChildCount() const;
