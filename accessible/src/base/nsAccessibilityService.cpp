@@ -289,10 +289,7 @@ nsAccessibilityService::GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIW
   if (!document)
     return NS_ERROR_FAILURE;
 
-#ifdef DEBUG_A11Y
-  PRInt32 shells = document->GetNumberOfShells();
-  NS_ASSERTION(shells > 0,"Error no shells!");
-#endif
+  NS_ASSERTION(document->GetPrimaryShell(),"Error no shells!");
 
   // do_GetWR only works into a |nsCOMPtr| :-(
   nsCOMPtr<nsIWeakReference> weakShell =
