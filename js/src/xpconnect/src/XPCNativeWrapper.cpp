@@ -231,13 +231,15 @@ WrapFunction(JSContext* cx, JSObject* funobj, jsval *rval)
   // function's parent will be the original function and that's how we
   // get the right thing to call when this function is called.
   JSFunction *funWrapper =
-    ::JS_NewFunction(cx, XPC_NW_FunctionWrapper, 0, 0, funobj,
+    ::JS_NewFunction(cx, XPC_NW_FunctionWrapper, 0, 0, nsnull,
                      "XPCNativeWrapper function wrapper");
   if (!funWrapper) {
     return JS_FALSE;
   }
 
-  *rval = OBJECT_TO_JSVAL(::JS_GetFunctionObject(funWrapper));
+  JSObject* funWrapperObj = ::JS_GetFunctionObject(funWrapper);
+  ::JS_SetParent(cx, funWrapperObj, funobj);
+  *rval = OBJECT_TO_JSVAL(funWrapperObj);
   return JS_TRUE;
 }
 
