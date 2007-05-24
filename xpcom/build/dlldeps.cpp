@@ -280,7 +280,7 @@ void XXXNeverCalled()
       b.ToString(0, y);
     }
 
-    nsCycleCollectionParticipant();
+    nsXPCOMCycleCollectionParticipant();
     nsCycleCollector_collect();
 
 #if !defined(WINCE) && !defined(XP_OS2)

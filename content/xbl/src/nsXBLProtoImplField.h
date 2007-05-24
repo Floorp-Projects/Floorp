@@ -67,6 +67,8 @@ public:
                                  const nsCString& aClassStr,
                                  void* aClassObject);
 
+  virtual void Traverse(nsCycleCollectionTraversalCallback &cb) const;
+
 protected:
   PRUnichar* mFieldText;
   PRUint32 mFieldTextLength;

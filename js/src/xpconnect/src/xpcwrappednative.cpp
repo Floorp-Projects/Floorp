@@ -50,10 +50,10 @@
 NS_IMPL_CYCLE_COLLECTION_CLASS(XPCWrappedNative)
 
 NS_IMETHODIMP
-NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(nsISupports *s,
+NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(void *p,
                                                           nsCycleCollectionTraversalCallback &cb)
 {
-    XPCWrappedNative *tmp = NS_STATIC_CAST(XPCWrappedNative*, s);
+    XPCWrappedNative *tmp = NS_STATIC_CAST(XPCWrappedNative*, p);
     if(!tmp->IsValid())
         return NS_OK;
 
@@ -113,7 +113,7 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(nsISupports *s,
 }
 
 NS_IMETHODIMP
-NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Unlink(nsISupports *s)
+NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Unlink(void *p)
 {
     // NB: We might unlink our outgoing references in the future; for
     // now we do nothing. This is a harmless conservative behavior; it

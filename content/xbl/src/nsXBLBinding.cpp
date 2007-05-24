@@ -173,6 +173,36 @@ nsXBLBinding::~nsXBLBinding(void)
   NS_RELEASE(info);
 }
 
+PR_STATIC_CALLBACK(PLDHashOperator)
+TraverseKey(nsISupports* aKey, nsInsertionPointList* aData, void* aClosure)
+{
+  nsCycleCollectionTraversalCallback &cb = 
+    *NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aClosure);
+
+  cb.NoteXPCOMChild(aKey);
+  if (aData) {
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY(*aData, nsXBLInsertionPoint)
+  }
+  return PL_DHASH_NEXT;
+}
+
+NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(nsXBLBinding)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXBLBinding)
+  // XXX Probably can't unlink mPrototypeBinding->XBLDocumentInfo(), because
+  //     mPrototypeBinding is weak.
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContent)
+  // XXX What about mNextBinding and mInsertionPointTable?
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXBLBinding)
+  cb.NoteXPCOMChild(tmp->mPrototypeBinding->XBLDocumentInfo());
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mNextBinding, nsXBLBinding)
+  if (tmp->mInsertionPointTable)
+    tmp->mInsertionPointTable->EnumerateRead(TraverseKey, &cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsXBLBinding, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsXBLBinding, Release)
+
 void
 nsXBLBinding::SetBaseBinding(nsXBLBinding* aBinding)
 {
