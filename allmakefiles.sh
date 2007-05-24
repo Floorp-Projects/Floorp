@@ -1337,7 +1337,7 @@ fi
 
 for extension in $MOZ_EXTENSIONS; do
   if [ -f "${srcdir}/extensions/${extension}/makefiles.sh" ]; then
-    source "${srcdir}/extensions/${extension}/makefiles.sh"
+    . "${srcdir}/extensions/${extension}/makefiles.sh"
   fi
 done
 
@@ -1467,5 +1467,5 @@ if test -n "$MOZ_STORAGE"; then
 fi
 
 if test -f "${srcdir}/${MOZ_BUILD_APP}/makefiles.sh"; then
-  source "${srcdir}/${MOZ_BUILD_APP}/makefiles.sh"
+  . "${srcdir}/${MOZ_BUILD_APP}/makefiles.sh"
 fi
