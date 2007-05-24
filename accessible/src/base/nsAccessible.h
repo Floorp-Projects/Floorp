@@ -49,7 +49,7 @@
 #include "nsIAccessibleValue.h"
 #include "nsIAccessibleRole.h"
 #include "nsIAccessibleStates.h"
-#include "nsIAccessibleRelation.h"
+#include "nsAccessibleRelationWrap.h"
 
 #include "nsIDOMNodeList.h"
 #include "nsINameSpaceManager.h"
