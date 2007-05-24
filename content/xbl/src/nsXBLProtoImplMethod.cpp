@@ -279,11 +279,9 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
 void
 nsXBLProtoImplMethod::Traverse(nsCycleCollectionTraversalCallback &cb) const
 {
-/*
-  if (mIsCompiled) {
-    cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, mJSMethodObject);
-  }
-*/
+  NS_ASSERTION(mIsCompiled, "Shouldn't traverse uncompiled method");
+
+  cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, mJSMethodObject);
 }
 
 nsresult
