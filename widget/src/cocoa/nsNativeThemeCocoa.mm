@@ -852,8 +852,15 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   return NS_OK;
 }
 
+// The left border is simply set to the text does not get too close
+// to the edge.
 static const int kAquaDropdownLeftBorder = 5;
-static const int kAquaDropdownRightBorder = 22;
+// The right border is for the ~22-pixel native "button" on the
+// right side of a combobox. Since comboboxes are sized with
+// extra room on the right for a scrollbar already, we specify the
+// difference beween the ~22-pixel native "button" and the scrollbar
+// width.
+static const int kAquaDropdownRightBorder = 7;
 
 NS_IMETHODIMP
 nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext, 
@@ -872,9 +879,9 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
 
     case NS_THEME_DROPDOWN:
     case NS_THEME_DROPDOWN_BUTTON:
-      // Top has a single pixel line, bottom has a single pixel line plus a single
-      // pixel shadow
-      aResult->SizeTo(kAquaDropdownLeftBorder, 1, kAquaDropdownRightBorder, 2);
+      // We need to shift the text up a single pixel. For native form control drawing,
+      // the borders need not actually reflect the size of the drawn border.
+      aResult->SizeTo(kAquaDropdownLeftBorder, 0, kAquaDropdownRightBorder, 1);
       break;
     
     case NS_THEME_TEXTFIELD: {
