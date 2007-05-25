@@ -110,6 +110,21 @@ protected:
                           PRInt64 aEndTime,
                           PRInt32 aState);
 
+  void NotifyListenersOnDownloadStateChange(PRInt16 aOldState,
+                                            nsIDownload *aDownload);
+  void NotifyListenersOnProgressChange(nsIWebProgress *aProgress,
+                                       nsIRequest *aRequest,
+                                       PRInt64 aCurSelfProgress,
+                                       PRInt64 aMaxSelfProgress,
+                                       PRInt64 aCurTotalProgress,
+                                       PRInt64 aMaxTotalProgress,
+                                       nsIDownload *aDownload);
+  void NotifyListenersOnStateChange(nsIWebProgress *aProgress,
+                                    nsIRequest *aRequest,
+                                    PRUint32 aStateFlags,
+                                    nsresult aStatus,
+                                    nsIDownload *aDownload);
+
   nsDownload *FindDownload(PRUint32 aID);
   nsresult PauseResumeDownload(PRUint32 aID, PRBool aPause);
   nsresult CancelAllDownloads();
@@ -131,7 +146,6 @@ protected:
                                       nsIDownload* aDownload,
                                       nsIDOMWindow* aParent);
 
-  PRBool   NeedsUIUpdate() { return mListener != nsnull; }
   PRInt32  GetRetentionBehavior();
 
   static PRBool IsInFinalStage(DownloadState aState)
@@ -157,7 +171,7 @@ protected:
   }
 
 private:
-  nsCOMPtr<nsIDownloadProgressListener> mListener;
+  nsCOMArray<nsIDownloadProgressListener> mListeners;
   nsCOMPtr<nsIXPIProgressDialog> mXPIProgress;
   nsCOMPtr<nsIStringBundle> mBundle;
   nsCOMPtr<nsITimer> mDMOpenTimer;
