@@ -53,7 +53,11 @@ static const nsXREAppData kAppData = {
   "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}",
   "Copyright (c) 1998 - 2007 mozilla.org",
   NS_XRE_ENABLE_PROFILE_MIGRATOR |
-  NS_XRE_ENABLE_EXTENSION_MANAGER,
+  NS_XRE_ENABLE_EXTENSION_MANAGER
+#if defined(MOZILLA_OFFICIAL) && (defined(XP_WIN) || defined(XP_MACOSX))
+  | NS_XRE_ENABLE_CRASH_REPORTER
+#endif
+,
   nsnull, // xreDirectory
   nsnull, // minVersion
   nsnull, // maxVersion

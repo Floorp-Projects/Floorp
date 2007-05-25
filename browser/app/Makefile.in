@@ -218,6 +218,10 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DFIREFOX_ICO=\"$(DIST)/branding/firefox.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\"
 
+ifdef MOZILLA_OFFICIAL
+DEFINES += -DMOZILLA_OFFICIAL
+endif
+
 ifdef BUILD_STATIC_LIBS
 include $(topsrcdir)/config/static-rules.mk
 
