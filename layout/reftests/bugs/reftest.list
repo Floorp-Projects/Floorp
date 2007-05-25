@@ -52,7 +52,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 28811-2a.html 28811-2-ref.html # bug 38
 != 40596-1h.html 40596-1-ref.html
 == 40596-1i.html 40596-1-ref.html
 != 40596-1j.html 40596-1-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 84400-1.html 84400-1-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 84400-1.html 84400-1-ref.html # bug 382039
 == 84400-2.html 84400-2-ref.html
 == 97777-1.html 97777-1-ref.html
 == 97777-2.html 97777-2-ref.html
@@ -86,7 +86,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 84400-1.html 84400-1-ref.html
 == 255820-1.html 255820-1-ref.html
 == 262151-1.html 262151-1-ref.html
 == 267353-1.html 267353-1-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 273681-1.html 273681-1-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 273681-1.html 273681-1-ref.html # bug 382040
 == 300691-1a.html 300691-1-ref.html
 == 300691-1b.html 300691-1-ref.html
 == 300691-1c.html 300691-1-ref.html
