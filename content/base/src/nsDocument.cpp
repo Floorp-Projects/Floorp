@@ -3651,8 +3651,10 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
 {
   nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
   NS_ENSURE_TRUE(content, NS_ERROR_UNEXPECTED);
-  NS_ENSURE_TRUE(content->GetCurrentDoc() == this,
-                 NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
+
+  nsIDocument* doc = content->HasFlag(NODE_FORCE_XBL_BINDINGS) ?
+    content->GetOwnerDoc() : content->GetCurrentDoc();
+  NS_ENSURE_TRUE(doc == this, NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
   
   *aResult = nsnull;
 

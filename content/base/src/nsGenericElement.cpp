@@ -115,7 +115,7 @@
 #include "nsIFocusController.h"
 #include "nsIControllers.h"
 #include "nsXBLInsertionPoint.h"
-
+#include "nsIXULDocument.h"
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsCCUncollectableMarker.h"
@@ -1719,6 +1719,7 @@ BindNodesInInsertPoints(nsXBLBinding* aBinding, nsIContent* aInsertParent,
     aBinding->GetExistingInsertionPointsFor(aInsertParent);
   if (inserts) {
     PRBool allowScripts = aBinding->AllowScripts();
+    nsCOMPtr<nsIXULDocument> xulDoc = do_QueryInterface(aDocument);
     PRUint32 i;
     for (i = 0; i < inserts->Length(); ++i) {
       nsCOMPtr<nsIContent> insertRoot =
@@ -1730,6 +1731,10 @@ BindNodesInInsertPoints(nsXBLBinding* aBinding, nsIContent* aInsertParent,
           rv = child->BindToTree(aDocument, aInsertParent,
                                  aBinding->GetBoundElement(), allowScripts);
           NS_ENSURE_SUCCESS(rv, rv);
+
+          if (xulDoc) {
+            xulDoc->AddSubtreeToDocument(child);
+          }
         }
       }
     }
