@@ -323,16 +323,16 @@ nsSVGFilterResource::AcquireSourceImage(nsIDOMSVGAnimatedString* aIn,
     return NS_ERROR_FAILURE;
   }
 
-  if (aSurface) {
-    *aSurface = nsnull;
-    surface.swap(*aSurface);
-  }
   mInstance->GetFilterSubregion(aFilter, defaultRect, &mRect);
 
   mSourceData = surface->Data();
   mStride = surface->Stride();
 
   *aSourceData = mSourceData;
+  if (aSurface) {
+    *aSurface = nsnull;
+    surface.swap(*aSurface);
+  }
   return NS_OK;
 }
 
@@ -347,10 +347,6 @@ nsSVGFilterResource::AcquireTargetImage(nsIDOMSVGAnimatedString* aResult,
     return NS_ERROR_FAILURE;
   }
 
-  if (aSurface) {
-    *aSurface = mTargetImage;
-    NS_ADDREF(*aSurface);
-  }
   mTargetData = mTargetImage->Data();
   mStride = mTargetImage->Stride();
   gfxIntSize size = mTargetImage->GetSize();
@@ -358,6 +354,10 @@ nsSVGFilterResource::AcquireTargetImage(nsIDOMSVGAnimatedString* aResult,
   mHeight = size.height;
 
   *aTargetData = mTargetData;
+  if (aSurface) {
+    *aSurface = mTargetImage;
+    NS_ADDREF(*aSurface);
+  }
   return NS_OK;
 }
 
