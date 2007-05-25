@@ -53,8 +53,10 @@
         // but do it on setTimeout() for bugs #373719 and bug #373721
         // caused by a change for bug #267833
         // note the corresponding setTimeout() in PO_init()
-        var self = this;
-        setTimeout(function() { self.place = self.place; }, 0);
+        if (this.place) {
+          var self = this;
+          setTimeout(function() { self.place = self.place; }, 0);
+        }
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -105,7 +107,7 @@
         <parameter name="onlyBookmarks"/>
         <parameter name="folderRestrict"/>
         <parameter name="optionsFilter"/>
-        <body><![CDATA[ 
+        <body><![CDATA[
           // preserve grouping
           var queryNode = asQuery(this.getResult().root);
           var options = queryNode.queryOptions.clone();
@@ -136,7 +138,7 @@
       <method name="load">
         <parameter name="queries"/>
         <parameter name="options"/>
-        <body><![CDATA[ 
+        <body><![CDATA[
           var result = PlacesUtils.history.executeQueries(queries, queries.length, 
                                                           options);
           var treeView = new PlacesTreeView(this.showRoot);
