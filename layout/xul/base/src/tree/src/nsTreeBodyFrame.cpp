@@ -50,7 +50,6 @@
 #include "nsISupportsArray.h"
 #include "nsPresContext.h"
 #include "nsINameSpaceManager.h"
-#include "nsIScrollbarFrame.h"
 
 #include "nsTreeBodyFrame.h"
 #include "nsTreeSelection.h"
@@ -101,6 +100,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsEventDispatcher.h"
 #include "nsDisplayList.h"
+#include "nsTreeBoxObject.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -222,7 +222,6 @@ nsTreeBodyFrame::Init(nsIContent*     aContent,
 
   NS_ENSURE_TRUE(mImageCache.Init(16), NS_ERROR_OUT_OF_MEMORY);
   EnsureBoxObject();
-  NS_ENSURE_STATE(mTreeBoxObject);
   return rv;
 }
 
@@ -370,8 +369,15 @@ nsTreeBodyFrame::EnsureBoxObject()
       // Ensure that we got a native box object.
       nsCOMPtr<nsPIBoxObject> pBox = do_QueryInterface(box);
       if (pBox) {
-        mTreeBoxObject = do_QueryInterface(pBox);
-        mColumns->SetTree(mTreeBoxObject);
+        nsCOMPtr<nsITreeBoxObject> realTreeBoxObject = do_QueryInterface(pBox);
+        if (realTreeBoxObject) {
+          nsITreeBoxObject* innerTreeBoxObject =
+            NS_STATIC_CAST(nsTreeBoxObject*, realTreeBoxObject.get())->GetTreeBody();
+          ENSURE_TRUE(!innerTreeBoxObject || innerTreeBoxObject ==
+                      NS_STATIC_CAST(nsITreeBoxObject*, this));
+          mTreeBoxObject = realTreeBoxObject;
+          mColumns->SetTree(mTreeBoxObject);
+        }
       }
     }
   }
