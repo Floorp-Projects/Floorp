@@ -64,10 +64,10 @@ public:
                                                   PRBool     *aFound);
 
   // override nsIExternalProtocolService methods
-  NS_IMETHOD ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
   nsresult LoadUriInternal(nsIURI * aURL);
   NS_IMETHODIMP GetApplicationDescription(const nsACString& aScheme, nsAString& _retval);
 
+  nsresult OSProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
 protected:
   already_AddRefed<nsMIMEInfoOS2> GetFromType(const nsCString& aMimeType);
   already_AddRefed<nsMIMEInfoOS2> GetFromExtension(const nsCString& aFileExt);

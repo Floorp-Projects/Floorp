@@ -56,7 +56,6 @@ public:
   virtual ~nsOSHelperAppService();
 
   // override nsIExternalProtocolService methods
-  NS_IMETHOD ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
   NS_IMETHOD GetApplicationDescription(const nsACString& aScheme, nsAString& _retval);
   nsresult LoadUriInternal(nsIURI * aURL);
   
@@ -69,11 +68,13 @@ public:
   //                     rdf data source. This can be a mac file spec, a unix path or a windows path depending on the platform
   // aFile --> an nsIFile representation of that platform application path.
   virtual nsresult GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile);
-  
+
+  nsresult OSProtocolHandlerExists(const char * aScheme,
+                                   PRBool * aHandlerExists);
+
 protected:
   // add any mac specific service state here
   void UpdateCreatorInfo(nsIMIMEInfo * aMIMEInfo);
-
 };
 
 #endif // nsOSHelperAppService_h__
