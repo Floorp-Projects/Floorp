@@ -380,8 +380,13 @@ typedef struct Sprinter {
 #define RETRACT(sp,str) ((sp)->offset = STR2OFF(sp, str))
 
 static JSBool
-SprintAlloc(Sprinter *sp, size_t nb)
+SprintEnsureBuffer(Sprinter *sp, size_t len)
 {
+    ptrdiff_t nb;
+
+    nb = (sp->offset + len + 1) - sp->size;
+    if (nb < 0)
+        return JS_TRUE;
     if (!sp->base) {
         JS_ARENA_ALLOCATE_CAST(sp->base, char *, sp->pool, nb);
     } else {
@@ -398,12 +403,11 @@ SprintAlloc(Sprinter *sp, size_t nb)
 static ptrdiff_t
 SprintPut(Sprinter *sp, const char *s, size_t len)
 {
-    ptrdiff_t nb, offset;
+    ptrdiff_t offset;
     char *bp;
 
     /* Allocate space for s, including the '\0' at the end. */
-    nb = (sp->offset + len + 1) - sp->size;
-    if (nb > 0 && !SprintAlloc(sp, nb))
+    if (!SprintEnsureBuffer(sp, len))
         return -1;
 
     /* Advance offset and copy s into sp's buffer. */
@@ -434,7 +438,7 @@ SprintString(Sprinter *sp, JSString *str)
         return sp->offset;
 
     size = js_GetDeflatedStringLength(sp->context, chars, length);
-    if (size == (size_t)-1 || !SprintAlloc(sp, size + 1))
+    if (size == (size_t)-1 || !SprintEnsureBuffer(sp, size))
         return -1;
 
     offset = sp->offset;
@@ -485,7 +489,7 @@ QuoteString(Sprinter *sp, JSString *str, uint32 quote)
 {
     JSBool dontEscape, ok;
     jschar qc, c;
-    ptrdiff_t off, len, nb;
+    ptrdiff_t off, len;
     const jschar *s, *t, *z;
     const char *e;
     char *bp;
@@ -511,8 +515,7 @@ QuoteString(Sprinter *sp, JSString *str, uint32 quote)
         len = PTRDIFF(t, s, jschar);
 
         /* Allocate space for s, including the '\0' at the end. */
-        nb = (sp->offset + len + 1) - sp->size;
-        if (nb > 0 && !SprintAlloc(sp, nb))
+        if (!SprintEnsureBuffer(sp, len))
             return NULL;
 
         /* Advance sp->offset and copy s into sp's buffer. */
@@ -883,7 +886,7 @@ PushOff(SprintStack *ss, ptrdiff_t off, JSOp op)
 {
     uintN top;
 
-    if (!SprintAlloc(&ss->sprinter, PAREN_SLOP))
+    if (!SprintEnsureBuffer(&ss->sprinter, PAREN_SLOP))
         return JS_FALSE;
 
     /* ss->top points to the next free slot; be paranoid about overflow. */
