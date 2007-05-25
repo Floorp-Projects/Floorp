@@ -1755,7 +1755,9 @@ nsXULElement::GetBoxObject(nsIBoxObject** aResult)
   *aResult = nsnull;
 
   // XXX sXBL/XBL2 issue! Owner or current document?
-  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(GetCurrentDoc()));
+  nsIDocument* doc = HasFlag(NODE_FORCE_XBL_BINDINGS) ?
+    GetOwnerDoc() : GetCurrentDoc();
+  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(doc));
 
   return nsDoc ? nsDoc->GetBoxObjectFor(this, aResult) : NS_ERROR_FAILURE;
 }
