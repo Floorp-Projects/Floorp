@@ -33,12 +33,12 @@ class nsPlacesImportExportService : public nsIPlacesImportExportService
 
     nsresult ImportHTMLFromFileInternal(nsILocalFile* aFile, PRBool aAllowRootChanges,
                                        PRInt64 aFolder, PRBool aIsImportDefaults);
-    nsresult WriteContainer(PRInt64 aFolder, const nsACString& aIndent, nsIOutputStream* aOutput);
-    nsresult WriteContainerHeader(PRInt64 aFolder, const nsACString& aIndent, nsIOutputStream* aOutput);
-    nsresult WriteContainerTitle(PRInt64 aFolder, nsIOutputStream* aOutput);
+    nsresult WriteContainer(nsINavHistoryResultNode* aFolder, const nsACString& aIndent, nsIOutputStream* aOutput);
+    nsresult WriteContainerHeader(nsINavHistoryResultNode* aFolder, const nsACString& aIndent, nsIOutputStream* aOutput);
+    nsresult WriteTitle(nsINavHistoryResultNode* aItem, nsIOutputStream* aOutput);
     nsresult WriteItem(nsINavHistoryResultNode* aItem, const nsACString& aIndent, nsIOutputStream* aOutput);
-    nsresult WriteLivemark(PRInt64 aFolderId, const nsACString& aIndent, nsIOutputStream* aOutput);
-    nsresult WriteContainerContents(PRInt64 aFolder, const nsACString& aIndent, nsIOutputStream* aOutput);
+    nsresult WriteLivemark(nsINavHistoryResultNode* aFolder, const nsACString& aIndent, nsIOutputStream* aOutput);
+    nsresult WriteContainerContents(nsINavHistoryResultNode* aFolder, const nsACString& aIndent, nsIOutputStream* aOutput);
     nsresult WriteSeparator(nsINavHistoryResultNode* aItem, const nsACString& aIndent, nsIOutputStream* aOutput);
     nsresult WriteDescription(PRInt64 aId, PRInt32 aType, nsIOutputStream* aOutput);
 
