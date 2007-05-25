@@ -79,3 +79,10 @@ if (!profileDir) {
   dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
 }
 
+function importDownloadsFile(aFName)
+{
+  var file = do_get_file("toolkit/components/downloads/test/unit/" + aFName);
+  var newFile = dirSvc.get("ProfD", Ci.nsIFile);
+  file.copyTo(newFile, "downloads.rdf");
+}
+
