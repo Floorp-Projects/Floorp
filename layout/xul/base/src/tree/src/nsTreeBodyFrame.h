@@ -57,6 +57,7 @@
 #include "nsDataHashtable.h"
 #include "imgIRequest.h"
 #include "imgIDecoderObserver.h"
+#include "nsIScrollbarFrame.h"
 
 // An entry in the tree's image cache
 struct nsTreeImageCacheEntry
@@ -130,6 +131,8 @@ public:
 
   void PaintTreeBody(nsIRenderingContext& aRenderingContext,
                      const nsRect& aDirtyRect, nsPoint aPt);
+
+  nsITreeBoxObject* GetTreeBoxObject() const { return mTreeBoxObject; }
 
 protected:
   // This method paints a specific column background of the tree.
