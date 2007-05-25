@@ -502,7 +502,7 @@ FinishGCArenaLists(JSRuntime *rt)
     }
 }
 
-uint8 *
+JS_FRIEND_API(uint8 *)
 js_GetGCThingFlags(void *thing)
 {
     JSGCPageInfo *pi;
