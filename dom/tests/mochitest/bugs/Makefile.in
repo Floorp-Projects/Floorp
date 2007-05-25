@@ -51,6 +51,7 @@ _TEST_FILES	= \
 		test_bug342448.html \
 		test_bug345521.html \
 		test_bug351601.html \
+		test_bug370098.html \
 		test_bug377539.html \
 		$(NULL)
 
