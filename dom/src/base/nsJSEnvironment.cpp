@@ -1045,7 +1045,7 @@ NoteContextChild(JSTracer *trc, void *thing, uint32 kind)
   if (kind == JSTRACE_OBJECT || kind == JSTRACE_NAMESPACE ||
       kind == JSTRACE_QNAME || kind == JSTRACE_XML) {
     ContextCallbackItem *item = NS_STATIC_CAST(ContextCallbackItem*, trc);
-    item->cb->NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, thing);
+    item->cb->NoteScriptChild(JAVASCRIPT, thing);
   }
 }
 
