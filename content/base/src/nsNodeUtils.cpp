@@ -69,6 +69,12 @@
     }                                                             \
     prev = node;                                                  \
     node = node->GetNodeParent();                                 \
+                                                                  \
+    if (!node && prev->HasFlag(NODE_FORCE_XBL_BINDINGS)) {        \
+      /* For elements that have the NODE_FORCE_XBL_BINDINGS flag  \
+         set we need to notify the document */                    \
+      node = prev->GetOwnerDoc();                                 \
+    }                                                             \
   } while (node);                                                 \
   PR_END_MACRO
 
