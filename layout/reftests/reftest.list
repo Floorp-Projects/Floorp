@@ -92,3 +92,6 @@ include text-indent/reftest.list
 
 # text-transform/
 include text-transform/reftest.list
+
+# native-theme/
+include native-theme/reftest.list
