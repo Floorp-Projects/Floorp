@@ -181,9 +181,10 @@ public:
 private:
     ~nsProxyEventObject();
 
-    nsCOMPtr<nsISomeInterface>  mRealInterface;
+    // Member ordering is important: See note in the destructor.
     nsProxyEventClass          *mClass;
     nsCOMPtr<nsProxyObject>     mProxyObject;
+    nsCOMPtr<nsISomeInterface>  mRealInterface;
 
     // Weak reference, maintained by the parent nsProxyObject
     nsProxyEventObject         *mNext;
