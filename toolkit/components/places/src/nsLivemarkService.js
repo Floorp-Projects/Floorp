@@ -435,7 +435,9 @@ LivemarkLoadListener.prototype = {
       this._livemark.locked = false;
       return;
     }
-
+    
+    this._bms.beginUpdateBatch();
+      
     try {  
       // We need this to make sure the item links are safe
       var secMan = Cc[SEC_CONTRACTID].getService(Ci.nsIScriptSecurityManager);
@@ -480,6 +482,7 @@ LivemarkLoadListener.prototype = {
       }
     } 
     finally {
+      this._bms.endUpdateBatch();
       this._processor.listener = null;
       this._processor = null;
       this._livemark.locked = false;
