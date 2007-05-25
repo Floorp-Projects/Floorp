@@ -2805,9 +2805,7 @@ var bookmarksButtonObserver = {
       openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
                  BROWSER_ADD_BM_FEATURES, dialogArgs);
 #else
-      var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-      var uri = ios.newURI(url, null, null);
-      PlacesUtils.showAddBookmarkUI(uri, split[1]);
+      PlacesUtils.showMinimalAddBookmarkUI(makeURI(url), split[1]);
 #endif
     }
   },
