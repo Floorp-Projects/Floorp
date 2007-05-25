@@ -283,7 +283,10 @@ nsDownloadManager::ImportDownloadHistory()
     if (NS_FAILED(rv)) continue;
 
     rv = ds->GetTarget(dl, NC_DateStarted, PR_TRUE, getter_AddRefs(node));
-    if (NS_FAILED(rv)) continue;
+    if (NS_FAILED(rv) || !node) {
+      rv = ds->GetTarget(dl, NC_DateEnded, PR_TRUE, getter_AddRefs(node));
+      if (NS_FAILED(rv)) continue;
+    }
     nsCOMPtr<nsIRDFDate> rdfDate = do_QueryInterface(node, &rv);
     if (NS_FAILED(rv)) continue;
     rv = rdfDate->GetValue(&startTime);
