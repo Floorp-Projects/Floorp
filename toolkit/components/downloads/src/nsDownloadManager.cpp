@@ -682,22 +682,6 @@ nsDownloadManager::GetCanCleanUp(PRBool *aResult)
 }
 
 NS_IMETHODIMP
-nsDownloadManager::SetListener(nsIDownloadProgressListener *aListener)
-{
-  mListener = aListener;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDownloadManager::GetListener(nsIDownloadProgressListener** aListener)
-{
-  NS_IF_ADDREF(*aListener = mListener);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDownloadManager::PauseDownload(PRUint32 aID)
 {
   return PauseResumeDownload(aID, PR_TRUE);
@@ -849,6 +833,57 @@ nsDownloadManager::GetDBConnection(mozIStorageConnection **aDBConn)
   NS_ADDREF(*aDBConn = mDBConn);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownloadManager::AddListener(nsIDownloadProgressListener *aListener)
+{
+  mListeners.AppendObject(aListener);
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownloadManager::RemoveListener(nsIDownloadProgressListener *aListener)
+{
+  mListeners.RemoveObject(aListener);
+  
+  return NS_OK;
+}
+
+void
+nsDownloadManager::NotifyListenersOnDownloadStateChange(PRInt16 aOldState,
+                                                        nsIDownload *aDownload)
+{
+  for (PRInt32 i = mListeners.Count() - 1; i >= 0; --i)
+    mListeners[i]->OnDownloadStateChange(aOldState, aDownload);
+}
+
+void
+nsDownloadManager::NotifyListenersOnProgressChange(nsIWebProgress *aProgress,
+                                                   nsIRequest *aRequest,
+                                                   PRInt64 aCurSelfProgress,
+                                                   PRInt64 aMaxSelfProgress,
+                                                   PRInt64 aCurTotalProgress,
+                                                   PRInt64 aMaxTotalProgress,
+                                                   nsIDownload *aDownload)
+{
+  for (PRInt32 i = mListeners.Count() - 1; i >= 0; --i)
+    mListeners[i]->OnProgressChange(aProgress, aRequest, aCurSelfProgress,
+                                    aMaxSelfProgress, aCurTotalProgress,
+                                    aMaxTotalProgress, aDownload);
+}
+
+void
+nsDownloadManager::NotifyListenersOnStateChange(nsIWebProgress *aProgress,
+                                                nsIRequest *aRequest,
+                                                PRUint32 aStateFlags,
+                                                nsresult aStatus,
+                                                nsIDownload *aDownload)
+{
+  for (PRInt32 i = mListeners.Count() - 1; i >= 0; --i)
+    mListeners[i]->OnStateChange(aProgress, aRequest, aStateFlags, aStatus,
+                                 aDownload);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1178,8 +1213,7 @@ nsDownload::SetState(DownloadState aState)
   nsresult rv = UpdateDB();
   NS_ENSURE_SUCCESS(rv, rv);
   
-  if (mDownloadManager->mListener)
-    mDownloadManager->mListener->OnDownloadStateChange(oldState, this);
+  mDownloadManager->NotifyListenersOnDownloadStateChange(oldState, this);
 
   return NS_OK;
 }
@@ -1248,14 +1282,9 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
   mCurrBytes = aCurTotalProgress;
   mMaxBytes = aMaxTotalProgress;
 
-  if (mDownloadManager->NeedsUIUpdate()) {
-    nsIDownloadProgressListener* dpl = mDownloadManager->mListener;
-    if (dpl) {
-      dpl->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress,
-                            aMaxSelfProgress, aCurTotalProgress,
-                            aMaxTotalProgress, this);
-    }
-  }
+  mDownloadManager->NotifyListenersOnProgressChange(
+    aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress,
+    aCurTotalProgress, aMaxTotalProgress, this);
 
   return NS_OK;
 }
@@ -1454,11 +1483,8 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       mDownloadManager->RemoveDownload(mID);
   }
 
-  if (mDownloadManager->NeedsUIUpdate()) {
-    nsIDownloadProgressListener* dpl = mDownloadManager->mListener;
-    if (dpl)
-      dpl->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus, this);
-  }
+  mDownloadManager->NotifyListenersOnStateChange(aWebProgress, aRequest,
+                                                 aStateFlags, aStatus, this);
 
   return UpdateDB();
 }

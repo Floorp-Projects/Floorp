@@ -206,7 +206,7 @@ function run_test()
     onLocationChange: function(a, b, c, d) { },
     onSecurityChange: function(a, b, c, d) { }
   };
-  dm.listener = listener;
+  dm.addListener(listener);
 
   print("Try creating observer...");
   var observer = {

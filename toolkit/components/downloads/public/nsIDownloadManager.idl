@@ -51,7 +51,7 @@ interface nsIDownloadProgressListener;
 interface nsISimpleEnumerator;
 interface mozIStorageConnection;
 
-[scriptable, uuid(541712be-f582-4e1c-a85e-7b4652c4f392)]
+[scriptable, uuid(1c015a52-c4e3-4c1c-9071-2c2eaeed8bfc)]
 interface nsIDownloadManager : nsISupports {
   // Download States
   const short DOWNLOAD_NOTSTARTED       = -1;
@@ -166,11 +166,6 @@ interface nsIDownloadManager : nsISupports {
   readonly attribute mozIStorageConnection DBConnection;
 
   /** 
-   * The Download Manager's progress listener.
-   */
-  attribute nsIDownloadProgressListener listener;
-
-  /** 
    * Whether or not there are downloads that can be cleaned up (removed)
    * i.e. downloads that have completed, have failed or have been canceled. 
    */
@@ -190,6 +185,16 @@ interface nsIDownloadManager : nsISupports {
    * An enumeration of active nsIDownloads
    */
   readonly attribute nsISimpleEnumerator activeDownloads;
+
+  /**
+   * Adds a listener from the download manager.
+   */
+  void addListener(in nsIDownloadProgressListener aListener);
+
+  /**
+   * Removes a listener from the download manager.
+   */
+  void removeListener(in nsIDownloadProgressListener aListener);
 };
 
 

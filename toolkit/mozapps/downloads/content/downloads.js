@@ -520,7 +520,7 @@ function Startup()
   // notifications. 
   var downloadStrings = document.getElementById("downloadStrings");
   gDownloadListener = new DownloadProgressListener(document, downloadStrings);
-  gDownloadManager.listener = gDownloadListener;
+  gDownloadManager.addListener(gDownloadListener);
 
   // The active downloads list is created by the front end only when the download starts,  
   // so we need to pre-populate it with any downloads that were already going. 
@@ -580,7 +580,7 @@ function Startup()
 
 function Shutdown() 
 {
-  gDownloadManager.listener = null;
+  gDownloadManager.removeListener(gDownloadListener);
 
   var pbi = Components.classes["@mozilla.org/preferences-service;1"]
                       .getService(Components.interfaces.nsIPrefBranch2);
