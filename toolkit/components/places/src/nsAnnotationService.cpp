@@ -283,7 +283,7 @@ nsAnnotationService::InitTables(mozIStorageConnection* aDBConn)
         "CREATE INDEX moz_annos_item_idindex ON moz_items_annos (item_id)"));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_items_annos_attributesindex ON moz_items_annos (anno_attribute_id)"));
+        "CREATE INDEX moz_items_annos_attributesindex ON moz_items_annos (item_id, anno_attribute_id)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
