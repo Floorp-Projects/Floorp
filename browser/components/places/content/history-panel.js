@@ -63,6 +63,15 @@ function HistorySidebarInit()
     document.getElementById("byday").setAttribute("checked", "true");
 
   initContextMenu();
+  
+  // set the place on the tree dynamically
+  // otherwise, we will end up calling the place's tree's load() twice
+  var optionsRef = {};
+  var queriesRef = {};
+  PlacesUtils.history.queryStringToQueries(ORGANIZER_ROOT_HISTORY_UNSORTED, queriesRef, {}, optionsRef);
+  SetSortingAndGrouping(optionsRef.value);
+  var place = PlacesUtils.history.queriesToQueryString(queriesRef.value, 1, optionsRef.value);
+  gHistoryTree.place = place;
 
   gSearchBox.focus();
 }
@@ -110,7 +119,8 @@ function historyAddBookmarks()
 #endif
 }
 
-function SetSortingAndGrouping() {
+function SetSortingAndGrouping(aOptions) 
+{
   const NHQO = Ci.nsINavHistoryQueryOptions;
   var sortingMode;
   var groups = [];
@@ -134,9 +144,8 @@ function SetSortingAndGrouping() {
       sortingMode = NHQO.SORT_BY_TITLE_ASCENDING;
       break;
   }
-  var options = asQuery(gHistoryTree.getResult().root).queryOptions;
-  options.setGroupingMode(groups, groups.length);
-  options.sortingMode = sortingMode;
+  aOptions.setGroupingMode(groups, groups.length);
+  aOptions.sortingMode = sortingMode;
 }
 
 function searchHistory(aInput)
@@ -144,14 +153,15 @@ function searchHistory(aInput)
   if (aInput) {
     if (!gSearching) {
       // Unset grouping when searching; applyFilter will update the view
-      var options = asQuery(gHistoryTree.getResult().root).queryOptions;
+      var options = gHistoryTree.getResult().root.queryOptions;
       options.setGroupingMode([], 0);
       gSearching = true;
     }
   }
   else {
     // applyFilter will update the view
-    SetSortingAndGrouping();
+    var options = gHistoryTree.getResult().root.queryOptions;
+    SetSortingAndGrouping(options);
     gSearching = false;
   }
 
