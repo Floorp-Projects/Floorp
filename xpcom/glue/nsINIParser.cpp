@@ -61,6 +61,7 @@ public:
   ~AutoFILE() { if (fp_) fclose(fp_); }
   operator FILE *() { return fp_; }
   FILE** operator &() { return &fp_; }
+  void operator=(FILE *fp) { fp_ = fp; }
 private:
   FILE *fp_;
 };
