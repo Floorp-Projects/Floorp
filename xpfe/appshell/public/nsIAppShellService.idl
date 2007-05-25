@@ -111,6 +111,13 @@ interface nsIAppShellService : nsISupports
                                    out JSContext aJSContext);
 
   /**
+   * Return true if the application hidden window was provided by the
+   * application. If it wasn't, the default hidden window was used. This will
+   * usually be false on all non-mac platforms.
+   */
+  readonly attribute boolean applicationProvidedHiddenWindow;
+
+  /**
    * Add a window to the application's registry of windows.  These windows
    * are generally shown in the Windows taskbar, and the application
    * knows it can't quit until it's out of registered windows.
