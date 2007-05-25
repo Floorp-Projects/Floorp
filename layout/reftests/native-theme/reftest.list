@@ -1,0 +1,10 @@
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") != button-html-not-blank.html about:blank # bug 382048
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") != button-not-blank.html about:blank # bug 382048
+!= checkbox-not-blank.html about:blank
+!= combobox-not-blank.html about:blank
+!= fieldset-not-blank.html about:blank
+!= file-not-blank.html about:blank
+!= listbox-not-blank.html about:blank
+!= radio-not-blank.html about:blank
+!= text-control-not-blank.html about:blank
+!= textarea-not-blank.html about:blank
