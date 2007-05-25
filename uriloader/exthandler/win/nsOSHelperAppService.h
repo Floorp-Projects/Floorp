@@ -57,7 +57,7 @@ public:
   virtual ~nsOSHelperAppService();
 
   // override nsIExternalProtocolService methods
-  NS_IMETHOD ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
+  nsresult OSProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
   nsresult LoadUriInternal(nsIURI * aURL);
   NS_IMETHOD GetApplicationDescription(const nsACString& aScheme, nsAString& _retval);
 

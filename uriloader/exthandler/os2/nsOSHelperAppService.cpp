@@ -1240,9 +1240,9 @@ nsOSHelperAppService::GetApplicationAndParametersFromINI(const nsACString& aProt
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
+nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
 {
-  LOG(("-- nsOSHelperAppService::ExternalProtocolHandlerExists for '%s'\n",
+  LOG(("-- nsOSHelperAppService::OSProtocolHandlerExists for '%s'\n",
        aProtocolScheme));
   *aHandlerExists = PR_FALSE;
 

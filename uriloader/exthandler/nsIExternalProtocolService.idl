@@ -45,7 +45,8 @@ interface nsIPrompt;
 
 /**
  * The external protocol service is used for finding and launching
- * platform specific applications for particular protocols.
+ * web handlers (a la registerProtocolHandler in the HTML5 draft) or 
+ * platform-specific applications for handling particular protocols.
  *
  * You can ask the external protocol service if it has an external
  * handler for a given protocol scheme. And you can ask it to load 
