@@ -531,10 +531,12 @@ XPCCycleGCCallback(JSContext *cx, JSGCStatus status)
 
 void XPCMarkNotification(void *thing, uint8 flags, void *closure)
 {
+    // XXX This can't deal with JS atoms yet, but probably should.
     uint8 ty = flags & GCF_TYPEMASK;
-    if (ty != GCX_OBJECT &&
-        ty != GCX_PRIVATE && 
-        ty != GCX_XML)
+    if(ty != GCX_OBJECT &&
+       ty != GCX_NAMESPACE && 
+       ty != GCX_QNAME &&
+       ty != GCX_XML)
         return;
 
     JSObjectRefcounts* jsr = NS_STATIC_CAST(JSObjectRefcounts*, closure);
@@ -627,25 +629,47 @@ nsXPConnect::Unroot(void *p)
     return NS_OK;
 }
 
-static void
-TraverseJSScript(JSScript* script, nsCycleCollectionTraversalCallback& cb)
+struct ContextCallbackItem : public JSTracer
 {
-    JSAtomMap* map = &script->atomMap;
-    uintN i, length = map->length;
-    JSAtom** vector = map->vector;
+    nsCycleCollectionTraversalCallback *cb;
+};
 
-    for(i = 0; i < length; i++)
+void
+NoteJSChild(JSTracer *trc, void *thing, uint32 kind)
+{
+    if(kind == JSTRACE_ATOM)
     {
-        JSAtom* atom = vector[i];
-        if(ATOM_IS_OBJECT(atom))
-            cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                               ATOM_TO_OBJECT(atom));
+        JSAtom *atom = (JSAtom *)thing;
+        jsval v = ATOM_KEY(atom);
+        if(!JSVAL_IS_PRIMITIVE(v))
+        {
+            thing = JSVAL_TO_GCTHING(v);
+            kind = JSTRACE_OBJECT;
+        }
+    }
+
+    if(kind == JSTRACE_OBJECT || kind == JSTRACE_NAMESPACE ||
+       kind == JSTRACE_QNAME || kind == JSTRACE_XML)
+    {
+        ContextCallbackItem *item = NS_STATIC_CAST(ContextCallbackItem*, trc);
+        item->cb->NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, thing);
     }
 }
 
+static uint8 GCTypeToTraceKindMap[GCX_NTYPES] = {
+    JSTRACE_OBJECT,     /* GCX_OBJECT */
+    JSTRACE_STRING,     /* GCX_STRING (unused) */
+    JSTRACE_DOUBLE,     /* GCX_DOUBLE (unused) */
+    JSTRACE_STRING,     /* GCX_MUTABLE_STRING (unused) */
+    JSTRACE_FUNCTION,   /* GCX_PRIVATE (unused) */
+    JSTRACE_NAMESPACE,  /* GCX_NAMESPACE */
+    JSTRACE_QNAME,      /* GCX_QNAME */
+    JSTRACE_XML         /* GCX_XML */
+    // We don't care about JSTRACE_STRING, so stop here
+};
+
 NS_IMETHODIMP
-nsXPConnect::Traverse(void *p,
-                      nsCycleCollectionTraversalCallback &cb)
+nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 {
     if(!mCycleCollectionContext)
         return NS_ERROR_FAILURE;
@@ -655,115 +679,129 @@ nsXPConnect::Traverse(void *p,
     PRUint32 refcount = mObjRefcounts->Get(p);
     NS_ASSERTION(refcount > 0, "JS object but unknown to the JS GC?");
 
-    JSObject *obj = NS_STATIC_CAST(JSObject*, p);
-    JSClass* clazz = OBJ_GET_CLASS(cx, obj);
+    uint8 ty = *js_GetGCThingFlags(p) & GCF_TYPEMASK;
+    if(ty != GCX_OBJECT && ty != GCX_NAMESPACE && ty != GCX_QNAME &&
+       ty != GCX_XML)
+        return NS_OK;
 
 #ifdef DEBUG_CC
-    char name[72];
-    if(XPCNativeWrapper::IsNativeWrapperClass(clazz))
+    if(ty == GCX_OBJECT)
     {
-        XPCWrappedNative* wn = XPCNativeWrapper::GetWrappedNative(cx, obj);
-        if(wn)
+        JSObject *obj = NS_STATIC_CAST(JSObject*, p);
+        JSClass *clazz = OBJ_GET_CLASS(cx, obj);
+        char name[72];
+        if(XPCNativeWrapper::IsNativeWrapperClass(clazz))
         {
-            XPCNativeScriptableInfo* si = wn->GetScriptableInfo();
-            if(si)
+            XPCWrappedNative* wn = XPCNativeWrapper::GetWrappedNative(cx, obj);
+            if(wn)
             {
-                JS_snprintf(name, sizeof(name), "XPCNativeWrapper (%s)",
-                            si->GetJSClass()->name);
-            }
-            else
-            {
-                nsIClassInfo* ci = wn->GetClassInfo();
-                char* className = nsnull;
-                if(ci)
-                    ci->GetClassDescription(&className);
-                if(className)
+                XPCNativeScriptableInfo* si = wn->GetScriptableInfo();
+                if(si)
                 {
                     JS_snprintf(name, sizeof(name), "XPCNativeWrapper (%s)",
-                                className);
-                    PR_Free(className);
+                                si->GetJSClass()->name);
                 }
                 else
                 {
-                    XPCNativeSet* set = wn->GetSet();
-                    XPCNativeInterface** array = set->GetInterfaceArray();
-                    PRUint16 count = set->GetInterfaceCount();
-
-                    if(count > 0)
+                    nsIClassInfo* ci = wn->GetClassInfo();
+                    char* className = nsnull;
+                    if(ci)
+                        ci->GetClassDescription(&className);
+                    if(className)
+                    {
                         JS_snprintf(name, sizeof(name), "XPCNativeWrapper (%s)",
-                                    array[0]->GetNameString());
+                                    className);
+                        PR_Free(className);
+                    }
                     else
-                        JS_snprintf(name, sizeof(name), "XPCNativeWrapper");
+                    {
+                        XPCNativeSet* set = wn->GetSet();
+                        XPCNativeInterface** array = set->GetInterfaceArray();
+                        PRUint16 count = set->GetInterfaceCount();
+
+                        if(count > 0)
+                            JS_snprintf(name, sizeof(name),
+                                        "XPCNativeWrapper (%s)",
+                                        array[0]->GetNameString());
+                        else
+                            JS_snprintf(name, sizeof(name), "XPCNativeWrapper");
+                    }
                 }
+            }
+            else
+            {
+                JS_snprintf(name, sizeof(name), "XPCNativeWrapper");
             }
         }
         else
         {
-            JS_snprintf(name, sizeof(name), "XPCNativeWrapper");
+            XPCNativeScriptableInfo* si = nsnull;
+            if(IS_PROTO_CLASS(clazz))
+            {
+                XPCWrappedNativeProto* p =
+                    (XPCWrappedNativeProto*) JS_GetPrivate(cx, obj);
+                si = p->GetScriptableInfo();
+            }
+            if(si)
+            {
+                JS_snprintf(name, sizeof(name), "JS Object (%s - %s)",
+                            clazz->name, si->GetJSClass()->name);
+            }
+            else if(clazz == &js_ScriptClass)
+            {
+                JSScript* script = (JSScript*) JS_GetPrivate(cx, obj);
+                if(script->filename)
+                {
+                    JS_snprintf(name, sizeof(name), "JS Object (Script - %s)",
+                                script->filename);
+                }
+                else
+                {
+                    JS_snprintf(name, sizeof(name), "JS Object (Script)");
+                }
+            }
+            else if(clazz == &js_FunctionClass)
+            {
+                JSFunction* fun = (JSFunction*) JS_GetPrivate(cx, obj);
+                if(fun->atom)
+                {
+                    JS_snprintf(name, sizeof(name), "JS Object (Function - %s)",
+                                js_AtomToPrintableString(cx, fun->atom));
+                }
+                else
+                {
+                    JS_snprintf(name, sizeof(name), "JS Object (Function)");
+                }
+            }
+            else
+            {
+                JS_snprintf(name, sizeof(name), "JS Object (%s)", clazz->name);
+            }
         }
+
+        cb.DescribeNode(refcount, sizeof(JSObject), name);
     }
     else
     {
-        XPCNativeScriptableInfo* si = nsnull;
-        if(IS_PROTO_CLASS(clazz))
-        {
-            XPCWrappedNativeProto* p =
-                (XPCWrappedNativeProto*) JS_GetPrivate(cx, obj);
-            si = p->GetScriptableInfo();
-        }
-        if(si)
-        {
-            JS_snprintf(name, sizeof(name), "JS Object (%s - %s)", clazz->name,
-                        si->GetJSClass()->name);
-        }
-        else if(clazz == &js_ScriptClass)
-        {
-            JSScript* script = (JSScript*) JS_GetPrivate(cx, obj);
-            if(script->filename)
-            {
-                JS_snprintf(name, sizeof(name), "JS Object (Script - %s)",
-                            script->filename);
-            }
-            else
-            {
-                JS_snprintf(name, sizeof(name), "JS Object (Script)");
-            }
-        }
-        else if(clazz == &js_FunctionClass)
-        {
-            JSFunction* fun = (JSFunction*) JS_GetPrivate(cx, obj);
-            if(fun->atom)
-            {
-                JS_snprintf(name, sizeof(name), "JS Object (Function - %s)",
-                            js_AtomToPrintableString(cx, fun->atom));
-            }
-            else
-            {
-                JS_snprintf(name, sizeof(name), "JS Object (Function)");
-            }
-        }
-        else
-        {
-            JS_snprintf(name, sizeof(name), "JS Object (%s)", clazz->name);
-        }
+        cb.DescribeNode(refcount, sizeof(JSObject), "JS Object");
     }
-
-    cb.DescribeNode(refcount, sizeof(JSObject), name);
 #else
     cb.DescribeNode(refcount);
 #endif
-    if (!p)
-        return NS_OK;    
 
-    if(XPCNativeWrapper::IsNativeWrapperClass(clazz))
-    {
-        // XPCNativeWrapper keeps its wrapped native alive (see XPC_NW_Mark).
-        XPCWrappedNative* wn = XPCNativeWrapper::GetWrappedNative(cx, obj);
-        if(wn)
-            cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                               wn->GetFlatJSObject());
-    }
-    else if(clazz == &XPC_WN_Tearoff_JSClass)
+    ContextCallbackItem trc;
+    trc.cb = &cb;
+
+    JS_TRACER_INIT(&trc, cx, NoteJSChild);
+    JS_TraceChildren(&trc, p, GCTypeToTraceKindMap[ty]);
+
+    if(ty != GCX_OBJECT)
+        return NS_OK;
+    
+    JSObject *obj = NS_STATIC_CAST(JSObject*, p);
+    JSClass* clazz = OBJ_GET_CLASS(cx, obj);
+
+    if(clazz == &XPC_WN_Tearoff_JSClass)
     {
         // A tearoff holds a strong reference to its native object
         // (see XPCWrappedNative::FlatJSObjectFinalized). Its XPCWrappedNative
@@ -772,72 +810,15 @@ nsXPConnect::Traverse(void *p,
             (XPCWrappedNativeTearOff*) JS_GetPrivate(cx, obj);
         cb.NoteXPCOMChild(to->GetNative());
     }
-    else if(IS_PROTO_CLASS(clazz))
-    {
-        // See XPC_WN_Shared_Proto_Mark.
-        XPCWrappedNativeProto* p =
-            (XPCWrappedNativeProto*) JS_GetPrivate(cx, obj);
-        if(p)
-            // Mark scope.
-            p->GetScope()->Traverse(cb);
-    }
+    // XXX XPCNativeWrapper seems to be the only class that doesn't hold a
+    //     strong reference to its nsISupports private. This test does seem
+    //     fragile though, we should probably whitelist classes that do hold
+    //     a strong reference, but that might not be possible.
     else if(clazz->flags & JSCLASS_HAS_PRIVATE &&
-            clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS)
+            clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS &&
+            !XPCNativeWrapper::IsNativeWrapperClass(clazz))
     {
         cb.NoteXPCOMChild(NS_STATIC_CAST(nsISupports*, JS_GetPrivate(cx, obj)));
-    }
-    else if(clazz == &js_ScriptClass)
-    {
-        JSScript* script = (JSScript*) JS_GetPrivate(cx, obj);
-        TraverseJSScript(script, cb);
-    }
-    else if(clazz == &js_FunctionClass)
-    {
-        JSFunction* fun = (JSFunction*) JS_GetPrivate(cx, obj);
-        if (fun) {
-            JSAtom* atom = fun->atom;
-            if(atom && ATOM_IS_OBJECT(atom))
-                cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                                   ATOM_TO_OBJECT(atom));
-            JSScript* script = FUN_SCRIPT(fun);
-            if (script)
-                TraverseJSScript(script, cb);
-        }
-    }
-
-    cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                       OBJ_GET_PARENT(cx, obj));
-    cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                       OBJ_GET_PROTO(cx, obj));
-
-    for(uint32 i = JSSLOT_START(clazz); i < STOBJ_NSLOTS(obj); ++i) 
-    {
-        jsval val = STOBJ_GET_SLOT(obj, i);
-        if (JSVAL_IS_OBJECT(val)) 
-            cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                               JSVAL_TO_OBJECT(val));
-    }
-
-    JSScope* scope;
-    if(OBJ_IS_NATIVE(obj) && (scope = OBJ_SCOPE(obj)))
-    {
-        JSScopeProperty* sprop;
-        for(sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent)
-        {
-            if(SCOPE_HAD_MIDDLE_DELETE(scope) &&
-               !SCOPE_HAS_PROPERTY(scope, sprop))
-                continue;
-            jsid id = sprop->id;
-            if(JSID_IS_OBJECT(id))
-                cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                                   JSID_TO_OBJECT(id));
-            if(sprop->attrs & JSPROP_GETTER)
-                cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                                   JSVAL_TO_GCTHING((jsval)sprop->getter));
-            if(sprop->attrs & JSPROP_SETTER)
-                cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                                   JSVAL_TO_GCTHING((jsval)sprop->setter));
-        }
     }
 
 #ifndef XPCONNECT_STANDALONE

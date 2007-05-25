@@ -89,23 +89,6 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(void *p,
             cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, obj);
     }
 
-    // XXX If there is a scriptable helper we will not be able to find out what
-    //     it marked.
-
-
-    // xpc_TraceForValidWrapper calls TraceJS and TraceScopeJSObjects.
-
-    // XPCWrappedNative marks its proto (see TraceJS).
-    if(tmp->HasProto())
-        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                           tmp->GetProto()->GetJSProtoObject());
-
-    // XPCWrappedNative marks its mNativeWrapper (see TraceJS).
-    cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, tmp->mNativeWrapper);
-
-    // XPCWrappedNative marks its scope.
-    tmp->GetScope()->Traverse(cb);
-
     // XPCWrappedNative keeps its native object alive.
     cb.NoteXPCOMChild(tmp->GetIdentityObject());
 

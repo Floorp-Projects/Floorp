@@ -79,7 +79,7 @@ JS_BEGIN_EXTERN_C
 # error "mutable string type index botch!"
 #endif
 
-extern uint8 *
+extern JS_FRIEND_API(uint8 *)
 js_GetGCThingFlags(void *thing);
 
 /*

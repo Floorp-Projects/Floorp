@@ -1025,13 +1025,43 @@ nsJSContext::~nsJSContext()
   }
 }
 
+struct ContextCallbackItem : public JSTracer
+{
+  nsCycleCollectionTraversalCallback *cb;
+};
+
+void
+NoteContextChild(JSTracer *trc, void *thing, uint32 kind)
+{
+  if (kind == JSTRACE_ATOM) {
+    JSAtom *atom = (JSAtom *)thing;
+    jsval v = ATOM_KEY(atom);
+    if (!JSVAL_IS_PRIMITIVE(v)) {
+      thing = JSVAL_TO_GCTHING(v);
+      kind = JSTRACE_OBJECT;
+    }
+  }
+
+  if (kind == JSTRACE_OBJECT || kind == JSTRACE_NAMESPACE ||
+      kind == JSTRACE_QNAME || kind == JSTRACE_XML) {
+    ContextCallbackItem *item = NS_STATIC_CAST(ContextCallbackItem*, trc);
+    item->cb->NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, thing);
+  }
+}
+
 // QueryInterface implementation for nsJSContext
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSContext)
 // XXX Should we call ClearScope here?
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsJSContext)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGlobalWrapperRef)
-  cb.NoteScriptChild(JAVASCRIPT, ::JS_GetGlobalObject(tmp->mContext));
+  {
+    ContextCallbackItem trc;
+    trc.cb = &cb;
+
+    JS_TRACER_INIT(&trc, tmp->mContext, NoteContextChild);
+    js_TraceContext(&trc, tmp->mContext);
+  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSContext)
