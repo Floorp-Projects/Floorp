@@ -2835,6 +2835,11 @@ nsNavHistory::AddVisitChain(nsIURI* aURI, PRTime aTime,
                        &referringVisit, aSessionID, aRedirectBookmark);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // for redirects in frames, we don't want to see those items in history
+    // see bug #381453 for more details
+    if (!aToplevel) {
+      transitionType = nsINavHistoryService::TRANSITION_EMBED;
+    }
   } else if (aReferrer) {
     // If there is a referrer, we know you came from somewhere, either manually
     // or automatically. For toplevel windows, assume its manual and you want
