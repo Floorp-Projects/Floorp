@@ -57,9 +57,9 @@ nsProxyEventObject::nsProxyEventObject(nsProxyObject *aParent,
                             nsProxyEventClass* aClass,
                             already_AddRefed<nsISomeInterface> aRealInterface,
                             nsresult *rv)
-    : mRealInterface(aRealInterface),
-      mClass(aClass),
+    : mClass(aClass),
       mProxyObject(aParent),
+      mRealInterface(aRealInterface),
       mNext(nsnull)
 {
     *rv = InitStub(aClass->GetProxiedIID());
@@ -71,6 +71,11 @@ nsProxyEventObject::~nsProxyEventObject()
     // XXX assert this!
 
     mProxyObject->LockedRemove(this);
+
+    // mRealInterface must be released before mProxyObject so that the last
+    // release of the proxied object is proxied to the correct thread.
+    // See bug 337492.
+    mRealInterface = nsnull;
 }
 
 //
