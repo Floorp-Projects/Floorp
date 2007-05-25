@@ -104,17 +104,17 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-height-4.html image-base-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-height-5.html image-height-10-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-height-6.html image-height-10-ref.html
 != image-base-ref.html image-top-10-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-top-4.html image-base-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-top-5.html image-top-10-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-top-6.html image-top-10-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-top-4.html image-base-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-top-5.html image-top-10-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-top-6.html image-top-10-ref.html
 != image-base-ref.html image-width-10-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-width-4.html image-base-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-width-4.html image-base-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-width-5.html image-width-10-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-width-6.html image-width-10-ref.html
 != image-base-ref.html image-left-10-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-left-4.html image-base-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-left-5.html image-left-10-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-left-6.html image-left-10-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-left-4.html image-base-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-left-5.html image-left-10-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-left-6.html image-left-10-ref.html
 == image-top-height-4.html image-height-4.html
 == image-top-height-5.html image-height-5.html
 == image-top-height-6.html image-height-6.html
