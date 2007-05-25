@@ -903,11 +903,6 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIDOMNode> node, prevNode;
-    nsCOMPtr<nsIContent> content;
-    PRBool bTableCellsFound = PR_FALSE;
-    NS_NAMED_LITERAL_STRING(_begin_tr, "<tr>");
-    NS_NAMED_LITERAL_STRING(_end_tr, "</tr>");
-
     for (i = 0; i < count; i++) {
       mSelection->GetRangeAt(i, getter_AddRefs(range));
 
@@ -916,26 +911,26 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
       // get the row, compare it to previous row and emit </tr><tr> as needed
       range->GetStartContainer(getter_AddRefs(node));
       NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
-      content = do_QueryInterface(node);
-      if (content) {
-        nsIAtom *name = content->Tag();
-        if (name == nsGkAtoms::tr && content->IsNodeOfType(nsINode::eHTML)) {
-          if (prevNode != node) { 
-            if (bTableCellsFound) { 
-              aOutputString.Append(_end_tr);
-            }
-            aOutputString.Append(_begin_tr);
-            prevNode = node;
-          }
-          bTableCellsFound = PR_TRUE;
+      if (node != prevNode) {
+        if (prevNode) {
+          rv = SerializeNodeEnd(prevNode, aOutputString);
+          NS_ENSURE_SUCCESS(rv, rv);
+          prevNode = nsnull;
+        }
+        nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+        if (content && content->Tag() == nsGkAtoms::tr) {
+          rv = SerializeNodeStart(node, 0, -1, aOutputString);
+          NS_ENSURE_SUCCESS(rv, rv);
+          prevNode = node;
         }
       }
 
       rv = SerializeRangeToString(range, aOutputString);
       NS_ENSURE_SUCCESS(rv, rv);
     }
-    if (bTableCellsFound) {
-      aOutputString.Append(_end_tr);
+    if (prevNode) {
+      rv = SerializeNodeEnd(prevNode, aOutputString);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     mSelection = nsnull;
