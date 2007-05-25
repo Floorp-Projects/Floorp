@@ -397,6 +397,18 @@ HelperApps.prototype = {
     }
   },
   
+  onBeginUpdateBatch: function (aDataSource) {
+    for (var i = 0; i < this._observers.length; ++i) {
+      this._observers[i].onBeginUpdateBatch(aDataSource);
+    }
+  },
+  
+  onEndUpdateBatch: function (aDataSource) {
+    for (var i = 0; i < this._observers.length; ++i) {
+      this._observers[i].onEndUpdateBatch(aDataSource);
+    }
+  },
+  
   beginUpdateBatch: function (aDataSource) {
     for (var i = 0; i < this._observers.length; ++i) {
       this._observers[i].beginUpdateBatch(aDataSource);
