@@ -791,7 +791,7 @@ PlacesTreeView.prototype = {
         var obs = this._observers[i];
         obs[aFunctionName].apply(obs, aArgs);
       }
-      catch (ex) { Components.reportError(ex); }
+      catch (ex) { Components.utils.reportError(ex); }
     }
   },
 
