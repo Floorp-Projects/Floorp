@@ -343,12 +343,6 @@ HelperApps.prototype = {
     }
     return this._inner.HasAssertion(aSource, aProperty, aTarget, aTruthValue);
   },
-  AddObserver: function (aObserver) {
-    this._inner.AddObserver(aObserver);
-  },
-  RemoveObserver: function (aObserver) {
-    this._inner.RemoveObserver(aObserver);
-  },
   ArcLabelsIn: function (aNode) {
     return this._inner.ArcLabelsIn(aNode);
   },
