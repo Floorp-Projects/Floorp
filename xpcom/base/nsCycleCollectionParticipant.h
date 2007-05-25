@@ -78,7 +78,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionISupports,
 #undef  IMETHOD_VISIBILITY
 #define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
 
-struct nsCycleCollectionParticipant;
+class nsCycleCollectionParticipant;
 
 struct nsCycleCollectionTraversalCallback
 {
