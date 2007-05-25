@@ -1959,20 +1959,21 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
         // set 'src' to be the object from which we get the value and
         // prepare for out param
 
+        if((paramInfo.IsOut() || paramInfo.IsDipper()) &&
+           !paramInfo.IsRetval() &&
+           (JSVAL_IS_PRIMITIVE(argv[i]) ||
+            !OBJ_GET_PROPERTY(ccx, JSVAL_TO_OBJECT(argv[i]),
+                              rt->GetStringID(XPCJSRuntime::IDX_VALUE),
+                              &src)))
+        {
+            ThrowBadParam(NS_ERROR_XPC_NEED_OUT_OBJECT, i, ccx);
+            goto done;
+        }
+
         if(paramInfo.IsOut())
         {
             dp->SetPtrIsData();
             dp->ptr = &dp->val;
-
-            if(!paramInfo.IsRetval() &&
-               (JSVAL_IS_PRIMITIVE(argv[i]) ||
-                !OBJ_GET_PROPERTY(ccx, JSVAL_TO_OBJECT(argv[i]),
-                                  rt->GetStringID(XPCJSRuntime::IDX_VALUE),
-                                  &src)))
-            {
-                ThrowBadParam(NS_ERROR_XPC_NEED_OUT_OBJECT, i, ccx);
-                goto done;
-            }
 
             if(type.IsPointer() &&
                type_tag != nsXPTType::T_INTERFACE &&
