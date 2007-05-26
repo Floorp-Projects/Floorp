@@ -131,6 +131,8 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
 #endif
                       bool succeeded)
 {
+  printf("Wrote minidump ID %s\n", minidump_id);
+
   XP_CHAR minidumpPath[XP_PATH_MAX];
   int size = XP_PATH_MAX;
   XP_CHAR* p = Concat(minidumpPath, dump_path, &size);
@@ -248,6 +250,12 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   nsCOMPtr<nsIFile> exePath;
   rv = aXREDirectory->Clone(getter_AddRefs(exePath));
   NS_ENSURE_SUCCESS(rv, rv);
+
+#if defined(XP_MACOSX)
+  exePath->Append(NS_LITERAL_STRING("crashreporter.app"));
+  exePath->Append(NS_LITERAL_STRING("Contents"));
+  exePath->Append(NS_LITERAL_STRING("MacOS"));
+#endif
 
   exePath->Append(NS_LITERAL_STRING(CRASH_REPORTER_FILENAME));
 
