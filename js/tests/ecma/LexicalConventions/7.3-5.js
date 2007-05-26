@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '7.3-5.js';
+
 /**
    File Name:          7.3-5.js
    ECMA Section:       7.3 Comments

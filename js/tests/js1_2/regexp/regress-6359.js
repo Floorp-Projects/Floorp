@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'regress-6359.js';
+
 /**
  *  File Name:          regress-6359.js
  *  Reference:          ** replace with bugzilla URL or document reference **

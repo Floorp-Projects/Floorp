@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,9 +35,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'regress-99663.js';
+
 //-----------------------------------------------------------------------------
 var UBound = 0;
-var bug = 99663;
+var BUGNUMBER = 99663;
 var summary = 'Regression test for Bugzilla bug 99663';
 /*
  * This testcase expects error messages containing

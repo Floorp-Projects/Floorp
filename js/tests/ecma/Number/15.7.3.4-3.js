@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.7.3.4-3.js';
+
 /**
    File Name:          15.7.3.4-3.js
    ECMA Section:       15.7.3.4 Number.NaN

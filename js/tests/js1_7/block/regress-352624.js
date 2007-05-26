@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-352624.js';
 //-----------------------------------------------------------------------------
-var bug = 352624;
+var BUGNUMBER = 352624;
 var summary = 'Do not crash with |let (map)| in WAY_TOO_MUCH_GC builds';
 var actual = 'No Crash';
 var expect = 'No Crash';
@@ -48,21 +50,21 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
   printStatus('This bug can only be verified with a WAY_TOO_MUCH_GC build');
-  
+ 
   let (x = [].map(function () {})) { x; }
   reportCompare(expect, actual, summary + ': 1');
 
   let (x = [].map(function () {})) 3
-  reportCompare(expect, actual, summary + ': 2');
+    reportCompare(expect, actual, summary + ': 2');
 
   var g = function() {};
   (function() { let x = [].map(function () {}); g(x); })()
-  reportCompare(expect, actual, summary + ': 3');
+    reportCompare(expect, actual, summary + ': 3');
 
-  for(let x in [1].map(function () { })) { } 
+  for(let x in [1].map(function () { })) { }
   reportCompare(expect, actual, summary + ': 4');
 
   exitFunc ('test');

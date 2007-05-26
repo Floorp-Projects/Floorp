@@ -20,7 +20,7 @@
  * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,15 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("Error - tag name mismatch error message should include tag name");
+gTestfile = 'regress-344455.js';
 
-var bug = 344455;
-var summary = 'Error - tag name mismatch error message should include tag name';
+var summary = "Error - tag name mismatch error message should include tag name";
+var BUGNUMBER = 344455;
 var actual = '';
 var expect = 'SyntaxError: XML tag name mismatch (expected foo)';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 try
 {

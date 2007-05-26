@@ -39,6 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'ToInt-004.js';
+
 /**
  *  JavaScript to Java type conversion.
  *
@@ -59,7 +61,7 @@
 var SECTION = "number conversion to int";
 var VERSION = "1_4";
 var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-SECTION;
+  SECTION;
 var BUGNUMBER="335589";
 
 startTest();
@@ -78,68 +80,68 @@ var i = 0;
 // Special cases:  0, -0, Infinity, -Infinity, and NaN
 
 a[i++] = new TestObject(
-    "dt.setInteger(java.lang.Integer.MIN_VALUE - 0.5)",
-    "dt.PUB_INT",
-    "dt.getInteger()",
-    "typeof dt.getInteger()",
-    java.lang.Integer.MIN_VALUE,
-    "number" );
+  "dt.setInteger(java.lang.Integer.MIN_VALUE - 0.5)",
+  "dt.PUB_INT",
+  "dt.getInteger()",
+  "typeof dt.getInteger()",
+  java.lang.Integer.MIN_VALUE,
+  "number" );
 
 a[i++] = new TestObject(
-    "dt.setInteger(java.lang.Integer.MIN_VALUE - 0.4)",
-    "dt.PUB_INT",
-    "dt.getInteger()",
-    "typeof dt.getInteger()",
-    java.lang.Integer.MIN_VALUE,
-    "number" );
+  "dt.setInteger(java.lang.Integer.MIN_VALUE - 0.4)",
+  "dt.PUB_INT",
+  "dt.getInteger()",
+  "typeof dt.getInteger()",
+  java.lang.Integer.MIN_VALUE,
+  "number" );
 
 a[i++] = new TestObject(
-    "dt.setInteger(java.lang.Integer.MIN_VALUE + 0.6)",
-    "dt.PUB_INT",
-    "dt.getInteger()",
-    "typeof dt.getInteger()",
-    java.lang.Integer.MIN_VALUE+1,
-    "number" );
+  "dt.setInteger(java.lang.Integer.MIN_VALUE + 0.6)",
+  "dt.PUB_INT",
+  "dt.getInteger()",
+  "typeof dt.getInteger()",
+  java.lang.Integer.MIN_VALUE+1,
+  "number" );
 
 a[i++] = new TestObject(
-    "dt.setInteger(java.lang.Integer.MIN_VALUE + 0.5)",
-    "dt.PUB_INT",
-    "dt.getInteger()",
-    "typeof dt.getInteger()",
-    java.lang.Integer.MIN_VALUE +1,
-    "number" );
+  "dt.setInteger(java.lang.Integer.MIN_VALUE + 0.5)",
+  "dt.PUB_INT",
+  "dt.getInteger()",
+  "typeof dt.getInteger()",
+  java.lang.Integer.MIN_VALUE +1,
+  "number" );
 
 a[i++] = new TestObject(
-    "dt.setInteger(java.lang.Integer.MIN_VALUE + 0.4)",
-    "dt.PUB_INT",
-    "dt.getInteger()",
-    "typeof dt.getInteger()",
-    java.lang.Integer.MIN_VALUE +1,
-    "number" );
+  "dt.setInteger(java.lang.Integer.MIN_VALUE + 0.4)",
+  "dt.PUB_INT",
+  "dt.getInteger()",
+  "typeof dt.getInteger()",
+  java.lang.Integer.MIN_VALUE +1,
+  "number" );
 
 a[i++] = new TestObject(
-    "dt.setInteger(java.lang.Integer.MIN_VALUE - 0.999)",
-    "dt.PUB_INT",
-    "dt.getInteger()",
-    "typeof dt.getInteger()",
-    java.lang.Integer.MIN_VALUE,
-    "number" );
+  "dt.setInteger(java.lang.Integer.MIN_VALUE - 0.999)",
+  "dt.PUB_INT",
+  "dt.getInteger()",
+  "typeof dt.getInteger()",
+  java.lang.Integer.MIN_VALUE,
+  "number" );
 
 for ( i = 0; i < a.length; i++ ) {
-    new TestCase(
-	a[i].description +"; "+ a[i].javaFieldName,
-	a[i].jsValue,
-	a[i].javaFieldValue );
+  new TestCase(
+    a[i].description +"; "+ a[i].javaFieldName,
+    a[i].jsValue,
+    a[i].javaFieldValue );
 
-    new TestCase(
-	a[i].description +"; " + a[i].javaMethodName,
-	a[i].jsValue,
-	a[i].javaMethodValue );
+  new TestCase(
+    a[i].description +"; " + a[i].javaMethodName,
+    a[i].jsValue,
+    a[i].javaMethodValue );
 
-    new TestCase(
-	a[i].javaTypeName,
-	a[i].jsType,
-	a[i].javaTypeValue );
+  new TestCase(
+    a[i].javaTypeName,
+    a[i].jsType,
+    a[i].javaTypeValue );
 }
 
 test();
@@ -147,16 +149,16 @@ test();
 function TestObject( description, javaField, javaMethod, javaType,
 		     jsValue, jsType )
 {
-    eval (description );
+  eval (description );
 
-    this.description = description;
-    this.javaFieldName = javaField;
-    this.javaFieldValue = eval( javaField );
-    this.javaMethodName = javaMethod;
-    this.javaMethodValue = eval( javaMethod );
-    this.javaTypeName = javaType,
-	this.javaTypeValue = eval( javaType );
+  this.description = description;
+  this.javaFieldName = javaField;
+  this.javaFieldValue = eval( javaField );
+  this.javaMethodName = javaMethod;
+  this.javaMethodValue = eval( javaMethod );
+  this.javaTypeName = javaType,
+    this.javaTypeValue = eval( javaType );
 
-    this.jsValue   = jsValue;
-    this.jsType      = jsType;
+  this.jsValue   = jsValue;
+  this.jsType      = jsType;
 }

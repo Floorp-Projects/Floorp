@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '9.3.1-2.js';
+
 /**
    File Name:          9.3.1-2.js
    ECMA Section:       9.3  Type Conversion:  ToNumber

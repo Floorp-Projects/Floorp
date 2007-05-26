@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,19 +34,21 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 14 April 2001
  *
  * SUMMARY: Testing  obj.__defineSetter__(), obj.__defineGetter__()
  * Note: this is a non-ECMA language extension
  *
- * This test is the same as getset-004.js, except that here we 
+ * This test is the same as getset-004.js, except that here we
  * store the getter/setter functions in global variables.
  */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+var gTestfile = 'getset-005.js';
 var UBound = 0;
-var bug = '(none)';
+var BUGNUMBER = '(none)';
 var summary = 'Testing  obj.__defineSetter__(), obj.__defineGetter__()';
 var statprefix = 'Status: ';
 var status = '';
@@ -171,15 +174,15 @@ addThis();
 
 // Use both obj and obj2  -
 obj2.name = obj.name +  obj2.name;
-  status = 'obj2 = new TestObject() after 2 sets, 1 get';
-  actual = [obj2.nameSETS,obj2.nameGETS];
-  expect = [2,1];
-  addThis();
+status = 'obj2 = new TestObject() after 2 sets, 1 get';
+actual = [obj2.nameSETS,obj2.nameGETS];
+expect = [2,1];
+addThis();
 
-  status = 'In SECTION3 of test after 3 sets, 3 gets';
-  actual = [obj.nameSETS,obj.nameGETS];
-  expect = [3,3];  // we left off at [3,2] above -
-  addThis();
+status = 'In SECTION3 of test after 3 sets, 3 gets';
+actual = [obj.nameSETS,obj.nameGETS];
+expect = [3,3];  // we left off at [3,2] above -
+addThis();
 
 
 //---------------------------------------------------------------------------------
@@ -199,9 +202,9 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
- 
+
   for (var i = 0; i < UBound; i++)
   {
     reportCompare(expectedvalues[i], actualvalues[i], getStatus(i));

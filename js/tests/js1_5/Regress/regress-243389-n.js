@@ -35,14 +35,16 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-243389-n.js';
 //-----------------------------------------------------------------------------
 // test from Henrik Gemal
-var bug = 243389;
+var BUGNUMBER = 243389;
 var summary = 'Don\'t crash on Regular Expression';
 var actual = 'Crash';
 var expect = 'error';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 // this is a syntax error which will fire

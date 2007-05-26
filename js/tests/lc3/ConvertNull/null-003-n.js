@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'null-003-n.js';
+
 /**
  *  Preferred Argument Conversion.
  *
@@ -45,11 +48,11 @@
 var SECTION = "Preferred argument conversion:  null";
 var VERSION = "1_4";
 var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-SECTION;
+  SECTION;
 startTest();
 
 TEST_CLASS = new
-Packages.com.netscape.javascript.qa.lc3.jsnull.Null_001;
+  Packages.com.netscape.javascript.qa.lc3.jsnull.Null_001;
 
 // Call an ambiguous method without using the explicit method
 // syntax should be an error.
@@ -58,8 +61,8 @@ DESCRIPTION = "TEST_CLASS.ambiguous(null)";
 EXPECTED = "error";
 
 new TestCase(
-    "TEST_CLASS.ambiguous(null)",
-    "error",
-    TEST_CLASS.ambiguous(null) );
+  "TEST_CLASS.ambiguous(null)",
+  "error",
+  TEST_CLASS.ambiguous(null) );
 
 test();

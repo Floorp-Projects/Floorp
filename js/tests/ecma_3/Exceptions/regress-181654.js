@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    23 Nov 2002
  * SUMMARY: Calling toString for an object derived from the Error class
@@ -42,8 +44,9 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=181654
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-181654.js';
 var UBound = 0;
-var bug = '181654';
+var BUGNUMBER = '181654';
 var summary = 'Calling toString for an object derived from the Error class should be possible.';
 var status = '';
 var statusitems = [];
@@ -58,7 +61,7 @@ var EXPECTED_FORMAT = 0;
 // derive MyError from Error
 function MyError( msg )
 {
-	this.message = msg;
+  this.message = msg;
 }
 MyError.prototype = new Error();
 MyError.prototype.name = "MyError";
@@ -96,7 +99,7 @@ try
 }
 catch(err5)
 {
- actual = examineThis(err5, "thrown");
+  actual = examineThis(err5, "thrown");
 }
 expect = EXPECTED_FORMAT;
 addThis();
@@ -140,7 +143,7 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   for (var i = 0; i < UBound; i++)

@@ -35,15 +35,17 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-271716-n.js';
 //-----------------------------------------------------------------------------
-var bug = 271716;
+var BUGNUMBER = 271716;
 var summary = 'Don\'t Crash on infinite loop creating new Arrays';
 var actual = 'Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
-  
+ 
 try
 {
   a = new Array();

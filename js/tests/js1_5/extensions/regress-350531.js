@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-350531.js';
 //-----------------------------------------------------------------------------
-var bug = 350531;
+var BUGNUMBER = 350531;
 var summary = 'exhaustively test parenthesization of binary operator subsets';
 var actual = '';
 var expect = '';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
 // Translated from permcomb.py, found at
 // http://biotech.embl-ebi.ac.uk:8400/sw/common/share/python/examples/dstruct/classics/permcomb.py
 // by searching for "permcomb.py".
@@ -85,7 +87,7 @@ function test()
       var pick = list.slice(i, i+1);                    // sequence slice
       var rest = list.slice(0, i).concat(list.slice(i+1)); // keep [:i] part
       for each (var x in subset(rest, size-1))
-                 result.push(pick.concat(x));
+	result.push(pick.concat(x));
     }
     return result;
   }
@@ -99,7 +101,7 @@ function test()
       var pick = list.slice(i, i+1);
       var rest = list.slice(i+1);                       // drop [:i] part
       for each (var x in combo(rest, size - 1))
-                 result.push(pick.concat(x));
+	result.push(pick.concat(x));
     }
     return result;
   }

@@ -40,11 +40,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.4.14.js';
+
 START("13.4.4.14 - XML hasOwnProperty()");
 
 TEST(1, true, XML.prototype.hasOwnProperty("hasOwnProperty"));
-    
-x = 
+   
+x =
 <alpha attr1="value1">
     <bravo>one</bravo>
     <charlie>

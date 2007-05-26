@@ -36,13 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var bug = 357063;
+gTestfile = 'regress-357063-02.js';
+
+var BUGNUMBER = 357063;
 var summary = 'GC hazard in XMLEquality';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 var xml1 = new XML("<xml>text<a>B</a></xml>");
 var xml2 = new XML("<xml>text<a>C</a></xml>");

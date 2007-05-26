@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '11.2.3-2-n.js';
+
 /**
    File Name:          11.2.3-2-n.js
    ECMA Section:       11.2.3. Function Calls

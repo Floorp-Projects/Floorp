@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 03 September 2001
  *
  * SUMMARY: Double quotes should be escaped in uneval(new Error('""'))
@@ -47,8 +49,9 @@
  * obj2.toSource() == obj1.toSource().
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-96284-002.js';
 var UBound = 0;
-var bug = 96284;
+var BUGNUMBER = 96284;
 var summary = 'Double quotes should be escaped in Error.prototype.toSource()';
 var status = '';
 var statusitems = [];
@@ -167,7 +170,7 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   for (var i = 0; i < UBound; i++)

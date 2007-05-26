@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-349012-05.js';
 //-----------------------------------------------------------------------------
-var bug = 349012;
+var BUGNUMBER = 349012;
 var summary = 'generator recursively calling itself via close is an Error';
 var actual = '';
 var expect = '';
@@ -48,7 +50,7 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   var iter;
@@ -69,7 +71,7 @@ function test()
     print(ex + '');
     actual = (ex instanceof TypeError) && (ex + '').indexOf(' already executing generator') != -1;
   }
-  
+ 
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');

@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = '15.3.4-1.js';
+
 /**
    File Name:          15.3.4-1.js
    ECMA Section:       15.3.4  Properties of the Function Prototype Object
@@ -73,19 +76,19 @@ new TestCase( SECTION,
 
 //  new TestCase( SECTION,  "Function.prototype.__proto__",     Object.prototype,           Function.prototype.__proto__ );
 
-new TestCase( SECTION,  
-	      "Function.prototype.valueOf",       
-	      Object.prototype.valueOf,   
+new TestCase( SECTION, 
+	      "Function.prototype.valueOf",      
+	      Object.prototype.valueOf,  
 	      Function.prototype.valueOf );
 
-new TestCase( SECTION,  
-	      "Function.prototype()",             
-	      (void 0),                   
+new TestCase( SECTION, 
+	      "Function.prototype()",            
+	      (void 0),                  
 	      Function.prototype() );
 
-new TestCase( SECTION,  
-	      "Function.prototype(1,true,false,'string', new Date(),null)",  
-	      (void 0), 
+new TestCase( SECTION, 
+	      "Function.prototype(1,true,false,'string', new Date(),null)", 
+	      (void 0),
 	      Function.prototype(1,true,false,'string', new Date(),null) );
 
 test();

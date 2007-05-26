@@ -40,10 +40,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '11.6.2.js';
+
 START("11.6.2 - XMLList Assignment");
 
 // Set the name of the only customer in the order to Fred Jones
-order = 
+order =
 <order>
     <customer>
         <name>John Smith</name>
@@ -57,8 +59,8 @@ order =
         <price>399.99</price>
     </item>
 </order>;
-    
-correct = 
+   
+correct =
 <order>
     <customer>
         <name>Fred Jones</name>
@@ -77,7 +79,7 @@ order.customer.name = "Fred Jones";
 TEST(1, correct, order);
 
 // Replace all the hobbies for the only customer in the order
-order = 
+order =
 <order>
     <customer>
         <name>John Smith</name>
@@ -93,7 +95,7 @@ order =
     </item>
 </order>;
 
-correct = 
+correct =
 <order>
     <customer>
         <name>John Smith</name>
@@ -113,7 +115,7 @@ order.customer.hobby = "shopping"
 TEST(2, correct, order);
 
 // Attempt to set the sale date of the item.  Throw an exception if more than 1 item exists.
-order = 
+order =
 <order>
     <customer>
         <name>John Smith</name>
@@ -125,7 +127,7 @@ order =
     </item>
 </order>;
 
-correct = 
+correct =
 <order>
     <customer>
         <name>John Smith</name>
@@ -140,7 +142,7 @@ correct =
 order.item.saledate = "05-07-2002"
 TEST(3, correct, order);
 
-order = 
+order =
 <order>
     <customer>
         <name>John Smith</name>
@@ -164,7 +166,7 @@ try {
 }
 
 // Replace all the employee's hobbies with their new favorite pastime
-emps = 
+emps =
 <employees>
     <employee id = "1">
         <name>John</name>
@@ -183,7 +185,7 @@ emps =
     </employee>
 </employees>;
 
-correct = 
+correct =
 <employees>
     <employee id = "1">
         <name>John</name>
@@ -206,7 +208,7 @@ emps.employee.(@id == 3).hobby = "working";
 TEST(5, correct, emps);
 
 // Replace the first employee with George
-emps = 
+emps =
 <employees>
     <employee id = "1">
         <name>John</name>
@@ -222,7 +224,7 @@ emps =
     </employee>
 </employees>;
 
-correct = 
+correct =
 <employees>
     <employee id = "4">
         <name>George</name>
@@ -242,7 +244,7 @@ emps.employee[0] = <employee id="4"><name>George</name><age>27</age></employee>;
 TEST(6, emps, correct);
 
 // Add a new employee to the end of the employee list
-emps = 
+emps =
 <employees>
     <employee id = "1">
         <name>John</name>
@@ -258,7 +260,7 @@ emps =
     </employee>
 </employees>;
 
-correct = 
+correct =
 <employees>
     <employee id = "1">
         <name>John</name>
@@ -279,10 +281,10 @@ correct =
 </employees>;
 
 emps.employee += <employee id="4"><name>Frank</name><age>39</age></employee>;
-TEST(7, correct, emps); 
+TEST(7, correct, emps);
 
 // Add a new employee to the end of the employee list
-emps = 
+emps =
 <employees>
     <employee id = "1">
         <name>John</name>
@@ -298,7 +300,7 @@ emps =
     </employee>
 </employees>;
 
-correct = 
+correct =
 <employees>
     <employee id = "1">
         <name>John</name>
@@ -319,6 +321,6 @@ correct =
 </employees>;
 
 emps.employee[emps.employee.length()] = <employee id="4"><name>Frank</name><age>39</age></employee>;
-TEST(7, correct, emps); 
+TEST(7, correct, emps);
 
 END();

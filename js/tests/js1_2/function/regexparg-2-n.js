@@ -36,11 +36,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'regexparg-2-n.js';
+
 /**
    File Name:          regexparg-1.js
-   Description:	
+   Description:
 
-   Regression test for 
+   Regression test for
    http://scopus/bugsplat/show_bug.cgi?id=122787
    Passing a regular expression as the first constructor argument fails
 

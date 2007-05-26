@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'switch2.js';
+
 /**
    Filename:     switch2.js
    Description:  'Tests the switch statement'
@@ -58,17 +60,17 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 // test defaults not at the end; regression test for a bug that
 // nearly made it into 4.06
 function f0(i) {
-    switch(i) {
-    default:
-    case "a":
-    case "b":
-	return "ab*"
-	    case "c":
-	    return "c";
-    case "d":
-	return "d";
-    }
-    return "";
+  switch(i) {
+  default:
+  case "a":
+  case "b":
+    return "ab*"
+      case "c":
+    return "c";
+  case "d":
+    return "d";
+  }
+  return "";
 }
 new TestCase(SECTION, 'switch statement',
 	     f0("a"), "ab*");
@@ -86,17 +88,17 @@ new TestCase(SECTION, 'switch statement',
 	     f0("d"), "d");
 
 function f1(i) {
-    switch(i) {
-    case "a":
-    case "b":
-    default:
-	return "ab*"
-	    case "c":
-	    return "c";
-    case "d":
-	return "d";
-    }
-    return "";
+  switch(i) {
+  case "a":
+  case "b":
+  default:
+    return "ab*"
+      case "c":
+    return "c";
+  case "d":
+    return "d";
+  }
+  return "";
 }
 
 new TestCase(SECTION, 'switch statement',
@@ -116,15 +118,15 @@ new TestCase(SECTION, 'switch statement',
 
 // Switch on integer; will use TABLESWITCH opcode in C engine
 function f2(i) {
-    switch (i) {
-    case 0:
-    case 1:
-	return 1;
-    case 2:
-	return 2;
-    }
-    // with no default, control will fall through
-    return 3;
+  switch (i) {
+  case 0:
+  case 1:
+    return 1;
+  case 2:
+    return 2;
+  }
+  // with no default, control will fall through
+  return 3;
 }
 
 new TestCase(SECTION, 'switch statement',
@@ -150,7 +152,7 @@ new TestCase(SECTION, 'switch statement',
 se = 0;
 switch (se) {
 default:
-    se = 1;
+  se = 1;
 }
 new TestCase(SECTION, 'switch statement',
 	     se, 1);
@@ -158,12 +160,12 @@ new TestCase(SECTION, 'switch statement',
 // in loop, break should only break out of switch
 se = 0;
 for (var i=0; i < 2; i++) {
-    switch (i) {
-    case 0:
-    case 1:
-	break;
-    }
-    se = 1;
+  switch (i) {
+  case 0:
+  case 1:
+    break;
+  }
+  se = 1;
 }
 new TestCase(SECTION, 'switch statement',
 	     se, 1);
@@ -173,11 +175,11 @@ se = 0;
 i = 0;
 switch (i) {
 case 0:
-    se++;
-    /* fall through */
+  se++;
+  /* fall through */
 case 1:
-    se++;
-    break;
+  se++;
+  break;
 }
 new TestCase(SECTION, 'switch statement',
 	     se, 2);

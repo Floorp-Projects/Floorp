@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.4.5.2-1.js';
+
 /**
    File Name:          15.4.5.2-1.js
    ECMA Section:       Array.length

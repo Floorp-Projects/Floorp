@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-350704.js';
 //-----------------------------------------------------------------------------
-var bug = 350704;
+var BUGNUMBER = 350704;
 var summary = 'decompilation of let nested in for';
 var actual = '';
 var expect = '';
@@ -48,15 +50,15 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   var f;
 
   f = function() { try{} catch(y) { for(z(let(y=3)4); ; ) ; } }
-  expect = 'function () {\n    try {\n    } catch (y) {\n        ' + 
+  expect = 'function () {\n    try {\n    } catch (y) {\n        ' +
     'for (z((let (y = 3) 4));;) {\n        }\n    }\n}'
-  actual = f + '';
+    actual = f + '';
   compareSource(expect, actual, summary);
 
   exitFunc ('test');

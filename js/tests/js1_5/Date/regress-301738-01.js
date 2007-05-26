@@ -34,24 +34,26 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-301738-01.js';
 //-----------------------------------------------------------------------------
-var bug = 301738;
+var BUGNUMBER = 301738;
 var summary = 'Date parse compatibilty with MSIE';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-/*  
-  Case 1. The input string contains an English month name.
-          The form of the string can be month f l, or f month l, or
-          f l month which each evaluate to the same date. 
-          If f and l are both greater than or equal to 70, or
-          both less than 70, the date is invalid.
-          The year is taken to be the greater of the values f, l.
-          If the year is greater than or equal to 70 and less than 100,
-          it is considered to be the number of years after 1900.
+/* 
+    Case 1. The input string contains an English month name.
+    The form of the string can be month f l, or f month l, or
+    f l month which each evaluate to the same date.
+    If f and l are both greater than or equal to 70, or
+    both less than 70, the date is invalid.
+    The year is taken to be the greater of the values f, l.
+    If the year is greater than or equal to 70 and less than 100,
+    it is considered to be the number of years after 1900.
 */
 
 var month = 'January';

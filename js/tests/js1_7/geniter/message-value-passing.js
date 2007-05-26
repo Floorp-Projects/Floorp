@@ -34,12 +34,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'message-value-passing.js';
 //-----------------------------------------------------------------------------
-var bug     = 326466;
+var BUGNUMBER     = 326466;
 var summary = "Generator value/exception passing";
 var actual, expect;
 
-printBugNumber(bug);
+printBugNumber(BUGNUMBER);
 printStatus(summary);
 
 /**************

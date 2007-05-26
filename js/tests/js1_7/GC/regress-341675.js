@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-341675.js';
 //-----------------------------------------------------------------------------
-var bug = 341675;
+var BUGNUMBER = 341675;
 var summary = 'Iterators: still infinite loop during GC';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var globalToPokeGC = {};

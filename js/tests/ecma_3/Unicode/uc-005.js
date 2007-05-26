@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    15 July 2002
  * SUMMARY: Testing identifiers with double-byte names
@@ -64,8 +66,9 @@
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'uc-005.js';
 var UBound = 0;
-var bug = 58274;
+var BUGNUMBER = 58274;
 var summary = 'Testing identifiers with double-byte names';
 var status = '';
 var statusitems = [];
@@ -97,7 +100,7 @@ var s2 =  '\u02b2, b) {try { Z';
 var s3 =  '\u02b3 : var Z';
 var s4 =  '\u02b4 = Z';
 var s5 =  '\u02b1; } catch (Z'
-var s6 =  '\u02b5) { for (var Z';
+  var s6 =  '\u02b5) { for (var Z';
 var s7 =  '\u02b6 in Z';
 var s8 =  '\u02b5){for (1; 1<0; Z';
 var s9 =  '\u02b7++) {new Array()[Z';
@@ -189,7 +192,7 @@ test();
  * |arr[1]| is the 1st identifier, |arr[2]| the 2nd, and so on.
  *
  * Note, however, f.toString() is implementation-independent.
- * For example, it may begin with '\nfunction' instead of 'function'. 
+ * For example, it may begin with '\nfunction' instead of 'function'.
  *
  * Rhino uses a Unicode representation for f.toString(); whereas
  * SpiderMonkey uses an ASCII representation, putting escape sequences
@@ -244,9 +247,9 @@ function condenseStr(str)
    *
    * So replace them with the empty string -
    */
-  str = str.replace(/[\r\n]/g, '') 
-  return eval("'" + str + "'")
-}
+  str = str.replace(/[\r\n]/g, '')
+    return eval("'" + str + "'")
+    }
 
 
 function addThis()
@@ -261,7 +264,7 @@ function addThis()
 function test()
 {
   enterFunc('test');
-  printBugNumber(bug);
+  printBugNumber(BUGNUMBER);
   printStatus(summary);
 
   for (var i=0; i<UBound; i++)

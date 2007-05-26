@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,51 +34,53 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 26 Feb 2001
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=44009
  *
  * SUMMARY:  Testing that we don't crash on obj.toSource()
  */
-//-------------------------------------------------------------------------------------------------
-var bug = 44009;
+//-----------------------------------------------------------------------------
+var gTestfile = 'regress-44009.js';
+var BUGNUMBER = 44009;
 var summary = "Testing that we don't crash on obj.toSource()";
 var obj1 = {};
-var sToSource = ''; 
-var self = this;  //capture a reference to the global JS object - 
+var sToSource = '';
+var self = this;  //capture a reference to the global JS object -
 
 
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 test();
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
 
-function test() 
+function test()
 {
-  enterFunc ('test'); 
-  printBugNumber (bug);
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   var obj2 = {};
 
-  // test various objects and scopes - 
+  // test various objects and scopes -
   testThis(self);
   testThis(this);
   testThis(obj1);
   testThis(obj2);
 
   reportCompare('No Crash', 'No Crash', '');
- 
+
   exitFunc ('test');
 }
 
 
-// We're just testing that we don't crash by doing this - 
+// We're just testing that we don't crash by doing this -
 function testThis(obj)
 {
   sToSource = obj.toSource();
-  obj.prop = obj; 
+  obj.prop = obj;
   sToSource = obj.toSource();
 }

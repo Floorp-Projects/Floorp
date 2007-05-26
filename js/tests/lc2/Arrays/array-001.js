@@ -35,25 +35,28 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- /**
-        File Name:      array-001.js
-        Description:
 
-        When accessing a Java field whose value is a java.lang.Array,
-        or if a java method returns a java.lang.Array, JavaScript should
-        read the value as the JavaScript JavaArray, an object whose class
-        is JavaArray.
+gTestfile = 'array-001.js';
 
-        To test this:
+/**
+   File Name:      array-001.js
+   Description:
 
-        1.  Call a java method that returns a java.lang.Array
-        2.  Check the value of the returned object, which should be the value
-            of the array.  Iterate through the array indices.
-        3.  Check the type of the returned object, which should be "object"
-        4.  Check the class of the object, using Object.prototype.toString,
-            which should be "[object JavaArray]"
-        5.  Check the class of the JavaArray, using getClass, and compare
-            it to java.lang.Class.forName("java.lang.Array");
+   When accessing a Java field whose value is a java.lang.Array,
+   or if a java method returns a java.lang.Array, JavaScript should
+   read the value as the JavaScript JavaArray, an object whose class
+   is JavaArray.
+
+   To test this:
+
+   1.  Call a java method that returns a java.lang.Array
+   2.  Check the value of the returned object, which should be the value
+   of the array.  Iterate through the array indices.
+   3.  Check the type of the returned object, which should be "object"
+   4.  Check the class of the object, using Object.prototype.toString,
+   which should be "[object JavaArray]"
+   5.  Check the class of the JavaArray, using getClass, and compare
+   it to java.lang.Class.forName("java.lang.Array");
 
    @author     christine@netscape.com
    @version    1.00
@@ -91,7 +94,7 @@ test_array[i] = new TestValue( "( new java.lang.String('hello') ).getBytes()",
 				"l".charCodeAt(0),
 				"o".charCodeAt(0) ],
 			       "[B"
-    );
+  );
 i++;
 
 // char[]
@@ -109,52 +112,52 @@ i++;
 
 
 for ( i = 0; i < java_array.length; i++ ) {
-    CompareValues( java_array[i], test_array[i] );
+  CompareValues( java_array[i], test_array[i] );
 }
 
 test();
 
 function CompareValues( javaval, testval ) {
-    //  Check value
+  //  Check value
 
-    for ( var i = 0; i < testval.value.length; i++ ) {
-        new TestCase( SECTION,
-		      "("+ testval.description +")["+i+"]",
-		      testval.value[i],
-		      javaval.value[i] );
-    }
-
-    //  Check type
-
+  for ( var i = 0; i < testval.value.length; i++ ) {
     new TestCase( SECTION,
-		  "typeof (" + testval.description +")",
-		  testval.type,
-		  javaval.type );
+		  "("+ testval.description +")["+i+"]",
+		  testval.value[i],
+		  javaval.value[i] );
+  }
+
+  //  Check type
+
+  new TestCase( SECTION,
+		"typeof (" + testval.description +")",
+		testval.type,
+		javaval.type );
 
 
-    //  Check class
-    testcases[testcases.length ] = new TestCase(    SECTION,
-                                                    "The Java Class of ( "+ testval.description +" )",
-                                                    testval.lcclass +"",
-                                                    javaval.lcclass +"");
+  //  Check class
+  new TestCase(SECTION,
+               "The Java Class of ( "+ testval.description +" )",
+               testval.lcclass +"",
+               javaval.lcclass +"");
 
 }
 function JavaValue( value ) {
-    this.value  = value;
-    this.type   = typeof value;
-    this.classname = this.value.getClass();
+  this.value  = value;
+  this.type   = typeof value;
+  this.classname = this.value.getClass();
 
-    jlo_class = java.lang.Class.forName("java.lang.Object")
-	jlo_getClass_method = jlo_class.getMethod("getClass", null)
-	this.lcclass = jlo_getClass_method.invoke(value, null );
+  jlo_class = java.lang.Class.forName("java.lang.Object")
+    jlo_getClass_method = jlo_class.getMethod("getClass", null)
+    this.lcclass = jlo_getClass_method.invoke(value, null );
 
-    return this;
+  return this;
 }
 function TestValue( description, value, lcclass ) {
-    this.lcclass = java.lang.Class.forName( lcclass );
-    this.description = description;
-    this.value = value;
-    this.type =  E_TYPE;
-    this.classname = E_CLASS;
-    return this;
+  this.lcclass = java.lang.Class.forName( lcclass );
+  this.description = description;
+  this.value = value;
+  this.type =  E_TYPE;
+  this.classname = E_CLASS;
+  return this;
 }

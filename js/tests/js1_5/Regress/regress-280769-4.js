@@ -35,13 +35,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-280769-4.js';
 //-----------------------------------------------------------------------------
-var bug = 280769;
+var BUGNUMBER = 280769;
 var summary = 'Do not overflow 64K length of char sequence in RegExp []';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 
@@ -51,20 +53,20 @@ var prefixes = ["000", "00", "0"];
 
 function to_4_hex(i)
 {
-    var printed = i.toString(16);
-    if (printed.length < 4) {
-        printed= prefixes[printed.length - 1]+printed;
-    }
-    return printed;
+  var printed = i.toString(16);
+  if (printed.length < 4) {
+    printed= prefixes[printed.length - 1]+printed;
+  }
+  return printed;
 
 }
 
 var a = new Array(N);
 for (var i = 0; i != N; ++i) {
-    a[i] = to_4_hex(2*i);
+  a[i] = to_4_hex(2*i);
 }
 
-var str = '[\\u'+a.join('\\u')+']'; 
+var str = '[\\u'+a.join('\\u')+']';
 // str is [\u0000\u0002\u0004...\u<printed value of 2N>]
 
 var re = new RegExp(str);

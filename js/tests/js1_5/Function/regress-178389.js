@@ -37,15 +37,17 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-178389.js';
 //-----------------------------------------------------------------------------
-var bug = 178389;
+var BUGNUMBER = 178389;
 var summary = 'Function.prototype.toSource should not override Function.prototype.toString';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
-  
+ 
 function f()
 {
   var g = function (){};

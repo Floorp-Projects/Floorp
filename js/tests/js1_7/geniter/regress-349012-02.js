@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-349012-02.js';
 //-----------------------------------------------------------------------------
-var bug = 349012;
+var BUGNUMBER = 349012;
 var summary = 'generators with nested try finally blocks';
 var actual = '';
 var expect = '';
@@ -48,7 +50,7 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   expect = "[object StopIteration]";
@@ -83,7 +85,7 @@ function test()
   {
     actual = ex + '';
   }
-  
+ 
   reportCompare(expect, actual, summary);
   reportCompare(expectyield, actualyield, summary);
   reportCompare(expectfinally, actualfinally, summary);

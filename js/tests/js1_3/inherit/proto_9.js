@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'proto_9.js';
+
 /**
    File Name:          proto_9.js
    Section:
@@ -63,17 +65,17 @@ startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 function Employee ( name, dept ) {
-    this.name = name || "";
-    this.dept = dept || "general";
+  this.name = name || "";
+  this.dept = dept || "general";
 }
 function WorkerBee ( name, dept, projs ) {
-    this.projects = new Array();
+  this.projects = new Array();
 }
 WorkerBee.prototype = new Employee();
 
 var pat = new WorkerBee()
 
-    Employee.prototype.specialty = "none";
+  Employee.prototype.specialty = "none";
 Employee.prototype.name = "Unknown";
 
 Array.prototype.getClass = Object.prototype.toString;

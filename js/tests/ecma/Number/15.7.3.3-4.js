@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.7.3.3-4.js';
+
 /**
    File Name:          15.7.3.3-4.js
    ECMA Section:       15.7.3.3 Number.MIN_VALUE

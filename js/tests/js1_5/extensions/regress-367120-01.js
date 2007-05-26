@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-367120-01.js';
 //-----------------------------------------------------------------------------
-var bug = 367120;
+var BUGNUMBER = 367120;
 var summary = 'memory corruption in script_toSource';
 var actual = 'No Crash';
 var expect = 'No Crash';
@@ -47,9 +49,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   if (typeof Script == 'undefined' || !('toSource' in {}))
   {
     print('Test skipped. Script or toSource not defined');

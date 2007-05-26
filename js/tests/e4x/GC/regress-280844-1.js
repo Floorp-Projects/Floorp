@@ -36,15 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var bug = 280844;
+gTestfile = 'regress-280844-1.js';
+
 var summary = 'Uncontrolled recursion in js_MarkXML during GC';
+var BUGNUMBER = 280844;
 var actual = 'No Crash';
 var expect = 'No Crash';
 
+printBugNumber(BUGNUMBER);
 START(summary);
-
-printBugNumber (bug);
-printStatus (summary);
 
 var N = 5 * 1000;
 var x = <x/>;

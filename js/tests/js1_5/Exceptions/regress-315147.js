@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-315147.js';
 //-----------------------------------------------------------------------------
-var bug = 315147;
+var BUGNUMBER = 315147;
 var summary = 'Error JSMSG_UNDEFINED_PROP should be JSEXN_REFERENCEERR';
 var actual = '';
 var expect = 'ReferenceError';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 options('strict');
@@ -54,8 +56,8 @@ try
   actual = 'no error';
 }
 catch(ex)
-{ 
+{
   actual = ex.name;
 }
-  
+ 
 reportCompare(expect, actual, summary);

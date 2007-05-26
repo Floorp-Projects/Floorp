@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Paul Kurczaba 
+ * Contributor(s): Paul Kurczaba
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-299209.js';
 //-----------------------------------------------------------------------------
-var bug = 299209;
+var BUGNUMBER = 299209;
 var summary = 'anonymous function expression statement => JS stack overflow';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 try
@@ -50,5 +52,5 @@ try
 catch(e)
 {
 }
- 
+
 reportCompare(expect, actual, summary);

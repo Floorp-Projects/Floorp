@@ -36,40 +36,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.9.1.13-1.js';
+
 /**
    File Name:          15.9.1.13-1.js
    ECMA Section:       15.9.1.1 MakeDate(day, time)
    Description:
 
-    The operator MakeDate calculates a number of milliseconds from its
-    two arguments, which must be ECMAScript number values. This
-    operator functions as follows:
+   The operator MakeDate calculates a number of milliseconds from its
+   two arguments, which must be ECMAScript number values. This
+   operator functions as follows:
 
-    1. If day is not finite or time is not finite, return NaN.
+   1. If day is not finite or time is not finite, return NaN.
 
-    2. Compute day * msPerDay + time.
+   2. Compute day * msPerDay + time.
 
-    3. Return Result(2).
+   3. Return Result(2).
 */
 
-new TestCase( SECTION, 
-              "MakeDate(Number.POSITIVE_INFINITY, 0)", 
-              Number.NaN, 
+new TestCase( SECTION,
+              "MakeDate(Number.POSITIVE_INFINITY, 0)",
+              Number.NaN,
               MakeDate(Number.POSITIVE_INFINITY, 0));
 
-new TestCase( SECTION, 
-              "MakeDate(Number.NEGATIVE_INFINITY, 0)", 
-              Number.NaN, 
+new TestCase( SECTION,
+              "MakeDate(Number.NEGATIVE_INFINITY, 0)",
+              Number.NaN,
               MakeDate(Number.NEGATIVE_INFINITY, 0));
 
-new TestCase( SECTION, 
-              "MakeDate(0, Number.POSITIVE_INFINITY)", 
-              Number.NaN, 
+new TestCase( SECTION,
+              "MakeDate(0, Number.POSITIVE_INFINITY)",
+              Number.NaN,
               MakeDate(0, Number.POSITIVE_INFINITY));
 
-new TestCase( SECTION, 
-              "MakeDate(0, Number.NEGATIVE_INFINITY)", 
-              Number.NaN, 
+new TestCase( SECTION,
+              "MakeDate(0, Number.NEGATIVE_INFINITY)",
+              Number.NaN,
               MakeDate(0, Number.NEGATIVE_INFINITY));
 
 test();

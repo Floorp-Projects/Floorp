@@ -37,4 +37,6 @@
 
 /* all files in this dir need version(120) called before they are *loaded* */
 
+gTestsubsuite = 'version120';
+
 version(120);

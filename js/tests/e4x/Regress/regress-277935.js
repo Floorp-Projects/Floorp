@@ -38,8 +38,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'regress-277935.js';
+
 START('XML("") should create empty text node');
-BUG(277935);
+printBugNumber(277935);
 
 // Check that assignments like "a..b = c" causes proper error
 

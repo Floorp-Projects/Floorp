@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'method-001.js';
+
 /**
    File Name:      method-001.js
    Description:
@@ -83,17 +85,17 @@ i++;
 
 
 for ( i = 0; i < java_array.length; i++ ) {
-    CompareValues( java_array[i], test_array[i] );
+  CompareValues( java_array[i], test_array[i] );
 }
 
 test();
 
 function CompareValues( javaval, testval ) {
-    //  Check type, which should be E_TYPE
-    new TestCase( SECTION,
-		  "typeof (" + testval.description +" )",
-		  testval.type,
-		  javaval.type );
+  //  Check type, which should be E_TYPE
+  new TestCase( SECTION,
+		"typeof (" + testval.description +" )",
+		testval.type,
+		javaval.type );
 /*
 //  Check JavaScript class, which should be E_JSCLASS
 new TestCase( SECTION,
@@ -101,37 +103,37 @@ new TestCase( SECTION,
 E_JSCLASS,
 javaval.jsclass );
 */
-    // Check the JavaClass, which should be the same as the result as Class.forName(description).
-    new TestCase( SECTION,
-		  "("+testval.description +").getClass().equals( " +
-		  "java.lang.Class.forName( '" + testval.classname +
-		  "' ) )",
-		  true,
-		  (javaval.javaclass).equals( testval.javaclass ) );
-    // check the string value
-    new TestCase(
-        SECTION,
-        "("+testval.description+") +''",
-        testval.stringval,
-        javaval.value +"" );
+  // Check the JavaClass, which should be the same as the result as Class.forName(description).
+  new TestCase( SECTION,
+		"("+testval.description +").getClass().equals( " +
+		"java.lang.Class.forName( '" + testval.classname +
+		"' ) )",
+		true,
+		(javaval.javaclass).equals( testval.javaclass ) );
+  // check the string value
+  new TestCase(
+    SECTION,
+    "("+testval.description+") +''",
+    testval.stringval,
+    javaval.value +"" );
 }
 function JavaValue( value ) {
-    this.type   = typeof value;
-    this.value = value;
+  this.type   = typeof value;
+  this.value = value;
 //  LC2 does not support the __proto__ property in Java objects
 //  Object.prototype.toString will show its JavaScript wrapper object.
 //    value.__proto__.getJSClass = Object.prototype.toString;
 //    this.jsclass = value.getJSClass();
-    this.javaclass = value.getClass();
+  this.javaclass = value.getClass();
 
-    return this;
+  return this;
 }
 function TestValue( description, type, classname, stringval ) {
-    this.description = description;
-    this.type =  type;
-    this.classname = classname;
-    this.javaclass = java.lang.Class.forName( classname );
-    this.stringval = stringval;
+  this.description = description;
+  this.type =  type;
+  this.classname = classname;
+  this.javaclass = java.lang.Class.forName( classname );
+  this.stringval = stringval;
 
-    return this;
+  return this;
 }

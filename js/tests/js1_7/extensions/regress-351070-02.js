@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-351070-02.js';
 //-----------------------------------------------------------------------------
-var bug = 351070;
+var BUGNUMBER = 351070;
 var summary = 'decompilation of let declaration should not change scope';
 var actual = '';
 var expect = '';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   var pfx  = "(function f() { var n = 2, a = 2; ",
     decl = " let a = 3;",
     end  = " return a; })";
@@ -78,7 +80,7 @@ function test()
       break;
     }
     print('uneval: ' + uneval(fun));
-    var declsrc = '(' + 
+    var declsrc = '(' +
       src.slice(1, -1).replace('function f', 'function f' + i) + ')';
     print('declsrc: ' + declsrc);
     this['f' + i] = eval(declsrc);

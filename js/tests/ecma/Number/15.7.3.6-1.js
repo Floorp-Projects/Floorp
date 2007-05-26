@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.7.3.6-1.js';
+
 /**
    File Name:          15.7.3.6-1.js
    ECMA Section:       15.7.3.6 Number.POSITIVE_INFINITY
@@ -55,9 +57,9 @@ var TITLE   = "Number.POSITIVE_INFINITY";
 
 writeHeaderToLog( SECTION + " "+TITLE);
 
-new TestCase( SECTION, 
-	      "Number.POSITIVE_INFINITY",      
-	      Infinity,   
+new TestCase( SECTION,
+	      "Number.POSITIVE_INFINITY",     
+	      Infinity,  
 	      Number.POSITIVE_INFINITY );
 
 test();

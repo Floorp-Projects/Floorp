@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.4.5.2-2.js';
+
 /**
    File Name:          15.4.5.2-2.js
    ECMA Section:       Array.length
@@ -68,12 +70,12 @@ addCase( new Array(Math.pow(2,13)), Math.pow(2,13), Math.pow(2,12), Math.pow(2,1
 addCase( new Array(Math.pow(2,12)), Math.pow(2,12), Math.pow(2,12), Math.pow(2,12) );
 addCase( new Array(Math.pow(2,14)), Math.pow(2,14), Math.pow(2,12), Math.pow(2,12) )
 
-  // some tests where array is not empty
-  // array is populated with strings
+// some tests where array is not empty
+// array is populated with strings
   for ( var arg = "", i = 0; i < Math.pow(2,12); i++ ) {
     arg +=  String(i) + ( i != Math.pow(2,12)-1 ? "," : "" );
 
-}
+  }
 //      print(i +":"+arg);
 
 var a = eval( "new Array("+arg+")" );

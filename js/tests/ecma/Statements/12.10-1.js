@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '12.10-1.js';
+
 /**
    File Name:          12.10-1.js
    ECMA Section:       12.10 The with statement

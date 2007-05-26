@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'switch.js';
+
 /**
    Filename:     switch.js
    Description:  'Tests the switch statement'
@@ -64,12 +66,12 @@ var match3 = false;
 switch (var1)
 {
 case "match string":
-    match1 = true;
+  match1 = true;
 case "bad string 1":
-    match2 = true;
-    break;
+  match2 = true;
+  break;
 case "bad string 2":
-    match3 = true;
+  match3 = true;
 }
 
 new TestCase ( SECTION, 'switch statement',
@@ -93,22 +95,22 @@ switch (var2)
 {
 case 1:
 /*	        switch (var1)
-	        {
-		case "foo":
-		match1 = true;
-		break;
-		case 3:
-		match2 = true;
-		break;
-	        }*/
-    match3 = true;
-    break;
+  {
+  case "foo":
+  match1 = true;
+  break;
+  case 3:
+  match2 = true;
+  break;
+  }*/
+  match3 = true;
+  break;
 case 2:
-    match4 = true;
-    break;
+  match4 = true;
+  break;
 case 3:
-    match5 = true;
-    break;
+  match5 = true;
+  break;
 }
 new TestCase ( SECTION, 'switch statement',
 	       false, match1);

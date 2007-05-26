@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 22 June 2001
  *
  * SUMMARY:  Regression test for Bugzilla bug 87231:
@@ -54,9 +56,10 @@
  * the 2nd subexpression to make the only match it can: the single 'A'.
  * Such "altruism" is the only way there can be a successful global match...
  */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+var gTestfile = 'regress-87231.js';
 var i = 0;
-var bug = 87231;
+var BUGNUMBER = 87231;
 var cnEmptyString = '';
 var summary = 'Testing regular expression /(A)?(A.*)/';
 var status = '';
@@ -72,46 +75,46 @@ var expectedmatches = new Array();
 
 
 pattern = /^(A)?(A.*)$/;
-    status = inSection(1);
-    string = 'AAA';
-    actualmatch = string.match(pattern);
-    expectedmatch = Array('AAA', 'A', 'AA');
-    addThis();
+status = inSection(1);
+string = 'AAA';
+actualmatch = string.match(pattern);
+expectedmatch = Array('AAA', 'A', 'AA');
+addThis();
 
-    status = inSection(2);
-    string = 'AA';
-    actualmatch = string.match(pattern);
-    expectedmatch = Array('AA', 'A', 'A');
-    addThis();
+status = inSection(2);
+string = 'AA';
+actualmatch = string.match(pattern);
+expectedmatch = Array('AA', 'A', 'A');
+addThis();
 
-    status = inSection(3);
-    string = 'A';
-    actualmatch = string.match(pattern);
-    expectedmatch = Array('A', undefined, 'A'); // 'altruistic' case: see above
-    addThis();
+status = inSection(3);
+string = 'A';
+actualmatch = string.match(pattern);
+expectedmatch = Array('A', undefined, 'A'); // 'altruistic' case: see above
+addThis();
 
 
 pattern = /(A)?(A.*)/;
 var strL = 'zxcasd;fl\\\  ^';
 var strR = 'aaAAaaaf;lrlrzs';
 
-    status = inSection(4);
-    string =  strL + 'AAA' + strR;
-    actualmatch = string.match(pattern);
-    expectedmatch = Array('AAA' + strR, 'A', 'AA' + strR);
-    addThis();
+status = inSection(4);
+string =  strL + 'AAA' + strR;
+actualmatch = string.match(pattern);
+expectedmatch = Array('AAA' + strR, 'A', 'AA' + strR);
+addThis();
 
-    status = inSection(5);
-    string =  strL + 'AA' + strR;
-    actualmatch = string.match(pattern);
-    expectedmatch = Array('AA' + strR, 'A', 'A' + strR);
-    addThis();
+status = inSection(5);
+string =  strL + 'AA' + strR;
+actualmatch = string.match(pattern);
+expectedmatch = Array('AA' + strR, 'A', 'A' + strR);
+addThis();
 
-    status = inSection(6);
-    string =  strL + 'A' + strR;
-    actualmatch = string.match(pattern);
-    expectedmatch = Array('A' + strR, undefined, 'A' + strR); // 'altruistic' case: see above
-    addThis();
+status = inSection(6);
+string =  strL + 'A' + strR;
+actualmatch = string.match(pattern);
+expectedmatch = Array('A' + strR, undefined, 'A' + strR); // 'altruistic' case: see above
+addThis();
 
 
 
@@ -135,7 +138,7 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
   testRegExp(statusmessages, patterns, strings, actualmatches, expectedmatches);
   exitFunc ('test');

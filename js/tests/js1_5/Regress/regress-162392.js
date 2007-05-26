@@ -35,10 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var gTestfile = 'regress-162392.js';
+
 //-----------------------------------------------------------------------------
 // SUMMARY: 10.1.8 Arguments Object length
 
-var bug = 162392;
+var BUGNUMBER = 162392;
 var summary = 'eval("arguments").length == 0 when no arguments specified';
 var actual = noargslength();
 var expect = 0;
@@ -57,9 +59,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');

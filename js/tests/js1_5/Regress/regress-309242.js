@@ -34,33 +34,35 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-309242.js';
 //-----------------------------------------------------------------------------
-var bug = 309242;
+var BUGNUMBER = 309242;
 var summary = 'E4X should be on by default while preserving comment hack';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-/*  
-  E4X should be available regardless of script type
-   <!-- and --> should begin comment to end of line
-   unless type=text/javascript;e4x=1 
+/* 
+    E4X should be available regardless of script type
+    <!-- and --> should begin comment to end of line
+    unless type=text/javascript;e4x=1
 */
 
 expect = true;
-actual = true; 
+actual = true;
 // the next line will be ignored when e4x is not requested
 <!-- comment -->; actual = false;
 
 reportCompare(expect, actual, summary + ': &lt;!-- is comment to end of line');
 
 expect = true;
-actual = false; 
+actual = false;
 // the next line will be ignored when e4x is not requested
-<!-- 
-actual = true;
+<!--
+ actual = true;
 // -->
 
 reportCompare(expect, actual, summary + ': comment hack works inside script');

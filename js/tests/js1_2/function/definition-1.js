@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'definition-1.js';
+
 /**
    File Name:          definition-1.js
    Reference:          http://scopus.mcom.com/bugsplat/show_bug.cgi?id=111284
@@ -54,7 +56,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 f1 = function() { return "passed!" }
 
-function f2() { f3 = function() { return "passed!" }; return f3(); }
+  function f2() { f3 = function() { return "passed!" }; return f3(); }
 
 new TestCase( SECTION,
 	      'f1 = function() { return "passed!" }; f1()',

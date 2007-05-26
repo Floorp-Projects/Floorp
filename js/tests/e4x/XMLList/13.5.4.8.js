@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.5.4.8.js';
+
 START("13.5.4.8 - XMLList copy()");
 
 TEST(1, true, XMLList.prototype.hasOwnProperty("copy"));
@@ -59,7 +61,7 @@ TEST(3, correct, emps.copy());
 emps = new XMLList();
 emps += <employee id="0"><name>Jim</name><age>25</age></employee>;
 emps += <employee id="1"><name>Joe</name><age>20</age></employee>;
-   
+  
 correct = new XMLList();
 correct += <employee id="0"><name>Jim</name><age>25</age></employee>;
 correct += <employee id="1"><name>Joe</name><age>20</age></employee>;

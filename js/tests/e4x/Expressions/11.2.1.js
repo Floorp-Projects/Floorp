@@ -40,9 +40,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '11.2.1.js';
+
 START("11.2.1 - Property Accessors");
 
-order = 
+order =
 <order id="123456" timestamp="Mon Mar 10 2003 16:03:25 GMT-0800 (PST)">
     <customer>
         <firstname>John</firstname>
@@ -53,9 +55,9 @@ order =
         <price>1299.99</price>
         <quantity>1</quantity>
     </item>
-</order>;    
+</order>;   
 
-correct = 
+correct =
 <customer>
     <firstname>John</firstname>
     <lastname>Doe</lastname>
@@ -64,7 +66,7 @@ correct =
 TEST(1, correct, order.customer);
 TEST_XML(2, 123456, order.@id);
 
-correct = 
+correct =
 <item>
     <description>Big Screen Television</description>
     <price>1299.99</price>
@@ -73,7 +75,7 @@ correct =
 
 TEST(3, correct, order.children()[1]);
 
-correct = 
+correct =
 <customer>
     <firstname>John</firstname>
     <lastname>Doe</lastname>
@@ -85,7 +87,7 @@ correct =
 </item>;
 
 
-TEST(4, correct, order.*); 
+TEST(4, correct, order.*);
 
 correct = new XMLList();
 correct += new XML("123456");
@@ -129,7 +131,7 @@ correct =
 
 TEST(8, correct, order.item[1]);
 
-correct = 
+correct =
 <description>Big Screen Television</description> +
 <price>1299.99</price> +
 <quantity>1</quantity> +

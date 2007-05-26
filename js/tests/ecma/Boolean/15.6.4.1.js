@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.6.4.1.js';
+
 /**
    File Name:          15.6.4.1.js
    ECMA Section:       15.6.4.1 Boolean.prototype.constructor
@@ -51,7 +53,7 @@ var SECTION = "15.6.4.1";
 var VERSION = "ECMA_1";
 startTest();
 var TITLE   = "Boolean.prototype.constructor"
-writeHeaderToLog( SECTION + TITLE );
+  writeHeaderToLog( SECTION + TITLE );
 
 new TestCase( SECTION,
 	      "( Boolean.prototype.constructor == Boolean )",

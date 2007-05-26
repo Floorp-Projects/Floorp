@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-361274.js';
 //-----------------------------------------------------------------------------
-var bug = 361274;
+var BUGNUMBER = 361274;
 var summary = 'Embedded nulls in property names';
 var actual = '';
 var expect = '';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   var x='123'+'\0'+'456';
   var y='123'+'\0'+'789';
   var a={};

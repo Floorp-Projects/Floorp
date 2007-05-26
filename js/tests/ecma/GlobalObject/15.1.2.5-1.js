@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.1.2.5-1.js';
+
 /**
    File Name:          15.1.2.5-1.js
    ECMA Section:       15.1.2.5  Function properties of the global object

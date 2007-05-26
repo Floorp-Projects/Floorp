@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,34 +34,36 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 01 June 2001
  *
  * SUMMARY: Testing that we don't crash on switch case -1...
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=83532
  *
  */
-//-------------------------------------------------------------------------------------------------
-var bug = 83532;
+//-----------------------------------------------------------------------------
+var gTestfile = 'regress-83532-002.js';
+var BUGNUMBER = 83532;
 var summary = "Testing that we don't crash on switch case -1";
 var sToEval = '';
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 test();
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   // Just testing that we don't crash on these -
   sToEval += 'function f () {switch(1) {case -1:}};';
   sToEval += 'function g(){switch(1){case (-1):}};';
   sToEval += 'var h = function() {switch(1) {case -1:}};'
-  sToEval += 'f();';
+    sToEval += 'f();';
   sToEval += 'g();';
   sToEval += 'h();';
   eval(sToEval);

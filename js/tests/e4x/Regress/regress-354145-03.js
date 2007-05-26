@@ -36,13 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var bug = 354145;
+gTestfile = 'regress-354145-03.js';
+
+var BUGNUMBER = 354145;
 var summary = 'Immutable XML';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 var list = <></>
 var N = 10;

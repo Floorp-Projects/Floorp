@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 2001-07-17
  *
  * SUMMARY: Regression test for Bugzilla bug 72964:
@@ -43,8 +45,9 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=72964
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-72964.js';
 var i = 0;
-var bug = 72964;
+var BUGNUMBER = 72964;
 var summary = 'Testing regular expressions containing non-Latin1 characters';
 var cnSingleSpace = ' ';
 var status = '';
@@ -60,34 +63,34 @@ var expectedmatches = new Array();
 
 
 pattern = /[\S]+/;
-    // 4 low Unicode chars = Latin1; whole string should match
-    status = inSection(1);
-    string = '\u00BF\u00CD\u00BB\u00A7';
-    actualmatch = string.match(pattern);
-    expectedmatch = Array(string);
-    addThis();
+// 4 low Unicode chars = Latin1; whole string should match
+status = inSection(1);
+string = '\u00BF\u00CD\u00BB\u00A7';
+actualmatch = string.match(pattern);
+expectedmatch = Array(string);
+addThis();
 
-    // Now put a space in the middle; first half of string should match
-    status = inSection(2);
-    string = '\u00BF\u00CD \u00BB\u00A7';
-    actualmatch = string.match(pattern);
-    expectedmatch = Array('\u00BF\u00CD');
-    addThis();
+// Now put a space in the middle; first half of string should match
+status = inSection(2);
+string = '\u00BF\u00CD \u00BB\u00A7';
+actualmatch = string.match(pattern);
+expectedmatch = Array('\u00BF\u00CD');
+addThis();
 
 
-    // 4 high Unicode chars = non-Latin1; whole string should match
-    status = inSection(3);
-    string = '\u4e00\uac00\u4e03\u4e00';
-    actualmatch = string.match(pattern);
-    expectedmatch = Array(string);
-    addThis();
+// 4 high Unicode chars = non-Latin1; whole string should match
+status = inSection(3);
+string = '\u4e00\uac00\u4e03\u4e00';
+actualmatch = string.match(pattern);
+expectedmatch = Array(string);
+addThis();
 
-    // Now put a space in the middle; first half of string should match
-    status = inSection(4);
-    string = '\u4e00\uac00 \u4e03\u4e00';
-    actualmatch = string.match(pattern);
-    expectedmatch = Array('\u4e00\uac00');
-    addThis();
+// Now put a space in the middle; first half of string should match
+status = inSection(4);
+string = '\u4e00\uac00 \u4e03\u4e00';
+actualmatch = string.match(pattern);
+expectedmatch = Array('\u4e00\uac00');
+addThis();
 
 
 
@@ -111,7 +114,7 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
   testRegExp(statusmessages, patterns, strings, actualmatches, expectedmatches);
   exitFunc ('test');

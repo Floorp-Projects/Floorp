@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-365527.js';
 //-----------------------------------------------------------------------------
-var bug = 365527;
+var BUGNUMBER = 365527;
 var summary = 'JSOP_ARGUMENTS should set obj register';
 var actual = 'No Crash';
 var expect = 'No Crash';
@@ -47,45 +49,45 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
 
   counter = 500*1000;
 
   var obj;
 
   function getter()
-    {
-      obj = { get x() { 
-        return getter(); 
+  {
+    obj = { get x() {
+        return getter();
       }, counter: counter};
-      return obj;
-    }
+    return obj;
+  }
 
 
   var x;
 
   function g()
-    {
-      x += this.counter;
-      if (--counter == 0)
-        throw "Done";
-    }
+  {
+    x += this.counter;
+    if (--counter == 0)
+      throw "Done";
+  }
 
 
   function f()
-    {
-      arguments=g;
-      try {
-        for (;;) {
-          arguments();
-          obj.x;
-        }
-      } catch (e) {
-        print(e);
+  {
+    arguments=g;
+    try {
+      for (;;) {
+	arguments();
+	obj.x;
       }
+    } catch (e) {
+      print(e);
     }
+  }
 
 
   getter();

@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-352025.js';
 //-----------------------------------------------------------------------------
-var bug = 352025;
+var BUGNUMBER = 352025;
 var summary = 'decompilation of nested yields';
 var actual = '';
 var expect = '';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   var f;
   f = function() { yield (yield a); }
   expect = 'function() { yield (yield a); }';

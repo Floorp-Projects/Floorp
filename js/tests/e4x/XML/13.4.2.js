@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.2.js';
+
 START("13.4.2 - XML Constructor");
 
 x = new XML();
@@ -47,7 +49,7 @@ TEST(1, "xml", typeof(x));
 TEST(2, true, x instanceof XML);
 
 correct =
-<Envelope 
+<Envelope
     xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
     xmlns:stock="http://mycompany.com/stocks"
     soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
@@ -62,7 +64,7 @@ x = new XML(correct);
 TEST_XML(3, correct.toXMLString(), x);
 
 text =
-"<Envelope" + 
+"<Envelope" +
 "    xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"" +
 "    xmlns:stock=\"http://mycompany.com/stocks\"" +
 "    soap:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">" +

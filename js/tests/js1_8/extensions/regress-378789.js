@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-378789.js';
 //-----------------------------------------------------------------------------
-var bug = 378789;
+var BUGNUMBER = 378789;
 var summary = 'js_PutEscapedString should handle nulls';
 var actual = '';
 var expect = '';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   if (typeof dumpHeap == 'undefined')
   {
     print('dumpHeap not supported');

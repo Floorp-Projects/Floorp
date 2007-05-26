@@ -39,8 +39,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'regress-278112.js';
+
 START('setNamespace() should not affect namespaceDeclarations()');
-BUG('278112');
+printBugNumber('278112');
 
 var xhtml1NS = new Namespace('http://www.w3.org/1999/xhtml');
 var xhtml = <html />;

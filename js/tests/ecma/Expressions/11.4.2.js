@@ -36,20 +36,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '11.4.2.js';
+
 /**
-    File Name:          11.4.2.js
-    ECMA Section:       11.4.2 the Void Operator
-    Description:        always returns undefined (?)
-    Author:             christine@netscape.com
-    Date:               7 july 1997
+   File Name:          11.4.2.js
+   ECMA Section:       11.4.2 the Void Operator
+   Description:        always returns undefined (?)
+   Author:             christine@netscape.com
+   Date:               7 july 1997
 
 */
-    var SECTION = "11.4.2";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "The void operator";
+var SECTION = "11.4.2";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "The void operator";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
 new TestCase( SECTION,   "void(new String('string object'))",      void 0,  void(new String( 'string object' )) );
 new TestCase( SECTION,   "void('string primitive')",               void 0,  void("string primitive") );

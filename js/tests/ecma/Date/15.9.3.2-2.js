@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.9.3.2-2.js';
+
 /**
    File Name:          15.9.3.1.js
    ECMA Section:       15.9.3.1 new Date (year, month, date, hours, minutes, seconds, ms)
@@ -89,7 +91,7 @@ var MINUTES     = 14;
 var SECONDS     = 15;
 var MS          = 16;
 
-//  for TCMS, the testcases array must be global.
+//  for TCMS, the gTestcases array must be global.
 var SECTION = "15.9.3.1";
 var TITLE =   "Date( year, month, date, hours, minutes, seconds )";
 

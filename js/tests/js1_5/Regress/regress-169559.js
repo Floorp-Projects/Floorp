@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-169559.js';
 //-----------------------------------------------------------------------------
-var bug = 169559;
+var BUGNUMBER = 169559;
 var summary = 'Global vars should not be more than 2.5 times slower than local';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var starttime;
@@ -73,7 +75,7 @@ printStatus("Ratio of global to local time " + ratio.toFixed(3));
 
 expect = true;
 actual = (ratio < maxratio);
-summary += ', Ratio: ' + ratio + ' ';  
+summary += ', Ratio: ' + ratio + ' '; 
 reportCompare(expect, actual, summary);
 
 function local()

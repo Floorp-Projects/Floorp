@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-352079.js';
 //-----------------------------------------------------------------------------
-var bug = 352079;
+var BUGNUMBER = 352079;
 var summary = 'decompilation of various operators';
 var actual = '';
 var expect = '';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   var f;
 
   f = function() { f(let (y = 3) 4)++; }
@@ -58,7 +60,7 @@ function test()
   actual = f + '';
   compareSource(expect, actual, summary);
 
-  f = function() { f(4)++; }  
+  f = function() { f(4)++; } 
   expect = 'function() { f(4)++; }';
   actual = f + '';
   compareSource(expect, actual, summary);
@@ -68,7 +70,7 @@ function test()
   actual = f + '';
   compareSource(expect, actual, summary);
 
-  f = function() { delete(p(3)) }  
+  f = function() { delete(p(3)) } 
   expect = 'function() { delete p(3); }';
   actual = f + '';
   compareSource(expect, actual, summary);

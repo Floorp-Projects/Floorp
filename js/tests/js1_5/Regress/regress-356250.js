@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-356250.js';
 //-----------------------------------------------------------------------------
-var bug = 356250;
+var BUGNUMBER = 356250;
 var summary = 'Assertion: !fp->fun || !(fp->fun->flags & JSFUN_HEAVYWEIGHT) || fp->callobj';
 var actual = 'No Crash';
 var expect = 'No Crash';
@@ -51,9 +53,9 @@ test2();
 function test1()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   (function() { eval("(function() { })"); })();
 
   reportCompare(expect, actual, summary + ': nested 1');
@@ -64,9 +66,9 @@ function test1()
 function test2()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   (function () {(function() { eval("(function() { })"); })();})();
 
   reportCompare(expect, actual, summary + ': nested 2');

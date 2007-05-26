@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 04 September 2001
  *
  * SUMMARY: Regression test for Bugzilla bug 98306
@@ -43,7 +45,8 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=98306
  */
 //-----------------------------------------------------------------------------
-var bug = 98306;
+var gTestfile = 'regress-98306.js';
+var BUGNUMBER = 98306;
 var summary = "Testing that we don't crash on this code -";
 var cnUBOUND = 10;
 var re;
@@ -58,7 +61,7 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   s = '"Hello".match(/[/]/)';

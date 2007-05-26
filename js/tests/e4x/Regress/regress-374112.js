@@ -36,13 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var bug = 374112;
+gTestfile = 'regress-374112.js';
+
+var BUGNUMBER = 374112;
 var summary = 'E4X Do not assert with xml.setName(...)';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 <a/>.setName(<b/>.name());
 

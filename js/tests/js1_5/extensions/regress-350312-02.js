@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-350312-02.js';
 //-----------------------------------------------------------------------------
-var bug = 350312;
+var BUGNUMBER = 350312;
 var summary = 'Accessing wrong stack slot with nested catch/finally';
 var actual = '';
 var expect = '';
@@ -48,31 +50,31 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   function createPrint(obj)
-    {
-      return new Function("actual += " + obj + " + ','; " + 
-                          "print(" + obj + ");");
-    }
+  {
+    return new Function("actual += " + obj + " + ','; " +
+			"print(" + obj + ");");
+  }
 
   function createThrow(obj)
-    {
-      return new Function("throw " + obj + "; ");
-    }
+  {
+    return new Function("throw " + obj + "; ");
+  }
 
 
   function f(a, b, c)
-    {
-      try {
-        a();
-      } catch (e if e == null) {
-        b();
-      } finally {
-        c();
-      }
+  {
+    try {
+      a();
+    } catch (e if e == null) {
+      b();
+    } finally {
+      c();
     }
+  }
 
   print('test 1');
   expect = 'a,c,';

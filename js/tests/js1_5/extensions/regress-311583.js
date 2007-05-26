@@ -34,19 +34,21 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-311583.js';
 //-----------------------------------------------------------------------------
-var bug = 311583;
+var BUGNUMBER = 311583;
 var summary = 'uneval(array) should use elision for holes';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-var a = new Array(3); 
-a[0] = a[2] = 0; 
+var a = new Array(3);
+a[0] = a[2] = 0;
 
 actual = uneval(a);
-expect = '[0, , 0]';  
+expect = '[0, , 0]'; 
 
 reportCompare(expect, actual, summary);

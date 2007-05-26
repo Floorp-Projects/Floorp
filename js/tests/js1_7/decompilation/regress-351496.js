@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-351496.js';
 //-----------------------------------------------------------------------------
-var bug = 351496;
+var BUGNUMBER = 351496;
 var summary = 'decompilation of case let (y = 3) expression';
 var actual = '';
 var expect = '';
@@ -48,17 +50,17 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   var f = function() { switch(0) { case let(y = 3) 6: } }
   actual = f + '';
   expect = 'function () {\n' +
-           '    switch (0) {\n' +
-           '      case let (y = 3) 6:\n' +
-           '      default:;\n' + 
-           '    }\n' +
-           '}';
+    '    switch (0) {\n' +
+    '      case let (y = 3) 6:\n' +
+    '      default:;\n' +
+    '    }\n' +
+    '}';
 
   compareSource(expect, actual, summary);
 

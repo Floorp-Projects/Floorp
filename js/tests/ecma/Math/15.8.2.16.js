@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.8.2.16.js';
+
 /**
    File Name:          15.8.2.16.js
    ECMA Section:       15.8.2.16 sin( x )
@@ -104,7 +106,7 @@ new TestCase( SECTION,
 
 new TestCase( SECTION,
 	      "Math.sin(-Infinity)",
-	      Number.NaN,	
+	      Number.NaN,
 	      Math.sin(Number.NEGATIVE_INFINITY));
 
 new TestCase( SECTION,
@@ -113,17 +115,17 @@ new TestCase( SECTION,
 	      Math.sin(0.7853981633974));
 
 new TestCase( SECTION,
-	      "Math.sin(1.570796326795)",	 
+	      "Math.sin(1.570796326795)",	
 	      1,
 	      Math.sin(1.570796326795));
 
 new TestCase( SECTION,
-	      "Math.sin(2.356194490192)",	 
+	      "Math.sin(2.356194490192)",	
 	      0.7071067811865,
 	      Math.sin(2.356194490192));
 
 new TestCase( SECTION,
-	      "Math.sin(3.14159265359)",	
+	      "Math.sin(3.14159265359)",
 	      0,
 	      Math.sin(3.14159265359));
 

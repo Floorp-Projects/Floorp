@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-350256-02.js';
 //-----------------------------------------------------------------------------
-var bug = 350256;
+var BUGNUMBER = 350256;
 var summary = 'Array.apply maximum arguments: 2^20';
 var actual = '';
 var expect = '';
@@ -48,9 +50,9 @@ test(Math.pow(2, 20));
 function test(length)
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
 
   var a = new Array();
   a[length - 2] = 'length-2';
@@ -63,7 +65,7 @@ function test(length)
   reportCompare(expect, actual, summary);
 
   function f() {
-    return arguments.length + "," + arguments[length - 2] + "," + 
+    return arguments.length + "," + arguments[length - 2] + "," +
       arguments[length - 1];
   }
 

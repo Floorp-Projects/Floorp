@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'proto_7.js';
+
 /**
    File Name:          proto_7.js
    Section:
@@ -63,20 +65,20 @@ startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 function Employee ( name, dept ) {
-    this.name = name || "";
-    this.dept = dept || "general";
+  this.name = name || "";
+  this.dept = dept || "general";
 }
 function WorkerBee ( name, dept, projs ) {
-    this.base = Employee;
-    this.base( name, dept)
-	this.projects = projs || new Array();
+  this.base = Employee;
+  this.base( name, dept)
+    this.projects = projs || new Array();
 }
 WorkerBee.prototype = new Employee();
 
 function Engineer ( name, projs, machine ) {
-    this.base = WorkerBee;
-    this.base( name, "engineering", projs )
-	this.machine = machine || "";
+  this.base = WorkerBee;
+  this.base( name, "engineering", projs )
+    this.machine = machine || "";
 }
 // Engineer.prototype = new WorkerBee();
 

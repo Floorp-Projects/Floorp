@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    14 Feb 2002
  * SUMMARY: Performance: Regexp performance degraded from 4.7
@@ -45,7 +47,8 @@
  *
  */
 //-----------------------------------------------------------------------------
-var bug = 85721;
+var gTestfile = 'regress-85721.js';
+var BUGNUMBER = 85721;
 var summary = 'Performance: execution of regular expression';
 var FAST = 100; // execution should be 100 ms or less to pass the test
 var MSG_FAST = 'Execution took less than ' + FAST + ' ms';
@@ -57,7 +60,7 @@ var status = '';
 var actual = '';
 var expect= '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 
@@ -78,7 +81,7 @@ function isThisFast(ms)
 
 /*
  * The first regexp. We'll test for performance (Section 1) and accuracy (Section 2).
- */ 
+ */
 str='<sql:connection id="conn1"> <sql:url>www.m.com</sql:url> <sql:driver>drive.class</sql:driver>\n<sql:userId>foo</sql:userId> <sql:password>goo</sql:password> </sql:connection>';
 re = /<sql:connection id="([^\r\n]*?)">\s*<sql:url>\s*([^\r\n]*?)\s*<\/sql:url>\s*<sql:driver>\s*([^\r\n]*?)\s*<\/sql:driver>\s*(\s*<sql:userId>\s*([^\r\n]*?)\s*<\/sql:userId>\s*)?\s*(\s*<sql:password>\s*([^\r\n]*?)\s*<\/sql:password>\s*)?\s*<\/sql:connection>/;
 expect = Array("<sql:connection id=\"conn1\"> <sql:url>www.m.com</sql:url> <sql:driver>drive.class</sql:driver>\n<sql:userId>foo</sql:userId> <sql:password>goo</sql:password> </sql:connection>","conn1","www.m.com","drive.class","<sql:userId>foo</sql:userId> ","foo","<sql:password>goo</sql:password> ","goo");
@@ -103,10 +106,10 @@ testRegExp([status], [re], [str], [result], [expect]);
 /*
  * The second regexp (HUGE!). We'll test for performance (Section 3) and accuracy (Section 4).
  * It comes from the O'Reilly book "Mastering Regular Expressions" by Jeffrey Friedl, Appendix B
- */ 
+ */
 
 //# Some things for avoiding backslashitis later on.
-$esc        = '\\\\';      
+$esc        = '\\\\';     
 $Period      = '\.';
 $space      = '\040';              $tab         = '\t';
 $OpenBR     = '\\[';               $CloseBR     = '\\]';
@@ -125,102 +128,102 @@ $ctext   =  '[^' + $esc + $NonASCII + $CRlist + '()]';
 
 //# $Cnested matches one non-nested comment.
 //# It is unrolled, with normal of $ctext, special of $quoted_pair.
-$Cnested = 
-   $OpenParen +                                 // #  (
-      $ctext + '*' +                            // #     normal*
-      '(?:' + $quoted_pair + $ctext + '*)*' +   // #     (special normal*)*
-   $CloseParen;                                 // #                       )
+$Cnested =
+  $OpenParen +                                 // #  (
+  $ctext + '*' +                            // #     normal*
+  '(?:' + $quoted_pair + $ctext + '*)*' +   // #     (special normal*)*
+  $CloseParen;                                 // #                       )
 
 
 //# $comment allows one level of nested parentheses
 //# It is unrolled, with normal of $ctext, special of ($quoted_pair|$Cnested)
-$comment = 
-   $OpenParen +                                           // #  (
-       $ctext + '*' +                                     // #     normal*
-       '(?:' +                                            // #       (
-          '(?:' + $quoted_pair + '|' + $Cnested + ')' +   // #         special
-           $ctext + '*' +                                 // #         normal*
-       ')*' +                                             // #            )*
-   $CloseParen;                                           // #                )
+$comment =
+  $OpenParen +                                           // #  (
+  $ctext + '*' +                                     // #     normal*
+  '(?:' +                                            // #       (
+  '(?:' + $quoted_pair + '|' + $Cnested + ')' +   // #         special
+  $ctext + '*' +                                 // #         normal*
+  ')*' +                                             // #            )*
+  $CloseParen;                                           // #                )
 
 
 //##############################################################################
 //# $X is optional whitespace/comments.
-$X = 
-   '[' + $space + $tab + ']*' +					       // # Nab whitespace.
-   '(?:' + $comment + '[' + $space + $tab + ']*)*';    // # If comment found, allow more spaces.
+$X =
+  '[' + $space + $tab + ']*' +					       // # Nab whitespace.
+  '(?:' + $comment + '[' + $space + $tab + ']*)*';    // # If comment found, allow more spaces.
 
 
 //# Item 10: atom
 $atom_char   = '[^(' + $space + '<>\@,;:\".' + $esc + $OpenBR + $CloseBR + $ctrl + $NonASCII + ']';
-$atom = 
+$atom =
   $atom_char + '+' +            // # some number of atom characters...
   '(?!' + $atom_char + ')';     // # ..not followed by something that could be part of an atom
 
 // # Item 11: doublequoted string, unrolled.
 $quoted_str =
-    '\"' +                                         // # "
-       $qtext + '*' +                              // #   normal
-       '(?:' + $quoted_pair + $qtext + '*)*' +     // #   ( special normal* )*
-    '\"';                                          // # "
+  '\"' +                                         // # "
+  $qtext + '*' +                              // #   normal
+  '(?:' + $quoted_pair + $qtext + '*)*' +     // #   ( special normal* )*
+  '\"';                                          // # "
 
 //# Item 7: word is an atom or quoted string
-$word = 
-    '(?:' +
-       $atom +                // # Atom
-       '|' +                  //     #  or
-       $quoted_str +          // # Quoted string
-     ')'
+$word =
+  '(?:' +
+  $atom +                // # Atom
+  '|' +                  //     #  or
+  $quoted_str +          // # Quoted string
+  ')'
 
 //# Item 12: domain-ref is just an atom
-$domain_ref  = $atom;
+  $domain_ref  = $atom;
 
 //# Item 13: domain-literal is like a quoted string, but [...] instead of  "..."
-$domain_lit  = 
-    $OpenBR +								   	     // # [
-    '(?:' + $dtext + '|' + $quoted_pair + ')*' +     // #    stuff
-    $CloseBR;                                        // #           ]
+$domain_lit  =
+  $OpenBR +								   	     // # [
+  '(?:' + $dtext + '|' + $quoted_pair + ')*' +     // #    stuff
+  $CloseBR;                                        // #           ]
 
 // # Item 9: sub-domain is a domain-ref or domain-literal
 $sub_domain  =
-  '(?:' + 
-    $domain_ref + 
-    '|' +
-    $domain_lit +
-   ')' +
-   $X;                 // # optional trailing comments
+  '(?:' +
+  $domain_ref +
+  '|' +
+  $domain_lit +
+  ')' +
+  $X;                 // # optional trailing comments
 
 // # Item 6: domain is a list of subdomains separated by dots.
-$domain = 
-     $sub_domain +
-     '(?:' +
-        $Period + $X + $sub_domain +
-     ')*';
+$domain =
+  $sub_domain +
+  '(?:' +
+  $Period + $X + $sub_domain +
+  ')*';
 
 //# Item 8: a route. A bunch of "@ $domain" separated by commas, followed by a colon.
-$route = 
-    '\@' + $X + $domain +
-    '(?:,' + $X + '\@' + $X + $domain + ')*' +  // # additional domains
-    ':' +
-    $X;					// # optional trailing comments
+$route =
+  '\@' + $X + $domain +
+  '(?:,' + $X + '\@' + $X + $domain + ')*' +  // # additional domains
+  ':' +
+  $X;					// # optional trailing comments
 
 //# Item 6: local-part is a bunch of $word separated by periods
-$local_part = 
-    $word + $X
-    '(?:' + 
-        $Period + $X + $word + $X +		// # additional words
-    ')*';
+$local_part =
+  $word + $X
+  '(?:' +
+  $Period + $X + $word + $X +		// # additional words
+  ')*';
 
 // # Item 2: addr-spec is local@domain
-$addr_spec  = 
+$addr_spec  =
   $local_part + '\@' + $X + $domain;
 
 //# Item 4: route-addr is <route? addr-spec>
 $route_addr =
-    '<' + $X +                     // # <
-       '(?:' + $route + ')?' +     // #       optional route
-       $addr_spec +                // #       address spec
-    '>';                           // #                 >
+  '<' + $X +                     // # <
+  '(?:' + $route + ')?' +     // #       optional route
+  $addr_spec +                // #       address spec
+  '>';                           // #                 >
 
 //# Item 3: phrase........
 $phrase_ctrl = '\000-\010\012-\037'; // # like ctrl, but without tab
@@ -228,26 +231,26 @@ $phrase_ctrl = '\000-\010\012-\037'; // # like ctrl, but without tab
 //# Like atom-char, but without listing space, and uses phrase_ctrl.
 //# Since the class is negated, this matches the same as atom-char plus space and tab
 $phrase_char =
-   '[^()<>\@,;:\".' + $esc + $OpenBR + $CloseBR + $NonASCII + $phrase_ctrl + ']';
+  '[^()<>\@,;:\".' + $esc + $OpenBR + $CloseBR + $NonASCII + $phrase_ctrl + ']';
 
 // # We've worked it so that $word, $comment, and $quoted_str to not consume trailing $X
 // # because we take care of it manually.
-$phrase = 
-   $word +                                                  // # leading word
-   $phrase_char + '*' +                                     // # "normal" atoms and/or spaces
-   '(?:' +
-      '(?:' + $comment + '|' + $quoted_str + ')' +          // # "special" comment or quoted string
-      $phrase_char + '*' +                                  // #  more "normal"
-   ')*';
+$phrase =
+  $word +                                                  // # leading word
+  $phrase_char + '*' +                                     // # "normal" atoms and/or spaces
+  '(?:' +
+  '(?:' + $comment + '|' + $quoted_str + ')' +          // # "special" comment or quoted string
+  $phrase_char + '*' +                                  // #  more "normal"
+  ')*';
 
 // ## Item #1: mailbox is an addr_spec or a phrase/route_addr
-$mailbox = 
-    $X +                                // # optional leading comment
-    '(?:' +
-            $phrase + $route_addr +     // # name and address
-            '|' +                       //     #  or
-            $addr_spec +                // # address
-     ')';
+$mailbox =
+  $X +                                // # optional leading comment
+  '(?:' +
+  $phrase + $route_addr +     // # name and address
+  '|' +                       //     #  or
+  $addr_spec +                // # address
+  ')';
 
 
 //###########################################################################

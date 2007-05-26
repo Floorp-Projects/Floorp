@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-371692.js';
 //-----------------------------------------------------------------------------
-var bug = 371692;
+var BUGNUMBER = 371692;
 var summary = 'Keep extra parentheses in conditional tests';
 var actual = '';
 var expect = '';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   var f = function (){ if((i=1)){ a=2; } };
   expect = 'function (){ if((i=1)){ a=2; } }';
   actual = f + '';

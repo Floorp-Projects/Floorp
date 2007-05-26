@@ -35,15 +35,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("13.4.4.3 - XML.appendChild should copy child");
+gTestfile = '13.4.4.3-01.js';
 
-var bug = 312692;
-var summary = '13.4.4.3 - XML.appendChild should copy child';
+var summary = "13.4.4.3 - XML.appendChild should copy child";
+
+var BUGNUMBER = 312692;
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 var ul = <ul/>;
 var li = <li/>;

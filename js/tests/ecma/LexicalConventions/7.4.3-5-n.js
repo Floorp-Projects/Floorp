@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '7.4.3-5-n.js';
+
 /**
    File Name:          7.4.3-5-n.js
    ECMA Section:       7.4.3
@@ -60,7 +62,7 @@ startTest();
 var TITLE   = "Future Reserved Words";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
-    
+   
 DESCRIPTION = "var catch = true";
 EXPECTED = "error";
 

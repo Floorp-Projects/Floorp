@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'long-001.js';
+
 /**
    Template for LiveConnect Tests
 
@@ -110,12 +112,12 @@ a[i++] = new TestObject( "new java.lang.Long( Number(5.5) )",
 
 for ( var i = 0; i < a.length; i++ ) {
 
-    // check typeof
-    new TestCase(
-	SECTION,
-	"typeof (" + a[i].description +")",
-	a[i].type,
-	typeof a[i].javavalue );
+  // check typeof
+  new TestCase(
+    SECTION,
+    "typeof (" + a[i].description +")",
+    a[i].type,
+    typeof a[i].javavalue );
 /*
 // check the js class
 new TestCase(
@@ -124,23 +126,23 @@ SECTION,
 E_JSCLASS,
 a[i].jsclass );
 */
-    // check the number value of the object
-    new TestCase(
-	SECTION,
-	"Number(" + a[i].description +")",
-	a[i].jsvalue,
-	Number( a[i].javavalue ) );
+  // check the number value of the object
+  new TestCase(
+    SECTION,
+    "Number(" + a[i].description +")",
+    a[i].jsvalue,
+    Number( a[i].javavalue ) );
 }
 
 test();
 
 function TestObject( description, javavalue, jsvalue ) {
-    this.description = description;
-    this.javavalue = javavalue;
-    this.jsvalue = jsvalue;
-    this.type = E_TYPE;
+  this.description = description;
+  this.javavalue = javavalue;
+  this.jsvalue = jsvalue;
+  this.type = E_TYPE;
 //  LC2 does not support the __proto__ property in Java objects.
 //    this.javavalue.__proto__.getJSClass = Object.prototype.toString;
 //    this.jsclass = this.javavalue.getJSClass();
-    return this;
+  return this;
 }

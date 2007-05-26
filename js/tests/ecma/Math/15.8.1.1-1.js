@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = '15.8.1.1-1.js';
+
 /**
    File Name:          15.8.1.1-1.js
    ECMA Section:       15.8.1.1.js
@@ -53,9 +56,9 @@ var TITLE   = "Math.E";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION, 
-	      "Math.E = 0; Math.E",       
-	      2.7182818284590452354,  
+new TestCase( SECTION,
+	      "Math.E = 0; Math.E",      
+	      2.7182818284590452354, 
 	      eval("Math.E=0;Math.E") );
 
 test();

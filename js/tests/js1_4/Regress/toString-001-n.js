@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'toString-001-n.js';
+
 /**
  *  File Name:          toString-001-n.js
  *  Description:
@@ -60,9 +63,9 @@ DESCRIPTION = "var o = {}; o.toString = Function.prototype.toString; o.toString(
 EXPECTED = "error";
 
 new TestCase(
-    SECTION,
-    "var o = {}; o.toString = Function.prototype.toString; o.toString();",
-    "error",
-    o.toString() );
+  SECTION,
+  "var o = {}; o.toString = Function.prototype.toString; o.toString();",
+  "error",
+  o.toString() );
 
 test();

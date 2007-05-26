@@ -34,12 +34,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-319683.js';
 //-----------------------------------------------------------------------------
-var bug = 319683;
+var BUGNUMBER = 319683;
 var summary = 'Do not crash in call_enumerate';
 var actual = 'No Crash';
 var expect = 'No Crash';
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 function crash(){
@@ -51,11 +53,11 @@ function crash(){
   }
 
   //apply an object to the __proto__ attribute
-  f.__proto__={}; 
+  f.__proto__={};
 
   //the following call will cause crash
   f();
-}  
+} 
 
 crash();
 

@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'simple_form.js';
+
 /**
    Filename:     simple_form.js
    Description:  'Tests regular expressions using simple form: re(...)'

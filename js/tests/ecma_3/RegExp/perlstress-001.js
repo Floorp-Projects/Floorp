@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    2002-07-07
  * SUMMARY: Testing JS RegExp engine against Perl 5 RegExp engine.
@@ -53,12 +55,12 @@
  *   By contrast, in Perl, unmatched captures hold the empty string.
  *   We have modified such sections accordingly. Example:
 
-    pattern = /^([^a-z])|(\^)$/;
-    string = '.';
-    actualmatch = string.match(pattern);
-  //expectedmatch = Array('.', '.', '');        <<<--- Perl
-    expectedmatch = Array('.', '.', undefined); <<<--- JS
-    addThis();
+ pattern = /^([^a-z])|(\^)$/;
+ string = '.';
+ actualmatch = string.match(pattern);
+ //expectedmatch = Array('.', '.', '');        <<<--- Perl
+ expectedmatch = Array('.', '.', undefined); <<<--- JS
+ addThis();
 
 
  * - In JS, you can't refer to a capture before it's encountered & completed
@@ -85,8 +87,9 @@
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'perlstress-001.js';
 var i = 0;
-var bug = 85721;
+var BUGNUMBER = 85721;
 var summary = 'Testing regular expression edge cases';
 var cnSingleSpace = ' ';
 var status = '';
@@ -342,13 +345,13 @@ expectedmatch = Array('a]');
 addThis();
 
 /* Perl supports ] & ^] inside a [], ECMA does not
-pattern = /a[]]b/;
-status = inSection(35);
-string = 'a]b';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a]b');
-addThis();
- */
+   pattern = /a[]]b/;
+   status = inSection(35);
+   string = 'a]b';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('a]b');
+   addThis();
+*/
 
 status = inSection(36);
 pattern = /a[^bc]d/;
@@ -365,13 +368,13 @@ expectedmatch = Array('adc');
 addThis();
 
 /* Perl supports ] & ^] inside a [], ECMA does not
-status = inSection(38);
-pattern = /a[^]b]c/;
-string = 'adc';
-actualmatch = string.match(pattern);
-expectedmatch = Array('adc');
-addThis();
- */
+   status = inSection(38);
+   pattern = /a[^]b]c/;
+   string = 'adc';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('adc');
+   addThis();
+*/
 
 status = inSection(39);
 pattern = /\ba\b/;
@@ -878,20 +881,20 @@ expectedmatch = Array('ababbbcbc', 'cbc', 'c');
 addThis();
 
 /* Can't refer to a capture before it's encountered & completed
-status = inSection(111);
-pattern = /((\3|b)\2(a)x)+/;
-string = 'aaaxabaxbaaxbbax';
-actualmatch = string.match(pattern);
-expectedmatch = Array('bbax', 'bbax', 'b', 'a');
-addThis();
+   status = inSection(111);
+   pattern = /((\3|b)\2(a)x)+/;
+   string = 'aaaxabaxbaaxbbax';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('bbax', 'bbax', 'b', 'a');
+   addThis();
 
-status = inSection(112);
-pattern = /((\3|b)\2(a)){2,}/;
-string = 'bbaababbabaaaaabbaaaabba';
-actualmatch = string.match(pattern);
-expectedmatch = Array('bbaaaabba', 'bba', 'b', 'a');
-addThis();
- */
+   status = inSection(112);
+   pattern = /((\3|b)\2(a)){2,}/;
+   string = 'bbaababbabaaaaabbaaaabba';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('bbaaaabba', 'bba', 'b', 'a');
+   addThis();
+*/
 
 status = inSection(113);
 pattern = /abc/i;
@@ -1118,13 +1121,13 @@ expectedmatch = Array('A]');
 addThis();
 
 /* Perl supports ] & ^] inside a [], ECMA does not
-status = inSection(145);
-pattern = /a[]]b/i;
-string = 'A]B';
-actualmatch = string.match(pattern);
-expectedmatch = Array('A]B');
-addThis();
- */
+   status = inSection(145);
+   pattern = /a[]]b/i;
+   string = 'A]B';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('A]B');
+   addThis();
+*/
 
 status = inSection(146);
 pattern = /a[^bc]d/i;
@@ -1141,13 +1144,13 @@ expectedmatch = Array('ADC');
 addThis();
 
 /* Perl supports ] & ^] inside a [], ECMA does not
-status = inSection(148);
-pattern = /a[^]b]c/i;
-string = 'ADC';
-actualmatch = string.match(pattern);
-expectedmatch = Array('ADC');
-addThis();
- */
+   status = inSection(148);
+   pattern = /a[^]b]c/i;
+   string = 'ADC';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('ADC');
+   addThis();
+*/
 
 status = inSection(149);
 pattern = /ab|cd/i;
@@ -1714,20 +1717,20 @@ expectedmatch = Array('<&');
 addThis();
 
 /* Can't refer to a capture before it's encountered & completed
-status = inSection(229);
-pattern = /^(a\1?){4}$/;
-string = 'aaaaaaaaaa';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aaaaaaaaaa', 'aaaa');
-addThis();
+   status = inSection(229);
+   pattern = /^(a\1?){4}$/;
+   string = 'aaaaaaaaaa';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aaaaaaaaaa', 'aaaa');
+   addThis();
 
-status = inSection(230);
-pattern = /^(a(?(1)\1)){4}$/;
-string = 'aaaaaaaaaa';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aaaaaaaaaa', 'aaaa');
-addThis();
- */
+   status = inSection(230);
+   pattern = /^(a(?(1)\1)){4}$/;
+   string = 'aaaaaaaaaa';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aaaaaaaaaa', 'aaaa');
+   addThis();
+*/
 
 status = inSection(231);
 pattern = /((a{4})+)/;
@@ -1759,34 +1762,34 @@ expectedmatch = Array('foobar', undefined, undefined, undefined, 'b', 'a', 'r');
 addThis();
 
 /* ECMA supports (?: (?= and (?! but doesn't support (?< etc.
-status = inSection(235);
-pattern = /(?<=a)b/;
-string = 'ab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('b');
-addThis();
+   status = inSection(235);
+   pattern = /(?<=a)b/;
+   string = 'ab';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('b');
+   addThis();
 
-status = inSection(236);
-pattern = /(?<!c)b/;
-string = 'ab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('b');
-addThis();
+   status = inSection(236);
+   pattern = /(?<!c)b/;
+   string = 'ab';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('b');
+   addThis();
 
-status = inSection(237);
-pattern = /(?<!c)b/;
-string = 'b';
-actualmatch = string.match(pattern);
-expectedmatch = Array('b');
-addThis();
+   status = inSection(237);
+   pattern = /(?<!c)b/;
+   string = 'b';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('b');
+   addThis();
 
-status = inSection(238);
-pattern = /(?<!c)b/;
-string = 'b';
-actualmatch = string.match(pattern);
-expectedmatch = Array('b');
-addThis();
- */
+   status = inSection(238);
+   pattern = /(?<!c)b/;
+   string = 'b';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('b');
+   addThis();
+*/
 
 status = inSection(239);
 pattern = /(?:..)*a/;
@@ -1868,153 +1871,153 @@ expectedmatch = Array('ab', undefined);
 addThis();
 
 /* ECMA doesn't support (?imsx or (?-imsx
-status = inSection(248);
-pattern = /(?:(?i)a)b/;
-string = 'ab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('ab');
-addThis();
+   status = inSection(248);
+   pattern = /(?:(?i)a)b/;
+   string = 'ab';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('ab');
+   addThis();
 
-status = inSection(249);
-pattern = /((?i)a)b/;
-string = 'ab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('ab', 'a');
-addThis();
+   status = inSection(249);
+   pattern = /((?i)a)b/;
+   string = 'ab';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('ab', 'a');
+   addThis();
 
-status = inSection(250);
-pattern = /(?:(?i)a)b/;
-string = 'Ab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('Ab');
-addThis();
+   status = inSection(250);
+   pattern = /(?:(?i)a)b/;
+   string = 'Ab';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('Ab');
+   addThis();
 
-status = inSection(251);
-pattern = /((?i)a)b/;
-string = 'Ab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('Ab', 'A');
-addThis();
+   status = inSection(251);
+   pattern = /((?i)a)b/;
+   string = 'Ab';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('Ab', 'A');
+   addThis();
 
-status = inSection(252);
-pattern = /(?i:a)b/;
-string = 'ab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('ab');
-addThis();
+   status = inSection(252);
+   pattern = /(?i:a)b/;
+   string = 'ab';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('ab');
+   addThis();
 
-status = inSection(253);
-pattern = /((?i:a))b/;
-string = 'ab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('ab', 'a');
-addThis();
+   status = inSection(253);
+   pattern = /((?i:a))b/;
+   string = 'ab';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('ab', 'a');
+   addThis();
 
-status = inSection(254);
-pattern = /(?i:a)b/;
-string = 'Ab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('Ab');
-addThis();
+   status = inSection(254);
+   pattern = /(?i:a)b/;
+   string = 'Ab';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('Ab');
+   addThis();
 
-status = inSection(255);
-pattern = /((?i:a))b/;
-string = 'Ab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('Ab', 'A');
-addThis();
+   status = inSection(255);
+   pattern = /((?i:a))b/;
+   string = 'Ab';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('Ab', 'A');
+   addThis();
 
-status = inSection(256);
-pattern = /(?:(?-i)a)b/i;
-string = 'ab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('ab');
-addThis();
+   status = inSection(256);
+   pattern = /(?:(?-i)a)b/i;
+   string = 'ab';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('ab');
+   addThis();
 
-status = inSection(257);
-pattern = /((?-i)a)b/i;
-string = 'ab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('ab', 'a');
-addThis();
+   status = inSection(257);
+   pattern = /((?-i)a)b/i;
+   string = 'ab';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('ab', 'a');
+   addThis();
 
-status = inSection(258);
-pattern = /(?:(?-i)a)b/i;
-string = 'aB';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aB');
-addThis();
+   status = inSection(258);
+   pattern = /(?:(?-i)a)b/i;
+   string = 'aB';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aB');
+   addThis();
 
-status = inSection(259);
-pattern = /((?-i)a)b/i;
-string = 'aB';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aB', 'a');
-addThis();
+   status = inSection(259);
+   pattern = /((?-i)a)b/i;
+   string = 'aB';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aB', 'a');
+   addThis();
 
-status = inSection(260);
-pattern = /(?:(?-i)a)b/i;
-string = 'aB';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aB');
-addThis();
+   status = inSection(260);
+   pattern = /(?:(?-i)a)b/i;
+   string = 'aB';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aB');
+   addThis();
 
-status = inSection(261);
-pattern = /((?-i)a)b/i;
-string = 'aB';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aB', 'a');
-addThis();
+   status = inSection(261);
+   pattern = /((?-i)a)b/i;
+   string = 'aB';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aB', 'a');
+   addThis();
 
-status = inSection(262);
-pattern = /(?-i:a)b/i;
-string = 'ab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('ab');
-addThis();
+   status = inSection(262);
+   pattern = /(?-i:a)b/i;
+   string = 'ab';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('ab');
+   addThis();
 
-status = inSection(263);
-pattern = /((?-i:a))b/i;
-string = 'ab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('ab', 'a');
-addThis();
+   status = inSection(263);
+   pattern = /((?-i:a))b/i;
+   string = 'ab';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('ab', 'a');
+   addThis();
 
-status = inSection(264);
-pattern = /(?-i:a)b/i;
-string = 'aB';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aB');
-addThis();
+   status = inSection(264);
+   pattern = /(?-i:a)b/i;
+   string = 'aB';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aB');
+   addThis();
 
-status = inSection(265);
-pattern = /((?-i:a))b/i;
-string = 'aB';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aB', 'a');
-addThis();
+   status = inSection(265);
+   pattern = /((?-i:a))b/i;
+   string = 'aB';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aB', 'a');
+   addThis();
 
-status = inSection(266);
-pattern = /(?-i:a)b/i;
-string = 'aB';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aB');
-addThis();
+   status = inSection(266);
+   pattern = /(?-i:a)b/i;
+   string = 'aB';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aB');
+   addThis();
 
-status = inSection(267);
-pattern = /((?-i:a))b/i;
-string = 'aB';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aB', 'a');
-addThis();
+   status = inSection(267);
+   pattern = /((?-i:a))b/i;
+   string = 'aB';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aB', 'a');
+   addThis();
 
-status = inSection(268);
-pattern = /((?s-i:a.))b/i;
-string = 'a\nB';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a\nB', 'a\n');
-addThis();
- */
+   status = inSection(268);
+   pattern = /((?s-i:a.))b/i;
+   string = 'a\nB';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('a\nB', 'a\n');
+   addThis();
+*/
 
 status = inSection(269);
 pattern = /(?:c|d)(?:)(?:a(?:)(?:b)(?:b(?:))(?:b(?:)(?:b)))/;
@@ -2059,185 +2062,185 @@ expectedmatch = Array('x~~', '~~');
 addThis();
 
 /* Perl supports (?# but JS doesn't
-status = inSection(275);
-pattern = /^a(?#xxx){3}c/;
-string = 'aaac';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aaac');
-addThis();
- */
+   status = inSection(275);
+   pattern = /^a(?#xxx){3}c/;
+   string = 'aaac';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aaac');
+   addThis();
+*/
 
 /* ECMA doesn't support (?< etc
-status = inSection(276);
-pattern = /(?<![cd])[ab]/;
-string = 'dbaacb';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a');
-addThis();
+   status = inSection(276);
+   pattern = /(?<![cd])[ab]/;
+   string = 'dbaacb';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('a');
+   addThis();
 
-status = inSection(277);
-pattern = /(?<!(c|d))[ab]/;
-string = 'dbaacb';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a');
-addThis();
+   status = inSection(277);
+   pattern = /(?<!(c|d))[ab]/;
+   string = 'dbaacb';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('a');
+   addThis();
 
-status = inSection(278);
-pattern = /(?<!cd)[ab]/;
-string = 'cdaccb';
-actualmatch = string.match(pattern);
-expectedmatch = Array('b');
-addThis();
+   status = inSection(278);
+   pattern = /(?<!cd)[ab]/;
+   string = 'cdaccb';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('b');
+   addThis();
 
-status = inSection(279);
-pattern = /((?s)^a(.))((?m)^b$)/;
-string = 'a\nb\nc\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a\nb', 'a\n', '\n', 'b');
-addThis();
+   status = inSection(279);
+   pattern = /((?s)^a(.))((?m)^b$)/;
+   string = 'a\nb\nc\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('a\nb', 'a\n', '\n', 'b');
+   addThis();
 
-status = inSection(280);
-pattern = /((?m)^b$)/;
-string = 'a\nb\nc\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('b', 'b');
-addThis();
+   status = inSection(280);
+   pattern = /((?m)^b$)/;
+   string = 'a\nb\nc\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('b', 'b');
+   addThis();
 
-status = inSection(281);
-pattern = /(?m)^b/;
-string = 'a\nb\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('b');
-addThis();
+   status = inSection(281);
+   pattern = /(?m)^b/;
+   string = 'a\nb\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('b');
+   addThis();
 
-status = inSection(282);
-pattern = /(?m)^(b)/;
-string = 'a\nb\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('b', 'b');
-addThis();
+   status = inSection(282);
+   pattern = /(?m)^(b)/;
+   string = 'a\nb\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('b', 'b');
+   addThis();
 
-status = inSection(283);
-pattern = /((?m)^b)/;
-string = 'a\nb\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('b', 'b');
-addThis();
+   status = inSection(283);
+   pattern = /((?m)^b)/;
+   string = 'a\nb\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('b', 'b');
+   addThis();
 
-status = inSection(284);
-pattern = /\n((?m)^b)/;
-string = 'a\nb\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('\nb', 'b');
-addThis();
+   status = inSection(284);
+   pattern = /\n((?m)^b)/;
+   string = 'a\nb\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('\nb', 'b');
+   addThis();
 
-status = inSection(285);
-pattern = /((?s).)c(?!.)/;
-string = 'a\nb\nc\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('\nc', '\n');
-addThis();
+   status = inSection(285);
+   pattern = /((?s).)c(?!.)/;
+   string = 'a\nb\nc\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('\nc', '\n');
+   addThis();
 
-status = inSection(286);
-pattern = /((?s).)c(?!.)/;
-string = 'a\nb\nc\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('\nc', '\n');
-addThis();
+   status = inSection(286);
+   pattern = /((?s).)c(?!.)/;
+   string = 'a\nb\nc\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('\nc', '\n');
+   addThis();
 
-status = inSection(287);
-pattern = /((?s)b.)c(?!.)/;
-string = 'a\nb\nc\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('b\nc', 'b\n');
-addThis();
+   status = inSection(287);
+   pattern = /((?s)b.)c(?!.)/;
+   string = 'a\nb\nc\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('b\nc', 'b\n');
+   addThis();
 
-status = inSection(288);
-pattern = /((?s)b.)c(?!.)/;
-string = 'a\nb\nc\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('b\nc', 'b\n');
-addThis();
+   status = inSection(288);
+   pattern = /((?s)b.)c(?!.)/;
+   string = 'a\nb\nc\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('b\nc', 'b\n');
+   addThis();
 
-status = inSection(289);
-pattern = /((?m)^b)/;
-string = 'a\nb\nc\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('b', 'b');
-addThis();
- */
+   status = inSection(289);
+   pattern = /((?m)^b)/;
+   string = 'a\nb\nc\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('b', 'b');
+   addThis();
+*/
 
 /* ECMA doesn't support (?(condition)
-status = inSection(290);
-pattern = /(?(1)b|a)/;
-string = 'a';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a');
-addThis();
+   status = inSection(290);
+   pattern = /(?(1)b|a)/;
+   string = 'a';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('a');
+   addThis();
 
-status = inSection(291);
-pattern = /(x)?(?(1)b|a)/;
-string = 'a';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a');
-addThis();
+   status = inSection(291);
+   pattern = /(x)?(?(1)b|a)/;
+   string = 'a';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('a');
+   addThis();
 
-status = inSection(292);
-pattern = /()?(?(1)b|a)/;
-string = 'a';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a');
-addThis();
+   status = inSection(292);
+   pattern = /()?(?(1)b|a)/;
+   string = 'a';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('a');
+   addThis();
 
-status = inSection(293);
-pattern = /()?(?(1)a|b)/;
-string = 'a';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a');
-addThis();
+   status = inSection(293);
+   pattern = /()?(?(1)a|b)/;
+   string = 'a';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('a');
+   addThis();
 
-status = inSection(294);
-pattern = /^(\()?blah(?(1)(\)))$/;
-string = '(blah)';
-actualmatch = string.match(pattern);
-expectedmatch = Array('(blah)', '(', ')');
-addThis();
+   status = inSection(294);
+   pattern = /^(\()?blah(?(1)(\)))$/;
+   string = '(blah)';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('(blah)', '(', ')');
+   addThis();
 
-status = inSection(295);
-pattern = /^(\()?blah(?(1)(\)))$/;
-string = 'blah';
-actualmatch = string.match(pattern);
-expectedmatch = Array('blah');
-addThis();
+   status = inSection(295);
+   pattern = /^(\()?blah(?(1)(\)))$/;
+   string = 'blah';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('blah');
+   addThis();
 
-status = inSection(296);
-pattern = /^(\(+)?blah(?(1)(\)))$/;
-string = '(blah)';
-actualmatch = string.match(pattern);
-expectedmatch = Array('(blah)', '(', ')');
-addThis();
+   status = inSection(296);
+   pattern = /^(\(+)?blah(?(1)(\)))$/;
+   string = '(blah)';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('(blah)', '(', ')');
+   addThis();
 
-status = inSection(297);
-pattern = /^(\(+)?blah(?(1)(\)))$/;
-string = 'blah';
-actualmatch = string.match(pattern);
-expectedmatch = Array('blah');
-addThis();
+   status = inSection(297);
+   pattern = /^(\(+)?blah(?(1)(\)))$/;
+   string = 'blah';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('blah');
+   addThis();
 
-status = inSection(298);
-pattern = /(?(?!a)b|a)/;
-string = 'a';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a');
-addThis();
+   status = inSection(298);
+   pattern = /(?(?!a)b|a)/;
+   string = 'a';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('a');
+   addThis();
 
-status = inSection(299);
-pattern = /(?(?=a)a|b)/;
-string = 'a';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a');
-addThis();
- */
+   status = inSection(299);
+   pattern = /(?(?=a)a|b)/;
+   string = 'a';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('a');
+   addThis();
+*/
 
 status = inSection(300);
 pattern = /(?=(a+?))(\1ab)/;
@@ -2254,13 +2257,13 @@ expectedmatch = Array('one:', 'one:');
 addThis();
 
 /* ECMA doesn't support (?< etc
-status = inSection(302);
-pattern = /$(?<=^(a))/;
-string = 'a';
-actualmatch = string.match(pattern);
-expectedmatch = Array('', 'a');
-addThis();
- */
+   status = inSection(302);
+   pattern = /$(?<=^(a))/;
+   string = 'a';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('', 'a');
+   addThis();
+*/
 
 status = inSection(303);
 pattern = /(?=(a+?))(\1ab)/;
@@ -2323,905 +2326,905 @@ expectedmatch = Array('aexyc', 'c');
 addThis();
 
 /* ECMA doesn't support (?>
-status = inSection(311);
-pattern = /(?>a+)b/;
-string = 'aaab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aaab');
-addThis();
- */
+   status = inSection(311);
+   pattern = /(?>a+)b/;
+   string = 'aaab';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aaab');
+   addThis();
+*/
 
 status = inSection(312);
 pattern = /([[:]+)/;
-string = 'a:[b]:';
-actualmatch = string.match(pattern);
-expectedmatch = Array(':[', ':[');
-addThis();
+	    string = 'a:[b]:';
+	    actualmatch = string.match(pattern);
+	    expectedmatch = Array(':[', ':[');
+	    addThis();
 
-status = inSection(313);
-pattern = /([[=]+)/;
-string = 'a=[b]=';
-actualmatch = string.match(pattern);
-expectedmatch = Array('=[', '=[');
-addThis();
+	    status = inSection(313);
+	    pattern = /([[=]+)/;
+			string = 'a=[b]=';
+			actualmatch = string.match(pattern);
+			expectedmatch = Array('=[', '=[');
+			addThis();
 
-status = inSection(314);
-pattern = /([[.]+)/;
-string = 'a.[b].';
-actualmatch = string.match(pattern);
-expectedmatch = Array('.[', '.[');
-addThis();
+			status = inSection(314);
+			pattern = /([[.]+)/;
+				    string = 'a.[b].';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('.[', '.[');
+				    addThis();
 
 /* ECMA doesn't have rules for [:
-status = inSection(315);
-pattern = /[a[:]b[:c]/;
-string = 'abc';
-actualmatch = string.match(pattern);
-expectedmatch = Array('abc');
-addThis();
- */
+   status = inSection(315);
+   pattern = /[a[:]b[:c]/;
+   string = 'abc';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('abc');
+   addThis();
+*/
 
 /* ECMA doesn't support (?>
-status = inSection(316);
-pattern = /((?>a+)b)/;
-string = 'aaab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aaab', 'aaab');
-addThis();
+   status = inSection(316);
+   pattern = /((?>a+)b)/;
+   string = 'aaab';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aaab', 'aaab');
+   addThis();
 
-status = inSection(317);
-pattern = /(?>(a+))b/;
-string = 'aaab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aaab', 'aaa');
-addThis();
+   status = inSection(317);
+   pattern = /(?>(a+))b/;
+   string = 'aaab';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aaab', 'aaa');
+   addThis();
 
-status = inSection(318);
-pattern = /((?>[^()]+)|\([^()]*\))+/;
-string = '((abc(ade)ufh()()x';
-actualmatch = string.match(pattern);
-expectedmatch = Array('abc(ade)ufh()()x', 'x');
-addThis();
- */
-
-/* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(319);
-pattern = /\Z/;
-string = 'a\nb\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('');
-addThis();
-
-status = inSection(320);
-pattern = /\z/;
-string = 'a\nb\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('');
-addThis();
- */
-
-status = inSection(321);
-pattern = /$/;
-string = 'a\nb\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('');
-addThis();
+   status = inSection(318);
+   pattern = /((?>[^()]+)|\([^()]*\))+/;
+   string = '((abc(ade)ufh()()x';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('abc(ade)ufh()()x', 'x');
+   addThis();
+*/
 
 /* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(322);
-pattern = /\Z/;
-string = 'b\na\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('');
-addThis();
+   status = inSection(319);
+   pattern = /\Z/;
+   string = 'a\nb\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('');
+   addThis();
 
-status = inSection(323);
-pattern = /\z/;
-string = 'b\na\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('');
-addThis();
- */
+   status = inSection(320);
+   pattern = /\z/;
+   string = 'a\nb\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('');
+   addThis();
+*/
 
-status = inSection(324);
-pattern = /$/;
-string = 'b\na\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('');
-addThis();
-
-/* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(325);
-pattern = /\Z/;
-string = 'b\na';
-actualmatch = string.match(pattern);
-expectedmatch = Array('');
-addThis();
-
-status = inSection(326);
-pattern = /\z/;
-string = 'b\na';
-actualmatch = string.match(pattern);
-expectedmatch = Array('');
-addThis();
- */
-
-status = inSection(327);
-pattern = /$/;
-string = 'b\na';
-actualmatch = string.match(pattern);
-expectedmatch = Array('');
-addThis();
+				    status = inSection(321);
+				    pattern = /$/;
+				    string = 'a\nb\n';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('');
+				    addThis();
 
 /* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(328);
-pattern = /\Z/m;
-string = 'a\nb\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('');
-addThis();
+   status = inSection(322);
+   pattern = /\Z/;
+   string = 'b\na\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('');
+   addThis();
 
-status = inSection(329);
-pattern = /\z/m;
-string = 'a\nb\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('');
-addThis();
- */
+   status = inSection(323);
+   pattern = /\z/;
+   string = 'b\na\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('');
+   addThis();
+*/
 
-status = inSection(330);
-pattern = /$/m;
-string = 'a\nb\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('');
-addThis();
-
-/* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(331);
-pattern = /\Z/m;
-string = 'b\na\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('');
-addThis();
-
-status = inSection(332);
-pattern = /\z/m;
-string = 'b\na\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('');
-addThis();
- */
-
-status = inSection(333);
-pattern = /$/m;
-string = 'b\na\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('');
-addThis();
+				    status = inSection(324);
+				    pattern = /$/;
+				    string = 'b\na\n';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('');
+				    addThis();
 
 /* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(334);
-pattern = /\Z/m;
-string = 'b\na';
-actualmatch = string.match(pattern);
-expectedmatch = Array('');
-addThis();
+   status = inSection(325);
+   pattern = /\Z/;
+   string = 'b\na';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('');
+   addThis();
 
-status = inSection(335);
-pattern = /\z/m;
-string = 'b\na';
-actualmatch = string.match(pattern);
-expectedmatch = Array('');
-addThis();
- */
+   status = inSection(326);
+   pattern = /\z/;
+   string = 'b\na';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('');
+   addThis();
+*/
 
-status = inSection(336);
-pattern = /$/m;
-string = 'b\na';
-actualmatch = string.match(pattern);
-expectedmatch = Array('');
-addThis();
+				    status = inSection(327);
+				    pattern = /$/;
+				    string = 'b\na';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('');
+				    addThis();
 
 /* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(337);
-pattern = /a\Z/;
-string = 'b\na\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a');
-addThis();
- */
+   status = inSection(328);
+   pattern = /\Z/m;
+   string = 'a\nb\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('');
+   addThis();
+
+   status = inSection(329);
+   pattern = /\z/m;
+   string = 'a\nb\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('');
+   addThis();
+*/
+
+				    status = inSection(330);
+				    pattern = /$/m;
+				    string = 'a\nb\n';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('');
+				    addThis();
+
+/* Perl has \Z has end-of-line, ECMA doesn't
+   status = inSection(331);
+   pattern = /\Z/m;
+   string = 'b\na\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('');
+   addThis();
+
+   status = inSection(332);
+   pattern = /\z/m;
+   string = 'b\na\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('');
+   addThis();
+*/
+
+				    status = inSection(333);
+				    pattern = /$/m;
+				    string = 'b\na\n';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('');
+				    addThis();
+
+/* Perl has \Z has end-of-line, ECMA doesn't
+   status = inSection(334);
+   pattern = /\Z/m;
+   string = 'b\na';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('');
+   addThis();
+
+   status = inSection(335);
+   pattern = /\z/m;
+   string = 'b\na';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('');
+   addThis();
+*/
+
+				    status = inSection(336);
+				    pattern = /$/m;
+				    string = 'b\na';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('');
+				    addThis();
+
+/* Perl has \Z has end-of-line, ECMA doesn't
+   status = inSection(337);
+   pattern = /a\Z/;
+   string = 'b\na\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('a');
+   addThis();
+*/
 
 /* $ only matches end of input unless multiline
-status = inSection(338);
-pattern = /a$/;
-string = 'b\na\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a');
-addThis();
- */
+   status = inSection(338);
+   pattern = /a$/;
+   string = 'b\na\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('a');
+   addThis();
+*/
 
 /* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(339);
-pattern = /a\Z/;
-string = 'b\na';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a');
-addThis();
+   status = inSection(339);
+   pattern = /a\Z/;
+   string = 'b\na';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('a');
+   addThis();
 
-status = inSection(340);
-pattern = /a\z/;
-string = 'b\na';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a');
-addThis();
- */
+   status = inSection(340);
+   pattern = /a\z/;
+   string = 'b\na';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('a');
+   addThis();
+*/
 
-status = inSection(341);
-pattern = /a$/;
-string = 'b\na';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a');
-addThis();
+				    status = inSection(341);
+				    pattern = /a$/;
+				    string = 'b\na';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('a');
+				    addThis();
 
-status = inSection(342);
-pattern = /a$/m;
-string = 'a\nb\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a');
-addThis();
-
-/* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(343);
-pattern = /a\Z/m;
-string = 'b\na\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a');
-addThis();
- */
-
-status = inSection(344);
-pattern = /a$/m;
-string = 'b\na\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a');
-addThis();
+				    status = inSection(342);
+				    pattern = /a$/m;
+				    string = 'a\nb\n';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('a');
+				    addThis();
 
 /* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(345);
-pattern = /a\Z/m;
-string = 'b\na';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a');
-addThis();
+   status = inSection(343);
+   pattern = /a\Z/m;
+   string = 'b\na\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('a');
+   addThis();
+*/
 
-status = inSection(346);
-pattern = /a\z/m;
-string = 'b\na';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a');
-addThis();
- */
-
-status = inSection(347);
-pattern = /a$/m;
-string = 'b\na';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a');
-addThis();
+				    status = inSection(344);
+				    pattern = /a$/m;
+				    string = 'b\na\n';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('a');
+				    addThis();
 
 /* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(348);
-pattern = /aa\Z/;
-string = 'b\naa\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aa');
-addThis();
- */
+   status = inSection(345);
+   pattern = /a\Z/m;
+   string = 'b\na';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('a');
+   addThis();
+
+   status = inSection(346);
+   pattern = /a\z/m;
+   string = 'b\na';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('a');
+   addThis();
+*/
+
+				    status = inSection(347);
+				    pattern = /a$/m;
+				    string = 'b\na';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('a');
+				    addThis();
+
+/* Perl has \Z has end-of-line, ECMA doesn't
+   status = inSection(348);
+   pattern = /aa\Z/;
+   string = 'b\naa\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aa');
+   addThis();
+*/
 
 /* $ only matches end of input unless multiline
-status = inSection(349);
-pattern = /aa$/;
-string = 'b\naa\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aa');
-addThis();
- */
+   status = inSection(349);
+   pattern = /aa$/;
+   string = 'b\naa\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aa');
+   addThis();
+*/
 
 /* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(350);
-pattern = /aa\Z/;
-string = 'b\naa';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aa');
-addThis();
+   status = inSection(350);
+   pattern = /aa\Z/;
+   string = 'b\naa';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aa');
+   addThis();
 
-status = inSection(351);
-pattern = /aa\z/;
-string = 'b\naa';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aa');
-addThis();
- */
+   status = inSection(351);
+   pattern = /aa\z/;
+   string = 'b\naa';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aa');
+   addThis();
+*/
 
-status = inSection(352);
-pattern = /aa$/;
-string = 'b\naa';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aa');
-addThis();
+				    status = inSection(352);
+				    pattern = /aa$/;
+				    string = 'b\naa';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('aa');
+				    addThis();
 
-status = inSection(353);
-pattern = /aa$/m;
-string = 'aa\nb\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aa');
-addThis();
-
-/* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(354);
-pattern = /aa\Z/m;
-string = 'b\naa\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aa');
-addThis();
- */
-
-status = inSection(355);
-pattern = /aa$/m;
-string = 'b\naa\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aa');
-addThis();
+				    status = inSection(353);
+				    pattern = /aa$/m;
+				    string = 'aa\nb\n';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('aa');
+				    addThis();
 
 /* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(356);
-pattern = /aa\Z/m;
-string = 'b\naa';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aa');
-addThis();
+   status = inSection(354);
+   pattern = /aa\Z/m;
+   string = 'b\naa\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aa');
+   addThis();
+*/
 
-status = inSection(357);
-pattern = /aa\z/m;
-string = 'b\naa';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aa');
-addThis();
- */
-
-status = inSection(358);
-pattern = /aa$/m;
-string = 'b\naa';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aa');
-addThis();
+				    status = inSection(355);
+				    pattern = /aa$/m;
+				    string = 'b\naa\n';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('aa');
+				    addThis();
 
 /* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(359);
-pattern = /ab\Z/;
-string = 'b\nab\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('ab');
-addThis();
- */
+   status = inSection(356);
+   pattern = /aa\Z/m;
+   string = 'b\naa';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aa');
+   addThis();
+
+   status = inSection(357);
+   pattern = /aa\z/m;
+   string = 'b\naa';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aa');
+   addThis();
+*/
+
+				    status = inSection(358);
+				    pattern = /aa$/m;
+				    string = 'b\naa';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('aa');
+				    addThis();
+
+/* Perl has \Z has end-of-line, ECMA doesn't
+   status = inSection(359);
+   pattern = /ab\Z/;
+   string = 'b\nab\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('ab');
+   addThis();
+*/
 
 /* $ only matches end of input unless multiline
-status = inSection(360);
-pattern = /ab$/;
-string = 'b\nab\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('ab');
-addThis();
- */
+   status = inSection(360);
+   pattern = /ab$/;
+   string = 'b\nab\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('ab');
+   addThis();
+*/
 
 /* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(361);
-pattern = /ab\Z/;
-string = 'b\nab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('ab');
-addThis();
+   status = inSection(361);
+   pattern = /ab\Z/;
+   string = 'b\nab';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('ab');
+   addThis();
 
-status = inSection(362);
-pattern = /ab\z/;
-string = 'b\nab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('ab');
-addThis();
- */
+   status = inSection(362);
+   pattern = /ab\z/;
+   string = 'b\nab';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('ab');
+   addThis();
+*/
 
-status = inSection(363);
-pattern = /ab$/;
-string = 'b\nab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('ab');
-addThis();
+				    status = inSection(363);
+				    pattern = /ab$/;
+				    string = 'b\nab';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('ab');
+				    addThis();
 
-status = inSection(364);
-pattern = /ab$/m;
-string = 'ab\nb\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('ab');
-addThis();
-
-/* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(365);
-pattern = /ab\Z/m;
-string = 'b\nab\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('ab');
-addThis();
- */
-
-status = inSection(366);
-pattern = /ab$/m;
-string = 'b\nab\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('ab');
-addThis();
+				    status = inSection(364);
+				    pattern = /ab$/m;
+				    string = 'ab\nb\n';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('ab');
+				    addThis();
 
 /* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(367);
-pattern = /ab\Z/m;
-string = 'b\nab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('ab');
-addThis();
+   status = inSection(365);
+   pattern = /ab\Z/m;
+   string = 'b\nab\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('ab');
+   addThis();
+*/
 
-status = inSection(368);
-pattern = /ab\z/m;
-string = 'b\nab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('ab');
-addThis();
- */
-
-status = inSection(369);
-pattern = /ab$/m;
-string = 'b\nab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('ab');
-addThis();
+				    status = inSection(366);
+				    pattern = /ab$/m;
+				    string = 'b\nab\n';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('ab');
+				    addThis();
 
 /* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(370);
-pattern = /abb\Z/;
-string = 'b\nabb\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('abb');
-addThis();
- */
+   status = inSection(367);
+   pattern = /ab\Z/m;
+   string = 'b\nab';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('ab');
+   addThis();
+
+   status = inSection(368);
+   pattern = /ab\z/m;
+   string = 'b\nab';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('ab');
+   addThis();
+*/
+
+				    status = inSection(369);
+				    pattern = /ab$/m;
+				    string = 'b\nab';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('ab');
+				    addThis();
+
+/* Perl has \Z has end-of-line, ECMA doesn't
+   status = inSection(370);
+   pattern = /abb\Z/;
+   string = 'b\nabb\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('abb');
+   addThis();
+*/
 
 /* $ only matches end of input unless multiline
-status = inSection(371);
-pattern = /abb$/;
-string = 'b\nabb\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('abb');
-addThis();
- */
+   status = inSection(371);
+   pattern = /abb$/;
+   string = 'b\nabb\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('abb');
+   addThis();
+*/
 
 /* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(372);
-pattern = /abb\Z/;
-string = 'b\nabb';
-actualmatch = string.match(pattern);
-expectedmatch = Array('abb');
-addThis();
+   status = inSection(372);
+   pattern = /abb\Z/;
+   string = 'b\nabb';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('abb');
+   addThis();
 
-status = inSection(373);
-pattern = /abb\z/;
-string = 'b\nabb';
-actualmatch = string.match(pattern);
-expectedmatch = Array('abb');
-addThis();
- */
+   status = inSection(373);
+   pattern = /abb\z/;
+   string = 'b\nabb';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('abb');
+   addThis();
+*/
 
-status = inSection(374);
-pattern = /abb$/;
-string = 'b\nabb';
-actualmatch = string.match(pattern);
-expectedmatch = Array('abb');
-addThis();
+				    status = inSection(374);
+				    pattern = /abb$/;
+				    string = 'b\nabb';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('abb');
+				    addThis();
 
-status = inSection(375);
-pattern = /abb$/m;
-string = 'abb\nb\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('abb');
-addThis();
-
-/* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(376);
-pattern = /abb\Z/m;
-string = 'b\nabb\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('abb');
-addThis();
- */
-
-status = inSection(377);
-pattern = /abb$/m;
-string = 'b\nabb\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('abb');
-addThis();
+				    status = inSection(375);
+				    pattern = /abb$/m;
+				    string = 'abb\nb\n';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('abb');
+				    addThis();
 
 /* Perl has \Z has end-of-line, ECMA doesn't
-status = inSection(378);
-pattern = /abb\Z/m;
-string = 'b\nabb';
-actualmatch = string.match(pattern);
-expectedmatch = Array('abb');
-addThis();
+   status = inSection(376);
+   pattern = /abb\Z/m;
+   string = 'b\nabb\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('abb');
+   addThis();
+*/
 
-status = inSection(379);
-pattern = /abb\z/m;
-string = 'b\nabb';
-actualmatch = string.match(pattern);
-expectedmatch = Array('abb');
-addThis();
- */
+				    status = inSection(377);
+				    pattern = /abb$/m;
+				    string = 'b\nabb\n';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('abb');
+				    addThis();
 
-status = inSection(380);
-pattern = /abb$/m;
-string = 'b\nabb';
-actualmatch = string.match(pattern);
-expectedmatch = Array('abb');
-addThis();
+/* Perl has \Z has end-of-line, ECMA doesn't
+   status = inSection(378);
+   pattern = /abb\Z/m;
+   string = 'b\nabb';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('abb');
+   addThis();
 
-status = inSection(381);
-pattern = /(^|x)(c)/;
-string = 'ca';
-actualmatch = string.match(pattern);
-expectedmatch = Array('c', '', 'c');
-addThis();
+   status = inSection(379);
+   pattern = /abb\z/m;
+   string = 'b\nabb';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('abb');
+   addThis();
+*/
 
-status = inSection(382);
-pattern = /foo.bart/;
-string = 'foo.bart';
-actualmatch = string.match(pattern);
-expectedmatch = Array('foo.bart');
-addThis();
+				    status = inSection(380);
+				    pattern = /abb$/m;
+				    string = 'b\nabb';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('abb');
+				    addThis();
 
-status = inSection(383);
-pattern = /^d[x][x][x]/m;
-string = 'abcd\ndxxx';
-actualmatch = string.match(pattern);
-expectedmatch = Array('dxxx');
-addThis();
+				    status = inSection(381);
+				    pattern = /(^|x)(c)/;
+				    string = 'ca';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('c', '', 'c');
+				    addThis();
 
-status = inSection(384);
-pattern = /tt+$/;
-string = 'xxxtt';
-actualmatch = string.match(pattern);
-expectedmatch = Array('tt');
-addThis();
+				    status = inSection(382);
+				    pattern = /foo.bart/;
+				    string = 'foo.bart';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('foo.bart');
+				    addThis();
+
+				    status = inSection(383);
+				    pattern = /^d[x][x][x]/m;
+				    string = 'abcd\ndxxx';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('dxxx');
+				    addThis();
+
+				    status = inSection(384);
+				    pattern = /tt+$/;
+				    string = 'xxxtt';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('tt');
+				    addThis();
 
 /* ECMA spec says that each atom in a range must be a single character
-status = inSection(385);
-pattern = /([a-\d]+)/;
-string = 'za-9z';
-actualmatch = string.match(pattern);
-expectedmatch = Array('9', '9');
-addThis();
+   status = inSection(385);
+   pattern = /([a-\d]+)/;
+   string = 'za-9z';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('9', '9');
+   addThis();
 
-status = inSection(386);
-pattern = /([\d-z]+)/;
-string = 'a0-za';
-actualmatch = string.match(pattern);
-expectedmatch = Array('0-z', '0-z');
-addThis();
- */
+   status = inSection(386);
+   pattern = /([\d-z]+)/;
+   string = 'a0-za';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('0-z', '0-z');
+   addThis();
+*/
 
 /* ECMA doesn't support [:
-status = inSection(387);
-pattern = /([a-[:digit:]]+)/;
-string = 'za-9z';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a-9', 'a-9');
-addThis();
+   status = inSection(387);
+   pattern = /([a-[:digit:]]+)/;
+   string = 'za-9z';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('a-9', 'a-9');
+   addThis();
 
-status = inSection(388);
-pattern = /([[:digit:]-z]+)/;
-string = '=0-z=';
-actualmatch = string.match(pattern);
-expectedmatch = Array('0-z', '0-z');
-addThis();
+   status = inSection(388);
+   pattern = /([[:digit:]-z]+)/;
+   string = '=0-z=';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('0-z', '0-z');
+   addThis();
 
-status = inSection(389);
-pattern = /([[:digit:]-[:alpha:]]+)/;
-string = '=0-z=';
-actualmatch = string.match(pattern);
-expectedmatch = Array('0-z', '0-z');
-addThis();
- */
+   status = inSection(389);
+   pattern = /([[:digit:]-[:alpha:]]+)/;
+   string = '=0-z=';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('0-z', '0-z');
+   addThis();
+*/
 
-status = inSection(390);
-pattern = /(\d+\.\d+)/;
-string = '3.1415926';
-actualmatch = string.match(pattern);
-expectedmatch = Array('3.1415926', '3.1415926');
-addThis();
+				    status = inSection(390);
+				    pattern = /(\d+\.\d+)/;
+				    string = '3.1415926';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('3.1415926', '3.1415926');
+				    addThis();
 
-status = inSection(391);
-pattern = /\.c(pp|xx|c)?$/i;
-string = 'IO.c';
-actualmatch = string.match(pattern);
-expectedmatch = Array('.c', undefined);
-addThis();
+				    status = inSection(391);
+				    pattern = /\.c(pp|xx|c)?$/i;
+				    string = 'IO.c';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('.c', undefined);
+				    addThis();
 
-status = inSection(392);
-pattern = /(\.c(pp|xx|c)?$)/i;
-string = 'IO.c';
-actualmatch = string.match(pattern);
-expectedmatch = Array('.c', '.c', undefined);
-addThis();
+				    status = inSection(392);
+				    pattern = /(\.c(pp|xx|c)?$)/i;
+				    string = 'IO.c';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('.c', '.c', undefined);
+				    addThis();
 
-status = inSection(393);
-pattern = /(^|a)b/;
-string = 'ab';
-actualmatch = string.match(pattern);
-expectedmatch = Array('ab', 'a');
-addThis();
+				    status = inSection(393);
+				    pattern = /(^|a)b/;
+				    string = 'ab';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('ab', 'a');
+				    addThis();
 
-status = inSection(394);
-pattern = /^([ab]*?)(b)?(c)$/;
-string = 'abac';
-actualmatch = string.match(pattern);
-expectedmatch = Array('abac', 'aba', undefined, 'c');
-addThis();
+				    status = inSection(394);
+				    pattern = /^([ab]*?)(b)?(c)$/;
+				    string = 'abac';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('abac', 'aba', undefined, 'c');
+				    addThis();
 
-status = inSection(395);
-pattern = /^(?:.,){2}c/i;
-string = 'a,b,c';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a,b,c');
-addThis();
+				    status = inSection(395);
+				    pattern = /^(?:.,){2}c/i;
+				    string = 'a,b,c';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('a,b,c');
+				    addThis();
 
-status = inSection(396);
-pattern = /^(.,){2}c/i;
-string = 'a,b,c';
-actualmatch = string.match(pattern);
-expectedmatch =  Array('a,b,c', 'b,');
-addThis();
+				    status = inSection(396);
+				    pattern = /^(.,){2}c/i;
+				    string = 'a,b,c';
+				    actualmatch = string.match(pattern);
+				    expectedmatch =  Array('a,b,c', 'b,');
+				    addThis();
 
-status = inSection(397);
-pattern = /^(?:[^,]*,){2}c/;
-string = 'a,b,c';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a,b,c');
-addThis();
+				    status = inSection(397);
+				    pattern = /^(?:[^,]*,){2}c/;
+				    string = 'a,b,c';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('a,b,c');
+				    addThis();
 
-status = inSection(398);
-pattern = /^([^,]*,){2}c/;
-string = 'a,b,c';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a,b,c', 'b,');
-addThis();
+				    status = inSection(398);
+				    pattern = /^([^,]*,){2}c/;
+				    string = 'a,b,c';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('a,b,c', 'b,');
+				    addThis();
 
-status = inSection(399);
-pattern = /^([^,]*,){3}d/;
-string = 'aaa,b,c,d';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aaa,b,c,d', 'c,');
-addThis();
+				    status = inSection(399);
+				    pattern = /^([^,]*,){3}d/;
+				    string = 'aaa,b,c,d';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('aaa,b,c,d', 'c,');
+				    addThis();
 
-status = inSection(400);
-pattern = /^([^,]*,){3,}d/;
-string = 'aaa,b,c,d';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aaa,b,c,d', 'c,');
-addThis();
+				    status = inSection(400);
+				    pattern = /^([^,]*,){3,}d/;
+				    string = 'aaa,b,c,d';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('aaa,b,c,d', 'c,');
+				    addThis();
 
-status = inSection(401);
-pattern = /^([^,]*,){0,3}d/;
-string = 'aaa,b,c,d';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aaa,b,c,d', 'c,');
-addThis();
+				    status = inSection(401);
+				    pattern = /^([^,]*,){0,3}d/;
+				    string = 'aaa,b,c,d';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('aaa,b,c,d', 'c,');
+				    addThis();
 
-status = inSection(402);
-pattern = /^([^,]{1,3},){3}d/i;
-string = 'aaa,b,c,d';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aaa,b,c,d', 'c,');
-addThis();
+				    status = inSection(402);
+				    pattern = /^([^,]{1,3},){3}d/i;
+				    string = 'aaa,b,c,d';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('aaa,b,c,d', 'c,');
+				    addThis();
 
-status = inSection(403);
-pattern = /^([^,]{1,3},){3,}d/;
-string = 'aaa,b,c,d';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aaa,b,c,d', 'c,');
-addThis();
+				    status = inSection(403);
+				    pattern = /^([^,]{1,3},){3,}d/;
+				    string = 'aaa,b,c,d';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('aaa,b,c,d', 'c,');
+				    addThis();
 
-status = inSection(404);
-pattern = /^([^,]{1,3},){0,3}d/;
-string = 'aaa,b,c,d';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aaa,b,c,d', 'c,');
-addThis();
+				    status = inSection(404);
+				    pattern = /^([^,]{1,3},){0,3}d/;
+				    string = 'aaa,b,c,d';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('aaa,b,c,d', 'c,');
+				    addThis();
 
-status = inSection(405);
-pattern = /^([^,]{1,},){3}d/;
-string = 'aaa,b,c,d';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aaa,b,c,d', 'c,');
-addThis();
+				    status = inSection(405);
+				    pattern = /^([^,]{1,},){3}d/;
+				    string = 'aaa,b,c,d';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('aaa,b,c,d', 'c,');
+				    addThis();
 
-status = inSection(406);
-pattern = /^([^,]{1,},){3,}d/;
-string = 'aaa,b,c,d';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aaa,b,c,d', 'c,');
-addThis();
+				    status = inSection(406);
+				    pattern = /^([^,]{1,},){3,}d/;
+				    string = 'aaa,b,c,d';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('aaa,b,c,d', 'c,');
+				    addThis();
 
-status = inSection(407);
-pattern = /^([^,]{1,},){0,3}d/;
-string = 'aaa,b,c,d';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aaa,b,c,d', 'c,');
-addThis();
+				    status = inSection(407);
+				    pattern = /^([^,]{1,},){0,3}d/;
+				    string = 'aaa,b,c,d';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('aaa,b,c,d', 'c,');
+				    addThis();
 
-status = inSection(408);
-pattern = /^([^,]{0,3},){3}d/i;
-string = 'aaa,b,c,d';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aaa,b,c,d', 'c,');
-addThis();
+				    status = inSection(408);
+				    pattern = /^([^,]{0,3},){3}d/i;
+				    string = 'aaa,b,c,d';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('aaa,b,c,d', 'c,');
+				    addThis();
 
-status = inSection(409);
-pattern = /^([^,]{0,3},){3,}d/;
-string = 'aaa,b,c,d';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aaa,b,c,d', 'c,');
-addThis();
+				    status = inSection(409);
+				    pattern = /^([^,]{0,3},){3,}d/;
+				    string = 'aaa,b,c,d';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('aaa,b,c,d', 'c,');
+				    addThis();
 
-status = inSection(410);
-pattern = /^([^,]{0,3},){0,3}d/;
-string = 'aaa,b,c,d';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aaa,b,c,d', 'c,');
-addThis();
+				    status = inSection(410);
+				    pattern = /^([^,]{0,3},){0,3}d/;
+				    string = 'aaa,b,c,d';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('aaa,b,c,d', 'c,');
+				    addThis();
 
 /* ECMA doesn't support \A
-status = inSection(411);
-pattern = /(?!\A)x/m;
-string = 'a\nxb\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('\n');
-addThis();
- */
+   status = inSection(411);
+   pattern = /(?!\A)x/m;
+   string = 'a\nxb\n';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('\n');
+   addThis();
+*/
 
-status = inSection(412);
-pattern = /^(a(b)?)+$/;
-string = 'aba';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aba', 'a', undefined);
-addThis();
+				    status = inSection(412);
+				    pattern = /^(a(b)?)+$/;
+				    string = 'aba';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('aba', 'a', undefined);
+				    addThis();
 
-status = inSection(413);
-pattern = /^(aa(bb)?)+$/;
-string = 'aabbaa';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aabbaa', 'aa', undefined);
-addThis();
+				    status = inSection(413);
+				    pattern = /^(aa(bb)?)+$/;
+				    string = 'aabbaa';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('aabbaa', 'aa', undefined);
+				    addThis();
 
-status = inSection(414);
-pattern = /^.{9}abc.*\n/m;
-string = '123\nabcabcabcabc\n';
-actualmatch = string.match(pattern);
-expectedmatch = Array('abcabcabcabc\n');
-addThis();
+				    status = inSection(414);
+				    pattern = /^.{9}abc.*\n/m;
+				    string = '123\nabcabcabcabc\n';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('abcabcabcabc\n');
+				    addThis();
 
-status = inSection(415);
-pattern = /^(a)?a$/;
-string = 'a';
-actualmatch = string.match(pattern);
-expectedmatch = Array('a', undefined);
-addThis();
+				    status = inSection(415);
+				    pattern = /^(a)?a$/;
+				    string = 'a';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('a', undefined);
+				    addThis();
 
-status = inSection(416);
-pattern = /^(a\1?)(a\1?)(a\2?)(a\3?)$/;
-string = 'aaaaaa';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aaaaaa', 'a', 'aa', 'a', 'aa');
-addThis();
+				    status = inSection(416);
+				    pattern = /^(a\1?)(a\1?)(a\2?)(a\3?)$/;
+				    string = 'aaaaaa';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('aaaaaa', 'a', 'aa', 'a', 'aa');
+				    addThis();
 
 /* Can't refer to a capture before it's encountered & completed
-status = inSection(417);
-pattern = /^(a\1?){4}$/;
-string = 'aaaaaa';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aaaaaa', 'aaa');
-addThis();
- */
+   status = inSection(417);
+   pattern = /^(a\1?){4}$/;
+   string = 'aaaaaa';
+   actualmatch = string.match(pattern);
+   expectedmatch = Array('aaaaaa', 'aaa');
+   addThis();
+*/
 
-status = inSection(418);
-pattern = /^(0+)?(?:x(1))?/;
-string = 'x1';
-actualmatch = string.match(pattern);
-expectedmatch = Array('x1', undefined, '1');
-addThis();
+				    status = inSection(418);
+				    pattern = /^(0+)?(?:x(1))?/;
+				    string = 'x1';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('x1', undefined, '1');
+				    addThis();
 
-status = inSection(419);
-pattern = /^([0-9a-fA-F]+)(?:x([0-9a-fA-F]+)?)(?:x([0-9a-fA-F]+))?/;
-string = '012cxx0190';
-actualmatch = string.match(pattern);
-expectedmatch = Array('012cxx0190', '012c', undefined, '0190');
-addThis();
+				    status = inSection(419);
+				    pattern = /^([0-9a-fA-F]+)(?:x([0-9a-fA-F]+)?)(?:x([0-9a-fA-F]+))?/;
+				    string = '012cxx0190';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('012cxx0190', '012c', undefined, '0190');
+				    addThis();
 
-status = inSection(420);
-pattern = /^(b+?|a){1,2}c/;
-string = 'bbbac';
-actualmatch = string.match(pattern);
-expectedmatch = Array('bbbac', 'a');
-addThis();
+				    status = inSection(420);
+				    pattern = /^(b+?|a){1,2}c/;
+				    string = 'bbbac';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('bbbac', 'a');
+				    addThis();
 
-status = inSection(421);
-pattern = /^(b+?|a){1,2}c/;
-string = 'bbbbac';
-actualmatch = string.match(pattern);
-expectedmatch = Array('bbbbac', 'a');
-addThis();
+				    status = inSection(421);
+				    pattern = /^(b+?|a){1,2}c/;
+				    string = 'bbbbac';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('bbbbac', 'a');
+				    addThis();
 
-status = inSection(422);
-pattern = /((?:aaaa|bbbb)cccc)?/;
-string = 'aaaacccc';
-actualmatch = string.match(pattern);
-expectedmatch = Array('aaaacccc', 'aaaacccc');
-addThis();
+				    status = inSection(422);
+				    pattern = /((?:aaaa|bbbb)cccc)?/;
+				    string = 'aaaacccc';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('aaaacccc', 'aaaacccc');
+				    addThis();
 
-status = inSection(423);
-pattern = /((?:aaaa|bbbb)cccc)?/;
-string = 'bbbbcccc';
-actualmatch = string.match(pattern);
-expectedmatch = Array('bbbbcccc', 'bbbbcccc');
-addThis();
+				    status = inSection(423);
+				    pattern = /((?:aaaa|bbbb)cccc)?/;
+				    string = 'bbbbcccc';
+				    actualmatch = string.match(pattern);
+				    expectedmatch = Array('bbbbcccc', 'bbbbcccc');
+				    addThis();
 
 
 
 
 //-----------------------------------------------------------------------------
-test();
+				    test();
 //-----------------------------------------------------------------------------
 
 
 
-function addThis()
-{
-  if(omitCurrentSection())
-    return;
+				    function addThis()
+			  {
+			    if(omitCurrentSection())
+			      return;
 
-  statusmessages[i] = status;
-  patterns[i] = pattern;
-  strings[i] = string;
-  actualmatches[i] = actualmatch;
-  expectedmatches[i] = expectedmatch;
-  i++;
-}
-
-
-function omitCurrentSection()
-{
-  try
-  {
-    // current section number is in global status variable
-    var n = status.match(/(\d+)/)[1];
-    return ((n < cnLBOUND) || (n > cnUBOUND));
-  }
-  catch(e)
-  {
-    return false;
-  }
-}
+			    statusmessages[i] = status;
+			    patterns[i] = pattern;
+			    strings[i] = string;
+			    actualmatches[i] = actualmatch;
+			    expectedmatches[i] = expectedmatch;
+			    i++;
+			  }
 
 
-function test()
-{
-  enterFunc ('test');
-  printBugNumber (bug);
-  printStatus (summary);
-  testRegExp(statusmessages, patterns, strings, actualmatches, expectedmatches);
-  exitFunc ('test');
-}
+				    function omitCurrentSection()
+			  {
+			    try
+			    {
+			      // current section number is in global status variable
+			      var n = status.match(/(\d+)/)[1];
+			      return ((n < cnLBOUND) || (n > cnUBOUND));
+			    }
+			    catch(e)
+			    {
+			      return false;
+			    }
+			  }
+
+
+				    function test()
+			  {
+			    enterFunc ('test');
+			    printBugNumber(BUGNUMBER);
+			    printStatus (summary);
+			    testRegExp(statusmessages, patterns, strings, actualmatches, expectedmatches);
+			    exitFunc ('test');
+			  }

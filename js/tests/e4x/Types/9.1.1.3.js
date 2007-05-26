@@ -40,10 +40,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '9.1.1.3.js';
+
 START("9.1.1.3 - XML [[Delete]]");
 
 // .@
-x = 
+x =
 <alpha attr1="value1">one</alpha>;
 
 delete x.@attr1;
@@ -94,21 +96,21 @@ correct =
 delete x..@*;
 TEST(4, correct, x);
 
-x = 
+x =
 <BODY>
     <HR id="i1"/>
     <HR id="i2"/>
     <HR id="i3"/>
     <HR id="i4"/>
 </BODY>;
-	
-correct = 
+
+correct =
 <BODY></BODY>;
 
 delete x..HR;
 TEST(5, correct, x);
 
-x = 
+x =
 <BODY>
     ECMA-357
     <HR id="i1"/>
@@ -116,8 +118,8 @@ x =
     <HR id="i3"/>
     <HR id="i4"/>
 </BODY>;
-	
-correct = 
+
+correct =
 <BODY>
     ECMA-357
 </BODY>;
@@ -125,7 +127,7 @@ correct =
 delete x..HR;
 TEST(6, correct.toXMLString(), x.toXMLString());
 
-x = 
+x =
 <BODY>
     ECMA-357
     <HR id="i1"/>
@@ -133,14 +135,14 @@ x =
     <HR id="i3"/>
     <HR id="i4"/>
 </BODY>;
-	
-correct = 
+
+correct =
 <BODY>ECMA-357</BODY>;
 
 delete x.HR;
 TEST(7, correct, x);
 
-x = 
+x =
 <BODY>
     ECMA-357
     <HR id="i1"/>
@@ -148,14 +150,14 @@ x =
     <HR id="i3"/>
     <HR id="i4"/>
 </BODY>;
-	
-correct = 
+
+correct =
 <BODY></BODY>;
 
 delete x..*;
 TEST(8, correct, x);
 
-x = 
+x =
 <BODY>
     ECMA-357
     <HR id="i1"/>
@@ -163,14 +165,14 @@ x =
     <HR id="i3"/>
     <HR id="i4"/>
 </BODY>;
-	
-correct = 
+
+correct =
 <BODY></BODY>;
 
 delete x.*;
 TEST(9, correct, x);
 
-x = 
+x =
 <BODY>
     <UL>
       <LI id="i1"/>
@@ -178,8 +180,8 @@ x =
       <LI id="i3"/>
     </UL>
 </BODY>;
-      
-correct = 
+     
+correct =
 <BODY>
     <UL>
       <LI id="i1"/>
@@ -191,7 +193,7 @@ correct =
 delete x.LI;
 TEST(10, correct, x);
 
-x = 
+x =
 <BODY>
     <UL>
       <LI id="i1"/>
@@ -199,8 +201,8 @@ x =
       <LI id="i3"/>
     </UL>
 </BODY>;
-      
-correct = 
+     
+correct =
 <BODY>
     <UL></UL>
 </BODY>;

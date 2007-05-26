@@ -34,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    21 February 2003
  * SUMMARY: Testing eval statements containing conditional function expressions
@@ -44,8 +45,9 @@
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-194364.js';
 var UBound = 0;
-var bug = 194364;
+var BUGNUMBER = 194364;
 var summary = 'Testing eval statements with conditional function expressions';
 var status = '';
 var statusitems = [];
@@ -55,17 +57,17 @@ var expect= '';
 var expectedvalues = [];
 
 /*
-From ECMA-262 Edition 3, 12.4:
+  From ECMA-262 Edition 3, 12.4:
 
-12.4 Expression Statement
+  12.4 Expression Statement
 
-Syntax
-ExpressionStatement : [lookahead not in {{, function}] Expression ;
+  Syntax
+  ExpressionStatement : [lookahead not in {{, function}] Expression ;
 
-Note that an ExpressionStatement cannot start with an opening curly brace
-because that might make it ambiguous with a Block. Also, an ExpressionStatement
-cannot start with the function keyword because that might make it ambiguous with
-a FunctionDeclaration.
+  Note that an ExpressionStatement cannot start with an opening curly brace
+  because that might make it ambiguous with a Block. Also, an ExpressionStatement
+  cannot start with the function keyword because that might make it ambiguous with
+  a FunctionDeclaration.
 */
 
 status = inSection(1);
@@ -138,7 +140,7 @@ function addThis()
 function test()
 {
   enterFunc('test');
-  printBugNumber(bug);
+  printBugNumber(BUGNUMBER);
   printStatus(summary);
 
   for (var i=0; i<UBound; i++)

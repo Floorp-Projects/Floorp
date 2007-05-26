@@ -35,20 +35,22 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-244470.js';
 //-----------------------------------------------------------------------------
-var bug = 244470;
+var BUGNUMBER = 244470;
 var summary = 'Don\'t Crash';
 var actual = 'Crash';
 var expect = 'No Crash';
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var g;
 for (var i=1; ; ++i) {
 
-  g=new Function("ABCDEFGHIJK", "1234"); 
   g=new Function("ABCDEFGHIJK", "1234");
-  g=new Function("ABCDEFGHIJK", "1234"); 
+  g=new Function("ABCDEFGHIJK", "1234");
+  g=new Function("ABCDEFGHIJK", "1234");
   g=new Function("ABCDEFGHIJK", "1234");
   g=new Function("ABCDEFGHIJK", "1234");
   g=new Function("ABCDEFGHIJK", "1234");
@@ -1096,16 +1098,16 @@ for (var i=1; ; ++i) {
     printStatus("This doesn't want to crash now, please keep trying.");
     break;
   }
-	
+
 }
 
 // These have to be named functions, using anonymous functions doesn't crash.
 // Using just one function here makes the crash much less likely.
-function dummy(){} 
+function dummy(){}
 function dummy2(){}
 function dummy3(){}
 
 actual = 'No Crash';
-  
+ 
 reportCompare(expect, actual, summary);
 

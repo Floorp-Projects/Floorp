@@ -35,8 +35,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-345736.js';
 //-----------------------------------------------------------------------------
-var bug = 345736;
+var BUGNUMBER = 345736;
 var summary = 'for each in array comprehensions';
 var actual = '';
 var expect = '';
@@ -49,7 +51,7 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   var arr;
@@ -70,7 +72,7 @@ function test()
   expect = 'aa,bb,cc';
   actual = arr.toString();
 
-  arr=[x+y for ([x,y] in ["a","b","c"])]; 
+  arr=[x+y for ([x,y] in ["a","b","c"])];
   expect = '0a,1b,2c';
   actual = arr.toString();
 

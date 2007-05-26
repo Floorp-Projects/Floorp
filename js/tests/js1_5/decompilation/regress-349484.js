@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-349484.js';
 //-----------------------------------------------------------------------------
-var bug = 349484;
+var BUGNUMBER = 349484;
 var summary = 'Incorrect decompilation of import/export statements';
 var actual = 'No Crash';
 var expect = 'No Crash';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   expect = 'function () {\n    export x;\n    alert(5);\n}';
   var f = function() { export x; alert(5); };
   actual = f.toString();

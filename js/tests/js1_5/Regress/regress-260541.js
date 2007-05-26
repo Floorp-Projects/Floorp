@@ -35,16 +35,18 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-260541.js';
 //-----------------------------------------------------------------------------
 // have not been able to reproduce the crash in any build.
-var bug = 260541;
+var BUGNUMBER = 260541;
 var summary = 'Recursive Error object should not crash';
 var actual = 'Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
-  
+ 
 var myErr = new Error( "Error Text" );
 myErr.name = myErr;
 

@@ -34,22 +34,24 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-294191.js';
 //-----------------------------------------------------------------------------
-var bug = 294191;
+var BUGNUMBER = 294191;
 var summary = 'Do not crash with nested function and "delete" op';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
 enterFunc ('test');
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
-  
+ 
 function f()
 {
   function x()
-    {
-      x;
-    }
+  {
+    x;
+  }
 }
 
 f.z=0;

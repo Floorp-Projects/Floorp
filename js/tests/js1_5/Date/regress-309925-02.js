@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-309925-02.js';
 //-----------------------------------------------------------------------------
-var bug = 309925;
+var BUGNUMBER = 309925;
 var summary = 'Correctly parse Date strings with HH:MM(comment)';
 var actual = new Date('Sep 24, 11:58(comment) 105') + '';
 var expect = new Date('Sep 24, 11:58:00 (comment) 105') + '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
-  
+ 
 reportCompare(expect, actual, summary);
