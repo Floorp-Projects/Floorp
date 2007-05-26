@@ -415,21 +415,24 @@ function run_test() {
   // test bookmark id in query output
   try {
     var options = histsvc.getNewQueryOptions();
-    options.maxResults = 1;
-    options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
-    options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
     var query = histsvc.getNewQuery();
     query.setFolders([testRoot], 1);
     var result = histsvc.executeQuery(query, options);
     var rootNode = result.root;
     rootNode.containerOpen = true;
     var cc = rootNode.childCount;
+    LOG("bookmark itemId test: CC = " + cc);
+    do_check_true(cc > 0);
     for (var i=0; i < cc; ++i) {
       var node = rootNode.getChild(i);
-      if (node.type == node.RESULT_TYPE_FOLDER)
-        do_check_eq(node.itemId, -1);
-      else
+      if (node.type == node.RESULT_TYPE_FOLDER ||
+          node.type == node.RESULT_TYPE_URI ||
+          node.type == node.RESULT_TYPE_SEPARATOR) {
         do_check_true(node.itemId > 0);
+      }
+      else {
+        do_check_eq(node.itemId, -1);
+      }
     }
     rootNode.containerOpen = false;
   }
@@ -601,6 +604,7 @@ function run_test() {
     var rootNode = result.root;
     rootNode.containerOpen = true;
     var cc = rootNode.childCount;
+    do_check_true(cc > 0);
     for (var i = 0; i < cc; i++) {
       var node = rootNode.getChild(i);
 
