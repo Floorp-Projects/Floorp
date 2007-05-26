@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'method-002.js';
+
 /**
    File Name:      method-002.js
    Description:
@@ -74,89 +76,89 @@ var rect = new java.awt.Rectangle(1,2,3,4);
 var size = rect.getSize();
 
 new TestCase(
-    SECTION,
-    "var size = (new java.awt.Rectangle(1,2,3,4)).getSize(); "+
-    "size.getClass().equals(java.lang.Class.forName(\""+
-    "java.awt.Dimension\"))",
-    true,
-    size.getClass().equals(java.lang.Class.forName("java.awt.Dimension")));
+  SECTION,
+  "var size = (new java.awt.Rectangle(1,2,3,4)).getSize(); "+
+  "size.getClass().equals(java.lang.Class.forName(\""+
+  "java.awt.Dimension\"))",
+  true,
+  size.getClass().equals(java.lang.Class.forName("java.awt.Dimension")));
 
 new TestCase(
-    SECTION,
-    "size.width",
-    3,
-    size.width );
+  SECTION,
+  "size.width",
+  3,
+  size.width );
 
 new TestCase(
-    SECTION,
-    "size.height",
-    4,
-    size.height );
+  SECTION,
+  "size.height",
+  4,
+  size.height );
 
 // method returns void
 var r = rect.setSize(5,6);
 
 new TestCase(
-    SECTION,
-    "var r = rect.setSize(5,6); r",
-    void 0,
-    r );
+  SECTION,
+  "var r = rect.setSize(5,6); r",
+  void 0,
+  r );
 
 // method returns a string
 
 var string = new java.lang.String( "     hello     " );
 s = string.trim()
 
-    new TestCase(
-        SECTION,
-        "var string = new java.lang.String(\"     hello     \"); "+
-        "var s = string.trim(); s.getClass().equals("+
-        "java.lang.Class.forName(\"java.lang.String\")",
-        true,
-        s.getClass().equals(java.lang.Class.forName("java.lang.String")) );
+  new TestCase(
+    SECTION,
+    "var string = new java.lang.String(\"     hello     \"); "+
+    "var s = string.trim(); s.getClass().equals("+
+    "java.lang.Class.forName(\"java.lang.String\")",
+    true,
+    s.getClass().equals(java.lang.Class.forName("java.lang.String")) );
 
 // method returns an int
 new TestCase(
-    SECTION,
-    "s.length()",
-    5,
-    s.length() );
+  SECTION,
+  "s.length()",
+  5,
+  s.length() );
 
 test();
 
 function CompareValues( javaval, testval ) {
-    //  Check type, which should be E_TYPE
-    new TestCase( SECTION,
-		  "typeof (" + testval.description +" )",
-		  testval.type,
-		  javaval.type );
+  //  Check type, which should be E_TYPE
+  new TestCase( SECTION,
+		"typeof (" + testval.description +" )",
+		testval.type,
+		javaval.type );
 
-    //  Check JavaScript class, which should be E_JSCLASS
-    new TestCase( SECTION,
-		  "(" + testval.description +" ).getJSClass()",
-		  testval.jsclass,
-		  javaval.jsclass );
-    // Check the JavaClass, which should be the same as the result as Class.forName(description).
-    new TestCase( SECTION,
-		  testval.description +".getClass().equals( " +
-		  "java.lang.Class.forName( '" + testval.classname +
-		  "' ) )",
-		  true,
-		  javaval.javaclass.equals( testval.javaclass ) );
+  //  Check JavaScript class, which should be E_JSCLASS
+  new TestCase( SECTION,
+		"(" + testval.description +" ).getJSClass()",
+		testval.jsclass,
+		javaval.jsclass );
+  // Check the JavaClass, which should be the same as the result as Class.forName(description).
+  new TestCase( SECTION,
+		testval.description +".getClass().equals( " +
+		"java.lang.Class.forName( '" + testval.classname +
+		"' ) )",
+		true,
+		javaval.javaclass.equals( testval.javaclass ) );
 }
 function JavaValue( value ) {
-    this.type   = typeof value;
-    // Object.prototype.toString will show its JavaScript wrapper object.
-    value.__proto__.getJSClass = Object.prototype.toString;
-    this.jsclass = value.getJSClass();
-    this.javaclass = value.getClass();
-    return this;
+  this.type   = typeof value;
+  // Object.prototype.toString will show its JavaScript wrapper object.
+  value.__proto__.getJSClass = Object.prototype.toString;
+  this.jsclass = value.getJSClass();
+  this.javaclass = value.getClass();
+  return this;
 }
 function TestValue( description, classname ) {
-    this.description = description;
-    this.classname = classname;
-    this.type =  E_TYPE;
-    this.jsclass = E_JSCLASS;
-    this.javaclass = java.lang.Class.forName( classname );
-    return this;
+  this.description = description;
+  this.classname = classname;
+  this.type =  E_TYPE;
+  this.jsclass = E_JSCLASS;
+  this.javaclass = java.lang.Class.forName( classname );
+  return this;
 }

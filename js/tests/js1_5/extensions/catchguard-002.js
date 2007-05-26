@@ -38,40 +38,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var gTestfile = 'catchguard-002.js';
+
 test();
 
 function test()
 {
-    enterFunc ("test");
+  enterFunc ("test");
 
-    var EXCEPTION_DATA = "String exception";
-    var e;
-    var caught = false;
+  var EXCEPTION_DATA = "String exception";
+  var e;
+  var caught = false;
 
-    printStatus ("Basic catchguard test.");
-    
-    try 
-    {    
-        throw EXCEPTION_DATA;   
-    }
-    catch (e if true)
-    {
-        caught = true;
-    }
-    catch (e if true)
-    {   
-        reportFailure ("Second (e if true) catch block should not have " +
-                       "executed.");
-    }
-    catch (e)
-    {   
-        reportFailure ("Catch block (e) should not have executed.");
-    }
+  printStatus ("Basic catchguard test.");
+   
+  try
+  {   
+    throw EXCEPTION_DATA;  
+  }
+  catch (e if true)
+  {
+    caught = true;
+  }
+  catch (e if true)
+  {  
+    reportCompare('PASS', 'FAIL',
+		  "Second (e if true) catch block should not have executed.");
+  }
+  catch (e)
+  {  
+    reportCompare('PASS', 'FAIL', "Catch block (e) should not have executed.");
+  }
 
-    if (!caught)
-        reportFailure ("Exception was never caught.");
-    
-    reportCompare('PASS', 'PASS', '');
+  if (!caught)
+    reportCompare('PASS', 'FAIL', "Exception was never caught.");
+   
+  reportCompare('PASS', 'PASS', 'Basic catchguard test');
 
-    exitFunc ("test");
+  exitFunc ("test");
 }

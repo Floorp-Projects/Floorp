@@ -34,13 +34,17 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 07 February 2001
  *
  * Functionality common to Array testing -
  */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+gTestsubsuite = 'Expressions';
+
 var CHAR_LBRACKET = '[';
 var CHAR_RBRACKET = ']';
 var CHAR_QT_DBL = '"';

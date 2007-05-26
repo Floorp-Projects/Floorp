@@ -38,6 +38,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'ToJSObject-001.js';
+
 /**
  *  JavaScript to Java type conversion.
  *
@@ -58,14 +61,14 @@
 var SECTION = "JavaClass to java.lang.Class";
 var VERSION = "1_4";
 var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-SECTION;
+  SECTION;
 
 var BUGNUMBER ="335885";
 
 startTest();
 
 var jsoc = new
-Packages.com.netscape.javascript.qa.liveconnect.JSObjectConversion();
+  Packages.com.netscape.javascript.qa.liveconnect.JSObjectConversion();
 
 var a = new Array();
 var i = 0;
@@ -74,30 +77,30 @@ var i = 0;
 // the object in a new instance of JSObject.
 
 a[i++] = new TestObject (
-    "var newClass = java.lang.Integer; "+
-    "jsoc.setJSObject( newClass )",
-    "jsoc.PUB_JSOBJECT",
-    "jsoc.getJSObject()",
-    "jsoc.getJSObject()",
-    java.lang.Integer,
-    "function" );
+  "var newClass = java.lang.Integer; "+
+  "jsoc.setJSObject( newClass )",
+  "jsoc.PUB_JSOBJECT",
+  "jsoc.getJSObject()",
+  "jsoc.getJSObject()",
+  java.lang.Integer,
+  "function" );
 
 
 for ( i = 0; i < a.length; i++ ) {
-    new TestCase(
-	a[i].description +"; "+ a[i].javaFieldName,
-	a[i].jsValue,
-	a[i].javaFieldValue );
+  new TestCase(
+    a[i].description +"; "+ a[i].javaFieldName,
+    a[i].jsValue,
+    a[i].javaFieldValue );
 
-    new TestCase(
-	a[i].description +"; " + a[i].javaMethodName,
-	a[i].jsValue,
-	a[i].javaMethodValue );
+  new TestCase(
+    a[i].description +"; " + a[i].javaMethodName,
+    a[i].jsValue,
+    a[i].javaMethodValue );
 
-    new TestCase(
-	a[i].javaTypeName,
-	a[i].jsType,
-	a[i].javaTypeValue );
+  new TestCase(
+    a[i].javaTypeName,
+    a[i].jsType,
+    a[i].javaTypeValue );
 
 }
 
@@ -106,16 +109,16 @@ test();
 function TestObject( description, javaField, javaMethod, javaType,
 		     jsValue, jsType )
 {
-    eval (description );
+  eval (description );
 
-    this.description = description;
-    this.javaFieldName = javaField;
-    this.javaFieldValue = eval( javaField );
-    this.javaMethodName = javaMethod;
-    this.javaMethodValue = eval( javaMethod );
-    this.javaTypeName = javaType,
-	this.javaTypeValue = typeof this.javaFieldValue;
+  this.description = description;
+  this.javaFieldName = javaField;
+  this.javaFieldValue = eval( javaField );
+  this.javaMethodName = javaMethod;
+  this.javaMethodValue = eval( javaMethod );
+  this.javaTypeName = javaType,
+    this.javaTypeValue = typeof this.javaFieldValue;
 
-    this.jsValue   = jsValue;
-    this.jsType      = jsType;
+  this.jsValue   = jsValue;
+  this.jsType      = jsType;
 }

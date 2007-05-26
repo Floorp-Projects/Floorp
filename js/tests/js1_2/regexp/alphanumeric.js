@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'alphanumeric.js';
+
 /**
    Filename:     alphanumeric.js
    Description:  'Tests regular expressions with \w and \W special characters'
@@ -112,18 +114,18 @@ var i;
 // be sure all alphanumeric characters match individually
 for (i = 0; i < alphanumeric.length; ++i)
 {
-    s = '#$' + alphanumeric[i] + '%^';
-    new TestCase ( SECTION,
-		   "'" + s + "'.match(new RegExp('\\w'))",
-		   String([alphanumeric[i]]), String(s.match(new RegExp('\\w'))));
+  s = '#$' + alphanumeric[i] + '%^';
+  new TestCase ( SECTION,
+		 "'" + s + "'.match(new RegExp('\\w'))",
+		 String([alphanumeric[i]]), String(s.match(new RegExp('\\w'))));
 }
 // be sure all non_alphanumeric characters match individually
 for (i = 0; i < non_alphanumeric.length; ++i)
 {
-    s = 'sd' + non_alphanumeric[i] + String((i+10) * (i+10) - 2 * (i+10));
-    new TestCase ( SECTION,
-		   "'" + s + "'.match(new RegExp('\\W'))",
-		   String([non_alphanumeric[i]]), String(s.match(new RegExp('\\W'))));
+  s = 'sd' + non_alphanumeric[i] + String((i+10) * (i+10) - 2 * (i+10));
+  new TestCase ( SECTION,
+		 "'" + s + "'.match(new RegExp('\\W'))",
+		 String([non_alphanumeric[i]]), String(s.match(new RegExp('\\W'))));
 }
 
 test();

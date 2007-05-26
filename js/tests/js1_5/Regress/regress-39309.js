@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    30 Sep 2003
  * SUMMARY: Testing concatenation of string + number
@@ -42,8 +44,9 @@
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-39309.js';
 var UBound = 0;
-var bug = 39309;
+var BUGNUMBER = 39309;
 var summary = 'Testing concatenation of string + number';
 var status = '';
 var statusitems = [];
@@ -55,12 +58,12 @@ var expectedvalues = [];
 
 function f(textProp, len)
 {
-    var i = 0;
-    while (++i <= len)
-    {
-       var name = textProp + i;
-       actual = name;
-    }
+  var i = 0;
+  while (++i <= len)
+  {
+    var name = textProp + i;
+    actual = name;
+  }
 }
 
 
@@ -95,7 +98,7 @@ function addThis()
 function test()
 {
   enterFunc('test');
-  printBugNumber(bug);
+  printBugNumber(BUGNUMBER);
   printStatus(summary);
 
   for (var i=0; i<UBound; i++)

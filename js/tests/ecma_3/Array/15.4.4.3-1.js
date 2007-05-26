@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 12 Mar 2001
  *
  *
@@ -46,14 +48,16 @@
  * should be applied to each element of the array, and the results should be
  * concatenated with an implementation-specific delimiter. For example:
  *
- *  myArray[0].toLocaleString()  +  ','  +  myArray[1].toLocaleString()  +  etc.
+ *  myArray[0].toLocaleString()  +  ','  +  myArray[1].toLocaleString()  + etc.
  *
- * In this testcase toLocaleString is a user-defined property of each array element;
- * therefore it is the function that should be invoked. This function increments a
- * global variable. Therefore the end value of this variable should be myArray.length.
+ * In this testcase toLocaleString is a user-defined property of each
+ * array element; therefore it is the function that should be
+ * invoked. This function increments a global variable. Therefore the
+ * end value of this variable should be myArray.length.
  */
-//-------------------------------------------------------------------------------------------------
-var bug = 56883;
+//-----------------------------------------------------------------------------
+var gTestfile = '15.4.4.3-1.js';
+var BUGNUMBER = 56883;
 var summary = 'Testing Array.prototype.toLocaleString() -';
 var actual = '';
 var expect = '';
@@ -67,17 +71,17 @@ actual = n;
 expect = 3; // (see explanation above)
 
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 test();
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
 
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');

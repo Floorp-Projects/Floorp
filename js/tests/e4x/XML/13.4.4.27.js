@@ -40,11 +40,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.4.27.js';
+
 START("13.4.4.27 - XML parent()");
 
 TEST(1, true, XML.prototype.hasOwnProperty("parent"));
-    
-x = 
+   
+x =
 <alpha>
     <bravo>one</bravo>
     <charlie>

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    29 April 2003
  * SUMMARY: eval() is not a constructor, but don't crash on |new eval();|
@@ -43,8 +45,9 @@
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-204210.js';
 var UBound = 0;
-var bug = 204210;
+var BUGNUMBER = 204210;
 var summary = "eval() is not a constructor, but don't crash on |new eval();|";
 var status = '';
 var statusitems = [];
@@ -53,7 +56,7 @@ var actualvalues = [];
 var expect= '';
 var expectedvalues = [];
 
-printBugNumber(bug);
+printBugNumber(BUGNUMBER);
 printStatus(summary);
 
 /*

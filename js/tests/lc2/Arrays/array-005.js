@@ -35,9 +35,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- /**
-        File Name:      array-005.js
-        Description:
+
+gTestfile = 'array-005.js';
+
+/**
+   File Name:      array-005.js
+   Description:
 
    Put and Get JavaArray Elements
 
@@ -60,63 +63,63 @@ var E_CLASS = "[object JavaArray]";
 var byte_array = ( new java.lang.String("hi") ).getBytes();
 
 new TestCase(
-    SECTION,
-    "byte_array = new java.lang.String(\"hi\")).getBytes(); delete byte_array.length",
-    false,
-    delete byte_array.length );
+  SECTION,
+  "byte_array = new java.lang.String(\"hi\")).getBytes(); delete byte_array.length",
+  false,
+  delete byte_array.length );
 
 new TestCase(
-    SECTION,
-    "byte_array[0]",
-    ("hi").charCodeAt(0),
-    byte_array[0]);
+  SECTION,
+  "byte_array[0]",
+  ("hi").charCodeAt(0),
+  byte_array[0]);
 
 new TestCase(
-    SECTION,
-    "byte_array[1]",
-    ("hi").charCodeAt(1),
-    byte_array[1]);
+  SECTION,
+  "byte_array[1]",
+  ("hi").charCodeAt(1),
+  byte_array[1]);
 
 byte_array.length = 0;
 
 new TestCase(
-    SECTION,
-    "byte_array.length = 0; byte_array.length",
-    2,
-    byte_array.length );
+  SECTION,
+  "byte_array.length = 0; byte_array.length",
+  2,
+  byte_array.length );
 
 var properties = "";
 for ( var p in byte_array ) {
-    properties += ( p == "length" ) ? p : "";
+  properties += ( p == "length" ) ? p : "";
 }
 
 new TestCase(
-    SECTION,
-    "for ( var p in byte_array ) { properties += p ==\"length\" ? p : \"\" }; properties",
-    "",
-    properties );
+  SECTION,
+  "for ( var p in byte_array ) { properties += p ==\"length\" ? p : \"\" }; properties",
+  "",
+  properties );
 
 new TestCase(
-    SECTION,
-    "byte_array[\"length\"]",
-    2,
-    byte_array["length"] );
+  SECTION,
+  "byte_array[\"length\"]",
+  2,
+  byte_array["length"] );
 
 byte_array["0"] = 127;
 
 new TestCase(
-    SECTION,
-    "byte_array[\"0\"] = 127; byte_array[0]",
-    127,
-    byte_array[0] );
+  SECTION,
+  "byte_array[\"0\"] = 127; byte_array[0]",
+  127,
+  byte_array[0] );
 
 byte_array[1] = 99;
 
 new TestCase(
-    SECTION,
-    "byte_array[1] = 99; byte_array[\"1\"]",
-    99,
-    byte_array["1"] );
+  SECTION,
+  "byte_array[1] = 99; byte_array[\"1\"]",
+  99,
+  byte_array["1"] );
 
 test();
 

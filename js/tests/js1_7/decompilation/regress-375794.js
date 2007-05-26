@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-375794.js';
 //-----------------------------------------------------------------------------
-var bug = 375794;
+var BUGNUMBER = 375794;
 var summary = 'Decompilation of array comprehension with catch guard';
 var actual = '';
 var expect = '';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   var f = function() { try { } catch(a if [b for each (c in [])]) { } } ;
   expect = 'function() { try { } catch(a if [b for each (c in [])]) { } }';
   actual = f + '';

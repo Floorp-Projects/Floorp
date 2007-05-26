@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'vertical_bar.js';
+
 /**
    Filename:     vertical_bar.js
    Description:  'Tests regular expressions containing |'

@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = '11.10-3.js';
+
 /**
    File Name:          11.10-3.js
    ECMA Section:       11.10-3 Binary Bitwise Operators:  ^

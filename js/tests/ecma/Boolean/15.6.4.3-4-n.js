@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.6.4.3-4-n.js';
+
 /**
    File Name:          15.6.4.3-4.js
    ECMA Section:       15.6.4.3 Boolean.prototype.valueOf()
@@ -57,7 +59,7 @@ var TITLE   = "Boolean.prototype.valueOf()";
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "valof=Boolean.prototype.valueOf; x=new String( 'hello' ); x.valueOf=valof;x.valueOf()"
-EXPECTED = "error";
+  EXPECTED = "error";
 
 new TestCase(   SECTION,
 		"valof=Boolean.prototype.valueOf; x=new String( 'hello' ); x.valueOf=valof;x.valueOf()",

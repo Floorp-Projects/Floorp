@@ -34,12 +34,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'throw-forever.js';
 //-----------------------------------------------------------------------------
-var bug     = "(none)";
+var BUGNUMBER     = "(none)";
 var summary = "gen.throw(ex) returns ex for an exhausted gen";
 var actual, expect;
 
-printBugNumber(bug);
+printBugNumber(BUGNUMBER);
 printStatus(summary);
 
 /**************

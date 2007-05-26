@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-346801.js';
 //-----------------------------------------------------------------------------
-var bug = 346801;
+var BUGNUMBER = 346801;
 var summary = 'Hang regression from bug 346021';
 var actual = '';
 var expect = 'No Hang';
@@ -48,13 +50,13 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   try
   {
     var Class = {
-    create: function() {
+      create: function() {
         return function() {
           this.initialize.apply(this, arguments);
         }
@@ -85,7 +87,7 @@ function test()
 
     Ajax.Base = function() {};
     Ajax.Base.prototype = {
-    responseIsFailure: function() { }
+      responseIsFailure: function() { }
     }
 
     Ajax.Request = Class.create();

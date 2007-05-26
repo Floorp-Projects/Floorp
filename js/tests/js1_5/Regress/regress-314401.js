@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-314401.js';
 //-----------------------------------------------------------------------------
-var bug = 314401;
+var BUGNUMBER = 314401;
 var summary = 'setTimeout(eval,0,"",null)|setTimeout(Script,0,"",null) should not crash';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 if (typeof setTimeout == 'undefined')
@@ -95,7 +97,7 @@ else
     catch(ex)
     {
       printStatus(ex+'');
-    }  
+    } 
     reportCompare(expect, actual, 'setInterval(Script, 0, "", null)');
   }
   setTimeout('gDelayTestDriverEnd = false; jsTestDriverEnd();', 0);

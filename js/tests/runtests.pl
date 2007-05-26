@@ -133,7 +133,7 @@ sub execute_js_tests {
 
 
 			# this is where we want the tests to provide a lot more information
-			# that this script must parse so that we can  
+			# that this script must parse so that we can 
 
         	while( <RUNNING_TEST> ){
     	        if ( $js_verbose && !$js_quiet ) {
@@ -200,7 +200,7 @@ sub execute_js_tests {
 						&js_print( " Missing 'PASSED' in output\n", "","<br>" );
 						&js_print( $log, "output:<br><pre>", "</pre>" );
                      }
-				}						
+				}					
 
             }
         }

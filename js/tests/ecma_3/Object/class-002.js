@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,22 +34,25 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 14 Mar 2001
  *
  * SUMMARY: Testing the [[Class]] property of native constructors.
  * See ECMA-262 Edition 3 13-Oct-1999, Section 8.6.2 re [[Class]] property.
  *
- * Same as class-001.js - but testing the constructors here, not object instances.
- * Therefore we expect the [[Class]] property to equal 'Function' in each case. 
+ * Same as class-001.js - but testing the constructors here, not
+ * object instances.  Therefore we expect the [[Class]] property to
+ * equal 'Function' in each case.
  *
  * The getJSClass() function we use is in a utility file, e.g. "shell.js"
  */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+var gTestfile = 'class-002.js';
 var i = 0;
 var UBound = 0;
-var bug = '(none)';
+var BUGNUMBER = '(none)';
 var summary = 'Testing the internal [[Class]] property of native constructors';
 var statprefix = 'Current constructor is: ';
 var status = ''; var statusList = [ ];
@@ -124,9 +128,9 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
- 
+
   for (i = 0; i < UBound; i++)
   {
     reportCompare(expectedvalue[i], actualvalue[i], getStatus(i));

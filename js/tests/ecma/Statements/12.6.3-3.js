@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '12.6.3-3.js';
+
 /**
    File Name:          12.6.3-3.js
    ECMA Section:       for..in loops

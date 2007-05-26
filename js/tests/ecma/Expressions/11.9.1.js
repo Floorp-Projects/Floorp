@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '11.9.1.js';
+
 /**
    File Name:          11.9.1.js
    ECMA Section:       11.9.1 The equals operator ( == )

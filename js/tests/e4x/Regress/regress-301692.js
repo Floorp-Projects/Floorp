@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,15 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("Function.prototype.toString should not quote XML literals");
+gTestfile = 'regress-301692.js';
 
-var bug = 301692;
-var summary = 'Function.prototype.toString should not quote XML literals';
+var summary = "Function.prototype.toString should not quote XML literals";
+var BUGNUMBER = 301692;
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 actual = ToString((function () { return <xml/>; }));
 expect = 'function () { return <xml/>;}';
@@ -68,9 +69,9 @@ actual = ToString((function (k) { return <{k}>{k}</{k}>; }));
 expect = 'function (k) { return <{k}>{k}</{k}>;}';
 TEST(6, expect, actual);
 
-actual = ToString((function (k) { return <{k} 
+actual = ToString((function (k) { return <{k}
                   {k}={k} {"k"}={k + "world"}><{k + "k"}/></{k}>; }));
-expect = 'function (k) ' + 
+expect = 'function (k) ' +
          '{ return <{k} {k}={k} {"k"}={k + "world"}><{k + "k"}/></{k}>;}';
 TEST(7, expect, actual);
 

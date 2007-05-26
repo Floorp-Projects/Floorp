@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '10.2.3-1.js';
+
 /**
    File Name:          10.2.3-1.js
    ECMA Section:       10.2.3 Function and Anonymous Code

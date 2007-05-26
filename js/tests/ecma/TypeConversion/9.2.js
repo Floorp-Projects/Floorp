@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '9.2.js';
+
 /**
    File Name:          9.2.js
    ECMA Section:       9.2  Type Conversion:  ToBoolean

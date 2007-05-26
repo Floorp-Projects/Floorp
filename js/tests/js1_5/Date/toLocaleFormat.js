@@ -35,17 +35,19 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'toLocaleFormat.js';
 //-----------------------------------------------------------------------------
-var bug = 291494;
+var BUGNUMBER = 291494;
 var summary = 'Date.prototype.toLocaleFormat extension';
 var actual = '';
 var expect = '';
 var temp;
 
 enterFunc ('test');
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
-  
+ 
 var date = new Date("06/05/2005 00:00:00 GMT-0000");
 
 expect = date.getTimezoneOffset() > 0 ? 'Sat' : 'Sun';
@@ -65,24 +67,24 @@ actual = date.toLocaleFormat('%B');
 reportCompare(expect, actual, 'Date.toLocaleFormat("%B")');
 
 /*
-expect = date.toLocaleFormat('%a %b %e %H:%M:%S %Y');
-actual = date.toLocaleFormat('%c');
-reportCompare(expect, actual, 
-              'Date.toLocaleFormat("%a %b %e %H:%M:%S %Y") == ' + 
-              'Date.toLocaleFormat("%c")');
+  expect = date.toLocaleFormat('%a %b %e %H:%M:%S %Y');
+  actual = date.toLocaleFormat('%c');
+  reportCompare(expect, actual,
+  'Date.toLocaleFormat("%a %b %e %H:%M:%S %Y") == ' +
+  'Date.toLocaleFormat("%c")');
 */
 
 /*
-expect = '20';
-actual = date.toLocaleFormat('%C');
-reportCompare(expect, actual, 'Date.toLocaleFormat("%C")');
+  expect = '20';
+  actual = date.toLocaleFormat('%C');
+  reportCompare(expect, actual, 'Date.toLocaleFormat("%C")');
 */
 
 /*
-expect = date.toLocaleFormat('%C%y');
-actual = date.toLocaleFormat('%Y');
-reportCompare(expect, actual, 'Date.toLocaleFormat("%C%y") == ' + 
-              'Date.toLocaleFormat("%Y")');
+  expect = date.toLocaleFormat('%C%y');
+  actual = date.toLocaleFormat('%Y');
+  reportCompare(expect, actual, 'Date.toLocaleFormat("%C%y") == ' +
+  'Date.toLocaleFormat("%Y")');
 */
 
 expect = (date.getTimezoneOffset() > 0) ? '04' : '05';
@@ -90,51 +92,51 @@ actual = date.toLocaleFormat('%d');
 reportCompare(expect, actual, 'Date.toLocaleFormat("%d")');
 
 /*
-expect = date.toLocaleFormat('%m/%d/%y');
-actual = date.toLocaleFormat('%D');
-reportCompare(expect, actual, 'Date.toLocaleFormat("%m/%d/%y") == ' + 
-              'Date.toLocaleFormat("%D")');
+  expect = date.toLocaleFormat('%m/%d/%y');
+  actual = date.toLocaleFormat('%D');
+  reportCompare(expect, actual, 'Date.toLocaleFormat("%m/%d/%y") == ' +
+  'Date.toLocaleFormat("%D")');
 */
 
 /*
-expect = (date.getTimezoneOffset() > 0) ? ' 4' : ' 5';
-actual = date.toLocaleFormat('%e');
-reportCompare(expect, actual, 'Date.toLocaleFormat("%e")');
+  expect = (date.getTimezoneOffset() > 0) ? ' 4' : ' 5';
+  actual = date.toLocaleFormat('%e');
+  reportCompare(expect, actual, 'Date.toLocaleFormat("%e")');
 */
 
 /*
-expect = date.toLocaleFormat('%Y-%m-%d');
-actual = date.toLocaleFormat('%F');
-reportCompare(expect, actual, 'Date.toLocaleFormat("%Y-%m-%d") == ' +
-              'Date.toLocaleFormat("%F")');
+  expect = date.toLocaleFormat('%Y-%m-%d');
+  actual = date.toLocaleFormat('%F');
+  reportCompare(expect, actual, 'Date.toLocaleFormat("%Y-%m-%d") == ' +
+  'Date.toLocaleFormat("%F")');
 */
 
 /*
-expect = '05';
-actual = date.toLocaleFormat('%g');
-reportCompare(expect, actual, 'Date.toLocaleFormat("%g")');
+  expect = '05';
+  actual = date.toLocaleFormat('%g');
+  reportCompare(expect, actual, 'Date.toLocaleFormat("%g")');
 */
 
 /*
-expect = '2005';
-actual = date.toLocaleFormat('%G');
-reportCompare(expect, actual, 'Date.toLocaleFormat("%G")');
+  expect = '2005';
+  actual = date.toLocaleFormat('%G');
+  reportCompare(expect, actual, 'Date.toLocaleFormat("%G")');
 */
 
 /*
-expect = date.toLocaleFormat('%b');
-actual = date.toLocaleFormat('%h');
-reportCompare(expect, actual, 'Date.toLocaleFormat("%b") == ' + 
-              'Date.toLocaleFormat("%h")');
+  expect = date.toLocaleFormat('%b');
+  actual = date.toLocaleFormat('%h');
+  reportCompare(expect, actual, 'Date.toLocaleFormat("%b") == ' +
+  'Date.toLocaleFormat("%h")');
 */
 
 expect = '0';
-actual = String((Number(date.toLocaleFormat('%H')) + 
+actual = String((Number(date.toLocaleFormat('%H')) +
                  date.getTimezoneOffset()/60) % 24);
 reportCompare(expect, actual, 'Date.toLocaleFormat(%H)');
 
 expect = '12';
-actual = String(Number(date.toLocaleFormat('%I')) + 
+actual = String(Number(date.toLocaleFormat('%I')) +
                 date.getTimezoneOffset()/60);
 reportCompare(expect, actual, 'Date.toLocaleFormat(%I)');
 
@@ -151,9 +153,9 @@ actual = date.toLocaleFormat('%M');
 reportCompare(expect, actual, 'Date.toLocaleFormat("%M")');
 
 /*
-expect = '\n';
-actual = date.toLocaleFormat('%n');
-reportCompare(expect, actual, 'Date.toLocaleFormat("%n") == "\\n"');
+  expect = '\n';
+  actual = date.toLocaleFormat('%n');
+  reportCompare(expect, actual, 'Date.toLocaleFormat("%n") == "\\n"');
 */
 
 expect = true;
@@ -162,17 +164,17 @@ actual = temp == 'AM' || date.toLocaleFormat('%p') == 'PM';
 reportCompare(expect, actual, 'Date.toLocaleFormat("%p") is AM or PM');
 
 /*
-expect = date.toLocaleFormat('%I:%M:%S %p');
-actual = date.toLocaleFormat('%r');
-reportCompare(expect, actual, 'Date.toLocaleFormat("%I:%M:%S %p") == ' +
-              'Date.toLocaleFormat("%r")');
+  expect = date.toLocaleFormat('%I:%M:%S %p');
+  actual = date.toLocaleFormat('%r');
+  reportCompare(expect, actual, 'Date.toLocaleFormat("%I:%M:%S %p") == ' +
+  'Date.toLocaleFormat("%r")');
 */
 
 /*
-expect = date.toLocaleFormat('%H:%M');
-actual = date.toLocaleFormat('%R');
-reportCompare(expect, actual, 'Date.toLocaleFormat("%H:%M") == ' +
-              'Date.toLocaleFormat("%R")');
+  expect = date.toLocaleFormat('%H:%M');
+  actual = date.toLocaleFormat('%R');
+  reportCompare(expect, actual, 'Date.toLocaleFormat("%H:%M") == ' +
+  'Date.toLocaleFormat("%R")');
 */
 
 expect = '00';
@@ -180,22 +182,22 @@ actual = date.toLocaleFormat('%S');
 reportCompare(expect, actual, 'Date.toLocaleFormat("%S")');
 
 /*
-expect = '\t';
-actual = date.toLocaleFormat('%t');
-reportCompare(expect, actual, 'Date.toLocaleFormat("%t") == "\\t"');
+  expect = '\t';
+  actual = date.toLocaleFormat('%t');
+  reportCompare(expect, actual, 'Date.toLocaleFormat("%t") == "\\t"');
 */
 
 /*
-expect = date.toLocaleFormat('%H:%M:%S');
-actual = date.toLocaleFormat('%T');
-reportCompare(expect, actual, 'Date.toLocaleFormat("%H:%M:%S") == ' +
-              'Date.toLocaleFormat("%T")');
+  expect = date.toLocaleFormat('%H:%M:%S');
+  actual = date.toLocaleFormat('%T');
+  reportCompare(expect, actual, 'Date.toLocaleFormat("%H:%M:%S") == ' +
+  'Date.toLocaleFormat("%T")');
 */
 
 /*
-expect = String(6 + ((date.getTimezoneOffset() > 0) ? 0 : 1));
-actual = date.toLocaleFormat('%u');
-reportCompare(expect, actual, 'Date.toLocaleFormat("%u")');
+  expect = String(6 + ((date.getTimezoneOffset() > 0) ? 0 : 1));
+  actual = date.toLocaleFormat('%u');
+  reportCompare(expect, actual, 'Date.toLocaleFormat("%u")');
 */
 
 expect = String(22 + ((date.getTimezoneOffset() > 0) ? 0 : 1));
@@ -203,9 +205,9 @@ actual = date.toLocaleFormat('%U');
 reportCompare(expect, actual, 'Date.toLocaleFormat("%U")');
 
 /*
-expect = '22';
-actual = date.toLocaleFormat('%V');
-reportCompare(expect, actual, 'Date.toLocaleFormat("%V")');
+  expect = '22';
+  actual = date.toLocaleFormat('%V');
+  reportCompare(expect, actual, 'Date.toLocaleFormat("%V")');
 */
 
 expect = String((6 + ((date.getTimezoneOffset() > 0) ? 0 : 1))%7);
@@ -217,15 +219,15 @@ actual = date.toLocaleFormat('%W');
 reportCompare(expect, actual, 'Date.toLocaleFormat("%W")');
 
 /*
-expect = date.toLocaleFormat('%m/%d/%y');
-actual = date.toLocaleFormat('%x');
-reportCompare(expect, actual, 'Date.toLocaleFormat("%m/%d/%y) == ' + 
-              'Date.toLocaleFormat("%x")');
+  expect = date.toLocaleFormat('%m/%d/%y');
+  actual = date.toLocaleFormat('%x');
+  reportCompare(expect, actual, 'Date.toLocaleFormat("%m/%d/%y) == ' +
+  'Date.toLocaleFormat("%x")');
 */
 
 expect = date.toLocaleTimeString();
 actual = date.toLocaleFormat('%X');
-reportCompare(expect, actual, 'Date.toLocaleTimeString() == ' + 
+reportCompare(expect, actual, 'Date.toLocaleTimeString() == ' +
               'Date.toLocaleFormat("%X")');
 
 expect = '05';

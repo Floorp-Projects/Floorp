@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-341956-03.js';
 //-----------------------------------------------------------------------------
-var bug = 341956;
+var BUGNUMBER = 341956;
 var summary = 'GC Hazards in jsarray.c - reverse';
 var actual = 'No Crash';
 var expect = 'No Crash';
@@ -47,7 +49,7 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   var N = 0xFFFFFFFF;
@@ -57,24 +59,24 @@ function test()
   var expected = "GETTER RESULT";
 
   a.__defineGetter__(N - 1, function() {
-      delete a[N - 1];
-      var tmp = [];
-      tmp[N - 2] = 1;
+		       delete a[N - 1];
+		       var tmp = [];
+		       tmp[N - 2] = 1;
 
-      if (typeof gc == 'function')
-        gc();
-      for (var i = 0; i != 50000; ++i) {
-        var tmp = 1 / 3;
-        tmp /= 10;  
-      }
-      for (var i = 0; i != 1000; ++i) {
-        // Make string with 11 characters that would take
-        // (11 + 1) * 2 bytes or sizeof(JSAtom) so eventually
-        // malloc will ovewrite just freed atoms.
-        var tmp2 = Array(12).join(' ');
-      }
-      return expected;
-    });
+		       if (typeof gc == 'function')
+			 gc();
+		       for (var i = 0; i != 50000; ++i) {
+			 var tmp = 1 / 3;
+			 tmp /= 10; 
+		       }
+		       for (var i = 0; i != 1000; ++i) {
+			 // Make string with 11 characters that would take
+			 // (11 + 1) * 2 bytes or sizeof(JSAtom) so eventually
+			 // malloc will ovewrite just freed atoms.
+			 var tmp2 = Array(12).join(' ');
+		       }
+		       return expected;
+		     });
 
 // The following always-throw getter is to stop unshift from doing
 // 2^32 iterations.

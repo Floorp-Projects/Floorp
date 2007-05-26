@@ -35,26 +35,28 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-167658.js';
 //-----------------------------------------------------------------------------
-var bug = 167658;
+var BUGNUMBER = 167658;
 var summary = 'Do not crash due to js_NewRegExp initialization';
 var actual = 'No Crash';
 var expect = 'No Crash';
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var UBOUND=100;
 for (var j=0; j<UBOUND; j++)
 {
   'Apfelkiste, Apfelschale'.replace('Apfel', function()
-  {
-    for (var i = 0; i < arguments.length; i++)
-      printStatus(i+': '+arguments[i]);
-    return 'Bananen';
-  });
+				    {
+				      for (var i = 0; i < arguments.length; i++)
+					printStatus(i+': '+arguments[i]);
+				      return 'Bananen';
+				    });
 
   printStatus(j);
 }
-  
+ 
 reportCompare(expect, actual, summary);
 

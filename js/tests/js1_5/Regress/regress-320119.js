@@ -34,24 +34,26 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-320119.js';
 //-----------------------------------------------------------------------------
-var bug = 320119;
+var BUGNUMBER = 320119;
 var summary = 'delegating objects and arguments, arity, caller, name';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 printStatus('original test');
 
-function origtest(name, bar) 
+function origtest(name, bar)
 {
   this.name = name;
   this.bar = bar;
 }
 
-function Monty(id, name, bar) 
+function Monty(id, name, bar)
 {
   this.id = id;
   this.base = origtest;
@@ -60,13 +62,13 @@ function Monty(id, name, bar)
 
 Monty.prototype = origtest;
 
-function testtwo(notNamedName, bar) 
+function testtwo(notNamedName, bar)
 {
   this.name = notNamedName;
   this.bar = bar;
 }
 
-function Python(id, notNamedName, bar) 
+function Python(id, notNamedName, bar)
 {
   this.id = id;
   this.base = origtest;
@@ -136,7 +138,7 @@ Child.prototype = Parent;
 Child.prototype.value = function()
 {
   return this.arguments + ',' + this.caller + ',' + this.arity + ',' +
-    this.length + ',' + this.name;
+  this.length + ',' + this.name;
 };
 
 var child = new Child();

@@ -37,9 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.3.10.js';
+
 START("13.4.3.10 - XML Constructor [[HasInstance]]");
 
-BUG(288027);
+printBugNumber(288027);
 
 var xmlListObject1 = new XMLList('<god>Kibo</god>');
 var xmlListObject2 = new XMLList('<god>Kibo</god><devil>Xibo</devil>');

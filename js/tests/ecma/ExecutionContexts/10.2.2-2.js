@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '10.2.2-2.js';
+
 /**
    File Name:          10.2.2-2.js
    ECMA Section:       10.2.2 Eval Code
@@ -80,37 +82,37 @@ for ( p in this ) {
 
 with ( OBJECT ) {
   var THIS = this;
-  new TestCase( SECTION, 
-		"eval( 'this == THIS' )",                  
-		true,               
+  new TestCase( SECTION,
+		"eval( 'this == THIS' )",                 
+		true,              
 		eval("this == THIS") );
-  new TestCase( SECTION, 
-		"this in a with() block",                  
-		GLOBAL,  
+  new TestCase( SECTION,
+		"this in a with() block",                 
+		GLOBAL, 
 		this+"" );
-  new TestCase( SECTION, 
-		"new MyObject('hello').value",             
-		"hello",            
+  new TestCase( SECTION,
+		"new MyObject('hello').value",            
+		"hello",           
 		value );
-  new TestCase( SECTION, 
-		"eval(new MyObject('hello').value)",       
-		"hello",            
+  new TestCase( SECTION,
+		"eval(new MyObject('hello').value)",      
+		"hello",           
 		eval("value") );
-  new TestCase( SECTION, 
-		"new MyObject('hello').getClass()",        
-		"[object Object]",  
+  new TestCase( SECTION,
+		"new MyObject('hello').getClass()",       
+		"[object Object]", 
 		getClass() );
-  new TestCase( SECTION, 
-		"eval(new MyObject('hello').getClass())",  
-		"[object Object]",  
+  new TestCase( SECTION,
+		"eval(new MyObject('hello').getClass())", 
+		"[object Object]", 
 		eval("getClass()") );
-  new TestCase( SECTION, 
-		"eval(new MyObject('hello').toString())",  
-		"hello",  
+  new TestCase( SECTION,
+		"eval(new MyObject('hello').toString())", 
+		"hello", 
 		eval("toString()") );
-  new TestCase( SECTION, 
-		"eval('getClass') == Object.prototype.toString",  
-		true,  
+  new TestCase( SECTION,
+		"eval('getClass') == Object.prototype.toString", 
+		true, 
 		eval("getClass") == Object.prototype.toString );
 
   for ( i = 0; i < GLOBAL_PROPERTIES.length; i++ ) {

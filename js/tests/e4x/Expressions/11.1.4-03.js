@@ -35,15 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("11.1.4 - XML Initializer");
+gTestfile = '11.1.4-03.js';
 
-var bug = 257679;
-var summary = 'XML Initializer should accept single comment';
+var summary = '11.1.4 - XML Initializer should accept single comment';
+var BUGNUMBER = 257679;
 var actual = '';
 var expect = 'comment';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 XML.ignoreComments = false;
 print("XML.ignoreComments: " + XML.ignoreComments);

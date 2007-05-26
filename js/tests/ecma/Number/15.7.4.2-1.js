@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.7.4.2-1.js';
+
 /**
    File Name:          15.7.4.2.js
    ECMA Section:       15.7.4.2.1 Number.prototype.toString()
@@ -59,51 +61,51 @@ var VERSION = "ECMA_1";
 startTest();
 
 writeHeaderToLog( SECTION + " Number.prototype.toString()");
- 
+
 //  the following two lines cause navigator to crash -- cmb 9/16/97
-new TestCase(SECTION, 
-	     "Number.prototype.toString()",       
-	     "0",        
+new TestCase(SECTION,
+	     "Number.prototype.toString()",      
+	     "0",       
 	     eval("Number.prototype.toString()") );
 
-new TestCase(SECTION, 
-	     "typeof(Number.prototype.toString())", 
-	     "string",      
+new TestCase(SECTION,
+	     "typeof(Number.prototype.toString())",
+	     "string",     
 	     eval("typeof(Number.prototype.toString())") );
 
-new TestCase(SECTION,  
-	     "s = Number.prototype.toString; o = new Number(); o.toString = s; o.toString()",  
-	     "0",          
+new TestCase(SECTION, 
+	     "s = Number.prototype.toString; o = new Number(); o.toString = s; o.toString()", 
+	     "0",         
 	     eval("s = Number.prototype.toString; o = new Number(); o.toString = s; o.toString()") );
 
-new TestCase(SECTION,  
-	     "s = Number.prototype.toString; o = new Number(1); o.toString = s; o.toString()", 
-	     "1",          
+new TestCase(SECTION, 
+	     "s = Number.prototype.toString; o = new Number(1); o.toString = s; o.toString()",
+	     "1",         
 	     eval("s = Number.prototype.toString; o = new Number(1); o.toString = s; o.toString()") );
 
-new TestCase(SECTION,  
-	     "s = Number.prototype.toString; o = new Number(-1); o.toString = s; o.toString()", 
-	     "-1",         
+new TestCase(SECTION, 
+	     "s = Number.prototype.toString; o = new Number(-1); o.toString = s; o.toString()",
+	     "-1",        
 	     eval("s = Number.prototype.toString; o = new Number(-1); o.toString = s; o.toString()") );
 
-new TestCase(SECTION, 
-	     "var MYNUM = new Number(255); MYNUM.toString(10)",          
-	     "255",      
+new TestCase(SECTION,
+	     "var MYNUM = new Number(255); MYNUM.toString(10)",         
+	     "255",     
 	     eval("var MYNUM = new Number(255); MYNUM.toString(10)") );
 
-new TestCase(SECTION, 
-	     "var MYNUM = new Number(Number.NaN); MYNUM.toString(10)",   
-	     "NaN",      
+new TestCase(SECTION,
+	     "var MYNUM = new Number(Number.NaN); MYNUM.toString(10)",  
+	     "NaN",     
 	     eval("var MYNUM = new Number(Number.NaN); MYNUM.toString(10)") );
 
-new TestCase(SECTION, 
-	     "var MYNUM = new Number(Infinity); MYNUM.toString(10)",   
-	     "Infinity",   
+new TestCase(SECTION,
+	     "var MYNUM = new Number(Infinity); MYNUM.toString(10)",  
+	     "Infinity",  
 	     eval("var MYNUM = new Number(Infinity); MYNUM.toString(10)") );
 
-new TestCase(SECTION, 
-	     "var MYNUM = new Number(-Infinity); MYNUM.toString(10)",   
-	     "-Infinity", 
+new TestCase(SECTION,
+	     "var MYNUM = new Number(-Infinity); MYNUM.toString(10)",  
+	     "-Infinity",
 	     eval("var MYNUM = new Number(-Infinity); MYNUM.toString(10)") );
 
 test();

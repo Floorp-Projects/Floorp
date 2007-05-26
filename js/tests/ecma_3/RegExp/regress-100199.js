@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 17 September 2001
  *
  * SUMMARY: Regression test for Bugzilla bug 100199
@@ -48,8 +50,9 @@
  * Neither one of these conditions should cause syntax errors in a RegExp.
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-100199.js';
 var i = 0;
-var bug = 100199;
+var BUGNUMBER = 100199;
 var summary = '[], [^] are valid RegExp conditions. Should not cause errors -';
 var status = '';
 var statusmessages = new Array();
@@ -64,215 +67,215 @@ var expectedmatches = new Array();
 
 
 pattern = /[]/;
-  string = 'abc';
-  status = inSection(1);
-  actualmatch = string.match(pattern);
-  expectedmatch = null;
-  addThis();
+string = 'abc';
+status = inSection(1);
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
-  string = '';
-  status = inSection(2);
-  actualmatch = string.match(pattern);
-  expectedmatch = null;
-  addThis();
+string = '';
+status = inSection(2);
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
-  string = '[';
-  status = inSection(3);
-  actualmatch = string.match(pattern);
-  expectedmatch = null;
-  addThis();
+string = '[';
+status = inSection(3);
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
-  string = '/';
-  status = inSection(4);
-  actualmatch = string.match(pattern);
-  expectedmatch = null;
-  addThis();
+string = '/';
+status = inSection(4);
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
-  string = '[';
-  status = inSection(5);
-  actualmatch = string.match(pattern);
-  expectedmatch = null;
-  addThis();
+string = '[';
+status = inSection(5);
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
-  string = ']';
-  status = inSection(6);
-  actualmatch = string.match(pattern);
-  expectedmatch = null;
-  addThis();
+string = ']';
+status = inSection(6);
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
-  string = '[]';
-  status = inSection(7);
-  actualmatch = string.match(pattern);
-  expectedmatch = null;
-  addThis();
+string = '[]';
+status = inSection(7);
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
-  string = '[ ]';
-  status = inSection(8);
-  actualmatch = string.match(pattern);
-  expectedmatch = null;
-  addThis();
+string = '[ ]';
+status = inSection(8);
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
-  string = '][';
-  status = inSection(9);
-  actualmatch = string.match(pattern);
-  expectedmatch = null;
-  addThis();
+string = '][';
+status = inSection(9);
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
 
 pattern = /a[]/;
-  string = 'abc';
-  status = inSection(10);
-  actualmatch = string.match(pattern);
-  expectedmatch = null;
-  addThis();
+string = 'abc';
+status = inSection(10);
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
-  string = '';
-  status = inSection(11);
-  actualmatch = string.match(pattern);
-  expectedmatch = null;
-  addThis();
+string = '';
+status = inSection(11);
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
-  string = 'a[';
-  status = inSection(12);
-  actualmatch = string.match(pattern);
-  expectedmatch = null;
-  addThis();
+string = 'a[';
+status = inSection(12);
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
-  string = 'a[]';
-  status = inSection(13);
-  actualmatch = string.match(pattern);
-  expectedmatch = null;
-  addThis();
+string = 'a[]';
+status = inSection(13);
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
-  string = '[';
-  status = inSection(14);
-  actualmatch = string.match(pattern);
-  expectedmatch = null;
-  addThis();
+string = '[';
+status = inSection(14);
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
-  string = ']';
-  status = inSection(15);
-  actualmatch = string.match(pattern);
-  expectedmatch = null;
-  addThis();
+string = ']';
+status = inSection(15);
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
-  string = '[]';
-  status = inSection(16);
-  actualmatch = string.match(pattern);
-  expectedmatch = null;
-  addThis();
+string = '[]';
+status = inSection(16);
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
-  string = '[ ]';
-  status = inSection(17);
-  actualmatch = string.match(pattern);
-  expectedmatch = null;
-  addThis();
+string = '[ ]';
+status = inSection(17);
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
-  string = '][';
-  status = inSection(18);
-  actualmatch = string.match(pattern);
-  expectedmatch = null;
-  addThis();
+string = '][';
+status = inSection(18);
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
 
 pattern = /[^]/;
-  string = 'abc';
-  status = inSection(19);
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('a');
-  addThis();
+string = 'abc';
+status = inSection(19);
+actualmatch = string.match(pattern);
+expectedmatch = Array('a');
+addThis();
 
-  string = '';
-  status = inSection(20);
-  actualmatch = string.match(pattern);
-  expectedmatch = null; //there are no characters to test against the condition
-  addThis();
+string = '';
+status = inSection(20);
+actualmatch = string.match(pattern);
+expectedmatch = null; //there are no characters to test against the condition
+addThis();
 
-  string = '\/';
-  status = inSection(21);
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('/');
-  addThis();
+string = '\/';
+status = inSection(21);
+actualmatch = string.match(pattern);
+expectedmatch = Array('/');
+addThis();
 
-  string = '\[';
-  status = inSection(22);
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('[');
-  addThis();
-  
-  string = '[';
-  status = inSection(23);
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('[');
-  addThis();
+string = '\[';
+status = inSection(22);
+actualmatch = string.match(pattern);
+expectedmatch = Array('[');
+addThis();
+ 
+string = '[';
+status = inSection(23);
+actualmatch = string.match(pattern);
+expectedmatch = Array('[');
+addThis();
 
-  string = ']';
-  status = inSection(24);
-  actualmatch = string.match(pattern);
-  expectedmatch = Array(']');
-  addThis();
+string = ']';
+status = inSection(24);
+actualmatch = string.match(pattern);
+expectedmatch = Array(']');
+addThis();
 
-  string = '[]';
-  status = inSection(25);
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('[');
-  addThis();
+string = '[]';
+status = inSection(25);
+actualmatch = string.match(pattern);
+expectedmatch = Array('[');
+addThis();
 
-  string = '[ ]';
-  status = inSection(26);
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('[');
-  addThis();
+string = '[ ]';
+status = inSection(26);
+actualmatch = string.match(pattern);
+expectedmatch = Array('[');
+addThis();
 
-  string = '][';
-  status = inSection(27);
-  actualmatch = string.match(pattern);
-  expectedmatch = Array(']');
-  addThis();
+string = '][';
+status = inSection(27);
+actualmatch = string.match(pattern);
+expectedmatch = Array(']');
+addThis();
 
 
 pattern = /a[^]/;
-  string = 'abc';
-  status = inSection(28);
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('ab');
-  addThis();
+string = 'abc';
+status = inSection(28);
+actualmatch = string.match(pattern);
+expectedmatch = Array('ab');
+addThis();
 
-  string = '';
-  status = inSection(29);
-  actualmatch = string.match(pattern);
-  expectedmatch = null; //there are no characters to test against the condition
-  addThis();
+string = '';
+status = inSection(29);
+actualmatch = string.match(pattern);
+expectedmatch = null; //there are no characters to test against the condition
+addThis();
 
-  string = 'a[';
-  status = inSection(30);
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('a[');
-  addThis();
+string = 'a[';
+status = inSection(30);
+actualmatch = string.match(pattern);
+expectedmatch = Array('a[');
+addThis();
 
-  string = 'a]';
-  status = inSection(31);
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('a]');
-  addThis();
+string = 'a]';
+status = inSection(31);
+actualmatch = string.match(pattern);
+expectedmatch = Array('a]');
+addThis();
 
-  string = 'a[]';
-  status = inSection(32);
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('a[');
-  addThis();
+string = 'a[]';
+status = inSection(32);
+actualmatch = string.match(pattern);
+expectedmatch = Array('a[');
+addThis();
 
-  string = 'a[ ]';
-  status = inSection(33);
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('a[');
-  addThis();
+string = 'a[ ]';
+status = inSection(33);
+actualmatch = string.match(pattern);
+expectedmatch = Array('a[');
+addThis();
 
-  string = 'a][';
-  status = inSection(34);
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('a]');
-  addThis();
+string = 'a][';
+status = inSection(34);
+actualmatch = string.match(pattern);
+expectedmatch = Array('a]');
+addThis();
 
 
 
@@ -297,7 +300,7 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
   testRegExp(statusmessages, patterns, strings, actualmatches, expectedmatches);
   exitFunc ('test');

@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'global.js';
+
 /**
    Filename:     global.js
    Description:  'Tests RegExp attribute global'

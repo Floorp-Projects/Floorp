@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'function-001.js';
+
 /**
  *  File Name:          function-001.js
  *  Description:
@@ -61,33 +64,33 @@ eval("function f1 (a){ var a,b; }");
 function f2( a ) { var a, b; };
 
 new TestCase(
-    SECTION,
-    "eval(\"function f1 (a){ var a,b; }\"); "+
-    "function f2( a ) { var a, b; }; typeof f1",
-    "function",
-    typeof f1 );
+  SECTION,
+  "eval(\"function f1 (a){ var a,b; }\"); "+
+  "function f2( a ) { var a, b; }; typeof f1",
+  "function",
+  typeof f1 );
 
 // force a function decompilation
 
 new TestCase(
-    SECTION,
-    "typeof f1.toString()",
-    "string",
-    typeof f1.toString() );
+  SECTION,
+  "typeof f1.toString()",
+  "string",
+  typeof f1.toString() );
 
 new TestCase(
-    SECTION,
-    "typeof f2",
-    "function",
-    typeof f2 );
+  SECTION,
+  "typeof f2",
+  "function",
+  typeof f2 );
 
 // force a function decompilation
 
 new TestCase(
-    SECTION,
-    "typeof f2.toString()",
-    "string",
-    typeof f2.toString() );
+  SECTION,
+  "typeof f2.toString()",
+  "string",
+  typeof f2.toString() );
 
 test();
 

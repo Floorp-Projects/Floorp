@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '10.1.8-2.js';
+
 /**
    File Name:          10.1.8-2
    ECMA Section:       Arguments Object

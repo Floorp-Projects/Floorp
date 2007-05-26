@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.4.3.2.js';
+
 /**
    File Name:          15.4.3.2.js
    ECMA Section:       15.4.3.2 Array.length
@@ -52,9 +54,9 @@ var TITLE   = "Array.length";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,	
-	      "Array.length",      
-	      1,        
+new TestCase( SECTION,
+	      "Array.length",     
+	      1,       
 	      Array.length );
 
 test();

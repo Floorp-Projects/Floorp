@@ -35,30 +35,32 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-203278-3.js';
 //-----------------------------------------------------------------------------
-var bug = 203278;
+var BUGNUMBER = 203278;
 var summary = 'Don\'t crash in recursive js_MarkGCThing';
 var actual = 'FAIL';
 var expect = 'PASS';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 // Prepare  array a to cause O(a.length^2) bahaviour in the current
-// DeutschSchorrWaite implementation 
+// DeutschSchorrWaite implementation
 
 var a = new Array(1000 * 100);
 
 var i = a.length;
-while (i-- != 0) 
+while (i-- != 0)
 {
   a[i] = {};
 }
 
-// Prepare linked list that causes recursion during GC with 
+// Prepare linked list that causes recursion during GC with
 // depth O(list size)
 
-for (i = 0; i != 50*1000; ++i) 
+for (i = 0; i != 50*1000; ++i)
 {
   a = [a, a.concat()];
 }

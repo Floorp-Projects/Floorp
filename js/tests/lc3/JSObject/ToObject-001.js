@@ -39,6 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'ToObject-001.js';
+
 /**
  *  JavaScript to Java type conversion.
  *
@@ -59,7 +61,7 @@
 var SECTION = "JavaScript Object to java.lang.String";
 var VERSION = "1_4";
 var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-SECTION;
+  SECTION;
 var BUGNUMBER="335882";
 
 startTest();
@@ -78,176 +80,176 @@ var i = 0;
 var string  = new String("JavaScript String Value");
 
 a[i++] = new TestObject(
-    "dt.setObject(string)",
-    "dt.PUB_OBJECT +''",
-    "dt.getObject() +''",
-    "dt.getObject().constructor",
-    string +"",
-    String);
+  "dt.setObject(string)",
+  "dt.PUB_OBJECT +''",
+  "dt.getObject() +''",
+  "dt.getObject().constructor",
+  string +"",
+  String);
 
 var myobject = new MyObject( string );
 
 a[i++] = new TestObject(
-    "dt.setObject( myobject )",
-    "dt.PUB_OBJECT",
-    "dt.getObject()",
-    "dt.getObject().constructor",
-    myobject,
-    MyObject);
+  "dt.setObject( myobject )",
+  "dt.PUB_OBJECT",
+  "dt.getObject()",
+  "dt.getObject().constructor",
+  myobject,
+  MyObject);
 
 var bool = new Boolean(true);
 
 a[i++] = new TestObject(
-    "dt.setObject( bool )",
-    "dt.PUB_OBJECT",
-    "dt.getObject()",
-    "dt.getObject().constructor",
-    bool,
-    Boolean);
+  "dt.setObject( bool )",
+  "dt.PUB_OBJECT",
+  "dt.getObject()",
+  "dt.getObject().constructor",
+  bool,
+  Boolean);
 
 bool = new Boolean(false);
 
 a[i++] = new TestObject(
-    "dt.setObject( bool )",
-    "dt.PUB_OBJECT",
-    "dt.getObject()",
-    "dt.getObject().constructor",
-    bool,
-    Boolean);
+  "dt.setObject( bool )",
+  "dt.PUB_OBJECT",
+  "dt.getObject()",
+  "dt.getObject().constructor",
+  bool,
+  Boolean);
 
 var object = new Object();
 
 a[i++] = new TestObject(
-    "dt.setObject( object)",
-    "dt.PUB_OBJECT",
-    "dt.getObject()",
-    "dt.getObject().constructor",
-    object,
-    Object);
+  "dt.setObject( object)",
+  "dt.PUB_OBJECT",
+  "dt.getObject()",
+  "dt.getObject().constructor",
+  object,
+  Object);
 
 var number = new Number(0);
 
 a[i++] = new TestObject(
-    "dt.setObject( number )",
-    "dt.PUB_OBJECT",
-    "dt.getObject()",
-    "dt.getObject().constructor",
-    number,
-    Number);
+  "dt.setObject( number )",
+  "dt.PUB_OBJECT",
+  "dt.getObject()",
+  "dt.getObject().constructor",
+  number,
+  Number);
 
 nan = new Number(NaN);
 
 a[i++] = new TestObject(
-    "dt.setObject( nan )",
-    "dt.PUB_OBJECT",
-    "dt.getObject()",
-    "dt.getObject().constructor",
-    nan,
-    Number);
+  "dt.setObject( nan )",
+  "dt.PUB_OBJECT",
+  "dt.getObject()",
+  "dt.getObject().constructor",
+  nan,
+  Number);
 
 infinity = new Number(Infinity);
 
 a[i++] = new TestObject(
-    "dt.setObject( infinity )",
-    "dt.PUB_OBJECT",
-    "dt.getObject()",
-    "dt.getObject().constructor",
-    infinity,
-    Number);
+  "dt.setObject( infinity )",
+  "dt.PUB_OBJECT",
+  "dt.getObject()",
+  "dt.getObject().constructor",
+  infinity,
+  Number);
 
 var neg_infinity = new Number(-Infinity);
 
 a[i++] = new TestObject(
-    "dt.setObject( neg_infinity )",
-    "dt.PUB_OBJECT",
-    "dt.getObject()",
-    "dt.getObject().constructor",
-    neg_infinity,
-    Number);
+  "dt.setObject( neg_infinity )",
+  "dt.PUB_OBJECT",
+  "dt.getObject()",
+  "dt.getObject().constructor",
+  neg_infinity,
+  Number);
 
 var array = new Array(1,2,3)
 
-    a[i++] = new TestObject(
-        "dt.setObject(array)",
-        "dt.PUB_OBJECT",
-        "dt.getObject()",
-        "dt.getObject().constructor",
-        array,
-        Array);
-
-
-a[i++] = new TestObject(
-    "dt.setObject( MyObject )",
+  a[i++] = new TestObject(
+    "dt.setObject(array)",
     "dt.PUB_OBJECT",
     "dt.getObject()",
     "dt.getObject().constructor",
-    MyObject,
-    Function);
+    array,
+    Array);
+
+
+a[i++] = new TestObject(
+  "dt.setObject( MyObject )",
+  "dt.PUB_OBJECT",
+  "dt.getObject()",
+  "dt.getObject().constructor",
+  MyObject,
+  Function);
 
 var THIS = this;
 
 a[i++] = new TestObject(
-    "dt.setObject( THIS )",
-    "dt.PUB_OBJECT",
-    "dt.getObject()",
-    "dt.getObject().constructor",
-    this,
-    Object);
+  "dt.setObject( THIS )",
+  "dt.PUB_OBJECT",
+  "dt.getObject()",
+  "dt.getObject().constructor",
+  this,
+  Object);
 
 a[i++] = new TestObject(
-    "dt.setObject( Math )",
-    "dt.PUB_OBJECT",
-    "dt.getObject()",
-    "dt.getObject().constructor",
-    Math,
-    Object);
+  "dt.setObject( Math )",
+  "dt.PUB_OBJECT",
+  "dt.getObject()",
+  "dt.getObject().constructor",
+  Math,
+  Object);
 
 a[i++] = new TestObject(
-    "dt.setObject( Function )",
-    "dt.PUB_OBJECT",
-    "dt.getObject()",
-    "dt.getObject().constructor",
-    Function,
-    Function);
+  "dt.setObject( Function )",
+  "dt.PUB_OBJECT",
+  "dt.getObject()",
+  "dt.getObject().constructor",
+  Function,
+  Function);
 
 for ( i = 0; i < a.length; i++ ) {
-    new TestCase(
-	a[i].description +"; "+ a[i].javaFieldName,
-	a[i].jsValue,
-	a[i].javaFieldValue );
+  new TestCase(
+    a[i].description +"; "+ a[i].javaFieldName,
+    a[i].jsValue,
+    a[i].javaFieldValue );
 
-    new TestCase(
-	a[i].description +"; " + a[i].javaMethodName,
-	a[i].jsValue,
-	a[i].javaMethodValue );
+  new TestCase(
+    a[i].description +"; " + a[i].javaMethodName,
+    a[i].jsValue,
+    a[i].javaMethodValue );
 
-    new TestCase(
-	a[i].javaTypeName,
-	a[i].jsType,
-	a[i].javaTypeValue );
+  new TestCase(
+    a[i].javaTypeName,
+    a[i].jsType,
+    a[i].javaTypeValue );
 }
 
 test();
 
 function MyObject( stringValue ) {
-    this.stringValue = String(stringValue);
-    this.toString = new Function( "return this.stringValue" );
+  this.stringValue = String(stringValue);
+  this.toString = new Function( "return this.stringValue" );
 }
 
 
 function TestObject( description, javaField, javaMethod, javaType,
 		     jsValue, jsType )
 {
-    eval (description );
+  eval (description );
 
-    this.description = description;
-    this.javaFieldName = javaField;
-    this.javaFieldValue = eval( javaField );
-    this.javaMethodName = javaMethod;
-    this.javaMethodValue = eval( javaMethod );
-    this.javaTypeName = javaType,
-	this.javaTypeValue = eval( javaType );
+  this.description = description;
+  this.javaFieldName = javaField;
+  this.javaFieldValue = eval( javaField );
+  this.javaMethodName = javaMethod;
+  this.javaMethodValue = eval( javaMethod );
+  this.javaTypeName = javaType,
+    this.javaTypeValue = eval( javaType );
 
-    this.jsValue   = jsValue;
-    this.jsType      = jsType;
+  this.jsValue   = jsValue;
+  this.jsType      = jsType;
 }

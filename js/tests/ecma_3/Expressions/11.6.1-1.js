@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    14 Mar 2003
  * SUMMARY: Testing left-associativity of the + operator
@@ -46,8 +48,9 @@
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = '11.6.1-1.js';
 var UBound = 0;
-var bug = 196290;
+var BUGNUMBER = 196290;
 var summary = 'Testing left-associativity of the + operator';
 var status = '';
 var statusitems = [];
@@ -161,7 +164,7 @@ function quoteThis(x)
 function test()
 {
   enterFunc('test');
-  printBugNumber(bug);
+  printBugNumber(BUGNUMBER);
   printStatus(summary);
 
   for (var i=0; i<UBound; i++)

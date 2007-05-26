@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '12.8-1-n.js';
+
 /**
    File Name:          12.8-1-n.js
    ECMA Section:       12.8 The break statement

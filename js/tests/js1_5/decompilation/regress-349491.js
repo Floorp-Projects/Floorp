@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-349491.js';
 //-----------------------------------------------------------------------------
-var bug = 349491;
+var BUGNUMBER = 349491;
 var summary = 'Incorrect decompilation due to assign to const';
 var actual = 'No Crash';
 var expect = 'No Crash';
@@ -48,7 +50,7 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   var a;

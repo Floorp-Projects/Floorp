@@ -39,6 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestsuite = 'e4x';
+
 /*
  * Report a failure in the 'accepted' manner
  */
@@ -50,23 +52,10 @@ function reportFailure (section, msg)
         print (FAILED + lines[i]);
 }
 
-function toPrinted(value)
-{
-  if (typeof value == "xml") {
-    return value.toXMLString();
-  } else {
-    return String(value);
-  }
-}
-
 function START(summary)
 {
-  printStatus(summary);
-}
-
-function BUG(bug)
-{
-  printBugNumber(bug);
+    SUMMARY = summary;
+    printStatus(summary);
 }
 
 function TEST(section, expected, actual)
@@ -74,106 +63,50 @@ function TEST(section, expected, actual)
     var expected_t = typeof expected;
     var actual_t = typeof actual;
     var output = "";
-    
-    if (expected_t != actual_t)
-        output += "Type mismatch, expected type " + expected_t + 
-            ", actual type " + actual_t + "\n";
-    else if (VERBOSE)
-        printStatus ("Expected type '" + actual_t + "' matched actual " +
-                     "type '" + expected_t + "'");
+   
+    SECTION = section;
+    EXPECTED = expected;
+    ACTUAL = actual;
 
-    if (expected != actual) {
-	output += "Expected value:\n" + toPrinted(expected) + "\nActual value:\n" + toPrinted(actual) + "\n";
-    }
-    else if (VERBOSE)
-        printStatus ("Expected value '" + toPrinted(actual) + "' matched actual value");
-
-    if (output != "")
-    {
-        reportFailure (section, output);   
-        return false;
-    }
-    else
-    {
-        print('PASSED! ' + section);
-    }
-    return true;
+    return reportCompare(expected, actual, inSection(section) + SUMMARY);
 }
 
 function TEST_XML(section, expected, actual)
 {
-  var actual_t = typeof actual;
-  var expected_t = typeof expected;
+    var actual_t = typeof actual;
+    var expected_t = typeof expected;
 
-  if (actual_t != "xml") {
-    // force error on type mismatch
-    return TEST(section, new XML(), actual);
-  }
-  
-  if (expected_t == "string") {
-    return TEST(section, expected, actual.toXMLString());
-  }
+    SECTION = section;
+    EXPECTED = expected;
+    ACTUAL = actual;
 
-  if (expected_t == "number") {
-    return TEST(section, String(expected), actual.toXMLString());
-  }
+    if (actual_t != "xml") {
+        // force error on type mismatch
+        return TEST(section, new XML(), actual);
+    }
+ 
+    if (expected_t == "string") {
+        return TEST(section, expected, actual.toXMLString());
+    }
 
-  reportFailure (section, "Bad TEST_XML usage: type of expected is "+expected_t+", should be number or string");
-  return false;
+    if (expected_t == "number") {
+        return TEST(section, String(expected), actual.toXMLString());
+    }
+ 
+    throw section + ": Bad TEST_XML usage: type of expected is " +
+        expected_t + ", should be number or string";
+
+    // suppress warning
+    return false;
 }
 
 function SHOULD_THROW(section)
 {
-  reportFailure(section, "Expected to generate exception, actual behavior: no exception was thrown");   
+    TEST(section, "exception", "no exception");
 }
 
 function END()
 {
-}
-
-function compareSource(n, expect, actual)
-{
-    // compare source
-    var expectP = expect.
-        replace(/([(){},.:\[\]])/mg, ' $1 ').
-        replace(/(\w+)/mg, ' $1 ').
-        replace(/<(\/)? (\w+) (\/)?>/mg, '<$1$2$3>').
-        replace(/\s+/mg, ' ').
-        replace(/new (\w+)\s*\(\s*\)/mg, 'new $1');
-
-    var actualP = actual.
-        replace(/([(){},.:\[\]])/mg, ' $1 ').
-        replace(/(\w+)/mg, ' $1 ').
-        replace(/<(\/)? (\w+) (\/)?>/mg, '<$1$2$3>').
-        replace(/\s+/mg, ' ').
-        replace(/new (\w+)\s*\(\s*\)/mg, 'new $1');
-
-    print('expect:\n' + expectP);
-    print('actual:\n' + actualP);
-
-    TEST(n, expectP, actualP);
-
-    // actual must be compilable if expect is?
-    try
-    {
-        var expectCompile = 'No Error';
-        var actualCompile;
-
-        eval(expect);
-        try
-        {
-            eval(actual);
-            actualCompile = 'No Error';
-        }
-        catch(ex1)
-        {
-            actualCompile = ex1 + '';
-        }
-        TEST(n, expectCompile, actualCompile);
-    }
-    catch(ex)
-    {
-    }
 }
 
 if (typeof options == 'function')

@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-310351.js';
 //-----------------------------------------------------------------------------
-var bug = 310351;
+var BUGNUMBER = 310351;
 var summary = 'Convert host "list" objects to arrays';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var nodeList = [];
@@ -52,7 +54,7 @@ else
 {
   printStatus('test using dummy array since no document available');
 }
-  
+ 
 var array = Array.prototype.slice.call(nodeList, 0);
 
 expect = 'Array';
@@ -75,8 +77,8 @@ for (var i = 0; i < saveLength; i++)
   if (array[i] != nodeList[i])
   {
     actual = false;
-    summary += ' Comparison failed: array[' + i + ']=' + array[i] + 
-                ', nodeList[' + i + ']=' + nodeList[i];
+    summary += ' Comparison failed: array[' + i + ']=' + array[i] +
+      ', nodeList[' + i + ']=' + nodeList[i];
     break;
   }
 }

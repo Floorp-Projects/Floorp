@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.4.23.js';
+
 START("13.4.4.23 - XML namespace()");
 
 TEST(1, true, XML.prototype.hasOwnProperty("namespace"));

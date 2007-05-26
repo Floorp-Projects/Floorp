@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = '11.13.2-5.js';
+
 /**
    File Name:          11.13.2-5.js
    ECMA Section:       11.13.2 Compound Assignment: -=

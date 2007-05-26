@@ -35,15 +35,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("11.1.1 - Attribute Identifiers");
+gTestfile = 'regress-301545.js';
 
-var bug = 301545;
-var summary = 'Do not crash when attribute-op name collides with local var';
+var summary = "11.1.1 - Attribute Identifiers Do not crash when " +
+    "attribute-op name collides with local var";
+var BUGNUMBER = 301545;
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 function TOCParser(aElement) {
   var href = aElement.@href;

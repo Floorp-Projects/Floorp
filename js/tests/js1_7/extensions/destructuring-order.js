@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'destructuring-order.js';
 //-----------------------------------------------------------------------------
-var bug     = "(none)";
+var BUGNUMBER     = "(none)";
 var summary = "Order of destructuring, destructuring in the presence of " +
-              "exceptions";
+  "exceptions";
 var actual, expect;
 
-printBugNumber(bug);
+printBugNumber(BUGNUMBER);
 printStatus(summary);
 
 /**************
@@ -101,46 +103,46 @@ var order = [];
 function objWithGetters()
 {
   return {
-           get j()
-           {
-             var rv = _j;
-             _g = _h = _i = _j = "FAILED";
-             _k = "PASSED";
-             order.push("j");
-             return rv;
-           },
-           get g()
-           {
-             var rv = _g;
-             _g = _i = _j = _k = "FAILED";
-             _h = "PASSED";
-             order.push("g");
-             return rv;
-           },
-           get i()
-           {
-             var rv = _i;
-             _g = _h = _i = _k = "FAILED";
-             _j = "PASSED";
-             order.push("i");
-             return rv;
-           },
-           get k()
-           {
-             var rv = _k;
-             _g = _h = _i = _j = _k = "FAILED";
-             order.push("k");
-             return rv;
-           },
-           get h()
-           {
-             var rv = _h;
-             _g = _h = _j = _k = "FAILED";
-             _i = "PASSED";
-             order.push("h");
-             return rv;
-           }
-         };
+    get j()
+    {
+      var rv = _j;
+      _g = _h = _i = _j = "FAILED";
+      _k = "PASSED";
+      order.push("j");
+      return rv;
+    },
+      get g()
+      {
+	var rv = _g;
+	_g = _i = _j = _k = "FAILED";
+	_h = "PASSED";
+	order.push("g");
+	return rv;
+      },
+	get i()
+	{
+	  var rv = _i;
+	  _g = _h = _i = _k = "FAILED";
+	  _j = "PASSED";
+	  order.push("i");
+	  return rv;
+	},
+	  get k()
+	  {
+	    var rv = _k;
+	    _g = _h = _i = _j = _k = "FAILED";
+	    order.push("k");
+	    return rv;
+	  },
+	    get h()
+	    {
+	      var rv = _h;
+	      _g = _h = _j = _k = "FAILED";
+	      _i = "PASSED";
+	      order.push("h");
+	      return rv;
+	    }
+  };
 }
 
 function partialEvalObj2()
@@ -153,7 +155,7 @@ try
   partialEvalObj();
   if (a !== "PASSED" || b !== "PASSED")
     throw "FAILED: lhs not mutated correctly during destructuring!\n" +
-          "a == " + a + ", b == " + b;
+      "a == " + a + ", b == " + b;
 
   partialEvalObj2();
   if (g !== "PASSED" ||
@@ -162,15 +164,15 @@ try
       j !== "PASSED" ||
       k !== "PASSED")
     throw "FAILED: order of property accesses wrong!\n" +
-          "order == " + order;
+      "order == " + order;
 
   partialEvalArr();
   if (c !== "PASSED" || d !== "PASSED" || e !== "PASSED")
     throw "FAILED: lhs not mutated correctly during destructuring!\n" +
-          "c == " + c +
-          ", d == " + d +
-          ", e == " + e +
-          ", f == " + f ;
+      "c == " + c +
+      ", d == " + d +
+      ", e == " + e +
+      ", f == " + f ;
 }
 catch (ex)
 {

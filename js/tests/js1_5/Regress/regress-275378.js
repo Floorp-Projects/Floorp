@@ -35,17 +35,19 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-275378.js';
 //-----------------------------------------------------------------------------
 // testcase by Martin Zvieger <martin.zvieger@sphinx.at>
 // if fails, will fail to run in browser due to syntax error
-var bug = 275378;
+var BUGNUMBER = 275378;
 var summary = 'Literal RegExp in case block should not give syntax error';
 var actual = '';
 var expect = '';
 
 var status;
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 
@@ -55,24 +57,24 @@ var tmpString= "XYZ";
 var tmpVal= 1;
 if (tmpVal == 1)
 {
-	// works
-	/ABC/.test(tmpString);
+  // works
+  /ABC/.test(tmpString);
 }
 switch(tmpVal)
 {
 case 1:
-	{
-		// works
-		/ABC/.test(tmpString);
-	}
-	break;
+{
+  // works
+  /ABC/.test(tmpString);
+}
+break;
 }
 switch(tmpVal)
 {
 case 1:
-	// fails with syntax error
-	/ABC/.test(tmpString);
-	break;
+  // fails with syntax error
+  /ABC/.test(tmpString);
+  break;
 }
 
 expect = actual = 'no error';

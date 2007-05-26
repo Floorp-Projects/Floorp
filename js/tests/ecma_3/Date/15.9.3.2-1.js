@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = '15.9.3.2-1.js';
 //-----------------------------------------------------------------------------
-var bug = 273292;
+var BUGNUMBER = 273292;
 var summary = '15.9.3.2  new Date(value)';
 var actual = '';
 var expect = '';
@@ -59,7 +61,7 @@ var invalidDateStrings = [
   "70/70/2004"
   ];
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 expect = 0;
@@ -71,7 +73,7 @@ for (i = 0; i < validDateStrings.length; i++)
   actual = date2 - date1;
 
   reportCompare(expect, actual, inSection(i) + ' ' +
-                                validDateStrings[i]);
+		validDateStrings[i]);
 }
 
 expect = true;
@@ -84,6 +86,6 @@ for (i = 0; i < invalidDateStrings.length; i++)
   actual = isNaN(date1);
 
   reportCompare(expect, actual, inSection(i + offset) + ' ' +
-                                invalidDateStrings[i] + ' is invalid.');
+		invalidDateStrings[i] + ' is invalid.');
 }
 

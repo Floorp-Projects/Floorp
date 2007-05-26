@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-352283.js';
 //-----------------------------------------------------------------------------
-var bug = 352283;
+var BUGNUMBER = 352283;
 var summary = 'decompilation of |let| block with |while|, |let|';
 var actual = '';
 var expect = '';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   var f;
   f = function() { while(w) {let (x) { let y; } } }
   expect = 'function() { while(w) {let (x) { let y; } } }';

@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.6.4.2-1.js';
+
 /**
    File Name:          15.6.4.2.js
    ECMA Section:       15.6.4.2-1 Boolean.prototype.toString()
@@ -56,7 +58,7 @@ var SECTION = "15.6.4.2-1";
 var VERSION = "ECMA_1";
 startTest();
 var TITLE   = "Boolean.prototype.toString()"
-writeHeaderToLog( SECTION + TITLE );
+  writeHeaderToLog( SECTION + TITLE );
 
 
 new TestCase( SECTION,   "new Boolean(1)",       "true",   (new Boolean(1)).toString() );

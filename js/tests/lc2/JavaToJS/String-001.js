@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'String-001.js';
+
 /**
    File Name:      String-001.js
    Description:

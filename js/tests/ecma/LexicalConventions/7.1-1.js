@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '7.1-1.js';
+
 /**
    File Name:          7.1-1.js
    ECMA Section:       7.1 White Space

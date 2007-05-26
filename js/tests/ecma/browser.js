@@ -50,40 +50,6 @@
  *      <script src="./mytest.js"></script>
  */
 
-var GLOBAL = this + '';
-
-function writeHeaderToLog( string ) {
-  string = String(string);
-
-  if (typeof dump == 'function')
-  {
-    dump( string + '\n');
-  }
-
-  string = string.replace(/[<>&]/g, htmlesc);
-
-  DocumentWrite( "<h2>" + string + "</h2>" );
-}
-
-function writeFormattedResult( expect, actual, string, passed ) {
-  string = String(string);
-
-  if (typeof dump == 'function')
-  {
-    dump( string + '\n');
-  }
-
-  string = string.replace(/[<>&]/g, htmlesc);
-
-  var s = "<tt>"+ string ;
-  s += "<b>" ;
-  s += ( passed ) ? "<font color=#009900> &nbsp;" + PASSED
-    : "<font color=#aa0000>&nbsp;" +  FAILED + expect + "</tt>";
-
-  DocumentWrite( s + "</font></b></tt><br>" );
-  return passed;
-}
-
 /*
  * The earlier versions of the test code used exceptions
  * to terminate the test script in "negative" test cases
@@ -93,62 +59,4 @@ function writeFormattedResult( expect, actual, string, passed ) {
  * the err online handler will assume that any error is a 
  * failure unless gExceptionExpected is true.
  */
-window.onerror = err;
-var gExceptionExpected = false;
-
-function err( msg, page, line ) {
-  var testcase;
-
-  optionsPush();
-
-  if (typeof(EXPECTED) == "undefined" || EXPECTED != "error") {
-    /*
-     * an unexpected exception occured
-     */
-    print( "Test failed with the message: " + msg );
-    testcase = new TestCase(SECTION, "unknown", "unknown", "unknown");
-    testcase.passed = false;
-    testcase.reason = "Error: " + msg + 
-      " Source File: " + page + " Line: " + line + ".";
-    if (document.location.href.indexOf('-n.js') != -1)
-    {
-      // negative test
-      testcase.passed = true;
-    }
-    return;
-  }
-
-  if (typeof SECTION == 'undefined')
-  {
-    SECTION = 'Unknown';
-  }
-  if (typeof DESCRIPTION == 'undefined')
-  {
-    DESCRIPTION = 'Unknown';
-  }
-  if (typeof EXPECTED == 'undefined')
-  {
-    EXPECTED = 'Unknown';
-  }
-
-  testcase = new TestCase(SECTION, DESCRIPTION, EXPECTED, "error");
-  testcase.reason += "Error: " + msg + 
-    " Source File: " + page + " Line: " + line + ".";
-  stopTest();
-
-  gDelayTestDriverEnd = false;
-  jsTestDriverEnd();
-
-  optionsReset();
-}
-
-var gVersion = 0;
-
-function version(v)
-{
-  if (v) { 
-    gVersion = v; 
-  } 
-  return gVersion; 
-}
 

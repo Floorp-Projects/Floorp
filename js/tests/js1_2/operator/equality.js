@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'equality.js';
+
 /**
    Filename:     equality.js
    Description:  'This tests the operator =='
@@ -52,23 +54,19 @@ var TITLE = 'operator "=="';
 writeHeaderToLog('Executing script: equality.js');
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-var count = 0;
-var testcases = new Array();
-
-	
 // the following two tests are incorrect
 //new TestCase( SECTION, "(new String('') == new String(''))       ",
 //                                            true,   (new String('') == new String('')));
-	
+
 //new TestCase( SECTION, "(new Boolean(true) == new Boolean(true)) ",
 //                                            true,   (new Boolean(true) == new Boolean(true)));
-	
+
 new TestCase( SECTION, "(new String('x') == 'x')                 ",
 	      false,   (new String('x') == 'x'));
-	
+
 new TestCase( SECTION, "('x' == new String('x'))                 ",
 	      false,   ('x' == new String('x')));
-	
-	
+
+
 test();
 

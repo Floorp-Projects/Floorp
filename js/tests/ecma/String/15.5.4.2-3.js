@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.5.4.2-3.js';
+
 /**
    File Name:          15.5.4.2-3.js
    ECMA Section:       15.5.4.2 String.prototype.toString()

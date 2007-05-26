@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,8 +35,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 07 July 2001
  *
  * SUMMARY: Regression test for Bugzilla bug 89474
@@ -44,21 +46,22 @@
  * This test used to crash the JS shell. This was discovered
  * by Darren DeRidder <darren.deridder@icarusproject.com
  */
-//-------------------------------------------------------------------------------------------------
-var bug = 89474;
+//-----------------------------------------------------------------------------
+var gTestfile = 'regress-89474.js';
+var BUGNUMBER = 89474;
 var summary = "Testing the JS shell doesn't crash on it.item()";
 var cnTest = 'it.item()';
 
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 test();
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
 
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   tryThis(cnTest); // Just testing that we don't crash on this

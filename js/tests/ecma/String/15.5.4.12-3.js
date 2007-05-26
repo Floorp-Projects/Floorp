@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = '15.5.4.12-3.js';
+
 /**
    File Name:          15.5.4.12-3.js
    ECMA Section:       15.5.4.12 String.prototype.toUpperCase()

@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'function-002.js';
+
 /**
  *  File Name:          function-002.js
  *  Description:
@@ -78,61 +81,61 @@ eval(dec1);
 eval(dec2);
 
 new TestCase(
-    SECTION,
-    "typeof f1",
-    "function",
-    typeof f1 );
+  SECTION,
+  "typeof f1",
+  "function",
+  typeof f1 );
 
 
 // force a function decompilation
 new TestCase(
-    SECTION,
-    "f1.toString() == dec1",
-    true,
-    StripSpaces(f1.toString()) == StripSpaces(dec1));
+  SECTION,
+  "f1.toString() == dec1",
+  true,
+  StripSpaces(f1.toString()) == StripSpaces(dec1));
 
 new TestCase(
-    SECTION,
-    "typeof f2",
-    "function",
-    typeof f2 );
+  SECTION,
+  "typeof f2",
+  "function",
+  typeof f2 );
 
 // force a function decompilation
 
 new TestCase(
-    SECTION,
-    "f2.toString() == dec2",
-    true,
-    StripSpaces(f2.toString().replace(/new Date\(\)/g, 'new Date')) == 
-    StripSpaces(dec2.replace(/new Date\(\)/g, 'new Date')));
+  SECTION,
+  "f2.toString() == dec2",
+  true,
+  StripSpaces(f2.toString().replace(/new Date\(\)/g, 'new Date')) ==
+  StripSpaces(dec2.replace(/new Date\(\)/g, 'new Date')));
 
 test();
 
 function StripSpaces( s ) {
-    var strippedString = "";
-    for ( var currentChar = 0; currentChar < s.length; currentChar++ ) {
-	if (!IsWhiteSpace(s.charAt(currentChar))) {
-	    strippedString += s.charAt(currentChar);
-	}
+  var strippedString = "";
+  for ( var currentChar = 0; currentChar < s.length; currentChar++ ) {
+    if (!IsWhiteSpace(s.charAt(currentChar))) {
+      strippedString += s.charAt(currentChar);
     }
-    return strippedString;
+  }
+  return strippedString;
 }
 
 function IsWhiteSpace( string ) {
-    var cc = string.charCodeAt(0);
+  var cc = string.charCodeAt(0);
 
-    switch (cc) {
-    case (0x0009):
-    case (0x000B):
-    case (0x000C):
-    case (0x0020):
-    case (0x000A):
-    case (0x000D):
-    case ( 59 ): // let's strip out semicolons, too
-	return true;
-	break;
-    default:
-	return false;
-    }
+  switch (cc) {
+  case (0x0009):
+  case (0x000B):
+  case (0x000C):
+  case (0x0020):
+  case (0x000A):
+  case (0x000D):
+  case ( 59 ): // let's strip out semicolons, too
+    return true;
+    break;
+  default:
+    return false;
+  }
 }
 

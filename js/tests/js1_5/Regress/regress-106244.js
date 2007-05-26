@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-106244.js';
 //-----------------------------------------------------------------------------
-var bug = 106244;
+var BUGNUMBER = 106244;
 var summary = 'No warning in strict mode if (a = b && c == d)...';
 var actual = '';
 var expect = 'test for equality (==) mistyped as assignment (=)?';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 options('strict');
@@ -54,9 +56,9 @@ var result;
 
 try
 {
-  if (a = b && c == d) 
+  if (a = b && c == d)
     result = true;
-  else 
+  else
     result = false;
 }
 catch(ex)
@@ -64,6 +66,6 @@ catch(ex)
   actual = ex.message;
 }
 
-print('result = ' + result); 
+print('result = ' + result);
 
 reportCompare(expect, actual, summary);

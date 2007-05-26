@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,21 +34,23 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    05 July 2002
  * SUMMARY: Testing local var having same name as switch label inside function
- * 
+ *
  * The code below crashed while compiling in JS1.1 or JS1.2
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=144834
  *
  */
 //-----------------------------------------------------------------------------
-var bug = 144834;
+gTestfile = 'regress-144834.js';
+var BUGNUMBER = 144834;
 var summary = 'Local var having same name as switch label inside function';
 
-print(bug);
+print(BUGNUMBER);
 print(summary);
 
 
@@ -57,7 +60,7 @@ function RedrawSched()
 
   switch (i)
   {
-    case MinBound :
+  case MinBound :
   }
 }
 

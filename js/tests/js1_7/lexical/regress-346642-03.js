@@ -35,8 +35,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-346642-03.js';
 //-----------------------------------------------------------------------------
-var bug = 346642;
+var BUGNUMBER = 346642;
 var summary = 'decompilation of destructuring assignment';
 var actual = '';
 var expect = '';
@@ -49,7 +51,7 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   expect = 'TypeError: NaN is not a constructor';
@@ -68,7 +70,7 @@ function test()
   actual = 'No Crash';
   try
   {
-    z = [1]; 
+    z = [1];
     let (x = (undefined ? 3 : z)) { x.t.g }
   }
   catch(ex)
@@ -81,9 +83,9 @@ function test()
   actual = 'No Crash';
   try
   {
-    z = [1]; 
+    z = [1];
     new Function("let (x = (undefined ? 3 : z)) { x.t.g }")()
-  }
+      }
   catch(ex)
   {
     actual = ex + '';
@@ -95,7 +97,7 @@ function test()
   try
   {
     with({x: (new (b = 1))}) (2).x
-  }
+      }
   catch(ex)
   {
     actual = ex + '';
@@ -143,7 +145,7 @@ function test()
   try
   {
     let (x=3) ((++x)())
-  }
+      }
   catch(ex)
   {
     actual = ex + '';

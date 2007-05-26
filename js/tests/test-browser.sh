@@ -8,6 +8,7 @@ source ${TEST_BIN}/library.sh
 TEST_JSEACH_TIMEOUT=${TEST_JSEACH_TIMEOUT:-240}
 TEST_JSEACH_PAGE_TIMEOUT=${TEST_JSEACH_PAGE_TIMEOUT:-240}
 
+TEST_WWW_JS=`pwd|sed "s|$TEST_DIR||"`
 #
 # options processing
 #
@@ -82,7 +83,7 @@ cat "$list" | while read url; do
 		-spider -start -quit \
 		-uri "$url" \
 		-depth 0 -timeout "$TEST_JSEACH_PAGE_TIMEOUT" \
-		-hook "http://$TEST_HTTP/tests/mozilla.org/js/userhookeach.js"; 
+		-hook "http://$TEST_HTTP$TEST_WWW_JS/userhookeach.js"; 
 done
 
 

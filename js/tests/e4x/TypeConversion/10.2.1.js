@@ -39,11 +39,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '10.2.1.js';
+
 START("10.2.1 - XML.toXMLString");
 
-var bug = 297025;
+var BUGNUMBER = 297025;
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 
 var n = 1;
 var actual;

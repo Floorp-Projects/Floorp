@@ -35,24 +35,26 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-243869.js';
 //-----------------------------------------------------------------------------
 // testcase from Alex Vincent
-var bug = 243869;
+var BUGNUMBER = 243869;
 var summary = 'Rethrown custom Errors should retain file and line number';
 var actual = '';
 var expect = 'Test Location:123';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-function bar() 
+function bar()
 {
-  try 
+  try
   {
     var f = new Error("Test Error", "Test Location", 123);
     throw f;
   }
-  catch(e) 
+  catch(e)
   {
     throw e;
   }
@@ -65,6 +67,6 @@ try
 catch(eb)
 {
   actual = eb.fileName + ':' + eb.lineNumber
-}
-  
+    }
+ 
 reportCompare(expect, actual, summary);

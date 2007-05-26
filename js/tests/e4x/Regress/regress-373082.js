@@ -36,13 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var bug = 373082;
+gTestfile = 'regress-373082.js';
+
+var BUGNUMBER = 373082;
 var summary = 'Simpler sharing of XML and XMLList functions';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 var l;
 

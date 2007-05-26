@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.8.2.15.js';
+
 /**
    File Name:          15.8.2.15.js
    ECMA Section:       15.8.2.15  Math.round(x)
@@ -138,7 +140,7 @@ new TestCase( SECTION,
 	      Infinity/Math.round(-0) );
 
 new TestCase( SECTION,
-	      "Math.round(Infinity)", 
+	      "Math.round(Infinity)",
 	      Number.POSITIVE_INFINITY,
 	      Math.round(Number.POSITIVE_INFINITY));
 

@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'parentheses.js';
+
 /**
    Filename:     parentheses.js
    Description:  'Tests regular expressions containing ()'

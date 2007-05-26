@@ -35,22 +35,24 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-256501.js';
 //-----------------------------------------------------------------------------
-var bug = 256501;
+var BUGNUMBER = 256501;
 var summary = 'Check Recursion';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 expect = 'error';
 
 try
-{  
+{ 
   var N = 100*1000;
   var buffer = new Array(N * 2 + 1);
-  for (var i = 0; i != N; ++i) 
+  for (var i = 0; i != N; ++i)
   {
     buffer[i] = 'do ';
     buffer[buffer.length - i - 1] = ' while(0);';

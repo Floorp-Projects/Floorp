@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.5.4.5.js';
+
 START("13.5.4.5 - XMLList children()");
 
 TEST(1, true, XMLList.prototype.hasOwnProperty("children"));
@@ -50,7 +52,7 @@ TEST(2, "xml", typeof(x.children()));
 TEST_XML(3, "", x.children());
 
 // Test with XMLList of size 1
-x += <alpha>one<bravo>two</bravo></alpha>;    
+x += <alpha>one<bravo>two</bravo></alpha>;   
 TEST(4, "xml", typeof(x.children()));
 
 correct = <>one<bravo>two</bravo></>;
@@ -72,7 +74,7 @@ TEST_XML(9, "", x.children());
 
 //get all grandchildren of the order that have the name price
 
-order = 
+order =
 <order>
     <customer>
         <name>John Smith</name>

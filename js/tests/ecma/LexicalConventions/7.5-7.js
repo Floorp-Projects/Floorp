@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '7.5-7.js';
+
 /**
    File Name:          7.5-7.js
    ECMA Section:       7.5 Identifiers

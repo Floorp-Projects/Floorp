@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'String.js';
+
 /**
    Filename:     String.js
    Description:  'This tests the function String(Object)'

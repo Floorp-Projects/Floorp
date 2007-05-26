@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-376052.js';
 //-----------------------------------------------------------------------------
-var bug = 376052;
+var BUGNUMBER = 376052;
 var summary = 'javascript.options.anonfunfix to allow function (){} expressions';
 var actual = '';
 var expect = '';
@@ -48,7 +50,7 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   if (typeof window != 'undefined')

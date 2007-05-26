@@ -35,8 +35,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-330569.js';
 //-----------------------------------------------------------------------------
-var bug = 330569;
+var BUGNUMBER = 330569;
 var summary = 'RegExp - throw InternalError on too complex regular expressions';
 var actual = '';
 var expect = '';
@@ -49,24 +51,24 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   var s;
   expect = 'InternalError: regular expression too complex';
-  
+ 
   s = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">' +
     '<html>\n' +
-    '<head>\n' + 
+    '<head>\n' +
     '<meta http-equiv="content-type" content="text/html; charset=windows-1250">\n' +
-    '<meta name="generator" content="PSPad editor, www.pspad.com">\n' + 
-    '<title></title>\n'+ 
+    '<meta name="generator" content="PSPad editor, www.pspad.com">\n' +
+    '<title></title>\n'+
     '</head>\n' +
-    '<body>\n' + 
+    '<body>\n' +
     '<!-- hello -->\n' +
     '<script language="JavaScript">\n' +
-    'var s = document. body. innerHTML;\n' + 
-    'var d = s. replace (/<!--(.*|\n)*-->/, "");\n' + 
+    'var s = document. body. innerHTML;\n' +
+    'var d = s. replace (/<!--(.*|\n)*-->/, "");\n' +
     'alert (d);\n' +
     '</script>\n' +
     '</body>\n' +

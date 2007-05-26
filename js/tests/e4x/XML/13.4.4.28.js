@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.4.28.js';
+
 START("13.4.4.28 - processingInsructions()");
 
 TEST(1, true, XML.prototype.hasOwnProperty("processingInstructions"));
@@ -58,7 +60,7 @@ correct = "<?xyz abc=\"123\" michael=\"wierd\"?>";
 
 TEST_XML(4, correct, x.processingInstructions("xyz"));
 
-// test XML-decl 
+// test XML-decl
 // Un-comment these tests when we can read in doc starting with PI.
 //x = new XML("<?xml version=\"1.0\" ?><alpha><bravo>one</bravo></alpha>");
 

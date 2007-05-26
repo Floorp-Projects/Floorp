@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    18 Feb 2002
  * SUMMARY: Testing re.exec(str) when re.lastIndex is < 0 or > str.length
@@ -46,7 +48,7 @@
  *
  *
  * From the ECMA-262 Final spec:
- * 
+ *
  * 15.10.6.2 RegExp.prototype.exec(string)
  * Performs a regular expression match of string against the regular
  * expression and returns an Array object containing the results of
@@ -73,7 +75,7 @@
  *
  *
  * So:
- * 
+ *
  * A. If the global flag is not set, |lastIndex| is set to 0
  *    before the match is attempted; thus the match is unaffected.
  *
@@ -94,8 +96,9 @@
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = '15.10.6.2-2.js';
 var i = 0;
-var bug = 76717;
+var BUGNUMBER = 76717;
 var summary = 'Testing re.exec(str) when re.lastIndex is < 0 or > str.length';
 var status = '';
 var statusmessages = new Array();
@@ -117,107 +120,107 @@ var expectedmatches = new Array();
 pattern = /abc/gi;
 string = 'AbcaBcabC';
 
-  status = inSection(1);
-  actualmatch = pattern.exec(string);
-  expectedmatch = Array('Abc');
-  addThis();
+status = inSection(1);
+actualmatch = pattern.exec(string);
+expectedmatch = Array('Abc');
+addThis();
 
-  status = inSection(2);
-  actualmatch = pattern.exec(string);
-  expectedmatch = Array('aBc');
-  addThis();
+status = inSection(2);
+actualmatch = pattern.exec(string);
+expectedmatch = Array('aBc');
+addThis();
 
-  status = inSection(3);
-  actualmatch = pattern.exec(string);
-  expectedmatch = Array('abC');
-  addThis();
+status = inSection(3);
+actualmatch = pattern.exec(string);
+expectedmatch = Array('abC');
+addThis();
 
-  /*
-   * At this point |lastIndex| is > string.length, so the match should be null -
-   */
-  status = inSection(4);
-  actualmatch = pattern.exec(string);
-  expectedmatch = null;
-  addThis();
+/*
+ * At this point |lastIndex| is > string.length, so the match should be null -
+ */
+status = inSection(4);
+actualmatch = pattern.exec(string);
+expectedmatch = null;
+addThis();
 
-  /*
-   * Now let's set |lastIndex| to -1, so the match should again be null -
-   */
-  status = inSection(5);
-  pattern.lastIndex = -1;
-  actualmatch = pattern.exec(string);
-  expectedmatch = null;
-  addThis();
+/*
+ * Now let's set |lastIndex| to -1, so the match should again be null -
+ */
+status = inSection(5);
+pattern.lastIndex = -1;
+actualmatch = pattern.exec(string);
+expectedmatch = null;
+addThis();
 
-  /*
-   * Now try some edge-case values. Thanks to the work done in
-   * http://bugzilla.mozilla.org/show_bug.cgi?id=124339, |lastIndex|
-   * is now stored as a double instead of a uint32 (unsigned integer).
-   *
-   * Note 2^32 -1 is the upper bound for uint32's, but doubles can go
-   * all the way up to Number.MAX_VALUE. So that's why we need cases
-   * between those two numbers.
-   */ 
-  status = inSection(6);
-  pattern.lastIndex = Math.pow(2,32);
-  actualmatch = pattern.exec(string);
-  expectedmatch = null;
-  addThis();
-  
-  status = inSection(7);
-  pattern.lastIndex = -Math.pow(2,32);
-  actualmatch = pattern.exec(string);
-  expectedmatch = null;
-  addThis();
+/*
+ * Now try some edge-case values. Thanks to the work done in
+ * http://bugzilla.mozilla.org/show_bug.cgi?id=124339, |lastIndex|
+ * is now stored as a double instead of a uint32 (unsigned integer).
+ *
+ * Note 2^32 -1 is the upper bound for uint32's, but doubles can go
+ * all the way up to Number.MAX_VALUE. So that's why we need cases
+ * between those two numbers.
+ */
+status = inSection(6);
+pattern.lastIndex = Math.pow(2,32);
+actualmatch = pattern.exec(string);
+expectedmatch = null;
+addThis();
+ 
+status = inSection(7);
+pattern.lastIndex = -Math.pow(2,32);
+actualmatch = pattern.exec(string);
+expectedmatch = null;
+addThis();
 
-  status = inSection(8);
-  pattern.lastIndex = Math.pow(2,32) + 1;
-  actualmatch = pattern.exec(string);
-  expectedmatch = null;
-  addThis();
+status = inSection(8);
+pattern.lastIndex = Math.pow(2,32) + 1;
+actualmatch = pattern.exec(string);
+expectedmatch = null;
+addThis();
 
-  status = inSection(9);
-  pattern.lastIndex = -(Math.pow(2,32) + 1);
-  actualmatch = pattern.exec(string);
-  expectedmatch = null;
-  addThis();
+status = inSection(9);
+pattern.lastIndex = -(Math.pow(2,32) + 1);
+actualmatch = pattern.exec(string);
+expectedmatch = null;
+addThis();
 
-  status = inSection(10);
-  pattern.lastIndex = Math.pow(2,32) * 2;
-  actualmatch = pattern.exec(string);
-  expectedmatch = null;
-  addThis();
+status = inSection(10);
+pattern.lastIndex = Math.pow(2,32) * 2;
+actualmatch = pattern.exec(string);
+expectedmatch = null;
+addThis();
 
-  status = inSection(11);
-  pattern.lastIndex = -Math.pow(2,32) * 2;
-  actualmatch = pattern.exec(string);
-  expectedmatch = null;
-  addThis();
+status = inSection(11);
+pattern.lastIndex = -Math.pow(2,32) * 2;
+actualmatch = pattern.exec(string);
+expectedmatch = null;
+addThis();
 
-  status = inSection(12);
-  pattern.lastIndex = Math.pow(2,40);
-  actualmatch = pattern.exec(string);
-  expectedmatch = null;
-  addThis();
+status = inSection(12);
+pattern.lastIndex = Math.pow(2,40);
+actualmatch = pattern.exec(string);
+expectedmatch = null;
+addThis();
 
-  status = inSection(13);
-  pattern.lastIndex = -Math.pow(2,40);
-  actualmatch = pattern.exec(string);
-  expectedmatch = null;
-  addThis();
+status = inSection(13);
+pattern.lastIndex = -Math.pow(2,40);
+actualmatch = pattern.exec(string);
+expectedmatch = null;
+addThis();
 
-  status = inSection(14);
-  pattern.lastIndex = Number.MAX_VALUE;
-  actualmatch = pattern.exec(string);
-  expectedmatch = null;
-  addThis();
+status = inSection(14);
+pattern.lastIndex = Number.MAX_VALUE;
+actualmatch = pattern.exec(string);
+expectedmatch = null;
+addThis();
 
-  status = inSection(15);
-  pattern.lastIndex = -Number.MAX_VALUE;
-  actualmatch = pattern.exec(string);
-  expectedmatch = null;
-  addThis();
-  
+status = inSection(15);
+pattern.lastIndex = -Number.MAX_VALUE;
+actualmatch = pattern.exec(string);
+expectedmatch = null;
+addThis();
+ 
 
 
 /******************************************************************************
@@ -233,105 +236,105 @@ string = 'AbcaBcabC';
 pattern = /abc/i;
 string = 'AbcaBcabC';
 
-  status = inSection(16);
-  actualmatch = pattern.exec(string);
-  expectedmatch = Array('Abc');
+status = inSection(16);
+actualmatch = pattern.exec(string);
+expectedmatch = Array('Abc');
+addThis();
+
+status = inSection(17);
+actualmatch = pattern.exec(string);
+expectedmatch = Array('Abc'); // NOT Array('aBc') as before -
+addThis();
+
+status = inSection(18);
+actualmatch = pattern.exec(string);
+expectedmatch = Array('Abc'); // NOT Array('abC') as before -
+addThis();
+
+/*
+ * At this point above, |lastIndex| WAS > string.length, but not here -
+ */
+status = inSection(19);
+actualmatch = pattern.exec(string);
+expectedmatch = Array('Abc') // NOT null as before -
   addThis();
 
-  status = inSection(17);
-  actualmatch = pattern.exec(string);
-  expectedmatch = Array('Abc'); // NOT Array('aBc') as before -
+/*
+ * Now let's set |lastIndex| to -1
+ */
+status = inSection(20);
+pattern.lastIndex = -1;
+actualmatch = pattern.exec(string);
+expectedmatch = Array('Abc') // NOT null as before -
   addThis();
 
-  status = inSection(18);
-  actualmatch = pattern.exec(string);
-  expectedmatch = Array('Abc'); // NOT Array('abC') as before -
+/*
+ * Now try some edge-case values. Thanks to the work done in
+ * http://bugzilla.mozilla.org/show_bug.cgi?id=124339, |lastIndex|
+ * is now stored as a double instead of a uint32 (unsigned integer).
+ *
+ * Note 2^32 -1 is the upper bound for uint32's, but doubles can go
+ * all the way up to Number.MAX_VALUE. So that's why we need cases
+ * between those two numbers.
+ */
+status = inSection(21);
+pattern.lastIndex = Math.pow(2,32);
+actualmatch = pattern.exec(string);
+expectedmatch = Array('Abc') // NOT null as before -
+  addThis();
+ 
+status = inSection(22);
+pattern.lastIndex = -Math.pow(2,32);
+actualmatch = pattern.exec(string);
+expectedmatch = Array('Abc') // NOT null as before -
   addThis();
 
-  /*
-   * At this point above, |lastIndex| WAS > string.length, but not here - 
-   */
-  status = inSection(19);
-  actualmatch = pattern.exec(string);
-  expectedmatch = Array('Abc') // NOT null as before -
+status = inSection(23);
+pattern.lastIndex = Math.pow(2,32) + 1;
+actualmatch = pattern.exec(string);
+expectedmatch = Array('Abc') // NOT null as before -
   addThis();
 
-  /*
-   * Now let's set |lastIndex| to -1
-   */
-  status = inSection(20);
-  pattern.lastIndex = -1;
-  actualmatch = pattern.exec(string);
-  expectedmatch = Array('Abc') // NOT null as before -
+status = inSection(24);
+pattern.lastIndex = -(Math.pow(2,32) + 1);
+actualmatch = pattern.exec(string);
+expectedmatch = Array('Abc') // NOT null as before -
   addThis();
 
-  /*
-   * Now try some edge-case values. Thanks to the work done in
-   * http://bugzilla.mozilla.org/show_bug.cgi?id=124339, |lastIndex|
-   * is now stored as a double instead of a uint32 (unsigned integer).
-   *
-   * Note 2^32 -1 is the upper bound for uint32's, but doubles can go
-   * all the way up to Number.MAX_VALUE. So that's why we need cases
-   * between those two numbers.
-   */ 
-  status = inSection(21);
-  pattern.lastIndex = Math.pow(2,32);
-  actualmatch = pattern.exec(string);
-  expectedmatch = Array('Abc') // NOT null as before -
-  addThis();
-  
-  status = inSection(22);
-  pattern.lastIndex = -Math.pow(2,32);
-  actualmatch = pattern.exec(string);
-  expectedmatch = Array('Abc') // NOT null as before -
+status = inSection(25);
+pattern.lastIndex = Math.pow(2,32) * 2;
+actualmatch = pattern.exec(string);
+expectedmatch = Array('Abc') // NOT null as before -
   addThis();
 
-  status = inSection(23);
-  pattern.lastIndex = Math.pow(2,32) + 1;
-  actualmatch = pattern.exec(string);
-  expectedmatch = Array('Abc') // NOT null as before -
+status = inSection(26);
+pattern.lastIndex = -Math.pow(2,32) * 2;
+actualmatch = pattern.exec(string);
+expectedmatch = Array('Abc') // NOT null as before -
   addThis();
 
-  status = inSection(24);
-  pattern.lastIndex = -(Math.pow(2,32) + 1);
-  actualmatch = pattern.exec(string);
-  expectedmatch = Array('Abc') // NOT null as before -
+status = inSection(27);
+pattern.lastIndex = Math.pow(2,40);
+actualmatch = pattern.exec(string);
+expectedmatch = Array('Abc') // NOT null as before -;
   addThis();
 
-  status = inSection(25);
-  pattern.lastIndex = Math.pow(2,32) * 2;
-  actualmatch = pattern.exec(string);
-  expectedmatch = Array('Abc') // NOT null as before -
+status = inSection(28);
+pattern.lastIndex = -Math.pow(2,40);
+actualmatch = pattern.exec(string);
+expectedmatch = Array('Abc') // NOT null as before -
   addThis();
 
-  status = inSection(26);
-  pattern.lastIndex = -Math.pow(2,32) * 2;
-  actualmatch = pattern.exec(string);
-  expectedmatch = Array('Abc') // NOT null as before -
+status = inSection(29);
+pattern.lastIndex = Number.MAX_VALUE;
+actualmatch = pattern.exec(string);
+expectedmatch = Array('Abc') // NOT null as before -
   addThis();
 
-  status = inSection(27);
-  pattern.lastIndex = Math.pow(2,40);
-  actualmatch = pattern.exec(string);
-  expectedmatch = Array('Abc') // NOT null as before -;
-  addThis();
-
-  status = inSection(28);
-  pattern.lastIndex = -Math.pow(2,40);
-  actualmatch = pattern.exec(string);
-  expectedmatch = Array('Abc') // NOT null as before -
-  addThis();
-
-  status = inSection(29);
-  pattern.lastIndex = Number.MAX_VALUE;
-  actualmatch = pattern.exec(string);
-  expectedmatch = Array('Abc') // NOT null as before -
-  addThis();
-
-  status = inSection(30);
-  pattern.lastIndex = -Number.MAX_VALUE;
-  actualmatch = pattern.exec(string);
-  expectedmatch = Array('Abc') // NOT null as before -
+status = inSection(30);
+pattern.lastIndex = -Number.MAX_VALUE;
+actualmatch = pattern.exec(string);
+expectedmatch = Array('Abc') // NOT null as before -
   addThis();
 
 
@@ -357,7 +360,7 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
   testRegExp(statusmessages, patterns, strings, actualmatches, expectedmatches);
   exitFunc ('test');

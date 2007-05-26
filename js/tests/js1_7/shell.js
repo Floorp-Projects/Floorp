@@ -39,9 +39,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestsuite = 'js1_7';
+
 // explicitly turn on js17
 if (typeof version != 'undefined')
 {
-    version(170);
+  version(170);
 }
 

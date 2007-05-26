@@ -40,9 +40,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '9.1.1.1.js';
+
 START('9.1.1.1 XML [[Get]]');
 
-var x = 
+var x =
 <alpha attr1="value1" attr2="value2">
     <bravo>
         one
@@ -75,7 +77,7 @@ correct += new XML("value1");
 correct += new XML("value2");
 TEST(11, correct, x.@*);
 
-x = 
+x =
 <alpha attr1="value1" attr2="value2">
     <bravo>
         one
@@ -89,7 +91,7 @@ correct = <><bravo>one<charlie>two</charlie></bravo>one<charlie>two</charlie>two
 TEST(12, correct, x..*);
 XML.prettyPrinting = true;
 
-x = 
+x =
 <alpha attr1="value1" attr2="value2">
     <bravo attr3="value3">
         one
@@ -137,7 +139,7 @@ x =
     <bravo>one</bravo>
 </alpha>;
 
-correct = 
+correct =
 <alpha>
     <bravo>
         one
@@ -155,7 +157,7 @@ x =
     <bravo>one</bravo>
 </alpha>;
 
-correct = 
+correct =
 <alpha>
     <bravo>
         one
@@ -173,7 +175,7 @@ x =
     <bravo>one</bravo>
 </alpha>;
 
-correct = 
+correct =
 <alpha>
     <bravo>
         one
@@ -192,7 +194,7 @@ x =
     <bravo>one</bravo>
 </alpha>;
 
-correct = 
+correct =
 <alpha>
     <bravo>
         one
@@ -210,7 +212,7 @@ x =
     <bravo>one</bravo>
 </alpha>;
 
-correct = 
+correct =
 <alpha>
     <bravo>
         one
@@ -228,7 +230,7 @@ x =
     <bravo>one</bravo>
 </alpha>;
 
-correct = 
+correct =
 <alpha>
     <bravo>
         one
@@ -246,7 +248,7 @@ x =
     <bravo>one</bravo>
 </alpha>;
 
-correct = 
+correct =
 <alpha>
     <bravo>one</bravo>
     <newChild>
@@ -260,7 +262,7 @@ x.child("newChild").charlie.delta = <delta>two</delta>;
 TEST(26, correct, x);
 
 // These should fail because the XMLList is size > 1
-x = 
+x =
 <alpha>
     <bravo>one</bravo>
     <bravo>two</bravo>
@@ -273,7 +275,7 @@ try {
     TEST(27, "TypeError", ex.name);
 }
 
-x = 
+x =
 <alpha>
     <bravo>one</bravo>
     <bravo>two</bravo>
@@ -286,7 +288,7 @@ try {
     TEST(28, "TypeError", ex.name);
 }
 
-x = 
+x =
 <alpha>
     <bravo>one</bravo>
     <bravo>two</bravo>

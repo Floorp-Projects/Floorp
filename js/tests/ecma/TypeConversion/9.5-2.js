@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '9.5-2.js';
+
 /**
    File Name:          9.5-2.js
    ECMA Section:       9.5  Type Conversion:  ToInt32
@@ -136,7 +138,7 @@ new TestCase( SECTION,   "3000000000.5 << 0",   ToInt32(3000000000.5),    300000
 new TestCase( SECTION,   "3000000000.75 << 0",  ToInt32(3000000000.75),   3000000000.75 << 0 );
 
 /*
- * Numbers between - 2^31 and - 2^32 
+ * Numbers between - 2^31 and - 2^32
  */
 new TestCase( SECTION,   "-2147483648.25 << 0",  ToInt32(-2147483648.25),   -2147483648.25 << 0 );
 new TestCase( SECTION,   "-2147483648.5 << 0",   ToInt32(-2147483648.5),    -2147483648.5 << 0 );

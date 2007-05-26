@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'boolean-002.js';
+
 /**
  *  Preferred Argument Conversion.
  *
@@ -43,20 +46,20 @@
 var SECTION = "Preferred argument conversion:  boolean";
 var VERSION = "1_4";
 var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-SECTION;
+  SECTION;
 startTest();
 
 var TEST_CLASS = new
-Packages.com.netscape.javascript.qa.lc3.bool.Boolean_002;
+  Packages.com.netscape.javascript.qa.lc3.bool.Boolean_002;
 
 new TestCase(
-    "TEST_CLASS.ambiguous( true )",
-    TEST_CLASS.expect(),
-    TEST_CLASS.ambiguous(true) );
+  "TEST_CLASS.ambiguous( true )",
+  TEST_CLASS.expect(),
+  TEST_CLASS.ambiguous(true) );
 
 new TestCase(
-    "TEST_CLASS.ambiguous( false )",
-    TEST_CLASS.expect(),
-    TEST_CLASS.ambiguous( false ) );
+  "TEST_CLASS.ambiguous( false )",
+  TEST_CLASS.expect(),
+  TEST_CLASS.ambiguous( false ) );
 
 test();

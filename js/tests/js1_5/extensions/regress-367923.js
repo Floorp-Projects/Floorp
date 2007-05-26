@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-367923.js';
 //-----------------------------------------------------------------------------
-var bug = 367923;
+var BUGNUMBER = 367923;
 var summary = 'strict warning for variable redeclares argument';
 var actual = '';
 var expect = '';
@@ -48,7 +50,7 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   print('This test will fail in Gecko prior to 1.9');
@@ -68,7 +70,7 @@ function test()
     actual = ex + '';
     print(ex);
   }
-  
+ 
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');

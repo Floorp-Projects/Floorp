@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = '15.4.4.11-01.js';
 //-----------------------------------------------------------------------------
-var bug = 312138;
+var BUGNUMBER = 312138;
 var summary = 'Array.sort should not eat exceptions';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 expect = "e=1 N=1";
@@ -50,8 +52,8 @@ var array = [4,3,2,1];
 
 try {
   array.sort(function() {
-    throw ++N;
-  }); 
+	       throw ++N;
+	     });
 } catch (e) {
   actual = ("e="+e+" N="+N);
 }

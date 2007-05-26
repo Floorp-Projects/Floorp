@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.9.5.22-8.js';
+
 /**
    File Name:          15.9.5.22.js
    ECMA Section:       15.9.5.22

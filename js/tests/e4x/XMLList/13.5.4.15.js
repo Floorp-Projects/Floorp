@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.5.4.15.js';
+
 START("13.5.4.15 - XMLList normalize()");
 
 TEST(1, true, XMLList.prototype.hasOwnProperty("normalize"));

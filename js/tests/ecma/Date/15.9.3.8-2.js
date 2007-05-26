@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = '15.9.3.8-2.js';
+
 /**
    File Name:          15.9.3.8.js
    ECMA Section:       15.9.3.8 The Date Constructor
@@ -90,8 +93,8 @@ var SECONDS     = 15;
 var MS          = 16;
 
 
-//  for TCMS, the testcases array must be global.
-var tc= 0;
+//  for TCMS, the gTestcases array must be global.
+var gTc= 0;
 var TITLE = "Date constructor:  new Date( value )";
 var SECTION = "15.9.3.8";
 var VERSION = "ECMA_1";
@@ -127,7 +130,7 @@ test();
 
 function addNewTestCase( DateCase, DateString, ResultArray ) {
   //adjust hard-coded ResultArray for tester's timezone instead of PST
-  adjustResultArray(ResultArray, 'msMode'); 
+  adjustResultArray(ResultArray, 'msMode');
 
   new TestCase( SECTION, DateString+".getTime()", ResultArray[TIME],       DateCase.getTime() );
   new TestCase( SECTION, DateString+".valueOf()", ResultArray[TIME],       DateCase.valueOf() );

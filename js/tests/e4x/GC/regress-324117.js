@@ -36,31 +36,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("GC hazard during namespace scanning");
+gTestfile = 'regress-324117.js';
 
-var bug = 324117;
-var summary = 'GC hazard during namespace scanning';
+var summary = "GC hazard during namespace scanning";
+var BUGNUMBER = 324117;
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
-
-function prepare(N) 
+function prepare(N)
 {
     var xml = <xml/>;
-    var ns1 = new Namespace("text1");  
-    var ns2 = new Namespace("text2");  
+    var ns1 = new Namespace("text1"); 
+    var ns2 = new Namespace("text2"); 
     xml.addNamespace(ns1);
     xml.addNamespace(ns2);
 
     // Prepare list to trigger DeutschSchorrWaite call during GC
     cursor = xml;
     for (var i = 0; i != N; ++i) {
-        if (i % 2 == 0) 
+        if (i % 2 == 0)
             cursor = [ {a: 1}, cursor ];
-        else 
+        else
             cursor = [ cursor, {a: 1} ];
     }
     return cursor;

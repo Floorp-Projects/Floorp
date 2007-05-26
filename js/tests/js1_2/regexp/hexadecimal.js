@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'hexadecimal.js';
+
 /**
    Filename:     hexadecimal.js
    Description:  'Tests regular expressions containing \<number> '

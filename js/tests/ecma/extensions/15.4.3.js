@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.4.3.js';
+
 /**
    File Name:          15.4.3.js
    ECMA Section:       15.4.3 Properties of the Array Constructor
@@ -53,9 +55,9 @@ var TITLE   = "Properties of the Array Constructor";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,	
-	      "Array.__proto__",      
-	      Function.prototype,        
+new TestCase( SECTION,
+	      "Array.__proto__",     
+	      Function.prototype,       
 	      Array.__proto__ );
 
 test();

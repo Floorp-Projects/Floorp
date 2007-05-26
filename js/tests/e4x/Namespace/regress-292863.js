@@ -35,15 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("Undeclaring namespace prefix should cause parse error");
+gTestfile = 'regress-292863.js';
 
-var bug = 292863;
-var summary = 'Undeclaring namespace prefix should cause parse error';
+var summary = "Undeclaring namespace prefix should cause parse error";
+var BUGNUMBER = 292863;
 var actual = 'no error';
 var expect = 'error';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 try
 {

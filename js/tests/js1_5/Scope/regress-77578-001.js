@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,16 +34,18 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 2001-07-11
  *
  * SUMMARY: Testing eval scope inside a function.
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=77578
  */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+var gTestfile = 'regress-77578-001.js';
 var UBound = 0;
-var bug = 77578;
+var BUGNUMBER = 77578;
 var summary = 'Testing eval scope inside a function';
 var cnEquals = '=';
 var status = '';
@@ -70,7 +73,7 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   // Run tests A,B,C on each version of JS and store results

@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.9.5.24-2.js';
+
 /**
    File Name:          15.9.5.24-1.js
    ECMA Section:       15.9.5.24 Date.prototype.setTime(time)
@@ -50,7 +52,7 @@
 
 */
 var TITLE = "Date.prototype.setTime"
-var SECTION = "15.9.5.24-1";
+  var SECTION = "15.9.5.24-1";
 var VERSION = "ECMA_1";
 startTest();
 

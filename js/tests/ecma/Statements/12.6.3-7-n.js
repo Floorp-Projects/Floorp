@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '12.6.3-7-n.js';
+
 /**
    File Name:          12.6.3-1.js
    ECMA Section:       12.6.3 The for...in Statement
@@ -76,7 +78,6 @@ var SECTION = "12.6.3-4";
 var VERSION = "ECMA_1";
 startTest();
 var TITLE   = "The for..in statement";
-var error = err;
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

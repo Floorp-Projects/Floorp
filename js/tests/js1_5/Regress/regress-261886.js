@@ -35,13 +35,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-261886.js';
 //-----------------------------------------------------------------------------
-var bug = 261886;
+var BUGNUMBER = 261886;
 var summary = 'Always evaluate delete operand expression';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var o = {a:1};
@@ -57,5 +59,5 @@ catch(e)
   actual = o.a;
   summary += ' ' + e;
 }
-  
+ 
 reportCompare(expect, actual, summary);

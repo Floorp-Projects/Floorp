@@ -40,11 +40,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.4.15.js';
+
 START("13.4.4.15 - hasComplexContent()");
 
 TEST(1, true, XML.prototype.hasOwnProperty("hasComplexContent"));
 
-x = 
+x =
 <alpha attr1="value1">
     <bravo>one</bravo>
     <charlie>
@@ -72,6 +74,6 @@ TEST(8, false, x.hotel.hasComplexContent());
 TEST(9, false, x.@attr1.hasComplexContent());
 TEST(10, false, x.bravo.child(0).hasComplexContent());
 TEST(11, true, x.india.hasComplexContent());
-    
+   
 
 END();

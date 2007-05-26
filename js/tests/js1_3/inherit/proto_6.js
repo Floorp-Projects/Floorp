@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'proto_6.js';
+
 /**
    File Name:          proto_6.js
    Section:
@@ -63,32 +65,32 @@ startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 function Employee ( name, dept ) {
-    this.name = name || "";
-    this.dept = dept || "general";
+  this.name = name || "";
+  this.dept = dept || "general";
 }
 function Manager () {
-    this.reports = [];
+  this.reports = [];
 }
 Manager.prototype = new Employee();
 
 function WorkerBee ( name, dept, projs ) {
-    this.base = Employee;
-    this.base( name, dept)
-	this.projects = projs || new Array();
+  this.base = Employee;
+  this.base( name, dept)
+    this.projects = projs || new Array();
 }
 
 WorkerBee.prototype = new Employee();
 
 function SalesPerson () {
-    this.dept = "sales";
-    this.quota = 100;
+  this.dept = "sales";
+  this.quota = 100;
 }
 SalesPerson.prototype = new WorkerBee();
 
 function Engineer ( name, projs, machine ) {
-    this.base = WorkerBee;
-    this.base( name, "engineering", projs )
-	this.machine = machine || "";
+  this.base = WorkerBee;
+  this.base( name, "engineering", projs )
+    this.machine = machine || "";
 }
 Engineer.prototype = new WorkerBee();
 
@@ -100,8 +102,8 @@ var les = new WorkerBee( "Morris, Les",
 			 "Training",
 			 ["Hippo"] )
 
-    var terry = new Employee( "Boomberi, Terry",
-                              "Marketing" );
+  var terry = new Employee( "Boomberi, Terry",
+			    "Marketing" );
 
 // Pat, the Engineer
 

@@ -39,6 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'ToLong-001.js';
+
 /**
  *  JavaScript to Java type conversion.
  *
@@ -59,7 +61,7 @@
 var SECTION = "JavaScript Object to int";
 var VERSION = "1_4";
 var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-SECTION;
+  SECTION;
 startTest();
 
 var dt = new DT();
@@ -77,32 +79,32 @@ var i = 0;
 var bool = new Boolean(true);
 
 a[i++] = new TestObject(
-    "dt.setLong( bool )",
-    "dt.PUB_LONG",
-    "dt.getLong()",
-    "typeof dt.getLong()",
-    1,
-    "number");
+  "dt.setLong( bool )",
+  "dt.PUB_LONG",
+  "dt.getLong()",
+  "typeof dt.getLong()",
+  1,
+  "number");
 
 bool = new Boolean(false);
 
 a[i++] = new TestObject(
-    "dt.setLong( bool )",
-    "dt.PUB_LONG",
-    "dt.getLong()",
-    "typeof dt.getLong()",
-    0,
-    "number");
+  "dt.setLong( bool )",
+  "dt.PUB_LONG",
+  "dt.getLong()",
+  "typeof dt.getLong()",
+  0,
+  "number");
 
 var number = new Number(0);
 
 a[i++] = new TestObject(
-    "dt.setLong( number )",
-    "dt.PUB_LONG",
-    "dt.getLong()",
-    "typeof dt.getLong()",
-    0,
-    "number");
+  "dt.setLong( number )",
+  "dt.PUB_LONG",
+  "dt.getLong()",
+  "typeof dt.getLong()",
+  0,
+  "number");
 
 
 var long_max = java.lang.Short.MAX_VALUE;
@@ -111,102 +113,102 @@ var long_min = java.lang.Short.MIN_VALUE;
 var string  = new String(long_max);
 
 a[i++] = new TestObject(
-    "dt.setLong(string)",
-    "dt.PUB_LONG",
-    "dt.getLong()",
-    "typeof dt.getLong()",
-    long_max,
-    "number");
+  "dt.setLong(string)",
+  "dt.PUB_LONG",
+  "dt.getLong()",
+  "typeof dt.getLong()",
+  long_max,
+  "number");
 
 var string  = new String(long_min);
 
 a[i++] = new TestObject(
-    "dt.setLong(string)",
-    "dt.PUB_LONG",
-    "dt.getLong()",
-    "typeof dt.getLong()",
-    long_min,
-    "number");
+  "dt.setLong(string)",
+  "dt.PUB_LONG",
+  "dt.getLong()",
+  "typeof dt.getLong()",
+  long_min,
+  "number");
 
 var myobject = new MyObject( "5.5" );
 
 a[i++] = new TestObject(
-    "dt.setLong( myobject )",
-    "dt.PUB_LONG",
-    "dt.getLong()",
-    "typeof dt.getLong()",
-    5,
-    "number");
+  "dt.setLong( myobject )",
+  "dt.PUB_LONG",
+  "dt.getLong()",
+  "typeof dt.getLong()",
+  5,
+  "number");
 
 myobject = new MyOtherObject( "-107.5");
 
 a[i++] = new TestObject(
-    "dt.setLong( myobject )",
-    "dt.PUB_LONG",
-    "dt.getLong()",
-    "typeof dt.getLong()",
-    -107,
-    "number");
+  "dt.setLong( myobject )",
+  "dt.PUB_LONG",
+  "dt.getLong()",
+  "typeof dt.getLong()",
+  -107,
+  "number");
 
 myobject = new AnotherObject( "6666");
 
 a[i++] = new TestObject(
-    "dt.setLong( myobject )",
-    "dt.PUB_LONG",
-    "dt.getLong()",
-    "typeof dt.getLong()",
-    6666,
-    "number");
+  "dt.setLong( myobject )",
+  "dt.PUB_LONG",
+  "dt.getLong()",
+  "typeof dt.getLong()",
+  6666,
+  "number");
 
 for ( i = 0; i < a.length; i++ ) {
-    new TestCase(
-	a[i].description +"; "+ a[i].javaFieldName,
-	a[i].jsValue,
-	a[i].javaFieldValue );
+  new TestCase(
+    a[i].description +"; "+ a[i].javaFieldName,
+    a[i].jsValue,
+    a[i].javaFieldValue );
 
-    new TestCase(
-	a[i].description +"; " + a[i].javaMethodName,
-	a[i].jsValue,
-	a[i].javaMethodValue );
+  new TestCase(
+    a[i].description +"; " + a[i].javaMethodName,
+    a[i].jsValue,
+    a[i].javaMethodValue );
 
-    new TestCase(
-	a[i].javaTypeName,
-	a[i].jsType,
-	a[i].javaTypeValue );
+  new TestCase(
+    a[i].javaTypeName,
+    a[i].jsType,
+    a[i].javaTypeValue );
 }
 
 test();
 
 function MyObject( stringValue ) {
-    this.stringValue = String(stringValue);
-    this.toString = new Function( "return this.stringValue" );
+  this.stringValue = String(stringValue);
+  this.toString = new Function( "return this.stringValue" );
 }
 
 function MyOtherObject( value ) {
-    this.toString = null;
-    this.value = value;
-    this.valueOf = new Function( "return this.value" );
+  this.toString = null;
+  this.value = value;
+  this.valueOf = new Function( "return this.value" );
 }
 
 function AnotherObject( value ) {
-    this.toString = new Function( "return new Number(666)" );
-    this.value = value;
-    this.valueOf = new Function( "return this.value" );
+  this.toString = new Function( "return new Number(666)" );
+  this.value = value;
+  this.valueOf = new Function( "return this.value" );
 }
 
 function TestObject( description, javaField, javaMethod, javaType,
 		     jsValue, jsType )
 {
-    eval (description );
+  eval (description );
 
-    this.description = description;
-    this.javaFieldName = javaField;
-    this.javaFieldValue = eval( javaField );
-    this.javaMethodName = javaMethod;
-    this.javaMethodValue = eval( javaMethod );
-    this.javaTypeName = javaType,
-	this.javaTypeValue = eval( javaType );
+  this.description = description;
+  this.javaFieldName = javaField;
+  this.javaFieldValue = eval( javaField );
+  this.javaMethodName = javaMethod;
+  this.javaMethodValue = eval( javaMethod );
+  this.javaTypeName = javaType,
+    this.javaTypeValue = eval( javaType );
 
-    this.jsValue   = jsValue;
-    this.jsType      = jsType;
+  this.jsValue   = jsValue;
+  this.jsType      = jsType;
 }

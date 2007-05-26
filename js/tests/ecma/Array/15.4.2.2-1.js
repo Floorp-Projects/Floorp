@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.4.2.2-1.js';
+
 /**
    File Name:          15.4.2.2-1.js
    ECMA Section:       15.4.2.2 new Array(len)
@@ -75,89 +77,89 @@ var TITLE   = "The Array Constructor:  new Array( len )";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,	
-	      "new Array(0)",             
-	      "",                 
+new TestCase( SECTION,
+	      "new Array(0)",            
+	      "",                
 	      (new Array(0)).toString() );
 
-new TestCase( SECTION,	
-	      "typeof new Array(0)",      
-	      "object",           
+new TestCase( SECTION,
+	      "typeof new Array(0)",     
+	      "object",          
 	      (typeof new Array(0)) );
 
-new TestCase( SECTION,	
-	      "(new Array(0)).length",    
-	      0,                  
+new TestCase( SECTION,
+	      "(new Array(0)).length",   
+	      0,                 
 	      (new Array(0)).length );
 
-new TestCase( SECTION,	
-	      "(new Array(0)).toString", 
-	      Array.prototype.toString,    
+new TestCase( SECTION,
+	      "(new Array(0)).toString",
+	      Array.prototype.toString,   
 	      (new Array(0)).toString );
 
-new TestCase( SECTION,   
-	      "new Array(1)",            
-	      "",                 
+new TestCase( SECTION,  
+	      "new Array(1)",           
+	      "",                
 	      (new Array(1)).toString() );
 
-new TestCase( SECTION,   
-	      "new Array(1).length",     
-	      1,                  
+new TestCase( SECTION,  
+	      "new Array(1).length",    
+	      1,                 
 	      (new Array(1)).length );
 
-new TestCase( SECTION,   
-	      "(new Array(1)).toString", 
-	      Array.prototype.toString,   
+new TestCase( SECTION,  
+	      "(new Array(1)).toString",
+	      Array.prototype.toString,  
 	      (new Array(1)).toString );
 
-new TestCase( SECTION,	
-	      "(new Array(-0)).length",                       
-	      0,  
+new TestCase( SECTION,
+	      "(new Array(-0)).length",                      
+	      0, 
 	      (new Array(-0)).length );
 
-new TestCase( SECTION,	
-	      "(new Array(0)).length",                        
-	      0,  
+new TestCase( SECTION,
+	      "(new Array(0)).length",                       
+	      0, 
 	      (new Array(0)).length );
 
-new TestCase( SECTION,	
-	      "(new Array(10)).length",           
-	      10,         
+new TestCase( SECTION,
+	      "(new Array(10)).length",          
+	      10,        
 	      (new Array(10)).length );
 
-new TestCase( SECTION,	
-	      "(new Array('1')).length",          
-	      1,          
+new TestCase( SECTION,
+	      "(new Array('1')).length",         
+	      1,         
 	      (new Array('1')).length );
 
-new TestCase( SECTION,	
-	      "(new Array(1000)).length",         
-	      1000,       
+new TestCase( SECTION,
+	      "(new Array(1000)).length",        
+	      1000,      
 	      (new Array(1000)).length );
 
-new TestCase( SECTION,	
-	      "(new Array('1000')).length",       
-	      1,          
+new TestCase( SECTION,
+	      "(new Array('1000')).length",      
+	      1,         
 	      (new Array('1000')).length );
 
-new TestCase( SECTION,	
-	      "(new Array(4294967295)).length",   
-	      ToUint32(4294967295),   
+new TestCase( SECTION,
+	      "(new Array(4294967295)).length",  
+	      ToUint32(4294967295),  
 	      (new Array(4294967295)).length );
 
-new TestCase( SECTION,	
-	      "(new Array('8589934592')).length", 
-	      1,                      
+new TestCase( SECTION,
+	      "(new Array('8589934592')).length",
+	      1,                     
 	      (new Array("8589934592")).length );
 
-new TestCase( SECTION,	
-	      "(new Array('4294967296')).length", 
-	      1,                      
+new TestCase( SECTION,
+	      "(new Array('4294967296')).length",
+	      1,                     
 	      (new Array("4294967296")).length );
 
-new TestCase( SECTION,	
-	      "(new Array(1073741824)).length",   
-	      ToUint32(1073741824),	
+new TestCase( SECTION,
+	      "(new Array(1073741824)).length",  
+	      ToUint32(1073741824),
 	      (new Array(1073741824)).length );
 
 test();

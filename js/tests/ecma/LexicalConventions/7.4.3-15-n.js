@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '7.4.3-15-n.js';
+
 /**
    File Name:          7.4.3-15-n.js
    ECMA Section:       7.4.3
@@ -87,9 +89,9 @@ if (actual == 'error')
   throw actual;
 }
 
-new TestCase( SECTION,  
-              "var import = true",     
-              "error",    
+new TestCase( SECTION, 
+              "var import = true",    
+              "error",   
               actual );
 
 test();

@@ -40,11 +40,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.4.21.js';
+
 START("13.4.4.21 - XML localName()");
 
 TEST(1, true, XML.prototype.hasOwnProperty("localName"));
 
-x = 
+x =
 <alpha>
     <bravo>one</bravo>
     <charlie>
@@ -60,7 +62,7 @@ y = x.bravo.localName();
 x.bravo.setNamespace("http://someuri");
 TEST(4, "bravo", y);
 
-x = 
+x =
 <foo:alpha xmlns:foo="http://foo/">
     <foo:bravo name="bar" foo:value="one">one</foo:bravo>
 </foo:alpha>;

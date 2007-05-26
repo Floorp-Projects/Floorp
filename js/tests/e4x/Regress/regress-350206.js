@@ -36,13 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var bug = 350206;
+gTestfile = 'regress-350206.js';
+
+var BUGNUMBER = 350206;
 var summary = 'Assertion failure: serial <= n in jsxml.c';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 var pa = <state1 xmlns="http://aaa" id="D1"><tag1/></state1>
 var ch = <state2 id="D2"><tag2/></state2>

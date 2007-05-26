@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.4.11.js';
+
 START("13.4.4.11 - XML copy()");
 
 TEST(1, true, XML.prototype.hasOwnProperty("copy"));
@@ -57,7 +59,7 @@ x = emps.employee[0].copy();
 
 TEST(2, null, x.parent());
 TEST(3, correct, x);
- 
+
 // Make sure we're getting a copy, not a ref to orig.
 emps =
 <employees>

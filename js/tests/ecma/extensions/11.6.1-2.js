@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '11.6.1-2.js';
+
 /**
    File Name:          11.6.1-2.js
    ECMA Section:       11.6.1 The addition operator ( + )

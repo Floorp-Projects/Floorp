@@ -40,13 +40,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.3.js';
+
 START("13.4.3 - XML Properties");
 
 // Test defaults
-TEST(1, true, XML.ignoreComments);    
-TEST(2, true, XML.ignoreProcessingInstructions);    
-TEST(3, true, XML.ignoreWhitespace);    
-TEST(4, true, XML.prettyPrinting);    
+TEST(1, true, XML.ignoreComments);   
+TEST(2, true, XML.ignoreProcessingInstructions);   
+TEST(3, true, XML.ignoreWhitespace);   
+TEST(4, true, XML.prettyPrinting);   
 TEST(5, 2, XML.prettyIndent);
 
 // ignoreComments
@@ -60,8 +62,8 @@ XML.ignoreComments = false;
 
 x = <alpha><!-- comment --><bravo>one</bravo></alpha>;
 
-correct = 
-"<alpha>\n" +   
+correct =
+"<alpha>\n" +  
 "  <!-- comment -->\n" +
 "  <bravo>one</bravo>\n" +
 "</alpha>";
@@ -71,7 +73,7 @@ TEST_XML(7, correct, x);
 
 // ignoreProcessingInstructions
 XML.setSettings();
-x = 
+x =
 <>
     <alpha>
         <?foo version="1.0" encoding="utf-8"?>
@@ -79,7 +81,7 @@ x =
     </alpha>
 </>;
 
-correct = 
+correct =
 <alpha>
     <bravo>one</bravo>
 </alpha>;
@@ -88,7 +90,7 @@ TEST(8, correct, x);
 
 XML.ignoreProcessingInstructions = false;
 
-x = 
+x =
 <>
     <alpha>
         <?foo version="1.0" encoding="utf-8"?>
@@ -96,8 +98,8 @@ x =
     </alpha>
 </>;
 
-correct = 
-"<alpha>\n" +   
+correct =
+"<alpha>\n" +  
 "  <?foo version=\"1.0\" encoding=\"utf-8\"?>\n" +
 "  <bravo>one</bravo>\n" +
 "</alpha>";
@@ -108,8 +110,8 @@ TEST_XML(9, correct, x);
 XML.setSettings();
 x = new XML("<alpha> \t\r\n\r\n<bravo> \t\r\n\r\none</bravo> \t\r\n\r\n</alpha>");
 
-correct = 
-"<alpha>\n" + 
+correct =
+"<alpha>\n" +
 "  <bravo>one</bravo>\n" +
 "</alpha>";
 
@@ -140,13 +142,13 @@ x =
 correct = "<alpha>\n" +
     "  one\n" +
     "  <bravo>two</bravo>\n" +
-    "  <charlie/>\n" + 
+    "  <charlie/>\n" +
     "  <delta>\n" +
     "    three\n" +
     "    <echo>four</echo>\n" +
     "  </delta>\n" +
     "</alpha>";
-    
+   
 TEST(12, correct, x.toString());
 TEST(13, correct, x.toXMLString());
 
@@ -163,7 +165,7 @@ XML.prettyIndent = 3;
 correct = "<alpha>\n" +
     "   one\n" +
     "   <bravo>two</bravo>\n" +
-    "   <charlie/>\n" + 
+    "   <charlie/>\n" +
     "   <delta>\n" +
     "      three\n" +
     "      <echo>four</echo>\n" +
@@ -178,7 +180,7 @@ XML.prettyIndent = 0;
 correct = "<alpha>\n" +
     "one\n" +
     "<bravo>two</bravo>\n" +
-    "<charlie/>\n" + 
+    "<charlie/>\n" +
     "<delta>\n" +
     "three\n" +
     "<echo>four</echo>\n" +
