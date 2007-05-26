@@ -38,12 +38,9 @@
 #include "nsView.h"
 #include "nsIWidget.h"
 #include "nsViewManager.h"
-#include "nsIWidget.h"
 #include "nsGUIEvent.h"
 #include "nsIDeviceContext.h"
 #include "nsIComponentManager.h"
-#include "nsIRenderingContext.h"
-#include "nsTransform2D.h"
 #include "nsIScrollableView.h"
 #include "nsGfxCIID.h"
 #include "nsIRegion.h"
@@ -344,6 +341,39 @@ void nsView::ResetWidgetBounds(PRBool aRecurse, PRBool aMoveOnly,
   }
 }
 
+nsRect nsView::CalcWidgetBounds(nsWindowType aType)
+{
+  nsCOMPtr<nsIDeviceContext> dx;
+  mViewManager->GetDeviceContext(*getter_AddRefs(dx));
+  NS_ASSERTION(dx, "View manager can't be created without a device context");
+  PRInt32 p2a = dx->AppUnitsPerDevPixel();
+
+  nsRect viewBounds(mDimBounds);
+
+  if (GetParent()) {
+    // put offset into screen coordinates
+    nsPoint offset;
+    nsIWidget* parentWidget = GetParent()->GetNearestWidget(&offset);
+    viewBounds += offset;
+
+    if (aType == eWindowType_popup && mVis == nsViewVisibility_kShow) {
+      nsRect screenRect(0,0,1,1);
+      parentWidget->WidgetToScreen(screenRect, screenRect);
+      viewBounds += nsPoint(NSIntPixelsToAppUnits(screenRect.x, p2a),
+                            NSIntPixelsToAppUnits(screenRect.y, p2a));
+    }
+  }
+
+  nsRect newBounds(viewBounds);
+  newBounds.ScaleRoundPreservingCenters(1.0f / p2a);
+
+  nsPoint roundedOffset(NSIntPixelsToAppUnits(newBounds.x, p2a),
+                        NSIntPixelsToAppUnits(newBounds.y, p2a));
+  mViewToWidgetOffset = viewBounds.TopLeft() - roundedOffset;
+
+  return newBounds;
+}
+
 void nsView::DoResetWidgetBounds(PRBool aMoveOnly,
                                  PRBool aInvalidateChangedSize) {
   // The geometry of a root view's widget is controlled externally,
@@ -367,38 +397,11 @@ void nsView::DoResetWidgetBounds(PRBool aMoveOnly,
   }
 
   NS_PRECONDITION(mWindow, "Why was this called??");
-  nsIDeviceContext  *dx;
-  
-  mViewManager->GetDeviceContext(dx);
-  PRInt32 p2a = dx->AppUnitsPerDevPixel();
-  NS_RELEASE(dx);
 
-  nsPoint offset(0, 0);
-  if (GetParent()) {
-    nsIWidget* parentWidget = GetParent()->GetNearestWidget(&offset);
-    
-    if (type == eWindowType_popup) {
-      // put offset into screen coordinates
-      nsRect screenRect(0,0,1,1);
-      parentWidget->WidgetToScreen(screenRect, screenRect);
-      offset += nsPoint(NSIntPixelsToAppUnits(screenRect.x, p2a),
-                        NSIntPixelsToAppUnits(screenRect.y, p2a));
-    }
-  }
+  nsRect newBounds = CalcWidgetBounds(type);
 
-  nsRect viewBounds(mDimBounds + offset);
-
-  nsRect newBounds(viewBounds);
-  newBounds.ScaleRoundPreservingCenters(1.0f / p2a);
-
-  PRBool changedPos = PR_TRUE;
-  PRBool changedSize = PR_TRUE;
-  if (!(mVFlags & NS_VIEW_FLAG_HAS_POSITIONED_WIDGET)) {
-    mVFlags |= NS_VIEW_FLAG_HAS_POSITIONED_WIDGET;
-  } else {
-    changedPos = curBounds.TopLeft() != newBounds.TopLeft();
-    changedSize = curBounds.Size() != newBounds.Size();
-  }
+  PRBool changedPos = curBounds.TopLeft() != newBounds.TopLeft();
+  PRBool changedSize = curBounds.Size() != newBounds.Size();
 
   if (changedPos) {
     if (changedSize && !aMoveOnly) {
@@ -412,10 +415,6 @@ void nsView::DoResetWidgetBounds(PRBool aMoveOnly,
       mWindow->Resize(newBounds.width, newBounds.height, aInvalidateChangedSize);
     } // else do nothing!
   }
-
-  nsPoint roundedOffset(NSIntPixelsToAppUnits(newBounds.x, p2a),
-                        NSIntPixelsToAppUnits(newBounds.y, p2a));
-  mViewToWidgetOffset = viewBounds.TopLeft() - roundedOffset;
 }
 
 void nsView::SetDimensions(const nsRect& aRect, PRBool aPaint, PRBool aResizeWidget)
@@ -610,9 +609,6 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
                                PRBool aResetVisibility,
                                nsContentType aContentType)
 {
-  nsIDeviceContext  *dx;
-  nsRect            trect = mDimBounds;
-
   if (NS_UNLIKELY(mWindow)) {
     NS_ERROR("We already have a window for this view? BAD");
     ViewWrapper* wrapper = GetWrapperFor(mWindow);
@@ -621,16 +617,17 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
     NS_RELEASE(mWindow);
   }
 
-  mViewManager->GetDeviceContext(dx);
-  float scale = 1.0f / dx->AppUnitsPerDevPixel();
-
-  trect *= scale;
-
   nsView* v = NS_STATIC_CAST(nsView*, this);
+
+  nsRect trect = v->CalcWidgetBounds(aWidgetInitData
+                                     ? aWidgetInitData->mWindowType
+                                     : eWindowType_child);
+
   if (NS_OK == v->LoadWidget(aWindowIID))
   {
     PRBool usewidgets;
-
+    nsCOMPtr<nsIDeviceContext> dx;
+    mViewManager->GetDeviceContext(*getter_AddRefs(dx));
     dx->SupportsNativeWidgets(usewidgets);
 
     if (PR_TRUE == usewidgets)
@@ -654,11 +651,8 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
         if (!initDataPassedIn && GetParent() && 
           GetParent()->GetViewManager() != mViewManager)
           initData.mListenForResizes = PR_TRUE;
-
-        nsPoint offset(0, 0);
-        nsIWidget* parentWidget = GetParent() ? GetParent()->GetNearestWidget(&offset)
-          : nsnull;
-        trect += offset;
+        nsIWidget* parentWidget = GetParent() ? GetParent()->GetNearestWidget(nsnull)
+                                              : nsnull;
         if (aWidgetInitData->mWindowType == eWindowType_popup) {
           // Without a parent, we can't make a popup.  This can happen
           // when printing
@@ -677,16 +671,20 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
       
       // propagate the z-index to the widget.
       UpdateNativeWidgetZIndexes(v, FindNonAutoZIndex(v));
+    } else {
+      // We should tell the widget its size even if we don't create a
+      // native widget.  (At the moment, this doesn't really matter,
+      // but we might want it to work at some point.)
+      mWindow->Resize(trect.x, trect.y, trect.width, trect.height,
+                      PR_FALSE);
     }
   }
 
   //make sure visibility state is accurate
-  
+
   if (aResetVisibility) {
     v->SetVisibility(GetVisibility());
   }
-
-  NS_RELEASE(dx);
 
   return NS_OK;
 }
@@ -723,8 +721,6 @@ NS_IMETHODIMP nsView::SetWidget(nsIWidget *aWidget)
     mWindow->SetClientData(wrapper);
   }
 
-  mVFlags &= ~NS_VIEW_FLAG_HAS_POSITIONED_WIDGET;
-
   UpdateNativeWidgetZIndexes(this, FindNonAutoZIndex(this));
 
   return NS_OK;
@@ -749,7 +745,6 @@ nsresult nsView::LoadWidget(const nsCID &aClassIID)
     delete wrapper;
   }
 
-  mVFlags &= ~NS_VIEW_FLAG_HAS_POSITIONED_WIDGET;
   return rv;
 }
 
@@ -765,7 +760,7 @@ void nsIView::List(FILE* out, PRInt32 aIndent) const
     float p2t;
     nsIDeviceContext *dx;
     mViewManager->GetDeviceContext(dx);
-    p2t = dx->AppUnitsPerDevPixel();
+    p2t = (float) dx->AppUnitsPerDevPixel();
     NS_RELEASE(dx);
     mWindow->GetClientBounds(windowBounds);
     windowBounds *= p2t;

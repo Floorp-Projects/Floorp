@@ -58,24 +58,9 @@ class nsZPlaceholderView;
 
 // View flags private to the view module
 
-// indicates that the view is or contains a placeholder view
-#define NS_VIEW_FLAG_CONTAINS_PLACEHOLDER 0x0100
-
 // Flag to determine whether the view will check if events can be handled
 // by its children or just handle the events itself
 #define NS_VIEW_FLAG_DONT_CHECK_CHILDREN  0x0200
-
-// set if this view is clipping its normal descendants
-// to its bounds. When this flag is set, child views
-// bounds need not be inside this view's bounds.
-#define NS_VIEW_FLAG_CLIP_CHILDREN_TO_BOUNDS      0x0800
-
-// set if this view is clipping its descendants (including
-// placeholders) to its bounds
-#define NS_VIEW_FLAG_CLIP_PLACEHOLDERS_TO_BOUNDS  0x1000
-
-// set if this view has positioned its widget at least once
-#define NS_VIEW_FLAG_HAS_POSITIONED_WIDGET 0x2000
 
 class nsView : public nsIView
 {
@@ -222,11 +207,13 @@ public:
     return mViewToWidgetOffset;
   }
 
+  nsRect CalcWidgetBounds(nsWindowType aType);
+
 protected:
   // Do the actual work of ResetWidgetBounds, unconditionally.  Don't
   // call this method if we have no widget.
   void DoResetWidgetBounds(PRBool aMoveOnly, PRBool aInvalidateChangedSize);
-  
+
   nsZPlaceholderView* mZParent;
 
   // mClipRect is relative to the view's origin.
