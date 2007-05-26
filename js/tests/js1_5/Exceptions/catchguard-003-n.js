@@ -38,35 +38,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var gTestfile = 'catchguard-003-n.js';
+
 DESCRIPTION = "Illegally constructed catchguard should have thrown an exception.";
 EXPECTED = "error";
+
+var expect;
+var actual;
 
 test();
 
 function test()
 {
-    enterFunc ("test");
+  enterFunc ("test");
 
-    var EXCEPTION_DATA = "String exception";
-    var e;
+  var EXCEPTION_DATA = "String exception";
+  var e;
 
-    printStatus ("Catchguard syntax negative test #2.");
-    
-    try 
-    {    
-        throw EXCEPTION_DATA;   
-    }
-    catch (e) 
-    {   
+  printStatus ("Catchguard syntax negative test #2.");
+   
+  try
+  {   
+    throw EXCEPTION_DATA;  
+  }
+  catch (e)
+  {  
+    actual = e + ': 1';
+  }
+  catch (e) /* two non-guarded catch statements shoud generate an error */
+  {
+    actual = e + ': 2';
+  }
 
-    }
-    catch (e) /* two non-guarded catch statements shoud generate an error */
-    {
+  reportCompare(expect, actual, DESCRIPTION);
 
-    }
-
-    reportFailure ("Illegally constructed catchguard should have thrown " +
-                   "an exception.");
-
-    exitFunc ("test");
+  exitFunc ("test");
 }

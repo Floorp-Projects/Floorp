@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'method-005.js';
+
 /**
    File Name:      method-005.js
    Description:
@@ -73,20 +75,20 @@ var mo = new MyObject();
 var c = mo.classForName( "java.lang.String" );
 
 new TestCase(
-    SECTION,
-    "var mo = new MyObject(); "+
-    "var c = mo.classForName(\"java.lang.String\");" +
-    "c.equals(java.lang.Class.forName(\"java.lang.String\))",
-    true,
-    c.equals(java.lang.Class.forName("java.lang.String")) );
+  SECTION,
+  "var mo = new MyObject(); "+
+  "var c = mo.classForName(\"java.lang.String\");" +
+  "c.equals(java.lang.Class.forName(\"java.lang.String\))",
+  true,
+  c.equals(java.lang.Class.forName("java.lang.String")) );
 
 
 
 test();
 
 function MyObject() {
-    this.println = java.lang.System.out.println;
-    this.classForName = java.lang.Class.forName;
-    return this;
+  this.println = java.lang.System.out.println;
+  this.classForName = java.lang.Class.forName;
+  return this;
 }
 

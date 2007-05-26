@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-351448.js';
 //-----------------------------------------------------------------------------
-var bug = 351448;
+var BUGNUMBER = 351448;
 var summary = 'RegExp - throw InternalError on too complex regular expressions';
 var actual = '';
 var expect = '';
@@ -48,28 +50,28 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   var strings = [
     "/.X(.+)+X/.exec('bbbbXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')",
     "/.X(.+)+X/.exec('bbbbXcXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')",
-    "/.X(.+)+XX/.exec('bbbbXXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')", 
+    "/.X(.+)+XX/.exec('bbbbXXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')",
     "/.X(.+)+XX/.exec('bbbbXcXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')",
-    "/.X(.+)+[X]/.exec('bbbbXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')", 
-    "/.X(.+)+[X]/.exec('bbbbXcXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')", 
-    "/.X(.+)+[X][X]/.exec('bbbbXXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')", 
-    "/.X(.+)+[X][X]/.exec('bbbbXcXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')", 
-    "/.XX(.+)+X/.exec('bbbbXXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')", 
+    "/.X(.+)+[X]/.exec('bbbbXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')",
+    "/.X(.+)+[X]/.exec('bbbbXcXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')",
+    "/.X(.+)+[X][X]/.exec('bbbbXXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')",
+    "/.X(.+)+[X][X]/.exec('bbbbXcXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')",
+    "/.XX(.+)+X/.exec('bbbbXXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')",
     "/.XX(.+)+X/.exec('bbbbXXcXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')",
     "/.XX(.+)+X/.exec('bbbbXXcXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')",
-    "/.XX(.+)+[X]/.exec('bbbbXXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')", 
-    "/.XX(.+)+[X]/.exec('bbbbXXcXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')", 
-    "/.[X](.+)+[X]/.exec('bbbbXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')", 
-    "/.[X](.+)+[X]/.exec('bbbbXcXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')", 
-    "/.[X](.+)+[X][X]/.exec('bbbbXXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')", 
-    "/.[X](.+)+[X][X]/.exec('bbbbXcXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')", 
-    "/.[X][X](.+)+[X]/.exec('bbbbXXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')", 
+    "/.XX(.+)+[X]/.exec('bbbbXXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')",
+    "/.XX(.+)+[X]/.exec('bbbbXXcXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')",
+    "/.[X](.+)+[X]/.exec('bbbbXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')",
+    "/.[X](.+)+[X]/.exec('bbbbXcXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')",
+    "/.[X](.+)+[X][X]/.exec('bbbbXXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')",
+    "/.[X](.+)+[X][X]/.exec('bbbbXcXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')",
+    "/.[X][X](.+)+[X]/.exec('bbbbXXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')",
     "/.[X][X](.+)+[X]/.exec('bbbbXXcXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')"
     ];
 
@@ -81,7 +83,7 @@ function test()
   {
     try
     {
-    eval(strings[i]);
+      eval(strings[i]);
     }
     catch(ex)
     {

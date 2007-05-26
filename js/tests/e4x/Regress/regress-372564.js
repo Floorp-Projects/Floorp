@@ -36,13 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var bug = 372564;
+gTestfile = 'regress-372564.js';
+
+var BUGNUMBER = 372564;
 var summary = 'Assertion failure: op == JSOP_ADD';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 (function() { return {a: @foo} <= 3;});
 

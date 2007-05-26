@@ -35,32 +35,35 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = '15.8.1.4-2.js';
+
 /**
-    File Name:          15.8.1.4-2.js
-    ECMA Section:       15.8.1.4.js
-    Description:        All value properties of the Math object should have
-                        the attributes [DontEnum, DontDelete, ReadOnly]
+   File Name:          15.8.1.4-2.js
+   ECMA Section:       15.8.1.4.js
+   Description:        All value properties of the Math object should have
+   the attributes [DontEnum, DontDelete, ReadOnly]
 
-                        this test checks the DontDelete attribute of Math.LOG2E
+   this test checks the DontDelete attribute of Math.LOG2E
 
-    Author:             christine@netscape.com
-    Date:               16 september 1997
+   Author:             christine@netscape.com
+   Date:               16 september 1997
 */
 
-    var SECTION = "15.8.1.4-2";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Math.LOG2E";
+var SECTION = "15.8.1.4-2";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Math.LOG2E";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION, 
-	      "delete(Math.L0G2E);Math.LOG2E", 
-	      1.4426950408889634,     
+new TestCase( SECTION,
+	      "delete(Math.L0G2E);Math.LOG2E",
+	      1.4426950408889634,    
 	      eval("delete(Math.LOG2E);Math.LOG2E") );
-new TestCase( SECTION, 
-	      "delete(Math.L0G2E)",            
-	      false,                  
+new TestCase( SECTION,
+	      "delete(Math.L0G2E)",           
+	      false,                 
 	      eval("delete(Math.LOG2E)") );
 
 test();

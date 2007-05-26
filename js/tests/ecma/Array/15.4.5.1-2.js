@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.4.5.1-2.js';
+
 /**
    File Name:          15.4.5.1-2.js
    ECMA Section:       [[ Put]] (P, V)
@@ -70,7 +72,7 @@
    15. Return.
 
 
-   These are testcases from Waldemar, detailed in
+   These are gTestcases from Waldemar, detailed in
    http://scopus.mcom.com/bugsplat/show_bug.cgi?id=123552
 
    Author:             christine@netscape.com

@@ -35,15 +35,17 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-335700.js';
 //-----------------------------------------------------------------------------
-var bug = 335700;
+var BUGNUMBER = 335700;
 var summary = 'Object Construction with getter closures should be O(N)';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
-  
+ 
 test('Object', Object);
 test('ObjectWithFunction', ObjectWithFunction);
 test('ObjectWithGetter', ObjectWithGetter);
@@ -58,7 +60,7 @@ function test(desc, ctor)
 
   var data = {X:[], Y:[]};
   for (var i = start; i <= stop; i += incr)
-  {  
+  { 
     data.X.push(i);
     data.Y.push(runStart(ctor, i));
     gc();
@@ -68,12 +70,12 @@ function test(desc, ctor)
 
   var msg = '';
   for (var p = 0; p < data.X.length; p++)
-  { 
+  {
     msg += '(' + data.X[p] + ', ' + data.Y[p] + '); ';
   }
 
   print(msg);
-  
+ 
   reportCompare(true, order < 2, desc + ': BigO ' + order + ' < 2');
 
 }
@@ -117,7 +119,7 @@ function runStart(ctor, limit)
     obj.Var = 42;
     arr.push(obj);
   }
-	
+
   var end = Date.now();
   var diff = end - start;
 

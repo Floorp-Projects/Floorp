@@ -40,12 +40,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '11.4.1.js';
+
 START("11.4.1 - Addition Operator");
 
 employeeData = <name>Fred</name> + <age>28</age> + <hobby>skiing</hobby>;
 TEST(1, "xml", typeof(employeeData));
 correct = <><name>Fred</name><age>28</age><hobby>skiing</hobby></>;
-TEST(2, correct, employeeData);    
+TEST(2, correct, employeeData);   
 
 order = <order>
         <item>
@@ -64,7 +66,7 @@ order = <order>
 
 correct =
 <item><description>Big Screen Television</description></item> +
-<item><description>CD Player</description></item> + 
+<item><description>CD Player</description></item> +
 <item><description>8-Track Player</description></item>;
 
 myItems = order.item[0] + order.item[2] + order.item[3];
@@ -73,8 +75,8 @@ TEST(4, correct, myItems);
 
 correct =
 <item><description>Big Screen Television</description></item> +
-<item><description>DVD Player</description></item> + 
-<item><description>CD Player</description></item> + 
+<item><description>DVD Player</description></item> +
+<item><description>CD Player</description></item> +
 <item><description>8-Track Player</description></item> +
 <item><description>New Item</description></item>;
 
@@ -82,7 +84,7 @@ newItems = order.item + <item><description>New Item</description></item>;
 TEST(5, "xml", typeof(newItems));
 TEST(6, correct, newItems);
 
-order = 
+order =
 <order>
     <item>
         <description>Big Screen Television</description>
@@ -111,7 +113,7 @@ totalPrice = Number(order.item[1].price) + Number(order.item[3].price);
 TEST(9, 469.98, totalPrice);
 
 
-order = 
+order =
 <order>
     <customer>
         <address>

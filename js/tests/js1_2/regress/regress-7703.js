@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'regress-7703.js';
+
 
 /**
  *  File Name:          regress-7703.js
@@ -69,10 +71,10 @@ startTest();               // leave this alone
 
 types = [];
 function inspect(object) {
-    for (prop in object) {
-	var x = object[prop];
-	types[types.length] = (typeof x);
-    }
+  for (prop in object) {
+    var x = object[prop];
+    types[types.length] = (typeof x);
+  }
 }
 
 var o = {a: 1, b: 2};
@@ -85,9 +87,9 @@ AddTestCase( "inspect(o)[1]",      "number", types[1] );
 types_2 = [];
 
 function inspect_again(object) {
-    for (prop in object) {
-	types_2[types_2.length] = (typeof object[prop]);
-    }
+  for (prop in object) {
+    types_2[types_2.length] = (typeof object[prop]);
+  }
 }
 
 inspect_again(o);

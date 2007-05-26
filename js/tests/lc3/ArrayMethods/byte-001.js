@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'byte-001.js';
+
 /**
  *  java array objects "inherit" JS string methods.  verify that byte arrays
  *  can inherit JavaScript Array object methods
@@ -50,32 +53,32 @@ startTest();
 var a = new Array();
 
 a[a.length] = new TestObject(
-    "var b"+a.length+" = new java.lang.String(\"hello\").getBytes(); b"+a.length+".join() +''",
-    "b"+a.length,
-    "join",
-    true,
-    "104,101,108,108,111" );
+  "var b"+a.length+" = new java.lang.String(\"hello\").getBytes(); b"+a.length+".join() +''",
+  "b"+a.length,
+  "join",
+  true,
+  "104,101,108,108,111" );
 
 a[a.length] = new TestObject(
-    "var b"+a.length+" = new java.lang.String(\"JavaScript\").getBytes(); b"+a.length+".reverse().join() +''",
-    "b"+a.length,
-    "reverse",
-    true,
-    getCharValues("tpircSavaJ") );
+  "var b"+a.length+" = new java.lang.String(\"JavaScript\").getBytes(); b"+a.length+".reverse().join() +''",
+  "b"+a.length,
+  "reverse",
+  true,
+  getCharValues("tpircSavaJ") );
 
 a[a.length] = new TestObject(
-    "var b"+a.length+" = new java.lang.String(\"JavaScript\").getBytes(); b"+a.length+".sort().join() +''",
-    "b"+a.length,
-    "sort",
-    true,
-    "105,112,114,116,118,74,83,97,97,99" );
+  "var b"+a.length+" = new java.lang.String(\"JavaScript\").getBytes(); b"+a.length+".sort().join() +''",
+  "b"+a.length,
+  "sort",
+  true,
+  "105,112,114,116,118,74,83,97,97,99" );
 
 a[a.length] = new TestObject(
-    "var b"+a.length+" = new java.lang.String(\"JavaScript\").getBytes(); b"+a.length+".sort().join() +''",
-    "b"+a.length,
-    "sort",
-    true,
-    "105,112,114,116,118,74,83,97,97,99" );
+  "var b"+a.length+" = new java.lang.String(\"JavaScript\").getBytes(); b"+a.length+".sort().join() +''",
+  "b"+a.length,
+  "sort",
+  true,
+  "105,112,114,116,118,74,83,97,97,99" );
 
 test();
 
@@ -83,10 +86,10 @@ test();
 // character in the string, separated by commas
 
 function getCharValues(string) {
-    for ( var c = 0, cString = ""; c < string.length; c++ ) {
-	cString += string.charCodeAt(c) + ((c+1 < string.length) ? "," : "");
-    }
-    return cString;
+  for ( var c = 0, cString = ""; c < string.length; c++ ) {
+    cString += string.charCodeAt(c) + ((c+1 < string.length) ? "," : "");
+  }
+  return cString;
 }
 
 // figure out what methods exist
@@ -97,35 +100,35 @@ function getCharValues(string) {
 // the method should call the java method
 
 function TestObject( description, ob, method, override, expect ) {
-    this.description = description;
-    this.object = ob;
-    this.method = method;
-    this.override = override
-        this.expect;
+  this.description = description;
+  this.object = ob;
+  this.method = method;
+  this.override = override
+    this.expect;
 
-    this.result = eval(description);
+  this.result = eval(description);
 
-    this.isJSMethod = eval( ob +"."+ method +" == Array.prototype." + method );
+  this.isJSMethod = eval( ob +"."+ method +" == Array.prototype." + method );
 
-    // verify result of method
+  // verify result of method
 
-    new TestCase(
-	description,
-	expect,
-	this.result );
+  new TestCase(
+    description,
+    expect,
+    this.result );
 
-    // verify that method is the method of Array.prototype
+  // verify that method is the method of Array.prototype
 
-    new TestCase(
-	ob +"." + method +" == Array.prototype." + method,
-	override,
-	this.isJSMethod );
+  new TestCase(
+    ob +"." + method +" == Array.prototype." + method,
+    override,
+    this.isJSMethod );
 
-    // verify that it's not cast to JS Array type
+  // verify that it's not cast to JS Array type
 
-    new TestCase(
-	ob + ".getClass().getName() +''",
-	"[B",
-	eval( ob+".getClass().getName() +''") );
+  new TestCase(
+    ob + ".getClass().getName() +''",
+    "[B",
+    eval( ob+".getClass().getName() +''") );
 
 }

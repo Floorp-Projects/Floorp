@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-329383.js';
 //-----------------------------------------------------------------------------
-var bug = 329383;
+var BUGNUMBER = 329383;
 var summary = 'Math copysign issues';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var inputs = [
@@ -78,28 +80,28 @@ var inputs = [
   9.01,
   10.01,
   Infinity
-];
+  ];
 
 var iinput;
 
 for (iinput = 0; iinput < inputs.length; iinput++)
 {
   var input = inputs[iinput];
-  reportCompare(Math.round(input), 
-                emulateRound(input), 
+  reportCompare(Math.round(input),
+                emulateRound(input),
                 summary + ': Math.round(' + input + ')');
 }
 
-reportCompare(isNaN(Math.round(NaN)), 
-              isNaN(emulateRound(NaN)), 
+reportCompare(isNaN(Math.round(NaN)),
+              isNaN(emulateRound(NaN)),
               summary + ': Math.round(' + input + ')');
 
 function emulateRound(x)
 {
   if (!isFinite(x) || x === 0) return x
-  if (-0.5 <= x && x < 0) return -0
-  return Math.floor(x + 0.5)
-}
+    if (-0.5 <= x && x < 0) return -0
+      return Math.floor(x + 0.5)
+      }
 
 var z;
 

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 30 October 2001
  *
  * SUMMARY: Regression test for bug 94257
@@ -45,8 +47,9 @@
  *                       arr[1+1] += 2;
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-94257.js';
 var UBound = 0;
-var bug = 94257;
+var BUGNUMBER = 94257;
 var summary = "Making sure we don't crash on this code -";
 var status = '';
 var statusitems = [];
@@ -105,7 +108,7 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   for (var i=0; i<UBound; i++)

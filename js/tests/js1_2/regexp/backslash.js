@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'backslash.js';
+
 /**
    Filename:     backslash.js
    Description:  'Tests regular expressions containing \'

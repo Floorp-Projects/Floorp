@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-346645-03.js';
 //-----------------------------------------------------------------------------
-var bug = 346645;
+var BUGNUMBER = 346645;
 var summary = 'Do not crash with non-empty array in destructuring assign LHS';
 var actual = 'No Crash';
 var expect = 'No Crash';
@@ -48,7 +50,7 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   try

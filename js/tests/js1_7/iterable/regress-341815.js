@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-341815.js';
 //-----------------------------------------------------------------------------
-var bug = 341815;
+var BUGNUMBER = 341815;
 var summary = 'Close hook crash';
 var actual = 'No Crash';
 var expect = 'No Crash';
@@ -48,7 +50,7 @@ var ialert = 0;
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   var globalToPokeGC = {};
@@ -75,7 +77,7 @@ function test()
   for (var i = 0; i != 50000; ++i) {
     var x = {};
   }
-  
+ 
   print('done');
   reportCompare(expect, actual, summary);
 
@@ -98,10 +100,10 @@ function runtest()
 
 if (typeof window != 'undefined')
 {
-    // delay test driver end
-    gDelayTestDriverEnd = true;
+  // delay test driver end
+  gDelayTestDriverEnd = true;
 
-    window.addEventListener("load", init, false);
+  window.addEventListener("load", init, false);
 }
 else
 {

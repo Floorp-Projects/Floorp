@@ -34,29 +34,31 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-317476.js';
 //-----------------------------------------------------------------------------
-var bug = 317476;
+var BUGNUMBER = 317476;
 var summary = 'The error thrown by JS_ReportError should be catchable';
 var actual = 'no error';
 var expect = 'no error';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 if (typeof setTimeout != 'undefined')
 {
   expect = 'error';
-  try 
-  { 
-    setTimeout(2); 
-  } 
-  catch(ex) 
+  try
+  {
+    setTimeout(2);
+  }
+  catch(ex)
   {
     actual = 'error';
     printStatus(ex+'');
   }
 }
 
-  
+ 
 
 reportCompare(expect, actual, summary);

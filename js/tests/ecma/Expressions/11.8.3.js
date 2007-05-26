@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '11.8.3.js';
+
 /**
    File Name:          11.8.3.js
    ECMA Section:       11.8.3  The less-than-or-equal operator ( <= )

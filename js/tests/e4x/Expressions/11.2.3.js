@@ -40,13 +40,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '11.2.3.js';
+
 START("11.2.3 - XML Descendant Accessor");
 
-e = 
+e =
 <employees>
     <employee id="1"><name>Joe</name><age>20</age></employee>
     <employee id="2"><name>Sue</name><age>30</age></employee>
-</employees>    
+</employees>   
 
 names = e..name;
 

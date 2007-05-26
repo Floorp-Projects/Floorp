@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.8.2.3.js';
+
 /**
    File Name:          15.8.2.3.js
    ECMA Section:       15.8.2.3 asin( x )

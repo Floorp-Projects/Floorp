@@ -34,12 +34,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'send-no-rhs.js';
 //-----------------------------------------------------------------------------
-var bug     = "(none)";
+var BUGNUMBER     = "(none)";
 var summary = "|it.send(o)| without an RHS";
 var actual, expect;
 
-printBugNumber(bug);
+printBugNumber(BUGNUMBER);
 printStatus(summary);
 
 /**************

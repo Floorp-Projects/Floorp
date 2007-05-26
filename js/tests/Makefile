@@ -15,7 +15,7 @@ excluded-n.tests: spidermonkey-n.tests slow-n.tests
 	cat $^ > $@
 
 spidermonkey-extensions-n.tests: $(TEST_JS)
-	find . -name '*.js' | grep -v shell.js | grep -v browser.js | grep '/extensions/' | sort > $@
+	find . -name '*.js' | grep -v shell.js | grep -v browser.js | grep '/extensions/' | sed 's|\.\/||' | sort > $@
 
 menu-list.txt:
 	echo "http://$(TEST_HTTP)/tests/mozilla.org/$(JSDIR)/menu.html" > menu-list.txt

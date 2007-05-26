@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.8.2.7.js';
+
 /**
    File Name:          15.8.2.7.js
    ECMA Section:       15.8.2.7 cos( x )

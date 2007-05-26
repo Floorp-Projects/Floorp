@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'RegExp_lastMatch_as_array.js';
+
 /**
    Filename:     RegExp_lastMatch_as_array.js
    Description:  'Tests RegExps $& property (same tests as RegExp_lastMatch.js but using $&)'

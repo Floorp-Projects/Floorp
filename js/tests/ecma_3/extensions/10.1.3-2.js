@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    11 Feb 2002
  * SUMMARY: Testing functions having duplicate formal parameter names
@@ -47,8 +49,9 @@
  * extensions to the language. So we include a test for them at the beginning -
  */
 //-----------------------------------------------------------------------------
+var gTestfile = '10.1.3-2.js';
 var UBound = 0;
-var bug = '(none)';
+var BUGNUMBER = '(none)';
 var summary = 'Testing functions having duplicate formal parameter names';
 var status = '';
 var statusitems = [];
@@ -147,7 +150,7 @@ function addThis()
 function test()
 {
   enterFunc('test');
-  printBugNumber(bug);
+  printBugNumber(BUGNUMBER);
   printStatus(summary);
 
   for (var i=0; i<UBound; i++)

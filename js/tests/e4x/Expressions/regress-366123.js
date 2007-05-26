@@ -36,13 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var bug = 366123;
+gTestfile = 'regress-366123.js';
+
+var BUGNUMBER = 366123;
 var summary = 'Compiling long XML filtering predicate';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 function exploit() {
   var code = "foo = <x/>.(", obj = {};

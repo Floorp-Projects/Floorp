@@ -36,15 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("Null pointer deref crash deleting XML methods");
+gTestfile = 'regress-331664.js';
 
-var bug = 331664;
-var summary = 'Null pointer deref crash deleting XML methods';
+var summary = "Null pointer deref crash deleting XML methods";
+var BUGNUMBER = 331664;
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 delete XML.prototype.attributes
 

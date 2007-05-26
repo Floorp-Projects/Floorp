@@ -34,15 +34,17 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = '8.6.1-01.js';
 //-----------------------------------------------------------------------------
 
-var bug = 315436;
+var BUGNUMBER = 315436;
 var summary = 'In strict mode, setting a read-only property should generate a warning';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-enterFunc (String (bug));
+enterFunc (String (BUGNUMBER));
 
 // should throw an error in strict mode
 var actual = '';
@@ -52,13 +54,13 @@ var status = summary + ': Throw if STRICT and WERROR is enabled';
 options('strict');
 options('werror');
 
-try 
-{ 
+try
+{
   var s = new String ('abc');
   s.length = 0;
-} 
-catch (e) 
-{ 
+}
+catch (e)
+{
   actual = e.message;
 }
 
@@ -73,12 +75,12 @@ var status = summary + ': Do not throw if STRICT is enabled and WERROR is disabl
 // toggle werror off
 options('werror');
 
-try 
-{ 
+try
+{
   s.length = 0;
-} 
-catch (e) 
-{ 
+}
+catch (e)
+{
   actual = e.message;
 }
 
@@ -93,12 +95,12 @@ var status = summary + ': Do not throw if not in strict mode';
 // toggle strict off
 options('strict');
 
-try 
-{ 
+try
+{
   s.length = 0;
-} 
-catch (e) 
-{ 
+}
+catch (e)
+{
   actual = e.message;
 }
 

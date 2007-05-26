@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Ria Klaassen
- *                 Gavin Sharp  
+ *                 Gavin Sharp 
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,17 +35,19 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-340369.js';
 //-----------------------------------------------------------------------------
-var bug = 340369;
+var BUGNUMBER = 340369;
 var summary = 'Oh for crying out loud.';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 try
-{  
+{ 
   eval('return /;');
 }
 catch(ex)

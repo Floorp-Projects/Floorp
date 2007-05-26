@@ -36,14 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/**
-File Name:          15.1.2.1-1.js
-ECMA Section:       15.1.2.1 eval(x)
+gTestfile = '15.1.2.1-1.js';
 
-if x is not a string object, return x.
-Description:
-Author:             christine@netscape.com
-Date:               16 september 1997
+/**
+   File Name:          15.1.2.1-1.js
+   ECMA Section:       15.1.2.1 eval(x)
+
+   if x is not a string object, return x.
+   Description:
+   Author:             christine@netscape.com
+   Date:               16 september 1997
 */
 var SECTION = "15.1.2.1-1";
 var VERSION = "ECMA_1";

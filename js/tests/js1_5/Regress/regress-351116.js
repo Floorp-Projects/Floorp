@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-351116.js';
 //-----------------------------------------------------------------------------
-var bug = 351116;
+var BUGNUMBER = 351116;
 var summary = 'formal parameter and inner function have same name';
 var actual = 'No Crash';
 var expect = 'No Crash';
@@ -47,9 +49,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   var f = function (s) { function s() { } }
 
   if (typeof window != 'undefined')

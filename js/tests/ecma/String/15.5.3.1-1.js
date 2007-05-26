@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.5.3.1-1.js';
+
 /**
    File Name:          15.5.3.1-1.js
    ECMA Section:       15.5.3.1 Properties of the String Constructor

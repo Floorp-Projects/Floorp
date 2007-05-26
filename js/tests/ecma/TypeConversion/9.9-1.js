@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '9.9-1.js';
+
 /**
    File Name:          9.9-1.js
    ECMA Section:       9.9  Type Conversion:  ToObject

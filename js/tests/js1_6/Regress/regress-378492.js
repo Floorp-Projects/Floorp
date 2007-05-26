@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-378492.js';
 //-----------------------------------------------------------------------------
-var bug = 378492;
+var BUGNUMBER = 378492;
 var summary = 'namespace_trace/qname_trace should check for null private, ' +
   'WAY_TOO_MUCH_GC';
 var actual = 'No Crash';
@@ -49,12 +51,12 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   options('xml');
 
-  x = <x/>; 
+  x = <x/>;
   for each(x.t in x) { }
 
   reportCompare(expect, actual, summary);

@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-355344.js';
 //-----------------------------------------------------------------------------
-var bug = 355344;
+var BUGNUMBER = 355344;
 var summary = 'Exceptions thrown by watch point';
 var actual = '';
 var expect = '';
@@ -48,29 +50,29 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   var o = {};
 
   expect = 'setter: yikes';
 
-  o.watch('x', function(){throw 'yikes'}); 
+  o.watch('x', function(){throw 'yikes'});
   try
   {
-    o.x = 3; 
+    o.x = 3;
   }
   catch(ex)
   {
     actual = "setter: " + ex;
   }
 
-  try 
-  { 
+  try
+  {
     eval("") ;
   }
-  catch(e) 
-  { 
+  catch(e)
+  {
     actual = "eval: " + e;
   }
 

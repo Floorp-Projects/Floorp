@@ -40,9 +40,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '11.3.1.js';
+
 START("11.3.1 - Delete Operator");
 
-order = 
+order =
 <order id="123456">
     <customer id="123">
         <firstname>John</firstname>
@@ -66,7 +68,7 @@ order =
         <price>399.99</price>
         <quantity>1</quantity>
     </item>
-</order>;    
+</order>;   
 
 // Delete the customer address
 correct =
@@ -92,13 +94,13 @@ correct =
         <price>399.99</price>
         <quantity>1</quantity>
     </item>
-</order>;    
+</order>;   
 
 delete order.customer.address;
 TEST_XML(1, "", order.customer.address);
 TEST(2, correct, order);
 
-order = 
+order =
 <order id="123456">
     <customer id="123">
         <firstname>John</firstname>
@@ -122,7 +124,7 @@ order =
         <price>399.99</price>
         <quantity>1</quantity>
     </item>
-</order>;    
+</order>;   
 
 // delete the custmomer ID
 correct =
@@ -149,13 +151,13 @@ correct =
         <price>399.99</price>
         <quantity>1</quantity>
     </item>
-</order>;    
+</order>;   
 
 delete order.customer.@id;
 TEST_XML(3, "", order.customer.@id);
 TEST(4, correct, order);
 
-order = 
+order =
 <order id="123456">
     <customer id="123">
         <firstname>John</firstname>
@@ -179,7 +181,7 @@ order =
         <price>399.99</price>
         <quantity>1</quantity>
     </item>
-</order>;    
+</order>;   
 
 // delete the first item price
 correct =
@@ -205,14 +207,14 @@ correct =
         <price>399.99</price>
         <quantity>1</quantity>
     </item>
-</order>;    
+</order>;   
 
 delete order.item.price[0];
 TEST_XML(5, "", order.item[0].price);
 TEST(6, <price>1299.99</price>, order.item.price[0]);
 TEST(7, order, correct);
 
-order = 
+order =
 <order id="123456">
     <customer id="123">
         <firstname>John</firstname>
@@ -236,7 +238,7 @@ order =
         <price>399.99</price>
         <quantity>1</quantity>
     </item>
-</order>;    
+</order>;   
 
 // delete all the items
 correct =<order id="123456">
@@ -247,10 +249,10 @@ correct =<order id="123456">
         <city>Bellevue</city>
         <state>WA</state>
     </customer>
-</order>;    
+</order>;   
 
 delete order.item;
-TEST_XML(8, "", order.item); 
+TEST_XML(8, "", order.item);
 TEST(9, correct, order);
 
 default xml namespace = "http://someuri";

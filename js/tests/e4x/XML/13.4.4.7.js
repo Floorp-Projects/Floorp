@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.4.7.js';
+
 START("13.4.4.7 - XML childIndex()");
 
 TEST(1, true, XML.prototype.hasOwnProperty("childIndex"));
@@ -56,5 +58,5 @@ TEST(2, 0, emps.employee[0].childIndex());
 TEST(3, 1, emps.employee.(age == "20").childIndex());
 
 TEST(4, 1, emps.employee.(name == "Joe").childIndex());
-    
+   
 END();

@@ -35,8 +35,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-230216-2.js';
 //-----------------------------------------------------------------------------
-var bug = 230216;
+var BUGNUMBER = 230216;
 var summary = 'check for numerical overflow in regexps in back reference and bounds for {} quantifier';
 var actual = '';
 var expect = '';
@@ -45,12 +47,12 @@ var status = '';
 DESCRIPTION = summary;
 EXPECTED = 'error';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 status = inSection(1) + ' check for overflow in quantifier';
 
-actual = 'undefined';  
+actual = 'undefined'; 
 expect = 'error';
 
 try

@@ -40,11 +40,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.4.20.js';
+
 START("13.4.4.20 - XML length()");
 
 TEST(1, true, XML.prototype.hasOwnProperty("length"));
 
-x = 
+x =
 <alpha attr1="value1">
     <bravo>one</bravo>
     <charlie>

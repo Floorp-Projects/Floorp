@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 28 December 2000
  *
  * SUMMARY: Testing regular expressions containing the ? character.
@@ -44,8 +46,9 @@
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-57572.js';
 var i = 0;
-var bug = 57572;
+var BUGNUMBER = 57572;
 var summary = 'Testing regular expressions containing "?"';
 var cnEmptyString = ''; var cnSingleSpace = ' ';
 var status = '';
@@ -140,7 +143,7 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
   testRegExp(statusmessages, patterns, strings, actualmatches, expectedmatches);
   exitFunc ('test');

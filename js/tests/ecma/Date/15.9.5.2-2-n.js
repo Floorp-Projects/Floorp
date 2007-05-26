@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.9.5.2-2-n.js';
+
 /**
    File Name:          15.9.5.2-2.js
    ECMA Section:       15.9.5.2 Date.prototype.toString

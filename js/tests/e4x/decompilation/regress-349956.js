@@ -36,13 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var bug = 349956;
+gTestfile = 'regress-349956.js';
+
+var BUGNUMBER = 349956;
 var summary = 'decompilation of <x/>.@*';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 var f;
 var g;
@@ -53,6 +55,6 @@ g = eval('(' + f + ')');
 expect = f + '';
 actual = g + '';
 
-compareSource(1, expect, actual);
+compareSource(expect, actual, inSection(1) + summary);
 
 END();

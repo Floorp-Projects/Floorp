@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'RegExp_lastMatch.js';
+
 /**
    Filename:     RegExp_lastMatch.js
    Description:  'Tests RegExps lastMatch property'

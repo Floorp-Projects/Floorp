@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-352605.js';
 //-----------------------------------------------------------------------------
-var bug = 352605;
+var BUGNUMBER = 352605;
 var summary = 'Do not assert with |yield|, nested xml-filtering predicate';
 var actual = 'No Crash';
 var expect = 'No Crash';
@@ -48,12 +50,12 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   expect = 'InternalError: yield not yet supported from filtering predicate';
   try
-  {  
+  { 
     (function() { <y/>.(<x/>.(false), (yield 3)) })().next();
   }
   catch(ex)

@@ -40,9 +40,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '9.2.1.1.js';
+
 START("9.2.1.1 XMLList [[Get]]");
 
-var x = 
+var x =
 <>
 <alpha attr1="value1">
     <bravo attr2="value2">
@@ -121,7 +123,7 @@ correct += new XML("value1");
 correct += new XML("value3");
 TEST(7, correct, x.@*);
 
-x = 
+x =
 <alpha attr1="value1" attr2="value2">
     <bravo>
         one
@@ -136,7 +138,7 @@ XML.prettyPrinting = false;
 TEST(8, correct, x..*);
 XML.prettyPrinting = true;
 
-x = 
+x =
 <alpha attr1="value1" attr2="value2">
     <bravo attr2="value3">
         one

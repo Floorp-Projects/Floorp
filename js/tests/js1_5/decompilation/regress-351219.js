@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-351219.js';
 //-----------------------------------------------------------------------------
-var bug = 351219;
+var BUGNUMBER = 351219;
 var summary = 'Decompilation of immutable infinity, NaN';
 var actual = '';
 var expect = '';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   var f = function () { return 2e308 };
   expect = 'function () { return 1 / 0; }';
   actual = f + '';

@@ -36,24 +36,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var bug = 351706;
+gTestfile = 'regress-351706.js';
+
+var BUGNUMBER = 351706;
 var summary = 'decompilation of E4X literals with parens';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 var f;
 
 f = function() { return <{m}/>.(y) }
 expect = 'function() { return (<{m}/>).(y); }';
 actual = f + '';
-compareSource(1, expect, actual);
+compareSource(expect, actual, inSection(1) + summary);
 
 f = function() { return (<{m}/>).(y) }
 expect = 'function() { return (<{m}/>).(y); }';
 actual = f + '';
-compareSource(2, expect, actual);
+compareSource(expect, actual, inSection(2) + summary);
 
 END();

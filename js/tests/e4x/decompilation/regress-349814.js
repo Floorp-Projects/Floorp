@@ -36,16 +36,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var bug = 349814;
+gTestfile = 'regress-349814.js';
+
+var BUGNUMBER = 349814;
 var summary = 'decompilation of e4x literals';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 var z = function ()
-{ 
+{
   a =
     <x>
       <y/>
@@ -55,6 +57,6 @@ var z = function ()
 expect = z + '';
 actual = (eval("(" + z + ")")) + '';
 
-compareSource(1, expect, actual);
+compareSource(expect, actual, inSection(1) + summary);
 
 END();

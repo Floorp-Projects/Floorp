@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,8 +35,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    18 Jun 2002
  * SUMMARY: Shouldn't crash when catch parameter is "hidden" by varX
@@ -43,8 +45,9 @@
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-146596.js';
 var UBound = 0;
-var bug = 146596;
+var BUGNUMBER = 146596;
 var summary = "Shouldn't crash when catch parameter is 'hidden' by varX";
 var status = '';
 var statusitems = [];
@@ -57,7 +60,7 @@ var expectedvalues = [];
 /*
  * Just seeing we don't crash when executing this function -
  * This example provided by jim-patterson@ncf.ca
- * 
+ *
  * Brendan: "Jim, thanks for the testcase. But note that |var|
  * in a JS function makes a function-scoped variable --  JS lacks
  * block scope apart from for catch variables within catch blocks.
@@ -144,7 +147,7 @@ function addThis()
 function test()
 {
   enterFunc('test');
-  printBugNumber(bug);
+  printBugNumber(BUGNUMBER);
   printStatus(summary);
 
   for (var i=0; i<UBound; i++)

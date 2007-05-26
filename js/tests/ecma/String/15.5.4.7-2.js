@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.5.4.7-2.js';
+
 /**
    File Name:          15.5.4.7-2.js
    ECMA Section:       15.5.4.7 String.prototype.lastIndexOf( searchString, pos)

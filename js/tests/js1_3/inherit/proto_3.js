@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'proto_3.js';
+
 /**
    File Name:          proto_3.js
    Section:
@@ -61,29 +63,29 @@ startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 function Employee () {
-    this.name = "";
-    this.dept = "general";
+  this.name = "";
+  this.dept = "general";
 }
 function Manager () {
-    this.reports = [];
+  this.reports = [];
 }
 Manager.prototype = new Employee();
 
 function WorkerBee () {
-    this.projects = new Array();
+  this.projects = new Array();
 }
 
 WorkerBee.prototype = new Employee();
 
 function SalesPerson () {
-    this.dept = "sales";
-    this.quota = 100;
+  this.dept = "sales";
+  this.quota = 100;
 }
 SalesPerson.prototype = new WorkerBee();
 
 function Engineer () {
-    this.dept = "engineering";
-    this.machine = "";
+  this.dept = "engineering";
+  this.machine = "";
 }
 Engineer.prototype = new WorkerBee();
 

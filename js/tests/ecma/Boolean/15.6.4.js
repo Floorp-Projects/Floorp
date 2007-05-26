@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.6.4.js';
+
 /**
    File Name:          15.6.4.js
    ECMA Section:       Properties of the Boolean Prototype Object

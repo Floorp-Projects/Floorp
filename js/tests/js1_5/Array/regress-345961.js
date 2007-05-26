@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-345961.js';
 //-----------------------------------------------------------------------------
-var bug = 345961;
+var BUGNUMBER = 345961;
 var summary = 'Array.prototype.shift should preserve holes';
 var actual = '';
 var expect = '';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   expect = false;
 
   var array = new Array(2);
@@ -58,8 +60,8 @@ function test()
   actual = array.hasOwnProperty(0);
   reportCompare(expect, actual, summary);
 
-  array=Array(1); 
-  array.shift(1); 
+  array=Array(1);
+  array.shift(1);
   actual = array.hasOwnProperty(1);
   reportCompare(expect, actual, summary);
 

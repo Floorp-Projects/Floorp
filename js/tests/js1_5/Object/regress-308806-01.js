@@ -34,18 +34,20 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-308806-01.js';
 //-----------------------------------------------------------------------------
-var bug = 308806;
+var BUGNUMBER = 308806;
 var summary = 'Object.prototype.toLocaleString() should track Object.prototype.toString() ';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var o = {toString: function() { return 'foo'; }};
 
 expect = o.toString();
 actual = o.toLocaleString();
-  
+ 
 reportCompare(expect, actual, summary);

@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-365869.js';
 //-----------------------------------------------------------------------------
-var bug = 365869;
+var BUGNUMBER = 365869;
 var summary = 'strict warning for object literal with duplicate propery names';
 var actual = '';
 var expect = '';
@@ -48,7 +50,7 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   options('strict');
@@ -66,7 +68,7 @@ function test()
     actual = ex + '';
     print(ex);
   }
-  
+ 
   reportCompare(expect, actual, summary);
 
   print('test crash from bug 371292');
@@ -83,7 +85,7 @@ function test()
     actual = ex + '';
     print(ex);
   }
-  
+ 
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');

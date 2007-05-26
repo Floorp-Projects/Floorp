@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.4.4.5-2.js';
+
 /**
    File Name:          15.4.4.5-2.js
    ECMA Section:       Array.prototype.sort(comparefn)

@@ -34,18 +34,20 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-314887.js';
 //-----------------------------------------------------------------------------
-var bug = 314887;
+var BUGNUMBER = 314887;
 var summary = 'Do not crash when morons embed script tags in external script files';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 <script language="JavaScript" type="text/JavaScript">
 <!--
 //-->
-</script>
-  
+ </script>
+ 
 reportCompare(expect, actual, summary);

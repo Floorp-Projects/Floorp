@@ -73,7 +73,7 @@ time perl jsDriver.pl \
 	-L excluded-n.tests \
 	-s $executable -e sm$buildtype \
 	-o '-S 524288' \
-	-K \
+	-R \
 	-T $TEST_JSSHELL_TIMEOUT \
 	-f $TEST_HTML_LOG \
     -Q

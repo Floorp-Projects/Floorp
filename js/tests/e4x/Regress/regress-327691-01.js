@@ -36,15 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("Do not crash in js_IsXMLName");
+gTestfile = 'regress-327691-01.js';
 
-var bug = 327691;
-var summary = 'Do not crash in js_IsXMLName';
+var summary = "Do not crash in js_IsXMLName";
+var BUGNUMBER = 327691;
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 var A=<y/>;
 var B=A.h;

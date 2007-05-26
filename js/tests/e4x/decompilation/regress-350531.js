@@ -36,24 +36,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var bug = 350351;
+gTestfile = 'regress-350531.js';
+
+var BUGNUMBER = 350351;
 var summary = "decompilation of function (){ return (@['a'])=='b'}";
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 var f;
 
 f = function (){ return (@['a'])=='b'}
 expect = 'function () {\n    return @["a"] == "b";\n}';
 actual = f + '';
-compareSource(1, expect, actual);
+compareSource(expect, actual, inSection(1) + summary);
 
 f = function (){ return (@['a']).toXMLString() }
 expect = 'function () {\n    return @["a"].toXMLString();\n}';
 actual = f + '';
-compareSource(2, expect, actual);
+compareSource(expect, actual, inSection(2) + summary);
 
 END();

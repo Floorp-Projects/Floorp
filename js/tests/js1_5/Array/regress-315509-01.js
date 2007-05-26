@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-315509-01.js';
 //-----------------------------------------------------------------------------
-var bug = 315509;
+var BUGNUMBER = 315509;
 var summary = 'Array.prototype.unshift on Arrays with holes';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var a = [0,1,2,3,4];
@@ -55,5 +57,5 @@ a.unshift('a','b');
 
 expect = 'a,b,0,,2,3,4';
 actual = a.toString();
-  
+ 
 reportCompare(expect, actual, summary);

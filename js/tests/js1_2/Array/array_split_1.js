@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'array_split_1.js';
+
 /**
    File Name:          array_split_1.js
    ECMA Section:       Array.split()
@@ -54,7 +57,7 @@ startTest();
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
- 
+
 new TestCase( SECTION,
 	      "('a,b,c'.split(',')).length",
 	      3,

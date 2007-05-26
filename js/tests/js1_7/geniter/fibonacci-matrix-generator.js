@@ -34,12 +34,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'fibonacci-matrix-generator.js';
 //-----------------------------------------------------------------------------
-var bug     = "(none)";
+var BUGNUMBER     = "(none)";
 var summary = "Fibonacci generator by matrix multiplication";
 var actual, expect;
 
-printBugNumber(bug);
+printBugNumber(BUGNUMBER);
 printStatus(summary);
 
 /**************

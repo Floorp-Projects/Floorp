@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 10 September 2001
  *
  * SUMMARY: Testing with() statement with nested functions
@@ -45,8 +47,9 @@
  * of formal parameters."
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-97921.js';
 var UBound = 0;
-var bug = 97921;
+var BUGNUMBER = 97921;
 var summary = 'Testing with() statement with nested functions';
 var cnYES = 'Inner value === outer value';
 var cnNO = "Inner value !== outer value!";
@@ -131,7 +134,7 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   for (var i = 0; i < UBound; i++)
@@ -146,4 +149,4 @@ function test()
 function areTheseEqual(yes)
 {
   return yes? cnYES : cnNO
-}
+    }

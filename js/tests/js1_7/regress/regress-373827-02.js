@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-373827-02.js';
 //-----------------------------------------------------------------------------
-var bug = 373827;
+var BUGNUMBER = 373827;
 var summary = 'Assertion: OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_HAS_PRIVATE';
 var actual = '';
 var expect = '';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   try
   {
     let ([] = [{x: function(){}}]) { }; foo;

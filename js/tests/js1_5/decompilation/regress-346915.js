@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-346915.js';
 //-----------------------------------------------------------------------------
-var bug = 346915;
+var BUGNUMBER = 346915;
 var summary = 'Optimize decompilation of delete expressions';
 var actual = '';
 var expect = '';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   var f;
 
   f = function() { delete 3; };

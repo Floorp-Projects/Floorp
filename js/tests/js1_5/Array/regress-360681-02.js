@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-360681-02.js';
 //-----------------------------------------------------------------------------
-var bug = 360681;
+var BUGNUMBER = 360681;
 var summary = 'Regression from bug 224128';
 var actual = '';
 var expect = '';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   expect = actual = 'No Crash';
 
   var N = 1000;
@@ -66,7 +68,7 @@ function test()
 // strings with a reasonable malloc implementation that memory will be most
 // likely reused in array_sort for the temporary vector. Then the bug causes
 // accessing the one-beyond-the-aloocation word and re-interpretation of
-// 0xFFF0FFF0 as GC thing. 
+// 0xFFF0FFF0 as GC thing.
 
   var str1 = Array(2*(2*N + 1) + 1).join(String.fromCharCode(0xFFF0));
   var str2 = Array(4*(2*N + 1) + 1).join(String.fromCharCode(0xFFF0));
@@ -75,13 +77,13 @@ function test()
   gc();
 
   var firstCall = true;
-  a.sort(function (a, b) { 
-    if (firstCall) {
-      firstCall = false;
-      gc();
-    }
-    return a - b;
-  });
+  a.sort(function (a, b) {
+	   if (firstCall) {
+	     firstCall = false;
+	     gc();
+	   }
+	   return a - b;
+	 });
 
   reportCompare(expect, actual, summary);
 

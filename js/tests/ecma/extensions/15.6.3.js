@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.6.3.js';
+
 /**
    File Name:          15.6.3.js
    ECMA Section:       15.6.3 Properties of the Boolean Constructor
@@ -54,7 +56,7 @@ var SECTION = "15.6.3";
 var VERSION = "ECMA_2";
 startTest();
 var TITLE   = "Properties of the Boolean Constructor"
-writeHeaderToLog( SECTION + TITLE );
+  writeHeaderToLog( SECTION + TITLE );
 
 
 new TestCase( SECTION,  "Boolean.__proto__ == Function.prototype",  true,   Boolean.__proto__ == Function.prototype );

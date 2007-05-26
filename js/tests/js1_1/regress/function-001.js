@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'function-001.js';
+
 /**
  *  File Name:          boolean-001.js
  *  Description:
@@ -67,10 +70,10 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 result = "passed";
 
 new TestCase(
-    SECTION,
-    "eval(\"function f(){}function g(){}\")",
-    void 0,
-    eval("function f(){}function g(){}") );
+  SECTION,
+  "eval(\"function f(){}function g(){}\")",
+  void 0,
+  eval("function f(){}function g(){}") );
 
 test();
 

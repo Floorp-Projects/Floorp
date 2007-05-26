@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'object-004.js';
+
 /**
    File Name:      object-004.js
    Description:
@@ -55,28 +57,28 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 var vector = new java.util.Vector();
 
 new TestCase(
-    SECTION,
-    "var vector = new java.util.Vector(); vector.addElement(\"hi\")",
-    void 0,
-    vector.addElement("hi") );
+  SECTION,
+  "var vector = new java.util.Vector(); vector.addElement(\"hi\")",
+  void 0,
+  vector.addElement("hi") );
 
 new TestCase(
-    SECTION,
-    "vector.elementAt(0) +''",
-    "hi",
-    vector.elementAt(0)+"" );
+  SECTION,
+  "vector.elementAt(0) +''",
+  "hi",
+  vector.elementAt(0)+"" );
 
 new TestCase(
-    SECTION,
-    "vector.setElementAt( \"hello\", 0)",
-    void 0,
-    vector.setElementAt( "hello", 0) );
+  SECTION,
+  "vector.setElementAt( \"hello\", 0)",
+  void 0,
+  vector.setElementAt( "hello", 0) );
 
 new TestCase(
-    SECTION,
-    "vector.elementAt(0) +''",
-    "hello",
-    vector.elementAt(0)+"" );
+  SECTION,
+  "vector.elementAt(0) +''",
+  "hello",
+  vector.elementAt(0)+"" );
 
 test();
 

@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'delete-001.js';
+
 /**
    File Name:     delete-001.js
    Section:       regress
@@ -60,13 +62,13 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 // with var or functions
 
 for ( p in this ) {
-    delete p;
+  delete p;
 }
 
 var result ="";
 
 for ( p in this ) {
-    result += String( p );
+  result += String( p );
 }
 
 // not too picky here... just want to make sure we didn't crash or something

@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = '7.4.3-4-n.js';
+
 /**
    File Name:          7.4.3-4-n.js
    ECMA Section:       7.4.3
@@ -78,7 +81,7 @@ catch(e)
 }
 
 DESCRIPTION = "var super = true"
-EXPECTED = "error";
+  EXPECTED = "error";
 
 // force exception since this is a negative test
 if (actual == 'error')
@@ -86,8 +89,8 @@ if (actual == 'error')
   throw actual;
 }
 
-new TestCase( SECTION,  
-              "var super = true",     
-              "error",    
+new TestCase( SECTION, 
+              "var super = true",    
+              "error",   
               actual );
 test();

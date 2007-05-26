@@ -36,13 +36,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-257751.js';
 //-----------------------------------------------------------------------------
-var bug = 257751;
+var BUGNUMBER = 257751;
 var summary = 'RegExp Syntax Errors should have lineNumber and fileName';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var status;

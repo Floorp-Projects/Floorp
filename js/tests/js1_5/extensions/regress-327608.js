@@ -34,16 +34,18 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-327608.js';
 //-----------------------------------------------------------------------------
-var bug = 327608;
+var BUGNUMBER = 327608;
 var summary = 'Do not assume we will find the prototype property';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 print('This test runs only in the browser');
-  
+ 
 function countProps(obj)
 {
   var c;

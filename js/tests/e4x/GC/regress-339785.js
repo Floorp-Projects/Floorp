@@ -36,15 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("scanner: memory exposure to scripts");
+gTestfile = 'regress-339785.js';
 
-var bug = 339785;
-var summary = 'scanner: memory exposure to scripts';
+var summary = "scanner: memory exposure to scripts";
+var BUGNUMBER = 339785;
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 function evalXML(N)
 {

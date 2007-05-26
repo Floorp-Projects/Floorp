@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'test.js';
+
 /**
    Filename:     test.js
    Description:  'Tests regular expressions method compile'

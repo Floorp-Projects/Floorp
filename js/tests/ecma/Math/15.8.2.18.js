@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.8.2.18.js';
+
 /**
    File Name:          15.8.2.18.js
    ECMA Section:       15.8.2.18 tan( x )
@@ -90,7 +92,7 @@ new TestCase( SECTION,
 
 new TestCase( SECTION,
 	      "Math.tan(0)",
-	      0,	
+	      0,
 	      Math.tan(0));
 
 new TestCase( SECTION,

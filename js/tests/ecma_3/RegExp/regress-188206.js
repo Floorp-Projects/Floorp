@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    21 January 2003
  * SUMMARY: Invalid use of regexp quantifiers should generate SyntaxErrors
@@ -45,8 +47,9 @@
  * and http://bugzilla.mozilla.org/show_bug.cgi?id=197451
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-188206.js';
 var UBound = 0;
-var bug = 188206;
+var BUGNUMBER = 188206;
 var summary = 'Invalid use of regexp quantifiers should generate SyntaxErrors';
 var TEST_PASSED = 'SyntaxError';
 var TEST_FAILED = 'Generated an error, but NOT a SyntaxError!';
@@ -272,7 +275,7 @@ function checkThis(sAllowedSyntax)
 function test()
 {
   enterFunc('test');
-  printBugNumber(bug);
+  printBugNumber(BUGNUMBER);
   printStatus(summary);
 
   for (var i=0; i<UBound; i++)

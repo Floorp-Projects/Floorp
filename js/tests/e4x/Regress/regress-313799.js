@@ -35,15 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("13.5.4.4 - XMLList.prototype.child");
+gTestfile = 'regress-313799.js';
 
-var bug = 313799;
 var summary = 'Do not crash on XMLListInitializer.child(0)';
+var BUGNUMBER = 313799;
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 var val = <><t/></>.child(0);
 

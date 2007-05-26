@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'proto_12.js';
+
 /**
    File Name:          proto_12.js
    Section:
@@ -60,41 +62,41 @@ startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 function Employee ( name, dept ) {
-    this.name = name || "";
-    this.dept = dept || "general";
-    this.id = idCounter++;
+  this.name = name || "";
+  this.dept = dept || "general";
+  this.id = idCounter++;
 }
 function Manager () {
-    this.reports = [];
+  this.reports = [];
 }
 Manager.prototype = new Employee();
 
 function WorkerBee ( name, dept, projs ) {
-    this.base = Employee;
-    this.base( name, dept)
-	this.projects = projs || new Array();
+  this.base = Employee;
+  this.base( name, dept)
+    this.projects = projs || new Array();
 }
 WorkerBee.prototype = new Employee();
 
 function SalesPerson () {
-    this.dept = "sales";
-    this.quota = 100;
+  this.dept = "sales";
+  this.quota = 100;
 }
 SalesPerson.prototype = new WorkerBee();
 
 function Hobbyist( hobby ) {
-    this.hobby = hobby || "yodeling";
+  this.hobby = hobby || "yodeling";
 }
 
 function Engineer ( name, projs, machine, hobby ) {
-    this.base1 = WorkerBee;
-    this.base1( name, "engineering", projs )
+  this.base1 = WorkerBee;
+  this.base1( name, "engineering", projs )
 
-	this.base2 = Hobbyist;
-    this.base2( hobby );
+    this.base2 = Hobbyist;
+  this.base2( hobby );
 
-    this.projects = projs || new Array();
-    this.machine = machine || "";
+  this.projects = projs || new Array();
+  this.machine = machine || "";
 }
 Engineer.prototype = new WorkerBee();
 

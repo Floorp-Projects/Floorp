@@ -34,32 +34,34 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-301738-02.js';
 //-----------------------------------------------------------------------------
-var bug = 301738;
+var BUGNUMBER = 301738;
 var summary = 'Date parse compatibilty with MSIE';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-/*  
-  Case 2. The input string is of the form "f/m/l" where f, m and l are
-          integers, e.g. 7/16/45.
-          Adjust the mon, mday and year values to achieve 100% MSIE 
-          compatibility.
-          a. If 0 <= f < 70, f/m/l is interpreted as month/day/year.
-             i.  If year < 100, it is the number of years after 1900
-             ii. If year >= 100, it is the number of years after 0.
-          b. If 70 <= f < 100
-             i.  If m < 70, f/m/l is interpreted as
-                 year/month/day where year is the number of years after
-                 1900.
-             ii. If m >= 70, the date is invalid.
-          c. If f >= 100
-             i.  If m < 70, f/m/l is interpreted as
-                 year/month/day where year is the number of years after 0.
-             ii. If m >= 70, the date is invalid.
+/* 
+    Case 2. The input string is of the form "f/m/l" where f, m and l are
+    integers, e.g. 7/16/45.
+    Adjust the mon, mday and year values to achieve 100% MSIE
+    compatibility.
+    a. If 0 <= f < 70, f/m/l is interpreted as month/day/year.
+    i.  If year < 100, it is the number of years after 1900
+    ii. If year >= 100, it is the number of years after 0.
+    b. If 70 <= f < 100
+    i.  If m < 70, f/m/l is interpreted as
+    year/month/day where year is the number of years after
+    1900.
+    ii. If m >= 70, the date is invalid.
+    c. If f >= 100
+    i.  If m < 70, f/m/l is interpreted as
+    year/month/day where year is the number of years after 0.
+    ii. If m >= 70, the date is invalid.
 */
 
 var f;

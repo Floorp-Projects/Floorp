@@ -35,15 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("13.3.5.4 - [[GetNamespace]]");
+gTestfile = 'regress-283349.js';
 
-var bug = 283349;
-var summary = 'Test assertion adding namespace';
+var summary = "13.3.5.4 - [[GetNamespace]]";
+var BUGNUMBER = 283349;
 var actual = 'Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 var x = <x>text</x>;
 var ns = new Namespace("http://foo.com/bar");

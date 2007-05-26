@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.8.1.8-1.js';
+
 /**
    File Name:          15.8.1.8-1.js
    ECMA Section:       15.8.1.8.js
@@ -55,9 +57,9 @@ var TITLE   = "Math.SQRT2";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION, 
-	      "Math.SQRT2=0; Math.SQRT2", 
-	      1.4142135623730951,     
+new TestCase( SECTION,
+	      "Math.SQRT2=0; Math.SQRT2",
+	      1.4142135623730951,    
 	      eval("Math.SQRT2=0; Math.SQRT2") );
 
 test();

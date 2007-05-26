@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.5.4.9-1.js';
+
 /**
    File Name:          15.5.4.9-1.js
    ECMA Section:       15.5.4.9 String.prototype.substring( start )

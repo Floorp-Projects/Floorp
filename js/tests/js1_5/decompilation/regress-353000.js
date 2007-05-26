@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-353000.js';
 //-----------------------------------------------------------------------------
-var bug = 353100;
+var BUGNUMBER = 353100;
 var summary = 'decompilation of RegExp literal after catch block';
 var actual = '';
 var expect = '';
@@ -48,7 +50,7 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   var f;

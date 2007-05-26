@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = '15.8.2.2.js';
+
 /**
    File Name:          15.8.2.2.js
    ECMA Section:       15.8.2.2 acos( x )
@@ -141,7 +144,7 @@ new TestCase( SECTION,
 	      Math.acos(-Math.SQRT1_2));
 
 new TestCase( SECTION,
-	      "Math.acos(0.9999619230642)",	
+	      "Math.acos(0.9999619230642)",
 	      Math.PI/360,
 	      Math.acos(0.9999619230642));
 

@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = '15.8.1.8-3.js';
+
 /**
    File Name:          15.8.1.8-3.js
    ECMA Section:       15.8.1.8.js
@@ -52,9 +55,9 @@ startTest();
 
 writeHeaderToLog( SECTION + " Math.SQRT2:  DontDelete");
 
-new TestCase( SECTION, 
-	      "delete Math.SQRT2", 
-	      false,     
+new TestCase( SECTION,
+	      "delete Math.SQRT2",
+	      false,    
 	      eval("delete Math.SQRT2") );
 
 test();

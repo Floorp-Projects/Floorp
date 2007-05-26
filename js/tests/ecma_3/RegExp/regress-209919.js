@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    19 June 2003
  * SUMMARY: Testing regexp submatches with quantifiers
@@ -43,8 +45,9 @@
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-209919.js';
 var i = 0;
-var bug = 209919;
+var BUGNUMBER = 209919;
 var summary = 'Testing regexp submatches with quantifiers';
 var status = '';
 var statusmessages = new Array();
@@ -123,23 +126,23 @@ addThis();
  */
 pattern = /^\-?(\d{1,}|\.{0,})*(\,\d{1,})?$/;
 
-  status = inSection(5);
-  string = '100.00';
-  actualmatch = string.match(pattern);
-  expectedmatch = Array(string, '00', undefined);
-  addThis();
+status = inSection(5);
+string = '100.00';
+actualmatch = string.match(pattern);
+expectedmatch = Array(string, '00', undefined);
+addThis();
 
-  status = inSection(6);
-  string = '100,00';
-  actualmatch = string.match(pattern);
-  expectedmatch = Array(string, '100', ',00');
-  addThis();
+status = inSection(6);
+string = '100,00';
+actualmatch = string.match(pattern);
+expectedmatch = Array(string, '100', ',00');
+addThis();
 
-  status = inSection(7);
-  string = '1.000,00';
-  actualmatch = string.match(pattern);
-  expectedmatch = Array(string, '000', ',00');
-  addThis();
+status = inSection(7);
+string = '1.000,00';
+actualmatch = string.match(pattern);
+expectedmatch = Array(string, '000', ',00');
+addThis();
 
 
 
@@ -164,7 +167,7 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
   testRegExp(statusmessages, patterns, strings, actualmatches, expectedmatches);
   exitFunc ('test');

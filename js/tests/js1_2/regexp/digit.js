@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'digit.js';
+
 /**
    Filename:     digit.js
    Description:  'Tests regular expressions containing \d'
@@ -95,24 +97,24 @@ var i;
 // be sure all digits match individually
 for (i = 0; i < digits.length; ++i)
 {
-    s = 'ab' + digits[i] + 'cd';
-    new TestCase ( SECTION,
-		   "'" + s + "'.match(new RegExp('\\d'))",
-		   String([digits[i]]), String(s.match(new RegExp('\\d'))));
-    new TestCase ( SECTION,
-		   "'" + s + "'.match(/\\d/)",
-		   String([digits[i]]), String(s.match(/\d/)));
+  s = 'ab' + digits[i] + 'cd';
+  new TestCase ( SECTION,
+		 "'" + s + "'.match(new RegExp('\\d'))",
+		 String([digits[i]]), String(s.match(new RegExp('\\d'))));
+  new TestCase ( SECTION,
+		 "'" + s + "'.match(/\\d/)",
+		 String([digits[i]]), String(s.match(/\d/)));
 }
 // be sure all non_digits match individually
 for (i = 0; i < non_digits.length; ++i)
 {
-    s = '12' + non_digits[i] + '34';
-    new TestCase ( SECTION,
-		   "'" + s + "'.match(new RegExp('\\D'))",
-		   String([non_digits[i]]), String(s.match(new RegExp('\\D'))));
-    new TestCase ( SECTION,
-		   "'" + s + "'.match(/\\D/)",
-		   String([non_digits[i]]), String(s.match(/\D/)));
+  s = '12' + non_digits[i] + '34';
+  new TestCase ( SECTION,
+		 "'" + s + "'.match(new RegExp('\\D'))",
+		 String([non_digits[i]]), String(s.match(new RegExp('\\D'))));
+  new TestCase ( SECTION,
+		 "'" + s + "'.match(/\\D/)",
+		 String([non_digits[i]]), String(s.match(/\D/)));
 }
 
 test();

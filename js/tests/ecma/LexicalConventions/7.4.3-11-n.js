@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '7.4.3-11-n.js';
+
 /**
    File Name:          7.4.3-11-n.js
    ECMA Section:       7.4.3

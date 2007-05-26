@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'RegExp_lastIndex.js';
+
 /**
    Filename:     RegExp_lastIndex.js
    Description:  'Tests RegExps lastIndex property'

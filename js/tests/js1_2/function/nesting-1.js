@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'nesting-1.js';
+
 /**
    File Name:          nesting-1.js
    Reference:          http://scopus.mcom.com/bugsplat/show_bug.cgi?id=122040

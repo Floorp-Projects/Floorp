@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '10.2.1.js';
+
 /**
    File Name:          10.2.1.js
    ECMA Section:       10.2.1 Global Code

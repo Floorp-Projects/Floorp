@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-379442.js';
 //-----------------------------------------------------------------------------
-var bug = 379442;
+var BUGNUMBER = 379442;
 var summary = 'Regression from bug 368224';
 var actual = 'No Crash';
 var expect = 'No Crash';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   reportCompare(expect, actual, summary);
 
   (function () { ({ y: [] }) = {} });

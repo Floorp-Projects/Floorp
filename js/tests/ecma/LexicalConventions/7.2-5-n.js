@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '7.2-5-n.js';
+
 /**
    File Name:          7.2.js
    ECMA Section:       7.2 Line Terminators
@@ -63,8 +65,8 @@ var TITLE   = "Line Terminators";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-DESCRIPTION = 
-EXPECTED = "error";
+DESCRIPTION =
+  EXPECTED = "error";
 
 new TestCase( SECTION,    "\rb",     "error",    eval("\rb"));
 test();

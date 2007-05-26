@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    22 Jan 2002
  * SUMMARY: Testing Error.prototype.toString()
@@ -70,8 +72,9 @@
  * See also ECMA 15.11.4.2, 15.11.4.3
  */
 //-----------------------------------------------------------------------------
+var gTestfile = '15.11.4.4-1.js';
 var UBound = 0;
-var bug = '(none)';
+var BUGNUMBER = '(none)';
 var summary = 'Testing Error.prototype.toString()';
 var status = '';
 var statusitems = [];
@@ -115,7 +118,7 @@ try
 }
 catch(err5)
 {
- actual = examineThis(err5, '.*');
+  actual = examineThis(err5, '.*');
 }
 expect = EXPECTED_FORMAT;
 addThis();
@@ -159,7 +162,7 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   for (var i = 0; i < UBound; i++)

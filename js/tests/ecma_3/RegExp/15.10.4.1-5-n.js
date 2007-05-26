@@ -35,22 +35,24 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = '15.10.4.1-5-n.js';
 /*
  *
  * Date: 26 November 2000
  *
  *
- *SUMMARY: Passing a RegExp object to a RegExp() constructor. 
- *This test arose from Bugzilla bug 61266. The ECMA3 section is:       
+ *SUMMARY: Passing a RegExp object to a RegExp() constructor.
+ *This test arose from Bugzilla bug 61266. The ECMA3 section is:      
  *
  *  15.10.4.1 new RegExp(pattern, flags)
  *
- *  If pattern is an object R whose [[Class]] property is "RegExp" and 
- *  flags is undefined, then let P be the pattern used to construct R 
+ *  If pattern is an object R whose [[Class]] property is "RegExp" and
+ *  flags is undefined, then let P be the pattern used to construct R
  *  and let F be the flags used to construct R. If pattern is an object R
- *  whose [[Class]] property is "RegExp" and flags is not undefined, 
- *  then throw a TypeError exception. Otherwise, let P be the empty string  
- *  if pattern is undefined and ToString(pattern) otherwise, and let F be 
+ *  whose [[Class]] property is "RegExp" and flags is not undefined,
+ *  then throw a TypeError exception. Otherwise, let P be the empty string 
+ *  if pattern is undefined and ToString(pattern) otherwise, and let F be
  *  the empty string if flags is undefined and ToString(flags) otherwise.
  *
  *
@@ -64,7 +66,7 @@
  */
 
 //-------------------------------------------------------------------------------------------------
-var bug = '61266';
+var BUGNUMBER = '61266';
 var summary = 'Negative test: Passing (RegExp object, flag) to RegExp() constructor';
 var statprefix = 'Passing RegExp object on pattern ';
 var statsuffix =  '; passing flag ';
@@ -73,7 +75,7 @@ var singlequote = "'";
 var i = -1; var j = -1; var s = ''; var f = '';
 var obj1 = {}; var obj2 = {};
 var patterns = new Array();
-var flags = new Array();  
+var flags = new Array(); 
 
 
 // various regular expressions to try -
@@ -91,7 +93,7 @@ flags[2] = 'm';
 
 
 DESCRIPTION = "Negative test: Passing (RegExp object, flag) to RegExp() constructor"
-EXPECTED = "error";
+  EXPECTED = "error";
 
 
 //-------------------------------------------------------------------------------------------------
@@ -99,39 +101,39 @@ test();
 //-------------------------------------------------------------------------------------------------
 
 
-function test() 
+function test()
 {
-    enterFunc ('test'); 
-    printBugNumber (bug);
-    printStatus (summary);
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary);
 
-    for (i in patterns)
+  for (i in patterns)
+  {
+    s = patterns[i];
+
+    for (j in flags)
     {
-        s = patterns[i];
+      f = flags[j];
+      printStatus(getStatus(s, f));
+      obj1 = new RegExp(s, f);  
+      obj2 = new RegExp(obj1, f);   // this should cause an exception
 
-        for (j in flags)
-        {
-            f = flags[j];
-            printStatus(getStatus(s, f));
-            obj1 = new RegExp(s, f);   
-            obj2 = new RegExp(obj1, f);   // this should cause an exception 
-
-            // WE SHOULD NEVER REACH THIS POINT -
-            reportFailure(cnFAILURE);
-        }
+      // WE SHOULD NEVER REACH THIS POINT -
+      reportCompare('PASS', 'FAIL', cnFAILURE);
     }
+  }
 
-    exitFunc ('test');
+  exitFunc ('test');
 }
 
 
 function getStatus(regexp, flag)
-{ 
-    return (statprefix  +  quote(regexp) +  statsuffix  +   flag); 
+{
+  return (statprefix  +  quote(regexp) +  statsuffix  +   flag);
 }
 
 
 function quote(text)
 {
-    return (singlequote  +  text  + singlequote);
+  return (singlequote  +  text  + singlequote);
 }

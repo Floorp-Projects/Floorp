@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-352876.js';
 //-----------------------------------------------------------------------------
-var bug = 352876;
+var BUGNUMBER = 352876;
 var summary = 'Do not assert with nested finally return|yield';
 var actual = '';
 var expect = '';
@@ -48,16 +50,16 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   expect = '[object StopIteration]';
   actual = '';
   try
   {
-    var g = (function() { 
-        try { try { } finally { return; } } finally { yield 3; }
-      })();
+    var g = (function() {
+	       try { try { } finally { return; } } finally { yield 3; }
+	     })();
 
     g.next();
     g.next();

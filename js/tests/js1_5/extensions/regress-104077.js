@@ -35,8 +35,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date: 10 October 2001
  * SUMMARY: Regression test for Bugzilla bug 104077
@@ -59,8 +60,9 @@
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-104077.js';
 var UBound = 0;
-var bug = 104077;
+var BUGNUMBER = 104077;
 var summary = "Just testing that we don't crash on with/finally/return -";
 var status = '';
 var statusitems = [];
@@ -73,7 +75,7 @@ var expectedvalues = [];
 function addValues_3(obj)
 {
   var sum = 0;
-  
+ 
   with (obj)
   {
     try
@@ -83,7 +85,7 @@ function addValues_3(obj)
       {
         while (sum < 10)
         {
-          try 
+          try
           {
             if (sum > 5)
               return sum;
@@ -99,17 +101,17 @@ function addValues_3(obj)
     }
     finally
     {
-      try 
-      { 
+      try
+      {
         sum +=1;
         print("In finally block of addValues_3() function: sum = " + sum);
-      } 
-      catch (e if e == 42) 
+      }
+      catch (e if e == 42)
       {
         sum +=1;
         print('In finally catch block of addValues_3() function: sum = ' + sum + ', e = ' + e);
-      } 
-      finally 
+      }
+      finally
       {
         sum +=1;
         print("In finally finally block of addValues_3() function: sum = " + sum);
@@ -146,7 +148,7 @@ function addValues_4(obj)
       {
         while (sum < 10)
         {
-          try 
+          try
           {
             if (sum > 5)
               return sum;
@@ -162,7 +164,7 @@ function addValues_4(obj)
     }
     finally
     {
-      try 
+      try
       {
         sum += 1;
         print("In finally block of addValues_4() function: sum = " + sum);
@@ -171,7 +173,7 @@ function addValues_4(obj)
       {
         sum += 1;
         print("In 1st finally catch block of addValues_4() function: sum = " + sum + ", e = " + e);
-      } 
+      }
       catch (e if e == 43)
       {
         sum += 1;
@@ -219,7 +221,7 @@ function captureThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   for (var i=0; i<UBound; i++)

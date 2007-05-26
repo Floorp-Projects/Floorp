@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-338804-02.js';
 //-----------------------------------------------------------------------------
-var bug = 338804;
+var BUGNUMBER = 338804;
 var summary = 'GC hazards in constructor functions';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 printStatus ('Uses Intel Assembly');
 
@@ -55,11 +57,11 @@ var rooter, scale = 2000;
 
 exploit();
 /*
-if(typeof(setTimeout) != "undefined") {
+  if(typeof(setTimeout) != "undefined") {
   setTimeout(exploit, 2000);
-} else {
+  } else {
   exploit();
-}
+  }
 */
 
 function exploit() {
@@ -97,5 +99,5 @@ function fillHeap() {
 }
 
 // </script>
-  
+ 
 reportCompare(expect, actual, summary);

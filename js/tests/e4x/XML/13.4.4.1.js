@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.4.1.js';
+
 START("13.4.4.1 - XML Constructor");
 
 var actual = 'Test not implemented';

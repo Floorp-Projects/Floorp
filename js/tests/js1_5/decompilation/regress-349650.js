@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-349650.js';
 //-----------------------------------------------------------------------------
-var bug = 349650;
+var BUGNUMBER = 349650;
 var summary = 'Number getting parens replaces last character of identifier in decompilation of array comprehension';
 var actual = '';
 var expect = '';
@@ -48,7 +50,7 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   var f;

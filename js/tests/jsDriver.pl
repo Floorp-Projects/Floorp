@@ -76,14 +76,15 @@ my $opt_exit_munge = ($os_type ne "MAC") ? 1 : 0;
 my $opt_timeout = 3600;
 my $opt_enable_narcissus = 0;
 my $opt_narcissus_path = "";
-my $opt_no_quit = 0; 
+my $opt_no_quit = 0;
+my $opt_report_summarized_results = 0;
 
 # command line option definition
 my $options = "b=s bugurl>b c=s classpath>c e=s engine>e f=s file>f " .
-  "h help>h i j=s javapath>j k confail>k K linefail>K l=s list>l " .
+  "h help>h i j=s javapath>j k confail>k K linefail>K R report>R l=s list>l " .
   "L=s neglist>L o=s opt>o p=s testpath>p s=s shellpath>s t trace>t " .
   "T=s timeout>T u=s lxrurl>u " .
-  "x noexitmunge>x n:s narcissus>n " . 
+  "x noexitmunge>x n:s narcissus>n " .
   "Q noquitinthandler>Q";
 
 if ($os_type eq "MAC") {
@@ -98,7 +99,7 @@ if ($os_type eq "MAC") {
 
 my $user_exit = 0;
 my ($engine_command, $html, $failures_reported, $tests_completed,
-    $exec_time_string); 
+    $exec_time_string);
 my @failed_tests;
 my @test_list = &get_test_list;
 
@@ -107,7 +108,7 @@ if ($#test_list == -1) {
 }
 
 if ($unixish && $opt_no_quit == 0) {
-    # on unix, ^C pauses the tests, and gives the user a chance to quit but 
+    # on unix, ^C pauses the tests, and gives the user a chance to quit but
     # report on what has been done, to just quit, or to continue (the
     # interrupted test will still be skipped.)
     # windows doesn't handle the int handler they way we want it to,
@@ -188,10 +189,11 @@ sub execute_tests {
         my $failure_lines;
         my $bug_number;
         my $status_lines;
+        my $result_lines;
 
         # Allow the test to declare multiple possible success exit codes.
-        # This is useful in situations where the test fails if a 
-        # crash occurs but passes if no crash occurs even if an 
+        # This is useful in situations where the test fails if a
+        # crash occurs but passes if no crash occurs even if an
         # out of memory error occurs.
         my @expected_exit_list = ($expected_exit);
 
@@ -230,9 +232,16 @@ sub execute_tests {
             $last_suite = $suite;
             $last_test_dir = $test_dir;
         }
-         
+        
         $path = &xp_path($opt_suite_path . $test);
         my $command = &append_file_to_command($shell_command, $path);
+
+        $path = &xp_path($opt_suite_path ."js-test-driver-end.js");
+        if (-f $path) {
+            $command = &append_file_to_command($command,
+                                               $path);
+        }
+
         &dd ("executing: " . $command);
 
         my $jsout;
@@ -256,7 +265,7 @@ sub execute_tests {
         my $loop_count = 0;
         my $wait_pid = -1;
 
-        eval 
+        eval
         {
             local $SIG{ALRM} = sub { die "time out" };
             alarm $opt_timeout;
@@ -287,12 +296,12 @@ sub execute_tests {
         @output = <OUTPUT>;
         close (OUTPUT);
         unlink "$jsout";
-
         @output = grep (!/js\>/, @output);
 
         $failure_lines = "";
         $bug_number = "";
         $status_lines = "";
+        $result_lines = "";
 
         foreach $line (@output) {
 
@@ -323,17 +332,41 @@ sub execute_tests {
                 $status_lines .= $line;
             }
 
+            # collect result summary lines
+            if ($line =~ /^jstest:/)
+            {
+                $result_lines .= $line;
+            }
         }
 
         if (!@output) {
             @output = ("Testcase produced no output!");
         }
 
-        if ($timed_out) {
-            # test was terminated due to timeout
-            &report_failure ($test, "TIMED OUT ($opt_timeout seconds)\n");
+        if ($opt_report_summarized_results) {
+            print STDERR $result_lines;
+            if ($timed_out)
+            {
+                &report_summary_result($test, $bug_number, "FAILED TIMED OUT",
+                                       "", "", "",
+                                       join("\n",@output));
+            }
+            elsif (index(join(',', @expected_exit_list), $got_exit) == -1 ||
+                   $exit_signal != 0) {
+                &report_summary_result($test, $bug_number, "FAILED",
+                                       "", 
+                                       "Expected exit $expected_exit",
+                                       "Actual exit $got_exit, signal $exit_signal",
+                                       join("\n",@output));
+            }
         }
-        elsif (index(join(',', @expected_exit_list), $got_exit) == -1 || 
+        elsif ($timed_out) {
+            # test was terminated due to timeout
+            &report_failure ($test, "TIMED OUT ($opt_timeout seconds) " .
+                             "Complete testcase output was:\n" .
+                             join ("\n",@output), $bug_number);
+        }
+        elsif (index(join(',', @expected_exit_list), $got_exit) == -1 ||
                $exit_signal != 0) {
             # full testcase output dumped on mismatched exit codes,
             &report_failure ($test, "Expected exit code " .
@@ -380,7 +413,7 @@ sub write_results {
     open (OUTPUT, "> $opt_output_file") ||
       die ("Could not create output file $opt_output_file");
 
-    print OUTPUT 
+    print OUTPUT
       ("<html><head>\n" .
        "<title>Test results, $opt_engine_type</title>\n" .
        "</head>\n" .
@@ -404,7 +437,7 @@ sub write_results {
         close (JAVAOUTPUT);
     }
 
-    print OUTPUT 
+    print OUTPUT
       ("Testcase execution time: $exec_time_string.<br>\n" .
        "Tests completed on $completion_date.<br><br>\n");
 
@@ -445,7 +478,7 @@ sub write_results {
            "[ <a href='#tippy_top'>Top of Page</a> | " .
            "<a href='#retest_list'>Top of Retest List</a> ]<br>\n");
     } else {
-        print OUTPUT 
+        print OUTPUT
           ("<h1>Whoop-de-doo, nothing failed!</h1>\n");
     }
 
@@ -509,6 +542,10 @@ sub parse_args {
             &dd ("opt: displaying failures on console as single line.");
             $opt_console_failures=1;
             $opt_console_failures_line=1;
+
+        } elsif ($option eq "R") {
+            &dd ("opt: Report summarized test results.");
+            $opt_report_summarized_results=1;
 
         } elsif ($option eq "l" || (($option eq "") && ($lastopt eq "l"))) {
             $option = "l";
@@ -592,7 +629,7 @@ sub parse_args {
 # print the arguments that this script expects
 #
 sub usage {
-    print STDERR 
+    print STDERR
       ("\nusage: $0 [<options>] \n" .
        "(-b|--bugurl)             Bugzilla URL.\n" .
        "                          (default is $opt_bug_url)\n" .
@@ -606,10 +643,11 @@ sub usage {
        "results-<engine-type>-<date-stamp>.html)\n" .
        "(-h|--help)               Print this message.\n" .
        "(-j|--javapath)           Location of java executable.\n" .
-       "(-k|--confail)            Log failures to console (also.)\n" . 
-       "(-K|--linefail)           Log failures to console as single line (also.)\n" . 
-       "(-l|--list) <file> ...    List of tests to execute.\n" . 
-       "(-L|--neglist) <file> ... List of tests to skip.\n" . 
+       "(-k|--confail)            Log failures to console (also.)\n" .
+       "(-K|--linefail)           Log failures to console as single line (also.)\n" .
+       "(-R|--report)             Report summarized test results.\n" .
+       "(-l|--list) <file> ...    List of tests to execute.\n" .
+       "(-L|--neglist) <file> ... List of tests to skip.\n" .
        "(-o|--opt) <options>      Options to pass to the JavaScript engine.\n" .
        "                          (Make sure to quote them!)\n" .
        "(-p|--testpath) <path>    Root of the test suite. (default is ./)\n" .
@@ -674,7 +712,7 @@ sub get_engine_command {
         $retval = &get_xpc_engine_command;
     } elsif ($opt_engine_type =~ /^lc(opt|debug)$/) {
         &dd ("getting liveconnect engine command.");
-        $retval = &get_lc_engine_command;   
+        $retval = &get_lc_engine_command;  
     } elsif ($opt_engine_type =~ /^sm(opt|debug)$/) {
         &dd ("getting spidermonkey engine command.");
         $retval = &get_sm_engine_command;
@@ -827,7 +865,7 @@ sub get_sm_engine_command {
             if (!(-x $retval . $object_dir . "/js.exe") && ($os_type eq "WIN")) {
                 # On windows, you can build with js.mak as well as Makefile.ref
                 # (Can you say WTF boys and girls?  I knew you could.)
-                # So, if the exe the would have been built by Makefile.ref isn't 
+                # So, if the exe the would have been built by Makefile.ref isn't
                 # here, check for the js.mak version before dying.
                 if ($opt_shell_path) {
                     $retval = $opt_shell_path;
@@ -1122,7 +1160,7 @@ sub expand_test_list_entry {
         # Entry is in the form suite_dir/test_dir[/*]
         # so iterate all tests under it
         my $suite_and_test_dir = $1;
-        my @test_files = &get_js_files ($opt_suite_path . 
+        my @test_files = &get_js_files ($opt_suite_path .
                                         $suite_and_test_dir);
         my $i;
 
@@ -1379,9 +1417,11 @@ sub report_failure {
             my $linemessage = $message;
             $linemessage =~ s/[\n\r]+/ /mg;
             $bug_number = "none" unless $bug_number;
-            print STDERR ("test: $test bug: $bug_number result: FAILED " .
-                          "type: shell " .
-                          " description: $linemessage\n");
+            &report_summary_result($test, $bug_number, "FAILED", 
+                                   "", 
+                                   "", 
+                                   "",
+                                   $linemessage);
         } elsif($bug_number) {
             print STDERR ("*-* Testcase $test failed:\nBug Number $bug_number".
                           "\n$message\n");
@@ -1458,7 +1498,7 @@ sub int_handler {
 
 }
 
-# XXX: These functions were pulled from 
+# XXX: These functions were pulled from
 # lxr.mozilla.org/mozilla/source/tools/tinderbox/build-seamonkey-util.pl
 # need a general reusable library of routines for use in all test programs.
 
@@ -1473,7 +1513,7 @@ sub kill_process {
         kill $sig => $target_pid;
         my $interval_start = time;
         while (time - $interval_start < 10) {
-            # the following will work with 'cygwin' perl on win32, but not 
+            # the following will work with 'cygwin' perl on win32, but not
             # with 'MSWin32' (ActiveState) perl
             my $pid = waitpid($target_pid, POSIX::WNOHANG());
             if (($pid == $target_pid and POSIX::WIFEXITED($?)) or $pid == -1) {
@@ -1487,3 +1527,24 @@ sub kill_process {
     die "Unable to kill process: $target_pid";
 }
 
+sub report_summary_result
+{
+    my ($test, $bug_number, $result, $description,
+        $expected, $actual, $reason) = @_;
+
+    $description =~ s/[\n\r]+/ /mg;
+    $expected    =~ s/[\n\r]+/ /mg;
+    $actual      =~ s/[\n\r]+/ /mg;
+    $reason      =~ s/[\n\r]+/ /mg;
+
+    print STDERR ("jstest: $test " .
+                  "bug: $bug_number " .
+                  "result: $result " .
+                  "type: shell " . 
+                  "description: $description " .
+                  "expected: $expected " .
+                  "actual: $actual " .
+                  "reason: $reason" .
+                  "\n");
+
+}

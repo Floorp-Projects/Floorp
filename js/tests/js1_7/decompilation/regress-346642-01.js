@@ -35,8 +35,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-346642-01.js';
 //-----------------------------------------------------------------------------
-var bug = 346642;
+var BUGNUMBER = 346642;
 var summary = 'decompilation of destructuring assignment';
 var actual = '';
 var expect = '';
@@ -49,9 +51,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   var f;
 
   f = function () {({a:{c:x}, b:x}) = ({b:3})}
@@ -114,7 +116,7 @@ function test()
   actual = f + '';
   compareSource(expect, actual, summary + ': 12');
 
-  f = function() { ({}) = 3 }   
+  f = function() { ({}) = 3 }  
   expect = 'function() { [] = 3; }';
   actual = f + '';
   compareSource(expect, actual, summary + ': 13');
@@ -149,7 +151,7 @@ function test()
   actual = f + '';
   compareSource(expect, actual, summary + ': 19');
 
-  f = function() { for (;; [x] = [1]) { } } 
+  f = function() { for (;; [x] = [1]) { } }
   expect = 'function() { for (;; [x] = [1]) { } } ';
   actual = f + '';
   compareSource(expect, actual, summary + ': 20');
@@ -160,11 +162,11 @@ function test()
   compareSource(expect, actual, summary + ': 21');
 
   f = (function() { for ( let [a,b]=[c,d] in [3]) { } })
-  expect = 'function() { [c, d]; for ( let [a,b] in [3]) { } }';
+    expect = 'function() { [c, d]; for ( let [a,b] in [3]) { } }';
   actual = f + '';
   compareSource(expect, actual, summary + ': 22');
 
-  f = function () { while(1) [a] = [b]; } 
+  f = function () { while(1) [a] = [b]; }
   expect = 'function () { while(1) {[a] = [b];} } ';
   actual = f + '';
   compareSource(expect, actual, summary + ': 23');

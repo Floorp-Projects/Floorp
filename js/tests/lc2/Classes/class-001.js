@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'class-001.js';
+
 /**
    File Name:      class-001.js
    Description:
@@ -103,16 +105,16 @@ i++;
   i++;
 */
 for ( i = 0; i < java_array.length; i++ ) {
-    CompareValues( java_array[i], test_array[i] );
+  CompareValues( java_array[i], test_array[i] );
 }
 
 test();
 function CompareValues( javaval, testval ) {
-    //  Check type, which should be E_TYPE
-    new TestCase( SECTION,
-		  "typeof (" + testval.description +")",
-		  testval.type,
-		  javaval.type );
+  //  Check type, which should be E_TYPE
+  new TestCase( SECTION,
+		"typeof (" + testval.description +")",
+		testval.type,
+		javaval.type );
 /*
 //  Check JavaScript class, which should be E_JSCLASS
 new TestCase( SECTION,
@@ -120,33 +122,33 @@ new TestCase( SECTION,
 testval.jsclass,
 javaval.jsclass );
 */
-    // Check the class's name, which should be the description, minus the "Package." part.
-    new TestCase( SECTION,
-		  "(" + testval.description +") +''",
-		  testval.classname,
-		  javaval.classname );
+  // Check the class's name, which should be the description, minus the "Package." part.
+  new TestCase( SECTION,
+		"(" + testval.description +") +''",
+		testval.classname,
+		javaval.classname );
 }
 function JavaValue( value ) {
-    // Object.prototype.toString will show its JavaScript wrapper object.
+  // Object.prototype.toString will show its JavaScript wrapper object.
 //    value.__proto__.getJSClass = Object.prototype.toString;
 //    this.jsclass = value.getJSClass();
 
-    this.classname = value +"";
-    this.type   = typeof value;
-    return this;
+  this.classname = value +"";
+  this.type   = typeof value;
+  return this;
 }
 function TestValue( description, value ) {
-    this.description = description;
-    this.type =  E_TYPE;
-    this.jclass = E_JSCLASS;
-    this.lcclass = java.lang.Class.forName( description );
+  this.description = description;
+  this.type =  E_TYPE;
+  this.jclass = E_JSCLASS;
+  this.lcclass = java.lang.Class.forName( description );
 
-    this.classname = "[JavaClass " +
-	(  ( description.substring(0,9) == "Packages." )
-	   ? description.substring(9,description.length)
-	   : description
-	    ) + "]"
+  this.classname = "[JavaClass " +
+    (  ( description.substring(0,9) == "Packages." )
+       ? description.substring(9,description.length)
+       : description
+      ) + "]"
 
 
-	return this;
+    return this;
 }

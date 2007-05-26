@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.4.1.1.js';
+
 /**
    File Name:          15.4.1.1.js
    ECMA Section:       15.4.1 Array( item0, item1,... )
@@ -59,14 +61,14 @@ var TITLE   = "Array Constructor Called as a Function";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,	
-	      "typeof Array(1,2)",        
-	      "object",           
+new TestCase( SECTION,
+	      "typeof Array(1,2)",       
+	      "object",          
 	      typeof Array(1,2) );
 
-new TestCase( SECTION,	
-	      "(Array(1,2)).toString",    
-	      Array.prototype.toString,    
+new TestCase( SECTION,
+	      "(Array(1,2)).toString",   
+	      Array.prototype.toString,   
 	      (Array(1,2)).toString );
 
 new TestCase( SECTION,
@@ -74,24 +76,24 @@ new TestCase( SECTION,
 	      "[object Array]",
 	      eval("var arr = Array(1,2,3); arr.toString = Object.prototype.toString; arr.toString()") );
 
-new TestCase( SECTION,	
-	      "(Array(1,2)).length",      
-	      2,                  
+new TestCase( SECTION,
+	      "(Array(1,2)).length",     
+	      2,                 
 	      (Array(1,2)).length );
 
-new TestCase( SECTION,	
-	      "var arr = (Array(1,2)); arr[0]",  
-	      1,           
+new TestCase( SECTION,
+	      "var arr = (Array(1,2)); arr[0]", 
+	      1,          
 	      eval("var arr = (Array(1,2)); arr[0]") );
 
-new TestCase( SECTION,	
-	      "var arr = (Array(1,2)); arr[1]",  
-	      2,           
+new TestCase( SECTION,
+	      "var arr = (Array(1,2)); arr[1]", 
+	      2,          
 	      eval("var arr = (Array(1,2)); arr[1]") );
 
-new TestCase( SECTION,	
-	      "var arr = (Array(1,2)); String(arr)",  
-	      "1,2",  
+new TestCase( SECTION,
+	      "var arr = (Array(1,2)); String(arr)", 
+	      "1,2", 
 	      eval("var arr = (Array(1,2)); String(arr)") );
 
 test();
