@@ -10,17 +10,18 @@ var storage;
 
 var DIR_SERVICE = new Components.Constructor(
                     "@mozilla.org/file/directory_service;1", "nsIProperties");
-var OUTDIR = (new DIR_SERVICE()).get("ProfD", Ci.nsIFile).path + "/";
+var OUTDIR = (new DIR_SERVICE()).get("ProfD", Ci.nsIFile).path;
 var INDIR = do_get_file("toolkit/components/passwordmgr/test/unit/data/" +
-                        "signons-00.txt").parent.path + "/";
+                        "signons-00.txt").parent.path;
 
 
-function initStorage(aInputFileName, aExpectedError) {
+function initStorage(aInputPathName, aInputFileName, aExpectedError) {
     var e, caughtError = false;
 
     var inputFile  = Cc["@mozilla.org/file/local;1"]
                             .createInstance(Ci.nsILocalFile);
-    inputFile.initWithPath(aInputFileName);
+    inputFile.initWithPath(aInputPathName);
+    inputFile.append(aInputFileName);
 
     try {
         storage.initWithFile(inputFile, null);
@@ -99,7 +100,7 @@ var nsLoginInfo = new Components.Constructor(
                     Components.interfaces.nsILoginInfo);
 do_check_true(nsLoginInfo != null);
 
-testuser1 = new nsLoginInfo;
+var testuser1 = new nsLoginInfo;
 testuser1.hostname      = "http://dummyhost.mozilla.org";
 testuser1.formSubmitURL = "";
 testuser1.username      = "dummydude";
@@ -108,7 +109,7 @@ testuser1.usernameField = "put_user_here";
 testuser1.passwordField = "put_pw_here";
 testuser1.httpRealm     = null;
 
-testuser2 = new nsLoginInfo;
+var testuser2 = new nsLoginInfo;
 testuser2.hostname      = "http://dummyhost.mozilla.org";
 testuser2.formSubmitURL = "";
 testuser2.username      = "dummydude2";
@@ -146,7 +147,7 @@ if (exists) {
 
 testdesc = "Initialize with a non-existant data file";
 
-initStorage(OUTDIR + filename, null);
+initStorage(OUTDIR, filename, null);
 
 checkStorageData([], []);
 
@@ -156,7 +157,7 @@ dump("/* ========== 3 ========== */\n");
 testnum++;
 testdesc = "Initialize with signons-00.txt (a zero-length file)";
 
-initStorage(INDIR + "signons-00.txt", /invalid file header/);
+initStorage(INDIR, "signons-00.txt", /invalid file header/);
 checkStorageData([], []);
 
 
@@ -164,7 +165,7 @@ checkStorageData([], []);
 testnum++;
 testdesc = "Initialize with signons-01.txt (bad file header)";
 
-initStorage(INDIR + "signons-01.txt", /invalid file header/);
+initStorage(INDIR, "signons-01.txt", /invalid file header/);
 checkStorageData([], []);
 
 
@@ -172,7 +173,7 @@ checkStorageData([], []);
 testnum++;
 testdesc = "Initialize with signons-02.txt (valid, but empty)";
 
-initStorage(INDIR + "signons-02.txt", null);
+initStorage(INDIR, "signons-02.txt", null);
 checkStorageData([], []);
 
 
@@ -180,7 +181,7 @@ checkStorageData([], []);
 testnum++;
 testdesc = "Initialize with signons-03.txt (1 disabled, 0 logins)";
 
-initStorage(INDIR + "signons-03.txt", null);
+initStorage(INDIR, "signons-03.txt", null);
 
 disabledHosts = ["http://www.disabled.com"];
 checkStorageData(disabledHosts, []);
@@ -193,7 +194,7 @@ testdesc = "Initialize with signons-06.txt (1 disabled, 0 logins, extra '.')";
 // Mozilla code should never have generated the extra ".", but it's possible
 // someone writing an external utility might have generated it, since it
 // would seem consistant with the format.
-initStorage(INDIR + "signons-04.txt", null);
+initStorage(INDIR, "signons-04.txt", null);
 
 disabledHosts = ["http://www.disabled.com"];
 checkStorageData(disabledHosts, []);
@@ -203,7 +204,7 @@ checkStorageData(disabledHosts, []);
 testnum++;
 testdesc = "Initialize with signons-05.txt (0 disabled, 1 login)";
 
-initStorage(INDIR + "signons-05.txt", null);
+initStorage(INDIR, "signons-05.txt", null);
 
 logins = [testuser1];
 checkStorageData([], logins);
@@ -213,7 +214,7 @@ checkStorageData([], logins);
 testnum++;
 testdesc = "Initialize with signons-06.txt (1 disabled, 1 login)";
 
-initStorage(INDIR + "signons-06.txt", null);
+initStorage(INDIR, "signons-06.txt", null);
 
 disabledHosts = ["https://www.site.net"];
 logins = [testuser1];
@@ -224,7 +225,7 @@ checkStorageData(disabledHosts, logins);
 testnum++;
 testdesc = "Initialize with signons-07.txt (0 disabled, 2 logins for same host)";
 
-initStorage(INDIR + "signons-07.txt", null);
+initStorage(INDIR, "signons-07.txt", null);
 
 logins = [testuser1, testuser2];
 checkStorageData([], logins);
@@ -234,7 +235,7 @@ checkStorageData([], logins);
 testnum++;
 testdesc = "Initialize with signons-08.txt (1000 disabled, 1000 logins)";
 
-initStorage(INDIR + "signons-08.txt", null);
+initStorage(INDIR, "signons-08.txt", null);
 
 disabledHosts = [];
 for (var i = 1; i <= 1000; i++) {
