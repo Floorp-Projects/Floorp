@@ -43,31 +43,10 @@ var summary = 'uneval with special getter functions';
 var actual = '';
 var expect = '';
 
-
-//-----------------------------------------------------------------------------
-test();
-//-----------------------------------------------------------------------------
-
-function test()
-{
-  enterFunc ('test');
-  printBugNumber(BUGNUMBER);
-  printStatus (summary);
+printBugNumber(BUGNUMBER);
+printStatus (summary);
  
-  expect = 'SyntaxError: invalid getter usage';
-
-  getter function p() { print(4) }
-  try
-  {
-    uneval({x getter: this.__lookupGetter__("p")});
-  }
-  catch(ex)
-  {
-    actual = ex + '';
-  }
-  
-  reportCompare(expect, actual, summary);
-
-
-  exitFunc ('test');
-}
+expect = '({get x () {print(4);})';
+getter function p() { print(4) }
+actual =  uneval({x getter: this.__lookupGetter__("p")});
+reportCompare(expect, actual, summary + ': global');
