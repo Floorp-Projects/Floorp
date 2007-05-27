@@ -478,9 +478,15 @@
       <field name="_viewer"><![CDATA[({
         _self: this,
         itemInserted: function MV_V_itemInserted(aParentNode, aNode, aIndex) {
-          var children = this._self.childNodes;
-          this._self.insertNewItem(aNode, aIndex < children.length ? children[aIndex] : null);
-          this._self.updateChevron();
+          // don't insert new items into the toolbar
+          // if the parent is not the root 
+          if (PlacesUtils.nodeIsFolder(aParentNode) &&
+              aParentNode == this._self.getResult().root) {
+            var children = this._self.childNodes;
+            this._self.insertNewItem(aNode,
+              aIndex < children.length ? children[aIndex] : null);
+            this._self.updateChevron();
+          }
         },
         itemRemoved: function MV_V_itemRemoved(aParentNode, aNode, aIndex) {
           var children = this._self.childNodes;
