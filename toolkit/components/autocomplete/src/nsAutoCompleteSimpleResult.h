@@ -44,6 +44,7 @@
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "prtypes.h"
+#include "nsCOMPtr.h"
 
 class nsAutoCompleteSimpleResult : public nsIAutoCompleteSimpleResult
 {
@@ -69,6 +70,8 @@ protected:
   nsString mErrorDescription;
   PRInt32 mDefaultIndex;
   PRUint32 mSearchResult;
+
+  nsCOMPtr<nsIAutoCompleteSimpleResultListener> mListener;
 };
 
 #endif // __nsAutoCompleteSimpleResult__
