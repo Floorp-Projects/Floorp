@@ -2452,14 +2452,35 @@ NS_IMETHODIMP
 nsNavBookmarks::OnPageChanged(nsIURI *aURI, PRUint32 aWhat,
                               const nsAString &aValue)
 {
-  PRBool bookmarked = PR_FALSE;
-  IsBookmarked(aURI, &bookmarked);
-  if (bookmarked) {
-    if (aWhat == nsINavHistoryObserver::ATTRIBUTE_FAVICON) {
-      // query for all bookmarks for that URI, notify for each 
-      nsresult rv;
-      nsTArray<PRInt64> bookmarks;
+  nsresult rv;
+  if (aWhat == nsINavHistoryObserver::ATTRIBUTE_FAVICON) {
+    // Favicons may be set to either pure URIs or to folder URIs
+    PRBool isPlaceURI;
+    rv = aURI->SchemeIs("place", &isPlaceURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (isPlaceURI) {
+      nsCAutoString spec;
+      rv = aURI->GetSpec(spec);
+      NS_ENSURE_SUCCESS(rv, rv);
 
+      nsNavHistory* history = History();
+      NS_ENSURE_TRUE(history, NS_ERROR_UNEXPECTED);
+  
+      nsCOMArray<nsNavHistoryQuery> queries;
+      nsCOMPtr<nsNavHistoryQueryOptions> options;
+      rv = history->QueryStringToQueryArray(spec, &queries, getter_AddRefs(options));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      NS_ENSURE_STATE(queries.Count() == 1);
+      NS_ENSURE_STATE(queries[0]->Folders().Length() == 1);
+
+      ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                          OnItemChanged(queries[0]->Folders()[0], NS_LITERAL_CSTRING("favicon"),
+                                        PR_FALSE, NS_ConvertUTF16toUTF8(aValue)));
+    }
+    else {
+      // query for all bookmarks for that URI, notify for each 
+      nsTArray<PRInt64> bookmarks;
       rv = GetBookmarkIdsForURITArray(aURI, &bookmarks);
       NS_ENSURE_SUCCESS(rv, rv);
 
