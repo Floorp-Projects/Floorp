@@ -693,11 +693,10 @@ nsSeamonkeyProfileMigrator::CopyPasswords(PRBool aReplace)
     nsCOMPtr<nsILoginManagerStorage> importer(
         do_CreateInstance("@mozilla.org/login-manager/storage/legacy;1"));
 
-    nsString pathName;
-    nsCOMPtr<nsIFile> profileDir(do_QueryInterface(mSourceProfile));
-    profileDir->GetPath(pathName);
+    nsCOMPtr<nsIFile> signonsFile(do_QueryInterface(mSourceProfile));
+    signonsFile->SetLeafName(fileName);
 
-    importer->InitWithFile(pathName, fileName, EmptyString());
+    importer->InitWithFile(signonsFile, nsnull);
 
     nsresult rv;
     PRUint32 count;
