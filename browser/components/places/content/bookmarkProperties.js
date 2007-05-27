@@ -835,15 +835,15 @@ var BookmarkPropertiesPanel = {
       }
 
       // Site Location is empty, we can set its URI to null
-      var siteURIString = this._element("feedSiteLocationTextfield").value;
-      var siteURI = null;
-      if (siteURIString)
-        siteURI = PlacesUtils._uri(siteURIString);
+      var newSiteURIString = this._element("feedSiteLocationTextfield").value;
+      var newSiteURI = null;
+      if (newSiteURIString)
+        newSiteURI = PlacesUtils._uri(newSiteURIString);
 
-      if ((!siteURI && this._siteURI)  ||
-          (siteURI && !this._siteURI.equals(siteURI))) {
+      if ((!newSiteURI && this._siteURI)  ||
+          (newSiteURI && (!this._siteURI || !this._siteURI.equals(newSiteURI)))) {
         transactions.push(
-          new PlacesEditLivemarkSiteURITransaction(this._folderId, siteURI));
+          new PlacesEditLivemarkSiteURITransaction(this._folderId, newSiteURI));
       }
     }
 
