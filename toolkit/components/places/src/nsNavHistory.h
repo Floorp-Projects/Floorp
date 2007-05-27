@@ -101,7 +101,8 @@ class nsNavHistory : public nsSupportsWeakReference,
                      public nsIObserver,
                      public nsIBrowserHistory,
                      public nsIGlobalHistory3,
-                     public nsIAutoCompleteSearch
+                     public nsIAutoCompleteSearch,
+                     public nsIAutoCompleteSimpleResultListener
 {
   friend class AutoCompleteIntermediateResultSet;
   friend class AutoCompleteResultComparator;
@@ -116,6 +117,7 @@ public:
   NS_DECL_NSIBROWSERHISTORY
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIAUTOCOMPLETESEARCH
+  NS_DECL_NSIAUTOCOMPLETESIMPLERESULTLISTENER
 
   nsresult Init();
 

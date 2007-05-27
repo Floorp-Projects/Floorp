@@ -153,15 +153,26 @@ nsAutoCompleteSimpleResult::GetStyleAt(PRInt32 aIndex, nsAString& _retval)
 }
 
 NS_IMETHODIMP
+nsAutoCompleteSimpleResult::SetListener(nsIAutoCompleteSimpleResultListener* aListener)
+{
+  mListener = aListener;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsAutoCompleteSimpleResult::RemoveValueAt(PRInt32 aRowIndex,
                                           PRBool aRemoveFromDb)
 {
   NS_ENSURE_TRUE(aRowIndex >= 0 && aRowIndex < mValues.Count(),
                  NS_ERROR_ILLEGAL_VALUE);
 
+  nsAutoString removedValue(*mValues.StringAt(aRowIndex));
   mValues.RemoveStringAt(aRowIndex);
   mComments.RemoveStringAt(aRowIndex);
+
+  if (mListener)
+    mListener->OnValueRemoved(this, removedValue, aRemoveFromDb);
+
   return NS_OK;
 }
-
-

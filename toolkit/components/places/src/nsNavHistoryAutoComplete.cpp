@@ -349,6 +349,9 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
     result->SetDefaultIndex(-1);
   }
 
+  rv = result->SetListener(this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   aListener->OnSearchResult(this, result);
   return NS_OK;
 }
@@ -538,6 +541,25 @@ nsNavHistory::AutoCompleteFullHistorySearch(const nsAString& aSearchString,
   return NS_OK;
 }
 
+// nsNavHistory::OnValueRemoved (nsIAutoCompleteSimpleResultListener)
+
+NS_IMETHODIMP
+nsNavHistory::OnValueRemoved(nsIAutoCompleteSimpleResult* aResult,
+                             const nsAString& aValue, PRBool aRemoveFromDb)
+{
+  if (!aRemoveFromDb)
+    return NS_OK;
+
+  nsresult rv;
+  nsCOMPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), aValue);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = RemovePage(uri);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
 
 // nsNavHistory::AutoCompleteQueryOnePrefix
 //
