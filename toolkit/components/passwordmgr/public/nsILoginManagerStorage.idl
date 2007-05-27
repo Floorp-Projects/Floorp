@@ -37,6 +37,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIFile;
 interface nsILoginInfo;
 
 [scriptable, uuid(18b5acbd-36dc-496d-9212-6f1a3c068a84)]
@@ -60,16 +61,13 @@ interface nsILoginManagerStorage : nsISupports {
     * locations. This is primarily used to the unit tests and profile
     * migration.
     *
-    * @param aPathname
-    *        Directory to use for the input and output files
-    * @param aInputFilename
-    *        Filename to read for stored logins.
-    * @param aOutputFilename
-    *        If non-null, filename to output logins to.
+    * @param aInputFile
+    *        File to read for stored logins.
+    * @param aOutputFile
+    *        If non-null, file to output logins to.
     *
     */
-    void initWithFile(in AString aPathname,
-                in AString aInputFilename, in AString aOutputFilename);
+    void initWithFile(in nsIFile aInputFile, in nsIFile aOutputFile); 
 
 
     /**

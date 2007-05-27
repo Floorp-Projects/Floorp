@@ -102,15 +102,16 @@ LoginManagerStorage_legacy.prototype = {
 
 
 
-    initWithFile : function(aPath, aInputFilename, aOutputFilename) {
-        this._datapath = aPath;
-        this._datafile = aInputFilename;
+    initWithFile : function(aInputFile, aOutputFile) {
+        this._datapath = aInputFile.parent.path;
+        this._datafile = aInputFile.leafName;
 
         this.init();
 
-        if (aOutputFilename && aOutputFilename.length) {
-            this._datafile = aOutputFilename;
-            this._writeFile(aPath, aOutputFilename);
+        if (aOutputFile) {
+            this._datapath = aOutputFile.parent.path;
+            this._datafile = aOutputFile.leafName;
+            this._writeFile(this._datapath, this._datafile);
         }
     },
 
