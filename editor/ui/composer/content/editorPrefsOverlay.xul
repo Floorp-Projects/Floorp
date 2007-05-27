@@ -26,7 +26,8 @@
 
   <!-- editor startup toggle -->
   <groupbox id="generalStartupPreferences">           
-    <checkbox id="generalStartupEditor" wsm_persist="true" position="3"
+    <checkbox id="generalStartupEditor" wsm_persist="true"
+              insertafter="generalStartupMail,generalStartupBrowser"
               label="&editorCheck.label;" accesskey="&editorCheck.accesskey;"
               pref="true" preftype="bool" prefstring="general.startup.editor"
               prefattribute="checked"/>         
@@ -34,7 +35,7 @@
 
   <!-- category tree entries for editor -->
   <treechildren id="panelChildren">
-    <treeitem container="true" id="editor" position="3">
+    <treeitem container="true" id="editor" insertafter="mailnews,navigator">
       <treerow>       
         <treecell url="chrome://editor/content/pref-composer.xul" label="&compose.label;" /> 
       </treerow>
