@@ -41,9 +41,9 @@
 
 gTestsuite = 'js1_8';
 
-// explicitly turn on js17
+// explicitly turn on js18
 if (typeof version != 'undefined')
 {
-  version(170);
+  version(180);
 }
 
