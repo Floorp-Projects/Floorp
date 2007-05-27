@@ -496,11 +496,11 @@ function jsTestDriverBrowserInit()
   }
   else if(value.indexOf('1.8') != -1)
   {
-    gVersion = 170;
+    gVersion = 180;
   }
   else if(value.indexOf('1.9') != -1)
   {
-    gVersion = 170;
+    gVersion = 190;
   }
 
   var testpathparts = testpath.split(/\//);
