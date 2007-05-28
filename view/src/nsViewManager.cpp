@@ -1628,8 +1628,12 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView, nsPoint aDelta,
 
   aUpdateRegion->MoveBy(-displayOffset);
 
+#ifdef MOZ_WIDGET_GTK2
+  return aUpdateRegion->IsEmpty();
+#else
   return PR_TRUE;
-}                                            
+#endif
+}
 
 NS_IMETHODIMP nsViewManager::SetViewCheckChildEvents(nsIView *aView, PRBool aEnable)
 {

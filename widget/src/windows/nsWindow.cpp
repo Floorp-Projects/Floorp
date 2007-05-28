@@ -3278,7 +3278,7 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     trect.bottom = aClipRect->YMost();
   }
 
-  ::ScrollWindowEx(mWnd, aDx, aDy, (nsnull != aClipRect) ? &trect : NULL, NULL,
+  ::ScrollWindowEx(mWnd, aDx, aDy, NULL, (nsnull != aClipRect) ? &trect : NULL,
                    NULL, NULL, SW_INVALIDATE | SW_SCROLLCHILDREN);
   ::UpdateWindow(mWnd);
   return NS_OK;
