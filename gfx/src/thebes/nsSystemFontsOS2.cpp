@@ -113,6 +113,20 @@ nsSystemFontsOS2::nsSystemFontsOS2()
 #endif
 }
 
+/*
+ * Query the font used for various CSS properties (aID) from the system.
+ * For OS/2, only very few fonts are defined in the system, so most of the IDs
+ * resolve to the same system font.
+ * The font queried will give back a string like
+ *    9.WarpSans Bold
+ *    12.Times New Roman Bold Italic
+ *    10.Times New Roman.Strikeout.Underline
+ *    20.Bitstream Vera Sans Mono Obli
+ * (always restricted to 32 chars, at least before the second dot)
+ * We use the value before the dot as the font size (in pt, and convert it to
+ * px using the screen resolution) and then try to use the rest of the string
+ * to determine the font style from it.
+ */
 nsresult nsSystemFontsOS2::GetSystemFont(nsSystemFontID aID, nsString* aFontName,
                                          gfxFontStyle *aFontStyle) const
 {
@@ -172,7 +186,7 @@ nsresult nsSystemFontsOS2::GetSystemFont(nsSystemFontID aID, nsString* aFontName
     printf(" (%s)\n", szFontNameSize);
 #endif
 
-    char *szFacename = strchr(szFontNameSize, '.') + 1;
+    char *szFacename = strchr(szFontNameSize, '.');
     if (!szFacename || (*(szFacename++) == '\0'))
         return NS_ERROR_FAILURE;
 
@@ -195,15 +209,63 @@ nsresult nsSystemFontsOS2::GetSystemFont(nsSystemFontID aID, nsString* aFontName
     // now scale to make pixels from points (1 pt = 1/72in)
     aFontStyle->size *= vertScreenRes / 72.0;
 
-    NS_NAMED_LITERAL_STRING(quote, "\""); // seems like we need quotes around the font name
     NS_ConvertUTF8toUTF16 fontFace(szFacename);
-    *aFontName = quote + fontFace + quote;
+    int pos = 0;
 
-    // As in old gfx/src/os2 set the styles to the defaults
-    aFontStyle->style = FONT_STYLE_NORMAL;
-    aFontStyle->weight = FONT_WEIGHT_NORMAL;
-
+    // this is a system font in any case
     aFontStyle->systemFont = PR_TRUE;
+
+    // bold fonts should have " Bold" in their names, at least we hope that they
+    // do, otherwise it's bad luck
+    NS_NAMED_LITERAL_CSTRING(spcBold, " Bold");
+    if ((pos = fontFace.Find(spcBold.get(), PR_FALSE, 0, -1)) > -1) {
+        aFontStyle->weight = FONT_WEIGHT_BOLD;
+        // strip the attribute, now that we have set it in the gfxFontStyle
+        fontFace.Cut(pos, spcBold.Length());
+    } else {
+        aFontStyle->weight = FONT_WEIGHT_NORMAL;
+    }
+
+    // similar hopes for italic and oblique fonts...
+    NS_NAMED_LITERAL_CSTRING(spcItalic, " Italic");
+    NS_NAMED_LITERAL_CSTRING(spcOblique, " Oblique");
+    NS_NAMED_LITERAL_CSTRING(spcObli, " Obli");
+    if ((pos = fontFace.Find(spcItalic.get(), PR_FALSE, 0, -1)) > -1) {
+        aFontStyle->style = FONT_STYLE_ITALIC;
+        fontFace.Cut(pos, spcItalic.Length());
+    } else if ((pos = fontFace.Find(spcOblique.get(), PR_FALSE, 0, -1)) > -1) {
+        // oblique fonts are rare on OS/2 and not specially supported by
+        // the GPI system, but at least we are trying...
+        aFontStyle->style = FONT_STYLE_OBLIQUE;
+        fontFace.Cut(pos, spcOblique.Length());
+    } else if ((pos = fontFace.Find(spcObli.get(), PR_FALSE, 0, -1)) > -1) {
+        // especially oblique often gets cut by the 32 char limit to "Obli",
+        // so search for that, too (anything shorter would be ambiguous)
+        aFontStyle->style = FONT_STYLE_OBLIQUE;
+        // In this case, assume that this is the last property in the line
+        // and cut off everything else, too
+        // This is needed in case it was really Obliq or Obliqu...
+        fontFace.Cut(pos, fontFace.Length());
+    } else {
+        aFontStyle->style = FONT_STYLE_NORMAL;
+    }
+
+    // just throw away any modifiers that are separated by dots (which are either
+    // .Strikeout, .Underline, or .Outline, none of which have a corresponding
+    // gfxFont property)
+    if ((pos = fontFace.Find(".", PR_FALSE, 0, -1)) > -1) {
+        fontFace.Cut(pos, fontFace.Length());
+    }
+
+#ifdef DEBUG_thebes
+    printf("  after=%s\n", NS_LossyConvertUTF16toASCII(fontFace).get());
+    printf("  style: %s %s %s\n",
+           (aFontStyle->weight == FONT_WEIGHT_BOLD) ? "BOLD" : "",
+           (aFontStyle->style == FONT_STYLE_ITALIC) ? "ITALIC" : "",
+           (aFontStyle->style == FONT_STYLE_OBLIQUE) ? "OBLIQUE" : "");
+#endif
+    NS_NAMED_LITERAL_STRING(quote, "\""); // seems like we need quotes around the font name
+    *aFontName = quote + fontFace + quote;
 
     return NS_OK;
 }
