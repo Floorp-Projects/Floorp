@@ -165,6 +165,10 @@ SYM_FIND_CMD := find -L $(DIST)/bin -type f -a -perm -100 -o -name "*.so" \
 DUMP_SYMS_BIN := $(DIST)/host/bin/dump_syms
 endif
 
+ifdef MOZ_SYMBOLS_EXTRA_BUILDID
+EXTRA_BUILDID := -$(MOZ_SYMBOLS_EXTRA_BUILDID)
+endif
+
 buildsymbols:
 ifdef MOZ_AIRBAG
 	echo building symbol store
@@ -173,7 +177,7 @@ ifdef MOZ_AIRBAG
 	  xargs $(topsrcdir)/toolkit/airbag/tools/make_symbol_store.pl    \
 	  $(MAKE_SYM_STORE_ARGS) $(DUMP_SYMS_BIN)                         \
 	  $(DIST)/crashreporter-symbols/$(BUILDID) >                      \
-	  $(DIST)/crashreporter-symbols/$(BUILDID)/$(MOZ_APP_NAME)-$(MOZ_APP_VERSION)-$(OS_ARCH)-$(BUILDID)-symbols.txt
+	  $(DIST)/crashreporter-symbols/$(BUILDID)/$(MOZ_APP_NAME)-$(MOZ_APP_VERSION)-$(OS_ARCH)-$(BUILDID)$(EXTRA_BUILDID)-symbols.txt
 	echo packing symbols
 	mkdir -p $(topsrcdir)/../$(BUILDID)
 	cd $(DIST)/crashreporter-symbols/$(BUILDID) && \
