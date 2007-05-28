@@ -1398,6 +1398,11 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
         aTextBuffer = end;
       }
     }
+    // In CSS 2.1, we do not compress a space that is preceded by a non-compressible
+    // space.
+    if (!compressWhitespace) {
+      mTrimNextRunLeadingWhitespace = PR_FALSE;
+    }
     textFlags |= analysisFlags;
 
     currentTransformedTextOffset =
@@ -4899,7 +4904,8 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   PRBool usedHyphenation;
   gfxFloat trimmedWidth = 0;
   gfxFloat availWidth = aReflowState.availableWidth;
-  PRBool canTrimTrailingWhitespace = !textStyle->WhiteSpaceIsSignificant();
+  PRBool canTrimTrailingWhitespace = !textStyle->WhiteSpaceIsSignificant() &&
+    textStyle->WhiteSpaceCanWrap();
   PRUint32 transformedCharsFit =
     mTextRun->BreakAndMeasureText(transformedOffset, transformedLength,
                                   (GetStateBits() & TEXT_START_OF_LINE) != 0,
