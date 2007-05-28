@@ -60,7 +60,7 @@ BOOL IsDBCS()
         CHAR        achDBCSInfo[12] = {0};                  // DBCS environmental vector
         ctrycodeInfo.country  = 0;                          // current country
         ctrycodeInfo.codepage = 0;                          // current codepage
-        
+
         rc = DosQueryDBCSEnv(sizeof(achDBCSInfo), &ctrycodeInfo, achDBCSInfo);
         if (rc == NO_ERROR) {
             // Non-DBCS countries will have four bytes in the first four bytes of the
@@ -84,7 +84,7 @@ BOOL IsDBCS()
 void QueryFontFromINI(char* fontType, char* fontName, ULONG ulLength)
 {
     ULONG ulMaxNameL = ulLength;
-    
+
     /* We had to switch to using PrfQueryProfileData because */
     /* some users have binary font data in their INI files */
     BOOL rc = PrfQueryProfileData(HINI_USER, "PM_SystemFonts", fontType,
@@ -116,14 +116,8 @@ nsSystemFontsOS2::nsSystemFontsOS2()
 nsresult nsSystemFontsOS2::GetSystemFont(nsSystemFontID aID, nsString* aFontName,
                                          gfxFontStyle *aFontStyle) const
 {
-    return GetSystemFontInfo(aID, aFontName, aFontStyle);
-}
-
-nsresult nsSystemFontsOS2::GetSystemFontInfo(nsSystemFontID aID, nsString* aFontName,
-                                             gfxFontStyle *aFontStyle) const
-{
 #ifdef DEBUG_thebes
-    printf("nsSystemFontsOS2::GetSystemFontInfo: ");
+    printf("nsSystemFontsOS2::GetSystemFont: ");
 #endif
     char szFontNameSize[MAXNAMEL];
 
@@ -167,21 +161,39 @@ nsresult nsSystemFontsOS2::GetSystemFontInfo(nsSystemFontID aID, nsString* aFont
         break;
 
     default:
-        NS_WARNING("None of the listed font types, using 9.WarpSans");
-#ifdef DEBUG_thebes
-        printf("using 9.WarpSans... ");
-#endif
-        strcpy(szFontNameSize, "9.WarpSans");
+        NS_WARNING("None of the listed font types, using WarpSans");
+        if (!IsDBCS()) {
+            strcpy(szFontNameSize, "9.WarpSans");
+        } else {
+            strcpy(szFontNameSize, "9.WarpSans Combined");
+        }
     } // switch
 #ifdef DEBUG_thebes
     printf(" (%s)\n", szFontNameSize);
 #endif
 
-    int pointSize = atoi(szFontNameSize);
-    char *szFacename = strchr(szFontNameSize, '.');
-
-    if ((pointSize == 0) || (!szFacename) || (*(szFacename++) == '\0'))
+    char *szFacename = strchr(szFontNameSize, '.') + 1;
+    if (!szFacename || (*(szFacename++) == '\0'))
         return NS_ERROR_FAILURE;
+
+    // local DPI for size will be taken into account below
+    aFontStyle->size = atof(szFontNameSize);
+
+    // determine DPI resolution of screen device to compare compute
+    // font size in pixels
+    gfxFloat vertScreenRes = 120; // assume 120 dpi as default
+    HPS ps = WinGetScreenPS(HWND_DESKTOP);
+    HDC dc = GpiQueryDevice(ps);
+    LONG lStart = CAPS_FAMILY, lCount = CAPS_CHAR_WIDTH;
+    LONG alArray[CAPS_CHAR_WIDTH];
+    if (DevQueryCaps(dc, lStart, lCount, alArray)) {
+        // system screen resolution is in pels/m, we need DPI
+        vertScreenRes = alArray[CAPS_VERTICAL_RESOLUTION] * 0.0254;
+    }
+    WinReleasePS(ps);
+
+    // now scale to make pixels from points (1 pt = 1/72in)
+    aFontStyle->size *= vertScreenRes / 72.0;
 
     NS_NAMED_LITERAL_STRING(quote, "\""); // seems like we need quotes around the font name
     NS_ConvertUTF8toUTF16 fontFace(szFacename);
@@ -190,7 +202,6 @@ nsresult nsSystemFontsOS2::GetSystemFontInfo(nsSystemFontID aID, nsString* aFont
     // As in old gfx/src/os2 set the styles to the defaults
     aFontStyle->style = FONT_STYLE_NORMAL;
     aFontStyle->weight = FONT_WEIGHT_NORMAL;
-    aFontStyle->size = gfxFloat(pointSize);
 
     aFontStyle->systemFont = PR_TRUE;
 

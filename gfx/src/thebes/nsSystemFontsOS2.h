@@ -42,6 +42,7 @@
 #define _NS_SYSTEMFONTSOS2_H_
 
 #include <gfxFont.h>
+#define INCL_WINWINDOWMGR
 #define INCL_WINSHELLDATA
 #define INCL_DOSNLS
 #define INCL_DOSERRORS
@@ -53,10 +54,6 @@ public:
     nsSystemFontsOS2();
     nsresult GetSystemFont(nsSystemFontID aID, nsString* aFontName,
                            gfxFontStyle *aFontStyle) const;
-
-private:
-    nsresult GetSystemFontInfo(nsSystemFontID aID, nsString* aFontName,
-                               gfxFontStyle *aFontStyle) const;
 };
 
 #endif /* _NS_SYSTEMFONTSOS2_H_ */
