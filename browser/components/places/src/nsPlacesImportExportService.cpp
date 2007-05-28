@@ -2038,17 +2038,19 @@ nsPlacesImportExportService::WriteLivemark(nsINavHistoryResultNode* aFolder, con
   nsCOMPtr<nsIURI> feedURI;
   rv = mLivemarkService->GetFeedURI(folderId, getter_AddRefs(feedURI));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCString feedSpec;
-  rv = feedURI->GetSpec(feedSpec);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (feedURI) {
+    nsCString feedSpec;
+    rv = feedURI->GetSpec(feedSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  // write feed URI
-  rv = aOutput->Write(kFeedURIAttribute, sizeof(kFeedURIAttribute)-1, &dummy);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = WriteEscapedUrl(feedSpec, aOutput);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
-  NS_ENSURE_SUCCESS(rv, rv);
+    // write feed URI
+    rv = aOutput->Write(kFeedURIAttribute, sizeof(kFeedURIAttribute)-1, &dummy);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = WriteEscapedUrl(feedSpec, aOutput);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // get the optional site URI
   nsCOMPtr<nsIURI> siteURI;
