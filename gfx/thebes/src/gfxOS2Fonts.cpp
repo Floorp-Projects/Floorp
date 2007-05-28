@@ -448,8 +448,6 @@ static void SetMissingGlyphForUCS4(gfxTextRun *aTextRun, PRUint32 aIndex,
     }
 }
 
-#define IS_MISSING_GLYPH(g) (((g) & 0x10000000) || (g) == 0x0FFFFFFF || (g) == 0)
-
 // Helper function to return the leading UTF-8 character in a char pointer
 // as 32bit number. Also sets the length of the current character (i.e. the
 // offset to the next one) in the second argument
@@ -502,19 +500,24 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
 #endif
 
         if (ch == 0) {
-            // treat this null byte as a missing glyph
+            // treat this null byte as a missing glyph, don't create a glyph for it
             aTextRun->SetMissingGlyph(utf16Offset, 0);
+        } else if (ch < 0x10000 && IsInvisibleChar(PRUnichar(ch))) {
+            // hide glyphs for invisible chars (tabs, linebreaks)
+            aTextRun->SetCharacterGlyph(utf16Offset, g.SetMissing());
         } else {
             FT_UInt gid = FT_Get_Char_Index(face, ch); // find the glyph id
             PRInt32 advance = 0;
             if (gid == font->GetSpaceGlyph()) {
                 advance = (int)(font->GetMetrics().spaceWidth * appUnitsPerDevUnit);
+            } else if (gid == 0) {
+                advance = -1; // trigger the missing glyphs case below
             } else {
                 FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT); // load glyph into the slot
                 advance = MOZ_FT_TRUNC(face->glyph->advance.x) * appUnitsPerDevUnit;
             }
 #ifdef DEBUG_thebes_2
-            printf(" gid=%d, advance=%d (%d)\n", gid, advance, appUnitsPerDevUnit);
+            printf(" gid=%d, advance=%d\n", gid, advance);
 #endif
             
             if (advance >= 0 &&
@@ -523,9 +526,8 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
             {
                 aTextRun->SetCharacterGlyph(utf16Offset,
                                             g.SetSimpleGlyph(advance, gid));
-            } else if (IS_MISSING_GLYPH(gid)) {
-                // Note that missing-glyph IDs are not simple glyph IDs, so we'll
-                // always get here when a glyph is missing
+            } else if (gid == 0) {
+                // gid = 0 only happens when the glyph is missing from the font
                 SetMissingGlyphForUCS4(aTextRun, utf16Offset, ch);
             } else {
                 gfxTextRun::DetailedGlyph details;
