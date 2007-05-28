@@ -1749,7 +1749,8 @@ nsTextFrame::GetTrimmedOffsets(const nsTextFragment* aFrag,
   NS_ASSERTION(mTextRun, "Need textrun here");
 
   TrimmedOffsets offsets = { mContentOffset, mContentLength };
-  if (GetStyleText()->WhiteSpaceIsSignificant())
+  const nsStyleText* textStyle = GetStyleText();
+  if (textStyle->WhiteSpaceIsSignificant())
     return offsets;
 
   if (GetStateBits() & TEXT_START_OF_LINE) {
@@ -1759,7 +1760,8 @@ nsTextFrame::GetTrimmedOffsets(const nsTextFragment* aFrag,
     offsets.mLength -= whitespaceCount;
   }
 
-  if (aTrimAfter && (GetStateBits() & TEXT_END_OF_LINE)) {
+  if (aTrimAfter && (GetStateBits() & TEXT_END_OF_LINE) &&
+      textStyle->WhiteSpaceCanWrap()) {
     PRInt32 whitespaceCount =
       GetWhitespaceCount(aFrag, offsets.mStart + offsets.mLength - 1, offsets.mLength, -1);
     offsets.mLength -= whitespaceCount;
@@ -4517,6 +4519,7 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
                             iter, GetInFlowContentLength(), nsnull, 0);
 
   PRBool collapseWhitespace = !provider.GetStyleText()->WhiteSpaceIsSignificant();
+  PRBool canWrap = provider.GetStyleText()->WhiteSpaceCanWrap();
   PRUint32 start =
     FindStartAfterSkippingWhitespace(&provider, aData, collapseWhitespace,
                                      &iter, flowEndInTextRun);
@@ -4540,8 +4543,13 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
 
     if (collapseWhitespace) {
       nscoord trailingWhitespaceWidth;
-      PRUint32 lengthAfterTrim =
-        GetLengthOfTrimmedText(provider.GetFragment(), wordStart, i, &iter);
+      PRUint32 lengthAfterTrim;
+      if (canWrap) {
+        lengthAfterTrim = GetLengthOfTrimmedText(provider.GetFragment(),
+                                                 wordStart, i, &iter);
+      } else {
+        lengthAfterTrim = i - wordStart;
+      }
       if (lengthAfterTrim == 0) {
         trailingWhitespaceWidth = width;
       } else {
@@ -4605,6 +4613,7 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
                             iter, GetInFlowContentLength(), nsnull, 0);
 
   PRBool collapseWhitespace = !provider.GetStyleText()->WhiteSpaceIsSignificant();
+  PRBool canWrap = provider.GetStyleText()->WhiteSpaceCanWrap();
   PRUint32 start =
     FindStartAfterSkippingWhitespace(&provider, aData, collapseWhitespace,
                                      &iter, flowEndInTextRun);
@@ -4614,8 +4623,13 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
   if (collapseWhitespace) {
     // \n line breaks are not honoured, so everything would like to go
     // onto one line, so just measure it
-    PRUint32 lengthAfterTrim =
-      GetLengthOfTrimmedText(provider.GetFragment(), start, flowEndInTextRun, &iter);
+    PRUint32 lengthAfterTrim;
+    if (canWrap) {
+      lengthAfterTrim = GetLengthOfTrimmedText(provider.GetFragment(), start,
+                                               flowEndInTextRun, &iter);
+    } else {
+      lengthAfterTrim = flowEndInTextRun;
+    }
     aData->currentLine +=
       NSToCoordCeil(mTextRun->GetAdvanceWidth(start, flowEndInTextRun - start, &provider));
 
