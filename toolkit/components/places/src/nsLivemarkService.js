@@ -301,17 +301,21 @@ LivemarkService.prototype = {
   *         startup.
   */
   getSiteURI: function LS_getSiteURI(container) {
-    this._ensureLivemark(container);
-    var siteURIString;
-    try { 
-      siteURIString =
+    try {
+      this._ensureLivemark(container);
+      
+      // getItemAnnotationString() can throw if there is no annotation
+      var siteURIString =
         this._ans.getItemAnnotationString(container, LMANNO_SITEURI);
+
+      return gIoService.newURI(siteURIString, null, null);
     }
     catch (ex) {
-      return null;
+      // temporary logging, for bug #381894
+      LOG("getSiteURI failed: " + ex);
+      LOG("siteURIString: " + siteURIString);
     }
-
-    return gIoService.newURI(siteURIString, null, null);
+    return null;
   },
 
   setSiteURI: function LS_setSiteURI(container, siteURI) {
@@ -327,9 +331,19 @@ LivemarkService.prototype = {
   },
 
   getFeedURI: function LS_getFeedURI(container) {
-    return gIoService.newURI(this._ans.getItemAnnotationString(container,
-                                                               LMANNO_FEEDURI),
-                             null, null);
+    try {
+      // getItemAnnotationString() can throw if there is no annotation
+      var feedURIString = this._ans.getItemAnnotationString(container,
+                                                            LMANNO_FEEDURI);
+       
+      return gIoService.newURI(feedURIString, null, null);
+    }
+    catch (ex) {
+      // temporary logging, for bug #381894
+      LOG("getFeedURI failed: " + ex);
+      LOG("feedURIString: " + feedURIString);
+    }
+    return null;
   },
 
   setFeedURI: function LS_setFeedURI(container, feedURI) {
