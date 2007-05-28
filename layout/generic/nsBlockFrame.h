@@ -356,6 +356,11 @@ protected:
 
 #ifdef IBMBIDI
   /**
+   * Perform Bidi resolution on this frame
+   */
+  nsresult ResolveBidi();
+
+  /**
    * Test whether the frame is a form control in a visual Bidi page.
    * This is necessary for backwards-compatibility, because most visual
    * pages use logical order for form controls so that they will

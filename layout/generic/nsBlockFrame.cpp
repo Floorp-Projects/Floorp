@@ -637,6 +637,10 @@ nsBlockFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
   AutoNoisyIndenter indent(gNoisyIntrinsic);
 #endif
 
+#ifdef IBMBIDI
+  ResolveBidi();
+#endif // IBMBIDI
+
   PRInt32 lineNumber = 0;
   InlineMinWidthData data;
   for (line_iterator line = begin_lines(), line_end = end_lines();
@@ -693,6 +697,10 @@ nsBlockFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   }
   AutoNoisyIndenter indent(gNoisyIntrinsic);
 #endif
+
+#ifdef IBMBIDI
+  ResolveBidi();
+#endif // IBMBIDI
 
   PRInt32 lineNumber = 0;
   InlinePrefWidthData data;
@@ -876,16 +884,7 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
                            marginRoot, marginRoot, needSpaceManager);
 
 #ifdef IBMBIDI
-  if (! mLines.empty()) {
-    if (aPresContext->BidiEnabled()) {
-      nsBidiPresUtils* bidiUtils = aPresContext->GetBidiUtils();
-      if (bidiUtils) {
-        bidiUtils->Resolve(aPresContext, this,
-                           mLines.front()->mFirstChild,
-                           IsVisualFormControl(aPresContext));
-      }
-    }
-  }
+  ResolveBidi();
 #endif // IBMBIDI
 
   if (RenumberLists(aPresContext)) {
@@ -6347,6 +6346,27 @@ nsBlockFrame::BlockNeedsSpaceManager(nsIFrame* aBlock)
 // XXX keep the text-run data in the first-in-flow of the block
 
 #ifdef IBMBIDI
+nsresult
+nsBlockFrame::ResolveBidi()
+{
+  nsPresContext* presContext = PresContext();
+  if (!presContext->BidiEnabled()) {
+    return NS_OK;
+  }
+
+  if (mLines.empty()) {
+    return NS_OK;
+  }
+
+  nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
+  if (!bidiUtils)
+    return NS_OK;
+
+  return bidiUtils->Resolve(presContext, this,
+                            mLines.front()->mFirstChild,
+                            IsVisualFormControl(presContext));
+}
+
 PRBool
 nsBlockFrame::IsVisualFormControl(nsPresContext* aPresContext)
 {
