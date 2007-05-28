@@ -170,6 +170,9 @@
         <parameter name="placeURI"/>
         <body><![CDATA[
           function findNode(container, placeURI) {
+            if (container.uri == placeURI)
+              return container;
+              
             container.containerOpen = true;
             for (var i = 0; i < container.childCount; ++i) {
               var child = container.getChild(i);
