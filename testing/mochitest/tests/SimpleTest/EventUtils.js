@@ -160,6 +160,7 @@ function __doEventDispatch(aTarget, aCharCode, aKeyCode, aHasShift) {
  */
 function _parseModifiers(aEvent)
 {
+  const masks = Components.interfaces.nsIDOMNSEvent;
   var mval = 0;
   if (aEvent.shiftKey)
     mval |= masks.SHIFT_MASK;
