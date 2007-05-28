@@ -39,7 +39,7 @@
 #ifndef NSEXPIRATIONTRACKER_H_
 #define NSEXPIRATIONTRACKER_H_
 
-#include "prerror.h"
+#include "prlog.h"
 #include "nsTArray.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
