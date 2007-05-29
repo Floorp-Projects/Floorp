@@ -39,8 +39,11 @@
 
 #include "crashreporter.h"
 
+#ifdef _MSC_VER
 // Disable exception handler warnings.
-#pragma warning( disable : 4530 )
+# pragma warning( disable : 4530 )
+#endif
+
 #include <fstream>
 #include <sstream>
 
@@ -48,8 +51,10 @@ using std::string;
 using std::istream;
 using std::ifstream;
 using std::istringstream;
+using std::ostringstream;
 using std::ostream;
 using std::ofstream;
+using std::vector;
 
 StringTable  gStrings;
 int          gArgc;
@@ -61,7 +66,30 @@ static string       gSettingsPath;
 
 static string kExtraDataExtension = ".extra";
 
-static bool ReadStrings(istream &in, StringTable &strings)
+static string Unescape(const string& str)
+{
+  string ret;
+  for (string::const_iterator iter = str.begin();
+       iter != str.end();
+       iter++) {
+    if (*iter == '\\') {
+      iter++;
+      if (*iter == '\\'){
+        ret.push_back('\\');
+      } else if (*iter == 'n') {
+        ret.push_back('\n');
+      } else if (*iter == 't') {
+        ret.push_back('\t');
+      }
+    } else {
+      ret.push_back(*iter);
+    }
+  }
+
+  return ret;
+}
+
+static bool ReadStrings(istream& in, StringTable& strings, bool unescape)
 {
   string currentSection;
   while (!in.eof()) {
@@ -72,6 +100,8 @@ static bool ReadStrings(istream &in, StringTable &strings)
       string key, value;
       key = line.substr(0, sep);
       value = line.substr(sep + 1);
+      if (unescape)
+        value = Unescape(value);
       strings[key] = value;
     }
   }
@@ -80,12 +110,13 @@ static bool ReadStrings(istream &in, StringTable &strings)
 }
 
 static bool ReadStringsFromFile(const string& path,
-                                StringTable& strings)
+                                StringTable& strings,
+                                bool unescape)
 {
   ifstream f(path.c_str(), std::ios::in);
   if (!f.is_open()) return false;
 
-  return ReadStrings(f, strings);
+  return ReadStrings(f, strings, unescape);
 }
 
 static bool ReadConfig()
@@ -94,7 +125,7 @@ static bool ReadConfig()
   if (!UIGetIniPath(iniPath))
     return false;
 
-  if (!ReadStringsFromFile(iniPath, gStrings))
+  if (!ReadStringsFromFile(iniPath, gStrings, true))
     return false;
 
   return true;
@@ -125,7 +156,6 @@ static bool MoveCrashData(const string& toDir,
                           string& extrafile)
 {
   if (!UIEnsurePathExists(toDir)) {
-    UIError(toDir.c_str());
     return false;
   }
 
@@ -134,8 +164,6 @@ static bool MoveCrashData(const string& toDir,
 
   if (!UIMoveFile(dumpfile, newDump) ||
       !UIMoveFile(extrafile, newExtra)) {
-    UIError(dumpfile.c_str());
-    UIError(newDump.c_str());
     return false;
   }
 
@@ -149,7 +177,7 @@ static bool AddSubmittedReport(const string& serverResponse)
 {
   StringTable responseItems;
   istringstream in(serverResponse);
-  ReadStrings(in, responseItems);
+  ReadStrings(in, responseItems, false);
 
   if (responseItems.find("CrashID") == responseItems.end())
     return false;
@@ -190,10 +218,13 @@ bool CrashReporterSendCompleted(bool success,
                                 const string& serverResponse)
 {
   if (success) {
-    if (!gDumpFile.empty())
-      UIDeleteFile(gDumpFile);
-    if (!gExtraFile.empty())
-      UIDeleteFile(gExtraFile);
+    const char* noDelete = getenv("MOZ_CRASHREPORTER_NO_DELETE_DUMP");
+    if (!noDelete || *noDelete == '\0') {
+      if (!gDumpFile.empty())
+        UIDeleteFile(gDumpFile);
+      if (!gExtraFile.empty())
+        UIDeleteFile(gExtraFile);
+    }
 
     return AddSubmittedReport(serverResponse);
   }
@@ -228,7 +259,7 @@ int main(int argc, const char** argv)
     }
 
     StringTable queryParameters;
-    if (!ReadStringsFromFile(gExtraFile, queryParameters)) {
+    if (!ReadStringsFromFile(gExtraFile, queryParameters, true)) {
       UIError("Couldn't read extra data");
       return 0;
     }
@@ -260,6 +291,19 @@ int main(int argc, const char** argv)
     // we don't need to actually send this
     queryParameters.erase("ServerURL");
 
+    vector<string> restartArgs;
+
+    ostringstream paramName;
+    int i = 0;
+    paramName << "MOZ_CRASHREPORTER_RESTART_ARG_" << i++;
+    const char *param = getenv(paramName.str().c_str());
+    while (param && *param) {
+      restartArgs.push_back(param);
+
+      paramName << "MOZ_CRASHREPORTER_RESTART_ARG_" << i++;
+      param = getenv(paramName.str().c_str());
+    };
+
     // allow override of the server url via environment variable
     //XXX: remove this in the far future when our robot
     // masters force everyone to use XULRunner
@@ -268,7 +312,29 @@ int main(int argc, const char** argv)
       sendURL = urlEnv;
     }
 
-    UIShowCrashUI(gDumpFile, queryParameters, sendURL);
+    // rewrite some UI strings with the values from the query parameters
+    char buf[4096];
+    UI_SNPRINTF(buf, sizeof(buf),
+                gStrings[ST_RESTART].c_str(),
+                product.c_str());
+    gStrings[ST_RESTART] = buf;
+
+    UI_SNPRINTF(buf, sizeof(buf),
+                gStrings[ST_CRASHREPORTERDESCRIPTION].c_str(),
+                product.c_str());
+    gStrings[ST_CRASHREPORTERDESCRIPTION] = buf;
+
+    UI_SNPRINTF(buf, sizeof(buf),
+                gStrings[ST_CHECKSUBMIT].c_str(),
+                vendor.empty() ? "Mozilla" : vendor.c_str());
+    gStrings[ST_CHECKSUBMIT] = buf;
+
+    UI_SNPRINTF(buf, sizeof(buf),
+                gStrings[ST_CRASHREPORTERTITLE].c_str(),
+                vendor.empty() ? "Mozilla" : vendor.c_str());
+    gStrings[ST_CRASHREPORTERTITLE] = buf;
+
+    UIShowCrashUI(gDumpFile, queryParameters, sendURL, restartArgs);
   }
 
   UIShutdown();
