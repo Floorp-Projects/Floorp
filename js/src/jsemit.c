@@ -6905,6 +6905,6 @@ void
 js_FinishTakingTryNotes(JSContext *cx, JSCodeGenerator *cg,
                         JSTryNoteArray *array)
 {
-    JS_ASSERT(cg->tryNext - cg->tryBase == array->length);
+    JS_ASSERT(cg->tryNext - cg->tryBase == (ptrdiff_t) array->length);
     memcpy(array->notes, cg->tryBase, TRYNOTE_SIZE(array->length));
 }
