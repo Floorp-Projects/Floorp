@@ -490,19 +490,21 @@ nsNavHistory::AutoCompleteFullHistorySearch(const nsAString& aSearchString,
                                AUTOCOMPLETE_MATCHES_SCHEME_PENALTY, &matches);
   }
 
-  // sort according to priorities
-  AutoCompleteResultComparator comparator(this);
-  matches.Sort(comparator);
-
   // fill into result
-  rv = aResult->AppendMatch(matches[0].url, matches[0].title);
-  NS_ENSURE_SUCCESS(rv, rv);
-  for (i = 1; i < matches.Length(); i ++) {
-    // only add ones that are NOT the same as the previous one. It's possible
-    // to get duplicates from the queries.
-    if (!matches[i].url.Equals(matches[i-1].url)) {
-      rv = aResult->AppendMatch(matches[i].url, matches[i].title);
-      NS_ENSURE_SUCCESS(rv, rv);
+  if (matches.Length() > 0) {
+    // sort according to priorities
+    AutoCompleteResultComparator comparator(this);
+    matches.Sort(comparator);
+
+    rv = aResult->AppendMatch(matches[0].url, matches[0].title);
+    NS_ENSURE_SUCCESS(rv, rv);
+    for (i = 1; i < matches.Length(); i ++) {
+      // only add ones that are NOT the same as the previous one. It's possible
+      // to get duplicates from the queries.
+      if (!matches[i].url.Equals(matches[i-1].url)) {
+        rv = aResult->AppendMatch(matches[i].url, matches[i].title);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
     }
   }
   return NS_OK;
