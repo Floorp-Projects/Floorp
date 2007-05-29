@@ -228,6 +228,8 @@ static const char * GetUniqueMaiAtkTypeName(PRUint16 interfacesBits);
 
 static gpointer parent_class = NULL;
 
+static GQuark quark_mai_hyperlink = 0;
+
 GType
 mai_atk_object_get_type(void)
 {
@@ -249,6 +251,7 @@ mai_atk_object_get_type(void)
 
         type = g_type_register_static(ATK_TYPE_OBJECT,
                                       "MaiAtkObject", &tinfo, GTypeFlags(0));
+        quark_mai_hyperlink = g_quark_from_static_string("MaiHyperlink");
     }
     return type;
 }
@@ -300,12 +303,54 @@ nsAccessibleWrap::~nsAccessibleWrap()
     MAI_LOG_DEBUG(("==nsAccessibleWrap deleting: this=%p,total=%d left=%d\n",
                    (void*)this, mAccWrapDeleted,
                    (mAccWrapCreated-mAccWrapDeleted)));
+}
 
+NS_IMETHODIMP nsAccessibleWrap::Shutdown()
+{
     if (mAtkObject) {
         if (IS_MAI_OBJECT(mAtkObject)) {
             MAI_ATK_OBJECT(mAtkObject)->accWrap = nsnull;
         }
+        SetMaiHyperlink(nsnull);
         g_object_unref(mAtkObject);
+        mAtkObject = nsnull;
+    }
+    return nsAccessible::Shutdown();
+}
+
+MaiHyperlink* nsAccessibleWrap::GetMaiHyperlink(PRBool aCreate /* = PR_TRUE */)
+{
+    // make sure mAtkObject is created
+    GetAtkObject();
+
+    NS_ASSERTION(quark_mai_hyperlink, "quark_mai_hyperlink not initialized");
+    NS_ASSERTION(IS_MAI_OBJECT(mAtkObject), "Invalid AtkObject");
+    MaiHyperlink* maiHyperlink = nsnull;
+    if (quark_mai_hyperlink && IS_MAI_OBJECT(mAtkObject)) {
+        maiHyperlink = (MaiHyperlink*)g_object_get_qdata(G_OBJECT(mAtkObject),
+                                                         quark_mai_hyperlink);
+        if (!maiHyperlink && aCreate) {
+            maiHyperlink = new MaiHyperlink(this);
+            SetMaiHyperlink(maiHyperlink);
+        }
+    }
+    return maiHyperlink;
+}
+
+void nsAccessibleWrap::SetMaiHyperlink(MaiHyperlink* aMaiHyperlink)
+{
+    NS_ASSERTION(quark_mai_hyperlink, "quark_mai_hyperlink not initialized");
+    NS_ASSERTION(IS_MAI_OBJECT(mAtkObject), "Invalid AtkObject");
+    if (quark_mai_hyperlink && IS_MAI_OBJECT(mAtkObject)) {
+        MaiHyperlink* maiHyperlink = GetMaiHyperlink(PR_FALSE);
+        if (!maiHyperlink && !aMaiHyperlink) {
+            return; // Never set and we're shutting down
+        }
+        if (maiHyperlink) {
+            delete maiHyperlink;
+        }
+        g_object_set_qdata(G_OBJECT(mAtkObject), quark_mai_hyperlink,
+                           aMaiHyperlink);
     }
 }
 

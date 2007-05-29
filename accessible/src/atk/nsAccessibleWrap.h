@@ -76,6 +76,8 @@ struct AtkPropertyChange {
   void *newvalue;
 };
 
+class MaiHyperlink;
+
 /**
  * nsAccessibleWrap, and its descendents in atk directory provide the
  * implementation of AtkObject.
@@ -85,6 +87,7 @@ class nsAccessibleWrap: public nsAccessible
 public:
     nsAccessibleWrap(nsIDOMNode*, nsIWeakReference *aShell);
     virtual ~nsAccessibleWrap();
+    NS_IMETHOD Shutdown();
 
 #ifdef MAI_LOGGING
     virtual void DumpnsAccessibleWrapInfo(int aDepth) {}
@@ -92,7 +95,6 @@ public:
     static PRInt32 mAccWrapDeleted;
 #endif
 
-public:
     // return the atk object for this nsAccessibleWrap
     NS_IMETHOD GetNativeInterface(void **aOutAccessible);
     NS_IMETHOD FireAccessibleEvent(nsIAccessibleEvent *aEvent);
@@ -100,13 +102,17 @@ public:
     AtkObject * GetAtkObject(void);
 
     PRBool IsValidObject();
+    
+    // get/set the MaiHyperlink object for this nsAccessibleWrap
+    MaiHyperlink* GetMaiHyperlink(PRBool aCreate = PR_TRUE);
+    void SetMaiHyperlink(MaiHyperlink* aMaiHyperlink);
 
     static const char * ReturnString(nsAString &aString) {
       static nsCString returnedString;
       returnedString = NS_ConvertUTF16toUTF8(aString);
       return returnedString.get();
     }
-    
+
 protected:
     nsresult FireAtkStateChangeEvent(nsIAccessibleEvent *aEvent,
                                      AtkObject *aObject);
