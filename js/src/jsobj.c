@@ -963,11 +963,14 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             if (gsop[j] && VALUE_IS_FUNCTION(cx, val[j]) &&
                 !needOldStyleGetterSetter) {
                 const jschar *start = vchars;
-                if (vchars[0] == '(')
+                uint8 parenChomp = 0;
+                if (vchars[0] == '(') {
                     vchars++;
+                    parenChomp = 1;
+                }
                 vchars = js_strchr_limit(vchars, '(', vchars + vlength);
                 if (vchars) {
-                    vlength -= vchars - start + 1;
+                    vlength -= vchars - start + parenChomp;
                 } else {
                     gsop[j] = NULL;
                     vchars = start;
