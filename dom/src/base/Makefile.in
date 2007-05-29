@@ -61,6 +61,7 @@ REQUIRES	= xpcom \
 		  pref \
 		  oji \
 		  necko \
+		  nkcache \
 		  mimetype \
 		  java \
 		  locale \
@@ -120,6 +121,7 @@ FORCE_STATIC_LIB = 1
 LOCAL_INCLUDES = \
 		-I$(srcdir)/../events \
 		-I$(srcdir)/../storage \
+		-I$(srcdir)/../offline \
 		-I$(topsrcdir)/content/xbl/src \
 		-I$(topsrcdir)/content/xul/document/src \
 		-I$(topsrcdir)/content/events/src \

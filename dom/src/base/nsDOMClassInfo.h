@@ -1579,6 +1579,29 @@ public:
   }
 };
 
+class nsOfflineResourceListSH : public nsStringArraySH
+{
+protected:
+  nsOfflineResourceListSH(nsDOMClassInfoData* aData) : nsStringArraySH(aData)
+  {
+  }
+
+  virtual ~nsOfflineResourceListSH()
+  {
+  }
+
+  virtual nsresult GetStringAt(nsISupports *aNative, PRInt32 aIndex,
+                               nsAString& aResult);
+
+public:
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsOfflineResourceListSH(aData);
+  }
+};
+
+
+
 void InvalidateContextAndWrapperCache();
 
 

@@ -1162,6 +1162,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(CommandEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(OfflineResourceList, nsOfflineResourceListSH,
+                           ARRAY_SCRIPTABLE_FLAGS)
 };
 
 // Objects that shuld be constructable through |new Name();|
@@ -3166,6 +3169,10 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(CommandEvent, nsIDOMCommandEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCommandEvent)
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(OfflineResourceList, nsIDOMOfflineResourceList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMOfflineResourceList)
   DOM_CLASSINFO_MAP_END
 
 #ifdef NS_DEBUG
@@ -10005,4 +10012,15 @@ nsAttributeSH::GetFlags(PRUint32 *aFlags)
   *aFlags = DOMCLASSINFO_STANDARD_FLAGS;
 
   return NS_OK;
+}
+
+// nsOfflineResourceListSH
+nsresult
+nsOfflineResourceListSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
+                                     nsAString& aResult)
+{
+  nsCOMPtr<nsIDOMOfflineResourceList> list(do_QueryInterface(aNative));
+  NS_ENSURE_TRUE(list, NS_ERROR_UNEXPECTED);
+
+  return list->Item(aIndex, aResult);
 }

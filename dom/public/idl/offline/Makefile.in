@@ -15,8 +15,8 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Mozilla Foundation.
-# Portions created by the Initial Developer are Copyright (C) 2007
+#   Mozilla Corporation
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,16 +35,19 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH          = ../../../..
+topsrcdir      = @top_srcdir@
+srcdir         = @srcdir@
+VPATH          = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS =	lib \
-	prototype \
-	offline \
-	$(NULL)
+MODULE         = dom
+XPIDL_MODULE   = dom_offline
+GRE_MODULE     = 1
+
+SDK_XPIDLSRCS =                       \
+        nsIDOMOfflineResourceList.idl \
+       $(NULL)
 
 include $(topsrcdir)/config/rules.mk

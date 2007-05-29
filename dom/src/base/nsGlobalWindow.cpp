@@ -50,6 +50,7 @@
 #include "nsHistory.h"
 #include "nsBarProps.h"
 #include "nsDOMStorage.h"
+#include "nsDOMOfflineResourceList.h"
 #include "nsDOMError.h"
 
 // Helper Classes
@@ -104,6 +105,7 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMPkcs11.h"
+#include "nsIDOMOfflineResourceList.h"
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsThreadUtils.h"
@@ -8415,6 +8417,7 @@ nsNavigator::LoadingNewDocument()
   // arrays may have changed.  See bug 150087.
   mMimeTypes = nsnull;
   mPlugins = nsnull;
+  mOfflineResources = nsnull;
 }
 
 nsresult
@@ -8463,3 +8466,34 @@ nsNavigator::RegisterProtocolHandler(const nsAString& aProtocol,
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsNavigator::GetOfflineResources(nsIDOMOfflineResourceList **aList)
+{
+  NS_ENSURE_ARG_POINTER(aList);
+
+  if (!mOfflineResources) {
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetDocShell()));
+    if (!webNav) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = webNav->GetCurrentURI(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mOfflineResources = new nsDOMOfflineResourceList();
+    if (!mOfflineResources) return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = mOfflineResources->Init(uri);
+    if (NS_FAILED(rv)) {
+      mOfflineResources = nsnull;
+      return rv;
+    }
+  }
+
+  NS_IF_ADDREF(*aList = mOfflineResources);
+
+  return NS_OK;
+}
+
