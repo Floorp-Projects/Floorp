@@ -74,6 +74,9 @@ else
   catch(ex)
   {
   }
+
+  // prevent this from messing up enumerators when shutting down test.
+  delete Object.prototype.__iterator__;
 }
  
 reportCompare(expect, actual, summary);
