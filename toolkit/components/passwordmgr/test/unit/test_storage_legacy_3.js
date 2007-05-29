@@ -194,6 +194,64 @@ initStorage(OUTDIR, "output-380961-3.txt");
 checkStorageData([], [dummyuser1, dummyuser2, dummyuser3]);
 
 
+/*
+ * ---------------------- Bug 381262 ----------------------
+ * The SecretDecoderRing can't handle UCS2, failure to
+ * convert to UTF8 garbles the result.
+ *
+ * Note: dump()ing to the console on OS X (at least) outputs
+ * garbage, whereas the "bad" UCS2 looks ok!
+ */
+
+/* ========== 5 ========== */
+testnum++;
+
+testdesc = "initializing login with non-ASCII data."
+var dummyuser4 = Cc["@mozilla.org/login-manager/loginInfo;1"]
+                    .createInstance(Ci.nsILoginInfo);
+
+dummyuser4.hostname      = "https://site.org";
+dummyuser4.username      = String.fromCharCode(
+                            355, 277, 349, 357, 533, 537, 101, 345, 185);
+                            // "testuser1" using similar-looking glyphs
+dummyuser4.usernameField = "username";
+dummyuser4.password      = "testpa" + String.fromCharCode(223) + "1";
+                            // "ss" replaced with German eszett.
+dummyuser4.passwordField = "password";
+dummyuser4.formSubmitURL = "https://site.org";
+dummyuser4.httpRealm     = null;
+
+
+/* ========== 6 ========== */
+testnum++;
+
+testdesc = "testing import of non-ascii username and password."
+initStorage(INDIR, "signons-381262.txt", OUTDIR, "output-381262-1.txt");
+var logins = storage.getAllLogins({});
+checkStorageData([], [dummyuser4]);
+
+testdesc = "[flush and reload for verification]"
+initStorage(OUTDIR, "output-381262-1.txt");
+checkStorageData([], [dummyuser4]);
+
+
+/* ========== 7 ========== */
+testnum++;
+
+testdesc = "testing storage of non-ascii username and password."
+initStorage(INDIR, "signons-empty.txt", OUTDIR, "output-381262-2.txt");
+checkStorageData([], []);
+storage.addLogin(dummyuser4);
+checkStorageData([], [dummyuser4]);
+
+testdesc = "[flush and reload for verification]"
+initStorage(OUTDIR, "output-381262-2.txt");
+var logins = storage.getAllLogins({});
+checkStorageData([], [dummyuser4]);
+
+
+
+
 } catch (e) {
     throw ("FAILED in test #" + testnum + " -- " + testdesc + ": " + e); }
 };

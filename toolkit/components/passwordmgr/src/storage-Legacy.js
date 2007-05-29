@@ -612,7 +612,12 @@ LoginManagerStorage_legacy.prototype = {
      *
      */
     _encrypt : function (plainText) {
-        return this._decoderRing.encryptString(plainText);
+        var converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                             .createInstance(Ci.nsIScriptableUnicodeConverter);
+        converter.charset = "UTF-8";
+        var plainOctet = converter.ConvertFromUnicode(plainText);
+        plainOctet += converter.Finish();
+        return this._decoderRing.encryptString(plainOctet);
     },
 
 
@@ -624,14 +629,19 @@ LoginManagerStorage_legacy.prototype = {
         var plainText = null;
 
         try {
+            var plainOctet;
             if (cipherText.charAt(0) == '~') {
                 // The older file format obscured entries by
                 // base64-encoding them. These entries are signaled by a
                 // leading '~' character. 
-                plainText = atob(cipherText.substring(1));
+                plainOctet = atob(cipherText.substring(1));
             } else {
-                plainText = this._decoderRing.decryptString(cipherText);
+                plainOctet = this._decoderRing.decryptString(cipherText);
             }
+            var converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                              .createInstance(Ci.nsIScriptableUnicodeConverter);
+            converter.charset = "UTF-8";
+            plainText = converter.ConvertToUnicode(plainOctet);
         } catch (e) {
             this.log("Failed to decrypt string: " + cipherText);
         }
