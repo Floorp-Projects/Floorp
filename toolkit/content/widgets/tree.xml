@@ -389,6 +389,236 @@
         </body>
       </method>
 
+      <method name="_moveByOffset">
+        <parameter name="offset"/>
+        <parameter name="edge"/>
+        <parameter name="event"/>
+        <body>
+          <![CDATA[
+            if (this._editingColumn || this.view.rowCount == 0)
+              return;
+
+            if (this._isAccelPressed(event) && this.view.selection.single) {
+              this.treeBoxObject.scrollByLines(offset);
+              return;
+            }
+   
+            var c = this.currentIndex + offset;
+            if (offset > 0 ? c > edge : c < edge) {
+              if (this.view.selection.isSelected(edge) && this.view.selection.count <= 1)
+                return;
+              c = edge;
+            }
+   
+            var cellSelType = this._cellSelType;
+            if (cellSelType) {
+              var column = this.view.selection.currentColumn;
+              if (!column)
+                return;
+   
+              while ((offset > 0 ? c <= edge : c >= edge) && !this.view.isSelectable(c, column))
+                c += offset;
+              if (offset > 0 ? c > edge : c < edge)
+                return;
+            }
+   
+            if (!this._isAccelPressed(event))
+              this.view.selection.timedSelect(c, this._selectDelay);
+            else // Ctrl+Up/Down moves the anchor without selecting
+              this.currentIndex = c;
+            this.treeBoxObject.ensureRowIsVisible(c);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_moveByOffsetShift">
+        <parameter name="offset"/>
+        <parameter name="edge"/>
+        <parameter name="event"/>
+        <body>
+          <![CDATA[
+            if (this._editingColumn || this.view.rowCount == 0)
+              return;
+
+            if (this.view.selection.single) {
+              this.treeBoxObject.scrollByLines(offset);
+              return;
+            }
+
+            if (this.view.rowCount == 1 && !this.view.selection.isSelected(0)) {
+              this.view.selection.timedSelect(0, this._selectDelay);
+              return;
+            }
+      
+            var c = this.currentIndex;
+            if (c == -1)
+                c == 0;
+
+            if (c == edge) {
+              if (this.view.selection.isSelected(c))
+                return;
+            }
+      
+            // Extend the selection from the existing pivot, if any
+            this.view.selection.rangedSelect(-1, c + offset,
+                                             this._isAccelPressed(event));
+            this.treeBoxObject.ensureRowIsVisible(c + offset);
+
+          ]]>
+        </body>
+      </method>
+
+      <method name="_moveByPage">
+        <parameter name="offset"/>
+        <parameter name="edge"/>
+        <parameter name="event"/>
+        <body>
+          <![CDATA[
+            if (this._editingColumn || this.view.rowCount == 0)
+              return;
+
+            if (this.pageUpOrDownMovesSelection == this._isAccelPressed(event)) {
+               this.treeBoxObject.scrollByPages(offset);
+               return;
+            }
+
+            if (this.view.rowCount == 1 && !this.view.selection.isSelected(0)) {
+              this.view.selection.timedSelect(0, this._selectDelay);
+              return;
+            }
+
+            var c = this.currentIndex;
+            if (c == -1)
+              return;
+
+            if (c == edge && this.view.selection.isSelected(c)) {
+              this.treeBoxObject.ensureRowIsVisible(c);
+              return;
+            }
+            var i = this.treeBoxObject.getFirstVisibleRow();
+            var p = this.treeBoxObject.getPageLength();
+
+            if (offset > 0) {
+              i += p - 1;
+              if (c >= i) {
+                 i = c + p;
+                 this.treeBoxObject.ensureRowIsVisible(i > edge ? edge : i);
+              }
+              i = i > edge ? edge : i;
+
+            } else {
+              if (c <= i) {
+                 i = c <= p ? 0 : c - p;
+                 this.treeBoxObject.ensureRowIsVisible(i);
+              }
+            }
+            this.view.selection.timedSelect(i, this._selectDelay);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_moveByPageShift">
+        <parameter name="offset"/>
+        <parameter name="edge"/>
+        <parameter name="event"/>
+        <body>
+          <![CDATA[
+            if (this._editingColumn || this.view.rowCount == 0)
+              return;
+
+            if (this.view.rowCount == 1 && !this.view.selection.isSelected(0) &&
+                !(this.pageUpOrDownMovesSelection == this._isAccelPressed(event))) {
+              this.view.selection.timedSelect(0, this._selectDelay);
+              return;
+            }
+
+            if (this.view.selection.single)
+              return;
+
+            var c = this.currentIndex;
+            if (c == -1)
+              return;
+            if (c == edge && this.view.selection.isSelected(c)) {
+              this.treeBoxObject.ensureRowIsVisible(edge);
+              return;
+            }
+            var i = this.treeBoxObject.getFirstVisibleRow();
+            var p = this.treeBoxObject.getPageLength();
+
+            if (offset > 0) {
+              i += p - 1;
+              if (c >= i) {
+                 i = c + p;
+                 this.treeBoxObject.ensureRowIsVisible(i > edge ? edge : i);
+              }
+              // Extend the selection from the existing pivot, if any
+              this.view.selection.rangedSelect(-1, i > edge ? edge : i, this._isAccelPressed(event));
+
+            } else {
+
+              if (c <= i) {
+                 i = c <= p ? 0 : c - p;
+                 this.treeBoxObject.ensureRowIsVisible(i);
+              }
+              // Extend the selection from the existing pivot, if any
+              this.view.selection.rangedSelect(-1, i, this._isAccelPressed(event));
+            }
+
+          ]]>
+        </body>
+      </method>
+
+      <method name="_moveToEdge">
+        <parameter name="edge"/>
+        <parameter name="event"/>
+        <body>
+          <![CDATA[
+            if (this._editingColumn || this.view.rowCount == 0)
+              return;
+
+            if (this.view.selection.isSelected(edge) && this.view.selection.count == 1) {
+              this.currentIndex = edge;
+              return;
+            }
+
+            // Normal behaviour is to select the first/last row
+            if (!this._isAccelPressed(event))
+              this.view.selection.timedSelect(edge, this._selectDelay);
+
+            // In a multiselect tree Ctrl+Home/End moves the anchor
+            else if (!this.view.selection.single)
+              this.currentIndex = edge;
+
+            this.treeBoxObject.ensureRowIsVisible(edge);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_moveToEdgeShift">
+        <parameter name="edge"/>
+        <parameter name="event"/>
+        <body>
+          <![CDATA[
+            if (this._editingColumn || this.view.rowCount == 0)
+              return;
+
+            if (this.view.rowCount == 1 && !this.view.selection.isSelected(0)) {
+              this.view.selection.timedSelect(0, this._selectDelay);
+              return;
+            }
+
+            if (this.view.selection.single ||
+                (this.view.selection.isSelected(edge)) && this.view.selection.isSelected(this.currentIndex))
+              return;
+
+            // Extend the selection from the existing pivot, if any.
+            // -1 doesn't work here, so using currentIndex instead
+            this.view.selection.rangedSelect(this.currentIndex, edge, this._isAccelPressed(event));
+
+            this.treeBoxObject.ensureRowIsVisible(edge);
+          ]]>
+        </body>
+      </method>
     </implementation>
     
     <handlers>
@@ -553,252 +783,29 @@
         ]]>
       </handler>
       <handler event="keypress" keycode="VK_UP"
-               modifiers="accel any">
-        <![CDATA[
-         if (this._editingColumn)
-           return;
-
-         if (this._isAccelPressed(event) && this.view.selection.single) {
-           this.treeBoxObject.scrollByLines(-1);
-           return;
-         }
-
-         var c = this.currentIndex - 1;
-         if (c < 0)
-           return;
-
-         var cellSelType = this._cellSelType;
-         if (cellSelType) {
-           var column = this.view.selection.currentColumn;
-           if (!column)
-             return;
-
-           while (c >= 0 && !this.view.isSelectable(c, column))
-             c--;
-           if (c < 0)
-             return;
-         }
-
-         if (!this._isAccelPressed(event))
-           this.view.selection.timedSelect(c, this._selectDelay);
-         else // Ctrl+Up moves the anchor without selecting
-           this.currentIndex = c;
-         this.treeBoxObject.ensureRowIsVisible(c);
-        ]]>
-      </handler>
+               modifiers="accel any" action="_moveByOffset(-1, 0, event);"/>
       <handler event="keypress" keycode="VK_DOWN"
-               modifiers="accel any">
-        <![CDATA[
-         if (this._editingColumn)
-           return;
-
-         if (this._isAccelPressed(event) && this.view.selection.single) {
-           this.treeBoxObject.scrollByLines(1);
-           return;
-         }
-         var c = this.currentIndex + 1;
-         if (c == this.view.rowCount)
-           return;
-
-         var cellSelType = this._cellSelType;
-
-         if (cellSelType) {
-           var column = this.view.selection.currentColumn;
-           if (!column)
-             return;
-
-           while (c < this.view.rowCount && !this.view.isSelectable(c, column))
-             c++;
-           if (c == this.view.rowCount)
-             return;
-         }
-
-         if (!this._isAccelPressed(event))
-           this.view.selection.timedSelect(c, this._selectDelay);
-         else // Ctrl+Down moves the anchor without selecting
-           this.currentIndex = c;
-         this.treeBoxObject.ensureRowIsVisible(c);
-        ]]>
-      </handler>
+               modifiers="accel any" action="_moveByOffset(1, this.view.rowCount - 1, event);"/>
       <handler event="keypress" keycode="VK_UP"
-               modifiers="accel any, shift">
-        <![CDATA[
-         if (this._editingColumn || this.view.selection.single)
-           return;
-         var c = this.currentIndex;
-         if (c == -1 || c == 0)
-           return;
-         // Extend the selection from the existing pivot, if any
-         this.view.selection.rangedSelect(-1, c - 1,
-                                          this._isAccelPressed(event));
-         this.treeBoxObject.ensureRowIsVisible(c - 1);
-        ]]>
-      </handler>
+               modifiers="accel any, shift" action="_moveByOffsetShift(-1, 0, event);"/>
       <handler event="keypress" keycode="VK_DOWN"
-               modifiers="accel any, shift">
-        <![CDATA[
-         if (this._editingColumn || this.view.selection.single)
-           return;
-         var c = this.currentIndex;
-         if (c+1 == this.view.rowCount)
-           return;
-         // Extend the selection from the existing pivot, if any
-         this.view.selection.rangedSelect(-1, c + 1,
-                                          this._isAccelPressed(event));
-         this.treeBoxObject.ensureRowIsVisible(c + 1);
-        ]]>
-      </handler>
+               modifiers="accel any, shift" action="_moveByOffsetShift(1, this.view.rowCount - 1, event);"/>
       <handler event="keypress" keycode="VK_PAGE_UP"
-               modifiers="accel any">
-        <![CDATA[
-         if (this._editingColumn)
-           return;
-
-         if (this.pageUpOrDownMovesSelection == this._isAccelPressed(event)) {
-           this.treeBoxObject.scrollByPages(-1);
-           return;
-         }
-         var c = this.currentIndex;
-         if (c == -1)
-           return;
-         if (c == 0 && this.view.selection.isSelected(c)) {
-           this.treeBoxObject.ensureRowIsVisible(0);
-           return;
-         }
-         var i = this.treeBoxObject.getFirstVisibleRow();
-         if (c <= i) {
-            var p = this.treeBoxObject.getPageLength();
-            i = c <= p ? 0 : c - p;
-            this.treeBoxObject.ensureRowIsVisible(i);
-         }
-         this.view.selection.timedSelect(i, this._selectDelay);
-        ]]>
-      </handler>
+               modifiers="accel any" action="_moveByPage(-1, 0, event);"/>
       <handler event="keypress" keycode="VK_PAGE_DOWN"
-               modifiers="accel any">
-        <![CDATA[
-         if (this._editingColumn)
-           return;
-
-         if (this.pageUpOrDownMovesSelection == this._isAccelPressed(event)) {
-           this.treeBoxObject.scrollByPages(1);
-           return;
-         }
-         var c = this.currentIndex;
-         var l = this.view.rowCount - 1;
-         if (l == -1)
-           return;
-         if (c == l && this.view.selection.isSelected(c)) {
-           this.treeBoxObject.ensureRowIsVisible(l);
-           return;
-         }
-         var p = this.treeBoxObject.getPageLength();
-         var i = this.treeBoxObject.getFirstVisibleRow() + p - 1;
-         if (c >= i) {
-            i = c + p;
-            this.treeBoxObject.ensureRowIsVisible(i > l ? l : i);
-         }
-         this.view.selection.timedSelect(i > l ? l : i, this._selectDelay);
-        ]]>
-      </handler>
+               modifiers="accel any" action="_moveByPage(1, this.view.rowCount - 1, event);"/>
       <handler event="keypress" keycode="VK_PAGE_UP"
-               modifiers="accel any, shift">
-        <![CDATA[
-         if (this._editingColumn || this.view.selection.single)
-           return;
-         var c = this.currentIndex;
-         if (c == -1)
-           return;
-         if (c == 0 && this.view.selection.isSelected(c)) {
-           this.treeBoxObject.ensureRowIsVisible(0);
-           return;
-         }
-         var i = this.treeBoxObject.getFirstVisibleRow();
-         if (c <= i) {
-            var p = this.treeBoxObject.getPageLength();
-            i = c <= p ? 0 : c - p;
-            this.treeBoxObject.ensureRowIsVisible(i);
-         }
-         // Extend the selection from the existing pivot, if any
-         this.view.selection.rangedSelect(-1, i, this._isAccelPressed(event));
-        ]]>
-      </handler>
+               modifiers="accel any, shift" action="_moveByPageShift(-1, 0, event);"/>
       <handler event="keypress" keycode="VK_PAGE_DOWN"
-               modifiers="accel any, shift">
-        <![CDATA[
-         if (this._editingColumn || this.view.selection.single)
-           return;
-         var c = this.currentIndex;
-         var l = this.view.rowCount - 1;
-         if (l == -1)
-           return;
-         if (c == l && this.view.selection.isSelected(c)) {
-           this.treeBoxObject.ensureRowIsVisible(l);
-           return;
-         }
-         var p = this.treeBoxObject.getPageLength();
-         var i = this.treeBoxObject.getFirstVisibleRow() + p - 1;
-         if (c >= i) {
-            i = c + p;
-            this.treeBoxObject.ensureRowIsVisible(i > l ? l : i);
-         }
-         // Extend the selection from the existing pivot, if any
-         this.view.selection.rangedSelect(-1, i > l ? l : i, this._isAccelPressed(event));
-        ]]>
-      </handler>
+               modifiers="accel any, shift" action="_moveByPageShift(1, this.view.rowCount - 1, event);"/>
       <handler event="keypress" keycode="VK_HOME"
-               modifiers="accel any">
-        <![CDATA[
-         if (this._editingColumn || this.view.rowCount == 0)
-           return;
-         // Normal behaviour is to select the first row
-         if (!this._isAccelPressed(event))
-           this.view.selection.timedSelect(0, this._selectDelay);
-         // In a multiselect tree Ctrl+Home moves the anchor
-         else if (!this.view.selection.single)
-           this.currentIndex = 0;
-         this.treeBoxObject.ensureRowIsVisible(0);
-        ]]>
-      </handler>
+               modifiers="accel any" action="_moveToEdge(0, event);"/>
       <handler event="keypress" keycode="VK_END"
-               modifiers="accel any">
-        <![CDATA[
-         if (this._editingColumn)
-           return;
-
-         var l = this.view.rowCount - 1;
-         if (l < 0)
-           return;
-         // Normal behaviour is to select the last row
-         if (!this._isAccelPressed(event))
-           this.view.selection.timedSelect(l, this._selectDelay);
-         // In a multiselect tree Ctrl+End moves the anchor
-         else if (!this.view.selection.single)
-           this.currentIndex = l;
-         this.treeBoxObject.ensureRowIsVisible(l);
-        ]]>
-      </handler>
+               modifiers="accel any" action="_moveToEdge(this.view.rowCount - 1, event);"/>
       <handler event="keypress" keycode="VK_HOME"
-               modifiers="accel any, shift">
-        <![CDATA[
-         if (this._editingColumn || this.view.selection.single)
-           return;
-         // Extend the selection from the existing pivot, if any
-         this.view.selection.rangedSelect(-1, 0, this._isAccelPressed(event));
-         this.treeBoxObject.ensureRowIsVisible(0);
-        ]]>
-      </handler>
+               modifiers="accel any, shift" action="_moveToEdgeShift(0, event);"/>
       <handler event="keypress" keycode="VK_END"
-               modifiers="accel any, shift">
-        <![CDATA[
-         if (this._editingColumn || this.view.selection.single)
-           return;
-         var l = this.view.rowCount - 1;
-         // Extend the selection from the existing pivot, if any
-         this.view.selection.rangedSelect(-1, l, this._isAccelPressed(event));
-         this.treeBoxObject.ensureRowIsVisible(l);
-        ]]>
-      </handler>
+               modifiers="accel any, shift" action="_moveToEdgeShift(this.view.rowCount - 1, event);"/>
       <handler event="keypress">
         <![CDATA[
          if (this._editingColumn)
