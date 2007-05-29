@@ -1819,6 +1819,7 @@ NSEvent* globalDragEvent = nil;
   [self registerForDraggedTypes:[NSArray arrayWithObjects:NSFilenamesPboardType,
                                                           NSStringPboardType,
                                                           NSURLPboardType,
+                                                          kWildcardPboardType,
                                                           nil]];
 
   return self;
