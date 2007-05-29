@@ -1,11 +1,15 @@
 #ifndef CRASHREPORTER_H__
 #define CRASHREPORTER_H__
 
-#pragma warning( push )
+#ifdef _MSC_VER
+# pragma warning( push )
 // Disable exception handler warnings.
-#pragma warning( disable : 4530 )
+# pragma warning( disable : 4530 )
+#endif
+
 #include <string>
 #include <map>
+#include <vector>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -24,17 +28,16 @@
 
 typedef std::map<std::string, std::string> StringTable;
 
-#define ST_OK                       "Ok"
-#define ST_CANCEL                   "Cancel"
-#define ST_SEND                     "Send"
-#define ST_DONTSEND                 "DontSend"
-#define ST_CLOSE                    "Close"
 #define ST_CRASHREPORTERTITLE       "CrashReporterTitle"
+#define ST_CRASHREPORTERHEADER      "CrashReporterHeader"
 #define ST_CRASHREPORTERDESCRIPTION "CrashReporterDescription"
-#define ST_RADIOENABLE              "RadioEnable"
-#define ST_RADIODISABLE             "RadioDisable"
-#define ST_SENDTITLE                "SendTitle"
-#define ST_SUBMITSUCCESS            "SubmitSuccess"
+#define ST_CRASHREPORTERDEFAULT     "CrashReporterDefault"
+#define ST_VIEWREPORT               "ViewReport"
+#define ST_EXTRAREPORTINFO          "ExtraReportInfo"
+#define ST_CHECKSUBMIT              "CheckSubmit"
+#define ST_CHECKEMAIL               "CheckEmail"
+#define ST_CLOSE                    "Close"
+#define ST_RESTART                  "Restart"
 #define ST_SUBMITFAILED             "SubmitFailed"
 
 //=============================================================================
@@ -62,7 +65,8 @@ void UIShowDefaultUI();
 // Run the UI for when the app was launched with a dump file
 void UIShowCrashUI(const std::string& dumpfile,
                    const StringTable& queryParameters,
-                   const std::string& sendURL);
+                   const std::string& sendURL,
+                   const std::vector<std::string>& restartArgs);
 
 void UIError(const std::string& message);
 
@@ -74,5 +78,8 @@ bool UIEnsurePathExists(const std::string& path);
 bool UIMoveFile(const std::string& oldfile, const std::string& newfile);
 bool UIDeleteFile(const std::string& oldfile);
 
-#pragma warning( pop )
+#ifdef _MSC_VER
+# pragma warning( pop )
+#endif
+
 #endif

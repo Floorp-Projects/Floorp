@@ -2328,6 +2328,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     if (appData.buildID)
       CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("BuildID"),
                                      nsDependentCString(appData.buildID));
+    CrashReporter::SetRestartArgs(argc, argv);
   }
 #endif
 
