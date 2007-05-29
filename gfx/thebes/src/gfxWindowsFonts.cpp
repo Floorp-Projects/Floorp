@@ -97,6 +97,9 @@ gfxWindowsFont::gfxWindowsFont(const nsAString& aName, const gfxFontStyle *aFont
       mFontFace(nsnull), mScaledFont(nsnull),
       mMetrics(nsnull)
 {
+    // XXX we should work to get this passed in rather than having to find it again.
+    mFontEntry = gfxWindowsPlatform::GetPlatform()->FindFontEntry(aName);
+    NS_ASSERTION(mFontEntry, "Unable to find font entry for font.  Something is whack.");
 }
 
 gfxWindowsFont::~gfxWindowsFont()
@@ -175,19 +178,6 @@ gfxWindowsFont::MakeHFONT()
     if (mFont)
         return mFont;
 
-    if (!mWeightTable) {
-        nsString name(mName);
-        ToLowerCase(name);
-
-        gfxWindowsPlatform *platform = gfxWindowsPlatform::GetPlatform();
-
-        mWeightTable = platform->GetFontWeightTable(name);
-        if (!mWeightTable) {
-            mWeightTable = new WeightTable();
-            platform->PutFontWeightTable(name, mWeightTable);
-        }
-    }
-
     PRInt8 baseWeight, weightDistance;
     GetStyle()->ComputeWeightAndOffset(&baseWeight, &weightDistance);
 
@@ -198,10 +188,10 @@ gfxWindowsFont::MakeHFONT()
     if (weightDistance >= 0) {
 
         for (PRUint8 i = baseWeight, k = 0; i < 10; i++) {
-            if (mWeightTable->HasWeight(i)) {
+            if (mFontEntry->mWeightTable.HasWeight(i)) {
                 k++;
                 chosenWeight = i * 100;
-            } else if (mWeightTable->TriedWeight(i)) {
+            } else if (mFontEntry->mWeightTable.TriedWeight(i)) {
                 continue;
             } else {
                 const PRUint32 tryWeight = i * 100;
@@ -216,7 +206,7 @@ gfxWindowsFont::MakeHFONT()
                 GetTextMetrics(dc, &metrics);
 
                 PRBool hasWeight = (metrics.tmWeight == tryWeight);
-                mWeightTable->SetWeight(i, hasWeight);
+                mFontEntry->mWeightTable.SetWeight(i, hasWeight);
                 if (hasWeight) {
                     chosenWeight = i * 100;
                     k++;
@@ -328,7 +318,7 @@ gfxWindowsFont::ComputeMetrics()
         mMetrics->strikeoutOffset = (double)oMetrics.otmsStrikeoutPosition;
         mMetrics->underlineSize = PR_MAX(1, (double)oMetrics.otmsUnderscoreSize);
         mMetrics->underlineOffset = (double)oMetrics.otmsUnderscorePosition;
-        
+
         const MAT2 kIdentityMatrix = { {0, 1}, {0, 0}, {0, 0}, {0, 1} };
         GLYPHMETRICS gm;
         DWORD len = GetGlyphOutlineW(dc, PRUnichar('x'), GGO_METRICS, &gm, 0, nsnull, &kIdentityMatrix);
@@ -674,7 +664,7 @@ SetupTextRunFromGlyphs(gfxTextRun *aRun, WCHAR *aGlyphs, HDC aDC,
     PRUint32 length = aRun->GetLength();
     if (IsAnyGlyphMissing(aGlyphs, length))
         return PR_FALSE;
-       
+
     SIZE size;
     nsAutoTArray<int,500> partialWidthArray;
     if (!partialWidthArray.AppendElements(length))
@@ -936,11 +926,6 @@ public:
         free(mAlternativeString);
     }
 
-    const PRUnichar *GetString() const { return mString; }
-    const PRUint32 GetStringLength() const { return mLength; }
-
-
-
     static PRBool AddFontCallback(const nsAString& aName,
                                   const nsACString& aGenericName,
                                   void *closure) {
@@ -955,53 +940,26 @@ public:
             if (aName.Equals(item->mFonts[i]->GetName()))
                 return PR_TRUE;
 
-        nsRefPtr<gfxWindowsFont> font =
-            GetOrMakeFont(aName, item->mGroup->GetStyle());
+        nsRefPtr<gfxWindowsFont> font = GetOrMakeFont(aName, item->mGroup->GetStyle());
         if (font) {
             item->mFonts.AppendElement(font);
         }
         return PR_TRUE;
     }
 
-#ifdef DEBUG_pavlov
-    HRESULT Break() {
-        HRESULT rv;
-
-        SCRIPT_LOGATTR *logAttrs = (SCRIPT_LOGATTR*)malloc(sizeof(SCRIPT_LOGATTR) * mLength);
-
-        rv = ScriptBreak(mString, mLength, &mScriptItem->a, logAttrs);
-
-        for (PRUint32 i = 0; i < mLength; ++i) {
-            PR_LOG(gFontLog, PR_LOG_DEBUG, ("0x%04x - %d %d %d %d %d",
-                                            mString[i],
-                                            logAttrs[i].fSoftBreak,
-                                            logAttrs[i].fWhiteSpace,
-                                            logAttrs[i].fCharStop,
-                                            logAttrs[i].fWordStop,
-                                            logAttrs[i].fInvalid));
-        }
-
-        free(logAttrs);
-        return rv;
-    }
-#endif
-
     /* possible return values:
-       E_PENDING -- means script cache lookup failed, DC needs to be set and font selected in to it.
-       USP_E_SCRIPT_NOT_IN_FONT -- this font doesn't support this text. keep trying new fonts.
-       if you try all possible fonts, then go back to font 0 after calling DisableShaping and try again
-       through all the fonts
-    */
+     * S_OK - things succeeded
+     * GDI_ERROR - things failed to shape.  Might want to try again after calling DisableShaping()
+     */
     HRESULT Shape() {
         HRESULT rv;
 
         HDC shapeDC = nsnull;
 
+        const PRUnichar *str = mAlternativeString ? mAlternativeString : mString;
+
         while (PR_TRUE) {
-            const PRUnichar *str =
-                mAlternativeString ? mAlternativeString : mString;
             mScriptItem->a.fLogicalOrder = PR_TRUE;
-            mScriptItem->a.s.fDisplayZWG = PR_TRUE;
 
             rv = ScriptShape(shapeDC, mCurrentFont->ScriptCache(),
                              str, mLength,
@@ -1023,10 +981,6 @@ public:
                 continue;
             }
 
-#if 0 // debugging only
-            if (rv != USP_E_SCRIPT_NOT_IN_FONT && !shapeDC)
-                printf("skipped select-shape %d\n", rv);
-#endif
             return rv;
         }
     }
@@ -1043,51 +997,24 @@ public:
         GenerateAlternativeString();
     }
 
-    /* this should only be called if there are no surrogates
-     * in the string */
     PRBool IsMissingGlyphsCMap() {
-        HRESULT rv;
-        HDC cmapDC = nsnull;
-
-        while (PR_TRUE) {
-            rv = ScriptGetCMap(cmapDC, mCurrentFont->ScriptCache(),
-                               mString, mLength, 0, mGlyphs);
-
-            if (rv == E_PENDING) {
-                SelectFont();
-                cmapDC = mDC;
-                continue;
+        nsRefPtr<FontEntry> fe = GetCurrentFont()->GetFontEntry();
+        for (PRUint32 i = 0; i < mLength; i++) {
+            PRUint32 ch = mString[i];
+            if ((i+1 < mLength) && NS_IS_HIGH_SURROGATE(ch) && NS_IS_LOW_SURROGATE(mString[i+1])) {
+                i++;
+                ch = SURROGATE_TO_UCS4(ch, mString[i]);
             }
-
-            if (rv == S_OK)
-                return PR_FALSE;
-
-            PR_LOG(gFontLog, PR_LOG_WARNING, ("cmap is missing a glyph"));
-            for (PRUint32 i = 0; i < mLength; i++)
-                PR_LOG(gFontLog, PR_LOG_WARNING, (" - %d", mGlyphs[i]));
-            return PR_TRUE;
+            if (!fe->mCharacterMap.test(ch))
+                return PR_TRUE;
         }
+
+        return PR_FALSE;
     }
 
     PRBool IsGlyphMissing(SCRIPT_FONTPROPERTIES *aSFP, PRUint32 aGlyphIndex) {
         if (mGlyphs[aGlyphIndex] == aSFP->wgDefault)
             return PR_TRUE;
-        return PR_FALSE;
-    }
-
-    PRBool IsMissingGlyphs() {
-        SCRIPT_FONTPROPERTIES sfp;
-        ScriptFontProperties(&sfp);
-        PRUint32 charIndex = 0;
-        for (int i = 0; i < mNumGlyphs; ++i) {
-            if (IsGlyphMissing(&sfp, i))
-                return PR_TRUE;
-#ifdef DEBUG_pavlov // excess debugging code
-            PR_LOG(gFontLog, PR_LOG_DEBUG, ("%04x %04x %04x", sfp.wgBlank, sfp.wgDefault, sfp.wgInvalid));
-            PR_LOG(gFontLog, PR_LOG_DEBUG, ("glyph%d - 0x%04x", i, mGlyphs[i]));
-            PR_LOG(gFontLog, PR_LOG_DEBUG, ("%04x  --  %04x -- %04x", ScriptProperties()->fInvalidGlyph, mScriptItem->a.fNoGlyphIndex, mAttr[i].fZeroWidth));
-#endif
-        }
         return PR_FALSE;
     }
 
@@ -1286,7 +1213,6 @@ TRY_AGAIN_HOPE_FOR_THE_BEST_2:
             goto TRY_AGAIN_HOPE_FOR_THE_BEST_2;
         } else if (!mTriedOtherFonts) {
             mTriedOtherFonts = PR_TRUE;
-            nsString fonts;
             gfxWindowsPlatform *platform = gfxWindowsPlatform::GetPlatform();
 
             if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG)) {
@@ -1302,22 +1228,16 @@ TRY_AGAIN_HOPE_FOR_THE_BEST_2:
                     PR_LOG(gFontLog, PR_LOG_DEBUG, (" - 0x%04x", ch));
                 }
             }
-            
-            platform->FindOtherFonts(mString, mLength,
-                                     nsPromiseFlatCString(mGroup->GetStyle()->langGroup).get(),
-                                     nsPromiseFlatCString(mGroup->GetGenericFamily()).get(),
-                                     fonts);
-            if (!fonts.IsEmpty()) {
+
+            nsRefPtr<FontEntry> newFont = platform->FindFontForString(mString, mLength, mFonts[0]);
+                                                                
+            if (newFont) {
                 if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
-                    PR_LOG(gFontLog, PR_LOG_DEBUG, ("Got back: %s", NS_LossyConvertUTF16toASCII(fonts).get()));
-                gfxFontGroup::ForEachFont(fonts, EmptyCString(), UniscribeItem::AddFontCallback, this);
+                    PR_LOG(gFontLog, PR_LOG_DEBUG, ("Got back: %s", NS_LossyConvertUTF16toASCII(newFont->mName).get()));
+
+                AddFontCallback(newFont->mName, EmptyCString(), this);
             }
             goto TRY_AGAIN_HOPE_FOR_THE_BEST_2;
-        } else {
-            // const SCRIPT_PROPERTIES *sp = item->ScriptProperties();
-            // We should try to look up the font based on sp.langgroup
-            // if it isn't ambiguious.  Would save us time over doing
-            // character by character lookups at least for pref fonts
         }
 
         return nsnull;
@@ -1352,7 +1272,6 @@ TRY_AGAIN_HOPE_FOR_THE_BEST_2:
 
         mFontSelected = PR_TRUE;
     }
-
 
 private:
     static PRInt32 GetCJKLangGroupIndex(const char *aLangGroup) {
@@ -1441,6 +1360,7 @@ private:
                 mAlternativeString[i] = PRUnichar(0xFFFD);
         }
     }
+
 private:
     nsRefPtr<gfxContext> mContext;
     HDC mDC;
@@ -1481,7 +1401,6 @@ class Uniscribe
 public:
     Uniscribe(gfxContext *aContext, HDC aDC, const PRUnichar *aString, PRUint32 aLength, PRBool aIsRTL) :
         mContext(aContext), mDC(aDC), mString(aString), mLength(aLength), mIsRTL(aIsRTL),
-        mIsComplex(ScriptIsComplex(aString, aLength, SIC_COMPLEX) == S_OK),
         mItems(nsnull) {
     }
     ~Uniscribe() {
@@ -1541,8 +1460,6 @@ private:
     const PRUnichar *mString;
     const PRUint32 mLength;
     const PRBool mIsRTL;
-    // XXX not used
-    const PRBool mIsComplex;
 
     SCRIPT_CONTROL mControl;
     SCRIPT_STATE   mState;
@@ -1550,10 +1467,9 @@ private:
     int mNumItems;
 };
 
-
 void
 gfxWindowsFontGroup::InitTextRunUniscribe(gfxContext *aContext, gfxTextRun *aRun, const PRUnichar *aString,
-                                         PRUint32 aLength)
+                                          PRUint32 aLength)
 {
     nsRefPtr<gfxASurface> surf = aContext->CurrentSurface();
     HDC aDC = GetDCFromSurface(surf);
@@ -1568,7 +1484,7 @@ gfxWindowsFontGroup::InitTextRunUniscribe(gfxContext *aContext, gfxTextRun *aRun
     /* itemize the string */
     int numItems = us.Itemize();
 
-    for (int i=0; i < numItems; ++i) {
+    for (int i = 0; i < numItems; ++i) {
         PRUint32 fontIndex = 0;
 
         SaveDC(aDC);
@@ -1584,58 +1500,45 @@ gfxWindowsFontGroup::InitTextRunUniscribe(gfxContext *aContext, gfxTextRun *aRun
             if (font) {
                 /* set the curret font on the item */
                 item->SetCurrentFont(font);
-
+ 
                 if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
                     PR_LOG(gFontLog, PR_LOG_DEBUG, ("trying: %s", NS_LossyConvertUTF16toASCII(font->GetName()).get()));
-
-                PRBool cmapHasGlyphs = PR_FALSE; // false means "maybe" here
-
-                if (!giveUp && !(aRun->GetFlags() & TEXT_HAS_SURROGATES)) {
-                    if (item->IsMissingGlyphsCMap())
-                        continue;
-                    else
-                        cmapHasGlyphs = PR_TRUE;
+ 
+                if (!giveUp && item->IsMissingGlyphsCMap()) {
+                    PR_LOG(gFontLog, PR_LOG_DEBUG, (" - missing glyphs in cmap"));
+                    continue;
                 }
-
+ 
+SCRIPT_SHAPE:
                 rv = item->Shape();
-
+ 
                 if (giveUp) {
                     if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
                         PR_LOG(gFontLog, PR_LOG_DEBUG, ("%s - gave up", NS_LossyConvertUTF16toASCII(font->GetName()).get()));
                     goto SCRIPT_PLACE;
                 }
-
-                if (FAILED(rv))
-                    continue;
-
-                if (!cmapHasGlyphs && item->IsMissingGlyphs())
-                    continue;
+ 
+                if (FAILED(rv)) {
+                    PR_LOG(gFontLog, PR_LOG_DEBUG, (" - shaping failed"));
+                    // we know we have the glyphs to display this font already
+                    // so Uniscribe just doesn't know how to shape the script.
+                    // Render the glyphs without shaping.
+                    item->DisableShaping();
+                    goto SCRIPT_SHAPE;
+                }
 
             } else {
-#if 0
-                /* code to try all the fonts again without shaping on.
-                   in general, if we couldn't shape we should probably just give up */
-                if (item->ShapingEnabled()) {
-                    item->DisableShaping();
-                    item->ResetFontIndex();
-                    continue;
-                }
-#endif
                 giveUp = PR_TRUE;
                 item->DisableShaping();
                 item->ResetFontIndex();
                 continue;
             }
-
+ 
             if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
                 PR_LOG(gFontLog, PR_LOG_DEBUG, ("%s - worked", NS_LossyConvertUTF16toASCII(font->GetName()).get()));
-
+ 
 SCRIPT_PLACE:
             NS_ASSERTION(SUCCEEDED(rv), "Failed to shape -- we should never hit this");
-
-#ifdef DEBUG_pavlov
-            item->Break();
-#endif
 
             rv = item->Place();
             if (FAILED(rv)) {
@@ -1648,6 +1551,7 @@ SCRIPT_PLACE:
         }
 
         item->SaveGlyphs(aRun);
+
         delete item;
 
         RestoreDC(aDC, -1);
