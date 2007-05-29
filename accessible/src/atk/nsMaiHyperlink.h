@@ -56,7 +56,6 @@ class MaiHyperlink
 public:
     MaiHyperlink(nsIAccessibleHyperLink *aAcc);
     ~MaiHyperlink();
-    NS_IMETHOD GetUniqueID(void **aUniqueID);
 
 public:
     AtkHyperlink *GetAtkHyperlink(void);
@@ -65,7 +64,7 @@ public:
     }
 
 protected:
-    nsCOMPtr<nsIAccessibleHyperLink> mHyperlink;
+    nsIAccessibleHyperLink *mHyperlink;
     AtkHyperlink *mMaiAtkHyperlink;
 public:
     static nsresult Initialize(AtkHyperlink *aObj, MaiHyperlink *aClass);
