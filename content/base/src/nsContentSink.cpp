@@ -849,8 +849,12 @@ nsContentSink::AddOfflineResource(const nsAString &aHref)
   PRBool match;
   nsresult rv;
 
+  nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(mDocumentURI);
+  if (!innerURI)
+    return NS_ERROR_FAILURE;
+
   nsCAutoString ownerHost;
-  rv = mDocumentURI->GetHostPort(ownerHost);
+  rv = innerURI->GetHostPort(ownerHost);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString ownerSpec;
@@ -862,11 +866,11 @@ nsContentSink::AddOfflineResource(const nsAString &aHref)
     mSaveOfflineResources = PR_FALSE;
 
     // only let http and https urls add offline resources
-    nsresult rv = mDocumentURI->SchemeIs("http", &match);
+    nsresult rv = innerURI->SchemeIs("http", &match);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!match) {
-      rv = mDocumentURI->SchemeIs("https", &match);
+      rv = innerURI->SchemeIs("https", &match);
       NS_ENSURE_SUCCESS(rv, rv);
       if (!match)
         return NS_OK;

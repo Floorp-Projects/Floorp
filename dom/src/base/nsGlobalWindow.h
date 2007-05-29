@@ -94,6 +94,7 @@
 #include "nsIDOMStorage.h"
 #include "nsIDOMStorageList.h"
 #include "nsIDOMStorageWindow.h"
+#include "nsIDOMOfflineResourceList.h"
 #include "nsPIDOMEventTarget.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
@@ -116,6 +117,8 @@ class nsIDocShellLoadInfo;
 class WindowStateHolder;
 class nsGlobalWindowObserver;
 class nsGlobalWindow;
+
+class nsDOMOfflineResourceList;
 
 // permissible values for CheckOpenAllow
 enum OpenAllowValue {
@@ -754,6 +757,7 @@ public:
 protected:
   nsRefPtr<nsMimeTypeArray> mMimeTypes;
   nsRefPtr<nsPluginArray> mPlugins;
+  nsRefPtr<nsDOMOfflineResourceList> mOfflineResources;
   nsIDocShell* mDocShell; // weak reference
 
   static jsval       sPrefInternal_id;
