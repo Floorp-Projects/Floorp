@@ -111,8 +111,8 @@ class nsRootAccessible : public nsDocAccessibleWrap,
   protected:
     nsresult AddEventListeners();
     nsresult RemoveEventListeners();
-    virtual nsresult HandleEventWithTarget(nsIDOMEvent* aEvent, 
-                                           nsIDOMNode* aTargetNode);
+    nsresult HandleEventWithTarget(nsIDOMEvent* aEvent,
+                                   nsIDOMNode* aTargetNode);
     static void GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNode);
     void TryFireEarlyLoadEvent(nsIDOMNode *aDocNode);
     void FireCurrentFocusEvent();
