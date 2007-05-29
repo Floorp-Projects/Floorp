@@ -495,7 +495,9 @@ nsNavHistory::AutoCompleteFullHistorySearch(const nsAString& aSearchString,
   matches.Sort(comparator);
 
   // fill into result
-  for (i = 0; i < matches.Length(); i ++) {
+  rv = aResult->AppendMatch(matches[0].url, matches[0].title);
+  NS_ENSURE_SUCCESS(rv, rv);
+  for (i = 1; i < matches.Length(); i ++) {
     // only add ones that are NOT the same as the previous one. It's possible
     // to get duplicates from the queries.
     if (!matches[i].url.Equals(matches[i-1].url)) {
