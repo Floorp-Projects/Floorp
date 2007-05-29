@@ -50,7 +50,6 @@
 
 #include "nsIFrame.h"
 #include "nsIWidget.h"
-#include "nsIView.h"
 #include "nsGUIEvent.h"
 
 #ifdef MOZ_ENABLE_GTK2
@@ -175,7 +174,7 @@ nsDOMWindowUtils::SendMouseEvent(const nsAString& aType,
     return NS_ERROR_DOM_SECURITY_ERR;
 
   // get the widget to send the event to
-  nsIWidget* widget = GetWidget();
+  nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget)
     return NS_ERROR_FAILURE;
 
