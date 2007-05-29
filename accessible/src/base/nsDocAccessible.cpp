@@ -796,11 +796,6 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
       mDocLoadTimer->InitWithFuncCallback(DocLoadCallback, this, 0,
                                           nsITimer::TYPE_ONE_SHOT);
     }
-    // Finished loading: fire EVENT_STATE_CHANGE to clear STATE_BUSY
-    nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
-      new nsAccStateChangeEvent(this, nsIAccessibleStates::STATE_BUSY,
-                                PR_FALSE, PR_FALSE);
-    FireAccessibleEvent(accEvent);
   } else {
     nsCOMPtr<nsIDocShellTreeItem> treeItem = GetDocShellTreeItemFor(mDOMNode);
     if (!treeItem) {
