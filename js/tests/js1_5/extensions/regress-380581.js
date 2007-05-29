@@ -55,11 +55,11 @@ function test()
   printStatus (summary);
  
   expect = '({ set x () {}})';
-  actual = uneval({x setter: eval("function () { }") });
+  actual = uneval({x setter: eval("(function () { })") });
   compareSource(expect, actual, summary);
   
-  expect = 'function() { }';
-  actual = uneval(eval("function() { }"));
+  expect = '(function() { })';
+  actual = uneval(eval("(function() { })"));
   compareSource(expect, actual, summary);
     
   expect = '(function() { })';
