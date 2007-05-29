@@ -985,7 +985,7 @@ gfxTextRun::DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx, PRUint32 aOffs
         // before-spacing.
         widthBeforeCluster = 0;
     }
-    if (aOffset < data.mEndOffset) {
+    if (aOffset < data.mEndOffset - 1) {
         // Not the end of the ligature; need to clip the ligature after the current cluster
         gfxFloat endEdge = aPt->x + clusterWidth;
         if (IsRightToLeft()) {
@@ -999,12 +999,15 @@ gfxTextRun::DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx, PRUint32 aOffs
     }
 
     aCtx->Save();
+    aCtx->NewPath();
     // use division here to ensure that when the rect is aligned on multiples
-    // of mAppUnitsPerDevUnit, we clip to true device unit boundaries
-    aCtx->Clip(gfxRect(left/mAppUnitsPerDevUnit,
-                       aDirtyRect->Y()/mAppUnitsPerDevUnit,
-                       (right - left)/mAppUnitsPerDevUnit,
-                       aDirtyRect->Height()/mAppUnitsPerDevUnit));
+    // of mAppUnitsPerDevUnit, we clip to true device unit boundaries.
+    // Also, make sure we snap the rectangle to device pixels.
+    aCtx->Rectangle(gfxRect(left/mAppUnitsPerDevUnit,
+                            aDirtyRect->Y()/mAppUnitsPerDevUnit,
+                            (right - left)/mAppUnitsPerDevUnit,
+                            aDirtyRect->Height()/mAppUnitsPerDevUnit), PR_TRUE);
+    aCtx->Clip();
     gfxPoint pt(aPt->x - direction*widthBeforeCluster, aPt->y);
     DrawGlyphs(aFont, aCtx, PR_FALSE, &pt, data.mStartOffset,
                data.mEndOffset, aProvider);
