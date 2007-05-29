@@ -247,6 +247,7 @@ MODULES_suite :=                                \
   mozilla/mailnews                              \
   mozilla/themes                                \
   mozilla/suite                                 \
+  mozilla/other-licenses/7zstub/seamonkey       \
   $(NULL)
 
 LOCALES_suite :=                                \
