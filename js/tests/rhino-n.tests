@@ -392,6 +392,11 @@ js1_5/Regress/regress-306633.js
 js1_5/extensions/regress-367119-01.js
 js1_5/extensions/regress-367119-02.js
 
+# Likely failing due to changes to unify the various shell.js files:
+ecma_2/Exceptions/function-001.js
+ecma_3/Date/15.9.5.6.js
+js1_2/operator/equality.js
+
 # uninvestigated failures. May be some bugs in here.
 e4x/Regress/regress-373082.js
 e4x/XML/regress-376773.js
@@ -725,3 +730,22 @@ js1_5/extensions/regress-376052.js
 js1_6/Regress/regress-353078.js
 js1_8/template.js
 js1_8/extensions/regress-378789.js
+ecma_3/RegExp/regress-375715-01-n.js
+js1_5/extensions/regress-380581.js
+js1_5/extensions/regress-381205.js
+js1_5/extensions/regress-381211.js
+js1_7/extensions/regress-367629.js
+js1_7/extensions/regress-379482.js
+js1_7/extensions/regress-379566.js
+js1_7/extensions/regress-381303.js
+js1_7/geniter/regress-366941.js
+js1_7/decompilation/regress-379925.js
+js1_7/decompilation/regress-380506.js
+js1_7/decompilation/regress-381101.js
+js1_8/decompilation/regress-381372.js
+js1_8/decompilation/regress-381504.js
+js1_8/regress/regress-366941.js
+js1_8/genexps/regress-380237-01.js
+js1_8/genexps/regress-380237-02.js
+js1_8/genexps/regress-380237-03.js
+js1_8/genexps/regress-380237-04.js
