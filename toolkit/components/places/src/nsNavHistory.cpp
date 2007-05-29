@@ -405,6 +405,18 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   rv = dbFile->Append(NS_LITERAL_STRING("places.sqlite"));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // if the places file doesn't exist, set the do-import-bookmarks flag
+  PRBool exists;
+  rv = dbFile->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!exists) {
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService("@mozilla.org/preferences-service;1"));
+    if (prefs) {
+      rv = prefs->SetBoolPref(PREF_BROWSER_IMPORT_BOOKMARKS, PR_TRUE);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
   mDBService = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBService->OpenDatabase(dbFile, getter_AddRefs(mDBConn));
