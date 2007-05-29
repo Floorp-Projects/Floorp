@@ -392,6 +392,8 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_XULCommandEvent_id,
   eDOMClassInfo_CommandEvent_id,
 
+  eDOMClassInfo_OfflineResourceList_id,
+
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };

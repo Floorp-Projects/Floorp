@@ -102,6 +102,8 @@ private:
     nsPrefetchNode                   *mQueueTail;
     nsCOMPtr<nsIChannel>              mCurrentChannel;
     PRInt32                           mStopCount;
+    // true if pending document loads have ever reached zero.
+    PRInt32                           mHaveProcessed;
     PRBool                            mDisabled;
     PRBool                            mFetchedOffline;
 

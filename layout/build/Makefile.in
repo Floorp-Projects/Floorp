@@ -148,6 +148,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/dom/src/events/$(LIB_PREFIX)jsdomevents_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/jsurl/$(LIB_PREFIX)jsurl_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/storage/$(LIB_PREFIX)jsdomstorage_s.$(LIB_SUFFIX) \
+	$(DEPTH)/dom/src/offline/$(LIB_PREFIX)jsdomoffline_s.$(LIB_SUFFIX) \
 	$(DEPTH)/editor/libeditor/text/$(LIB_PREFIX)texteditor_s.$(LIB_SUFFIX) \
 	$(DEPTH)/editor/libeditor/base/$(LIB_PREFIX)editorbase_s.$(LIB_SUFFIX) \
 	$(NULL)
@@ -278,6 +279,7 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/dom/src/base \
 		   -I$(topsrcdir)/dom/src/jsurl \
 		   -I$(topsrcdir)/dom/src/storage \
+		   -I$(topsrcdir)/dom/src/offline \
 		   -I. \
 		   -I$(topsrcdir)/editor/libeditor/base \
 		   -I$(topsrcdir)/editor/libeditor/text \

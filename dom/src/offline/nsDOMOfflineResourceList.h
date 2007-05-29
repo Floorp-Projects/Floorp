@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,18 +12,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is nsIDOMNavigator additions.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Google Inc.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * The Initial Developer of the Original Code is
+ * Mozilla Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Ben Goodger <beng@google.com>
+ *   Dave Camp <dcamp@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,23 +36,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+#ifndef nsDOMOfflineResourceList_h___
+#define nsDOMOfflineResourceList_h___
 
-interface nsIDOMOfflineResourceList;
+#include "nscore.h"
+#include "nsIDOMOfflineResourceList.h"
+#include "nsIOfflineCacheSession.h"
+#include "nsTArray.h"
+#include "nsString.h"
+#include "nsIURI.h"
+#include "nsCOMPtr.h"
 
-[scriptable, uuid(609439fa-63e4-4f71-9512-904867f154e7)]
-interface nsIDOMClientInformation : nsISupports
+class nsDOMOfflineResourceList : public nsIDOMOfflineResourceList
 {
-  /**
-   * Web Applications 1.0 Browser State: registerContentHandler
-   * Allows web services to register themselves as handlers for certain content
-   * types.
-   * http://whatwg.org/specs/web-apps/current-work/
-   */
-  void registerContentHandler(in DOMString mimeType, in DOMString uri, in DOMString title);
-  void registerProtocolHandler(in DOMString protocol, in DOMString uri, in DOMString title);
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMOFFLINERESOURCELIST
 
-  readonly attribute nsIDOMOfflineResourceList offlineResources;
+  nsDOMOfflineResourceList();
+  virtual ~nsDOMOfflineResourceList();
+
+  nsresult Init(nsIURI *aURI);
+
+private:
+  nsresult GetCacheKey(const nsAString &aURI, nsCString &aKey);
+  nsresult GetCacheKey(nsIURI *aURI, nsCString &aKey);
+
+  nsresult CacheKeys();
+  void ClearCachedKeys();
+
+  nsCOMPtr<nsIURI> mURI;
+  nsCOMPtr<nsIOfflineCacheSession> mCacheSession;
+  nsCAutoString mHostPort;
 };
 
-
+#endif
