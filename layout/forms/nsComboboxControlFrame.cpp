@@ -580,33 +580,34 @@ nsComboboxControlFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 nscoord
 nsComboboxControlFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
 {
-  nscoord result;
-  DISPLAY_PREF_WIDTH(this, result);
-
-  if (NS_LIKELY(mDropdownFrame != nsnull)) {
-    result = mDropdownFrame->GetPrefWidth(aRenderingContext);
-  } else {
-    result = 0;
+  // get the scrollbar width, we'll use this later
+  nscoord scrollbarWidth = 0;
+  nsPresContext* presContext = PresContext();
+  if (mListControlFrame) {
+    nsIScrollableFrame* scrollable;
+    CallQueryInterface(mListControlFrame, &scrollable);
+    NS_ASSERTION(scrollable, "List must be a scrollable frame");
+    nsBoxLayoutState bls(presContext, aRenderingContext);
+    scrollbarWidth = scrollable->GetDesiredScrollbarSizes(&bls).LeftRight();
   }
 
-  // It's also possible that the pref width of our dropdown is less than that
-  // of our display frame plus a scrollbar.  This can happen, eg, if the
-  // dropdown is empty.
-  if (NS_LIKELY(mListControlFrame && mDisplayFrame)) {
-    nscoord displayResult = nsLayoutUtils::IntrinsicForContainer(aRenderingContext, mDisplayFrame,
-                                                                 nsLayoutUtils::PREF_WIDTH);
-    nsPresContext *presContext = PresContext();
-    if (!IsThemed() || presContext->GetTheme()->ThemeNeedsComboboxDropmarker()) {
-      nsIScrollableFrame* scrollable;
-      CallQueryInterface(mListControlFrame, &scrollable);
-      NS_ASSERTION(scrollable, "List must be a scrollable frame");
-      nsBoxLayoutState bls(presContext, aRenderingContext);
-      displayResult += scrollable->GetDesiredScrollbarSizes(&bls).LeftRight();
-    }
-    result = PR_MAX(result, displayResult);
+  nscoord displayPrefWidth = 0;
+  DISPLAY_PREF_WIDTH(this, displayPrefWidth);
+  if (NS_LIKELY(mDisplayFrame)) {
+    displayPrefWidth = nsLayoutUtils::IntrinsicForContainer(aRenderingContext, mDisplayFrame,
+                                                            nsLayoutUtils::PREF_WIDTH);
   }
 
-  return result;
+  if (mDropdownFrame) {
+    nscoord dropdownContentWidth = mDropdownFrame->GetPrefWidth(aRenderingContext) - scrollbarWidth;
+    displayPrefWidth = PR_MAX(dropdownContentWidth, displayPrefWidth);
+  }
+
+  // add room for the dropmarker button if there is one
+  if (!IsThemed() || presContext->GetTheme()->ThemeNeedsComboboxDropmarker())
+    displayPrefWidth += scrollbarWidth;
+
+  return displayPrefWidth;
 }
 
 NS_IMETHODIMP 
