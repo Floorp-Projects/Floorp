@@ -59,17 +59,24 @@ getLinkCB(AtkHypertext *aText, gint aLinkIndex)
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
     NS_ENSURE_TRUE(accWrap, nsnull);
 
-    nsCOMPtr<nsIAccessibleHyperText> accHyperlink;
+    nsCOMPtr<nsIAccessibleHyperText> hyperText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleHyperText),
-                            getter_AddRefs(accHyperlink));
-    NS_ENSURE_TRUE(accHyperlink, nsnull);
+                            getter_AddRefs(hyperText));
+    NS_ENSURE_TRUE(hyperText, nsnull);
 
     nsCOMPtr<nsIAccessibleHyperLink> hyperLink;
-    rv = accHyperlink->GetLink(aLinkIndex, getter_AddRefs(hyperLink));
+    rv = hyperText->GetLink(aLinkIndex, getter_AddRefs(hyperLink));
     if (NS_FAILED(rv) || !hyperLink)
         return nsnull;
 
-    MaiHyperlink *maiHyperlink = new MaiHyperlink(hyperLink);
+    nsCOMPtr<nsIAccessible> hyperLinkAcc(do_QueryInterface(hyperLink));
+    void *hyperLinkAtkObj = nsnull;
+    hyperLinkAcc->GetNativeInterface(&hyperLinkAtkObj);
+    nsAccessibleWrap *accChild = GetAccessibleWrap(ATK_OBJECT(hyperLinkAtkObj));
+    NS_ENSURE_TRUE(accChild, nsnull);
+
+    MaiHyperlink *maiHyperlink = accChild->GetMaiHyperlink();
+    NS_ENSURE_TRUE(maiHyperlink, nsnull);
     return maiHyperlink->GetAtkHyperlink();
 }
 

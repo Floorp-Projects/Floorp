@@ -60,7 +60,8 @@ getHyperlinkCB(AtkHyperlinkImpl *aImpl)
                             getter_AddRefs(accHyperlink));
     NS_ENSURE_TRUE(accHyperlink, nsnull);
     
-    MaiHyperlink *maiHyperlink = new MaiHyperlink(accHyperlink);
+    MaiHyperlink *maiHyperlink = accWrap->GetMaiHyperlink();
+    NS_ENSURE_TRUE(maiHyperlink, nsnull);
     return maiHyperlink->GetAtkHyperlink();
 
 }
