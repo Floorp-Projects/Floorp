@@ -53,7 +53,7 @@ create-%:
 	    echo $(TOPSRCDIR)/../l10n/$*/$$mod already exists; \
 	  else \
 	    echo Creating $(TOPSRCDIR)/../l10n/$*/$$mod from $(TOPSRCDIR)/$$mod/locales/en-US; \
-	    mkdirhier ../l10n/$*/$$mod; \
+	    mkdir -p ../l10n/$*/$$mod; \
 	    cp -r $(TOPSRCDIR)/$$mod/locales/en-US/* $(TOPSRCDIR)/../l10n/$*/$$mod; \
 	    find $(TOPSRCDIR)/../l10n/$*/$$mod -name CVS | xargs rm -rf; \
 	  fi; \
