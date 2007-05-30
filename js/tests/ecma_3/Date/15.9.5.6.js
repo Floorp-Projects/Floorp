@@ -127,6 +127,7 @@ test();
 function addTestCase()
 {
   new TestCase(
+    gTestfile,
     status,
     expect,
     actual);

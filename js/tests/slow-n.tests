@@ -6,8 +6,6 @@ e4x/XML/regress-324688.js
 ecma_3/Array/regress-322135-02.js
 ecma_3/Array/regress-322135-03.js
 ecma_3/Array/regress-322135-04.js
-ecma_3/Date/15.9.5.5.js
-ecma_3/Date/15.9.5.6.js
 ecma_3/RegExp/regress-307456.js
 ecma_3/RegExp/regress-330684.js
 js1_5/Array/regress-330812.js
