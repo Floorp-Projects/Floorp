@@ -971,35 +971,6 @@ toolkit/themes/winstripe/mozapps/Makefile
 toolkit/xre/Makefile
 "
 
-
-MAKEFILES_thunderbird="
-mail/Makefile
-mail/app/Makefile
-mail/app/profile/Makefile
-mail/base/Makefile
-mail/locales/Makefile
-mail/components/Makefile
-mail/components/compose/Makefile
-mail/components/addrbook/Makefile
-mail/components/preferences/Makefile
-mail/components/build/Makefile
-mail/components/shell/Makefile
-mail/components/shell/public/Makefile
-mail/components/phishing/Makefile
-mail/extensions/Makefile
-mail/extensions/smime/Makefile
-mail/config/Makefile
-mail/installer/Makefile
-mail/installer/windows/Makefile
-mail/themes/Makefile
-mail/themes/pinstripe/mail/Makefile
-mail/themes/pinstripe/editor/Makefile
-mail/themes/pinstripe/Makefile
-mail/themes/qute/mail/Makefile
-mail/themes/qute/editor/Makefile
-mail/themes/qute/Makefile
-"
-
 MAKEFILES_standalone_composer="
 composer/Makefile
 composer/app/Makefile
@@ -1426,10 +1397,6 @@ fi
 
 if test -n "$MOZ_XULRUNNER"; then
     add_makefiles "$MAKEFILES_xulrunner"
-fi
-
-if test -n "$MOZ_THUNDERBIRD"; then
-    add_makefiles "$MAKEFILES_thunderbird"
 fi
 
 if test -n "$MOZ_STANDALONE_COMPOSER"; then
