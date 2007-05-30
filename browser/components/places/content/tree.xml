@@ -172,7 +172,7 @@
           function findNode(container, placeURI) {
             if (container.uri == placeURI)
               return container;
-              
+
             container.containerOpen = true;
             for (var i = 0; i < container.childCount; ++i) {
               var child = container.getChild(i);
@@ -597,6 +597,14 @@
            *               gets filled in as the recursion progresses.
            */
           function findNodes(node, indexes, nodes) {
+            // See if node matches an ID we wanted; add to results.
+            if (node.itemId in indexes) {
+              nodes[node.itemId] = node;
+              delete indexes[node.itemId];
+              if (!len(indexes))
+                return;
+            }
+
             // Remember the beginning state so that we can re-close
             // this node if we don't find any additional results here.
             var previousOpenness = node.containerOpen;
@@ -616,8 +624,9 @@
                 delete indexes[childNode.itemId];
               }
 
-              // Search down that child's subtree.
-              findNodes(childNode, indexes, nodes);
+              // If we are still searching, search down that child's subtree.
+              if (len(indexes))
+                findNodes(childNode, indexes, nodes);
             }
 
             // If we didn't find any additional matches in this node's
@@ -646,7 +655,7 @@
           var resultview = this.getResultView();
           var selection = this.view.selection;
           selection.clearSelection();
-          for(idx in nodes) {
+          for (idx in nodes) {
             var index = resultview.treeIndexForNode(nodes[idx]);
             selection.rangedSelect(index, index, true);
           }
