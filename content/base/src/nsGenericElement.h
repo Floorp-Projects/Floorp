@@ -143,26 +143,6 @@ private:
 };
 
 /**
- * Yet another tearoff class for nsGenericElement
- * to implement additional interfaces
- */
-class nsNSElementTearoff : public nsIDOMNSElement
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  NS_DECL_NSIDOMNSELEMENT
-
-  nsNSElementTearoff(nsIContent *aContent) : mContent(aContent)
-  {
-  }
-  
-private:
-  nsCOMPtr<nsIContent> mContent;
-};
-
-
-/**
  * A class that implements nsIWeakReference
  */
 
@@ -1087,5 +1067,24 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
                                                                             \
   return rv;                                                                \
 }
+
+/**
+ * Yet another tearoff class for nsGenericElement
+ * to implement additional interfaces
+ */
+class nsNSElementTearoff : public nsIDOMNSElement
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_DECL_NSIDOMNSELEMENT
+
+  nsNSElementTearoff(nsGenericElement *aContent) : mContent(aContent)
+  {
+  }
+  
+private:
+  nsRefPtr<nsGenericElement> mContent;
+};
 
 #endif /* nsGenericElement_h___ */

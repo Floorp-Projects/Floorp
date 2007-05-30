@@ -380,6 +380,9 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_XMLHttpProgressEvent_id,
   eDOMClassInfo_XMLHttpRequest_id,
 
+  eDOMClassInfo_TextRectangle_id,
+  eDOMClassInfo_TextRectangleList_id,
+
   // We are now trying to preserve binary compat in classinfo.  No more
   // putting things in those categories up there.  New entries are to be
   // added here, which is the end of the things that are currently on by

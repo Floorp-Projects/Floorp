@@ -796,6 +796,17 @@ nsSVGUtils::GetOuterSVGFrame(nsIFrame *aFrame)
   return nsnull;
 }
 
+nsIFrame*
+nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame, nsRect* aRect)
+{
+  nsISVGChildFrame* svg;
+  CallQueryInterface(aFrame, &svg);
+  if (!svg)
+    return nsnull;
+  *aRect = svg->GetCoveredRegion();
+  return GetOuterSVGFrame(aFrame);
+}
+
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGUtils::GetViewBoxTransform(float aViewportWidth, float aViewportHeight,
                                 float aViewboxX, float aViewboxY,
