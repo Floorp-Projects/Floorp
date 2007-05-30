@@ -170,9 +170,9 @@ public:
         mListLength = 0;
     }
   
-      PRInt32 GetOriginalCharCount() const { return mCharCount; }
+    PRInt32 GetOriginalCharCount() const { return mCharCount; }
 
-      friend class gfxSkipCharsIterator;
+    friend class gfxSkipCharsIterator;
 
 private:
     struct Shortcut {
@@ -208,6 +208,10 @@ private:
  * always constrained to be >= 0 and <= the string length. When the position
  * is equal to the string length, it is at the end of the string. The current
  * positions do not include any aOriginalStringToSkipCharsOffset.
+ * 
+ * When the position in the original string corresponds to a skipped character,
+ * the skipped-characters offset is the offset of the next unskipped character,
+ * or the skipped-characters string length if there is no next unskipped character.
  */
 class THEBES_API gfxSkipCharsIterator {
 public:
