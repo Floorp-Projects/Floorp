@@ -113,9 +113,9 @@ test_array[i] = new TestValue( "(new java.lang.Long( '1234567891234567' )).longV
 
 // Call a java function that returns a value whose type is float
 
-java_array[i] = new JavaValue( (new java.lang.Float( '1.23456789' )).floatValue() );
-test_array[i] = new TestValue( "(new java.lang.Float( '1.23456789' )).floatValue()",
-			       1.23456789,
+java_array[i] = new JavaValue( (new java.lang.Float( '1234.5' )).floatValue() );
+test_array[i] = new TestValue( "(new java.lang.Float( '1234.5' )).floatValue()",
+			       1234.5,
 			       E_TYPE );
 
 i++;
