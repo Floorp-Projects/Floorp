@@ -99,7 +99,7 @@ public:
     /**
      * Allow a break opportunity in the interior of this chunk of text.
      */
-    BREAK_ALLOW_INSIDE = 0x02,
+    BREAK_ALLOW_INSIDE = 0x02
   };
 
   /**
