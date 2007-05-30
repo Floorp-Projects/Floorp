@@ -858,16 +858,18 @@ nsIEProfileMigrator::MigrateSiteAuthSignons(IPStore* aPStore)
           // If not, are they in UTF-8 or the default codepage? (ref. bug 41489)
           nsresult rv;
 
-          nsCOMPtr<nsILoginInfo> aLogin (do_CreateInstance(NS_LOGININFO_CONTRACTID, &rv));
+          nsCOMPtr<nsILoginInfo> aLogin (do_CreateInstance(
+                                           NS_LOGININFO_CONTRACTID, &rv));
           NS_ENSURE_SUCCESS(rv, rv);
 
-          // TODO: Need to pass in nulls here, but XPCOM whines. Might be able
-          // just pass in EmptyString(), and then force a flush to disk and
-          // reinit, which should correct things in the storage module.
+          // nsStringAPI doesn't let us create void strings, so we won't
+          // use Init() here.
+          aLogin->SetHostname(host);
+          aLogin->SetHttpRealm(realm);
+          aLogin->SetUsername(NS_ConvertUTF8toUTF16((char *)data));
+          aLogin->SetPassword(NS_ConvertUTF8toUTF16((char *)password));
 
-          //aLogin->Init(host, nsnull, realm, data, password, nsnull, nsnull);
-
-          //pwmgr->AddLogin(aLogin);
+          pwmgr->AddLogin(aLogin);
         }
         ::CoTaskMemFree(data);
       }
