@@ -740,7 +740,32 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
      * acquire a valid pn->pn_pos.begin from the current token.
      */
     firstLine = ts->lineno;
+#if JS_HAS_EXPR_CLOSURES
+    if (CURRENT_TOKEN(ts).type == TOK_LC) {
+        pn = Statements(cx, ts, tc);
+    } else {
+        pn = NewParseNode(cx, ts, PN_UNARY, tc);
+        if (pn) {
+            pn->pn_kid = AssignExpr(cx, ts, tc);
+            if (!pn->pn_kid) {
+                pn = NULL;
+            } else {
+                if (tc->flags & TCF_FUN_IS_GENERATOR) {
+                    ReportBadReturn(cx, ts, JSREPORT_ERROR,
+                                    JSMSG_BAD_GENERATOR_RETURN,
+                                    JSMSG_BAD_ANON_GENERATOR_RETURN);
+                    pn = NULL;
+                } else {
+                    pn->pn_type = TOK_RETURN;
+                    pn->pn_op = JSOP_RETURN;
+                    pn->pn_pos.end = pn->pn_kid->pn_pos.end;
+                }
+            }
+        }
+    }
+#else
     pn = Statements(cx, ts, tc);
+#endif
 
     js_PopStatement(tc);
 
@@ -1313,7 +1338,17 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_FORMAL);
     }
 
+#if JS_HAS_EXPR_CLOSURES
+    ts->flags |= TSF_OPERAND;
+    tt = js_GetToken(cx, ts);
+    ts->flags &= ~TSF_OPERAND;
+    if (tt != TOK_LC) {
+        js_UngetToken(ts);
+        fun->flags |= JSFUN_EXPR_CLOSURE;
+    }
+#else
     MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_BODY);
+#endif
     pn->pn_pos.begin = CURRENT_TOKEN(ts).pos.begin;
 
     /*
@@ -1329,7 +1364,14 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     if (!body)
         return NULL;
 
+#if JS_HAS_EXPR_CLOSURES
+    if (tt == TOK_LC)
+        MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_BODY);
+    else if (!lambda)
+        js_MatchToken(cx, ts, TOK_SEMI);
+#else
     MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_BODY);
+#endif
     pn->pn_pos.end = CURRENT_TOKEN(ts).pos.end;
 
 #if JS_HAS_DESTRUCTURING
@@ -1343,9 +1385,6 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     if (list) {
         if (body->pn_arity != PN_LIST) {
             JSParseNode *block;
-
-            JS_ASSERT(body->pn_type == TOK_LEXICALSCOPE);
-            JS_ASSERT(body->pn_arity == PN_NAME);
 
             block = NewParseNode(cx, ts, PN_LIST, tc);
             if (!block)
@@ -1409,7 +1448,8 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
          * If this anonymous function definition is *not* embedded within a
          * larger expression, we treat it as an expression statement, not as
          * a function declaration -- and not as a syntax error (as ECMA-262
-         * Edition 3 would have it).  Backward compatibility trumps all.
+         * Edition 3 would have it).  Backward compatibility must trump all,
+         * unless JSOPTION_ANONFUNFIX is set.
          */
         result = NewParseNode(cx, ts, PN_UNARY, tc);
         if (!result)
@@ -2463,7 +2503,7 @@ LetBlock(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSBool statement)
          * result down after popping the block, and clear statement.
          */
         pnblock->pn_op = JSOP_LEAVEBLOCKEXPR;
-        pnlet->pn_right = Expr(cx, ts, tc);
+        pnlet->pn_right = AssignExpr(cx, ts, tc);
         if (!pnlet->pn_right)
             return NULL;
     }
@@ -5591,14 +5631,6 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         return pn;
       }
 
-#if JS_HAS_BLOCK_SCOPE
-      case TOK_LET:
-        pn = LetBlock(cx, ts, tc, JS_FALSE);
-        if (!pn)
-            return NULL;
-        break;
-#endif
-
       case TOK_LC:
       {
         JSBool afterComma;
@@ -5718,10 +5750,19 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             }
             afterComma = JS_TRUE;
         }
-     end_obj_init:
+
+      end_obj_init:
         pn->pn_pos.end = CURRENT_TOKEN(ts).pos.end;
         return pn;
       }
+
+#if JS_HAS_BLOCK_SCOPE
+      case TOK_LET:
+        pn = LetBlock(cx, ts, tc, JS_FALSE);
+        if (!pn)
+            return NULL;
+        break;
+#endif
 
 #if JS_HAS_SHARP_VARS
       case TOK_DEFSHARP:
