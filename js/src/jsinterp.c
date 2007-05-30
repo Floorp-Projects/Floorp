@@ -6078,16 +6078,8 @@ out:
                     break;
 #endif
                 }
-                if (++tn == tnlimit) {
-#if JS_HAS_GENERATORS
-                    if (JS_UNLIKELY(cx->exception == JSVAL_ARETURN)) {
-                        cx->throwing = JS_FALSE;
-                        ok = JS_TRUE;
-                        fp->rval = JSVAL_VOID;
-                    }
-#endif
+                if (++tn == tnlimit)
                     goto no_catch;
-                }
             }
 
             ok = JS_TRUE;
@@ -6157,7 +6149,15 @@ out:
             ok = JS_TRUE;
             DO_NEXT_OP(len);
         }
-no_catch:;
+
+      no_catch:;
+#if JS_HAS_GENERATORS
+        if (JS_UNLIKELY(cx->exception == JSVAL_ARETURN)) {
+            cx->throwing = JS_FALSE;
+            ok = JS_TRUE;
+            fp->rval = JSVAL_VOID;
+        }
+#endif
     }
 
     /*
