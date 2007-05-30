@@ -1078,7 +1078,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 nsresult
 nsDocument::Init()
 {
-  if (mBindingManager || mCSSLoader || mNodeInfoManager) {
+  if (mBindingManager || mCSSLoader || mNodeInfoManager || mScriptLoader) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
@@ -1125,6 +1125,9 @@ nsDocument::Init()
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   NS_ASSERTION(GetOwnerDoc() == this, "Our nodeinfo is busted!");
+
+  mScriptLoader = new nsScriptLoader(this);
+  NS_ENSURE_TRUE(mScriptLoader, NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
 }
@@ -2555,12 +2558,8 @@ nsDocument::GetInnerWindow()
 }
 
 nsScriptLoader*
-nsDocument::GetScriptLoader()
+nsDocument::ScriptLoader()
 {
-  if (!mScriptLoader) {
-    mScriptLoader = new nsScriptLoader(this);
-  }
-
   return mScriptLoader;
 }
 
