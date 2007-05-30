@@ -79,6 +79,42 @@ struct THEBES_API gfxRect {
     gfxRect Union(const gfxRect& aRect) const;
     // XXX figure out what methods (intersect, union, etc) we use and add them.
 
+    void Inset(gfxFloat k) {
+        pos.x += k;
+        pos.y += k;
+        size.width = PR_MAX(0.0, size.width - k * 2.0);
+        size.height = PR_MAX(0.0, size.height - k * 2.0);
+    }
+
+    void Inset(gfxFloat top, gfxFloat right, gfxFloat bottom, gfxFloat left) {
+        pos.x += left;
+        pos.y += top;
+        size.width = PR_MAX(0.0, size.width - (right+left));
+        size.height = PR_MAX(0.0, size.height - (bottom+top));
+    }
+
+    void Inset(const gfxFloat *sides) {
+        Inset(sides[0], sides[1], sides[2], sides[3]);
+    }
+
+    void Outset(gfxFloat k) {
+        pos.x -= k;
+        pos.y -= k;
+        size.width = PR_MAX(0.0, size.width + k * 2.0);
+        size.height = PR_MAX(0.0, size.height + k * 2.0);
+    }
+
+    void Outset(gfxFloat top, gfxFloat right, gfxFloat bottom, gfxFloat left) {
+        pos.x -= left;
+        pos.y -= top;
+        size.width = PR_MAX(0.0, size.width + (right+left));
+        size.height = PR_MAX(0.0, size.height + (bottom+top));
+    }
+
+    void Outset(const gfxFloat *sides) {
+        Outset(sides[0], sides[1], sides[2], sides[3]);
+    }
+
     void Round();
 
     // grabbing specific points
@@ -92,6 +128,14 @@ struct THEBES_API gfxRect {
      * the caller can possibly avoid doing any extra rendering.
      */
     void Condition();
+
+    void Scale(gfxFloat k) {
+        NS_ASSERTION(k >= 0.0, "Invalid (negative) scale factor");
+        pos.x *= k;
+        pos.y *= k;
+        size.width *= k;
+        size.height *= k;
+    }
 };
 
 #endif /* GFX_RECT_H */
