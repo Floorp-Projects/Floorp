@@ -558,12 +558,22 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, gfxFloat aSize,
                            PRPackedBool aFamilyNameQuirks) :
     style(aStyle), systemFont(aSystemFont),
     familyNameQuirks(aFamilyNameQuirks), weight(aWeight),
-    size(PR_MIN(aSize, 5000)), langGroup(aLangGroup), sizeAdjust(aSizeAdjust)
+    size(aSize), langGroup(aLangGroup), sizeAdjust(aSizeAdjust)
 {
+    static const gfxFloat kMaxFontSize = 2000.0;
+
     if (weight > 900)
         weight = 900;
     if (weight < 100)
         weight = 100;
+
+    if (size >= kMaxFontSize) {
+        size = kMaxFontSize;
+        sizeAdjust = 0.0;
+    } else if (size < 0.0) {
+        NS_WARNING("negative font size");
+        size = 0.0;
+    }
 
     if (langGroup.IsEmpty()) {
         NS_WARNING("empty langgroup");
