@@ -327,10 +327,7 @@ nsXMLContentSink::DidBuildModel()
   }
   else {
     // Kick off layout for non-XSLT transformed documents.
-    nsScriptLoader *loader = mDocument->GetScriptLoader();
-    if (loader) {
-      loader->RemoveObserver(this);
-    }
+    mDocument->ScriptLoader()->RemoveObserver(this);
 
     if (mDocElement) {
       // Notify document observers that all the content has been stuck
@@ -405,10 +402,7 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
     mDocument = aResultDocument;
   }
 
-  nsScriptLoader *loader = originalDocument->GetScriptLoader();
-  if (loader) {
-    loader->RemoveObserver(this);
-  }
+  originalDocument->ScriptLoader()->RemoveObserver(this);
 
   // Notify document observers that all the content has been stuck
   // into the document.  
@@ -929,10 +923,7 @@ nsXMLContentSink::SetDocElement(PRInt32 aNameSpaceID,
       // In this case, disable script execution, stylesheet
       // loading, and auto XLinks since we plan to prettyprint.
       mAllowAutoXLinks = PR_FALSE;
-      nsScriptLoader* scriptLoader = mDocument->GetScriptLoader();
-      if (scriptLoader) {
-        scriptLoader->SetEnabled(PR_FALSE);
-      }
+      mDocument->ScriptLoader()->SetEnabled(PR_FALSE);
       if (mCSSLoader) {
         mCSSLoader->SetEnabled(PR_FALSE);
       }

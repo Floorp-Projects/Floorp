@@ -451,7 +451,7 @@ public:
   /**
    * Get the script loader for this document
    */
-  virtual nsScriptLoader* GetScriptLoader();
+  virtual nsScriptLoader* ScriptLoader();
 
   virtual void AddMutationObserver(nsIMutationObserver* aObserver);
   virtual void RemoveMutationObserver(nsIMutationObserver* aMutationObserver);

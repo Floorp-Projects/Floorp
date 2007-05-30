@@ -205,8 +205,7 @@ nsContentSink::Init(nsIDocument* aDoc,
       new nsScriptLoaderObserverProxy(this);
   NS_ENSURE_TRUE(proxy, NS_ERROR_OUT_OF_MEMORY);
 
-  mScriptLoader = mDocument->GetScriptLoader();
-  NS_ENSURE_TRUE(mScriptLoader, NS_ERROR_FAILURE);
+  mScriptLoader = mDocument->ScriptLoader();
   mScriptLoader->AddObserver(proxy);
 
   mCSSLoader = aDoc->CSSLoader();
