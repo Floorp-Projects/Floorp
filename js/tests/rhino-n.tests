@@ -392,9 +392,10 @@ js1_5/Regress/regress-306633.js
 js1_5/extensions/regress-367119-01.js
 js1_5/extensions/regress-367119-02.js
 
-# Likely failing due to changes to unify the various shell.js files:
+# Obsolete JS 1.2 behavior, see bug 10278 
 ecma_2/Exceptions/function-001.js
-ecma_3/Date/15.9.5.6.js
+
+# Obsolete JS 1.2 behavior
 js1_2/operator/equality.js
 
 # uninvestigated failures. May be some bugs in here.
