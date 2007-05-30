@@ -375,11 +375,13 @@ pref("alerts.totalOpenTime", 4000);
 
 pref("browser.xul.error_pages.enabled", true);
 
+// Prefs for Login Manager
 pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
-pref("signon.SignonFileName",               "signons.txt");
+pref("signon.SignonFileName",               "signons.txt"); // obsolete
 pref("signon.SignonFileName2",              "signons2.txt");
 pref("signon.autofillForms",                true);
+pref("signon.debug",                        false); // logs to Error Console
 
 // We want to make sure mail URLs are handled externally...
 pref("network.protocol-handler.external.mailto", true); // for mail
