@@ -4215,7 +4215,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                                       rval);
                     }
                 } else {
-                    todo = Sprint(&ss->sprinter, "%s%s%s:%s",
+                    todo = Sprint(&ss->sprinter, "%s%s%s: %s",
                                   lval,
                                   (lval[1] != '\0') ? ", " : "",
                                   xval,
