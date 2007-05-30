@@ -233,7 +233,6 @@
           var button = null;
           if (PlacesUtils.nodeIsURI(child)) {
             button = document.createElementNS(XULNS, "toolbarbutton");
-            button.setAttribute("url", child.uri);
 
             if (PlacesUtils.nodeIsBookmark(child)) {
               // If the item has a generated title, use that instead.
@@ -473,7 +472,7 @@
           // Nothing
         ]]></body>
       </method>
-      
+
       <!-- nsINavHistoryResultViewer -->
       <field name="_viewer"><![CDATA[({
         _self: this,
@@ -499,11 +498,68 @@
           }
         },
         itemChanged: function MV_V_itemChanged(aNode) {
-          // XXX NOTE
-          // for bug #379591, if you rewrite itemChanged()
-          // to not call itemReplaced() don't forget to call:
-          // this._self.updateChevron();
-          this.itemReplaced(aNode.parent, aNode, aNode, -1);
+          // this check can be removed once we fix bug #382397
+          if (!aNode.parent)
+            return;
+
+          // for the toolbar,
+          // we only care if children of the root are changing  
+          if (!PlacesUtils.nodeIsFolder(aNode.parent) ||
+              aNode.parent != this._self.getResult().root)
+            return;
+
+          var button;
+
+          var children = this._self.childNodes;
+          for (var i = 0; i < children.length; i++) {
+            if (children[i].node == aNode) {
+              button = children[i];
+              break;
+            }
+          }
+
+          NS_ASSERT(button, "unable to find a toolbar element");
+
+          var title = aNode.title;
+
+          if (PlacesUtils.nodeIsURI(aNode)) {
+            if (PlacesUtils.nodeIsBookmark(aNode)) {
+              // If the item has a generated title, use that instead.
+              if (this._self._generatedTitles[aNode.itemId])
+                title = this._self._generatedTitles[aNode.itemId];
+            }
+          } 
+          else if (PlacesUtils.nodeIsSeparator(aNode)) {
+            // nothing to do when a separator changes
+            return;
+          } 
+          else if (PlacesUtils.nodeIsContainer(aNode)) {
+            if (PlacesUtils.nodeIsLivemarkContainer(aNode)) {
+              var folder = aNode.itemId;
+              var siteURIString = PlacesUtils.livemarks.getSiteURI(folder);
+              if (siteURIString) {
+                if (button.getAttribute("siteURI") != siteURIString)
+                  button.setAttribute("siteURI", siteURIString);
+              }
+              else
+                button.removeAttribute("siteURI");
+            }
+          }
+
+          if (aNode.icon) {
+            if (button.getAttribute("image") != aNode.icon.spec)
+              button.setAttribute("image", aNode.icon.spec);
+          }
+          else
+            button.removeAttribute("image");
+        
+          // the only change that might require a chevron update
+          // is when the title changes
+          if (button.getAttribute("label") != title)
+          {
+            button.setAttribute("label", title);
+            this._self.updateChevron();
+          }
         },
         itemReplaced: function MV_V_itemReplaced(aParentNode, aOldNode, aNewNode, aIndex) {
           var children = this._self.childNodes;
