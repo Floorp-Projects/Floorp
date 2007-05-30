@@ -1455,25 +1455,9 @@ nsNavBookmarks::MoveItem(PRInt64 aItemId, PRInt64 aNewParent, PRInt32 aIndex)
     return NS_OK;
   }
 
-  // update parent/index fields
-  nsCAutoString buffer;
-  buffer.AssignLiteral("UPDATE moz_bookmarks SET ");
-  if (aNewParent != oldParent) {
-    buffer.AppendLiteral(" parent = ");
-    buffer.AppendInt(aNewParent);
-  }
-  if (newIndex != oldIndex) {
-    if (aNewParent != oldParent)
-      buffer.AppendLiteral(", ");
-    buffer.AppendLiteral(" position = ");
-    buffer.AppendInt(newIndex);
-  }
-  buffer.AppendLiteral(" WHERE id = ");
-  buffer.AppendInt(aItemId);
-  rv = dbConn->ExecuteSimpleSQL(buffer);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // adjust indices to account for the move
+  // do this before we update the parent/index fields
+  // or we'll re-adjust the index for the item we are moving
   if (oldParent == aNewParent) {
     // We can optimize the updates if moving within the same container.
     // We only shift the items between the old and new positions, since the
@@ -1491,6 +1475,24 @@ nsNavBookmarks::MoveItem(PRInt64 aItemId, PRInt64 aNewParent, PRInt32 aIndex)
     // Now, make room in the new parent for the insertion.
     rv = AdjustIndices(aNewParent, newIndex + 1, PR_INT32_MAX, 1);
   }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // update parent/index fields
+  nsCAutoString buffer;
+  buffer.AssignLiteral("UPDATE moz_bookmarks SET ");
+  if (aNewParent != oldParent) {
+    buffer.AppendLiteral(" parent = ");
+    buffer.AppendInt(aNewParent);
+  }
+  if (newIndex != oldIndex) {
+    if (aNewParent != oldParent)
+      buffer.AppendLiteral(", ");
+    buffer.AppendLiteral(" position = ");
+    buffer.AppendInt(newIndex);
+  }
+  buffer.AppendLiteral(" WHERE id = ");
+  buffer.AppendInt(aItemId);
+  rv = dbConn->ExecuteSimpleSQL(buffer);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
