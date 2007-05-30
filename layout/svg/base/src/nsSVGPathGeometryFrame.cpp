@@ -507,7 +507,9 @@ NS_IMETHODIMP
 nsSVGPathGeometryFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
   UpdateGraphic(suppressInvalidation);
-  
+  if (!suppressInvalidation)
+    nsSVGUtils::UpdateFilterRegion(this);
+
   return NS_OK;
 }
 
