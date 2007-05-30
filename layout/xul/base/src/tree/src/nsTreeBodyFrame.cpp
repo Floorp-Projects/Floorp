@@ -2761,7 +2761,7 @@ nsTreeBodyFrame::PaintTreeBody(nsIRenderingContext& aRenderingContext,
     nsRect dirtyRect;
     feedbackRect += aPt;
     if (dirtyRect.IntersectRect(aDirtyRect, feedbackRect)) {
-      PaintDropFeedback(feedbackRect, PresContext(), aRenderingContext, aDirtyRect);
+      PaintDropFeedback(feedbackRect, PresContext(), aRenderingContext, aDirtyRect, aPt);
     }
   }
   aRenderingContext.PopState();
@@ -3598,7 +3598,8 @@ void
 nsTreeBodyFrame::PaintDropFeedback(const nsRect&        aDropFeedbackRect,
                                    nsPresContext*      aPresContext,
                                    nsIRenderingContext& aRenderingContext,
-                                   const nsRect&        aDirtyRect)
+                                   const nsRect&        aDirtyRect,
+                                   nsPoint              aPt)
 {
   // Paint the drop feedback in between rows.
 
@@ -3611,7 +3612,7 @@ nsTreeBodyFrame::PaintDropFeedback(const nsRect&        aDropFeedbackRect,
     nsresult rv = primaryCol->GetXInTwips(this, &currX);
     NS_ASSERTION(NS_SUCCEEDED(rv), "primary column is invalid?");
 
-    currX -= mHorzPosition;
+    currX += aPt.x - mHorzPosition;
   } else {
     currX = aDropFeedbackRect.x;
   }
