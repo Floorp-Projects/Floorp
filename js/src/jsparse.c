@@ -4186,10 +4186,14 @@ UnaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
         /*
          * Under ECMA3, deleting any unary expression is valid -- it simply
-         * returns true. Here we strip off any parentheses.
+         * returns true. Here we strip off any parentheses and fold constants
+         * before checking for a call expression, in order to rule out delete
+         * of a generator expression.
          */
         while (pn2->pn_type == TOK_RP)
             pn2 = pn2->pn_kid;
+        if (!js_FoldConstants(cx, pn2, tc))
+            return NULL;
         if (pn2->pn_type == TOK_LP &&
             pn2->pn_op != JSOP_SETCALL &&
             !MakeSetCall(cx, pn2, JSMSG_BAD_DELETE_OPERAND)) {
