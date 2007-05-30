@@ -108,8 +108,9 @@ PlacesController.prototype = {
       return PlacesUtils.tm.numberOfRedoItems > 0;
     case "cmd_cut":
     case "cmd_delete":
+      return this._hasRemovableSelection(false);
     case "placesCmd_moveBookmarks":
-      return this._hasRemovableSelection();
+      return this._hasRemovableSelection(true);
     case "cmd_copy":
       return this._view.hasSelection;
     case "cmd_paste":
@@ -209,7 +210,7 @@ PlacesController.prototype = {
       if (this._view.hasSingleSelection) {
         var selectedNode = this._view.selectedNode;
         if (PlacesUtils.nodeIsFolder(selectedNode) &&
-            selectedNode.itemId != PlacesUtils.bookmarks.toolbarFolder) {
+            selectedNode.itemId != PlacesUtils.toolbarFolderId) {
           return true;
         }
       }
@@ -315,11 +316,14 @@ PlacesController.prototype = {
    * delete or cut operations based on whether or not any of its contents
    * are non-removable. We don't need to worry about recursion here since it
    * is a policy decision that a removable item not be placed inside a non-
-   * removable item. 
+   * removable item.
+   * @param aIsMoveCommand
+   *        True if thecommand for which this method is called only moves the
+   *        selected items to another container, false otherwise.
    * @returns true if the there's a selection which has no nodes that cannot be removed,
    *          false otherwise.
    */
-  _hasRemovableSelection: function PC__hasRemovableSelection() {
+  _hasRemovableSelection: function PC__hasRemovableSelection(aIsMoveCommand) {
     if (!this._view.hasSelection)
       return false;
 
@@ -333,7 +337,8 @@ PlacesController.prototype = {
         return false;
 
       // Disallow removing the toolbar folder
-      if (PlacesUtils.nodeIsFolder(nodes[i]) && nodes[i].itemId == btFolderId)
+      if (!aIsMoveCommand &&
+          PlacesUtils.nodeIsFolder(nodes[i]) && nodes[i].itemId == btFolderId)
         return false;
 
       // We don't call nodeIsReadOnly here, because nodeIsReadOnly means that
@@ -370,7 +375,7 @@ PlacesController.prototype = {
       cstring.data = types[i];
       flavors.AppendElement(cstring);
     }
-  
+
     var clipboard = 
         Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
     return clipboard.hasDataMatchingFlavors(flavors, 
