@@ -185,7 +185,7 @@ private:
                             // if the old pollable event is broken.  only
                             // one thread may change mThreadEvent; that
                             // thread needs to lock mThreadEventLock only
-                            // when it changes mThreadEvent.  Other threads
+                            // when it changes mThreadEvent.  other threads
                             // don't change mThreadEvent; they need to lock
                             // mThreadEventLock whenever they access
                             // mThreadEvent. 
