@@ -968,8 +968,9 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                     vchars++;
                     parenChomp = 1;
                 }
-                vchars = js_strchr_limit(vchars, '(', vchars + vlength);
+                vchars = js_strchr_limit(vchars, ' ', vchars + vlength);
                 if (vchars) {
+                    vchars++;
                     vlength -= vchars - start + parenChomp;
                 } else {
                     gsop[j] = NULL;
