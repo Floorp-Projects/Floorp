@@ -64,7 +64,7 @@ function test()
   }
   reportCompare(expect, actual, '[let (x = 3, y = 4) x].map(0)');
 
-  expect = 'TypeError: p.z = [(let (x = 3, y = 4) x)] is not a function';
+  expect = 'TypeError: p.z = [let (x = 3, y = 4) x] is not a function';
   try
   {
     var p = {}; (p.z = [let (x = 3, y = 4) x])();
