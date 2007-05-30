@@ -397,18 +397,11 @@ var gModule = {
             contractID : "@mozilla.org/passwordmanager/authpromptfactory;1",
             className  : "LoginManagerPromptFactory",
             factory    : LoginManagerPromptFactory_Factory = {
-                singleton : null,
                 createInstance: function (aOuter, aIID) {
                     if (aOuter != null)
                         throw Components.results.NS_ERROR_NO_AGGREGATION;
 
-                    if (this.singleton == null) {
-                        var svc = new LoginManagerPromptFactory();
-                        this.singleton = svc;
-                    } else {
-                        svc = this.singleton;
-                    }
-                    return svc.QueryInterface(aIID);
+                    return new LoginManagerPromptFactory().QueryInterface(aIID);
                 }
             }
         }
