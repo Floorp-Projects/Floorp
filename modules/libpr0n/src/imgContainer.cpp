@@ -443,8 +443,7 @@ NS_IMETHODIMP imgContainer::Notify(nsITimer *timer)
   // currentDecodingFrameIndex is not set until the second frame has
   // finished decoding (see EndFrameDecode)
   if (mAnim->doneDecoding || 
-      (numFrames == 2 && nextFrameIndex < 2) ||
-      (numFrames > 2 && nextFrameIndex < mAnim->currentDecodingFrameIndex)) {
+      (nextFrameIndex < mAnim->currentDecodingFrameIndex)) {
     if (numFrames == nextFrameIndex) {
       // End of Animation
 
@@ -472,8 +471,7 @@ NS_IMETHODIMP imgContainer::Notify(nsITimer *timer)
     }
     nextFrame->GetTimeout(&timeout);
 
-  } else if ((numFrames == 2 && nextFrameIndex == 2) ||
-             (numFrames > 2 && nextFrameIndex == mAnim->currentDecodingFrameIndex)) {
+  } else if (nextFrameIndex == mAnim->currentDecodingFrameIndex) {
     // Uh oh, the frame we want to show is currently being decoded (partial)
     // Wait a bit and try again
     mAnim->timer->SetDelay(100);
