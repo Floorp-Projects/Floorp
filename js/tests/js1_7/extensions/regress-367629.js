@@ -57,7 +57,7 @@ function test()
   var a = {}; 
   a.h getter = encodeURI; 
 
-  expect = '({get h () {[native code]})';
+  expect = '({get h encodeURI() {[native code]}})';
   actual = uneval(a);      
 
   reportCompare(expect, actual, summary);
