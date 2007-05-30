@@ -339,7 +339,7 @@ var BookmarksEventHandler = {
     if (aTipElement.localName != "toolbarbutton")
       return false;
 
-    var url = aTipElement.getAttribute("url");
+    var url = aTipElement.node.uri;
     if (!url) 
       return false;
 
