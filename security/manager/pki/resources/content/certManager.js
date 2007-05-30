@@ -110,10 +110,6 @@ function LoadCerts()
   } else  {
     enableBackupAllButton.setAttribute("enabled",true);
   }
-
-  if (certdb.isOcspOn) {
-    document.getElementById('ocsp_info').removeAttribute("hidden");
-  }
 }
 
 function getSelectedCerts()

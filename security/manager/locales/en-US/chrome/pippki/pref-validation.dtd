@@ -72,14 +72,15 @@
 <!ENTITY  edit.button                             "Settings">
 
 <!ENTITY validation.ocsp.caption                  "OCSP">
-<!ENTITY validation.ocsp.description              "&brandShortName; can use Online Certificate Status Protocol (OCSP) to verify certificates. Set &brandShortName; to use OCSP as follows:">
-<!ENTITY disableOCSP.label                        "Do not use OCSP for certificate validation">
-<!ENTITY disableOCSP.accesskey                    "D">
-<!ENTITY certOCSP.label                           "Use OCSP to validate only certificates that specify an OCSP service URL">
-<!ENTITY certOCSP.accesskey                       "U">
-<!ENTITY proxyOCSP.label                          "Use OCSP to validate all certificates using this URL and signer:">
+<!ENTITY enableOCSP.label                         "Use the Online Certificate Status Protocol (OCSP) to confirm the current validity of certificates">
+<!ENTITY enableOCSP.accesskey                     "E">
+<!ENTITY certOCSP.label2                          "Validate a certificate if it specifies an OCSP server">
+<!ENTITY certOCSP.accesskey                       "C">
+<!ENTITY proxyOCSP.label2                         "Validate all certificates using the following OCSP server:">
 <!ENTITY proxyOCSP.accesskey                      "O">
 <!ENTITY serviceURL.label                         "Service URL:">
 <!ENTITY serviceURL.accesskey                     "S">
 <!ENTITY signingCA.label                          "Response Signer:">
 <!ENTITY signingCA.accesskey                      "R">
+<!ENTITY validation.requireOCSP.description       "When an OCSP server connection fails, treat the certificate as invalid">
+<!ENTITY validation.requireOCSP.accesskey         "V">
