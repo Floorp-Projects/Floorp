@@ -53,7 +53,9 @@ function test()
   enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
- 
+
+if (this.version) version(180);
+
 // XXX should be standard (and named clone, after Java?)
 Object.prototype.copy = function () {
     let o = {}
@@ -151,9 +153,8 @@ function parse_grid(grid) {
     grid = [c for (c in grid) if ('0.-123456789'.contains(c))]
     let values = dict([s, digits] for (s in squares))
 
-    // XXX should destructure [s, d] but JS1.7 is broken
-    for (let sd in zip(squares, grid))
-        if (digits.contains(sd[1]) && !assign(values, sd[0], sd[1]))
+    for (let [s, d] in zip(squares, grid))
+        if (digits.contains(d) && !assign(values, s, d))
             return false
     return values
 }
@@ -198,7 +199,7 @@ function print_board(values) {
     for (let r in rows)
         print([values[r+c].center(width) + ('36'.contains(c) && '|' || '')
                for (c in cols)].join('') + ('CF'.contains(r) && line || ''))
-    print()
+    print('\n')
 }
 
 easy = "..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3.."
@@ -224,7 +225,7 @@ function search(values) {
 hard = '4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......'
 
 print_board(search(parse_grid(hard)))
-
+ 
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');
