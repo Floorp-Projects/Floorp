@@ -674,12 +674,30 @@ js_GetPrinterOutput(JSPrinter *jp)
     return str;
 }
 
+/*
+ * NB: Indexed by SRC_DECL_* defines from jsemit.h.
+ */
+static const char * const var_prefix[] = {"var ", "const ", "let "};
+
+static const char *
+VarPrefix(jssrcnote *sn)
+{
+    if (sn && (SN_TYPE(sn) == SRC_DECL || SN_TYPE(sn) == SRC_GROUPASSIGN)) {
+        ptrdiff_t type = js_GetSrcNoteOffset(sn, 0);
+        if ((uintN)type <= SRC_DECL_LET)
+            return var_prefix[type];
+    }
+    return "";
+}
+
 #if !JS_HAS_BLOCK_SCOPE
 # define SET_MAYBE_BRACE(jp)    jp
 # define CLEAR_MAYBE_BRACE(jp)  jp
+# define MAYBE_SET_DONT_BRACE(jp,pc,endpc,rval) /* nothing */
 #else
 # define SET_MAYBE_BRACE(jp)    ((jp)->braceState = MAYBE_BRACE, (jp))
 # define CLEAR_MAYBE_BRACE(jp)  ((jp)->braceState = ALWAYS_BRACE, (jp))
+# define MAYBE_SET_DONT_BRACE   MaybeSetDontBrace
 
 static void
 SetDontBrace(JSPrinter *jp)
@@ -698,6 +716,25 @@ SetDontBrace(JSPrinter *jp)
         JS_ASSERT(!jp->pretty || bp[offset+2] == '\n');
         jp->spaceOffset = offset;
         jp->braceState = DONT_BRACE;
+    }
+}
+
+/*
+ * If a let declaration is the only child of a control structure that does not
+ * require braces, it must not be braced. If it were braced explicitly, then it
+ * would be bracketed by JSOP_ENTERBLOCK/JSOP_LEAVEBLOCK.
+ */
+static void
+MaybeSetDontBrace(JSPrinter *jp, jsbytecode *pc, jsbytecode *endpc,
+                  const char *rval)
+{
+    JS_ASSERT(*pc == JSOP_POP || *pc == JSOP_POPV || *pc == JSOP_POPN);
+
+    if (jp->braceState == MAYBE_BRACE &&
+        pc + js_CodeSpec[*pc].length == endpc &&
+        !strncmp(rval, var_prefix[SRC_DECL_LET], 4) &&
+        rval[4] != '(') {
+        SetDontBrace(jp);
     }
 }
 #endif
@@ -1170,21 +1207,6 @@ PushSlotAtom(SprintStack *ss, JSPropertyOp getter, uintN slot, JSOp op)
     return PushOff(ss, STR2OFF(&ss->sprinter, lval), op);
 }
 
-/*
- * NB: Indexed by SRC_DECL_* defines from jsemit.h.
- */
-static const char * const var_prefix[] = {"var ", "const ", "let "};
-
-static const char *
-VarPrefix(jssrcnote *sn)
-{
-    if (sn && (SN_TYPE(sn) == SRC_DECL || SN_TYPE(sn) == SRC_GROUPASSIGN)) {
-        ptrdiff_t type = js_GetSrcNoteOffset(sn, 0);
-        if ((uintN)type <= SRC_DECL_LET)
-            return var_prefix[type];
-    }
-    return "";
-}
 #define LOCAL_ASSERT_RV(expr, rv)                                             \
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT(expr);                                                      \
@@ -2253,8 +2275,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * If control flow reaches this point with todo still -2,
                      * just print rval as an expression statement.
                      */
-                    if (todo == -2)
+                    if (todo == -2) {
+                        MAYBE_SET_DONT_BRACE(jp, pc, endpc, rval);
                         js_printf(jp, "\t%s;\n", rval);
+                    }
                   end_popn:
                     break;
                 }
@@ -2377,20 +2401,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * not appear in the decompiler's output.
                      */
                     if (*rval != '\0' && (rval[0] != '/' || rval[1] != '*')) {
-#if JS_HAS_BLOCK_SCOPE
-                        /*
-                         * If a let declaration is the only child of a control
-                         * structure that does not require braces, it must not
-                         * be braced.  If it were braced explicitly, it would
-                         * be bracketed by JSOP_ENTERBLOCK/JSOP_LEAVEBLOCK.
-                         */
-                        if (jp->braceState == MAYBE_BRACE &&
-                            pc + JSOP_POP_LENGTH == endpc &&
-                            !strncmp(rval, var_prefix[SRC_DECL_LET], 4) &&
-                            rval[4] != '(') {
-                            SetDontBrace(jp);
-                        }
-#endif
+                        MAYBE_SET_DONT_BRACE(jp, pc, endpc, rval);
                         js_printf(jp,
                                   (*rval == '{' ||
                                    (strncmp(rval, js_function_str, 8) == 0 &&
