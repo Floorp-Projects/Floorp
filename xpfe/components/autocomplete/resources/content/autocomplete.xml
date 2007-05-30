@@ -1062,12 +1062,12 @@
             this.userAction = "scrolling";
             this.mNeedToComplete = false;
             
-            var dir = k == KeyEvent.DOM_VK_DOWN ||
-                      k == KeyEvent.DOM_VK_PAGE_DOWN ||
-                     (k == KeyEvent.DOM_VK_TAB && !aEvent.shiftKey) ? 1 : -1;
-            var amt = k == KeyEvent.DOM_VK_PAGE_UP ||
-                      k == KeyEvent.DOM_VK_PAGE_DOWN ? this.resultsPopup.pageCount-1 : 1;
-            var selected = this.resultsPopup.selectBy(dir, amt);
+            var reverse = k == KeyEvent.DOM_VK_TAB && aEvent.shiftKey ||
+                          k == KeyEvent.DOM_VK_UP ||
+                          k == KeyEvent.DOM_VK_PAGE_UP;
+            var page = k == KeyEvent.DOM_VK_PAGE_UP ||
+                       k == KeyEvent.DOM_VK_PAGE_DOWN;
+            var selected = this.resultsPopup.selectBy(reverse, page);
           
             // determine which value to place in the textbox
             this.ignoreInputEvent = true;
@@ -1575,14 +1575,11 @@
       </method>
 
       <method name="selectBy">
-        <parameter name="aDir"/>
-        <parameter name="aAmount"/>
+        <parameter name="aReverse"/>
+        <parameter name="aPage"/>
         <body><![CDATA[
           try {
-            var view = this.textbox.view;
-            this.selectedIndex = this.getNextIndex(aDir, aAmount, this.selectedIndex, view.rowCount-1);
-  
-            return this.selectedIndex;
+            return this.selectedIndex = this.getNextIndex(aReverse, aPage, this.selectedIndex, this.textbox.view.rowCount - 1);
           } catch (ex) {
             // do nothing - occasionally timer-related js errors happen here
             // e.g. "this.selectedIndex has no properties", when you type fast and hit a
@@ -1593,25 +1590,25 @@
       </method>
 
       <method name="getNextIndex">
-        <parameter name="aDir"/>
-        <parameter name="aAmount"/>
+        <parameter name="aReverse"/>
+        <parameter name="aPage"/>
         <parameter name="aIndex"/>
         <parameter name="aMaxRow"/>
         <body><![CDATA[
           if (aMaxRow < 0)
             return null;
-            
-          var newIdx = aIndex + aDir*aAmount;
-          if (aDir < 0 && aIndex == null || newIdx > aMaxRow && aIndex != aMaxRow)
-            newIdx = aMaxRow;
-          else if (aDir > 0 && aIndex == null || newIdx < 0 && aIndex != 0)
-            newIdx = 0;
-          
-          if (newIdx < 0 && aIndex == 0 || newIdx > aMaxRow && aIndex == aMaxRow)
-            aIndex = null;
-          else
-            aIndex = newIdx;
-          
+
+          if (aIndex == null)
+            return aReverse ? aMaxRow : 0;
+          if (aIndex == (aReverse ? 0 : aMaxRow))
+            return null;
+
+          var amount = aPage ? this.pageCount - 1 : 1;
+          aIndex = aReverse ? aIndex - amount : aIndex + amount;
+          if (aIndex > aMaxRow)
+            return aMaxRow;
+          if (aIndex < 0)
+            return 0;
           return aIndex;
         ]]></body>
       </method>
