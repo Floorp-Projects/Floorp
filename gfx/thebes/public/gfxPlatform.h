@@ -124,7 +124,7 @@ public:
     /**
      * Create the appropriate platform font group
      */
-    virtual gfxFontGroup *CreateFontGroup(const nsAString &aFamilies,
+    virtual gfxFontGroup *CreateFontGroup(const nsAString& aFamilies,
                                           const gfxFontStyle *aStyle) = 0;
 
     /* Returns PR_TRUE if the given block of ARGB32 data really has alpha, otherwise PR_FALSE */
