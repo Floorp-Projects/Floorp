@@ -216,7 +216,8 @@ protected:
   void PaintDropFeedback(const nsRect&        aDropFeedbackRect, 
                          nsPresContext*      aPresContext,
                          nsIRenderingContext& aRenderingContext,
-                         const nsRect&        aDirtyRect);
+                         const nsRect&        aDirtyRect,
+                         nsPoint              aPt);
 
   // This method is called with a specific style context and rect to
   // paint the background rect as if it were a full-blown frame.
