@@ -170,8 +170,7 @@ LoginManager.prototype = {
         this._prefBranch.addObserver("", this._observer, false);
 
         // Get current preference values.
-        if (this._prefBranch.prefHasUserValue("debug"))
-            this._debug = this._prefBranch.getBoolPref("debug");
+        this._debug = this._prefBranch.getBoolPref("debug");
 
         this._remember = this._prefBranch.getBoolPref("rememberSignons");
 
@@ -254,14 +253,8 @@ LoginManager.prototype = {
                 this._pwmgr.log("got change to " + prefName + " preference");
 
                 if (prefName == "debug") {
-                    // The debug pref is hidden (so no default)
-                    if (this._pwmgr._prefBranch.prefHasUserValue("debug"))
-                        var debug =
-                            this._pwmgr._prefBranch.getBoolPref("debug");
-                    else
-                        debug = false;
-                    this._pwmgr._debug = debug;
-
+                    this._pwmgr._debug = 
+                        this._pwmgr._prefBranch.getBoolPref("debug");
                 } else if (prefName == "rememberSignons") {
                     this._pwmgr._remember =
                         this._pwmgr._prefBranch.getBoolPref("rememberSignons");
