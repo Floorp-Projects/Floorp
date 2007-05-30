@@ -42,6 +42,7 @@ const nsISupportsArray = Components.interfaces.nsISupportsArray;
 
 var certdb;
 var ocspResponders;
+var cacheRadio = 0;
 
 function onLoad()
 {
@@ -63,26 +64,44 @@ function onLoad()
 
   parent.initPanel('chrome://pippki/content/pref-validation.xul');
 
-  doEnabling();
+  doEnabling(0);
 }
 
-function doEnabling()
+function doEnabling(called_by)
 {
-  var signersMenu = document.getElementById("signingCA");
-  var signersURL = document.getElementById("serviceURL");
-  var radiogroup = document.getElementById("securityOCSPEnabled");
-  
-  switch ( radiogroup.value ) {
-   case "0":
-   case "1":
-    signersMenu.setAttribute("disabled", true);
-    signersURL.setAttribute("disabled", true);
-    break;
-   case "2":
-   default:
-    signersMenu.removeAttribute("disabled");
-    signersURL.removeAttribute("disabled");
+  var signingCA = document.getElementById("signingCA");
+  var serviceURL = document.getElementById("serviceURL");
+  var securityOCSPEnabled = document.getElementById("securityOCSPEnabled");
+  var requireWorkingOCSP = document.getElementById("requireWorkingOCSP");
+  var enableOCSPBox = document.getElementById("enableOCSPBox");
+  var certOCSP = document.getElementById("certOCSP");
+  var proxyOCSP = document.getElementById("proxyOCSP");
+
+  var OCSPPrefValue = parseInt(securityOCSPEnabled.value);
+
+  if (called_by == 0) {
+    // the radio button changed, or we init the stored value from prefs
+    enableOCSPBox.checked = (OCSPPrefValue != 0);
   }
+  else {
+    // the user toggled the checkbox to enable/disable OCSP
+    var new_val = 0;
+    if (enableOCSPBox.checked) {
+      // now enabled. if we have a cached radio val, restore it.
+      // if not, use the first setting
+      new_val = (cacheRadio > 0) ? cacheRadio : 1;
+    }
+    else {
+      // now disabled. remember current value
+      cacheRadio = OCSPPrefValue;
+    }
+    securityOCSPEnabled.value = OCSPPrefValue = new_val;
+  }
+
+  certOCSP.disabled = (OCSPPrefValue == 0);
+  proxyOCSP.disabled = (OCSPPrefValue == 0);
+  signingCA.disabled = serviceURL.disabled = OCSPPrefValue == 0 || OCSPPrefValue == 1;
+  requireWorkingOCSP.disabled = (OCSPPrefValue == 0);
 }
 
 function changeURL()

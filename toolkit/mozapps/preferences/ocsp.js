@@ -36,9 +36,11 @@
 #
 # ***** END LICENSE BLOCK *****
 
+
 var gOCSPDialog = {
   _certDB         : null,
   _OCSPResponders : null,
+  _cacheRadio     : 0,
 
   init: function ()
   {
@@ -67,14 +69,42 @@ var gOCSPDialog = {
     this.chooseServiceURL();
   },
   
-  _updateUI: function ()
+  _updateUI: function (called_by)
   {
     var signingCA = document.getElementById("security.OCSP.signingCA");
     var serviceURL = document.getElementById("security.OCSP.URL");
     var securityOCSPEnabled = document.getElementById("security.OCSP.enabled");
+    var requireWorkingOCSP = document.getElementById("security.OCSP.require");
+    var enableOCSPBox = document.getElementById("enableOCSPBox");
+    var certOCSP = document.getElementById("certOCSP");
+    var proxyOCSP = document.getElementById("proxyOCSP");
 
-    var OCSPEnabled = parseInt(securityOCSPEnabled.value);
-    signingCA.disabled = serviceURL.disabled = OCSPEnabled == 0 || OCSPEnabled == 1;
+    var OCSPPrefValue = parseInt(securityOCSPEnabled.value);
+
+    if (called_by == 0) {
+      // the radio button changed, or we init the stored value from prefs
+      enableOCSPBox.checked = (OCSPPrefValue != 0);
+    }
+    else {
+      // the user toggled the checkbox to enable/disable OCSP
+      var new_val = 0;
+      if (enableOCSPBox.checked) {
+        // now enabled. if we have a cached radio val, restore it.
+        // if not, use the first setting
+        new_val = (this._cacheRadio > 0) ? this._cacheRadio : 1;
+      }
+      else {
+        // now disabled. remember current value
+        this._cacheRadio = OCSPPrefValue;
+      }
+      securityOCSPEnabled.value = OCSPPrefValue = new_val;
+    }
+
+    certOCSP.disabled = (OCSPPrefValue == 0);
+    proxyOCSP.disabled = (OCSPPrefValue == 0);
+    signingCA.disabled = serviceURL.disabled = OCSPPrefValue == 0 || OCSPPrefValue == 1;
+    requireWorkingOCSP.disabled = (OCSPPrefValue == 0);
+    
     return undefined;
   },
   

@@ -259,7 +259,7 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
          ("nsNSSHttpRequestSession::trySendAndReceiveFcn to %s\n", mURL.get()));
 
-  const int max_retries = 5;
+  const int max_retries = 2;
   int retry_count = 0;
   PRBool retryable_error = PR_FALSE;
   SECStatus result_sec_status = SECFailure;

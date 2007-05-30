@@ -992,6 +992,14 @@ static void setOCSPOptions(nsIPrefBranch * pref)
     }
     break;
   }
+  PRBool ocspRequired;
+  pref->GetBoolPref("security.OCSP.require", &ocspRequired);
+  if (ocspRequired) {
+    CERT_SetOCSPFailureMode(ocspMode_FailureIsVerificationFailure);
+  }
+  else {
+    CERT_SetOCSPFailureMode(ocspMode_FailureIsNotAVerificationFailure);
+  }
 }
 
 nsresult
@@ -1969,7 +1977,8 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
       mPrefBranch->GetBoolPref("security.enable_tls", &enabled);
       SSL_OptionSetDefault(SSL_ENABLE_TLS, enabled);
       clearSessionCache = PR_TRUE;
-    } else if (prefName.Equals("security.OCSP.enabled")) {
+    } else if (prefName.Equals("security.OCSP.enabled")
+               || prefName.Equals("security.OCSP.require")) {
       setOCSPOptions(mPrefBranch);
     } else {
       /* Look through the cipher table and set according to pref setting */
