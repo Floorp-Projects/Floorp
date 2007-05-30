@@ -72,63 +72,50 @@ public:
  * into AppendText calls.
  * 
  * The current strategy is that we break the overall text into
- * whitespace-delimited "words". Then for words that contain a CJK character,
- * we break within the word using JISx4051 rules.
- * XXX This approach is not very good and we should replace it with something
- * better, such as some variant of UAX#14.
+ * whitespace-delimited "words". Then for words that contain a "complex" 
+ * character (currently CJK or Thai), we break within the word using complex
+ * rules (JISx4051 or Pango).
  */
 class nsLineBreaker {
 public:
   nsLineBreaker();
   ~nsLineBreaker();
 
-  // We need finegrained control of the line breaking behaviour to ensure
-  // that we get tricky CSS semantics right (in particular, the way we currently
-  // interpret and implement them; there's some ambiguity in the spec). The
-  // rules for CSS 'white-space' are slightly different for breaks induced by
-  // whitespace and space induced by nonwhitespace. Breaks induced by
-  // whitespace are always controlled by the
-  // 'white-space' property of the text node containing the
-  // whitespace. Breaks induced by non-whitespace where the break is between
-  // two nodes are controled by the 'white-space' property on the nearest
-  // common ancestor node. Therefore we provide separate control over
-  // a) whether whitespace in this text induces breaks b) whether we can
-  // break between nonwhitespace inside this text and c) whether we can break
-  // between nonwhitespace between the last text and this text.
+  // Normally, break opportunities exist at the end of each run of whitespace
+  // (Unicode ZWSP (U+200B) and ASCII space (U+0020)). Break opportunities can
+  // also exist inside runs of non-whitespace, as determined by nsILineBreaker.
+  // We provide flags to control on a per-chunk basis where breaks are allowed.
+  // At any character boundary, exactly one text chunk governs whether a
+  // break is allowed at that boundary.
   //
-  // "Whitespace" below means Unicode ZWSP (U+200B) and ASCII space (U+0020). We
-  // operate on text after whitespace processing has been applied, so
+  // We operate on text after whitespace processing has been applied, so
   // other characters (e.g. tabs and newlines) may have been converted to
   // spaces.
   enum {
     /**
-     * Allow breaks where a non-whitespace character in this block of text
-     * is preceded by a whitespace character.
+     * Allow a break opportunity at the start of this chunk of text.
      */
-    BREAK_WHITESPACE_END       = 0x01,
+    BREAK_ALLOW_INITIAL = 0x01,
     /**
-     * Allow breaks between eligible nonwhitespace characters when the break
-     * is in the interior of this block of text.
+     * Allow a break opportunity in the interior of this chunk of text.
      */
-    BREAK_NONWHITESPACE_INSIDE = 0x02,
-    /**
-     * Allow break between eligible nonwhitespace characters when the break
-     * is at the beginning of this block of text.
-     */
-    BREAK_NONWHITESPACE_BEFORE = 0x04
+    BREAK_ALLOW_INSIDE = 0x02,
   };
 
   /**
-   * Feed Unicode text into the linebreaker for analysis.
-   * If aLength is zero, then we assume the string is "invisible whitespace"
-   * which can induce breaks.
+   * Append "invisible whitespace". This acts like whitespace, but there is
+   * no actual text associated with it.
+   */
+  nsresult AppendInvisibleWhitespace();
+
+  /**
+   * Feed Unicode text into the linebreaker for analysis. aLength must be
+   * nonzero.
    */
   nsresult AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 aLength,
                       PRUint32 aFlags, nsILineBreakSink* aSink);
   /**
-   * Feed 8-bit text into the linebreaker for analysis.
-   * If aLength is zero, then we assume the string is "invisible whitespace"
-   * which can induce breaks.
+   * Feed 8-bit text into the linebreaker for analysis. aLength must be nonzero.
    */
   nsresult AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aLength,
                       PRUint32 aFlags, nsILineBreakSink* aSink);
@@ -143,6 +130,9 @@ public:
   nsresult Reset() { return FlushCurrentWord(); }
 
 private:
+  // This is a list of text sources that make up the "current word" (i.e.,
+  // run of text which does not contain any whitespace). All the mLengths
+  // are are nonzero, these cannot overlap.
   struct TextItem {
     TextItem(nsILineBreakSink* aSink, PRUint32 aSinkOffset, PRUint32 aLength,
              PRUint32 aFlags)
@@ -167,9 +157,8 @@ private:
   nsAutoTArray<TextItem,2>    mTextItems;
   PRPackedBool                mCurrentWordContainsCJK;
 
-  // When mCurrentWord is empty, this indicates whether we should allow a break
-  // before the next text if it starts with non-whitespace.
-  PRPackedBool                mBreakBeforeNonWhitespace;
+  // True if the previous character was whitespace
+  PRPackedBool                mAfterSpace;
 };
 
 #endif /*NSLINEBREAKER_H_*/
