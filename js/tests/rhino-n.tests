@@ -2,6 +2,9 @@
 # These tests are skipped by Rhino either because a bug with a regression
 # test has yet to be fixed, or because the test is not applicable to Rhino.
 
+# should be investigated: OutOfMemoryError
+js1_5/Regress/regress-330352.js
+
 # performance regression test
 js1_5/Array/regress-99120-01.js
 
