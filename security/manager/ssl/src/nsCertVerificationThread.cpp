@@ -123,12 +123,8 @@ nsresult nsCertVerificationThread::addJob(nsBaseVerificationJob *aJob)
   return NS_OK;
 }
 
-#define CONDITION_WAIT_TIME PR_TicksPerSecond() / 4
-  
 void nsCertVerificationThread::Run(void)
 {
-  const PRIntervalTime wait_time = CONDITION_WAIT_TIME;
-
   while (PR_TRUE) {
 
     nsBaseVerificationJob *job = nsnull;
@@ -139,7 +135,7 @@ void nsCertVerificationThread::Run(void)
       while (!mExitRequested && (0 == verification_thread_singleton->mJobQ.GetSize())) {
         // no work to do ? let's wait a moment
 
-        PR_WaitCondVar(mCond, wait_time);
+        PR_WaitCondVar(mCond, PR_INTERVAL_NO_TIMEOUT);
       }
       
       if (mExitRequested)
