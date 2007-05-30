@@ -249,7 +249,9 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
       if ((0 != width) && (NS_UNCONSTRAINEDSIZE != width)) {
         indent = nscoord(mStyleText->mTextIndent.GetPercentValue() * width);
       }
-      mLineBox->DisableResizeReflowOptimization();
+      if (GetFlag(LL_GOTLINEBOX)) {
+        mLineBox->DisableResizeReflowOptimization();
+      }
     }
 
     mTextIndent = indent;
