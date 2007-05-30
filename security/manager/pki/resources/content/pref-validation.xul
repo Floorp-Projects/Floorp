@@ -52,7 +52,7 @@
   <!-- List elements to manage for prefs -->
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["securityOCSPEnabled", "serviceURL", "signingCA"];
+    var _elementIDs = ["securityOCSPEnabled", "serviceURL", "signingCA", "requireWorkingOCSP"];
   ]]>
   </script>
             
@@ -72,16 +72,16 @@
 
   <groupbox align="start">
     <caption label="&validation.ocsp.caption;"/>
-    <description>&validation.ocsp.description;</description>
+    <checkbox id="enableOCSPBox" label="&enableOCSP.label;"
+              accesskey="&enableOCSP.accesskey;" oncommand="doEnabling(1);"/>
     <!-- Prefs -->
     <radiogroup id="securityOCSPEnabled"
                 prefstring="security.OCSP.enabled">
-        <radio value="0" label="&disableOCSP.label;"
-               accesskey="&disableOCSP.accesskey;" oncommand="doEnabling();"/>
-        <radio value="1" label="&certOCSP.label;"
-               accesskey="&certOCSP.accesskey;" oncommand="doEnabling();"/>
-        <radio value="2" label="&proxyOCSP.label;"
-               accesskey="&proxyOCSP.accesskey;" oncommand="doEnabling();"/>
+        <radio value="0" hidden="true"/>
+        <radio id="certOCSP" value="1" label="&certOCSP.label2;"
+               accesskey="&certOCSP.accesskey;" oncommand="doEnabling(0);"/>
+        <radio id="proxyOCSP" value="2" label="&proxyOCSP.label2;"
+               accesskey="&proxyOCSP.accesskey;" oncommand="doEnabling(0);"/>
 
         <grid class="indent" flex="1">
           <columns>
@@ -106,5 +106,11 @@
          </rows>
        </grid>
     </radiogroup>
+    <separator class="thin"/>
+    <checkbox id="requireWorkingOCSP" label="&validation.requireOCSP.description;"
+                accesskey="&validation.requireOCSP.accesskey;"
+                prefstring="security.OCSP.require"/>
+
   </groupbox>
+
 </page>

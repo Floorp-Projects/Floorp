@@ -50,8 +50,7 @@
 <prefwindow id="OCSPDialog" type="child"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             dlgbuttons="accept,cancel"
-            title="&ocspDialog.title;"
-            style="width: &window.width; !important;">
+            title="&ocspDialog.title;">
 
   <prefpane id="OCSPDialogPane" onpaneload="gOCSPDialog.init();">
     <script type="application/javascript" src="chrome://mozapps/content/preferences/ocsp.js"/>
@@ -60,14 +59,19 @@
       <preference id="security.OCSP.enabled"    name="security.OCSP.enabled"   type="int"/>
       <preference id="security.OCSP.signingCA"  name="security.OCSP.signingCA" type="string"/>
       <preference id="security.OCSP.URL"        name="security.OCSP.URL"       type="string"/>
+      <preference id="security.OCSP.require"    name="security.OCSP.require"   type="bool"/>
     </preferences>
     
-    <description control="securityOSCPEnabled">&validation.ocsp.description;</description>
+    <checkbox id="enableOCSPBox" label="&enableOCSP.label;" accesskey="&enableOCSP.accesskey;"
+              oncommand="gOCSPDialog._updateUI(1);"/>
     <radiogroup id="securityOCSPEnabled" preference="security.OCSP.enabled"
-                onsyncfrompreference="return gOCSPDialog._updateUI();">
-      <radio value="0" label="&disableOCSP.label;"/>
-      <radio value="1" label="&certOCSP.label;"/>
-      <radio value="2" label="&proxyOCSP.label;"/>
+                onsyncfrompreference="return gOCSPDialog._updateUI(0);"
+                class="indent">
+      <radio value="0" hidden="true"/>
+      <radio id="certOCSP" value="1" label="&certOCSP.label;"
+             accesskey="&certOCSP.accesskey;"/>
+      <radio id="proxyOCSP" value="2" label="&proxyOCSP.label;"
+             accesskey="&proxyOCSP.accesskey;"/>
 
       <grid class="indent" flex="1">
         <columns>
@@ -93,6 +97,9 @@
         </rows>
       </grid>
     </radiogroup>
-    <separator/>
+    <separator class="thin"/>
+    <checkbox id="requireWorkingOCSP" preference="security.OCSP.require" 
+              label="&requireOCSP.label;"
+              accesskey="&requireOCSP.accesskey;"/>
   </prefpane>
 </prefwindow>
