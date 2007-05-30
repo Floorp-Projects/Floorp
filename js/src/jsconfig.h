@@ -108,6 +108,7 @@
 #define JS_HAS_BLOCK_SCOPE      0       /* has block scope via let/arraycomp */
 #define JS_HAS_DESTRUCTURING    0       /* has [a,b] = ... or {p:a,q:b} = ... */
 #define JS_HAS_GENERATOR_EXPRS  0       /* has (expr for (lhs in iterable)) */
+#define JS_HAS_EXPR_CLOSURES    0       /* has function (formals) listexpr */
 
 #elif JS_VERSION < 150
 
@@ -141,6 +142,7 @@
 #define JS_HAS_BLOCK_SCOPE      0       /* has block scope via let/arraycomp */
 #define JS_HAS_DESTRUCTURING    0       /* has [a,b] = ... or {p:a,q:b} = ... */
 #define JS_HAS_GENERATOR_EXPRS  0       /* has (expr for (lhs in iterable)) */
+#define JS_HAS_EXPR_CLOSURES    0       /* has function (formals) listexpr */
 
 #elif JS_VERSION == 160
 
@@ -170,6 +172,7 @@
 #define JS_HAS_BLOCK_SCOPE      0       /* has block scope via let/arraycomp */
 #define JS_HAS_DESTRUCTURING    0       /* has [a,b] = ... or {p:a,q:b} = ... */
 #define JS_HAS_GENERATOR_EXPRS  0       /* has (expr for (lhs in iterable)) */
+#define JS_HAS_EXPR_CLOSURES    0       /* has function (formals) listexpr */
 
 #elif JS_VERSION == 170
 
@@ -199,6 +202,7 @@
 #define JS_HAS_BLOCK_SCOPE      1       /* has block scope via let/arraycomp */
 #define JS_HAS_DESTRUCTURING    1       /* has [a,b] = ... or {p:a,q:b} = ... */
 #define JS_HAS_GENERATOR_EXPRS  0       /* has (expr for (lhs in iterable)) */
+#define JS_HAS_EXPR_CLOSURES    0       /* has function (formals) listexpr */
 
 #elif JS_VERSION == 180
 
@@ -228,6 +232,7 @@
 #define JS_HAS_BLOCK_SCOPE      1       /* has block scope via let/arraycomp */
 #define JS_HAS_DESTRUCTURING    1       /* has [a,b] = ... or {p:a,q:b} = ... */
 #define JS_HAS_GENERATOR_EXPRS  1       /* has (expr for (lhs in iterable)) */
+#define JS_HAS_EXPR_CLOSURES    1       /* has function (formals) listexpr */
 
 #else
 

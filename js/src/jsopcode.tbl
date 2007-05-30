@@ -64,8 +64,8 @@
  * format       Bytecode plus immediate operand encoding format
  *
  * Precedence   Operators               Opcodes
- *  1           let (x = y) z, w        JSOP_LEAVEBLOCKEXPR
- *  2           ,                       JSOP_POP with SRC_PCDELTA note
+ *  1           let (x = y) z, yield w  JSOP_LEAVEBLOCKEXPR, JSOP_YIELD
+ *  2           ,                       JSOP_POP with SRC_PCDELTA, JSOP_RETURN
  *  3           =, +=, etc.             JSOP_SETNAME, etc. (all JOF_ASSIGNING)
  *  4           ?:                      JSOP_IFEQ, JSOP_IFEQX
  *  5           ||                      JSOP_OR, JSOP_ORX
@@ -102,7 +102,7 @@ OPDEF(JSOP_PUSH,      1,  "push",       NULL,         1,  0,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_POPV,      2,  "popv",       NULL,         1,  1,  0,  2,  JOF_BYTE)
 OPDEF(JSOP_ENTERWITH, 3,  "enterwith",  NULL,         1,  1,  1,  0,  JOF_BYTE|JOF_PARENHEAD)
 OPDEF(JSOP_LEAVEWITH, 4,  "leavewith",  NULL,         1,  1,  0,  0,  JOF_BYTE)
-OPDEF(JSOP_RETURN,    5,  "return",     NULL,         1,  1,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_RETURN,    5,  "return",     NULL,         1,  1,  0,  2,  JOF_BYTE)
 OPDEF(JSOP_GOTO,      6,  "goto",       NULL,         3,  0,  0,  0,  JOF_JUMP)
 OPDEF(JSOP_IFEQ,      7,  "ifeq",       NULL,         3,  1,  0,  4,  JOF_JUMP|JOF_DETECTING)
 OPDEF(JSOP_IFNE,      8,  "ifne",       NULL,         3,  1,  0,  0,  JOF_JUMP|JOF_PARENHEAD)
@@ -311,7 +311,7 @@ OPDEF(JSOP_NAMEDFUNOBJ, 129, "namedfunobj", NULL,     3,  0,  1, 19,  JOF_CONST)
 OPDEF(JSOP_SETLOCALPOP, 130, "setlocalpop", NULL,     3,  1,  0,  3,  JOF_LOCAL|JOF_NAME|JOF_SET)
 
 /* ECMA-mandated parenthesization opcode, which nulls the reference base register, obj; see jsinterp.c. */
-OPDEF(JSOP_GROUP,       131, "group",       NULL,     1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_GROUP,       131, "group",       NULL,     1,  0,  0, 19,  JOF_BYTE)
 
 /* Host object extension: given 'o.item(i) = j', the left-hand side compiles JSOP_SETCALL, rather than JSOP_CALL. */
 OPDEF(JSOP_SETCALL,     132, "setcall",     NULL,     3, -1,  2, 18,  JOF_UINT16|JOF_SET|JOF_ASSIGNING)
@@ -363,7 +363,7 @@ OPDEF(JSOP_BACKPATCH_POP, 150,"backpatch_pop",NULL,   3,  1,  0,  0,  JOF_JUMP|J
 OPDEF(JSOP_THROWING,      151,"throwing", NULL,       1,  1,  0,  0,  JOF_BYTE)
 
 /* Set and get return value pseudo-register in stack frame. */
-OPDEF(JSOP_SETRVAL,       152,"setrval",  NULL,       1,  1,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_SETRVAL,       152,"setrval",  NULL,       1,  1,  0,  2,  JOF_BYTE)
 OPDEF(JSOP_RETRVAL,       153,"retrval",  NULL,       1,  0,  0,  0,  JOF_BYTE)
 
 /* Optimized global variable ops (we don't bother doing a JSOP_FORGVAR op). */
