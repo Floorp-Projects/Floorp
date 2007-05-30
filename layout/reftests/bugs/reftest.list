@@ -53,7 +53,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 28811-2a.html 28811-2-ref.html # bug 38
 == 40596-1i.html 40596-1-ref.html
 != 40596-1j.html 40596-1-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 84400-1.html 84400-1-ref.html # bug 382039
-== 84400-2.html 84400-2-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 84400-2.html 84400-2-ref.html # mac bug 382399
 == 97777-1.html 97777-1-ref.html
 == 97777-2.html 97777-2-ref.html
 == 98223-1.html 98223-1-ref.html
@@ -76,7 +76,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 84400-1.html 84400-1-ref.html # bug 382
 == 185388-1.html 185388-1-ref.html
 == 201215-1.html 201215-1-ref.html
 == 206516-1.html 206516-1-ref.html
-== 210876-1.html 210876-1-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 210876-1.html 210876-1-ref.html # mac bug 382399
 == 235593-1.html 235593-1-ref.html
 == 243266-1.html 243266-1-ref.html
 == 243302-1.html 243302-1-ref.html
@@ -119,7 +119,7 @@ random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 335628-1.html 335628-1-ref.html
 != 335628-2.xul 335628-2-ref.xul
 == 336147-1.html 336147-1-ref.html
-== 339289-1.html 339289-1-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 339289-1.html 339289-1-ref.html # mac bug 382399
 == 341043-1a.html 341043-1-ref.html
 != 341043-1b.html 341043-1-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 346774-1a.html 346774-1-ref.html # bug 381831
@@ -163,7 +163,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 359903-1.html 359903-1-ref.html # bug 3
 != 362594-2b.html 362594-1-standards-ref.html
 == 362594-2b.html 362594-2-standards-ref.html
 == 362594-2c.html 362594-2-standards-ref.html
-== 362901-1.html 362901-1-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 362901-1.html 362901-1-ref.html # mac bug 382399
 == 363329-1.html 363329-1-ref.html
 == 363329-2.html 363329-2-ref.html
 == 363637-1.html 363637-1-ref.html
