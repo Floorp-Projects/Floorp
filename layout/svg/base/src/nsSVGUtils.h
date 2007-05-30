@@ -247,6 +247,14 @@ public:
   static nsSVGOuterSVGFrame *
   GetOuterSVGFrame(nsIFrame *aFrame);
 
+  /**
+   * Get the covered region for a frame. Return null if it's not an SVG frame.
+   * @param aRect gets a rectangle in *pixels*
+   * @return the outer SVG frame which aRect is relative to
+   */
+  static nsIFrame*
+  GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame, nsRect* aRect);
+
   /* Generate a viewbox to viewport tranformation matrix */
   
   static already_AddRefed<nsIDOMSVGMatrix>
