@@ -300,6 +300,7 @@ int main(int argc, const char** argv)
     while (param && *param) {
       restartArgs.push_back(param);
 
+      paramName.str("");
       paramName << "MOZ_CRASHREPORTER_RESTART_ARG_" << i++;
       param = getenv(paramName.str().c_str());
     };
