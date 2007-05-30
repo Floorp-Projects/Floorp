@@ -115,10 +115,7 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
         aSkipChars->SkipChar();
       } else {
         aSkipChars->KeepChar();
-        if (ch == CH_NBSP) {
-          ch = ' ';
-          flags |= TEXT_WAS_TRANSFORMED;
-        } else if (ch == '\t') {
+        if (ch == '\t') {
           flags |= TEXT_HAS_TAB;
         }
         *aOutput++ = ch;
@@ -153,10 +150,6 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
           aSkipChars->SkipChar();
           nowInWhitespace = inWhitespace;
         } else {
-          if (ch == CH_NBSP) {
-            ch = ' ';
-            flags |= TEXT_WAS_TRANSFORMED;
-          }
           *aOutput++ = ch;
           aSkipChars->KeepChar();
         }
@@ -203,10 +196,7 @@ nsTextFrameUtils::TransformText(const PRUint8* aText, PRUint32 aLength,
         aSkipChars->SkipChar();
       } else {
         aSkipChars->KeepChar();
-        if (ch == CH_NBSP) {
-          ch = ' ';
-          flags |= TEXT_WAS_TRANSFORMED;
-        } else if (ch == '\t') {
+        if (ch == '\t') {
           flags |= TEXT_HAS_TAB;
         }
         *aOutput++ = ch;
@@ -224,10 +214,6 @@ nsTextFrameUtils::TransformText(const PRUint8* aText, PRUint32 aLength,
           aSkipChars->SkipChar();
           nowInWhitespace = inWhitespace;
         } else {
-          if (ch == CH_NBSP) {
-            ch = ' ';
-            flags |= TEXT_WAS_TRANSFORMED;
-          }
           *aOutput++ = ch;
           aSkipChars->KeepChar();
         }
