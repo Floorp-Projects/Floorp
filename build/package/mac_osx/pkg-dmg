@@ -239,7 +239,7 @@ pkg-dmg --source /Applications/DeerPark.app --target ~/DeerPark.dmg
 =head1 REQUIREMENTS
 
 I<pkg-dmg> has been tested with Mac OS X releases 10.2 ("Jaguar")
-through 10.4 ("Panther").  Certain adjustments to behavior are made
+through 10.4 ("Tiger").  Certain adjustments to behavior are made
 depending on the host system's release.  Mac OS X 10.3 ("Panther") or
 later are recommended.
 
