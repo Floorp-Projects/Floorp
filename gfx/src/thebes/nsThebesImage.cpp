@@ -340,8 +340,9 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
     gfxContext *ctx = thebesRC->Thebes();
 
 #if 0
-    fprintf (stderr, "nsThebesImage::Draw src [%d %d %d %d] dest [%d %d %d %d] tx [%f %f] dec [%d %d %d %d]\n",
-             aSourceRect.pos.x, aSourceRect.pos.y, aSWidth, aSHeight, aDX, aDY, aDWidth, aDHeight,
+    fprintf (stderr, "nsThebesImage::Draw src [%f %f %f %f] dest [%f %f %f %f] trans: [%f %f] dec: [%f %f]\n",
+             aSourceRect.pos.x, aSourceRect.pos.y, aSourceRect.size.width, aSourceRect.size.height,
+             aDestRect.pos.x, aDestRect.pos.y, aDestRect.size.width, aDestRect.size.height,
              ctx->CurrentMatrix().GetTranslation().x, ctx->CurrentMatrix().GetTranslation().y,
              mDecoded.x, mDecoded.y, mDecoded.width, mDecoded.height);
 #endif
@@ -385,6 +386,48 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
     if (!AllowedImageSize(destRect.size.width, destRect.size.height))
         return NS_ERROR_FAILURE;
 
+    nsRefPtr<gfxPattern> pat;
+
+    /* See bug 364968 to understand the necessity of this goop; we basically
+     * have to pre-downscale any image that would fall outside of a scaled 16-bit
+     * coordinate space.
+     */
+    if (aDestRect.pos.x * (1.0 / xscale) > 32768.0 ||
+        aDestRect.pos.y * (1.0 / yscale) > 32768.0)
+    {
+        gfxIntSize dim(NS_lroundf(destRect.size.width),
+                       NS_lroundf(destRect.size.height));
+        nsRefPtr<gfxASurface> temp =
+            gfxPlatform::GetPlatform()->CreateOffscreenSurface (dim,  mFormat);
+        nsRefPtr<gfxContext> tempctx = new gfxContext(temp);
+
+        nsRefPtr<gfxPattern> srcpat = new gfxPattern(ThebesSurface());
+        gfxMatrix mat;
+        mat.Translate(srcRect.pos);
+        mat.Scale(1.0 / xscale, 1.0 / yscale);
+        srcpat->SetMatrix(mat);
+
+        tempctx->SetPattern(srcpat);
+        tempctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+        tempctx->NewPath();
+        tempctx->Rectangle(gfxRect(0.0, 0.0, dim.width, dim.height));
+        tempctx->Fill();
+
+        pat = new gfxPattern(temp);
+
+        srcRect.pos.x = 0.0;
+        srcRect.pos.y = 0.0;
+        srcRect.size.width = dim.width;
+        srcRect.size.height = dim.height;
+
+        xscale = 1.0;
+        yscale = 1.0;
+    }
+
+    if (!pat) {
+        pat = new gfxPattern(ThebesSurface());
+    }
+
     gfxMatrix mat;
     mat.Translate(srcRect.pos);
     mat.Scale(1.0/xscale, 1.0/yscale);
@@ -394,7 +437,6 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
      */
     mat.Translate(-destRect.pos);
 
-    nsRefPtr<gfxPattern> pat = new gfxPattern(ThebesSurface());
     pat->SetMatrix(mat);
 
     // XXX bug 324698
