@@ -775,11 +775,9 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
   PRBool scripts_enabled = PR_FALSE;
 
   if (doc) {
-    loader = doc->GetScriptLoader();
-    if (loader) {
-      scripts_enabled = loader->GetEnabled();
-      loader->SetEnabled(PR_FALSE);
-    }
+    loader = doc->ScriptLoader();
+    scripts_enabled = loader->GetEnabled();
+    loader->SetEnabled(PR_FALSE);
   }
 
   nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(NS_STATIC_CAST(nsIContent *,

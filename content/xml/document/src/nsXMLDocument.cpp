@@ -567,11 +567,8 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
     // We leave them disabled even in EndLoad(), and let anyone
     // who puts the document on display to worry about enabling.
 
-    // scripts
-    nsScriptLoader *loader = GetScriptLoader();
-    if (loader) {
-      loader->SetEnabled(PR_FALSE); // Do not load/process scripts when loading as data
-    }
+    // Do not load/process scripts when loading as data
+    ScriptLoader()->SetEnabled(PR_FALSE);
 
     // styles
     CSSLoader()->SetEnabled(PR_FALSE); // Do not load/process styles when loading as data
