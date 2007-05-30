@@ -171,6 +171,7 @@ public:
 
   nsRect GetRect() { return mFilterRect; }
   nsSVGFilterFrame *GetFilterFrame();
+  void UpdateRect();
 
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED
@@ -208,16 +209,21 @@ nsSVGFilterProperty::GetFilterFrame()
 }
 
 void
+nsSVGFilterProperty::UpdateRect()
+{
+  nsSVGFilterFrame *filter = GetFilterFrame();
+  if (filter)
+    mFilterRect = filter->GetInvalidationRegion(mFrame);
+}
+
+void
 nsSVGFilterProperty::DoUpdate()
 {
   nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(mFrame);
   if (outerSVGFrame) {
     outerSVGFrame->InvalidateRect(mFilterRect);
-    nsSVGFilterFrame *filter = GetFilterFrame();
-    if (filter) {
-      mFilterRect = filter->GetInvalidationRegion(mFrame);
-      outerSVGFrame->InvalidateRect(mFilterRect);
-    }
+    UpdateRect();
+    outerSVGFrame->InvalidateRect(mFilterRect);
   }
 }
 
@@ -693,6 +699,17 @@ nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame)
   }
 
   return rect;
+}
+
+void
+nsSVGUtils::UpdateFilterRegion(nsIFrame *aFrame)
+{
+  if (aFrame->GetStateBits() & NS_STATE_SVG_FILTERED) {
+    nsSVGFilterProperty *property;
+    property = NS_STATIC_CAST(nsSVGFilterProperty *,
+                              aFrame->GetProperty(nsGkAtoms::filter));
+    property->UpdateRect();
+  }
 }
 
 float

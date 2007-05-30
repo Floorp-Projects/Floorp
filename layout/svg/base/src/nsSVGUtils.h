@@ -214,6 +214,11 @@ public:
    */
   static nsRect FindFilterInvalidation(nsIFrame *aFrame);
 
+  /*
+   * Update the filter invalidation region for this frame, if relevant.
+   */
+  static void UpdateFilterRegion(nsIFrame *aFrame);
+
   /* enum for specifying coordinate direction for ObjectSpace/UserSpace */
   enum ctxDirection { X, Y, XY };
 
