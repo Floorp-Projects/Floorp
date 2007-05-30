@@ -456,9 +456,23 @@ void nsChildView::TearDownView()
       [(NSView*)responder isDescendantOf:mView]) {
     [win makeFirstResponder: [mView superview]];
   }
-  
-  [mView removeFromSuperviewWithoutNeedingDisplay];
-  [mView release];
+
+  // If mView is win's contentView, win (mView's NSWindow) "owns" mView --
+  // win has retained mView, and will detach it from the view hierarchy and
+  // release it when necessary (when win is itself destroyed (in a call to
+  // [win dealloc])).  So all we need to do here is call [mView release] (to
+  // match the call to [mView retain] in nsChildView::StandardCreate()).
+  // Also calling [mView removeFromSuperviewWithoutNeedingDisplay] causes
+  // mView to be released again and dealloced, while remaining win's
+  // contentView.  So if we do that here, win will (for a short while) have
+  // an invalid contentView (for the consequences see bmo bugs 381087 and
+  // 374260).
+  if ([mView isEqual:[win contentView]]) {
+    [mView release];
+  } else {
+    // Stop NSView hierarchy being changed during [ChildView drawRect:]
+    [mView performSelectorOnMainThread:@selector(delayedTearDown) withObject:nil waitUntilDone:false];
+  }
   mView = nil;
 }
 
@@ -3442,6 +3456,20 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 
   nsFocusEvent unfocusEvent(PR_TRUE, NS_LOSTFOCUS, mGeckoChild);
   mGeckoChild->DispatchWindowEvent(unfocusEvent);
+}
+
+
+// If the call to removeFromSuperviewWithoutNeedingDisplay isn't delayed from
+// nsChildView::TearDownView(), the NSView hierarchy might get changed during
+// calls to [ChildView drawRect:], which leads to "beyond bounds" exceptions
+// in NSCFArray.  For more info see bmo bug 373122.  Apple's docs claim that
+// removeFromSuperviewWithoutNeedingDisplay "can be safely invoked during
+// display" (whatever "display" means).  But it's _not_ true that it can be
+// safely invoked during calls to [NSView drawRect:].
+- (void)delayedTearDown
+{
+  [self removeFromSuperviewWithoutNeedingDisplay];
+  [self release];
 }
 
 
