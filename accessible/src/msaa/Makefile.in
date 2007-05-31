@@ -79,7 +79,6 @@ CPPSRCS = \
   nsHTMLImageAccessibleWrap.cpp \
   nsHTMLTableAccessibleWrap.cpp \
   nsAccessibleRelationWrap.cpp \
-  nsApplicationAccessibleWrap.cpp \
   CAccessibleAction.cpp \
   CAccessibleImage.cpp \
   CAccessibleComponent.cpp \
@@ -104,7 +103,6 @@ EXPORTS = \
   nsHTMLImageAccessibleWrap.h \
   nsHTMLTableAccessibleWrap.h \
   nsAccessibleRelationWrap.h \
-  nsApplicationAccessibleWrap.h \
   CAccessibleAction.h \
   CAccessibleImage.h \
   CAccessibleComponent.h \
