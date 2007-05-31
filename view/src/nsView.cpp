@@ -356,7 +356,8 @@ nsRect nsView::CalcWidgetBounds(nsWindowType aType)
     nsIWidget* parentWidget = GetParent()->GetNearestWidget(&offset);
     viewBounds += offset;
 
-    if (aType == eWindowType_popup && mVis == nsViewVisibility_kShow) {
+    if (parentWidget && Type == eWindowType_popup &&
+        mVis == nsViewVisibility_kShow) {
       nsRect screenRect(0,0,1,1);
       parentWidget->WidgetToScreen(screenRect, screenRect);
       viewBounds += nsPoint(NSIntPixelsToAppUnits(screenRect.x, p2a),
