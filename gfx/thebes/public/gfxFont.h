@@ -467,7 +467,11 @@ public:
          * and advance width of the glyph). When not set, it may just be the
          * standard font-box even if glyphs overflow.
          */
-        TEXT_NEED_BOUNDING_BOX       = 0x0200
+        TEXT_NEED_BOUNDING_BOX       = 0x0200,
+        /**
+         * When set, ligatures are disabled.
+         */
+        TEXT_DISABLE_LIGATURES       = 0x0400,
     };
 
     /**
