@@ -46,7 +46,7 @@ var expect = '';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
  
-expect = '({get x () {print(4);})';
+expect = '({get x p() {print(4);}})';
 getter function p() { print(4) }
 actual =  uneval({x getter: this.__lookupGetter__("p")});
 reportCompare(expect, actual, summary + ': global');
