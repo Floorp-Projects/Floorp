@@ -65,6 +65,9 @@ REPORTS_DIR = r'c:\extension_perf_reports'
 """The path to the file url to load when initializing a new profile"""
 INIT_URL = 'file:///c:/win32/initialize.html'
 
+"""The path to the file url to load when collecting information from the browser"""
+INFO_URL = 'file:///c:/win32/getInfo.html'
+
 """The path to the file url to load for startup test (Ts)"""
 TS_URL = 'file:///c:/win32/startup_test/startup_test.html?begin='
 
