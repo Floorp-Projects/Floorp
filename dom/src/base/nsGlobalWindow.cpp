@@ -6888,14 +6888,17 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
       // disabled (!aTimeout), set the next interval to be relative to
       // "now", and not to when the timeout that was pending should
       // have fired.
-      PRTime nextInterval = (aTimeout ? timeout->mWhen : now) +
-        ((PRTime)timeout->mInterval * PR_USEC_PER_MSEC);
+      // Also check if the next interval timeout is overdue.  If so,
+      // then restart the interval from now.
+      PRTime nextInterval = (PRTime)timeout->mInterval * PR_USEC_PER_MSEC;
+      if (!aTimeout || nextInterval + timeout->mWhen <= now)
+        nextInterval += now;
+      else
+        nextInterval += timeout->mWhen;
+
       PRTime delay = nextInterval - PR_Now();
 
-      // If the next interval timeout is already supposed to have
-      // happened then run the timeout as soon as we can (meaning
-      // after DOM_MIN_TIMEOUT_VALUE time has passed).
-
+      // Make sure the delay is at least DOM_MIN_TIMEOUT_VALUE.
       // Note: We must cast the rhs expression to PRTime to work
       // around what looks like a compiler bug on x86_64.
       if (delay < (PRTime)(DOM_MIN_TIMEOUT_VALUE * PR_USEC_PER_MSEC)) {
