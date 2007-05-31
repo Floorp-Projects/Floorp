@@ -72,7 +72,7 @@ typedef enum REOp {
 
 #define REOP_IS_SIMPLE(op)  ((op) <= (unsigned)REOP_NCLASS)
 
-#ifdef REGEXP_DEBUG 
+#ifdef REGEXP_DEBUG
 const char *reop_names[] = {
 #define REOP_DEF(opcode, name) name,
 #include "jsreops.tbl"
@@ -649,12 +649,14 @@ ParseRegExp(CompilerState *state)
                 operand = state->result;
 pushOperand:
                 if (operandSP == operandStackSize) {
+                    RENode **tmp;
                     operandStackSize += operandStackSize;
-                    operandStack = (RENode **)
+                    tmp = (RENode **)
                         JS_realloc(state->context, operandStack,
                                    sizeof(RENode *) * operandStackSize);
-                    if (!operandStack)
+                    if (!tmp)
                         goto out;
+                    operandStack = tmp;
                 }
                 operandStack[operandSP++] = operand;
                 break;
@@ -788,12 +790,14 @@ restartOperator:
             op = REOP_CONCAT;
 pushOperator:
             if (operatorSP == operatorStackSize) {
+                REOpData *tmp;
                 operatorStackSize += operatorStackSize;
-                operatorStack = (REOpData *)
+                tmp = (REOpData *)
                     JS_realloc(state->context, operatorStack,
                                sizeof(REOpData) * operatorStackSize);
-                if (!operatorStack)
+                if (!tmp)
                     goto out;
+                operatorStack = tmp;
             }
             operatorStack[operatorSP].op = op;
             operatorStack[operatorSP].errPos = state->cp;
@@ -1549,7 +1553,7 @@ ParseMinMaxQuantifier(CompilerState *state, JSBool ignoreValues)
         if (c == '}') {
             state->result = NewRENode(state, REOP_QUANT);
             if (!state->result)
-                return JS_FALSE;
+                return JSMSG_OUT_OF_MEMORY;
             state->result->u.range.min = min;
             state->result->u.range.max = max;
             /*
@@ -1954,6 +1958,8 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
 
     if (len != 0 && flat) {
         state.result = NewRENode(&state, REOP_FLAT);
+        if (!state.result)
+            goto out;
         state.result->u.flat.chr = *state.cpbegin;
         state.result->u.flat.length = len;
         state.result->kid = (void *) state.cpbegin;
@@ -3246,13 +3252,13 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
         JS_ASSERT(op < REOP_LIMIT);
     }
 
-bad:            
+bad:
     re_debug("\n");
     return NULL;
-              
-good:           
+
+good:
     re_debug("\n");
-    return x;   
+    return x;
 }
 
 static REMatchState *
