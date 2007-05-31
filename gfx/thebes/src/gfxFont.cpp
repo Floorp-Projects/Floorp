@@ -1264,9 +1264,13 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
 
     gfxFloat width = 0;
     gfxFloat advance = 0;
-    gfxFloat trimmableAdvance = 0;
+    // The number of space characters that can be trimmed
     PRUint32 trimmableChars = 0;
+    // The amount of space removed by ignoring trimmableChars
+    gfxFloat trimmableAdvance = 0;
     PRInt32 lastBreak = -1;
+    PRInt32 lastBreakTrimmableChars = -1;
+    gfxFloat lastBreakTrimmableAdvance = -1;
     PRBool aborted = PR_FALSE;
     PRUint32 end = aStart + aMaxLength;
     PRBool lastBreakUsedHyphenation = PR_FALSE;
@@ -1303,6 +1307,8 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
             if (lastBreak < 0 || width + hyphenatedAdvance - trimmableAdvance <= aWidth) {
                 // We can break here.
                 lastBreak = i;
+                lastBreakTrimmableChars = trimmableChars;
+                lastBreakTrimmableAdvance = trimmableAdvance;
                 lastBreakUsedHyphenation = hyphenation;
             }
 
@@ -1364,6 +1370,8 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
         charsFit = aMaxLength;
     } else if (lastBreak >= 0) {
         charsFit = lastBreak - aStart;
+        trimmableChars = lastBreakTrimmableChars;
+        trimmableAdvance = lastBreakTrimmableAdvance;
     } else {
         charsFit = aMaxLength;
     }
