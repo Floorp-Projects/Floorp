@@ -164,7 +164,7 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
     PRBool isSpace = IS_SPACE(ch);
 
     breakState[offset] = mAfterSpace && !isSpace &&
-      (aFlags & (start == 0 ? BREAK_ALLOW_INITIAL : BREAK_ALLOW_INSIDE));
+      (aFlags & (offset == 0 ? BREAK_ALLOW_INITIAL : BREAK_ALLOW_INSIDE));
     mAfterSpace = isSpace;
 
     if (isSpace) {
@@ -254,7 +254,7 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
     PRBool isSpace = IS_SPACE(ch);
 
     breakState[offset] = mAfterSpace && !isSpace &&
-      (aFlags & (start == 0 ? BREAK_ALLOW_INITIAL : BREAK_ALLOW_INSIDE));
+      (aFlags & (offset == 0 ? BREAK_ALLOW_INITIAL : BREAK_ALLOW_INSIDE));
     mAfterSpace = isSpace;
 
     if (isSpace) {
