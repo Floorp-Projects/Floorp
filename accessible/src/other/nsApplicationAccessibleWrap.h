@@ -17,13 +17,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Sun Microsystems, Inc.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bolian Yin (bolian.yin@sun.com)
- *   Ginn Chen (ginn.chen@sun.com)
+ *   Alexander Surkov <surkov.alexander@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,12 +38,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsMai.h"
-#include "nsRootAccessibleWrap.h"
+#ifndef __NS_APPLICATION_ACCESSIBLE_WRAP_H__
+#define __NS_APPLICATION_ACCESSIBLE_WRAP_H__
 
-nsNativeRootAccessibleWrap::nsNativeRootAccessibleWrap(AtkObject *aAccessible):
-    nsRootAccessible(nsnull, nsnull)
+#include "nsApplicationAccessible.h"
+
+class nsApplicationAccessibleWrap: public nsApplicationAccessible
 {
-    g_object_ref(aAccessible);
-    nsAccessibleWrap::mAtkObject = aAccessible;
-}
+public:
+  static void PreCreate() {}
+};
+
+#endif
+

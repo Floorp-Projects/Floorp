@@ -50,6 +50,7 @@
 #include "nsIAccessibleRole.h"
 #include "nsIAccessibleStates.h"
 #include "nsAccessibleRelationWrap.h"
+#include "nsIAccessibleEvent.h"
 
 #include "nsIDOMNodeList.h"
 #include "nsINameSpaceManager.h"
