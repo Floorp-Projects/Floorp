@@ -926,6 +926,34 @@ AddGlyphRun(gfxTextRun *aRun, gfxAtsuiFont *aFont, PRUint32 aOffset)
     }
 }
 
+static void
+DisableLigaturesInStyle(ATSUStyle aStyle)
+{
+    static ATSUFontFeatureType selectors[9] = {
+        kRequiredLigaturesOffSelector,
+        kCommonLigaturesOffSelector,
+        kRareLigaturesOffSelector,
+        kLogosOffSelector,
+        kRebusPicturesOffSelector,
+        kDiphthongLigaturesOffSelector,
+        kSquaredLigaturesOffSelector,
+        kAbbrevSquaredLigaturesOffSelector,
+        kSymbolLigaturesOffSelector
+    };
+    static ATSUFontFeatureType types[NS_ARRAY_LENGTH(selectors)] = {
+        kLigaturesType,
+        kLigaturesType,
+        kLigaturesType,
+        kLigaturesType,
+        kLigaturesType,
+        kLigaturesType,
+        kLigaturesType,
+        kLigaturesType,
+        kLigaturesType
+    };
+    ATSUSetFontFeatures(aStyle, NS_ARRAY_LENGTH(selectors), types, selectors);
+}
+
 PRBool
 gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
                                const PRUnichar *aString, PRUint32 aLength,
@@ -946,6 +974,14 @@ gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
     NS_ConvertUTF16toUTF8 families(mFamilies);
     printf("%p(%s) TEXTRUN \"%s\" ENDTEXTRUN\n", this, families.get(), str.get());
 #endif
+
+    if (aRun->GetFlags() & TEXT_DISABLE_LIGATURES) {
+        status = ATSUCreateAndCopyStyle(mainStyle, &mainStyle);
+        if (status == noErr) {
+            stylesToDispose.AppendElement(mainStyle);
+            DisableLigaturesInStyle(mainStyle);
+        }
+    }
 
     UniCharCount runLengths = aSegmentLength;
     ATSUTextLayout layout;

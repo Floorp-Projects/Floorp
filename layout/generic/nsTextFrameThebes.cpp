@@ -1083,6 +1083,21 @@ void BuildTextRunsScanner::AccumulateRunInfo(nsTextFrame* aFrame)
   }
 }
 
+static nscoord StyleToCoord(const nsStyleCoord& aCoord)
+{
+  if (eStyleUnit_Coord == aCoord.GetUnit()) {
+    return aCoord.GetCoordValue();
+  } else {
+    return 0;
+  }
+}
+
+static PRBool
+ShouldDisableLigatures(const nsStyleText* aTextStyle)
+{
+  return StyleToCoord(aTextStyle->mLetterSpacing) != 0;
+}
+
 PRBool
 BuildTextRunsScanner::StylesMatchForTextRun(nsIFrame* aFrame1, nsIFrame* aFrame2)
 {
@@ -1096,7 +1111,8 @@ BuildTextRunsScanner::StylesMatchForTextRun(nsIFrame* aFrame1, nsIFrame* aFrame2
   if (sc1 == sc2)
     return PR_TRUE;
   return sc1->GetStyleFont()->mFont.BaseEquals(sc2->GetStyleFont()->mFont) &&
-    sc1->GetStyleVisibility()->mLangGroup == sc2->GetStyleVisibility()->mLangGroup;
+    sc1->GetStyleVisibility()->mLangGroup == sc2->GetStyleVisibility()->mLangGroup &&
+    ShouldDisableLigatures(sc1->GetStyleText()) == ShouldDisableLigatures(sc2->GetStyleText());
 }
 
 void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
@@ -1182,15 +1198,6 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
     FlushFrames(PR_TRUE);
     mCommonAncestorWithLastFrame = nsnull;
     mTrimNextRunLeadingWhitespace = PR_FALSE;
-  }
-}
-
-static nscoord StyleToCoord(const nsStyleCoord& aCoord)
-{
-  if (eStyleUnit_Coord == aCoord.GetUnit()) {
-    return aCoord.GetCoordValue();
-  } else {
-    return 0;
   }
 }
 
@@ -1490,6 +1497,9 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   }
   if (mTrimNextRunLeadingWhitespace) {
     textFlags |= nsTextFrameUtils::TEXT_TRAILING_WHITESPACE;
+  }
+  if (ShouldDisableLigatures(firstFrame->GetStyleText())) {
+    textFlags |= gfxTextRunFactory::TEXT_DISABLE_LIGATURES;
   }
 
   gfxSkipChars skipChars;
@@ -2067,6 +2077,15 @@ PropertyProvider::GetSpacing(PRUint32 aStart, PRUint32 aLength,
                      (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_HAS_TAB) == 0);
 }
 
+static PRBool
+CanAddSpacingAfter(gfxTextRun* aTextRun, PRUint32 aOffset)
+{
+  if (aOffset + 1 >= aTextRun->GetLength())
+    return PR_TRUE;
+  return aTextRun->IsClusterStart(aOffset + 1) &&
+    !aTextRun->IsLigatureContinuation(aOffset + 1);
+}
+
 void
 PropertyProvider::GetSpacingInternal(PRUint32 aStart, PRUint32 aLength,
                                      Spacing* aSpacing, PRBool aIgnoreTabs)
@@ -2093,9 +2112,8 @@ PropertyProvider::GetSpacingInternal(PRUint32 aStart, PRUint32 aLength,
       PRInt32 i;
       gfxSkipCharsIterator iter = run.GetPos();
       for (i = 0; i < run.GetRunLength(); ++i) {
-        if (i + 1 >= run.GetRunLength() ||
-            mTextRun->IsClusterStart(i + 1 + run.GetSkippedOffset())) {
-          // End of a cluster, put letter-spacing after it
+        if (CanAddSpacingAfter(mTextRun, run.GetSkippedOffset() + i)) {
+          // End of a cluster, not in a ligature: put letter-spacing after it
           aSpacing[runOffsetInSubstring + i].mAfter += mLetterSpacing;
         }
         if (IsCSSWordSpacingSpace(mFrag, i + run.GetOriginalOffset())) {

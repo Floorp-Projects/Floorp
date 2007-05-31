@@ -859,27 +859,17 @@ gfxTextRun::GetAdjustedSpacing(PRUint32 aStart, PRUint32 aEnd,
         aSpacing[aEnd - 1 - aStart].mAfter -= clusterWidth;
     }
 
-    // Move spacing inside a ligature to after the ligature.
-    // Do this after adjusting for ABSOLUTE_SPACING above.
-    // XXX we shouldn't really have to do this, textframe users should
-    // not put spacing inside ligatures.
-    // XXX the following loop could be avoided if we add some kind of
-    // TEXT_HAS_LIGATURES flag
-    gfxFloat accumulatedSpace = 0;
-    for (i = aStart; i <= aEnd; ++i) {
-        if (i < aEnd && charGlyphs[i].IsLigatureContinuation()) {
-            accumulatedSpace += aSpacing[i - aStart].mBefore;
-            aSpacing[i - aStart].mBefore = 0;
-            NS_ASSERTION(i > aStart, "Ligature continuation at start of spacing run?");
-            accumulatedSpace += aSpacing[i - 1 - aStart].mAfter;
-            aSpacing[i - 1 - aStart].mAfter = 0;
-        } else {
-            if (i > aStart) {
-                aSpacing[i - 1 - aStart].mAfter += accumulatedSpace;
-                accumulatedSpace = 0;
-            }
+#ifdef DEBUG
+    // Check to see if we have spacing inside ligatures
+    for (i = aStart; i < aEnd; ++i) {
+        if (charGlyphs[i].IsLigatureContinuation()) {
+            NS_ASSERTION(i == aStart || aSpacing[i - aStart].mBefore == 0,
+                         "Before-spacing inside a ligature!");
+            NS_ASSERTION(i - 1 <= aStart || aSpacing[i - 1 - aStart].mAfter == 0,
+                         "After-spacing inside a ligature!");
         }
     }
+#endif
 }
 
 PRBool
@@ -1411,29 +1401,27 @@ gfxTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
                  charGlyphs[aStart + aLength].IsClusterStart(),
                  "GetAdvanceWidth called, not ending at cluster boundary");
 
-    gfxFloat result = 0; // app units
+    PRUint32 ligatureRunStart = aStart;
+    PRUint32 ligatureRunEnd = aStart + aLength;
+    ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
 
-    // Account for all spacing here. This is more efficient than processing it
-    // along with the glyphs.
+    gfxFloat result = GetPartialLigatureWidth(aStart, ligatureRunStart, aProvider) +
+                      GetPartialLigatureWidth(ligatureRunEnd, aStart + aLength, aProvider);
+
+    // Account for all remaining spacing here. This is more efficient than
+    // processing it along with the glyphs.
     if (aProvider && (mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING)) {
         PRUint32 i;
         nsAutoTArray<PropertyProvider::Spacing,200> spacingBuffer;
         if (spacingBuffer.AppendElements(aLength)) {
-            GetAdjustedSpacing(aStart, aStart + aLength, aProvider,
+            GetAdjustedSpacing(ligatureRunStart, ligatureRunEnd, aProvider,
                                spacingBuffer.Elements());
-            for (i = 0; i < aLength; ++i) {
+            for (i = 0; i < ligatureRunEnd - ligatureRunStart; ++i) {
                 PropertyProvider::Spacing *space = &spacingBuffer[i];
                 result += space->mBefore + space->mAfter;
             }
         }
     }
-
-    PRUint32 ligatureRunStart = aStart;
-    PRUint32 ligatureRunEnd = aStart + aLength;
-    ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
-
-    result += GetPartialLigatureWidth(aStart, ligatureRunStart, aProvider) +
-              GetPartialLigatureWidth(ligatureRunEnd, aStart + aLength, aProvider);
 
     PRUint32 i;
     for (i = ligatureRunStart; i < ligatureRunEnd; ++i) {
