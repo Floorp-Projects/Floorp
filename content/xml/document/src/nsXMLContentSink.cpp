@@ -251,7 +251,12 @@ nsXMLContentSink::MaybePrettyPrint()
   nsresult rv = NS_NewXMLPrettyPrinter(getter_AddRefs(printer));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return printer->PrettyPrint(mDocument);
+  PRBool isPrettyPrinting;
+  rv = printer->PrettyPrint(mDocument, &isPrettyPrinting);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mPrettyPrinting = isPrettyPrinting;
+  return NS_OK;
 }
 
 static void
@@ -341,9 +346,25 @@ nsXMLContentSink::DidBuildModel()
     // Check if we want to prettyprint
     MaybePrettyPrint();
 
-    StartLayout(PR_FALSE);
+    PRBool startLayout = PR_TRUE;
+    
+    if (mPrettyPrinting) {
+      NS_ASSERTION(!mPendingSheetCount, "Shouldn't have pending sheets here!");
+      
+      // We're pretty-printing now.  See whether we should wait up on
+      // stylesheet loads
+      if (mDocument->CSSLoader()->HasPendingLoads() &&
+          NS_SUCCEEDED(mDocument->CSSLoader()->AddObserver(this))) {
+        // wait for those sheets to load
+        startLayout = PR_FALSE;
+      }
+    }
+    
+    if (startLayout) {
+      StartLayout(PR_FALSE);
 
-    ScrollToRef();
+      ScrollToRef();
+    }
 
     mDocument->RemoveObserver(this);
 
@@ -428,6 +449,23 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXMLContentSink::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
+                                   PRBool aWasAlternate,
+                                   nsresult aStatus)
+{
+  if (!mPrettyPrinting) {
+    return nsContentSink::StyleSheetLoaded(aSheet, aWasAlternate, aStatus);
+  }
+
+  if (!mDocument->CSSLoader()->HasPendingLoads()) {
+    mDocument->CSSLoader()->RemoveObserver(this);
+    StartLayout(PR_FALSE);
+    ScrollToRef();
+  }
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsXMLContentSink::WillInterrupt(void)

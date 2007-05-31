@@ -71,8 +71,11 @@ nsXMLPrettyPrinter::~nsXMLPrettyPrinter()
 }
 
 nsresult
-nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument)
+nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
+                                PRBool* aDidPrettyPrint)
 {
+    *aDidPrettyPrint = PR_FALSE;
+    
     // Check for iframe with display:none. Such iframes don't have presshells
     if (!aDocument->GetPrimaryShell()) {
         return NS_OK;
@@ -119,6 +122,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument)
     }
 
     // Ok, we should prettyprint. Let's do it!
+    *aDidPrettyPrint = PR_TRUE;
     nsresult rv = NS_OK;
 
     // Load the XSLT
