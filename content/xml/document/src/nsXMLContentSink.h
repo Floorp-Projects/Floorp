@@ -101,6 +101,9 @@ public:
   NS_IMETHOD OnDocumentCreated(nsIDocument *aResultDocument);
   NS_IMETHOD OnTransformDone(nsresult aResult, nsIDocument *aResultDocument);
 
+  // nsICSSLoaderObserver
+  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,
+                              nsresult aStatus);
   static void ParsePIData(const nsString &aData, nsString &aHref,
                           nsString &aTitle, nsString &aMedia,
                           PRBool &aIsAlternate);
@@ -190,7 +193,9 @@ protected:
   PRUint8 mPrettyPrintHasFactoredElements : 1;
   PRUint8 mHasProcessedBase : 1;
   PRUint8 mAllowAutoXLinks : 1;
-  PRUint8 unused : 2;  // bits available if someone needs one
+  PRUint8 mPrettyPrinting : 1;  // True if we called PrettyPrint() and it
+                                // decided we should in fact prettyprint.
+  PRUint8 unused : 1;  // bits available if someone needs one
   
   nsTArray<StackNode>              mContentStack;
 

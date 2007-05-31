@@ -72,6 +72,7 @@ class nsMediaList;
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "nsIPrincipal.h"
+#include "nsTObserverArray.h"
 
 /**
  * OVERALL ARCHITECTURE
@@ -360,6 +361,10 @@ public:
   NS_IMETHOD GetEnabled(PRBool *aEnabled);
   NS_IMETHOD SetEnabled(PRBool aEnabled);
 
+  NS_IMETHOD_(PRBool) HasPendingLoads();
+  NS_IMETHOD AddObserver(nsICSSLoaderObserver* aObserver);
+  NS_IMETHOD_(void) RemoveObserver(nsICSSLoaderObserver* aObserver);  
+
   // local helper methods (some are public for access from statics)
 
   // IsAlternate can change our currently selected style set if none
@@ -417,15 +422,19 @@ private:
                          nsICSSStyleSheet* aSheet,
                          nsICSSLoaderObserver* aObserver,
                          PRBool aWasAlternate);
+
+  // Start the loads of all the sheets in mPendingDatas
+  void StartAlternateLoads();
+  
 public:
   // Handle an event posted by PostLoadEvent
   void HandleLoadEvent(SheetLoadData* aEvent);
 
+protected:
   // Note: LoadSheet is responsible for releasing aLoadData and setting the
   // sheet to complete on failure.
   nsresult LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState);
 
-protected:
   friend class SheetLoadData;
 
   // Protected functions and members are ones that SheetLoadData needs
@@ -439,14 +448,14 @@ protected:
                       SheetLoadData* aLoadData,
                       PRBool& aCompleted);
 
-public:
   // The load of the sheet in aLoadData is done, one way or another.  Do final
   // cleanup, including releasing aLoadData.
   void SheetComplete(SheetLoadData* aLoadData, nsresult aStatus);
 
-private:
+public:
   typedef nsTArray<nsRefPtr<SheetLoadData> > LoadDataArray;
   
+private:
   // The guts of SheetComplete.  This may be called recursively on parent datas
   // or datas that had glommed on to a single load.  The array is there so load
   // datas whose observers need to be notified can be added to it.
@@ -481,6 +490,15 @@ private:
   // The array of posted stylesheet loaded events (SheetLoadDatas) we have.
   // Note that these are rare.
   LoadDataArray mPostedEvents;
+
+  // Number of datas still waiting to be notified on if we're notifying on a
+  // whole bunch at once (e.g. in one of the stop methods).  This is used to
+  // make sure that HasPendingLoads() won't return false until we're notifying
+  // on the last data we're working with.
+  PRUint32 mDatasToNotifyOn;
+
+  // Our array of "global" observers
+  nsTObserverArray<nsICSSLoaderObserver> mObservers;
 };
 
 #endif // nsCSSLoader_h__
