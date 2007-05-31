@@ -54,6 +54,7 @@ import time
 
 import ffprocess
 import ffprofile
+import ffinfo
 import config
 
 
@@ -134,6 +135,7 @@ def RunStartupTests(profile_configs, num_runs):
     # cause a performance hit, and the second Firefox that gets
     # created is properly terminated.
     ffprofile.InitializeNewProfile(config[2], profile_dir)
+    ffinfo.GetMetricsFromBrowser(config[2], profile_dir)
 
     # Run the startup tests for this profile and log the results.
     times = RunStartupTest(config[2], profile_dir, 5, 10)
