@@ -50,17 +50,19 @@ var gMoveBookmarksDialog = {
   init: function() {
     this._nodes = window.arguments[0];
     this._tm = window.arguments[1];
+
+    // setTimeout until bug 373944 is fixed
+    setTimeout(function(aSelf) {
+        // select and expand the root node
+        aSelf.foldersTree.selectFolders([PlacesUtils.bookmarksRootId]);
+        aSelf.foldersTree.selectedNode.containerOpen = true;
+      }, 0, this);
   },
 
   onOK: function MBD_onOK(aEvent) {
     var selectedNode = this.foldersTree.selectedNode;
-    if (!selectedNode) {
-      // XXXmano: the old dialog defaults to the the "Bookmarks" root folder
-      // for some reason. I'm pretty sure we don't want to that yet in Places,
-      // at least not until we make that folder node visible in the tree, if we
-      // ever do so
-      return;
-    }
+    NS_ASSERT(selectedNode,
+              "selectedNode must be set in a single-selection tree with initial selection set");
     var selectedFolderID = selectedNode.itemId;
 
     var transactions = [];
