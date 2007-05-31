@@ -307,8 +307,11 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     // NSLog(@"Top-level window being created at Cocoa rect: %f, %f, %f, %f\n",
     //       rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
 
-    // create the window
-    mWindow = [[NSWindow alloc] initWithContentRect:rect styleMask:features 
+    // Create the window. If we're a top level window, we want to be able to
+    // have the toolbar pill button, so use the special ToolbarWindow class.
+    Class windowClass = (mWindowType == eWindowType_toplevel) 
+                        ? [ToolbarWindow class] : [NSWindow class];
+    mWindow = [[windowClass alloc] initWithContentRect:rect styleMask:features 
                                 backing:NSBackingStoreBuffered defer:NO];
     
     if (mWindowType == eWindowType_popup) {
@@ -1272,5 +1275,30 @@ NS_IMETHODIMP nsCocoaWindow::GetAnimatedResize(PRUint16* aAnimation)
   return mGeckoWindow;
 }
 
+
+@end
+
+@implementation ToolbarWindow
+
+// Toolbar pill button methods, DANGER! The underscore means DANGEROUS!
+// "You aren't expected to understand this."
+
+// The carbon widget code was saying we want a toolbar for all top level
+// windows, and since we're only using this class for top level windows, we
+// always want to return yes from here.
+- (BOOL)_hasToolbar
+{
+  return YES;
+}
+
+// Dispatch a toolbar pill button clicked message to Gecko
+- (void)_toolbarPillButtonClicked:(id)sender
+{
+  nsCocoaWindow *geckoWindow = [[self delegate] geckoWidget];
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsGUIEvent guiEvent(PR_TRUE, NS_OS_TOOLBAR, geckoWindow);
+  guiEvent.time = PR_IntervalNow();
+  geckoWindow->DispatchEvent(&guiEvent, status);
+}
 
 @end
