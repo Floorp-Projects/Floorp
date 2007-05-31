@@ -88,13 +88,18 @@ function test()
   actual = f + '';
   compareSource(expect, actual, summary);
 
+  f = (function() { (1 for (w in []) if (x)) });
+  expect = 'function() { (1 for (w in []) if (x)); }';
+  actual = f + '';
+  compareSource(expect, actual, summary);
+
   f = (function() { (1 for (w in []) if (1)) });
-  expect = 'function() { (1 for (w in []) if (1)); }';
+  expect = 'function() { (1 for (w in []) ); }';
   actual = f + '';
   compareSource(expect, actual, summary);
 
   f = (function() { (x for ([{}, {}] in [])); });
-  expect = 'function() { (x for ([{}, {}] in [])); }';
+  expect = 'function() { (x for ([[], []] in [])); }';
   actual = f + '';
   compareSource(expect, actual, summary);
 
@@ -132,7 +137,7 @@ function test()
   reportCompare(expect, actual, summary + ': Do not Assert: *pc == JSOP_CALL');
 
   f = (function() { ([yield] for (x in [])); });
-  expect = 'function() { ([(yield)] for (x in [])); }';
+  expect = 'function() { ([yield] for (x in [])); }';
   actual = f + '';
   compareSource(expect, actual, summary);
 
