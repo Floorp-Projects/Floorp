@@ -70,12 +70,6 @@
 #include "nsIFocusController.h"
 #include "nsIObserverService.h"
 
-#ifdef MOZ_ACCESSIBILITY_ATK
-#include "nsAppRootAccessible.h"
-#else
-#include "nsApplicationAccessibleWrap.h"
-#endif
-
 /* For documentation of the accessibility architecture, 
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
@@ -88,8 +82,6 @@ PRBool nsAccessNode::gIsAccessibilityActive = PR_FALSE;
 PRBool nsAccessNode::gIsCacheDisabled = PR_FALSE;
 PRBool nsAccessNode::gIsFormFillEnabled = PR_FALSE;
 nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> nsAccessNode::gGlobalDocAccessibleCache;
-
-nsApplicationAccessibleWrap *nsAccessNode::gApplicationAccessible = nsnull;
 
 nsIAccessibilityService *nsAccessNode::sAccService = nsnull;
 nsIAccessibilityService *nsAccessNode::GetAccService()
@@ -209,29 +201,6 @@ NS_IMETHODIMP nsAccessNode::GetOwnerWindow(void **aWindow)
   return docAccessible->GetWindowHandle(aWindow);
 }
 
-already_AddRefed<nsApplicationAccessibleWrap>
-nsAccessNode::GetApplicationAccessible()
-{
-  if (!gApplicationAccessible && gIsAccessibilityActive) {
-    nsApplicationAccessibleWrap::PreCreate();
-
-    gApplicationAccessible = new nsApplicationAccessibleWrap();
-    if (!gApplicationAccessible)
-      return nsnull;
-
-    NS_ADDREF(gApplicationAccessible);
-
-    nsresult rv = gApplicationAccessible->Init();
-    if (NS_FAILED(rv)) {
-      NS_RELEASE(gApplicationAccessible);
-      return nsnull;
-    }
-  }
-
-  NS_ADDREF(gApplicationAccessible);
-  return gApplicationAccessible;
-}
-
 void nsAccessNode::InitXPAccessibility()
 {
   if (gIsAccessibilityActive) {
@@ -289,7 +258,6 @@ void nsAccessNode::ShutdownXPAccessibility()
   NS_IF_RELEASE(gDoCommandTimer);
   NS_IF_RELEASE(gLastFocusedNode);
   NS_IF_RELEASE(sAccService);
-  NS_IF_RELEASE(gApplicationAccessible);
 
   ClearCache(gGlobalDocAccessibleCache);
 

@@ -98,15 +98,13 @@
 #include "nsHTMLWin32ObjectAccessible.h"
 #endif
 
+#ifdef MOZ_ACCESSIBILITY_ATK
+#include "nsAppRootAccessible.h"
+#endif
+
 #ifndef DISABLE_XFORMS_HOOKS
 #include "nsXFormsFormControlsAccessible.h"
 #include "nsXFormsWidgetsAccessible.h"
-#endif
-
-#ifdef MOZ_ACCESSIBILITY_ATK
-#include "nsAppRootAccessible.h"
-#else
-#include "nsApplicationAccessibleWrap.h"
 #endif
 
 nsAccessibilityService *nsAccessibilityService::gAccessibilityService = nsnull;
@@ -1601,10 +1599,7 @@ NS_IMETHODIMP nsAccessibilityService::AddNativeRootAccessible(void * aAtkAccessi
   *aRootAccessible = NS_STATIC_CAST(nsIAccessible*, rootAccWrap);
   NS_ADDREF(*aRootAccessible);
 
-  nsRefPtr<nsApplicationAccessibleWrap> appRoot =
-    nsAccessNode::GetApplicationAccessible();
-  NS_ENSURE_STATE(appRoot);
-
+  nsAppRootAccessible *appRoot = nsAppRootAccessible::Create();
   appRoot->AddRootAccessible(*aRootAccessible);
 
   return NS_OK;
@@ -1619,10 +1614,7 @@ NS_IMETHODIMP nsAccessibilityService::RemoveNativeRootAccessible(nsIAccessible *
   void* atkAccessible;
   aRootAccessible->GetNativeInterface(&atkAccessible);
 
-  nsRefPtr<nsApplicationAccessibleWrap> appRoot =
-    nsAccessNode::GetApplicationAccessible();
-  NS_ENSURE_STATE(appRoot);
-
+  nsAppRootAccessible *appRoot = nsAppRootAccessible::Create();
   appRoot->RemoveRootAccessible(aRootAccessible);
 
   return NS_OK;

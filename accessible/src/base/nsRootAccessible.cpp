@@ -84,12 +84,6 @@
 #include "nsIXULWindow.h"
 #endif
 
-#ifdef MOZ_ACCESSIBILITY_ATK
-#include "nsAppRootAccessible.h"
-#else
-#include "nsApplicationAccessibleWrap.h"
-#endif
-
 // Expanded version of NS_IMPL_ISUPPORTS_INHERITED2 
 // so we can QI directly to concrete nsRootAccessible
 NS_IMPL_QUERY_HEAD(nsRootAccessible)
@@ -153,13 +147,8 @@ NS_IMETHODIMP nsRootAccessible::GetName(nsAString& aName)
 
 /* readonly attribute nsIAccessible accParent; */
 NS_IMETHODIMP nsRootAccessible::GetParent(nsIAccessible * *aParent) 
-{
-  NS_ENSURE_ARG_POINTER(aParent);
+{ 
   *aParent = nsnull;
-
-  nsRefPtr<nsApplicationAccessibleWrap> root = GetApplicationAccessible();
-  NS_IF_ADDREF(*aParent = root);
-
   return NS_OK;
 }
 
@@ -910,26 +899,8 @@ void nsRootAccessible::FireFocusCallback(nsITimer *aTimer, void *aClosure)
   rootAccessible->FireCurrentFocusEvent();
 }
 
-NS_IMETHODIMP
-nsRootAccessible::Init()
-{
-  nsresult rv = nsDocAccessibleWrap::Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsRefPtr<nsApplicationAccessibleWrap> root = GetApplicationAccessible();
-  NS_ENSURE_STATE(root);
-
-  root->AddRootAccessible(this);
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsRootAccessible::Shutdown()
 {
-  nsRefPtr<nsApplicationAccessibleWrap> root = GetApplicationAccessible();
-  NS_ENSURE_STATE(root);
-
-  root->RemoveRootAccessible(this);
-
   // Called manually or by nsAccessNode::LastRelease()
   if (!mWeakShell) {
     return NS_OK;  // Already shutdown
