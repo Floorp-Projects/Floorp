@@ -64,7 +64,6 @@ class nsIFrame;
 class nsIDOMNodeList;
 class nsITimer;
 class nsRootAccessible;
-class nsApplicationAccessibleWrap;
 
 #define ACCESSIBLE_BUNDLE_URL "chrome://global-platform/locale/accessible.properties"
 #define PLATFORM_KEYS_BUNDLE_URL "chrome://global-platform/locale/platformKeys.properties"
@@ -106,11 +105,6 @@ class nsAccessNode: public nsIAccessNode, public nsPIAccessNode
 
     static void InitXPAccessibility();
     static void ShutdownXPAccessibility();
-
-    /**
-     * Return an application accessible.
-     */
-    static already_AddRefed<nsApplicationAccessibleWrap> GetApplicationAccessible();
 
     // Static methods for handling per-document cache
     static void PutCacheEntry(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode>& aCache, 
@@ -188,7 +182,6 @@ protected:
 
 private:
   static nsIAccessibilityService *sAccService;
-  static nsApplicationAccessibleWrap *gApplicationAccessible;
 };
 
 #endif
