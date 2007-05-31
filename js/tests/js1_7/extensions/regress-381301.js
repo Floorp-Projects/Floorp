@@ -54,8 +54,8 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  expect = '( { get x print ( ) { [ native code ] } } )';
-  actual =  uneval({x getter: print});
+  expect = '( { get x decodeURI ( ) { [ native code ] } } )';
+  actual =  uneval({x getter: decodeURI});
 
   compareSource(expect, actual, summary);
 
