@@ -59,7 +59,7 @@ function test()
   actual = f + '';
   compareSource(expect, actual, summary);
 
-  var g = eval(f + '');
+  var g = eval('(' + f + ')');
   actual = g + '';
   compareSource(expect, actual, summary);
 
@@ -68,7 +68,7 @@ function test()
   actual = f + '';
   compareSource(expect, actual, summary);
 
-  g = eval(f + '');
+  g = eval('(' + f + ')');
   actual = g + '';
   compareSource(expect, actual, summary);
 
