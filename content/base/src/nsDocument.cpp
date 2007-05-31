@@ -2603,6 +2603,10 @@ nsDocument::RemoveObserver(nsIDocumentObserver* aObserver)
 void
 nsDocument::BeginUpdate(nsUpdateType aUpdateType)
 {
+  if (mUpdateNestLevel == 0) {
+    mBindingManager->BeginOutermostUpdate();
+  }
+  
   ++mUpdateNestLevel;
   if (mScriptLoader) {
     mScriptLoader->AddExecuteBlocker();
@@ -2617,9 +2621,9 @@ nsDocument::EndUpdate(nsUpdateType aUpdateType)
 
   --mUpdateNestLevel;
   if (mUpdateNestLevel == 0) {
-    // This set of updates may have created XBL bindings.  Run the
-    // constructors.
-    mBindingManager->ProcessAttachedQueue();
+    // This set of updates may have created XBL bindings.  Let the
+    // binding manager know we're done.
+    mBindingManager->EndOutermostUpdate();
   }
 
   if (mScriptLoader) {

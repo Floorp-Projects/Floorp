@@ -384,7 +384,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsBindingManager)
 
 // Constructors/Destructors
 nsBindingManager::nsBindingManager(void)
-: mProcessingAttachedStack(PR_FALSE)
+  : mProcessingAttachedStack(PR_FALSE),
+    mProcessOnEndUpdate(PR_FALSE)
 {
   mContentListTable.ops = nsnull;
   mAnonymousNodesTable.ops = nsnull;
@@ -1415,5 +1416,20 @@ nsBindingManager::Traverse(nsIContent *aContent,
       (value = LookupObject(mWrapperTable, aContent))) {
     cb.NoteXPCOMChild(aContent);
     cb.NoteXPCOMChild(value);
+  }
+}
+
+void
+nsBindingManager::BeginOutermostUpdate()
+{
+  mProcessOnEndUpdate = (mAttachedStack.Length() == 0);
+}
+
+void
+nsBindingManager::EndOutermostUpdate()
+{
+  if (mProcessOnEndUpdate) {
+    mProcessOnEndUpdate = PR_FALSE;
+    ProcessAttachedQueue();
   }
 }
