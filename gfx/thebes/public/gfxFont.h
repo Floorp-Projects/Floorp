@@ -471,7 +471,7 @@ public:
         /**
          * When set, ligatures are disabled.
          */
-        TEXT_DISABLE_LIGATURES       = 0x0400,
+        TEXT_DISABLE_LIGATURES       = 0x0400
     };
 
     /**
