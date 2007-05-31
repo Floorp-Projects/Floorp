@@ -49,15 +49,15 @@ test();
 
 try
 {
-  expect = 'SyntaxError: yield not in function';
+  expect = 'SyntaxError: syntax error';
   eval('yield = 1;');
-  actual = 'No Error'
-    }
+  actual = 'No Error';
+}
 catch(ex)
 {
   actual = ex + '';
 }
-reportCompare(expect, actual, summary + ': yield = 1');
+reportCompare(expect, actual, summary + ': global: yield = 1');
 
 try
 {
@@ -69,7 +69,7 @@ catch(ex)
 {
   actual = ex + '';
 }
-reportCompare(expect, actual, summary + ': let = 1');
+reportCompare(expect, actual, summary + ': global: let = 1');
 
 function test()
 {
