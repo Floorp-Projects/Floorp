@@ -1054,7 +1054,7 @@ var PlacesUtils = {
    */
   _showBookmarkDialog: function PU__showBookmarkDialog(aInfo, aMinimalUI) {
     var dialogURL = aMinimalUI ?
-                    "chrome://browser/content/places/bookmarkPageDialog.xul" :
+                    "chrome://browser/content/places/bookmarkProperties2.xul" :
                     "chrome://browser/content/places/bookmarkProperties.xul";
 
     var features;
