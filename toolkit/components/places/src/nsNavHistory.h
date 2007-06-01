@@ -303,6 +303,11 @@ public:
                           const PRUint16* aGroupingMode, PRUint32 aGroupCount,
                           nsCOMArray<nsNavHistoryResultNode>* aDest);
 
+  // Don't use these directly, inside nsNavHistory use UpdateBatchScoper,
+  // else use nsINavHistoryService::RunInBatchMode
+  nsresult BeginUpdateBatch();
+  nsresult EndUpdateBatch();
+
   // better alternative to QueryStringToQueries (in nsNavHistoryQuery.cpp)
   nsresult QueryStringToQueryArray(const nsACString& aQueryString,
                                    nsCOMArray<nsNavHistoryQuery>* aQueries,

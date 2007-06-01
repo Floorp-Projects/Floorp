@@ -1556,34 +1556,50 @@ function PlacesAggregateTransaction(name, transactions) {
 PlacesAggregateTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
   
-  doTransaction: function() {
+  doTransaction: function PAT_doTransaction() {
     this.LOG("== " + this._name + " (Aggregate) ==============");
-    if (this._transactions.length >= this.MIN_TRANSACTIONS_FOR_BATCH)
-      this.bookmarks.beginUpdateBatch();
-    for (var i = 0; i < this._transactions.length; ++i) {
-      var txn = this._transactions[i];
-      if (this.container > -1) 
-        txn.container = this.container;
-      txn.doTransaction();
+    if (this._transactions.length >= this.MIN_TRANSACTIONS_FOR_BATCH) {
+      var callback = {
+        _self: this,
+        runBatched: function() {
+          this._self.commit(false);
+        }
+      };
+      this.utils.bookmarks.runInBatchMode(callback, null);
     }
-    if (this._transactions.length >= this.MIN_TRANSACTIONS_FOR_BATCH)
-      this.bookmarks.endUpdateBatch();
+    else
+      this.commit(false);
+
     this.LOG("== " + this._name + " (Aggregate Ends) =========");
   },
-  
-  undoTransaction: function() {
+
+  undoTransaction: function PAT_undoTransaction() {
     this.LOG("== UN" + this._name + " (UNAggregate) ============");
-    if (this._transactions.length >= this.MIN_TRANSACTIONS_FOR_BATCH)
-      this.bookmarks.beginUpdateBatch();
+    if (this._transactions.length >= this.MIN_TRANSACTIONS_FOR_BATCH) {
+      var callback = {
+        _self: this,
+        runBatched: function() {
+          this._self.commit(true);
+        }
+      };
+      this.utils.bookmarks.runInBatchMode(callback, null);
+    }
+    else
+      this.commit(true);
+  
+    this.LOG("== UN" + this._name + " (UNAggregate Ends) =======");
+  },
+
+  commit: function PAT_commit(aUndo) {
     for (var i = this._transactions.length - 1; i >= 0; --i) {
       var txn = this._transactions[i];
       if (this.container > -1) 
         txn.container = this.container;
-      txn.undoTransaction();
+      if (aUndo)
+        txn.undoTransaction();
+      else
+        txn.doTransaction();
     }
-    if (this._transactions.length >= this.MIN_TRANSACTIONS_FOR_BATCH)
-      this.bookmarks.endUpdateBatch();
-    this.LOG("== UN" + this._name + " (UNAggregate Ends) =======");
   }
 };
 

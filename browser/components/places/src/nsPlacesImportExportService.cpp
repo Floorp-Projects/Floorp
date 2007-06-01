@@ -293,7 +293,8 @@ nsEscapeHTML(const char * string)
 	return(rv);
 }
 
-NS_IMPL_ISUPPORTS1(nsPlacesImportExportService, nsIPlacesImportExportService)
+NS_IMPL_ISUPPORTS2(nsPlacesImportExportService, nsIPlacesImportExportService,
+                   nsINavHistoryBatchCallback)
 
 nsPlacesImportExportService::nsPlacesImportExportService()
 {
@@ -2299,18 +2300,6 @@ nsPlacesImportExportService::ImportHTMLFromFileInternal(nsILocalFile* aFile,
     return NS_ERROR_INVALID_ARG;
   }
 
-  // wrap the import in a transaction to make it faster
-  mBookmarksService->BeginUpdateBatch();
-
-  if (aIsImportDefaults) {
-    PRInt64 bookmarksRoot;
-    rv = mBookmarksService->GetBookmarksRoot(&bookmarksRoot);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = mBookmarksService->RemoveFolderChildren(bookmarksRoot);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2327,32 +2316,51 @@ nsPlacesImportExportService::ImportHTMLFromFileInternal(nsILocalFile* aFile,
   nsCOMPtr<nsIURI> fileURI;
   rv = ioservice->NewFileURI(file, getter_AddRefs(fileURI));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIChannel> channel;
-  rv = ioservice->NewChannelFromURI(fileURI, getter_AddRefs(channel));
+  rv = ioservice->NewChannelFromURI(fileURI, getter_AddRefs(mImportChannel));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = channel->SetContentType(NS_LITERAL_CSTRING("text/html"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // streams
-  nsCOMPtr<nsIInputStream> stream;
-  rv = channel->Open(getter_AddRefs(stream));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIInputStream> bufferedstream;
-  rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedstream), stream, 4096);
+  rv = mImportChannel->SetContentType(NS_LITERAL_CSTRING("text/html"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // init parser
   rv = parser->Parse(fileURI, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // wrap the import in a transaction to make it faster
+  mIsImportDefaults = aIsImportDefaults;
+  mBookmarksService->RunInBatchMode(this, parser);
+  mImportChannel = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPlacesImportExportService::RunBatched(nsISupports* aUserData)
+{
+  nsresult rv;
+  if (mIsImportDefaults) {
+    PRInt64 bookmarksRoot;
+    rv = mBookmarksService->GetBookmarksRoot(&bookmarksRoot);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = mBookmarksService->RemoveFolderChildren(bookmarksRoot);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // streams
+  nsCOMPtr<nsIInputStream> stream;
+  rv = mImportChannel->Open(getter_AddRefs(stream));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIInputStream> bufferedstream;
+  rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedstream), stream, 4096);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // feed the parser the data
   // Note: on error, we always need to set the channel's status to be the
   // same, and to always call OnStopRequest with the channel error.
-  nsCOMPtr<nsIStreamListener> listener = do_QueryInterface(parser, &rv);
+  nsCOMPtr<nsIStreamListener> listener = do_QueryInterface(aUserData, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = listener->OnStartRequest(channel, nsnull);
-  rv = SyncChannelStatus(channel, rv);
-  while(NS_SUCCEEDED(rv))
+  rv = listener->OnStartRequest(mImportChannel, nsnull);
+  rv = SyncChannelStatus(mImportChannel, rv);
+  while (NS_SUCCEEDED(rv))
   {
     PRUint32 available;
     rv = bufferedstream->Available(&available);
@@ -2361,20 +2369,19 @@ nsPlacesImportExportService::ImportHTMLFromFileInternal(nsILocalFile* aFile,
       available = 0;
     }
     if (NS_FAILED(rv)) {
-      channel->Cancel(rv);
+      mImportChannel->Cancel(rv);
       break;
     }
     if (!available)
       break; // blocking input stream has none available when done
 
-    rv = listener->OnDataAvailable(channel, nsnull, bufferedstream, 0, available);
-    rv = SyncChannelStatus(channel, rv);
+    rv = listener->OnDataAvailable(mImportChannel, nsnull, bufferedstream, 0,
+                                   available);
+    rv = SyncChannelStatus(mImportChannel, rv);
     if (NS_FAILED(rv))
       break;
   }
-  listener->OnStopRequest(channel, nsnull, rv);
-  // commit transaction
-  mBookmarksService->EndUpdateBatch();
+  listener->OnStopRequest(mImportChannel, nsnull, rv);
   return NS_OK;
 }
 

@@ -47,6 +47,7 @@
 #include "nsFaviconService.h"
 #include "nsAnnotationService.h"
 #include "nsPrintfCString.h"
+#include "nsAutoLock.h"
 
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_ID = 0;
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_Type = 1;
@@ -88,6 +89,8 @@ nsNavBookmarks::~nsNavBookmarks()
 {
   NS_ASSERTION(sInstance == this, "Expected sInstance == this");
   sInstance = nsnull;
+  if (mLock)
+    PR_DestroyLock(mLock);
 }
 
 NS_IMPL_ISUPPORTS3(nsNavBookmarks,
@@ -232,6 +235,9 @@ nsNavBookmarks::Init()
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  mLock = PR_NewLock();
+  NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
 
   nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
   NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
@@ -2325,7 +2331,8 @@ nsNavBookmarks::GetURIForKeyword(const nsAString& aKeyword, nsIURI** aURI)
   return NS_NewURI(aURI, spec);
 }
 
-NS_IMETHODIMP
+// See RunInBatchMode, mLock _must_ be set when batching
+nsresult
 nsNavBookmarks::BeginUpdateBatch()
 {
   if (mBatchLevel++ == 0) {
@@ -2344,7 +2351,7 @@ nsNavBookmarks::BeginUpdateBatch()
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsNavBookmarks::EndUpdateBatch()
 {
   if (--mBatchLevel == 0) {
@@ -2354,6 +2361,21 @@ nsNavBookmarks::EndUpdateBatch()
     ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
                         OnEndUpdateBatch())
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavBookmarks::RunInBatchMode(nsINavHistoryBatchCallback* aCallback,
+                               nsISupports* aUserData) {
+  NS_ENSURE_STATE(mLock);
+  NS_ENSURE_ARG_POINTER(aCallback);
+
+  nsAutoLock lock(mLock);
+  BeginUpdateBatch();
+  nsresult rv = aCallback->RunBatched(aUserData);
+  EndUpdateBatch();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
