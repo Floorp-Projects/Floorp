@@ -74,7 +74,7 @@ const PRInt32 nsNavBookmarks::kGetItemPropertiesIndex_LastModified = 9;
 nsNavBookmarks* nsNavBookmarks::sInstance = nsnull;
 
 #define BOOKMARKS_ANNO_PREFIX "bookmarks/"
-#define ANNO_FOLDER_READONLY BOOKMARKS_ANNO_PREFIX "readonly"
+#define BOOKMARKS_TOOLBAR_FOLDER_ANNO NS_LITERAL_CSTRING(BOOKMARKS_ANNO_PREFIX "toolbarFolder")
 
 nsNavBookmarks::nsNavBookmarks()
   : mRoot(0), mBookmarksRoot(0), mTagRoot(0), mToolbarFolder(0), mBatchLevel(0),
@@ -419,20 +419,38 @@ nsNavBookmarks::InitDefaults()
 nsresult
 nsNavBookmarks::InitToolbarFolder()
 {
-  mozIStorageConnection *dbConn = DBConn();
+  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
+  NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
 
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT id from moz_bookmarks WHERE folder_type = 'toolbar'"),
-                                        getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsTArray<PRInt64> folders;
+  nsresult rv = annosvc->GetItemsWithAnnotationTArray(BOOKMARKS_TOOLBAR_FOLDER_ANNO,
+                                                      &folders);
+  if (NS_FAILED(rv) || folders.Length() == 0) {
+    /**
+     * XXXmano: temporary migaration code, should be removed some time
+     *          after alpha 5.
+     */
+    mozIStorageConnection *dbConn = DBConn();
 
-  PRBool hasResult;
-  rv = statement->ExecuteStep(&hasResult);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (hasResult) {
-    rv = statement->GetInt64(0, &mToolbarFolder);
+    nsCOMPtr<mozIStorageStatement> statement;
+    rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT id from moz_bookmarks WHERE folder_type = 'toolbar'"),
+                                 getter_AddRefs(statement));
     NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool hasResult;
+    rv = statement->ExecuteStep(&hasResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (hasResult) {
+      PRInt64 toolbarFolder;
+      rv = statement->GetInt64(0, &toolbarFolder);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = SetToolbarFolder(toolbarFolder);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    return NS_OK;
   }
+
+  mToolbarFolder = folders[0];
   return NS_OK;
 }
 
@@ -807,35 +825,26 @@ nsNavBookmarks::GetToolbarFolder(PRInt64 *aFolderId)
 NS_IMETHODIMP
 nsNavBookmarks::SetToolbarFolder(PRInt64 aFolderId)
 {
-  mozIStorageConnection *dbConn = DBConn();
-  mozStorageTransaction transaction(dbConn, PR_FALSE);
-
   // XXX - validate that input is a valid folder id
-  if (aFolderId < 0) {
+  if (aFolderId < 0)
     return NS_ERROR_INVALID_ARG;
-  }
+  if (aFolderId == mToolbarFolder)
+    return NS_OK;
 
   nsresult rv;
-  nsCAutoString buffer;
+  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
+  NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
 
-  // unset old toolbar folder
-  if (mToolbarFolder > 0) {
-    buffer.AssignLiteral("UPDATE moz_bookmarks SET folder_type = '' WHERE id = ");
-    buffer.AppendInt(mToolbarFolder);
-    rv = dbConn->ExecuteSimpleSQL(buffer);
+  if (mToolbarFolder != 0) {
+    rv = annosvc->RemoveItemAnnotation(mToolbarFolder,
+                                       BOOKMARKS_TOOLBAR_FOLDER_ANNO);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // set new toolbar folder
-  buffer.AssignLiteral("UPDATE moz_bookmarks SET folder_type = 'toolbar' WHERE id = ");
-  buffer.AppendInt(aFolderId);
-  rv = dbConn->ExecuteSimpleSQL(buffer);
+  rv = annosvc->SetItemAnnotationInt32(aFolderId, BOOKMARKS_TOOLBAR_FOLDER_ANNO,
+                                       1, 0, nsIAnnotationService::EXPIRE_NEVER);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // commit
-  rv = transaction.Commit();
-  NS_ENSURE_SUCCESS(rv, rv);
-  
   // update local
   mToolbarFolder = aFolderId;
 
