@@ -120,7 +120,7 @@ private:
   nsresult InitToolbarFolder();
   nsresult CreateRoot(mozIStorageStatement* aGetRootStatement,
                       const nsCString& name, PRInt64* aID,
-                      PRBool* aWasCreated);
+                      PRInt64 aParentID, PRBool* aWasCreated);
 
   nsresult AdjustIndices(PRInt64 aFolder,
                          PRInt32 aStartIndex, PRInt32 aEndIndex,

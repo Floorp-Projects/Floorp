@@ -366,15 +366,15 @@ nsNavBookmarks::InitRoots()
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool importDefaults = PR_FALSE;
-  rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("places"), &mRoot, &importDefaults);
+  rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("places"), &mRoot, 0, &importDefaults);
   NS_ENSURE_SUCCESS(rv, rv);
 
   getRootStatement->Reset();
-  rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("menu"), &mBookmarksRoot, nsnull);
+  rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("menu"), &mBookmarksRoot, mRoot, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
   getRootStatement->Reset();
-  rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("tags"), &mTagRoot, nsnull);
+  rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("tags"), &mTagRoot, mRoot, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef MOZ_PLACES_BOOKMARKS
@@ -385,6 +385,26 @@ nsNavBookmarks::InitRoots()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 #endif
+
+  // migration for bug 382094 - remove for A6
+  PRInt64 parent;
+  rv = GetFolderIdForItem(mBookmarksRoot, &parent);
+  if (NS_FAILED(rv) || parent == 0) {
+    nsCOMPtr<mozIStorageStatement> statement;
+    rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_bookmarks SET parent = ?1 WHERE id = ?2 or id = ?3"),
+                                   getter_AddRefs(statement));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = statement->BindInt64Parameter(0, mRoot);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = statement->BindInt64Parameter(1, mBookmarksRoot);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = statement->BindInt64Parameter(2, mTagRoot);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = statement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   return NS_OK;
 }
 
@@ -472,7 +492,7 @@ nsNavBookmarks::InitToolbarFolder()
 nsresult
 nsNavBookmarks::CreateRoot(mozIStorageStatement* aGetRootStatement,
                            const nsCString& name, PRInt64* aID,
-                           PRBool* aWasCreated)
+                           PRInt64 aParentID, PRBool* aWasCreated)
 {
   PRBool hasResult = PR_FALSE;
   nsresult rv = aGetRootStatement->BindUTF8StringParameter(0, name);
@@ -492,11 +512,11 @@ nsNavBookmarks::CreateRoot(mozIStorageStatement* aGetRootStatement,
 
   // create folder with no name or attributes
   nsCOMPtr<mozIStorageStatement> insertStatement;
-  rv = CreateFolder(0, NS_LITERAL_STRING(""), nsINavBookmarksService::DEFAULT_INDEX, aID);
+  rv = CreateFolder(aParentID, NS_LITERAL_STRING(""), nsINavBookmarksService::DEFAULT_INDEX, aID);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // save root ID
-  rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO moz_bookmarks_roots (root_name,folder_id) VALUES (?1, ?2)"),
+  rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO moz_bookmarks_roots (root_name, folder_id) VALUES (?1, ?2)"),
                                  getter_AddRefs(insertStatement));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = insertStatement->BindUTF8StringParameter(0, name);
