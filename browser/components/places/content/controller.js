@@ -180,6 +180,16 @@ PlacesController.prototype = {
           return true;
       }
       return false;
+    case "placesCmd_reloadMicrosummary":
+      if (this._view.hasSingleSelection) {
+        var selectedNode = this._view.selectedNode;
+        if (PlacesUtils.nodeIsBookmark(selectedNode)) {
+          var mss = PlacesUtils.microsummaries;
+          if (mss.hasMicrosummary(selectedNode.itemId))
+            return true;
+        }
+      }
+      return false;
     case "placesCmd_reload":
       if (this._view.hasSingleSelection) {
         var selectedNode = this._view.selectedNode;
@@ -297,6 +307,9 @@ PlacesController.prototype = {
       break;
     case "placesCmd_reload":
       this.reloadSelectedLivemarks();
+      break;
+    case "placesCmd_reloadMicrosummary":
+      this.reloadSelectedMicrosummary();
       break;
     case "placesCmd_sortBy:name":
       this.sortFolderByName();
@@ -514,8 +527,12 @@ PlacesController.prototype = {
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_FULL_VISIT:
           nodeData["link"] = true;
           uri = PlacesUtils._uri(node.uri);
-          if (PlacesUtils.nodeIsBookmark(node))
+          if (PlacesUtils.nodeIsBookmark(node)) {
             nodeData["bookmark"] = true;
+            var mss = PlacesUtils.microsummaries;
+            if (mss.hasMicrosummary(node.itemId))
+              nodeData["microsummary"] = true;
+          }
           break;
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_DAY:
           nodeData["day"] = true;
@@ -773,6 +790,16 @@ PlacesController.prototype = {
       if (folder)
         PlacesUtils.livemarks.reloadLivemarkFolder(folder.itemId);
     }
+  },
+
+  /**
+   * Reload the microsummary associated with the selection
+   */
+  reloadSelectedMicrosummary: function PC_reloadSelectedMicrosummary() {
+    var selectedNode = this._view.selectedNode;
+    var mss = PlacesUtils.microsummaries;
+    if (mss.hasMicrosummary(selectedNode.itemId))
+      mss.refreshMicrosummary(selectedNode.itemId);
   },
 
   /**
@@ -2137,8 +2164,7 @@ function PlacesEditBookmarkMicrosummaryTransaction(aID, newMicrosummary) {
 PlacesEditBookmarkMicrosummaryTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
   
-  mss: Cc["@mozilla.org/microsummary/service;1"].
-       getService(Ci.nsIMicrosummaryService),
+  mss: PlacesUtils.microsummaries,
 
   doTransaction: function PEBMT_doTransaction() {
     this._oldMicrosummary = this.mss.getMicrosummary(this.id);
@@ -2231,6 +2257,7 @@ function goUpdatePlacesCommands() {
   goUpdateCommand("placesCmd_moveBookmarks");
   goUpdateCommand("placesCmd_setAsBookmarksToolbarFolder");
   goUpdateCommand("placesCmd_reload");
+  goUpdateCommand("placesCmd_reloadMicrosummary");
   goUpdateCommand("placesCmd_sortBy:name");
 #endif
 }
