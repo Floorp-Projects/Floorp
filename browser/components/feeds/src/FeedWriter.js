@@ -325,7 +325,7 @@ FeedWriter.prototype = {
       var entryContainer = this._document.createElementNS(HTML_NS, "div");
       entryContainer.className = "entry";
 
-      // If the entry has a title, make it a like
+      // If the entry has a title, make it a link
       if (entry.title) {
         var a = this._document.createElementNS(HTML_NS, "a");
         a.appendChild(this._document.createTextNode(entry.title.plainText()));
