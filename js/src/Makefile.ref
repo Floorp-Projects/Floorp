@@ -101,6 +101,25 @@ endif
 endif # WINNT
 
 #
+# Ask perl what flags it was built with, so we can build js with similar flags
+# and link properly.  Viva gmake.
+#
+ifdef JS_PERLCONNECT
+DEFINES += -DPERLCONNECT -D_GNU_SOURCE
+
+PERLCFLAGS := $(shell perl -MExtUtils::Embed -e ccopts)
+PERLLDFLAGS := $(shell perl -MExtUtils::Embed -e ldopts)
+
+# perl erroneously reports compiler flag -rdynamic (interpreted by ld
+# as -r) when it really meant -export-dynamic.
+PERLLDFLAGS := $(subst -rdynamic,-export-dynamic,$(PERLLDFLAGS))
+
+CFLAGS += $(PERLCFLAGS)
+#LDFLAGS += $(PERLLDFLAGS) #PH removed this assgnment
+INCLUDES += -I. #needed for perlconnect/jsperl.c
+endif
+
+#
 #	Server-related changes :
 #
 ifdef NES40
@@ -240,6 +259,10 @@ ifdef JS_LIVECONNECT
 DIRS      += liveconnect
 endif
 
+ifdef JS_PERLCONNECT
+JS_CFILES += perlconnect/jsperl.c
+endif
+
 ifdef JS_HAS_FILE_OBJECT
 JS_CFILES += jsfile.c
 JS_HFILES += jsfile.h
@@ -257,6 +280,9 @@ else
 LIBRARY = $(OBJDIR)/libjs.a
 SHARED_LIBRARY = $(OBJDIR)/libjs.$(SO_SUFFIX)
 PROGRAM = $(OBJDIR)/js
+ifdef JS_PERLCONNECT
+PROG_LIBS += $(PERLLDFLAGS)
+endif
 endif
 
 include rules.mk

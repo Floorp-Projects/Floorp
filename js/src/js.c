@@ -64,6 +64,10 @@
 #include "jsscope.h"
 #include "jsscript.h"
 
+#ifdef PERLCONNECT
+#include "perlconnect/jsperl.h"
+#endif
+
 #ifdef LIVECONNECT
 #include "jsjava.h"
 #endif
@@ -3193,6 +3197,11 @@ main(int argc, char **argv, char **envp)
         return 1;
     if (!JS_DefineFunctions(cx, it, its_methods))
         return 1;
+
+#ifdef PERLCONNECT
+    if (!JS_InitPerlClass(cx, glob))
+        return 1;
+#endif
 
 #ifdef JSDEBUGGER
     /*
