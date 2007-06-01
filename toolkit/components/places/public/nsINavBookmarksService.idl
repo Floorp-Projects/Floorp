@@ -47,6 +47,7 @@
 interface nsIFile;
 interface nsIURI;
 interface nsITransaction;
+interface nsINavHistoryBatchCallback;
 
 [ptr] native PRInt64Array(nsTArray<PRInt64>);
 
@@ -54,7 +55,7 @@ interface nsITransaction;
  * Observer for bookmark changes.
  */
 
-[scriptable, uuid(ef368152-354a-4a2b-92e4-910a80153c6f)]
+[scriptable, uuid(f9828ba8-9c70-4d95-b926-60d9e4378d7d)]
 interface nsINavBookmarkObserver : nsISupports
 {
   /**
@@ -495,23 +496,16 @@ interface nsINavBookmarksService : nsISupports
   void removeObserver(in nsINavBookmarkObserver observer);
 
   /**
-   * Causes observers to be notified of a beginUpdateBatch when a lot of things
+   * Runs the passed callback in batch mode. Use this when a lot of things
    * are about to change. Calls can be nested, observers will only be
    * notified when all batches begin/end.
    *
-   * It is EXTREMELY IMPORTANT that you call EndUpdateBatch for each call to
-   * beginUpdateBatch. If you don't do this, certain parts of the UI will not
-   * get updated and any changes to bookmarks will not get written to disk.
-   * From C++ code inside the places component, use nsBookmarksUpdateBatcher
-   * defined in nsNavBookmarks.h to scope batches. For JS or from other
-   * components, just please be very careful to close the batch, especially
-   * when encountering an error and returning early.
+   * @param aCallback
+   *        nsINavHistoryBatchCallback interface to call.
+   * @param aUserData
+   *        Opaque parameter passed to nsINavBookmarksBatchCallback
    */
-  void beginUpdateBatch();
-
-  /**
-   * Causes observers to be notified of an endUpdateBatch when a batch is
-   * done changing. Should match beginUpdateBatch or bad things will happen.
-   */
-  void endUpdateBatch();
+  void runInBatchMode(in nsINavHistoryBatchCallback aCallback,
+                      in nsISupports aUserData);
 };
+

@@ -2294,7 +2294,7 @@ nsNavHistory::RemoveObserver(nsINavHistoryObserver* aObserver)
 
 // nsNavHistory::BeginUpdateBatch
 
-NS_IMETHODIMP
+nsresult
 nsNavHistory::BeginUpdateBatch()
 {
   mBatchesInProgress ++;
@@ -2308,7 +2308,7 @@ nsNavHistory::BeginUpdateBatch()
 
 // nsNavHistory::EndUpdateBatch
 
-NS_IMETHODIMP
+nsresult
 nsNavHistory::EndUpdateBatch()
 {
   if (mBatchesInProgress == 0)
@@ -2316,6 +2316,17 @@ nsNavHistory::EndUpdateBatch()
   if (--mBatchesInProgress == 0) {
     ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver, OnEndUpdateBatch())
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistory::RunInBatchMode(nsINavHistoryBatchCallback* aCallback,
+                             nsISupports* aUserData) {
+  NS_ENSURE_ARG_POINTER(aCallback);
+
+  UpdateBatchScoper batch(*this);
+  nsresult rv = aCallback->RunBatched(aUserData);
+  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 

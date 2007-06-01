@@ -12,12 +12,15 @@
 #include "nsINavHistoryService.h"
 #include "nsINavBookmarksService.h"
 #include "nsIMicrosummaryService.h"
+#include "nsIChannel.h"
 
-class nsPlacesImportExportService : public nsIPlacesImportExportService
+class nsPlacesImportExportService : public nsIPlacesImportExportService,
+                                    public nsINavHistoryBatchCallback
 {
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPLACESIMPORTEXPORTSERVICE
+    NS_DECL_NSINAVHISTORYBATCHCALLBACK
     nsPlacesImportExportService();
 
   private:
@@ -30,6 +33,9 @@ class nsPlacesImportExportService : public nsIPlacesImportExportService
     nsCOMPtr<nsINavHistoryService> mHistoryService;
     nsCOMPtr<nsILivemarkService> mLivemarkService;
     nsCOMPtr<nsIMicrosummaryService> mMicrosummaryService;
+
+    nsCOMPtr<nsIChannel> mImportChannel;
+    PRBool mIsImportDefaults;
 
     nsresult ImportHTMLFromFileInternal(nsILocalFile* aFile, PRBool aAllowRootChanges,
                                        PRInt64 aFolder, PRBool aIsImportDefaults);
