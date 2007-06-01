@@ -1390,8 +1390,11 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
 
       mPercentComplete = 100;
 
+      // We can safely remove it from the current downloads
+      mDownloadManager->RemoveDownloadFromCurrent(this);
+
       // Master pref to control this function. 
-      PRBool showTaskbarAlert = PR_FALSE;
+      PRBool showTaskbarAlert = PR_TRUE;
       if (pref)
         pref->GetBoolPref(PREF_BDM_SHOWALERTONCOMPLETE, &showTaskbarAlert);
 
@@ -1429,9 +1432,6 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
           }
         }
       }
-
-      // We can safely remove it from the current downloads
-      mDownloadManager->RemoveDownloadFromCurrent(this);
 
       if (mDownloadState != nsIXPInstallManagerUI::INSTALL_INSTALLING)
         SetState(nsIDownloadManager::DOWNLOAD_FINISHED);
