@@ -207,6 +207,8 @@ var gDownloadObserver = {
     case "dl-start":
       // Add this download to the percentage average tally
       var dl = aSubject.QueryInterface(Components.interfaces.nsIDownload);
+      if (getDownload(dl.id))
+        return;
       gActiveDownloads.push(dl);
 
       // Adding to the UI
