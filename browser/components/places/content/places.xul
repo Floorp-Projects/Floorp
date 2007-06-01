@@ -223,6 +223,10 @@
                     command="placesCmd_reload"
                     label="&cmd.reloadLivebookmark.label;"
                     accesskey="&cmd.reloadLivebookmark.accesskey;"/>
+          <menuitem id="editReloadMicrosummary"
+                    command="placesCmd_reloadMicrosummary"
+                    label="&cmd.reloadMicrosummary.label;"
+                    accesskey="&cmd.reloadMicrosummary.accesskey;"/>
           <menuseparator/>
           <menuitem id="properties"
                     command="placesCmd_show:info"
