@@ -171,6 +171,7 @@ protected:
   void CallSetForPageObservers(nsIURI* aURI, const nsACString& aName);
   void CallSetForItemObservers(PRInt64 aItemId, const nsACString& aName);
 
+public:
   nsresult GetPagesWithAnnotationCOMArray(const nsACString& aName,
                                           nsCOMArray<nsIURI>* aResults);
   nsresult GetItemsWithAnnotationTArray(const nsACString& aName,
