@@ -46,6 +46,7 @@ interface nsINavHistoryQueryResultNode;
 interface nsINavHistoryQuery;
 interface nsINavHistoryQueryOptions;
 interface nsINavHistoryResult;
+interface nsINavHistoryBatchCallback;
 interface nsITreeColumn;
 interface nsIWritablePropertyBag;
 
@@ -1144,7 +1145,7 @@ interface nsINavHistoryQueryOptions : nsISupports
   nsINavHistoryQueryOptions clone();
 };
 
-[scriptable, uuid(1a8df7bf-4889-4331-a521-f6c4dacd20e7)]
+[scriptable, uuid(b6751da3-a87c-4991-bb69-3c2289d3e0ff)]
 interface nsINavHistoryService : nsISupports
 {
   /**
@@ -1332,17 +1333,17 @@ interface nsINavHistoryService : nsISupports
   void removeObserver(in nsINavHistoryObserver observer);
 
   /**
-   * Causes observers to be notified of a beginUpdateBatch when a lot of things
+   * Runs the passed callback in batch mode. Use this when a lot of things
    * are about to change. Calls can be nested, observers will only be
    * notified when all batches begin/end.
+   *
+   * @param aCallback
+   *        nsINavHistoryBatchCallback interface to call.
+   * @param aUserData
+   *        Opaque parameter passed to nsINavBookmarksBatchCallback
    */
-  void beginUpdateBatch();
-
-  /**
-   * Causes observers to be notified of an endUpdateBatch when a batch is
-   * done changing. Should match beginUpdateBatch or bad things will happen.
-   */
-  void endUpdateBatch();
+  void runInBatchMode(in nsINavHistoryBatchCallback aCallback,
+                      in nsISupports aClosure);
 
   /** 
    * True if history is disabled. currently, 
@@ -1366,4 +1367,12 @@ interface nsIMorkHistoryImporter : nsISupports
    *                  history service initialization.
    */
   void importHistory(in nsIFile file, in nsINavHistoryService history);
+};
+
+/**
+ * @see runInBatchMode of nsINavHistoryService/nsINavBookmarksService
+ */
+[scriptable, uuid(5143f2bb-be0a-4faf-9acb-b0ed3f82952c)]
+interface nsINavHistoryBatchCallback : nsISupports {
+  void runBatched(in nsISupports aUserData);
 };

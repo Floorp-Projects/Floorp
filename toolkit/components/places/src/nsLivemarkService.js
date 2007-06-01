@@ -441,6 +441,50 @@ LivemarkLoadListener.prototype = {
     return this.__history;
   },
 
+  // called back from handleResult
+  runBatched: function LLL_runBatched(aUserData) {
+    var result = aUserData.QueryInterface(Ci.nsIFeedResult);
+
+    // We need this to make sure the item links are safe
+    var secMan = Cc[SEC_CONTRACTID].getService(Ci.nsIScriptSecurityManager);
+      
+    // Clear out any child nodes of the livemark folder, since
+    // they're about to be replaced.
+    var lmService = Cc[LS_CONTRACTID].getService(Ci.nsILivemarkService);
+    this.deleteLivemarkChildren(this._livemark.folderId);
+
+    // Enforce well-formedness because the existing code does
+    if (!result || !result.doc || result.bozo) {
+      this.insertLivemarkFailedItem(this._livemark.folderId);
+      this._ttl = EXPIRATION;
+      throw Cr.NS_ERROR_FAILURE;
+    }
+
+    var title, href, entry;
+    var feed = result.doc.QueryInterface(Ci.nsIFeed);
+    // Loop through and check for a link and a title
+    // as the old code did
+    for (var i = 0; i < feed.items.length; ++i) {
+      entry = feed.items.queryElementAt(i, Ci.nsIFeedEntry);
+      if (entry.title)
+        title = entry.title.plainText();
+      else if (entry.updated)
+        title = entry.updated;
+
+      if (entry.link) {
+        try {
+          secMan.checkLoadURIStr(this._livemark.feedURI.spec, entry.link.spec,
+                                 SEC_FLAGS);
+          href = entry.link;
+        }
+        catch (ex) { }
+      }
+
+      if (href && title)
+        this.insertLivemarkChild(this._livemark.folderId, href, title);
+    }
+  },
+
   /**
    * See nsIFeedResultListener.idl
    */
@@ -449,54 +493,11 @@ LivemarkLoadListener.prototype = {
       this._livemark.locked = false;
       return;
     }
-    
-    this._bms.beginUpdateBatch();
-      
-    try {  
-      // We need this to make sure the item links are safe
-      var secMan = Cc[SEC_CONTRACTID].getService(Ci.nsIScriptSecurityManager);
-      
-      // Clear out any child nodes of the livemark folder, since
-      // they're about to be replaced.
-      var lmService = Cc[LS_CONTRACTID].getService(Ci.nsILivemarkService);
-      this.deleteLivemarkChildren(this._livemark.folderId);
-
-      // Enforce well-formedness because the existing code does
-      if (!result || !result.doc || result.bozo) {
-        this.insertLivemarkFailedItem(this._livemark.folderId);
-        this._ttl = EXPIRATION;
-        throw Cr.NS_ERROR_FAILURE;
-      }
-
-      var title, href, entry;
-      var feed = result.doc.QueryInterface(Ci.nsIFeed);
-      // Loop through and check for a link and a title
-      // as the old code did
-      for (var i = 0; i < feed.items.length; ++i) {
-        entry = feed.items.queryElementAt(i, Ci.nsIFeedEntry);
-        if (entry.title)
-          title = entry.title.plainText();
-        else if (entry.updated)
-          title = entry.updated;
-        
-        if (entry.link) {
-          try {
-              secMan.checkLoadURIStr(this._livemark.feedURI.spec,
-                                     entry.link.spec, SEC_FLAGS);
-              href = entry.link;
-          } 
-          catch (ex) {
-          }
-        }
-        
-        if (href && title) {
-          this.insertLivemarkChild(this._livemark.folderId,
-                                   href, title);
-        }
-      }
-    } 
+    try {
+      // The actual work is done in runBatched, see above.
+      this._bms.runInBatchMode(this, result);
+    }
     finally {
-      this._bms.endUpdateBatch();
       this._processor.listener = null;
       this._processor = null;
       this._livemark.locked = false;
@@ -598,6 +599,7 @@ LivemarkLoadListener.prototype = {
     if (iid.equals(Ci.nsIFeedResultListener) ||
         iid.equals(Ci.nsIStreamListener) ||
         iid.equals(Ci.nsIRequestObserver)||
+        iid.equals(Ci.nsINavHistoryBatchCallback) ||
         iid.equals(Ci.nsISupports))
       return this;
     throw Cr.NS_ERROR_NO_INTERFACE;
