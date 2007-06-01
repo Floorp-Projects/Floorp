@@ -138,6 +138,17 @@ var PlacesUtils = {
     return this._favicons;
   },
 
+  /**
+   * The Microsummary Service
+   */
+  _microsummaries: null,
+  get microsummaries() {
+    if (!this._microsummaries)
+      this._microsummaries = Cc["@mozilla.org/microsummary/service;1"].
+                             getService(Ci.nsIMicrosummaryService);
+    return this._microsummaries;
+  },
+
   _RDF: null,
   get RDF() {
     if (!this._RDF)

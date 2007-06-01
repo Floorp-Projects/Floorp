@@ -161,6 +161,10 @@
   "Reload Live Bookmark">
 <!ENTITY cmd.reloadLivebookmark.accesskey
   "R">
+<!ENTITY cmd.reloadMicrosummary.label
+  "Reload Live Title">
+<!ENTITY cmd.reloadMicrosummary.accesskey
+  "R">
 <!ENTITY cmd.groupby_site.label
   "Group by Site">
 <!ENTITY cmd.groupby_site.accesskey
