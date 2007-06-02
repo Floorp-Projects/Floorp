@@ -88,7 +88,6 @@
 //
 // See classes below for more methods. 
 //
-// TODO add abililty to alert() instead of dump()? Should be easy.
 // TODO add code to set prefs when not found to the default value of a tristate
 // TODO add error level support
 // TODO add ability to turn off console output
@@ -207,7 +206,7 @@ function G_GetDebugZone(who) {
 
     if (who && who.debugZone) {
       zone = who.debugZone;
-    } else if (isString(who)) {
+    } else if (typeof who == "string") {
       zone = who;
     }
 
@@ -769,7 +768,7 @@ G_Loggifier.prototype.loggify = function(obj) {
           args[i] = arguments[i];
           argsString += (i == 0 ? "" : ", ");
           
-          if (isFunction(args[i])) {
+          if (typeof args[i] == "function") {
             argsString += "[function]";
           } else {
             argsString += args[i];
