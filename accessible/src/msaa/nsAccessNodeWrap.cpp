@@ -41,6 +41,7 @@
 #include "nsAccessibilityAtoms.h"
 #include "nsIAccessibilityService.h"
 #include "nsIAccessible.h"
+#include "nsAttrName.h"
 #include "nsIDocument.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMNodeList.h"
@@ -52,8 +53,8 @@
 #include "nsIPrefBranch.h"
 #include "nsIPresShell.h"
 #include "nsPIDOMWindow.h"
+#include "nsRootAccessible.h"
 #include "nsIServiceManager.h"
-#include "nsAttrName.h"
 
 /// the accessible library and cached methods
 HINSTANCE nsAccessNodeWrap::gmAccLib = nsnull;
@@ -65,6 +66,7 @@ LPFNGETGUITHREADINFO nsAccessNodeWrap::gmGetGUIThreadInfo = nsnull;
 PRBool nsAccessNodeWrap::gIsEnumVariantSupportDisabled = 0;
 
 nsIAccessibleTextChangeEvent *nsAccessNodeWrap::gTextEvent = nsnull;
+
 
 /* For documentation of the accessibility architecture, 
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
@@ -136,10 +138,12 @@ STDMETHODIMP nsAccessNodeWrap::get_nodeInfo(
     /* [out] */ unsigned int __RPC_FAR *aUniqueID,
     /* [out] */ unsigned short __RPC_FAR *aNodeType)
 {
+  *aNodeName = nsnull;
+  *aNodeValue = nsnull;
+
   if (!mDOMNode)
     return E_FAIL;
  
-  *aNodeName = nsnull;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
 
   PRUint16 nodeType = 0;
@@ -480,6 +484,8 @@ nsAccessNodeWrap::get_innerHTML(BSTR __RPC_FAR *aInnerHTML)
 STDMETHODIMP 
 nsAccessNodeWrap::get_language(BSTR __RPC_FAR *aLanguage)
 {
+  *aLanguage = nsnull;
+
   nsAutoString language;
   if (NS_FAILED(GetLanguage(language))) {
     return E_FAIL;
