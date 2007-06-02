@@ -542,8 +542,6 @@ void XPCMarkNotification(void *thing, uint8 flags, void *closure)
     JSObjectRefcounts* jsr = NS_STATIC_CAST(JSObjectRefcounts*, closure);
     // We're marking after a mark phase ended, so the GC restarted itself and
     // we want to clear the refcounts first.
-    // XXX With GC_MARK_DEBUG defined we end up too many times in
-    //     XPCMarkNotification, even while taking JSGC_MARK_END into account.
     if(jsr->mMarkEnded)
         jsr->MarkStart();
     jsr->Ref(thing);
@@ -1656,7 +1654,7 @@ nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
                  "Bad return value from xpc_CreateSandboxObject()!");
 
     if (NS_SUCCEEDED(rv) && !JSVAL_IS_PRIMITIVE(rval)) {
-        *_retval = XPCJSObjectHolder::newHolder(cx, JSVAL_TO_OBJECT(rval));
+        *_retval = XPCJSObjectHolder::newHolder(ccx, JSVAL_TO_OBJECT(rval));
         NS_ENSURE_TRUE(*_retval, NS_ERROR_OUT_OF_MEMORY);
 
         NS_ADDREF(*_retval);

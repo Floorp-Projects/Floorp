@@ -68,6 +68,9 @@ class XPCNativeScriptableShared;
 class XPCNativeScriptableInfo;
 class XPCNativeScriptableCreateInfo;
 
+class XPCTraceableVariant;
+class XPCJSObjectHolder;
+
 class JSObject2WrappedJSMap;
 class Native2WrappedNativeMap;
 class IID2WrappedJSClassMap;

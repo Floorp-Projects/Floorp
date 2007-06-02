@@ -3210,24 +3210,42 @@ XPCJSObjectHolder::GetJSObject(JSObject** aJSObj)
     return NS_OK;
 }
 
-XPCJSObjectHolder::XPCJSObjectHolder(JSContext* cx, JSObject* obj)
-    : mRuntime(JS_GetRuntime(cx)), mJSObj(obj)
+XPCJSObjectHolder::XPCJSObjectHolder(XPCCallContext& ccx, JSObject* obj)
+    : mJSObj(obj)
 {
-    JS_AddNamedRoot(cx, &mJSObj, "XPCJSObjectHolder::mJSObj");
+    ccx.GetRuntime()->AddObjectHolderRoot(this);
 }
 
 XPCJSObjectHolder::~XPCJSObjectHolder()
 {
-    JS_RemoveRootRT(mRuntime, &mJSObj);
+    RemoveFromRootSet(nsXPConnect::GetRuntime()->GetJSRuntime());
 }
 
-XPCJSObjectHolder*
-XPCJSObjectHolder::newHolder(JSContext* cx, JSObject* obj)
+void
+XPCJSObjectHolder::TraceJS(JSTracer *trc)
 {
-    if(!cx || !obj)
+    JS_SET_TRACING_DETAILS(trc, PrintTraceName, this, 0);
+    JS_CallTracer(trc, mJSObj, JSTRACE_OBJECT);
+}
+
+#ifdef DEBUG
+// static
+void
+XPCJSObjectHolder::PrintTraceName(JSTracer* trc, char *buf, size_t bufsize)
+{
+    JS_snprintf(buf, bufsize, "XPCJSObjectHolder[0x%p].mJSObj",
+                trc->debugPrintArg);
+}
+#endif
+
+// static
+XPCJSObjectHolder*
+XPCJSObjectHolder::newHolder(XPCCallContext& ccx, JSObject* obj)
+{
+    if(!obj)
     {
         NS_ASSERTION(0, "bad param");
         return nsnull;
     }
-    return new XPCJSObjectHolder(cx, obj);
+    return new XPCJSObjectHolder(ccx, obj);
 }
