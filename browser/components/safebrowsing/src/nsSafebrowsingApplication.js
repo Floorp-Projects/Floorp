@@ -10,8 +10,6 @@ Function.prototype.inherits = function(parentCtor) {
   this.prototype = new tempCtor();
 }  
 
-#include ../content/js/eventregistrar.js
-#include ../content/js/listdictionary.js
 #include ../content/moz/tabbedbrowserwatcher.js
 
 #include ../content/application.js

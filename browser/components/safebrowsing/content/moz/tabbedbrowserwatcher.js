@@ -199,10 +199,12 @@
 
 function G_TabbedBrowserWatcher(tabBrowser, name, opt_filterAboutBlank) {
   this.debugZone = "tabbedbrowserwatcher";
-  this.registrar_ = new EventRegistrar(G_TabbedBrowserWatcher.events);
   this.tabBrowser_ = tabBrowser;
   this.filterAboutBlank_ = !!opt_filterAboutBlank;
   this.events = G_TabbedBrowserWatcher.events;      // Convenience pointer
+  this.eventListeners_ = {};
+  for (var e in this.events)
+    this.eventListeners_[this.events[e]] = [];
 
   // We need some way to tell if we've seen a browser before, so we
   // set a property on it with a probabilistically unique string. The
@@ -289,7 +291,10 @@ G_TabbedBrowserWatcher.prototype.instrumentBrowser_ = function(browser) {
  */
 G_TabbedBrowserWatcher.prototype.registerListener = function(eventType,
                                                              listener) {
-  this.registrar_.registerListener(eventType, listener);
+  if (!(eventType in this.eventListeners_))
+    throw new Error("Unknown event type: " + eventType);
+
+  this.eventListeners_[eventType].push(listener);
 }
 
 /**
@@ -300,7 +305,12 @@ G_TabbedBrowserWatcher.prototype.registerListener = function(eventType,
  */
 G_TabbedBrowserWatcher.prototype.removeListener = function(eventType,
                                                            listener) {
-  this.registrar_.removeListener(eventType, listener);
+  if (!(eventType in this.eventListeners_))
+    throw new Error("Unknown event type: " + eventType);
+
+  var ix = this.eventListeners_[eventType].indexOf(listener);
+  if (ix > -1)
+    this.eventListeners_[eventType].splice(ix, 1);
 }
 
 /**
@@ -310,7 +320,10 @@ G_TabbedBrowserWatcher.prototype.removeListener = function(eventType,
  * @param e Object to pass to each listener (NOT copied -- be careful)
  */
 G_TabbedBrowserWatcher.prototype.fire = function(eventType, e) {
-  this.registrar_.fire(eventType, e);
+  if (!(eventType in this.eventListeners_))
+    throw new Error("Unknown event type: " + eventType);
+
+  this.eventListeners_[eventType].forEach(function(listener) { listener(e); });
 }
 
 /**
