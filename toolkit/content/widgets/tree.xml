@@ -452,7 +452,7 @@
       
             var c = this.currentIndex;
             if (c == -1)
-                c == 0;
+                c = 0;
 
             if (c == edge) {
               if (this.view.selection.isSelected(c))
