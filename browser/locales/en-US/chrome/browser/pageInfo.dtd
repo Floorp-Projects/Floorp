@@ -20,6 +20,7 @@
 #
 # Contributor(s): Daniel Brooks <db48x@yahoo.com>
 #                 Florian QUEZE <f.qu@queze.net>
+#                 Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -59,7 +60,7 @@
 <!ENTITY  generalMetaName       "Name">
 <!ENTITY  generalMetaContent    "Content">
 <!ENTITY  generalSecurityMore   "More">
-<!ENTITY  generalSecurityMore.accesskey "M">
+<!ENTITY  generalSecurityMore.accesskey "o">
 
 <!ENTITY  mediaTab              "Media">
 <!ENTITY  mediaTab.accesskey    "M">
