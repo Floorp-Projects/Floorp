@@ -44,6 +44,7 @@
 #include "nsAppRootAccessible.h"
 #include "prlink.h"
 #include "nsIServiceManager.h"
+#include "nsAutoPtr.h"
 
 #include <gtk/gtk.h>
 #include <atk/atk.h>
@@ -54,9 +55,6 @@ static PRBool sATKChecked = PR_FALSE;
 static PRLibrary *sATKLib = nsnull;
 static const char sATKLibName[] = "libatk-1.0.so.0";
 static const char sATKHyperlinkImplGetTypeSymbol[] = "atk_hyperlink_impl_get_type";
-
-/* app root accessible */
-static nsAppRootAccessible *sAppRoot = nsnull;
 
 /* gail function pointer */
 static guint (* gail_add_global_event_listener) (GSignalEmissionHook listener,
@@ -434,7 +432,8 @@ mai_util_remove_key_event_listener (guint remove_listener)
 AtkObject *
 mai_util_get_root(void)
 {
-    nsAppRootAccessible *root = nsAppRootAccessible::Create();
+    nsRefPtr<nsApplicationAccessibleWrap> root =
+        nsAccessNode::GetApplicationAccessible();
 
     if (root)
         return root->GetAtkObject();
@@ -510,21 +509,21 @@ add_listener (GSignalEmissionHook listener,
 
 static nsresult LoadGtkModule(GnomeAccessibilityModule& aModule);
 
-nsAppRootAccessible::nsAppRootAccessible():
-    nsAccessibleWrap(nsnull, nsnull),
-    mChildren(nsnull)
+// nsApplicationAccessibleWrap
+
+nsApplicationAccessibleWrap::nsApplicationAccessibleWrap():
+    nsApplicationAccessible()
 {
     MAI_LOG_DEBUG(("======Create AppRootAcc=%p\n", (void*)this));
 }
 
-nsAppRootAccessible::~nsAppRootAccessible()
+nsApplicationAccessibleWrap::~nsApplicationAccessibleWrap()
 {
     MAI_LOG_DEBUG(("======Destory AppRootAcc=%p\n", (void*)this));
 }
 
-/* virtual functions */
-
-NS_IMETHODIMP nsAppRootAccessible::Init()
+NS_IMETHODIMP
+nsApplicationAccessibleWrap::Init()
 {
     // load and initialize gail library
     nsresult rv = LoadGtkModule(sGail);
@@ -549,13 +548,12 @@ NS_IMETHODIMP nsAppRootAccessible::Init()
     else
         MAI_LOG_DEBUG(("Fail to load lib: %s\n", sAtkBridge.libName));
 
-    mChildren = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-    return rv;
+    return nsApplicationAccessible::Init();
 }
 
-/* static */ void nsAppRootAccessible::Unload()
+void
+nsApplicationAccessibleWrap::Unload()
 {
-    NS_IF_RELEASE(sAppRoot);
     if (sAtkBridge.lib) {
         // Do not shutdown/unload atk-bridge,
         // an exit function registered will take care of it
@@ -583,150 +581,8 @@ NS_IMETHODIMP nsAppRootAccessible::Init()
     // }
 }
 
-NS_IMETHODIMP nsAppRootAccessible::GetName(nsAString& _retval)
-{
-    nsCOMPtr<nsIStringBundleService> bundleService = 
-      do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-
-    NS_ASSERTION(bundleService, "String bundle service must be present!");
-
-    nsCOMPtr<nsIStringBundle> bundle;
-    bundleService->CreateBundle("chrome://branding/locale/brand.properties",
-                                getter_AddRefs(bundle));
-    nsXPIDLString appName;
-
-    if (bundle) {
-      bundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
-                                getter_Copies(appName));
-    } else {
-      NS_WARNING("brand.properties not present, using default app name");
-      appName.AssignLiteral("Mozilla");
-    }
-
-    _retval.Assign(appName);
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsAppRootAccessible::GetDescription(nsAString& aDescription)
-{
-    GetName(aDescription);
-    aDescription.AppendLiteral(" Root Accessible");
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsAppRootAccessible::GetRole(PRUint32 *aRole)
-{
-    *aRole = nsIAccessibleRole::ROLE_APP_ROOT;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsAppRootAccessible::GetFinalRole(PRUint32 *aFinalRole)
-{
-    return GetRole(aFinalRole);
-}
-
 NS_IMETHODIMP
-nsAppRootAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
-{
-  *aState = 0;
-  if (aExtraState)
-    *aExtraState = 0;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsAppRootAccessible::GetParent(nsIAccessible **  aParent)
-{
-    *aParent = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsAppRootAccessible::GetChildAt(PRInt32 aChildNum,
-                                              nsIAccessible **aChild)
-{
-    PRUint32 count = 0;
-    nsresult rv = NS_OK;
-    *aChild = nsnull;
-    if (mChildren)
-        rv = mChildren->GetLength(&count);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (aChildNum >= NS_STATIC_CAST(PRInt32, count) || count == 0)
-        return NS_ERROR_INVALID_ARG;
-
-    if (aChildNum < 0)
-        aChildNum = count - 1;
-
-    nsCOMPtr<nsIWeakReference> childWeakRef;
-    rv = mChildren->QueryElementAt(aChildNum, NS_GET_IID(nsIWeakReference),
-                                   getter_AddRefs(childWeakRef));
-    if (childWeakRef) {
-        MAI_LOG_DEBUG(("GetChildAt(%d), has weak ref\n", aChildNum));
-        nsCOMPtr<nsIAccessible> childAcc = do_QueryReferent(childWeakRef);
-        if (childAcc) {
-            MAI_LOG_DEBUG(("GetChildAt(%d), has Acc Child ref\n", aChildNum));
-            NS_IF_ADDREF(*aChild = childAcc);
-        }
-        else
-            MAI_LOG_DEBUG(("GetChildAt(%d), NOT has Acc Child ref\n",
-                           aChildNum));
-
-    }
-    else
-        MAI_LOG_DEBUG(("GetChildAt(%d), NOT has weak ref\n", aChildNum));
-    return rv;
-}
-
-void nsAppRootAccessible::CacheChildren()
-{
-    if (!mChildren) {
-        mAccChildCount = eChildCountUninitialized;
-        return;
-    }
-
-    if (mAccChildCount == eChildCountUninitialized) {
-        nsCOMPtr<nsISimpleEnumerator> enumerator;
-        mChildren->Enumerate(getter_AddRefs(enumerator));
-
-        nsCOMPtr<nsIWeakReference> childWeakRef;
-        nsCOMPtr<nsIAccessible> accessible;
-        nsCOMPtr<nsPIAccessible> previousAccessible;
-        PRBool hasMoreElements;
-        while(NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreElements))
-              && hasMoreElements) {
-            enumerator->GetNext(getter_AddRefs(childWeakRef));
-            accessible = do_QueryReferent(childWeakRef);
-            if (accessible) {
-                if (previousAccessible) {
-                    previousAccessible->SetNextSibling(accessible);
-                }
-                else {
-                    SetFirstChild(accessible);
-                }
-                previousAccessible = do_QueryInterface(accessible);
-                previousAccessible->SetParent(this);
-            }
-        }
-
-        PRUint32 count = 0;
-        mChildren->GetLength(&count);
-        mAccChildCount = NS_STATIC_CAST(PRInt32, count);
-    }
-}
-
-NS_IMETHODIMP nsAppRootAccessible::GetNextSibling(nsIAccessible * *aNextSibling) 
-{ 
-    *aNextSibling = nsnull; 
-    return NS_OK;  
-}
-
-NS_IMETHODIMP nsAppRootAccessible::GetPreviousSibling(nsIAccessible * *aPreviousSibling) 
-{
-    *aPreviousSibling = nsnull;
-    return NS_OK;  
-}
-
-NS_IMETHODIMP nsAppRootAccessible::GetNativeInterface(void **aOutAccessible)
+nsApplicationAccessibleWrap::GetNativeInterface(void **aOutAccessible)
 {
     *aOutAccessible = nsnull;
 
@@ -746,15 +602,13 @@ NS_IMETHODIMP nsAppRootAccessible::GetNativeInterface(void **aOutAccessible)
 }
 
 nsresult
-nsAppRootAccessible::AddRootAccessible(nsIAccessible *aRootAccWrap)
+nsApplicationAccessibleWrap::AddRootAccessible(nsIAccessible *aRootAccWrap)
 {
     NS_ENSURE_ARG_POINTER(aRootAccWrap);
 
-    nsresult rv = NS_ERROR_FAILURE;
-
     // add by weak reference
-    rv = mChildren->AppendElement(aRootAccWrap, PR_TRUE);
-    InvalidateChildren();
+    nsresult rv = nsApplicationAccessible::AddRootAccessible(aRootAccWrap);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     void* atkAccessible;
     aRootAccWrap->GetNativeInterface(&atkAccessible);
@@ -778,7 +632,7 @@ nsAppRootAccessible::AddRootAccessible(nsIAccessible *aRootAccWrap)
 }
 
 nsresult
-nsAppRootAccessible::RemoveRootAccessible(nsIAccessible *aRootAccWrap)
+nsApplicationAccessibleWrap::RemoveRootAccessible(nsIAccessible *aRootAccWrap)
 {
     NS_ENSURE_ARG_POINTER(aRootAccWrap);
 
@@ -816,8 +670,8 @@ nsAppRootAccessible::RemoveRootAccessible(nsIAccessible *aRootAccWrap)
     return rv;
 }
 
-nsAppRootAccessible *
-nsAppRootAccessible::Create()
+void
+nsApplicationAccessibleWrap::PreCreate()
 {
     if (!sATKChecked) {
         sATKLib = PR_LoadLibrary(sATKLibName);
@@ -829,19 +683,6 @@ nsAppRootAccessible::Create()
         }
         sATKChecked = PR_TRUE;
     }
-    if (!sAppRoot && gIsAccessibilityActive) {
-        sAppRoot = new nsAppRootAccessible();
-        NS_ASSERTION(sAppRoot, "OUT OF MEMORY");
-        if (sAppRoot) {
-            if (NS_FAILED(sAppRoot->Init())) {
-                delete sAppRoot;
-                sAppRoot = nsnull;
-            }
-            else
-                NS_IF_ADDREF(sAppRoot);
-        }
-    }
-    return sAppRoot;
 }
 
 static nsresult

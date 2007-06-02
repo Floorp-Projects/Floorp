@@ -17,13 +17,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Sun Microsystems, Inc.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bolian Yin (bolian.yin@sun.com)
- *   Ginn Chen (ginn.chen@sun.com)
+ *   Alexander Surkov <surkov.alexander@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,12 +38,60 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsMai.h"
-#include "nsRootAccessibleWrap.h"
+#include "nsApplicationAccessibleWrap.h"
 
-nsNativeRootAccessibleWrap::nsNativeRootAccessibleWrap(AtkObject *aAccessible):
-    nsRootAccessible(nsnull, nsnull)
+#include "AccessibleApplication_i.c"
+
+// nsISupports
+NS_IMPL_ISUPPORTS_INHERITED0(nsApplicationAccessibleWrap,
+                             nsApplicationAccessible)
+
+// IUnknown
+
+STDMETHODIMP
+nsApplicationAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 {
-    g_object_ref(aAccessible);
-    nsAccessibleWrap::mAtkObject = aAccessible;
+  *ppv = NULL;
+
+  if (IID_IAccessibleApplication == iid) {
+    *ppv = NS_STATIC_CAST(IAccessibleApplication*, this);
+    (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
+    return S_OK;
+  }
+
+  return nsAccessibleWrap::QueryInterface(iid, ppv);
 }
+
+// IAccessibleApplication
+
+STDMETHODIMP
+nsApplicationAccessibleWrap::get_appName(BSTR *aName)
+{
+  return E_NOTIMPL;
+}
+
+STDMETHODIMP
+nsApplicationAccessibleWrap::get_appVersion(BSTR *aVersion)
+{
+  return E_NOTIMPL;
+}
+
+STDMETHODIMP
+nsApplicationAccessibleWrap::get_toolkitName(BSTR *aName)
+{
+  return E_NOTIMPL;
+}
+
+STDMETHODIMP
+nsApplicationAccessibleWrap::get_toolkitVersion(BSTR *aVersion)
+{
+  return E_NOTIMPL;
+}
+
+// nsApplicationAccessibleWrap
+
+void
+nsApplicationAccessibleWrap::PreCreate()
+{
+}
+

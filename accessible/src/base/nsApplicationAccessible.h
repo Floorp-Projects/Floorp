@@ -17,13 +17,14 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Sun Microsystems, Inc.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bolian Yin (bolian.yin@sun.com)
- *   Ginn Chen (ginn.chen@sun.com)
+ *   Bolian Yin <bolian.yin@sun.com>
+ *   Ginn Chen <ginn.chen@sun.com>
+ *   Alexander Surkov <surkov.alexander@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,30 +40,54 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_APP_ROOT_ACCESSIBLE_H__
-#define __NS_APP_ROOT_ACCESSIBLE_H__
+#ifndef __NS_APPLICATION_ACCESSIBLE_H__
+#define __NS_APPLICATION_ACCESSIBLE_H__
 
-#include "nsApplicationAccessible.h"
+#include "nsAccessibleWrap.h"
+#include "nsIMutableArray.h"
 
-class nsApplicationAccessibleWrap: public nsApplicationAccessible
+/**
+ * nsApplicationAccessible is for the whole application of Mozilla.
+ * Only one instance of nsAppRootAccessible exists for one Mozilla instance.
+ * And this one should be created when Mozilla Startup (if accessibility
+ * feature has been enabled) and destroyed when Mozilla Shutdown.
+ *
+ * All the accessibility objects for toplevel windows are direct children of
+ * the nsApplicationAccessible instance.
+ */
+
+class nsApplicationAccessible: public nsAccessibleWrap
 {
 public:
-    static void Unload();
-    static void PreCreate();
+  nsApplicationAccessible();
 
-public:
-    nsApplicationAccessibleWrap();
-    virtual ~nsApplicationAccessibleWrap();
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
 
-    // nsPIAccessNode
-    NS_IMETHOD Init();
+  // nsPIAccessNode
+  NS_IMETHOD Init();
 
-    // return the atk object for app root accessible
-    NS_IMETHOD GetNativeInterface(void **aOutAccessible);
+  // nsIAccessible
+  NS_IMETHOD GetName(nsAString & aName);
+  NS_IMETHOD GetDescription(nsAString & aDescription);
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+  NS_IMETHOD GetFinalRole(PRUint32 *aFinalRole);
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
+  NS_IMETHOD GetParent(nsIAccessible * *aParent);
+  NS_IMETHOD GetNextSibling(nsIAccessible * *aNextSibling);
+  NS_IMETHOD GetPreviousSibling(nsIAccessible **aPreviousSibling);
+  NS_IMETHOD GetChildAt(PRInt32 aChildNum, nsIAccessible **aChild);
 
-    // nsApplicationAccessible
-    virtual nsresult AddRootAccessible(nsIAccessible *aRootAccWrap);
-    virtual nsresult RemoveRootAccessible(nsIAccessible *aRootAccWrap);
+  // nsApplicationAccessible
+  virtual nsresult AddRootAccessible(nsIAccessible *aRootAccWrap);
+  virtual nsresult RemoveRootAccessible(nsIAccessible *aRootAccWrap);
+
+protected:
+  // nsAccessible
+  virtual void CacheChildren();
+
+  nsCOMPtr<nsIMutableArray> mChildren;
 };
 
-#endif   /* __NS_APP_ROOT_ACCESSIBLE_H__ */
+#endif
+
