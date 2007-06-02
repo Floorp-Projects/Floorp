@@ -276,6 +276,15 @@ void XPCJSRuntime::TraceJS(JSTracer* trc, void* data)
     }
 
     XPCWrappedNativeScope::TraceJS(trc, self);
+
+    for (XPCRootSetElem *e = self->mVariantRoots; e ; e = e->GetNextRoot())
+        NS_STATIC_CAST(XPCTraceableVariant*, e)->TraceJS(trc);
+
+    for (XPCRootSetElem *e = self->mWrappedJSRoots; e ; e = e->GetNextRoot())
+        NS_STATIC_CAST(nsXPCWrappedJS*, e)->TraceJS(trc);
+
+    for (XPCRootSetElem *e = self->mObjectHolderRoots; e ; e = e->GetNextRoot())
+        NS_STATIC_CAST(XPCJSObjectHolder*, e)->TraceJS(trc);
 }
 
 // static
@@ -822,7 +831,10 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
    mNativesToReleaseArray(),
    mMainThreadOnlyGC(JS_FALSE),
    mDeferReleases(JS_FALSE),
-   mDoingFinalization(JS_FALSE)
+   mDoingFinalization(JS_FALSE),
+   mVariantRoots(nsnull),
+   mWrappedJSRoots(nsnull),
+   mObjectHolderRoots(nsnull)
 {
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
     DEBUG_WrappedNativeHashtable =
@@ -1138,3 +1150,36 @@ XPCJSRuntime::DebugDump(PRInt16 depth)
 #endif
 }
 
+/***************************************************************************/
+
+void
+XPCRootSetElem::AddToRootSet(JSRuntime* rt, XPCRootSetElem** listHead)
+{
+    NS_ASSERTION(!mSelfp, "Must be not linked");
+    JS_LOCK_GC(rt);
+    mSelfp = listHead;
+    mNext = *listHead;
+    if(mNext)
+    {
+        NS_ASSERTION(mNext->mSelfp == listHead, "Must be list start");
+        mNext->mSelfp = &mNext;
+    }
+    *listHead = this;
+    JS_UNLOCK_GC(rt);
+}
+
+void
+XPCRootSetElem::RemoveFromRootSet(JSRuntime* rt)
+{
+    NS_ASSERTION(mSelfp, "Must be linked");
+    JS_LOCK_GC(rt);
+    NS_ASSERTION(*mSelfp == this, "Link invariant");
+    *mSelfp = mNext;
+    if(mNext)
+        mNext->mSelfp = mSelfp;
+    JS_UNLOCK_GC(rt);
+#ifdef DEBUG
+    mSelfp = nsnull;
+    mNext = nsnull;
+#endif
+}

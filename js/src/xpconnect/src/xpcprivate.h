@@ -527,6 +527,34 @@ private:
 
 /***************************************************************************/
 
+class XPCRootSetElem
+{
+public:
+    XPCRootSetElem()
+    {
+#ifdef DEBUG
+        mNext = nsnull;
+        mSelfp = nsnull;
+#endif
+    }
+
+    ~XPCRootSetElem()
+    {
+        NS_ASSERTION(!mNext, "Must be unlinked");
+        NS_ASSERTION(!mSelfp, "Must be unlinked");
+    }
+
+    inline XPCRootSetElem* GetNextRoot() { return mNext; }
+    void AddToRootSet(JSRuntime* rt, XPCRootSetElem** listHead);
+    void RemoveFromRootSet(JSRuntime* rt);
+
+private:
+    XPCRootSetElem *mNext;
+    XPCRootSetElem **mSelfp;
+};
+
+/***************************************************************************/
+
 // In the current xpconnect system there can only be one XPCJSRuntime.
 // So, xpconnect can only be used on one JSRuntime within the process.
 
@@ -638,6 +666,10 @@ public:
 
     static JSBool JS_DLL_CALLBACK GCCallback(JSContext *cx, JSGCStatus status);
 
+    inline void AddVariantRoot(XPCTraceableVariant* variant);
+    inline void AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS);
+    inline void AddObjectHolderRoot(XPCJSObjectHolder* holder);
+
     void DebugDump(PRInt16 depth);
 
     void SystemIsBeingShutDown(XPCCallContext* ccx);
@@ -698,6 +730,9 @@ private:
     JSBool mMainThreadOnlyGC;
     JSBool mDeferReleases;
     JSBool mDoingFinalization;
+    XPCRootSetElem *mVariantRoots;
+    XPCRootSetElem *mWrappedJSRoots;
+    XPCRootSetElem *mObjectHolderRoots;
 };
 
 /***************************************************************************/
@@ -2271,7 +2306,8 @@ private:
 class nsXPCWrappedJS : protected nsAutoXPTCStub,
                        public nsIXPConnectWrappedJS,
                        public nsSupportsWeakReference,
-                       public nsIPropertyBag
+                       public nsIPropertyBag,
+                       public XPCRootSetElem
 {
 public:
     NS_DECL_ISUPPORTS
@@ -2324,6 +2360,11 @@ public:
     JSBool IsAggregatedToNative() const {return mRoot->mOuter != nsnull;}
     nsISupports* GetAggregatedNativeObject() const {return mRoot->mOuter;}
 
+    void TraceJS(JSTracer* trc);
+#ifdef DEBUG
+    static void PrintTraceName(JSTracer* trc, char *buf, size_t bufsize);
+#endif
+
     virtual ~nsXPCWrappedJS();
 protected:
     nsXPCWrappedJS();   // not implemented
@@ -2339,14 +2380,12 @@ private:
     nsXPCWrappedJS* mRoot;
     nsXPCWrappedJS* mNext;
     nsISupports* mOuter;    // only set in root
-#ifdef GC_MARK_DEBUG
-    char *mGCRootName;
-#endif
 };
 
 /***************************************************************************/
 
-class XPCJSObjectHolder : public nsIXPConnectJSObjectHolder
+class XPCJSObjectHolder : public nsIXPConnectJSObjectHolder,
+                          public XPCRootSetElem
 {
 public:
     // all the interface method declarations...
@@ -2356,15 +2395,19 @@ public:
     // non-interface implementation
 
 public:
-    static XPCJSObjectHolder* newHolder(JSContext* cx, JSObject* obj);
+    static XPCJSObjectHolder* newHolder(XPCCallContext& ccx, JSObject* obj);
 
     virtual ~XPCJSObjectHolder();
 
+    void TraceJS(JSTracer *trc);
+#ifdef DEBUG
+    static void PrintTraceName(JSTracer* trc, char *buf, size_t bufsize);
+#endif
+
 private:
-    XPCJSObjectHolder(JSContext* cx, JSObject* obj);
+    XPCJSObjectHolder(XPCCallContext& ccx, JSObject* obj);
     XPCJSObjectHolder(); // not implemented
 
-    JSRuntime* mRuntime;
     JSObject* mJSObj;
 };
 
@@ -3599,7 +3642,7 @@ public:
 
     jsval GetJSVal() const {return mJSVal;}
 
-    XPCVariant(JSRuntime* aJSRuntime);
+    XPCVariant(jsval aJSVal);
 
     /**
      * Convert a variant into a jsval.
@@ -3617,23 +3660,34 @@ public:
                                   jsval* pJSVal);
 
 protected:
-    virtual ~XPCVariant();
+    virtual ~XPCVariant() { }
 
     JSBool InitializeData(XPCCallContext& ccx);
 
 protected:
     nsDiscriminatedUnion mData;
     jsval                mJSVal;
-
-    // For faster GC-thing locking and unlocking
-    JSRuntime*           mJSRuntime;
-
-#ifdef GC_MARK_DEBUG
-    char *mGCRootName;
-#endif
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(XPCVariant, XPCVARIANT_IID)
+
+class XPCTraceableVariant: public XPCVariant,
+                           public XPCRootSetElem
+{
+public:
+    XPCTraceableVariant(XPCJSRuntime *runtime, jsval aJSVal)
+        : XPCVariant(aJSVal)
+    {
+        runtime->AddVariantRoot(this);
+    }
+
+    virtual ~XPCTraceableVariant();
+
+    void TraceJS(JSTracer* trc);
+#ifdef DEBUG
+    static void PrintTraceName(JSTracer* trc, char *buf, size_t bufsize);
+#endif
+};
 
 /***************************************************************************/
 #ifndef XPCONNECT_STANDALONE
