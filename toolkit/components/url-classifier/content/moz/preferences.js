@@ -161,66 +161,6 @@ G_Preferences.prototype.getPref = function(key, opt_default) {
 }
 
 /**
- * Set a boolean preference
- *
- * @param which Name of preference to set
- * @param value Boolean indicating value to set
- *
- * @deprecated  Just use setPref.
- */
-G_Preferences.prototype.setBoolPref = function(which, value) {
-  return this.setPref(which, value);
-}
-
-/**
- * Get a boolean preference. WILL THROW IF PREFERENCE DOES NOT EXIST.
- * If you don't want this behavior, use getBoolPrefOrDefault.
- *
- * @param which Name of preference to get.
- *
- * @deprecated  Just use getPref.
- */
-G_Preferences.prototype.getBoolPref = function(which) {
-  return this.prefs_.getBoolPref(which);
-}
-
-/**
- * Get a boolean preference or return some default value if it doesn't
- * exist. Note that the default doesn't have to be bool -- it could be
- * anything (e.g., you could pass in null and check if the return
- * value is === null to determine if the pref doesn't exist).
- *
- * @param which Name of preference to get.
- * @param def Value to return if the preference doesn't exist
- * @returns Boolean value of the pref if it exists, else def
- *
- * @deprecated  Just use getPref.
- */
-G_Preferences.prototype.getBoolPrefOrDefault = function(which, def) {
-  return this.getPref(which, def);
-}
-
-/**
- * Get a boolean preference if it exists. If it doesn't, set its value
- * to a default and return the default. Note that the default will be
- * coherced to a bool if it is set, but not in the return value.
- *
- * @param which Name of preference to get.
- * @param def Value to set and return if the preference doesn't exist
- * @returns Boolean value of the pref if it exists, else def
- *
- * @deprecated  Just use getPref.
- */
-G_Preferences.prototype.getBoolPrefOrDefaultAndSet = function(which, def) {
-  try {
-    return this.prefs_.getBoolPref(which);
-  } catch(e) {
-    this.prefs_.setBoolPref(which, !!def);  // The !! forces boolean conversion
-    return def;
-  }
-}
-
-/**
  * Delete a preference. 
  *
  * @param which Name of preference to obliterate
@@ -327,36 +267,20 @@ function TEST_G_Preferences() {
 
     // Test setting, getting, and observing
     p.addObserver(testPref, observe);
-    p.setBoolPref(testPref, true);
-    G_Assert(z, p.getBoolPref(testPref), "get or set broken");
+    p.setPref(testPref, true);
+    G_Assert(z, p.getPref(testPref), "get or set broken");
     G_Assert(z, observeCount == 1, "observer adding not working");
 
     p.removeObserver(testPref, observe);
 
-    p.setBoolPref(testPref, false);
+    p.setPref(testPref, false);
     G_Assert(z, observeCount == 1, "observer removal not working");
-    G_Assert(z, !p.getBoolPref(testPref), "get broken");
-    try {
-      p.getBoolPref(noSuchPref);
-      G_Assert(z, false, "getting non-existent pref didn't throw");
-    } catch (e) {
-    }
-    
-    // Try the default varieties
-    G_Assert(z, 
-             p.getBoolPrefOrDefault(noSuchPref, true), "default borken (t)");
-    G_Assert(z, !p.getBoolPrefOrDefault(noSuchPref, false), "default borken");
-    
-    // And the default-and-set variety
-    G_Assert(z, p.getBoolPrefOrDefaultAndSet(noSuchPref, true), 
-             "default and set broken (didnt default");
-    G_Assert(z, 
-             p.getBoolPref(noSuchPref), "default and set broken (didnt set)");
+    G_Assert(z, !p.getPref(testPref), "get broken");
     
     // Remember to clean up the prefs we've set, and test removing prefs 
     // while we're at it
     p.clearPref(noSuchPref);
-    G_Assert(z, !p.getBoolPrefOrDefault(noSuchPref, false), "clear broken");
+    G_Assert(z, !p.getPref(noSuchPref, false), "clear broken");
     
     p.clearPref(testPref);
     
