@@ -45,7 +45,6 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-#include ../../url-classifier/content/js/lang.js
 #include ../../url-classifier/content/moz/lang.js
 #include ../../url-classifier/content/moz/observer.js
 #include ../../url-classifier/content/moz/alarm.js

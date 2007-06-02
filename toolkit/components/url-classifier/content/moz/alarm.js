@@ -45,7 +45,7 @@
 //
 // Example:
 //
-//  function foo() { alert('hi'); };
+//  function foo() { dump('hi'); };
 //  new G_Alarm(foo, 10*1000);                   // Fire foo in 10 seconds
 //  new G_Alarm(foo, 10*1000, true /*repeat*/);  // Fire foo every 10 seconds
 //  new G_Alarm(foo, 10*1000, true, 7);          // Fire foo every 10 seconds
