@@ -1344,7 +1344,7 @@ nsresult nsBidiPresUtils::ProcessText(const PRUnichar*       aText,
 
   PRInt32 runCount;
 
-  mBuffer.Assign(aText);
+  mBuffer.Assign(aText, aLength);
 
   nsresult rv = mBidiEngine->SetPara(mBuffer.get(), aLength, aBaseDirection, nsnull);
   if (NS_FAILED(rv))
