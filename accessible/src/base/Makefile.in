@@ -85,6 +85,7 @@ CPPSRCS = \
   nsBaseWidgetAccessible.cpp \
   nsFormControlAccessible.cpp \
   nsRootAccessible.cpp \
+  nsApplicationAccessible.cpp \
   nsCaretAccessible.cpp \
   nsTextAccessible.cpp \
   $(NULL)
