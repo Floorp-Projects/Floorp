@@ -212,7 +212,7 @@ ReadCMAPTableFormat4(PRUint8 *aBuf, PRInt32 aLength, FontEntry *aFontEntry)
         OffsetFormat = 0,
         OffsetLength = 2,
         OffsetLanguage = 4,
-        OffsetSegCountX2 = 6,
+        OffsetSegCountX2 = 6
     };
 
     NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetFormat) == 4, NS_ERROR_FAILURE);
@@ -290,7 +290,7 @@ ReadCMAP(HDC hdc, FontEntry *aFontEntry)
         TableOffsetOffset = 4,
         SizeOfTable = 8,
 
-        SubtableOffsetFormat = 0,
+        SubtableOffsetFormat = 0
     };
     enum {
         PlatformIDMicrosoft = 3
