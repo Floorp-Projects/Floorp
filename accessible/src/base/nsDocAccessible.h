@@ -42,7 +42,6 @@
 #include "nsHyperTextAccessibleWrap.h"
 #include "nsIAccessibleDocument.h"
 #include "nsPIAccessibleDocument.h"
-#include "nsIAccessibleEvent.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
 #include "nsIEditor.h"

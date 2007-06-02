@@ -41,8 +41,9 @@
 
 #include "nsMai.h"
 #include "nsAccessibleWrap.h"
-#include "nsAppRootAccessible.h"
+#include "nsAccessibleEventData.h"
 #include "nsString.h"
+#include "nsAutoPtr.h"
 #include "prprf.h"
 #include "nsRoleMap.h"
 #include "nsStateMap.h"
@@ -60,6 +61,8 @@
 #include "nsComponentManagerUtils.h"
 #include "nsMaiInterfaceDocument.h"
 #include "nsMaiInterfaceImage.h"
+
+#include "nsAppRootAccessible.h"
 
 extern "C" GType g_atk_hyperlink_impl_type; //defined in nsAppRootAccessible.cpp
 
@@ -1086,7 +1089,12 @@ CheckMaiAtkObject(AtkObject *aAtkObj)
         return NS_ERROR_NULL_POINTER;
     }
 
-    if (tmpAccWrap != nsAppRootAccessible::Create() && !tmpAccWrap->IsValidObject())
+    nsRefPtr<nsApplicationAccessibleWrap> appAccWrap =
+        nsAccessNode::GetApplicationAccessible();
+    nsAccessibleWrap* tmpAppAccWrap =
+        NS_STATIC_CAST(nsAccessibleWrap*, appAccWrap.get());
+
+    if (tmpAppAccWrap != tmpAccWrap && !tmpAccWrap->IsValidObject())
         return NS_ERROR_INVALID_POINTER;
 
     NS_ENSURE_TRUE(tmpAccWrap->GetAtkObject() == aAtkObj, NS_ERROR_FAILURE);
