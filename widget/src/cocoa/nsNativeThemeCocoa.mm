@@ -875,7 +875,7 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
     case NS_THEME_DROPDOWN_BUTTON:
       // We need to shift the text up a single pixel. For native form control drawing,
       // the borders need not actually reflect the size of the drawn border.
-      aResult->SizeTo(kAquaDropdownLeftBorder, 0, kAquaDropdownRightBorder, 1);
+      aResult->SizeTo(kAquaDropdownLeftBorder, 1, kAquaDropdownRightBorder, 1);
       break;
     
     case NS_THEME_TEXTFIELD: {
