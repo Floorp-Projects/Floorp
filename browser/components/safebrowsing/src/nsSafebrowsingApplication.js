@@ -29,7 +29,6 @@ var modScope = this;
 function Init() {
   var jslib = Cc["@mozilla.org/url-classifier/jslib;1"]
               .getService().wrappedJSObject;
-  modScope.String.prototype.startsWith = jslib.String.prototype.startsWith;
   modScope.G_Debug = jslib.G_Debug;
   modScope.G_Assert = jslib.G_Assert;
   modScope.G_Alarm = jslib.G_Alarm;

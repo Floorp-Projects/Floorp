@@ -49,16 +49,16 @@
 // Example:
 // 
 // var p = new PROT_Preferences();
-// alert(p.getPref("some-true-pref"));     // shows true
-// alert(p.getPref("no-such-pref", true)); // shows true   
-// alert(p.getPref("no-such-pref", null)); // shows null
+// dump(p.getPref("some-true-pref"));     // shows true
+// dump(p.getPref("no-such-pref", true)); // shows true   
+// dump(p.getPref("no-such-pref", null)); // shows null
 //
 // function observe(prefThatChanged) {
-//   alert("Pref changed: " + prefThatChanged);
+//   dump("Pref changed: " + prefThatChanged);
 // };
 //
 // p.addObserver("somepref", observe);
-// p.setPref("somepref", true);            // alerts
+// p.setPref("somepref", true);            // dumps
 // p.removeObserver("somepref", observe);
 //
 // TODO: should probably have the prefobserver pass in the new and old

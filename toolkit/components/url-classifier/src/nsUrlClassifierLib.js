@@ -44,15 +44,14 @@ const Ci = Components.interfaces;
 const G_GDEBUG = false;
 
 // TODO: get rid of application.js and filesystem.js (not used much)
-#include ../content/js/lang.js
 
+#include ../content/moz/lang.js
 #include ../content/moz/preferences.js
 #include ../content/moz/filesystem.js
 #include ../content/moz/debug.js
 #include ../content/moz/alarm.js
 #include ../content/moz/base64.js
 #include ../content/moz/cryptohasher.js
-#include ../content/moz/lang.js
 #include ../content/moz/objectsafemap.js
 #include ../content/moz/observer.js
 #include ../content/moz/protocol4.js

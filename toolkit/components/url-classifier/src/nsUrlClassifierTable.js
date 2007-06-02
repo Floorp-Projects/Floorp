@@ -38,8 +38,8 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-// js/lang.js is needed for Function.prototype.inherts
-#include ../content/js/lang.js
+// moz/lang.js is needed for Function.prototype.inherts
+#include ../content/moz/lang.js
 #include ../content/enchash-decrypter.js
 #include ../content/multi-querier.js
 #include ../content/trtable.js
