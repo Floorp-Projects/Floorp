@@ -3513,7 +3513,30 @@ WindowRef nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
     mPluginWindow->x = -pluginPort->qdPort.portx;
     mPluginWindow->y = -pluginPort->qdPort.porty;
   }
+  else if (drawingModel == NPDrawingModelCoreGraphics)
 #endif
+  {
+    // This would be a lot easier if we could use obj-c here,
+    // but we can't. Since we have only nsIWidget and we can't
+    // use its native widget (an obj-c object) we have to go
+    // from the widget's screen coordinates to its window coords
+    // instead of straight to window coords.
+    nsRect geckoBounds;
+    mWidget->GetBounds(geckoBounds);
+    // we need a rect that is the entire *internal* rect, so the
+    // x and y coords are 0, width is the same.
+    geckoBounds.x = 0;
+    geckoBounds.y = 0;
+    nsRect geckoScreenCoords;
+    mWidget->WidgetToScreen(geckoBounds, geckoScreenCoords);
+
+    Rect windowRect;
+    WindowRef window = (WindowRef)pluginPort->cgPort.window;
+    ::GetWindowBounds(window, kWindowStructureRgn, &windowRect);
+
+    mPluginWindow->x = geckoScreenCoords.x - windowRect.left;
+    mPluginWindow->y = geckoScreenCoords.y - windowRect.top;
+  }
 
   nsPluginRect oldClipRect = mPluginWindow->clipRect;
   
