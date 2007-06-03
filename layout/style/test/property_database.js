@@ -124,7 +124,7 @@ var gCSSProperties = {
 		subproperties: [ "-moz-border-radius-bottomleft", "-moz-border-radius-bottomright", "-moz-border-radius-topleft", "-moz-border-radius-topright" ],
 		initial_values: [ "0", "0px", "0px 0 0 0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em", "3em 2px", "2pt 3% 4em", "2px 2px 2px 2px" ],
-		invalid_values: []
+		invalid_values: [ "2px -2px" ]
 	},
 	"-moz-border-radius-bottomleft": {
 		domProp: "MozBorderRadiusBottomleft",
@@ -132,7 +132,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em" ],
-		invalid_values: []
+		invalid_values: [ "-1px" ]
 	},
 	"-moz-border-radius-bottomright": {
 		domProp: "MozBorderRadiusBottomright",
@@ -140,7 +140,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em" ],
-		invalid_values: []
+		invalid_values: [ "-1px" ]
 	},
 	"-moz-border-radius-topleft": {
 		domProp: "MozBorderRadiusTopleft",
@@ -148,7 +148,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em" ],
-		invalid_values: []
+		invalid_values: [ "-1px" ]
 	},
 	"-moz-border-radius-topright": {
 		domProp: "MozBorderRadiusTopright",
@@ -156,7 +156,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em" ],
-		invalid_values: []
+		invalid_values: [ "-1px" ]
 	},
 	"-moz-border-right-colors": {
 		domProp: "MozBorderRightColors",
@@ -308,7 +308,7 @@ var gCSSProperties = {
 		subproperties: [ "-moz-outline-radius-bottomleft", "-moz-outline-radius-bottomright", "-moz-outline-radius-topleft", "-moz-outline-radius-topright" ],
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "2px", "0.3em", "2%" ],
-		invalid_values: []
+		invalid_values: [ "-2px" ]
 	},
 	"-moz-outline-radius-bottomleft": {
 		domProp: "MozOutlineRadiusBottomleft",
@@ -316,7 +316,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "2px", "0.3em", "2%" ],
-		invalid_values: []
+		invalid_values: [ "-2px" ]
 	},
 	"-moz-outline-radius-bottomright": {
 		domProp: "MozOutlineRadiusBottomright",
@@ -324,7 +324,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "2px", "0.3em", "2%" ],
-		invalid_values: []
+		invalid_values: [ "-2px" ]
 	},
 	"-moz-outline-radius-topleft": {
 		domProp: "MozOutlineRadiusTopleft",
@@ -332,7 +332,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "2px", "0.3em", "2%" ],
-		invalid_values: []
+		invalid_values: [ "-2px" ]
 	},
 	"-moz-outline-radius-topright": {
 		domProp: "MozOutlineRadiusTopright",
@@ -340,7 +340,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "2px", "0.3em", "2%" ],
-		invalid_values: []
+		invalid_values: [ "-2px" ]
 	},
 	"-moz-padding-end": {
 		domProp: "MozPaddingEnd",
