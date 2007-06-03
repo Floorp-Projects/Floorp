@@ -452,6 +452,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       {
         childComputedBoxSize = childComputedBoxSize->next;
         childBoxSize = childBoxSize->next;
+        child = child->GetNextBox();
         count++;
         x = nextX;
         y = nextY;
@@ -916,6 +917,8 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
 
   // we specified all our children are equal size;
   if (frameState & NS_STATE_EQUAL_SIZE) {
+    nsBox::BoundsCheck(biggestMinWidth, biggestPrefWidth, smallestMaxWidth);
+
     currentBox = aBoxSizes;
 
     while(currentBox)
