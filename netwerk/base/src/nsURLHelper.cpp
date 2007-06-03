@@ -359,12 +359,6 @@ net_CoalesceDirs(netCoalesceFlags flags, char* path)
             *urlPtr++ = *fwdPtr;
         }
     }
-    // Copy remaining stuff past the #?;
-    for (; *fwdPtr != '\0'; ++fwdPtr)
-    {
-        *urlPtr++ = *fwdPtr;
-    }
-    *urlPtr = '\0';  // terminate the url 
 
     /* 
      *  Now lets remove trailing . case
@@ -372,7 +366,14 @@ net_CoalesceDirs(netCoalesceFlags flags, char* path)
      */
 
     if ((urlPtr > (path+1)) && (*(urlPtr-1) == '.') && (*(urlPtr-2) == '/'))
-        *(urlPtr-1) = '\0';
+        urlPtr--;
+
+    // Copy remaining stuff past the #?;
+    for (; *fwdPtr != '\0'; ++fwdPtr)
+    {
+        *urlPtr++ = *fwdPtr;
+    }
+    *urlPtr = '\0';  // terminate the url 
 }
 
 nsresult
