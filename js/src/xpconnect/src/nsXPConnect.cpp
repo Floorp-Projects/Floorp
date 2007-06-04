@@ -602,8 +602,7 @@ nsXPConnect::FinishCycleCollection()
 NS_IMETHODIMP
 nsXPConnect::Root(void *p)
 {
-    if(!mCycleCollectionContext ||
-       !JS_LockGCThing(*mCycleCollectionContext, NS_STATIC_CAST(JSObject*, p)))
+    if(!mCycleCollectionContext || !JS_LockGCThing(*mCycleCollectionContext, p))
         return NS_ERROR_FAILURE;
     return NS_OK;
 }
@@ -613,7 +612,9 @@ nsXPConnect::Unlink(void *p)
 {
     if(!mCycleCollectionContext)
         return NS_ERROR_FAILURE;
-    JS_ClearScope(*mCycleCollectionContext, NS_STATIC_CAST(JSObject*, p));
+    uint8 ty = *js_GetGCThingFlags(p) & GCF_TYPEMASK;
+    if(ty == GCX_OBJECT)
+        JS_ClearScope(*mCycleCollectionContext, NS_STATIC_CAST(JSObject*, p));
     return NS_OK;
 }
 
@@ -621,8 +622,7 @@ NS_IMETHODIMP
 nsXPConnect::Unroot(void *p)
 {
     if(!mCycleCollectionContext ||
-       !JS_UnlockGCThing(*mCycleCollectionContext,
-                         NS_STATIC_CAST(JSObject*, p)))
+       !JS_UnlockGCThing(*mCycleCollectionContext, p))
         return NS_ERROR_FAILURE;
     return NS_OK;
 }
