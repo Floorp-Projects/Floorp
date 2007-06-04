@@ -1065,9 +1065,12 @@ nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     const nsStyleXUL *xulStyle = frame->GetStyleXUL();
     if (xulStyle) {
       // In XUL all boxes are either vertical or horizontal
-      *aExtraState |= (xulStyle->mBoxOrient == NS_STYLE_BOX_ORIENT_VERTICAL) ?
-        nsIAccessibleStates::EXT_STATE_VERTICAL :
-        nsIAccessibleStates::EXT_STATE_HORIZONTAL;
+      if (xulStyle->mBoxOrient == NS_STYLE_BOX_ORIENT_VERTICAL) {
+        *aExtraState |= nsIAccessibleStates::EXT_STATE_VERTICAL;
+      }
+      else {
+        *aExtraState |= nsIAccessibleStates::EXT_STATE_HORIZONTAL;
+      }
     }
   }
 
@@ -1076,8 +1079,12 @@ nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
       mRoleMapEntry->role == nsIAccessibleRole::ROLE_PASSWORD_TEXT)) {
     PRBool isEqual =
       NS_LITERAL_CSTRING("textarea").Equals(mRoleMapEntry->roleString);
-    *aExtraState =  isEqual? nsIAccessibleStates::EXT_STATE_MULTI_LINE :
-                             nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
+    if (isEqual) {
+      *aExtraState |= nsIAccessibleStates::EXT_STATE_MULTI_LINE;
+    }
+    else {
+      *aExtraState |= nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
+    }
   }
 
   if (!(state & nsIAccessibleStates::STATE_UNAVAILABLE)) {  // If not disabled
