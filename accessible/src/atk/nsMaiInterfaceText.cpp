@@ -285,9 +285,11 @@ getCharacterExtentsCB(AtkText *aText, gint aOffset,
     PRInt32 extY = 0, extX = 0;
     PRInt32 extWidth = 0, extHeight = 0;
 
-    PRUint32 geckoCoordType = (aCoords == ATK_XY_SCREEN) ?
-        nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE :
-        nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE;
+    PRUint32 geckoCoordType;
+    if (aCoords == ATK_XY_SCREEN)
+        geckoCoordType = nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE;
+    else
+        geckoCoordType = nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE;
 
     nsresult rv = accText->GetCharacterExtents(aOffset, &extX, &extY,
                                                &extWidth, &extHeight,
@@ -317,9 +319,11 @@ getRangeExtentsCB(AtkText *aText, gint aStartOffset, gint aEndOffset,
     PRInt32 extY = 0, extX = 0;
     PRInt32 extWidth = 0, extHeight = 0;
 
-    PRUint32 geckoCoordType = (aCoords == ATK_XY_SCREEN) ?
-        nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE :
-        nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE;
+    PRUint32 geckoCoordType;
+    if (aCoords == ATK_XY_SCREEN)
+        geckoCoordType = nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE;
+    else
+        geckoCoordType = nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE;
 
     nsresult rv = accText->GetRangeExtents(aStartOffset, aEndOffset,
                                            &extX, &extY,
@@ -363,9 +367,11 @@ getOffsetAtPointCB(AtkText *aText,
     NS_ENSURE_TRUE(accText, -1);
 
     PRInt32 offset = 0;
-    PRUint32 geckoCoordType = (aCoords == ATK_XY_SCREEN) ?
-        nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE :
-        nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE;
+    PRUint32 geckoCoordType;
+    if (aCoords == ATK_XY_SCREEN)
+        geckoCoordType = nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE;
+    else
+        geckoCoordType = nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE;
 
     accText->GetOffsetAtPoint(aX, aY, geckoCoordType, &offset);
     return NS_STATIC_CAST(gint, offset);

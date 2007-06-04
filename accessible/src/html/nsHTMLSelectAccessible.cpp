@@ -806,9 +806,13 @@ void nsHTMLSelectOptionAccessible::SelectionChangedIfOption(nsIContent *aPossibl
   privateMultiSelect->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
                       multiSelect, nsnull);
   PRUint32 state = State(optionAccessible);
-  PRUint32 eventType = (state & nsIAccessibleStates::STATE_SELECTED) ?
-                       PRUint32(nsIAccessibleEvent::EVENT_SELECTION_ADD) :
-                       PRUint32(nsIAccessibleEvent::EVENT_SELECTION_REMOVE); 
+  PRUint32 eventType;
+  if (state & nsIAccessibleStates::STATE_SELECTED) {
+    eventType = nsIAccessibleEvent::EVENT_SELECTION_ADD;
+  }
+  else {
+    eventType = nsIAccessibleEvent::EVENT_SELECTION_REMOVE;
+  } 
   privateMultiSelect->FireToolkitEvent(eventType, optionAccessible, nsnull);
 }
 

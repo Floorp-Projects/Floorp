@@ -292,8 +292,12 @@ nsXULMenuitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     *aState |= nsIAccessibleStates::STATE_HASPOPUP;
     PRBool isOpen;
     element->HasAttribute(NS_LITERAL_STRING("open"), &isOpen);
-    *aState |= isOpen ? nsIAccessibleStates::STATE_EXPANDED :
-                        nsIAccessibleStates::STATE_COLLAPSED;
+    if (isOpen) {
+      *aState |= nsIAccessibleStates::STATE_EXPANDED;
+    }
+    else {
+      *aState |= nsIAccessibleStates::STATE_COLLAPSED;
+    }
   }
 
   nsAutoString menuItemType;
