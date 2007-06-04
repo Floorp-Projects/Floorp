@@ -150,6 +150,7 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
     JSOp op;
     const JSCodeSpec *cs;
     intN nuses;
+    uintN stackLimit;
 
     pc = CG_CODE(cg, target);
     op = (JSOp) *pc;
@@ -182,8 +183,10 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
                                      numBuf);
     }
     cg->stackDepth += cs->ndefs;
-    if ((uintN)cg->stackDepth > cg->maxStackDepth)
-        cg->maxStackDepth = cg->stackDepth;
+    stackLimit = (uintN)cg->stackDepth +
+                 ((cs->format >> JOF_TMPSLOT_SHIFT) & 1);
+    if (stackLimit > cg->maxStackDepth)
+        cg->maxStackDepth = stackLimit;
 }
 
 ptrdiff_t

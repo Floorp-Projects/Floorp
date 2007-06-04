@@ -88,31 +88,35 @@ typedef enum JSOpLength {
                                      atom index */
 #define JOF_LOCAL         14      /* block-local operand stack variable */
 #define JOF_TYPEMASK      0x000f  /* mask for above immediate types */
-#define JOF_NAME          0x0010  /* name operation */
-#define JOF_PROP          0x0020  /* obj.prop operation */
-#define JOF_ELEM          0x0030  /* obj[index] operation */
-#define JOF_XMLNAME       0x0040  /* XML name: *, a::b, @a, @a::b, etc. */
-#define JOF_VARPROP       0x0050  /* x.prop for arg, var, or local x */
-#define JOF_MODEMASK      0x0070  /* mask for above addressing modes */
-#define JOF_SET           0x0080  /* set (i.e., assignment) operation */
-#define JOF_DEL           0x0100  /* delete operation */
-#define JOF_DEC           0x0200  /* decrement (--, not ++) opcode */
-#define JOF_INC           0x0400  /* increment (++, not --) opcode */
-#define JOF_INCDEC        0x0600  /* increment or decrement opcode */
-#define JOF_POST          0x0800  /* postorder increment or decrement */
-#define JOF_IMPORT        0x1000  /* import property op */
-#define JOF_FOR           0x2000  /* for-in property op */
+#define JOF_NAME          (1U<<4) /* name operation */
+#define JOF_PROP          (2U<<4) /* obj.prop operation */
+#define JOF_ELEM          (3U<<4) /* obj[index] operation */
+#define JOF_XMLNAME       (4U<<4) /* XML name: *, a::b, @a, @a::b, etc. */
+#define JOF_VARPROP       (5U<<4) /* x.prop for arg, var, or local x */
+#define JOF_MODEMASK      (7U<<4) /* mask for above addressing modes */
+#define JOF_SET           (1U<<7) /* set (i.e., assignment) operation */
+#define JOF_DEL           (1U<<8) /* delete operation */
+#define JOF_DEC           (1U<<9) /* decrement (--, not ++) opcode */
+#define JOF_INC           (2U<<9) /* increment (++, not --) opcode */
+#define JOF_INCDEC        (3U<<9) /* increment or decrement opcode */
+#define JOF_POST         (1U<<11) /* postorder increment or decrement */
+#define JOF_IMPORT       (1U<<12) /* import property op */
+#define JOF_FOR          (1U<<13) /* for-in property op */
 #define JOF_ASSIGNING     JOF_SET /* hint for JSClass.resolve, used for ops
                                      that do simplex assignment */
-#define JOF_DETECTING     0x4000  /* object detection flag for JSNewResolveOp */
-#define JOF_BACKPATCH     0x8000  /* backpatch placeholder during codegen */
-#define JOF_LEFTASSOC    0x10000  /* left-associative operator */
-#define JOF_DECLARING    0x20000  /* var, const, or function declaration op */
-#define JOF_ATOMBASE     0x40000  /* atom segment base setting prefix op */
-#define JOF_CALLOP       0x80000  /* call operation pushing function and this */
-#define JOF_PARENHEAD   0x100000  /* opcode consumes value of expression in
+#define JOF_DETECTING    (1U<<14) /* object detection for JSNewResolveOp */
+#define JOF_BACKPATCH    (1U<<15) /* backpatch placeholder during codegen */
+#define JOF_LEFTASSOC    (1U<<16) /* left-associative operator */
+#define JOF_DECLARING    (1U<<17) /* var, const, or function declaration op */
+#define JOF_ATOMBASE     (1U<<18) /* atom segment base setting prefix op */
+#define JOF_CALLOP       (1U<<19) /* call operation that pushes function and
+                                     this */
+#define JOF_PARENHEAD    (1U<<20) /* opcode consumes value of expression in
                                      parenthesized statement head */
-#define JOF_INVOKE      0x200000  /* JSOP_CALL, JSOP_NEW, JSOP_EVAL */
+#define JOF_INVOKE       (1U<<21) /* JSOP_CALL, JSOP_NEW, JSOP_EVAL */
+#define JOF_TMPSLOT      (1U<<22) /* interpreter uses extra temporray slot
+                                     to root intermediate objects */
+#define JOF_TMPSLOT_SHIFT 22
 
 /* Shorthands for mode from format and mode from opcode. */
 #define JOF_MODE(fmt)   ((fmt) & JOF_MODEMASK)
