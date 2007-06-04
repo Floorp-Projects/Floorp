@@ -125,16 +125,12 @@ function G_DebugL(who, msg) {
 
     if (zone.zoneIsEnabled()) {
       G_debugService.dump(
-        G_File.LINE_END_CHAR +
-        "************************************************************" +
-        G_File.LINE_END_CHAR);
+        "\n************************************************************\n");
 
       G_Debug(who, msg);
 
       G_debugService.dump(
-        "************************************************************" +
-        G_File.LINE_END_CHAR +
-        G_File.LINE_END_CHAR);
+        "************************************************************\n\n");
     }
   }
 }
@@ -149,7 +145,7 @@ function G_DebugL(who, msg) {
 function G_TraceCall(who, msg) {
   if (G_GDEBUG) {
     if (G_debugService.callTracingEnabled()) {
-      G_debugService.dump(msg + G_File.LINE_END_CHAR);
+      G_debugService.dump(msg + "\n");
     }
   }
 }
@@ -282,9 +278,7 @@ G_DebugZone.prototype.disableZone = function() {
 G_DebugZone.prototype.debug = function(msg) {
   if (G_GDEBUG) {
     if (this.zoneIsEnabled()) {
-      this.debugService_.dump("[%s] %s%s".subs(this.zone_,
-                                               msg,
-                                               G_File.LINE_END_CHAR));
+      this.debugService_.dump("[%s] %s\n".subs(this.zone_, msg));
     }
   }
 }
@@ -296,9 +290,7 @@ G_DebugZone.prototype.debug = function(msg) {
  */
 G_DebugZone.prototype.error = function(msg) {
   if (G_GDEBUG) {
-    this.debugService_.dump("[%s] %s%s".subs(this.zone_,
-                                             msg,
-                                             G_File.LINE_END_CHAR));
+    this.debugService_.dump("[%s] %s\n".subs(this.zone_, msg));
     throw new Error(msg);
     debugger;
   }
@@ -561,8 +553,7 @@ G_DebugService.prototype.dump = function(msg) {
                       .getService(Components.interfaces.nsIConsoleService);
         console.logStringMessage(msg);
       } catch(e) {
-        dump("G_DebugZone ERROR: COULD NOT DUMP TO CONSOLE" +
-             G_File.LINE_END_CHAR);
+        dump("G_DebugZone ERROR: COULD NOT DUMP TO CONSOLE\n");
       }
     }
 
@@ -575,11 +566,25 @@ G_DebugService.prototype.dump = function(msg) {
  */
 G_DebugService.prototype.maybeDumpToFile = function(msg) {
   if (this.logFileIsEnabled() && this.logFile_) {
-    if (!this.logWriter_) {
-      this.logWriter_ = new G_FileWriter(this.logFile_, true);
-    }
 
-    this.logWriter_.write(msg);
+    /* try to get the correct line end character for this platform */
+    if (!this._LINE_END_CHAR)
+      this._LINE_END_CHAR =
+        Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
+                                         .OS == "WINNT" ? "\r\n" : "\n";
+    if (this._LINE_END_CHAR != "\n")
+      msg = msg.replace(/\n/g, this._LINE_END_CHAR);
+
+    try {
+      var stream = Cc["@mozilla.org/network/file-output-stream;1"]
+                   .createInstance(Ci.nsIFileOutputStream);
+      stream.init(this.logFile_,
+                  0x02 | 0x08 | 0x10 /* PR_WRONLY | PR_CREATE_FILE | PR_APPEND */
+                  -1 /* default perms */, 0 /* no special behavior */);
+      stream.write(msg, msg.length);
+    } finally {
+      stream.close();
+    }
   }
 }
 
@@ -598,7 +603,7 @@ G_DebugService.prototype.observe = function(consoleMessage) {
       // Only report these messages if the error level is INFO.
       if (errorLevel == G_DebugService.ERROR_LEVEL_INFO) {
         this.maybeDumpToFile(G_DebugService.ERROR_LEVEL_INFO + ": " + 
-                             consoleMessage.message + G_File.LINE_END_CHAR);
+                             consoleMessage.message + "\n");
       }
 
       return;
@@ -650,13 +655,10 @@ G_DebugService.prototype.observe = function(consoleMessage) {
  */
 G_DebugService.prototype.reportScriptError_ = function(message, sourceName, 
                                                        lineNumber, label) {
-  var message = ["",
-                 "------------------------------------------------------------",
-                 label + ": " + message,
-                 "location: " + sourceName + ", " + "line: " + lineNumber,
-                 "------------------------------------------------------------",
-                 "",
-                 ""].join(G_File.LINE_END_CHAR);
+  var message = "\n------------------------------------------------------------\n" +
+                label + ": " + message +
+                "\nlocation: " + sourceName + ", " + "line: " + lineNumber +
+                "\n------------------------------------------------------------\n\n";
 
   dump(message);
   this.maybeDumpToFile(message);
