@@ -3343,8 +3343,10 @@ nsGlobalWindow::SetFullScreen(PRBool aFullScreen)
 {
   FORWARD_TO_OUTER(SetFullScreen, (aFullScreen), NS_ERROR_NOT_INITIALIZED);
 
+  PRBool rootWinFullScreen;
+  GetFullScreen(&rootWinFullScreen);
   // Only chrome can change our fullScreen mode.
-  if (aFullScreen == mFullScreen || 
+  if (aFullScreen == rootWinFullScreen || 
       !nsContentUtils::IsCallerTrustedForWrite()) {
     return NS_OK;
   }
@@ -3390,6 +3392,18 @@ nsGlobalWindow::GetFullScreen(PRBool* aFullScreen)
 {
   FORWARD_TO_OUTER(GetFullScreen, (aFullScreen), NS_ERROR_NOT_INITIALIZED);
 
+  // Get the fullscreen value of the root window, to always have the value
+  // accurate, even when called from content.
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(mDocShell);
+  nsCOMPtr<nsIDocShellTreeItem> rootItem;
+  treeItem->GetRootTreeItem(getter_AddRefs(rootItem));
+  if (rootItem != treeItem) {
+    nsCOMPtr<nsIDOMWindowInternal> window = do_GetInterface(rootItem);
+    if (window)
+      return window->GetFullScreen(aFullScreen);
+  }
+
+  // We are the root window, or something went wrong. Return our internal value.
   *aFullScreen = mFullScreen;
   return NS_OK;
 }
