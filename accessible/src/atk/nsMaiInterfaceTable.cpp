@@ -84,13 +84,14 @@ refAtCB(AtkTable *aTable, gint aRow, gint aColumn)
     if (NS_FAILED(rv) || !cell)
         return nsnull;
 
-    nsIAccessible *tmpAcc = cell;
-    nsAccessibleWrap *cellAccWrap = NS_STATIC_CAST(nsAccessibleWrap *, tmpAcc);
+    void *cellAtkObjPtr = nsnull;
+    cell->GetNativeInterface(&cellAtkObjPtr);
+    if (!cellAtkObjPtr)
+        return nsnull;
 
-    AtkObject *atkObj = cellAccWrap->GetAtkObject();
-    if (atkObj)
-        g_object_ref(atkObj);
-    return atkObj;
+    AtkObject *cellAtkObj = ATK_OBJECT(cellAtkObjPtr);
+    g_object_ref(cellAtkObj);
+    return cellAtkObj;
 }
 
 gint
@@ -237,11 +238,9 @@ getCaptionCB(AtkTable *aTable)
     if (NS_FAILED(rv) || !caption)
         return nsnull;
 
-    nsIAccessible *tmpAcc = caption;
-    nsAccessibleWrap *captionAccWrap =
-        NS_STATIC_CAST(nsAccessibleWrap *, tmpAcc);
-
-    return captionAccWrap->GetAtkObject();
+    void *captionAtkObj = nsnull;
+    caption->GetNativeInterface(&captionAtkObj);
+    return ATK_OBJECT(captionAtkObj);
 }
 
 const gchar*
@@ -291,11 +290,9 @@ getColumnHeaderCB(AtkTable *aTable, gint aColumn)
     header->CellRefAt(0, aColumn, getter_AddRefs(accHeader));
     NS_ENSURE_TRUE(accHeader, nsnull);
 
-    nsIAccessible *tmpAcc = accHeader;
-    nsAccessibleWrap *headerAccWrap =
-        NS_STATIC_CAST(nsAccessibleWrap *, tmpAcc);
-
-    return headerAccWrap->GetAtkObject();
+    void *headerAtkObj = nsnull;
+    accHeader->GetNativeInterface(&headerAtkObj);
+    return ATK_OBJECT(headerAtkObj);
 }
 
 const gchar*
@@ -332,13 +329,11 @@ getRowHeaderCB(AtkTable *aTable, gint aRow)
     NS_ENSURE_SUCCESS(rv, nsnull);
 
     nsCOMPtr<nsIAccessible> accHeader(do_QueryInterface(header));
-    NS_ENSURE_TRUE(accTable, nsnull);
+    NS_ENSURE_TRUE(accHeader, nsnull);
 
-    nsIAccessible *tmpAcc = accHeader;
-    nsAccessibleWrap *headerAccWrap =
-        NS_STATIC_CAST(nsAccessibleWrap *, tmpAcc);
-
-    return headerAccWrap->GetAtkObject();
+    void *headerAtkObj = nsnull;
+    accHeader->GetNativeInterface(&headerAtkObj);
+    return ATK_OBJECT(headerAtkObj);
 }
 
 AtkObject*

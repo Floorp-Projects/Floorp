@@ -95,17 +95,18 @@ refSelectionCB(AtkSelection *aSelection, gint i)
                             getter_AddRefs(accSelection));
     NS_ENSURE_TRUE(accSelection, nsnull);
 
-    AtkObject *atkObj = nsnull;
     nsCOMPtr<nsIAccessible> accSelect;
-    nsresult rv = accSelection->RefSelection(i, getter_AddRefs(accSelect));
-    if (NS_SUCCEEDED(rv) && accSelect) {
-        nsIAccessible *tmpAcc = accSelect;
-        nsAccessibleWrap *refAccWrap =
-            NS_STATIC_CAST(nsAccessibleWrap *, tmpAcc);
-        atkObj = refAccWrap->GetAtkObject();
-        if (atkObj)
-            g_object_ref(atkObj);
+    accSelection->RefSelection(i, getter_AddRefs(accSelect));
+    if (!accSelect) {
+        return nsnull;
     }
+    void *atkObjPtr = nsnull;
+    accSelect->GetNativeInterface(&atkObjPtr);
+    if (!atkObjPtr) {
+        return nsnull;
+    }
+    AtkObject *atkObj = ATK_OBJECT(atkObjPtr);
+    g_object_ref(atkObj);
     return atkObj;
 }
 
