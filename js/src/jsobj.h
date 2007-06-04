@@ -501,10 +501,14 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 
 /*
  * Specialized subroutine that allows caller to preset JSRESOLVE_* flags.
+ * JSRESOLVE_HIDDEN flags hidden function param/local name lookups, just for
+ * internal use by fun_resolve and similar built-ins.
  */
 extern JSBool
 js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                            JSObject **objp, JSProperty **propp);
+
+#define JSRESOLVE_HIDDEN        0x8000
 
 extern JS_FRIEND_API(JSBool)
 js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
