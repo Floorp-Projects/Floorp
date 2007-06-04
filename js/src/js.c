@@ -3091,7 +3091,7 @@ snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             JS_ReportError(cx, "can't seek end of %s", pathname);
         } else {
             len = ftell(file);
-            if (fseek(file, 0, SEEK_SET) == EOF) {
+            if (len == -1 || fseek(file, 0, SEEK_SET) == EOF) {
                 JS_ReportError(cx, "can't seek start of %s", pathname);
             } else {
                 buf = JS_malloc(cx, len + 1);
