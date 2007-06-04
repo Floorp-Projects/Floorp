@@ -54,6 +54,8 @@ js1_5/String/regress-56940-02.js
 js1_5/Regress/regress-271716-n.js
 js1_5/Regress/regress-303213.js
 js1_5/Regress/regress-312588.js
+js1_5/Array/regress-157652.js
+js1_5/Regress/regress-330352.js
 
 # Tests that create very large strings by concatentation
 js1_5/extensions/regress-336409-1.js
