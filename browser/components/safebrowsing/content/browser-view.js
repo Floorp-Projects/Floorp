@@ -53,11 +53,6 @@
 //   etc.) and let's the BrowserView know about any user action 
 //   having to do with the problems it is tracking.
 //
-// - from the TabbedBrowserWatcher. When the BrowserView is keeping
-//   track of a problematic document it listens for interesting
-//   events affecting it, for example pagehide (at which point
-//   we presumably hide the warning if we're showing it).
-//
 // The BrowserView associates at most one "problem" with each Document
 // in the browser window. It keeps state about which Documents are 
 // problematic by storing a "problem queue" on each browser (tab).
@@ -115,45 +110,13 @@
  * aware of the problem.
  *
  * @constructor
- * @param tabWatcher Reference to the TabbedBrowserWatcher we'll use to query 
+ * @param tabBrowser Reference to the main tabbrowser we'll use to query 
  *                   for information about active tabs/browsers.
- * @param doc Reference to the XUL Document (browser window) in which the 
- *            tabwatcher is watching
  */ 
-function PROT_BrowserView(tabWatcher, doc) {
+function PROT_BrowserView(tabBrowser) {
   this.debugZone = "browserview";
-  this.tabWatcher_ = tabWatcher;
-  this.doc_ = doc;
-}
-
-/**
- * See if we have any Documents with a given (problematic) URL that
- * haven't yet been marked as problems. Called as a subroutine by
- * tryToHandleProblemRequest().
- *
- * @param url String containing the URL to look for
- *
- * @returns Reference to an unhandled Document with the problem URL or null
- */
-PROT_BrowserView.prototype.getFirstUnhandledDocWithURL_ = function(url) {
-  var docs = this.tabWatcher_.getDocumentsFromURL(url);
-  if (!docs.length)
-    return null;
-
-  for (var i = 0; i < docs.length; i++) {
-    // We only care about top level documents (i.e., we don't care about
-    // frames).
-    if (docs[i].defaultView.top != docs[i].defaultView)
-      continue;
-
-    var browser = this.tabWatcher_.getBrowserFromDocument(docs[i]);
-    G_Assert(this, !!browser, "Found doc but can't find browser???");
-    var alreadyHandled = this.getProblem_(docs[i], browser);
-
-    if (!alreadyHandled)
-      return docs[i];
-  }
-  return null;
+  this.tabBrowser_ = tabBrowser;
+  this.doc_ = this.tabBrowser_.ownerDocument;
 }
 
 /**
@@ -172,16 +135,19 @@ PROT_BrowserView.prototype.getFirstUnhandledDocWithURL_ = function(url) {
  */
 PROT_BrowserView.prototype.tryToHandleProblemRequest = function(warden,
                                                                 request) {
+  // XXX: pass around the URL instead of the request.  request.name isn't
+  // really supposed to be used and isn't guaranteed to give the URL.
+  var url = request.name;
+  var browsers = this.tabBrowser_.browsers;
+  for (var i = 0; i < browsers.length; i++) {
+    var browser = browsers[i];
+    var doc = browser.contentDocument;
 
-  var doc = this.getFirstUnhandledDocWithURL_(request.name);
-  if (doc) {
-    var browser = this.tabWatcher_.getBrowserFromDocument(doc);
-    G_Assert(this, !!browser, "Couldn't get browser from problem doc???");
-    G_Assert(this, !this.getProblem_(doc, browser),
-             "Doc is supposedly unhandled, but has state?");
-    
-    this.isProblemDocument_(browser, doc, warden);
-    return true;
+    // We only care about top level documents (and not about frames)
+    if (doc.location.href == url && !this.getProblem_(doc, browser)) {
+      this.isProblemDocument_(browser, doc, warden);
+      return true;
+    }
   }
   return false;
 }
@@ -403,7 +369,7 @@ PROT_BrowserView.prototype.unqueueNextProblem_ = function(browser) {
     // Thanks to bryner for helping to track the bfcache bug down.
     // https://bugzilla.mozilla.org/show_bug.cgi?id=319646
     
-    if (this.tabWatcher_.getCurrentBrowser() === browser)
+    if (this.tabBrowser_.selectedBrowser === browser)
       new G_Alarm(BindToObject(this.problemBrowserMaybeSelected, 
                                this, 
                                browser),
@@ -549,7 +515,7 @@ PROT_BrowserView.prototype.problemBrowserUnselected = function(browser) {
 PROT_BrowserView.prototype.problemBrowserMaybeSelected = function(browser) {
   var problem = this.getCurrentProblem_(browser);
 
-  if (this.tabWatcher_.getCurrentBrowser() === browser &&
+  if (this.tabBrowser_.selectedBrowser === browser &&
       problem &&
       problem.displayer_.isActive()) 
     this.problemBrowserSelected(browser);
