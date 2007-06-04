@@ -43,11 +43,8 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const G_GDEBUG = false;
 
-// TODO: get rid of application.js and filesystem.js (not used much)
-
 #include ../content/moz/lang.js
 #include ../content/moz/preferences.js
-#include ../content/moz/filesystem.js
 #include ../content/moz/debug.js
 #include ../content/moz/alarm.js
 #include ../content/moz/base64.js
@@ -56,7 +53,6 @@ const G_GDEBUG = false;
 #include ../content/moz/observer.js
 #include ../content/moz/protocol4.js
 
-#include ../content/application.js
 #include ../content/request-backoff.js
 #include ../content/url-crypto.js
 #include ../content/url-crypto-key-manager.js

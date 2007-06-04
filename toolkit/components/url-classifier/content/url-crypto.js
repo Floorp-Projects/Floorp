@@ -404,8 +404,9 @@ function TEST_PROT_UrlCrypto() {
 
     var kf = "test.txt";
     function removeTestFile(f) {
-      var appDir = new PROT_ApplicationDirectory();
-      var file = appDir.getAppDirFileInterface();
+      var file = Cc["@mozilla.org/file/directory_service;1"]
+                 .getService(Ci.nsIProperties)
+                 .get("ProfD", Ci.nsILocalFile); /* profile directory */
       file.append(f);
       if (file.exists())
         file.remove(false /* do not recurse */ );

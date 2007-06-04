@@ -72,13 +72,10 @@ function PROT_Application() {
       TEST_PROT_URLCanonicalizer();
       TEST_G_Preferences();
       TEST_G_Observer();
-      TEST_G_File();
       TEST_PROT_WireFormat();
       // UrlCrypto's test should come before the key manager's
       TEST_PROT_UrlCrypto();
       TEST_PROT_UrlCryptoKeyManager();
-      TEST_G_MozVersionNumber();
-      TEST_G_ThisFirefoxVersion();
       G_DebugL("UNITTESTS", "END UNITTESTS");
     }
   };
