@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 sw=2 et tw=80: */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -226,18 +226,31 @@ WrapFunction(JSContext* cx, JSObject* funobj, jsval *rval)
     *rval = OBJECT_TO_JSVAL(funobj);
     return JS_TRUE;
   }
+
+  // Ensure that we've been called from JS. Native code should extract
+  // the wrapped native and deal with that directly.
+  // XXX Can we simply trust |cx| here?
+  JSStackFrame *iterator = nsnull;
+  if (!::JS_FrameIterator(cx, &iterator)) {
+    ::JS_ReportError(cx, "XPCNativeWrappers must be used from script");
+    return JS_FALSE;
+  }
   
   // Create a new function that'll call our given function.  This new
   // function's parent will be the original function and that's how we
   // get the right thing to call when this function is called.
+  // Note that we pass nsnull as the nominal parent so that we'll inherit
+  // our caller's Function.prototype.
   JSFunction *funWrapper =
-    ::JS_NewFunction(cx, XPC_NW_FunctionWrapper, 0, 0, funobj,
+    ::JS_NewFunction(cx, XPC_NW_FunctionWrapper, 0, 0, nsnull,
                      "XPCNativeWrapper function wrapper");
   if (!funWrapper) {
     return JS_FALSE;
   }
 
-  *rval = OBJECT_TO_JSVAL(::JS_GetFunctionObject(funWrapper));
+  JSObject* funWrapperObj = ::JS_GetFunctionObject(funWrapper);
+  ::JS_SetParent(cx, funWrapperObj, funobj);
+  *rval = OBJECT_TO_JSVAL(funWrapperObj);
   return JS_TRUE;
 }
 
