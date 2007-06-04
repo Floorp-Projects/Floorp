@@ -2223,7 +2223,7 @@ static JSFunctionSpec shell_functions[] = {
     {"quit",            Quit,           0,0,0},
     {"gc",              GC,             0,0,0},
 #ifdef JS_GC_ZEAL
-    {"gczeal",        GCZeal,       1,0,0},
+    {"gczeal",          GCZeal,         1,0,0},
 #endif
     {"trap",            Trap,           3,0,0},
     {"untrap",          Untrap,         2,0,0},
