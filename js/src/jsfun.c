@@ -1092,16 +1092,21 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     JSString *str;
     JSAtom *prototypeAtom;
 
+    /*
+     * No need to reflect fun.prototype in 'fun.prototype = ...' or in an
+     * unqualified reference to prototype, which the emitter looks up as a
+     * hidden atom when attempting to bind to a formal parameter or local
+     * variable slot.
+     */
+    if (flags & (JSRESOLVE_ASSIGNING | JSRESOLVE_HIDDEN))
+        return JS_TRUE;
+
     if (!JSVAL_IS_STRING(id))
         return JS_TRUE;
 
     /* No valid function object should lack private data, but check anyway. */
     fun = (JSFunction *)JS_GetInstancePrivate(cx, obj, &js_FunctionClass, NULL);
     if (!fun || !fun->object)
-        return JS_TRUE;
-
-    /* No need to reflect fun.prototype in 'fun.prototype = ...'. */
-    if (flags & JSRESOLVE_ASSIGNING)
         return JS_TRUE;
 
     /*
