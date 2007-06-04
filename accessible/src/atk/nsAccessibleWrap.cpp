@@ -361,11 +361,12 @@ NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
 {
     *aOutAccessible = nsnull;
 
-    if (!IsEmbeddedObject(this)) {
-      // We don't create ATK objects for nsIAccessible plain text leaves
-      return NS_ERROR_FAILURE;
-    }
     if (!mAtkObject) {
+        if (!IsEmbeddedObject(this)) {
+            // We don't create ATK objects for nsIAccessible plain text leaves
+            return NS_ERROR_FAILURE;
+        }
+
         GType type = GetMaiAtkType(CreateMaiInterfaces());
         NS_ENSURE_TRUE(type, NS_ERROR_FAILURE);
         mAtkObject =
