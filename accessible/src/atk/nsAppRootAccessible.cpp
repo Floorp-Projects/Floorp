@@ -86,10 +86,8 @@ static guint add_listener (GSignalEmissionHook listener,
 static AtkKeyEventStruct *atk_key_event_from_gdk_event_key(GdkEventKey *key);
 static gboolean notify_hf(gpointer key, gpointer value, gpointer data);
 static void insert_hf(gpointer key, gpointer value, gpointer data);
-static gboolean remove_hf(gpointer key, gpointer value, gpointer data);
 static gint mai_key_snooper(GtkWidget *the_widget, GdkEventKey *event,
                             gpointer func_data);
-static void value_destroy_func(gpointer data);
 
 static GHashTable *listener_list = NULL;
 static gint listener_idx = 1;
@@ -120,9 +118,15 @@ struct MaiUtil
     GList *listener_list;
 };
 
-struct MaiKeyListenerInfo
+struct MaiKeyEventInfo
 {
-    AtkKeySnoopFunc listener;
+    AtkKeyEventStruct *key_event;
+    gpointer func_data;
+};
+
+union AtkKeySnoopFuncPointer
+{
+    AtkKeySnoopFunc func_ptr;
     gpointer data;
 };
 
@@ -259,6 +263,7 @@ mai_util_add_global_event_listener(GSignalEmissionHook listener,
             rc = add_listener (listener, split_string[1], split_string[2],
                                event_type);
         }
+        g_strfreev(split_string);
     }
     return rc;
 }
@@ -289,19 +294,13 @@ mai_util_remove_global_event_listener(guint remove_listener)
                 g_hash_table_remove(listener_list, &tmp_idx);
             }
             else {
-                /* do not use g_warning with such complex format args, */
-                /* Forte CC can not preprocess it correctly */
-                g_log((gchar *)0, G_LOG_LEVEL_WARNING,
-                      "Invalid listener hook_id %ld or signal_id %d\n",
-                      listener_info->hook_id, listener_info->signal_id);
+                g_warning("Invalid listener hook_id %ld or signal_id %d\n",
+                          listener_info->hook_id, listener_info->signal_id);
             }
         }
         else {
-            /* do not use g_warning with such complex format args, */
-            /* Forte CC can not preprocess it correctly */
-            g_log((gchar *)0, G_LOG_LEVEL_WARNING,
-                  "No listener with the specified listener id %d",
-                  remove_listener);
+            g_warning("No listener with the specified listener id %d",
+                      remove_listener);
         }
     }
     else {
@@ -350,16 +349,10 @@ atk_key_event_from_gdk_event_key (GdkEventKey *key)
 static gboolean
 notify_hf(gpointer key, gpointer value, gpointer data)
 {
-    AtkKeyEventStruct *event = (AtkKeyEventStruct *) data;
-    MaiKeyListenerInfo *info = (MaiKeyListenerInfo *)value;
-
-    return (*(info->listener))(event, info->data) ? TRUE : FALSE;
-}
-
-static void
-value_destroy_func(gpointer data)
-{
-    g_free(data);
+    MaiKeyEventInfo *info = (MaiKeyEventInfo *)data;
+    AtkKeySnoopFuncPointer atkKeySnoop;
+    atkKeySnoop.data = value;
+    return (atkKeySnoop.func_ptr)(info->key_event, info->func_data) ? TRUE : FALSE;
 }
 
 static void
@@ -369,30 +362,23 @@ insert_hf(gpointer key, gpointer value, gpointer data)
     g_hash_table_insert (new_table, key, value);
 }
 
-static gboolean
-remove_hf(gpointer key, gpointer value, gpointer data)
-{
-    AtkKeySnoopFunc listener = (AtkKeySnoopFunc)data;
-    MaiKeyListenerInfo *info = (MaiKeyListenerInfo *)value;
-    if (info->listener == listener)
-        return TRUE;
-    return FALSE;
-}
-
 static gint
 mai_key_snooper(GtkWidget *the_widget, GdkEventKey *event, gpointer func_data)
 {
     /* notify each AtkKeySnoopFunc in turn... */
 
+    MaiKeyEventInfo *info = g_new0(MaiKeyEventInfo, 1);
     gint consumed = 0;
     if (key_listener_list) {
-        AtkKeyEventStruct *keyEvent = atk_key_event_from_gdk_event_key(event);
         GHashTable *new_hash = g_hash_table_new(NULL, NULL);
         g_hash_table_foreach (key_listener_list, insert_hf, new_hash);
-        consumed = g_hash_table_foreach_steal (new_hash, notify_hf, keyEvent);
+        info->key_event = atk_key_event_from_gdk_event_key (event);
+        info->func_data = func_data;
+        consumed = g_hash_table_foreach_steal (new_hash, notify_hf, info);
         g_hash_table_destroy (new_hash);
-        g_free (keyEvent);
+        g_free(info->key_event);
     }
+    g_free(info);
     return (consumed ? 1 : 0);
 }
 
@@ -403,27 +389,22 @@ mai_util_add_key_event_listener (AtkKeySnoopFunc listener,
     NS_ENSURE_TRUE(listener, 0);
 
     static guint key=0;
-    MaiKeyListenerInfo *info = g_new0(MaiKeyListenerInfo, 1);
-    NS_ENSURE_TRUE(info, 0);
-
-    info->listener = listener;
-    info->data = data;
 
     if (!key_listener_list) {
-        key_listener_list = g_hash_table_new_full(NULL, NULL, NULL,
-                                                  value_destroy_func);
-        key_snooper_id = gtk_key_snooper_install(mai_key_snooper, NULL);
+        key_listener_list = g_hash_table_new(NULL, NULL);
+        key_snooper_id = gtk_key_snooper_install(mai_key_snooper, data);
     }
+    AtkKeySnoopFuncPointer atkKeySnoop;
+    atkKeySnoop.func_ptr = listener;
     g_hash_table_insert(key_listener_list, GUINT_TO_POINTER (key++),
-                        (gpointer)info);
+                        atkKeySnoop.data);
     return key;
 }
 
 static void
 mai_util_remove_key_event_listener (guint remove_listener)
 {
-    g_hash_table_foreach_remove(key_listener_list, remove_hf,
-                                (gpointer)remove_listener);
+    g_hash_table_remove(key_listener_list, GUINT_TO_POINTER (remove_listener));
     if (g_hash_table_size(key_listener_list) == 0) {
         gtk_key_snooper_remove(key_snooper_id);
     }
