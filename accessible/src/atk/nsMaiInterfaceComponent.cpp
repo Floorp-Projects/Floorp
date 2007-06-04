@@ -77,16 +77,17 @@ refAccessibleAtPointCB(AtkComponent *aComponent,
     }
 
     nsCOMPtr<nsIAccessible> pointAcc;
-    nsresult rv = accWrap->GetChildAtPoint(aAccX, aAccY, getter_AddRefs(pointAcc));
-    if (NS_FAILED(rv))
+    accWrap->GetChildAtPoint(aAccX, aAccY, getter_AddRefs(pointAcc));
+    if (!pointAcc) {
         return nsnull;
+    }
 
-    nsIAccessible *tmpAcc = pointAcc;
-    nsAccessibleWrap *tmpAccWrap =
-        NS_STATIC_CAST(nsAccessibleWrap *, tmpAcc);
-    AtkObject *atkObj = tmpAccWrap->GetAtkObject();
-    if (!atkObj)
+    void *atkObjPtr = nsnull;
+    pointAcc->GetNativeInterface(&atkObjPtr);
+    if (!atkObjPtr) {
         return nsnull;
+    }
+    AtkObject *atkObj = ATK_OBJECT(atkObjPtr);
     g_object_ref(atkObj);
     return atkObj;
 }

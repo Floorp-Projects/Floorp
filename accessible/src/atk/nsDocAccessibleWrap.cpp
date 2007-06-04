@@ -76,16 +76,17 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
 
     nsresult rv = NS_ERROR_FAILURE;
 
-    nsAccessibleWrap *accWrap =
-        NS_STATIC_CAST(nsAccessibleWrap *, aAccessible);
     MAI_LOG_DEBUG(("\n\nReceived event: aEvent=%u, obj=0x%x, data=0x%x \n",
                    aEvent, aAccessible, aEventData));
+    void *atkObjPtr = nsnull;
+    aAccessible->GetNativeInterface(&atkObjPtr);
     // We don't create ATK objects for nsIAccessible plain text leaves,
     // just return NS_OK in such case
-    AtkObject *atkObj = accWrap->GetAtkObject();
-    if (!atkObj) {
+    if (!atkObjPtr) {
       return NS_OK;
     }
+    AtkObject *atkObj = ATK_OBJECT(atkObjPtr);
+    nsAccessibleWrap *accWrap = GetAccessibleWrap(atkObj);
 
     AtkTableChange * pAtkTableChange = nsnull;
 

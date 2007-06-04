@@ -243,16 +243,16 @@ getObjectCB(AtkHyperlink *aLink, gint aLinkIndex)
     NS_ENSURE_TRUE(accHyperlink, nsnull);
 
     nsCOMPtr<nsIAccessible> accObj;
-    nsresult rv = accHyperlink->GetObject(aLinkIndex, getter_AddRefs(accObj));
-    NS_ENSURE_SUCCESS(rv, nsnull);
-    AtkObject *atkObj = nsnull;
-    if (accObj) {
-        nsIAccessible *tmpObj = accObj;
-        nsAccessibleWrap *accWrap = NS_STATIC_CAST(nsAccessibleWrap *, tmpObj);
-        atkObj = accWrap->GetAtkObject();
+    accHyperlink->GetObject(aLinkIndex, getter_AddRefs(accObj));
+    NS_ENSURE_TRUE(accObj, nsnull);
+
+    void *atkObj = nsnull;
+    accObj->GetNativeInterface(&atkObj);
+    if (!atkObj) {
+        return nsnull;
     }
-    //no need to add ref it, because it is "get" not "ref" ???
-    return atkObj;
+    //no need to add ref it, because it is "get" not "ref"
+    return ATK_OBJECT(atkObj);
 }
 
 gint
