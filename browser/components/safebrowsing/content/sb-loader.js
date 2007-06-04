@@ -71,11 +71,9 @@ var safebrowsing = {
 
     // Each new browser window needs its own controller. 
 
-    var contentArea = document.getElementById("content");
-
     safebrowsing.progressListener.QueryInterface(Ci.nsIWebProgressListener);
     var phishWarden = new appContext.PROT_PhishingWarden(
-          safebrowsing.progressListener, document.getElementById("content"));
+        safebrowsing.progressListener, getBrowser());
     safebrowsing.phishWarden = phishWarden;
 
     // Register tables
@@ -88,14 +86,8 @@ var safebrowsing = {
 
     // Download/update lists if we're in non-enhanced mode
     phishWarden.maybeToggleUpdateChecking();
-    var tabWatcher = new appContext.G_TabbedBrowserWatcher(
-        contentArea,
-        "safebrowsing-watcher",
-        true /*ignore about:blank*/);
     safebrowsing.controller = new appContext.PROT_Controller(
-        window,
-        tabWatcher,
-        phishWarden);
+        window, getBrowser(), phishWarden);
 
     // Remove the global progress listener.  The phishingWarden moves
     // the progress listener to the tabbrowser so we don't need it anymore.
