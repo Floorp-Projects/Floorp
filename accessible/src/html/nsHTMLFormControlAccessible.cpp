@@ -452,8 +452,12 @@ nsHTMLTextFieldAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 
   nsCOMPtr<nsIDOMHTMLInputElement> htmlInput(do_QueryInterface(mDOMNode));
   // Is it an <input> or a <textarea> ?
-  *aExtraState |= htmlInput ? nsIAccessibleStates::EXT_STATE_SINGLE_LINE :
-                              nsIAccessibleStates::EXT_STATE_MULTI_LINE;
+  if (htmlInput) {
+    *aExtraState |= nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
+  }
+  else {
+    *aExtraState |= nsIAccessibleStates::EXT_STATE_MULTI_LINE;
+  }
 
   nsCOMPtr<nsIContent> bindingContent = content->GetBindingParent();
   if (bindingContent &&

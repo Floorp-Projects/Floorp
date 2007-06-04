@@ -802,8 +802,12 @@ nsXULTextFieldAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   PRBool isMultiLine = content->HasAttr(kNameSpaceID_None,
                                         nsAccessibilityAtoms::multiline);
 
-  *aExtraState |= (isMultiLine ? nsIAccessibleStates::EXT_STATE_MULTI_LINE :
-                                 nsIAccessibleStates::EXT_STATE_SINGLE_LINE);
+  if (isMultiLine) {
+    *aExtraState |= nsIAccessibleStates::EXT_STATE_MULTI_LINE;
+  }
+  else {
+    *aExtraState |= nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
+  }
 
   return NS_OK;
 }
