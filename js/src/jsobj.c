@@ -1276,20 +1276,23 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSPrincipals *principals;
     JSScript *script;
     JSBool ok;
+#if JS_HAS_EVAL_THIS_SCOPE
+    JSObject *callerScopeChain = NULL, *callerVarObj = NULL;
+    JSObject *setCallerScopeChain = NULL;
+    JSBool setCallerVarObj = JS_FALSE;
+#endif
 
     fp = cx->fp;
     caller = JS_GetScriptedCaller(cx, fp);
     JS_ASSERT(!caller || caller->pc);
     indirectCall = (caller && *caller->pc != JSOP_EVAL);
 
-    /* 
-     * Ban all indirect uses of eval (global.foo = eval; global.foo(...)) and
-     * calls that attempt to use a non-global object as the "with" object in
-     * the former indirect case.
-     */
-    if (indirectCall || OBJ_GET_PARENT(cx, obj)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BAD_INDIRECT_CALL, js_eval_str);
+    if (indirectCall &&
+        !JS_ReportErrorFlagsAndNumber(cx,
+                                      JSREPORT_WARNING | JSREPORT_STRICT,
+                                      js_GetErrorMessage, NULL,
+                                      JSMSG_BAD_INDIRECT_CALL,
+                                      js_eval_str)) {
         return JS_FALSE;
     }
 
@@ -1318,16 +1321,51 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     if (!scopeobj) {
-        /*
-         * Compile using caller's current scope object.
-         *
-         * NB: This means that native callers (who reach this point through
-         * the C API) must use the two parameter form.
-         */
+#if JS_HAS_EVAL_THIS_SCOPE
+        /* If obj.eval(str), emulate 'with (obj) eval(str)' in the caller. */
+        if (indirectCall) {
+            callerScopeChain = js_GetScopeChain(cx, caller);
+            if (!callerScopeChain)
+                return JS_FALSE;
+            OBJ_TO_INNER_OBJECT(cx, obj);
+            if (!obj)
+                return JS_FALSE;
+            if (obj != callerScopeChain) {
+                if (!js_CheckPrincipalsAccess(cx, obj,
+                                              caller->script->principals,
+                                              cx->runtime->atomState.evalAtom))
+                {
+                    return JS_FALSE;
+                }
+
+                scopeobj = js_NewWithObject(cx, obj, callerScopeChain, -1);
+                if (!scopeobj)
+                    return JS_FALSE;
+
+                /* Set fp->scopeChain too, for the compiler. */
+                caller->scopeChain = fp->scopeChain = scopeobj;
+
+                /* Remember scopeobj so we can null its private when done. */
+                setCallerScopeChain = scopeobj;
+            }
+
+            callerVarObj = caller->varobj;
+            if (obj != callerVarObj) {
+                /* Set fp->varobj too, for the compiler. */
+                caller->varobj = fp->varobj = obj;
+                setCallerVarObj = JS_TRUE;
+            }
+        }
+        /* From here on, control must exit through label out with ok set. */
+#endif
+
+        /* Compile using caller's current scope object. */
         if (caller) {
             scopeobj = js_GetScopeChain(cx, caller);
-            if (!scopeobj)
-                return JS_FALSE;
+            if (!scopeobj) {
+                ok = JS_FALSE;
+                goto out;
+            }
         }
     }
 
@@ -1363,8 +1401,10 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                                              JSSTRING_CHARS(str),
                                              JSSTRING_LENGTH(str),
                                              file, line);
-    if (!script)
-        return JS_FALSE;
+    if (!script) {
+        ok = JS_FALSE;
+        goto out;
+    }
 
     if (argc < 2) {
         /* Execute using caller's new scope object (might be a Call object). */
@@ -1382,6 +1422,18 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         ok = js_Execute(cx, scopeobj, script, caller, JSFRAME_EVAL, rval);
 
     JS_DestroyScript(cx, script);
+
+out:
+#if JS_HAS_EVAL_THIS_SCOPE
+    /* Restore OBJ_GET_PARENT(scopeobj) not callerScopeChain in case of Call. */
+    if (setCallerScopeChain) {
+        caller->scopeChain = callerScopeChain;
+        JS_ASSERT(OBJ_GET_CLASS(cx, setCallerScopeChain) == &js_WithClass);
+        JS_SetPrivate(cx, setCallerScopeChain, NULL);
+    }
+    if (setCallerVarObj)
+        caller->varobj = callerVarObj;
+#endif
     return ok;
 }
 
@@ -1736,6 +1788,7 @@ static JSFunctionSpec object_methods[] = {
     {js_toString_str,             js_obj_toString,    0, 0, OBJ_TOSTRING_EXTRA},
     {js_toLocaleString_str,       js_obj_toLocaleString, 0, 0, OBJ_TOSTRING_EXTRA},
     {js_valueOf_str,              obj_valueOf,        0,0,0},
+    {js_eval_str,                 obj_eval,           1,0,0},
 #if JS_HAS_OBJ_WATCHPOINT
     {js_watch_str,                obj_watch,          2,0,0},
     {js_unwatch_str,              obj_unwatch,        1,0,0},
@@ -2184,15 +2237,22 @@ JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj)
 {
     JSObject *proto;
+    jsval eval;
 
     proto = JS_InitClass(cx, obj, NULL, &js_ObjectClass, Object, 1,
                          object_props, object_methods, NULL, NULL);
     if (!proto)
         return NULL;
 
-    /* ECMA (15.1.2.1) says 'eval' is a property of the global object. */
-    if (!js_DefineFunction(cx, obj, cx->runtime->atomState.evalAtom,
-                           obj_eval, 1, 0)) {
+    /* ECMA (15.1.2.1) says 'eval' is also a property of the global object. */
+    if (!OBJ_GET_PROPERTY(cx, proto,
+                          ATOM_TO_JSID(cx->runtime->atomState.evalAtom),
+                          &eval)) {
+        return NULL;
+    }
+    if (!OBJ_DEFINE_PROPERTY(cx, obj,
+                             ATOM_TO_JSID(cx->runtime->atomState.evalAtom),
+                             eval, NULL, NULL, 0, NULL)) {
         return NULL;
     }
 
