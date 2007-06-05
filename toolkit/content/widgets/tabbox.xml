@@ -107,7 +107,7 @@
         <setter>
         <![CDATA[
           if (val && this.tabs)
-            this.tabs._selectNewTab(val);
+            this.tabs.selectedItem = val;
           return val;
         ]]>
         </setter>
