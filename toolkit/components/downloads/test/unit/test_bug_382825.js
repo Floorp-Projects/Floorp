@@ -35,64 +35,61 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// This tests the migration code to make sure we properly migrate downloads.rdf
-// Also tests cleanUp function of DM since we have a good number of entries to
-// clean up after importing.
-
-importDownloadsFile("downloads.rdf");
+// This tests the retryDownload function of nsIDownloadManager.  This function
+// was added in Bug 382825.
 
 const nsIDownloadManager = Ci.nsIDownloadManager;
 const dm = Cc["@mozilla.org/download-manager;1"].getService(nsIDownloadManager);
 
-function test_count_entries()
+function test_retry_canceled()
 {
-  var stmt = dm.DBConnection.createStatement("SELECT COUNT(*) " +
-                                             "FROM moz_downloads");
-  stmt.executeStep();
+  var dl = addDownload();
 
-  do_check_eq(7, stmt.getInt32(0));
+  // since we are going to be retrying a failed download, we need to inflate
+  // this so it doesn't stop our server
+  gDownloadCount++;
 
-  stmt.reset();
+  dm.cancelDownload(dl.id);
+
+  do_check_eq(nsIDownloadManager.DOWNLOAD_CANCELED, dl.state);
+
+  // Our download object will no longer be updated.
+  dm.retryDownload(dl.id);
 }
 
-function test_random_download()
+function test_retry_bad()
 {
-  var stmt = dm.DBConnection.createStatement("SELECT COUNT(*), source, target," +
-                                           "  iconURL, state " +
-                                           "FROM moz_downloads " +
-                                           "WHERE name = ?1");
-  stmt.bindStringParameter(0, "Firefox 2.0.0.3.dmg");
-  stmt.executeStep();
-
-  do_check_eq(1, stmt.getInt32(0));
-  do_check_eq("http://ftp-mozilla.netscape.com/pub/mozilla.org/firefox/releases/2.0.0.3/mac/en-US/Firefox%202.0.0.3.dmg", stmt.getUTF8String(1));
-  do_check_eq("file:///Users/sdwilsh/Desktop/Firefox 2.0.0.3.dmg", stmt.getUTF8String(2));
-  do_check_eq("", stmt.getString(3));
-  do_check_eq(1, stmt.getInt32(4));
-
-  stmt.reset();
+  try {
+    dm.retryDownload(0);
+    do_throw("Hey!  We expect to get an exception with this!");
+  } catch(e) {
+    do_check_eq(Components.lastResult, Cr.NS_ERROR_NOT_AVAILABLE);
+  }
 }
 
-// This provides us with a lot of download entries to test the cleanup function
-function test_dm_cleanup()
-{
-  dm.cleanUp();
+var tests = [test_retry_canceled, test_retry_bad];
 
-  var stmt = dm.DBConnection.createStatement("SELECT COUNT(*) " +
-                                             "FROM moz_downloads");
-  stmt.executeStep();
-
-  do_check_eq(0, stmt.getInt32(0));
-
-  stmt.reset();
-}
-
-var tests = [test_count_entries, test_random_download, test_dm_cleanup];
-
+var httpserv = null;
 function run_test()
 {
+  httpserv = new nsHttpServer();
+  httpserv.registerDirectory("/", dirSvc.get("ProfD", Ci.nsILocalFile));
+  httpserv.start(4444);
+  
+  dm.addListener(getDownloadListener());
+  
   for (var i = 0; i < tests.length; i++)
     tests[i]();
   
   cleanup();
+
+  var thread = Cc["@mozilla.org/thread-manager;1"]
+               .getService().currentThread;
+
+  while (!httpserv.isStopped())
+    thread.processNextEvent(true);
+
+  // get rid of any pending requests
+  while (thread.hasPendingEvents())
+    thread.processNextEvent(true);
 }

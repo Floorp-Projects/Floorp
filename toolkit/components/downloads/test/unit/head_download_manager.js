@@ -66,6 +66,7 @@ if (!profileDir) {
         file.append("downloads.rdf");
         return file;
       }
+      print("*** Throwing trying to get " + prop);
       throw Cr.NS_ERROR_FAILURE;
     },
     QueryInterface: function(iid) {
@@ -85,4 +86,81 @@ function importDownloadsFile(aFName)
   var newFile = dirSvc.get("ProfD", Ci.nsIFile);
   file.copyTo(newFile, "downloads.rdf");
 }
+
+function cleanup()
+{
+  // removing rdf
+  var rdfFile = dirSvc.get("DLoads", Ci.nsIFile);
+  if (rdfFile.exists()) rdfFile.remove(true);
+  
+  // removing database
+  var dbFile = dirSvc.get("ProfD", Ci.nsIFile);
+  dbFile.append("downloads.sqlite");
+  if (dbFile.exists())
+    try { dbFile.remove(true); } catch(e) { /* stupid windows box */ }
+
+  // removing downloaded file
+  var destFile = dirSvc.get("ProfD", Ci.nsIFile);
+  destFile.append("download.result");
+  if (destFile.exists()) destFile.remove(true);
+}
+
+var gDownloadCount = 0;
+function addDownload()
+{
+  const nsIWBP = Ci.nsIWebBrowserPersist;
+  var persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
+                .createInstance(Ci.nsIWebBrowserPersist);
+  persist.persistFlags = nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES |
+                         nsIWBP.PERSIST_FLAGS_BYPASS_CACHE |
+                         nsIWBP.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+
+  var destFile = dirSvc.get("ProfD", Ci.nsIFile);
+  destFile.append("download.result");
+  var srcFile = dirSvc.get("ProfD", Ci.nsIFile);
+  srcFile.append("LICENSE");
+
+  var dl = dm.addDownload(nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
+                          createURI("http://localhost:4444/LICENSE"),
+                          createURI(destFile), null, null, null,
+                          Math.round(Date.now() * 1000), null, persist);
+
+  // This will throw if it isn't found, and that would mean test failure, so no
+  // try catch block
+  var test = dm.getDownload(dl.id);
+
+  // it is part of the active downloads now, even if it hasn't started.
+  gDownloadCount++;
+
+  persist.progressListener = dl.QueryInterface(Ci.nsIWebProgressListener);
+  persist.saveURI(dl.source, null, null, null, null, dl.targetFile);
+
+  return dl;
+}
+
+function getDownloadListener()
+{
+  return {
+    onDownloadStateChange: function(aState, aDownload)
+    {
+      if (aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_FINISHED)
+        gDownloadCount--;
+
+      if (aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_CANCELED ||
+          aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_FAILED) {
+          gDownloadCount--;
+      }
+      
+      if (gDownloadCount == 0)
+        httpserv.stop();
+    },
+    onStateChange: function(a, b, c, d, e) { },
+    onProgressChange: function(a, b, c, d, e, f, g) { },
+    onStatusChange: function(a, b, c, d, e) { },
+    onLocationChange: function(a, b, c, d) { },
+    onSecurityChange: function(a, b, c, d) { }
+  };
+}
+
+cleanup();
 

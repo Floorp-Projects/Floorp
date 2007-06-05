@@ -45,6 +45,15 @@ interface nsICancelable;
 interface nsIWebProgressListener;
 interface nsIMIMEInfo;
 
+/**
+ * Represents a download object.
+ *
+ * @note This object is no longer updated once it enters a completed state.
+ *       Completed states are the following:
+ *       nsIDownloadManager::DOWNLOAD_FINISHED
+ *       nsIDownloadManager::DOWNLOAD_FAILED
+ *       nsIDownloadManager::DOWNLOAD_CANCELED
+ */
 [scriptable, uuid(974db2c6-fbd2-4de1-8d24-f54ce4f3e8bc)]
 interface nsIDownload : nsITransfer {
     
@@ -66,7 +75,7 @@ interface nsIDownload : nsITransfer {
 
     /**
      * The size of file in bytes.
-     * Unknown size is represented by 0.
+     * Unknown size is represented by LL_MAXUINT.
      */
     readonly attribute PRUint64 size;
     

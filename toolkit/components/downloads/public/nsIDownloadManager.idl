@@ -51,7 +51,7 @@ interface nsIDownloadProgressListener;
 interface nsISimpleEnumerator;
 interface mozIStorageConnection;
 
-[scriptable, uuid(1c015a52-c4e3-4c1c-9071-2c2eaeed8bfc)]
+[scriptable, uuid(bbf6561b-d7d7-48fa-967c-9cc46cc372b4)]
 interface nsIDownloadManager : nsISupports {
   // Download States
   const short DOWNLOAD_NOTSTARTED       = -1;
@@ -149,6 +149,17 @@ interface nsIDownloadManager : nsISupports {
    * @throws NS_ERROR_FAILURE if the download is not in-progress.
    */
   void resumeDownload(in unsigned long aID);
+
+  /**
+   * Retries a failed download.
+   *
+   * @param aID The unique ID of the download.
+   * @throws NS_ERROR_NOT_AVAILALE if the download id is not known.
+   * @throws NS_ERROR_FAILURE if the download is not in the following states:
+   *           nsIDownloadManager::DOWNLOAD_CANCELED
+   *           nsIDownloadManager::DOWNLOAD_FAILED
+   */
+  void retryDownload(in unsigned long aID);
 
   /** 
    * Opens the Download Manager front end, selecting the specified download.
