@@ -150,11 +150,14 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
     JSOp op;
     const JSCodeSpec *cs;
     intN nuses;
-    uintN stackLimit;
 
     pc = CG_CODE(cg, target);
     op = (JSOp) *pc;
     cs = &js_CodeSpec[op];
+    if ((cs->format & JOF_TMPSLOT) &&
+        (uintN)cg->stackDepth >= cg->maxStackDepth) {
+        cg->maxStackDepth = cg->stackDepth + 1;
+    }
     nuses = cs->nuses;
     if (nuses < 0) {
         switch (op) {
@@ -183,10 +186,8 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
                                      numBuf);
     }
     cg->stackDepth += cs->ndefs;
-    stackLimit = (uintN)cg->stackDepth +
-                 ((cs->format >> JOF_TMPSLOT_SHIFT) & 1);
-    if (stackLimit > cg->maxStackDepth)
-        cg->maxStackDepth = stackLimit;
+    if ((uintN)cg->stackDepth > cg->maxStackDepth)
+        cg->maxStackDepth = cg->stackDepth;
 }
 
 ptrdiff_t
@@ -5739,14 +5740,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
       case TOK_INC:
       case TOK_DEC:
-      {
-        intN depth;
-
         /* Emit lvalue-specialized code for ++/-- operators. */
         pn2 = pn->pn_kid;
         JS_ASSERT(pn2->pn_type != TOK_RP);
         op = pn->pn_op;
-        depth = cg->stackDepth;
         switch (pn2->pn_type) {
           case TOK_NAME:
             pn2->pn_op = op;
@@ -5770,18 +5767,15 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
           case TOK_DOT:
             if (!EmitPropOp(cx, pn2, op, cg, JS_FALSE))
                 return JS_FALSE;
-            ++depth;
             break;
           case TOK_LB:
             if (!EmitElemOp(cx, pn2, op, cg))
                 return JS_FALSE;
-            depth += 2;
             break;
 #if JS_HAS_LVALUE_RETURN
           case TOK_LP:
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
-            depth = cg->stackDepth;
             if (js_NewSrcNote2(cx, cg, SRC_PCBASE,
                                CG_OFFSET(cg) - pn2->pn_offset) < 0) {
                 return JS_FALSE;
@@ -5797,7 +5791,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
             if (js_Emit1(cx, cg, JSOP_BINDXMLNAME) < 0)
                 return JS_FALSE;
-            depth = cg->stackDepth;
             if (js_Emit1(cx, cg, op) < 0)
                 return JS_FALSE;
             break;
@@ -5817,7 +5810,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                   ((js_CodeSpec[op].format & JOF_POST) &&
                    pn2->pn_type != TOK_NAME));
         break;
-      }
 
       case TOK_DELETE:
         /*
