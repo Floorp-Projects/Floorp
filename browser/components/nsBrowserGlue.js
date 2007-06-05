@@ -325,7 +325,7 @@ var Module = {
       var len = kServiceCats.length;
       for (var j = 0; j < len; j++) {
         catman.addCategoryEntry(kServiceCats[j],
-          kServiceCtrId, kServiceCtrId, true, true, null);
+          kServiceCtrId, kServiceCtrId, true, true);
       }
       this.registered = true;
     } 

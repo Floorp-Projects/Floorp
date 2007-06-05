@@ -800,7 +800,7 @@ var Module = {
     var catman = 
         Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
     catman.addCategoryEntry("app-startup", WCCR_CLASSNAME, 
-                            "service," + WCCR_CONTRACTID, true, true, null);
+                            "service," + WCCR_CONTRACTID, true, true);
   },
   
   unregisterSelf: function M_unregisterSelf(cm, location, type) {
