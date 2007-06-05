@@ -604,6 +604,10 @@ nsHTMLSelectOptionAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 
   PRUint32 selectState;
   nsCOMPtr<nsIContent> selectContent = GetSelectState(&selectState);
+  if (selectState & nsIAccessibleStates::STATE_INVISIBLE) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIDOMNode> selectNode = do_QueryInterface(selectContent); 
   NS_ENSURE_TRUE(selectNode, NS_ERROR_FAILURE);
 
@@ -625,9 +629,20 @@ nsHTMLSelectOptionAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 
   *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
 
-  if (selectState & nsIAccessibleStates::STATE_COLLAPSED) {
-    // <select> is COLLAPSED: add STATE_OFFSCREEN
+  if (selectState & nsIAccessibleStates::STATE_OFFSCREEN) {
     *aState |= nsIAccessibleStates::STATE_OFFSCREEN;
+  }
+  else if (selectState & nsIAccessibleStates::STATE_COLLAPSED) {
+    // <select> is COLLAPSED: add STATE_OFFSCREEN, if not the currently
+    // visible option
+    if (focusedOptionNode != mDOMNode) {
+      *aState |= nsIAccessibleStates::STATE_OFFSCREEN;
+    }
+    else {
+      // Clear offscreen and invisible for currently showing option
+      *aState &= ~nsIAccessibleStates::STATE_OFFSCREEN;
+      *aState &= ~nsIAccessibleStates::STATE_INVISIBLE;
+    }
   }
   else {
     // XXX list frames are weird, don't rely on nsAccessible's general
