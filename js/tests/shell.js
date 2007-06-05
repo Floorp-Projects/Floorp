@@ -232,8 +232,7 @@ function toPrinted(value)
  * type) report a failure.  If description is provided, include it in the
  * failure report.
  */
-function reportCompare (expected, actual, description)
-{
+function reportCompare (expected, actual, description) {
   var expected_t = typeof expected;
   var actual_t = typeof actual;
   var output = "";
@@ -248,8 +247,8 @@ function reportCompare (expected, actual, description)
   }
   else if (VERBOSE)
   {
-    printStatus ("Expected type '" + actual_t + "' matched actual " +
-		 "type '" + expected_t + "'");
+    printStatus ("Expected type '" + expected_t + "' matched actual " +
+                 "type '" + actual_t + "'");
   }
 
   if (expected != actual)
@@ -259,8 +258,8 @@ function reportCompare (expected, actual, description)
   }
   else if (VERBOSE)
   {
-    printStatus ("Expected value '" + toPrinted(actual) +
-                 "' matched actual value '" + toPrinted(expected) + "'");
+    printStatus ("Expected value '" + toPrinted(expected) +
+                 "' matched actual value '" + toPrinted(actual) + "'");
   }
 
   if (typeof description == "undefined")
@@ -276,6 +275,61 @@ function reportCompare (expected, actual, description)
   else
   {
     reportFailure (output);  
+  }
+
+  return testcase.passed;
+}
+
+/*
+ * Attempt to match a regular expression describing the result to
+ * the actual result, if they differ (in value and/or
+ * type) report a failure.  If description is provided, include it in the
+ * failure report.
+ */
+function reportMatch (expectedRegExp, actual, description) {
+  var expected_t = "string";
+  var actual_t = typeof actual;
+  var output = "";
+
+  if ((VERBOSE) && (typeof description != "undefined"))
+    printStatus ("Comparing '" + description + "'");
+
+  if (expected_t != actual_t)
+  {
+    output += "Type mismatch, expected type " + expected_t +
+      ", actual type " + actual_t + " ";
+  }
+  else if (VERBOSE)
+  {
+    printStatus ("Expected type '" + expected_t + "' matched actual " +
+                 "type '" + actual_t + "'");
+  }
+
+  var matches = expectedRegExp.test(actual);
+  if (!matches)
+  {
+    output += "Expected match to '" + toPrinted(expectedRegExp) +
+      "', Actual value '" + toPrinted(actual) + "' ";
+  }
+  else if (VERBOSE)
+  {
+    printStatus ("Expected match to '" + toPrinted(expectedRegExp) +
+                 "' matched actual value '" + toPrinted(actual) + "'");
+  }
+
+  if (typeof description == "undefined")
+    description = '';
+
+  var testcase = new TestCase(gTestfile, description, true, matches);
+  testcase.reason = output;
+
+  if (testcase.passed)
+  {
+    print('PASSED! ' + description);
+  }
+  else
+  {
+    reportFailure (output);
   }
 
   return testcase.passed;
@@ -491,7 +545,7 @@ function compareSource(expect, actual, summary)
       actualCompile = ex1 + '';
     }
     reportCompare(expectCompile, actualCompile,
-		  summary + ': compile actual');
+                  summary + ': compile actual');
   }
   catch(ex)
   {

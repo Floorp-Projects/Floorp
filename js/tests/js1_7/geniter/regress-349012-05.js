@@ -59,7 +59,7 @@ function test()
     yield 1;
   }
 
-  expect = true;
+  expect = /TypeError.*[aA]lready executing generator/;
   try
   {
     iter = gen();
@@ -69,10 +69,9 @@ function test()
   catch(ex)
   {
     print(ex + '');
-    actual = (ex instanceof TypeError) && (ex + '').indexOf(' already executing generator') != -1;
+    actual = ex + '';
   }
- 
-  reportCompare(expect, actual, summary);
+  reportMatch(expect, actual, summary);
 
   exitFunc ('test');
 }

@@ -65,7 +65,7 @@ function test()
   }
   reportCompare(expect, actual, summary + ': function() {x = 12 + yield;}');
 
-  expect = 'SyntaxError: yield expression must be parenthesized';
+  expect = /SyntaxError: yield expression must be parenthesized/;
   try
   {
     eval('(function () {foo(yield)})');
@@ -75,7 +75,7 @@ function test()
   {
     actual = ex + '';
   }
-  reportCompare(expect, actual, summary + ': function () {foo(yield)}');
+  reportMatch(expect, actual, summary + ': function () {foo(yield)}');
 
   expect = 'SyntaxError: syntax error';
   try
@@ -89,7 +89,7 @@ function test()
   }
   reportCompare(expect, actual, summary + ': function() {x = 12 + yield 42}');
 
-  expect = 'SyntaxError: yield expression must be parenthesized';
+  expect = /SyntaxError: yield expression must be parenthesized/;
   try
   {
     eval('(function (){foo(yield 42)})');
@@ -99,10 +99,9 @@ function test()
   {
     actual = ex + '';
   }
-  reportCompare(expect, actual, summary + ': function (){foo(yield 42)}');
+  reportMatch(expect, actual, summary + ': function (){foo(yield 42)}');
 
   expect = 'No Error';
-
   try
   {
     eval('(function() {x = 12 + (yield);})');
