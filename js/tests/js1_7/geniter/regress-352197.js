@@ -52,9 +52,8 @@ function test()
   enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
- 
-  expect = 'TypeError: anonymous generator function returns a value';
- 
+
+  expect = /TypeError: anonymous generator function returns a value/;
   try
   {
     var gen = eval('(function() { { return 5; } yield 3; })');
@@ -64,8 +63,7 @@ function test()
   {
     actual = ex + '';
   }
-
-  reportCompare(expect, actual, summary);
+  reportMatch(expect, actual, summary);
 
   exitFunc ('test');
 }

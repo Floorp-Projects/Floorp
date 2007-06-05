@@ -53,7 +53,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  expect = 'SyntaxError: yield expression must be parenthesized';
+  expect = /SyntaxError: yield expression must be parenthesized/;
   try
   {
     eval('function f() { yield g(yield 1, 2) };');
@@ -63,7 +63,7 @@ function test()
     actual = ex + '';
   }
 
-  reportCompare(expect, actual, summary);
+  reportMatch(expect, actual, summary);
 
   exitFunc ('test');
 }
