@@ -37,32 +37,7 @@
 
 /**
  * lang.js - Some missing JavaScript language features
- *
- * WARNING: This class adds members to the prototypes of String, Array, and
- * Function for convenience.
- *
- * The tradeoff is that the for/in statement will not work properly for those
- * objects when this library is used.
- *
- * To work around this for Arrays, you may want to use the forEach() method,
- * which is more fun and easier to read.
  */
-
-/**
- * Does simple python-style string substitution.
- * "foo%s hot%s".subs("bar", "dog") becomes "foobar hotdog".
- */
-String.prototype.subs = function() {
-  var ret = this;
-
-  // this appears to be slow, but testing shows it compares more or less equiv.
-  // to the regex.exec method.
-  for (var i = 0; i < arguments.length; i++) {
-    ret = ret.replace(/\%s/, String(arguments[i]));
-  }
-
-  return ret;
-}
 
 /**
  * Partially applies this function to a particular "this object" and zero or
