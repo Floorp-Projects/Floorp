@@ -22,6 +22,7 @@
  * Contributor(s):
  *  Brian Ryner <bryner@brianryner.com>  (Original Author)
  *  Pierre Chanial <p_ch@verizon.net>
+ *  Michael Ventnor <m.ventnor@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -598,6 +599,9 @@ moz_gtk_toggle_paint(GdkDrawable* drawable, GdkRectangle* rect,
     GtkWidget *w;
     GtkStyle *style;
 
+    if (state->focused && state_type == GTK_STATE_NORMAL)
+      state_type = GTK_STATE_PRELIGHT;
+
     if (isradio) {
         moz_gtk_radio_get_metrics(&indicator_size, &indicator_spacing);
         w = gRadiobuttonWidget;
@@ -967,6 +971,9 @@ moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
     x = XTHICKNESS(style);
     y = YTHICKNESS(style);
 
+    /* This gets us a lovely greyish disabledish look */
+    gtk_widget_set_sensitive(gEntryWidget, !state->disabled);
+
     TSOffsetStyleGCs(style, rect->x + x, rect->y + y);
     gtk_paint_flat_box(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_NONE,
                        cliprect, gEntryWidget, "entry_bg",  rect->x + x,
@@ -1066,13 +1073,10 @@ moz_gtk_option_menu_paint(GdkDrawable* drawable, GdkRectangle* rect,
       if (interior_focus) {
           x += XTHICKNESS(style) + focus_pad;
           y += YTHICKNESS(style) + focus_pad;
-          width -= 2 * (XTHICKNESS(style) + focus_pad) +
-                   indicator_spacing.left + indicator_spacing.right +
-                   indicator_size.width;
+          /* Standard GTK combos have their focus ring around the entire
+             control, not just the text bit */
+          width -= 2 * (XTHICKNESS(style) + focus_pad);
           height -= 2 * (YTHICKNESS(style) + focus_pad);
-          if (gtk_widget_get_direction(gOptionMenuWidget) == GTK_TEXT_DIR_RTL) 
-              x += indicator_spacing.left + indicator_spacing.right +
-                   indicator_size.width;
       } else {
           x -= focus_width + focus_pad;
           y -= focus_width + focus_pad;
@@ -1529,8 +1533,8 @@ moz_gtk_window_paint(GdkDrawable* drawable, GdkRectangle* rect,
 }
 
 gint
-moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* xthickness,
-                          gint* ythickness)
+moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
+                          gint* right, gint* bottom, gboolean inhtml)
 {
     GtkWidget* w;
 
@@ -1543,16 +1547,22 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* xthickness,
             gint focus_width, focus_pad;
 
             ensure_button_widget();
+            *left = *top = *right = *bottom = GTK_CONTAINER(gButtonWidget)->border_width;
 
-            moz_gtk_button_get_focus(&interior_focus,
-                                     &focus_width, &focus_pad);
+            /* Don't add this padding in HTML, otherwise the buttons will
+               become too big and stuff the layout. */
+            if (!inhtml) {
+                moz_gtk_button_get_focus(&interior_focus, &focus_width, &focus_pad);
+                *left += focus_width + focus_pad + child_spacing;
+                *right += focus_width + focus_pad + child_spacing;
+                *top += focus_width + focus_pad + child_spacing;
+                *bottom += focus_width + focus_pad + child_spacing;
+            }
 
-            *xthickness = *ythickness =
-                GTK_CONTAINER(gButtonWidget)->border_width + child_spacing
-                + focus_width + focus_pad;
-
-            *xthickness += gButtonWidget->style->xthickness;
-            *ythickness += gButtonWidget->style->ythickness;
+            *left += gButtonWidget->style->xthickness;
+            *right += gButtonWidget->style->xthickness;
+            *top += gButtonWidget->style->ythickness;
+            *bottom += gButtonWidget->style->ythickness;
             return MOZ_GTK_SUCCESS;
         }
 
@@ -1569,9 +1579,26 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* xthickness,
         w = gDropdownButtonWidget;
         break;
     case MOZ_GTK_DROPDOWN:
-        ensure_option_menu_widget();
-        w = gOptionMenuWidget;
-        break;
+        {
+            /* We need to account for the arrow on the dropdown, so text doesn't
+               come too close to the arrow, or in some cases spill into the arrow. */
+            gboolean interior_focus;
+            GtkRequisition indicator_size;
+            GtkBorder indicator_spacing;
+            gint focus_width, focus_pad;
+
+            ensure_option_menu_widget();
+            *right = *left = gOptionMenuWidget->style->xthickness;
+            *bottom = *top = gOptionMenuWidget->style->ythickness;
+            moz_gtk_option_menu_get_metrics(&interior_focus, &indicator_size,
+                                            &indicator_spacing, &focus_width, &focus_pad);
+
+            if (gtk_widget_get_direction(gOptionMenuWidget) == GTK_TEXT_DIR_RTL)
+                *left += indicator_spacing.left + indicator_size.width + indicator_spacing.right;
+            else
+                *right += indicator_spacing.left + indicator_size.width + indicator_spacing.right;
+            return MOZ_GTK_SUCCESS;
+        }
     case MOZ_GTK_TABPANELS:
         ensure_tab_widget();
         w = gTabWidget;
@@ -1613,9 +1640,9 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* xthickness,
                                         &focus_width, &focus_pad);
 
             if (interior_focus)
-                *xthickness = *ythickness = (focus_width + focus_pad);
+                *left = *top = *right = *bottom = (focus_width + focus_pad);
             else
-                *xthickness = *ythickness = 0;
+                *left = *top = *right = *bottom = 0;
 
             return MOZ_GTK_SUCCESS;
         }
@@ -1638,11 +1665,13 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* xthickness,
                 w = gRadiobuttonWidget;
             }
 
-            *xthickness = *ythickness = GTK_CONTAINER(w)->border_width;
+            *left = *top = *right = *bottom = GTK_CONTAINER(w)->border_width;
 
             if (!interior_focus) {
-                *xthickness += (focus_width + focus_pad);
-                *ythickness += (focus_width + focus_pad);
+                *left += (focus_width + focus_pad);
+                *right += (focus_width + focus_pad);
+                *top += (focus_width + focus_pad);
+                *bottom += (focus_width + focus_pad);
             }
 
             return MOZ_GTK_SUCCESS;
@@ -1680,15 +1709,15 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* xthickness,
     /* These widgets have no borders.*/
     case MOZ_GTK_TOOLTIP:
     case MOZ_GTK_WINDOW:
-        *xthickness = *ythickness = 0;
+        *left = *top = *right = *bottom = 0;
         return MOZ_GTK_SUCCESS;
     default:
         g_warning("Unsupported widget type: %d", widget);
         return MOZ_GTK_UNKNOWN_WIDGET;
     }
 
-    *xthickness = XTHICKNESS(w->style);
-    *ythickness = YTHICKNESS(w->style);
+    *right = *left = XTHICKNESS(w->style);
+    *bottom = *top = YTHICKNESS(w->style);
 
     return MOZ_GTK_SUCCESS;
 }
