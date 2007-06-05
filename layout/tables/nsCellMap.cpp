@@ -76,18 +76,14 @@ nsTableCellMap::nsTableCellMap(nsTableFrame&   aTableFrame,
 {
   MOZ_COUNT_CTOR(nsTableCellMap);
 
-  nsAutoVoidArray orderedRowGroups;
-  PRUint32 numRowGroups;
-  aTableFrame.OrderRowGroups(orderedRowGroups, numRowGroups);
+  nsTableFrame::RowGroupArray orderedRowGroups;
+  aTableFrame.OrderRowGroups(orderedRowGroups);
 
-  for (PRUint32 rgX = 0; rgX < numRowGroups; rgX++) {
-    nsTableRowGroupFrame* rgFrame =
-      nsTableFrame::GetRowGroupFrame((nsIFrame*)orderedRowGroups.ElementAt(rgX));
-    if (rgFrame) {
-      nsTableRowGroupFrame* prior = (0 == rgX)
-        ? nsnull : nsTableFrame::GetRowGroupFrame((nsIFrame*)orderedRowGroups.ElementAt(rgX - 1));
-      InsertGroupCellMap(*rgFrame, prior);
-    }
+  nsTableRowGroupFrame* prior = nsnull;
+  for (PRUint32 rgX = 0; rgX < orderedRowGroups.Length(); rgX++) {
+    nsTableRowGroupFrame* rgFrame = orderedRowGroups[rgX];
+    InsertGroupCellMap(*rgFrame, prior);
+    prior = rgFrame;
   }
   if (aBorderCollapse) {
     mBCInfo = new BCInfo();
@@ -296,15 +292,10 @@ nsTableCellMap::GetMapFor(const nsTableRowGroupFrame* aRowGroup,
   if (aRowGroup->IsRepeatable()) {
     nsTableFrame* fifTable = NS_STATIC_CAST(nsTableFrame*, mTableFrame.GetFirstInFlow());
 
-    nsAutoVoidArray rowGroups;
-    PRUint32 numRowGroups;
-    nsTableRowGroupFrame *thead, *tfoot;
-    // find the original header/footer 
-    fifTable->OrderRowGroups(rowGroups, numRowGroups, &thead, &tfoot);
-
     const nsStyleDisplay* display = aRowGroup->GetStyleDisplay();
     nsTableRowGroupFrame* rgOrig = 
-      (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == display->mDisplay) ? thead : tfoot; 
+      (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == display->mDisplay) ?
+      fifTable->GetTHead() : fifTable->GetTFoot(); 
     // find the row group cell map using the original header/footer
     if (rgOrig && rgOrig != aRowGroup) {
       return GetMapFor(rgOrig, aStartHint);
@@ -317,37 +308,36 @@ nsTableCellMap::GetMapFor(const nsTableRowGroupFrame* aRowGroup,
 void
 nsTableCellMap::Synchronize(nsTableFrame* aTableFrame)
 {
-  nsAutoVoidArray orderedRowGroups;
-  nsAutoVoidArray maps;
-  PRUint32 numRowGroups;
-  PRInt32 mapIndex;
+  nsTableFrame::RowGroupArray orderedRowGroups;
+  nsAutoTPtrArray<nsCellMap, 8> maps;
 
-  maps.Clear();
-  aTableFrame->OrderRowGroups(orderedRowGroups, numRowGroups);
-  if (!numRowGroups) {
+  aTableFrame->OrderRowGroups(orderedRowGroups);
+  if (!orderedRowGroups.Length()) {
     return;
   }
 
+  // XXXbz this fails if orderedRowGroups is missing some row groups
+  // (due to OOM when appending to the array, e.g. -- we leak maps in
+  // that case).
+  
   // Scope |map| outside the loop so we can use it as a hint.
   nsCellMap* map = nsnull;
-  for (PRUint32 rgX = 0; rgX < numRowGroups; rgX++) {
-    nsTableRowGroupFrame* rgFrame =
-      nsTableFrame::GetRowGroupFrame((nsIFrame*)orderedRowGroups.ElementAt(rgX));
-    if (rgFrame) {
-      map = GetMapFor(rgFrame, map);
-      if (map) {
-        if (!maps.AppendElement(map)) {
-          delete map;
-          NS_WARNING("Could not AppendElement");
-        }
+  for (PRUint32 rgX = 0; rgX < orderedRowGroups.Length(); rgX++) {
+    nsTableRowGroupFrame* rgFrame = orderedRowGroups[rgX];
+    map = GetMapFor(rgFrame, map);
+    if (map) {
+      if (!maps.AppendElement(map)) {
+        delete map;
+        NS_WARNING("Could not AppendElement");
       }
     }
   }
-  mapIndex = maps.Count() - 1;
-  nsCellMap* nextMap = (nsCellMap*) maps.ElementAt(mapIndex);
+
+  PRInt32 mapIndex = maps.Length() - 1;  // Might end up -1
+  nsCellMap* nextMap = maps.ElementAt(mapIndex);
   nextMap->SetNextSibling(nsnull);
   for (mapIndex-- ; mapIndex >= 0; mapIndex--) {
-    nsCellMap* map = (nsCellMap*) maps.ElementAt(mapIndex);
+    nsCellMap* map = maps.ElementAt(mapIndex);
     map->SetNextSibling(nextMap);
     nextMap = map;
   }
