@@ -125,9 +125,5 @@ private:
   friend class FaviconLoadListener;
 };
 
-#ifdef XP_MACOSX
-#define FAVICON_DEFAULT_URL "chrome://browser/skin/bookmarks/bookmark-item.png"
-#else
-#define FAVICON_DEFAULT_URL "chrome://browser/skin/places/defaultFavicon.png"
-#endif
+#define FAVICON_DEFAULT_URL "chrome://mozapps/skin/places/defaultFavicon.png"
 #define FAVICON_ANNOTATION_NAME "favicon"

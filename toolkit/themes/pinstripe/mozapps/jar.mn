@@ -34,4 +34,7 @@ classic.jar:
   skin/classic/mozapps/update/update.png                          (update/update.png)
   skin/classic/mozapps/xpinstall/xpinstallItemGeneric.png         (xpinstall/xpinstallItemGeneric.png)
   skin/classic/mozapps/xpinstall/xpinstallConfirm.css             (xpinstall/xpinstallConfirm.css)
+#ifdef MOZ_PLACES
+  skin/classic/mozapps/places/defaultFavicon.png                  (places/defaultFavicon.png)
+#endif
 #endif

@@ -959,7 +959,11 @@ toolbar[iconsize="small"] #paste-button:hover:active {
 }
 
 #page-proxy-button {
+%ifdef MOZ_PLACES
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+%else
   list-style-image: url("chrome://browser/skin/bookmarks/bookmark-item.png");
+%endif
 }
 
 #page-proxy-button[pageproxystate="invalid"] {
@@ -1189,7 +1193,11 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .bookmark-item {
-	  list-style-image: url("chrome://browser/skin/bookmarks/bookmark-item.png");
+%ifdef MOZ_PLACES
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+%else
+  list-style-image: url("chrome://browser/skin/bookmarks/bookmark-item.png");
+%endif
 }
 
 .openintabs-menuitem {
