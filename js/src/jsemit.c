@@ -5807,17 +5807,15 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 
         /*
-         * Allocate another stack slot for GC protection in case the initial
-         * value being post-incremented or -decremented is not a number, but
-         * converts to a jsdouble.  In the TOK_NAME cases, op has 0 operand
-         * uses and 1 definition, so we don't need an extra stack slot -- we
-         * can use the one allocated for the def.
+         * Post-increments require an extra slot for GC protection in case
+         * the initial value being post-incremented or -decremented is not a
+         * number, but converts to a jsdouble.  In the TOK_NAME cases, op has
+         * 0 operand uses and 1 definition, so we don't need an extra stack
+         * slot -- we can use the one allocated for the def.
          */
-        if (pn2->pn_type != TOK_NAME &&
-            (js_CodeSpec[op].format & JOF_POST) &&
-            (uintN)depth == cg->maxStackDepth) {
-            ++cg->maxStackDepth;
-        }
+        JS_ASSERT(((js_CodeSpec[op].format >> JOF_TMPSLOT_SHIFT) & 1) ==
+                  ((js_CodeSpec[op].format & JOF_POST) &&
+                   pn2->pn_type != TOK_NAME));
         break;
       }
 
