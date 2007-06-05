@@ -47,7 +47,6 @@ const G_GDEBUG = false;
 #include ../content/moz/preferences.js
 #include ../content/moz/debug.js
 #include ../content/moz/alarm.js
-#include ../content/moz/base64.js
 #include ../content/moz/cryptohasher.js
 #include ../content/moz/objectsafemap.js
 #include ../content/moz/observer.js

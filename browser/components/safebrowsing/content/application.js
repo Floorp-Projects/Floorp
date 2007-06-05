@@ -61,7 +61,6 @@ function PROT_Application() {
 
       G_DebugL("UNITTESTS", "STARTING UNITTESTS");
       TEST_G_Protocol4Parser();
-      TEST_G_Base64();
       TEST_G_CryptoHasher();
       TEST_PROT_EnchashDecrypter();
       TEST_PROT_TRTable();
