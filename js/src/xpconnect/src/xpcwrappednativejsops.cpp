@@ -1305,8 +1305,8 @@ XPCNativeScriptableInfo::Construct(XPCCallContext& ccx,
                                    JSBool isGlobal,
                                    const XPCNativeScriptableCreateInfo* sci)
 {
-    NS_ASSERTION(sci->GetCallback(), "bad param");
     NS_ASSERTION(sci, "bad param");
+    NS_ASSERTION(sci->GetCallback(), "bad param");
 
     XPCNativeScriptableInfo* newObj =
         new XPCNativeScriptableInfo(sci->GetCallback());
