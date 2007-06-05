@@ -78,10 +78,10 @@
     <radiogroup id="securityOCSPEnabled"
                 prefstring="security.OCSP.enabled">
         <radio value="0" hidden="true"/>
-        <radio id="certOCSP" value="1" label="&certOCSP.label2;"
-               accesskey="&certOCSP.accesskey;" oncommand="doEnabling(0);"/>
-        <radio id="proxyOCSP" value="2" label="&proxyOCSP.label2;"
-               accesskey="&proxyOCSP.accesskey;" oncommand="doEnabling(0);"/>
+        <radio id="certOCSP" value="1" label="&certOCSP2.label;"
+               accesskey="&certOCSP2.accesskey;" oncommand="doEnabling(0);"/>
+        <radio id="proxyOCSP" value="2" label="&proxyOCSP2.label;"
+               accesskey="&proxyOCSP2.accesskey;" oncommand="doEnabling(0);"/>
 
         <grid class="indent" flex="1">
           <columns>

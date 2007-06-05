@@ -68,10 +68,10 @@
                 onsyncfrompreference="return gOCSPDialog._updateUI(0);"
                 class="indent">
       <radio value="0" hidden="true"/>
-      <radio id="certOCSP" value="1" label="&certOCSP.label;"
-             accesskey="&certOCSP.accesskey;"/>
-      <radio id="proxyOCSP" value="2" label="&proxyOCSP.label;"
-             accesskey="&proxyOCSP.accesskey;"/>
+      <radio id="certOCSP" value="1" label="&certOCSP2.label;"
+             accesskey="&certOCSP2.accesskey;"/>
+      <radio id="proxyOCSP" value="2" label="&proxyOCSP2.label;"
+             accesskey="&proxyOCSP2.accesskey;"/>
 
       <grid class="indent" flex="1">
         <columns>
