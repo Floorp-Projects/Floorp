@@ -74,6 +74,7 @@ REQUIRES	= appshell \
 CPPSRCS = \
   nsAccessNode.cpp \
   nsAccessibleEventData.cpp \
+  nsARIAMap.cpp \
   nsDocAccessible.cpp \
   nsOuterDocAccessible.cpp \
   nsAccessibilityAtoms.cpp \
