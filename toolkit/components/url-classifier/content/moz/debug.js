@@ -36,6 +36,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
+#ifdef DEBUG
+
 // Generic logging/debugging functionality that:
 //
 // (*) when disabled compiles to no-ops at worst (for calls to the service) 
@@ -178,17 +180,6 @@ function G_Assert(who, condition, msg) {
 }
 
 /**
- * Assert two things are equal (as in ==).
- */
-function G_AssertEqual(who, expected, actual, msg) {
-  if (G_GDEBUG) {
-    G_GetDebugZone(who).assert(
-        expected == actual,
-        msg + " Expected: {%s}, got: {%s}".subs(expected, actual));
-  }
-}
-
-/**
  * Helper function that takes input and returns the DebugZone
  * corresponding to it.
  *
@@ -278,7 +269,7 @@ G_DebugZone.prototype.disableZone = function() {
 G_DebugZone.prototype.debug = function(msg) {
   if (G_GDEBUG) {
     if (this.zoneIsEnabled()) {
-      this.debugService_.dump("[%s] %s\n".subs(this.zone_, msg));
+      this.debugService_.dump("[" + this.zone_ + "] " + msg + "\n");
     }
   }
 }
@@ -290,7 +281,7 @@ G_DebugZone.prototype.debug = function(msg) {
  */
 G_DebugZone.prototype.error = function(msg) {
   if (G_GDEBUG) {
-    this.debugService_.dump("[%s] %s\n".subs(this.zone_, msg));
+    this.debugService_.dump("[" + this.zone_ + "] " + msg + "\n");
     throw new Error(msg);
     debugger;
   }
@@ -332,12 +323,6 @@ function G_DebugService(opt_prefix) {
 
     this.loggifier = new G_Loggifier();
     this.settings_ = new G_DebugSettings();
-
-    // We observe the console service so that we can echo errors that get 
-    // reported there to the file log.
-    Cc["@mozilla.org/consoleservice;1"]
-      .getService(Ci.nsIConsoleService)
-      .registerListener(this);
   }
 }
 
@@ -878,3 +863,15 @@ var G_debugService = new G_DebugService(); // Instantiate us!
 if (G_GDEBUG) {
   G_debugService.enableAllZones();
 }
+
+#else
+
+// Stubs for the debugging aids scattered through this component.
+// They will be expanded if you compile yourself a debug build.
+
+function G_Debug(who, msg) { }
+function G_Assert(who, condition, msg) { }
+function G_Error(who, msg) { }
+var G_debugService = { __noSuchMethod__: function() { } };
+
+#endif
