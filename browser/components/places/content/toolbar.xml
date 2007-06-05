@@ -72,6 +72,7 @@
                                mousethrough="never"
                                collapsed="true">
               <xul:menupopup type="places"
+                             anonid="chevronPopup"
 #ifndef XP_MACOSX
                              context="placesContext"
 #endif
