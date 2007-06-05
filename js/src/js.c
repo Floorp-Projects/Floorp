@@ -649,13 +649,19 @@ ReadLine(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
 
         /* Else, grow our buffer for another pass. */
-        tmp = JS_realloc(cx, buf, bufsize * 2);
+        bufsize *= 2;
+        if (bufsize > buflength) {
+            tmp = JS_realloc(cx, buf, bufsize);
+        } else {
+            JS_ReportOutOfMemory(cx);
+            tmp = NULL;
+        }
+
         if (!tmp) {
             JS_free(cx, buf);
             return JS_FALSE;
         }
 
-        bufsize *= 2;
         buf = tmp;
     }
 
