@@ -2844,7 +2844,7 @@ var gModule = {
                                     .getService(Components.interfaces.nsICategoryManager);
     categoryManager.addCategoryEntry("app-startup", this._objects.service.className,
                                      "service," + this._objects.service.contractID, 
-                                     true, true, null);
+                                     true, true);
   },
   
   getClassObject: function(componentManager, cid, iid) {
