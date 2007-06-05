@@ -704,17 +704,17 @@ nsSeamonkeyProfileMigrator::CopyPasswords(PRBool aReplace)
 
     rv = importer->GetAllLogins(&count, &logins);
     NS_ENSURE_SUCCESS(rv, rv);
-    for (count--; count >= 0; count--) {
-        pwmgr->AddLogin(logins[count]);
+    for (PRUint32 i = 0; i < count; i++) {
+        pwmgr->AddLogin(logins[i]);
     }
     NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(count, logins);
 
     PRUnichar **hostnames;
     rv = importer->GetAllDisabledHosts(&count, &hostnames);
     NS_ENSURE_SUCCESS(rv, rv);
-    for (count--; count >= 0; count--) {
-        pwmgr->SetLoginSavingEnabled(nsDependentString(hostnames[count]),
-                                        PR_FALSE);
+    for (PRUint32 i = 0; i < count; i++) {
+        pwmgr->SetLoginSavingEnabled(nsDependentString(hostnames[i]),
+                                     PR_FALSE);
     }
     NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, hostnames);
   }
