@@ -74,7 +74,7 @@
 	<key>CFBundleExecutable</key>
 	<string>firefox-bin</string>
 	<key>CFBundleGetInfoString</key>
-	<string>@APP_NAME@ @APP_VERSION@, © 1998-2007 Contributors</string>
+	<string>%APP_NAME% %APP_VERSION%, © 1998-2007 Contributors</string>
 	<key>CFBundleIconFile</key>
 	<string>firefox</string>
 	<key>CFBundleIdentifier</key>
@@ -82,11 +82,11 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>@APP_NAME@</string>
+	<string>%APP_NAME%</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>@APP_VERSION@</string>
+	<string>%APP_VERSION%</string>
 	<key>CFBundleSignature</key>
 	<string>MOZB</string>
 	<key>CFBundleURLTypes</key>
@@ -137,7 +137,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>@APP_VERSION@</string>
+	<string>%APP_VERSION%</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 </dict>
