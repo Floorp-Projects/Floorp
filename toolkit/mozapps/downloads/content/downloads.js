@@ -430,16 +430,10 @@ function onDownloadAnimated(aEvent)
 function onDownloadRetry(aEvent)
 {
   var download = aEvent.target;
-  if (download.localName == "download") {
-    var src = document.getElementById(download.id).getAttribute("uri");
-    var f = getLocalFileFromNativePathOrUrl(aEvent.target.getAttribute("file"));
-    saveURL(src, f, null, true, true);
-  }
+  if (download.localName == "download")
+    gDownloadManager.retryDownload(download.getAttribute("dlid"));
   
   gDownloadViewController.onCommandUpdate();
-
-  // retry always places the item in the first spot
-  gDownloadsView.selectedIndex = 0;
 }
 
 // This is called by the progress listener. We don't actually use the event

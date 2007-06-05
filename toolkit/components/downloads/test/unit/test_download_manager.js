@@ -37,26 +37,6 @@
 
 // This file tests the download manager backend
 
-function cleanup()
-{
-  // removing rdf
-  var rdfFile = dirSvc.get("DLoads", Ci.nsIFile);
-  if (rdfFile.exists()) rdfFile.remove(true);
-  
-  // removing database
-  var dbFile = dirSvc.get("ProfD", Ci.nsIFile);
-  dbFile.append("downloads.sqlite");
-  if (dbFile.exists())
-    try { dbFile.remove(true); } catch(e) { /* stupid windows box */ }
-
-  // removing downloaded file
-  var destFile = dirSvc.get("ProfD", Ci.nsIFile);
-  destFile.append("download.result");
-  if (destFile.exists()) destFile.remove(true);
-}
-
-cleanup();
-
 const nsIDownloadManager = Ci.nsIDownloadManager;
 const dm = Cc["@mozilla.org/download-manager;1"].getService(nsIDownloadManager);
 
@@ -117,40 +97,6 @@ function test_resumeDownload_empty_queue()
   }
 }
 
-function addDownload()
-{
-  print("*** DOWNLOAD MANAGER TEST - Adding a download");
-  const nsIWBP = Ci.nsIWebBrowserPersist;
-  var persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
-                .createInstance(Ci.nsIWebBrowserPersist);
-  persist.persistFlags = nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES |
-                         nsIWBP.PERSIST_FLAGS_BYPASS_CACHE |
-                         nsIWBP.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
-
-  var destFile = dirSvc.get("ProfD", Ci.nsIFile);
-  destFile.append("download.result");
-  var srcFile = dirSvc.get("ProfD", Ci.nsIFile);
-  srcFile.append("LICENSE");
-
-  var dl = dm.addDownload(nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
-                          createURI("http://localhost:4444/LICENSE"),
-                          createURI(destFile), null, null, null,
-                          Math.round(Date.now() * 1000), null, persist);
-
-  // This will throw if it isn't found, and that would mean test failure, so no
-  // try catch block
-  var test = dm.getDownload(dl.id);
-
-  // it is part of the active downloads now, even if it hasn't started.
-  gDownloadCount++;
-
-  persist.progressListener = dl.QueryInterface(Ci.nsIWebProgressListener);
-  persist.saveURI(dl.source, null, null, null, null, dl.targetFile);
-
-  print("*** DOWNLOAD MANAGER TEST - Adding a download worked");
-  return dl;
-}
-
 function test_addDownload_normal()
 {
   print("*** DOWNLOAD MANAGER TEST - Testing normal download adding");
@@ -172,33 +118,19 @@ var tests = [test_get_download_empty_queue, test_connection,
              test_pauseDownload_empty_queue, test_resumeDownload_empty_queue,
              test_addDownload_normal, test_addDownload_cancel];
 
-var gDownloadCount = 0;
 var httpserv = null;
 function run_test()
 {
-  print("*** DOWNLOAD MANAGER TEST - starting tests");
   httpserv = new nsHttpServer();
   httpserv.registerDirectory("/", dirSvc.get("ProfD", Ci.nsILocalFile));
   httpserv.start(4444);
-  print("*** DOWNLOAD MANAGER TEST - server started");
 
-  print("Try creating listener...")
   // our download listener
   var listener = {
+    // this listener checks to ensure activeDownloadCount is correct.
     onDownloadStateChange: function(aState, aDownload)
     {
-      if (aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_FINISHED)
-        gDownloadCount--;
-
-      if (aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_CANCELED ||
-          aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_FAILED) {
-          gDownloadCount--;
-      }
-      
       do_check_eq(gDownloadCount, dm.activeDownloadCount);
-    
-      if (gDownloadCount == 0)
-        httpserv.stop();
     },
     onStateChange: function(a, b, c, d, e) { },
     onProgressChange: function(a, b, c, d, e, f, g) { },
@@ -207,8 +139,8 @@ function run_test()
     onSecurityChange: function(a, b, c, d) { }
   };
   dm.addListener(listener);
+  dm.addListener(getDownloadListener());
 
-  print("Try creating observer...");
   var observer = {
     observe: function(aSubject, aTopic, aData) {
       var dl = aSubject.QueryInterface(Ci.nsIDownload);
@@ -252,8 +184,6 @@ function run_test()
   os.addObserver(observer, "dl-failed", false);
   os.addObserver(observer, "dl-cancel", false);
   os.addObserver(observer, "dl-done", false);
-
-  print("Made it through adding observers.");
 
   for (var i = 0; i < tests.length; i++)
     tests[i]();

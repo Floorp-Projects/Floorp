@@ -96,6 +96,8 @@ protected:
   nsresult InitDB(PRBool *aDoImport);
   nsresult CreateTable();
   nsresult ImportDownloadHistory();
+  nsresult GetDownloadFromDB(PRUint32 aID, nsDownload **retVal);
+  nsresult AddToCurrentDownloads(nsDownload *aDl);
 
   /**
    * Adds a download with the specified information to the DB.

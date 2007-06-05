@@ -428,6 +428,105 @@ nsDownloadManager::GetRetentionBehavior()
   return val;
 }
 
+nsresult
+nsDownloadManager::GetDownloadFromDB(PRUint32 aID, nsDownload **retVal)
+{
+  NS_ASSERTION(!FindDownload(aID),
+               "If it is a current download, you should not call this method!");
+
+  // First, let's query the database and see if it even exists
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT id, state, startTime, source, target, name "
+    "FROM moz_downloads "
+    "WHERE id = ?1"), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stmt->BindInt64Parameter(0, aID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasResults = PR_FALSE;
+  rv = stmt->ExecuteStep(&hasResults);
+  if (NS_FAILED(rv) || !hasResults)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  // We have a download, so lets create it
+  nsRefPtr<nsDownload> dl = new nsDownload();
+  if (!dl)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // Setting all properties of the download now
+  dl->mCancelable = nsnull;
+  dl->mID = stmt->AsInt64(0);
+  dl->mDownloadState = stmt->AsInt32(1);
+  dl->mStartTime = stmt->AsInt64(2);
+  
+  nsCString source;
+  stmt->GetUTF8String(3, source);
+  rv = NS_NewURI(getter_AddRefs(dl->mSource), source);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCString target;
+  stmt->GetUTF8String(4, target);
+  rv = NS_NewURI(getter_AddRefs(dl->mTarget), target);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  stmt->GetString(5, dl->mDisplayName);
+
+  nsCOMPtr<nsILocalFile> file;
+  rv = dl->GetTargetFile(getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool fileExists;
+  if (NS_SUCCEEDED(file->Exists(&fileExists)) && fileExists) {
+    if (dl->mDownloadState == nsIDownloadManager::DOWNLOAD_FINISHED) {
+      dl->mPercentComplete = 100;
+      
+      PRInt64 size;
+      rv = file->GetFileSize(&size);
+      NS_ENSURE_SUCCESS(rv, rv);
+      dl->mMaxBytes = dl->mCurrBytes = size;
+    } else {
+      dl->mPercentComplete = -1;
+      dl->mMaxBytes = LL_MAXUINT;
+    }
+  } else {
+    dl->mPercentComplete = 0;
+    dl->mMaxBytes = LL_MAXUINT;
+    dl->mCurrBytes = 0;
+  }
+
+  // Addrefing and returning
+  NS_ADDREF(*retVal = dl);
+  return NS_OK;
+}
+
+nsresult
+nsDownloadManager::AddToCurrentDownloads(nsDownload *aDl)
+{
+  // If this is an install operation, ensure we have a progress listener for the
+  // install and track this download separately. 
+  if (aDl->mDownloadType == nsIXPInstallManagerUI::DOWNLOAD_TYPE_INSTALL) {
+    if (!mXPIProgress) {
+      mXPIProgress = new nsXPIProgressListener(this);
+      if (!mXPIProgress)
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    nsIXPIProgressDialog *dialog = mXPIProgress.get();
+    nsXPIProgressListener *listener = NS_STATIC_CAST(nsXPIProgressListener*,
+                                                     dialog);
+    listener->AddDownload(aDl);
+  }
+
+  mCurrentDownloads.AppendObject(aDl);
+
+  return NS_OK;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//// nsIDownloadManager
+
 NS_IMETHODIMP
 nsDownloadManager::GetActiveDownloadCount(PRInt32 *aResult)
 {
@@ -441,9 +540,6 @@ nsDownloadManager::GetActiveDownloads(nsISimpleEnumerator **aResult)
 {
   return NS_NewArrayEnumerator(aResult, mCurrentDownloads);
 }
-
-///////////////////////////////////////////////////////////////////////////////
-// nsIDownloadManager
 
 NS_IMETHODIMP
 nsDownloadManager::AddDownload(DownloadType aDownloadType, 
@@ -502,21 +598,8 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
   NS_ENSURE_TRUE(id, NS_ERROR_FAILURE);
   dl->mID = id;
 
-  // If this is an install operation, ensure we have a progress listener for the
-  // install and track this download separately. 
-  if (aDownloadType == nsIXPInstallManagerUI::DOWNLOAD_TYPE_INSTALL) {
-    if (!mXPIProgress) {
-      mXPIProgress = new nsXPIProgressListener(this);
-      if (!mXPIProgress)
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    nsIXPIProgressDialog* dialog = mXPIProgress.get();
-    nsXPIProgressListener* listener = NS_STATIC_CAST(nsXPIProgressListener*, dialog);
-    listener->AddDownload(*aDownload);
-  }
-
-  mCurrentDownloads.AppendObject(dl);
+  rv = AddToCurrentDownloads(dl);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ADDREF(*aDownload = dl);
   
@@ -599,6 +682,44 @@ nsDownloadManager::CancelDownload(PRUint32 aID)
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownloadManager::RetryDownload(PRUint32 aID)
+{
+  nsRefPtr<nsDownload> dl;
+  nsresult rv = GetDownloadFromDB(aID, getter_AddRefs(dl));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // if our download is not canceled or failed, we should fail
+  if (dl->mDownloadState != nsIDownloadManager::DOWNLOAD_FAILED &&
+      dl->mDownloadState != nsIDownloadManager::DOWNLOAD_CANCELED)
+    return NS_ERROR_FAILURE;
+
+  // we are redownloading this, so we need to link the download manager to the
+  // download else we'll try to dereference null pointers - eww
+  dl->mDownloadManager = this;
+
+  dl->SetStartTime(PR_Now());
+  rv = dl->SetState(nsIDownloadManager::DOWNLOAD_NOTSTARTED);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIWebBrowserPersist> wbp =
+    do_CreateInstance("@mozilla.org/embedding/browser/nsWebBrowserPersist;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Creates a cycle that will be broken in nsDownload::OnStateChange
+  dl->mCancelable = wbp;
+  wbp->SetProgressListener(dl);
+
+  rv = wbp->SetPersistFlags(nsIWebBrowserPersist::PERSIST_FLAGS_REPLACE_EXISTING_FILES |
+                            nsIWebBrowserPersist::PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = AddToCurrentDownloads(dl);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return wbp->SaveURI(dl->mSource, nsnull, nsnull, nsnull, nsnull, dl->mTarget);
 }
 
 NS_IMETHODIMP
@@ -1187,7 +1308,7 @@ nsDownload::nsDownload() : mDownloadState(nsIDownloadManager::DOWNLOAD_NOTSTARTE
                            mID(0),
                            mPercentComplete(0),
                            mCurrBytes(LL_ZERO),
-                           mMaxBytes(LL_ZERO),
+                           mMaxBytes(LL_MAXUINT),
                            mStartTime(LL_ZERO),
                            mLastUpdate(PR_Now() - (PRUint32)gUpdateInterval),
                            mPaused(PR_FALSE),
@@ -1641,6 +1762,7 @@ nsresult
 nsDownload::UpdateDB()
 {
   NS_ASSERTION(mID, "Download ID is stored as zero.  This is bad!");
+  NS_ASSERTION(mDownloadManager, "Egads!  We have no download manager!");
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDownloadManager->mDBConn->CreateStatement(NS_LITERAL_CSTRING(
