@@ -3089,7 +3089,8 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
     }
 
     // resize so that everything is set to the right dimensions
-    Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, PR_FALSE);
+    if (!mIsTopLevel)
+        Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, PR_FALSE);
 
 #ifdef ACCESSIBILITY
     nsresult rv;
