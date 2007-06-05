@@ -1366,6 +1366,12 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
   if (!mRequest)
     mRequest = aRequest; // used for pause/resume
 
+  if (mDownloadState == nsIDownloadManager::DOWNLOAD_NOTSTARTED) {
+    nsresult rv = SetState(nsIDownloadManager::DOWNLOAD_DOWNLOADING);
+    NS_ENSURE_SUCCESS(rv, rv);
+    mDownloadManager->mObserverService->NotifyObservers(this, "dl-start", nsnull);
+  }
+
   // filter notifications since they come in so frequently
   PRTime now = PR_Now();
   PRIntervalTime delta = now - mLastUpdate;
@@ -1373,12 +1379,6 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
     return NS_OK;
 
   mLastUpdate = now;
-
-  if (mDownloadState == nsIDownloadManager::DOWNLOAD_NOTSTARTED) {
-    nsresult rv = SetState(nsIDownloadManager::DOWNLOAD_DOWNLOADING);
-    NS_ENSURE_SUCCESS(rv, rv);
-    mDownloadManager->mObserverService->NotifyObservers(this, "dl-start", nsnull);
-  }
 
   // Calculate the speed using the elapsed delta time and bytes downloaded
   // during that time for more accuracy.
