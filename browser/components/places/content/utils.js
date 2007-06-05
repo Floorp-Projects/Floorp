@@ -694,7 +694,7 @@ var PlacesUtils = {
       break;
     case this.TYPE_X_MOZ_URL:
     case this.TYPE_UNICODE:
-      var title = type == this.TYPE_X_MOZ_URL ? data.title : data.uri;
+      var title = type == this.TYPE_X_MOZ_URL ? data.title : data.uri.spec;
       var createTxn =
         new PlacesCreateItemTransaction(data.uri, container, index, title);
       return createTxn;
@@ -1379,4 +1379,5 @@ var PlacesUtils = {
 PlacesUtils.GENERIC_VIEW_DROP_TYPES = [PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
                                        PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
                                        PlacesUtils.TYPE_X_MOZ_PLACE,
-                                       PlacesUtils.TYPE_X_MOZ_URL];
+                                       PlacesUtils.TYPE_X_MOZ_URL,
+                                       PlacesUtils.TYPE_UNICODE];
