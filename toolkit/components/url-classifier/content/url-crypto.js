@@ -61,7 +61,6 @@
 function PROT_UrlCrypto() {
   this.debugZone = "urlcrypto";
   this.hasher_ = new G_CryptoHasher();
-  this.base64_ = new G_Base64();
   this.streamCipher_ = Cc["@mozilla.org/security/streamcipher;1"]
                        .createInstance(Ci.nsIStreamCipher);
 
@@ -88,7 +87,8 @@ function PROT_UrlCrypto() {
   this.macInitialized_ = false;
   // Separator to prevent leakage between key and data when computing mac
   this.separator_ = ":coolgoog:";
-  this.separatorArray_ = this.base64_.arrayifyString(this.separator_);
+  this.separatorArray_ = Array.map(this.separator_,
+                                   function(c) { return c.charCodeAt(0); });
 }
 
 // The version of encryption we implement
@@ -310,8 +310,11 @@ PROT_UrlCrypto.prototype.updateMacFromString = function(s) {
     throw new Error ("Initialize mac first");
   }
 
-  var arr = this.base64_.arrayifyString(s);
-  this.macer_.updateFromArray(arr);
+  var stream = Cc['@mozilla.org/io/string-input-stream;1']
+               .createInstance(Ci.nsIStringInputStream);
+  stream.setData(s, s.length);
+  if (stream.available() > 0)
+    this.macer_.updateFromStream(stream);
 }
 
 /**
@@ -373,11 +376,11 @@ PROT_UrlCrypto.prototype.computeMac = function(data,
   this.macer_.updateFromArray(clientKeyArray);
   this.macer_.updateFromArray(separatorArray);
 
-  // Note to self: calling G_CryptoHasher.updateFromString ain't the same as
-  // arrayifying the string and then calling updateFromArray.  Not sure if
-  // that's a bug in G_CryptoHasher or not.  Niels, what do you think?
-  var arr = this.base64_.arrayifyString(data);
-  this.macer_.updateFromArray(arr);
+  var stream = Cc['@mozilla.org/io/string-input-stream;1']
+               .createInstance(Ci.nsIStringInputStream);  
+  stream.setData(data, data.length);
+  if (stream.available() > 0)
+    this.macer_.updateFromStream(stream);
 
   this.macer_.updateFromArray(separatorArray);
   this.macer_.updateFromArray(clientKeyArray);
@@ -449,7 +452,6 @@ function TEST_PROT_UrlCrypto() {
                "Output query params doesn't have: " + PROT_UrlCrypto.QPS[p]);
     
     // Now test that encryption is determinisitic
-    var b64 = new G_Base64();
     
     // Some helper functions
     function arrayEquals(a1, a2) {
@@ -479,6 +481,10 @@ function TEST_PROT_UrlCrypto() {
     var startCrypt = (new Date).getTime();
     var numCrypts = 0;
 
+    // Helper function to arrayify string.
+    function toCharCode(c) {
+      return c.charCodeAt(0);
+    }
     // Set this to true for extended testing
     var doLongTest = false;
     if (doLongTest) {
@@ -504,9 +510,9 @@ function TEST_PROT_UrlCrypto() {
           for (var payloadPadding = 0; payloadPadding < count; payloadPadding++)
             payload += "a";
           
-          var plaintext1 = b64.arrayifyString(payload);
-          var plaintext2 = b64.arrayifyString(payload);
-          var plaintext3 = b64.arrayifyString(payload);
+          var plaintext1 = Array.map(payload, toCharCode);
+          var plaintext2 = Array.map(payload, toCharCode);
+          var plaintext3 = Array.map(payload, toCharCode);
           
           // Verify that encryption is deterministic given set parameters
           numCrypts++;
@@ -528,14 +534,17 @@ function TEST_PROT_UrlCrypto() {
           numCrypts++;
 
           // Now verify that it is symmetrical
+          var b64arr = Array.map(atob(ciphertext2), toCharCode);
           var ciphertext3 = c.encryptV1(clientKeyArray, 
                                         "1", 
                                         count,
-                                        b64.decodeString(ciphertext2), 
+                                        b64arr,
                                         true /* websafe */);
           
-          G_Assert(z, arrayEquals(plaintext3, b64.decodeString(ciphertext3, 
-                                                              true/*websafe*/)),
+          // note: ciphertext3 was websafe - reverting to plain base64 first
+          var b64str = atob(ciphertext3).replace(/-/g, "+").replace(/_/g, "/");
+          b64arr = Array.map(b64str, toCharCode)
+          G_Assert(z, arrayEquals(plaintext3, b64arr),
                    "Encryption and decryption not symmetrical");
         }
       }
@@ -593,7 +602,8 @@ function TEST_PROT_UrlCrypto() {
     ciphertexts[36]="Q0nZXFPJbpx1WZPP-lLPuSGR-pD08B4CAW-6Uf0eEkS05-oM";
     ciphertexts[37]="XeKfieZGc9bPh7nRtCgujF8OY14zbIZSK20Lwg1HTpHi9HfXVQ==";
     
-    var clientKeyArray = b64.decodeString("dtmbEN1kgN/LmuEoYifaFw==");
+    var clientKey = "dtmbEN1kgN/LmuEoYifaFw==";
+    var clientKeyArray = Array.map(atob(clientKey), toCharCode);
     // wrappedKey was "MTpPH3pnLDKihecOci+0W5dk"
     var count = 0xFEDCBA09;
     var plaintext = "http://www.foobar.com/this?is&some=url";
@@ -602,7 +612,7 @@ function TEST_PROT_UrlCrypto() {
     // that we get what we expect when we encrypt
 
     for (var i = 0; i < plaintext.length; i++) {
-      var plaintextArray = b64.arrayifyString(plaintext.substring(0, i));
+      var plaintextArray = Array.map(plaintext.slice(0, i), toCharCode);
       var crypted = c.encryptV1(clientKeyArray,
                                 "1",
                                 count + i,

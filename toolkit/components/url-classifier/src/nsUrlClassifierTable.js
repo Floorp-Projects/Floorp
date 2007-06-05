@@ -53,7 +53,6 @@ function Init() {
   modScope.G_PreferenceObserver = jslib.G_PreferenceObserver;
   modScope.G_Debug = jslib.G_Debug;
   modScope.G_CryptoHasher = jslib.G_CryptoHasher;
-  modScope.G_Base64 = jslib.G_Base64;
   modScope.BindToObject = jslib.BindToObject;
 
   // We only need to call Init once.
