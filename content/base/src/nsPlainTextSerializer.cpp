@@ -758,6 +758,9 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
       mIndent += kTabSize; // Check for some maximum value?
     }
   }
+  else if (type == eHTMLTag_q) {
+    Write(NS_LITERAL_STRING("\""));
+  }
 
   // Else make sure we'll separate block level tags,
   // even if we're about to leave, before doing any other formatting.
@@ -819,9 +822,6 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
         && !url.IsEmpty()) {
       mURL = url;
     }
-  }
-  else if (type == eHTMLTag_q) {
-    Write(NS_LITERAL_STRING("\""));
   }
   else if (type == eHTMLTag_sup && mStructs && !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("^"));
@@ -958,6 +958,9 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
     }
     mLineBreakDue = PR_TRUE;
   }
+  else if (type == eHTMLTag_q) {
+    Write(NS_LITERAL_STRING("\""));
+  }
   else if (IsBlockLevel(aTag)
            && type != eHTMLTag_script
            && type != eHTMLTag_doctypeDecl
@@ -1009,9 +1012,6 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
     temp.Append(PRUnichar('>'));
     Write(temp);
     mURL.Truncate();
-  }
-  else if (type == eHTMLTag_q) {
-    Write(NS_LITERAL_STRING("\""));
   }
   else if ((type == eHTMLTag_sup || type == eHTMLTag_sub) 
            && mStructs && !currentNodeIsConverted) {
