@@ -594,11 +594,12 @@ void nsScrollPortView::Scroll(nsView *aScrolledView, nsPoint aTwipsDelta, nsPoin
             biggestRect = *r;
           }
         }
+        toScrollPtr = &toScroll;
+        biggestRect.ScaleRoundIn(1.0/aP2A);
+        toScroll = biggestRect;
+        biggestRect *= aP2A;
         regionToScroll.Sub(regionToScroll, biggestRect);
         updateRegion.Or(updateRegion, regionToScroll);
-        toScrollPtr = &toScroll;
-        toScroll = biggestRect;
-        toScroll.ScaleRoundOut(1.0/aP2A);
       }
 #endif
 
