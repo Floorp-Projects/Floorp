@@ -2085,21 +2085,6 @@ function getShortcutOrURI(aURL, aPostDataRef)
   return aURL;
 }
 
-#if 0
-// XXXben - this is only useful if we ever support text/plain encoded forms in
-// smart keywords.
-function normalizePostData(aStringData)
-{
-  var parts = aStringData.split("&");
-  var result = "";
-  for (var i = 0; i < parts.length; ++i) {
-    var part = unescape(parts[i]);
-    if (part)
-      result += part + "\r\n";
-  }
-  return result;
-}
-#endif
 function getPostDataStream(aStringData, aKeyword, aEncKeyword, aType)
 {
   var dataStream = Components.classes["@mozilla.org/io/string-input-stream;1"]
