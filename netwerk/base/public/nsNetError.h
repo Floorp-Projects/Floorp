@@ -252,7 +252,7 @@
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 24)
 
 #define NS_ERROR_FTP_LIST \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 25)
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 28)
 
 /******************************************************************************
  * DNS specific error codes:
