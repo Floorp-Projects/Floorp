@@ -848,8 +848,7 @@
           var val = this.resultsPopup.getOverrideValue();
             if (val)
               this.setTextValue(val);
-          else if (this.resultsPopup.selectedIndex != null &&
-                   !this.noMatch) {
+          else if (this.resultsPopup.selectedIndex != -1 && !this.noMatch) {
             if (this.getSessionStatusAt(this.resultsPopup.selectedIndex) ==
                 Components.interfaces.nsIAutoCompleteStatus.failureItems) {
               this.setTextValue(this.currentSearchString);
@@ -932,7 +931,7 @@
           this.mNeedToComplete = true;
           var str = this.value;
           this.currentSearchString = str;
-          this.resultsPopup.selectedIndex = null;
+          this.resultsPopup.selectedIndex = -1;
           this.removeAttribute("noMatchesFound");
           
           this.mAutoCompleteTimer = setTimeout(this.callListener, this.timeout, this, "startLookup");
@@ -963,7 +962,7 @@
 
               // if this is a failure item, save it for fireErrorCommand
               var errItem = null;
-              if (this.resultsPopup.selectedIndex != null && 
+              if (this.resultsPopup.selectedIndex != -1 && 
                   this.getSessionStatusAt(this.resultsPopup.selectedIndex) ==
                   Components.interfaces.nsIAutoCompleteStatus.failureItems) {
                 errItem = this.getResultAt(this.resultsPopup.selectedIndex);
@@ -1071,7 +1070,7 @@
           
             // determine which value to place in the textbox
             this.ignoreInputEvent = true;
-            if (selected != null) {
+            if (selected != -1) {
               if (this.getSessionStatusAt(selected) == 
                   Components.interfaces.nsIAutoCompleteStatus.failureItems) { 
                 if (this.currentSearchString)
@@ -1285,10 +1284,10 @@
         ({
           mTextbox: this,
           mTree: null,
-          mBoxObject: null,
+          mSelection: null,
           mResults: [],
           mRowCount: 0,
-          mSelectedIndex: null,
+          mSelectedIndex: -1,
           
           get treeBoxObject()
           {
@@ -1297,24 +1296,15 @@
           
           set selectedIndex(aRow)
           {
-            if (!this.mBoxObject)
-              return;
-              
-            if (this.mSelectedIndex != null)
-              this.mBoxObject.invalidateRow(this.mSelectedIndex);
-              
-            this.mSelectedIndex = aRow;
-            
-            if (aRow != null) {
-              this.mBoxObject.invalidateRow(aRow);
-
-              this.mBoxObject.ensureRowIsVisible(aRow);
-              // Fire select event on xul:tree so that accessibility API 
-              // support layer can fire appropriate accessibility events.
-              var event = document.createEvent('Events');
-              event.initEvent("select", true, true);
-              this.mTree.element.dispatchEvent(event);
+            if (this.mSelection) {
+              this.mSelectedIndex = aRow;
+              this.mSelection.select(aRow);
+              if (aRow >= 0) {
+                this.mSelection.currentIndex = -1;
+                this.mTree.ensureRowIsVisible(aRow);
+              }
             }
+            return aRow;
           },
           
           get selectedIndex()
@@ -1328,10 +1318,10 @@
             this.mRowCount = 0;  
             this.mResults = [];
             
-            if (this.mTree)
+            if (this.mTree) {
               this.mTree.rowCountChanged(0, -oldCount);
-            if (this.mBoxObject)
-              this.mBoxObject.scrollToRow(0);
+              this.mTree.scrollToRow(0);
+            }
           },
           
           addResults: function(aResults)
@@ -1361,17 +1351,19 @@
             return this.mRowCount;
           },
           
-          // implementing these results in a crash
-          // get selection() {},
-          // set selection(aVal) { },
+          get selection() {
+            return this.mSelection;
+          },
+
+          set selection(aVal) {
+            return this.mSelection = aVal;
+          },
           
           setTree: function(aTree)
           {
             this.mTree = aTree;
             
             if (aTree) {
-              this.mBoxObject = this.mTextbox.resultsPopup.tree.treeBoxObject;
-            
               // cache atoms for pseudoelement properties
               this.mAtomSelected = this.createAtom("menuactive")
             }
@@ -1514,7 +1506,7 @@
         this.tree.__AUTOCOMPLETE_BOX__ = this.textbox;
         this.treebody.__AUTOCOMPLETE_BOX__ = this.textbox;
 
-        this._selectedIndex = null;
+        this._selectedIndex = -1;
 
         this.initColumns();
         this.view = this.textbox.view;
@@ -1584,7 +1576,7 @@
             // do nothing - occasionally timer-related js errors happen here
             // e.g. "this.selectedIndex has no properties", when you type fast and hit a
             // navigation key before this popup has opened
-            return null;
+            return -1;
           }
         ]]></body>
       </method>
@@ -1596,12 +1588,12 @@
         <parameter name="aMaxRow"/>
         <body><![CDATA[
           if (aMaxRow < 0)
-            return null;
+            return -1;
 
-          if (aIndex == null)
+          if (aIndex == -1)
             return aReverse ? aMaxRow : 0;
           if (aIndex == (aReverse ? 0 : aMaxRow))
-            return null;
+            return -1;
 
           var amount = aPage ? this.pageCount - 1 : 1;
           aIndex = aReverse ? aIndex - amount : aIndex + amount;
@@ -1631,7 +1623,7 @@
 
       <handler event="popuphiding">
         this.textbox.mMenuOpen = false;
-        this.selectedIndex = null;
+        this.selectedIndex = -1;
       </handler>
 
       <handler event="mousedown" phase="capturing" preventdefault="true"/>
@@ -1642,8 +1634,6 @@
     <implementation>
       <property name="textbox"
                 onget="return this.__AUTOCOMPLETE_BOX__;"/>
-      <property name="currentIndex" onget="return this.textbox.view.selectedIndex;"
-                                    onset="this.textbox.view.selectedIndex = val; return val;"/>
     </implementation>
   </binding>
 
@@ -1661,19 +1651,16 @@
            // popup!
            var x = aEvent.screenX - document.documentElement.boxObject.screenX;
            var y = aEvent.screenY - document.documentElement.boxObject.screenY;
-           var row = this.textbox.view.treeBoxObject.getRowAt(x, y);
-           if (row >= 0)
-             return row;
-           return null;
+           return this.textbox.view.treeBoxObject.getRowAt(x, y);
         ]]></body>
       </method>
     </implementation>
     
     <handlers>
-      <handler event="mouseout" action="this.textbox.view.selectedIndex = null;"/>
+      <handler event="mouseout" action="this.textbox.view.selectedIndex = -1;"/>
       <handler event="mouseup"><![CDATA[
         var rc = this.getHoverRow(event);
-        if (rc != null) {
+        if (rc != -1) {
           this.textbox.view.selectedIndex = rc;
           this.textbox.onResultClick();
         }
@@ -1682,7 +1669,7 @@
       <handler event="mousemove"><![CDATA[
         if (Date.now() - this.mLastMoveTime > 30) {
           var rc = this.getHoverRow(event);
-          if (rc != null && rc != this.textbox.view.selectedIndex) 
+          if (rc != -1 && rc != this.textbox.view.selectedIndex) 
             this.textbox.view.selectedIndex = rc;
           this.mLastMoveTime = Date.now();
         }
