@@ -352,19 +352,16 @@ TableBackgroundPainter::PaintTable(nsTableFrame* aTableFrame,
 {
   NS_PRECONDITION(aTableFrame, "null table frame");
 
-  nsVoidArray rowGroups;
-  PRUint32 numRowGroups;
-  aTableFrame->OrderRowGroups(rowGroups, numRowGroups);
+  nsTableFrame::RowGroupArray rowGroups;
+  aTableFrame->OrderRowGroups(rowGroups);
 
-  if (numRowGroups < 1) { //degenerate case
-    PaintTableFrame(aTableFrame,nsnull, nsnull, nsnull);
+  if (rowGroups.Length() < 1) { //degenerate case
+    PaintTableFrame(aTableFrame, nsnull, nsnull, nsnull);
     /* No cells; nothing else to paint */
     return NS_OK;
   }
 
-  PaintTableFrame(aTableFrame,
-                  aTableFrame->GetRowGroupFrame(NS_STATIC_CAST(nsIFrame*, rowGroups.ElementAt(0))),
-                  aTableFrame->GetRowGroupFrame(NS_STATIC_CAST(nsIFrame*, rowGroups.ElementAt(numRowGroups - 1))),
+  PaintTableFrame(aTableFrame, rowGroups[0], rowGroups[rowGroups.Length() - 1],
                   aDeflate);
 
   /*Set up column background/border data*/
@@ -438,8 +435,8 @@ TableBackgroundPainter::PaintTable(nsTableFrame* aTableFrame,
     }
   }
 
-  for (PRUint32 i = 0; i < numRowGroups; i++) {
-    nsTableRowGroupFrame* rg = nsTableFrame::GetRowGroupFrame(NS_STATIC_CAST(nsIFrame*, rowGroups.ElementAt(i)));
+  for (PRUint32 i = 0; i < rowGroups.Length(); i++) {
+    nsTableRowGroupFrame* rg = rowGroups[i];
     mRowGroup.SetFrame(rg);
     // Need to compute the right rect via GetOffsetTo, since the row
     // group may not be a child of the table.
