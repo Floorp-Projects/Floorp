@@ -286,9 +286,10 @@ var BookmarksEventHandler = {
    *        DOMEvent for popupshowing
    */
   onPopupShowing: function BM_onPopupShowing(event) {
-    var target = event.target;
-
-    if (target.localName == "menupopup" && target.id != "bookmarksMenuPopup") {
+    var target = event.originalTarget;
+    if (target.localName == "menupopup" &&
+        target.id != "bookmarksMenuPopup" &&
+        target.getAttribute("anonid") != "chevronPopup") {
       // Show "Open All in Tabs" menuitem if there are at least
       // two menuitems with places result nodes, and "Open (Feed Name)"
       // if it's a livemark with a siteURI.
