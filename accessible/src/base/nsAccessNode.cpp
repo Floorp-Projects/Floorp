@@ -212,7 +212,11 @@ NS_IMETHODIMP nsAccessNode::GetOwnerWindow(void **aWindow)
 already_AddRefed<nsApplicationAccessibleWrap>
 nsAccessNode::GetApplicationAccessible()
 {
-  if (!gApplicationAccessible && gIsAccessibilityActive) {
+  if (!gIsAccessibilityActive) {
+    return nsnull;
+  }
+
+  if (!gApplicationAccessible) {
     nsApplicationAccessibleWrap::PreCreate();
 
     gApplicationAccessible = new nsApplicationAccessibleWrap();
