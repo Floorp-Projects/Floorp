@@ -53,7 +53,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  expect = 'TypeError: [].z is not a function';
+  expect = /TypeError:.*(is not a function|Cannot find function).*/;
   actual = '';
   try
   {
@@ -63,7 +63,7 @@ function test()
   {
     actual = ex + '';
   }
-  reportCompare(expect, actual, summary);
+  reportMatch(expect, actual, summary);
 
   exitFunc ('test');
 }
