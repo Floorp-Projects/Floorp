@@ -61,7 +61,6 @@ function PROT_EnchashDecrypter() {
   this.debugZone = "enchashdecrypter";
   this.REs_ = PROT_EnchashDecrypter.REs;
   this.hasher_ = new G_CryptoHasher();
-  this.base64_ = new G_Base64();
   this.streamCipher_ = Cc["@mozilla.org/security/streamcipher;1"]
                        .createInstance(Ci.nsIStreamCipher);
 }
@@ -301,7 +300,7 @@ PROT_EnchashDecrypter.prototype.canonicalNum_ = function(num, bytes, octal) {
 
 PROT_EnchashDecrypter.prototype.getLookupKey = function(host) {
   var dataKey = PROT_EnchashDecrypter.DATABASE_SALT + host;
-  dataKey = this.base64_.arrayifyString(dataKey);
+  dataKey = Array.map(dataKey, function(c) { return c.charCodeAt(0); });
 
   this.hasher_.init(G_CryptoHasher.algorithms.MD5);
   var lookupDigest = this.hasher_.updateFromArray(dataKey);
@@ -311,9 +310,7 @@ PROT_EnchashDecrypter.prototype.getLookupKey = function(host) {
 }
 
 PROT_EnchashDecrypter.prototype.decryptData = function(data, host) {
-  // XXX: base 64 decoding should be done in C++
-  var asciiArray = this.base64_.decodeString(data);
-  var ascii = this.base64_.stringifyArray(asciiArray);
+  var ascii = atob(data);
 
   var random_salt = ascii.slice(0, PROT_EnchashDecrypter.SALT_LENGTH);
   var encrypted_data = ascii.slice(PROT_EnchashDecrypter.SALT_LENGTH);
