@@ -185,51 +185,44 @@ gfxWindowsFont::MakeHFONT()
 
     PRUint32 chosenWeight = 0;
 
-    if (weightDistance >= 0) {
+    PRUint8 direction = (weightDistance >= 0) ? 1 : -1;
 
-        for (PRUint8 i = baseWeight, k = 0; i < 10; i++) {
-            if (mFontEntry->mWeightTable.HasWeight(i)) {
-                k++;
+    for (PRUint8 i = baseWeight, k = 0; i < 10 && i >= 1; i+=direction) {
+        if (mFontEntry->mWeightTable.HasWeight(i)) {
+            k++;
+            chosenWeight = i * 100;
+        } else if (mFontEntry->mWeightTable.TriedWeight(i)) {
+            continue;
+        } else {
+            const PRUint32 tryWeight = i * 100;
+
+            if (!dc)
+                dc = GetDC((HWND)nsnull);
+
+            FillLogFont(GetStyle()->size, tryWeight);
+            mFont = CreateFontIndirectW(&mLogFont);
+            HGDIOBJ oldFont = SelectObject(dc, mFont);
+            TEXTMETRIC metrics;
+            GetTextMetrics(dc, &metrics);
+
+            PRBool hasWeight = (metrics.tmWeight == tryWeight);
+            mFontEntry->mWeightTable.SetWeight(i, hasWeight);
+            if (hasWeight) {
                 chosenWeight = i * 100;
-            } else if (mFontEntry->mWeightTable.TriedWeight(i)) {
-                continue;
-            } else {
-                const PRUint32 tryWeight = i * 100;
-
-                if (!dc)
-                    dc = GetDC((HWND)nsnull);
-
-                FillLogFont(GetStyle()->size, tryWeight);
-                mFont = CreateFontIndirectW(&mLogFont);
-                HGDIOBJ oldFont = SelectObject(dc, mFont);
-                TEXTMETRIC metrics;
-                GetTextMetrics(dc, &metrics);
-
-                PRBool hasWeight = (metrics.tmWeight == tryWeight);
-                mFontEntry->mWeightTable.SetWeight(i, hasWeight);
-                if (hasWeight) {
-                    chosenWeight = i * 100;
-                    k++;
-                }
-
-                SelectObject(dc, oldFont);
-                if (k <= weightDistance) {
-                    DeleteObject(mFont);
-                    mFont = nsnull;
-                }
+                k++;
             }
 
-            if (k > weightDistance) {
-                chosenWeight = i * 100;
-                break;
+            SelectObject(dc, oldFont);
+            if (k <= abs(weightDistance)) {
+                DeleteObject(mFont);
+                mFont = nsnull;
             }
         }
 
-    } else if (weightDistance < 0) {
-#ifdef DEBUG_pavlov
-        printf("dont' support light/lighter yet\n");
-#endif
-        chosenWeight = baseWeight * 100;
+        if (k > abs(weightDistance)) {
+            chosenWeight = i * 100;
+            break;
+        }
     }
 
     if (chosenWeight == 0)
