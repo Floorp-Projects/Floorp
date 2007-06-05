@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Brian Ryner <bryner@brianryner.com>  (Original Author)
+ *  Michael Ventnor <m.ventnor@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -222,7 +223,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
 
       PRInt32 eventState = GetContentState(stateFrame, aWidgetType);
 
-      aState->disabled = IsDisabled(aFrame);
+      aState->disabled = (IsDisabled(aFrame) || IsReadOnly(aFrame));
       aState->active  = (eventState & NS_EVENT_STATE_ACTIVE) == NS_EVENT_STATE_ACTIVE;
       aState->focused = (eventState & NS_EVENT_STATE_FOCUS) == NS_EVENT_STATE_FOCUS;
       aState->inHover = (eventState & NS_EVENT_STATE_HOVER) == NS_EVENT_STATE_HOVER;
@@ -709,14 +710,14 @@ NS_IMETHODIMP
 nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType, nsMargin* aResult)
 {
-  aResult->top = aResult->left = 0;
+  aResult->top = aResult->left = aResult->right = aResult->bottom = 0;
   switch (aWidgetType) {
   case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
   case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
     {
       MozGtkScrollbarMetrics metrics;
       moz_gtk_get_scrollbar_metrics(&metrics);
-      aResult->top = aResult->left = metrics.trough_border;
+      aResult->top = aResult->left = aResult->right = aResult->bottom = metrics.trough_border;
     }
     break;
   case NS_THEME_TOOLBOX:
@@ -737,14 +738,11 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
       GtkThemeWidgetType gtkWidgetType;
       if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nsnull,
                                nsnull))
-        moz_gtk_get_widget_border(gtkWidgetType, &aResult->left,
-                                  &aResult->top);
+        moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
+                                  &aResult->right, &aResult->bottom,
+                                  (aFrame ? aFrame->GetContent()->IsNodeOfType(nsINode::eHTML) : FALSE));
     }
   }
-
-  aResult->right = aResult->left;
-  aResult->bottom = aResult->top;
-
   return NS_OK;
 }
 
@@ -941,6 +939,7 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
         aAttribute == nsWidgetAtoms::checked ||
         aAttribute == nsWidgetAtoms::selected ||
         aAttribute == nsWidgetAtoms::focused ||
+        aAttribute == nsWidgetAtoms::readonly ||
         aAttribute == nsWidgetAtoms::mozmenuactive)
       *aShouldRepaint = PR_TRUE;
   }
@@ -966,11 +965,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
                                       nsIFrame* aFrame,
                                       PRUint8 aWidgetType)
 {
-  if (aFrame) {
-    if (aFrame->GetContent()->IsNodeOfType(nsINode::eHTML))
-      return PR_FALSE;
-  }
-
   if (IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType))
     return PR_FALSE;
 
@@ -1028,7 +1022,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_TEXTFIELD:
   case NS_THEME_TEXTFIELD_MULTILINE:
     // case NS_THEME_TEXTFIELD_CARET:
-  case NS_THEME_DROPDOWN_BUTTON:
+    // case NS_THEME_DROPDOWN_BUTTON:
   case NS_THEME_DROPDOWN_TEXTFIELD:
   case NS_THEME_SCALE_HORIZONTAL:
   case NS_THEME_SCALE_THUMB_HORIZONTAL:
@@ -1070,11 +1064,15 @@ nsNativeThemeGTK::WidgetIsContainer(PRUint8 aWidgetType)
 PRBool
 nsNativeThemeGTK::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType)
 {
+   if (aWidgetType == NS_THEME_DROPDOWN ||
+      aWidgetType == NS_THEME_BUTTON)
+    return PR_TRUE;
+  
   return PR_FALSE;
 }
 
 PRBool
 nsNativeThemeGTK::ThemeNeedsComboboxDropmarker()
 {
-  return PR_TRUE;
+  return PR_FALSE;
 }
