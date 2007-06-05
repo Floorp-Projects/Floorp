@@ -512,14 +512,14 @@ NS_IMETHODIMP nsAccessible::Init()
         nsCString utf8Role = NS_ConvertUTF16toUTF8(roleString); // For easy comparison
         ToLowerCase(utf8Role);
         PRUint32 index;
-        for (index = 0; gWAIRoleMap[index].roleString; index ++) {
-          if (utf8Role.Equals(gWAIRoleMap[index].roleString)) {
+        for (index = 0; nsARIAMap::gWAIRoleMap[index].roleString; index ++) {
+          if (utf8Role.Equals(nsARIAMap::gWAIRoleMap[index].roleString)) {
             break; // The dynamic role attribute maps to an entry in our table
           }
         }
         // Always use some entry if there is a role string
         // If no match, we use the last entry which maps to ROLE_NOTHING
-        mRoleMapEntry = &gWAIRoleMap[index];
+        mRoleMapEntry = &nsARIAMap::gWAIRoleMap[index];
       }
     }
   }
@@ -2037,132 +2037,6 @@ nsAccessible::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
   return obsService->NotifyObservers(aEvent, NS_ACCESSIBLE_EVENT_TOPIC, nsnull);
 }
 
-nsRoleMapEntry nsAccessible::gWAIRoleMap[] = 
-{
-  // This list of WAI-defined roles are currently hardcoded.
-  // Eventually we will most likely be loading an RDF resource that contains this information
-  // Using RDF will also allow for role extensibility. See bug 280138.
-  // XXX Should we store attribute names in this table as atoms instead of strings?
-  // Definition of nsRoleMapEntry and nsStateMapEntry contains comments explaining this table.
-  {"alert", nsIAccessibleRole::ROLE_ALERT, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
-  {"alertdialog", nsIAccessibleRole::ROLE_ALERT, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
-  {"application", nsIAccessibleRole::ROLE_APPLICATION, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"button", nsIAccessibleRole::ROLE_PUSHBUTTON, eNameOkFromChildren, eNoValue, eNoReqStates,
-            {"pressed", BOOL_STATE, nsIAccessibleStates::STATE_PRESSED},
-            {"haspopup", BOOL_STATE, nsIAccessibleStates::STATE_HASPOPUP}, END_ENTRY},
-  {"buttonsubmit", nsIAccessibleRole::ROLE_PUSHBUTTON, eNameOkFromChildren, eNoValue, nsIAccessibleStates::STATE_DEFAULT, END_ENTRY},
-  {"buttoncancel", nsIAccessibleRole::ROLE_PUSHBUTTON, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
-  {"checkbox", nsIAccessibleRole::ROLE_CHECKBUTTON, eNameOkFromChildren, eNoValue, nsIAccessibleStates::STATE_CHECKABLE,
-            {"checked", BOOL_STATE, nsIAccessibleStates::STATE_CHECKED},
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, END_ENTRY},
-  {"checkboxtristate", nsIAccessibleRole::ROLE_CHECKBUTTON, eNameOkFromChildren, eNoValue, nsIAccessibleStates::STATE_CHECKABLE,
-            {"checked", BOOL_STATE, nsIAccessibleStates::STATE_CHECKED},
-            {"checked", "mixed", nsIAccessibleStates::STATE_MIXED},
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, END_ENTRY},
-  {"columnheader", nsIAccessibleRole::ROLE_COLUMNHEADER, eNameOkFromChildren, eNoValue, eNoReqStates,
-            {"selected", BOOL_STATE, nsIAccessibleStates::STATE_SELECTED | nsIAccessibleStates::STATE_SELECTABLE},
-            {"selected", "false", nsIAccessibleStates::STATE_SELECTABLE},
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, END_ENTRY},
-  {"combobox", nsIAccessibleRole::ROLE_COMBOBOX, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY},
-            {"expanded", BOOL_STATE, nsIAccessibleStates::STATE_EXPANDED},
-            {"multiselectable", BOOL_STATE, nsIAccessibleStates::STATE_MULTISELECTABLE | nsIAccessibleStates::STATE_EXTSELECTABLE}, END_ENTRY},
-  {"description", nsIAccessibleRole::ROLE_TEXT_CONTAINER, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
-  {"dialog", nsIAccessibleRole::ROLE_DIALOG, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"document", nsIAccessibleRole::ROLE_DOCUMENT, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"label", nsIAccessibleRole::ROLE_LABEL, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
-  {"list", nsIAccessibleRole::ROLE_LIST, eNameLabelOrTitle, eNoValue, eNoReqStates,
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY},
-            {"multiselectable", BOOL_STATE, nsIAccessibleStates::STATE_MULTISELECTABLE | nsIAccessibleStates::STATE_EXTSELECTABLE}, END_ENTRY},
-  {"listbox", nsIAccessibleRole::ROLE_LIST, eNameLabelOrTitle, eNoValue, eNoReqStates,
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY},
-            {"multiselectable", BOOL_STATE, nsIAccessibleStates::STATE_MULTISELECTABLE | nsIAccessibleStates::STATE_EXTSELECTABLE}, END_ENTRY},
-  {"listitem", nsIAccessibleRole::ROLE_LISTITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
-            {"selected", BOOL_STATE, nsIAccessibleStates::STATE_SELECTED | nsIAccessibleStates::STATE_SELECTABLE},
-            {"selected", "false", nsIAccessibleStates::STATE_SELECTABLE},
-            {"checked", BOOL_STATE, nsIAccessibleStates::STATE_CHECKED | nsIAccessibleStates::STATE_CHECKABLE},
-            {"checked", "false", nsIAccessibleStates::STATE_CHECKABLE}, END_ENTRY},
-  {"menu", nsIAccessibleRole::ROLE_MENUPOPUP, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"menubar", nsIAccessibleRole::ROLE_MENUBAR, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"menuitem", nsIAccessibleRole::ROLE_MENUITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
-            {"haspopup", BOOL_STATE, nsIAccessibleStates::STATE_HASPOPUP},
-            {"checked", BOOL_STATE, nsIAccessibleStates::STATE_CHECKED | nsIAccessibleStates::STATE_CHECKABLE},
-            {"checked", "mixed", nsIAccessibleStates::STATE_MIXED},
-            {"checked", "false", nsIAccessibleStates::STATE_CHECKABLE}, END_ENTRY},
-  {"menuitemcheckbox", nsIAccessibleRole::ROLE_MENUITEM, eNameOkFromChildren, eNoValue, nsIAccessibleStates::STATE_CHECKABLE,
-            {"checked", BOOL_STATE, nsIAccessibleStates::STATE_CHECKED }, END_ENTRY},
-  {"menuitemradio", nsIAccessibleRole::ROLE_MENUITEM, eNameOkFromChildren, eNoValue, nsIAccessibleStates::STATE_CHECKABLE,
-            {"checked", BOOL_STATE, nsIAccessibleStates::STATE_CHECKED }, END_ENTRY},
-  {"grid", nsIAccessibleRole::ROLE_TABLE, eNameLabelOrTitle, eNoValue, nsIAccessibleStates::STATE_FOCUSABLE,
-            {"multiselectable", BOOL_STATE, nsIAccessibleStates::STATE_MULTISELECTABLE | nsIAccessibleStates::STATE_EXTSELECTABLE},
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, END_ENTRY},
-  {"gridcell", nsIAccessibleRole::ROLE_CELL, eNameOkFromChildren, eNoValue, eNoReqStates,
-            {"selected", BOOL_STATE, nsIAccessibleStates::STATE_SELECTED | nsIAccessibleStates::STATE_SELECTABLE},
-            {"selected", "false", nsIAccessibleStates::STATE_SELECTABLE},
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, END_ENTRY},
-  {"group", nsIAccessibleRole::ROLE_GROUPING, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"link", nsIAccessibleRole::ROLE_LINK, eNameOkFromChildren, eNoValue, nsIAccessibleStates::STATE_LINKED, END_ENTRY},
-  {"option", nsIAccessibleRole::ROLE_LISTITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
-            {"selected", BOOL_STATE, nsIAccessibleStates::STATE_SELECTED | nsIAccessibleStates::STATE_SELECTABLE},
-            {"selected", "false", nsIAccessibleStates::STATE_SELECTABLE},
-            {"checked", BOOL_STATE, nsIAccessibleStates::STATE_CHECKED | nsIAccessibleStates::STATE_CHECKABLE},
-            {"checked", "false", nsIAccessibleStates::STATE_CHECKABLE}, END_ENTRY},
-  {"progressbar", nsIAccessibleRole::ROLE_PROGRESSBAR, eNameLabelOrTitle, eHasValueMinMax, nsIAccessibleStates::STATE_READONLY,
-            {"valuenow", "unknown", nsIAccessibleStates::STATE_MIXED}, END_ENTRY},
-  {"radio", nsIAccessibleRole::ROLE_RADIOBUTTON, eNameOkFromChildren, eNoValue, eNoReqStates,
-            {"checked", BOOL_STATE, nsIAccessibleStates::STATE_CHECKED}, END_ENTRY},
-  {"radiogroup", nsIAccessibleRole::ROLE_GROUPING, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"rowheader", nsIAccessibleRole::ROLE_ROWHEADER, eNameOkFromChildren, eNoValue, eNoReqStates,
-            {"selected", BOOL_STATE, nsIAccessibleStates::STATE_SELECTED | nsIAccessibleStates::STATE_SELECTABLE},
-            {"selected", "false", nsIAccessibleStates::STATE_SELECTABLE},
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, END_ENTRY},
-  {"secret", nsIAccessibleRole::ROLE_PASSWORD_TEXT, eNameLabelOrTitle, eNoValue, nsIAccessibleStates::STATE_PROTECTED,
-             END_ENTRY},  // nsIAccessibleStates::EXT_STATE_SINGLE_LINE manually supported in code
-  {"separator", nsIAccessibleRole::ROLE_SEPARATOR, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"slider", nsIAccessibleRole::ROLE_SLIDER, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, END_ENTRY},
-  {"spinbutton", nsIAccessibleRole::ROLE_SPINBUTTON, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, END_ENTRY},
-  {"spreadsheet", nsIAccessibleRole::ROLE_TABLE, eNameLabelOrTitle, eNoValue, nsIAccessibleStates::STATE_MULTISELECTABLE | nsIAccessibleStates::STATE_EXTSELECTABLE | nsIAccessibleStates::STATE_FOCUSABLE,
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, END_ENTRY}, // Still supported, but deprecated in favor of grid
-  {"status", nsIAccessibleRole::ROLE_STATUSBAR, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"tab", nsIAccessibleRole::ROLE_PAGETAB, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
-  {"table", nsIAccessibleRole::ROLE_TABLE, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"td", nsIAccessibleRole::ROLE_CELL, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"th", nsIAccessibleRole::ROLE_CELL, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"tablist", nsIAccessibleRole::ROLE_PAGETABLIST, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"tabpanel", nsIAccessibleRole::ROLE_PROPERTYPAGE, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"textarea", nsIAccessibleRole::ROLE_ENTRY, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, END_ENTRY}, // XXX nsIAccessibleStates::EXT_STATE_MULTI_LINE supported in code
-  {"textfield", nsIAccessibleRole::ROLE_ENTRY, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, 
-            {"haspopup", BOOL_STATE, nsIAccessibleStates::STATE_HASPOPUP}, END_ENTRY}, // XXX nsIAccessibleStates::EXT_STATE_SINGLE_LINE supported in code
-  {"toolbar", nsIAccessibleRole::ROLE_TOOLBAR, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"tree", nsIAccessibleRole::ROLE_OUTLINE, eNameLabelOrTitle, eNoValue, eNoReqStates,
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY},
-            {"multiselectable", BOOL_STATE, nsIAccessibleStates::STATE_MULTISELECTABLE | nsIAccessibleStates::STATE_EXTSELECTABLE}, END_ENTRY},
-  {"treeitem", nsIAccessibleRole::ROLE_OUTLINEITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
-            {"selected", BOOL_STATE, nsIAccessibleStates::STATE_SELECTED | nsIAccessibleStates::STATE_SELECTABLE},
-            {"selected", "false", nsIAccessibleStates::STATE_SELECTABLE},
-            {"expanded", BOOL_STATE, nsIAccessibleStates::STATE_EXPANDED},
-            {"expanded", "false", nsIAccessibleStates::STATE_COLLAPSED},
-            {"checked", BOOL_STATE, nsIAccessibleStates::STATE_CHECKED | nsIAccessibleStates::STATE_CHECKABLE},
-            {"checked", "mixed", nsIAccessibleStates::STATE_MIXED},
-            {"checked", "false", nsIAccessibleStates::STATE_CHECKABLE},},
-  {"treegroup", nsIAccessibleRole::ROLE_GROUPING, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {nsnull, nsIAccessibleRole::ROLE_NOTHING, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY} // Last item
-};
-
-// XHTML 2 roles
-// These don't need a mapping - they are exposed either through DOM or via MSAA role string
-// banner, contentinfo, main, navigation, note, search, secondary, seealso
-
-nsStateMapEntry nsAccessible::gUnivStateMap[] = {
-  {"disabled", BOOL_STATE, nsIAccessibleStates::STATE_UNAVAILABLE},
-  {"required", BOOL_STATE, nsIAccessibleStates::STATE_REQUIRED},
-  {"invalid", BOOL_STATE, nsIAccessibleStates::STATE_INVALID}
-};
-
 NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
 {
   if (mRoleMapEntry) {
@@ -2357,7 +2231,7 @@ PRBool nsAccessible::MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut
   nsAutoString attribValue;
   nsCOMPtr<nsIAtom> attribAtom = do_GetAtom(aStateMapEntry->attributeName); // XXX put atoms directly in entry
   if (aContent->GetAttr(kNameSpaceID_WAIProperties, attribAtom, attribValue)) {
-    if (aStateMapEntry->attributeValue == BOOL_STATE) {
+    if (aStateMapEntry->attributeValue == kBoolState) {
       // No attribute value map specified in state map entry indicates state cleared
       if (attribValue.EqualsLiteral("false")) {
         return *aStateInOut &= ~aStateMapEntry->state;
@@ -2395,9 +2269,10 @@ nsAccessible::GetARIAState(PRUint32 *aState)
   nsIContent *content = GetRoleContent(mDOMNode);
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE); // Node already shut down
 
-  PRUint32 length = NS_ARRAY_LENGTH(nsAccessible::gUnivStateMap);
-  for (PRUint32 index = 0; index < length; index++) {
-    MappedAttrState(content, aState, &nsAccessible::gUnivStateMap[index]);
+  PRUint32 index = 0;
+  while (nsARIAMap::gWAIUnivStateMap[index].attributeName != nsnull) {
+    MappedAttrState(content, aState, &nsARIAMap::gWAIUnivStateMap[index]);
+    ++ index;
   }
 
   if (!mRoleMapEntry)
