@@ -1185,7 +1185,9 @@ NS_IMETHODIMP nsHyperTextAccessible::DidInsertNode(nsIDOMNode *aNode, nsIDOMNode
     }
   }
 
-  if (NS_FAILED(DOMPointToOffset(aNode, aPosition, &start)))
+  nsCOMPtr<nsIDOMNode> parentNode;
+  aNode->GetParentNode(getter_AddRefs(parentNode));
+  if (NS_FAILED(DOMPointToOffset(parentNode, aPosition, &start)))
     return NS_OK;
 
   nsCOMPtr<nsIAccessibleTextChangeEvent> event =
