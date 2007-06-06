@@ -25,6 +25,7 @@
 #  Darin Fisher <darin@meer.net>
 #  Dave Liebreich <davel@mozilla.com>
 #  Jeff Walden <jwalden+code@mit.edu>
+#  Alexander J. Vincent <ajvincent@gmail.com> (single-test mode)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,6 +49,10 @@ export XPCOM_DEBUG_BREAK=abort
 
 exit_status=0
 
+# Launch single tests by calling:
+# make SOLO_FILE=(filename) -C (test directory) check-interactive
+# js>_execute_test();
+# js>quit();
 
 ##########################
 # COMMAND-LINE ARGUMENTS #
@@ -77,6 +82,8 @@ if [ "x$testdir" = "x" ]; then
     testdir=.
 fi
 
+# The actual JS test to run.
+target_js="$5"
 
 ###############################
 # SETUP FOR RUNNING THE TESTS #
@@ -95,7 +102,7 @@ done
 # files matching the pattern tail_*.js are treated like teardown files
 # - they are run after tail.js
 tailfiles="-f $topsrcdir/tools/test-harness/xpcshell-simple/tail.js"
-tailfiles="$tailfiles -f $topsrcdir/tools/test-harness/xpcshell-simple/execute_test.js"
+#tailfiles="$tailfiles -f $topsrcdir/tools/test-harness/xpcshell-simple/execute_test.js"
 for t in $testdir/tail_*.js
 do
     if [ -f $t ]; then
@@ -104,26 +111,24 @@ do
 done
 
 
-#################
-# RUN EACH TEST #
-#################
+############
+# RUN TEST #
+############
 
-for t in $testdir/test_*.js
-do
-    echo -n "$t: "
-    NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell -s $headfiles -f $t $tailfiles 2> $t.log 1>&2
-    if [ `grep -c '\*\*\* PASS' $t.log` = 0 ]
-    then
-        echo "FAIL"
-        echo "$t.log:"
-        echo ">>>>>>>"
-        cat $t.log
-        echo ""
-        echo "<<<<<<<"
-        exit_status=1
-    else
-        echo "PASS"
-    fi
-done
+echo "NATIVE_TOPSRCDIR='$native_topsrcdir' TOPSRCDIR='$topsrcdir' $xpcshell -s $headfiles -f $testdir/unit/$target_js $tailfiles 2>&1"
+echo -n "$target_js: "
+NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell -s $headfiles -f $testdir/unit/$target_js $tailfiles -i 2>&1
+if [ `grep -c '\*\*\* PASS' $testdir/unit/$target_js.log` = 0 ]
+then
+    echo "FAIL"
+    echo "$target_js.log:"
+    echo ">>>>>>>"
+    cat $testdir/unit/$target_js.log
+    echo ""
+    echo "<<<<<<<"
+    exit_status=1
+else
+    echo "PASS"
+fi
 
 exit $exit_status
