@@ -52,8 +52,8 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES	= \
 	test_Mochikit.html \
-        manifest.json \
-        $(NULL)
+	manifest.json \
+	$(NULL)
 
 libs::	$(_TEST_FILES)
 	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
