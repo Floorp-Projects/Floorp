@@ -38,14 +38,14 @@
 }
 
 treechildren::-moz-tree-image(title) {
+  padding-right: 2px;
+  margin: 0px 2px;
   width: 16px;
   height: 16px;
 }
 
 treechildren::-moz-tree-image(title, container),
 treechildren::-moz-tree-image(title, open) {
-  padding-right: 2px;
-  margin: 0px 2px;
   list-style-image: url("chrome://global/skin/tree/folder.png") !important;
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
