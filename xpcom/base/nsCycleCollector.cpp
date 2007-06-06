@@ -1908,6 +1908,10 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
         obs->NotifyObservers(nsnull, "cycle-collector-begin", nsnull);
     }
 
+#ifdef DEBUG_CC
+    PRUint32 origTryCollections = aTryCollections;
+#endif
+
     while (aTryCollections > 0) {
         // This triggers a JS GC. Our caller assumes we always trigger at
         // least one JS GC -- they rely on this fact to avoid redundant JS
@@ -1939,7 +1943,13 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
             now = PR_Now();
 #endif
 
+#ifdef DEBUG_CC
+            PRUint32 purpleStart = mBuf.GetSize();
+#endif
             CollectPurple();
+#ifdef DEBUG_CC
+            PRUint32 purpleEnd = mBuf.GetSize();
+#endif
 
 #ifdef COLLECT_TIME_DEBUG
             printf("cc: CollectPurple() took %lldms\n",
@@ -1987,6 +1997,24 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
 
                 mScanInProgress = PR_FALSE;
 
+#ifdef DEBUG_CC
+                if (aTryCollections != origTryCollections && purpleStart != purpleEnd) {
+                    PRUint32 i = 0;
+                    NodePool::Enumerator queue(graph.mNodes);
+                    while (i++ < purpleStart) {
+                        queue.GetNext();
+                    }
+                    while (i++ < purpleEnd) {
+                        PtrInfo *pi = queue.GetNext();
+                        if (pi->mColor == white) {
+                            printf("nsCycleCollector: a later shutdown collection collected the additional\n"
+                                   "  suspect %p %s\n"
+                                   "  (which could be fixed by improving traversal)\n",
+                                   pi->mPointer, pi->mName);
+                        }
+                    }
+                }
+#endif
 
 #ifdef COLLECT_TIME_DEBUG
                 now = PR_Now();
