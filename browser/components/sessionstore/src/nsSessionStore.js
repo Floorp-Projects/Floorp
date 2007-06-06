@@ -768,6 +768,11 @@ SessionStoreService.prototype = {
         tabs.push(tabData);
         continue;
       }
+      else if (browser.parentNode.__SS_data && browser.parentNode.__SS_data._tab) {
+        // use the data to be restored when the tab hasn't been completely loaded
+        tabs.push(browser.parentNode.__SS_data);
+        continue;
+      }
       var history = null;
       
       try {
@@ -1266,13 +1271,22 @@ SessionStoreService.prototype = {
       }
     }
     
-    // mark the tabs as loading (at this point about:blank
-    // has completed loading in all tabs, so it won't interfere)
+    // mark the tabs as loading
     for (t = 0; t < aTabs.length; t++) {
+      if (!aTabs[t].entries || !aTabs[t].entries[0])
+        continue; // there won't be anything to load
+      
       var tab = aTabs[t]._tab;
+      var browser = tabbrowser.getBrowserForTab(tab);
+      browser.stop(); // in case about:blank isn't done yet
+      
       tab.setAttribute("busy", "true");
       tabbrowser.updateIcon(tab);
       tabbrowser.setTabTitleLoading(tab);
+      
+      // keep the data around to prevent dataloss in case
+      // a tab gets closed before it's been properly restored
+      browser.parentNode.__SS_data = aTabs[t];
     }
     
     // make sure to restore the selected tab first (if any)
@@ -1909,6 +1923,9 @@ SessionStoreService.prototype = {
       else if (typeof aObj == "object") {
         parts.push("{");
         for (var key in aObj) {
+          if (key == "_tab")
+            continue; // XXXzeniko we might even want to drop all private members
+          
           jsonIfy(key.toString());
           parts.push(":");
           jsonIfy(aObj[key]);
