@@ -434,7 +434,7 @@ struct PtrInfo
 
 #ifdef DEBUG_CC
     size_t mBytes;
-    const char *mName;
+    char *mName;
 #endif
 
     PtrInfo(void *aPointer, nsCycleCollectionParticipant *aParticipant)
@@ -482,6 +482,14 @@ public:
 
     ~NodePool()
     {
+#ifdef DEBUG_CC
+        {
+            Enumerator queue(*this);
+            while (!queue.IsDone()) {
+                PL_strfree(queue.GetNext()->mName);
+            }
+        }
+#endif
         Block *b = mBlocks;
         while (b) {
             Block *n = b->mNext;
@@ -1105,7 +1113,7 @@ GCGraphBuilder::DescribeNode(size_t refCount)
 
 #ifdef DEBUG_CC
     mCurrPi->mBytes = objSz;
-    mCurrPi->mName = objName;
+    mCurrPi->mName = PL_strdup(objName);
 #endif
 
     mCurrPi->mRefCount = refCount;
