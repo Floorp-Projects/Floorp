@@ -218,7 +218,6 @@ struct nsCycleCollectorStats
     PRUint32 mSuccessfulQI;
 
     PRUint32 mVisitedNode;
-    PRUint32 mVisitedJSNode;
     PRUint32 mWalkedGraph;
     PRUint32 mCollectedBytes;
     PRUint32 mFreeCalls;
@@ -253,7 +252,6 @@ struct nsCycleCollectorStats
         DUMP(mSuccessfulQI);
     
         DUMP(mVisitedNode);
-        DUMP(mVisitedJSNode);
         DUMP(mWalkedGraph);
         DUMP(mCollectedBytes);
         DUMP(mFreeCalls);
@@ -278,23 +276,6 @@ struct nsCycleCollectorStats
     }
 };
 #endif
-
-static inline void
-ToParticipant(nsISupports *s, nsXPCOMCycleCollectionParticipant **cp)
-{
-    // We use QI to move from an nsISupports to an
-    // nsXPCOMCycleCollectionParticipant, which is a per-class singleton helper
-    // object that implements traversal and unlinking logic for the nsISupports
-    // in question.
-    CallQueryInterface(s, cp);
-#ifdef DEBUG_CC
-    if (cp)
-        ++sCollector->mStats.mSuccessfulQI;
-    else
-        ++sCollector->mStats.mFailedQI;
-#endif
-}
-
 
 #ifdef DEBUG_CC
 static PRBool
@@ -795,12 +776,7 @@ struct nsCycleCollectionXPCOMRuntime :
         return NS_OK;
     }
 
-    nsCycleCollectionParticipant *ToParticipant(void *p)
-    {
-        nsXPCOMCycleCollectionParticipant *cp;
-        ::ToParticipant(NS_STATIC_CAST(nsISupports*, p), &cp);
-        return cp;
-    }
+    inline nsCycleCollectionParticipant *ToParticipant(void *p);
 };
 
 struct nsCycleCollector
@@ -924,6 +900,30 @@ canonicalize(nsISupports *in)
     in->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
                        getter_AddRefs(child));
     return child.get();
+}
+
+static inline void
+ToParticipant(nsISupports *s, nsXPCOMCycleCollectionParticipant **cp)
+{
+    // We use QI to move from an nsISupports to an
+    // nsXPCOMCycleCollectionParticipant, which is a per-class singleton helper
+    // object that implements traversal and unlinking logic for the nsISupports
+    // in question.
+    CallQueryInterface(s, cp);
+#ifdef DEBUG_CC
+    if (cp)
+        ++sCollector->mStats.mSuccessfulQI;
+    else
+        ++sCollector->mStats.mFailedQI;
+#endif
+}
+
+nsCycleCollectionParticipant *
+nsCycleCollectionXPCOMRuntime::ToParticipant(void *p)
+{
+    nsXPCOMCycleCollectionParticipant *cp;
+    ::ToParticipant(NS_STATIC_CAST(nsISupports*, p), &cp);
+    return cp;
 }
 
 
@@ -1111,8 +1111,6 @@ GCGraphBuilder::DescribeNode(size_t refCount)
     mCurrPi->mRefCount = refCount;
 #ifdef DEBUG_CC
     sCollector->mStats.mVisitedNode++;
-    if (mCurrPi->mParticipant == mRuntimes[nsIProgrammingLanguage::JAVASCRIPT])
-        sCollector->mStats.mVisitedJSNode++;
 #endif
 }
 
