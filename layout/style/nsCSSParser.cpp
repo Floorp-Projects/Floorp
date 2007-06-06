@@ -933,10 +933,6 @@ CSSParserImpl::ParseRule(const nsAString&        aRule,
   return NS_OK;
 }
 
-//XXXbz this function does not deal well with something like "foo
-//!important" as the aPropValue.  It will parse the "foo" and set it
-//in the decl, then ignore the !important.  It should either fail to
-//parse this or do !important correctly....
 NS_IMETHODIMP
 CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
                              const nsAString& aPropValue,
@@ -977,9 +973,14 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
   mTempData.AssertInitialState();
   aDeclaration->ExpandTo(&mData);
   nsresult result = NS_OK;
-  if (ParseProperty(errorCode, aPropID)) {
+  PRBool parsedOK = ParseProperty(errorCode, aPropID);
+  if (parsedOK && !GetToken(errorCode, PR_TRUE)) {
     TransferTempData(aDeclaration, aPropID, PR_FALSE, PR_FALSE, aChanged);
   } else {
+    if (parsedOK) {
+      // Junk at end of property value.
+      REPORT_UNEXPECTED_TOKEN(PEExpectEndProperty);
+    }
     NS_ConvertASCIItoUTF16 propName(nsCSSProps::GetStringValue(aPropID));
     const PRUnichar *params[] = {
       propName.get()

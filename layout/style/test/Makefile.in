@@ -74,6 +74,7 @@ _TEST_FILES = 	test_bug221428.html \
 		test_bug373293.html \
 		test_bug379440.html \
 		test_bug379741.html \
+		test_bug383075.html \
 		test_dont_use_document_colors.html \
 		test_inherit_storage.html \
 		test_inherit_computation.html \
