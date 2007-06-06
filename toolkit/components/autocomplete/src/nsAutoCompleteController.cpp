@@ -1212,7 +1212,8 @@ nsAutoCompleteController::ProcessResult(PRInt32 aSearchIndex, nsIAutoCompleteRes
 
 nsresult
 nsAutoCompleteController::PostSearchCleanup()
-{  
+{
+  NS_ENSURE_STATE(mInput);
   if (mRowCount) {
     OpenPopup();
     mSearchStatus = nsIAutoCompleteController::STATUS_COMPLETE_MATCH;
