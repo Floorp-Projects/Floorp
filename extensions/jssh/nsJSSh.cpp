@@ -151,9 +151,9 @@ Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
        shell->mOutput->Write(JS_GetStringBytes(str), JS_GetStringLength(str), &bytesWritten);
      }
      else
-       printf(JS_GetStringBytes(str)); // use cout if no output stream given.
+       printf("%s", JS_GetStringBytes(str)); // use cout if no output stream given.
 #ifdef DEBUG
-//        printf(JS_GetStringBytes(str));
+//        printf("%s", JS_GetStringBytes(str));
 #endif
    }
   return JS_TRUE;
