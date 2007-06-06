@@ -759,6 +759,8 @@ ageSelectionCallback(const void*  ptr,
 void
 nsPurpleBuffer::SelectAgedPointers(nsDeque *transferBuffer)
 {
+    // Rely on our caller having done a BumpGeneration first, which in
+    // turn calls SpillAll.
     mTransferBuffer = transferBuffer;
     mBackingStore.Enumerate(ageSelectionCallback, this);
     mTransferBuffer = nsnull;
@@ -809,7 +811,7 @@ struct nsCycleCollector
                          nsCycleCollectionLanguageRuntime *rt);
     void ForgetRuntime(PRUint32 langID);
 
-    void CollectPurple(); // XXXldb Should this be called SelectPurple?
+    void SelectPurple();
     void MarkRoots(GCGraph &graph);
     void ScanRoots(GCGraph &graph);
     void CollectWhite(GCGraph &graph);
@@ -1184,8 +1186,9 @@ GCGraphBuilder::NoteScriptChild(PRUint32 langID, void *child)
 
 
 void 
-nsCycleCollector::CollectPurple()
+nsCycleCollector::SelectPurple()
 {
+    mPurpleBuf.BumpGeneration();
     mPurpleBuf.SelectAgedPointers(&mBuf);
 }
 
@@ -1954,13 +1957,13 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
 #ifdef DEBUG_CC
             PRUint32 purpleStart = mBuf.GetSize();
 #endif
-            CollectPurple();
+            SelectPurple();
 #ifdef DEBUG_CC
             PRUint32 purpleEnd = mBuf.GetSize();
 #endif
 
 #ifdef COLLECT_TIME_DEBUG
-            printf("cc: CollectPurple() took %lldms\n",
+            printf("cc: SelectPurple() took %lldms\n",
                    (PR_Now() - now) / PR_USEC_PER_MSEC);
 #endif
 
@@ -2039,8 +2042,6 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
                 --aTryCollections;
             }
 
-            mPurpleBuf.BumpGeneration();
-
 #ifdef DEBUG_CC
             mStats.mCollection++;
             if (mParams.mReportStats)
@@ -2069,12 +2070,11 @@ nsCycleCollector::Shutdown()
     // buffered, irrespective of age; then permanently disable
     // the collector because the program is shutting down.
 
-    mPurpleBuf.BumpGeneration();
     mParams.mScanDelay = 0;
     Collect(SHUTDOWN_COLLECTIONS(mParams));
 
 #ifdef DEBUG_CC
-    CollectPurple();
+    SelectPurple();
     if (mBuf.GetSize() != 0) {
         printf("Might have been able to release more cycles if the cycle collector would "
                "run once more at shutdown.\n");
