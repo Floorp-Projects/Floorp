@@ -35,17 +35,39 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
+DEPTH		= ../../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir	= dom/tests/mochitest/ajax/mochikit/Mochikit
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS =	lib \
-	prototype \
-	offline \
-	mochikit \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
+
+_TEST_FILES	= \
+		Async.js \
+		Base.js \
+		Color.js \
+		Controls.js \
+		DOM.js \
+		DateTime.js \
+		DragAndDrop.js \
+		Format.js \
+		Iter.js \
+		Logging.js \
+		LoggingPane.js \
+		MochiKit.js \
+		MockDOM.js \
+		Position.js \
+		Selector.js \
+		Signal.js \
+		Sortable.js \
+		Style.js \
+		Test.js \
+		Visual.js \
+		__package__.js \
+		$(NULL)
+
+libs::	$(_TEST_FILES)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

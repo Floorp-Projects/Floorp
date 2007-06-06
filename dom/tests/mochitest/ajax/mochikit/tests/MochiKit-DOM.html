@@ -1,0 +1,316 @@
+<html>
+<head>
+    <script type="text/javascript" src="../MochiKit/MockDOM.js"></script>
+    <script type="text/javascript" src="../MochiKit/Base.js"></script>
+    <script type="text/javascript" src="../MochiKit/Iter.js"></script>
+    <script type="text/javascript" src="../MochiKit/DOM.js"></script>
+    <script type="text/javascript" src="../MochiKit/Style.js"></script>    
+    <script type="text/javascript" src="SimpleTest/SimpleTest.js"></script>        
+    <link rel="stylesheet" type="text/css" href="SimpleTest/test.css">
+</head>
+<body>
+
+<div style="display: none;">
+    <form id="form_test">
+        <select name="select">
+            <option value="foo" selected="selected">foo</option>
+            <option value="bar">bar</option>
+            <option value="baz">baz</option>
+        </select>
+        <select name="selmultiple" multiple="multiple">
+            <option value="bar" selected="selected">bar</option>
+            <option value="baz" selected="selected">baz</option>
+            <option value="foo">foo</option>
+        </select>
+        <input type="hidden" name="hidden" value="test" />
+        <input type="radio" name="radio_off" value="1" />
+        <input type="radio" name="radio_off" value="2" />
+        <input type="radio" name="radio_off" value="3" />
+        <input type="radio" name="radio_on" value="1" />
+        <input type="radio" name="radio_on" value="2" checked="checked" />
+        <input type="radio" name="radio_on" value="3" />
+    </form>
+    <form id="form_test2">
+        <select name="selempty">
+            <option value="" selected="selected">foo</option>
+        </select>
+        <select name="selempty2">
+            <option selected="selected">foo</option>
+        </select>
+    </form>
+    <div id="parentTwo" class="two">
+        <div id="parentOne" class="one">
+            <div id="parentZero" class="zero">
+                <span id="child">child</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<pre id="test">
+<script type="text/javascript">
+try {
+
+    lst = [];
+    o = {"blah": function () { lst.push("original"); }};
+    addToCallStack(o, "blah", function () { lst.push("new"); }, true);
+    addToCallStack(o, "blah", function () { lst.push("stuff"); }, true);
+    is( typeof(o.blah), 'function', 'addToCallStack has a function' );
+    is( o.blah.callStack.length, 3, 'callStack length 3' );
+    o.blah();
+    is( lst.join(" "), "original new stuff", "callStack in correct order" );
+    is( o.blah, null, "set to null" );
+    lst = [];
+    o = {"blah": function () { lst.push("original"); }};
+    addToCallStack(o, "blah",
+        function () { lst.push("new"); return false;}, false);
+    addToCallStack(o, "blah", function () { lst.push("stuff"); }, false);
+    o.blah();
+    is( lst.join(" "), "original new", "callStack in correct order (abort)" );
+    o.blah();
+    is( lst.join(" "), "original new original new", "callStack in correct order (again)" );
+    
+    
+    is( escapeHTML("<>\"&bar"), "&lt;&gt;&quot;&amp;bar", "escapeHTML" ); // for emacs highlighting: "
+
+    var isDOM = function (value, expected, message) {
+        is( escapeHTML(toHTML(value)), escapeHTML(expected), message );
+    };
+
+    var d = document.createElement('span');
+    updateNodeAttributes(d, {"foo": "bar", "baz": "wibble"});
+    isDOM( d, '<span baz="wibble" foo="bar"/>', "updateNodeAttributes" );
+
+    var d = document.createElement('span');
+    appendChildNodes(d, 'word up', [document.createElement('span')]);
+    isDOM( d, '<span>word up<span/></span>', 'appendChildNodes' );
+
+    replaceChildNodes(d, 'Think Different');
+    isDOM( d, '<span>Think Different</span>', 'replaceChildNodes' );
+
+
+    insertSiblingNodesBefore(d.childNodes[0], 'word up', document.createElement('span'));
+    isDOM( d, '<span>word up<span/>Think Different</span>', 'insertSiblingNodesBefore' );
+
+    insertSiblingNodesAfter(d.childNodes[0], 'purple monkey', document.createElement('span'));
+    isDOM( d, '<span>word uppurple monkey<span/><span/>Think Different</span>', 'insertSiblingNodesAfter' ); 
+
+    d = createDOM("span");
+    isDOM( d, "<span/>", "createDOM empty" );
+
+
+    d = createDOM("span", {"foo": "bar", "baz": "wibble"});
+    isDOM( d, '<span baz="wibble" foo="bar"/>', "createDOM attributes" );
+
+    d = createDOM("span", {"foo": "bar", "baz": "wibble", "spam": "egg"}, "one", "two", "three");
+    is( getNodeAttribute(d, 'foo'), "bar", "createDOM attribute" );
+    is( getNodeAttribute(d, 'baz'), "wibble", "createDOM attribute" );
+    removeNodeAttribute(d, "spam");
+    is( scrapeText(d), "onetwothree", "createDOM contents" );
+    
+    isDOM( d, '<span baz="wibble" foo="bar">onetwothree</span>', "createDOM contents" );
+
+    d = createDOM("span", null, function (f) {
+            return this.nodeName.toLowerCase() + "hi" + f.nodeName.toLowerCase();});
+    isDOM( d, '<span>spanhispan</span>', 'createDOM function call' );
+
+    d = createDOM("span", null, {msg: "hi", dom: function (f) {
+            return f.nodeName.toLowerCase() + this.msg; }});
+    isDOM( d, '<span>spanhi</span>', 'createDOM this.dom() call' );
+
+    d = createDOM("span", null, {msg: "hi", __dom__: function (f) {
+            return f.nodeName.toLowerCase() + this.msg; }});
+    isDOM( d, '<span>spanhi</span>', 'createDOM this.__dom__() call' );
+
+    d = createDOM("span", null, range(4));
+    isDOM( d, '<span>0123</span>', 'createDOM iterable' );
+
+
+    var d = {"taco": "pork"};
+    registerDOMConverter("taco",
+        function (o) { return !isUndefinedOrNull(o.taco); },
+        function (o) { return "Goddamn, I like " + o.taco + " tacos"; }
+    );
+    d = createDOM("span", null, d);
+    // not yet public API
+    domConverters.unregister("taco");
+
+    isDOM( d, "<span>Goddamn, I like pork tacos</span>", "createDOM with custom converter" );
+    
+    is(
+        escapeHTML(toHTML(SPAN(null))),
+        escapeHTML(toHTML(createDOM("span", null))),
+        "createDOMFunc vs createDOM"
+    );
+
+    is( scrapeText(d), "Goddamn, I like pork tacos", "scrape OK" );
+    is( scrapeText(d, true).join(""), "Goddamn, I like pork tacos", "scrape Array OK" );
+
+    var st = DIV(null, STRONG(null, "d"), "oor ", STRONG(null, "f", SPAN(null, "r"), "a"), "me");
+    is( scrapeText(st), "door frame", "scrape in-order" );
+    
+    
+    ok( !isUndefinedOrNull(getElement("test")), "getElement might work" );
+    ok( !isUndefinedOrNull($("test")), "$alias$$ CASH MONEY alias might work" );
+
+    d = createDOM("span", null, "one", "two");
+    swapDOM(d.childNodes[0], document.createTextNode("uno"));
+    isDOM( d, "<span>unotwo</span>", "swapDOM" );
+
+    is( scrapeText(d, true).join(" "), "uno two", "multi-node scrapeText" );
+    /*
+
+        TODO:
+            addLoadEvent (async test?)
+
+    */
+
+    d = createDOM("span", {"class": "foo"});
+    setElementClass(d, "bar baz");
+    ok( d.className == "bar baz", "setElementClass");
+    toggleElementClass("bar", d);
+    ok( d.className == "baz", "toggleElementClass: " + d.className);
+    toggleElementClass("bar", d);
+    ok( hasElementClass(d, "baz", "bar"), 
+        "toggleElementClass 2: " + d.className);
+    addElementClass(d, "bar");
+    ok( hasElementClass(d, "baz", "bar"), 
+        "toggleElementClass 3: " + d.className);
+    ok( addElementClass(d, "blah"), "addElementClass return");
+    ok( hasElementClass(d, "baz", "bar", "blah"), "addElementClass action");
+    ok( !hasElementClass(d, "not"), "hasElementClass single");
+    ok( !hasElementClass(d, "baz", "not"), "hasElementClass multiple");
+    ok( removeElementClass(d, "blah"), "removeElementClass" );
+    ok( !removeElementClass(d, "blah"), "removeElementClass again" );
+    ok( !hasElementClass(d, "blah"), "removeElementClass again (hasElement)" );
+    removeElementClass(d, "baz");
+    ok( !swapElementClass(d, "blah", "baz"), "false swapElementClass" );
+    ok( !hasElementClass(d, "baz"), "false swapElementClass from" );
+    ok( !hasElementClass(d, "blah"), "false swapElementClass to" );
+    addElementClass(d, "blah");
+    ok( swapElementClass(d, "blah", "baz"), "swapElementClass" );
+    ok( hasElementClass(d, "baz"), "swapElementClass has toClass" );
+    ok( !hasElementClass(d, "blah"), "swapElementClass !has fromClass" );
+    ok( !swapElementClass(d, "blah", "baz"), "swapElementClass twice" );
+    ok( hasElementClass(d, "baz"), "swapElementClass has toClass" );
+    ok( !hasElementClass(d, "blah"), "swapElementClass !has fromClass" );
+
+    TABLE;
+    TBODY;
+    TR;
+    var t = TABLE(null,
+        TBODY({"class": "foo bar", "id":"tbody0"},
+            TR({"class": "foo", "id":"tr0"}),
+            TR({"class": "bar", "id":"tr1"})
+        )
+    );
+
+    var matchElements = getElementsByTagAndClassName;
+    is(
+        map(itemgetter("id"), matchElements(null, "foo", t)).join(" "),
+        "tbody0 tr0",
+        "getElementsByTagAndClassName found all tags with foo class"
+    );
+    is(
+        map(itemgetter("id"), matchElements("tr", "foo", t)).join(" "),
+        "tr0",
+        "getElementsByTagAndClassName found all tr tags with foo class"
+    );
+    is(
+        map(itemgetter("id"), matchElements("tr", null, t)).join(" "),
+        "tr0 tr1",
+        "getElementsByTagAndClassName found all tr tags"
+    );
+        
+    var oldDoc = document;
+    var doc = MochiKit.MockDOM.createDocument();
+    is( currentDocument(), document, "currentDocument() correct" );
+    withDocument(doc, function () {
+        ok( document != doc, "global doc unchanged" );
+        is( currentDocument(), doc, "currentDocument() correct" );
+        var h1 = H1();
+        var span = SPAN(null, "foo", h1);
+        appendChildNodes(currentDocument().body, span);
+    });
+    is( document, oldDoc, "doc restored" );
+    is( doc.childNodes.length, 1, "doc has one child" );
+    is( doc.body.childNodes.length, 1, "body has one child" );
+    var sp = doc.body.childNodes[0];
+    is( sp.nodeName, "SPAN", "only child is SPAN" );
+    is( sp.childNodes.length, 2, "SPAN has two childNodes" );
+    is( sp.childNodes[0].nodeValue, "foo", "first node is text" );
+    is( sp.childNodes[1].nodeName, "H1", "second child is H1" );
+
+    is( currentDocument(), document, "currentDocument() correct" );
+    try {
+        withDocument(doc, function () {
+            ok( document != doc, "global doc unchanged" );
+            is( currentDocument(), doc, "currentDocument() correct" );
+            throw new Error("foo");
+        });
+        ok( false, "didn't throw" );
+    } catch (e) {
+        ok( true, "threw" );
+    }
+
+    var mockWindow = {"foo": "bar"};
+    is (currentWindow(), window, "currentWindow ok");
+    withWindow(mockWindow, function () {
+        is(currentWindow(), mockWindow, "withWindow ok");
+    });
+    is (currentWindow(), window, "currentWindow ok");
+
+    doc = MochiKit.MockDOM.createDocument();
+    var frm;
+    withDocument(doc, function () {
+        frm = FORM({name: "ignore"},
+            INPUT({name:"foo", value:"bar"}),
+            INPUT({name:"foo", value:"bar"}),
+            INPUT({name:"baz", value:"bar"})
+        );
+    });
+    var kv = formContents(frm);
+    is( kv[0].join(","), "foo,foo,baz", "mock formContents names" );
+    is( kv[1].join(","), "bar,bar,bar", "mock formContents values" );
+    is( queryString(frm), "foo=bar&foo=bar&baz=bar", "mock queryString hook" );
+
+    var kv = formContents("form_test");
+    is( kv[0].join(","), "select,selmultiple,selmultiple,hidden,radio_on", "formContents names" );
+    is( kv[1].join(","), "foo,bar,baz,test,2", "formContents values" );
+    is( queryString("form_test"), "select=foo&selmultiple=bar&selmultiple=baz&hidden=test&radio_on=2", "queryString hook" );
+    kv = formContents("form_test2");
+    is( kv[0].join(","), "selempty,selempty2", "formContents names empty option values" );
+    is( kv[1].join(","), ",foo", "formContents empty option values" );
+    is( queryString("form_test2"), "selempty=&selempty2=foo", "queryString empty option values" );
+    
+    var d = DIV(null, SPAN(), " \n\t", SPAN(), "foo", SPAN(), " ");
+    is( d.childNodes.length, 6, "removeEmptyNodes test conditions correct" );
+    removeEmptyTextNodes(d);
+    is( d.childNodes.length, 4, "removeEmptyNodes" );
+
+    is( getFirstParentByTagAndClassName('child', 'div', 'two'), getElement("parentTwo"), "getFirstParentByTagAndClassName found parent" );
+    is( getFirstParentByTagAndClassName('child', 'div'), getElement("parentZero"), "getFirstParentByTagAndClassName found parent (any class)" );
+    is( getFirstParentByTagAndClassName('child', '*', 'two'), getElement("parentTwo"), "getFirstParentByTagAndClassName found parent (any tag)" );
+
+    ok( true, "test suite finished!");
+    
+    
+} catch (err) {
+    
+    var s = "test suite failure!\n";
+    var o = {};
+    var k = null;
+    for (k in err) {
+        // ensure unique keys?!
+        if (!o[k]) {
+            s +=  k + ": " + err[k] + "\n";
+            o[k] = err[k];
+        }
+    }
+    ok ( false, s );
+
+}
+</script>
+</pre>
+</body>
+</html>
