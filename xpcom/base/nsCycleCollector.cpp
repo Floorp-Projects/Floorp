@@ -2092,24 +2092,45 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
 
         mScanInProgress = PR_FALSE;
 
-        NodePool::Enumerator queue(graph.mNodes);
-        while (!queue.IsDone()) {
-            PtrInfo *pi = queue.GetNext();
-            if (pi->mColor == white) {
-                printf("nsCycleCollector: %s %p was not collected due to\n"
-                       "  missing call to suspect or failure to unlink\n",
-                       pi->mName, pi->mPointer);
-            }
+        PRBool giveKnownReferences = PR_FALSE;
+        {
+            NodePool::Enumerator queue(graph.mNodes);
+            while (!queue.IsDone()) {
+                PtrInfo *pi = queue.GetNext();
+                if (pi->mColor == white) {
+                    printf("nsCycleCollector: %s %p was not collected due to\n"
+                           "  missing call to suspect or failure to unlink\n",
+                           pi->mName, pi->mPointer);
+                }
 
-            if (pi->mInternalRefs != pi->mRefCount) {
-                // Note that the external references may have been external
-                // to a different node in the cycle collection that just
-                // happened, if that different node was purple and then
-                // black.
-                printf("nsCycleCollector: %s %p was not collected due to %d\n"
-                       "  external references\n",
-                       pi->mName, pi->mPointer,
-                       pi->mRefCount - pi->mInternalRefs);
+                if (pi->mInternalRefs != pi->mRefCount) {
+                    // Note that the external references may have been external
+                    // to a different node in the cycle collection that just
+                    // happened, if that different node was purple and then
+                    // black.
+                    printf("nsCycleCollector: %s %p was not collected due to %d\n"
+                           "  external references\n",
+                           pi->mName, pi->mPointer,
+                           pi->mRefCount - pi->mInternalRefs);
+                    giveKnownReferences = PR_TRUE;
+                }
+            }
+        }
+
+        if (giveKnownReferences) {
+            printf("The known references to the objects above not collected\n"
+                   "due to external references are:\n");
+            NodePool::Enumerator queue(graph.mNodes);
+            while (!queue.IsDone()) {
+                PtrInfo *pi = queue.GetNext();
+                for (EdgePool::Iterator child = pi->mFirstChild,
+                                    child_end = pi->mLastChild;
+                     child != child_end; ++child) {
+                    if ((*child)->mInternalRefs != (*child)->mRefCount) {
+                        printf("  to: %p from %s %p\n",
+                               (*child)->mPointer, pi->mName, pi->mPointer);
+                    }
+                }
             }
         }
     }
