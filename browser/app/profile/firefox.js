@@ -276,6 +276,9 @@ pref("browser.bookmarks.sort.resource", "rdf:http://home.netscape.com/NC-rdf#Nam
 pref("dom.disable_open_during_load",              true);
 #ifdef DEBUG
 pref("javascript.options.showInConsole",          true);
+pref("javascript.options.strict",                 true);
+pref("browser.dom.window.dump.enabled",           true);
+pref("general.warnOnAboutConfig",                 false);
 #else
 pref("javascript.options.showInConsole",          false);
 #endif
