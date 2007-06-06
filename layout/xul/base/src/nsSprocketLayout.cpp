@@ -452,7 +452,8 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       {
         childComputedBoxSize = childComputedBoxSize->next;
         childBoxSize = childBoxSize->next;
-        child = child->GetNextBox();
+        if (child)
+          child = child->GetNextBox();
         count++;
         x = nextX;
         y = nextY;
