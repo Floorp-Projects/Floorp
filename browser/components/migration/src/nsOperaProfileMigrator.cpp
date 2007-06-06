@@ -310,9 +310,6 @@ nsOperaProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
   if (NS_SUCCEEDED(rv))
     aResult.Assign(val);
 
-  if (aResult.Length() > 0)
-    printf(val.get());
-
   return NS_OK;
 }
  
