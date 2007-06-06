@@ -204,7 +204,9 @@ nsSVGUseElement::CharacterDataChanged(nsIDocument *aDocument,
                                       nsIContent *aContent,
                                       CharacterDataChangeInfo* aInfo)
 {
-  TriggerReclone();
+  if (nsContentUtils::IsInSameAnonymousTree(this, aContent)) {
+    TriggerReclone();
+  }
 }
 
 void
@@ -214,7 +216,9 @@ nsSVGUseElement::AttributeChanged(nsIDocument *aDocument,
                                   nsIAtom *aAttribute,
                                   PRInt32 aModType)
 {
-  TriggerReclone();
+  if (nsContentUtils::IsInSameAnonymousTree(this, aContent)) {
+    TriggerReclone();
+  }
 }
 
 void
@@ -222,7 +226,9 @@ nsSVGUseElement::ContentAppended(nsIDocument *aDocument,
                                  nsIContent *aContainer,
                                  PRInt32 aNewIndexInContainer)
 {
-  TriggerReclone();
+  if (nsContentUtils::IsInSameAnonymousTree(this, aContainer)) {
+    TriggerReclone();
+  }
 }
 
 void
@@ -231,7 +237,9 @@ nsSVGUseElement::ContentInserted(nsIDocument *aDocument,
                                  nsIContent *aChild,
                                  PRInt32 aIndexInContainer)
 {
-  TriggerReclone();
+  if (nsContentUtils::IsInSameAnonymousTree(this, aChild)) {
+    TriggerReclone();
+  }
 }
 
 void
@@ -240,7 +248,9 @@ nsSVGUseElement::ContentRemoved(nsIDocument *aDocument,
                                 nsIContent *aChild,
                                 PRInt32 aIndexInContainer)
 {
-  TriggerReclone();
+  if (nsContentUtils::IsInSameAnonymousTree(this, aChild)) {
+    TriggerReclone();
+  }
 }
 
 void
