@@ -814,7 +814,7 @@ struct nsCycleCollector
     void SelectPurple();
     void MarkRoots(GCGraph &graph);
     void ScanRoots(GCGraph &graph);
-    void CollectWhite(GCGraph &graph);
+    PRBool CollectWhite(GCGraph &graph); // returns whether anything collected
 
     nsCycleCollector();
     ~nsCycleCollector();
@@ -1300,7 +1300,7 @@ nsCycleCollector::ScanRoots(GCGraph &graph)
 // Bacon & Rajan's |CollectWhite| routine, somewhat modified.
 ////////////////////////////////////////////////////////////////////////
 
-void
+PRBool
 nsCycleCollector::CollectWhite(GCGraph &graph)
 {
     // Explanation of "somewhat modified": we have no way to collect the
@@ -1394,6 +1394,8 @@ nsCycleCollector::CollectWhite(GCGraph &graph)
     if (ms2.lTotalCount < ms1.lTotalCount)
         mStats.mFreedBytes += (ms1.lTotalCount - ms2.lTotalCount);
 #endif
+
+    return count > 0;
 }
 
 
@@ -2030,7 +2032,7 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
 #ifdef COLLECT_TIME_DEBUG
                 now = PR_Now();
 #endif
-                CollectWhite(graph);
+                PRBool collected = CollectWhite(graph);
 
 #ifdef COLLECT_TIME_DEBUG
                 printf("cc: CollectWhite() took %lldms\n",
@@ -2040,6 +2042,14 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
                 // Some additional book-keeping.
 
                 --aTryCollections;
+
+                // Since runtimes may add wrappers to the purple buffer
+                // (which will mean we won't stop repeating due to the
+                // mBuf.GetSize() == 0 check above), we should stop
+                // repeating collections if we didn't collect anything
+                // this time.
+                if (!collected)
+                    aTryCollections = 0;
             }
 
 #ifdef DEBUG_CC
