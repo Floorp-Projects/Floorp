@@ -30,12 +30,9 @@
   -moz-appearance: listbox;
 }
 
-treechildren::-moz-tree-image {
+treechildren::-moz-tree-image(title) {
   padding-right: 2px;
   margin: 0px 2px;
-}
-
-treechildren::-moz-tree-image(title) {
   width: 16px;
   height: 16px;
 }
