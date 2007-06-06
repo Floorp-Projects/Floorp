@@ -43,6 +43,7 @@
 #include "prprf.h"
 #include "prlog.h"
 #include "plstr.h"
+#include "prlink.h"
 #include <stdlib.h>
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
@@ -439,13 +440,15 @@ static PRIntn PR_CALLBACK DumpSerialNumbers(PLHashEntry* aHashEntry, PRIntn aInd
 {
   serialNumberRecord* record = NS_REINTERPRET_CAST(serialNumberRecord *,aHashEntry->value);
 #ifdef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
-  fprintf((FILE*) aClosure, "%d (%d references; %d from COMPtrs)\n",
+  fprintf((FILE*) aClosure, "%d @%p (%d references; %d from COMPtrs)\n",
                             record->serialNumber,
+                            NS_INT32_TO_PTR(aHashEntry->key),
                             record->refCount,
                             record->COMPtrCount);
 #else
-  fprintf((FILE*) aClosure, "%d (%d references)\n",
+  fprintf((FILE*) aClosure, "%d @%p (%d references)\n",
                             record->serialNumber,
+                            NS_INT32_TO_PTR(aHashEntry->key),
                             record->refCount);
 #endif
   return HT_ENUMERATE_NEXT;
@@ -681,11 +684,20 @@ static void InitTraceLog(void)
   defined = InitLog("XPCOM_MEM_LEAKY_LOG", "for leaky", &gLeakyLog);
   if (defined) {
     gLogToLeaky = PR_TRUE;
-    void* p = nsnull;
-    void* q = nsnull;
+    PRFuncPtr p = nsnull, q = nsnull;
 #ifdef HAVE_LIBDL
-    p = dlsym(0, "__log_addref");
-    q = dlsym(0, "__log_release");
+    {
+      PRLibrary *lib = nsnull;
+      p = PR_FindFunctionSymbolAndLibrary("__log_addref", &lib);
+      if (lib) {
+        PR_UnloadLibrary(lib);
+        lib = nsnull;
+      }
+      q = PR_FindFunctionSymbolAndLibrary("__log_release", &lib);
+      if (lib) {
+        PR_UnloadLibrary(lib);
+      }
+    }
 #endif
     if (p && q) {
       leakyLogAddRef = (void (*)(void*,int,int)) p;
