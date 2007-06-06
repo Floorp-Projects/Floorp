@@ -44,7 +44,7 @@ relativesrcdir	= dom/tests/mochitest/ajax/mochikit
 include $(DEPTH)/config/autoconf.mk
 
 DIRS	= \
-	Mochikit \
+	MochiKit \
 	tests \
 	$(NULL)
 
