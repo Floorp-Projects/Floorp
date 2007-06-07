@@ -6117,6 +6117,13 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
     }
 #endif
 
+    // Push a null float containing block to disable floating within xul
+    nsFrameConstructorSaveState floatSaveState;
+    if (newFrame->IsBoxFrame()) {
+      aState.PushFloatContainingBlock(nsnull, floatSaveState, PR_FALSE,
+                                      PR_FALSE);
+    }
+
     // Process the child content if requested
     nsFrameItems childItems;
     if (!newFrame->IsLeaf()) {
@@ -7778,7 +7785,8 @@ nsCSSFrameConstructor::GetFloatContainingBlock(nsIFrame* aFrame)
   // IF we hit a mathml frame, bail out; we don't allow floating out of mathml
   // frames, because they don't seem to be able to deal.
   for (nsIFrame* containingBlock = aFrame;
-       containingBlock && !containingBlock->IsFrameOfType(nsIFrame::eMathML);
+       containingBlock && !containingBlock->IsFrameOfType(nsIFrame::eMathML) &&
+       !containingBlock->IsBoxFrame();
        containingBlock = containingBlock->GetParent()) {
     if (containingBlock->IsFloatContainingBlock()) {
       return containingBlock;
