@@ -58,6 +58,7 @@
 #include "nsIViewSourceChannel.h"
 
 #include "imgILoader.h"
+#include "nsIParser.h"
 
 // plugins
 #include "nsIPluginManager.h"
@@ -381,6 +382,9 @@ nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup,
 
   // add a nice bow
   if (NS_SUCCEEDED(rv)) {
+    blankDoc->SetDocumentCharacterSetSource(kCharsetFromDocTypeDefault);
+    blankDoc->SetDocumentCharacterSet(NS_LITERAL_CSTRING("UTF-8"));
+    
     *aDocument = blankDoc;
     NS_ADDREF(*aDocument);
   }
