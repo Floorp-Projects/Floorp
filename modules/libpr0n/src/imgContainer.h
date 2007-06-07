@@ -256,20 +256,16 @@ private:
                       aRect.width, aRect.height, aVisible);
   }
   
-  /** Fills an area of <aFrame> with black.
+  /** Clears an area of <aFrame> with transparent black.
    *
    * @param aFrame Target Frame
    *
-   * @note Does not set the mask
+   * @note Does also clears the transparancy mask
    */
-  static void BlackenFrame(gfxIImageFrame* aFrame);
+  static void ClearFrame(gfxIImageFrame* aFrame);
+  
   //! @overload
-  static void BlackenFrame(gfxIImageFrame* aFrame,
-                    PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-  //! @overload
-  static inline void BlackenFrame(gfxIImageFrame* aFrame, nsIntRect &aRect) {
-    BlackenFrame(aFrame, aRect.x, aRect.y, aRect.width, aRect.height);
-  }
+  static void ClearFrame(gfxIImageFrame* aFrame, nsIntRect &aRect);
   
   //! Copy one gfxIImageFrame's image and mask into another
   static PRBool CopyFrameImage(gfxIImageFrame *aSrcFrame,
