@@ -233,10 +233,14 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   if (gExceptionHandler)
     return NS_ERROR_ALREADY_INITIALIZED;
 
+  const char *envvar = PR_GetEnv("MOZ_CRASHREPORTER_DISABLE");
+  if (envvar && *envvar)
+    return NS_OK;
+
   // this environment variable prevents us from launching
   // the crash reporter client
-  const char* noReportEnv = PR_GetEnv("MOZ_CRASHREPORTER_NO_REPORT");
-  if (noReportEnv && *noReportEnv)
+  envvar = PR_GetEnv("MOZ_CRASHREPORTER_NO_REPORT");
+  if (envvar && *envvar)
     doReport = false;
 
   // allocate our strings
@@ -428,6 +432,9 @@ nsresult AnnotateCrashReport(const nsACString &key, const nsACString &data)
 nsresult
 SetRestartArgs(int argc, char **argv)
 {
+  if (!gExceptionHandler)
+    return NS_OK;
+
   int i;
   nsCAutoString envVar;
   char *env;

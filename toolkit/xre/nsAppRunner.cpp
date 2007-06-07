@@ -2305,8 +2305,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   }
 
 #ifdef MOZ_AIRBAG
-  //XXX: remove me when this is on by default
-  const char* airbagEnv = PR_GetEnv("MOZ_AIRBAG");
+  const char* airbagEnv = PR_GetEnv("MOZ_CRASHREPORTER");
   if (airbagEnv && *airbagEnv) {
     appData.flags |= NS_XRE_ENABLE_CRASH_REPORTER;
   }
