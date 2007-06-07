@@ -589,8 +589,8 @@ NS_IMETHODIMP nsJSSh::Init()
   // Enable e4x:
   JS_SetOptions(mJSContext, JS_GetOptions(mJSContext) | JSOPTION_XML);
   
-  // Enable js1.7 features (let, yield, etc - see bug#351515)
-  JS_SetVersion(mJSContext, JSVERSION_1_7);
+  // Always use the latest js version
+  JS_SetVersion(mJSContext, JSVERSION_LATEST);
   
   mContextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
   if (!mContextStack) {
