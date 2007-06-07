@@ -1115,12 +1115,19 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
     void *atkObjPtr = nsnull;
     accessible->GetNativeInterface(&atkObjPtr);
 
-    AtkObject *atkObj = ATK_OBJECT(atkObjPtr);
-    NS_ENSURE_TRUE(atkObj, NS_ERROR_FAILURE);
-
     PRUint32 type = 0;
     rv = aEvent->GetEventType(&type);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    AtkObject *atkObj = ATK_OBJECT(atkObjPtr);
+    // We don't create ATK objects for nsIAccessible plain text leaves,
+    // just return NS_OK in such case
+    if (!atkObj) {
+        NS_ASSERTION(type == nsIAccessibleEvent::EVENT_SHOW ||
+                     type == nsIAccessibleEvent::EVENT_HIDE,
+                     "Event other than SHOW and HIDE fired for plain text leaves");
+        return NS_OK;
+    }
 
     switch (type) {
     case nsIAccessibleEvent::EVENT_STATE_CHANGE:
