@@ -152,7 +152,7 @@ main (int argc, char **argv)
   NS_InitXPCOM2(nsnull, nsnull, nsnull);
 
   char* env = new char[13];
-  strcpy(env, "MOZ_AIRBAG=1");
+  strcpy(env, "MOZ_CRASHREPORTER=1");
   PR_SetEnv(env);
 
   char* result = all_tests();
