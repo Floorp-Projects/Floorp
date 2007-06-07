@@ -83,6 +83,9 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
     // We don't create ATK objects for nsIAccessible plain text leaves,
     // just return NS_OK in such case
     if (!atkObjPtr) {
+      NS_ASSERTION(aEvent == nsIAccessibleEvent::EVENT_SHOW ||
+                   aEvent == nsIAccessibleEvent::EVENT_HIDE,
+                   "Event other than SHOW and HIDE fired for plain text leaves");
       return NS_OK;
     }
     AtkObject *atkObj = ATK_OBJECT(atkObjPtr);
