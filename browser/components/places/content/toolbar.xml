@@ -537,7 +537,7 @@
           else if (PlacesUtils.nodeIsContainer(aNode)) {
             if (PlacesUtils.nodeIsLivemarkContainer(aNode)) {
               var folder = aNode.itemId;
-              var siteURIString = PlacesUtils.livemarks.getSiteURI(folder);
+              var siteURIString = PlacesUtils.livemarks.getSiteURI(folder).spec;
               if (siteURIString) {
                 if (button.getAttribute("siteURI") != siteURIString)
                   button.setAttribute("siteURI", siteURIString);
