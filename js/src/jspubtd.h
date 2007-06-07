@@ -73,7 +73,8 @@ typedef enum JSVersion {
     JSVERSION_1_7     = 170,
     JSVERSION_1_8     = 180,
     JSVERSION_DEFAULT = 0,
-    JSVERSION_UNKNOWN = -1
+    JSVERSION_UNKNOWN = -1,
+    JSVERSION_LATEST  = JSVERSION_1_8
 } JSVersion;
 
 #define JSVERSION_IS_ECMA(version) \
