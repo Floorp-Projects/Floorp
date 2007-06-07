@@ -40,31 +40,8 @@
 #include "nsContentUtils.h"
 #include "nsILineBreaker.h"
 
-#define UNICODE_ZWSP 0x200b
-
-static inline int
-IS_SPACE(PRUnichar u)
-{
-  return u == 0x0020 || u == UNICODE_ZWSP;
-}
-
-static inline int
-IS_SPACE(PRUint8 u)
-{
-  return u == 0x0020;
-}
-
-static inline int
-IS_CJK_CHAR(PRUnichar u)
-{
-  return (0x1100 <= u && u <= 0x11ff) ||
-         (0x2e80 <= u && u <= 0xd7ff) ||
-         (0xf900 <= u && u <= 0xfaff) ||
-         (0xff00 <= u && u <= 0xffef);
-}
-
 nsLineBreaker::nsLineBreaker()
-  : mCurrentWordContainsCJK(PR_FALSE),
+  : mCurrentWordContainsComplexChar(PR_FALSE),
     mAfterSpace(PR_FALSE)
 {
 }
@@ -81,7 +58,7 @@ nsLineBreaker::FlushCurrentWord()
   if (!breakState.AppendElements(mCurrentWord.Length()))
     return NS_ERROR_OUT_OF_MEMORY;
 
-  if (!mCurrentWordContainsCJK) {
+  if (!mCurrentWordContainsComplexChar) {
     // Just set everything internal to "no break"!
     memset(breakState.Elements(), PR_FALSE, mCurrentWord.Length());
   } else {
@@ -107,14 +84,16 @@ nsLineBreaker::FlushCurrentWord()
     // it was already set correctly earlier and we don't know what the true
     // value should be.
     PRUint32 skipSet = i == 0 ? 1 : 0;
-    ti->mSink->SetBreaks(ti->mSinkOffset + skipSet, ti->mLength - skipSet,
-                         breakState.Elements() + offset + skipSet);
+    if (ti->mSink) {
+      ti->mSink->SetBreaks(ti->mSinkOffset + skipSet, ti->mLength - skipSet,
+                           breakState.Elements() + offset + skipSet);
+    }
     offset += ti->mLength;
   }
 
   mCurrentWord.Clear();
   mTextItems.Clear();
-  mCurrentWordContainsCJK = PR_FALSE;
+  mCurrentWordContainsComplexChar = PR_FALSE;
   return NS_OK;
 }
 
@@ -130,10 +109,10 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
   if (mCurrentWord.Length() > 0) {
     NS_ASSERTION(!mAfterSpace, "These should not be set");
 
-    while (offset < aLength && !IS_SPACE(aText[offset])) {
+    while (offset < aLength && !IsSpace(aText[offset])) {
       mCurrentWord.AppendElement(aText[offset]);
-      if (!mCurrentWordContainsCJK && IS_CJK_CHAR(aText[offset])) {
-        mCurrentWordContainsCJK = PR_TRUE;
+      if (!mCurrentWordContainsComplexChar && IsComplexChar(aText[offset])) {
+        mCurrentWordContainsComplexChar = PR_TRUE;
       }
       ++offset;
     }
@@ -156,19 +135,28 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
     return NS_ERROR_OUT_OF_MEMORY;
 
   PRUint32 start = offset;
+  if (!aSink && !aFlags) {
+    // Skip to the space before the last word, since we don't need the breaks
+    offset = aLength;
+    while (offset > start) {
+      --offset;
+      if (IsSpace(aText[offset]))
+        break;
+    }
+  }
   PRUint32 wordStart = offset;
-  PRBool wordHasCJK = PR_FALSE;
+  PRBool wordHasComplexChar = PR_FALSE;
 
   for (;;) {
     PRUnichar ch = aText[offset];
-    PRBool isSpace = IS_SPACE(ch);
+    PRBool isSpace = IsSpace(ch);
 
     breakState[offset] = mAfterSpace && !isSpace &&
       (aFlags & (offset == 0 ? BREAK_ALLOW_INITIAL : BREAK_ALLOW_INSIDE));
     mAfterSpace = isSpace;
 
     if (isSpace) {
-      if (offset > wordStart && wordHasCJK) {
+      if (offset > wordStart && wordHasComplexChar) {
         if (aFlags & BREAK_ALLOW_INSIDE) {
           // Save current start-of-word state because GetJISx4051Breaks will
           // set it to false
@@ -178,7 +166,7 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
                               breakState.Elements() + wordStart);
           breakState[wordStart] = currentStart;
         }
-        wordHasCJK = PR_FALSE;
+        wordHasComplexChar = PR_FALSE;
       }
 
       ++offset;
@@ -186,13 +174,13 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
         break;
       wordStart = offset;
     } else {
-      if (!wordHasCJK && IS_CJK_CHAR(ch)) {
-        wordHasCJK = PR_TRUE;
+      if (!wordHasComplexChar && IsComplexChar(ch)) {
+        wordHasComplexChar = PR_TRUE;
       }
       ++offset;
       if (offset >= aLength) {
         // Save this word
-        mCurrentWordContainsCJK = wordHasCJK;
+        mCurrentWordContainsComplexChar = wordHasComplexChar;
         PRUint32 len = offset - wordStart;
         PRUnichar* elems = mCurrentWord.AppendElements(len);
         if (!elems)
@@ -206,7 +194,9 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
     }
   }
 
-  aSink->SetBreaks(start, offset - start, breakState.Elements() + start);
+  if (aSink) {
+    aSink->SetBreaks(start, offset - start, breakState.Elements() + start);
+  }
   return NS_OK;
 }
 
@@ -222,7 +212,7 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
   if (mCurrentWord.Length() > 0) {
     NS_ASSERTION(!mAfterSpace, "These should not be set");
 
-    while (offset < aLength && !IS_SPACE(aText[offset])) {
+    while (offset < aLength && !IsSpace(aText[offset])) {
       mCurrentWord.AppendElement(aText[offset]);
       ++offset;
     }
@@ -243,22 +233,35 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
   }
 
   nsAutoTArray<PRPackedBool,4000> breakState;
-  if (!breakState.AppendElements(aLength))
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (aSink) {
+    if (!breakState.AppendElements(aLength))
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   PRUint32 start = offset;
+  if (!aSink && !aFlags) {
+    // Skip to the space before the last word, since we don't need the breaks
+    offset = aLength;
+    while (offset > start) {
+      --offset;
+      if (IsSpace(aText[offset]))
+        break;
+    }
+  }
   PRUint32 wordStart = offset;
 
   for (;;) {
     PRUint8 ch = aText[offset];
-    PRBool isSpace = IS_SPACE(ch);
+    PRBool isSpace = IsSpace(ch);
 
-    breakState[offset] = mAfterSpace && !isSpace &&
-      (aFlags & (offset == 0 ? BREAK_ALLOW_INITIAL : BREAK_ALLOW_INSIDE));
+    if (aSink) {
+      breakState[offset] = mAfterSpace && !isSpace &&
+        (aFlags & (offset == 0 ? BREAK_ALLOW_INITIAL : BREAK_ALLOW_INSIDE));
+    }
     mAfterSpace = isSpace;
 
     if (isSpace) {
-      // The current word can't have any special (CJK/Thai) characters inside it
+      // The current word can't have any complex characters inside it
       // because this is 8-bit text, so just ignore it
       ++offset;
       if (offset >= aLength)
@@ -268,7 +271,7 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
       ++offset;
       if (offset >= aLength) {
         // Save this word
-        mCurrentWordContainsCJK = PR_FALSE;
+        mCurrentWordContainsComplexChar = PR_FALSE;
         PRUint32 len = offset - wordStart;
         PRUnichar* elems = mCurrentWord.AppendElements(len);
         if (!elems)
@@ -282,12 +285,14 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
         offset = wordStart + 1;
         break;
       }
-      // We can't break inside words in 8-bit text (no CJK characters), so
+      // We can't break inside words in 8-bit text (no complex characters), so
       // there is no need to do anything else to handle words
     }
   }
 
-  aSink->SetBreaks(start, offset - start, breakState.Elements() + start);
+  if (aSink) {
+    aSink->SetBreaks(start, offset - start, breakState.Elements() + start);
+  }
   return NS_OK;
 }
 

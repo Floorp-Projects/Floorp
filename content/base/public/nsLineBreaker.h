@@ -80,10 +80,25 @@ class nsLineBreaker {
 public:
   nsLineBreaker();
   ~nsLineBreaker();
+  
+  static inline PRBool IsSpace(PRUnichar u)
+  {
+    return u == 0x0020 || u == 0x200b/*ZWSP*/ || u == '\n' || u == '\t';
+  }
+
+  static inline PRBool IsComplexChar(PRUnichar u)
+  {
+    return (0x1100 <= u && u <= 0x11ff) ||
+           (0x2e80 <= u && u <= 0xd7ff) ||
+           (0xf900 <= u && u <= 0xfaff) ||
+           (0xff00 <= u && u <= 0xffef);
+  }
 
   // Normally, break opportunities exist at the end of each run of whitespace
-  // (Unicode ZWSP (U+200B) and ASCII space (U+0020)). Break opportunities can
-  // also exist inside runs of non-whitespace, as determined by nsILineBreaker.
+  // (see IsSpace above). Break opportunities can also exist inside runs of
+  // non-whitespace, as determined by nsILineBreaker. We pass a whitespace-
+  // delimited word to nsILineBreaker if it contains at least one character
+  // matching IsComplexChar.
   // We provide flags to control on a per-chunk basis where breaks are allowed.
   // At any character boundary, exactly one text chunk governs whether a
   // break is allowed at that boundary.
@@ -111,11 +126,15 @@ public:
   /**
    * Feed Unicode text into the linebreaker for analysis. aLength must be
    * nonzero.
+   * @param aSink can be null if the breaks are not actually needed (we may
+   * still be setting up state for later breaks)
    */
   nsresult AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 aLength,
                       PRUint32 aFlags, nsILineBreakSink* aSink);
   /**
    * Feed 8-bit text into the linebreaker for analysis. aLength must be nonzero.
+   * @param aSink can be null if the breaks are not actually needed (we may
+   * still be setting up state for later breaks)
    */
   nsresult AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aLength,
                       PRUint32 aFlags, nsILineBreakSink* aSink);
@@ -155,7 +174,7 @@ private:
   nsAutoTArray<PRUnichar,100> mCurrentWord;
   // All the items that contribute to mCurrentWord
   nsAutoTArray<TextItem,2>    mTextItems;
-  PRPackedBool                mCurrentWordContainsCJK;
+  PRPackedBool                mCurrentWordContainsComplexChar;
 
   // True if the previous character was whitespace
   PRPackedBool                mAfterSpace;
