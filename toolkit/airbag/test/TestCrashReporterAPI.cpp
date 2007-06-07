@@ -151,9 +151,7 @@ main (int argc, char **argv)
 {
   NS_InitXPCOM2(nsnull, nsnull, nsnull);
 
-  char* env = new char[13];
-  strcpy(env, "MOZ_CRASHREPORTER=1");
-  PR_SetEnv(env);
+  PR_SetEnv("MOZ_CRASHREPORTER=1");
 
   char* result = all_tests();
   if (result != 0) {
