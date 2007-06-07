@@ -109,7 +109,8 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::GetColumns(PRInt32 *aColumns)
   rv = nsAccessible::GetFirstChild(getter_AddRefs(acc));
   NS_ENSURE_TRUE(acc, NS_ERROR_FAILURE);
 
-  return acc->GetChildCount(aColumns);
+  rv = acc->GetChildCount(aColumns);
+  return *aColumns > 0 ? rv : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsXULTreeAccessibleWrap::GetColumnHeader(nsIAccessibleTable **aColumnHeader)
@@ -456,7 +457,8 @@ NS_IMETHODIMP nsXULTreeColumnsAccessibleWrap::SetSummary(const nsAString &aSumma
 
 NS_IMETHODIMP nsXULTreeColumnsAccessibleWrap::GetColumns(PRInt32 *aColumns)
 {
-  return GetChildCount(aColumns);
+  nsresult rv = GetChildCount(aColumns);
+  return *aColumns > 0 ? rv : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsXULTreeColumnsAccessibleWrap::GetColumnHeader(nsIAccessibleTable * *aColumnHeader)

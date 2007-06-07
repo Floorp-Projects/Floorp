@@ -963,6 +963,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetAccessibleRelated(PRUint32 aRelationTy
   //that's why ATK specific code shows here
   *aRelated = nsnull;
 #ifdef MOZ_ACCESSIBILITY_ATK
+  NS_ENSURE_TRUE(mColumn && mTree && mTreeView, NS_ERROR_FAILURE);
   if (aRelationType == nsIAccessibleRelation::RELATION_NODE_CHILD_OF) {
     PRInt32 columnIndex;
     if (NS_SUCCEEDED(mColumn->GetIndex(&columnIndex)) && columnIndex == 0) {
