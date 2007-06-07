@@ -1421,7 +1421,7 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
                                &newEntry->location);
         if (NS_FAILED(rv)) {
             *_retval = nsnull;
-            return NS_ERROR_FAILURE;
+            return NS_ERROR_FILE_NOT_FOUND;
         }
         
         mod = newEntry;
