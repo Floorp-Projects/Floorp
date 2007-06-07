@@ -545,9 +545,6 @@ IsInlineFrame(nsIFrame* aFrame)
     case NS_STYLE_DISPLAY_INLINE_BOX:
     case NS_STYLE_DISPLAY_INLINE_GRID:
     case NS_STYLE_DISPLAY_INLINE_STACK:
-    case NS_STYLE_DISPLAY_DECK:
-    case NS_STYLE_DISPLAY_POPUP:
-    case NS_STYLE_DISPLAY_GROUPBOX:
       return PR_TRUE;
     default:
       break;
