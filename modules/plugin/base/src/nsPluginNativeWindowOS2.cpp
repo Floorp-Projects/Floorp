@@ -139,7 +139,8 @@ private:
 public:
   // locals
   PFNWP GetWindowProc();
-  PluginWindowEvent * GetPluginWindowEvent(HWND aWnd, ULONG aMsg, MPARAM mp1, MPARAM mp2);
+  already_AddRefed<nsIRunnable> GetPluginWindowEvent(HWND aWnd, ULONG aMsg,
+                                                     MPARAM mp1, MPARAM mp2);
 
 private:
   PFNWP mPluginWinProc;
@@ -271,7 +272,7 @@ NS_IMETHODIMP PluginWindowEvent::Run()
   return NS_OK;
 }
 
-PluginWindowEvent*
+already_AddRefed<nsIRunnable>
 nsPluginNativeWindowOS2::GetPluginWindowEvent(HWND aWnd, ULONG aMsg, MPARAM aMp1, MPARAM aMp2)
 {
   if (!mWeakRef) {

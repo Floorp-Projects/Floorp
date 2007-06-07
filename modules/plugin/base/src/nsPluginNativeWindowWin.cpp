@@ -145,7 +145,9 @@ public:
   // locals
   WNDPROC GetPrevWindowProc();
   WNDPROC GetWindowProc();
-  PluginWindowEvent * GetPluginWindowEvent(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLParam);
+  already_AddRefed<nsIRunnable> GetPluginWindowEvent(HWND aWnd, UINT aMsg,
+                                                     WPARAM aWParam,
+                                                     LPARAM aLParam);
 
 private:
   WNDPROC mPrevWinProc;
@@ -437,7 +439,7 @@ NS_IMETHODIMP PluginWindowEvent::Run()
   return NS_OK;
 }
 
-PluginWindowEvent*
+already_AddRefed<nsIRunnable>
 nsPluginNativeWindowWin::GetPluginWindowEvent(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLParam)
 {
   if (!mWeakRef) {
