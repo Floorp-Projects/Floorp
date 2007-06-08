@@ -79,6 +79,7 @@
 #include "nsIEventStateManager.h"
 #include "nsIFocusController.h"
 #include "nsPIDOMWindow.h"
+#include "nsDOMError.h"
 
 #include "nsIFrame.h"
 #include "nsIMenuFrame.h"
@@ -229,6 +230,24 @@ XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
   mouseEvent->GetTarget(getter_AddRefs(target));
   nsCOMPtr<nsIDOMNode> targetNode = do_QueryInterface(target);
 
+  if (!targetNode && popupType == eXULPopupType_context) {
+    // Not a DOM node, see if it's the DOM window (bug 380818).
+    nsCOMPtr<nsIDOMWindow> domWin = do_QueryInterface(target);
+    if (!domWin) {
+      return NS_ERROR_DOM_WRONG_TYPE_ERR;
+    }
+    // Try to use the root node as target node.
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    domWin->GetDocument(getter_AddRefs(domDoc));
+
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+    if (doc)
+      targetNode = do_QueryInterface(doc->GetRootContent());
+    if (!targetNode) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
   PRBool preventDefault;
   nsUIEvent->GetPreventDefault(&preventDefault);
   if (preventDefault && targetNode && popupType == eXULPopupType_context) {
@@ -266,7 +285,7 @@ XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
   // submenu of an already-showing popup.  We don't need to do anything at all.
   if (popupType == eXULPopupType_popup) {
     nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
-    nsIAtom *tag = targetContent->Tag();
+    nsIAtom *tag = targetContent ? targetContent->Tag() : nsnull;
     if (tag == nsGkAtoms::menu || tag == nsGkAtoms::menuitem)
       return NS_OK;
   }
