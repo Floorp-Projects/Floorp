@@ -156,8 +156,7 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
     if (mAdjustedSize == 0) {
         if (GetStyle()->sizeAdjust != 0) {
             gfxFloat aspect = mMetrics.xHeight / size;
-            mAdjustedSize =
-                PR_MAX(ROUND(size * (GetStyle()->sizeAdjust / aspect)), 1.0f);
+            mAdjustedSize = GetStyle()->GetAdjustedSize(aspect);
             InitMetrics(aFontID, aFontRef);
             return;
         }
