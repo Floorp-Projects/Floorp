@@ -119,7 +119,5 @@ export:: done_gen
 register::
 	regsvr32 -s $(DIST)/bin/$(SHARED_LIBRARY)
 
-EMBED_MANIFEST_AT = 2
-
 include $(topsrcdir)/config/rules.mk
 
