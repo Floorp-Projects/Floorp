@@ -272,8 +272,13 @@ WrappedNativeJSGCThingTracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
         JS_CALL_OBJECT_TRACER(trc, wrapper->GetFlatJSObject(),
                               "XPCWrappedNative::mFlatJSObject");
 
-        if (JS_IsGCMarkingTracer(trc))
-          nsCycleCollector_suspectCurrent(wrapper);
+        // FIXME: this call appears to do more harm than good, but
+        // there is reason to imagine it might clean up some cycles
+        // formed by a poor order between C++ and JS garbage cycle
+        // formations. See Bug 368869.
+        //
+        // if (JS_IsGCMarkingTracer(trc))
+        //   nsCycleCollector_suspectCurrent(wrapper);
     }
     return JS_DHASH_NEXT;
 }
