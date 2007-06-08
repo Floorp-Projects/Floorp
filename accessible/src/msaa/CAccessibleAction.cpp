@@ -56,10 +56,6 @@ CAccessibleAction::QueryInterface(REFIID iid, void** ppv)
   *ppv = NULL;
 
   if (IID_IAccessibleAction == iid) {
-    nsCOMPtr<nsIAccessible> acc(do_QueryInterface(this));
-    if (!acc)
-      return E_FAIL;
-
     *ppv = NS_STATIC_CAST(IAccessibleAction*, this);
     (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
     return S_OK;
