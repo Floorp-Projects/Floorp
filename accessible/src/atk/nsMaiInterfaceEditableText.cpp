@@ -65,7 +65,8 @@ setRunAttributesCB(AtkEditableText *aText, AtkAttributeSet *aAttribSet,
 
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-    NS_ENSURE_TRUE(accWrap, FALSE);
+    if (!accWrap)
+        return FALSE;
 
     nsCOMPtr<nsIAccessibleEditableText> accText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleEditableText),

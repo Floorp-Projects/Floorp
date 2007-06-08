@@ -67,7 +67,8 @@ const gchar *
 getDocumentLocaleCB(AtkDocument *aDocument)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
-    NS_ENSURE_TRUE(accWrap, nsnull);
+    if (!accWrap)
+        return nsnull;
 
     nsCOMPtr<nsIAccessNode> docAccessNode;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessNode),
@@ -86,7 +87,8 @@ const gchar *
 getDocumentTypeCB(AtkDocument *aDocument)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
-    NS_ENSURE_TRUE(accWrap, nsnull);
+    if (!accWrap)
+        return nsnull;
 
     nsCOMPtr<nsIAccessibleDocument> accDocument;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleDocument),
@@ -113,7 +115,8 @@ AtkAttributeSet *
 getDocumentAttributesCB(AtkDocument *aDocument)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
-    NS_ENSURE_TRUE(accWrap, nsnull);
+    if (!accWrap)
+        return nsnull;
 
     nsCOMPtr<nsIAccessibleDocument> accDocument;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleDocument),
@@ -147,7 +150,8 @@ getDocumentAttributeValueCB(AtkDocument *aDocument,
                             const gchar *aAttrName)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
-    NS_ENSURE_TRUE(accWrap, nsnull);
+    if (!accWrap)
+        return nsnull;
 
     nsCOMPtr<nsIAccessibleDocument> accDocument;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleDocument),
