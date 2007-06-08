@@ -63,7 +63,7 @@ CAccessibleHyperlink::QueryInterface(REFIID iid, void** ppv)
   if (IID_IAccessibleHyperlink == iid) {
     nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryInterface(this));
     if (!acc)
-      return E_FAIL;
+      return E_NOINTERFACE;
 
     *ppv = NS_STATIC_CAST(IAccessibleHyperlink*, this);
     (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();

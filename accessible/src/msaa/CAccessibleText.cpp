@@ -66,6 +66,10 @@ CAccessibleText::QueryInterface(REFIID iid, void** ppv)
   *ppv = NULL;
 
   if (IID_IAccessibleText == iid) {
+    nsCOMPtr<nsIAccessibleText> textAcc(do_QueryInterface(this));
+    if (!textAcc) {
+      return E_NOINTERFACE;
+    }
     *ppv = NS_STATIC_CAST(IAccessibleText*, this);
     (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
     return S_OK;

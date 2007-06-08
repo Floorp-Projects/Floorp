@@ -61,6 +61,9 @@ CAccessibleEditableText::QueryInterface(REFIID iid, void** ppv)
   *ppv = NULL;
 
   if (IID_IAccessibleEditableText == iid) {
+    nsCOMPtr<nsIAccessibleEditableText> editTextAcc(do_QueryInterface(this));
+    if (!editTextAcc)
+      return E_NOINTERFACE;
     *ppv = NS_STATIC_CAST(IAccessibleEditableText*, this);
     (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef(); 
     return S_OK;
