@@ -69,7 +69,8 @@ refAccessibleAtPointCB(AtkComponent *aComponent,
                        AtkCoordType aCoordType)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aComponent));
-    NS_ENSURE_TRUE(accWrap, nsnull);
+    if (!accWrap)
+        return nsnull;
 
     // or ATK_XY_SCREEN  what is definition this in nsIAccessible ???
     if (aCoordType == ATK_XY_WINDOW) {
@@ -82,13 +83,10 @@ refAccessibleAtPointCB(AtkComponent *aComponent,
         return nsnull;
     }
 
-    void *atkObjPtr = nsnull;
-    pointAcc->GetNativeInterface(&atkObjPtr);
-    if (!atkObjPtr) {
-        return nsnull;
+    AtkObject *atkObj = nsAccessibleWrap::GetAtkObject(pointAcc);
+    if (atkObj) {
+        g_object_ref(atkObj);
     }
-    AtkObject *atkObj = ATK_OBJECT(atkObjPtr);
-    g_object_ref(atkObj);
     return atkObj;
 }
 
@@ -151,7 +149,8 @@ gboolean
 grabFocusCB(AtkComponent *aComponent)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aComponent));
-    NS_ENSURE_TRUE(accWrap, FALSE);
+    if (!accWrap)
+        return FALSE;
 
     nsresult rv = accWrap->TakeFocus();
     return (NS_FAILED(rv)) ? FALSE : TRUE;

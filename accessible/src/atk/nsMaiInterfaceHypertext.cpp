@@ -55,9 +55,9 @@ hypertextInterfaceInitCB(AtkHypertextIface *aIface)
 AtkHyperlink *
 getLinkCB(AtkHypertext *aText, gint aLinkIndex)
 {
-    nsresult rv;
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-    NS_ENSURE_TRUE(accWrap, nsnull);
+    if (!accWrap)
+        return nsnull;
 
     nsCOMPtr<nsIAccessibleHyperText> hyperText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleHyperText),
@@ -65,14 +65,13 @@ getLinkCB(AtkHypertext *aText, gint aLinkIndex)
     NS_ENSURE_TRUE(hyperText, nsnull);
 
     nsCOMPtr<nsIAccessibleHyperLink> hyperLink;
-    rv = hyperText->GetLink(aLinkIndex, getter_AddRefs(hyperLink));
+    nsresult rv = hyperText->GetLink(aLinkIndex, getter_AddRefs(hyperLink));
     if (NS_FAILED(rv) || !hyperLink)
         return nsnull;
 
     nsCOMPtr<nsIAccessible> hyperLinkAcc(do_QueryInterface(hyperLink));
-    void *hyperLinkAtkObj = nsnull;
-    hyperLinkAcc->GetNativeInterface(&hyperLinkAtkObj);
-    nsAccessibleWrap *accChild = GetAccessibleWrap(ATK_OBJECT(hyperLinkAtkObj));
+    AtkObject *hyperLinkAtkObj = nsAccessibleWrap::GetAtkObject(hyperLinkAcc);
+    nsAccessibleWrap *accChild = GetAccessibleWrap(hyperLinkAtkObj);
     NS_ENSURE_TRUE(accChild, nsnull);
 
     MaiHyperlink *maiHyperlink = accChild->GetMaiHyperlink();
@@ -84,7 +83,8 @@ gint
 getLinkCountCB(AtkHypertext *aText)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-    NS_ENSURE_TRUE(accWrap, -1);
+    if (!accWrap)
+        return -1;
 
     nsCOMPtr<nsIAccessibleHyperText> accHyperlink;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleHyperText),
@@ -102,7 +102,8 @@ gint
 getLinkIndexCB(AtkHypertext *aText, gint aCharIndex)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-    NS_ENSURE_TRUE(accWrap, -1);
+    if (!accWrap)
+        return -1;
 
     nsCOMPtr<nsIAccessibleHyperText> accHyperlink;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleHyperText),
