@@ -560,15 +560,13 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, gfxFloat aSize,
     familyNameQuirks(aFamilyNameQuirks), weight(aWeight),
     size(aSize), langGroup(aLangGroup), sizeAdjust(aSizeAdjust)
 {
-    static const gfxFloat kMaxFontSize = 2000.0;
-
     if (weight > 900)
         weight = 900;
     if (weight < 100)
         weight = 100;
 
-    if (size >= kMaxFontSize) {
-        size = kMaxFontSize;
+    if (size >= FONT_MAX_SIZE) {
+        size = FONT_MAX_SIZE;
         sizeAdjust = 0.0;
     } else if (size < 0.0) {
         NS_WARNING("negative font size");

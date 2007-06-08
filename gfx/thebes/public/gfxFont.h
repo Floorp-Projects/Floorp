@@ -49,6 +49,7 @@
 #include "gfxSkipChars.h"
 #include "gfxRect.h"
 #include "nsExpirationTracker.h"
+#include "nsMathUtils.h"
 
 class gfxContext;
 class gfxTextRun;
@@ -63,6 +64,8 @@ typedef struct _cairo cairo_t;
 
 #define FONT_WEIGHT_NORMAL             400
 #define FONT_WEIGHT_BOLD               700
+
+#define FONT_MAX_SIZE                  2000.0
 
 struct THEBES_API gfxFontStyle {
     gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, gfxFloat aSize,
@@ -101,6 +104,14 @@ struct THEBES_API gfxFontStyle {
     // rendering or measuring a string. A value of 0 means no adjustment
     // needs to be done.
     float sizeAdjust;
+
+    // Return the final adjusted font size for the given aspect ratio.
+    // Not meant to be called when sizeAdjust = 0.
+    gfxFloat GetAdjustedSize(gfxFloat aspect) const {
+        NS_ASSERTION(sizeAdjust != 0.0, "Not meant to be called when sizeAdjust = 0");
+        gfxFloat adjustedSize = PR_MAX(NS_round(size*(sizeAdjust/aspect)), 1.0);
+        return PR_MIN(adjustedSize, FONT_MAX_SIZE);
+    }
 
     PLDHashNumber Hash() const {
         return ((style + (systemFont << 7) + (familyNameQuirks << 8) +

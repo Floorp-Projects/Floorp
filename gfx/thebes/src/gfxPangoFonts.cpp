@@ -412,8 +412,7 @@ gfxPangoFont::RealizeFont(PRBool force)
     gfxSize isz, lsz;
     GetCharSize('x', isz, lsz);
     gfxFloat aspect = isz.height / GetStyle()->size;
-    mAdjustedSize =
-        PR_MAX(NS_round(GetStyle()->size*(GetStyle()->sizeAdjust/aspect)), 1.0);
+    mAdjustedSize = GetStyle()->GetAdjustedSize(aspect);
     RealizeFont(PR_TRUE);
 }
 
