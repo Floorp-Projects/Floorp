@@ -53,7 +53,8 @@ AtkHyperlink*
 getHyperlinkCB(AtkHyperlinkImpl *aImpl)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aImpl));
-    NS_ENSURE_TRUE(accWrap, nsnull);
+    if (!accWrap)
+        return nsnull;
 
     nsCOMPtr<nsIAccessibleHyperLink> accHyperlink;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleHyperLink),

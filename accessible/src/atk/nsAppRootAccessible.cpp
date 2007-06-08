@@ -591,9 +591,9 @@ nsApplicationAccessibleWrap::AddRootAccessible(nsIAccessible *aRootAccWrap)
     nsresult rv = nsApplicationAccessible::AddRootAccessible(aRootAccWrap);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    void* atkAccessible;
-    aRootAccWrap->GetNativeInterface(&atkAccessible);
-    atk_object_set_parent((AtkObject*)atkAccessible, mAtkObject);
+    AtkObject *atkAccessible = nsAccessibleWrap::GetAtkObject(aRootAccWrap);
+    atk_object_set_parent(atkAccessible, mAtkObject);
+
     PRUint32 count = 0;
     mChildren->GetLength(&count);
     g_signal_emit_by_name(mAtkObject, "children_changed::add", count - 1,
@@ -624,9 +624,8 @@ nsApplicationAccessibleWrap::RemoveRootAccessible(nsIAccessible *aRootAccWrap)
     nsCOMPtr<nsIWeakReference> weakPtr = do_GetWeakReference(aRootAccWrap);
     rv = mChildren->IndexOf(0, weakPtr, &index);
 
-    void* atkAccessible;
-    aRootAccWrap->GetNativeInterface(&atkAccessible);
-    atk_object_set_parent((AtkObject*)atkAccessible, NULL);
+    AtkObject *atkAccessible = nsAccessibleWrap::GetAtkObject(aRootAccWrap);
+    atk_object_set_parent(atkAccessible, NULL);
     g_signal_emit_by_name(mAtkObject, "children_changed::remove", index,
                           atkAccessible, NULL);
 

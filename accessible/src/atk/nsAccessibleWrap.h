@@ -100,6 +100,7 @@ public:
     NS_IMETHOD FireAccessibleEvent(nsIAccessibleEvent *aEvent);
 
     AtkObject * GetAtkObject(void);
+    static AtkObject * GetAtkObject(nsIAccessible * acc);
 
     PRBool IsValidObject();
     
