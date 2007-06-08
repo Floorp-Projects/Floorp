@@ -1910,10 +1910,16 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
         InitMemHook();
 #endif
 
+    // This can legitimately happen in a few cases. See bug 383651.
+    if (mCollectionInProgress)
+        return;
+
 #ifdef COLLECT_TIME_DEBUG
     printf("cc: Starting nsCycleCollector::Collect(%d)\n", aTryCollections);
     PRTime start = PR_Now(), now;
 #endif
+
+    mCollectionInProgress = PR_TRUE;
 
     nsCOMPtr<nsIObserverService> obs =
       do_GetService("@mozilla.org/observer-service;1");
@@ -1972,11 +1978,6 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
             if (mBuf.GetSize() == 0) {
                 aTryCollections = 0;
             } else {
-                if (mCollectionInProgress)
-                    Fault("re-entered collection");
-
-                mCollectionInProgress = PR_TRUE;
-
                 mScanInProgress = PR_TRUE;
 
                 GCGraph graph;
@@ -2057,8 +2058,6 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
             if (mParams.mReportStats)
                 mStats.Dump();
 #endif
-
-            mCollectionInProgress = PR_FALSE;
         }
 
         for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
@@ -2066,6 +2065,8 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
                 mRuntimes[i]->FinishCycleCollection();
         }
     }
+
+    mCollectionInProgress = PR_FALSE;
 
 #ifdef COLLECT_TIME_DEBUG
     printf("cc: Collect() took %lldms\n",
