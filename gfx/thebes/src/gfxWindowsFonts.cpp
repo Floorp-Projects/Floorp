@@ -238,8 +238,7 @@ gfxWindowsFont::MakeHFONT()
         Metrics *oldMetrics = mMetrics;
         ComputeMetrics();
         gfxFloat aspect = mMetrics->xHeight / mMetrics->emHeight;
-        mAdjustedSize =
-            PR_MAX(ROUND(GetStyle()->size * (GetStyle()->sizeAdjust / aspect)), 1.0f);
+        mAdjustedSize = GetStyle()->GetAdjustedSize(aspect);
 
         if (mMetrics != oldMetrics) {
             delete mMetrics;
