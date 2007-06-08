@@ -99,8 +99,6 @@ MIDL_GENERATED_FILES = \
   $(MIDL_ENUMS:%.idl=%.h) \
   $(NULL)
 
-EMBED_MANIFEST_AT = 2
-
 include $(topsrcdir)/config/rules.mk
 
 OS_LIBS = \
