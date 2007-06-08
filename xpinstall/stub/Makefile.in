@@ -67,5 +67,4 @@ EXTRA_DSO_LDOPTS= \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-EMBED_MANIFEST_AT = 17
 include $(topsrcdir)/config/rules.mk
