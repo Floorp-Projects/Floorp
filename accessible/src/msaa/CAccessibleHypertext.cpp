@@ -57,7 +57,7 @@ CAccessibleHypertext::QueryInterface(REFIID iid, void** ppv)
   if (IID_IAccessibleHypertext == iid) {
     nsCOMPtr<nsIAccessibleHyperText> hyperAcc(do_QueryInterface(this));
     if (!hyperAcc)
-      return E_FAIL;
+      return E_NOINTERFACE;
 
     *ppv = NS_STATIC_CAST(IAccessibleHypertext*, this);
     (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
