@@ -37,12 +37,9 @@
  * ***** END LICENSE BLOCK ***** */
  
 function test_BrokenFile(path, shouldThrow, expectedName) {
-  var f = do_get_file(path, true);
-  var uri = "abs:" + f.path;
-  print(uri);
-  var didThrow;
+  var didThrow = false;
   try {
-    Components.utils.import(uri);
+    Components.utils.import(path);
   } catch (ex) {
     var exceptionName = ex.name;
     print("ex: " + ex + "; name = " + ex.name);
@@ -55,7 +52,27 @@ function test_BrokenFile(path, shouldThrow, expectedName) {
 }
 
 function run_test() {
-  test_BrokenFile("js/src/xpconnect/tests/unit/bogus_exports_type.jsm", true, "Error");
-  test_BrokenFile("js/src/xpconnect/tests/unit/bogus_element_type.jsm", true, "Error");
-  test_BrokenFile("js/src/xpconnect/tests/unit/non_existing.jsm", true, "NS_ERROR_FILE_NOT_FOUND");
+  const C_i = Components.interfaces;
+  const ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService(C_i.nsIIOService);
+  const resProt = ioService.getProtocolHandler("resource")
+                           .QueryInterface(C_i.nsIResProtocolHandler);
+
+  var curdir = do_get_file("js/src/xpconnect/tests/unit");
+  var curURI = ioService.newFileURI(curdir);
+  resProt.setSubstitution("test", curURI);
+
+  test_BrokenFile("resource://test/bogus_exports_type.jsm", true, "Error");
+
+  test_BrokenFile("resource://test/bogus_element_type.jsm", true, "Error");
+
+  test_BrokenFile("resource://test/non_existing.jsm",
+                  true,
+                  "NS_ERROR_FILE_NOT_FOUND");
+
+  test_BrokenFile("chrome://test/content/test.jsm",
+                  true,
+                  "NS_ERROR_ILLEGAL_VALUE");
+
+  resProt.setSubstitution("test", null);
 }

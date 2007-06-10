@@ -48,7 +48,7 @@ struct JSObject;
 
 [ptr] native JSObjectPtr(JSObject);
 
-[scriptable, uuid(bb66b661-4cdf-40d5-b4f6-0be2e195ef7c)]
+[scriptable, uuid(89da3673-e699-4f26-9ed7-11a528011434)]
 interface xpcIJSModuleLoader : nsISupports
 {
   /**
@@ -63,11 +63,7 @@ interface xpcIJSModuleLoader : nsISupports
    * targetObj, or, if 'targetObj' is not specified, on the caller's
    * global object.
    *
-   * @param registryLocation the string identifying the location of the
-   *        module to import. For the format of the string, see
-   *        nsIComponentManagerObsolete.registryLocationForSpec.
-   *        Note that the format of this parameter is expected to change
-   *        (see bug 380970).
+   * @param resourceURI A resource:// URI string to load the module from.
    * @param targetObj  the object to install the exported properties on.
    *        If this parameter is null or is a primitive value, this
    *        method throws an exception.
@@ -81,7 +77,7 @@ interface xpcIJSModuleLoader : nsISupports
    *
    * (This comment is duplicated to nsIXPCComponents_Utils.)
    */
-  void /* JSObject */ import(in AUTF8String registryLocation
+  void /* JSObject */ import(in AUTF8String aResourceURI
                              /* , [optional] in JSObject targetObj */);
 
   /**
@@ -89,7 +85,7 @@ interface xpcIJSModuleLoader : nsISupports
    * 'targetObj' (if != null) as described for importModule() and
    * returns the module's global object.
    */
-  [noscript] JSObjectPtr importInto(in AUTF8String registryLocation,
+  [noscript] JSObjectPtr importInto(in AUTF8String aResourceURI,
                                     in JSObjectPtr targetObj,
                                     in nsIXPCNativeCallContext cc);
 };
