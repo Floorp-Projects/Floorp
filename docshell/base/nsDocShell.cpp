@@ -2767,12 +2767,11 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
     if (NS_FAILED(rv) || !uri)
         return NS_ERROR_FAILURE;
 
-    // Don't pass the fixup flag to MAKE_LOAD_TYPE, since it isn't needed and
-    // confuses ConvertLoadTypeToDocShellLoadInfo. We do need to ensure that
-    // it is passed to LoadURI though, since it uses it to determine whether it
-    // can do fixup.
-    PRUint32 fixupFlag = (aLoadFlags & LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP);
-    aLoadFlags &= ~LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+    // Don't pass certain flags that aren't needed and end up confusing
+    // ConvertLoadTypeToDocShellLoadInfo.  We do need to ensure that they are
+    // passed to LoadURI though, since it uses them.
+    PRUint32 extraFlags = (aLoadFlags & EXTRA_LOAD_FLAGS);
+    aLoadFlags &= ~EXTRA_LOAD_FLAGS;
 
     nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
     rv = CreateLoadInfo(getter_AddRefs(loadInfo));
@@ -2784,7 +2783,7 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
     loadInfo->SetReferrer(aReferringURI);
     loadInfo->SetHeadersStream(aHeaderStream);
 
-    rv = LoadURI(uri, loadInfo, fixupFlag, PR_TRUE);
+    rv = LoadURI(uri, loadInfo, extraFlags, PR_TRUE);
 
     return rv;
 }

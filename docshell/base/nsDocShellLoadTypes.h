@@ -55,6 +55,13 @@
 #define MAKE_LOAD_TYPE(type, flags) ((type) | ((flags) << 16))
 #define LOAD_TYPE_HAS_FLAGS(type, flags) ((type) & ((flags) << 16))
 
+/**
+ * These are flags that confuse ConvertLoadTypeToDocShellLoadInfo and should not
+ * be passed to MAKE_LOAD_TYPE.
+ */
+#define EXTRA_LOAD_FLAGS (LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP | \
+                          LOAD_FLAGS_FIRST_LOAD)
+
 /* load types are legal combinations of load commands and flags 
  *  
  * NOTE:
