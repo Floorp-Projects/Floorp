@@ -1715,6 +1715,42 @@ endif
 endif
 
 ################################################################################
+# Copy each element of EXTRA_JS_MODULES to $(FINAL_TARGET)/modules
+ifdef EXTRA_JS_MODULES
+libs:: $(EXTRA_JS_MODULES)
+ifndef NO_DIST_INSTALL
+	$(INSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/modules
+endif
+
+install:: $(EXTRA_JS_MODULES)
+ifndef NO_INSTALL
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/modules
+endif
+endif
+
+ifdef EXTRA_PP_JS_MODULES
+libs:: $(EXTRA_PP_JS_MODULES)
+ifndef NO_DIST_INSTALL
+	$(EXIT_ON_ERROR) \
+	for i in $^; do \
+	  dest=$(FINAL_TARGET)/modules/`basename $$i`; \
+	  $(RM) -f $$dest; \
+	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $$dest; \
+	done
+endif
+
+install:: $(EXTRA_PP_JS_MODULES)
+ifndef NO_INSTALL
+	$(EXIT_ON_ERROR) \
+	for i in $^; do \
+	  dest=$(DESTDIR)$(mozappdir)/modules/`basename $$i`; \
+	  $(RM) -f $$dest; \
+	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $$dest; \
+	done
+endif
+endif
+
+################################################################################
 # SDK
 
 ifneq (,$(SDK_LIBRARY))
