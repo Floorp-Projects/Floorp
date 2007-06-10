@@ -273,10 +273,6 @@ static char **gRestartArgv;
 #include "nsGTKToolkit.h"
 #endif
 
-#if defined(MOZ_WIDGET_QT)
-#include <qapplication.h>
-#endif
-
 // Save the path of the given file to the specified environment variable.
 static void
 SaveFileToEnv(const char *name, nsIFile *file)
@@ -2465,10 +2461,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     gtk_widget_set_default_visual(gdk_rgb_get_visual());
     gtk_widget_set_default_colormap(gdk_rgb_get_cmap());
 #endif /* MOZ_WIDGET_GTK2 */
-
-#if defined(MOZ_WIDGET_QT)
-    QApplication qapp(argc, argv);
-#endif
 
     // Call the code to install our handler
 #ifdef MOZ_JPROF

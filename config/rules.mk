@@ -303,10 +303,6 @@ ALL_TRASH = \
 ALL_TRASH_DIRS = \
 	$(GARBAGE_DIRS) /no-such-file
 
-ifdef QTDIR
-GARBAGE			+= $(MOCSRCS)
-endif
-
 ifdef SIMPLE_PROGRAMS
 GARBAGE			+= $(SIMPLE_PROGRAMS:%=%.$(OBJ_SUFFIX))
 endif

@@ -84,8 +84,6 @@
 #else
 #  if defined(MOZ_WIDGET_GTK2)
 #    define GFX_MODULES MODULE(nsGfxGTKModule)
-#  elif defined(MOZ_WIDGET_QT)
-#    define GFX_MODULES MODULE(nsGfxQtModule)
 #  elif defined(MOZ_WIDGET_PHOTON)
 #    define GFX_MODULES MODULE(nsGfxPhModule)
 #  elif defined(XP_WIN)
@@ -113,8 +111,6 @@
 #  define WIDGET_MODULES MODULE(nsWidgetGtk2Module)
 #elif defined(MOZ_WIDGET_PHOTON)
 #  define WIDGET_MODULES MODULE(nsWidgetPhModule)
-#elif defined(MOZ_WIDGET_QT)
-#  define WIDGET_MODULES MODULE(nsWidgetQtModule)
 #else
 #  error Unknown widget module.
 #endif

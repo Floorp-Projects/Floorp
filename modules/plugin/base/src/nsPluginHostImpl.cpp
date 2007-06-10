@@ -173,12 +173,8 @@
 #include "nsContentPolicyUtils.h"
 #include "nsContentErrors.h"
 
-#ifdef XP_UNIX
-#if defined (MOZ_WIDGET_GTK2)
+#if defined(XP_UNIX) && defined(MOZ_WIDGET_GTK2)
 #include <gdk/gdkx.h> // for GDK_DISPLAY()
-#elif defined(MOZ_WIDGET_QT)
-#include <qwindowdefs.h> // for qt_xdisplay()
-#endif
 #endif
 
 #ifdef XP_MACOSX
@@ -2635,8 +2631,6 @@ NS_IMETHODIMP nsPluginHostImpl::GetValue(nsPluginManagerVariable aVariable, void
     Display** value = NS_REINTERPRET_CAST(Display**, aValue);
 #if defined (MOZ_WIDGET_GTK2)
     *value = GDK_DISPLAY();
-#elif defined(MOZ_WIDGET_QT)
-    *value = qt_xdisplay();
 #endif
     if (!(*value)) {
       return NS_ERROR_FAILURE;

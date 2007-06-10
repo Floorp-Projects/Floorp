@@ -248,7 +248,7 @@ EXTRA_DSO_LDOPTS += \
 endif
 
 # Add explicit X11 dependency when building against X11 toolkits
-ifneq (,$(filter gtk2 qt,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS)
 endif
 
