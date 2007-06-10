@@ -107,7 +107,7 @@ BarComponent.prototype =
   flags: 0
 };
 
-Components.utils.import("rel:XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var NSGetModule = XPCOMUtils.generateNSGetModule([
   {

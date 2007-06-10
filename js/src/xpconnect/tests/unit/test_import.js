@@ -39,19 +39,19 @@
  
 function run_test() {   
   var scope = {};
-  Components.utils.import("rel:XPCOMUtils.jsm", scope);
+  Components.utils.import("resource://gre/modules/XPCOMUtils.jsm", scope);
   do_check_eq(typeof(scope.XPCOMUtils), "object");
   do_check_eq(typeof(scope.XPCOMUtils.generateFactory), "function");
   
   // try again on the global object
   do_check_eq(typeof(Components.utils.import), "function");
-  Components.utils.import("rel:XPCOMUtils.jsm");
+  Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
   do_check_eq(typeof(XPCOMUtils), "object");
   do_check_eq(typeof(XPCOMUtils.generateFactory), "function");
   
   // try on a new object
   var scope2 = {};
-  Components.utils.import("rel:XPCOMUtils.jsm", scope2);
+  Components.utils.import("resource://gre/modules/XPCOMUtils.jsm", scope2);
   do_check_eq(typeof(scope2.XPCOMUtils), "object");
   do_check_eq(typeof(scope2.XPCOMUtils.generateFactory), "function");
   
@@ -60,7 +60,7 @@ function run_test() {
   // make sure we throw when the second arg is bogus
   var didThrow = false;
   try {
-      Components.utils.import("rel:XPCOMUtils.jsm", "wrong");
+      Components.utils.import("resource://gre/modules/XPCOMUtils.jsm", "wrong");
   } catch (ex) {
       print("ex: " + ex);
       didThrow = true;
