@@ -86,7 +86,8 @@ public:
     nsresult Init(nsIURI* uri);
     nsresult EvaluateScript(nsIChannel *aChannel,
                             PopupControlState aPopupState,
-                            PRUint32 aExecutionPolicy);
+                            PRUint32 aExecutionPolicy,
+                            nsPIDOMWindow *aOriginalInnerWindow);
 
 protected:
     virtual ~nsJSThunk();
@@ -153,7 +154,8 @@ nsIScriptGlobalObject* GetGlobalObject(nsIChannel* aChannel)
 
 nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
                                    PopupControlState aPopupState,
-                                   PRUint32 aExecutionPolicy)
+                                   PRUint32 aExecutionPolicy,
+                                   nsPIDOMWindow *aOriginalInnerWindow)
 {
     if (aExecutionPolicy == nsIScriptChannel::NO_EXECUTION) {
         // Nothing to do here.
@@ -189,11 +191,10 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     // Push our popup control state
     nsAutoPopupStatePusher popupStatePusher(win, aPopupState);
 
-    // Make sure we create a new inner window if one doesn't already exist (see
-    // bug 306630).
-    nsPIDOMWindow *innerWin = win->EnsureInnerWindow();
+    // Make sure we still have the same inner window as we used to.
+    nsPIDOMWindow *innerWin = win->GetCurrentInnerWindow();
 
-    if (!innerWin) {
+    if (innerWin != aOriginalInnerWindow) {
         return NS_ERROR_UNEXPECTED;
     }
 
@@ -418,6 +419,8 @@ protected:
     nsCOMPtr<nsIChannel>    mStreamChannel;
     nsCOMPtr<nsIStreamListener> mListener;  // Our final listener
     nsCOMPtr<nsISupports> mContext; // The context passed to AsyncOpen
+    nsCOMPtr<nsPIDOMWindow> mOriginalInnerWindow;  // The inner window our load
+                                                   // started against.
     nsresult mStatus; // Our status
 
     nsLoadFlags             mLoadFlags;
@@ -577,7 +580,8 @@ NS_IMETHODIMP
 nsJSChannel::Open(nsIInputStream **aResult)
 {
     nsresult rv = mIOThunk->EvaluateScript(mStreamChannel, mPopupState,
-                                           mExecutionPolicy);
+                                           mExecutionPolicy,
+                                           mOriginalInnerWindow);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return mStreamChannel->Open(aResult);
@@ -587,6 +591,23 @@ NS_IMETHODIMP
 nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 {
     NS_ENSURE_ARG(aListener);
+
+    // First make sure that we have a usable inner window; we'll want to make
+    // sure that we execute against that inner and no other.
+    nsIScriptGlobalObject* global = GetGlobalObject(this);
+    if (!global) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(global));
+    NS_ASSERTION(win, "Our global is not a window??");
+
+    // Make sure we create a new inner window if one doesn't already exist (see
+    // bug 306630).
+    mOriginalInnerWindow = win->EnsureInnerWindow();
+    if (!mOriginalInnerWindow) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
     
     mListener = aListener;
     mContext = aContext;
@@ -618,13 +639,11 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
         loadGroup->RemoveRequest(this, nsnull, rv);
         mIsActive = PR_FALSE;
         mListener = nsnull;
-        mContext = nsnull;            
+        mContext = nsnull;
+        mOriginalInnerWindow = nsnull;
     }
 
-    nsCOMPtr<nsPIDOMWindow> domWin = do_QueryInterface(GetGlobalObject(this));
-    if (domWin) {
-        mPopupState = domWin->GetPopupControlState();
-    }
+    mPopupState = win->GetPopupControlState();
 
     return rv;
 }
@@ -644,7 +663,8 @@ nsJSChannel::EvaluateScript()
     
     if (NS_SUCCEEDED(mStatus)) {
         nsresult rv = mIOThunk->EvaluateScript(mStreamChannel, mPopupState,
-                                               mExecutionPolicy);
+                                               mExecutionPolicy,
+                                               mOriginalInnerWindow);
 
         // Note that evaluation may have canceled us, so recheck mStatus again
         if (NS_FAILED(rv) && NS_SUCCEEDED(mStatus)) {
@@ -736,6 +756,7 @@ nsJSChannel::NotifyListener()
     listener->OnStopRequest(this, mContext, mStatus);
 
     mContext = nsnull;
+    mOriginalInnerWindow = nsnull;
 }
 
 NS_IMETHODIMP
