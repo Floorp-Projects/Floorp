@@ -52,23 +52,12 @@
 #include "nsDownloadManager.h"
 #include "nsDownloadProxy.h"
 
-// XXX When Suite becomes a full XUL App this section can be removed.
-#ifndef MOZ_XUL_APP
-#include "nsAppStartup.h"
-#include "nsCommandLineService.h"
-#include "nsUserInfo.h"
-#endif // !MOZ_XUL_APP
-
 #if defined(XP_WIN)
 #include "nsWindowsHooks.h"
 #include "nsUrlWidget.h"
 #endif // Windows
 
 #endif // MOZ_SUITE
-
-#ifdef ALERTS_SERVICE
-#include "nsAlertsService.h"
-#endif
 
 #if !defined(MOZ_MACBROWSER)
 #include "nsBrowserStatusFilter.h"
@@ -101,22 +90,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
 
-#ifndef MOZ_XUL_APP
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCmdLineService)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppStartup)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
-#endif // !MOZ_XUL_APP
-
 #if defined(XP_WIN)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
 #endif // Windows
 
 #endif // MOZ_SUITE
-
-#ifdef ALERTS_SERVICE
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
-#endif
 
 #if (!defined(MOZ_XUL_APP)) && !defined(MOZ_MACBROWSER)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserContentHandler)
@@ -181,23 +160,6 @@ static const nsModuleComponentInfo components[] = {
       nsGlobalHistoryConstructor },
     { "Related Links Handler", NS_RELATEDLINKSHANDLER_CID, NS_RELATEDLINKSHANDLER_CONTRACTID,
        RelatedLinksHandlerImplConstructor},
-#ifndef MOZ_XUL_APP
-    { "App Startup Service",
-      NS_SEAMONKEY_APPSTARTUP_CID,
-      NS_APPSTARTUP_CONTRACTID,
-      nsAppStartupConstructor
-    },
-    { "CommandLine Service",
-      NS_COMMANDLINESERVICE_CID,
-      NS_COMMANDLINESERVICE_CONTRACTID,
-      nsCmdLineServiceConstructor
-    },
-    { "User Info Service",
-      NS_USERINFO_CID,
-      NS_USERINFO_CONTRACTID,
-      nsUserInfoConstructor
-    },
-#endif // MOZ_XUL_APP
 
 #ifdef XP_WIN
     { NS_IURLWIDGET_CLASSNAME, NS_IURLWIDGET_CID,
@@ -219,11 +181,6 @@ static const nsModuleComponentInfo components[] = {
       NS_BROWSERINSTANCE_CONTRACTID,
       nsBrowserInstanceConstructor
     },
-#endif
-
-#ifdef ALERTS_SERVICE
-    { "nsAlertsService", NS_ALERTSSERVICE_CID,
-      NS_ALERTSERVICE_CONTRACTID, nsAlertsServiceConstructor },
 #endif
 
 #if (!defined(MOZ_XUL_APP)) && !defined(MOZ_MACBROWSER)
