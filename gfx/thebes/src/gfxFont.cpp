@@ -628,6 +628,7 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void 
     mAppUnitsPerDevUnit(aParams->mAppUnitsPerDevUnit),
     mFlags(aFlags), mCharacterCount(aLength), mHashCode(0)
 {
+    MOZ_COUNT_CTOR(gfxTextRun);
     NS_ADDREF(mFontGroup);
     if (aParams->mSkipChars) {
         mSkipChars.TakeFrom(aParams->mSkipChars);
@@ -675,6 +676,7 @@ gfxTextRun::~gfxTextRun()
         }
     }
     NS_RELEASE(mFontGroup);
+    MOZ_COUNT_DTOR(gfxTextRun);
 }
 
 gfxTextRun *
