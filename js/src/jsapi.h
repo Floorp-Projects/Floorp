@@ -876,7 +876,7 @@ JS_MarkGCThing(JSContext *cx, void *thing, const char *name, void *arg);
  * JS_CallTracer API and related macros for implementors of JSTraceOp, to
  * enumerate all references to traceable things reachable via a property or
  * other strong ref identified for debugging purposes by name or index or
- * a naming callaback.
+ * a naming callback.
  *
  * By definition references to traceable things include non-null pointers
  * to JSObject, JSString and jsdouble and corresponding jsvals.
@@ -912,7 +912,7 @@ struct JSTracer {
 };
 
 /*
- * The method to call on each reference to a traceable thing storted in a
+ * The method to call on each reference to a traceable thing stored in a
  * particular JSObject or other runtime structure. With DEBUG defined the
  * caller before calling JS_CallTracer must initialize JSTracer fields
  * describing the reference using the macros below.
