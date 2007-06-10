@@ -48,8 +48,6 @@ var inspector;
 
 //////////// global constants ////////////////////
 
-const kSearchRegURL        = "resource:///res/inspector/search-registry.rdf";
-
 const kClipboardHelperCID  = "@mozilla.org/widget/clipboardhelper;1";
 const kPromptServiceCID    = "@mozilla.org/embedcomp/prompt-service;1";
 const nsIWebNavigation     = Components.interfaces.nsIWebNavigation;
@@ -103,26 +101,21 @@ InspectorApp.prototype =
   ////////////////////////////////////////////////////////////////////////////
   //// Initialization
 
-  mSearchService: null,
   mShowBrowser: false,
   mClipboardHelper: null,
   mPromptService: null,
   
   get document() { return this.mDocPanel.viewer.subject },
-  get searchRegistry() { return this.mSearchService },
   get panelset() { return this.mPanelSet; },
   
   initialize: function(aTarget, aURI)
   {
     this.mInitTarget = aTarget;
     
-    //this.initSearch();
-
     var el = document.getElementById("bxBrowser");
     el.addEventListener("pageshow", BrowserPageShowListener, true);
 
     this.setBrowser(false, true);
-    //this.setSearch(false, true);
 
     this.mClipboardHelper = XPCU.getService(kClipboardHelperCID, "nsIClipboardHelper");
     this.mPromptService = XPCU.getService(kPromptServiceCID, "nsIPromptService");
@@ -232,20 +225,6 @@ InspectorApp.prototype =
     cmd.setAttribute("checked", aValue);
   },
 
-  toggleSearch: function(aToggleSplitter)
-  {
-    this.setSearch(!this.mShowSearch, aToggleSplitter);
-  },
-
-  setSearch: function(aValue, aToggleSplitter)
-  {
-    this.mShowSearch = aValue;
-    if (aToggleSplitter)
-      this.openSplitter("Search", aValue);
-    var cmd = document.getElementById("cmdToggleSearch");
-    cmd.setAttribute("checked", aValue);
-  },
-
   openSplitter: function(aName, aTruth)
   {
     var splitter = document.getElementById("spl" + aName);
@@ -254,93 +233,6 @@ InspectorApp.prototype =
     else
       splitter.close();
   },
-
-/*
-  XXXcaa
-  The following code needs to evaluated.  What does it do?  Why does nobody
-  call it?  If deemed necessary, turn it back on with the right callers,
-  and localize it.
- */
-/*
-  runSearch: function()
-  {
-    var path = null; // TODO: should persist last path chosen in a pref
-    var file = FilePickerUtils.pickFile("Find Search File", path, ["filterXML"], "Open");
-    if (file) {
-      var ioService = XPCU.getService("@mozilla.org/network/io-service;1","nsIIOService");
-      var fileHandler = XPCU.QI(ioService.getProtocolHandler("file"), "nsIFileProtocolHandler");
-
-      var url = fileHandler.getURLSpecFromFile(file);
-
-      this.startSearchModule(url);
-    }
-  },
-
-  viewSearchItem: function()
-  {
-    if (this.mCurrentSearch.canViewItems)
-      window.openDialog("chrome://inspector/content/utilWindow.xul", "viewItem", "chrome,resizable");
-  },
-
-  doViewSearchItem: function(aWindow)
-  {
-    var idx = this.getSelectedSearchIndex();
-    var el = this.mCurrentSearch.viewItemAt(idx);
-
-    aWindow.document.title = this.mCurrentSearch.getItemDescription(idx);
-    aWindow.document.getElementById("bxCenter").appendChild(el);
-  },
-
-  editSearchItem: function()
-  {
-  },
-  
-  onSearchTreeClick: function(aEvent)
-  {
-    if (aEvent.detail == 2) { // double click
-      this.viewSearchItem();
-    }
-  },
-
-  copySearchItemLine: function()
-  {
-    var mod = this.mSearchService.currentModule;
-    var idx = this.mSearchService.getSelectedIndex(0);
-    var text = mod.getItemText(idx);
-    this.mClipboardHelper.copyString(text);
-  },
-
-  // XXX what is this?  It doesn't seem to get called from anywhere?
-  copySearchItemAll: function()
-  {
-    var text = this.getAllSearchItemText();
-    this.mClipboardHelper.copyString(text);
-  },
-
-  saveSearchItemText: function()
-  {
-    var target = FilePickerUtils.pickFile("Save Results As", null, ["filterAll", "filterText"], "Save");
-
-    var text = this.getAllSearchItemText();
-
-    var file = new File(target.path);
-    file.open('w');
-    file.write(text);
-    file.close();
-  },
-
-  getAllSearchItemText: function()
-  {
-    var mod = this.mSearchService.currentModule;
-    var len = mod.resultCount;
-    var text = "";
-    for (var i = 0; i < len; i++) {
-      text += mod.getItemText(i) + "\r";
-    }
-
-    return text;
-  },
-*/
 
   exit: function()
   {
@@ -506,17 +398,6 @@ InspectorApp.prototype =
   get progress() { return document.getElementById("pmStatus").value; },
   set progress(aPct) { document.getElementById("pmStatus").value = aPct; },
 
-/*
-  XXXcaa -- What is this?
-
-
-  get searchTitle(aTitle) { return document.getElementById("splSearch").label; },
-  set searchTitle(aTitle)
-  {
-    var splitter = document.getElementById("splSearch");
-    splitter.setAttribute("label", "Search" + (aTitle ? " - " + aTitle : ""));
-  },
-*/
   ////////////////////////////////////////////////////////////////////////////
   //// Document Loading 
 
@@ -536,66 +417,6 @@ InspectorApp.prototype =
     this.mPendingURL = null;
     this.mPendingNoSave = null;
   },
-
-  ////////////////////////////////////////////////////////////////////////////
-  //// Search 
-/*
-  initSearch: function()
-  {
-    var ss = new inSearchService();
-    this.mSearchService = ss;
-    
-    ss.addSearchObserver(this);
-    ss.resultsTree = document.getElementById("trSearch");
-    ss.contextMenu = document.getElementById("ppSearchResults");
-    ss.contextMenuInsertPt = document.getElementById("ppSearchResults-insertion");
-    ss.contextMenuInsert = inSearchService.INSERT_BEFORE;
-  },
-
-  startSearchModule: function(aModuleURL)
-  {
-    this.mSearchService.startModule(aModuleURL);
-  },
-  
-  clearSearchResults: function()
-  {
-    this.searchTitle = null;
-    this.statusText = "";
-    this.progress = 0;
-    
-    this.mSearchService.clearSearch();
-  },
-  
-  ////////////////////////////////////////////////////////////////////////////
-  //// interface inISearchObserver
-
-  onSearchStart: function(aModule) 
-  {
-    this.searchTitle = aModule.title;
-    this.toggleSearch(true, true);
-  },
-
-  onSearchResult: function(aModule)
-  {
-    if (aModule.isPastMilestone) {
-      this.statusText = "Searching - " + aModule.resultCount + " results found."; // XXX localize
-      this.progress = aModule.progressPercent;
-    }
-  },
-
-  onSearchEnd: function(aModule, aResult)
-  {
-    var diff = Math.round(aModule.elapsed / 100) / 10;
-    this.progress = 100;
-    this.statusText = "Search complete - " + aModule.resultCount + " results found ("+diff+"s)"; // XXX localize
-  },
-
-  onSearchError: function(aModule, aMessage)
-  {
-    alert("Unable to complete this search due to the following error:\n" + aMessage);
-  },
-
-*/
 
   ////////////////////////////////////////////////////////////////////////////
   //// History 
@@ -665,8 +486,6 @@ InspectorApp.prototype =
   {
     if (aSplitter.id == "splBrowser") {
       this.setBrowser(aSplitter.isOpened, false);
-    } else if (aSplitter.id == "splSearch") {
-      this.setSearch(aSplitter.isOpened, false);
     }
   },
   
