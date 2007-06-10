@@ -227,7 +227,6 @@ endif
 
 LOCAL_INCLUDES += \
 	-I$(srcdir) \
-	-I$(topsrcdir)/xpfe/bootstrap \
 	-I$(srcdir)/../profile/src \
 	-I$(topsrcdir)/config \
 	$(NULL)
@@ -252,5 +251,5 @@ ifdef WRAP_SYSTEM_INCLUDES
 DEFINES		+= -DWRAP_SYSTEM_INCLUDES
 endif
 
-export:: $(addprefix $(topsrcdir)/xpfe/bootstrap/, $(SHAREDCPPSRCS) $(SHAREDCMMSRCS)) $(STACKWALK_CPPSRCS)
+export:: $(addprefix $(topsrcdir)/xpfe/bootstrap/, $(SHAREDCPPSRCS)) $(STACKWALK_CPPSRCS)
 	$(INSTALL) $^ .
