@@ -67,7 +67,6 @@ function PROT_Application() {
       TEST_PROT_ListManager();
       TEST_PROT_PhishingWarden();
       TEST_PROT_TRFetcher();
-      TEST_G_ObjectSafeMap();
       TEST_PROT_URLCanonicalizer();
       TEST_G_Preferences();
       TEST_G_Observer();
