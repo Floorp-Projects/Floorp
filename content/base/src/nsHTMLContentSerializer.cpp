@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Ryan Jones <sciguyryan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -454,29 +455,8 @@ nsHTMLContentSerializer::IsJavaScript(nsIAtom* aAttrNameAtom, const nsAString& a
       return PR_FALSE;  
   }
 
-  PRBool result = 
-                 (aAttrNameAtom == nsGkAtoms::onblur)      || (aAttrNameAtom == nsGkAtoms::onchange)
-              || (aAttrNameAtom == nsGkAtoms::onclick)     || (aAttrNameAtom == nsGkAtoms::ondblclick)
-              || (aAttrNameAtom == nsGkAtoms::onfocus)     || (aAttrNameAtom == nsGkAtoms::onkeydown)
-              || (aAttrNameAtom == nsGkAtoms::onkeypress)  || (aAttrNameAtom == nsGkAtoms::onkeyup)
-              || (aAttrNameAtom == nsGkAtoms::onload)      || (aAttrNameAtom == nsGkAtoms::onmousedown)
-              || (aAttrNameAtom == nsGkAtoms::onpageshow)  || (aAttrNameAtom == nsGkAtoms::onpagehide)
-              || (aAttrNameAtom == nsGkAtoms::onmousemove) || (aAttrNameAtom == nsGkAtoms::onmouseout)
-              || (aAttrNameAtom == nsGkAtoms::onmouseover) || (aAttrNameAtom == nsGkAtoms::onmouseup)
-              || (aAttrNameAtom == nsGkAtoms::onreset)     || (aAttrNameAtom == nsGkAtoms::onselect)
-              || (aAttrNameAtom == nsGkAtoms::onsubmit)    || (aAttrNameAtom == nsGkAtoms::onunload)
-              || (aAttrNameAtom == nsGkAtoms::onabort)     || (aAttrNameAtom == nsGkAtoms::onerror)
-              || (aAttrNameAtom == nsGkAtoms::onpaint)     || (aAttrNameAtom == nsGkAtoms::onresize)
-              || (aAttrNameAtom == nsGkAtoms::onscroll)    || (aAttrNameAtom == nsGkAtoms::onbroadcast)
-              || (aAttrNameAtom == nsGkAtoms::onclose)     || (aAttrNameAtom == nsGkAtoms::oncontextmenu)
-              || (aAttrNameAtom == nsGkAtoms::oncommand)   || (aAttrNameAtom == nsGkAtoms::oncommandupdate)
-              || (aAttrNameAtom == nsGkAtoms::ondragdrop)  || (aAttrNameAtom == nsGkAtoms::ondragenter)
-              || (aAttrNameAtom == nsGkAtoms::ondragexit)  || (aAttrNameAtom == nsGkAtoms::ondraggesture)
-              || (aAttrNameAtom == nsGkAtoms::ondragover)  || (aAttrNameAtom == nsGkAtoms::ondragstart)
-              || (aAttrNameAtom == nsGkAtoms::ondragleave) || (aAttrNameAtom == nsGkAtoms::ondrop)
-              || (aAttrNameAtom == nsGkAtoms::ondragend)   || (aAttrNameAtom == nsGkAtoms::ondrag)
-              || (aAttrNameAtom == nsGkAtoms::oninput);
-  return result;
+  return nsContentUtils::IsEventAttributeName(aAttrNameAtom,
+                                              EventNameType_HTML);
 }
 
 nsresult 
