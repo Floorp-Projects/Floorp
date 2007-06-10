@@ -89,9 +89,6 @@ else
  ifdef MOZ_ENABLE_GTK2
  DIRS        += gtk
  endif
- ifdef MOZ_ENABLE_QT
- DIRS        += qt
- endif
  ifdef MOZ_ENABLE_PHOTON
  DIRS        += photon
  endif

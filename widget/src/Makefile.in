@@ -73,10 +73,6 @@ DIRS		+= gtk2
 DIRS		+= gtkxtbin
 endif
 
-ifdef MOZ_ENABLE_QT
-DIRS		+= qt
-endif
-
 ifdef MOZ_ENABLE_PHOTON
 DIRS		+= photon
 endif

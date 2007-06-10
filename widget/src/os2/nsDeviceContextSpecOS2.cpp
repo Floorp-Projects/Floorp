@@ -262,26 +262,6 @@ NS_IMETHODIMP nsDeviceContextSpecOS2 :: QueryInterface(REFNSIID aIID, void** aIn
 NS_IMPL_ADDREF(nsDeviceContextSpecOS2)
 NS_IMPL_RELEASE(nsDeviceContextSpecOS2)
 
-  
-/** -------------------------------------------------------
- *  Initialize the nsDeviceContextSpecOS2
- *  @update   dc 2/15/98
- *  @update   syd 3/2/99
- *
- * gisburn: Please note that this function exists as 1:1 copy in other
- * toolkits including:
- * - GTK+-toolkit:
- *   file:     mozilla/gfx/src/gtk/nsDeviceContextSpecG.cpp
- *   function: NS_IMETHODIMP nsDeviceContextSpecGTK::Init(PRBool aPrintPreview )
- * - Xlib-toolkit: 
- *   file:     mozilla/gfx/src/xlib/nsDeviceContextSpecXlib.cpp 
- *   function: NS_IMETHODIMP nsDeviceContextSpecXlib::Init(PRBool aPrintPreview )
- * - Qt-toolkit:
- *   file:     mozilla/gfx/src/qt/nsDeviceContextSpecQT.cpp
- *   function: NS_IMETHODIMP nsDeviceContextSpecQT::Init(PRBool aPrintPreview )
- * 
- * ** Please update the other toolkits when changing this function.
- */
 NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIWidget *aWidget,
                                            nsIPrintSettings* aPS,
                                            PRBool aIsPrintPreview)

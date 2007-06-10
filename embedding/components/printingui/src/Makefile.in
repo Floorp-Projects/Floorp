@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifneq (,$(filter gtk2 photon qt beos,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk2 photon beos,$(MOZ_WIDGET_TOOLKIT)))
 PLATFORM_DIR += unixshared
 endif
 

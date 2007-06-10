@@ -160,7 +160,6 @@ gfx/src/ps/Makefile
 gfx/src/psshared/Makefile
 gfx/src/photon/Makefile
 gfx/src/mac/Makefile
-gfx/src/qt/Makefile
 gfx/src/os2/Makefile
 gfx/src/xlibrgb/Makefile
 gfx/src/windows/Makefile
@@ -566,7 +565,6 @@ widget/src/Makefile
 widget/src/beos/Makefile
 widget/src/build/Makefile
 widget/src/gtkxtbin/Makefile
-widget/src/qt/Makefile
 widget/src/photon/Makefile
 widget/src/mac/Makefile
 widget/src/cocoa/Makefile
@@ -765,9 +763,6 @@ embedding/browser/webBrowser/Makefile
 embedding/browser/gtk/Makefile
 embedding/browser/gtk/src/Makefile
 embedding/browser/gtk/tests/Makefile
-embedding/browser/qt/Makefile
-embedding/browser/qt/src/Makefile
-embedding/browser/qt/tests/Makefile
 embedding/browser/photon/Makefile
 embedding/browser/photon/src/Makefile
 embedding/browser/photon/tests/Makefile

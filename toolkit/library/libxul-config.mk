@@ -286,14 +286,8 @@ else # Platform-specific GFX layer
   ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
   COMPONENT_LIBS += gfx_mac
   endif
-  ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
-  COMPONENT_LIBS += widget_qt
-  endif
   ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
   COMPONENT_LIBS += gfx_gtk
-  endif
-  ifdef MOZ_ENABLE_QT
-  COMPONENT_LIBS += gfx_qt
   endif
   ifdef MOZ_ENABLE_PHOTON
   COMPONENT_LIBS += gfx_photon
@@ -311,9 +305,6 @@ COMPONENT_LIBS += wdgtos2
 endif
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 COMPONENT_LIBS += widget_mac
-endif
-ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
-COMPONENT_LIBS += widget_qt
 endif
 
 ifdef MOZ_ENABLE_PHOTON
