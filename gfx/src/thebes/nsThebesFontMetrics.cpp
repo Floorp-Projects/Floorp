@@ -102,6 +102,7 @@ nsThebesFontMetrics::Destroy()
 
 // XXXTODO get rid of this macro
 #define ROUND_TO_TWIPS(x) (nscoord)floor(((x) * mP2A) + 0.5)
+#define CEIL_TO_TWIPS(x) (nscoord)NS_ceil((x) * mP2A)
 
 const gfxFont::Metrics& nsThebesFontMetrics::GetMetrics() const
 {
@@ -149,7 +150,8 @@ nsThebesFontMetrics::GetUnderline(nscoord& aOffset, nscoord& aSize)
 NS_IMETHODIMP
 nsThebesFontMetrics::GetHeight(nscoord &aHeight)
 {
-    aHeight = ROUND_TO_TWIPS(GetMetrics().maxHeight);
+    aHeight = CEIL_TO_TWIPS(GetMetrics().maxAscent) +
+        CEIL_TO_TWIPS(GetMetrics().maxDescent);
     return NS_OK;
 }
 
@@ -191,28 +193,29 @@ nsThebesFontMetrics::GetEmDescent(nscoord &aDescent)
 NS_IMETHODIMP
 nsThebesFontMetrics::GetMaxHeight(nscoord &aHeight)
 {
-    aHeight = ROUND_TO_TWIPS(GetMetrics().maxHeight);
+    aHeight = CEIL_TO_TWIPS(GetMetrics().maxAscent) +
+        CEIL_TO_TWIPS(GetMetrics().maxDescent);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetMaxAscent(nscoord &aAscent)
 {
-    aAscent = ROUND_TO_TWIPS(GetMetrics().maxAscent);
+    aAscent = CEIL_TO_TWIPS(GetMetrics().maxAscent);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetMaxDescent(nscoord &aDescent)
 {
-    aDescent = ROUND_TO_TWIPS(GetMetrics().maxDescent);
+    aDescent = CEIL_TO_TWIPS(GetMetrics().maxDescent);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetMaxAdvance(nscoord &aAdvance)
 {
-    aAdvance = ROUND_TO_TWIPS(GetMetrics().maxAdvance);
+    aAdvance = CEIL_TO_TWIPS(GetMetrics().maxAdvance);
     return NS_OK;
 }
 
