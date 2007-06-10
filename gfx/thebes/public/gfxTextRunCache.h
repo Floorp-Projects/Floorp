@@ -52,7 +52,9 @@ public:
     gfxTextRunCache() {
         mCache.Init(100);
     }
-    ~gfxTextRunCache() {}
+    ~gfxTextRunCache() {
+        NS_ASSERTION(mCache.Count() == 0, "Textrun cache not empty!");
+    }
 
     /**
      * Get a textrun from the cache, create one if necessary.
