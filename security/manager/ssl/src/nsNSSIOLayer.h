@@ -113,6 +113,10 @@ public:
   // This variable is used to save the SSL level file descriptor,
   // to allow us to restore the original file descriptor layering.
   PRFileDesc *mReplacedSSLFileDesc;
+
+  PRBool mOneBytePendingFromEarlierWrite;
+  unsigned char mThePendingByte;
+  PRInt32 mOriginalRequestedTransferAmount;
 };
 
 class nsNSSSocketInfo : public nsITransportSecurityInfo,
