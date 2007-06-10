@@ -46,10 +46,10 @@
         </columns>
         <rows>
           <row>
-            <label value="&nodeName.label;"
-                   for="tx_nodeName"
+            <label value="&localName.label;"
+                   for="tx_localName"
                    class="olNodeInfoLabel"/>
-            <textbox id="tx_nodeName" readonly="true" class="plain"/>
+            <textbox id="tx_localName" readonly="true" class="plain"/>
           </row>
           <row>
             <label value="&namespaceURI.label;"
