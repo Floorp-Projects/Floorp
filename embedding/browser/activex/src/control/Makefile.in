@@ -114,6 +114,8 @@ GARBAGE	+= $(DEFFILE) $(MIDL_GENERATED_FILES) done_gen
 
 ENABLE_CXX_EXCEPTIONS = 1
 
+EMBED_MANIFEST_AT = 2
+
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += -D "WIN32" -U "ClientWallet"
