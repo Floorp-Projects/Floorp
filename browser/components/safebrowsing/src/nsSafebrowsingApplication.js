@@ -34,7 +34,6 @@ function Init() {
   modScope.PROT_XMLFetcher = jslib.PROT_XMLFetcher;
   modScope.BindToObject = jslib.BindToObject;
   modScope.G_Protocol4Parser = jslib.G_Protocol4Parser;
-  modScope.G_ObjectSafeMap = jslib.G_ObjectSafeMap;
   modScope.PROT_UrlCrypto = jslib.PROT_UrlCrypto;
   modScope.RequestBackoff = jslib.RequestBackoff;
   

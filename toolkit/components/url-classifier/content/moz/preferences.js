@@ -182,12 +182,17 @@ G_Preferences.prototype.clearPref = function(which) {
  *                 holding the preference name that changed
  */
 G_Preferences.prototype.addObserver = function(which, callback) {
-  var observer = new G_PreferenceObserver(callback);
   // Need to store the observer we create so we can eventually unregister it
   if (!this.observers_[which])
-    this.observers_[which] = new G_ObjectSafeMap();
-  this.observers_[which].insert(callback, observer);
-  this.prefs_.addObserver(which, observer, false /* strong reference */);
+    this.observers_[which] = { callbacks: [], observers: [] };
+
+  /* only add an observer if the callback hasn't been registered yet */
+  if (this.observers_[which].callbacks.indexOf(callback) == -1) {
+    var observer = new G_PreferenceObserver(callback);
+    this.observers_[which].callbacks.push(callback);
+    this.observers_[which].observers.push(observer);
+    this.prefs_.addObserver(which, observer, false /* strong reference */);
+  }
 }
 
 /**
@@ -197,10 +202,11 @@ G_Preferences.prototype.addObserver = function(which, callback) {
  * @param callback Function to remove as an observer
  */
 G_Preferences.prototype.removeObserver = function(which, callback) {
-  var observer = this.observers_[which].find(callback);
-  G_Assert(this, !!observer, "Tried to unregister a nonexistant observer"); 
+  var ix = this.observers_[which].callbacks.indexOf(callback);
+  G_Assert(this, ix != -1, "Tried to unregister a nonexistant observer"); 
+  this.observers_[which].callbacks.splice(ix, 1);
+  var observer = this.observers_[which].observers.splice(ix, 1)[0];
   this.prefs_.removeObserver(which, observer);
-  this.observers_[which].erase(callback);
 }
 
 
