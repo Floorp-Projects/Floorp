@@ -282,10 +282,6 @@ static void InitializeMacOSXApp(int argc, char* argv[])
 
 #endif /* XP_MACOSX */
 
-#if defined(MOZ_WIDGET_QT)
-#include <qapplication.h>
-#endif
-
 #ifdef MOZ_X11
 #include <X11/Xlib.h>
 #endif /* MOZ_X11 */
@@ -1592,10 +1588,6 @@ int main(int argc, char* argv[])
   gtk_widget_set_default_visual(gdk_rgb_get_visual());
   gtk_widget_set_default_colormap(gdk_rgb_get_cmap());
 #endif /* MOZ_WIDGET_GTK2 */
-
-#if defined(MOZ_WIDGET_QT)
-  QApplication qapp(argc, argv);
-#endif
 
   // Call the code to install our handler
 #ifdef MOZ_JPROF
