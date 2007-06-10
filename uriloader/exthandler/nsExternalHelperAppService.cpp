@@ -71,10 +71,9 @@
 #include "rdf.h"
 #include "nsIRDFService.h"
 #include "nsIRDFRemoteDataSource.h"
-#endif //MOZ_RDF
 #include "nsHelperAppRDF.h"
+#endif //MOZ_RDF
 #include "nsIMIMEInfo.h"
-#include "nsDirectoryServiceDefs.h"
 #include "nsIRefreshURI.h" // XXX needed to redirect according to Refresh: URI
 #include "nsIDocumentLoader.h" // XXX needed to get orig. channel and assoc. refresh uri
 #include "nsIHelperAppLauncherDialog.h"
