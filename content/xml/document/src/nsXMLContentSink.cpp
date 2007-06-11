@@ -1499,16 +1499,10 @@ nsXMLContentSink::AddText(const PRUnichar* aText,
     mTextSize = NS_ACCUMULATION_BUFFER_SIZE;
   }
 
-  const nsAString& str = Substring(aText, aText+aLength);
-
   // Copy data from string into our buffer; flush buffer when it fills up
   PRInt32 offset = 0;
-  PRBool  isLastCharCR = PR_FALSE;
   while (0 != aLength) {
     PRInt32 amount = mTextSize - mTextLength;
-    if (amount > aLength) {
-      amount = aLength;
-    }
     if (0 == amount) {
       // XSLT wants adjacent textnodes merged.
       if (mConstrainSize && !mXSLTProcessor) {
@@ -1516,23 +1510,27 @@ nsXMLContentSink::AddText(const PRUnichar* aText,
         if (NS_OK != rv) {
           return rv;
         }
+
+        amount = mTextSize - mTextLength;
       }
       else {
         mTextSize += aLength;
         mText = (PRUnichar *) PR_REALLOC(mText, sizeof(PRUnichar) * mTextSize);
         if (nsnull == mText) {
+          mTextSize = 0;
+
           return NS_ERROR_OUT_OF_MEMORY;
         }
+
+        amount = aLength;
       }
     }
-    // Line breaks should not be normalized twice. See bug 343870.
-    mTextLength +=
-      nsContentUtils::CopyNewlineNormalizedUnicodeTo(str, 
-                                                     offset, 
-                                                     &mText[mTextLength], 
-                                                     amount,
-                                                     isLastCharCR);
-    offset  += amount;
+    if (amount > aLength) {
+      amount = aLength;
+    }
+    memcpy(&mText[mTextLength], &aText[offset], sizeof(PRUnichar) * amount);
+    mTextLength += amount;
+    offset += amount;
     aLength -= amount;
   }
 
