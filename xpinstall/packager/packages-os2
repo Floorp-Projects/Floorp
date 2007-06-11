@@ -323,10 +323,6 @@ bin/ldap60.dll
 bin/prldap60.dll
 bin/ldif60.dll
 
-; p3p
-bin/components/p3p.xpt
-bin/components/p3p.dll
-
 ; classic theme
 bin/chrome/classic.jar
 bin/chrome/classic.manifest
@@ -537,8 +533,6 @@ bin/chrome/sroaming.jar
 ;iiextras.dll - I don't know
 ;iiextras.xpt - I don't know
 ;MyServce.dll - Sample
-;p3p.dll - I don't know
-;p3p.xpt - I don't know
 ;proxytext.xpt - Test
 ;tdynamic.dll - Test
 ;xpcomsmp.dll - Sample

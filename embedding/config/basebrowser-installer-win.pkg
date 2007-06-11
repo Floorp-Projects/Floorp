@@ -284,10 +284,6 @@ res\fonts\mathfontPUA.properties
 res\fonts\mathfontSymbol.properties
 
 
-; p3p
-components\p3p.dll
-components\p3p.xpt
-
 ; XPInstall
 res\cmessage.txt
 

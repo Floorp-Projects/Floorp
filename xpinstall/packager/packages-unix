@@ -325,10 +325,6 @@ bin/components/mozldap.xpt
 bin/components/libsroaming.so
 bin/chrome/sroaming.jar
 
-; p3p
-bin/components/p3p.xpt
-bin/components/libp3p.so
-
 ; classic theme
 bin/chrome/classic.jar
 bin/chrome/classic.manifest
