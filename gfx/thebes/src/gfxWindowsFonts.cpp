@@ -530,7 +530,8 @@ gfxWindowsFont *
 gfxWindowsFontGroup::GetFontAt(PRInt32 i)
 {
     if (!mFonts[i]) {
-        mFonts[i] = GetOrMakeFont(mFontEntries[i], &mStyle);
+        nsRefPtr<gfxWindowsFont> font = GetOrMakeFont(mFontEntries[i], &mStyle);
+        mFonts[i] = font;
     }
 
     return NS_STATIC_CAST(gfxWindowsFont*, mFonts[i].get());
