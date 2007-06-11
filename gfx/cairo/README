@@ -32,3 +32,8 @@ win32-no-printer-bitblt.patch: If we need to BitBlt from a DC (to do
 fallback), only bother trying if the IS_DISPLAY flag is set -- many
 printers lie about their support for BitBlt, and we end up getting
 black instead of what we want.
+
+avoid-region-extract.patch: Bail from _cairo_traps_extract_region early
+if we have over 200 traps (arbitrary); this avoids an O(N*N) perf hit
+when the region is built up, because we call union_rect with each rect
+individually instead of building the region up in one go.
