@@ -2407,7 +2407,7 @@ nsCryptoHash::Finish(PRBool ascii, nsACString & _retval)
   unsigned char buffer[HASH_LENGTH_MAX];
   unsigned char* pbuffer = buffer;
 
-  HASH_End(mHashContext, pbuffer, &hashLen, 32);
+  HASH_End(mHashContext, pbuffer, &hashLen, HASH_LENGTH_MAX);
   HASH_Destroy(mHashContext);
 
   mHashContext = nsnull;
