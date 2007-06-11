@@ -68,7 +68,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsCocoaWindow, Inherited, nsPIWidgetCocoa)
 
 
 // returns the height of the title bar for a given cocoa NSWindow
-static float TitleBarHeightForWindow(NSWindow* aWindow)
+static float titleBarHeightForWindow(NSWindow* aWindow)
 {
   NS_ASSERTION(aWindow, "Must have a window to calculate a title bar height!");
   
@@ -78,14 +78,9 @@ static float TitleBarHeightForWindow(NSWindow* aWindow)
 }
 
 
-// roll up any popup windows
-static void RollUpPopups()
-{
-  if (gRollupListener && gRollupWidget)
-    gRollupListener->Rollup();
-}
-
-
+//
+// nsCocoaWindow constructor
+//
 nsCocoaWindow::nsCocoaWindow()
 : mParent(nsnull)
 , mWindow(nil)
@@ -102,6 +97,9 @@ nsCocoaWindow::nsCocoaWindow()
 }
 
 
+//
+// nsCocoaWindow destructor
+//
 nsCocoaWindow::~nsCocoaWindow()
 {
   // notify the children that we're gone
@@ -155,8 +153,10 @@ static nsIMenuBar* GetHiddenWindowMenuBar()
 }
 
 
+//
 // Utility method for implementing both Create(nsIWidget ...) and
 // Create(nsNativeWidget...)
+//
 nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
                         const nsRect &aRect,
                         EVENT_CALLBACK aHandleEventFunction,
@@ -355,7 +355,9 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
 }
 
 
+//
 // Create a nsCocoaWindow using a native window provided by the application
+//
 NS_IMETHODIMP nsCocoaWindow::Create(nsNativeWidget aNativeWindow,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
@@ -428,7 +430,9 @@ NS_IMETHODIMP nsCocoaWindow::IsVisible(PRBool & aState)
 }
 
 
+//
 // Hide or show this window
+//
 NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
 {
   nsIWidget* parentWidget = mParent;
@@ -499,8 +503,10 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
   }
   else {
     // roll up any popups if a top-level window is going away
-    if (mWindowType == eWindowType_toplevel)
-      RollUpPopups();
+    if (mWindowType == eWindowType_toplevel) {
+      if (gRollupListener != nsnull && gRollupWidget != nsnull)
+        gRollupListener->Rollup();
+    }
 
     // now get rid of the window/sheet
     if (mWindowType == eWindowType_sheet) {
@@ -703,6 +709,9 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
 }
 
 
+//
+// Resize this window
+//
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
   if (mWindow) {
@@ -721,7 +730,7 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
     // being shown as a sheet the content area and window frame differ.
     float newHeight = (float)aHeight;
     if (mWindowType != eWindowType_popup && ![mWindow isSheet])
-      newHeight += TitleBarHeightForWindow(mWindow); // add height of title bar
+      newHeight += titleBarHeightForWindow(mWindow); // add height of title bar
     // Now we need to adjust for the fact that gecko wants the top of the window
     // to remain in the same place.
     newFrame.origin.y += newFrame.size.height - newHeight;
@@ -749,9 +758,11 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
 }
 
 
+//
 // We return the origin for the entire window (title bar and all) but
 // the size of the content area. I have no idea why it was originally done
 // this way, but it matches Carbon and makes things work nicely.
+//
 NS_IMETHODIMP nsCocoaWindow::GetScreenBounds(nsRect &aRect)
 {
   nsRect windowFrame = cocoaRectToGeckoRect([mWindow frame]);
@@ -807,6 +818,7 @@ NS_IMETHODIMP nsCocoaWindow::Update()
 }
 
 
+//
 // Pass notification of some drag event to Gecko
 //
 // The drag manager has let us know that something related to a drag has
@@ -814,7 +826,8 @@ NS_IMETHODIMP nsCocoaWindow::Update()
 // a drop, to a drag enter/leave, or a drag over event. The actual event
 // is passed in |aMessage| and is passed along to our event hanlder so Gecko
 // knows about it.
-PRBool nsCocoaWindow::DragEvent(unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers)
+//
+PRBool nsCocoaWindow::DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers )
 {
   return PR_FALSE;
 }
@@ -895,7 +908,9 @@ NS_IMETHODIMP nsCocoaWindow::ResetInputState()
 }
 
 
+//
 // Invokes callback and  ProcessEvent method on Event Listener object
+//
 NS_IMETHODIMP 
 nsCocoaWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 {
@@ -924,13 +939,16 @@ nsCocoaWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 void
 nsCocoaWindow::ReportSizeEvent()
 {
+  // nsEvent
   nsSizeEvent sizeEvent(PR_TRUE, NS_SIZE, this);
   sizeEvent.time = PR_IntervalNow();
 
+  // nsSizeEvent
   sizeEvent.windowSize = &mBounds;
   sizeEvent.mWinWidth  = mBounds.width;
   sizeEvent.mWinHeight = mBounds.height;
   
+  // dispatch event
   nsEventStatus status = nsEventStatus_eIgnore;
   DispatchEvent(&sizeEvent, status);
 }
@@ -1096,7 +1114,9 @@ NS_IMETHODIMP nsCocoaWindow::GetAnimatedResize(PRUint16* aAnimation)
 
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)proposedFrameSize
 {
-  RollUpPopups();
+  // roll up any popups
+  if (gRollupListener != nsnull && gRollupWidget != nsnull)
+    gRollupListener->Rollup();
   
   return proposedFrameSize;
 }
@@ -1116,7 +1136,9 @@ NS_IMETHODIMP nsCocoaWindow::GetAnimatedResize(PRUint16* aAnimation)
 
 - (void)windowDidBecomeMain:(NSNotification *)aNotification
 {
-  RollUpPopups();
+  // roll up any popups
+  if (gRollupListener != nsnull && gRollupWidget != nsnull)
+    gRollupListener->Rollup();
 
   NSWindow* window = [aNotification object];
   if (window)
@@ -1126,7 +1148,9 @@ NS_IMETHODIMP nsCocoaWindow::GetAnimatedResize(PRUint16* aAnimation)
 
 - (void)windowDidResignMain:(NSNotification *)aNotification
 {
-  RollUpPopups();
+  // roll up any popups
+  if (gRollupListener != nsnull && gRollupWidget != nsnull)
+    gRollupListener->Rollup();
   
   nsCOMPtr<nsIMenuBar> hiddenWindowMenuBar = GetHiddenWindowMenuBar();
   if (hiddenWindowMenuBar) {
@@ -1156,7 +1180,9 @@ NS_IMETHODIMP nsCocoaWindow::GetAnimatedResize(PRUint16* aAnimation)
 
 - (void)windowWillMove:(NSNotification *)aNotification
 {
-  RollUpPopups();
+  // roll up any popups
+  if (gRollupListener != nsnull && gRollupWidget != nsnull)
+    gRollupListener->Rollup();
 }
 
 - (void)windowDidMove:(NSNotification *)aNotification
@@ -1185,13 +1211,17 @@ NS_IMETHODIMP nsCocoaWindow::GetAnimatedResize(PRUint16* aAnimation)
 
 - (void)windowWillClose:(NSNotification *)aNotification
 {
-  RollUpPopups();
+  // roll up any popups
+  if (gRollupListener != nsnull && gRollupWidget != nsnull)
+    gRollupListener->Rollup();
 }
 
 
 - (void)windowWillMiniaturize:(NSNotification *)aNotification
 {
-  RollUpPopups();
+  // roll up any popups
+  if (gRollupListener != nsnull && gRollupWidget != nsnull)
+    gRollupListener->Rollup();
 }
 
 
@@ -1245,9 +1275,13 @@ NS_IMETHODIMP nsCocoaWindow::GetAnimatedResize(PRUint16* aAnimation)
   return mGeckoWindow;
 }
 
+
 @end
 
 @implementation ToolbarWindow
+
+// Toolbar pill button methods, DANGER! The underscore means DANGEROUS!
+// "You aren't expected to understand this."
 
 // The carbon widget code was saying we want a toolbar for all top level
 // windows, and since we're only using this class for top level windows, we
