@@ -20,6 +20,8 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include "pixmanint.h"
+
 #include "pixman-xserver-compat.h"
 
 static void

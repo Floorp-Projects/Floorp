@@ -21,7 +21,7 @@
  * Author:  Keith Packard, SuSE, Inc.
  */
 
-#include "icint.h"
+#include "pixmanint.h"
 
 #define MAX_FIXED_48_16	    ((xFixed_48_16) 0x7fffffff)
 #define MIN_FIXED_48_16	    (-((xFixed_48_16) 1 << 31))

@@ -80,9 +80,9 @@ _cairo_spline_init (cairo_spline_t *spline,
     else
 	_cairo_slope_init (&spline->final_slope, &spline->a, &spline->d);
 
+    spline->points = spline->points_embedded;
+    spline->points_size = ARRAY_LENGTH (spline->points_embedded);
     spline->num_points = 0;
-    spline->points_size = 0;
-    spline->points = NULL;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -90,11 +90,11 @@ _cairo_spline_init (cairo_spline_t *spline,
 void
 _cairo_spline_fini (cairo_spline_t *spline)
 {
-    if (spline->points && spline->points != spline->points_embedded)
+    if (spline->points != spline->points_embedded)
 	free (spline->points);
 
-    spline->points = NULL;
-    spline->points_size = 0;
+    spline->points = spline->points_embedded;
+    spline->points_size = ARRAY_LENGTH (spline->points_embedded);
     spline->num_points = 0;
 }
 
@@ -104,16 +104,7 @@ _cairo_spline_grow (cairo_spline_t *spline)
 {
     cairo_point_t *new_points;
     int old_size = spline->points_size;
-    int embedded_size = sizeof (spline->points_embedded) / sizeof (spline->points_embedded[0]);
     int new_size = 2 * MAX (old_size, 16);
-
-    /* we have a local buffer at spline->points_embedded.  try to fulfill the request
-     * from there. */
-    if (old_size < embedded_size) {
-	spline->points = spline->points_embedded;
-	spline->points_size = embedded_size;
-	return CAIRO_STATUS_SUCCESS;
-    }
 
     assert (spline->num_points <= spline->points_size);
 
@@ -284,9 +275,8 @@ _cairo_spline_decompose (cairo_spline_t *spline, double tolerance)
 {
     cairo_status_t status;
 
-    if (spline->points_size) {
-	_cairo_spline_fini (spline);
-    }
+    /* reset the spline, but keep the buffer */
+    spline->num_points = 0;
 
     status = _cairo_spline_decompose_into (spline, tolerance * tolerance, spline);
     if (status)

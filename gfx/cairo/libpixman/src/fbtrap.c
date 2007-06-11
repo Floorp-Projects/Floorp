@@ -1,5 +1,5 @@
 /*
- * $Id: fbtrap.c,v 1.15 2007/04/04 01:09:16 vladimir%pobox.com Exp $
+ * $Id: fbtrap.c,v 1.16 2007/06/11 00:01:31 vladimir%pobox.com Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -21,6 +21,8 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
+
+#include "pixmanint.h"
 
 #include "pixman-xserver-compat.h"
 

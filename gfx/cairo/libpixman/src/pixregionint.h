@@ -48,16 +48,11 @@ SOFTWARE.
 
 #include "pixman.h"
 
-typedef struct pixman_region16_data {
+struct pixman_region16_data {
     long		size;
     long		numRects;
     /* XXX: And why, exactly, do we have this bogus struct definition? */
 /*  pixman_box16_t	rects[size];   in memory but not explicitly declared */
-} pixman_region16_data_t;
-
-struct pixman_region16 {
-    pixman_box16_t	extents;
-    pixman_region16_data_t	*data;
 };
 
 typedef struct pixman_region16_point {
