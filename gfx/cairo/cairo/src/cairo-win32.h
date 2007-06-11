@@ -70,6 +70,9 @@ cairo_win32_font_face_create_for_logfontw (LOGFONTW *logfont);
 cairo_public cairo_font_face_t *
 cairo_win32_font_face_create_for_hfont (HFONT font);
 
+cairo_public cairo_font_face_t *
+cairo_win32_font_face_create_for_logfontw_hfont (LOGFONTW *logfont, HFONT font);
+
 cairo_public cairo_status_t
 cairo_win32_scaled_font_select_font (cairo_scaled_font_t *scaled_font,
 				     HDC                  hdc);
