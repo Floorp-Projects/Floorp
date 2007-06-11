@@ -327,12 +327,6 @@
 #define FASTCALL
 #endif
 
-#if defined(__GNUC__)
-#define INLINE __inline__
-#else
-#define INLINE
-#endif
-
 typedef struct _FbComposeData {
     CARD8	op;
     PicturePtr	src;

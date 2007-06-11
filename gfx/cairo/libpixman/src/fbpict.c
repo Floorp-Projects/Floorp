@@ -21,9 +21,8 @@
  * Author:  Keith Packard, SuSE, Inc.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include "pixmanint.h"
+
 #include "pixman-xserver-compat.h"
 
 #ifdef RENDER
@@ -1389,7 +1388,7 @@ pixman_composite (pixman_operator_t	op,
 	     int	width,
 	     int	height)
 {
-    pixman_region16_t	    *region;
+    pixman_region16_t	    region;
     int		    n;
     pixman_box16_t    *pbox;
     CompositeFunc   func = NULL;
@@ -1643,19 +1642,23 @@ pixman_composite (pixman_operator_t	op,
 			    break;
 #ifdef USE_MMX
 			case PICT_x8r8g8b8:
-			case PICT_x8b8g8r8:
-			    if (pDst->format_code == pSrc->format_code &&
+			    if ((pDst->format_code == PICT_a8r8g8b8 ||
+				 pDst->format_code == PICT_x8r8g8b8) &&
 				pMask->format_code == PICT_a8 && fbHaveMMX())
 				func = fbCompositeSrc_x888x8x8888mmx;
 			    break;
-#if 0 /* This case fails rendercheck for me */
+			case PICT_x8b8g8r8:
+			    if ((pDst->format_code == PICT_a8b8g8r8 ||
+				 pDst->format_code == PICT_x8b8g8r8) &&
+				pMask->format_code == PICT_a8 && fbHaveMMX())
+				func = fbCompositeSrc_x888x8x8888mmx;
+			    break;
 			case PICT_a8r8g8b8:
-			    if ((pDst->format == PICT_a8r8g8b8 ||
-				 pDst->format == PICT_x8r8g8b8) &&
-				pMask->format == PICT_a8 && fbHaveMMX())
+			    if ((pDst->format_code == PICT_a8r8g8b8 ||
+				 pDst->format_code == PICT_x8r8g8b8) &&
+				pMask->format_code == PICT_a8 && fbHaveMMX())
 				func = fbCompositeSrc_8888x8x8888mmx;
 			    break;
-#endif
 			case PICT_a8b8g8r8:
 			    if ((pDst->format_code == PICT_a8b8g8r8 ||
 				 pDst->format_code == PICT_x8b8g8r8) &&
@@ -1932,25 +1935,14 @@ pixman_composite (pixman_operator_t	op,
     if (maskTransform)
 	maskRepeat = 0;
 
-    region = pixman_region_create();
-    pixman_region_union_rect (region, region, xDst, yDst, width, height);
+    pixman_region_init_rect (&region, xDst, yDst, width, height);
 
-    if (!FbComputeCompositeRegion (region,
-				   pSrc,
-				   pMask,
-				   pDst,
-				   xSrc,
-				   ySrc,
-				   xMask,
-				   yMask,
-				   xDst,
-				   yDst,
-				   width,
-				   height))
-	return;
+    if (!FbComputeCompositeRegion (&region, pSrc, pMask, pDst, xSrc, ySrc,
+				   xMask, yMask, xDst, yDst, width, height))
+        goto CLEANUP_REGION;
 
-    n = pixman_region_num_rects (region);
-    pbox = pixman_region_rects (region);
+    n = pixman_region_num_rects (&region);
+    pbox = pixman_region_rects (&region);
     while (n--)
     {
 	h = pbox->y2 - pbox->y1;
@@ -2006,7 +1998,9 @@ pixman_composite (pixman_operator_t	op,
 	}
 	pbox++;
     }
-    pixman_region_destroy (region);
+
+CLEANUP_REGION:    
+    pixman_region_fini (&region);
 }
 
 /* The CPU detection code needs to be in a file not compiled with

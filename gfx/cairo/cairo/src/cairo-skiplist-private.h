@@ -26,7 +26,24 @@
 
 #include "cairoint.h"
 
-#define MAX_LEVEL   31
+/*
+ * Skip lists are described in detail here:
+ *
+ *   http://citeseer.ist.psu.edu/pugh90skip.html
+ */
+
+/* Note that random_level() called from alloc_node_for_level() depends on
+ * this being not more than 16.
+ */
+#define MAX_LEVEL   15
+
+/* Returns the index of the free-list to use for a node at level 'level' */
+#define FREELIST_FOR_LEVEL(level) (((level) - 1) / 2)
+
+/* Returns the maximum level that uses the same free-list as 'level' does */
+#define FREELIST_MAX_LEVEL_FOR(level) (((level) + 1) & ~1)
+
+#define MAX_FREELIST_LEVEL (FREELIST_FOR_LEVEL (MAX_LEVEL - 1) + 1)
 
 /*
  * Skip list element. In order to use the skip list, the caller must
@@ -52,7 +69,7 @@ typedef struct _skip_list {
     size_t elt_size;
     size_t data_size;
     skip_elt_t *chains[MAX_LEVEL];
-    skip_elt_t *freelists[MAX_LEVEL];
+    skip_elt_t *freelists[MAX_FREELIST_LEVEL];
     int		max_level;
 } cairo_skip_list_t;
 

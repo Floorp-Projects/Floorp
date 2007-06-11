@@ -29,9 +29,7 @@
  * Based on work by Owen Taylor
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include "pixmanint.h"
 
 #include <assert.h>
 #include "fbpict.h"
@@ -147,7 +145,8 @@ static const MMXData c =
 };
 
 #ifdef _MSC_VER
-#define __inline__ __forceinline
+#undef inline
+#define inline __forceinline
 #endif
 
 #ifdef __GNUC__
@@ -162,7 +161,7 @@ static const MMXData c =
  */
 #define M64(x) (*(__m64*)(void*)(&x))
 
-static __inline__ __m64
+static inline __m64
 shift (__m64 v, int s)
 {
     if (s > 0)
@@ -173,13 +172,13 @@ shift (__m64 v, int s)
 	return v;
 }
 
-static __inline__ __m64
+static inline __m64
 negate (__m64 mask)
 {
     return _mm_xor_si64 (mask, MC(4x00ff));
 }
 
-static __inline__ __m64
+static inline __m64
 pix_multiply (__m64 a, __m64 b)
 {
     __m64 res;
@@ -192,7 +191,7 @@ pix_multiply (__m64 a, __m64 b)
     return res;
 }
 
-static __inline__ __m64
+static inline __m64
 pix_add (__m64 a, __m64 b)
 {
     return  _mm_adds_pu8 (a, b);
@@ -200,19 +199,19 @@ pix_add (__m64 a, __m64 b)
 
 #ifdef USE_SSE
 
-static __inline__ __m64
+static inline __m64
 expand_alpha (__m64 pixel)
 {
     return _mm_shuffle_pi16 (pixel, _MM_SHUFFLE(3, 3, 3, 3));
 }
 
-static __inline__ __m64
+static inline __m64
 expand_alpha_rev (__m64 pixel)
 {
     return _mm_shuffle_pi16 (pixel, _MM_SHUFFLE(0, 0, 0, 0));
 }
 
-static __inline__ __m64
+static inline __m64
 invert_colors (__m64 pixel)
 {
     return _mm_shuffle_pi16 (pixel, _MM_SHUFFLE(3, 0, 1, 2));
@@ -220,7 +219,7 @@ invert_colors (__m64 pixel)
 
 #else
 
-static __inline__ __m64
+static inline __m64
 expand_alpha (__m64 pixel)
 {
     __m64 t1, t2;
@@ -234,7 +233,7 @@ expand_alpha (__m64 pixel)
     return t1;
 }
 
-static __inline__ __m64
+static inline __m64
 expand_alpha_rev (__m64 pixel)
 {
     __m64 t1, t2;
@@ -251,7 +250,7 @@ expand_alpha_rev (__m64 pixel)
     return t1;
 }
 
-static __inline__ __m64
+static inline __m64
 invert_colors (__m64 pixel)
 {
     __m64 x, y, z;
@@ -273,13 +272,13 @@ invert_colors (__m64 pixel)
 
 #endif
 
-static __inline__ __m64
+static inline __m64
 over (__m64 src, __m64 srca, __m64 dest)
 {
     return  _mm_adds_pu8 (src, pix_multiply(dest, negate(srca)));
 }
 
-static __inline__ __m64
+static inline __m64
 over_rev_non_pre (__m64 src, __m64 dest)
 {
     __m64 srca = expand_alpha (src);
@@ -288,7 +287,7 @@ over_rev_non_pre (__m64 src, __m64 dest)
     return over(pix_multiply(invert_colors(src), srcfaaa), srca, dest);
 }
 
-static __inline__ __m64
+static inline __m64
 in (__m64 src,
     __m64 mask)
 {
@@ -296,7 +295,7 @@ in (__m64 src,
 }
 
 #ifndef _MSC_VER
-static __inline__ __m64
+static inline __m64
 in_over (__m64 src,
 	 __m64 srca,
 	 __m64 mask,
@@ -308,19 +307,19 @@ in_over (__m64 src,
 #define in_over(src, srca, mask, dest) over(in(src, mask), pix_multiply(srca, mask), dest)
 #endif
 
-static __inline__ __m64
+static inline __m64
 load8888 (CARD32 v)
 {
     return _mm_unpacklo_pi8 (_mm_cvtsi32_si64 (v), _mm_setzero_si64());
 }
 
-static __inline__ __m64
+static inline __m64
 pack8888 (__m64 lo, __m64 hi)
 {
     return _mm_packs_pu16 (lo, hi);
 }
 
-static __inline__ CARD32
+static inline CARD32
 store8888 (__m64 v)
 {
     return _mm_cvtsi64_si32(pack8888(v, _mm_setzero_si64()));
@@ -340,7 +339,7 @@ store8888 (__m64 v)
  * Note the trick here - the top word is shifted by another nibble to
  * avoid it bumping into the middle word
  */
-static __inline__ __m64
+static inline __m64
 expand565 (__m64 pixel, int pos)
 {
     __m64 p = pixel;
@@ -360,7 +359,7 @@ expand565 (__m64 pixel, int pos)
     return _mm_srli_pi16 (pixel, 8);
 }
 
-static __inline__ __m64
+static inline __m64
 expand8888 (__m64 in, int pos)
 {
     if (pos == 0)
@@ -369,7 +368,7 @@ expand8888 (__m64 in, int pos)
 	return _mm_unpackhi_pi8 (in, _mm_setzero_si64());
 }
 
-static __inline__ __m64
+static inline __m64
 pack565 (__m64 pixel, __m64 target, int pos)
 {
     __m64 p = pixel;
@@ -400,7 +399,7 @@ pack565 (__m64 pixel, __m64 target, int pos)
 }
 
 #ifndef _MSC_VER
-static __inline__ __m64
+static inline __m64
 pix_add_mul (__m64 x, __m64 a, __m64 y, __m64 b)
 {
     x = _mm_mullo_pi16 (x, a);
@@ -1195,10 +1194,9 @@ fbCompositeSrc_8888x8x8888mmx (pixman_operator_t	op,
 {
     CARD32	*dstLine, *dst;
     CARD32	*srcLine, *src;
-    CARD8	*maskLine;
     CARD32	mask;
     __m64	vmask;
-    FbStride	dstStride, srcStride, maskStride;
+    FbStride	dstStride, srcStride;
     CARD16	w;
     __m64  srca;
 
@@ -1206,9 +1204,9 @@ fbCompositeSrc_8888x8x8888mmx (pixman_operator_t	op,
 
     fbComposeGetStart (pDst, xDst, yDst, CARD32, dstStride, dstLine, 1);
     fbComposeGetStart (pSrc, xSrc, ySrc, CARD32, srcStride, srcLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, CARD8, maskStride, maskLine, 1);
 
-    mask = *maskLine << 24 | *maskLine << 16 | *maskLine << 8 | *maskLine;
+    fbComposeGetSolid (pMask, pDst, mask);
+    mask = mask | mask >> 8 | mask >> 16 | mask >> 24;
     vmask = load8888 (mask);
     srca = MC(4x00ff);
 
@@ -1225,7 +1223,7 @@ fbCompositeSrc_8888x8x8888mmx (pixman_operator_t	op,
 	    __m64 s = load8888 (*src);
 	    __m64 d = load8888 (*dst);
 
-	    *dst = store8888 (over (s, expand_alpha (s), d));
+	    *dst = store8888 (in_over (s, expand_alpha (s), vmask, d));
 
 	    w--;
 	    dst++;
@@ -1234,8 +1232,8 @@ fbCompositeSrc_8888x8x8888mmx (pixman_operator_t	op,
 
 	while (w >= 2)
 	{
-	    __m64 vs = *(__m64 *)dst;
-	    __m64 vd = *(__m64 *)src;
+	    __m64 vs = *(__m64 *)src;
+	    __m64 vd = *(__m64 *)dst;
 	    __m64 vsrc0 = expand8888 (vs, 0);
 	    __m64 vsrc1 = expand8888 (vs, 1);
 
@@ -1280,10 +1278,9 @@ fbCompositeSrc_x888x8x8888mmx (pixman_operator_t	op,
 {
     CARD32	*dstLine, *dst;
     CARD32	*srcLine, *src;
-    CARD8	*maskLine;
     CARD32	mask;
     __m64	vmask;
-    FbStride	dstStride, srcStride, maskStride;
+    FbStride	dstStride, srcStride;
     CARD16	w;
     __m64  srca;
 
@@ -1291,9 +1288,9 @@ fbCompositeSrc_x888x8x8888mmx (pixman_operator_t	op,
 
     fbComposeGetStart (pDst, xDst, yDst, CARD32, dstStride, dstLine, 1);
     fbComposeGetStart (pSrc, xSrc, ySrc, CARD32, srcStride, srcLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, CARD8, maskStride, maskLine, 1);
+    fbComposeGetSolid (pMask, pDst, mask);
 
-    mask = *maskLine << 24 | *maskLine << 16 | *maskLine << 8 | *maskLine;
+    mask = mask | mask >> 8 | mask >> 16 | mask >> 24;
     vmask = load8888 (mask);
     srca = MC(4x00ff);
 
@@ -1657,6 +1654,102 @@ fbCompositeSolidMask_nx8x8888mmx (pixman_operator_t      op,
     _mm_empty();
 }
 
+static void
+fbSolidFillmmx (FbPixels	*pDraw,
+		int		x,
+		int		y,
+		int		width,
+		int		height,
+		FbBits		xor)
+{
+    FbStride	stride;
+    int		bpp;
+    ullong	fill;
+    __m64	vfill;
+    CARD32	byte_width;
+    CARD8	*byte_line;
+    FbBits      *bits;
+    int		xoff, yoff;
+
+    CHECKPOINT();
+
+    fbGetDrawable(pDraw, bits, stride, bpp, xoff, yoff);
+
+    assert (bpp == 32 || (xor >> 16 == (xor & 0xffff)));
+    assert (bpp == 16 || bpp == 32);
+
+    if (bpp == 16)
+    {
+	stride = stride * sizeof (FbBits) / 2;
+	byte_line = (CARD8 *)(((CARD16 *)bits) + stride * (y + yoff) + (x + xoff));
+	byte_width = 2 * width;
+	stride *= 2;
+    }
+    else
+    {
+	stride = stride * sizeof (FbBits) / 4;
+	byte_line = (CARD8 *)(((CARD32 *)bits) + stride * (y + yoff) + (x + xoff));
+	byte_width = 4 * width;
+	stride *= 4;
+    }
+
+    fill = ((ullong)xor << 32) | xor;
+    vfill = M64(fill);
+
+    while (height--)
+    {
+	unsigned int w;
+	CARD8 *d = byte_line;
+	byte_line += stride;
+	w = byte_width;
+
+	while (w >= 2 && ((unsigned long)d & 3))
+	{
+	    *(CARD16 *)d = xor;
+	    w -= 2;
+	    d += 2;
+	}
+
+	while (w >= 4 && ((unsigned long)d & 7))
+	{
+	    *(CARD32 *)d = xor;
+
+	    w -= 4;
+	    d += 4;
+	}
+
+	while (w >= 64)
+	{
+	    *(__m64*) (d +  0) = vfill;
+	    *(__m64*) (d +  8) = vfill;
+	    *(__m64*) (d + 16) = vfill;
+	    *(__m64*) (d + 24) = vfill;
+	    *(__m64*) (d + 32) = vfill;
+	    *(__m64*) (d + 40) = vfill;
+	    *(__m64*) (d + 48) = vfill;
+	    *(__m64*) (d + 56) = vfill;
+
+	    w -= 64;
+	    d += 64;
+	}
+	while (w >= 4)
+	{
+	    *(CARD32 *)d = xor;
+
+	    w -= 4;
+	    d += 4;
+	}
+	if (w >= 2)
+	{
+	    *(CARD16 *)d = xor;
+	    w -= 2;
+	    d += 2;
+	}
+    }
+
+    _mm_empty();
+}
+
 void
 fbCompositeSolidMaskSrc_nx8x8888mmx (pixman_operator_t      op,
 				     PicturePtr pSrc,
@@ -1686,8 +1779,8 @@ fbCompositeSolidMaskSrc_nx8x8888mmx (pixman_operator_t      op,
     srca = src >> 24;
     if (srca == 0)
     {
-	if (fbSolidFillmmx (pDst->pDrawable, xDst, yDst, width, height, 0))
-	    return;
+	fbSolidFillmmx (pDst->pDrawable, xDst, yDst, width, height, 0);
+	return;
     }
 
     srcsrc = (ullong)src << 32 | src;
@@ -2591,107 +2684,7 @@ fbCompositeSrcAdd_8888x8888mmx (pixman_operator_t		op,
     _mm_empty();
 }
 
-Bool
-fbSolidFillmmx (FbPixels	*pDraw,
-		int		x,
-		int		y,
-		int		width,
-		int		height,
-		FbBits		xor)
-{
-    FbStride	stride;
-    int		bpp;
-    ullong	fill;
-    __m64	vfill;
-    CARD32	byte_width;
-    CARD8	*byte_line;
-    FbBits      *bits;
-    int		xoff, yoff;
-
-    CHECKPOINT();
-
-    fbGetDrawable(pDraw, bits, stride, bpp, xoff, yoff);
-
-    if (bpp == 16 && (xor >> 16 != (xor & 0xffff)))
-	return FALSE;
-
-    if (bpp != 16 && bpp != 32)
-	return FALSE;
-
-    if (bpp == 16)
-    {
-	stride = stride * sizeof (FbBits) / 2;
-	byte_line = (CARD8 *)(((CARD16 *)bits) + stride * (y + yoff) + (x + xoff));
-	byte_width = 2 * width;
-	stride *= 2;
-    }
-    else
-    {
-	stride = stride * sizeof (FbBits) / 4;
-	byte_line = (CARD8 *)(((CARD32 *)bits) + stride * (y + yoff) + (x + xoff));
-	byte_width = 4 * width;
-	stride *= 4;
-    }
-
-    fill = ((ullong)xor << 32) | xor;
-    vfill = M64(fill);
-
-    while (height--)
-    {
-	unsigned int w;
-	CARD8 *d = byte_line;
-	byte_line += stride;
-	w = byte_width;
-
-	while (w >= 2 && ((unsigned long)d & 3))
-	{
-	    *(CARD16 *)d = xor;
-	    w -= 2;
-	    d += 2;
-	}
-
-	while (w >= 4 && ((unsigned long)d & 7))
-	{
-	    *(CARD32 *)d = xor;
-
-	    w -= 4;
-	    d += 4;
-	}
-
-	while (w >= 64)
-	{
-	    *(__m64*) (d +  0) = vfill;
-	    *(__m64*) (d +  8) = vfill;
-	    *(__m64*) (d + 16) = vfill;
-	    *(__m64*) (d + 24) = vfill;
-	    *(__m64*) (d + 32) = vfill;
-	    *(__m64*) (d + 40) = vfill;
-	    *(__m64*) (d + 48) = vfill;
-	    *(__m64*) (d + 56) = vfill;
-
-	    w -= 64;
-	    d += 64;
-	}
-	while (w >= 4)
-	{
-	    *(CARD32 *)d = xor;
-
-	    w -= 4;
-	    d += 4;
-	}
-	if (w >= 2)
-	{
-	    *(CARD16 *)d = xor;
-	    w -= 2;
-	    d += 2;
-	}
-    }
-
-    _mm_empty();
-    return TRUE;
-}
-
-Bool
+static void
 fbCopyAreammx (FbPixels	*pSrc,
 	       FbPixels	*pDst,
 	       int		src_x,
@@ -2720,16 +2713,8 @@ fbCopyAreammx (FbPixels	*pSrc,
     fbGetDrawable(pSrc, src_bits, src_stride, src_bpp, src_xoff, src_yoff);
     fbGetDrawable(pDst, dst_bits, dst_stride, dst_bpp, dst_xoff, dst_yoff);
 
-    if (src_bpp != 16 && src_bpp != 32)
-	return FALSE;
-
-    if (dst_bpp != 16 && dst_bpp != 32)
-	return FALSE;
-
-    if (src_bpp != dst_bpp)
-    {
-	return FALSE;
-    }
+    assert (src_bpp == dst_bpp);
+    assert (src_bpp == 16 || src_bpp == 32);
 
     if (src_bpp == 16)
     {
@@ -2810,7 +2795,6 @@ fbCopyAreammx (FbPixels	*pSrc,
     }
 
     _mm_empty();
-    return TRUE;
 }
 
 void

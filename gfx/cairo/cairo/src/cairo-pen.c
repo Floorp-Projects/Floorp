@@ -45,15 +45,13 @@ _cairo_pen_compute_slopes (cairo_pen_t *pen);
 static cairo_status_t
 _cairo_pen_stroke_spline_half (cairo_pen_t *pen, cairo_spline_t *spline, cairo_direction_t dir, cairo_polygon_t *polygon);
 
-cairo_status_t
+void
 _cairo_pen_init_empty (cairo_pen_t *pen)
 {
     pen->radius = 0;
     pen->tolerance = 0;
     pen->vertices = NULL;
     pen->num_vertices = 0;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t
@@ -135,6 +133,7 @@ cairo_status_t
 _cairo_pen_add_points (cairo_pen_t *pen, cairo_point_t *point, int num_points)
 {
     cairo_pen_vertex_t *vertices;
+    cairo_status_t status;
     int num_vertices;
     int i;
 
@@ -150,7 +149,9 @@ _cairo_pen_add_points (cairo_pen_t *pen, cairo_point_t *point, int num_points)
     for (i=0; i < num_points; i++)
 	pen->vertices[pen->num_vertices-num_points+i].point = point[i];
 
-    _cairo_hull_compute (pen->vertices, &pen->num_vertices);
+    status = _cairo_hull_compute (pen->vertices, &pen->num_vertices);
+    if (status)
+	return status;
 
     _cairo_pen_compute_slopes (pen);
 
@@ -388,15 +389,18 @@ _cairo_pen_stroke_spline_half (cairo_pen_t *pen,
 	final_slope.dy = -final_slope.dy;
     }
 
-    _cairo_pen_find_active_cw_vertex_index (pen, &initial_slope, &active);
+    status = _cairo_pen_find_active_cw_vertex_index (pen,
+	                                             &initial_slope,
+						     &active);
+    if (status)
+	return status;
 
     i = start;
     while (i != stop) {
 	hull_point.x = point[i].x + pen->vertices[active].point.x;
 	hull_point.y = point[i].y + pen->vertices[active].point.y;
-	status = _cairo_polygon_line_to (polygon, &hull_point);
-	if (status)
-	    return status;
+
+	_cairo_polygon_line_to (polygon, &hull_point);
 
 	if (i + step == stop)
 	    slope = final_slope;
@@ -437,19 +441,24 @@ _cairo_pen_stroke_spline (cairo_pen_t		*pen,
 
     status = _cairo_spline_decompose (spline, tolerance);
     if (status)
-	return status;
+	goto BAIL;
 
     status = _cairo_pen_stroke_spline_half (pen, spline, CAIRO_DIRECTION_FORWARD, &polygon);
     if (status)
-	return status;
+	goto BAIL;
 
     status = _cairo_pen_stroke_spline_half (pen, spline, CAIRO_DIRECTION_REVERSE, &polygon);
     if (status)
-	return status;
+	goto BAIL;
 
     _cairo_polygon_close (&polygon);
-    _cairo_bentley_ottmann_tessellate_polygon (traps, &polygon, CAIRO_FILL_RULE_WINDING);
+    status = _cairo_polygon_status (&polygon);
+    if (status)
+	goto BAIL;
+
+    status = _cairo_bentley_ottmann_tessellate_polygon (traps, &polygon, CAIRO_FILL_RULE_WINDING);
+BAIL:
     _cairo_polygon_fini (&polygon);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
