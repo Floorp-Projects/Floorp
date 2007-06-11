@@ -624,16 +624,28 @@ nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
   if (!category)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  // We will need the return value of AddLeaf even if the called doesn't want it
+  char *oldEntry = nsnull;
+
   nsresult rv = category->AddLeaf(aEntryName,
                                   aValue,
                                   aPersist,
                                   aReplace,
-                                  _retval,
+                                  &oldEntry,
                                   &mArena);
 
   if (NS_SUCCEEDED(rv)) {
+    if (oldEntry) {
+      NotifyObservers(NS_XPCOM_CATEGORY_ENTRY_REMOVED_OBSERVER_ID,
+                      aCategoryName, oldEntry);
+    }
     NotifyObservers(NS_XPCOM_CATEGORY_ENTRY_ADDED_OBSERVER_ID,
                     aCategoryName, aEntryName);
+
+    if (_retval)
+      *_retval = oldEntry;
+    else if (oldEntry)
+      nsMemory::Free(oldEntry);
   }
 
   return rv;
