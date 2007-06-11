@@ -44,17 +44,12 @@
 #if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
 # define _WIN32_WINNT 0x0500
 #endif
-
-#include "cairoint.h"
-
-#include "cairo-clip-private.h"
-#include "cairo-win32-private.h"
-
 #include <windows.h>
 
-#if defined(__MINGW32__) && !defined(ETO_PDY)
-# define ETO_PDY 0x2000
-#endif
+#include <stdio.h>
+#include "cairoint.h"
+#include "cairo-clip-private.h"
+#include "cairo-win32-private.h"
 
 #undef DEBUG_COMPOSITE
 
@@ -332,6 +327,8 @@ _cairo_win32_surface_create_for_dc (HDC             original_dc,
     char *bits;
     int rowstride;
 
+    _cairo_win32_initialize ();
+
     surface = malloc (sizeof (cairo_win32_surface_t));
     if (surface == NULL) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -476,7 +473,12 @@ _cairo_win32_surface_get_subimage (cairo_win32_surface_t  *surface,
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if ((local->flags & CAIRO_WIN32_SURFACE_CAN_BITBLT) &&
+    /* Check for SURFACE_IS_DISPLAY here, because there are a lot
+     * of printer drivers that lie and say they can BitBlt, but
+     * just spit out black instead.
+     */
+    if ((local->flags & CAIRO_WIN32_SURFACE_IS_DISPLAY) &&
+	(local->flags & CAIRO_WIN32_SURFACE_CAN_BITBLT) &&
 	BitBlt (local->dc,
 		0, 0,
 		width, height,
@@ -1638,6 +1640,8 @@ cairo_win32_surface_create (HDC hdc)
     int depth;
     cairo_format_t format;
 
+    _cairo_win32_initialize ();
+
     /* Try to figure out the drawing bounds for the Device context
      */
     if (GetClipBox (hdc, &rect) == ERROR) {
@@ -1855,30 +1859,6 @@ cairo_win32_surface_get_image (cairo_surface_t *surface)
     return ((cairo_win32_surface_t*)surface)->image;
 }
 
-static cairo_bool_t
-_cairo_win32_surface_is_similar (void *surface_a,
-	                         void *surface_b,
-				 cairo_content_t content)
-{
-    cairo_win32_surface_t *a = surface_a;
-    cairo_win32_surface_t *b = surface_b;
-
-    return a->dc == b->dc;
-}
-
-static cairo_status_t
-_cairo_win32_surface_reset (void *abstract_surface)
-{
-    cairo_win32_surface_t *surface = abstract_surface;
-    cairo_status_t status;
-
-    status = _cairo_win32_surface_set_clip_region (surface, NULL);
-    if (status)
-	return status;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static const cairo_surface_backend_t cairo_win32_surface_backend = {
     CAIRO_SURFACE_TYPE_WIN32,
     _cairo_win32_surface_create_similar,
@@ -1909,11 +1889,69 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
     NULL, /* fill */
     _cairo_win32_surface_show_glyphs,
 
-    NULL,  /* snapshot */
-    _cairo_win32_surface_is_similar,
-
-    _cairo_win32_surface_reset
+    NULL  /* snapshot */
 };
+
+/*
+ * Without pthread, on win32 we need to initialize all the 'mutex'es
+ * before use. It is guaranteed that DllMain will get called single
+ * threaded before any other function.
+ * Initializing more than finally needed should not matter much.
+ */
+#if !defined(HAVE_PTHREAD_H) 
+
+CRITICAL_SECTION _cairo_scaled_font_map_mutex;
+#ifdef CAIRO_HAS_FT_FONT
+CRITICAL_SECTION _cairo_ft_unscaled_font_map_mutex;
+#endif
+CRITICAL_SECTION _cairo_font_face_mutex;
+
+static int _cairo_win32_initialized = 0;
+
+void
+_cairo_win32_initialize (void) {
+    if (_cairo_win32_initialized)
+	return;
+
+    /* every 'mutex' from CAIRO_MUTEX_DECALRE needs to be initialized here */
+    InitializeCriticalSection (&_cairo_scaled_font_map_mutex);
+#ifdef CAIRO_HAS_FT_FONT
+    InitializeCriticalSection (&_cairo_ft_unscaled_font_map_mutex);
+#endif
+    InitializeCriticalSection (&_cairo_font_face_mutex);
+
+    _cairo_win32_initialized = 1;
+}
+
+#if !defined(CAIRO_WIN32_STATIC_BUILD)
+BOOL WINAPI
+DllMain (HINSTANCE hinstDLL,
+	 DWORD     fdwReason,
+	 LPVOID    lpvReserved)
+{
+  switch (fdwReason)
+  {
+  case DLL_PROCESS_ATTACH:
+    _cairo_win32_initialize();
+    break;
+  case DLL_PROCESS_DETACH:
+    DeleteCriticalSection (&_cairo_scaled_font_map_mutex);
+#ifdef CAIRO_HAS_FT_FONT
+    DeleteCriticalSection (&_cairo_ft_unscaled_font_map_mutex);
+#endif
+    DeleteCriticalSection (&_cairo_font_face_mutex);
+    break;
+  }
+  return TRUE;
+}
+#endif
+#else
+/* Need a function definition here too since it's called outside of ifdefs */
+void
+_cairo_win32_initialize (void)
+{
+}
+#endif
 
 /* Notes:
  *
@@ -1928,33 +1966,3 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
  *              it will still copy over the src alpha, because the SCA value (255) will be
  *              multiplied by all the src components.
  */
-
-
-#if !defined(CAIRO_WIN32_STATIC_BUILD)
-
-/* declare to avoid "no previous prototype for 'DllMain'" warning */
-BOOL WINAPI
-DllMain (HINSTANCE hinstDLL,
-         DWORD     fdwReason,
-         LPVOID    lpvReserved);
-
-BOOL WINAPI
-DllMain (HINSTANCE hinstDLL,
-         DWORD     fdwReason,
-         LPVOID    lpvReserved)
-{
-    switch (fdwReason) {
-        case DLL_PROCESS_ATTACH:
-            CAIRO_MUTEX_INITIALIZE ();
-            break;
-
-        case DLL_PROCESS_DETACH:
-            CAIRO_MUTEX_FINALIZE ();
-            break;
-    }
-
-    return TRUE;
-}
-
-#endif
-

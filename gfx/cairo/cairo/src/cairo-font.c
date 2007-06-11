@@ -59,14 +59,16 @@ void
 _cairo_font_face_init (cairo_font_face_t               *font_face,
 		       const cairo_font_face_backend_t *backend)
 {
-    CAIRO_MUTEX_INITIALIZE ();
-
     font_face->status = CAIRO_STATUS_SUCCESS;
     font_face->ref_count = 1;
     font_face->backend = backend;
 
     _cairo_user_data_array_init (&font_face->user_data);
 }
+
+/* This mutex protects both cairo_toy_font_hash_table as well as
+   reference count manipulations for all cairo_font_face_t. */
+CAIRO_MUTEX_DECLARE (_cairo_font_face_mutex);
 
 /**
  * cairo_font_face_reference:
@@ -455,11 +457,6 @@ _cairo_toy_font_face_scaled_font_create (void                *abstract_font_face
 {
     cairo_toy_font_face_t *font_face = abstract_font_face;
     const cairo_scaled_font_backend_t * backend = CAIRO_SCALED_FONT_BACKEND_DEFAULT;
-    cairo_status_t status;
-
-    status = cairo_font_options_status ((cairo_font_options_t *) options);
-    if (status)
-	return status;
 
     return backend->create_toy (font_face,
 				font_matrix, ctm, options, scaled_font);

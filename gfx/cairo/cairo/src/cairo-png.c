@@ -35,9 +35,8 @@
  *	Kristian Høgsberg <krh@redhat.com>
  */
 
-#include "cairoint.h"
-
 #include <errno.h>
+#include "cairoint.h"
 #include <png.h>
 
 /* Unpremultiplies data and converts native endian ARGB => RGBA bytes */
@@ -83,25 +82,6 @@ convert_data_to_bytes (png_structp png, png_row_infop row_info, png_bytep data)
     }
 }
 
-/* Use a couple of simple error callbacks that do not print anything to
- * stderr and rely on the user to check for errors via the cairo_status_t
- * return.
- */
-static void
-png_simple_error_callback (png_structp png_save_ptr,
-	                   png_const_charp error_msg)
-{
-    _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    longjmp (png_save_ptr->jmpbuf, CAIRO_STATUS_NO_MEMORY);
-}
-
-static void
-png_simple_warning_callback (png_structp png_save_ptr,
-	                     png_const_charp error_msg)
-{
-}
-
-
 static cairo_status_t
 write_png (cairo_surface_t	*surface,
 	   png_rw_ptr		write_func,
@@ -137,9 +117,7 @@ write_png (cairo_surface_t	*surface,
     for (i = 0; i < image->height; i++)
 	rows[i] = (png_byte *) image->data + i * image->stride;
 
-    png = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL,
-	                           png_simple_error_callback,
-	                           png_simple_warning_callback);
+    png = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (png == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;
 	goto BAIL2;
@@ -151,9 +129,10 @@ write_png (cairo_surface_t	*surface,
 	goto BAIL3;
     }
 
-    status = setjmp (png_jmpbuf (png));
-    if (status)
+    if (setjmp (png_jmpbuf (png))) {
+	status = CAIRO_STATUS_NO_MEMORY;
 	goto BAIL3;
+    }
 
     png_set_write_fn (png, closure, write_func, NULL);
 
@@ -175,7 +154,7 @@ write_png (cairo_surface_t	*surface,
 	png_color_type = PNG_COLOR_TYPE_GRAY;
 	break;
     default:
-	status = CAIRO_STATUS_INVALID_FORMAT;
+	status = CAIRO_STATUS_NULL_POINTER;
 	goto BAIL3;
     }
 
@@ -227,13 +206,8 @@ stdio_write_func (png_structp png, png_bytep data, png_size_t size)
     FILE *fp;
 
     fp = png_get_io_ptr (png);
-    while (size) {
-	size_t ret = fwrite (data, 1, size, fp);
-	size -= ret;
-	data += ret;
-	if (size && ferror (fp))
-	    png_error(png, "Write Error");
-    }
+    if (fwrite (data, 1, size, fp) != size)
+	png_error(png, "Write Error");
 }
 
 /**
@@ -358,20 +332,20 @@ read_png (png_rw_ptr	read_func,
 	  void		*closure)
 {
     cairo_surface_t *surface = (cairo_surface_t*) &_cairo_surface_nil;
+    png_byte *data = NULL;
+    unsigned int i;
     png_struct *png = NULL;
     png_info *info;
-    png_byte *data = NULL;
-    png_byte **row_pointers = NULL;
     png_uint_32 png_width, png_height, stride;
     int depth, color_type, interlace;
-    unsigned int i;
     unsigned int pixel_size;
+    png_byte **row_pointers = NULL;
 
     /* XXX: Perhaps we'll want some other error handlers? */
     png = png_create_read_struct (PNG_LIBPNG_VER_STRING,
                                   NULL,
-	                          png_simple_error_callback,
-	                          png_simple_warning_callback);
+                                  NULL,
+                                  NULL);
     if (png == NULL)
 	goto BAIL;
 
@@ -399,11 +373,7 @@ read_png (png_rw_ptr	read_func,
 
     /* expand gray bit depth if needed */
     if (color_type == PNG_COLOR_TYPE_GRAY && depth < 8)
-#if PNG_LIBPNG_VER >= 10209
-        png_set_expand_gray_1_2_4_to_8 (png);
-#else
         png_set_gray_1_2_4_to_8 (png);
-#endif
     /* transform transparency to alpha */
     if (png_get_valid(png, info, PNG_INFO_tRNS))
         png_set_tRNS_to_alpha (png);
@@ -472,13 +442,8 @@ stdio_read_func (png_structp png, png_bytep data, png_size_t size)
     FILE *fp;
 
     fp = png_get_io_ptr (png);
-    while (size) {
-	size_t ret = fread (data, 1, size, fp);
-	size -= ret;
-	data += ret;
-	if (size && ferror (fp))
-	    png_error(png, "Read Error");
-    }
+    if (fread (data, 1, size, fp) != size)
+	png_error(png, "Read Error");
 }
 
 /**
