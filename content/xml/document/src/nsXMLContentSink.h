@@ -175,6 +175,14 @@ protected:
   
   PRBool IsMonolithicContainer(nsINodeInfo* aNodeInfo);
 
+  nsresult HandleStartElement(const PRUnichar *aName, const PRUnichar **aAtts, 
+                              PRUint32 aAttsCount, PRInt32 aIndex, 
+                              PRUint32 aLineNumber,
+                              PRBool aInterruptable);
+  nsresult HandleEndElement(const PRUnichar *aName, PRBool aInterruptable);
+  nsresult HandleCharacterData(const PRUnichar *aData, PRUint32 aLength,
+                               PRBool aInterruptable);
+
   nsIContent*      mDocElement;
   PRUnichar*       mText;
 

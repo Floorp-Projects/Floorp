@@ -979,12 +979,24 @@ nsXMLContentSink::SetDocElement(PRInt32 aNameSpaceID,
   return PR_TRUE;
 }
 
-NS_IMETHODIMP 
-nsXMLContentSink::HandleStartElement(const PRUnichar *aName, 
-                                     const PRUnichar **aAtts, 
-                                     PRUint32 aAttsCount, 
-                                     PRInt32 aIndex, 
+NS_IMETHODIMP
+nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
+                                     const PRUnichar **aAtts,
+                                     PRUint32 aAttsCount,
+                                     PRInt32 aIndex,
                                      PRUint32 aLineNumber)
+{
+  return HandleStartElement(aName, aAtts, aAttsCount, aIndex, aLineNumber,
+                            PR_TRUE);
+}
+
+nsresult
+nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
+                                     const PRUnichar **aAtts,
+                                     PRUint32 aAttsCount,
+                                     PRInt32 aIndex,
+                                     PRUint32 aLineNumber,
+                                     PRBool aInterruptable)
 {
   NS_PRECONDITION(aIndex >= -1, "Bogus aIndex");
   NS_PRECONDITION(aAttsCount % 2 == 0, "incorrect aAttsCount");
@@ -1074,11 +1086,19 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
 
   MaybeStartLayout(PR_FALSE);
 
-  return NS_SUCCEEDED(result) ? DidProcessATokenImpl() : result;
+  return aInterruptable && NS_SUCCEEDED(result) ? DidProcessATokenImpl() :
+                                                  result;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
+{
+  return HandleEndElement(aName, PR_TRUE);
+}
+
+nsresult
+nsXMLContentSink::HandleEndElement(const PRUnichar *aName,
+                                   PRBool aInterruptable)
 {
   nsresult result = NS_OK;
 
@@ -1147,7 +1167,8 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
   }
 #endif
 
-  return NS_SUCCEEDED(result) ? DidProcessATokenImpl() : result;
+  return aInterruptable && NS_SUCCEEDED(result) ? DidProcessATokenImpl() :
+                                                  result;
 }
 
 NS_IMETHODIMP 
@@ -1247,16 +1268,23 @@ nsXMLContentSink::HandleDoctypeDecl(const nsAString & aSubset,
   return NS_SUCCEEDED(rv) ? DidProcessATokenImpl() : rv;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLContentSink::HandleCharacterData(const PRUnichar *aData, 
                                       PRUint32 aLength)
+{
+  return HandleCharacterData(aData, aLength, PR_TRUE);
+}
+
+nsresult
+nsXMLContentSink::HandleCharacterData(const PRUnichar *aData, PRUint32 aLength,
+                                      PRBool aInterruptable)
 {
   nsresult rv = NS_OK;
   if (aData && mState != eXMLContentSinkState_InProlog &&
       mState != eXMLContentSinkState_InEpilog) {
     rv = AddText(aData, aLength);
   }
-  return NS_SUCCEEDED(rv) ? DidProcessATokenImpl() : rv;
+  return aInterruptable && NS_SUCCEEDED(rv) ? DidProcessATokenImpl() : rv;
 }
 
 NS_IMETHODIMP
@@ -1421,27 +1449,29 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
   parsererror.Append((PRUnichar)0xFFFF);
   parsererror.AppendLiteral("parsererror");
   
-  rv = HandleStartElement(parsererror.get(), noAtts, 0, -1, (PRUint32)-1);
-  NS_ENSURE_SUCCESS(rv,rv);
+  rv = HandleStartElement(parsererror.get(), noAtts, 0, -1, (PRUint32)-1,
+                          PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = HandleCharacterData(aErrorText, nsCRT::strlen(aErrorText));
-  NS_ENSURE_SUCCESS(rv,rv);  
+  rv = HandleCharacterData(aErrorText, nsCRT::strlen(aErrorText), PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);  
   
   nsAutoString sourcetext(errorNs);
   sourcetext.Append((PRUnichar)0xFFFF);
   sourcetext.AppendLiteral("sourcetext");
 
-  rv = HandleStartElement(sourcetext.get(), noAtts, 0, -1, (PRUint32)-1);
-  NS_ENSURE_SUCCESS(rv,rv);
+  rv = HandleStartElement(sourcetext.get(), noAtts, 0, -1, (PRUint32)-1,
+                          PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
   
-  rv = HandleCharacterData(aSourceText, nsCRT::strlen(aSourceText));
-  NS_ENSURE_SUCCESS(rv,rv);
+  rv = HandleCharacterData(aSourceText, nsCRT::strlen(aSourceText), PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
   
-  rv = HandleEndElement(sourcetext.get());
-  NS_ENSURE_SUCCESS(rv,rv); 
+  rv = HandleEndElement(sourcetext.get(), PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv); 
   
-  rv = HandleEndElement(parsererror.get());
-  NS_ENSURE_SUCCESS(rv,rv);
+  rv = HandleEndElement(parsererror.get(), PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   FlushTags();
 
