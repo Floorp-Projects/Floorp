@@ -1123,10 +1123,10 @@ public:
         mFonts.Clear();
     }
 
-    gfxFont *GetFontAt(PRInt32 i) {
+    virtual gfxFont *GetFontAt(PRInt32 i) {
         return NS_STATIC_CAST(gfxFont*, mFonts[i]);
     }
-    PRUint32 FontListLength() const {
+    virtual PRUint32 FontListLength() const {
         return mFonts.Length();
     }
 

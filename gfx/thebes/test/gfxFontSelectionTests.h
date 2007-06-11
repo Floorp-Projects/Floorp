@@ -136,7 +136,7 @@ SetupTests()
                  "foo\xe2\x80\x91""bar");
 
     t->Expect ("win32", "Verdana", GLYPHS(73, 82, 82));
-    t->Expect ("win32", "MS UI Gothic", GLYPHS(19401));
+    t->Expect ("win32", "Arial Unicode MS", GLYPHS(3236));
     t->Expect ("win32", "Verdana", GLYPHS(69, 68, 85));
 
     t->Expect ("macosx", "Verdana", GLYPHS(73, 82, 82));
@@ -162,6 +162,7 @@ SetupTests()
     t->Expect ("macosx", "Helvetica", GLYPHS(3));
     t->Expect ("macosx", "AlBayan", GLYPHS(47));
     t->Expect ("macosx", "Helvetica", GLYPHS(3));
+    t->Expect ("win32", "Arial", GLYPHS(3, 919, 994, 3));
 
     /* Test 4: LTR Arabic with leading and trailing whitespace */
     t = AddTest ("sans-serif",
@@ -171,6 +172,7 @@ SetupTests()
     t->Expect ("macosx", "Helvetica", GLYPHS(3));
     t->Expect ("macosx", "AlBayan", GLYPHS(2, 47));
     t->Expect ("macosx", "Helvetica", GLYPHS(3));
+    t->Expect ("win32", "Arial", GLYPHS(3, 994, 919, 3));
 
     /* Test 5: RTL ASCII with leading whitespace */
     t = AddTest ("sans-serif",
@@ -199,6 +201,7 @@ SetupTests()
                  S_ASCII,
                  "fi");
     t->Expect ("macosx", "Helvetica", GLYPHS(192));
+    t->Expect ("win32", "Arial", GLYPHS(73, 76));
 
     /* Test 8: DEVANAGARI VOWEL I reordering */
     /* The glyph for DEVANAGARI VOWEL I 2367 (101) is displayed before the glyph for 2361 (99) */
@@ -208,4 +211,23 @@ SetupTests()
                  "\xe0\xa4\x9a\xe0\xa4\xbe\xe0\xa4\xb9\xe0\xa4\xbf\xe0\xa4\x8f"); // 2330 2366 2361 2367 2319
     t->Expect ("macosx", "DevanagariMT", GLYPHS(71, 100, 101, 99, 60));
     t->Expect ("win32", "Mangal", GLYPHS(133, 545, 465, 161, 102));
+
+    /* Test 9: NWJ test */
+    t = AddTest ("Kartika",
+                 style_western_normal_16,
+                 S_UTF8,
+                 "\xe0\xb4\xb3\xe0\xb5\x8d\xe2\x80\x8d");
+    t->Expect ("win32", "Kartika", GLYPHS(332));
+
+    /* Test 10: NWJ fallback test */
+    /* it isn't clear what we should actually do in this case.  Ideally
+       we would have the same results as the previous test, but because
+       we use sans-serif (i.e. Arial) CSS says we should should really
+       use Arial for U+200D.
+    */
+    t = AddTest ("sans-serif",
+                 style_western_normal_16,
+                 S_UTF8,
+                 "\xe0\xb4\xb3\xe0\xb5\x8d\xe2\x80\x8d");
+    t->Expect ("win32", "Kartika", GLYPHS(332));
 }
