@@ -265,10 +265,6 @@ res/fonts/mathfontPUA.properties
 res/fonts/mathfontSymbol.properties
 components/libucvmath.dylib
 
-; p3p
-components/libp3p.dylib
-components/p3p.xpt
-
 ; svg
 components/dom_svg.xpt
 res/svg.css
