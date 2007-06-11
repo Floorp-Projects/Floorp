@@ -34,7 +34,6 @@
  *	Carl D. Worth <cworth@cworth.org>
  */
 
-#include <stdlib.h>
 #include "cairoint.h"
 
 /* private functions */
@@ -45,6 +44,8 @@ _cairo_polygon_grow (cairo_polygon_t *polygon);
 void
 _cairo_polygon_init (cairo_polygon_t *polygon)
 {
+    polygon->status = CAIRO_STATUS_SUCCESS;
+
     polygon->num_edges = 0;
 
     polygon->edges_size = 0;
@@ -66,13 +67,19 @@ _cairo_polygon_fini (cairo_polygon_t *polygon)
     polygon->has_current_point = FALSE;
 }
 
+cairo_status_t
+_cairo_polygon_status (cairo_polygon_t *polygon)
+{
+    return polygon->status;
+}
+
 /* make room for at least one more edge */
 static cairo_status_t
 _cairo_polygon_grow (cairo_polygon_t *polygon)
 {
     cairo_edge_t *new_edges;
     int old_size = polygon->edges_size;
-    int embedded_size = sizeof (polygon->edges_embedded) / sizeof (polygon->edges_embedded[0]);
+    int embedded_size = ARRAY_LENGTH (polygon->edges_embedded);
     int new_size = 2 * MAX (old_size, 16);
 
     /* we have a local buffer at polygon->edges_embedded.  try to fulfill the request
@@ -103,22 +110,22 @@ _cairo_polygon_grow (cairo_polygon_t *polygon)
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_status_t
+void
 _cairo_polygon_add_edge (cairo_polygon_t *polygon, cairo_point_t *p1, cairo_point_t *p2)
 {
-    cairo_status_t status;
     cairo_edge_t *edge;
 
+    if (polygon->status)
+	return;
+
     /* drop horizontal edges */
-    if (p1->y == p2->y) {
+    if (p1->y == p2->y)
 	goto DONE;
-    }
 
     if (polygon->num_edges >= polygon->edges_size) {
-	status = _cairo_polygon_grow (polygon);
-	if (status) {
-	    return status;
-	}
+	polygon->status = _cairo_polygon_grow (polygon);
+	if (polygon->status)
+	    return;
     }
 
     edge = &polygon->edges[polygon->num_edges];
@@ -136,49 +143,45 @@ _cairo_polygon_add_edge (cairo_polygon_t *polygon, cairo_point_t *p1, cairo_poin
 
   DONE:
     _cairo_polygon_move_to (polygon, p2);
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_status_t
+void
 _cairo_polygon_move_to (cairo_polygon_t *polygon, cairo_point_t *point)
 {
+    if (polygon->status)
+	return;
+
     if (! polygon->has_current_point)
 	polygon->first_point = *point;
+
     polygon->current_point = *point;
     polygon->has_current_point = TRUE;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_status_t
+void
 _cairo_polygon_line_to (cairo_polygon_t *polygon, cairo_point_t *point)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    if (polygon->status)
+	return;
 
     if (polygon->has_current_point) {
-	status = _cairo_polygon_add_edge (polygon, &polygon->current_point, point);
+	_cairo_polygon_add_edge (polygon, &polygon->current_point, point);
     } else {
 	_cairo_polygon_move_to (polygon, point);
     }
-
-    return status;
 }
 
-cairo_status_t
+void
 _cairo_polygon_close (cairo_polygon_t *polygon)
 {
-    cairo_status_t status;
+    if (polygon->status)
+	return;
 
     if (polygon->has_current_point) {
-	status = _cairo_polygon_add_edge (polygon,
-					  &polygon->current_point,
-					  &polygon->first_point);
-	if (status)
-	    return status;
+	_cairo_polygon_add_edge (polygon,
+				 &polygon->current_point,
+				 &polygon->first_point);
 
 	polygon->has_current_point = FALSE;
     }
-
-    return CAIRO_STATUS_SUCCESS;
 }

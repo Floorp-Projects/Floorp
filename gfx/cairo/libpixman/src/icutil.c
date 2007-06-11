@@ -22,6 +22,8 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include "pixmanint.h"
+
 #include "pixman-xserver-compat.h"
 
 pixman_bits_t

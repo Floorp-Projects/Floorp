@@ -45,9 +45,10 @@
  * backend.
  */
 
+#include "cairoint.h"
+
 #include "test-meta-surface.h"
 
-#include "cairoint.h"
 #include "cairo-meta-surface-private.h"
 
 typedef struct _test_meta_surface {
@@ -143,11 +144,14 @@ static cairo_int_status_t
 _test_meta_surface_show_page (void *abstract_surface)
 {
     test_meta_surface_t *surface = abstract_surface;
+    cairo_status_t status;
 
     if (surface->image_reflects_meta)
 	return CAIRO_STATUS_SUCCESS;
 
-    _cairo_meta_surface_replay (surface->meta, surface->image);
+    status = _cairo_meta_surface_replay (surface->meta, surface->image);
+    if (status)
+	return status;
 
     surface->image_reflects_meta = TRUE;
 
@@ -279,6 +283,7 @@ static cairo_surface_t *
 _test_meta_surface_snapshot (void *abstract_other)
 {
     test_meta_surface_t *other = abstract_other;
+    cairo_status_t status;
 
     /* XXX: Just making a snapshot of other->meta is what we really
      * want. But this currently triggers a bug somewhere (the "mask"
@@ -298,14 +303,20 @@ _test_meta_surface_snapshot (void *abstract_other)
     cairo_rectangle_int16_t extents;
     cairo_surface_t *surface;
 
-    _cairo_surface_get_extents (other->image, &extents);
+    status = _cairo_surface_get_extents (other->image, &extents);
+    if (status)
+	return (cairo_surface_t*) &_cairo_surface_nil;
 
     surface = cairo_surface_create_similar (other->image,
 					    CAIRO_CONTENT_COLOR_ALPHA,
 					    extents.width,
 					    extents.height);
 
-    _cairo_meta_surface_replay (other->meta, surface);
+    status = _cairo_meta_surface_replay (other->meta, surface);
+    if (status) {
+	cairo_surface_destroy (surface);
+	surface = (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     return surface;
 #endif

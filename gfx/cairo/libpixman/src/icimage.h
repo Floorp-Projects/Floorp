@@ -143,8 +143,8 @@ struct pixman_image {
     unsigned int    subWindowMode : 1;
     unsigned int    polyEdge : 1;
     unsigned int    polyMode : 1;
-    unsigned int    freeCompClip : 1;
-    unsigned int    freeSourceClip : 1;
+    unsigned int    hasCompositeClip : 1;
+    unsigned int    hasSourceClip : 1;
     unsigned int    clientClipType : 2;
     unsigned int    componentAlpha : 1;
     unsigned int    compositeClipSource : 1;
@@ -154,15 +154,15 @@ struct pixman_image {
     FbPoint	    alphaOrigin;
 
     FbPoint 	    clipOrigin;
-    void	   *clientClip;
 
     unsigned long   dither;
 
     unsigned long   stateChanges;
     unsigned long   serialNumber;
 
-    pixman_region16_t	    *pCompositeClip;
-    pixman_region16_t	    *pSourceClip;
+    pixman_region16_t       clientClip;
+    pixman_region16_t	    compositeClip;
+    pixman_region16_t	    sourceClip;
 
     pixman_transform_t     *transform;
 
