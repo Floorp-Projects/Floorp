@@ -70,7 +70,7 @@ CSRCS   = \
         cairo-debug.c \
         cairo-deflate-stream.c \
         cairo-fixed.c \
-        cairo-font-face.c \
+        cairo-font.c \
         cairo-font-options.c \
         cairo-freelist.c \
         cairo-gstate.c \
@@ -80,7 +80,6 @@ CSRCS   = \
         cairo-lzw.c \
         cairo-matrix.c \
         cairo-meta-surface.c \
-        cairo-mutex.c \
         cairo-operator.c \
         cairo-output-stream.c \
         cairo-paginated-surface.c \
@@ -155,8 +154,7 @@ endif
 
 ifdef MOZ_X11
 CSRCS   += cairo-xlib-surface.c \
-	   cairo-xlib-screen.c \
-	   cairo-xlib-display.c
+	   cairo-xlib-screen.c
 EXPORTS += cairo-xlib.h cairo-xlib-xrender.h
 endif
 

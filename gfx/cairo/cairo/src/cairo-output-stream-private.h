@@ -37,7 +37,7 @@
 #ifndef CAIRO_OUTPUT_STREAM_PRIVATE_H
 #define CAIRO_OUTPUT_STREAM_PRIVATE_H
 
-#include "cairo-types-private.h"
+typedef struct _cairo_output_stream cairo_output_stream_t;
 
 typedef cairo_status_t (*cairo_output_stream_write_func_t) (cairo_output_stream_t *output_stream,
 							    const unsigned char   *data,
@@ -53,7 +53,7 @@ struct _cairo_output_stream {
     cairo_bool_t		     closed;
 };
 
-extern const cairo_private cairo_output_stream_t _cairo_output_stream_nil;
+extern const cairo_private cairo_output_stream_t cairo_output_stream_nil;
 
 cairo_private void
 _cairo_output_stream_init (cairo_output_stream_t            *stream,
@@ -107,7 +107,7 @@ _cairo_output_stream_write_hex_string (cairo_output_stream_t *stream,
 				       const char *data,
 				       size_t length);
 
-cairo_private void
+cairo_private int
 _cairo_dtostr (char *buffer, size_t size, double d);
 
 cairo_private void

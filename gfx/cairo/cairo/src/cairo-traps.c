@@ -43,7 +43,7 @@
 static cairo_status_t
 _cairo_traps_grow (cairo_traps_t *traps);
 
-static void
+static cairo_status_t
 _cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
 		       cairo_line_t *left, cairo_line_t *right);
 
@@ -57,21 +57,10 @@ _cairo_traps_init (cairo_traps_t *traps)
 
     traps->num_traps = 0;
 
-    traps->traps_size = ARRAY_LENGTH (traps->traps_embedded);
-    traps->traps = traps->traps_embedded;
+    traps->traps_size = 0;
+    traps->traps = NULL;
     traps->extents.p1.x = traps->extents.p1.y = INT32_MAX;
     traps->extents.p2.x = traps->extents.p2.y = INT32_MIN;
-
-    traps->has_limits = FALSE;
-}
-
-void
-_cairo_traps_limit (cairo_traps_t	*traps,
-		    cairo_box_t		*limits)
-{
-    traps->has_limits = TRUE;
-
-    traps->limits = *limits;
 }
 
 void
@@ -98,104 +87,45 @@ cairo_status_t
 _cairo_traps_init_box (cairo_traps_t *traps,
 		       cairo_box_t   *box)
 {
-    _cairo_traps_init (traps);
+  _cairo_traps_init (traps);
 
-    assert (traps->traps_size >= 1);
-
-    traps->num_traps = 1;
-
-    traps->traps[0].top = box->p1.y;
-    traps->traps[0].bottom = box->p2.y;
-    traps->traps[0].left.p1 = box->p1;
-    traps->traps[0].left.p2.x = box->p1.x;
-    traps->traps[0].left.p2.y = box->p2.y;
-    traps->traps[0].right.p1.x = box->p2.x;
-    traps->traps[0].right.p1.y = box->p1.y;
-    traps->traps[0].right.p2 = box->p2;
-
-    traps->extents = *box;
-
+  traps->status = _cairo_traps_grow (traps);
+  if (traps->status)
     return traps->status;
+
+  traps->num_traps = 1;
+
+  traps->traps[0].top = box->p1.y;
+  traps->traps[0].bottom = box->p2.y;
+  traps->traps[0].left.p1 = box->p1;
+  traps->traps[0].left.p2.x = box->p1.x;
+  traps->traps[0].left.p2.y = box->p2.y;
+  traps->traps[0].right.p1.x = box->p2.x;
+  traps->traps[0].right.p1.y = box->p1.y;
+  traps->traps[0].right.p2 = box->p2;
+
+  traps->extents = *box;
+
+  return traps->status;
 }
 
-cairo_status_t
-_cairo_traps_status (cairo_traps_t *traps)
-{
-    return traps->status;
-}
-
-static void
+static cairo_status_t
 _cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
 		       cairo_line_t *left, cairo_line_t *right)
 {
     cairo_trapezoid_t *trap;
 
     if (traps->status)
-	return;
+	return traps->status;
 
-    /* Note: With the goofy trapezoid specification, (where an
-     * arbitrary two points on the lines can specified for the left
-     * and right edges), these limit checks would not work in
-     * general. For example, one can imagine a trapezoid entirely
-     * within the limits, but with two points used to specify the left
-     * edge entirely to the right of the limits.  Fortunately, for our
-     * purposes, cairo will never generate such a crazy
-     * trapezoid. Instead, cairo always uses for its points the
-     * extreme positions of the edge that are visible on at least some
-     * trapezoid. With this constraint, it's impossible for both
-     * points to be outside the limits while the relevant edge is
-     * entirely inside the limits.
-     */
-    if (traps->has_limits) {
-	/* Trivially reject if trapezoid is entirely to the right or
-	 * to the left of the limits. */
-	if (left->p1.x >= traps->limits.p2.x &&
-	    left->p2.x >= traps->limits.p2.x)
-	{
-	    return;
-	}
-
-	if (right->p1.x <= traps->limits.p1.x &&
-	    right->p2.x <= traps->limits.p1.x)
-	{
-	    return;
-	}
-
-	/* Otherwise, clip the trapezoid to the limits. We only clip
-	 * where an edge is entirely outside the limits. If we wanted
-	 * to be more clever, we could handle cases where a trapezoid
-	 * edge intersects the edge of the limits, but that would
-	 * require slicing this trapezoid into multiple trapezoids,
-	 * and I'm not sure the effort would be worth it. */
-	if (top < traps->limits.p1.y)
-	    top = traps->limits.p1.y;
-
-	if (bottom > traps->limits.p2.y)
-	    bottom = traps->limits.p2.y;
-
-	if (left->p1.x < traps->limits.p1.x &&
-	    left->p2.x < traps->limits.p1.x)
-	{
-	    left->p1.x = traps->limits.p1.x;
-	    left->p2.x = traps->limits.p1.x;
-	}
-
-	if (right->p1.x > traps->limits.p2.x &&
-	    right->p2.x > traps->limits.p2.x)
-	{
-	    right->p1.x = traps->limits.p2.x;
-	    right->p2.x = traps->limits.p2.x;
-	}
-    }
-
-    if (top >= bottom) {
-	return;
+    if (top == bottom) {
+	return CAIRO_STATUS_SUCCESS;
     }
 
     if (traps->num_traps >= traps->traps_size) {
 	traps->status = _cairo_traps_grow (traps);
 	if (traps->status)
-	    return;
+	    return traps->status;
     }
 
     trap = &traps->traps[traps->num_traps];
@@ -227,9 +157,11 @@ _cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bo
 	traps->extents.p2.x = right->p2.x;
 
     traps->num_traps++;
+
+    return traps->status;
 }
 
-void
+cairo_status_t
 _cairo_traps_add_trap_from_points (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
 				   cairo_point_t left_p1, cairo_point_t left_p2,
 				   cairo_point_t right_p1, cairo_point_t right_p2)
@@ -238,7 +170,7 @@ _cairo_traps_add_trap_from_points (cairo_traps_t *traps, cairo_fixed_t top, cair
     cairo_line_t right;
 
     if (traps->status)
-	return;
+	return traps->status;
 
     left.p1 = left_p1;
     left.p2 = left_p2;
@@ -246,7 +178,7 @@ _cairo_traps_add_trap_from_points (cairo_traps_t *traps, cairo_fixed_t top, cair
     right.p1 = right_p1;
     right.p2 = right_p2;
 
-    _cairo_traps_add_trap (traps, top, bottom, &left, &right);
+    return _cairo_traps_add_trap (traps, top, bottom, &left, &right);
 }
 
 /* make room for at least one more trap */
@@ -254,7 +186,19 @@ static cairo_status_t
 _cairo_traps_grow (cairo_traps_t *traps)
 {
     cairo_trapezoid_t *new_traps;
-    int new_size = 2 * MAX (traps->traps_size, 16);
+    int old_size = traps->traps_size;
+    int embedded_size = sizeof (traps->traps_embedded) / sizeof (traps->traps_embedded[0]);
+    int new_size = 2 * MAX (old_size, 16);
+
+    /* we have a local buffer at traps->traps_embedded.  try to fulfill the request
+     * from there. */
+    if (old_size < embedded_size) {
+	traps->traps = traps->traps_embedded;
+	traps->traps_size = embedded_size;
+	return traps->status;
+    }
+
+    assert (traps->num_traps <= traps->traps_size);
 
     if (traps->status)
 	return traps->status;
@@ -262,7 +206,7 @@ _cairo_traps_grow (cairo_traps_t *traps)
     if (traps->traps == traps->traps_embedded) {
 	new_traps = malloc (new_size * sizeof (cairo_trapezoid_t));
 	if (new_traps)
-	    memcpy (new_traps, traps->traps, sizeof (traps->traps_embedded));
+	    memcpy (new_traps, traps->traps, old_size * sizeof (cairo_trapezoid_t));
     } else {
 	new_traps = realloc (traps->traps, new_size * sizeof (cairo_trapezoid_t));
     }
@@ -275,7 +219,7 @@ _cairo_traps_grow (cairo_traps_t *traps)
     traps->traps = new_traps;
     traps->traps_size = new_size;
 
-    return CAIRO_STATUS_SUCCESS;
+    return traps->status;
 }
 
 static int
@@ -590,20 +534,21 @@ _cairo_traps_extents (cairo_traps_t *traps, cairo_box_t *extents)
  * Determines if a set of trapezoids are exactly representable as a
  * pixman region, and if so creates such a region.
  *
- * Return value: %CAIRO_STATUS_SUCCESS, %CAIRO_INT_STATUS_UNSUPPORTED
- * or %CAIRO_STATUS_NO_MEMORY
+ * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY
  **/
-cairo_int_status_t
-_cairo_traps_extract_region (cairo_traps_t     *traps,
-			     pixman_region16_t *region)
+cairo_status_t
+_cairo_traps_extract_region (cairo_traps_t      *traps,
+			     pixman_region16_t **region)
 {
     int i;
 
     /* Bail early if we have lots of traps, until we fix the code
      * below to not use Union()
      */
-    if (traps->num_traps > 200)
-        return CAIRO_INT_STATUS_UNSUPPORTED;
+    if (traps->num_traps > 200) {
+        *region = NULL;
+        return CAIRO_STATUS_SUCCESS;
+    }
 
     for (i = 0; i < traps->num_traps; i++)
 	if (!(traps->traps[i].left.p1.x == traps->traps[i].left.p2.x
@@ -612,10 +557,11 @@ _cairo_traps_extract_region (cairo_traps_t     *traps,
 	      && _cairo_fixed_is_integer(traps->traps[i].bottom)
 	      && _cairo_fixed_is_integer(traps->traps[i].left.p1.x)
 	      && _cairo_fixed_is_integer(traps->traps[i].right.p1.x))) {
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	    *region = NULL;
+	    return CAIRO_STATUS_SUCCESS;
 	}
 
-    pixman_region_init (region);
+    *region = pixman_region_create ();
 
     for (i = 0; i < traps->num_traps; i++) {
 	int x = _cairo_fixed_integer_part(traps->traps[i].left.p1.x);
@@ -630,9 +576,9 @@ _cairo_traps_extract_region (cairo_traps_t     *traps,
 	if (width == 0 || height == 0)
 	  continue;
 
-	if (pixman_region_union_rect (region, region,
+	if (pixman_region_union_rect (*region, *region,
 				      x, y, width, height) != PIXMAN_REGION_STATUS_SUCCESS) {
-	    pixman_region_fini (region);
+	    pixman_region_destroy (*region);
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
     }

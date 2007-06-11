@@ -33,6 +33,16 @@
 #include <string.h>
 #include <limits.h>
 
+#ifndef __GNUC__
+#define __inline
+#endif
+
+#if defined(__GNUC__)
+#define INLINE __inline__
+#else
+#define INLINE
+#endif
+
 #undef MIN
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #undef MAX
@@ -738,6 +748,16 @@ fbStipple (pixman_bits_t   *dst,
 	   int	    xRot,
 	   int	    yRot);
 
+/* XXX: Is depth redundant here? */
+struct pixman_format {
+    int		format_code;
+    int		depth;
+    int		red, redMask;
+    int		green, greenMask;
+    int		blue, blueMask;
+    int		alpha, alphaMask;
+};
+
 typedef struct _FbPixels {
     pixman_bits_t		*data;
     unsigned int	width;
@@ -768,7 +788,7 @@ fbRasterizeTrapezoid (pixman_image_t		*pMask,
 /* XXX: This is to avoid including gc.h from the server includes */
 /* clientClipType field in GC */
 #define CT_NONE			0
-/* #define CT_PIXMAP		1 (not used anymore) */
+#define CT_PIXMAP		1
 #define CT_REGION		2
 #define CT_UNSORTED		6
 #define CT_YSORTED		10
@@ -784,7 +804,7 @@ fbRasterizeTrapezoid (pixman_image_t		*pMask,
    in libgcc in case a target does not have one, which should be just as
    good as the static function below.  */
 #if __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
-static inline int
+static INLINE int
 _FbOnes(unsigned int mask)
 {
 	return __builtin_popcount(mask);
@@ -798,7 +818,7 @@ _FbOnes(unsigned int mask);
 /* icformat.c */
 
 pixman_private void
-pixman_format_init_code (pixman_format_t *format, int format_code);
+pixman_format_init (pixman_format_t *format, int format_code);
 
 /* icimage.c */
 

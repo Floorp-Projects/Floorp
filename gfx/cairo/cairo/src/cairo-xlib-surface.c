@@ -39,8 +39,8 @@
 #include "cairoint.h"
 #include "cairo-xlib.h"
 #include "cairo-xlib-xrender.h"
+#include "cairo-xlib-test.h"
 #include "cairo-xlib-private.h"
-#include "cairo-xlib-surface-private.h"
 #include "cairo-clip-private.h"
 #include <X11/extensions/Xrender.h>
 #include <X11/extensions/renderproto.h>
@@ -49,7 +49,9 @@
 typedef int (*cairo_xlib_error_func_t) (Display     *display,
 					XErrorEvent *event);
 
-static cairo_status_t
+typedef struct _cairo_xlib_surface cairo_xlib_surface_t;
+
+static void
 _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface);
 
 static void
@@ -80,11 +82,52 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 
 #define CAIRO_ASSUME_PIXMAP	20
 
-static const XTransform identity = { {
-    { 1 << 16, 0x00000, 0x00000 },
-    { 0x00000, 1 << 16, 0x00000 },
-    { 0x00000, 0x00000, 1 << 16 },
-} };
+struct _cairo_xlib_surface {
+    cairo_surface_t base;
+
+    Display *dpy;
+    cairo_xlib_screen_info_t *screen_info;
+
+    GC gc;
+    Drawable drawable;
+    Screen *screen;
+    cairo_bool_t owns_pixmap;
+    Visual *visual;
+
+    int use_pixmap;
+
+    int render_major;
+    int render_minor;
+
+    /* TRUE if the server has a bug with repeating pictures
+     *
+     *  https://bugs.freedesktop.org/show_bug.cgi?id=3566
+     *
+     * We can't test for this because it depends on whether the
+     * picture is in video memory or not.
+     *
+     * We also use this variable as a guard against a second
+     * independent bug with transformed repeating pictures:
+     *
+     * http://lists.freedesktop.org/archives/cairo/2004-September/001839.html
+     *
+     * Both are fixed in xorg >= 6.9 and hopefully in > 6.8.2, so
+     * we can reuse the test for now.
+     */
+    cairo_bool_t buggy_repeat;
+
+    int width;
+    int height;
+    int depth;
+
+    Picture dst_picture, src_picture;
+
+    cairo_bool_t have_clip_rects;
+    XRectangle *clip_rects;
+    int num_clip_rects;
+
+    XRenderPictFormat *xrender_format;
+};
 
 #define CAIRO_SURFACE_RENDER_AT_LEAST(surface, major, minor)	\
 	(((surface)->render_major > major) ||			\
@@ -107,6 +150,25 @@ static const XTransform identity = { {
 
 #define CAIRO_SURFACE_RENDER_HAS_PICTURE_TRANSFORM(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 6)
 #define CAIRO_SURFACE_RENDER_HAS_FILTERS(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 6)
+
+static cairo_bool_t cairo_xlib_render_disabled = FALSE;
+
+/**
+ * _cairo_xlib_test_disable_render:
+ *
+ * Disables the use of the RENDER extension.
+ *
+ * <note>
+ * This function is <emphasis>only</emphasis> intended for internal
+ * testing use within the cairo distribution. It is not installed in
+ * any public header file.
+ * </note>
+ **/
+void
+_cairo_xlib_test_disable_render (void)
+{
+    cairo_xlib_render_disabled = TRUE;
+}
 
 static int
 _CAIRO_FORMAT_DEPTH (cairo_format_t format)
@@ -174,7 +236,6 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
 						       xrender_format,
 						       width, height);
     if (surface->base.status != CAIRO_STATUS_SUCCESS) {
-	XFreePixmap (dpy, pix);
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
@@ -220,8 +281,6 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
     cairo_xlib_surface_t *surface;
     Pixmap pix;
 
-    _cairo_xlib_display_notify (src->screen_info->display);
-
     /* Start by examining the surface's XRenderFormat, or if it
      * doesn't have one, then look one up through its visual (in the
      * case of a bitmap, it won't even have that). */
@@ -254,7 +313,6 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
 						       xrender_format,
 						       width, height);
     if (surface->base.status != CAIRO_STATUS_SUCCESS) {
-	XFreePixmap (src->dpy, pix);
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
@@ -268,68 +326,24 @@ static cairo_status_t
 _cairo_xlib_surface_finish (void *abstract_surface)
 {
     cairo_xlib_surface_t *surface = abstract_surface;
-    cairo_xlib_display_t *display = surface->screen_info ?
-	                            surface->screen_info->display :
-				    NULL;
-    cairo_status_t        status  = CAIRO_STATUS_SUCCESS;
+    if (surface->dst_picture != None)
+	XRenderFreePicture (surface->dpy, surface->dst_picture);
 
-    if (surface->dst_picture != None) {
-	cairo_status_t status2;
-	status2 = _cairo_xlib_display_queue_resource (display,
-		                                      XRenderFreePicture,
-						      surface->dst_picture);
-	if (status2 == CAIRO_STATUS_SUCCESS)
-	    surface->dst_picture = None;
-	else if (status == CAIRO_STATUS_SUCCESS)
-	    status = status2;
-    }
+    if (surface->src_picture != None)
+	XRenderFreePicture (surface->dpy, surface->src_picture);
 
-    if (surface->src_picture != None) {
-	cairo_status_t status2;
-	status2 = _cairo_xlib_display_queue_resource (display,
-		                                      XRenderFreePicture,
-						      surface->src_picture);
-	if (status2 == CAIRO_STATUS_SUCCESS)
-	    surface->src_picture = None;
-	else if (status == CAIRO_STATUS_SUCCESS)
-	    status = status2;
-    }
+    if (surface->owns_pixmap)
+	XFreePixmap (surface->dpy, surface->drawable);
 
-    if (surface->owns_pixmap) {
-	cairo_status_t status2;
-	status2 = _cairo_xlib_display_queue_resource (display,
-		                           (cairo_xlib_notify_resource_func) XFreePixmap,
-					   surface->drawable);
-	if (status2 == CAIRO_STATUS_SUCCESS) {
-	    surface->owns_pixmap = FALSE;
-	    surface->drawable = None;
-	} else if (status == CAIRO_STATUS_SUCCESS)
-	    status = status2;
-    }
+    if (surface->gc != NULL)
+	XFreeGC (surface->dpy, surface->gc);
 
-    if (surface->gc != NULL) {
-	cairo_status_t status2;
-	status2 = _cairo_xlib_screen_put_gc (surface->screen_info,
-		                             surface->depth,
-				             surface->gc,
-				             surface->have_clip_rects);
-	surface->gc = NULL;
-	if (status == CAIRO_STATUS_SUCCESS)
-	    status = status2;
-    }
-
-    if (surface->clip_rects != surface->embedded_clip_rects)
+    if (surface->clip_rects != NULL)
 	free (surface->clip_rects);
 
-    if (surface->screen_info != NULL)
-	_cairo_xlib_screen_info_destroy (surface->screen_info);
+    surface->dpy = NULL;
 
-    if (surface->dpy != NULL) {
-	_cairo_xlib_remove_close_display_hooks (surface->dpy, surface);
-	surface->dpy = NULL;
-    }
-
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static int
@@ -573,27 +587,22 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	 * retry, but to keep things simple, we just create a
 	 * temporary pixmap
 	 */
-	Pixmap pixmap;
-	cairo_status_t status = _cairo_xlib_surface_ensure_gc (surface);
-	if (status)
-	    return status;
-
-	pixmap = XCreatePixmap (surface->dpy,
+	Pixmap pixmap = XCreatePixmap (surface->dpy,
 				       surface->drawable,
 				       x2 - x1, y2 - y1,
 				       surface->depth);
-	if (pixmap) {
-	    XCopyArea (surface->dpy, surface->drawable, pixmap, surface->gc,
-		       x1, y1, x2 - x1, y2 - y1, 0, 0);
+	_cairo_xlib_surface_ensure_gc (surface);
 
-	    ximage = XGetImage (surface->dpy,
-				pixmap,
-				0, 0,
-				x2 - x1, y2 - y1,
-				AllPlanes, ZPixmap);
+	XCopyArea (surface->dpy, surface->drawable, pixmap, surface->gc,
+		   x1, y1, x2 - x1, y2 - y1, 0, 0);
 
-	    XFreePixmap (surface->dpy, pixmap);
-	}
+	ximage = XGetImage (surface->dpy,
+			    pixmap,
+			    0, 0,
+			    x2 - x1, y2 - y1,
+			    AllPlanes, ZPixmap);
+
+	XFreePixmap (surface->dpy, pixmap);
     }
     if (!ximage)
 	return CAIRO_STATUS_NO_MEMORY;
@@ -692,33 +701,21 @@ _cairo_xlib_surface_ensure_src_picture (cairo_xlib_surface_t    *surface)
 static void
 _cairo_xlib_surface_set_picture_clip_rects (cairo_xlib_surface_t *surface)
 {
-    if (surface->have_clip_rects) {
+    if (surface->have_clip_rects)
 	XRenderSetPictureClipRectangles (surface->dpy, surface->dst_picture,
 					 0, 0,
 					 surface->clip_rects,
 					 surface->num_clip_rects);
-    } else {
-	XRenderPictureAttributes pa;
-	pa.clip_mask = None;
-	XRenderChangePicture (surface->dpy, surface->dst_picture,
-			      CPClipMask, &pa);
-    }
-
-    surface->clip_dirty &= ~CAIRO_XLIB_SURFACE_CLIP_DIRTY_PICTURE;
 }
 
 static void
 _cairo_xlib_surface_set_gc_clip_rects (cairo_xlib_surface_t *surface)
 {
-    if (surface->have_clip_rects) {
+    if (surface->have_clip_rects)
 	XSetClipRectangles(surface->dpy, surface->gc,
 			   0, 0,
 			   surface->clip_rects,
 			   surface->num_clip_rects, YXSorted);
-    } else
-	XSetClipMask (surface->dpy, surface->gc, None);
-
-    surface->clip_dirty &= ~CAIRO_XLIB_SURFACE_CLIP_DIRTY_GC;
 }
 
 static void
@@ -730,31 +727,22 @@ _cairo_xlib_surface_ensure_dst_picture (cairo_xlib_surface_t    *surface)
 						     surface->xrender_format,
 						     0, NULL);
 	_cairo_xlib_surface_set_picture_clip_rects (surface);
-    } else if (surface->clip_dirty & CAIRO_XLIB_SURFACE_CLIP_DIRTY_PICTURE)
-	_cairo_xlib_surface_set_picture_clip_rects (surface);
+    }
+
 }
 
-static cairo_status_t
+static void
 _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface)
 {
     XGCValues gcv;
 
-    if (surface->gc == NULL) {
-	surface->gc = _cairo_xlib_screen_get_gc (surface->screen_info,
-						 surface->depth);
-	if (surface->gc == NULL) {
-	    gcv.graphics_exposures = False;
-	    surface->gc = XCreateGC (surface->dpy, surface->drawable,
-				     GCGraphicsExposures, &gcv);
-	    if (!surface->gc)
-		return CAIRO_STATUS_NO_MEMORY;
-	}
+    if (surface->gc)
+	return;
 
-	_cairo_xlib_surface_set_gc_clip_rects (surface);
-    } else if (surface->clip_dirty & CAIRO_XLIB_SURFACE_CLIP_DIRTY_GC)
-	_cairo_xlib_surface_set_gc_clip_rects (surface);
-
-    return CAIRO_STATUS_SUCCESS;
+    gcv.graphics_exposures = False;
+    surface->gc = XCreateGC (surface->dpy, surface->drawable,
+			     GCGraphicsExposures, &gcv);
+    _cairo_xlib_surface_set_gc_clip_rects (surface);
 }
 
 static cairo_status_t
@@ -770,7 +758,6 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
     XImage ximage;
     unsigned int bpp, alpha, red, green, blue;
     int native_byte_order = _native_byte_order_lsb () ? LSBFirst : MSBFirst;
-    cairo_status_t status;
 
     pixman_format_get_masks (pixman_image_get_format (image->pixman_image),
 			     &bpp, &alpha, &red, &green, &blue);
@@ -793,9 +780,7 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 
     XInitImage (&ximage);
 
-    status = _cairo_xlib_surface_ensure_gc (surface);
-    if (status)
-	return status;
+    _cairo_xlib_surface_ensure_gc (surface);
     XPutImage(surface->dpy, surface->drawable, surface->gc,
 	      &ximage, src_x, src_y, dst_x, dst_y,
 	      width, height);
@@ -812,8 +797,6 @@ _cairo_xlib_surface_acquire_source_image (void                    *abstract_surf
     cairo_xlib_surface_t *surface = abstract_surface;
     cairo_image_surface_t *image;
     cairo_status_t status;
-
-    _cairo_xlib_display_notify (surface->screen_info->display);
 
     status = _get_image_surface (surface, NULL, &image, NULL);
     if (status)
@@ -843,8 +826,6 @@ _cairo_xlib_surface_acquire_dest_image (void                    *abstract_surfac
     cairo_xlib_surface_t *surface = abstract_surface;
     cairo_image_surface_t *image;
     cairo_status_t status;
-
-    _cairo_xlib_display_notify (surface->screen_info->display);
 
     status = _get_image_surface (surface, interest_rect, &image, image_rect_out);
     if (status)
@@ -895,9 +876,6 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 {
     cairo_xlib_surface_t *surface = abstract_surface;
     cairo_xlib_surface_t *clone;
-    cairo_status_t status;
-
-    _cairo_xlib_display_notify (surface->screen_info->display);
 
     if (src->backend == surface->base.backend ) {
 	cairo_xlib_surface_t *xlib_src = (cairo_xlib_surface_t *)src;
@@ -919,12 +897,8 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	if (clone->base.status)
 	    return CAIRO_STATUS_NO_MEMORY;
 
-	status = _draw_image_surface (clone, image_src, src_x, src_y,
-			              width, height, src_x, src_y);
-	if (status) {
-	    cairo_surface_destroy (&clone->base);
-	    return status;
-	}
+	_draw_image_surface (clone, image_src, src_x, src_y,
+			     width, height, src_x, src_y);
 
 	*clone_out = &clone->base;
 
@@ -955,14 +929,21 @@ _cairo_xlib_surface_set_matrix (cairo_xlib_surface_t *surface,
     xtransform.matrix[2][1] = 0;
     xtransform.matrix[2][2] = _cairo_fixed_from_double (1);
 
-    if (memcmp (&xtransform, &surface->xtransform, sizeof (XTransform)) == 0)
-	return CAIRO_STATUS_SUCCESS;
-
     if (!CAIRO_SURFACE_RENDER_HAS_PICTURE_TRANSFORM (surface))
+    {
+	static const XTransform identity = { {
+	    { 1 << 16, 0x00000, 0x00000 },
+	    { 0x00000, 1 << 16, 0x00000 },
+	    { 0x00000, 0x00000, 1 << 16 },
+	} };
+
+	if (memcmp (&xtransform, &identity, sizeof (XTransform)) == 0)
+	    return CAIRO_STATUS_SUCCESS;
+
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     XRenderSetPictureTransform (surface->dpy, surface->src_picture, &xtransform);
-    surface->xtransform = xtransform;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -974,9 +955,6 @@ _cairo_xlib_surface_set_filter (cairo_xlib_surface_t *surface,
     const char *render_filter;
 
     if (!surface->src_picture)
-	return CAIRO_STATUS_SUCCESS;
-
-    if (surface->filter == filter)
 	return CAIRO_STATUS_SUCCESS;
 
     if (!CAIRO_SURFACE_RENDER_HAS_FILTERS (surface))
@@ -1016,7 +994,6 @@ _cairo_xlib_surface_set_filter (cairo_xlib_surface_t *surface,
 
     XRenderSetPictureFilter (surface->dpy, surface->src_picture,
 			     (char *) render_filter, NULL, 0);
-    surface->filter = filter;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1030,21 +1007,17 @@ _cairo_xlib_surface_set_repeat (cairo_xlib_surface_t *surface, int repeat)
     if (!surface->src_picture)
 	return CAIRO_STATUS_SUCCESS;
 
-    if (surface->repeat == repeat)
-	return CAIRO_STATUS_SUCCESS;
-
     mask = CPRepeat;
     pa.repeat = repeat;
 
     XRenderChangePicture (surface->dpy, surface->src_picture, mask, &pa);
-    surface->repeat = repeat;
 
     return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
-_cairo_xlib_surface_set_attributes (cairo_xlib_surface_t	    *surface,
-				    cairo_surface_attributes_t	    *attributes)
+_cairo_xlib_surface_set_attributes (cairo_xlib_surface_t	  *surface,
+				       cairo_surface_attributes_t *attributes)
 {
     cairo_int_status_t status;
 
@@ -1056,17 +1029,15 @@ _cairo_xlib_surface_set_attributes (cairo_xlib_surface_t	    *surface,
 
     switch (attributes->extend) {
     case CAIRO_EXTEND_NONE:
-	status = _cairo_xlib_surface_set_repeat (surface, 0);
+	_cairo_xlib_surface_set_repeat (surface, 0);
 	break;
     case CAIRO_EXTEND_REPEAT:
-	status = _cairo_xlib_surface_set_repeat (surface, 1);
+	_cairo_xlib_surface_set_repeat (surface, 1);
 	break;
     case CAIRO_EXTEND_REFLECT:
     case CAIRO_EXTEND_PAD:
-	status = CAIRO_INT_STATUS_UNSUPPORTED;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
-    if (status)
-	return status;
 
     status = _cairo_xlib_surface_set_filter (surface, attributes->filter);
     if (status)
@@ -1233,12 +1204,7 @@ _recategorize_composite_operation (cairo_xlib_surface_t	      *dst,
 {
     cairo_bool_t is_integer_translation =
 	_cairo_matrix_is_integer_translation (&src_attr->matrix, NULL, NULL);
-    cairo_bool_t needs_alpha_composite;
-
-    if (!_cairo_surface_is_xlib (&src->base))
-	return DO_UNSUPPORTED;
-
-    needs_alpha_composite =
+    cairo_bool_t needs_alpha_composite =
 	_operator_needs_alpha_composite (op, _surface_has_alpha (src));
 
     if (!have_mask &&
@@ -1331,9 +1297,6 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
     cairo_int_status_t		status;
     composite_operation_t       operation;
     int				itx, ity;
-    cairo_bool_t		is_integer_translation;
-
-    _cairo_xlib_display_notify (dst->screen_info->display);
 
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1353,16 +1316,6 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 					      &src_attr, &mask_attr);
     if (status)
 	return status;
-
-    /* check for fallback surfaces that we cannot handle ... */
-    if (!_cairo_surface_is_xlib (&src->base)) {
-	status = CAIRO_INT_STATUS_UNSUPPORTED;
-	goto BAIL;
-    }
-    if (mask != NULL && !_cairo_surface_is_xlib (&mask->base)) {
-	status = CAIRO_INT_STATUS_UNSUPPORTED;
-	goto BAIL;
-    }
 
     operation = _recategorize_composite_operation (dst, op, src, &src_attr,
 						   mask_pattern != NULL);
@@ -1411,9 +1364,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 	break;
 
     case DO_XCOPYAREA:
-	status = _cairo_xlib_surface_ensure_gc (dst);
-	if (status)
-	    goto BAIL;
+	_cairo_xlib_surface_ensure_gc (dst);
 	XCopyArea (dst->dpy,
 		   src->drawable,
 		   dst->drawable,
@@ -1433,13 +1384,8 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 	 * _recategorize_composite_operation.
 	 */
 
-	status = _cairo_xlib_surface_ensure_gc (dst);
-	if (status)
-	    goto BAIL;
-	is_integer_translation = _cairo_matrix_is_integer_translation (&src_attr.matrix,
-								       &itx, &ity);
-	/* This is a pre-condition for DO_XTILE. */
-	assert (is_integer_translation);
+	_cairo_xlib_surface_ensure_gc (dst);
+	_cairo_matrix_is_integer_translation (&src_attr.matrix, &itx, &ity);
 
 	XSetTSOrigin (dst->dpy, dst->gc,
 		      - (itx + src_attr.x_offset), - (ity + src_attr.y_offset));
@@ -1483,8 +1429,6 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
 {
     cairo_xlib_surface_t *surface = abstract_surface;
     XRenderColor render_color;
-
-    _cairo_xlib_display_notify (surface->screen_info->display);
 
     if (!CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLE (surface))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1618,8 +1562,6 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
     int				render_src_x, render_src_y;
     XRenderPictFormat		*pict_format;
 
-    _cairo_xlib_display_notify (dst->screen_info->display);
-
     if (!CAIRO_SURFACE_RENDER_HAS_TRAPEZOIDS (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -1727,31 +1669,38 @@ static cairo_int_status_t
 _cairo_xlib_surface_set_clip_region (void              *abstract_surface,
 				     pixman_region16_t *region)
 {
-    cairo_xlib_surface_t *surface = abstract_surface;
+    cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
 
-    if (surface->have_clip_rects == FALSE && region == NULL)
-	return CAIRO_STATUS_SUCCESS;
-
-    if (surface->clip_rects != surface->embedded_clip_rects) {
+    if (surface->clip_rects) {
 	free (surface->clip_rects);
-	surface->clip_rects = surface->embedded_clip_rects;
+	surface->clip_rects = NULL;
     }
 
     surface->have_clip_rects = FALSE;
     surface->num_clip_rects = 0;
 
-    if (region != NULL) {
+    if (region == NULL) {
+	if (surface->gc)
+	    XSetClipMask (surface->dpy, surface->gc, None);
+
+	if (surface->xrender_format && surface->dst_picture) {
+	    XRenderPictureAttributes pa;
+	    pa.clip_mask = None;
+	    XRenderChangePicture (surface->dpy, surface->dst_picture,
+				  CPClipMask, &pa);
+	}
+    } else {
 	pixman_box16_t *boxes;
 	XRectangle *rects = NULL;
 	int n_boxes, i;
 
 	n_boxes = pixman_region_num_rects (region);
-	if (n_boxes > ARRAY_LENGTH (surface->embedded_clip_rects)) {
+	if (n_boxes > 0) {
 	    rects = malloc (sizeof(XRectangle) * n_boxes);
 	    if (rects == NULL)
 		return CAIRO_STATUS_NO_MEMORY;
-	}else {
-	    rects = surface->embedded_clip_rects;
+	} else {
+	    rects = NULL;
 	}
 
 	boxes = pixman_region_rects (region);
@@ -1766,9 +1715,13 @@ _cairo_xlib_surface_set_clip_region (void              *abstract_surface,
 	surface->have_clip_rects = TRUE;
 	surface->clip_rects = rects;
 	surface->num_clip_rects = n_boxes;
-    }
 
-    surface->clip_dirty = CAIRO_XLIB_SURFACE_CLIP_DIRTY_ALL;
+	if (surface->gc)
+	    _cairo_xlib_surface_set_gc_clip_rects (surface);
+
+	if (surface->dst_picture)
+	    _cairo_xlib_surface_set_picture_clip_rects (surface);
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1804,46 +1757,6 @@ static void
 _cairo_xlib_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 				       cairo_scaled_font_t  *scaled_font);
 
-static cairo_bool_t
-_cairo_xlib_surface_is_similar (void		*surface_a,
-	                        void		*surface_b,
-				cairo_content_t	 content)
-{
-    cairo_xlib_surface_t *a = surface_a;
-    cairo_xlib_surface_t *b = surface_b;
-    XRenderPictFormat *xrender_format = b->xrender_format;
-
-    if (!_cairo_xlib_surface_same_screen (a, b))
-	return FALSE;
-
-    /* now inspect the content to check that a is similar to b */
-    if (xrender_format == NULL && b->visual != NULL)
-        xrender_format = XRenderFindVisualFormat (b->dpy, b->visual);
-
-    if (xrender_format == NULL ||
-	_xrender_format_to_content (xrender_format) != content)
-    {
-	xrender_format = _CAIRO_FORMAT_TO_XRENDER_FORMAT (b->dpy,
-		_cairo_format_from_content (content));
-    }
-
-
-    return a->xrender_format == xrender_format;
-}
-
-static cairo_status_t
-_cairo_xlib_surface_reset (void *abstract_surface)
-{
-    cairo_xlib_surface_t *surface = abstract_surface;
-    cairo_status_t status;
-
-    status = _cairo_xlib_surface_set_clip_region (surface, NULL);
-    if (status)
-	return status;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static const cairo_surface_backend_t cairo_xlib_surface_backend = {
     CAIRO_SURFACE_TYPE_XLIB,
     _cairo_xlib_surface_create_similar,
@@ -1873,10 +1786,7 @@ static const cairo_surface_backend_t cairo_xlib_surface_backend = {
     NULL, /* stroke */
     NULL, /* fill */
     _cairo_xlib_surface_show_glyphs,
-    NULL,  /* snapshot */
-    _cairo_xlib_surface_is_similar,
-
-    _cairo_xlib_surface_reset
+    NULL  /* snapshot */
 };
 
 /**
@@ -1891,35 +1801,6 @@ static cairo_bool_t
 _cairo_surface_is_xlib (cairo_surface_t *surface)
 {
     return surface->backend == &cairo_xlib_surface_backend;
-}
-
-static void
-_cairo_xlib_surface_detach_display (Display *dpy, void *data)
-{
-    cairo_xlib_surface_t *surface = data;
-
-    surface->dpy = NULL;
-
-    if (surface->dst_picture != None) {
-	XRenderFreePicture (dpy, surface->dst_picture);
-	surface->dst_picture = None;
-    }
-
-    if (surface->src_picture != None) {
-	XRenderFreePicture (dpy, surface->src_picture);
-	surface->src_picture = None;
-    }
-
-    if (surface->owns_pixmap) {
-	XFreePixmap (dpy, surface->drawable);
-	surface->drawable = None;
-	surface->owns_pixmap = FALSE;
-    }
-
-    if (surface->gc != NULL) {
-	XFreeGC (dpy, surface->gc);
-	surface->gc = NULL;
-    }
 }
 
 static cairo_surface_t *
@@ -1943,15 +1824,6 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 
     surface = malloc (sizeof (cairo_xlib_surface_t));
     if (surface == NULL) {
-	_cairo_xlib_screen_info_destroy (screen_info);
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
-
-    if (! _cairo_xlib_add_close_display_hook (dpy,
-	    _cairo_xlib_surface_detach_display, surface, surface)) {
-	free (surface);
-	_cairo_xlib_screen_info_destroy (screen_info);
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
@@ -1977,7 +1849,8 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 	;
     }
 
-    if (! XRenderQueryVersion (dpy, &surface->render_major, &surface->render_minor)) {
+    if (cairo_xlib_render_disabled ||
+	! XRenderQueryVersion (dpy, &surface->render_major, &surface->render_minor)) {
 	surface->render_major = -1;
 	surface->render_minor = -1;
     }
@@ -2014,6 +1887,9 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     } else if (strstr (ServerVendor (dpy), "XFree86") != NULL) {
 	if (VendorRelease (dpy) <= 40500000)
 	    surface->buggy_repeat = TRUE;
+    } else if (strstr (ServerVendor (dpy), "Sun Microsystems, Inc.") != NULL) {
+	if (VendorRelease (dpy) <= 60900000)
+	    surface->buggy_repeat = TRUE;
     }
 
     surface->dst_picture = None;
@@ -2022,12 +1898,9 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     surface->visual = visual;
     surface->xrender_format = xrender_format;
     surface->depth = depth;
-    surface->filter = CAIRO_FILTER_NEAREST;
-    surface->repeat = FALSE;
-    surface->xtransform = identity;
 
     surface->have_clip_rects = FALSE;
-    surface->clip_rects = surface->embedded_clip_rects;
+    surface->clip_rects = NULL;
     surface->num_clip_rects = 0;
 
     return (cairo_surface_t *) surface;
@@ -2149,7 +2022,9 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
     return _cairo_xlib_surface_create_internal (dpy, drawable, screen,
 						NULL, format, width, height, 0);
 }
+#ifdef MOZILLA_CAIRO_NOT_DEFINED
 slim_hidden_def (cairo_xlib_surface_create_with_xrender_format);
+#endif
 
 /**
  * cairo_xlib_surface_set_size:
@@ -2204,7 +2079,6 @@ cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,
 				 int		    height)
 {
     cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *)abstract_surface;
-    cairo_status_t status;
 
     if (! _cairo_surface_is_xlib (abstract_surface)) {
 	_cairo_surface_set_error (abstract_surface, CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
@@ -2216,31 +2090,14 @@ cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,
 	return;
 
     if (surface->drawable != drawable) {
-	if (surface->dst_picture != None) {
-	    status = _cairo_xlib_display_queue_resource (
-		                                  surface->screen_info->display,
-						  XRenderFreePicture,
-						  surface->dst_picture);
-	    if (status) {
-		_cairo_surface_set_error (&surface->base, status);
-		return;
-	    }
+	if (surface->dst_picture)
+	    XRenderFreePicture (surface->dpy, surface->dst_picture);
 
-	    surface->dst_picture = None;
-	}
+	if (surface->src_picture)
+	    XRenderFreePicture (surface->dpy, surface->src_picture);
 
-	if (surface->src_picture != None) {
-	    status = _cairo_xlib_display_queue_resource (
-		                                  surface->screen_info->display,
-						  XRenderFreePicture,
-						  surface->src_picture);
-	    if (status) {
-		_cairo_surface_set_error (&surface->base, status);
-		return;
-	    }
-
-	    surface->src_picture = None;
-	}
+	surface->dst_picture = None;
+	surface->src_picture = None;
 
 	surface->drawable = drawable;
     }
@@ -2418,21 +2275,19 @@ typedef struct _cairo_xlib_surface_font_private {
 
 static void
 _cairo_xlib_surface_remove_scaled_font (Display *dpy,
-	                                void    *data)
+	                               void    *data)
 {
     cairo_scaled_font_t *scaled_font = data;
-    cairo_xlib_surface_font_private_t	*font_private;
-
-    CAIRO_MUTEX_LOCK (scaled_font->mutex);
-    font_private  = scaled_font->surface_private;
-    scaled_font->surface_private = NULL;
+    cairo_xlib_surface_font_private_t	*font_private = scaled_font->surface_private;
 
     _cairo_scaled_font_reset_cache (scaled_font);
-    CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
 
-    if (font_private != NULL) {
+    /* separate function to avoid deadlock if we tried to remove the
+     * close display hook ala _cairo_xlib_surface_scaled_font_fini() */
+    if (font_private) {
 	XRenderFreeGlyphSet (font_private->dpy, font_private->glyphset);
 	free (font_private);
+	scaled_font->surface_private = NULL;
     }
 }
 
@@ -2443,17 +2298,14 @@ _cairo_xlib_surface_font_init (Display		    *dpy,
 {
     cairo_xlib_surface_font_private_t	*font_private;
 
+    if (!_cairo_xlib_add_close_display_hook (dpy,
+		_cairo_xlib_surface_remove_scaled_font,
+		scaled_font, scaled_font))
+	return CAIRO_STATUS_NO_MEMORY;
+
     font_private = malloc (sizeof (cairo_xlib_surface_font_private_t));
     if (!font_private)
 	return CAIRO_STATUS_NO_MEMORY;
-
-    if (!_cairo_xlib_add_close_display_hook (dpy,
-		_cairo_xlib_surface_remove_scaled_font,
-		scaled_font, scaled_font)) {
-	free (font_private);
-	return CAIRO_STATUS_NO_MEMORY;
-    }
-
 
     font_private->dpy = dpy;
     font_private->format = format;
@@ -2471,32 +2323,10 @@ _cairo_xlib_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font)
     cairo_xlib_surface_font_private_t	*font_private = scaled_font->surface_private;
 
     if (font_private) {
-	cairo_xlib_display_t *display;
-
-	_cairo_xlib_remove_close_display_hooks (font_private->dpy, scaled_font);
-
-	display = _cairo_xlib_display_get (font_private->dpy);
-	if (display != NULL) {
-	    cairo_status_t status = _cairo_xlib_display_queue_resource (display,
-					                XRenderFreeGlyphSet,
-					                font_private->glyphset);
-	    (void) status; /* XXX cannot propagate failure */
-	    _cairo_xlib_display_destroy (display);
-	}
-
+	_cairo_xlib_remove_close_display_hook (font_private->dpy, scaled_font);
+	XRenderFreeGlyphSet (font_private->dpy, font_private->glyphset);
 	free (font_private);
     }
-}
-
-struct _cairo_xlib_render_free_glyphs {
-    GlyphSet glyphset;
-    unsigned long glyph_index;
-};
-static void _cairo_xlib_render_free_glyphs (Display *dpy, struct _cairo_xlib_render_free_glyphs *arg)
-{
-    XRenderFreeGlyphs (dpy,
-	               arg->glyphset,
-	               &arg->glyph_index, 1);
 }
 
 static void
@@ -2506,26 +2336,10 @@ _cairo_xlib_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
     cairo_xlib_surface_font_private_t	*font_private = scaled_font->surface_private;
 
     if (font_private != NULL && scaled_glyph->surface_private != NULL) {
-	cairo_xlib_display_t *display = _cairo_xlib_display_get (font_private->dpy);
-	if (display != NULL) {
-	    struct _cairo_xlib_render_free_glyphs *arg = malloc (sizeof (*arg));
-	    if (arg != NULL) {
-		cairo_status_t status;
-		arg->glyphset = font_private->glyphset;
-		arg->glyph_index = _cairo_scaled_glyph_index (scaled_glyph);
-		status = _cairo_xlib_display_queue_work (display,
-			(cairo_xlib_notify_func) _cairo_xlib_render_free_glyphs,
-			arg,
-			free);
-		if (status) {
-		    /* XXX cannot propagate failure */
-		    free (arg);
-		}
-	    }
-
-	    _cairo_xlib_display_destroy (display);
-
-	}
+	unsigned long	glyph_index = _cairo_scaled_glyph_index(scaled_glyph);
+	XRenderFreeGlyphs (font_private->dpy,
+			   font_private->glyphset,
+			   &glyph_index, 1);
     }
 }
 
@@ -2887,7 +2701,6 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
     int request_size = 0;
 
     _cairo_xlib_surface_ensure_dst_picture (dst);
-    _cairo_xlib_display_notify (dst->screen_info->display);
 
     for (i = 0; i < num_glyphs; i++) {
 	int this_x, this_y;
@@ -2982,11 +2795,7 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 
 	/* Send unsent glyphs to the server */
 	if (scaled_glyph->surface_private == NULL) {
-	    status = _cairo_xlib_surface_add_glyph (dst->dpy,
-		                                    scaled_font,
-						    scaled_glyph);
-	    if (status)
-		return status;
+	    _cairo_xlib_surface_add_glyph (dst->dpy, scaled_font, scaled_glyph);
 	    scaled_glyph->surface_private = (void *) 1;
 	}
 
@@ -3081,8 +2890,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
      * so PictOpClear was never used with CompositeText before.
      */
     if (op == CAIRO_OPERATOR_CLEAR) {
-	_cairo_pattern_init_solid (&solid_pattern.solid, CAIRO_COLOR_WHITE,
-				   CAIRO_CONTENT_COLOR);
+	_cairo_pattern_init_solid (&solid_pattern.solid, CAIRO_COLOR_WHITE);
 	src_pattern = &solid_pattern.base;
 	op = CAIRO_OPERATOR_DEST_OUT;
     }
@@ -3092,8 +2900,6 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
                                                  0, 0, 1, 1,
                                                  (cairo_surface_t **) &src,
                                                  &attributes);
-	if (status)
-	    goto BAIL0;
     } else {
         cairo_rectangle_int16_t glyph_extents;
 
@@ -3102,43 +2908,38 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
                                                           num_glyphs,
                                                           &glyph_extents);
         if (status)
-	    goto BAIL0;
+	    goto BAIL;
 
         status = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
                                                  glyph_extents.x, glyph_extents.y,
                                                  glyph_extents.width, glyph_extents.height,
                                                  (cairo_surface_t **) &src,
                                                  &attributes);
-        if (status)
-	    goto BAIL0;
     }
+
+    if (status)
+        goto BAIL;
 
     operation = _recategorize_composite_operation (dst, op, src, &attributes, TRUE);
     if (operation == DO_UNSUPPORTED) {
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
-	goto BAIL1;
+	goto BAIL;
     }
 
     status = _cairo_xlib_surface_set_attributes (src, &attributes);
     if (status)
-        goto BAIL1;
+        goto BAIL;
 
-    status = _cairo_xlib_surface_emit_glyphs (dst,
-	                                      (cairo_xlib_glyph_t *) glyphs,
-					      num_glyphs,
-					      scaled_font,
-					      op,
-					      src,
-					      &attributes);
+    _cairo_xlib_surface_emit_glyphs (dst, (cairo_xlib_glyph_t *) glyphs, num_glyphs,
+				     scaled_font, op, src, &attributes);
 
-  BAIL1:
+  BAIL:
+    _cairo_scaled_font_thaw_cache (scaled_font);
+
     if (src)
         _cairo_pattern_release_surface (src_pattern, &src->base, &attributes);
     if (src_pattern == &solid_pattern.base)
 	_cairo_pattern_fini (&solid_pattern.base);
-  BAIL0:
-    _cairo_scaled_font_thaw_cache (scaled_font);
-    _cairo_xlib_display_notify (dst->screen_info->display);
 
     return status;
 }
