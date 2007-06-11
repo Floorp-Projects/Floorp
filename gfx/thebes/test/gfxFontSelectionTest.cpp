@@ -378,6 +378,7 @@ main (int argc, char **argv) {
         printf ("==== Test %d\n", test);
         PRBool result = RunTest (&testList[test], context);
         if (result) {
+            printf ("Test %d succeeded\n", test);
             passed++;
         } else {
             printf ("Test %d failed\n", test);

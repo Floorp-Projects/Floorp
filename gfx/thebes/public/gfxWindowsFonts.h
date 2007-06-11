@@ -521,31 +521,20 @@ public:
         return mGenericFamily;
     }
 
+    const nsTArray<nsRefPtr<FontEntry> >& GetFontList() const {
+        return mFontEntries;
+    }
     PRUint32 FontListLength() const {
-        return mFonts.Length();
+        return mFontEntries.Length();
     }
 
-    gfxWindowsFont *GetFontAt(PRInt32 i) {
-        return NS_STATIC_CAST(gfxWindowsFont*, NS_STATIC_CAST(gfxFont*, mFonts[i]));
+    FontEntry *GetFontEntryAt(PRInt32 i) {
+        return mFontEntries[i];
     }
 
-    void AppendFont(gfxWindowsFont *aFont) {
-        mFonts.AppendElement(aFont);
-    }
-
-    PRBool HasFontNamed(const nsAString& aName) const {
-        PRUint32 len = mFonts.Length();
-        for (PRUint32 i = 0; i < len; ++i)
-            if (aName.Equals(mFonts[i]->GetName()))
-                return PR_TRUE;
-        return PR_FALSE;
-    }
+    virtual gfxWindowsFont *GetFontAt(PRInt32 i);
 
 protected:
-    static PRBool MakeFont(const nsAString& fontName,
-                           const nsACString& genericName,
-                           void *closure);
-
     void InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun, const char *aString, PRUint32 aLength);
     void InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun, const PRUnichar *aString, PRUint32 aLength);
 
@@ -553,6 +542,7 @@ protected:
 
 private:
     nsCString mGenericFamily;
+    nsTArray<nsRefPtr<FontEntry> > mFontEntries;
 };
 
 #endif /* GFX_WINDOWSFONTS_H */
