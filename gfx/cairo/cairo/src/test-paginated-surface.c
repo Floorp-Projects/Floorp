@@ -45,11 +45,11 @@
  * backend.
  */
 
-#include "cairoint.h"
-
 #include "test-paginated-surface.h"
 
-#include "cairo-paginated-private.h"
+#include "cairoint.h"
+
+#include "cairo-paginated-surface-private.h"
 
 typedef struct _test_paginated_surface {
     cairo_surface_t base;

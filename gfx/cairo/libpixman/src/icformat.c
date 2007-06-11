@@ -21,92 +21,70 @@
  * Author:  Keith Packard, SuSE, Inc.
  */
 
-#include "pixmanint.h"
+#include "icint.h"
 
 #define Mask(n)	((n) == 32 ? 0xffffffff : (unsigned) ((1 << (n))-1))
 
-int
-pixman_format_init (pixman_format_t *format, pixman_format_name_t name)
+pixman_format_t *
+pixman_format_create (pixman_format_name_t name)
 {
     switch (name) {
     case PIXMAN_FORMAT_NAME_ARGB32:
-	pixman_format_init_masks (format, 32,
-				  0xff000000,
-				  0x00ff0000,
-				  0x0000ff00,
-				  0x000000ff);
-	break;
-
+	return pixman_format_create_masks (32,
+				    0xff000000,
+				    0x00ff0000,
+				    0x0000ff00,
+				    0x000000ff);
     case PIXMAN_FORMAT_NAME_RGB24:
-	pixman_format_init_masks (format, 32,
-				  0x0,
-				  0xff0000,
-				  0x00ff00,
-				  0x0000ff);
-	break;
-
+	return pixman_format_create_masks (32,
+				    0x0,
+				    0xff0000,
+				    0x00ff00,
+				    0x0000ff);
     case PIXMAN_FORMAT_NAME_A8:
-	pixman_format_init_masks (format, 8,
-		                  0xff,
-				  0,
-				  0,
-				  0);
-	break;
-
+	return pixman_format_create_masks (8, 0xff,
+				    0, 0, 0);
     case PIXMAN_FORMAT_NAME_A1:
-	pixman_format_init_masks (format, 1,
-	                          0x1,
-				  0,
-				  0,
-				  0);
-	break;
-
+	return pixman_format_create_masks (1, 0x1,
+				    0, 0, 0);
     case PIXMAN_FORMAT_NAME_RGB16_565:
-	pixman_format_init_masks (format, 16,
-				  0x0,
-				  0xf800,
-				  0x07e0,
-				  0x001f);
-	break;
-
+	return pixman_format_create_masks (16,
+					   0x0,
+					   0xf800,
+					   0x07e0,
+					   0x001f);
     case PIXMAN_FORMAT_NAME_ABGR32:
-	pixman_format_init_masks (format, 32,
-				  0xff000000,
-				  0x000000ff,
-				  0x0000ff00,
-				  0x00ff0000);
-	break;
-
+	return pixman_format_create_masks (32,
+				    0xff000000,
+				    0x000000ff,
+				    0x0000ff00,
+				    0x00ff0000);
     case PIXMAN_FORMAT_NAME_BGR24:
-	pixman_format_init_masks (format, 32,
-				  0x0,
-				  0x000000ff,
-				  0x0000ff00,
-				  0x00ff0000);
-	break;
-
-    default:
-	return 0;
+	return pixman_format_create_masks (32,
+				    0x0,
+				    0x000000ff,
+				    0x0000ff00,
+				    0x00ff0000);
     }
 
-    return 1;
+    return NULL;
 }
 
 /* XXX: There's some nonsense going on here. The macros above help
    pixman_format_create_masks to encode a format into an int, while
-   immediately afterwards pixman_format_init_code goes through the effort of
+   immediately afterwards pixman_format_init goes through the effort of
    decoding it. This should all be disentagled, (it's probably
    possible to just eliminate the encoding macros altogether). */
-void
-pixman_format_init_masks (pixman_format_t *format,
-	                    int bpp,
-			    int alpha_mask,
-			    int red_mask,
-			    int green_mask,
-			    int blue_mask)
+pixman_format_t *
+pixman_format_create_masks (int bpp,
+		     int alpha_mask,
+		     int red_mask,
+		     int green_mask,
+		     int blue_mask)
 {
     int type;
     int format_code;
+    pixman_format_t *format;
 
     if (red_mask == 0 && green_mask == 0 && blue_mask == 0)
 	type = PICT_TYPE_A;
@@ -121,11 +99,17 @@ pixman_format_init_masks (pixman_format_t *format,
 			       _FbOnes (green_mask),
 			       _FbOnes (blue_mask));
 
-    pixman_format_init_code (format, format_code);
+    format = malloc (sizeof (pixman_format_t));
+    if (format == NULL)
+	return NULL;
+
+    pixman_format_init (format, format_code);
+
+    return format;
 }
 
 void
-pixman_format_init_code (pixman_format_t *format, int format_code)
+pixman_format_init (pixman_format_t *format, int format_code)
 {
     memset (format, 0, sizeof (pixman_format_t));
 
@@ -186,6 +170,12 @@ pixman_format_init_code (pixman_format_t *format, int format_code)
 			     (format->redMask << format->red) |
 			     (format->blueMask << format->blue) |
 			     (format->greenMask << format->green));
+}
+
+void
+pixman_format_destroy (pixman_format_t *format)
+{
+    free (format);
 }
 
 void

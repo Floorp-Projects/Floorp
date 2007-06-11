@@ -33,8 +33,7 @@ typedef struct _cairo_glitz_surface {
 
     glitz_surface_t   *surface;
     glitz_format_t    *format;
-    cairo_bool_t      has_clip;
-    pixman_region16_t clip;
+    pixman_region16_t *clip;
 } cairo_glitz_surface_t;
 
 static const cairo_surface_backend_t *
@@ -45,9 +44,10 @@ _cairo_glitz_surface_finish (void *abstract_surface)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
 
-    if (surface->has_clip) {
-        glitz_surface_set_clip_region (surface->surface, 0, 0, NULL, 0);
-        pixman_region_fini (&surface->clip);
+    if (surface->clip)
+    {
+	glitz_surface_set_clip_region (surface->surface, 0, 0, NULL, 0);
+	pixman_region_destroy (surface->clip);
     }
 
     glitz_surface_destroy (surface->surface);
@@ -208,7 +208,7 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t   *surface,
     }
 
     /* clear out the glitz clip; the clip affects glitz_get_pixels */
-    if (surface->has_clip)
+    if (surface->clip)
 	glitz_surface_set_clip_region (surface->surface,
 				       0, 0, NULL, 0);
 
@@ -221,12 +221,12 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t   *surface,
     glitz_buffer_destroy (buffer);
 
     /* restore the clip, if any */
-    if (surface->has_clip) {
+    if (surface->clip) {
 	glitz_box_t *box;
 	int	    n;
 
-	box = (glitz_box_t *) pixman_region_rects (&surface->clip);
-	n = pixman_region_num_rects (&surface->clip);
+	box = (glitz_box_t *) pixman_region_rects (surface->clip);
+	n = pixman_region_num_rects (surface->clip);
 	glitz_surface_set_clip_region (surface->surface, 0, 0, box, n);
     }
 
@@ -668,7 +668,7 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	}
 
 	glitz_set_pixels (src->surface, 0, 0, gradient->n_stops, 1,
-			  (glitz_pixel_format_t *)&format, buffer);
+			  &format, buffer);
 
 	glitz_buffer_destroy (buffer);
 
@@ -822,16 +822,11 @@ _cairo_glitz_pattern_acquire_surfaces (cairo_pattern_t	                *src,
 	combined = src_solid->color;
 	_cairo_color_multiply_alpha (&combined, mask_solid->color.alpha);
 
-	_cairo_pattern_init_solid (&tmp.solid, &combined,
-				   CAIRO_COLOR_IS_OPAQUE (&combined) ?
-				   CAIRO_CONTENT_COLOR :
-				   CAIRO_CONTENT_COLOR_ALPHA);
+	_cairo_pattern_init_solid (&tmp.solid, &combined);
 
 	mask = NULL;
     } else {
-	status = _cairo_pattern_init_copy (&tmp.base, src);
-	if (status)
-	    return status;
+	_cairo_pattern_init_copy (&tmp.base, src);
     }
 
     status = _cairo_glitz_pattern_acquire_surface (&tmp.base, dst,
@@ -846,9 +841,7 @@ _cairo_glitz_pattern_acquire_surfaces (cairo_pattern_t	                *src,
 
     if (mask)
     {
-	status = _cairo_pattern_init_copy (&tmp.base, mask);
-	if (status)
-	    return status;
+	_cairo_pattern_init_copy (&tmp.base, mask);
 
 	status = _cairo_glitz_pattern_acquire_surface (&tmp.base, dst,
 						       mask_x, mask_y,
@@ -1009,8 +1002,7 @@ _cairo_glitz_surface_fill_rectangles (void		      *abstract_dst,
 	    _cairo_surface_create_similar_solid (&dst->base,
 						 CAIRO_CONTENT_COLOR_ALPHA,
 						 1, 1,
-						 (cairo_color_t *) color,
-						 NULL);
+						 (cairo_color_t *) color);
 	if (src->base.status)
 	    return CAIRO_STATUS_NO_MEMORY;
 
@@ -1079,9 +1071,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 
     if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE)
     {
-	status = _cairo_pattern_init_copy (&tmp_src_pattern.base, pattern);
-	if (status)
-	    return status;
+	_cairo_pattern_init_copy (&tmp_src_pattern.base, pattern);
 
 	status = _cairo_glitz_pattern_acquire_surface (&tmp_src_pattern.base,
 						       dst,
@@ -1293,32 +1283,26 @@ _cairo_glitz_surface_set_clip_region (void		*abstract_surface,
 	glitz_box_t *box;
 	int	    n;
 
-	if (!surface->has_clip) {
-            pixman_region_init (&surface->clip);
-            surface->has_clip = TRUE;
-        }
+	if (!surface->clip)
+	{
+	    surface->clip = pixman_region_create ();
+	    if (!surface->clip)
+		return CAIRO_STATUS_NO_MEMORY;
+	}
+	pixman_region_copy (surface->clip, region);
 
-	if (pixman_region_copy (&surface->clip, region) !=
-            PIXMAN_REGION_STATUS_SUCCESS)
-        {
-	    pixman_region_fini (&surface->clip);
-	    surface->has_clip = FALSE;
-            return CAIRO_STATUS_NO_MEMORY;
-        }
-
-	box = (glitz_box_t *) pixman_region_rects (&surface->clip);
-	n = pixman_region_num_rects (&surface->clip);
-
+	box = (glitz_box_t *) pixman_region_rects (surface->clip);
+	n = pixman_region_num_rects (surface->clip);
 	glitz_surface_set_clip_region (surface->surface, 0, 0, box, n);
     }
     else
     {
 	glitz_surface_set_clip_region (surface->surface, 0, 0, NULL, 0);
 
-	if (surface->has_clip) {
-	    pixman_region_fini (&surface->clip);
-	    surface->has_clip = FALSE;
-        }
+	if (surface->clip)
+	    pixman_region_destroy (surface->clip);
+
+	surface->clip = NULL;
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -2188,33 +2172,6 @@ _cairo_glitz_surface_flush (void *abstract_surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_bool_t
-_cairo_glitz_surface_is_similar (void *surface_a,
-	                         void *surface_b,
-				 cairo_content_t content)
-{
-    cairo_glitz_surface_t *a = (cairo_glitz_surface_t *) surface_a;
-    cairo_glitz_surface_t *b = (cairo_glitz_surface_t *) surface_b;
-
-    glitz_drawable_t *drawable_a = glitz_surface_get_drawable (a->surface);
-    glitz_drawable_t *drawable_b = glitz_surface_get_drawable (b->surface);
-
-    return drawable_a == drawable_b;
-}
-
-static cairo_status_t
-_cairo_glitz_surface_reset (void *abstract_surface)
-{
-    cairo_glitz_surface_t *surface = abstract_surface;
-    cairo_status_t status;
-
-    status = _cairo_glitz_surface_set_clip_region (surface, NULL);
-    if (status)
-	return status;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static const cairo_surface_backend_t cairo_glitz_surface_backend = {
     CAIRO_SURFACE_TYPE_GLITZ,
     _cairo_glitz_surface_create_similar,
@@ -2237,18 +2194,7 @@ static const cairo_surface_backend_t cairo_glitz_surface_backend = {
     _cairo_glitz_surface_flush,
     NULL, /* mark_dirty_rectangle */
     _cairo_glitz_surface_scaled_font_fini,
-    _cairo_glitz_surface_scaled_glyph_fini,
-
-    NULL, /* paint */
-    NULL, /* mask */
-    NULL, /* stroke */
-    NULL, /* fill */
-    NULL, /* show_glyphs */
-
-    NULL, /* snapshot */
-    _cairo_glitz_surface_is_similar,
-
-    _cairo_glitz_surface_reset
+    _cairo_glitz_surface_scaled_glyph_fini
 };
 
 static const cairo_surface_backend_t *
@@ -2294,9 +2240,9 @@ cairo_glitz_surface_create (glitz_surface_t *surface)
 
     glitz_surface_reference (surface);
 
-    crsurface->surface  = surface;
-    crsurface->format   = format;
-    crsurface->has_clip = FALSE;
+    crsurface->surface = surface;
+    crsurface->format  = format;
+    crsurface->clip    = NULL;
 
     return (cairo_surface_t *) crsurface;
 }

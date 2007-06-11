@@ -119,7 +119,7 @@ _cairo_deflate_stream_create (cairo_output_stream_t *output)
 
     stream = malloc (sizeof (cairo_deflate_stream_t));
     if (stream == NULL)
-	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
+	return (cairo_output_stream_t *) &cairo_output_stream_nil;
 
     _cairo_output_stream_init (&stream->base,
 			       _cairo_deflate_stream_write,
@@ -130,10 +130,8 @@ _cairo_deflate_stream_create (cairo_output_stream_t *output)
     stream->zlib_stream.zfree  = Z_NULL;
     stream->zlib_stream.opaque  = Z_NULL;
 
-    if (deflateInit (&stream->zlib_stream, Z_DEFAULT_COMPRESSION) != Z_OK) {
-	free (stream);
-	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
-    }
+    if (deflateInit (&stream->zlib_stream, Z_DEFAULT_COMPRESSION) != Z_OK)
+	return (cairo_output_stream_t *) &cairo_output_stream_nil;
 
     stream->zlib_stream.next_in = stream->input_buf;
     stream->zlib_stream.avail_in = 0;

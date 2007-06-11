@@ -20,7 +20,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "pixmanint.h"
+#include "icint.h"
 
 typedef void	(*FillFunc) (pixman_image_t *dst,
 			     int16_t	     xDst,
@@ -176,7 +176,7 @@ pixman_fill_rect_general (pixman_image_t *dst,
     }
 }
 
-static int
+static void
 pixman_color_rects (pixman_image_t	 *dst,
 	      pixman_image_t	 *clipPict,
 	      pixman_color_t	 *color,
@@ -185,13 +185,12 @@ pixman_color_rects (pixman_image_t	 *dst,
 	      int	 xoff,
 	      int	 yoff)
 {
-    pixman_bits_t       pixel;
-    pixman_region16_t   clip;
-    pixman_region16_t   rects_as_region;
+    pixman_bits_t	pixel;
+    pixman_region16_t  *clip;
+    pixman_region16_t  *rects_as_region;
     pixman_box16_t     *clipped_rects;
     int	                i, n_clipped_rects;
     FillFunc            func;
-    pixman_region_status_t status;
 
     pixman_color_to_pixel (&dst->image_format,
 			   color,
@@ -201,34 +200,19 @@ pixman_color_rects (pixman_image_t	 *dst,
     xoff -= dst->pixels->x;
     yoff -= dst->pixels->y;
 
-    pixman_region_init_rect (&clip,
-                             dst->pixels->x, dst->pixels->y,
-			     dst->pixels->width, dst->pixels->height);
+    clip = pixman_region_create();
+    pixman_region_union_rect (clip, clip,
+			      dst->pixels->x, dst->pixels->y,
+			      dst->pixels->width, dst->pixels->height);
 
-    status = pixman_region_intersect (&clip, &clip,
-	                              clipPict->hasCompositeClip ?
-                                      &clipPict->compositeClip :
-				      NULL);
-    if (status != PIXMAN_REGION_STATUS_SUCCESS)
-    {
-	pixman_region_fini (&clip);
-	return 1;
-    }
+    pixman_region_intersect (clip, clip, clipPict->pCompositeClip);
     if (clipPict->alphaMap)
     {
-	pixman_region_translate (&clip,
+	pixman_region_translate (clip,
 				 -clipPict->alphaOrigin.x,
 				 -clipPict->alphaOrigin.y);
-	status = pixman_region_intersect (&clip, &clip,
-		                          clipPict->alphaMap->hasCompositeClip ?
-					  &clipPict->alphaMap->compositeClip :
-					  NULL);
-	if (status != PIXMAN_REGION_STATUS_SUCCESS)
-	{
-	    pixman_region_fini (&clip);
-	    return 1;
-	}
-	pixman_region_translate (&clip,
+	pixman_region_intersect (clip, clip, clipPict->alphaMap->pCompositeClip);
+	pixman_region_translate (clip,
 				 clipPict->alphaOrigin.x,
 				 clipPict->alphaOrigin.y);
     }
@@ -242,32 +226,19 @@ pixman_color_rects (pixman_image_t	 *dst,
 	}
     }
 
-    pixman_region_init (&rects_as_region);
-
+    rects_as_region = pixman_region_create ();
     for (i = 0; i < nRect; i++)
     {
-	status = pixman_region_union_rect (&rects_as_region, &rects_as_region,
-				           rects[i].x, rects[i].y,
-					   rects[i].width, rects[i].height);
-	if (status != PIXMAN_REGION_STATUS_SUCCESS)
-	{
-	    break;
-	}
+	pixman_region_union_rect (rects_as_region, rects_as_region,
+				  rects[i].x, rects[i].y,
+				  rects[i].width, rects[i].height);
     }
 
-    /* any earlier failure will also trigger a failure here... */
-    status = pixman_region_intersect (&rects_as_region,
-	                              &rects_as_region,
-				      &clip);
-    pixman_region_fini (&clip);
-    if (status != PIXMAN_REGION_STATUS_SUCCESS)
-    {
-	pixman_region_fini (&rects_as_region);
-	return 1;
-    }
+    pixman_region_intersect (rects_as_region, rects_as_region, clip);
+    pixman_region_destroy (clip);
 
-    n_clipped_rects = pixman_region_num_rects (&rects_as_region);
-    clipped_rects = pixman_region_rects (&rects_as_region);
+    n_clipped_rects = pixman_region_num_rects (rects_as_region);
+    clipped_rects = pixman_region_rects (rects_as_region);
 
     if (dst->pixels->bpp == 8)
 	func = pixman_fill_rect_8bpp;
@@ -287,7 +258,7 @@ pixman_color_rects (pixman_image_t	 *dst,
 		 &pixel);
     }
 
-    pixman_region_fini (&rects_as_region);
+    pixman_region_destroy (rects_as_region);
 
     if (xoff || yoff)
     {
@@ -297,11 +268,9 @@ pixman_color_rects (pixman_image_t	 *dst,
 	    rects[i].y += yoff;
 	}
     }
-
-    return 0;
 }
 
-int pixman_fill_rectangle (pixman_operator_t	op,
+void pixman_fill_rectangle (pixman_operator_t	op,
 		      pixman_image_t		*dst,
 		      const pixman_color_t	*color,
 		      int		x,
@@ -316,17 +285,16 @@ int pixman_fill_rectangle (pixman_operator_t	op,
     rect.width = width;
     rect.height = height;
 
-    return pixman_fill_rectangles (op, dst, color, &rect, 1);
+    pixman_fill_rectangles (op, dst, color, &rect, 1);
 }
 
-int
+void
 pixman_fill_rectangles (pixman_operator_t		op,
 		  pixman_image_t		*dst,
 		  const pixman_color_t		*color,
 		  const pixman_rectangle_t	*rects,
 		  int			nRects)
 {
-    int ret = 1;
     pixman_color_t color_s = *color;
 
     if (color_s.alpha == 0xffff)
@@ -341,16 +309,12 @@ pixman_fill_rectangles (pixman_operator_t		op,
     {
       /* We cast away the constness of rects here, because pixman_color_rects
 	 temporarily modifies it */
-	ret = pixman_color_rects (dst, dst,
-	                          &color_s,
-				  nRects, (pixman_rectangle_t *)rects,
-				  0, 0);
-	if (!ret && dst->alphaMap)
-	    ret = pixman_color_rects (dst->alphaMap, dst,
-			              &color_s,
-				      nRects, (pixman_rectangle_t *)rects,
-			              dst->alphaOrigin.x,
-			              dst->alphaOrigin.y);
+	pixman_color_rects (dst, dst, &color_s, nRects, (pixman_rectangle_t *)rects, 0, 0);
+	if (dst->alphaMap)
+	    pixman_color_rects (dst->alphaMap, dst,
+			  &color_s, nRects, (pixman_rectangle_t *)rects,
+			  dst->alphaOrigin.x,
+			  dst->alphaOrigin.y);
     }
     else
     {
@@ -359,7 +323,7 @@ pixman_fill_rectangles (pixman_operator_t		op,
 	pixman_image_t		*src;
 	pixman_bits_t		pixel;
 
-	pixman_format_init_code (&rgbaFormat, PICT_a8r8g8b8);
+	pixman_format_init (&rgbaFormat, PICT_a8r8g8b8);
 
 	pixels = FbPixelsCreate (1, 1, rgbaFormat.depth);
 	if (!pixels)
@@ -393,12 +357,9 @@ pixman_fill_rectangles (pixman_operator_t		op,
 	}
 
 	pixman_image_destroy (src);
-	ret = 0;
 bail2:
 	FbPixelsDestroy (pixels);
 bail1:
 	;
     }
-
-    return ret;
 }
