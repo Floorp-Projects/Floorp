@@ -89,6 +89,9 @@ _cairo_error (cairo_status_t status)
 {
     assert (status > CAIRO_STATUS_SUCCESS &&
 	    status <= CAIRO_STATUS_LAST_STATUS);
+
+    /* let's force a crash */
+    *(int*)0 = 4;
 }
 
 /**
