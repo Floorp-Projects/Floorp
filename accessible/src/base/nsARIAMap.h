@@ -70,10 +70,10 @@ enum EValueRule
 };
 
 // Used for an nsStateMapEntry if a given state attribute supports "true" and "false"
-static const char *kBoolState = 0;
+#define kBoolState 0
 
 // Used in nsRoleMapEntry.state if no nsIAccessibleStates are automatic for a given role
-static const PRUint32 kNoReqStates = 0;
+#define kNoReqStates 0
 
 // For this name and value pair, what is the nsIAccessibleStates mapping.
 // nsStateMapEntry.state
