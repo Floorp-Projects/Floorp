@@ -202,12 +202,16 @@ nsIOService::Init()
     // TODO(darin): Load the Socket and DNS services lazily.
 
     mSocketTransportService = do_GetService(kSocketTransportServiceCID, &rv);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
         NS_WARNING("failed to get socket transport service");
+        return rv;
+    }
 
     mDNSService = do_GetService(kDNSServiceCID, &rv);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
         NS_WARNING("failed to get DNS service");
+        return rv;
+    }
 
     // XXX hack until xpidl supports error info directly (bug 13423)
     nsCOMPtr<nsIErrorService> errorService = do_GetService(kErrorServiceCID);
