@@ -132,20 +132,6 @@ nsLinkableAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
         *aState |= nsIAccessibleStates::STATE_TRAVERSED;
       }
     }
-    // Make sure we also include all the states of the parent link, such as focusable, focused, etc.
-    PRUint32 role;
-    GetRole(&role);
-    if (role != nsIAccessibleRole::ROLE_LINK) {
-      nsCOMPtr<nsIAccessible> parentAccessible(GetParent());
-      if (parentAccessible) {
-        PRUint32 orState = State(parentAccessible);
-        *aState |= orState;
-      }
-    }
-  }
-  if (mActionContent && !mActionContent->IsFocusable()) {
-    // Links must have href or tabindex
-    *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
   }
 
   // XXX What if we're in a contenteditable container?
