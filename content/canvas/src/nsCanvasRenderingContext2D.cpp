@@ -117,6 +117,8 @@
 #include "nsIScrollableView.h"
 #include "nsFrameManager.h"
 #include "nsRegion.h"
+
+#include "stdio.h"
 #endif
 
 #ifdef XP_WIN
@@ -1080,6 +1082,11 @@ nsCanvasRenderingContext2D::GetInputStream(const nsACString& aMimeType,
 {
     nsCString conid(NS_LITERAL_CSTRING("@mozilla.org/image/encoder;2?type="));
     conid += aMimeType;
+
+    if (cairo_status(mCairo)) {
+        fprintf (stderr, "Cairo error! %d %s\n", cairo_status(mCairo), cairo_status_to_string(cairo_status(mCairo)));
+        fflush (stderr);
+    }
 
     nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(conid.get());
     if (!encoder)
