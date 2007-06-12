@@ -482,6 +482,7 @@ protected:
   nsresult BindQueryClauseParameters(mozIStorageStatement* statement,
                                      PRInt32 aStartParameter,
                                      nsNavHistoryQuery* aQuery,
+                                     nsNavHistoryQueryOptions* aOptions,
                                      PRInt32* aParamCount);
 
   nsresult ResultsAsList(mozIStorageStatement* statement,

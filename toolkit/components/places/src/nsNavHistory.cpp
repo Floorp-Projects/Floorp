@@ -2226,7 +2226,7 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
   for (i = 0; i < aQueries.Count(); i ++) {
     PRInt32 clauseParameters = 0;
     rv = BindQueryClauseParameters(statement, numParameters,
-                                   aQueries[i], &clauseParameters);
+                                   aQueries[i], aOptions, &clauseParameters);
     NS_ENSURE_SUCCESS(rv, rv);
     numParameters += clauseParameters;
   }
@@ -3327,9 +3327,21 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
     (*aParamCount) ++;
   }
 
-  // only bookmarked, has no affect on bookmarks-only queries
-  if (aOptions->QueryType() != nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS &&
-      aQuery->OnlyBookmarked()) {
+  
+  if (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS) {
+    // Folders only have an affect on bookmark queries
+    // XXX: add multiple folders support
+    if (aQuery->Folders().Length() == 1) {
+      if (!aClause->IsEmpty())
+        *aClause += NS_LITERAL_CSTRING(" AND ");
+
+      nsCAutoString paramString;
+      parameterString(aStartParameter + *aParamCount, paramString);
+      (*aParamCount) ++;
+      *aClause += NS_LITERAL_CSTRING(" b.parent = ") + paramString;
+    }
+  } else if (aQuery->OnlyBookmarked()) {
+    // only bookmarked, has no affect on bookmarks-only queries
     if (!aClause->IsEmpty())
       *aClause += NS_LITERAL_CSTRING(" AND ");
 
@@ -3424,6 +3436,7 @@ nsresult
 nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
                                         PRInt32 aStartParameter,
                                         nsNavHistoryQuery* aQuery, // const
+                                        nsNavHistoryQueryOptions* aOptions,
                                         PRInt32* aParamCount)
 {
   nsresult rv;
@@ -3466,6 +3479,16 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
     (*aParamCount) ++;
   }
 
+  // folder
+  if (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS) {
+    // XXX: add multiple folders support
+    if (aQuery->Folders().Length() == 1) {
+      rv = statement->BindInt64Parameter(aStartParameter + *aParamCount,
+                                         aQuery->Folders()[0]);
+      NS_ENSURE_SUCCESS(rv, rv);
+      (*aParamCount) ++;
+    }
+  }
   // onlyBookmarked: nothing to bind
 
   // domain (see GetReversedHostname for more info on reversed host names)
