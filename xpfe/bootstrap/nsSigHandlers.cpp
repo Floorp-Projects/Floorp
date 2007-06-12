@@ -158,9 +158,12 @@ void beos_signal_handler(int signum) {
 }
 #endif
 
-#if defined(MOZ_WIDGET_GTK2) && (GLIB_MAJOR_VERSION > 2 || (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 6))
-
+#ifdef MOZ_WIDGET_GTK2
+// Need this include for version test below.
 #include <glib.h>
+#endif
+
+#if defined(MOZ_WIDGET_GTK2) && (GLIB_MAJOR_VERSION > 2 || (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 6))
 
 static GLogFunc orig_log_func = NULL;
 
