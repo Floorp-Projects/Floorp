@@ -202,6 +202,7 @@ struct nsCSSFont : public nsCSSStruct {
   nsCSSFont(const nsCSSFont& aCopy);
   ~nsCSSFont(void);
 
+  nsCSSValue mSystemFont;
   nsCSSValue mFamily;
   nsCSSValue mStyle;
   nsCSSValue mVariant;

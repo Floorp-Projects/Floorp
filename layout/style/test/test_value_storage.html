@@ -69,9 +69,14 @@ var gNotAccepted = {
   "list-style": [ "none disc outside" ],
 };
 
-var gSpecialFont = [
-  "caption", "icon", "menu", "message-box", "small-caption", "status-bar"
-];
+var gSystemFont = {
+  "caption": true,
+  "icon": true,
+  "menu": true,
+  "message-box": true,
+  "small-caption": true,
+  "status-bar": true,
+};
 
 var gBadCompute = {
   // output wrapped around to positive, in exponential notation
@@ -89,9 +94,6 @@ function xfail_accepted(property, value)
       gNotAccepted[property].indexOf(value) != -1)
     return true;
 
-  if (property == "font" && gSpecialFont.indexOf(value) != -1)
-    return true;
-
   return false;
 }
 
@@ -99,10 +101,6 @@ function xfail_accepted_split(property, subprop, value)
 {
   if (property in gNotAccepted &&
       gNotAccepted[property].indexOf(value) != -1)
-    return true;
-
-  if (property == "font" && subprop != "font-family" &&
-      gSpecialFont.indexOf(value) != -1)
     return true;
 
   return false;
@@ -155,13 +153,6 @@ function xfail_idserparse_compute(property, value)
 
 function xfail_idsersplitparse_compute(property, subprop, value, step1subcomp)
 {
-  // These failures depend on what the system fonts actually are,
-  // since they show up in computed style but not serialization!
-  if (property == "font" &&
-      gSpecialFont.indexOf(value) != -1 &&
-      gCSSProperties[subprop].initial_values.indexOf(step1subcomp) == -1)
-    return true;
-
   return false;
 }
 
@@ -247,7 +238,10 @@ function test_property(property)
            property + ": " + value + "'");
     }
 
-    if ("subproperties" in info) {
+    if ("subproperties" in info &&
+        // Using setProperty over subproperties is not sufficient for
+        // system fonts, since the shorthand does more than its parts.
+        (property != "font" || !(value in gSystemFont))) {
       gDeclaration.removeProperty(property);
       for (idx in info.subproperties) {
         var subprop = info.subproperties[idx];
