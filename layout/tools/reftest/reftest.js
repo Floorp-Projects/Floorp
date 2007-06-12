@@ -45,6 +45,8 @@ const NS_LOCAL_FILE_CONTRACTID = "@mozilla.org/file/local;1";
 const IO_SERVICE_CONTRACTID = "@mozilla.org/network/io-service;1";
 const NS_LOCALFILEINPUTSTREAM_CONTRACTID =
           "@mozilla.org/network/file-input-stream;1";
+const NS_SCRIPTSECURITYMANAGER_CONTRACTID =
+          "@mozilla.org/scriptsecuritymanager;1";
 
 const LOAD_FAILURE_TIMEOUT = 10000; // ms
 
@@ -98,6 +100,9 @@ function ReadManifest(aURL)
 {
     var ios = CC[IO_SERVICE_CONTRACTID].getService(CI.nsIIOService);
     var listURL = aURL.QueryInterface(CI.nsIFileURL);
+
+    var secMan = CC[NS_SCRIPTSECURITYMANAGER_CONTRACTID]
+                     .getService(CI.nsIScriptSecurityManager);
 
     var fis = CC[NS_LOCALFILEINPUTSTREAM_CONTRACTID].
                   createInstance(CI.nsIFileInputStream);
@@ -154,14 +159,23 @@ function ReadManifest(aURL)
         if (items[0] == "include") {
             if (items.length != 2)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo;
-            ReadManifest(ios.newURI(items[1], null, listURL));
+            var incURI = ios.newURI(items[1], null, listURL);
+            secMan.checkLoadURI(aURL, incURI,
+                                CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+            ReadManifest(incURI);
         } else if (items[0] == "==" || items[0] == "!=") {
             if (items.length != 3)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo;
+            var testURI = ios.newURI(items[1], null, listURL);
+            var refURI = ios.newURI(items[2], null, listURL);
+            secMan.checkLoadURI(aURL, testURI,
+                                CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+            secMan.checkLoadURI(aURL, refURI,
+                                CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             gURLs.push( { equal: (items[0] == "=="),
                           expected: expected_status,
-                          url1: ios.newURI(items[1], null, listURL),
-                          url2: ios.newURI(items[2], null, listURL)} );
+                          url1: testURI,
+                          url2: refURI} );
         } else {
             throw "Error in manifest file " + aURL.spec + " line " + lineNo;
         }
