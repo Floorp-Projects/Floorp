@@ -611,10 +611,12 @@ nsDownloadManager::GetDownload(PRUint32 aID, nsIDownload **aDownloadItem)
 {
   nsDownload *itm = FindDownload(aID);
 
+  nsRefPtr<nsDownload> dl;
   if (!itm) {
-    *aDownloadItem = nsnull;
+    nsresult rv = GetDownloadFromDB(aID, getter_AddRefs(dl));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    return NS_ERROR_FAILURE;
+    itm = dl.get();
   }
   
   NS_ADDREF(*aDownloadItem = itm);

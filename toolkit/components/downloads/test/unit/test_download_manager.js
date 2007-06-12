@@ -42,12 +42,11 @@ const dm = Cc["@mozilla.org/download-manager;1"].getService(nsIDownloadManager);
 
 function test_get_download_empty_queue()
 {
-  print("*** DOWNLOAD MANAGER TEST - test_get_download_empty_queue");
   try {
     dm.getDownload(0);
     do_throw("Hey!  We expect to get an excpetion with this!");
   } catch(e) {
-    do_check_eq(Components.lastResult, Cr.NS_ERROR_FAILURE);
+    do_check_eq(Components.lastResult, Cr.NS_ERROR_NOT_AVAILABLE);
   }
 }
 
