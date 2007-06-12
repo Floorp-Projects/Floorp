@@ -877,8 +877,8 @@ js_IndexAtom(JSContext *cx, JSAtom *atom, JSAtomList *al)
             if (!ale)
                 return NULL;
             ALE_SET_ATOM(ale, atom);
-            ALE_SET_NEXT(ale, al->list);
-            al->list = ale;
+            ale->entry.next = al->list;
+            al->list = &ale->entry;
         } else {
             /* We want to hash.  Have we already made a hash table? */
             if (!al->table) {
@@ -897,12 +897,12 @@ js_IndexAtom(JSContext *cx, JSAtom *atom, JSAtomList *al)
                 al->table->nentries = al->count;
 
                 /* Insert each ale on al->list into the new hash table. */
-                for (ale2 = al->list; ale2; ale2 = next) {
+                for (ale2 = (JSAtomListElement *)al->list; ale2; ale2 = next) {
                     next = ALE_NEXT(ale2);
                     ale2->entry.keyHash = ALE_ATOM(ale2)->number;
                     hep = JS_HashTableRawLookup(al->table, ale2->entry.keyHash,
                                                 ale2->entry.key);
-                    ALE_SET_NEXT(ale2, *hep);
+                    ale2->entry.next = *hep;
                     *hep = &ale2->entry;
                 }
                 al->list = NULL;
@@ -967,7 +967,7 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
 #ifdef DEBUG
     JS_ATOMIC_INCREMENT(&js_atom_map_count);
 #endif
-    ale = al->list;
+    ale = (JSAtomListElement *)al->list;
     if (!ale && !al->table) {
         map->vector = NULL;
         map->length = 0;
