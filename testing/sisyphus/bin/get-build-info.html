@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Get Build Information</title>
+<script type="text/javascript" src="quit.js"></script>
+<script type="text/javascript" src="appinfo.js"></script>
+</head>
+<body>
+<h1>Get Build Information</h1>
+<script type="text/javascript">
+
+
+var appInfoSource = (new AppInfo()).toSource();
+
+document.write(appInfoSource);
+dump(appInfoSource);
+
+goQuitApplication();
+</script>
+</body>
+</html>
