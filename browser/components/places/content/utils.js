@@ -41,9 +41,9 @@ function LOG(str) {
   dump("*** " + str + "\n");
 }
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cr = Components.results;
+var Ci = Components.interfaces;
+var Cc = Components.classes;
+var Cr = Components.results;
 
 const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
