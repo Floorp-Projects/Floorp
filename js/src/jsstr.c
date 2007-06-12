@@ -2688,6 +2688,8 @@ js_ValueToSource(JSContext *cx, jsval v)
     JSTempValueRooter tvr;
     JSString *str;
 
+    if (JSVAL_IS_VOID(v))
+        return ATOM_TO_STRING(cx->runtime->atomState.void0Atom);
     if (JSVAL_IS_STRING(v))
         return js_QuoteString(cx, JSVAL_TO_STRING(v), '"');
     if (JSVAL_IS_PRIMITIVE(v)) {

@@ -338,6 +338,7 @@ js_InitPinnedAtoms(JSContext *cx, JSAtomState *state)
     FROB(toStringAtom,            js_toString_str);
     FROB(toLocaleStringAtom,      js_toLocaleString_str);
     FROB(valueOfAtom,             js_valueOf_str);
+    FROB(void0Atom,               "(void 0)");
 
 #if JS_HAS_XML_SUPPORT
     FROB(etagoAtom,               js_etago_str);
