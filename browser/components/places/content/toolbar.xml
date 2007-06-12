@@ -1029,12 +1029,14 @@
           nsDragAndDrop.dragExit(event, this._DNDObserver);
       ]]></handler>
       <handler event="popupshowing"><![CDATA[
-        if (event.target.parentNode.localName == "toolbarbutton" &&
+        var targetParent = event.originalTarget.parentNode;
+        if (targetParent.localName == "toolbarbutton" &&
             !PlacesControllerDragHelper.getSession())
-          this._openedMenuButton = event.target.parentNode;
+          this._openedMenuButton = targetParent;
       ]]></handler>
       <handler event="popuphidden"><![CDATA[
-        if (event.target.parentNode.localName == "toolbarbutton" &&
+        var targetParent = event.originalTarget.parentNode;
+        if (targetParent.localName == "toolbarbutton" &&
             !PlacesControllerDragHelper.getSession())
           this._openedMenuButton = null;
       ]]></handler>
@@ -1042,9 +1044,9 @@
         if (this._openedMenuButton == null || PlacesControllerDragHelper.getSession())
           return;
       
-        var target = event.target;
+        var target = event.originalTarget;
         if (this._openedMenuButton != target &&
-            target.nodeName == "toolbarbutton" &&
+            target.localName == "toolbarbutton" &&
             target.type == "menu") {
           this._openedMenuButton.open = false;
           target.open = true;
