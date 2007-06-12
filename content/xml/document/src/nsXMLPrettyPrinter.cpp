@@ -155,9 +155,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
     NS_ASSERTION(xblDoc, "xml document doesn't implement nsIDOMDocumentXBL");
     NS_ENSURE_TRUE(xblDoc, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIDOMDocument> dummy;
-    xblDoc->LoadBindingDocument(NS_LITERAL_STRING("chrome://global/content/xml/XMLPrettyPrint.xml"),
-                                getter_AddRefs(dummy));
+    xblDoc->LoadBindingDocument(NS_LITERAL_STRING("chrome://global/content/xml/XMLPrettyPrint.xml"));
 
     nsCOMPtr<nsIDOMElement> rootElem;
     sourceDocument->GetDocumentElement(getter_AddRefs(rootElem));

@@ -156,8 +156,7 @@ public:
 
   nsresult AddLayeredBinding(nsIContent* aContent, nsIURI* aURL);
   nsresult RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL);
-  nsresult LoadBindingDocument(nsIDocument* aBoundDoc, nsIURI* aURL,
-                               nsIDocument** aResult);
+  nsresult LoadBindingDocument(nsIDocument* aBoundDoc, nsIURI* aURL);
 
   nsresult AddToAttachedQueue(nsXBLBinding* aBinding);
   void ProcessAttachedQueue();
