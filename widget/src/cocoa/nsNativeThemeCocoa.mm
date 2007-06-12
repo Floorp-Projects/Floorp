@@ -184,12 +184,16 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
     [image setSize:NSMakeSize(offscreenWidth, inBoxRect.size.height)];
 
     // render to the given CGContextRef
-    //[NSGraphicsContext saveGraphicsState];
-    // we can't use graphicsContextWithGraphicsPort now because that is 10.4 only, this is a band-aid
-    //[NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAX_OS_X_VERSION_10_4
+    // graphicsContextWithGraphicsPort is only available on 10.4+
+    [NSGraphicsContext saveGraphicsState];
+    [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
+#endif
     [image compositeToPoint:NSMakePoint(inBoxRect.origin.x, inBoxRect.origin.y + inBoxRect.size.height)
                   operation:NSCompositeSourceOver];
-    //[NSGraphicsContext restoreGraphicsState];
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAX_OS_X_VERSION_10_4
+    [NSGraphicsContext restoreGraphicsState];
+#endif
     [image release];
   }
   else {
