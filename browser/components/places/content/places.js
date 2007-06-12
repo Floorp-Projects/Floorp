@@ -1138,6 +1138,7 @@ var ViewMenu = {
     var result = document.getElementById("placeContent").getResult();
     if (!aColumnID && !aDirection) {
       result.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
+      OptionsFilter.update(result);
       return;
     }
 
@@ -1191,6 +1192,7 @@ var ViewMenu = {
     }
     result.sortingAnnotation = sortingAnnotation;
     result.sortingMode = sortingMode;
+    OptionsFilter.update(result);
   }
 };
 
