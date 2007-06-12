@@ -36,8 +36,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 // This tests the migration code to make sure we properly migrate downloads.rdf
-// Also tests cleanUp function of DM since we have a good number of entries to
-// clean up after importing.
+// Also tests cleanUp and getDownload (from the database) since we have a good
+// number of entries in the database after importing.
 
 importDownloadsFile("downloads.rdf");
 
@@ -73,6 +73,15 @@ function test_random_download()
   stmt.reset();
 }
 
+// yey - we have entries in the DM to test this!
+function test_dm_getDownload()
+{
+  // this will get it from the database
+  var dl = dm.getDownload(1);
+  
+  do_check_eq("CVS-Contributor-Form.pdf", dl.displayName);
+}
+
 // This provides us with a lot of download entries to test the cleanup function
 function test_dm_cleanup()
 {
@@ -87,7 +96,8 @@ function test_dm_cleanup()
   stmt.reset();
 }
 
-var tests = [test_count_entries, test_random_download, test_dm_cleanup];
+var tests = [test_count_entries, test_random_download, test_dm_getDownload,
+             test_dm_cleanup];
 
 function run_test()
 {
