@@ -367,6 +367,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
   case NS_THEME_TEXTFIELD:
   case NS_THEME_TEXTFIELD_MULTILINE:
   case NS_THEME_DROPDOWN_TEXTFIELD:
+  case NS_THEME_LISTBOX:
     aGtkWidgetType = MOZ_GTK_ENTRY;
     break;
   case NS_THEME_DROPDOWN:
@@ -985,7 +986,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_STATUSBAR:
   case NS_THEME_STATUSBAR_PANEL:
     // case NS_THEME_RESIZER:  (n/a for gtk)
-    // case NS_THEME_LISTBOX:
+  case NS_THEME_LISTBOX:
     // case NS_THEME_LISTBOX_LISTITEM:
     // case NS_THEME_TREEVIEW:
     // case NS_THEME_TREEVIEW_TREEITEM:
