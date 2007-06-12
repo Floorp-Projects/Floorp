@@ -115,11 +115,14 @@ enum {
                        markedRange:(NSRange)markRange
                        doCommit:(BOOL)doCommit;
 
-// convert from one event system to the other for event dispatching
-- (void) convertEvent:(NSEvent*)inEvent toGeckoEvent:(nsInputEvent*)outGeckoEvent;
+// do generic gecko event setup with a generic cocoa event. accepts nil inEvent.
+- (void) convertGenericCocoaEvent:(NSEvent*)inEvent toGeckoEvent:(nsInputEvent*)outGeckoEvent;
 
-  // create a gecko key event out of a cocoa event
-- (void) convertKeyEvent:(NSEvent*)aKeyEvent toGeckoEvent:(nsKeyEvent*)outGeckoEvent;
+// set up a gecko mouse event based on a cocoa mouse event
+- (void) convertCocoaMouseEvent:(NSEvent*)aMouseEvent toGeckoEvent:(nsInputEvent*)outGeckoEvent;
+
+// set up a gecko key event based on a cocoa key event
+- (void) convertCocoaKeyEvent:(NSEvent*)aKeyEvent toGeckoEvent:(nsKeyEvent*)outGeckoEvent;
 
 - (NSMenu*)contextMenu;
 - (TopLevelWindowData*)ensureWindowData;
@@ -1715,7 +1718,7 @@ nsChildView::DragEvent(PRUint32 aMessage, PRInt16 aMouseGlobalX, PRInt16 aMouseG
 
   // set up gecko event
   nsMouseEvent geckoEvent(PR_TRUE, aMessage, nsnull, nsMouseEvent::eReal);
-  [(ChildView*)mView convertEvent:nil toGeckoEvent:&geckoEvent];
+  [(ChildView*)mView convertGenericCocoaEvent:nil toGeckoEvent:&geckoEvent];
 
   // Use our own coordinates in the gecko event.
   // Convert event from gecko global coords to gecko view coords.
@@ -2379,13 +2382,14 @@ NSEvent* globalDragEvent = nil;
     return;
 
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_DOWN, nsnull, nsMouseEvent::eReal);
-  [self convertEvent:theEvent toGeckoEvent:&geckoEvent];
+  [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.clickCount = [theEvent clickCount];
   if (modifierFlags & NSControlKeyMask)
     geckoEvent.button = nsMouseEvent::eRightButton;
   else
     geckoEvent.button = nsMouseEvent::eLeftButton;
 
+  // create native EventRecord for use by plugins
   EventRecord macEvent;
   macEvent.what = mouseDown;
   macEvent.message = 0;
@@ -2394,14 +2398,13 @@ NSEvent* globalDragEvent = nil;
   macEvent.modifiers = GetCurrentKeyModifiers();
   geckoEvent.nativeMsg = &macEvent;
 
-  // send event into Gecko by going directly to the widget
   mGeckoChild->DispatchMouseEvent(geckoEvent);
 
   // if this is a right button click (either actual right click or ctrl-click) send
   // a context menu event
   if (geckoEvent.button == nsMouseEvent::eRightButton) {
     nsMouseEvent geckoCMEvent(PR_TRUE, NS_CONTEXTMENU, nsnull, nsMouseEvent::eReal);
-    [self convertEvent:theEvent toGeckoEvent:&geckoCMEvent];
+    [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoCMEvent];
     geckoCMEvent.nativeMsg = &macEvent;
     geckoCMEvent.isControl = ((modifierFlags & NSControlKeyMask) != 0);
     mGeckoChild->DispatchMouseEvent(geckoCMEvent);
@@ -2418,9 +2421,14 @@ NSEvent* globalDragEvent = nil;
     [self stopHandScroll:theEvent];
     return;
   }
-  nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_UP, nsnull, nsMouseEvent::eReal);
-  [self convertEvent:theEvent toGeckoEvent:&geckoEvent];
 
+  if (!mGeckoChild)
+    return;
+
+  nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_UP, nsnull, nsMouseEvent::eReal);
+  [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
+
+  // create native EventRecord for use by plugins
   EventRecord macEvent;
   macEvent.what = mouseUp;
   macEvent.message = 0;
@@ -2429,10 +2437,7 @@ NSEvent* globalDragEvent = nil;
   macEvent.modifiers = GetCurrentKeyModifiers();
   geckoEvent.nativeMsg = &macEvent;
 
-  // send event into Gecko by going directly to the
-  // the widget.
-  if (mGeckoChild)
-    mGeckoChild->DispatchMouseEvent(geckoEvent);
+  mGeckoChild->DispatchMouseEvent(geckoEvent);
 }
 
 
@@ -2444,11 +2449,12 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
 {
   if (!widget || !localEventLocation)
     return nsEventStatus_eIgnore;
-  
-  nsEventStatus status;
+
   nsMouseEvent event(isTrusted, msg, widget, aReason);
   event.refPoint.x = nscoord((PRInt32)localEventLocation->x);
   event.refPoint.y = nscoord((PRInt32)localEventLocation->y);
+
+  nsEventStatus status;
   widget->DispatchEvent(&event, status);
   return status;
 }
@@ -2557,8 +2563,9 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
     return;
 
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
-  [self convertEvent:theEvent toGeckoEvent:&geckoEvent];
+  [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
 
+  // create native EventRecord for use by plugins
   EventRecord macEvent;
   macEvent.what = nullEvent;
   macEvent.message = 0;
@@ -2568,7 +2575,6 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
   macEvent.modifiers = GetCurrentKeyModifiers();
   geckoEvent.nativeMsg = &macEvent;
 
-  // send event into Gecko by going directly to the the widget.
   mGeckoChild->DispatchMouseEvent(geckoEvent);
 }
 
@@ -2585,8 +2591,9 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
   globalDragEvent = theEvent;
 
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
-  [self convertEvent:theEvent toGeckoEvent:&geckoEvent];
+  [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
 
+  // create native EventRecord for use by plugins
   EventRecord macEvent;
   macEvent.what = nullEvent;
   macEvent.message = 0;
@@ -2594,9 +2601,7 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
   ::GetGlobalMouse(&macEvent.where);
   macEvent.modifiers = btnState | GetCurrentKeyModifiers();
   geckoEvent.nativeMsg = &macEvent;
-  
-  // send event into Gecko by going directly to the
-  // the widget.
+
   mGeckoChild->DispatchMouseEvent(geckoEvent);    
 
   globalDragView = nil;
@@ -2622,10 +2627,11 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
   
   // The right mouse went down, fire off a right mouse down event to gecko
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_DOWN, nsnull, nsMouseEvent::eReal);
-  [self convertEvent:theEvent toGeckoEvent:&geckoEvent];
+  [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eRightButton;
+  geckoEvent.clickCount = [theEvent clickCount];
 
-  // plugins need a native event here
+  // create native EventRecord for use by plugins
   EventRecord macEvent;
   macEvent.what = mouseDown;
   macEvent.message = 0;
@@ -2634,7 +2640,6 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
   macEvent.modifiers = controlKey;  // fake a context menu click
   geckoEvent.nativeMsg = &macEvent;
 
-  geckoEvent.clickCount = [theEvent clickCount];
   PRBool handled = mGeckoChild->DispatchMouseEvent(geckoEvent);
   if (!handled)
     [super rightMouseDown:theEvent]; // let the superview do context menu stuff
@@ -2644,10 +2649,11 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
 - (void)rightMouseUp:(NSEvent *)theEvent
 {
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_UP, nsnull, nsMouseEvent::eReal);
-  [self convertEvent:theEvent toGeckoEvent:&geckoEvent];
+  [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eRightButton;
+  geckoEvent.clickCount = [theEvent clickCount];
 
-  // plugins need a native event here
+  // create native EventRecord for use by plugins
   EventRecord macEvent;
   macEvent.what = mouseUp;
   macEvent.message = 0;
@@ -2656,7 +2662,6 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
   macEvent.modifiers = controlKey;  // fake a context menu click
   geckoEvent.nativeMsg = &macEvent;
 
-  geckoEvent.clickCount = [theEvent clickCount];
   PRBool handled = mGeckoChild->DispatchMouseEvent(geckoEvent);
   if (!handled)
     [super rightMouseUp:theEvent];
@@ -2666,12 +2671,10 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
 - (void)otherMouseDown:(NSEvent *)theEvent
 {
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_DOWN, nsnull, nsMouseEvent::eReal);
-  [self convertEvent:theEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.clickCount = [theEvent clickCount];
+  [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eMiddleButton;
-  
-  // send event into Gecko by going directly to the
-  // the widget.
+  geckoEvent.clickCount = [theEvent clickCount];
+
   mGeckoChild->DispatchMouseEvent(geckoEvent);
 }
 
@@ -2679,11 +2682,9 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
 - (void)otherMouseUp:(NSEvent *)theEvent
 {
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_UP, nsnull, nsMouseEvent::eReal);
-  [self convertEvent:theEvent toGeckoEvent:&geckoEvent];
+  [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eMiddleButton;
 
-  // send event into Gecko by going directly to the
-  // the widget.
   mGeckoChild->DispatchMouseEvent(geckoEvent);
 }
 
@@ -2707,7 +2708,7 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
     return;
   
   nsMouseScrollEvent geckoEvent(PR_TRUE, NS_MOUSE_SCROLL, nsnull);
-  [self convertEvent:theEvent toGeckoEvent:&geckoEvent];
+  [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.scrollFlags |= inAxis;
 
   // Gecko only understands how to scroll by an integer value.  Using floor
@@ -2794,7 +2795,7 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
   
   // Fire the context menu event into Gecko.
   nsMouseEvent geckoEvent(PR_TRUE, NS_CONTEXTMENU, nsnull, nsMouseEvent::eReal);
-  [self convertEvent:theEvent toGeckoEvent:&geckoEvent];
+  [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eRightButton;
   mGeckoChild->DispatchMouseEvent(geckoEvent);
   
@@ -2825,33 +2826,6 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
     [windowData release];
   }
   return windowData;
-}
-
-
-// Set up a gecko event possibly based on a native event.
-// Note that it is OK for inEvent to be nil - do a check if you need it!
-- (void) convertEvent:(NSEvent*)inEvent toGeckoEvent:(nsInputEvent*)outGeckoEvent
-{
-  outGeckoEvent->widget = [self widget];
-  outGeckoEvent->time = PR_IntervalNow();
-  outGeckoEvent->nativeMsg = inEvent;
-
-  if (inEvent) {
-    // set up event location
-    if (outGeckoEvent->eventStructType != NS_KEY_EVENT) {    
-      // convert point to view coordinate system
-      NSPoint localPoint = [self convertPoint:[inEvent locationInWindow] fromView:nil];
-      outGeckoEvent->refPoint.x = NS_STATIC_CAST(nscoord, localPoint.x);
-      outGeckoEvent->refPoint.y = NS_STATIC_CAST(nscoord, localPoint.y);
-    }
-
-    // set up modifier keys
-    unsigned int modifiers = [inEvent modifierFlags];
-    outGeckoEvent->isShift   = ((modifiers & NSShiftKeyMask) != 0);
-    outGeckoEvent->isControl = ((modifiers & NSControlKeyMask) != 0);
-    outGeckoEvent->isAlt     = ((modifiers & NSAlternateKeyMask) != 0);
-    outGeckoEvent->isMeta    = ((modifiers & NSCommandKeyMask) != 0);
-  }
 }
 
 
@@ -2921,6 +2895,331 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     macEvent.when = ::TickCount();
     ::GetGlobalMouse(&macEvent.where);
     macEvent.modifiers = ::GetCurrentKeyModifiers();
+}
+
+// Key code constants
+enum
+{
+  kEscapeKeyCode      = 0x35,
+  kCommandKeyCode     = 0x37,
+  kShiftKeyCode       = 0x38,
+  kCapsLockKeyCode    = 0x39,
+  kControlKeyCode     = 0x3B,
+  kOptionkeyCode      = 0x3A, // both left and right option keys
+  kClearKeyCode       = 0x47,
+  
+  // function keys
+  kF1KeyCode          = 0x7A,
+  kF2KeyCode          = 0x78,
+  kF3KeyCode          = 0x63,
+  kF4KeyCode          = 0x76,
+  kF5KeyCode          = 0x60,
+  kF6KeyCode          = 0x61,
+  kF7KeyCode          = 0x62,
+  kF8KeyCode          = 0x64,
+  kF9KeyCode          = 0x65,
+  kF10KeyCode         = 0x6D,
+  kF11KeyCode         = 0x67,
+  kF12KeyCode         = 0x6F,
+  kF13KeyCode         = 0x69,
+  kF14KeyCode         = 0x6B,
+  kF15KeyCode         = 0x71,
+  
+  kPrintScreenKeyCode = kF13KeyCode,
+  kScrollLockKeyCode  = kF14KeyCode,
+  kPauseKeyCode       = kF15KeyCode,
+  
+  // keypad
+  kKeypad0KeyCode     = 0x52,
+  kKeypad1KeyCode     = 0x53,
+  kKeypad2KeyCode     = 0x54,
+  kKeypad3KeyCode     = 0x55,
+  kKeypad4KeyCode     = 0x56,
+  kKeypad5KeyCode     = 0x57,
+  kKeypad6KeyCode     = 0x58,
+  kKeypad7KeyCode     = 0x59,
+  kKeypad8KeyCode     = 0x5B,
+  kKeypad9KeyCode     = 0x5C,
+  
+  kKeypadMultiplyKeyCode  = 0x43,
+  kKeypadAddKeyCode       = 0x45,
+  kKeypadSubtractKeyCode  = 0x4E,
+  kKeypadDecimalKeyCode   = 0x41,
+  kKeypadDivideKeyCode    = 0x4B,
+  kKeypadEqualsKeyCode    = 0x51, // no correpsonding gecko key code
+  kEnterKeyCode           = 0x4C,
+  kReturnKeyCode          = 0x24,
+  kPowerbookEnterKeyCode  = 0x34, // Enter on Powerbook's keyboard is different
+  
+  kInsertKeyCode          = 0x72, // also help key
+  kDeleteKeyCode          = 0x75, // also forward delete key
+  kTabKeyCode             = 0x30,
+  kBackspaceKeyCode       = 0x33,
+  kHomeKeyCode            = 0x73, 
+  kEndKeyCode             = 0x77,
+  kPageUpKeyCode          = 0x74,
+  kPageDownKeyCode        = 0x79,
+  kLeftArrowKeyCode       = 0x7B,
+  kRightArrowKeyCode      = 0x7C,
+  kUpArrowKeyCode         = 0x7E,
+  kDownArrowKeyCode       = 0x7D
+};
+
+
+static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, NSString* characters)
+{
+  PRUint32 geckoKeyCode = 0;
+  PRUint8 charCode = 0;
+  if ([characters length])
+    charCode = [characters characterAtIndex: 0];
+  
+  switch (keyCode)
+  {
+    // modifiers. We don't get separate events for these
+    case kEscapeKeyCode:        geckoKeyCode = NS_VK_ESCAPE;         break;
+    case kCommandKeyCode:       geckoKeyCode = NS_VK_META;           break;
+    case kShiftKeyCode:         geckoKeyCode = NS_VK_SHIFT;          break;
+    case kCapsLockKeyCode:      geckoKeyCode = NS_VK_CAPS_LOCK;      break;
+    case kControlKeyCode:       geckoKeyCode = NS_VK_CONTROL;        break;
+    case kOptionkeyCode:        geckoKeyCode = NS_VK_ALT;            break;
+    case kClearKeyCode:         geckoKeyCode = NS_VK_CLEAR;          break;
+      
+      // function keys
+    case kF1KeyCode:            geckoKeyCode = NS_VK_F1;             break;
+    case kF2KeyCode:            geckoKeyCode = NS_VK_F2;             break;
+    case kF3KeyCode:            geckoKeyCode = NS_VK_F3;             break;
+    case kF4KeyCode:            geckoKeyCode = NS_VK_F4;             break;
+    case kF5KeyCode:            geckoKeyCode = NS_VK_F5;             break;
+    case kF6KeyCode:            geckoKeyCode = NS_VK_F6;             break;
+    case kF7KeyCode:            geckoKeyCode = NS_VK_F7;             break;
+    case kF8KeyCode:            geckoKeyCode = NS_VK_F8;             break;
+    case kF9KeyCode:            geckoKeyCode = NS_VK_F9;             break;
+    case kF10KeyCode:           geckoKeyCode = NS_VK_F10;            break;
+    case kF11KeyCode:           geckoKeyCode = NS_VK_F11;            break;
+    case kF12KeyCode:           geckoKeyCode = NS_VK_F12;            break;
+      // case kF13KeyCode:           geckoKeyCode = NS_VK_F13;            break;    // clash with the 3 below
+      // case kF14KeyCode:           geckoKeyCode = NS_VK_F14;            break;
+      // case kF15KeyCode:           geckoKeyCode = NS_VK_F15;            break;
+    case kPauseKeyCode:         geckoKeyCode = NS_VK_PAUSE;          break;
+    case kScrollLockKeyCode:    geckoKeyCode = NS_VK_SCROLL_LOCK;    break;
+    case kPrintScreenKeyCode:   geckoKeyCode = NS_VK_PRINTSCREEN;    break;
+      
+      // keypad
+    case kKeypad0KeyCode:       geckoKeyCode = NS_VK_NUMPAD0;        break;
+    case kKeypad1KeyCode:       geckoKeyCode = NS_VK_NUMPAD1;        break;
+    case kKeypad2KeyCode:       geckoKeyCode = NS_VK_NUMPAD2;        break;
+    case kKeypad3KeyCode:       geckoKeyCode = NS_VK_NUMPAD3;        break;
+    case kKeypad4KeyCode:       geckoKeyCode = NS_VK_NUMPAD4;        break;
+    case kKeypad5KeyCode:       geckoKeyCode = NS_VK_NUMPAD5;        break;
+    case kKeypad6KeyCode:       geckoKeyCode = NS_VK_NUMPAD6;        break;
+    case kKeypad7KeyCode:       geckoKeyCode = NS_VK_NUMPAD7;        break;
+    case kKeypad8KeyCode:       geckoKeyCode = NS_VK_NUMPAD8;        break;
+    case kKeypad9KeyCode:       geckoKeyCode = NS_VK_NUMPAD9;        break;
+      
+    case kKeypadMultiplyKeyCode:  geckoKeyCode = NS_VK_MULTIPLY;     break;
+    case kKeypadAddKeyCode:       geckoKeyCode = NS_VK_ADD;          break;
+    case kKeypadSubtractKeyCode:  geckoKeyCode = NS_VK_SUBTRACT;     break;
+    case kKeypadDecimalKeyCode:   geckoKeyCode = NS_VK_DECIMAL;      break;
+    case kKeypadDivideKeyCode:    geckoKeyCode = NS_VK_DIVIDE;       break;
+      
+      // these may clash with forward delete and help
+    case kInsertKeyCode:        geckoKeyCode = NS_VK_INSERT;         break;
+    case kDeleteKeyCode:        geckoKeyCode = NS_VK_DELETE;         break;
+      
+    case kBackspaceKeyCode:     geckoKeyCode = NS_VK_BACK;           break;
+    case kTabKeyCode:           geckoKeyCode = NS_VK_TAB;            break;
+    case kHomeKeyCode:          geckoKeyCode = NS_VK_HOME;           break;
+    case kEndKeyCode:           geckoKeyCode = NS_VK_END;            break;
+    case kPageUpKeyCode:        geckoKeyCode = NS_VK_PAGE_UP;        break;
+    case kPageDownKeyCode:      geckoKeyCode = NS_VK_PAGE_DOWN;      break;
+    case kLeftArrowKeyCode:     geckoKeyCode = NS_VK_LEFT;           break;
+    case kRightArrowKeyCode:    geckoKeyCode = NS_VK_RIGHT;          break;
+    case kUpArrowKeyCode:       geckoKeyCode = NS_VK_UP;             break;
+    case kDownArrowKeyCode:     geckoKeyCode = NS_VK_DOWN;           break;
+      
+    default:
+      if (aKeyEvent->isControl)
+        charCode += 64;
+      
+      // if we haven't gotten the key code already, look at the char code
+      switch (charCode)
+      {
+        case kReturnCharCode:       geckoKeyCode = NS_VK_RETURN;        break;
+        case kEnterCharCode:        geckoKeyCode = NS_VK_RETURN;        break;
+        case ' ':                   geckoKeyCode = NS_VK_SPACE;         break;
+        case ';':                   geckoKeyCode = NS_VK_SEMICOLON;     break;
+        case '=':                   geckoKeyCode = NS_VK_EQUALS;        break;
+        case ',':                   geckoKeyCode = NS_VK_COMMA;         break;
+        case '.':                   geckoKeyCode = NS_VK_PERIOD;        break;
+        case '/':                   geckoKeyCode = NS_VK_SLASH;         break;
+        case '`':                   geckoKeyCode = NS_VK_BACK_QUOTE;    break;
+        case '{':
+        case '[':                   geckoKeyCode = NS_VK_OPEN_BRACKET;  break;
+        case '\\':                  geckoKeyCode = NS_VK_BACK_SLASH;    break;
+        case '}':
+        case ']':                   geckoKeyCode = NS_VK_CLOSE_BRACKET; break;
+        case '\'':
+        case '"':                   geckoKeyCode = NS_VK_QUOTE;         break;
+          
+        default:
+          if (charCode >= '0' && charCode <= '9') // numerals
+            geckoKeyCode = charCode;
+          else if (charCode >= 'a' && charCode <= 'z') // lowercase
+            geckoKeyCode = toupper(charCode);
+          else if (charCode >= 'A' && charCode <= 'Z') // uppercase
+            geckoKeyCode = charCode;
+            break;
+      }
+  }
+  
+  return geckoKeyCode;
+}
+
+
+static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
+{
+  PRBool  isSpecial;
+  
+  // this table is used to determine which keys are special and should not generate a charCode
+  switch (macKeyCode)
+  {
+    // modifiers - we don't get separate events for these yet
+    case kEscapeKeyCode:
+    case kShiftKeyCode:
+    case kCommandKeyCode:
+    case kCapsLockKeyCode:
+    case kControlKeyCode:
+    case kOptionkeyCode:
+    case kClearKeyCode:
+      
+      // function keys
+    case kF1KeyCode:
+    case kF2KeyCode:
+    case kF3KeyCode:
+    case kF4KeyCode:
+    case kF5KeyCode:
+    case kF6KeyCode:
+    case kF7KeyCode:
+    case kF8KeyCode:
+    case kF9KeyCode:
+    case kF10KeyCode:
+    case kF11KeyCode:
+    case kF12KeyCode:
+    case kPauseKeyCode:
+    case kScrollLockKeyCode:
+    case kPrintScreenKeyCode:
+      
+    case kInsertKeyCode:
+    case kDeleteKeyCode:
+    case kTabKeyCode:
+    case kBackspaceKeyCode:
+      
+    case kHomeKeyCode:
+    case kEndKeyCode:
+    case kPageUpKeyCode:
+    case kPageDownKeyCode:
+    case kLeftArrowKeyCode:
+    case kRightArrowKeyCode:
+    case kUpArrowKeyCode:
+    case kDownArrowKeyCode:
+    case kReturnKeyCode:
+    case kEnterKeyCode:
+    case kPowerbookEnterKeyCode:
+      isSpecial = PR_TRUE;
+      break;
+      
+    default:
+      isSpecial = PR_FALSE;
+      break;
+  }
+  
+  return isSpecial;
+}
+
+
+// Basic conversion for cocoa to gecko events, common to all conversions.
+// Note that it is OK for inEvent to be nil.
+- (void) convertGenericCocoaEvent:(NSEvent*)inEvent toGeckoEvent:(nsInputEvent*)outGeckoEvent
+{
+  NS_ASSERTION(outGeckoEvent, "convertGenericCocoaEvent:toGeckoEvent: requires non-null outGeckoEvent");
+  if (!outGeckoEvent)
+    return;
+
+  outGeckoEvent->widget = [self widget];
+  outGeckoEvent->time = PR_IntervalNow();
+  outGeckoEvent->nativeMsg = inEvent;
+
+  if (inEvent) {
+    unsigned int modifiers = [inEvent modifierFlags];
+    outGeckoEvent->isShift   = ((modifiers & NSShiftKeyMask) != 0);
+    outGeckoEvent->isControl = ((modifiers & NSControlKeyMask) != 0);
+    outGeckoEvent->isAlt     = ((modifiers & NSAlternateKeyMask) != 0);
+    outGeckoEvent->isMeta    = ((modifiers & NSCommandKeyMask) != 0);
+  }
+}
+
+
+- (void) convertCocoaMouseEvent:(NSEvent*)aMouseEvent toGeckoEvent:(nsInputEvent*)outGeckoEvent
+{
+  NS_ASSERTION(aMouseEvent && outGeckoEvent, "convertCocoaMouseEvent:toGeckoEvent: requires non-null arguments");
+  if (!aMouseEvent || !outGeckoEvent)
+    return;
+
+  [self convertGenericCocoaEvent:aMouseEvent toGeckoEvent:outGeckoEvent];
+
+  // convert point to view coordinate system
+  NSPoint localPoint = [self convertPoint:[aMouseEvent locationInWindow] fromView:nil];
+  outGeckoEvent->refPoint.x = NS_STATIC_CAST(nscoord, localPoint.x);
+  outGeckoEvent->refPoint.y = NS_STATIC_CAST(nscoord, localPoint.y);
+}
+
+
+- (void) convertCocoaKeyEvent:(NSEvent*)aKeyEvent toGeckoEvent:(nsKeyEvent*)outGeckoEvent
+{
+  NS_ASSERTION(aKeyEvent && outGeckoEvent, "convertCocoaKeyEvent:toGeckoEvent: requires non-null arguments");
+  if (!aKeyEvent || !outGeckoEvent)
+    return;
+
+  [self convertGenericCocoaEvent:aKeyEvent toGeckoEvent:outGeckoEvent];
+
+  // coords for key events are always 0,0
+  outGeckoEvent->refPoint.x = outGeckoEvent->refPoint.y = 0;
+
+  // Initialize whether or not we are using charCodes to false.
+  outGeckoEvent->isChar = PR_FALSE;
+
+  // Check to see if the message is a key press that does not involve
+  // one of our special key codes.
+  if (outGeckoEvent->message == NS_KEY_PRESS && !IsSpecialGeckoKey([aKeyEvent keyCode])) {
+    outGeckoEvent->isChar = PR_TRUE; // this is not a special key
+    
+    outGeckoEvent->charCode = 0;
+    outGeckoEvent->keyCode  = 0;
+    
+    NSString* unmodifiedChars = [aKeyEvent charactersIgnoringModifiers];
+    if ([unmodifiedChars length] > 0)
+      outGeckoEvent->charCode = [unmodifiedChars characterAtIndex:0];
+    
+    // convert control-modified charCode to raw charCode (with appropriate case)
+    if (outGeckoEvent->isControl && outGeckoEvent->charCode <= 26)
+      outGeckoEvent->charCode += (outGeckoEvent->isShift) ? ('A' - 1) : ('a' - 1);
+    
+    // gecko also wants charCode to be in the appropriate case
+    if (outGeckoEvent->isShift && (outGeckoEvent->charCode >= 'a' && outGeckoEvent->charCode <= 'z'))
+      outGeckoEvent->charCode -= 32; // convert to uppercase
+  }
+  else {
+    NSString* characters = nil;
+    if ([aKeyEvent type] != NSFlagsChanged)
+      characters = [aKeyEvent characters];
+    
+    outGeckoEvent->keyCode = ConvertMacToGeckoKeyCode([aKeyEvent keyCode], outGeckoEvent, characters);
+    outGeckoEvent->charCode = 0;
+  } 
+
+  if (outGeckoEvent->message == NS_KEY_PRESS && !outGeckoEvent->isMeta && outGeckoEvent->keyCode != NS_VK_PAGE_UP && 
+      outGeckoEvent->keyCode != NS_VK_PAGE_DOWN)
+    [NSCursor setHiddenUntilMouseMoves:YES];
 }
 
 
@@ -2997,7 +3296,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     // -insertText: they've already been taken into account in creating
     // the input string.
         
-    // plugins need a native keyDown or autoKey event here
+    // create native EventRecord for use by plugins
     EventRecord macEvent;
     if (mCurKeyEvent) {
       ConvertCocoaKeyEventToMacEvent(mCurKeyEvent, macEvent);
@@ -3250,9 +3549,9 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   if (![theEvent isARepeat] && nonDeadKeyPress) {
     // Fire a key down. We'll fire key presses via -insertText:
     nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_DOWN, nsnull);
-    [self convertKeyEvent:theEvent toGeckoEvent:&geckoEvent];
+    [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
 
-    //XXX we should only do this when there is a plugin present
+    // create native EventRecord for use by plugins
     EventRecord macEvent;
     ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
     geckoEvent.nativeMsg = &macEvent;
@@ -3271,7 +3570,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   PRBool dispatchedKeyPress = PR_FALSE;
   if (nonDeadKeyPress) {
     nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
-    [self convertKeyEvent:theEvent toGeckoEvent:&geckoEvent];
+    [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
 
     if (mKeyHandled)
       geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
@@ -3282,7 +3581,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     // them for keybindings.
     if ((!geckoEvent.isChar || geckoEvent.isControl) &&
         !nsTSMManager::IsComposing()) {
-      // plugins need a native event, it will either be keyDown or autoKey
+      // create native EventRecord for use by plugins
       EventRecord macEvent;
       ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
@@ -3315,9 +3614,9 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 
   // Fire a key up.
   nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_UP, nsnull);
-  [self convertKeyEvent:theEvent toGeckoEvent:&geckoEvent];
+  [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
 
-  // As an optimisation, only do this when there is a plugin present.
+  // create native EventRecord for use by plugins
   EventRecord macEvent;
   ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
   geckoEvent.nativeMsg = &macEvent;
@@ -3345,8 +3644,9 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 
   // handle the event ourselves
   nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
-  [self convertKeyEvent:theEvent toGeckoEvent:&geckoEvent];
+  [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
 
+  // create native EventRecord for use by plugins
   EventRecord macEvent;
   ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
   geckoEvent.nativeMsg = &macEvent;
@@ -3367,7 +3667,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     const PRUint32 kModifierCount = sizeof(kModifierMaskTable) /
                                     sizeof(kModifierMaskTable[0]);
 
-    for(PRUint32 i = 0 ; i < kModifierCount ; i++) {
+    for (PRUint32 i = 0; i < kModifierCount; i++) {
       PRUint32 modifierBit = kModifierMaskTable[i];
       if ((modifiers & modifierBit) != (mLastModifierState & modifierBit)) {
         PRUint32 message = ((modifiers & modifierBit) != 0 ? NS_KEY_DOWN :
@@ -3375,11 +3675,13 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 
         // Fire a key event.
         nsKeyEvent geckoEvent(PR_TRUE, message, nsnull);
-        [self convertKeyEvent:theEvent toGeckoEvent:&geckoEvent];
+        [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
 
+        // create native EventRecord for use by plugins
         EventRecord macEvent;
         ConvertCocoaKeyEventToMacEvent(theEvent, macEvent, message);
         geckoEvent.nativeMsg = &macEvent;
+
         mGeckoChild->DispatchWindowEvent(geckoEvent);
 
         // Stop if focus has changed.
@@ -3470,295 +3772,6 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 {
   [self removeFromSuperviewWithoutNeedingDisplay];
   [self release];
-}
-
-
-// Key code constants
-enum
-{
-  kEscapeKeyCode      = 0x35,
-  kCommandKeyCode     = 0x37,
-  kShiftKeyCode       = 0x38,
-  kCapsLockKeyCode    = 0x39,
-  kControlKeyCode     = 0x3B,
-  kOptionkeyCode      = 0x3A, // both left and right option keys
-  kClearKeyCode       = 0x47,
-  
-  // function keys
-  kF1KeyCode          = 0x7A,
-  kF2KeyCode          = 0x78,
-  kF3KeyCode          = 0x63,
-  kF4KeyCode          = 0x76,
-  kF5KeyCode          = 0x60,
-  kF6KeyCode          = 0x61,
-  kF7KeyCode          = 0x62,
-  kF8KeyCode          = 0x64,
-  kF9KeyCode          = 0x65,
-  kF10KeyCode         = 0x6D,
-  kF11KeyCode         = 0x67,
-  kF12KeyCode         = 0x6F,
-  kF13KeyCode         = 0x69,
-  kF14KeyCode         = 0x6B,
-  kF15KeyCode         = 0x71,
-  
-  kPrintScreenKeyCode = kF13KeyCode,
-  kScrollLockKeyCode  = kF14KeyCode,
-  kPauseKeyCode       = kF15KeyCode,
-  
-  // keypad
-  kKeypad0KeyCode     = 0x52,
-  kKeypad1KeyCode     = 0x53,
-  kKeypad2KeyCode     = 0x54,
-  kKeypad3KeyCode     = 0x55,
-  kKeypad4KeyCode     = 0x56,
-  kKeypad5KeyCode     = 0x57,
-  kKeypad6KeyCode     = 0x58,
-  kKeypad7KeyCode     = 0x59,
-  kKeypad8KeyCode     = 0x5B,
-  kKeypad9KeyCode     = 0x5C,
-  
-  kKeypadMultiplyKeyCode  = 0x43,
-  kKeypadAddKeyCode       = 0x45,
-  kKeypadSubtractKeyCode  = 0x4E,
-  kKeypadDecimalKeyCode   = 0x41,
-  kKeypadDivideKeyCode    = 0x4B,
-  kKeypadEqualsKeyCode    = 0x51, // no correpsonding gecko key code
-  kEnterKeyCode           = 0x4C,
-  kReturnKeyCode          = 0x24,
-  kPowerbookEnterKeyCode  = 0x34, // Enter on Powerbook's keyboard is different
-  
-  kInsertKeyCode          = 0x72, // also help key
-  kDeleteKeyCode          = 0x75, // also forward delete key
-  kTabKeyCode             = 0x30,
-  kBackspaceKeyCode       = 0x33,
-  kHomeKeyCode            = 0x73, 
-  kEndKeyCode             = 0x77,
-  kPageUpKeyCode          = 0x74,
-  kPageDownKeyCode        = 0x79,
-  kLeftArrowKeyCode       = 0x7B,
-  kRightArrowKeyCode      = 0x7C,
-  kUpArrowKeyCode         = 0x7E,
-  kDownArrowKeyCode       = 0x7D
-};
-
-
-static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, NSString* characters)
-{
-  PRUint32 geckoKeyCode = 0;
-  PRUint8 charCode = 0;
-  if ([characters length])
-    charCode = [characters characterAtIndex: 0];
-
-  switch (keyCode)
-  {
-    // modifiers. We don't get separate events for these
-    case kEscapeKeyCode:        geckoKeyCode = NS_VK_ESCAPE;         break;
-    case kCommandKeyCode:       geckoKeyCode = NS_VK_META;           break;
-    case kShiftKeyCode:         geckoKeyCode = NS_VK_SHIFT;          break;
-    case kCapsLockKeyCode:      geckoKeyCode = NS_VK_CAPS_LOCK;      break;
-    case kControlKeyCode:       geckoKeyCode = NS_VK_CONTROL;        break;
-    case kOptionkeyCode:        geckoKeyCode = NS_VK_ALT;            break;
-    case kClearKeyCode:         geckoKeyCode = NS_VK_CLEAR;          break;
-
-    // function keys
-    case kF1KeyCode:            geckoKeyCode = NS_VK_F1;             break;
-    case kF2KeyCode:            geckoKeyCode = NS_VK_F2;             break;
-    case kF3KeyCode:            geckoKeyCode = NS_VK_F3;             break;
-    case kF4KeyCode:            geckoKeyCode = NS_VK_F4;             break;
-    case kF5KeyCode:            geckoKeyCode = NS_VK_F5;             break;
-    case kF6KeyCode:            geckoKeyCode = NS_VK_F6;             break;
-    case kF7KeyCode:            geckoKeyCode = NS_VK_F7;             break;
-    case kF8KeyCode:            geckoKeyCode = NS_VK_F8;             break;
-    case kF9KeyCode:            geckoKeyCode = NS_VK_F9;             break;
-    case kF10KeyCode:           geckoKeyCode = NS_VK_F10;            break;
-    case kF11KeyCode:           geckoKeyCode = NS_VK_F11;            break;
-    case kF12KeyCode:           geckoKeyCode = NS_VK_F12;            break;
-    // case kF13KeyCode:           geckoKeyCode = NS_VK_F13;            break;    // clash with the 3 below
-    // case kF14KeyCode:           geckoKeyCode = NS_VK_F14;            break;
-    // case kF15KeyCode:           geckoKeyCode = NS_VK_F15;            break;
-    case kPauseKeyCode:         geckoKeyCode = NS_VK_PAUSE;          break;
-    case kScrollLockKeyCode:    geckoKeyCode = NS_VK_SCROLL_LOCK;    break;
-    case kPrintScreenKeyCode:   geckoKeyCode = NS_VK_PRINTSCREEN;    break;
-  
-    // keypad
-    case kKeypad0KeyCode:       geckoKeyCode = NS_VK_NUMPAD0;        break;
-    case kKeypad1KeyCode:       geckoKeyCode = NS_VK_NUMPAD1;        break;
-    case kKeypad2KeyCode:       geckoKeyCode = NS_VK_NUMPAD2;        break;
-    case kKeypad3KeyCode:       geckoKeyCode = NS_VK_NUMPAD3;        break;
-    case kKeypad4KeyCode:       geckoKeyCode = NS_VK_NUMPAD4;        break;
-    case kKeypad5KeyCode:       geckoKeyCode = NS_VK_NUMPAD5;        break;
-    case kKeypad6KeyCode:       geckoKeyCode = NS_VK_NUMPAD6;        break;
-    case kKeypad7KeyCode:       geckoKeyCode = NS_VK_NUMPAD7;        break;
-    case kKeypad8KeyCode:       geckoKeyCode = NS_VK_NUMPAD8;        break;
-    case kKeypad9KeyCode:       geckoKeyCode = NS_VK_NUMPAD9;        break;
-
-    case kKeypadMultiplyKeyCode:  geckoKeyCode = NS_VK_MULTIPLY;     break;
-    case kKeypadAddKeyCode:       geckoKeyCode = NS_VK_ADD;          break;
-    case kKeypadSubtractKeyCode:  geckoKeyCode = NS_VK_SUBTRACT;     break;
-    case kKeypadDecimalKeyCode:   geckoKeyCode = NS_VK_DECIMAL;      break;
-    case kKeypadDivideKeyCode:    geckoKeyCode = NS_VK_DIVIDE;       break;
-
-    // these may clash with forward delete and help
-    case kInsertKeyCode:        geckoKeyCode = NS_VK_INSERT;         break;
-    case kDeleteKeyCode:        geckoKeyCode = NS_VK_DELETE;         break;
-
-    case kBackspaceKeyCode:     geckoKeyCode = NS_VK_BACK;           break;
-    case kTabKeyCode:           geckoKeyCode = NS_VK_TAB;            break;
-    case kHomeKeyCode:          geckoKeyCode = NS_VK_HOME;           break;
-    case kEndKeyCode:           geckoKeyCode = NS_VK_END;            break;
-    case kPageUpKeyCode:        geckoKeyCode = NS_VK_PAGE_UP;        break;
-    case kPageDownKeyCode:      geckoKeyCode = NS_VK_PAGE_DOWN;      break;
-    case kLeftArrowKeyCode:     geckoKeyCode = NS_VK_LEFT;           break;
-    case kRightArrowKeyCode:    geckoKeyCode = NS_VK_RIGHT;          break;
-    case kUpArrowKeyCode:       geckoKeyCode = NS_VK_UP;             break;
-    case kDownArrowKeyCode:     geckoKeyCode = NS_VK_DOWN;           break;
-
-    default:
-        if (aKeyEvent->isControl)
-          charCode += 64;
-      
-        // if we haven't gotten the key code already, look at the char code
-        switch (charCode)
-        {
-          case kReturnCharCode:       geckoKeyCode = NS_VK_RETURN;        break;
-          case kEnterCharCode:        geckoKeyCode = NS_VK_RETURN;        break;
-          case ' ':                   geckoKeyCode = NS_VK_SPACE;         break;
-          case ';':                   geckoKeyCode = NS_VK_SEMICOLON;     break;
-          case '=':                   geckoKeyCode = NS_VK_EQUALS;        break;
-          case ',':                   geckoKeyCode = NS_VK_COMMA;         break;
-          case '.':                   geckoKeyCode = NS_VK_PERIOD;        break;
-          case '/':                   geckoKeyCode = NS_VK_SLASH;         break;
-          case '`':                   geckoKeyCode = NS_VK_BACK_QUOTE;    break;
-          case '{':
-          case '[':                   geckoKeyCode = NS_VK_OPEN_BRACKET;  break;
-          case '\\':                  geckoKeyCode = NS_VK_BACK_SLASH;    break;
-          case '}':
-          case ']':                   geckoKeyCode = NS_VK_CLOSE_BRACKET; break;
-          case '\'':
-          case '"':                   geckoKeyCode = NS_VK_QUOTE;         break;
-          
-          default:
-            if (charCode >= '0' && charCode <= '9') // numerals
-              geckoKeyCode = charCode;
-            else if (charCode >= 'a' && charCode <= 'z') // lowercase
-              geckoKeyCode = toupper(charCode);
-            else if (charCode >= 'A' && charCode <= 'Z') // uppercase
-              geckoKeyCode = charCode;
-            break;
-        }
-  }
-
-  return geckoKeyCode;
-}
-
-
-static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
-{
-  PRBool  isSpecial;
-
-  // this table is used to determine which keys are special and should not generate a charCode
-  switch (macKeyCode)
-  {
-    // modifiers - we don't get separate events for these yet
-    case kEscapeKeyCode:
-    case kShiftKeyCode:
-    case kCommandKeyCode:
-    case kCapsLockKeyCode:
-    case kControlKeyCode:
-    case kOptionkeyCode:
-    case kClearKeyCode:
-
-    // function keys
-    case kF1KeyCode:
-    case kF2KeyCode:
-    case kF3KeyCode:
-    case kF4KeyCode:
-    case kF5KeyCode:
-    case kF6KeyCode:
-    case kF7KeyCode:
-    case kF8KeyCode:
-    case kF9KeyCode:
-    case kF10KeyCode:
-    case kF11KeyCode:
-    case kF12KeyCode:
-    case kPauseKeyCode:
-    case kScrollLockKeyCode:
-    case kPrintScreenKeyCode:
-
-    case kInsertKeyCode:
-    case kDeleteKeyCode:
-    case kTabKeyCode:
-    case kBackspaceKeyCode:
-
-    case kHomeKeyCode:
-    case kEndKeyCode:
-    case kPageUpKeyCode:
-    case kPageDownKeyCode:
-    case kLeftArrowKeyCode:
-    case kRightArrowKeyCode:
-    case kUpArrowKeyCode:
-    case kDownArrowKeyCode:
-    case kReturnKeyCode:
-    case kEnterKeyCode:
-    case kPowerbookEnterKeyCode:
-      isSpecial = PR_TRUE;
-      break;
-
-    default:
-      isSpecial = PR_FALSE;
-      break;
-  }
-
-  return isSpecial;
-}
-
-
-- (void) convertKeyEvent:(NSEvent*)aKeyEvent toGeckoEvent:(nsKeyEvent*)outGeckoEvent
-{
-  [self convertEvent:aKeyEvent toGeckoEvent:outGeckoEvent];
-
-  // refPoint is always 0,0 for key events
-  outGeckoEvent->refPoint.x = outGeckoEvent->refPoint.y = 0;
-
-  // Initialize whether or not we are using charCodes to false.
-  outGeckoEvent->isChar = PR_FALSE;
-
-  // Check to see if the message is a key press that does not involve
-  // one of our special key codes.
-  if (outGeckoEvent->message == NS_KEY_PRESS && !IsSpecialGeckoKey([aKeyEvent keyCode])) {
-    if (!outGeckoEvent->isControl && !outGeckoEvent->isMeta)
-      outGeckoEvent->isControl = outGeckoEvent->isAlt = outGeckoEvent->isMeta = 0;
-    
-    outGeckoEvent->charCode = 0;
-    outGeckoEvent->keyCode  = 0;
-
-    NSString* unmodifiedChars = [aKeyEvent charactersIgnoringModifiers];
-    if ([unmodifiedChars length] > 0)
-      outGeckoEvent->charCode = [unmodifiedChars characterAtIndex:0];
-    
-    // We're not a special key.
-    outGeckoEvent->isChar = PR_TRUE;
-
-    // convert control-modified charCode to raw charCode (with appropriate case)
-    if (outGeckoEvent->isControl && outGeckoEvent->charCode <= 26)
-      outGeckoEvent->charCode += (outGeckoEvent->isShift) ? ('A' - 1) : ('a' - 1);
-
-    // gecko also wants charCode to be in the appropriate case
-    if (outGeckoEvent->isShift && (outGeckoEvent->charCode >= 'a' && outGeckoEvent->charCode <= 'z'))
-      outGeckoEvent->charCode -= 32;    // convert to uppercase
-  }
-  else {
-    NSString* characters = nil;
-    if ([aKeyEvent type] != NSFlagsChanged)
-      characters = [aKeyEvent characters];
-  
-    outGeckoEvent->keyCode = ConvertMacToGeckoKeyCode([aKeyEvent keyCode], outGeckoEvent, characters);
-    outGeckoEvent->charCode = 0;
-  } 
-  
-  if (outGeckoEvent->message == NS_KEY_PRESS && !outGeckoEvent->isMeta && outGeckoEvent->keyCode != NS_VK_PAGE_UP && 
-      outGeckoEvent->keyCode != NS_VK_PAGE_DOWN)
-    [NSCursor setHiddenUntilMouseMoves:YES];
 }
 
 
