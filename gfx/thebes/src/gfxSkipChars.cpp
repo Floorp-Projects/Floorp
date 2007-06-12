@@ -88,13 +88,10 @@ gfxSkipChars::BuildShortcuts()
 void
 gfxSkipCharsIterator::SetOffsets(PRUint32 aOffset, PRBool aInOriginalString)
 {
+    NS_ASSERTION(aOffset <= mSkipChars->mCharCount,
+                 "Invalid offset");
+
     if (mSkipChars->mListLength == 0) {
-        // Special case: all chars kept, original and stripped strings are equal
-        if (aOffset < 0) {
-            aOffset = 0;
-        } else if (aOffset > mSkipChars->mCharCount) {
-            aOffset = mSkipChars->mCharCount;
-        }
         mOriginalStringOffset = mSkippedStringOffset = aOffset;
         return;
     }

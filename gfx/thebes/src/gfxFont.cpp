@@ -531,24 +531,13 @@ gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, PRUint32 aFlags)
     aFlags |= TEXT_IS_8BIT | TEXT_IS_ASCII | TEXT_IS_PERSISTENT;
     static const PRUint8 space = ' ';
 
-    gfxFont *font = GetFontAt(0);
-    PRUint32 spaceGlyph = font->GetSpaceGlyph();
-    float spaceWidth = font->GetMetrics().spaceWidth;
-    PRUint32 spaceWidthAppUnits = NS_lroundf(spaceWidth*aParams->mAppUnitsPerDevUnit);
-    if (!spaceGlyph ||
-        !gfxTextRun::CompressedGlyph::IsSimpleGlyphID(spaceGlyph) ||
-        !gfxTextRun::CompressedGlyph::IsSimpleAdvance(spaceWidthAppUnits))
-        return MakeTextRun(&space, 1, aParams, aFlags);
-
     nsAutoPtr<gfxTextRun> textRun;
     textRun = new gfxTextRun(aParams, &space, 1, this, aFlags);
-    if (!textRun)
+    if (!textRun || !textRun->GetCharacterGlyphs())
         return nsnull;
-    if (NS_FAILED(textRun->AddGlyphRun(font, 0)))
-        return nsnull;
-    gfxTextRun::CompressedGlyph g;
-    g.SetSimpleGlyph(spaceWidthAppUnits, spaceGlyph);
-    textRun->SetCharacterGlyph(0, g);
+
+    gfxFont *font = GetFontAt(0);
+    textRun->SetSpaceGlyph(font, aParams->mContext, 0);
     return textRun.forget();
 }
 
@@ -691,35 +680,7 @@ gfxTextRun::Clone(const gfxTextRunFactory::Parameters *aParams, const void *aTex
     if (!textRun || !textRun->mCharacterGlyphs)
         return nsnull;
 
-    PRUint32 i;
-    for (i = 0; i < mGlyphRuns.Length(); ++i) {
-        if (NS_FAILED(textRun->AddGlyphRun(mGlyphRuns[i].mFont,
-                                           mGlyphRuns[i].mCharacterOffset)))
-            return nsnull;
-    }
-
-    for (i = 0; i < aLength; ++i) {
-        CompressedGlyph g = mCharacterGlyphs[i];
-        g.SetCanBreakBefore(PR_FALSE);
-        textRun->mCharacterGlyphs[i] = g;
-    }
-
-    if (mDetailedGlyphs) {
-        for (i = 0; i < aLength; ++i) {
-            DetailedGlyph *details = mDetailedGlyphs[i];
-            if (details) {
-                PRUint32 glyphCount = 1;
-                while (!details[glyphCount - 1].mIsLastGlyph) {
-                    ++glyphCount;
-                }
-                DetailedGlyph *dest = textRun->AllocateDetailedGlyphs(i, glyphCount);
-                if (!dest)
-                    return nsnull;
-                memcpy(dest, details, sizeof(DetailedGlyph)*glyphCount);
-            }
-        }
-    }
-
+    textRun->CopyGlyphDataFrom(this, 0, mCharacterCount, 0, PR_FALSE);
     return textRun.forget();
 }
 
@@ -1490,8 +1451,24 @@ gfxTextRun::FindFirstGlyphRunContaining(PRUint32 aOffset)
 nsresult
 gfxTextRun::AddGlyphRun(gfxFont *aFont, PRUint32 aUTF16Offset)
 {
-    NS_ASSERTION(mGlyphRuns.Length() > 0 || aUTF16Offset == 0,
+    PRUint32 numGlyphRuns = mGlyphRuns.Length();
+    if (numGlyphRuns > 0) {
+        GlyphRun *lastGlyphRun = &mGlyphRuns[numGlyphRuns - 1];
+
+        NS_ASSERTION(lastGlyphRun->mCharacterOffset <= aUTF16Offset,
+                     "Glyph runs out of order");
+
+        if (lastGlyphRun->mFont == aFont)
+            return NS_OK;
+        if (lastGlyphRun->mCharacterOffset == aUTF16Offset) {
+            lastGlyphRun->mFont = aFont;
+            return NS_OK;
+        }
+    }
+
+    NS_ASSERTION(numGlyphRuns > 0 || aUTF16Offset == 0,
                  "First run doesn't cover the first character?");
+
     GlyphRun *glyphRun = mGlyphRuns.AppendElement();
     if (!glyphRun)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1583,4 +1560,123 @@ gfxTextRun::RecordSurrogates(const PRUnichar *aString)
             SetCharacterGlyph(i, g.SetLowSurrogate());
         }
     }
+}
+
+static PRUint32
+CountDetailedGlyphs(gfxTextRun::DetailedGlyph *aGlyphs)
+{
+    PRUint32 i = 0;
+    while (!aGlyphs[i].mIsLastGlyph) {
+        ++i;
+    }
+    return i + 1;
+}
+
+static void
+ClearCharacters(gfxTextRun::CompressedGlyph *aGlyphs, PRUint32 aLength)
+{
+    gfxTextRun::CompressedGlyph g;
+    g.SetMissing();
+    PRUint32 i;
+    for (i = 0; i < aLength; ++i) {
+        aGlyphs[i] = g;
+    }
+}
+
+void
+gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, PRUint32 aStart,
+                              PRUint32 aLength, PRUint32 aDest,
+                              PRBool aStealData)
+{
+    NS_ASSERTION(aStart + aLength <= aSource->GetLength(),
+                 "Source substring out of range");
+    NS_ASSERTION(aDest + aLength <= GetLength(),
+                 "Destination substring out of range");
+
+    PRUint32 i;
+    for (i = 0; i < aLength; ++i) {
+        CompressedGlyph g = aSource->mCharacterGlyphs[i + aStart];
+        g.SetCanBreakBefore(PR_FALSE);
+        mCharacterGlyphs[i + aDest] = g;
+        if (aStealData) {
+            aSource->mCharacterGlyphs[i + aStart].SetMissing();
+        }
+    }
+
+    if (aSource->mDetailedGlyphs) {
+        for (i = 0; i < aLength; ++i) {
+            DetailedGlyph *details = aSource->mDetailedGlyphs[i + aStart];
+            if (details) {
+                if (aStealData) {
+                    if (!mDetailedGlyphs) {
+                        mDetailedGlyphs = new nsAutoArrayPtr<DetailedGlyph>[mCharacterCount];
+                        if (!mDetailedGlyphs) {
+                            ClearCharacters(&mCharacterGlyphs[aDest], aLength);
+                            return;
+                        }
+                    }        
+                    mDetailedGlyphs[i + aDest] = details;
+                    aSource->mDetailedGlyphs[i + aStart].forget();
+                } else {
+                    PRUint32 glyphCount = CountDetailedGlyphs(details);
+                    DetailedGlyph *dest = AllocateDetailedGlyphs(i + aDest, glyphCount);
+                    if (!dest) {
+                        ClearCharacters(&mCharacterGlyphs[aDest], aLength);
+                        return;
+                    }
+                    memcpy(dest, details, sizeof(DetailedGlyph)*glyphCount);
+                }
+            } else if (mDetailedGlyphs) {
+                mDetailedGlyphs[i + aDest] = nsnull;
+            }
+        }
+    } else if (mDetailedGlyphs) {
+        for (i = 0; i < aLength; ++i) {
+            mDetailedGlyphs[i + aDest] = nsnull;
+        }
+    }
+
+    GlyphRunIterator iter(aSource, aStart, aLength);
+    while (iter.NextRun()) {
+        gfxFont *font = iter.GetGlyphRun()->mFont;
+        PRUint32 start = iter.GetStringStart();
+        PRUint32 end = iter.GetStringEnd();
+        NS_ASSERTION(aSource->IsClusterStart(start),
+                     "Started word in the middle of a cluster...");
+        NS_ASSERTION(end == aSource->GetLength() || aSource->IsClusterStart(end),
+                     "Ended word in the middle of a cluster...");
+
+        nsresult rv = AddGlyphRun(font, start - aStart + aDest);
+        if (NS_FAILED(rv))
+            return;
+    }
+}
+
+void
+gfxTextRun::SetSpaceGlyph(gfxFont *aFont, gfxContext *aContext, PRUint32 aCharIndex)
+{
+    PRUint32 spaceGlyph = aFont->GetSpaceGlyph();
+    float spaceWidth = aFont->GetMetrics().spaceWidth;
+    PRUint32 spaceWidthAppUnits = NS_lroundf(spaceWidth*mAppUnitsPerDevUnit);
+    if (!spaceGlyph ||
+        !CompressedGlyph::IsSimpleGlyphID(spaceGlyph) ||
+        !CompressedGlyph::IsSimpleAdvance(spaceWidthAppUnits)) {
+        gfxTextRunFactory::Parameters params = {
+            aContext, nsnull, nsnull, nsnull, 0, mAppUnitsPerDevUnit
+        };
+        static const PRUint8 space = ' ';
+        nsAutoPtr<gfxTextRun> textRun;
+        textRun = mFontGroup->MakeTextRun(&space, 1, &params,
+            gfxTextRunFactory::TEXT_IS_8BIT | gfxTextRunFactory::TEXT_IS_ASCII |
+            gfxTextRunFactory::TEXT_IS_PERSISTENT);
+        if (!textRun || !textRun->mCharacterGlyphs)
+            return;
+        CopyGlyphDataFrom(textRun, 0, 1, aCharIndex, PR_TRUE);
+        return;
+    }
+
+    AddGlyphRun(aFont, aCharIndex);
+    CompressedGlyph g;
+    g.SetSimpleGlyph(spaceWidthAppUnits, spaceGlyph);
+    SetCharacterGlyph(aCharIndex, g);
 }
