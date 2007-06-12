@@ -387,6 +387,15 @@ void
 nsTreeBodyFrame::EnsureView()
 {
   if (!mView) {
+    PRBool isInReflow;
+    PresContext()->PresShell()->IsReflowLocked(&isInReflow);
+    if (isInReflow) {
+      if (!mReflowCallbackPosted) {
+        mReflowCallbackPosted = PR_TRUE;
+        PresContext()->PresShell()->PostReflowCallback(this);
+      }
+      return;
+    }
     nsCOMPtr<nsIBoxObject> box = do_QueryInterface(mTreeBoxObject);
     if (box) {
       nsCOMPtr<nsITreeView> treeView;
@@ -433,6 +442,11 @@ nsTreeBodyFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRec
 PRBool
 nsTreeBodyFrame::ReflowFinished()
 {
+  if (!mView) {
+    nsWeakFrame weakFrame(this);
+    EnsureView();
+    NS_ENSURE_TRUE(weakFrame.IsAlive(), PR_FALSE);
+  }
   if (mView) {
     CalcInnerBox();
     ScrollParts parts = GetScrollParts();
