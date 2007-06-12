@@ -35,6 +35,7 @@ CPPSRCS	= \
 	gfxRect.cpp \
 	gfxSkipChars.cpp \
 	gfxTextRunCache.cpp \
+	gfxTextRunWordCache.cpp \
 	$(NULL)
 
 ifdef MOZ_TREE_CAIRO

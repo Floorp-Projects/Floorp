@@ -430,6 +430,10 @@ public:
     // Flags in the mask 0x0000F000 are reserved for per-platform fonts
     // Flags in the mask 0x00000FFF are set by the textrun creator.
     enum {
+        USER_TEXT_FLAGS     = 0xFFFF0000,
+        PLATFORM_TEXT_FLAGS = 0x0000F000,
+        TEXTRUN_TEXT_FLAGS  = 0x00000FFF,
+      
         /**
          * When set, the text string pointer used to create the text run
          * is guaranteed to be available during the lifetime of the text run.
@@ -789,6 +793,16 @@ public:
     void *GetUserData() const { return mUserData; }
     void SetUserData(void *aUserData) { mUserData = aUserData; }
     PRUint32 GetFlags() const { return mFlags; }
+    void SetFlagBits(PRUint32 aFlags) {
+      NS_ASSERTION(!(aFlags & ~gfxTextRunFactory::USER_TEXT_FLAGS),
+                   "Only user flags should be mutable");
+      mFlags |= aFlags;
+    }
+    void ClearFlagBits(PRUint32 aFlags) {
+      NS_ASSERTION(!(aFlags & ~gfxTextRunFactory::USER_TEXT_FLAGS),
+                   "Only user flags should be mutable");
+      mFlags &= ~aFlags;
+    }
     const gfxSkipChars& GetSkipChars() const { return mSkipChars; }
     PRUint32 GetAppUnitsPerDevUnit() const { return mAppUnitsPerDevUnit; }
     gfxFontGroup *GetFontGroup() const { return mFontGroup; }
@@ -796,6 +810,11 @@ public:
     { return (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) ? mText.mSingle : nsnull; }
     const PRUnichar *GetTextUnicode() const
     { return (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) ? nsnull : mText.mDouble; }
+    const void *GetTextAt(PRUint32 aIndex) {
+        return (mFlags & gfxTextRunFactory::TEXT_IS_8BIT)
+            ? NS_STATIC_CAST(const void *, mText.mSingle + aIndex)
+            : NS_STATIC_CAST(const void *, mText.mDouble + aIndex);
+    }
     const PRUnichar GetChar(PRUint32 i) const
     { return (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) ? mText.mSingle[i] : mText.mDouble[i]; }
     PRUint32 GetHashCode() const { return mHashCode; }
@@ -1020,6 +1039,7 @@ public:
     void SetDetailedGlyphs(PRUint32 aCharIndex, const DetailedGlyph *aGlyphs,
                            PRUint32 aNumGlyphs);
     void SetMissingGlyph(PRUint32 aCharIndex, PRUnichar aChar);
+    void SetSpaceGlyph(gfxFont *aFont, gfxContext *aContext, PRUint32 aCharIndex);
 
     // API for access to the raw glyph data, needed by gfxFont::Draw
     // and gfxFont::GetBoundingBox
@@ -1034,6 +1054,16 @@ public:
         *aNumGlyphRuns = mGlyphRuns.Length();
         return mGlyphRuns.Elements();
     }
+    // Returns the index of the GlyphRun containing the given offset.
+    // Returns mGlyphRuns.Length() when aOffset is mCharacterCount.
+    PRUint32 FindFirstGlyphRunContaining(PRUint32 aOffset);
+    // Copy glyph data for a range of characters from aSource to this
+    // textrun. If aStealData is true then we actually steal the glyph data,
+    // setting the data in aSource to "missing". aDest should be in the last
+    // glyphrun.
+    virtual void CopyGlyphDataFrom(gfxTextRun *aSource, PRUint32 aStart,
+                                   PRUint32 aLength, PRUint32 aDest,
+                                   PRBool aStealData);
 
     nsExpirationState *GetExpirationState() { return &mExpirationState; }
 
@@ -1042,9 +1072,6 @@ private:
 
     // Allocate aCount DetailedGlyphs for the given index
     DetailedGlyph *AllocateDetailedGlyphs(PRUint32 aCharIndex, PRUint32 aCount);
-    // Returns the index of the GlyphRun containing the given offset.
-    // Returns mGlyphRuns.Length() when aOffset is mCharacterCount.
-    PRUint32 FindFirstGlyphRunContaining(PRUint32 aOffset);
     // Computes the x-advance for a given cluster starting at aClusterOffset. Does
     // not include any spacing. Result is in appunits.
     PRInt32 ComputeClusterAdvance(PRUint32 aClusterOffset);
@@ -1140,7 +1167,8 @@ public:
     virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle) = 0;
 
     /**
-     * Tabs, CRs and LFs should be zero-width and invisible.
+     * Tabs, CRs and LFs should be zero-width and invisible. They should
+     * break up shaping.
      */
     static PRBool IsInvisibleChar(PRUnichar ch) {
         return ch == '\t' || ch == '\r' || ch == '\n';
