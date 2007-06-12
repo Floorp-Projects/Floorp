@@ -1412,7 +1412,7 @@ private:
         mAlternativeString = (PRUnichar *)malloc(mRangeLength * sizeof(PRUnichar));
         memcpy((void *)mAlternativeString, (const void *)mRangeString,
                mRangeLength * sizeof(PRUnichar));
-        for (PRUint32 i = 0; i < mItemLength; i++) {
+        for (PRUint32 i = 0; i < mRangeLength; i++) {
             if (NS_IS_HIGH_SURROGATE(mRangeString[i]) || NS_IS_LOW_SURROGATE(mRangeString[i]))
                 mAlternativeString[i] = PRUnichar(0xFFFD);
         }
