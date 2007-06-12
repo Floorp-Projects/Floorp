@@ -1007,7 +1007,9 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                  */
                 if (JSFUN_GETTER_TEST(fun->flags) ||
                     JSFUN_SETTER_TEST(fun->flags)) { /* skip "getter/setter" */
-                    vchars = js_strchr_limit(vchars, ' ', end) + 1;
+                    const jschar *tmp = js_strchr_limit(vchars, ' ', end);
+                    if (tmp)
+                        vchars = tmp + 1;
                 }
 
                 /* Try to jump "function" keyword. */
