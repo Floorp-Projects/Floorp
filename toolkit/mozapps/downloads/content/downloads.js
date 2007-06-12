@@ -54,7 +54,7 @@ const PREF_BDM_RETENTION = "browser.download.manager.retention";
 const nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
                                            "nsILocalFile", "initWithPath");
 
-const Ci = Components.interfaces;
+var Ci = Components.interfaces;
 
 var gDownloadManager  = Components.classes[kDlmgrContractID]
                                   .getService(nsIDownloadManager);
