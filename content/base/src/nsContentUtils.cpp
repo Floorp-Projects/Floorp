@@ -137,6 +137,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsMutationEvent.h"
 #include "nsIKBStateControl.h"
 #include "nsIMEStateManager.h"
+#include "nsContentErrors.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -3551,4 +3552,57 @@ void
 nsContentUtils::NotifyInstalledMenuKeyboardListener(PRBool aInstalling)
 {
   nsIMEStateManager::OnInstalledMenuKeyboardListener(aInstalling);
+}
+
+static PRBool SchemeIs(nsIURI* aURI, const char* aScheme)
+{
+  nsCOMPtr<nsIURI> baseURI = NS_GetInnermostURI(aURI);
+  NS_ENSURE_TRUE(baseURI, PR_FALSE);
+
+  PRBool isScheme = PR_FALSE;
+  return NS_SUCCEEDED(baseURI->SchemeIs(aScheme, &isScheme)) && isScheme;
+}
+
+/* static */
+nsresult
+nsContentUtils::CheckSecurityBeforeLoad(nsIURI* aURIToLoad,
+                                        nsIPrincipal* aLoadingPrincipal,
+                                        PRUint32 aCheckLoadFlags,
+                                        PRBool aAllowData,
+                                        PRUint32 aContentPolicyType,
+                                        nsISupports* aContext,
+                                        const nsACString& aMimeGuess,
+                                        nsISupports* aExtra)
+{
+  nsCOMPtr<nsIURI> loadingURI;
+  nsresult rv = aLoadingPrincipal->GetURI(getter_AddRefs(loadingURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // CheckLoadURIWithPrincipal
+  rv = sSecurityManager->
+    CheckLoadURIWithPrincipal(aLoadingPrincipal, aURIToLoad, aCheckLoadFlags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Content Policy
+  PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+  rv = NS_CheckContentLoadPolicy(aContentPolicyType,
+                                 aURIToLoad,
+                                 loadingURI,
+                                 aContext,
+                                 aMimeGuess,
+                                 aExtra,
+                                 &shouldLoad,
+                                 GetContentPolicy());
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_CP_REJECTED(shouldLoad)) {
+    return NS_ERROR_CONTENT_BLOCKED;
+  }
+
+  // Same Origin
+  if ((aAllowData && SchemeIs(aURIToLoad, "data")) ||
+      ((aCheckLoadFlags & nsIScriptSecurityManager::ALLOW_CHROME) &&
+       SchemeIs(aURIToLoad, "chrome"))) {
+    return NS_OK;
+  }
+  return sSecurityManager->CheckSameOriginURI(loadingURI, aURIToLoad);
 }

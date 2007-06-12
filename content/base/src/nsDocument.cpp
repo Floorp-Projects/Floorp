@@ -154,6 +154,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsIXPConnect.h"
 #include "nsCycleCollector.h"
 #include "nsCCUncollectableMarker.h"
+#include "nsIContentPolicy.h"
 
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
@@ -3430,23 +3431,16 @@ nsDocument::RemoveBinding(nsIDOMElement* aContent, const nsAString& aURI)
 }
 
 NS_IMETHODIMP
-nsDocument::LoadBindingDocument(const nsAString& aURI,
-                                nsIDOMDocument** aResult)
+nsDocument::LoadBindingDocument(const nsAString& aURI)
 {
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aURI,
                           mCharacterSet.get(),
                           NS_STATIC_CAST(nsIDocument *, this)->GetBaseURI());
-
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  nsCOMPtr<nsIDocument> doc;
-  mBindingManager->LoadBindingDocument(this, uri, getter_AddRefs(doc));
 
-  if (doc) {
-    CallQueryInterface(doc, aResult);
-  }
-  
+  mBindingManager->LoadBindingDocument(this, uri);
+
   return NS_OK;
 }
 
