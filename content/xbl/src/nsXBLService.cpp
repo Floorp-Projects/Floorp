@@ -522,42 +522,21 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
     }
   }
 
-  // Security check - remote pages can't load local bindings, except from chrome
-  nsIURI *docURI = document->GetDocumentURI();
-  PRBool isChrome = PR_FALSE;
-  rv = docURI->SchemeIs("chrome", &isChrome);
-
-  // Not everything with a chrome URI has a system principal.  See bug 160042.
-  if (NS_FAILED(rv) || !isChrome) {
-    rv = nsContentUtils::GetSecurityManager()->
-      CheckLoadURIWithPrincipal(document->NodePrincipal(), aURL,
-                                nsIScriptSecurityManager::ALLOW_CHROME);
-    if (NS_FAILED(rv))
-      return rv;
-  }
-
-  // Content policy check.  We have to be careful to not pass aContent as the
-  // context here.  Otherwise, if there is a JS-implemented content policy, we
-  // will attempt to wrap the content node, which will try to load XBL bindings
-  // for it, if any.  Since we're not done loading this binding yet, that will
-  // reenter this method and we'll end up creating a binding and then
-  // immediately clobbering it in our table.  That makes things very confused,
-  // leading to misbehavior and crashes.
-  PRInt16 decision = nsIContentPolicy::ACCEPT;
-  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OTHER,
-                                 aURL,
-                                 docURI,
-                                 document,        // context
-                                 EmptyCString(),  // mime guess
-                                 nsnull,          // extra
-                                 &decision,
-                                 nsContentUtils::GetContentPolicy());
-
-  if (NS_SUCCEEDED(rv) && !NS_CP_ACCEPTED(decision))
-    rv = NS_ERROR_NOT_AVAILABLE;
-
-  if (NS_FAILED(rv))
-    return rv;
+  // Security check - Enforce same-origin policy, except to chrome.
+  // We have to be careful to not pass aContent as the context here. 
+  // Otherwise, if there is a JS-implemented content policy, we will attempt
+  // to wrap the content node, which will try to load XBL bindings for it, if
+  // any. Since we're not done loading this binding yet, that will reenter
+  // this method and we'll end up creating a binding and then immediately
+  // clobbering it in our table.  That makes things very confused, leading to
+  // misbehavior and crashes.
+  rv = nsContentUtils::CheckSecurityBeforeLoad(aURL,
+                                               document->NodePrincipal(),
+                                               nsIScriptSecurityManager::ALLOW_CHROME,
+                                               PR_TRUE,
+                                               nsIContentPolicy::TYPE_OTHER,
+                                               document);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool ready;
   nsRefPtr<nsXBLBinding> newBinding;
@@ -986,7 +965,16 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
 {
   NS_PRECONDITION(aBindingURI, "Must have a binding URI");
   
-  nsresult rv = NS_OK;
+  nsresult rv;
+  if (aBoundDocument) {
+    rv = nsContentUtils::
+      CheckSecurityBeforeLoad(aBindingURI, aBoundDocument->NodePrincipal(),
+                              nsIScriptSecurityManager::ALLOW_CHROME,
+                              PR_TRUE,
+                              nsIContentPolicy::TYPE_OTHER,
+                              aBoundDocument);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   *aResult = nsnull;
   nsCOMPtr<nsIXBLDocumentInfo> info;
@@ -1097,6 +1085,43 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
   return NS_OK;
 }
 
+class nsSameOriginChecker : public nsIChannelEventSink,
+                            public nsIInterfaceRequestor
+{
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICHANNELEVENTSINK
+  NS_DECL_NSIINTERFACEREQUESTOR
+};
+
+NS_IMPL_ISUPPORTS2(nsSameOriginChecker,
+                   nsIChannelEventSink,
+                   nsIInterfaceRequestor)
+
+NS_IMETHODIMP
+nsSameOriginChecker::OnChannelRedirect(nsIChannel *aOldChannel,
+                                       nsIChannel *aNewChannel,
+                                       PRUint32    aFlags)
+{
+    NS_PRECONDITION(aNewChannel, "Redirecting to null channel?");
+
+    nsCOMPtr<nsIURI> oldURI;
+    nsresult rv = aOldChannel->GetURI(getter_AddRefs(oldURI)); // The original URI
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIURI> newURI;
+    rv = aNewChannel->GetURI(getter_AddRefs(newURI)); // The new URI
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return nsContentUtils::GetSecurityManager()->
+      CheckSameOriginURI(oldURI, newURI);
+}
+
+NS_IMETHODIMP
+nsSameOriginChecker::GetInterface(const nsIID & aIID, void **aResult)
+{
+    return QueryInterface(aIID, aResult);
+}
+
 nsresult
 nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoundDocument,
                                    nsIURI* aDocumentURI, nsIURI* aBindingURI, 
@@ -1130,6 +1155,11 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel), aDocumentURI, nsnull, loadGroup);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIInterfaceRequestor> sameOriginChecker = new nsSameOriginChecker;
+  NS_ENSURE_TRUE(sameOriginChecker, NS_ERROR_OUT_OF_MEMORY);
+
+  channel->SetNotificationCallbacks(sameOriginChecker);
 
   nsCOMPtr<nsIStreamListener> listener;
   rv = doc->StartDocumentLoad("loadAsInteractiveData",

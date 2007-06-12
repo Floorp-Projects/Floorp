@@ -766,19 +766,11 @@ nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL)
 
 nsresult
 nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc,
-                                      nsIURI* aURL,
-                                      nsIDocument** aResult)
+                                      nsIURI* aURL)
 {
   NS_PRECONDITION(aURL, "Must have a URI to load!");
   
-  nsCAutoString otherScheme;
-  aURL->GetScheme(otherScheme);
-  
-  nsCAutoString scheme;
-  aBoundDoc->GetDocumentURI()->GetScheme(scheme);
-
   // First we need to load our binding.
-  *aResult = nsnull;
   nsresult rv;
   nsCOMPtr<nsIXBLService> xblService = 
            do_GetService("@mozilla.org/xbl;1", &rv);
@@ -792,11 +784,6 @@ nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc,
   if (!info)
     return NS_ERROR_FAILURE;
 
-  // XXXbz Why is this based on a scheme comparison?  Shouldn't this
-  // be a real security check???
-    if (!strcmp(scheme.get(), otherScheme.get()))
-    info->GetDocument(aResult); // Addref happens here.
-    
   return NS_OK;
 }
 
