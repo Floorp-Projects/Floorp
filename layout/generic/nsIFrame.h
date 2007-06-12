@@ -100,10 +100,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface 
-// 902aaa17-6433-4d96-86b3-fe1f4af41159
+// 4c0cfb5b-864d-46c5-ad78-b1b4de35a4c3
 #define NS_IFRAME_IID \
-{ 0x902aaa17, 0x6433, 0x4d96, \
-  { 0x86, 0xb3, 0xfe, 0x1f, 0x4a, 0xf4, 0x11, 0x59 } }
+{ 0x4c0cfb5b, 0x864d, 0x46c5, \
+  { 0xad, 0x78, 0xb1, 0xb4, 0xde, 0x35, 0xa4, 0xc3 } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -1185,6 +1185,17 @@ public:
   };
   virtual IntrinsicWidthOffsetData
     IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext) = 0;
+
+  /*
+   * Get the intrinsic ratio of this element, or nsSize(0,0) if it has
+   * no intrinsic ratio.  The intrinsic ratio is the ratio of the
+   * height/width of a box with an intrinsic size or the intrinsic
+   * aspect ratio of a scalable vector image without an intrinsic size.
+   *
+   * Either one of the sides may be zero, indicating a zero or infinite
+   * ratio.
+   */
+  virtual nsSize GetIntrinsicRatio() = 0;
 
   /**
    * Compute the size that a frame will occupy.  Called while

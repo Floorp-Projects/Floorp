@@ -279,6 +279,7 @@ public:
                                   InlinePrefWidthData *aData);
   virtual IntrinsicWidthOffsetData
     IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext);
+  virtual nsSize GetIntrinsicRatio();
 
   virtual nsSize ComputeSize(nsIRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,

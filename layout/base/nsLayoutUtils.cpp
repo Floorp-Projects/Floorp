@@ -1253,6 +1253,67 @@ nsLayoutUtils::GetAbsoluteCoord(const nsStyleCoord& aStyle,
   return PR_FALSE;
 }
 
+static PRBool
+GetPercentHeight(const nsStyleCoord& aStyle,
+                 nsIRenderingContext* aRenderingContext,
+                 nsIFrame* aFrame,
+                 nscoord& aResult)
+{
+  if (eStyleUnit_Percent != aStyle.GetUnit())
+    return PR_FALSE;
+
+  nsIFrame *f;
+  for (f = aFrame->GetParent(); f && !f->IsContainingBlock();
+       f = f->GetParent())
+    ;
+  if (!f) {
+    NS_NOTREACHED("top of frame tree not a containing block");
+    return PR_FALSE;
+  }
+
+  const nsStylePosition *pos = f->GetStylePosition();
+  nscoord h;
+  if (!nsLayoutUtils::
+        GetAbsoluteCoord(pos->mHeight, aRenderingContext, f, h) &&
+      !GetPercentHeight(pos->mHeight, aRenderingContext, f, h)) {
+    NS_ASSERTION(pos->mHeight.GetUnit() == eStyleUnit_Auto ||
+                 pos->mHeight.GetUnit() == eStyleUnit_Percent,
+                 "unknown height unit");
+    // There's no basis for the percentage height, so it acts like auto.
+    // Should we consider a max-height < min-height pair a basis for
+    // percentage heights?  The spec is somewhat unclear, and not doing
+    // so is simpler and avoids troubling discontinuities in behavior,
+    // so I'll choose not to. -LDB
+    return PR_FALSE;
+  }
+
+  nscoord maxh;
+  if (nsLayoutUtils::
+        GetAbsoluteCoord(pos->mMaxHeight, aRenderingContext, f, maxh) ||
+      GetPercentHeight(pos->mMaxHeight, aRenderingContext, f, maxh)) {
+    if (maxh < h)
+      h = maxh;
+  } else {
+    NS_ASSERTION(pos->mMaxHeight.GetUnit() == eStyleUnit_None ||
+                 pos->mMaxHeight.GetUnit() == eStyleUnit_Percent,
+                 "unknown max-height unit");
+  }
+
+  nscoord minh;
+  if (nsLayoutUtils::
+        GetAbsoluteCoord(pos->mMinHeight, aRenderingContext, f, minh) ||
+      GetPercentHeight(pos->mMinHeight, aRenderingContext, f, minh)) {
+    if (minh > h)
+      h = minh;
+  } else {
+    NS_ASSERTION(pos->mMaxHeight.GetUnit() == eStyleUnit_Percent,
+                 "unknown min-height unit");
+  }
+
+  aResult = NSToCoordRound(aStyle.GetPercentValue() * h);
+  return PR_TRUE;
+}
+
 // Handles only -moz-intrinsic and -moz-min-intrinsic, and
 // -moz-shrink-wrap for min-width and max-width, since the others
 // (-moz-shrink-wrap for width, and -moz-fill) have no effect on
@@ -1369,6 +1430,43 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
     printf(" %s intrinsic width from frame is %d.\n",
            aType == MIN_WIDTH ? "min" : "pref", result);
 #endif
+
+    // Handle elements with an intrinsic ratio (or size) and a specified
+    // height, min-height, or max-height.
+    const nsStyleCoord &styleHeight = stylePos->mHeight;
+    const nsStyleCoord &styleMinHeight = stylePos->mMinHeight;
+    const nsStyleCoord &styleMaxHeight = stylePos->mMaxHeight;
+    if (styleHeight.GetUnit() != eStyleUnit_Auto ||
+        !(styleMinHeight.GetUnit() == eStyleUnit_Coord &&
+          styleMinHeight.GetCoordValue() == 0) ||
+        styleMaxHeight.GetUnit() != eStyleUnit_None) {
+
+      nsSize ratio = aFrame->GetIntrinsicRatio();
+
+      if (ratio.height != 0) {
+
+        nscoord h;
+        if (GetAbsoluteCoord(styleHeight, aRenderingContext, aFrame, h) ||
+            GetPercentHeight(styleHeight, aRenderingContext, aFrame, h)) {
+          result =
+            NSToCoordRound(h * (float(ratio.width) / float(ratio.height)));
+        }
+
+        if (GetAbsoluteCoord(styleMaxHeight, aRenderingContext, aFrame, h) ||
+            GetPercentHeight(styleMaxHeight, aRenderingContext, aFrame, h)) {
+          h = NSToCoordRound(h * (float(ratio.width) / float(ratio.height)));
+          if (h < result)
+            result = h;
+        }
+
+        if (GetAbsoluteCoord(styleMinHeight, aRenderingContext, aFrame, h) ||
+            GetPercentHeight(styleMinHeight, aRenderingContext, aFrame, h)) {
+          h = NSToCoordRound(h * (float(ratio.width) / float(ratio.height)));
+          if (h > result)
+            result = h;
+        }
+      }
+    }
   }
       
   if (aFrame->GetType() == nsGkAtoms::tableFrame) {
