@@ -68,6 +68,7 @@ const LMANNO_SITEURI = "livemark/siteURI";
 const LMANNO_EXPIRATION = "livemark/expiration";
 const LMANNO_BMANNO = "livemark/bookmarkFeedURI";
 
+const PS_CONTRACTID = "@mozilla.org/preferences-service;1";
 const NH_CONTRACTID = "@mozilla.org/browser/nav-history-service;1";
 const AS_CONTRACTID = "@mozilla.org/browser/annotation-service;1";
 const OS_CONTRACTID = "@mozilla.org/observer-service;1";
@@ -80,8 +81,9 @@ const FP_CONTRACTID = "@mozilla.org/feed-processor;1";
 const SEC_CONTRACTID = "@mozilla.org/scriptsecuritymanager;1";
 const SEC_FLAGS = Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL;
 
-// Check every hour
-const EXPIRATION = 3600000;
+// Check every hour by default
+var gExpiration = 3600000;
+
 // Check every 10 minutes on error
 const ERROR_EXPIRATION = 600000;
 
@@ -107,7 +109,17 @@ function GetString(name)
 
 var gLivemarkService;
 function LivemarkService() {
-  
+
+  try {
+    var prefs = Cc[PS_CONTRACTID].getService(Ci.nsIPrefBranch);
+    var livemarkRefresh = 
+      prefs.getIntPref("browser.bookmarks.livemark_refresh_seconds");
+    // Reset global expiration variable to reflect hidden pref (in ms)
+    // with a lower limit of 1 minute (60000 ms)
+    gExpiration = Math.max(livemarkRefresh * 1000, 60000);
+  } 
+  catch (ex) { }
+    
   // [ {folderId:, folderURI:, feedURI:, loadGroup:, locked: } ];
   this._livemarks = [];
 
@@ -414,7 +426,7 @@ function LivemarkLoadListener(livemark) {
   this._livemark = livemark;
   this._processor = null;
   this._isAborted = false;
-  this._ttl = EXPIRATION;
+  this._ttl = gExpiration;
   this._ans = Cc[AS_CONTRACTID].getService(Ci.nsIAnnotationService);
 }
 
@@ -455,7 +467,7 @@ LivemarkLoadListener.prototype = {
     // Enforce well-formedness because the existing code does
     if (!result || !result.doc || result.bozo) {
       this.insertLivemarkFailedItem(this._livemark.folderId);
-      this._ttl = EXPIRATION;
+      this._ttl = gExpiration;
       throw Cr.NS_ERROR_FAILURE;
     }
 
@@ -548,14 +560,13 @@ LivemarkLoadListener.prototype = {
   /**
    * See nsIRequestObserver.idl
    */
-  onStopRequest: function LLL_onStopReqeust(request, context, status) {
+  onStopRequest: function LLL_onStopRequest(request, context, status) {
     if (!Components.isSuccessCode(status)) {
       // Something went wrong; try to load again in a bit
       this._setResourceTTL(ERROR_EXPIRATION);
       this._isAborted = true;
       return;
     }
-
     // Set an expiration on the livemark, for reloading the data
     try { 
       this._processor.onStopRequest(request, context, status);
@@ -565,27 +576,26 @@ LivemarkLoadListener.prototype = {
       if (channel) {
         var entryInfo = channel.cacheToken.QueryInterface(Ci.nsICacheEntryInfo);
         if (entryInfo) {
-          var exprtime = entryInfo.expirationTime;
-          var nowtime = Date.now();
+          // nsICacheEntryInfo returns value as seconds, 
+          // expiresTime stores as ms
+          var expiresTime = entryInfo.expirationTime * 1000;
+          var nowTime = Date.now();
           
-          if (nowtime >= exprtime) {
-            expiresTime -= nowtime;
-            if (expiresTime > EXPIRATION)
-              this._setResourceTTL(expiresTime);
-            else
-              this._setResourceTTL(EXPIRATION);
+          // note, expiresTime can be 0, see bug #383538
+          if (expiresTime > nowTime) {
+            this._setResourceTTL(Math.max((expiresTime - nowTime),
+                                 gExpiration));
+            return;
           }
         }
       }
     }
-    catch (ex) { 
-      this._setResourceTTL(this._ttl);
-    }
-    
+    catch (ex) { }
+    this._setResourceTTL(this._ttl);
   },
 
-  _setResourceTTL: function LLL__setResourceTTL(seconds) {
-    var exptime = Date.now() + seconds;
+  _setResourceTTL: function LLL__setResourceTTL(milliseconds) {
+    var exptime = Date.now() + milliseconds;
     this._ans.setPageAnnotationInt64(this._livemark.feedURI,
                                      LMANNO_EXPIRATION, exptime, 0,
                                      Ci.nsIAnnotationService.EXPIRE_NEVER);
