@@ -102,11 +102,9 @@ struct JSAtomListElement {
 #define ALE_SET_ATOM(ale,atom)  ((ale)->entry.key = (const void *)(atom))
 #define ALE_SET_INDEX(ale,index)((ale)->entry.value = JS_UINT32_TO_PTR(index))
 #define ALE_SET_JSOP(ale,op)    ((ale)->entry.value = JS_UINT32_TO_PTR(op))
-#define ALE_SET_VALUE(ale,val)  ((ale)->entry.value = (JSHashEntry *)(val))
-#define ALE_SET_NEXT(ale,link)  ((ale)->entry.next = (JSHashEntry *)(link))
 
 struct JSAtomList {
-    JSAtomListElement   *list;          /* literals indexed for mapping */
+    JSHashEntry         *list;          /* literals indexed for mapping */
     JSHashTable         *table;         /* hash table if list gets too long */
     jsuint              count;          /* count of indexed literals */
 };
@@ -126,17 +124,17 @@ struct JSAtomList {
             _hep = JS_HashTableRawLookup((_al)->table, _atom->number, _atom); \
             _ale = *_hep ? (JSAtomListElement *) *_hep : NULL;                \
         } else {                                                              \
-            JSAtomListElement **_alep = &(_al)->list;                         \
+            JSHashEntry **_alep = &(_al)->list;                               \
             _hep = NULL;                                                      \
-            while ((_ale = *_alep) != NULL) {                                 \
+            while ((_ale = (JSAtomListElement *)*_alep) != NULL) {            \
                 if (ALE_ATOM(_ale) == (_atom)) {                              \
                     /* Hit, move atom's element to the front of the list. */  \
-                    *_alep = ALE_NEXT(_ale);                                  \
-                    ALE_SET_NEXT(_ale, (_al)->list);                          \
-                    (_al)->list = _ale;                                       \
+                    *_alep = (_ale)->entry.next;                              \
+                    (_ale)->entry.next = (_al)->list;                         \
+                    (_al)->list = &_ale->entry;                               \
                     break;                                                    \
                 }                                                             \
-                _alep = (JSAtomListElement **)&_ale->entry.next;              \
+                _alep = &_ale->entry.next;                                    \
             }                                                                 \
         }                                                                     \
     JS_END_MACRO
