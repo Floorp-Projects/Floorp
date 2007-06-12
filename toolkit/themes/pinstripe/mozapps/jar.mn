@@ -36,5 +36,6 @@ classic.jar:
   skin/classic/mozapps/xpinstall/xpinstallConfirm.css             (xpinstall/xpinstallConfirm.css)
 #ifdef MOZ_PLACES
   skin/classic/mozapps/places/defaultFavicon.png                  (places/defaultFavicon.png)
+  skin/classic/mozapps/places/tagContainerIcon.png                (places/tagContainerIcon.png)
 #endif
 #endif
