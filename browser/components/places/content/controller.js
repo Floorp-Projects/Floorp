@@ -2222,12 +2222,7 @@ PlacesSortFolderByNameTransaction.prototype = {
       items.push(item);
     }
 
-    function sortItems(a, b) {
-      var atitle = a.title;
-      var btitle = b.title;
-      return (atitle == btitle) ? 0 : ((atitle < btitle) ? -1 : 1);
-    }
-    items.sort(sortItems);
+    items.sort(function (a, b) { return a.title.localeCompare(b.title); });
 
     for (var i = 0; i < count; ++i)
       this.bookmarks.setItemIndex(items[i].itemId, i);
