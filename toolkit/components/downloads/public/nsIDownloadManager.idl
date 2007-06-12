@@ -106,11 +106,13 @@ interface nsIDownloadManager : nsISupports {
                           in nsICancelable aCancelable);
 
   /**
-   * Retrieves an in-progress download managed by the download manager.
+   * Retrieves a download managed by the download manager.  This can be one that
+   * is in progress, or one that has completed in the past and is stored in the
+   * database.
    *
    * @param aID The unique ID of the download.
    * @return The download with the specified ID.
-   * @throws NS_ERROR_FAILURE if the download is not in-progress.
+   * @throws NS_ERROR_NOT_AVAILABLE if the download is not in the database.
    */
   nsIDownload getDownload(in unsigned long aID);
 
