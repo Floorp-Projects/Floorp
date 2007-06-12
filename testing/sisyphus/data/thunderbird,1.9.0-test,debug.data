@@ -1,0 +1,10 @@
+product=thunderbird
+branch=1.9.0
+profilename=thunderbird-1.9.0-test-profile
+profiledirectory=/tmp/thunderbird-1.9.0-test-profile
+executablepath=/work/mozilla/builds/1.9.0-test/mozilla/thunderbird-debug/dist
+userpreferences=/work/mozilla/mozilla.com/test.mozilla.com/www/prefs/test-user.js
+extensiondir=/work/mozilla/mozilla.com/test.mozilla.com/www/xpi
+profiletemplate=/work/mozilla/mozilla.com/test.mozilla.com/www/profiles/imap
+
+

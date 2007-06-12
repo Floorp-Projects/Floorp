@@ -1,0 +1,10 @@
+product=thunderbird
+branch=1.8.1
+profilename=thunderbird-1.8.1-profile
+profiledirectory=/tmp/thunderbird-1.8.1-profile
+executablepath=/work/mozilla/builds/1.8.1/mozilla/thunderbird-debug/dist
+userpreferences=/work/mozilla/mozilla.com/test.mozilla.com/www/prefs/test-user.js
+extensiondir=/work/mozilla/mozilla.com/test.mozilla.com/www/xpi
+profiletemplate=/work/mozilla/mozilla.com/test.mozilla.com/www/profiles/imap
+
+
