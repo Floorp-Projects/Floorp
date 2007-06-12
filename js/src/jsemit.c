@@ -1538,7 +1538,7 @@ js_DefineCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
         ale = js_IndexAtom(cx, atom, &cg->constList);
         if (!ale)
             return JS_FALSE;
-        ALE_SET_VALUE(ale, ATOM_KEY(valueAtom));
+        ale->entry.value = (void *)ATOM_KEY(valueAtom);
     }
     return JS_TRUE;
 }
