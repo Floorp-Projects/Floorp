@@ -316,9 +316,26 @@ function run_test() {
   // Test expected failure of moving a folder to be its own parent
   try {
     bmsvc.moveItem(workFolder, workFolder, bmsvc.DEFAULT_INDEX);
-    do_throw("moveItem() allowed moving a folder to be it's own parent.");
+    do_throw("moveItem() allowed moving a folder to be its own parent.");
   } catch (e) {}
 
+  // Test expected failure of moving a folder to be a child of its child
+  // or of its grandchild.  see bug #383678 
+  var childFolder = bmsvc.createFolder(workFolder, "childFolder", bmsvc.DEFAULT_INDEX);
+  do_check_eq(observer._itemAddedId, childFolder);
+  do_check_eq(observer._itemAddedParent, workFolder);
+  var grandchildFolder = bmsvc.createFolder(childFolder, "grandchildFolder", bmsvc.DEFAULT_INDEX);
+  do_check_eq(observer._itemAddedId, grandchildFolder);
+  do_check_eq(observer._itemAddedParent, childFolder);
+  try {
+    bmsvc.moveItem(workFolder, childFolder, bmsvc.DEFAULT_INDEX);
+    do_throw("moveItem() allowed moving a folder to be a child of its child");
+  } catch (e) {}
+  try {
+    bmsvc.moveItem(workFolder, grandchildFolder, bmsvc.DEFAULT_INDEX);
+    do_throw("moveItem() allowed moving a folder to be a child of its grandchild");
+  } catch (e) {}
+  
   // test insertSeparator and removeChildAt
   // XXX - this should also query bookmarks for the folder children
   // and then test the node type at our index
