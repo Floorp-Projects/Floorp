@@ -1911,24 +1911,11 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   const nsFont* defaultVariableFont =
     aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID);
 
-  // font-family: string list, enum, inherit
-  if (eCSSUnit_String == aFontData.mFamily.GetUnit()) {
-    // set the correct font if we are using DocumentFonts OR we are overriding for XUL
-    // MJA: bug 31816
-    if (!aIsGeneric) {
-      // only bother appending fallback fonts if this isn't a fallback generic font itself
-      if (!aFont->mFont.name.IsEmpty())
-        aFont->mFont.name.Append((PRUnichar)',');
-      // XXXldb Should this name be quoted?
-      aFont->mFont.name.Append(aDefaultFont.name);
-    }
-    aFont->mFont.familyNameQuirks =
-        (aPresContext->CompatibilityMode() == eCompatibility_NavQuirks &&
-         aFontData.mFamilyFromHTML);
-  }
-  else if (eCSSUnit_Enumerated == aFontData.mFamily.GetUnit()) {
+  // -moz-system-font: enum (never inherit!)
+  nsFont systemFont;
+  if (eCSSUnit_Enumerated == aFontData.mSystemFont.GetUnit()) {
     nsSystemFontID sysID;
-    switch (aFontData.mFamily.GetIntValue()) {
+    switch (aFontData.mSystemFont.GetIntValue()) {
       // If you add fonts to this list, you need to also patch the list
       // in CheckFontCallback (also in this file).
       case NS_STYLE_FONT_CAPTION:       sysID = eSystemFont_Caption;      break;    // css2
@@ -1950,17 +1937,14 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     }
 
     // GetSystemFont sets the font face but not necessarily the size
-    aFont->mFont.size = defaultVariableFont->size;
+    // XXX Or at least it used to -- no longer true for thebes.  Maybe
+    // it should be again, though.
+    systemFont.size = defaultVariableFont->size;
 
     if (NS_FAILED(aPresContext->DeviceContext()->GetSystemFont(sysID,
-                                                             &aFont->mFont))) {
-        aFont->mFont.name = defaultVariableFont->name;
+                                                               &systemFont))) {
+        systemFont.name = defaultVariableFont->name;
     }
-    // this becomes our cascading size
-    aFont->mSize = aFont->mFont.size =
-      nsStyleFont::ZoomText(aPresContext, aFont->mFont.size);
-
-    aFont->mFont.familyNameQuirks = PR_FALSE;
 
     // XXXldb All of this platform-specific stuff should be in the
     // nsIDeviceContext implementations, not here.
@@ -1983,20 +1967,50 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
       case eSystemFont_Button:
       case eSystemFont_List:
         // Assumption: system defined font is proportional
-        aFont->mSize = nsStyleFont::ZoomText(aPresContext,
-             PR_MAX(defaultVariableFont->size - aPresContext->PointsToAppUnits(2), 0));
+        systemFont.size = 
+          PR_MAX(defaultVariableFont->size - aPresContext->PointsToAppUnits(2), 0);
         break;
     }
 #endif
+  } else {
+    // In case somebody explicitly used -moz-use-system-font.
+    systemFont = *defaultVariableFont;
+  }
+
+
+  // font-family: string list, enum, inherit
+  NS_ASSERTION(eCSSUnit_Enumerated != aFontData.mFamily.GetUnit(),
+               "system fonts should not be in mFamily anymore");
+  if (eCSSUnit_String == aFontData.mFamily.GetUnit()) {
+    // set the correct font if we are using DocumentFonts OR we are overriding for XUL
+    // MJA: bug 31816
+    if (!aIsGeneric) {
+      // only bother appending fallback fonts if this isn't a fallback generic font itself
+      if (!aFont->mFont.name.IsEmpty())
+        aFont->mFont.name.Append((PRUnichar)',');
+      // XXXldb Should this name be quoted?
+      aFont->mFont.name.Append(aDefaultFont.name);
+    }
+    aFont->mFont.familyNameQuirks =
+        (aPresContext->CompatibilityMode() == eCompatibility_NavQuirks &&
+         aFontData.mFamilyFromHTML);
+    aFont->mFont.systemFont = PR_FALSE;
+  }
+  else if (eCSSUnit_System_Font == aFontData.mFamily.GetUnit()) {
+    aFont->mFont.name = systemFont.name;
+    aFont->mFont.familyNameQuirks = PR_FALSE;
+    aFont->mFont.systemFont = PR_TRUE;
   }
   else if (eCSSUnit_Inherit == aFontData.mFamily.GetUnit()) {
     aInherited = PR_TRUE;
     aFont->mFont.name = aParentFont->mFont.name;
     aFont->mFont.familyNameQuirks = aParentFont->mFont.familyNameQuirks;
+    aFont->mFont.systemFont = aParentFont->mFont.systemFont;
   }
   else if (eCSSUnit_Initial == aFontData.mFamily.GetUnit()) {
     aFont->mFont.name = defaultVariableFont->name;
     aFont->mFont.familyNameQuirks = PR_FALSE;
+    aFont->mFont.systemFont = defaultVariableFont->systemFont;
   }
 
   // font-style: enum, normal, inherit
@@ -2005,6 +2019,9 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   }
   else if (eCSSUnit_Normal == aFontData.mStyle.GetUnit()) {
     aFont->mFont.style = NS_STYLE_FONT_STYLE_NORMAL;
+  }
+  else if (eCSSUnit_System_Font == aFontData.mStyle.GetUnit()) {
+    aFont->mFont.style = systemFont.style;
   }
   else if (eCSSUnit_Inherit == aFontData.mStyle.GetUnit()) {
     aInherited = PR_TRUE;
@@ -2020,6 +2037,9 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   }
   else if (eCSSUnit_Normal == aFontData.mVariant.GetUnit()) {
     aFont->mFont.variant = NS_STYLE_FONT_VARIANT_NORMAL;
+  }
+  else if (eCSSUnit_System_Font == aFontData.mVariant.GetUnit()) {
+    aFont->mFont.variant = systemFont.variant;
   }
   else if (eCSSUnit_Inherit == aFontData.mVariant.GetUnit()) {
     aInherited = PR_TRUE;
@@ -2049,6 +2069,9 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   }
   else if (eCSSUnit_Normal == aFontData.mWeight.GetUnit()) {
     aFont->mFont.weight = NS_STYLE_FONT_WEIGHT_NORMAL;
+  }
+  else if (eCSSUnit_System_Font == aFontData.mWeight.GetUnit()) {
+    aFont->mFont.weight = systemFont.weight;
   }
   else if (eCSSUnit_Inherit == aFontData.mWeight.GetUnit()) {
     aInherited = PR_TRUE;
@@ -2110,6 +2133,11 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
                                   aFontData.mSize.GetPercentValue());
     zoom = PR_FALSE;
   }
+  else if (eCSSUnit_System_Font == aFontData.mSize.GetUnit()) {
+    // this becomes our cascading size
+    aFont->mSize = systemFont.size;
+    zoom = PR_TRUE;
+  }
   else if (eCSSUnit_Inherit == aFontData.mSize.GetUnit()) {
     aInherited = PR_TRUE;
     aFont->mSize = aParentFont->mSize;
@@ -2136,6 +2164,9 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   }
   else if (eCSSUnit_None == aFontData.mSizeAdjust.GetUnit()) {
     aFont->mFont.sizeAdjust = 0.0f;
+  }
+  else if (eCSSUnit_System_Font == aFontData.mSizeAdjust.GetUnit()) {
+    aFont->mFont.sizeAdjust = systemFont.sizeAdjust;
   }
   else if (eCSSUnit_Inherit == aFontData.mSizeAdjust.GetUnit()) {
     aInherited = PR_TRUE;
@@ -2357,7 +2388,8 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct,
         nscoord(float(aContext->GetStyleFont()->mFont.size) *
                 textData.mLineHeight.GetPercentValue()));
   }
-  else if (eCSSUnit_Initial == textData.mLineHeight.GetUnit()) {
+  else if (eCSSUnit_Initial == textData.mLineHeight.GetUnit() ||
+           eCSSUnit_System_Font == textData.mLineHeight.GetUnit()) {
     text->mLineHeight.SetNormalValue();
   }
   else {

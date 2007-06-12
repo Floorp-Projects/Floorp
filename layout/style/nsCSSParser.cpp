@@ -169,6 +169,8 @@ protected:
     public:
       nsAutoParseCompoundProperty(CSSParserImpl* aParser) : mParser(aParser)
       {
+        NS_ASSERTION(!aParser->IsParsingCompoundProperty(),
+                     "already parsing compound property");
         NS_ASSERTION(aParser, "Null parser?");
         aParser->SetParsingCompoundProperty(PR_TRUE);
       }
@@ -3470,12 +3472,6 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
       dest->~nsCSSValue();
       memcpy(dest, source, sizeof(nsCSSValue));
       new (source) nsCSSValue();
-      if (dest->GetUnit() == eCSSUnit_Null) {
-        // Some of our property parsers actually want to _clear_ properties in
-        // mData (eg the "font" shorthand parser does for system fonts).  We've
-        // cleared the data; now clear the bit too.
-        mData.ClearPropertyBit(aPropID);
-      }
     } break;
 
     case eCSSType_Rect: {
@@ -3549,6 +3545,7 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
 #define VARIANT_INHERIT         0x020000  // H eCSSUnit_Initial, eCSSUnit_Inherit
 #define VARIANT_NONE            0x040000  // O
 #define VARIANT_NORMAL          0x080000  // M
+#define VARIANT_SYSFONT         0x100000  // eCSSUnit_System_Font
 
 // Common combinations of variants
 #define VARIANT_AL   (VARIANT_AUTO | VARIANT_LENGTH)
@@ -3762,6 +3759,9 @@ PRBool CSSParserImpl::ParseVariant(nsresult& aErrorCode, nsCSSValue& aValue,
         }
       }
       if ((aVariantMask & VARIANT_INHERIT) != 0) {
+        // XXX Should we check IsParsingCompoundProperty, or do all
+        // callers handle it?  (Not all callers set it, though, since
+        // they want the quirks that are disabled by setting it.)
         if (eCSSKeyword_inherit == keyword) {
           aValue.SetInheritValue();
           return PR_TRUE;
@@ -3780,6 +3780,13 @@ PRBool CSSParserImpl::ParseVariant(nsresult& aErrorCode, nsCSSValue& aValue,
       if ((aVariantMask & VARIANT_NORMAL) != 0) {
         if (eCSSKeyword_normal == keyword) {
           aValue.SetNormalValue();
+          return PR_TRUE;
+        }
+      }
+      if ((aVariantMask & VARIANT_SYSFONT) != 0) {
+        if (eCSSKeyword__moz_use_system_font == keyword &&
+            !IsParsingCompoundProperty()) {
+          aValue.SetSystemFontValue();
           return PR_TRUE;
         }
       }
@@ -4359,6 +4366,7 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
 #endif
 
   // Strip out properties we use internally.
+  case eCSSProperty__x_system_font:
   case eCSSProperty_margin_end_value:
   case eCSSProperty_margin_left_value:
   case eCSSProperty_margin_right_value:
@@ -4463,6 +4471,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
     NS_ERROR("not a single value property");
     return PR_FALSE;
 
+  case eCSSProperty__x_system_font:
   case eCSSProperty_margin_left_ltr_source:
   case eCSSProperty_margin_left_rtl_source:
   case eCSSProperty_margin_right_ltr_source:
@@ -4679,19 +4688,20 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_font_family:
     return ParseFamily(aErrorCode, aValue);
   case eCSSProperty_font_size: 
-    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HKLP,
+    return ParsePositiveVariant(aErrorCode, aValue,
+                                VARIANT_HKLP | VARIANT_SYSFONT,
                                 nsCSSProps::kFontSizeKTable);
   case eCSSProperty_font_size_adjust:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HON,
+    return ParseVariant(aErrorCode, aValue, VARIANT_HON | VARIANT_SYSFONT,
                         nsnull);
   case eCSSProperty_font_stretch:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HMK,
+    return ParseVariant(aErrorCode, aValue, VARIANT_HMK | VARIANT_SYSFONT,
                         nsCSSProps::kFontStretchKTable);
   case eCSSProperty_font_style:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HMK,
+    return ParseVariant(aErrorCode, aValue, VARIANT_HMK | VARIANT_SYSFONT,
                         nsCSSProps::kFontStyleKTable);
   case eCSSProperty_font_variant:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HMK,
+    return ParseVariant(aErrorCode, aValue, VARIANT_HMK | VARIANT_SYSFONT,
                         nsCSSProps::kFontVariantKTable);
   case eCSSProperty_font_weight:
     return ParseFontWeight(aErrorCode, aValue);
@@ -4702,7 +4712,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_word_spacing:
     return ParseVariant(aErrorCode, aValue, VARIANT_HL | VARIANT_NORMAL, nsnull);
   case eCSSProperty_line_height:
-    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HLPN | VARIANT_NORMAL, nsnull);
+    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HLPN | VARIANT_NORMAL | VARIANT_SYSFONT, nsnull);
   case eCSSProperty_list_style_image:
     return ParseVariant(aErrorCode, aValue, VARIANT_HUO, nsnull);
   case eCSSProperty_list_style_position:
@@ -5597,6 +5607,7 @@ PRBool CSSParserImpl::ParseFont(nsresult& aErrorCode)
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
       if (eCSSUnit_Inherit == family.GetUnit() ||
           eCSSUnit_Initial == family.GetUnit()) {
+        AppendValue(eCSSProperty__x_system_font, nsCSSValue(eCSSUnit_None));
         AppendValue(eCSSProperty_font_family, family);
         AppendValue(eCSSProperty_font_style, family);
         AppendValue(eCSSProperty_font_variant, family);
@@ -5607,22 +5618,16 @@ PRBool CSSParserImpl::ParseFont(nsresult& aErrorCode)
         AppendValue(eCSSProperty_font_size_adjust, family);
       }
       else {
-        AppendValue(eCSSProperty_font_family, family);  // keyword value overrides everything else
-        nsCSSValue empty;
-        // XXXbz this is actually _clearing_ the values for the following
-        // properties in mTempData, but setting the bit for them.  We need that
-        // because we want to clear out the values in mData when all is said
-        // and done.  See the code in TransferTempData that handles this.  The
-        // end result is that mData always has its property bits set like it
-        // should, but mTempData can, in fact, have bits set for properties
-        // that are not set...
-        AppendValue(eCSSProperty_font_style, empty);
-        AppendValue(eCSSProperty_font_variant, empty);
-        AppendValue(eCSSProperty_font_weight, empty);
-        AppendValue(eCSSProperty_font_size, empty);
-        AppendValue(eCSSProperty_line_height, empty);
-        AppendValue(eCSSProperty_font_stretch, empty);
-        AppendValue(eCSSProperty_font_size_adjust, empty);
+        AppendValue(eCSSProperty__x_system_font, family);
+        nsCSSValue systemFont(eCSSUnit_System_Font);
+        AppendValue(eCSSProperty_font_family, systemFont);
+        AppendValue(eCSSProperty_font_style, systemFont);
+        AppendValue(eCSSProperty_font_variant, systemFont);
+        AppendValue(eCSSProperty_font_weight, systemFont);
+        AppendValue(eCSSProperty_font_size, systemFont);
+        AppendValue(eCSSProperty_line_height, systemFont);
+        AppendValue(eCSSProperty_font_stretch, systemFont);
+        AppendValue(eCSSProperty_font_size_adjust, systemFont);
       }
       return PR_TRUE;
     }
@@ -5670,9 +5675,11 @@ PRBool CSSParserImpl::ParseFont(nsresult& aErrorCode)
   }
 
   // Get final mandatory font-family
+  nsAutoParseCompoundProperty compound(this);
   if (ParseFamily(aErrorCode, family)) {
     if ((eCSSUnit_Inherit != family.GetUnit()) && (eCSSUnit_Initial != family.GetUnit()) &&
         ExpectEndProperty(aErrorCode, PR_TRUE)) {
+      AppendValue(eCSSProperty__x_system_font, nsCSSValue(eCSSUnit_None));
       AppendValue(eCSSProperty_font_family, family);
       AppendValue(eCSSProperty_font_style, values[0]);
       AppendValue(eCSSProperty_font_variant, values[1]);
@@ -5689,7 +5696,7 @@ PRBool CSSParserImpl::ParseFont(nsresult& aErrorCode)
 
 PRBool CSSParserImpl::ParseFontWeight(nsresult& aErrorCode, nsCSSValue& aValue)
 {
-  if (ParseVariant(aErrorCode, aValue, VARIANT_HMKI, nsCSSProps::kFontWeightKTable)) {
+  if (ParseVariant(aErrorCode, aValue, VARIANT_HMKI | VARIANT_SYSFONT, nsCSSProps::kFontWeightKTable)) {
     if (eCSSUnit_Integer == aValue.GetUnit()) { // ensure unit value
       PRInt32 intValue = aValue.GetIntValue();
       if ((100 <= intValue) &&
@@ -5722,8 +5729,13 @@ PRBool CSSParserImpl::ParseFamily(nsresult& aErrorCode, nsCSSValue& aValue)
           aValue.SetInheritValue();
           return PR_TRUE;
         }
-        else if (keyword == eCSSKeyword__moz_initial) {
+        if (keyword == eCSSKeyword__moz_initial) {
           aValue.SetInitialValue();
+          return PR_TRUE;
+        }
+        if (keyword == eCSSKeyword__moz_use_system_font &&
+            !IsParsingCompoundProperty()) {
+          aValue.SetSystemFontValue();
           return PR_TRUE;
         }
       }
