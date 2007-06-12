@@ -340,6 +340,10 @@ var BookmarksEventHandler = {
     if (aTipElement.localName != "toolbarbutton")
       return false;
 
+    // Fx2XP: Only show tooltips for URL items
+    if (!PlacesUtils.nodeIsURI(aTipElement.node))
+      return false;
+
     var url = aTipElement.node.uri;
     if (!url) 
       return false;
