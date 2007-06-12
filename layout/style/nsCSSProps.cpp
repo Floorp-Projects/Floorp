@@ -1333,6 +1333,7 @@ static const nsCSSProperty gFontSubpropTable[] = {
   eCSSProperty_line_height,
   eCSSProperty_font_size_adjust, // XXX Added LDB.
   eCSSProperty_font_stretch, // XXX Added LDB.
+  eCSSProperty__x_system_font,
   eCSSProperty_UNKNOWN
 };
 

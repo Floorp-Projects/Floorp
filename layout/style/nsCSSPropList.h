@@ -269,6 +269,9 @@ CSS_PROP_OUTLINE(-moz-outline-radius-topleft, _moz_outline_radius_topLeft, MozOu
 CSS_PROP_OUTLINE(-moz-outline-radius-topright, _moz_outline_radius_topRight, MozOutlineRadiusTopright, Margin, mOutlineRadius.mRight, eCSSType_Value, nsnull)
 CSS_PROP_OUTLINE(-moz-outline-radius-bottomleft, _moz_outline_radius_bottomLeft, MozOutlineRadiusBottomleft, Margin, mOutlineRadius.mLeft, eCSSType_Value, nsnull)
 CSS_PROP_OUTLINE(-moz-outline-radius-bottomright, _moz_outline_radius_bottomRight, MozOutlineRadiusBottomright, Margin, mOutlineRadius.mBottom, eCSSType_Value, nsnull)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_FONT(-x-system-font, _x_system_font, X, Font, mSystemFont, eCSSType_Value, kFontKTable)
+#endif
 CSS_PROP_BACKENDONLY(azimuth, azimuth, Azimuth, Aural, mAzimuth, eCSSType_Value, kAzimuthKTable)
 CSS_PROP_SHORTHAND(background, background, Background)
 CSS_PROP_BACKGROUND(background-attachment, background_attachment, BackgroundAttachment, Color, mBackAttachment, eCSSType_Value, kBackgroundAttachmentKTable)
@@ -329,7 +332,7 @@ CSS_PROP_TABLEBORDER(empty-cells, empty_cells, EmptyCells, Table, mEmptyCells, e
 CSS_PROP_DISPLAY(float, float, CssFloat, Display, mFloat, eCSSType_Value, kFloatKTable)
 CSS_PROP_BORDER(-moz-float-edge, float_edge, MozFloatEdge, Margin, mFloatEdge, eCSSType_Value, kFloatEdgeKTable) // XXX bug 3935
 CSS_PROP_SHORTHAND(font, font, Font)
-CSS_PROP_FONT(font-family, font_family, FontFamily, Font, mFamily, eCSSType_Value, kFontKTable)
+CSS_PROP_FONT(font-family, font_family, FontFamily, Font, mFamily, eCSSType_Value, nsnull)
 CSS_PROP_FONT(font-size, font_size, FontSize, Font, mSize, eCSSType_Value, kFontSizeKTable)
 CSS_PROP_FONT(font-size-adjust, font_size_adjust, FontSizeAdjust, Font, mSizeAdjust, eCSSType_Value, nsnull)
 CSS_PROP_BACKENDONLY(font-stretch, font_stretch, FontStretch, Font, mStretch, eCSSType_Value, kFontStretchKTable)
