@@ -1188,8 +1188,21 @@ public:
     }
 
 
-    inline FontEntry *FindFontForChar(PRUint32 ch, FontEntry *aFont) {
+    static inline bool IsJoiner(PRUint32 ch) {
+        return (ch == 0x200C ||
+                ch == 0x200D ||
+                ch == 0x2060);
+    }
+
+    inline FontEntry *FindFontForChar(PRUint32 ch, PRUint32 prevCh, PRUint32 nextCh, FontEntry *aFont) {
         nsRefPtr<FontEntry> selectedFont;
+
+        // if this character or the next one is a joiner use the
+        // same font as the previous range if we can
+        if (IsJoiner(ch) || IsJoiner(prevCh) || IsJoiner(nextCh)) {
+            if (aFont && aFont->mCharacterMap.test(ch))
+                return aFont;
+        }
 
         // check the list of fonts
         selectedFont = WhichFontSupportsChar(mGroup->GetFontList(), ch);
@@ -1265,6 +1278,8 @@ public:
             return 0;
 
         PR_LOG(gFontLog, PR_LOG_DEBUG, ("Computing ranges for string: (len = %d)", mItemLength));
+
+        PRUint32 prevCh = 0;
         for (PRUint32 i = 0; i < mItemLength; i++) {
             const PRUint32 origI = i; // save off incase we increase for surrogate
             PRUint32 ch = mItemString[i];
@@ -1274,7 +1289,18 @@ public:
             }
 
             PR_LOG(gFontLog, PR_LOG_DEBUG, (" 0x%04x - ", ch));
-            nsRefPtr<FontEntry> fe = FindFontForChar(ch, (mRanges.Length() == 0) ? nsnull : mRanges[mRanges.Length() - 1].font);
+            PRUint32 nextCh = 0;
+            if (i+1 < mItemLength) {
+                nextCh = mItemString[i+1];
+                if ((i+2 < mItemLength) && NS_IS_HIGH_SURROGATE(ch) && NS_IS_LOW_SURROGATE(mItemString[i+2]))
+                    nextCh = SURROGATE_TO_UCS4(nextCh, mItemString[i+2]);
+            }
+            nsRefPtr<FontEntry> fe = FindFontForChar(ch,
+                                                     prevCh,
+                                                     nextCh,
+                                                     (mRanges.Length() == 0) ? nsnull : mRanges[mRanges.Length() - 1].font);
+
+            prevCh = ch;
 
             if (mRanges.Length() == 0) {
                 TextRange r(0,1);
@@ -1291,8 +1317,12 @@ public:
                     mRanges.AppendElement(r);
                 }
             }
-            if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
-                PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Using %s", NS_LossyConvertUTF16toASCII(fe->mName).get()));
+            if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG)) {
+                if (fe)
+                  PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Using %s", NS_LossyConvertUTF16toASCII(fe->mName).get()));
+                else
+                  PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Unable to find font"));
+            }
         }
         mRanges[mRanges.Length()-1].end = mItemLength;
 
