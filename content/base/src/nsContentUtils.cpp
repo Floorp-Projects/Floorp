@@ -2404,7 +2404,7 @@ nsCxPusher::Push(nsISupports *aCurrentTarget)
   nsCOMPtr<nsIDocument> document;
 
   if (content) {
-    document = content->GetDocument();
+    document = content->GetOwnerDoc();
   }
 
   if (!document) {
