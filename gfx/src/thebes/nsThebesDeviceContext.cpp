@@ -380,6 +380,17 @@ nsThebesDeviceContext::SupportsNativeWidgets(PRBool &aSupportsWidgets)
 }
 
 NS_IMETHODIMP
+nsThebesDeviceContext::ClearCachedSystemFonts()
+{
+    //clear our cache of stored system fonts
+    if (gSystemFonts) {
+        delete gSystemFonts;
+        gSystemFonts = nsnull;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsThebesDeviceContext::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
 {
     if (!gSystemFonts) {
