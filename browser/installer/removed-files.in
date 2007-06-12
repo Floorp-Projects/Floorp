@@ -37,6 +37,24 @@ searchplugins/google.gif
 searchplugins/yahoo.src
 searchplugins/yahoo.gif
 searchplugins/
+#ifdef MOZ_ENABLE_LIBXUL
+@DLL_PREFIX@xpcom_core@DLL_SUFFIX@
+components/@DLL_PREFIX@jar50@DLL_SUFFIX@
+#ifdef XP_WIN
+components/jsd3250.dll
+components/xpinstal.dll
+#else
+components/@DLL_PREFIX@jsd@DLL_SUFFIX@
+components/@DLL_PREFIX@xpinstall@DLL_SUFFIX@
+#endif
+components/@DLL_PREFIX@jar50@DLL_SUFFIX@
+#else
+#ifdef XP_MACOSX
+XUL
+#else
+@DLL_PREFIX@xul@DLL_SUFFIX@
+#endif
+#endif
 component.reg
 components/compreg.dat
 components/@DLL_PREFIX@myspell@DLL_SUFFIX@
