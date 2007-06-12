@@ -3099,6 +3099,12 @@ nsFrame::IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext)
   return result;
 }
 
+/* virtual */ nsSize
+nsFrame::GetIntrinsicRatio()
+{
+  return nsSize(0, 0);
+}
+
 inline PRBool
 IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)
 {

@@ -769,6 +769,13 @@ nsImageFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   return result;
 }
 
+/* virtual */ nsSize
+nsImageFrame::GetIntrinsicRatio()
+{
+  EnsureIntrinsicSize(PresContext());
+  return mIntrinsicSize;
+}
+
 NS_IMETHODIMP
 nsImageFrame::Reflow(nsPresContext*          aPresContext,
                      nsHTMLReflowMetrics&     aMetrics,
