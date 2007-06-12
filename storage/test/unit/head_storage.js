@@ -53,7 +53,8 @@ function cleanup()
 {
   // removing test db
   var dbFile = getTestDB();
-  if (dbFile.exists()) dbFile.remove(false);
+  if (dbFile.exists())
+    try { dbFile.remove(true); } catch(e) { /* stupid windows box */ }
 }
 
 function getService()
