@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window title="Testing Application"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml">
+  
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml" />
+
+<script type="application/javascript">
+<![CDATA[
+
+// The various pieces that we'll be testing
+var test = {
+	dummyid: "fuel-dummy-extension@mozilla.org",
+	dummyname: "Dummy Extension",
+	inspectorid: "inspector@mozilla.org",
+	inspectorname: "DOM Inspector"
+};
+
+test_Extensions();
+
+function test_Extensions() {
+  // test to see if a non-existant extension exists
+  ok(!Application.extensions.has(test.dummyid), "Check non-existant extension for existance");
+
+  // test to see if an extension exists
+  ok(Application.extensions.has(test.inspectorid), "Check extension for existance");
+
+  var inspector = Application.extensions.get(test.inspectorid);
+  is(inspector.id, test.inspectorid, "Check 'Extension.id' for known extension");
+  is(inspector.name, test.inspectorname, "Check 'Extension.name' for known extension");
+  // The known version number changes too frequently to hardcode in
+  ok(inspector.version, "Check 'Extension.version' for known extension");
+  ok(inspector.firstRun, "Check 'Extension.firstRun' for known extension");
+  
+  // test to see if extension find works
+  is(Application.extensions.all.length, 1, "Check a find for all extensions");
+
+  // test the value of the preference root
+  is(Application.extensions.all[0].prefs.root, "extensions.inspector@mozilla.org.", "Check an extension preference root");
+  
+  // Reset the install event preference, so that we can test it again later
+  inspector.prefs.get("install-event-fired").reset();
+}
+
+]]>
+</script>
+
+</window>

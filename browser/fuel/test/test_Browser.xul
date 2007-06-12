@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window title="Testing Application"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml">
+  
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml" />
+
+<script type="application/javascript">
+<![CDATA[
+
+test_Browser();
+
+function test_Browser() {
+  var browsers = Application.browsers;
+  ok(browsers, "Check access to browser windows");
+  ok(browsers.length, "There should be at least one browser window open");
+  
+  var activeBrowser = Application.activeBrowser;
+  var moz = activeBrowser.open("http://mozilla.org/");
+  var goog = activeBrowser.open("http://google.com/");
+  goog.focus();
+
+  is(activeBrowser.tabs.length, 3, "Checking length of 'Browser.tabs' after opening 2 additional tabs");
+  is(activeBrowser.activeTab.index, goog.index, "Checking 'Browser.activeTab' after setting focus");
+  
+  // need to wait for the url's to be refreshed during the load
+  function checkURL() {
+    is(moz.url, "http://mozilla.org/", "Checking 'BrowserTab.url' after opening");  
+    is(goog.url, "http://google.com/", "Checking 'BrowserTab.url' after opening");  
+  }
+  setTimeout(checkURL, 50);
+}
+
+]]>
+</script>
+
+</window>
