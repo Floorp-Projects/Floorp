@@ -304,8 +304,8 @@ ReadCMAP(HDC hdc, FontEntry *aFontEntry)
     PRUint16 numTables = ReadShortAt(buf, OffsetNumTables);
 
     // save the format and offset we want here
-    PRUint32 keepOffset;
-    PRUint32 keepFormat;
+    PRUint32 keepOffset = 0;
+    PRUint32 keepFormat = 0;
 
     PRUint8 *table = buf + SizeOfHeader;
     for (PRUint16 i = 0; i < numTables; ++i, table += SizeOfTable) {
