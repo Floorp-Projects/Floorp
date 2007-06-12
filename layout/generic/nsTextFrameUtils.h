@@ -63,7 +63,8 @@ public:
     TEXT_INCOMING_WHITESPACE = 0x200000,
     TEXT_TRAILING_WHITESPACE = 0x400000,
     TEXT_COMPRESSED_LEADING_WHITESPACE = 0x800000,
-    TEXT_IS_UNCACHED         = 0x1000000
+    TEXT_IS_UNCACHED         = 0x1000000,
+    TEXT_NO_BREAKS           = 0x2000000
   };
 
   static PRBool
@@ -106,39 +107,6 @@ public:
                                 PRPackedBool* aIncomingWhitespace,
                                 gfxSkipCharsBuilder* aSkipChars,
                                 PRUint32* aAnalysisFlags);
-
-  /**
-   * Find a word boundary starting from a given position and proceeding either
-   * forwards (aDirection == 1) or backwards (aDirection == -1). The search
-   * is limited to a substring of an nsTextFragment, and starts with the
-   * first character of the word (the character at aOffset). We return the length
-   * of the word.
-   * 
-   * @param aTextRun a text run which we will use to ensure that we don't
-   * return a boundary inside a cluster
-   * @param aPosition a character in the substring aOffset/aLength
-   * @param aBreakBeforePunctuation if true, then we allow a word break
-   * when transitioning from regular word text to punctuation (in content order)
-   * @param aBreakAfterPunctuation if true, then we allow a word break
-   * when transitioning from punctuation to regular word text (in content order)
-   * @param aWordIsWhitespace we set this to true if this word is whitespace
-   * 
-   * For the above properties, "punctuation" is defined as any ASCII character
-   * which is not a letter or a digit. Regular word text is any non-whitespace
-   * (here "whitespace" includes non-breaking whitespace).
-   * Word break points are the punctuation breaks defined above, plus
-   * for Unicode text, whatever intl's wordbreaker identifies, and for
-   * ASCII text, boundaries between whitespace and non-whitespace.
-   */
-  static PRInt32
-  FindWordBoundary(const nsTextFragment* aText,
-                   gfxTextRun* aTextRun,
-                   gfxSkipCharsIterator* aIterator,
-                   PRInt32 aOffset, PRInt32 aLength,
-                   PRInt32 aPosition, PRInt32 aDirection,
-                   PRBool aBreakBeforePunctuation,
-                   PRBool aBreakAfterPunctuation,
-                   PRBool* aWordIsWhitespace);
 };
 
 class nsSkipCharsRunIterator {
