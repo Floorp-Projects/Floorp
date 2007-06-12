@@ -57,6 +57,6 @@ ssh -2 ${SYMBOL_SERVER_SSH_KEY:+-i $SYMBOL_SERVER_SSH_KEY} \
   "set -e;
    umask 0022;
    cd ${SYMBOL_SERVER_PATH};
-   unzip $archive;
+   unzip -o $archive;
    rm -v $archive;"
 echo "Symbol transfer completed"
