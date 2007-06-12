@@ -40,12 +40,12 @@ function Startup()
 {
   const dlmgrContractID = "@mozilla.org/download-manager;1";
   const dlmgrIID = Components.interfaces.nsIDownloadManager;
-  var downloadMgr = Components.classes[dlmgrContractID].getService(dlmgrIID);
-  var db = downloadMgr.DBConnection;
+  var dm = Components.classes[dlmgrContractID].getService(dlmgrIID);
+  var db = dm.DBConnection;
   
   const dateTimeContractID = "@mozilla.org/intl/scriptabledateformat;1";
   const dateTimeIID = Components.interfaces.nsIScriptableDateFormat;
-  var dateTimeService = Components.classes[dateTimeContractID].getService(dateTimeIID);  
+  var dts = Components.classes[dateTimeContractID].getService(dateTimeIID);  
 
   var dateStartedField = document.getElementById("dateStarted");
   var dateEndedField = document.getElementById("dateEnded");
@@ -60,31 +60,36 @@ function Startup()
   stmt.bindInt64Parameter(0, dlid);
   stmt.executeStep();
 
-  try {
-    var dateStarted = stmt.getInt64(0);
-    dateStarted = new Date(dateStarted/1000);
-    dateStarted = dateTimeService.FormatDateTime("", dateTimeService.dateFormatShort, dateTimeService.timeFormatSeconds, dateStarted.getFullYear(), dateStarted.getMonth()+1, dateStarted.getDate(), dateStarted.getHours(), dateStarted.getMinutes(), dateStarted.getSeconds());
-    dateStartedField.setAttribute("value", dateStarted);
-  }
-  catch (e) {
-  }
+  var dateStarted = new Date(stmt.getInt64(0) / 1000);
+  dateStarted = dts.FormatDateTime("", dts.dateFormatShort,
+                                   dts.timeFormatSeconds,
+                                   dateStarted.getFullYear(),
+                                   dateStarted.getMonth() + 1,
+                                   dateStarted.getDate(),
+                                   dateStarted.getHours(),
+                                   dateStarted.getMinutes(),
+                                   dateStarted.getSeconds());
+  dateStartedField.setAttribute("value", dateStarted);
   
-  try {
-    var dateEnded = stmt.getInt64(1);
-    dateEnded = new Date(dateEnded/1000);
-    dateEnded = dateTimeService.FormatDateTime("", dateTimeService.dateFormatShort, dateTimeService.timeFormatSeconds, dateEnded.getFullYear(), dateEnded.getMonth()+1, dateEnded.getDate(), dateEnded.getHours(), dateEnded.getMinutes(), dateEnded.getSeconds());
-    dateEndedField.setAttribute("value", dateEnded);
-  }
-  catch (e) {
-  }
+  var dateEnded = new Date(stmt.getInt64(1) / 1000);
+  dateEnded = dts.FormatDateTime("", dts.dateFormatShort,
+                                 dts.timeFormatSeconds,
+                                 dateEnded.getFullYear(),
+                                 dateEnded.getMonth() + 1,
+                                 dateEnded.getDate(),
+                                 dateEnded.getHours(),
+                                 dateEnded.getMinutes(),
+                                 dateEnded.getSeconds());
+  dateEndedField.setAttribute("value", dateEnded);
   
   pathField.value = stmt.getUTF8String(2);
   sourceField.value = stmt.getUTF8String(3);
   stmt.reset();
 
-  try {
-    window.opener.gDownloadManager.getDownload(dlid);
-  } catch (e) { // Download is not currently active
+  var dl = dm.getDownload(dlid);
+  if (dl.state == dlmgrIID.DOWNLOAD_DOWNLOADING ||
+      dl.state == dlmgrIID.DOWNLOAD_PAUSED ||
+      dl.state == dlmgrIID.DOWNLOAD_NOTSTARTED) {
     document.getElementById("dateEndedRow").hidden = true;
     document.getElementById("dateEndedSeparator").hidden = true;
   }
