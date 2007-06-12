@@ -21,7 +21,6 @@
 #
 # Contributor(s):
 #   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
-#   Shawn Wilsher <me@shawnwilsher.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -43,10 +42,6 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-
-MODULE = test_storage
-
-XPCSHELL_TESTS = unit
 
 PROGRAM = teststorage1$(BIN_SUFFIX)
 
