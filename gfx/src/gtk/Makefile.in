@@ -68,11 +68,7 @@ ifdef SUNCTL
 REQUIRES	+= ctl
 endif
 
-ifdef MOZ_ENABLE_XPRINT
-REQUIRES	+= xprintutil
-endif
-
-# Code shared between GTK+, Xlib and Xprint gfx modules
+# Code used by the GTK+ gfx module
 X11SHARED_LCPPSRCS = \
 		nsAntiAliasedGlyph.cpp \
 		nsX11AlphaBlend.cpp \
@@ -189,13 +185,6 @@ DEFINES         += -DUSE_POSTSCRIPT
 EXTRA_DSO_LDOPTS += -lgfxpsshar
 endif
 
-ifdef MOZ_ENABLE_XPRINT
-DEFINES         += -DUSE_XPRINT -DUSE_MOZILLA_TYPES
-EXTRA_DSO_LDOPTS += \
-		-lxprintutil \
-		$(MOZ_XPRINT_LDFLAGS)
-endif
-
 LOCAL_INCLUDES	= \
 		-I../.. \
 		-I$(srcdir)/. \
@@ -210,11 +199,5 @@ INCLUDES        += $(FT2_CFLAGS)
 LOCAL_INCLUDES        += -I$(srcdir)/../freetype
 endif
 
-ifdef MOZ_ENABLE_XPRINT
-export:: $(addprefix $(srcdir)/../xprint/,$(XPU_LCSRCS)) $(addprefix $(srcdir)/../x11shared/,$(X11SHARED_LCPPSRCS))
-	$(INSTALL) $^ .
-else
 export:: $(addprefix $(srcdir)/../x11shared/,$(X11SHARED_LCPPSRCS))
 	$(INSTALL) $^ .
-endif
-

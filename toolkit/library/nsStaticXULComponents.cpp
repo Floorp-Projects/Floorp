@@ -121,12 +121,6 @@
 #define ICON_MODULE
 #endif
 
-#ifdef MOZ_ENABLE_XPRINT
-#define XPRINT_MODULES MODULE(nsGfxXprintModule)
-#else
-#define XPRINT_MODULES
-#endif
-
 #ifdef MOZ_RDF
 #define RDF_MODULE MODULE(nsRDFModule)
 #else

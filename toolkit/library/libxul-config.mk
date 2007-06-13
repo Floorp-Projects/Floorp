@@ -232,16 +232,6 @@ ifdef MOZ_MATHML
 COMPONENT_LIBS += ucvmath
 endif
 
-ifneq (,$(MOZ_ENABLE_XPRINT))
-STATIC_LIBS += xlibrgb
-endif
-
-ifdef MOZ_ENABLE_XPRINT
-DEFINES += -DMOZ_ENABLE_XPRINT
-STATIC_LIBS += xprintutil
-COMPONENTS_LIBS += gfxxprint
-endif
-
 ifdef MOZ_ENABLE_GTK2
 COMPONENT_LIBS += widget_gtk2
 ifdef MOZ_PREF_EXTENSIONS

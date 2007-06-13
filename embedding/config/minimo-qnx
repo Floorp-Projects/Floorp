@@ -39,10 +39,8 @@ components/xpconnect.xpt
 ; 
 
 libgkgfx.so 
-libxlibrgb.so
 libgfxpsshar.so
 components/libgfxps.so
-components/libgfxxprint.so
 components/gfx.xpt 
 components/widget.xpt
 
