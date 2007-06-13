@@ -110,9 +110,6 @@ nsDeviceContextSpecOS2 :: ~nsDeviceContextSpecOS2()
 }
 
 static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
-#ifdef USE_XPRINT
-static NS_DEFINE_IID(kIDeviceContextSpecXPIID, NS_IDEVICE_CONTEXT_SPEC_XP_IID);
-#endif
 
 void SetupDevModeFromSettings(ULONG printer, nsIPrintSettings* aPrintSettings)
 {
@@ -234,16 +231,6 @@ NS_IMETHODIMP nsDeviceContextSpecOS2 :: QueryInterface(REFNSIID aIID, void** aIn
     NS_ADDREF_THIS();
     return NS_OK;
   }
-
-#ifdef USE_XPRINT
-  if (aIID.Equals(kIDeviceContextSpecXPIID))
-  {
-    nsIDeviceContextSpecXp *tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-#endif /* USE_XPRINT */
 
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 

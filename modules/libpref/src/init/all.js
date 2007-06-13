@@ -2236,7 +2236,7 @@ pref("font.min-size.fixed.zh-HK", 10);
  * - xdisplay  = X11 display name (like "host:0.0" (string)
  * - xdpy      = X DPI (X screen resolution) (integer)
  * - ydpy      = Y DPI (Y screen resolution) (integer)
- * - xdevice   = "display" or "printer" (Xprint)
+ * - xdevice   = "display" or "printer" (Xprint - now obsolete)
  * Patterns use  the regular expressions described in the EXTENDED REGULAR
  * EXPRESSIONS section of the regex(5) manual page.
  * Note that prefs strings can always be concatenated via the '+'-operator,
@@ -2249,19 +2249,6 @@ pref("font.min-size.fixed.zh-HK", 10);
 /* reject font if reject pattern matches it... */
 //pref("font.x11.rejectfontpattern", 
 //     "fname=-urw.*;scalable=false;outline_scaled=false;xdisplay=.*;xdpy=.*;ydpy=.*;xdevice=.*");
-
-/* reject font if accept pattern does not match it... */
-pref("print.xprint.font.acceptfontpattern", ".*");
-/* reject font if reject pattern matches it...
- * Current bans:
- * - bug 148470 ("Ban "-dt-*" (bitmap!!) fonts from Xprint")
- *   pattern="fname=-dt-.*;scalable=.*;outline_scaled=false;xdisplay=.*;xdpy=.*;ydpy=.*;xdevice=.*"
- */
-pref("print.xprint.font.rejectfontpattern", 
-     "fname=-dt-.*;scalable=.*;outline_scaled=false;xdisplay=.*;xdpy=.*;ydpy=.*;xdevice=.*");
-
-/* Xprint print module prefs */
-pref("print.xprint.font.force_outline_scaled_fonts", true);
 
 /* PostScript print module prefs */
 // pref("print.postscript.enabled",      true);

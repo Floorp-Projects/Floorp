@@ -74,15 +74,6 @@ DIRS        += ps
 endif
 endif
 
-# Build xlibrgb only for X toolkits and/or Xprint
-ifneq (,$(MOZ_ENABLE_XPRINT))
-DIRS        += xlibrgb
-endif
-
-ifdef MOZ_ENABLE_XPRINT
-DIRS        += xprintutil xprint 
-endif
-
 ifdef MOZ_ENABLE_CAIRO_GFX
 DIRS        += thebes
 else
