@@ -3113,7 +3113,7 @@ nsNavHistoryFolderResultNode::OnItemRemoved(PRInt64 aItemId,
 
   NS_ASSERTION(aParentFolder == mItemId, "Got wrong bookmark update");
 
-  if (!node->IsFolder() && mOptions->ExcludeItems()) {
+  if ((node->IsURI() || node->IsSeparator()) && mOptions->ExcludeItems()) {
     // don't update items when we aren't displaying them, but we do need to
     // adjust everybody's bookmark indices to account for the removal
     ReindexRange(aIndex, PR_INT32_MAX, -1);
@@ -3138,15 +3138,16 @@ nsNavHistoryFolderResultNode::OnItemChanged(PRInt64 aItemId,
                                             PRBool aIsAnnotationProperty,
                                             const nsACString& aValue)
 {
-  if (mOptions->ExcludeItems())
-    return NS_OK; // don't update items when we aren't displaying them
-  if (!StartIncrementalUpdate())
-    return NS_OK;
-
   PRUint32 nodeIndex;
   nsNavHistoryResultNode* node = FindChildById(aItemId, &nodeIndex);
   if (!node)
     return NS_ERROR_FAILURE;
+
+  if ((node->IsURI() || node->IsSeparator()) && mOptions->ExcludeItems())
+    return NS_OK; // don't update items when we aren't displaying them
+
+  if (!StartIncrementalUpdate())
+    return NS_OK;
 
   if (aProperty.EqualsLiteral("title")) {
     node->mTitle = aValue;
