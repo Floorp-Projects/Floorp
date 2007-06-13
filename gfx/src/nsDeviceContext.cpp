@@ -559,7 +559,7 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
   return rv;
 }
 
-/* PostScript and Xprint module may override this method to create 
+/* PostScript module may override this method to create 
  * nsIFontMetrics objects with their own classes 
  */
 nsresult

@@ -4835,27 +4835,6 @@ MOZ_ARG_DISABLE_BOOL(postscript,
     MOZ_ENABLE_POSTSCRIPT=1 )
 
 dnl ========================================================
-dnl = Xprint print module
-dnl ========================================================
-if test "$MOZ_X11"
-then
-    _SAVE_LDFLAGS="$LDFLAGS"
-    LDFLAGS="$XLDFLAGS $LDFLAGS"
-    AC_CHECK_LIB(Xp, XpGetPrinterList, [XPRINT_LIBS="-lXp"],
-        MOZ_ENABLE_XPRINT=, $XEXT_LIBS $XLIBS)
-    LDFLAGS="$_SAVE_LDFLAGS"
-
-    MOZ_XPRINT_CFLAGS="$X_CFLAGS"
-    MOZ_XPRINT_LDFLAGS="$XLDFLAGS $XPRINT_LIBS"
-    MOZ_XPRINT_LDFLAGS="$MOZ_XPRINT_LDFLAGS $XEXT_LIBS $X11_LIBS"
-
-    MOZ_ARG_DISABLE_BOOL(xprint,
-    [  --disable-xprint        Disable Xprint printing support ],
-        MOZ_ENABLE_XPRINT=,
-        MOZ_ENABLE_XPRINT=1 )
-fi
-
-dnl ========================================================
 dnl = GnomeVFS support module
 dnl ========================================================
 
@@ -5009,8 +4988,7 @@ dnl = (see bug 180851)
 dnl ========================================================
 
 if test "$MOZ_ENABLE_GTK2" \
-&& test "$MOZ_ENABLE_COREXFONTS" \
-|| test "$MOZ_ENABLE_XPRINT" 
+&& test "$MOZ_ENABLE_COREXFONTS"
 then
     AC_DEFINE(MOZ_EXTRA_X11CONVERTERS)
     MOZ_EXTRA_X11CONVERTERS=1
@@ -7420,9 +7398,6 @@ AC_SUBST(MOZ_IPCD)
 
 AC_SUBST(HAVE_XIE)
 AC_SUBST(MOZ_XIE_LIBS)
-AC_SUBST(MOZ_XPRINT_CFLAGS)
-AC_SUBST(MOZ_XPRINT_LDFLAGS)
-AC_SUBST(MOZ_ENABLE_XPRINT)
 AC_SUBST(MOZ_ENABLE_POSTSCRIPT)
 
 AC_SUBST(XPCOM_USE_LEA)

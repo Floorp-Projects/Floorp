@@ -161,7 +161,6 @@ gfx/src/psshared/Makefile
 gfx/src/photon/Makefile
 gfx/src/mac/Makefile
 gfx/src/os2/Makefile
-gfx/src/xlibrgb/Makefile
 gfx/src/windows/Makefile
 gfx/src/thebes/Makefile
 gfx/tests/Makefile

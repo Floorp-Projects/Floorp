@@ -93,8 +93,6 @@ bin/xpicleanup
 bin/res/cmessage.txt
 ; this is used by gtk embedding clients
 bin/libgtkembedmoz.so
-; this is used by Xprint and Xlib gfx
-bin/libxlibrgb.so
 ; This is used by libgfxps and libgfx_gtk
 bin/libgfxpsshar.so
 bin/components/alerts.xpt

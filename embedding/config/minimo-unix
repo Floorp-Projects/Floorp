@@ -41,11 +41,9 @@ components/xpconnect.xpt
 libgkgfx.so 
 libgtksuperwin.so 
 libgtkembedmoz.so 
-libxlibrgb.so
 libgfxpsshar.so
 components/libgfx_gtk.so
 components/libgfxps.so
-components/libgfxxprint.so
 components/gfx.xpt 
 components/libwidget_gtk.so
 components/libwidget_gtk2.so

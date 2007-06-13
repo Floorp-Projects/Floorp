@@ -51,10 +51,6 @@
 #include "nsGfxPSCID.h"
 #include "nsIDeviceContextPS.h"
 #endif /* USE_POSTSCRIPT */
-#ifdef USE_XPRINT
-#include "nsGfxXPrintCID.h"
-#include "nsIDeviceContextXPrint.h"
-#endif /* USE_XPRINT */
 
 #include "nsFontMetricsUtils.h"
 
@@ -474,29 +470,6 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDev
   if (NS_FAILED(rv)) 
     return rv;
 
-#ifdef USE_XPRINT
-  if (method == pmXprint) { // XPRINT
-    static NS_DEFINE_CID(kCDeviceContextXp, NS_DEVICECONTEXTXP_CID);
-    nsCOMPtr<nsIDeviceContextXp> dcxp(do_CreateInstance(kCDeviceContextXp, &rv));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create Xp Device context.");    
-    if (NS_FAILED(rv)) 
-      return NS_ERROR_GFX_COULD_NOT_LOAD_PRINT_MODULE;
-    
-    rv = dcxp->SetSpec(aDevice);
-    if (NS_FAILED(rv)) 
-      return rv;
-    
-    rv = dcxp->InitDeviceContextXP((nsIDeviceContext*)aContext,
-                                   (nsIDeviceContext*)this);
-    if (NS_FAILED(rv)) 
-      return rv;
-      
-    rv = dcxp->QueryInterface(NS_GET_IID(nsIDeviceContext),
-                              (void **)&aContext);
-    return rv;
-  }
-  else
-#endif /* USE_XPRINT */
 #endif
 #ifdef USE_POSTSCRIPT
 //  if (method == pmPostScript) // PostScript
