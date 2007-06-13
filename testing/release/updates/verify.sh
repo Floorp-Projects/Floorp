@@ -7,7 +7,7 @@
 . ../common/check_updates.sh
 
 ftp_server="http://stage.mozilla.org/pub/mozilla.org"
-aus_server="https://aus2-staging.mozilla.org"
+aus_server="https://aus2.mozilla.org"
 
 runmode=0
 config_file="updates.cfg"
