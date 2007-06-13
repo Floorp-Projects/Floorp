@@ -662,6 +662,8 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
 
   gfxContext* ctx =
     (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+
+  // XXXbz do we really want to round here, then snap, then round again?
   gfxRect rect(0, 0, NSAppUnitsToIntPixels(drawingRect.width, p2a),
                      NSAppUnitsToIntPixels(drawingRect.height, p2a));
   // Don't snap if it's a non-unit scale factor. We're going to have to take
@@ -679,7 +681,9 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
     ctx->SetMatrix(current);
   } else {
     renderer.Draw(gdk_x11_get_default_xdisplay(), ctx,
-                  drawingRect.width, drawingRect.height, rendererFlags, nsnull);
+                  NSToIntCeil(NSAppUnitsToFloatPixels(drawingRect.width, p2a)),
+                  NSToIntCeil(NSAppUnitsToFloatPixels(drawingRect.height, p2a)),
+                  rendererFlags, nsnull);
   }
 
   if (!safeState) {
