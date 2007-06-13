@@ -350,21 +350,7 @@ nsresult
 XRemoteService::GetMailLocation(char **_retval)
 {
   // get the mail chrome URL
-  nsCOMPtr<nsIPref> prefs;
-  prefs = do_GetService(NS_PREF_CONTRACTID);
-  if (!prefs)
-    return NS_ERROR_FAILURE;
-  
-  PRInt32 retval = 0;
-  nsresult rv;
-  rv = prefs->GetIntPref("mail.pane_config", &retval);
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-
-  if (!retval)
-    *_retval = nsCRT::strdup("chrome://messenger/content/messenger.xul");
-  else
-    *_retval = nsCRT::strdup("chrome://messenger/content/mail3PaneWindowVertLayout.xul");
+  *_retval = nsCRT::strdup("chrome://messenger/content/");
 
   return NS_OK;
   
