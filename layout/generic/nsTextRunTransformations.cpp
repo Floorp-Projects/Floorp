@@ -354,7 +354,7 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun)
   aTextRun->ResetGlyphRuns();
 
   PRUint32 runStart = 0;
-  PRPackedBool runIsLowercase = PR_FALSE;
+  PRBool runIsLowercase = PR_FALSE;
   nsAutoTArray<nsStyleContext*,50> styleArray;
   nsAutoTArray<PRPackedBool,50> canBreakBeforeArray;
   nsAutoTArray<PRUint32,10> lineBreakBeforeArray;
@@ -372,16 +372,17 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun)
     if (i < length) {
       // Characters that aren't the start of a cluster are ignored here. They
       // get added to whatever lowercase/non-lowercase run we're in.
-      if (!inner->IsClusterStart(i))
-        continue;
-
-      if (styles[i]->GetStyleFont()->mFont.variant == NS_STYLE_FONT_VARIANT_SMALL_CAPS) {
-        PRUnichar ch = str[i];
-        PRUnichar ch2;
-        converter->ToUpper(ch, &ch2);
-        isLowercase = ch != ch2 || ch == SZLIG;
+      if (!inner->IsClusterStart(i)) {
+        isLowercase = runIsLowercase;
       } else {
-        // Don't transform the character! I.e., pretend that it's not lowercase
+        if (styles[i]->GetStyleFont()->mFont.variant == NS_STYLE_FONT_VARIANT_SMALL_CAPS) {
+          PRUnichar ch = str[i];
+          PRUnichar ch2;
+          converter->ToUpper(ch, &ch2);
+          isLowercase = ch != ch2 || ch == SZLIG;
+        } else {
+          // Don't transform the character! I.e., pretend that it's not lowercase
+        }
       }
     }
 
