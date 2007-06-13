@@ -65,9 +65,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
 #include "nsITimer.h"
-#include "prtime.h"
 #include "nsVoidArray.h"
-#include "prprf.h"
 #include "nsIDOMText.h"
 #include "nsIDocument.h"
 #include "nsIDeviceContext.h"
@@ -154,7 +152,7 @@
 
 #define TEXT_WHITESPACE_FLAGS      0x18000000
 
-// This bit is set if this frame is the owner of the textrun (i.e., occurs
+// This bit is set if this frame is an owner of the textrun (i.e., occurs
 // as the mStartFrame of some flow associated with the textrun)
 #define TEXT_IS_RUN_OWNER          0x20000000
 
@@ -184,8 +182,6 @@
  * XXX currently we don't handle hyphenated breaks between text frames where the
  * hyphen occurs at the end of the first text frame, e.g.
  *   <b>Kit&shy;</b>ty
- * 
- * Preformatted text basically matches 
  */
 
 class nsTextFrame;
@@ -201,7 +197,8 @@ class PropertyProvider;
  * mDOMOffsetToBeforeTransformOffset is added to DOM offsets for those frames to obtain
  * the offset into the before-transformation text of the textrun. It can be
  * positive (when a text node starts in the middle of a text run) or
- * negative (when a text run starts in the middle of a text node).
+ * negative (when a text run starts in the middle of a text node). Of course
+ * it can also be zero.
  * 
  * mStartFrame has TEXT_IS_RUN_OWNER set.
  */
@@ -213,9 +210,11 @@ struct TextRunMappedFlow {
 };
 
 /**
- * This is our user data for the textrun. When there is no user data, the
- * textrun maps exactly the in-flow relatives of the current frame and the
- * first-in-flow's offset into the text run is 0.
+ * This is our user data for the textrun, when textRun->GetFlags() does not
+ * have TEXT_SIMPLE_FLOW set. When TEXT_SIMPLE_FLOW is set, there is just one
+ * flow, the textrun's user data pointer is a pointer to mStartFrame
+ * for that flow, mDOMOffsetToBeforeTransformOffset is zero, and mContentLength
+ * is the length of the text node.
  */
 struct TextRunUserData {
   TextRunMappedFlow* mMappedFlows;
@@ -565,9 +564,13 @@ DestroyUserData(void* aUserData)
   }
 }
 
+// Remove the textrun from the frame continuation chain starting at aFrame,
+// which should be marked as a textrun owner.
 static void
 ClearAllTextRunReferences(nsTextFrame* aFrame, gfxTextRun* aTextRun)
 {
+  NS_ASSERTION(aFrame->GetStateBits() & TEXT_IS_RUN_OWNER,
+               "aFrame should be marked as a textrun owner");
   aFrame->RemoveStateBits(TEXT_IS_RUN_OWNER);
   while (aFrame) {
     if (aFrame->GetTextRun() != aTextRun)
@@ -577,6 +580,7 @@ ClearAllTextRunReferences(nsTextFrame* aFrame, gfxTextRun* aTextRun)
   }
 }
 
+// Figure out which frames 
 static void
 UnhookTextRunFromFrames(gfxTextRun* aTextRun)
 {
@@ -724,81 +728,82 @@ PRInt32 nsTextFrame::GetInFlowContentLength() {
 // when it combines with another character
 // So we have several versions of IsSpace for use in different contexts.
 
+static PRBool IsSpaceCombiningSequenceTail(const nsTextFragment* aFrag, PRUint32 aPos)
+{
+  NS_ASSERTION(aPos <= aFrag->GetLength(), "Bad offset");
+  if (!aFrag->Is2b())
+    return PR_FALSE;
+  return nsTextFrameUtils::IsSpaceCombiningSequenceTail(
+    aFrag->Get2b() + aPos, aFrag->GetLength() - aPos);
+}
+
+// Check whether aPos is a space for CSS 'word-spacing' purposes
 static PRBool IsCSSWordSpacingSpace(const nsTextFragment* aFrag, PRUint32 aPos)
 {
   NS_ASSERTION(aPos < aFrag->GetLength(), "No text for IsSpace!");
   PRUnichar ch = aFrag->CharAt(aPos);
-  if (ch == ' ' || ch == 0x3000) { // IDEOGRAPHIC SPACE
-    if (!aFrag->Is2b())
-      return PR_TRUE;
-    return !nsTextFrameUtils::IsSpaceCombiningSequenceTail(
-        aFrag->Get2b() + aPos + 1, aFrag->GetLength() - (aPos + 1));
-  } else {
-    return ch == '\t' || ch == '\n' || ch == '\f';
-  }
+  if (ch == ' ' || ch == 0x3000/*IDEOGRAPHIC SPACE*/)
+    return !IsSpaceCombiningSequenceTail(aFrag, aPos + 1);
+  return ch == '\t' || ch == '\n' || ch == '\f';
 }
 
-static PRBool IsSpace(const PRUnichar* aChars, PRUint32 aLength)
+// Check whether the string aChars/aLength starts with a space that's
+// trimmable according to CSS 'white-space'.
+static PRBool IsTrimmableSpace(const PRUnichar* aChars, PRUint32 aLength)
 {
   NS_ASSERTION(aLength > 0, "No text for IsSpace!");
   PRUnichar ch = *aChars;
-  if (ch == ' ') {
+  if (ch == ' ')
     return !nsTextFrameUtils::IsSpaceCombiningSequenceTail(aChars + 1, aLength - 1);
-  } else {
-    return ch == '\t' || ch == '\n' || ch == '\f';
-  }
+  return ch == '\t' || ch == '\n' || ch == '\f';
 }
 
-static PRBool IsSpace(char aCh)
+// Check whether the character aCh is trimmable according to CSS 'white-space'
+static PRBool IsTrimmableSpace(char aCh)
 {
   return aCh == ' ' || aCh == '\t' || aCh == '\n' || aCh == '\f';
 }
 
-static PRBool IsSpace(const nsTextFragment* aFrag, PRUint32 aPos)
+static PRBool IsTrimmableSpace(const nsTextFragment* aFrag, PRUint32 aPos)
 {
   NS_ASSERTION(aPos < aFrag->GetLength(), "No text for IsSpace!");
   PRUnichar ch = aFrag->CharAt(aPos);
-  if (ch == ' ') {
-    if (!aFrag->Is2b())
-      return PR_TRUE;
-    return !nsTextFrameUtils::IsSpaceCombiningSequenceTail(
-        aFrag->Get2b() + aPos + 1, aFrag->GetLength() - (aPos + 1));
-  } else {
-    return ch == '\t' || ch == '\n' || ch == '\f';
-  }
+  if (ch == ' ')
+    return !IsSpaceCombiningSequenceTail(aFrag, aPos + 1);
+  return ch == '\t' || ch == '\n' || ch == '\f';
 }
 
 static PRBool IsSelectionSpace(const nsTextFragment* aFrag, PRUint32 aPos)
 {
   NS_ASSERTION(aPos < aFrag->GetLength(), "No text for IsSpace!");
   PRUnichar ch = aFrag->CharAt(aPos);
-  if (ch == ' ' || ch == 0x00A0/*NBSP*/) {
-    if (!aFrag->Is2b())
-      return PR_TRUE;
-    return !nsTextFrameUtils::IsSpaceCombiningSequenceTail(
-        aFrag->Get2b() + aPos + 1, aFrag->GetLength() - (aPos + 1));
-  } else {
-    return ch == '\t' || ch == '\n' || ch == '\f';
-  }
+  if (ch == ' ' || ch == 0x00A0/*NBSP*/)
+    return !IsSpaceCombiningSequenceTail(aFrag, aPos + 1);
+  return ch == '\t' || ch == '\n' || ch == '\f';
 }
 
-static PRUint32 GetWhitespaceCount(const nsTextFragment* frag, PRInt32 aStartOffset,
-                                   PRInt32 aLength, PRInt32 aDirection)
+// Count the amount of trimmable whitespace in a text fragment. The first
+// character is at offset aStartOffset; the maximum number of characters
+// to check is aLength. aDirection is -1 or 1 depending on whether we should
+// progress backwards or forwards.
+static PRUint32
+GetTrimmableWhitespaceCount(const nsTextFragment* aFrag, PRInt32 aStartOffset,
+                            PRInt32 aLength, PRInt32 aDirection)
 {
   PRInt32 count = 0;
-  if (frag->Is2b()) {
-    const PRUnichar* str = frag->Get2b() + aStartOffset;
-    PRInt32 fragLen = frag->GetLength() - aStartOffset;
+  if (aFrag->Is2b()) {
+    const PRUnichar* str = aFrag->Get2b() + aStartOffset;
+    PRInt32 fragLen = aFrag->GetLength() - aStartOffset;
     for (; count < aLength; ++count) {
-      if (!IsSpace(str, fragLen))
+      if (!IsTrimmableSpace(str, fragLen))
         break;
       str += aDirection;
       fragLen -= aDirection;
     }
   } else {
-    const char* str = frag->Get1b() + aStartOffset;
+    const char* str = aFrag->Get1b() + aStartOffset;
     for (; count < aLength; ++count) {
-      if (!IsSpace(*str))
+      if (!IsTrimmableSpace(*str))
         break;
       str += aDirection;
     }
@@ -1758,6 +1763,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   AssignTextRun(textRun);
 }
 
+// XXX
 static PRBool
 HasCompressedLeadingWhitespace(nsTextFrame* aFrame, PRInt32 aContentEndOffset,
                                gfxSkipCharsIterator* aIterator)
@@ -1771,7 +1777,7 @@ HasCompressedLeadingWhitespace(nsTextFrame* aFrame, PRInt32 aContentEndOffset,
   const nsTextFragment* frag = aFrame->GetContent()->GetText();
   while (frameContentOffset < aContentEndOffset &&
          aIterator->IsOriginalCharSkipped()) {
-    if (IsSpace(frag, frameContentOffset)) {
+    if (IsTrimmableSpace(frag, frameContentOffset)) {
       result = PR_TRUE;
       break;
     }
@@ -1985,7 +1991,7 @@ GetEndOfTrimmedText(const nsTextFragment* aFrag,
   aIterator->SetSkippedOffset(aEnd);
   while (aIterator->GetSkippedOffset() > aStart) {
     aIterator->AdvanceSkipped(-1);
-    if (!IsSpace(aFrag, aIterator->GetOriginalOffset()))
+    if (!IsTrimmableSpace(aFrag, aIterator->GetOriginalOffset()))
       return aIterator->GetSkippedOffset() + 1;
   }
   return aStart;
@@ -2004,7 +2010,7 @@ nsTextFrame::GetTrimmedOffsets(const nsTextFragment* aFrag,
 
   if (GetStateBits() & TEXT_START_OF_LINE) {
     PRInt32 whitespaceCount =
-      GetWhitespaceCount(aFrag, offsets.mStart, offsets.mLength, 1);
+      GetTrimmableWhitespaceCount(aFrag, offsets.mStart, offsets.mLength, 1);
     offsets.mStart += whitespaceCount;
     offsets.mLength -= whitespaceCount;
   }
@@ -2012,7 +2018,8 @@ nsTextFrame::GetTrimmedOffsets(const nsTextFragment* aFrag,
   if (aTrimAfter && (GetStateBits() & TEXT_END_OF_LINE) &&
       textStyle->WhiteSpaceCanWrap()) {
     PRInt32 whitespaceCount =
-      GetWhitespaceCount(aFrag, offsets.mStart + offsets.mLength - 1, offsets.mLength, -1);
+      GetTrimmableWhitespaceCount(aFrag, offsets.mStart + offsets.mLength - 1,
+                                  offsets.mLength, -1);
     offsets.mLength -= whitespaceCount;
   }
   return offsets;
@@ -4811,7 +4818,7 @@ FindFirstLetterRange(const nsTextFragment* aFrag,
   PRInt32 i;
   PRInt32 length = *aLength;
   for (i = 0; i < length; ++i) {
-    if (!IsSpace(aFrag, aOffset + i) &&
+    if (!IsTrimmableSpace(aFrag, aOffset + i) &&
         !nsTextFrameUtils::IsPunctuationMark(aFrag->CharAt(aOffset + i)))
       break;
   }
@@ -4847,7 +4854,7 @@ FindStartAfterSkippingWhitespace(PropertyProvider* aProvider,
 {
   if (aData->skipWhitespace && aCollapseWhitespace) {
     while (aIterator->GetSkippedOffset() < aFlowEndInTextRun &&
-           IsSpace(aProvider->GetFragment(), aIterator->GetOriginalOffset())) {
+           IsTrimmableSpace(aProvider->GetFragment(), aIterator->GetOriginalOffset())) {
       aIterator->AdvanceOriginal(1);
     }
   }
@@ -4894,7 +4901,8 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
   PRUint32 wordStart = start;
   // XXX Should we consider hyphenation here?
   for (i = start + 1; i <= flowEndInTextRun; ++i) {
-    if (i < flowEndInTextRun && !mTextRun->CanBreakLineBefore(i))
+    if (i < flowEndInTextRun && !mTextRun->CanBreakLineBefore(i) &&
+        (collapseWhitespace || frag->CharAt(iter.ConvertSkippedToOriginal(i)) == '\n'))
       continue;
 
     nscoord width =
@@ -4922,8 +4930,8 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
 
   // Check if we have whitespace at the end
   aData->skipWhitespace =
-    IsSpace(provider.GetFragment(),
-            iter.ConvertSkippedToOriginal(flowEndInTextRun - 1));
+    IsTrimmableSpace(provider.GetFragment(),
+                     iter.ConvertSkippedToOriginal(flowEndInTextRun - 1));
 }
 
 // XXX Need to do something here to avoid incremental reflow bugs due to
@@ -5011,8 +5019,8 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
 
   // Check if we have whitespace at the end
   aData->skipWhitespace =
-    IsSpace(provider.GetFragment(),
-            iter.ConvertSkippedToOriginal(flowEndInTextRun - 1));
+    IsTrimmableSpace(provider.GetFragment(),
+                     iter.ConvertSkippedToOriginal(flowEndInTextRun - 1));
 }
 
 // XXX Need to do something here to avoid incremental reflow bugs due to
@@ -5189,7 +5197,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   } else {
     if (atStartOfLine) {
       // Skip leading whitespace
-      PRInt32 whitespaceCount = GetWhitespaceCount(frag, offset, length, 1);
+      PRInt32 whitespaceCount = GetTrimmableWhitespaceCount(frag, offset, length, 1);
       offset += whitespaceCount;
       length -= whitespaceCount;
     }
@@ -5375,7 +5383,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   lineLayout.SetUnderstandsWhiteSpace(PR_TRUE);
   PRBool endsInWhitespace = PR_FALSE;
   if (charsFit > 0) {
-    endsInWhitespace = IsSpace(frag, offset + charsFit - 1);
+    endsInWhitespace = IsTrimmableSpace(frag, offset + charsFit - 1);
     lineLayout.SetInWord(!endsInWhitespace);
     lineLayout.SetEndsInWhiteSpace(endsInWhitespace);
     PRBool wrapping = textStyle->WhiteSpaceCanWrap();
