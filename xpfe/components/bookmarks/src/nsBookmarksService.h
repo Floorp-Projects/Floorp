@@ -59,6 +59,7 @@
 #include "nsICacheSession.h"
 #include "nsITransactionManager.h"
 #include "nsICharsetResolver.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIOutputStream;
 
@@ -79,7 +80,7 @@ class nsBookmarksService : public nsIBookmarksService,
                            public nsSupportsWeakReference
 {
 protected:
-    nsIRDFDataSource*               mInner;
+    nsCOMPtr<nsIRDFDataSource>      mInner;
     nsCOMPtr<nsIRDFResource>        busyResource;
     nsCOMArray<nsIRDFObserver>      mObservers;
     nsCOMPtr<nsIStringBundle>       mBundle;
@@ -218,7 +219,9 @@ public:
     nsresult Init();
 
     // nsISupports
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsBookmarksService,
+                                             nsIBookmarksService)
 
     // nsIBookmarksService
     NS_DECL_NSIBOOKMARKSSERVICE
