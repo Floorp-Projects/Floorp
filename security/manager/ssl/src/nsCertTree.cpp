@@ -723,7 +723,7 @@ nsCertTree::GetCellText(PRInt32 row, nsITreeColumn* col,
 
   PRInt32 colIndex;
   col->GetIndex(&colIndex);
-  PRUint32 arrayIndex=absoluteCertOffset+colIndex*mNumRows;
+  PRUint32 arrayIndex=absoluteCertOffset+colIndex*(mNumRows-mNumOrgs);
   PRUint32 arrayLength=0;
   if (mCellText) {
     mCellText->GetLength(&arrayLength);
