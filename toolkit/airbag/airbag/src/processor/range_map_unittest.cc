@@ -38,6 +38,7 @@
 #include "processor/range_map-inl.h"
 
 #include "processor/linked_ptr.h"
+#include "processor/logging.h"
 #include "processor/scoped_ptr.h"
 
 
@@ -487,5 +488,7 @@ static bool RunTests() {
 
 
 int main(int argc, char **argv) {
+  BPLOG_INIT(&argc, &argv);
+
   return RunTests() ? 0 : 1;
 }

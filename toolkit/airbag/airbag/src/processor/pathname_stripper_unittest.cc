@@ -28,6 +28,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "processor/pathname_stripper.h"
+#include "processor/logging.h"
 
 #define ASSERT_TRUE(condition) \
   if (!(condition)) { \
@@ -78,5 +79,7 @@ static bool RunTests() {
 }  // namespace
 
 int main(int argc, char **argv) {
+  BPLOG_INIT(&argc, &argv);
+
   return RunTests() ? 0 : 1;
 }

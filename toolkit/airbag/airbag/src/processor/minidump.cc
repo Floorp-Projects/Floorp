@@ -106,15 +106,13 @@ static inline void Swap(u_int32_t* value) {
 }
 
 
-static inline void Swap(u_int64_t* value) {
-  *value =  (*value >> 56) |
-           ((*value >> 40) & 0x000000000000ff00LL) |
-           ((*value >> 24) & 0x0000000000ff0000LL) |
-           ((*value >> 8)  & 0x00000000ff000000LL) |
-           ((*value << 8)  & 0x000000ff00000000LL) |
-           ((*value << 24) & 0x0000ff0000000000LL) |
-           ((*value << 40) & 0x00ff000000000000LL) |
-            (*value << 56);
+static void Swap(u_int64_t* value) {
+  u_int32_t* value32 = reinterpret_cast<u_int32_t*>(value);
+  Swap(&value32[0]);
+  Swap(&value32[1]);
+  u_int32_t temp = value32[0];
+  value32[0] = value32[1];
+  value32[1] = temp;
 }
 
 
@@ -686,6 +684,9 @@ void MinidumpContext::Print() {
 //
 
 
+u_int32_t MinidumpMemoryRegion::max_bytes_ = 1024 * 1024;  // 1MB
+
+
 MinidumpMemoryRegion::MinidumpMemoryRegion(Minidump* minidump)
     : MinidumpObject(minidump),
       descriptor_(NULL),
@@ -724,7 +725,13 @@ const u_int8_t* MinidumpMemoryRegion::GetMemory() {
       return NULL;
     }
 
-    // TODO(mmentovai): verify rational size!
+    if (descriptor_->memory.data_size > max_bytes_) {
+      BPLOG(ERROR) << "MinidumpMemoryRegion size " <<
+                      descriptor_->memory.data_size << " exceeds maximum " <<
+                      max_bytes_;
+      return NULL;
+    }
+
     scoped_ptr< vector<u_int8_t> > memory(
         new vector<u_int8_t>(descriptor_->memory.data_size));
 
@@ -1014,6 +1021,9 @@ void MinidumpThread::Print() {
 //
 
 
+u_int32_t MinidumpThreadList::max_threads_ = 256;
+
+
 MinidumpThreadList::MinidumpThreadList(Minidump* minidump)
     : MinidumpStream(minidump),
       id_to_thread_map_(),
@@ -1064,8 +1074,13 @@ bool MinidumpThreadList::Read(u_int32_t expected_size) {
     return false;
   }
 
-  if (thread_count) {
-    // TODO(mmentovai): verify rational size!
+  if (thread_count > max_threads_) {
+    BPLOG(ERROR) << "MinidumpThreadList count " << thread_count <<
+                    " exceeds maximum " << max_threads_;
+    return false;
+  }
+
+  if (thread_count != 0) {
     scoped_ptr<MinidumpThreads> threads(
         new MinidumpThreads(thread_count, MinidumpThread(minidump_)));
 
@@ -1155,6 +1170,10 @@ void MinidumpThreadList::Print() {
 //
 // MinidumpModule
 //
+
+
+u_int32_t MinidumpModule::max_cv_bytes_ = 1024;
+u_int32_t MinidumpModule::max_misc_bytes_ = 1024;
 
 
 MinidumpModule::MinidumpModule(Minidump* minidump)
@@ -1308,7 +1327,8 @@ string MinidumpModule::code_identifier() const {
       break;
     }
 
-    case MD_OS_MAC_OS_X: {
+    case MD_OS_MAC_OS_X:
+    case MD_OS_LINUX: {
       // TODO(mmentovai): support uuid extension if present, otherwise fall
       // back to version (from LC_ID_DYLIB?), otherwise fall back to something
       // else.
@@ -1370,7 +1390,7 @@ string MinidumpModule::debug_file() const {
         // if misc_record->data is 0-terminated, so use an explicit size.
         file = string(
             reinterpret_cast<const char*>(misc_record->data),
-            module_.misc_record.data_size - sizeof(MDImageDebugMisc));
+            module_.misc_record.data_size - MDImageDebugMisc_minsize);
       } else {
         // There's a misc_record but it encodes the debug filename in UTF-16.
         // (Actually, because miscellaneous records are so old, it's probably
@@ -1379,7 +1399,7 @@ string MinidumpModule::debug_file() const {
         // return.
 
         unsigned int bytes =
-            module_.misc_record.data_size - sizeof(MDImageDebugMisc);
+            module_.misc_record.data_size - MDImageDebugMisc_minsize;
         if (bytes % 2 == 0) {
           unsigned int utf16_words = bytes / 2;
 
@@ -1525,14 +1545,19 @@ const u_int8_t* MinidumpModule::GetCVRecord(u_int32_t* size) {
       return NULL;
     }
 
-    // TODO(mmentovai): verify rational size!
+    if (module_.cv_record.data_size > max_cv_bytes_) {
+      BPLOG(ERROR) << "MinidumpModule CodeView record size " <<
+                      module_.cv_record.data_size << " exceeds maximum " <<
+                      max_cv_bytes_;
+      return NULL;
+    }
 
     // Allocating something that will be accessed as MDCVInfoPDB70 or
     // MDCVInfoPDB20 but is allocated as u_int8_t[] can cause alignment
     // problems.  x86 and ppc are able to cope, though.  This allocation
     // style is needed because the MDCVInfoPDB70 or MDCVInfoPDB20 are
     // variable-sized due to their pdb_file_name fields; these structures
-    // are not sizeof(MDCVInfoPDB70) or sizeof(MDCVInfoPDB20) and treating
+    // are not MDCVInfoPDB70_minsize or MDCVInfoPDB20_minsize and treating
     // them as such would result in incomplete structures or overruns.
     scoped_ptr< vector<u_int8_t> > cv_record(
         new vector<u_int8_t>(module_.cv_record.data_size));
@@ -1553,9 +1578,9 @@ const u_int8_t* MinidumpModule::GetCVRecord(u_int32_t* size) {
 
     if (signature == MD_CVINFOPDB70_SIGNATURE) {
       // Now that the structure type is known, recheck the size.
-      if (sizeof(MDCVInfoPDB70) > module_.cv_record.data_size) {
+      if (MDCVInfoPDB70_minsize > module_.cv_record.data_size) {
         BPLOG(ERROR) << "MinidumpModule CodeView7 record size mismatch, " <<
-                        sizeof(MDCVInfoPDB70) << " > " <<
+                        MDCVInfoPDB70_minsize << " > " <<
                         module_.cv_record.data_size;
         return NULL;
       }
@@ -1579,9 +1604,9 @@ const u_int8_t* MinidumpModule::GetCVRecord(u_int32_t* size) {
       }
     } else if (signature == MD_CVINFOPDB20_SIGNATURE) {
       // Now that the structure type is known, recheck the size.
-      if (sizeof(MDCVInfoPDB20) > module_.cv_record.data_size) {
+      if (MDCVInfoPDB20_minsize > module_.cv_record.data_size) {
         BPLOG(ERROR) << "MinidumpModule CodeView2 record size mismatch, " <<
-                        sizeof(MDCVInfoPDB20) << " > " <<
+                        MDCVInfoPDB20_minsize << " > " <<
                         module_.cv_record.data_size;
         return NULL;
       }
@@ -1635,9 +1660,9 @@ const MDImageDebugMisc* MinidumpModule::GetMiscRecord(u_int32_t* size) {
       return NULL;
     }
 
-    if (sizeof(MDImageDebugMisc) > module_.misc_record.data_size) {
+    if (MDImageDebugMisc_minsize > module_.misc_record.data_size) {
       BPLOG(ERROR) << "MinidumpModule miscellaneous debugging record "
-                      "size mismatch, " << sizeof(MDImageDebugMisc) << " > " <<
+                      "size mismatch, " << MDImageDebugMisc_minsize << " > " <<
                       module_.misc_record.data_size;
       return NULL;
     }
@@ -1648,13 +1673,18 @@ const MDImageDebugMisc* MinidumpModule::GetMiscRecord(u_int32_t* size) {
       return NULL;
     }
 
-    // TODO(mmentovai): verify rational size!
+    if (module_.misc_record.data_size > max_misc_bytes_) {
+      BPLOG(ERROR) << "MinidumpModule miscellaneous debugging record size " <<
+                      module_.misc_record.data_size << " exceeds maximum " <<
+                      max_misc_bytes_;
+      return NULL;
+    }
 
     // Allocating something that will be accessed as MDImageDebugMisc but
     // is allocated as u_int8_t[] can cause alignment problems.  x86 and
     // ppc are able to cope, though.  This allocation style is needed
     // because the MDImageDebugMisc is variable-sized due to its data field;
-    // this structure is not sizeof(MDImageDebugMisc) and treating it as such
+    // this structure is not MDImageDebugMisc_minsize and treating it as such
     // would result in an incomplete structure or an overrun.
     scoped_ptr< vector<u_int8_t> > misc_record_mem(
         new vector<u_int8_t>(module_.misc_record.data_size));
@@ -1678,7 +1708,7 @@ const MDImageDebugMisc* MinidumpModule::GetMiscRecord(u_int32_t* size) {
         // in practice due to the layout of MDImageDebugMisc.
         u_int16_t* data16 = reinterpret_cast<u_int16_t*>(&(misc_record->data));
         unsigned int dataBytes = module_.misc_record.data_size -
-                                 sizeof(MDImageDebugMisc);
+                                 MDImageDebugMisc_minsize;
         unsigned int dataLength = dataBytes / 2;
         for (unsigned int characterIndex = 0;
              characterIndex < dataLength;
@@ -1846,6 +1876,9 @@ void MinidumpModule::Print() {
 //
 
 
+u_int32_t MinidumpModuleList::max_modules_ = 1024;
+
+
 MinidumpModuleList::MinidumpModuleList(Minidump* minidump)
     : MinidumpStream(minidump),
       range_map_(new RangeMap<u_int64_t, unsigned int>()),
@@ -1897,8 +1930,13 @@ bool MinidumpModuleList::Read(u_int32_t expected_size) {
     return false;
   }
 
-  if (module_count) {
-    // TODO(mmentovai): verify rational size!
+  if (module_count > max_modules_) {
+    BPLOG(ERROR) << "MinidumpModuleList count " << module_count_ <<
+                    " exceeds maximum " << max_modules_;
+    return false;
+  }
+
+  if (module_count != 0) {
     scoped_ptr<MinidumpModules> modules(
         new MinidumpModules(module_count, MinidumpModule(minidump_)));
 
@@ -2064,6 +2102,9 @@ void MinidumpModuleList::Print() {
 //
 
 
+u_int32_t MinidumpMemoryList::max_regions_ = 256;
+
+
 MinidumpMemoryList::MinidumpMemoryList(Minidump* minidump)
     : MinidumpStream(minidump),
       range_map_(new RangeMap<u_int64_t, unsigned int>()),
@@ -2119,8 +2160,13 @@ bool MinidumpMemoryList::Read(u_int32_t expected_size) {
     return false;
   }
 
-  if (region_count) {
-    // TODO(mmentovai): verify rational size!
+  if (region_count > max_regions_) {
+    BPLOG(ERROR) << "MinidumpMemoryList count " << region_count <<
+                    " exceeds maximum " << max_regions_;
+    return false;
+  }
+
+  if (region_count != 0) {
     scoped_ptr<MemoryDescriptors> descriptors(
         new MemoryDescriptors(region_count));
 
@@ -2820,6 +2866,10 @@ void MinidumpBreakpadInfo::Print() {
 //
 
 
+u_int32_t Minidump::max_streams_ = 128;
+unsigned int Minidump::max_string_length_ = 1024;
+
+
 Minidump::Minidump(const string& path)
     : header_(),
       directory_(NULL),
@@ -2933,8 +2983,13 @@ bool Minidump::Read() {
     return false;
   }
 
-  if (header_.stream_count) {
-    // TODO(mmentovai): verify rational size!
+  if (header_.stream_count > max_streams_) {
+    BPLOG(ERROR) << "Minidump stream count " << header_.stream_count <<
+                    " exceeds maximum " << max_streams_;
+    return false;
+  }
+
+  if (header_.stream_count != 0) {
     scoped_ptr<MinidumpDirectoryEntries> directory(
         new MinidumpDirectoryEntries(header_.stream_count));
 
@@ -3145,31 +3200,39 @@ string* Minidump::ReadString(off_t offset) {
     return NULL;
   }
   if (!SeekSet(offset)) {
-    BPLOG(ERROR) << "ReadString could not seek to string";
+    BPLOG(ERROR) << "ReadString could not seek to string at offset " << offset;
     return NULL;
   }
 
   u_int32_t bytes;
   if (!ReadBytes(&bytes, sizeof(bytes))) {
-    BPLOG(ERROR) << "ReadString could not read string size";
+    BPLOG(ERROR) << "ReadString could not read string size at offset " <<
+                    offset;
     return NULL;
   }
   if (swap_)
     Swap(&bytes);
 
   if (bytes % 2 != 0) {
-    BPLOG(ERROR) << "ReadString found odd-sized string of " << bytes <<
-                    " bytes at offset " << offset;
+    BPLOG(ERROR) << "ReadString found odd-sized " << bytes <<
+                    "-byte string at offset " << offset;
     return NULL;
   }
   unsigned int utf16_words = bytes / 2;
 
-  // TODO(mmentovai): verify rational size!
+  if (utf16_words > max_string_length_) {
+    BPLOG(ERROR) << "ReadString string length " << utf16_words <<
+                    " exceeds maximum " << max_string_length_ <<
+                    " at offset " << offset;
+    return NULL;
+  }
+
   vector<u_int16_t> string_utf16(utf16_words);
 
   if (utf16_words) {
     if (!ReadBytes(&string_utf16[0], bytes)) {
-      BPLOG(ERROR) << "ReadString could not read string";
+      BPLOG(ERROR) << "ReadString could not read " << bytes <<
+                      "-byte string at offset " << offset;
       return NULL;
     }
   }
