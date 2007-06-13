@@ -77,9 +77,16 @@ function test_random_download()
 function test_dm_getDownload()
 {
   // this will get it from the database
-  var dl = dm.getDownload(1);
+  try {
+    var dl = dm.getDownload(1);
   
-  do_check_eq("CVS-Contributor-Form.pdf", dl.displayName);
+    do_check_eq("CVS-Contributor-Form.pdf", dl.displayName);
+  } catch (e) {
+    // This won't actually work on windows since the test file has a file path
+    // for this file that is from os x.  This still works on linux though.
+  
+    do_check_eq(Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH, e.result);
+  }
 }
 
 // This provides us with a lot of download entries to test the cleanup function
