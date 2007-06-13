@@ -1,0 +1,39 @@
+Index: gfx/cairo/cairo/src/cairoint.h
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/cairo/cairo/src/cairoint.h,v
+retrieving revision 1.34
+diff -u -p -1 -2 -r1.34 cairoint.h
+--- gfx/cairo/cairo/src/cairoint.h	4 Apr 2007 01:09:16 -0000	1.34
++++ gfx/cairo/cairo/src/cairoint.h	1 Jun 2007 02:05:18 -0000
+@@ -231,24 +231,31 @@ typedef void *cairo_mutex_t;
+ #define FALSE 0
+ #endif
+ 
+ #ifndef TRUE
+ #define TRUE 1
+ #endif
+ 
+ #ifndef M_PI
+ #define M_PI 3.14159265358979323846
+ #endif
+ 
+ #ifndef MOZILLA_CAIRO_NOT_DEFINED
++/* Make assertions non-fatal */
++#ifndef NDEBUG
++#undef assert
++#define assert(expr) \
++    do { if (!(expr)) fprintf(stderr, "Assertion failed at %s:%d: %s\n", \
++          __FILE__, __LINE__, #expr); } while (0)
++#endif
+ #ifndef INT32_MAX
+ # ifdef INT_MAX
+ #  define INT32_MAX INT_MAX
+ #  define INT32_MIN INT_MIN
+ # else
+ #  define INT32_MAX 2147483647
+ #  define INT32_MIN (-2147483647 - 1)
+ # endif
+ #endif
+ #endif
+ 
+ /* Size in bytes of buffer to use off the stack per functions.
