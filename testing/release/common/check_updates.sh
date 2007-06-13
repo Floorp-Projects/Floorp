@@ -57,8 +57,7 @@ check_updates () {
   fi
 
   diff -r \
-    -x chrome/installed-chrome.txt \
-    -x Contents/MacOS/chrome/installed-chrome.txt \
+    -x installed-chrome.txt \
     -x removed-files \
     source/$platform_dirname target/$platform_dirname 
   return $?
