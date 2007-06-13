@@ -4751,13 +4751,14 @@ nsTextFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool 
   PRBool stopBeforePunctuation = stopAfterPunctuation && aIsKeyboardSelect;
   PRInt32 offset = mContentOffset + (*aOffset < 0 ? mContentLength : *aOffset);
   ClusterIterator cIter(this, offset, aForward ? 1 : -1);
+  PRBool firstCluster = PR_TRUE;
 
   while (cIter.NextCluster()) {
     if (aWordSelectEatSpace == cIter.IsWhitespace() && !*aSawBeforeType) {
       *aSawBeforeType = PR_TRUE;
     } else {
-      if ((*aSawBeforeType && cIter.HaveWordBreakBefore()) ||
-          (stopBeforePunctuation && cIter.IsPunctuation())) {
+      if (!firstCluster && ((*aSawBeforeType && cIter.HaveWordBreakBefore()) ||
+                            (stopBeforePunctuation && cIter.IsPunctuation()))) {
         *aOffset = cIter.GetBeforeOffset() - mContentOffset;
         return PR_TRUE;
       }
@@ -4766,6 +4767,7 @@ nsTextFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool 
         return PR_TRUE;
       }
     }
+    firstCluster = PR_FALSE;
   }
   *aOffset = cIter.GetAfterOffset() - mContentOffset;
   return PR_FALSE;
