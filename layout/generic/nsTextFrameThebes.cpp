@@ -4901,9 +4901,14 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
   PRUint32 wordStart = start;
   // XXX Should we consider hyphenation here?
   for (i = start + 1; i <= flowEndInTextRun; ++i) {
-    if (i < flowEndInTextRun && !mTextRun->CanBreakLineBefore(i) &&
-        (collapseWhitespace || frag->CharAt(iter.ConvertSkippedToOriginal(i)) == '\n'))
-      continue;
+    if (i < flowEndInTextRun && !mTextRun->CanBreakLineBefore(i)) {
+      PRBool preformattedNewline = !collapseWhitespace &&
+        frag->CharAt(iter.ConvertSkippedToOriginal(i)) == '\n';
+      if (!preformattedNewline) {
+        // we can't break here
+        continue;
+      }
+    }
 
     nscoord width =
       NSToCoordCeil(mTextRun->GetAdvanceWidth(wordStart, i - wordStart, &provider));
