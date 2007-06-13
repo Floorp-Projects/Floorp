@@ -281,17 +281,40 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
 
   // Now that we have all of the necessary geometries, we can
   // create our surface.
-  float surfaceWidth, surfaceHeight;
-  bbox->GetWidth(&surfaceWidth);
-  bbox->GetHeight(&surfaceHeight);
+  float patternWidth, patternHeight;
+  bbox->GetWidth(&patternWidth);
+  bbox->GetHeight(&patternHeight);
+
+  PRBool resultOverflows;
+  gfxIntSize surfaceSize =
+    nsSVGUtils::ConvertToSurfaceSize(gfxSize(patternWidth, patternHeight),
+                                     &resultOverflows);
+
+  // 0 disables rendering, < 0 is an error
+  if (surfaceSize.width <= 0 || surfaceSize.height <= 0)
+    return NS_ERROR_FAILURE;
+
+  if (resultOverflows) {
+    // scale down drawing to new pattern surface size
+    nsCOMPtr<nsIDOMSVGMatrix> tempTM, aCTM;
+    NS_NewSVGMatrix(getter_AddRefs(tempTM),
+                    surfaceSize.width / patternWidth, 0.0f,
+                    0.0f, surfaceSize.height / patternHeight,
+                    0.0f, 0.0f);
+    mCTM->Multiply(tempTM, getter_AddRefs(aCTM));
+    aCTM.swap(mCTM);
+
+    // and magnify pattern to compensate
+    patternMatrix->Scale(patternWidth / surfaceSize.width,
+                         patternHeight / surfaceSize.height);
+  }
 
 #ifdef DEBUG_scooter
-  printf("Creating %dX%d surface\n",(int)(surfaceWidth),(int)(surfaceHeight));
+  printf("Creating %dX%d surface\n", int(surfaceSize.width), int(surfaceSize.height));
 #endif
 
   nsRefPtr<gfxASurface> tmpSurface =
-    gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(PRInt32(surfaceWidth),
-                                                                  PRInt32(surfaceHeight)),
+    gfxPlatform::GetPlatform()->CreateOffscreenSurface(surfaceSize,
                                                        gfxASurface::ImageFormatARGB32);
   if (!tmpSurface)
     return NS_ERROR_FAILURE;
