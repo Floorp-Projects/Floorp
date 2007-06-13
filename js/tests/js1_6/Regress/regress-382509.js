@@ -66,7 +66,7 @@ function test()
   expect = 'EvalError: function eval must be called directly, and not by way of a function of another name';
   try
   {
-    actual = String(['a+" indirect"'].map(object.foo));
+    actual = String(['a+" indirect"'].map(object.foo, object));
   }
   catch(ex)
   {
