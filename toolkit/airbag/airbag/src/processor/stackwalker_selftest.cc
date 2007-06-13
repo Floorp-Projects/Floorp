@@ -61,6 +61,7 @@
 #include "google_breakpad/processor/memory_region.h"
 #include "google_breakpad/processor/stack_frame.h"
 #include "google_breakpad/processor/stack_frame_cpu.h"
+#include "processor/logging.h"
 #include "processor/scoped_ptr.h"
 
 using google_breakpad::BasicSourceLineResolver;
@@ -292,6 +293,8 @@ static bool Recursor(unsigned int depth, unsigned int parent_callers) {
 // be inlined anyway.
 int main(int argc, char** argv) __attribute__((noinline));
 int main(int argc, char** argv) {
+  BPLOG_INIT(&argc, &argv);
+
   return Recursor(RECURSION_DEPTH, CountCallerFrames()) ? 0 : 1;
 }
 
@@ -302,8 +305,11 @@ int main(int argc, char** argv) {
 
 
 int main(int argc, char **argv) {
+  BPLOG_INIT(&argc, &argv);
+
   // "make check" interprets an exit status of 77 to mean that the test is
   // not supported.
+  BPLOG(ERROR) << "Selftest not supported here";
   return 77;
 }
 

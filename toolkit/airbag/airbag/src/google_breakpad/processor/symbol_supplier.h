@@ -52,7 +52,7 @@ class SymbolSupplier {
     FOUND,
 
     // stops processing the minidump immediately
-    INTERRUPT,
+    INTERRUPT
   };
 
   virtual ~SymbolSupplier() {}

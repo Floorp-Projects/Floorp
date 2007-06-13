@@ -40,6 +40,7 @@
 #include "google_breakpad/processor/process_state.h"
 #include "google_breakpad/processor/stack_frame.h"
 #include "google_breakpad/processor/symbol_supplier.h"
+#include "processor/logging.h"
 #include "processor/scoped_ptr.h"
 
 namespace {
@@ -204,6 +205,8 @@ static bool RunTests() {
 }  // namespace
 
 int main(int argc, char *argv[]) {
+  BPLOG_INIT(&argc, &argv);
+
   if (!RunTests()) {
     return 1;
   }

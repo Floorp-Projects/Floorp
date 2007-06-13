@@ -33,6 +33,7 @@
 #include "google_breakpad/processor/code_module.h"
 #include "google_breakpad/processor/stack_frame.h"
 #include "processor/linked_ptr.h"
+#include "processor/logging.h"
 #include "processor/scoped_ptr.h"
 #include "processor/stack_frame_info.h"
 
@@ -202,6 +203,8 @@ static bool RunTests() {
 }  // namespace
 
 int main(int argc, char **argv) {
+  BPLOG_INIT(&argc, &argv);
+
   if (!RunTests()) {
     return 1;
   }
