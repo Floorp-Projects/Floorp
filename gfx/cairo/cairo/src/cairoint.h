@@ -240,6 +240,13 @@ typedef void *cairo_mutex_t;
 #endif
 
 #ifndef MOZILLA_CAIRO_NOT_DEFINED
+/* Make assertions non-fatal */
+#ifndef NDEBUG
+#undef assert
+#define assert(expr) \
+    do { if (!(expr)) fprintf(stderr, "Assertion failed at %s:%d: %s\n", \
+          __FILE__, __LINE__, #expr); } while (0)
+#endif
 #ifndef INT32_MAX
 # ifdef INT_MAX
 #  define INT32_MAX INT_MAX
