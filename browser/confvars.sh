@@ -39,6 +39,18 @@
 MOZ_APP_NAME=firefox
 MOZ_UPDATER=1
 MOZ_PHOENIX=1
+
+case "$target_os" in
+darwin*)
+  # libxul is causing performance issues due to mach-o not hiding symbols
+  # Disable it temporarily
+  MOZ_ENABLE_LIBXUL=
+  ;;
+*)
+  MOZ_ENABLE_LIBXUL=1
+  ;;
+esac
+
 MOZ_PLACES=1
 MOZ_PLACES_BOOKMARKS=1
 # always enabled for form history
@@ -48,4 +60,3 @@ MOZ_APP_VERSION=$FIREFOX_VERSION
 MOZ_NO_XPCOM_OBSOLETE=1
 MOZ_EXTENSIONS_DEFAULT=" xml-rpc inspector gnomevfs reporter"
 # MOZ_APP_DISPLAYNAME will be set by branding/configure.sh
-MOZ_ENABLE_LIBXUL=1
