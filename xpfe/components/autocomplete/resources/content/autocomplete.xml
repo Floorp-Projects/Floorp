@@ -30,7 +30,7 @@
                       xbl:inherits="open,hidden=disablehistory" anonid="historydropmarker"/>
 
       <xul:popupset>
-        <xul:popup ignorekeys="true" anonid="popup" class="autocomplete-result-popup" hidden="true" xbl:inherits="for=id,nomatch"/>
+        <xul:popup type="autocomplete" ignorekeys="true" anonid="popup" class="autocomplete-result-popup" hidden="true" xbl:inherits="for=id,nomatch"/>
       </xul:popupset>
       
       <children includes="menupopup"/>
@@ -164,8 +164,7 @@
       <!-- toggles a second column in the results list which contains
            the string in the comment field of each autocomplete result -->
       <property name="showCommentColumn"
-                onget=
-		  "return this.getAttribute('showCommentColumn') == 'true';">
+                onget="return this.getAttribute('showCommentColumn') == 'true';">
         <setter><![CDATA[
 
           var currentState = this.getAttribute('showCommentColumn');          
@@ -1362,11 +1361,6 @@
           setTree: function(aTree)
           {
             this.mTree = aTree;
-            
-            if (aTree) {
-              // cache atoms for pseudoelement properties
-              this.mAtomSelected = this.createAtom("menuactive")
-            }
           },
           
           getCellText: function(aRow, aCol)
@@ -1378,14 +1372,10 @@
 
           getRowProperties: function(aIndex, aProperties) 
           {
-            if (aIndex == this.mSelectedIndex)
-              aProperties.AppendElement(this.mAtomSelected);
           },
 
           getCellProperties: function(aIndex, aCol, aProperties)
           {
-            this.getRowProperties(aIndex, aProperties);
-
             // for the value column, append nsIAutoCompleteItem::className
             // to the property list so that we can style this column
             // using that property
