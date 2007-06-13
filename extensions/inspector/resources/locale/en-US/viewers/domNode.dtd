@@ -37,6 +37,7 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 
+<!ENTITY nodeName.label "Node Name:">
 <!ENTITY localName.label "Local Name:">
 <!ENTITY namespaceURI.label "Namespace URI:">
 <!ENTITY nodeType.label "Node Type:">
