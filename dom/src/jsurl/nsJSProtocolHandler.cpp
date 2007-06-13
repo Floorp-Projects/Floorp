@@ -429,6 +429,7 @@ protected:
     nsRefPtr<nsJSThunk>     mIOThunk;
     PopupControlState       mPopupState;
     PRUint32                mExecutionPolicy;
+    PRPackedBool            mIsAsync;
     PRPackedBool            mIsActive;
     PRPackedBool            mOpenedStreamChannel;
 };
@@ -439,6 +440,7 @@ nsJSChannel::nsJSChannel() :
     mActualLoadFlags(LOAD_NORMAL),
     mPopupState(openOverridden),
     mExecutionPolicy(EXECUTE_IN_SANDBOX),
+    mIsAsync(PR_TRUE),
     mIsActive(PR_FALSE),
     mOpenedStreamChannel(PR_FALSE)
 {
@@ -630,9 +632,42 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
         loadGroup->AddRequest(this, nsnull);
     }
 
-    // post an event to do the rest
-    nsCOMPtr<nsIRunnable> ev =
-        new nsRunnableMethod<nsJSChannel>(this, &nsJSChannel::EvaluateScript);
+    mPopupState = win->GetPopupControlState();
+
+    nsRunnableMethod<nsJSChannel>::Method method;
+    if (mIsAsync) {
+        // post an event to do the rest
+        method = &nsJSChannel::EvaluateScript;
+    } else {   
+        EvaluateScript();
+        if (mOpenedStreamChannel) {
+            // That will handle notifying things
+            return NS_OK;
+        }
+
+        NS_ASSERTION(NS_FAILED(mStatus), "We should have failed _somehow_");
+
+        // mStatus is going to be NS_ERROR_DOM_RETVAL_UNDEFINED if we didn't
+        // have any content resulting from the execution and NS_BINDING_ABORTED
+        // if something we did causes our own load to be stopped.  Return
+        // success in those cases, and error out in all others.
+        if (mStatus != NS_ERROR_DOM_RETVAL_UNDEFINED &&
+            mStatus != NS_BINDING_ABORTED) {
+            // Note that calling EvaluateScript() handled removing us from the
+            // loadgroup and marking us as not active anymore.
+            mListener = nsnull;
+            mContext = nsnull;
+            mOriginalInnerWindow = nsnull;
+            return mStatus;
+        }
+
+        // We're returning success from asyncOpen(), but we didn't open a
+        // stream channel.  We'll have to notify ourselves, but make sure to do
+        // it asynchronously.
+        method = &nsJSChannel::NotifyListener;            
+    }
+
+    nsCOMPtr<nsIRunnable> ev = new nsRunnableMethod<nsJSChannel>(this, method);
     nsresult rv = NS_DispatchToCurrentThread(ev);
 
     if (NS_FAILED(rv)) {
@@ -642,9 +677,6 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
         mContext = nsnull;
         mOriginalInnerWindow = nsnull;
     }
-
-    mPopupState = win->GetPopupControlState();
-
     return rv;
 }
 
@@ -687,7 +719,9 @@ nsJSChannel::EvaluateScript()
     mIsActive = PR_FALSE;
 
     if (NS_FAILED(mStatus)) {
-        NotifyListener();
+        if (mIsAsync) {
+            NotifyListener();
+        }
         return;
     }
     
@@ -729,17 +763,19 @@ nsJSChannel::EvaluateScript()
     }
 
     if (NS_FAILED(mStatus)) {
-        NotifyListener();
+        if (mIsAsync) {
+            NotifyListener();
+        }
         return;
     }
     
     mStatus = mStreamChannel->AsyncOpen(this, mContext);
-    if (NS_FAILED(mStatus)) {
-        NotifyListener();
-    } else {
+    if (NS_SUCCEEDED(mStatus)) {
         // mStreamChannel will call OnStartRequest and OnStopRequest on
         // us, so we'll be sure to call them on our listener.
         mOpenedStreamChannel = PR_TRUE;
+    } else if (mIsAsync) {
+        NotifyListener();
     }
 
     return;
@@ -917,6 +953,25 @@ NS_IMETHODIMP
 nsJSChannel::GetExecutionPolicy(PRUint32* aPolicy)
 {
     *aPolicy = mExecutionPolicy;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSChannel::SetExecuteAsync(PRBool aIsAsync)
+{
+    if (!mIsActive) {
+        mIsAsync = aIsAsync;
+    }
+    // else ignore this call
+    NS_WARN_IF_FALSE(!mIsActive, "Calling SetExecuteAsync on active channel?");
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSChannel::GetExecuteAsync(PRBool* aIsAsync)
+{
+    *aIsAsync = mIsAsync;
     return NS_OK;
 }
 

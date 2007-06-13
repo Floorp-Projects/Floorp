@@ -5809,6 +5809,8 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
         nsCOMPtr<nsIScriptChannel> scriptChannel(do_QueryInterface(channel));
         if (scriptChannel) {
           scriptChannel->SetExecutionPolicy(nsIScriptChannel::EXECUTE_NORMAL);
+          // Plug-ins seem to depend on javascript: URIs running synchronously
+          scriptChannel->SetExecuteAsync(PR_FALSE);
         }
       }
 
