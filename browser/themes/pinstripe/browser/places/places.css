@@ -76,6 +76,11 @@ treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
   color: HighlightText;
 }
 
+treechildren::-moz-tree-twisty(title, separator) {
+  -moz-appearance: none;
+  padding: 0px;
+}
+
 /* Command Bar */
 .commands {
   padding-bottom: 5px;  
