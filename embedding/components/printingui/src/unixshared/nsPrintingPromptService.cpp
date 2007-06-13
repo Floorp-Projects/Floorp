@@ -135,7 +135,7 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent,
 
     *notifyOnOpen = PR_FALSE;
 
-    nsPrintProgress* prtProgress = new nsPrintProgress();
+    nsPrintProgress* prtProgress = new nsPrintProgress(printSettings);
     nsresult rv = prtProgress->QueryInterface(NS_GET_IID(nsIPrintProgress), (void**)getter_AddRefs(mPrintProgress));
     NS_ENSURE_SUCCESS(rv, rv);
 
