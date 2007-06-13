@@ -178,11 +178,22 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
           clipExtents.Width(), clipExtents.Height());
 #endif
 
-  gfxIntSize clipSize(PRInt32(clipExtents.Width() + 0.5),
-                      PRInt32(clipExtents.Height() + 0.5));
+  PRBool resultOverflows;
+  gfxIntSize surfaceSize =
+    nsSVGUtils::ConvertToSurfaceSize(gfxSize(clipExtents.Width(),
+                                             clipExtents.Height()),
+                                     &resultOverflows);
+
+  // 0 disables mask, < 0 is an error
+  if (surfaceSize.width <= 0 || surfaceSize.height <= 0)
+    return nsnull;
+
+  if (resultOverflows)
+    return nsnull;
+
   nsRefPtr<gfxImageSurface> image =
-    new gfxImageSurface(clipSize, gfxASurface::ImageFormatARGB32);
-  if (!image)
+    new gfxImageSurface(surfaceSize, gfxASurface::ImageFormatARGB32);
+  if (!image || !image->Data())
     return nsnull;
 
   gfxContext transferCtx(image);
@@ -190,8 +201,8 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
   transferCtx.SetSource(surface, -clipExtents.pos);
   transferCtx.Paint();
 
-  PRUint32 width  = clipSize.width;
-  PRUint32 height = clipSize.height;
+  PRUint32 width  = surfaceSize.width;
+  PRUint32 height = surfaceSize.height;
   PRUint8 *data   = image->Data();
   PRInt32  stride = image->Stride();
 

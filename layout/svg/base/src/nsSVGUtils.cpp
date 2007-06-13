@@ -1283,6 +1283,28 @@ nsSVGUtils::ToBoundingPixelRect(const gfxRect& rect)
                 nscoord(ceil(rect.YMost()) - floor(rect.Y())));
 }
 
+gfxIntSize
+nsSVGUtils::ConvertToSurfaceSize(const gfxSize& aSize, PRBool *aResultOverflows)
+{
+  gfxIntSize surfaceSize =
+    gfxIntSize(PRInt32(aSize.width + 0.5), PRInt32(aSize.height + 0.5));
+
+  *aResultOverflows = (aSize.width >= PR_INT32_MAX + 0.5 ||
+                       aSize.height >= PR_INT32_MAX + 0.5 ||
+                       aSize.width <= PR_INT32_MIN - 0.5 ||
+                       aSize.height <= PR_INT32_MIN - 0.5);
+
+  if (*aResultOverflows ||
+      !gfxASurface::CheckSurfaceSize(surfaceSize)) {
+    surfaceSize.width = PR_MIN(NS_SVG_OFFSCREEN_MAX_DIMENSION,
+                               surfaceSize.width);
+    surfaceSize.height = PR_MIN(NS_SVG_OFFSCREEN_MAX_DIMENSION,
+                                surfaceSize.height);
+    *aResultOverflows = PR_TRUE;
+  }
+  return surfaceSize;
+}
+
 gfxASurface *
 nsSVGUtils::GetThebesComputationalSurface()
 {

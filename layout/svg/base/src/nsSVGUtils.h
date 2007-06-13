@@ -71,6 +71,8 @@ class gfxASurface;
 class nsIRenderingContext;
 struct gfxRect;
 struct gfxMatrix;
+struct gfxSize;
+struct gfxIntSize;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -108,6 +110,11 @@ struct gfxMatrix;
 #define GFX_ARGB32_OFFSET_G 1
 #define GFX_ARGB32_OFFSET_B 0
 #endif
+
+// maximum dimension of an offscreen surface - choose so that
+// the surface size doesn't overflow a 32-bit signed int using
+// 4 bytes per pixel; in line with gfxASurface::CheckSurfaceSize
+#define NS_SVG_OFFSCREEN_MAX_DIMENSION 16384
 
 /*
  * Checks the svg enable preference and if a renderer could
@@ -315,6 +322,17 @@ public:
   ToBoundingPixelRect(double xmin, double ymin, double xmax, double ymax);
   static nsRect
   ToBoundingPixelRect(const gfxRect& rect);
+
+  /*
+   * Convert a surface size to an integer for use by thebes
+   * possibly making it smaller in the process so the surface does not
+   * use excessive memory.
+   * @param aSize the desired surface size
+   * @param aResultOverflows true if the desired surface size is too big
+   * @return the surface size to use
+   */
+  static gfxIntSize
+  ConvertToSurfaceSize(const gfxSize& aSize, PRBool *aResultOverflows);
 
   /*
    * Get a pointer to a surface that can be used to create thebes

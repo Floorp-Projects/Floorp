@@ -51,13 +51,6 @@
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 
-// maximum dimension of a filter - choose so that
-// 4*(FILTER_RES_MAX^2) < UINT_MAX, it's small
-// enough that it could be computed in a reasonable
-// amount of time, and large enough for most content
-// window sizes.
-#define FILTER_RES_MAX 16384
-
 nsIFrame*
 NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
@@ -143,13 +136,6 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
 
   nsCOMPtr<nsIDOMSVGMatrix> ctm = nsSVGUtils::GetCanvasTM(frame);
 
-  float s1, s2;
-  ctm->GetA(&s1);
-  ctm->GetD(&s2);
-#ifdef DEBUG_tor
-  fprintf(stderr, "scales: %f %f\n", s1, s2);
-#endif
-
   nsSVGElement *target = NS_STATIC_CAST(nsSVGElement*, frame->GetContent());
 
   aTarget->SetMatrixPropagation(PR_FALSE);
@@ -187,39 +173,51 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
     height = nsSVGUtils::UserSpace(target, tmpHeight);
   }
   
-  PRInt32 filterResX = PRInt32(s1 * width + 0.5);
-  PRInt32 filterResY = PRInt32(s2 * height + 0.5);
+  PRBool resultOverflows;
+  gfxIntSize filterRes;
 
   if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::filterRes)) {
+    PRInt32 filterResX, filterResY;
     filter->mFilterResX->GetAnimVal(&filterResX);
     filter->mFilterResY->GetAnimVal(&filterResY);
+
+    filterRes =
+      nsSVGUtils::ConvertToSurfaceSize(gfxSize(filterResX, filterResY),
+                                       &resultOverflows);
+  } else {
+    float s1, s2;
+    ctm->GetA(&s1);
+    ctm->GetD(&s2);
+#ifdef DEBUG_tor
+    fprintf(stderr, "scales: %f %f\n", s1, s2);
+#endif
+
+    filterRes =
+      nsSVGUtils::ConvertToSurfaceSize(gfxSize(s1 * width, s2 * height),
+                                       &resultOverflows);
   }
 
-  // filterRes = 0 disables rendering, < 0 is error
-  if (filterResX <= 0.0f || filterResY <= 0.0f)
-    return NS_OK;
 
-  // prevent filters from overflowing or generally using excessive memory
-  filterResX = PR_MIN(FILTER_RES_MAX, filterResX);
-  filterResY = PR_MIN(FILTER_RES_MAX, filterResY);
+  // 0 disables rendering, < 0 is error
+  if (filterRes.width <= 0 || filterRes.height <= 0)
+    return NS_OK;
 
 #ifdef DEBUG_tor
   fprintf(stderr, "filter bbox: %f,%f  %fx%f\n", x, y, width, height);
-  fprintf(stderr, "filterRes: %u %u\n", filterResX, filterResY);
+  fprintf(stderr, "filterRes: %u %u\n", filterRes.width, filterRes.height);
 #endif
 
   nsCOMPtr<nsIDOMSVGMatrix> filterTransform;
   NS_NewSVGMatrix(getter_AddRefs(filterTransform),
-                  filterResX/width,  0.0f,
-                  0.0f,              filterResY/height,
-                  -x*filterResX/width,                 -y*filterResY/height);
+                  filterRes.width / width,      0.0f,
+                  0.0f,                         filterRes.height / height,
+                  -x * filterRes.width / width, -y * filterRes.height / height);
   aTarget->SetOverrideCTM(filterTransform);
   aTarget->NotifyCanvasTMChanged(PR_TRUE);
 
   // paint the target geometry
   nsRefPtr<gfxImageSurface> tmpSurface =
-    new gfxImageSurface(gfxIntSize(filterResX, filterResY),
-                        gfxASurface::ImageFormatARGB32);
+    new gfxImageSurface(filterRes, gfxASurface::ImageFormatARGB32);
   if (!tmpSurface || !tmpSurface->Data()) {
     FilterFailCleanup(aContext, aTarget);
     return NS_OK;
@@ -238,7 +236,7 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
   filter->mPrimitiveUnits->GetAnimVal(&primitiveUnits);
   nsSVGFilterInstance instance(target, bbox,
                                x, y, width, height,
-                               filterResX, filterResY,
+                               filterRes.width, filterRes.height,
                                primitiveUnits);
   nsSVGFilterInstance::ColorModel 
     colorModel(nsSVGFilterInstance::ColorModel::SRGB,
@@ -246,8 +244,7 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
 
   if (requirements & NS_FE_SOURCEALPHA) {
     nsRefPtr<gfxImageSurface> alpha =
-      new gfxImageSurface(gfxIntSize(filterResX, filterResY),
-                          gfxASurface::ImageFormatARGB32);
+      new gfxImageSurface(filterRes, gfxASurface::ImageFormatARGB32);
 
     if (!alpha || !alpha->Data()) {
       FilterFailCleanup(aContext, aTarget);
@@ -258,8 +255,8 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
     PRUint8 *alphaData = alpha->Data();
     PRUint32 stride = tmpSurface->Stride();
 
-    for (PRUint32 yy = 0; yy < PRUint32(filterResY); yy++)
-      for (PRUint32 xx = 0; xx < PRUint32(filterResX); xx++) {
+    for (PRInt32 yy = 0; yy < filterRes.height; yy++)
+      for (PRInt32 xx = 0; xx < filterRes.width; xx++) {
         alphaData[stride*yy + 4*xx + GFX_ARGB32_OFFSET_B] = 0;
         alphaData[stride*yy + 4*xx + GFX_ARGB32_OFFSET_G] = 0;
         alphaData[stride*yy + 4*xx + GFX_ARGB32_OFFSET_R] = 0;
@@ -268,13 +265,15 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
     }
 
     instance.DefineImage(NS_LITERAL_STRING("SourceAlpha"), alpha,
-                         nsRect(0, 0, filterResX, filterResY), colorModel);
+                         nsRect(0, 0, filterRes.width, filterRes.height),
+                         colorModel);
   }
 
   // this always needs to be defined last because the default image
   // for the first filter element is supposed to be SourceGraphic
   instance.DefineImage(NS_LITERAL_STRING("SourceGraphic"), tmpSurface,
-                       nsRect(0, 0, filterResX, filterResY), colorModel);
+                       nsRect(0, 0, filterRes.width, filterRes.height),
+                       colorModel);
 
   for (PRUint32 k=0; k<count; ++k) {
     nsIContent* child = mContent->GetChildAt(k);
@@ -299,8 +298,8 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
 
   nsCOMPtr<nsIDOMSVGMatrix> scale, fini;
   NS_NewSVGMatrix(getter_AddRefs(scale),
-                  width/filterResX, 0.0f,
-                  0.0f, height/filterResY,
+                  width / filterRes.width, 0.0f,
+                  0.0f, height / filterRes.height,
                   x, y);
 
   ctm->Multiply(scale, getter_AddRefs(fini));
