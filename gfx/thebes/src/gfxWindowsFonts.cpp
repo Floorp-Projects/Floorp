@@ -77,7 +77,9 @@ static PRLogModuleInfo *gFontLog = PR_NewLogModule("winfonts");
 
 #define ROUND(x) floor((x) + 0.5)
 
-inline HDC GetDCFromSurface(gfxASurface *aSurface) {
+inline HDC
+GetDCFromSurface(gfxASurface *aSurface)
+{
     if (aSurface->GetType() != gfxASurface::SurfaceTypeWin32) {
         NS_ERROR("GetDCFromSurface: Context target is not win32!");
         return nsnull;
@@ -100,15 +102,12 @@ gfxWindowsFont::gfxWindowsFont(const nsAString& aName, const gfxFontStyle *aFont
     // XXX we should work to get this passed in rather than having to find it again.
     mFontEntry = gfxWindowsPlatform::GetPlatform()->FindFontEntry(aName);
     NS_ASSERTION(mFontEntry, "Unable to find font entry for font.  Something is whack.");
+
+    mFont = MakeHFONT(); // create the HFONT, compute metrics, etc
+    NS_ASSERTION(mFont, "Failed to make HFONT");
 }
 
 gfxWindowsFont::~gfxWindowsFont()
-{
-    Destroy();
-}
-
-void
-gfxWindowsFont::Destroy()
 {
     if (mFontFace)
         cairo_font_face_destroy(mFontFace);
@@ -122,12 +121,6 @@ gfxWindowsFont::Destroy()
     ScriptFreeCache(&mScriptCache);
 
     delete mMetrics;
-
-    mFont = nsnull;
-    mScriptCache = nsnull;
-    mFontFace = nsnull;
-    mScaledFont = nsnull;
-    mMetrics = nsnull;
 }
 
 const gfxFont::Metrics&
@@ -139,22 +132,11 @@ gfxWindowsFont::GetMetrics()
     return *mMetrics;
 }
 
-HFONT
-gfxWindowsFont::GetHFONT()
-{
-    if (!mFont)
-        mFont = MakeHFONT();
-
-    NS_ASSERTION(mFont, "Failed to make HFONT");
-
-    return mFont;
-}
-
 cairo_font_face_t *
 gfxWindowsFont::CairoFontFace()
 {
     if (!mFontFace)
-        mFontFace = MakeCairoFontFace();
+        mFontFace = cairo_win32_font_face_create_for_logfontw_hfont(&mLogFont, mFont);
 
     NS_ASSERTION(mFontFace, "Failed to make font face");
 
@@ -164,8 +146,18 @@ gfxWindowsFont::CairoFontFace()
 cairo_scaled_font_t *
 gfxWindowsFont::CairoScaledFont()
 {
-    if (!mScaledFont)
-        mScaledFont = MakeCairoScaledFont();
+    if (!mScaledFont) {
+        cairo_matrix_t sizeMatrix;
+        cairo_matrix_t identityMatrix;
+
+        cairo_matrix_init_scale(&sizeMatrix, mAdjustedSize, mAdjustedSize);
+        cairo_matrix_init_identity(&identityMatrix);
+
+        cairo_font_options_t *fontOptions = cairo_font_options_create();
+        mScaledFont = cairo_scaled_font_create(CairoFontFace(), &sizeMatrix,
+                                               &identityMatrix, fontOptions);
+        cairo_font_options_destroy(fontOptions);
+    }
 
     NS_ASSERTION(mScaledFont, "Failed to make scaled font");
 
@@ -259,45 +251,17 @@ gfxWindowsFont::MakeHFONT()
     return mFont;
 }
 
-cairo_font_face_t *
-gfxWindowsFont::MakeCairoFontFace()
-{
-    // ensure mFont is around
-    MakeHFONT();
-    return cairo_win32_font_face_create_for_logfontw_hfont(&mLogFont, mFont);
-}
-
-cairo_scaled_font_t *
-gfxWindowsFont::MakeCairoScaledFont()
-{
-    cairo_scaled_font_t *font = nsnull;
-
-    cairo_matrix_t sizeMatrix;
-    cairo_matrix_t identityMatrix;
-
-    MakeHFONT(); // Ensure mAdjustedSize being initialized.
-    cairo_matrix_init_scale(&sizeMatrix, mAdjustedSize, mAdjustedSize);
-    cairo_matrix_init_identity(&identityMatrix);
-
-    cairo_font_options_t *fontOptions = cairo_font_options_create();
-    font = cairo_scaled_font_create(CairoFontFace(), &sizeMatrix,
-                                    &identityMatrix, fontOptions);
-    cairo_font_options_destroy(fontOptions);
-
-    return font;
-}
-
 void
 gfxWindowsFont::ComputeMetrics()
 {
     if (!mMetrics)
         mMetrics = new gfxFont::Metrics;
+    else
+        NS_WARNING("Calling ComputeMetrics multiple times");
 
     HDC dc = GetDC((HWND)nsnull);
 
-    HFONT font = GetHFONT();
-
-    HGDIOBJ oldFont = SelectObject(dc, font);
+    HGDIOBJ oldFont = SelectObject(dc, mFont);
 
     // Get font metrics
     OUTLINETEXTMETRIC oMetrics;
@@ -417,9 +381,6 @@ nsString
 gfxWindowsFont::GetUniqueName()
 {
     nsString uniqueName;
-
-    // make sure this exists, because we're going to read its fields
-    MakeHFONT();
 
     // start with the family name
     uniqueName.Assign(mName);

@@ -451,7 +451,7 @@ public:
 
     virtual const gfxFont::Metrics& GetMetrics();
 
-    HFONT GetHFONT();
+    HFONT GetHFONT() { return mFont; }
     cairo_font_face_t *CairoFontFace();
     cairo_scaled_font_t *CairoScaledFont();
     SCRIPT_CACHE *ScriptCache() { return &mScriptCache; }
@@ -464,7 +464,7 @@ public:
                       Spacing *aSpacing);
 
     virtual PRUint32 GetSpaceGlyph() {
-        ComputeMetrics();
+        GetMetrics(); // ensure that the metrics are computed but don't recompute them
         return mSpaceGlyph;
     };
 
@@ -472,8 +472,6 @@ public:
 
 protected:
     HFONT MakeHFONT();
-    cairo_font_face_t *MakeCairoFontFace();
-    cairo_scaled_font_t *MakeCairoScaledFont();
     void FillLogFont(gfxFloat aSize, PRInt16 aWeight);
 
     HFONT    mFont;
@@ -481,7 +479,6 @@ protected:
     PRUint32 mSpaceGlyph;
 
 private:
-    void Destroy();
     void ComputeMetrics();
 
     SCRIPT_CACHE mScriptCache;
