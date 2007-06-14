@@ -597,6 +597,13 @@ extern JSBool
 js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto,
                      uintN attrs);
 
+/*
+ * Wrap boolean, number or string as Boolean, Number or String object.
+ * *vp must not be an object, null or undefined.
+ */
+extern JSBool
+js_PrimitiveToObject(JSContext *cx, jsval *vp);
+
 extern JSBool
 js_ValueToObject(JSContext *cx, jsval v, JSObject **objp);
 

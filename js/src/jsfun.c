@@ -173,8 +173,7 @@ ArgWasDeleted(JSContext *cx, JSStackFrame *fp, uintN slot)
 }
 
 JSBool
-js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id,
-                   JSObject **objp, jsval *vp)
+js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, jsval *vp)
 {
     jsval val;
     JSObject *obj;
@@ -195,11 +194,9 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id,
         } else {
             obj = JSVAL_TO_OBJECT(val);
         }
-        *objp = obj;
         return OBJ_GET_PROPERTY(cx, obj, id, vp);
     }
 
-    *objp = NULL;
     *vp = JSVAL_VOID;
     if (JSID_IS_INT(id)) {
         slot = (uintN) JSID_TO_INT(id);

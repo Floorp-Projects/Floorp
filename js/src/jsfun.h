@@ -151,8 +151,7 @@ extern JSBool
 js_GetArgsValue(JSContext *cx, JSStackFrame *fp, jsval *vp);
 
 extern JSBool
-js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id,
-                   JSObject **objp, jsval *vp);
+js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, jsval *vp);
 
 extern JSObject *
 js_GetArgsObject(JSContext *cx, JSStackFrame *fp);
