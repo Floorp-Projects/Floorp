@@ -225,7 +225,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     memset(cx, 0, sizeof *cx);
 
     cx->runtime = rt;
-    cx->debugHooks = &rt->globalDebugHooks;
 #if JS_STACK_GROWTH_DIRECTION > 0
     cx->stackLimit = (jsuword)-1;
 #endif
@@ -852,11 +851,11 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp)
      */
     if (!js_ErrorToException(cx, message, reportp)) {
         js_ReportErrorAgain(cx, message, reportp);
-    } else if (cx->debugHooks->debugErrorHook && cx->errorReporter) {
-        JSDebugErrorHook hook = cx->debugHooks->debugErrorHook;
+    } else if (cx->runtime->debugErrorHook && cx->errorReporter) {
+        JSDebugErrorHook hook = cx->runtime->debugErrorHook;
         /* test local in case debugErrorHook changed on another thread */
         if (hook)
-            hook(cx, message, reportp, cx->debugHooks->debugErrorHookData);
+            hook(cx, message, reportp, cx->runtime->debugErrorHookData);
     }
 }
 
@@ -901,9 +900,9 @@ js_ReportOutOfMemory(JSContext *cx)
      * sending the error on to the regular ErrorReporter.
      */
     if (onError) {
-        JSDebugErrorHook hook = cx->debugHooks->debugErrorHook;
+        JSDebugErrorHook hook = cx->runtime->debugErrorHook;
         if (hook &&
-            !hook(cx, msg, &report, cx->debugHooks->debugErrorHookData)) {
+            !hook(cx, msg, &report, cx->runtime->debugErrorHookData)) {
             onError = NULL;
         }
     }
@@ -1203,10 +1202,10 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *reportp)
      * sending the error on to the regular ErrorReporter.
      */
     if (onError) {
-        JSDebugErrorHook hook = cx->debugHooks->debugErrorHook;
+        JSDebugErrorHook hook = cx->runtime->debugErrorHook;
         if (hook &&
             !hook(cx, cx->lastMessage, reportp,
-                  cx->debugHooks->debugErrorHookData)) {
+                  cx->runtime->debugErrorHookData)) {
             onError = NULL;
         }
     }

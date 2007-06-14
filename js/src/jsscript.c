@@ -1459,25 +1459,29 @@ bad:
 JS_FRIEND_API(void)
 js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun)
 {
+    JSRuntime *rt;
     JSNewScriptHook hook;
 
-    hook = cx->debugHooks->newScriptHook;
+    rt = cx->runtime;
+    hook = rt->newScriptHook;
     if (hook) {
-        JS_KEEP_ATOMS(cx->runtime);
+        JS_KEEP_ATOMS(rt);
         hook(cx, script->filename, script->lineno, script, fun,
-             cx->debugHooks->newScriptHookData);
-        JS_UNKEEP_ATOMS(cx->runtime);
+             rt->newScriptHookData);
+        JS_UNKEEP_ATOMS(rt);
     }
 }
 
 JS_FRIEND_API(void)
 js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
 {
+    JSRuntime *rt;
     JSDestroyScriptHook hook;
 
-    hook = cx->debugHooks->destroyScriptHook;
+    rt = cx->runtime;
+    hook = rt->destroyScriptHook;
     if (hook)
-        hook(cx, script, cx->debugHooks->destroyScriptHookData);
+        hook(cx, script, rt->destroyScriptHookData);
 }
 
 void
