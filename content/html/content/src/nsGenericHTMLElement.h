@@ -185,8 +185,10 @@ public:
                      nsIFrame **aFrame = nsnull);
 
   /**
-   * Get this element's client area rect in app units.
-   * @return the frame's client area
+   * Get this element's client area dimensions in app units.
+   * The rect x, y, width, height are the clientLeft, clientTop, clientWidth,
+   * clientHeight values.
+   * @return the frame's client dimensions
    */
   nsRect GetClientAreaRect();
 
