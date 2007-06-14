@@ -213,6 +213,7 @@ sub Bump {
      or die ("Bootstrap::Config::Bump - Could not open $tmpFile for writing: $!");
 
     my $skipNextLine = 0;
+    my $KEY_REGEX = qr/ ([\w\-]+) /x;
     foreach my $line (<INFILE>) {
         if ($skipNextLine) {
             $skipNextLine = 0;
@@ -222,10 +223,16 @@ sub Bump {
             $skipNextLine = 1;
             my $interpLine = $line;
             $interpLine =~ s/^#\s+CONFIG:\s+//;
-            foreach my $variable (grep(/%[\w\-]+%/, split(/\s+/, $line))) {
+            foreach my $variable (grep(/%/,split(/(%$KEY_REGEX?%)/, $line))) {
                 my $key = $variable;
-                if (! ($key =~ s/.*%([\w\-]+)%.*/$1/)) {
+                if (! ($key =~ s/.*%($KEY_REGEX)%.*/$1/)) {
                     die("ASSERT: could not parse $variable");
+                }
+
+                $key =~ s/^%(.*)%$/$1/;
+
+                if ($key =~ /^\s*$/) {
+                    die("ASSERT: could not get key from $variable");
                 }
 
                 if (! $config->Exists(sysvar => $key)) {

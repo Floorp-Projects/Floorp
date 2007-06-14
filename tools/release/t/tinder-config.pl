@@ -1,4 +1,6 @@
 # CONFIG: bar %mozillaCvsroot%
-hoo hoo hoo
-# CONFIG: bar %tagDir% %verifyDir%
-ooh ooh ooh
+bar
+# CONFIG: bar %tagDir%%verifyDir%
+baz
+# CONFIG: bar %tagDir%_%verifyDir%
+bla
