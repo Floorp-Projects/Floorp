@@ -76,7 +76,7 @@ sub Verify {
     # Download current release
     $this->Shell(
       cmd => 'rsync',
-      cmdArgs => ['-v', 
+      cmdArgs => ['-Lav', 
                   '-e', 'ssh', 
                   '--include=*.dmg',
                   '--include=*.exe',
@@ -95,7 +95,7 @@ sub Verify {
     # Download previous release
     $this->Shell(
       cmd => 'rsync',
-      cmdArgs => ['-v', 
+      cmdArgs => ['-Lav', 
                   '-e', 'ssh', 
                   '--include=*.dmg',
                   '--include=*.exe',
