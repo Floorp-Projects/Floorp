@@ -639,9 +639,11 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
      * Get the arguments object to snapshot fp's actual argument values.
      */
     if (fp->argsobj) {
-        argsid = ATOM_TO_JSID(cx->runtime->atomState.argumentsAtom);
-        ok &= js_GetProperty(cx, callobj, argsid, &aval);
-        ok &= js_SetProperty(cx, callobj, argsid, &aval);
+        if (!TEST_OVERRIDE_BIT(fp, CALL_ARGUMENTS)) {
+            argsid = ATOM_TO_JSID(cx->runtime->atomState.argumentsAtom);
+            aval = OBJECT_TO_JSVAL(fp->argsobj);
+            ok &= js_SetProperty(cx, callobj, argsid, &aval);
+        }
         ok &= js_PutArgsObject(cx, fp);
     }
 
