@@ -346,10 +346,3 @@ function previousVisitCount(host, endTimeReference) {
   result.root.containerOpen = true;
   return result.root.childCount;
 }
-
-/**
- * Return true iff the string suffix appears at the end of the string target
- */
-function endsWith(target, suffix) {
-  return target && suffix && target.substr(-1 * suffix.length) === suffix;
-}
