@@ -671,6 +671,9 @@ nsDocShell::LoadURI(nsIURI * aURI,
                     PRUint32 aLoadFlags,
                     PRBool aFirstParty)
 {
+    if (mFiredUnloadEvent) {
+      return NS_OK; // JS may not handle returning of an error code
+    }
     nsresult rv;
     nsCOMPtr<nsIURI> referrer;
     nsCOMPtr<nsIInputStream> postStream;
@@ -973,6 +976,7 @@ nsDocShell::FirePageHideNotification(PRBool aIsUnload)
             }
         }
     }
+
     return NS_OK;
 }
 
@@ -2198,6 +2202,13 @@ nsDocShell::SetChildOffset(PRUint32 aChildOffset)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocShell::GetIsInUnload(PRBool* aIsInUnload)
+{
+    *aIsInUnload = mFiredUnloadEvent;
+    return NS_OK;
+}
+
 //*****************************************************************************
 // nsDocShell::nsIDocShellTreeNode
 //*****************************************************************************   
@@ -2630,6 +2641,12 @@ nsDocShell::IsPrintingOrPP(PRBool aDisplayErrorDialog)
   return mIsPrintingOrPP;
 }
 
+PRBool
+nsDocShell::IsNavigationAllowed(PRBool aDisplayPrintErrorDialog)
+{
+    return !IsPrintingOrPP(aDisplayPrintErrorDialog) && !mFiredUnloadEvent;
+}
+
 //*****************************************************************************
 // nsDocShell::nsIWebNavigation
 //*****************************************************************************   
@@ -2637,7 +2654,7 @@ nsDocShell::IsPrintingOrPP(PRBool aDisplayErrorDialog)
 NS_IMETHODIMP
 nsDocShell::GetCanGoBack(PRBool * aCanGoBack)
 {
-    if (IsPrintingOrPP(PR_FALSE)) {
+    if (!IsNavigationAllowed(PR_FALSE)) {
       *aCanGoBack = PR_FALSE;
       return NS_OK; // JS may not handle returning of an error code
     }
@@ -2654,7 +2671,7 @@ nsDocShell::GetCanGoBack(PRBool * aCanGoBack)
 NS_IMETHODIMP
 nsDocShell::GetCanGoForward(PRBool * aCanGoForward)
 {
-    if (IsPrintingOrPP(PR_FALSE)) {
+    if (!IsNavigationAllowed(PR_FALSE)) {
       *aCanGoForward = PR_FALSE;
       return NS_OK; // JS may not handle returning of an error code
     }
@@ -2671,7 +2688,7 @@ nsDocShell::GetCanGoForward(PRBool * aCanGoForward)
 NS_IMETHODIMP
 nsDocShell::GoBack()
 {
-    if (IsPrintingOrPP()) {
+    if (!IsNavigationAllowed()) {
       return NS_OK; // JS may not handle returning of an error code
     }
     nsresult rv;
@@ -2687,7 +2704,7 @@ nsDocShell::GoBack()
 NS_IMETHODIMP
 nsDocShell::GoForward()
 {
-    if (IsPrintingOrPP()) {
+    if (!IsNavigationAllowed()) {
       return NS_OK; // JS may not handle returning of an error code
     }
     nsresult rv;
@@ -2702,7 +2719,7 @@ nsDocShell::GoForward()
 
 NS_IMETHODIMP nsDocShell::GotoIndex(PRInt32 aIndex)
 {
-    if (IsPrintingOrPP()) {
+    if (!IsNavigationAllowed()) {
       return NS_OK; // JS may not handle returning of an error code
     }
     nsresult rv;
@@ -2723,7 +2740,7 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
                     nsIInputStream * aPostStream,
                     nsIInputStream * aHeaderStream)
 {
-    if (IsPrintingOrPP()) {
+    if (!IsNavigationAllowed()) {
       return NS_OK; // JS may not handle returning of an error code
     }
     nsCOMPtr<nsIURI> uri;
@@ -3107,7 +3124,7 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
 NS_IMETHODIMP
 nsDocShell::Reload(PRUint32 aReloadFlags)
 {
-    if (IsPrintingOrPP()) {
+    if (!IsNavigationAllowed()) {
       return NS_OK; // JS may not handle returning of an error code
     }
     nsresult rv;

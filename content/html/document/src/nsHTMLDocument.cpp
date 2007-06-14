@@ -2040,6 +2040,16 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
+  // check whether we're in the middle of unload.  If so, ignore this call.
+  nsCOMPtr<nsIDocShell> shell = do_QueryReferent(mDocumentContainer);
+  if (shell) {
+    PRBool inUnload;
+    shell->GetIsInUnload(&inUnload);
+    if (inUnload) {
+      return NS_OK;
+    }
+  }
+
   // Note: We want to use GetDocumentFromContext here because this document
   // should inherit the security information of the document that's opening us,
   // (since if it's secure, then it's presumeably trusted).
