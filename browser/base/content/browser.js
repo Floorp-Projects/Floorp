@@ -5514,22 +5514,6 @@ var FeedHandler = {
     this.loadFeed(href, event);
   },
     
-  /**
-   * Locate the shell that has a specified document loaded in it. 
-   * @param   doc
-   *          The document to find a shell for.
-   * @returns The doc shell that contains the specified document.
-   */
-  _getContentShell: function(doc) {
-    var browsers = getBrowser().browsers;
-    for (var i = 0; i < browsers.length; i++) {
-      var shell = findChildShell(doc, browsers[i].docShell, null);
-      if (shell)
-        return { shell: shell, browser: browsers[i] };
-    }
-    return null;
-  },
-  
 #ifndef MOZ_PLACES_BOOKMARKS
   /**
    * Adds a Live Bookmark to a feed

@@ -155,12 +155,3 @@ function onChooseFile()
   }
   doEnabling();
 }
-
-function useUBHistoryItem(aMenuItem)
-{
-  var urlbar = document.getElementById("dialog.input");
-  urlbar.value = aMenuItem.getAttribute("label");
-  urlbar.focus();
-  doEnabling();
-}
-
