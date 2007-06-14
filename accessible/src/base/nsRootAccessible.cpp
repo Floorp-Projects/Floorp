@@ -358,12 +358,10 @@ nsresult nsRootAccessible::RemoveEventListeners()
   return nsDocAccessible::RemoveEventListeners();
 }
 
-already_AddRefed<nsCaretAccessible>
+nsCaretAccessible*
 nsRootAccessible::GetCaretAccessible()
 {
-  nsCaretAccessible *rawCaretAccessible = mCaretAccessible;
-  NS_IF_ADDREF(rawCaretAccessible);
-  return rawCaretAccessible;
+  return mCaretAccessible;
 }
 
 void nsRootAccessible::TryFireEarlyLoadEvent(nsIDOMNode *aDocNode)
