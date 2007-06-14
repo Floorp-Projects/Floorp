@@ -69,18 +69,6 @@ const PREF_SELECTED_WEB = "browser.feeds.handlers.webservice";
 const PREF_SELECTED_ACTION = "browser.feeds.handler";
 const PREF_SELECTED_READER = "browser.feeds.handler.default";
 
-function safeGetBoolPref(pref, defaultValue) {
-  var prefs =   
-      Cc["@mozilla.org/preferences-service;1"].
-      getService(Ci.nsIPrefBranch);
-  try {
-    return prefs.getBoolPref(pref);
-  }
-  catch (e) {
-  }
-  return defaultValue;
-}
-
 function safeGetCharPref(pref, defaultValue) {
   var prefs =   
       Cc["@mozilla.org/preferences-service;1"].
