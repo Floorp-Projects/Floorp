@@ -479,9 +479,6 @@ public:
   }
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const {
-    // Override nsInlineFrame.   XXX Should we really?
-    if (aFlags & (nsIFrame::eBidiInlineContainer))
-      return PR_FALSE;
     return nsInlineFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
   }
 
