@@ -174,7 +174,7 @@ nsSVGOuterSVGFrame::InitSVG()
     doc->AddMutationObserver(&sSVGMutationObserver);
   }
 
-  SuspendRedraw();
+  SuspendRedraw();  // UnsuspendRedraw is in DidReflow
 
   AddStateBits(NS_STATE_IS_OUTER_SVG);
 
@@ -210,91 +210,52 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
     aStatus = NS_FRAME_COMPLETE;
     return NS_OK;
   }
-  
-  //  SVG CR 20001102: When the SVG content is embedded inline within
-  //  a containing document, and that document is styled using CSS,
-  //  then if there are CSS positioning properties specified on the
-  //  outermost 'svg' element that are sufficient to establish the
-  //  width of the viewport, then these positioning properties
-  //  establish the viewport's width; otherwise, the width attribute
-  //  on the outermost 'svg' element establishes the viewport's width.
-  //  Similarly, if there are CSS positioning properties specified on
-  //  the outermost 'svg' element that are sufficient to establish the
-  //  height of the viewport, then these positioning properties
-  //  establish the viewport's height; otherwise, the height attribute
-  //  on the outermost 'svg' element establishes the viewport's
-  //  height.
-#ifdef DEBUG
-  // printf("--- nsSVGOuterSVGFrame(%p)::Reflow(frame:%p,reason:%d) ---\n",this,aReflowState.frame,aReflowState.reason);
-#endif
-  
-  nsCOMPtr<nsISVGSVGElement> SVGElement = do_QueryInterface(mContent);
-  NS_ENSURE_TRUE(SVGElement, NS_ERROR_FAILURE);
 
-  // The width/height attribs given on the <svg>-element might be
-  // percentage values of the parent viewport. We will set the parent
-  // coordinate context dimensions to the available space.
+  // http://www.w3.org/TR/SVG11/coords.html#ViewportSpace specifies our behavior
+
+  SuspendRedraw();
+
+  // Take a note of the current viewport dimensions.
+  //
+  // XXX note: "viewport" is kinda ambiguous here. We have the viewport into
+  // which we're being rendered and we also have the viewport established by
+  // our width and height attributes. The mViewportWidth/Height below are the
+  // dimensions of the viewport established _by_ our width and height
+  // attributes. These can be thought of as our "computed" width/height in CSS
+  // terms (and maybe we should call them that).
+
+  nsSVGSVGElement *svgElem = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
+  float oldViewportWidth  = svgElem->mViewportWidth;
+  float oldViewportHeight = svgElem->mViewportHeight;
+
+  // Tell our element the dimensions of the viewport into which it is rendering
+  // so that it can calculate its computed width/height (mViewportWidth/Height)
 
   nsRect maxRect, preferredRect;
   CalculateAvailableSpace(&maxRect, &preferredRect, aPresContext, aReflowState);
   float preferredWidth = nsPresContext::AppUnitsToFloatCSSPixels(preferredRect.width);
   float preferredHeight = nsPresContext::AppUnitsToFloatCSSPixels(preferredRect.height);
 
-  SuspendRedraw();
-
   nsCOMPtr<nsIDOMSVGRect> r;
   NS_NewSVGRect(getter_AddRefs(r), 0, 0, preferredWidth, preferredHeight);
-
-  nsSVGSVGElement *svgElem = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
-  NS_ENSURE_TRUE(svgElem, NS_ERROR_FAILURE);
   svgElem->SetCoordCtxRect(r);
 
-#ifdef DEBUG
-  // some debug stuff:
-//   {
-//     nsRect r=aPresContext->GetVisibleArea();
-//     printf("******* aw: %d, ah: %d visiw: %d, visih: %d\n",
-//            aReflowState.availableWidth,
-//            aReflowState.availableHeight,
-//            r.width, r.height);
-//     printf("******* cw: %d, ch: %d \n    cmaxw: %d, cmaxh: %d\n",
-//            aReflowState.ComputedWidth(),
-//            aReflowState.mComputedHeight,
-//            aReflowState.mComputedMaxWidth,
-//            aReflowState.mComputedMaxHeight);
-
-//     if (aReflowState.parentReflowState) {
-//       printf("******* parent aw: %d, parent ah: %d \n",
-//              aReflowState.parentReflowState->availableWidth,
-//              aReflowState.parentReflowState->availableHeight);
-//       printf("******* parent cw: %d, parent ch: %d \n  parent cmaxw: %d, parent cmaxh: %d\n",
-//              aReflowState.parentReflowState->ComputedWidth(),
-//              aReflowState.parentReflowState->mComputedHeight,
-//              aReflowState.parentReflowState->mComputedMaxWidth,
-//              aReflowState.parentReflowState->mComputedMaxHeight);
-//     }
-//   }
-#endif
-
-  // now that the parent coord ctx dimensions have been set, the
-  // width/height attributes will be valid.
-  // Let's work out our desired dimensions.
-
-  nsSVGSVGElement *svg = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
+  // Now we can get the computed width/height in app units
 
   aDesiredSize.width =
-    nsPresContext::CSSPixelsToAppUnits(svg->mViewportWidth);
+    nsPresContext::CSSPixelsToAppUnits(svgElem->mViewportWidth);
   aDesiredSize.height =
-    nsPresContext::CSSPixelsToAppUnits(svg->mViewportHeight);
+    nsPresContext::CSSPixelsToAppUnits(svgElem->mViewportHeight);
 
   // XXX add in CSS borders ??
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
 
-  // tell our element that the viewbox to viewport transform needs refreshing,
-  // and set us up to draw
-  NotifyViewportChange();
+  if (svgElem->mViewportWidth != oldViewportWidth ||
+      svgElem->mViewportHeight != oldViewportHeight) {
+    NotifyViewportChange();
+  }
 
   UnsuspendRedraw();
   
@@ -323,7 +284,7 @@ nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
       kid = kid->GetNextSibling();
     }
     
-    UnsuspendRedraw();
+    UnsuspendRedraw(); // For the SuspendRedraw in InitSVG
   }
   
   return rv;
@@ -579,6 +540,12 @@ nsSVGOuterSVGFrame::NotifyViewportChange()
 {
   // no point in doing anything when were not init'ed yet:
   if (!mViewportInitialized) return NS_OK;
+
+  // viewport changes only affect our transform if we have a viewBox attribute
+  nsSVGSVGElement *svgElem = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
+  if (!svgElem->HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
+    return NS_OK;
+  }
 
   // make sure canvas transform matrix gets (lazily) recalculated:
   mCanvasTM = nsnull;
