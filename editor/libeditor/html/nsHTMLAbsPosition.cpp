@@ -443,14 +443,19 @@ nsHTMLEditor::EndMoving()
   }
   mMouseMotionListenerP = nsnull;
 
-  return NS_OK;
+  mGrabberClicked = PR_FALSE;
+  mIsMoving = PR_FALSE;
+  nsCOMPtr<nsISelection> selection;
+  GetSelection(getter_AddRefs(selection));
+  if (!selection) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  return CheckSelectionStateForAnonymousButtons(selection);
 }
 nsresult
 nsHTMLEditor::SetFinalPosition(PRInt32 aX, PRInt32 aY)
 {
   nsresult res = EndMoving();
-  mGrabberClicked = PR_FALSE;
-  mIsMoving = PR_FALSE;
   if (NS_FAILED(res)) return res;
 
   // we have now to set the new width and height of the resized object
