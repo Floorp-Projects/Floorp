@@ -168,10 +168,10 @@ NS_IMETHODIMP nsDocAccessible::GetRole(PRUint32 *aRole)
   if (docShellTreeItem) {
     nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
     docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
+    PRInt32 itemType;
+    docShellTreeItem->GetItemType(&itemType);
     if (sameTypeRoot == docShellTreeItem) {
       // Root of content or chrome tree
-      PRInt32 itemType;
-      docShellTreeItem->GetItemType(&itemType);
       if (itemType == nsIDocShellTreeItem::typeChrome) {
         *aRole = nsIAccessibleRole::ROLE_CHROME_WINDOW;
       }
@@ -187,6 +187,9 @@ NS_IMETHODIMP nsDocAccessible::GetRole(PRUint32 *aRole)
         *aRole = nsIAccessibleRole::ROLE_DOCUMENT;
 #endif
       }
+    }
+    else if (itemType == nsIDocShellTreeItem::typeContent) {
+      *aRole = nsIAccessibleRole::ROLE_DOCUMENT;
     }
   }
 
@@ -347,13 +350,6 @@ NS_IMETHODIMP nsDocAccessible::GetNameSpaceURIForID(PRInt16 aNameSpaceID, nsAStr
       return nameSpaceManager->GetNameSpaceURI(aNameSpaceID, aNameSpaceURI);
   }
   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsDocAccessible::GetCaretAccessible(nsIAccessible **aCaretAccessible)
-{
-  // We only have a caret accessible on the root document
-  *aCaretAccessible = nsnull;
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsDocAccessible::GetWindowHandle(void **aWindow)
@@ -666,13 +662,13 @@ nsresult nsDocAccessible::AddEventListeners()
   nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
   docShellTreeItem->GetRootTreeItem(getter_AddRefs(rootTreeItem));
   if (rootTreeItem) {
-    nsCOMPtr<nsIAccessibleDocument> rootAccDoc = GetDocAccessibleFor(rootTreeItem, PR_TRUE);
-    nsCOMPtr<nsIAccessible> caretAccessible;
-    rootAccDoc->GetCaretAccessible(getter_AddRefs(caretAccessible));
-    nsCOMPtr<nsIAccessibleCaret> caretAccessibleIface(do_QueryInterface(caretAccessible));
-    if (caretAccessibleIface) {
+    GetDocAccessibleFor(rootTreeItem, PR_TRUE); // Ensure root accessible is created;
+    nsRefPtr<nsRootAccessible> rootAccessible = GetRootAccessible();
+    NS_ENSURE_TRUE(rootAccessible, NS_ERROR_FAILURE);
+    nsRefPtr<nsCaretAccessible> caretAccessible = rootAccessible->GetCaretAccessible();
+    if (caretAccessible) {
       nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mDocument);
-      caretAccessibleIface->AddDocSelectionListener(domDoc);
+      caretAccessible->AddDocSelectionListener(domDoc);
     }
   }
 
@@ -697,12 +693,10 @@ nsresult nsDocAccessible::RemoveEventListeners()
 
   nsRefPtr<nsRootAccessible> rootAccessible(GetRootAccessible());
   if (rootAccessible) {
-    nsCOMPtr<nsIAccessible> caretAccessible;
-    rootAccessible->GetCaretAccessible(getter_AddRefs(caretAccessible));
-    nsCOMPtr<nsIAccessibleCaret> caretAccessibleIface(do_QueryInterface(caretAccessible));
-    if (caretAccessibleIface) {
+    nsRefPtr<nsCaretAccessible> caretAccessible = rootAccessible->GetCaretAccessible();
+    if (caretAccessible) {
       nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mDocument);
-      caretAccessibleIface->RemoveDocSelectionListener(domDoc);
+      caretAccessible->RemoveDocSelectionListener(domDoc);
     }
   }
 

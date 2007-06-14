@@ -38,9 +38,7 @@
 // NOTE: alphabetically ordered
 #include "nsAccessibilityService.h"
 #include "nsAccessibleEventData.h"
-#include "nsCaretAccessible.h"
 #include "nsHTMLSelectAccessible.h"
-#include "nsIAccessibleCaret.h"
 #include "nsIBaseWindow.h"
 #include "nsICaret.h"
 #include "nsIDocShell.h"
@@ -321,11 +319,7 @@ nsresult nsRootAccessible::AddEventListeners()
   }
 
   if (!mCaretAccessible) {
-    mCaretAccessible = new nsCaretAccessible(mDOMNode, mWeakShell, this);
-    nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(mCaretAccessible));
-    if (accessNode && NS_FAILED(accessNode->Init())) {
-      mCaretAccessible = nsnull;
-    }
+    mCaretAccessible = new nsCaretAccessible(this);
   }
 
   // Fire accessible focus event for pre-existing focus, but wait until all internal
@@ -356,23 +350,21 @@ nsresult nsRootAccessible::RemoveEventListeners()
     target->RemoveEventListener(NS_LITERAL_STRING("pagehide"), this, PR_TRUE);
   }
 
-  nsCOMPtr<nsPIAccessNode> caretAccessNode(do_QueryInterface(mCaretAccessible));
-  if (caretAccessNode) {
-    caretAccessNode->Shutdown();
+  if (mCaretAccessible) {
+    mCaretAccessible->Shutdown();
     mCaretAccessible = nsnull;
   }
 
   return nsDocAccessible::RemoveEventListeners();
 }
 
-NS_IMETHODIMP nsRootAccessible::GetCaretAccessible(nsIAccessible **aCaretAccessible)
+already_AddRefed<nsCaretAccessible>
+nsRootAccessible::GetCaretAccessible()
 {
-  *aCaretAccessible = nsnull;
   if (mCaretAccessible) {
-    CallQueryInterface(mCaretAccessible, aCaretAccessible);
+    NS_ADDREF(NS_STATIC_CAST(nsISupports*, mCaretAccessible));
   }
-
-  return NS_OK;
+  return mCaretAccessible;
 }
 
 void nsRootAccessible::TryFireEarlyLoadEvent(nsIDOMNode *aDocNode)

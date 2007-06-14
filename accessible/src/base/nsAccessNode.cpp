@@ -354,9 +354,9 @@ already_AddRefed<nsRootAccessible> nsAccessNode::GetRootAccessible()
 
   // nsRootAccessible has a special QI
   // that let us get that concrete type directly.
-  nsRootAccessible* foo;
-  accDoc->QueryInterface(NS_GET_IID(nsRootAccessible), (void**)&foo); // addrefs
-  return foo;
+  nsRootAccessible* rootAccessible;
+  accDoc->QueryInterface(NS_GET_IID(nsRootAccessible), (void**)&rootAccessible); // addrefs
+  return rootAccessible;
 }
 
 nsIFrame* nsAccessNode::GetFrame()

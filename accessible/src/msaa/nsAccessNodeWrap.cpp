@@ -531,6 +531,7 @@ void nsAccessNodeWrap::InitAccessibility()
 void nsAccessNodeWrap::ShutdownAccessibility()
 {
   NS_IF_RELEASE(gTextEvent);
+  ::DestroyCaret();
 
   if (!gIsAccessibilityActive) {
     return;
