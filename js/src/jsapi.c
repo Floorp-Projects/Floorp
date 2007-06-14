@@ -4699,7 +4699,7 @@ JS_ExecuteScriptPart(JSContext *cx, JSObject *obj, JSScript *script,
                      JSExecPart part, jsval *rval)
 {
     JSScript tmp;
-    JSRuntime *rt;
+    JSDebugHooks *hooks;
     JSBool ok;
 
     /* Make a temporary copy of the JSScript structure and farble it a bit. */
@@ -4712,16 +4712,16 @@ JS_ExecuteScriptPart(JSContext *cx, JSObject *obj, JSScript *script,
     }
 
     /* Tell the debugger about our temporary copy of the script structure. */
-    rt = cx->runtime;
-    if (rt->newScriptHook) {
-        rt->newScriptHook(cx, tmp.filename, tmp.lineno, &tmp, NULL,
-                          rt->newScriptHookData);
+    hooks = cx->debugHooks;
+    if (hooks->newScriptHook) {
+        hooks->newScriptHook(cx, tmp.filename, tmp.lineno, &tmp, NULL,
+                             hooks->newScriptHookData);
     }
 
     /* Execute the farbled struct and tell the debugger to forget about it. */
     ok = JS_ExecuteScript(cx, obj, &tmp, rval);
-    if (rt->destroyScriptHook)
-        rt->destroyScriptHook(cx, &tmp, rt->destroyScriptHookData);
+    if (hooks->destroyScriptHook)
+        hooks->destroyScriptHook(cx, &tmp, hooks->destroyScriptHookData);
     return ok;
 }
 
