@@ -103,7 +103,7 @@ class nsRootAccessible : public nsDocAccessibleWrap,
                                     nsIDOMEvent *aFocusEvent,
                                     PRBool aForceEvent = PR_FALSE);
 
-    already_AddRefed<nsCaretAccessible> GetCaretAccessible();
+    nsCaretAccessible *GetCaretAccessible();
 
   private:
     nsCOMPtr<nsITimer> mFireFocusTimer;
