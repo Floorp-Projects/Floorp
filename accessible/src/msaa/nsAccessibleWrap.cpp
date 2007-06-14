@@ -1511,17 +1511,11 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
   nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(accessible));
   NS_ENSURE_STATE(accessNode);
 
-  if (eventType == nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED) {
-    // Fire additional old-style MSAA caret events as well as the IA2 event
-    nsRefPtr<nsRootAccessible> rootAccessible = GetRootAccessible();
-    if (rootAccessible) {
-      nsCOMPtr<nsIAccessible> caretAccessible;
-      void* handle = nsnull;
-      rootAccessible->GetWindowHandle(&handle);
-      NotifyWinEvent(EVENT_OBJECT_LOCATIONCHANGE, (HWND)handle, OBJID_CARET, CHILDID_SELF);
-    }
+  if (eventType == nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED ||
+      eventType == nsIAccessibleEvent::EVENT_FOCUS) {
+    UpdateSystemCaret();
   }
-
+ 
   PRInt32 childID = GetChildIDFor(accessible); // get the id for the accessible
   if (!childID)
     return NS_OK; // Can't fire an event without a child ID
@@ -1662,5 +1656,40 @@ void nsAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild, nsIAccessibl
     }
   }
   NS_IF_ADDREF(*aXPAccessible);
+}
+
+void nsAccessibleWrap::UpdateSystemCaret()
+{
+  // Move the system caret so that Windows Tablet Edition and tradional ATs with 
+  // off-screen model can follow the caret
+  ::DestroyCaret();
+
+  nsRefPtr<nsRootAccessible> rootAccessible = GetRootAccessible();
+  if (!rootAccessible) {
+    return;
+  }
+
+  nsRefPtr<nsCaretAccessible> caretAccessible = rootAccessible->GetCaretAccessible();
+  if (!caretAccessible) {
+    return;
+  }
+
+  nsIWidget *widget;
+  nsRect caretRect = caretAccessible->GetCaretRect(&widget);        
+  HWND caretWnd; 
+  if (caretRect.IsEmpty() || !(caretWnd = (HWND)widget->GetNativeData(NS_NATIVE_WINDOW))) {
+    return;
+  }
+
+  // Create invisible bitmap for caret, otherwise its appearance interferes
+  // with Gecko caret
+  HBITMAP caretBitMap = CreateBitmap(1, caretRect.height, 1, 1, NULL);
+  if (::CreateCaret(caretWnd, caretBitMap, 1, caretRect.height)) {  // Also destroys the last caret
+    ::ShowCaret(caretWnd);
+    RECT windowRect;
+    ::GetWindowRect(caretWnd, &windowRect);
+    ::SetCaretPos(caretRect.x - windowRect.left, caretRect.y - windowRect.top);
+    ::DeleteObject(caretBitMap);
+  }
 }
 

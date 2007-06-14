@@ -296,6 +296,15 @@ class nsAccessibleWrap : public nsAccessible,
   // Helper methods
   static PRInt32 GetChildIDFor(nsIAccessible* aAccessible);
 
+  /**
+   * System caret support: update the Windows caret position. 
+   * The system caret works more universally than the MSAA caret
+   * For example, Window-Eyes, JAWS, ZoomText and Windows Tablet Edition use it
+   * We will use an invisible system caret.
+   * Gecko is still responsible for drawing its own caret
+   */
+  void UpdateSystemCaret();
+
   virtual void GetXPAccessibleFor(const VARIANT& aVarChild, nsIAccessible **aXPAccessible);
   NS_IMETHOD GetNativeInterface(void **aOutAccessible);
 

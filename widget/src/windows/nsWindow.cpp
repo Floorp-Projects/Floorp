@@ -5223,30 +5223,19 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #ifdef ACCESSIBILITY
     case WM_GETOBJECT:
     {
-      LRESULT lAcc = 0;
-      IAccessible *msaaAccessible = NULL;
+      *aRetValue = 0;
       if (lParam == OBJID_CLIENT) { // oleacc.dll will be loaded dynamically
         nsCOMPtr<nsIAccessible> rootAccessible = GetRootAccessible(); // Held by a11y cache
         if (rootAccessible) {
+          IAccessible *msaaAccessible = NULL;
           rootAccessible->GetNativeInterface((void**)&msaaAccessible); // does an addref
-        }
-      }
-      else if (lParam == OBJID_CARET) {  // each root accessible owns a caret accessible
-        nsCOMPtr<nsIAccessible> rootAccessible = GetRootAccessible();  // Held by a11y cache
-        nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(rootAccessible));
-        if (accDoc) {
-          nsCOMPtr<nsIAccessible> accessibleCaret;
-          accDoc->GetCaretAccessible(getter_AddRefs(accessibleCaret));
-          if (accessibleCaret) {
-            accessibleCaret->GetNativeInterface((void**)&msaaAccessible);
+          if (msaaAccessible) {
+            *aRetValue = LresultFromObject(IID_IAccessible, wParam, msaaAccessible); // does an addref
+            msaaAccessible->Release(); // release extra addref
+            result = PR_TRUE;  // We handled the WM_GETOBJECT message
           }
         }
       }
-      if (msaaAccessible) {
-        lAcc = LresultFromObject(IID_IAccessible, wParam, msaaAccessible); // does an addref
-        msaaAccessible->Release(); // release extra addref
-      }
-      return (*aRetValue = lAcc) != 0;
     }
 #endif
 
