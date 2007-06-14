@@ -541,11 +541,13 @@ nsSVGOuterSVGFrame::NotifyViewportChange()
   // no point in doing anything when were not init'ed yet:
   if (!mViewportInitialized) return NS_OK;
 
+/* XXX this caused reftest failures
   // viewport changes only affect our transform if we have a viewBox attribute
   nsSVGSVGElement *svgElem = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
   if (!svgElem->HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
     return NS_OK;
   }
+*/
 
   // make sure canvas transform matrix gets (lazily) recalculated:
   mCanvasTM = nsnull;
