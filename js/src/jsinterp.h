@@ -152,14 +152,14 @@ extern JSObject *
 js_GetScopeChain(JSContext *cx, JSStackFrame *fp);
 
 /*
- * Compute the 'this' parameter for a call with nominal 'this' given by thisp
- * and arguments including argv[-1] (nominal 'this') and argv[-2] (callee).
- * Activation objects ("Call" objects not created with "new Call()", i.e.,
- * "Call" objects that have private data) may not be referred to by 'this',
- * per ECMA-262, so js_ComputeThis censors them.
+ * For a call with arguments argv including argv[-1] (nominal |this|) and
+ * argv[-2] (callee) replace null |this| with callee's parent, replace
+ * primitive values with the equivalent wrapper objects and censor activation
+ * objects as, per ECMA-262, they may not be referred to by |this|. argv[-1]
+ * must not be a JSVAL_VOID.
  */
-extern JSObject *
-js_ComputeThis(JSContext *cx, JSObject *thisp, jsval *argv);
+extern JSBool
+js_ComputeThis(JSContext *cx, jsval *argv);
 
 /*
  * NB: js_Invoke requires that cx is currently running JS (i.e., that cx->fp

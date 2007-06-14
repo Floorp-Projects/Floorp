@@ -4511,6 +4511,38 @@ js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto,
 }
 
 JSBool
+js_PrimitiveToObject(JSContext *cx, jsval *vp)
+{
+    JSClass *clasp;
+    JSObject *obj;
+
+    /* Table to map primitive value's tag into the corresponding class. */
+    JS_STATIC_ASSERT(JSVAL_INT == 1);
+    JS_STATIC_ASSERT(JSVAL_DOUBLE == 2);
+    JS_STATIC_ASSERT(JSVAL_STRING == 4);
+    JS_STATIC_ASSERT(JSVAL_BOOLEAN == 6);
+    static JSClass *const PrimitiveClasses[] = {
+        &js_NumberClass,    /* INT     */
+        &js_NumberClass,    /* DOUBLE  */
+        &js_NumberClass,    /* INT     */
+        &js_StringClass,    /* STRING  */
+        &js_NumberClass,    /* INT     */
+        &js_BooleanClass,   /* BOOLEAN */
+        &js_NumberClass     /* INT     */
+    };
+
+    JS_ASSERT(!JSVAL_IS_OBJECT(*vp));
+    JS_ASSERT(*vp != JSVAL_VOID);
+    clasp = PrimitiveClasses[JSVAL_TAG(*vp) - 1];
+    obj = js_NewObject(cx, clasp, NULL, NULL);
+    if (!obj)
+        return JS_FALSE;
+    OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, *vp);
+    *vp = OBJECT_TO_JSVAL(obj);
+    return JS_TRUE;
+}
+
+JSBool
 js_ValueToObject(JSContext *cx, jsval v, JSObject **objp)
 {
     JSObject *obj;
@@ -4524,18 +4556,9 @@ js_ValueToObject(JSContext *cx, jsval v, JSObject **objp)
         if (JSVAL_IS_OBJECT(v))
             obj = JSVAL_TO_OBJECT(v);
     } else {
-        if (JSVAL_IS_STRING(v)) {
-            obj = js_StringToObject(cx, JSVAL_TO_STRING(v));
-        } else if (JSVAL_IS_INT(v)) {
-            obj = js_NumberToObject(cx, (jsdouble)JSVAL_TO_INT(v));
-        } else if (JSVAL_IS_DOUBLE(v)) {
-            obj = js_NumberToObject(cx, *JSVAL_TO_DOUBLE(v));
-        } else {
-            JS_ASSERT(JSVAL_IS_BOOLEAN(v));
-            obj = js_BooleanToObject(cx, JSVAL_TO_BOOLEAN(v));
-        }
-        if (!obj)
+        if (!js_PrimitiveToObject(cx, &v))
             return JS_FALSE;
+        obj = JSVAL_TO_OBJECT(v);
     }
     *objp = obj;
     return JS_TRUE;

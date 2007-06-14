@@ -178,10 +178,6 @@ js_NewDoubleValue(JSContext *cx, jsdouble d, jsval *rval);
 extern JSBool
 js_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval);
 
-/* Construct a Number instance that wraps around d. */
-extern JSObject *
-js_NumberToObject(JSContext *cx, jsdouble d);
-
 /* Convert a number to a GC'ed string. */
 extern JSString *
 js_NumberToString(JSContext *cx, jsdouble d);
