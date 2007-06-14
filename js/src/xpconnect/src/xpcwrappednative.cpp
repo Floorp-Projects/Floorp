@@ -633,13 +633,6 @@ XPCWrappedNative::~XPCWrappedNative()
 
     XPCWrappedNativeProto* proto = GetProto();
 
-    if (proto && 
-        proto->ClassIsMainThreadOnly() && 
-        NS_IsMainThread()) 
-    {
-        nsCycleCollector_forget(this);
-    }
-
     if(mScriptableInfo &&
        (!HasProto() ||
         (proto && proto->GetScriptableInfo() != mScriptableInfo)))
