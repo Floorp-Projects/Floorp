@@ -2629,18 +2629,6 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
     str->length = 0;
 }
 
-JSObject *
-js_StringToObject(JSContext *cx, JSString *str)
-{
-    JSObject *obj;
-
-    obj = js_NewObject(cx, &js_StringClass, NULL, NULL);
-    if (!obj)
-        return NULL;
-    OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, STRING_TO_JSVAL(str));
-    return obj;
-}
-
 JS_FRIEND_API(const char *)
 js_ValueToPrintable(JSContext *cx, jsval v, JSValueToStringFun v2sfun)
 {
