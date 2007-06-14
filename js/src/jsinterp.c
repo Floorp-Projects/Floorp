@@ -1208,7 +1208,7 @@ have_fun:
     cx->fp = &frame;
 
     /* Init these now in case we goto out before first hook call. */
-    hook = cx->debugHooks->callHook;
+    hook = cx->runtime->callHook;
     hookData = NULL;
 
     /* Check for argument slots required by the function. */
@@ -1287,7 +1287,7 @@ have_fun:
 
     /* call the hook if present */
     if (hook && (native || script))
-        hookData = hook(cx, &frame, JS_TRUE, 0, cx->debugHooks->callHookData);
+        hookData = hook(cx, &frame, JS_TRUE, 0, cx->runtime->callHookData);
 
     /* Call the function, either a native method or an interpreted script. */
     if (native) {
@@ -1331,7 +1331,7 @@ have_fun:
 
 out:
     if (hookData) {
-        hook = cx->debugHooks->callHook;
+        hook = cx->runtime->callHook;
         if (hook)
             hook(cx, &frame, JS_FALSE, &ok, hookData);
     }
@@ -1482,7 +1482,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     JSObject *obj, *tmp;
     JSBool ok;
 
-    hook = cx->debugHooks->executeHook;
+    hook = cx->runtime->executeHook;
     hookData = mark = NULL;
     oldfp = cx->fp;
     frame.script = script;
@@ -1555,10 +1555,8 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     }
 
     cx->fp = &frame;
-    if (hook) {
-        hookData = hook(cx, &frame, JS_TRUE, 0,
-                        cx->debugHooks->executeHookData);
-    }
+    if (hook)
+        hookData = hook(cx, &frame, JS_TRUE, 0, cx->runtime->executeHookData);
 
     /*
      * Use frame.rval, not result, so the last result stays rooted across any
@@ -1568,7 +1566,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     *result = frame.rval;
 
     if (hookData) {
-        hook = cx->debugHooks->executeHook;
+        hook = cx->runtime->executeHook;
         if (hook)
             hook(cx, &frame, JS_FALSE, &ok, hookData);
     }
@@ -2257,13 +2255,13 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 # define LOAD_JUMP_TABLE()      /* nothing */
 #endif
 
-#define LOAD_INTERRUPT_HANDLER(cx)                                            \
+#define LOAD_INTERRUPT_HANDLER(rt)                                            \
     JS_BEGIN_MACRO                                                            \
-        interruptHandler = (cx)->debugHooks->interruptHandler;                \
+        interruptHandler = (rt)->interruptHandler;                            \
         LOAD_JUMP_TABLE();                                                    \
     JS_END_MACRO
 
-    LOAD_INTERRUPT_HANDLER(cx);
+    LOAD_INTERRUPT_HANDLER(rt);
 
     /* Check for too much js_Interpret nesting, or too deep a C stack. */
     ++cx->interpLevel;
@@ -2329,7 +2327,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 interrupt:
         SAVE_SP_AND_PC(fp);
         switch (interruptHandler(cx, script, pc, &rval,
-                                 cx->debugHooks->interruptHandlerData)) {
+                                 rt->interruptHandlerData)) {
           case JSTRAP_ERROR:
             ok = JS_FALSE;
             goto out;
@@ -2345,7 +2343,7 @@ interrupt:
             goto out;
           default:;
         }
-        LOAD_INTERRUPT_HANDLER(cx);
+        LOAD_INTERRUPT_HANDLER(rt);
     }
 
     JS_ASSERT((uintN)op < (uintN)JSOP_LIMIT);
@@ -2388,7 +2386,7 @@ interrupt:
         if (interruptHandler) {
             SAVE_SP_AND_PC(fp);
             switch (interruptHandler(cx, script, pc, &rval,
-                                     cx->debugHooks->interruptHandlerData)) {
+                                     rt->interruptHandlerData)) {
               case JSTRAP_ERROR:
                 ok = JS_FALSE;
                 goto out;
@@ -2404,7 +2402,7 @@ interrupt:
                 goto out;
               default:;
             }
-            LOAD_INTERRUPT_HANDLER(cx);
+            LOAD_INTERRUPT_HANDLER(rt);
         }
 
         switch (op) {
@@ -2521,11 +2519,11 @@ interrupt:
                 }
 
                 if (hookData) {
-                    JSInterpreterHook hook = cx->debugHooks->callHook;
+                    JSInterpreterHook hook = rt->callHook;
                     if (hook) {
                         SAVE_SP_AND_PC(fp);
                         hook(cx, fp, JS_FALSE, &ok, hookData);
-                        LOAD_INTERRUPT_HANDLER(cx);
+                        LOAD_INTERRUPT_HANDLER(rt);
                     }
                 }
 
@@ -3425,7 +3423,7 @@ interrupt:
             if (!ok)
                 goto out;
             RESTORE_SP(fp);
-            LOAD_INTERRUPT_HANDLER(cx);
+            LOAD_INTERRUPT_HANDLER(rt);
             obj = JSVAL_TO_OBJECT(*vp);
             len = js_CodeSpec[op].length;
             DO_NEXT_OP(len);
@@ -3941,12 +3939,12 @@ interrupt:
                 SAVE_SP(&newifp->frame);
 
                 /* Call the debugger hook if present. */
-                hook = cx->debugHooks->callHook;
+                hook = rt->callHook;
                 if (hook) {
                     newifp->frame.pc = NULL;
                     newifp->hookData = hook(cx, &newifp->frame, JS_TRUE, 0,
-                                            cx->debugHooks->callHookData);
-                    LOAD_INTERRUPT_HANDLER(cx);
+                                            rt->callHookData);
+                    LOAD_INTERRUPT_HANDLER(rt);
                 } else {
                     newifp->hookData = NULL;
                 }
@@ -3991,7 +3989,7 @@ interrupt:
 
             ok = js_Invoke(cx, argc, 0);
             RESTORE_SP(fp);
-            LOAD_INTERRUPT_HANDLER(cx);
+            LOAD_INTERRUPT_HANDLER(rt);
             if (!ok)
                 goto out;
             JS_RUNTIME_METER(rt, nonInlineCalls);
@@ -4027,7 +4025,7 @@ interrupt:
             SAVE_SP_AND_PC(fp);
             ok = js_Invoke(cx, argc, 0);
             RESTORE_SP(fp);
-            LOAD_INTERRUPT_HANDLER(cx);
+            LOAD_INTERRUPT_HANDLER(rt);
             if (!ok)
                 goto out;
             if (!cx->rval2set) {
@@ -4481,7 +4479,7 @@ interrupt:
                 JS_ASSERT(JSVAL_IS_INT(rval));
                 op = (JSOp) JSVAL_TO_INT(rval);
                 JS_ASSERT((uintN)op < (uintN)JSOP_LIMIT);
-                LOAD_INTERRUPT_HANDLER(cx);
+                LOAD_INTERRUPT_HANDLER(rt);
                 DO_OP();
               case JSTRAP_RETURN:
                 fp->rval = rval;
@@ -4493,7 +4491,7 @@ interrupt:
                 goto out;
               default:;
             }
-            LOAD_INTERRUPT_HANDLER(cx);
+            LOAD_INTERRUPT_HANDLER(rt);
           END_CASE(JSOP_TRAP)
 
           BEGIN_CASE(JSOP_ARGUMENTS)
@@ -5346,11 +5344,11 @@ interrupt:
 #if JS_HAS_DEBUGGER_KEYWORD
           BEGIN_CASE(JSOP_DEBUGGER)
           {
-            JSTrapHandler handler = cx->debugHooks->debuggerHandler;
+            JSTrapHandler handler = rt->debuggerHandler;
             if (handler) {
                 SAVE_SP_AND_PC(fp);
                 switch (handler(cx, script, pc, &rval,
-                                cx->debugHooks->debuggerHandlerData)) {
+                                rt->debuggerHandlerData)) {
                   case JSTRAP_ERROR:
                     ok = JS_FALSE;
                     goto out;
@@ -5366,7 +5364,7 @@ interrupt:
                     goto out;
                   default:;
                 }
-                LOAD_INTERRUPT_HANDLER(cx);
+                LOAD_INTERRUPT_HANDLER(rt);
             }
           }
           END_CASE(JSOP_DEBUGGER)
@@ -6003,11 +6001,10 @@ out:
             /*
              * Call debugger throw hook if set (XXX thread safety?).
              */
-            handler = cx->debugHooks->throwHook;
+            handler = rt->throwHook;
             if (handler) {
                 SAVE_SP_AND_PC(fp);
-                switch (handler(cx, script, pc, &rval,
-                                cx->debugHooks->throwHookData)) {
+                switch (handler(cx, script, pc, &rval, rt->throwHookData)) {
                   case JSTRAP_ERROR:
                     cx->throwing = JS_FALSE;
                     goto no_catch;
@@ -6021,7 +6018,7 @@ out:
                   case JSTRAP_CONTINUE:
                   default:;
                 }
-                LOAD_INTERRUPT_HANDLER(cx);
+                LOAD_INTERRUPT_HANDLER(rt);
             }
 
             /*
