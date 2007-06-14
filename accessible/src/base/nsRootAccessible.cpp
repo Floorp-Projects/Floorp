@@ -364,7 +364,7 @@ nsRootAccessible::GetCaretAccessible()
   if (mCaretAccessible) {
     NS_ADDREF(NS_STATIC_CAST(nsISupports*, mCaretAccessible));
   }
-  return NS_STATIC_CAST(nsCaretAccessible*, mCaretAccessible);
+  return mCaretAccessible.get();
 }
 
 void nsRootAccessible::TryFireEarlyLoadEvent(nsIDOMNode *aDocNode)
