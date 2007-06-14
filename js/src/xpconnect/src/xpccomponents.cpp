@@ -3309,8 +3309,12 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
 
             if (wrapper) {
                 sop = do_QueryWrappedNative(wrapper);
-
-                prinOrSop = sop;
+                if (sop) {
+                    prinOrSop = sop;
+                } else {
+                    principal = do_QueryWrappedNative(wrapper);
+                    prinOrSop = principal;
+                }
             }
         }
 
