@@ -112,6 +112,15 @@ function test_addDownload_cancel()
   do_check_eq(nsIDownloadManager.DOWNLOAD_CANCELED, dl.state);
 }
 
+// This test is actually ran by the observer 
+function test_dm_getDownload(aDl)
+{
+  // this will get it from the database
+  var dl = dm.getDownload(aDl.id);
+  
+  do_check_eq(aDl.displayName, dl.displayName);
+}
+
 var tests = [test_get_download_empty_queue, test_connection,
              test_count_empty_queue, test_canCleanUp_empty_queue,
              test_pauseDownload_empty_queue, test_resumeDownload_empty_queue,
@@ -151,14 +160,17 @@ function run_test()
         case "dl-failed":
           do_check_eq(nsIDownloadManager.DOWNLOAD_FAILED, dl.state);
           do_check_true(dm.canCleanUp);
+          test_dm_getDownload(dl);
           do_test_finished();
           break;
         case "dl-cancel":
           do_check_eq(nsIDownloadManager.DOWNLOAD_CANCELED, dl.state);
           do_check_true(dm.canCleanUp);
+          test_dm_getDownload(dl);
           do_test_finished();
           break;
         case "dl-done":
+          test_dm_getDownload(dl);
           dm.removeDownload(dl.id);
 
           var stmt = dm.DBConnection.createStatement("SELECT COUNT(*) " +
