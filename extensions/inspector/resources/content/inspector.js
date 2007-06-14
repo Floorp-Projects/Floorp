@@ -50,9 +50,15 @@ var inspector;
 
 const kClipboardHelperCID  = "@mozilla.org/widget/clipboardhelper;1";
 const kPromptServiceCID    = "@mozilla.org/embedcomp/prompt-service;1";
+const kFOStreamCID         = "@mozilla.org/network/file-output-stream;1";
+const kEncoderCIDbase      = "@mozilla.org/layout/documentEncoder;1?type=";
+const kSerializerCID       = "@mozilla.org/xmlextras/xmlserializer;1";
 const nsIWebNavigation     = Components.interfaces.nsIWebNavigation;
 const nsIDocShellTreeItem  = Components.interfaces.nsIDocShellTreeItem;
 const nsIDocShell          = Components.interfaces.nsIDocShell;
+const nsIFileOutputStream  = Components.interfaces.nsIFileOutputStream;
+const nsIDocumentEncoder   = Components.interfaces.nsIDocumentEncoder;
+const nsIDOMSerializer     = Components.interfaces.nsIDOMSerializer;
 
 //////////////////////////////////////////////////
 
@@ -180,6 +186,8 @@ InspectorApp.prototype =
             document.title = docTitle + " - " + 
               document.documentElement.getAttribute("title");
           }
+
+          this.updateCommand("cmdSave");
         }
         break;
     }
@@ -187,6 +195,22 @@ InspectorApp.prototype =
   
   ////////////////////////////////////////////////////////////////////////////
   //// UI Commands
+
+  updateCommand: function inspector_updateCommand(aCommand)
+  {
+    var command = document.getElementById(aCommand);
+    
+    var disabled = false;
+    switch (aCommand) {
+      case "cmdSave":
+        var doc = this.mDocPanel.subject;
+        disabled = !((kEncoderCIDbase + doc.contentType) in Components.classes ||
+                    (kSerializerCID in Components.classes));
+        break;
+    }
+
+    command.setAttribute("disabled", disabled);
+  },
 
   doViewerCommand: function(aCommand)
   {
@@ -232,6 +256,50 @@ InspectorApp.prototype =
       splitter.open();
     else
       splitter.close();
+  },
+
+ /**
+  * Saves the current document state in the inspector.
+  */
+  save: function save()
+  {
+    var picker = Components.classes["@mozilla.org/filepicker;1"]
+                           .createInstance(nsIFilePicker);
+    var title = document.getElementById("mi-save").label;
+    picker.init(window, title, picker.modeSave)
+    picker.appendFilters(picker.filterHTML | picker.filterXML |
+                         picker.filterXUL);
+    if (picker.show() == picker.returnCancel)
+      return;
+
+    var fos = Components.classes[kFOStreamCID]
+                        .createInstance(nsIFileOutputStream);
+    const flags = 0x02 | 0x08 | 0x20; // write, create, truncate
+
+    var doc = this.mDocPanel.subject;
+    if ((kEncoderCIDbase + doc.contentType) in Components.classes) {
+      // first we try to use the document encoder for that content type.  If
+      // that fails, we move on to the xml serializer.
+      var encoder = Components.classes[kEncoderCIDbase + doc.contentType]
+                              .createInstance(nsIDocumentEncoder);
+      encoder.init(doc, doc.contentType, encoder.OutputRaw);
+      encoder.setCharset(doc.characterSet);
+      fos.init(picker.file, flags, 0666, 0); 
+      try {
+        encoder.encodeToStream(fos);
+      } finally {
+        fos.close();
+      }
+    } else {
+      var serializer = Components.classes[kSerializerCID]
+                                 .createInstance(nsIDOMSerializer);
+      fos.init(picker.file, flags, 0666, 0); 
+      try {
+        serializer.serializeToStream(doc, fos);
+      } finally {
+        fos.close();
+      }
+    }
   },
 
   exit: function()

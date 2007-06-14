@@ -15,6 +15,7 @@
       oncommand="inspector.gotoTypedURL()"/>
 
     <command id="cmdShowOpenURLDialog" oncommand="inspector.showOpenURLDialog()"/>
+    <command id="cmdSave" oncommand="inspector.save();"/>
     <command id="cmdClose" oncommand="inspector.exit();"/>
   
     <command id="cmdShowPrefsDialog" oncommand="inspector.showPrefsDialog()"/>
