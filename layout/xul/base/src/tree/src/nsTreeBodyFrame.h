@@ -58,6 +58,7 @@
 #include "imgIRequest.h"
 #include "imgIDecoderObserver.h"
 #include "nsIScrollbarFrame.h"
+#include "nsThreadUtils.h"
 
 // An entry in the tree's image cache
 struct nsTreeImageCacheEntry
@@ -309,6 +310,11 @@ protected:
   // Check overflow and generate events.
   void CheckOverflow(const ScrollParts& aParts);
 
+  // Calls UpdateScrollbars, Invalidate aNeedsFullInvalidation if PR_TRUE,
+  // InvalidateScrollbars and finally CheckOverflow.
+  // returns PR_TRUE if the frame is still alive after the method call.
+  PRBool FullScrollbarsUpdate(PRBool aNeedsFullInvalidation);
+
   // Use to auto-fill some of the common properties without the view having to do it.
   // Examples include container, open, selected, and focus.
   void PrefillPropertyArray(PRInt32 aRowIndex, nsTreeColumn* aCol);
@@ -389,6 +395,18 @@ protected:
   static void LazyScrollCallback(nsITimer *aTimer, void *aClosure);
 
   static void ScrollCallback(nsITimer *aTimer, void *aClosure);
+
+  class ScrollEvent : public nsRunnable {
+  public:
+    NS_DECL_NSIRUNNABLE
+    ScrollEvent(nsTreeBodyFrame *aInner) : mInner(aInner) {}
+    void Revoke() { mInner = nsnull; }
+  private:
+    nsTreeBodyFrame* mInner;
+  };
+
+  void PostScrollEvent();
+  void FireScrollEvent();
 
 protected: // Data Members
   // The cached box object parent.
@@ -489,4 +507,6 @@ protected: // Data Members
   };
 
   Slots* mSlots;
+
+  nsRevocableEventPtr<ScrollEvent> mScrollEvent;
 }; // class nsTreeBodyFrame
