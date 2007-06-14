@@ -68,7 +68,7 @@ interface nsILayoutHistoryState;
 interface nsISecureBrowserUI;
 interface nsIDOMStorage;
 
-[scriptable, uuid(db67b973-ba1a-49fa-b5b4-7670d203fa0e)]
+[scriptable, uuid(10ed386d-8598-408c-b571-e75ad18edeb0)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -184,6 +184,9 @@ interface nsIDocShell : nsISupports
    * Notify the associated content viewer and all child docshells that they are
    * about to be hidden.  If |isUnload| is true, then the document is being
    * unloaded as well.
+   *
+   * @param isUnload if true, fire the unload event in addition to the pagehide
+   *                 event.
    */
   [noscript] void firePageHideNotification(in boolean isUnload);
 
@@ -438,5 +441,12 @@ interface nsIDocShell : nsISupports
    * Set the offset of this child in its container.
    */
   [noscript] void setChildOffset(in unsigned long offset);
+
+  /**
+   * Find out whether the docshell is currently in the middle of a page
+   * transition (after the onunload event has fired, but before the new
+   * document has been set up)
+   */
+  readonly attribute boolean isInUnload;
 };
 

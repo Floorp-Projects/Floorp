@@ -380,6 +380,7 @@ protected:
                              const PRUnichar *aPage,
                              const PRUnichar *aDescription,
                              nsIChannel* aFailedChannel);
+    PRBool IsNavigationAllowed(PRBool aDisplayPrintErrorDialog = PR_TRUE);
     PRBool IsPrintingOrPP(PRBool aDisplayErrorDialog = PR_TRUE);
 
     nsresult SetBaseUrlForWyciwyg(nsIContentViewer * aContentViewer);
