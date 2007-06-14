@@ -2686,7 +2686,9 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
                 if (!UpdateSelection()) {
                   return NS_OK;
                 }
+#ifdef ACCESSIBILITY
                 FireMenuItemActiveEvent(); // Only fire if new item reached
+#endif
               }
               break;
             }
