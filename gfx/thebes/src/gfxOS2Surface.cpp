@@ -55,7 +55,8 @@ gfxOS2Surface::gfxOS2Surface(HPS aPS, const gfxIntSize& aSize)
     printf("  type(%#x)=%d (own=%d, h/w=%d/%d)\n", (unsigned int)surf,
            cairo_surface_get_type(surf), mOwnsPS, mSize.width, mSize.height);
 #endif
-    cairo_surface_mark_dirty(surf);
+    // XXX for now uncomment the mark_dirty function, see bug 371505
+    //cairo_surface_mark_dirty(surf);
     Init(surf);
 }
 
@@ -85,7 +86,8 @@ gfxOS2Surface::gfxOS2Surface(HWND aWnd)
            cairo_surface_get_type(surf), mOwnsPS, mSize.width, mSize.height);
 #endif
     cairo_os2_surface_set_hwnd(surf, aWnd); // XXX is this needed here??
-    cairo_surface_mark_dirty(surf);
+    // XXX for now uncomment the mark_dirty function, see bug 371505
+    //cairo_surface_mark_dirty(surf);
     Init(surf);
 }
 
