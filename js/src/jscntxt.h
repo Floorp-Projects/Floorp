@@ -264,8 +264,27 @@ struct JSRuntime {
     /* List of active contexts sharing this runtime; protected by gcLock. */
     JSCList             contextList;
 
-    /* Per runtime debug hooks -- see jsprvtd.h and jsdbgapi.h. */
-    JSDebugHooks        globalDebugHooks;
+    /* These are used for debugging -- see jsprvtd.h and jsdbgapi.h. */
+    JSTrapHandler       interruptHandler;
+    void                *interruptHandlerData;
+    JSNewScriptHook     newScriptHook;
+    void                *newScriptHookData;
+    JSDestroyScriptHook destroyScriptHook;
+    void                *destroyScriptHookData;
+    JSTrapHandler       debuggerHandler;
+    void                *debuggerHandlerData;
+    JSSourceHandler     sourceHandler;
+    void                *sourceHandlerData;
+    JSInterpreterHook   executeHook;
+    void                *executeHookData;
+    JSInterpreterHook   callHook;
+    void                *callHookData;
+    JSObjectHook        objectHook;
+    void                *objectHookData;
+    JSTrapHandler       throwHook;
+    void                *throwHookData;
+    JSDebugErrorHook    debugErrorHook;
+    void                *debugErrorHookData;
 
     /* More debugging state, see jsdbgapi.c. */
     JSCList             trapList;
@@ -767,9 +786,6 @@ struct JSContext {
 
     /* Stack of thread-stack-allocated temporary GC roots. */
     JSTempValueRooter   *tempValueRooters;
-
-    /* Debug hooks associated with the current context. */
-    JSDebugHooks        *debugHooks;
 };
 
 #ifdef JS_THREADSAFE

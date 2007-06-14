@@ -296,8 +296,8 @@ JS_HandleTrap(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval)
 JS_PUBLIC_API(JSBool)
 JS_SetInterrupt(JSRuntime *rt, JSTrapHandler handler, void *closure)
 {
-    rt->globalDebugHooks.interruptHandler = handler;
-    rt->globalDebugHooks.interruptHandlerData = closure;
+    rt->interruptHandler = handler;
+    rt->interruptHandlerData = closure;
     return JS_TRUE;
 }
 
@@ -305,11 +305,11 @@ JS_PUBLIC_API(JSBool)
 JS_ClearInterrupt(JSRuntime *rt, JSTrapHandler *handlerp, void **closurep)
 {
     if (handlerp)
-        *handlerp = (JSTrapHandler)rt->globalDebugHooks.interruptHandler;
+        *handlerp = (JSTrapHandler)rt->interruptHandler;
     if (closurep)
-        *closurep = rt->globalDebugHooks.interruptHandlerData;
-    rt->globalDebugHooks.interruptHandler = 0;
-    rt->globalDebugHooks.interruptHandlerData = 0;
+        *closurep = rt->interruptHandlerData;
+    rt->interruptHandler = 0;
+    rt->interruptHandlerData = 0;
     return JS_TRUE;
 }
 
@@ -1115,16 +1115,16 @@ JS_GetScriptVersion(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(void)
 JS_SetNewScriptHook(JSRuntime *rt, JSNewScriptHook hook, void *callerdata)
 {
-    rt->globalDebugHooks.newScriptHook = hook;
-    rt->globalDebugHooks.newScriptHookData = callerdata;
+    rt->newScriptHook = hook;
+    rt->newScriptHookData = callerdata;
 }
 
 JS_PUBLIC_API(void)
 JS_SetDestroyScriptHook(JSRuntime *rt, JSDestroyScriptHook hook,
                         void *callerdata)
 {
-    rt->globalDebugHooks.destroyScriptHook = hook;
-    rt->globalDebugHooks.destroyScriptHookData = callerdata;
+    rt->destroyScriptHook = hook;
+    rt->destroyScriptHookData = callerdata;
 }
 
 /***************************************************************************/
@@ -1375,56 +1375,56 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda)
 JS_PUBLIC_API(JSBool)
 JS_SetDebuggerHandler(JSRuntime *rt, JSTrapHandler handler, void *closure)
 {
-    rt->globalDebugHooks.debuggerHandler = handler;
-    rt->globalDebugHooks.debuggerHandlerData = closure;
+    rt->debuggerHandler = handler;
+    rt->debuggerHandlerData = closure;
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetSourceHandler(JSRuntime *rt, JSSourceHandler handler, void *closure)
 {
-    rt->globalDebugHooks.sourceHandler = handler;
-    rt->globalDebugHooks.sourceHandlerData = closure;
+    rt->sourceHandler = handler;
+    rt->sourceHandlerData = closure;
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetExecuteHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
 {
-    rt->globalDebugHooks.executeHook = hook;
-    rt->globalDebugHooks.executeHookData = closure;
+    rt->executeHook = hook;
+    rt->executeHookData = closure;
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetCallHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
 {
-    rt->globalDebugHooks.callHook = hook;
-    rt->globalDebugHooks.callHookData = closure;
+    rt->callHook = hook;
+    rt->callHookData = closure;
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetObjectHook(JSRuntime *rt, JSObjectHook hook, void *closure)
 {
-    rt->globalDebugHooks.objectHook = hook;
-    rt->globalDebugHooks.objectHookData = closure;
+    rt->objectHook = hook;
+    rt->objectHookData = closure;
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetThrowHook(JSRuntime *rt, JSTrapHandler hook, void *closure)
 {
-    rt->globalDebugHooks.throwHook = hook;
-    rt->globalDebugHooks.throwHookData = closure;
+    rt->throwHook = hook;
+    rt->throwHookData = closure;
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetDebugErrorHook(JSRuntime *rt, JSDebugErrorHook hook, void *closure)
 {
-    rt->globalDebugHooks.debugErrorHook = hook;
-    rt->globalDebugHooks.debugErrorHookData = closure;
+    rt->debugErrorHook = hook;
+    rt->debugErrorHookData = closure;
     return JS_TRUE;
 }
 
@@ -1573,23 +1573,4 @@ JS_FlagSystemObject(JSContext *cx, JSObject *obj)
 
     flagp = js_GetGCThingFlags(obj);
     *flagp |= GCF_SYSTEM;
-}
-
-/************************************************************************/
-
-JS_PUBLIC_API(JSDebugHooks *)
-JS_GetGlobalDebugHooks(JSRuntime *rt)
-{
-    return &rt->globalDebugHooks;
-}
-
-JS_PUBLIC_API(JSDebugHooks *)
-JS_SetContextDebugHooks(JSContext *cx, JSDebugHooks *hooks)
-{
-    JSDebugHooks *old;
-
-    JS_ASSERT(hooks);
-    old = cx->debugHooks;
-    cx->debugHooks = hooks;
-    return old;
 }
