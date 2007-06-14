@@ -153,7 +153,7 @@
 
 #ifdef MOZ_ENABLE_GTK2
 #ifdef MOZ_PREF_EXTENSIONS
-#define SYSTEMPREF_MODULES MODULE(system-pref) \
+#define SYSTEMPREF_MODULES MODULE(nsSystemPrefModule) \
     MODULE(nsAutoConfigModule)
 #else
 #define SYSTEMPREF_MODULES
