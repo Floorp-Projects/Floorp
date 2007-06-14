@@ -672,8 +672,6 @@ nsHTMLEditor::MouseUp(PRInt32 aClientX, PRInt32 aClientY,
     }
     if (mGrabberClicked) {
       EndMoving();
-      mGrabberClicked = PR_FALSE;
-      mIsMoving = PR_FALSE;
     }
   }
   return NS_OK;
