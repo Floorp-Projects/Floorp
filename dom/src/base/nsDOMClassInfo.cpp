@@ -567,12 +567,14 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Prototype, nsDOMConstructorSH,
                            DOM_BASE_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_HASINSTANCE)
+                           nsIXPCScriptable::WANT_HASINSTANCE |
+                           nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE)
   NS_DEFINE_CLASSINFO_DATA(Constructor, nsDOMConstructorSH,
                            DOM_BASE_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_HASINSTANCE |
                            nsIXPCScriptable::WANT_CALL |
-                           nsIXPCScriptable::WANT_CONSTRUCT)
+                           nsIXPCScriptable::WANT_CONSTRUCT |
+                           nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE)
 
   // Core classes
   NS_DEFINE_CLASSINFO_DATA(XMLDocument, nsDocumentSH,
