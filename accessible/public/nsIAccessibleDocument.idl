@@ -58,7 +58,7 @@ interface nsIDOMWindow;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(60f8b190-63c4-4919-ac92-a7a8212fc813)]
+[scriptable, uuid(ae5792a3-77ad-40d6-8450-d28d19b66889)]
 interface nsIAccessibleDocument : nsISupports
 {
   /**
@@ -90,11 +90,6 @@ interface nsIAccessibleDocument : nsISupports
    * The nsIDOMWindow that the document resides in.
    */
   readonly attribute nsIDOMWindow window;
-
-  /*
-   * The accessible for the caret belonging to this window.
-   */
-  readonly attribute nsIAccessible caretAccessible;
 
   /**
    * The namespace for each ID that is handed back.

@@ -879,7 +879,8 @@ NS_IMETHODIMP nsHyperTextAccessible::GetRangeExtents(PRInt32 aStartOffset, PRInt
 {
   nsIntRect boundsRect;
   nsIFrame *endFrameUnused;
-  if (!GetPosAndText(aStartOffset, aEndOffset, nsnull, &endFrameUnused, &boundsRect)) {
+  if (!GetPosAndText(aStartOffset, aEndOffset, nsnull, &endFrameUnused, &boundsRect) ||
+      boundsRect.IsEmpty()) {
     return NS_ERROR_FAILURE;
   }
 
