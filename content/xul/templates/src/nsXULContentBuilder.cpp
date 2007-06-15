@@ -944,9 +944,12 @@ nsXULContentBuilder::AddPersistentAttributes(nsIContent* aTemplateNode,
                                              nsIXULTemplateResult* aResult,
                                              nsIContent* aRealNode)
 {
+    if (!mRoot)
+        return NS_OK;
+
     nsCOMPtr<nsIRDFResource> resource;
     nsresult rv = GetResultResource(aResult, getter_AddRefs(resource));
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoString attribute, persist;
     aTemplateNode->GetAttr(kNameSpaceID_None, nsGkAtoms::persist, persist);
@@ -987,11 +990,11 @@ nsXULContentBuilder::AddPersistentAttributes(nsIContent* aTemplateNode,
 
         nsCOMPtr<nsIRDFResource> property;
         rv = nsXULContentUtils::GetResource(nameSpaceID, tag, getter_AddRefs(property));
-        if (NS_FAILED(rv)) return rv;
+        NS_ENSURE_SUCCESS(rv, rv);
 
         nsCOMPtr<nsIRDFNode> target;
         rv = mDB->GetTarget(resource, property, PR_TRUE, getter_AddRefs(target));
-        if (NS_FAILED(rv)) return rv;
+        NS_ENSURE_SUCCESS(rv, rv);
 
         if (! target)
             continue;
@@ -1003,11 +1006,11 @@ nsXULContentBuilder::AddPersistentAttributes(nsIContent* aTemplateNode,
 
         const PRUnichar* valueStr;
         rv = value->GetValueConst(&valueStr);
-        if (NS_FAILED(rv)) return rv;
+        NS_ENSURE_SUCCESS(rv, rv);
 
         rv = aRealNode->SetAttr(nameSpaceID, tag, nsDependentString(valueStr),
                                 PR_FALSE);
-        if (NS_FAILED(rv)) return rv;
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
     return NS_OK;
@@ -1137,7 +1140,7 @@ nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
             mRoot->GetAttr(kNameSpaceID_None, nsGkAtoms::ref, ref);
 
             if (! ref.IsEmpty()) {
-                nsresult rv = mQueryProcessor->TranslateRef(mDB, ref,
+                nsresult rv = mQueryProcessor->TranslateRef(mDataSource, ref,
                                                             getter_AddRefs(mRootResult));
                 if (NS_FAILED(rv))
                     return rv;
@@ -1278,7 +1281,7 @@ nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
         return NS_OK;
 
     nsCOMPtr<nsISimpleEnumerator> results;
-    nsresult rv = mQueryProcessor->GenerateResults(mDB, aResult,
+    nsresult rv = mQueryProcessor->GenerateResults(mDataSource, aResult,
                                                    aQuerySet->mCompiledQuery,
                                                    getter_AddRefs(results));
     if (NS_FAILED(rv) || !results)

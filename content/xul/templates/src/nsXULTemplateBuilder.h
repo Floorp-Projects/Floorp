@@ -53,6 +53,7 @@
 #include "nsIRDFObserver.h"
 #include "nsIRDFService.h"
 #include "nsIXULTemplateBuilder.h"
+#include "nsIDOMEventListener.h"
 
 #include "nsFixedSizeAllocator.h"
 #include "nsVoidArray.h"
@@ -77,6 +78,7 @@ class nsIRDFCompositeDataSource;
  * set of rules.
  */
 class nsXULTemplateBuilder : public nsIXULTemplateBuilder,
+                             public nsIDOMEventListener,
                              public nsStubDocumentObserver
 {
 public:
@@ -98,7 +100,9 @@ public:
 
     // nsIXULTemplateBuilder interface
     NS_DECL_NSIXULTEMPLATEBUILDER
-   
+
+    NS_DECL_NSIDOMEVENTLISTENER
+
     // nsIDocumentObserver
     virtual void AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
                                   PRInt32 aNameSpaceID, nsIAtom* aAttribute,
@@ -274,8 +278,30 @@ public:
                    const nsAString& aVariable,
                    void* aClosure);
 
+    /**
+     * Load the datasources for the template. shouldDelayBuilding is an out
+     * parameter which will be set to true to indicate that content building
+     * should not be performed yet as the datasource has not yet loaded. If
+     * false, the datasource has already loaded so building can proceed
+     * immediately. In the former case, the datasource or query processor
+     * should either rebuild the template or update results when the
+     * datasource is loaded as needed.
+     */
     nsresult
-    LoadDataSources(nsIDocument* aDoc);
+    LoadDataSources(nsIDocument* aDoc, PRBool* shouldDelayBuilding);
+
+    /**
+     * Called by LoadDataSources to load a datasource given a uri list
+     * in aDataSource. The list is a set of uris separated by spaces.
+     * If aIsRDFQuery is true, then this is for an RDF datasource which
+     * causes the method to check for additional flags specific to the
+     * RDF processor.
+     */
+    nsresult
+    LoadDataSourceUrls(nsIDocument* aDocument,
+                       const nsAString& aDataSources,
+                       PRBool aIsRDFQuery,
+                       PRBool* aShouldDelayBuilding);
 
     nsresult
     InitHTMLTemplateRoot();
@@ -330,6 +356,7 @@ public:
                                nsIRDFResource** aResource);
 
 protected:
+    nsCOMPtr<nsISupports> mDataSource;
     nsCOMPtr<nsIRDFDataSource> mDB;
     nsCOMPtr<nsIRDFCompositeDataSource> mCompDB;
 
