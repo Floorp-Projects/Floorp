@@ -15,6 +15,7 @@
     locale/browser/pageInfo.properties             (%chrome/browser/pageInfo.properties)
     locale/browser/pageReport.dtd                  (%chrome/browser/pageReport.dtd)
     locale/browser/pageReportFirstTime.dtd         (%chrome/browser/pageReportFirstTime.dtd)
+    locale/browser/quitDialog.properties           (%chrome/browser/quitDialog.properties)
 *   locale/browser/safeMode.dtd                    (%chrome/browser/safeMode.dtd)
     locale/browser/sanitize.dtd                    (%chrome/browser/sanitize.dtd)
     locale/browser/search.properties               (%chrome/browser/search.properties)
