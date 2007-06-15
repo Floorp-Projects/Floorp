@@ -44,6 +44,18 @@ nsTemplateMatch::nsTemplateMatch(const nsTemplateMatch& aMatch) {}
 void nsTemplateMatch::operator=(const nsTemplateMatch& aMatch) {}
 #endif
 
+// static
+void
+nsTemplateMatch::Destroy(nsFixedSizeAllocator& aPool,
+                         nsTemplateMatch*& aMatch,
+                         PRBool aRemoveResult) {
+    if (aRemoveResult && aMatch->mResult)
+        aMatch->mResult->HasBeenRemoved();
+    aMatch->~nsTemplateMatch();
+    aPool.Free(aMatch, sizeof(*aMatch));
+    aMatch = nsnull;
+}
+
 nsresult
 nsTemplateMatch::RuleMatched(nsTemplateQuerySet* aQuerySet,
                              nsTemplateRule* aRule,
