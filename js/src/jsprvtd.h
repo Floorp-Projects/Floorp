@@ -199,4 +199,27 @@ typedef JSBool
 (* JS_DLL_CALLBACK JSDebugErrorHook)(JSContext *cx, const char *message,
                                      JSErrorReport *report, void *closure);
 
+typedef struct JSDebugHooks {
+    JSTrapHandler       interruptHandler;
+    void                *interruptHandlerData;
+    JSNewScriptHook     newScriptHook;
+    void                *newScriptHookData;
+    JSDestroyScriptHook destroyScriptHook;
+    void                *destroyScriptHookData;
+    JSTrapHandler       debuggerHandler;
+    void                *debuggerHandlerData;
+    JSSourceHandler     sourceHandler;
+    void                *sourceHandlerData;
+    JSInterpreterHook   executeHook;
+    void                *executeHookData;
+    JSInterpreterHook   callHook;
+    void                *callHookData;
+    JSObjectHook        objectHook;
+    void                *objectHookData;
+    JSTrapHandler       throwHook;
+    void                *throwHookData;
+    JSDebugErrorHook    debugErrorHook;
+    void                *debugErrorHookData;
+} JSDebugHooks;
+
 #endif /* jsprvtd_h___ */
