@@ -2506,9 +2506,10 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
         }
     }
 
-    if (cx->runtime->objectHook) {
+    if (cx->debugHooks->objectHook) {
         JS_KEEP_ATOMS(cx->runtime);
-        cx->runtime->objectHook(cx, obj, JS_TRUE, cx->runtime->objectHookData);
+        cx->debugHooks->objectHook(cx, obj, JS_TRUE,
+                                   cx->debugHooks->objectHookData);
         JS_UNKEEP_ATOMS(cx->runtime);
     }
 
@@ -2756,8 +2757,10 @@ js_FinalizeObject(JSContext *cx, JSObject *obj)
     if (!map)
         return;
 
-    if (cx->runtime->objectHook)
-        cx->runtime->objectHook(cx, obj, JS_FALSE, cx->runtime->objectHookData);
+    if (cx->debugHooks->objectHook) {
+        cx->debugHooks->objectHook(cx, obj, JS_FALSE,
+                                   cx->debugHooks->objectHookData);
+    }
 
     /* Remove all watchpoints with weak links to obj. */
     JS_ClearWatchPointsForObject(cx, obj);
