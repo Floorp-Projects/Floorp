@@ -44,6 +44,7 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <vbox class="box-padded" id="general_info">
   <vbox id="verify_info_box">
+    <label id="verify_pending" value="&certmgr.pending.label;"/>
     <label class="header" id="verified"/>
   </vbox>
   <separator class="groove"/>
