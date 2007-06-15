@@ -9256,8 +9256,8 @@ nsCSSFrameConstructor::ReinsertContent(nsIContent*     aContainer,
  * 1. For each frame in the subtree, we remove the mapping from the
  *    content object to its frame
  *
- * 2. For child frames that have been moved out of the flow, we
- *    enqueue the out-of-frame for deletion *if* the out-of-flow frame's
+ * 2. For child frames that have been moved out of the flow, we enqueue
+ *    the out-of-flow frame for deletion *if* the out-of-flow frame's
  *    geometric parent is not in |aRemovedFrame|'s hierarchy (e.g., an
  *    absolutely positioned element that has been promoted to be a direct
  *    descendant of an area frame).
