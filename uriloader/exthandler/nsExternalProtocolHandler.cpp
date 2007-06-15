@@ -477,7 +477,7 @@ nsExternalProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_
     return NS_OK;
 }
 // returns TRUE if the OS can handle this protocol scheme and false otherwise.
-PRBool nsExternalProtocolHandler::HaveOSProtocolHandler(nsIURI * aURI)
+PRBool nsExternalProtocolHandler::HaveExternalProtocolHandler(nsIURI * aURI)
 {
   PRBool haveHandler = PR_FALSE;
   if (aURI)
@@ -485,7 +485,7 @@ PRBool nsExternalProtocolHandler::HaveOSProtocolHandler(nsIURI * aURI)
     nsCAutoString scheme;
     aURI->GetScheme(scheme);
     if (gExtProtSvc)
-      gExtProtSvc->OSProtocolHandlerExists(scheme.get(), &haveHandler);
+      gExtProtSvc->ExternalProtocolHandlerExists(scheme.get(), &haveHandler);
   }
 
   return haveHandler;
@@ -519,8 +519,8 @@ NS_IMETHODIMP nsExternalProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_
 {
   // only try to return a channel if we have a protocol handler for the url
 
-  PRBool haveOSHandler = HaveOSProtocolHandler(aURI);
-  if (haveOSHandler)
+  PRBool haveExternalHandler = HaveExternalProtocolHandler(aURI);
+  if (haveExternalHandler)
   {
     nsCOMPtr<nsIChannel> channel;
     NS_NEWXPCOM(channel, nsExtProtocolChannel);
