@@ -52,15 +52,37 @@ const nsISupports        = Components.interfaces.nsISupports;
 const nsIProxyAutoConfig = Components.interfaces.nsIProxyAutoConfig;
 const nsIDNSService      = Components.interfaces.nsIDNSService;
 
+// Loaded once per PAC script, this is a safe way for the supplied functions
+// that require chrome privileges to turn a random untrusted object into a
+// string.
+var safeToString = null;
+function myToString(thisp) {
+    return thisp + '';
+}
+
+// This is like safeToString, except that it calls a given function with a
+// given this and arguments.
+var callFunction = null;
+function myCall(fun) {
+    var args = [];
+    for (var i = 1; i < arguments.length; i++)
+        args.push(arguments[i]);
+    return fun.apply(this, args);
+}
+
+// Like the above, except that this gets a property off of an untrusted
+// object.
+var safeGetProperty = null;
+function myGet(thisp, id) {
+    return thisp[id];
+}
+
 // implementor of nsIProxyAutoConfig
 function nsProxyAutoConfig() {};
 
 nsProxyAutoConfig.prototype = {
     // sandbox in which we eval loaded autoconfig js file
     _sandBox: null, 
-
-    // ptr to eval'ed FindProxyForURL function
-    _findProxyForURL: null,
 
     QueryInterface: function(iid) {
         if (iid.Equals(nsIProxyAutoConfig) ||
@@ -72,6 +94,7 @@ nsProxyAutoConfig.prototype = {
     init: function(pacURI, pacText) {
         // remove PAC configuration if requested
         if (pacURI == "" || pacText == "") {
+            this._findProxyForURL = null;
             this._sandBox = null;
             return;
         }
@@ -80,6 +103,21 @@ nsProxyAutoConfig.prototype = {
         this._sandBox = new Components.utils.Sandbox(pacURI);
         Components.utils.evalInSandbox(pacUtils, this._sandBox);
 
+        safeToString =
+            Components.utils.evalInSandbox("(" + myToString.toSource() + ")",
+                                           this._sandBox);
+        callFunction =
+            Components.utils.evalInSandbox("(" + myCall.toSource() + ")",
+                                           this._sandBox);
+
+        // Clone callFunction.call onto our callFunction so that the PAC
+        // script can't monkey with Function.prototype.call and confuse us.
+        callFunction.call = Function.prototype.call;
+
+        safeGetProperty =
+            Components.utils.evalInSandbox("(" + myGet.toSource() + ")",
+                                           this._sandBox);
+
         // add predefined functions to pac
         this._sandBox.importFunction(myIpAddress);
         this._sandBox.importFunction(dnsResolve);
@@ -87,26 +125,23 @@ nsProxyAutoConfig.prototype = {
 
         // evaluate loaded js file
         Components.utils.evalInSandbox(pacText, this._sandBox);
-
-        // We can no longer trust this._sandBox. Touching it directly can
-        // cause all sorts of pain, so wrap it in an XPCSafeJSObjectWrapper
-        // and do all of our work through there.
-        this._sandBox = new XPCSafeJSObjectWrapper(this._sandBox);
+        this._findProxyForURL =
+            safeGetProperty(this._sandBox, "FindProxyForURL");
     },
 
     getProxyForURI: function(testURI, testHost) {
-        if (!("FindProxyForURL" in this._sandBox))
+        if (!this._findProxyForURL)
             return null;
 
         // Call the original function
-        return this._sandBox.FindProxyForURL(testURI, testHost);
+        return callFunction.call(this._sandBox, this._findProxyForURL,
+                                 testURI, testHost);
     }
 }
 
 function proxyAlert(msg) {
     // Ensure that we have a string.
-    if (typeof msg != "string")
-        msg = new XPCSafeJSObjectWraper(msg).toString();
+    msg = safeToString(msg);
 
     try {
         // It would appear that the console service is threadsafe.
@@ -129,8 +164,7 @@ function myIpAddress() {
 
 // wrapper for resolving hostnames called by PAC file
 function dnsResolve(host) {
-    if (typeof host != "string")
-        host = new XPCSafeJSObjectWrapper(host).toString();
+    host = safeToString(host);
 
     try {
         return dns.resolve(host, 0).getNextAddrAsString();
