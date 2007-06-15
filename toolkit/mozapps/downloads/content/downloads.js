@@ -173,9 +173,13 @@ function autoRemoveAndClose(aDownload)
     var autoClose = pref.getBoolPref(PREF_BDM_CLOSEWHENDONE);
     if (autoClose && (!window.opener ||
                       window.opener.location.href == window.location.href) &&
-        gCanAutoClose && !gUserInteracted)
+        gCanAutoClose && !gUserInteracted) {
       gCloseDownloadManager();
+      return true;
+    }
   }
+  
+  return false;
 }
 
 // This function can be overwritten by extensions that wish to place the Download Window in
@@ -571,7 +575,8 @@ function Startup()
   gDownloadsView.controllers.appendController(gDownloadViewController);
 
   // downloads can finish before Startup() does, so check if the window should close
-  autoRemoveAndClose();
+  if (!autoRemoveAndClose())
+    gDownloadsView.focus();
 }
 
 function Shutdown() 
