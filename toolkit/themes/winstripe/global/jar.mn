@@ -13,7 +13,7 @@ classic.jar:
         skin/classic/global/filepicker.css
         skin/classic/global/findBar.css
         skin/classic/global/formatting.css
-        skin/classic/global/global.css
+*       skin/classic/global/global.css
         skin/classic/global/globalBindings.xml
         skin/classic/global/groupbox.css
         skin/classic/global/linkTree.css
