@@ -242,7 +242,7 @@ function list(requestPath, directory, recurse)
   
   count = files.length;
   for each (var file in files) {
-    var key = requestPath + file.leafName;
+    var key = path + file.leafName;
     var childCount = 0;
     if (file.isDirectory()) {
       key += "/";

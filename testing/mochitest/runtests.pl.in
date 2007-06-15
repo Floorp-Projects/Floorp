@@ -123,7 +123,7 @@ my $unixish = (!($is_win32) && !($is_mac));
 
 sub main {
   my ($close_when_done, $appoverride, $log_path, $autorun,
-      $console_level, $file_level, $help, $do_chrome); 
+      $console_level, $file_level, $help, $do_chrome, $test_path); 
   GetOptions("close-when-done!"=> \$close_when_done,
              "appname:s"=> \$appoverride,
              "log-file:s" => \$log_path,
@@ -131,6 +131,7 @@ sub main {
              "console-level:s" => \$console_level,
              "file-level:s" => \$file_level,
 	     "chrome!" => \$do_chrome,
+	     "test-path:s" => \$test_path,
              "help!" => \$help);
 
   # if the switches include --help, exit and print directions
@@ -163,9 +164,9 @@ sub main {
 
   my $url;
   if ($do_chrome) {
-   $url = CHROMETESTS_URL . "?";
+   $url = CHROMETESTS_URL . ($test_path ? $test_path : "") . "?";
   } else {
-   $url = TESTS_URL . "?";
+   $url = TESTS_URL . ($test_path ? $test_path : "") . "?";
   }
 
   if ($autorun) {
@@ -215,6 +216,7 @@ sub usage_and_exit {
   print "   [--close-when-done] \\\n";
   print "   [--appname=/path/to/app] \\\n";
   print "   [--log-file=/path/to/logfile] \\\n";
+  print "   [--test-path=relative/path/to/tests] \\\n";
   print "   [--file-level=DEBUG|INFO|ERROR|FATAL|WARNING] \\\n";  
   print "   [--console-level=DEBUG|INFO|ERROR|FATAL|WARNING] \n\n";  
   exit(1);
