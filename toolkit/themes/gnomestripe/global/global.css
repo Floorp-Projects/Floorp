@@ -185,3 +185,25 @@ sidebarheader > label {
 .toolbar-focustarget {
   -moz-user-focus: ignore !important;
 }
+
+/* :::::: autoscroll popup ::::: */
+
+#autoscroller {
+  height: 28px;
+  width: 28px;
+  border: none;
+  margin: -14px;
+  padding: 0;
+  background-position: center top;
+  background-image: url("chrome://global/skin/icons/autoscroll.png");
+  background-color: transparent;
+  -moz-appearance: none;
+}
+
+#autoscroller[scrolldir="NS"] {
+  background-position: center center;
+}
+
+#autoscroller[scrolldir="EW"] {
+  background-position: center bottom;
+}

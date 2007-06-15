@@ -112,6 +112,7 @@ classic.jar:
 +  skin/classic/global/icons/alert-message.gif                        (icons/alert-message.gif)
 +  skin/classic/global/icons/alert-question.gif                       (icons/alert-question.gif)
 +  skin/classic/global/icons/autocomplete-dropmarker.png              (icons/autocomplete-dropmarker.png)
++  skin/classic/global/icons/autoscroll.png                           (icons/autoscroll.png)
 +  skin/classic/global/icons/chevron.png                              (icons/chevron.png)
 +  skin/classic/global/icons/close.gif                                (icons/close.gif)
 +  skin/classic/global/icons/closetab-active.png                      (icons/closetab-active.png)
