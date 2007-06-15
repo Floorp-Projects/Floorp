@@ -460,32 +460,6 @@
     </implementation>
 
     <handlers>
-      <!-- handle keyboard navigation also when a child element has got the focus -->
-      <handler event="keypress" keycode="VK_UP"
-               modifiers="control shift any"
-               action="this.moveByOffset(-1, !event.ctrlKey, event.shiftKey);"
-               preventdefault="true"/>
-      <handler event="keypress" keycode="VK_DOWN"
-               modifiers="control shift any"
-               action="this.moveByOffset(1, !event.ctrlKey, event.shiftKey);"
-               preventdefault="true"/>
-      <handler event="keypress" keycode="VK_HOME"
-               modifiers="control shift any"
-               action="this.moveByOffset(-this.currentIndex, !event.ctrlKey, event.shiftKey);"
-               preventdefault="true"/>
-      <handler event="keypress" keycode="VK_END"
-               modifiers="control shift any"
-               action="this.moveByOffset(this.getRowCount(), !event.ctrlKey, event.shiftKey);"
-               preventdefault="true"/>
-      <handler event="keypress" keycode="VK_PAGE_UP"
-               modifiers="control shift any"
-               action="this.moveByOffset(this.scrollOnePage(-1), !event.ctrlKey, event.shiftKey);"
-               preventdefault="true"/>
-      <handler event="keypress" keycode="VK_PAGE_DOWN"
-               modifiers="control shift any"
-               action="this.moveByOffset(this.scrollOnePage(1), !event.ctrlKey, event.shiftKey);"
-               preventdefault="true"/>
-
       <handler event="click">
         <![CDATA[
           // clicking into nothing should unselect

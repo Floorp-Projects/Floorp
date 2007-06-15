@@ -548,6 +548,33 @@
       <field name="_currentItem">null</field>
       <field name="_selectionStart">null</field>
     </implementation>
+
+    <handlers>
+      <handler event="keypress" keycode="VK_UP" modifiers="control shift any"
+               action="moveByOffset(-1, !event.ctrlKey, event.shiftKey);"
+               phase="target" preventdefault="true"/>
+      <handler event="keypress" keycode="VK_DOWN" modifiers="control shift any"
+               action="moveByOffset(1, !event.ctrlKey, event.shiftKey);"
+               phase="target" preventdefault="true"/>
+      <handler event="keypress" keycode="VK_HOME" modifiers="control shift any"
+               action="moveByOffset(-this.currentIndex, !event.ctrlKey, event.shiftKey);"
+               phase="target" preventdefault="true"/>
+      <handler event="keypress" keycode="VK_END" modifiers="control shift any"
+               action="moveByOffset(this.getRowCount() - this.currentIndex - 1, !event.ctrlKey, event.shiftKey);"
+               phase="target" preventdefault="true"/>
+      <handler event="keypress" keycode="VK_PAGE_UP" modifiers="control shift any"
+               action="moveByOffset(this.scrollOnePage(-1), !event.ctrlKey, event.shiftKey);"
+               phase="target" preventdefault="true"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="control shift any"
+               action="moveByOffset(this.scrollOnePage(1), !event.ctrlKey, event.shiftKey);"
+               phase="target" preventdefault="true"/>
+      <handler event="keypress" key=" " modifiers="control" phase="target">
+        <![CDATA[
+          if (this.currentItem && this.selType == "multiple")
+            this.toggleItemSelection(this.currentItem);
+        ]]>
+      </handler>
+    </handlers>
   </binding>
 
 
@@ -707,18 +734,6 @@
     </implementation>
     
     <handlers>
-      <handler event="keypress" keycode="VK_UP" modifiers="control shift any"
-               phase="target" action="moveByOffset(-1, !event.ctrlKey, event.shiftKey);"/>
-      <handler event="keypress" keycode="VK_DOWN" modifiers="control shift any"
-               phase="target" action="moveByOffset(1, !event.ctrlKey, event.shiftKey);"/>
-      <handler event="keypress" keycode="VK_HOME" modifiers="control shift any"
-               phase="target" action="moveByOffset(-this.currentIndex, !event.ctrlKey, event.shiftKey);"/>
-      <handler event="keypress" keycode="VK_END" modifiers="control shift any"
-               phase="target" action="moveByOffset(this.getRowCount() - this.currentIndex - 1, !event.ctrlKey, event.shiftKey);"/>
-      <handler event="keypress" keycode="VK_PAGE_UP" modifiers="control shift any"
-               phase="target" action="moveByOffset(this.scrollOnePage(-1), !event.ctrlKey, event.shiftKey);"/>
-      <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="control shift any"
-               phase="target" action="moveByOffset(this.scrollOnePage(1), !event.ctrlKey, event.shiftKey);"/>
       <handler event="keypress" key=" " phase="target">
         <![CDATA[
           if (this.currentItem) {
@@ -735,12 +750,6 @@
             this.currentIndex = this.getIndexOfFirstVisibleRow();
           }
           this._lastKeyTime = 0;
-        ]]>
-      </handler>
-      <handler event="keypress" key=" " modifiers="control" phase="target">
-        <![CDATA[
-          if (this.currentItem && this.selType == "multiple")
-            this.toggleItemSelection(this.currentItem);
         ]]>
       </handler>
       <handler event="keypress" phase="target">
