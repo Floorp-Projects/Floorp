@@ -144,11 +144,8 @@ DestroyMatchList(nsISupports* aKey, nsTemplateMatch* aMatch, void* aContext)
 
     // delete all the matches in the list
     while (aMatch) {
-        if (aMatch->mResult)
-            aMatch->mResult->HasBeenRemoved();
-
         nsTemplateMatch* next = aMatch->mNext;
-        nsTemplateMatch::Destroy(*pool, aMatch);
+        nsTemplateMatch::Destroy(*pool, aMatch, PR_TRUE);
         aMatch = next;
     }
 
@@ -582,11 +579,97 @@ nsXULTemplateBuilder::UpdateResultInContainer(nsIXULTemplateResult* aOldResult,
                                               nsIRDFResource* aNewId,
                                               nsIContent* aInsertionPoint)
 {
+    // This method takes a result that no longer applies (aOldResult) and
+    // replaces it with a new result (aNewResult). Either may be null
+    // indicating to just remove a result or add a new one without replacing.
+    //
+    // Matches are stored in the hashtable mMatchMap, keyed by result id. If
+    // there is more than one query, or the same id is found in different
+    // containers, the values in the hashtable will be a linked list of all
+    // the matches for that id. The matches are sorted according to the
+    // queries they are associated with. Matches for earlier queries in the
+    // template take priority over matches from later queries. The priority
+    // for a match is determined from the match's QuerySetPriority method.
+    // The first query has a priority 0, and higher numbers are for later
+    // queries with successively higher priorities. Thus, a match takes
+    // precedence if it has a lower priority than another. If there is only
+    // one query or container, then the match doesn't have any linked items.
+    //
+    // Matches are nsTemplateMatch objects. They are wrappers around
+    // nsIXULTemplateResult result objects and are created with
+    // nsTemplateMatch::Create below. The aQuerySet argument specifies which
+    // query the match is associated with.
+    //
+    // When a result id exists in multiple containers, the match's mContainer
+    // field is set to the container it corresponds to. The aInsertionPoint
+    // argument specifies which container is being updated. Even though they
+    // are stored in the same linked list as other matches of the same id, the
+    // matches for different containers are treated separately. They are only
+    // stored in the same hashtable to avoid a more complex data structure, as
+    // the use of the same id in multiple containers isn't a common occurance.
+    //
+    // Only one match with a given id per container is active at a time. When
+    // a match is active, content is generated for it. When a match is
+    // inactive, content is not generated for it. A match becomes active if
+    // another match with the same id and container with a lower priority
+    // isn't already active, and the match has a rule or conditions clause
+    // which evaluates to true. The former is checked by comparing the value
+    // of the QuerySetPriority method of the match with earlier matches. The
+    // latter is checked with the DetermineMatchedRule method.
+    //
+    // Naturally, if a match with a lower priority is active, it overrides
+    // the new match, so the new match is hooked up into the match linked
+    // list as inactive, and no content is generated for it. If a match with a
+    // higher priority is active, and the new match's conditions evaluate
+    // to true, then this existing match with the higher priority needs to have
+    // its generated content removed and replaced with the new match's
+    // generated content.
+    //
+    // Similar situations apply when removing an existing match. If the match
+    // is active, the existing generated content will need to be removed, and
+    // a match of higher priority that is revealed may become active and need
+    // to have content generated.
+    //
+    // Content removal and generation is done by the ReplaceMatch method which
+    // is overridden for the content builder and tree builder to update the
+    // generated output for each type.
+    //
+    // The code below handles all of the various cases and ensures that the
+    // match lists are maintained properly.
+
     nsresult rv = NS_OK;
     PRInt16 ruleindex;
     nsTemplateRule* matchedrule = nsnull;
-    nsTemplateMatch* acceptedmatch = nsnull, * removedmatch = nsnull;
-    nsTemplateMatch* replacedmatch = nsnull;
+
+    // Indicates that the old match was active and must have its content
+    // removed
+    PRBool oldMatchWasActive = PR_FALSE;
+
+    // acceptedmatch will be set to a new match that has to have new content
+    // generated for it. If a new match doesn't need to have content
+    // generated, (because for example, a match with a lower priority
+    // already applies), then acceptedmatch will be null, but the match will
+    // be still hooked up into the chain, since it may become active later
+    // as other results are updated.
+    nsTemplateMatch* acceptedmatch = nsnull;
+
+    // When aOldResult is specified, removematch will be set to the
+    // corresponding match. This match needs to be deleted as it no longer
+    // applies. However, removedmatch will be null when aOldResult is null, or
+    // when no match was found corresponding to aOldResult.
+    nsTemplateMatch* removedmatch = nsnull;
+
+    // These will be set when aNewResult is specified indicating to add a
+    // result, but will end up replacing an existing match. The former
+    // indicates a match being replaced that was active and had content
+    // generated for it, while the latter indicates a match that wasn't active
+    // and just needs to be deleted. Both may point to different matches. For
+    // example, if the new match becomes active, replacing an inactive match,
+    // the inactive match will need to be deleted. However, if another match
+    // with a higher priority is active, the new match will override it, so
+    // content will need to be generated for the new match and removed for
+    // this existing active match.
+    nsTemplateMatch* replacedmatch = nsnull, * replacedmatchtodelete = nsnull;
 
     if (aOldResult) {
         nsTemplateMatch* firstmatch;
@@ -603,12 +686,16 @@ nsXULTemplateBuilder::UpdateResultInContainer(nsIXULTemplateResult* aOldResult,
             if (oldmatch) {
                 nsTemplateMatch* findmatch = oldmatch->mNext;
 
-                // keep reference so that linked list can be hooked up at
-                // the end in case an error occurs
+                // Keep a reference so that linked list can be hooked up at
+                // the end in case an error occurs.
                 nsTemplateMatch* nextmatch = findmatch;
 
                 if (oldmatch->IsActive()) {
-                    // the match being removed is the active match, so scan
+                    // Indicate that the old match was active so its content
+                    // will be removed later.
+                    oldMatchWasActive = PR_TRUE;
+
+                    // The match being removed is the active match, so scan
                     // through the later matches to determine if one should
                     // now become the active match.
                     while (findmatch) {
@@ -674,25 +761,28 @@ nsXULTemplateBuilder::UpdateResultInContainer(nsIXULTemplateResult* aOldResult,
         if (mMatchMap.Get(aNewId, &firstmatch)) {
             PRBool hasEarlierActiveMatch = PR_FALSE;
 
-            // scan through the existing matches to find where the new one
+            // Scan through the existing matches to find where the new one
             // should be inserted. oldmatch will be set to the old match for
-            // the same query and prevmatch will be set to the match before it
+            // the same query and prevmatch will be set to the match before it.
             nsTemplateMatch* prevmatch = nsnull;
             nsTemplateMatch* oldmatch = firstmatch;
             while (oldmatch) {
-                // break out once we've reached a query in the list with a
-                // higher priority. The new match will be inserted at this
-                // location so that the match list is sorted by priority
+                // Break out once we've reached a query in the list with a
+                // lower priority. The new match will be inserted at this
+                // location so that the match list is sorted by priority.
                 PRInt32 priority = oldmatch->QuerySetPriority();
                 if (priority > findpriority) {
                     oldmatch = nsnull;
                     break;
                 }
 
+                // look for matches that belong in the same container
                 if (oldmatch->GetContainer() == aInsertionPoint) {
                     if (priority == findpriority)
                         break;
 
+                    // If a match with a lower priority is active, the new
+                    // match can't replace it.
                     if (oldmatch->IsActive())
                         hasEarlierActiveMatch = PR_TRUE;
                 }
@@ -701,6 +791,10 @@ nsXULTemplateBuilder::UpdateResultInContainer(nsIXULTemplateResult* aOldResult,
                 oldmatch = oldmatch->mNext;
             }
 
+            // At this point, oldmatch will either be null, or set to a match
+            // with the same container and priority. If set, oldmatch will
+            // need to be replaced by newmatch.
+
             if (oldmatch)
                 newmatch->mNext = oldmatch->mNext;
             else if (prevmatch)
@@ -708,15 +802,29 @@ nsXULTemplateBuilder::UpdateResultInContainer(nsIXULTemplateResult* aOldResult,
             else
                 newmatch->mNext = firstmatch;
 
-            // if the active match was earlier than the new match, the new
-            // match won't become active but it should still be added to the
-            // list in case it will match later
+            // hasEarlierActiveMatch will be set to true if a match with a
+            // lower priority was found. The new match won't replace it in
+            // this case. If hasEarlierActiveMatch is false, then the new match
+            // may be become active if it matches one of the rules, and will
+            // generate output. It's also possible however, that a match with
+            // the same priority already exists, which means that the new match
+            // will replace the old one. In this case, oldmatch will be set to
+            // the old match. The content for the old match must be removed and
+            // content for the new match generated in its place.
             if (! hasEarlierActiveMatch) {
+                // If the old match was the active match, set replacedmatch to
+                // indicate that it needs its content removed.
+                if (oldmatch) {
+                    if (oldmatch->IsActive())
+                        replacedmatch = oldmatch;
+                    replacedmatchtodelete = oldmatch;
+                }
+
                 // check if the new result matches the rules
                 rv = DetermineMatchedRule(aInsertionPoint, newmatch->mResult,
                                           aQuerySet, &matchedrule, &ruleindex);
                 if (NS_FAILED(rv)) {
-                    nsTemplateMatch::Destroy(mPool, newmatch);
+                    nsTemplateMatch::Destroy(mPool, newmatch, PR_FALSE);
                     return rv;
                 }
 
@@ -725,33 +833,48 @@ nsXULTemplateBuilder::UpdateResultInContainer(nsIXULTemplateResult* aOldResult,
                                                matchedrule, ruleindex,
                                                newmatch->mResult);
                     if (NS_FAILED(rv)) {
-                        nsTemplateMatch::Destroy(mPool, newmatch);
+                        nsTemplateMatch::Destroy(mPool, newmatch, PR_FALSE);
                         return rv;
                     }
 
+                    // acceptedmatch may have been set in the block handling
+                    // aOldResult earlier. If so, we would only get here when
+                    // that match has a higher priority than this new match.
+                    // As only one match can have content generated for it, it
+                    // is OK to set acceptedmatch here to the new match,
+                    // ignoring the other one.
                     acceptedmatch = newmatch;
 
-                    // clear the matched state of the later results
-                    // for the same container
+                    // Clear the matched state of the later results for the
+                    // same container.
                     nsTemplateMatch* clearmatch = newmatch->mNext;
                     while (clearmatch) {
-                        if (clearmatch->GetContainer() == aInsertionPoint)
+                        if (clearmatch->GetContainer() == aInsertionPoint &&
+                            clearmatch->IsActive()) {
                             clearmatch->SetInactive();
+                            // Replacedmatch should be null here. If not, it
+                            // means that two matches were active which isn't
+                            // a valid state
+                            NS_ASSERTION(!replacedmatch,
+                                         "replaced match already set");
+                            replacedmatch = clearmatch;
+                            break;
+                        }
                         clearmatch = clearmatch->mNext;
                     }
                 }
                 else if (oldmatch && oldmatch->IsActive()) {
-                    // the result didn't match the rules, so look for a later
+                    // The result didn't match the rules, so look for a later
                     // one. However, only do this if the old match was the
-                    // active match
-
+                    // active match.
                     newmatch = newmatch->mNext;
                     while (newmatch) {
                         if (newmatch->GetContainer() == aInsertionPoint) {
                             rv = DetermineMatchedRule(aInsertionPoint, newmatch->mResult,
                                                       aQuerySet, &matchedrule, &ruleindex);
                             if (NS_FAILED(rv)) {
-                                nsTemplateMatch::Destroy(mPool, newmatch);
+                                nsTemplateMatch::Destroy(mPool, newmatch,
+                                                         PR_FALSE);
                                 return rv;
                             }
 
@@ -760,7 +883,8 @@ nsXULTemplateBuilder::UpdateResultInContainer(nsIXULTemplateResult* aOldResult,
                                                            matchedrule, ruleindex,
                                                            newmatch->mResult);
                                 if (NS_FAILED(rv)) {
-                                    nsTemplateMatch::Destroy(mPool, newmatch);
+                                    nsTemplateMatch::Destroy(mPool, newmatch,
+                                                             PR_FALSE);
                                     return rv;
                                 }
 
@@ -773,16 +897,16 @@ nsXULTemplateBuilder::UpdateResultInContainer(nsIXULTemplateResult* aOldResult,
                     }
                 }
 
-                // put the match in the map if there isn't an earlier match
+                // put the match in the map if there isn't a previous match
                 if (! prevmatch) {
                     if (!mMatchMap.Put(aNewId, newmatch)) {
-                        nsTemplateMatch::Destroy(mPool, newmatch);
+                        // The match may have already matched a rule above, so
+                        // HasBeenRemoved should be called to indicate that it
+                        // is being removed again.
+                        nsTemplateMatch::Destroy(mPool, newmatch, PR_TRUE);
                         return rv;
                     }
                 }
-
-                if (oldmatch)
-                    replacedmatch = oldmatch;
             }
 
             // hook up the match last in case an error occurs
@@ -790,11 +914,12 @@ nsXULTemplateBuilder::UpdateResultInContainer(nsIXULTemplateResult* aOldResult,
                 prevmatch->mNext = newmatch;
         }
         else {
-            // the id is not used in a match yet so add a new match
+            // The id is not used in the hashtable yet so create a new match
+            // and add it to the hashtable.
             rv = DetermineMatchedRule(aInsertionPoint, aNewResult,
                                       aQuerySet, &matchedrule, &ruleindex);
             if (NS_FAILED(rv)) {
-                nsTemplateMatch::Destroy(mPool, newmatch);
+                nsTemplateMatch::Destroy(mPool, newmatch, PR_FALSE);
                 return rv;
             }
 
@@ -802,7 +927,7 @@ nsXULTemplateBuilder::UpdateResultInContainer(nsIXULTemplateResult* aOldResult,
                 rv = newmatch->RuleMatched(aQuerySet, matchedrule,
                                            ruleindex, aNewResult);
                 if (NS_FAILED(rv)) {
-                    nsTemplateMatch::Destroy(mPool, newmatch);
+                    nsTemplateMatch::Destroy(mPool, newmatch, PR_FALSE);
                     return rv;
                 }
 
@@ -810,30 +935,35 @@ nsXULTemplateBuilder::UpdateResultInContainer(nsIXULTemplateResult* aOldResult,
             }
 
             if (!mMatchMap.Put(aNewId, newmatch)) {
-                nsTemplateMatch::Destroy(mPool, newmatch);
+                nsTemplateMatch::Destroy(mPool, newmatch, PR_TRUE);
                 return NS_ERROR_OUT_OF_MEMORY;
             }
         }
     }
 
-    if (replacedmatch) {
-        // delete a replaced match
-        rv = ReplaceMatch(replacedmatch->mResult, nsnull, nsnull, aInsertionPoint);
+    // The ReplaceMatch method is builder specific and removes the generated
+    // content for a match.
 
-        replacedmatch->mResult->HasBeenRemoved();
-        nsTemplateMatch::Destroy(mPool, replacedmatch);
-    }
+    // Remove the content for a match that was active and needs to be replaced.
+    if (replacedmatch)
+        rv = ReplaceMatch(replacedmatch->mResult, nsnull, nsnull,
+                          aInsertionPoint);
+ 
+    // remove a match that needs to be deleted.
+    if (replacedmatchtodelete)
+        nsTemplateMatch::Destroy(mPool, replacedmatchtodelete, PR_TRUE);
 
-    // remove the content generated for the old result and add the content for
-    // the new result if it matched a rule
-    if (aOldResult || acceptedmatch)
-        rv = ReplaceMatch(aOldResult, acceptedmatch, matchedrule, aInsertionPoint);
+    // If the old match was active, the content for it needs to be removed.
+    // If the old match was not active, it shouldn't have had any content,
+    // so just pass null to ReplaceMatch. If acceptedmatch was set, then
+    // content needs to be generated for a new match.
+    if (oldMatchWasActive || acceptedmatch)
+        rv = ReplaceMatch(oldMatchWasActive ? aOldResult : nsnull,
+                          acceptedmatch, matchedrule, aInsertionPoint);
 
-    if (removedmatch) {
-        // delete the old match
-        removedmatch->mResult->HasBeenRemoved();
-        nsTemplateMatch::Destroy(mPool, removedmatch);
-    }
+    // delete the old match that was replaced
+    if (removedmatch)
+        nsTemplateMatch::Destroy(mPool, removedmatch, PR_TRUE);
 
     return rv;
 }
