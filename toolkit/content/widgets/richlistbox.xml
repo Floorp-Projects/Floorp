@@ -384,11 +384,6 @@
 
             if (this.selType != "multiple" && this.selectedCount == 0)
               this.selectedItem = this.currentItem;
-
-            // XXX hack for the Downloads manager (better to focus the list than
-            // the individual items - these usually aren't tabbable anyway, and
-            // we need the keyboard focus for navigation), see bug 363271:
-            this.focus();
           ]]>
         </body>
       </method>
