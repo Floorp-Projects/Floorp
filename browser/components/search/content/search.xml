@@ -45,6 +45,8 @@
 %searchBarDTD;
 <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
 %globalDTD;
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+%browserDTD;
 ]>
 
 <bindings id="SearchBindings"
@@ -548,7 +550,7 @@
 
   <binding id="searchbar-textbox"
       extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
-    <implementation implements="nsIObserver">
+    <implementation implements="nsIObserver nsIDOMXULLabeledControlElement">
       <constructor><![CDATA[
         if (this._getParentSearchbar().parentNode.parentNode.localName ==
             "toolbarpaletteitem")
@@ -568,6 +570,9 @@
         } catch (ex) { }
       ]]></destructor>
 
+      <property name="label" readonly="true"
+                onget="return '&searchItem.title; ' + 
+                      this._getParentSearchbar().currentEngine.name;"/>
       <field name="_stringBundle"/>
       <field name="_formHistSvc"/>
       <field name="_prefBranch"/>

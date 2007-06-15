@@ -401,6 +401,26 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsHTMLTextFieldAccessible::GetName(nsAString& aName)
+{
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+  if (!content) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = GetHTMLName(aName, PR_FALSE);
+  if (NS_FAILED(rv) || !aName.IsEmpty() || !content->GetBindingParent()) {
+    return rv;
+  }
+
+  // There's a binding parent.
+  // This means we're part of another control, so use parent accessible for name.
+  // This ensures that a textbox inside of a XUL widget gets
+  // an accessible name.
+  nsCOMPtr<nsIAccessible> parent;
+  rv = GetParent(getter_AddRefs(parent));
+  return parent ? parent->GetName(aName) : rv;
+}
+
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetValue(nsAString& _retval)
 {
   PRUint32 state;
