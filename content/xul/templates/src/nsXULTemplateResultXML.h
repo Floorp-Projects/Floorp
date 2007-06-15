@@ -12,15 +12,13 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is Neil Deakin
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Chris Waterson <waterson@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,40 +34,48 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsTemplateMatch.h"
-#include "nsTemplateRule.h"
+#ifndef nsXULTemplateResultXML_h__
+#define nsXULTemplateResultXML_h__
 
-#ifdef NEED_CPP_UNUSED_IMPLEMENTATIONS
-nsTemplateMatch::nsTemplateMatch(const nsTemplateMatch& aMatch) {}
-void nsTemplateMatch::operator=(const nsTemplateMatch& aMatch) {}
-#endif
+#include "nsCOMPtr.h"
+#include "nsIRDFResource.h"
+#include "nsXULTemplateQueryProcessorXML.h"
+#include "nsIXULTemplateResult.h"
 
-// static
-void
-nsTemplateMatch::Destroy(nsFixedSizeAllocator& aPool,
-                         nsTemplateMatch*& aMatch,
-                         PRBool aRemoveResult) {
-    if (aRemoveResult && aMatch->mResult)
-        aMatch->mResult->HasBeenRemoved();
-    aMatch->~nsTemplateMatch();
-    aPool.Free(aMatch, sizeof(*aMatch));
-    aMatch = nsnull;
-}
-
-nsresult
-nsTemplateMatch::RuleMatched(nsTemplateQuerySet* aQuerySet,
-                             nsTemplateRule* aRule,
-                             PRInt16 aRuleIndex,
-                             nsIXULTemplateResult* aResult)
+/**
+ * An single result of an query
+ */
+class nsXULTemplateResultXML : public nsIXULTemplateResult
 {
-    // assign the rule index, used to indicate that a match is active, and
-    // so the tree builder can get the right action body to generate
-    mRuleIndex = aRuleIndex;
+public:
+    NS_DECL_ISUPPORTS
 
-    nsCOMPtr<nsIDOMNode> rulenode;
-    aRule->GetRuleNode(getter_AddRefs(rulenode));
-    if (rulenode)
-        return aResult->RuleMatched(aQuerySet->mCompiledQuery, rulenode);
+    NS_DECL_NSIXULTEMPLATERESULT
 
-    return NS_OK;
-}
+    nsXULTemplateResultXML(nsXMLQuery* aQuery,
+                           nsIDOMNode* aNode,
+                           nsXMLBindingSet* aBindings);
+
+    ~nsXULTemplateResultXML() {}
+
+    void GetNode(nsIDOMNode** aNode);
+
+protected:
+
+    // result id
+    PRUint32 mId;
+
+    // query that generated the result
+    nsCOMPtr<nsXMLQuery> mQuery;
+
+    // context node in datasource
+    nsCOMPtr<nsIDOMNode> mNode;
+
+    // assignments in query
+    nsXMLBindingValues mRequiredValues;
+
+    // extra assignments made by rules (<binding> tags)
+    nsXMLBindingValues mOptionalValues;
+};
+
+#endif // nsXULTemplateResultXML_h__
