@@ -23,6 +23,8 @@
    - Contributor(s):
    -   Peter Annema <disttsc@bart.nl> (Original Author of <browser>)
    -   Peter Parente <parente@cs.unc.edu>
+   -   Christopher Thomas <cst@yecc.com>
+   -   Michael Ventnor <m.ventnor@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -459,8 +461,8 @@
             if (!tabBrowser || tabBrowser.mCurrentBrowser == this)
               this.fastFind.setDocShell(this.docShell);
 
-            if (this._isScrolling)
-              this.stopScroll();
+            if (this._scrollingView)
+              this._autoScrollPopup.hidePopup();
          ]]>
         </body>
       </method>
@@ -670,40 +672,82 @@
           
       <field name="_AUTOSCROLL_SPEED">3</field>
       <field name="_AUTOSCROLL_SNAP">10</field>
-      <field name="_clientFrameDoc">null</field>
-      <field name="_isScrolling">false</field>
-      <field name="_autoScrollMarkerImage">null</field>
-      <field name="_snapOn">false</field>
+      <field name="_scrollingView">null</field>
+      <field name="_autoScrollTimer">null</field>
       <field name="_startX">null</field>
       <field name="_startY">null</field>
       <field name="_screenX">null</field>
       <field name="_screenY">null</field>
+      <field name="_autoScrollPopup">null</field>
 
       <method name="stopScroll">
         <body>
           <![CDATA[
-            this._isScrolling = false;
-            this.removeEventListener("mousemove", this, false);
-            this.contentDocument.removeEventListener("blur", this, true);
-            if (this._autoScrollMarkerImage) {
-              this._autoScrollMarkerImage.style.display = 'none';  // seems to avoid blocking when autoscroll is initited during pageload
-              this._autoScrollMarkerImage.parentNode.removeChild(this._autoScrollMarkerImage);
+            if (this._scrollingView) {
+              this._scrollingView = null;
+              window.removeEventListener("mousemove", this, true);
+              window.removeEventListener("mousedown", this, true);
+              window.removeEventListener("mouseup", this, true);
+              window.removeEventListener("contextmenu", this, true);
+              clearInterval(this._autoScrollTimer);
             }
-            this._autoScrollMarkerImage = null;
          ]]>
        </body>
      </method>
      
+      <method name="startScroll">
+        <parameter name="event"/>
+        <body>
+          <![CDATA[
+            // if the tabbrowser didn't point us to a cached popup, we're not in a tabbrowser, so use global scope
+           if (!this._autoScrollPopup) {
+              const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+              this._autoScrollPopup = document.createElementNS(XUL_NS, "popup");
+              this._autoScrollPopup.id = "autoscroller";
+              this._autoScrollPopup.addEventListener("popuphidden", this, true);
+              document.documentElement.appendChild(this._autoScrollPopup);
+            }
+            this._scrollingView = event.originalTarget.ownerDocument.defaultView;
+            if (this._scrollingView.scrollMaxX > 0) {
+              this._autoScrollPopup.setAttribute("scrolldir", this._scrollingView.scrollMaxY > 0 ? "NSEW" : "EW");
+            }
+            else if (this._scrollingView.scrollMaxY > 0) {
+              this._autoScrollPopup.setAttribute("scrolldir", "NS");
+            }
+            else {
+              this._scrollingView = null; // abort scrolling
+              return;
+            }
+
+            document.popupNode = null;
+            this._autoScrollPopup.showPopup(document.documentElement,
+                                            event.screenX,
+                                            event.screenY,
+                                            "popup", null, null);
+            this._ignoreMouseEvents = true;
+            this._startX = event.screenX;
+            this._startY = event.screenY;
+            this._screenX = event.screenX;
+            this._screenY = event.screenY;
+
+            window.addEventListener("mousemove", this, true);
+            window.addEventListener("mousedown", this, true);
+            window.addEventListener("mouseup", this, true);
+            window.addEventListener("contextmenu", this, true);
+
+            this._autoScrollTimer = setInterval(function(self) { self.autoScrollLoop(); },
+                                                20, this);
+         ]]>
+       </body>
+     </method>
+
      <method name="autoScrollLoop">
        <body>
          <![CDATA[
-           if (this._isScrolling) {
-             var x = (this._screenX - this._startX) / this._AUTOSCROLL_SPEED;
-             var y = (this._screenY - this._startY) / this._AUTOSCROLL_SPEED;
+           var x = (this._screenX - this._startX) / this._AUTOSCROLL_SPEED;
+           var y = (this._screenY - this._startY) / this._AUTOSCROLL_SPEED;
 
-             this._clientFrameDoc.defaultView.scrollBy(x, y);
-             setTimeout(function foo(a) { a.autoScrollLoop() }, 20, this);
-           }
+           this._scrollingView.scrollBy(x, y);
          ]]>
        </body>
      </method>
@@ -743,75 +787,38 @@
          ]]>
        </body>
      </method>
-     <method name="showAutoscrollMarker">
-       <parameter name="evt"/>
-       <body>
-         <![CDATA[
-           var scrollCursor  = new Array("n-resize", "move",  "e-resize");
-           var scrollImages  = new Array("chrome://global/content/bindings/autoscroll_v.png",
-                                         "chrome://global/content/bindings/autoscroll_all.png",
-                                         "chrome://global/content/bindings/autoscroll_h.png");
-           var left = evt.clientX;
-           var top = evt.clientY;
-
-           var scrollType = 1;
-           if (this._clientFrameDoc.defaultView.scrollMaxY > 0) scrollType--;
-           if (this._clientFrameDoc.defaultView.scrollMaxX > 0) scrollType++;           
-           
-           var imageWidth = 28;
-           var imageHeight = 28;
-           
-           // marker
-           var el = this._clientFrameDoc.createElementNS("http://www.w3.org/1999/xhtml", "img");
-           
-           el.src = scrollImages[scrollType];         
-           el.style.position = "fixed";
-           el.style.left = left - imageWidth / 2 + "px";
-           el.style.top = top - imageHeight / 2 + "px";
-           el.style.width = imageWidth + "px";
-           el.style.height = imageHeight + "px";
-           el.style.cursor = scrollCursor[scrollType];
-           el.style.zIndex = 2147483647; //Max Int
-           el.style.borderStyle = "none";
-           el.style.padding = "0";
-           el.style.margin = "0";
-
-           this._clientFrameDoc.documentElement.appendChild(el);
-           
-           this._autoScrollMarkerImage = el;
-         ]]>
-       </body>
-     </method>
-     <method name="_handleMouseMove">
-        <parameter name="aEvent"/>
-        <body>
-        <![CDATA[
-          this._screenX = aEvent.screenX;
-          this._screenY = aEvent.screenY;
-        
-          if (this._isScrolling) {
-            var x = this._screenX - this._startX;
-            var y = this._screenY - this._startY;
-        
-            if ((x > this._AUTOSCROLL_SNAP || x < -this._AUTOSCROLL_SNAP) ||
-                (y > this._AUTOSCROLL_SNAP || y < -this._AUTOSCROLL_SNAP))
-              this._snapOn = false;
-          }
-        ]]>
-        </body>
-      </method>
 
       <method name="handleEvent">
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
-          switch (aEvent.type) {
-            case "mousemove":
-              this._handleMouseMove(aEvent);
-              break;
-            case "blur":
-              if (aEvent.target == this.contentDocument)
+          if (this._scrollingView) {
+            switch(aEvent.type) {
+              case "mousemove": {
+                this._screenX = aEvent.screenX;
+                this._screenY = aEvent.screenY;
+
+                var x = this._screenX - this._startX;
+                var y = this._screenY - this._startY;
+        
+                if ((x > this._AUTOSCROLL_SNAP || x < -this._AUTOSCROLL_SNAP) ||
+                    (y > this._AUTOSCROLL_SNAP || y < -this._AUTOSCROLL_SNAP))
+                  this._ignoreMouseEvents = false;
+                break;
+              }
+              case "mouseup":
+              case "mousedown":
+              case "contextmenu": {
+                if (!this._ignoreMouseEvents)
+                  this._autoScrollPopup.hidePopup();
+                this._ignoreMouseEvents = false;
+                break;
+              }
+              case "popuphidden": {
                 this.stopScroll();
+                break;
+              }
+            }
           }
         ]]>
         </body>
@@ -865,34 +872,15 @@
           }
         ]]>
       </handler>
-      <handler event="mouseup">
+      <handler event="mousedown" phase="capturing">
         <![CDATA[
-          if (!this.autoscrollEnabled)
-            return;
-          if (!this._snapOn)
-            this.stopScroll();
-        ]]>        
-      </handler>
-      <handler event="mousedown">
-        <![CDATA[
-          if (this._isScrolling) {
-            stopScroll();
-          } else if (event.button == 1) {
+          if (!this._scrollingView && event.button == 1) {
             if (!this.autoscrollEnabled  ||
                 this.currentURI.spec == "about:blank"|| 
                 this.isAutoscrollBlocker(event.originalTarget))
               return;
-            this.addEventListener("mousemove", this, false);
-            this.contentDocument.addEventListener("blur", this, true);
-            this._screenX = event.screenX;
-            this._screenY = event.screenY;
-            this._startX = event.screenX;
-            this._startY = event.screenY;
-            this._clientFrameDoc = event.originalTarget.ownerDocument;
-            this._isScrolling = true;
-            this._snapOn = true; 
-            this.showAutoscrollMarker(event);
-            window.setTimeout(function foo(a) { a.autoScrollLoop() }, 20, this);
+
+            this.startScroll(event);
           }
         ]]>
       </handler>

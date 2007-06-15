@@ -45,7 +45,7 @@
 /* ::::: menupopup ::::: */
 
 menupopup, popup {
-  -moz-appearance: menupopup !important;
+  -moz-appearance: menupopup;
   min-width: 1px;
 }
 
