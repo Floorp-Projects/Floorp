@@ -187,6 +187,7 @@ pref("browser.urlbar.matchOnlyTyped", false);
 pref("browser.chrome.site_icons", true);
 pref("browser.chrome.favicons", true);
 pref("browser.formfill.enable", true);
+pref("browser.warnOnQuit", true);
 
 pref("browser.download.useDownloadDir", true);
 pref("browser.download.folderList", 0);
