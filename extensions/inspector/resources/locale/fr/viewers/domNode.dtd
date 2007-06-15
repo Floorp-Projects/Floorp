@@ -38,6 +38,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY nodeName.label "Nom du nœud :">
+<!ENTITY localName.label "Nom local :">
 <!ENTITY namespaceURI.label "URI de l'espace de noms :">
 <!ENTITY nodeType.label "Type du nœud :">
 <!ENTITY nodeValue.label "Valeur du du nœud :">
