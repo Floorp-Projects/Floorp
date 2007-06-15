@@ -659,7 +659,8 @@ gfxWindowsPlatform::FindFontForStringProc(nsStringHashKey::KeyType aKey,
     if (targetWeight == aFontEntry->mDefaultWeight)
         rank += 5;
 
-    if (data->matchRank == 0 || rank > data->matchRank) {
+    if (rank > data->matchRank ||
+        (rank == data->matchRank && Compare(aFontEntry->mName, data->bestMatch->mName) > 0)) {
         data->bestMatch = aFontEntry;
         data->matchRank = rank;
     }
