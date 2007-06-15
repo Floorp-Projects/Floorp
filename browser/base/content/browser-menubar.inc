@@ -330,7 +330,7 @@
                   accesskey="&historyMenu.accesskey;">
               <menupopup id="goPopup"
                          type="places"
-                         onpopupshowing="HistoryMenu.onPoupShowing(this);"
+                         onpopupshowing="HistoryMenu.onPopupShowing(this);"
                          place="place:beginTime=-2592000000000&amp;beginTimeRef=1&amp;endTime=7200000000&amp;endTimeRef=2&amp;type=0&amp;sort=4&amp;maxResults=10">
                 <menuitem label="&backCmd.label;"
 #ifdef XP_MACOSX
