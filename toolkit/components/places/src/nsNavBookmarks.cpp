@@ -79,7 +79,7 @@ nsNavBookmarks* nsNavBookmarks::sInstance = nsnull;
 
 nsNavBookmarks::nsNavBookmarks()
   : mRoot(0), mBookmarksRoot(0), mTagRoot(0), mToolbarFolder(0), mBatchLevel(0),
-    mBatchHasTransaction(PR_FALSE)
+    mBatchHasTransaction(PR_FALSE), mLock(nsnull)
 {
   NS_ASSERTION(!sInstance, "Multiple nsNavBookmarks instances!");
   sInstance = this;
