@@ -45,6 +45,8 @@ function BrowserGlue() {
 }
 
 BrowserGlue.prototype = {
+  _saveSession: false,
+
   QueryInterface: function(iid) 
   {
      xpcomCheckInterfaces(iid, kServiceIIds, Components.results.NS_ERROR_NO_INTERFACE);
@@ -74,6 +76,16 @@ BrowserGlue.prototype = {
         cs.logStringMessage(null); // clear the console (in case it's open)
         cs.reset();
         break;
+      case "quit-application-requested":
+        this._onQuitRequest(subject);
+        break;
+      case "quit-application-granted":
+        if (this._saveSession) {
+          var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                      .getService(Components.interfaces.nsIPrefBranch);
+          prefService.setBoolPref("browser.sessionstore.resume_session_once", true);
+        }
+        break;
     }
   }
 , 
@@ -88,6 +100,8 @@ BrowserGlue.prototype = {
     osvr.addObserver(this, "xpcom-shutdown", false);
     osvr.addObserver(this, "final-ui-startup", false);
     osvr.addObserver(this, "browser:purge-session-history", false);
+    osvr.addObserver(this, "quit-application-requested", false);
+    osvr.addObserver(this, "quit-application-granted", false);
   },
 
   // cleanup (called on application shutdown)
@@ -101,6 +115,8 @@ BrowserGlue.prototype = {
     osvr.removeObserver(this, "xpcom-shutdown");
     osvr.removeObserver(this, "final-ui-startup");
     osvr.removeObserver(this, "browser:purge-session-history");
+    osvr.removeObserver(this, "quit-application-requested");
+    osvr.removeObserver(this, "quit-application-granted");
   },
 
   // profile startup handler (contains profile initialization routines)
@@ -166,6 +182,92 @@ BrowserGlue.prototype = {
     } catch(ex) {
     } finally {
       appStartup.exitLastWindowClosingSurvivalArea();
+    }
+  },
+
+  _onQuitRequest: function(aCancelQuit)
+  {
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Components.interfaces.nsIWindowMediator);
+    var windowcount = 0;
+    var pagecount = 0;
+    var browserEnum = wm.getEnumerator("navigator:browser");
+    while (browserEnum.hasMoreElements()) {
+      windowcount++;
+
+      var browser = browserEnum.getNext();
+      var tabbrowser = browser.document.getElementById("content");
+      if (tabbrowser)
+        pagecount += tabbrowser.browsers.length;
+    }
+
+    this._saveSession = false;
+    if (pagecount < 2)
+      return;
+
+    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                .getService(Components.interfaces.nsIPrefBranch);
+    var showPrompt = true;
+    try {
+      if (prefService.getIntPref("browser.startup.page") == 3 ||
+          prefService.getBoolPref("browser.sessionstore.resume_session_once"))
+        showPrompt = false;
+      else
+        showPrompt = prefService.getBoolPref("browser.warnOnQuit");
+    } catch (ex) {}
+
+    var buttonChoice = 0;
+    if (showPrompt) {
+      var bundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                    .getService(Components.interfaces.nsIStringBundleService);
+      var quitBundle = bundleService.createBundle("chrome://browser/locale/quitDialog.properties");
+      var brandBundle = bundleService.createBundle("chrome://branding/locale/brand.properties");
+
+      var appName = brandBundle.GetStringFromName("brandShortName");
+      var quitDialogTitle = quitBundle.formatStringFromName("quitDialogTitle",
+                                                            [appName], 1);
+      var quitTitle = quitBundle.GetStringFromName("quitTitle");
+      var cancelTitle = quitBundle.GetStringFromName("cancelTitle");
+      var saveTitle = quitBundle.GetStringFromName("saveTitle");
+      var neverAskText = quitBundle.GetStringFromName("neverAsk");
+
+      if (windowcount == 1)
+        var message = quitBundle.formatStringFromName("messageNoWindows",
+                                                      [appName], 1);
+      else
+        var message = quitBundle.formatStringFromName("message",
+                                                      [appName], 1);
+
+      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                    .getService(Components.interfaces.nsIPromptService);
+
+      var flags = promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0 +
+                  promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1 +
+                  promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2 +
+                  promptService.BUTTON_POS_0_DEFAULT;
+      var neverAsk = {value:false};
+      buttonChoice = promptService.confirmEx(null, quitDialogTitle, message,
+                                   flags, quitTitle, cancelTitle, saveTitle,
+                                   neverAskText, neverAsk);
+
+      switch (buttonChoice) {
+      case 0:
+        if (neverAsk.value)
+          prefService.setBoolPref("browser.warnOnQuit", false);
+        break;
+      case 1:
+        aCancelQuit.QueryInterface(Components.interfaces.nsISupportsPRBool);
+        aCancelQuit.data = true;
+        break;
+      case 2:
+        // could also set browser.warnOnQuit to false here,
+        // but not setting it is a little safer.
+        if (neverAsk.value)
+          prefService.setIntPref("browser.startup.page", 3);
+        break;
+      }
+
+      this._saveSession = buttonChoice == 2;
     }
   },
 
