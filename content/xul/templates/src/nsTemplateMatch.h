@@ -95,10 +95,9 @@ public:
                                                      aResult, aContainer)
                      : nsnull; }
 
-    static void
-    Destroy(nsFixedSizeAllocator& aPool, nsTemplateMatch* aMatch) {
-        aMatch->~nsTemplateMatch();
-        aPool.Free(aMatch, sizeof(*aMatch)); }
+    static void Destroy(nsFixedSizeAllocator& aPool,
+                        nsTemplateMatch*& aMatch,
+                        PRBool aRemoveResult);
 
     // return true if the the match is active, and has generated output
     PRBool IsActive() {

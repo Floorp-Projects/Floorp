@@ -1638,7 +1638,7 @@ nsXULTreeBuilder::OpenSubtreeForQuerySet(nsTreeRows::Subtree* aSubtree,
                     nsCOMPtr<nsIRDFResource> parentid;
                     rv = GetResultResource(iter->mMatch->mResult, getter_AddRefs(parentid));
                     if (NS_FAILED(rv)) {
-                        nsTemplateMatch::Destroy(mPool, newmatch);
+                        nsTemplateMatch::Destroy(mPool, newmatch, PR_FALSE);
                         return rv;
                     }
 
@@ -1651,7 +1651,7 @@ nsXULTreeBuilder::OpenSubtreeForQuerySet(nsTreeRows::Subtree* aSubtree,
 
             if (cyclic) {
                 NS_WARNING("tree cannot handle cyclic graphs");
-                nsTemplateMatch::Destroy(mPool, newmatch);
+                nsTemplateMatch::Destroy(mPool, newmatch, PR_FALSE);
                 continue;
             }
 
@@ -1660,7 +1660,7 @@ nsXULTreeBuilder::OpenSubtreeForQuerySet(nsTreeRows::Subtree* aSubtree,
             rv = DetermineMatchedRule(nsnull, nextresult, aQuerySet,
                                       &matchedrule, &ruleindex);
             if (NS_FAILED(rv)) {
-                nsTemplateMatch::Destroy(mPool, newmatch);
+                nsTemplateMatch::Destroy(mPool, newmatch, PR_FALSE);
                 return rv;
             }
 
@@ -1668,7 +1668,7 @@ nsXULTreeBuilder::OpenSubtreeForQuerySet(nsTreeRows::Subtree* aSubtree,
                 rv = newmatch->RuleMatched(aQuerySet, matchedrule, ruleindex,
                                            nextresult);
                 if (NS_FAILED(rv)) {
-                    nsTemplateMatch::Destroy(mPool, newmatch);
+                    nsTemplateMatch::Destroy(mPool, newmatch, PR_FALSE);
                     return rv;
                 }
 
@@ -1692,7 +1692,7 @@ nsXULTreeBuilder::OpenSubtreeForQuerySet(nsTreeRows::Subtree* aSubtree,
             prevmatch->mNext = newmatch;
         }
         else if (!mMatchMap.Put(resultid, newmatch)) {
-            nsTemplateMatch::Destroy(mPool, newmatch);
+            nsTemplateMatch::Destroy(mPool, newmatch, PR_TRUE);
             return NS_ERROR_OUT_OF_MEMORY;
         }
     }
@@ -1748,11 +1748,8 @@ nsXULTreeBuilder::RemoveMatchesFor(nsTreeRows::Subtree& subtree)
         nsTemplateMatch* existingmatch;
         if (mMatchMap.Get(id, &existingmatch)) {
             while (existingmatch) {
-                if (existingmatch->mResult)
-                    existingmatch->mResult->HasBeenRemoved();
-
                 nsTemplateMatch* nextmatch = existingmatch->mNext;
-                nsTemplateMatch::Destroy(mPool, existingmatch);
+                nsTemplateMatch::Destroy(mPool, existingmatch, PR_TRUE);
                 existingmatch = nextmatch;
             }
 
