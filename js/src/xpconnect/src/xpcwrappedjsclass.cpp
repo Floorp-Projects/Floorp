@@ -593,6 +593,44 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
 
     // else we do the more expensive stuff...
 
+#ifndef XPCONNECT_STANDALONE
+    // Before calling out, ensure that we're not about to claim to implement
+    // nsISecurityCheckedComponent for an untrusted object. Doing so causes
+    // problems. See bug 352882.
+
+    if(aIID.Equals(NS_GET_IID(nsISecurityCheckedComponent)))
+    {
+        // XXX This code checks to see if the given object has chrome (also
+        // known as system) principals. It really wants to do a
+        // UniversalXPConnect type check.
+
+        nsXPConnect *xpc = nsXPConnect::GetXPConnect();
+        nsCOMPtr<nsIScriptSecurityManager> secMan =
+            do_QueryInterface(xpc->GetDefaultSecurityManager());
+        if(!secMan)
+        {
+            *aInstancePtr = nsnull;
+            return NS_NOINTERFACE;
+        }
+        nsCOMPtr<nsIPrincipal> objPrin;
+        nsresult rv = secMan->GetObjectPrincipal(ccx, self->GetJSObject(),
+                                                 getter_AddRefs(objPrin));
+        if(NS_SUCCEEDED(rv))
+        {
+            nsCOMPtr<nsIPrincipal> systemPrin;
+            rv = secMan->GetSystemPrincipal(getter_AddRefs(systemPrin));
+            if(systemPrin != objPrin)
+                rv = NS_NOINTERFACE;
+        }
+
+        if(NS_FAILED(rv))
+        {
+            *aInstancePtr = nsnull;
+            return rv;
+        }
+    }
+#endif
+
     // check if the JSObject claims to implement this interface
     JSObject* jsobj = CallQueryInterfaceOnJSObject(ccx, self->GetJSObject(),
                                                    aIID);
