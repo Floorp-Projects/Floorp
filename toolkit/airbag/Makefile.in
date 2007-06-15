@@ -61,9 +61,27 @@ ifeq  ($(OS_ARCH),WINNT)
 endif
 
 ifeq ($(OS_ARCH),Darwin)
-	DIRS += airbag/src/common/mac \
-		airbag/src/client/mac/handler \
-		$(NULL)
+CMMSRCS = mac_utils.mm
+
+DIRS += \
+  airbag/src/common \
+  airbag/src/common/mac \
+  airbag/src/client \
+  airbag/src/client/mac/handler \
+  airbag/src/tools/mac/dump_syms \
+  $(NULL)
+endif
+
+ifeq ($(OS_ARCH),Linux)
+# there's no define for this normally
+DEFINES += -DXP_LINUX
+DIRS += \
+  airbag/src/common \
+  airbag/src/common/linux \
+  airbag/src/client \
+  airbag/src/client/linux/handler \
+  airbag/src/tools/linux/dump_syms \
+  $(NULL)
 endif
 
 DIRS += client

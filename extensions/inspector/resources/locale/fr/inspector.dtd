@@ -23,8 +23,8 @@
   <!ENTITY cmdExit.label "Quitter">
   <!ENTITY cmdExit.accesskey "Q">
 
-<!ENTITY mnEdit.label "Edition">
-<!ENTITY mnEdit.accesskey "E">
+<!ENTITY mnEdit.label "Édition">
+<!ENTITY mnEdit.accesskey "n">
   <!ENTITY cmdUndo.label "Annuler">
   <!ENTITY cmdUndo.accesskey "n">
   <!ENTITY cmdRedo.label "Refaire">
@@ -45,7 +45,7 @@
     <!ENTITY cmdRunSearch.label "Lancer…">
     <!ENTITY cmdRunSearch.accesskey "a">
 
-<!ENTITY mnView.label "Afficher">
+<!ENTITY mnView.label "Affichage">
 <!ENTITY mnView.accesskey "A">
   <!ENTITY cmdToggleBrowser.label "Navigateur">
   <!ENTITY cmdToggleSearch.label "Résultats de la recherche">

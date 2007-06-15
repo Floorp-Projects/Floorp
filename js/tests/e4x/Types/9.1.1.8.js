@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '9.1.1.8.js';
+
 // XML Type [[Descendants]]
 START("9.1.1.8 - XML [[Descendants]]");
 

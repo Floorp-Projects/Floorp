@@ -151,9 +151,9 @@ Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
        shell->mOutput->Write(JS_GetStringBytes(str), JS_GetStringLength(str), &bytesWritten);
      }
      else
-       printf(JS_GetStringBytes(str)); // use cout if no output stream given.
+       printf("%s", JS_GetStringBytes(str)); // use cout if no output stream given.
 #ifdef DEBUG
-//        printf(JS_GetStringBytes(str));
+//        printf("%s", JS_GetStringBytes(str));
 #endif
    }
   return JS_TRUE;
@@ -589,8 +589,8 @@ NS_IMETHODIMP nsJSSh::Init()
   // Enable e4x:
   JS_SetOptions(mJSContext, JS_GetOptions(mJSContext) | JSOPTION_XML);
   
-  // Enable js1.7 features (let, yield, etc - see bug#351515)
-  JS_SetVersion(mJSContext, JSVERSION_1_7);
+  // Always use the latest js version
+  JS_SetVersion(mJSContext, JSVERSION_LATEST);
   
   mContextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
   if (!mContextStack) {

@@ -57,12 +57,17 @@ function PrefHandler(pref, defaultValue, serializable) {
     getService(Components.interfaces.nsIPrefBranch2);
   this._pb.addObserver(this._pref, this, false);
 }
+
 PrefHandler.prototype = {
   /**
    * Clean up when the window is going away to avoid leaks. 
    */
   destroy: function PC_PH_destroy() {
     this._pb.removeObserver(this._pref, this);
+    this._pref = null;
+    this._pb = null;
+    this._defaultValue = null;
+    this._serializable = null;
   },
 
   /** 
@@ -287,5 +292,5 @@ var OptionsFilter = {
     var options = queryNode.queryOptions.clone();
     options.sortingMode = result.sortingMode;
     this.getHandler(queries).value = options;
-  },
+  }
 };

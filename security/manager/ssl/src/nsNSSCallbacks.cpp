@@ -259,7 +259,7 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
          ("nsNSSHttpRequestSession::trySendAndReceiveFcn to %s\n", mURL.get()));
 
-  const int max_retries = 5;
+  const int max_retries = 2;
   int retry_count = 0;
   PRBool retryable_error = PR_FALSE;
   SECStatus result_sec_status = SECFailure;
@@ -812,22 +812,16 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
                  nsIWebProgressListener::STATE_SECURE_LOW);
 
   CERTCertificate *peerCert = SSL_PeerCertificate(fd);
-  char* caName = CERT_GetOrgName(&peerCert->issuer);
+  const char* caName = nsnull; // caName is a pointer only, no ownership
+  char* certOrgName = CERT_GetOrgName(&peerCert->issuer);
   CERT_DestroyCertificate(peerCert);
-  if (!caName) {
-    caName = signer;
-  }
+  caName = certOrgName ? certOrgName : signer;
 
+  const char* verisignName = "Verisign, Inc.";
   // If the CA name is RSA Data Security, then change the name to the real
   // name of the company i.e. VeriSign, Inc.
   if (nsCRT::strcmp((const char*)caName, "RSA Data Security, Inc.") == 0) {
-    // In this case, caName != signer since the logic implies signer
-    // would be at minimal "O=RSA Data Security, Inc" because caName
-    // is what comes after to O=.  So we're OK just freeing this memory
-    // without checking to see if it's equal to signer;
-    NS_ASSERTION(caName != signer, "caName was equal to caName when it shouldn't be");
-    PR_Free(caName);
-    caName = PL_strdup("Verisign, Inc.");
+    caName = verisignName;
   }
 
   nsAutoString shortDesc;
@@ -860,9 +854,7 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
     infoObject->SetSSLStatus(status);
   }
 
-  if (caName != signer) {
-    PR_Free(caName);
-  }
+  PR_FREEIF(certOrgName);
   PR_Free(signer);
 }
 

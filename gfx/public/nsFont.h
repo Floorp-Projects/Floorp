@@ -79,7 +79,7 @@ struct NS_GFX nsFont {
 
   // True if the character set quirks (for treatment of "Symbol",
   // "Wingdings", etc.) should be applied.
-  PRPackedBool familyNameQuirks : 1;
+  PRUint8 familyNameQuirks : 1;
 
   // The weight of the font (0-999)
   PRUint16 weight;

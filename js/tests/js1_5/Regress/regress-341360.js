@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Ted Mielczarek 
+ * Contributor(s): Ted Mielczarek
  *                 Ria Klaassen
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -35,24 +35,26 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-341360.js';
 //-----------------------------------------------------------------------------
-var bug = 341360;
+var BUGNUMBER = 341360;
 var summary = 'clearInterval broken';
 var actual = '';
 var expect = 'Ok';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-function xxx() 
+function xxx()
 {
-  if(t != null) 
+  if(t != null)
   {
     print('Clearing interval...');
     window.clearInterval(t);
     t = null;
     setTimeout('yyy()', 2000);
-    
+   
   }
   else {
     print('Clearing interval failed...');

@@ -54,9 +54,11 @@
 #include "nsSVGGeometryFrame.h"
 #include "nsSVGPatternFrame.h"
 #include "gfxContext.h"
-#include "gfxImageSurface.h"
+#include "gfxPlatform.h"
+#include "gfxPattern.h"
 
 #ifdef DEBUG_scooter
+static void printCTM(char *msg, gfxMatrix aCTM);
 static void printCTM(char *msg, nsIDOMSVGMatrix *aCTM);
 static void printRect(char *msg, nsIDOMSVGRect *aRect);
 #endif
@@ -202,12 +204,11 @@ nsSVGPatternFrame::GetCanvasTM() {
 }
 
 nsresult
-nsSVGPatternFrame::PaintPattern(cairo_surface_t** surface,
-                                nsIDOMSVGMatrix** patternMatrix,
+nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
+                                gfxMatrix* patternMatrix,
                                 nsSVGGeometryFrame *aSource,
                                 float aGraphicOpacity)
 {
-
   /*
    * General approach:
    *    Set the content geometry stuff
@@ -220,7 +221,6 @@ nsSVGPatternFrame::PaintPattern(cairo_surface_t** surface,
    *    Return
    */
   *surface = nsnull;
-  *patternMatrix = nsnull;
 
   // Get our child
   nsIFrame *firstKid;
@@ -271,8 +271,7 @@ nsSVGPatternFrame::PaintPattern(cairo_surface_t** surface,
 
   // Get the transformation matrix that we will hand to the renderer's pattern
   // routine.
-  if (NS_FAILED(GetPatternMatrix(patternMatrix, bbox, callerBBox, callerCTM)))
-     return NS_ERROR_FAILURE;
+  *patternMatrix = GetPatternMatrix(bbox, callerBBox, callerCTM);
 
 #ifdef DEBUG_scooter
   printRect("Bounding Rect: ",bbox);
@@ -282,22 +281,51 @@ nsSVGPatternFrame::PaintPattern(cairo_surface_t** surface,
 
   // Now that we have all of the necessary geometries, we can
   // create our surface.
-  float surfaceWidth, surfaceHeight;
-  bbox->GetWidth(&surfaceWidth);
-  bbox->GetHeight(&surfaceHeight);
+  float patternWidth, patternHeight;
+  bbox->GetWidth(&patternWidth);
+  bbox->GetHeight(&patternHeight);
+
+  PRBool resultOverflows;
+  gfxIntSize surfaceSize =
+    nsSVGUtils::ConvertToSurfaceSize(gfxSize(patternWidth, patternHeight),
+                                     &resultOverflows);
+
+  // 0 disables rendering, < 0 is an error
+  if (surfaceSize.width <= 0 || surfaceSize.height <= 0)
+    return NS_ERROR_FAILURE;
+
+  if (resultOverflows) {
+    // scale down drawing to new pattern surface size
+    nsCOMPtr<nsIDOMSVGMatrix> tempTM, aCTM;
+    NS_NewSVGMatrix(getter_AddRefs(tempTM),
+                    surfaceSize.width / patternWidth, 0.0f,
+                    0.0f, surfaceSize.height / patternHeight,
+                    0.0f, 0.0f);
+    mCTM->Multiply(tempTM, getter_AddRefs(aCTM));
+    aCTM.swap(mCTM);
+
+    // and magnify pattern to compensate
+    patternMatrix->Scale(patternWidth / surfaceSize.width,
+                         patternHeight / surfaceSize.height);
+  }
 
 #ifdef DEBUG_scooter
-  printf("Creating %dX%d surface\n",(int)(surfaceWidth),(int)(surfaceHeight));
+  printf("Creating %dX%d surface\n", int(surfaceSize.width), int(surfaceSize.height));
 #endif
 
-  nsRefPtr<gfxImageSurface> tmpSurface =
-    new gfxImageSurface(gfxIntSize(surfaceWidth, surfaceHeight), gfxASurface::ImageFormatARGB32);
+  nsRefPtr<gfxASurface> tmpSurface =
+    gfxPlatform::GetPlatform()->CreateOffscreenSurface(surfaceSize,
+                                                       gfxASurface::ImageFormatARGB32);
   if (!tmpSurface)
     return NS_ERROR_FAILURE;
 
-  memset(tmpSurface->Data(), 0, tmpSurface->GetSize().height * tmpSurface->Stride());
   gfxContext tmpContext(tmpSurface);
   nsSVGRenderState tmpState(&tmpContext);
+
+  // Fill with transparent black
+  tmpContext.SetOperator(gfxContext::OPERATOR_CLEAR);
+  tmpContext.Paint();
+  tmpContext.SetOperator(gfxContext::OPERATOR_OVER);
 
   if (aGraphicOpacity != 1.0f) {
     tmpContext.Save();
@@ -323,9 +351,8 @@ nsSVGPatternFrame::PaintPattern(cairo_surface_t** surface,
     tmpContext.Restore();
   }
 
-  // caller now owns the cairo surface
-  cairo_surface_reference(tmpSurface->CairoSurface());
-  *surface = tmpSurface->CairoSurface();
+  // caller now owns the surface
+  tmpSurface.swap(*surface);
   return NS_OK;
 }
 
@@ -358,11 +385,9 @@ nsSVGPatternFrame::GetPatternUnits()
   // See if we need to get the value from another pattern
   if (!checkURITarget(nsGkAtoms::patternUnits)) {
     // No, return the values
-    nsCOMPtr<nsIDOMSVGPatternElement> patternElement = 
-                                            do_QueryInterface(mContent);
-    nsCOMPtr<nsIDOMSVGAnimatedEnumeration> units;
-    patternElement->GetPatternUnits(getter_AddRefs(units));
-    units->GetAnimVal(&rv);
+    nsSVGPatternElement *patternElement = NS_STATIC_CAST(nsSVGPatternElement*,
+                                                         mContent);
+    patternElement->mPatternUnits->GetAnimVal(&rv);
   } else {
     // Yes, get it from the target
     rv = mNextPattern->GetPatternUnits();
@@ -379,11 +404,9 @@ nsSVGPatternFrame::GetPatternContentUnits()
   // See if we need to get the value from another pattern
   if (!checkURITarget(nsGkAtoms::patternContentUnits)) {
     // No, return the values
-    nsCOMPtr<nsIDOMSVGPatternElement> patternElement = 
-                                            do_QueryInterface(mContent);
-    nsCOMPtr<nsIDOMSVGAnimatedEnumeration> units;
-    patternElement->GetPatternContentUnits(getter_AddRefs(units));
-    units->GetAnimVal(&rv);
+    nsSVGPatternElement *patternElement = NS_STATIC_CAST(nsSVGPatternElement*,
+                                                         mContent);
+    patternElement->mPatternContentUnits->GetAnimVal(&rv);
   } else {
     // Yes, get it from the target
     rv = mNextPattern->GetPatternContentUnits();
@@ -392,36 +415,29 @@ nsSVGPatternFrame::GetPatternContentUnits()
   return rv;
 }
 
-nsresult
-nsSVGPatternFrame::GetPatternTransform(nsIDOMSVGMatrix **aPatternTransform)
+gfxMatrix
+nsSVGPatternFrame::GetPatternTransform()
 {
-  *aPatternTransform = nsnull;
-  nsresult rv = NS_OK;
-
+  gfxMatrix matrix;
   // See if we need to get the value from another pattern
   if (!checkURITarget(nsGkAtoms::patternTransform)) {
     // No, return the values
-    nsCOMPtr<nsIDOMSVGPatternElement> patternElement = 
-                                            do_QueryInterface(mContent);
-    nsCOMPtr<nsIDOMSVGAnimatedTransformList> trans;
-    patternElement->GetPatternTransform(getter_AddRefs(trans));
+    nsSVGPatternElement *patternElement = NS_STATIC_CAST(nsSVGPatternElement*,
+                                                         mContent);
     nsCOMPtr<nsIDOMSVGTransformList> lTrans;
-    trans->GetAnimVal(getter_AddRefs(lTrans));
+    patternElement->mPatternTransform->GetAnimVal(getter_AddRefs(lTrans));
     nsCOMPtr<nsIDOMSVGMatrix> patternTransform =
       nsSVGTransformList::GetConsolidationMatrix(lTrans);
     if (patternTransform) {
-      *aPatternTransform = patternTransform;
-      NS_ADDREF(*aPatternTransform);
-    } else {
-      rv = NS_NewSVGMatrix(aPatternTransform);
+      matrix = nsSVGUtils::ConvertSVGMatrixToThebes(patternTransform);
     }
   } else {
     // Yes, get it from the target
-    rv = mNextPattern->GetPatternTransform(aPatternTransform);
+    matrix = mNextPattern->GetPatternTransform();
   }
   mLoopFlag = PR_FALSE;
 
-  return rv;
+  return matrix;
 }
 
 NS_IMETHODIMP
@@ -696,18 +712,13 @@ nsSVGPatternFrame::ConstructCTM(nsIDOMSVGMatrix **aCTM,
   return NS_OK;
 }
 
-nsresult
-nsSVGPatternFrame::GetPatternMatrix(nsIDOMSVGMatrix **aCTM, 
-                                    nsIDOMSVGRect *bbox,
+gfxMatrix
+nsSVGPatternFrame::GetPatternMatrix(nsIDOMSVGRect *bbox,
                                     nsIDOMSVGRect *callerBBox,
                                     nsIDOMSVGMatrix *callerCTM)
 {
-  *aCTM = nsnull;
-
   // Get the pattern transform
-  nsCOMPtr<nsIDOMSVGMatrix> patternTransform;
-  nsresult rv = GetPatternTransform(getter_AddRefs(patternTransform));
-  NS_ENSURE_SUCCESS(rv, rv);
+  gfxMatrix patternTransform = GetPatternTransform();
 
   // We really want the pattern matrix to handle translations
   float minx, miny;
@@ -722,12 +733,11 @@ nsSVGPatternFrame::GetPatternMatrix(nsIDOMSVGMatrix **aCTM,
     minx += x;
     miny += y;
   }
-  nsCOMPtr<nsIDOMSVGMatrix> tCTM;
-  patternTransform->Translate(minx, miny, getter_AddRefs(tCTM));
+
+  patternTransform.Translate(gfxPoint(minx, miny));
 
   // Multiply in the caller's CTM to handle device coordinates
-  callerCTM->Multiply(tCTM, aCTM);
-  return NS_OK;
+  return patternTransform * nsSVGUtils::ConvertSVGMatrixToThebes(callerCTM);
 }
 
 nsresult
@@ -816,56 +826,39 @@ nsSVGPatternFrame::SetupPaintServer(gfxContext *aContext,
   if (aGraphicOpacity == 0.0f)
     return PR_FALSE;
 
-  cairo_t *ctx = aContext->GetCairo();
-
-  cairo_matrix_t matrix;
-  cairo_get_matrix(ctx, &matrix);
+  gfxMatrix matrix = aContext->CurrentMatrix();
 
   // Paint it!
-  cairo_surface_t *surface;
-  nsCOMPtr<nsIDOMSVGMatrix> pMatrix;
-  cairo_identity_matrix(ctx);
-  nsresult rv = PaintPattern(&surface, getter_AddRefs(pMatrix),
+  nsRefPtr<gfxASurface> surface;
+  gfxMatrix pMatrix;
+  aContext->IdentityMatrix();
+  nsresult rv = PaintPattern(getter_AddRefs(surface), &pMatrix,
                              aSource, aGraphicOpacity);
-  cairo_set_matrix(ctx, &matrix);
+  aContext->SetMatrix(matrix);
   if (NS_FAILED(rv)) {
-    cairo_surface_destroy(surface);
     return PR_FALSE;
   }
 
   // Translate the pattern frame
-  cairo_matrix_t pmatrix = nsSVGUtils::ConvertSVGMatrixToCairo(pMatrix);
-  cairo_matrix_invert(&matrix);
-  cairo_matrix_multiply(&pmatrix, &pmatrix, &matrix);
-  if (cairo_matrix_invert(&pmatrix)) {
-    cairo_surface_destroy(surface);
+  matrix.Invert();
+  pMatrix *= matrix;
+
+  if (pMatrix.IsSingular()) {
     return NS_ERROR_FAILURE;
   }
+  pMatrix.Invert();
 
-  cairo_pattern_t *surface_pattern =
-    cairo_pattern_create_for_surface(surface);
+  nsRefPtr<gfxPattern> pattern = new gfxPattern(surface);
 
-  // Decrease the surface reference count (pattern keeps a reference)
-  cairo_surface_destroy(surface);
-
-  if (!surface_pattern)
+  if (!pattern)
     return NS_ERROR_FAILURE;
 
-  cairo_pattern_set_matrix (surface_pattern, &pmatrix);
-  cairo_pattern_set_extend (surface_pattern, CAIRO_EXTEND_REPEAT);
+  pattern->SetMatrix(pMatrix);
+  pattern->SetExtend(gfxPattern::EXTEND_REPEAT);
 
-  cairo_set_source(ctx, surface_pattern);
-
-  *aClosure = surface_pattern;
+  aContext->SetPattern(pattern);
 
   return PR_TRUE;
-}
-
-void
-nsSVGPatternFrame::CleanupPaintServer(gfxContext *aContext, void *aClosure)
-{
-  cairo_pattern_t *pattern = NS_STATIC_CAST(cairo_pattern_t*, aClosure);
-  cairo_pattern_destroy(pattern);
 }
 
 // -------------------------------------------------------------------------
@@ -893,6 +886,12 @@ nsIFrame* NS_NewSVGPatternFrame(nsIPresShell*   aPresShell,
 }
 
 #ifdef DEBUG_scooter
+static void printCTM(char *msg, gfxMatrix aCTM)
+{
+  printf("%s {%f,%f,%f,%f,%f,%f}\n", msg,
+         aCTM.xx, aCTM.yx, aCTM.xy, aCTM.yy, aCTM.x0, aCTM.y0);
+}
+
 static void printCTM(char *msg, nsIDOMSVGMatrix *aCTM)
 {
   float a,b,c,d,e,f;

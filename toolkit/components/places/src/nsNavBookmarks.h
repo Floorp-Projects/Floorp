@@ -40,6 +40,7 @@
 #define nsNavBookmarks_h_
 
 #include "nsINavBookmarksService.h"
+#include "nsIAnnotationService.h"
 #include "nsIStringBundle.h"
 #include "nsITransaction.h"
 #include "nsNavHistory.h"
@@ -49,12 +50,14 @@
 class nsIOutputStream;
 
 class nsNavBookmarks : public nsINavBookmarksService,
-                       public nsINavHistoryObserver
+                       public nsINavHistoryObserver,
+                       public nsIAnnotationObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVBOOKMARKSSERVICE
   NS_DECL_NSINAVHISTORYOBSERVER
+  NS_DECL_NSIANNOTATIONOBSERVER
 
   nsNavBookmarks();
   nsresult Init();
@@ -101,16 +104,11 @@ public:
                                  const nsAString& title, const nsAString& type,
                                  PRInt32 aIndex, PRInt64* aNewFolder);
 
-  // Returns a statement to get information about a folder id
-  mozIStorageStatement* DBGetFolderInfo() { return mDBGetFolderInfo; }
-  // constants for the above statement
-  static const PRInt32 kGetFolderInfoIndex_FolderID;
-  static const PRInt32 kGetFolderInfoIndex_Title;
-  static const PRInt32 kGetFolderInfoIndex_Type;
-
   // Called by History service when quitting.
   nsresult OnQuit();
-  nsresult ArchiveBookmarksFile(PRInt32 aNumberOfBackups, PRBool aForceArchive);
+
+  nsresult BeginUpdateBatch();
+  nsresult EndUpdateBatch();
 
 private:
   static nsNavBookmarks *sInstance;
@@ -122,7 +120,7 @@ private:
   nsresult InitToolbarFolder();
   nsresult CreateRoot(mozIStorageStatement* aGetRootStatement,
                       const nsCString& name, PRInt64* aID,
-                      PRBool* aWasCreated);
+                      PRInt64 aParentID, PRBool* aWasCreated);
 
   nsresult AdjustIndices(PRInt64 aFolder,
                          PRInt32 aStartIndex, PRInt32 aEndIndex,
@@ -149,6 +147,9 @@ private:
   // the level of nesting of batches, 0 when no batches are open
   PRInt32 mBatchLevel;
 
+  // lock for RunInBatchMode
+  PRLock* mLock;
+
   // true if the outermost batch has an associated transaction that should
   // be committed when our batch level reaches 0 again.
   PRBool mBatchHasTransaction;
@@ -165,8 +166,6 @@ private:
                                      PRInt32* aIndex);
 
   nsresult IsBookmarkedInDatabase(PRInt64 aBookmarkID, PRBool* aIsBookmarked);
-
-  nsCOMPtr<mozIStorageStatement> mDBGetFolderInfo;    // kGetFolderInfoIndex_* results
 
   nsCOMPtr<mozIStorageStatement> mDBGetChildren;       // kGetInfoIndex_* results + kGetChildrenIndex_* results
   static const PRInt32 kGetChildrenIndex_Position;
@@ -185,16 +184,20 @@ private:
 
   nsCOMPtr<mozIStorageStatement> mDBFolderCount;
 
-  nsCOMPtr<mozIStorageStatement> mDBIndexOfFolder;
+  nsCOMPtr<mozIStorageStatement> mDBGetItemIndex;
   nsCOMPtr<mozIStorageStatement> mDBGetChildAt;
 
-  nsCOMPtr<mozIStorageStatement> mDBGetBookmarkProperties; // kGetBookmarkPropertiesIndex_*
-  static const PRInt32 kGetBookmarkPropertiesIndex_ID;
-  static const PRInt32 kGetBookmarkPropertiesIndex_URI;
-  static const PRInt32 kGetBookmarkPropertiesIndex_Title;
-  static const PRInt32 kGetBookmarkPropertiesIndex_Position;
-  static const PRInt32 kGetBookmarkPropertiesIndex_PlaceID;
-  static const PRInt32 kGetBookmarkPropertiesIndex_Parent;
+  nsCOMPtr<mozIStorageStatement> mDBGetItemProperties; // kGetItemPropertiesIndex_*
+  static const PRInt32 kGetItemPropertiesIndex_ID;
+  static const PRInt32 kGetItemPropertiesIndex_URI; // null for folders and separators
+  static const PRInt32 kGetItemPropertiesIndex_Title;
+  static const PRInt32 kGetItemPropertiesIndex_Position;
+  static const PRInt32 kGetItemPropertiesIndex_PlaceID;
+  static const PRInt32 kGetItemPropertiesIndex_Parent;
+  static const PRInt32 kGetItemPropertiesIndex_Type;
+  static const PRInt32 kGetItemPropertiesIndex_FolderType;
+  static const PRInt32 kGetItemPropertiesIndex_DateAdded;
+  static const PRInt32 kGetItemPropertiesIndex_LastModified;
 
   nsCOMPtr<mozIStorageStatement> mDBGetRedirectDestinations;
 
@@ -256,23 +259,6 @@ private:
     nsCString mType;
     PRInt32 mIndex;
   };
-
-  // in nsBookmarksHTML
-  nsresult ImportBookmarksHTMLInternal(nsIURI* aURL,
-                                       PRBool aAllowRootChanges,
-                                       PRInt64 aFolder,
-                                       PRBool aIsImportDefaults);
-  nsresult WriteItem(nsNavHistoryResultNode* aItem, const nsCString& aIndent,
-                     nsIOutputStream* aOutput);
-  nsresult WriteContainer(PRInt64 aFolder, const nsCString& aIndent,
-                          nsIOutputStream* aOutput);
-  nsresult WriteContainerHeader(PRInt64 aFolder, const nsCString& aIndent,
-                                nsIOutputStream* aOutput);
-  nsresult WriteContainerTitle(PRInt64 aFolder, nsIOutputStream* aOutput);
-  nsresult WriteLivemark(PRInt64 aFolderId, const nsCString& aIndent,
-                         nsIOutputStream* aOutput);
-  nsresult WriteContainerContents(PRInt64 aFolder, const nsCString& aIndent,
-                                  nsIOutputStream* aOutput);
 };
 
 struct nsBookmarksUpdateBatcher

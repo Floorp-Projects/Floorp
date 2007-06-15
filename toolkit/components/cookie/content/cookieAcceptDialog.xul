@@ -57,7 +57,7 @@
     buttons="disclosure"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script src="cookieAcceptDialog.js" type="application/x-javascript"/>
+  <script src="cookieAcceptDialog.js" type="application/javascript"/>
   <stringbundle id="cookieBundle"
                 src="chrome://cookie/locale/cookieAcceptDialog.properties"/>
  

@@ -78,7 +78,3 @@
 <!ENTITY integer.accesskey "I">
 <!ENTITY boolean.label "Boolean">
 <!ENTITY boolean.accesskey "B">
-<!ENTITY lock.label "Lock">
-<!ENTITY lock.accesskey "L">
-<!ENTITY unlock.label "Unlock">
-<!ENTITY unlock.accesskey "U">

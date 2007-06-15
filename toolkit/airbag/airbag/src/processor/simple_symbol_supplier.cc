@@ -41,6 +41,7 @@
 #include "processor/simple_symbol_supplier.h"
 #include "google_breakpad/processor/code_module.h"
 #include "google_breakpad/processor/system_info.h"
+#include "processor/logging.h"
 #include "processor/pathname_stripper.h"
 
 namespace google_breakpad {
@@ -53,7 +54,11 @@ static bool file_exists(const string &file_name) {
 SymbolSupplier::SymbolResult SimpleSymbolSupplier::GetSymbolFile(
     const CodeModule *module, const SystemInfo *system_info,
     string *symbol_file) {
+  BPLOG_IF(ERROR, !symbol_file) << "SimpleSymbolSupplier::GetSymbolFile "
+                                   "requires |symbol_file|";
   assert(symbol_file);
+  symbol_file->clear();
+
   for (unsigned int path_index = 0; path_index < paths_.size(); ++path_index) {
     SymbolResult result;
     if ((result = GetSymbolFileAtPath(module, system_info, paths_[path_index],
@@ -67,7 +72,11 @@ SymbolSupplier::SymbolResult SimpleSymbolSupplier::GetSymbolFile(
 SymbolSupplier::SymbolResult SimpleSymbolSupplier::GetSymbolFileAtPath(
     const CodeModule *module, const SystemInfo *system_info,
     const string &root_path, string *symbol_file) {
+  BPLOG_IF(ERROR, !symbol_file) << "SimpleSymbolSupplier::GetSymbolFileAtPath "
+                                   "requires |symbol_file|";
   assert(symbol_file);
+  symbol_file->clear();
+
   if (!module)
     return NOT_FOUND;
 
@@ -77,15 +86,24 @@ SymbolSupplier::SymbolResult SimpleSymbolSupplier::GetSymbolFileAtPath(
   // Append the debug (pdb) file name as a directory name.
   path.append("/");
   string debug_file_name = PathnameStripper::File(module->debug_file());
-  if (debug_file_name.empty())
+  if (debug_file_name.empty()) {
+    BPLOG(ERROR) << "Can't construct symbol file path without debug_file "
+                    "(code_file = " <<
+                    PathnameStripper::File(module->code_file()) << ")";
     return NOT_FOUND;
+  }
   path.append(debug_file_name);
 
   // Append the identifier as a directory name.
   path.append("/");
   string identifier = module->debug_identifier();
-  if (identifier.empty())
+  if (identifier.empty()) {
+    BPLOG(ERROR) << "Can't construct symbol file path without debug_identifier "
+                    "(code_file = " <<
+                    PathnameStripper::File(module->code_file()) <<
+                    ", debug_file = " << debug_file_name << ")";
     return NOT_FOUND;
+  }
   path.append(identifier);
 
   // Transform the debug file name into one ending in .sym.  If the existing
@@ -103,8 +121,10 @@ SymbolSupplier::SymbolResult SimpleSymbolSupplier::GetSymbolFileAtPath(
   }
   path.append(".sym");
 
-  if (!file_exists(path))
+  if (!file_exists(path)) {
+    BPLOG(INFO) << "No symbol file at " << path;
     return NOT_FOUND;
+  }
 
   *symbol_file = path;
   return FOUND;

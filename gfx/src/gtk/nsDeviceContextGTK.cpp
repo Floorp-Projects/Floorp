@@ -51,19 +51,11 @@
 #include "nsGfxPSCID.h"
 #include "nsIDeviceContextPS.h"
 #endif /* USE_POSTSCRIPT */
-#ifdef USE_XPRINT
-#include "nsGfxXPrintCID.h"
-#include "nsIDeviceContextXPrint.h"
-#endif /* USE_XPRINT */
 
 #include "nsFontMetricsUtils.h"
 
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
-
-#ifdef MOZ_WIDGET_GTK
-#include "gdksuperwin.h"
-#endif /* MOZ_WIDGET_GTK */
 
 #ifdef MOZ_WIDGET_GTK2
 #include <pango/pango.h>
@@ -87,11 +79,6 @@ static PRInt32 GetOSDPI(void);
 
 #define GDK_DEFAULT_FONT1 "-*-helvetica-medium-r-*--*-120-*-*-*-*-iso8859-1"
 #define GDK_DEFAULT_FONT2 "-*-fixed-medium-r-*-*-*-120-*-*-*-*-*-*"
-
-#ifdef MOZ_WIDGET_GTK
-// this is specific to gtk 1.2
-extern NS_IMPORT_(GdkFont *) default_font;
-#endif /* MOZ_WIDGET_GTK */
 
 /**
  * A singleton instance of nsSystemFontsGTK is created by the first
@@ -179,25 +166,6 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   if (!mScreenManager) {
     return NS_ERROR_FAILURE;
   }
-
-#ifdef MOZ_WIDGET_GTK
-
-  if (aNativeWidget) {
-    // superwin?
-    if (GDK_IS_SUPERWIN(aNativeWidget)) {
-      mDeviceWindow = GDK_SUPERWIN(aNativeWidget)->shell_window;
-    }
-    // gtk widget?
-    else if (GTK_IS_WIDGET(aNativeWidget)) {
-      mDeviceWindow = GTK_WIDGET(aNativeWidget)->window;
-    }
-    // must be a bin_window
-    else {
-      mDeviceWindow = NS_STATIC_CAST(GdkWindow *, aNativeWidget);
-    }
-  }
-
-#endif /* MOZ_WIDGET_GTK */
 
 #ifdef MOZ_WIDGET_GTK2
 
@@ -502,29 +470,6 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDev
   if (NS_FAILED(rv)) 
     return rv;
 
-#ifdef USE_XPRINT
-  if (method == pmXprint) { // XPRINT
-    static NS_DEFINE_CID(kCDeviceContextXp, NS_DEVICECONTEXTXP_CID);
-    nsCOMPtr<nsIDeviceContextXp> dcxp(do_CreateInstance(kCDeviceContextXp, &rv));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create Xp Device context.");    
-    if (NS_FAILED(rv)) 
-      return NS_ERROR_GFX_COULD_NOT_LOAD_PRINT_MODULE;
-    
-    rv = dcxp->SetSpec(aDevice);
-    if (NS_FAILED(rv)) 
-      return rv;
-    
-    rv = dcxp->InitDeviceContextXP((nsIDeviceContext*)aContext,
-                                   (nsIDeviceContext*)this);
-    if (NS_FAILED(rv)) 
-      return rv;
-      
-    rv = dcxp->QueryInterface(NS_GET_IID(nsIDeviceContext),
-                              (void **)&aContext);
-    return rv;
-  }
-  else
-#endif /* USE_XPRINT */
 #endif
 #ifdef USE_POSTSCRIPT
 //  if (method == pmPostScript) // PostScript
@@ -757,7 +702,7 @@ ListFontProps(XFontStruct *aFont, Display *aDisplay)
 }
 #endif
 
-#if defined(MOZ_ENABLE_COREXFONTS) || defined(MOZ_WIDGET_GTK)
+#if defined(MOZ_ENABLE_COREXFONTS)
 
 #define LOCATE_MINUS(pos, str)  { \
    pos = str.FindChar('-'); \
@@ -798,134 +743,7 @@ AppendFontFFREName(nsString& aString, const char* aXLFDName)
 
   aString.AppendWithConversion(nameStr.get());
 }
-#endif /* MOZ_ENABLE_COREXFONTS || MOZ_WIDGET_GTK*/
-
-#ifdef MOZ_WIDGET_GTK
-static void
-AppendFontName(XFontStruct* aFontStruct, nsString& aString, Display *aDisplay)
-{
-  unsigned long pr = 0;
-  // we first append the FFRE name to reconstruct font more faithfully
-  unsigned long font_atom = gdk_atom_intern("FONT", FALSE);
-  if (::XGetFontProperty(aFontStruct, font_atom, &pr) && pr) {
-    char* xlfdName = ::XGetAtomName(aDisplay, pr);
-    AppendFontFFREName(aString, xlfdName);
-    ::XFree(xlfdName);
-  }
- 
-  aString.Append(PRUnichar(','));
-
-  // next, we need to append family name to cover more encodings.
-  if ((::XGetFontProperty(aFontStruct, XA_FAMILY_NAME, &pr) ||
-       ::XGetFontProperty(aFontStruct, XA_FULL_NAME, &pr)) &&
-      pr) {
-    char *fontName = ::XGetAtomName(aDisplay, pr);
-    aString.AppendWithConversion(fontName);
-    ::XFree(fontName);
-  }
-}
-
-static PRUint16
-GetFontWeight(XFontStruct* aFontStruct, Display *aDisplay)
-{
-  PRUint16 weight = NS_FONT_WEIGHT_NORMAL;
-
-  // WEIGHT_NAME seems more reliable than WEIGHT, where 10 can mean
-  // anything.  Check both, and make it bold if either says so.
-  unsigned long pr = 0;
-  Atom weightName = ::XInternAtom(aDisplay, "WEIGHT_NAME", True);
-  if (weightName != None) {
-    if (::XGetFontProperty(aFontStruct, weightName, &pr) && pr) {
-      char *weightString = ::XGetAtomName(aDisplay, pr);
-      if (nsCRT::strcasecmp(weightString, "bold") == 0)
-        weight = NS_FONT_WEIGHT_BOLD;
-      ::XFree(weightString);
-    }
-  }
-
-  pr = 0;
-  if (::XGetFontProperty(aFontStruct, XA_WEIGHT, &pr) && pr > 10 )
-    weight = NS_FONT_WEIGHT_BOLD;
-
-  return weight;
-}
-
-static nscoord
-GetFontSize(XFontStruct *aFontStruct, float aPixelsToTwips)
-{
-  unsigned long pr = 0;
-  Atom pixelSizeAtom = ::XInternAtom(GDK_DISPLAY(), "PIXEL_SIZE", 0);
-  if (!::XGetFontProperty(aFontStruct, pixelSizeAtom, &pr) || !pr)
-    return DEFAULT_TWIP_FONT_SIZE;
-  return NSIntPixelsToTwips(pr, aPixelsToTwips);
-}
-
-nsresult
-nsSystemFontsGTK::GetSystemFontInfo(GtkWidget *aWidget, nsFont* aFont,
-                                    float aPixelsToTwips) const
-{
-  GtkStyle *style = gtk_widget_get_style(aWidget);
-
-  GdkFont *theFont = style->font;
-
-  aFont->style       = NS_FONT_STYLE_NORMAL;
-  aFont->weight      = NS_FONT_WEIGHT_NORMAL;
-  aFont->decorations = NS_FONT_DECORATION_NONE;
-  
-  // do we have the default_font defined by GTK/GDK then
-  // we use it, if not then we load helvetica, if not then
-  // we load fixed font else we error out.
-  if (!theFont)
-    theFont = default_font; // GTK default font
-
-  if (!theFont)
-    theFont = ::gdk_font_load( GDK_DEFAULT_FONT1 );
-  
-  if (!theFont)
-    theFont = ::gdk_font_load( GDK_DEFAULT_FONT2 );
-  
-  if (!theFont)
-    return NS_ERROR_FAILURE;
-
-  Display *fontDisplay = GDK_FONT_XDISPLAY(theFont);
-  if (theFont->type == GDK_FONT_FONT) {
-    XFontStruct *fontStruct =
-        NS_STATIC_CAST(XFontStruct*, GDK_FONT_XFONT(theFont));
-
-    aFont->name.Truncate();
-    AppendFontName(fontStruct, aFont->name, fontDisplay);
-    aFont->weight = GetFontWeight(fontStruct, fontDisplay);
-    aFont->size = GetFontSize(fontStruct, aPixelsToTwips);
-  } else {
-    NS_ASSERTION(theFont->type == GDK_FONT_FONTSET,
-                 "theFont->type can only have two values");
-
-    XFontSet fontSet = NS_REINTERPRET_CAST(XFontSet, GDK_FONT_XFONT(theFont));
-    XFontStruct **fontStructs;
-    char **fontNames;
-    int numFonts = ::XFontsOfFontSet(fontSet, &fontStructs, &fontNames);
-    if (numFonts == 0)
-      return NS_ERROR_FAILURE;
-
-    // Use the weight and size from the first font, but append all
-    // the names.
-    aFont->weight = GetFontWeight(*fontStructs, fontDisplay);
-    aFont->size = GetFontSize(*fontStructs, aPixelsToTwips);
-    nsString& fontName = aFont->name;
-    fontName.Truncate();
-    for (;;) {
-      // we need to append FFRE name instead of family name in this case
-      AppendFontFFREName(fontName, *fontNames);
-      ++fontNames;
-      --numFonts;
-      if (numFonts == 0)
-        break;
-      fontName.Append(PRUnichar(','));
-    }
-  }
-  return NS_OK;
-}
-#endif /* MOZ_WIDGET_GTK */
+#endif /* MOZ_ENABLE_COREXFONTS */
 
 #ifdef MOZ_WIDGET_GTK2
 
@@ -989,27 +807,6 @@ nsSystemFontsGTK::GetSystemFontInfo(GtkWidget *aWidget, nsFont* aFont,
   return NS_OK;
 }
 #endif /* MOZ_WIDGET_GTK2 */
-
-#ifdef MOZ_WIDGET_GTK
-/* static */
-PRInt32
-GetOSDPI(void)
-{
-
-#ifdef MOZ_ENABLE_XFT
-  // try to get it from xft
-  if (NS_IsXftEnabled()) {
-    PRInt32 xftdpi = GetXftDPI();
-    if (xftdpi)
-      return xftdpi;
-  }
-#endif /* MOZ_ENABLE_XFT */
-
-  // Set OSVal to what the operating system thinks the logical resolution is.
-  float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
-  return NSToCoordRound(float(::gdk_screen_width()) / screenWidthIn);
-}
-#endif /* MOZ_WIDGET_GTK */
 
 #ifdef MOZ_WIDGET_GTK2
 /* static */

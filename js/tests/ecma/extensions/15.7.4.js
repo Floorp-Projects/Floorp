@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.7.4.js';
+
 /**
    File Name:          15.7.4.js
    ECMA Section:       15.7.4
@@ -71,14 +73,14 @@ new TestCase( SECTION,
 	      "[object Number]",
 	      eval("Number.prototype.toString=Object.prototype.toString;Number.prototype.toString()") );
 
-new TestCase( SECTION, 
-	      "typeof Number.prototype",   
-	      "object", 
+new TestCase( SECTION,
+	      "typeof Number.prototype",  
+	      "object",
 	      typeof Number.prototype );
 
 new TestCase( SECTION,
-	      "Number.prototype.valueOf()",  
-	      0, 
+	      "Number.prototype.valueOf()", 
+	      0,
 	      Number.prototype.valueOf() );
 
 //    The __proto__ property cannot be used in ECMA_1 tests.

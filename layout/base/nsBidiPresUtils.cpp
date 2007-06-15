@@ -485,7 +485,6 @@ nsBidiPresUtils::InitLogicalArray(nsPresContext* aPresContext,
                                   PRBool          aAddMarkers)
 {
   nsIFrame*             frame;
-  nsIFrame*             directionalFrame;
   nsresult              res = NS_OK;
 
   nsIPresShell* shell = aPresContext->PresShell();
@@ -494,11 +493,10 @@ nsBidiPresUtils::InitLogicalArray(nsPresContext* aPresContext,
   for (frame = aCurrentFrame;
        frame && frame != aNextInFlow;
        frame = frame->GetNextSibling()) {
-    directionalFrame = nsnull;
 
+    PRUnichar ch = 0;
     if (aAddMarkers &&
-        frame->IsFrameOfType(nsIFrame::eBidiInlineContainer) &&
-        !frame->GetPrevContinuation()) {
+        frame->IsFrameOfType(nsIFrame::eBidiInlineContainer)) {
       const nsStyleVisibility* vis = frame->GetStyleVisibility();
       const nsStyleTextReset* text = frame->GetStyleTextReset();
       switch (text->mUnicodeBidi) {
@@ -508,28 +506,31 @@ nsBidiPresUtils::InitLogicalArray(nsPresContext* aPresContext,
           styleContext = frame->GetStyleContext();
 
           if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
-            directionalFrame = NS_NewDirectionalFrame(shell, styleContext, kRLE);
+            ch = kRLE;
           }
           else if (NS_STYLE_DIRECTION_LTR == vis->mDirection) {
-            directionalFrame = NS_NewDirectionalFrame(shell, styleContext, kLRE);
+            ch = kLRE;
           }
           break;
         case NS_STYLE_UNICODE_BIDI_OVERRIDE:
           styleContext = frame->GetStyleContext();
 
           if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
-            directionalFrame = NS_NewDirectionalFrame(shell, styleContext, kRLO);
+            ch = kRLO;
           }
           else if (NS_STYLE_DIRECTION_LTR == vis->mDirection) {
-            directionalFrame = NS_NewDirectionalFrame(shell, styleContext, kLRO);
+            ch = kLRO;
           }
           break;
       }
 
       // Create a directional frame before the first frame of an
       // element specifying embedding or override
-      if (directionalFrame) {
-        mLogicalFrames.AppendElement(directionalFrame);
+      if (ch != 0 && !frame->GetPrevContinuation()) {
+        nsIFrame* dirFrame = NS_NewDirectionalFrame(shell, styleContext, ch);
+        if (dirFrame) {
+          mLogicalFrames.AppendElement(dirFrame);
+        }
       }
     }
 
@@ -551,13 +552,12 @@ nsBidiPresUtils::InitLogicalArray(nsPresContext* aPresContext,
     }
 
     // If the element is attributed by dir, indicate direction pop (add PDF frame)
-    if (directionalFrame && !frame->GetNextContinuation()) {
-      directionalFrame = NS_NewDirectionalFrame(shell, styleContext, kPDF);
-   
+    if (ch != 0 && !frame->GetNextContinuation()) {
       // Create a directional frame after the last frame of an
       // element specifying embedding or override
-      if (directionalFrame) {
-        mLogicalFrames.AppendElement(directionalFrame);
+      nsIFrame* dirFrame = NS_NewDirectionalFrame(shell, styleContext, kPDF);
+      if (dirFrame) {
+        mLogicalFrames.AppendElement(dirFrame);
       }
     }
   } // for
@@ -1344,7 +1344,7 @@ nsresult nsBidiPresUtils::ProcessText(const PRUnichar*       aText,
 
   PRInt32 runCount;
 
-  mBuffer.Assign(aText);
+  mBuffer.Assign(aText, aLength);
 
   nsresult rv = mBidiEngine->SetPara(mBuffer.get(), aLength, aBaseDirection, nsnull);
   if (NS_FAILED(rv))

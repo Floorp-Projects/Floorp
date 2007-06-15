@@ -30,7 +30,23 @@ in this Software without prior written authorization from The Open Group.
 #include "def.h"
 
 #ifdef _MSC_VER
-#define S_ISDIR(m) (((m) & _S_IFDIR) == _S_IFDIR)
+#include <windows.h>
+static int
+does_file_exist(char *file)
+{
+  WIN32_FILE_ATTRIBUTE_DATA data;
+  BOOL b = GetFileAttributesExA(file, GetFileExInfoStandard, &data);
+  if (!b)
+    return 0;
+  return (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
+}
+#else
+static int
+does_file_exist(char *file)
+{
+  struct stat sb;
+  return stat(file, &sb) == 0 && !S_ISDIR(sb.st_mode);
+}
 #endif
 
 extern struct	inclist	inclist[ MAXFILES ],
@@ -244,7 +260,6 @@ inc_path(char *file, char *include, int type)
 	static char		path[ BUFSIZ ];
 	register char		**pp, *p;
 	register struct inclist	*ip;
-	struct stat		st;
 
 	/*
 	 * Check all previously found include files for a path that
@@ -270,7 +285,7 @@ inc_path(char *file, char *include, int type)
 		if ((type == INCLUDEDOT) ||
 		    (type == INCLUDENEXTDOT) ||
 		    (*include == '/')) {
-			if (stat(include, &st) == 0 && !S_ISDIR(st.st_mode))
+			if (does_file_exist(include))
 				return newinclude(include, include);
 			if (show_where_not)
 				warning1("\tnot in %s\n", include);
@@ -292,7 +307,7 @@ inc_path(char *file, char *include, int type)
 				strcpy(path + (p-file) + 1, include);
 			}
 			remove_dotdot(path);
-			if (stat(path, &st) == 0 && !S_ISDIR(st.st_mode))
+			if (does_file_exist(path))
 				return newinclude(path, include);
 			if (show_where_not)
 				warning1("\tnot in %s\n", path);
@@ -310,7 +325,7 @@ inc_path(char *file, char *include, int type)
 	for (; *pp; pp++) {
 		sprintf(path, "%s/%s", *pp, include);
 		remove_dotdot(path);
-		if (stat(path, &st) == 0 && !S_ISDIR(st.st_mode)) {
+		if (does_file_exist(path)) {
 			includedirsnext = pp + 1;
 			return newinclude(path, include);
 		}

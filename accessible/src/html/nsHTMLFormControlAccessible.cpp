@@ -42,6 +42,7 @@
 #include "nsHTMLFormControlAccessible.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsIDOMNSHTMLButtonElement.h"
 #include "nsIDOMHTMLFormElement.h"
@@ -102,6 +103,8 @@ nsHTMLCheckboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   nsresult rv = nsFormControlAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  *aState |= nsIAccessibleStates::STATE_CHECKABLE;
+
   PRBool checked = PR_FALSE;   // Radio buttons and check boxes can be checked
 
   nsCOMPtr<nsIDOMHTMLInputElement> htmlCheckboxElement(do_QueryInterface(mDOMNode));
@@ -127,6 +130,8 @@ nsHTMLRadioButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   nsresult rv = nsAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  *aState |= nsIAccessibleStates::STATE_CHECKABLE;
+  
   PRBool checked = PR_FALSE;   // Radio buttons and check boxes can be checked
 
   nsCOMPtr<nsIDOMHTMLInputElement> htmlRadioElement(do_QueryInterface(mDOMNode));
@@ -211,7 +216,7 @@ nsHTMLRadioButtonAccessible::GetAttributesInternal(nsIPersistentProperties *aAtt
 // ----- Button -----
 
 nsHTMLButtonAccessible::nsHTMLButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsHyperTextAccessible(aNode, aShell)
+nsHyperTextAccessibleWrap(aNode, aShell)
 { 
 }
 
@@ -244,7 +249,7 @@ nsHTMLButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
 
-  nsresult rv = nsHyperTextAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString buttonType;
@@ -307,7 +312,7 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetName(nsAString& aName)
 // ----- HTML 4 Button: can contain arbitrary HTML content -----
 
 nsHTML4ButtonAccessible::nsHTML4ButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsHyperTextAccessible(aNode, aShell)
+nsHyperTextAccessibleWrap(aNode, aShell)
 { 
 }
 
@@ -346,7 +351,7 @@ nsHTML4ButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);  // Button accessible shut down
 
-  nsresult rv = nsHyperTextAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
@@ -362,17 +367,17 @@ nsHTML4ButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 // --- textfield -----
 
 nsHTMLTextFieldAccessible::nsHTMLTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsHyperTextAccessible(aNode, aShell)
+nsHyperTextAccessibleWrap(aNode, aShell)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTextFieldAccessible, nsHyperTextAccessible,
+NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTextFieldAccessible, nsHyperTextAccessibleWrap,
                              nsIAccessibleText)
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::Init()
 {
   CheckForEditor();
-  return nsHyperTextAccessible::Init();
+  return nsHyperTextAccessibleWrap::Init();
 }
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::Shutdown()
@@ -381,7 +386,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::Shutdown()
     mEditor->RemoveEditActionListener(this);
     mEditor = nsnull;
   }
-  return nsHyperTextAccessible::Shutdown();
+  return nsHyperTextAccessibleWrap::Shutdown();
 }
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetRole(PRUint32 *aRole)
@@ -394,6 +399,26 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetRole(PRUint32 *aRole)
     *aRole = nsIAccessibleRole::ROLE_PASSWORD_TEXT;
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLTextFieldAccessible::GetName(nsAString& aName)
+{
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+  if (!content) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = GetHTMLName(aName, PR_FALSE);
+  if (NS_FAILED(rv) || !aName.IsEmpty() || !content->GetBindingParent()) {
+    return rv;
+  }
+
+  // There's a binding parent.
+  // This means we're part of another control, so use parent accessible for name.
+  // This ensures that a textbox inside of a XUL widget gets
+  // an accessible name.
+  nsCOMPtr<nsIAccessible> parent;
+  rv = GetParent(getter_AddRefs(parent));
+  return parent ? parent->GetName(aName) : rv;
 }
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetValue(nsAString& _retval)
@@ -419,7 +444,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetValue(nsAString& _retval)
 NS_IMETHODIMP
 nsHTMLTextFieldAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsHyperTextAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // can be focusable, focused, protected. readonly, unavailable, selected
@@ -447,8 +472,12 @@ nsHTMLTextFieldAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 
   nsCOMPtr<nsIDOMHTMLInputElement> htmlInput(do_QueryInterface(mDOMNode));
   // Is it an <input> or a <textarea> ?
-  *aExtraState |= htmlInput ? nsIAccessibleStates::EXT_STATE_SINGLE_LINE :
-                              nsIAccessibleStates::EXT_STATE_MULTI_LINE;
+  if (htmlInput) {
+    *aExtraState |= nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
+  }
+  else {
+    *aExtraState |= nsIAccessibleStates::EXT_STATE_MULTI_LINE;
+  }
 
   nsCOMPtr<nsIContent> bindingContent = content->GetBindingParent();
   if (bindingContent &&
@@ -506,11 +535,9 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetActionName(PRUint8 aIndex, nsAString
 NS_IMETHODIMP nsHTMLTextFieldAccessible::DoAction(PRUint8 index)
 {
   if (index == 0) {
-    nsCOMPtr<nsIDOMHTMLInputElement> element(do_QueryInterface(mDOMNode));
-    if ( element )
-    {
-      element->Focus();
-      return NS_OK;
+    nsCOMPtr<nsIDOMNSHTMLElement> element(do_QueryInterface(mDOMNode));
+    if ( element ) {
+      return element->Focus();
     }
     return NS_ERROR_FAILURE;
   }

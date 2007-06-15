@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -178,10 +179,10 @@ public:
   // 2. If the MathML frame class has cached automatic data that depends on
   //    the attribute:
   //    2a. If the automatic data to update resides only within the descendants,
-  //        we just re-layout them using ReLayoutChildren(aPresContext, this);
+  //        we just re-layout them using ReLayoutChildren(this);
   //        (e.g., this happens with <ms>).
   //    2b. If the automatic data to update affects us in some way, we ask our parent
-  //        to re-layout its children using ReLayoutChildren(aPresContext, mParent);
+  //        to re-layout its children using ReLayoutChildren(mParent);
   //        Therefore, there is an overhead here in that our siblings are re-laid
   //        too (e.g., this happens with <mstyle>, <munder>, <mover>, <munderover>). 
   NS_IMETHOD
@@ -301,8 +302,10 @@ public:
   // method re-builds the automatic data in the children -- not in the parent
   // frame itself (except for those particular operations that the parent frame
   // may do do its TransmitAutomaticData()). @see RebuildAutomaticDataForChildren
+  //
+  // aBits are the bits to pass to FrameNeedsReflow() when we call it.
   static nsresult
-  ReLayoutChildren(nsIFrame* aParentFrame);
+  ReLayoutChildren(nsIFrame* aParentFrame, nsFrameState aBits);
 
 protected:
   virtual PRIntn GetSkipSides() const { return 0; }
@@ -361,7 +364,8 @@ public:
   {
     NS_ASSERTION(!aListName, "internal error");
     nsresult rv = nsBlockFrame::AppendFrames(aListName, aFrameList);
-    nsMathMLContainerFrame::ReLayoutChildren(this);
+    nsMathMLContainerFrame::ReLayoutChildren(this,
+                                             NS_FRAME_HAS_DIRTY_CHILDREN);
     return rv;
   }
 
@@ -372,7 +376,8 @@ public:
   {
     NS_ASSERTION(!aListName, "internal error");
     nsresult rv = nsBlockFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
-    nsMathMLContainerFrame::ReLayoutChildren(this);
+    nsMathMLContainerFrame::ReLayoutChildren(this,
+                                             NS_FRAME_HAS_DIRTY_CHILDREN);
     return rv;
   }
 
@@ -382,7 +387,8 @@ public:
   {
     NS_ASSERTION(!aListName, "internal error");
     nsresult rv = nsBlockFrame::RemoveFrame(aListName, aOldFrame);
-    nsMathMLContainerFrame::ReLayoutChildren(this);
+    nsMathMLContainerFrame::ReLayoutChildren(this,
+                                             NS_FRAME_HAS_DIRTY_CHILDREN);
     return rv;
   }
 
@@ -444,7 +450,8 @@ public:
   {
     NS_ASSERTION(!aListName, "internal error");
     nsresult rv = nsInlineFrame::AppendFrames(aListName, aFrameList);
-    nsMathMLContainerFrame::ReLayoutChildren(this);
+    nsMathMLContainerFrame::ReLayoutChildren(this,
+                                             NS_FRAME_HAS_DIRTY_CHILDREN);
     return rv;
   }
 
@@ -455,7 +462,8 @@ public:
   {
     NS_ASSERTION(!aListName, "internal error");
     nsresult rv = nsInlineFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
-    nsMathMLContainerFrame::ReLayoutChildren(this);
+    nsMathMLContainerFrame::ReLayoutChildren(this,
+                                             NS_FRAME_HAS_DIRTY_CHILDREN);
     return rv;
   }
 
@@ -465,14 +473,12 @@ public:
   {
     NS_ASSERTION(!aListName, "internal error");
     nsresult rv = nsInlineFrame::RemoveFrame(aListName, aOldFrame);
-    nsMathMLContainerFrame::ReLayoutChildren(this);
+    nsMathMLContainerFrame::ReLayoutChildren(this,
+                                             NS_FRAME_HAS_DIRTY_CHILDREN);
     return rv;
   }
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const {
-    // Override nsInlineFrame.   XXX Should we really?
-    if (aFlags & (nsIFrame::eBidiInlineContainer))
-      return PR_FALSE;
     return nsInlineFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
   }
 

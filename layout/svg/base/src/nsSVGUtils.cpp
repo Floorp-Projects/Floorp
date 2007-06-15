@@ -73,7 +73,6 @@
 #include "nsAttrValue.h"
 #include "nsSVGGeometryFrame.h"
 #include "nsIScriptError.h"
-#include "cairo.h"
 #include "gfxContext.h"
 #include "gfxMatrix.h"
 #include "gfxRect.h"
@@ -81,6 +80,7 @@
 #include "gfxMatrix.h"
 #include "nsStubMutationObserver.h"
 #include "gfxPlatform.h"
+#include "nsSVGForeignObjectFrame.h"
 
 class nsSVGPropertyBase : public nsStubMutationObserver {
 public:
@@ -91,15 +91,10 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIMutationObserver
-  virtual void AttributeChanged(nsIDocument* aDocument, nsIContent* aContent,
-                                PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                                PRInt32 aModType);
-  virtual void ContentAppended(nsIDocument* aDocument, nsIContent* aContainer,
-                               PRInt32 aNewIndexInContainer);
-  virtual void ContentInserted(nsIDocument* aDocument, nsIContent* aContainer,
-                               nsIContent* aChild, PRInt32 aIndexInContainer);
-  virtual void ContentRemoved(nsIDocument* aDocument, nsIContent* aContainer,
-                              nsIContent* aChild, PRInt32 aIndexInContainer);
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
 protected:
   virtual void DoUpdate() = 0;
@@ -176,9 +171,10 @@ public:
 
   nsRect GetRect() { return mFilterRect; }
   nsSVGFilterFrame *GetFilterFrame();
+  void UpdateRect();
 
   // nsIMutationObserver
-  virtual void ParentChainChanged(nsIContent *aContent);
+  NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED
 
 private:
   // nsSVGPropertyBase
@@ -213,16 +209,21 @@ nsSVGFilterProperty::GetFilterFrame()
 }
 
 void
+nsSVGFilterProperty::UpdateRect()
+{
+  nsSVGFilterFrame *filter = GetFilterFrame();
+  if (filter)
+    mFilterRect = filter->GetInvalidationRegion(mFrame);
+}
+
+void
 nsSVGFilterProperty::DoUpdate()
 {
   nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(mFrame);
   if (outerSVGFrame) {
     outerSVGFrame->InvalidateRect(mFilterRect);
-    nsSVGFilterFrame *filter = GetFilterFrame();
-    if (filter) {
-      mFilterRect = filter->GetInvalidationRegion(mFrame);
-      outerSVGFrame->InvalidateRect(mFilterRect);
-    }
+    UpdateRect();
+    outerSVGFrame->InvalidateRect(mFilterRect);
   }
 }
 
@@ -252,7 +253,7 @@ public:
   nsSVGClipPathFrame *GetClipPathFrame();
 
   // nsIMutationObserver
-  virtual void ParentChainChanged(nsIContent *aContent);
+  NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED
 
 private:
   virtual void DoUpdate();
@@ -311,7 +312,7 @@ public:
   nsSVGMaskFrame *GetMaskFrame();
 
   // nsIMutationObserver
-  virtual void ParentChainChanged(nsIContent *aContent);
+  NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED
 
 private:
   virtual void DoUpdate();
@@ -356,7 +357,6 @@ nsSVGMaskProperty::ParentChainChanged(nsIContent *aContent)
   mFrame->DeleteProperty(nsGkAtoms::mask);
 }
 
-cairo_surface_t *nsSVGUtils::mCairoComputationalSurface = nsnull;
 gfxASurface     *nsSVGUtils::mThebesComputationalSurface = nsnull;
 
 // c = n / 255
@@ -701,6 +701,17 @@ nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame)
   return rect;
 }
 
+void
+nsSVGUtils::UpdateFilterRegion(nsIFrame *aFrame)
+{
+  if (aFrame->GetStateBits() & NS_STATE_SVG_FILTERED) {
+    nsSVGFilterProperty *property;
+    property = NS_STATIC_CAST(nsSVGFilterProperty *,
+                              aFrame->GetProperty(nsGkAtoms::filter));
+    property->UpdateRect();
+  }
+}
+
 float
 nsSVGUtils::ObjectSpace(nsIDOMSVGRect *aRect, nsSVGLength2 *aLength)
 {
@@ -783,6 +794,17 @@ nsSVGUtils::GetOuterSVGFrame(nsIFrame *aFrame)
   }
 
   return nsnull;
+}
+
+nsIFrame*
+nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame, nsRect* aRect)
+{
+  nsISVGChildFrame* svg;
+  CallQueryInterface(aFrame, &svg);
+  if (!svg)
+    return nsnull;
+  *aRect = svg->GetCoveredRegion();
+  return GetOuterSVGFrame(aFrame);
 }
 
 already_AddRefed<nsIDOMSVGMatrix>
@@ -886,6 +908,12 @@ already_AddRefed<nsIDOMSVGMatrix>
 nsSVGUtils::GetCanvasTM(nsIFrame *aFrame)
 {
   if (!aFrame->IsLeaf()) {
+    // foreignObject is the one non-leaf svg frame that isn't a SVGContainer
+    if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
+      nsSVGForeignObjectFrame *foreignFrame =
+        NS_STATIC_CAST(nsSVGForeignObjectFrame*, aFrame);
+      return foreignFrame->GetCanvasTM();
+    }
     nsSVGContainerFrame *containerFrame = NS_STATIC_CAST(nsSVGContainerFrame*,
                                                          aFrame);
     return containerFrame->GetCanvasTM();
@@ -1047,7 +1075,7 @@ nsSVGUtils::PaintChildWithEffects(nsSVGRenderState *aContext,
     opacity = 1.0f;
 
   gfxContext *gfx = aContext->GetGfxContext();
-  cairo_t *ctx = nsnull;
+  PRBool complexEffects = PR_FALSE;
 
   nsSVGClipPathFrame *clipPathFrame = GetClipPathFrame(state, aFrame);
   PRBool isTrivialClip = clipPathFrame ? clipPathFrame->IsTrivial() : PR_TRUE;
@@ -1060,9 +1088,9 @@ nsSVGUtils::PaintChildWithEffects(nsSVGRenderState *aContext,
   /* Check if we need to do additional operations on this child's
    * rendering, which necessitates rendering into another surface. */
   if (opacity != 1.0f || maskFrame || (clipPathFrame && !isTrivialClip)) {
-    ctx = gfx->GetCairo();
-    cairo_save(ctx);
-    cairo_push_group(ctx);
+    complexEffects = PR_TRUE;
+    gfx->Save();
+    gfx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
   }
 
   /* If this frame has only a trivial clipPath, set up cairo's clipping now so
@@ -1086,46 +1114,41 @@ nsSVGUtils::PaintChildWithEffects(nsSVGRenderState *aContext,
   }
 
   /* No more effects, we're done. */
-  if (!ctx)
+  if (!complexEffects)
     return;
 
-  cairo_pop_group_to_source(ctx);
+  gfx->PopGroupToSource();
 
-  cairo_pattern_t *maskSurface =
+  nsRefPtr<gfxPattern> maskSurface =
     maskFrame ? maskFrame->ComputeMaskAlpha(aContext, svgChildFrame,
                                             matrix, opacity) : nsnull;
 
-  cairo_pattern_t *clipMaskSurface = nsnull;
+  nsRefPtr<gfxPattern> clipMaskSurface;
   if (clipPathFrame && !isTrivialClip) {
-    cairo_push_group(ctx);
+    gfx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
 
     nsresult rv = clipPathFrame->ClipPaint(aContext, svgChildFrame, matrix);
-    clipMaskSurface = cairo_pop_group(ctx);
+    clipMaskSurface = gfx->PopGroup();
 
     if (NS_SUCCEEDED(rv) && clipMaskSurface) {
       // Still more set after clipping, so clip to another surface
       if (maskSurface || opacity != 1.0f) {
-        cairo_push_group(ctx);
-        cairo_mask(ctx, clipMaskSurface);
-        cairo_pop_group_to_source(ctx);
+        gfx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+        gfx->Mask(clipMaskSurface);
+        gfx->PopGroupToSource();
       } else {
-        cairo_mask(ctx, clipMaskSurface);
+        gfx->Mask(clipMaskSurface);
       }
     }
   }
 
   if (maskSurface) {
-    cairo_mask(ctx, maskSurface);
+    gfx->Mask(maskSurface);
   } else if (opacity != 1.0f) {
-    cairo_paint_with_alpha(ctx, opacity);
+    gfx->Paint(opacity);
   }
 
-  cairo_restore(ctx);
-
-  if (maskSurface)
-    cairo_pattern_destroy(maskSurface);
-  if (clipMaskSurface)
-    cairo_pattern_destroy(clipMaskSurface);
+  gfx->Restore();
 }
 
 void
@@ -1260,14 +1283,26 @@ nsSVGUtils::ToBoundingPixelRect(const gfxRect& rect)
                 nscoord(ceil(rect.YMost()) - floor(rect.Y())));
 }
 
-cairo_surface_t *
-nsSVGUtils::GetCairoComputationalSurface()
+gfxIntSize
+nsSVGUtils::ConvertToSurfaceSize(const gfxSize& aSize, PRBool *aResultOverflows)
 {
-  if (!mCairoComputationalSurface)
-    mCairoComputationalSurface =
-      cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 1, 1);
+  gfxIntSize surfaceSize =
+    gfxIntSize(PRInt32(aSize.width + 0.5), PRInt32(aSize.height + 0.5));
 
-  return mCairoComputationalSurface;
+  *aResultOverflows = (aSize.width >= PR_INT32_MAX + 0.5 ||
+                       aSize.height >= PR_INT32_MAX + 0.5 ||
+                       aSize.width <= PR_INT32_MIN - 0.5 ||
+                       aSize.height <= PR_INT32_MIN - 0.5);
+
+  if (*aResultOverflows ||
+      !gfxASurface::CheckSurfaceSize(surfaceSize)) {
+    surfaceSize.width = PR_MIN(NS_SVG_OFFSCREEN_MAX_DIMENSION,
+                               surfaceSize.width);
+    surfaceSize.height = PR_MIN(NS_SVG_OFFSCREEN_MAX_DIMENSION,
+                                surfaceSize.height);
+    *aResultOverflows = PR_TRUE;
+  }
+  return surfaceSize;
 }
 
 gfxASurface *
@@ -1283,20 +1318,6 @@ nsSVGUtils::GetThebesComputationalSurface()
   }
 
   return mThebesComputationalSurface;
-}
-
-cairo_matrix_t
-nsSVGUtils::ConvertSVGMatrixToCairo(nsIDOMSVGMatrix *aMatrix)
-{
-  float A, B, C, D, E, F;
-  aMatrix->GetA(&A);
-  aMatrix->GetB(&B);
-  aMatrix->GetC(&C);
-  aMatrix->GetD(&D);
-  aMatrix->GetE(&E);
-  aMatrix->GetF(&F);
-  cairo_matrix_t m = { A, B, C, D, E, F };
-  return m;
 }
 
 gfxMatrix
@@ -1320,48 +1341,18 @@ nsSVGUtils::HitTestRect(nsIDOMSVGMatrix *aMatrix,
   PRBool result = PR_TRUE;
 
   if (aMatrix) {
-    cairo_matrix_t matrix = ConvertSVGMatrixToCairo(aMatrix);
-    cairo_t *ctx = cairo_create(GetCairoComputationalSurface());
-    if (cairo_status(ctx) != CAIRO_STATUS_SUCCESS) {
-      cairo_destroy(ctx);
-      return PR_FALSE;
-    }
-    cairo_set_tolerance(ctx, 1.0);
+    gfxContext ctx(GetThebesComputationalSurface());
+    ctx.SetMatrix(ConvertSVGMatrixToThebes(aMatrix));
 
-    cairo_set_matrix(ctx, &matrix);
-    cairo_new_path(ctx);
-    cairo_rectangle(ctx, aRX, aRY, aRWidth, aRHeight);
-    cairo_identity_matrix(ctx);
+    ctx.NewPath();
+    ctx.Rectangle(gfxRect(aRX, aRY, aRWidth, aRHeight));
+    ctx.IdentityMatrix();
 
-    if (!cairo_in_fill(ctx, aX, aY))
+    if (!ctx.PointInFill(gfxPoint(aX, aY)))
       result = PR_FALSE;
-
-    cairo_destroy(ctx);
   }
 
   return result;
-}
-
-void
-nsSVGUtils::UserToDeviceBBox(cairo_t *ctx,
-                             double *xmin, double *ymin,
-                             double *xmax, double *ymax)
-{
-  double x[3], y[3];
-  x[0] = *xmin;  y[0] = *ymax;
-  x[1] = *xmax;  y[1] = *ymax;
-  x[2] = *xmax;  y[2] = *ymin;
-
-  cairo_user_to_device(ctx, xmin, ymin);
-  *xmax = *xmin;
-  *ymax = *ymin;
-  for (int i = 0; i < 3; i++) {
-    cairo_user_to_device(ctx, &x[i], &y[i]);
-    *xmin = PR_MIN(*xmin, x[i]);
-    *xmax = PR_MAX(*xmax, x[i]);
-    *ymin = PR_MIN(*ymin, y[i]);
-    *ymax = PR_MAX(*ymax, y[i]);
-  }
 }
 
 void

@@ -31,7 +31,7 @@ BROWSER_APP_FILES = \
 export::
 	$(NSINSTALL) -D $(DIST)/branding
 	cp $(addprefix $(srcdir)/, $(BROWSER_APP_FILES)) $(DIST)/branding/
-ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/document.png  $(DIST)/branding/document.png
 	$(NSINSTALL) -D $(DIST)/install
 	cp $(srcdir)/header.png    $(DIST)/install/header.png

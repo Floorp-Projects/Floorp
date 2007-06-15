@@ -49,7 +49,7 @@
         onload="onLoad()"
         onunload="onUnload()">
 
-  <script type="application/x-javascript" src="chrome://global/content/printPreviewProgress.js"/>
+  <script type="application/javascript" src="chrome://global/content/printPreviewProgress.js"/>
 
     <grid flex="1">
       <columns>

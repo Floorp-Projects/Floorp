@@ -1,4 +1,4 @@
-function closeWindow(aClose)
+function closeWindow(aClose, aPromptFunction)
 {
   var windowCount = 0;
    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
@@ -17,6 +17,8 @@ function closeWindow(aClose)
   if (windowCount == 1 && !canQuitApplication())
     return false;
 #endif
+  if (windowCount != 1 && typeof(aPromptFunction) == "function" && !aPromptFunction())
+    return false;
 
   if (aClose)    
     window.close();

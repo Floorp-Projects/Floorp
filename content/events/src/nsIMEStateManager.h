@@ -61,6 +61,7 @@ public:
                                 nsIContent* aContent);
   static nsresult OnActivate(nsPresContext* aPresContext);
   static nsresult OnDeactivate(nsPresContext* aPresContext);
+  static void OnInstalledMenuKeyboardListener(PRBool aInstalling);
 protected:
   static void SetIMEState(nsPresContext* aPresContext,
                           PRUint32 aState,
@@ -76,6 +77,7 @@ protected:
   static nsIContent*    sContent;
   static nsPresContext* sPresContext;
   static nsPIDOMWindow* sActiveWindow;
+  static PRBool         sInstalledMenuKeyboardListener;
 };
 
 #endif // nsIMEStateManager_h__

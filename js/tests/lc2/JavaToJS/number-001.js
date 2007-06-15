@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'number-001.js';
+
 /**
 
 File Name:      number-001.js
@@ -111,9 +113,9 @@ test_array[i] = new TestValue( "(new java.lang.Long( '1234567891234567' )).longV
 
 // Call a java function that returns a value whose type is float
 
-java_array[i] = new JavaValue( (new java.lang.Float( '1.23456789' )).floatValue() );
-test_array[i] = new TestValue( "(new java.lang.Float( '1.23456789' )).floatValue()",
-			       1.23456789,
+java_array[i] = new JavaValue( (new java.lang.Float( '1234.5' )).floatValue() );
+test_array[i] = new TestValue( "(new java.lang.Float( '1234.5' )).floatValue()",
+			       1234.5,
 			       E_TYPE );
 
 i++;
@@ -140,31 +142,31 @@ test_array[i] = new TestValue( "(new java.lang.Byte(127)).byteValue()",
 
 
 for ( i = 0; i < java_array.length; i++ ) {
-    CompareValues( java_array[i], test_array[i] );
+  CompareValues( java_array[i], test_array[i] );
 }
 
 test();
 function CompareValues( javaval, testval ) {
-    //  Check value
-    new TestCase( SECTION,
-		  testval.description,
-		  testval.value,
-		  javaval.value );
-    //  Check type.
+  //  Check value
+  new TestCase( SECTION,
+		testval.description,
+		testval.value,
+		javaval.value );
+  //  Check type.
 
-    new TestCase( SECTION,
-		  "typeof (" + testval.description +")",
-		  testval.type,
-		  javaval.type );
+  new TestCase( SECTION,
+		"typeof (" + testval.description +")",
+		testval.type,
+		javaval.type );
 }
 function JavaValue( value ) {
-    this.value  = value.valueOf();
-    this.type   = typeof value;
-    return this;
+  this.value  = value.valueOf();
+  this.type   = typeof value;
+  return this;
 }
 function TestValue( description, value, type, classname ) {
-    this.description = description;
-    this.value = value;
-    this.type =  type;
-    return this;
+  this.description = description;
+  this.value = value;
+  this.type =  type;
+  return this;
 }

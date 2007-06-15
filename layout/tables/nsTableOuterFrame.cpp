@@ -115,6 +115,9 @@ nsTableCaptionFrame::GetParentStyleContextFrame(nsPresContext* aPresContext,
                                                 nsIFrame**      aProviderFrame,
                                                 PRBool*         aIsChild)
 {
+  NS_PRECONDITION(mContent->GetParent(),
+                  "How could we not have a parent here?");
+    
   // The caption's style context parent is the inner frame, unless
   // it's anonymous.
   nsIFrame* outerFrame = GetParent();
@@ -284,10 +287,9 @@ nsTableOuterFrame::AppendFrames(nsIAtom*        aListName,
 
     // Reflow the new caption frame. It's already marked dirty, so
     // just tell the pres shell.
-    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
     PresContext()->PresShell()->
-      FrameNeedsReflow(mCaptionFrame, nsIPresShell::eTreeChange);
-    
+      FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                       NS_FRAME_HAS_DIRTY_CHILDREN);
   }
   else {
     NS_PRECONDITION(PR_FALSE, "unexpected child list");
@@ -338,9 +340,9 @@ nsTableOuterFrame::RemoveFrame(nsIAtom*        aListName,
   mCaptionFrames.DestroyFrame(aOldFrame);
   mCaptionFrame = mCaptionFrames.FirstChild();
   
-  AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN); // also means child removed
   PresContext()->PresShell()->
-    FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+    FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                     NS_FRAME_HAS_DIRTY_CHILDREN); // also means child removed
 
   return NS_OK;
 }
@@ -1187,10 +1189,9 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
     MoveOverflowToChildList(aPresContext);
   }
 
-  PRBool reflowCaption = mCaptionFrame && (reflowAllKids || (mCaptionFrame->
-    GetStateBits() & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)));
-  PRBool reflowInner = reflowAllKids || (mInnerTableFrame->
-    GetStateBits() & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN));
+  PRBool reflowCaption =
+    mCaptionFrame && (reflowAllKids || NS_SUBTREE_DIRTY(mCaptionFrame));
+  PRBool reflowInner = reflowAllKids || NS_SUBTREE_DIRTY(mInnerTableFrame);
 
   // First reflow the caption.  nsHTMLReflowState takes care of making
   // side captions small.

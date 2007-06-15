@@ -25,6 +25,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Peter Annema <disttsc@bart.nl>
  *   Dan Rosen <dr@netscape.com>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -670,6 +671,9 @@ nsDocShell::LoadURI(nsIURI * aURI,
                     PRUint32 aLoadFlags,
                     PRBool aFirstParty)
 {
+    if (mFiredUnloadEvent) {
+      return NS_OK; // JS may not handle returning of an error code
+    }
     nsresult rv;
     nsCOMPtr<nsIURI> referrer;
     nsCOMPtr<nsIInputStream> postStream;
@@ -972,6 +976,7 @@ nsDocShell::FirePageHideNotification(PRBool aIsUnload)
             }
         }
     }
+
     return NS_OK;
 }
 
@@ -2080,16 +2085,15 @@ nsDocShell::GetTreeOwner(nsIDocShellTreeOwner ** aTreeOwner)
 
 #ifdef DEBUG_DOCSHELL_FOCUS
 static void 
-PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
+PrintDocTree(nsIDocShellTreeItem * aParentNode, int aLevel)
 {
   for (PRInt32 i=0;i<aLevel;i++) printf("  ");
 
   PRInt32 childWebshellCount;
   aParentNode->GetChildCount(&childWebshellCount);
   nsCOMPtr<nsIDocShell> parentAsDocShell(do_QueryInterface(aParentNode));
-  nsCOMPtr<nsIDocShellTreeItem> parentAsItem(do_QueryInterface(aParentNode));
   PRInt32 type;
-  parentAsItem->GetItemType(&type);
+  aParentNode->GetItemType(&type);
   nsCOMPtr<nsIPresShell> presShell;
   parentAsDocShell->GetPresShell(getter_AddRefs(presShell));
   nsCOMPtr<nsPresContext> presContext;
@@ -2115,20 +2119,18 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
     for (PRInt32 i=0;i<childWebshellCount;i++) {
       nsCOMPtr<nsIDocShellTreeItem> child;
       aParentNode->GetChildAt(i, getter_AddRefs(child));
-      nsCOMPtr<nsIDocShellTreeNode> childAsNode(do_QueryInterface(child));
-      PrintDocTree(childAsNode, aLevel+1);
+      PrintDocTree(child, aLevel+1);
     }
   }
 }
 
 static void 
-PrintDocTree(nsIDocShellTreeNode * aParentNode)
+PrintDocTree(nsIDocShellTreeItem * aParentNode)
 {
   NS_ASSERTION(aParentNode, "Pointer is null!");
 
-  nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(aParentNode));
   nsCOMPtr<nsIDocShellTreeItem> parentItem;
-  item->GetParent(getter_AddRefs(parentItem));
+  aParentNode->GetParent(getter_AddRefs(parentItem));
   while (parentItem) {
     nsCOMPtr<nsIDocShellTreeItem>tmp;
     parentItem->GetParent(getter_AddRefs(tmp));
@@ -2139,13 +2141,10 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode)
   }
 
   if (!parentItem) {
-    parentItem = do_QueryInterface(aParentNode);
+    parentItem = aParentNode;
   }
 
-  if (parentItem) {
-    nsCOMPtr<nsIDocShellTreeNode> parentAsNode(do_QueryInterface(parentItem));
-    PrintDocTree(parentAsNode, 0);
-  }
+  PrintDocTree(parentItem, 0);
 }
 #endif
 
@@ -2153,9 +2152,9 @@ NS_IMETHODIMP
 nsDocShell::SetTreeOwner(nsIDocShellTreeOwner * aTreeOwner)
 {
 #ifdef DEBUG_DOCSHELL_FOCUS
-    nsCOMPtr<nsIDocShellTreeNode> node(do_QueryInterface(aTreeOwner));
-    if (node) {
-      PrintDocTree(node);
+    nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(aTreeOwner));
+    if (item) {
+      PrintDocTree(item);
     }
 #endif
 
@@ -2197,17 +2196,16 @@ nsDocShell::SetTreeOwner(nsIDocShellTreeOwner * aTreeOwner)
 }
 
 NS_IMETHODIMP
-nsDocShell::SetChildOffset(PRInt32 aChildOffset)
+nsDocShell::SetChildOffset(PRUint32 aChildOffset)
 {
     mChildOffset = aChildOffset;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocShell::GetChildOffset(PRInt32 * aChildOffset)
+nsDocShell::GetIsInUnload(PRBool* aIsInUnload)
 {
-    NS_ENSURE_ARG_POINTER(aChildOffset);
-    *aChildOffset = mChildOffset;
+    *aIsInUnload = mFiredUnloadEvent;
     return NS_OK;
 }
 
@@ -2254,11 +2252,17 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
     
     nsresult res = AddChildLoader(childAsDocLoader);
     NS_ENSURE_SUCCESS(res, res);
+    NS_ASSERTION(mChildList.Count() > 0,
+                 "child list must not be empty after a successful add");
 
     // Set the child's index in the parent's children list 
     // XXX What if the parent had different types of children?
     // XXX in that case docshell hierarchy and SH hierarchy won't match.
-    aChild->SetChildOffset(mChildList.Count() - 1);
+    {
+        nsCOMPtr<nsIDocShell> childDocShell = do_QueryInterface(aChild);
+        if (childDocShell)
+            childDocShell->SetChildOffset(mChildList.Count() - 1);
+    }
 
     /* Set the child's global history if the parent has one */
     if (mGlobalHistory) {
@@ -2420,23 +2424,19 @@ nsDocShell::FindChildWithName(const PRUnichar * aName,
         if (aRecurse && (aRequestor != child))  // Only ask the child if it isn't the requestor
         {
             // See if child contains the shell with the given name
-            nsCOMPtr<nsIDocShellTreeNode>
-                childAsNode(do_QueryInterface(child));
-            if (childAsNode) {
 #ifdef DEBUG
-                nsresult rv =
+            nsresult rv =
 #endif
-                childAsNode->FindChildWithName(aName, PR_TRUE,
-                                               aSameType,
-                                               NS_STATIC_CAST(nsIDocShellTreeItem*,
-                                                              this),
-                                               aOriginalRequestor,
-                                               _retval);
-                NS_ASSERTION(NS_SUCCEEDED(rv),
-                             "FindChildWithName should not fail here");
-                if (*_retval)           // found it
-                    return NS_OK;
-            }
+            child->FindChildWithName(aName, PR_TRUE,
+                                     aSameType,
+                                     NS_STATIC_CAST(nsIDocShellTreeItem*,
+                                                    this),
+                                     aOriginalRequestor,
+                                     _retval);
+            NS_ASSERTION(NS_SUCCEEDED(rv),
+                         "FindChildWithName should not fail here");
+            if (*_retval)           // found it
+                return NS_OK;
         }
     }
     return NS_OK;
@@ -2641,6 +2641,12 @@ nsDocShell::IsPrintingOrPP(PRBool aDisplayErrorDialog)
   return mIsPrintingOrPP;
 }
 
+PRBool
+nsDocShell::IsNavigationAllowed(PRBool aDisplayPrintErrorDialog)
+{
+    return !IsPrintingOrPP(aDisplayPrintErrorDialog) && !mFiredUnloadEvent;
+}
+
 //*****************************************************************************
 // nsDocShell::nsIWebNavigation
 //*****************************************************************************   
@@ -2648,7 +2654,7 @@ nsDocShell::IsPrintingOrPP(PRBool aDisplayErrorDialog)
 NS_IMETHODIMP
 nsDocShell::GetCanGoBack(PRBool * aCanGoBack)
 {
-    if (IsPrintingOrPP(PR_FALSE)) {
+    if (!IsNavigationAllowed(PR_FALSE)) {
       *aCanGoBack = PR_FALSE;
       return NS_OK; // JS may not handle returning of an error code
     }
@@ -2665,7 +2671,7 @@ nsDocShell::GetCanGoBack(PRBool * aCanGoBack)
 NS_IMETHODIMP
 nsDocShell::GetCanGoForward(PRBool * aCanGoForward)
 {
-    if (IsPrintingOrPP(PR_FALSE)) {
+    if (!IsNavigationAllowed(PR_FALSE)) {
       *aCanGoForward = PR_FALSE;
       return NS_OK; // JS may not handle returning of an error code
     }
@@ -2682,7 +2688,7 @@ nsDocShell::GetCanGoForward(PRBool * aCanGoForward)
 NS_IMETHODIMP
 nsDocShell::GoBack()
 {
-    if (IsPrintingOrPP()) {
+    if (!IsNavigationAllowed()) {
       return NS_OK; // JS may not handle returning of an error code
     }
     nsresult rv;
@@ -2698,7 +2704,7 @@ nsDocShell::GoBack()
 NS_IMETHODIMP
 nsDocShell::GoForward()
 {
-    if (IsPrintingOrPP()) {
+    if (!IsNavigationAllowed()) {
       return NS_OK; // JS may not handle returning of an error code
     }
     nsresult rv;
@@ -2713,7 +2719,7 @@ nsDocShell::GoForward()
 
 NS_IMETHODIMP nsDocShell::GotoIndex(PRInt32 aIndex)
 {
-    if (IsPrintingOrPP()) {
+    if (!IsNavigationAllowed()) {
       return NS_OK; // JS may not handle returning of an error code
     }
     nsresult rv;
@@ -2734,7 +2740,7 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
                     nsIInputStream * aPostStream,
                     nsIInputStream * aHeaderStream)
 {
-    if (IsPrintingOrPP()) {
+    if (!IsNavigationAllowed()) {
       return NS_OK; // JS may not handle returning of an error code
     }
     nsCOMPtr<nsIURI> uri;
@@ -2778,12 +2784,11 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
     if (NS_FAILED(rv) || !uri)
         return NS_ERROR_FAILURE;
 
-    // Don't pass the fixup flag to MAKE_LOAD_TYPE, since it isn't needed and
-    // confuses ConvertLoadTypeToDocShellLoadInfo. We do need to ensure that
-    // it is passed to LoadURI though, since it uses it to determine whether it
-    // can do fixup.
-    PRUint32 fixupFlag = (aLoadFlags & LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP);
-    aLoadFlags &= ~LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+    // Don't pass certain flags that aren't needed and end up confusing
+    // ConvertLoadTypeToDocShellLoadInfo.  We do need to ensure that they are
+    // passed to LoadURI though, since it uses them.
+    PRUint32 extraFlags = (aLoadFlags & EXTRA_LOAD_FLAGS);
+    aLoadFlags &= ~EXTRA_LOAD_FLAGS;
 
     nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
     rv = CreateLoadInfo(getter_AddRefs(loadInfo));
@@ -2795,7 +2800,7 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
     loadInfo->SetReferrer(aReferringURI);
     loadInfo->SetHeadersStream(aHeaderStream);
 
-    rv = LoadURI(uri, loadInfo, fixupFlag, PR_TRUE);
+    rv = LoadURI(uri, loadInfo, extraFlags, PR_TRUE);
 
     return rv;
 }
@@ -3119,7 +3124,7 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
 NS_IMETHODIMP
 nsDocShell::Reload(PRUint32 aReloadFlags)
 {
-    if (IsPrintingOrPP()) {
+    if (!IsNavigationAllowed()) {
       return NS_OK; // JS may not handle returning of an error code
     }
     nsresult rv;
@@ -3491,10 +3496,10 @@ nsDocShell::Destroy()
     PersistLayoutHistoryState();
 
     // Remove this docshell from its parent's child list
-    nsCOMPtr<nsIDocShellTreeNode> docShellParentAsNode =
+    nsCOMPtr<nsIDocShellTreeItem> docShellParentAsItem =
         do_QueryInterface(GetAsSupports(mParent));
-    if (docShellParentAsNode)
-        docShellParentAsNode->RemoveChild(this);
+    if (docShellParentAsItem)
+        docShellParentAsItem->RemoveChild(this);
 
     if (mContentViewer) {
         mContentViewer->Close(nsnull);
@@ -3591,6 +3596,14 @@ nsDocShell::GetPositionAndSize(PRInt32 * x, PRInt32 * y, PRInt32 * cx,
         doc->FlushPendingNotifications(Flush_Layout);
     }
     
+    DoGetPositionAndSize(x, y, cx, cy);
+    return NS_OK;
+}
+
+void
+nsDocShell::DoGetPositionAndSize(PRInt32 * x, PRInt32 * y, PRInt32 * cx,
+                                 PRInt32 * cy)
+{    
     if (x)
         *x = mBounds.x;
     if (y)
@@ -3599,8 +3612,6 @@ nsDocShell::GetPositionAndSize(PRInt32 * x, PRInt32 * y, PRInt32 * cx,
         *cx = mBounds.width;
     if (cy)
         *cy = mBounds.height;
-
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5898,7 +5909,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
 
     // This will get the size from the current content viewer or from the
     // Init settings
-    GetPositionAndSize(&x, &y, &cx, &cy);
+    DoGetPositionAndSize(&x, &y, &cx, &cy);
 
     nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
     NS_ENSURE_SUCCESS(GetSameTypeParent(getter_AddRefs(parentAsItem)),
@@ -6370,7 +6381,9 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     //
     {
         PRBool inherits;
-        if (!owner && (aFlags & INTERNAL_LOAD_FLAGS_INHERIT_OWNER) &&
+        // One more twist: Don't inherit the owner for external loads.
+        if (aLoadType != LOAD_NORMAL_EXTERNAL && !owner &&
+            (aFlags & INTERNAL_LOAD_FLAGS_INHERIT_OWNER) &&
             NS_SUCCEEDED(URIInheritsSecurityContext(aURI, &inherits)) &&
             inherits) {
             owner = GetInheritedPrincipal(PR_TRUE);

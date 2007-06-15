@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'flags.js';
+
 /**
    Filename:     regexp.js
    Description:  'Tests regular expressions using flags "i" and "g"'

@@ -171,7 +171,10 @@ class LinuxThread {
   int ListModules(CallbackParam<ModuleCallback> *callback_param) const;
 
   // Get the bottom of the stack from ebp.
-  uintptr_t GetThreadStackBottom(uintptr_t current_esp) const;
+  uintptr_t GetThreadStackBottom(uintptr_t current_ebp) const;
+
+  // Finds a sigcontext on the stack given the ebp of our signal handler.
+  bool FindSigContext(uintptr_t sighandler_ebp, struct sigcontext **sig_ctx);
 
  private:
   // This callback will run when a new thread has been found.

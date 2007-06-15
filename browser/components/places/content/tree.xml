@@ -53,14 +53,20 @@
         // but do it on setTimeout() for bugs #373719 and bug #373721
         // caused by a change for bug #267833
         // note the corresponding setTimeout() in PO_init()
-        var self = this;
-        setTimeout(function() { self.place = self.place; }, 0);
+        if (this.place) {
+          var self = this;
+          setTimeout(function() { self.place = self.place; }, 0);
+        }
       ]]></constructor>
 
-      <destructor><![CDATA[ 
-        var resultview = this.getResultView();
-        if (resultview)
-          resultview.removeViewObserver(this._viewObserver);
+      <destructor><![CDATA[
+        // Break the treeviewer->result->treeviewer cycle.
+        // Note: unsetting the result's viewer also unsets
+        // the viewer's reference to our treeBoxObject.
+        var result = this.getResult();
+        if (result)
+          result.viewer = null;
+        this.view = null;
       ]]></destructor>
 
       <property name="controller"
@@ -78,11 +84,13 @@
           if (resultview)
             resultview.removeViewObserver(this._viewObserver);
           this.treeBoxObject.view = val;
-          val.QueryInterface(Ci.nsINavHistoryResultViewer).addViewObserver(
-            this._viewObserver, false);
+          if (val) {
+            val.QueryInterface(Ci.nsINavHistoryResultViewer)
+               .addViewObserver(this._viewObserver, false);
+          }
         ]]></setter>
       </property>
-      
+
       <method name="getBestOptions">
         <body><![CDATA[
           // Get the best set of grouping options to use, either reuse the 
@@ -93,13 +101,13 @@
           return options;
         ]]></body>
       </method>
-      
+
       <method name="applyFilter">
         <parameter name="filterString"/>
         <parameter name="onlyBookmarks"/>
         <parameter name="folderRestrict"/>
         <parameter name="optionsFilter"/>
-        <body><![CDATA[ 
+        <body><![CDATA[
           // preserve grouping
           var queryNode = asQuery(this.getResult().root);
           var options = queryNode.queryOptions.clone();
@@ -130,7 +138,7 @@
       <method name="load">
         <parameter name="queries"/>
         <parameter name="options"/>
-        <body><![CDATA[ 
+        <body><![CDATA[
           var result = PlacesUtils.history.executeQueries(queries, queries.length, 
                                                           options);
           var treeView = new PlacesTreeView(this.showRoot);
@@ -162,6 +170,9 @@
         <parameter name="placeURI"/>
         <body><![CDATA[
           function findNode(container, placeURI) {
+            if (container.uri == placeURI)
+              return container;
+
             container.containerOpen = true;
             for (var i = 0; i < container.childCount; ++i) {
               var child = container.getChild(i);
@@ -462,13 +473,24 @@
           if (this.hasSingleSelection && resultView.isContainer(max.value) &&
               (resultView.isContainerOpen(max.value) ||
                resultView.nodeForTreeIndex(max.value)
-                         .folderId == PlacesUtils.bookmarksRootId))
+                         .itemId == PlacesUtils.bookmarksRootId))
             orientation = NHRVO.DROP_ON;
 
           return this._getInsertionPoint(max.value, orientation);
         ]]></getter>
       </property>
       
+      <method name="_disallowInsertion">
+        <parameter name="aContainer"/>
+        <body><![CDATA[
+          // Disallow insertion of items under readonly folders
+          // Disallow insertion of items under the places root
+          return (!PlacesUtils.nodeIsFolder(aContainer) ||
+                   PlacesUtils.nodeIsReadOnly(aContainer) ||
+                   aContainer.itemId == PlacesUtils.placesRootId);
+        ]]></body>
+      </method>
+
       <method name="_getInsertionPoint">
         <parameter name="index"/>
         <parameter name="orientation"/>
@@ -478,7 +500,7 @@
           var container = result.root;
           NS_ASSERT(container, "null container");
           // When there's no selection, assume the container is the container
-          // the view is populated from (i.e. the result's folderId).
+          // the view is populated from (i.e. the result's itemId).
           if (index != -1) {
             var lastSelected = resultview.nodeForTreeIndex(index);
             if (resultview.isContainer(index) && orientation == NHRVO.DROP_ON) {
@@ -492,18 +514,21 @@
               // an item at the root is the result itself, which can be QI'ed to 
               // nsINavHistoryResult
               container = lastSelected.parent;
+ 
+              // avoid the potentially expensive call to getIndexOfNode() 
+              // if we know this container doesn't allow insertion
+              if (this._disallowInsertion(container))
+                return null;
+
               var lsi = PlacesUtils.getIndexOfNode(lastSelected);
               index = orientation == NHRVO.DROP_BEFORE ? lsi : lsi + 1;
             }
           }
 
-          // * Disallow insertion of items under readonly folders
-          // * Disallow insertion of items under the places root
-          if (PlacesUtils.nodeIsFolder(container) &&
-              !PlacesUtils.nodeIsReadOnly(container) &&
-              container.folderId != PlacesUtils.placesRootId) 
-            return new InsertionPoint(asFolder(container).folderId, index, orientation);
-          return null;
+          if (this._disallowInsertion(container))
+            return null;
+
+          return new InsertionPoint(container.itemId, index, orientation);
         ]]></body>
       </method>
 
@@ -572,6 +597,14 @@
            *               gets filled in as the recursion progresses.
            */
           function findNodes(node, indexes, nodes) {
+            // See if node matches an ID we wanted; add to results.
+            if (node.itemId in indexes) {
+              nodes[node.itemId] = node;
+              delete indexes[node.itemId];
+              if (!len(indexes))
+                return;
+            }
+
             // Remember the beginning state so that we can re-close
             // this node if we don't find any additional results here.
             var previousOpenness = node.containerOpen;
@@ -584,17 +617,16 @@
               var childNode = node.getChild(child);
               if (!PlacesUtils.nodeIsFolder(childNode))
                 continue;
-
-              var childFolder = asFolder(childNode);
               
               // See if child matches an ID we wanted; add to results.
-              if (childFolder.folderId in indexes) {
-                nodes[childFolder.folderId] = childFolder;
-                delete indexes[childFolder.folderId];
+              if (childNode.itemId in indexes) {
+                nodes[childNode.itemId] = childNode;
+                delete indexes[childNode.itemId];
               }
 
-              // Search down that child's subtree.
-              findNodes(childFolder, indexes, nodes);
+              // If we are still searching, search down that child's subtree.
+              if (len(indexes))
+                findNodes(childNode, indexes, nodes);
             }
 
             // If we didn't find any additional matches in this node's
@@ -623,7 +655,7 @@
           var resultview = this.getResultView();
           var selection = this.view.selection;
           selection.clearSelection();
-          for(idx in nodes) {
+          for (idx in nodes) {
             var index = resultview.treeIndexForNode(nodes[idx]);
             selection.rangedSelect(index, index, true);
           }
@@ -639,21 +671,21 @@
           // Drag and Drop does not work while a tree view is sorted.
           if (this.getAttribute("sortActive") == "true")
             throw Cr.NS_OK;
-          
-          // Items that are "static" - i.e. above the user-configurable area
-          // of the view - can not be moved. 
+
           var nodes = this.getSelectionNodes();
           for (var i = 0; i < nodes.length; ++i) {
             var node = nodes[i];
-            
+ 
             // If this node is part of a readonly container (e.g. a livemark) it 
             // cannot be moved, only copied, so we must change the action used
             // by the drag session.
             var parent = node.parent;
-            if (PlacesUtils.nodeIsReadOnly(parent))
+            if (PlacesUtils.nodeIsReadOnly(parent)) {
               dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
+              break;
+            }
           }
-          
+ 
           // XXXben - the drag wrapper should do this automatically.
           if (event.ctrlKey)
             dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
@@ -720,34 +752,33 @@
           // another result node (that constructed by |getFolderContents| say, 
           // instead of the displayed tree view). So we need to walk the 
           // children of the result to find the right folder. 
-          function findFolder(folderId, container) {
-            var wasOpen = container.containerOpen;
-            container.containerOpen = true;
-            var cc = container.childCount;
+          function findFolder(aItemId, aContainer) {
+            var wasOpen = aContainer.containerOpen;
+            aContainer.containerOpen = true;
+            var cc = aContainer.childCount;
             var foundNode = null;
             for (var i = 0; i < cc; ++i) {
-              var node = container.getChild(i);
+              var node = aContainer.getChild(i);
               if (PlacesUtils.nodeIsFolder(node)) {
-                var folder = asFolder(node);
-                if (folder.folderId == folderId) {
+                if (node.itemId == aItemId) {
                   foundNode = node;
                   break;
                 }
-                foundNode = findFolder(folderId, folder);
+                foundNode = findFolder(aItemId, node);
                 if (foundNode)
                   break;
               }
             }
-            container.containerOpen = wasOpen;
+            aContainer.containerOpen = wasOpen;
             return foundNode;
           }
           var folder = null;
           var root = asContainer(this.getResult().root);
           if (PlacesUtils.nodeIsFolder(root) && 
-              asFolder(root).folderId == insertionPoint.folderId)
+              root.itemId == insertionPoint.itemId)
             folder = root;
           else
-            folder = findFolder(insertionPoint.folderId, root);
+            folder = findFolder(insertionPoint.itemId, root);
           
           // Since we find the folder manually, using findFolder instead of 
           // PlacesUtils.getFolderContents, the folder is not opened for
@@ -796,9 +827,6 @@
           var result = this._self.getResult();
           var resultview = this._self.getResultView();
           var node = index != -1 ? resultview.nodeForTreeIndex(index) : result.root;
-          // Cannot drop before fixed items in the list. 
-          if (node.parent == result.root && orientation != NHRVO.DROP_ON)
-            return false;
 
           if (orientation == NHRVO.DROP_ON) {
             // The user cannot drop an item into itself or a read-only container
@@ -810,10 +838,10 @@
           } 
           else if (node.parent && PlacesUtils.nodeIsReadOnly(node.parent))
             return false;
-          
+
           return PlacesControllerDragHelper.canDrop(this._self, orientation);
         },
-        
+
         /**
          * Adjusts an InsertionPoint's insertion index using these rules:
          *  XXXben define rules

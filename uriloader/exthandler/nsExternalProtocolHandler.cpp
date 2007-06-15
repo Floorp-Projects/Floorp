@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *   Scott MacGregor <mscott@netscape.com>
+ *   Dan Mosedale <dmose@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -52,6 +53,10 @@
 #include "nsIPrefService.h"
 #include "nsIPrompt.h"
 #include "nsNetUtil.h"
+#include "nsIChannelEventSink.h"
+#include "nsThreadUtils.h"
+#include "nsEscape.h"
+#include "nsExternalHelperAppService.h"
 
 // used to dispatch urls to default protocol handlers
 #include "nsCExternalHandlerService.h"
@@ -64,8 +69,9 @@
 
 class nsExtProtocolChannel : public nsIChannel
 {
-public:
+    friend class nsWebProtocolRedirect;
 
+public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICHANNEL
     NS_DECL_NSIREQUEST
@@ -81,6 +87,7 @@ private:
     nsCOMPtr<nsIURI> mUrl;
     nsCOMPtr<nsIURI> mOriginalURI;
     nsresult mStatus;
+    nsLoadFlags mLoadFlags;
 
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
     nsCOMPtr<nsILoadGroup> mLoadGroup;
@@ -158,7 +165,7 @@ nsresult nsExtProtocolChannel::SetURI(nsIURI* aURI)
   mUrl = aURI;
   return NS_OK; 
 }
- 
+
 nsresult nsExtProtocolChannel::OpenURL()
 {
   nsresult rv = NS_ERROR_FAILURE;
@@ -192,20 +199,154 @@ NS_IMETHODIMP nsExtProtocolChannel::Open(nsIInputStream **_retval)
   return NS_ERROR_NO_CONTENT; // force caller to abort.
 }
 
+class nsWebProtocolRedirect : public nsRunnable {
+  public:
+    nsWebProtocolRedirect(nsIURI *aURI, const nsACString & aUriTemplate,
+                          nsIStreamListener *aListener, nsISupports *aContext,
+                          nsExtProtocolChannel *aOriginalChannel)
+      : mURI(aURI), mUriTemplate(aUriTemplate), mListener(aListener), 
+        mContext(aContext), mOriginalChannel(aOriginalChannel) {}
+
+    NS_IMETHOD Run() 
+    {
+      // get the URI spec so we can escape it for insertion into the template 
+      nsCAutoString uriSpecToHandle;
+      nsresult rv = mURI->GetSpec(uriSpecToHandle);
+      if (NS_FAILED(rv)) {
+        AbandonOriginalChannel(rv);
+        return NS_OK; 
+      }
+
+      // XXX need to strip passwd & username from URI to handle, as per the
+      // WhatWG HTML5 draft.  nsSimpleURL, which is what we're going to get,
+      // can't do this directly.  Ideally, we'd fix nsStandardURL to make it
+      // possible to turn off all of its quirks handling, and use that...
+
+      // XXX this doesn't exactly match how the HTML5 draft is requesting us to
+      // escape; at the very least, it should be escaping @ signs, and there
+      // may well be more issues.  However, this code will probably be thrown
+      // out when we do the front-end work, as we'll be using a refactored 
+      // nsIWebContentConverterInfo to do this work for us
+      nsCAutoString escapedUriSpecToHandle;
+      NS_EscapeURL(uriSpecToHandle, esc_Minimal | esc_Forced | esc_Colon,
+                   escapedUriSpecToHandle);
+
+      // Note that this replace all occurrences of %s with the URL to be
+      // handled.  The HTML5 draft doesn't prohibit %s from occurring more than
+      // once, and if it does, I can't think of any problems that could
+      // cause, (though I don't know why anyone would need or want to do it). 
+      mUriTemplate.ReplaceSubstring(NS_LITERAL_CSTRING("%s"),
+                                    escapedUriSpecToHandle);
+  
+      // convert spec to URI; no original charset needed since there's no way
+      // to communicate that information to any handler
+      nsCOMPtr<nsIURI> uriToSend;
+      rv = NS_NewURI(getter_AddRefs(uriToSend), mUriTemplate);
+      if (NS_FAILED(rv)) {
+        AbandonOriginalChannel(rv);
+        return NS_OK; 
+      }
+
+      // create a channel
+      nsCOMPtr<nsIChannel> newChannel;
+      rv = NS_NewChannel(getter_AddRefs(newChannel), uriToSend, nsnull,
+                         mOriginalChannel->mLoadGroup,
+                         mOriginalChannel->mCallbacks,
+                         mOriginalChannel->mLoadFlags);
+      if (NS_FAILED(rv)) {
+        AbandonOriginalChannel(rv);
+        return NS_OK; 
+      }
+
+      nsCOMPtr<nsIChannelEventSink> eventSink;
+      NS_QueryNotificationCallbacks(mOriginalChannel->mCallbacks,
+                                    mOriginalChannel->mLoadGroup, eventSink);
+
+      if (eventSink) {
+        // XXX decide on and audit for correct session & global hist behavior 
+        rv = eventSink->OnChannelRedirect(mOriginalChannel, newChannel, 
+                                          nsIChannelEventSink::REDIRECT_TEMPORARY |
+                                          nsIChannelEventSink::REDIRECT_INTERNAL);
+        if (NS_FAILED(rv)) {
+          AbandonOriginalChannel(rv);
+          return NS_OK;
+        }
+      }
+
+      rv = newChannel->AsyncOpen(mListener, mContext);
+      if (NS_FAILED(rv)) {
+        AbandonOriginalChannel(rv);
+        return NS_OK; 
+      }
+      
+      mOriginalChannel->mStatus = NS_BINDING_REDIRECTED;
+      return NS_OK;
+    }
+
+  private:
+    nsCOMPtr<nsIURI> mURI;
+    nsCString mUriTemplate;
+    nsCOMPtr<nsIStreamListener> mListener;
+    nsCOMPtr<nsISupports> mContext;
+    nsCOMPtr<nsExtProtocolChannel> mOriginalChannel;
+
+    // necko guarantees that after an AsyncOpen has succeeded, OnStartRequest
+    // and OnStopRequest will get called    
+    void AbandonOriginalChannel(const nsresult aStatus)
+    {
+      mOriginalChannel->mStatus = aStatus;
+      (void)mListener->OnStartRequest(mOriginalChannel, mContext);
+      (void)mListener->OnStopRequest(mOriginalChannel, mContext, aStatus);
+
+      return;
+    }
+     
+};
+
 NS_IMETHODIMP nsExtProtocolChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
+  // check whether the scheme is one that we have a web handler for
+  nsCAutoString urlScheme;  
+  nsresult rv = mUrl->GetScheme(urlScheme);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIExternalProtocolService> extProtService =
+    do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCAutoString uriTemplate;
+  rv = nsExternalHelperAppService::GetWebProtocolHandlerURITemplate(urlScheme,
+       uriTemplate);
+  if (NS_SUCCEEDED(rv)) {
+
+    // redirecting to the web handler involvegs calling OnChannelRedirect,
+    // which is supposed to happen after AsyncOpen completes, so we do it in an
+    // event
+    nsCOMPtr<nsIRunnable> event = new nsWebProtocolRedirect(mUrl, uriTemplate,
+                                                            listener, ctxt, 
+                                                            this);
+    // We don't check if |event| was successfully created because
+    // |NS_DispatchToCurrentThread| will do that for us.
+    rv = NS_DispatchToCurrentThread(event);
+    if (NS_SUCCEEDED(rv)) {
+      return rv;
+    }
+  }
+
+  // try for an OS-provided handler
   OpenURL();
   return NS_ERROR_NO_CONTENT; // force caller to abort.
 }
 
 NS_IMETHODIMP nsExtProtocolChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
 {
-  *aLoadFlags = 0;
+  *aLoadFlags = mLoadFlags;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsExtProtocolChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
+  mLoadFlags = aLoadFlags;
   return NS_OK;
 }
 
@@ -260,8 +401,7 @@ NS_IMETHODIMP nsExtProtocolChannel::SetOwner(nsISupports * aPrincipal)
 
 NS_IMETHODIMP nsExtProtocolChannel::GetName(nsACString &result)
 {
-  NS_NOTREACHED("nsExtProtocolChannel::GetName");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return mUrl->GetSpec(result);
 }
 
 NS_IMETHODIMP nsExtProtocolChannel::IsPending(PRBool *result)
@@ -301,7 +441,6 @@ NS_IMETHODIMP nsExtProtocolChannel::Resume()
 nsExternalProtocolHandler::nsExternalProtocolHandler()
 {
   m_schemeName = "default";
-  m_extProtService = do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID);
 }
 
 
@@ -338,15 +477,15 @@ nsExternalProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_
     return NS_OK;
 }
 // returns TRUE if the OS can handle this protocol scheme and false otherwise.
-PRBool nsExternalProtocolHandler::HaveProtocolHandler(nsIURI * aURI)
+PRBool nsExternalProtocolHandler::HaveOSProtocolHandler(nsIURI * aURI)
 {
   PRBool haveHandler = PR_FALSE;
   if (aURI)
   {
     nsCAutoString scheme;
     aURI->GetScheme(scheme);
-    if (m_extProtService)
-      m_extProtService->ExternalProtocolHandlerExists(scheme.get(), &haveHandler);
+    if (gExtProtSvc)
+      gExtProtSvc->OSProtocolHandlerExists(scheme.get(), &haveHandler);
   }
 
   return haveHandler;
@@ -380,8 +519,8 @@ NS_IMETHODIMP nsExternalProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_
 {
   // only try to return a channel if we have a protocol handler for the url
 
-  PRBool haveHandler = HaveProtocolHandler(aURI);
-  if (haveHandler)
+  PRBool haveOSHandler = HaveOSProtocolHandler(aURI);
+  if (haveOSHandler)
   {
     nsCOMPtr<nsIChannel> channel;
     NS_NEWXPCOM(channel, nsExtProtocolChannel);
@@ -406,8 +545,9 @@ NS_IMETHODIMP nsExternalProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_
 //////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP nsExternalProtocolHandler::ExternalAppExistsForScheme(const nsACString& aScheme, PRBool *_retval)
 {
-  if (m_extProtService)
-    return m_extProtService->ExternalProtocolHandlerExists(PromiseFlatCString(aScheme).get(), _retval);
+  if (gExtProtSvc)
+    return gExtProtSvc->ExternalProtocolHandlerExists(
+      PromiseFlatCString(aScheme).get(), _retval);
 
   // In case we don't have external protocol service.
   *_retval = PR_FALSE;

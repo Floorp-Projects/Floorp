@@ -35,19 +35,22 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- /**
-    File Name:          15.8.2.4.js
-    ECMA Section:       15.8.2.4 atan( x )
-    Description:        return an approximation to the arc tangent of the
-                        argument.  the result is expressed in radians and
-                        range is from -PI/2 to +PI/2.  special cases:
-                        - if x is NaN,  the result is NaN
-                        - if x == +0,   the result is +0
-                        - if x == -0,   the result is -0
-                        - if x == +Infinity,    the result is approximately +PI/2
-                        - if x == -Infinity,    the result is approximately -PI/2
-    Author:             christine@netscape.com
-    Date:               7 july 1997
+
+gTestfile = '15.8.2.4.js';
+
+/**
+   File Name:          15.8.2.4.js
+   ECMA Section:       15.8.2.4 atan( x )
+   Description:        return an approximation to the arc tangent of the
+   argument.  the result is expressed in radians and
+   range is from -PI/2 to +PI/2.  special cases:
+   - if x is NaN,  the result is NaN
+   - if x == +0,   the result is +0
+   - if x == -0,   the result is -0
+   - if x == +Infinity,    the result is approximately +PI/2
+   - if x == -Infinity,    the result is approximately -PI/2
+   Author:             christine@netscape.com
+   Date:               7 july 1997
 
 */
 
@@ -121,12 +124,12 @@ new TestCase( SECTION,
 	      Math.atan(0)          );
 
 new TestCase( SECTION,
-	      "Math.atan(-0)",	 
+	      "Math.atan(-0)",	
 	      -0,
 	      Math.atan(-0)         );
 
 new TestCase( SECTION,
-	      "Infinity/Math.atan(-0)", 
+	      "Infinity/Math.atan(-0)",
 	      -Infinity,
 	      Infinity/Math.atan(-0) );
 

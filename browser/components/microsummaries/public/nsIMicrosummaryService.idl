@@ -195,9 +195,20 @@ interface nsIMicrosummarySet : nsISupports
 };
 
 
-[scriptable, uuid(edec7c28-4b06-4692-842f-8bf238e61ac1)]
+[scriptable, uuid(D58143A2-74FA-4B13-94ED-113AF8936D80)]
 interface nsIMicrosummaryService : nsISupports
 {
+    /**
+     * Return a microsummary generator for the given URI.
+     *
+     * @param   generatorURI
+     *          the URI of the generator
+     *
+     * @returns an nsIMicrosummaryGenerator for the given URI.
+     *
+     */
+    nsIMicrosummaryGenerator getGenerator(in nsIURI generatorURI);
+
     /**
      * Install the microsummary generator from the resource at the supplied URI.
      * Callable by content via the addMicrosummaryGenerator() sidebar method.
@@ -253,7 +264,7 @@ interface nsIMicrosummaryService : nsISupports
      *
      */
     nsIMicrosummarySet getMicrosummaries(in nsIURI pageURI,
-                                         in nsISupports bookmarkID);
+                                         in long long bookmarkID);
 
     /**
      * Get the current microsummary for the given bookmark.
@@ -265,7 +276,21 @@ interface nsIMicrosummaryService : nsISupports
      *          if the bookmark does not have a current microsummary
      *
      */
-    nsIMicrosummary getMicrosummary(in nsISupports bookmarkID);
+    nsIMicrosummary getMicrosummary(in long long bookmarkID);
+
+    /**
+     * Create a microsummary for a given page URI and generator URI.
+     *
+     * @param   pageURI
+     *          the URI of the page to be summarized
+     *
+     * @param   generatorURI
+     *          the URI of the microsummary generator
+     *
+     * @returns an nsIMicrosummary for the given page and generator URIs.
+     *
+     */
+    nsIMicrosummary createMicrosummary(in nsIURI pageURI, in nsIURI generatorURI);
 
     /**
      * Set the current microsummary for the given bookmark.
@@ -277,7 +302,7 @@ interface nsIMicrosummaryService : nsISupports
      *          the microsummary to set as the current one
      *
      */
-    void setMicrosummary(in nsISupports bookmarkID,
+    void setMicrosummary(in long long bookmarkID,
                          in nsIMicrosummary microsummary);
 
     /**
@@ -287,7 +312,7 @@ interface nsIMicrosummaryService : nsISupports
      *          the bookmark for which to remove the current microsummary
      *
      */
-    void removeMicrosummary(in nsISupports bookmarkID);
+    void removeMicrosummary(in long long bookmarkID);
 
     /**
      * Whether or not the given bookmark has a current microsummary.
@@ -299,7 +324,7 @@ interface nsIMicrosummaryService : nsISupports
      *          has a current microsummary
      *
      */
-    boolean hasMicrosummary(in nsISupports bookmarkID);
+    boolean hasMicrosummary(in long long bookmarkID);
 
     /**
      * Whether or not the given microsummary is the current microsummary
@@ -315,7 +340,7 @@ interface nsIMicrosummaryService : nsISupports
      *          for the bookmark
      *
      */
-    boolean isMicrosummary(in nsISupports bookmarkID,
+    boolean isMicrosummary(in long long bookmarkID,
                            in nsIMicrosummary microsummary);
 
     /**
@@ -336,5 +361,20 @@ interface nsIMicrosummaryService : nsISupports
      * @returns the microsummary being refreshed
      *
      */
-    nsIMicrosummary refreshMicrosummary(in nsISupports bookmarkID);
+    nsIMicrosummary refreshMicrosummary(in long long bookmarkID);
+};
+
+[scriptable, uuid(f9e577a8-19d9-4ca0-a140-b9e43f014470)]
+interface nsILiveTitleNotificationSubject : nsISupports
+{
+    // The ID of the bookmark displaying this title.
+    // Note: in the old bookmarks code, this is an RDF resource.  In Places
+    // it is currently a URI, but after the fix for bug 360133 lands it will
+    // become an integer.
+    readonly attribute long long bookmarkID;
+
+    // The microsummary being displayed as the live title for the bookmark.
+    // The actual value of the microsummary (i.e. the string that gets displayed
+    // to the user) is stored in the content property of this object.
+    readonly attribute nsIMicrosummary microsummary;
 };

@@ -40,10 +40,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.4.17.js';
+
 START("13.4.4.17 - XML inScopeNamespaces()");
 
 TEST(1, true, XML.prototype.hasOwnProperty("inScopeNamespaces"));
- 
+
 x =
 <alpha xmlns:foo="http://foo/" xmlns:bar="http://bar/">
     <bravo>one</bravo>

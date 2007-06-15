@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = '15.8.2.6.js';
+
 /**
    File Name:          15.8.2.6.js
    ECMA Section:       15.8.2.6  Math.ceil(x)
@@ -72,7 +75,7 @@ new TestCase( SECTION,
 
 new TestCase( SECTION,
 	      "Math.ceil(null)",
-	      0,  
+	      0, 
 	      Math.ceil(null) );
 
 new TestCase( SECTION,

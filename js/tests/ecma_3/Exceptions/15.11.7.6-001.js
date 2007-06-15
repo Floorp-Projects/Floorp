@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    14 April 2003
  * SUMMARY: Prototype of predefined error objects should be DontEnum
@@ -42,8 +44,9 @@
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = '15.11.7.6-001.js';
 var UBound = 0;
-var bug = 201989;
+var BUGNUMBER = 201989;
 var summary = 'Prototype of predefined error objects should be DontEnum';
 var status = '';
 var statusitems = [];
@@ -70,15 +73,15 @@ function testDontEnum(F)
 
 
 var list = [
-    "Error",
-    "ConversionError",
-    "EvalError",
-    "RangeError",
-    "ReferenceError",
-    "SyntaxError",
-    "TypeError",
-    "URIError"
-];
+  "Error",
+  "ConversionError",
+  "EvalError",
+  "RangeError",
+  "ReferenceError",
+  "SyntaxError",
+  "TypeError",
+  "URIError"
+  ];
 
 
 for (i in list)
@@ -115,7 +118,7 @@ function addThis()
 function test()
 {
   enterFunc('test');
-  printBugNumber(bug);
+  printBugNumber(BUGNUMBER);
   printStatus(summary);
 
   for (var i=0; i<UBound; i++)

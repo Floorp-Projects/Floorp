@@ -88,11 +88,11 @@ nsAbsoluteContainingBlock::AppendFrames(nsIFrame*      aDelegatingFrame,
 #endif
   mAbsoluteFrames.AppendFrames(nsnull, aFrameList);
 
-  aDelegatingFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
   // no damage to intrinsic widths, since absolutely positioned frames can't
   // change them
   return aDelegatingFrame->PresContext()->PresShell()->
-    FrameNeedsReflow(aDelegatingFrame, nsIPresShell::eResize);
+    FrameNeedsReflow(aDelegatingFrame, nsIPresShell::eResize,
+                     NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
 nsresult
@@ -110,11 +110,11 @@ nsAbsoluteContainingBlock::InsertFrames(nsIFrame*      aDelegatingFrame,
 #endif
   mAbsoluteFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
 
-  aDelegatingFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
   // no damage to intrinsic widths, since absolutely positioned frames can't
   // change them
   return aDelegatingFrame->PresContext()->PresShell()->
-    FrameNeedsReflow(aDelegatingFrame, nsIPresShell::eResize);
+    FrameNeedsReflow(aDelegatingFrame, nsIPresShell::eResize,
+                     NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
 nsresult
@@ -170,8 +170,7 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
   nsIFrame* kidFrame;
   for (kidFrame = mAbsoluteFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
     if (reflowAll ||
-        (kidFrame->GetStateBits() &
-           (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) ||
+        NS_SUBTREE_DIRTY(kidFrame) ||
         FrameDependsOnContainer(kidFrame, aCBWidthChanged, aCBHeightChanged)) {
       // Reflow the frame
       nsReflowStatus  kidStatus;
@@ -184,14 +183,36 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
   return NS_OK;
 }
 
-static PRBool IsFixedPaddingSize(nsStyleUnit aUnit) {
-  return aUnit == eStyleUnit_Coord || aUnit == eStyleUnit_Null;
+static inline PRBool IsFixedPaddingSize(nsStyleUnit aUnit) {
+  return aUnit == eStyleUnit_Coord || aUnit == eStyleUnit_Chars;
 }
-static PRBool IsFixedMarginSize(nsStyleUnit aUnit) {
-  return aUnit == eStyleUnit_Coord || aUnit == eStyleUnit_Null;
+static inline PRBool IsFixedMarginSize(nsStyleUnit aUnit) {
+  return aUnit == eStyleUnit_Coord || aUnit == eStyleUnit_Chars;
 }
-static PRBool IsFixedMaxSize(nsStyleUnit aUnit) {
-  return aUnit == eStyleUnit_Null || aUnit == eStyleUnit_Coord;
+static inline PRBool IsFixedMaxSize(nsStyleUnit aUnit) {
+  return aUnit == eStyleUnit_None || aUnit == eStyleUnit_Coord ||
+         aUnit == eStyleUnit_Chars;
+}
+static inline PRBool IsFixedOffset(nsStyleUnit aUnit) {
+  return aUnit == eStyleUnit_Coord || aUnit == eStyleUnit_Chars;
+}
+static inline PRBool IsFixedHeight(nsStyleUnit aUnit) {
+  return aUnit == eStyleUnit_Coord || aUnit == eStyleUnit_Chars;
+}
+
+static inline PRBool IsFixedWidth(const nsStyleCoord& aCoord)
+{
+  return aCoord.GetUnit() == eStyleUnit_Coord ||
+         aCoord.GetUnit() == eStyleUnit_Chars ||
+         (aCoord.GetUnit() == eStyleUnit_Enumerated &&
+          (aCoord.GetIntValue() == NS_STYLE_WIDTH_INTRINSIC ||
+           aCoord.GetIntValue() == NS_STYLE_WIDTH_MIN_INTRINSIC));
+}
+
+static inline PRBool IsFixedMaxWidth(const nsStyleCoord& aCoord)
+{
+  return aCoord.GetUnit() == eStyleUnit_None ||
+         IsFixedWidth(aCoord);
 }
 
 PRBool
@@ -229,9 +250,10 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
     // width, min-width, and max-width are all lengths, 'none', or enumerated,
     // then our frame width does not depend on the parent width.
     // Note that borders never depend on the parent width
-    if (pos->mWidth.GetUnit() != eStyleUnit_Coord ||
-        pos->mMinWidth.GetUnit() != eStyleUnit_Coord ||
-        !IsFixedMaxSize(pos->mMaxWidth.GetUnit()) ||
+    // XXX All of the enumerated values except -moz-fill are ok too.
+    if (!IsFixedWidth(pos->mWidth) ||
+        !IsFixedWidth(pos->mMinWidth) ||
+        !IsFixedMaxWidth(pos->mMaxWidth) ||
         !IsFixedPaddingSize(padding->mPadding.GetLeftUnit()) ||
         !IsFixedPaddingSize(padding->mPadding.GetRightUnit())) {
       return PR_TRUE;
@@ -251,12 +273,12 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
       // positioned relative to the containing block right edge.
       // 'left' length and 'right' auto is the only combination
       // we can be sure of.
-      if (pos->mOffset.GetLeftUnit() != eStyleUnit_Coord ||
+      if (!IsFixedOffset(pos->mOffset.GetLeftUnit()) ||
           pos->mOffset.GetRightUnit() != eStyleUnit_Auto) {
         return PR_TRUE;
       }
     } else {
-      if (pos->mOffset.GetLeftUnit() != eStyleUnit_Coord) {
+      if (!IsFixedOffset(pos->mOffset.GetLeftUnit())) {
         return PR_TRUE;
       }
     }
@@ -268,11 +290,11 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
     // and height is a length or height and bottom are auto and top is not auto,
     // then our frame height does not depend on the parent height.
     // Note that borders never depend on the parent height
-    if (!(pos->mHeight.GetUnit() == eStyleUnit_Coord ||
+    if (!(IsFixedHeight(pos->mHeight.GetUnit()) ||
           (pos->mHeight.GetUnit() == eStyleUnit_Auto &&
            pos->mOffset.GetBottomUnit() == eStyleUnit_Auto &&
            pos->mOffset.GetTopUnit() != eStyleUnit_Auto)) ||
-        pos->mMinHeight.GetUnit() != eStyleUnit_Coord ||
+        !IsFixedHeight(pos->mMinHeight.GetUnit()) ||
         !IsFixedMaxSize(pos->mMaxHeight.GetUnit()) ||
         !IsFixedPaddingSize(padding->mPadding.GetTopUnit()) ||
         !IsFixedPaddingSize(padding->mPadding.GetBottomUnit())) { 
@@ -284,7 +306,7 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
         !IsFixedMarginSize(margin->mMargin.GetBottomUnit())) {
       return PR_TRUE;
     }
-    if (pos->mOffset.GetTopUnit() != eStyleUnit_Coord) {
+    if (!IsFixedOffset(pos->mOffset.GetTopUnit())) {
       return PR_TRUE;
     }
   }
@@ -418,11 +440,16 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
                kidDesiredSize.width, kidDesiredSize.height);
   aKidFrame->SetRect(rect);
 
-  // Size and position the view and set its opacity, visibility, content
-  // transparency, and clip
-  nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aKidFrame,
-                                             aKidFrame->GetView(),
-                                             &kidDesiredSize.mOverflowArea);
+  nsIView* view = aKidFrame->GetView();
+  if (view) {
+    // Size and position the view and set its opacity, visibility, content
+    // transparency, and clip
+    nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aKidFrame,
+                                               view,
+                                               &kidDesiredSize.mOverflowArea);
+  } else {
+    nsContainerFrame::PositionChildViews(aKidFrame);
+  }
 
   if (oldRect.TopLeft() != rect.TopLeft() || 
       (aDelegatingFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) ||
@@ -436,7 +463,6 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     aKidFrame->GetParent()->Invalidate(oldOverflowRect);
     aKidFrame->GetParent()->Invalidate(kidDesiredSize.mOverflowArea +
                                        rect.TopLeft());
-    nsContainerFrame::PositionChildViews(aKidFrame);
   } else if (oldRect.Size() != rect.Size()) {
     // Invalidate the area where the frame changed size.
     nscoord innerWidth = PR_MIN(oldRect.width, rect.width);

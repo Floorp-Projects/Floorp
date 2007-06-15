@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test for preference not to use document colors</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+
+  #one, #three { background: blue; color: yellow; border: thin solid red; }
+  #two { background: transparent; border: thin solid; }
+
+  /* XXX also test rgba() */
+
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=58048">Mozilla Bug 58048</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=255411">Mozilla Bug 255411</a>
+<div id="display">
+
+<div id="one">Hello</div>
+<div id="two">Hello</div>
+<input id="three" type="button" value="Hello">
+<input id="four" type="button" value="Hello">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+var prefService = Components.classes["@mozilla.org/preferences-service;1"].
+                    getService(Components.interfaces.nsIPrefService);
+var dispBranch = prefService.getBranch("browser.display.");
+
+function get_pref()
+{
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    return dispBranch.getBoolPref("use_document_colors");
+}
+
+function set_pref(val)
+{
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    dispBranch.setBoolPref("use_document_colors", val);
+}
+
+var cs1 = getComputedStyle(document.getElementById("one"), "");
+var cs2 = getComputedStyle(document.getElementById("two"), "");
+var cs3 = getComputedStyle(document.getElementById("three"), "");
+var cs4 = getComputedStyle(document.getElementById("four"), "");
+
+var oldVal = get_pref();
+set_pref(true);
+setTimeout(part1, 0);
+
+var transparentBackgroundColor;
+var inputBackgroundColor, inputColor, inputBorderColor;
+
+function part1()
+{
+
+    isnot(cs1.backgroundColor, cs2.backgroundColor, "background-color applies");
+    isnot(cs1.color, cs2.color, "color applies");
+    isnot(cs1.borderTopColor, cs2.borderTopColor, "border-top-color applies");
+    is(cs1.borderTopColor, cs3.borderTopColor, "border-top-color applies");
+    is(cs1.color, cs3.color, "color applies");
+    is(cs1.backgroundColor, cs3.backgroundColor, "background-color applies");
+    isnot(cs3.backgroundColor, cs4.backgroundColor, "background-color applies");
+    isnot(cs3.color, cs4.color, "color applies");
+    isnot(cs3.borderTopColor, cs4.borderTopColor, "border-top-color applies");
+    transparentBackgroundColor = cs2.backgroundColor;
+    inputBackgroundColor = cs4.backgroundColor;
+    inputColor = cs4.color;
+    inputBorderTopColor = cs4.borderTopColor;
+
+    set_pref(false);
+    setTimeout(part2, 0);
+}
+
+function part2()
+{
+    isnot(cs1.backgroundColor, cs2.backgroundColor, "background-color transparency preserved (opaque)");
+    is(cs2.backgroundColor, transparentBackgroundColor, "background-color transparency is preserved (transparent)");
+    is(cs1.color, cs2.color, "color is blocked");
+    is(cs1.borderTopColor, cs2.borderTopColor, "border-top-color is blocked");
+    is(cs3.backgroundColor, cs1.backgroundColor, "background-color transparency preserved (opaque)");
+    is(cs3.color, cs4.color, "color is blocked");
+    is(cs3.borderTopColor, cs4.borderTopColor, "border-top-color is blocked");
+    is(cs4.backgroundColor, inputBackgroundColor, "background-color not broken on inputs");
+    is(cs4.color, inputColor, "color not broken on inputs");
+    is(cs4.borderTopColor, inputBorderTopColor, "border-top-color not broken on inputs");
+
+    set_pref(oldVal);
+    SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

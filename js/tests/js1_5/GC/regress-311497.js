@@ -34,37 +34,39 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-311497.js';
 //-----------------------------------------------------------------------------
-var bug = 311497;
+var BUGNUMBER = 311497;
 var summary = 'Root pivots in js_HeapSort';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 
 function force_gc()
 {
-    if (this.gc) gc();
-    for (var i = 0; i != 30000; ++i) {
-        var tmp = Math.sin(i);
-        tmp = null;
-    }
+  if (this.gc) gc();
+  for (var i = 0; i != 30000; ++i) {
+    var tmp = Math.sin(i);
+    tmp = null;
+  }
 }
 
 var array = new Array(10);
 for (var i = 0; i != array.length; ++i) {
-    array[i] = String.fromCharCode(i, i, i);
+  array[i] = String.fromCharCode(i, i, i);
 }
 
 function cmp(a, b)
 {
-    for (var i = 0; i != array.length; ++i) {
-        array[i] = null;
-    }
-    force_gc();
-    return 0;
+  for (var i = 0; i != array.length; ++i) {
+    array[i] = null;
+  }
+  force_gc();
+  return 0;
 }
 
 array.sort(cmp);
@@ -74,16 +76,16 @@ array.sort(cmp);
 var null_count = 0;
 var original_string_count = 0;
 for (var i = 0; i != array.length; ++i) {
-    var elem = array[i];
-    if (elem === null) {
-        ++null_count;
-    } else if (typeof elem == "string" && elem.length == 3) {
-        var code = elem.charCodeAt(0);
-        if (0 <= code && code < array.length) {
-            if (code === elem.charCodeAt(1) && code == elem.charCodeAt(2))
-	            ++original_string_count;
-        }
+  var elem = array[i];
+  if (elem === null) {
+    ++null_count;
+  } else if (typeof elem == "string" && elem.length == 3) {
+    var code = elem.charCodeAt(0);
+    if (0 <= code && code < array.length) {
+      if (code === elem.charCodeAt(1) && code == elem.charCodeAt(2))
+	++original_string_count;
     }
+  }
 }
 
 var expect = array.length;

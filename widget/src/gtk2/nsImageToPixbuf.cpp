@@ -90,6 +90,11 @@ nsImageToPixbuf::ImageToPixbuf(nsIImage* aImage)
 GdkPixbuf*
 nsImageToPixbuf::SurfaceToPixbuf(gfxASurface* aSurface, PRInt32 aWidth, PRInt32 aHeight)
 {
+    if (aSurface->CairoStatus()) {
+        NS_ERROR("invalid surface");
+        return nsnull;
+    }
+
     nsRefPtr<gfxImageSurface> imgSurface;
     if (aSurface->GetType() == gfxASurface::SurfaceTypeImage) {
         imgSurface = NS_STATIC_CAST(gfxImageSurface*,

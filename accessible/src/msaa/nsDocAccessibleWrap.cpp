@@ -88,7 +88,7 @@ STDMETHODIMP nsDocAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
     *ppv = NS_STATIC_CAST(ISimpleDOMDocument*, this);
 
   if (NULL == *ppv)
-    return nsAccessibleWrap::QueryInterface(iid, ppv);
+    return nsHyperTextAccessibleWrap::QueryInterface(iid, ppv);
     
   (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
   return S_OK;
@@ -136,7 +136,7 @@ STDMETHODIMP nsDocAccessibleWrap::get_accChild(
       // has focus, but the system thinks the content window has focus.
       nsIDocument* parentDoc = mDocument->GetParentDocument();
       if (parentDoc) {
-        nsIPresShell *parentShell = parentDoc->GetShellAt(0);
+        nsIPresShell *parentShell = parentDoc->GetPrimaryShell();
         nsCOMPtr<nsIWeakReference> weakParentShell(do_GetWeakReference(parentShell));
         if (weakParentShell) {
           nsCOMPtr<nsIAccessibleDocument> parentDocAccessible = 

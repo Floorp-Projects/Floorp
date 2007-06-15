@@ -35,14 +35,16 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-261887.js';
 //-----------------------------------------------------------------------------
 // testcase from Oscar Fogelberg <osfo@home.se>
-var bug = 261887;
+var BUGNUMBER = 261887;
 var summary = 'deleted properties should not be visited by for in';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var count = 0;
@@ -54,14 +56,14 @@ t.one = "one";
 t.two = "two";
 t.three = "three";
 t.four = "four";
-    
+   
 for (var prop in t) {
-   if (count==1) delete(t.three);
-   count++;
-   value = value + t[prop];
-   result = result + prop;
+  if (count==1) delete(t.three);
+  count++;
+  value = value + t[prop];
+  result = result + prop;
 }
-  
+ 
 expect = 'onetwofour:onetwofour';
 actual = value + ':' + result;
 

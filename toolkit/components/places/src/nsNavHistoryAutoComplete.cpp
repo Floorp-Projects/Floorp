@@ -142,13 +142,6 @@
 // happens in response to clicking the down arrow next to the URL).
 #define AUTOCOMPLETE_MAX_PER_TYPED 100
 
-// This is the maximum number of visits that an item can have for us to
-// try to remove the path and put a virtual item with just the hostname as the
-// first entry. The virtual item helps the case where you've visited a site deep
-// down and want to visit the main site. This limit makes sure we don't take
-// the first autocomplete spot for a page you are more likely to go to.
-#define AUTOCOMPLETE_MAX_TRUNCATION_VISIT 6
-
 PRInt32 ComputeAutoCompletePriority(const nsAString& aUrl, PRInt32 aVisitCount,
                                     PRBool aWasTyped, PRBool aIsBookmarked);
 nsresult NormalizeAutocompleteInput(const nsAString& aInput,
@@ -278,7 +271,7 @@ nsNavHistory::CreateAutoCompleteQuery()
   if (mAutoCompleteOnlyTyped) {
     sql = NS_LITERAL_CSTRING(
         "SELECT p.url, p.title, p.visit_count, p.typed, "
-          "(SELECT b.fk FROM moz_bookmarks b WHERE b.fk = p.id AND b.type = ?3) "
+          "(SELECT b.fk FROM moz_bookmarks b WHERE b.fk = p.id) "
         "FROM moz_places p "
         "WHERE p.url >= ?1 AND p.url < ?2 "
         "AND p.typed = 1 "
@@ -287,7 +280,7 @@ nsNavHistory::CreateAutoCompleteQuery()
   } else {
     sql = NS_LITERAL_CSTRING(
         "SELECT p.url, p.title, p.visit_count, p.typed, "
-          "(SELECT b.fk FROM moz_bookmarks b WHERE b.fk = p.id AND b.type = ?3) "
+          "(SELECT b.fk FROM moz_bookmarks b WHERE b.fk = p.id) "
         "FROM moz_places p "
         "WHERE p.url >= ?1 AND p.url < ?2 "
         "AND (p.hidden <> 1 OR p.typed = 1) "
@@ -297,8 +290,6 @@ nsNavHistory::CreateAutoCompleteQuery()
   sql.AppendInt(AUTOCOMPLETE_MAX_PER_PREFIX);
   nsresult rv = mDBConn->CreateStatement(sql,
       getter_AddRefs(mDBAutoCompleteQuery));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBAutoCompleteQuery->BindInt32Parameter(2, nsINavBookmarksService::TYPE_BOOKMARK);
   return rv;
 }
 
@@ -348,6 +339,9 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
     result->SetSearchResult(nsIAutoCompleteResult::RESULT_NOMATCH);
     result->SetDefaultIndex(-1);
   }
+
+  rv = result->SetListener(this);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   aListener->OnSearchResult(this, result);
   return NS_OK;
@@ -496,48 +490,45 @@ nsNavHistory::AutoCompleteFullHistorySearch(const nsAString& aSearchString,
                                AUTOCOMPLETE_MATCHES_SCHEME_PENALTY, &matches);
   }
 
-  // sort according to priorities
-  AutoCompleteResultComparator comparator(this);
-  matches.Sort(comparator);
-
   // fill into result
-  nsAutoString zerothEntry;
-  if (matches.Length() > 0 &&
-      matches[0].visitCount <= AUTOCOMPLETE_MAX_TRUNCATION_VISIT) {
-    // Here, we try to make sure that the first match is always a host name
-    // we take the previous first match and extract its host name and add it
-    // before. If the first item has been visited a lot, don't do that because
-    // they probably want to go there instead
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), NS_ConvertUTF16toUTF8(matches[0].url));
-    NS_ENSURE_SUCCESS(rv, rv);
-    uri->SetPath(NS_LITERAL_CSTRING("/"));
+  if (matches.Length() > 0) {
+    // sort according to priorities
+    AutoCompleteResultComparator comparator(this);
+    matches.Sort(comparator);
 
-    nsCAutoString spec;
-    uri->GetSpec(spec);
-    zerothEntry = NS_ConvertUTF8toUTF16(spec);
-
-    if (! zerothEntry.Equals(matches[0].url))
-      aResult->AppendMatch(zerothEntry, EmptyString());
     rv = aResult->AppendMatch(matches[0].url, matches[0].title);
     NS_ENSURE_SUCCESS(rv, rv);
-  } else if (matches.Length() > 0) {
-    // otherwise, just append the first match
-    rv = aResult->AppendMatch(matches[0].url, matches[0].title);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  for (i = 1; i < matches.Length(); i ++) {
-    // only add ones that are NOT the same as the previous one. It's possible
-    // to get duplicates from the queries.
-    if (! matches[i].url.Equals(matches[i-1].url) &&
-        ! zerothEntry.Equals(matches[i].url)) {
-      rv = aResult->AppendMatch(matches[i].url, matches[i].title);
-      NS_ENSURE_SUCCESS(rv, rv);
+    for (i = 1; i < matches.Length(); i ++) {
+      // only add ones that are NOT the same as the previous one. It's possible
+      // to get duplicates from the queries.
+      if (!matches[i].url.Equals(matches[i-1].url)) {
+        rv = aResult->AppendMatch(matches[i].url, matches[i].title);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
     }
   }
   return NS_OK;
 }
 
+// nsNavHistory::OnValueRemoved (nsIAutoCompleteSimpleResultListener)
+
+NS_IMETHODIMP
+nsNavHistory::OnValueRemoved(nsIAutoCompleteSimpleResult* aResult,
+                             const nsAString& aValue, PRBool aRemoveFromDb)
+{
+  if (!aRemoveFromDb)
+    return NS_OK;
+
+  nsresult rv;
+  nsCOMPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), aValue);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = RemovePage(uri);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
 
 // nsNavHistory::AutoCompleteQueryOnePrefix
 //

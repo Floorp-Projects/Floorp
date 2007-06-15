@@ -1,5 +1,5 @@
 /*
- * $Id: fbtrap.c,v 1.15 2007/04/04 01:09:16 vladimir%pobox.com Exp $
+ * $Id: fbtrap.c,v 1.17 2007/06/11 04:39:03 gavin%gavinsharp.com Exp $
  *
  * Copyright © 2004 Keith Packard
  *

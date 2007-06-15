@@ -1,5 +1,10 @@
 xslt-qa.jar:
+#ifdef MOZ_XUL_APP
+% content xslt-qa %content/xslt-qa/
+% overlay chrome://communicator/content/tasksOverlay.xul chrome://xslt-qa/content/xslt-qa-overlay.xul
+#else
 * content/xslt-qa/contents.rdf                 (contents.rdf)
+#endif
   content/xslt-qa/xslt-qa-overlay.xul
   content/xslt-qa/xslt-qa-overlay.js
   content/xslt-qa/buster/buster.xul

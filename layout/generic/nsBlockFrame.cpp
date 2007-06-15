@@ -517,9 +517,7 @@ nsBlockFrame::InvalidateInternal(const nsRect& aDamageRect,
 nscoord
 nsBlockFrame::GetBaseline() const
 {
-  NS_ASSERTION(!(GetStateBits() & (NS_FRAME_IS_DIRTY |
-                                   NS_FRAME_HAS_DIRTY_CHILDREN)),
-               "frame must not be dirty");
+  NS_ASSERTION(!NS_SUBTREE_DIRTY(this), "frame must not be dirty");
   nscoord result;
   if (nsLayoutUtils::GetLastLineBaseline(this, &result))
     return result;
@@ -639,6 +637,10 @@ nsBlockFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
   AutoNoisyIndenter indent(gNoisyIntrinsic);
 #endif
 
+#ifdef IBMBIDI
+  ResolveBidi();
+#endif // IBMBIDI
+
   PRInt32 lineNumber = 0;
   InlineMinWidthData data;
   for (line_iterator line = begin_lines(), line_end = end_lines();
@@ -695,6 +697,10 @@ nsBlockFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   }
   AutoNoisyIndenter indent(gNoisyIntrinsic);
 #endif
+
+#ifdef IBMBIDI
+  ResolveBidi();
+#endif // IBMBIDI
 
   PRInt32 lineNumber = 0;
   InlinePrefWidthData data;
@@ -878,19 +884,12 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
                            marginRoot, marginRoot, needSpaceManager);
 
 #ifdef IBMBIDI
-  if (! mLines.empty()) {
-    if (aPresContext->BidiEnabled()) {
-      nsBidiPresUtils* bidiUtils = aPresContext->GetBidiUtils();
-      if (bidiUtils) {
-        bidiUtils->Resolve(aPresContext, this,
-                           mLines.front()->mFirstChild,
-                           IsVisualFormControl(aPresContext));
-      }
-    }
-  }
+  ResolveBidi();
 #endif // IBMBIDI
 
-  RenumberLists(aPresContext);
+  if (RenumberLists(aPresContext)) {
+    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+  }
 
   nsresult rv = NS_OK;
 
@@ -1120,10 +1119,10 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
     aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, childBounds);
   }
 
-  FinishAndStoreOverflow(&aMetrics);
-
   // Determine if we need to repaint our border, background or outline
   CheckInvalidateSizeChange(aPresContext, aMetrics, aReflowState);
+
+  FinishAndStoreOverflow(&aMetrics);
 
   // Clear the space manager pointer in the block reflow state so we
   // don't waste time translating the coordinate system back on a dead
@@ -2428,10 +2427,11 @@ nsBlockFrame::AttributeChanged(PRInt32         aNameSpaceID,
     nsPresContext* presContext = PresContext();
 
     // XXX Not sure if this is necessary anymore
-    RenumberLists(presContext);
-
-    presContext->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eStyleChange);
+    if (RenumberLists(presContext)) {
+      presContext->PresShell()->
+        FrameNeedsReflow(this, nsIPresShell::eStyleChange,
+                         NS_FRAME_HAS_DIRTY_CHILDREN);
+    }
   }
   else if (nsGkAtoms::value == aAttribute) {
     const nsStyleDisplay* styleDisplay = GetStyleDisplay();
@@ -2447,10 +2447,11 @@ nsBlockFrame::AttributeChanged(PRInt32         aNameSpaceID,
       if (nsnull != blockParent) {
         nsPresContext* presContext = PresContext();
         // XXX Not sure if this is necessary anymore
-        blockParent->RenumberLists(presContext);
-
-        presContext->PresShell()->
-          FrameNeedsReflow(blockParent, nsIPresShell::eStyleChange);
+        if (blockParent->RenumberLists(presContext)) {
+          presContext->PresShell()->
+            FrameNeedsReflow(blockParent, nsIPresShell::eStyleChange,
+                             NS_FRAME_HAS_DIRTY_CHILDREN);
+        }
       }
     }
   }
@@ -2461,16 +2462,14 @@ nsBlockFrame::AttributeChanged(PRInt32         aNameSpaceID,
 inline PRBool
 IsPaddingZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
 {
-    return (aUnit == eStyleUnit_Null ||
-            (aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0) ||
+    return ((aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0) ||
             (aUnit == eStyleUnit_Percent && aCoord.GetPercentValue() == 0.0));
 }
 
 inline PRBool
 IsMarginZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
 {
-    return (aUnit == eStyleUnit_Null ||
-            aUnit == eStyleUnit_Auto ||
+    return (aUnit == eStyleUnit_Auto ||
             (aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0) ||
             (aUnit == eStyleUnit_Percent && aCoord.GetPercentValue() == 0.0));
 }
@@ -3204,6 +3203,11 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     /* XXX get the height right! */
     availHeight = aState.mAvailSpaceRect.height;
   }
+
+  // Make sure to enable resize optimization before we call BeginLineReflow
+  // because it might get disabled there
+  aLine->EnableResizeReflowOptimization();
+
   aLineLayout.BeginLineReflow(x, aState.mY,
                               availWidth, availHeight,
                               impactedByFloats,
@@ -3224,7 +3228,6 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   LineReflowStatus lineReflowStatus = LINE_REFLOW_OK;
   PRInt32 i;
   nsIFrame* frame = aLine->mFirstChild;
-  aLine->EnableResizeReflowOptimization();
 
   // Determine whether this is a line of placeholders for out-of-flow
   // continuations
@@ -4578,9 +4581,9 @@ nsBlockFrame::AppendFrames(nsIAtom*  aListName,
 #endif
   nsresult rv = AddFrames(aFrameList, lastKid);
   if (NS_SUCCEEDED(rv)) {
-    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
     PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+      FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                       NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
   }
   return rv;
 }
@@ -4626,9 +4629,9 @@ nsBlockFrame::InsertFrames(nsIAtom*  aListName,
   if (aListName != nsGkAtoms::nextBidi)
 #endif // IBMBIDI
   if (NS_SUCCEEDED(rv)) {
-    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
     PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+      FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                       NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
   }
   return rv;
 }
@@ -4901,9 +4904,9 @@ nsBlockFrame::RemoveFrame(nsIAtom*  aListName,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
     PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+      FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                       NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
   }
   return rv;
 }
@@ -5945,18 +5948,27 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
   else {
     nsPresContext* presContext = PresContext();
 
-    // A block that's part of an {ib} split can't have a first-letter frame, no
-    // matter what its style says.  Neither can a block with a previous
-    // continuation.  Unfortunately, we can get SetInitialChildList() called on
-    // us before we have the NS_FRAME_IS_SPECIAL bit set for an {ib} split, so
-    // check our style context pseudo instead.
-    NS_ASSERTION(GetPrevContinuation() ||
-                 (GetStyleContext()->GetPseudoType() ==
-                  nsCSSAnonBoxes::mozAnonymousBlock) ||
-                 (nsRefPtr<nsStyleContext>(GetFirstLetterStyle(presContext)) !=
-                  nsnull) ==
+#ifdef DEBUG
+    // The only times a block that is an anonymous box is allowed to have a
+    // first-letter frame are when it's the block inside a non-anonymous cell,
+    // the block inside a fieldset, a scrolled content block, or a column
+    // content block.  Note that this means that blocks which are the anonymous
+    // block in {ib} splits do NOT get first-letter frames.  Also, a block that
+    // has a previous continuation can't have a first letter frame.
+    nsIAtom *pseudo = GetStyleContext()->GetPseudoType();
+    PRBool haveFirstLetterStyle =
+      !GetPrevContinuation() &&
+      (!pseudo ||
+       (pseudo == nsCSSAnonBoxes::cellContent &&
+        mParent->GetStyleContext()->GetPseudoType() == nsnull) ||
+       pseudo == nsCSSAnonBoxes::fieldsetContent ||
+       pseudo == nsCSSAnonBoxes::scrolledContent ||
+       pseudo == nsCSSAnonBoxes::columnContent) &&
+      nsRefPtr<nsStyleContext>(GetFirstLetterStyle(presContext)) != nsnull;
+    NS_ASSERTION(haveFirstLetterStyle ==
                  ((mState & NS_BLOCK_HAS_FIRST_LETTER_STYLE) != 0),
                  "NS_BLOCK_HAS_FIRST_LETTER_STYLE state out of sync");
+#endif
     
     rv = AddFrames(aChildList, nsnull);
     if (NS_FAILED(rv)) {
@@ -6029,13 +6041,13 @@ nsBlockFrame::FrameStartsCounterScope(nsIFrame* aFrame)
          localName == nsGkAtoms::menu;
 }
 
-void
+PRBool
 nsBlockFrame::RenumberLists(nsPresContext* aPresContext)
 {
   if (!FrameStartsCounterScope(this)) {
     // If this frame doesn't start a counter scope then we don't need
     // to renumber child list items.
-    return;
+    return PR_FALSE;
   }
 
   // Setup initial list ordinal value
@@ -6053,8 +6065,7 @@ nsBlockFrame::RenumberLists(nsPresContext* aPresContext)
 
   // Get to first-in-flow
   nsBlockFrame* block = (nsBlockFrame*) GetFirstInFlow();
-  if (RenumberListsInBlock(aPresContext, block, &ordinal, 0))
-    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+  return RenumberListsInBlock(aPresContext, block, &ordinal, 0);
 }
 
 PRBool
@@ -6335,6 +6346,27 @@ nsBlockFrame::BlockNeedsSpaceManager(nsIFrame* aBlock)
 // XXX keep the text-run data in the first-in-flow of the block
 
 #ifdef IBMBIDI
+nsresult
+nsBlockFrame::ResolveBidi()
+{
+  nsPresContext* presContext = PresContext();
+  if (!presContext->BidiEnabled()) {
+    return NS_OK;
+  }
+
+  if (mLines.empty()) {
+    return NS_OK;
+  }
+
+  nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
+  if (!bidiUtils)
+    return NS_OK;
+
+  return bidiUtils->Resolve(presContext, this,
+                            mLines.front()->mFirstChild,
+                            IsVisualFormControl(presContext));
+}
+
 PRBool
 nsBlockFrame::IsVisualFormControl(nsPresContext* aPresContext)
 {

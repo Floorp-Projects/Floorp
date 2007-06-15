@@ -36,54 +36,56 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '10.1.5-4.js';
+
 /**
-    File Name:          10.1.5-4.js
-    ECMA Section:       10.1.5 Global Object
-    Description:
-    There is a unique global object which is created before control enters
-    any execution context. Initially the global object has the following
-    properties:
+   File Name:          10.1.5-4.js
+   ECMA Section:       10.1.5 Global Object
+   Description:
+   There is a unique global object which is created before control enters
+   any execution context. Initially the global object has the following
+   properties:
 
-    Built-in objects such as Math, String, Date, parseInt, etc. These have
-    attributes { DontEnum }.
+   Built-in objects such as Math, String, Date, parseInt, etc. These have
+   attributes { DontEnum }.
 
-    Additional host defined properties. This may include a property whose
-    value is the global object itself, for example window in HTML.
+   Additional host defined properties. This may include a property whose
+   value is the global object itself, for example window in HTML.
 
-    As control enters execution contexts, and as ECMAScript code is executed,
-    additional properties may be added to the global object and the initial
-    properties may be changed.
+   As control enters execution contexts, and as ECMAScript code is executed,
+   additional properties may be added to the global object and the initial
+   properties may be changed.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
-    var SECTION = "10.5.1-4";
-    var VERSION = "ECMA_1";
-    startTest();
+var SECTION = "10.5.1-4";
+var VERSION = "ECMA_1";
+startTest();
 
-    writeHeaderToLog( SECTION + " Global Object");
+writeHeaderToLog( SECTION + " Global Object");
 
-    new TestCase( "SECTION", "Anonymous Code check" );
+new TestCase( "SECTION", "Anonymous Code check" );
 
 
-    var EVAL_STRING = 'if ( Object == null ) { testcases[0].reason += " Object == null" ; }' +
-        'if ( Function == null ) { testcases[0].reason += " Function == null"; }' +
-        'if ( String == null ) { testcases[0].reason += " String == null"; }'   +
-        'if ( Array == null ) { testcases[0].reason += " Array == null"; }'     +
-        'if ( Number == null ) { testcases[0].reason += " Function == null";}'  +
-        'if ( Math == null ) { testcases[0].reason += " Math == null"; }'       +
-        'if ( Boolean == null ) { testcases[0].reason += " Boolean == null"; }' +
-        'if ( Date  == null ) { testcases[0].reason += " Date == null"; }'      +
-        'if ( eval == null ) { testcases[0].reason += " eval == null"; }'       +
-        'if ( parseInt == null ) { testcases[0].reason += " parseInt == null"; }' ;
+var EVAL_STRING = 'if ( Object == null ) { gTestcases[0].reason += " Object == null" ; }' +
+  'if ( Function == null ) { gTestcases[0].reason += " Function == null"; }' +
+  'if ( String == null ) { gTestcases[0].reason += " String == null"; }'   +
+  'if ( Array == null ) { gTestcases[0].reason += " Array == null"; }'     +
+  'if ( Number == null ) { gTestcases[0].reason += " Function == null";}'  +
+  'if ( Math == null ) { gTestcases[0].reason += " Math == null"; }'       +
+  'if ( Boolean == null ) { gTestcases[0].reason += " Boolean == null"; }' +
+  'if ( Date  == null ) { gTestcases[0].reason += " Date == null"; }'      +
+  'if ( eval == null ) { gTestcases[0].reason += " eval == null"; }'       +
+  'if ( parseInt == null ) { gTestcases[0].reason += " parseInt == null"; }' ;
 
-    var NEW_FUNCTION = new Function( EVAL_STRING );
+var NEW_FUNCTION = new Function( EVAL_STRING );
 
-    if ( testcases[0].reason != "" ) {
-        testcases[0].actual = "fail";
-    } else {
-        testcases[0].actual = "pass";
-    }
-    testcases[0].expect = "pass";
+if ( gTestcases[0].reason != "" ) {
+  gTestcases[0].actual = "fail";
+} else {
+  gTestcases[0].actual = "pass";
+}
+gTestcases[0].expect = "pass";
 
-    test();
+test();

@@ -72,6 +72,8 @@
 #include "nsRuleNode.h"
 #include "nsUnicharUtils.h"
 #include "nsCSSPseudoElements.h"
+#include "nsIPrincipal.h"
+#include "nsComponentManagerUtils.h"
 
 #include "nsContentUtils.h"
 #include "nsContentErrors.h"
@@ -810,6 +812,7 @@ public:
                                      PRBool aAllocate);
   virtual nsresult GetCSSParsingEnvironment(nsIURI** aSheetURI,
                                             nsIURI** aBaseURI,
+                                            nsIPrincipal** aSheetPrincipal,
                                             nsICSSLoader** aCSSLoader,
                                             nsICSSParser** aCSSParser);
   virtual nsresult DeclarationChanged();
@@ -911,12 +914,14 @@ DOMCSSDeclarationImpl::GetCSSDeclaration(nsCSSDeclaration **aDecl,
 nsresult
 DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aSheetURI, 
                                                 nsIURI** aBaseURI,
+                                                nsIPrincipal** aSheetPrincipal,
                                                 nsICSSLoader** aCSSLoader,
                                                 nsICSSParser** aCSSParser)
 {
   // null out the out params since some of them may not get initialized below
   *aSheetURI = nsnull;
   *aBaseURI = nsnull;
+  *aSheetPrincipal = nsnull;
   *aCSSLoader = nsnull;
   *aCSSParser = nsnull;
   nsresult result;
@@ -926,6 +931,12 @@ DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aSheetURI,
     if (sheet) {
       sheet->GetSheetURI(aSheetURI);
       sheet->GetBaseURI(aBaseURI);
+
+      nsCOMPtr<nsICSSStyleSheet> cssSheet(do_QueryInterface(sheet));
+      if (cssSheet) {
+        NS_ADDREF(*aSheetPrincipal = cssSheet->Principal());
+      }
+
       nsCOMPtr<nsIDocument> document;
       sheet->GetOwningDocument(*getter_AddRefs(document));
       if (document) {
@@ -938,6 +949,11 @@ DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aSheetURI,
     result = (*aCSSLoader)->GetParserFor(nsnull, aCSSParser);
   } else {
     result = NS_NewCSSParser(aCSSParser);
+  }
+
+  if (NS_SUCCEEDED(result) && !*aSheetPrincipal) {
+    result = CallCreateInstance("@mozilla.org/nullprincipal;1",
+                                aSheetPrincipal);
   }
 
   return result;

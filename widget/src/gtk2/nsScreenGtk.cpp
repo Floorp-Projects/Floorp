@@ -230,7 +230,6 @@ nsScreenGtk :: Init (PRBool aReInit)
   g_free (workareas);
 }
 
-#ifdef MOZ_ENABLE_XINERAMA
 void
 nsScreenGtk :: Init (XineramaScreenInfo *aScreenInfo)
 {
@@ -241,4 +240,3 @@ nsScreenGtk :: Init (XineramaScreenInfo *aScreenInfo)
 
   mAvailRect = mRect = xineRect;
 }
-#endif // MOZ_ENABLE_XINERAMA

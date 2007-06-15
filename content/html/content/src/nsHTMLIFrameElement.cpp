@@ -43,6 +43,7 @@
 #include "nsMappedAttributes.h"
 #include "nsDOMError.h"
 #include "nsRuleData.h"
+#include "nsStyleConsts.h"
 
 class nsHTMLIFrameElement : public nsGenericHTMLFrameElement,
                             public nsIDOMHTMLIFrameElement

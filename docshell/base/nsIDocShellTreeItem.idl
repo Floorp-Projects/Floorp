@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsIDocShellTreeNode.idl"
 
 interface nsIDocShellTreeOwner;
 
@@ -48,8 +48,8 @@ interface nsIDocShellTreeOwner;
  * node or a leaf. 
  */
 
-[scriptable, uuid(7d935d63-6d2a-4600-afb5-9a4f7d68b825)]
-interface nsIDocShellTreeItem : nsISupports
+[scriptable, uuid(09b54ec1-d98a-49a9-bc95-3219e8b55089)]
+interface nsIDocShellTreeItem : nsIDocShellTreeNode
 {
 	/*
 	name of the DocShellTreeItem
@@ -157,8 +157,5 @@ interface nsIDocShellTreeItem : nsISupports
 	*/
 	readonly attribute nsIDocShellTreeOwner treeOwner;
 	[noscript] void setTreeOwner(in nsIDocShellTreeOwner treeOwner);
-
-	/* The offset of yourself in your parent's child list */
-	attribute long childOffset;
 };
 

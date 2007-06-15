@@ -79,7 +79,7 @@ public:
   UINT   GetMsg()    { return mMsg; };
   WPARAM GetWParam() { return mWParam; };
   LPARAM GetLParam() { return mLParam; };
-  PRBool InUse()     { return (mWnd!=NULL || mMsg!=0); };
+  PRBool InUse()     { return (mWnd!=NULL); };
 
   NS_DECL_NSIRUNNABLE
 
@@ -89,7 +89,6 @@ protected:
   UINT   mMsg;
   WPARAM mWParam;
   LPARAM mLParam;
-  PRBool mIsAlloced;
 };
 
 PluginWindowEvent::PluginWindowEvent()
@@ -108,8 +107,8 @@ void PluginWindowEvent::Clear()
 void PluginWindowEvent::Init(const PluginWindowWeakRef &ref, HWND aWnd,
                              UINT aMsg, WPARAM aWParam, LPARAM aLParam)
 {
-  NS_ASSERTION(aWnd!=NULL && aMsg!=0, "invalid plugin event value");
-  NS_ASSERTION(mWnd==NULL && mMsg==0 && mWParam==0 && mLParam==0,"event already in use");
+  NS_ASSERTION(aWnd != NULL, "invalid plugin event value");
+  NS_ASSERTION(mWnd == NULL, "event already in use");
   mPluginWindowRef = ref;
   mWnd    = aWnd;
   mMsg    = aMsg;
@@ -145,7 +144,10 @@ public:
   // locals
   WNDPROC GetPrevWindowProc();
   WNDPROC GetWindowProc();
-  PluginWindowEvent * GetPluginWindowEvent(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLParam);
+  PluginWindowEvent * GetPluginWindowEvent(HWND aWnd,
+                                           UINT aMsg,
+                                           WPARAM aWParam,
+                                           LPARAM aLParam);
 
 private:
   WNDPROC mPrevWinProc;
@@ -437,7 +439,7 @@ NS_IMETHODIMP PluginWindowEvent::Run()
   return NS_OK;
 }
 
-PluginWindowEvent*
+PluginWindowEvent * 
 nsPluginNativeWindowWin::GetPluginWindowEvent(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLParam)
 {
   if (!mWeakRef) {
@@ -447,20 +449,25 @@ nsPluginNativeWindowWin::GetPluginWindowEvent(HWND aWnd, UINT aMsg, WPARAM aWPar
   }
 
   PluginWindowEvent *event;
-  if (!mCachedPluginWindowEvent || mCachedPluginWindowEvent->InUse()) {
-    // We have the ability to alloc if needed in case in the future some plugin
-    // should post multiple PostMessages. However, this could lead to many
-    // alloc's per second which could become a performance issue. If/when this
-    // is asserting then this needs to be studied. See bug 169247
-    NS_ASSERTION(1, "possible plugin performance issue");
+
+  // We have the ability to alloc if needed in case in the future some plugin
+  // should post multiple PostMessages. However, this could lead to many
+  // alloc's per second which could become a performance issue. See bug 169247.
+  if (!mCachedPluginWindowEvent) 
+  {
     event = new PluginWindowEvent();
-    if (!event)
-      return nsnull;
+    if (!event) return nsnull;
+    mCachedPluginWindowEvent = event;
   }
-  else {
+  else if (mCachedPluginWindowEvent->InUse())
+  {
+    event = new PluginWindowEvent();
+    if (!event) return nsnull;
+  }
+  else
+  {
     event = mCachedPluginWindowEvent;
   }
-  NS_ADDREF(event);
 
   event->Init(mWeakRef, aWnd, aMsg, aWParam, aLParam);
   return event;

@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Wladimir Palant 
+ * Contributor(s): Wladimir Palant
  *                 shutdown
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -35,13 +35,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-301574.js';
 //-----------------------------------------------------------------------------
-var bug = 301574;
+var BUGNUMBER = 301574;
 var summary = 'E4X should be enabled even when e4x=1 not specified';
 var actual = 'No error';
 var expect = 'No error';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 try
@@ -51,7 +53,7 @@ try
 catch(e)
 {
   actual = 'error: ' + e;
-}  
+} 
 
 reportCompare(expect, actual, summary + ': XML()');
 
@@ -62,6 +64,6 @@ try
 catch(e)
 {
   actual = 'error: ' + e;
-}  
+} 
 
 reportCompare(expect, actual, summary + ': XMLList()');

@@ -45,7 +45,7 @@
 #include "nsHashtable.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIChannel.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -172,6 +172,36 @@ nsXBLBinding::~nsXBLBinding(void)
   nsIXBLDocumentInfo* info = mPrototypeBinding->XBLDocumentInfo();
   NS_RELEASE(info);
 }
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+TraverseKey(nsISupports* aKey, nsInsertionPointList* aData, void* aClosure)
+{
+  nsCycleCollectionTraversalCallback &cb = 
+    *NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aClosure);
+
+  cb.NoteXPCOMChild(aKey);
+  if (aData) {
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY(*aData, nsXBLInsertionPoint)
+  }
+  return PL_DHASH_NEXT;
+}
+
+NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(nsXBLBinding)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXBLBinding)
+  // XXX Probably can't unlink mPrototypeBinding->XBLDocumentInfo(), because
+  //     mPrototypeBinding is weak.
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContent)
+  // XXX What about mNextBinding and mInsertionPointTable?
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXBLBinding)
+  cb.NoteXPCOMChild(tmp->mPrototypeBinding->XBLDocumentInfo());
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mNextBinding, nsXBLBinding)
+  if (tmp->mInsertionPointTable)
+    tmp->mInsertionPointTable->EnumerateRead(TraverseKey, &cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsXBLBinding, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsXBLBinding, Release)
 
 void
 nsXBLBinding::SetBaseBinding(nsXBLBinding* aBinding)
@@ -815,8 +845,8 @@ nsXBLBinding::UnhookEventHandlers()
   nsXBLPrototypeHandler* handlerChain = mPrototypeBinding->GetPrototypeHandlers();
 
   if (handlerChain) {
-    nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
-    nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(receiver);
+    nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(mBoundElement);
+    nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(piTarget);
     nsCOMPtr<nsIDOMEventGroup> systemEventGroup;
 
     nsXBLPrototypeHandler* curr;
@@ -844,7 +874,7 @@ nsXBLBinding::UnhookEventHandlers()
         nsIDOMEventGroup* eventGroup = nsnull;
         if (curr->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) {
           if (!systemEventGroup)
-            receiver->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
+            piTarget->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
           eventGroup = systemEventGroup;
         }
 
@@ -873,7 +903,7 @@ nsXBLBinding::UnhookEventHandlers()
       nsIDOMEventGroup* eventGroup = nsnull;
       if (handler->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) {
         if (!systemEventGroup)
-          receiver->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
+          piTarget->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
         eventGroup = systemEventGroup;
       }
 
@@ -1250,6 +1280,18 @@ nsXBLBinding::GetInsertionPointsFor(nsIContent* aParent,
   }
 
   return NS_OK;
+}
+
+nsInsertionPointList*
+nsXBLBinding::GetExistingInsertionPointsFor(nsIContent* aParent)
+{
+  if (!mInsertionPointTable) {
+    return nsnull;
+  }
+
+  nsInsertionPointList* result = nsnull;
+  mInsertionPointTable->Get(aParent, &result);
+  return result;
 }
 
 nsIContent*

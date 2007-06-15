@@ -69,6 +69,7 @@
 #include "nsCRT.h"
 #include "nsDOMError.h"
 #include "nsEventDispatcher.h"
+#include "nsPresShellIterator.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gLog;
@@ -391,9 +392,9 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
     }
 #endif
 
-    PRUint32 count = document->GetNumberOfShells();
-    for (PRUint32 i = 0; i < count; i++) {
-      nsIPresShell *shell = document->GetShellAt(i);
+    nsPresShellIterator iter(document);
+    nsCOMPtr<nsIPresShell> shell;
+    while ((shell = iter.GetNextShell())) {
 
       // Retrieve the context in which our DOM event will fire.
       nsCOMPtr<nsPresContext> context = shell->GetPresContext();

@@ -41,6 +41,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.4.10.js';
+
 var nTest = 0;
 
 START("13.4.4.10 - XML contains()");
@@ -75,16 +77,16 @@ TEST(++nTest, expect, actual);
 
 // Martin - bug 289790
 
-function containsTest(xmlObject, value) 
+function containsTest(xmlObject, value)
 {
     var comparison    = (xmlObject == value);
     var containsCheck = xmlObject.contains(value);
     var result        = (comparison == containsCheck);
 
-    printStatus('Comparing ' + xmlObject.nodeKind() + 
+    printStatus('Comparing ' + xmlObject.nodeKind() +
                 ' against ' + (typeof value) + ':');
 
-    printStatus('==: ' + comparison + '; contains: ' + containsCheck + 
+    printStatus('==: ' + comparison + '; contains: ' + containsCheck +
                 '; check ' + (result ? 'passed' : 'failed'));
     return result;
 }

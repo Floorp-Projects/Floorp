@@ -1,19 +1,32 @@
 {
     IBClasses = (
         {
-            ACTIONS = {closeClicked = id; sendClicked = id; }; 
+            ACTIONS = {
+                closeAndSendClicked = id; 
+                closeClicked = id; 
+                emailMeClicked = id; 
+                restartClicked = id; 
+                viewReportClicked = id; 
+            }; 
             CLASS = CrashReporterUI; 
             LANGUAGE = ObjC; 
             OUTLETS = {
                 closeButton = NSButton; 
                 descriptionLabel = NSTextField; 
-                disableReportingButton = NSButton; 
-                dontSendButton = NSButton; 
-                enableView = NSView; 
-                progressBar = NSProgressIndicator; 
-                progressLabel = NSTextField; 
-                sendButton = NSButton; 
-                uploadingView = NSView; 
+                emailMeButton = NSButton; 
+                emailText = NSTextField; 
+                errorCloseButton = NSButton; 
+                errorHeaderLabel = NSTextField; 
+                errorLabel = NSTextField; 
+                errorView = NSView; 
+                headerLabel = NSTextField; 
+                restartButton = NSButton; 
+                submitReportButton = NSButton; 
+                viewReportButton = NSButton; 
+                viewReportLabel = NSTextField; 
+                viewReportScrollView = NSScrollView; 
+                viewReportTextView = NSTextView; 
+                window = NSWindow; 
             }; 
             SUPERCLASS = NSObject; 
         }, 

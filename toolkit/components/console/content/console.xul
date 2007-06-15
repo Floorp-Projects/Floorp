@@ -56,8 +56,8 @@
         persist="screenX screenY width height sizemode"
         onclose="return closeWindow(false);"> 
 
-  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/console.js"/>
+  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/javascript" src="chrome://global/content/console.js"/>
 
   <stringbundle id="ConsoleBundle" src="chrome://global/locale/console.properties"/>
 
@@ -121,14 +121,16 @@
       <toolbarbutton observes="Console:clear"/>
     </toolbar>
   
-    <toolbar class="chromeclass-toolbar" id="ToolbarEval">
+    <toolbar class="chromeclass-toolbar" id="ToolbarEval" align="center">
+      <label value="&codeEval.label;" accesskey="&codeEval.accesskey;" control="TextboxEval"/>
       <textbox id="TextboxEval" class="toolbar" value="" onkeypress="onEvalKeyPress(event)" flex="1"/>
-      <toolbarbutton id="ButtonEval" label="&evaluate.label;" oncommand="evaluateTypein()"/>
+      <toolbarbutton id="ButtonEval" label="&evaluate.label;"
+                     accesskey="&evaluate.accesskey;" oncommand="evaluateTypein()"/>
     </toolbar>
   </toolbox>
   
   <vbox id="ConsoleBox" class="console-box" flex="1" context="ConsoleContext" persist="sortOrder"/>
 
-  <iframe name="Evaluator" id="Evaluator" collapsed="true" src="chrome://global/content/blank.html"/>
+  <iframe name="Evaluator" id="Evaluator" collapsed="true"/>
 
 </window>

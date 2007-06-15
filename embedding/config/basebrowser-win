@@ -182,6 +182,7 @@ components\dom_css.xpt
 components\dom_events.xpt
 components\dom_html.xpt
 components\dom_loadsave.xpt
+components\dom_offline.xpt
 components\dom_range.xpt
 components\dom_sidebar.xpt
 components\dom_storage.xpt
@@ -298,10 +299,6 @@ res\html\gopher-unknown.gif
 ; res\fonts\mathfontPUA.properties
 ; res\fonts\mathfontSymbol.properties
 
-
-; p3p
-components\p3p.dll
-components\p3p.xpt
 
 ; Effective TLD
 res\effective_tld_names.dat

@@ -156,14 +156,35 @@ public:
     // nsIListControlFrame
   virtual void SetComboboxFrame(nsIFrame* aComboboxFrame);
   virtual PRInt32 GetSelectedIndex(); 
+
+  /**
+   * Gets the text of the currently selected item.
+   * If the there are zero items then an empty string is returned
+   * If there is nothing selected, then the 0th item's text is returned.
+   */
   virtual void GetOptionText(PRInt32 aIndex, nsAString & aStr);
+
   virtual void CaptureMouseEvents(PRBool aGrabMouseEvents);
   virtual nscoord GetHeightOfARow();
   virtual PRInt32 GetNumberOfOptions();  
   virtual void SyncViewWithFrame();
   virtual void AboutToDropDown();
+
+  /**
+   * @note This method might destroy |this|.
+   */
   virtual void AboutToRollup();
+
+  /**
+   * Dispatch a DOM onchange event synchroniously.
+   * @note This method might destroy |this|.
+   */
   virtual void FireOnChange();
+
+  /**
+   * Makes aIndex the selected option of a combobox list.
+   * @note This method might destroy |this|.
+   */
   virtual void ComboboxFinish(PRInt32 aIndex);
   virtual void OnContentReset();
 
@@ -172,12 +193,17 @@ public:
   NS_IMETHOD RemoveOption(nsPresContext* aPresContext, PRInt32 index);
   NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
   NS_IMETHOD DoneAddingChildren(PRBool aIsDone);
+
+  /**
+   * Gets the content (an option) by index and then set it as
+   * being selected or not selected.
+   */
   NS_IMETHOD OnOptionSelected(nsPresContext* aPresContext,
                               PRInt32 aIndex,
                               PRBool aSelected);
   NS_IMETHOD OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex);
 
-  // mouse event listeners
+  // mouse event listeners (both might destroy |this|)
   nsresult MouseDown(nsIDOMEvent* aMouseEvent);
   nsresult MouseUp(nsIDOMEvent* aMouseEvent);
 
@@ -185,14 +211,26 @@ public:
   nsresult MouseMove(nsIDOMEvent* aMouseEvent);
   nsresult DragMove(nsIDOMEvent* aMouseEvent);
 
-  // key listeners
+  // key listener (might destroy |this|)
   nsresult KeyPress(nsIDOMEvent* aKeyEvent);
 
-  // Static Methods
+  /**
+   * Returns the options collection for aContent, if any.
+   */
   static already_AddRefed<nsIDOMHTMLOptionsCollection>
     GetOptions(nsIContent * aContent);
+
+  /**
+   * Returns the nsIDOMHTMLOptionElement for a given index 
+   * in the select's collection.
+   */
   static already_AddRefed<nsIDOMHTMLOptionElement>
     GetOption(nsIDOMHTMLOptionsCollection* aOptions, PRInt32 aIndex);
+
+  /**
+   * Returns the nsIContent object in the collection 
+   * for a given index.
+   */
   static already_AddRefed<nsIContent>
     GetOptionAsContent(nsIDOMHTMLOptionsCollection* aCollection,PRInt32 aIndex);
 
@@ -232,21 +270,61 @@ public:
   PRBool IsInDropDownMode() const;
 
 #ifdef ACCESSIBILITY
+  /**
+   * Post a custom DOM event for the change, so that accessibility can
+   * fire a native focus event for accessibility 
+   * (Some 3rd party products need to track our focus)
+   */
   void FireMenuItemActiveEvent(); // Inform assistive tech what got focused
 #endif
 
 protected:
-  // Returns PR_FALSE if calling it destroyed |this|.
+  /**
+   * Updates the selected text in a combobox and then calls FireOnChange().
+   * Returns PR_FALSE if calling it destroyed |this|.
+   */
   PRBool     UpdateSelection();
+
+  /**
+   * Returns whether the nsIDOMHTMLSelectElement supports 
+   * multiple selection.
+   */
   PRBool     GetMultiple(nsIDOMHTMLSelectElement* aSelect = nsnull) const;
+
+  /**
+   * Toggles (show/hide) the combobox dropdown menu.
+   * @note This method might destroy |this|.
+   */
   void       DropDownToggleKey(nsIDOMEvent* aKeyEvent);
+
   nsresult   IsOptionDisabled(PRInt32 anIndex, PRBool &aIsDisabled);
   nsresult   ScrollToFrame(nsIContent * aOptElement);
   nsresult   ScrollToIndex(PRInt32 anIndex);
+
+  /**
+   * When the user clicks on the comboboxframe to show the dropdown
+   * listbox, they then have to move the mouse into the list. We don't
+   * want to process those mouse events as selection events (i.e., to
+   * scroll list items into view). So we ignore the events until
+   * the mouse moves below our border-inner-edge, when
+   * mItemSelectionStarted is set.
+   *
+   * @param aPoint relative to this frame
+   */
   PRBool     IgnoreMouseEventForSelection(nsIDOMEvent* aEvent);
+
+  /**
+   * If the dropdown is showing and the mouse has moved below our
+   * border-inner-edge, then set mItemSelectionStarted.
+   */
   void       UpdateInListState(nsIDOMEvent* aEvent);
   void       AdjustIndexForDisabledOpt(PRInt32 aStartIndex, PRInt32 &anNewIndex,
                                        PRInt32 aNumOptions, PRInt32 aDoAdjustInc, PRInt32 aDoAdjustIncNext);
+
+  /**
+   * Resets the select back to it's original default values;
+   * those values as determined by the original HTML
+   */
   virtual void ResetList(PRBool aAllowScrolling);
 
   nsListControlFrame(nsIPresShell* aShell, nsIDocument* aDocument, nsStyleContext* aContext);
@@ -255,10 +333,33 @@ protected:
   // Utility methods
   nsresult GetSizeAttribute(PRInt32 *aSize);
   nsIContent* GetOptionFromContent(nsIContent *aContent);
+
+  /**
+   * Sets the mSelectedIndex and mOldSelectedIndex from figuring out what 
+   * item was selected using content
+   * @param aPoint the event point, in listcontrolframe coordinates
+   * @return NS_OK if it successfully found the selection
+   */
   nsresult GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent, PRInt32& aCurIndex);
+
+  /**
+   * For a given index it returns the nsIContent object 
+   * from the select.
+   */
   already_AddRefed<nsIContent> GetOptionContent(PRInt32 aIndex) const;
+
+  /** 
+   * For a given piece of content, it determines whether the 
+   * content (an option) is selected or not.
+   * @return PR_TRUE if it is, PR_FALSE if it is NOT.
+   */
   PRBool   IsContentSelected(nsIContent* aContent) const;
+
+  /**
+   * For a given index is return whether the content is selected.
+   */
   PRBool   IsContentSelectedByIndex(PRInt32 aIndex) const;
+
   PRBool   IsOptionElement(nsIContent* aContent);
   PRBool   CheckIfAllFramesHere();
   PRInt32  GetIndexFromContent(nsIContent *aContent);

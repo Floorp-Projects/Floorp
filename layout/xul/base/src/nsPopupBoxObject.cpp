@@ -118,6 +118,8 @@ nsPopupBoxObject::ShowPopup(nsIDOMElement* aSrcContent,
 
   nsCOMPtr<nsIContent> srcContent(do_QueryInterface(aSrcContent));
   nsCOMPtr<nsIContent> popupContent(do_QueryInterface(aPopupContent));
+  NS_ENSURE_TRUE(popupContent, NS_ERROR_INVALID_ARG);
+  // srcContent can be null.
 
   nsAutoString popupType(aPopupType);
   nsAutoString anchorAlign(anAnchorAlignment);

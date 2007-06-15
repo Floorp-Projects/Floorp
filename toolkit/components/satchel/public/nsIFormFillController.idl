@@ -39,6 +39,7 @@
 
 interface nsIDocShell;
 interface nsIAutoCompletePopup;
+interface nsIDOMHTMLInputElement;
 
 /*
  * nsIFormFillController is an interface for controlling form fill behavior
@@ -49,7 +50,7 @@ interface nsIAutoCompletePopup;
  * global nsIAutoCompleteController service.
  */
 
-[scriptable, uuid(872F07F3-ED11-47c6-B7CF-246DB53379FB)]
+[scriptable, uuid(07f0a0dc-f6e9-4cdd-a55f-56d770523a4c)]
 interface nsIFormFillController : nsISupports
 {
   /*
@@ -66,4 +67,13 @@ interface nsIFormFillController : nsISupports
    * @param docShell - The docShell to detach from
    */
   void detachFromBrowser(in nsIDocShell docShell);
+
+  /*
+   * Mark the specified <input> element as being managed by password manager.
+   * Autocomplete requests will be handed off to the password manager, and will
+   * not be stored in form history.
+   *
+   * @param aInput - The HTML <input> element to tag
+   */
+  void markAsLoginManagerField(in nsIDOMHTMLInputElement aInput);
 };

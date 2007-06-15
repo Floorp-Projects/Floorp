@@ -58,6 +58,7 @@
  *       @ defaultInsertionPoint (InsertionPoint JS object) - optional, the
  *         default insertion point for the new item.
  *       @ keyword (String) - optional, the default keyword for the new item.
+ *       @ postData (String) - optional, POST data to accompany the keyword.
  *      Notes:
  *        1) If |uri| is set for a bookmark/livemark item and |title| isn't,
  *           the dialog will query the history tables for the title associated
@@ -125,13 +126,14 @@ var BookmarkPropertiesPanel = {
   _action: null,
   _itemType: null,
   _folderId: null,
-  _bookmarkId: null,
+  _bookmarkId: -1,
   _bookmarkURI: null,
   _loadBookmarkInSidebar: false,
   _itemTitle: "",
   _itemDescription: "",
   _microsummaries: null,
   _URIList: null,
+  _postData: null,
 
   // sizeToContent is not usable due to bug 90276, so we'll use resizeTo
   // instead and cache the bookmarks tree view size. See WSucks in the legacy
@@ -172,11 +174,12 @@ var BookmarkPropertiesPanel = {
         return this._strings.getString("dialogTitleAddMulti");
 
       return this._strings.getString("dialogTitleAddFolder");
-    } 
+    }
     if (this._action == ACTION_EDIT) {
       return this._strings
                  .getFormattedString("dialogTitleEdit", [this._itemTitle]);
     }
+    return "";
   },
 
   /**
@@ -223,8 +226,11 @@ var BookmarkPropertiesPanel = {
           if ("loadBookmarkInSidebar" in dialogInfo)
             this._loadBookmarkInSidebar = dialogInfo.loadBookmarkInSidebar;
 
-          if ("keyword" in dialogInfo)
+          if ("keyword" in dialogInfo) {
             this._bookmarkKeyword = dialogInfo.keyword;
+            if ("postData" in dialogInfo)
+              this._postData = dialogInfo.postData;
+          }
 
           break;
         case "folder":
@@ -267,7 +273,6 @@ var BookmarkPropertiesPanel = {
       const annos = PlacesUtils.annotations;
       const bookmarks = PlacesUtils.bookmarks;
 
-      var placeURI;
       switch (dialogInfo.type) {
         case "bookmark":
           NS_ASSERT("bookmarkId" in dialogInfo);
@@ -275,7 +280,6 @@ var BookmarkPropertiesPanel = {
           this._action = ACTION_EDIT;
           this._itemType = BOOKMARK_ITEM;
           this._bookmarkId = dialogInfo.bookmarkId;
-          placeURI = bookmarks.getItemURI(this._bookmarkId);
 
           this._bookmarkURI = bookmarks.getBookmarkURI(this._bookmarkId);
           this._itemTitle = bookmarks.getItemTitle(this._bookmarkId);
@@ -286,7 +290,7 @@ var BookmarkPropertiesPanel = {
 
           // Load In Sidebar
           this._loadBookmarkInSidebar =
-            annos.hasAnnotation(placeURI, LOAD_IN_SIDEBAR_ANNO);
+            annos.itemHasAnnotation(this._bookmarkId, LOAD_IN_SIDEBAR_ANNO);
 
           break;
         case "folder":
@@ -294,7 +298,6 @@ var BookmarkPropertiesPanel = {
 
           this._action = ACTION_EDIT;
           this._folderId = dialogInfo.folderId;
-          placeURI = bookmarks.getFolderURI(this._folderId);
 
           const livemarks = PlacesUtils.livemarks;
           if (livemarks.isLivemark(this._folderId)) {
@@ -304,14 +307,16 @@ var BookmarkPropertiesPanel = {
           }
           else
             this._itemType = BOOKMARK_FOLDER;
-          this._itemTitle = bookmarks.getFolderTitle(this._folderId);
+          this._itemTitle = bookmarks.getItemTitle(this._folderId);
           break;
       }
 
       // Description
-      if (annos.hasAnnotation(placeURI, DESCRIPTION_ANNO)) {
-        this._itemDescription =
-          annos.getAnnotationString(placeURI, DESCRIPTION_ANNO);
+      // XXXmano: unify the two id fields
+      var itemId = dialogInfo.type == "bookmark" ? this._bookmarkId : this._folderId;
+      if (annos.itemHasAnnotation(itemId, DESCRIPTION_ANNO)) {
+        this._itemDescription = annos.getItemAnnotationString(itemId,
+                                                              DESCRIPTION_ANNO);
       }
     }
   },
@@ -371,7 +376,7 @@ var BookmarkPropertiesPanel = {
     this._element("foldersSeparator").hidden = false;
 
     var folderMenuItem = document.createElement("menuitem");
-    var folderTitle = PlacesUtils.bookmarks.getFolderTitle(aFolderId)
+    var folderTitle = PlacesUtils.bookmarks.getItemTitle(aFolderId)
     folderMenuItem.folderId = aFolderId;
     folderMenuItem.setAttribute("label", folderTitle);
     folderMenuItem.className = "menuitem-iconic folder-icon";
@@ -382,10 +387,10 @@ var BookmarkPropertiesPanel = {
   _initFolderMenuList: function BPP__initFolderMenuList() {
     // List of recently used folders:
     var annos = PlacesUtils.annotations;
-    var folderURIs = annos.getPagesWithAnnotation(LAST_USED_ANNO, { });
+    var folderIds = annos.getItemsWithAnnotation(LAST_USED_ANNO, { });
 
     // Hide the folders-separator if no folder is annotated as recently-used
-    if (folderURIs.length == 0) {
+    if (folderIds.length == 0) {
       this._element("foldersSeparator").hidden = true;
       return;
     }
@@ -399,17 +404,9 @@ var BookmarkPropertiesPanel = {
      * set. Then we sort it descendingly based on the time field.
      */
     var folders = [];
-    var history = PlacesUtils.history;
-    for (var i=0; i < folderURIs.length; i++) {
-      var queryString = folderURIs[i].spec;
-      var queries = { };
-      history.queryStringToQueries(queryString, queries, { /* length */ },
-                                   { /* options */ });
-      var folderId = queries.value[0].getFolders({})[0];
-      NS_ASSERT(queries.value[0].folderCount == 1,
-                "Bogus uri is annotated with the LAST_USED_ANNO annotation");
-      var lastUsed = annos.getAnnotationInt64(folderURIs[i], LAST_USED_ANNO);
-      folders.push({ folderId: folderId, lastUsed: lastUsed });
+    for (var i=0; i < folderIds.length; i++) {
+      var lastUsed = annos.getItemAnnotationInt64(folderIds[i], LAST_USED_ANNO);
+      folders.push({ folderId: folderIds[i], lastUsed: lastUsed });
     }
     folders.sort(function(a, b) {
       if (b.lastUsed < a.lastUsed)
@@ -426,7 +423,7 @@ var BookmarkPropertiesPanel = {
     }
 
     var defaultItem =
-      this._getFolderMenuItem(this._defaultInsertionPoint.folderId, true);
+      this._getFolderMenuItem(this._defaultInsertionPoint.itemId, true);
     this._folderMenuList.selectedItem = defaultItem;
   },
 
@@ -551,14 +548,9 @@ var BookmarkPropertiesPanel = {
     }
 
     var itemToSelect = userEnteredNameField;
-    var placeURI = null;
-    if (this._action == ACTION_EDIT) {
-      NS_ASSERT(this._bookmarkId, "No bookmark identifier");
-      placeURI = PlacesUtils.bookmarks.getItemURI(this._bookmarkId);
-    }
     try {
       this._microsummaries = this._mss.getMicrosummaries(this._bookmarkURI,
-                                                         placeURI);
+                                                         this._bookmarkId);
     }
     catch(ex) {
       // getMicrosummaries will throw an exception in at least two cases:
@@ -583,7 +575,7 @@ var BookmarkPropertiesPanel = {
           var menuItem = this._createMicrosummaryMenuItem(microsummary);
 
           if (this._action == ACTION_EDIT &&
-              this._mss.isMicrosummary(placeURI, microsummary))
+              this._mss.isMicrosummary(this._bookmarkId, microsummary))
             itemToSelect = menuItem;
 
           menupopup.appendChild(menuItem);
@@ -705,12 +697,7 @@ var BookmarkPropertiesPanel = {
    */
   _getEditTitleTransaction:
   function BPP__getEditTitleTransaction(aItemId, aNewTitle) {
-    // XXXmano: remove this once bug 372508 is fixed
-    if (this._itemType == BOOKMARK_ITEM)
-      return new PlacesEditItemTitleTransaction(aItemId, aNewTitle);
-
-    // folder or livemark container
-    return new PlacesEditFolderTitleTransaction(aItemId, aNewTitle);
+    return new PlacesEditItemTitleTransaction(aItemId, aNewTitle);
   },
 
   /**
@@ -762,7 +749,7 @@ var BookmarkPropertiesPanel = {
   _getLoadInSidebarAnnotation:
   function BPP__getLoadInSidebarAnnotation(aLoadInSidebar) {
     var anno = { name: LOAD_IN_SIDEBAR_ANNO,
-                 type: Ci.nsIAnnotationsService.TYPE_INT32,
+                 type: Ci.nsIAnnotationService.TYPE_INT32,
                  flags: 0,
                  value: aLoadInSidebar,
                  expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
@@ -824,10 +811,9 @@ var BookmarkPropertiesPanel = {
       // microsummary, but the bookmark previously had one, or the user
       // selected a microsummary which is not the one the bookmark previously
       // had.
-      var placeURI = PlacesUtils.bookmarks.getItemURI(itemId);
-      if ((newMicrosummary == null && this._mss.hasMicrosummary(placeURI)) ||
+      if ((newMicrosummary == null && this._mss.hasMicrosummary(itemId)) ||
           (newMicrosummary != null &&
-           !this._mss.isMicrosummary(placeURI, newMicrosummary))) {
+           !this._mss.isMicrosummary(itemId, newMicrosummary))) {
         transactions.push(
           new PlacesEditBookmarkMicrosummaryTransaction(itemId,
                                                         newMicrosummary));
@@ -849,15 +835,15 @@ var BookmarkPropertiesPanel = {
       }
 
       // Site Location is empty, we can set its URI to null
-      var siteURIString = this._element("feedSiteLocationTextfield").value;
-      var siteURI = null;
-      if (siteURIString)
-        siteURI = PlacesUtils._uri(siteURIString);
+      var newSiteURIString = this._element("feedSiteLocationTextfield").value;
+      var newSiteURI = null;
+      if (newSiteURIString)
+        newSiteURI = PlacesUtils._uri(newSiteURIString);
 
-      if ((!siteURI && this._siteURI)  ||
-          (siteURI && !this._siteURI.equals(siteURI))) {
+      if ((!newSiteURI && this._siteURI)  ||
+          (newSiteURI && (!this._siteURI || !this._siteURI.equals(newSiteURI)))) {
         transactions.push(
-          new PlacesEditLivemarkSiteURITransaction(this._folderId, siteURI));
+          new PlacesEditLivemarkSiteURITransaction(this._folderId, newSiteURI));
       }
     }
 
@@ -883,7 +869,7 @@ var BookmarkPropertiesPanel = {
     if (isElementVisible(this._folderMenuList))
       containerId = this._getFolderIdFromMenuList();
     else {
-      containerId = this._defaultInsertionPoint.folderId;
+      containerId = this._defaultInsertionPoint.itemId;
       indexInContainer = this._defaultInsertionPoint.index;
     }
 
@@ -895,7 +881,7 @@ var BookmarkPropertiesPanel = {
    * various fields and opening arguments of the dialog.
    */
   _getCreateNewBookmarkTransaction:
-  function BPP__getCreateNewBookmarkTransaction() {
+  function BPP__getCreateNewBookmarkTransaction(aContainer, aIndex) {
     var uri = PlacesUtils._uri(this._element("editURLBar").value);
     var title = this._element("userEnteredName").label;
     var keyword = this._element("keywordTextfield").value;
@@ -915,10 +901,17 @@ var BookmarkPropertiesPanel = {
         new PlacesEditBookmarkMicrosummaryTransaction(-1, microsummary));
     }
 
-    var [container, index] = this._getInsertionPointDetails();
-    return new PlacesCreateItemTransaction(uri, container, index,
-                                           title, keyword, annotations,
-                                           childTransactions);
+    var transactions = [new PlacesCreateItemTransaction(uri, aContainer, aIndex,
+                                                        title, keyword,
+                                                        annotations,
+                                                        childTransactions)];
+
+    if (this._postData) {
+      transactions.push(new PlacesEditURIPostDataTransaction(uri,
+                                                             this._postData));
+    }
+    return new PlacesAggregateTransaction(this._getDialogTitle(),
+                                          transactions);
   },
 
   /**
@@ -940,7 +933,7 @@ var BookmarkPropertiesPanel = {
    * various fields and opening arguments of the dialog.
    */
   _getCreateNewFolderTransaction:
-  function BPP__getCreateNewFolderTransaction() {
+  function BPP__getCreateNewFolderTransaction(aContainer, aIndex) {
     var folderName = this._element("namePicker").value;
     var annotations = [];
     var childItemsTransactions;
@@ -950,8 +943,7 @@ var BookmarkPropertiesPanel = {
     if (description)
       annotations.push(this._getDescriptionAnnotation(description));
 
-    var [container, index] = this._getInsertionPointDetails();
-    return new PlacesCreateFolderTransaction(folderName, container, index,
+    return new PlacesCreateFolderTransaction(folderName, aContainer, aIndex,
                                              annotations,
                                              childItemsTransactions);
   },
@@ -961,8 +953,7 @@ var BookmarkPropertiesPanel = {
    * the various fields and opening arguments of the dialog.
    */
   _getCreateNewLivemarkTransaction:
-  function BPP__getCreateNewLivemarkTransaction() {
-    var [containerId, indexInContainer] = this._getInsertionPointDetails();
+  function BPP__getCreateNewLivemarkTransaction(aContainer, aIndex) {
     var feedURIString = this._element("feedLocationTextfield").value;
     var feedURI = PlacesUtils._uri(feedURIString);
 
@@ -973,24 +964,25 @@ var BookmarkPropertiesPanel = {
 
     var name = this._element("namePicker").value;
     return new PlacesCreateLivemarkTransaction(feedURI, siteURI,
-                                                name, containerId,
-                                                indexInContainer);
+                                                name, aContainer, 
+                                                aIndex);
   },
 
   /**
    * Dialog-accept code-path for creating a new item (any type)
    */
   _createNewItem: function BPP__getCreateItemTransaction() {
+    var [container, index] = this._getInsertionPointDetails();
     var createTxn;
     if (this._itemType == BOOKMARK_FOLDER)
-      createTxn = this._getCreateNewFolderTransaction();
+      createTxn = this._getCreateNewFolderTransaction(container, index);
     else if (this._itemType == LIVEMARK_CONTAINER)
-      createTxn = this._getCreateNewLivemarkTransaction();
+      createTxn = this._getCreateNewLivemarkTransaction(container, index);
     else // BOOKMARK_ITEM
-      createTxn = this._getCreateNewBookmarkTransaction();
+      createTxn = this._getCreateNewBookmarkTransaction(container, index);
 
     // Mark the containing folder as recently-used
-    this._markFolderAsRecentlyUsed(createTxn.container);
+    this._markFolderAsRecentlyUsed(container);
 
     // perfrom our transaction do via the transaction manager passed by the
     // opener so it can be undone.
@@ -1094,7 +1086,7 @@ var BookmarkPropertiesPanel = {
     if (!selectedNode)
       return;
 
-    var folderId = asFolder(selectedNode).folderId;
+    var folderId = selectedNode.itemId;
     // Don't set the selected item if the static item for the folder is
     // already selected
     var oldSelectedItem = this._folderMenuList.selectedItem;
@@ -1112,11 +1104,10 @@ var BookmarkPropertiesPanel = {
   function BPP__markFolderAsRecentlyUsed(aFolderId) {
     // We'll figure out when/if to expire the annotation if it turns out
     // we keep this recently-used-folders implementation
-    var folderURI = PlacesUtils.bookmarks.getFolderURI(aFolderId);
     PlacesUtils.annotations
-               .setAnnotationInt64(folderURI, LAST_USED_ANNO,
-                                   new Date().getTime(), 0,
-                                   Ci.nsIAnnotationService.EXPIRE_NEVER);
+               .setItemAnnotationInt64(aFolderId, LAST_USED_ANNO,
+                                       new Date().getTime(), 0,
+                                       Ci.nsIAnnotationService.EXPIRE_NEVER);
   },
 
   newFolder: function BPP_newFolder() {

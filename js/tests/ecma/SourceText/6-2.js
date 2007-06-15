@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '6-2.js';
+
 /**
    File Name:          6-1.js
    ECMA Section:       Source Text

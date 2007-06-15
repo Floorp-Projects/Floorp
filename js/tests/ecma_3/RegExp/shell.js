@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,13 +34,17 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 07 February 2001
  *
  * Functionality common to RegExp testing -
  */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+gTestsubsuite = 'RegExp';
+
 var MSG_PATTERN = '\nregexp = ';
 var MSG_STRING = '\nstring = ';
 var MSG_EXPECT = '\nExpect: ';
@@ -90,45 +95,45 @@ function testRegExp(statuses, patterns, strings, actualmatches, expectedmatches)
         // expectedmatch and actualmatch are arrays -
         lExpect = expectedmatch.length;
         lActual = actualmatch.length;
- 
-        expected = formatArray(expectedmatch);
+
+        var expected = formatArray(expectedmatch);
 
         if (lActual != lExpect)
         {
-          reportFailure(
+          reportCompare(lExpect, lActual,
                         state + ERR_LENGTH +
                         MSG_EXPECT + expected +
                         MSG_ACTUAL + actual +
                         CHAR_NL
-                       );
+	    );
           continue;
         }
 
         // OK, the arrays have same length -
         if (expected != actual)
         {
-          reportFailure(
+          reportCompare(expected, actual,
                         state + ERR_MATCH +
                         MSG_EXPECT + expected +
                         MSG_ACTUAL + actual +
                         CHAR_NL
-                       );
+	    );
         }
         else
         {
           reportCompare(expected, actual, state)
-        }
+	    }
 
       }
       else //expectedmatch is null - that is, we did not expect a match -
       {
         expected = expectedmatch;
-        reportFailure(
+        reportCompare(expected, actual,
                       state + ERR_UNEXP_MATCH +
                       MSG_EXPECT + expectedmatch +
                       MSG_ACTUAL + actual +
                       CHAR_NL
-                     );
+	  );
       }
 
     }
@@ -137,12 +142,12 @@ function testRegExp(statuses, patterns, strings, actualmatches, expectedmatches)
       if (expectedmatch)
       {
         actual = actualmatch;
-        reportFailure(
+        reportCompare(expected, actual,
                       state + ERR_NO_MATCH +
                       MSG_EXPECT + expectedmatch +
                       MSG_ACTUAL + actualmatch +
                       CHAR_NL
-                     );
+	  );
       }
       else // we did not expect a match
       {
@@ -229,15 +234,15 @@ function toSource(arr)
 
     switch(true)
     {
-      case (typeof elt === TYPE_STRING) :
-        ret += doubleQuote(elt);
-        break;
+    case (typeof elt === TYPE_STRING) :
+      ret += doubleQuote(elt);
+      break;
 
-      case (elt === undefined || elt === null) :
-        break; // add nothing but the delimiter, below -
+    case (elt === undefined || elt === null) :
+      break; // add nothing but the delimiter, below -
 
-      default:
-        ret += elt.toString();
+    default:
+      ret += elt.toString();
     }
 
     if ((i < len-1) || (elt === undefined))

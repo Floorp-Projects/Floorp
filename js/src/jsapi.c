@@ -1023,7 +1023,7 @@ JS_ContextIterator(JSRuntime *rt, JSContext **iterp)
 JS_PUBLIC_API(JSVersion)
 JS_GetVersion(JSContext *cx)
 {
-    return cx->version & JSVERSION_MASK;
+    return JSVERSION_NUMBER(cx);
 }
 
 JS_PUBLIC_API(JSVersion)
@@ -1034,7 +1034,7 @@ JS_SetVersion(JSContext *cx, JSVersion version)
     JS_ASSERT(version != JSVERSION_UNKNOWN);
     JS_ASSERT((version & ~JSVERSION_MASK) == 0);
 
-    oldVersion = cx->version & JSVERSION_MASK;
+    oldVersion = JSVERSION_NUMBER(cx);
     if (version == oldVersion)
         return oldVersion;
 
@@ -1060,6 +1060,7 @@ static struct v2smap {
     {JSVERSION_1_5,     "1.5"},
     {JSVERSION_1_6,     "1.6"},
     {JSVERSION_1_7,     "1.7"},
+    {JSVERSION_1_8,     "1.8"},
     {JSVERSION_DEFAULT, js_default_str},
     {JSVERSION_UNKNOWN, NULL},          /* must be last, NULL is sentinel */
 };
@@ -1864,6 +1865,13 @@ JS_UnlockGCThingRT(JSRuntime *rt, void *thing)
 }
 
 JS_PUBLIC_API(void)
+JS_SetExtraGCRoots(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
+{
+    rt->gcExtraRootsTraceOp = traceOp;
+    rt->gcExtraRootsData = data;
+}
+
+JS_PUBLIC_API(void)
 JS_TraceRuntime(JSTracer *trc)
 {
     JSBool allAtoms = trc->context->runtime->gcKeepAtoms != 0;
@@ -2166,8 +2174,7 @@ DumpNotify(JSTracer *trc, void *thing, uint32 kind)
 
 /* Dump node and the chain that leads to thing it contains. */
 static JSBool
-DumpNode(JSDumpingTracer *dtrc, JSHeapDumpNode *node,
-         JSPrintfFormater format, void *closure)
+DumpNode(JSDumpingTracer *dtrc, FILE* fp, JSHeapDumpNode *node)
 {
     JSHeapDumpNode *prev, *following;
     size_t chainLimit;
@@ -2176,7 +2183,7 @@ DumpNode(JSDumpingTracer *dtrc, JSHeapDumpNode *node,
 
     JS_PrintTraceThingInfo(dtrc->buffer, sizeof dtrc->buffer,
                            &dtrc->base, node->thing, node->kind, JS_TRUE);
-    if (format(closure, "%p %-22s via ", node->thing, dtrc->buffer) < 0)
+    if (fprintf(fp, "%p %-22s via ", node->thing, dtrc->buffer) < 0)
         return JS_FALSE;
 
     /*
@@ -2195,7 +2202,7 @@ DumpNode(JSDumpingTracer *dtrc, JSHeapDumpNode *node,
         if (!node)
             break;
         if (chainLimit == 0) {
-            if (format(closure, "...") < 0)
+            if (fputs("...", fp) < 0)
                 return JS_FALSE;
             break;
         }
@@ -2210,13 +2217,13 @@ DumpNode(JSDumpingTracer *dtrc, JSHeapDumpNode *node,
         if (ok) {
             if (!prev) {
                 /* Print edge from some runtime root or startThing. */
-                if (format(closure, "%s", node->edgeName) < 0)
+                if (fputs(node->edgeName, fp) < 0)
                     ok = JS_FALSE;
             } else {
                 JS_PrintTraceThingInfo(dtrc->buffer, sizeof dtrc->buffer,
                                        &dtrc->base, prev->thing, prev->kind,
                                        JS_FALSE);
-                if (format(closure, "(%p %s).%s",
+                if (fprintf(fp, "(%p %s).%s",
                            prev->thing, dtrc->buffer, node->edgeName) < 0) {
                     ok = JS_FALSE;
                 }
@@ -2228,13 +2235,12 @@ DumpNode(JSDumpingTracer *dtrc, JSHeapDumpNode *node,
         node = following;
     } while (node);
 
-    return ok && format(closure, "\n") >= 0;
+    return ok && putc('\n', fp) >= 0;
 }
 
 JS_PUBLIC_API(JSBool)
-JS_DumpHeap(JSContext *cx, void* startThing, uint32 startKind,
-            void *thingToFind, size_t maxDepth, void *thingToIgnore,
-            JSPrintfFormater format, void *closure)
+JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, uint32 startKind,
+            void *thingToFind, size_t maxDepth, void *thingToIgnore)
 {
     JSDumpingTracer dtrc;
     JSHeapDumpNode *node, *children, *next, *parent;
@@ -2277,7 +2283,7 @@ JS_DumpHeap(JSContext *cx, void* startThing, uint32 startKind,
          */
         if (dtrc.ok) {
             if (thingToFind == NULL || thingToFind == node->thing)
-                dtrc.ok = DumpNode(&dtrc, node, format, closure);
+                dtrc.ok = DumpNode(&dtrc, fp, node);
 
             /* Descend into children. */
             if (dtrc.ok &&
@@ -2345,20 +2351,6 @@ JS_IsGCMarkingTracer(JSTracer *trc)
     return IS_GC_MARKING_TRACER(trc);
 }
 
-JS_PUBLIC_API(JSTracer *)
-JS_GetGCMarkingTracer(JSContext *cx)
-{
-    JSRuntime *rt;
-
-    rt = cx->runtime;
-    JS_ASSERT(rt->gcMarkingTracer);
-    JS_ASSERT(rt->gcLevel > 0);
-#ifdef JS_THREADSAFE
-    JS_ASSERT(rt->gcThread == rt->gcMarkingTracer->context->thread);
-#endif
-    return rt->gcMarkingTracer;
-}
-
 JS_PUBLIC_API(void)
 JS_GC(JSContext *cx)
 {
@@ -2385,13 +2377,18 @@ JS_GC(JSContext *cx)
 JS_PUBLIC_API(void)
 JS_MaybeGC(JSContext *cx)
 {
-#ifdef WAY_TOO_MUCH_GC
-    JS_GC(cx);
-#else
     JSRuntime *rt;
     uint32 bytes, lastBytes;
 
     rt = cx->runtime;
+
+#ifdef JS_GC_ZEAL
+    if (rt->gcZeal > 0) {
+        JS_GC(cx);
+        return;
+    }
+#endif
+
     bytes = rt->gcBytes;
     lastBytes = rt->gcLastBytes;
 
@@ -2451,7 +2448,6 @@ JS_MaybeGC(JSContext *cx)
         /* Run scheduled but not yet executed close hooks. */
         js_RunCloseHooks(cx);
     }
-#endif
 #endif
 }
 
@@ -4172,10 +4168,9 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
      * the 'this' param if no args.
      */
     JS_ASSERT(cx->fp->argv == argv);
-    tmp = js_ComputeThis(cx, JSVAL_TO_OBJECT(argv[-1]), argv);
-    if (!tmp)
+    if (!js_ComputeThis(cx, argv))
         return JS_FALSE;
-    cx->fp->thisp = tmp;
+    cx->fp->thisp = JSVAL_TO_OBJECT(argv[-1]);
 
     /*
      * Protect against argc - 1 underflowing below. By calling js_ComputeThis,
@@ -4704,7 +4699,7 @@ JS_ExecuteScriptPart(JSContext *cx, JSObject *obj, JSScript *script,
                      JSExecPart part, jsval *rval)
 {
     JSScript tmp;
-    JSRuntime *rt;
+    JSDebugHooks *hooks;
     JSBool ok;
 
     /* Make a temporary copy of the JSScript structure and farble it a bit. */
@@ -4717,16 +4712,16 @@ JS_ExecuteScriptPart(JSContext *cx, JSObject *obj, JSScript *script,
     }
 
     /* Tell the debugger about our temporary copy of the script structure. */
-    rt = cx->runtime;
-    if (rt->newScriptHook) {
-        rt->newScriptHook(cx, tmp.filename, tmp.lineno, &tmp, NULL,
-                          rt->newScriptHookData);
+    hooks = cx->debugHooks;
+    if (hooks->newScriptHook) {
+        hooks->newScriptHook(cx, tmp.filename, tmp.lineno, &tmp, NULL,
+                             hooks->newScriptHookData);
     }
 
     /* Execute the farbled struct and tell the debugger to forget about it. */
     ok = JS_ExecuteScript(cx, obj, &tmp, rval);
-    if (rt->destroyScriptHook)
-        rt->destroyScriptHook(cx, &tmp, rt->destroyScriptHookData);
+    if (hooks->destroyScriptHook)
+        hooks->destroyScriptHook(cx, &tmp, hooks->destroyScriptHookData);
     return ok;
 }
 
@@ -4929,7 +4924,7 @@ JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp)
     if (!fp)
         return;
 
-    JS_ASSERT(cx->dormantFrameChain == fp);
+    JS_ASSERT(fp == cx->dormantFrameChain);
     cx->fp = fp;
     cx->dormantFrameChain = fp->dormantNext;
     fp->dormantNext = NULL;
@@ -5502,6 +5497,14 @@ JS_ClearContextThread(JSContext *cx)
     jsword old = JS_THREAD_ID(cx);
     js_ClearContextThread(cx);
     return old;
+}
+#endif
+
+#ifdef JS_GC_ZEAL
+JS_PUBLIC_API(void)
+JS_SetGCZeal(JSContext *cx, uint8 zeal)
+{
+    cx->runtime->gcZeal = zeal;
 }
 #endif
 

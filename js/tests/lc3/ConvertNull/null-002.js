@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'null-002.js';
+
 /**
  *  Preferred Argument Conversion.
  *
@@ -45,31 +48,31 @@
 var SECTION = "Preferred argument conversion:  null";
 var VERSION = "1_4";
 var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-SECTION;
+  SECTION;
 startTest();
 
 // pass null to a static method that expects an Object with explicit
 // method syntax.
 
 new TestCase(
-    "java.lang.String[\"valueOf(java.lang.Object)\"](null) +''",
-    "null",
-    java.lang.String["valueOf(java.lang.Object)"](null) + "" );
+  "java.lang.String[\"valueOf(java.lang.Object)\"](null) +''",
+  "null",
+  java.lang.String["valueOf(java.lang.Object)"](null) + "" );
 
 // Pass null to a static method that expects a string without explicit
 // method syntax.  In this case, there is only one matching method.
 
 new TestCase(
-    "java.lang.Boolean.valueOf(null) +''",
-    "false",
-    java.lang.Boolean.valueOf(null) +"" );
+  "java.lang.Boolean.valueOf(null) +''",
+  "false",
+  java.lang.Boolean.valueOf(null) +"" );
 
 // Pass null to a static method that expects a string  using explicit
 // method syntax.
 
 new TestCase(
-    "java.lang.Boolean[\"valueOf(java.lang.String)\"](null)",
-    "false",
-    java.lang.Boolean["valueOf(java.lang.String)"](null) +"" );
+  "java.lang.Boolean[\"valueOf(java.lang.String)\"](null)",
+  "false",
+  java.lang.Boolean["valueOf(java.lang.String)"](null) +"" );
 
 test();

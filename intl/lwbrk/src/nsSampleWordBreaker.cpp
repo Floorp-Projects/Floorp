@@ -91,7 +91,9 @@ PRUint8 nsSampleWordBreaker::GetClass(PRUnichar c)
 		  }
 	  } else if(IS_THAI(c))	{
 		  return kWbClassThaiLetter;
-	  } else {
+	  } else if (c == 0x00A0/*NBSP*/) {
+      return kWbClassSpace;
+    } else {
 		  return kWbClassAlphaLetter;
 	  }
   }  else {

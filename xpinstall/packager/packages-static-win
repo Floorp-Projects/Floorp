@@ -99,6 +99,7 @@ bin\components\dom_css.xpt
 bin\components\dom_events.xpt
 bin\components\dom_html.xpt
 bin\components\dom_loadsave.xpt
+bin\components\dom_offline.xpt
 bin\components\dom_range.xpt
 bin\components\dom_storage.xpt
 bin\components\dom_stylesheets.xpt
@@ -218,10 +219,6 @@ bin\components\websrvcs.xpt
 
 ; Roaming
 bin\chrome\sroaming.jar
-
-; p3p
-bin\components\p3p.dll
-bin\components\p3p.xpt
 
 ; chrome stuff
 bin\chrome\help.jar

@@ -181,10 +181,10 @@ void nsRect::Deflate(const nsMargin &aMargin)
 }
 
 // scale the rect but round to smallest containing rect
-nsRect& nsRect::ScaleRoundOut(const float aScale) 
+nsRect& nsRect::ScaleRoundOut(float aScale) 
 {
-  nscoord right = NSToCoordCeil(float(x + width) * aScale);
-  nscoord bottom = NSToCoordCeil(float(y + height) * aScale);
+  nscoord right = NSToCoordCeil(float(XMost()) * aScale);
+  nscoord bottom = NSToCoordCeil(float(YMost()) * aScale);
   x = NSToCoordFloor(float(x) * aScale);
   y = NSToCoordFloor(float(y) * aScale);
   width = (right - x);
@@ -193,12 +193,23 @@ nsRect& nsRect::ScaleRoundOut(const float aScale)
 }
 
 // scale the rect but round to largest contained rect
-nsRect& nsRect::ScaleRoundIn(const float aScale) 
+nsRect& nsRect::ScaleRoundIn(float aScale) 
 {
-  nscoord right = NSToCoordFloor(float(x + width) * aScale);
-  nscoord bottom = NSToCoordFloor(float(y + height) * aScale);
+  nscoord right = NSToCoordFloor(float(XMost()) * aScale);
+  nscoord bottom = NSToCoordFloor(float(YMost()) * aScale);
   x = NSToCoordCeil(float(x) * aScale);
   y = NSToCoordCeil(float(y) * aScale);
+  width = (right - x);
+  height = (bottom - y);
+  return *this;
+}
+
+nsRect& nsRect::ScaleRoundPreservingCenters(float aScale)
+{
+  nscoord right = NSToCoordRound(float(XMost()) * aScale);
+  nscoord bottom = NSToCoordRound(float(YMost()) * aScale);
+  x = NSToCoordRound(float(x) * aScale);
+  y = NSToCoordRound(float(y) * aScale);
   width = (right - x);
   height = (bottom - y);
   return *this;

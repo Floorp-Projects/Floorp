@@ -36,15 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("Do not crash when qn->uri is null");
+gTestfile = 'regress-323338-2.js';
 
-var bug = 323338;
-var summary = 'Do not crash when qn->uri is null';
+var summary = "Do not crash when qn->uri is null";
+var BUGNUMBER = 323338;
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 <x/>.(function::children());
 

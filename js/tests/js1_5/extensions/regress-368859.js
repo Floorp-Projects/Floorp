@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-368859.js';
 //-----------------------------------------------------------------------------
-var bug = 368859;
+var BUGNUMBER = 368859;
 var summary = 'large sharp variable numbers should not be rounded down.';
 var actual = '';
 var expect = '';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   expect = 'SyntaxError: overlarge sharp variable number';
 
   try

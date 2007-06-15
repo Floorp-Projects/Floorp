@@ -284,8 +284,7 @@ PROT_PhishingWarden.prototype.removeBrowserView = function(view) {
  *                 we should check remote server
  */
 PROT_PhishingWarden.prototype.onCheckRemotePrefChanged = function(prefName) {
-  this.checkRemote_ = this.prefs_.getBoolPrefOrDefault(prefName,
-                                                       this.checkRemote_);
+  this.checkRemote_ = this.prefs_.getPref(prefName, this.checkRemote_);
   this.requestBackoff_.reset();
   this.maybeToggleUpdateChecking();
 }
@@ -304,7 +303,7 @@ PROT_PhishingWarden.prototype.onPhishWardenEnabledPrefChanged = function(
     return;
 
   this.phishWardenEnabled_ = 
-    this.prefs_.getBoolPrefOrDefault(prefName, this.phishWardenEnabled_);
+    this.prefs_.getPref(prefName, this.phishWardenEnabled_);
   this.requestBackoff_.reset();
   this.maybeToggleUpdateChecking();
 

@@ -65,22 +65,8 @@
 class nsIFrame;
 class imgIRequest;
 
-enum nsStyleStructID {
-
-/*
- * Define the constants eStyleStruct_Font, etc.
- *
- * The C++ standard, section 7.2, guarantees that enums begin with 0 and
- * increase by 1.
- */
-
-#define STYLE_STRUCT(name, checkdata_cb, ctor_args) eStyleStruct_##name,
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
-
-nsStyleStructID_Length /* one past the end; length of 0-based list */
-
-};
+// Includes nsStyleStructID.
+#include "nsStyleStructFwd.h"
 
 // Bits for each struct.
 #define NS_STYLE_INHERIT_BIT(sid_)        (1 << PRInt32(eStyleStruct_##sid_))
@@ -92,6 +78,9 @@ nsStyleStructID_Length /* one past the end; length of 0-based list */
 
 // Additional bits for nsRuleNode's mDependentBits:
 #define NS_RULE_NODE_GC_MARK              0x02000000
+#define NS_RULE_NODE_IS_IMPORTANT         0x08000000
+#define NS_RULE_NODE_LEVEL_MASK           0xf0000000
+#define NS_RULE_NODE_LEVEL_SHIFT          28
 
 // The actual structs start here
 struct nsStyleStruct {
@@ -650,9 +639,9 @@ struct nsStylePosition : public nsStyleStruct {
 #endif
   
   nsStyleSides  mOffset;                // [reset]
-  nsStyleCoord  mWidth;                 // [reset] coord, percent, auto
-  nsStyleCoord  mMinWidth;              // [reset] coord, percent
-  nsStyleCoord  mMaxWidth;              // [reset] coord, percent, null
+  nsStyleCoord  mWidth;                 // [reset] coord, percent, auto, enum
+  nsStyleCoord  mMinWidth;              // [reset] coord, percent, enum
+  nsStyleCoord  mMaxWidth;              // [reset] coord, percent, null, enum
   nsStyleCoord  mHeight;                // [reset] coord, percent, auto
   nsStyleCoord  mMinHeight;             // [reset] coord, percent
   nsStyleCoord  mMaxHeight;             // [reset] coord, percent, null
@@ -1139,6 +1128,7 @@ struct nsStyleUIReset: public nsStyleStruct {
 
   PRUint8   mUserSelect;      // [reset] (selection-style)
   PRUint8   mForceBrokenImageIcon; // [reset]  (0 if not forcing, otherwise forcing)
+  PRUint8   mIMEMode;         // [reset]
 };
 
 struct nsCursorImage {

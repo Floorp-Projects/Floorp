@@ -38,66 +38,101 @@
 #ifndef __nsCaretAccessible_h__
 #define __nsCaretAccessible_h__
 
-#include "nsBaseWidgetAccessible.h"
 #include "nsIWeakReference.h"
+#include "nsIAccessibleText.h"
+#include "nsICaret.h"
 #include "nsIDOMNode.h"
-#include "nsIAccessibleCaret.h"
 #include "nsISelectionListener.h"
 #include "nsRect.h"
 
 class nsRootAccessible;
+class nsIView;
 
 /*
  * This special accessibility class is for the caret, which is really the currently focused selection.
- * There is only 1 visible caret per top level window (nsRootAccessible)
- * The caret accesible does not exist within the normal accessible tree; it lives in a different world.
- * In MSAA, it is retrieved with via the WM_GETOBJECT message with lParam = OBJID_CARET, 
+ * There is only 1 visible caret per top level window (nsRootAccessible),
+ * However, there may be several visible selections.
+ *
+ * The important selections are the one owned by each document, and the one in the currently focused control.
+ *
+ * The caret accessible is no longer an accessible object in its own right.
+ * On Windows it is used to move an invisible system caret that shadows the Mozilla caret. Windows will
+ * also automatically map this to the MSAA caret accessible object (via OBJID_CARET).
  * (as opposed to the root accessible tree for a window which is retrieved with OBJID_CLIENT)
+ * For ATK and Iaccessible2, the caret accessible is used to fire
+ * caret move and selection change events.
+ *
  * The caret accessible is owned by the nsRootAccessible for the top level window that it's in.
+ * The nsRootAccessible needs to tell the nsCaretAccessible about focus changes via
+ * setControlSelectionListener().
+ * Each nsDocAccessible needs to tell the nsCaretAccessible owned by the root to
+ * listen for selection events via addDocSelectionListener() and then needs to remove the 
+ * selection listener when the doc goes away via removeDocSelectionListener().
  */
 
-class nsCaretAccessible : public nsLeafAccessible, public nsIAccessibleCaret, public nsISelectionListener
+class nsCaretAccessible : public nsISelectionListener
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS
 
-  nsCaretAccessible(nsIDOMNode* aDocumentNode, nsIWeakReference* aShell, nsRootAccessible *aRootAccessible);
-
-  /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetParent(nsIAccessible **_retval);
-  NS_IMETHOD GetRole(PRUint32 *_retval);
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
-  NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
-  NS_IMETHOD GetNextSibling(nsIAccessible **_retval);
-  NS_IMETHOD GetPreviousSibling(nsIAccessible **_retval);
-
-  /* ----- nsIAccessibleCaret ------ */
-  NS_IMETHOD AttachNewSelectionListener(nsIDOMNode *aFocusedNode);
-  NS_IMETHOD RemoveSelectionListener();
+  nsCaretAccessible(nsRootAccessible *aRootAccessible);
+  virtual ~nsCaretAccessible();
+  void Shutdown();
 
   /* ----- nsISelectionListener ---- */
   NS_DECL_NSISELECTIONLISTENER
 
-  /* ----- nsIAccessNode ----- */
-  NS_IMETHOD Init()
-  {
-#ifdef DEBUG_A11Y
-    mIsInitialized = PR_TRUE;
-#endif
-    return NS_OK;
-  }
-  NS_IMETHOD Shutdown();
+  /**
+   * Listen to selection events on the focused control.
+   * Only one control's selection events are listened to at a time, per top-level window.
+   * This will remove the previous control's selection listener.
+   * It will fail if aFocusedNode is a document node -- document selection must be listened
+   * to via AddDocSelectionListener().
+   * @param aFocusedNode   The node for the focused control
+   */
+  nsresult SetControlSelectionListener(nsIDOMNode *aCurrentNode);
+
+  /**
+   * Stop listening to selection events for any control.
+   * This does not have to be called explicitly in Shutdown() procedures,
+   * because the nsCaretAccessible implementation guarantees that.
+   */
+  nsresult ClearControlSelectionListener();
+
+  /**
+   * Start listening to selection events for a given document
+   * More than one document's selection events can be listened to
+   * at the same time, by a given nsCaretAccessible
+   * @param aDocument   Document to listen to selection events for.
+   */
+  nsresult AddDocSelectionListener(nsIDOMDocument *aDoc);
+
+  /**
+   * Stop listening to selection events for a given document
+   * If the document goes away, this method needs to be called for 
+   * that document by the owner of the caret
+   * @param aDocument   Document to listen to selection events for.
+   */
+  nsresult RemoveDocSelectionListener(nsIDOMDocument *aDoc);
+
+  nsRect GetCaretRect(nsIWidget **aOutWidget);
 
 private:
-  nsRect mCaretRect;
-  PRBool mVisible;
+  // The currently focused control -- never a document.
+  // We listen to selection for one control at a time (the focused one)
+  // Document selection is handled separately via additional listeners on all active documents
+  // The current control is set via SetControlSelectionListener()
+  nsCOMPtr<nsIDOMNode> mCurrentControl;  // Selection controller for the currently focused control
+  nsCOMPtr<nsIWeakReference> mCurrentControlSelection;
+
+  // Info for the the last selection event
+  // If it was on a control, then mLastUsedSelection == mCurrentControlSelection
+  // Otherwise, it's for a document where the selection changed
+  nsCOMPtr<nsIWeakReference> mLastUsedSelection; // Weak ref to nsISelection
+  nsCOMPtr<nsIAccessibleText> mLastTextAccessible;
   PRInt32 mLastCaretOffset;
-  nsCOMPtr<nsIDOMNode> mLastNodeWithCaret;
-  nsCOMPtr<nsIDOMNode> mSelectionControllerNode;
-  // mListener is not a com pointer. It's a copy of the listener in the nsRootAccessible owner. 
-  //See nsRootAccessible.h for details of the lifetime if this listener
+
   nsRootAccessible *mRootAccessible;
-  nsCOMPtr<nsIWeakReference> mDomSelectionWeak;
 };
 
 #endif

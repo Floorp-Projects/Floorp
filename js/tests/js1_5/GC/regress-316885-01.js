@@ -34,18 +34,20 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-316885-01.js';
 //-----------------------------------------------------------------------------
-var bug = 316885;
+var BUGNUMBER = 316885;
 var summary = 'Unrooted access in jsinterp.c';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var str_with_num = "0.1";
 
-var obj = { 
+var obj = {
   elem getter: function() {
     return str_with_num;
   },
@@ -60,5 +62,5 @@ actual = obj.elem++;
 
 gc();
 
-  
+ 
 reportCompare(expect, actual, summary);

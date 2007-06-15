@@ -381,4 +381,30 @@ bool LinuxThread::IsAddressMapped(uintptr_t address) const {
   return addr.is_mapped;
 }
 
+bool LinuxThread::FindSigContext(uintptr_t sighandler_ebp,
+                                 struct sigcontext **sig_ctx) {
+  uintptr_t previous_ebp;
+  const int MAX_STACK_DEPTH = 10;
+  int depth_counter = 0;
+
+  do {
+    // We're looking for a |struct sigcontext| as the second parameter
+    // to a signal handler function call.  Luckily, the sigcontext
+    // has an ebp member which should match the ebp pointed to
+    // by the ebp of the signal handler frame.
+    previous_ebp = reinterpret_cast<uintptr_t>(GetNextFrame(
+                                  reinterpret_cast<void**>(sighandler_ebp)));
+    // The stack looks like this:
+    // | previous ebp | previous eip | first param | second param |,
+    // so we need to offset by 3 to get to the second parameter.
+    *sig_ctx = reinterpret_cast<struct sigcontext*>(sighandler_ebp +
+                                                    3 * sizeof(uintptr_t));
+    sighandler_ebp = previous_ebp;
+    depth_counter++;
+  } while(previous_ebp != (*sig_ctx)->ebp && sighandler_ebp != 0 &&
+          IsAddressMapped(sighandler_ebp) && depth_counter < MAX_STACK_DEPTH);
+
+  return previous_ebp == (*sig_ctx)->ebp && previous_ebp != 0;
+}
+
 }  // namespace google_breakpad

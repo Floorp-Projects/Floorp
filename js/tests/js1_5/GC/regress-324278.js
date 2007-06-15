@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-324278.js';
 //-----------------------------------------------------------------------------
-var bug = 324278;
+var BUGNUMBER = 324278;
 var summary = 'GC without recursion';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 // Number to push native stack size beyond 10MB if GC recurses generating
@@ -49,37 +51,37 @@ printStatus (summary);
 var N = 100*1000;
 
 function build(N) {
-        // Explore the fact that regexp literals are shared between
-        // function invocations. Thus we build the following chain:
-        // chainTop: function->regexp->function->regexp....->null
-        // to check how GC would deal with this chain.
+  // Explore the fact that regexp literals are shared between
+  // function invocations. Thus we build the following chain:
+  // chainTop: function->regexp->function->regexp....->null
+  // to check how GC would deal with this chain.
 
-        var chainTop = null;
-        for (var i = 0; i != N; ++i) {
-                var f = Function('some_arg'+i, ' return /test/;');
-                var re = f();
-                re.previous = chainTop;
-                chainTop = f;
-        }
-        return chainTop;
+  var chainTop = null;
+  for (var i = 0; i != N; ++i) {
+    var f = Function('some_arg'+i, ' return /test/;');
+    var re = f();
+    re.previous = chainTop;
+    chainTop = f;
+  }
+  return chainTop;
 }
 
 function check(chainTop, N) {
-        for (var i = 0; i != N; ++i) {
-                var re = chainTop();
-                chainTop = re.previous;
-        }
-        if (chainTop !== null) 
-                throw "Bad chainTop";
+  for (var i = 0; i != N; ++i) {
+    var re = chainTop();
+    chainTop = re.previous;
+  }
+  if (chainTop !== null)
+    throw "Bad chainTop";
 
 }
 
 if (typeof gc != "function") {
-        gc = function() {
-                for (var i = 0; i != 50*1000; ++i) {
-                        var tmp = new Object();
-                }
-        }
+  gc = function() {
+    for (var i = 0; i != 50*1000; ++i) {
+      var tmp = new Object();
+    }
+  }
 }
 
 var chainTop = build(N);
@@ -89,5 +91,5 @@ check(chainTop, N);
 printStatus("CHECKED");
 chainTop = null;
 gc();
-  
+ 
 reportCompare(expect, actual, summary);

@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-351514.js';
 //-----------------------------------------------------------------------------
-var bug = 351514;
+var BUGNUMBER = 351514;
 var summary = 'Finalize yield syntax to match ES4/JS2 proposal';
 var actual = '';
 var expect = '';
@@ -48,10 +50,10 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
-  expect = 'SyntaxError: yield expression must be parenthesized';
+ 
+  expect = /SyntaxError: yield expression must be parenthesized/;
   try
   {
     eval('function f() { yield g(yield 1, 2) };');
@@ -61,7 +63,7 @@ function test()
     actual = ex + '';
   }
 
-  reportCompare(expect, actual, summary);
+  reportMatch(expect, actual, summary);
 
   exitFunc ('test');
 }

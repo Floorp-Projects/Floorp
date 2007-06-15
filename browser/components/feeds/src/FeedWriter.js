@@ -95,7 +95,12 @@ const FW_CONTRACTID = "@mozilla.org/browser/feeds/result-writer;1";
 const TITLE_ID = "feedTitleText";
 const SUBTITLE_ID = "feedSubtitleText";
 
+#ifdef MOZ_PLACES
+const NH_CONTRACTID = "@mozilla.org/browser/nav-history-service;1";
+const FAV_CONTRACTID = "@mozilla.org/browser/favicon-service;1";
+#else
 const ICON_DATAURL_PREFIX = "data:image/x-icon;base64,";
+#endif
 
 function FeedWriter() {
 }
@@ -147,6 +152,18 @@ FeedWriter.prototype = {
       // Not allowed to load this link because secman.checkLoadURIStr threw
     }
   },
+
+#ifdef MOZ_PLACES
+  __faviconService: null,
+  get _faviconService() {
+    if (!this.__faviconService) {
+      this.__faviconService =
+        Cc[FAV_CONTRACTID].getService(Ci.nsIFaviconService);
+    }
+
+    return this.__faviconService;
+  },
+#endif
 
   __bundle: null,
   get _bundle() {
@@ -308,7 +325,7 @@ FeedWriter.prototype = {
       var entryContainer = this._document.createElementNS(HTML_NS, "div");
       entryContainer.className = "entry";
 
-      // If the entry has a title, make it a like
+      // If the entry has a title, make it a link
       if (entry.title) {
         var a = this._document.createElementNS(HTML_NS, "a");
         a.appendChild(this._document.createTextNode(entry.title.plainText()));
@@ -702,6 +719,11 @@ FeedWriter.prototype = {
     handlersMenuPopup.appendChild(this._document.createElementNS(XUL_NS,
                                   "menuseparator"));
 
+#ifdef MOZ_PLACES
+    var historySvc = Cc[NH_CONTRACTID].getService(Ci.nsINavHistoryService);
+    historySvc.addObserver(this, false);
+#endif
+
     // List of web handlers
     var wccr = 
       Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
@@ -719,8 +741,17 @@ FeedWriter.prototype = {
         // For privacy reasons we cannot set the image attribute directly
         // to the icon url, see Bug 358878
         var uri = makeURI(handlers[i].uri);
+#ifdef MOZ_PLACES
+        if (!this._setFaviconForWebReader(uri, menuItem)) {
+          if (uri && /^https?/.test(uri.scheme)) {
+            var iconURL = makeURI(uri.prePath + "/favicon.ico");
+            this._faviconService.setAndLoadFaviconForPage(uri, iconURL, true);
+          }
+        }
+#else
         if (uri && /^https?/.test(uri.scheme))
-          new iconDataURIGenerator(uri.prePath + "/favicon.ico", menuItem)
+          new iconDataURIGenerator(uri.prePath + "/favicon.ico", menuItem);
+#endif
       }
     }
 
@@ -845,6 +876,11 @@ FeedWriter.prototype = {
     prefs.removeObserver(PREF_SELECTED_WEB, this);
     prefs.removeObserver(PREF_SELECTED_APP, this);
     this._removeFeedFromCache();
+
+#ifdef MOZ_PLACES
+    var historySvc = Cc[NH_CONTRACTID].getService(Ci.nsINavHistoryService);
+    historySvc.removeObserver(this);
+#endif
   },
 
   _removeFeedFromCache: function FW__removeFeedFromCache() {
@@ -961,6 +997,68 @@ FeedWriter.prototype = {
     } 
   },
 
+#ifdef MOZ_PLACES
+  /**
+   * Sets the icon for the given web-reader item in the readers menu
+   * if the favicon-service has the necessary icon stored.
+   * @param aURI
+   *        the reader URI.
+   * @param aMenuItem
+   *        the reader item in the readers menulist.
+   * @return true if the icon was set, false otherwise.
+   */
+  _setFaviconForWebReader:
+  function FW__setFaviconForWebReader(aURI, aMenuItem) {
+    var faviconsSvc = this._faviconService;
+    var faviconURL = null;
+    try {
+      faviconURL = faviconsSvc.getFaviconForPage(aURI);
+    }
+    catch(ex) { }
+
+    if (faviconURL) {
+      var mimeType = { };
+      var bytes = faviconsSvc.getFaviconData(faviconURL, mimeType,
+                                             { /* dataLen */ });
+      if (bytes) {
+        var dataURI = "data:" + mimeType.value + ";" + "base64," +
+                      btoa(String.fromCharCode.apply(null, bytes));
+        aMenuItem.setAttribute("image", dataURI);
+        return true;
+      }
+    }
+
+    return false;
+  },
+
+  /**
+   * See nsINavHistoryService
+   */
+   onPageChanged: function FW_onPageChanged(aURI, aWhat, aValue) {
+     if (aWhat == Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON) {
+       // Go through the readers menu and look for the corresponding
+       // reader menu-item for the page if any.
+       var spec = aURI.spec;
+       var handlersMenulist = this._document.getElementById("handlersMenuList");
+       var possibleHandlers = handlersMenulist.firstChild.childNodes;
+       for (var i=0; i < possibleHandlers.length ; i++) {
+         if (possibleHandlers[i].getAttribute("webhandlerurl") == spec) {
+           this._setFaviconForWebReader(aURI, possibleHandlers[i]);
+           return;
+         }
+       }
+     }
+   },
+
+   onBeginUpdateBatch: function() { },
+   onEndUpdateBatch: function() { },
+   onVisit: function() { },
+   onTitleChanged: function() { },
+   onDeleteURI: function() { },
+   onClearHistory: function() { },
+   onPageExpired: function() { },
+#endif
+
   /**
    * See nsIClassInfo
    */
@@ -984,12 +1082,16 @@ FeedWriter.prototype = {
         iid.equals(Ci.nsIClassInfo) ||
         iid.equals(Ci.nsIDOMEventListener) ||
         iid.equals(Ci.nsIObserver) ||
+#ifdef MOZ_PLACES
+        iid.equals(Ci.nsINavHistoryObserver) ||
+#endif
         iid.equals(Ci.nsISupports))
       return this;
     throw Cr.NS_ERROR_NO_INTERFACE;
   }
 };
 
+#ifndef MOZ_PLACES
 function iconDataURIGenerator(aURISpec, aElement) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
@@ -1094,6 +1196,7 @@ iconDataURIGenerator.prototype = {
   onProgress: function (aRequest, aContext, aProgress, aProgressMax) { },
   onStatus: function (aRequest, aContext, aStatus, aStatusArg) { }
 };
+#endif
 
 var Module = {
   QueryInterface: function M_QueryInterface(iid) {

@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: sw=4 ts=4 sts=4
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -21,6 +22,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *   Shawn Wilsher <me@shawnwilsher.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,6 +47,7 @@
 #include "mozStorageConnection.h"
 #include "mozStorageStatement.h"
 #include "mozStorageValueArray.h"
+#include "mozStorage.h"
 
 #include "prlog.h"
 
@@ -165,15 +168,13 @@ NS_IMETHODIMP
 mozStorageStatement::Clone(mozIStorageStatement **_retval)
 {
     mozStorageStatement *mss = new mozStorageStatement();
-    NS_ADDREF(mss);
+    if (!mss)
+      return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv = mss->Initialize (mDBConnection, mStatementString);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(mss);
-        return NS_ERROR_FAILURE; // XXX error code
-    }
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    *_retval = mss;
+    NS_ADDREF(*_retval = mss);
     return NS_OK;
 }
 
@@ -193,8 +194,12 @@ NS_IMETHODIMP
 mozStorageStatement::GetParameterName(PRUint32 aParamIndex, nsACString & _retval)
 {
     NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
+    // We have to check this index because sqlite3_bind_parameter_name returns
+    // NULL if an error occurs, or if a column is unnamed.  Since we handle
+    // unnamed columns, we won't be able to tell if it is an error not without
+    // checking ourselves.
     if (aParamIndex < 0 || aParamIndex >= mParamCount)
-        return NS_ERROR_FAILURE; // XXXerror
+        return NS_ERROR_ILLEGAL_VALUE;
 
     const char *pname = sqlite3_bind_parameter_name(mDBStatement, aParamIndex + 1);
     if (pname == NULL) {
@@ -248,8 +253,10 @@ NS_IMETHODIMP
 mozStorageStatement::GetColumnName(PRUint32 aColumnIndex, nsACString & _retval)
 {
     NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
+    // We have to check this index because sqlite3_column_name returns
+    // NULL if an error occurs, or if a column is unnamed.
     if (aColumnIndex < 0 || aColumnIndex >= mResultColumnCount)
-        return NS_ERROR_FAILURE; // XXXerror
+        return NS_ERROR_ILLEGAL_VALUE;
 
     const char *cname = sqlite3_column_name(mDBStatement, aColumnIndex);
     _retval.Assign(nsDependentCString(cname));
@@ -278,15 +285,12 @@ NS_IMETHODIMP
 mozStorageStatement::BindUTF8StringParameter(PRUint32 aParamIndex, const nsACString & aValue)
 {
     NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
-    if (aParamIndex < 0 || aParamIndex >= mParamCount)
-        return NS_ERROR_FAILURE; // XXXerror
 
-    sqlite3_bind_text (mDBStatement, aParamIndex + 1,
-                       nsPromiseFlatCString(aValue).get(), aValue.Length(),
-                       SQLITE_TRANSIENT);
-    // XXX check return value for errors?
+    int srv = sqlite3_bind_text (mDBStatement, aParamIndex + 1,
+                                 nsPromiseFlatCString(aValue).get(),
+                                 aValue.Length(), SQLITE_TRANSIENT);
 
-    return NS_OK;
+    return ConvertResultCode(srv);
 }
 
 /* void bindStringParameter (in unsigned long aParamIndex, in AString aValue); */
@@ -294,15 +298,12 @@ NS_IMETHODIMP
 mozStorageStatement::BindStringParameter(PRUint32 aParamIndex, const nsAString & aValue)
 {
     NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
-    if (aParamIndex < 0 || aParamIndex >= mParamCount)
-        return NS_ERROR_FAILURE; // XXXerror
 
-    sqlite3_bind_text16 (mDBStatement, aParamIndex + 1,
-                         nsPromiseFlatString(aValue).get(), aValue.Length() * 2,
-                         SQLITE_TRANSIENT);
-    // XXX check return value for errors?
+    int srv = sqlite3_bind_text16 (mDBStatement, aParamIndex + 1,
+                                   nsPromiseFlatString(aValue).get(),
+                                   aValue.Length() * 2, SQLITE_TRANSIENT);
 
-    return NS_OK;
+    return ConvertResultCode(srv);
 }
 
 /* void bindDoubleParameter (in unsigned long aParamIndex, in double aValue); */
@@ -310,13 +311,10 @@ NS_IMETHODIMP
 mozStorageStatement::BindDoubleParameter(PRUint32 aParamIndex, double aValue)
 {
     NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
-    if (aParamIndex < 0 || aParamIndex >= mParamCount)
-        return NS_ERROR_FAILURE; // XXXerror
 
-    sqlite3_bind_double (mDBStatement, aParamIndex + 1, aValue);
-    // XXX check return value for errors?
+    int srv = sqlite3_bind_double (mDBStatement, aParamIndex + 1, aValue);
 
-    return NS_OK;
+    return ConvertResultCode(srv);
 }
 
 /* void bindInt32Parameter (in unsigned long aParamIndex, in long aValue); */
@@ -324,13 +322,10 @@ NS_IMETHODIMP
 mozStorageStatement::BindInt32Parameter(PRUint32 aParamIndex, PRInt32 aValue)
 {
     NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
-    if (aParamIndex < 0 || aParamIndex >= mParamCount)
-        return NS_ERROR_FAILURE; // XXXerror
 
-    sqlite3_bind_int (mDBStatement, aParamIndex + 1, aValue);
-    // XXX check return value for errors?
+    int srv = sqlite3_bind_int (mDBStatement, aParamIndex + 1, aValue);
 
-    return NS_OK;
+    return ConvertResultCode(srv);
 }
 
 /* void bindInt64Parameter (in unsigned long aParamIndex, in long long aValue); */
@@ -338,13 +333,10 @@ NS_IMETHODIMP
 mozStorageStatement::BindInt64Parameter(PRUint32 aParamIndex, PRInt64 aValue)
 {
     NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
-    if (aParamIndex < 0 || aParamIndex >= mParamCount)
-        return NS_ERROR_FAILURE; // XXXerror
 
-    sqlite3_bind_int64 (mDBStatement, aParamIndex + 1, aValue);
-    // XXX check return value for errors?
+    int srv = sqlite3_bind_int64 (mDBStatement, aParamIndex + 1, aValue);
 
-    return NS_OK;
+    return ConvertResultCode(srv);
 }
 
 /* void bindNullParameter (in unsigned long aParamIndex); */
@@ -352,13 +344,10 @@ NS_IMETHODIMP
 mozStorageStatement::BindNullParameter(PRUint32 aParamIndex)
 {
     NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
-    if (aParamIndex < 0 || aParamIndex >= mParamCount)
-        return NS_ERROR_FAILURE; // XXXerror
 
-    sqlite3_bind_null (mDBStatement, aParamIndex + 1);
-    // XXX check return value for errors?
+    int srv = sqlite3_bind_null (mDBStatement, aParamIndex + 1);
 
-    return NS_OK;
+    return ConvertResultCode(srv);
 }
 
 /* void bindBlobParameter (in unsigned long aParamIndex, [array, const, size_is (aValueSize)] in octet aValue, in unsigned long aValueSize); */
@@ -366,13 +355,11 @@ NS_IMETHODIMP
 mozStorageStatement::BindBlobParameter(PRUint32 aParamIndex, const PRUint8 *aValue, PRUint32 aValueSize)
 {
     NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
-    if (aParamIndex < 0 || aParamIndex >= mParamCount)
-        return NS_ERROR_FAILURE; // XXXerror
 
-    sqlite3_bind_blob (mDBStatement, aParamIndex + 1, aValue, aValueSize, SQLITE_TRANSIENT);
-    // XXX check return value for errors?
+    int srv = sqlite3_bind_blob (mDBStatement, aParamIndex + 1, aValue,
+                                 aValueSize, SQLITE_TRANSIENT);
 
-    return NS_OK;
+    return ConvertResultCode(srv);
 }
 
 /* void execute (); */
@@ -381,10 +368,10 @@ mozStorageStatement::Execute()
 {
     NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
 
-    PRBool ret = PR_FALSE;
+    PRBool ret;
     nsresult rv = ExecuteStep(&ret);
-    if (NS_FAILED(rv))
-        return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
+
     return Reset();
 }
 
@@ -509,7 +496,7 @@ mozStorageStatement::Recreate()
 
     if (srv != SQLITE_OK) {
         PR_LOG(gStorageLog, PR_LOG_ERROR, ("sqlite3_transfer_bindings returned: %d", srv));
-        return NS_ERROR_FAILURE;
+        return ConvertResultCode(srv);
     }
 
     return NS_OK;
@@ -531,7 +518,11 @@ mozStorageStatement::GetNumEntries(PRUint32 *aLength)
 NS_IMETHODIMP
 mozStorageStatement::GetTypeOfIndex(PRUint32 aIndex, PRInt32 *_retval)
 {
-    NS_ASSERTION (aIndex < mResultColumnCount, "aIndex out of range");
+    if (aIndex < 0 || aIndex >= mResultColumnCount)
+        return NS_ERROR_ILLEGAL_VALUE;
+
+    if (!mExecuting)
+        return NS_ERROR_UNEXPECTED;
 
     int t = sqlite3_column_type (mDBStatement, aIndex);
     switch (t) {
@@ -562,9 +553,11 @@ mozStorageStatement::GetTypeOfIndex(PRUint32 aIndex, PRInt32 *_retval)
 NS_IMETHODIMP
 mozStorageStatement::GetInt32(PRUint32 aIndex, PRInt32 *_retval)
 {
-    NS_ASSERTION (aIndex < mResultColumnCount, "aIndex out of range");
+    if (aIndex < 0 || aIndex >= mResultColumnCount)
+        return NS_ERROR_ILLEGAL_VALUE;
+    
     if (!mExecuting)
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_UNEXPECTED;
 
     *_retval = sqlite3_column_int (mDBStatement, aIndex);
 
@@ -575,9 +568,11 @@ mozStorageStatement::GetInt32(PRUint32 aIndex, PRInt32 *_retval)
 NS_IMETHODIMP
 mozStorageStatement::GetInt64(PRUint32 aIndex, PRInt64 *_retval)
 {
-    NS_ASSERTION (aIndex < mResultColumnCount, "aIndex out of range");
+    if (aIndex < 0 || aIndex >= mResultColumnCount)
+        return NS_ERROR_ILLEGAL_VALUE;
+    
     if (!mExecuting)
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_UNEXPECTED;
 
     *_retval = sqlite3_column_int64 (mDBStatement, aIndex);
 
@@ -588,9 +583,11 @@ mozStorageStatement::GetInt64(PRUint32 aIndex, PRInt64 *_retval)
 NS_IMETHODIMP
 mozStorageStatement::GetDouble(PRUint32 aIndex, double *_retval)
 {
-    NS_ASSERTION (aIndex < mResultColumnCount, "aIndex out of range");
+    if (aIndex < 0 || aIndex >= mResultColumnCount)
+        return NS_ERROR_ILLEGAL_VALUE;
+    
     if (!mExecuting)
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_UNEXPECTED;
 
     *_retval = sqlite3_column_double (mDBStatement, aIndex);
 
@@ -601,10 +598,7 @@ mozStorageStatement::GetDouble(PRUint32 aIndex, double *_retval)
 NS_IMETHODIMP
 mozStorageStatement::GetUTF8String(PRUint32 aIndex, nsACString & _retval)
 {
-    NS_ASSERTION (aIndex < mResultColumnCount, "aIndex out of range");
-    if (!mExecuting)
-        return NS_ERROR_FAILURE;
-
+    // Get type of Index will check aIndex for us, so we don't have to.
     PRInt32 t;
     nsresult rv = GetTypeOfIndex (aIndex, &t);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -624,10 +618,7 @@ mozStorageStatement::GetUTF8String(PRUint32 aIndex, nsACString & _retval)
 NS_IMETHODIMP
 mozStorageStatement::GetString(PRUint32 aIndex, nsAString & _retval)
 {
-    NS_ASSERTION (aIndex < mResultColumnCount, "aIndex out of range");
-    if (!mExecuting)
-        return NS_ERROR_FAILURE;
-
+    // Get type of Index will check aIndex for us, so we don't have to.
     PRInt32 t;
     nsresult rv = GetTypeOfIndex (aIndex, &t);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -648,9 +639,11 @@ mozStorageStatement::GetString(PRUint32 aIndex, nsAString & _retval)
 NS_IMETHODIMP
 mozStorageStatement::GetBlob(PRUint32 aIndex, PRUint32 *aDataSize, PRUint8 **aData)
 {
-    NS_ASSERTION (aIndex < mResultColumnCount, "aIndex out of range");
+    if (aIndex < 0 || aIndex >= mResultColumnCount)
+        return NS_ERROR_ILLEGAL_VALUE;
+    
     if (!mExecuting)
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_UNEXPECTED;
 
     int blobsize = sqlite3_column_bytes (mDBStatement, aIndex);
     if (blobsize == 0) {
@@ -711,9 +704,10 @@ mozStorageStatement::GetSharedBlob(PRUint32 aIndex, PRUint32 *aDataSize, const P
 NS_IMETHODIMP
 mozStorageStatement::GetIsNull(PRUint32 aIndex, PRBool *_retval)
 {
+    // Get type of Index will check aIndex for us, so we don't have to.
     PRInt32 t;
     nsresult rv = GetTypeOfIndex (aIndex, &t);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (t == VALUE_TYPE_NULL)
         *_retval = PR_TRUE;

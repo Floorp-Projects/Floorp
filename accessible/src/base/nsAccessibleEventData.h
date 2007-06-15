@@ -58,6 +58,9 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIACCESSIBLEEVENT
 
+protected:
+  already_AddRefed<nsIAccessible> GetAccessibleByNode();
+
 private:
   PRUint32 mEventType;
   nsCOMPtr<nsIAccessible> mAccessible;

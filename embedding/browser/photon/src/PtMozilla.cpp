@@ -59,7 +59,7 @@
 #include "nsIWebBrowserPrint.h"
 #include "nsIPrintOptions.h"
 
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMMouseListener.h"

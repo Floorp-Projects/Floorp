@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = '15.9.3.1-1.js';
+
 /**
    File Name:          15.9.3.1.js
    ECMA Section:       15.9.3.1 new Date (year, month, date, hours, minutes, seconds, ms)
@@ -210,7 +213,7 @@ test();
 
 function addNewTestCase( DateCase, DateString, ResultArray ) {
   //adjust hard-coded ResultArray for tester's timezone instead of PST
-  adjustResultArray(ResultArray); 
+  adjustResultArray(ResultArray);
 
   new TestCase( SECTION, DateString+".getTime()", ResultArray[TIME],       DateCase.getTime() );
   new TestCase( SECTION, DateString+".valueOf()", ResultArray[TIME],       DateCase.valueOf() );

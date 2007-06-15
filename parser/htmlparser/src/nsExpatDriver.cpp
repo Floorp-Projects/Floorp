@@ -537,14 +537,12 @@ nsExpatDriver::HandleDefault(const PRUnichar *aValue,
     mInternalSubset.Append(aValue, aLength);
   }
   else if (mSink) {
-    static const PRUnichar newline[] = { '\n', '\0' };
     PRUint32 i;
     for (i = 0; i < aLength && NS_SUCCEEDED(mInternalState); ++i) {
       if (aValue[i] == '\n' || aValue[i] == '\r') {
-        mInternalState = mSink->HandleCharacterData(newline, 1);
+        mInternalState = mSink->HandleCharacterData(&aValue[i], 1);
       }
     }
-    // The line breaks should not be normalized twice. See bug 343870.
     MaybeStopParser();
   }
 

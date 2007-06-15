@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '11.2.3-4-n.js';
+
 /**
    File Name:          11.2.3-4-n.js
    ECMA Section:       11.2.3. Function Calls
@@ -81,9 +83,9 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 DESCRIPTION = "null.valueOf()";
 EXPECTED = "error";
 
-new TestCase( SECTION, 
-              "null.valueOf()", 
-              "error", 
+new TestCase( SECTION,
+              "null.valueOf()",
+              "error",
               eval("null.valueOf()") );
 test();
 

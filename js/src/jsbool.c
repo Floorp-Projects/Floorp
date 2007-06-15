@@ -174,18 +174,6 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj)
     return proto;
 }
 
-JSObject *
-js_BooleanToObject(JSContext *cx, JSBool b)
-{
-    JSObject *obj;
-
-    obj = js_NewObject(cx, &js_BooleanClass, NULL, NULL);
-    if (!obj)
-        return NULL;
-    OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, BOOLEAN_TO_JSVAL(b));
-    return obj;
-}
-
 JSString *
 js_BooleanToString(JSContext *cx, JSBool b)
 {

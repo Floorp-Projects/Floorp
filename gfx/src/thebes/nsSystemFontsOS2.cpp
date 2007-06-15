@@ -60,7 +60,7 @@ BOOL IsDBCS()
         CHAR        achDBCSInfo[12] = {0};                  // DBCS environmental vector
         ctrycodeInfo.country  = 0;                          // current country
         ctrycodeInfo.codepage = 0;                          // current codepage
-        
+
         rc = DosQueryDBCSEnv(sizeof(achDBCSInfo), &ctrycodeInfo, achDBCSInfo);
         if (rc == NO_ERROR) {
             // Non-DBCS countries will have four bytes in the first four bytes of the
@@ -84,7 +84,7 @@ BOOL IsDBCS()
 void QueryFontFromINI(char* fontType, char* fontName, ULONG ulLength)
 {
     ULONG ulMaxNameL = ulLength;
-    
+
     /* We had to switch to using PrfQueryProfileData because */
     /* some users have binary font data in their INI files */
     BOOL rc = PrfQueryProfileData(HINI_USER, "PM_SystemFonts", fontType,
@@ -113,17 +113,25 @@ nsSystemFontsOS2::nsSystemFontsOS2()
 #endif
 }
 
+/*
+ * Query the font used for various CSS properties (aID) from the system.
+ * For OS/2, only very few fonts are defined in the system, so most of the IDs
+ * resolve to the same system font.
+ * The font queried will give back a string like
+ *    9.WarpSans Bold
+ *    12.Times New Roman Bold Italic
+ *    10.Times New Roman.Strikeout.Underline
+ *    20.Bitstream Vera Sans Mono Obli
+ * (always restricted to 32 chars, at least before the second dot)
+ * We use the value before the dot as the font size (in pt, and convert it to
+ * px using the screen resolution) and then try to use the rest of the string
+ * to determine the font style from it.
+ */
 nsresult nsSystemFontsOS2::GetSystemFont(nsSystemFontID aID, nsString* aFontName,
                                          gfxFontStyle *aFontStyle) const
 {
-    return GetSystemFontInfo(aID, aFontName, aFontStyle);
-}
-
-nsresult nsSystemFontsOS2::GetSystemFontInfo(nsSystemFontID aID, nsString* aFontName,
-                                             gfxFontStyle *aFontStyle) const
-{
 #ifdef DEBUG_thebes
-    printf("nsSystemFontsOS2::GetSystemFontInfo: ");
+    printf("nsSystemFontsOS2::GetSystemFont: ");
 #endif
     char szFontNameSize[MAXNAMEL];
 
@@ -167,34 +175,97 @@ nsresult nsSystemFontsOS2::GetSystemFontInfo(nsSystemFontID aID, nsString* aFont
         break;
 
     default:
-        NS_WARNING("None of the listed font types, using 9.WarpSans");
-#ifdef DEBUG_thebes
-        printf("using 9.WarpSans... ");
-#endif
-        strcpy(szFontNameSize, "9.WarpSans");
+        NS_WARNING("None of the listed font types, using WarpSans");
+        if (!IsDBCS()) {
+            strcpy(szFontNameSize, "9.WarpSans");
+        } else {
+            strcpy(szFontNameSize, "9.WarpSans Combined");
+        }
     } // switch
 #ifdef DEBUG_thebes
     printf(" (%s)\n", szFontNameSize);
 #endif
 
-    int pointSize = atoi(szFontNameSize);
     char *szFacename = strchr(szFontNameSize, '.');
-
-    if ((pointSize == 0) || (!szFacename) || (*(szFacename++) == '\0'))
+    if (!szFacename || (*(szFacename++) == '\0'))
         return NS_ERROR_FAILURE;
 
-    NS_NAMED_LITERAL_STRING(quote, "\""); // seems like we need quotes around the font name
+    // local DPI for size will be taken into account below
+    aFontStyle->size = atof(szFontNameSize);
+
+    // determine DPI resolution of screen device to compare compute
+    // font size in pixels
+    gfxFloat vertScreenRes = 120; // assume 120 dpi as default
+    HPS ps = WinGetScreenPS(HWND_DESKTOP);
+    HDC dc = GpiQueryDevice(ps);
+    LONG lStart = CAPS_FAMILY, lCount = CAPS_CHAR_WIDTH;
+    LONG alArray[CAPS_CHAR_WIDTH];
+    if (DevQueryCaps(dc, lStart, lCount, alArray)) {
+        // system screen resolution is in pels/m, we need DPI
+        vertScreenRes = alArray[CAPS_VERTICAL_RESOLUTION] * 0.0254;
+    }
+    WinReleasePS(ps);
+
+    // now scale to make pixels from points (1 pt = 1/72in)
+    aFontStyle->size *= vertScreenRes / 72.0;
+
     NS_ConvertUTF8toUTF16 fontFace(szFacename);
-    *aFontName = quote + fontFace + quote;
+    int pos = 0;
 
-    // As in old gfx/src/os2 set the styles to the defaults
-    aFontStyle->style = FONT_STYLE_NORMAL;
-    aFontStyle->variant = FONT_VARIANT_NORMAL;
-    aFontStyle->weight = FONT_WEIGHT_NORMAL;
-    aFontStyle->decorations = FONT_DECORATION_NONE;
-    aFontStyle->size = gfxFloat(pointSize);
-
+    // this is a system font in any case
     aFontStyle->systemFont = PR_TRUE;
+
+    // bold fonts should have " Bold" in their names, at least we hope that they
+    // do, otherwise it's bad luck
+    NS_NAMED_LITERAL_CSTRING(spcBold, " Bold");
+    if ((pos = fontFace.Find(spcBold.get(), PR_FALSE, 0, -1)) > -1) {
+        aFontStyle->weight = FONT_WEIGHT_BOLD;
+        // strip the attribute, now that we have set it in the gfxFontStyle
+        fontFace.Cut(pos, spcBold.Length());
+    } else {
+        aFontStyle->weight = FONT_WEIGHT_NORMAL;
+    }
+
+    // similar hopes for italic and oblique fonts...
+    NS_NAMED_LITERAL_CSTRING(spcItalic, " Italic");
+    NS_NAMED_LITERAL_CSTRING(spcOblique, " Oblique");
+    NS_NAMED_LITERAL_CSTRING(spcObli, " Obli");
+    if ((pos = fontFace.Find(spcItalic.get(), PR_FALSE, 0, -1)) > -1) {
+        aFontStyle->style = FONT_STYLE_ITALIC;
+        fontFace.Cut(pos, spcItalic.Length());
+    } else if ((pos = fontFace.Find(spcOblique.get(), PR_FALSE, 0, -1)) > -1) {
+        // oblique fonts are rare on OS/2 and not specially supported by
+        // the GPI system, but at least we are trying...
+        aFontStyle->style = FONT_STYLE_OBLIQUE;
+        fontFace.Cut(pos, spcOblique.Length());
+    } else if ((pos = fontFace.Find(spcObli.get(), PR_FALSE, 0, -1)) > -1) {
+        // especially oblique often gets cut by the 32 char limit to "Obli",
+        // so search for that, too (anything shorter would be ambiguous)
+        aFontStyle->style = FONT_STYLE_OBLIQUE;
+        // In this case, assume that this is the last property in the line
+        // and cut off everything else, too
+        // This is needed in case it was really Obliq or Obliqu...
+        fontFace.Cut(pos, fontFace.Length());
+    } else {
+        aFontStyle->style = FONT_STYLE_NORMAL;
+    }
+
+    // just throw away any modifiers that are separated by dots (which are either
+    // .Strikeout, .Underline, or .Outline, none of which have a corresponding
+    // gfxFont property)
+    if ((pos = fontFace.Find(".", PR_FALSE, 0, -1)) > -1) {
+        fontFace.Cut(pos, fontFace.Length());
+    }
+
+#ifdef DEBUG_thebes
+    printf("  after=%s\n", NS_LossyConvertUTF16toASCII(fontFace).get());
+    printf("  style: %s %s %s\n",
+           (aFontStyle->weight == FONT_WEIGHT_BOLD) ? "BOLD" : "",
+           (aFontStyle->style == FONT_STYLE_ITALIC) ? "ITALIC" : "",
+           (aFontStyle->style == FONT_STYLE_OBLIQUE) ? "OBLIQUE" : "");
+#endif
+    NS_NAMED_LITERAL_STRING(quote, "\""); // seems like we need quotes around the font name
+    *aFontName = quote + fontFace + quote;
 
     return NS_OK;
 }

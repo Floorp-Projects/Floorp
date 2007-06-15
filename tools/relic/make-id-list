@@ -20,11 +20,16 @@ my %equivalents = (
   "a mozilla.org contributor" => "Mozilla Foundation",
   "Mozilla" => "Mozilla Foundation",
   "Mozilla.com" => "Mozilla Corporation",
-  "The Mozilla Foundation" => "Mozilla Foundation",
-  "the Mozilla Foundation" => "Mozilla Foundation",
   "Mozilla.org" => "Mozilla Foundation",
-  "the Mozilla Organization" => "Mozilla Foundation",
+  "Mozilla Organization" => "Mozilla Foundation",
   "mozilla.org" => "Mozilla Foundation",
+  
+  "mozilla.org SeaMonkey project" => "Mozilla Foundation",
+  "SeaMonkey project" => "Mozilla Foundation",
+  "SeaMonkey project at mozilla.org" => "Mozilla Foundation",
+  "Mozilla Calendar Squad" => "Mozilla Foundation",
+  
+  "Mozilla Corp" => "Mozilla Corporation",
 
   "Netscape" => "Netscape Communications Corporation",
   "Netscape Corp" => "Netscape Communications Corporation",
@@ -36,7 +41,8 @@ my %equivalents = (
 
   "Novell" => "Novell Inc",
   "Novell, Inc" => "Novell Inc",
-
+  "Novell Corporation" => "Novell Inc",
+  
   "Red Hat Software" => "Red Hat Inc",
   "Red Hat" => "Red Hat Inc",
   "Red Hat, Inc" => "Red Hat Inc",
@@ -54,11 +60,25 @@ my %equivalents = (
   "davel\@mozilla.com" => "Dave Liebreich",
   "Digital Creations 2" => "Digital Creations 2 Inc",
   "Douglas F. Turner II" => "Doug Turner",
+  "Kenneth Herron" => "Ken Herron",
+  "sqlite3", "Sqlite Project",
+  "University Of Queensland" => "University of Queensland",
+  "OEOne Corporation" => "OEone Corporation",
+  "Paul Kocher of Cryptography Research" => "Paul Kocher",
+  "QUALCOMM incorporated" => "Qualcomm Inc",
+  "Simdesk Technologies" => "Simdesk Technologies Inc",
+  "Google" => "Google Inc",
+  "Telephone Corporation)" => "NTT",
+
   "Frank Schoenheit" => "Frank Schönheit",
   "HÃ¥kan Waara" => "Håkan Waara",
-  "Kenneth Herron" => "Ken Herron",
-  "sqlite3", "The sqlite Project",
-  "The University Of Queensland" => "The University of Queensland",
+  "Karsten DÃ¼sterloh" => "Karsten Düsterloh",
+  "Simon BÃ¼nzli" => "Simon Bünzli",
+  "Vincent BÃ©ron" => "Vincent Béron",
+  "Tomas Mšller" => "Tomas Müller",
+  
+  "person recorded in the version control logs" => "Mozilla Foundation",
+  "None" => "Mozilla Foundation"
 );
 
 # 'indevs' == "Initial Developers"
@@ -72,7 +92,9 @@ while (<>)
   {
     # Chop off email addresses and suchlike
     $indev =~ s/[<,\(].*$//;
+    $indev =~ s/^The\s*//i;
 
+    # Trim whitespace
     $indev =~ s/^\s*//;
     $indev =~ s/\s*$//;
 
@@ -83,3 +105,4 @@ while (<>)
 
 # Print out the list in a form suitable for pasting into about:licence.
 print join (",\n", sort {lc $a cmp lc $b} keys %indevs);
+print ".\n";

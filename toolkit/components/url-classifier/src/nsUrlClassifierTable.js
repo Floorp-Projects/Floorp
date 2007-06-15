@@ -38,8 +38,8 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-// js/lang.js is needed for Function.prototype.inherts
-#include ../content/js/lang.js
+// moz/lang.js is needed for Function.prototype.inherts
+#include ../content/moz/lang.js
 #include ../content/enchash-decrypter.js
 #include ../content/multi-querier.js
 #include ../content/trtable.js
@@ -53,7 +53,6 @@ function Init() {
   modScope.G_PreferenceObserver = jslib.G_PreferenceObserver;
   modScope.G_Debug = jslib.G_Debug;
   modScope.G_CryptoHasher = jslib.G_CryptoHasher;
-  modScope.G_Base64 = jslib.G_Base64;
   modScope.BindToObject = jslib.BindToObject;
 
   // We only need to call Init once.

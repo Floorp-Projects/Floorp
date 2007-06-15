@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Igor Bukanov 
+ * Contributor(s): Igor Bukanov
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,24 +34,26 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-311792-01.js';
 //-----------------------------------------------------------------------------
-var bug = 311792;
+var BUGNUMBER = 311792;
 var summary = 'Root Array.prototype methods';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 function index_getter()
 {
-	gc();
-	return 100;
+  gc();
+  return 100;
 }
 
 var a = [0, 1];
 a.__defineGetter__(0, index_getter);
 
 uneval(a.slice(0, 1));
-  
+ 
 reportCompare(expect, actual, summary);

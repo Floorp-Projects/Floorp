@@ -78,6 +78,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionISupports,
 #undef  IMETHOD_VISIBILITY
 #define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
 
+class nsCycleCollectionParticipant;
+
 struct nsCycleCollectionTraversalCallback
 {
     // You must call DescribeNode() with an accurate refcount,
@@ -91,18 +93,32 @@ struct nsCycleCollectionTraversalCallback
 #endif
     virtual void NoteScriptChild(PRUint32 langID, void *child) = 0;
     virtual void NoteXPCOMChild(nsISupports *child) = 0;
+    virtual void NoteNativeChild(void *child,
+                                 nsCycleCollectionParticipant *helper) = 0;
 };
 
-class NS_COM nsCycleCollectionParticipant
-    : public nsISupports
+class NS_NO_VTABLE nsCycleCollectionParticipant
+{
+public:
+    NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb) = 0;
+
+    NS_IMETHOD Root(void *p) = 0;
+    NS_IMETHOD Unlink(void *p) = 0;
+    NS_IMETHOD Unroot(void *p) = 0;
+};
+
+class NS_COM nsXPCOMCycleCollectionParticipant
+    : public nsCycleCollectionParticipant
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_CYCLECOLLECTIONPARTICIPANT_IID)
-    NS_DECL_ISUPPORTS
 
-    NS_IMETHOD Unlink(nsISupports *p);
-    NS_IMETHOD Traverse(nsISupports *p, 
-                        nsCycleCollectionTraversalCallback &cb);
+    NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb);
+
+    NS_IMETHOD Root(void *p);
+    NS_IMETHOD Unlink(void *p);
+    NS_IMETHOD Unroot(void *p);
+
     NS_IMETHOD_(void) UnmarkPurple(nsISupports *p);
 
 #ifdef DEBUG
@@ -110,7 +126,7 @@ public:
 #endif
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant, 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCOMCycleCollectionParticipant, 
                               NS_CYCLECOLLECTIONPARTICIPANT_IID)
 
 #undef  IMETHOD_VISIBILITY
@@ -118,7 +134,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant,
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Helpers for implementing a QI to nsCycleCollectionParticipant
+// Helpers for implementing a QI to nsXPCOMCycleCollectionParticipant
 ///////////////////////////////////////////////////////////////////////////////
 
 #define NS_CYCLE_COLLECTION_INNERCLASS                                         \
@@ -131,8 +147,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant,
         _class##_cycleCollectorGlobal
 
 #define NS_IMPL_QUERY_CYCLE_COLLECTION(_class)                                 \
-  if ( aIID.Equals(NS_GET_IID(nsCycleCollectionParticipant)) ) {               \
-    foundInterface = & NS_CYCLE_COLLECTION_NAME(_class);                       \
+  if ( aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant)) ) {          \
+    *aInstancePtr = & NS_CYCLE_COLLECTION_NAME(_class);                        \
+    return NS_OK;                                                              \
   } else
 
 #define NS_IMPL_QUERY_CYCLE_COLLECTION_ISUPPORTS(_class)                       \
@@ -165,25 +182,36 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant,
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(_class)                          \
   NS_IMETHODIMP                                                                \
-  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Unlink(nsISupports *s)                \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Unlink(void *p)                       \
   {                                                                            \
+    nsISupports *s = NS_STATIC_CAST(nsISupports*, p);                          \
     NS_ASSERTION(CheckForRightISupports(s),                                    \
                  "not the nsISupports pointer we expect");                     \
     _class *tmp = Downcast(s);
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(_class, _base_class)   \
   NS_IMETHODIMP                                                                \
-  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Unlink(nsISupports *s)                \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Unlink(void *p)                       \
   {                                                                            \
+    nsISupports *s = NS_STATIC_CAST(nsISupports*, p);                          \
     NS_ASSERTION(CheckForRightISupports(s),                                    \
                  "not the nsISupports pointer we expect");                     \
     _class *tmp = NS_STATIC_CAST(_class*, Downcast(s));                        \
     NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::Unlink(s);
 
+#define NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(_class)                   \
+  NS_IMETHODIMP                                                                \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Unlink(void *p)                       \
+  {                                                                            \
+    _class *tmp = NS_STATIC_CAST(_class*, p);
+
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(_field)                       \
     tmp->_field = NULL;    
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(_field)                     \
+    tmp->_field.Clear();
+
+#define NS_IMPL_CYCLE_COLLECTION_UNLINK_NSTARRAY(_field)                       \
     tmp->_field.Clear();
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_END                                    \
@@ -192,10 +220,17 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant,
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_0(_class)                              \
   NS_IMETHODIMP                                                                \
-  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Unlink(nsISupports *s)                \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Unlink(void *p)                       \
   {                                                                            \
-    NS_ASSERTION(CheckForRightISupports(s),                                    \
+    NS_ASSERTION(CheckForRightISupports(NS_STATIC_CAST(nsISupports*, p)),      \
                  "not the nsISupports pointer we expect");                     \
+    return NS_OK;                                                              \
+  }
+
+#define NS_IMPL_CYCLE_COLLECTION_UNLINK_NATIVE_0(_class)                       \
+  NS_IMETHODIMP                                                                \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Unlink(void *p)                       \
+  {                                                                            \
     return NS_OK;                                                              \
   }
 
@@ -215,9 +250,10 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant,
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_class)                        \
   NS_IMETHODIMP                                                                \
   NS_CYCLE_COLLECTION_CLASSNAME(_class)::Traverse                              \
-                         (nsISupports *s,                                      \
+                         (void *p,                                             \
                           nsCycleCollectionTraversalCallback &cb)              \
   {                                                                            \
+    nsISupports *s = NS_STATIC_CAST(nsISupports*, p);                          \
     NS_ASSERTION(CheckForRightISupports(s),                                    \
                  "not the nsISupports pointer we expect");                     \
     _class *tmp = Downcast(s);                                                 \
@@ -226,13 +262,23 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant,
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(_class, _base_class) \
   NS_IMETHODIMP                                                                \
   NS_CYCLE_COLLECTION_CLASSNAME(_class)::Traverse                              \
-                         (nsISupports *s,                                      \
+                         (void *p,                                             \
                           nsCycleCollectionTraversalCallback &cb)              \
   {                                                                            \
+    nsISupports *s = NS_STATIC_CAST(nsISupports*, p);                          \
     NS_ASSERTION(CheckForRightISupports(s),                                    \
                  "not the nsISupports pointer we expect");                     \
     _class *tmp = NS_STATIC_CAST(_class*, Downcast(s));                        \
     NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::Traverse(s, cb);
+
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(_class)                 \
+  NS_IMETHODIMP                                                                \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Traverse                              \
+                         (void *p,                                             \
+                          nsCycleCollectionTraversalCallback &cb)              \
+  {                                                                            \
+    _class *tmp = NS_STATIC_CAST(_class*, p);                                  \
+    NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(_field)                       \
     cb.NoteXPCOMChild(tmp->_field);
@@ -250,6 +296,24 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant,
         cb.NoteXPCOMChild(tmp->_field[i]);                                     \
     }
 
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(_ptr, _ptr_class)         \
+  cb.NoteNativeChild(_ptr, &NS_CYCLE_COLLECTION_NATIVE_NAME(_ptr_class));
+
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(_field, _field_class)  \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(tmp->_field, _field_class)
+
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY(_array, _element_class)     \
+    {                                                                          \
+      PRUint32 i, length = (_array).Length();                                  \
+      for (i = 0; i < length; ++i)                                             \
+        NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR((_array)[i],              \
+                                                     _element_class);          \
+    }
+
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY_MEMBER(_field,              \
+                                                          _element_class)      \
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY(tmp->_field, _element_class)
+
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                                  \
     return NS_OK;                                                              \
   }
@@ -260,15 +324,15 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant,
 
 #define NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(_class, _base)                \
 class NS_CYCLE_COLLECTION_INNERCLASS                                           \
- : public nsCycleCollectionParticipant                                         \
+ : public nsXPCOMCycleCollectionParticipant                                    \
 {                                                                              \
 public:                                                                        \
-  NS_IMETHOD Unlink(nsISupports *n);                                           \
-  NS_IMETHOD Traverse(nsISupports *n,                                          \
+  NS_IMETHOD Unlink(void *p);                                                  \
+  NS_IMETHOD Traverse(void *p,                                                 \
                       nsCycleCollectionTraversalCallback &cb);                 \
-  NS_IMETHOD_(void) UnmarkPurple(nsISupports *n)                               \
+  NS_IMETHOD_(void) UnmarkPurple(nsISupports *s)                               \
   {                                                                            \
-    Downcast(n)->UnmarkPurple();                                               \
+    Downcast(s)->UnmarkPurple();                                               \
   }                                                                            \
   static _class* Downcast(nsISupports* s)                                      \
   {                                                                            \
@@ -288,8 +352,8 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                           \
  : public NS_CYCLE_COLLECTION_CLASSNAME(_base_class)                           \
 {                                                                              \
 public:                                                                        \
-  NS_IMETHOD Unlink(nsISupports *n);                                           \
-  NS_IMETHOD Traverse(nsISupports *n,                                          \
+  NS_IMETHOD Unlink(void *p);                                                  \
+  NS_IMETHOD Traverse(void *p,                                                 \
                       nsCycleCollectionTraversalCallback &cb);                 \
   static _class* Downcast(nsISupports* s)                                      \
   {                                                                            \
@@ -304,7 +368,7 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                           \
  : public NS_CYCLE_COLLECTION_CLASSNAME(_base_class)                           \
 {                                                                              \
 public:                                                                        \
-  NS_IMETHOD Traverse(nsISupports *n,                                          \
+  NS_IMETHOD Traverse(void *p,                                                 \
                       nsCycleCollectionTraversalCallback &cb);                 \
   static _class* Downcast(nsISupports* s)                                      \
   {                                                                            \
@@ -320,13 +384,54 @@ public:                                                                        \
  * then you don't need this.
  */
 #define NS_DECL_CYCLE_COLLECTION_UNMARK_PURPLE_STUB(_class)                    \
-  void UnmarkPurple()                                                          \
+  NS_IMETHODIMP_(void) UnmarkPurple()                                          \
   {                                                                            \
   }                                                                            \
 
 #define NS_IMPL_CYCLE_COLLECTION_CLASS(_class)                                 \
   static NS_CYCLE_COLLECTION_CLASSNAME(_class)                                 \
     NS_CYCLE_COLLECTION_NAME(_class);
+
+#define NS_CYCLE_COLLECTION_NATIVE_INNERNAME                                   \
+        _cycleCollectorGlobal
+
+#define NS_CYCLE_COLLECTION_NATIVE_NAME(_class)                                \
+        _class::NS_CYCLE_COLLECTION_NATIVE_INNERNAME
+
+#define NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(_class)                          \
+  class NS_CYCLE_COLLECTION_INNERCLASS                                         \
+   : public nsCycleCollectionParticipant                                       \
+  {                                                                            \
+  public:                                                                      \
+    NS_IMETHOD Root(void *n);                                                  \
+    NS_IMETHOD Unlink(void *n);                                                \
+    NS_IMETHOD Unroot(void *n);                                                \
+    NS_IMETHOD Traverse(void *n,                                               \
+                      nsCycleCollectionTraversalCallback &cb);                 \
+  };                                                                           \
+  static NS_CYCLE_COLLECTION_INNERCLASS                                        \
+      NS_CYCLE_COLLECTION_NATIVE_INNERNAME;
+
+#define NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(_class)                          \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class) NS_CYCLE_COLLECTION_NATIVE_NAME(_class);
+
+#define NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(_class, _root_function)           \
+  NS_IMETHODIMP                                                                \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Root(void *p)                         \
+  {                                                                            \
+    _class *tmp = NS_STATIC_CAST(_class*, p);                                  \
+    tmp->_root_function();                                                     \
+    return NS_OK;                                                              \
+  }
+
+#define NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(_class, _unroot_function)       \
+  NS_IMETHODIMP                                                                \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Unroot(void *p)                       \
+  {                                                                            \
+    _class *tmp = NS_STATIC_CAST(_class*, p);                                  \
+    tmp->_unroot_function();                                                   \
+    return NS_OK;                                                              \
+  }
 
 #define NS_IMPL_CYCLE_COLLECTION_0(_class)                                     \
  NS_IMPL_CYCLE_COLLECTION_CLASS(_class)                                        \

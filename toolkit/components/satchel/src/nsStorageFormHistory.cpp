@@ -227,7 +227,7 @@ nsFormHistory::AddEntry(const nsAString &aName, const nsAString &aValue)
 
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
-  PRBool exists;
+  PRBool exists = PR_TRUE;
   EntryExists(aName, aValue, &exists);
   if (!exists) {
     mozStorageStatementScoper scope(mDBInsertNameValue);
@@ -359,6 +359,9 @@ nsFormHistory::Notify(nsIDOMHTMLFormElement* formElt, nsIDOMWindowInternal* aWin
       inputElt->GetType(type);
       if (!type.LowerCaseEqualsLiteral("text"))
         continue;
+
+      // TODO: If Login Manager marked this input, don't save it. The login
+      // manager will deal with remembering it.
 
       nsAutoString autocomplete;
       inputElt->GetAttribute(kAutoComplete, autocomplete);

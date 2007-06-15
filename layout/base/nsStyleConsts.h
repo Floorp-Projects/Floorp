@@ -428,6 +428,12 @@
 #define NS_STYLE_FONT_LIST											15
 #define NS_STYLE_FONT_FIELD											16
 
+// See nsStylePosition::mWidth, mMinWidth, mMaxWidth
+#define NS_STYLE_WIDTH_INTRINSIC                0
+#define NS_STYLE_WIDTH_MIN_INTRINSIC            1
+#define NS_STYLE_WIDTH_SHRINK_WRAP              2
+#define NS_STYLE_WIDTH_FILL                     3
+
 // See nsStylePosition.mPosition
 #define NS_STYLE_POSITION_STATIC                0
 #define NS_STYLE_POSITION_RELATIVE              1
@@ -646,6 +652,13 @@
 // See nsStyleColumn
 #define NS_STYLE_COLUMN_COUNT_AUTO              0
 #define NS_STYLE_COLUMN_COUNT_UNLIMITED         (-1)
+
+// See nsStyleUIReset
+#define NS_STYLE_IME_MODE_AUTO                  0
+#define NS_STYLE_IME_MODE_NORMAL                1
+#define NS_STYLE_IME_MODE_ACTIVE                2
+#define NS_STYLE_IME_MODE_DISABLED              3
+#define NS_STYLE_IME_MODE_INACTIVE              4
 
 #ifdef MOZ_SVG
 // See nsStyleSVG

@@ -133,6 +133,11 @@ struct nsXREAppData
    */
   const char *minVersion;
   const char *maxVersion;
+
+  /**
+   * The server URL to send crash reports to.
+   */
+  const char *crashReporterURL;
 };
 
 /**
@@ -146,6 +151,11 @@ struct nsXREAppData
  * initialized at startup.
  */
 #define NS_XRE_ENABLE_EXTENSION_MANAGER (1 << 2)
+
+/**
+ * Indicates whether or not to use Breakpad crash reporting.
+ */
+#define NS_XRE_ENABLE_CRASH_REPORTER (1 << 3)
 
 /**
  * The contract id for the nsIXULAppInfo service.

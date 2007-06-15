@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-352094.js';
 //-----------------------------------------------------------------------------
-var bug = 352094;
+var BUGNUMBER = 352094;
 var summary = 'Do not crash with invalid setter usage';
 var actual = 'No Crash';
 var expect = 'SyntaxError: invalid setter usage';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   try
   {
     eval('(function(){ this.p setter = 0 })()');

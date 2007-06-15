@@ -257,6 +257,9 @@ nsGfxCheckboxControlFrame::PaintCheckBoxFromStyle(
   const nsStyleBorder* myBorder = mCheckButtonFaceStyle->GetStyleBorder();
   const nsStyleBackground* myBackground = mCheckButtonFaceStyle->GetStyleBackground();
 
+  NS_ASSERTION(myPosition->mWidth.GetUnit() == eStyleUnit_Coord &&
+               myPosition->mHeight.GetUnit() == eStyleUnit_Coord,
+               "styles for :-moz-checkbox are incorrect or author-accessible");
   nscoord width = myPosition->mWidth.GetCoordValue();
   nscoord height = myPosition->mHeight.GetCoordValue();
   // Position the button centered within the control's rectangle.

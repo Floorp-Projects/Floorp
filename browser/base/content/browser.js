@@ -40,6 +40,7 @@
 #   Pamela Greene <pamg.bugs@gmail.com>
 #   Michael Ventnor <m.ventnor@gmail.com>
 #   Simon Bünzli <zeniko@gmail.com>
+#   Johnathan Nightingale <johnath@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -80,8 +81,9 @@ const BROWSER_ADD_BM_FEATURES = "centerscreen,chrome,dialog,resizable,dependent"
 const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
 const TYPE_XUL = "application/vnd.mozilla.xul+xml";
 
-var gBrowserGlue = Components.classes["@mozilla.org/browser/browserglue;1"]
-                             .getService(Components.interfaces.nsIBrowserGlue);
+// We use this once, for Clear Private Data
+const GLUE_CID = "@mozilla.org/browser/browserglue;1";
+
 var gRDF = null;
 var gGlobalHistory = null;
 var gURIFixup = null;
@@ -332,18 +334,13 @@ var gBookmarksObserver = {
   onItemRemoved: function() { },
 
   onItemChanged:
-  function G_BO_onItemChanged(aID, aBookmark, aProperty, aValue) {
+  function G_BO_onItemChanged(aID, aProperty, aIsAnnotationProperty, aValue) {
     if (aProperty == "became_toolbar_folder" && this.toolbar)
       this.toolbar.place = PlacesUtils.getQueryStringForFolder(aID);
   },
   
   onItemVisited: function() { },
-  onFolderAdded: function() { },
-  onFolderRemoved: function() { },
-  onFolderMoved: function() { },
-  onFolderChanged: function() { },
-  onSeparatorAdded: function() { },
-  onSeparatorRemoved: function() { }
+  onItemMoved: function() { }
 };
 
 /**
@@ -777,8 +774,6 @@ function BrowserStartup()
 {
   gBrowser = document.getElementById("content");
 
-  window.tryToClose = WindowIsClosing;
-
   var uriToLoad = null;
   // Check for window.arguments[0]. If present, use that for uriToLoad.
   if ("arguments" in window && window.arguments[0])
@@ -868,9 +863,6 @@ function BrowserStartup()
       if ((screen.availWidth / 2) >= 800)
         defaultWidth = (screen.availWidth / 2) - 20;
       defaultHeight = screen.availHeight - 10;
-#ifdef MOZ_WIDGET_GTK
-#define USE_HEIGHT_ADJUST
-#endif
 #ifdef MOZ_WIDGET_GTK2
 #define USE_HEIGHT_ADJUST
 #endif
@@ -1030,6 +1022,9 @@ function delayedStartup()
 
   window.addEventListener("keypress", ctrlNumberTabSelection, false);
 
+  // Ensure login manager is up and running.
+  Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+
   if (gMustLoadSidebar) {
     var sidebar = document.getElementById("sidebar");
     var sidebarBox = document.getElementById("sidebar-box");
@@ -1167,6 +1162,10 @@ function delayedStartup()
 
   // bookmark-all-tabs command
   gBookmarkAllTabsHandler = new BookmarkAllTabsHandler();
+  
+  // Prevent chrome-spoofing popups from forging our chrome, by adding a
+  // notification box entry in cases of chromeless popups.
+  checkForChromelessWindow();
 }
 
 function BrowserShutdown()
@@ -1213,6 +1212,14 @@ function BrowserShutdown()
     gSanitizeListener.shutdown();
 
   BrowserOffline.uninit();
+
+  // Store current window position/size into the window attributes 
+  // for persistence.
+  var win = document.documentElement;
+  win.setAttribute("x", window.screenX);
+  win.setAttribute("y", window.screenY);
+  win.setAttribute("height", window.outerHeight);
+  win.setAttribute("width", window.outerWidth);
 
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
   var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
@@ -1925,38 +1932,13 @@ function BrowserCloseTabOrWindow()
   }
 #endif
 
-  BrowserCloseWindow();
+  closeWindow(true);
 }
 
 function BrowserTryToCloseWindow()
 {
-  //give tryToClose a chance to veto if it is defined
-  if (typeof(window.tryToClose) != "function" || window.tryToClose())
-    BrowserCloseWindow();
-}
-
-function BrowserCloseWindow()
-{
-  // This code replicates stuff in BrowserShutdown().  It is here because
-  // window.screenX and window.screenY have real values.  We need
-  // to fix this eventually but by replicating the code here, we
-  // provide a means of saving position (it just requires that the
-  // user close the window via File->Close (vs. close box).
-
-  // Get the current window position/size.
-  var x = window.screenX;
-  var y = window.screenY;
-  var h = window.outerHeight;
-  var w = window.outerWidth;
-
-  // Store these into the window attributes (for persistence).
-  var win = document.getElementById( "main-window" );
-  win.setAttribute( "x", x );
-  win.setAttribute( "y", y );
-  win.setAttribute( "height", h );
-  win.setAttribute( "width", w );
-
-  closeWindow(true);
+  if (WindowIsClosing())
+    window.close();     // WindowIsClosing does all the necessary checks
 }
 
 function loadURI(uri, referrer, postData, allowThirdPartyFixup)
@@ -2008,8 +1990,12 @@ function getShortcutOrURI(aURL, aPostDataRef)
     var shortcutURL = null;
 #ifdef MOZ_PLACES_BOOKMARKS
     var shortcutURI = PlacesUtils.bookmarks.getURIForKeyword(aURL);
-    if (shortcutURI)
+    if (shortcutURI) {
       shortcutURL = shortcutURI.spec;
+      // get POST data
+      var postData = PlacesUtils.getPostDataForURI(shortcutURI);
+      aPostDataRef.value = postData;
+    }
 #else
     shortcutURL = BMSVC.resolveKeyword(aURL, aPostDataRef);
 #endif
@@ -2085,21 +2071,6 @@ function getShortcutOrURI(aURL, aPostDataRef)
   return aURL;
 }
 
-#if 0
-// XXXben - this is only useful if we ever support text/plain encoded forms in
-// smart keywords.
-function normalizePostData(aStringData)
-{
-  var parts = aStringData.split("&");
-  var result = "";
-  for (var i = 0; i < parts.length; ++i) {
-    var part = unescape(parts[i]);
-    if (part)
-      result += part + "\r\n";
-  }
-  return result;
-}
-#endif
 function getPostDataStream(aStringData, aKeyword, aEncKeyword, aType)
 {
   var dataStream = Components.classes["@mozilla.org/io/string-input-stream;1"]
@@ -2294,7 +2265,7 @@ function handleURLBarRevert()
   // don't revert to last valid url unless page is NOT loading
   // and user is NOT key-scrolling through autocomplete list
   if ((!throbberElement || !throbberElement.hasAttribute("busy")) && !isScrolling) {
-    if (url != "about:blank") {
+    if (url != "about:blank" || content.opener) {
       gURLBar.value = url;
       gURLBar.select();
       SetPageProxyState("valid");
@@ -2337,7 +2308,7 @@ function canonizeUrl(aTriggeringEvent, aPostDataRef) {
   // Since this function is called from handleURLBarCommand, which receives
   // both mouse (from the go button) and keyboard events, we also make sure not
   // to do the fixup unless we get a keyboard event, to match user expectations.
-  if (!/^(www|http)|\/\s*$/i.test(url) &&
+  if (!/^(www|https?)\b|\/\s*$/i.test(url) &&
       (aTriggeringEvent instanceof KeyEvent)) {
 #ifdef XP_MACOSX
     var accel = aTriggeringEvent.metaKey;
@@ -2791,19 +2762,22 @@ function openHomeDialog(aURL)
   }
 }
 
-#ifndef MOZ_PLACES_BOOKMARKS
 var bookmarksButtonObserver = {
   onDrop: function (aEvent, aXferData, aDragSession)
   {
     var split = aXferData.data.split("\n");
     var url = split[0];
     if (url != aXferData.data) {  //do nothing if it's not a valid URL
+#ifndef MOZ_PLACES_BOOKMARKS
       var dialogArgs = {
         name: split[1],
         url: url
       }
       openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
                  BROWSER_ADD_BM_FEATURES, dialogArgs);
+#else
+      PlacesUtils.showMinimalAddBookmarkUI(makeURI(url), split[1]);
+#endif
     }
   },
 
@@ -2829,7 +2803,6 @@ var bookmarksButtonObserver = {
     return flavourSet;
   }
 }
-#endif
 
 var newTabButtonObserver = {
   onDragOver: function(aEvent, aFlavour, aDragSession)
@@ -3417,7 +3390,9 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
     SetClickAndHoldHandlers();
 #endif
 
-#ifndef MOZ_PLACES_BOOKMARKS
+#ifdef MOZ_PLACES_BOOKMARKS
+  initBookmarksToolbar();
+#else
   // fix up the personal toolbar folder
   var bt = document.getElementById("bookmarks-ptf");
   if (bt) {
@@ -3842,8 +3817,9 @@ nsBrowserStatusHandler.prototype =
     var browser = getBrowser().selectedBrowser;
     if (aWebProgress.DOMWindow == content) {
 
-      if (location == "about:blank" || location == "") {   //second condition is for new tabs, otherwise
-        location = "";                                     //reload function is enabled until tab is refreshed
+      if ((location == "about:blank" && !content.opener) ||
+           location == "") {                        //second condition is for new tabs, otherwise
+        location = "";                              //reload function is enabled until tab is refreshed
         this.reloadCommand.setAttribute("disabled", "true");
         this.reloadSkipCacheCommand.setAttribute("disabled", "true");
       } else {
@@ -5105,7 +5081,7 @@ function WindowIsClosing()
   var browser = getBrowser();
   var cn = browser.tabContainer.childNodes;
   var numtabs = cn.length;
-  var reallyClose = browser.warnAboutClosingTabs(true);
+  var reallyClose = true;
 
   for (var i = 0; reallyClose && i < numtabs; ++i) {
     var ds = browser.getBrowserForTab(cn[i]).docShell;
@@ -5114,10 +5090,16 @@ function WindowIsClosing()
       reallyClose = false;
   }
 
-  if (reallyClose)
-    return closeWindow(false);
+  if (!reallyClose)
+    return false;
 
-  return reallyClose;
+  // closeWindow takes a second optional function argument to open up a
+  // window closing warning dialog if we're not quitting. (Quitting opens
+  // up another dialog so we don't need to.)
+  return closeWindow(false,
+    function () {
+      return browser.warnAboutClosingTabs(true);
+    });
 }
 
 var MailIntegration = {
@@ -5248,7 +5230,8 @@ function AddKeywordForSearchField()
              BROWSER_ADD_BM_FEATURES, dialogArgs);
 #else
   var description = PlacesUtils.getDescriptionFromDocument(node.ownerDocument);
-  PlacesUtils.showAddBookmarkUI(makeURI(spec), "", description, null, null, null, "");
+  PlacesUtils.showMinimalAddBookmarkUI(makeURI(spec), "", description, null,
+                                       null, null, "", postData);
 #endif
 }
 
@@ -5518,22 +5501,6 @@ var FeedHandler = {
     this.loadFeed(href, event);
   },
     
-  /**
-   * Locate the shell that has a specified document loaded in it. 
-   * @param   doc
-   *          The document to find a shell for.
-   * @returns The doc shell that contains the specified document.
-   */
-  _getContentShell: function(doc) {
-    var browsers = getBrowser().browsers;
-    for (var i = 0; i < browsers.length; i++) {
-      var shell = findChildShell(doc, browsers[i].docShell, null);
-      if (shell)
-        return { shell: shell, browser: browsers[i] };
-    }
-    return null;
-  },
-  
 #ifndef MOZ_PLACES_BOOKMARKS
   /**
    * Adds a Live Bookmark to a feed
@@ -5921,3 +5888,84 @@ BookmarkAllTabsHandler.prototype = {
     this._updateCommandState(aEvent.type == "TabClose");
   }
 };
+
+
+/**
+ * Check the chromehidden attribute to see if the toolbar is hidden.  If so,
+ * and if they haven't disabled the security.warn_chromeless_window.infobar
+ * pref, show an infobar notification informing them of what's going on.  This
+ * helps fight chrome spoofing on popups.  See bug 337344
+ */
+function checkForChromelessWindow() {
+
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefBranch);
+  
+  // true by default
+  if (!prefs.getBoolPref("browser.warn_chromeless_window.infobar"))
+    return;
+
+  if (document.documentElement.getAttribute("chromehidden").indexOf("toolbar") != -1 ||
+      document.documentElement.getAttribute("chromehidden").indexOf("location") != -1) {
+    
+    var bundle_browser = document.getElementById("bundle_browser");
+    
+    // It's possible that something in the window.content.opener.location.path
+    // chain might be null.  Rather than chaining a ton of 99% pass null checks,
+    // though, let's try/catch in order to fail gracefully
+    try {
+      var messageString = bundle_browser.getFormattedString("chromelessWindow.warningMessage",
+                                                            [window.content.opener.location.host]);
+    } catch (ex) {
+        
+      // An exception here is not worth breaking our security warning, but is worth
+      // logging, since it shouldn't happen.
+      Components.utils.reportError(ex);
+      messageString = bundle_browser.getString("chromelessWindow.warningNoLocation");
+      
+    }
+
+    var notificationBox = gBrowser.getNotificationBox();
+    var notificationName = "chromeless-info";
+    if (notificationBox.getNotificationWithValue(notificationName)) {
+      Components.utils.reportError("Already have a chromeless-info notification!")
+      return;
+    }
+    
+    var buttons = [{
+      label: bundle_browser.getString("chromelessWindow.showToolbarsButton"),
+      accessKey: bundle_browser.getString("chromelessWindow.accessKey"),
+      popup: null,
+      callback: function() { return showToolbars(); }
+    }];
+
+    notificationBox.appendNotification(messageString,
+                                       notificationName,
+                                       "chrome://browser/skin/Info.png",
+                                       notificationBox.PRIORITY_INFO_HIGH,
+                                       buttons);
+  }
+}
+
+/**
+ * Callback for "Show Toolbars" button in chromeless window notification box.
+ * Resets visibility of the go button stack and url bar, and wipes the
+ * chromehidden document attribute.
+ */
+function showToolbars() {
+
+  // Unhide the chrome elements
+  document.documentElement.removeAttribute("chromehidden");
+  
+  // Undo the URLBar tweaks performed when the url bar was chromehidden
+  if (gURLBar) {
+    gURLBar.removeAttribute("readonly");
+    gURLBar.setAttribute("enablehistory", "true");
+  }
+  
+  var goButtonStack = document.getElementById("go-button-stack");
+  if (goButtonStack)
+    goButtonStack.removeAttribute("hidden");
+  
+  return false; // Dismiss the notification message
+}

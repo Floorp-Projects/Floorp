@@ -96,3 +96,10 @@
 
 #define NS_DOCNAVSTARTPROGRESSLISTENER_CONTRACTID \
   "@mozilla.org/browser/safebrowsing/navstartlistener;1"
+
+// 6fb0c970-e1b1-11db-8314-0800200c9a66
+#define NS_PLACESIMPORTEXPORTSERVICE_CID \
+{ 0x6fb0c970, 0xe1b1, 0x11db, { 0x83, 0x14, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }
+
+#define NS_PLACESIMPORTEXPORTSERVICE_CONTRACTID \
+  "@mozilla.org/browser/places/import-export-service;1"

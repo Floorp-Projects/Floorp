@@ -84,9 +84,6 @@ nsProxyAutoConfig.prototype = {
     // sandbox in which we eval loaded autoconfig js file
     _sandBox: null, 
 
-    // ptr to eval'ed FindProxyForURL function
-    _findProxyForURL: null,
-
     QueryInterface: function(iid) {
         if (iid.Equals(nsIProxyAutoConfig) ||
             iid.Equals(nsISupports))

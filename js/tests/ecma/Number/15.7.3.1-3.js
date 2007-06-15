@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.7.3.1-3.js';
+
 /**
    File Name:          15.7.3.1-4.js
    ECMA Section:       15.7.3.1 Number.prototype

@@ -209,13 +209,15 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
 /*** Widget metrics ***/
 /**
  * Get the border size of a widget
- * xthickness:  [OUT] the widget's left/right border
- * ythickness:  [OUT] the widget's top/bottom border
+ * left/right:  [OUT] the widget's left/right border
+ * top/bottom:  [OUT] the widget's top/bottom border
+ * inhtml:      boolean indicating whether this widget will be drawn as a HTML form control,
+ *              in order to workaround a size issue (MOZ_GTK_BUTTON only, ignored otherwise)
  *
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
-gint moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* xthickness,
-                               gint* ythickness);
+gint moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top, 
+                               gint* right, gint* bottom, gboolean inhtml);
 
 /**
  * Get the desired size of a GtkCheckButton

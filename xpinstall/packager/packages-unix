@@ -93,8 +93,6 @@ bin/xpicleanup
 bin/res/cmessage.txt
 ; this is used by gtk embedding clients
 bin/libgtkembedmoz.so
-; this is used by Xprint and Xlib gfx
-bin/libxlibrgb.so
 ; This is used by libgfxps and libgfx_gtk
 bin/libgfxpsshar.so
 bin/components/alerts.xpt
@@ -130,6 +128,7 @@ bin/components/dom_css.xpt
 bin/components/dom_events.xpt
 bin/components/dom_html.xpt
 bin/components/dom_loadsave.xpt
+bin/components/dom_offline.xpt
 bin/components/dom_range.xpt
 bin/components/dom_sidebar.xpt
 bin/components/dom_storage.xpt
@@ -293,6 +292,7 @@ bin/components/prefetch.xpt
 bin/components/imgicon.xpt
 bin/components/libimgicon.so
 bin/components/txEXSLTRegExFunctions.js
+bin/components/nsAboutAbout.js
 
 bin/components/xulappinfo.js
 bin/components/xulappinfo.xpt
@@ -322,10 +322,6 @@ bin/components/mozldap.xpt
 ; Roaming
 bin/components/libsroaming.so
 bin/chrome/sroaming.jar
-
-; p3p
-bin/components/p3p.xpt
-bin/components/libp3p.so
 
 ; classic theme
 bin/chrome/classic.jar

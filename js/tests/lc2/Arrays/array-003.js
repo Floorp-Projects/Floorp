@@ -35,9 +35,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- /**
-        File Name:      array-003.js
-        Description:
+
+gTestfile = 'array-003.js';
+
+/**
+   File Name:      array-003.js
+   Description:
 
    JavaArray elements should be enumerable using a for/in loop.
 
@@ -76,7 +79,7 @@ test_array[i] = new TestValue( "( new java.lang.String('hello') ).getBytes()",
 				"l".charCodeAt(0),
 				"o".charCodeAt(0) ],
 			       "[B"
-    );
+  );
 i++;
 
 
@@ -94,67 +97,67 @@ test_array[i] = new TestValue( "( new java.lang.String('rhino') ).toCharArray()"
 i++;
 
 for ( i = 0; i < java_array.length; i++ ) {
-    CompareValues( java_array[i], test_array[i] );
+  CompareValues( java_array[i], test_array[i] );
 }
 
 test();
 
 function CompareValues( javaval, testval ) {
-    //  Check value
+  //  Check value
 
-    var p;
-    var e = 0;
+  var p;
+  var e = 0;
 
-    for ( p in javaval.value ) {
-        new TestCase( SECTION,
-		      "("+ testval.description +")["+p+"]",
-		      testval.value[p],
-		      javaval.value[p] );
-        e++;
-
-    }
-
-    /* Number of elements enumerated should be same as number of elements in
-     * the array
-     */
-
+  for ( p in javaval.value ) {
     new TestCase( SECTION,
-		  "number of elements enumerated:",
-		  testval.length,
-		  e );
+		  "("+ testval.description +")["+p+"]",
+		  testval.value[p],
+		  javaval.value[p] );
+    e++;
+
+  }
+
+  /* Number of elements enumerated should be same as number of elements in
+   * the array
+   */
+
+  new TestCase( SECTION,
+		"number of elements enumerated:",
+		testval.length,
+		e );
 
 
-    //  Check type
+  //  Check type
 
-    new TestCase( SECTION,
-		  "typeof (" + testval.description +")",
-		  testval.type,
-		  javaval.type );
+  new TestCase( SECTION,
+		"typeof (" + testval.description +")",
+		testval.type,
+		javaval.type );
 
-    //  Check class.
-    testcases[testcases.length ] = new TestCase(    SECTION,
-                                                    "The Java Class of ( "+ testval.description +" )",
-                                                    testval.lcclass,
-                                                    javaval.lcclass );
+  //  Check class.
+  new TestCase(SECTION,
+               "The Java Class of ( "+ testval.description +" )",
+               testval.lcclass,
+               javaval.lcclass );
 
 }
 function JavaValue( value ) {
-    this.value  = value;
-    this.type   = typeof value;
-    this.classname = this.value.toString();
+  this.value  = value;
+  this.type   = typeof value;
+  this.classname = this.value.toString();
 
-    jlo_class = java.lang.Class.forName("java.lang.Object")
-	jlo_getClass_method = jlo_class.getMethod("getClass", null)
-	this.lcclass = jlo_getClass_method.invoke(value, null );
+  jlo_class = java.lang.Class.forName("java.lang.Object")
+    jlo_getClass_method = jlo_class.getMethod("getClass", null)
+    this.lcclass = jlo_getClass_method.invoke(value, null );
 
-    return this;
+  return this;
 }
 function TestValue( description, value, lcclass ) {
-    this.lcclass = java.lang.Class.forName( lcclass );
-    this.description = description;
-    this.length = value.length;
-    this.value = value;
-    this.type =  E_TYPE;
-    this.classname = E_CLASS;
-    return this;
+  this.lcclass = java.lang.Class.forName( lcclass );
+  this.description = description;
+  this.length = value.length;
+  this.value = value;
+  this.type =  E_TYPE;
+  this.classname = E_CLASS;
+  return this;
 }

@@ -20,15 +20,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=351601
 
 /** Test for Bug 351601 **/
 
+var foo;
 var isOK = false;
 try {
-  var foo = navigator.buildID;
+  foo = navigator.buildID;
   isOK = true;
-} catch (ex) {
-}
-ok(isOK, "navigator.buildID should never throw");
+} catch (ex) { /* do not do anything here, as we are checking result below. */ }
 
-
+if (foo == "0000000000")
+  ok(isOK, "navigator.buildID should never throw");
+else
+  ok(isOK, "navigator.buildID is not 0000000000, but we can confirm the normal case does not crash.");
 </script>
 </pre>
 </body>

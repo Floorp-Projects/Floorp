@@ -35,67 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
- * JavaScript test library shared functions file for running the tests
- * in the browser.  Overrides the shell's print function with document.write
- * and make everything HTML pretty.
- *
- * To run the tests in the browser, use the mkhtml.pl script to generate
- * html pages that include the shell.js, browser.js (this file), and the
- * test js file in script tags.
- *
- * The source of the page that is generated should look something like this:
- *      <script src="./../shell.js"></script>
- *      <script src="./../browser.js"></script>
- *      <script src="./mytest.js"></script>
- */
-function htmlesc(str) { 
-  if (str == '<') 
-    return '&lt;'; 
-  if (str == '>') 
-    return '&gt;'; 
-  if (str == '&') 
-    return '&amp;'; 
-  return str; 
-}
-
-function DocumentWrite(s)
-{
-  try
-  {
-    var msgDiv = document.createElement('div');
-    msgDiv.innerHTML = s;
-    document.body.appendChild(msgDiv);
-    msgDiv = null;
-  }
-  catch(excp)
-  {
-    document.write(s + '<br>\n');
-  }
-}
-
-function print() { 
-  var s = ''; 
-  var a;
-  for (var i = 0; i < arguments.length; i++) 
-  { 
-    a = arguments[i]; 
-    s += String(a) + ' '; 
-  } 
-
-  if (typeof dump == 'function')
-  {
-    dump( s + '\n');
-  }
-
-  s = s.replace(/[<>&]/g, htmlesc);
-
-  DocumentWrite(s);
-}
-
-var testcases = new Array();
-var tc = testcases.length;
-var BUGSTR = '';
 var SUMMARY = '';
 var DESCRIPTION = '';
 var EXPECTED = '';
@@ -103,32 +42,9 @@ var ACTUAL = '';
 var MSG = '';
 var SECTION = '';
 
-function TestCase(n, d, e, a)
+window.onerror = function (msg, page, line)
 {
-  this.path = (typeof gTestPath == 'undefined') ? '' : gTestPath;
-  this.name = n;
-  this.description = d;
-  this.expect = e;
-  this.actual = a;
-  this.passed = ( e == a );
-  this.reason = '';
-  this.bugnumber = typeof(BUGSTR) != 'undefined' ? BUGSTR : '';
-  testcases[tc++] = this;
-}
-
-function reportSuccess(section, expected, actual)
-{
-  var testcase = new TestCase(gTestName,  SUMMARY + DESCRIPTION + ' Section ' + section, expected, actual);
-  testcase.passed = true;
-};
-
-function reportError(msg, page, line)
-{
-  var testcase;
-  var jsOptions = new JavaScriptOptions();
-
-  jsOptions.setOption('strict', false);
-  jsOptions.setOption('werror', false);
+  optionsPush();
 
   if (typeof SUMMARY == 'undefined')
   {
@@ -147,7 +63,8 @@ function reportError(msg, page, line)
     EXPECTED = 'Unknown';
   }
 
-  testcase = new TestCase(gTestName, SUMMARY + DESCRIPTION + ' Section ' + SECTION, EXPECTED, "error");
+  var testcase = new TestCase(gTestfile, SUMMARY + DESCRIPTION +
+                              ' Section ' + SECTION, EXPECTED, "error");
 
   testcase.passed = false;
   testcase.reason += msg;
@@ -165,91 +82,8 @@ function reportError(msg, page, line)
   gDelayTestDriverEnd = false;
   jsTestDriverEnd();
 
+  optionsReset();
 };
 
+options('xml');
 
-var _reportFailure = reportFailure;
-reportFailure = function (section, msg)
-{
-  var testcase;
-
-  testcase = new TestCase(gTestName, SUMMARY + DESCRIPTION + ' Section ' + section, EXPECTED, ACTUAL);
-
-  testcase.passed = false;
-  testcase.reason += msg;
-
-  _reportFailure(section, msg);
-
-};
-
-
-var _printBugNumber = printBugNumber;
-printBugNumber = function (num)
-{
-  BUGSTR = BUGNUMBER + num;
-  _printBugNumber(num);
-}
-
-var _START = START;
-START = function (summary)
-{
-  SUMMARY = summary;
-  printStatus(summary);
-}
-
-var _TEST = TEST;
-TEST = function (section, expected, actual)
-{
-  SECTION = section;
-  EXPECTED = expected;
-  ACTUAL = actual;
-  if (_TEST(section, expected, actual))
-  {
-    reportSuccess(section, expected, actual);
-  }
-}
-
-var _TEST_XML = TEST_XML;
-TEST_XML = function (section, expected, actual)
-{
-  SECTION = section;
-  EXPECTED = expected;
-  ACTUAL = actual;
-  if (_TEST_XML(section, expected, actual))
-  {
-    reportSuccess(section, expected, actual);
-  }
-}
-
-function gc()
-{
-  // Thanks to igor.bukanov@gmail.com
-  var tmp = Math.PI * 1e500, tmp2;
-  for (var i = 0; i != 1 << 15; ++i) 
-  {
-    tmp2 = tmp * 1.5;
-  }
-}
-
-function jsdgc()
-{
-  try
-  {
-    // Thanks to dveditz
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    var jsdIDebuggerService = Components.interfaces.jsdIDebuggerService;
-    var service = Components.classes['@mozilla.org/js/jsd/debugger-service;1'].
-      getService(jsdIDebuggerService);
-    service.GC();
-  }
-  catch(ex)
-  {
-    print('gc: ' + ex);
-  }
-}
-
-function quit()
-{
-}
-
-window.onerror = reportError;

@@ -49,9 +49,13 @@ public:
 
   // Default 8-bit path just transforms to Unicode and takes that path
   gfxTextRun* MakeTextRun(const PRUint8* aString, PRUint32 aLength,
-                          gfxFontGroup::Parameters* aParams, nsStyleContext** aStyles);
+                          const gfxFontGroup::Parameters* aParams,
+                          gfxFontGroup* aFontGroup, PRUint32 aFlags,
+                          nsStyleContext** aStyles, PRBool aOwnsFactory = PR_TRUE);
   gfxTextRun* MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
-                          gfxFontGroup::Parameters* aParams, nsStyleContext** aStyles);
+                          const gfxFontGroup::Parameters* aParams,
+                          gfxFontGroup* aFontGroup, PRUint32 aFlags,
+                          nsStyleContext** aStyles, PRBool aOwnsFactory = PR_TRUE);
 
   virtual void RebuildTextRun(nsTransformedTextRun* aTextRun) = 0;
 };
@@ -62,13 +66,7 @@ public:
  */
 class nsFontVariantTextRunFactory : public nsTransformingTextRunFactory {
 public:
-  nsFontVariantTextRunFactory(gfxFontGroup* aFontGroup)
-    : mFontGroup(aFontGroup) {}
-    
   virtual void RebuildTextRun(nsTransformedTextRun* aTextRun);
-
-protected:
-  nsRefPtr<gfxFontGroup> mFontGroup;
 };
 
 /**
@@ -83,17 +81,15 @@ public:
   // just convert the string to uppercase or lowercase and create the textrun
   // via the fontgroup.
   
-  nsCaseTransformTextRunFactory(gfxFontGroup* aFontGroup,
-                                nsTransformingTextRunFactory* aInnerTransformingTextRunFactory,
+  // Takes ownership of aInnerTransformTextRunFactory
+  nsCaseTransformTextRunFactory(nsTransformingTextRunFactory* aInnerTransformingTextRunFactory,
                                 PRBool aAllUppercase = PR_FALSE)
-    : mFontGroup(aFontGroup),
-      mInnerTransformingTextRunFactory(aInnerTransformingTextRunFactory),
+    : mInnerTransformingTextRunFactory(aInnerTransformingTextRunFactory),
       mAllUppercase(aAllUppercase) {}
 
   virtual void RebuildTextRun(nsTransformedTextRun* aTextRun);
 
 protected:
-  nsRefPtr<gfxFontGroup>                  mFontGroup;
   nsAutoPtr<nsTransformingTextRunFactory> mInnerTransformingTextRunFactory;
   PRPackedBool                            mAllUppercase;
 };

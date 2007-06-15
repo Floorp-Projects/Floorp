@@ -82,6 +82,7 @@ class ATL_NO_VTABLE CMozillaBrowser :
     public IProvideClassInfo2Impl<&CLSID_MozillaBrowser, &DIID_DWebBrowserEvents2, &LIBID_MOZILLACONTROLLib>,
     public IPersistStreamInitImpl<CMozillaBrowser>,
     public IPersistStorageImpl<CMozillaBrowser>,
+    public IPersistPropertyBagImpl<CMozillaBrowser>,
     public IQuickActivateImpl<CMozillaBrowser>,
     public IOleControlImpl<CMozillaBrowser>,
     public IOleObjectImpl<CMozillaBrowser>,
@@ -93,6 +94,7 @@ class ATL_NO_VTABLE CMozillaBrowser :
     public IOleCommandTargetImpl<CMozillaBrowser>,
     public IConnectionPointContainerImpl<CMozillaBrowser>,
     public ISpecifyPropertyPagesImpl<CMozillaBrowser>,
+    public IObjectSafetyImpl<CMozillaBrowser, INTERFACESAFE_FOR_UNTRUSTED_CALLER | INTERFACESAFE_FOR_UNTRUSTED_DATA>,
     public IMozControlBridge
 {
     friend CWebBrowserContainer;
@@ -118,24 +120,27 @@ BEGIN_COM_MAP(CMozillaBrowser)
     COM_INTERFACE_ENTRY_IID(DIID_DWebBrowserEvents2,
             CProxyDWebBrowserEvents2<CMozillaBrowser>)
     // Other ActiveX/OLE interfaces
-    COM_INTERFACE_ENTRY_IMPL(IViewObjectEx)
-    COM_INTERFACE_ENTRY_IMPL_IID(IID_IViewObject2, IViewObjectEx)
-    COM_INTERFACE_ENTRY_IMPL_IID(IID_IViewObject, IViewObjectEx)
-    COM_INTERFACE_ENTRY_IMPL(IOleInPlaceObjectWindowless)
-    COM_INTERFACE_ENTRY_IMPL_IID(IID_IOleInPlaceObject, IOleInPlaceObjectWindowless)
-    COM_INTERFACE_ENTRY_IMPL(IOleInPlaceActiveObject)
-    COM_INTERFACE_ENTRY_IMPL(IOleControl)
-    COM_INTERFACE_ENTRY_IMPL(IOleObject)
-    COM_INTERFACE_ENTRY_IMPL(IQuickActivate) // This causes size assertion in ATL
-    COM_INTERFACE_ENTRY_IMPL(IPersistStorage)
-    COM_INTERFACE_ENTRY_IMPL(IPersistStreamInit)
-    COM_INTERFACE_ENTRY_IMPL(ISpecifyPropertyPages)
-    COM_INTERFACE_ENTRY_IMPL(IDataObject)
+    COM_INTERFACE_ENTRY(IViewObjectEx)
+    COM_INTERFACE_ENTRY_IID(IID_IViewObject2, IViewObjectEx)
+    COM_INTERFACE_ENTRY_IID(IID_IViewObject, IViewObjectEx)
+    COM_INTERFACE_ENTRY(IOleInPlaceObjectWindowless)
+    COM_INTERFACE_ENTRY_IID(IID_IOleInPlaceObject, IOleInPlaceObjectWindowless)
+    COM_INTERFACE_ENTRY(IOleInPlaceActiveObject)
+    COM_INTERFACE_ENTRY(IOleControl)
+    COM_INTERFACE_ENTRY(IOleObject)
+    COM_INTERFACE_ENTRY(IQuickActivate) // This causes size assertion in ATL
+    COM_INTERFACE_ENTRY2(IPersist, IPersistPropertyBag)
+    COM_INTERFACE_ENTRY(IPersistPropertyBag)
+    COM_INTERFACE_ENTRY(IPersistStreamInit)
+    COM_INTERFACE_ENTRY(IPersistStorage)
+    COM_INTERFACE_ENTRY(ISpecifyPropertyPages)
+    COM_INTERFACE_ENTRY(IDataObject)
     COM_INTERFACE_ENTRY(IOleCommandTarget)
     COM_INTERFACE_ENTRY(IProvideClassInfo)
     COM_INTERFACE_ENTRY(IProvideClassInfo2)
     COM_INTERFACE_ENTRY(ISupportErrorInfo)
-    COM_INTERFACE_ENTRY_IMPL(IConnectionPointContainer)
+    COM_INTERFACE_ENTRY(IConnectionPointContainer)
+    COM_INTERFACE_ENTRY(IObjectSafety)
 END_COM_MAP()
 
 // Properties supported by the control that map onto property
@@ -145,6 +150,7 @@ BEGIN_PROPERTY_MAP(CMozillaBrowser)
     // Example entries
     // PROP_ENTRY("Property Description", dispid, clsid)
     PROP_PAGE(CLSID_StockColorPage)
+    PROP_DATA_ENTRY("SRC", mInitialSrc, VT_BSTR)
 END_PROPERTY_MAP()
 
 // Table of outgoing connection points. Anyone subscribing
@@ -386,6 +392,8 @@ protected:
     BOOL                    mHaveDropTargetFlag;
     // Contains an error message if startup went wrong
     tstring                 mStartupErrorMessage;
+    // Initial source url passed in via the container
+    CComBSTR                mInitialSrc;
     // List of registered browser helper objects
     CComUnkPtr             *mBrowserHelperList;
     ULONG                   mBrowserHelperListCount;
@@ -425,7 +433,8 @@ public:
     virtual nsresult GetDOMWindow(nsIDOMWindow **aDOMWindow);
     virtual nsresult GetPrefs(nsIPrefBranch **aPrefBranch);
     virtual PRBool BrowserIsValid();
-    // IWebBrowser
+    
+// IWebBrowser
     virtual HRESULT STDMETHODCALLTYPE get_Parent(IDispatch __RPC_FAR *__RPC_FAR *ppDisp);
     virtual HRESULT STDMETHODCALLTYPE get_Document(IDispatch __RPC_FAR *__RPC_FAR *ppDisp);
     virtual HRESULT STDMETHODCALLTYPE get_RegisterAsDropTarget(VARIANT_BOOL __RPC_FAR *pbRegister);

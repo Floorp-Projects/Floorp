@@ -40,9 +40,10 @@
  * So we test idempotence of parse + serialize by running the whole
  * operation twice.  Likewise for parse + compute + cserialize.
  *
- * Slightly more interestingly, we test the idempotence of serialize +
- * parse by comparing the output of parse + compute + cserialize to the
- * output of parse + serialize + parse + compute + cserialize.
+ * Slightly more interestingly, we test that serialize + parse is the
+ * identity transform by comparing the output of parse + compute +
+ * cserialize to the output of parse + serialize + parse + compute +
+ * cserialize.
  */
 
 var gShorthandsWithoutCondensingSerialize = {
@@ -65,13 +66,17 @@ var gNotAccepted = {
   "-moz-column-width": [ "50%" ],
   "-moz-user-select": [ "auto" ],
   "background-color": [ "rgb(255.0,0.387,3489)" ],
-  "content": [ "none" ],
   "list-style": [ "none disc outside" ],
 };
 
-var gSpecialFont = [
-  "caption", "icon", "menu", "message-box", "small-caption", "status-bar"
-];
+var gSystemFont = {
+  "caption": true,
+  "icon": true,
+  "menu": true,
+  "message-box": true,
+  "small-caption": true,
+  "status-bar": true,
+};
 
 var gBadCompute = {
   // output wrapped around to positive, in exponential notation
@@ -89,9 +94,6 @@ function xfail_accepted(property, value)
       gNotAccepted[property].indexOf(value) != -1)
     return true;
 
-  if (property == "font" && gSpecialFont.indexOf(value) != -1)
-    return true;
-
   return false;
 }
 
@@ -99,10 +101,6 @@ function xfail_accepted_split(property, subprop, value)
 {
   if (property in gNotAccepted &&
       gNotAccepted[property].indexOf(value) != -1)
-    return true;
-
-  if (property == "font" && subprop != "font-family" &&
-      gSpecialFont.indexOf(value) != -1)
     return true;
 
   return false;
@@ -120,6 +118,8 @@ function xfail_ser_val(property, value)
 
   // We output unneeded -moz-use-text-color only in the value getter and
   // not the serialization.
+  // XXXbz is there any way we could actually filter for that, so that colors
+  // other than green could be used in the property database here?
   if (property.match(/^border(|-bottom|-left|-right|-top)$/) &&
       !value.match(/(green|currentcolor)/i))
     return true;
@@ -153,13 +153,6 @@ function xfail_idserparse_compute(property, value)
 
 function xfail_idsersplitparse_compute(property, subprop, value, step1subcomp)
 {
-  // These failures depend on what the system fonts actually are,
-  // since they show up in computed style but not serialization!
-  if (property == "font" &&
-      gSpecialFont.indexOf(value) != -1 &&
-      gCSSProperties[subprop].initial_values.indexOf(step1subcomp) == -1)
-    return true;
-
   return false;
 }
 
@@ -241,22 +234,32 @@ function test_property(property)
     if (test_computed && info.type != CSS_TYPE_TRUE_SHORTHAND) {
       func = xfail_idserparse_compute(property, value) ? todo_is : is;
       func(gComputedStyle.getPropertyValue(property), step1comp,
-           "serialize+parse should be idempotent for '" +
+           "serialize+parse should be identity transform for '" +
            property + ": " + value + "'");
     }
 
-    if ("subproperties" in info) {
+    if ("subproperties" in info &&
+        // Using setProperty over subproperties is not sufficient for
+        // system fonts, since the shorthand does more than its parts.
+        (property != "font" || !(value in gSystemFont))) {
       gDeclaration.removeProperty(property);
       for (idx in info.subproperties) {
         var subprop = info.subproperties[idx];
         gDeclaration.setProperty(subprop, step1vals[idx], "");
+      }
+
+      // Now that all the subprops are set, check their values.  Note that we
+      // need this in a separate loop, in case parts of the shorthand affect
+      // the computed values of other parts.
+      for (idx in info.subproperties) {
+        var subprop = info.subproperties[idx];
         if (test_computed && !("backend_only" in gCSSProperties[subprop])) {
           func =
             xfail_idsersplitparse_compute(property, subprop, value, step1comps[idx])
               ? todo_is : is;
           func(gComputedStyle.getPropertyValue(subprop), step1comps[idx],
-               "serialize(" + subprop + ")+parse should be idempotent for '" +
-               property + ": " + value + "'");
+               "serialize(" + subprop + ")+parse should be the identity " +
+               "transform for '" + property + ": " + value + "'");
         }
       }
       func = xfail_idparsesplitser(property, value) ? todo_is : is;
@@ -280,7 +283,16 @@ function test_property(property)
         if ("backend_only" in gCSSProperties[subprop])
           continue;
         gDeclaration.setProperty(subprop, step1comps[idx], "");
-        func = xfail_split_compute(property, value) ? todo_is : is;
+      }
+
+      // Now that all the subprops are set, check their values.  Note that we
+      // need this in a separate loop, in case parts of the shorthand affect
+      // the computed values of other parts.
+      func = xfail_split_compute(property, value) ? todo_is : is;
+      for (idx in info.subproperties) {
+        var subprop = info.subproperties[idx];
+        if ("backend_only" in gCSSProperties[subprop])
+          continue;
         func(gComputedStyle.getPropertyValue(subprop), step1comps[idx],
              "parse+compute+serialize(" + subprop + ") should be idempotent for '" +
              property + ": " + value + "'");

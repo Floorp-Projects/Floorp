@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -55,7 +56,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDOMElement.h"
 
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMMouseListener.h"
 
 #include "nsMathMLmactionFrame.h"
@@ -87,9 +88,8 @@ NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 nsMathMLmactionFrame::~nsMathMLmactionFrame()
 {
   // unregister us as a mouse event listener ...
-//  printf("maction:%p unregistering as mouse event listener ...\n", this);
-  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));
-  receiver->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
+  //  printf("maction:%p unregistering as mouse event listener ...\n", this);
+  mContent->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
 }
 
 NS_IMETHODIMP
@@ -238,8 +238,7 @@ nsMathMLmactionFrame::SetInitialChildList(nsIAtom*        aListName,
   else {
     // register us as a mouse event listener ...
     // printf("maction:%p registering as mouse event listener ...\n", this);
-    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));
-    receiver->AddEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
+    mContent->AddEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
   }
   return rv;
 }
@@ -389,9 +388,9 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
       mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::selection_, value, notify);
 
       // Now trigger a content-changed reflow...
-      mSelectedFrame->AddStateBits(NS_FRAME_IS_DIRTY);
       PresContext()->PresShell()->
-        FrameNeedsReflow(mSelectedFrame, nsIPresShell::eTreeChange);
+        FrameNeedsReflow(mSelectedFrame, nsIPresShell::eTreeChange,
+                         NS_FRAME_IS_DIRTY);
     }
   }
   else if (NS_MATHML_ACTION_TYPE_RESTYLE == mActionType) {
@@ -405,9 +404,9 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
           node->SetAttribute(NS_LITERAL_STRING("actiontype"), mRestyle);
 
         // Trigger a style change reflow
-        mSelectedFrame->AddStateBits(NS_FRAME_IS_DIRTY);
         PresContext()->PresShell()->
-          FrameNeedsReflow(mSelectedFrame, nsIPresShell::eStyleChange);
+          FrameNeedsReflow(mSelectedFrame, nsIPresShell::eStyleChange,
+                           NS_FRAME_IS_DIRTY);
       }
     }
   }

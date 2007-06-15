@@ -40,7 +40,7 @@
 #include "nsIMenuParent.h"
 #include "nsMenuFrame.h"
 #include "nsIPopupBoxObject.h"
-
+#include "nsContentUtils.h"
 
 nsMenuDismissalListener* nsMenuDismissalListener::sInstance = nsnull;
 
@@ -85,6 +85,9 @@ nsMenuDismissalListener::GetInstance()
 nsMenuDismissalListener::Shutdown()
 {
   if (sInstance) {
+    // XXX temporary code for bug 381426 until bug 279703
+    nsContentUtils::NotifyInstalledMenuKeyboardListener(PR_FALSE);
+
     sInstance->Unregister();
     NS_RELEASE(sInstance);
   }

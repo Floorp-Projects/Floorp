@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.7.4.2-2-n.js';
+
 /**
    File Name:          15.7.4.2-2-n.js
    ECMA Section:       15.7.4.2.1 Number.prototype.toString()
@@ -63,9 +65,9 @@ writeHeaderToLog( SECTION + " Number.prototype.toString()");
 DESCRIPTION = "o = new Object(); o.toString = Number.prototype.toString; o.toString()";
 EXPECTED = "error";
 
-new TestCase(SECTION,  
-	     "o = new Object(); o.toString = Number.prototype.toString; o.toString()",  
-	     "error",    
+new TestCase(SECTION, 
+	     "o = new Object(); o.toString = Number.prototype.toString; o.toString()", 
+	     "error",   
 	     eval("o = new Object(); o.toString = Number.prototype.toString; o.toString()") );
 
 //    new TestCase(SECTION,  "o = new String(); o.toString = Number.prototype.toString; o.toString()",  "error",    eval("o = new String(); o.toString = Number.prototype.toString; o.toString()") );

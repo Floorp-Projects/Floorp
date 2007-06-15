@@ -35,15 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("Extending E4X XML objects with __noSuchMethod__");
+gTestfile = 'regress-312196.js';
 
-var bug = 312196;
-var summary = 'Extending E4X XML objects with __noSuchMethod__';
+var summary = "Extending E4X XML objects with __noSuchMethod__";
+var BUGNUMBER = 312196;
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 XML.ignoreWhitespace = true;
 XML.prettyPrint = false;
@@ -77,7 +77,7 @@ catch(e)
     actual = e + '';
 }
 
-expect = 
+expect =
 (<object uri="http://localhost">
 <request method="sample"/>
 <parameter>this</parameter>
@@ -97,7 +97,7 @@ catch(e)
     actual = e + '';
 }
 
-expect = 
+expect =
 (<object uri="http://localhost">
 <request method="sample"/>
 <parameter>this</parameter>

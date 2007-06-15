@@ -35,15 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("11.1.4 - ]] should be allowed in CDATA Section");
+gTestfile = '11.1.4-06.js';
 
-var bug = 313929;
-var summary = ']] should be allowed in CDATA Section';
+var summary = "11.1.4 - ]] should be allowed in CDATA Section";
+var BUGNUMBER = 313929;
 var actual = 'No error';
 var expect = 'No error';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 try
 {

@@ -2746,7 +2746,7 @@ nsComponentManagerImpl::GetLoaderType(const char *typeStr)
 
     const nsDependentCString type(typeStr);
 
-    for (int i=0; i < mLoaderData.Length(); ++i) {
+    for (unsigned int i = 0; i < mLoaderData.Length(); ++i) {
         if (mLoaderData[i].type == type)
             return i;
     }
@@ -3100,7 +3100,7 @@ nsComponentManagerImpl::LoadDeferredModules(nsTArray<DeferredModule> &aDeferred)
     // 1) they're all gone
     // 2) we loop through and none of them succeed
 
-    PRInt32 lastCount = PR_INT32_MAX;
+    PRUint32 lastCount = PR_UINT32_MAX;
     while (aDeferred.Length() > 0 &&
            lastCount > aDeferred.Length()) {
 

@@ -34,20 +34,22 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    11 Feb 2002
  * SUMMARY: Testing functions having duplicate formal parameter names
  *
  * Note: given function f(x,x,x,x) {return x;}; f(1,2,3,4) should return 4.
  * See ECMA-262 3rd Edition Final Section 10.1.3: Variable Instantiation
- * 
+ *
  * Also see http://bugzilla.mozilla.org/show_bug.cgi?id=124900
  */
 //-----------------------------------------------------------------------------
+var gTestfile = '10.1.3-1.js';
 var UBound = 0;
-var bug = 124900;
+var BUGNUMBER = 124900;
 var summary = 'Testing functions having duplicate formal parameter names';
 var status = '';
 var statusitems = [];
@@ -187,7 +189,7 @@ function addThis()
 function test()
 {
   enterFunc('test');
-  printBugNumber(bug);
+  printBugNumber(BUGNUMBER);
   printStatus(summary);
 
   for (var i=0; i<UBound; i++)

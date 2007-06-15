@@ -266,6 +266,8 @@ EngineStore.prototype = {
     for each (var engine in this._engines)
       if (engine.name == aName)
         return engine;
+
+    return null;
   },
 
   _cloneEngine: function ES_cloneObj(aEngine) {

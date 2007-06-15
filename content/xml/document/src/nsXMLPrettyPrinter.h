@@ -72,8 +72,10 @@ public:
      * displayed window.
      *
      * @param aDocument  document to prettyprint
+     * @param [out] aDidPrettyPrint if true, and error not returned, actually
+     *              went ahead with prettyprinting the document.
      */
-    nsresult PrettyPrint(nsIDocument* aDocument);
+    nsresult PrettyPrint(nsIDocument* aDocument, PRBool* aDidPrettyPrint);
 
 private:
     /**

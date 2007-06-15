@@ -1425,7 +1425,7 @@ nsStandardURL::SetHost(const nsACString &input)
     if (mURLType == URLTYPE_NO_AUTHORITY) {
         if (flat.IsEmpty())
             return NS_OK;
-        NS_ERROR("cannot set host on no-auth url");
+        NS_WARNING("cannot set host on no-auth url");
         return NS_ERROR_UNEXPECTED;
     }
 
@@ -1499,7 +1499,7 @@ nsStandardURL::SetPort(PRInt32 port)
         return NS_OK;
 
     if (mURLType == URLTYPE_NO_AUTHORITY) {
-        NS_ERROR("cannot set port on no-auth url");
+        NS_WARNING("cannot set port on no-auth url");
         return NS_ERROR_UNEXPECTED;
     }
 

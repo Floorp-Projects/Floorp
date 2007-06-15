@@ -57,7 +57,7 @@
 #include "nsIControllers.h"
 #include "nsICSSParser.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
@@ -193,7 +193,7 @@ public:
 
     Type                     mType;
 
-    PRInt32                  mRefCnt;
+    nsAutoRefCnt             mRefCnt;
 
     virtual ~nsXULPrototypeNode() {}
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
@@ -221,6 +221,8 @@ public:
             delete this;
     }
     virtual void ReleaseSubtree() { Release(); }
+
+    NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsXULPrototypeNode)
 
 protected:
     nsXULPrototypeNode(Type aType)
@@ -476,6 +478,8 @@ public:
 
     // nsISupports
     NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsXULElement,
+                                                       nsGenericElement)
 
     // nsINode
     virtual PRUint32 GetChildCount() const;
@@ -486,11 +490,7 @@ public:
                                    PRBool aNotify);
 
     // nsIContent
-    virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                                nsIContent* aBindingParent,
-                                PRBool aCompileEventHandlers);
-    virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
-                                PRBool aNullParent = PR_TRUE);
+    virtual void UnbindFromTree(PRBool aDeep, PRBool aNullParent);
     virtual void SetNativeAnonymous(PRBool aAnonymous);
     virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
     virtual nsIAtom *GetIDAttributeName() const;
@@ -563,13 +563,20 @@ public:
 
     virtual void RecompileScriptEventListeners();
 
+    // This function should ONLY be used by BindToTree implementations.
+    // The function exists solely because XUL elements store the binding
+    // parent as a member instead of in the slots, as nsGenericElement does.
+    void SetXULBindingParent(nsIContent* aBindingParent)
+    {
+      mBindingParent = aBindingParent;
+    }
+
 protected:
     // XXX This can be removed when nsNodeUtils::CloneAndAdopt doesn't need
     //     access to mPrototype anymore.
     friend class nsNodeUtils;
 
     nsXULElement(nsINodeInfo* aNodeInfo);
-    virtual ~nsXULElement(void);
 
     // Implementation methods
     nsresult EnsureContentsGenerated(void) const;

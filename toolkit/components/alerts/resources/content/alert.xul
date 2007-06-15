@@ -47,7 +47,7 @@
         pack="start"
         onload="onAlertLoad()">
   
-  <script type="application/x-javascript" src="chrome://global/content/alerts/alert.js"/>
+  <script type="application/javascript" src="chrome://global/content/alerts/alert.js"/>
 
   <box id="alertBox" class="alertBox">
     
@@ -64,6 +64,6 @@
 
   <!-- This method is called inline because we want to make sure we establish the width
        and height of the alert before we fire the onload handler. -->
-  <script type="application/x-javascript">prefillAlertInfo();</script>
+  <script type="application/javascript">prefillAlertInfo();</script>
 </window>
 

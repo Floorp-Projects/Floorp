@@ -296,8 +296,8 @@ JS_HandleTrap(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval)
 JS_PUBLIC_API(JSBool)
 JS_SetInterrupt(JSRuntime *rt, JSTrapHandler handler, void *closure)
 {
-    rt->interruptHandler = handler;
-    rt->interruptHandlerData = closure;
+    rt->globalDebugHooks.interruptHandler = handler;
+    rt->globalDebugHooks.interruptHandlerData = closure;
     return JS_TRUE;
 }
 
@@ -305,11 +305,11 @@ JS_PUBLIC_API(JSBool)
 JS_ClearInterrupt(JSRuntime *rt, JSTrapHandler *handlerp, void **closurep)
 {
     if (handlerp)
-        *handlerp = (JSTrapHandler)rt->interruptHandler;
+        *handlerp = (JSTrapHandler)rt->globalDebugHooks.interruptHandler;
     if (closurep)
-        *closurep = rt->interruptHandlerData;
-    rt->interruptHandler = 0;
-    rt->interruptHandlerData = 0;
+        *closurep = rt->globalDebugHooks.interruptHandlerData;
+    rt->globalDebugHooks.interruptHandler = 0;
+    rt->globalDebugHooks.interruptHandlerData = 0;
     return JS_TRUE;
 }
 
@@ -1115,16 +1115,16 @@ JS_GetScriptVersion(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(void)
 JS_SetNewScriptHook(JSRuntime *rt, JSNewScriptHook hook, void *callerdata)
 {
-    rt->newScriptHook = hook;
-    rt->newScriptHookData = callerdata;
+    rt->globalDebugHooks.newScriptHook = hook;
+    rt->globalDebugHooks.newScriptHookData = callerdata;
 }
 
 JS_PUBLIC_API(void)
 JS_SetDestroyScriptHook(JSRuntime *rt, JSDestroyScriptHook hook,
                         void *callerdata)
 {
-    rt->destroyScriptHook = hook;
-    rt->destroyScriptHookData = callerdata;
+    rt->globalDebugHooks.destroyScriptHook = hook;
+    rt->globalDebugHooks.destroyScriptHookData = callerdata;
 }
 
 /***************************************************************************/
@@ -1375,56 +1375,56 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda)
 JS_PUBLIC_API(JSBool)
 JS_SetDebuggerHandler(JSRuntime *rt, JSTrapHandler handler, void *closure)
 {
-    rt->debuggerHandler = handler;
-    rt->debuggerHandlerData = closure;
+    rt->globalDebugHooks.debuggerHandler = handler;
+    rt->globalDebugHooks.debuggerHandlerData = closure;
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetSourceHandler(JSRuntime *rt, JSSourceHandler handler, void *closure)
 {
-    rt->sourceHandler = handler;
-    rt->sourceHandlerData = closure;
+    rt->globalDebugHooks.sourceHandler = handler;
+    rt->globalDebugHooks.sourceHandlerData = closure;
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetExecuteHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
 {
-    rt->executeHook = hook;
-    rt->executeHookData = closure;
+    rt->globalDebugHooks.executeHook = hook;
+    rt->globalDebugHooks.executeHookData = closure;
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetCallHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
 {
-    rt->callHook = hook;
-    rt->callHookData = closure;
+    rt->globalDebugHooks.callHook = hook;
+    rt->globalDebugHooks.callHookData = closure;
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetObjectHook(JSRuntime *rt, JSObjectHook hook, void *closure)
 {
-    rt->objectHook = hook;
-    rt->objectHookData = closure;
+    rt->globalDebugHooks.objectHook = hook;
+    rt->globalDebugHooks.objectHookData = closure;
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetThrowHook(JSRuntime *rt, JSTrapHandler hook, void *closure)
 {
-    rt->throwHook = hook;
-    rt->throwHookData = closure;
+    rt->globalDebugHooks.throwHook = hook;
+    rt->globalDebugHooks.throwHookData = closure;
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetDebugErrorHook(JSRuntime *rt, JSDebugErrorHook hook, void *closure)
 {
-    rt->debugErrorHook = hook;
-    rt->debugErrorHookData = closure;
+    rt->globalDebugHooks.debugErrorHook = hook;
+    rt->globalDebugHooks.debugErrorHookData = closure;
     return JS_TRUE;
 }
 
@@ -1492,7 +1492,6 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
     JSObject *obj;
     jsatomid i;
     jssrcnote *sn, *notes;
-    JSTryNote *tn, *tnotes;
     JSPrincipals *principals;
 
     nbytes = sizeof *script;
@@ -1513,11 +1512,9 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
         continue;
     nbytes += (sn - notes + 1) * sizeof *sn;
 
-    tnotes = script->trynotes;
-    if (tnotes) {
-        for (tn = tnotes; tn->catchStart; tn++)
-            continue;
-        nbytes += (tn - tnotes + 1) * sizeof *tn;
+    if (script->trynotes) {
+        nbytes += offsetof(JSTryNoteArray, notes) +
+                  script->trynotes->length * sizeof script->trynotes->notes[0];
     }
 
     principals = script->principals;
@@ -1576,4 +1573,23 @@ JS_FlagSystemObject(JSContext *cx, JSObject *obj)
 
     flagp = js_GetGCThingFlags(obj);
     *flagp |= GCF_SYSTEM;
+}
+
+/************************************************************************/
+
+JS_PUBLIC_API(JSDebugHooks *)
+JS_GetGlobalDebugHooks(JSRuntime *rt)
+{
+    return &rt->globalDebugHooks;
+}
+
+JS_PUBLIC_API(JSDebugHooks *)
+JS_SetContextDebugHooks(JSContext *cx, JSDebugHooks *hooks)
+{
+    JSDebugHooks *old;
+
+    JS_ASSERT(hooks);
+    old = cx->debugHooks;
+    cx->debugHooks = hooks;
+    return old;
 }

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    18 July 2002
  * SUMMARY: Testing octal sequences in regexps
@@ -42,8 +44,9 @@
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'octal-001.js';
 var i = 0;
-var bug = 141078;
+var BUGNUMBER = 141078;
 var summary = 'Testing octal sequences in regexps';
 var status = '';
 var statusmessages = new Array();
@@ -126,7 +129,7 @@ function addThis()
 function test()
 {
   enterFunc('test');
-  printBugNumber(bug);
+  printBugNumber(BUGNUMBER);
   printStatus(summary);
   testRegExp(statusmessages, patterns, strings, actualmatches, expectedmatches);
   exitFunc ('test');

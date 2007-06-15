@@ -52,9 +52,6 @@
 #include "nsIPrintOptions.h"
 #include "nsIPrintSettings.h"
 #include "nsVoidArray.h"
-#ifdef USE_XPRINT
-#include "nsIDeviceContextSpecXPrint.h"
-#endif /* USE_XPRINT */
 #include "nsPrintdOS2.h"
 #include <os2.h>
 #include <pmddim.h>
@@ -65,9 +62,6 @@
 //---------------------------------------------------------------------
 
 class nsDeviceContextSpecOS2 : public nsIDeviceContextSpec
-#ifdef USE_XPRINT
-                             , public nsIDeviceContextSpecXp
-#endif
 {
 public:
 /**

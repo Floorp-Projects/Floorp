@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 23 October 2001
  *
  * SUMMARY: Testing regexps with the global flag set.
@@ -42,7 +44,7 @@
  * The parent string is CONSUMED as successive matches are found.
  *
  * From the ECMA-262 Final spec:
- * 
+ *
  * 15.10.6.2 RegExp.prototype.exec(string)
  * Performs a regular expression match of string against the regular
  * expression and returns an Array object containing the results of
@@ -78,8 +80,9 @@
  * will NOT be 'b c', but rather 'c d'. Similarly, 'd e' won't be matched.
  */
 //-----------------------------------------------------------------------------
+var gTestfile = '15.10.6.2-1.js';
 var i = 0;
-var bug = '(none)';
+var BUGNUMBER = '(none)';
 var summary = 'Testing regexps with the global flag set';
 var status = '';
 var statusmessages = new Array();
@@ -130,7 +133,7 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
   testRegExp(statusmessages, patterns, strings, actualmatches, expectedmatches);
   exitFunc ('test');

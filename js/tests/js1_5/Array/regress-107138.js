@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 29 October 2001
  *
  * SUMMARY: Regression test for bug 107138
@@ -46,10 +48,11 @@
  * The cnSTRESS constant defines how many times to repeat this test.
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-107138.js';
 var UBound = 0;
 var cnSTRESS = 10;
 var cnDASH = '-';
-var bug = 107138;
+var BUGNUMBER = 107138;
 var summary = 'Regression test for bug 107138';
 var status = '';
 var statusitems = [];
@@ -196,7 +199,7 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   for (var i=0; i<UBound; i++)

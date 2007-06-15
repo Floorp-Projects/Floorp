@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'tostring-1.js';
+
 /**
    File Name:          tostring-1.js
    Section:            Function.toString
@@ -102,42 +104,42 @@ test();
 function noop( value ) {
 }
 function Add( a, b, c, d, e ) {
-    var s = a + b + c + d + e;
-    return s;
+  var s = a + b + c + d + e;
+  return s;
 }
 function stub( value ) {
-    return value;
+  return value;
 }
 function ToString( object ) {
-    return object + "";
+  return object + "";
 }
 
 function ToBoolean( value ) {
-    if ( value == 0 || value == NaN || value == false ) {
-        return false;
-    } else {
-        return true;
-    }
+  if ( value == 0 || value == NaN || value == false ) {
+    return false;
+  } else {
+    return true;
+  }
 }
 
 function TestFunction( name, args, body ) {
-    if ( name == "anonymous" && version() == 120 ) {
-        name = "";
-    }
+  if ( name == "anonymous" && version() == 120 ) {
+    name = "";
+  }
 
-    this.name = name;
-    this.arguments = args.toString();
-    this.body = body;
+  this.name = name;
+  this.arguments = args.toString();
+  this.body = body;
 
-    /* the format of Function.toString() in JavaScript 1.2 is:
-       function name ( arguments ) {
-           body
-       }
-    */
-    this.value = "function " + (name ? name : "" )+
-	"("+args+") {\n"+ (( body ) ? body +"\n" : "") + "}";
+  /* the format of Function.toString() in JavaScript 1.2 is:
+     function name ( arguments ) {
+     body
+     }
+  */
+  this.value = "function " + (name ? name : "" )+
+    "("+args+") {\n"+ (( body ) ? body +"\n" : "") + "}";
 
-    this.toString = new Function( "return this.value" );
-    this.valueOf = new Function( "return this.value" );
-    return this;
+  this.toString = new Function( "return this.value" );
+  this.valueOf = new Function( "return this.value" );
+  return this;
 }

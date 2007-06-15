@@ -109,6 +109,7 @@ SDK_HEADERS = \
 		nsServiceManagerUtils.h \
 		nsVersionComparator.h \
 		nsIClassInfoImpl.h \
+		nsTObserverArray.h \
 		$(NULL)
 
 EXPORTS = \

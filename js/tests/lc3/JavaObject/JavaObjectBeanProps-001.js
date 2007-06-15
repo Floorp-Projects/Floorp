@@ -37,10 +37,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'JavaObjectBeanProps-001.js';
+
 var SECTION = "JavaObject Field or method access";
 var VERSION = "1_4";
 var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-              SECTION;
+  SECTION;
 startTest();
 
 var dt = new DT();
@@ -48,7 +50,7 @@ var dt = new DT();
 var a = [
   "boolean",
   "byte",
-  "integer", 
+  "integer",
   "double",
   "float",
   "short",
@@ -67,9 +69,9 @@ var v = [
 
 for (var i=0; i < a.length; i++) {
   var name = a[i];
-  var getterName = "get" + a[i].charAt(0).toUpperCase() + 
+  var getterName = "get" + a[i].charAt(0).toUpperCase() +
     a[i].substring(1);
-  var setterName = "set" + a[i].charAt(0).toUpperCase() + 
+  var setterName = "set" + a[i].charAt(0).toUpperCase() +
     a[i].substring(1);
   new TestCase(
     "dt['" + name + "'] == dt." + getterName + "()",

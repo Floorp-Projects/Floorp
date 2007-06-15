@@ -46,7 +46,6 @@
 #include "nsSVGElement.h"
 #include "nsSVGUtils.h"
 #include "nsSVGMatrix.h"
-#include "cairo.h"
 #include "gfxContext.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsThebesImage.h"
@@ -280,19 +279,22 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
   if (thebesSurface) {
     gfxContext *gfx = aContext->GetGfxContext();
 
-    nsCOMPtr<nsIDOMSVGMatrix> ctm;
-    GetCanvasTM(getter_AddRefs(ctm));
-
-    float x, y, width, height;
-    nsSVGElement *element = NS_STATIC_CAST(nsSVGElement*, mContent);
-    element->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
-
-    nsCOMPtr<nsIDOMSVGMatrix> fini = GetImageTransform();
-
     if (GetStyleDisplay()->IsScrollableOverflow()) {
       gfx->Save();
-      nsSVGUtils::SetClipRect(gfx, ctm, x, y, width, height);
+
+      nsCOMPtr<nsIDOMSVGMatrix> ctm;
+      GetCanvasTM(getter_AddRefs(ctm));
+
+      if (ctm) {
+        float x, y, width, height;
+        nsSVGElement *element = NS_STATIC_CAST(nsSVGElement*, mContent);
+        element->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
+
+        nsSVGUtils::SetClipRect(gfx, ctm, x, y, width, height);
+      }
     }
+
+    nsCOMPtr<nsIDOMSVGMatrix> fini = GetImageTransform();
 
     // fill-opacity doesn't affect <image>, so if we're allowed to
     // optimize group opacity, the opacity used for compositing the

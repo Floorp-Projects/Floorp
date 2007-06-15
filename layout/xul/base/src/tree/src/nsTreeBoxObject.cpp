@@ -37,46 +37,19 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#include "nsTreeBoxObject.h"
 #include "nsCOMPtr.h"
-#include "nsPresContext.h"
-#include "nsIPresShell.h"
 #include "nsIDOMXULElement.h"
 #include "nsIXULTemplateBuilder.h"
 #include "nsTreeContentView.h"
-#include "nsITreeView.h"
 #include "nsITreeSelection.h"
-#include "nsBoxObject.h"
-#include "nsIFrame.h"
-#include "nsIAtom.h"
-#include "nsINodeInfo.h"
-#include "nsGkAtoms.h"
 #include "nsChildIterator.h"
 #include "nsContentUtils.h"
 #include "nsDOMError.h"
+#include "nsTreeBodyFrame.h"
 
-class nsTreeBoxObject : public nsITreeBoxObject, public nsBoxObject
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSITREEBOXOBJECT
-
-  nsTreeBoxObject();
-  ~nsTreeBoxObject();
-
-  nsITreeBoxObject* GetTreeBody();
-
-  //NS_PIBOXOBJECT interfaces
-  virtual void Clear();
-  virtual void ClearCachedValues();
-
-protected:
-  nsITreeBoxObject* mTreeBody;
-  nsCOMPtr<nsITreeView> mView;
-};
-
-/* Implementation file */
 NS_IMPL_ISUPPORTS_INHERITED1(nsTreeBoxObject, nsBoxObject, nsITreeBoxObject)
-
 
 void
 nsTreeBoxObject::Clear()
@@ -120,9 +93,12 @@ static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
       *aResult = content;
       NS_ADDREF(*aResult);
       break;
-    }
-    else if (content->IsNodeOfType(nsINode::eELEMENT) &&
-             !ni->Equals(nsGkAtoms::_template, kNameSpaceID_XUL)) {
+    } else if (ni->Equals(nsGkAtoms::tree, kNameSpaceID_XUL)) {
+      // There are nesting tree elements. Only the innermost should
+      // find the treechilren.
+      break;
+    } else if (content->IsNodeOfType(nsINode::eELEMENT) &&
+               !ni->Equals(nsGkAtoms::_template, kNameSpaceID_XUL)) {
       FindBodyElement(content, aResult);
       if (*aResult)
         break;
@@ -155,7 +131,15 @@ nsTreeBoxObject::GetTreeBody()
      return nsnull;
 
   // It's a frame. Refcounts are irrelevant.
-  CallQueryInterface(frame, &mTreeBody);
+  // Make sure that the treebodyframe, which implements nsITreeBoxObject,
+  // has a pointer to |this|.
+  nsITreeBoxObject* innerTreeBoxObject = nsnull;
+  CallQueryInterface(frame, &innerTreeBoxObject);
+  NS_ENSURE_TRUE(innerTreeBoxObject &&
+    NS_STATIC_CAST(nsTreeBodyFrame*, innerTreeBoxObject)->GetTreeBoxObject() ==
+    NS_STATIC_CAST(nsITreeBoxObject*, this), nsnull);
+
+  mTreeBody = innerTreeBoxObject;
   return mTreeBody;
 }
 

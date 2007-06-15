@@ -54,10 +54,10 @@ nsMargin nsNativeTheme::sButtonBorderSize(2, 2, 2, 2);
 nsMargin nsNativeTheme::sButtonDisabledBorderSize(1, 1, 1, 1);
 PRUint8  nsNativeTheme::sButtonActiveBorderStyle = NS_STYLE_BORDER_STYLE_INSET;
 PRUint8  nsNativeTheme::sButtonInactiveBorderStyle = NS_STYLE_BORDER_STYLE_OUTSET;
-nsILookAndFeel::nsColorID nsNativeTheme::sButtonBorderColorID = nsILookAndFeel::eColor_threedface;
-nsILookAndFeel::nsColorID nsNativeTheme::sButtonDisabledBorderColorID = nsILookAndFeel::eColor_threedshadow;
-nsILookAndFeel::nsColorID nsNativeTheme::sButtonBGColorID = nsILookAndFeel::eColor_threedface;
-nsILookAndFeel::nsColorID nsNativeTheme::sButtonDisabledBGColorID = nsILookAndFeel::eColor_threedface;
+nsILookAndFeel::nsColorID nsNativeTheme::sButtonBorderColorID = nsILookAndFeel::eColor_buttonface;
+nsILookAndFeel::nsColorID nsNativeTheme::sButtonDisabledBorderColorID = nsILookAndFeel::eColor_buttonshadow;
+nsILookAndFeel::nsColorID nsNativeTheme::sButtonBGColorID = nsILookAndFeel::eColor_buttonface;
+nsILookAndFeel::nsColorID nsNativeTheme::sButtonDisabledBGColorID = nsILookAndFeel::eColor_buttonface;
 nsMargin nsNativeTheme::sTextfieldBorderSize(2, 2, 2, 2);
 PRUint8  nsNativeTheme::sTextfieldBorderStyle = NS_STYLE_BORDER_STYLE_INSET;
 nsILookAndFeel::nsColorID nsNativeTheme::sTextfieldBorderColorID = nsILookAndFeel::eColor_threedface;
@@ -94,7 +94,10 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType)
     return 0;
 
   PRBool isXULCheckboxRadio = 
-    (aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_RADIO) &&
+    (aWidgetType == NS_THEME_CHECKBOX ||
+     aWidgetType == NS_THEME_CHECKBOX_SMALL ||
+     aWidgetType == NS_THEME_RADIO ||
+     aWidgetType == NS_THEME_RADIO_SMALL) &&
     aFrame->GetContent()->IsNodeOfType(nsINode::eXUL);
   if (isXULCheckboxRadio)
     aFrame = aFrame->GetParent();
@@ -106,7 +109,7 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType)
   PRInt32 flags = 0;
   shell->GetPresContext()->EventStateManager()->GetContentState(aFrame->GetContent(), flags);
   
-  if (isXULCheckboxRadio && aWidgetType == NS_THEME_RADIO) {
+  if (isXULCheckboxRadio && (aWidgetType == NS_THEME_RADIO || aWidgetType == NS_THEME_RADIO_SMALL)) {
     if (IsFocused(aFrame))
       flags |= NS_EVENT_STATE_FOCUS;
   }
@@ -189,6 +192,7 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
   // Check for specific widgets to see if HTML has overridden the style.
   if (aFrame && (aWidgetType == NS_THEME_BUTTON ||
                  aWidgetType == NS_THEME_TEXTFIELD ||
+                 aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
                  aWidgetType == NS_THEME_LISTBOX ||
                  aWidgetType == NS_THEME_DROPDOWN)) {
 
@@ -225,6 +229,7 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
         break;
 
       case NS_THEME_TEXTFIELD:
+      case NS_THEME_TEXTFIELD_MULTILINE:
         defaultBorderStyle = sTextfieldBorderStyle;
         ConvertMarginToAppUnits(sTextfieldBorderSize, defaultBorderSize);
         lookAndFeel->GetColor(sTextfieldBorderColorID,

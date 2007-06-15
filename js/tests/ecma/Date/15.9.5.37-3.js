@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = '15.9.5.37-3.js';
+
 /**
    File Name:          15.9.5.37-1.js
    ECMA Section:       15.9.5.37 Date.prototype.setUTCFullYear(year [, mon [, date ]] )
@@ -70,7 +73,7 @@ writeHeaderToLog( SECTION + " Date.prototype.setUTCFullYear(year [, mon [, date 
 // Dates around 29 February 2000
 
 var UTC_FEB_29_1972 = TIME_1970 + TimeInYear(1970) + TimeInYear(1971) +
-31*msPerDay + 28*msPerDay;
+  31*msPerDay + 28*msPerDay;
 
 var PST_FEB_29_1972 = UTC_FEB_29_1972 - TZ_DIFF * msPerHour;
 

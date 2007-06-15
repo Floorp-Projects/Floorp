@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date: 16 Nov 2001
  * SUMMARY: multiline comments containing "/*" should not be syntax errors
@@ -42,8 +44,9 @@
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-110286.js';
 var UBound = 0;
-var bug = 110286;
+var BUGNUMBER = 110286;
 var summary = 'Multiline comments containing "/*" should not be syntax errors';
 var status = '';
 var statusitems = [];
@@ -92,10 +95,10 @@ status = inSection(6);
 try
 {
   /*
-     /*A/* /* /*A/*
-     /* blah blah /*
-     /* blah blah /*
-     /* /*A/* /*A/*
+    /*A/* /* /*A/*
+    /* blah blah /*
+    /* blah blah /*
+    /* /*A/* /*A/*
   */
   var result = 'PASSED';
 }
@@ -112,7 +115,7 @@ status = inSection(7);
 var str = 'ABC';
 /*
  *    /*
- *    /* 
+ *    /*
  *    /*
  *    /*
  *
@@ -141,9 +144,9 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
- 
+
   for (var i = 0; i < UBound; i++)
   {
     reportCompare(expectedvalues[i], actualvalues[i], statusitems[i]);

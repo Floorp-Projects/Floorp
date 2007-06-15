@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = '15.9.5.35-1.js';
+
 /**
    File Name:          15.9.5.35-1.js
    ECMA Section:       15.9.5.35 Date.prototype.setUTCMonth(mon [,date])
@@ -75,7 +78,7 @@ function addNewTestCase( DateString, UTCDate, LocalDate) {
   new TestCase( SECTION, DateString+".getUTCMinutes()",       UTCDate.minutes,     DateCase.getUTCMinutes() );
   new TestCase( SECTION, DateString+".getUTCSeconds()",       UTCDate.seconds,     DateCase.getUTCSeconds() );
   new TestCase( SECTION, DateString+".getUTCMilliseconds()",  UTCDate.ms,          DateCase.getUTCMilliseconds() );
-    
+   
   new TestCase( SECTION, DateString+".getFullYear()",         LocalDate.year,       DateCase.getFullYear() );
   new TestCase( SECTION, DateString+".getMonth()",            LocalDate.month,      DateCase.getMonth() );
   new TestCase( SECTION, DateString+".getDate()",             LocalDate.date,       DateCase.getDate() );

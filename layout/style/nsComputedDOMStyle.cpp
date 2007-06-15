@@ -68,6 +68,8 @@
 #include "nsStyleSet.h"
 #include "imgIRequest.h"
 #include "nsInspectorCSSUtils.h"
+#include "nsLayoutUtils.h"
+#include "nsFrameManager.h"
 
 #if defined(DEBUG_bzbarsky) || defined(DEBUG_caillon)
 #define DEBUG_ComputedDOMStyle
@@ -114,7 +116,8 @@ GetContainingBlockFor(nsIFrame* aFrame) {
 }
 
 nsComputedDOMStyle::nsComputedDOMStyle()
-  : mInner(this), mDocumentWeak(nsnull), mFrame(nsnull), mAppUnitsPerInch(0)
+  : mInner(this), mDocumentWeak(nsnull), mFrame(nsnull), mPresShell(nsnull),
+    mAppUnitsPerInch(0)
 {
 }
 
@@ -308,17 +311,33 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
   // may be different.
   document->FlushPendingNotifications(Flush_Style);
 
-  nsIPresShell* presShell = document->GetShellAt(0);
-  NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_AVAILABLE);
+  mPresShell = document->GetPrimaryShell();
+  NS_ENSURE_TRUE(mPresShell && mPresShell->GetPresContext(),
+                 NS_ERROR_NOT_AVAILABLE);
 
-  mFrame = presShell->GetPrimaryFrameFor(mContent);
+  mFrame = mPresShell->GetPrimaryFrameFor(mContent);
   if (!mFrame || mPseudo) {
     // Need to resolve a style context
     mStyleContextHolder =
       nsInspectorCSSUtils::GetStyleContextForContent(mContent,
                                                      mPseudo,
-                                                     presShell);
+                                                     mPresShell);
     NS_ENSURE_TRUE(mStyleContextHolder, NS_ERROR_OUT_OF_MEMORY);
+  } else {
+    nsIAtom* type = mFrame->GetType();
+    nsIFrame* frame = mFrame;
+    if (type == nsGkAtoms::tableOuterFrame) {
+      // If the frame is an outer table frame then we should get the style
+      // from the inner table frame.
+      frame = frame->GetFirstChild(nsnull);
+      NS_ASSERTION(frame, "Outer table must have an inner");
+      NS_ASSERTION(!frame->GetNextSibling(),
+                   "Outer table frames should have just one child, the inner "
+                   "table");
+    }
+
+    mStyleContextHolder = frame->GetStyleContext();
+    NS_ASSERTION(mStyleContextHolder, "Frame without style context?");
   }
 
   nsresult rv = NS_OK;
@@ -348,6 +367,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
   }
 
   mFrame = nsnull;
+  mPresShell = nsnull;
 
   // Release the current style context for it should be re-resolved
   // whenever a frame is not available.
@@ -680,7 +700,7 @@ nsComputedDOMStyle::GetFontFamily(nsIDOMCSSValue** aValue)
 
   nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocumentWeak);
   NS_ASSERTION(doc, "document is required");
-  nsIPresShell* presShell = doc->GetShellAt(0);
+  nsIPresShell* presShell = doc->GetPrimaryShell();
   NS_ASSERTION(presShell, "pres shell is required");
   nsPresContext *presContext = presShell->GetPresContext();
   NS_ASSERTION(presContext, "pres context is required");
@@ -1476,11 +1496,8 @@ nsComputedDOMStyle::GetLineHeight(nsIDOMCSSValue** aValue)
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   nscoord lineHeight;
-  if (GetLineHeightCoord(lineHeight)) {
-    val->SetAppUnits(lineHeight);
-  } else {
-    SetValueToCoord(val, GetStyleText()->mLineHeight);
-  }
+  GetLineHeightCoord(lineHeight);
+  val->SetAppUnits(lineHeight);
 
   return CallQueryInterface(val, aValue);
 }
@@ -1879,6 +1896,27 @@ nsComputedDOMStyle::GetFloatEdge(nsIDOMCSSValue** aValue)
   return CallQueryInterface(val, aValue);
 }
 
+nsresult
+nsComputedDOMStyle::GetIMEMode(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleUIReset *uiData = GetStyleUIReset();
+
+  nsCSSKeyword keyword;
+  if (uiData->mIMEMode == NS_STYLE_IME_MODE_AUTO) {
+    keyword = eCSSKeyword_auto;
+  } else if (uiData->mIMEMode == NS_STYLE_IME_MODE_NORMAL) {
+    keyword = eCSSKeyword_normal;
+  } else {
+    keyword = nsCSSProps::ValueToKeywordEnum(uiData->mIMEMode,
+                nsCSSProps::kIMEModeKTable);
+  }
+  val->SetIdent(nsCSSKeywords::GetStringValue(keyword));
+
+  return CallQueryInterface(val, aValue);
+}
 
 nsresult
 nsComputedDOMStyle::GetUserFocus(nsIDOMCSSValue** aValue)
@@ -2229,8 +2267,8 @@ nsComputedDOMStyle::GetWidth(nsIDOMCSSValue** aValue)
                           &nsComputedDOMStyle::GetCBContentWidth,
                           nscoord_MAX);
     
-    SetValueToCoord(val, positionData->mWidth, nsnull, nsnull,
-                    minWidth, maxWidth);
+    SetValueToCoord(val, positionData->mWidth, nsnull,
+                    nsCSSProps::kWidthKTable, minWidth, maxWidth);
   }
 
   return CallQueryInterface(val, aValue);
@@ -2255,7 +2293,8 @@ nsComputedDOMStyle::GetMaxWidth(nsIDOMCSSValue** aValue)
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   SetValueToCoord(val, GetStylePosition()->mMaxWidth,
-                  &nsComputedDOMStyle::GetCBContentWidth);
+                  &nsComputedDOMStyle::GetCBContentWidth,
+                  nsCSSProps::kWidthKTable);
 
   return CallQueryInterface(val, aValue);
 }
@@ -2279,7 +2318,8 @@ nsComputedDOMStyle::GetMinWidth(nsIDOMCSSValue** aValue)
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   SetValueToCoord(val, GetStylePosition()->mMinWidth,
-                  &nsComputedDOMStyle::GetCBContentWidth);
+                  &nsComputedDOMStyle::GetCBContentWidth,
+                  nsCSSProps::kWidthKTable);
 
   return CallQueryInterface(val, aValue);
 }
@@ -2454,6 +2494,10 @@ nsComputedDOMStyle::GetRelativeOffset(PRUint8 aSide, nsIDOMCSSValue** aValue)
       break;
     default:
       NS_ERROR("Unexpected left/right/top/bottom unit");
+      // Fall through
+    case eStyleUnit_Auto:
+      // In this case, both this side and the opposite side are auto.
+      // The computed offset is 0.
       val->SetAppUnits(0);
       break;
   }
@@ -2484,29 +2528,6 @@ nsComputedDOMStyle::FlushPendingReflows()
   }
 }
 
-const nsStyleStruct*
-nsComputedDOMStyle::GetStyleData(nsStyleStructID aSID)
-{
-  if (mFrame && !mPseudo) {
-    nsIAtom* type = mFrame->GetType();
-    nsIFrame* frame = mFrame;
-    if (type == nsGkAtoms::tableOuterFrame) {
-      // If the frame is an outer table frame then we should get the style
-      // from the inner table frame.
-      frame = frame->GetFirstChild(nsnull);
-      NS_ASSERTION(frame, "Outer table must have an inner");
-      NS_ASSERTION(!frame->GetNextSibling(),
-                   "Outer table frames should have just one child, the inner table");
-    }
-    return frame->GetStyleData(aSID);
-  }
-  
-  NS_ASSERTION(mStyleContextHolder,
-               "GetPropertyCSSValue should have resolved a style context");
-
-  return mStyleContextHolder->GetStyleData(aSID);
-}
-
 nsresult
 nsComputedDOMStyle::GetPaddingWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 {
@@ -2528,23 +2549,18 @@ nsComputedDOMStyle::GetPaddingWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 PRBool
 nsComputedDOMStyle::GetLineHeightCoord(nscoord& aCoord)
 {
-  const nsStyleText* text = GetStyleText();
-  const nsStyleFont *font = GetStyleFont();
-  switch (text->mLineHeight.GetUnit()) {
-    case eStyleUnit_Coord:
-      aCoord = text->mLineHeight.GetCoordValue();
-      return PR_TRUE;
-    case eStyleUnit_Percent:
-      aCoord = nscoord(text->mLineHeight.GetPercentValue() * font->mSize);
-      return PR_TRUE;
-    case eStyleUnit_Factor:
-      aCoord = nscoord(text->mLineHeight.GetFactorValue() * font->mSize);
-      return PR_TRUE;
-    default:
-      break;
-  }
-
-  return PR_FALSE;
+  aCoord = nsHTMLReflowState::CalcLineHeight(mStyleContextHolder,
+                                             mPresShell->GetPresContext()->
+                                               DeviceContext());
+  // CalcLineHeight uses font->mFont.size, but we want to use
+  // font->mSize as the font size.  Adjust for that.  Also adjust for
+  // the text zoom, if any.
+  const nsStyleFont* font = GetStyleFont();
+  aCoord = NSToCoordRound((float(aCoord) *
+                           (float(font->mSize) / float(font->mFont.size))) /
+                          mPresShell->GetPresContext()->TextZoom());
+  
+  return PR_TRUE;
 }
 
 nsresult
@@ -2754,17 +2770,29 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
                                                   aTable));
       break;
       
-    case eStyleUnit_Chars:
-      // XXX we need a frame and a rendering context to calculate this, bug 281972, bug 282126.
-      aValue->SetAppUnits(0);
+    case eStyleUnit_Chars: {
+      // Get a rendering context
+      nsCOMPtr<nsIRenderingContext> cx;
+      nsIFrame* frame = mPresShell->FrameManager()->GetRootFrame();
+      if (frame) {
+        mPresShell->CreateRenderingContext(frame, getter_AddRefs(cx));
+      }
+      if (cx) {
+        nscoord val =
+          nsLayoutUtils::CharsToCoord(aCoord, cx, mStyleContextHolder);
+        aValue->SetAppUnits(PR_MAX(aMinAppUnits, val));
+      } else {
+        // Oh, well.  Give up.
+        aValue->SetAppUnits(0);
+      }
       break;
-      
-    case eStyleUnit_Null:
+    }
+
+    case eStyleUnit_None:
       aValue->SetIdent(nsGkAtoms::none);
       break;
       
     default:
-      // eStyleUnit_Proportional
       NS_ERROR("Can't handle this unit");
       break;
   }
@@ -2953,6 +2981,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(max_width,                     MaxWidth),
     COMPUTED_STYLE_MAP_ENTRY(min_height,                    MinHeight),
     COMPUTED_STYLE_MAP_ENTRY(min_width,                     MinWidth),
+    COMPUTED_STYLE_MAP_ENTRY(ime_mode,                      IMEMode),
     COMPUTED_STYLE_MAP_ENTRY(opacity,                       Opacity),
     // COMPUTED_STYLE_MAP_ENTRY(orphans,                    Orphans),
     //// COMPUTED_STYLE_MAP_ENTRY(outline,                  Outline),

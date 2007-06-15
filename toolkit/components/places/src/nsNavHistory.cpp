@@ -101,6 +101,7 @@
 #define PREF_AUTOCOMPLETE_ONLY_TYPED            "urlbar.matchOnlyTyped"
 #define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
 #define PREF_DB_CACHE_PERCENTAGE                "history_cache_percentage"
+#define PREF_BROWSER_IMPORT_BOOKMARKS           "browser.places.importBookmarksHTML"
 
 // Default (integer) value of PREF_DB_CACHE_PERCENTAGE from 0-100
 // This is 6% of machine memory, giving 15MB for a user with 256MB of memory.
@@ -122,6 +123,9 @@
 // length
 #define HISTORY_URI_LENGTH_MAX 65536
 #define HISTORY_TITLE_LENGTH_MAX 4096
+
+// db file name
+#define DB_FILENAME NS_LITERAL_STRING("places.sqlite")
 
 // Lazy adding
 
@@ -147,6 +151,7 @@ NS_INTERFACE_MAP_BEGIN(nsNavHistory)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSearch)
+  NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSimpleResultListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsINavHistoryService)
 NS_INTERFACE_MAP_END
 
@@ -206,7 +211,9 @@ const PRInt32 nsNavHistory::kGetInfoIndex_VisitCount = 4;
 const PRInt32 nsNavHistory::kGetInfoIndex_VisitDate = 5;
 const PRInt32 nsNavHistory::kGetInfoIndex_FaviconURL = 6;
 const PRInt32 nsNavHistory::kGetInfoIndex_SessionId = 7;
-const PRInt32 nsNavHistory::kGetInfoIndex_BookmarkItemId = 8;
+const PRInt32 nsNavHistory::kGetInfoIndex_ItemId = 8;
+const PRInt32 nsNavHistory::kGetInfoIndex_ItemDateAdded = 9;
+const PRInt32 nsNavHistory::kGetInfoIndex_ItemLastModified = 10;
 
 const PRInt32 nsNavHistory::kAutoCompleteIndex_URL = 0;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_Title = 1;
@@ -384,7 +391,7 @@ nsNavHistory::Init()
 //
 
 
-#define PLACES_SCHEMA_VERSION 3
+#define PLACES_SCHEMA_VERSION 5
 
 nsresult
 nsNavHistory::InitDB(PRBool *aDoImport)
@@ -394,23 +401,60 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   *aDoImport = PR_FALSE;
 
   // init DB
+  nsCOMPtr<nsIFile> profDir;
   nsCOMPtr<nsIFile> dbFile;
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                              getter_AddRefs(dbFile));
+                              getter_AddRefs(profDir));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = dbFile->Append(NS_LITERAL_STRING("places.sqlite"));
+  rv = profDir->Clone(getter_AddRefs(dbFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = dbFile->Append(DB_FILENAME);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // import bookmarks if places.sqlite doesn't exist
+  PRBool dbExists;
+  rv = dbFile->Exists(&dbExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // open the database
   mDBService = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBService->OpenDatabase(dbFile, getter_AddRefs(mDBConn));
   if (rv == NS_ERROR_FILE_CORRUPTED) {
-    // delete the db and try opening again
-    rv = dbFile->Remove(PR_FALSE);
+    dbExists = PR_FALSE;
+    // backup the corrupted db file
+    nsAutoString corruptFileName;
+    rv = dbFile->GetLeafName(corruptFileName);
+    NS_ENSURE_SUCCESS(rv, rv);
+    corruptFileName.Append(NS_LITERAL_STRING(".corrupt"));
+
+    nsCOMPtr<nsIFile> corruptBackup;
+    rv = profDir->Clone(getter_AddRefs(corruptBackup));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = corruptBackup->Append(corruptFileName);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = corruptBackup->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = dbFile->MoveTo(nsnull, corruptFileName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = profDir->Clone(getter_AddRefs(dbFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = dbFile->Append(DB_FILENAME);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mDBService->OpenDatabase(dbFile, getter_AddRefs(mDBConn));
   }
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // if the db didn't previously exist, or was corrupted, re-import bookmarks.
+  if (!dbExists) {
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService("@mozilla.org/preferences-service;1"));
+    if (prefs) {
+      rv = prefs->SetBoolPref(PREF_BROWSER_IMPORT_BOOKMARKS, PR_TRUE);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
 
   // Set the database page size. This will only have any effect on empty files,
   // so must be done before anything else. If the file already exists, we'll
@@ -440,6 +484,14 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   NS_ENSURE_SUCCESS(rv, rv);
   rv = nsAnnotationService::InitTables(mDBConn);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Initialize the places schema version if this is first run.
+  rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_places"), &tableExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!tableExists) {
+    rv = UpdateSchemaVersion();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // Get the places schema version, which we store in the user_version PRAGMA
   PRInt32 DBSchemaVersion;
@@ -473,18 +525,19 @@ nsNavHistory::InitDB(PRBool *aDoImport)
     if (DBSchemaVersion < PLACES_SCHEMA_VERSION) {
       // Upgrading
 
-      // Migrating from schema V0/1 to V2.
-      if (DBSchemaVersion < 2) {
-        rv = ForceMigrateBookmarksDB(mDBConn);
-        NS_ENSURE_SUCCESS(rv, rv);
-      } 
-
+      // Migration anno tables up to V3
       if (DBSchemaVersion < 3) {
         rv = MigrateV3Up(mDBConn);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // XXX Upgrades V3 must add migration code here.
+      // Migrate bookmarks tables up to V5
+      if (DBSchemaVersion < 5) {
+        rv = ForceMigrateBookmarksDB(mDBConn);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // XXX Upgrades >V5 must add migration code here.
 
     } else {
       // Downgrading
@@ -492,10 +545,10 @@ nsNavHistory::InitDB(PRBool *aDoImport)
       // XXX Need to prompt user or otherwise notify of 
       // potential dataloss when downgrading.
 
-      // XXX Downgrades from >V2 must add migration code here.
-      
-      // V3: No backwards incompatible changes.
+      // XXX Downgrades from >V5 must add migration code here.
 
+      // Downgrade v1,2,4,5
+      // V3 had no backwards incompatible changes.
       if (DBSchemaVersion > 2) {
         // perform downgrade to v2
         rv = ForceMigrateBookmarksDB(mDBConn);
@@ -504,9 +557,7 @@ nsNavHistory::InitDB(PRBool *aDoImport)
     }
 
     // update schema version in the db
-    nsCAutoString schemaVersionPragma("PRAGMA user_version=");
-    schemaVersionPragma.AppendInt(PLACES_SCHEMA_VERSION);
-    rv = mDBConn->ExecuteSimpleSQL(schemaVersionPragma);
+    rv = UpdateSchemaVersion();
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -545,8 +596,6 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // moz_places
-  rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_places"), &tableExists);
-  NS_ENSURE_SUCCESS(rv, rv);
   if (! tableExists) {
     *aDoImport = PR_TRUE;
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_places ("
@@ -625,6 +674,16 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   return NS_OK;
 }
 
+// nsNavHistory::UpdateSchemaVersion
+//
+// Called by the individual services' InitTables()
+nsresult
+nsNavHistory::UpdateSchemaVersion()
+{
+  nsCAutoString schemaVersionPragma("PRAGMA user_version=");
+  schemaVersionPragma.AppendInt(PLACES_SCHEMA_VERSION);
+  return mDBConn->ExecuteSimpleSQL(schemaVersionPragma);
+}
 
 // nsNavHistory::InitStatements
 //
@@ -764,7 +823,7 @@ nsNavHistory::InitStatements()
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT b.fk, h.url, b.title, h.rev_host, h.visit_count, "
         "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = b.fk), "
-        "f.url, null, null "
+        "f.url, null, null, b.dateAdded, b.lastModified "
       "FROM moz_bookmarks b "
       "JOIN moz_places h ON b.fk = h.id "
       "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
@@ -787,18 +846,24 @@ nsresult
 nsNavHistory::ForceMigrateBookmarksDB(mozIStorageConnection* aDBConn) 
 {
   // drop bookmarks tables
-  nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE moz_bookmarks"));
+  nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE IF EXISTS moz_bookmarks"));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE moz_bookmarks_folders"));
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE IF EXISTS moz_bookmarks_folders"));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE moz_bookmarks_roots"));
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE IF EXISTS moz_bookmarks_roots"));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE moz_keywords"));
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE IF EXISTS moz_keywords"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // initialize bookmarks tables
   rv = nsNavBookmarks::InitTables(aDBConn);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // set pref indicating bookmarks.html should be imported.
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService("@mozilla.org/preferences-service;1"));
+  if (prefs) {
+    prefs->SetBoolPref(PREF_BROWSER_IMPORT_BOOKMARKS, PR_TRUE);
+  }
   return rv;
 }
 
@@ -819,7 +884,7 @@ nsNavHistory::MigrateV3Up(mozIStorageConnection* aDBConn)
     "ALTER TABLE moz_annos ADD type INTEGER DEFAULT 0"));
   if (NS_FAILED(rv)) {
     // if the alteration failed, force-migrate
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE moz_annos"));
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE IF EXISTS moz_annos"));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = nsAnnotationService::InitTables(mDBConn);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2045,7 +2110,7 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
       queryString = NS_LITERAL_CSTRING(
         "SELECT b.fk, h.url, b.title, h.rev_host, h.visit_count, "
         "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = b.fk), "
-        "f.url, null, b.id "
+        "f.url, null, b.id, b.dateAdded, b.lastModified "
       "FROM moz_bookmarks b "
       "JOIN moz_places h ON b.fk = h.id "
       "LEFT OUTER JOIN moz_historyvisits v ON b.fk = v.place_id "
@@ -2111,13 +2176,13 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
       // a sort by date here (see the IDL definition for maxResults). We'll
       // still do the official sort by title later.
       if (aOptions->MaxResults() > 0)
-        queryString += NS_LITERAL_CSTRING(" ORDER BY 6 DESC"); // v.vist_date
+        queryString += NS_LITERAL_CSTRING(" ORDER BY 6 DESC"); // v.visit_date
       break;
     case nsINavHistoryQueryOptions::SORT_BY_DATE_ASCENDING:
-      queryString += NS_LITERAL_CSTRING(" ORDER BY 6 ASC"); // v.vist_date
+      queryString += NS_LITERAL_CSTRING(" ORDER BY 6 ASC"); // v.visit_date
       break;
     case nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING:
-      queryString += NS_LITERAL_CSTRING(" ORDER BY 6 DESC"); // v.vist_date
+      queryString += NS_LITERAL_CSTRING(" ORDER BY 6 DESC"); // v.visit_date
       break;
     case nsINavHistoryQueryOptions::SORT_BY_URI_ASCENDING:
       queryString += NS_LITERAL_CSTRING(" ORDER BY 2 ASC"); // h.url
@@ -2161,7 +2226,7 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
   for (i = 0; i < aQueries.Count(); i ++) {
     PRInt32 clauseParameters = 0;
     rv = BindQueryClauseParameters(statement, numParameters,
-                                   aQueries[i], &clauseParameters);
+                                   aQueries[i], aOptions, &clauseParameters);
     NS_ENSURE_SUCCESS(rv, rv);
     numParameters += clauseParameters;
   }
@@ -2229,7 +2294,7 @@ nsNavHistory::RemoveObserver(nsINavHistoryObserver* aObserver)
 
 // nsNavHistory::BeginUpdateBatch
 
-NS_IMETHODIMP
+nsresult
 nsNavHistory::BeginUpdateBatch()
 {
   mBatchesInProgress ++;
@@ -2243,7 +2308,7 @@ nsNavHistory::BeginUpdateBatch()
 
 // nsNavHistory::EndUpdateBatch
 
-NS_IMETHODIMP
+nsresult
 nsNavHistory::EndUpdateBatch()
 {
   if (mBatchesInProgress == 0)
@@ -2251,6 +2316,17 @@ nsNavHistory::EndUpdateBatch()
   if (--mBatchesInProgress == 0) {
     ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver, OnEndUpdateBatch())
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistory::RunInBatchMode(nsINavHistoryBatchCallback* aCallback,
+                             nsISupports* aUserData) {
+  NS_ENSURE_ARG_POINTER(aCallback);
+
+  UpdateBatchScoper batch(*this);
+  nsresult rv = aCallback->RunBatched(aUserData);
+  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
@@ -2811,6 +2887,11 @@ nsNavHistory::AddVisitChain(nsIURI* aURI, PRTime aTime,
                        &referringVisit, aSessionID, aRedirectBookmark);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // for redirects in frames, we don't want to see those items in history
+    // see bug #381453 for more details
+    if (!aToplevel) {
+      transitionType = nsINavHistoryService::TRANSITION_EMBED;
+    }
   } else if (aReferrer) {
     // If there is a referrer, we know you came from somewhere, either manually
     // or automatically. For toplevel windows, assume its manual and you want
@@ -3246,9 +3327,21 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
     (*aParamCount) ++;
   }
 
-  // only bookmarked, has no affect on bookmarks-only queries
-  if (aOptions->QueryType() != nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS &&
-      aQuery->OnlyBookmarked()) {
+  
+  if (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS) {
+    // Folders only have an affect on bookmark queries
+    // XXX: add multiple folders support
+    if (aQuery->Folders().Length() == 1) {
+      if (!aClause->IsEmpty())
+        *aClause += NS_LITERAL_CSTRING(" AND ");
+
+      nsCAutoString paramString;
+      parameterString(aStartParameter + *aParamCount, paramString);
+      (*aParamCount) ++;
+      *aClause += NS_LITERAL_CSTRING(" b.parent = ") + paramString;
+    }
+  } else if (aQuery->OnlyBookmarked()) {
+    // only bookmarked, has no affect on bookmarks-only queries
     if (!aClause->IsEmpty())
       *aClause += NS_LITERAL_CSTRING(" AND ");
 
@@ -3343,6 +3436,7 @@ nsresult
 nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
                                         PRInt32 aStartParameter,
                                         nsNavHistoryQuery* aQuery, // const
+                                        nsNavHistoryQueryOptions* aOptions,
                                         PRInt32* aParamCount)
 {
   nsresult rv;
@@ -3385,6 +3479,16 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
     (*aParamCount) ++;
   }
 
+  // folder
+  if (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS) {
+    // XXX: add multiple folders support
+    if (aQuery->Folders().Length() == 1) {
+      rv = statement->BindInt64Parameter(aStartParameter + *aParamCount,
+                                         aQuery->Folders()[0]);
+      NS_ENSURE_SUCCESS(rv, rv);
+      (*aParamCount) ++;
+    }
+  }
   // onlyBookmarked: nothing to bind
 
   // domain (see GetReversedHostname for more info on reversed host names)
@@ -3906,9 +4010,11 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
       return NS_ERROR_OUT_OF_MEMORY;
 
     PRBool isNull;
-    if (NS_SUCCEEDED(aRow->GetIsNull(kGetInfoIndex_BookmarkItemId, &isNull)) &&
+    if (NS_SUCCEEDED(aRow->GetIsNull(kGetInfoIndex_ItemId, &isNull)) &&
         !isNull) {
-      (*aResult)->mBookmarkId = aRow->AsInt64(kGetInfoIndex_BookmarkItemId);
+      (*aResult)->mItemId = aRow->AsInt64(kGetInfoIndex_ItemId);
+      (*aResult)->mDateAdded = aRow->AsInt64(kGetInfoIndex_ItemDateAdded);
+      (*aResult)->mLastModified = aRow->AsInt64(kGetInfoIndex_ItemLastModified);
     }
     NS_ADDREF(*aResult);
     return NS_OK;

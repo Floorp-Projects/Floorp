@@ -184,6 +184,9 @@ PreferenceBranch.prototype = {
   // cleanup observer so we don't leak
   _shutdown: function prefs_shutdown() {
     this._prefs.removeObserver(this._root, this);
+
+    this._prefs = null;
+    this._events = null;
   },
   
   // for nsIObserver
@@ -413,6 +416,10 @@ Extension.prototype = {
     var os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
     os.removeObserver(this, "em-action-requested");
+
+    this._prefs = null;
+    this._storage = null;
+    this._events = null;
   },
   
   // for nsIObserver  
@@ -461,11 +468,18 @@ Extension.prototype = {
 function Extensions() {
   this._extmgr = Components.classes["@mozilla.org/extensions/manager;1"]
                            .getService(Components.interfaces.nsIExtensionManager);
+                             
+  var self = this;
+  gShutdown.push(function() { self._shutdown(); });
 }
 
 //=================================================
 // Extensions implementation
 Extensions.prototype = {
+  _shutdown : function() {
+    this._extmgr = null;
+  },
+  
   get all() {
     return this.find({});
   },
@@ -502,15 +516,15 @@ Extensions.prototype = {
 
 const CLASS_ID = Components.ID("fe74cf80-aa2d-11db-abbd-0800200c9a66");
 const CLASS_NAME = "Application wrapper";
-const CONTRACT_ID = "@mozilla.org/application;1";
+const CONTRACT_ID = "@mozilla.org/fuel/application;1";
 
 //=================================================
 // Application constructor
 function Application() {
-  this._console = new Console();
-  this._prefs = new PreferenceBranch("");
-  this._storage = new SessionStorage();
-  this._events = new Events();
+  this._console = null;
+  this._prefs = null;
+  this._storage = null;
+  this._events = null;
   
   this._info = Components.classes["@mozilla.org/xre/app-info;1"]
                      .getService(Components.interfaces.nsIXULAppInfo);
@@ -544,18 +558,18 @@ Application.prototype = {
   observe: function app_observe(aSubject, aTopic, aData) {
     if (aTopic == "app-startup") {
       this._extensions = new Extensions();
-      this._events.dispatch("load", "application");
+      this.events.dispatch("load", "application");
     }
     else if (aTopic == "final-ui-startup") {
-      this._events.dispatch("ready", "application");
+      this.events.dispatch("ready", "application");
     }
     else if (aTopic == "quit-application-requested") {
       // we can stop the quit by checking the return value
-      if (this._events.dispatch("quit", "application") == false)
+      if (this.events.dispatch("quit", "application") == false)
         aSubject.data = true;
     }
     else if (aTopic == "xpcom-shutdown") {
-      this._events.dispatch("unload", "application");
+      this.events.dispatch("unload", "application");
 
       // call the cleanup functions and empty the array
       while (gShutdown.length) {
@@ -573,6 +587,13 @@ Application.prototype = {
       os.removeObserver(this, "quit-application");
       
       os.removeObserver(this, "xpcom-shutdown");
+
+      this._info = null;
+      this._console = null;
+      this._prefs = null;
+      this._storage = null;
+      this._events = null;
+      this._extensions = null;
     }
   },
 
@@ -607,14 +628,23 @@ Application.prototype = {
   },
   
   get console() {
+    if (this._console == null)
+        this._console = new Console();
+
     return this._console;
   },
   
   get storage() {
+    if (this._storage == null)
+        this._storage = new SessionStorage();
+
     return this._storage;
   },
   
   get prefs() {
+    if (this._prefs == null)
+        this._prefs = new PreferenceBranch("");
+
     return this._prefs;
   },
   
@@ -623,52 +653,58 @@ Application.prototype = {
   },
 
   get events() {
+    if (this._events == null)
+        this._events = new Events();
+
     return this._events;
   }
 }
 
 //=================================================
 // Factory - Treat Application as a singleton
+var gSingleton = null;
 var ApplicationFactory = {
-  singleton: null,
   
-  createInstance: function af_ci(aOuter, aIID)
-  {
+  createInstance: function af_ci(aOuter, aIID) {
     if (aOuter != null)
       throw Components.results.NS_ERROR_NO_AGGREGATION;
       
-    if (this.singleton == null)
-      this.singleton = new Application();
+    if (gSingleton == null) {
+      gSingleton = new Application();
+    }
 
-    return this.singleton.QueryInterface(aIID);
+    return gSingleton.QueryInterface(aIID);
   }
 };
 
 //=================================================
 // Module
 var ApplicationModule = {
-  registerSelf: function am_rs(aCompMgr, aFileSpec, aLocation, aType)
-  {
+  registerSelf: function am_rs(aCompMgr, aFileSpec, aLocation, aType) {
     aCompMgr = aCompMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
     aCompMgr.registerFactoryLocation(CLASS_ID, CLASS_NAME, CONTRACT_ID, aFileSpec, aLocation, aType);
     
-    // make the Update Service a startup observer
     var categoryManager = Components.classes["@mozilla.org/categorymanager;1"]
                                     .getService(Components.interfaces.nsICategoryManager);
+    // make Application a startup observer
     categoryManager.addCategoryEntry("app-startup", CLASS_NAME, "service," + CONTRACT_ID, true, true);
 
     // add Application as a global property for easy access                                     
     categoryManager.addCategoryEntry("JavaScript global property", "Application", CONTRACT_ID, true, true);
   },
 
-  unregisterSelf: function am_us(aCompMgr, aLocation, aType)
-  {
+  unregisterSelf: function am_us(aCompMgr, aLocation, aType) {
     aCompMgr = aCompMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
     aCompMgr.unregisterFactoryLocation(CLASS_ID, aLocation);        
+
+    // cleanup categories
+    var categoryManager = Components.classes["@mozilla.org/categorymanager;1"]
+                                    .getService(Components.interfaces.nsICategoryManager);
+    categoryManager.deleteCategoryEntry("app-startup", "service," + CONTRACT_ID, true);
+    categoryManager.deleteCategoryEntry("JavaScript global property", CONTRACT_ID, true);
   },
   
-  getClassObject: function am_gco(aCompMgr, aCID, aIID)
-  {
+  getClassObject: function am_gco(aCompMgr, aCID, aIID) {
     if (!aIID.equals(Components.interfaces.nsIFactory))
       throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
 

@@ -251,8 +251,8 @@ js_NewBufferTokenStream(JSContext *cx, const jschar *base, size_t length)
     ts->userbuf.ptr = (jschar *)base;
     ts->tokenbuf.grow = GrowTokenBuf;
     ts->tokenbuf.data = cx;
-    ts->listener = cx->runtime->sourceHandler;
-    ts->listenerData = cx->runtime->sourceHandlerData;
+    ts->listener = cx->debugHooks->sourceHandler;
+    ts->listenerData = cx->debugHooks->sourceHandlerData;
     return ts;
 }
 
@@ -696,14 +696,14 @@ ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
         onError = NULL;
 
     if (onError) {
-        JSDebugErrorHook hook = cx->runtime->debugErrorHook;
+        JSDebugErrorHook hook = cx->debugHooks->debugErrorHook;
 
         /*
          * If debugErrorHook is present then we give it a chance to veto
          * sending the error on to the regular error reporter.
          */
         if (hook && !hook(cx, message, report,
-                          cx->runtime->debugErrorHookData)) {
+                          cx->debugHooks->debugErrorHookData)) {
             onError = NULL;
         }
     }

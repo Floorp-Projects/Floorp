@@ -48,6 +48,7 @@
 #include "nsSVGGradientFrame.h"
 #include "gfxContext.h"
 #include "nsIDOMSVGRect.h"
+#include "gfxPattern.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -236,13 +237,11 @@ nsSVGGradientFrame::GetStopInformation(PRInt32 aIndex,
 #endif
 }
 
-nsresult
-nsSVGGradientFrame::GetGradientTransform(nsIDOMSVGMatrix **aGradientTransform,
-                                         nsSVGGeometryFrame *aSource)
+gfxMatrix
+nsSVGGradientFrame::GetGradientTransform(nsSVGGeometryFrame *aSource)
 {
-  *aGradientTransform = nsnull;
+  gfxMatrix bboxMatrix;
 
-  nsCOMPtr<nsIDOMSVGMatrix> bboxTransform;
   PRUint16 gradientUnits = GetGradientUnits();
   nsIAtom *callerType = aSource->GetType();
   if (gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_USERSPACEONUSE) {
@@ -282,33 +281,25 @@ nsSVGGradientFrame::GetGradientTransform(nsIDOMSVGMatrix **aGradientTransform,
       rect->GetY(&y);
       rect->GetWidth(&width);
       rect->GetHeight(&height);
-      NS_NewSVGMatrix(getter_AddRefs(bboxTransform),
-                      width, 0, 0, height, x, y);
+      bboxMatrix = gfxMatrix(width, 0, 0, height, x, y);
     }
   }
-
-  if (!bboxTransform)
-    NS_NewSVGMatrix(getter_AddRefs(bboxTransform));
 
   nsIContent *gradient = GetGradientWithAttr(nsGkAtoms::gradientTransform);
   if (!gradient)
     gradient = mContent;  // use our gradient to get the correct default value
 
-  nsCOMPtr<nsIDOMSVGGradientElement> gradElement = do_QueryInterface(gradient);
-  nsCOMPtr<nsIDOMSVGAnimatedTransformList> animTrans;
-  gradElement->GetGradientTransform(getter_AddRefs(animTrans));
+  nsSVGGradientElement *gradElement = NS_STATIC_CAST(nsSVGGradientElement*,
+                                                     gradient);
   nsCOMPtr<nsIDOMSVGTransformList> trans;
-  animTrans->GetAnimVal(getter_AddRefs(trans));
+  gradElement->mGradientTransform->GetAnimVal(getter_AddRefs(trans));
   nsCOMPtr<nsIDOMSVGMatrix> gradientTransform =
     nsSVGTransformList::GetConsolidationMatrix(trans);
 
-  if (!gradientTransform) {
-    *aGradientTransform = bboxTransform;
-    NS_ADDREF(*aGradientTransform);
-    return NS_OK;
-  }
+  if (!gradientTransform)
+    return bboxMatrix;
 
-  return bboxTransform->Multiply(gradientTransform, aGradientTransform);
+  return nsSVGUtils::ConvertSVGMatrixToThebes(gradientTransform) * bboxMatrix;
 }
 
 PRUint16
@@ -318,12 +309,11 @@ nsSVGGradientFrame::GetSpreadMethod()
   if (!gradient)
     gradient = mContent;  // use our gradient to get the correct default value
 
-  nsCOMPtr<nsIDOMSVGGradientElement> gradElement = do_QueryInterface(gradient);
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> method;
-  gradElement->GetSpreadMethod(getter_AddRefs(method));
+  nsSVGGradientElement *gradElement = NS_STATIC_CAST(nsSVGGradientElement*,
+                                                     gradient);
 
   PRUint16 val;
-  method->GetAnimVal(&val);
+  gradElement->mSpreadMethod->GetAnimVal(&val);
   return val;
 }
 
@@ -346,28 +336,26 @@ nsSVGGradientFrame::SetupPaintServer(gfxContext *aContext,
     return PR_FALSE;
 
   // Get the transform list (if there is one)
-  nsCOMPtr<nsIDOMSVGMatrix> svgMatrix;
-  GetGradientTransform(getter_AddRefs(svgMatrix), aSource);
-  if (!svgMatrix)
+  gfxMatrix patternMatrix = GetGradientTransform(aSource);
+
+  if (patternMatrix.IsSingular())
     return PR_FALSE;
 
-  cairo_matrix_t patternMatrix = nsSVGUtils::ConvertSVGMatrixToCairo(svgMatrix);
-  if (cairo_matrix_invert(&patternMatrix))
-    return PR_FALSE;
+  patternMatrix.Invert();
 
-  cairo_pattern_t *gradient = CreateGradient();
+  nsRefPtr<gfxPattern> gradient = CreateGradient();
   if (!gradient)
     return PR_FALSE;
 
   PRUint16 aSpread = GetSpreadMethod();
   if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_PAD)
-    cairo_pattern_set_extend(gradient, CAIRO_EXTEND_PAD);
+    gradient->SetExtend(gfxPattern::EXTEND_PAD);
   else if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REFLECT)
-    cairo_pattern_set_extend(gradient, CAIRO_EXTEND_REFLECT);
+    gradient->SetExtend(gfxPattern::EXTEND_REFLECT);
   else if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REPEAT)
-    cairo_pattern_set_extend(gradient, CAIRO_EXTEND_REPEAT);
-  
-  cairo_pattern_set_matrix(gradient, &patternMatrix);
+    gradient->SetExtend(gfxPattern::EXTEND_REPEAT);
+
+  gradient->SetMatrix(patternMatrix);
 
   // setup stops
   float lastOffset = 0.0f;
@@ -383,25 +371,17 @@ nsSVGGradientFrame::SetupPaintServer(gfxContext *aContext,
     else
       lastOffset = offset;
 
-    cairo_pattern_add_color_stop_rgba(gradient, offset,
-                                      NS_GET_R(stopColor)/255.0,
-                                      NS_GET_G(stopColor)/255.0,
-                                      NS_GET_B(stopColor)/255.0,
-                                      NS_GET_A(stopColor)/255.0 *
-                                        stopOpacity * aGraphicOpacity);
+    gradient->AddColorStop(offset,
+                           gfxRGBA(NS_GET_R(stopColor)/255.0,
+                                   NS_GET_G(stopColor)/255.0,
+                                   NS_GET_B(stopColor)/255.0,
+                                   NS_GET_A(stopColor)/255.0 *
+                                     stopOpacity * aGraphicOpacity));
   }
 
-  cairo_set_source(aContext->GetCairo(), gradient);
+  aContext->SetPattern(gradient);
 
-  *aClosure = gradient;
   return PR_TRUE;
-}
-
-void
-nsSVGGradientFrame::CleanupPaintServer(gfxContext *aContext, void *aClosure)
-{
-  cairo_pattern_t *gradient = NS_STATIC_CAST(cairo_pattern_t*, aClosure);
-  cairo_pattern_destroy(gradient);
 }
 
 // Private (helper) methods
@@ -551,11 +531,11 @@ nsSVGGradientFrame::GetGradientUnits()
   if (!gradient)
     gradient = mContent;  // use our gradient to get the correct default value
 
-  nsCOMPtr<nsIDOMSVGGradientElement> gradElement = do_QueryInterface(gradient);
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> animUnits;
-  gradElement->GetGradientUnits(getter_AddRefs(animUnits));
+  nsSVGGradientElement *gradElement = NS_STATIC_CAST(nsSVGGradientElement*,
+                                                     gradient);
+
   PRUint16 units;
-  animUnits->GetAnimVal(&units);
+  gradElement->mGradientUnits->GetAnimVal(&units);
   return units;
 }
 
@@ -618,7 +598,7 @@ nsSVGLinearGradientFrame::GradientLookupAttribute(nsIAtom *aAtomName,
     GetAnimValue(NS_STATIC_CAST(nsSVGSVGElement*, nsnull));
 }
 
-cairo_pattern_t *
+already_AddRefed<gfxPattern>
 nsSVGLinearGradientFrame::CreateGradient()
 {
   float x1, y1, x2, y2;
@@ -628,7 +608,9 @@ nsSVGLinearGradientFrame::CreateGradient()
   x2 = GradientLookupAttribute(nsGkAtoms::x2, nsSVGLinearGradientElement::X2);
   y2 = GradientLookupAttribute(nsGkAtoms::y2, nsSVGLinearGradientElement::Y2);
 
-  return cairo_pattern_create_linear(x1, y1, x2, y2);
+  gfxPattern *pattern = new gfxPattern(x1, y1, x2, y2);
+  NS_IF_ADDREF(pattern);
+  return pattern;
 }
 
 // -------------------------------------------------------------------------
@@ -698,7 +680,7 @@ nsSVGRadialGradientFrame::GradientLookupAttribute(nsIAtom *aAtomName,
     GetAnimValue(NS_STATIC_CAST(nsSVGSVGElement*, nsnull));
 }
 
-cairo_pattern_t *
+already_AddRefed<gfxPattern>
 nsSVGRadialGradientFrame::CreateGradient()
 {
   float cx, cy, r, fx, fy;
@@ -738,7 +720,9 @@ nsSVGRadialGradientFrame::CreateGradient()
     }
   }
 
-  return cairo_pattern_create_radial(fx, fy, 0, cx, cy, r);
+  gfxPattern *pattern = new gfxPattern(fx, fy, 0, cx, cy, r);
+  NS_IF_ADDREF(pattern);
+  return pattern;
 }
 
 // -------------------------------------------------------------------------

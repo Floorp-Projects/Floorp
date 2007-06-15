@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    10 February 2003
  * SUMMARY: Object.toSource() recursion should check stack overflow
@@ -60,8 +62,9 @@
  * the test in a reasonable amount of time.
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-192465.js';
 var UBound = 0;
-var bug = 192465;
+var BUGNUMBER = 192465;
 var summary = 'Object.toSource() recursion should check stack overflow';
 var status = '';
 var statusitems = [];
@@ -120,11 +123,11 @@ function make_deep_nest(level)
   }
 
   cursor.toSource = function()
-  {
-    if (level != 0)
-      return make_deep_nest(level - 1);
-    return "END";
-  }
+    {
+      if (level != 0)
+	return make_deep_nest(level - 1);
+      return "END";
+    }
 
   return head.toSource();
 }
@@ -142,7 +145,7 @@ function addThis()
 function test()
 {
   enterFunc('test');
-  printBugNumber(bug);
+  printBugNumber(BUGNUMBER);
   printStatus(summary);
 
   for (var i=0; i<UBound; i++)

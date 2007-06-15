@@ -450,7 +450,7 @@ void nsHTMLSelectListAccessible::CacheChildren()
 
 /** Default Constructor */
 nsHTMLSelectOptionAccessible::nsHTMLSelectOptionAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell):
-nsHyperTextAccessible(aDOMNode, aShell)
+nsHyperTextAccessibleWrap(aDOMNode, aShell)
 {
   nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
   nsCOMPtr<nsIDOMNode> parentNode;
@@ -479,10 +479,10 @@ nsHyperTextAccessible(aDOMNode, aShell)
 NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetRole(PRUint32 *aRole)
 {
   if (mParent && Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST) {
-    *aRole = nsIAccessibleRole::ROLE_LISTITEM;
+    *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LISTITEM;
   }
   else {
-    *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LISTITEM;
+    *aRole = nsIAccessibleRole::ROLE_LISTITEM;
   }
   return NS_OK;
 }
@@ -495,10 +495,11 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetName(nsAString& aName)
   // CASE #1 -- great majority of the cases
   // find the label attribute - this is what the W3C says we should use
   nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
-  NS_ASSERTION(domElement, "No domElement for accessible DOM node!");
-  nsresult rv = domElement->GetAttribute(NS_LITERAL_STRING("label"), aName) ;
+  if (!domElement)
+    return NS_ERROR_FAILURE;
 
-  if (NS_SUCCEEDED(rv) && !aName.IsEmpty() ) {
+  nsresult rv = domElement->GetAttribute(NS_LITERAL_STRING("label"), aName) ;
+  if (NS_SUCCEEDED(rv) && !aName.IsEmpty()) {
     return NS_OK;
   }
   
@@ -512,16 +513,17 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetName(nsAString& aName)
     if (text && text->IsNodeOfType(nsINode::eTEXT)) {
       nsAutoString txtValue;
       rv = AppendFlatStringFromContentNode(text, &txtValue);
-      if (NS_SUCCEEDED(rv)) {
-        // Temp var (txtValue) needed until CompressWhitespace built for nsAString
-        txtValue.CompressWhitespace();
-        aName.Assign(txtValue);
-        return NS_OK;
-      }
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Temp var (txtValue) needed until CompressWhitespace built for nsAString
+      txtValue.CompressWhitespace();
+      aName.Assign(txtValue);
+      return NS_OK;
     }
   }
   
-  return NS_ERROR_FAILURE;
+  aName.Truncate();
+  return NS_OK;
 }
 
 nsresult
@@ -532,7 +534,7 @@ nsHTMLSelectOptionAccessible::GetAttributesInternal(nsIPersistentProperties *aAt
     return NS_ERROR_FAILURE;  // Accessible shut down
   }
 
-  nsresult rv = nsHyperTextAccessible::GetAttributesInternal(aAttributes);
+  nsresult rv = nsHyperTextAccessibleWrap::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMNode> parentNode;
@@ -588,51 +590,78 @@ nsIFrame* nsHTMLSelectOptionAccessible::GetBoundsFrame()
   *     STATE_SELECTED
   *     STATE_FOCUSED
   *     STATE_FOCUSABLE
-  *     STATE_INVISIBLE -- not implemented yet
+  *     STATE_OFFSCREEN
   */
 NS_IMETHODIMP
 nsHTMLSelectOptionAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  *aState = 0;
-  nsCOMPtr<nsIDOMNode> focusedOptionNode, parentNode;
-  // Go up to parent <select> element
-  nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(mDOMNode));
-  do {
-    thisNode->GetParentNode(getter_AddRefs(parentNode));
-    nsCOMPtr<nsIDOMHTMLSelectElement> selectControl(do_QueryInterface(parentNode));
-    if (selectControl) {
-      break;
-    }
-    thisNode = parentNode;
-  } while (parentNode);
-  if (!parentNode) {
-    return NS_ERROR_FAILURE;
+  // Upcall to nsAccessible, but skip nsHyperTextAccessible impl
+  // because we don't want EXT_STATE_EDITABLE or EXT_STATE_SELECTABLE_TEXT
+  nsresult rv = nsAccessible::GetState(aState, aExtraState);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
-  
-  // find out if we are the focused node
-  GetFocusedOptionNode(parentNode, getter_AddRefs(focusedOptionNode));
-  if (focusedOptionNode == mDOMNode)
-    *aState |= nsIAccessibleStates::STATE_FOCUSED;
+
+  PRUint32 selectState, selectExtState;
+  nsCOMPtr<nsIContent> selectContent = GetSelectState(&selectState,
+                                                      &selectExtState);
+  if (selectState & nsIAccessibleStates::STATE_INVISIBLE) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMNode> selectNode = do_QueryInterface(selectContent); 
+  NS_ENSURE_TRUE(selectNode, NS_ERROR_FAILURE);
+
+  // Is disabled?
+  if (0 == (*aState & nsIAccessibleStates::STATE_UNAVAILABLE)) {
+    *aState |= (nsIAccessibleStates::STATE_FOCUSABLE |
+                nsIAccessibleStates::STATE_SELECTABLE);
+  }
 
   // Are we selected?
+  PRBool isSelected = PR_FALSE;
   nsCOMPtr<nsIDOMHTMLOptionElement> option (do_QueryInterface(mDOMNode));
-  if ( option ) {
-    PRBool isSelected = PR_FALSE;
+  if (option) {
     option->GetSelected(&isSelected);
     if ( isSelected ) 
       *aState |= nsIAccessibleStates::STATE_SELECTED;
   }
 
-  *aState |= nsIAccessibleStates::STATE_SELECTABLE |
-             nsIAccessibleStates::STATE_FOCUSABLE;
-
-  // remove STATE_SHOWING if parent is STATE_COLLAPSED
-  PRUint32 state;
-  GetSelectState(&state);
-  if (state & nsIAccessibleStates::STATE_COLLAPSED) {
+  if (selectState & nsIAccessibleStates::STATE_OFFSCREEN) {
     *aState |= nsIAccessibleStates::STATE_OFFSCREEN;
   }
-
+  else if (selectState & nsIAccessibleStates::STATE_COLLAPSED) {
+    // <select> is COLLAPSED: add STATE_OFFSCREEN, if not the currently
+    // visible option
+    if (!isSelected) {
+      *aState |= nsIAccessibleStates::STATE_OFFSCREEN;
+    }
+    else {
+      // Clear offscreen and invisible for currently showing option
+      *aState &= ~nsIAccessibleStates::STATE_OFFSCREEN;
+      *aState &= ~nsIAccessibleStates::STATE_INVISIBLE;
+       if (aExtraState) {
+         *aExtraState |= selectExtState & nsIAccessibleStates::EXT_STATE_OPAQUE;
+       }
+    }
+  }
+  else {
+    // XXX list frames are weird, don't rely on nsAccessible's general
+    // visibility implementation unless they get reimplemented in layout
+    *aState &= ~nsIAccessibleStates::STATE_OFFSCREEN;
+    // <select> is not collapsed: compare bounds to calculate STATE_OFFSCREEN
+    nsCOMPtr<nsIAccessible> listAccessible = GetParent();
+    if (listAccessible) {
+      PRInt32 optionX, optionY, optionWidth, optionHeight;
+      PRInt32 listX, listY, listWidth, listHeight;
+      GetBounds(&optionX, &optionY, &optionWidth, &optionHeight);
+      listAccessible->GetBounds(&listX, &listY, &listWidth, &listHeight);
+      if (optionY < listY || optionY + optionHeight > listY + listHeight) {
+        *aState |= nsIAccessibleStates::STATE_OFFSCREEN;
+      }
+    }
+  }
+ 
   return NS_OK;
 }
 
@@ -727,7 +756,7 @@ nsresult nsHTMLSelectOptionAccessible::GetFocusedOptionNode(nsIDOMNode *aListNod
   nsCOMPtr<nsIDocument> document = content->GetDocument();
   nsIPresShell *shell = nsnull;
   if (document)
-    shell = document->GetShellAt(0);
+    shell = document->GetPrimaryShell();
   if (!shell)
     return NS_ERROR_FAILURE;
 
@@ -793,13 +822,18 @@ void nsHTMLSelectOptionAccessible::SelectionChangedIfOption(nsIContent *aPossibl
   privateMultiSelect->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
                       multiSelect, nsnull);
   PRUint32 state = State(optionAccessible);
-  PRUint32 eventType = (state & nsIAccessibleStates::STATE_SELECTED) ?
-                       nsIAccessibleEvent::EVENT_SELECTION_ADD :
-                       nsIAccessibleEvent::EVENT_SELECTION_REMOVE; 
+  PRUint32 eventType;
+  if (state & nsIAccessibleStates::STATE_SELECTED) {
+    eventType = nsIAccessibleEvent::EVENT_SELECTION_ADD;
+  }
+  else {
+    eventType = nsIAccessibleEvent::EVENT_SELECTION_REMOVE;
+  } 
   privateMultiSelect->FireToolkitEvent(eventType, optionAccessible, nsnull);
 }
 
-nsIContent* nsHTMLSelectOptionAccessible::GetSelectState(PRUint32* aState)
+nsIContent* nsHTMLSelectOptionAccessible::GetSelectState(PRUint32* aState,
+                                                         PRUint32* aExtraState)
 {
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   while (content && content->Tag() != nsAccessibilityAtoms::select) {
@@ -813,8 +847,7 @@ nsIContent* nsHTMLSelectOptionAccessible::GetSelectState(PRUint32* aState)
       nsCOMPtr<nsIAccessible> selAcc;
       accService->GetAccessibleFor(selectNode, getter_AddRefs(selAcc));
       if (selAcc) {
-        PRUint32 dummy;
-        selAcc->GetFinalState(aState, &dummy);
+        selAcc->GetFinalState(aState, aExtraState);
         return content;
       }
     }
@@ -1001,10 +1034,13 @@ nsHTMLComboboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   nsIComboboxControlFrame *comboFrame = nsnull;
   frame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
 
-  if (comboFrame && comboFrame->IsDroppedDown())
+  if (comboFrame && comboFrame->IsDroppedDown()) {
     *aState |= nsIAccessibleStates::STATE_EXPANDED;
-  else
+  }
+  else {
+    *aState &= ~nsIAccessibleStates::STATE_FOCUSED; // Focus is on an option
     *aState |= nsIAccessibleStates::STATE_COLLAPSED;
+  }
 
   *aState |= nsIAccessibleStates::STATE_HASPOPUP |
              nsIAccessibleStates::STATE_READONLY |
@@ -1365,15 +1401,11 @@ nsHTMLComboboxListAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   nsIFrame *boundsFrame = GetBoundsFrame();
   nsIComboboxControlFrame* comboFrame = nsnull;
   boundsFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
-  if (!comboFrame)
-    return NS_ERROR_FAILURE;
 
-  if (comboFrame->IsDroppedDown())
-    *aState |= nsIAccessibleStates::STATE_FLOATING |
-               nsIAccessibleStates::STATE_FOCUSABLE;
+  if (comboFrame && comboFrame->IsDroppedDown())
+    *aState |= nsIAccessibleStates::STATE_FLOATING;
   else
-    *aState |= nsIAccessibleStates::STATE_INVISIBLE |
-               nsIAccessibleStates::STATE_FOCUSABLE;
+    *aState |= nsIAccessibleStates::STATE_INVISIBLE;
 
   return NS_OK;
 }
@@ -1398,18 +1430,31 @@ NS_IMETHODIMP nsHTMLComboboxListAccessible::GetUniqueID(void **aUniqueID)
   */
 void nsHTMLComboboxListAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aBoundingFrame)
 {
+  *aBoundingFrame = nsnull;
+
+  nsCOMPtr<nsIAccessible> comboAccessible;
+  GetParent(getter_AddRefs(comboAccessible));
+  if (!comboAccessible) {
+    return;
+  }
+  if (0 == (State(comboAccessible) & nsIAccessibleStates::STATE_COLLAPSED)) {
+    nsHTMLSelectListAccessible::GetBoundsRect(aBounds, aBoundingFrame);
+    return;
+  }
    // get our first option
   nsCOMPtr<nsIDOMNode> child;
   mDOMNode->GetFirstChild(getter_AddRefs(child));
 
   // now get its frame
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
   if (!shell) {
-    *aBoundingFrame = nsnull;
     return;
   }
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(child));
+  if (!content) {
+    return;
+  }
   nsIFrame* frame = shell->GetPrimaryFrameFor(content);
   if (!frame) {
     *aBoundingFrame = nsnull;

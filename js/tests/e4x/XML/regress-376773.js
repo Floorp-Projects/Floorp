@@ -36,15 +36,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var bug = 376773;
+gTestfile = 'regress-376773.js';
+
+var BUGNUMBER = 376773;
 var summary = 'xmlsimple.stringmethod === xmlsimple.function::stringmethod';
 var actual = '';
 var expect = '';
 var actualcall = '';
 var expectcall = '';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 var nTest = 0;
 var xml = <a>TEXT</a>;
@@ -179,7 +181,7 @@ TEST(++nTest, expectcall + ':' + expect, actualcall + ':' + actual);
 String.prototype.charCodeAt = String.prototype.orig_charCodeAt;
 delete String.prototype.orig_charCodeAt;
 
-// -------------------------------------------------------------- 
+// --------------------------------------------------------------
 
 String.prototype.orig_concat = String.prototype.concat;
 String.prototype.concat = function(string1) {
@@ -205,7 +207,7 @@ TEST(++nTest, expectcall + ':' + expect, actualcall + ':' + actual);
 String.prototype.concat = String.prototype.orig_concat;
 delete String.prototype.orig_concat;
 
-// -------------------------------------------------------------- 
+// --------------------------------------------------------------
 
 String.prototype.orig_indexOf = String.prototype.indexOf;
 String.prototype.indexOf = function(searchString, position) {
@@ -231,7 +233,7 @@ TEST(++nTest, expectcall + ':' + expect, actualcall + ':' + actual);
 String.prototype.indexOf = String.prototype.orig_indexOf;
 delete String.prototype.orig_indexOf;
 
-// -------------------------------------------------------------- 
+// --------------------------------------------------------------
 
 String.prototype.orig_lastIndexOf = String.prototype.lastIndexOf;
 String.prototype.lastIndexOf = function(searchString, position) {
@@ -257,7 +259,7 @@ TEST(++nTest, expectcall + ':' + expect, actualcall + ':' + actual);
 String.prototype.lastIndexOf = String.prototype.orig_lastIndexOf;
 delete String.prototype.orig_lastIndexOf;
 
-// -------------------------------------------------------------- 
+// --------------------------------------------------------------
 
 String.prototype.orig_localeCompare = String.prototype.localeCompare;
 String.prototype.localeCompare = function(that) {
@@ -283,7 +285,7 @@ TEST(++nTest, expectcall + ':' + expect, actualcall + ':' + actual);
 String.prototype.localeCompare = String.prototype.orig_localeCompare;
 delete String.prototype.orig_localeCompare;
 
-// -------------------------------------------------------------- 
+// --------------------------------------------------------------
 
 String.prototype.orig_match = String.prototype.match;
 String.prototype.match = function(regexp) {
@@ -309,7 +311,7 @@ TEST(++nTest, expectcall + ':' + expect, actualcall + ':' + actual);
 String.prototype.match = String.prototype.orig_match;
 delete String.prototype.orig_match;
 
-// -------------------------------------------------------------- 
+// --------------------------------------------------------------
 
 String.prototype.orig_replace = String.prototype.replace;
 String.prototype.replace = function(searchValue, replaceValue) {
@@ -335,7 +337,7 @@ TEST(++nTest, expectcall + ':' + expect, actualcall + ':' + actual);
 String.prototype.replace = String.prototype.orig_replace;
 delete String.prototype.orig_replace;
 
-// -------------------------------------------------------------- 
+// --------------------------------------------------------------
 
 String.prototype.orig_search = String.prototype.search;
 String.prototype.search = function(regexp) {
@@ -361,7 +363,7 @@ TEST(++nTest, expectcall + ':' + expect, actualcall + ':' + actual);
 String.prototype.search = String.prototype.orig_search;
 delete String.prototype.orig_search;
 
-// -------------------------------------------------------------- 
+// --------------------------------------------------------------
 
 String.prototype.orig_slice = String.prototype.slice;
 String.prototype.slice = function(start, end) {
@@ -387,7 +389,7 @@ TEST(++nTest, expectcall + ':' + expect, actualcall + ':' + actual);
 String.prototype.slice = String.prototype.orig_slice;
 delete String.prototype.orig_slice;
 
-// -------------------------------------------------------------- 
+// --------------------------------------------------------------
 
 String.prototype.orig_split = String.prototype.split;
 String.prototype.split = function(separator, limit) {
@@ -413,7 +415,7 @@ TEST(++nTest, expectcall + ':' + expect, actualcall + ':' + actual);
 String.prototype.split = String.prototype.orig_split;
 delete String.prototype.orig_split;
 
-// -------------------------------------------------------------- 
+// --------------------------------------------------------------
 
 String.prototype.orig_substr = String.prototype.substr;
 String.prototype.substr = function(start, length) {
@@ -439,7 +441,7 @@ TEST(++nTest, expectcall + ':' + expect, actualcall + ':' + actual);
 String.prototype.substr = String.prototype.orig_substr;
 delete String.prototype.orig_substr;
 
-// -------------------------------------------------------------- 
+// --------------------------------------------------------------
 
 String.prototype.orig_substring = String.prototype.substring;
 String.prototype.substring = function(start, end) {
@@ -465,7 +467,7 @@ TEST(++nTest, expectcall + ':' + expect, actualcall + ':' + actual);
 String.prototype.substring = String.prototype.orig_substring;
 delete String.prototype.orig_substring;
 
-// -------------------------------------------------------------- 
+// --------------------------------------------------------------
 
 String.prototype.orig_toLowerCase = String.prototype.toLowerCase;
 String.prototype.toLowerCase = function() {
@@ -491,7 +493,7 @@ TEST(++nTest, expectcall + ':' + expect, actualcall + ':' + actual);
 String.prototype.toLowerCase = String.prototype.orig_toLowerCase;
 delete String.prototype.orig_toLowerCase;
 
-// -------------------------------------------------------------- 
+// --------------------------------------------------------------
 
 String.prototype.orig_toLocaleLowerCase = String.prototype.toLocaleLowerCase;
 String.prototype.toLocaleLowerCase = function() {
@@ -517,7 +519,7 @@ TEST(++nTest, expectcall + ':' + expect, actualcall + ':' + actual);
 String.prototype.toLocaleLowerCase = String.prototype.orig_toLocaleLowerCase;
 delete String.prototype.orig_toLocaleLowerCase;
 
-// -------------------------------------------------------------- 
+// --------------------------------------------------------------
 
 String.prototype.orig_toUpperCase = String.prototype.toUpperCase;
 String.prototype.toUpperCase = function() {
@@ -543,7 +545,7 @@ TEST(++nTest, expectcall + ':' + expect, actualcall + ':' + actual);
 String.prototype.toUpperCase = String.prototype.orig_toUpperCase;
 delete String.prototype.orig_toUpperCase;
 
-// -------------------------------------------------------------- 
+// --------------------------------------------------------------
 
 String.prototype.orig_toLocaleUpperCase = String.prototype.toLocaleUpperCase;
 String.prototype.toLocaleUpperCase = function() {

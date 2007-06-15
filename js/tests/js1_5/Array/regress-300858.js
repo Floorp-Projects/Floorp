@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-300858.js';
 //-----------------------------------------------------------------------------
-var bug = 300858;
+var BUGNUMBER = 300858;
 var summary = 'Do not crash when sorting array with holes';
 var actual = 'No Crash';
 var expect = 'No Crash';
@@ -45,7 +47,7 @@ arry[6]  = 'six';
 arry[8]  = 'eight';
 arry[9]  = 'nine';
 arry[13] = 'thirteen';
-arry[14] = 'fourteen'; 
+arry[14] = 'fourteen';
 arry[21] = 'twentyone';
 arry.sort();
 

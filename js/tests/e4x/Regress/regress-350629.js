@@ -34,13 +34,16 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'regress-350629.js';
+
 //-----------------------------------------------------------------------------
-var bug     = "350629";
+var BUGNUMBER     = "350629";
 var summary = ".toXMLString can include invalid generated prefixes";
 var actual, expect;
 
-printBugNumber(bug);
-printStatus(summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 /**************
  * BEGIN TEST *

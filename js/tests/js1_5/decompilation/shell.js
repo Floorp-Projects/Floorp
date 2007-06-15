@@ -1,1 +1,2 @@
+gTestsubsuite = 'decompilation';
  

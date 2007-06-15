@@ -81,7 +81,6 @@ REQUIRES = xpcom \
 CPPSRCS = \
           nsAnnoProtocolHandler.cpp \
           nsAnnotationService.cpp \
-          nsBookmarksHTML.cpp \
           nsFaviconService.cpp \
           nsNavHistory.cpp \
           nsNavHistoryAutoComplete.cpp \
@@ -102,6 +101,10 @@ EXTRA_DSO_LDOPTS += \
 
 LOCAL_INCLUDES += -I$(srcdir)/../../build
 
-EXTRA_PP_COMPONENTS = nsLivemarkService.js
+ifdef MOZ_PLACES_BOOKMARKS
+EXTRA_PP_COMPONENTS = nsLivemarkService.js \
+                      nsTaggingService.js \
+                      $(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk

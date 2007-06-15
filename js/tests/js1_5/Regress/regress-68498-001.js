@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 15 Feb 2001
  *
  * SUMMARY: var self = global JS object, outside any eval, is DontDelete
@@ -44,32 +46,33 @@
  *
  * Brendan:
  *
- * "Demonstrate that variable statement outside any eval creates a 
+ * "Demonstrate that variable statement outside any eval creates a
  *   DontDelete property of the global object"
  */
-//-------------------------------------------------------------------------------------------------
-var bug = 68498;
-var summary ='Testing that variable statement outside any eval creates'  + 
-                          ' a DontDelete property of the global object';
+//-----------------------------------------------------------------------------
+var gTestfile = 'regress-68498-001.js';
+var BUGNUMBER = 68498;
+var summary ='Testing that variable statement outside any eval creates'  +
+  ' a DontDelete property of the global object';
 
 
 // To be pedantic, use a variable named 'self' to capture the global object -
 // conflicts with window.self in browsers
 var _self = this;
 var actual = (delete _self);
-var expect =false; 
+var expect =false;
 
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 test();
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
 
-function test() 
+function test()
 {
-  enterFunc ('test'); 
-  printBugNumber (bug);
-  printStatus (summary);  
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary); 
   reportCompare(expect, actual, summary);
   exitFunc ('test');
 }

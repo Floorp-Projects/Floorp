@@ -558,16 +558,43 @@ protected:
    * frame at aPushFrom to the end of the array. The frames are put on our overflow
    * list or moved directly to our next-in-flow if one exists.
    */
-  void PushChildren(const nsAutoVoidArray& aFrames, PRInt32 aPushFrom);
+  typedef nsAutoTPtrArray<nsIFrame, 8> FrameArray;
+  void PushChildren(const FrameArray& aFrames, PRInt32 aPushFrom);
 
 public:
-  // put the children frames in the display order (e.g. thead before tbody before tfoot)
-  // and put the non row group frames at the end. Also return the number of row group frames.
-  void OrderRowGroups(nsVoidArray&           aChildren,
-                      PRUint32&              aNumRowGroups,
-                      nsTableRowGroupFrame** aHead      = nsnull,
-                      nsTableRowGroupFrame** aFoot      = nsnull) const;
+  // put the children frames in the display order (e.g. thead before tbodies
+  // before tfoot). This will handle calling GetRowGroupFrame() on the
+  // children, and not append nulls, so the array is guaranteed to contain
+  // nsTableRowGroupFrames.  If there are multiple theads or tfoots, all but
+  // the first one are treated as tbodies instead.
+  typedef nsAutoTPtrArray<nsTableRowGroupFrame, 8> RowGroupArray;
+  void OrderRowGroups(RowGroupArray& aChildren) const;
 
+  // Return the thead, if any
+  nsTableRowGroupFrame* GetTHead() const;
+
+  // Return the tfoot, if any
+  nsTableRowGroupFrame* GetTFoot() const;
+
+protected:
+  // As above, but does NOT actually call GetRowGroupFrame() on the kids, so
+  // returns an array of nsIFrames.  This is to be used when you really want
+  // the flowable kids of the table, not the rowgroups.  This outputs the thead
+  // and tfoot if they happen to be rowgroups.  All the child nsIFrames of the
+  // table that return null if you call GetRowGroupFrame() on them will appear
+  // at the end of the array, after the tfoot, if any.
+  //
+  // aHead and aFoot must not be null.
+  //
+  // @return the number of frames in aChildren which return non-null if you
+  // call GetRowGroupFrame() on them.
+  //
+  // XXXbz why do we really care about the non-rowgroup kids?
+  PRUint32 OrderRowGroups(FrameArray& aChildren,
+                          nsTableRowGroupFrame** aHead,
+                          nsTableRowGroupFrame** aFoot) const;
+
+public:
   // Returns PR_TRUE if there are any cells above the row at
   // aRowIndex and spanning into the row at aRowIndex, the number of
   // effective columns limits the search up to that column
@@ -606,6 +633,12 @@ public:
   PRBool NeedColSpanExpansion() const;
   void SetNeedColSpanExpansion(PRBool aValue);
 
+  /** The GeometryDirty bit is similar to the NS_FRAME_IS_DIRTY frame
+    * state bit, which implies that all descendants are dirty.  The
+    * GeometryDirty still implies that all the parts of the table are
+    * dirty, but resizing optimizations should still apply to the
+    * contents of the individual cells.
+    */
   void SetGeometryDirty() { mBits.mGeometryDirty = PR_TRUE; }
   void ClearGeometryDirty() { mBits.mGeometryDirty = PR_FALSE; }
   PRBool IsGeometryDirty() const { return mBits.mGeometryDirty; }

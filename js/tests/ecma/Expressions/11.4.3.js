@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '11.4.3.js';
+
 /**
    File Name:          typeof_1.js
    ECMA Section:       11.4.3 typeof operator

@@ -42,6 +42,7 @@
 #include "nsCOMArray.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsXBLInsertionPoint
 {
@@ -58,6 +59,8 @@ public:
   }
 
   nsrefcnt Release();
+
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsXBLInsertionPoint)
 
   already_AddRefed<nsIContent> GetInsertionParent();
   PRInt32 GetInsertionIndex() { return mIndex; }

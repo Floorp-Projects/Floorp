@@ -35,9 +35,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- /**
-        File Name:      array-002.js
-        Description:
+
+gTestfile = 'array-002.js';
+
+/**
+   File Name:      array-002.js
+   Description:
 
    JavaArrays should have a length property that specifies the number of
    elements in the array.
@@ -75,7 +78,7 @@ var byte_array = ( new java.lang.String("ABCDEFGHIJKLMNOPQRSTUVWXYZ") ).getBytes
 java_array[i] = new JavaValue( byte_array );
 test_array[i] = new TestValue( "( new java.lang.String('ABCDEFGHIJKLMNOPQRSTUVWXYZ') ).getBytes()",
 			       "ABCDEFGHIJKLMNOPQRSTUVWXYZ".length
-    );
+  );
 i++;
 
 
@@ -89,31 +92,31 @@ i++;
 
 
 for ( i = 0; i < java_array.length; i++ ) {
-    CompareValues( java_array[i], test_array[i] );
+  CompareValues( java_array[i], test_array[i] );
 }
 
 test();
 
 function CompareValues( javaval, testval ) {
-    //  Check length
-    new TestCase( SECTION,
-		  "("+ testval.description +").length",
-		  testval.value,
-		  javaval.length );
+  //  Check length
+  new TestCase( SECTION,
+		"("+ testval.description +").length",
+		testval.value,
+		javaval.length );
 }
 function JavaValue( value ) {
-    this.value  = value;
-    this.length = value.length;
-    this.type   = typeof value;
-    this.classname = this.value.toString();
+  this.value  = value;
+  this.length = value.length;
+  this.type   = typeof value;
+  this.classname = this.value.toString();
 
-    return this;
+  return this;
 }
 function TestValue( description, value ) {
-    this.description = description;
-    this.length = value
-	this.value = value;
-    this.type =  E_TYPE;
-    this.classname = E_CLASS;
-    return this;
+  this.description = description;
+  this.length = value
+    this.value = value;
+  this.type =  E_TYPE;
+  this.classname = E_CLASS;
+  return this;
 }

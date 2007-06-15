@@ -65,6 +65,7 @@ REQUIRES  = xpcom \
             xpinstall \
             embed_base \
             alerts \
+            storage \
             $(NULL)
 
 CPPSRCS   = \

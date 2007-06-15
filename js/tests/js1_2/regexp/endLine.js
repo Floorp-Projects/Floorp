@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'endLine.js';
+
 /**
    Filename:     endLine.js
    Description:  'Tests regular expressions containing $'

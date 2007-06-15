@@ -117,6 +117,8 @@
 #include "nsIScrollableView.h"
 #include "nsFrameManager.h"
 #include "nsRegion.h"
+
+#include "stdio.h"
 #endif
 
 #ifdef XP_WIN
@@ -1081,6 +1083,11 @@ nsCanvasRenderingContext2D::GetInputStream(const nsACString& aMimeType,
     nsCString conid(NS_LITERAL_CSTRING("@mozilla.org/image/encoder;2?type="));
     conid += aMimeType;
 
+    if (cairo_status(mCairo)) {
+        fprintf (stderr, "Cairo error! %d %s\n", cairo_status(mCairo), cairo_status_to_string(cairo_status(mCairo)));
+        fflush (stderr);
+    }
+
     nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(conid.get());
     if (!encoder)
         return NS_ERROR_FAILURE;
@@ -1091,7 +1098,7 @@ nsCanvasRenderingContext2D::GetInputStream(const nsACString& aMimeType,
                               imgIEncoder::INPUT_FORMAT_HOSTARGB,
                               aEncoderOptions);
     } else {
-        nsAutoArrayPtr<PRUint8> imageBuffer(new PRUint8[mWidth * mHeight * 4]);
+        nsAutoArrayPtr<PRUint8> imageBuffer(new (std::nothrow) PRUint8[mWidth * mHeight * 4]);
         if (!imageBuffer)
             return NS_ERROR_FAILURE;
 
@@ -2667,10 +2674,11 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
 
         rv = rootFrame->BuildDisplayListForStackingContext(&builder, r, &list);      
         if (NS_SUCCEEDED(rv)) {
-            float t2p = presContext->AppUnitsPerDevPixel();
+            nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
             // Ensure that r.x,r.y gets drawn at (0,0)
             mThebesContext->Save();
-            mThebesContext->Translate(gfxPoint(-r.x*t2p, -r.y*t2p));
+            mThebesContext->Translate(gfxPoint(-NSAppUnitsToFloatPixels(r.x,appUnitsPerDevPixel),
+                                               -NSAppUnitsToFloatPixels(r.y,appUnitsPerDevPixel)));
           
             nsIDeviceContext* devCtx = presContext->DeviceContext();
             nsCOMPtr<nsIRenderingContext> rc;
@@ -2875,7 +2883,7 @@ nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
 
     // Create a temporary surface to hold the full-size image in cairo
     // image format.
-    nsAutoArrayPtr<PRUint8> tmpBuf(new PRUint8[aSurfaceSize.width*aSurfaceSize.height*4]);
+    nsAutoArrayPtr<PRUint8> tmpBuf(new (std::nothrow) PRUint8[aSurfaceSize.width*aSurfaceSize.height*4]);
     if (!tmpBuf) {
         aBlackSurface->Unlock();
         return NS_ERROR_OUT_OF_MEMORY;
@@ -3008,7 +3016,7 @@ nsCanvasRenderingContext2D::GetImageData()
     int surfaceDataOffset = (surfaceDataStride * y) + (x * 4);
 
     if (!surfaceData) {
-        allocatedSurfaceData = new PRUint8[w * h * 4];
+        allocatedSurfaceData = new (std::nothrow) PRUint8[w * h * 4];
         if (!allocatedSurfaceData)
             return NS_ERROR_OUT_OF_MEMORY;
         surfaceData = allocatedSurfaceData.get();
@@ -3031,7 +3039,7 @@ nsCanvasRenderingContext2D::GetImageData()
     if (len > (((PRUint32)0xfff00000)/sizeof(jsval)))
         return NS_ERROR_INVALID_ARG;
 
-    nsAutoArrayPtr<jsval> jsvector(new jsval[w * h * 4]);
+    nsAutoArrayPtr<jsval> jsvector(new (std::nothrow) jsval[w * h * 4]);
     if (!jsvector)
         return NS_ERROR_OUT_OF_MEMORY;
     jsval *dest = jsvector.get();
@@ -3143,7 +3151,7 @@ nsCanvasRenderingContext2D::PutImageData()
         arrayLen < (jsuint)(w * h * 4))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
-    nsAutoArrayPtr<PRUint8> imageBuffer(new PRUint8[w * h * 4]);
+    nsAutoArrayPtr<PRUint8> imageBuffer(new (std::nothrow) PRUint8[w * h * 4]);
     cairo_surface_t *imgsurf;
     PRUint8 *imgPtr = imageBuffer.get();
     jsval vr, vg, vb, va;

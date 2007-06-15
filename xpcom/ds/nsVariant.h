@@ -43,6 +43,8 @@
 #include "nsStringFwd.h"
 #include "xpt_struct.h"
 
+struct nsCycleCollectionTraversalCallback;
+
 /** 
  * Map the nsAUTF8String, nsUTF8String classes to the nsACString and
  * nsCString classes respectively for now.  These defines need to be removed

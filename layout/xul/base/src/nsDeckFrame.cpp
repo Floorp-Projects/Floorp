@@ -80,6 +80,12 @@ nsDeckFrame::nsDeckFrame(nsIPresShell* aPresShell,
   SetLayoutManager(layout);
 }
 
+nsIAtom*
+nsDeckFrame::GetType() const
+{
+  return nsGkAtoms::deckFrame;
+}
+
 NS_IMETHODIMP
 nsDeckFrame::AttributeChanged(PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
@@ -181,7 +187,7 @@ nsDeckFrame::GetSelectedIndex()
 nsIBox* 
 nsDeckFrame::GetSelectedBox()
 {
-  return (mIndex >= 0) ? GetBoxAt(mIndex) : nsnull; 
+  return (mIndex >= 0) ? mFrames.FrameAt(mIndex) : nsnull; 
 }
 
 NS_IMETHODIMP

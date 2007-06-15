@@ -62,9 +62,9 @@ nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 nsOSHelperAppService::~nsOSHelperAppService()
 {}
 
-NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
+nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
 {
-	LOG(("-- nsOSHelperAppService::ExternalProtocolHandlerExists for '%s'\n",
+	LOG(("-- nsOSHelperAppService::OSProtocolHandlerExists for '%s'\n",
 	     aProtocolScheme));
 	// look up the protocol scheme in the MIME database
 	*aHandlerExists = PR_FALSE;

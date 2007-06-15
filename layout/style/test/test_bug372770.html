@@ -65,7 +65,7 @@ for (var i = 0; i <= 100; ++i) {
     // Bug 372783 means this doesn't round-trip quite right
     todo(style1.color == color1,
        "Inline style color roundtripping failed at opacity " + i);
-    todo(style1.background == color2,
+    todo(style1.backgroundColor == color2,
        "Inline style background roundtripping failed at opacity " + i);
     todo(style2.color == color2,
        "Rule style color roundtripping failed at opacity " + i);
@@ -77,7 +77,7 @@ for (var i = 0; i <= 100; ++i) {
 
   is(style1.color, color1,
      "Inline style color roundtripping failed at opacity " + i);
-  is(style1.background, color2,
+  is(style1.backgroundColor, color2,
      "Inline style background roundtripping failed at opacity " + i);
   is(style2.color, color2,
      "Rule style color roundtripping failed at opacity " + i);

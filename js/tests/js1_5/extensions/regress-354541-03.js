@@ -35,14 +35,16 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-354541-03.js';
 //-----------------------------------------------------------------------------
-var bug = 354541;
+var BUGNUMBER = 354541;
 var summary = 'Regression to standard class constructors in case labels';
 var actual = '';
 var expect = '';
 
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary + ': top level');
 
 String.prototype.trim = function() { print('hallo'); };
@@ -54,13 +56,16 @@ const Sp = String.prototype;
 
 expect = 'hallo';
 var expectStringInvariant = true
-var actualStringInvariant;
+  var actualStringInvariant;
 var expectStringPrototypeInvariant = true;
 var actualStringPrototypeInvariant;
 
 if (typeof Script == 'undefined')
 {
   print('Test skipped. Script not defined.');
+  reportCompare("Script not defined, Test skipped.",
+                "Script not defined, Test skipped.",
+                summary);
 }
 else
 {
@@ -74,11 +79,11 @@ else
     actual = ex + '';
   }
   reportCompare(expect, actual, 'trim() returned');
-  reportCompare(expectStringInvariant, actualStringInvariant, 
+  reportCompare(expectStringInvariant, actualStringInvariant,
                 'String invariant');
-  reportCompare(expectStringPrototypeInvariant, 
+  reportCompare(expectStringPrototypeInvariant,
                 actualStringPrototypeInvariant,
                 'String.prototype invariant');
 
 }
-  
+ 

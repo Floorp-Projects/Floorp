@@ -287,10 +287,12 @@ var PlacesOrganizer = {
             Ci.nsIFilePicker.modeOpen);
     fp.appendFilters(Ci.nsIFilePicker.filterHTML | Ci.nsIFilePicker.filterAll);
     if (fp.show() != Ci.nsIFilePicker.returnCancel) {
-      var ioService = Cc["@mozilla.org/network/io-service;1"].
-                      getService(Ci.nsIIOService);
-      if (fp.file)
-        PlacesUtils.bookmarks.importBookmarksHTML(ioService.newFileURI(fp.file));
+      if (fp.file) {
+        var importer = Cc["@mozilla.org/browser/places/import-export-service;1"].
+                       getService(Ci.nsIPlacesImportExportService);
+        var file = fp.file.QueryInterface(Ci.nsILocalFile);
+        importer.importHTMLFromFile(file, false);
+      }
     }
   },
 
@@ -304,8 +306,11 @@ var PlacesOrganizer = {
             Ci.nsIFilePicker.modeSave);
     fp.appendFilters(Ci.nsIFilePicker.filterHTML);
     fp.defaultString = "bookmarks.html";
-    if (fp.show() != Ci.nsIFilePicker.returnCancel)
-      PlacesUtils.bookmarks.exportBookmarksHTML(fp.file);
+    if (fp.show() != Ci.nsIFilePicker.returnCancel) {
+      var exporter = Cc["@mozilla.org/browser/places/import-export-service;1"].
+                     getService(Ci.nsIPlacesImportExportService);
+      exporter.exportHTMLToFile(fp.file);
+    }
   },
 
   updateStatusBarForView: function PO_updateStatusBarForView(aView) {
@@ -314,8 +319,7 @@ var PlacesOrganizer = {
     if (selectedNode) {
       if (PlacesUtils.nodeIsFolder(selectedNode)) {
         var childsCount =
-          PlacesUtils.getFolderContents(asFolder(selectedNode).folderId)
-                     .childCount;
+          PlacesUtils.getFolderContents(selectedNode.itemId).childCount;
         statusText = PlacesUtils.getFormattedString("status_foldercount",
                                                     [childsCount]);
       }
@@ -359,7 +363,7 @@ var PlacesSearchBox = {
 
     switch (PlacesSearchBox.filterCollection) {
     case "collection":
-      var folderId = asFolder(content.getResult().root).folderId;
+      var folderId = content.getResult().root.itemId;
       content.applyFilter(filterString, true, folderId, OptionsFilter);
       PO.setHeaderText(PO.HEADER_TYPE_SEARCH, filterString);
       break;
@@ -1035,7 +1039,7 @@ var ViewMenu = {
         if (column.primary)
           menuitem.setAttribute("disabled", "true");
         // Items for visible columns are checked. 
-        if (column.hidden)
+        if (!column.hidden)
           menuitem.setAttribute("checked", "true");
       }
       if (pivot)
@@ -1093,11 +1097,13 @@ var ViewMenu = {
     
     if (element.getAttribute("checked") == "true") {
       column.removeAttribute("hidden");
-      splitter.removeAttribute("hidden");
+      if (splitter)
+        splitter.removeAttribute("hidden");
     }
     else {
       column.setAttribute("hidden", "true");
-      splitter.setAttribute("hidden", "true");
+      if (splitter)
+        splitter.setAttribute("hidden", "true");
     }    
   },
 
@@ -1132,6 +1138,7 @@ var ViewMenu = {
     var result = document.getElementById("placeContent").getResult();
     if (!aColumnID && !aDirection) {
       result.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
+      OptionsFilter.update(result);
       return;
     }
 
@@ -1144,35 +1151,48 @@ var ViewMenu = {
       aColumnID = sortColumn ? sortColumn.id : "title";
 
     var sortingMode;
+    var sortingAnnotation = "";
+    const NHQO = Ci.nsINavHistoryQueryOptions;
     switch (aColumnID) {
       case "title":
-        if (aDirection == "descending")
-          sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_DESCENDING;
-        else
-          sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING;
+        sortingMode = aDirection == "descending" ?
+          NHQO.SORT_BY_TITLE_DESCENDING : NHQO.SORT_BY_TITLE_ASCENDING;
         break;
       case "url":
-        if (aDirection == "descending")
-          sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_URI_DESCENDING;
-        else
-          sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_URI_ASCENDING;
+        sortingMode = aDirection == "descending" ?
+          NHQO.SORT_BY_URI_DESCENDING : NHQO.SORT_BY_URI_ASCENDING;
         break;
       case "date":
-        if (aDirection == "descending")
-          sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
-        else
-          sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_ASCENDING;
+        sortingMode = aDirection == "descending" ?
+          NHQO.SORT_BY_DATE_DESCENDING : NHQO.SORT_BY_DATE_ASCENDING;
         break;      
       case "visitCount":
-        if (aDirection == "descending")
-          sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING;
-        else
-          sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_ASCENDING;
+        sortingMode = aDirection == "descending" ?
+          NHQO.SORT_BY_VISITCOUNT_DESCENDING : NHQO.SORT_BY_VISITCOUNT_ASCENDING;
+        break;
+      case "keyword":
+        sortingMode = aDirection == "descending" ?
+          NHQO.SORT_BY_KEYWORD_DESCENDING : NHQO.SORT_BY_KEYWORD_ASCENDING;
+        break;
+      case "description":
+        sortingAnnotation = DESCRIPTION_ANNO;
+        sortingMode = aDirection == "descending" ?
+          NHQO.SORT_BY_ANNOTATION_DESCENDING : NHQO.SORT_BY_ANNOTATION_ASCENDING;
+        break;
+      case "dateAdded":
+        sortingMode = aDirection == "descending" ?
+          NHQO.SORT_BY_DATEADDED_DESCENDING : NHQO.SORT_BY_DATEADDED_ASCENDING;
+        break;
+      case "lastModified":
+        sortingMode = aDirection == "descending" ?
+          NHQO.SORT_BY_LASTMODIFIED_DESCENDING : NHQO.SORT_BY_LASTMODIFIED_ASCENDING;
         break;
       default:
         throw("Invalid Column");
     }
+    result.sortingAnnotation = sortingAnnotation;
     result.sortingMode = sortingMode;
+    OptionsFilter.update(result);
   }
 };
 

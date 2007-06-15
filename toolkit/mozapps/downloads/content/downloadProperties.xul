@@ -54,7 +54,7 @@
         style="width: 30em;"
         buttons="accept" acceptbuttontext="&acceptButton.label;">
 
-  <script type="application/x-javascript" src="chrome://mozapps/content/downloads/downloadProperties.js"/>
+  <script type="application/javascript" src="chrome://mozapps/content/downloads/downloadProperties.js"/>
 
   <keyset id="downloadInfoKeys">
     <key id="key_close"   key="&cmd.close.commandKey;" oncommand="window.close()"     modifiers="accel"/>

@@ -63,6 +63,8 @@ MOCHI_TESTS = \
 		test_bug_360493_2.html \
 		$(NULL)
 
+XPCSHELL_TESTS  = unit
+
 # This test doesn't pass because we can't ensure a cross-platform
 # event that occurs between DOMContentLoaded and Pageload
 # test_bug_221634.html

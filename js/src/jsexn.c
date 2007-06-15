@@ -1106,7 +1106,8 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
 }
 
 const JSErrorFormatString*
-js_GetLocalizedErrorMessage(JSContext* cx, void *userRef, const char *locale, const uintN errorNumber)
+js_GetLocalizedErrorMessage(JSContext* cx, void *userRef, const char *locale,
+                            const uintN errorNumber)
 {
     const JSErrorFormatString *errorString = NULL;
 

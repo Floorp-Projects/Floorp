@@ -173,14 +173,8 @@
 #include "nsContentPolicyUtils.h"
 #include "nsContentErrors.h"
 
-#ifdef XP_UNIX
-#if defined(MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
+#if defined(XP_UNIX) && defined(MOZ_WIDGET_GTK2)
 #include <gdk/gdkx.h> // for GDK_DISPLAY()
-#elif defined(MOZ_WIDGET_QT)
-#include <qwindowdefs.h> // for qt_xdisplay()
-#elif defined(MOZ_WIDGET_XLIB)
-#include "xlibrgb.h" // for xlib_rgb_get_display()
-#endif
 #endif
 
 #ifdef XP_MACOSX
@@ -317,7 +311,7 @@ NS_IMETHODIMP nsPluginDocReframeEvent::Run() {
   for (PRUint32 i = 0; i < c; i++) {
     nsCOMPtr<nsIDocument> doc (do_QueryElementAt(mDocs, i));
     if (doc) {
-      nsIPresShell *shell = doc->GetShellAt(0);
+      nsIPresShell *shell = doc->GetPrimaryShell();
 
       // if this document has a presentation shell, then it has frames and can be reframed
       if (shell) {
@@ -2635,12 +2629,8 @@ NS_IMETHODIMP nsPluginHostImpl::GetValue(nsPluginManagerVariable aVariable, void
 #if defined(XP_UNIX) && !defined(XP_MACOSX) && defined(MOZ_X11)
   if (nsPluginManagerVariable_XDisplay == aVariable) {
     Display** value = NS_REINTERPRET_CAST(Display**, aValue);
-#if defined(MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
+#if defined (MOZ_WIDGET_GTK2)
     *value = GDK_DISPLAY();
-#elif defined(MOZ_WIDGET_QT)
-    *value = qt_xdisplay();
-#elif defined(MOZ_WIDGET_XLIB)
-    *value = xxlib_rgb_get_display(xxlib_find_handle(XXLIBRGB_DEFAULT_HANDLE));
 #endif
     if (!(*value)) {
       return NS_ERROR_FAILURE;
@@ -5819,6 +5809,8 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
         nsCOMPtr<nsIScriptChannel> scriptChannel(do_QueryInterface(channel));
         if (scriptChannel) {
           scriptChannel->SetExecutionPolicy(nsIScriptChannel::EXECUTE_NORMAL);
+          // Plug-ins seem to depend on javascript: URIs running synchronously
+          scriptChannel->SetExecuteAsync(PR_FALSE);
         }
       }
 
@@ -6800,7 +6792,7 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
     if (owner) {
       nsPluginWindow    *window = nsnull;
       owner->GetWindow(window);
-#if defined (MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
+#if defined (MOZ_WIDGET_GTK2)
       // Should call GetPluginPort() here.
       // This part is copied from nsPluginInstanceOwner::GetPluginPort(). 
       nsCOMPtr<nsIWidget> widget;

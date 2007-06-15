@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-348532.js';
 //-----------------------------------------------------------------------------
-var bug = 348532;
+var BUGNUMBER = 348532;
 var summary = 'Do not overflow int when constructing Error.stack';
 var actual = '';
 var expect = '';
@@ -48,14 +50,14 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   expectExitCode(0);
   expectExitCode(3);
 
   actual = 0;
-  
+ 
   // construct string of 1<<23 characters
   var s = Array((1<<23)+1).join('x');
 

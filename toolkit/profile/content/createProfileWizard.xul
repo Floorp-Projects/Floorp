@@ -20,8 +20,7 @@
   <stringbundle id="bundle_profileManager"
                 src="chrome://mozapps/locale/profile/profileSelection.properties"/>
 
-  <script type="application/x-javascript"
-          src="chrome://mozapps/content/profile/createProfileWizard.js"/>
+  <script type="application/javascript" src="chrome://mozapps/content/profile/createProfileWizard.js"/>
 
   <wizardpage id="explanation" onpageshow="enableNextButton();">
     <description>&profileCreationExplanation_1.text;</description>

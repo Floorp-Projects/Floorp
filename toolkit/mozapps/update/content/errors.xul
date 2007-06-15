@@ -49,7 +49,7 @@
         style="width: 40em;"
         buttons="cancel">
 
-  <script type="application/x-javascript">
+  <script type="application/javascript">
   <![CDATA[
     function LOG(string) 
     {

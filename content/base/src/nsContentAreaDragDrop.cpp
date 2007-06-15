@@ -50,7 +50,6 @@
 #include "nsISelection.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMEventReceiver.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMMouseEvent.h"
@@ -98,6 +97,7 @@
 #include "nsContentCID.h"
 #include "nsISelectionController.h"
 #include "nsFrameSelection.h"
+#include "nsIDOMEventTarget.h"
 
 // private clipboard data flavors for html copy, used by editor when pasting
 #define kHTMLContext   "text/_moz_htmlcontext"
@@ -190,9 +190,9 @@ nsContentAreaDragDrop::HookupTo(nsIDOMEventTarget *inAttachPoint,
                                 nsIWebNavigation* inNavigator)
 {
   NS_ASSERTION(inAttachPoint, "Can't hookup Drag Listeners to NULL receiver");
-  mEventReceiver = do_QueryInterface(inAttachPoint);
-  NS_ASSERTION(mEventReceiver,
-               "Target doesn't implement nsIDOMEventReceiver as needed");
+  mEventTarget = do_QueryInterface(inAttachPoint);
+  NS_ASSERTION(mEventTarget,
+               "Target doesn't implement nsPIDOMEventTarget as needed");
   mNavigator = inNavigator;
 
   return AddDragListener();
@@ -216,10 +216,10 @@ nsContentAreaDragDrop::AddDragListener()
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-  if ( mEventReceiver ) {
+  if (mEventTarget) {
     nsIDOMDragListener *pListener = NS_STATIC_CAST(nsIDOMDragListener *, this);
-    rv = mEventReceiver->AddEventListenerByIID(pListener,
-                                               NS_GET_IID(nsIDOMDragListener));
+    rv = mEventTarget->AddEventListenerByIID(pListener,
+                                             NS_GET_IID(nsIDOMDragListener));
     if (NS_SUCCEEDED(rv))
       mListenerInstalled = PR_TRUE;
   }
@@ -238,14 +238,14 @@ nsContentAreaDragDrop::RemoveDragListener()
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-  if (mEventReceiver) {
+  if (mEventTarget) {
     nsIDOMDragListener *pListener = NS_STATIC_CAST(nsIDOMDragListener *, this);
     rv =
-      mEventReceiver->RemoveEventListenerByIID(pListener,
-                                               NS_GET_IID(nsIDOMDragListener));
+      mEventTarget->RemoveEventListenerByIID(pListener,
+                                             NS_GET_IID(nsIDOMDragListener));
     if (NS_SUCCEEDED(rv))
       mListenerInstalled = PR_FALSE;
-    mEventReceiver = nsnull;
+    mEventTarget = nsnull;
   }
 
   return rv;
@@ -805,7 +805,7 @@ nsContentAreaDragDrop::DragGesture(nsIDOMEvent* inMouseEvent)
       nsCOMPtr<nsIContent> targetContent(do_QueryInterface(target));
       nsIDocument* doc = targetContent->GetCurrentDoc();
       if (doc) {
-        nsIPresShell* presShell = doc->GetShellAt(0);
+        nsIPresShell* presShell = doc->GetPrimaryShell();
         if (presShell) {
           nsISelection* selection =
             presShell->GetCurrentSelection(nsISelectionController::SELECTION_NORMAL);

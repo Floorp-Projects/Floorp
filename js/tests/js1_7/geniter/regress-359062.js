@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-359062.js';
 //-----------------------------------------------------------------------------
-var bug = 359062;
+var BUGNUMBER = 359062;
 var summary = 'Access generator local variables from nested functions';
 var actual = '';
 var expect = '';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   expect = "Generator string";
 
   var scope = "Global";

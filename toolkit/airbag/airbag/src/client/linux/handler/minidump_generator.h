@@ -32,6 +32,8 @@
 #ifndef CLIENT_LINUX_HANDLER_MINIDUMP_GENERATOR_H__
 #define CLIENT_LINUX_HANDLER_MINIDUMP_GENERATOR_H__
 
+#include <stdint.h>
+
 #include "google_breakpad/common/breakpad_types.h"
 #include "processor/scoped_ptr.h"
 
@@ -54,7 +56,8 @@ class MinidumpGenerator {
    // Write minidump.
    bool WriteMinidumpToFile(const char *file_pathname,
                             int signo,
-                            const struct sigcontext *sig_ctx) const;
+                            uintptr_t sighandler_ebp,
+                            struct sigcontext **sig_ctx) const;
   private:
    // Allocate memory for stack.
    void AllocateStack();

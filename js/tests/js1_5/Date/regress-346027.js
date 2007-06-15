@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-346027.js';
 //-----------------------------------------------------------------------------
-var bug = 346027;
+var BUGNUMBER = 346027;
 var summary = 'Date.prototype.setFullYear()';
 var actual = '';
 var expect = true;
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   var d = new Date();
   d.setFullYear();
   actual = isNaN(d.getFullYear());

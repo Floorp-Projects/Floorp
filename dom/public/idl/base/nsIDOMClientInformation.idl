@@ -37,7 +37,9 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(abbb51a4-be75-4d7f-bd4c-373fd7b52f85)]
+interface nsIDOMOfflineResourceList;
+
+[scriptable, uuid(609439fa-63e4-4f71-9512-904867f154e7)]
 interface nsIDOMClientInformation : nsISupports
 {
   /**
@@ -48,6 +50,8 @@ interface nsIDOMClientInformation : nsISupports
    */
   void registerContentHandler(in DOMString mimeType, in DOMString uri, in DOMString title);
   void registerProtocolHandler(in DOMString protocol, in DOMString uri, in DOMString title);
+
+  readonly attribute nsIDOMOfflineResourceList offlineResources;
 };
 
 

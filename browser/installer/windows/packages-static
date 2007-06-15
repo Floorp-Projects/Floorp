@@ -16,7 +16,9 @@ bin/.autoreg
 bin\chrome\@AB_CD@.jar
 bin\chrome\@AB_CD@.manifest
 bin\defaults\pref\firefox-l10n.js
+bin\defaults\existing-profile-defaults.js
 bin\browserconfig.properties
+bin\old-homepage-default.properties
 bin\searchplugins\*
 bin\defaults\profile\bookmarks.html
 bin\defaults\profile\localstore.rdf
@@ -64,6 +66,7 @@ bin\components\autocomplete.xpt
 bin\components\autoconfig.xpt
 bin\components\bookmarks.xpt
 bin\components\browsercompsbase.xpt
+bin\components\browserplaces.xpt
 bin\components\browsersearch.xpt
 bin\components\browser-feeds.xpt
 bin\components\caps.xpt
@@ -88,6 +91,7 @@ bin\components\dom_core.xpt
 bin\components\dom_css.xpt
 bin\components\dom_events.xpt
 bin\components\dom_html.xpt
+bin\components\dom_offline.xpt
 bin\components\dom_range.xpt
 bin\components\dom_sidebar.xpt
 bin\components\dom_storage.xpt
@@ -105,19 +109,17 @@ bin\components\exthandler.xpt
 bin\components\fastfind.xpt
 bin\components\feeds.xpt
 bin\components\find.xpt
+bin\components\fuel.xpt
 bin\components\gfx.xpt
-bin\components\helperAppDlg.xpt
 bin\components\history.xpt
 bin\components\htmlparser.xpt
 bin\components\imglib2.xpt
 bin\components\imgicon.xpt
 bin\components\intl.xpt
-bin\components\intlcmpt.xpt
 bin\components\jar.xpt
 bin\components\jsconsole-clhandler.js
 bin\components\jsd3250.dll
 bin\components\jsdservice.xpt
-bin\components\jsurl.xpt
 bin\components\layout_base.xpt
 bin\components\layout_printing.xpt
 bin\components\layout_xul.xpt
@@ -139,25 +141,21 @@ bin\components\necko_dns.xpt
 bin\components\necko_file.xpt
 bin\components\necko_ftp.xpt
 bin\components\necko_http.xpt
-bin\components\necko_jar.xpt
 bin\components\necko_res.xpt
 bin\components\necko_socket.xpt
 bin\components\necko_viewsource.xpt
 bin\components\oji.xpt
-bin\components\passwordmgr.xpt
+bin\components\loginmgr.xpt
 bin\components\places.xpt
 bin\components\plugin.xpt
 bin\components\pref.xpt
 bin\components\prefetch.xpt
-bin\components\prefmigr.xpt
 bin\components\profile.xpt
 bin\components\progressDlg.xpt
 bin\components\proxyObject.xpt
 bin\components\rdf.xpt
-bin\components\related.xpt
 bin\components\satchel.xpt
 bin\components\saxparser.xpt
-bin\components\search.xpt
 bin\components\shistory.xpt
 bin\components\signonviewer.xpt
 bin\components\storage.xpt
@@ -168,7 +166,6 @@ bin\components\ucnative.xpt
 bin\components\uconv.xpt
 bin\components\unicharutil.xpt
 bin\components\uriloader.xpt
-bin\components\util.xpt
 bin\components\wallet.xpt
 bin\components\walleteditor.xpt
 bin\components\walletpreview.xpt
@@ -196,6 +193,7 @@ bin\components\xultmpl.xpt
 bin\components\FeedProcessor.js
 bin\components\FeedConverter.js
 bin\components\FeedWriter.js
+bin\components\fuelApplication.js
 bin\components\WebContentConverter.js
 bin\components\nsBrowserContentHandler.js
 bin\components\nsBrowserGlue.js
@@ -212,6 +210,10 @@ bin\components\nsExtensionManager.js
 bin\components\nsUpdateService.js
 bin\components\nsMicrosummaryService.js
 bin\components\nsPostUpdateWin.js
+bin\components\nsLoginInfo.js
+bin\components\nsLoginManager.js
+bin\components\nsLoginManagerPrompter.js
+bin\components\storage-Legacy.js
 bin\components\pluginGlue.js
 bin\components\extensions.xpt
 bin\components\update.xpt
@@ -225,6 +227,7 @@ bin\components\browserdirprovider.dll
 bin\components\brwsrcmp.dll
 bin\components\txEXSLTRegExFunctions.js
 bin\components\nsLivemarkService.js
+bin\components\nsTaggingService.js
 bin\components\nsDefaultCLH.js
 
 ; Safe Browsing
@@ -267,7 +270,6 @@ bin\res\ua.css
 bin\res\html.css
 bin\res\quirk.css
 bin\res\forms.css
-bin\res\platform-forms.css
 bin\res\EditorOverride.css
 bin\res\table-add-column-after-active.gif
 bin\res\table-add-column-after-hover.gif
@@ -305,9 +307,7 @@ bin\res\language.properties
 bin\res\entityTables\*
 
 ; svg
-bin\gksvggdiplus.dll
 bin\res\svg.css
-bin\res\svg.properties
 bin\components\dom_svg.xpt
 
 ; [Personal Security Manager]
@@ -323,7 +323,6 @@ bin\softokn3.dll
 bin\freebl3.chk
 bin\freebl3.dll
 bin\ssl3.dll
-bin\chrome\pipnss.jar
 bin\chrome\pippki.jar
 bin\chrome\pippki.manifest
 

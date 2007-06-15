@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-353249.js';
 //-----------------------------------------------------------------------------
-var bug = 353249;
+var BUGNUMBER = 353249;
 var summary = 'regression test for bug 353249';
 var actual = '';
 var expect = '';
@@ -48,11 +50,11 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
-  var f = (function () { let (x) <x/>.(1) < let (z) eval('3'); 
-      for (x in this) {} });
+ 
+  var f = (function () { let (x) <x/>.(1) < let (z) eval('3');
+	     for (x in this) {} });
 
   expect = 'function () { (let (x) <x/>.((1)) < (let (z) eval("3"))); ' +
     'for (x in this) {} }';

@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '10.1.4-4.js';
+
 /**
    File Name:          10.1.4-1.js
    ECMA Section:       10.1.4 Scope Chain and Identifier Resolution
@@ -76,34 +78,34 @@ startTest();
 
 writeHeaderToLog( SECTION + " Scope Chain and Identifier Resolution");
 
-new TestCase( "SECTION", 
+new TestCase( "SECTION",
 	      "with MyObject, eval should be [object Global].eval " );
 test();
 
 function test() {
-  for ( tc=0; tc < testcases.length; tc++ ) {
+  for ( gTc=0; gTc < gTestcases.length; gTc++ ) {
 
     var MYOBJECT = new MyObject();
     var INPUT = 2;
-    testcases[tc].description += ( INPUT +"" );
+    gTestcases[gTc].description += ( INPUT +"" );
 
     with ( MYOBJECT ) {
       eval( INPUT );
     }
 
-    testcases[tc].actual = eval( INPUT );
-    testcases[tc].expect = INPUT;
+    gTestcases[gTc].actual = eval( INPUT );
+    gTestcases[gTc].expect = INPUT;
 
-    testcases[tc].passed = writeTestCaseResult(
-      testcases[tc].expect,
-      testcases[tc].actual,
-      testcases[tc].description +" = "+
-      testcases[tc].actual );
+    gTestcases[gTc].passed = writeTestCaseResult(
+      gTestcases[gTc].expect,
+      gTestcases[gTc].actual,
+      gTestcases[gTc].description +" = "+
+      gTestcases[gTc].actual );
 
-    testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
+    gTestcases[gTc].reason += ( gTestcases[gTc].passed ) ? "" : "wrong value ";
   }
   stopTest();
-  return ( testcases );
+  return ( gTestcases );
 }
 
 function MyObject() {

@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.4.9.js';
+
 START("13.4.4.9 - XML comments()");
 
 TEST(1, true, XML.prototype.hasOwnProperty("comments"));
@@ -53,7 +55,7 @@ x =
     <!-- comment two -->
     some text
     </bravo>
-</alpha>;    
+</alpha>;   
 
 TEST_XML(2, "<!-- comment one -->", x.comments());
 TEST_XML(3, "<!-- comment two -->", x..*.comments());

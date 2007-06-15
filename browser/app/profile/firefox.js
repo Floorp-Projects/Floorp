@@ -187,6 +187,7 @@ pref("browser.urlbar.matchOnlyTyped", false);
 pref("browser.chrome.site_icons", true);
 pref("browser.chrome.favicons", true);
 pref("browser.formfill.enable", true);
+pref("browser.warnOnQuit", true);
 
 pref("browser.download.useDownloadDir", true);
 pref("browser.download.folderList", 0);
@@ -251,6 +252,7 @@ pref("browser.tabs.opentabfor.middleclick", true);
 pref("browser.tabs.loadDivertedInBackground", false);
 pref("browser.tabs.loadBookmarksInBackground", false);
 pref("browser.tabs.tabMinWidth", 100);
+pref("browser.tabs.tabMaxWidth", 250);
 pref("browser.tabs.tabClipWidth", 140);
 
 // Where to show tab close buttons:
@@ -275,6 +277,9 @@ pref("browser.bookmarks.sort.resource", "rdf:http://home.netscape.com/NC-rdf#Nam
 pref("dom.disable_open_during_load",              true);
 #ifdef DEBUG
 pref("javascript.options.showInConsole",          true);
+pref("javascript.options.strict",                 true);
+pref("browser.dom.window.dump.enabled",           true);
+pref("general.warnOnAboutConfig",                 false);
 #else
 pref("javascript.options.showInConsole",          false);
 #endif
@@ -373,12 +378,6 @@ pref("alerts.slideIncrementTime", 10);
 pref("alerts.totalOpenTime", 4000);
 
 pref("browser.xul.error_pages.enabled", true);
-
-pref("signon.rememberSignons",              true);
-pref("signon.expireMasterPassword",         false);
-pref("signon.SignonFileName",               "signons.txt");
-pref("signon.SignonFileName2",              "signons2.txt");
-pref("signon.autofillForms",                true);
 
 // We want to make sure mail URLs are handled externally...
 pref("network.protocol-handler.external.mailto", true); // for mail
@@ -540,3 +539,9 @@ pref("browser.sessionstore.max_tabs_undo", 10);
 
 // allow META refresh by default
 pref("accessibility.blockautorefresh", false);
+
+// import bookmarks.html into Places bookmarks
+pref("browser.places.importBookmarksHTML", true);
+
+// Show infobar on chromeless windows
+pref("browser.warn_chromeless_window.infobar", false);

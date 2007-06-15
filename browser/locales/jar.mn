@@ -15,6 +15,7 @@
     locale/browser/pageInfo.properties             (%chrome/browser/pageInfo.properties)
     locale/browser/pageReport.dtd                  (%chrome/browser/pageReport.dtd)
     locale/browser/pageReportFirstTime.dtd         (%chrome/browser/pageReportFirstTime.dtd)
+    locale/browser/quitDialog.properties           (%chrome/browser/quitDialog.properties)
 *   locale/browser/safeMode.dtd                    (%chrome/browser/safeMode.dtd)
     locale/browser/sanitize.dtd                    (%chrome/browser/sanitize.dtd)
     locale/browser/search.properties               (%chrome/browser/search.properties)
@@ -30,7 +31,6 @@
 #ifdef MOZ_PLACES_BOOKMARKS
     locale/browser/places/bookmarkProperties.dtd   (%chrome/browser/places/bookmarkProperties.dtd)
     locale/browser/places/bookmarkProperties.properties (%chrome/browser/places/bookmarkProperties.properties)
-    locale/browser/places/default_places.html      (%chrome/browser/places/default_places.html)
     locale/browser/preferences/selectBookmark.dtd  (%chrome/browser/preferences/selectBookmark.dtd)
     locale/browser/places/moveBookmarks.dtd        (%chrome/browser/places/moveBookmarks.dtd)
 #else

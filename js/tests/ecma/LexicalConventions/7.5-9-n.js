@@ -36,23 +36,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '7.5-9-n.js';
+
 /**
-    File Name:          7.5-9-n.js
-    ECMA Section:       7.5 Identifiers
-    Description:        Identifiers are of unlimited length
-                        - can contain letters, a decimal digit, _, or $
-                        - the first character cannot be a decimal digit
-                        - identifiers are case sensitive
+   File Name:          7.5-9-n.js
+   ECMA Section:       7.5 Identifiers
+   Description:        Identifiers are of unlimited length
+   - can contain letters, a decimal digit, _, or $
+   - the first character cannot be a decimal digit
+   - identifiers are case sensitive
 
-    Author:             christine@netscape.com
-    Date:               11 september 1997
+   Author:             christine@netscape.com
+   Date:               11 september 1997
 */
-    var SECTION = "7.5-9-n";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Identifiers";
+var SECTION = "7.5-9-n";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Identifiers";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var 123=\"hi\"";
 EXPECTED = "error";

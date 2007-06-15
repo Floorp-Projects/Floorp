@@ -223,17 +223,16 @@
                     command="placesCmd_reload"
                     label="&cmd.reloadLivebookmark.label;"
                     accesskey="&cmd.reloadLivebookmark.accesskey;"/>
+          <menuitem id="editReloadMicrosummary"
+                    command="placesCmd_reloadMicrosummary"
+                    label="&cmd.reloadMicrosummary.label;"
+                    accesskey="&cmd.reloadMicrosummary.accesskey;"/>
           <menuseparator/>
           <menuitem id="properties"
                     command="placesCmd_show:info"
                     key="placesKey_show:info"
-#ifdef XP_MACOSX
-                    label="&cmd.show_infoMac.label;" 
-                    accesskey="&cmd.show_infoMac.accesskey;"/>
-#else
-                    label="&cmd.show_infoWin.label;" 
-                    accesskey="&cmd.show_infoWin.accesskey;"/>
-#endif
+                    label="&cmd.properties.label;" 
+                    accesskey="&cmd.properties.accesskey;"/>
         </menupopup>
       </menu>
       <menu id="viewMenu" label="&view.label;" accesskey="&view.accesskey;"
@@ -297,13 +296,8 @@
       <toolbarseparator/>
       <toolbarbutton id="properties"
                      command="placesCmd_show:info"
-#ifdef XP_MACOSX
-                     label="&cmd.show_infoMac.label;" 
-                     accesskey="&cmd.show_infoMac.accesskey;"/>
-#else
-                     label="&cmd.show_infoWin.label;" 
-                     accesskey="&cmd.show_infoWin.accesskey;"/>
-#endif
+                     label="&cmd.properties.label;" 
+                     accesskey="&cmd.properties.accesskey;"/>
       <toolbarbutton id="rename"
                      command="placesCmd_rename"
                      label="&cmd.rename.label;"
@@ -398,10 +392,22 @@
               <treecol label="&col.url.label;" id="url" flex="5" 
                        persist="width hidden ordinal sortActive sortDirection"/>
               <splitter class="tree-splitter"/>
-              <treecol label="&col.lastvisit.label;" id="date" flex="1" 
+              <treecol label="&col.lastvisit.label;" id="date" flex="1"
                        persist="width hidden ordinal sortActive sortDirection"/>
               <splitter class="tree-splitter"/>
-              <treecol label="&col.visitcount.label;" id="visitCount" flex="1" hidden="true" 
+              <treecol label="&col.visitcount.label;" id="visitCount" flex="1" hidden="true"
+                       persist="width hidden ordinal sortActive sortDirection"/>
+              <splitter class="tree-splitter"/>
+              <treecol label="&col.keyword.label;" id="keyword" flex="1" hidden="true"
+                       persist="width hidden ordinal sortActive sortDirection"/>
+              <splitter class="tree-splitter"/>
+              <treecol label="&col.description.label;" id="description" flex="1" hidden="true"
+                       persist="width hidden ordinal sortActive sortDirection"/>
+              <splitter class="tree-splitter"/>
+              <treecol label="&col.dateadded.label;" id="dateAdded" flex="1" hidden="true"
+                       persist="width hidden ordinal sortActive sortDirection"/>
+              <splitter class="tree-splitter"/>
+              <treecol label="&col.lastmodified.label;" id="lastModified" flex="1" hidden="true"
                        persist="width hidden ordinal sortActive sortDirection"/>
             </treecols>
             <treechildren id="placeContentChildren" view="placeContent" flex="1"/>

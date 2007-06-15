@@ -139,7 +139,7 @@ var security = {
   },
   
   /**
-   * Open the password manager window
+   * Open the login manager window
    */
   viewPasswords : function()
   {
@@ -199,7 +199,7 @@ function securityOnLoad() {
 
   /* Manage the View Cert button*/
   if (info.cert) {
-    var viewText = bundle.GetStringFromName("pageInfo_ViewCertificate");
+    var viewText = pageInfoBundle.getString("securityCertText");
     setText("security-view-text", viewText);
     security._cert = info.cert;
   }
@@ -220,7 +220,7 @@ function securityOnLoad() {
   var visitCount = previousVisitCount(info.hostName);
   if(visitCount > 1) {
     setText("security-privacy-history-value",
-            pageInfoBundle.getFormattedString("securityNVisits", [visitCount]));
+            pageInfoBundle.getFormattedString("securityNVisits", [visitCount.toLocaleString()]));
   }
   else if (visitCount == 1) {
     setText("security-privacy-history-value",
@@ -299,23 +299,9 @@ function hostHasCookies(hostName) {
     return false;
   
   var cookieManager = Components.classes["@mozilla.org/cookiemanager;1"]
-                                .getService(Components.interfaces.nsICookieManager);
+                                .getService(Components.interfaces.nsICookieManager2);
 
-  var iter = cookieManager.enumerator;
-  while (iter.hasMoreElements()){
-    var cookie = iter.getNext().QueryInterface(Components.interfaces.nsICookie);
-    if (!cookie)
-      continue;
-    
-    // A direct match works whether it's a domain cookie or not
-    if (cookie.host == hostName)
-      return true;
-    
-    // Domain cookies just need to end with our target hostname
-    if (cookie.isDomain && endsWith(hostName, cookie.host))
-      return true;
-  }
-  return false;
+  return cookieManager.countCookiesFromHost(hostName) > 0;
 }
 
 /**
@@ -327,18 +313,12 @@ function realmHasPasswords(location) {
     return false;
   
   var realm = makeURI(location).prePath;
-  var passwordManager = Components.classes["@mozilla.org/passwordmanager;1"]
-                                  .getService(Components.interfaces.nsIPasswordManager);
-  var e = passwordManager.enumerator;
-  while (e.hasMoreElements()) {
-    var next = e.getNext().QueryInterface(Components.interfaces.nsIPassword);
-    if (!next)
-      continue;
-    
-    if (realm == next.host)
-      return true;
-  }
-  return false;
+  var passwordManager = Components.classes["@mozilla.org/login-manager;1"]
+                                  .getService(Components.interfaces.nsILoginManager);
+  var passwords = passwordManager.getAllLogins({});
+
+  // XXX untested
+  return passwords.some(function (login) { return (login.hostname == realm); });
 }
 
 /**
@@ -365,11 +345,4 @@ function previousVisitCount(host, endTimeReference) {
   var result = historyService.executeQuery(query, options);
   result.root.containerOpen = true;
   return result.root.childCount;
-}
-
-/**
- * Return true iff the string suffix appears at the end of the string target
- */
-function endsWith(target, suffix) {
-  return target && suffix && target.substr(-1 * suffix.length) === suffix;
 }

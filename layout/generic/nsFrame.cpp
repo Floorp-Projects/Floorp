@@ -437,15 +437,6 @@ nsresult NS_NewSelectionImageService(nsISelectionImageService** aResult)
 
 //end selection service
 
-// a handy utility to set font
-void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC) 
-{
-  const nsStyleFont* font = aSC->GetStyleFont();
-  const nsStyleVisibility* visibility = aSC->GetStyleVisibility();
-
-  aRC->SetFont(font->mFont, visibility->mLangGroup);
-}
-
 void
 nsWeakFrame::Init(nsIFrame* aFrame)
 {
@@ -697,8 +688,7 @@ NS_IMETHODIMP nsFrame::DidSetStyleContext()
 /* virtual */ nsMargin
 nsIFrame::GetUsedMargin() const
 {
-  NS_ASSERTION(!(GetStateBits() &
-                 (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) ||
+  NS_ASSERTION(!NS_SUBTREE_DIRTY(this) ||
                (GetStateBits() & NS_FRAME_IN_REFLOW),
                "cannot call on a dirty frame not currently being reflowed");
 
@@ -717,8 +707,7 @@ nsIFrame::GetUsedMargin() const
 /* virtual */ nsMargin
 nsIFrame::GetUsedBorder() const
 {
-  NS_ASSERTION(!(GetStateBits() &
-                 (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) ||
+  NS_ASSERTION(!NS_SUBTREE_DIRTY(this) ||
                (GetStateBits() & NS_FRAME_IN_REFLOW),
                "cannot call on a dirty frame not currently being reflowed");
 
@@ -745,8 +734,7 @@ nsIFrame::GetUsedBorder() const
 /* virtual */ nsMargin
 nsIFrame::GetUsedPadding() const
 {
-  NS_ASSERTION(!(GetStateBits() &
-                 (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) ||
+  NS_ASSERTION(!NS_SUBTREE_DIRTY(this) ||
                (GetStateBits() & NS_FRAME_IN_REFLOW),
                "cannot call on a dirty frame not currently being reflowed");
 
@@ -841,8 +829,7 @@ nsFrame::SetAdditionalStyleContext(PRInt32 aIndex,
 nscoord
 nsFrame::GetBaseline() const
 {
-  NS_ASSERTION(!(GetStateBits() & (NS_FRAME_IS_DIRTY |
-                                   NS_FRAME_HAS_DIRTY_CHILDREN)),
+  NS_ASSERTION(!NS_SUBTREE_DIRTY(this),
                "frame must not be dirty");
   // Default to the bottom margin edge, per CSS2.1's definition of the
   // 'baseline' value of 'vertical-align'.
@@ -3059,11 +3046,8 @@ AddCoord(const nsStyleCoord& aStyle,
       *aPercent += aStyle.GetPercentValue();
       break;
     case eStyleUnit_Chars: {
-      SetFontFromStyle(aRenderingContext, aFrame->GetStyleContext());
-      nscoord fontWidth;
-      aRenderingContext->SetTextRunRTL(PR_FALSE);
-      aRenderingContext->GetWidth('M', fontWidth);
-      *aCoord += aStyle.GetIntValue() * fontWidth;
+      *aCoord += nsLayoutUtils::CharsToCoord(aStyle, aRenderingContext,
+                                             aFrame->GetStyleContext());
       break;
     }
     default:
@@ -3115,12 +3099,18 @@ nsFrame::IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext)
   return result;
 }
 
+/* virtual */ nsSize
+nsFrame::GetIntrinsicRatio()
+{
+  return nsSize(0, 0);
+}
+
 inline PRBool
 IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)
 {
   nsStyleUnit unit = aCoord.GetUnit();
   return unit == eStyleUnit_Auto ||  // only for 'height'
-         unit == eStyleUnit_Null ||  // only for 'max-height'
+         unit == eStyleUnit_None ||  // only for 'max-height'
          (unit == eStyleUnit_Percent && 
           aCBHeight == NS_AUTOHEIGHT);
 }
@@ -3143,29 +3133,31 @@ nsFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
     case NS_STYLE_BOX_SIZING_PADDING:
       boxSizingAdjust += aPadding;
   }
+  nscoord boxSizingToMarginEdgeWidth =
+    aMargin.width + aBorder.width + aPadding.width - boxSizingAdjust.width;
 
   // Compute width
 
   if (stylePos->mWidth.GetUnit() != eStyleUnit_Auto) {
     result.width =
-      nsLayoutUtils::ComputeWidthDependentValue(aRenderingContext, this,
-        aCBSize.width, stylePos->mWidth) -
-      boxSizingAdjust.width;
+      nsLayoutUtils::ComputeWidthValue(aRenderingContext, this,
+        aCBSize.width, boxSizingAdjust.width, boxSizingToMarginEdgeWidth,
+        stylePos->mWidth);
   }
 
-  if (stylePos->mMaxWidth.GetUnit() != eStyleUnit_Null) {
+  if (stylePos->mMaxWidth.GetUnit() != eStyleUnit_None) {
     nscoord maxWidth =
-      nsLayoutUtils::ComputeWidthDependentValue(aRenderingContext, this,
-        aCBSize.width, stylePos->mMaxWidth) -
-      boxSizingAdjust.width;
+      nsLayoutUtils::ComputeWidthValue(aRenderingContext, this,
+        aCBSize.width, boxSizingAdjust.width, boxSizingToMarginEdgeWidth,
+        stylePos->mMaxWidth);
     if (maxWidth < result.width)
       result.width = maxWidth;
   }
 
   nscoord minWidth =
-    nsLayoutUtils::ComputeWidthDependentValue(aRenderingContext, this,
-      aCBSize.width, stylePos->mMinWidth) -
-    boxSizingAdjust.width;
+    nsLayoutUtils::ComputeWidthValue(aRenderingContext, this,
+      aCBSize.width, boxSizingAdjust.width, boxSizingToMarginEdgeWidth,
+      stylePos->mMinWidth);
   if (minWidth > result.width)
     result.width = minWidth;
 
@@ -3360,6 +3352,35 @@ nsFrame::AttributeChanged(PRInt32         aNameSpaceID,
                           PRInt32         aModType)
 {
   return NS_OK;
+}
+
+PRBool nsFrame::GetMouseThrough() const
+{
+  eMouseThrough mousethrough = unset;
+
+  if (mContent) {
+    static nsIContent::AttrValuesArray strings[] =
+      {&nsGkAtoms::never, &nsGkAtoms::always, nsnull};
+    static const eMouseThrough values[] = {never, always};
+    PRInt32 index = mContent->FindAttrValueIn(kNameSpaceID_None,
+        nsGkAtoms::mousethrough, strings, eCaseMatters);
+    if (index >= 0) {
+      mousethrough = values[index];
+    }
+  }
+
+  switch(mousethrough)
+  {
+    case always:
+      return PR_TRUE;
+    case never:
+      return PR_FALSE;
+    case unset:
+      if (mParent)
+        return mParent->GetMouseThrough();
+  }
+
+  return PR_FALSE;
 }
 
 // Flow member functions
@@ -3786,6 +3807,7 @@ nsFrame::CheckInvalidateSizeChange(nsPresContext* aPresContext,
   nsRect r = ComputeOutlineRect(this, &anyOutline,
                                 aDesiredSize.mOverflowArea);
   if (anyOutline) {
+    r.UnionRect(GetOverflowRect(), r);
     Invalidate(r);
     return;
   }
@@ -5527,11 +5549,7 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
   // We can get here if aProspectiveParent is the scrollframe for a viewport
   // and the kids are the anonymous scrollbars.
   NS_ASSERTION(aProspectiveParent->GetStyleContext()->GetPseudoType() ==
-                 nsCSSAnonBoxes::viewportScroll ||
-               aProspectiveParent->GetStyleContext()->GetPseudoType() ==
-                 nsCSSAnonBoxes::canvas ||
-               aProspectiveParent->GetStyleContext()->GetPseudoType() ==
-                 nsCSSAnonBoxes::pageSequence,
+                 nsCSSAnonBoxes::viewportScroll,
                "Should have found a parent before this");
   return aProspectiveParent;
 }
@@ -6123,8 +6141,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
   PRBool redrawAfterReflow = PR_FALSE;
   PRBool redrawNow = PR_FALSE;
 
-  PRBool needsReflow =
-    (GetStateBits() & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) != 0;
+  PRBool needsReflow = NS_SUBTREE_DIRTY(this);
 
   if (redrawNow)
      Redraw(aState);

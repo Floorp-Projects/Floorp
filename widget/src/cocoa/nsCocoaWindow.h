@@ -61,6 +61,11 @@ class nsChildView;
 - (nsCocoaWindow*)geckoWidget;
 @end
 
+// Class that allows us to show the toolbar pill button
+@interface ToolbarWindow : NSWindow
+{
+}
+@end
 
 class nsCocoaWindow : public nsBaseWidget, public nsPIWidgetCocoa
 {

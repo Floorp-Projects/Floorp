@@ -35,15 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("11.1.5 XMLList Initialiser");
+gTestfile = 'regress-290499.js';
 
-var bug = 290499;
-var summary = "Don't Crash with empty XMLList Initializer";
+var summary = "11.1.5 XMLList Initialiser Don't Crash with empty Initializer";
+var BUGNUMBER = 290499;
 var actual = "No Crash";
 var expect = "No Crash";
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 var emptyList = <></>;
 

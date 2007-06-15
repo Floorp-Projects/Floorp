@@ -36,15 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("Crash in js_GetStringBytes");
+gTestfile = 'regress-327897.js';
 
-var bug = 327897;
-var summary = 'Crash in js_GetStringBytes';
+var summary = "Crash in js_GetStringBytes";
+var BUGNUMBER = 327897;
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 printStatus('This test runs only in the browser');
 
 if (typeof XMLSerializer != 'undefined')

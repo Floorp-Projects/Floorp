@@ -43,9 +43,14 @@
 #include "gdk/gdk.h"
 #include <X11/Xlib.h>
 
-#ifdef MOZ_ENABLE_XINERAMA
-#include <X11/extensions/Xinerama.h>
-#endif // MOZ_ENABLE_XINERAMA
+// from Xinerama.h
+typedef struct {
+   int   screen_number;
+   short x_org;
+   short y_org;
+   short width;
+   short height;
+} XineramaScreenInfo;
 
 //------------------------------------------------------------------------
 
@@ -60,9 +65,7 @@ public:
 
   void Init(PRBool aReInit = PR_FALSE);
   void ReInit() { Init(PR_TRUE); }
-#ifdef MOZ_ENABLE_XINERAMA
   void Init(XineramaScreenInfo *aScreenInfo);
-#endif
 
   Atom NetWorkareaAtom() { return mNetWorkareaAtom; }
 

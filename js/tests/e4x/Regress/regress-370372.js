@@ -36,13 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var bug = 370372;
+gTestfile = 'regress-370372.js';
+
+var BUGNUMBER = 370372;
 var summary = 'with (xmllist) function::name assignments';
 var actual = 'No Exception';
 var expect = 'No Exception';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 var tests = [<></>, <><a/></>, <><a/><b/></>];
 

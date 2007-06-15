@@ -39,6 +39,7 @@
 #include "processor/basic_code_modules.h"
 #include "google_breakpad/processor/code_module.h"
 #include "processor/linked_ptr.h"
+#include "processor/logging.h"
 #include "processor/range_map-inl.h"
 
 namespace google_breakpad {
@@ -46,6 +47,8 @@ namespace google_breakpad {
 BasicCodeModules::BasicCodeModules(const CodeModules *that)
     : main_address_(0),
       map_(new RangeMap<u_int64_t, linked_ptr<const CodeModule> >()) {
+  BPLOG_IF(ERROR, !that) << "BasicCodeModules::BasicCodeModules requires "
+                            "|that|";
   assert(that);
 
   const CodeModule *main_module = that->GetMainModule();
@@ -61,8 +64,11 @@ BasicCodeModules::BasicCodeModules(const CodeModules *that)
     // entire list, and GetModuleAtIndex may be faster than
     // GetModuleAtSequence.
     const CodeModule *module = that->GetModuleAtIndex(module_sequence)->Copy();
-    map_->StoreRange(module->base_address(), module->size(),
-                     linked_ptr<const CodeModule>(module));
+    if (!map_->StoreRange(module->base_address(), module->size(),
+                          linked_ptr<const CodeModule>(module))) {
+      BPLOG(ERROR) << "Module " << module->code_file() <<
+                      " could not be stored";
+    }
   }
 }
 
@@ -77,8 +83,10 @@ unsigned int BasicCodeModules::module_count() const {
 const CodeModule* BasicCodeModules::GetModuleForAddress(
     u_int64_t address) const {
   linked_ptr<const CodeModule> module;
-  if (!map_->RetrieveRange(address, &module, NULL, NULL))
+  if (!map_->RetrieveRange(address, &module, NULL, NULL)) {
+    BPLOG(INFO) << "No module at " << HexString(address);
     return NULL;
+  }
 
   return module.get();
 }
@@ -90,8 +98,10 @@ const CodeModule* BasicCodeModules::GetMainModule() const {
 const CodeModule* BasicCodeModules::GetModuleAtSequence(
     unsigned int sequence) const {
   linked_ptr<const CodeModule> module;
-  if (!map_->RetrieveRangeAtIndex(sequence, &module, NULL, NULL))
+  if (!map_->RetrieveRangeAtIndex(sequence, &module, NULL, NULL)) {
+    BPLOG(ERROR) << "RetrieveRangeAtIndex failed for sequence " << sequence;
     return NULL;
+  }
 
   return module.get();
 }

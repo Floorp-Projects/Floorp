@@ -40,12 +40,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.5.4.13.js';
+
 START("13.5.4.13 - XMLList hasSimpleContent()");
 
 TEST(1, true, XMLList.prototype.hasOwnProperty("hasSimpleContent"));
 
 // One element should be same as XML case
-x = 
+x =
 <>
 <alpha attr1="value1">
     <bravo>one</bravo>
@@ -77,7 +79,7 @@ TEST(10, true, x.bravo.child(0).hasSimpleContent());
 TEST(11, false, x.india.hasSimpleContent());
 
 // More than one element is complex if one or more things in the list are elements.
-x = 
+x =
 <>
 <alpha>one</alpha>
 <bravo>two</bravo>

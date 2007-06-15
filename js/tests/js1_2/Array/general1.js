@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'general1.js';
+
 /**
    Filename:     general1.js
    Description:  'This tests out some of the functionality on methods on the Array objects'

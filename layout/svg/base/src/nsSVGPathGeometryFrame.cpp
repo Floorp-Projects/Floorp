@@ -72,16 +72,11 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIMutationObserver
-  virtual void AttributeChanged(nsIDocument* aDocument, nsIContent* aContent,
-                                PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                                PRInt32 aModType);
-  virtual void ContentAppended(nsIDocument* aDocument, nsIContent* aContainer,
-                               PRInt32 aNewIndexInContainer);
-  virtual void ContentInserted(nsIDocument* aDocument, nsIContent* aContainer,
-                               nsIContent* aChild, PRInt32 aIndexInContainer);
-  virtual void ContentRemoved(nsIDocument* aDocument, nsIContent* aContainer,
-                              nsIContent* aChild, PRInt32 aIndexInContainer);
-  virtual void ParentChainChanged(nsIContent *aContent);
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
+  NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED
 
 private:
   nsSVGMarkerFrame *GetMarkerFrame(nsWeakPtr aObservedMarker);
@@ -512,7 +507,9 @@ NS_IMETHODIMP
 nsSVGPathGeometryFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
   UpdateGraphic(suppressInvalidation);
-  
+  if (!suppressInvalidation)
+    nsSVGUtils::UpdateFilterRegion(this);
+
   return NS_OK;
 }
 
@@ -646,12 +643,10 @@ nsSVGPathGeometryFrame::Render(nsSVGRenderState *aContext)
   void *closure;
   if (HasFill() && SetupCairoFill(gfx, &closure)) {
     gfx->Fill();
-    CleanupCairoFill(gfx, closure);
   }
 
   if (HasStroke() && SetupCairoStroke(gfx, &closure)) {
     gfx->Stroke();
-    CleanupCairoStroke(gfx, closure);
   }
 
   gfx->NewPath();

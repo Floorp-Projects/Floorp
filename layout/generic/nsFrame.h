@@ -113,10 +113,6 @@
 #define NS_FRAME_TRACE_REFLOW_OUT(_method, _status)
 #endif
 
-// handy utilities
-// XXXldb Move to nsLayoutUtils!
-void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC);
-
 //----------------------------------------------------------------------
 
 struct nsBoxLayoutMetrics;
@@ -210,6 +206,8 @@ public:
                                         PRInt8 aOutSideLimit
                                         );
 
+  PRBool GetMouseThrough() const;
+
   /**
    * Find the nearest frame with a mouse capturer. If no
    * parent has mouse capture this will return null.
@@ -281,6 +279,7 @@ public:
                                   InlinePrefWidthData *aData);
   virtual IntrinsicWidthOffsetData
     IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext);
+  virtual nsSize GetIntrinsicRatio();
 
   virtual nsSize ComputeSize(nsIRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,

@@ -45,6 +45,7 @@
 #include "nsIStyleRuleProcessor.h"
 #include "nsClassHashtable.h"
 #include "nsTArray.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsXBLPrototypeBinding;
 class nsIContent;
@@ -95,6 +96,8 @@ public:
     return mRefCnt;
   }
 
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsXBLBinding)
+
   nsXBLPrototypeBinding* PrototypeBinding() { return mPrototypeBinding; }
   nsIContent* GetAnonymousContent() { return mContent.get(); }
 
@@ -134,6 +137,8 @@ public:
   nsresult GetInsertionPointsFor(nsIContent* aParent,
                                  nsInsertionPointList** aResult);
 
+  nsInsertionPointList* GetExistingInsertionPointsFor(nsIContent* aParent);
+
   nsIContent* GetInsertionPoint(nsIContent* aChild, PRUint32* aIndex);
 
   nsIContent* GetSingleInsertionPoint(PRUint32* aIndex,
@@ -152,14 +157,14 @@ public:
                                 const nsAFlatCString& aClassName,
                                 void **aClassObject);
 
+  PRBool AllowScripts();  // XXX make const
+
 // Internal member functions
 protected:
   nsresult InitClass(const nsCString& aClassName, nsIScriptContext* aContext,
                      nsIDocument* aDocument, void** aScriptObject,
                      void** aClassObject);
 
-  PRBool AllowScripts();  // XXX make const
-  
 // MEMBER VARIABLES
 protected:
   nsAutoRefCnt mRefCnt;

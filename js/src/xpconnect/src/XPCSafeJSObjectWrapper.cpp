@@ -1103,14 +1103,8 @@ XPC_SJOW_AttachNewConstructorObject(XPCCallContext &ccx,
   // doesn't have what it takes to do this)
   if (!sEvalNative &&
       XPCWrappedNative::GetWrappedNativeOfJSObject(ccx, aGlobalObject)) {
-    JSObject *obj;
-    if (!::JS_GetClassObject(ccx, aGlobalObject, JSProto_Object, &obj) ||
-        !obj) {
-      return ThrowException(NS_ERROR_UNEXPECTED, ccx);
-    }
-
     jsval eval_val;
-    if (!::JS_GetProperty(ccx, obj, "eval", &eval_val)) {
+    if (!::JS_GetProperty(ccx, aGlobalObject, "eval", &eval_val)) {
       return ThrowException(NS_ERROR_UNEXPECTED, ccx);
     }
 

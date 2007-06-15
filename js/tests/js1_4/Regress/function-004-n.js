@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'function-004-n.js';
+
 /**
  *  File Name:          function-004.js
  *  Description:
@@ -60,9 +63,9 @@ DESCRIPTION = "var o = {}; o.call = Function.prototype.call; o.call()";
 EXPECTED = "error";
 
 new TestCase(
-    SECTION,
-    "var o = {}; o.call = Function.prototype.call; o.call()",
-    "error",
-    o.call() );
+  SECTION,
+  "var o = {}; o.call = Function.prototype.call; o.call()",
+  "error",
+  o.call() );
 
 test();

@@ -36,32 +36,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '7.4.1-3-n.js';
+
 /**
-    File Name:          7.4.1-3-n.js
-    ECMA Section:       7.4.1
+   File Name:          7.4.1-3-n.js
+   ECMA Section:       7.4.1
 
-    Description:
+   Description:
 
-    Reserved words cannot be used as identifiers.
+   Reserved words cannot be used as identifiers.
 
-    ReservedWord ::
-    Keyword
-    FutureReservedWord
-    NullLiteral
-    BooleanLiteral
+   ReservedWord ::
+   Keyword
+   FutureReservedWord
+   NullLiteral
+   BooleanLiteral
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 
 */
-    var SECTION = "7.4.1-3-n";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Keywords";
+var SECTION = "7.4.1-3-n";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Keywords";
 
 DESCRIPTION = "var false = true";
 EXPECTED = "error";
 
- new TestCase( SECTION,  "var false = true",     "error",    eval("var false = true") );
+new TestCase( SECTION,  "var false = true",     "error",    eval("var false = true") );
 
 test();

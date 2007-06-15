@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'switch-001.js';
+
 /**
    File Name:          switch-001.js
    Section:
@@ -61,20 +63,20 @@ result = "fail:  did not enter switch";
 
 switch (true) {
 case 1:
-    result = "fail: for backwards compatibility, version 130 use strict equality";
-    break;
+  result = "fail: for backwards compatibility, version 130 use strict equality";
+  break;
 case true:
-    result = "pass";
-    break;
+  result = "pass";
+  break;
 default:
-    result = "fail: evaluated default statement";
+  result = "fail: evaluated default statement";
 }
 
 new TestCase(
-    SECTION,
-    "switch / case should use strict equality in version of JS < 1.4",
-    "pass",
-    result );
+  SECTION,
+  "switch / case should use strict equality in version of JS < 1.4",
+  "pass",
+  result );
 
 
 

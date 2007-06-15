@@ -50,6 +50,7 @@
 #include "nsIServiceManager.h"
 #include "nsUnicharUtils.h"
 #include "nsStringFwd.h"
+#include "nsStringEnumerator.h"
 
 #include "nsOS2Uni.h"
 
@@ -109,9 +110,6 @@ nsDeviceContextSpecOS2 :: ~nsDeviceContextSpecOS2()
 }
 
 static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
-#ifdef USE_XPRINT
-static NS_DEFINE_IID(kIDeviceContextSpecXPIID, NS_IDEVICE_CONTEXT_SPEC_XP_IID);
-#endif
 
 void SetupDevModeFromSettings(ULONG printer, nsIPrintSettings* aPrintSettings)
 {
@@ -234,16 +232,6 @@ NS_IMETHODIMP nsDeviceContextSpecOS2 :: QueryInterface(REFNSIID aIID, void** aIn
     return NS_OK;
   }
 
-#ifdef USE_XPRINT
-  if (aIID.Equals(kIDeviceContextSpecXPIID))
-  {
-    nsIDeviceContextSpecXp *tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-#endif /* USE_XPRINT */
-
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
   if (aIID.Equals(kISupportsIID))
@@ -261,26 +249,6 @@ NS_IMETHODIMP nsDeviceContextSpecOS2 :: QueryInterface(REFNSIID aIID, void** aIn
 NS_IMPL_ADDREF(nsDeviceContextSpecOS2)
 NS_IMPL_RELEASE(nsDeviceContextSpecOS2)
 
-  
-/** -------------------------------------------------------
- *  Initialize the nsDeviceContextSpecOS2
- *  @update   dc 2/15/98
- *  @update   syd 3/2/99
- *
- * gisburn: Please note that this function exists as 1:1 copy in other
- * toolkits including:
- * - GTK+-toolkit:
- *   file:     mozilla/gfx/src/gtk/nsDeviceContextSpecG.cpp
- *   function: NS_IMETHODIMP nsDeviceContextSpecGTK::Init(PRBool aPrintPreview )
- * - Xlib-toolkit: 
- *   file:     mozilla/gfx/src/xlib/nsDeviceContextSpecXlib.cpp 
- *   function: NS_IMETHODIMP nsDeviceContextSpecXlib::Init(PRBool aPrintPreview )
- * - Qt-toolkit:
- *   file:     mozilla/gfx/src/qt/nsDeviceContextSpecQT.cpp
- *   function: NS_IMETHODIMP nsDeviceContextSpecQT::Init(PRBool aPrintPreview )
- * 
- * ** Please update the other toolkits when changing this function.
- */
 NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIWidget *aWidget,
                                            nsIPrintSettings* aPS,
                                            PRBool aIsPrintPreview)
@@ -435,20 +403,10 @@ nsPrinterEnumeratorOS2::nsPrinterEnumeratorOS2()
 
 NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorOS2, nsIPrinterEnumerator)
 
-NS_IMETHODIMP nsPrinterEnumeratorOS2::EnumeratePrinters(PRUint32* aCount, PRUnichar*** aResult)
+NS_IMETHODIMP nsPrinterEnumeratorOS2::GetPrinterNameList(nsIStringEnumerator **aPrinterNameList)
 {
-  NS_ENSURE_ARG(aCount);
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  if (aCount) 
-    *aCount = 0;
-  else 
-    return NS_ERROR_NULL_POINTER;
-  
-  if (aResult) 
-    *aResult = nsnull;
-  else 
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aPrinterNameList);
+  *aPrinterNameList = nsnull;
 
   nsDeviceContextSpecOS2::PrnDlg.RefreshPrintQueue();
   
@@ -458,9 +416,8 @@ NS_IMETHODIMP nsPrinterEnumeratorOS2::EnumeratePrinters(PRUint32* aCount, PRUnic
   }
 
   ULONG numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
-
-  PRUnichar** array = (PRUnichar**) nsMemory::Alloc(numPrinters * sizeof(PRUnichar*));
-  if (!array && numPrinters > 0) {
+  nsStringArray *printers = new nsStringArray(numPrinters);
+  if (!printers) {
     GlobalPrinters::GetInstance()->FreeGlobalPrinters();
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -468,25 +425,11 @@ NS_IMETHODIMP nsPrinterEnumeratorOS2::EnumeratePrinters(PRUint32* aCount, PRUnic
   ULONG count = 0;
   while( count < numPrinters )
   {
-    PRUnichar *str = ToNewUnicode(*GlobalPrinters::GetInstance()->GetStringAt(count));
-
-    if (!str) {
-      for (ULONG i = 0 ; i < count ; i++)
-        nsMemory::Free(array[i]);
-      
-      nsMemory::Free(array);
-
-      GlobalPrinters::GetInstance()->FreeGlobalPrinters();
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    array[count++] = str;
-    
+    printers->AppendString(*GlobalPrinters::GetInstance()->GetStringAt(count++));
   }
-  *aCount = count;
-  *aResult = array;
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 
-  return NS_OK;
+  return NS_NewAdoptingStringEnumerator(aPrinterNameList, printers);
 }
 
 NS_IMETHODIMP nsPrinterEnumeratorOS2::GetDefaultPrinterName(PRUnichar * *aDefaultPrinterName)

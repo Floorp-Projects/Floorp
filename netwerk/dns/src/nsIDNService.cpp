@@ -196,7 +196,7 @@ NS_IMETHODIMP nsIDNService::ConvertUTF8toACE(const nsACString & input, nsACStrin
   return NS_OK;
 }
 
-/* [noscript] string ConvertACEtoUTF8 (in string input); */
+/* AUTF8String convertACEtoUTF8(in ACString input); */
 NS_IMETHODIMP nsIDNService::ConvertACEtoUTF8(const nsACString & input, nsACString & _retval)
 {
   // RFC 3490 - 4.2 ToUnicode
@@ -242,7 +242,7 @@ NS_IMETHODIMP nsIDNService::ConvertACEtoUTF8(const nsACString & input, nsACStrin
   return NS_OK;
 }
 
-/* boolean encodedInACE (in ACString input); */
+/* boolean isACE(in ACString input); */
 NS_IMETHODIMP nsIDNService::IsACE(const nsACString & input, PRBool *_retval)
 {
   nsACString::const_iterator begin;
@@ -261,6 +261,7 @@ NS_IMETHODIMP nsIDNService::IsACE(const nsACString & input, PRBool *_retval)
   return NS_OK;
 }
 
+/* AUTF8String normalize(in AUTF8String input); */
 NS_IMETHODIMP nsIDNService::Normalize(const nsACString & input, nsACString & output)
 {
   // protect against bogus input

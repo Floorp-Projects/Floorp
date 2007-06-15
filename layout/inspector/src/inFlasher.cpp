@@ -160,9 +160,11 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement)
 
   while (frame) {
     nsCOMPtr<nsIRenderingContext> rcontext;
-    presShell->CreateRenderingContext(frame, getter_AddRefs(rcontext));
-    nsRect rect(nsPoint(0,0), frame->GetSize());
+    nsresult rv =
+      presShell->CreateRenderingContext(frame, getter_AddRefs(rcontext));
+    NS_ENSURE_SUCCESS(rv, rv);
 
+    nsRect rect(nsPoint(0,0), frame->GetSize());
     if (mInvert) {
       rcontext->InvertRect(rect);
     }

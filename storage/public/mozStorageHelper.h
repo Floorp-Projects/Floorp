@@ -64,18 +64,21 @@ public:
                         PRBool aCommitOnComplete,
                         PRInt32 aType = mozIStorageConnection::TRANSACTION_DEFERRED)
     : mConnection(aConnection),
+      mHasTransaction(PR_FALSE),
       mCommitOnComplete(aCommitOnComplete),
       mCompleted(PR_FALSE)
   {
-    PRBool transactionInProgress = PR_FALSE;
-    mConnection->GetTransactionInProgress(&transactionInProgress);
-    mHasTransaction = ! transactionInProgress;
-    if (mHasTransaction)
-      mConnection->BeginTransactionAs(aType);
+    if (mConnection) {
+      PRBool transactionInProgress = PR_FALSE;
+      mConnection->GetTransactionInProgress(&transactionInProgress);
+      mHasTransaction = ! transactionInProgress;
+      if (mHasTransaction)
+        mConnection->BeginTransactionAs(aType);
+    }
   }
   ~mozStorageTransaction()
   {
-    if (mHasTransaction && ! mCompleted) {
+    if (mConnection && mHasTransaction && ! mCompleted) {
       if (mCommitOnComplete)
         mConnection->CommitTransaction();
       else
@@ -90,8 +93,8 @@ public:
    */
   nsresult Commit()
   {
-    if (mCompleted)
-      return NS_OK; // already done
+    if (!mConnection || mCompleted)
+      return NS_OK; // no connection, or already done
     mCompleted = PR_TRUE;
     if (! mHasTransaction)
       return NS_OK; // transaction not ours, ignore
@@ -105,8 +108,8 @@ public:
    */
   nsresult Rollback()
   {
-    if (mCompleted)
-      return NS_OK; // already done
+    if (!mConnection || mCompleted)
+      return NS_OK; // no connection, or already done
     mCompleted = PR_TRUE;
     if (! mHasTransaction)
       return NS_ERROR_FAILURE;

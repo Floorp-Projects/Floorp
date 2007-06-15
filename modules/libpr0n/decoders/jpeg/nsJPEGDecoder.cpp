@@ -49,6 +49,7 @@
 #include "ImageLogging.h"
 #include "nsIImage.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "gfxColor.h"
 
 #include "jerror.h"
 
@@ -172,9 +173,18 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
   if (inStr) {
     if (!mBuffer) {
       mBuffer = (JOCTET *)PR_Malloc(count);
+      if (!mBuffer) {
+        mState = JPEG_ERROR;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
       mBufferSize = count;
     } else if (count > mBufferSize) {
-      mBuffer = (JOCTET *)PR_Realloc(mBuffer, count);
+      JOCTET *buf = (JOCTET *)PR_Realloc(mBuffer, count);
+      if (!buf) {
+        mState = JPEG_ERROR;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      mBuffer = buf;
       mBufferSize = count;
     }
 
@@ -461,7 +471,6 @@ nsJPEGDecoder::OutputScanlines()
   PRUint8 *imageData;
   PRUint32 imageDataLength;
   mFrame->GetImageData(&imageData, &imageDataLength);
-  nsCOMPtr<nsIImage> img(do_GetInterface(mFrame));
 
   while ((mInfo.output_scanline < mInfo.output_height)) {
       /* Request one scanline.  Returns 0 or 1 scanlines. */    
@@ -474,16 +483,15 @@ nsJPEGDecoder::OutputScanlines()
       PRUint32 offset = (mInfo.output_scanline - 1) * mInfo.output_width;
       PRUint32 *ptrOutputBuf = ((PRUint32*)imageData) + offset;
       JSAMPLE *j1 = mSamples[0];
-      for (PRUint32 i=0; i < mInfo.output_width; ++i) {
-        PRUint8 r = *j1++;
-        PRUint8 g = *j1++;
-        PRUint8 b = *j1++;
-        *ptrOutputBuf++ = (0xFF << 24) | (r << 16) | (g << 8) | b;
+      for (PRUint32 i=mInfo.output_width; i>0; --i) {
+        *ptrOutputBuf++ = GFX_PACKED_PIXEL(0xFF, j1[0], j1[1], j1[2]);
+        j1+=3;
       }
   }
 
   if (top != mInfo.output_scanline) {
       nsIntRect r(0, top, mInfo.output_width, mInfo.output_scanline-top);
+      nsCOMPtr<nsIImage> img(do_GetInterface(mFrame));
       img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
       mObserver->OnDataAvailable(nsnull, mFrame, &r);
   }
@@ -663,17 +671,22 @@ fill_input_buffer (j_decompress_ptr jd)
 
     /* Round up to multiple of 256 bytes. */
     const PRUint32 roundup_buflen = ((new_backtrack_buflen + 255) >> 8) << 8;
-    decoder->mBackBuffer = decoder->mBackBuffer
-                ? (JOCTET*)PR_REALLOC(decoder->mBackBuffer, roundup_buflen)
-                : (JOCTET*)PR_MALLOC(roundup_buflen);
 
-    /* Check for OOM */
-    if (!decoder->mBackBuffer) {
-#if 0
-      j_common_ptr cinfo = (j_common_ptr)(&decoder->js->jd);
-      cinfo->err->msg_code = JERR_OUT_OF_MEMORY;
-      my_error_exit(cinfo);
-#endif
+    if (decoder->mBackBuffer) {
+      JOCTET *buf = (JOCTET *)PR_REALLOC(decoder->mBackBuffer, roundup_buflen);
+      /* Check for OOM */
+      if (!buf) {
+        decoder->mInfo.err->msg_code = JERR_OUT_OF_MEMORY;
+        my_error_exit((j_common_ptr)(&decoder->mInfo));
+      }
+      decoder->mBackBuffer = buf;
+    } else {
+      decoder->mBackBuffer = (JOCTET*)PR_MALLOC(roundup_buflen);
+      /* Check for OOM */
+      if (!decoder->mBackBuffer) {
+        decoder->mInfo.err->msg_code = JERR_OUT_OF_MEMORY;
+        my_error_exit((j_common_ptr)(&decoder->mInfo));
+      }
     }
       
     decoder->mBackBufferSize = (size_t)roundup_buflen;

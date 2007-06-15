@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,27 +34,29 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 14 October 2001
  *
  * SUMMARY: Regression test for Bugzilla bug 104584
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=104584
  *
- * Testing that we don't crash on this code. The idea is to 
+ * Testing that we don't crash on this code. The idea is to
  * call F,G WITHOUT providing an argument. This caused a crash
  * on the second call to obj.toString() or print(obj) below -
  */
 
 //-----------------------------------------------------------------------------
-var bug = 104584;
+var gTestfile = 'regress-104584.js';
+var BUGNUMBER = 104584;
 var summary = "Testing that we don't crash on this code -";
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 F();
-G(); 
+G();
 
 reportCompare('No Crash', 'No Crash', '');
 

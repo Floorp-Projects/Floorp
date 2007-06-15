@@ -34,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    15 Nov 2003
  * SUMMARY: Stressing the byte code generator
@@ -44,8 +45,9 @@
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-225831.js';
 var UBound = 0;
-var bug = 225831;
+var BUGNUMBER = 225831;
 var summary = 'Stressing the byte code generator';
 var status = '';
 var statusitems = [];
@@ -182,7 +184,7 @@ function addThis()
 function test()
 {
   enterFunc('test');
-  printBugNumber(bug);
+  printBugNumber(BUGNUMBER);
   printStatus(summary);
 
   for (var i=0; i<UBound; i++)

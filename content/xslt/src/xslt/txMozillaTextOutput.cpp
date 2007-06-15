@@ -197,8 +197,8 @@ txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
 
         if (calias &&
             NS_SUCCEEDED(calias->GetPreferred(charset, canonicalCharset))) {
-            mDocument->SetDocumentCharacterSet(canonicalCharset);
             mDocument->SetDocumentCharacterSetSource(kCharsetFromOtherComponent);
+            mDocument->SetDocumentCharacterSet(canonicalCharset);
         }
     }
 

@@ -335,7 +335,7 @@ DOMViewer.prototype =
    */
   setAccessibleNodes: function setAccessibleNodes(aValue)
   {
-    if (!("@mozilla.org/accessibilityService;1" in Components.classes))
+    if (!("@mozilla.org/accessibleRetrieval;1" in Components.classes))
       aValue = false;
 
     this.mDOMView.showAccessibleNodes = aValue;

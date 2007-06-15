@@ -57,9 +57,10 @@ class nsSVGLengthList : public nsIDOMSVGLengthList,
 {  
 protected:
   friend nsresult NS_NewSVGLengthList(nsIDOMSVGLengthList** result,
-                                      nsSVGElement *aContext);
+                                      nsSVGElement *aContext,
+                                      PRUint8 aCtxType);
 
-  nsSVGLengthList(nsSVGElement *aContext);
+  nsSVGLengthList(nsSVGElement *aContext, PRUint8 aCtxType);
   ~nsSVGLengthList();
 //  void Init();
   
@@ -101,8 +102,8 @@ protected:
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGLengthList::nsSVGLengthList(nsSVGElement *aContext)
-  : mCtxType(0)
+nsSVGLengthList::nsSVGLengthList(nsSVGElement *aContext, PRUint8 aCtxType)
+  : mCtxType(aCtxType)
 {
   mContext = do_GetWeakReference(NS_STATIC_CAST(nsGenericElement*, aContext));
 }
@@ -389,11 +390,11 @@ nsSVGLengthList::InsertElementAt(nsISVGLength* aElement, PRInt32 index)
 // Exported creation functions:
 
 nsresult
-NS_NewSVGLengthList(nsIDOMSVGLengthList** result, nsSVGElement *aContext)
+NS_NewSVGLengthList(nsIDOMSVGLengthList** result, nsSVGElement *aContext, PRUint8 aCtxType)
 {
   *result = nsnull;
   
-  nsSVGLengthList* lengthList = new nsSVGLengthList(aContext);
+  nsSVGLengthList* lengthList = new nsSVGLengthList(aContext, aCtxType);
   if (!lengthList) return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(lengthList);
 

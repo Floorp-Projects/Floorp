@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-345855.js';
 //-----------------------------------------------------------------------------
-var bug = 345855;
+var BUGNUMBER = 345855;
 var summary = 'Blank yield expressions are not syntax errors';
 var actual = '';
 var expect = 'No Error';
@@ -48,13 +50,13 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   expect = 'SyntaxError: syntax error';
   try
   {
-    eval('function() {x = 12 + yield;}');
+    eval('(function() {x = 12 + yield;})');
     actual = 'No Error';
   }
   catch(ex)
@@ -63,22 +65,22 @@ function test()
   }
   reportCompare(expect, actual, summary + ': function() {x = 12 + yield;}');
 
-  expect = 'SyntaxError: yield expression must be parenthesized';
+  expect = /SyntaxError: yield expression must be parenthesized/;
   try
   {
-    eval('function () {foo(yield)}');
+    eval('(function () {foo(yield)})');
     actual = 'No Error';
   }
   catch(ex)
   {
     actual = ex + '';
   }
-  reportCompare(expect, actual, summary + ': function () {foo(yield)}');
+  reportMatch(expect, actual, summary + ': function () {foo(yield)}');
 
   expect = 'SyntaxError: syntax error';
   try
   {
-    eval('function() {x = 12 + yield 42}');
+    eval('(function() {x = 12 + yield 42})');
     actual = 'No Error';
   }
   catch(ex)
@@ -87,23 +89,22 @@ function test()
   }
   reportCompare(expect, actual, summary + ': function() {x = 12 + yield 42}');
 
-  expect = 'SyntaxError: yield expression must be parenthesized';
+  expect = /SyntaxError: yield expression must be parenthesized/;
   try
   {
-    eval('function (){foo(yield 42)}');
+    eval('(function (){foo(yield 42)})');
     actual = 'No Error';
   }
   catch(ex)
   {
     actual = ex + '';
   }
-  reportCompare(expect, actual, summary + ': function (){foo(yield 42)}');
+  reportMatch(expect, actual, summary + ': function (){foo(yield 42)}');
 
   expect = 'No Error';
-
   try
   {
-    eval('function() {x = 12 + (yield);}');
+    eval('(function() {x = 12 + (yield);})');
     actual = 'No Error';
   }
   catch(ex)
@@ -114,7 +115,7 @@ function test()
 
   try
   {
-    eval('function () {foo((yield))}');
+    eval('(function () {foo((yield))})');
     actual = 'No Error';
   }
   catch(ex)
@@ -125,7 +126,7 @@ function test()
 
   try
   {
-    eval('function() {x = 12 + (yield 42)}');
+    eval('(function() {x = 12 + (yield 42)})');
     actual = 'No Error';
   }
   catch(ex)
@@ -136,7 +137,7 @@ function test()
 
   try
   {
-    eval('function (){foo((yield 42))}');
+    eval('(function (){foo((yield 42))})');
     actual = 'No Error';
   }
   catch(ex)

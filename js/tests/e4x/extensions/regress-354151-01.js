@@ -36,13 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var bug = 354151;
+gTestfile = 'regress-354151-01.js';
+
+var BUGNUMBER = 354151;
 var summary = 'Bad assumptions about Array elements';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 function getter() { return 1; }
 function setter(v) { return v; }

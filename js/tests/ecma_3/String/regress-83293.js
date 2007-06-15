@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,7 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* 
+var gTestfile = 'regress-83293.js';
+
+/*
  * Creation Date:   30 May 2001
  * Correction Date: 14 Aug 2001
  *
@@ -65,9 +68,9 @@
  * It also makes most of this testcase, as originally written, invalid.
  **********************************************************************
  */
- 
+
 //-----------------------------------------------------------------------------
-var bug = 103351; // <--- (Outgrowth of original bug 83293)
+var BUGNUMBER = 103351; // <--- (Outgrowth of original bug 83293)
 var summ_OLD = 'Testing str.replace(strA, strB) == str.replace(new RegExp(strA),strB)';
 var summ_NEW = 'Testing String.prototype.replace(x,y) when x is a string';
 var summary = summ_NEW;
@@ -96,7 +99,7 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
 /*******************  THESE WERE INCORRECT; SEE ABOVE  ************************
@@ -129,7 +132,7 @@ function test()
   * It is a variation on the example below.
   *
   * Namely, we are using the regexp /$/ instead of the regexp //.
-  * The regexp /$/ means we should match the "empty string" at the 
+  * The regexp /$/ means we should match the "empty string" at the
   * end-boundary of the word, instead of the one at the beginning.
   *
   status = 'Section E of test';
@@ -159,7 +162,7 @@ function test()
   expect = str.replace(new RegExp(strA), strB);
   reportCompare(expect, actual, status);
 
- *************************  END OF INCORRECT CASES ****************************/
+  *************************  END OF INCORRECT CASES ****************************/
 
 
 //////////////////////////  OK, LET'S START OVER //////////////////////////////

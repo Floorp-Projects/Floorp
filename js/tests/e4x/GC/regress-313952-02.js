@@ -35,15 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("13.3.5.2 - QName.uri");
+gTestfile = 'regress-313952-02.js';
 
-var bug = 313952;
-var summary = 'Root QName.uri';
+var summary = "13.3.5.2 - root QName.uri";
+var BUGNUMBER = 313952;
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 var str = String(1);
 var expected = String(1);
@@ -62,7 +62,7 @@ var likeString = {
         toString: function() {
                 var tmp = new XML("");
                 tmp = (tmp == "string");
-                if (typeof gc == "function") 
+                if (typeof gc == "function")
                         gc();
                 for (var i = 0; i != 40000; ++i) {
                         tmp = 1e100 * TWO;

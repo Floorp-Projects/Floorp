@@ -49,11 +49,9 @@ components/xpconnect.xpt
 libgkgfx.so 
 libgtksuperwin.so 
 libgtkembedmoz.so 
-libxlibrgb.so
 libgfxpsshar.so
 components/libgfx_gtk.so
 components/libgfxps.so
-components/libgfxxprint.so
 components/gfx.xpt 
 components/libwidget_gtk.so
 components/libwidget_gtk2.so
@@ -150,6 +148,7 @@ components/dom_core.xpt
 components/dom_css.xpt
 components/dom_events.xpt
 components/dom_html.xpt
+components/dom_offline.xpt
 components/dom_range.xpt
 components/dom_stylesheets.xpt
 components/dom_traversal.xpt
@@ -268,10 +267,6 @@ res/entityTables/transliterate.properties
 ;res/fonts/mathfontPUA.properties
 ;res/fonts/mathfontSymbol.properties
 ;components/libucvmath.so
-
-; p3p
-components/libp3p.so
-components/p3p.xpt
 
 ; Effective TLD
 res/effective_tld_names.dat

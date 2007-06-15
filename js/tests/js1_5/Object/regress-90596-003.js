@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 28 August 2001
  *
  * SUMMARY: A [DontEnum] prop, if overridden, should appear in for-in loops.
@@ -46,13 +48,15 @@
  *                    actual = enumerateThis(obj);
  *                    expect = '{prop:"Hi"}';
  *
- * But enumerateThis(obj) gets literal value Hi for obj.prop, not literal "Hi".
- * We take care of all these details in the compactThis(), sortThis() functions.
- * Sorting properties alphabetically is necessary for the test to work in Rhino.
+ * But enumerateThis(obj) gets literal value Hi for obj.prop, not
+ * literal "Hi".  We take care of all these details in the
+ * compactThis(), sortThis() functions.  Sorting properties
+ * alphabetically is necessary for the test to work in Rhino.
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-90596-003.js';
 var UBound = 0;
-var bug = 90596;
+var BUGNUMBER = 90596;
 var summary = '[DontEnum] props (if overridden) should appear in for-in loops';
 var cnCOMMA = ',';
 var cnCOLON = ':';
@@ -248,17 +252,17 @@ function isWhiteSpace(charCode)
 {
   switch (charCode)
   {
-    case (0x0009):
-    case (0x000B):
-    case (0x000C):
-    case (0x0020):
-    case (0x000A):  // '\n'
-    case (0x000D):  // '\r'
-      return true;
-      break;
+  case (0x0009):
+  case (0x000B):
+  case (0x000C):
+  case (0x0020):
+  case (0x000A):  // '\n'
+  case (0x000D):  // '\r'
+    return true;
+    break;
 
-    default:
-      return false;
+  default:
+    return false;
   }
 }
 
@@ -267,13 +271,13 @@ function isQuote(charCode)
 {
   switch (charCode)
   {
-    case (0x0027): // single quote
-    case (0x0022): // double quote
-      return true;
-      break;
+  case (0x0027): // single quote
+  case (0x0022): // double quote
+    return true;
+    break;
 
-    default:
-      return false;
+  default:
+    return false;
   }
 }
 
@@ -296,7 +300,7 @@ function stripBraces(text)
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   for (var i=0; i<UBound; i++)

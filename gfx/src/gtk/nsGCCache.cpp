@@ -135,18 +135,6 @@ nsGCCache::ReportStats() {
               );
 }
 
-#ifdef MOZ_WIDGET_GTK
-
-GdkRegion *
-nsGCCache::gdk_region_copy(GdkRegion *region)
-{
-  if (!copyRegion) copyRegion = gdk_region_new();
-
-  return gdk_regions_union(region, copyRegion);
-}
-
-#endif
-
 /* Dispose of entries matching the given flags, compressing the GC cache */
 void nsGCCache::Flush(unsigned long flags)
 {
@@ -213,12 +201,7 @@ GdkGC *nsGCCache::GetGC(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask fla
     entry->clipRegion = NULL;
     //printf("creating new gc=%X\n",entry->gc); 
   }
-#ifdef MOZ_WIDGET_GTK
-  else if ( ((GdkGCPrivate*)entry->gc)->ref_count > 1 ) {
-#endif /* MOZ_WIDGET_GTK */
-#ifdef MOZ_WIDGET_GTK2
   else if ( G_OBJECT(entry->gc)->ref_count > 1 ) {
-#endif /* MOZ_WIDGET_GTK2 */
     // Old GC still in use, create new
     gdk_gc_unref(entry->gc);
     entry->gc=gdk_gc_new_with_values(window, gcv, flags);
@@ -240,8 +223,6 @@ GdkGC *nsGCCache::GetGC(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask fla
   
   return gdk_gc_ref(entry->gc);
 }
-
-#ifdef MOZ_WIDGET_GTK2
 
 void nsGCCache::ReuseGC(GCCacheEntry *entry, GdkGCValues *gcv, GdkGCValuesMask flags)
 {
@@ -287,108 +268,3 @@ void nsGCCache::ReuseGC(GCCacheEntry *entry, GdkGCValues *gcv, GdkGCValuesMask f
   entry->flags = flags;
   entry->gcv = *gcv;
 }
-
-#else /* MOZ_WIDGET_GTK and friends */
-
-void nsGCCache::ReuseGC(GCCacheEntry *entry, GdkGCValues *gcv, GdkGCValuesMask flags)
-{
-  // We have old GC, reuse it and check what
-  // we have to change
-
-  XGCValues xvalues;
-  unsigned long xvalues_mask=0;
-
-  if (entry->clipRegion) {
-    // set it to none here and then set the clip region with
-    // gdk_gc_set_clip_region in GetGC()
-    xvalues.clip_mask = None;
-    xvalues_mask |= GCClipMask;
-    gdk_region_destroy(entry->clipRegion);
-    entry->clipRegion = NULL;
-  }
-
-  if (entry->gcv.foreground.pixel != gcv->foreground.pixel) {
-    xvalues.foreground = gcv->foreground.pixel;
-    xvalues_mask |= GCForeground;
-  }
-
-  if (entry->gcv.function != gcv->function) {
-    switch (gcv->function) {
-    case GDK_COPY:
-      xvalues.function = GXcopy;
-      break;
-    case GDK_INVERT:
-      xvalues.function = GXinvert;
-      break;
-    case GDK_XOR:
-      xvalues.function = GXxor;
-      break;
-    case GDK_CLEAR:
-      xvalues.function = GXclear;
-      break;
-    case GDK_AND:
-      xvalues.function = GXand;
-      break;
-    case GDK_AND_REVERSE:
-      xvalues.function = GXandReverse;
-      break;
-    case GDK_AND_INVERT:
-      xvalues.function = GXandInverted;
-      break;
-    case GDK_NOOP:
-      xvalues.function = GXnoop;
-      break;
-    case GDK_OR:
-      xvalues.function = GXor;
-      break;
-    case GDK_EQUIV:
-      xvalues.function = GXequiv;
-      break;
-    case GDK_OR_REVERSE:
-      xvalues.function = GXorReverse;
-      break;
-    case GDK_COPY_INVERT:
-      xvalues.function = GXcopyInverted;
-      break;
-    case GDK_OR_INVERT:
-      xvalues.function = GXorInverted;
-      break;
-    case GDK_NAND:
-      xvalues.function = GXnand;
-      break;
-    case GDK_SET:
-      xvalues.function = GXset;
-      break;
-    }
-    xvalues_mask |= GCFunction;
-  }
-
-  if(entry->gcv.font != gcv->font && flags & GDK_GC_FONT) {
-    xvalues.font =  ((XFontStruct *)GDK_FONT_XFONT(gcv->font))->fid;
-    xvalues_mask |= GCFont;
-  }
-
-  if (entry->gcv.line_style != gcv->line_style) {
-    switch (gcv->line_style) {
-    case GDK_LINE_SOLID:
-      xvalues.line_style = LineSolid;
-      break;
-    case GDK_LINE_ON_OFF_DASH:
-      xvalues.line_style = LineOnOffDash;
-      break;
-    case GDK_LINE_DOUBLE_DASH:
-      xvalues.line_style = LineDoubleDash;
-      break;
-    }
-    xvalues_mask |= GCLineStyle;
-  }
-
-  if (xvalues_mask != 0) {
-    XChangeGC(GDK_GC_XDISPLAY(entry->gc), GDK_GC_XGC(entry->gc),
-              xvalues_mask, &xvalues);
-  }
-  entry->flags = flags;
-  entry->gcv = *gcv;
-}
-
-#endif /* MOZ_WIDGET_GTK */

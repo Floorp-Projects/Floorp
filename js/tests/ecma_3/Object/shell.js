@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,25 +34,29 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 14 Mar 2001
  *
  * SUMMARY: Utility functions for testing objects -
- * 
- * Suppose obj is an instance of a native type, e.g. Number. 
+ *
+ * Suppose obj is an instance of a native type, e.g. Number.
  * Then obj.toString() invokes Number.prototype.toString().
  * We would also like to access Object.prototype.toString().
- * 
+ *
  * The difference is this: suppose obj = new Number(7).
  * Invoking Number.prototype.toString() on this just returns 7.
- * Object.prototype.toString() on this returns '[object Number]'. 
+ * Object.prototype.toString() on this returns '[object Number]'.
  *
  * The getJSType() function below will return '[object Number]' for us.
  * The getJSClass() function returns 'Number', the [[Class]] property of obj.
- * See ECMA-262 Edition 3,  13-Oct-1999,  Section 8.6.2  
+ * See ECMA-262 Edition 3,  13-Oct-1999,  Section 8.6.2 
  */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+gTestsubsuite = 'Object';
+
 var cnNoObject = 'Unexpected Error!!! Parameter to this function must be an object';
 var cnNoClass = 'Unexpected Error!!! Cannot find Class property';
 var cnObjectToString = Object.prototype.toString;
@@ -86,7 +91,7 @@ function findClass(sType)
 {
   var re =  /^\[.*\s+(\w+)\s*\]$/;
   var a = sType.match(re);
-  
+ 
   if (a && a[1])
     return a[1];
   return cnNoClass;

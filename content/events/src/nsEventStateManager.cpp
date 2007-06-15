@@ -131,6 +131,7 @@
 #include "nsIProperties.h"
 #include "nsISupportsPrimitives.h"
 #include "nsEventDispatcher.h"
+#include "nsPresShellIterator.h"
 
 #ifdef XP_MACOSX
 #include <Events.h>
@@ -796,7 +797,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
               if (gLastFocusedContent) // could have changed in Dispatch
                 doc = gLastFocusedContent->GetDocument();
               if (doc) {
-                nsIPresShell *shell = doc->GetShellAt(0);
+                nsIPresShell *shell = doc->GetPrimaryShell();
                 if (shell) {
                   nsCOMPtr<nsPresContext> oldPresContext =
                     shell->GetPresContext();
@@ -927,7 +928,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
             // in the Ender widget case.
             nsCOMPtr<nsIDocument> doc = gLastFocusedContent->GetDocument();
             if (doc) {
-              nsIPresShell *shell = doc->GetShellAt(0);
+              nsIPresShell *shell = doc->GetPrimaryShell();
               if (shell) {
                 nsCOMPtr<nsPresContext> oldPresContext =
                   shell->GetPresContext();
@@ -1017,7 +1018,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         if (document) {
           // Use a strong ref to make sure that the shell is alive still
           // when calling FrameSelection().
-          nsCOMPtr<nsIPresShell> shell = document->GetShellAt(0);
+          nsCOMPtr<nsIPresShell> shell = document->GetPrimaryShell();
           NS_ASSERTION(shell, "Focus events should not be getting thru when this is null!");
           if (shell) {
             nsPresContext* context = shell->GetPresContext();
@@ -1085,7 +1086,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         nsEvent event(PR_TRUE, NS_BLUR_CONTENT);
 
         if (gLastFocusedContent) {
-          nsIPresShell *shell = gLastFocusedDocument->GetShellAt(0);
+          nsIPresShell *shell = gLastFocusedDocument->GetPrimaryShell();
           if (shell) {
             nsCOMPtr<nsPresContext> oldPresContext = shell->GetPresContext();
 
@@ -1152,7 +1153,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       // Prevent keyboard scrolling while an accesskey modifier is in use.
       if (modifierMask && (modifierMask == sChromeAccessModifier ||
                            modifierMask == sContentAccessModifier))
-        HandleAccessKey(aPresContext, keyEvent, aStatus, -1,
+        HandleAccessKey(aPresContext, keyEvent, aStatus, nsnull,
                         eAccessKeyProcessingNormal, modifierMask);
     }
   case NS_KEY_DOWN:
@@ -1249,15 +1250,11 @@ GetAccessModifierMask(nsISupports* aDocShell)
   }
 }
 
-// Note: for the in parameter aChildOffset,
-// -1 stands for not bubbling from the child docShell
-// 0 -- childCount - 1 stands for the child docShell's offset
-// which bubbles up the access key handling
 void
 nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
                                      nsKeyEvent *aEvent,
                                      nsEventStatus* aStatus,
-                                     PRInt32 aChildOffset,
+                                     nsIDocShellTreeItem* aBubbledFrom,
                                      ProcessingAccessKeyState aAccessKeyState,
                                      PRInt32 aModifierMask)
 {
@@ -1293,16 +1290,15 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
     docShell->GetChildCount(&childCount);
     for (PRInt32 counter = 0; counter < childCount; counter++) {
       // Not processing the child which bubbles up the handling
-      if (aAccessKeyState == eAccessKeyProcessingUp && counter == aChildOffset)
+      nsCOMPtr<nsIDocShellTreeItem> subShellItem;
+      docShell->GetChildAt(counter, getter_AddRefs(subShellItem));
+      if (aAccessKeyState == eAccessKeyProcessingUp &&
+          subShellItem == aBubbledFrom)
         continue;
 
-      nsCOMPtr<nsIDocShellTreeItem> subShellItem;
-      nsCOMPtr<nsIPresShell> subPS;
-      nsCOMPtr<nsPresContext> subPC;
-
-      docShell->GetChildAt(counter, getter_AddRefs(subShellItem));
       nsCOMPtr<nsIDocShell> subDS = do_QueryInterface(subShellItem);
       if (subDS && IsShellVisible(subDS)) {
+        nsCOMPtr<nsIPresShell> subPS;
         subDS->GetPresShell(getter_AddRefs(subPS));
 
         // Docshells need not have a presshell (eg. display:none
@@ -1318,7 +1314,7 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
           NS_STATIC_CAST(nsEventStateManager *, subPC->EventStateManager());
 
         if (esm)
-          esm->HandleAccessKey(subPC, aEvent, aStatus, -1,
+          esm->HandleAccessKey(subPC, aEvent, aStatus, nsnull,
                                eAccessKeyProcessingDown, aModifierMask);
 
         if (nsEventStatus_eConsumeNoDefault == *aStatus)
@@ -1327,11 +1323,11 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
     }
   }// if end . checking all sub docshell ends here.
 
-  // bubble up the process to the parent docShell if necessary
+  // bubble up the process to the parent docshell if necessary
   if (eAccessKeyProcessingDown != aAccessKeyState && nsEventStatus_eConsumeNoDefault != *aStatus) {
     nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(pcContainer));
     if (!docShell) {
-      NS_WARNING("no docShellTreeNode for presContext");
+      NS_WARNING("no docShellTreeItem for presContext");
       return;
     }
 
@@ -1339,9 +1335,6 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
     docShell->GetParent(getter_AddRefs(parentShellItem));
     nsCOMPtr<nsIDocShell> parentDS = do_QueryInterface(parentShellItem);
     if (parentDS) {
-      PRInt32 myOffset;
-      docShell->GetChildOffset(&myOffset);
-
       nsCOMPtr<nsIPresShell> parentPS;
 
       parentDS->GetPresShell(getter_AddRefs(parentPS));
@@ -1354,7 +1347,7 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
         NS_STATIC_CAST(nsEventStateManager *, parentPC->EventStateManager());
 
       if (esm)
-        esm->HandleAccessKey(parentPC, aEvent, aStatus, myOffset,
+        esm->HandleAccessKey(parentPC, aEvent, aStatus, docShell,
                              eAccessKeyProcessingUp, aModifierMask);
     }
   }// if end. bubble up process
@@ -1785,7 +1778,7 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
   nsIDocument *doc = GetDocumentFromWindow(contentWindow);
   if(!doc) return NS_ERROR_FAILURE;
 
-  nsIPresShell *presShell = doc->GetShellAt(0);
+  nsIPresShell *presShell = doc->GetPrimaryShell();
   if(!presShell) return NS_ERROR_FAILURE;
   nsPresContext *presContext = presShell->GetPresContext();
   if(!presContext) return NS_ERROR_FAILURE;
@@ -1995,9 +1988,9 @@ nsEventStateManager::GetParentScrollingView(nsInputEvent *aEvent,
   }
 
   nsIPresShell *pPresShell = nsnull;
-  for (PRUint32 i = 0; i < parentDoc->GetNumberOfShells(); i++) {
-    nsIPresShell *tmpPresShell = parentDoc->GetShellAt(i);
-    NS_ENSURE_TRUE(tmpPresShell, NS_ERROR_FAILURE);
+  nsPresShellIterator iter(parentDoc);
+  nsCOMPtr<nsIPresShell> tmpPresShell;
+  while ((tmpPresShell = iter.GetNextShell())) {
     NS_ENSURE_TRUE(tmpPresShell->GetPresContext(), NS_ERROR_FAILURE);
     if (tmpPresShell->GetPresContext()->Type() == aPresContext->Type()) {
       pPresShell = tmpPresShell;
@@ -2791,7 +2784,7 @@ nsEventStateManager::NotifyMouseOver(nsGUIEvent* aEvent, nsIContent* aContent)
   if (parentDoc) {
     nsIContent *docContent = parentDoc->FindContentForSubDocument(mDocument);
     if (docContent) {
-      nsIPresShell *parentShell = parentDoc->GetShellAt(0);
+      nsIPresShell *parentShell = parentDoc->GetPrimaryShell();
       if (parentShell) {
         nsEventStateManager* parentESM =
           NS_STATIC_CAST(nsEventStateManager*,
@@ -4178,7 +4171,7 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
         // associated view manager on exit from this function.
         // See bug 53763.
         nsCOMPtr<nsIViewManager> kungFuDeathGrip;
-        nsIPresShell *shell = doc->GetShellAt(0);
+        nsIPresShell *shell = doc->GetPrimaryShell();
         if (shell) {
           kungFuDeathGrip = shell->GetViewManager();
 
@@ -4455,7 +4448,7 @@ nsEventStateManager::GetFocusedFrame(nsIFrame** aFrame)
   if (!mCurrentFocusFrame && mCurrentFocus) {
     nsIDocument* doc = mCurrentFocus->GetDocument();
     if (doc) {
-      nsIPresShell *shell = doc->GetShellAt(0);
+      nsIPresShell *shell = doc->GetPrimaryShell();
       if (shell) {
         mCurrentFocusFrame = shell->GetPrimaryFrameFor(mCurrentFocus);
       }

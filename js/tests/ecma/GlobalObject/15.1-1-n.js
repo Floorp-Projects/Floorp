@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.1-1-n.js';
+
 /**
    File Name:          15.1-1-n.js
    ECMA Section:       The global object

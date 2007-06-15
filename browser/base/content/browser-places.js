@@ -187,7 +187,7 @@ var HistoryMenu = {
    * @param aMenuPopup
    *        XULNode for the history menupopup
    */
-  onPoupShowing: function PHM_onPopupShowing(aMenuPopup) {
+  onPopupShowing: function PHM_onPopupShowing(aMenuPopup) {
     var resultNode = aMenuPopup.getResultNode();
     var wasOpen = resultNode.containerOpen;
     resultNode.containerOpen = true;
@@ -286,9 +286,10 @@ var BookmarksEventHandler = {
    *        DOMEvent for popupshowing
    */
   onPopupShowing: function BM_onPopupShowing(event) {
-    var target = event.target;
-
-    if (target.localName == "menupopup" && target.id != "bookmarksMenuPopup") {
+    var target = event.originalTarget;
+    if (target.localName == "menupopup" &&
+        target.id != "bookmarksMenuPopup" &&
+        target.getAttribute("anonid") != "chevronPopup") {
       // Show "Open All in Tabs" menuitem if there are at least
       // two menuitems with places result nodes, and "Open (Feed Name)"
       // if it's a livemark with a siteURI.
@@ -339,7 +340,11 @@ var BookmarksEventHandler = {
     if (aTipElement.localName != "toolbarbutton")
       return false;
 
-    var url = aTipElement.getAttribute("url");
+    // Fx2XP: Only show tooltips for URL items
+    if (!PlacesUtils.nodeIsURI(aTipElement.node))
+      return false;
+
+    var url = aTipElement.node.uri;
     if (!url) 
       return false;
 

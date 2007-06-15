@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,27 +34,29 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 06 May 2001
  *
  * SUMMARY: Regression test: we shouldn't crash on this code
  *
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=79129
  */
-//-------------------------------------------------------------------------------------------------
-var bug = 79129;
+//-----------------------------------------------------------------------------
+var gTestfile = 'regress-79129-001.js';
+var BUGNUMBER = 79129;
 var summary = "Regression test: we shouldn't crash on this code";
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 test();
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
 
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
   tryThis();
   reportCompare('No Crash', 'No Crash', 'Should not crash');

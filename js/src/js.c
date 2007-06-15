@@ -64,10 +64,6 @@
 #include "jsscope.h"
 #include "jsscript.h"
 
-#ifdef PERLCONNECT
-#include "perlconnect/jsperl.h"
-#endif
-
 #ifdef LIVECONNECT
 #include "jsjava.h"
 #endif
@@ -653,13 +649,19 @@ ReadLine(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
 
         /* Else, grow our buffer for another pass. */
-        tmp = JS_realloc(cx, buf, bufsize * 2);
+        bufsize *= 2;
+        if (bufsize > buflength) {
+            tmp = JS_realloc(cx, buf, bufsize);
+        } else {
+            JS_ReportOutOfMemory(cx);
+            tmp = NULL;
+        }
+
         if (!tmp) {
             JS_free(cx, buf);
             return JS_FALSE;
         }
 
-        bufsize *= 2;
         buf = tmp;
     }
 
@@ -750,6 +752,19 @@ GC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
     return JS_TRUE;
 }
+
+#ifdef JS_GC_ZEAL
+static JSBool
+GCZeal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    uintN zeal;
+
+    if (!JS_ValueToECMAUint32(cx, argv[0], &zeal))
+        return JS_FALSE;
+    JS_SetGCZeal(cx, zeal);
+    return JS_TRUE;
+}
+#endif /* JS_GC_ZEAL */
 
 static JSScript *
 ValueToScript(JSContext *cx, jsval v)
@@ -894,8 +909,8 @@ PCToLine(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #ifdef DEBUG
 
 static void
-GetSwitchTableBounds(JSScript *script, uintN offset,
-                     uintN *start, uintN *end)
+UpdateSwitchTableBounds(JSScript *script, uintN offset,
+                        uintN *start, uintN *end)
 {
     jsbytecode *pc;
     JSOp op;
@@ -922,8 +937,7 @@ GetSwitchTableBounds(JSScript *script, uintN offset,
       case JSOP_LOOKUPSWITCHX:
         jmplen = JUMPX_OFFSET_LEN;
         goto lookup_table;
-      default:
-        JS_ASSERT(op == JSOP_LOOKUPSWITCH);
+      case JSOP_LOOKUPSWITCH:
         jmplen = JUMP_OFFSET_LEN;
       lookup_table:
         pc += jmplen;
@@ -931,6 +945,11 @@ GetSwitchTableBounds(JSScript *script, uintN offset,
         pc += ATOM_INDEX_LEN;
         jmplen += JUMP_OFFSET_LEN;
         break;
+
+      default:
+        /* [condswitch] switch does not have any jump or lookup tables. */
+        JS_ASSERT(op == JSOP_CONDSWITCH);
+        return;
     }
 
     *start = (uintN)(pc - script->code);
@@ -1017,8 +1036,8 @@ SrcNotes(JSContext *cx, JSScript *script)
             caseOff = (uintN) js_GetSrcNoteOffset(sn, 1);
             if (caseOff)
                 fprintf(gOutFile, " first case offset %u", caseOff);
-            GetSwitchTableBounds(script, offset,
-                                 &switchTableStart, &switchTableEnd);
+            UpdateSwitchTableBounds(script, offset,
+                                    &switchTableStart, &switchTableEnd);
             break;
           case SRC_CATCH:
             delta = (uintN) js_GetSrcNoteOffset(sn, 0);
@@ -1051,19 +1070,29 @@ Notes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+JS_STATIC_ASSERT(JSTN_CATCH == 0);
+JS_STATIC_ASSERT(JSTN_FINALLY == 1);
+
+static const char* const TryNoteNames[] = { "catch", "finally" };
+
 static JSBool
 TryNotes(JSContext *cx, JSScript *script)
 {
-    JSTryNote *tn = script->trynotes;
+    JSTryNote *tn, *tnlimit;
 
-    if (!tn)
+    if (!script->trynotes)
         return JS_TRUE;
-    fprintf(gOutFile, "\nException table:\nstart\tend\tcatch\n");
-    while (tn->start && tn->catchStart) {
-        fprintf(gOutFile, "  %d\t%d\t%d\n",
-               tn->start, tn->start + tn->length, tn->catchStart);
-        tn++;
-    }
+
+    tn = script->trynotes->notes;
+    tnlimit = tn + script->trynotes->length;
+    fprintf(gOutFile, "\nException table:\n"
+            "kind      stack    start      end\n");
+    do {
+        JS_ASSERT(tn->kind == JSTN_CATCH || tn->kind == JSTN_FINALLY);
+        fprintf(gOutFile, " %-7s %6u %8u %8u\n",
+                TryNoteNames[tn->kind], tn->stackDepth,
+                tn->start, tn->start + tn->length);
+    } while (++tn != tnlimit);
     return JS_TRUE;
 }
 
@@ -1103,6 +1132,7 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 SHOW_FLAG(THISP_STRING);
                 SHOW_FLAG(THISP_NUMBER);
                 SHOW_FLAG(THISP_BOOLEAN);
+                SHOW_FLAG(EXPR_CLOSURE);
                 SHOW_FLAG(INTERPRETED);
 
 #undef SHOW_FLAG
@@ -1415,9 +1445,8 @@ DumpHeap(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
     }
 
-    ok = JS_DumpHeap(cx, startThing, startTraceKind, thingToFind,
-                     maxDepth, thingToIgnore,
-                     (JSPrintfFormater)fprintf, dumpFile);
+    ok = JS_DumpHeap(cx, dumpFile, startThing, startTraceKind, thingToFind,
+                     maxDepth, thingToIgnore);
     if (dumpFile != stdout)
         fclose(dumpFile);
     return ok;
@@ -2199,6 +2228,9 @@ static JSFunctionSpec shell_functions[] = {
     {"help",            Help,           0,0,0},
     {"quit",            Quit,           0,0,0},
     {"gc",              GC,             0,0,0},
+#ifdef JS_GC_ZEAL
+    {"gczeal",          GCZeal,         1,0,0},
+#endif
     {"trap",            Trap,           3,0,0},
     {"untrap",          Untrap,         2,0,0},
     {"line2pc",         LineToPC,       0,0,0},
@@ -2243,6 +2275,9 @@ static char *shell_help_messages[] = {
     "help([name ...])       Display usage and help messages",
     "quit()                 Quit the shell",
     "gc()                   Run the garbage collector",
+#ifdef JS_GC_ZEAL
+    "gczeal(level)          How zealous the garbage collector should be",
+#endif
     "trap([fun, [pc,]] exp) Trap bytecode execution",
     "untrap(fun[, pc])      Remove a trap",
     "line2pc([fun,] line)   Map line number to PC",
@@ -3062,7 +3097,7 @@ snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             JS_ReportError(cx, "can't seek end of %s", pathname);
         } else {
             len = ftell(file);
-            if (fseek(file, 0, SEEK_SET) == EOF) {
+            if (len == -1 || fseek(file, 0, SEEK_SET) == EOF) {
                 JS_ReportError(cx, "can't seek start of %s", pathname);
             } else {
                 buf = JS_malloc(cx, len + 1);
@@ -3164,11 +3199,6 @@ main(int argc, char **argv, char **envp)
         return 1;
     if (!JS_DefineFunctions(cx, it, its_methods))
         return 1;
-
-#ifdef PERLCONNECT
-    if (!JS_InitPerlClass(cx, glob))
-        return 1;
-#endif
 
 #ifdef JSDEBUGGER
     /*

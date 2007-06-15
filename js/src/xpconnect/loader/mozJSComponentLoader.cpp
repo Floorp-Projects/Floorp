@@ -45,12 +45,15 @@
 #define FORCE_PR_LOG
 #endif
 
+#include <stdarg.h>
+
 #include "prlog.h"
 
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsICategoryManager.h"
 #include "nsIComponentManager.h"
+#include "nsIComponentManagerObsolete.h"
 #include "nsIGenericFactory.h"
 #include "nsILocalFile.h"
 #include "nsIModule.h"
@@ -68,9 +71,11 @@
 #ifndef XPCONNECT_STANDALONE
 #include "nsIScriptSecurityManager.h"
 #include "nsIURI.h"
+#include "nsIFileURL.h"
 #include "nsNetUtil.h"
 #endif
 #include "jsxdrapi.h"
+#include "jsprf.h"
 #include "nsIFastLoadFileControl.h"
 // For reporting errors with the console service
 #include "nsIScriptError.h"
@@ -104,6 +109,15 @@ static PRLogModuleInfo *gJSCLLog;
 #endif
 
 #define LOG(args) PR_LOG(gJSCLLog, PR_LOG_DEBUG, args)
+
+// Components.utils.import error messages
+#define ERROR_SCOPE_OBJ "%s - Second argument must be an object."
+#define ERROR_NOT_PRESENT "%s - EXPORTED_SYMBOLS is not present."
+#define ERROR_NOT_AN_ARRAY "%s - EXPORTED_SYMBOLS is not an array."
+#define ERROR_GETTING_ARRAY_LENGTH "%s - Error getting array length of EXPORTED_SYMBOLS."
+#define ERROR_ARRAY_ELEMENT "%s - EXPORTED_SYMBOLS[%d] is not a string."
+#define ERROR_GETTING_SYMBOL "%s - Could not get symbol '%s'."
+#define ERROR_SETTING_SYMBOL "%s - Could not set symbol '%s' on target object."
 
 void JS_DLL_CALLBACK
 mozJSLoaderErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
@@ -469,8 +483,11 @@ mozJSComponentLoader::~mozJSComponentLoader()
 mozJSComponentLoader*
 mozJSComponentLoader::sSelf;
 
-NS_IMPL_ISUPPORTS2(mozJSComponentLoader, nsIModuleLoader, nsIObserver)
-
+NS_IMPL_ISUPPORTS3(mozJSComponentLoader,
+                   nsIModuleLoader,
+                   xpcIJSModuleLoader,
+                   nsIObserver)
+ 
 nsresult
 mozJSComponentLoader::ReallyInit()
 {
@@ -495,9 +512,9 @@ mozJSComponentLoader::ReallyInit()
     uint32 options = JS_GetOptions(mContext);
     JS_SetOptions(mContext, options | JSOPTION_XML);
 
-    // enable Javascript 1.7 features (let, yield, etc. - see bug#351515)
-    JS_SetVersion(mContext, JSVERSION_1_7);
-    
+  // Always use the latest js version
+  JS_SetVersion(mContext, JSVERSION_LATEST);
+
 #ifndef XPCONNECT_STANDALONE
     nsCOMPtr<nsIScriptSecurityManager> secman = 
         do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
@@ -510,6 +527,8 @@ mozJSComponentLoader::ReallyInit()
 #endif
 
     if (!mModules.Init(32))
+        return NS_ERROR_OUT_OF_MEMORY;
+    if (!mImports.Init(32))
         return NS_ERROR_OUT_OF_MEMORY;
 
     // Set up our fastload file
@@ -1258,6 +1277,7 @@ mozJSComponentLoader::UnloadModules()
     mInitialized = PR_FALSE;
 
     mModules.Clear();
+    mImports.Clear();
 
     // Destroying our context will force a GC.
     JS_DestroyContext(mContext);
@@ -1268,6 +1288,246 @@ mozJSComponentLoader::UnloadModules()
 #ifdef DEBUG_shaver_off
     fprintf(stderr, "mJCL: UnloadAll(%d)\n", aWhen);
 #endif
+}
+
+/* [JSObject] import (in AUTF8String registryLocation,
+                      [optional] in JSObject targetObj ); */
+NS_IMETHODIMP
+mozJSComponentLoader::Import(const nsACString & registryLocation)
+{
+    // This function should only be called from JS.
+    nsresult rv;
+
+    nsCOMPtr<nsIXPConnect> xpc =
+        do_GetService(kXPConnectServiceContractID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsCOMPtr<nsIXPCNativeCallContext> cc;
+    rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef DEBUG
+    // ensure that we are being call from JS, from this method
+    nsCOMPtr<nsIInterfaceInfo> info;
+    rv = cc->GetCalleeInterface(getter_AddRefs(info));
+    NS_ENSURE_SUCCESS(rv, rv);
+    char *name;
+    info->GetName(&name);
+    NS_ASSERTION(nsCRT::strcmp("nsIXPCComponents_Utils", name) == 0,
+                 "Components.utils.import must only be called from JS.");
+    PRUint16 methodIndex;
+    const nsXPTMethodInfo *methodInfo;
+    rv = info->GetMethodInfoForName("import", &methodIndex, &methodInfo);
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRUint16 calleeIndex;
+    rv = cc->GetCalleeMethodIndex(&calleeIndex);
+    NS_ASSERTION(calleeIndex == methodIndex,
+                 "Components.utils.import called from another utils method.");
+#endif
+
+    JSContext *cx = nsnull;
+    rv = cc->GetJSContext(&cx);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    JSObject *targetObject = nsnull;
+
+    PRUint32 argc = 0;
+    rv = cc->GetArgc(&argc);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (argc > 1) {
+        // The caller passed in the optional second argument. Get it.
+        jsval *argv = nsnull;
+        rv = cc->GetArgvPtr(&argv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (JSVAL_IS_PRIMITIVE(argv[1]) ||
+            !JS_ValueToObject(cx, argv[1], &targetObject)) {
+            return ReportOnCaller(cc, ERROR_SCOPE_OBJ,
+                                  PromiseFlatCString(registryLocation).get());
+        }
+    } else {
+        // Our targetObject is the caller's global object. Find it by
+        // walking the calling object's parent chain.
+
+        nsCOMPtr<nsIXPConnectWrappedNative> wn;
+        rv = cc->GetCalleeWrapper(getter_AddRefs(wn));
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        wn->GetJSObject(&targetObject);
+        if (!targetObject) {
+            NS_ERROR("null calling object");
+            return NS_ERROR_FAILURE;
+        }
+        
+        JSObject *parent;
+        while ((parent = JS_GetParent(cx, targetObject)))
+            targetObject = parent;
+    }
+ 
+    JSObject *globalObj = nsnull;
+    rv = ImportInto(registryLocation, targetObject, cc, &globalObj);
+
+    jsval *retval = nsnull;
+    cc->GetRetValPtr(&retval);
+    if (*retval)
+        *retval = OBJECT_TO_JSVAL(globalObj);
+
+    return rv;
+}
+
+/* [noscript] JSObjectPtr importInto(in AUTF8String registryLocation,
+                                     in JSObjectPtr targetObj); */
+NS_IMETHODIMP
+mozJSComponentLoader::ImportInto(const nsACString & aLocation,
+                                 JSObject * targetObj,
+                                 nsIXPCNativeCallContext * cc,
+                                 JSObject * *_retval)
+{
+    nsresult rv;
+
+    if (!mInitialized) {
+        rv = ReallyInit();
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+    
+    nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCAutoString scheme;
+    rv = ioService->ExtractScheme(aLocation, scheme);
+    if (NS_FAILED(rv) ||
+        !scheme.EqualsLiteral("resource")) {
+      *_retval = nsnull;
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    // Get the resource:// URI.
+    nsCOMPtr<nsIURI> resURI;
+    rv = ioService->NewURI(aLocation, nsnull, nsnull, getter_AddRefs(resURI));
+    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(resURI, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Get the file belonging to it.
+    nsCOMPtr<nsIFile> file;
+    rv = fileURL->GetFile(getter_AddRefs(file));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsILocalFile> componentFile = do_QueryInterface(file, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIHashable> lfhash(do_QueryInterface(componentFile));
+    if (!lfhash) {
+        NS_ERROR("nsLocalFile not implementing nsIHashable");
+        return NS_NOINTERFACE;
+    }
+
+    ModuleEntry* mod;
+    nsAutoPtr<ModuleEntry> newEntry;
+    if (!mImports.Get(lfhash, &mod)) {
+        newEntry = new ModuleEntry;
+        if (!newEntry)
+            return NS_ERROR_OUT_OF_MEMORY;
+        
+        rv = GlobalForLocation(componentFile, &newEntry->global,
+                               &newEntry->location);
+        if (NS_FAILED(rv)) {
+            *_retval = nsnull;
+            return NS_ERROR_FILE_NOT_FOUND;
+        }
+        
+        mod = newEntry;
+    }
+
+    NS_ASSERTION(mod->global, "Import table contains entry with no global");
+    *_retval = mod->global;
+
+    jsval symbols;
+    if (targetObj) {
+        if (!JS_GetProperty(mContext, mod->global,
+                            "EXPORTED_SYMBOLS", &symbols)) {
+            return ReportOnCaller(cc, ERROR_NOT_PRESENT,
+                                  PromiseFlatCString(aLocation).get());
+        }
+
+        JSObject *symbolsObj = nsnull;
+        if (!JSVAL_IS_OBJECT(symbols) ||
+            !(symbolsObj = JSVAL_TO_OBJECT(symbols)) ||
+            !JS_IsArrayObject(mContext, symbolsObj)) {
+            return ReportOnCaller(cc, ERROR_NOT_AN_ARRAY,
+                                  PromiseFlatCString(aLocation).get());
+        }
+
+        // Iterate over symbols array, installing symbols on targetObj:
+
+        jsuint symbolCount = 0;
+        if (!JS_GetArrayLength(mContext, symbolsObj, &symbolCount)) {
+            return ReportOnCaller(cc, ERROR_GETTING_ARRAY_LENGTH,
+                                  PromiseFlatCString(aLocation).get());
+        }
+    
+        for (jsuint i = 0; i < symbolCount; ++i) {
+            jsval val;
+            JSString *symbolName;
+
+            if (!JS_GetElement(mContext, symbolsObj, i, &val) ||
+                !JSVAL_IS_STRING(val)) {
+                return ReportOnCaller(cc, ERROR_ARRAY_ELEMENT,
+                                      PromiseFlatCString(aLocation).get(), i);
+            }
+
+            symbolName = JSVAL_TO_STRING(val);
+            if (!JS_GetProperty(mContext, mod->global,
+                                JS_GetStringBytes(symbolName), &val)) {
+                return ReportOnCaller(cc, ERROR_GETTING_SYMBOL,
+                                      PromiseFlatCString(aLocation).get(),
+                                      JS_GetStringBytes(symbolName));
+            }
+
+            if (!JS_SetProperty(mContext, targetObj,
+                                JS_GetStringBytes(symbolName), &val)) {
+                return ReportOnCaller(cc, ERROR_SETTING_SYMBOL,
+                                      PromiseFlatCString(aLocation).get(),
+                                      JS_GetStringBytes(symbolName));
+            }
+#ifdef DEBUG
+            if (i == 0) {
+                printf("Installing symbols [ ");
+            }
+            printf("%s ", JS_GetStringBytes(symbolName));
+            if (i == symbolCount - 1) {
+                printf("] from %s\n", PromiseFlatCString(aLocation).get());
+            }
+#endif
+        }
+    }
+
+    // Cache this module for later
+    if (newEntry) {
+        if (!mImports.Put(lfhash, newEntry))
+            return NS_ERROR_OUT_OF_MEMORY;
+        newEntry.forget();
+    }
+    
+    return NS_OK;
+}
+
+nsresult
+mozJSComponentLoader::ReportOnCaller(nsIXPCNativeCallContext *cc,
+                                     const char *format, ...) {
+    if (!cc) {
+        return NS_ERROR_FAILURE;
+    }
+    
+    va_list ap;
+    va_start(ap, format);
+
+    nsresult rv;
+    JSContext *callerContext;
+    rv = cc->GetJSContext(&callerContext);
+    NS_ENSURE_SUCCESS(rv, rv);
+    char* buf = JS_vsmprintf(format, ap);
+    JS_ReportError(callerContext, buf);
+    JS_smprintf_free(buf);
+    return cc->SetExceptionWasThrown(PR_TRUE);
 }
 
 NS_IMETHODIMP

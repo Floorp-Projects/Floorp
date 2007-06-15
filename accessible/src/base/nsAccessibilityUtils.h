@@ -43,6 +43,7 @@
 
 #include "nsIDOMNode.h"
 #include "nsIPersistentProperties2.h"
+#include "nsIContent.h"
 
 class nsAccessibilityUtils
 {
@@ -99,6 +100,8 @@ public:
    */
   static void SetAccAttrsForXULSelectControlItem(nsIDOMNode *aNode,
                                                  nsIPersistentProperties *aAttributes);
+
+  static PRBool HasListener(nsIContent *aContent, const nsAString& aEventType);
 };
 
 #endif

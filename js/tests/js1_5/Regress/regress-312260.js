@@ -34,18 +34,19 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-312260.js';
 //-----------------------------------------------------------------------------
-var bug = 312260;
+var BUGNUMBER = 312260;
 var summary = 'Switch discriminant detecting case should not warn';
 var actual = 'No warning';
 var expect = 'No warning';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-var jsOptions = new JavaScriptOptions();
-jsOptions.setOption('strict', true);
-jsOptions.setOption('werror', true);
+options('strict');
+options('werror');
 
 try
 {
@@ -56,6 +57,4 @@ catch(e)
   actual = e + '';
 }
 
-jsOptions.reset();
-  
 reportCompare(expect, actual, summary);

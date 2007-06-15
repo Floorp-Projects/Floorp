@@ -1,4 +1,4 @@
-/* $Id: cairo-analysis-surface-private.h,v 1.5 2007/04/04 01:09:15 vladimir%pobox.com Exp $
+/* $Id: cairo-analysis-surface-private.h,v 1.6 2007/06/11 00:01:29 vladimir%pobox.com Exp $
  *
  * Copyright © 2005 Keith Packard
  *

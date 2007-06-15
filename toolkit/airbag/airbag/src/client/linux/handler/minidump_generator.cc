@@ -78,8 +78,14 @@ struct WriterArgument {
   // Signal number when crash happed. Can be 0 if this is a requested dump.
   int signo;
 
-  // Signal contex when crash happed. Can be NULL if this is a requested dump.
-  const struct sigcontext *sig_ctx;
+  // The ebp of the signal handler frame.  Can be zero if this
+  // is a requested dump.
+  uintptr_t sighandler_ebp;
+
+  // Signal context when crash happed. Can be NULL if this is a requested dump.
+  // This is actually an out parameter, but it will be filled in at the start
+  // of the writer thread.
+  struct sigcontext *sig_ctx;
 
   // Used to get information about the threads.
   LinuxThread *thread_lister;
@@ -272,10 +278,10 @@ bool WriteCrashedThreadStream(MinidumpFileWriter *minidump_writer,
 
   UntypedMDRVA memory(minidump_writer);
   if (!WriteThreadStack(writer_args->sig_ctx->ebp,
-                   writer_args->sig_ctx->esp,
-                   writer_args->thread_lister,
-                   &memory,
-                   &thread->stack))
+                        writer_args->sig_ctx->esp,
+                        writer_args->thread_lister,
+                        &memory,
+                        &thread->stack))
     return false;
 
   TypedMDRVA<MDRawContextX86> context(minidump_writer);
@@ -328,6 +334,9 @@ bool WriteThreadStream(MinidumpFileWriter *minidump_writer,
 bool WriteCPUInformation(MDRawSystemInfo *sys_info) {
   const char *proc_cpu_path = "/proc/cpuinfo";
   char line[128];
+  char vendor_id[13];
+  const char vendor_id_name[] = "vendor_id";
+  const size_t vendor_id_name_length = sizeof(vendor_id_name) - 1;
 
   struct CpuInfoEntry {
     const char *info_name;
@@ -339,6 +348,8 @@ bool WriteCPUInformation(MDRawSystemInfo *sys_info) {
     { "cpuid level", 0 },
     { NULL, -1 },
   };
+
+  memset(vendor_id, 0, sizeof(vendor_id));
 
   FILE *fp = fopen(proc_cpu_path, "r");
   if (fp != NULL) {
@@ -352,6 +363,26 @@ bool WriteCPUInformation(MDRawSystemInfo *sys_info) {
             sscanf(value, " %d", &(entry->value));
         }
         entry++;
+      }
+
+      // special case for vendor_id
+      if (!strncmp(line, vendor_id_name, vendor_id_name_length)) {
+        char *value = strchr(line, ':');
+        if (value == NULL)
+          continue;
+
+        value++;
+        while (*value && isspace(*value))
+          value++;
+        if (*value) {
+          size_t length = strlen(value);
+          // we don't want the trailing newline
+          if (value[length - 1] == '\n')
+            length--;
+          // ensure we have space for the value
+          if (length < sizeof(vendor_id))
+            strncpy(vendor_id, value, length);
+        }
       }
     }
     fclose(fp);
@@ -373,8 +404,12 @@ bool WriteCPUInformation(MDRawSystemInfo *sys_info) {
         (strlen(uts.machine) == 4 &&
          uts.machine[0] == 'i' &&
          uts.machine[2] == '8' &&
-         uts.machine[3] == '6'))
+         uts.machine[3] == '6')) {
       sys_info->processor_architecture = MD_CPU_ARCHITECTURE_X86;
+      if (vendor_id[0] != '\0')
+        memcpy(sys_info->cpu.x86_cpu_info.vendor_id, vendor_id,
+               sizeof(sys_info->cpu.x86_cpu_info.vendor_id));
+    }
   }
   return true;
 }
@@ -685,12 +720,15 @@ int Write(void *argument) {
   if (!writer_args->thread_lister->SuspendAllThreads())
     return -1;
 
-  if (writer_args->sig_ctx != NULL) {
+  if (writer_args->sighandler_ebp != 0 &&
+      writer_args->thread_lister->FindSigContext(writer_args->sighandler_ebp,
+                                                 &writer_args->sig_ctx)) {
     writer_args->crashed_stack_bottom =
-    writer_args->thread_lister->GetThreadStackBottom(writer_args->sig_ctx->ebp);
+      writer_args->thread_lister->GetThreadStackBottom(
+                                             writer_args->sig_ctx->ebp);
     int crashed_pid =  FindCrashingThread(writer_args->crashed_stack_bottom,
-                                         writer_args->requester_pid,
-                                         writer_args->thread_lister);
+                                          writer_args->requester_pid,
+                                          writer_args->thread_lister);
     if (crashed_pid > 0)
       writer_args->crashed_pid = crashed_pid;
   }
@@ -740,7 +778,8 @@ void MinidumpGenerator::AllocateStack() {
 
 bool MinidumpGenerator::WriteMinidumpToFile(const char *file_pathname,
                                    int signo,
-                                   const struct sigcontext *sig_ctx) const {
+                                   uintptr_t sighandler_ebp,
+                                   struct sigcontext **sig_ctx) const {
   assert(file_pathname != NULL);
   assert(stack_ != NULL);
 
@@ -757,12 +796,15 @@ bool MinidumpGenerator::WriteMinidumpToFile(const char *file_pathname,
     argument.requester_pid = getpid();
     argument.crashed_pid = getpid();
     argument.signo = signo;
-    argument.sig_ctx = sig_ctx;
+    argument.sighandler_ebp = sighandler_ebp;
+    argument.sig_ctx = NULL;
 
     int cloned_pid = clone(Write, stack_.get() + kStackSize,
                            CLONE_VM | CLONE_FILES | CLONE_FS | CLONE_UNTRACED,
                            (void*)&argument);
     waitpid(cloned_pid, NULL, __WALL);
+    if (sig_ctx != NULL)
+        *sig_ctx = argument.sig_ctx;
     return true;
   }
 

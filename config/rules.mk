@@ -265,7 +265,12 @@ OBJS	= $(strip $(_OBJS))
 endif
 
 ifndef HOST_OBJS
-HOST_OBJS		= $(addprefix host_,$(HOST_CSRCS:.c=.$(OBJ_SUFFIX))) $(addprefix host_,$(HOST_CPPSRCS:.cpp=.$(OBJ_SUFFIX)))
+_HOST_OBJS		= \
+        $(addprefix host_,$(HOST_CSRCS:.c=.$(OBJ_SUFFIX))) \
+	$(addprefix host_,$(patsubst %.cc,%.$(OBJ_SUFFIX),$(HOST_CPPSRCS:.cpp=.$(OBJ_SUFFIX)))) \
+	$(addprefix host_,$(HOST_CMSRCS:.m=.$(OBJ_SUFFIX))) \
+	$(addprefix host_,$(HOST_CMMSRCS:.mm=.$(OBJ_SUFFIX)))
+HOST_OBJS = $(strip $(_HOST_OBJS))
 endif
 
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
@@ -297,10 +302,6 @@ ALL_TRASH = \
 	$(wildcard gts_tmp_*) $(LIBRARY:%.a=.%.timestamp)
 ALL_TRASH_DIRS = \
 	$(GARBAGE_DIRS) /no-such-file
-
-ifdef QTDIR
-GARBAGE			+= $(MOCSRCS)
-endif
 
 ifdef SIMPLE_PROGRAMS
 GARBAGE			+= $(SIMPLE_PROGRAMS:%=%.$(OBJ_SUFFIX))
@@ -925,7 +926,11 @@ ifdef MSMANIFEST_TOOL
 	fi
 endif	# MSVC with manifest tool
 else
+ifeq ($(CPP_PROG_LINK),1)
+	$(HOST_CXX) -o $@ $(HOST_CXXFLAGS) $(HOST_LDFLAGS) $(HOST_PROGOBJS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
+else
 	$(HOST_CC) -o $@ $(HOST_CFLAGS) $(HOST_LDFLAGS) $(HOST_PROGOBJS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
+endif # CPP_PROG_LINK
 endif
 endif
 endif
@@ -1190,6 +1195,18 @@ host_%.$(OBJ_SUFFIX): %.cpp Makefile Makefile.in
 	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
+host_%.$(OBJ_SUFFIX): %.cc Makefile Makefile.in
+	$(REPORT_BUILD)
+	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
+
+host_%.$(OBJ_SUFFIX): %.m Makefile Makefile.in
+	$(REPORT_BUILD)
+	$(ELOG) $(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
+
+host_%.$(OBJ_SUFFIX): %.mm Makefile Makefile.in
+	$(REPORT_BUILD)
+	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
+
 %: %.c Makefile Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
@@ -1311,7 +1328,13 @@ ifdef CYGWIN_WRAPPER
 normalizepath = $(foreach p,$(1),$(shell cygpath -m $(p)))
 else
 # assume MSYS
-normalizepath = $(foreach p,$(1),$(shell cd $(p) && pwd -W))
+#  We use 'pwd -W' to get DOS form of the path.  However, since the given path
+#  could be a file or a non-existent path, we cannot call 'pwd -W' directly
+#  on the path.  Instead, we extract the root path (i.e. "c:/"), call 'pwd -W'
+#  on it, then merge with the rest of the path.
+root-path = $(shell echo $(1) | sed -e "s|\(/[^/]*\)/\?\(.*\)|\1|")
+non-root-path = $(shell echo $(1) | sed -e "s|\(/[^/]*\)/\?\(.*\)|\2|")
+normalizepath = $(foreach p,$(1),$(if $(filter /%,$(1)),$(shell cd $(call root-path,$(1)) && pwd -W)$(call non-root-path,$(1)),$(1)))
 endif
 else
 normalizepath = $(1)
@@ -1326,7 +1349,7 @@ _JAVA_SOURCEPATH = ".$(SEP)$(_srcdir)"
 endif
 
 ifdef JAVA_CLASSPATH
-CP = $(subst $(SPACE),$(SEP),$(strip $(JAVA_CLASSPATH)))
+CP = $(subst $(SPACE),$(SEP),$(call normalizepath,$(strip $(JAVA_CLASSPATH))))
 _JAVA_CLASSPATH = ".$(SEP)$(CP)"
 else
 _JAVA_CLASSPATH = .
@@ -1692,6 +1715,42 @@ endif
 endif
 
 ################################################################################
+# Copy each element of EXTRA_JS_MODULES to $(FINAL_TARGET)/modules
+ifdef EXTRA_JS_MODULES
+libs:: $(EXTRA_JS_MODULES)
+ifndef NO_DIST_INSTALL
+	$(INSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/modules
+endif
+
+install:: $(EXTRA_JS_MODULES)
+ifndef NO_INSTALL
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/modules
+endif
+endif
+
+ifdef EXTRA_PP_JS_MODULES
+libs:: $(EXTRA_PP_JS_MODULES)
+ifndef NO_DIST_INSTALL
+	$(EXIT_ON_ERROR) \
+	for i in $^; do \
+	  dest=$(FINAL_TARGET)/modules/`basename $$i`; \
+	  $(RM) -f $$dest; \
+	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $$dest; \
+	done
+endif
+
+install:: $(EXTRA_PP_JS_MODULES)
+ifndef NO_INSTALL
+	$(EXIT_ON_ERROR) \
+	for i in $^; do \
+	  dest=$(DESTDIR)$(mozappdir)/modules/`basename $$i`; \
+	  $(RM) -f $$dest; \
+	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $$dest; \
+	done
+endif
+endif
+
+################################################################################
 # SDK
 
 ifneq (,$(SDK_LIBRARY))
@@ -1838,12 +1897,12 @@ _JAR_REGCHROME_DISABLE_JAR=0
 endif
 
 REGCHROME = $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/add-chrome.pl \
-	$(if $(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)),-x) \
+	$(if $(filter gtk2,$(MOZ_WIDGET_TOOLKIT)),-x) \
 	$(if $(CROSS_COMPILE),-o $(OS_ARCH)) $(FINAL_TARGET)/chrome/installed-chrome.txt \
 	$(_JAR_REGCHROME_DISABLE_JAR)
 
 REGCHROME_INSTALL = $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/add-chrome.pl \
-	$(if $(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)),-x) \
+	$(if $(filter gtk2,$(MOZ_WIDGET_TOOLKIT)),-x) \
 	$(if $(CROSS_COMPILE),-o $(OS_ARCH)) $(DESTDIR)$(mozappdir)/chrome/installed-chrome.txt \
 	$(_JAR_REGCHROME_DISABLE_JAR)
 
@@ -1899,6 +1958,17 @@ check::
 	      $(NATIVE_TOPSRCDIR) \
 	      $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir; \
 	done
+
+# Test execution
+check-interactive::
+	@$(EXIT_ON_ERROR) \
+	$(RUN_TEST_PROGRAM) \
+	  $(topsrcdir)/tools/test-harness/xpcshell-simple/test_one.sh \
+	    $(DIST)/bin/xpcshell \
+	    $(FWDSLASH_TOPSRCDIR) \
+	    $(NATIVE_TOPSRCDIR) \
+	    $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir \
+	    $(SOLO_FILE);
 
 endif # XPCSHELL_TESTS
 
@@ -2040,7 +2110,7 @@ endif
 # Fake targets.  Always run these rules, even if a file/directory with that
 # name already exists.
 #
-.PHONY: all all_platforms alltags boot checkout chrome realchrome clean clobber clobber_all export install libs makefiles realclean run_viewer run_apprunner tools $(DIRS) $(TOOL_DIRS) FORCE check
+.PHONY: all all_platforms alltags boot checkout chrome realchrome clean clobber clobber_all export install libs makefiles realclean run_viewer run_apprunner tools $(DIRS) $(TOOL_DIRS) FORCE check check-interactive
 
 # Used as a dependency to force targets to rebuild
 FORCE:
@@ -2056,6 +2126,9 @@ tags: TAGS
 TAGS: $(SUBMAKEFILES) $(CSRCS) $(CPPSRCS) $(wildcard *.h)
 	-etags $(CSRCS) $(CPPSRCS) $(wildcard *.h)
 	+$(LOOP_OVER_DIRS)
+
+echo-variable-%:
+	@echo $($*)
 
 echo-tiers:
 	@echo $(TIERS)
@@ -2111,6 +2184,7 @@ showbuild:
 	@echo "MOZ_WIDGET_TOOLKIT = $(MOZ_WIDGET_TOOLKIT)"
 	@echo "CC                 = $(CC)"
 	@echo "CXX                = $(CXX)"
+	@echo "CCC                = $(CCC)"
 	@echo "CPP                = $(CPP)"
 	@echo "LD                 = $(LD)"
 	@echo "AR                 = $(AR)"
@@ -2143,13 +2217,16 @@ showbuild:
 
 showhost:
 	@echo "HOST_CC            = $(HOST_CC)"
+	@echo "HOST_CXX           = $(HOST_CXX)"
 	@echo "HOST_CFLAGS        = $(HOST_CFLAGS)"
 	@echo "HOST_LDFLAGS       = $(HOST_LDFLAGS)"
 	@echo "HOST_LIBS          = $(HOST_LIBS)"
 	@echo "HOST_EXTRA_LIBS    = $(HOST_EXTRA_LIBS)"
 	@echo "HOST_EXTRA_DEPS    = $(HOST_EXTRA_DEPS)"
 	@echo "HOST_PROGRAM       = $(HOST_PROGRAM)"
+	@echo "HOST_OBJS          = $(HOST_OBJS)"
 	@echo "HOST_PROGOBJS      = $(HOST_PROGOBJS)"
+	@echo "HOST_LIBRARY       = $(HOST_LIBRARY)"
 
 showbuildmods::
 	@echo "Build Modules	= $(BUILD_MODULES)"
@@ -2166,5 +2243,9 @@ documentation:
 	$(DOXYGEN) $(DEPTH)/config/doxygen.cfg
 
 check:: $(SUBMAKEFILES) $(MAKE_DIRS)
+	+$(LOOP_OVER_DIRS)
+	+$(LOOP_OVER_TOOL_DIRS)
+
+check-interactive:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	+$(LOOP_OVER_DIRS)
 	+$(LOOP_OVER_TOOL_DIRS)

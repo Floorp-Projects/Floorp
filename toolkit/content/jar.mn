@@ -72,9 +72,6 @@ toolkit.jar:
 *+ content/global/bindings/tree.xml            (widgets/tree.xml)
 *+ content/global/bindings/wizard.xml          (widgets/wizard.xml)
 *+ content/global/bindings/findbar.xml         (widgets/findbar.xml)
-   content/global/bindings/autoscroll_all.png  (widgets/autoscroll_all.png)
-   content/global/bindings/autoscroll_h.png    (widgets/autoscroll_h.png)
-   content/global/bindings/autoscroll_v.png    (widgets/autoscroll_v.png)
 #ifdef XP_MACOSX
 *  content/global/macWindowMenu.js             (macWindowMenu.js)
 #endif

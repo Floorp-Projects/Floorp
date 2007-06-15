@@ -35,17 +35,18 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'regress-277683.js';
+
 // testcase from  Martin.Honnen@arcor.de
 
-var bug = 277683;
 var summary = 'processing instruction with target name XML';
+var BUGNUMBER = 277683;
 var actual = '';
 var expect = '';
 
+printBugNumber(BUGNUMBER);
 START(summary);
-
-printBugNumber (bug);
-printStatus (summary);
 
 expect = 'error';
 try

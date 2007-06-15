@@ -58,7 +58,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMAttr.h"
 #include "nsIDocument.h"
-#include "nsIDOMEventReceiver.h" 
+#include "nsIDOMEventTarget.h" 
 #include "nsIDOM3EventTarget.h" 
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMKeyListener.h" 
@@ -369,9 +369,10 @@ nsHTMLEditor::RemoveEventListeners()
     return;
   }
 
-  nsCOMPtr<nsIDOMEventReceiver> erP = GetDOMEventReceiver();
+  nsCOMPtr<nsPIDOMEventTarget> piTarget = GetPIDOMEventTarget();
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(piTarget);
 
-  if (erP)
+  if (piTarget && target)
   {
     // Both mMouseMotionListenerP and mResizeEventListenerP can be
     // registerd with other targets than the DOM event receiver that
@@ -384,17 +385,17 @@ nsHTMLEditor::RemoveEventListeners()
     {
       // mMouseMotionListenerP might be registerd either by IID or
       // name, unregister by both.
-      erP->RemoveEventListenerByIID(mMouseMotionListenerP,
-                                    NS_GET_IID(nsIDOMMouseMotionListener));
+      piTarget->RemoveEventListenerByIID(mMouseMotionListenerP,
+                                         NS_GET_IID(nsIDOMMouseMotionListener));
 
-      erP->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
-                               mMouseMotionListenerP, PR_TRUE);
+      target->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
+                                  mMouseMotionListenerP, PR_TRUE);
     }
 
     if (mResizeEventListenerP)
     {
-      erP->RemoveEventListener(NS_LITERAL_STRING("resize"),
-                               mResizeEventListenerP, PR_FALSE);
+      target->RemoveEventListener(NS_LITERAL_STRING("resize"),
+                                  mResizeEventListenerP, PR_FALSE);
     }
   }
 

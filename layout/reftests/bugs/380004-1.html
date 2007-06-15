@@ -1,0 +1,18 @@
+<html class="reftest-wait">
+ <body onload="HandleLoad()">
+  <script>
+    function HandleLoad() {
+      setTimeout(function() {
+	var myFrame = document.getElementById("myFrame");
+	myFrame.style.height = "300px";
+        document.documentElement.className = "";
+      }, 0);
+    }
+  </script>
+
+  <iframe id="myFrame" 
+          style="height: 100px"
+          src="380004-iframe.html"/>
+ </body>
+</html>
+

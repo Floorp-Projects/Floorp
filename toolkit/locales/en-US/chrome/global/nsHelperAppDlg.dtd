@@ -30,7 +30,6 @@
 <!ENTITY useSystemDefault.noDesc.label "Open it with the default application">
 <!ENTITY useSystemDefault.accesskey    "O">
 
-<!-- LOCALIZATION NOTE:  do not localize "#1" -->
 <!ENTITY openUsing.label       "Open it with">
 <!ENTITY openUsing.accesskey   "w">
 

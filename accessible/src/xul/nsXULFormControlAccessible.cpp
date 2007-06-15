@@ -133,14 +133,20 @@ nsXULButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   // Buttons can be checked -- they simply appear pressed in rather than checked
   nsCOMPtr<nsIDOMXULButtonElement> xulButtonElement(do_QueryInterface(mDOMNode));
   if (xulButtonElement) {
-    PRBool checked = PR_FALSE;
-    PRInt32 checkState = 0;
-    xulButtonElement->GetChecked(&checked);
-    if (checked) {
-      *aState |= nsIAccessibleStates::STATE_PRESSED;
-      xulButtonElement->GetCheckState(&checkState);
-      if (checkState == nsIDOMXULButtonElement::CHECKSTATE_MIXED)  
-        *aState |= nsIAccessibleStates::STATE_MIXED;
+    nsAutoString type;
+    xulButtonElement->GetType(type);
+    if (type.EqualsLiteral("checkbox") || type.EqualsLiteral("radio")) {
+      *aState |= nsIAccessibleStates::STATE_CHECKABLE;
+      PRBool checked = PR_FALSE;
+      PRInt32 checkState = 0;
+      xulButtonElement->GetChecked(&checked);
+      if (checked) {
+        *aState |= nsIAccessibleStates::STATE_PRESSED;
+        xulButtonElement->GetCheckState(&checkState);
+        if (checkState == nsIDOMXULButtonElement::CHECKSTATE_MIXED) { 
+          *aState |= nsIAccessibleStates::STATE_MIXED;
+        }
+      }
     }
   }
 
@@ -365,7 +371,9 @@ nsXULCheckboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   // Get focus and disable status from base class
   nsresult rv = nsFormControlAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
-
+  
+  *aState |= nsIAccessibleStates::STATE_CHECKABLE;
+  
   // Determine Checked state
   nsCOMPtr<nsIDOMXULCheckboxElement> xulCheckboxElement(do_QueryInterface(mDOMNode));
   if (xulCheckboxElement) {
@@ -473,11 +481,15 @@ NS_IMETHODIMP nsXULProgressMeterAccessible::GetValue(nsAString& aValue)
   if (!aValue.IsEmpty()) {
     return NS_OK;
   }
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  NS_ASSERTION(element, "No element for DOM node!");
-  element->GetAttribute(NS_LITERAL_STRING("value"), aValue);
-  if (!aValue.IsEmpty() && aValue.Last() != '%')
-    aValue.AppendLiteral("%");
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    return NS_ERROR_FAILURE;
+  }
+  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, aValue);
+  if (aValue.IsEmpty()) {
+    aValue.AppendLiteral("0");  // Empty value for progress meter = 0%
+  }
+  aValue.AppendLiteral("%");
   return NS_OK;
 }
 
@@ -501,8 +513,14 @@ NS_IMETHODIMP nsXULProgressMeterAccessible::GetMinimumIncrement(double *aMinimum
 
 NS_IMETHODIMP nsXULProgressMeterAccessible::GetCurrentValue(double *aCurrentValue)
 {
+  *aCurrentValue = 0;
   nsAutoString currentValue;
-  GetValue(currentValue);
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    return NS_ERROR_FAILURE;
+  }
+  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, currentValue);
+
   PRInt32 error;
   *aCurrentValue = currentValue.ToFloat(&error) / 100;
   return NS_OK;
@@ -531,6 +549,8 @@ nsXULRadioButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   nsresult rv = nsFormControlAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  *aState |= nsIAccessibleStates::STATE_CHECKABLE;
+  
   PRBool selected = PR_FALSE;   // Radio buttons can be selected
 
   nsCOMPtr<nsIDOMXULSelectControlItemElement> radioButton(do_QueryInterface(mDOMNode));
@@ -671,7 +691,7 @@ nsXULToolbarSeparatorAccessible::GetState(PRUint32 *aState,
   */
 
 nsXULTextFieldAccessible::nsXULTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell) :
- nsHyperTextAccessible(aNode, aShell)
+ nsHyperTextAccessibleWrap(aNode, aShell)
 {
 }
 
@@ -681,7 +701,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXULTextFieldAccessible, nsHyperTextAccessible,
 NS_IMETHODIMP nsXULTextFieldAccessible::Init()
 {
   CheckForEditor();
-  return nsHyperTextAccessible::Init();
+  return nsHyperTextAccessibleWrap::Init();
 }
 
 NS_IMETHODIMP nsXULTextFieldAccessible::Shutdown()
@@ -690,7 +710,7 @@ NS_IMETHODIMP nsXULTextFieldAccessible::Shutdown()
     mEditor->RemoveEditActionListener(this);
     mEditor = nsnull;
   }
-  return nsHyperTextAccessible::Shutdown();
+  return nsHyperTextAccessibleWrap::Shutdown();
 }
 
 NS_IMETHODIMP nsXULTextFieldAccessible::GetValue(nsAString& aValue)
@@ -732,7 +752,7 @@ nsXULTextFieldAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
 
-  nsresult rv = nsHyperTextAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMNode> inputField = GetInputField();
@@ -782,8 +802,12 @@ nsXULTextFieldAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   PRBool isMultiLine = content->HasAttr(kNameSpaceID_None,
                                         nsAccessibilityAtoms::multiline);
 
-  *aExtraState |= (isMultiLine ? nsIAccessibleStates::EXT_STATE_MULTI_LINE :
-                                 nsIAccessibleStates::EXT_STATE_SINGLE_LINE);
+  if (isMultiLine) {
+    *aExtraState |= nsIAccessibleStates::EXT_STATE_MULTI_LINE;
+  }
+  else {
+    *aExtraState |= nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
+  }
 
   return NS_OK;
 }

@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-332472.js';
 //-----------------------------------------------------------------------------
-var bug = 332472;
+var BUGNUMBER = 332472;
 var summary = 'new RegExp() ignores string boundaries when throwing exceptions';
 var actual = '';
 var expect = 'SyntaxError: invalid quantifier ?asdf';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var str1 = "?asdf\nAnd you really shouldn't see this!";
@@ -52,5 +54,5 @@ catch(ex) {
   printStatus(ex);
   actual = ex + '';
 }
-  
+ 
 reportCompare(expect, actual, summary);

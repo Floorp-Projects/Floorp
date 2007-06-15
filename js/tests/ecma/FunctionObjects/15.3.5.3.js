@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.3.5.3.js';
+
 /**
    File Name:          15.3.5.3.js
    ECMA Section:       Function.arguments

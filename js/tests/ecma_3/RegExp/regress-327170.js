@@ -34,23 +34,25 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-327170.js';
 //-----------------------------------------------------------------------------
-var bug = 327170;
+var BUGNUMBER = 327170;
 var summary = 'Reuse of RegExp in string.replace(rx.compile(...), function() { rx.compile(...); }) causes a crash';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var g_rx = /(?:)/;
 
-"this is a test-string".replace(g_rx.compile("test", "g"), 
-function()
-{
-  // re-use of the g_rx RegExp object, 
-  // that's currently in use by the replace fn.
-  g_rx.compile("string", "g");
-});
-  
+"this is a test-string".replace(g_rx.compile("test", "g"),
+				function()
+				{
+				  // re-use of the g_rx RegExp object,
+				  // that's currently in use by the replace fn.
+				  g_rx.compile("string", "g");
+				});
+ 
 reportCompare(expect, actual, summary);

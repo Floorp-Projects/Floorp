@@ -3067,6 +3067,7 @@ void
 txHandlerTable::shutdown()
 {
     SHUTDOWN_HANDLER(Root);
+    SHUTDOWN_HANDLER(Embed);
     SHUTDOWN_HANDLER(Top);
     SHUTDOWN_HANDLER(Ignore);
     SHUTDOWN_HANDLER(Template);

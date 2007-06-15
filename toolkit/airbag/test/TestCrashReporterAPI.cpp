@@ -62,8 +62,15 @@ int tests_run;
 char *
 test_init_exception_handler()
 {
+  nsCOMPtr<nsILocalFile> lf;
+  // we don't plan on launching the crash reporter in this app anyway,
+  // so it's ok to pass a bogus nsILocalFile
+  mu_assert("NS_NewNativeLocalFile", NS_NewNativeLocalFile(EmptyCString(),
+                                                           PR_TRUE,
+                                                           getter_AddRefs(lf)));
+
   mu_assert("CrashReporter::SetExceptionHandler",
-            CrashReporter::SetExceptionHandler(nsnull));
+            CrashReporter::SetExceptionHandler(lf, nsnull));
   return 0;
 }
 
@@ -144,9 +151,7 @@ main (int argc, char **argv)
 {
   NS_InitXPCOM2(nsnull, nsnull, nsnull);
 
-  char* env = new char[13];
-  strcpy(env, "MOZ_AIRBAG=1");
-  PR_SetEnv(env);
+  PR_SetEnv("MOZ_CRASHREPORTER=1");
 
   char* result = all_tests();
   if (result != 0) {

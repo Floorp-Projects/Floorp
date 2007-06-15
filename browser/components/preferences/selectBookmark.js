@@ -51,7 +51,7 @@ var SelectBookmarkDialog = {
     // Initial update of the OK button.
     this.selectionChanged();
   },
-  
+
   /** 
    * Update the disabled state of the OK button as the user changes the 
    * selection within the view. 
@@ -66,7 +66,6 @@ var SelectBookmarkDialog = {
     }
     accept.disabled = disableAcceptButton;
   },
-  
 
   onItemDblClick: function SBD_onItemDblClick() {
     var bookmarks = document.getElementById("bookmarks");
@@ -79,7 +78,7 @@ var SelectBookmarkDialog = {
       document.documentElement.getButton("accept").click();
     }
   },
-  
+
   /**
    * User accepts their selection. Set all the selected URLs or the contents
    * of the selected folder as the list of homepages.
@@ -91,9 +90,8 @@ var SelectBookmarkDialog = {
     var urls = [];
     var names = [];
     var selectedNode = bookmarks.selectedNode;
-    if (bookmarks.hasSingleSelection && 
-        PlacesUtils.nodeIsFolder(selectedNode)) {
-      var contents = PlacesUtils.getFolderContents(asFolder(selectedNode).folderId);
+    if (PlacesUtils.nodeIsFolder(selectedNode)) {
+      var contents = PlacesUtils.getFolderContents(selectedNode.itemId);
       var cc = contents.childCount;
       for (var i = 0; i < cc; ++i) {
         var node = contents.getChild(i);
@@ -104,11 +102,8 @@ var SelectBookmarkDialog = {
       }
     }
     else {
-      var nodes = bookmarks.getSelectionNodes();
-      for (i = 0; i < nodes.length; ++i) {
-        urls.push(nodes[i].uri);
-        names.push(nodes[i].title);
-      }
+      urls.push(selectedNode.uri);
+      names.push(selectedNode.title);
     }
     window.arguments[0].urls = urls;
     window.arguments[0].names = names;

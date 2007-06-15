@@ -108,6 +108,7 @@
 #include "nsIPropertyBag.h"
 #include "nsIProperty.h"
 #include "nsSupportsArray.h"
+#include "nsTArray.h"
 
 #include "nsIXPCScriptNotify.h"  // used to notify: ScriptEvaluated
 
@@ -426,7 +427,8 @@ struct JSObjectRefcounts;
 
 class nsXPConnect : public nsIXPConnect,
                     public nsSupportsWeakReference,
-                    public nsCycleCollectionLanguageRuntime
+                    public nsCycleCollectionLanguageRuntime,
+                    public nsCycleCollectionParticipant
 {
 public:
     // all the interface method declarations...
@@ -474,13 +476,16 @@ public:
     nsresult GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info);
     nsresult GetInfoForName(const char * name, nsIInterfaceInfo** info);
 
-    // from nsCycleCollectionLanguageRuntime
+    // from nsCycleCollectionLanguageRuntime and nsCycleCollectionParticipant
     nsresult BeginCycleCollection();
-    nsresult Root(const nsDeque &nodes);
-    nsresult Unlink(const nsDeque &nodes);
-    nsresult Unroot(const nsDeque &nodes);
-    nsresult Traverse(void *p, nsCycleCollectionTraversalCallback &cb);
+    NS_IMETHOD Root(void *p);
+    NS_IMETHOD Unlink(void *p);
+    NS_IMETHOD Unroot(void *p);
+    NS_IMETHOD Traverse(void *p,
+                        nsCycleCollectionTraversalCallback &cb);
     nsresult FinishCycleCollection();
+    nsCycleCollectionParticipant *ToParticipant(void *p) {return this;}
+
     JSObjectRefcounts* GetJSObjectRefcounts() {return mObjRefcounts;}
 #ifndef XPCONNECT_STANDALONE
     void RecordTraversal(void *p, nsISupports *s);
@@ -511,12 +516,41 @@ private:
     PRUint16                 mDefaultSecurityManagerFlags;
     JSBool                   mShuttingDown;
     JSObjectRefcounts*       mObjRefcounts;
+    XPCCallContext*          mCycleCollectionContext;
 
 #ifdef XPC_TOOLS_SUPPORT
     nsCOMPtr<nsIXPCToolsProfiler> mProfiler;
     nsCOMPtr<nsILocalFile>        mProfilerOutputFile;
 #endif
 
+};
+
+/***************************************************************************/
+
+class XPCRootSetElem
+{
+public:
+    XPCRootSetElem()
+    {
+#ifdef DEBUG
+        mNext = nsnull;
+        mSelfp = nsnull;
+#endif
+    }
+
+    ~XPCRootSetElem()
+    {
+        NS_ASSERTION(!mNext, "Must be unlinked");
+        NS_ASSERTION(!mSelfp, "Must be unlinked");
+    }
+
+    inline XPCRootSetElem* GetNextRoot() { return mNext; }
+    void AddToRootSet(JSRuntime* rt, XPCRootSetElem** listHead);
+    void RemoveFromRootSet(JSRuntime* rt);
+
+private:
+    XPCRootSetElem *mNext;
+    XPCRootSetElem **mSelfp;
 };
 
 /***************************************************************************/
@@ -628,7 +662,13 @@ public:
         return mStrings[index];
     }
 
+    static void JS_DLL_CALLBACK TraceJS(JSTracer* trc, void* data);
+
     static JSBool JS_DLL_CALLBACK GCCallback(JSContext *cx, JSGCStatus status);
+
+    inline void AddVariantRoot(XPCTraceableVariant* variant);
+    inline void AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS);
+    inline void AddObjectHolderRoot(XPCJSObjectHolder* holder);
 
     void DebugDump(PRInt16 depth);
 
@@ -690,6 +730,9 @@ private:
     JSBool mMainThreadOnlyGC;
     JSBool mDeferReleases;
     JSBool mDoingFinalization;
+    XPCRootSetElem *mVariantRoots;
+    XPCRootSetElem *mWrappedJSRoots;
+    XPCRootSetElem *mObjectHolderRoots;
 };
 
 /***************************************************************************/
@@ -1038,7 +1081,7 @@ xpc_InitWrappedNativeJSOps();
 
 // Comes from xpcwrappednativeops.cpp
 extern void
-xpc_MarkForValidWrapper(JSContext *cx, XPCWrappedNative* wrapper, void *arg);
+xpc_TraceForValidWrapper(JSTracer *trc, XPCWrappedNative* wrapper);
 
 /***************************************************************************/
 
@@ -1088,6 +1131,9 @@ public:
 
     static void
     SystemIsBeingShutDown(XPCCallContext& ccx);
+
+    static void
+    TraceJS(JSTracer* trc, XPCJSRuntime* rt);
 
     static void
     FinishedMarkPhaseOfGC(JSContext* cx, XPCJSRuntime* rt);
@@ -1294,8 +1340,8 @@ public:
                     {return 0 != (mMemberCount & XPC_NATIVE_IFACE_MARK_FLAG);}
 
     // NOP. This is just here to make the AutoMarkingPtr code compile.
-    inline void MarkBeforeJSFinalize(JSContext*) {}
-    inline void AutoMark(JSContext*) {}
+    inline void TraceJS(JSTracer* trc) {}
+    inline void AutoTrace(JSTracer* trc) {}
 
     static void DestroyInstance(JSContext* cx, XPCJSRuntime* rt,
                                 XPCNativeInterface* inst);
@@ -1423,8 +1469,8 @@ public:
     inline void Mark();
 
     // NOP. This is just here to make the AutoMarkingPtr code compile.
-    inline void MarkBeforeJSFinalize(JSContext*) {}
-    inline void AutoMark(JSContext*) {}
+    inline void TraceJS(JSTracer* trc) {}
+    inline void AutoTrace(JSTracer* trc) {}
 
 private:
     void MarkSelfOnly() {mInterfaceCount |= XPC_NATIVE_SET_MARK_FLAG;}
@@ -1512,7 +1558,7 @@ public:
     JSBool WantCall()                     GET_IT(WANT_CALL)
     JSBool WantConstruct()                GET_IT(WANT_CONSTRUCT)
     JSBool WantHasInstance()              GET_IT(WANT_HASINSTANCE)
-    JSBool WantMark()                     GET_IT(WANT_MARK)
+    JSBool WantTrace()                    GET_IT(WANT_TRACE)
     JSBool WantEquality()                 GET_IT(WANT_EQUALITY)
     JSBool WantOuterObject()              GET_IT(WANT_OUTER_OBJECT)
     JSBool WantInnerObject()              GET_IT(WANT_INNER_OBJECT)
@@ -1723,16 +1769,19 @@ public:
 
     void DebugDump(PRInt16 depth);
 
-    // This is called in the 'early' phase by AutoMarkingWrappedNativeProtoPtr.
-    // 'early' meaning after JSGC_MARK_END and before JSGC_FINALIZE_END.
-    // At this point in time we can still mark JSObjects in the JS gc heap.
-    void MarkBeforeJSFinalize(JSContext* cx)
-        {if(mJSProtoObject)
-            JS_MarkGCThing(cx, mJSProtoObject, 
-                           "XPCWrappedNativeProto::mJSProtoObject", nsnull);
-         if(mScriptableInfo) mScriptableInfo->Mark();}
+    void TraceJS(JSTracer* trc)
+    {
+        if(mJSProtoObject)
+        {
+            JS_CALL_OBJECT_TRACER(trc, mJSProtoObject,
+                                  "XPCWrappedNativeProto::mJSProtoObject");
+        }
+        if(mScriptableInfo && JS_IsGCMarkingTracer(trc))
+            mScriptableInfo->Mark();
+    }
+
     // NOP. This is just here to make the AutoMarkingPtr code compile.
-    inline void AutoMark(JSContext*) {}
+    inline void AutoTrace(JSTracer* trc) {}
 
     // Yes, we *do* need to mark the mScriptableInfo in both cases.
     void Mark() const
@@ -1801,8 +1850,8 @@ public:
     ~XPCWrappedNativeTearOff();
 
     // NOP. This is just here to make the AutoMarkingPtr code compile.
-    inline void MarkBeforeJSFinalize(JSContext*) {}
-    inline void AutoMark(JSContext*) {}
+    inline void TraceJS(JSTracer* trc) {}
+    inline void AutoTrace(JSTracer* trc) {}
 
     void Mark()       {mJSObject = (JSObject*)(((jsword)mJSObject) | 1);}
     void Unmark()     {mJSObject = (JSObject*)(((jsword)mJSObject) & ~1);}
@@ -2026,28 +2075,29 @@ public:
     }
 
     // Yes, we *do* need to mark the mScriptableInfo in both cases.
-    inline void MarkBeforeJSFinalize(JSContext* cx)
+    inline void TraceJS(JSTracer* trc)
     {
-        if(mScriptableInfo) mScriptableInfo->Mark();
-        if(HasProto()) mMaybeProto->MarkBeforeJSFinalize(cx);
+        if(mScriptableInfo && JS_IsGCMarkingTracer(trc))
+            mScriptableInfo->Mark();
+        if(HasProto()) mMaybeProto->TraceJS(trc);
         if(mNativeWrapper)
         {
-            JS_MarkGCThing(cx, mNativeWrapper, 
-                           "XPCWrappedNative::mNativeWrapper", nsnull);
+            JS_CALL_OBJECT_TRACER(trc, mNativeWrapper,
+                                  "XPCWrappedNative::mNativeWrapper");
         }
     }
 
-    inline void AutoMark(JSContext* cx)
+    inline void AutoTrace(JSTracer* trc)
     {
         // If this got called, we're being kept alive by someone who really
         // needs us alive and whole.  Do not let our mFlatJSObject go away.
-        // This is the only time we should be marking our mFlatJSObject;
-        // normally we just go away quietly when it does.  Be careful not to
-        // mark the bogus JSVAL_ONE value we can have during init, though.
+        // This is the only time we should be tracing our mFlatJSObject,
+        // normally somebody else is doing that. Be careful not to trace the
+        // bogus JSVAL_ONE value we can have during init, though.
         if(mFlatJSObject && mFlatJSObject != (JSObject*)JSVAL_ONE)
         {
-            ::JS_MarkGCThing(cx, mFlatJSObject,
-                             "XPCWrappedNative::mFlatJSObject", nsnull);
+            JS_CALL_OBJECT_TRACER(trc, mFlatJSObject,
+                                  "XPCWrappedNative::mFlatJSObject");
         }
     }
 
@@ -2256,7 +2306,8 @@ private:
 class nsXPCWrappedJS : protected nsAutoXPTCStub,
                        public nsIXPConnectWrappedJS,
                        public nsSupportsWeakReference,
-                       public nsIPropertyBag
+                       public nsIPropertyBag,
+                       public XPCRootSetElem
 {
 public:
     NS_DECL_ISUPPORTS
@@ -2309,6 +2360,11 @@ public:
     JSBool IsAggregatedToNative() const {return mRoot->mOuter != nsnull;}
     nsISupports* GetAggregatedNativeObject() const {return mRoot->mOuter;}
 
+    void TraceJS(JSTracer* trc);
+#ifdef DEBUG
+    static void PrintTraceName(JSTracer* trc, char *buf, size_t bufsize);
+#endif
+
     virtual ~nsXPCWrappedJS();
 protected:
     nsXPCWrappedJS();   // not implemented
@@ -2324,14 +2380,12 @@ private:
     nsXPCWrappedJS* mRoot;
     nsXPCWrappedJS* mNext;
     nsISupports* mOuter;    // only set in root
-#ifdef GC_MARK_DEBUG
-    char *mGCRootName;
-#endif
 };
 
 /***************************************************************************/
 
-class XPCJSObjectHolder : public nsIXPConnectJSObjectHolder
+class XPCJSObjectHolder : public nsIXPConnectJSObjectHolder,
+                          public XPCRootSetElem
 {
 public:
     // all the interface method declarations...
@@ -2341,15 +2395,19 @@ public:
     // non-interface implementation
 
 public:
-    static XPCJSObjectHolder* newHolder(JSContext* cx, JSObject* obj);
+    static XPCJSObjectHolder* newHolder(XPCCallContext& ccx, JSObject* obj);
 
     virtual ~XPCJSObjectHolder();
 
+    void TraceJS(JSTracer *trc);
+#ifdef DEBUG
+    static void PrintTraceName(JSTracer* trc, char *buf, size_t bufsize);
+#endif
+
 private:
-    XPCJSObjectHolder(JSContext* cx, JSObject* obj);
+    XPCJSObjectHolder(XPCCallContext& ccx, JSObject* obj);
     XPCJSObjectHolder(); // not implemented
 
-    JSRuntime* mRuntime;
     JSObject* mJSObj;
 };
 
@@ -2609,9 +2667,6 @@ private:
 
 class nsXPCException :
             public nsIXPCException
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
-          , public nsISecurityCheckedComponent
-#endif
 {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_XPCEXCEPTION_CID)
@@ -2619,9 +2674,6 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIEXCEPTION
     NS_DECL_NSIXPCEXCEPTION
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
-    NS_DECL_NSISECURITYCHECKEDCOMPONENT
-#endif
 
     static nsresult NewException(const char *aMessage,
                                  nsresult aResult,
@@ -2764,6 +2816,15 @@ private:
 /***************************************************************************/
 // XPCJSContextStack is not actually an xpcom object, but xpcom calls are
 // delegated to it as an implementation detail.
+struct JSContextAndFrame {
+    JSContextAndFrame(JSContext* aCx) :
+        cx(aCx),
+        frame(nsnull)
+    {}
+    JSContext* cx;
+    JSStackFrame* frame;  // Frame to be restored when this JSContext becomes
+                          // the topmost one.
+};
 
 class XPCJSContextStack
 {
@@ -2778,14 +2839,14 @@ public:
     JSBool DEBUG_StackHasJSContext(JSContext*  aJSContext);
 #endif
 
-    const nsDeque &GetStack()
-    { return mStack; }
+    const nsTArray<JSContextAndFrame>* GetStack()
+    { return &mStack; }
 
 private:
     void SyncJSContexts();
 
 private:
-    nsDeque     mStack;
+    nsTArray<JSContextAndFrame> mStack;
     JSContext*  mSafeJSContext;
 
     // If non-null, we own it; same as mSafeJSContext if SetSafeJSContext
@@ -2806,8 +2867,8 @@ public:
     NS_DECL_NSIJSCONTEXTSTACKITERATOR
 
 private:
-    // XXX These don't really want to be pointers.
-    nsAutoPtr<nsDequeIterator> mIterator;
+    const nsTArray<JSContextAndFrame> *mStack;
+    PRUint32 mPosition;
 };
 
 /**************************************************************/
@@ -2906,7 +2967,7 @@ public:
 
     AutoMarkingPtr**  GetAutoRootsAdr() {return &mAutoRoots;}
 
-    void MarkAutoRootsBeforeJSFinalize(JSContext* cx);
+    void TraceJS(JSTracer* trc);
     void MarkAutoRootsAfterJSFinalize();
 
     jsuword GetStackLimit() const { return mStackLimit; }
@@ -3381,11 +3442,11 @@ public:
     XPCMarkableJSVal(jsval *pval) : mVal(0), mValPtr(pval) {}
     ~XPCMarkableJSVal() {}
     void Mark() {}
-    void MarkBeforeJSFinalize(JSContext* cx)
-        {if(JSVAL_IS_GCTHING(*mValPtr))
-            JS_MarkGCThing(cx, JSVAL_TO_GCTHING(*mValPtr), 
-                           "XPCMarkableJSVal", nsnull);}
-    void AutoMark(JSContext*) {}
+    void TraceJS(JSTracer* trc)
+    {
+        JS_CALL_VALUE_TRACER(trc, *mValPtr, "XPCMarkableJSVal");
+    }
+    void AutoTrace(JSTracer* trc) {}
 private:
     XPCMarkableJSVal(); // not implemented    
     jsval  mVal;
@@ -3425,7 +3486,7 @@ public:
 
     AutoMarkingPtr* GetNext() {return mNext;}
     
-    virtual void MarkBeforeJSFinalize(JSContext* cx) = 0;
+    virtual void TraceJS(JSTracer* trc) = 0;
     virtual void MarkAfterJSFinalize() = 0;
 
 protected:
@@ -3443,12 +3504,12 @@ public:                                                                      \
         : AutoMarkingPtr(ccx), mPtr(ptr) {}                                  \
     virtual ~ class_ () {}                                                   \
                                                                              \
-    virtual void MarkBeforeJSFinalize(JSContext* cx)                         \
+    virtual void TraceJS(JSTracer* trc)                                      \
         {if(mPtr) {                                                          \
-           mPtr->MarkBeforeJSFinalize(cx);                                   \
-           mPtr->AutoMark(cx);                                               \
+           mPtr->TraceJS(trc);                                               \
+           mPtr->AutoTrace(trc);                                             \
          }                                                                   \
-         if(mNext) mNext->MarkBeforeJSFinalize(cx);}                         \
+         if(mNext) mNext->TraceJS(trc);}                                     \
                                                                              \
     virtual void MarkAfterJSFinalize()                                       \
         {if(mPtr) mPtr->Mark();                                              \
@@ -3489,18 +3550,18 @@ public:                                                                      \
     }                                                                        \
     virtual ~ class_ () {}                                                   \
                                                                              \
-    virtual void MarkBeforeJSFinalize(JSContext* cx)                         \
+    virtual void TraceJS(JSTracer* trc)                                      \
     {                                                                        \
         for(PRUint32 i = 0; i < mCount; ++i)                                 \
         {                                                                    \
             type_* cur = mPtr[i];                                            \
             if(cur)                                                          \
             {                                                                \
-                cur->MarkBeforeJSFinalize(cx);                               \
-                cur->AutoMark(cx);                                           \
+                cur->TraceJS(trc);                                           \
+                cur->AutoTrace(trc);                                         \
             }                                                                \
         }                                                                    \
-        if(mNext) mNext->MarkBeforeJSFinalize(cx);                           \
+        if(mNext) mNext->TraceJS(trc);                                       \
     }                                                                        \
                                                                              \
     virtual void MarkAfterJSFinalize()                                       \
@@ -3581,7 +3642,7 @@ public:
 
     jsval GetJSVal() const {return mJSVal;}
 
-    XPCVariant(JSRuntime* aJSRuntime);
+    XPCVariant(jsval aJSVal);
 
     /**
      * Convert a variant into a jsval.
@@ -3599,23 +3660,34 @@ public:
                                   jsval* pJSVal);
 
 protected:
-    virtual ~XPCVariant();
+    virtual ~XPCVariant() { }
 
     JSBool InitializeData(XPCCallContext& ccx);
 
 protected:
     nsDiscriminatedUnion mData;
     jsval                mJSVal;
-
-    // For faster GC-thing locking and unlocking
-    JSRuntime*           mJSRuntime;
-
-#ifdef GC_MARK_DEBUG
-    char *mGCRootName;
-#endif
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(XPCVariant, XPCVARIANT_IID)
+
+class XPCTraceableVariant: public XPCVariant,
+                           public XPCRootSetElem
+{
+public:
+    XPCTraceableVariant(XPCJSRuntime *runtime, jsval aJSVal)
+        : XPCVariant(aJSVal)
+    {
+        runtime->AddVariantRoot(this);
+    }
+
+    virtual ~XPCTraceableVariant();
+
+    void TraceJS(JSTracer* trc);
+#ifdef DEBUG
+    static void PrintTraceName(JSTracer* trc, char *buf, size_t bufsize);
+#endif
+};
 
 /***************************************************************************/
 #ifndef XPCONNECT_STANDALONE

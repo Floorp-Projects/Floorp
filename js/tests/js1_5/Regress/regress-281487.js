@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-281487.js';
 //-----------------------------------------------------------------------------
-var bug = 281487;
+var BUGNUMBER = 281487;
 var summary = 'JSOP_ARGDEC assertion when tracing';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 printStatus('This test requires a DEBUG build and will cause a false ' +
@@ -63,5 +65,5 @@ a(1,2,3);
 if (typeof tracing == 'function')
 {
   tracing(false);
-}  
+} 
 reportCompare(expect, actual, summary);

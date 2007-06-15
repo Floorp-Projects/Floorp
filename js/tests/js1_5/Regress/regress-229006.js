@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): David Baron <dbaron@mozilla.org>
- *                 Bob Clary <bob@bclary.com> 
+ *                 Bob Clary <bob@bclary.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,19 +35,21 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-229006.js';
 //-----------------------------------------------------------------------------
 // Note this file contains a greater than 2^16 lines on _purpose_.
-// It will properly report failures when run in the js shell however 
+// It will properly report failures when run in the js shell however
 // will fail to run at all in the browser (if it fails) due to a syntax error.
 //
-var bug = 229006;
+var BUGNUMBER = 229006;
 var summary = 'JS parser should not fail when line number &gt 2^16';
 var actual = 'FAIL';
 var expect = 'PASS';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
-  
+ 
 
 
 

@@ -561,14 +561,6 @@ function ShowErrorInPanel(tab, errorMsgId, widgetWithError)
     SetTextboxFocus(widgetWithError);
 }
 
-function doHelpButton()
-{
-  if (gDialog.TabBox.selectedTab == gDialog.PublishTab)
-    openHelp("comp-doc-publish-publishtab");
-  else
-    openHelp("comp-doc-publish-settingstab");
-}
-
 function onAccept()
 {
   if (ValidateData())

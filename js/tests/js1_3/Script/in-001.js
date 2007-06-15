@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'in-001.js';
+
 /**
    File Name:          in-001.js
    Section:
@@ -59,9 +61,9 @@ o = {};
 o.foo = 'sil';
 
 new TestCase(
-    SECTION,
-    "\"foo\" in o",
-    true,
-    "foo" in o );
+  SECTION,
+  "\"foo\" in o",
+  true,
+  "foo" in o );
 
 test();

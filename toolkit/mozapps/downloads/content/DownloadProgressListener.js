@@ -64,11 +64,19 @@ DownloadProgressListener.prototype =
   priorRate: 0,
   lastUpdate: -500,
   doc: null,
+  onDownloadStateChange: function dlPL_onDownloadStateChange(aState, aDownload)
+  {
+    var downloadID = "dl" + aDownload.id;
+    var download = this.doc.getElementById(downloadID);
+    if (download)
+      download.setAttribute("state", aDownload.state);
+  },
+
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus, aDownload)
   {
     if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP) {
-      var aDownloadID = aDownload.targetFile.path;
-      var download = this.doc.getElementById(aDownloadID);
+      var downloadID = "dl" + aDownload.id;
+      var download = this.doc.getElementById(downloadID);
       if (download)
         download.setAttribute("status", "");
     }
@@ -90,8 +98,8 @@ DownloadProgressListener.prototype =
     // Update this time.
     this.lastUpdate = now;
 
-    var aDownloadID = aDownload.targetFile.path;
-    var download = this.doc.getElementById(aDownloadID);
+    var downloadID = "dl" + aDownload.id;
+    var download = this.doc.getElementById(downloadID);
 
     // Calculate percentage.
     var percent;

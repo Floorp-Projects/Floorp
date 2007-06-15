@@ -59,7 +59,7 @@
 #include "nsIPrefService.h"
 #include "nsIServiceManager.h"
 
-#include "nsISimpleEnumerator.h"
+#include "nsIStringEnumerator.h"
 #include "nsISupportsPrimitives.h"
 #include "nsWidgetsCID.h"
 #include "stdlib.h"
@@ -135,80 +135,6 @@ nsPrintOptions::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   return prefService->GetBranch("print.", getter_AddRefs(mPrefBranch));
-}
-
-
-//**************************************************************
-//** PageList Enumerator
-//**************************************************************
-class
-    nsPrinterListEnumerator : public nsISimpleEnumerator
-{
-  public:
-    nsPrinterListEnumerator();
-    virtual ~nsPrinterListEnumerator();
-
-    //nsISupports interface
-    NS_DECL_ISUPPORTS
-
-    //nsISimpleEnumerator interface
-    NS_DECL_NSISIMPLEENUMERATOR
-
-    NS_IMETHOD Init();
-
-  protected:
-    PRUnichar **mPrinters;
-    PRUint32 mCount;
-    PRUint32 mIndex;
-};
-
-nsPrinterListEnumerator::nsPrinterListEnumerator() :
-    mPrinters(nsnull), mCount(0), mIndex(0)
-{
-}
-
-nsPrinterListEnumerator::~nsPrinterListEnumerator()
-{
-  if (mPrinters)
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mCount, mPrinters);
-}
-
-NS_IMPL_ISUPPORTS1(nsPrinterListEnumerator, nsISimpleEnumerator)
-
-NS_IMETHODIMP
-nsPrinterListEnumerator::Init()
-{
-  nsresult rv;
-  nsCOMPtr<nsIPrinterEnumerator> printerEnumerator =
-    do_CreateInstance(kCPrinterEnumerator, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return printerEnumerator->EnumeratePrinters(&mCount, &mPrinters);
-}
-
-NS_IMETHODIMP
-nsPrinterListEnumerator::HasMoreElements(PRBool *result)
-{
-  *result = (mIndex < mCount);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrinterListEnumerator::GetNext(nsISupports **aPrinter)
-{
-  NS_ENSURE_STATE(mIndex < mCount);
-
-  PRUnichar *printerName = mPrinters[mIndex++];
-
-  nsresult rv;
-  nsCOMPtr<nsISupportsString> printerNameWrapper =
-    do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  printerNameWrapper->SetData(nsDependentString(printerName));
-  *aPrinter = NS_STATIC_CAST(nsISupports*, printerNameWrapper);
-  NS_ADDREF(*aPrinter);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -862,23 +788,6 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
   return NS_OK;
 }
 
-/* create and return a new |nsPrinterListEnumerator| */
-NS_IMETHODIMP
-nsPrintOptions::AvailablePrinters(nsISimpleEnumerator **aPrinterEnumerator)
-{
-  nsRefPtr<nsPrinterListEnumerator> printerListEnum =
-      new nsPrinterListEnumerator();
-  NS_ENSURE_TRUE(printerListEnum, NS_ERROR_OUT_OF_MEMORY);
-
-  NS_ADDREF(*aPrinterEnumerator = printerListEnum.get());
-
-  nsresult rv = printerListEnum->Init();
-  if (NS_FAILED(rv))
-    NS_RELEASE(*aPrinterEnumerator);
-
-  return rv;
-}
-
 NS_IMETHODIMP
 nsPrintOptions::DisplayJobProperties(const PRUnichar *aPrinter,
                                      nsIPrintSettings* aPrintSettings,
@@ -962,18 +871,18 @@ nsPrintOptions::GetDefaultPrinterName(PRUnichar * *aDefaultPrinterName)
   ReadPrefString(kPrinterName, lastPrinterName);
   if (!lastPrinterName.IsEmpty()) {
     // Verify it's still a valid printer
-    PRUnichar **printers;
-    PRUint32 ctPrinters;
-    rv = prtEnum->EnumeratePrinters(&ctPrinters, &printers);
+    nsCOMPtr<nsIStringEnumerator> printers;
+    rv = prtEnum->GetPrinterNameList(getter_AddRefs(printers));
     if (NS_SUCCEEDED(rv)) {
       PRBool isValid = PR_FALSE;
-      for (PRInt32 ii = ctPrinters - 1; ii >= 0; --ii) {
-        if (lastPrinterName.Equals(printers[ii])) {
+      PRBool hasMore;
+      while (NS_SUCCEEDED(printers->HasMore(&hasMore)) && hasMore) {
+        nsAutoString printer;
+        if (NS_SUCCEEDED(printers->GetNext(printer)) && lastPrinterName.Equals(printer)) {
           isValid = PR_TRUE;
           break;
         }
       }
-      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(ctPrinters, printers);
       if (isValid) {
         *aDefaultPrinterName = ToNewUnicode(lastPrinterName);
         return NS_OK;

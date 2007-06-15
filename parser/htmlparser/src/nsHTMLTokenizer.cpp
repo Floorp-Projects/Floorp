@@ -1120,7 +1120,7 @@ nsHTMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,
   nsAutoString theBufCopy;
   aScanner.Peek(theBufCopy, 20);
   ToUpperCase(theBufCopy);
-  PRInt32 theIndex = theBufCopy.Find("DOCTYPE");
+  PRInt32 theIndex = theBufCopy.Find("DOCTYPE", PR_FALSE, 0, 0);
   nsTokenAllocator* theAllocator = this->GetTokenAllocator();
 
   if (theIndex == kNotFound) {

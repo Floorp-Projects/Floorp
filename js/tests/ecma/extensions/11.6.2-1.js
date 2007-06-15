@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '11.6.2-1.js';
+
 /**
    File Name:          11.6.2-1.js
    ECMA Section:       11.6.2 The Subtraction operator ( - )

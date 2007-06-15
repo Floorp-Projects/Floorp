@@ -93,30 +93,7 @@ public:
                           const nsStyleBorder& aBorderStyle,
                           const nsStyleOutline& aOutlineStyle,
                           nsStyleContext* aStyleContext,
-                          PRIntn aSkipSides,
                           nsRect* aGap = 0);
-
-  /**
-   * Just like PaintBorder, but takes as input a list of border segments
-   * rather than a single border style.  Useful for any object that needs to
-   * draw a border where an edge is not necessarily homogenous.
-   * Render the border for an element using css rendering rules
-   * for borders. aSkipSides is a bitmask of the sides to skip
-   * when rendering. If 0 then no sides are skipped.
-   *
-   * Both aDirtyRect and aBorderArea are in the local coordinate space
-   * of aForFrame
-   */
-  static void PaintBorderEdges(nsPresContext* aPresContext,
-                               nsIRenderingContext& aRenderingContext,
-                               nsIFrame* aForFrame,
-                               const nsRect& aDirtyRect,
-                               const nsRect& aBorderArea,
-                               nsBorderEdges * aBorderEdges,
-                               nsStyleContext* aStyleContext,
-                               PRIntn aSkipSides,
-                               nsRect* aGap = 0);
-
 
   /**
    * Fill in an nsStyleBackground to be used to paint the background for
@@ -202,15 +179,6 @@ public:
                               PRIntn aSkipSides,
                               nsRect* aGap);
 
-  /** draw the dashed segements of a segmented border */
-  //XXX: boy is it annoying that we have 3 methods to draw dashed sides!
-  //     they clearly can be factored.
-  static void DrawDashedSegments(nsIRenderingContext& aContext,
-                                 const nsRect& aBounds,
-                                 nsBorderEdges * aBorderEdges,
-                                 PRIntn aSkipSides,
-                                 nsRect* aGap);
-
   // Draw a border segment in the table collapsing border model without beveling corners
   static void DrawTableBorderSegment(nsIRenderingContext&     aContext,
                                      PRUint8                  aBorderStyle,  
@@ -231,29 +199,6 @@ public:
   static nscolor TransformColor(nscolor  aMapColor,PRBool aNoBackGround);
 
 protected:
-  /**
-   * Render the border for an element using css rendering rules
-   * for borders. aSkipSides is a bitmask of the sides to skip
-   * when rendering. If 0 then no sides are skipped.
-   * Both aDirtyRect and aBorderArea are in the local coordinate space
-   * of aForFrame
-   */
-  static void PaintRoundedBorder(nsPresContext* aPresContext,
-                          nsIRenderingContext& aRenderingContext,
-                          nsIFrame* aForFrame,
-                          const nsRect& aDirtyRect,
-                          const nsRect& aBorderArea,
-                          const nsStyleBorder* aBorderStyle,
-                          const nsStyleOutline* aOutlineStyle,
-                          nsStyleContext* aStyleContext,
-                          PRIntn aSkipSides,
-                          PRInt16 aBorderRadius[4],nsRect* aGap = 0,
-                          PRBool aIsOutline=PR_FALSE);
-
-  static void RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderingContext,
-                        const nsStyleBorder* aBorderStyle,const nsStyleOutline* aOutlineStyle,nsStyleContext* aStyleContext,
-                        PRUint8 aSide,nsMargin  &aBorThick,nscoord aTwipsPerPixel,
-                        PRBool aIsOutline=PR_FALSE);
 
   static void PaintBackgroundColor(nsPresContext* aPresContext,
                                    nsIRenderingContext& aRenderingContext,
@@ -276,35 +221,6 @@ protected:
   static nscolor MakeBevelColor(PRIntn whichSide, PRUint8 style,
                                 nscolor aBackgroundColor,
                                 nscolor aBorderColor);
-
-  static PRIntn MakeSide(nsPoint aPoints[],
-                         nsIRenderingContext& aContext,
-                         PRIntn whichSide,
-                         const nsRect& outside, const nsRect& inside,
-                         PRIntn aSkipSides,
-                         PRIntn borderPart, float borderFrac,
-                         nscoord twipsPerPixel);
-
-  static void DrawSide(nsIRenderingContext& aContext,
-                       PRIntn whichSide,
-                       const PRUint8 borderStyle,
-                       const nscolor borderColor,
-                       const nscolor aBackgroundColor, 
-                       const nsRect& borderOutside,
-                       const nsRect& borderInside,
-                       PRIntn aSkipSides,
-                       nscoord twipsPerPixel,
-                       nsRect* aGap = 0);
-
-
-  static void DrawCompositeSide(nsIRenderingContext& aContext,
-                                PRIntn aWhichSide,
-                                nsBorderColors* aCompositeColors,
-                                const nsRect& aOuterRect,
-                                const nsRect& aInnerRect,
-                                PRInt16* aBorderRadii,
-                                nscoord aTwipsPerPixel,
-                                nsRect* aGap);
 
   static void DrawLine (nsIRenderingContext& aContext, 
                         nscoord aX1, nscoord aY1, nscoord aX2, nscoord aY2,

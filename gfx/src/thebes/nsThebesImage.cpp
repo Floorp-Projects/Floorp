@@ -100,7 +100,10 @@ nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequi
 #ifdef XP_WIN
     if (!ShouldUseImageSurfaces()) {
         mWinSurface = new gfxWindowsSurface(gfxIntSize(mWidth, mHeight), format);
-        mImageSurface = mWinSurface->GetImageSurface();
+        if (mWinSurface && mWinSurface->CairoStatus() == 0) {
+            // no error
+            mImageSurface = mWinSurface->GetImageSurface();
+        }
     }
 
     if (!mImageSurface) {
@@ -110,6 +113,13 @@ nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequi
 #else
     mImageSurface = new gfxImageSurface(gfxIntSize(mWidth, mHeight), format);
 #endif
+
+    if (!mImageSurface || mImageSurface->CairoStatus()) {
+        mImageSurface = nsnull;
+        // guess
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     mStride = mImageSurface->Stride();
 
     return NS_OK;
@@ -286,7 +296,7 @@ nsThebesImage::LockImagePixels(PRBool aMaskPixels)
         // Recover the pixels
         mImageSurface = new gfxImageSurface(gfxIntSize(mWidth, mHeight),
                                             gfxImageSurface::ImageFormatARGB32);
-        if (!mImageSurface)
+        if (!mImageSurface || mImageSurface->CairoStatus())
             return NS_ERROR_OUT_OF_MEMORY;
         nsRefPtr<gfxContext> context = new gfxContext(mImageSurface);
         if (!context) {
@@ -330,14 +340,12 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
     gfxContext *ctx = thebesRC->Thebes();
 
 #if 0
-    fprintf (stderr, "nsThebesImage::Draw src [%d %d %d %d] dest [%d %d %d %d] tx [%f %f] dec [%d %d %d %d]\n",
-             aSourceRect.pos.x, aSourceRect.pos.y, aSWidth, aSHeight, aDX, aDY, aDWidth, aDHeight,
+    fprintf (stderr, "nsThebesImage::Draw src [%f %f %f %f] dest [%f %f %f %f] trans: [%f %f] dec: [%f %f]\n",
+             aSourceRect.pos.x, aSourceRect.pos.y, aSourceRect.size.width, aSourceRect.size.height,
+             aDestRect.pos.x, aDestRect.pos.y, aDestRect.size.width, aDestRect.size.height,
              ctx->CurrentMatrix().GetTranslation().x, ctx->CurrentMatrix().GetTranslation().y,
              mDecoded.x, mDecoded.y, mDecoded.width, mDecoded.height);
 #endif
-
-    gfxMatrix savedCTM(ctx->CurrentMatrix());
-    PRBool doSnap = !(savedCTM.HasNonTranslation());
 
     if (mSinglePixel) {
         // if a == 0, it's a noop
@@ -350,14 +358,6 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
         ctx->Rectangle(aDestRect, PR_TRUE);
         ctx->Fill();
         return NS_OK;
-    }
-
-    // See comment inside ThebesDrawTile
-    if (doSnap) {
-        gfxMatrix roundedCTM(savedCTM);
-        roundedCTM.x0 = ::floor(roundedCTM.x0 + 0.5);
-        roundedCTM.y0 = ::floor(roundedCTM.y0 + 0.5);
-        ctx->SetMatrix(roundedCTM);
     }
 
     gfxFloat xscale = aDestRect.size.width / aSourceRect.size.width;
@@ -386,6 +386,48 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
     if (!AllowedImageSize(destRect.size.width, destRect.size.height))
         return NS_ERROR_FAILURE;
 
+    nsRefPtr<gfxPattern> pat;
+
+    /* See bug 364968 to understand the necessity of this goop; we basically
+     * have to pre-downscale any image that would fall outside of a scaled 16-bit
+     * coordinate space.
+     */
+    if (aDestRect.pos.x * (1.0 / xscale) >= 32768.0 ||
+        aDestRect.pos.y * (1.0 / yscale) >= 32768.0)
+    {
+        gfxIntSize dim(NS_lroundf(destRect.size.width),
+                       NS_lroundf(destRect.size.height));
+        nsRefPtr<gfxASurface> temp =
+            gfxPlatform::GetPlatform()->CreateOffscreenSurface (dim,  mFormat);
+        nsRefPtr<gfxContext> tempctx = new gfxContext(temp);
+
+        nsRefPtr<gfxPattern> srcpat = new gfxPattern(ThebesSurface());
+        gfxMatrix mat;
+        mat.Translate(srcRect.pos);
+        mat.Scale(1.0 / xscale, 1.0 / yscale);
+        srcpat->SetMatrix(mat);
+
+        tempctx->SetPattern(srcpat);
+        tempctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+        tempctx->NewPath();
+        tempctx->Rectangle(gfxRect(0.0, 0.0, dim.width, dim.height));
+        tempctx->Fill();
+
+        pat = new gfxPattern(temp);
+
+        srcRect.pos.x = 0.0;
+        srcRect.pos.y = 0.0;
+        srcRect.size.width = dim.width;
+        srcRect.size.height = dim.height;
+
+        xscale = 1.0;
+        yscale = 1.0;
+    }
+
+    if (!pat) {
+        pat = new gfxPattern(ThebesSurface());
+    }
+
     gfxMatrix mat;
     mat.Translate(srcRect.pos);
     mat.Scale(1.0/xscale, 1.0/yscale);
@@ -395,16 +437,27 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
      */
     mat.Translate(-destRect.pos);
 
-    nsRefPtr<gfxPattern> pat = new gfxPattern(ThebesSurface());
     pat->SetMatrix(mat);
+
+    // XXX bug 324698
+#ifndef XP_MACOSX
+    if (xscale > 1.0 || yscale > 1.0) {
+        // See bug 324698.  This is a workaround.
+        //
+        // Set the filter to CAIRO_FILTER_FAST if we're scaling up -- otherwise,
+        // pixman's sampling will sample transparency for the outside edges and we'll
+        // get blurry edges.  CAIRO_EXTEND_PAD would also work here, but it's not
+        // implemented for image sources.
+        //
+        // This effectively disables smooth upscaling for images.
+        pat->SetFilter(0);
+    }
+#endif
 
     ctx->NewPath();
     ctx->SetPattern(pat);
-    ctx->Rectangle(destRect, doSnap);
+    ctx->Rectangle(destRect);
     ctx->Fill();
-
-    if (doSnap)
-        ctx->SetMatrix(savedCTM);
 
     return NS_OK;
 }
@@ -464,6 +517,11 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
 
             surface = new gfxImageSurface(gfxIntSize(width, height),
                                           gfxASurface::ImageFormatARGB32);
+            if (!surface || surface->CairoStatus()) {
+                thebesContext->SetMatrix(savedCTM);
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
+
             tmpSurfaceGrip = surface;
 
             nsRefPtr<gfxContext> tmpContext = new gfxContext(surface);
@@ -502,6 +560,14 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
         pat = new gfxPattern(surface);
         pat->SetExtend(gfxPattern::EXTEND_REPEAT);
         pat->SetMatrix(patMat);
+
+#ifndef XP_MACOSX
+        if (scale > 1.0) {
+            // See bug 324698.  This is a workaround.  See comments
+            // by the earlier SetFilter call.
+            pat->SetFilter(0);
+        }
+#endif
 
         thebesContext->SetPattern(pat);
     }

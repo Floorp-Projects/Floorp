@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = '11.2.1-1.js';
+
 /**
    File Name:          11.2.1-1.js
    ECMA Section:       11.2.1 Property Accessors

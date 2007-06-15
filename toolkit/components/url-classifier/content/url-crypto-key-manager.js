@@ -92,7 +92,6 @@ const kKeyFilename = "kf.txt";
 function PROT_UrlCryptoKeyManager(opt_keyFilename, opt_testing) {
   this.debugZone = "urlcryptokeymanager";
   this.testing_ = !!opt_testing;
-  this.base64_ = new G_Base64();
   this.clientKey_ = null;          // Base64-encoded, as fetched from server
   this.clientKeyArray_ = null;     // Base64-decoded into an array of numbers
   this.wrappedKey_ = null;         // Opaque websafe base64-encoded server key
@@ -254,7 +253,8 @@ PROT_UrlCryptoKeyManager.prototype.replaceKey_ = function(clientKey,
     G_Debug(this, "Replacing " + this.clientKey_ + " with " + clientKey);
 
   this.clientKey_ = clientKey;
-  this.clientKeyArray_ = this.base64_.decodeString(this.clientKey_);
+  this.clientKeyArray_ = Array.map(atob(clientKey),
+                                   function(c) { return c.charCodeAt(0); });
   this.wrappedKey_ = wrappedKey;
 
   this.serializeKey_(this.clientKey_, this.wrappedKey_);
@@ -274,12 +274,22 @@ PROT_UrlCryptoKeyManager.prototype.serializeKey_ = function() {
   
   try {  
 
-    var appDir = new PROT_ApplicationDirectory();
-    if (!appDir.exists())
-      appDir.create();
-    var keyfile = appDir.getAppDirFileInterface();
+    var keyfile = Cc["@mozilla.org/file/directory_service;1"]
+                 .getService(Ci.nsIProperties)
+                 .get("ProfD", Ci.nsILocalFile); /* profile directory */
     keyfile.append(this.keyFilename_);
-    G_FileWriter.writeAll(keyfile, (new G_Protocol4Parser).serialize(map));
+    var data = (new G_Protocol4Parser()).serialize(map);
+
+    try {
+      var stream = Cc["@mozilla.org/network/file-output-stream;1"]
+                   .createInstance(Ci.nsIFileOutputStream);
+      stream.init(keyfile,
+                  0x02 | 0x08 | 0x20 /* PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE */,
+                  -1 /* default perms */, 0 /* no special behavior */);
+      stream.write(data, data.length);
+    } finally {
+      stream.close();
+    }
     return true;
 
   } catch(e) {
@@ -323,11 +333,24 @@ PROT_UrlCryptoKeyManager.prototype.maybeLoadOldKey = function() {
   
   var oldKey = null;
   try {  
-    var appDir = new PROT_ApplicationDirectory();
-    var keyfile = appDir.getAppDirFileInterface();
+    var keyfile = Cc["@mozilla.org/file/directory_service;1"]
+                 .getService(Ci.nsIProperties)
+                 .get("ProfD", Ci.nsILocalFile); /* profile directory */
     keyfile.append(this.keyFilename_);
-    if (keyfile.exists())
-      oldKey = G_FileReader.readAll(keyfile);
+    if (keyfile.exists()) {
+      try {
+        var fis = Cc["@mozilla.org/network/file-input-stream;1"]
+                  .createInstance(Ci.nsIFileInputStream);
+        fis.init(keyfile, 0x01 /* PR_RDONLY */, 0444, 0);
+        var stream = Cc["@mozilla.org/scriptableinputstream;1"]
+                     .createInstance(Ci.nsIScriptableInputStream);
+        stream.init(fis);
+        oldKey = stream.read(stream.available());
+      } finally {
+        if (stream)
+          stream.close();
+      }
+    }
   } catch(e) {
     G_Debug(this, "Caught " + e + " trying to read keyfile");
     return;
@@ -365,8 +388,9 @@ function TEST_PROT_UrlCryptoKeyManager() {
 
     // Let's be able to clean up after ourselves
     function removeTestFile(f) {
-      var appDir = new PROT_ApplicationDirectory();
-      var file = appDir.getAppDirFileInterface();
+      var file = Cc["@mozilla.org/file/directory_service;1"]
+                 .getService(Ci.nsIProperties)
+                 .get("ProfD", Ci.nsILocalFile); /* profile directory */
       file.append(f);
       if (file.exists())
         file.remove(false /* do not recurse */);

@@ -199,7 +199,7 @@ interface fuelIPreference : nsISupports
   /**
    * Check if a preference has been modified by the user, or not.
    */
-  attribute boolean modified;
+  readonly attribute boolean modified;
   
   /**
    * The preference branch that contains this preference.

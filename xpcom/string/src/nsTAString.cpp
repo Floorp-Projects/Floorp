@@ -53,6 +53,7 @@
 
 nsTAString_CharT::~nsTAString_CharT()
   {
+    NS_ASSERTION(mVTable, "mVTable is null! Is this a static string instance?!");
     if (mVTable == obsolete_string_type::sCanonicalVTable)
       AsSubstring()->Finalize();
     else

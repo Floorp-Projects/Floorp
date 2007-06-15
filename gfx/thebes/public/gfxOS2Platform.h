@@ -43,6 +43,8 @@
 
 #include "gfxPlatform.h"
 
+class gfxFontconfigUtils;
+
 class THEBES_API gfxOS2Platform : public gfxPlatform {
 
 public:
@@ -60,13 +62,15 @@ public:
     nsresult GetFontList(const nsACString& aLangGroup,
                          const nsACString& aGenericFamily,
                          nsStringArray& aListOfFonts);
-
+    nsresult UpdateFontList();
     nsresult ResolveFontName(const nsAString& aFontName,
                              FontResolverCallback aCallback,
                              void *aClosure, PRBool& aAborted);
 
     gfxFontGroup *CreateFontGroup(const nsAString &aFamilies,
                                   const gfxFontStyle *aStyle);
+protected:
+    static gfxFontconfigUtils *sFontconfigUtils;
 
 private:
     HDC mDC;

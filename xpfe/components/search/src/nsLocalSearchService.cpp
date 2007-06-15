@@ -246,9 +246,9 @@ LocalSearchDataSource::GetTarget(nsIRDFResource *source,
 //			rv = GetURL(source, &array);
 			nsAutoString	url;
 			nsIRDFLiteral	*literal;
-			gRDFService->GetLiteral(url.get(), &literal);
+			rv = gRDFService->GetLiteral(url.get(), &literal);
 			*target = literal;
-			return(NS_OK);
+			return rv;
 		}
 		else if (property == kRDF_type)
 		{
@@ -256,12 +256,12 @@ LocalSearchDataSource::GetTarget(nsIRDFResource *source,
 			rv = kNC_FindObject->GetValueConst(&uri);
 			if (NS_FAILED(rv)) return rv;
 
-			nsAutoString	url; url.AssignWithConversion(uri);
+			NS_ConvertUTF8toUTF16 url(uri);
 			nsIRDFLiteral	*literal;
-			gRDFService->GetLiteral(url.get(), &literal);
+			rv = gRDFService->GetLiteral(url.get(), &literal);
 
 			*target = literal;
-			return(NS_OK);
+			return rv;
 		}
 		else if (property == kNC_pulse)
 		{
@@ -271,7 +271,7 @@ LocalSearchDataSource::GetTarget(nsIRDFResource *source,
 			if (NS_FAILED(rv)) return rv;
 
 			*target = pulseLiteral;
-			return(NS_OK);
+			return NS_OK;
 		}
 		else if (property == kNC_Child)
 		{
@@ -326,16 +326,13 @@ LocalSearchDataSource::parseResourceIntoFindTokens(nsIRDFResource *u, findTokenP
             				PRUnichar	*uni = nsnull;
             				if (NS_SUCCEEDED(rv = textToSubURI->UnEscapeAndConvert("UTF-8", value, &uni)) && (uni))
             				{
-    					        tokens[loop].value = uni;
-    					        NS_Free(uni);
+    					        tokens[loop].value.Adopt(uni);
     					    }
     					}
 				    }
 				    else
 				    {
-				        nsAutoString    valueStr;
-				        valueStr.AssignWithConversion(value);
-				        tokens[loop].value = valueStr;
+				        CopyASCIItoUTF16(value, tokens[loop].value);
     			    }
 					break;
 				}
@@ -521,7 +518,7 @@ LocalSearchDataSource::parseFindURL(nsIRDFResource *u, nsISupportsArray *array)
     return rv;
 
   nsCAutoString dsName;
-  dsName.AssignWithConversion(tokens[0].value);
+  dsName.Assign(NS_LossyConvertUTF16toASCII(tokens[0].value));
 
   nsCOMPtr<nsIRDFDataSource> datasource;
   rv = gRDFService->GetDataSource(dsName.get(), getter_AddRefs(datasource));
@@ -695,10 +692,8 @@ LocalSearchDataSource::GetTargets(nsIRDFResource *source,
 			rv = kNC_FindObject->GetValueConst( &uri );
 			if (NS_FAILED(rv)) return rv;
 
-			nsAutoString	url; url.AssignWithConversion(uri);
-
 			nsCOMPtr<nsIRDFLiteral> literal;
-			rv = gRDFService->GetLiteral(url.get(),
+			rv = gRDFService->GetLiteral(NS_ConvertUTF8toUTF16(uri).get(),
                                                      getter_AddRefs(literal));
 			if (NS_FAILED(rv)) return rv;
 

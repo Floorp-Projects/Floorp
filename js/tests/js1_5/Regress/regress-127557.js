@@ -34,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    06 Mar 2002
  * SUMMARY: Testing cloned function objects
@@ -49,8 +50,9 @@
  * what was confusing the engine in its attempt to look up h_peer
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-127557.js';
 var UBound = 0;
-var bug = 127557;
+var BUGNUMBER = 127557;
 var summary = 'Testing cloned function objects';
 var cnCOMMA = ',';
 var status = '';
@@ -76,7 +78,7 @@ function f(x,y)
 
 if (typeof clone == 'function')
 {
-  status = inSection(1);	
+  status = inSection(1);
   var g = clone(f);
   g.prototype = new Object;
   var h = g(5,6);
@@ -109,7 +111,7 @@ function addThis()
 function test()
 {
   enterFunc('test');
-  printBugNumber(bug);
+  printBugNumber(BUGNUMBER);
   printStatus(summary);
 
   for (var i=0; i<UBound; i++)

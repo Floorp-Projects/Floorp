@@ -50,8 +50,6 @@
 
 #ifdef XP_MACOSX
 #include "MacLaunchHelper.h"
-#endif
-#ifdef MOZ_WIDGET_COCOA
 #include "MacApplicationDelegate.h"
 #endif
 
@@ -270,15 +268,9 @@ char **gArgv;
 static int    gRestartArgc;
 static char **gRestartArgv;
 
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
-#include <gtk/gtk.h>
-#endif //MOZ_WIDGET_GTK || MOZ_WIDGET_GTK2
 #if defined(MOZ_WIDGET_GTK2)
+#include <gtk/gtk.h>
 #include "nsGTKToolkit.h"
-#endif
-
-#if defined(MOZ_WIDGET_QT)
-#include <qapplication.h>
 #endif
 
 // Save the path of the given file to the specified environment variable.
@@ -1023,31 +1015,6 @@ DumpHelp()
   printf("Usage: %s [ options ... ] [URL]\n"
          "       where options include:\n\n", gArgv[0]);
 
-#ifdef MOZ_WIDGET_GTK
-  /* insert gtk options above moz options, like any other gtk app
-   *
-   * note: this isn't a very cool way to do things -- i'd rather get
-   * these straight from a user's gtk version -- but it seems to be
-   * what most gtk apps do. -dr
-   */
-  printf("GTK options\n"
-         "\t--gdk-debug=FLAGS\t\tGdk debugging flags to set\n"
-         "\t--gdk-no-debug=FLAGS\t\tGdk debugging flags to unset\n"
-         "\t--gtk-debug=FLAGS\t\tGtk+ debugging flags to set\n"
-         "\t--gtk-no-debug=FLAGS\t\tGtk+ debugging flags to unset\n"
-         "\t--gtk-module=MODULE\t\tLoad an additional Gtk module\n"
-         "\t-install\t\tInstall a private colormap\n");
-
-#endif /* MOZ_WIDGET_GTK */
-#if MOZ_WIDGET_XLIB
-  printf("Xlib options\n"
-         "\t-display=DISPLAY\t\tX display to use\n"
-         "\t-visual=VISUALID\t\tX visual to use\n"
-         "\t-install_colormap\t\tInstall own colormap\n"
-         "\t-sync\t\tMake X calls synchronous\n"
-         "\t-no-xshm\t\tDon't use X shared memory extension\n");
-
-#endif /* MOZ_WIDGET_XLIB */
 #ifdef MOZ_X11
   printf("X11 options\n"
          "\t--display=DISPLAY\t\tX display to use\n"
@@ -1069,7 +1036,6 @@ DumpHelp()
          "\t-ProfileManager\t\tStart with ProfileManager.\n"
          "\t-no-remote\t\tOpen new instance, not a new window in running instance.\n"
          "\t-UILocale <locale>\t\tStart with <locale> resources as UI Locale.\n"
-         "\t-contentLocale <locale>\t\tStart with <locale> resources as content Locale.\n"
          "\t-safe-mode\t\tDisables extensions and themes for this session.\n", gAppData->name);
 
 #if defined(XP_WIN) || defined(XP_OS2)
@@ -2214,25 +2180,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     NS_BREAK();
 #endif
 
-#ifdef MOZ_AIRBAG
-  if (NS_SUCCEEDED(
-        CrashReporter::SetExceptionHandler(aAppData->xreDirectory))) {
-    // pass some basic info from the app data
-    if (aAppData->vendor)
-      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Vendor"),
-                                     nsDependentCString(aAppData->vendor));
-    if (aAppData->name)
-      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ProductName"),
-                                     nsDependentCString(aAppData->name));
-    if (aAppData->version)
-      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Version"),
-                                     nsDependentCString(aAppData->version));
-    if (aAppData->buildID)
-      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("BuildID"),
-                                     nsDependentCString(aAppData->buildID));
-  }
-#endif
-
 #ifdef XP_WIN32
   // Suppress the "DLL Foo could not be found" dialog, such that if dependent
   // libraries (such as GDI+) are not preset, we gracefully fail to load those
@@ -2353,8 +2300,40 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       return 2;
   }
 
+#ifdef MOZ_AIRBAG
+  const char* airbagEnv = PR_GetEnv("MOZ_CRASHREPORTER");
+  if (airbagEnv && *airbagEnv) {
+    appData.flags |= NS_XRE_ENABLE_CRASH_REPORTER;
+  }
+
+  if ((appData.flags & NS_XRE_ENABLE_CRASH_REPORTER) &&
+      NS_SUCCEEDED(
+         CrashReporter::SetExceptionHandler(appData.xreDirectory,
+                                            appData.crashReporterURL))) {
+    // pass some basic info from the app data
+    if (appData.vendor)
+      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Vendor"),
+                                     nsDependentCString(appData.vendor));
+    if (appData.name)
+      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ProductName"),
+                                     nsDependentCString(appData.name));
+    if (appData.version)
+      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Version"),
+                                     nsDependentCString(appData.version));
+    if (appData.buildID)
+      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("BuildID"),
+                                     nsDependentCString(appData.buildID));
+    CrashReporter::SetRestartArgs(argc, argv);
+  }
+#endif
+
 #ifdef XP_MACOSX
   if (PR_GetEnv("MOZ_LAUNCHED_CHILD")) {
+    // This is needed, on relaunch, to force the OS to use the "Cocoa Dock
+    // API".  Otherwise the call to ReceiveNextEvent() below will make it
+    // use the "Carbon Dock API".  For more info see bmo bug 377166.
+    EnsureUseCocoaDockAPI();
+
     // When the app relaunches, the original process exits.  This causes
     // the dock tile to stop bouncing, lose the "running" triangle, and
     // if the tile does not permanently reside in the Dock, even disappear.
@@ -2446,7 +2425,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       return 0;
     }
 
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2) || defined(MOZ_ENABLE_XREMOTE)
+#if defined(MOZ_WIDGET_GTK2) || defined(MOZ_ENABLE_XREMOTE)
     // Stash DESKTOP_STARTUP_ID in malloc'ed memory because gtk_init will clear it.
 #define HAVE_DESKTOP_STARTUP_ID
     const char* desktopStartupIDEnv = PR_GetEnv("DESKTOP_STARTUP_ID");
@@ -2456,7 +2435,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     }
 #endif
 
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK2)
     // setup for private colormap.  Ideally we'd like to do this
     // in nsAppShell::Create, but we need to get in before gtk
     // has been initialized to make sure everything is running
@@ -2464,13 +2443,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     if (CheckArg("install"))
       gdk_rgb_set_install(TRUE);
 
-    // Initialize GTK+1/2 here for splash
-#if defined(MOZ_WIDGET_GTK)
-    gtk_set_locale();
-#endif
+    // Initialize GTK here for splash
     gtk_init(&gArgc, &gArgv);
 
-#if defined(MOZ_WIDGET_GTK2)
     // g_set_application_name () is only defined in glib2.2 and higher.
     _g_set_application_name_fn _g_set_application_name =
       (_g_set_application_name_fn)FindFunction("g_set_application_name");
@@ -2482,20 +2457,11 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     if (_gtk_window_set_auto_startup_notification) {
       _gtk_window_set_auto_startup_notification(PR_FALSE);
     }
-#endif
 
     gtk_widget_set_default_visual(gdk_rgb_get_visual());
     gtk_widget_set_default_colormap(gdk_rgb_get_cmap());
-#endif /* MOZ_WIDGET_GTK || MOZ_WIDGET_GTK2 */
+#endif /* MOZ_WIDGET_GTK2 */
 
-#if defined(MOZ_WIDGET_QT)
-    QApplication qapp(argc, argv);
-#endif
-
-    // #if defined(MOZ_WIDGET_XLIB)
-    // XXXtimeless fix me! How do we get a Display from here to nsAppShell.cpp ?
-    // #endif
-    
     // Call the code to install our handler
 #ifdef MOZ_JPROF
     setupProfilingStuff();
@@ -2601,7 +2567,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     //////////////////////// NOW WE HAVE A PROFILE ////////////////////////
 
 #ifdef MOZ_AIRBAG
-    MakeOrSetMinidumpPath(profD);
+    if (appData.flags & NS_XRE_ENABLE_CRASH_REPORTER)
+        MakeOrSetMinidumpPath(profD);
 #endif
 
     PRBool upgraded = PR_FALSE;
@@ -2930,7 +2897,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       rv = LaunchChild(nativeApp, appInitiatedRestart, upgraded ? -1 : 0);
 
 #ifdef MOZ_AIRBAG
-      CrashReporter::UnsetExceptionHandler();
+      if (appData.flags & NS_XRE_ENABLE_CRASH_REPORTER)
+        CrashReporter::UnsetExceptionHandler();
 #endif
 
       return rv == NS_ERROR_LAUNCHED_CHILD_PROCESS ? 0 : 1;
@@ -2938,7 +2906,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   }
 
 #ifdef MOZ_AIRBAG
-  CrashReporter::UnsetExceptionHandler();
+  if (appData.flags & NS_XRE_ENABLE_CRASH_REPORTER)
+      CrashReporter::UnsetExceptionHandler();
 #endif
 
   return NS_FAILED(rv) ? 1 : 0;

@@ -40,6 +40,7 @@
 
 #include "nsAccessibleWrap.h"
 #include "nsMaiInterfaceDocument.h"
+#include "nsAccessibilityAtoms.h"
 
 const char *const kDocTypeName = "W3C-doctype";
 const char *const kDocUrlName = "DocURL";
@@ -53,29 +54,51 @@ documentInterfaceInitCB(AtkDocumentIface *aIface)
         return;
 
     /*
-     * We don't support get_document, get_locale and set_attribute right now.
+     * We don't support get_document or set_attribute right now.
      * get_document_type is deprecated, we return DocType in
      * get_document_attribute_value and get_document_attributes instead.
      */
     aIface->get_document_attributes = getDocumentAttributesCB;
     aIface->get_document_attribute_value = getDocumentAttributeValueCB;
+    aIface->get_document_locale = getDocumentLocaleCB;
+}
+
+const gchar *
+getDocumentLocaleCB(AtkDocument *aDocument)
+{
+    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
+    if (!accWrap)
+        return nsnull;
+
+    nsCOMPtr<nsIAccessNode> docAccessNode;
+    accWrap->QueryInterface(NS_GET_IID(nsIAccessNode),
+                            getter_AddRefs(docAccessNode));
+    NS_ENSURE_TRUE(docAccessNode, nsnull);
+
+    nsAutoString locale;
+    docAccessNode->GetLanguage(locale);
+    if (locale.IsEmpty()) {
+      return nsnull;
+    }
+    return nsAccessibleWrap::ReturnString(locale);
 }
 
 const gchar *
 getDocumentTypeCB(AtkDocument *aDocument)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
-    NS_ENSURE_TRUE(accWrap, nsnull);
+    if (!accWrap)
+        return nsnull;
 
     nsCOMPtr<nsIAccessibleDocument> accDocument;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleDocument),
                             getter_AddRefs(accDocument));
     NS_ENSURE_TRUE(accDocument, nsnull);
 
-    nsAutoString aMimeType;
-    nsresult rv = accDocument->GetMimeType(aMimeType);
+    nsAutoString mimeType;
+    nsresult rv = accDocument->GetMimeType(mimeType);
     NS_ENSURE_SUCCESS(rv, nsnull);
-    return nsAccessibleWrap::ReturnString(aMimeType);
+    return nsAccessibleWrap::ReturnString(mimeType);
 }
 
 static inline GSList *
@@ -92,7 +115,8 @@ AtkAttributeSet *
 getDocumentAttributesCB(AtkDocument *aDocument)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
-    NS_ENSURE_TRUE(accWrap, nsnull);
+    if (!accWrap)
+        return nsnull;
 
     nsCOMPtr<nsIAccessibleDocument> accDocument;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleDocument),
@@ -126,7 +150,8 @@ getDocumentAttributeValueCB(AtkDocument *aDocument,
                             const gchar *aAttrName)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
-    NS_ENSURE_TRUE(accWrap, nsnull);
+    if (!accWrap)
+        return nsnull;
 
     nsCOMPtr<nsIAccessibleDocument> accDocument;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleDocument),

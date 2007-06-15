@@ -76,16 +76,21 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
 
     nsresult rv = NS_ERROR_FAILURE;
 
-    nsAccessibleWrap *accWrap =
-        NS_STATIC_CAST(nsAccessibleWrap *, aAccessible);
     MAI_LOG_DEBUG(("\n\nReceived event: aEvent=%u, obj=0x%x, data=0x%x \n",
                    aEvent, aAccessible, aEventData));
+
+    AtkObject *atkObj = nsAccessibleWrap::GetAtkObject(aAccessible);
+
     // We don't create ATK objects for nsIAccessible plain text leaves,
     // just return NS_OK in such case
-    AtkObject *atkObj = accWrap->GetAtkObject();
     if (!atkObj) {
+      NS_ASSERTION(aEvent == nsIAccessibleEvent::EVENT_SHOW ||
+                   aEvent == nsIAccessibleEvent::EVENT_HIDE,
+                   "Event other than SHOW and HIDE fired for plain text leaves");
       return NS_OK;
     }
+
+    nsAccessibleWrap *accWrap = GetAccessibleWrap(atkObj);
 
     AtkTableChange * pAtkTableChange = nsnull;
 
@@ -341,8 +346,11 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
         rv = NS_OK;
       } break;
 
-    case nsIAccessibleEvent::EVENT_SHOW:
     case nsIAccessibleEvent::EVENT_MENUPOPUP_START:
+        // fire extra focus event, then go down to EVENT_SHOW
+        atk_focus_tracker_notify(atkObj);
+
+    case nsIAccessibleEvent::EVENT_SHOW:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_SHOW\n"));
         atk_object_notify_state_change(atkObj, ATK_STATE_VISIBLE, PR_TRUE);
         atk_object_notify_state_change(atkObj, ATK_STATE_SHOWING, PR_TRUE);

@@ -36,8 +36,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-231518.js';
 //-----------------------------------------------------------------------------
-var bug = 231518;
+var BUGNUMBER = 231518;
 var summary = 'decompiler must quote keywords and non-identifier property names';
 var actual = '';
 var expect = 'no error';
@@ -45,7 +47,7 @@ var status;
 var object;
 var result;
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 
@@ -65,7 +67,7 @@ if (typeof uneval != 'undefined')
   {
     actual = 'error';
   }
-  
+ 
   reportCompare(expect, actual, status);
 
   status = inSection(2) + ' eval(uneval({"if": "then"}))';
@@ -82,7 +84,7 @@ if (typeof uneval != 'undefined')
   {
     actual = 'error';
   }
-  
+ 
   reportCompare(expect, actual, status);
 
   status = inSection(3) + ' eval(uneval(f))';
@@ -98,7 +100,7 @@ if (typeof uneval != 'undefined')
   {
     actual = 'error';
   }
-  
+ 
   reportCompare(expect, actual, status);
 
   status = inSection(2) + ' eval(uneval(g))';
@@ -114,11 +116,11 @@ if (typeof uneval != 'undefined')
   {
     actual = 'error';
   }
-  
+ 
   reportCompare(expect, actual, status);
 }
 
-function f() 
+function f()
 {
   var obj = new Object();
 
@@ -127,8 +129,8 @@ function f()
   obj['some text'] = 'correct';
 }
 
-function g() 
-{ 
-  return {'if': "then"}; 
+function g()
+{
+  return {'if': "then"};
 }
 

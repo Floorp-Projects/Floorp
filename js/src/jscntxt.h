@@ -196,7 +196,12 @@ struct JSRuntime {
      */
     JSPackedBool        gcPoke;
     JSPackedBool        gcRunning;
+#ifdef JS_GC_ZEAL
+    uint8               gcZeal;
+    uint8               gcPadding;
+#else
     uint16              gcPadding;
+#endif
 
     JSGCCallback        gcCallback;
     JSGCThingCallback   gcThingCallback;
@@ -221,6 +226,13 @@ struct JSRuntime {
 #ifdef JS_GCMETER
     JSGCStats           gcStats;
 #endif
+
+    /*
+     * The trace operation and its data argument to trace embedding-specific
+     * GC roots.
+     */
+    JSTraceDataOp       gcExtraRootsTraceOp;
+    void                *gcExtraRootsData;
 
     /* Literal table maintained by jsatom.c functions. */
     JSAtomState         atomState;
@@ -252,27 +264,8 @@ struct JSRuntime {
     /* List of active contexts sharing this runtime; protected by gcLock. */
     JSCList             contextList;
 
-    /* These are used for debugging -- see jsprvtd.h and jsdbgapi.h. */
-    JSTrapHandler       interruptHandler;
-    void                *interruptHandlerData;
-    JSNewScriptHook     newScriptHook;
-    void                *newScriptHookData;
-    JSDestroyScriptHook destroyScriptHook;
-    void                *destroyScriptHookData;
-    JSTrapHandler       debuggerHandler;
-    void                *debuggerHandlerData;
-    JSSourceHandler     sourceHandler;
-    void                *sourceHandlerData;
-    JSInterpreterHook   executeHook;
-    void                *executeHookData;
-    JSInterpreterHook   callHook;
-    void                *callHookData;
-    JSObjectHook        objectHook;
-    void                *objectHookData;
-    JSTrapHandler       throwHook;
-    void                *throwHookData;
-    JSDebugErrorHook    debugErrorHook;
-    void                *debugErrorHookData;
+    /* Per runtime debug hooks -- see jsprvtd.h and jsdbgapi.h. */
+    JSDebugHooks        globalDebugHooks;
 
     /* More debugging state, see jsdbgapi.c. */
     JSCList             trapList;
@@ -774,6 +767,9 @@ struct JSContext {
 
     /* Stack of thread-stack-allocated temporary GC roots. */
     JSTempValueRooter   *tempValueRooters;
+
+    /* Debug hooks associated with the current context. */
+    JSDebugHooks        *debugHooks;
 };
 
 #ifdef JS_THREADSAFE

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,16 +34,18 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 13 August 2001
  *
  * SUMMARY: Invoking an undefined function should produce a ReferenceError
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=95101
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-95101.js';
 var UBound = 0;
-var bug = 95101;
+var BUGNUMBER = 95101;
 var summary = 'Invoking an undefined function should produce a ReferenceError';
 var msgERR_REF_YES = 'ReferenceError';
 var msgERR_REF_NO = 'did NOT generate a ReferenceError';
@@ -96,7 +99,7 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   for (var i = 0; i < UBound; i++)

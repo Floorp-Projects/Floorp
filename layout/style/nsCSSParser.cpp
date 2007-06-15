@@ -79,6 +79,7 @@
 #include "nsIMediaList.h"
 #include "nsILookAndFeel.h"
 #include "nsStyleUtil.h"
+#include "nsIPrincipal.h"
 
 #include "prprf.h"
 #include "math.h"
@@ -108,6 +109,7 @@ public:
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
                    nsIURI*                aSheetURI,
                    nsIURI*                aBaseURI,
+                   nsIPrincipal*          aSheetPrincipal,
                    PRUint32               aLineNumber,
                    PRBool                 aAllowUnsafeRules,
                    nsICSSStyleSheet*&     aResult);
@@ -115,11 +117,13 @@ public:
   NS_IMETHOD ParseStyleAttribute(const nsAString&  aAttributeValue,
                                  nsIURI*           aDocURL,
                                  nsIURI*           aBaseURL,
+                                 nsIPrincipal*     aNodePrincipal,
                                  nsICSSStyleRule** aResult);
   
   NS_IMETHOD ParseAndAppendDeclaration(const nsAString&  aBuffer,
                                        nsIURI*           aSheetURL,
                                        nsIURI*           aBaseURL,
+                                       nsIPrincipal*     aSheetPrincipal,
                                        nsCSSDeclaration* aDeclaration,
                                        PRBool            aParseOnlyOneDecl,
                                        PRBool*           aChanged,
@@ -128,12 +132,14 @@ public:
   NS_IMETHOD ParseRule(const nsAString&        aRule,
                        nsIURI*                 aSheetURL,
                        nsIURI*                 aBaseURL,
+                       nsIPrincipal*           aSheetPrincipal,
                        nsCOMArray<nsICSSRule>& aResult);
 
   NS_IMETHOD ParseProperty(const nsCSSProperty aPropID,
                            const nsAString& aPropValue,
                            nsIURI* aSheetURL,
                            nsIURI* aBaseURL,
+                           nsIPrincipal* aSheetPrincipal,
                            nsCSSDeclaration* aDeclaration,
                            PRBool* aChanged);
 
@@ -163,6 +169,8 @@ protected:
     public:
       nsAutoParseCompoundProperty(CSSParserImpl* aParser) : mParser(aParser)
       {
+        NS_ASSERTION(!aParser->IsParsingCompoundProperty(),
+                     "already parsing compound property");
         NS_ASSERTION(aParser, "Null parser?");
         aParser->SetParsingCompoundProperty(PR_TRUE);
       }
@@ -176,10 +184,12 @@ protected:
   };
 
   nsresult InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
-                       PRUint32 aLineNumber, nsIURI* aBaseURI);
+                       PRUint32 aLineNumber, nsIURI* aBaseURI,
+                       nsIPrincipal* aSheetPrincipal);
   // the caller must hold on to aBuffer until parsing is done
   nsresult InitScanner(const nsString& aString, nsIURI* aSheetURI,
-                       PRUint32 aLineNumber, nsIURI* aBaseURI);
+                       PRUint32 aLineNumber, nsIURI* aBaseURI,
+                       nsIPrincipal* aSheetPrincipal);
   nsresult ReleaseScanner(void);
 
   nsresult DoParseMediaList(const nsSubstring& aBuffer,
@@ -403,6 +413,9 @@ protected:
   // The URI to be used as an HTTP "Referer" and for error reporting.
   nsCOMPtr<nsIURI> mSheetURL;
 
+  // The principal of the sheet involved
+  nsCOMPtr<nsIPrincipal> mSheetPrincipal;
+
   // The sheet we're parsing into
   nsCOMPtr<nsICSSStyleSheet> mSheet;
 
@@ -617,7 +630,8 @@ CSSParserImpl::SetChildLoader(nsICSSLoader* aChildLoader)
 
 nsresult
 CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
-                           PRUint32 aLineNumber, nsIURI* aBaseURI)
+                           PRUint32 aLineNumber, nsIURI* aBaseURI,
+                           nsIPrincipal* aSheetPrincipal)
 {
   NS_ASSERTION(! mScannerInited, "already have scanner");
 
@@ -627,6 +641,7 @@ CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
 #endif
   mBaseURL = aBaseURI;
   mSheetURL = aSheetURI;
+  mSheetPrincipal = aSheetPrincipal;
 
   mHavePushBack = PR_FALSE;
 
@@ -635,7 +650,8 @@ CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
 
 nsresult
 CSSParserImpl::InitScanner(const nsString& aString, nsIURI* aSheetURI,
-                           PRUint32 aLineNumber, nsIURI* aBaseURI)
+                           PRUint32 aLineNumber, nsIURI* aBaseURI,
+                           nsIPrincipal* aSheetPrincipal)
 {
   // Having it not own the string is OK since the caller will hold on to
   // the stream until we're done parsing.
@@ -648,6 +664,7 @@ CSSParserImpl::InitScanner(const nsString& aString, nsIURI* aSheetURI,
 #endif
   mBaseURL = aBaseURI;
   mSheetURL = aSheetURI;
+  mSheetPrincipal = aSheetPrincipal;
 
   mHavePushBack = PR_FALSE;
 
@@ -671,10 +688,13 @@ NS_IMETHODIMP
 CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
                      nsIURI*                aSheetURI,
                      nsIURI*                aBaseURI,
+                     nsIPrincipal*          aSheetPrincipal,
                      PRUint32               aLineNumber,
                      PRBool                 aAllowUnsafeRules,
                      nsICSSStyleSheet*&     aResult)
 {
+  NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
+  
   NS_ASSERTION(nsnull != aBaseURI, "need base URL");
   NS_ASSERTION(nsnull != aSheetURI, "need sheet URL");
 
@@ -683,6 +703,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
     NS_ENSURE_TRUE(mSheet, NS_ERROR_OUT_OF_MEMORY);
 
     mSheet->SetURIs(aSheetURI, aBaseURI);
+    mSheet->SetPrincipal(aSheetPrincipal);
     mNameSpaceMap = nsnull;
   }
 #ifdef DEBUG
@@ -690,14 +711,19 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
     nsCOMPtr<nsIURI> uri;
     mSheet->GetSheetURI(getter_AddRefs(uri));
     PRBool equal;
-    aSheetURI->Equals(uri, &equal);
-    NS_ASSERTION(equal, "Sheet URI does not match passed URI");
+    NS_ASSERTION(NS_SUCCEEDED(aSheetURI->Equals(uri, &equal)) && equal,
+                 "Sheet URI does not match passed URI");
+    NS_ASSERTION(NS_SUCCEEDED(mSheet->Principal()->Equals(aSheetPrincipal,
+                                                          &equal)) &&
+                 equal,
+                 "Sheet principal does not match passed principal");
   }
 #endif
   
   nsresult errorCode = NS_OK;
 
-  nsresult result = InitScanner(aInput, aSheetURI, aLineNumber, aBaseURI);
+  nsresult result = InitScanner(aInput, aSheetURI, aLineNumber, aBaseURI,
+                                aSheetPrincipal);
   if (! NS_SUCCEEDED(result)) {
     return result;
   }
@@ -764,12 +790,16 @@ NS_IMETHODIMP
 CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
                                    nsIURI*                  aDocURL,
                                    nsIURI*                  aBaseURL,
+                                   nsIPrincipal*            aNodePrincipal,
                                    nsICSSStyleRule**        aResult)
 {
+  NS_PRECONDITION(aNodePrincipal, "Must have principal here!");
+  
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
 
   const nsAFlatString& flat = PromiseFlatString(aAttributeValue);
-  nsresult rv = InitScanner(flat, aDocURL, 0, aBaseURL); // XXX line number
+  // XXX line number?
+  nsresult rv = InitScanner(flat, aDocURL, 0, aBaseURL, aNodePrincipal);
   if (! NS_SUCCEEDED(rv)) {
     return rv;
   }
@@ -815,16 +845,19 @@ NS_IMETHODIMP
 CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
                                          nsIURI*           aSheetURL,
                                          nsIURI*           aBaseURL,
+                                         nsIPrincipal*     aSheetPrincipal,
                                          nsCSSDeclaration* aDeclaration,
                                          PRBool            aParseOnlyOneDecl,
                                          PRBool*           aChanged,
                                          PRBool            aClearOldDecl)
 {
+  NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
+  
 //  NS_ASSERTION(nsnull != aBaseURL, "need base URL");
   *aChanged = PR_FALSE;
 
   const nsAFlatString& flat = PromiseFlatString(aBuffer);
-  nsresult rv = InitScanner(flat, aSheetURL, 0, aBaseURL);
+  nsresult rv = InitScanner(flat, aSheetURL, 0, aBaseURL, aSheetPrincipal);
   if (! NS_SUCCEEDED(rv)) {
     return rv;
   }
@@ -869,12 +902,15 @@ NS_IMETHODIMP
 CSSParserImpl::ParseRule(const nsAString&        aRule,
                          nsIURI*                 aSheetURL,
                          nsIURI*                 aBaseURL,
+                         nsIPrincipal*           aSheetPrincipal,
                          nsCOMArray<nsICSSRule>& aResult)
 {
+  NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
+  
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
 
   const nsAFlatString& flat = PromiseFlatString(aRule);
-  nsresult rv = InitScanner(flat, aSheetURL, 0, aBaseURL);
+  nsresult rv = InitScanner(flat, aSheetURL, 0, aBaseURL, aSheetPrincipal);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -899,24 +935,23 @@ CSSParserImpl::ParseRule(const nsAString&        aRule,
   return NS_OK;
 }
 
-//XXXbz this function does not deal well with something like "foo
-//!important" as the aPropValue.  It will parse the "foo" and set it
-//in the decl, then ignore the !important.  It should either fail to
-//parse this or do !important correctly....
 NS_IMETHODIMP
 CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
                              const nsAString& aPropValue,
                              nsIURI* aSheetURL,
                              nsIURI* aBaseURL,
+                             nsIPrincipal* aSheetPrincipal,
                              nsCSSDeclaration* aDeclaration,
                              PRBool* aChanged)
 {
+  NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
+  
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
   NS_ASSERTION(nsnull != aDeclaration, "Need declaration to parse into!");
   *aChanged = PR_FALSE;
 
   const nsAFlatString& flat = PromiseFlatString(aPropValue);
-  nsresult rv = InitScanner(flat, aSheetURL, 0, aBaseURL);
+  nsresult rv = InitScanner(flat, aSheetURL, 0, aBaseURL, aSheetPrincipal);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -940,9 +975,14 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
   mTempData.AssertInitialState();
   aDeclaration->ExpandTo(&mData);
   nsresult result = NS_OK;
-  if (ParseProperty(errorCode, aPropID)) {
+  PRBool parsedOK = ParseProperty(errorCode, aPropID);
+  if (parsedOK && !GetToken(errorCode, PR_TRUE)) {
     TransferTempData(aDeclaration, aPropID, PR_FALSE, PR_FALSE, aChanged);
   } else {
+    if (parsedOK) {
+      // Junk at end of property value.
+      REPORT_UNEXPECTED_TOKEN(PEExpectEndProperty);
+    }
     NS_ConvertASCIItoUTF16 propName(nsCSSProps::GetStringValue(aPropID));
     const PRUnichar *params[] = {
       propName.get()
@@ -1024,7 +1064,7 @@ CSSParserImpl::DoParseMediaList(const nsSubstring& aBuffer,
   const nsAFlatString& flat = PromiseFlatString(aBuffer);
 
   // fake base URL since media lists don't have URLs in them
-  nsresult rv = InitScanner(flat, aURL, aLineNumber, aURL);
+  nsresult rv = InitScanner(flat, aURL, aLineNumber, aURL, nsnull);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1047,7 +1087,7 @@ CSSParserImpl::ParseColorString(const nsSubstring& aBuffer,
   NS_ASSERTION(aHandleAlphaColors == PR_TRUE || aHandleAlphaColors == PR_FALSE, "bad PRBool value");
 
   const nsAFlatString& flat = PromiseFlatString(aBuffer);
-  nsresult rv = InitScanner(flat, aURL, aLineNumber, aURL);
+  nsresult rv = InitScanner(flat, aURL, aLineNumber, aURL, nsnull);
   if (NS_FAILED(rv))
     return rv;
 
@@ -3155,16 +3195,22 @@ PRBool CSSParserImpl::ParseColorOpacity(nsresult& aErrorCode, PRUint8& aOpacity)
     return PR_FALSE;
   }
 
-  PRInt32 value = nsStyleUtil::FloatToColorComponent(mToken.mNumber);
+  if (mToken.mNumber < 0.0f) {
+    mToken.mNumber = 0.0f;
+  } else if (mToken.mNumber > 1.0f) {
+    mToken.mNumber = 1.0f;
+  }
+
+  PRUint8 value = nsStyleUtil::FloatToColorComponent(mToken.mNumber);
+  NS_ASSERTION(fabs(mToken.mNumber - value/255.0f) <= 0.5f,
+               "FloatToColorComponent did something weird");
 
   if (!ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
     REPORT_UNEXPECTED_TOKEN(PEExpectedCloseParen);
     return PR_FALSE;
   }
   
-  if (value < 0) value = 0;
-  if (value > 255) value = 255;
-  aOpacity = (PRUint8)value;
+  aOpacity = value;
 
   return PR_TRUE;
 }
@@ -3426,12 +3472,6 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
       dest->~nsCSSValue();
       memcpy(dest, source, sizeof(nsCSSValue));
       new (source) nsCSSValue();
-      if (dest->GetUnit() == eCSSUnit_Null) {
-        // Some of our property parsers actually want to _clear_ properties in
-        // mData (eg the "font" shorthand parser does for system fonts).  We've
-        // cleared the data; now clear the bit too.
-        mData.ClearPropertyBit(aPropID);
-      }
     } break;
 
     case eCSSType_Rect: {
@@ -3505,6 +3545,7 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
 #define VARIANT_INHERIT         0x020000  // H eCSSUnit_Initial, eCSSUnit_Inherit
 #define VARIANT_NONE            0x040000  // O
 #define VARIANT_NORMAL          0x080000  // M
+#define VARIANT_SYSFONT         0x100000  // eCSSUnit_System_Font
 
 // Common combinations of variants
 #define VARIANT_AL   (VARIANT_AUTO | VARIANT_LENGTH)
@@ -3513,6 +3554,7 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
 #define VARIANT_AHLP (VARIANT_AH | VARIANT_LP)
 #define VARIANT_AHI  (VARIANT_AH | VARIANT_INTEGER)
 #define VARIANT_AHK  (VARIANT_AH | VARIANT_KEYWORD)
+#define VARIANT_AHKLP (VARIANT_AHLP | VARIANT_KEYWORD)
 #define VARIANT_AUK  (VARIANT_AUTO | VARIANT_URL | VARIANT_KEYWORD)
 #define VARIANT_AHUK (VARIANT_AH | VARIANT_URL | VARIANT_KEYWORD)
 #define VARIANT_AHL  (VARIANT_AH | VARIANT_LENGTH)
@@ -3521,6 +3563,7 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
 #define VARIANT_HKF  (VARIANT_HK | VARIANT_FREQUENCY)
 #define VARIANT_HKL  (VARIANT_HK | VARIANT_LENGTH)
 #define VARIANT_HKLP (VARIANT_HK | VARIANT_LP)
+#define VARIANT_HKLPO (VARIANT_HKLP | VARIANT_NONE)
 #define VARIANT_HL   (VARIANT_INHERIT | VARIANT_LENGTH)
 #define VARIANT_HI   (VARIANT_INHERIT | VARIANT_INTEGER)
 #define VARIANT_HLP  (VARIANT_HL | VARIANT_PERCENT)
@@ -3716,6 +3759,9 @@ PRBool CSSParserImpl::ParseVariant(nsresult& aErrorCode, nsCSSValue& aValue,
         }
       }
       if ((aVariantMask & VARIANT_INHERIT) != 0) {
+        // XXX Should we check IsParsingCompoundProperty, or do all
+        // callers handle it?  (Not all callers set it, though, since
+        // they want the quirks that are disabled by setting it.)
         if (eCSSKeyword_inherit == keyword) {
           aValue.SetInheritValue();
           return PR_TRUE;
@@ -3734,6 +3780,13 @@ PRBool CSSParserImpl::ParseVariant(nsresult& aErrorCode, nsCSSValue& aValue,
       if ((aVariantMask & VARIANT_NORMAL) != 0) {
         if (eCSSKeyword_normal == keyword) {
           aValue.SetNormalValue();
+          return PR_TRUE;
+        }
+      }
+      if ((aVariantMask & VARIANT_SYSFONT) != 0) {
+        if (eCSSKeyword__moz_use_system_font == keyword &&
+            !IsParsingCompoundProperty()) {
+          aValue.SetSystemFontValue();
           return PR_TRUE;
         }
       }
@@ -4010,6 +4063,12 @@ PRBool CSSParserImpl::ParseAttr(nsresult& aErrorCode, nsCSSValue& aValue)
 
 PRBool CSSParserImpl::ParseURL(nsresult& aErrorCode, nsCSSValue& aValue)
 {
+  if (!mSheetPrincipal) {
+    NS_NOTREACHED("Codepaths that expect to parse URLs MUST pass in an "
+                  "origin principal");
+    return PR_FALSE;
+  }
+  
   if (ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
     if (! GetURLToken(aErrorCode, PR_TRUE)) {
       return PR_FALSE;
@@ -4029,7 +4088,8 @@ PRBool CSSParserImpl::ParseURL(nsresult& aErrorCode, nsCSSValue& aValue)
           return PR_FALSE;
         }
 
-        nsCSSValue::URL *url = new nsCSSValue::URL(uri, buffer, mSheetURL);
+        nsCSSValue::URL *url =
+          new nsCSSValue::URL(uri, buffer, mSheetURL, mSheetPrincipal);
         buffer->Release();
         if (NS_UNLIKELY(!url)) {
           aErrorCode = NS_ERROR_OUT_OF_MEMORY;
@@ -4306,6 +4366,7 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
 #endif
 
   // Strip out properties we use internally.
+  case eCSSProperty__x_system_font:
   case eCSSProperty_margin_end_value:
   case eCSSProperty_margin_left_value:
   case eCSSProperty_margin_right_value:
@@ -4410,6 +4471,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
     NS_ERROR("not a single value property");
     return PR_FALSE;
 
+  case eCSSProperty__x_system_font:
   case eCSSProperty_margin_left_ltr_source:
   case eCSSProperty_margin_left_rtl_source:
   case eCSSProperty_margin_right_ltr_source:
@@ -4473,7 +4535,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty__moz_border_radius_topRight:
   case eCSSProperty__moz_border_radius_bottomRight:
   case eCSSProperty__moz_border_radius_bottomLeft:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HLP, nsnull);
+    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HLP, nsnull);
   case eCSSProperty__moz_column_count:
     return ParsePositiveVariant(aErrorCode, aValue, VARIANT_AHI, nsnull);
   case eCSSProperty__moz_column_width:
@@ -4484,7 +4546,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty__moz_outline_radius_topRight:
   case eCSSProperty__moz_outline_radius_bottomRight:
   case eCSSProperty__moz_outline_radius_bottomLeft:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HLP, nsnull);
+    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HLP, nsnull);
   case eCSSProperty_bottom:
   case eCSSProperty_top:
   case eCSSProperty_left:
@@ -4578,8 +4640,10 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
                         nsCSSProps::kBoxSizingKTable);
   case eCSSProperty_height:
-  case eCSSProperty_width:
     return ParsePositiveVariant(aErrorCode, aValue, VARIANT_AHLP, nsnull);
+  case eCSSProperty_width:
+    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_AHKLP,
+                                nsCSSProps::kWidthKTable);
   case eCSSProperty_force_broken_image_icon:
     return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HI, nsnull);
   case eCSSProperty_caption_side:
@@ -4624,27 +4688,31 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_font_family:
     return ParseFamily(aErrorCode, aValue);
   case eCSSProperty_font_size: 
-    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HKLP,
+    return ParsePositiveVariant(aErrorCode, aValue,
+                                VARIANT_HKLP | VARIANT_SYSFONT,
                                 nsCSSProps::kFontSizeKTable);
   case eCSSProperty_font_size_adjust:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HON,
+    return ParseVariant(aErrorCode, aValue, VARIANT_HON | VARIANT_SYSFONT,
                         nsnull);
   case eCSSProperty_font_stretch:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HMK,
+    return ParseVariant(aErrorCode, aValue, VARIANT_HMK | VARIANT_SYSFONT,
                         nsCSSProps::kFontStretchKTable);
   case eCSSProperty_font_style:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HMK,
+    return ParseVariant(aErrorCode, aValue, VARIANT_HMK | VARIANT_SYSFONT,
                         nsCSSProps::kFontStyleKTable);
   case eCSSProperty_font_variant:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HMK,
+    return ParseVariant(aErrorCode, aValue, VARIANT_HMK | VARIANT_SYSFONT,
                         nsCSSProps::kFontVariantKTable);
   case eCSSProperty_font_weight:
     return ParseFontWeight(aErrorCode, aValue);
+  case eCSSProperty_ime_mode:
+    return ParseVariant(aErrorCode, aValue, VARIANT_AHK | VARIANT_NORMAL,
+                        nsCSSProps::kIMEModeKTable);
   case eCSSProperty_letter_spacing:
   case eCSSProperty_word_spacing:
     return ParseVariant(aErrorCode, aValue, VARIANT_HL | VARIANT_NORMAL, nsnull);
   case eCSSProperty_line_height:
-    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HLPN | VARIANT_NORMAL, nsnull);
+    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HLPN | VARIANT_NORMAL | VARIANT_SYSFONT, nsnull);
   case eCSSProperty_list_style_image:
     return ParseVariant(aErrorCode, aValue, VARIANT_HUO, nsnull);
   case eCSSProperty_list_style_position:
@@ -4663,11 +4731,15 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_marks:
     return ParseMarks(aErrorCode, aValue);
   case eCSSProperty_max_height:
-  case eCSSProperty_max_width:
     return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HLPO, nsnull);
+  case eCSSProperty_max_width:
+    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HKLPO,
+                                nsCSSProps::kWidthKTable);
   case eCSSProperty_min_height:
-  case eCSSProperty_min_width:
     return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HLP, nsnull);
+  case eCSSProperty_min_width:
+    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HKLP,
+                                nsCSSProps::kWidthKTable);
   case eCSSProperty_opacity:
     return ParseVariant(aErrorCode, aValue, VARIANT_HN, nsnull);
   case eCSSProperty_orphans:
@@ -5327,7 +5399,8 @@ PRBool CSSParserImpl::ParseContent(nsresult& aErrorCode)
   // XXX Rewrite to make it look more like ParseCursor or ParseCounterData?
   nsCSSValue  value;
   if (ParseVariant(aErrorCode, value,
-                   VARIANT_CONTENT | VARIANT_INHERIT | VARIANT_NORMAL, 
+                   VARIANT_CONTENT | VARIANT_INHERIT | VARIANT_NORMAL |
+                     VARIANT_NONE, 
                    nsCSSProps::kContentKTable)) {
     nsCSSValueList* listHead = new nsCSSValueList();
     nsCSSValueList* list = listHead;
@@ -5347,6 +5420,7 @@ PRBool CSSParserImpl::ParseContent(nsresult& aErrorCode)
       if (eCSSUnit_Inherit == value.GetUnit() ||
           eCSSUnit_Initial == value.GetUnit() ||
           eCSSUnit_Normal == value.GetUnit() ||
+          eCSSUnit_None == value.GetUnit() ||
           (eCSSUnit_Enumerated == value.GetUnit() &&
            NS_STYLE_CONTENT_ALT_CONTENT == value.GetIntValue())) {
         // This only matters the first time through the loop.
@@ -5395,7 +5469,7 @@ PRBool CSSParserImpl::ParseCounterData(nsresult& aErrorCode,
   for (const SingleCounterPropValue *sv = singleValues,
            *sv_end = singleValues + NS_ARRAY_LENGTH(singleValues);
        sv != sv_end; ++sv) {
-    if (ident->LowerCaseEqualsLiteral(sv->str)) {
+    if (ident->LowerCaseEqualsASCII(sv->str)) {
       if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
         nsCSSCounterData* dataHead = new nsCSSCounterData();
         if (!dataHead) {
@@ -5531,7 +5605,9 @@ PRBool CSSParserImpl::ParseFont(nsresult& aErrorCode)
   nsCSSValue  family;
   if (ParseVariant(aErrorCode, family, VARIANT_HK, nsCSSProps::kFontKTable)) {
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      if (eCSSUnit_Inherit == family.GetUnit()) {
+      if (eCSSUnit_Inherit == family.GetUnit() ||
+          eCSSUnit_Initial == family.GetUnit()) {
+        AppendValue(eCSSProperty__x_system_font, nsCSSValue(eCSSUnit_None));
         AppendValue(eCSSProperty_font_family, family);
         AppendValue(eCSSProperty_font_style, family);
         AppendValue(eCSSProperty_font_variant, family);
@@ -5542,22 +5618,16 @@ PRBool CSSParserImpl::ParseFont(nsresult& aErrorCode)
         AppendValue(eCSSProperty_font_size_adjust, family);
       }
       else {
-        AppendValue(eCSSProperty_font_family, family);  // keyword value overrides everything else
-        nsCSSValue empty;
-        // XXXbz this is actually _clearing_ the values for the following
-        // properties in mTempData, but setting the bit for them.  We need that
-        // because we want to clear out the values in mData when all is said
-        // and done.  See the code in TransferTempData that handles this.  The
-        // end result is that mData always has its property bits set like it
-        // should, but mTempData can, in fact, have bits set for properties
-        // that are not set...
-        AppendValue(eCSSProperty_font_style, empty);
-        AppendValue(eCSSProperty_font_variant, empty);
-        AppendValue(eCSSProperty_font_weight, empty);
-        AppendValue(eCSSProperty_font_size, empty);
-        AppendValue(eCSSProperty_line_height, empty);
-        AppendValue(eCSSProperty_font_stretch, empty);
-        AppendValue(eCSSProperty_font_size_adjust, empty);
+        AppendValue(eCSSProperty__x_system_font, family);
+        nsCSSValue systemFont(eCSSUnit_System_Font);
+        AppendValue(eCSSProperty_font_family, systemFont);
+        AppendValue(eCSSProperty_font_style, systemFont);
+        AppendValue(eCSSProperty_font_variant, systemFont);
+        AppendValue(eCSSProperty_font_weight, systemFont);
+        AppendValue(eCSSProperty_font_size, systemFont);
+        AppendValue(eCSSProperty_line_height, systemFont);
+        AppendValue(eCSSProperty_font_stretch, systemFont);
+        AppendValue(eCSSProperty_font_size_adjust, systemFont);
       }
       return PR_TRUE;
     }
@@ -5605,9 +5675,11 @@ PRBool CSSParserImpl::ParseFont(nsresult& aErrorCode)
   }
 
   // Get final mandatory font-family
+  nsAutoParseCompoundProperty compound(this);
   if (ParseFamily(aErrorCode, family)) {
     if ((eCSSUnit_Inherit != family.GetUnit()) && (eCSSUnit_Initial != family.GetUnit()) &&
         ExpectEndProperty(aErrorCode, PR_TRUE)) {
+      AppendValue(eCSSProperty__x_system_font, nsCSSValue(eCSSUnit_None));
       AppendValue(eCSSProperty_font_family, family);
       AppendValue(eCSSProperty_font_style, values[0]);
       AppendValue(eCSSProperty_font_variant, values[1]);
@@ -5624,7 +5696,7 @@ PRBool CSSParserImpl::ParseFont(nsresult& aErrorCode)
 
 PRBool CSSParserImpl::ParseFontWeight(nsresult& aErrorCode, nsCSSValue& aValue)
 {
-  if (ParseVariant(aErrorCode, aValue, VARIANT_HMKI, nsCSSProps::kFontWeightKTable)) {
+  if (ParseVariant(aErrorCode, aValue, VARIANT_HMKI | VARIANT_SYSFONT, nsCSSProps::kFontWeightKTable)) {
     if (eCSSUnit_Integer == aValue.GetUnit()) { // ensure unit value
       PRInt32 intValue = aValue.GetIntValue();
       if ((100 <= intValue) &&
@@ -5657,8 +5729,13 @@ PRBool CSSParserImpl::ParseFamily(nsresult& aErrorCode, nsCSSValue& aValue)
           aValue.SetInheritValue();
           return PR_TRUE;
         }
-        else if (keyword == eCSSKeyword__moz_initial) {
+        if (keyword == eCSSKeyword__moz_initial) {
           aValue.SetInitialValue();
+          return PR_TRUE;
+        }
+        if (keyword == eCSSKeyword__moz_use_system_font &&
+            !IsParsingCompoundProperty()) {
+          aValue.SetSystemFontValue();
           return PR_TRUE;
         }
       }

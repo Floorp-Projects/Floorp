@@ -36,18 +36,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsEventDispatcher.h"
-#include "nsIDocument.h"
-#include "nsIAtom.h"
 #include "nsDOMEvent.h"
-#include "nsINode.h"
 #include "nsPIDOMEventTarget.h"
 #include "nsPresContext.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsIDOMEventReceiver.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIEventListenerManager.h"
-#include "nsPIDOMWindow.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsDOMError.h"
 #include "nsMutationEvent.h"

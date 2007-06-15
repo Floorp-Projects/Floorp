@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-307456.js';
 //-----------------------------------------------------------------------------
-var bug = 307456;
+var BUGNUMBER = 307456;
 var summary = 'Do not Freeze with RegExp';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var data='<!---<->---->\n\n<><>--!!!<><><><><><>\n!!<>\n\n<>\n<><><><>!\n\n\n\n--\n--\n--\n\n--\n--\n\n\n-------\n--\n--\n\n\n--\n\n\n\n----\n\n\n\n--\n\n\n-\n\n\n-\n\n-\n\n-\n\n-\n-\n\n----\n\n-\n\n\n\n\n-\n\n\n\n\n\n\n\n\n-----\n\n\n-\n------\n-------\n\n----\n\n\n\n!\n\n\n\n\n\n\n\n!!!\n\n\n--------\n\n\n\n-\n\n\n-\n--\n\n----\n\n\n\n\n\n-\n\n\n----\n\n\n\n\n\n--------\n!\n\n\n\n\n-\n---\n--\n\n----\n\n-\n\n-\n\n-\n\n\n\n-----\n\n\n\n-\n\n\n-\n\n\n--\n-\n\n\n-\n\n----\n\n---\n\n---\n\n----\n\n\n\n---\n\n-++\n\n-------<>\n\n-!\n\n--\n\n----!-\n\n\n\n';

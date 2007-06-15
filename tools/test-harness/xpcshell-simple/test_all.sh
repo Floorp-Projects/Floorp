@@ -95,6 +95,7 @@ done
 # files matching the pattern tail_*.js are treated like teardown files
 # - they are run after tail.js
 tailfiles="-f $topsrcdir/tools/test-harness/xpcshell-simple/tail.js"
+tailfiles="$tailfiles -f $topsrcdir/tools/test-harness/xpcshell-simple/execute_test.js"
 for t in $testdir/tail_*.js
 do
     if [ -f $t ]; then
@@ -110,7 +111,7 @@ done
 for t in $testdir/test_*.js
 do
     echo -n "$t: "
-    NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell $headfiles -f $t $tailfiles 2> $t.log 1>&2
+    NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell -s $headfiles -f $t $tailfiles 2> $t.log 1>&2
     if [ `grep -c '\*\*\* PASS' $t.log` = 0 ]
     then
         echo "FAIL"

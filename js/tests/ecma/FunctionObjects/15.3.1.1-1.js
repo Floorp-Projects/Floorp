@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.3.1.1-1.js';
+
 /**
    File Name:          15.3.1.1.js
    ECMA Section:       15.3.1.1 The Function Constructor Called as a Function
@@ -74,61 +76,61 @@ new TestCase(   SECTION,
 		"[object Function]",
 		myfunc.toString() );
 
-new TestCase( SECTION,  
-	      "myfunc.length",                            
-	      0,                      
+new TestCase( SECTION, 
+	      "myfunc.length",                           
+	      0,                     
 	      myfunc.length );
 
-new TestCase( SECTION,  
-	      "myfunc.prototype.toString()",              
-	      "[object Object]",      
+new TestCase( SECTION, 
+	      "myfunc.prototype.toString()",             
+	      "[object Object]",     
 	      myfunc.prototype.toString() );
 
-new TestCase( SECTION,  
-	      "myfunc.prototype.constructor",             
-	      myfunc,                 
+new TestCase( SECTION, 
+	      "myfunc.prototype.constructor",            
+	      myfunc,                
 	      myfunc.prototype.constructor );
 
-new TestCase( SECTION,  
-	      "myfunc.arguments",                         
-	      null,                   
+new TestCase( SECTION, 
+	      "myfunc.arguments",                        
+	      null,                  
 	      myfunc.arguments );
 
-new TestCase( SECTION,  
-	      "var OBJ = new MyObject(true); OBJ.valueOf()",    
-	      true,             
+new TestCase( SECTION, 
+	      "var OBJ = new MyObject(true); OBJ.valueOf()",   
+	      true,            
 	      eval("var OBJ = new MyObject(true); OBJ.valueOf()") );
 
-new TestCase( SECTION,  
-	      "OBJ.toString()",                           
-	      "true",                 
+new TestCase( SECTION, 
+	      "OBJ.toString()",                          
+	      "true",                
 	      OBJ.toString() );
 
-new TestCase( SECTION,  
-	      "OBJ.toString = Object.prototype.toString; OBJ.toString()", 
-	      "[object Object]",  
+new TestCase( SECTION, 
+	      "OBJ.toString = Object.prototype.toString; OBJ.toString()",
+	      "[object Object]", 
 	      eval("OBJ.toString = Object.prototype.toString; OBJ.toString()") );
 
-new TestCase( SECTION,  
-	      "MyObject.toString = Object.prototype.toString; MyObject.toString()",    
-	      "[object Function]",   
+new TestCase( SECTION, 
+	      "MyObject.toString = Object.prototype.toString; MyObject.toString()",   
+	      "[object Function]",  
 	      eval("MyObject.toString = Object.prototype.toString; MyObject.toString()") );
 
-new TestCase( SECTION,  
-	      "MyObject.length",                              
-	      1,      
+new TestCase( SECTION, 
+	      "MyObject.length",                             
+	      1,     
 	      MyObject.length );
 
-new TestCase( SECTION,  
-	      "MyObject.prototype.constructor",               
-	      MyObject,   
+new TestCase( SECTION, 
+	      "MyObject.prototype.constructor",              
+	      MyObject,  
 	      MyObject.prototype.constructor );
 
-new TestCase( SECTION,  
-	      "MyObject.arguments",                           
-	      null,   
+new TestCase( SECTION, 
+	      "MyObject.arguments",                          
+	      null,  
 	      MyObject.arguments );
-    
+   
 test();
 
 

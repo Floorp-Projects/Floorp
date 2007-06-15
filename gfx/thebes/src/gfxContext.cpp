@@ -141,6 +141,12 @@ gfxContext::MoveTo(const gfxPoint& pt)
 }
 
 void
+gfxContext::NewSubPath()
+{
+    cairo_new_sub_path(mCairo);
+}
+
+void
 gfxContext::LineTo(const gfxPoint& pt)
 {
     cairo_line_to(mCairo, pt.x, pt.y);
@@ -585,6 +591,14 @@ gfxContext::UpdateSurfaceClip()
     NewPath();
     Rectangle(gfxRect(0,0,0,0));
     Fill();
+}
+
+gfxRect
+gfxContext::GetClipExtents()
+{
+    double xmin, ymin, xmax, ymax;
+    cairo_clip_extents(mCairo, &xmin, &ymin, &xmax, &ymax);
+    return gfxRect(xmin, ymin, xmax - xmin, ymax - ymin);
 }
 
 // rendering sources

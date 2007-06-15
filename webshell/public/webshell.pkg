@@ -9,10 +9,4 @@ dist/bin/viewer@BINS@
 dist/bin/mozilla-viewer.sh
 #endif
 #endif
-#if MOZ_ENABLE_GTK
-dist/bin/viewer_gtk
-#endif
-#if MOZ_ENABLE_XLIB
-dist/bin/viewer_xlib
-#endif
 #endif
