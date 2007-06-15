@@ -38,8 +38,8 @@
 #include "nsXULTemplateResultXML.h"
 #include "nsXMLBinding.h"
 
-NS_IMPL_ADDREF(nsXMLBindingSet);
-NS_IMPL_RELEASE(nsXMLBindingSet);
+NS_IMPL_ADDREF(nsXMLBindingSet)
+NS_IMPL_RELEASE(nsXMLBindingSet)
 
 nsresult
 nsXMLBindingSet::AddBinding(nsIAtom* aVar, nsIDOMXPathExpression* aExpr)

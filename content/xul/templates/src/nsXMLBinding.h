@@ -85,8 +85,8 @@ public:
 
 public:
 
-  nsrefcnt AddRef();
-  nsrefcnt Release();
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
   NS_DECL_OWNINGTHREAD
 
   /**
