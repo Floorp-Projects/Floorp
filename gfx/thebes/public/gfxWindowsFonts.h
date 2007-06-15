@@ -60,45 +60,6 @@
 
 #define NO_RANGE_FOUND 126 // bit 126 in the font unicode ranges is required to be 0
 
-/** @description Font Weights
- * Each available font weight is stored as as single bit inside a bitset.
- * e.g. The binary value 0000000000001000 indcates font weight 400 is available.
- * while the binary value 0000000000001001 indicates both font weight 100 and 400 are available
- *
- * The font weights which will be represented include {100, 200, 300, 400, 500, 600, 700, 800, 900}
- * The font weight specified in the mFont->weight may include values which are not an even multiple of 100.
- * If so, the font weight mod 100 indicates the number steps to lighten are make bolder.
- * This corresponds to the CSS lighter and bolder property values. If bolder is applied twice to the font which has
- * a font weight of 400 then the mFont->weight will contain the value 402.
- * If lighter is applied twice to a font of weight 400 then the mFont->weight will contain the value 398.
- * Only nine steps of bolder or lighter are allowed by the CSS XPCODE.
- */
-// XXX change this from using a bitset to something cleaner eventually
-class WeightTable
-{
-public:
-    THEBES_INLINE_DECL_REFCOUNTING(WeightTable)
-
-    WeightTable() : mWeights(0) {}
-    ~WeightTable() {
-
-    }
-    PRBool TriedWeight(PRUint8 aWeight) {
-        return mWeights[aWeight - 1 + 10];
-    }
-    PRBool HasWeight(PRUint8 aWeight) {
-        return mWeights[aWeight - 1];
-    }
-    void SetWeight(PRUint8 aWeight, PRBool aValue) {
-        mWeights[aWeight - 1] = (aValue == PR_TRUE);
-        mWeights[aWeight - 1 + 10] = PR_TRUE;
-    }
-
-private:
-    std::bitset<20> mWeights;
-};
-
-
 /* Unicode subrange table
  *   from: http://msdn.microsoft.com/library/default.asp?url=/library/en-us/intl/unicode_63ub.asp
  *
@@ -279,6 +240,58 @@ static PRUint8 CharRangeBit(PRUint32 ch) {
     return NO_RANGE_FOUND;
 }
 
+
+class gfxSparseBitSet {
+public:
+    enum { BLOCK_SIZE = 32 };
+
+    PRBool test(PRUint32 aIndex) {
+        PRUint32 blockIndex = aIndex/(BLOCK_SIZE*8);
+        if (blockIndex >= mBlocks.Length())
+            return PR_FALSE;
+        Block *block = mBlocks[blockIndex];
+        if (!block)
+            return PR_FALSE;
+        return ((block->mBits[(aIndex/8) & (BLOCK_SIZE - 1)]) & (1 << (aIndex & 0x7))) != 0;
+    }
+   
+    void set(PRUint32 aIndex) {
+        PRUint32 blockIndex = aIndex/(BLOCK_SIZE*8);
+        if (blockIndex >= mBlocks.Length()) {
+            nsAutoPtr<Block> *blocks = mBlocks.AppendElements(blockIndex + 1 - mBlocks.Length());
+            if (!blocks) // OOM
+                return;
+        }
+        Block *block = mBlocks[blockIndex];
+        if (!block) {
+            block = new Block;
+            if (!block) // OOM
+                return;
+            memset(block, 0, sizeof(Block));
+            mBlocks[blockIndex] = block;
+        }
+        block->mBits[(aIndex/8) & (BLOCK_SIZE - 1)] |= 1 << (aIndex & 0x7);
+    }
+
+    PRUint32 getsize() {
+        PRUint32 size = 0;
+        for (PRUint32 i = 0; i < mBlocks.Length(); i++)
+            if (mBlocks[i])
+                size += sizeof(Block);
+        return size;
+    }
+
+    // If you want to set a lot of bits very fast, we could have Set variants
+    // that set a lot of bits at once, e.g. Set(PRUint32 aStart, PRUint32 aLength)
+
+private:
+    struct Block {
+        PRUint8 mBits[BLOCK_SIZE];
+    };
+    
+    nsTArray< nsAutoPtr<Block> > mBlocks;
+};
+
 /**
  * FontEntry is a class that describes one of the fonts on the users system
  * It contains information such as the name, font type, charset table and unicode ranges.
@@ -291,8 +304,8 @@ public:
     THEBES_INLINE_DECL_REFCOUNTING(FontEntry)
 
     FontEntry(const nsAString& aName, PRUint16 aFontType) : 
-        mName(aName), mFontType(aFontType), mUnicodeFont(PR_FALSE),
-        mCharset(0), mUnicodeRanges(0)
+        mName(aName), mFontType(aFontType), mDefaultWeight(0),
+        mUnicodeFont(PR_FALSE), mCharset(0), mUnicodeRanges(0)
     {
     }
 
@@ -385,10 +398,32 @@ public:
         return mUnicodeRanges[range];
     }
 
+    class WeightTable
+    {
+    public:
+        THEBES_INLINE_DECL_REFCOUNTING(WeightTable)
+            
+        WeightTable() : mWeights(0) {}
+        ~WeightTable() {}
+        PRBool TriedWeight(PRUint8 aWeight) {
+            return mWeights[aWeight - 1 + 10];
+        }
+        PRBool HasWeight(PRUint8 aWeight) {
+            return mWeights[aWeight - 1];
+        }
+        void SetWeight(PRUint8 aWeight, PRBool aValue) {
+            mWeights[aWeight - 1] = aValue;
+            mWeights[aWeight - 1 + 10] = PR_TRUE;
+        }
+    private:
+        std::bitset<20> mWeights;
+    };
+
     // The family name of the font
     nsString mName;
 
     PRUint16 mFontType;
+    PRUint16 mDefaultWeight;
 
     PRUint8 mFamily;
     PRUint8 mPitch;
@@ -396,6 +431,10 @@ public:
 
     std::bitset<256> mCharset;
     std::bitset<128> mUnicodeRanges;
+
+    WeightTable mWeightTable;
+
+    gfxSparseBitSet mCharacterMap;
 };
 
 
@@ -412,7 +451,7 @@ public:
 
     virtual const gfxFont::Metrics& GetMetrics();
 
-    HFONT GetHFONT();
+    HFONT GetHFONT() { return mFont; }
     cairo_font_face_t *CairoFontFace();
     cairo_scaled_font_t *CairoScaledFont();
     SCRIPT_CACHE *ScriptCache() { return &mScriptCache; }
@@ -424,17 +463,22 @@ public:
                       gfxContext *aContext, PRBool aDrawToPath, gfxPoint *aBaselineOrigin,
                       Spacing *aSpacing);
 
+    virtual PRUint32 GetSpaceGlyph() {
+        GetMetrics(); // ensure that the metrics are computed but don't recompute them
+        return mSpaceGlyph;
+    };
+
+    FontEntry *GetFontEntry() { return mFontEntry; }
+
 protected:
     HFONT MakeHFONT();
-    cairo_font_face_t *MakeCairoFontFace();
-    cairo_scaled_font_t *MakeCairoScaledFont();
     void FillLogFont(gfxFloat aSize, PRInt16 aWeight);
 
-    HFONT mFont;
+    HFONT    mFont;
     gfxFloat mAdjustedSize;
+    PRUint32 mSpaceGlyph;
 
 private:
-    void Destroy();
     void ComputeMetrics();
 
     SCRIPT_CACHE mScriptCache;
@@ -446,7 +490,7 @@ private:
 
     LOGFONTW mLogFont;
 
-    nsRefPtr<WeightTable> mWeightTable;
+    nsRefPtr<FontEntry> mFontEntry;
     
     virtual void SetupCairoFont(cairo_t *aCR);
 };
@@ -466,39 +510,28 @@ public:
     virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle);
 
     virtual gfxTextRun *MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
-                                    Parameters* aParams);
+                                    const Parameters* aParams, PRUint32 aFlags);
     virtual gfxTextRun *MakeTextRun(const PRUint8* aString, PRUint32 aLength,
-                                    Parameters* aParams);
+                                    const Parameters* aParams, PRUint32 aFlags);
 
     const nsACString& GetGenericFamily() const {
         return mGenericFamily;
     }
 
+    const nsTArray<nsRefPtr<FontEntry> >& GetFontList() const {
+        return mFontEntries;
+    }
     PRUint32 FontListLength() const {
-        return mFonts.Length();
+        return mFontEntries.Length();
     }
 
-    gfxWindowsFont *GetFontAt(PRInt32 i) {
-        return NS_STATIC_CAST(gfxWindowsFont*, NS_STATIC_CAST(gfxFont*, mFonts[i]));
+    FontEntry *GetFontEntryAt(PRInt32 i) {
+        return mFontEntries[i];
     }
 
-    void AppendFont(gfxWindowsFont *aFont) {
-        mFonts.AppendElement(aFont);
-    }
-
-    PRBool HasFontNamed(const nsAString& aName) const {
-        PRUint32 len = mFonts.Length();
-        for (PRUint32 i = 0; i < len; ++i)
-            if (aName.Equals(mFonts[i]->GetName()))
-                return PR_TRUE;
-        return PR_FALSE;
-    }
+    virtual gfxWindowsFont *GetFontAt(PRInt32 i);
 
 protected:
-    static PRBool MakeFont(const nsAString& fontName,
-                           const nsACString& genericName,
-                           void *closure);
-
     void InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun, const char *aString, PRUint32 aLength);
     void InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun, const PRUnichar *aString, PRUint32 aLength);
 
@@ -506,6 +539,7 @@ protected:
 
 private:
     nsCString mGenericFamily;
+    nsTArray<nsRefPtr<FontEntry> > mFontEntries;
 };
 
 #endif /* GFX_WINDOWSFONTS_H */

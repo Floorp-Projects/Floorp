@@ -44,6 +44,8 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS =	lib \
 	prototype \
+	offline \
 	$(NULL)
+#	mochikit \  removed until fixed on linux
 
 include $(topsrcdir)/config/rules.mk

@@ -131,7 +131,8 @@ public:
                          nsIDOMEvent* aDOMEvent,
                          nsEventStatus aEventStatus = nsEventStatus_eIgnore)
   : nsEventChainVisitor(aPresContext, aEvent, aDOMEvent, aEventStatus),
-    mCanHandle(PR_TRUE), mForceContentDispatch(PR_FALSE) {}
+    mCanHandle(PR_TRUE), mForceContentDispatch(PR_FALSE),
+    mRelatedTargetIsInAnon(PR_FALSE) {}
 
   void Reset() {
     mItemFlags = 0;
@@ -156,6 +157,12 @@ public:
    * FIXME! This is here for backward compatibility. Bug 329119
    */
   PRPackedBool          mForceContentDispatch;
+
+  /**
+   * PR_TRUE if it is known that related target is or is a descendant of an
+   * element which is anonymous for events.
+   */
+  PRPackedBool          mRelatedTargetIsInAnon;
 
   /**
    * Parent item in the event target chain.

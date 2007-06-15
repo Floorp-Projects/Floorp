@@ -188,7 +188,7 @@ nsPrintPreviewListener::HandleEvent(nsIDOMEvent* aEvent)
           nsIDocument* parentDoc = doc->GetParentDocument();
           NS_ASSERTION(parentDoc, "no parent document");
           nsIEventStateManager* esm =
-            parentDoc->GetShellAt(0)->GetPresContext()->EventStateManager();
+            parentDoc->GetPrimaryShell()->GetPresContext()->EventStateManager();
           if (esm) {
             esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
             PRBool forward = (action == eEventAction_Tab);

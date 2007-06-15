@@ -35,23 +35,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("13.4.4.12 - XML Descendants");
+gTestfile = '13.4.4.12-1.js';
 
-var bug = 289117;
-var summary = '13.4.4.12 - XML Descendants';
+var summary = "13.4.4.12 - XML Descendants";
+var BUGNUMBER = 289117;
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 var xhtmlMarkup = <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"><head><title>XHTML example</title></head><body><p>Kibology for all</p></body></html>;
 
-expect =  'element:http://www.w3.org/1999/xhtml::head;' + 
-'element:http://www.w3.org/1999/xhtml::title;' + 
-'text:XHTML example;' + 
-'element:http://www.w3.org/1999/xhtml::body;' + 
-'element:http://www.w3.org/1999/xhtml::p;' + 
+expect =  'element:http://www.w3.org/1999/xhtml::head;' +
+'element:http://www.w3.org/1999/xhtml::title;' +
+'text:XHTML example;' +
+'element:http://www.w3.org/1999/xhtml::body;' +
+'element:http://www.w3.org/1999/xhtml::p;' +
 'text:Kibology for all;';
 
 actual = '';

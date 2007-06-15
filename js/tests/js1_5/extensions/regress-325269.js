@@ -34,18 +34,20 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-325269.js';
 //-----------------------------------------------------------------------------
-var bug = 325269;
+var BUGNUMBER = 325269;
 var summary = 'GC hazard in js_ConstructObject';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
-// only get exit code 3 if out of memory error occurs which 
+// only get exit code 3 if out of memory error occurs which
 // will not happen on machines with enough memory.
 // expectExitCode(3);
-  
+ 
 var SavedArray = Array;
 
 function Redirector() { }
@@ -53,21 +55,21 @@ function Redirector() { }
 Redirector.prototype = 1;
 Redirector.__defineGetter__('prototype', function() {
 //        printStatus("REDIRECTOR");
-        gc();
-        return SavedArray.prototype;
-});
+			      gc();
+			      return SavedArray.prototype;
+			    });
 
 //Array = Function('printStatus("Constructor")');
 Array = Function('');
 Array.prototype = 1;
-Array.__defineGetter__('prototype', function() { 
+Array.__defineGetter__('prototype', function() {
 //        printStatus("**** GETTER ****");
-        Array = Redirector;
-        gc();
-        new Object();
-        new Object();
-        return undefined;
-});
+			 Array = Redirector;
+			 gc();
+			 new Object();
+			 new Object();
+			 return undefined;
+		       });
 
 new Object();
 

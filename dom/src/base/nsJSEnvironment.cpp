@@ -760,7 +760,7 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
   nsresult rv;
 
   // Check if we should offer the option to debug
-  PRBool debugPossible = (cx->runtime && cx->runtime->debuggerHandler);
+  PRBool debugPossible = (cx->debugHooks->debuggerHandler != nsnull);
 #ifdef MOZ_JSDEBUGGER
   // Get the debugger service if necessary.
   if (debugPossible) {
@@ -860,8 +860,9 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
   else if ((buttonPressed == 2) && debugPossible) {
     // Debug the script
     jsval rval;
-    switch(cx->runtime->debuggerHandler(cx, script, cx->fp->pc, &rval, 
-                                        cx->runtime->debuggerHandlerData)) {
+    switch(cx->debugHooks->debuggerHandler(cx, script, cx->fp->pc, &rval,
+                                           cx->debugHooks->
+                                           debuggerHandlerData)) {
       case JSTRAP_RETURN:
         cx->fp->rval = rval;
         return JS_TRUE;
@@ -1025,13 +1026,43 @@ nsJSContext::~nsJSContext()
   }
 }
 
+struct ContextCallbackItem : public JSTracer
+{
+  nsCycleCollectionTraversalCallback *cb;
+};
+
+void
+NoteContextChild(JSTracer *trc, void *thing, uint32 kind)
+{
+  if (kind == JSTRACE_ATOM) {
+    JSAtom *atom = (JSAtom *)thing;
+    jsval v = ATOM_KEY(atom);
+    if (!JSVAL_IS_PRIMITIVE(v)) {
+      thing = JSVAL_TO_GCTHING(v);
+      kind = JSTRACE_OBJECT;
+    }
+  }
+
+  if (kind == JSTRACE_OBJECT || kind == JSTRACE_NAMESPACE ||
+      kind == JSTRACE_QNAME || kind == JSTRACE_XML) {
+    ContextCallbackItem *item = NS_STATIC_CAST(ContextCallbackItem*, trc);
+    item->cb->NoteScriptChild(JAVASCRIPT, thing);
+  }
+}
+
 // QueryInterface implementation for nsJSContext
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSContext)
 // XXX Should we call ClearScope here?
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsJSContext)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGlobalWrapperRef)
-  cb.NoteScriptChild(JAVASCRIPT, ::JS_GetGlobalObject(tmp->mContext));
+  {
+    ContextCallbackItem trc;
+    trc.cb = &cb;
+
+    JS_TRACER_INIT(&trc, tmp->mContext, NoteContextChild);
+    js_TraceContext(&trc, tmp->mContext);
+  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSContext)
@@ -3334,6 +3365,7 @@ nsJSRuntime::ParseVersion(const nsString &aVersionStr, PRUint32 *flags)
         case '5': jsVersion = JSVERSION_1_5; break;
         case '6': jsVersion = JSVERSION_1_6; break;
         case '7': jsVersion = JSVERSION_1_7; break;
+        case '8': jsVersion = JSVERSION_1_8; break;
         default:  jsVersion = JSVERSION_UNKNOWN;
     }
     *flags = (PRUint32)jsVersion;

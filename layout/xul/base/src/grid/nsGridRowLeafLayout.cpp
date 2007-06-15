@@ -315,10 +315,10 @@ nsGridRowLeafLayout::DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)
 {
   if (aBox) {
     // mark us dirty
-    aBox->AddStateBits(NS_FRAME_IS_DIRTY);
     // XXXldb We probably don't want to walk up the ancestor chain
     // calling MarkIntrinsicWidthsDirty for every row.
-    aState.PresShell()->FrameNeedsReflow(aBox, nsIPresShell::eTreeChange);
+    aState.PresShell()->FrameNeedsReflow(aBox, nsIPresShell::eTreeChange,
+                                         NS_FRAME_IS_DIRTY);
   }
 }
 

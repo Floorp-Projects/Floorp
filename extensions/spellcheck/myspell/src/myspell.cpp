@@ -38,8 +38,8 @@ MySpell::~MySpell()
     delete pSMgr;
     delete pAMgr;
     delete pHMgr;
-    
-    csconv= NULL;
+    free(csconv);
+    csconv = NULL;
     if (encoding) 
         free(encoding);
 }

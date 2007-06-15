@@ -40,10 +40,10 @@
 
 #include "gfx-config.h"
  
-/* PostScript/Xprint print modules do not support more than one object
+/* PostScript print module do not support more than one object
  * instance because they use global vars which cannot be shared between
  * multiple instances...
- * bug 119491 ("Cleanup global vars in PostScript and Xprint modules) will fix
+ * bug 119491 ("Cleanup global vars in PostScript module) will fix
  * that...
  */
 #define WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS 1

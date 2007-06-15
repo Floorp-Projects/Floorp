@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,22 +34,23 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 26 November 2000
  *
  *
- *SUMMARY: Passing a RegExp object to a RegExp() constructor. 
- *This test arose from Bugzilla bug 61266. The ECMA3 section is:       
+ *SUMMARY: Passing a RegExp object to a RegExp() constructor.
+ *This test arose from Bugzilla bug 61266. The ECMA3 section is:      
  *
  *  15.10.4.1 new RegExp(pattern, flags)
  *
- *  If pattern is an object R whose [[Class]] property is "RegExp" and 
- *  flags is undefined, then let P be the pattern used to construct R 
+ *  If pattern is an object R whose [[Class]] property is "RegExp" and
+ *  flags is undefined, then let P be the pattern used to construct R
  *  and let F be the flags used to construct R. If pattern is an object R
- *  whose [[Class]] property is "RegExp" and flags is not undefined, 
- *  then throw a TypeError exception. Otherwise, let P be the empty string  
- *  if pattern is undefined and ToString(pattern) otherwise, and let F be 
+ *  whose [[Class]] property is "RegExp" and flags is not undefined,
+ *  then throw a TypeError exception. Otherwise, let P be the empty string 
+ *  if pattern is undefined and ToString(pattern) otherwise, and let F be
  *  the empty string if flags is undefined and ToString(flags) otherwise.
  *
  *
@@ -58,14 +60,15 @@
  *   "flags"  is undefined
  *
  * We check that a new RegExp object obj2 defined from these parameters
- * is morally the same as the original RegExp object obj1. Of course, they 
+ * is morally the same as the original RegExp object obj1. Of course, they
  * can't be equal as objects - so we check their enumerable properties...
  *
  * In this test, the initial RegExp obj1 will include a flag. The flags
  * parameter for obj2  will be undefined in the sense of not being provided.
  */
-//-------------------------------------------------------------------------------------------------
-var bug = '61266';
+//-----------------------------------------------------------------------------
+var gTestfile = '15.10.4.1-3.js';
+var BUGNUMBER = '61266';
 var summary = 'Passing a RegExp object to a RegExp() constructor';
 var statprefix = 'Applying RegExp() twice to pattern ';
 var statmiddle = ' and flag ';
@@ -74,8 +77,8 @@ var singlequote = "'";
 var i = -1; var j = -1; var s = '';
 var obj1 = {}; var obj2 = {};
 var status = ''; var actual = ''; var expect = ''; var msg = '';
-var patterns = new Array();  
-var flags = new Array();  
+var patterns = new Array(); 
+var flags = new Array(); 
 
 
 // various regular expressions to try -
@@ -99,23 +102,23 @@ test();
 //-------------------------------------------------------------------------------------------------
 
 
-function test() 
+function test()
 {
-  enterFunc ('test'); 
-  printBugNumber (bug);
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   for (i in patterns)
   {
     s = patterns[i];
-    
+   
     for (j in flags)
     {
       f = flags[j];
-      status = getStatus(s, f);  
-      obj1 = new RegExp(s, f); 
-      obj2 = new RegExp(obj1); 
-  
+      status = getStatus(s, f); 
+      obj1 = new RegExp(s, f);
+      obj2 = new RegExp(obj1);
+ 
       reportCompare (obj1 + '', obj2 + '', status);
     }
   }
@@ -125,8 +128,8 @@ function test()
 
 
 function getStatus(regexp, flag)
-{ 
-  return (statprefix  +  quote(regexp) +  statmiddle  +  flag  +  statsuffix); 
+{
+  return (statprefix  +  quote(regexp) +  statmiddle  +  flag  +  statsuffix);
 }
 
 

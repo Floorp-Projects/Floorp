@@ -56,7 +56,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMDocumentEvent.h"
 
 #include "nsGUIEvent.h"

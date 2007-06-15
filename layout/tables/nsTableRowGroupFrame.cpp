@@ -384,8 +384,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*        aPresContext,
 
     // Reflow the row frame
     if (reflowAllKids ||
-        (kidFrame->GetStateBits() &
-         (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) ||
+        NS_SUBTREE_DIRTY(kidFrame) ||
         (aReflowState.reflowState.mFlags.mSpecialHeightReflow &&
          (isPaginated || (kidFrame->GetStateBits() &
                           NS_FRAME_CONTAINS_RELATIVE_HEIGHT)))) {
@@ -1342,9 +1341,9 @@ nsTableRowGroupFrame::AppendFrames(nsIAtom*        aListName,
     nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
     if (tableFrame) {
       tableFrame->AppendRows(*this, rowIndex, rows);
-      AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-      PresContext()->PresShell()->FrameNeedsReflow(this,
-                                                    nsIPresShell::eTreeChange);
+      PresContext()->PresShell()->
+        FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                         NS_FRAME_HAS_DIRTY_CHILDREN);
       tableFrame->SetGeometryDirty();
     }
   }
@@ -1392,9 +1391,9 @@ nsTableRowGroupFrame::InsertFrames(nsIAtom*        aListName,
     PRInt32 rowIndex = (prevRow) ? prevRow->GetRowIndex() + 1 : startRowIndex;
     tableFrame->InsertRows(*this, rows, rowIndex, PR_TRUE);
 
-    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-    PresContext()->PresShell()->FrameNeedsReflow(this,
-                                                    nsIPresShell::eTreeChange);
+    PresContext()->PresShell()->
+      FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                       NS_FRAME_HAS_DIRTY_CHILDREN);
     tableFrame->SetGeometryDirty();
   }
   return NS_OK;
@@ -1414,9 +1413,9 @@ nsTableRowGroupFrame::RemoveFrame(nsIAtom*        aListName,
       // remove the rows from the table (and flag a rebalance)
       tableFrame->RemoveRows((nsTableRowFrame &)*aOldFrame, 1, PR_TRUE);
 
-      AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-      PresContext()->PresShell()->FrameNeedsReflow(this,
-                                                    nsIPresShell::eTreeChange);
+      PresContext()->PresShell()->
+        FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                         NS_FRAME_HAS_DIRTY_CHILDREN);
       tableFrame->SetGeometryDirty();
     }
   }

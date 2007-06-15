@@ -24,6 +24,7 @@
  *   Scott MacGregor <mscott@netscape.com>
  *   Bill Law <law@netscape.com>
  *   Christian Biesinger <cbiesinger@web.de>
+ *   Dan Mosedale <dmose@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -70,10 +71,9 @@
 #include "rdf.h"
 #include "nsIRDFService.h"
 #include "nsIRDFRemoteDataSource.h"
-#endif //MOZ_RDF
 #include "nsHelperAppRDF.h"
+#endif //MOZ_RDF
 #include "nsIMIMEInfo.h"
-#include "nsDirectoryServiceDefs.h"
 #include "nsIRefreshURI.h" // XXX needed to redirect according to Refresh: URI
 #include "nsIDocumentLoader.h" // XXX needed to get orig. channel and assoc. refresh uri
 #include "nsIHelperAppLauncherDialog.h"
@@ -142,7 +142,7 @@ static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 /**
  * Contains a pointer to the helper app service, set in its constructor
  */
-static nsExternalHelperAppService* sSrv;
+nsExternalHelperAppService* gExtProtSvc;
 
 // Helper functions for Content-Disposition headers
 
@@ -492,7 +492,7 @@ NS_IMPL_ISUPPORTS6(
 nsExternalHelperAppService::nsExternalHelperAppService()
 : mDataSourceInitialized(PR_FALSE)
 {
-  sSrv = this;
+  gExtProtSvc = this;
 }
 nsresult nsExternalHelperAppService::Init()
 {
@@ -514,7 +514,7 @@ nsresult nsExternalHelperAppService::Init()
 
 nsExternalHelperAppService::~nsExternalHelperAppService()
 {
-  sSrv = nsnull;
+  gExtProtSvc = nsnull;
 }
 
 nsresult nsExternalHelperAppService::InitDataSource()
@@ -1051,9 +1051,17 @@ nsresult nsExternalHelperAppService::GetFileTokenForPath(const PRUnichar * aPlat
 NS_IMETHODIMP nsExternalHelperAppService::ExternalProtocolHandlerExists(const char * aProtocolScheme,
                                                                         PRBool * aHandlerExists)
 {
-  // this method should only be implemented by each OS specific implementation of this service.
-  *aHandlerExists = PR_FALSE;
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // check for web-based handler
+  nsCAutoString uriTemplate;
+  nsresult rv = GetWebProtocolHandlerURITemplate(
+    nsDependentCString(aProtocolScheme), uriTemplate);
+  if (NS_SUCCEEDED(rv)) {
+    *aHandlerExists = PR_TRUE;
+    return NS_OK;
+  }
+
+  // fall back on an os-based handler
+  return OSProtocolHandlerExists(aProtocolScheme, aHandlerExists);
 }
 
 NS_IMETHODIMP nsExternalHelperAppService::IsExposedProtocol(const char * aProtocolScheme, PRBool * aResult)
@@ -1106,8 +1114,8 @@ class nsExternalLoadRequest : public nsRunnable {
       : mURI(uri), mPrompt(prompt) {}
 
     NS_IMETHOD Run() {
-      if (sSrv && sSrv->isExternalLoadOK(mURI, mPrompt))
-        sSrv->LoadUriInternal(mURI);
+      if (gExtProtSvc && gExtProtSvc->isExternalLoadOK(mURI, mPrompt))
+        gExtProtSvc->LoadUriInternal(mURI);
       return NS_OK;
     }
 
@@ -1366,6 +1374,42 @@ nsresult nsExternalHelperAppService::ExpungeTemporaryFiles()
   return NS_OK;
 }
 
+nsresult
+nsExternalHelperAppService::GetWebProtocolHandlerURITemplate(const nsACString &aScheme, 
+                                                             nsACString &aUriTemplate)
+{
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID,
+                                                     &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+    
+  // before we expose this to the UI, we need sort out our strategy re
+  // the "warning" and "exposed" prefs
+
+  // XXX enterprise customers should be able to turn this support off with a
+  // single master pref (maybe use one of the "exposed" prefs here?)
+  
+  // do we have an automatic handler for this protocol?
+  nsCAutoString autoTemplatePref("network.protocol-handler.web.auto.");
+  autoTemplatePref += aScheme;
+    
+  nsCAutoString autoTemplate;
+  rv = prefBranch->GetCharPref(autoTemplatePref.get(), 
+                               getter_Copies(autoTemplate));
+  // if so, return it.
+  if (NS_SUCCEEDED(rv)) {
+      aUriTemplate.Assign(autoTemplate);
+      return NS_OK;
+  }
+
+  // XXX since there's no automatic handler, if we have any choices, offer them
+  // up as well as including the option to make one of the choices automatic.  
+  // do so by returning "about:protoHandlerChooser?uri=%s" as the template or 
+  // perhaps by opening a dialog
+
+  return NS_ERROR_FAILURE;
+}
+ 
 // XPCOM profile change observer
 NS_IMETHODIMP
 nsExternalHelperAppService::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData )
@@ -1431,13 +1475,13 @@ nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
   // Make sure extension is correct.
   EnsureSuggestedFileName();
 
-  sSrv->AddRef();
+  gExtProtSvc->AddRef();
 }
 
 nsExternalAppHandler::~nsExternalAppHandler()
 {
-  // Not using NS_RELEASE, since we don't want to set sSrv to NULL
-  sSrv->Release();
+  // Not using NS_RELEASE, since we don't want to set gExtProtSvc to NULL
+  gExtProtSvc->Release();
 }
 
 NS_IMETHODIMP nsExternalAppHandler::SetWebProgressListener(nsIWebProgressListener2 * aWebProgressListener)
@@ -1755,10 +1799,9 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
             rv = encEnum->GetNext(encType);
             if (NS_SUCCEEDED(rv) && !encType.IsEmpty())
             {
-              NS_ASSERTION(sSrv, "Where did the service go?");
-              sSrv->ApplyDecodingForExtension(extension,
-                                              encType,
-                                              &applyConversion);
+              NS_ASSERTION(gExtProtSvc, "Where did the service go?");
+              gExtProtSvc->ApplyDecodingForExtension(extension, encType,
+                                                     &applyConversion);
             }
           }
         }
@@ -1791,8 +1834,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     // at some point in the distant past that they don't
     // want to be asked.  The latter fact would have been
     // stored in pref strings back in the old days.
-    NS_ASSERTION(sSrv, "Service gone away!?");
-    if (!sSrv->MIMETypeIsInDataSource(MIMEType.get()))
+    NS_ASSERTION(gExtProtSvc, "Service gone away!?");
+    if (!gExtProtSvc->MIMETypeIsInDataSource(MIMEType.get()))
     {
       if (!GetNeverAskFlagFromPref(NEVER_ASK_FOR_SAVE_TO_DISK_PREF, MIMEType.get()))
       {
@@ -2148,7 +2191,7 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
       if (NS_SUCCEEDED(rv) && action == nsIMIMEInfo::saveToDisk)
       {
         nsCOMPtr<nsILocalFile> destfile(do_QueryInterface(mFinalFileDestination));
-        sSrv->FixFilePermissions(destfile);
+        gExtProtSvc->FixFilePermissions(destfile);
       }
     }
     
@@ -2454,8 +2497,8 @@ nsresult nsExternalAppHandler::OpenWithApplication()
 #endif
       }
       if (deleteTempFileOnExit) {
-        NS_ASSERTION(sSrv, "Service gone away!?");
-        sSrv->DeleteTemporaryFileOnExit(mFinalFileDestination);
+        NS_ASSERTION(gExtProtSvc, "Service gone away!?");
+        gExtProtSvc->DeleteTemporaryFileOnExit(mFinalFileDestination);
       }
     }
   }

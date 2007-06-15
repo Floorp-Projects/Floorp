@@ -404,6 +404,14 @@ JS_IsSystemObject(JSContext *cx, JSObject *obj);
 extern JS_PUBLIC_API(void)
 JS_FlagSystemObject(JSContext *cx, JSObject *obj);
 
+/************************************************************************/
+
+extern JS_PUBLIC_API(JSDebugHooks *)
+JS_GetGlobalDebugHooks(JSRuntime *rt);
+
+extern JS_PUBLIC_API(JSDebugHooks *)
+JS_SetContextDebugHooks(JSContext *cx, JSDebugHooks *hooks);
+
 JS_END_EXTERN_C
 
 #endif /* jsdbgapi_h___ */

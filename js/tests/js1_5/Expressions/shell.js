@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,13 +34,17 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 07 February 2001
  *
  * Functionality common to Array testing -
  */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+gTestsubsuite = 'Expressions';
+
 var CHAR_LBRACKET = '[';
 var CHAR_RBRACKET = ']';
 var CHAR_QT_DBL = '"';
@@ -100,15 +105,15 @@ function toSource(arr)
 
     switch(true)
     {
-      case (typeof elt === TYPE_STRING) :
-        ret += doubleQuote(elt);
-        break;
+    case (typeof elt === TYPE_STRING) :
+      ret += doubleQuote(elt);
+      break;
 
-      case (elt === undefined || elt === null) :
-        break; // add nothing but the delimiter, below -
+    case (elt === undefined || elt === null) :
+      break; // add nothing but the delimiter, below -
 
-      default:
-        ret += elt.toString();
+    default:
+      ret += elt.toString();
     }
 
     if ((i < len-1) || (elt === undefined))

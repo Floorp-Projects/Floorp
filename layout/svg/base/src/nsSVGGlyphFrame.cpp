@@ -140,11 +140,9 @@ nsSVGGlyphFrame::DidSetStyleContext()
     langGroup.Assign(lg);
   }
 
-  // XXX decorations are ignored by gfxFontStyle - still need to implement
-  mFontStyle = new gfxFontStyle(font.style, font.variant,
-                                font.weight, font.decorations,
-                                size, langGroup, font.sizeAdjust,
-                                font.systemFont, font.familyNameQuirks);
+  mFontStyle = new gfxFontStyle(font.style, font.weight, size, langGroup,
+                                font.sizeAdjust, font.systemFont,
+                                font.familyNameQuirks);
 
   if (mFontStyle) {
     mFontGroup =
@@ -312,14 +310,12 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
   void *closure;
   if (HasFill() && SetupCairoFill(gfx, &closure)) {
     LoopCharacters(gfx, text, cp, FILL);
-    CleanupCairoFill(gfx, closure);
   }
 
   if (HasStroke() && SetupCairoStroke(gfx, &closure)) {
     gfx->NewPath();
     LoopCharacters(gfx, text, cp, STROKE);
     gfx->Stroke();
-    CleanupCairoStroke(gfx, closure);
     gfx->NewPath();
   }
 
@@ -1354,14 +1350,14 @@ nsSVGGlyphFrame::GetTextRun(gfxContext *aCtx, const nsString &aText)
 
   gfxTextRunFactory::Parameters params =
     { aCtx, nsnull, nsnull,
-      nsnull, nsnull, nsnull,
-      1, // see note above
-      0 };
+      nsnull, nsnull,
+      1 // see note above
+      };
 
   if (!mFontGroup)
     return nsnull;
 
-  return mFontGroup->MakeTextRun(aText.get(), aText.Length(), &params);
+  return mFontGroup->MakeTextRun(aText.get(), aText.Length(), &params, 0);
 }
 
 //----------------------------------------------------------------------

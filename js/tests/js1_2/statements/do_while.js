@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'do_while.js';
+
 /**
    Filename:     do_while.js
    Description:  'This tests the new do_while loop'
@@ -56,12 +58,12 @@ var done = false;
 var x = 0;
 do
 {
-    if (x++ == 3) done = true;
+  if (x++ == 3) done = true;
 } while (!done);
-	
+
 new TestCase( SECTION, "do_while ",
 	      4, x);
-	
+
 //load('d:/javascript/tests/output/statements/do_while.js')
 test();
 

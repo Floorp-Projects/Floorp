@@ -151,3 +151,8 @@ nsXBLProtoImplField::CompileMember(nsIScriptContext* aContext, const nsCString& 
 {
   return NS_OK;
 }
+
+void
+nsXBLProtoImplField::Traverse(nsCycleCollectionTraversalCallback &cb) const
+{
+}

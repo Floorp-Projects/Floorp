@@ -61,24 +61,19 @@ function PROT_Application() {
 
       G_DebugL("UNITTESTS", "STARTING UNITTESTS");
       TEST_G_Protocol4Parser();
-      TEST_G_Base64();
       TEST_G_CryptoHasher();
       TEST_PROT_EnchashDecrypter();
       TEST_PROT_TRTable();
       TEST_PROT_ListManager();
       TEST_PROT_PhishingWarden();
       TEST_PROT_TRFetcher();
-      TEST_G_ObjectSafeMap();
       TEST_PROT_URLCanonicalizer();
       TEST_G_Preferences();
       TEST_G_Observer();
-      TEST_G_File();
       TEST_PROT_WireFormat();
       // UrlCrypto's test should come before the key manager's
       TEST_PROT_UrlCrypto();
       TEST_PROT_UrlCryptoKeyManager();
-      TEST_G_MozVersionNumber();
-      TEST_G_ThisFirefoxVersion();
       G_DebugL("UNITTESTS", "END UNITTESTS");
     }
   };
@@ -87,7 +82,6 @@ function PROT_Application() {
 #endif
   
   // expose some classes
-  this.G_TabbedBrowserWatcher = G_TabbedBrowserWatcher;
   this.PROT_Controller = PROT_Controller;
   this.PROT_PhishingWarden = PROT_PhishingWarden;
 

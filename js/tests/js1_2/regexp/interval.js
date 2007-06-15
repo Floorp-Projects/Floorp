@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'interval.js';
+
 /**
    Filename:     interval.js
    Description:  'Tests regular expressions containing {}'

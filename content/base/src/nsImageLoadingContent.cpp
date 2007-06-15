@@ -822,7 +822,7 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
   // We should not be getting called from off the UI thread...
   NS_ASSERTION(NS_IsMainThread(), "should be on the main thread");
 
-  nsIPresShell *shell = document->GetShellAt(0);
+  nsIPresShell *shell = document->GetPrimaryShell();
   nsPresContext *presContext = shell ? shell->GetPresContext() : nsnull;
 
   nsCOMPtr<nsIRunnable> evt =

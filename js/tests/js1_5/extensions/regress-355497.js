@@ -35,8 +35,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-355497.js';
 //-----------------------------------------------------------------------------
-var bug = 355497;
+var BUGNUMBER = 355497;
 var summary = 'Do not overflow stack with Array.slice, getter';
 var actual = '';
 var expect = '';
@@ -48,15 +50,15 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   expect = 'InternalError: too much recursion';
 
   try
   {
-    var a = { length: 1 }; 
-    a.__defineGetter__(0, [].slice); 
+    var a = { length: 1 };
+    a.__defineGetter__(0, [].slice);
     a[0];
   }
   catch(ex)
@@ -67,7 +69,7 @@ function test()
 
   try
   {
-    var b = { length: 1 }; 
+    var b = { length: 1 };
     b.__defineGetter__(0, function () { return Array.slice(b);});
     b[0];
   }
@@ -79,8 +81,8 @@ function test()
 
   try
   {
-    var c = []; 
-    c.__defineSetter__(0, c.unshift); 
+    var c = [];
+    c.__defineSetter__(0, c.unshift);
     c[0] = 1;
   }
   catch(ex)

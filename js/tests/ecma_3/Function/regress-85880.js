@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 2001-06-14
  *
  * SUMMARY: Regression test for Bugzilla bug 85880
@@ -45,9 +47,10 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=85880
  *
  */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+var gTestfile = 'regress-85880.js';
 var UBound = 0;
-var bug = 85880;
+var BUGNUMBER = 85880;
 var summary = 'Arguments object of g(){f()} should not be null';
 var cnNonNull = 'Arguments != null';
 var cnNull = 'Arguments == null';
@@ -152,7 +155,7 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   for (var i = 0; i < UBound; i++)
@@ -167,4 +170,4 @@ function test()
 function isThisNull(bool)
 {
   return bool? cnNull : cnNonNull
-}
+    }

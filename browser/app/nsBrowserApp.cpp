@@ -44,7 +44,7 @@
 #include "nsBuildID.h"
 
 static const nsXREAppData kAppData = {
-  offsetof(nsXREAppData, xreDirectory),
+  sizeof(nsXREAppData),
   nsnull,
   "Mozilla",
   "Firefox",
@@ -54,6 +54,14 @@ static const nsXREAppData kAppData = {
   "Copyright (c) 1998 - 2007 mozilla.org",
   NS_XRE_ENABLE_PROFILE_MIGRATOR |
   NS_XRE_ENABLE_EXTENSION_MANAGER
+#if defined(MOZILLA_OFFICIAL) && (defined(XP_WIN) || defined(XP_MACOSX))
+  | NS_XRE_ENABLE_CRASH_REPORTER
+#endif
+,
+  nsnull, // xreDirectory
+  nsnull, // minVersion
+  nsnull, // maxVersion
+  "https://crash-reports.mozilla.com/submit"
 };
 
 int main(int argc, char* argv[])

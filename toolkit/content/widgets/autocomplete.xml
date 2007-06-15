@@ -601,6 +601,7 @@
             document.popupNode = null;
 
             this.setAttribute("hidden", "true");
+            this.removeAttribute("width");
             this.mInput.controller.detachRollupListener();
           }
         ]]></body>

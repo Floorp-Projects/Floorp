@@ -250,6 +250,44 @@ ContextCallback(JSContext *cx, uintN operation)
 }
 
 // static
+void XPCJSRuntime::TraceJS(JSTracer* trc, void* data)
+{
+    XPCJSRuntime* self = (XPCJSRuntime*)data;
+
+    // Skip this part if XPConnect is shutting down. We get into
+    // bad locking problems with the thread iteration otherwise.
+    if(!self->GetXPConnect()->IsShuttingDown())
+    {
+        PRLock* threadLock = XPCPerThreadData::GetLock();
+        if(threadLock)
+        { // scoped lock
+            nsAutoLock lock(threadLock);
+
+            XPCPerThreadData* iterp = nsnull;
+            XPCPerThreadData* thread;
+
+            while(nsnull != (thread =
+                             XPCPerThreadData::IterateThreads(&iterp)))
+            {
+                // Trace those AutoMarkingPtr lists!
+                thread->TraceJS(trc);
+            }
+        }
+    }
+
+    XPCWrappedNativeScope::TraceJS(trc, self);
+
+    for (XPCRootSetElem *e = self->mVariantRoots; e ; e = e->GetNextRoot())
+        NS_STATIC_CAST(XPCTraceableVariant*, e)->TraceJS(trc);
+
+    for (XPCRootSetElem *e = self->mWrappedJSRoots; e ; e = e->GetNextRoot())
+        NS_STATIC_CAST(nsXPCWrappedJS*, e)->TraceJS(trc);
+
+    for (XPCRootSetElem *e = self->mObjectHolderRoots; e ; e = e->GetNextRoot())
+        NS_STATIC_CAST(XPCJSObjectHolder*, e)->TraceJS(trc);
+}
+
+// static
 JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
 {
     nsVoidArray* dyingWrappedJSArray;
@@ -276,31 +314,6 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                     XPCAutoLock lock(self->GetMapLock());
                     NS_ASSERTION(!self->mThreadRunningGC, "bad state");
                     self->mThreadRunningGC = PR_GetCurrentThread();
-                }
-
-                // Skip this part if XPConnect is shutting down. We get into
-                // bad locking problems with the thread iteration otherwise.
-                if(!self->GetXPConnect()->IsShuttingDown())
-                {
-                    PRLock* threadLock = XPCPerThreadData::GetLock();
-                    if(threadLock)
-                    { // scoped lock
-                        nsAutoLock lock(threadLock);
-
-                        XPCPerThreadData* iterp = nsnull;
-                        XPCPerThreadData* thread;
-
-                        while(nsnull != (thread =
-                                     XPCPerThreadData::IterateThreads(&iterp)))
-                        {
-                            // Mark those AutoMarkingPtr lists!
-                            // XXX This should be in a JSGC_MARK_BEGIN
-                            // callback, in case other callbacks use
-                            // JSGC_MARK_END (or a close phase before it)
-                            // to determine what is about to be finalized.
-                            thread->MarkAutoRootsBeforeJSFinalize(cx);
-                        }
-                    }
                 }
 
                 dyingWrappedJSArray = &self->mWrappedJSToReleaseArray;
@@ -818,7 +831,10 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
    mNativesToReleaseArray(),
    mMainThreadOnlyGC(JS_FALSE),
    mDeferReleases(JS_FALSE),
-   mDoingFinalization(JS_FALSE)
+   mDoingFinalization(JS_FALSE),
+   mVariantRoots(nsnull),
+   mWrappedJSRoots(nsnull),
+   mObjectHolderRoots(nsnull)
 {
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
     DEBUG_WrappedNativeHashtable =
@@ -841,11 +857,12 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
         gOldJSContextCallback = JS_SetContextCallback(mJSRuntime,
                                                       ContextCallback);
         gOldJSGCCallback = JS_SetGCCallbackRT(mJSRuntime, GCCallback);
+        JS_SetExtraGCRoots(mJSRuntime, TraceJS, this);
     }
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
 #ifdef DEBUG
-    if(mJSRuntime && !mJSRuntime->debuggerHandler)
+    if(mJSRuntime && !JS_GetGlobalDebugHooks(mJSRuntime)->debuggerHandler)
         xpc_InstallJSDebuggerKeywordHandler(mJSRuntime);
 #endif
 }
@@ -1133,3 +1150,36 @@ XPCJSRuntime::DebugDump(PRInt16 depth)
 #endif
 }
 
+/***************************************************************************/
+
+void
+XPCRootSetElem::AddToRootSet(JSRuntime* rt, XPCRootSetElem** listHead)
+{
+    NS_ASSERTION(!mSelfp, "Must be not linked");
+    JS_LOCK_GC(rt);
+    mSelfp = listHead;
+    mNext = *listHead;
+    if(mNext)
+    {
+        NS_ASSERTION(mNext->mSelfp == listHead, "Must be list start");
+        mNext->mSelfp = &mNext;
+    }
+    *listHead = this;
+    JS_UNLOCK_GC(rt);
+}
+
+void
+XPCRootSetElem::RemoveFromRootSet(JSRuntime* rt)
+{
+    NS_ASSERTION(mSelfp, "Must be linked");
+    JS_LOCK_GC(rt);
+    NS_ASSERTION(*mSelfp == this, "Link invariant");
+    *mSelfp = mNext;
+    if(mNext)
+        mNext->mSelfp = mSelfp;
+    JS_UNLOCK_GC(rt);
+#ifdef DEBUG
+    mSelfp = nsnull;
+    mNext = nsnull;
+#endif
+}

@@ -115,7 +115,7 @@ nsSVGForeignObjectFrame::AttributeChanged(PRInt32         aNameSpaceID,
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::width ||
         aAttribute == nsGkAtoms::height) {
-      PostChildDirty();
+      RequestReflow(nsIPresShell::eStyleChange);
       UpdateGraphic();
     } else if (aAttribute == nsGkAtoms::x ||
                aAttribute == nsGkAtoms::y) {
@@ -140,26 +140,18 @@ nsSVGForeignObjectFrame::DidSetStyleContext()
 /* virtual */ void
 nsSVGForeignObjectFrame::MarkIntrinsicWidthsDirty()
 {
-  if (GetStateBits() & NS_FRAME_FIRST_REFLOW)
-    // If we haven't had an InitialUpdate yet, nothing to do.
-    return;
-
-  // Use the fact that we get a MarkIntrinsicWidthsDirty whenever
-  // there's a style change that requires reflow to actually cause that
-  // reflow, since the SVG outer frame doesn't know to reflow us.
-  nsIFrame* kid = GetFirstChild(nsnull);
-  if (!kid)
-    return;
   // Since we don't know whether this is because of a style change on an
   // ancestor or descendant, mark the kid dirty.  If it's a descendant,
-  // all we need is the NS_FRAME_IS_DIRTY_CHILDREN that our caller is
-  // going to set, though.
-  kid->AddStateBits(NS_FRAME_IS_DIRTY);
+  // all we need is the NS_FRAME_HAS_DIRTY_CHILDREN that our caller is
+  // going to set, though. (If we could differentiate between a style change on
+  // an ancestor or descendant, we'd need to add a parameter to RequestReflow
+  // to pass either NS_FRAME_IS_DIRTY or NS_FRAME_HAS_DIRTY_CHILDREN.)
+  //
   // This is really a style change, except we're already being called
   // from MarkIntrinsicWidthsDirty, so say it's a resize to avoid doing
   // the same work over again.
-  PresContext()->PresShell()->FrameNeedsReflow(kid,
-                                                  nsIPresShell::eResize);
+
+  RequestReflow(nsIPresShell::eResize);
 }
 
 NS_IMETHODIMP
@@ -256,6 +248,16 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
   gfxContext *gfx = aContext->GetGfxContext();
 
   gfx->Save();
+
+  if (GetStyleDisplay()->IsScrollableOverflow()) {
+    float x, y, width, height;
+    NS_STATIC_CAST(nsSVGElement*, mContent)->
+      GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
+
+    // tm already includes the x,y offset
+    nsSVGUtils::SetClipRect(gfx, tm, 0.0f, 0.0f, width, height);
+  }
+
   gfx->Multiply(matrix);
 
   nsresult rv = nsLayoutUtils::PaintFrame(ctx, kid, nsRegion(kid->GetRect()),
@@ -350,6 +352,11 @@ NS_IMETHODIMP
 nsSVGForeignObjectFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
   mCanvasTM = nsnull;
+  // If our width/height has a percentage value then we need to reflow if the
+  // width/height of our parent coordinate context changes. Actually we also
+  // need to reflow if our scale changes since when text is scaled it doesn't
+  // necessarily change by quite the same amount as the change in scale.
+  RequestReflow(nsIPresShell::eResize);
   UpdateGraphic();
   return NS_OK;
 }
@@ -474,13 +481,17 @@ nsSVGForeignObjectFrame::GetCanvasTM()
 //----------------------------------------------------------------------
 // Implementation helpers
 
-void nsSVGForeignObjectFrame::PostChildDirty()
+void nsSVGForeignObjectFrame::RequestReflow(nsIPresShell::IntrinsicDirty aType)
 {
+  if (GetStateBits() & NS_FRAME_FIRST_REFLOW)
+    // If we haven't had an InitialUpdate yet, nothing to do.
+    return;
+
   nsIFrame* kid = GetFirstChild(nsnull);
   if (!kid)
     return;
-  PresContext()->PresShell()->
-    FrameNeedsReflow(kid, nsIPresShell::eStyleChange);
+
+  PresContext()->PresShell()->FrameNeedsReflow(kid, aType, NS_FRAME_IS_DIRTY);
 }
 
 void nsSVGForeignObjectFrame::UpdateGraphic()

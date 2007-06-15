@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'filter.js';
 //-----------------------------------------------------------------------------
-var bug     = "364603";
+var BUGNUMBER     = "364603";
 var summary = "The value placed in a filtered array for an element is the " +
-              " element's value before the callback is run, not after";
+  " element's value before the callback is run, not after";
 var actual, expect;
 
-printBugNumber(bug);
+printBugNumber(BUGNUMBER);
 printStatus(summary);
 
 /**************

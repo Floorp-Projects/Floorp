@@ -35,13 +35,16 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'regress-352097.js';
+
 //-----------------------------------------------------------------------------
-var bug     = "352097";
+var BUGNUMBER     = "352097";
 var summary = "Avoid adding unnecessary spaces to PIs";
 var actual, expect;
 
-printBugNumber(bug);
-printStatus(summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 /**************
  * BEGIN TEST *

@@ -759,20 +759,20 @@ private:
   GetFirstLineStyle(nsIContent*      aContent,
                     nsStyleContext*  aStyleContext);
 
-  PRBool HaveFirstLetterStyle(nsIContent*      aContent,
-                              nsStyleContext*  aStyleContext);
+  PRBool ShouldHaveFirstLetterStyle(nsIContent*      aContent,
+                                    nsStyleContext*  aStyleContext);
 
   // Check whether a given block has first-letter style.  Make sure to
   // only pass in blocks!  And don't pass in null either.
-  PRBool HaveFirstLetterStyle(nsIFrame* aBlockFrame);
+  PRBool HasFirstLetterStyle(nsIFrame* aBlockFrame);
 
-  PRBool HaveFirstLineStyle(nsIContent*      aContent,
-                            nsStyleContext*  aStyleContext);
+  PRBool ShouldHaveFirstLineStyle(nsIContent*      aContent,
+                                  nsStyleContext*  aStyleContext);
 
-  void HaveSpecialBlockStyle(nsIContent*      aContent,
-                             nsStyleContext*  aStyleContext,
-                             PRBool*          aHaveFirstLetterStyle,
-                             PRBool*          aHaveFirstLineStyle);
+  void ShouldHaveSpecialBlockStyle(nsIContent*      aContent,
+                                   nsStyleContext*  aStyleContext,
+                                   PRBool*          aHaveFirstLetterStyle,
+                                   PRBool*          aHaveFirstLineStyle);
 
   // |aContentParentFrame| should be null if it's really the same as
   // |aParentFrame|.
@@ -950,8 +950,10 @@ private:
 
   // see if aContent and aSibling are legitimate siblings due to restrictions
   // imposed by table columns
+  // XXXbz this code is generally wrong, since the frame for aContent
+  // may be constructed based on tag, not based on aDisplay!
   PRBool IsValidSibling(nsIFrame*              aParentFrame,
-                        const nsIFrame&        aSibling,
+                        nsIFrame*              aSibling,
                         PRUint8                aSiblingDisplay,
                         nsIContent&            aContent,
                         PRUint8&               aDisplay);

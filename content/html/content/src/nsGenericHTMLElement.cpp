@@ -50,7 +50,6 @@
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMAttr.h"
-#include "nsIDOMEventReceiver.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMNSHTMLElement.h"
@@ -523,15 +522,17 @@ IsBody(nsIContent *aContent)
           aContent->IsNodeOfType(nsINode::eHTML));
 }
 
-static PRBool
-IsOffsetParent(nsIContent *aContent)
-{
-  nsINodeInfo *ni = aContent->NodeInfo();
+static PRBool IS_TABLE_CELL(nsIAtom* frameType) {
+  return nsGkAtoms::tableCellFrame == frameType ||
+    nsGkAtoms::bcTableCellFrame == frameType;
+}
 
-  return ((ni->Equals(nsGkAtoms::td) ||
-           ni->Equals(nsGkAtoms::table) ||
-           ni->Equals(nsGkAtoms::th)) &&
-          aContent->IsNodeOfType(nsINode::eHTML));
+static PRBool
+IsOffsetParent(nsIFrame* aFrame)
+{
+  nsIAtom* frameType = aFrame->GetType();
+  return (IS_TABLE_CELL(frameType) ||
+          frameType == nsGkAtoms::tableFrame);
 }
 
 void
@@ -580,7 +581,8 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
 
       // Add the parent's origin to our own to get to the
       // right coordinate system.
-      if (!isAbsolutelyPositioned) {
+      PRBool isOffsetParent = IsOffsetParent(parent);
+      if (!isAbsolutelyPositioned && !isOffsetParent) {
         origin += parent->GetPositionIgnoringScrolling();
       }
 
@@ -593,7 +595,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
         // If the tag of this frame is a offset parent tag and this
         // element is *not* positioned, break here. Also break if we
         // hit the body element.
-        if ((!isPositioned && IsOffsetParent(content)) || IsBody(content)) {
+        if ((!isPositioned && isOffsetParent) || IsBody(content)) {
           *aOffsetParent = content;
           NS_ADDREF(*aOffsetParent);
           break;
@@ -776,11 +778,9 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
   PRBool scripts_enabled = PR_FALSE;
 
   if (doc) {
-    loader = doc->GetScriptLoader();
-    if (loader) {
-      scripts_enabled = loader->GetEnabled();
-      loader->SetEnabled(PR_FALSE);
-    }
+    loader = doc->ScriptLoader();
+    scripts_enabled = loader->GetEnabled();
+    loader->SetEnabled(PR_FALSE);
   }
 
   nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(NS_STATIC_CAST(nsIContent *,
@@ -1012,7 +1012,7 @@ nsGenericHTMLElement::GetClientAreaRect()
        frame->IsFrameOfType(nsIFrame::eReplaced))) {
     // Special case code to make client area work even when there isn't
     // a scroll view, see bug 180552, bug 227567.
-    return frame->GetPaddingRect();
+    return frame->GetPaddingRect() - frame->GetPositionIgnoringScrolling();
   }
 
   return nsRect(0, 0, 0, 0);
@@ -1060,7 +1060,7 @@ nsGenericHTMLElement::ScrollIntoView(PRBool aTop)
   }
 
   // Get the presentation shell
-  nsCOMPtr<nsIPresShell> presShell = document->GetShellAt(0);
+  nsCOMPtr<nsIPresShell> presShell = document->GetPrimaryShell();
   if (!presShell) {
     return NS_OK;
   }
@@ -1377,10 +1377,10 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(nsIEventListenerManager** a
     nsIDocument *document = GetOwnerDoc();
     nsresult rv = NS_OK;
     if (document && (win = document->GetInnerWindow())) {
-      nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(win));
-      NS_ENSURE_TRUE(receiver, NS_ERROR_FAILURE);
+      nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryInterface(win));
+      NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
 
-      rv = receiver->GetListenerManager(PR_TRUE, aManager);
+      rv = piTarget->GetListenerManager(PR_TRUE, aManager);
 
       if (NS_SUCCEEDED(rv)) {
         NS_ADDREF(*aTarget = win);
@@ -1757,7 +1757,7 @@ nsGenericHTMLElement::GetPresContext()
   nsIDocument* doc = GetDocument();
   if (doc) {
     // Get presentation shell 0
-    nsIPresShell *presShell = doc->GetShellAt(0);
+    nsIPresShell *presShell = doc->GetPrimaryShell();
     if (presShell) {
       return presShell->GetPresContext();
     }
@@ -1999,6 +1999,7 @@ nsGenericHTMLElement::ParseStyleAttribute(nsIContent* aContent,
         nsCOMPtr<nsICSSStyleRule> rule;
         result = cssParser->ParseStyleAttribute(aValue, doc->GetDocumentURI(),
                                                 baseURI,
+                                                aContent->NodePrincipal(),
                                                 getter_AddRefs(rule));
         cssLoader->RecycleParser(cssParser);
 
@@ -2248,7 +2249,7 @@ nsGenericHTMLElement::MapImageBorderAttributeInto(const nsMappedAttributes* aAtt
 
 void
 nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
-                                                  nsRuleData* aData)
+                                        nsRuleData* aData)
 {
   if (aData->mSID != eStyleStruct_Background)
     return;
@@ -2275,9 +2276,12 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
           // accessor on nsAttrValue?
           nsStringBuffer* buffer = nsCSSValue::BufferFromString(spec);
           if (NS_LIKELY(buffer != 0)) {
+            // XXXbz it would be nice to assert that doc->NodePrincipal() is
+            // the same as the principal of the node (which we'd need to store
+            // in the mapped attrs or something?)
             nsCSSValue::Image *img =
               new nsCSSValue::Image(uri, buffer, doc->GetDocumentURI(),
-                                    doc, PR_TRUE);
+                                    doc->NodePrincipal(), doc, PR_TRUE);
             buffer->Release();
             if (NS_LIKELY(img != 0)) {
               aData->mColorData->mBackImage.SetImageValue(img);

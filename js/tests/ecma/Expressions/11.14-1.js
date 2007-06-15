@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '11.14-1.js';
+
 /**
    File Name:          11.14-1.js
    ECMA Section:       11.14 Comma operator (,)

@@ -58,6 +58,11 @@ endif
 # tier "necko" - the networking library and its dependencies
 #
 
+# the offline cache uses mozStorage
+ifdef MOZ_STORAGE
+tier_necko_dirs += storage/public
+endif
+
 # these are only in the necko tier because libpref needs it
 
 ifneq (1_,$(MOZ_NO_XPCOM_OBSOLETE)_$(MOZ_XPINSTALL))

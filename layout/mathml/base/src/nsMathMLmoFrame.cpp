@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -1000,7 +1001,7 @@ nsMathMLmoFrame::AttributeChanged(PRInt32         aNameSpaceID,
     } while (embellishData.coreFrame == this);
 
     // we have automatic data to update in the children of the target frame
-    return ReLayoutChildren(target);
+    return ReLayoutChildren(target, NS_FRAME_IS_DIRTY);
   }
 
   return nsMathMLTokenFrame::

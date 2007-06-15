@@ -48,8 +48,11 @@
 #include "nsIDocument.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDOMCSSStyleDeclaration.h"
+#include "nsIDOMCSSPrimitiveValue.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIDOMHTMLElement.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIDOMWindow.h"
@@ -65,6 +68,13 @@
 #include "nsITimer.h"
 #include "nsRootAccessible.h"
 #include "nsIFocusController.h"
+#include "nsIObserverService.h"
+
+#ifdef MOZ_ACCESSIBILITY_ATK
+#include "nsAppRootAccessible.h"
+#else
+#include "nsApplicationAccessibleWrap.h"
+#endif
 
 /* For documentation of the accessibility architecture, 
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
@@ -78,6 +88,8 @@ PRBool nsAccessNode::gIsAccessibilityActive = PR_FALSE;
 PRBool nsAccessNode::gIsCacheDisabled = PR_FALSE;
 PRBool nsAccessNode::gIsFormFillEnabled = PR_FALSE;
 nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> nsAccessNode::gGlobalDocAccessibleCache;
+
+nsApplicationAccessibleWrap *nsAccessNode::gApplicationAccessible = nsnull;
 
 nsIAccessibilityService *nsAccessNode::sAccService = nsnull;
 nsIAccessibilityService *nsAccessNode::GetAccService()
@@ -197,6 +209,33 @@ NS_IMETHODIMP nsAccessNode::GetOwnerWindow(void **aWindow)
   return docAccessible->GetWindowHandle(aWindow);
 }
 
+already_AddRefed<nsApplicationAccessibleWrap>
+nsAccessNode::GetApplicationAccessible()
+{
+  if (!gIsAccessibilityActive) {
+    return nsnull;
+  }
+
+  if (!gApplicationAccessible) {
+    nsApplicationAccessibleWrap::PreCreate();
+
+    gApplicationAccessible = new nsApplicationAccessibleWrap();
+    if (!gApplicationAccessible)
+      return nsnull;
+
+    NS_ADDREF(gApplicationAccessible);
+
+    nsresult rv = gApplicationAccessible->Init();
+    if (NS_FAILED(rv)) {
+      NS_RELEASE(gApplicationAccessible);
+      return nsnull;
+    }
+  }
+
+  NS_ADDREF(gApplicationAccessible);
+  return gApplicationAccessible;
+}
+
 void nsAccessNode::InitXPAccessibility()
 {
   if (gIsAccessibilityActive) {
@@ -224,6 +263,20 @@ void nsAccessNode::InitXPAccessibility()
   }
 
   gIsAccessibilityActive = PR_TRUE;
+  NotifyA11yInitOrShutdown();
+}
+
+void nsAccessNode::NotifyA11yInitOrShutdown()
+{
+  nsCOMPtr<nsIObserverService> obsService =
+    do_GetService("@mozilla.org/observer-service;1");
+  NS_ASSERTION(obsService, "No observer service to notify of a11y init/shutdown");
+  if (obsService) {
+    static const PRUnichar kInitIndicator[] = { '1', 0 };
+    static const PRUnichar kShutdownIndicator[] = { '0', 0 }; 
+    obsService->NotifyObservers(nsnull, "a11y-init-or-shutdown",
+                                gIsAccessibilityActive ? kInitIndicator  : kShutdownIndicator);
+  }
 }
 
 void nsAccessNode::ShutdownXPAccessibility()
@@ -240,10 +293,12 @@ void nsAccessNode::ShutdownXPAccessibility()
   NS_IF_RELEASE(gDoCommandTimer);
   NS_IF_RELEASE(gLastFocusedNode);
   NS_IF_RELEASE(sAccService);
+  NS_IF_RELEASE(gApplicationAccessible);
 
   ClearCache(gGlobalDocAccessibleCache);
 
   gIsAccessibilityActive = PR_FALSE;
+  NotifyA11yInitOrShutdown();
 }
 
 already_AddRefed<nsIPresShell> nsAccessNode::GetPresShell()
@@ -299,9 +354,9 @@ already_AddRefed<nsRootAccessible> nsAccessNode::GetRootAccessible()
 
   // nsRootAccessible has a special QI
   // that let us get that concrete type directly.
-  nsRootAccessible* foo;
-  accDoc->QueryInterface(NS_GET_IID(nsRootAccessible), (void**)&foo); // addrefs
-  return foo;
+  nsRootAccessible* rootAccessible;
+  accDoc->QueryInterface(NS_GET_IID(nsRootAccessible), (void**)&rootAccessible); // addrefs
+  return rootAccessible;
 }
 
 nsIFrame* nsAccessNode::GetFrame()
@@ -545,6 +600,31 @@ nsAccessNode::GetComputedStyleValue(const nsAString& aPseudoElt, const nsAString
   return styleDecl->GetPropertyValue(aPropertyName, aValue);
 }
 
+NS_IMETHODIMP
+nsAccessNode::GetComputedStyleCSSValue(const nsAString& aPseudoElt,
+                                       const nsAString& aPropertyName,
+                                       nsIDOMCSSPrimitiveValue **aCSSValue)
+{
+  NS_ENSURE_ARG_POINTER(aCSSValue);
+
+  *aCSSValue = nsnull;
+
+  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
+  if (!domElement)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> styleDecl;
+  GetComputedStyleDeclaration(aPseudoElt, domElement,
+                              getter_AddRefs(styleDecl));
+  NS_ENSURE_STATE(styleDecl);
+
+  nsCOMPtr<nsIDOMCSSValue> cssValue;
+  styleDecl->GetPropertyCSSValue(aPropertyName, getter_AddRefs(cssValue));
+  NS_ENSURE_TRUE(cssValue, NS_ERROR_FAILURE);
+
+  return CallQueryInterface(cssValue, aCSSValue);
+}
+
 void nsAccessNode::GetComputedStyleDeclaration(const nsAString& aPseudoElt,
                                                nsIDOMElement *aElement,
                                                nsIDOMCSSStyleDeclaration **aCssDecl)
@@ -629,7 +709,7 @@ nsAccessNode::GetPresShellFor(nsIDOMNode *aNode)
   }
   nsIPresShell *presShell = nsnull;
   if (doc) {
-    presShell = doc->GetShellAt(0);
+    presShell = doc->GetPrimaryShell();
     NS_IF_ADDREF(presShell);
   }
   return presShell;
@@ -750,3 +830,47 @@ already_AddRefed<nsIDOMNode> nsAccessNode::GetCurrentFocus()
 
   return focusedNode;
 }
+
+NS_IMETHODIMP
+nsAccessNode::GetLanguage(nsAString& aLanguage)
+{
+  aLanguage.Truncate();
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    // For documents make sure we look for lang attribute on
+    // document element
+    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mDOMNode));
+    if (domDoc) {
+      nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(mDOMNode));
+      if (htmlDoc) {
+        // Make sure we look for lang attribute on HTML <body>
+        nsCOMPtr<nsIDOMHTMLElement> bodyElement;
+        htmlDoc->GetBody(getter_AddRefs(bodyElement));
+        content = do_QueryInterface(bodyElement);
+      }
+      if (!content) {
+        nsCOMPtr<nsIDOMElement> docElement;
+        domDoc->GetDocumentElement(getter_AddRefs(docElement));
+        content = do_QueryInterface(docElement);
+      }
+    }
+    if (!content) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  nsIContent *walkUp = content;
+  while (walkUp && !walkUp->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::lang, aLanguage)) {
+    walkUp = walkUp->GetParent();
+  }
+
+  if (aLanguage.IsEmpty()) { // Nothing found, so use document's language
+    nsIDocument *doc = content->GetOwnerDoc();
+    if (doc) {
+      doc->GetHeaderData(nsAccessibilityAtoms::headerContentLanguage, aLanguage);
+    }
+  }
+ 
+  return NS_OK;
+}
+

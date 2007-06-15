@@ -34,21 +34,22 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-253150.js';
 //-----------------------------------------------------------------------------
-var bug = 253150;
+var BUGNUMBER = 253150;
 var summary = 'Do not warn on detecting properties';
 var actual = '';
 var expect = 'No warning';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
-
-var jsOptions = new JavaScriptOptions();
 
 var testobject = {};
 
-jsOptions.setOption('strict', true);
-jsOptions.setOption('werror', true);
+options('strict');
+options('werror');
+
 try
 {
   var testresult = testobject.foo;
@@ -58,11 +59,9 @@ catch(ex)
 {
   actual = ex + '';
 }
-jsOptions.reset();  
+
 reportCompare(expect, actual, summary + ': 1');
 
-jsOptions.setOption('strict', true);
-jsOptions.setOption('werror', true);
 try
 {
   if (testobject.foo)
@@ -75,11 +74,9 @@ catch(ex)
 {
   actual = ex + '';
 }
-jsOptions.reset();  
+
 reportCompare(expect, actual, summary + ': 2');
 
-jsOptions.setOption('strict', true);
-jsOptions.setOption('werror', true);
 try
 {
   if (typeof testobject.foo == 'undefined')
@@ -92,11 +89,9 @@ catch(ex)
 {
   actual = ex + '';
 }
-jsOptions.reset();  
+
 reportCompare(expect, actual, summary + ': 3');
 
-jsOptions.setOption('strict', true);
-jsOptions.setOption('werror', true);
 try
 {
   if (testobject.foo == null)
@@ -109,11 +104,9 @@ catch(ex)
 {
   actual = ex + '';
 }
-jsOptions.reset();  
+
 reportCompare(expect, actual, summary + ': 4');
 
-jsOptions.setOption('strict', true);
-jsOptions.setOption('werror', true);
 try
 {
   if (testobject.foo == undefined)
@@ -126,5 +119,5 @@ catch(ex)
 {
   actual = ex + '';
 }
-jsOptions.reset();  
+
 reportCompare(expect, actual, summary + ': 3');

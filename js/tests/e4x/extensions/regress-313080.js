@@ -35,15 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("Regression - Do not crash calling __proto__, __parent__");
+gTestfile = 'regress-313080.js';
 
-var bug = 313080;
-var summary = 'Do not crash calling __proto__, __parent__';
+var summary = "Regression - Do not crash calling __proto__, __parent__";
+var BUGNUMBER = 313080;
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 try
 {

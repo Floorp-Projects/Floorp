@@ -41,6 +41,7 @@ dnl   Mark Mentovai <mark@moxienet.com>:
 dnl   Mac OS X 10.4 support
 dnl   Giorgio Maone <g.maone@informaction.com>
 dnl   MSVC l10n compatible version check
+dnl   Ben Turner <mozilla@songbirdnest.com>
 dnl
 dnl Alternatively, the contents of this file may be used under the terms of
 dnl either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -110,11 +111,8 @@ NSS_VERSION=3
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
 GLIB_VERSION=1.2.0
-GTK_VERSION=1.2.0
 LIBIDL_VERSION=0.6.3
 PERL_VERSION=5.006
-QT_VERSION=3.2.0
-QT_VERSION_NUM=320
 LIBART_VERSION=2.3.4
 CAIRO_VERSION=1.4.2
 GLITZ_VERSION=0.4.0
@@ -912,7 +910,7 @@ if test -n "$CROSS_COMPILE"; then
     OS_RELEASE=
     OS_TEST="${target_cpu}"
     case "${target_os}" in
-        linux*)       OS_ARCH=Linux ;;
+        linux*)       OS_ARCH=Linux OS_TARGET=Linux ;;
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
         mingw*)       OS_ARCH=WINNT ;;
         wince*)       OS_ARCH=WINCE ;;
@@ -2439,6 +2437,7 @@ esac
 
 if test -z "$COMPILE_ENVIRONMENT"; then
     SKIP_COMPILER_CHECKS=1
+    SKIP_LIBRARY_CHECKS=1
 fi
 
 if test -z "$SKIP_COMPILER_CHECKS"; then
@@ -2882,13 +2881,6 @@ else
         XT_LIBS="-lXm $XT_LIBS"
         ;;
     esac
-
-    dnl ========================================================
-    dnl = Check for Xinerama
-    dnl ========================================================
-    AC_CHECK_LIB(Xinerama, XineramaIsActive, [MOZ_XINERAMA_LIBS="-lXinerama"],,
-        $XLIBS $XEXT_LIBS)
-    AC_CHECK_HEADER(X11/extensions/Xinerama.h)
 
     dnl ========================================================
     dnl = Check for XShm
@@ -4117,13 +4109,14 @@ MOZ_UI_LOCALE=en-US
 MOZ_UNIVERSALCHARDET=1
 MOZ_URL_CLASSIFIER=
 MOZ_USE_NATIVE_UCONV=
-MOZ_V1_STRING_ABI=1
+MOZ_V1_STRING_ABI=
 MOZ_VIEW_SOURCE=1
 MOZ_XPFE_COMPONENTS=1
 MOZ_XPINSTALL=1
 MOZ_XSLT_STANDALONE=
 MOZ_XTF=1
 MOZ_XUL=1
+MOZ_XUL_APP=1
 NS_PRINTING=1
 NECKO_COOKIES=1
 NECKO_DISK_CACHE=1
@@ -4172,6 +4165,7 @@ MOZ_ARG_ENABLE_STRING(application,
 [ MOZ_BUILD_APP=$enableval ] )
 
 if test "$MOZ_BUILD_APP" = "macbrowser"; then
+    AC_MSG_WARN([--enable-application=macbrowser is deprecated. Use --enable-application=camino.])
     MOZ_BUILD_APP=camino
 fi
 
@@ -4237,12 +4231,10 @@ basic)
   MOZ_UNIVERSALCHARDET=
   MOZ_UPDATER=
   MOZ_USE_NATIVE_UCONV=1
-  MOZ_V1_STRING_ABI=
   MOZ_VIEW_SOURCE=
   MOZ_XPFE_COMPONENTS=
   MOZ_XPINSTALL=
   MOZ_XTF=
-  MOZ_XUL_APP=1
   NECKO_DISK_CACHE=
   NECKO_PROTOCOLS_DEFAULT="about data http file res"
   NECKO_SMALL_BUFFERS=1
@@ -4288,14 +4280,12 @@ minimal)
   MOZ_UNIVERSALCHARDET=
   MOZ_UPDATER=
   MOZ_USE_NATIVE_UCONV=1
-  MOZ_V1_STRING_ABI=
   MOZ_VIEW_SOURCE=
   MOZ_XPFE_COMPONENTS=
   MOZ_XPINSTALL=
   MOZ_XTF=
   MOZ_XUL=
   MOZ_RDF=
-  MOZ_XUL_APP=1
   NECKO_DISK_CACHE=
   NECKO_PROTOCOLS_DEFAULT="about data http file res"
   NECKO_SMALL_BUFFERS=1
@@ -4313,184 +4303,86 @@ AC_SUBST(MOZ_EMBEDDING_LEVEL_DEFAULT)
 AC_SUBST(MOZ_EMBEDDING_LEVEL_BASIC)
 AC_SUBST(MOZ_EMBEDDING_LEVEL_MINIMAL)
 
+if test -z "$MOZ_BUILD_APP"; then
+  AC_MSG_ERROR([--enable-application=APP was not specified and is required.])
+else
+  # We have a valid application only if it has a build.mk file in its top
+  # directory.
+  if test ! -f "${srcdir}/${MOZ_BUILD_APP}/build.mk" ; then
+    AC_MSG_ERROR([--enable-application value not recognized (${MOZ_BUILD_APP}/build.mk does not exist).])
+  fi
+fi
+
+# Allow the application to influence configure with a confvars.sh script.
+
+AC_MSG_CHECKING([if app-specific confvars.sh exists])
+if test -f "${srcdir}/${MOZ_BUILD_APP}/confvars.sh" ; then
+  AC_MSG_RESULT([${srcdir}/${MOZ_BUILD_APP}/confvars.sh])
+  . "${srcdir}/${MOZ_BUILD_APP}/confvars.sh"
+else
+  AC_MSG_RESULT([no])
+fi
+
+# Now is a good time to test for logic errors, define mismatches, etc.
 case "$MOZ_BUILD_APP" in
-suite)
-  MOZ_APP_NAME=seamonkey
-  MOZ_APP_DISPLAYNAME=SeaMonkey
-  MOZ_MAIL_NEWS=1
-  MOZ_LDAP_XPCOM=1
-  MOZ_COMPOSER=1
-  MOZ_SUITE=1
-  MOZ_PROFILESHARING=
-  MOZ_APP_VERSION=$SEAMONKEY_VERSION
-  if test "$MOZ_XUL_APP"; then
-    MOZ_EXTENSIONS_DEFAULT=" wallet p3p venkman inspector irc typeaheadfind gnomevfs sroaming reporter"
-  else
-    MOZ_EXTENSIONS_DEFAULT=" wallet help p3p venkman inspector irc typeaheadfind gnomevfs sroaming reporter"
-  fi
-  AC_DEFINE(MOZ_SUITE)
-  ;;
-
-browser)
-  MOZ_APP_NAME=firefox
-  MOZ_XUL_APP=1
-  MOZ_UPDATER=1
-  MOZ_PHOENIX=1
-  MOZ_PLACES=1
-  MOZ_PLACES_BOOKMARKS=
-  # always enabled for form history
-  MOZ_MORKREADER=1
-  MOZ_SAFE_BROWSING=1
-  MOZ_APP_VERSION=$FIREFOX_VERSION
-  MOZ_NO_XPCOM_OBSOLETE=1
-  MOZ_EXTENSIONS_DEFAULT=" inspector gnomevfs reporter"
-  AC_DEFINE(MOZ_PHOENIX)
-  # MOZ_APP_DISPLAYNAME will be set by branding/configure.sh
-  ;;
-
-minimo)
-  MOZ_APP_NAME=minimo
-  MOZ_APP_DISPLAYNAME=minimo
-  AC_DEFINE(MINIMO)
-  MINIMO=1
-  MOZ_APP_VERSION=`cat $topsrcdir/minimo/config/version.txt`
-  ;;
-
-mail)
-  MOZ_APP_NAME=thunderbird
-  MOZ_APP_DISPLAYNAME=Thunderbird
-  MOZ_XUL_APP=1
-  MOZ_UPDATER=1
-  MOZ_THUNDERBIRD=1
-  MOZ_MATHML=
-  MOZ_NO_ACTIVEX_SUPPORT=1
-  MOZ_ACTIVEX_SCRIPTING_SUPPORT=
-  ENABLE_TESTS=
-  MOZ_OJI=
-  NECKO_DISK_CACHE=
-  NECKO_PROTOCOLS_DEFAULT="http file viewsource res data"
-  MOZ_ENABLE_CANVAS=
-  MOZ_IMG_DECODERS_DEFAULT=`echo "$MOZ_IMG_DECODERS_DEFAULT" | sed "s/ xbm//"`
-  MOZ_MAIL_NEWS=1
-  MOZ_LDAP_XPCOM=1
-  MOZ_STATIC_MAIL_BUILD=1
-  MOZ_COMPOSER=1
-  MOZ_SAFE_BROWSING=1
-  MOZ_SVG=
-  MOZ_APP_VERSION=$THUNDERBIRD_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" wallet"
-  AC_DEFINE(MOZ_THUNDERBIRD)
-  ;;
-
-composer)
-  MOZ_APP_NAME=nvu
-  MOZ_APP_DISPLAYNAME=NVU
-  MOZ_XUL_APP=1
-  MOZ_UPDATER=1
-  MOZ_STANDALONE_COMPOSER=1
-  MOZ_COMPOSER=1
-  MOZ_APP_VERSION=0.17+
-  AC_DEFINE(MOZ_STANDALONE_COMPOSER)
-  ;;
-
-calendar)
-  MOZ_APP_NAME=sunbird
-  MOZ_APP_DISPLAYNAME=Calendar
-  MOZ_XUL_APP=1
-  MOZ_UPDATER=1
-  MOZ_SUNBIRD=1
-  MOZ_CALENDAR=1
-  MOZ_APP_VERSION=$SUNBIRD_VERSION
-  MOZ_PLAINTEXT_EDITOR_ONLY=1
-  NECKO_PROTOCOLS_DEFAULT="about http ftp file res viewsource"
-  MOZ_NO_ACTIVEX_SUPPORT=1
-  MOZ_ACTIVEX_SCRIPTING_SUPPORT=
-  MOZ_INSTALLER=
-  MOZ_MATHML=
-  NECKO_DISK_CACHE=
-  MOZ_OJI=
-  MOZ_PLUGINS=
-  NECKO_COOKIES=
-  MOZ_NO_XPCOM_OBSOLETE=1
-  MOZ_EXTENSIONS_DEFAULT=
-  MOZ_UNIVERSALCHARDET=
-  AC_DEFINE(MOZ_SUNBIRD)
-  ;;
-
 xulrunner)
-  MOZ_APP_NAME=xulrunner
-  MOZ_APP_DISPLAYNAME=XULRunner
-  MOZ_XUL_APP=1
-  MOZ_UPDATER=1
-  MOZ_XULRUNNER=1
-  MOZ_ENABLE_LIBXUL=1
-  MOZ_APP_VERSION=$MOZILLA_VERSION
-  MOZ_JAVAXPCOM=1
-  if test "$MOZ_STORAGE"; then
-    MOZ_PLACES=1
-  fi
-  MOZ_EXTENSIONS_DEFAULT=" gnomevfs"
-  MOZ_NO_XPCOM_OBSOLETE=1
-  AC_DEFINE(MOZ_XULRUNNER)
-
   if test "$LIBXUL_SDK"; then
     AC_MSG_ERROR([Building XULRunner --with-libxul-sdk doesn't make sense; XULRunner provides the libxul SDK.])
   fi
   ;;
+*)
+  # Fix this case for folks who forget. Warn them.
+  if test -n "$LIBXUL_SDK" -a -z "$MOZ_XUL_APP"; then
+    AC_MSG_WARN([Setting MOZ_XUL_APP since LIBXUL_SDK was set. Add to confvars.sh!])
+    MOZ_XUL_APP=1
+  fi
+  ;;
+esac
+
+# Special cases where we need to AC_DEFINE something. Also a holdover for apps
+# that haven't made a confvars.sh yet. Don't add new stuff here, use
+# MOZ_BUILD_APP.
+case "$MOZ_BUILD_APP" in
+suite)
+  AC_DEFINE(MOZ_SUITE)
+  ;;
+
+browser)
+  AC_DEFINE(MOZ_PHOENIX)
+  ;;
+
+minimo)
+  AC_DEFINE(MINIMO)
+  ;;
+
+mail)
+  AC_DEFINE(MOZ_THUNDERBIRD)
+  ;;
+
+composer)
+  AC_DEFINE(MOZ_STANDALONE_COMPOSER)
+  ;;
+
+calendar)
+  AC_DEFINE(MOZ_SUNBIRD)
+  ;;
+
+xulrunner)
+  AC_DEFINE(MOZ_XULRUNNER)
+  ;;
 
 camino) 
-  MOZ_APP_NAME=mozilla
-  ENABLE_TESTS=
-  ACCESSIBILITY=
-  MOZ_JSDEBUGGER=
-  MOZ_SINGLE_PROFILE=1
-  MOZ_PROFILESHARING=
-  MOZ_APP_DISPLAYNAME=Mozilla
-  MOZ_APP_VERSION=$MOZILLA_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" typeaheadfind"
-# MOZ_XUL_APP=1
-  MOZ_PREF_EXTENSIONS=
   AC_DEFINE(MOZ_MACBROWSER)
   ;;
 
 content/xslt)
-  MOZ_APP_NAME=mozilla
-  MOZ_EXTENSIONS_DEFAULT=""
   AC_DEFINE(TX_EXE)
-  MOZ_XSLT_STANDALONE=1
-  MOZ_APP_VERSION=$MOZILLA_VERSION
-  ;;
-
-netwerk)
-  MOZ_APP_NAME=mozilla
-  MOZ_EXTENSIONS_DEFAULT=""
-  MOZ_APP_VERSION=$MOZILLA_VERSION
-  MOZ_NO_XPCOM_OBSOLETE=1
-  MOZ_SINGLE_PROFILE=1
-  MOZ_PROFILESHARING=
-  MOZ_XPINSTALL=
   ;;
 
 standalone) 
   MOZ_APP_NAME=mozilla
   MOZ_APP_DISPLAYNAME=Mozilla
   MOZ_APP_VERSION=$MOZILLA_VERSION
-  ;;
-
-tools/update-packaging)
-  MOZ_APP_NAME=mozilla
-  MOZ_APP_DISPLAYNAME=Mozilla
-  MOZ_APP_VERSION=$MOZILLA_VERSION
-  MOZ_UPDATE_PACKAGING=1
-  MOZ_UPDATER=1
-  ;;
-
-*)
-  if test -z "$MOZ_BUILD_APP"; then
-    AC_MSG_ERROR([--enable-application=APP is required.])
-  else
-    AC_MSG_ERROR([--enable-application value not recognized.])
-  fi
   ;;
 
 esac
@@ -4536,13 +4428,11 @@ MOZ_ARG_HEADER(Toolkit Options)
     [ _DEFAULT_TOOLKIT=$enableval ],
     [ _DEFAULT_TOOLKIT=$_PLATFORM_DEFAULT_TOOLKIT])
 
-    if test "$_DEFAULT_TOOLKIT" = "qt" \
-        -o "$_DEFAULT_TOOLKIT" = "photon" \
+    if test "$_DEFAULT_TOOLKIT" = "photon" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-windows" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-beos" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-os2" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-xlib" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-mac" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-cocoa"
     then
@@ -4551,7 +4441,7 @@ MOZ_ARG_HEADER(Toolkit Options)
         MOZ_WIDGET_TOOLKIT=`echo "$_DEFAULT_TOOLKIT" | sed -e "s/,.*$//"`
     else
         if test "$no_x" != "yes"; then
-            AC_MSG_ERROR([Toolkit must be cairo-xlib, cairo-gtk2, or qt.])
+            AC_MSG_ERROR([Toolkit must be cairo-gtk2.])
         else
             AC_MSG_ERROR([Toolkit must be $_PLATFORM_DEFAULT_TOOLKIT (if supported).])
         fi
@@ -4564,17 +4454,6 @@ dnl = Enable the toolkit as needed                         =
 dnl ========================================================
 
 case "$MOZ_WIDGET_TOOLKIT" in
-qt)
-    MOZ_ENABLE_QT=1
-    if test "$_HAVE_FREETYPE2"; then
-        MOZ_ENABLE_FREETYPE2=1
-    fi
-    MOZ_ENABLE_XPRINT=1
-    TK_CFLAGS='$(MOZ_QT_CFLAGS)'
-    TK_LIBS='$(MOZ_QT_LDFLAGS)'
-    AC_DEFINE(MOZ_WIDGET_QT)
-    ;;
-
 photon)
 	MOZ_ENABLE_PHOTON=1
 	AC_DEFINE(MOZ_WIDGET_PHOTON)
@@ -4612,16 +4491,6 @@ cairo-os2)
     TK_LIBS='$(MOZ_CAIRO_LIBS)'
     ;;
 
-cairo-xlib)
-    MOZ_WIDGET_TOOLKIT=xlib
-    MOZ_GFX_TOOLKIT=cairo
-    MOZ_ENABLE_CAIRO_GFX=1
-	MOZ_ENABLE_XLIB=1
-	TK_CFLAGS='$(MOZ_XLIB_CFLAGS) $(MOZ_CAIRO_FLAGS)'
-	TK_LIBS='$(MOZ_XLIB_LDFLAGS) $(MOZ_CAIRO_LIBS)'
-	AC_DEFINE(MOZ_WIDGET_XLIB)
-    ;;
-
 cairo-mac|cairo-cocoa)
     if test "$MOZ_WIDGET_TOOLKIT" = "cairo-cocoa"; then
         MOZ_WIDGET_TOOLKIT=cocoa
@@ -4648,94 +4517,9 @@ if test "$MOZ_ENABLE_XREMOTE"; then
 fi
 
 if test "$COMPILE_ENVIRONMENT"; then
-if test "$MOZ_ENABLE_GTK"
-then
-    AM_PATH_GTK($GTK_VERSION,,
-    AC_MSG_ERROR(Test for GTK failed.))
-
-    MOZ_GTK_LDFLAGS=$GTK_LIBS
-    MOZ_GTK_CFLAGS=$GTK_CFLAGS
-fi
-
 if test "$MOZ_ENABLE_GTK2"
 then
     PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= 1.3.7 gdk-x11-2.0 glib-2.0 gobject-2.0)
-fi
-
-if test "$MOZ_ENABLE_XLIB"
-then
-    MOZ_XLIB_CFLAGS="$X_CFLAGS"
-    MOZ_XLIB_LDFLAGS="$XLDFLAGS"
-    MOZ_XLIB_LDFLAGS="$MOZ_XLIB_LDFLAGS $XEXT_LIBS $X11_LIBS"
-fi
-
-if test "$MOZ_ENABLE_QT"
-then
-    MOZ_ARG_WITH_STRING(qtdir,
-    [  --with-qtdir=\$dir       Specify Qt directory ],
-    [ QTDIR=$withval])
-
-    if test -z "$QTDIR"; then
-      QTDIR="/usr"
-    fi
-    QTINCDIR="/include/qt"
-    if test ! -d "$QTDIR$QTINCDIR"; then
-       QTINCDIR="/include/X11/qt"
-    fi
-    if test ! -d "$QTDIR$QTINCDIR"; then
-       QTINCDIR="/include"
-    fi
-
-    if test -x "$QTDIR/bin/moc"; then
-      HOST_MOC="$QTDIR/bin/moc"
-    else
-      AC_CHECK_PROGS(HOST_MOC, moc, "")
-    fi
-    if test -z "$HOST_MOC"; then
-      AC_MSG_ERROR([no acceptable moc preprocessor found])
-    fi
-    MOC=$HOST_MOC
-
-    QT_CFLAGS="-I${QTDIR}${QTINCDIR} -DQT_GENUINE_STR -DQT_NO_STL"
-    if test -z "$MOZ_DEBUG"; then
-      QT_CFLAGS="$QT_CFLAGS -DQT_NO_DEBUG -DNO_DEBUG"
-    fi
-    _SAVE_LDFLAGS=$LDFLAGS
-    QT_LDFLAGS=-L${QTDIR}/lib
-    LDFLAGS="$LDFLAGS $QT_LDFLAGS"
-    AC_LANG_SAVE
-    AC_LANG_CPLUSPLUS
-    AC_CHECK_LIB(qt, main, QT_LIB=-lqt,
-        AC_CHECK_LIB(qt-mt, main, QT_LIB=-lqt-mt,
-            AC_MSG_ERROR([Cannot find QT libraries.])))
-    LDFLAGS=$_SAVE_LDFLAGS
-    QT_LIBS="-L/usr/X11R6/lib $QT_LDFLAGS $QT_LIB -lXext -lX11"
-
-    MOZ_QT_LDFLAGS=$QT_LIBS
-    MOZ_QT_CFLAGS=$QT_CFLAGS
-
-    _SAVE_CXXFLAGS=$CXXFLAGS
-    _SAVE_LIBS=$LIBS
-
-    CXXFLAGS="$CXXFLAGS $QT_CFLAGS"
-    LIBS="$LIBS $QT_LIBS"
-    
-    AC_MSG_CHECKING(Qt - version >= $QT_VERSION)
-    AC_TRY_COMPILE([#include <qglobal.h>],
-    [
-        #if (QT_VERSION < $QT_VERSION_NUM)
-            #error  "QT_VERSION too old"
-        #endif
-    ],result="yes",result="no")
-
-    AC_MSG_RESULT("$result")
-    if test "$result" = "no"; then
-        AC_MSG_ERROR([Qt Mozilla requires at least version $QT_VERSION of Qt])
-    fi
-    CXXFLAGS=$_SAVE_CXXFLAGS
-    LIBS=$_SAVE_LIBS
-
-    AC_LANG_RESTORE
 fi
 fi # COMPILE_ENVIRONMENT
 
@@ -4780,23 +4564,14 @@ AC_SUBST(GTK_CONFIG)
 AC_SUBST(TK_CFLAGS)
 AC_SUBST(TK_LIBS)
 
-AC_SUBST(MOZ_ENABLE_GTK)
-AC_SUBST(MOZ_ENABLE_XLIB)
 AC_SUBST(MOZ_ENABLE_GTK2)
-AC_SUBST(MOZ_ENABLE_QT)
 AC_SUBST(MOZ_ENABLE_PHOTON)
 AC_SUBST(MOZ_ENABLE_COCOA)
 AC_SUBST(MOZ_ENABLE_CAIRO_GFX)
 AC_SUBST(MOZ_ENABLE_GLITZ)
 AC_SUBST(MOZ_ENABLE_XREMOTE)
-AC_SUBST(MOZ_GTK_CFLAGS)
-AC_SUBST(MOZ_GTK_LDFLAGS)
 AC_SUBST(MOZ_GTK2_CFLAGS)
 AC_SUBST(MOZ_GTK2_LIBS)
-AC_SUBST(MOZ_XLIB_CFLAGS)
-AC_SUBST(MOZ_XLIB_LDFLAGS)
-AC_SUBST(MOZ_QT_CFLAGS)
-AC_SUBST(MOZ_QT_LDFLAGS)
 
 AC_SUBST(MOC)
 
@@ -4806,10 +4581,7 @@ then
     AC_DEFINE(MOZ_CAIRO_GFX)
 fi
 
-if test "$MOZ_ENABLE_GTK" \
-|| test "$MOZ_ENABLE_QT" \
-|| test "$MOZ_ENABLE_XLIB" \
-|| test "$MOZ_ENABLE_GTK2"
+if test "$MOZ_ENABLE_GTK2"
 then
     AC_DEFINE(MOZ_X11)
     MOZ_X11=1
@@ -5061,27 +4833,6 @@ MOZ_ARG_DISABLE_BOOL(postscript,
     MOZ_ENABLE_POSTSCRIPT=1 )
 
 dnl ========================================================
-dnl = Xprint print module
-dnl ========================================================
-if test "$MOZ_X11"
-then
-    _SAVE_LDFLAGS="$LDFLAGS"
-    LDFLAGS="$XLDFLAGS $LDFLAGS"
-    AC_CHECK_LIB(Xp, XpGetPrinterList, [XPRINT_LIBS="-lXp"],
-        MOZ_ENABLE_XPRINT=, $XEXT_LIBS $XLIBS)
-    LDFLAGS="$_SAVE_LDFLAGS"
-
-    MOZ_XPRINT_CFLAGS="$X_CFLAGS"
-    MOZ_XPRINT_LDFLAGS="$XLDFLAGS $XPRINT_LIBS"
-    MOZ_XPRINT_LDFLAGS="$MOZ_XPRINT_LDFLAGS $XEXT_LIBS $X11_LIBS"
-
-    MOZ_ARG_DISABLE_BOOL(xprint,
-    [  --disable-xprint        Disable Xprint printing support ],
-        MOZ_ENABLE_XPRINT=,
-        MOZ_ENABLE_XPRINT=1 )
-fi
-
-dnl ========================================================
 dnl = GnomeVFS support module
 dnl ========================================================
 
@@ -5234,10 +4985,8 @@ dnl = those converters are not built on other platforms/toolkits.
 dnl = (see bug 180851)
 dnl ========================================================
 
-if (test "$MOZ_ENABLE_GTK"  || test "$MOZ_ENABLE_GTK2") \
-&& test "$MOZ_ENABLE_COREXFONTS" \
-|| test "$MOZ_ENABLE_XLIB" \
-|| test "$MOZ_ENABLE_XPRINT" 
+if test "$MOZ_ENABLE_GTK2" \
+&& test "$MOZ_ENABLE_COREXFONTS"
 then
     AC_DEFINE(MOZ_EXTRA_X11CONVERTERS)
     MOZ_EXTRA_X11CONVERTERS=1
@@ -5278,30 +5027,6 @@ MOZ_ARG_DISABLE_BOOL(oji,
     MOZ_OJI=1)
 if test -n "$MOZ_OJI"; then
     AC_DEFINE(OJI)
-fi
-
-dnl ========================================================
-dnl = Xinerama support. The autodetection is done above in the Xlib
-dnl = detection routines.
-dnl ========================================================
-
-if test "$MOZ_WIDGET_TOOLKIT" = "gtk2"; then
-    MOZ_ENABLE_XINERAMA=1
-fi
-
-MOZ_ARG_DISABLE_BOOL(xinerama,
-[  --disable-xinerama      Disable Xinerama support],
-    MOZ_ENABLE_XINERAMA=,
-    MOZ_ENABLE_XINERAMA=1 )
-
-if test -n "$MOZ_ENABLE_XINERAMA"; then
-    if test -z "$MOZ_XINERAMA_LIBS" || \
-        test "$ac_cv_header_X11_extensions_Xinerama_h" = "no"; then
-        AC_MSG_ERROR([Cannot find Xinerama library. To build without Xinerama support, rebuild with --disable-xinerama])
-    fi
-    # Xinerama depends on libXext which is not automatically included on older distribs
-    MOZ_XINERAMA_LIBS="$MOZ_XINERAMA_LIBS $XEXT_LIBS"
-    AC_DEFINE(MOZ_ENABLE_XINERAMA)
 fi
 
 dnl bi-directional support always on
@@ -5578,7 +5303,8 @@ dnl ========================================================
 dnl = Airbag crash reporting (on by default on supported platforms)
 dnl ========================================================
 
-if test "$OS_ARCH" = "WINNT" -a -z "$GNU_CC"; then
+if test "$OS_ARCH" = "WINNT" -a -z "$GNU_CC" \
+  || test "$OS_ARCH" = "Darwin"; then
    MOZ_AIRBAG=1
 fi
 
@@ -7010,9 +6736,6 @@ then
     if test "$MOZ_ENABLE_GTK2"; then
         PKG_CHECK_MODULES(LIBIDL, libIDL-2.0 >= 0.8.0 glib-2.0 gobject-2.0, _LIBIDL_FOUND=1,_LIBIDL_FOUND=)
     fi
-    if test "$MOZ_ENABLE_GTK"; then
-        AM_PATH_LIBIDL($LIBIDL_VERSION,_LIBIDL_FOUND=1)
-    fi
     dnl if no gtk/libIDL1 or gtk2/libIDL2 combination was found, fall back
     dnl to either libIDL1 or libIDL2.
     if test -z "$_LIBIDL_FOUND"; then
@@ -7529,7 +7252,7 @@ if test "$MOZ_LDAP_XPCOM"; then
         else
             LDAP_LIBS='$(DIST)/lib/$(LIB_PREFIX)nsldap32v60.${IMPORT_LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)nsldappr32v60.${IMPORT_LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)nsldif32v60.${IMPORT_LIB_SUFFIX}'
         fi
-    elif test "$VACPP"; then
+    elif test "$OS_ARCH" = "OS2"; then
             LDAP_LIBS='$(DIST)/lib/$(LIB_PREFIX)ldap60.${IMPORT_LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)prldap60.${IMPORT_LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)ldif60.${IMPORT_LIB_SUFFIX}'
     else
         LDAP_LIBS='-L${DIST}/bin -L${DIST}/lib -lldap60 -lprldap60 -lldif60'
@@ -7645,12 +7368,7 @@ AC_SUBST(MOZ_IPCD)
 
 AC_SUBST(HAVE_XIE)
 AC_SUBST(MOZ_XIE_LIBS)
-AC_SUBST(MOZ_XPRINT_CFLAGS)
-AC_SUBST(MOZ_XPRINT_LDFLAGS)
-AC_SUBST(MOZ_ENABLE_XPRINT)
 AC_SUBST(MOZ_ENABLE_POSTSCRIPT)
-AC_SUBST(MOZ_XINERAMA_LIBS)
-AC_SUBST(MOZ_ENABLE_XINERAMA)
 
 AC_SUBST(XPCOM_USE_LEA)
 AC_SUBST(BUILD_STATIC_LIBS)

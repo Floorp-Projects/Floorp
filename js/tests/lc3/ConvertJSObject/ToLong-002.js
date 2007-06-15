@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'ToLong-002.js';
+
 /**
  *  Preferred Argument Conversion.
  *
@@ -45,73 +48,73 @@
 var SECTION = "Preferred argument conversion:  JavaScript Object to Long";
 var VERSION = "1_4";
 var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-SECTION;
+  SECTION;
 startTest();
 
 var TEST_CLASS = new Packages.com.netscape.javascript.qa.lc3.jsobject.JSObject_006;
 
 function MyFunction() {
-    return "hello";
+  return "hello";
 }
 MyFunction.valueOf = new Function( "return 999" );
 
 function MyOtherFunction() {
-    return "goodbye";
+  return "goodbye";
 }
 MyOtherFunction.valueOf = null;
 MyOtherFunction.toString = new Function( "return 999" );
 
 function MyObject(value) {
-    this.value = value;
-    this.valueOf = new Function("return this.value");
+  this.value = value;
+  this.valueOf = new Function("return this.value");
 }
 
 function MyOtherObject(stringValue) {
-    this.stringValue = String( stringValue );
-    this.toString = new Function( "return this.stringValue" );
-    this.valueOf = null;
+  this.stringValue = String( stringValue );
+  this.toString = new Function( "return this.stringValue" );
+  this.valueOf = null;
 }
 
 function AnotherObject( value ) {
-    this.value = value;
-    this.valueOf = new Function( "return this.value" );
-    this.toString = new Function( "return 666" );
+  this.value = value;
+  this.valueOf = new Function( "return this.value" );
+  this.toString = new Function( "return 666" );
 }
 
 // should pass MyFunction.valueOf() to ambiguous
 
 new TestCase(
-    "TEST_CLASS.ambiguous( MyFunction ) +''",
-    "LONG",
-    TEST_CLASS.ambiguous( MyFunction )+'' );
+  "TEST_CLASS.ambiguous( MyFunction ) +''",
+  "LONG",
+  TEST_CLASS.ambiguous( MyFunction )+'' );
 
 // should pass MyOtherFunction.toString() to ambiguous
 
 new TestCase(
-    "TEST_CLASS.ambiguous( MyOtherFunction ) +''",
-    "LONG",
-    TEST_CLASS.ambiguous( MyOtherFunction )+'' );
+  "TEST_CLASS.ambiguous( MyOtherFunction ) +''",
+  "LONG",
+  TEST_CLASS.ambiguous( MyOtherFunction )+'' );
 
 // should pass MyObject.valueOf() to ambiguous
 
 new TestCase(
-    "TEST_CLASS.ambiguous( new MyObject(12345) ) +''",
-    "LONG",
-    TEST_CLASS.ambiguous( new MyObject(12345) )+'' );
+  "TEST_CLASS.ambiguous( new MyObject(12345) ) +''",
+  "LONG",
+  TEST_CLASS.ambiguous( new MyObject(12345) )+'' );
 
 // should pass MyOtherObject.toString() to ambiguous
 
 new TestCase(
-    "TEST_CLASS.ambiguous( new MyOtherObject(\"12345\") ) +''",
-    "LONG",
-    TEST_CLASS.ambiguous( new MyOtherObject("12345") )+'' );
+  "TEST_CLASS.ambiguous( new MyOtherObject(\"12345\") ) +''",
+  "LONG",
+  TEST_CLASS.ambiguous( new MyOtherObject("12345") )+'' );
 
 // should pass AnotherObject.valueOf() to ambiguous
 
 new TestCase(
-    "TEST_CLASS.ambiguous( new AnotherObject(\"12345\") ) +''",
-    "LONG",
-    TEST_CLASS.ambiguous( new AnotherObject("12345") )+'' );
+  "TEST_CLASS.ambiguous( new AnotherObject(\"12345\") ) +''",
+  "LONG",
+  TEST_CLASS.ambiguous( new AnotherObject("12345") )+'' );
 
 test();
 

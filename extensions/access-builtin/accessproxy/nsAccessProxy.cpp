@@ -140,8 +140,8 @@ NS_IMETHODIMP nsAccessProxy::HandleEvent(nsIDOMEvent* aEvent)
   domNode->GetOwnerDocument(getter_AddRefs(domDoc));
   if (domDoc) {
     doc = do_QueryInterface(domDoc);
-    if (doc && doc->GetNumberOfShells()>0) {
-      presShell = doc->GetShellAt(0);
+    if (doc) {
+      presShell = doc->GetPrimaryShell();
     }
   }
   //return  NS_OK;

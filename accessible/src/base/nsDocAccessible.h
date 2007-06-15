@@ -39,11 +39,9 @@
 #ifndef _nsDocAccessible_H_
 #define _nsDocAccessible_H_
 
-#include "nsHyperTextAccessible.h"
+#include "nsHyperTextAccessibleWrap.h"
 #include "nsIAccessibleDocument.h"
 #include "nsPIAccessibleDocument.h"
-#include "nsIAccessibleEvent.h"
-#include "nsIArray.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
 #include "nsIEditor.h"
@@ -58,7 +56,7 @@ class nsIScrollableView;
 
 const PRUint32 kDefaultCacheSize = 256;
 
-class nsDocAccessible : public nsHyperTextAccessible,
+class nsDocAccessible : public nsHyperTextAccessibleWrap,
                         public nsIAccessibleDocument,
                         public nsPIAccessibleDocument,
                         public nsIDocumentObserver,

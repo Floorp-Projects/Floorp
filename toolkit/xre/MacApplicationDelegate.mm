@@ -63,6 +63,14 @@
 
 // Something to call from non-objective code.
 
+// This is needed, on relaunch, to force the OS to use the "Cocoa Dock API"
+// instead of the "Carbon Dock API".  For more info see bmo bug 377166.
+void
+EnsureUseCocoaDockAPI()
+{
+  [NSApplication sharedApplication];
+}
+
 void
 SetupMacApplicationDelegate()
 {

@@ -53,6 +53,7 @@
 
 class imgIRequest;
 class nsIDocument;
+class nsIPrincipal;
 
 enum nsCSSUnit {
   eCSSUnit_Null         = 0,      // (n/a) null unit, value is not specified
@@ -61,6 +62,7 @@ enum nsCSSUnit {
   eCSSUnit_Initial      = 3,      // (n/a) value is default UA value
   eCSSUnit_None         = 4,      // (n/a) value is none
   eCSSUnit_Normal       = 5,      // (n/a) value is normal (algorithmic, different than auto)
+  eCSSUnit_System_Font  = 6,      // (n/a) value is -moz-use-system-font
   eCSSUnit_String       = 10,     // (PRUnichar*) a string value
   eCSSUnit_Attr         = 11,     // (PRUnichar*) a attr(string) value
   eCSSUnit_Array        = 20,     // (nsCSSValue::Array*) a list of values
@@ -105,9 +107,6 @@ enum nsCSSUnit {
   // Screen relative measure
   eCSSUnit_Pixel        = 900,    // (float) CSS pixel unit
 
-  // Proportional Unit (for columns in tables)
-  eCSSUnit_Proportional = 950, 
-
   // Angular units
   eCSSUnit_Degree       = 1000,    // (float) 360 per circle
   eCSSUnit_Grad         = 1001,    // (float) 400 per circle
@@ -137,8 +136,8 @@ public:
   explicit nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null)
     : mUnit(aUnit)
   {
-    NS_ASSERTION(aUnit <= eCSSUnit_Normal, "not a valueless unit");
-    if (aUnit > eCSSUnit_Normal) {
+    NS_ASSERTION(aUnit <= eCSSUnit_System_Font, "not a valueless unit");
+    if (aUnit > eCSSUnit_System_Font) {
       mUnit = eCSSUnit_Null;
     }
     mValue.mInt = 0;
@@ -164,11 +163,11 @@ public:
 
   nsCSSUnit GetUnit() const { return mUnit; }
   PRBool    IsLengthUnit() const
-    { return PRBool((eCSSUnit_Inch <= mUnit) && (mUnit <= eCSSUnit_Proportional)); }
+    { return PRBool((eCSSUnit_Inch <= mUnit) && (mUnit <= eCSSUnit_Pixel)); }
   PRBool    IsFixedLengthUnit() const  
     { return PRBool((eCSSUnit_Inch <= mUnit) && (mUnit <= eCSSUnit_Cicero)); }
   PRBool    IsRelativeLengthUnit() const  
-    { return PRBool((eCSSUnit_EM <= mUnit) && (mUnit <= eCSSUnit_Proportional)); }
+    { return PRBool((eCSSUnit_EM <= mUnit) && (mUnit <= eCSSUnit_Pixel)); }
   PRBool    IsAngularUnit() const  
     { return PRBool((eCSSUnit_Degree <= mUnit) && (mUnit <= eCSSUnit_Radian)); }
   PRBool    IsFrequencyUnit() const  
@@ -277,6 +276,7 @@ public:
   NS_HIDDEN_(void)  SetInitialValue();
   NS_HIDDEN_(void)  SetNoneValue();
   NS_HIDDEN_(void)  SetNormalValue();
+  NS_HIDDEN_(void)  SetSystemFontValue();
   NS_HIDDEN_(void)  StartImageLoad(nsIDocument* aDocument,
                                    PRBool aIsBGImage = PR_FALSE)
                                    const;  // Not really const, but pretending
@@ -376,38 +376,24 @@ public:
   };
 
   struct URL {
+    // Methods are not inline because using an nsIPrincipal means requiring
+    // caps, which leads to REQUIRES hell, since this header is included all
+    // over.    
+
     // aString must not be null.
-    URL(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer)
-      : mURI(aURI),
-        mString(aString),
-        mReferrer(aReferrer),
-        mRefCnt(0)
-    {
-      mString->AddRef();
-      MOZ_COUNT_CTOR(nsCSSValue::URL);
-    }
+    // aOriginPrincipal must not be null.
+    URL(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
+        nsIPrincipal* aOriginPrincipal) NS_HIDDEN;
 
-    ~URL()
-    {
-      mString->Release();
-      MOZ_COUNT_DTOR(nsCSSValue::URL);
-    }
+    ~URL() NS_HIDDEN;
 
-    PRBool operator==(const URL& aOther) const
-    {
-      PRBool eq;
-      return NS_strcmp(GetBufferValue(mString),
-                       GetBufferValue(aOther.mString)) == 0 &&
-             (mURI == aOther.mURI || // handles null == null
-              (mURI && aOther.mURI &&
-               NS_SUCCEEDED(mURI->Equals(aOther.mURI, &eq)) &&
-               eq));
-    }
+    NS_HIDDEN_(PRBool) operator==(const URL& aOther) const;
 
     nsCOMPtr<nsIURI> mURI; // null == invalid URL
     nsStringBuffer* mString; // Could use nsRefPtr, but it'd add useless
                              // null-checks; this is never null.
     nsCOMPtr<nsIURI> mReferrer;
+    nsCOMPtr<nsIPrincipal> mOriginPrincipal;
 
     void AddRef() { ++mRefCnt; }
     void Release() { if (--mRefCnt == 0) delete this; }
@@ -421,7 +407,8 @@ public:
     // this header is included all over.
     // aString must not be null.
     Image(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
-          nsIDocument* aDocument, PRBool aIsBGImage = PR_FALSE) NS_HIDDEN;
+          nsIPrincipal* aOriginPrincipal, nsIDocument* aDocument,
+          PRBool aIsBGImage = PR_FALSE) NS_HIDDEN;
     ~Image() NS_HIDDEN;
 
     // Inherit operator== from nsCSSValue::URL

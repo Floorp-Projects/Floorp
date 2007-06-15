@@ -71,10 +71,13 @@ ACCESSIBILITY_ATOM(headerContentLanguage, "content-language")
   // Alphabetical list of frame types
 ACCESSIBILITY_ATOM(areaFrame, "AreaFrame")
 ACCESSIBILITY_ATOM(blockFrame, "BlockFrame")
+ACCESSIBILITY_ATOM(boxFrame, "BoxFrame")
 ACCESSIBILITY_ATOM(brFrame, "BRFrame")
+ACCESSIBILITY_ATOM(deckFrame, "DeckFrame")
 ACCESSIBILITY_ATOM(inlineBlockFrame, "InlineBlockFrame")
 ACCESSIBILITY_ATOM(inlineFrame, "InlineFrame")
 ACCESSIBILITY_ATOM(objectFrame, "ObjectFrame")
+ACCESSIBILITY_ATOM(scrollFrame, "ScrollFrame")
 ACCESSIBILITY_ATOM(textFrame, "TextFrame")
 ACCESSIBILITY_ATOM(tableCellFrame, "TableCellFrame")
 ACCESSIBILITY_ATOM(tableOuterFrame, "TableOuterFrame")
@@ -147,6 +150,7 @@ ACCESSIBILITY_ATOM(alt, "alt")
 ACCESSIBILITY_ATOM(anonid, "anonid") // Used for ID's in XBL
 ACCESSIBILITY_ATOM(autocomplete, "autocomplete") // Used as attribute value too
 ACCESSIBILITY_ATOM(control, "control")
+ACCESSIBILITY_ATOM(cycles, "cycles") // used for XUL cycler attribute
 ACCESSIBILITY_ATOM(data, "data")
 ACCESSIBILITY_ATOM(disabled, "disabled")
 ACCESSIBILITY_ATOM(editable, "editable")

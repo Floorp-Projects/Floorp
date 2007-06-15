@@ -70,11 +70,10 @@
     prev = node;                                                  \
     node = node->GetNodeParent();                                 \
                                                                   \
-    if (!node && prev->IsNodeOfType(nsINode::eXUL)) {             \
-      /* XUL elements can have the in-document flag set, but      \
-         still be in an orphaned subtree. In this case we         \
-         need to notify the document */                           \
-      node = NS_STATIC_CAST(nsIContent*, prev)->GetCurrentDoc();  \
+    if (!node && prev->HasFlag(NODE_FORCE_XBL_BINDINGS)) {        \
+      /* For elements that have the NODE_FORCE_XBL_BINDINGS flag  \
+         set we need to notify the document */                    \
+      node = prev->GetOwnerDoc();                                 \
     }                                                             \
   } while (node);                                                 \
   PR_END_MACRO
@@ -174,32 +173,8 @@ nsNodeUtils::ParentChainChanged(nsIContent *aContent)
   }
 }
 
-struct nsHandlerData
-{
-  PRUint16 mOperation;
-  nsCOMPtr<nsIDOMNode> mSource, mDest;
-};
-
-static void
-CallHandler(void *aObject, nsIAtom *aKey, void *aHandler, void *aData)
-{
-  nsHandlerData *handlerData = NS_STATIC_CAST(nsHandlerData*, aData);
-  nsCOMPtr<nsIDOMUserDataHandler> handler =
-    NS_STATIC_CAST(nsIDOMUserDataHandler*, aHandler);
-
-  nsINode *node = NS_STATIC_CAST(nsINode*, aObject);
-  nsCOMPtr<nsIVariant> data =
-    NS_STATIC_CAST(nsIVariant*, node->GetProperty(DOM_USER_DATA, aKey));
-  NS_ASSERTION(data, "Handler without data?");
-
-  nsAutoString key;
-  aKey->ToString(key);
-  handler->Handle(handlerData->mOperation, key, data, handlerData->mSource,
-                  handlerData->mDest);
-}
-
 void
-nsNodeUtils::LastRelease(nsINode* aNode, PRBool aDelete)
+nsNodeUtils::LastRelease(nsINode* aNode)
 {
   nsINode::nsSlots* slots = aNode->GetExistingSlots();
   if (slots) {
@@ -216,21 +191,21 @@ nsNodeUtils::LastRelease(nsINode* aNode, PRBool aDelete)
 
   // Kill properties first since that may run external code, so we want to
   // be in as complete state as possible at that time.
-  if (aNode->HasProperties()) {
+  if (aNode->IsNodeOfType(nsINode::eDOCUMENT)) {
+    // Delete all properties before tearing down the document. Some of the
+    // properties are bound to nsINode objects and the destructor functions of
+    // the properties may want to use the owner document of the nsINode.
+    NS_STATIC_CAST(nsIDocument*, aNode)->PropertyTable()->DeleteAllProperties();
+  }
+  else if (aNode->HasProperties()) {
     // Strong reference to the document so that deleting properties can't
     // delete the document.
     nsCOMPtr<nsIDocument> document = aNode->GetOwnerDoc();
     if (document) {
-      nsHandlerData handlerData;
-      handlerData.mOperation = nsIDOMUserDataHandler::NODE_DELETED;
-
-      nsPropertyTable *table = document->PropertyTable();
-
-      table->Enumerate(aNode, DOM_USER_DATA_HANDLER, CallHandler, &handlerData);
-      table->DeleteAllPropertiesFor(aNode);
+      document->PropertyTable()->DeleteAllPropertiesFor(aNode);
     }
-    aNode->UnsetFlags(NODE_HAS_PROPERTIES);
   }
+  aNode->UnsetFlags(NODE_HAS_PROPERTIES);
 
   if (aNode->HasFlag(NODE_HAS_LISTENERMANAGER)) {
 #ifdef DEBUG
@@ -249,9 +224,108 @@ nsNodeUtils::LastRelease(nsINode* aNode, PRBool aDelete)
     aNode->UnsetFlags(NODE_HAS_LISTENERMANAGER);
   }
 
-  if (aDelete) {
-    delete aNode;
+  delete aNode;
+}
+
+static nsresult
+SetUserDataProperty(PRUint16 aCategory, nsINode *aNode, nsIAtom *aKey,
+                    nsISupports* aValue, void** aOldValue)
+{
+  nsresult rv = aNode->SetProperty(aCategory, aKey, aValue,
+                                   nsPropertyTable::SupportsDtorFunc, PR_TRUE,
+                                   aOldValue);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Property table owns it now.
+  NS_ADDREF(aValue);
+
+  return NS_OK;
+}
+
+/* static */
+nsresult
+nsNodeUtils::SetUserData(nsINode *aNode, const nsAString &aKey,
+                         nsIVariant *aData, nsIDOMUserDataHandler *aHandler,
+                         nsIVariant **aResult)
+{
+  *aResult = nsnull;
+
+  nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
+  if (!key) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  nsresult rv;
+  void *data;
+  if (aData) {
+    rv = SetUserDataProperty(DOM_USER_DATA, aNode, key, aData, &data);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  else {
+    data = aNode->UnsetProperty(DOM_USER_DATA, key);
+  }
+
+  // Take over ownership of the old data from the property table.
+  nsCOMPtr<nsIVariant> oldData = dont_AddRef(NS_STATIC_CAST(nsIVariant*, data));
+
+  if (aData && aHandler) {
+    nsCOMPtr<nsIDOMUserDataHandler> oldHandler;
+    rv = SetUserDataProperty(DOM_USER_DATA_HANDLER, aNode, key, aHandler,
+                             getter_AddRefs(oldHandler));
+    if (NS_FAILED(rv)) {
+      // We failed to set the handler, remove the data.
+      aNode->DeleteProperty(DOM_USER_DATA, key);
+
+      return rv;
+    }
+  }
+  else {
+    aNode->DeleteProperty(DOM_USER_DATA_HANDLER, key);
+  }
+
+  oldData.swap(*aResult);
+
+  return NS_OK;
+}
+
+/* static */
+nsresult
+nsNodeUtils::GetUserData(nsINode *aNode, const nsAString &aKey,
+                         nsIVariant **aResult)
+{
+  nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
+  if (!key) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  *aResult = NS_STATIC_CAST(nsIVariant*,
+                            aNode->GetProperty(DOM_USER_DATA, key));
+  NS_IF_ADDREF(*aResult);
+
+  return NS_OK;
+}
+
+struct nsHandlerData
+{
+  PRUint16 mOperation;
+  nsCOMPtr<nsIDOMNode> mSource, mDest;
+};
+
+static void
+CallHandler(void *aObject, nsIAtom *aKey, void *aHandler, void *aData)
+{
+  nsHandlerData *handlerData = NS_STATIC_CAST(nsHandlerData*, aData);
+  nsCOMPtr<nsIDOMUserDataHandler> handler =
+    NS_STATIC_CAST(nsIDOMUserDataHandler*, aHandler);
+  nsINode *node = NS_STATIC_CAST(nsINode*, aObject);
+  nsCOMPtr<nsIVariant> data =
+    NS_STATIC_CAST(nsIVariant*, node->GetProperty(DOM_USER_DATA, aKey));
+  NS_ASSERTION(data, "Handler without data?");
+
+  nsAutoString key;
+  aKey->ToString(key);
+  handler->Handle(handlerData->mOperation, key, data, handlerData->mSource,
+                  handlerData->mDest);
 }
 
 /* static */
@@ -291,6 +365,30 @@ nsNodeUtils::CallUserDataHandlers(nsCOMArray<nsINode> &aNodesWithProperties,
   }
 
   return NS_OK;
+}
+
+static void
+NoteUserData(void *aObject, nsIAtom *aKey, void *aXPCOMChild, void *aData)
+{
+  nsCycleCollectionTraversalCallback* cb =
+    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aData);
+  cb->NoteXPCOMChild(NS_STATIC_CAST(nsISupports*, aXPCOMChild));
+}
+
+/* static */
+void
+nsNodeUtils::TraverseUserData(nsINode* aNode,
+                              nsCycleCollectionTraversalCallback &aCb)
+{
+  nsIDocument* ownerDoc = aNode->GetOwnerDoc();
+  if (!ownerDoc) {
+    return;
+  }
+
+  nsPropertyTable *table = ownerDoc->PropertyTable();
+
+  table->Enumerate(aNode, DOM_USER_DATA, NoteUserData, &aCb);
+  table->Enumerate(aNode, DOM_USER_DATA_HANDLER, NoteUserData, &aCb);
 }
 
 /* static */
@@ -546,7 +644,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
   if (aClone && !aParent && aNode->IsNodeOfType(nsINode::eXUL)) {
     nsXULElement *xulElem = NS_STATIC_CAST(nsXULElement*, elem);
     if (!xulElem->mPrototype || xulElem->IsInDoc()) {
-      clone->mParentPtrBits |= nsINode::PARENT_BIT_INDOCUMENT;
+      clone->SetFlags(NODE_FORCE_XBL_BINDINGS);
     }
   }
 #endif
@@ -561,4 +659,21 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
   }
 
   return clone ? CallQueryInterface(clone, aResult) : NS_OK;
+}
+
+
+/* static */
+void
+nsNodeUtils::UnlinkUserData(nsINode *aNode)
+{
+  NS_ASSERTION(aNode->HasProperties(), "Call to UnlinkUserData not needed.");
+
+  // Strong reference to the document so that deleting properties can't
+  // delete the document.
+  nsCOMPtr<nsIDocument> document = aNode->GetOwnerDoc();
+  if (document) {
+    document->PropertyTable()->DeleteAllPropertiesFor(aNode, DOM_USER_DATA);
+    document->PropertyTable()->DeleteAllPropertiesFor(aNode,
+                                                      DOM_USER_DATA_HANDLER);
+  }
 }

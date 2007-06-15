@@ -35,13 +35,16 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'regress-352103.js';
+
 //-----------------------------------------------------------------------------
-var bug     = "352103";
+var BUGNUMBER     = "352103";
 var summary = "<??> XML initializer should generate a SyntaxError";
 var actual, expect;
 
-printBugNumber(bug);
-printStatus(summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 /**************
  * BEGIN TEST *

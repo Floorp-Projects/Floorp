@@ -53,6 +53,7 @@ XPIDLSRCS  = \
   nsINavBookmarksService.idl \
   nsILivemarkService.idl \
   nsIRemoteContainer.idl \
+  nsITaggingService.idl  \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

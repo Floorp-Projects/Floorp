@@ -580,8 +580,9 @@ nsPopupSetFrame::OpenPopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
   }
 
   if (weakFrame.IsAlive()) {
-    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-    PresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+    PresContext()->PresShell()->
+      FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                       NS_FRAME_HAS_DIRTY_CHILDREN);
   }
 }
 

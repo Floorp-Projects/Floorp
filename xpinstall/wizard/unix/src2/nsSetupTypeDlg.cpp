@@ -90,14 +90,8 @@ void
 nsSetupTypeDlg::Next(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("Next");
-    if (aData && aData != gCtx->sdlg) return;
-#ifdef MOZ_WIDGET_GTK
-    if (gCtx->bMoving)
-    {
-        gCtx->bMoving = FALSE;
+    if (aData && aData != gCtx->sdlg)
         return;
-    }
-#endif
 
     // verify selected destination directory exists
     if (OK != nsSetupTypeDlg::VerifyDestination())
@@ -140,15 +134,6 @@ nsSetupTypeDlg::Next(GtkWidget *aWidget, gpointer aData)
             gCtx->idlg->Next((GtkWidget *)NULL, (gpointer) gCtx->idlg);
         }
     }
-
-#ifdef MOZ_WIDGET_GTK
-    // When Next() is not invoked from a signal handler, the caller passes
-    // aData as NULL so we know not to do the bMoving hack. 
-    if (aData)
-    {
-        gCtx->bMoving = TRUE;
-    }
-#endif
 }
 
 int

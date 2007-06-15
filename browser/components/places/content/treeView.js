@@ -44,12 +44,12 @@ PlacesTreeView.prototype = {
             getAtom(aString);
   },
 
-  __containerAtom: null,
-  get _containerAtom() {
-    if (!this.__containerAtom)
-      this.__containerAtom = this._makeAtom("container");
+  __separatorAtom: null,
+  get _separatorAtom() {
+    if (!this.__separatorAtom)
+      this.__separatorAtom = this._makeAtom("separator");
 
-    return this.__containerAtom;
+    return this.__separatorAtom;
   },
 
   __sessionStartAtom: null,
@@ -211,10 +211,13 @@ PlacesTreeView.prototype = {
    * It is used to compute each node's viewIndex.
    */
   _buildVisibleSection:
-  function PTV__buildVisibleSection(aContainer, aVisible, aVisibleStartIndex)
+  function PTV__buildVisibleSection(aContainer, aVisible, aToOpen, aVisibleStartIndex)
   {
     if (!aContainer.containerOpen)
       return;  // nothing to do
+
+    const openLiteral = PlacesUtils.RDF.GetResource("http://home.netscape.com/NC-rdf#open");
+    const trueLiteral = PlacesUtils.RDF.GetLiteral("true");
 
     var cc = aContainer.childCount;
     for (var i=0; i < cc; i++) {
@@ -254,9 +257,14 @@ PlacesTreeView.prototype = {
 
       // recursively do containers
       if (PlacesUtils.nodeIsContainer(curChild)) {
+        var resource = this._getResourceForNode(curChild);
+        var isopen = resource != null &&
+                     PlacesUtils.localStore.HasAssertion(resource, openLiteral, trueLiteral, true);
         asContainer(curChild);
-        if (curChild.containerOpen && curChild.childCount > 0)
-          this._buildVisibleSection(curChild, aVisible, aVisibleStartIndex);
+        if (isopen != curChild.containerOpen)
+          aToOpen.push(curChild);
+        else if (curChild.containerOpen && curChild.childCount > 0)
+          this._buildVisibleSection(curChild, aVisible, aToOpen, aVisibleStartIndex);
       }
     }
   },
@@ -323,39 +331,36 @@ PlacesTreeView.prototype = {
 
     // Building the new list will set the new elements' visible indices.
     var newElements = [];
-    this._buildVisibleSection(aContainer, newElements, startReplacement);
+    var toOpenElements = [];
+    this._buildVisibleSection(aContainer, newElements, toOpenElements, startReplacement);
 
     // actually update the visible list
-    this._visibleElements = 
+    this._visibleElements =
       this._visibleElements.slice(0, startReplacement).concat(newElements)
           .concat(this._visibleElements.slice(startReplacement + replaceCount,
                                               this._visibleElements.length));
 
-    if (replaceCount == newElements.length) {
-      // length is the same, just repaint the changed area
-      if (replaceCount > 0) {
-        this._tree.invalidateRange(startReplacement,
-                                   startReplacement + replaceCount - 1);
-      }
-    }
-    else {
-      // If the new area hasa different size, we'll have to renumber the
-      // elements following the area.
+    // If the new area has a different size, we'll have to renumber the
+    // elements following the area.
+    if (replaceCount != newElements.length) {
       for (i = startReplacement + newElements.length;
            i < this._visibleElements.length; i ++) {
         this._visibleElements[i].viewIndex = i;
       }
+    }
 
-      // repaint the region in which we didn't change the viewIndexes, also
-      // including the container element itself since its twisty could have
-      // changed.
-      var minLength = Math.min(newElements.length, replaceCount);
-      this._tree.invalidateRange(startReplacement - 1,
-                                 startReplacement + minLength - 1);
+    // now update the number of elements
+    this._tree.beginUpdateBatch();
+    if (replaceCount)
+      this._tree.rowCountChanged(startReplacement, -replaceCount);
+    if (newElements.length)
+      this._tree.rowCountChanged(startReplacement, newElements.length);
+    this._tree.endUpdateBatch();
 
-      // now update the number of elements
-      this._tree.rowCountChanged(startReplacement + minLength,
-                                 newElements.length - replaceCount);
+    // now, open any containers that were persisted
+    for (var i = 0; i < toOpenElements.length; i++) {
+      var item = asContainer(toOpenElements[i]);
+      item.containerOpen = !item.containerOpen;
     }
   },
 
@@ -382,12 +387,45 @@ PlacesTreeView.prototype = {
     aShowThisOne.value = aTop.time < aNext.time;
     return true;
   },
+  
+  _convertPRTimeToString: function PTV__convertPRTimeToString(aTime) {
+    var timeInMilliseconds = aTime / 1000; // PRTime is in microseconds
+    var timeObj = new Date(timeInMilliseconds);
 
+    // Check if it is today and only display the time.  Only bother
+    // checking for today if it's within the last 24 hours, since
+    // computing midnight is not really cheap. Sometimes we may get dates
+    // in the future, so always show those.
+    var ago = new Date(Date.now() - timeInMilliseconds);
+    var dateFormat = Ci.nsIScriptableDateFormat.dateFormatShort;
+    if (ago > -10000 && ago < (1000 * 24 * 60 * 60)) {
+      var midnight = new Date(timeInMilliseconds);
+      midnight.setHours(0);
+      midnight.setMinutes(0);
+      midnight.setSeconds(0);
+      midnight.setMilliseconds(0);
+
+      if (timeInMilliseconds > midnight.getTime())
+        dateFormat = Ci.nsIScriptableDateFormat.dateFormatNone;
+    }
+
+    return (this._dateService.FormatDateTime("", dateFormat,
+      Ci.nsIScriptableDateFormat.timeFormatNoSeconds,
+      timeObj.getFullYear(), timeObj.getMonth() + 1,
+      timeObj.getDate(), timeObj.getHours(),
+      timeObj.getMinutes(), timeObj.getSeconds()));
+  },
+  
   COLUMN_TYPE_UNKNOWN: 0,
   COLUMN_TYPE_TITLE: 1,
   COLUMN_TYPE_URI: 2,
   COLUMN_TYPE_DATE: 3,
   COLUMN_TYPE_VISITCOUNT: 4,
+  COLUMN_TYPE_KEYWORD: 5,
+  COLUMN_TYPE_DESCRIPTION: 6,
+  COLUMN_TYPE_DATEADDED: 7,
+  COLUMN_TYPE_LASTMODIFIED: 8,
+
   _getColumnType: function PTV__getColumnType(aColumn) {
     switch (aColumn.id) {
       case "title":
@@ -398,6 +436,14 @@ PlacesTreeView.prototype = {
         return this.COLUMN_TYPE_DATE;
       case "visitCount":
         return this.COLUMN_TYPE_VISITCOUNT;
+      case "keyword":
+        return this.COLUMN_TYPE_KEYWORD;
+      case "description":
+        return this.COLUMN_TYPE_DESCRIPTION;
+      case "dateAdded":
+        return this.COLUMN_TYPE_DATEADDED;
+      case "lastModified":
+        return this.COLUMN_TYPE_LASTMODIFIED;
     }
     return this.COLUMN_TYPE_UNKNOWN;
   },
@@ -409,9 +455,9 @@ PlacesTreeView.prototype = {
       case Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_DESCENDING:
         return [this.COLUMN_TYPE_TITLE, true];
       case Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_ASCENDING:
-        return [this.COLUMN_TYPE_DATA, false];
+        return [this.COLUMN_TYPE_DATE, false];
       case Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING:
-        return [this.COLUMN_TYPE_DATA, true];
+        return [this.COLUMN_TYPE_DATE, true];
       case Ci.nsINavHistoryQueryOptions.SORT_BY_URI_ASCENDING:
         return [this.COLUMN_TYPE_URI, false];
       case Ci.nsINavHistoryQueryOptions.SORT_BY_URI_DESCENDING:
@@ -420,6 +466,25 @@ PlacesTreeView.prototype = {
         return [this.COLUMN_TYPE_VISITCOUNT, false];
       case Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING:
         return [this.COLUMN_TYPE_VISITCOUNT, true];
+      case Ci.nsINavHistoryQueryOptions.SORT_BY_KEYWORD_ASCENDING:
+        return [this.COLUMN_TYPE_KEYWORD, false];
+      case Ci.nsINavHistoryQueryOptions.SORT_BY_KEYWORD_DESCENDING:
+        return [this.COLUMN_TYPE_KEYWORD, true];
+      case Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_ASCENDING:
+        if (this._result.sortingAnnotation == DESCRIPTION_ANNO)
+          return [this.COLUMN_TYPE_DESCRIPTION, false];
+        break;
+      case Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_DESCENDING:
+        if (this._result.sortingAnnotation == DESCRIPTION_ANNO)
+          return [this.COLUMN_TYPE_DESCRIPTION, true];
+      case Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_ASCENDING:
+        return [this.COLUMN_TYPE_DATEADDED, false];
+      case Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING:
+        return [this.COLUMN_TYPE_DATEADDED, true];
+      case Ci.nsINavHistoryQueryOptions.SORT_BY_LASTMODIFIED_ASCENDING:
+        return [this.COLUMN_TYPE_LASTMODIFIED, false];
+      case Ci.nsINavHistoryQueryOptions.SORT_BY_LASTMODIFIED_DESCENDING:
+        return [this.COLUMN_TYPE_LASTMODIFIED, true];
     }
     return [this.COLUMN_TYPE_UNKNOWN, false];
   },
@@ -659,8 +724,10 @@ PlacesTreeView.prototype = {
     this._buildVisibleList();
 
     // redraw the tree, inserting new items
-    this._tree.rowCountChanged(0, this._visibleElements.length - oldRowCount);
-    this._tree.invalidate();
+    this._tree.beginUpdateBatch();
+    this._tree.rowCountChanged(0, -oldRowCount);
+    this._tree.rowCountChanged(0, this._visibleElements.length);
+    this._tree.endUpdateBatch();
   },
 
   sortingChanged: function PTV__sortingChanged(aSortingMode) {
@@ -724,7 +791,7 @@ PlacesTreeView.prototype = {
         var obs = this._observers[i];
         obs[aFunctionName].apply(obs, aArgs);
       }
-      catch (ex) { Components.reportError(ex); }
+      catch (ex) { Components.utils.reportError(ex); }
     }
   },
 
@@ -765,6 +832,13 @@ PlacesTreeView.prototype = {
     return viewIndex;
   },
 
+  _getResourceForNode : function PTV_getResourceForNode(aNode)
+  {
+    // XXXndeakin bug 380735, need to support day/host containers as well
+    var uri = aNode.uri;
+    return uri ? PlacesUtils.RDF.GetResource(uri) : null;
+  },
+
   // nsITreeView
   get rowCount() {
     return this._visibleElements.length;
@@ -782,11 +856,7 @@ PlacesTreeView.prototype = {
     this._ensureValidRow(aRow);
     var node = this._visibleElements[aRow];
 
-    // Add the container property if it's applicable for this row.
-    if (PlacesUtils.nodeIsContainer(node))
-      aProperties.AppendElement(this._containerAtom);
-
-    // Next handle properties for session information.
+    // Handle properties for session information.
     if (!this._showSessions)
       return;
 
@@ -802,7 +872,17 @@ PlacesTreeView.prototype = {
     }
   },
 
-  getCellProperties: function(aRow, aColumn, aProperties) { },
+  getCellProperties: function PTV_getCellProperties(aRow, aColumn, aProperties) {
+    if (aColumn.id != "title")
+      return;
+
+    this._ensureValidRow(aRow);
+    var node = this._visibleElements[aRow];
+
+    if (PlacesUtils.nodeIsSeparator(node))
+      aProperties.AppendElement(this._separatorAtom);
+  },
+
   getColumnProperties: function(aColumn, aProperties) { },
 
   isContainer: function PTV_isContainer(aRow) {
@@ -938,7 +1018,6 @@ PlacesTreeView.prototype = {
       case this.COLUMN_TYPE_URI:
         if (PlacesUtils.nodeIsURI(node))
           return node.uri;
-
         return "";
       case this.COLUMN_TYPE_DATE:
         if (node.time == 0 || !PlacesUtils.nodeIsURI(node)) {
@@ -949,36 +1028,28 @@ PlacesTreeView.prototype = {
           // Only show this for URI-based items.
           return "";
         }
-        if (this._getRowSessionStatus(aRow) != this.SESSION_STATUS_CONTINUE) {
-          var nodeTime = node.time / 1000; // PRTime is in microseconds
-          var nodeTimeObj = new Date(nodeTime);
-
-          // Check if it is today and only display the time.  Only bother
-          // checking for today if it's within the last 24 hours, since
-          // computing midnight is not really cheap. Sometimes we may get dates
-          // in the future, so always show those.
-          var ago = new Date(Date.now() - nodeTime);
-          var dateFormat = Ci.nsIScriptableDateFormat.dateFormatShort;
-          if (ago > -10000 && ago < (1000 * 24 * 60 * 60)) {
-            var midnight = new Date(nodeTime);
-            midnight.setHours(0);
-            midnight.setMinutes(0);
-            midnight.setSeconds(0);
-            midnight.setMilliseconds(0);
-
-            if (nodeTime > midnight.getTime())
-              dateFormat = Ci.nsIScriptableDateFormat.dateFormatNone;
-          }
-
-          return (this._dateService.FormatDateTime("", dateFormat,
-            Ci.nsIScriptableDateFormat.timeFormatNoSeconds,
-            nodeTimeObj.getFullYear(), nodeTimeObj.getMonth() + 1,
-            nodeTimeObj.getDate(), nodeTimeObj.getHours(),
-            nodeTimeObj.getMinutes(), nodeTimeObj.getSeconds()));
-        }
+        if (this._getRowSessionStatus(aRow) != this.SESSION_STATUS_CONTINUE)
+          return this._convertPRTimeToString(node.time);
         return "";
       case this.COLUMN_TYPE_VISITCOUNT:
         return node.accessCount;
+      case this.COLUMN_TYPE_KEYWORD:
+        if (PlacesUtils.nodeIsBookmark(node))
+          return PlacesUtils.bookmarks.getKeywordForBookmark(node.itemId);
+        return "";
+      case this.COLUMN_TYPE_DESCRIPTION:
+        const annos = PlacesUtils.annotations;
+        if (annos.itemHasAnnotation(node.itemId, DESCRIPTION_ANNO))
+          return annos.getItemAnnotationString(node.itemId, DESCRIPTION_ANNO)
+        return "";
+      case this.COLUMN_TYPE_DATEADDED:
+        if (node.dateAdded)
+          return this._convertPRTimeToString(node.dateAdded);
+        return "";
+      case this.COLUMN_TYPE_LASTMODIFIED:
+        if (node.lastModified)
+          return this._convertPRTimeToString(node.lastModified);
+        return "";
     }
     return "";
   },
@@ -1011,6 +1082,17 @@ PlacesTreeView.prototype = {
       return; // not a container, nothing to do
 
     asContainer(node);
+    var resource = this._getResourceForNode(node);
+    if (resource) {
+      const openLiteral = PlacesUtils.RDF.GetResource("http://home.netscape.com/NC-rdf#open");
+      const trueLiteral = PlacesUtils.RDF.GetLiteral("true");
+
+      if (node.containerOpen)
+        PlacesUtils.localStore.Unassert(resource, openLiteral, trueLiteral);
+      else
+        PlacesUtils.localStore.Assert(resource, openLiteral, trueLiteral, true);
+    }
+
     node.containerOpen = !node.containerOpen;
   },
 
@@ -1034,7 +1116,9 @@ PlacesTreeView.prototype = {
     var allowTriState = PlacesUtils.nodeIsFolder(this._result.root);
 
     var oldSort = this._result.sortingMode;
+    var oldSortingAnnotation = this._result.sortingAnnotation;
     var newSort;
+    var newSortingAnnotation = "";
     const NHQO = Ci.nsINavHistoryQueryOptions;
     switch (this._getColumnType(aColumn)) {
       case this.COLUMN_TYPE_TITLE:
@@ -1077,9 +1161,54 @@ PlacesTreeView.prototype = {
           newSort = NHQO.SORT_BY_VISITCOUNT_DESCENDING;
 
         break;
+      case this.COLUMN_TYPE_KEYWORD:
+        if (oldSort == NHQO.SORT_BY_KEYWORD_ASCENDING)
+          newSort = NHQO.SORT_BY_KEYWORD_DESCENDING;
+        else if (allowTriState && oldSort == NHQO.SORT_BY_KEYWORD_DESCENDING)
+          newSort = NHQO.SORT_BY_NONE;
+        else
+          newSort = NHQO.SORT_BY_KEYWORD_ASCENDING;
+
+        break;
+      case this.COLUMN_TYPE_DESCRIPTION:
+        if (oldSort == NHQO.SORT_BY_ANNOTATION_ASCENDING &&
+            oldSortingAnnotation == DESCRIPTION_ANNO) {
+          newSort = NHQO.SORT_BY_ANNOTATION_DESCENDING;
+          newSortingAnnotation = DESCRIPTION_ANNO;
+        }
+        else if (allowTriState &&
+                 oldSort == NHQO.SORT_BY_ANNOTATION_DESCENDING &&
+                 oldSortingAnnotation == DESCRIPTION_ANNO)
+          newSort = NHQO.SORT_BY_NONE;
+        else {
+          newSort = NHQO.SORT_BY_ANNOTATION_ASCENDING;
+          newSortingAnnotation = DESCRIPTION_ANNO;
+        }
+        break;
+      case this.COLUMN_TYPE_DATEADDED:
+        if (oldSort == NHQO.SORT_BY_DATEADDED_ASCENDING)
+          newSort = NHQO.SORT_BY_DATEADDED_DESCENDING;
+        else if (allowTriState &&
+                 oldSort == NHQO.SORT_BY_DATEADDED_DESCENDING)
+          newSort = NHQO.SORT_BY_NONE;
+        else
+          newSort = NHQO.SORT_BY_DATEADDED_ASCENDING;
+
+        break;
+      case this.COLUMN_TYPE_LASTMODIFIED:
+        if (oldSort == NHQO.SORT_BY_LASTMODIFIED_ASCENDING)
+          newSort = NHQO.SORT_BY_LASTMODIFIED_DESCENDING;
+        else if (allowTriState &&
+                 oldSort == NHQO.SORT_BY_LASTMODIFIED_DESCENDING)
+          newSort = NHQO.SORT_BY_NONE;
+        else
+          newSort = NHQO.SORT_BY_LASTMODIFIED_ASCENDING;
+
+        break;
       default:
         throw Cr.NS_ERROR_INVALID_ARG;
     }
+    this._result.sortingAnnotation = newSortingAnnotation;
     this._result.sortingMode = newSort;
   },
 

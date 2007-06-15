@@ -57,7 +57,7 @@
         title="&incompatible.title;"
         onload="init();">
 
-  <script type="application/x-javascript" 
+  <script type="application/javascript" 
           src="chrome://mozapps/content/update/incompatible.js"/>
           
   <stringbundle id="updateBundle" 

@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.4.4.3-1.js';
+
 /**
    File Name:    15.4.4.3-1.js
    ECMA Section: 15.4.4.3-1 Array.prototype.join()
@@ -106,7 +108,7 @@ new TestCase(   SECTION,
 // separator is a control character
 new TestCase(   SECTION,
 		"var TEST_ARRAY = new Array(null, void 0, true, false, 123, new Object(), new Boolean(true) ); TEST_ARRAY.join('\v')",
-		unescape("%u000B%u000Btrue%u000Bfalse%u000B123%u000B[object Object]%u000Btrue"),
+		decodeURIComponent("%0B%0Btrue%0Bfalse%0B123%0B[object Object]%0Btrue"),
 		eval("var TEST_ARRAY = new Array(null, void 0, true, false, 123, new Object(), new Boolean(true) ); TEST_ARRAY.join('\v')") );
 
 // length of array is 1
@@ -117,7 +119,7 @@ new TestCase(   SECTION,
 
 
 SEPARATOR = "\t"
-TEST_LENGTH = 100;
+  TEST_LENGTH = 100;
 TEST_STRING = "";
 ARGUMENTS = "";
 TEST_RESULT = "";
@@ -132,12 +134,12 @@ for ( var index = 0; index < TEST_LENGTH; index++ ) {
 
 TEST_ARRAY = eval( "new Array( "+ARGUMENTS +")" );
 
-new TestCase( SECTION, 
-	      "TEST_ARRAY.join("+SEPARATOR+")",   
-	      TEST_RESULT,    
+new TestCase( SECTION,
+	      "TEST_ARRAY.join("+SEPARATOR+")",  
+	      TEST_RESULT,   
 	      TEST_ARRAY.join( SEPARATOR ) );
 
-new TestCase( SECTION, 
+new TestCase( SECTION,
 	      "(new Array( Boolean(true), Boolean(false), null,  void 0, Number(1e+21), Number(1e-7))).join()",
 	      "true,false,,,1e+21,1e-7",
 	      (new Array( Boolean(true), Boolean(false), null,  void 0, Number(1e+21), Number(1e-7))).join() );

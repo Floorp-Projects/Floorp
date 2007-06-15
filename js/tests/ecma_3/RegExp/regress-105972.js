@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 22 October 2001
  *
  * SUMMARY: Regression test for Bugzilla bug 105972:
@@ -43,8 +45,9 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=105972
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-105972.js';
 var i = 0;
-var bug = 105972;
+var BUGNUMBER = 105972;
 var summary = 'Regression test for Bugzilla bug 105972';
 var cnEmptyString = '';
 var status = '';
@@ -108,11 +111,11 @@ addThis();
 
 /*
  * Again, '$' combined with an 'or' operator.
- * 
+ *
  * The operator * will consume the string from left to right,
  * attempting to satisfy the condition (:|$). When it hits ':',
  * the match will not stop since * is greedy. The match will
- * continue until it hits $, the end-of-string boundary. 
+ * continue until it hits $, the end-of-string boundary.
  *
  * The submatch $1 = (:|$) will contain the empty string
  * conceived to exist at the end-of-string boundary.
@@ -147,7 +150,7 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
   testRegExp(statusmessages, patterns, strings, actualmatches, expectedmatches);
   exitFunc ('test');

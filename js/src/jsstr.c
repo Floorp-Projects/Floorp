@@ -1130,6 +1130,7 @@ typedef struct GlobData {
 static JSBool
 match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                  JSBool (*glob)(JSContext *cx, jsint count, GlobData *data),
+                 void (*destroy)(JSContext *cx, GlobData *data),
                  GlobData *data, jsval *rval)
 {
     JSString *str, *src, *opt;
@@ -1202,6 +1203,8 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                     index++;
                 }
             }
+            if (!ok && destroy)
+                destroy(cx, data);
         }
     } else {
         if (GET_MODE(data->flags) == MODE_REPLACE) {
@@ -1245,7 +1248,7 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (reobj) {
         /* Tell our caller that it doesn't need to destroy data->regexp. */
         data->flags &= ~KEEP_REGEXP;
-    } else if (!(data->flags & KEEP_REGEXP)) {
+    } else if (!ok || !(data->flags & KEEP_REGEXP)) {
         /* Caller didn't want to keep data->regexp, so null and destroy it.  */
         data->regexp = NULL;
         js_DestroyRegExp(cx, re);
@@ -1294,7 +1297,8 @@ str_match(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     mdata.base.optarg = 1;
     mdata.arrayval = &argv[2];
     *mdata.arrayval = JSVAL_NULL;
-    ok = match_or_replace(cx, obj, argc, argv, match_glob, &mdata.base, rval);
+    ok = match_or_replace(cx, obj, argc, argv, match_glob, NULL, &mdata.base,
+                          rval);
     if (ok && !JSVAL_IS_NULL(*mdata.arrayval))
         *rval = *mdata.arrayval;
     return ok;
@@ -1307,7 +1311,7 @@ str_search(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     data.flags = MODE_SEARCH;
     data.optarg = 1;
-    return match_or_replace(cx, obj, argc, argv, NULL, &data, rval);
+    return match_or_replace(cx, obj, argc, argv, NULL, NULL, &data, rval);
 }
 
 typedef struct ReplaceData {
@@ -1543,6 +1547,16 @@ do_replace(JSContext *cx, ReplaceData *rdata, jschar *chars)
     js_strncpy(chars, cp, JSSTRING_LENGTH(repstr) - (cp - bp));
 }
 
+static void
+replace_destroy(JSContext *cx, GlobData *data)
+{
+    ReplaceData *rdata;
+
+    rdata = (ReplaceData *)data;
+    JS_free(cx, rdata->chars);
+    rdata->chars = NULL;
+}
+
 static JSBool
 replace_glob(JSContext *cx, jsint count, GlobData *data)
 {
@@ -1567,11 +1581,8 @@ replace_glob(JSContext *cx, jsint count, GlobData *data)
          ? JS_realloc(cx, rdata->chars, (rdata->length + growth + 1)
                                         * sizeof(jschar))
          : JS_malloc(cx, (growth + 1) * sizeof(jschar)));
-    if (!chars) {
-        JS_free(cx, rdata->chars);
-        rdata->chars = NULL;
+    if (!chars)
         return JS_FALSE;
-    }
     rdata->chars = chars;
     rdata->length += growth;
     chars += rdata->index;
@@ -1624,7 +1635,8 @@ str_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     rdata.index = 0;
     rdata.leftIndex = 0;
 
-    ok = match_or_replace(cx, obj, argc, argv, replace_glob, &rdata.base, rval);
+    ok = match_or_replace(cx, obj, argc, argv, replace_glob, replace_destroy,
+                          &rdata.base, rval);
     if (!ok)
         return JS_FALSE;
 
@@ -2617,18 +2629,6 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
     str->length = 0;
 }
 
-JSObject *
-js_StringToObject(JSContext *cx, JSString *str)
-{
-    JSObject *obj;
-
-    obj = js_NewObject(cx, &js_StringClass, NULL, NULL);
-    if (!obj)
-        return NULL;
-    OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, STRING_TO_JSVAL(str));
-    return obj;
-}
-
 JS_FRIEND_API(const char *)
 js_ValueToPrintable(JSContext *cx, jsval v, JSValueToStringFun v2sfun)
 {
@@ -2676,6 +2676,8 @@ js_ValueToSource(JSContext *cx, jsval v)
     JSTempValueRooter tvr;
     JSString *str;
 
+    if (JSVAL_IS_VOID(v))
+        return ATOM_TO_STRING(cx->runtime->atomState.void0Atom);
     if (JSVAL_IS_STRING(v))
         return js_QuoteString(cx, JSVAL_TO_STRING(v), '"');
     if (JSVAL_IS_PRIMITIVE(v)) {

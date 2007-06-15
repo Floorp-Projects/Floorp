@@ -1,0 +1,54 @@
+<html>
+<head>
+    <script type="text/javascript" src="../MochiKit/Base.js"></script>
+    <script type="text/javascript" src="../MochiKit/Iter.js"></script>
+    <script type="text/javascript" src="../MochiKit/DOM.js"></script>
+    <script type="text/javascript" src="../MochiKit/Style.js"></script>
+    <script type="text/javascript" src="../MochiKit/Color.js"></script>
+    <script type="text/javascript" src="../MochiKit/Signal.js"></script>    
+    <script type="text/javascript" src="../MochiKit/Visual.js"></script>    
+    <script type="text/javascript" src="../MochiKit/DragAndDrop.js"></script>    
+    <script type="text/javascript" src="SimpleTest/SimpleTest.js"></script>        
+    <link rel="stylesheet" type="text/css" href="SimpleTest/test.css">
+    <style type="text/css">
+    .drop-hover {
+    }
+    #drag1 {
+        visibility: hidden;
+    }
+    #drop1 {
+        visibility: hidden;
+    }
+    </style>
+</head>
+<body>
+<div id='drag1'>drag1</div>
+<div id='drop1'>drop1</div>
+<pre id="test">
+<script type="text/javascript" src="test_DragAndDrop.js"></script>
+<script type="text/javascript">
+try {
+        
+    // Counting the number of tests is really lame
+    tests.test_DragAndDrop({ok:ok, is:is});
+    ok( true, "test suite finished!");
+    
+} catch (err) {
+    
+    var s = "test suite failure!\n";
+    var o = {};
+    var k = null;
+    for (k in err) {
+        // ensure unique keys?!
+        if (!o[k]) {
+            s +=  k + ": " + err[k] + "\n";
+            o[k] = err[k];
+        }
+    }
+    ok ( false, s );
+
+}
+</script>
+</pre>
+</body>
+</html>

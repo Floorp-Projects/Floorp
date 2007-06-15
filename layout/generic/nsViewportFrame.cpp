@@ -270,8 +270,7 @@ ViewportFrame::Reflow(nsPresContext*          aPresContext,
     // targeted at our one-and-only principal child frame.
     if (aReflowState.ShouldReflowAllKids() ||
         aReflowState.mFlags.mVResize ||
-        (mFrames.FirstChild()->GetStateBits() &
-         (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
+        NS_SUBTREE_DIRTY(mFrames.FirstChild())) {
       // Reflow our one-and-only principal child frame
       nsIFrame*           kidFrame = mFrames.FirstChild();
       nsHTMLReflowMetrics kidDesiredSize;

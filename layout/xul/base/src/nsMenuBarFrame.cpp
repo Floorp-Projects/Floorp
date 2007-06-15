@@ -41,6 +41,7 @@
 #include "nsMenuBarFrame.h"
 #include "nsIServiceManager.h"
 #include "nsIContent.h"
+#include "nsContentUtils.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsPresContext.h"
@@ -48,7 +49,7 @@
 #include "nsCSSRendering.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDocument.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsGkAtoms.h"
 #include "nsMenuFrame.h"
 #include "nsMenuPopupFrame.h"
@@ -138,7 +139,7 @@ nsMenuBarFrame::Init(nsIContent*      aContent,
 
   // Hook up the menu bar as a key listener on the whole document.  It will see every
   // key press that occurs, but after everyone else does.
-  nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(aContent->GetDocument());
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aContent->GetDocument());
   
   mTarget = target;
 
@@ -218,7 +219,7 @@ nsMenuBarFrame::SetActive(PRBool aActiveFlag)
     if (!focusedDoc)
       break;
 
-    presShell = focusedDoc->GetShellAt(0);
+    presShell = focusedDoc->GetPrimaryShell();
     nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(presShell));
     // there is no selection controller for full page plugins
     if (!selCon)
@@ -620,7 +621,6 @@ nsMenuBarFrame::Escape(PRBool& aHandledFlag)
       mCurrentMenu->OpenMenu(PR_FALSE);
       NS_ENSURE_TRUE(weakFrame.IsAlive(), NS_OK);
     }
-    nsMenuDismissalListener::Shutdown();
     return NS_OK;
   }
 
@@ -759,7 +759,9 @@ nsMenuBarFrame::InstallKeyboardNavigator()
   mTarget->AddEventListener(NS_LITERAL_STRING("keypress"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE); 
   mTarget->AddEventListener(NS_LITERAL_STRING("keydown"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);  
   mTarget->AddEventListener(NS_LITERAL_STRING("keyup"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);   
-  
+
+  nsContentUtils::NotifyInstalledMenuKeyboardListener(PR_TRUE);
+
   return NS_OK;
 }
 
@@ -772,8 +774,10 @@ nsMenuBarFrame::RemoveKeyboardNavigator()
   mTarget->RemoveEventListener(NS_LITERAL_STRING("keypress"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
   mTarget->RemoveEventListener(NS_LITERAL_STRING("keydown"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
   mTarget->RemoveEventListener(NS_LITERAL_STRING("keyup"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
-  
+
   NS_IF_RELEASE(mKeyboardNavigator);
+
+  nsContentUtils::NotifyInstalledMenuKeyboardListener(PR_FALSE);
 
   return NS_OK;
 }

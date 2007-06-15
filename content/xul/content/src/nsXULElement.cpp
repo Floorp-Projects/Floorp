@@ -77,7 +77,7 @@
 #include "nsIDOMContextMenuListener.h"
 #include "nsIDOMDragListener.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULElement.h"
@@ -150,6 +150,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsXBLBinding.h"
 #include "nsEventDispatcher.h"
+#include "nsPresShellIterator.h"
 
 /**
  * Three bits are used for XUL Element's lazy state.
@@ -246,16 +247,6 @@ nsXULElement::nsXULElement(nsINodeInfo* aNodeInfo)
       mBindingParent(nsnull)
 {
     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumElements);
-}
-
-nsXULElement::~nsXULElement()
-{
-    //XXX UnbindFromTree is not called always before dtor.
-    //XXX Related to templates or overlays?
-    //XXXbz probably related to the cloning thing!
-    if (IsInDoc()) {
-      UnbindFromTree();
-    }
 }
 
 nsXULElement::nsXULSlots::nsXULSlots(PtrBits aFlags)
@@ -362,6 +353,13 @@ NS_NewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
 //----------------------------------------------------------------------
 // nsISupports interface
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULElement,
+                                                  nsGenericElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mPrototype,
+                                                  nsXULPrototypeElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_ADDREF_INHERITED(nsXULElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsXULElement, nsGenericElement)
 
@@ -371,6 +369,10 @@ nsXULElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ENSURE_ARG_POINTER(aInstancePtr);
     *aInstancePtr = nsnull;
 
+    if ( aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant)) ) {
+      *aInstancePtr = &NS_CYCLE_COLLECTION_NAME(nsXULElement);
+      return NS_OK;
+    }
 
     nsresult rv = nsGenericElement::QueryInterface(aIID, aInstancePtr);
     if (NS_SUCCEEDED(rv))
@@ -523,11 +525,11 @@ nsXULElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
     if ((!root || root == this) && !mNodeInfo->Equals(nsGkAtoms::overlay)) {
         nsPIDOMWindow *window = doc->GetInnerWindow();
 
-        nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(window);
-        if (!receiver)
+        nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(window);
+        if (!piTarget)
             return NS_ERROR_UNEXPECTED;
 
-        nsresult rv = receiver->GetListenerManager(PR_TRUE, aManager);
+        nsresult rv = piTarget->GetListenerManager(PR_TRUE, aManager);
         if (NS_SUCCEEDED(rv)) {
             NS_ADDREF(*aTarget = window);
         }
@@ -605,7 +607,7 @@ nsXULElement::PerformAccesskey(PRBool aKeyCausesActivation,
     if (!doc)
         return;
 
-    nsIPresShell *shell = doc->GetShellAt(0);
+    nsIPresShell *shell = doc->GetPrimaryShell();
     if (!shell)
         return;
 
@@ -795,121 +797,9 @@ nsXULElement::MaybeAddPopupListener(nsIAtom* aLocalName)
 // nsIContent interface
 //
 
-nsresult
-nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                         nsIContent* aBindingParent,
-                         PRBool aCompileEventHandlers)
-{
-    NS_PRECONDITION(aParent || aDocument, "Must have document if no parent!");
-    NS_PRECONDITION(HasSameOwnerDoc(NODE_FROM(aParent, aDocument)),
-                    "Must have the same owner document");
-    // XXXbz XUL elements are confused about their current doc when they're
-    // cloned, so we don't assert if aParent is a XUL element and aDocument is
-    // null, even if aParent->GetCurrentDoc() is non-null
-    //  NS_PRECONDITION(!aParent || aDocument == aParent->GetCurrentDoc(),
-    //                  "aDocument must be current doc of aParent");
-    NS_PRECONDITION(!aParent ||
-                    (aParent->IsNodeOfType(eXUL) && aDocument == nsnull) ||
-                    aDocument == aParent->GetCurrentDoc(),
-                    "aDocument must be current doc of aParent");
-    // XXXbz we'd like to assert that GetCurrentDoc() is null, but the cloning
-    // mess makes that impossible.  We can't even assert that aDocument ==
-    // GetCurrentDoc() when GetCurrentDoc() is non-null, since we may be
-    // getting inserted into a different document.  :(
-    //    NS_PRECONDITION(!GetCurrentDoc(),
-    //                    "Already have a document.  Unbind first!");
-
-    // Note that as we recurse into the kids, they'll have a non-null
-    // parent.  So only assert if our parent is _changing_ while we
-    // have a parent.
-    NS_PRECONDITION(!GetParent() || aParent == GetParent(),
-                    "Already have a parent.  Unbind first!");
-    NS_PRECONDITION(!GetBindingParent() ||
-                    aBindingParent == GetBindingParent() ||
-                    (!aBindingParent && aParent &&
-                     aParent->GetBindingParent() == GetBindingParent()),
-                    "Already have a binding parent.  Unbind first!");
-
-    if (!aBindingParent && aParent) {
-        aBindingParent = aParent->GetBindingParent();
-    }
-
-    // First set the binding parent
-    mBindingParent = aBindingParent;
-    
-    // Now set the parent
-    if (aParent) {
-        mParentPtrBits = NS_REINTERPRET_CAST(PtrBits, aParent) | PARENT_BIT_PARENT_IS_CONTENT;
-    }
-    else {
-        mParentPtrBits = NS_REINTERPRET_CAST(PtrBits, aDocument);
-    }
-
-    // XXXbz sXBL/XBL2 issue!
-
-    // Finally, set the document
-    if (aDocument) {
-        // Notify XBL- & nsIAnonymousContentCreator-generated
-        // anonymous content that the document is changing.  XXXbz
-        // ordering issues here?  Probably not, since
-        // ChangeDocumentFor is just pretty broken anyway....  Need to
-        // get it working.
-
-        // XXXbz XBL doesn't handle this (asserts), and we don't really want
-        // to be doing this during parsing anyway... sort this out.    
-        //    aDocument->BindingManager()->ChangeDocumentFor(this, nsnull,
-        //                                                   aDocument);
-
-        // Being added to a document.
-        mParentPtrBits |= PARENT_BIT_INDOCUMENT;
-    }
-
-    // Now recurse into our kids
-    nsresult rv;
-    PRUint32 i;
-    for (i = 0; i < GetChildCount(); ++i) {
-        // The child can remove itself from the parent in BindToTree.
-        nsCOMPtr<nsIContent> child = mAttrsAndChildren.ChildAt(i);
-        rv = child->BindToTree(aDocument, this, aBindingParent,
-                               aCompileEventHandlers);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    nsNodeUtils::ParentChainChanged(this);
-
-    // XXXbz script execution during binding can trigger some of these
-    // postcondition asserts....  But we do want that, since things will
-    // generally be quite broken when that happens.
-    // XXXbz we'd like to assert that we have the right GetCurrentDoc(), but
-    // we may be being bound to a null document while we already have a
-    // current doc, due to the cloneNode hack...  So can't assert that yet.
-    //    NS_POSTCONDITION(aDocument == GetCurrentDoc(),
-    //                     "Bound to wrong document");
-    NS_POSTCONDITION(aParent == GetParent(), "Bound to wrong parent");
-    NS_POSTCONDITION(aBindingParent == GetBindingParent(),
-                     "Bound to wrong binding parent");
-
-    return NS_OK;
-}
-
 void
 nsXULElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
-    // XXXbz we'd like to assert that called didn't screw up aDeep, but I'm not
-    // sure we can....
-    //    NS_PRECONDITION(aDeep || (!GetCurrentDoc() && !GetBindingParent()),
-    //                    "Shallow unbind won't clear document and binding "
-    //                    "parent on kids!");
-    // Make sure to unbind this node before doing the kids
-    nsIDocument *document = GetCurrentDoc();
-    if (document) {
-        // Notify XBL- & nsIAnonymousContentCreator-generated
-        // anonymous content that the document is changing.
-        document->BindingManager()->ChangeDocumentFor(this, document, nsnull);
-
-        document->ClearBoxObjectFor(this);
-    }
-
     // mControllers can own objects that are implemented
     // in JavaScript (such as some implementations of
     // nsIControllers.  These objects prevent their global
@@ -926,27 +816,7 @@ nsXULElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
         NS_IF_RELEASE(slots->mControllers);
     }
 
-    // Unset things in the reverse order from how we set them in BindToTree
-    mParentPtrBits = aNullParent ? 0 : mParentPtrBits & ~PARENT_BIT_INDOCUMENT;
-  
-    mBindingParent = nsnull;
-
-    if (aDeep) {
-        // Do the kids.  Note that we don't want to GetChildCount(), because
-        // that will force content generation... if we never had to generate
-        // the content, we shouldn't force it now!
-        PRUint32 i, n = PeekChildCount();
-
-        for (i = 0; i < n; ++i) {
-            // Note that we pass PR_FALSE for aNullParent here, since we don't
-            // want the kids to forget us.  We _do_ want them to forget their
-            // binding parent, though, since this only walks non-anonymous
-            // kids.
-            mAttrsAndChildren.ChildAt(i)->UnbindFromTree(PR_TRUE, PR_FALSE);
-        }
-    }
-
-    nsNodeUtils::ParentChainChanged(this);
+    nsGenericElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 void
@@ -1105,7 +975,7 @@ nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
     //
     nsIDocument* doc = GetCurrentDoc();
     if (doc && !aOldValue.IsEmpty()) {
-        nsIPresShell *shell = doc->GetShellAt(0);
+        nsIPresShell *shell = doc->GetPrimaryShell();
 
         if (shell) {
             nsIContent *content = this;
@@ -1885,7 +1755,9 @@ nsXULElement::GetBoxObject(nsIBoxObject** aResult)
   *aResult = nsnull;
 
   // XXX sXBL/XBL2 issue! Owner or current document?
-  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(GetCurrentDoc()));
+  nsIDocument* doc = HasFlag(NODE_FORCE_XBL_BINDINGS) ?
+    GetOwnerDoc() : GetCurrentDoc();
+  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(doc));
 
   return nsDoc ? nsDoc->GetBoxObjectFor(this, aResult) : NS_ERROR_FAILURE;
 }
@@ -1959,11 +1831,32 @@ NS_IMPL_XUL_STRING_ATTR(StatusText, statustext)
 nsresult
 nsXULElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 {
+    nsresult rv;
+
+    // Clone the prototype rule, if we don't have a local one.
+    if (mPrototype &&
+        !mAttrsAndChildren.GetAttr(nsGkAtoms::style, kNameSpaceID_None)) {
+
+        nsXULPrototypeAttribute *protoattr =
+                  FindPrototypeAttribute(kNameSpaceID_None, nsGkAtoms::style);
+        if (protoattr && protoattr->mValue.Type() == nsAttrValue::eCSSStyleRule) {
+            nsCOMPtr<nsICSSRule> ruleClone;
+            rv = protoattr->mValue.GetCSSStyleRuleValue()->Clone(*getter_AddRefs(ruleClone));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            nsAttrValue value;
+            nsCOMPtr<nsICSSStyleRule> styleRule = do_QueryInterface(ruleClone);
+            value.SetTo(styleRule);
+
+            rv = mAttrsAndChildren.SetAndTakeAttr(nsGkAtoms::style, value);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+    }
+
     nsDOMSlots* slots = GetDOMSlots();
     NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
 
     if (!slots->mStyle) {
-        nsresult rv;
         if (!gCSSOMFactory) {
             rv = CallGetService(kCSSOMFactoryCID, &gCSSOMFactory);
             NS_ENSURE_SUCCESS(rv, rv);
@@ -2010,10 +1903,10 @@ nsXULElement::Focus()
         return NS_OK;
 
     // Obtain a presentation context and then call SetFocus.
-    if (doc->GetNumberOfShells() == 0)
-        return NS_OK;
 
-    nsIPresShell *shell = doc->GetShellAt(0);
+    nsIPresShell *shell = doc->GetPrimaryShell();
+    if (!shell)
+        return NS_OK;
 
     // Set focus
     nsCOMPtr<nsPresContext> context = shell->GetPresContext();
@@ -2031,10 +1924,9 @@ nsXULElement::Blur()
         return NS_OK;
 
     // Obtain a presentation context and then call SetFocus.
-    if (doc->GetNumberOfShells() == 0)
+    nsIPresShell *shell = doc->GetPrimaryShell();
+    if (!shell)
         return NS_OK;
-
-    nsIPresShell *shell = doc->GetShellAt(0);
 
     // Set focus
     nsCOMPtr<nsPresContext> context = shell->GetPresContext();
@@ -2052,13 +1944,11 @@ nsXULElement::Click()
 
     nsCOMPtr<nsIDocument> doc = GetCurrentDoc(); // Strong just in case
     if (doc) {
-        PRUint32 numShells = doc->GetNumberOfShells();
-        // strong ref to PresContext so events don't destroy it
-        nsCOMPtr<nsPresContext> context;
-
-        for (PRUint32 i = 0; i < numShells; ++i) {
-            nsIPresShell *shell = doc->GetShellAt(i);
-            context = shell->GetPresContext();
+        nsPresShellIterator iter(doc);
+        nsCOMPtr<nsIPresShell> shell;
+        while ((shell = iter.GetNextShell())) {
+            // strong ref to PresContext so events don't destroy it
+            nsCOMPtr<nsPresContext> context = shell->GetPresContext();
 
             PRBool isCallerChrome = nsContentUtils::IsCallerChrome();
 
@@ -2095,13 +1985,10 @@ nsXULElement::DoCommand()
 {
     nsCOMPtr<nsIDocument> doc = GetCurrentDoc(); // strong just in case
     if (doc) {
-        PRUint32 numShells = doc->GetNumberOfShells();
-        nsCOMPtr<nsPresContext> context;
-
-        for (PRUint32 i = 0; i < numShells; ++i) {
-            nsIPresShell *shell = doc->GetShellAt(i);
-            context = shell->GetPresContext();
-
+        nsPresShellIterator iter(doc);
+        nsCOMPtr<nsIPresShell> shell;
+        while ((shell = iter.GetNextShell())) {
+            nsCOMPtr<nsPresContext> context = shell->GetPresContext();
             nsEventStatus status = nsEventStatus_eIgnore;
             nsXULCommandEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull);
             nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this),
@@ -2285,6 +2172,17 @@ nsresult nsXULElement::MakeHeavyweight()
 
         // XXX we might wanna have a SetAndTakeAttr that takes an nsAttrName
         nsAttrValue attrValue(protoattr->mValue);
+        
+        // Style rules need to be cloned.
+        if (attrValue.Type() == nsAttrValue::eCSSStyleRule) {
+            nsCOMPtr<nsICSSRule> ruleClone;
+            rv = attrValue.GetCSSStyleRuleValue()->Clone(*getter_AddRefs(ruleClone));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            nsCOMPtr<nsICSSStyleRule> styleRule = do_QueryInterface(ruleClone);
+            attrValue.SetTo(styleRule);
+        }
+
         if (protoattr->mName.IsAtom()) {
             rv = mAttrsAndChildren.SetAndTakeAttr(protoattr->mName.Atom(), attrValue);
         }
@@ -2304,7 +2202,7 @@ nsXULElement::HideWindowChrome(PRBool aShouldHide)
     if (!doc || doc->GetRootContent() != this)
       return NS_ERROR_UNEXPECTED;
 
-    nsIPresShell *shell = doc->GetShellAt(0);
+    nsIPresShell *shell = doc->GetPrimaryShell();
 
     if (shell) {
         nsIContent* content = NS_STATIC_CAST(nsIContent*, this);
@@ -2392,6 +2290,29 @@ nsXULElement::RecompileScriptEventListeners()
         }
     }
 }
+
+NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(nsXULPrototypeNode)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_NATIVE_0(nsXULPrototypeNode)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXULPrototypeNode)
+    if (tmp->mType == nsXULPrototypeNode::eType_Element) {
+        nsXULPrototypeElement *elem =
+            NS_STATIC_CAST(nsXULPrototypeElement*, tmp);
+        PRUint32 i;
+        for (i = 0; i < elem->mNumAttributes; ++i) {
+            cb.NoteScriptChild(elem->mScriptTypeID,
+                               elem->mAttributes[i].mEventHandler);
+        }
+        for (i = 0; i < elem->mNumChildren; ++i) {
+            NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(elem->mChildren[i],
+                                                         nsXULPrototypeNode)
+        }
+    }
+    else if (tmp->mType == nsXULPrototypeNode::eType_Script) {
+        NS_STATIC_CAST(nsXULPrototypeScript*, tmp)->mScriptObject.traverse(cb);
+    }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsXULPrototypeNode, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsXULPrototypeNode, Release)
 
 //----------------------------------------------------------------------
 //
@@ -2674,6 +2595,10 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
 
         // XXX Get correct Base URI (need GetBaseURI on *prototype* element)
         parser->ParseStyleAttribute(aValue, aDocumentURI, aDocumentURI,
+                                    // This is basically duplicating what
+                                    // nsINode::NodePrincipal() does
+                                    mNodeInfo->NodeInfoManager()->
+                                      DocumentPrincipal(),
                                     getter_AddRefs(rule));
         if (rule) {
             mAttributes[aPos].mValue.SetTo(rule);

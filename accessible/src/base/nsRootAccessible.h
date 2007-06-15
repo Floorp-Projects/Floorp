@@ -41,11 +41,11 @@
 #include "nsDocAccessibleWrap.h"
 #include "nsHashtable.h"
 #include "nsIAccessibleDocument.h"
+#include "nsCaretAccessible.h"
 #include "nsIDocument.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMFormListener.h"
 #include "nsIDOMXULListener.h"
-#include "nsIAccessibleCaret.h"
 #include "nsITimer.h"
 
 #define NS_ROOTACCESSIBLE_IMPL_CID                      \
@@ -67,6 +67,7 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     nsRootAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell);
     virtual ~nsRootAccessible();
 
+    // nsIAccessible
     NS_IMETHOD GetName(nsAString& aName);
     NS_IMETHOD GetParent(nsIAccessible * *aParent);
     NS_IMETHOD GetRole(PRUint32 *aRole);
@@ -80,10 +81,8 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     // ----- nsIDOMEventListener --------------------------
     NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
 
-    // nsIAccessibleDocument
-    NS_IMETHOD GetCaretAccessible(nsIAccessible **aAccessibleCaret);
-
     // nsIAccessNode
+    NS_IMETHOD Init();
     NS_IMETHOD Shutdown();
 
     void ShutdownAll();
@@ -104,6 +103,8 @@ class nsRootAccessible : public nsDocAccessibleWrap,
                                     nsIDOMEvent *aFocusEvent,
                                     PRBool aForceEvent = PR_FALSE);
 
+    nsCaretAccessible *GetCaretAccessible();
+
   private:
     nsCOMPtr<nsITimer> mFireFocusTimer;
     static void FireFocusCallback(nsITimer *aTimer, void *aClosure);
@@ -111,8 +112,8 @@ class nsRootAccessible : public nsDocAccessibleWrap,
   protected:
     nsresult AddEventListeners();
     nsresult RemoveEventListeners();
-    virtual nsresult HandleEventWithTarget(nsIDOMEvent* aEvent, 
-                                           nsIDOMNode* aTargetNode);
+    nsresult HandleEventWithTarget(nsIDOMEvent* aEvent,
+                                   nsIDOMNode* aTargetNode);
     static void GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNode);
     void TryFireEarlyLoadEvent(nsIDOMNode *aDocNode);
     void FireCurrentFocusEvent();
@@ -122,7 +123,7 @@ class nsRootAccessible : public nsDocAccessibleWrap,
 #endif
     already_AddRefed<nsIDocShellTreeItem>
            GetContentDocShell(nsIDocShellTreeItem *aStart);
-    nsCOMPtr<nsIAccessibleCaret> mCaretAccessible;
+    nsRefPtr<nsCaretAccessible> mCaretAccessible;
     PRPackedBool mIsInDHTMLMenu;
 };
 

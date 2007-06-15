@@ -90,6 +90,8 @@ public:
   NS_IMETHOD_(PRBool) ThemeDrawsFocusForWidget(nsPresContext* aPresContext,
                                                nsIFrame* aFrame, PRUint8 aWidgetType);
 
+  PRBool ThemeNeedsComboboxDropmarker();
+
   nsNativeThemeGTK();
   virtual ~nsNativeThemeGTK();
 

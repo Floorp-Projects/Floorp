@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-352609.js';
 //-----------------------------------------------------------------------------
-var bug = 352609;
+var BUGNUMBER = 352609;
 var summary = 'decompilation of |let| expression for |is not a function| error';
 var actual = '';
 var expect = '';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   expect = 'TypeError: 0 is not a function';
   try
   {
@@ -62,7 +64,7 @@ function test()
   }
   reportCompare(expect, actual, '[let (x = 3, y = 4) x].map(0)');
 
-  expect = 'TypeError: p.z = [(let (x = 3, y = 4) x)] is not a function';
+  expect = 'TypeError: p.z = [let (x = 3, y = 4) x] is not a function';
   try
   {
     var p = {}; (p.z = [let (x = 3, y = 4) x])();
@@ -77,7 +79,7 @@ function test()
   try
   {
     var p = {}; (p.z = let(x) x)()
-  }
+		  }
   catch(ex)
   {
     actual = ex + '';

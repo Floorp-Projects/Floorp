@@ -56,7 +56,7 @@
   persist="screenX screenY"
   screenX="24" screenY="24">
 
-  <script type="application/x-javascript" src="chrome://global/content/printPageSetup.js"/>
+  <script type="application/javascript" src="chrome://global/content/printPageSetup.js"/>
 
   <!-- Localizable strings manipulated at run-time. -->
   <data id="marginUnits.inches">&marginUnits.inches;</data>

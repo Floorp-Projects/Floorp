@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-354499-01.js';
 //-----------------------------------------------------------------------------
-var bug = 354499;
+var BUGNUMBER = 354499;
 var summary = 'Iterating over Array elements';
 var actual = '';
 var expect = '';
@@ -48,7 +50,7 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   expect = actual = 'No Crash';
@@ -56,12 +58,12 @@ function test()
   var obj = {get a(){ return new Object(); }};
 
   function setter(v)
-    {
-      // Push out obj.a from all temp roots
-      var tmp = { get toString() { return new Object(); }};
-      try { String(tmp); } catch (e) {  }
-      gc();
-    }
+  {
+    // Push out obj.a from all temp roots
+    var tmp = { get toString() { return new Object(); }};
+    try { String(tmp); } catch (e) {  }
+    gc();
+  }
 
   Array.prototype.__defineGetter__(0, function() { });
   Array.prototype.__defineSetter__(0, setter);

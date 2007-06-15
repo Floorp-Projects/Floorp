@@ -59,7 +59,7 @@ _TimerCallback.prototype = {
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
   notify: function(timer) {
-    eval(this._expr);  
+    eval(this._expr);
   }
 };
 
@@ -142,7 +142,7 @@ function do_import_script(topsrcdirRelativePath) {
   load(scriptPath);
 }
 
-function do_get_file(path) {
+function do_get_file(path, allowInexistent) {
   var comps = path.split("/");
   try {
     // The following always succeeds on Windows because we use cygpath with
@@ -168,7 +168,19 @@ function do_get_file(path) {
       lf.append(comps[i]);
   }
 
-  do_check_true(lf.exists());
+  if (!allowInexistent) {
+    if (!lf.exists()) {
+      print(lf.path + " doesn't exist\n");
+    }
+    do_check_true(lf.exists());
+  }
 
   return lf;
+}
+
+function do_load_module(path) {
+  var lf = do_get_file(path);
+  const nsIComponentRegistrar = Components.interfaces.nsIComponentRegistrar;
+  do_check_true(Components.manager instanceof nsIComponentRegistrar);
+  Components.manager.autoRegister(lf);
 }

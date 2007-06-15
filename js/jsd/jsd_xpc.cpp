@@ -2723,11 +2723,8 @@ jsdService::DumpHeap(const char* fileName)
         rv = NS_ERROR_FAILURE;
     } else {
         JSContext *cx = JSD_GetDefaultJSContext (mCx);
-        if (!JS_DumpHeap(cx, NULL, 0, NULL, (size_t)-1, NULL,
-                         NS_REINTERPRET_CAST(JSPrintfFormater, &fprintf),
-                         file)) {
+        if (!JS_DumpHeap(cx, file, NULL, 0, NULL, (size_t)-1, NULL))
             rv = NS_ERROR_FAILURE;
-        }
         if (file != stdout)
             fclose(file);
     }

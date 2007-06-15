@@ -92,14 +92,6 @@ pageInfoTreeView.prototype = {
     this.rowCountChanged(this.rows - 1, 1);
   },
 
-  addRows: function(rows)
-  {
-    var length = rows.length;
-    for(var i = 0; i < length; i++)
-      this.rows = this.data.push(rows[i]);
-    this.rowCountChanged(this.rows - length, length);
-  },
-
   rowCountChanged: function(index, count)
   {
     this.tree.rowCountChanged(index, count);
@@ -351,10 +343,11 @@ function onUnloadPageInfo()
 function doHelpButton()
 {
   const helpTopics = {
-    "generalPanel": "pageinfo_general",
-    "mediaPanel":   "pageinfo_media",
-    "feedPanel":    "pageinfo_feed",
-    "permPanel":    "pageinfo_permissions"
+    "generalPanel":  "pageinfo_general",
+    "mediaPanel":    "pageinfo_media",
+    "feedPanel":     "pageinfo_feed",
+    "permPanel":     "pageinfo_permissions",
+    "securityPanel": "pageinfo_security"
   };
 
   var deck  = document.getElementById("mainDeck");

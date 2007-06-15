@@ -19,14 +19,6 @@
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/FilePickerUtils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/file.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>
-  <!--
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inFormManager.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inTreeTableBuilder.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/search/inSearchService.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/search/inSearchModule.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/search/inSearchUtils.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/search/inSearchTreeBuilder.js"/>
-  -->
   <vbox id="bxInspectorMain">
 
     <domi-panelset id="bxPanelSet" flex="1"
@@ -52,20 +44,6 @@
                flex="1" src="about:blank"/>
     </hbox>
 
-    <!--
-    <splitter id="splSearch" class="titled-splitter" 
-        onopen="inspector.onSplitterOpen(this)"
-        label="Search Results" closebutton="true" collapse="after"/>
-     
-    <vbox id="bxSearch">
-      <tree id="trSearch" flex="1" context="ppSearchResults" datasources="rdf:null">
-        <template/>
-      </tree>
-    
-      TEMPORARY UNTIL FIX FOR 54237
-      <browser id="inSearchServiceLoader" disablehistory="true" disablesecurity="true" height="1"/>
-    </vbox>
-    -->
   </vbox>
 
 </overlay>

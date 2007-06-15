@@ -282,7 +282,8 @@ CanvasFrame::AppendFrames(nsIAtom*        aListName,
     mFrames.AppendFrame(nsnull, aFrameList);
 
     rv = PresContext()->PresShell()->
-           FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+           FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                            NS_FRAME_HAS_DIRTY_CHILDREN);
   }
 
   return rv;
@@ -328,9 +329,9 @@ CanvasFrame::RemoveFrame(nsIAtom*        aListName,
     // Remove the frame and destroy it
     mFrames.DestroyFrame(aOldFrame);
 
-    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
     rv = PresContext()->PresShell()->
-           FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+           FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                            NS_FRAME_HAS_DIRTY_CHILDREN);
   } else {
     rv = NS_ERROR_FAILURE;
   }

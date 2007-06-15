@@ -2262,7 +2262,7 @@ nsresult nsLocalFile::CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutS
                               kCFStringEncodingUTF8, 0, PR_FALSE, nsnull, 0, &usedBufLen);
   if (charsConverted == inStrLen) {
     aOutStr.SetLength(usedBufLen);
-    if (aOutStr.Length() != usedBufLen)
+    if (aOutStr.Length() != (unsigned int)usedBufLen)
       return NS_ERROR_OUT_OF_MEMORY;
     UInt8 *buffer = (UInt8*) aOutStr.BeginWriting();
 

@@ -112,7 +112,7 @@ textarea {
   vertical-align: text-bottom;
   cursor: text;
   -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#textAreas");
-  -moz-appearance: textfield;
+  -moz-appearance: textfield-multiline;
   text-indent: 0;
   -moz-user-select: text;
 }
@@ -131,6 +131,7 @@ input > .anonymous-div {
   /* XXXldb I'm not sure if we really want the 'text-decoration: inherit',
      but it's needed to make 'text-decoration' "work" on text inputs. */
   text-decoration: inherit;
+  ime-mode: inherit;
 }
 
 select {
@@ -326,7 +327,6 @@ input[type="image"] {
   font-size: small;
   cursor: pointer;
   -moz-binding: none;
-  -moz-appearance: none;
 }
 
 input[type="image"][disabled] {
@@ -371,7 +371,7 @@ input[type="file"] > input[type="button"] {
 
 /* radio buttons */
 input[type="radio"] {
-  -moz-appearance: radio;
+  -moz-appearance: radio-small;
   width: 13px;
   height: 13px;
   margin: 3px 3px 0px 5px;
@@ -384,7 +384,7 @@ input[type="radio"] {
 
 /* check boxes */
 input[type="checkbox"] {
-  -moz-appearance: checkbox;
+  -moz-appearance: checkbox-small;
   width: 13px;
   height: 13px;
   margin: 3px 3px 3px 4px;
@@ -581,81 +581,6 @@ input[type="reset"],
 input[type="button"],
 input[type="submit"] { 
   font: medium serif; font-family: inherit
-}
-
-%endif
-
-%ifdef MOZ_MACBROWSER
-/* makes sure enabled and disabled input and text area fields are drawn */
-input,
-input[disabled] {
-  font-size: 11px;
-  margin: 1px 1px 1px 1px;
-}
-
-select {
-  margin: 1px 1px 1px 1px;
-  background-color: transparent !important;
-  color: -moz-FieldText !important;
-  font-size: 11px;
-  direction: ltr;
-}
-
-/* Need the "select[size][multiple]" selector to override the settings on
-  'select[size="1"]', eg if one has <select size="1" multiple> */
-select[size],
-select[multiple],
-select[size][multiple] {
-  -moz-appearance: none; /* we'll draw by hand, thanks */
-  background-color: -moz-Field !important;
-  border-style: solid;
-  border-color: #737373 #999999 #999999 #999999;
-  border-width: 1px;
-  /* still need to get rid of 1-pixel gab above the first and below the last option */
-  /* get rid of the dotted focus outline? */
-}
-
-select[size="0"],
-select[size="1"] {
-  -moz-appearance: menulist;
-  border-width: 2px;
-  background-color: transparent !important;
-}
-
-/* make sure nothing paints for the menulist button, since the button is
-  painted as part of the menulist. */
-select > input[type="button"],
-select > input[type="button"]:active {
-  background: transparent !important;
-  -moz-appearance: none !important;
-  border: none !important;
-}
-
-select[disabled] {
-  color: GrayText !important;
-}
-
-input[type="image"] {
-  margin: 0;
-}
-
-/* margins makes sure they are aligned with the text baseline */
-input[type="checkbox"] {
-  -moz-appearance: checkbox-small;
-  margin: 1px 2px 0px 3px;
-}
-
-input[type="radio"] {
-  -moz-appearance: radio-small;
-  margin: 1px 2px -3px 3px;
-}
-
-/* this draws the square button */
-button,
-button[disabled],
-button:active:hover,
-button[disabled]:active {
-  -moz-appearance: none;
 }
 
 %endif

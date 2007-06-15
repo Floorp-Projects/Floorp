@@ -205,6 +205,9 @@ nsParserUtils::IsJavaScriptLanguage(const nsString& aName, PRUint32 *aFlags)
   else if (aName.LowerCaseEqualsLiteral("javascript1.7")) {
     version = JSVERSION_1_7;
   }
+  else if (aName.LowerCaseEqualsLiteral("javascript1.8")) {
+    version = JSVERSION_1_8;
+  }
   if (version == JSVERSION_UNKNOWN)
     return PR_FALSE;
   *aFlags = version;

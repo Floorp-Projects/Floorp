@@ -1,3 +1,4 @@
+
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=78:
  *
@@ -49,20 +50,29 @@
 JS_BEGIN_EXTERN_C
 
 /*
- * Exception handling runtime information.
- *
- * All fields except length are code offsets relative to the main entry point
- * of the script.  If script->trynotes is not null, it points to a vector of
- * these structs terminated by one with catchStart == 0.
+ * Type of try note associated with each catch block or finally block.
+ */
+typedef enum JSTryNoteKind {
+    JSTN_CATCH,
+    JSTN_FINALLY
+} JSTryNoteKind;
+
+/*
+ * Exception handling record.
  */
 struct JSTryNote {
-    ptrdiff_t    start;         /* start of try statement */
-    ptrdiff_t    length;        /* count of try statement bytecodes */
-    ptrdiff_t    catchStart;    /* start of catch block (0 if end) */
+    uint8           kind;       /* one of JSTryNoteKind */
+    uint8           padding;    /* explicit padding on uint16 boundary */
+    uint16          stackDepth; /* stack depth upon exception handler entry */
+    uint32          start;      /* start of the try statement relative to
+                                   script->main */
+    uint32          length;     /* length of the try statement */
 };
 
-#define JSTRYNOTE_GRAIN         sizeof(ptrdiff_t)
-#define JSTRYNOTE_ALIGNMASK     (JSTRYNOTE_GRAIN - 1)
+typedef struct JSTryNoteArray {
+    uint32          length;     /* number of notes in the array */
+    JSTryNote       notes[1];   /* the first eleemnt of notes array */
+} JSTryNoteArray;
 
 struct JSScript {
     jsbytecode   *code;         /* bytecodes and their immediate operands */
@@ -74,7 +84,7 @@ struct JSScript {
     const char   *filename;     /* source filename or null */
     uintN        lineno;        /* base line number of script */
     uintN        depth;         /* maximum stack depth in slots */
-    JSTryNote    *trynotes;     /* exception table for this script */
+    JSTryNoteArray *trynotes;   /* exception table for this script */
     JSPrincipals *principals;   /* principals for this script */
     JSObject     *object;       /* optional Script-class object wrapper */
 };
@@ -82,29 +92,13 @@ struct JSScript {
 /* No need to store script->notes now that it is allocated right after code. */
 #define SCRIPT_NOTES(script)    ((jssrcnote*)((script)->code+(script)->length))
 
-#define SCRIPT_FIND_CATCH_START(script, pc, catchpc)                          \
-    JS_BEGIN_MACRO                                                            \
-        JSTryNote *tn_ = (script)->trynotes;                                  \
-        jsbytecode *catchpc_ = NULL;                                          \
-        if (tn_) {                                                            \
-            ptrdiff_t off_ = PTRDIFF(pc, (script)->main, jsbytecode);         \
-            if (off_ >= 0) {                                                  \
-                while ((jsuword)(off_ - tn_->start) >= (jsuword)tn_->length)  \
-                    ++tn_;                                                    \
-                if (tn_->catchStart)                                          \
-                    catchpc_ = (script)->main + tn_->catchStart;              \
-            }                                                                 \
-        }                                                                     \
-        catchpc = catchpc_;                                                   \
-    JS_END_MACRO
-
 /*
- * Find the innermost finally block that handles the given pc. This is a
- * version of SCRIPT_FIND_CATCH_START that ignore catch blocks and is used
- * to implement generator.close().
+ * Check if pc is inside a try block that has finally code. GC calls this to
+ * check if it is necessary to schedule generator.close() invocation for an
+ * unreachable generator.
  */
-jsbytecode *
-js_FindFinallyHandler(JSScript *script, jsbytecode *pc);
+JSBool
+js_IsInsideTryWithFinally(JSScript *script, jsbytecode *pc);
 
 extern JS_FRIEND_DATA(JSClass) js_ScriptClass;
 

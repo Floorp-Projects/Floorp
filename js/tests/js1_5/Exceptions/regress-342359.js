@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-342359.js';
 //-----------------------------------------------------------------------------
-var bug = 342359;
+var BUGNUMBER = 342359;
 var summary = 'Overriding ReferenceError should stick';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 ReferenceError = 5;
@@ -56,5 +58,5 @@ catch(ex)
 
 expect = 5;
 actual = ReferenceError
-  
-reportCompare(expect, actual, summary);
+ 
+  reportCompare(expect, actual, summary);

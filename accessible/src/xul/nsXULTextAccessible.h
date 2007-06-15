@@ -42,11 +42,11 @@
 
 #include "nsBaseWidgetAccessible.h"
 #include "nsTextAccessibleWrap.h"
-#include "nsHyperTextAccessible.h"
+#include "nsHyperTextAccessibleWrap.h"
 
 class nsIWeakReference;
 
-class nsXULTextAccessible : public nsHyperTextAccessible
+class nsXULTextAccessible : public nsHyperTextAccessibleWrap
 {
 
 public:

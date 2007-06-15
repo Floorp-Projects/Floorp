@@ -41,8 +41,9 @@
 #include "nsIAccessibilityService.h"
 #include "nsIAccessibleDocument.h"
 #include "nsAccessibleWrap.h"
+#include "nsAccessibilityUtils.h"
 #include "nsGUIEvent.h"
-#include "nsHyperTextAccessible.h"
+#include "nsHyperTextAccessibleWrap.h"
 #include "nsILink.h"
 #include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
@@ -96,14 +97,14 @@ nsLeafAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren)
 //----------------
 
 nsLinkableAccessible::nsLinkableAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell) :
-  nsHyperTextAccessible(aNode, aShell),
+  nsHyperTextAccessibleWrap(aNode, aShell),
   mActionContent(nsnull),
   mIsLink(PR_FALSE),
   mIsOnclick(PR_FALSE)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsLinkableAccessible, nsHyperTextAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(nsLinkableAccessible, nsHyperTextAccessibleWrap)
 
 NS_IMETHODIMP nsLinkableAccessible::TakeFocus()
 { 
@@ -118,7 +119,7 @@ NS_IMETHODIMP nsLinkableAccessible::TakeFocus()
 NS_IMETHODIMP
 nsLinkableAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsHyperTextAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mIsLink) {
@@ -131,20 +132,6 @@ nsLinkableAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
         *aState |= nsIAccessibleStates::STATE_TRAVERSED;
       }
     }
-    // Make sure we also include all the states of the parent link, such as focusable, focused, etc.
-    PRUint32 role;
-    GetRole(&role);
-    if (role != nsIAccessibleRole::ROLE_LINK) {
-      nsCOMPtr<nsIAccessible> parentAccessible(GetParent());
-      if (parentAccessible) {
-        PRUint32 orState = State(parentAccessible);
-        *aState |= orState;
-      }
-    }
-  }
-  if (mActionContent && !mActionContent->IsFocusable()) {
-    // Links must have href or tabindex
-    *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
   }
 
   // XXX What if we're in a contenteditable container?
@@ -240,22 +227,23 @@ void nsLinkableAccessible::CacheActionContent()
        walkUpContent;
        walkUpContent = walkUpContent->GetParent()) {
     nsIAtom *tag = walkUpContent->Tag();
-    if ((tag == nsAccessibilityAtoms::a || tag == nsAccessibilityAtoms::area)) {
-      // Currently we do not expose <link> tags, because they are not typically
-      // in <body> and rendered.
-      // We do not yet support xlinks
+    if ((tag == nsAccessibilityAtoms::a || tag == nsAccessibilityAtoms::area) &&
+        walkUpContent->IsNodeOfType(nsINode::eHTML)) {
       nsCOMPtr<nsILink> link = do_QueryInterface(walkUpContent);
-      NS_ASSERTION(link, "No nsILink for area or a");
-      nsCOMPtr<nsIURI> uri;
-      link->GetHrefURI(getter_AddRefs(uri));
-      if (uri) {
-        mActionContent = walkUpContent;
-        mIsLink = PR_TRUE;
-        break;
+      if (link) {
+        // Currently we do not expose <link> tags, because they are not typically
+        // in <body> and rendered.
+        // We do not yet support xlinks
+        nsCOMPtr<nsIURI> uri;
+        link->GetHrefURI(getter_AddRefs(uri));
+        if (uri) {
+          mActionContent = walkUpContent;
+          mIsLink = PR_TRUE;
+          break;
+        }
       }
     }
-    if (walkUpContent->HasAttr(kNameSpaceID_None,
-                            nsAccessibilityAtoms::onclick)) {
+    if (nsAccessibilityUtils::HasListener(walkUpContent, NS_LITERAL_STRING("click"))) {
       mActionContent = walkUpContent;
       mIsOnclick = PR_TRUE;
       break;
@@ -283,13 +271,13 @@ NS_IMETHODIMP nsLinkableAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
 NS_IMETHODIMP nsLinkableAccessible::Init()
 {
   CacheActionContent();
-  return nsHyperTextAccessible::Init();
+  return nsHyperTextAccessibleWrap::Init();
 }
 
 NS_IMETHODIMP nsLinkableAccessible::Shutdown()
 {
   mActionContent = nsnull;
-  return nsHyperTextAccessible::Shutdown();
+  return nsHyperTextAccessibleWrap::Shutdown();
 }
 
 //---------------------

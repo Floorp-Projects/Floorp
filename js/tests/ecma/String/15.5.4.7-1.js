@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.5.4.7-1.js';
+
 /**
    File Name:          15.5.4.7-1.js
    ECMA Section:       15.5.4.7 String.prototype.lastIndexOf( searchString, pos)
@@ -156,7 +158,7 @@ for ( k = 0, i = 0x0020; i < 0x007d; i++, j++, k++ ) {
 new TestCase( SECTION,  "String.lastIndexOf(" +TEST_STRING + ", 0 )", 0, TEST_STRING.lastIndexOf( TEST_STRING, 0 ) );
 
 // new TestCase( SECTION,  "String.lastIndexOf(" +TEST_STRING + ", 1 )", 0, TEST_STRING.lastIndexOf( TEST_STRING, 1 ));
-  
+ 
 new TestCase( SECTION,  "String.lastIndexOf(" +TEST_STRING + ")", 0, TEST_STRING.lastIndexOf( TEST_STRING ));
 
 print( "TEST_STRING = new String(\" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\")" );

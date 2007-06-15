@@ -240,13 +240,14 @@ XULContentSinkImpl::~XULContentSinkImpl()
                 nsXULPrototypeNode* child =
                     NS_REINTERPRET_CAST(nsXULPrototypeNode*, children->ElementAt(i));
 
-                delete child;
+                child->Release();
             }
         }
 
         nsXULPrototypeNode* node;
         rv = mContextStack.GetTopNode(&node);
-        if (NS_SUCCEEDED(rv)) delete node;
+        if (NS_SUCCEEDED(rv))
+            node->Release();
 
         State state;
         mContextStack.Pop(&state);
@@ -761,7 +762,7 @@ XULContentSinkImpl::ReportError(const PRUnichar* aErrorText,
         nsXULPrototypeNode* child =
             NS_REINTERPRET_CAST(nsXULPrototypeNode*, children->ElementAt(i));
 
-        delete child;
+        child->Release();
       }
     }
 
@@ -909,7 +910,7 @@ XULContentSinkImpl::OpenRoot(const PRUnichar** aAttributes,
     // containers will hook up to us as their parent.
     rv = mContextStack.Push(element, mState);
     if (NS_FAILED(rv)) {
-        delete element;
+        element->Release();
         return rv;
     }
 
@@ -1039,6 +1040,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
 
           if (isJavaScript) {
               langID = nsIProgrammingLanguage::JAVASCRIPT;
+              version = JSVERSION_LATEST;
           } else {
               // Use the script object factory to locate the language.
               nsCOMPtr<nsIScriptRuntime> runtime;
@@ -1058,20 +1060,20 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
                                              EmptyCString(), PR_FALSE, nsnull,
                                              versionName);
             if (NS_FAILED(rv)) {
-              // no version specified - version remains 0.
-                  if (rv != NS_ERROR_INVALID_ARG)
-                      return rv;
-              } else {
-                nsCOMPtr<nsIScriptRuntime> runtime;
-                rv = NS_GetScriptRuntimeByID(langID, getter_AddRefs(runtime));
-                if (NS_FAILED(rv))
-                    return rv;
-                rv = runtime->ParseVersion(versionName, &version);
-                if (NS_FAILED(rv)) {
-                    NS_WARNING("This script language version is not supported - ignored");
-                    langID = nsIProgrammingLanguage::UNKNOWN;
-                  }
+              if (rv != NS_ERROR_INVALID_ARG)
+                return rv;
+              // no version specified - version remains the default.
+            } else {
+              nsCOMPtr<nsIScriptRuntime> runtime;
+              rv = NS_GetScriptRuntimeByID(langID, getter_AddRefs(runtime));
+              if (NS_FAILED(rv))
+                return rv;
+              rv = runtime->ParseVersion(versionName, &version);
+              if (NS_FAILED(rv)) {
+                NS_WARNING("This script language version is not supported - ignored");
+                langID = nsIProgrammingLanguage::UNKNOWN;
               }
+            }
           }
           // Some js specifics yet to be abstracted.
           if (langID == nsIProgrammingLanguage::JAVASCRIPT) {

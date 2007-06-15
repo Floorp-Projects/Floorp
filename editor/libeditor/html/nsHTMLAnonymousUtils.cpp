@@ -227,6 +227,11 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
       !mIsInlineTableEditingEnabled)
     return NS_OK;
 
+  // Don't change selection state if we're moving.
+  if (mIsMoving) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIDOMElement> focusElement;
   // let's get the containing element of the selection
   nsresult res  = GetSelectionContainer(getter_AddRefs(focusElement));

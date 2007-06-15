@@ -62,6 +62,8 @@
       ]]></constructor>
       
       <destructor><![CDATA[
+        this._result = null;
+        this._resultNode = null;
       ]]></destructor>
 
       <method name="_init">
@@ -238,7 +240,7 @@
 
                 if (PlacesUtils.nodeIsLivemarkContainer(child)) {
                   element.setAttribute("livemark", "true");
-                  var folder = asFolder(child).folderId;
+                  var folder = child.itemId;
                   var siteURI = PlacesUtils.livemarks.getSiteURI(folder);
                   if (siteURI) {            
                     element.setAttribute("siteURI", siteURI.spec);
@@ -403,13 +405,13 @@
           var index = -1;
           var folderId = 0;
           if (PlacesUtils.nodeIsFolder(this._resultNode))
-            folderId = this._resultNode.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
+            folderId = this._resultNode.itemId;
           
           if (this.hasSelection) {
-            if(PlacesUtils.nodeIsFolder(this.selectedNode)) {
+            if (PlacesUtils.nodeIsFolder(this.selectedNode)) {
               // If there is a folder selected, the insertion point is the
               // end of the folder.
-              folderId = this.selectedNode.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
+              folderId = this.selectedNode.itemId;
             } else {
               // If there is another type of node selected, the insertion point
               // is after that node.
@@ -545,7 +547,6 @@
           if (!PlacesUtils.nodeIsFolder(this._self._result.root) ||
               !PlacesUtils.nodeIsFolder(resultNode))
             return null;
-          asFolder(resultNode);
           
           var dropPoint = { ip: null, beforeIndex: null, folderNode: null };
           // Loop through all the nodes to see which one this should
@@ -565,13 +566,14 @@
               // 50%, drop into the folder.  If it's past that, drop below.
               if (event.clientY < nodeY + (nodeHeight * 0.25)) {
                 // Drop above this folder.
-                dropPoint.ip = new InsertionPoint(resultNode.folderId, i - start, -1);
+                dropPoint.ip = new InsertionPoint(resultNode.itemId, i - start,
+                                                  -1);
                 dropPoint.beforeIndex = i;
                 return dropPoint;
               }
               else if (event.clientY < nodeY + (nodeHeight * 0.75)) {
                 // Drop inside this folder.
-                dropPoint.ip = new InsertionPoint(asFolder(xulNode.node).folderId, -1, 1);
+                dropPoint.ip = new InsertionPoint(xulNode.node.itemId, -1, 1);
                 dropPoint.beforeIndex = i;
                 dropPoint.folderNode = xulNode;
                 return dropPoint;
@@ -581,14 +583,14 @@
               // drop above the folder.  Otherwise, drop below.
               if (event.clientY < nodeY + (nodeHeight / 2)) {
                 // Drop above this bookmark.
-                dropPoint.ip = new InsertionPoint(resultNode.folderId, i - start, -1);
+                dropPoint.ip = new InsertionPoint(resultNode.itemId, i - start, -1);
                 dropPoint.beforeIndex = i;
                 return dropPoint;
               }
             }
           }
           // Should drop below the last node.
-          dropPoint.ip = new InsertionPoint(resultNode.folderId, -1, 1);
+          dropPoint.ip = new InsertionPoint(resultNode.itemId, -1, 1);
           dropPoint.beforeIndex = -1;
           return dropPoint;
         },
@@ -608,7 +610,7 @@
           this._self._selection = event.target.node;
           if (event.ctrlKey)
             dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
-          xferData.data = this._controller.getTransferData(dragAction.action);
+          xferData.data = this._self._controller.getTransferData(dragAction.action);
         },
         
         canDrop: function TBV_DO_canDrop(event, session) {

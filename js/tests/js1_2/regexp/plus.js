@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'plus.js';
+
 /**
    Filename:     plus.js
    Description:  'Tests regular expressions containing +'

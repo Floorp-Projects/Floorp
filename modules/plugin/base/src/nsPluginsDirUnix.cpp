@@ -83,7 +83,7 @@
 #define DEFAULT_X11_PATH ""
 #endif
 
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK2)
 
 #define PLUGIN_MAX_LEN_OF_TMP_ARR 512
 
@@ -248,7 +248,7 @@ static void LoadExtraSharedLibs()
         }
     }
 }
-#endif //MOZ_WIDGET_GTK || MOZ_WIDGET_GTK2
+#endif //MOZ_WIDGET_GTK2
 
 
 
@@ -382,7 +382,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 
     libSpec.value.pathname = path.get();
 
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK2)
 
     ///////////////////////////////////////////////////////////
     // Normally, Mozilla isn't linked against libXt and libXext
@@ -413,7 +413,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
     }
 #else
     pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
-#endif  // MOZ_WIDGET_GTK || MOZ_WIDGET_GTK2
+#endif  // MOZ_WIDGET_GTK2
 
 #ifdef NS_DEBUG
     printf("LoadPlugin() %s returned %lx\n", 

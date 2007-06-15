@@ -87,9 +87,8 @@ tree:not([hidecolumnpicker="true"]) treechildren::-moz-tree-row(odd, selected) {
 treechildren::-moz-tree-row(selected, focus), 
 treechildren::-moz-tree-row(odd, selected, focus),
 tree:not([hidecolumnpicker="true"]) treechildren::-moz-tree-row(odd, selected, focus) {
-  /* background-color: Highlight; */
-  background-color: -moz-mac-alternateprimaryhighlight;
-  color: #FFFFFF;
+  background-color: Highlight;
+  color: HighlightText;
 }
 
 tree[seltype="cell"] > treechildren::-moz-tree-row,
@@ -136,20 +135,19 @@ tree[seltype="text"] > treechildren::-moz-tree-cell-text(active, selected) {
 }
 
 treechildren::-moz-tree-cell-text(selected, focus) {
-  /* color: HighlightText; */
-  color: #FFFFFF;
+  color: HighlightText;
 }
 
 tree[seltype="cell"] > treechildren::-moz-tree-cell(active, selected, focus) {
-  background-color: -moz-mac-alternateprimaryhighlight;
+  background-color: Highlight;
 }
 tree[seltype="cell"] > treechildren::-moz-tree-cell-text(active, selected, focus) {
-  color: #FFFFFF;
+  color: HighlightText;
 }
 
 tree[seltype="text"] > treechildren::-moz-tree-cell-text(active, selected, focus) {
-  background-color: -moz-mac-alternateprimaryhighlight;
-  color: #FFFFFF;
+  background-color: Highlight;
+  color: HighlightText;
 }
 
 /* ::::: lines connecting cells ::::: */
@@ -383,11 +381,11 @@ treechildren[alternatingbackground="true"]::-moz-tree-cell-text(odd, selected) {
 }
 
 treechildren[alternatingbackground="true"]::-moz-tree-row(odd, selected, focus) {
-  background-color: -moz-mac-alternateprimaryhighlight;
+  background-color: Highlight;
 }
 
 treechildren[alternatingbackground="true"]::-moz-tree-cell-text(odd, selected, focus) {
-  color: #FFFFFF;
+  color: HighlightText;
 }
 
 /* ::::: editable tree ::::: */

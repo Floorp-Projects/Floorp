@@ -45,7 +45,16 @@ interface nsICancelable;
 interface nsIWebProgressListener;
 interface nsIMIMEInfo;
 
-[scriptable, uuid(07910093-d70b-4621-9888-b811f42293c3)]
+/**
+ * Represents a download object.
+ *
+ * @note This object is no longer updated once it enters a completed state.
+ *       Completed states are the following:
+ *       nsIDownloadManager::DOWNLOAD_FINISHED
+ *       nsIDownloadManager::DOWNLOAD_FAILED
+ *       nsIDownloadManager::DOWNLOAD_CANCELED
+ */
+[scriptable, uuid(974db2c6-fbd2-4de1-8d24-f54ce4f3e8bc)]
 interface nsIDownload : nsITransfer {
     
     /**
@@ -66,7 +75,7 @@ interface nsIDownload : nsITransfer {
 
     /**
      * The size of file in bytes.
-     * Unknown size is represented by 0.
+     * Unknown size is represented by LL_MAXUINT.
      */
     readonly attribute PRUint64 size;
     
@@ -89,7 +98,7 @@ interface nsIDownload : nsITransfer {
     /**
      * The user-readable description of the transfer.
      */
-    readonly attribute wstring displayName;
+    readonly attribute AString displayName;
 
     /**
      * The time a transfer was started.
@@ -107,6 +116,17 @@ interface nsIDownload : nsITransfer {
      * executed.
      */
     readonly attribute nsIMIMEInfo MIMEInfo;
+
+    /**
+     * The id of the download that is stored in the database.
+     */
+    readonly attribute unsigned long id;
+
+    /**
+     * The state of the download.
+     * @see nsIDownloadManager and nsIXPInstallManagerUI
+     */
+    readonly attribute short state;
 };
 
 %{C++

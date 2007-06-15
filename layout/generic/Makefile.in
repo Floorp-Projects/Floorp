@@ -169,7 +169,7 @@ CPPSRCS		+= \
 endif
 
 # set this to 1 to enable the new text frame
-MOZ_ENABLE_NEW_TEXT_FRAME =
+MOZ_ENABLE_NEW_TEXT_FRAME ?=
 
 ifdef MOZ_ENABLE_NEW_TEXT_FRAME
 CPPSRCS   += \

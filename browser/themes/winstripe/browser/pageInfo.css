@@ -145,6 +145,10 @@ textbox[disabled] {
   -moz-margin-end: 3px;
 }
 
+#securityBoxCaption .caption-icon {
+  display: none;
+}
+
 groupbox caption .caption-icon { 
   background-image: url("chrome://global/skin/tree/twisty-open.png");
 }
@@ -254,15 +258,19 @@ treechildren::-moz-tree-cell-text(broken) {
 }
 
 /* Security Tab */
+#securityPanel .caption-icon {
+  display: none;
+}
+
 #securityPanel .header {
   font-size: 120%;
 }
  
 #securityPanel .fieldLabel {
-  margin: 5px 10px 10px 10px;
+  margin: 2px 10px 3px 10px;
 }
 
 #securityPanel .fieldValue {
   font-weight: bold;
-  margin: 5px 10px 0px 10px;
+  margin: 2px 10px 0px 10px;
 }

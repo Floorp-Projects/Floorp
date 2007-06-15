@@ -35,13 +35,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-280769-1.js';
 //-----------------------------------------------------------------------------
-var bug = 280769;
+var BUGNUMBER = 280769;
 var summary = 'Do not crash on overflow of 64K boundary of [] offset in regexp search string ';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 status = summary + ' ' + inSection(1) + ' (new RegExp("zzz...[AB]").exec("zzz...A") ';
@@ -49,7 +51,7 @@ status = summary + ' ' + inSection(1) + ' (new RegExp("zzz...[AB]").exec("zzz...
 var N = 100 * 1000; // N should be more then 64K
 var a = new Array(N + 1);
 var prefix = a.join("z"); // prefix is sequence of N "z", zzz...zzz
-var str = prefix+"[AB]"; // str is zzz...zzz[AB] 
+var str = prefix+"[AB]"; // str is zzz...zzz[AB]
 var re = new RegExp(str);
 re.exec(prefix+"A");
 

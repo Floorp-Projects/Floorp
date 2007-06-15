@@ -108,7 +108,7 @@ inLayoutUtils::GetEventStateManagerFor(nsIDOMElement *aElement)
     return nsnull;
   }
 
-  nsIPresShell *shell = doc->GetShellAt(0);
+  nsIPresShell *shell = doc->GetPrimaryShell();
   NS_ASSERTION(shell, "No pres shell");
 
   return shell->GetPresContext()->EventStateManager();

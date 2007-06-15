@@ -156,8 +156,7 @@ public:
 
   nsresult AddLayeredBinding(nsIContent* aContent, nsIURI* aURL);
   nsresult RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL);
-  nsresult LoadBindingDocument(nsIDocument* aBoundDoc, nsIURI* aURL,
-                               nsIDocument** aResult);
+  nsresult LoadBindingDocument(nsIDocument* aBoundDoc, nsIURI* aURL);
 
   nsresult AddToAttachedQueue(nsXBLBinding* aBinding);
   void ProcessAttachedQueue();
@@ -204,6 +203,11 @@ public:
                             nsCycleCollectionTraversalCallback &cb);
 
   NS_DECL_CYCLE_COLLECTION_CLASS(nsBindingManager)
+
+  // Notify the binding manager when an outermost update begins and
+  // ends.  The end method can execute script.
+  void BeginOutermostUpdate();
+  void EndOutermostUpdate();
 
 protected:
   nsIXPConnectWrappedJS* GetWrappedJS(nsIContent* aContent);
@@ -278,7 +282,8 @@ protected:
 
   // A queue of binding attached event handlers that are awaiting execution.
   nsBindingList mAttachedStack;
-  PRBool mProcessingAttachedStack;
+  PRPackedBool mProcessingAttachedStack;
+  PRPackedBool mProcessOnEndUpdate;
 
   // Our posted event to process the attached queue, if any
   friend class nsRunnableMethod<nsBindingManager>;

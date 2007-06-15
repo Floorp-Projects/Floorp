@@ -63,8 +63,10 @@
 #include "gfxIImageFrame.h"
 #include "imgIContainer.h"
 #include "gfxRect.h"
+#include "gfxContext.h"
 #include "nsIImage.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsCSSRendering.h"
 
 #ifdef MOZ_SVG_FOREIGNOBJECT
 #include "nsSVGForeignObjectFrame.h"
@@ -1232,10 +1234,11 @@ static nscoord AddPercents(nsLayoutUtils::IntrinsicWidthType aType,
   return result;
 }
 
-static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle,
-                               nsIRenderingContext* aRenderingContext,
-                               nsIFrame* aFrame,
-                               nscoord& aResult)
+/* static */ PRBool
+nsLayoutUtils::GetAbsoluteCoord(const nsStyleCoord& aStyle,
+                                nsIRenderingContext* aRenderingContext,
+                                nsIFrame* aFrame,
+                                nscoord& aResult)
 {
   nsStyleUnit unit = aStyle.GetUnit();
   if (eStyleUnit_Coord == unit) {
@@ -1243,14 +1246,117 @@ static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle,
     return PR_TRUE;
   }
   if (eStyleUnit_Chars == unit) {
-    SetFontFromStyle(aRenderingContext, aFrame->GetStyleContext());
-    nscoord fontWidth;
-    aRenderingContext->SetTextRunRTL(PR_FALSE);
-    aRenderingContext->GetWidth('M', fontWidth);
-    aResult = aStyle.GetIntValue() * fontWidth;
+    aResult = nsLayoutUtils::CharsToCoord(aStyle, aRenderingContext,
+                                          aFrame->GetStyleContext());
     return PR_TRUE;
   }
   return PR_FALSE;
+}
+
+static PRBool
+GetPercentHeight(const nsStyleCoord& aStyle,
+                 nsIRenderingContext* aRenderingContext,
+                 nsIFrame* aFrame,
+                 nscoord& aResult)
+{
+  if (eStyleUnit_Percent != aStyle.GetUnit())
+    return PR_FALSE;
+
+  nsIFrame *f;
+  for (f = aFrame->GetParent(); f && !f->IsContainingBlock();
+       f = f->GetParent())
+    ;
+  if (!f) {
+    NS_NOTREACHED("top of frame tree not a containing block");
+    return PR_FALSE;
+  }
+
+  const nsStylePosition *pos = f->GetStylePosition();
+  nscoord h;
+  if (!nsLayoutUtils::
+        GetAbsoluteCoord(pos->mHeight, aRenderingContext, f, h) &&
+      !GetPercentHeight(pos->mHeight, aRenderingContext, f, h)) {
+    NS_ASSERTION(pos->mHeight.GetUnit() == eStyleUnit_Auto ||
+                 pos->mHeight.GetUnit() == eStyleUnit_Percent,
+                 "unknown height unit");
+    // There's no basis for the percentage height, so it acts like auto.
+    // Should we consider a max-height < min-height pair a basis for
+    // percentage heights?  The spec is somewhat unclear, and not doing
+    // so is simpler and avoids troubling discontinuities in behavior,
+    // so I'll choose not to. -LDB
+    return PR_FALSE;
+  }
+
+  nscoord maxh;
+  if (nsLayoutUtils::
+        GetAbsoluteCoord(pos->mMaxHeight, aRenderingContext, f, maxh) ||
+      GetPercentHeight(pos->mMaxHeight, aRenderingContext, f, maxh)) {
+    if (maxh < h)
+      h = maxh;
+  } else {
+    NS_ASSERTION(pos->mMaxHeight.GetUnit() == eStyleUnit_None ||
+                 pos->mMaxHeight.GetUnit() == eStyleUnit_Percent,
+                 "unknown max-height unit");
+  }
+
+  nscoord minh;
+  if (nsLayoutUtils::
+        GetAbsoluteCoord(pos->mMinHeight, aRenderingContext, f, minh) ||
+      GetPercentHeight(pos->mMinHeight, aRenderingContext, f, minh)) {
+    if (minh > h)
+      h = minh;
+  } else {
+    NS_ASSERTION(pos->mMaxHeight.GetUnit() == eStyleUnit_Percent,
+                 "unknown min-height unit");
+  }
+
+  aResult = NSToCoordRound(aStyle.GetPercentValue() * h);
+  return PR_TRUE;
+}
+
+// Handles only -moz-intrinsic and -moz-min-intrinsic, and
+// -moz-shrink-wrap for min-width and max-width, since the others
+// (-moz-shrink-wrap for width, and -moz-fill) have no effect on
+// intrinsic widths.
+enum eWidthProperty { PROP_WIDTH, PROP_MAX_WIDTH, PROP_MIN_WIDTH };
+static PRBool
+GetIntrinsicCoord(const nsStyleCoord& aStyle,
+                  nsIRenderingContext* aRenderingContext,
+                  nsIFrame* aFrame,
+                  eWidthProperty aProperty,
+                  nscoord& aResult)
+{
+  NS_PRECONDITION(aProperty == PROP_WIDTH || aProperty == PROP_MAX_WIDTH ||
+                  aProperty == PROP_MIN_WIDTH, "unexpected property");
+  if (aStyle.GetUnit() != eStyleUnit_Enumerated)
+    return PR_FALSE;
+  PRInt32 val = aStyle.GetIntValue();
+  NS_ASSERTION(val == NS_STYLE_WIDTH_INTRINSIC ||
+               val == NS_STYLE_WIDTH_MIN_INTRINSIC ||
+               val == NS_STYLE_WIDTH_SHRINK_WRAP ||
+               val == NS_STYLE_WIDTH_FILL,
+               "unexpected enumerated value for width property");
+  if (val == NS_STYLE_WIDTH_FILL)
+    return PR_FALSE;
+  if (val == NS_STYLE_WIDTH_SHRINK_WRAP) {
+    if (aProperty == PROP_WIDTH)
+      return PR_FALSE; // handle like 'width: auto'
+    if (aProperty == PROP_MAX_WIDTH)
+      // constrain large 'width' values down to -moz-intrinsic
+      val = NS_STYLE_WIDTH_INTRINSIC;
+    else
+      // constrain small 'width' or 'max-width' values up to -moz-min-intrinsic
+      val = NS_STYLE_WIDTH_MIN_INTRINSIC;
+  }
+
+  NS_ASSERTION(val == NS_STYLE_WIDTH_INTRINSIC ||
+               val == NS_STYLE_WIDTH_MIN_INTRINSIC,
+               "should have reduced everything remaining to one of these");
+  if (val == NS_STYLE_WIDTH_INTRINSIC)
+    aResult = aFrame->GetPrefWidth(aRenderingContext);
+  else
+    aResult = aFrame->GetMinWidth(aRenderingContext);
+  return PR_TRUE;
 }
 
 #undef  DEBUG_INTRINSIC_WIDTH
@@ -1278,7 +1384,7 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
     aFrame->IntrinsicWidthOffsets(aRenderingContext);
 
   const nsStylePosition *stylePos = aFrame->GetStylePosition();
-  const PRUint8 boxSizing = stylePos->mBoxSizing;
+  PRUint8 boxSizing = stylePos->mBoxSizing;
   const nsStyleCoord &styleWidth = stylePos->mWidth;
   const nsStyleCoord &styleMinWidth = stylePos->mMinWidth;
   const nsStyleCoord &styleMaxWidth = stylePos->mMaxWidth;
@@ -1298,10 +1404,18 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
   // If we have a specified width (or a specified 'min-width' greater
   // than the specified 'max-width', which works out to the same thing),
   // don't even bother getting the frame's intrinsic width.
-  if (styleWidth.GetUnit() != eStyleUnit_Coord &&
-      (styleMinWidth.GetUnit() != eStyleUnit_Coord ||
-       styleMaxWidth.GetUnit() != eStyleUnit_Coord ||
-       styleMaxWidth.GetCoordValue() > styleMinWidth.GetCoordValue())) {
+  if (styleWidth.GetUnit() == eStyleUnit_Enumerated &&
+      (styleWidth.GetIntValue() == NS_STYLE_WIDTH_INTRINSIC ||
+       styleWidth.GetIntValue() == NS_STYLE_WIDTH_MIN_INTRINSIC)) {
+    // -moz-shrink-wrap and -moz-fill enumerated widths compute intrinsic
+    // widths just like auto.
+    // For -moz-intrinsic and -moz-min-intrinsic, we handle them like
+    // specified widths, but ignore -moz-box-sizing.
+    boxSizing = NS_STYLE_BOX_SIZING_CONTENT;
+  } else if (styleWidth.GetUnit() != eStyleUnit_Coord &&
+             (styleMinWidth.GetUnit() != eStyleUnit_Coord ||
+              styleMaxWidth.GetUnit() != eStyleUnit_Coord ||
+              styleMaxWidth.GetCoordValue() > styleMinWidth.GetCoordValue())) {
 #ifdef DEBUG_INTRINSIC_WIDTH
     ++gNoiseIndent;
 #endif
@@ -1316,6 +1430,43 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
     printf(" %s intrinsic width from frame is %d.\n",
            aType == MIN_WIDTH ? "min" : "pref", result);
 #endif
+
+    // Handle elements with an intrinsic ratio (or size) and a specified
+    // height, min-height, or max-height.
+    const nsStyleCoord &styleHeight = stylePos->mHeight;
+    const nsStyleCoord &styleMinHeight = stylePos->mMinHeight;
+    const nsStyleCoord &styleMaxHeight = stylePos->mMaxHeight;
+    if (styleHeight.GetUnit() != eStyleUnit_Auto ||
+        !(styleMinHeight.GetUnit() == eStyleUnit_Coord &&
+          styleMinHeight.GetCoordValue() == 0) ||
+        styleMaxHeight.GetUnit() != eStyleUnit_None) {
+
+      nsSize ratio = aFrame->GetIntrinsicRatio();
+
+      if (ratio.height != 0) {
+
+        nscoord h;
+        if (GetAbsoluteCoord(styleHeight, aRenderingContext, aFrame, h) ||
+            GetPercentHeight(styleHeight, aRenderingContext, aFrame, h)) {
+          result =
+            NSToCoordRound(h * (float(ratio.width) / float(ratio.height)));
+        }
+
+        if (GetAbsoluteCoord(styleMaxHeight, aRenderingContext, aFrame, h) ||
+            GetPercentHeight(styleMaxHeight, aRenderingContext, aFrame, h)) {
+          h = NSToCoordRound(h * (float(ratio.width) / float(ratio.height)));
+          if (h < result)
+            result = h;
+        }
+
+        if (GetAbsoluteCoord(styleMinHeight, aRenderingContext, aFrame, h) ||
+            GetPercentHeight(styleMinHeight, aRenderingContext, aFrame, h)) {
+          h = NSToCoordRound(h * (float(ratio.width) / float(ratio.height)));
+          if (h > result)
+            result = h;
+        }
+      }
+    }
   }
       
   if (aFrame->GetType() == nsGkAtoms::tableFrame) {
@@ -1364,7 +1515,9 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
   pctTotal += pctOutsideWidth;
 
   nscoord w;
-  if (GetAbsoluteCoord(styleWidth, aRenderingContext, aFrame, w)) {
+  if (GetAbsoluteCoord(styleWidth, aRenderingContext, aFrame, w) ||
+      GetIntrinsicCoord(styleWidth, aRenderingContext, aFrame,
+                        PROP_WIDTH, w)) {
     result = AddPercents(aType, w + coordOutsideWidth, pctOutsideWidth);
   }
   else if (aType == MIN_WIDTH && eStyleUnit_Percent == styleWidth.GetUnit() &&
@@ -1377,14 +1530,18 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
   }
 
   nscoord maxw;
-  if (GetAbsoluteCoord(styleMaxWidth, aRenderingContext, aFrame, maxw)) {
+  if (GetAbsoluteCoord(styleMaxWidth, aRenderingContext, aFrame, maxw) ||
+      GetIntrinsicCoord(styleMaxWidth, aRenderingContext, aFrame,
+                        PROP_MAX_WIDTH, maxw)) {
     maxw = AddPercents(aType, maxw + coordOutsideWidth, pctOutsideWidth);
     if (result > maxw)
       result = maxw;
   }
 
   nscoord minw;
-  if (GetAbsoluteCoord(styleMinWidth, aRenderingContext, aFrame, minw)) {
+  if (GetAbsoluteCoord(styleMinWidth, aRenderingContext, aFrame, minw) ||
+      GetIntrinsicCoord(styleMinWidth, aRenderingContext, aFrame,
+                        PROP_MIN_WIDTH, minw)) {
     minw = AddPercents(aType, minw + coordOutsideWidth, pctOutsideWidth);
     if (result < minw)
       result = minw;
@@ -1442,8 +1599,70 @@ nsLayoutUtils::ComputeWidthDependentValue(
   if (eStyleUnit_Percent == aCoord.GetUnit()) {
     return NSToCoordFloor(aContainingBlockWidth * aCoord.GetPercentValue());
   }
+  NS_ASSERTION(aCoord.GetUnit() == eStyleUnit_None ||
+               aCoord.GetUnit() == eStyleUnit_Auto,
+               "unexpected width value");
   return 0;
 }
+
+/* static */ nscoord
+nsLayoutUtils::ComputeWidthValue(
+                 nsIRenderingContext* aRenderingContext,
+                 nsIFrame*            aFrame,
+                 nscoord              aContainingBlockWidth,
+                 nscoord              aContentEdgeToBoxSizing,
+                 nscoord              aBoxSizingToMarginEdge,
+                 const nsStyleCoord&  aCoord)
+{
+  NS_PRECONDITION(aFrame, "non-null frame expected");
+  NS_PRECONDITION(aRenderingContext, "non-null rendering context expected");
+  NS_PRECONDITION(aContainingBlockWidth != NS_UNCONSTRAINEDSIZE,
+                  "unconstrained widths no longer supported");
+  NS_PRECONDITION(aContainingBlockWidth >= 0,
+                  "width less than zero");
+
+  nscoord result;
+  if (GetAbsoluteCoord(aCoord, aRenderingContext, aFrame, result)) {
+    NS_ASSERTION(result >= 0, "width less than zero");
+    result -= aContentEdgeToBoxSizing;
+  } else if (eStyleUnit_Percent == aCoord.GetUnit()) {
+    NS_ASSERTION(aCoord.GetPercentValue() >= 0.0f, "width less than zero");
+    result = NSToCoordFloor(aContainingBlockWidth * aCoord.GetPercentValue()) -
+             aContentEdgeToBoxSizing;
+  } else if (eStyleUnit_Enumerated == aCoord.GetUnit()) {
+    PRInt32 val = aCoord.GetIntValue();
+    switch (val) {
+      case NS_STYLE_WIDTH_INTRINSIC:
+        result = aFrame->GetPrefWidth(aRenderingContext);
+        NS_ASSERTION(result >= 0, "width less than zero");
+        break;
+      case NS_STYLE_WIDTH_MIN_INTRINSIC:
+        result = aFrame->GetMinWidth(aRenderingContext);
+        NS_ASSERTION(result >= 0, "width less than zero");
+        break;
+      case NS_STYLE_WIDTH_SHRINK_WRAP:
+        {
+          nscoord pref = aFrame->GetPrefWidth(aRenderingContext),
+                   min = aFrame->GetMinWidth(aRenderingContext),
+                  fill = aContainingBlockWidth -
+                         (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing);
+          result = PR_MAX(min, PR_MIN(pref, fill));
+          NS_ASSERTION(result >= 0, "width less than zero");
+        }
+        break;
+      case NS_STYLE_WIDTH_FILL:
+        result = aContainingBlockWidth -
+                 (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing);
+    }
+  } else {
+    NS_NOTREACHED("unexpected width value");
+    result = 0;
+  }
+  if (result < 0)
+    result = 0;
+  return result;
+}
+
 
 /* static */ nscoord
 nsLayoutUtils::ComputeHeightDependentValue(
@@ -1474,6 +1693,9 @@ nsLayoutUtils::ComputeHeightDependentValue(
       return NSToCoordFloor(aContainingBlockHeight * aCoord.GetPercentValue());
     }
   }
+  NS_ASSERTION(aCoord.GetUnit() == eStyleUnit_None ||
+               aCoord.GetUnit() == eStyleUnit_Auto,
+               "unexpected height value");
   return 0;
 }
 
@@ -1482,7 +1704,7 @@ IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)
 {
   nsStyleUnit unit = aCoord.GetUnit();
   return unit == eStyleUnit_Auto ||  // only for 'height'
-         unit == eStyleUnit_Null ||  // only for 'max-height'
+         unit == eStyleUnit_None ||  // only for 'max-height'
          (unit == eStyleUnit_Percent && 
           aCBHeight == NS_AUTOHEIGHT);
 }
@@ -1493,7 +1715,7 @@ IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)
 nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
                    nsIRenderingContext* aRenderingContext,
                    nsIFrame* aFrame, nsSize aIntrinsicSize, nsSize aCBSize,
-                   nsSize aBorder, nsSize aPadding)
+                   nsSize aMargin, nsSize aBorder, nsSize aPadding)
 {
   const nsStylePosition *stylePos = aFrame->GetStylePosition();
   // Handle intrinsic sizes and their interaction with
@@ -1504,8 +1726,8 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
   // a * (b / c) because of its reduced accuracy relative to a * b / c
   // or (a * b) / c (which are equivalent).
 
-  PRBool isAutoWidth = stylePos->mWidth.GetUnit() == eStyleUnit_Auto;
-  PRBool isAutoHeight = IsAutoHeight(stylePos->mHeight, aCBSize.height);
+  const PRBool isAutoWidth = stylePos->mWidth.GetUnit() == eStyleUnit_Auto;
+  const PRBool isAutoHeight = IsAutoHeight(stylePos->mHeight, aCBSize.height);
 
   nsSize boxSizingAdjust(0,0);
   switch (stylePos->mBoxSizing) {
@@ -1515,32 +1737,31 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
     case NS_STYLE_BOX_SIZING_PADDING:
       boxSizingAdjust += aPadding;
   }
+  nscoord boxSizingToMarginEdgeWidth =
+    aMargin.width + aBorder.width + aPadding.width - boxSizingAdjust.width;
 
   nscoord width, minWidth, maxWidth, height, minHeight, maxHeight;
 
   if (!isAutoWidth) {
-    width = nsLayoutUtils::ComputeWidthDependentValue(aRenderingContext,
-              aFrame, aCBSize.width, stylePos->mWidth) -
-            boxSizingAdjust.width;
-    if (width < 0)
-      width = 0;
+    width = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
+              aFrame, aCBSize.width, boxSizingAdjust.width,
+              boxSizingToMarginEdgeWidth, stylePos->mWidth);
+    NS_ASSERTION(width >= 0, "negative result from ComputeWidthValue");
   }
 
-  if (stylePos->mMaxWidth.GetUnit() != eStyleUnit_Null) {
-    maxWidth = nsLayoutUtils::ComputeWidthDependentValue(aRenderingContext,
-                 aFrame, aCBSize.width, stylePos->mMaxWidth) -
-               boxSizingAdjust.width;
-    if (maxWidth < 0)
-      maxWidth = 0;
+  if (stylePos->mMaxWidth.GetUnit() != eStyleUnit_None) {
+    maxWidth = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
+                 aFrame, aCBSize.width, boxSizingAdjust.width,
+                 boxSizingToMarginEdgeWidth, stylePos->mMaxWidth);
+    NS_ASSERTION(maxWidth >= 0, "negative result from ComputeWidthValue");
   } else {
     maxWidth = nscoord_MAX;
   }
 
-  minWidth = nsLayoutUtils::ComputeWidthDependentValue(aRenderingContext,
-               aFrame, aCBSize.width, stylePos->mMinWidth) -
-             boxSizingAdjust.width;
-  if (minWidth < 0)
-    minWidth = 0;
+  minWidth = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
+               aFrame, aCBSize.width, boxSizingAdjust.width,
+               boxSizingToMarginEdgeWidth, stylePos->mMinWidth);
+  NS_ASSERTION(minWidth >= 0, "negative result from ComputeWidthValue");
 
   if (!isAutoHeight) {
     height = nsLayoutUtils::ComputeHeightDependentValue(aRenderingContext,
@@ -1921,6 +2142,10 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   aRenderingContext->GetDeviceContext(*getter_AddRefs(dc));
   PRInt32 d2a = dc->AppUnitsPerDevPixel();
 
+  nsRefPtr<gfxContext> ctx = NS_STATIC_CAST(gfxContext*,
+    aRenderingContext->GetNativeGraphicData(
+      nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+
   // the dest rect is affected by the current transform; that'll be
   // handled by Image::Draw(), when we actually set up the rectangle.
   
@@ -1928,15 +2153,12 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   // pixel, but then convert back to gfxFloats for the rest of the math.
   gfxRect pxDest;
   {
-    nsIntRect r;
-    r.x = NSAppUnitsToIntPixels(aDestRect.x, d2a);
-    r.y = NSAppUnitsToIntPixels(aDestRect.y, d2a);
-    r.width = NSAppUnitsToIntPixels(aDestRect.XMost(), d2a) - r.x;
-    r.height = NSAppUnitsToIntPixels(aDestRect.YMost(), d2a) - r.y;
-    pxDest.pos.x = gfxFloat(r.x);
-    pxDest.pos.y = gfxFloat(r.y);
-    pxDest.size.width = gfxFloat(r.width);
-    pxDest.size.height = gfxFloat(r.height);
+    pxDest.pos.x = NSAppUnitsToFloatPixels(aDestRect.x, d2a);
+    pxDest.pos.y = NSAppUnitsToFloatPixels(aDestRect.y, d2a);
+    pxDest.size.width = NSAppUnitsToFloatPixels(aDestRect.width, d2a);
+    pxDest.size.height = NSAppUnitsToFloatPixels(aDestRect.height, d2a);
+    if (ctx->UserToDevicePixelSnapped(pxDest))
+      pxDest = ctx->DeviceToUser(pxDest);
   }
 
   // And likewise for the dirty rect.  (Is should be OK to round to
@@ -1945,15 +2167,12 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   // been intersected with, and we should be rounding those consistently.)
   gfxRect pxDirty;
   {
-    nsIntRect r;
-    r.x = NSAppUnitsToIntPixels(dirtyRect.x, d2a);
-    r.y = NSAppUnitsToIntPixels(dirtyRect.y, d2a);
-    r.width = NSAppUnitsToIntPixels(dirtyRect.XMost(), d2a) - r.x;
-    r.height = NSAppUnitsToIntPixels(dirtyRect.YMost(), d2a) - r.y;
-    pxDirty.pos.x = gfxFloat(r.x);
-    pxDirty.pos.y = gfxFloat(r.y);
-    pxDirty.size.width = gfxFloat(r.width);
-    pxDirty.size.height = gfxFloat(r.height);
+    pxDirty.pos.x = NSAppUnitsToFloatPixels(dirtyRect.x, d2a);
+    pxDirty.pos.y = NSAppUnitsToFloatPixels(dirtyRect.y, d2a);
+    pxDirty.size.width = NSAppUnitsToFloatPixels(dirtyRect.width, d2a);
+    pxDirty.size.height = NSAppUnitsToFloatPixels(dirtyRect.height, d2a);
+    if (ctx->UserToDevicePixelSnapped(pxDirty))
+      pxDirty = ctx->DeviceToUser(pxDirty);
   }
 
   // Reduce the src rect to what's needed for the dirty rect.
@@ -2030,4 +2249,79 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
    * appropriate code to call nsIRenderingContext::DrawImage here
    */
 #endif
+}
+
+void
+nsLayoutUtils::SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC) 
+{
+  const nsStyleFont* font = aSC->GetStyleFont();
+  const nsStyleVisibility* visibility = aSC->GetStyleVisibility();
+
+  aRC->SetFont(font->mFont, visibility->mLangGroup);
+}
+
+nscoord
+nsLayoutUtils::CharsToCoord(const nsStyleCoord& aStyle,
+                            nsIRenderingContext* aRenderingContext,
+                            nsStyleContext* aStyleContext)
+{
+  NS_ASSERTION(aStyle.GetUnit() == eStyleUnit_Chars,
+               "Shouldn't have called this");
+
+  SetFontFromStyle(aRenderingContext, aStyleContext);
+  nscoord fontWidth;
+  aRenderingContext->SetTextRunRTL(PR_FALSE);
+  aRenderingContext->GetWidth('M', fontWidth);
+  return aStyle.GetIntValue() * fontWidth;
+}
+
+static PRBool NonZeroStyleCoord(const nsStyleCoord& aCoord)
+{
+  switch (aCoord.GetUnit()) {
+  case eStyleUnit_Percent:
+    return aCoord.GetPercentValue() > 0;
+  case eStyleUnit_Coord:
+    return aCoord.GetCoordValue() > 0;
+  default:
+    return PR_TRUE;
+  }
+}
+
+/* static */ PRBool
+nsLayoutUtils::HasNonZeroSide(const nsStyleSides& aSides)
+{
+  nsStyleCoord coord;
+  aSides.GetTop(coord);
+  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
+  aSides.GetRight(coord);
+  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
+  aSides.GetBottom(coord);
+  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
+  aSides.GetLeft(coord);
+  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
+  return PR_FALSE;
+}
+
+/* static */ PRBool
+nsLayoutUtils::FrameHasTransparency(nsIFrame* aFrame) {
+  if (aFrame->GetStyleContext()->GetStyleDisplay()->mOpacity < 1.0f)
+    return PR_TRUE;
+
+  if (HasNonZeroSide(aFrame->GetStyleContext()->GetStyleBorder()->mBorderRadius))
+    return PR_TRUE;
+
+  if (aFrame->IsThemed())
+    return PR_FALSE;
+
+  PRBool isCanvas;
+  const nsStyleBackground* bg;
+  if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg, &isCanvas))
+    return PR_TRUE;
+  if (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)
+    return PR_TRUE;
+  if (NS_GET_A(bg->mBackgroundColor) < 255)
+    return PR_TRUE;
+  if (bg->mBackgroundClip != NS_STYLE_BG_CLIP_BORDER)
+    return PR_TRUE;
+  return PR_FALSE;
 }

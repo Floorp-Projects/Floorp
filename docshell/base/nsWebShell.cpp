@@ -768,6 +768,11 @@ nsWebShell::OnLinkClick(nsIContent* aContent,
                         nsIInputStream* aHeadersDataStream)
 {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
+
+  if (mFiredUnloadEvent) {
+    return NS_OK;
+  }
+  
   nsCOMPtr<nsIRunnable> ev =
       new OnLinkClickEvent(this, aContent, aURI, aTargetSpec,
                            aPostDataStream, aHeadersDataStream);
@@ -789,6 +794,10 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
   }
   if (aRequest) {
     *aRequest = nsnull;
+  }
+
+  if (mFiredUnloadEvent) {
+    return NS_OK;
   }
 
   {

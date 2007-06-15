@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.4.1.js';
+
 /**
    File Name:          15.4.1.js
    ECMA Section:       15.4.1 The Array Constructor Called as a Function

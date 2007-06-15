@@ -248,6 +248,9 @@ nsSVGDisplayContainerFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
       SVGFrame->NotifyCanvasTMChanged(suppressInvalidation);
     }
   }
+  if (!suppressInvalidation)
+    nsSVGUtils::UpdateFilterRegion(this);
+
   return NS_OK;
 }
 

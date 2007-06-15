@@ -461,12 +461,6 @@ JSBool XPCDispIDArray::IsMarked() const
     return mMarked;
 }
 
-    // NOP. This is just here to make the AutoMarkingPtr code compile.
-inline
-void XPCDispIDArray::MarkBeforeJSFinalize(JSContext*) 
-{
-}
-
 //=============================================================================
 // XPCDispTypeInfo inlines
 

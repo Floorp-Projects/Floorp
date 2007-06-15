@@ -44,6 +44,7 @@
 #include "imgIRequest.h"
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
+#include "nsIPrincipal.h"
 
 // Paint forcing
 #include "prenv.h"
@@ -348,6 +349,12 @@ void nsCSSValue::SetNormalValue()
   mUnit = eCSSUnit_Normal;
 }
 
+void nsCSSValue::SetSystemFontValue()
+{
+  Reset();
+  mUnit = eCSSUnit_System_Font;
+}
+
 void nsCSSValue::StartImageLoad(nsIDocument* aDocument, PRBool aIsBGImage) const
 {
   NS_PRECONDITION(eCSSUnit_URL == mUnit, "Not a URL value!");
@@ -355,6 +362,7 @@ void nsCSSValue::StartImageLoad(nsIDocument* aDocument, PRBool aIsBGImage) const
     new nsCSSValue::Image(mValue.mURL->mURI,
                           mValue.mURL->mString,
                           mValue.mURL->mReferrer,
+                          mValue.mURL->mOriginPrincipal,
                           aDocument, aIsBGImage);
   if (image) {
     nsCSSValue* writable = NS_CONST_CAST(nsCSSValue*, this);
@@ -384,10 +392,45 @@ nsCSSValue::BufferFromString(const nsString& aValue)
   return buffer;
 }
 
+nsCSSValue::URL::URL(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
+                     nsIPrincipal* aOriginPrincipal)
+  : mURI(aURI),
+    mString(aString),
+    mReferrer(aReferrer),
+    mOriginPrincipal(aOriginPrincipal),
+    mRefCnt(0)
+{
+  NS_PRECONDITION(aOriginPrincipal, "Must have an origin principal");
+  
+  mString->AddRef();
+  MOZ_COUNT_CTOR(nsCSSValue::URL);
+}
+
+nsCSSValue::URL::~URL()
+{
+  mString->Release();
+  MOZ_COUNT_DTOR(nsCSSValue::URL);
+}
+
+PRBool
+nsCSSValue::URL::operator==(const URL& aOther) const
+{
+  PRBool eq;
+  return NS_strcmp(GetBufferValue(mString),
+                   GetBufferValue(aOther.mString)) == 0 &&
+          (mURI == aOther.mURI || // handles null == null
+           (mURI && aOther.mURI &&
+            NS_SUCCEEDED(mURI->Equals(aOther.mURI, &eq)) &&
+            eq)) &&
+          NS_SUCCEEDED(mOriginPrincipal->Equals(aOther.mOriginPrincipal,
+                                                &eq)) &&
+          eq;
+}
+
 nsCSSValue::Image::Image(nsIURI* aURI, nsStringBuffer* aString,
-                         nsIURI* aReferrer, nsIDocument* aDocument,
-                         PRBool aIsBGImage)
-  : URL(aURI, aString, aReferrer)
+                         nsIURI* aReferrer, nsIPrincipal* aOriginPrincipal,
+                         nsIDocument* aDocument, PRBool aIsBGImage)
+  : URL(aURI, aString, aReferrer, aOriginPrincipal)
 {
   MOZ_COUNT_CTOR(nsCSSValue::Image);
 

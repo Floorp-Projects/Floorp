@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'eval-003.js';
+
 /**
  *  File Name:    eval-003.js
  *  Description:  (SEE REVISED DESCRIPTION FURTHER BELOW)
@@ -52,15 +55,15 @@
  *
  *  REVISION:    05  February 2001
  *  Author:          pschwartau@netscape.com
- *  
+ * 
  *  Indirect eval IS NOT ILLEGAL per ECMA3!!!  See
  *
  *  http://bugzilla.mozilla.org/show_bug.cgi?id=38512
  *
- *  ------- Additional Comments From Brendan Eich 2001-01-30 17:12 ------- 
- * ECMA-262 Edition 3 doesn't require implementations to throw EvalError, 
+ *  ------- Additional Comments From Brendan Eich 2001-01-30 17:12 -------
+ * ECMA-262 Edition 3 doesn't require implementations to throw EvalError,
  * see the short, section-less Chapter 16.  It does say an implementation that
- * doesn't throw EvalError must allow assignment to eval and indirect calls 
+ * doesn't throw EvalError must allow assignment to eval and indirect calls
  * of the evalnative method.
  *
  */
@@ -76,13 +79,13 @@ var MY_EVAL = eval;
 var RESULT = "";
 var EXPECT= "";
 var h = function f(x,y){var g = function(z){return Math.exp(z);}; return g(x+y);};
-    
+   
 
 new EvalTest();
 
 test();
 
-function EvalTest() 
+function EvalTest()
 {
   with( this ) {
     MY_EVAL( "RESULT = h(-1, 1)" );

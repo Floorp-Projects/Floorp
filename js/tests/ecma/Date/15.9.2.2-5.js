@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.9.2.2-5.js';
+
 /**
    File Name:          15.9.2.2.js
    ECMA Section:       15.9.2.2 Date constructor used as a function

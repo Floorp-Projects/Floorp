@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<body>
+  <div id="source" style="font-size: 10px; -moz-column-gap: 2ch">
+    <span id="test"
+          style="background: green; display: inline-block; height: 30px;
+                 padding: 0 2px">
+    </span>
+    <script>
+      document.getElementById("test").style.width =
+        document.defaultView.getComputedStyle(document.getElementById("source"),
+                                              "").MozColumnGap;
+    </script>
+  </div>
+</body>

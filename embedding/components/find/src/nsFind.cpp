@@ -372,7 +372,7 @@ nsFindContentIterator::SetupInnerIterator(nsIContent* aContent)
   NS_ASSERTION(aContent && !aContent->IsNativeAnonymous(), "invalid call");
 
   nsIDocument* doc = aContent->GetDocument();
-  nsIPresShell* shell = doc ? doc->GetShellAt(0) : nsnull;
+  nsIPresShell* shell = doc ? doc->GetPrimaryShell() : nsnull;
   if (!shell)
     return;
 
@@ -830,7 +830,7 @@ PRBool nsFind::IsVisibleNode(nsIDOMNode *aDOMNode)
   if (!doc)
     return PR_FALSE;
 
-  nsIPresShell *presShell = doc->GetShellAt(0);
+  nsIPresShell *presShell = doc->GetPrimaryShell();
   if (!presShell)
     return PR_FALSE;
 

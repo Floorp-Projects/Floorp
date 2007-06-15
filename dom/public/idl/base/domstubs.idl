@@ -54,6 +54,7 @@ interface nsIDOMElement;
 interface nsIDOMEntity;
 interface nsIDOMEntityReference;
 interface nsIDOMNSDocument;
+interface nsIDOMNSElement;
 interface nsIDOMNamedNodeMap;
 interface nsIDOMNode;
 interface nsIDOMNodeList;
@@ -62,6 +63,8 @@ interface nsIDOMProcessingInstruction;
 interface nsIDOMText;
 interface nsIDOMDOMStringList;
 interface nsIDOMNameList;
+interface nsIDOMTextRectangle;
+interface nsIDOMTextRectangleList;
 
 // Needed for raises() in our IDL
 interface DOMException;

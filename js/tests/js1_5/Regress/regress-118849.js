@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    08 Jan 2002
  * SUMMARY: Just testing that we don't crash on this code
@@ -49,14 +51,15 @@
  *   (Optional) Names to be used by the function as formal argument names.
  *   Each must be a string that corresponds to a valid JavaScript identifier.
  *
- * functionBody 
+ * functionBody
  *   A string containing JS statements comprising the function definition.
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-118849.js';
 var UBound = 0;
-var bug = 118849;
+var BUGNUMBER = 118849;
 var summary = 'Should not crash if we provide Function() with bad arguments'
-var status = '';
+  var status = '';
 var statusitems = [];
 var actual = '';
 var actualvalues = [];
@@ -76,7 +79,7 @@ actual = cnFAIL_1; // initialize to failure
 try
 {
   Function(cnSTRING);
-  Function(cnNUMBER);  // cnNUMBER is a valid functionBody        
+  Function(cnNUMBER);  // cnNUMBER is a valid functionBody       
   Function(cnSTRING,cnSTRING);
   Function(cnSTRING,cnNUMBER);
   Function(cnSTRING,cnSTRING,cnNUMBER);
@@ -171,9 +174,9 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
- 
+
   for (var i = 0; i < UBound; i++)
   {
     reportCompare(expectedvalues[i], actualvalues[i], statusitems[i]);

@@ -50,7 +50,6 @@
 pref("keyword.URL", "http://www.google.com/search?ie=UTF-8&oe=utf-8&q=");
 pref("keyword.enabled", false);
 pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
-pref("general.useragent.contentlocale", "chrome://navigator-region/locale/region.properties");
 
 pref("general.config.obscure_value", 13); // for MCD .cfg files
 
@@ -70,7 +69,7 @@ pref("browser.cache.check_doc_frequency",   3);
 
 pref("browser.cache.offline.enable",           true);
 // offline cache capacity in kilobytes
-pref("browser.cache.offline.capacity",         51200);
+pref("browser.cache.offline.capacity",         10240);
 
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
@@ -196,6 +195,9 @@ pref("view_source.wrap_long_lines", false);
 
 // dispatch left clicks only to content in browser (still allows clicks to chrome/xul)
 pref("nglayout.events.dispatchLeftClickOnly", true);
+
+// whether or not to draw images while dragging
+pref("nglayout.enable_drag_images", true);
 
 // whether or not to use xbl form controls
 pref("nglayout.debug.enable_xbl_forms", false);
@@ -754,7 +756,7 @@ pref("network.proxy.socks_remote_dns",      false);
 pref("network.proxy.no_proxies_on",         "localhost, 127.0.0.1");
 pref("network.proxy.failover_timeout",      1800); // 30 minutes
 pref("network.online",                      true); //online/offline
-pref("network.cookie.cookieBehavior",       0); // 0-Accept, 1-dontAcceptForeign, 2-dontUse, 3-p3p
+pref("network.cookie.cookieBehavior",       0); // 0-Accept, 1-dontAcceptForeign, 2-dontUse
 pref("network.cookie.disableCookieForMailNews", true); // disable all cookies for mail
 pref("network.cookie.lifetimePolicy",       0); // accept normally, 1-askBeforeAccepting, 2-acceptForSession,3-acceptForNDays
 pref("network.cookie.alwaysAcceptSessionCookies", false);
@@ -768,11 +770,6 @@ pref("network.proxy.autoconfig_url", "");
 // until we reach interval_max or the PAC file is successfully loaded).
 pref("network.proxy.autoconfig_retry_interval_min", 5);    // 5 seconds
 pref("network.proxy.autoconfig_retry_interval_max", 300);  // 5 minutes
-
-// The following default value is for p3p medium mode.
-// See xpfe/components/permissions/content/cookieP3P.xul for the definitions of low/medium/hi
-pref("network.cookie.p3p",                  "ffffaaaa");
-pref("network.cookie.p3plevel",             1); // 0=low, 1=medium, 2=high, 3=custom
 
 pref("converter.html2txt.structs",          true); // Output structured phrases (strong, em, code, sub, sup, b, i, u)
 pref("converter.html2txt.header_strategy",  1); // 0 = no indention; 1 = indention, increased with header level; 2 = numbering and slight indention
@@ -2239,7 +2236,7 @@ pref("font.min-size.fixed.zh-HK", 10);
  * - xdisplay  = X11 display name (like "host:0.0" (string)
  * - xdpy      = X DPI (X screen resolution) (integer)
  * - ydpy      = Y DPI (Y screen resolution) (integer)
- * - xdevice   = "display" or "printer" (Xprint)
+ * - xdevice   = "display" or "printer" (Xprint - now obsolete)
  * Patterns use  the regular expressions described in the EXTENDED REGULAR
  * EXPRESSIONS section of the regex(5) manual page.
  * Note that prefs strings can always be concatenated via the '+'-operator,
@@ -2252,19 +2249,6 @@ pref("font.min-size.fixed.zh-HK", 10);
 /* reject font if reject pattern matches it... */
 //pref("font.x11.rejectfontpattern", 
 //     "fname=-urw.*;scalable=false;outline_scaled=false;xdisplay=.*;xdpy=.*;ydpy=.*;xdevice=.*");
-
-/* reject font if accept pattern does not match it... */
-pref("print.xprint.font.acceptfontpattern", ".*");
-/* reject font if reject pattern matches it...
- * Current bans:
- * - bug 148470 ("Ban "-dt-*" (bitmap!!) fonts from Xprint")
- *   pattern="fname=-dt-.*;scalable=.*;outline_scaled=false;xdisplay=.*;xdpy=.*;ydpy=.*;xdevice=.*"
- */
-pref("print.xprint.font.rejectfontpattern", 
-     "fname=-dt-.*;scalable=.*;outline_scaled=false;xdisplay=.*;xdpy=.*;ydpy=.*;xdevice=.*");
-
-/* Xprint print module prefs */
-pref("print.xprint.font.force_outline_scaled_fonts", true);
 
 /* PostScript print module prefs */
 // pref("print.postscript.enabled",      true);
@@ -2420,3 +2404,11 @@ pref("print.print_command", "lp -c -s ${MOZ_PRINTER_NAME:+'-d'}${MOZ_PRINTER_NAM
 
 # Solaris
 #endif
+
+// Login Manager prefs
+pref("signon.rememberSignons",              true);
+pref("signon.expireMasterPassword",         false);
+pref("signon.SignonFileName",               "signons.txt"); // obsolete 
+pref("signon.SignonFileName2",              "signons2.txt");
+pref("signon.autofillForms",                true); 
+pref("signon.debug",                        false); // logs to Error Console

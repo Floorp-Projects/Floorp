@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'function-001-n.js';
+
 /**
  *  File Name:          boolean-001.js
  *  Description:
@@ -55,19 +59,19 @@
  *  Author:             christine@netscape.com
  *  Date:               11 August 1998
  */
-    var SECTION = "function-001.js";
-    var VERSION = "JS1_1";
-    var TITLE   = "functions not separated by semicolons are errors in version 120 and higher";
-    var BUGNUMBER="99232";
+var SECTION = "function-001.js";
+var VERSION = "JS1_1";
+var TITLE   = "functions not separated by semicolons are errors in version 120 and higher";
+var BUGNUMBER="99232";
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    new TestCase(
-        SECTION,
-        "eval(\"function f(){}function g(){}\")",
-        "error",
-        eval("function f(){}function g(){}") );
+new TestCase(
+  SECTION,
+  "eval(\"function f(){}function g(){}\")",
+  "error",
+  eval("function f(){}function g(){}") );
 
-    test();
+test();
 

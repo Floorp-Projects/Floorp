@@ -1368,3 +1368,23 @@ nsPresContext::CountReflows(const char * aName, nsIFrame * aFrame)
   }
 }
 #endif
+
+PRBool
+nsPresContext::IsChrome()
+{
+  PRBool isChrome = PR_FALSE;
+  nsCOMPtr<nsISupports> container = GetContainer();
+  if (container) {
+    nsresult result;
+    nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(container, &result));
+    if (NS_SUCCEEDED(result) && docShell) {
+      PRInt32 docShellType;
+      result = docShell->GetItemType(&docShellType);
+      if (NS_SUCCEEDED(result)) {
+        isChrome = nsIDocShellTreeItem::typeChrome == docShellType;
+      }
+    }
+  }
+  return isChrome;
+}
+

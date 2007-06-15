@@ -34,16 +34,18 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-289669.js';
 //-----------------------------------------------------------------------------
-var bug = 289669;
+var BUGNUMBER = 289669;
 var summary = 'O(N^2) behavior on String.replace(/RegExp/, ...)';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
- 
+
 var data = {X: [], Y:[]};
 
 function replace(str) {
@@ -61,7 +63,7 @@ function runTest() {
 function neurodna(limit) {
   var prepare="<go>";
   for(var i=0;i<limit;i++) {
-     prepare += "<a>neurodna</a>";
+    prepare += "<a>neurodna</a>";
   }
   prepare+="</go>";
   var da1=new Date();
@@ -78,7 +80,7 @@ var order = BigO(data);
 
 var msg = '';
 for (var p = 0; p < data.X.length; p++)
-{ 
+{
   msg += '(' + data.X[p] + ', ' + data.Y[p] + '); ';
 }
 printStatus(msg);

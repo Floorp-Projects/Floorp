@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'ignoreCase.js';
+
 /**
    Filename:     ignoreCase.js
    Description:  'Tests RegExp attribute ignoreCase'

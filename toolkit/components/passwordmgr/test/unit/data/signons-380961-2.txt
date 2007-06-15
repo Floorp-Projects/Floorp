@@ -1,0 +1,14 @@
+#2c
+.
+http://dummyhost2.mozilla.org
+put_user3_here
+~dGVzdHVzZXIz
+*put_pw3_here
+~dGVzdHBhc3Mz
+.
+http://dummyhost2.mozilla.org
+put_user2_here
+~dGVzdHVzZXIy
+*put_pw2_here
+~dGVzdHBhc3My
+.

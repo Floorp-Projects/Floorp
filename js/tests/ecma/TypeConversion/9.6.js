@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '9.6.js';
+
 /**
    File Name:          9.6.js
    ECMA Section:       9.6  Type Conversion:  ToUint32

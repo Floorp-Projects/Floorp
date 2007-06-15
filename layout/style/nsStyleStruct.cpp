@@ -63,8 +63,7 @@
 
 inline PRBool IsFixedUnit(nsStyleUnit aUnit, PRBool aEnumOK)
 {
-  return PRBool((aUnit == eStyleUnit_Null) || 
-                (aUnit == eStyleUnit_Coord) || 
+  return PRBool((aUnit == eStyleUnit_Coord) || 
                 (aEnumOK && (aUnit == eStyleUnit_Enumerated)));
 }
 
@@ -198,8 +197,6 @@ static nscoord CalcCoord(const nsStyleCoord& aCoord,
                          PRInt32 aNumEnums)
 {
   switch (aCoord.GetUnit()) {
-    case eStyleUnit_Null:
-      return 0;
     case eStyleUnit_Coord:
       return aCoord.GetCoordValue();
     case eStyleUnit_Enumerated:
@@ -222,7 +219,10 @@ static nscoord CalcCoord(const nsStyleCoord& aCoord,
 }
 
 nsStyleMargin::nsStyleMargin() {
-  mMargin.Reset();
+  nsStyleCoord zero(0);
+  NS_FOR_CSS_SIDES(side) {
+    mMargin.Set(side, zero);
+  }
   mHasCachedMargin = PR_FALSE;
 }
 
@@ -277,7 +277,10 @@ nsChangeHint nsStyleMargin::MaxDifference()
 #endif
 
 nsStylePadding::nsStylePadding() {
-  mPadding.Reset();
+  nsStyleCoord zero(0);
+  NS_FOR_CSS_SIDES(side) {
+    mPadding.Set(side, zero);
+  }
   mHasCachedPadding = PR_FALSE;
 }
 
@@ -858,10 +861,10 @@ nsStylePosition::nsStylePosition(void)
   mOffset.SetBottom(autoCoord);
   mWidth.SetAutoValue();
   mMinWidth.SetCoordValue(0);
-  mMaxWidth.Reset();
+  mMaxWidth.SetNoneValue();
   mHeight.SetAutoValue();
   mMinHeight.SetCoordValue(0);
-  mMaxHeight.Reset();
+  mMaxHeight.SetNoneValue();
   mBoxSizing = NS_STYLE_BOX_SIZING_CONTENT;
   mZIndex.SetAutoValue();
 }
@@ -1301,6 +1304,7 @@ nsStyleContent::nsStyleContent(void)
     mResetCount(0),
     mResets(nsnull)
 {
+  mMarkerOffset.SetAutoValue();
 }
 
 nsStyleContent::~nsStyleContent(void)
@@ -1639,12 +1643,14 @@ nsStyleUIReset::nsStyleUIReset(void)
 { 
   mUserSelect = NS_STYLE_USER_SELECT_AUTO;
   mForceBrokenImageIcon = 0;
+  mIMEMode = NS_STYLE_IME_MODE_AUTO;
 }
 
 nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource) 
 {
   mUserSelect = aSource.mUserSelect;
   mForceBrokenImageIcon = aSource.mForceBrokenImageIcon;
+  mIMEMode = aSource.mIMEMode;
 }
 
 nsStyleUIReset::~nsStyleUIReset(void) 
@@ -1653,6 +1659,7 @@ nsStyleUIReset::~nsStyleUIReset(void)
 
 nsChangeHint nsStyleUIReset::CalcDifference(const nsStyleUIReset& aOther) const
 {
+  // ignore mIMEMode
   if (mForceBrokenImageIcon == aOther.mForceBrokenImageIcon) {
     if (mUserSelect == aOther.mUserSelect) {
       return NS_STYLE_HINT_NONE;

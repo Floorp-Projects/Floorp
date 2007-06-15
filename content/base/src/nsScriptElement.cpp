@@ -53,7 +53,7 @@ GetContextForContent(nsIContent* aContent)
 {
   nsIDocument* doc = aContent->GetCurrentDoc();
   if (doc) {
-    nsIPresShell *presShell = doc->GetShellAt(0);
+    nsIPresShell *presShell = doc->GetPrimaryShell();
     if (presShell) {
       return presShell->GetPresContext();
     }
@@ -195,18 +195,16 @@ nsScriptElement::MaybeProcessScript()
   }
 
   nsresult scriptresult = NS_OK;
-  nsRefPtr<nsScriptLoader> loader = cont->GetOwnerDoc()->GetScriptLoader();
-  if (loader) {
-    mIsEvaluated = PR_TRUE;
-    scriptresult = loader->ProcessScriptElement(this);
+  nsRefPtr<nsScriptLoader> loader = cont->GetOwnerDoc()->ScriptLoader();
+  mIsEvaluated = PR_TRUE;
+  scriptresult = loader->ProcessScriptElement(this);
 
-    // The only error we don't ignore is NS_ERROR_HTMLPARSER_BLOCK
-    // However we don't want to override other success values
-    // (such as NS_CONTENT_SCRIPT_IS_EVENTHANDLER)
-    if (NS_FAILED(scriptresult) &&
-        scriptresult != NS_ERROR_HTMLPARSER_BLOCK) {
-      scriptresult = NS_OK;
-    }
+  // The only error we don't ignore is NS_ERROR_HTMLPARSER_BLOCK
+  // However we don't want to override other success values
+  // (such as NS_CONTENT_SCRIPT_IS_EVENTHANDLER)
+  if (NS_FAILED(scriptresult) &&
+      scriptresult != NS_ERROR_HTMLPARSER_BLOCK) {
+    scriptresult = NS_OK;
   }
 
   return scriptresult;

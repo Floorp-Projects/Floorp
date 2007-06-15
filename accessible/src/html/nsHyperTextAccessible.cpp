@@ -527,9 +527,10 @@ nsresult nsHyperTextAccessible::DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNod
     // <div>abc<h1>def</h1>ghi</div>
     // If the passed-in DOM point was not on a direct child of the hypertext, we will
     // return the offset for that entire hypertext
-    // If the offset was at the end of the passed in object, we will now use 1 for
-    // addTextOffset, to put us after the embedded object char for that child hypertext
-    addTextOffset = (TextLength(descendantAccessible) == addTextOffset) ? 1 : 0;
+    // If the offset was after the first character of the passed in object, we will now use 1 for
+    // addTextOffset, to put us after the embedded object char. We'll only treat the offset as
+    // before the embedded object char if we end at the very beginning of the child.
+    addTextOffset = addTextOffset > 0;
     descendantAccessible = parentAccessible;
   }  
 
@@ -878,7 +879,8 @@ NS_IMETHODIMP nsHyperTextAccessible::GetRangeExtents(PRInt32 aStartOffset, PRInt
 {
   nsIntRect boundsRect;
   nsIFrame *endFrameUnused;
-  if (!GetPosAndText(aStartOffset, aEndOffset, nsnull, &endFrameUnused, &boundsRect)) {
+  if (!GetPosAndText(aStartOffset, aEndOffset, nsnull, &endFrameUnused, &boundsRect) ||
+      boundsRect.IsEmpty()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1184,7 +1186,9 @@ NS_IMETHODIMP nsHyperTextAccessible::DidInsertNode(nsIDOMNode *aNode, nsIDOMNode
     }
   }
 
-  if (NS_FAILED(DOMPointToOffset(aNode, aPosition, &start)))
+  nsCOMPtr<nsIDOMNode> parentNode;
+  aNode->GetParentNode(getter_AddRefs(parentNode));
+  if (NS_FAILED(DOMPointToOffset(parentNode, aPosition, &start)))
     return NS_OK;
 
   nsCOMPtr<nsIAccessibleTextChangeEvent> event =

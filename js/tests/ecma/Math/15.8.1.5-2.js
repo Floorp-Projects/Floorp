@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.8.1.5-2.js';
+
 /**
    File Name:          15.8.1.5-2.js
    ECMA Section:       15.8.1.5.js
@@ -55,14 +57,14 @@ var TITLE   = "Math.LOG10E";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION, 
-	      "delete Math.LOG10E; Math.LOG10E",   
-	      0.4342944819032518,     
+new TestCase( SECTION,
+	      "delete Math.LOG10E; Math.LOG10E",  
+	      0.4342944819032518,    
 	      eval("delete Math.LOG10E; Math.LOG10E") );
 
-new TestCase( SECTION, 
-	      "delete Math.LOG10E",                
-	      false,                  
+new TestCase( SECTION,
+	      "delete Math.LOG10E",               
+	      false,                 
 	      eval("delete Math.LOG10E") );
 
 test();

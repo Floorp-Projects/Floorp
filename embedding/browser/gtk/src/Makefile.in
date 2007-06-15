@@ -181,7 +181,7 @@ EXPORTS		+= \
 endif
 
 ifdef MOZ_GTKEMBED_DYN
-ifneq (,$(filter gtk gtk2 qt xlib,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk2 qt,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += \
 		$(DIST)/lib/libxpcomglue_s.$(LIB_SUFFIX) \
 		$(MOZ_COMPONENT_LIBS) \
@@ -210,8 +210,8 @@ DEFINES         += -D_TIME_H=1
 endif
 endif
 
-CXXFLAGS        += $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS)
-CFLAGS          += $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS)
+CXXFLAGS        += $(MOZ_GTK2_CFLAGS)
+CFLAGS          += $(MOZ_GTK2_CFLAGS)
 ifdef MOZ_GNOMEVFS_CFLAGS
 CXXFLAGS        += $(MOZ_GNOMEVFS_CFLAGS)
 CFLAGS          += $(MOZ_GNOMEVFS_CFLAGS)

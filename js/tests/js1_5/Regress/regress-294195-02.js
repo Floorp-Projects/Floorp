@@ -34,15 +34,17 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-294195-02.js';
 //-----------------------------------------------------------------------------
-var bug = 294195;
+var BUGNUMBER = 294195;
 var summary = 'Do not crash during String replace when accessing methods on backreferences';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var result = "".replace(/()/, "$1".slice(0,1))
 
-reportCompare(expect, actual, summary);
+  reportCompare(expect, actual, summary);

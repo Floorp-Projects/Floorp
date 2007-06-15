@@ -45,7 +45,6 @@
 #include "nsCOMPtr.h"
 #include "nsISVGValue.h"
 #include "nsRect.h"
-#include "cairo.h"
 
 class nsIDocument;
 class nsPresContext;
@@ -72,6 +71,8 @@ class gfxASurface;
 class nsIRenderingContext;
 struct gfxRect;
 struct gfxMatrix;
+struct gfxSize;
+struct gfxIntSize;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -109,6 +110,11 @@ struct gfxMatrix;
 #define GFX_ARGB32_OFFSET_G 1
 #define GFX_ARGB32_OFFSET_B 0
 #endif
+
+// maximum dimension of an offscreen surface - choose so that
+// the surface size doesn't overflow a 32-bit signed int using
+// 4 bytes per pixel; in line with gfxASurface::CheckSurfaceSize
+#define NS_SVG_OFFSCREEN_MAX_DIMENSION 16384
 
 /*
  * Checks the svg enable preference and if a renderer could
@@ -215,6 +221,11 @@ public:
    */
   static nsRect FindFilterInvalidation(nsIFrame *aFrame);
 
+  /*
+   * Update the filter invalidation region for this frame, if relevant.
+   */
+  static void UpdateFilterRegion(nsIFrame *aFrame);
+
   /* enum for specifying coordinate direction for ObjectSpace/UserSpace */
   enum ctxDirection { X, Y, XY };
 
@@ -242,6 +253,14 @@ public:
   /* Find the outermost SVG frame of the passed frame */
   static nsSVGOuterSVGFrame *
   GetOuterSVGFrame(nsIFrame *aFrame);
+
+  /**
+   * Get the covered region for a frame. Return null if it's not an SVG frame.
+   * @param aRect gets a rectangle in *pixels*
+   * @return the outer SVG frame which aRect is relative to
+   */
+  static nsIFrame*
+  GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame, nsRect* aRect);
 
   /* Generate a viewbox to viewport tranformation matrix */
   
@@ -305,19 +324,22 @@ public:
   ToBoundingPixelRect(const gfxRect& rect);
 
   /*
-   * Get a pointer to a surface that can be used to create cairo
-   * contexts for various measurement purposes.
+   * Convert a surface size to an integer for use by thebes
+   * possibly making it smaller in the process so the surface does not
+   * use excessive memory.
+   * @param aSize the desired surface size
+   * @param aResultOverflows true if the desired surface size is too big
+   * @return the surface size to use
    */
-  static cairo_surface_t *
-  GetCairoComputationalSurface();
-  static gfxASurface *
-  GetThebesComputationalSurface();
+  static gfxIntSize
+  ConvertToSurfaceSize(const gfxSize& aSize, PRBool *aResultOverflows);
 
   /*
-   * Convert a nsIDOMSVGMatrix to a cairo_matrix_t.
+   * Get a pointer to a surface that can be used to create thebes
+   * contexts for various measurement purposes.
    */
-  static cairo_matrix_t
-  ConvertSVGMatrixToCairo(nsIDOMSVGMatrix *aMatrix);
+  static gfxASurface *
+  GetThebesComputationalSurface();
 
   /*
    * Convert a nsIDOMSVGMatrix to a gfxMatrix.
@@ -333,13 +355,6 @@ public:
               float aRX, float aRY, float aRWidth, float aRHeight,
               float aX, float aY);
 
-  /*
-   * Convert a rectangle from cairo user space to device space.
-   */
-  static void
-  UserToDeviceBBox(cairo_t *ctx,
-                   double *xmin, double *ymin,
-                   double *xmax, double *ymax);
 
   static void CompositeSurfaceMatrix(gfxContext *aContext,
                                      gfxASurface *aSurface,
@@ -359,7 +374,6 @@ public:
 
 private:
   /* Computational (nil) surfaces */
-  static cairo_surface_t *mCairoComputationalSurface;
   static gfxASurface *mThebesComputationalSurface;
 };
 

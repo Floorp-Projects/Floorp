@@ -385,7 +385,7 @@ FocusElementButNotDocument(nsIDocument* aDocument, nsIContent* aContent)
   nsCOMPtr<nsIDOMElement> newFocusedElement(do_QueryInterface(aContent));
   focusController->SetFocusedElement(newFocusedElement);
 
-  nsIPresShell* presShell = aDocument->GetShellAt(0);
+  nsIPresShell* presShell = aDocument->GetPrimaryShell();
   nsIEventStateManager* esm = presShell->GetPresContext()->EventStateManager();
 
   // Temporarily set esm::mCurrentFocus so that esm::GetContentState() tells 
@@ -410,7 +410,7 @@ void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMWindow* aWindow,
   if (!domDoc) return;
 
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-  nsIPresShell* presShell = doc->GetShellAt(0);
+  nsIPresShell* presShell = doc->GetPrimaryShell();
   if (!presShell) return;
 
   // since the match could be an anonymous textnode inside a
@@ -834,7 +834,7 @@ nsWebBrowserFind::GetFrameSelection(nsIDOMWindow* aWindow,
     if (!domDoc) return;
 
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-    nsIPresShell* presShell = doc->GetShellAt(0);
+    nsIPresShell* presShell = doc->GetPrimaryShell();
     if (!presShell) return;
 
     // text input controls have their independent selection controllers

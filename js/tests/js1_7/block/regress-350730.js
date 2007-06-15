@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-350730.js';
 //-----------------------------------------------------------------------------
-var bug = 350730;
+var BUGNUMBER = 350730;
 var summary = 'Assertion: pn2->pn_slot >= 0 || varOrConst [@ EmitVariables]';
 var actual = 'No Crash';
 var expect = 'No Crash';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   with({}) let y;
 
   reportCompare(expect, actual, summary);

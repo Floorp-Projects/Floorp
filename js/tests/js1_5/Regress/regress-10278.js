@@ -34,6 +34,8 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-10278.js';
 /**
  *  File Name:          regress-10278.js
  *  Reference:          https://bugzilla.mozilla.org/show_bug.cgi?id=10278
@@ -42,7 +44,7 @@
  *  Author:             bob@bclary.com
  */
 //-----------------------------------------------------------------------------
-var bug = 10278;
+var BUGNUMBER = 10278;
 var summary = 'Function declarations do not need to be separated by semi-colon';
 var actual;
 var expect;
@@ -55,17 +57,17 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   expect = 'pass';
-  try 
+  try
   {
     eval("function f(){}function g(){}");
     actual = "pass";
     printStatus('no exception thrown');
-  } 
-  catch ( e ) 
+  }
+  catch ( e )
   {
     actual = "fail";
     printStatus('exception ' + e.toString() + ' thrown');

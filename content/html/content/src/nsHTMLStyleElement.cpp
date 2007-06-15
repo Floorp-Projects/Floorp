@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLStyleElement.h"
 #include "nsIDOMLinkStyle.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
@@ -119,6 +119,12 @@ protected:
                          nsAString& aType,
                          nsAString& aMedia,
                          PRBool* aIsAlternate);
+  /**
+   * Common method to call from the various mutation observer methods.
+   * aContent is a content node that's either the one that changed or its
+   * parent; we should only respond to the change if aContent is non-anonymous.
+   */
+  void ContentChanged(nsIContent* aContent);
 };
 
 
@@ -196,7 +202,7 @@ nsHTMLStyleElement::CharacterDataChanged(nsIDocument* aDocument,
                                          nsIContent* aContent,
                                          CharacterDataChangeInfo* aInfo)
 {
-  UpdateStyleSheetInternal(nsnull);
+  ContentChanged(aContent);
 }
 
 void
@@ -204,7 +210,7 @@ nsHTMLStyleElement::ContentAppended(nsIDocument* aDocument,
                                     nsIContent* aContainer,
                                     PRInt32 aNewIndexInContainer)
 {
-  UpdateStyleSheetInternal(nsnull);
+  ContentChanged(aContainer);
 }
 
 void
@@ -213,7 +219,7 @@ nsHTMLStyleElement::ContentInserted(nsIDocument* aDocument,
                                     nsIContent* aChild,
                                     PRInt32 aIndexInContainer)
 {
-  UpdateStyleSheetInternal(nsnull);
+  ContentChanged(aChild);
 }
 
 void
@@ -222,7 +228,15 @@ nsHTMLStyleElement::ContentRemoved(nsIDocument* aDocument,
                                    nsIContent* aChild,
                                    PRInt32 aIndexInContainer)
 {
-  UpdateStyleSheetInternal(nsnull);
+  ContentChanged(aChild);
+}
+
+void
+nsHTMLStyleElement::ContentChanged(nsIContent* aContent)
+{
+  if (nsContentUtils::IsInSameAnonymousTree(this, aContent)) {
+    UpdateStyleSheetInternal(nsnull);
+  }
 }
 
 nsresult

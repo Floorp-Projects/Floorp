@@ -71,8 +71,10 @@ typedef enum JSVersion {
     JSVERSION_1_5     = 150,
     JSVERSION_1_6     = 160,
     JSVERSION_1_7     = 170,
+    JSVERSION_1_8     = 180,
     JSVERSION_DEFAULT = 0,
-    JSVERSION_UNKNOWN = -1
+    JSVERSION_UNKNOWN = -1,
+    JSVERSION_LATEST  = JSVERSION_1_8
 } JSVersion;
 
 #define JSVERSION_IS_ECMA(version) \
@@ -623,6 +625,13 @@ typedef JSBool
 typedef void
 (* JS_DLL_CALLBACK JSGCThingCallback)(void *thing, uint8 flags, void *closure);
 
+/*
+ * Generic trace operation that calls JS_CallTracer on each traceable thing
+ * stored in data.
+ */
+typedef void
+(* JS_DLL_CALLBACK JSTraceDataOp)(JSTracer *trc, void *data);
+
 typedef JSBool
 (* JS_DLL_CALLBACK JSBranchCallback)(JSContext *cx, JSScript *script);
 
@@ -714,18 +723,6 @@ typedef JSBool
  */
 typedef JSPrincipals *
 (* JS_DLL_CALLBACK JSObjectPrincipalsFinder)(JSContext *cx, JSObject *obj);
-
-/*
- * Output formated arguments as specified by format string. See fprintf/sprintf
- * documentation for specification of format. Return the number of characters
- * printed or -1 if an error occur.
- */
-typedef int
-(* JS_DLL_CALLBACK JSPrintfFormater)(void *closure, const char *format, ...)
-#if defined __GNUC__
-    __attribute__ ((format (printf, 2, 3)))
-#endif
-;
 
 JS_END_EXTERN_C
 

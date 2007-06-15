@@ -59,11 +59,6 @@ endif
 ifeq ($(OS_ARCH),OS2)
 MOZ_PKG_PLATFORM := os2
 endif
-
-# GTK2 is the default, so we mark gtk1 builds
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
-MOZ_PKG_PLATFORM := $(MOZ_PKG_PLATFORM)-gtk1
-endif
 endif #MOZ_PKG_PLATFORM
 
 ifdef MOZ_PKG_SPECIAL

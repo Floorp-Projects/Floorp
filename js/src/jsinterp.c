@@ -230,25 +230,6 @@
         sp--;                                                                 \
     JS_END_MACRO
 
-/*
- * Convert a primitive string, number or boolean to a corresponding object.
- * v must not be an object, null or undefined when using this macro.
- */
-#define PRIMITIVE_TO_OBJECT(cx, v, obj)                                       \
-    JS_BEGIN_MACRO                                                            \
-        SAVE_SP(fp);                                                          \
-        if (JSVAL_IS_STRING(v)) {                                             \
-            obj = js_StringToObject(cx, JSVAL_TO_STRING(v));                  \
-        } else if (JSVAL_IS_INT(v)) {                                         \
-            obj = js_NumberToObject(cx, (jsdouble)JSVAL_TO_INT(v));           \
-        } else if (JSVAL_IS_DOUBLE(v)) {                                      \
-            obj = js_NumberToObject(cx, *JSVAL_TO_DOUBLE(v));                 \
-        } else {                                                              \
-            JS_ASSERT(JSVAL_IS_BOOLEAN(v));                                   \
-            obj = js_BooleanToObject(cx, JSVAL_TO_BOOLEAN(v));                \
-        }                                                                     \
-    JS_END_MACRO
-
 /* SAVE_SP_AND_PC must be already called. */
 #define VALUE_TO_OBJECT(cx, n, v, obj)                                        \
     JS_BEGIN_MACRO                                                            \
@@ -524,14 +505,23 @@ PutBlockObjects(JSContext *cx, JSStackFrame *fp)
     return ok;
 }
 
-JSObject *
-js_ComputeThis(JSContext *cx, JSObject *thisp, jsval *argv)
+JSBool
+js_ComputeThis(JSContext *cx, jsval *argv)
 {
+    JSObject *thisp;
+
+    if (!JSVAL_IS_OBJECT(argv[-1]))
+        return js_PrimitiveToObject(cx, &argv[-1]);
+
+    thisp = JSVAL_TO_OBJECT(argv[-1]);
     if (thisp && OBJ_GET_CLASS(cx, thisp) != &js_CallClass) {
+        if (!thisp->map->ops->thisObject)
+            return JS_TRUE;
+
         /* Some objects (e.g., With) delegate 'this' to another object. */
         thisp = OBJ_THIS_OBJECT(cx, thisp);
         if (!thisp)
-            return NULL;
+            return JS_FALSE;
     } else {
         /*
          * ECMA requires "the global object", but in the presence of multiple
@@ -563,7 +553,7 @@ js_ComputeThis(JSContext *cx, JSObject *thisp, jsval *argv)
             id = ATOM_TO_JSID(cx->runtime->atomState.parentAtom);
             for (;;) {
                 if (!OBJ_CHECK_ACCESS(cx, thisp, id, JSACC_PARENT, &v, &attrs))
-                    return NULL;
+                    return JS_FALSE;
                 parent = JSVAL_IS_VOID(v)
                          ? OBJ_GET_PARENT(cx, thisp)
                          : JSVAL_TO_OBJECT(v);
@@ -574,7 +564,7 @@ js_ComputeThis(JSContext *cx, JSObject *thisp, jsval *argv)
         }
     }
     argv[-1] = OBJECT_TO_JSVAL(thisp);
-    return thisp;
+    return JS_TRUE;
 }
 
 #if JS_HAS_NO_SUCH_METHOD
@@ -605,25 +595,17 @@ NoSuchMethod(JSContext *cx, JSStackFrame *fp, jsval *vp, uint32 flags,
      * such defaulting of 'this' to callee (v, *vp) ancestor.
      */
     JS_ASSERT(JSVAL_IS_PRIMITIVE(vp[0]));
-    RESTORE_SP(fp);
-    if (JSVAL_IS_OBJECT(vp[1])) {
-        thisp = JSVAL_TO_OBJECT(vp[1]);
-    } else {
-        PRIMITIVE_TO_OBJECT(cx, vp[1], thisp);
-        if (!thisp)
-            return JS_FALSE;
-        vp[1] = OBJECT_TO_JSVAL(thisp);
-    }
-    thisp = js_ComputeThis(cx, thisp, vp + 2);
-    if (!thisp)
+    if (!js_ComputeThis(cx, vp + 2))
         return JS_FALSE;
-    vp[1] = OBJECT_TO_JSVAL(thisp);
+
+    RESTORE_SP(fp);
 
     /* From here on, control must flow through label out: to return. */
     memset(roots, 0, sizeof roots);
     JS_PUSH_TEMP_ROOT(cx, JS_ARRAY_LENGTH(roots), roots, &tvr);
 
     id = ATOM_TO_JSID(cx->runtime->atomState.noSuchMethodAtom);
+    thisp = JSVAL_TO_OBJECT(vp[1]);
 #if JS_HAS_XML_SUPPORT
     if (OBJECT_IS_XML(cx, thisp)) {
         JSXMLObjectOps *ops;
@@ -1038,8 +1020,8 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
     void *mark;
     JSStackFrame *fp, frame;
     jsval *sp, *newsp, *limit;
-    jsval *vp, v, thisv;
-    JSObject *funobj, *parent, *thisp;
+    jsval *vp, v;
+    JSObject *funobj, *parent;
     JSBool ok;
     JSClass *clasp;
     JSObjectOps *ops;
@@ -1070,7 +1052,7 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
      * implements the __noSuchMethod__ method, in which case that method will
      * be called like so:
      *
-     *   thisp.__noSuchMethod__(id, args)
+     *   this.__noSuchMethod__(id, args)
      *
      * where id is the name of the method that this invocation attempted to
      * call by name, and args is an Array containing this invocation's actual
@@ -1087,9 +1069,6 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
 #endif
         goto bad;
     }
-
-    /* Load thisv after potentially calling NoSuchMethod, which may set it. */
-    thisv = vp[1];
 
     funobj = JSVAL_TO_OBJECT(v);
     parent = OBJ_GET_PARENT(cx, funobj);
@@ -1125,18 +1104,18 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
         nslots = nvars = 0;
 
         /* Try a call or construct native object op. */
-        native = (flags & JSINVOKE_CONSTRUCT) ? ops->construct : ops->call;
+        if (flags & JSINVOKE_CONSTRUCT) {
+            if (!JSVAL_IS_OBJECT(vp[1])) {
+                ok = js_PrimitiveToObject(cx, &vp[1]);
+                if (!ok)
+                    goto out2;
+            }
+            native = ops->construct;
+        } else {
+            native = ops->call;
+        }
         if (!native)
             goto bad;
-
-        if (JSVAL_IS_OBJECT(thisv)) {
-            thisp = JSVAL_TO_OBJECT(thisv);
-        } else {
-            PRIMITIVE_TO_OBJECT(cx, thisv, thisp);
-            if (!thisp)
-                goto out2;
-            vp[1] = thisv = OBJECT_TO_JSVAL(thisp);
-        }
     } else {
 have_fun:
         /* Get private data and set derived locals from it. */
@@ -1155,61 +1134,56 @@ have_fun:
 
         if (JSFUN_BOUND_METHOD_TEST(fun->flags)) {
             /* Handle bound method special case. */
-            thisp = parent;
-        } else if (JSVAL_IS_OBJECT(thisv)) {
-            thisp = JSVAL_TO_OBJECT(thisv);
-        } else {
-            uintN thispflags = JSFUN_THISP_FLAGS(fun->flags);
+            vp[1] = OBJECT_TO_JSVAL(parent);
+        } else if (!JSVAL_IS_OBJECT(vp[1])) {
+            /*
+             * We check if the function accepts a primitive value as |this|.
+             * For that we use a table that maps value's tag into the
+             * corresponding function flag.
+             */
+            uintN flagToTest;
+
+            JS_STATIC_ASSERT(JSVAL_INT == 1);
+            JS_STATIC_ASSERT(JSVAL_DOUBLE == 2);
+            JS_STATIC_ASSERT(JSVAL_STRING == 4);
+            JS_STATIC_ASSERT(JSVAL_BOOLEAN == 6);
+            static const uint16 PrimitiveTestFlags[] = {
+                JSFUN_THISP_NUMBER,     /* INT     */
+                JSFUN_THISP_NUMBER,     /* DOUBLE  */
+                JSFUN_THISP_NUMBER,     /* INT     */
+                JSFUN_THISP_STRING,     /* STRING  */
+                JSFUN_THISP_NUMBER,     /* INT     */
+                JSFUN_THISP_BOOLEAN,    /* BOOLEAN */
+                JSFUN_THISP_NUMBER      /* INT     */
+            };
 
             JS_ASSERT(!(flags & JSINVOKE_CONSTRUCT));
-            if (JSVAL_IS_STRING(thisv)) {
-                if (JSFUN_THISP_TEST(thispflags, JSFUN_THISP_STRING)) {
-                    thisp = (JSObject *) thisv;
-                    goto init_frame;
-                }
-                thisp = js_StringToObject(cx, JSVAL_TO_STRING(thisv));
-            } else if (JSVAL_IS_INT(thisv)) {
-                if (JSFUN_THISP_TEST(thispflags, JSFUN_THISP_NUMBER)) {
-                    thisp = (JSObject *) thisv;
-                    goto init_frame;
-                }
-                thisp = js_NumberToObject(cx, (jsdouble)JSVAL_TO_INT(thisv));
-            } else if (JSVAL_IS_DOUBLE(thisv)) {
-                if (JSFUN_THISP_TEST(thispflags, JSFUN_THISP_NUMBER)) {
-                    thisp = (JSObject *) thisv;
-                    goto init_frame;
-                }
-                thisp = js_NumberToObject(cx, *JSVAL_TO_DOUBLE(thisv));
-            } else {
-                JS_ASSERT(JSVAL_IS_BOOLEAN(thisv));
-                if (JSFUN_THISP_TEST(thispflags, JSFUN_THISP_BOOLEAN)) {
-                    thisp = (JSObject *) thisv;
-                    goto init_frame;
-                }
-                thisp = js_BooleanToObject(cx, JSVAL_TO_BOOLEAN(thisv));
-            }
-            if (!thisp) {
-                ok = JS_FALSE;
-                goto out2;
-            }
-            goto init_frame;
+            JS_ASSERT(vp[1] != JSVAL_VOID);
+            flagToTest = PrimitiveTestFlags[JSVAL_TAG(vp[1]) - 1];
+            if (JSFUN_THISP_TEST(JSFUN_THISP_FLAGS(fun->flags), flagToTest))
+                goto init_frame;
         }
     }
 
     if (flags & JSINVOKE_CONSTRUCT) {
         /* Default return value for a constructor is the new object. */
-        frame.rval = OBJECT_TO_JSVAL(thisp);
+        JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[1]));
+        frame.rval = vp[1];
     } else {
-        thisp = js_ComputeThis(cx, thisp, vp + 2);
-        if (!thisp) {
-            ok = JS_FALSE;
+        ok = js_ComputeThis(cx, vp + 2);
+        if (!ok)
             goto out2;
-        }
     }
 
   init_frame:
-    /* Initialize the rest of frame, except for sp (set by SAVE_SP later). */
-    frame.thisp = thisp;
+    /*
+     * Initialize the rest of frame, except for sp (set by SAVE_SP later).
+     *
+     * To set thisp we use an explicit cast and not JSVAL_TO_OBJECT, as vp[1]
+     * can be a primitive value here for native functions specified with
+     * JSFUN_THISP_(NUMBER|STRING|BOOLEAN) flags.
+     */
+    frame.thisp = (JSObject *)vp[1];
     frame.varobj = NULL;
     frame.callobj = frame.argsobj = NULL;
     frame.script = script;
@@ -1234,7 +1208,7 @@ have_fun:
     cx->fp = &frame;
 
     /* Init these now in case we goto out before first hook call. */
-    hook = cx->runtime->callHook;
+    hook = cx->debugHooks->callHook;
     hookData = NULL;
 
     /* Check for argument slots required by the function. */
@@ -1313,7 +1287,7 @@ have_fun:
 
     /* call the hook if present */
     if (hook && (native || script))
-        hookData = hook(cx, &frame, JS_TRUE, 0, cx->runtime->callHookData);
+        hookData = hook(cx, &frame, JS_TRUE, 0, cx->debugHooks->callHookData);
 
     /* Call the function, either a native method or an interpreted script. */
     if (native) {
@@ -1357,7 +1331,7 @@ have_fun:
 
 out:
     if (hookData) {
-        hook = cx->runtime->callHook;
+        hook = cx->debugHooks->callHook;
         if (hook)
             hook(cx, &frame, JS_FALSE, &ok, hookData);
     }
@@ -1508,7 +1482,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     JSObject *obj, *tmp;
     JSBool ok;
 
-    hook = cx->runtime->executeHook;
+    hook = cx->debugHooks->executeHook;
     hookData = mark = NULL;
     oldfp = cx->fp;
     frame.script = script;
@@ -1581,8 +1555,10 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     }
 
     cx->fp = &frame;
-    if (hook)
-        hookData = hook(cx, &frame, JS_TRUE, 0, cx->runtime->executeHookData);
+    if (hook) {
+        hookData = hook(cx, &frame, JS_TRUE, 0,
+                        cx->debugHooks->executeHookData);
+    }
 
     /*
      * Use frame.rval, not result, so the last result stays rooted across any
@@ -1592,7 +1568,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     *result = frame.rval;
 
     if (hookData) {
-        hook = cx->runtime->executeHook;
+        hook = cx->debugHooks->executeHook;
         if (hook)
             hook(cx, &frame, JS_FALSE, &ok, hookData);
     }
@@ -2143,7 +2119,6 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     JSAtom **atoms;
     JSObject *obj, *obj2, *parent;
     JSVersion currentVersion, originalVersion;
-    JSBranchCallback onbranch;
     JSBool ok, cond;
     JSTrapHandler interruptHandler;
     jsint depth, len;
@@ -2258,17 +2233,13 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
-     * if it returns false.  We reload onbranch after calling out to native
-     * functions (but not to getters, setters, or other native hooks).
+     * if it returns false.
      */
-#define LOAD_BRANCH_CALLBACK(cx)    (onbranch = (cx)->branchCallback)
-
-    LOAD_BRANCH_CALLBACK(cx);
 #define CHECK_BRANCH(len)                                                     \
     JS_BEGIN_MACRO                                                            \
-        if (len <= 0 && onbranch) {                                           \
+        if (len <= 0 && cx->branchCallback) {                                 \
             SAVE_SP_AND_PC(fp);                                               \
-            if (!(ok = (*onbranch)(cx, script)))                              \
+            if (!(ok = cx->branchCallback(cx, script)))                       \
                 goto out;                                                     \
         }                                                                     \
     JS_END_MACRO
@@ -2286,13 +2257,13 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 # define LOAD_JUMP_TABLE()      /* nothing */
 #endif
 
-#define LOAD_INTERRUPT_HANDLER(rt)                                            \
+#define LOAD_INTERRUPT_HANDLER(cx)                                            \
     JS_BEGIN_MACRO                                                            \
-        interruptHandler = (rt)->interruptHandler;                            \
+        interruptHandler = (cx)->debugHooks->interruptHandler;                \
         LOAD_JUMP_TABLE();                                                    \
     JS_END_MACRO
 
-    LOAD_INTERRUPT_HANDLER(rt);
+    LOAD_INTERRUPT_HANDLER(cx);
 
     /* Check for too much js_Interpret nesting, or too deep a C stack. */
     ++cx->interpLevel;
@@ -2358,7 +2329,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 interrupt:
         SAVE_SP_AND_PC(fp);
         switch (interruptHandler(cx, script, pc, &rval,
-                                 rt->interruptHandlerData)) {
+                                 cx->debugHooks->interruptHandlerData)) {
           case JSTRAP_ERROR:
             ok = JS_FALSE;
             goto out;
@@ -2374,7 +2345,7 @@ interrupt:
             goto out;
           default:;
         }
-        LOAD_INTERRUPT_HANDLER(rt);
+        LOAD_INTERRUPT_HANDLER(cx);
     }
 
     JS_ASSERT((uintN)op < (uintN)JSOP_LIMIT);
@@ -2417,7 +2388,7 @@ interrupt:
         if (interruptHandler) {
             SAVE_SP_AND_PC(fp);
             switch (interruptHandler(cx, script, pc, &rval,
-                                     rt->interruptHandlerData)) {
+                                     cx->debugHooks->interruptHandlerData)) {
               case JSTRAP_ERROR:
                 ok = JS_FALSE;
                 goto out;
@@ -2433,7 +2404,7 @@ interrupt:
                 goto out;
               default:;
             }
-            LOAD_INTERRUPT_HANDLER(rt);
+            LOAD_INTERRUPT_HANDLER(cx);
         }
 
         switch (op) {
@@ -2455,9 +2426,29 @@ interrupt:
             sp--;
           END_CASE(JSOP_POP)
 
-          BEGIN_CASE(JSOP_POP2)
-            sp -= 2;
-          END_CASE(JSOP_POP2)
+          BEGIN_CASE(JSOP_POPN)
+            sp -= GET_UINT16(pc);
+#ifdef DEBUG
+            JS_ASSERT(fp->spbase <= sp);
+            obj = fp->blockChain;
+            JS_ASSERT(!obj ||
+                      fp->spbase + OBJ_BLOCK_DEPTH(cx, obj)
+                                 + OBJ_BLOCK_COUNT(cx, obj)
+                      <= sp);
+            for (obj = fp->scopeChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
+                clasp = OBJ_GET_CLASS(cx, obj);
+                if (clasp != &js_BlockClass && clasp != &js_WithClass)
+                    continue;
+                if (JS_GetPrivate(cx, obj) != fp)
+                    break;
+                JS_ASSERT(fp->spbase + OBJ_BLOCK_DEPTH(cx, obj)
+                                     + ((clasp == &js_BlockClass)
+                                         ? OBJ_BLOCK_COUNT(cx, obj)
+                                         : 1)
+                          <= sp);
+            }
+#endif
+          END_CASE(JSOP_POPN)
 
           BEGIN_CASE(JSOP_SWAP)
             vp = sp - depth;    /* swap generating pc's for the decompiler */
@@ -2530,11 +2521,11 @@ interrupt:
                 }
 
                 if (hookData) {
-                    JSInterpreterHook hook = rt->callHook;
+                    JSInterpreterHook hook = cx->debugHooks->callHook;
                     if (hook) {
                         SAVE_SP_AND_PC(fp);
                         hook(cx, fp, JS_FALSE, &ok, hookData);
-                        LOAD_INTERRUPT_HANDLER(rt);
+                        LOAD_INTERRUPT_HANDLER(cx);
                     }
                 }
 
@@ -3434,8 +3425,7 @@ interrupt:
             if (!ok)
                 goto out;
             RESTORE_SP(fp);
-            LOAD_BRANCH_CALLBACK(cx);
-            LOAD_INTERRUPT_HANDLER(rt);
+            LOAD_INTERRUPT_HANDLER(cx);
             obj = JSVAL_TO_OBJECT(*vp);
             len = js_CodeSpec[op].length;
             DO_NEXT_OP(len);
@@ -3574,8 +3564,8 @@ interrupt:
                 ok = js_NewNumberValue(cx, d, &rtmp);                         \
                 if (!ok)                                                      \
                     goto out;                                                 \
-                *vp = rtmp;                                                   \
             }                                                                 \
+            *vp = rtmp;                                                       \
             (cs->format & JOF_INC) ? d++ : d--;                               \
             ok = js_NewNumberValue(cx, d, &rval);                             \
         } else {                                                              \
@@ -3933,22 +3923,11 @@ interrupt:
                 newifp->mark = newmark;
 
                 /* Compute the 'this' parameter now that argv is set. */
-                if (!JSVAL_IS_OBJECT(vp[1])) {
-                    PRIMITIVE_TO_OBJECT(cx, vp[1], obj2);
-                    if (!obj2)
-                        goto out;
-                    vp[1] = OBJECT_TO_JSVAL(obj2);
-                }
-                newifp->frame.thisp =
-                    js_ComputeThis(cx,
-                                   JSFUN_BOUND_METHOD_TEST(fun->flags)
-                                   ? parent
-                                   : JSVAL_TO_OBJECT(vp[1]),
-                                   newifp->frame.argv);
-                if (!newifp->frame.thisp) {
-                    js_FreeRawStack(cx, newmark);
+                if (JSFUN_BOUND_METHOD_TEST(fun->flags))
+                    vp[1] = OBJECT_TO_JSVAL(parent);
+                if (!js_ComputeThis(cx, vp + 2))
                     goto bad_inline_call;
-                }
+                newifp->frame.thisp = JSVAL_TO_OBJECT(vp[1]);
 #ifdef DUMP_CALL_TABLE
                 LogCall(cx, *vp, argc, vp + 2);
 #endif
@@ -3962,12 +3941,12 @@ interrupt:
                 SAVE_SP(&newifp->frame);
 
                 /* Call the debugger hook if present. */
-                hook = rt->callHook;
+                hook = cx->debugHooks->callHook;
                 if (hook) {
                     newifp->frame.pc = NULL;
                     newifp->hookData = hook(cx, &newifp->frame, JS_TRUE, 0,
-                                            rt->callHookData);
-                    LOAD_INTERRUPT_HANDLER(rt);
+                                            cx->debugHooks->callHookData);
+                    LOAD_INTERRUPT_HANDLER(cx);
                 } else {
                     newifp->hookData = NULL;
                 }
@@ -3975,8 +3954,7 @@ interrupt:
                 /* Scope with a call object parented by the callee's parent. */
                 if (JSFUN_HEAVYWEIGHT_TEST(fun->flags) &&
                     !js_GetCallObject(cx, &newifp->frame, parent)) {
-                    ok = JS_FALSE;
-                    goto out;
+                    goto bad_inline_call;
                 }
 
                 /* Switch to new version if currentVersion wasn't overridden. */
@@ -4001,17 +3979,19 @@ interrupt:
                 DO_OP();
 
               bad_inline_call:
+                RESTORE_SP(fp);
+                JS_ASSERT(fp->pc == pc);
                 script = fp->script;
                 depth = (jsint) script->depth;
                 atoms = script->atomMap.vector;
+                js_FreeRawStack(cx, newmark);
                 ok = JS_FALSE;
                 goto out;
             }
 
             ok = js_Invoke(cx, argc, 0);
             RESTORE_SP(fp);
-            LOAD_BRANCH_CALLBACK(cx);
-            LOAD_INTERRUPT_HANDLER(rt);
+            LOAD_INTERRUPT_HANDLER(cx);
             if (!ok)
                 goto out;
             JS_RUNTIME_METER(rt, nonInlineCalls);
@@ -4047,8 +4027,7 @@ interrupt:
             SAVE_SP_AND_PC(fp);
             ok = js_Invoke(cx, argc, 0);
             RESTORE_SP(fp);
-            LOAD_BRANCH_CALLBACK(cx);
-            LOAD_INTERRUPT_HANDLER(rt);
+            LOAD_INTERRUPT_HANDLER(cx);
             if (!ok)
                 goto out;
             if (!cx->rval2set) {
@@ -4502,7 +4481,7 @@ interrupt:
                 JS_ASSERT(JSVAL_IS_INT(rval));
                 op = (JSOp) JSVAL_TO_INT(rval);
                 JS_ASSERT((uintN)op < (uintN)JSOP_LIMIT);
-                LOAD_INTERRUPT_HANDLER(rt);
+                LOAD_INTERRUPT_HANDLER(cx);
                 DO_OP();
               case JSTRAP_RETURN:
                 fp->rval = rval;
@@ -4514,7 +4493,7 @@ interrupt:
                 goto out;
               default:;
             }
-            LOAD_INTERRUPT_HANDLER(rt);
+            LOAD_INTERRUPT_HANDLER(cx);
           END_CASE(JSOP_TRAP)
 
           BEGIN_CASE(JSOP_ARGUMENTS)
@@ -4528,7 +4507,7 @@ interrupt:
           BEGIN_CASE(JSOP_ARGSUB)
             id = INT_TO_JSID(GET_ARGNO(pc));
             SAVE_SP_AND_PC(fp);
-            ok = js_GetArgsProperty(cx, fp, id, &obj, &rval);
+            ok = js_GetArgsProperty(cx, fp, id, &rval);
             if (!ok)
                 goto out;
             PUSH_OPND(rval);
@@ -4537,7 +4516,7 @@ interrupt:
           BEGIN_CASE(JSOP_ARGCNT)
             id = ATOM_TO_JSID(rt->atomState.lengthAtom);
             SAVE_SP_AND_PC(fp);
-            ok = js_GetArgsProperty(cx, fp, id, &obj, &rval);
+            ok = js_GetArgsProperty(cx, fp, id, &rval);
             if (!ok)
                 goto out;
             PUSH_OPND(rval);
@@ -5279,67 +5258,15 @@ interrupt:
           EMPTY_CASE(JSOP_TRY)
           EMPTY_CASE(JSOP_FINALLY)
 
-          /* Reset the stack to the given depth. */
-          BEGIN_CASE(JSOP_SETSP)
-            i = (jsint) GET_UINT16(pc);
-
-            for (obj = fp->blockChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
-                JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
-                if (OBJ_BLOCK_DEPTH(cx, obj) + (jsint)OBJ_BLOCK_COUNT(cx, obj) <= i) {
-                    JS_ASSERT(OBJ_BLOCK_DEPTH(cx, obj) < i || OBJ_BLOCK_COUNT(cx, obj) == 0);
-                    break;
-                }
-            }
-            fp->blockChain = obj;
-
-            JS_ASSERT(ok);
-            for (obj = fp->scopeChain;
-                 (clasp = OBJ_GET_CLASS(cx, obj)) == &js_WithClass ||
-                 clasp == &js_BlockClass;
-                 obj = OBJ_GET_PARENT(cx, obj)) {
-                if (JS_GetPrivate(cx, obj) != fp ||
-                    OBJ_BLOCK_DEPTH(cx, obj) < i) {
-                    break;
-                }
-                if (clasp == &js_BlockClass)
-                    ok &= js_PutBlockObject(cx, obj);
-                else
-                    JS_SetPrivate(cx, obj, NULL);
-            }
-
-            fp->scopeChain = obj;
-
-            /* Set sp after js_PutBlockObject to avoid potential GC hazards. */
-            sp = fp->spbase + i;
-
-            /* Don't fail until after we've updated all stacks. */
-            if (!ok)
-                goto out;
-          END_CASE(JSOP_SETSP)
-
           BEGIN_CASE(JSOP_GOSUB)
-            JS_ASSERT(cx->exception != JSVAL_HOLE);
-            if (!cx->throwing) {
-                lval = JSVAL_HOLE;
-            } else {
-                lval = cx->exception;
-                cx->throwing = JS_FALSE;
-            }
-            PUSH(lval);
+            PUSH(JSVAL_FALSE);
             i = PTRDIFF(pc, script->main, jsbytecode) + JSOP_GOSUB_LENGTH;
             len = GET_JUMP_OFFSET(pc);
             PUSH(INT_TO_JSVAL(i));
           END_VARLEN_CASE
 
           BEGIN_CASE(JSOP_GOSUBX)
-            JS_ASSERT(cx->exception != JSVAL_HOLE);
-            if (!cx->throwing) {
-                lval = JSVAL_HOLE;
-            } else {
-                lval = cx->exception;
-                cx->throwing = JS_FALSE;
-            }
-            PUSH(lval);
+            PUSH(JSVAL_FALSE);
             i = PTRDIFF(pc, script->main, jsbytecode) + JSOP_GOSUBX_LENGTH;
             len = GET_JUMPX_OFFSET(pc);
             PUSH(INT_TO_JSVAL(i));
@@ -5347,9 +5274,9 @@ interrupt:
 
           BEGIN_CASE(JSOP_RETSUB)
             rval = POP();
-            JS_ASSERT(JSVAL_IS_INT(rval));
             lval = POP();
-            if (lval != JSVAL_HOLE) {
+            JS_ASSERT(JSVAL_IS_BOOLEAN(lval));
+            if (JSVAL_TO_BOOLEAN(lval)) {
                 /*
                  * Exception was pending during finally, throw it *before* we
                  * adjust pc, because pc indexes into script->trynotes.  This
@@ -5357,10 +5284,11 @@ interrupt:
                  * it points out a FIXME: 350509, due to Igor Bukanov.
                  */
                 cx->throwing = JS_TRUE;
-                cx->exception = lval;
+                cx->exception = rval;
                 ok = JS_FALSE;
                 goto out;
             }
+            JS_ASSERT(JSVAL_IS_INT(rval));
             len = JSVAL_TO_INT(rval);
             pc = script->main;
           END_VARLEN_CASE
@@ -5418,11 +5346,11 @@ interrupt:
 #if JS_HAS_DEBUGGER_KEYWORD
           BEGIN_CASE(JSOP_DEBUGGER)
           {
-            JSTrapHandler handler = rt->debuggerHandler;
+            JSTrapHandler handler = cx->debugHooks->debuggerHandler;
             if (handler) {
                 SAVE_SP_AND_PC(fp);
                 switch (handler(cx, script, pc, &rval,
-                                rt->debuggerHandlerData)) {
+                                cx->debugHooks->debuggerHandlerData)) {
                   case JSTRAP_ERROR:
                     ok = JS_FALSE;
                     goto out;
@@ -5438,7 +5366,7 @@ interrupt:
                     goto out;
                   default:;
                 }
-                LOAD_INTERRUPT_HANDLER(rt);
+                LOAD_INTERRUPT_HANDLER(cx);
             }
           }
           END_CASE(JSOP_DEBUGGER)
@@ -5983,6 +5911,7 @@ interrupt:
 #if JS_THREADED_INTERP
           L_JSOP_BACKPATCH:
           L_JSOP_BACKPATCH_POP:
+          L_JSOP_UNUSED117:
 #else
           default:
 #endif
@@ -6040,6 +5969,7 @@ interrupt:
 #endif /* !JS_THREADED_INTERP */
 
 out:
+    JS_ASSERT((size_t)(pc - script->code) < script->length);
     if (!ok) {
         /*
          * Has an exception been raised?  Also insist that we are not in an
@@ -6066,13 +5996,18 @@ out:
          * FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=309894
          */
         if (cx->throwing && !(fp->flags & JSFRAME_FILTERING)) {
+            JSTrapHandler handler;
+            JSTryNote *tn, *tnlimit;
+            uint32 offset;
+
             /*
              * Call debugger throw hook if set (XXX thread safety?).
              */
-            JSTrapHandler handler = rt->throwHook;
+            handler = cx->debugHooks->throwHook;
             if (handler) {
                 SAVE_SP_AND_PC(fp);
-                switch (handler(cx, script, pc, &rval, rt->throwHookData)) {
+                switch (handler(cx, script, pc, &rval,
+                                cx->debugHooks->throwHookData)) {
                   case JSTRAP_ERROR:
                     cx->throwing = JS_FALSE;
                     goto no_catch;
@@ -6086,38 +6021,111 @@ out:
                   case JSTRAP_CONTINUE:
                   default:;
                 }
-                LOAD_INTERRUPT_HANDLER(rt);
+                LOAD_INTERRUPT_HANDLER(cx);
             }
 
             /*
              * Look for a try block in script that can catch this exception.
              */
+            if (!script->trynotes)
+                goto no_catch;
+
+            offset = (uint32)(pc - script->main);
+            tn = script->trynotes->notes;
+            tnlimit = tn + script->trynotes->length;
+            for (;;) {
+                if (offset - tn->start < tn->length) {
+                    if (tn->kind == JSTN_FINALLY)
+                        break;
+                    JS_ASSERT(tn->kind == JSTN_CATCH);
 #if JS_HAS_GENERATORS
-            if (JS_LIKELY(cx->exception != JSVAL_ARETURN)) {
-                SCRIPT_FIND_CATCH_START(script, pc, pc);
-                if (!pc)
+                    /* Catch can not intercept closing of a generator. */
+                    if (JS_LIKELY(cx->exception != JSVAL_ARETURN))
+                        break;
+#else
+                    break;
+#endif
+                }
+                if (++tn == tnlimit)
                     goto no_catch;
-            } else {
-                pc = js_FindFinallyHandler(script, pc);
-                if (!pc) {
-                    cx->throwing = JS_FALSE;
-                    ok = JS_TRUE;
-                    fp->rval = JSVAL_VOID;
-                    goto no_catch;
+            }
+
+            ok = JS_TRUE;
+
+            /*
+             * Unwind the block and scope chains until we match the stack
+             * depth of the try note.
+             */
+            i = tn->stackDepth;
+            for (obj = fp->blockChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
+                JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
+                if (OBJ_BLOCK_DEPTH(cx, obj) < i)
+                    break;
+            }
+            fp->blockChain = obj;
+
+            JS_ASSERT(ok);
+            for (obj = fp->scopeChain;
+                 (clasp = OBJ_GET_CLASS(cx, obj)) == &js_WithClass ||
+                 clasp == &js_BlockClass;
+                 obj = OBJ_GET_PARENT(cx, obj)) {
+                if (JS_GetPrivate(cx, obj) != fp ||
+                    OBJ_BLOCK_DEPTH(cx, obj) < i) {
+                    break;
+                }
+                if (clasp == &js_BlockClass) {
+                    /* Don't fail until after we've updated all stacks. */
+                    ok &= js_PutBlockObject(cx, obj);
+                } else {
+                    JS_SetPrivate(cx, obj, NULL);
                 }
             }
-#else
-            SCRIPT_FIND_CATCH_START(script, pc, pc);
-            if (!pc)
-                goto no_catch;
-#endif
 
-            /* Don't clear cx->throwing to save cx->exception from GC. */
+            fp->scopeChain = obj;
+
+            /* Set sp after js_PutBlockObject to avoid potential GC hazards. */
+            sp = fp->spbase + i;
+
+            /* The catch or finally begins right after the code they protect. */
+            pc = (script)->main + tn->start + tn->length;
+
+            /*
+             * When failing during the scope recovery, restart the exception
+             * search with the updated stack and pc.
+             */
+            if (!ok)
+                goto out;
+
+            JS_ASSERT(cx->exception != JSVAL_HOLE);
+            if (tn->kind == JSTN_FINALLY) {
+                /*
+                 * Push (false, exception) pair for finally to indicate that
+                 * [retsub] should rethrow the exception.
+                 */
+                PUSH(JSVAL_TRUE);
+                PUSH(cx->exception);
+                cx->throwing = JS_FALSE;
+            } else {
+                /*
+                 * Don't clear cx->throwing to save cx->exception from GC
+                 * until it is pushed to the stack via [exception] in the
+                 * catch block.
+                 */
+            }
+
             len = 0;
             ok = JS_TRUE;
             DO_NEXT_OP(len);
         }
-no_catch:;
+
+      no_catch:;
+#if JS_HAS_GENERATORS
+        if (JS_UNLIKELY(cx->exception == JSVAL_ARETURN)) {
+            cx->throwing = JS_FALSE;
+            ok = JS_TRUE;
+            fp->rval = JSVAL_VOID;
+        }
+#endif
     }
 
     /*

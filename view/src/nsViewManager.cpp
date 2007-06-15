@@ -227,11 +227,6 @@ nsViewManager::~nsViewManager()
 
   mObserver = nsnull;
   mContext = nsnull;
-
-  if (nsnull != mCompositeListeners) {
-    mCompositeListeners->Clear();
-    NS_RELEASE(mCompositeListeners);
-  }
 }
 
 NS_IMPL_ISUPPORTS1(nsViewManager, nsIViewManager)
@@ -377,34 +372,6 @@ NS_IMETHODIMP nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight
   return NS_OK;
 }
 
-/* Check the prefs to see whether we should do double buffering or not... */
-static
-PRBool DoDoubleBuffering(void)
-{
-  static PRBool gotDoublebufferPrefs = PR_FALSE;
-  static PRBool doDoublebuffering    = PR_TRUE;  /* Double-buffering is ON by default */
-  
-  if (!gotDoublebufferPrefs) {
-    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefBranch) {
-      PRBool val;
-      if (NS_SUCCEEDED(prefBranch->GetBoolPref("viewmanager.do_doublebuffering", &val))) {
-        doDoublebuffering = val;
-      }
-    }
-
-#ifdef DEBUG
-    if (!doDoublebuffering) {
-      printf("nsViewManager: Note: Double-buffering disabled via prefs.\n");
-    }
-#endif /* DEBUG */
-
-    gotDoublebufferPrefs = PR_TRUE;
-  }
-  
-  return doDoublebuffering;
-}
-
 static void ConvertNativeRegionToAppRegion(nsIRegion* aIn, nsRegion* aOut,
                                            nsIDeviceContext* context)
 {
@@ -492,7 +459,6 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
   SetPainting(PR_TRUE);
 
   nsCOMPtr<nsIRenderingContext> localcx;
-  nsIDrawingSurface*    ds = nsnull;
 
   if (nsnull == aContext)
     {
@@ -508,19 +474,6 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
       localcx = aContext;
     }
 
-  // notify the listeners.
-  if (nsnull != mCompositeListeners) {
-    PRUint32 listenerCount;
-    if (NS_SUCCEEDED(mCompositeListeners->Count(&listenerCount))) {
-      nsCOMPtr<nsICompositeListener> listener;
-      for (PRUint32 i = 0; i < listenerCount; i++) {
-        if (NS_SUCCEEDED(mCompositeListeners->QueryElementAt(i, NS_GET_IID(nsICompositeListener), getter_AddRefs(listener)))) {
-          listener->WillRefreshRegion(this, aView, aContext, aRegion, aUpdateFlags);
-        }
-      }
-    }
-  }
-
   // damageRect is the clipped damage area bounds, in twips-relative-to-view-origin
   nsRect damageRect = damageRegion.GetBounds();
   PRInt32 p2a = mContext->AppUnitsPerDevPixel();
@@ -530,31 +483,23 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
 
   ctx->Save();
 
-  ctx->Translate(gfxPoint(NSAppUnitsToIntPixels(viewRect.x, p2a),
-                          NSAppUnitsToIntPixels(viewRect.y, p2a)));
+  nsPoint vtowoffset = aView->ViewToWidgetOffset();
+  ctx->Translate(gfxPoint(gfxFloat(vtowoffset.x) / p2a,
+                          gfxFloat(vtowoffset.y) / p2a));
+
+  NS_ASSERTION(!viewRect.x && !viewRect.y, "When exactly is this supposed to be non-zero?");
+  ctx->Translate(gfxPoint(gfxFloat(viewRect.x) / p2a,
+                          gfxFloat(viewRect.y) / p2a));
 
   nsRegion opaqueRegion;
   AddCoveringWidgetsToOpaqueRegion(opaqueRegion, mContext, aView);
   damageRegion.Sub(damageRegion, opaqueRegion);
 
-  RenderViews(aView, *localcx, damageRegion, ds);
+  RenderViews(aView, *localcx, damageRegion);
 
   ctx->Restore();
 
   SetPainting(PR_FALSE);
-
-  // notify the listeners.
-  if (nsnull != mCompositeListeners) {
-    PRUint32 listenerCount;
-    if (NS_SUCCEEDED(mCompositeListeners->Count(&listenerCount))) {
-      nsCOMPtr<nsICompositeListener> listener;
-      for (PRUint32 i = 0; i < listenerCount; i++) {
-        if (NS_SUCCEEDED(mCompositeListeners->QueryElementAt(i, NS_GET_IID(nsICompositeListener), getter_AddRefs(listener)))) {
-          listener->DidRefreshRegion(this, aView, aContext, aRegion, aUpdateFlags);
-        }
-      }
-    }
-  }
 
   if (RootViewManager()->mRecursiveRefreshPending) {
     // Unset this flag first, since if aUpdateFlags includes NS_VMREFRESH_IMMEDIATE
@@ -650,13 +595,8 @@ void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceCo
   }
 }
 
-/*
-  aRCSurface is the drawing surface being used to double-buffer aRC, or null
-  if no double-buffering is happening. We pass this in here so that we can
-  blend directly into the double-buffer offscreen memory.
-*/
 void nsViewManager::RenderViews(nsView *aView, nsIRenderingContext& aRC,
-                                const nsRegion& aRegion, nsIDrawingSurface* aRCSurface)
+                                const nsRegion& aRegion)
 {
   if (mObserver) {
     nsView* displayRoot = GetDisplayRootFor(aView);
@@ -669,125 +609,6 @@ void nsViewManager::RenderViews(nsView *aView, nsIRenderingContext& aRC,
     mObserver->Paint(displayRoot, &aRC, damageRegion);
     aRC.PopState();
   }
-}
-
-static nsresult NewOffscreenContext(nsIDeviceContext* deviceContext, nsIDrawingSurface* surface,
-                                    const nsRect& aRect, nsIRenderingContext* *aResult)
-{
-  nsresult             rv;
-  nsIRenderingContext *context = nsnull;
-
-  rv = deviceContext->CreateRenderingContext(surface, context);
-  if (NS_FAILED(rv))
-    return rv;
-
-  // always initialize clipping, linux won't draw images otherwise.
-  nsRect clip(0, 0, aRect.width, aRect.height);
-  context->SetClipRect(clip, nsClipCombine_kReplace);
-
-  context->Translate(-aRect.x, -aRect.y);
-
-  *aResult = context;
-  return NS_OK;
-}
-
-nsIViewManager::BlendingBuffers::BlendingBuffers(nsIRenderingContext* aCleanupContext) {
-  mCleanupContext = aCleanupContext;
-
-  mOwnBlackSurface = PR_FALSE;
-  mWhite = nsnull;
-  mBlack = nsnull;
-}
-
-nsIViewManager::BlendingBuffers::~BlendingBuffers() {
-  if (mWhite)
-    mCleanupContext->DestroyDrawingSurface(mWhite);
-
-  if (mBlack && mOwnBlackSurface)
-    mCleanupContext->DestroyDrawingSurface(mBlack);
-}
-
-/*
-@param aBorrowContext set to PR_TRUE if the BlendingBuffers' "black" context
-  should be just aRC; set to PR_FALSE if we should create a new offscreen context
-@param aBorrowSurface if aBorrowContext is PR_TRUE, then this is the offscreen surface
-  corresponding to aRC, or nsnull if aRC doesn't have one; if aBorrowContext is PR_FALSE,
-  this parameter is ignored
-@param aNeedAlpha set to PR_FALSE if the caller guarantees that every pixel of the
-  BlendingBuffers will be drawn with opacity 1.0, PR_TRUE otherwise
-@param aRect the screen rectangle covered by the new BlendingBuffers, in app units, and
-  relative to the origin of aRC
-*/
-nsIViewManager::BlendingBuffers*
-nsViewManager::CreateBlendingBuffers(nsIRenderingContext *aRC,
-                                     PRBool aBorrowContext,
-                                     nsIDrawingSurface* aBorrowSurface,
-                                     PRBool aNeedAlpha,
-                                     const nsRect& aRect)
-{
-  nsresult rv;
-
-  // create a blender, if none exists already.
-  if (!mBlender) {
-    mBlender = do_CreateInstance(kBlenderCID, &rv);
-    if (NS_FAILED(rv))
-      return nsnull;
-    rv = mBlender->Init(mContext);
-    if (NS_FAILED(rv)) {
-      mBlender = nsnull;
-      return nsnull;
-    }
-  }
-
-  BlendingBuffers* buffers = new BlendingBuffers(aRC);
-  if (!buffers)
-    return nsnull;
-
-  buffers->mOffset = nsPoint(aRect.x, aRect.y);
-
-  nsRect offscreenBounds(0, 0, aRect.width, aRect.height);
-  offscreenBounds.ScaleRoundOut(1.0f / mContext->AppUnitsPerDevPixel());
-
-  if (aBorrowContext) {
-    buffers->mBlackCX = aRC;
-    buffers->mBlack = aBorrowSurface;
-  } else {
-    rv = aRC->CreateDrawingSurface(offscreenBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, buffers->mBlack);
-    if (NS_FAILED(rv)) {
-      delete buffers;
-      return nsnull;
-    }
-    buffers->mOwnBlackSurface = PR_TRUE;
-    
-    rv = NewOffscreenContext(mContext, buffers->mBlack, aRect, getter_AddRefs(buffers->mBlackCX));
-    if (NS_FAILED(rv)) {
-      delete buffers;
-      return nsnull;
-    }
-  }
-
-  if (aNeedAlpha) {
-    rv = aRC->CreateDrawingSurface(offscreenBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, buffers->mWhite);
-    if (NS_FAILED(rv)) {
-      delete buffers;
-      return nsnull;
-    }
-    
-    rv = NewOffscreenContext(mContext, buffers->mWhite, aRect, getter_AddRefs(buffers->mWhiteCX));
-    if (NS_FAILED(rv)) {
-      delete buffers;
-      return nsnull;
-    }
-    
-    // Note that we only need to fill mBlackCX with black when some pixels are going
-    // to be transparent.
-    buffers->mBlackCX->SetColor(NS_RGB(0, 0, 0));
-    buffers->mBlackCX->FillRect(aRect);
-    buffers->mWhiteCX->SetColor(NS_RGB(255, 255, 255));
-    buffers->mWhiteCX->FillRect(aRect);
-  }
-
-  return buffers;
 }
 
 void nsViewManager::ProcessPendingUpdates(nsView* aView, PRBool aDoInvalidate)
@@ -1215,6 +1036,10 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
                 BeginUpdateViewBatch();
                 observer->WillPaint();
                 EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+
+                // Get the view pointer again since the code above might have
+                // destroyed it (bug 378273).
+                view = nsView::GetViewFor(aEvent->widget);
               }
             }
             // Make sure to sync up any widget geometry changes we
@@ -1222,8 +1047,11 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             if (rootVM->mHasPendingUpdates) {
               rootVM->ProcessPendingUpdates(mRootView, PR_FALSE);
             }
-            Refresh(view, event->renderingContext, region,
-                    NS_VMREFRESH_DOUBLE_BUFFER);
+            
+            if (view) {
+              Refresh(view, event->renderingContext, region,
+                      NS_VMREFRESH_DOUBLE_BUFFER);
+            }
           }
         } else {
           // since we got an NS_PAINT event, we need to
@@ -1800,8 +1628,12 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView, nsPoint aDelta,
 
   aUpdateRegion->MoveBy(-displayOffset);
 
+#ifdef MOZ_WIDGET_GTK2
+  return aUpdateRegion->IsEmpty();
+#else
   return PR_TRUE;
-}                                            
+#endif
+}
 
 NS_IMETHODIMP nsViewManager::SetViewCheckChildEvents(nsIView *aView, PRBool aEnable)
 {
@@ -1955,40 +1787,6 @@ NS_IMETHODIMP nsViewManager::GetDeviceContext(nsIDeviceContext *&aContext)
   return NS_OK;
 }
 
-void nsViewManager::GetMaxWidgetBounds(nsRect& aMaxWidgetBounds) const
-{
-  // Go through the list of viewmanagers and get the maximum width and 
-  // height of their widgets
-  aMaxWidgetBounds.width = 0;
-  aMaxWidgetBounds.height = 0;
-  PRInt32 index = 0;
-  for (index = 0; index < mVMCount; index++) {
-
-    nsViewManager* vm = (nsViewManager*)gViewManagers->ElementAt(index);
-    nsCOMPtr<nsIWidget> rootWidget;
-
-    if(NS_SUCCEEDED(vm->GetWidget(getter_AddRefs(rootWidget))) && rootWidget)
-      {
-        nsRect widgetBounds;
-        rootWidget->GetBounds(widgetBounds);
-        aMaxWidgetBounds.width = PR_MAX(aMaxWidgetBounds.width, widgetBounds.width);
-        aMaxWidgetBounds.height = PR_MAX(aMaxWidgetBounds.height, widgetBounds.height);
-      }
-  }
-
-  //   printf("WIDGET BOUNDS %d %d\n", aMaxWidgetBounds.width, aMaxWidgetBounds.height);
-}
-
-PRInt32 nsViewManager::GetViewManagerCount()
-{
-  return mVMCount;
-}
-
-const nsVoidArray* nsViewManager::GetViewManagerArray() 
-{
-  return gViewManagers;
-}
-
 already_AddRefed<nsIRenderingContext>
 nsViewManager::CreateRenderingContext(nsView &aView)
 {
@@ -2129,54 +1927,6 @@ NS_IMETHODIMP nsViewManager::GetRootScrollableView(nsIScrollableView **aScrollab
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::RenderOffscreen(nsIView* aView, nsRect aRect,
-                                             PRBool aUntrusted,
-                                             PRBool aIgnoreViewportScrolling,
-                                             nscolor aBackgroundColor,
-                                             nsIRenderingContext** aRenderedContext)
-{
-  // This is just a wrapper now. We keep it for compatibility until nsIViewManager
-  // goes away.
-  *aRenderedContext = nsnull;
-  if (!mObserver || !IsRefreshEnabled())
-    return NS_ERROR_FAILURE;
-
-  nsIScrollableView* scrollableView = nsnull;
-  GetRootScrollableView(&scrollableView);
-  nsIView* view;
-  if (scrollableView) {
-    scrollableView->GetScrolledView(view);
-  } else {
-    GetRootView(view);
-  }
-
-  NS_ASSERTION(view == aView,
-               "Only support offscreen rendering of the root (scrolled) view");
-  if (view != aView)
-    return NS_ERROR_FAILURE;
-
-  return mObserver->RenderOffscreen(aRect, aUntrusted, aIgnoreViewportScrolling,
-                                    aBackgroundColor, aRenderedContext);
-}
-
-NS_IMETHODIMP nsViewManager::AddCompositeListener(nsICompositeListener* aListener)
-{
-  if (nsnull == mCompositeListeners) {
-    nsresult rv = NS_NewISupportsArray(&mCompositeListeners);
-    if (NS_FAILED(rv))
-      return rv;
-  }
-  return mCompositeListeners->AppendElement(aListener);
-}
-
-NS_IMETHODIMP nsViewManager::RemoveCompositeListener(nsICompositeListener* aListener)
-{
-  if (nsnull != mCompositeListeners) {
-    return mCompositeListeners->RemoveElement(aListener);
-  }
-  return NS_ERROR_FAILURE;
-}
-
 NS_IMETHODIMP nsViewManager::GetWidget(nsIWidget **aWidget)
 {
   *aWidget = GetWidget();
@@ -2216,24 +1966,6 @@ nsPoint nsViewManager::ComputeViewOffset(const nsView *aView)
                origView->GetViewManager()->RootViewManager()->GetRootView(),
                "Unexpected root view");
   return origin;
-}
-
-PRBool nsViewManager::DoesViewHaveNativeWidget(nsView* aView)
-{
-  if (aView->HasWidget())
-    return (nsnull != aView->GetWidget()->GetNativeData(NS_NATIVE_WIDGET));
-  return PR_FALSE;
-}
-
-/* static */
-nsView* nsViewManager::GetWidgetView(nsView *aView)
-{
-  while (aView) {
-    if (aView->HasWidget())
-      return aView;
-    aView = aView->GetParent();
-  }
-  return nsnull;
 }
 
 void nsViewManager::ViewToWidget(nsView *aView, nsView* aWidgetView, nsRect &aRect) const

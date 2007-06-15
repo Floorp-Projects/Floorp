@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.5.4.5-6.js';
+
 /**
    File Name:          15.5.4.5-6.js
    ECMA Section:       15.5.4.5 String.prototype.charCodeAt(pos)

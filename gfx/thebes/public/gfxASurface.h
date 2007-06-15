@@ -94,7 +94,10 @@ public:
     static already_AddRefed<gfxASurface> Wrap(cairo_surface_t *csurf);
 
     /*** this DOES NOT addref the surface */
-    cairo_surface_t *CairoSurface() { return mSurface; }
+    cairo_surface_t *CairoSurface() {
+        NS_ASSERTION(mSurface != nsnull, "gfxASurface::CairoSurface called with mSurface == nsnull!");
+        return mSurface;
+    }
 
     gfxSurfaceType GetType() const;
 
@@ -121,7 +124,17 @@ public:
 
     virtual void Finish();
 
+    int CairoStatus();
+
+    /* Make sure that the given dimensions don't overflow a 32-bit signed int
+     * using 4 bytes per pixel; optionally, make sure that either dimension
+     * doesn't exceed the given limit.
+     */
+    static PRBool CheckSurfaceSize(const gfxIntSize& sz, PRInt32 limit = 0);
+
 protected:
+    gfxASurface() : mSurface(nsnull), mFloatingRefs(0), mSurfaceValid(PR_FALSE) { }
+
     static gfxASurface* GetSurfaceWrapper(cairo_surface_t *csurf);
     static void SetSurfaceWrapper(cairo_surface_t *csurf, gfxASurface *asurf);
 
@@ -130,10 +143,13 @@ protected:
     virtual ~gfxASurface() {
     }
 private:
-    cairo_surface_t *mSurface;
-    PRPackedBool mHasFloatingRef;
-
     static void SurfaceDestroyFunc(void *data);
+
+    cairo_surface_t *mSurface;
+    PRInt32 mFloatingRefs;
+
+protected:
+    PRPackedBool mSurfaceValid;
 };
 
 /**

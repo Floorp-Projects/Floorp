@@ -50,6 +50,7 @@ include $(DEPTH)/config/autoconf.mk
 
 XPIDLSRCS = \
       nsIAccessibleWin32Object.idl \
+      nsIWinAccessNode.idl \
       $(NULL)
 
 DEFINES		+= -DREGISTER_PROXY_DLL -D_WIN32_WINNT=0x400

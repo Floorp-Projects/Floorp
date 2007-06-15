@@ -60,7 +60,6 @@
 static gboolean
 (* PTR_pango_font_description_get_size_is_absolute)(PangoFontDescription*)
     = nsnull;
-static PRLibrary *gPangoLib = nsnull;
 
 static void InitPangoLib()
 {
@@ -69,23 +68,18 @@ static void InitPangoLib()
         return;
     initialized = PR_TRUE;
 
-    gPangoLib = PR_LoadLibrary("libpango-1.0.so");
-    if (!gPangoLib)
-        return;
-
+    PRLibrary *pangoLib = nsnull;
     PTR_pango_font_description_get_size_is_absolute =
         (gboolean (*)(PangoFontDescription*))
-        PR_FindFunctionSymbol(gPangoLib,
-                              "pango_font_description_get_size_is_absolute");
+        PR_FindFunctionSymbolAndLibrary("pango_font_description_get_size_is_absolute",
+                                        &pangoLib);
+    if (pangoLib)
+        PR_UnloadLibrary(pangoLib);
 }
 
 static void
 ShutdownPangoLib()
 {
-    if (gPangoLib) {
-        PR_UnloadLibrary(gPangoLib);
-        gPangoLib = nsnull;
-    }
 }
 
 static gboolean
@@ -121,20 +115,16 @@ nsSystemFontsGTK2::nsSystemFontsGTK2()
   , mButtonFontName(NS_LITERAL_STRING("sans-serif"))
   , mFieldFontName(NS_LITERAL_STRING("sans-serif"))
   , mMenuFontName(NS_LITERAL_STRING("sans-serif"))
-  , mDefaultFontStyle(FONT_STYLE_NORMAL, FONT_VARIANT_NORMAL,
-                 FONT_WEIGHT_NORMAL, FONT_DECORATION_NONE,
+  , mDefaultFontStyle(FONT_STYLE_NORMAL, FONT_WEIGHT_NORMAL,
                  DEFAULT_PIXEL_FONT_SIZE, NS_LITERAL_CSTRING(""),
                  0.0f, PR_TRUE, PR_FALSE)
-  , mButtonFontStyle(FONT_STYLE_NORMAL, FONT_VARIANT_NORMAL,
-                FONT_WEIGHT_NORMAL, FONT_DECORATION_NONE,
+  , mButtonFontStyle(FONT_STYLE_NORMAL, FONT_WEIGHT_NORMAL,
                 DEFAULT_PIXEL_FONT_SIZE, NS_LITERAL_CSTRING(""),
                 0.0f, PR_TRUE, PR_FALSE)
-  , mFieldFontStyle(FONT_STYLE_NORMAL, FONT_VARIANT_NORMAL,
-               FONT_WEIGHT_NORMAL, FONT_DECORATION_NONE,
+  , mFieldFontStyle(FONT_STYLE_NORMAL, FONT_WEIGHT_NORMAL,
                DEFAULT_PIXEL_FONT_SIZE, NS_LITERAL_CSTRING(""),
                0.0f, PR_TRUE, PR_FALSE)
-  , mMenuFontStyle(FONT_STYLE_NORMAL, FONT_VARIANT_NORMAL,
-               FONT_WEIGHT_NORMAL, FONT_DECORATION_NONE,
+  , mMenuFontStyle(FONT_STYLE_NORMAL, FONT_WEIGHT_NORMAL,
                DEFAULT_PIXEL_FONT_SIZE, NS_LITERAL_CSTRING(""),
                0.0f, PR_TRUE, PR_FALSE)
 {
@@ -217,7 +207,6 @@ nsSystemFontsGTK2::GetSystemFontInfo(GtkWidget *aWidget, nsString *aFontName,
     GtkSettings *settings = gtk_widget_get_settings(aWidget);
 
     aFontStyle->style       = FONT_STYLE_NORMAL;
-    aFontStyle->decorations = FONT_DECORATION_NONE;
 
     gchar *fontname;
     g_object_get(settings, "gtk-font-name", &fontname, NULL);

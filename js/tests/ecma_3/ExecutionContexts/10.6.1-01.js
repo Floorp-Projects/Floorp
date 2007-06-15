@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = '10.6.1-01.js';
 //-----------------------------------------------------------------------------
-var bug = 290774;
+var BUGNUMBER = 290774;
 var summary = 'activation object never delegates to Object.prototype';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var toStringResult;
@@ -53,9 +55,9 @@ var watch = undefined;
 var parseInt = 'fooParseInt';
 
 
-function toString() 
-{ 
-  return 'fooString'; 
+function toString()
+{
+  return 'fooString';
 }
 
 function normal()
@@ -73,12 +75,12 @@ function outerinnervar()
   watchResult = watch;
   parseIntResult = parseInt;
   function inner()
-    {
-      // addition of any statement
-      // which accesses a variable 
-      // from the outer scope causes the bug
-      printStatus(toString);
-    }
+  {
+    // addition of any statement
+    // which accesses a variable
+    // from the outer scope causes the bug
+    printStatus(toString);
+  }
 }
 
 expect = true;

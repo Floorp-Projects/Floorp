@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 2001-07-15
  *
  * SUMMARY: Testing Number.prototype.toPrecision(precision)
@@ -44,8 +46,9 @@
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = '15.7.4.7-1.js';
 var UBound = 0;
-var bug = '(none)';
+var BUGNUMBER = '(none)';
 var summary = 'Testing Number.prototype.toPrecision(precision)';
 var cnIsRangeError = 'instanceof RangeError';
 var cnNotRangeError = 'NOT instanceof RangeError';
@@ -87,7 +90,7 @@ status = 'Section D of test: expect RangeError because precision > 21 ';
 actual = catchError('testNum.toPrecision(22)');
 expect = cnIsRangeError;
 captureThis();
- *************************************************************************/
+*************************************************************************/
 
 
 
@@ -108,9 +111,9 @@ function captureThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
- 
+
   for (var i = 0; i < UBound; i++)
   {
     reportCompare(expectedvalues[i], actualvalues[i], statusitems[i]);

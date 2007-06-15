@@ -35,8 +35,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-347559.js';
 //-----------------------------------------------------------------------------
-var bug = 347559;
+var BUGNUMBER = 347559;
 var summary = 'Let declarations should not warn that function does not ' +
   'return a value';
 var actual = '';
@@ -50,16 +52,14 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-
-  var jsOptions = new JavaScriptOptions();
 
   actual = 'No Warning';
   expect = 'No Warning';
 
-  jsOptions.setOption('strict', true);
-  jsOptions.setOption('werror', true);
+  options('strict');
+  options('werror');
 
   try
   {
@@ -70,15 +70,10 @@ function test()
     actual = ex + '';
   }
 
-  jsOptions.reset();
-  
   reportCompare(expect, actual, summary + ': 1');
 
   actual = 'No Warning';
   expect = 'TypeError: function f does not always return a value';
-
-  jsOptions.setOption('strict', true);
-  jsOptions.setOption('werror', true);
 
   try
   {
@@ -89,15 +84,10 @@ function test()
     actual = ex + '';
   }
 
-  jsOptions.reset();
-  
   reportCompare(expect, actual, summary + ': 2');
 
   actual = 'No Warning';
   expect = 'No Warning';
-
-  jsOptions.setOption('strict', true);
-  jsOptions.setOption('werror', true);
 
   try
   {
@@ -108,8 +98,6 @@ function test()
     actual = ex + '';
   }
 
-  jsOptions.reset();
-  
   reportCompare(expect, actual, summary + ': 3');
 
   exitFunc ('test');

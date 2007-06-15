@@ -35,15 +35,17 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-280769-2.js';
 //-----------------------------------------------------------------------------
-var bug = 280769;
+var BUGNUMBER = 280769;
 var summary = 'Do not overflow 64K boundary in treeDepth';
 var actual = 'No Crash';
 var expect = 'No Crash';
 var status;
 var result;
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 
@@ -52,7 +54,7 @@ status = summary + ' ' + inSection(1) + ' (new RegExp("0|...|99999") ';
 var N = 100 * 1000;
 var a = new Array(N);
 for (var i = 0; i != N; ++i) {
-    a[i] = i;
+  a[i] = i;
 }
 var str = a.join('|');  // str is 0|1|2|3|...|<printed value of N -1>
 var re = new RegExp(str);

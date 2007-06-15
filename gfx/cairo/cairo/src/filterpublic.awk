@@ -14,3 +14,7 @@ BEGIN { state = "public"; }
 			}
 		}
 
+# catch some one-off things
+END {
+    print "#define _cairo_image_surface_nil_invalid_format __moz__cairo_image_surface_nil_invalid_format";
+}

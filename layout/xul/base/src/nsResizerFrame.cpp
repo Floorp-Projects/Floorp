@@ -303,13 +303,10 @@ nsResizerFrame::GetInitialDirection(eDirection& aDirection)
  // see what kind of resizer we are.
   nsAutoString value;
 
-  nsCOMPtr<nsIContent> content;
-  GetContentOf(getter_AddRefs(content));
-
-  if (!content)
+  if (!GetContent())
      return PR_FALSE;
 
-  if (content->GetAttr(kNameSpaceID_None, nsGkAtoms::dir, value)) {
+  if (GetContent()->GetAttr(kNameSpaceID_None, nsGkAtoms::dir, value)) {
      return EvalDirection(value,aDirection);
   }
 

@@ -42,10 +42,81 @@
 
 var paths =
   [
-   "http://localhost:4444/",     // check top-level directory listing
-   "http://localhost:4444/foo/"  // check non-top-level, too
+   "http://localhost:4444/",            // check top-level directory listing
+   "http://localhost:4444/foo/",        // check non-top-level, too
+   "http://localhost:4444/bar/folder^/" // trailing-caret leaf with hidden files
   ];
 var currPathIndex = 0;
+
+/** Verifies data in bytes for the trailing-caret path above. */
+function hiddenDataCheck(bytes, uri, path)
+{
+  var data = String.fromCharCode.apply(null, bytes);
+
+  var parser = Cc["@mozilla.org/xmlextras/domparser;1"]
+                 .createInstance(Ci.nsIDOMParser);
+
+  // Note: the index format isn't XML -- it's actually HTML -- but we require
+  //       the index format also be valid XML, albeit XML without namespaces,
+  //       XML declarations, etc.  Doing this simplifies output checking.
+  try
+  {
+    var doc = parser.parseFromString(data, "application/xml");
+  }
+  catch (e)
+  {
+    do_throw("document failed to parse as XML");
+  }
+
+  // See all the .QueryInterface()s and .item()s happening here?  That's because
+  // xpcshell sucks and doesn't have classinfo, so no automatic interface
+  // flattening or array-style access to items in NodeLists.  Suck.
+
+  var body = doc.documentElement.getElementsByTagName("body");
+  do_check_eq(body.length, 1);
+  body = body.item(0);
+
+  // header
+  var header = body.QueryInterface(Ci.nsIDOMElement)
+                   .getElementsByTagName("h1");
+  do_check_eq(header.length, 1);
+
+  do_check_eq(header.item(0).QueryInterface(Ci.nsIDOM3Node).textContent, path);
+
+  // files
+  var lst = body.getElementsByTagName("ol");
+  do_check_eq(lst.length, 1);
+  var items = lst.item(0).QueryInterface(Ci.nsIDOMElement)
+                         .getElementsByTagName("li");
+
+  var ios = Cc["@mozilla.org/network/io-service;1"]
+              .getService(Ci.nsIIOService);
+
+  var top = ios.newURI(uri, null, null);
+
+  // N.B. No ERROR_IF_SEE_THIS.txt^ file!
+  var dirEntries = [{name: "CVS", isDirectory: true}, // XXX sigh
+                    {name: "file.txt", isDirectory: false},
+                    {name: "SHOULD_SEE_THIS.txt^", isDirectory: false}];
+
+  for (var i = 0; i < items.length; i++)
+  {
+    var link = items.item(i)
+                    .childNodes
+                    .item(0)
+                    .QueryInterface(Ci.nsIDOM3Node)
+                    .QueryInterface(Ci.nsIDOMElement);
+    var f = dirEntries[i];
+
+    var sep = f.isDirectory ? "/" : "";
+
+    do_check_eq(link.textContent, f.name + sep);
+
+    var uri = ios.newURI(link.getAttribute("href"), null, top);
+    do_check_eq(decodeURIComponent(uri.path), path + f.name + sep);
+  }
+}
+
 
 /**
  * Verifies data in bytes (an array of bytes) represents an index page for the
@@ -123,8 +194,7 @@ function dataCheck(bytes, uri, path, dirEntries)
     do_check_eq(link.textContent, f.name + sep);
 
     var uri = ios.newURI(link.getAttribute("href"), null, top);
-    var fn = encodeURIComponent(f.name) + sep;
-    do_check_eq(uri.path, path + fn);
+    do_check_eq(decodeURIComponent(uri.path), path + f.name + sep);
   }
 }
 
@@ -150,7 +220,10 @@ var listener =
     },
     onStopRequest: function(request, cx, status)
     {
-      dataCheck(this._data, this._uri, this._path, this._dirEntries);
+      if (currPathIndex == 2)
+        hiddenDataCheck(this._data, this._uri, this._path);
+      else
+        dataCheck(this._data, this._uri, this._path, this._dirEntries);
 
       if (++currPathIndex == paths.length)
       {
@@ -182,6 +255,10 @@ function run_test()
 
   srv = createServer();
   srv.registerDirectory("/", dir);
+
+  var nameDir = do_get_file("netwerk/test/httpserver/test/data/name-scheme/");
+  srv.registerDirectory("/bar/", nameDir);
+
   srv.start(4444);
 
   performNextTest();

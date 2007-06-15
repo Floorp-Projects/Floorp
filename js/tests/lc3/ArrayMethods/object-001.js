@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'object-001.js';
+
 /**
  *  java array objects "inherit" JS string methods.  verify that byte arrays
  *  can inherit JavaScript Array object methods join, reverse, sort and valueOf
@@ -53,35 +56,35 @@ obArray = dt.PUB_ARRAY_OBJECT;
 // check string value
 
 new TestCase(
-    "dt = new Packages.com.netscape.javascript.qa.liveconnect.DataTypeClass(); "+
-    "obArray = dt.PUB_ARRAY_OBJECT" +
-    "obArray.join() +''",
-    join(obArray),
-    obArray.join() );
+  "dt = new Packages.com.netscape.javascript.qa.liveconnect.DataTypeClass(); "+
+  "obArray = dt.PUB_ARRAY_OBJECT" +
+  "obArray.join() +''",
+  join(obArray),
+  obArray.join() );
 
 // check type of object returned by method
 
 new TestCase(
-    "typeof obArray.reverse().join()",
-    reverse(obArray),
-    obArray.reverse().join() );
+  "typeof obArray.reverse().join()",
+  reverse(obArray),
+  obArray.reverse().join() );
 
 new TestCase(
-    "obArray.reverse().getClass().getName() +''",
-    "[Ljava.lang.Object;",
-    obArray.reverse().getClass().getName() +'');
+  "obArray.reverse().getClass().getName() +''",
+  "[Ljava.lang.Object;",
+  obArray.reverse().getClass().getName() +'');
 
 test();
 
 function join( a ) {
-    for ( var i = 0, s = ""; i < a.length; i++ ) {
-	s += a[i].toString() + ( i + 1 < a.length ? "," : "" );
-    }
-    return s;
+  for ( var i = 0, s = ""; i < a.length; i++ ) {
+    s += a[i].toString() + ( i + 1 < a.length ? "," : "" );
+  }
+  return s;
 }
 function reverse( a ) {
-    for ( var i = a.length -1, s = ""; i >= 0; i-- ) {
-	s += a[i].toString() + ( i> 0 ? "," : "" );
-    }
-    return s;
+  for ( var i = a.length -1, s = ""; i >= 0; i-- ) {
+    s += a[i].toString() + ( i> 0 ? "," : "" );
+  }
+  return s;
 }

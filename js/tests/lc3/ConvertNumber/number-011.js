@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'number-011.js';
+
 /**
  *  Preferred Argument Conversion.
  *
@@ -45,61 +48,61 @@
 var SECTION = "Preferred argument conversion:  undefined";
 var VERSION = "1_4";
 var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-SECTION;
+  SECTION;
 startTest();
 
 var TEST_CLASS = new
-Packages.com.netscape.javascript.qa.lc3.number.Number_001;
+  Packages.com.netscape.javascript.qa.lc3.number.Number_001;
 
 new TestCase(
-    "TEST_CLASS[\"ambiguous(java.lang.Object)\"](1)",
-    "OBJECT",
-    TEST_CLASS["ambiguous(java.lang.Object)"](1) +'');
+  "TEST_CLASS[\"ambiguous(java.lang.Object)\"](1)",
+  "OBJECT",
+  TEST_CLASS["ambiguous(java.lang.Object)"](1) +'');
 
 
 new TestCase(
-    "TEST_CLASS[\"ambiguous(java.lang.String)\"](1)",
-    "STRING",
-    TEST_CLASS["ambiguous(java.lang.String)"](1) +'');
+  "TEST_CLASS[\"ambiguous(java.lang.String)\"](1)",
+  "STRING",
+  TEST_CLASS["ambiguous(java.lang.String)"](1) +'');
 
 new TestCase(
-    "TEST_CLASS[\"ambiguous(byte)\"](1)",
-    "BYTE",
-    TEST_CLASS["ambiguous(byte)"](1) +'');
+  "TEST_CLASS[\"ambiguous(byte)\"](1)",
+  "BYTE",
+  TEST_CLASS["ambiguous(byte)"](1) +'');
 
 new TestCase(
-    "TEST_CLASS[\"ambiguous(char)\"](1)",
-    "CHAR",
-    TEST_CLASS["ambiguous(char)"](1) +'');
+  "TEST_CLASS[\"ambiguous(char)\"](1)",
+  "CHAR",
+  TEST_CLASS["ambiguous(char)"](1) +'');
 
 new TestCase(
-    "TEST_CLASS[\"ambiguous(short)\"](1)",
-    "SHORT",
-    TEST_CLASS["ambiguous(short)"](1) +'');
+  "TEST_CLASS[\"ambiguous(short)\"](1)",
+  "SHORT",
+  TEST_CLASS["ambiguous(short)"](1) +'');
 
 new TestCase(
-    "TEST_CLASS[\"ambiguous(int)\"](1)",
-    "INT",
-    TEST_CLASS["ambiguous(int)"](1) +'');
+  "TEST_CLASS[\"ambiguous(int)\"](1)",
+  "INT",
+  TEST_CLASS["ambiguous(int)"](1) +'');
 
 new TestCase(
-    "TEST_CLASS[\"ambiguous(long)\"](1)",
-    "LONG",
-    TEST_CLASS["ambiguous(long)"](1) +'');
+  "TEST_CLASS[\"ambiguous(long)\"](1)",
+  "LONG",
+  TEST_CLASS["ambiguous(long)"](1) +'');
 
 new TestCase(
-    "TEST_CLASS[\"ambiguous(float)\"](1)",
-    "FLOAT",
-    TEST_CLASS["ambiguous(float)"](1) +'');
+  "TEST_CLASS[\"ambiguous(float)\"](1)",
+  "FLOAT",
+  TEST_CLASS["ambiguous(float)"](1) +'');
 
 new TestCase(
-    "TEST_CLASS[\"ambiguous(java.lang.Double)\"](1)",
-    "DOUBLE_OBJECT",
-    TEST_CLASS["ambiguous(java.lang.Double)"](1) +'');
+  "TEST_CLASS[\"ambiguous(java.lang.Double)\"](1)",
+  "DOUBLE_OBJECT",
+  TEST_CLASS["ambiguous(java.lang.Double)"](1) +'');
 
 new TestCase(
-    "TEST_CLASS[\"ambiguous(double)\"](1)",
-    "DOUBLE",
-    TEST_CLASS["ambiguous(double)"](1) +'');
+  "TEST_CLASS[\"ambiguous(double)\"](1)",
+  "DOUBLE",
+  TEST_CLASS["ambiguous(double)"](1) +'');
 
 test();

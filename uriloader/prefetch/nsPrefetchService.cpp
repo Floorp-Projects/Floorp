@@ -36,6 +36,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPrefetchService.h"
+#include "nsICacheSession.h"
+#include "nsIOfflineCacheSession.h"
+#include "nsICacheService.h"
 #include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
 #include "nsIObserverService.h"
@@ -71,9 +74,6 @@ static PRLogModuleInfo *gPrefetchLog;
 #endif
 #define LOG(args) PR_LOG(gPrefetchLog, 4, args)
 #define LOG_ENABLED() PR_LOG_TEST(gPrefetchLog, 4)
-
-static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
-static NS_DEFINE_IID(kPrefServiceCID, NS_PREFSERVICE_CID);
 
 #define PREFETCH_PREF "network.prefetch-next"
 
@@ -284,7 +284,9 @@ nsPrefetchService::nsPrefetchService()
     : mQueueHead(nsnull)
     , mQueueTail(nsnull)
     , mStopCount(0)
+    , mHaveProcessed(PR_FALSE)
     , mDisabled(PR_TRUE)
+    , mFetchedOffline(PR_FALSE)
 {
 }
 
@@ -306,7 +308,7 @@ nsPrefetchService::Init()
     nsresult rv;
 
     // read prefs and hook up pref observer
-    nsCOMPtr<nsIPrefBranch2> prefs(do_GetService(kPrefServiceCID, &rv));
+    nsCOMPtr<nsIPrefBranch2> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv)) {
       PRBool enabled;
       rv = prefs->GetBoolPref(PREFETCH_PREF, &enabled);
@@ -345,6 +347,19 @@ nsPrefetchService::ProcessNextURI()
         PRBool offline;
         rv = DequeueURI(getter_AddRefs(uri), getter_AddRefs(referrer),
                         &offline);
+        if (rv == NS_ERROR_NOT_AVAILABLE && mFetchedOffline) {
+            // done loading stuff, go ahead and evict unowned entries from
+            // the offline cache
+            mFetchedOffline = PR_FALSE;
+
+            nsCOMPtr<nsIOfflineCacheSession> session;
+            rv = GetOfflineCacheSession(getter_AddRefs(session));
+            if (NS_FAILED(rv)) break;
+
+            session->EvictUnownedEntries();
+            break;
+        }
+
         if (NS_FAILED(rv)) break;
 
 #if defined(PR_LOGGING)
@@ -385,6 +400,8 @@ nsPrefetchService::ProcessNextURI()
                     continue;
                 }
             }
+
+            mFetchedOffline = PR_TRUE;
         }
 
         rv = mCurrentChannel->AsyncOpen(listener, nsnull);
@@ -400,7 +417,8 @@ void
 nsPrefetchService::AddProgressListener()
 {
     // Register as an observer for the document loader  
-    nsCOMPtr<nsIWebProgress> progress(do_GetService(kDocLoaderServiceCID));
+    nsCOMPtr<nsIWebProgress> progress = 
+        do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID);
     if (progress)
         progress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_DOCUMENT);
 }
@@ -409,7 +427,8 @@ void
 nsPrefetchService::RemoveProgressListener()
 {
     // Register as an observer for the document loader  
-    nsCOMPtr<nsIWebProgress> progress(do_GetService(kDocLoaderServiceCID));
+    nsCOMPtr<nsIWebProgress> progress =
+        do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID);
     if (progress)
         progress->RemoveProgressListener(this);
 }
@@ -480,6 +499,31 @@ nsPrefetchService::EmptyQueue(PRBool includeOffline)
     }
 }
 
+nsresult
+nsPrefetchService::GetOfflineCacheSession(nsIOfflineCacheSession **aSession)
+{
+    if (!mOfflineCacheSession) {
+        nsresult rv;
+        nsCOMPtr<nsICacheService> serv =
+            do_GetService(NS_CACHESERVICE_CONTRACTID,
+                          &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsICacheSession> session;
+        rv = serv->CreateSession("HTTP-offline",
+                                 nsICache::STORE_OFFLINE,
+                                 nsICache::STREAM_BASED,
+                                 getter_AddRefs(session));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        mOfflineCacheSession = do_QueryInterface(session, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    NS_ADDREF(*aSession = mOfflineCacheSession);
+    return NS_OK;
+}
+
 void
 nsPrefetchService::StartPrefetching()
 {
@@ -496,8 +540,10 @@ nsPrefetchService::StartPrefetching()
     // only start prefetching after we've received enough DOCUMENT
     // STOP notifications.  we do this inorder to defer prefetching
     // until after all sub-frames have finished loading.
-    if (mStopCount == 0 && !mCurrentChannel)
+    if (mStopCount == 0 && !mCurrentChannel) {
+        mHaveProcessed = PR_TRUE;
         ProcessNextURI();
+    }
 }
 
 void
@@ -673,7 +719,14 @@ nsPrefetchService::Prefetch(nsIURI *aURI,
         }
     }
 
-    return EnqueueURI(aURI, aReferrerURI, aOffline);
+    rv = EnqueueURI(aURI, aReferrerURI, aOffline);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // if there are no pages loading, kick off the request immediately
+    if (mStopCount == 0 && mHaveProcessed)
+        ProcessNextURI();
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -74,6 +74,7 @@
 #include "nsGkAtoms.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
+#include "nsPresShellIterator.h"
 
 // Concrete classes
 #include "nsFrameLoader.h"
@@ -543,9 +544,9 @@ nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
       return NS_OK;
     }
 
-    PRUint32 numShells = doc->GetNumberOfShells();
-    for (PRUint32 i = 0; i < numShells; ++i) {
-      nsIPresShell* shell = doc->GetShellAt(i);
+    nsPresShellIterator iter(doc);
+    nsCOMPtr<nsIPresShell> shell;
+    while ((shell = iter.GetNextShell())) {
       shell->RecreateFramesFor(thisContent);
     }
 
@@ -1175,9 +1176,9 @@ nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
     // If our state changed, then we already recreated frames
     // Otherwise, need to do that here
 
-    PRUint32 numShells = doc->GetNumberOfShells();
-    for (PRUint32 i = 0; i < numShells; ++i) {
-      nsIPresShell* shell = doc->GetShellAt(i);
+    nsPresShellIterator iter(doc);
+    nsCOMPtr<nsIPresShell> shell;
+    while ((shell = iter.GetNextShell())) {
       shell->RecreateFramesFor(thisContent);
     }
   }
@@ -1293,20 +1294,34 @@ nsObjectLoadingContent::GetFrame()
     do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
   NS_ASSERTION(thisContent, "must be a content");
 
-  nsIDocument* doc = thisContent->GetCurrentDoc();
-  if (!doc) {
-    return nsnull; // No current doc -> no frame
-  }
+  PRBool flushed = PR_FALSE;
+  nsIFrame* frame;
+  do {
+    nsIDocument* doc = thisContent->GetCurrentDoc();
+    if (!doc) {
+      return nsnull; // No current doc -> no frame
+    }
 
-  nsIPresShell* shell = doc->GetShellAt(0);
-  if (!shell) {
-    return nsnull; // No presentation -> no frame
-  }
+    nsIPresShell* shell = doc->GetPrimaryShell();
+    if (!shell) {
+      return nsnull; // No presentation -> no frame
+    }
 
-  nsIFrame* frame = shell->GetPrimaryFrameFor(thisContent);
-  if (!frame) {
-    return nsnull;
-  }
+    frame = shell->GetPrimaryFrameFor(thisContent);
+    if (!frame) {
+      return nsnull;
+    }
+
+    if (flushed) {
+      break;
+    }
+    
+    // OK, let's flush out and try again.  Note that we want to reget
+    // the document, etc, since flushing might run script.
+    doc->FlushPendingNotifications(Flush_ContentAndNotify);
+
+    flushed = PR_TRUE;
+  } while (1);
 
   nsIObjectFrame* objFrame;
   CallQueryInterface(frame, &objFrame);

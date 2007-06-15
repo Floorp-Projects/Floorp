@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'package-005.js';
+
 /**
    File Name:      package-005.js
    Description:
@@ -70,60 +72,60 @@ new TestCase( SECTION,
 test();
 
 function CompareValues( javaval, testval ) {
-    //  Check typeof, which should be E_TYPE
-    new TestCase( SECTION,
-		  "typeof (" + testval.description +")",
-		  testval.type,
-		  javaval.type );
+  //  Check typeof, which should be E_TYPE
+  new TestCase( SECTION,
+		"typeof (" + testval.description +")",
+		testval.type,
+		javaval.type );
 
-    //  Check JavaScript class, which should be E_JSCLASS + the package name
-    new TestCase( SECTION,
-		  "(" + testval.description +").getJSClass()",
-		  testval.jsclass,
-		  javaval.getJSClass() );
+  //  Check JavaScript class, which should be E_JSCLASS + the package name
+  new TestCase( SECTION,
+		"(" + testval.description +").getJSClass()",
+		testval.jsclass,
+		javaval.getJSClass() );
 
-    //  Number( package ) is NaN
-    new TestCase( SECTION,
-		  "Number (" + testval.description +")",
-		  NaN,
-		  Number( javaval ) );
+  //  Number( package ) is NaN
+  new TestCase( SECTION,
+		"Number (" + testval.description +")",
+		NaN,
+		Number( javaval ) );
 
-    //  String( package ) is string value
-    new TestCase( SECTION,
-		  "String (" + testval.description +")",
-		  testval.jsclass,
-		  String(javaval) );
-    //  ( package ).toString() is string value
-    new TestCase( SECTION,
-		  "(" + testval.description +").toString()",
-		  testval.jsclass,
-		  (javaval).toString() );
+  //  String( package ) is string value
+  new TestCase( SECTION,
+		"String (" + testval.description +")",
+		testval.jsclass,
+		String(javaval) );
+  //  ( package ).toString() is string value
+  new TestCase( SECTION,
+		"(" + testval.description +").toString()",
+		testval.jsclass,
+		(javaval).toString() );
 
-    //  Boolean( package ) is true
-    new TestCase( SECTION,
-		  "Boolean (" + testval.description +")",
-		  true,
-		  Boolean( javaval ) );
-    //  add 0 is name + "0"
-    new TestCase( SECTION,
-		  "(" + testval.description +") +0",
-		  testval.jsclass +"0",
-		  javaval + 0);
+  //  Boolean( package ) is true
+  new TestCase( SECTION,
+		"Boolean (" + testval.description +")",
+		true,
+		Boolean( javaval ) );
+  //  add 0 is name + "0"
+  new TestCase( SECTION,
+		"(" + testval.description +") +0",
+		testval.jsclass +"0",
+		javaval + 0);
 }
 function JavaValue( value ) {
-    this.value  = value;
-    this.type   = typeof value;
-    this.getJSClass = Object.prototype.toString;
-    this.jsclass = value +""
-	return this;
+  this.value  = value;
+  this.type   = typeof value;
+  this.getJSClass = Object.prototype.toString;
+  this.jsclass = value +""
+    return this;
 }
 function TestValue( description ) {
-    this.packagename = (description.substring(0, "Packages.".length) ==
-			"Packages.") ? description.substring("Packages.".length, description.length ) :
-        description;
+  this.packagename = (description.substring(0, "Packages.".length) ==
+		      "Packages.") ? description.substring("Packages.".length, description.length ) :
+    description;
 
-    this.description = description;
-    this.type =  E_TYPE;
-    this.jsclass = E_JSCLASS +  this.packagename +"]";
-    return this;
+  this.description = description;
+  this.type =  E_TYPE;
+  this.jsclass = E_JSCLASS +  this.packagename +"]";
+  return this;
 }

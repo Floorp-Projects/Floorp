@@ -50,7 +50,6 @@
 #include "nsIDOMSerializer.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
-#include "nsIDOMEventReceiver.h"
 #include "nsIEventListenerManager.h"
 #include "nsGUIEvent.h"
 #include "nsIPrivateDOMEvent.h"
@@ -82,6 +81,7 @@
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentErrors.h"
+#include "nsLayoutStatics.h"
 
 #define LOAD_STR "load"
 #define ERROR_STR "error"
@@ -273,6 +273,7 @@ GetDocumentFromScriptContext(nsIScriptContext *aScriptContext)
 nsXMLHttpRequest::nsXMLHttpRequest()
   : mState(XML_HTTP_REQUEST_UNINITIALIZED)
 {
+  nsLayoutStatics::AddRef();
 }
 
 nsXMLHttpRequest::~nsXMLHttpRequest()
@@ -288,6 +289,7 @@ nsXMLHttpRequest::~nsXMLHttpRequest()
 
   // Needed to free the listener arrays.
   ClearEventListeners();
+  nsLayoutStatics::Release();
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLHttpRequest)
@@ -1302,7 +1304,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   mResponseBody.Truncate();
 
   // Register as a load listener on the document
-  nsCOMPtr<nsIDOMEventReceiver> target(do_QueryInterface(mDocument));
+  nsCOMPtr<nsPIDOMEventTarget> target(do_QueryInterface(mDocument));
   if (target) {
     nsWeakPtr requestWeak =
       do_GetWeakReference(NS_STATIC_CAST(nsIXMLHttpRequest*, this));
@@ -1544,6 +1546,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   if (aBody && httpChannel && !method.EqualsLiteral("GET")) {
     nsXPIDLString serial;
     nsCOMPtr<nsIInputStream> postDataStream;
+    nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8"));
 
     PRUint16 dataType;
     rv = aBody->GetDataType(&dataType);
@@ -1567,6 +1570,11 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
         if (doc) {
           nsCOMPtr<nsIDOMSerializer> serializer(do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv));
           if (NS_FAILED(rv)) return rv;
+
+          nsCOMPtr<nsIDocument> baseDoc(do_QueryInterface(doc));
+          if (baseDoc) {
+            charset = baseDoc->GetDocumentCharacterSet();
+          }
 
           // Serialize to a stream so that the encoding used will
           // match the document's.
@@ -1641,7 +1649,10 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
           contentType.IsEmpty()) {
         contentType = NS_LITERAL_CSTRING("application/xml");
       }
-      
+
+      contentType.AppendLiteral(";charset=");
+      contentType.Append(charset);
+
       rv = uploadChannel->SetUploadStream(postDataStream, contentType, -1);
       // Reset the method to its original value
       if (httpChannel) {

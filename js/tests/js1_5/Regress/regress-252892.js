@@ -36,16 +36,18 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-252892.js';
 //-----------------------------------------------------------------------------
-var bug = 252892;
+var BUGNUMBER = 252892;
 var summary = 'for (var i in o) in heavyweight function f should define i in f\'s activation';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-var status;  
+var status; 
 
 var dodis;
 
@@ -55,58 +57,58 @@ function f2novar(o){with(this)for(x in o)printStatus(o[x]); return x}
 function f3(i,o){for(var x=i in o)printStatus(o[x]); return x}
 function f4(i,o){with(this)for(var x=i in o)printStatus(o[x]); return x}
 
-const f1src = 
-"function f1(o) {\n" +
-"    for (var x in o) {\n" +
-"        printStatus(o[x]);\n" +
-"    }\n" +
-"    return x;\n" +
-"}";
+const f1src =
+  "function f1(o) {\n" +
+  "    for (var x in o) {\n" +
+  "        printStatus(o[x]);\n" +
+  "    }\n" +
+  "    return x;\n" +
+  "}";
 
-const f2src = 
-"function f2(o) {\n" +
-"    with (this) {\n" +
-"        for (var x in o) {\n" +
-"            printStatus(o[x]);\n" +
-"        }\n" +
-"    }\n" +
-"    return x;\n" +
-"}";
+const f2src =
+  "function f2(o) {\n" +
+  "    with (this) {\n" +
+  "        for (var x in o) {\n" +
+  "            printStatus(o[x]);\n" +
+  "        }\n" +
+  "    }\n" +
+  "    return x;\n" +
+  "}";
 
-const f2novarsrc = 
-"function f2novar(o) {\n" +
-"    with (this) {\n" +
-"        for (x in o) {\n" +
-"            printStatus(o[x]);\n" +
-"        }\n" +
-"    }\n" +
-"    return x;\n" +
-"}";
+const f2novarsrc =
+  "function f2novar(o) {\n" +
+  "    with (this) {\n" +
+  "        for (x in o) {\n" +
+  "            printStatus(o[x]);\n" +
+  "        }\n" +
+  "    }\n" +
+  "    return x;\n" +
+  "}";
 
-const f3src = 
-"function f3(i, o) {\n" +
-"    var x = i;\n" +
-"    for (x in o) {\n" +
-"        printStatus(o[x]);\n" +
-"    }\n" +
-"    return x;\n" +
-"}";
+const f3src =
+  "function f3(i, o) {\n" +
+  "    var x = i;\n" +
+  "    for (x in o) {\n" +
+  "        printStatus(o[x]);\n" +
+  "    }\n" +
+  "    return x;\n" +
+  "}";
 
-const f4src = 
-"function f4(i, o) {\n" +
-"    with (this) {\n" +
-"        var x = i;\n" +
-"        for (x in o) {\n" +
-"            printStatus(o[x]);\n" +
-"        }\n" +
-"    }\n" +
-"    return x;\n" +
-"}";
+const f4src =
+  "function f4(i, o) {\n" +
+  "    with (this) {\n" +
+  "        var x = i;\n" +
+  "        for (x in o) {\n" +
+  "            printStatus(o[x]);\n" +
+  "        }\n" +
+  "    }\n" +
+  "    return x;\n" +
+  "}";
 
 var t=0;
 function assert(c)
 {
-  ++t; 
+  ++t;
 
   status = summary + ' ' + inSection(t);
   expect = true;
@@ -114,7 +116,7 @@ function assert(c)
 
   if (!c)
   {
-    printStatus(t + " FAILED!"); 
+    printStatus(t + " FAILED!");
   }
   reportCompare(expect, actual, summary);
 }

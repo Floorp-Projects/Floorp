@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -168,5 +169,5 @@ nsMathMLmstyleFrame::AttributeChanged(PRInt32         aNameSpaceID,
   // them in our subtree. However, our siblings will be re-laid too. We used
   // to have a more speedier but more verbose alternative that didn't re-layout
   // our siblings. See bug 114909 - attachment 67668.
-  return ReLayoutChildren(mParent);
+  return ReLayoutChildren(mParent, NS_FRAME_IS_DIRTY);
 }

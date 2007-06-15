@@ -1233,9 +1233,9 @@ nsOSHelperAppService::GetHandlerAppFromPrefs(const char* aScheme, /*out*/ nsIFil
   return GetFileTokenForPath(utf16AppPath.get(), aApp);
 }
 
-NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
+nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
 {
-  LOG(("-- nsOSHelperAppService::ExternalProtocolHandlerExists for '%s'\n",
+  LOG(("-- nsOSHelperAppService::OSProtocolHandlerExists for '%s'\n",
        aProtocolScheme));
   *aHandlerExists = PR_FALSE;
 

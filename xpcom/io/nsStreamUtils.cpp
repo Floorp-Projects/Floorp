@@ -608,8 +608,9 @@ NS_InputStreamIsBuffered(nsIInputStream *stream)
 {
     PRBool result = PR_FALSE;
     PRUint32 n;
-    stream->ReadSegments(TestInputStream, &result, 1, &n);
-    return result;
+    nsresult rv = stream->ReadSegments(TestInputStream,
+                                       &result, 1, &n);
+    return result || NS_SUCCEEDED(rv);
 }
 
 static NS_METHOD

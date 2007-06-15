@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    02 July 2003
  * SUMMARY: testing line ending with |continue| and only terminated by a CR
@@ -44,8 +46,9 @@
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-210682.js';
 var UBound = 0;
-var bug = 210682;
+var BUGNUMBER = 210682;
 var summary = 'testing line ending with |continue| and only terminated by CR';
 var status = '';
 var statusitems = [];
@@ -57,8 +60,8 @@ var expectedvalues = [];
 
 for (i=0; i<100; i++)
 {
-   if (i%2 == 0) continue
-   this.lasti = i;
+  if (i%2 == 0) continue
+    this.lasti = i;
 }
 
 status = inSection(1);
@@ -86,7 +89,7 @@ function addThis()
 function test()
 {
   enterFunc('test');
-  printBugNumber(bug);
+  printBugNumber(BUGNUMBER);
   printStatus(summary);
 
   for (var i=0; i<UBound; i++)

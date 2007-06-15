@@ -49,7 +49,7 @@
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocumentFragment.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOM3Node.h"
 #include "nsIDOMNSEventTarget.h"
@@ -143,26 +143,6 @@ private:
 };
 
 /**
- * Yet another tearoff class for nsGenericElement
- * to implement additional interfaces
- */
-class nsNSElementTearoff : public nsIDOMNSElement
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  NS_DECL_NSIDOMNSELEMENT
-
-  nsNSElementTearoff(nsIContent *aContent) : mContent(aContent)
-  {
-  }
-  
-private:
-  nsCOMPtr<nsIContent> mContent;
-};
-
-
-/**
  * A class that implements nsIWeakReference
  */
 
@@ -219,13 +199,13 @@ private:
 /**
  * nsDOMEventRTTearoff is a tearoff class used by nsGenericElement and
  * nsGenericDOMDataNode classes for implementing the interfaces
- * nsIDOMEventReceiver and nsIDOMEventTarget
+ * nsIDOMEventTarget, nsIDOM3EventTarget and nsIDOMNSEventTarget.
  *
  * Use the method nsDOMEventRTTearoff::Create() to create one of these babies.
  * @see nsDOMEventRTTearoff::Create
  */
 
-class nsDOMEventRTTearoff : public nsIDOMEventReceiver,
+class nsDOMEventRTTearoff : public nsIDOMEventTarget,
                             public nsIDOM3EventTarget,
                             public nsIDOMNSEventTarget
 {
@@ -248,7 +228,6 @@ private:
    */
   void LastRelease();
 
-  nsresult GetEventReceiver(nsIDOMEventReceiver **aReceiver);
   nsresult GetDOM3EventTarget(nsIDOM3EventTarget **aTarget);
 
 public:
@@ -273,15 +252,6 @@ public:
 
   // nsIDOM3EventTarget
   NS_DECL_NSIDOM3EVENTTARGET
-
-  // nsIDOMEventReceiver
-  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                   const nsIID& aIID);
-  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                      const nsIID& aIID);
-  NS_IMETHOD GetListenerManager(PRBool aCreateIfNotFound,
-                                nsIEventListenerManager** aResult);
-  NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
 
   // nsIDOMNSEventTarget
   NS_DECL_NSIDOMNSEVENTTARGET
@@ -399,8 +369,13 @@ public:
   virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
                                     nsPresContext* aPresContext,
                                     nsEventStatus* aEventStatus);
-  NS_IMETHOD GetListenerManager(PRBool aCreateIfNotFound,
-                                nsIEventListenerManager** aResult);
+  virtual nsresult GetListenerManager(PRBool aCreateIfNotFound,
+                                      nsIEventListenerManager** aResult);
+  virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener,
+                                         const nsIID& aIID);
+  virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
+                                            const nsIID& aIID);
+  virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
 
   // nsIContent interface methods
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -1092,5 +1067,24 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
                                                                             \
   return rv;                                                                \
 }
+
+/**
+ * Yet another tearoff class for nsGenericElement
+ * to implement additional interfaces
+ */
+class nsNSElementTearoff : public nsIDOMNSElement
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_DECL_NSIDOMNSELEMENT
+
+  nsNSElementTearoff(nsGenericElement *aContent) : mContent(aContent)
+  {
+  }
+  
+private:
+  nsRefPtr<nsGenericElement> mContent;
+};
 
 #endif /* nsGenericElement_h___ */

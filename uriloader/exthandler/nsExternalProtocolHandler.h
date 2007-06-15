@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Scott MacGregor <mscott@netscape.com>
+ *   Dan Mosedale <dmose@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -61,7 +62,7 @@ public:
 
 protected:
   // helper function
-  PRBool HaveProtocolHandler(nsIURI * aURI);
+  PRBool HaveOSProtocolHandler(nsIURI * aURI);
 	nsCString	m_schemeName;
   nsCOMPtr<nsIExternalProtocolService> m_extProtService;
 };

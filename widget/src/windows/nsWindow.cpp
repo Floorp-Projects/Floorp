@@ -79,6 +79,11 @@
 #include <windows.h>
 #include <process.h>
 
+#ifndef WINCE
+// mmsystem.h is needed to build with WIN32_LEAN_AND_MEAN
+#include <mmsystem.h>
+#endif
+
 #ifdef WINCE
 #include "aygshell.h"
 #include "imm.h"
@@ -1887,6 +1892,10 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
                          SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
           if (hwndBelow)
             ::SetForegroundWindow(hwndBelow);
+
+          // Play the minimize sound while we're here, since that is also
+          // forgotten when we use SW_SHOWMINIMIZED.
+          ::PlaySound("Minimize", nsnull, SND_ALIAS | SND_NODEFAULT | SND_ASYNC);
         }
 #endif
         break;
@@ -3269,7 +3278,7 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     trect.bottom = aClipRect->YMost();
   }
 
-  ::ScrollWindowEx(mWnd, aDx, aDy, (nsnull != aClipRect) ? &trect : NULL, NULL,
+  ::ScrollWindowEx(mWnd, aDx, aDy, NULL, (nsnull != aClipRect) ? &trect : NULL,
                    NULL, NULL, SW_INVALIDATE | SW_SCROLLCHILDREN);
   ::UpdateWindow(mWnd);
   return NS_OK;
@@ -5214,30 +5223,19 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #ifdef ACCESSIBILITY
     case WM_GETOBJECT:
     {
-      LRESULT lAcc = 0;
-      IAccessible *msaaAccessible = NULL;
+      *aRetValue = 0;
       if (lParam == OBJID_CLIENT) { // oleacc.dll will be loaded dynamically
         nsCOMPtr<nsIAccessible> rootAccessible = GetRootAccessible(); // Held by a11y cache
         if (rootAccessible) {
+          IAccessible *msaaAccessible = NULL;
           rootAccessible->GetNativeInterface((void**)&msaaAccessible); // does an addref
-        }
-      }
-      else if (lParam == OBJID_CARET) {  // each root accessible owns a caret accessible
-        nsCOMPtr<nsIAccessible> rootAccessible = GetRootAccessible();  // Held by a11y cache
-        nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(rootAccessible));
-        if (accDoc) {
-          nsCOMPtr<nsIAccessible> accessibleCaret;
-          accDoc->GetCaretAccessible(getter_AddRefs(accessibleCaret));
-          if (accessibleCaret) {
-            accessibleCaret->GetNativeInterface((void**)&msaaAccessible);
+          if (msaaAccessible) {
+            *aRetValue = LresultFromObject(IID_IAccessible, wParam, msaaAccessible); // does an addref
+            msaaAccessible->Release(); // release extra addref
+            result = PR_TRUE;  // We handled the WM_GETOBJECT message
           }
         }
       }
-      if (msaaAccessible) {
-        lAcc = LresultFromObject(IID_IAccessible, wParam, msaaAccessible); // does an addref
-        msaaAccessible->Release(); // release extra addref
-      }
-      return (*aRetValue = lAcc) != 0;
     }
 #endif
 

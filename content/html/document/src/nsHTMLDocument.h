@@ -210,9 +210,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLDocument, nsDocument)
 
 protected:
-  nsresult GetPixelDimensions(nsIPresShell* aShell,
-                              PRInt32* aWidth,
-                              PRInt32* aHeight);
+  nsresult GetBodySize(PRInt32* aWidth,
+                       PRInt32* aHeight);
 
   nsresult RegisterNamedItems(nsIContent *aContent);
   nsresult UnregisterNamedItems(nsIContent *aContent);
@@ -296,6 +295,9 @@ protected:
 
   void StartAutodetection(nsIDocShell *aDocShell, nsACString& aCharset,
                           const char* aCommand);
+
+  // Override so we can munge the charset on our wyciwyg channel as needed.
+  virtual void SetDocumentCharacterSet(const nsACString& aCharSetID);
 
   // mWriteState tracks the status of this document if the document is being
   // entirely created by script. In the normal load case, mWriteState will be

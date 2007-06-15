@@ -65,7 +65,6 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIStringBundle.h"
-#include "nsCPasswordManager.h"
 #include "nsAuthInformationHolder.h"
 
 #if defined(PR_LOGGING)
@@ -802,21 +801,6 @@ nsFtpState::R_pass() {
     if (mResponseCode/100 == 5 || mResponseCode==421) {
         // There is no difference between a too-many-users error,
         // a wrong-password error, or any other sort of error
-        // So we need to tell wallet to forget the password if we had one,
-        // and error out. That will then show the error message, and the
-        // user can retry if they want to
-
-        if (!mPassword.IsEmpty()) {
-            nsCOMPtr<nsIPasswordManager> pm =
-                    do_GetService(NS_PASSWORDMANAGER_CONTRACTID);
-            if (pm) {
-                nsCAutoString prePath;
-                nsresult rv = mChannel->URI()->GetPrePath(prePath);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get prepath");
-                if (NS_SUCCEEDED(rv))
-                    pm->RemoveUser(prePath, EmptyString());
-            }
-        }
 
         // If the login was anonymous, and it failed, try again with a username
         if (mAnonymous) {

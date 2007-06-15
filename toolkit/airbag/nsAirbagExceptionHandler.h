@@ -43,10 +43,12 @@
 #include "nsStringGlue.h"
 
 namespace CrashReporter {
-nsresult SetExceptionHandler(nsILocalFile* aXREDirectory);
+nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
+                             const char* aServerURL);
 nsresult SetMinidumpPath(const nsAString& aPath);
 nsresult UnsetExceptionHandler();
 nsresult AnnotateCrashReport(const nsACString &key, const nsACString &data);
+nsresult SetRestartArgs(int argc, char **argv);
 }
 
 #endif /* nsAirbagExceptionHandler_h__ */

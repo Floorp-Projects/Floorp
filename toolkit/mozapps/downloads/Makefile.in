@@ -42,7 +42,10 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifndef MOZ_SUITE
+# XXX Suite doesn't want these just yet
 DIRS = src
+endif
 
 include $(topsrcdir)/config/rules.mk
 

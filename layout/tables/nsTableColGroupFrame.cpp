@@ -269,9 +269,9 @@ nsTableColGroupFrame::InsertColsReflow(PRInt32         aColIndex,
   if (!tableFrame)
     return;
 
-  tableFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
   PresContext()->PresShell()->FrameNeedsReflow(tableFrame,
-                                                  nsIPresShell::eTreeChange);
+                                               nsIPresShell::eTreeChange,
+                                               NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
 void
@@ -301,9 +301,9 @@ nsTableColGroupFrame::RemoveChild(nsTableColFrame& aChild,
   if (!tableFrame)
     return;
 
-  tableFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
   PresContext()->PresShell()->FrameNeedsReflow(tableFrame,
-                                                  nsIPresShell::eTreeChange);
+                                               nsIPresShell::eTreeChange,
+                                               NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
 NS_IMETHODIMP
@@ -325,9 +325,9 @@ nsTableColGroupFrame::RemoveFrame(nsIAtom*        aListName,
 
     tableFrame->RemoveCol(this, colIndex, PR_TRUE, PR_TRUE);
 
-    tableFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
     PresContext()->PresShell()->FrameNeedsReflow(tableFrame,
-                                                    nsIPresShell::eTreeChange);
+                                                 nsIPresShell::eTreeChange,
+                                                 NS_FRAME_HAS_DIRTY_CHILDREN);
   }
   else {
     mFrames.DestroyFrame(aOldFrame);

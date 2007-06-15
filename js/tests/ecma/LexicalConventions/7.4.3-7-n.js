@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = '7.4.3-7-n.js';
+
 /**
    File Name:          7.4.3-7-n.js
    ECMA Section:       7.4.3
@@ -65,9 +68,8 @@ var prefValue;
 
 print("This test requires option javascript.options.strict enabled");
 
-var jsOptions = new JavaScriptOptions();
-jsOptions.setOption('strict', true);
-jsOptions.setOption('werror', true);
+options('strict');
+options('werror');
 
 try
 {
@@ -78,8 +80,6 @@ catch(e)
   actual = 'error';
 }
 
-jsOptions.reset();
-
 DESCRIPTION = "var extends = true";
 EXPECTED = "error";
 
@@ -89,10 +89,9 @@ if (actual == 'error')
   throw actual;
 }
 
-new TestCase( SECTION,  
-              "var extends = true",     
-              "error",    
+new TestCase( SECTION, 
+              "var extends = true",    
+              "error",   
               actual);
 
 test();
-

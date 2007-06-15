@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '9.1.1.7.js';
+
 START("9.1.1.7 - XML [[DeepCopy]]");
 
 var actual = 'Test not implemented';

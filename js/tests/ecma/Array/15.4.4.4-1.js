@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = '15.4.4.4-1.js';
+
 /**
    File Name:          15.4.4.3-1.js
    ECMA Section:       15.4.4.3-1 Array.prototype.reverse()
@@ -94,19 +97,19 @@ writeHeaderToLog( SECTION + " Array.prototype.reverse()");
 
 var ARR_PROTOTYPE = Array.prototype;
 
-new TestCase( SECTION, 
-	      "Array.prototype.reverse.length",           
-	      0,      
+new TestCase( SECTION,
+	      "Array.prototype.reverse.length",          
+	      0,     
 	      Array.prototype.reverse.length );
 
-new TestCase( SECTION, 
-	      "delete Array.prototype.reverse.length",    
-	      false,  
+new TestCase( SECTION,
+	      "delete Array.prototype.reverse.length",   
+	      false, 
 	      delete Array.prototype.reverse.length );
 
-new TestCase( SECTION, 
-	      "delete Array.prototype.reverse.length; Array.prototype.reverse.length",    
-	      0, 
+new TestCase( SECTION,
+	      "delete Array.prototype.reverse.length; Array.prototype.reverse.length",   
+	      0,
 	      eval("delete Array.prototype.reverse.length; Array.prototype.reverse.length") );
 
 // length of array is 0
@@ -184,7 +187,7 @@ var NUMBER_OBJECT = new Number(Math.PI);
 var ARRAY_OBJECT= new Array(1000);
 
 var args = "null, void 0, Math.pow(2,32), 1.234e-32, OBJECT_OBJECT, BOOLEAN_OBJECT, FUNCTION_OBJECT, DATE_OBJECT, STRING_OBJECT,"+
-"ARRAY_OBJECT, NUMBER_OBJECT, Math, true, false, 123, '90210'";
+  "ARRAY_OBJECT, NUMBER_OBJECT, Math, true, false, 123, '90210'";
 
 var S = "var A = new Array("+args+")";
 eval(S);

@@ -292,8 +292,12 @@ nsXULMenuitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     *aState |= nsIAccessibleStates::STATE_HASPOPUP;
     PRBool isOpen;
     element->HasAttribute(NS_LITERAL_STRING("open"), &isOpen);
-    *aState |= isOpen ? nsIAccessibleStates::STATE_EXPANDED :
-                        nsIAccessibleStates::STATE_COLLAPSED;
+    if (isOpen) {
+      *aState |= nsIAccessibleStates::STATE_EXPANDED;
+    }
+    else {
+      *aState |= nsIAccessibleStates::STATE_COLLAPSED;
+    }
   }
 
   nsAutoString menuItemType;
@@ -313,16 +317,53 @@ nsXULMenuitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     }
   }
 
-  // Offscreen?
-  // If parent or grandparent menuitem is offscreen, then we're offscreen too
-  // We get it by replacing the current offscreen bit with the parent's
-  nsCOMPtr<nsIAccessible> parentAccessible(GetParent());
-  if (parentAccessible) {
-    // clear the old OFFSCREEN bit
-    *aState &= ~nsIAccessibleStates::STATE_OFFSCREEN;
-    // or it with the parent's offscreen bit
-    *aState |= (State(parentAccessible) & nsIAccessibleStates::STATE_OFFSCREEN);
-  }
+  // Combo box listitem
+  if (Role(this) == nsIAccessibleRole::ROLE_COMBOBOX_LISTITEM) {
+    // Is selected?
+    PRBool isSelected = PR_FALSE;
+    nsCOMPtr<nsIDOMXULSelectControlItemElement>
+      item(do_QueryInterface(mDOMNode));
+    NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
+    item->GetSelected(&isSelected);
+
+    // Is collapsed?
+    PRBool isCollapsed = PR_FALSE;
+    nsCOMPtr<nsIAccessible> parentAccessible(GetParent());
+    if (parentAccessible &&
+        State(parentAccessible) & nsIAccessibleStates::STATE_INVISIBLE) {
+      isCollapsed = PR_TRUE;
+    }
+    
+    // Is disabled?
+    if (0 == (*aState & nsIAccessibleStates::STATE_UNAVAILABLE)) {
+      *aState |= (nsIAccessibleStates::STATE_FOCUSABLE |
+                  nsIAccessibleStates::STATE_SELECTABLE);
+    }
+
+    if (isSelected) {
+      *aState |= nsIAccessibleStates::STATE_SELECTED;
+      
+      // Selected and collapsed?
+      if (isCollapsed) {
+        // Set selected option offscreen/invisible according to combobox state
+        nsCOMPtr<nsIAccessible> grandParentAcc;
+        parentAccessible->GetParent(getter_AddRefs(grandParentAcc));
+        NS_ENSURE_TRUE(grandParentAcc, NS_ERROR_FAILURE);
+        NS_ASSERTION((Role(grandParentAcc) == nsIAccessibleRole::ROLE_COMBOBOX),
+                     "grandparent of combobox listitem is not combobox");
+        PRUint32 grandParentState, grandParentExtState;
+        grandParentAcc->GetFinalState(&grandParentState, &grandParentExtState);
+        *aState &= ~(nsIAccessibleStates::STATE_OFFSCREEN |
+                     nsIAccessibleStates::STATE_INVISIBLE);
+        *aState |= grandParentState & nsIAccessibleStates::STATE_OFFSCREEN |
+                   grandParentState & nsIAccessibleStates::STATE_INVISIBLE;
+        if (aExtraState) {
+          *aExtraState |=
+            grandParentExtState & nsIAccessibleStates::EXT_STATE_OPAQUE;
+        }
+      } // isCollapsed
+    } // isSelected
+  } // ROLE_COMBOBOX_LISTITEM
 
   return NS_OK;
 }
@@ -501,11 +542,12 @@ nsXULMenuitemAccessible(aDOMNode, aShell)
 NS_IMETHODIMP
 nsXULMenuSeparatorAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  // Isn't focusable, but can be offscreen
+  // Isn't focusable, but can be offscreen/invisible -- only copy those states
   nsresult rv = nsXULMenuitemAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aState &= nsIAccessibleStates::STATE_OFFSCREEN;
+  *aState &= (nsIAccessibleStates::STATE_OFFSCREEN | 
+              nsIAccessibleStates::STATE_INVISIBLE);
 
   return NS_OK;
 }
@@ -550,11 +592,10 @@ nsXULMenupopupAccessible::nsXULMenupopupAccessible(nsIDOMNode* aDOMNode, nsIWeak
 NS_IMETHODIMP
 nsXULMenupopupAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  // We are onscreen if our parent is active
-  *aState = 0;
-  if (aExtraState)
-    *aExtraState = 0;
+  nsresult rv = nsAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  // We are onscreen if our parent is active
   PRBool isActive = PR_FALSE;
 
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
@@ -571,7 +612,8 @@ nsXULMenupopupAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   }
 
   if (!isActive)
-    *aState |= nsIAccessibleStates::STATE_OFFSCREEN;
+    *aState |= (nsIAccessibleStates::STATE_OFFSCREEN |
+                nsIAccessibleStates::STATE_INVISIBLE);
 
   return NS_OK;
 }
@@ -637,7 +679,13 @@ NS_IMETHODIMP nsXULMenupopupAccessible::GetName(nsAString& _retval)
 
 NS_IMETHODIMP nsXULMenupopupAccessible::GetRole(PRUint32 *aRole)
 {
-  if (mParent && Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX) {
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    return NS_ERROR_FAILURE;
+  }
+  if ((mParent && Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX) ||
+      content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                           nsAccessibilityAtoms::autocomplete, eIgnoreCase)) {
     *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
   }
   else {

@@ -42,6 +42,7 @@
 
 #include "nsTextAccessibleWrap.h"
 #include "nsAutoPtr.h"
+#include "nsBaseWidgetAccessible.h"
 
 class nsIWeakReference;
 
@@ -123,16 +124,16 @@ protected:
   nsString mBulletText;
 };
 
-class nsHTMLListAccessible : public nsHyperTextAccessible
+class nsHTMLListAccessible : public nsHyperTextAccessibleWrap
 {
 public:
   nsHTMLListAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell):
-    nsHyperTextAccessible(aDOMNode, aShell) { }
+    nsHyperTextAccessibleWrap(aDOMNode, aShell) { }
   NS_IMETHOD GetRole(PRUint32 *aRole) { *aRole = nsIAccessibleRole::ROLE_LIST; return NS_OK; }
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
-class nsHTMLLIAccessible : public nsHyperTextAccessible
+class nsHTMLLIAccessible : public nsLinkableAccessible
 {
 public:
   nsHTMLLIAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell, 

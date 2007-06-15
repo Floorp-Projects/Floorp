@@ -78,6 +78,8 @@
 #include "txMozillaXSLTProcessor.h"
 #include "nsDOMStorage.h"
 #include "nsCellMap.h"
+#include "nsTextFrameTextRunCache.h"
+#include "nsCCUncollectableMarker.h"
 
 #ifdef MOZ_XUL
 #include "nsXULContentUtils.h"
@@ -161,6 +163,12 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
+  rv = nsTextFrameTextRunCache::Init();
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Could not initialize textframe textrun cache");
+    return rv;
+  }
+
 #ifndef MOZ_NO_INSPECTOR_APIS
   inDOMView::InitAtoms();
 #endif
@@ -209,6 +217,12 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
+  rv = nsCCUncollectableMarker::Init();
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Could not initialize nsCCUncollectableMarker");
+    return rv;
+  }
+
   return NS_OK;
 }
 
@@ -223,6 +237,7 @@ nsLayoutStatics::Shutdown()
   nsContentList::Shutdown();
   nsComputedDOMStyle::Shutdown();
   CSSLoaderImpl::Shutdown();
+  nsTextFrameTextRunCache::Shutdown();
   nsCSSRendering::Shutdown();
 #ifdef DEBUG
   nsFrame::DisplayReflowShutdown();

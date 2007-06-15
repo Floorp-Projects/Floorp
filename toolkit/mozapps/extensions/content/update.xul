@@ -58,7 +58,7 @@
         onclose="return gUpdateWizard.onWizardClose(event);"
         buttons="accept,cancel">
 
-  <script type="application/x-javascript" src="chrome://mozapps/content/extensions/update.js"/>
+  <script type="application/javascript" src="chrome://mozapps/content/extensions/update.js"/>
   
   <stringbundleset id="updateSet">
     <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>

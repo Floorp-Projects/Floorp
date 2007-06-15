@@ -54,9 +54,9 @@
         onload="wizardInit()"
         onwizardfinish="return wizardFinish();">
 
-  <script type="application/x-javascript" src="chrome://mozapps/content/plugins/pluginInstallerWizard.js"/>
-  <script type="application/x-javascript" src="chrome://mozapps/content/plugins/pluginInstallerDatasource.js"/>
-  <script type="application/x-javascript" src="chrome://mozapps/content/plugins/pluginInstallerService.js"/>
+  <script type="application/javascript" src="chrome://mozapps/content/plugins/pluginInstallerWizard.js"/>
+  <script type="application/javascript" src="chrome://mozapps/content/plugins/pluginInstallerDatasource.js"/>
+  <script type="application/javascript" src="chrome://mozapps/content/plugins/pluginInstallerService.js"/>
 
   <stringbundleset id="pluginSet">
     <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>

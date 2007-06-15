@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-347674.js';
 //-----------------------------------------------------------------------------
-var bug     = "347674";
+var BUGNUMBER     = "347674";
 var summary = "ReferenceError thrown when accessing exception bound in a " +
-              "catch block in a try block within that catch block";
+  "catch block in a try block within that catch block";
 var actual, expect;
 
-printBugNumber(bug);
+printBugNumber(BUGNUMBER);
 printStatus(summary);
 
 /**************
@@ -79,8 +81,8 @@ try
   {
     if (!(ex instanceof TypeError))
       throw "Wrong value thrown!\n" +
-            "  expected: a TypeError ('32.9' doesn't match the regexp)\n" +
-            "  actual: " + ex;
+	"  expected: a TypeError ('32.9' doesn't match the regexp)\n" +
+	"  actual: " + ex;
   }
 }
 catch (e)

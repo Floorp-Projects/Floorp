@@ -36,13 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var bug = 370048;
+gTestfile = 'regress-370048-02.js';
+
+var BUGNUMBER = 370048;
 var summary = 'with (obj) function:: with xml lists';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 var list = <><a/></>;
 expect = list.function::addNamespace;

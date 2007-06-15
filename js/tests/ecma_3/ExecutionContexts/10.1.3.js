@@ -38,34 +38,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var gTestfile = '10.1.3.js';
+
 /**
-    ECMA Section: 10.1.3: Variable Instantiation
-    FunctionDeclarations are processed before VariableDeclarations, and 
-    VariableDeclarations don't replace existing values with undefined
+   ECMA Section: 10.1.3: Variable Instantiation
+   FunctionDeclarations are processed before VariableDeclarations, and
+   VariableDeclarations don't replace existing values with undefined
 */
 
 test();
 
 function f()
 {
-    var x;
+  var x;
 
-    return typeof x;
+  return typeof x;
 
-    function x()
-    {
-        return 7;    
-    }
+  function x()
+  {
+    return 7;   
+  }
 }
 
 function test()
 {
-    enterFunc ("test");
+  enterFunc ("test");
 
-    printStatus ("ECMA Section: 10.1.3: Variable Instantiation.");
-    printBugNumber (17290);
+  printStatus ("ECMA Section: 10.1.3: Variable Instantiation.");
+  printBugNumber (17290);
 
-    reportCompare ("function", f(), "Declaration precedence test");
+  reportCompare ("function", f(), "Declaration precedence test");
 
-    exitFunc("test");        
+  exitFunc("test");       
 }

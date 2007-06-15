@@ -40,10 +40,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.5.4.16.js';
+
 START("13.5.4.16 - XMLList parent()");
 
 TEST(1, true, XMLList.prototype.hasOwnProperty("parent"));
-    
+   
 // Empty should return undefined
 x = new XMLList();
 TEST(2, undefined, x.parent());

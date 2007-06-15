@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 29 Aug 2001
  *
  * SUMMARY: Negative test that JS infinite recursion protection works.
@@ -43,7 +45,8 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=96128
  */
 //-----------------------------------------------------------------------------
-var bug = 96128;
+var gTestfile = 'regress-96128-n.js';
+var BUGNUMBER = 96128;
 var summary = 'Testing that JS infinite recursion protection works';
 
 
@@ -69,14 +72,14 @@ test();
 //-----------------------------------------------------------------------------
 
 
-function test() 
+function test()
 {
-  enterFunc ('test'); 
-  printBugNumber (bug);
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   // we expect this to fail (exit code 3), but NOT crash. -
   var obj = new objRecurse();
- 
+
   exitFunc ('test');
 }

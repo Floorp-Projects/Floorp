@@ -35,16 +35,18 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-276103.js';
 //-----------------------------------------------------------------------------
 // testcase by Gianugo Rabellino <gianugo@apache.org>
-var bug = 276103;
+var BUGNUMBER = 276103;
 var summary = 'link foo and null bytes';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
-  
+ 
 
 var testString = "test|string";
 var idx = testString.indexOf("|");

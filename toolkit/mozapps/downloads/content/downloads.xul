@@ -63,11 +63,11 @@
         onload="Startup();" onunload="Shutdown();"
         onclose="return closeWindow(false);">
       
-  <script type="application/x-javascript" src="chrome://mozapps/content/downloads/DownloadProgressListener.js"/>
-  <script type="application/x-javascript" src="chrome://mozapps/content/downloads/downloads.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/javascript" src="chrome://mozapps/content/downloads/DownloadProgressListener.js"/>
+  <script type="application/javascript" src="chrome://mozapps/content/downloads/downloads.js"/>
+  <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
+  <script type="application/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
   
   <stringbundleset id="downloadSet">
     <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
@@ -136,45 +136,8 @@
   <popup id="downloadContextMenu" onpopupshowing="return buildContextMenu(event);"/>
 
   <richlistbox id="downloadView" flex="1" context="downloadContextMenu"
-        datasources="rdf:null" ref="NC:DownloadsRoot"
         ondragover="nsDragAndDrop.dragOver(event, gDownloadDNDObserver);"
         ondragdrop="nsDragAndDrop.drop(event, gDownloadDNDObserver);">
-    <template>
-      <rule>
-        <conditions>
-          <content uri="?uri"/>
-          <member container="?uri" child="?download"/>
-          <triple subject="?download"
-                  predicate="http://home.netscape.com/NC-rdf#File"
-                  object="?file"/>
-          <triple subject="?download"   
-                  predicate="http://home.netscape.com/NC-rdf#Name"
-                  object="?target"/>
-          <triple subject="?download"   
-                  predicate="http://home.netscape.com/NC-rdf#DownloadState"
-                  object="?state"/>
-        </conditions>
-        <bindings>
-          <binding subject="?download"
-                  predicate="http://home.netscape.com/NC-rdf#DownloadAnimated"
-                  object="?animated"/>
-          <binding subject="?download"
-                  predicate="http://home.netscape.com/NC-rdf#DownloadStatus"
-                  object="?status"/>
-          <binding subject="?download"
-                  predicate="http://home.netscape.com/NC-rdf#ProgressPercent"
-                  object="?progress-percent"/>
-          <binding subject="?download"
-                  predicate="http://home.netscape.com/NC-rdf#IconURL"
-                  object="?icon"/>
-        </bindings>            
-        <action>
-          <download uri="?download"
-                    image="?icon" file="?file" target="?target" state="?state"
-                    animated="?animated" status="?status" progress="?progress-percent"/>
-        </action>
-      </rule>
-    </template>
   </richlistbox>
   
   <hbox>

@@ -107,7 +107,6 @@ VIAddVersionKey "FileDescription" "${BrandShortName} Installer"
 !insertmacro CanWriteToInstallDir
 !insertmacro CheckDiskSpace
 !insertmacro AddHandlerValues
-!insertmacro DisplayCopyErrMsg
 
 !include shared.nsh
 
@@ -193,36 +192,56 @@ Section "-Application" Section1
   SetDetailsPrint textonly
   DetailPrint $(STATUS_CLEANUP)
   SetDetailsPrint none
-  SetOutPath $INSTDIR
 
   ; Try to delete the app's main executable and if we can't delete it try to
   ; close the app. This allows running an instance that is located in another
   ; directory and prevents the launching of the app during the installation.
-  ClearErrors
+  ; A copy of the executable is placed in a temporary directory so it can be
+  ; copied back in the case where a specific file is checked / found to be in
+  ; use that would prevent a successful install.
+
+  ; Create a temporary backup directory.
+  GetTempFileName $TmpVal "$TEMP"
+  ${DeleteFile} $TmpVal
+  SetOutPath $TmpVal
+
   ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
-    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
-  ${EndIf}
-  ${If} ${Errors}
     ClearErrors
-    ${CloseApp} "true" $(WARN_APP_RUNNING_INSTALL)
-    ; Try to delete it again to prevent launching the app while we are
-    ; installing.
-    ClearErrors
-    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+    CopyFiles /SILENT "$INSTDIR\${FileMainEXE}" "$TmpVal\${FileMainEXE}"
+    Delete "$INSTDIR\${FileMainEXE}"
     ${If} ${Errors}
       ClearErrors
-      ; Try closing the app a second time
       ${CloseApp} "true" $(WARN_APP_RUNNING_INSTALL)
-      retry:
+      ; Try to delete it again to prevent launching the app while we are
+      ; installing.
       ClearErrors
-      ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+      CopyFiles /SILENT "$INSTDIR\${FileMainEXE}" "$TmpVal\${FileMainEXE}"
+      Delete "$INSTDIR\${FileMainEXE}"
       ${If} ${Errors}
-        ; Fallback to the FileError_NoIgnore error with retry/cancel options
-        ${DisplayCopyErrMsg} "${FileMainEXE}"
-        GoTo retry
+        ClearErrors
+        ; Try closing the app a second time
+        ${CloseApp} "true" $(WARN_APP_RUNNING_INSTALL)
+        StrCpy $R1 "${FileMainEXE}"
+        Call CheckInUse
       ${EndIf}
     ${EndIf}
   ${EndIf}
+
+  StrCpy $R1 "freebl3.dll"
+  Call CheckInUse
+
+  StrCpy $R1 "nssckbi.dll"
+  Call CheckInUse
+
+  StrCpy $R1 "nspr4.dll"
+  Call CheckInUse
+
+  StrCpy $R1 "xpicleanup.exe"
+  Call CheckInUse
+
+  SetOutPath $INSTDIR
+  RmDir /r "$TmpVal"
+  ClearErrors
 
   ; During an install Vista checks if a new entry is added under the uninstall
   ; registry key (e.g. ARP). When the same version of the app is installed on
@@ -544,7 +563,7 @@ Function installTalkback
       ; This will add it during install to the uninstall.log and retains the
       ; original disabled state from the installation.
       ${If} ${FileExists} "$R1\InstallDisabled"
-        CopyFiles "$R1\InstallDisabled" "$R0"
+        CopyFiles /SILENT "$R1\InstallDisabled" "$R0"
       ${EndIf}
       ; Remove the existing install of talkback
       RmDir /r "$R1"
@@ -566,6 +585,31 @@ Function installTalkback
     ClearErrors
     ${LogHeader} "Installing Quality Feedback Agent"
     Call DoCopyFiles
+  ${EndIf}
+FunctionEnd
+
+; Copies a file to a temporary backup directory and then checks if it is in use
+; by attempting to delete the file. If the file is in use an error is displayed
+; and the user is given the options to either retry or cancel. If cancel is
+; selected then the files are restored.
+Function CheckInUse
+  ${If} ${FileExists} "$INSTDIR\$R1"
+    retry:
+    ClearErrors
+    CopyFiles /SILENT "$INSTDIR\$R1" "$TmpVal\$R1"
+    ${Unless} ${Errors}
+      Delete "$INSTDIR\$R1"
+    ${EndUnless}
+    ${If} ${Errors}
+      StrCpy $0 "$INSTDIR\$R1"
+      ${WordReplace} "$(^FileError_NoIgnore)" "\r\n" "$\r$\n" "+*" $0
+      MessageBox MB_RETRYCANCEL|MB_ICONQUESTION "$0" IDRETRY retry
+      Delete "$TmpVal\$R1"
+      CopyFiles /SILENT "$TmpVal\*" "$INSTDIR\"
+      SetOutPath $INSTDIR
+      RmDir /r "$TmpVal"
+      Quit
+    ${EndIf}
   ${EndIf}
 FunctionEnd
 
@@ -650,8 +694,10 @@ Function CopyFile
       CreateDirectory "$R1$R3\$R7"
       ${If} ${Errors}
         ${LogMsg}  "** ERROR Creating Directory: $R1$R3\$R7 **"
-        ${DisplayCopyErrMsg} "$R7"
-        GoTo retry
+        StrCpy $0 "$R1$R3\$R7"
+        ${WordReplace} "$(^FileError_NoIgnore)" "\r\n" "$\r$\n" "+*" $0
+        MessageBox MB_RETRYCANCEL|MB_ICONQUESTION "$0" IDRETRY retry
+        Quit
       ${Else}
         ${LogMsg}  "Created Directory: $R1$R3\$R7"
       ${EndIf}
@@ -662,25 +708,33 @@ Function CopyFile
       CreateDirectory "$R1$R3"
       ${If} ${Errors}
         ${LogMsg}  "** ERROR Creating Directory: $R1$R3 **"
-        ${DisplayCopyErrMsg} "$R3"
-        GoTo retry
+        StrCpy $0 "$R1$R3"
+        ${WordReplace} "$(^FileError_NoIgnore)" "\r\n" "$\r$\n" "+*" $0
+        MessageBox MB_RETRYCANCEL|MB_ICONQUESTION "$0" IDRETRY retry
+        Quit
       ${Else}
         ${LogMsg}  "Created Directory: $R1$R3"
       ${EndIf}
     ${EndUnless}
     ${If} ${FileExists} "$R1$R3\$R7"
+      ClearErrors
       Delete "$R1$R3\$R7"
       ${If} ${Errors}
-        ${DisplayCopyErrMsg} "$R7"
-        GoTo retry
+        ${LogMsg} "** ERROR Deleting File: $R1$R3\$R7 **"
+        StrCpy $0 "$R1$R3\$R7"
+        ${WordReplace} "$(^FileError_NoIgnore)" "\r\n" "$\r$\n" "+*" $0
+        MessageBox MB_RETRYCANCEL|MB_ICONQUESTION "$0" IDRETRY retry
+        Quit
       ${EndIf}
     ${EndIf}
     ClearErrors
     CopyFiles /SILENT $R9 "$R1$R3"
     ${If} ${Errors}
       ${LogMsg} "** ERROR Installing File: $R1$R3\$R7 **"
-      ${DisplayCopyErrMsg} "$R7"
-      GoTo retry
+      StrCpy $0 "$R1$R3\$R7"
+      ${WordReplace} "$(^FileError_NoIgnore)" "\r\n" "$\r$\n" "+*" $0
+      MessageBox MB_RETRYCANCEL|MB_ICONQUESTION "$0" IDRETRY retry
+      Quit
     ${Else}
       ${LogMsg} "Installed File: $R1$R3\$R7"
     ${EndIf}

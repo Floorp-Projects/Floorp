@@ -365,9 +365,6 @@ NS_NewScrollbarFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewScrollbarButtonFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-nsIFrame*
-NS_NewNativeScrollbarFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
-
 
 #ifdef NOISY_FINDFRAME
 static PRInt32 FFWC_totalCount=0;
@@ -548,9 +545,6 @@ IsInlineFrame(nsIFrame* aFrame)
     case NS_STYLE_DISPLAY_INLINE_BOX:
     case NS_STYLE_DISPLAY_INLINE_GRID:
     case NS_STYLE_DISPLAY_INLINE_STACK:
-    case NS_STYLE_DISPLAY_DECK:
-    case NS_STYLE_DISPLAY_POPUP:
-    case NS_STYLE_DISPLAY_GROUPBOX:
       return PR_TRUE;
     default:
       break;
@@ -1908,14 +1902,14 @@ nsCSSFrameConstructor::CreateAttributeContent(nsIContent* aParentContent,
                                        getter_AddRefs(content));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  content->SetNativeAnonymous(PR_TRUE);
+
   // Set aContent as the parent content so that event handling works.
   rv = content->BindToTree(mDocument, aParentContent, content, PR_TRUE);
   if (NS_FAILED(rv)) {
     content->UnbindFromTree();
     return rv;
   }
-
-  content->SetNativeAnonymous(PR_TRUE);
 
   // Create a text frame and initialize it
   nsIFrame* textFrame = NS_NewTextFrame(mPresShell, aStyleContext);
@@ -1970,6 +1964,8 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
                                            data.mContent.mImage);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    content->SetNativeAnonymous(PR_TRUE);
+  
     // Set aContent as the parent content and set the document object. This
     // way event handling works
     // Hack the binding parent to make document rules not match (not
@@ -1981,8 +1977,6 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
       return rv;
     }
     
-    content->SetNativeAnonymous(PR_TRUE);
-  
     // Create an image frame and initialize it
     nsIFrame* imageFrame = NS_NewImageFrame(mPresShell, aStyleContext);
     if (NS_UNLIKELY(!imageFrame)) {
@@ -2152,6 +2146,8 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
           NS_ASSERTION(*textPtr, "must implement nsIDOMCharacterData");
         }
 
+        textContent->SetNativeAnonymous(PR_TRUE);
+
         // Set aContent as the parent content so that event handling works.
         nsresult rv = textContent->BindToTree(mDocument, aContent, textContent,
                                               PR_TRUE);
@@ -2159,8 +2155,6 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
           textContent->UnbindFromTree();
           return rv;
         }
-
-        textContent->SetNativeAnonymous(PR_TRUE);
 
         // Create a text frame and initialize it
         textFrame = NS_NewTextFrame(mPresShell, aStyleContext);
@@ -3379,7 +3373,6 @@ IsSpecialContent(nsIContent*     aContent,
 #endif
       aTag == nsGkAtoms::slider ||
       aTag == nsGkAtoms::scrollbar ||
-      aTag == nsGkAtoms::nativescrollbar ||
       aTag == nsGkAtoms::scrollbarbutton ||
 #ifdef MOZ_XUL
       aTag == nsGkAtoms::splitter ||
@@ -3660,8 +3653,8 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsFrameConstructorState& aStat
   nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, nsnull, PR_FALSE);
 
   PRBool haveFirstLetterStyle, haveFirstLineStyle;
-  HaveSpecialBlockStyle(aContent, aStyleContext,
-                        &haveFirstLetterStyle, &haveFirstLineStyle);
+  ShouldHaveSpecialBlockStyle(aContent, aStyleContext,
+                              &haveFirstLetterStyle, &haveFirstLineStyle);
 
   // The caption frame is a float container
   nsFrameConstructorSaveState floatSaveState;
@@ -4004,8 +3997,8 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsFrameConstructorState& aState,
 
   if (!aIsPseudo) {
     PRBool haveFirstLetterStyle, haveFirstLineStyle;
-    HaveSpecialBlockStyle(aContent, aStyleContext,
-                          &haveFirstLetterStyle, &haveFirstLineStyle);
+    ShouldHaveSpecialBlockStyle(aContent, aStyleContext,
+                                &haveFirstLetterStyle, &haveFirstLineStyle);
 
     // The block frame is a float container
     nsFrameConstructorSaveState floatSaveState;
@@ -4342,8 +4335,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
 
     if (isBlockFrame) {
       PRBool haveFirstLetterStyle, haveFirstLineStyle;
-      HaveSpecialBlockStyle(aDocElement, styleContext,
-                            &haveFirstLetterStyle, &haveFirstLineStyle);
+      ShouldHaveSpecialBlockStyle(aDocElement, styleContext,
+                                  &haveFirstLetterStyle, &haveFirstLineStyle);
       mInitialContainingBlockIsAbsPosContainer = PR_TRUE;
       aState.PushAbsoluteContainingBlock(contentFrame, absoluteSaveState);
       aState.PushFloatContainingBlock(contentFrame, floatSaveState,
@@ -4805,8 +4798,8 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
     // input type="button" have only anonymous content
     // The area frame is a float container
     PRBool haveFirstLetterStyle, haveFirstLineStyle;
-    HaveSpecialBlockStyle(aContent, aStyleContext,
-                          &haveFirstLetterStyle, &haveFirstLineStyle);
+    ShouldHaveSpecialBlockStyle(aContent, aStyleContext,
+                                &haveFirstLetterStyle, &haveFirstLineStyle);
     nsFrameConstructorSaveState floatSaveState;
     aState.PushFloatContainingBlock(areaFrame, floatSaveState,
                                     haveFirstLetterStyle,
@@ -5064,8 +5057,8 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
 
   // The area frame is a float container
   PRBool haveFirstLetterStyle, haveFirstLineStyle;
-  HaveSpecialBlockStyle(aContent, aStyleContext,
-                        &haveFirstLetterStyle, &haveFirstLineStyle);
+  ShouldHaveSpecialBlockStyle(aContent, aStyleContext,
+                              &haveFirstLetterStyle, &haveFirstLineStyle);
   nsFrameConstructorSaveState floatSaveState;
   aState.PushFloatContainingBlock(scrolledFrame, floatSaveState,
                                   haveFirstLetterStyle, haveFirstLineStyle);
@@ -5132,8 +5125,8 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
 
   // The area frame is a float container
   PRBool haveFirstLetterStyle, haveFirstLineStyle;
-  HaveSpecialBlockStyle(aContent, aStyleContext,
-                        &haveFirstLetterStyle, &haveFirstLineStyle);
+  ShouldHaveSpecialBlockStyle(aContent, aStyleContext,
+                              &haveFirstLetterStyle, &haveFirstLineStyle);
   nsFrameConstructorSaveState floatSaveState;
   aState.PushFloatContainingBlock(areaFrame, floatSaveState,
                                   haveFirstLetterStyle,
@@ -5523,8 +5516,9 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
       }
       if (isFloatContainer) {
         PRBool haveFirstLetterStyle, haveFirstLineStyle;
-        HaveSpecialBlockStyle(aContent, aStyleContext,
-                              &haveFirstLetterStyle, &haveFirstLineStyle);
+        ShouldHaveSpecialBlockStyle(aContent, aStyleContext,
+                                    &haveFirstLetterStyle,
+                                    &haveFirstLineStyle);
         aState.PushFloatContainingBlock(newFrame, floatSaveState,
                                         PR_FALSE, PR_FALSE);
       }
@@ -5609,7 +5603,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
                                              PRBool                   aAppendToExisting,
                                              nsFrameItems&            aChildItems)
 {
-  nsCOMPtr<nsIAnonymousContentCreator> creator(do_QueryInterface(aParentFrame));
+  nsIAnonymousContentCreator* creator = nsnull;
+  CallQueryInterface(aParentFrame, &creator);
   if (!creator)
     return NS_OK;
 
@@ -5659,9 +5654,9 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
       // create the frame and attach it to our frame
       ConstructFrame(aState, content, aParentFrame, aChildItems);
     }
-
-    creator->PostCreateFrames();
   }
+
+  creator->PostCreateFrames();
 
   // process the current pseudo frame state
   if (!aState.mPseudoFrames.IsEmpty()) {
@@ -5797,6 +5792,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
                aTag == nsGkAtoms::description) {
         if ((aTag == nsGkAtoms::label || aTag == nsGkAtoms::description) && 
             (! aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::value))) {
+          // XXX we should probably be calling ConstructBlock here to handle
+          // things like columns etc
           newFrame = NS_NewAreaFrame(mPresShell, aStyleContext,
                                      NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
         }
@@ -5868,9 +5865,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       // SCROLLBAR CONSTRUCTION
       else if (aTag == nsGkAtoms::scrollbar) {
         newFrame = NS_NewScrollbarFrame(mPresShell, aStyleContext);
-      }
-      else if (aTag == nsGkAtoms::nativescrollbar) {
-        newFrame = NS_NewNativeScrollbarFrame(mPresShell, aStyleContext);
       }
       // End of SCROLLBAR CONSTRUCTION logic
 
@@ -6121,6 +6115,15 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       }      
     }
 #endif
+
+    // If the new frame isn't a float containing block, then push a null
+    // float containing block to disable floats. This is needed to disable
+    // floats within XUL frames.
+    nsFrameConstructorSaveState floatSaveState;
+    PRBool isFloatContainingBlock =
+      newFrame->GetContentInsertionFrame()->IsFloatContainingBlock();
+    aState.PushFloatContainingBlock(isFloatContainingBlock ? newFrame : nsnull,
+                                    floatSaveState, PR_FALSE, PR_FALSE);
 
     // Process the child content if requested
     nsFrameItems childItems;
@@ -7783,7 +7786,8 @@ nsCSSFrameConstructor::GetFloatContainingBlock(nsIFrame* aFrame)
   // IF we hit a mathml frame, bail out; we don't allow floating out of mathml
   // frames, because they don't seem to be able to deal.
   for (nsIFrame* containingBlock = aFrame;
-       containingBlock && !containingBlock->IsFrameOfType(nsIFrame::eMathML);
+       containingBlock && !containingBlock->IsFrameOfType(nsIFrame::eMathML) &&
+       !containingBlock->IsBoxFrame();
        containingBlock = containingBlock->GetParent()) {
     if (containingBlock->IsFloatContainingBlock()) {
       return containingBlock;
@@ -8016,7 +8020,7 @@ FindNextAnonymousSibling(nsIPresShell* aPresShell,
 // frame tree.
 PRBool
 nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aParentFrame,
-                                      const nsIFrame&        aSibling,
+                                      nsIFrame*              aSibling,
                                       PRUint8                aSiblingDisplay,
                                       nsIContent&            aContent,
                                       PRUint8&               aDisplay)
@@ -8030,7 +8034,17 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aParentFrame,
     // if we haven't already, construct a style context to find the display type of aContent
     if (UNSET_DISPLAY == aDisplay) {
       nsRefPtr<nsStyleContext> styleContext;
-      styleContext = ResolveStyleContext(aSibling.GetParent(), &aContent);
+      nsIFrame* styleParent;
+      PRBool providerIsChild;
+      if (NS_FAILED(aSibling->
+                      GetParentStyleContextFrame(aSibling->PresContext(),
+                                                 &styleParent,
+                                                 &providerIsChild)) ||
+          !styleParent) {
+        NS_NOTREACHED("Shouldn't happen");
+        return PR_FALSE;
+      }
+      styleContext = ResolveStyleContext(styleParent, &aContent);
       if (!styleContext) return PR_FALSE;
       const nsStyleDisplay* display = styleContext->GetStyleDisplay();
       aDisplay = display->mDisplay;
@@ -8051,7 +8065,7 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aParentFrame,
   }
   else if (nsGkAtoms::fieldSetFrame == aParentFrame->GetType()) {
     // Legends can be sibling of legends but not of other content in the fieldset
-    nsIAtom* sibType = aSibling.GetType();
+    nsIAtom* sibType = aSibling->GetType();
     nsCOMPtr<nsIDOMHTMLLegendElement> legendContent(do_QueryInterface(&aContent));
 
     if ((legendContent  && (nsGkAtoms::legendFrame != sibType)) ||
@@ -8100,7 +8114,7 @@ nsCSSFrameConstructor::FindPreviousSibling(nsIContent*       aContainer,
       // placeholder for out-of-flows?
       const nsStyleDisplay* display = prevSibling->GetStyleDisplay();
   
-      if (aChild && !IsValidSibling(aContainerFrame, *prevSibling, 
+      if (aChild && !IsValidSibling(aContainerFrame, prevSibling, 
                                     display->mDisplay, (nsIContent&)*aChild,
                                     childDisplay))
         continue;
@@ -8161,7 +8175,7 @@ nsCSSFrameConstructor::FindNextSibling(nsIContent*       aContainer,
       // placeholder for out-of-flows?
       const nsStyleDisplay* display = nextSibling->GetStyleDisplay();
 
-      if (aChild && !IsValidSibling(aContainerFrame, *nextSibling, 
+      if (aChild && !IsValidSibling(aContainerFrame, nextSibling, 
                                     display->mDisplay, (nsIContent&)*aChild,
                                     childDisplay))
         continue;
@@ -8480,11 +8494,10 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   PRBool haveFirstLetterStyle = PR_FALSE, haveFirstLineStyle = PR_FALSE;
   nsIFrame* containingBlock = state.mFloatedItems.containingBlock;
   if (containingBlock) {
-    nsIContent* blockContent = containingBlock->GetContent();
-    nsStyleContext* blockSC = containingBlock->GetStyleContext();
-    HaveSpecialBlockStyle(blockContent, blockSC,
-                          &haveFirstLetterStyle,
-                          &haveFirstLineStyle);
+    haveFirstLetterStyle = HasFirstLetterStyle(containingBlock);
+    haveFirstLineStyle =
+      ShouldHaveFirstLineStyle(containingBlock->GetContent(),
+                               containingBlock->GetStyleContext());
   }
 
   if (haveFirstLetterStyle) {
@@ -9009,11 +9022,10 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
       (NS_STYLE_DISPLAY_INLINE_BLOCK == parentDisplay->mDisplay)) {
     // Recover the special style flags for the containing block
     if (containingBlock) {
-      blockSC = containingBlock->GetStyleContext();
-      blockContent = containingBlock->GetContent();
-      HaveSpecialBlockStyle(blockContent, blockSC,
-                            &haveFirstLetterStyle,
-                            &haveFirstLineStyle);
+      haveFirstLetterStyle = HasFirstLetterStyle(containingBlock);
+      haveFirstLineStyle =
+        ShouldHaveFirstLineStyle(containingBlock->GetContent(),
+                                 containingBlock->GetStyleContext());
     }
 
     if (haveFirstLetterStyle) {
@@ -9472,7 +9484,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
     // Examine the containing-block for the removed content and see if
     // :first-letter style applies.
     nsIFrame* containingBlock = GetFloatContainingBlock(parentFrame);
-    PRBool haveFLS = containingBlock && HaveFirstLetterStyle(containingBlock);
+    PRBool haveFLS = containingBlock && HasFirstLetterStyle(containingBlock);
     if (haveFLS) {
       // Trap out to special routine that handles adjusting a blocks
       // frame tree when first-letter style is present.
@@ -9806,8 +9818,8 @@ nsCSSFrameConstructor::StyleChangeReflow(nsIFrame* aFrame,
   if (IsFrameSpecial(aFrame))
     aFrame = GetIBContainingBlockFor(aFrame);
 
-  aFrame->AddStateBits(NS_FRAME_IS_DIRTY);
-  mPresShell->FrameNeedsReflow(aFrame, nsIPresShell::eStyleChange);
+  mPresShell->FrameNeedsReflow(aFrame, nsIPresShell::eStyleChange,
+                               NS_FRAME_IS_DIRTY);
 
   return NS_OK;
 }
@@ -9850,7 +9862,7 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
       // See if the block has first-letter style applied to it.
       nsIContent* blockContent = block->GetContent();
       nsStyleContext* blockSC = block->GetStyleContext();
-      haveFirstLetterStyle = HaveFirstLetterStyle(block);
+      haveFirstLetterStyle = HasFirstLetterStyle(block);
       if (haveFirstLetterStyle) {
         RemoveLetterFrames(mPresShell->GetPresContext(), mPresShell,
                            mPresShell->FrameManager(), block);
@@ -11172,8 +11184,8 @@ nsCSSFrameConstructor::GetFirstLineStyle(nsIContent* aContent,
 // Predicate to see if a given content (block element) has
 // first-letter style applied to it.
 PRBool
-nsCSSFrameConstructor::HaveFirstLetterStyle(nsIContent* aContent,
-                                            nsStyleContext* aStyleContext)
+nsCSSFrameConstructor::ShouldHaveFirstLetterStyle(nsIContent* aContent,
+                                                  nsStyleContext* aStyleContext)
 {
   return nsLayoutUtils::HasPseudoStyle(aContent, aStyleContext,
                                        nsCSSPseudoElements::firstLetter,
@@ -11181,7 +11193,7 @@ nsCSSFrameConstructor::HaveFirstLetterStyle(nsIContent* aContent,
 }
 
 PRBool
-nsCSSFrameConstructor::HaveFirstLetterStyle(nsIFrame* aBlockFrame)
+nsCSSFrameConstructor::HasFirstLetterStyle(nsIFrame* aBlockFrame)
 {
   NS_PRECONDITION(aBlockFrame, "Need a frame");
   
@@ -11197,8 +11209,8 @@ nsCSSFrameConstructor::HaveFirstLetterStyle(nsIFrame* aBlockFrame)
 }
 
 PRBool
-nsCSSFrameConstructor::HaveFirstLineStyle(nsIContent* aContent,
-                                          nsStyleContext* aStyleContext)
+nsCSSFrameConstructor::ShouldHaveFirstLineStyle(nsIContent* aContent,
+                                                nsStyleContext* aStyleContext)
 {
   return nsLayoutUtils::HasPseudoStyle(aContent, aStyleContext,
                                        nsCSSPseudoElements::firstLine,
@@ -11206,15 +11218,15 @@ nsCSSFrameConstructor::HaveFirstLineStyle(nsIContent* aContent,
 }
 
 void
-nsCSSFrameConstructor::HaveSpecialBlockStyle(nsIContent* aContent,
-                                             nsStyleContext* aStyleContext,
-                                             PRBool* aHaveFirstLetterStyle,
-                                             PRBool* aHaveFirstLineStyle)
+nsCSSFrameConstructor::ShouldHaveSpecialBlockStyle(nsIContent* aContent,
+                                                   nsStyleContext* aStyleContext,
+                                                   PRBool* aHaveFirstLetterStyle,
+                                                   PRBool* aHaveFirstLineStyle)
 {
   *aHaveFirstLetterStyle =
-    HaveFirstLetterStyle(aContent, aStyleContext);
+    ShouldHaveFirstLetterStyle(aContent, aStyleContext);
   *aHaveFirstLineStyle =
-    HaveFirstLineStyle(aContent, aStyleContext);
+    ShouldHaveFirstLineStyle(aContent, aStyleContext);
 }
 
 /**
@@ -12350,8 +12362,8 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
 
   // See if the block has first-letter style applied to it...
   PRBool haveFirstLetterStyle, haveFirstLineStyle;
-  HaveSpecialBlockStyle(aContent, aStyleContext,
-                        &haveFirstLetterStyle, &haveFirstLineStyle);
+  ShouldHaveSpecialBlockStyle(aContent, aStyleContext,
+                              &haveFirstLetterStyle, &haveFirstLineStyle);
 
   // Process the child content
   nsFrameItems childItems;

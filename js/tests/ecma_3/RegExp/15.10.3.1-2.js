@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,20 +34,21 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 26 November 2000
  *
  *
- * SUMMARY: Passing (RegExp object, flag) to RegExp() function. 
- * This test arose from Bugzilla bug 61266. The ECMA3 section is:       
+ * SUMMARY: Passing (RegExp object, flag) to RegExp() function.
+ * This test arose from Bugzilla bug 61266. The ECMA3 section is:      
  *
  * 15.10.3 The RegExp Constructor Called as a Function
  *
  *   15.10.3.1 RegExp(pattern, flags)
- * 
+ *
  *   If pattern is an object R whose [[Class]] property is "RegExp"
- *   and flags is undefined, then return R unchanged.  Otherwise  
+ *   and flags is undefined, then return R unchanged.  Otherwise 
  *   call the RegExp constructor (section 15.10.4.1),  passing it the
  *   pattern and flags arguments and return  the object constructed
  *   by that constructor.
@@ -63,13 +65,14 @@
  *
  * instead of:
  *
- *                     RegExp(R); 
+ *                     RegExp(R);
  *
  *
  * We check that RegExp(R, undefined) returns R  -
  */
-//-------------------------------------------------------------------------------------------------
-var bug = '61266';
+//-----------------------------------------------------------------------------
+var gTestfile = '15.10.3.1-2.js';
+var BUGNUMBER = '61266';
 var summary = 'Passing (RegExp object,flag) to RegExp() function';
 var statprefix = 'RegExp(new RegExp(';
 var comma =  ', '; var singlequote = "'"; var closeparens = '))';
@@ -79,7 +82,7 @@ var i = -1; var j = -1; var s = ''; var f = '';
 var obj = {};
 var status = ''; var actual = ''; var expect = '';
 var patterns = new Array();
-var flags = new Array();  
+var flags = new Array(); 
 
 
 // various regular expressions to try -
@@ -103,10 +106,10 @@ test();
 //-------------------------------------------------------------------------------------------------
 
 
-function test() 
+function test()
 {
-  enterFunc ('test'); 
-  printBugNumber (bug);
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   for (i in patterns)
@@ -117,21 +120,21 @@ function test()
     {
       f = flags[j];
       status = getStatus(s, f);
-      obj = new RegExp(s, f);   
+      obj = new RegExp(s, f);  
 
       actual = (obj == RegExp(obj, undefined))? cnSUCCESS : cnFAILURE ;
       expect = cnSUCCESS;
       reportCompare (expect, actual, status);
     }
   }
-  
+ 
   exitFunc ('test');
 }
 
 
 function getStatus(regexp, flag)
-{ 
-  return (statprefix  +  quote(regexp) +  comma  +   flag  +  closeparens); 
+{
+  return (statprefix  +  quote(regexp) +  comma  +   flag  +  closeparens);
 }
 
 

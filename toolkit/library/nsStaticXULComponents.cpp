@@ -82,12 +82,8 @@
 #ifdef MOZ_CAIRO_GFX
 #  define GFX_MODULES MODULE(nsGfxModule)
 #else
-#  if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
+#  if defined(MOZ_WIDGET_GTK2)
 #    define GFX_MODULES MODULE(nsGfxGTKModule)
-#  elif defined(MOZ_WIDGET_QT)
-#    define GFX_MODULES MODULE(nsGfxQtModule)
-#  elif defined(MOZ_WIDGET_XLIB)
-#    define GFX_MODULES MODULE(nsGfxXlibModule)
 #  elif defined(MOZ_WIDGET_PHOTON)
 #    define GFX_MODULES MODULE(nsGfxPhModule)
 #  elif defined(XP_WIN)
@@ -111,16 +107,10 @@
 #  define WIDGET_MODULES MODULE(nsWidgetBeOSModule)
 #elif defined(XP_OS2)
 #  define WIDGET_MODULES MODULE(nsWidgetOS2Module)
-#elif defined(MOZ_WIDGET_GTK)
-#  define WIDGET_MODULES MODULE(nsWidgetGTKModule)
 #elif defined(MOZ_WIDGET_GTK2)
 #  define WIDGET_MODULES MODULE(nsWidgetGtk2Module)
-#elif defined(MOZ_WIDGET_XLIB)
-#  define WIDGET_MODULES MODULE(nsWidgetXLIBModule)
 #elif defined(MOZ_WIDGET_PHOTON)
 #  define WIDGET_MODULES MODULE(nsWidgetPhModule)
-#elif defined(MOZ_WIDGET_QT)
-#  define WIDGET_MODULES MODULE(nsWidgetQtModule)
 #else
 #  error Unknown widget module.
 #endif
@@ -129,12 +119,6 @@
 #define ICON_MODULE MODULE(nsIconDecoderModule)
 #else
 #define ICON_MODULE
-#endif
-
-#ifdef MOZ_ENABLE_XPRINT
-#define XPRINT_MODULES MODULE(nsGfxXprintModule)
-#else
-#define XPRINT_MODULES
 #endif
 
 #ifdef MOZ_RDF
@@ -169,7 +153,7 @@
 
 #ifdef MOZ_ENABLE_GTK2
 #ifdef MOZ_PREF_EXTENSIONS
-#define SYSTEMPREF_MODULES MODULE(system-pref) \
+#define SYSTEMPREF_MODULES MODULE(nsSystemPrefModule) \
     MODULE(nsAutoConfigModule)
 #else
 #define SYSTEMPREF_MODULES

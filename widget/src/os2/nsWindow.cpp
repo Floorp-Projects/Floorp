@@ -3206,8 +3206,14 @@ PRBool nsWindow::OnPaint()
 #endif // NS_DEBUG
 
 #ifdef MOZ_CAIRO_GFX // Thebes code version, adapted from windows/nsWindow.cpp
+        // XXX as a preliminary solution for repaint problems of cairo-os2
+        //     builds, repaint the whole window for each paint event
+        //     see Bug 371505
+        SWP swp;
+        WinQueryWindowPos(mWnd, &swp);
         nsRefPtr<gfxASurface> targetSurface =
-          new gfxOS2Surface(hPS, gfxIntSize(rect.width, rect.height));
+          new gfxOS2Surface(hPS, gfxIntSize(swp.cx, swp.cy));
+        //new gfxOS2Surface(hPS, gfxIntSize(rect.width, rect.height));
         nsRefPtr<gfxContext> thebesContext = new gfxContext(targetSurface);
 
         nsCOMPtr<nsIRenderingContext> context;

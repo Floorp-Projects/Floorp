@@ -62,11 +62,9 @@ nsStyleCoord::nsStyleCoord(PRInt32 aValue, nsStyleUnit aUnit)
 {
   //if you want to pass in eStyleUnit_Coord, don't. instead, use the
   //constructor just above this one... MMP
-  NS_ASSERTION((aUnit == eStyleUnit_Proportional) ||
-               (aUnit == eStyleUnit_Enumerated) ||
+  NS_ASSERTION((aUnit == eStyleUnit_Enumerated) ||
                (aUnit == eStyleUnit_Integer), "not an int value");
-  if ((aUnit == eStyleUnit_Proportional) ||
-      (aUnit == eStyleUnit_Enumerated) ||
+  if ((aUnit == eStyleUnit_Enumerated) ||
       (aUnit == eStyleUnit_Integer)) {
     mValue.mInt = aValue;
   }
@@ -141,12 +139,10 @@ void nsStyleCoord::SetCoordValue(nscoord aValue)
 
 void nsStyleCoord::SetIntValue(PRInt32 aValue, nsStyleUnit aUnit)
 {
-  NS_ASSERTION((aUnit == eStyleUnit_Proportional) ||
-               (aUnit == eStyleUnit_Enumerated) ||
+  NS_ASSERTION((aUnit == eStyleUnit_Enumerated) ||
                (aUnit == eStyleUnit_Chars) ||
                (aUnit == eStyleUnit_Integer), "not an int value");
-  if ((aUnit == eStyleUnit_Proportional) ||
-      (aUnit == eStyleUnit_Enumerated) ||
+  if ((aUnit == eStyleUnit_Enumerated) ||
       (aUnit == eStyleUnit_Chars) ||
       (aUnit == eStyleUnit_Integer)) {
     mUnit = aUnit;
@@ -181,6 +177,12 @@ void nsStyleCoord::SetAutoValue(void)
   mValue.mInt = 0;
 }
 
+void nsStyleCoord::SetNoneValue(void)
+{
+  mUnit = eStyleUnit_None;
+  mValue.mInt = 0;
+}
+
 void nsStyleCoord::SetUnionValue(const nsStyleUnion& aValue, nsStyleUnit aUnit)
 {
   mUnit = aUnit;
@@ -197,7 +199,6 @@ void nsStyleCoord::AppendToString(nsString& aBuffer) const
     aBuffer.AppendFloat(mValue.mFloat);
   }
   else if ((eStyleUnit_Coord == mUnit) || 
-           (eStyleUnit_Proportional == mUnit) ||
            (eStyleUnit_Enumerated == mUnit) ||
            (eStyleUnit_Integer == mUnit)) {
     aBuffer.AppendInt(mValue.mInt, 10);
@@ -213,7 +214,7 @@ void nsStyleCoord::AppendToString(nsString& aBuffer) const
     case eStyleUnit_Factor:       aBuffer.AppendLiteral("f");        break;
     case eStyleUnit_Normal:       aBuffer.AppendLiteral("Normal");   break;
     case eStyleUnit_Auto:         aBuffer.AppendLiteral("Auto");     break;
-    case eStyleUnit_Proportional: aBuffer.AppendLiteral("*");        break;
+    case eStyleUnit_None:         aBuffer.AppendLiteral("None");     break;
     case eStyleUnit_Enumerated:   aBuffer.AppendLiteral("enum");     break;
     case eStyleUnit_Integer:      aBuffer.AppendLiteral("int");      break;
     case eStyleUnit_Chars:        aBuffer.AppendLiteral("chars");    break;

@@ -40,10 +40,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '11.1.4.js';
+
 START("11.1.4 - XML Initializer");
 
 person = <person><name>John</name><age>25</age></person>;
-TEST(1, <person><name>John</name><age>25</age></person>, person);    
+TEST(1, <person><name>John</name><age>25</age></person>, person);   
 
 e = <employees>
     <employee id = "1"><name>Joe</name><age>20</age></employee>
@@ -99,7 +101,7 @@ x = <{tagName} {attributeName}={attributeValue}>{content}</{tagName}>;
 TEST(14, "<name id=\"5\">Fred</name>", x.toXMLString());
 
 // Test {} on XML and XMLList types
-x = 
+x =
 <rectangle>
     <length>30</length>
     <width>50</width>

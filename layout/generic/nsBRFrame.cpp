@@ -46,7 +46,7 @@
 #include "nsGkAtoms.h"
 #include "nsIFontMetrics.h"
 #include "nsIRenderingContext.h"
-#include "nsTextTransformer.h"
+#include "nsLayoutUtils.h"
 
 #ifdef ACCESSIBILITY
 #include "nsIServiceManager.h"
@@ -84,7 +84,8 @@ public:
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
-    return nsFrame::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced));
+    return nsFrame::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced |
+                                             nsIFrame::eLineParticipant));
   }
 
 #ifdef ACCESSIBILITY  
@@ -144,7 +145,7 @@ BRFrame::Reflow(nsPresContext* aPresContext,
       // We also do this in strict mode because BR should act like a
       // normal inline frame.  That line-height is used is important
       // here for cases where the line-height is less that 1.
-      SetFontFromStyle(aReflowState.rendContext, mStyleContext);
+      nsLayoutUtils::SetFontFromStyle(aReflowState.rendContext, mStyleContext);
       nsCOMPtr<nsIFontMetrics> fm;
       aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
       if (fm) {
@@ -152,9 +153,7 @@ BRFrame::Reflow(nsPresContext* aPresContext,
         fm->GetMaxAscent(ascent);
         fm->GetMaxDescent(descent);
         nscoord logicalHeight =
-          aReflowState.CalcLineHeight(aPresContext,
-                                       aReflowState.rendContext,
-                                       this);
+          aReflowState.CalcLineHeight(aReflowState.rendContext, this);
         nscoord leading = logicalHeight - ascent - descent;
         aMetrics.height = logicalHeight;
         aMetrics.ascent = ascent + (leading/2);

@@ -42,7 +42,7 @@
 #include "nsBaseWidgetAccessible.h"
 #include "nsIAccessibleTable.h"
 
-class nsHTMLTableCellAccessible : public nsHyperTextAccessible
+class nsHTMLTableCellAccessible : public nsHyperTextAccessibleWrap
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -76,6 +76,29 @@ public:
 #endif
 
 protected:
+
+  /**
+   * Selects or unselects row or column.
+   *
+   * @param aIndex - index of row or column to be selected
+   * @param aTarget - indicates what should be selected, either row or column
+   *                  (see nsISelectionPrivate)
+   * @param aDoSelect - indicates whether row or column should selected or
+   *                    unselected
+   */
+  nsresult SelectRowOrColumn(PRInt32 aIndex, PRUint32 aTarget, PRBool aDoSelect);
+
+  /**
+   * Selects or unselects the cell.
+   *
+   * @param aSelection - the selection of document
+   * @param aDocument - the document that contains the cell
+   * @param aCellElement - the cell of table
+   * @param aDoSelect - indicates whether cell should be selected or unselected
+   */
+  nsresult SelectCell(nsISelection *aSelection, nsIDocument *aDocument,
+                      nsIDOMElement *aCellElement, PRBool aDoSelect);
+
   virtual void CacheChildren();
   nsresult GetTableNode(nsIDOMNode **_retval);
   nsresult GetTableLayout(nsITableLayout **aLayoutObject);

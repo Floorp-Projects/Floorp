@@ -34,35 +34,37 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-313479.js';
 //-----------------------------------------------------------------------------
-var bug = 313479;
+var BUGNUMBER = 313479;
 var summary = 'Root access in jsnum.c';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var prepared_string = String(1);
 String(2); // To remove prepared_string from newborn
 
 var likeString = {
-        toString: function() {
-                var tmp = prepared_string;
-                prepared_string = null;
-                return tmp;
-        }
+  toString: function() {
+    var tmp = prepared_string;
+    prepared_string = null;
+    return tmp;
+  }
 };
 
 var likeNumber = {
-        valueOf: function() {
-                gc();
-                return 10;
-        }
+  valueOf: function() {
+    gc();
+    return 10;
+  }
 }
 
-var expect = 1;
+  var expect = 1;
 var actual = parseInt(likeString, likeNumber);
 printStatus("expect="+expect+" actual="+actual);
-  
+ 
 reportCompare(expect, actual, summary);

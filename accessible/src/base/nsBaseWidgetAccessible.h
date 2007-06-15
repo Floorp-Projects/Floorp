@@ -40,7 +40,7 @@
 #define _nsBaseWidgetAccessible_H_
 
 #include "nsAccessibleWrap.h"
-#include "nsHyperTextAccessible.h"
+#include "nsHyperTextAccessibleWrap.h"
 #include "nsIContent.h"
 
 class nsIDOMNode;
@@ -70,7 +70,7 @@ public:
   *  It knows how to report the state of the link ( traveled or not )
   *  and can activate ( click ) the link programmatically.
   */
-class nsLinkableAccessible : public nsHyperTextAccessible
+class nsLinkableAccessible : public nsHyperTextAccessibleWrap
 {
 public:
   enum { eAction_Jump = 0 };

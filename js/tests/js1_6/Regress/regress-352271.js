@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-352271.js';
 //-----------------------------------------------------------------------------
-var bug = 352271;
+var BUGNUMBER = 352271;
 var summary = 'Do not crash with |getter| |for each|';
 var actual = 'No Crash';
 var expect = 'No Crash';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   try
   {
     eval('[window.x getter= t for each ([*].a(v) in [])]');

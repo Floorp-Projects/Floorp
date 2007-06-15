@@ -501,10 +501,14 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 
 /*
  * Specialized subroutine that allows caller to preset JSRESOLVE_* flags.
+ * JSRESOLVE_HIDDEN flags hidden function param/local name lookups, just for
+ * internal use by fun_resolve and similar built-ins.
  */
 extern JSBool
 js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                            JSObject **objp, JSProperty **propp);
+
+#define JSRESOLVE_HIDDEN        0x8000
 
 extern JS_FRIEND_API(JSBool)
 js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
@@ -592,6 +596,13 @@ js_GetClassPrototype(JSContext *cx, JSObject *scope, jsid id,
 extern JSBool
 js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto,
                      uintN attrs);
+
+/*
+ * Wrap boolean, number or string as Boolean, Number or String object.
+ * *vp must not be an object, null or undefined.
+ */
+extern JSBool
+js_PrimitiveToObject(JSContext *cx, jsval *vp);
 
 extern JSBool
 js_ValueToObject(JSContext *cx, jsval v, JSObject **objp);

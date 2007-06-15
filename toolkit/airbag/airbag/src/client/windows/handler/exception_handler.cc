@@ -64,6 +64,7 @@ ExceptionHandler::ExceptionHandler(const wstring &dump_path,
       minidump_write_dump_(NULL),
       installed_handler_(install_handler),
       previous_filter_(NULL),
+      previous_pch_(NULL),
       handler_thread_(0),
       handler_critical_section_(),
       handler_start_semaphore_(NULL),
@@ -124,6 +125,8 @@ ExceptionHandler::ExceptionHandler(const wstring &dump_path,
     previous_iph_ = _set_invalid_parameter_handler(HandleInvalidParameter);
 #endif  // _MSC_VER >= 1400
 
+    previous_pch_ = _set_purecall_handler(HandlePureVirtualCall);
+
     LeaveCriticalSection(&handler_stack_critical_section_);
   }
 }
@@ -141,6 +144,8 @@ ExceptionHandler::~ExceptionHandler() {
 #if _MSC_VER >= 1400  // MSVC 2005/8
     _set_invalid_parameter_handler(previous_iph_);
 #endif  // _MSC_VER >= 1400
+
+    _set_purecall_handler(previous_pch_);
 
     if (handler_stack_->back() == this) {
       handler_stack_->pop_back();
@@ -233,6 +238,7 @@ class AutoExceptionHandler {
 #if _MSC_VER >= 1400  // MSVC 2005/8
     _set_invalid_parameter_handler(handler_->previous_iph_);
 #endif  // _MSC_VER >= 1400
+    _set_purecall_handler(handler_->previous_pch_);
   }
 
   ~AutoExceptionHandler() {
@@ -241,6 +247,7 @@ class AutoExceptionHandler {
 #if _MSC_VER >= 1400  // MSVC 2005/8
     _set_invalid_parameter_handler(ExceptionHandler::HandleInvalidParameter);
 #endif  // _MSC_VER >= 1400
+    _set_purecall_handler(ExceptionHandler::HandlePureVirtualCall);
 
     EnterCriticalSection(&ExceptionHandler::handler_stack_critical_section_);
     --ExceptionHandler::handler_stack_index_;
@@ -348,6 +355,33 @@ void ExceptionHandler::HandleInvalidParameter(const wchar_t *expression,
   exit(0);
 }
 #endif  // _MSC_VER >= 1400
+
+// static
+void ExceptionHandler::HandlePureVirtualCall() {
+  AutoExceptionHandler auto_exception_handler;
+  ExceptionHandler *current_handler = auto_exception_handler.get_handler();
+
+  MDRawAssertionInfo assertion;
+  memset(&assertion, 0, sizeof(assertion));
+  assertion.type = MD_ASSERTION_INFO_TYPE_PURE_VIRTUAL_CALL;
+
+  if (!current_handler->WriteMinidumpOnHandlerThread(NULL, &assertion)) {
+    if (current_handler->previous_pch_) {
+      // The handler didn't fully handle the exception.  Give it to the
+      // previous purecall handler.
+      current_handler->previous_pch_();
+    } else {
+      // If there's no previous handler, return and let _purecall handle it.
+      // This will just put up an assertion dialog.
+      return;
+    }
+  }
+
+  // The handler either took care of the invalid parameter problem itself,
+  // or passed it on to another handler.  "Swallow" it by exiting, paralleling
+  // the behavior of "swallowing" exceptions.
+  exit(0);
+}
 
 bool ExceptionHandler::WriteMinidumpOnHandlerThread(
     EXCEPTION_POINTERS *exinfo, MDRawAssertionInfo *assertion) {
@@ -477,7 +511,10 @@ void ExceptionHandler::UpdateNextID() {
   wchar_t minidump_path[MAX_PATH];
   swprintf(minidump_path, MAX_PATH, L"%s\\%s.dmp",
            dump_path_c_, next_minidump_id_c_);
-  GB_WSU_SAFE_SWPRINTF_TERMINATE(minidump_path, MAX_PATH);
+
+  // remove when VC++7.1 is no longer supported
+  minidump_path[MAX_PATH - 1] = L'\0';
+
   next_minidump_path_ = minidump_path;
   next_minidump_path_c_ = next_minidump_path_.c_str();
 }

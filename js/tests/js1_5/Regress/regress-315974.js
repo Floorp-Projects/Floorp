@@ -34,22 +34,24 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-315974.js';
 //-----------------------------------------------------------------------------
 
 /*
-This test case uses String.quote(), because that method uses the JS printf()
-functions internally. The printf() functions print to a char* buffer, causing
-conversion to and from UTF-8 if UTF-8 is enabled. If not, UTF-8 sequences are
-converted to ASCII \uXXXX sequences. Thus, both return values are acceptable.
+  This test case uses String.quote(), because that method uses the JS printf()
+  functions internally. The printf() functions print to a char* buffer, causing
+  conversion to and from UTF-8 if UTF-8 is enabled. If not, UTF-8 sequences are
+  converted to ASCII \uXXXX sequences. Thus, both return values are acceptable.
 */
 
-var bug = 315974;
+var BUGNUMBER = 315974;
 var summary = 'Test internal printf() for wide characters';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-enterFunc (String (bug));
+enterFunc (String (BUGNUMBER));
 
 var goodSurrogatePair = '\uD841\uDC42';
 var badSurrogatePair = '\uD841badbad';
@@ -65,10 +67,10 @@ var actual = goodSurrogatePair.quote();
 var expect = goodSurrogatePairQuotedUtf8;
 /* Result in case UTF-8 is disabled. */
 if (actual != expect && actual == goodSurrogatePairQuotedNoUtf8)
-	expect = actual;
+  expect = actual;
 reportCompare(expect, actual, status);
 
-/* 
+/*
  * A malformed surrogate pair throws an out-of-memory error,
  * but only if UTF-8 is enabled.
  */
@@ -78,4 +80,4 @@ actual = badSurrogatePair.quote();
 /* Come here only if UTF-8 is disabled. */
 reportCompare(badSurrogatePairQuotedNoUtf8, actual, status);
 
-exitFunc (String (bug));
+exitFunc (String (BUGNUMBER));

@@ -80,11 +80,13 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsGenericDOMDataNode)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericDOMDataNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_LISTENERMANAGER
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_USERDATA
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericDOMDataNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_LISTENERMANAGER
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -92,8 +94,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGenericDOMDataNode)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
   NS_INTERFACE_MAP_ENTRY(nsINode)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventReceiver,
-                                 nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventTarget,
                                  nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3EventTarget,
@@ -108,7 +108,7 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsGenericDOMDataNode, nsIContent)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_FULL(nsGenericDOMDataNode, nsIContent,
-                                      nsNodeUtils::LastRelease(this, PR_TRUE))
+                                      nsNodeUtils::LastRelease(this))
 
 
 nsresult
@@ -547,14 +547,7 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_PRECONDITION(aParent || aDocument, "Must have document if no parent!");
   NS_PRECONDITION(HasSameOwnerDoc(NODE_FROM(aParent, aDocument)),
                   "Must have the same owner document");
-  // XXXbz XUL elements are confused about their current doc when they're
-  // cloned, so we don't assert if aParent is a XUL element and aDocument is
-  // null, even if aParent->GetCurrentDoc() is non-null
-  //  NS_PRECONDITION(!aParent || aDocument == aParent->GetCurrentDoc(),
-  //                  "aDocument must be current doc of aParent");
-  NS_PRECONDITION(!aParent ||
-                  (aParent->IsNodeOfType(eXUL) && aDocument == nsnull) ||
-                  aDocument == aParent->GetCurrentDoc(),
+  NS_PRECONDITION(!aParent || aDocument == aParent->GetCurrentDoc(),
                   "aDocument must be current doc of aParent");
   NS_PRECONDITION(!GetCurrentDoc() && !IsInDoc(),
                   "Already have a document.  Unbind first!");
@@ -567,6 +560,9 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                   (!aBindingParent && aParent &&
                    aParent->GetBindingParent() == GetBindingParent()),
                   "Already have a binding parent.  Unbind first!");
+  NS_PRECONDITION(aBindingParent != this || IsNativeAnonymous(),
+                  "Only native anonymous content should have itself as its "
+                  "own binding parent");
 
   if (!aBindingParent && aParent) {
     aBindingParent = aParent->GetBindingParent();
@@ -708,11 +704,46 @@ nsGenericDOMDataNode::DispatchDOMEvent(nsEvent* aEvent,
                                              aPresContext, aEventStatus);
 }
 
-NS_IMETHODIMP
+nsresult
 nsGenericDOMDataNode::GetListenerManager(PRBool aCreateIfNotFound,
                                          nsIEventListenerManager** aResult)
 {
   return nsContentUtils::GetListenerManager(this, aCreateIfNotFound, aResult);
+}
+
+nsresult
+nsGenericDOMDataNode::AddEventListenerByIID(nsIDOMEventListener *aListener,
+                                            const nsIID& aIID)
+{
+  nsCOMPtr<nsIEventListenerManager> elm;
+  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(elm));
+  if (elm) {
+    return elm->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
+  }
+  return rv;
+}
+
+nsresult
+nsGenericDOMDataNode::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
+                                               const nsIID& aIID)
+{
+  nsCOMPtr<nsIEventListenerManager> elm;
+  GetListenerManager(PR_FALSE, getter_AddRefs(elm));
+  if (elm) {
+    return elm->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsGenericDOMDataNode::GetSystemEventGroup(nsIDOMEventGroup** aGroup)
+{
+  nsCOMPtr<nsIEventListenerManager> elm;
+  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(elm));
+  if (elm) {
+    return elm->GetSystemEventGroupLM(aGroup);
+  }
+  return rv;
 }
 
 PRUint32

@@ -40,12 +40,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.5.4.11.js';
+
 START("13.5.4.11 - XMLList hasOwnProperty()");
 
 TEST(1, true, XMLList.prototype.hasOwnProperty("hasOwnProperty"));
-  
+ 
 
-x = 
+x =
 <>
 <alpha attr1="value1">
     <bravo>one</bravo>
@@ -70,5 +72,5 @@ TEST(5, true, x.hasOwnProperty("echo"));
 // Test for XML Prototype Object - returns true for XML methods.
 TEST(5, true, XMLList.prototype.hasOwnProperty("toString"));
 TEST(6, false, XMLList.prototype.hasOwnProperty("foobar"));
-  
+ 
 END();

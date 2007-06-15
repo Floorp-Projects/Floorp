@@ -104,6 +104,7 @@
       testNormalFind();
       gFindBar.close();
       ok(gFindBar.hidden, "Failed to close findbar after testNormalFind");
+      testAutoCaseSensitivityUI();
       testQuickFindText();
       gFindBar.close();
       ok(gFindBar.hidden, "Failed to close findbar after testQuickFindText");
@@ -162,6 +163,37 @@
            "testNormalFind: Case-sensitivy is broken '" + searchStr + "'");
         matchCaseCheckbox.click();
       }
+    }
+
+    function testAutoCaseSensitivityUI() {
+      var matchCaseCheckbox = gFindBar.getElement("find-case-sensitive");
+      var matchCaseLabel = gFindBar.getElement("match-case-status");
+      document.getElementById("cmd_find").doCommand();
+      ok(!matchCaseCheckbox.hidden, "match case box is hidden in manual mode");
+      ok(matchCaseLabel.hidden, "match case label is visible in manual mode");
+
+      var prefsvc = Cc["@mozilla.org/preferences-service;1"].
+                    getService(Components.interfaces.nsIPrefBranch2);
+      prefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 2);
+
+      ok(matchCaseCheckbox.hidden,
+         "match case box is visible in automatic mode");
+      ok(!matchCaseLabel.hidden,
+         "match case label is hidden in automatic mode");
+
+      enterStringIntoFindField("a");
+      var insensitiveLabel = matchCaseLabel.value;
+      enterStringIntoFindField("A");
+      var sensitiveLabel = matchCaseLabel.value;
+      ok(insensitiveLabel != sensitiveLabel,
+         "Case Sensitive label was not correctly updated");
+
+      // bug 365551
+      gFindBar.onFindAgainCommand();
+      ok(matchCaseCheckbox.hidden && !matchCaseLabel.hidden,
+         "bug 365551: case sensitivity UI is broken after find-again");
+      prefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 0);
+      gFindBar.close();
     }
 
     function clearFocus() {

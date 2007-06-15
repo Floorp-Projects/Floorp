@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'package-006.js';
+
 /**
    File Name:      package-006.js
    Description:

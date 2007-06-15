@@ -81,8 +81,6 @@
 #include "nsDOMError.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIScrollableView.h"
-#include "nsIView.h"
 #include "nsAttrName.h"
 #include "nsNodeUtils.h"
 
@@ -775,6 +773,19 @@ nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, nsACString& aCharset,
   }
 }
 
+void
+nsHTMLDocument::SetDocumentCharacterSet(const nsACString& aCharSetID)
+{
+  nsDocument::SetDocumentCharacterSet(aCharSetID);
+  // Make sure to stash this charset on our channel as needed if it's a wyciwyg
+  // channel.
+  nsCOMPtr<nsIWyciwygChannel> wyciwygChannel = do_QueryInterface(mChannel);
+  if (wyciwygChannel) {
+    wyciwygChannel->SetCharsetAndSource(GetDocumentCharacterSetSource(),
+                                        aCharSetID);
+  }
+}
+
 nsresult
 nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                   nsIChannel* aChannel,
@@ -900,15 +911,26 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   printf("Determining charset for %s\n", urlSpec.get());
 #endif
 
+  // These are the charset source and charset for our document
   PRInt32 charsetSource;
   nsCAutoString charset;
 
+  // These are the charset source and charset for the parser.  This can differ
+  // from that for the document if the channel is a wyciwyg channel.
+  PRInt32 parserCharsetSource;
+  nsCAutoString parserCharset;
+
+  nsCOMPtr<nsIWyciwygChannel> wyciwygChannel;
+  
   if (IsXHTML()) {
     charsetSource = kCharsetFromDocTypeDefault;
     charset.AssignLiteral("UTF-8");
     TryChannelCharset(aChannel, charsetSource, charset);
+    parserCharsetSource = charsetSource;
+    parserCharset = charset;
   } else {
     charsetSource = kCharsetUninitialized;
+    wyciwygChannel = do_QueryInterface(aChannel);
 
     // The following charset resolving calls has implied knowledge
     // about charset source priority order. Each try will return true
@@ -919,7 +941,11 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     if (!TryUserForcedCharset(muCV, dcInfo, charsetSource, charset)) {
       TryHintCharset(muCV, charsetSource, charset);
       TryParentCharset(dcInfo, parentDocument, charsetSource, charset);
-      if (TryChannelCharset(aChannel, charsetSource, charset)) {
+
+      // Don't actually get the charset from the channel if this is a
+      // wyciwyg channel; it'll always be UTF-16
+      if (!wyciwygChannel &&
+          TryChannelCharset(aChannel, charsetSource, charset)) {
         // Use the channel's charset (e.g., charset from HTTP
         // "Content-Type" header).
       }
@@ -960,20 +986,45 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       }
     }
 
+    if (wyciwygChannel) {
+      // We know for sure that the parser needs to be using UTF16.
+      parserCharset = "UTF-16";
+      parserCharsetSource = charsetSource < kCharsetFromChannel ?
+        kCharsetFromChannel : charsetSource;
+        
+      nsCAutoString cachedCharset;
+      PRInt32 cachedSource;
+      rv = wyciwygChannel->GetCharsetAndSource(&cachedSource, cachedCharset);
+      if (NS_SUCCEEDED(rv)) {
+        if (cachedSource > charsetSource) {
+          charsetSource = cachedSource;
+          charset = cachedCharset;
+        }
+      } else {
+        // Don't propagate this error.
+        rv = NS_OK;
+      }
+      
+    } else {
+      parserCharset = charset;
+      parserCharsetSource = charsetSource;
+    }
+
     if(kCharsetFromAutoDetection > charsetSource && !isPostPage) {
       StartAutodetection(docShell, charset, aCommand);
     }
 
     // ahmed
     // Check if 864 but in Implicit mode !
+    // XXXbz why is this happening after StartAutodetection ?
     if ((textType == IBMBIDI_TEXTTYPE_LOGICAL) &&
         (charset.LowerCaseEqualsLiteral("ibm864"))) {
       charset.AssignLiteral("IBM864i");
     }
   }
 
-  SetDocumentCharacterSet(charset);
   SetDocumentCharacterSetSource(charsetSource);
+  SetDocumentCharacterSet(charset);
 
   // set doc charset to muCV for next document.
   // Don't propagate this back up to the parent document if we have one.
@@ -981,6 +1032,9 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     muCV->SetPrevDocCharacterSet(charset);
 
   if(cacheDescriptor) {
+    NS_ASSERTION(charset == parserCharset,
+                 "How did those end up different here?  wyciwyg channels are "
+                 "not nsICachingChannel");
     rv = cacheDescriptor->SetMetaDataElement("charset",
                                              charset.get());
     NS_ASSERTION(NS_SUCCEEDED(rv),"cannot SetMetaDataElement");
@@ -997,7 +1051,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     printf(" charset = %s source %d\n",
           charset.get(), charsetSource);
 #endif
-    mParser->SetDocumentCharset(charset, charsetSource);
+    mParser->SetDocumentCharset(parserCharset, parserCharsetSource);
     mParser->SetCommand(aCommand);
 
     // create the content sink
@@ -1239,7 +1293,7 @@ nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
 
   mCompatMode = aMode;
   CSSLoader()->SetCompatibilityMode(mCompatMode);
-  nsCOMPtr<nsIPresShell> shell = GetShellAt(0);
+  nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
   if (shell) {
     nsPresContext *pc = shell->GetPresContext();
     if (pc) {
@@ -1986,6 +2040,16 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
+  // check whether we're in the middle of unload.  If so, ignore this call.
+  nsCOMPtr<nsIDocShell> shell = do_QueryReferent(mDocumentContainer);
+  if (shell) {
+    PRBool inUnload;
+    shell->GetIsInUnload(&inUnload);
+    if (inUnload) {
+      return NS_OK;
+    }
+  }
+
   // Note: We want to use GetDocumentFromContext here because this document
   // should inherit the security information of the document that's opening us,
   // (since if it's secure, then it's presumeably trusted).
@@ -2296,7 +2360,7 @@ nsHTMLDocument::Close()
     // it be for now, though.  In any case, there's no reason to do
     // this if we have no presshell, since in that case none of the
     // above about reusing frames applies.
-    if (GetNumberOfShells() != 0) {
+    if (GetPrimaryShell()) {
       FlushPendingNotifications(Flush_Layout);
     }
 
@@ -2675,13 +2739,17 @@ nsHTMLDocument::GetNumFormsSynchronous()
 }
 
 nsresult
-nsHTMLDocument::GetPixelDimensions(nsIPresShell* aShell,
-                                   PRInt32* aWidth,
-                                   PRInt32* aHeight)
+nsHTMLDocument::GetBodySize(PRInt32* aWidth,
+                            PRInt32* aHeight)
 {
   *aWidth = *aHeight = 0;
 
   FlushPendingNotifications(Flush_Layout);
+
+  nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+  
+  if (!shell)
+    return NS_OK;
 
   // Find the <body> element: this is what we'll want to use for the
   // document's width and height values.
@@ -2692,32 +2760,14 @@ nsHTMLDocument::GetPixelDimensions(nsIPresShell* aShell,
   nsCOMPtr<nsIContent> body = do_QueryInterface(mBodyContent);
 
   // Now grab its frame
-  nsIFrame* frame = aShell->GetPrimaryFrameFor(body);
-  if (frame) {
-    nsSize                    size;
-    nsIView* view = frame->GetView();
+  nsIFrame* frame = shell->GetPrimaryFrameFor(body);
+  if (!frame)
+    return NS_OK;
+  
+  nsSize size = frame->GetSize();
 
-    // If we have a view check if it's scrollable. If not,
-    // just use the view size itself
-    if (view) {
-      nsIScrollableView* scrollableView = view->ToScrollableView();
-
-      if (scrollableView) {
-        scrollableView->GetScrolledView(view);
-      }
-
-      nsRect r = view->GetBounds();
-      size.height = r.height;
-      size.width = r.width;
-    }
-    // If we don't have a view, use the frame size
-    else {
-      size = frame->GetSize();
-    }
-
-    *aWidth = nsPresContext::AppUnitsToIntCSSPixels(size.width);
-    *aHeight = nsPresContext::AppUnitsToIntCSSPixels(size.height);
-  }
+  *aWidth = nsPresContext::AppUnitsToIntCSSPixels(size.width);
+  *aHeight = nsPresContext::AppUnitsToIntCSSPixels(size.height);
 
   return NS_OK;
 }
@@ -2726,44 +2776,18 @@ NS_IMETHODIMP
 nsHTMLDocument::GetWidth(PRInt32* aWidth)
 {
   NS_ENSURE_ARG_POINTER(aWidth);
-  *aWidth = 0;
 
-  // We make the assumption that the first presentation shell
-  // is the one for which we need information.
-  // Since GetPixelDimensions flushes and flushing can destroy
-  // our shell, hold a strong ref to it.
-  nsCOMPtr<nsIPresShell> shell = GetShellAt(0);
-  if (!shell) {
-    return NS_OK;
-  }
-
-  PRInt32 dummy;
-
-  // GetPixelDimensions() does the flushing for us, no need to flush
-  // here too
-  return GetPixelDimensions(shell, aWidth, &dummy);
+  PRInt32 height;
+  return GetBodySize(aWidth, &height);
 }
 
 NS_IMETHODIMP
 nsHTMLDocument::GetHeight(PRInt32* aHeight)
 {
   NS_ENSURE_ARG_POINTER(aHeight);
-  *aHeight = 0;
 
-  // We make the assumption that the first presentation shell
-  // is the one for which we need information.
-  // Since GetPixelDimensions flushes and flushing can destroy
-  // our shell, hold a strong ref to it.
-  nsCOMPtr<nsIPresShell> shell = GetShellAt(0);
-  if (!shell) {
-    return NS_OK;
-  }
-
-  PRInt32 dummy;
-
-  // GetPixelDimensions() does the flushing for us, no need to flush
-  // here too
-  return GetPixelDimensions(shell, &dummy, aHeight);
+  PRInt32 width;
+  return GetBodySize(&width, aHeight);
 }
 
 NS_IMETHODIMP
@@ -3625,6 +3649,11 @@ nsHTMLDocument::CreateAndAddWyciwygChannel(void)
   mWyciwygChannel = do_QueryInterface(channel);
 
   mWyciwygChannel->SetSecurityInfo(mSecurityInfo);
+
+  // Note: we want to treat this like a "previous document" hint so that,
+  // e.g. a <meta> tag in the document.write content can override it.
+  mWyciwygChannel->SetCharsetAndSource(kCharsetFromHintPrevDoc,
+                                       GetDocumentCharacterSet());
 
   // Use our new principal
   channel->SetOwner(NodePrincipal());

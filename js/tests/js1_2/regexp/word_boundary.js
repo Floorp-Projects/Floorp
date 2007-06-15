@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'word_boundary.js';
+
 /**
    Filename:     word_boundary.js
    Description:  'Tests regular expressions containing \b and \B'
@@ -65,21 +67,21 @@ var i;
 // testing whether all boundary characters are matched when they should be
 for (i = 0; i < boundary_characters.length; ++i)
 {
-    s = '123ab' + boundary_characters.charAt(i) + '123c' + boundary_characters.charAt(i);
+  s = '123ab' + boundary_characters.charAt(i) + '123c' + boundary_characters.charAt(i);
 
-    new TestCase ( SECTION,
-		   "'" + s + "'.match(new RegExp('\\b123[a-z]\\b'))",
-		   String(["123c"]), String(s.match(new RegExp('\\b123[a-z]\\b'))));
+  new TestCase ( SECTION,
+		 "'" + s + "'.match(new RegExp('\\b123[a-z]\\b'))",
+		 String(["123c"]), String(s.match(new RegExp('\\b123[a-z]\\b'))));
 }
 
 // testing whether all non-boundary characters are matched when they should be
 for (i = 0; i < non_boundary_characters.length; ++i)
 {
-    s = '123ab' + non_boundary_characters.charAt(i) + '123c' + non_boundary_characters.charAt(i);
+  s = '123ab' + non_boundary_characters.charAt(i) + '123c' + non_boundary_characters.charAt(i);
 
-    new TestCase ( SECTION,
-		   "'" + s + "'.match(new RegExp('\\B123[a-z]\\B'))",
-		   String(["123c"]), String(s.match(new RegExp('\\B123[a-z]\\B'))));
+  new TestCase ( SECTION,
+		 "'" + s + "'.match(new RegExp('\\B123[a-z]\\B'))",
+		 String(["123c"]), String(s.match(new RegExp('\\B123[a-z]\\B'))));
 }
 
 s = '';
@@ -87,7 +89,7 @@ s = '';
 // testing whether all boundary characters are not matched when they should not be
 for (i = 0; i < boundary_characters.length; ++i)
 {
-    s += boundary_characters[i] + "a" + i + "b";
+  s += boundary_characters[i] + "a" + i + "b";
 }
 s += "xa1111bx";
 
@@ -104,7 +106,7 @@ s = '';
 // testing whether all non-boundary characters are not matched when they should not be
 for (i = 0; i < non_boundary_characters.length; ++i)
 {
-    s += non_boundary_characters[i] + "a" + i + "b";
+  s += non_boundary_characters[i] + "a" + i + "b";
 }
 s += "(a1111b)";
 

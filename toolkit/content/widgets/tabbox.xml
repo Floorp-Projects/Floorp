@@ -533,14 +533,7 @@
 
   <binding id="tabpanels"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULTabPanels;
-          ]]>
-        </getter>
-      </property>
+    <implementation>
 
       <field name="_selectedPanel">null</field>
 

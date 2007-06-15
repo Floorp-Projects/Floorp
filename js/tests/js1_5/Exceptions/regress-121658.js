@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,20 +34,23 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    24 Jan 2002
  * SUMMARY: "Too much recursion" errors should be safely caught by try...catch
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=121658
  *
- * In the cases below, we expect i>0. The bug was filed because we were getting
- * i===0; i.e. |i| did not retain the value it had at the location of the error.
+ * In the cases below, we expect i>0. The bug was filed because we
+ * were getting i===0; i.e. |i| did not retain the value it had at the
+ * location of the error.
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-121658.js';
 var UBound = 0;
-var bug = 121658;
+var BUGNUMBER = 121658;
 var msg = '"Too much recursion" errors should be safely caught by try...catch';
 var TEST_PASSED = 'i retained the value it had at location of error';
 var TEST_FAILED = 'i did NOT retain this value';
@@ -73,7 +77,7 @@ function f()
   }
 }
 
-i=0; 
+i=0;
 f();
 status = inSection(1);
 actual = (i>0);
@@ -88,7 +92,7 @@ function g()
   f();
 }
 
-i=0; 
+i=0;
 g();
 status = inSection(2);
 actual = (i>0);
@@ -142,9 +146,9 @@ function formatThis(bool)
 function test()
 {
   enterFunc('test');
-  printBugNumber(bug);
+  printBugNumber(BUGNUMBER);
   printStatus(msg);
- 
+
   for (var i=0; i<UBound; i++)
   {
     reportCompare(expectedvalues[i], actualvalues[i], statusitems[i]);

@@ -5,6 +5,7 @@
 package Bootstrap::Step::Repack;
 use Bootstrap::Step;
 use Bootstrap::Config;
+use Bootstrap::Util qw(CvsCatfile);
 use MozBuild::Util qw(MkdirWithPath);
 @ISA = ("Bootstrap::Step");
 
@@ -65,7 +66,7 @@ sub Verify {
           cmd => 'cvs',
           cmdArgs => ['-d', $mozillaCvsroot, 
                       'co', '-d', $dir, 
-                      catfile('mozilla', 'testing', 'release', $dir)],
+                      CvsCatfile('mozilla', 'testing', 'release', $dir)],
           dir => $verifyDirVersion,
           logFile => catfile($logDir, 
                                'repack_checkout-l10n_verification.log'),
@@ -75,7 +76,7 @@ sub Verify {
     # Download current release
     $this->Shell(
       cmd => 'rsync',
-      cmdArgs => ['-v', 
+      cmdArgs => ['-Lav', 
                   '-e', 'ssh', 
                   '--include=*.dmg',
                   '--include=*.exe',
@@ -94,7 +95,7 @@ sub Verify {
     # Download previous release
     $this->Shell(
       cmd => 'rsync',
-      cmdArgs => ['-v', 
+      cmdArgs => ['-Lav', 
                   '-e', 'ssh', 
                   '--include=*.dmg',
                   '--include=*.exe',

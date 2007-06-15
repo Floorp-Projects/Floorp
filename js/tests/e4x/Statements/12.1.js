@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '12.1.js';
+
 START("12.1 - Default XML Namespace");
 
 
@@ -50,7 +52,7 @@ default xml namespace = soap;
 
 // Create an XML initializer in the default (i.e., soap) namespace
 message =
-<Envelope 
+<Envelope
     xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
     soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
     <Body>
@@ -65,7 +67,7 @@ encodingStyle = message.@soap::encodingStyle;
 TEST_XML(1, "http://schemas.xmlsoap.org/soap/encoding/", encodingStyle);
 
 // Extract the body from the soap message using the default namespace
-correct = 
+correct =
 <Body
     xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
     <stock:GetLastTradePrice xmlns:stock="http://mycompany.com/stocks">
@@ -78,7 +80,7 @@ TEST_XML(2, correct.toXMLString(), body);
 
 // Change the stock symbol using the default namespace and qualified names
 correct =
-<Envelope 
+<Envelope
     xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
     soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
     <Body>

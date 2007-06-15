@@ -35,17 +35,19 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-309840.js';
 //-----------------------------------------------------------------------------
-var bug = 309840;
+var BUGNUMBER = 309840;
 var summary = 'Treat / in a literal regexp class as valid';
 var actual = 'No error';
 var expect = 'No error';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 try
-{  
+{ 
   var re = eval('/[/]/');
 }
 catch(e)

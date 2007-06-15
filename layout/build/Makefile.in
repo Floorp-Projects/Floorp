@@ -148,6 +148,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/dom/src/events/$(LIB_PREFIX)jsdomevents_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/jsurl/$(LIB_PREFIX)jsurl_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/storage/$(LIB_PREFIX)jsdomstorage_s.$(LIB_SUFFIX) \
+	$(DEPTH)/dom/src/offline/$(LIB_PREFIX)jsdomoffline_s.$(LIB_SUFFIX) \
 	$(DEPTH)/editor/libeditor/text/$(LIB_PREFIX)texteditor_s.$(LIB_SUFFIX) \
 	$(DEPTH)/editor/libeditor/base/$(LIB_PREFIX)editorbase_s.$(LIB_SUFFIX) \
 	$(NULL)
@@ -219,12 +220,6 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
 
-ifdef MOZ_ENABLE_XLIB
-EXTRA_DSO_LDOPTS += \
-		-lxlibrgb \
-		$(NULL)
-endif
-
 ifdef NS_TRACE_MALLOC
 EXTRA_DSO_LIBS	+= tracemalloc
 endif
@@ -253,7 +248,7 @@ EXTRA_DSO_LDOPTS += \
 endif
 
 # Add explicit X11 dependency when building against X11 toolkits
-ifneq (,$(filter gtk gtk2 qt xlib,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS)
 endif
 
@@ -284,6 +279,7 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/dom/src/base \
 		   -I$(topsrcdir)/dom/src/jsurl \
 		   -I$(topsrcdir)/dom/src/storage \
+		   -I$(topsrcdir)/dom/src/offline \
 		   -I. \
 		   -I$(topsrcdir)/editor/libeditor/base \
 		   -I$(topsrcdir)/editor/libeditor/text \

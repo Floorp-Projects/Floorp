@@ -237,6 +237,34 @@ public:
    */
   NS_IMETHOD GetEnabled(PRBool *aEnabled) = 0;
   NS_IMETHOD SetEnabled(PRBool aEnabled) = 0;
+
+  /**
+   * Return true if this nsICSSLoader has pending loads (ones that would send
+   * notifications to an nsICSSLoaderObserver attached to this nsICSSLoader).
+   * If called from inside nsICSSLoaderObserver::StyleSheetLoaded, this will
+   * return PR_FALSE if and only if that is the last StyleSheetLoaded
+   * notification the CSSLoader knows it's going to send.  In other words, if
+   * two sheets load at once (via load coalescing, e.g.), HasPendingLoads()
+   * will return PR_TRUE during notification for the first one, and PR_FALSE
+   * during notification for the second one.
+   */
+  NS_IMETHOD_(PRBool) HasPendingLoads() = 0;
+
+  /**
+   * Add an observer to this nsICSSLoader.  The observer will be notified for
+   * all loads that would have notified their own observers (even if those
+   * loads don't have observers attached to them).  Load-specific observers
+   * will be notified before generic observers.  The CSSLoader holds a
+   * reference to the observer.
+   *
+   * aObserver must not be null.
+   */
+  NS_IMETHOD AddObserver(nsICSSLoaderObserver* aObserver) = 0;
+
+  /**
+   * Remove an observer added via AddObserver.
+   */
+  NS_IMETHOD_(void) RemoveObserver(nsICSSLoaderObserver* aObserver) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSLoader, NS_ICSS_LOADER_IID)

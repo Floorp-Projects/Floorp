@@ -19,3 +19,7 @@ GARBAGE += nsStaticComponents.cpp
 ifeq ($(OS_ARCH),IRIX)
 LDFLAGS	+= -Wl,-LD_LAYOUT:lgot_buffer=80
 endif
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+LIBS	+= -framework QuickTime -framework IOKit -lcrypto
+endif

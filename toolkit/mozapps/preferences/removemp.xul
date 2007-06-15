@@ -18,7 +18,7 @@
         xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
         xmlns:aaa="http://www.w3.org/2005/07/aaa">
 
-  <script type="application/x-javascript" src="chrome://mozapps/content/preferences/removemp.js"/>
+  <script type="application/javascript" src="chrome://mozapps/content/preferences/removemp.js"/>
 
   <stringbundle id="bundlePreferences" src="chrome://mozapps/locale/preferences/preferences.properties"/>
 

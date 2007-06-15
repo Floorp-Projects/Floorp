@@ -51,6 +51,7 @@
 class nsIScriptContext;
 struct JSRuntime;
 class nsIJSRuntimeService;
+struct nsCycleCollectionTraversalCallback;
 
 struct nsXBLTextWithLineNumber
 {
@@ -112,6 +113,8 @@ public:
   virtual nsresult CompileMember(nsIScriptContext* aContext,
                                  const nsCString& aClassStr,
                                  void* aClassObject)=0;
+
+  virtual void Traverse(nsCycleCollectionTraversalCallback &cb) const = 0;
 
 protected:
   friend class nsAutoGCRoot;

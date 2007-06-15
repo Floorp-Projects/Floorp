@@ -57,7 +57,7 @@
         title="&history.title;"
         onload="gUpdateHistory.onLoad();">
 
-  <script type="application/x-javascript" 
+  <script type="application/javascript" 
           src="chrome://mozapps/content/update/history.js"/>
           
   <stringbundle id="updateBundle" 

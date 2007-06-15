@@ -44,6 +44,7 @@
           if (val)
             this.setAttribute('notificationshidden', true);
           else this.removeAttribute('notificationshidden');
+          return val;
         </setter>
       </property>
 
@@ -336,15 +337,15 @@
         </getter>
       </property>
 
-      <property name="label" onset="return this.setAttribute('label', val);"
+      <property name="label" onset="this.setAttribute('label', val); return val;"
                              onget="return this.getAttribute('label');"/>
-      <property name="value" onset="return this.setAttribute('value', val);"
+      <property name="value" onset="this.setAttribute('value', val); return val;"
                              onget="return this.getAttribute('value');"/>
-      <property name="image" onset="return this.setAttribute('image', val);"
+      <property name="image" onset="this.setAttribute('image', val); return val;"
                              onget="return this.getAttribute('image');"/>
-      <property name="type" onget="return this.getAttribute('type');"
-                            onset="this.setAttribute('type', val); return val;"/>
-      <property name="priority" onget="return this.getAttribute('priority');"
+      <property name="type" onset="this.setAttribute('type', val); return val;"
+                            onget="return this.getAttribute('type');"/>
+      <property name="priority" onget="return parseInt(this.getAttribute('priority')) || 0;"
                                 onset="this.setAttribute('priority', val); return val;"/>
 
       <property name="control" readonly="true">

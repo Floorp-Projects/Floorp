@@ -85,12 +85,9 @@ jsj_CreateJavaMember(JSContext *cx, jsval method_val, jsval field_val)
         return NULL;
     }
 
-    JS_SetPrivate(cx, JavaMember_obj, (void *)member_val);
     member_val->method_val = method_val;
-    JS_AddNamedRoot(cx, &member_val->method_val, "&member_val->method_val");
     member_val->field_val = field_val;
-    if (JSVAL_IS_GCTHING(field_val))
-        JS_AddNamedRoot(cx, &member_val->field_val, "&member_val->field_val");
+    JS_SetPrivate(cx, JavaMember_obj, (void *)member_val);
 
     return JavaMember_obj;
 }
@@ -103,10 +100,6 @@ JavaMember_finalize(JSContext *cx, JSObject *obj)
     member_val = JS_GetPrivate(cx, obj);
     if (!member_val)
         return;
-
-    JS_RemoveRoot(cx, &member_val->method_val);
-    if (JSVAL_IS_GCTHING(member_val->field_val))
-        JS_RemoveRoot(cx, &member_val->field_val);
     JS_free(cx, member_val);
 }
 
@@ -157,8 +150,20 @@ JavaMember_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
     return JS_TRUE;
 }
 
+JS_STATIC_DLL_CALLBACK(void)
+JavaMember_trace(JSTracer *trc, JSObject *obj)
+{
+    JavaMethodOrFieldValue *member_val;
+
+    member_val = (JavaMethodOrFieldValue *)JS_GetPrivate(trc->context, obj);
+    if (member_val) {
+        JS_CALL_VALUE_TRACER(trc, member_val->method_val, "method_val");
+        JS_CALL_VALUE_TRACER(trc, member_val->field_val, "field_val");
+    }
+}
+
 JSClass JavaMember_class = {
-    "JavaMember", JSCLASS_HAS_PRIVATE,
+    "JavaMember", JSCLASS_HAS_PRIVATE | JSCLASS_MARK_IS_TRACE,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub, 
     JavaMember_convert, JavaMember_finalize,
@@ -169,7 +174,7 @@ JSClass JavaMember_class = {
     NULL, /* construct */
     NULL, /* xdrObject */
     NULL, /* hasInstance */
-    NULL, /* mark */
+    JS_CLASS_TRACE(JavaMember_trace), /* mark/trace */
     0,    /* spare */
 };
 

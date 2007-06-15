@@ -41,12 +41,13 @@ function LOG(str) {
   dump("*** " + str + "\n");
 }
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cr = Components.results;
+var Ci = Components.interfaces;
+var Cc = Components.classes;
+var Cr = Components.results;
 
 const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
+const POST_DATA_ANNO = "URIProperties/POSTData";
 
 function QI_node(aNode, aIID) {
   var result = null;
@@ -58,7 +59,6 @@ function QI_node(aNode, aIID) {
   NS_ASSERT(result, "Node QI Failed");
   return result;
 }
-function asFolder(aNode)   { return QI_node(aNode, Ci.nsINavHistoryFolderResultNode);   }
 function asVisit(aNode)    { return QI_node(aNode, Ci.nsINavHistoryVisitResultNode);    }
 function asFullVisit(aNode){ return QI_node(aNode, Ci.nsINavHistoryFullVisitResultNode);}
 function asContainer(aNode){ return QI_node(aNode, Ci.nsINavHistoryContainerResultNode);}
@@ -136,6 +136,32 @@ var PlacesUtils = {
                        getService(Ci.nsIFaviconService);
     }
     return this._favicons;
+  },
+
+  /**
+   * The Microsummary Service
+   */
+  _microsummaries: null,
+  get microsummaries() {
+    if (!this._microsummaries)
+      this._microsummaries = Cc["@mozilla.org/microsummary/service;1"].
+                             getService(Ci.nsIMicrosummaryService);
+    return this._microsummaries;
+  },
+
+  _RDF: null,
+  get RDF() {
+    if (!this._RDF)
+      this._RDF = Cc["@mozilla.org/rdf/rdf-service;1"].
+                  getService(Ci.nsIRDFService);
+    return this._RDF;
+  },
+
+  _localStore: null,
+  get localStore() {
+    if (!this._localStore)
+      this._localStore = this.RDF.GetDataSource("rdf:local-store");
+    return this._localStore;
   },
 
   /**
@@ -218,7 +244,8 @@ var PlacesUtils = {
    */
   nodeIsBookmark: function PU_nodeIsBookmark(aNode) {
     NS_ASSERT(aNode, "null node");
-    return aNode.bookmarkId > 0;
+    return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_URI &&
+           aNode.itemId != -1;
   },
 
   /**
@@ -287,7 +314,7 @@ var PlacesUtils = {
     NS_ASSERT(aNode, "null node");
 
     if (this.nodeIsFolder(aNode))
-      return this.bookmarks.getFolderReadonly(asFolder(aNode).folderId);
+      return this.bookmarks.getFolderReadonly(aNode.itemId);
     if (this.nodeIsQuery(aNode))
       return asQuery(aNode).childrenReadOnly;
     return false;
@@ -369,8 +396,8 @@ var PlacesUtils = {
   */
   nodeIsLivemarkItem: function PU_nodeIsLivemarkItem(aNode) {
     if (this.nodeIsBookmark(aNode)) {
-      var placeURI = this.bookmarks.getItemURI(aNode.bookmarkId);
-      if (this.annotations.hasAnnotation(placeURI, "livemark/bookmarkFeedURI"))
+      if (this.annotations
+              .itemHasAnnotation(aNode.itemId, "livemark/bookmarkFeedURI"))
         return true;
     }
 
@@ -387,7 +414,7 @@ var PlacesUtils = {
     NS_ASSERT(aNode, "null node");
 
     return this.nodeIsFolder(aNode) &&
-           this.bookmarks.getFolderReadonly(asFolder(aNode).folderId);
+           this.bookmarks.getFolderReadonly(aNode.itemId);
   },
 
   /**
@@ -406,7 +433,8 @@ var PlacesUtils = {
     var wasOpen = parent.containerOpen;
     parent.containerOpen = true;
     var cc = parent.childCount;
-    for (var i = 0; i < cc && asContainer(parent).getChild(i) != aNode; ++i);
+    asContainer(parent);
+    for (var i = 0; i < cc && parent.getChild(i) != aNode; ++i);
     parent.containerOpen = wasOpen;
     return i < cc ? i : -1;
   },
@@ -430,15 +458,13 @@ var PlacesUtils = {
     case this.TYPE_X_MOZ_PLACE:
     case this.TYPE_X_MOZ_PLACE_SEPARATOR:
       // Data is encoded like this:
-      // bookmarks folder: <folderId>\n<>\n<parentId>\n<indexInParent>
+      // bookmarks folder: <itemId>\n<>\n<parentId>\n<indexInParent>
       // uri:              0\n<uri>\n<parentId>\n<indexInParent>
-      // bookmark:         <bookmarkId>\n<uri>\n<parentId>\n<indexInParent>
-      // separator:        0\n<>\n<parentId>\n<indexInParent>
+      // bookmark:         <itemId>\n<uri>\n<parentId>\n<indexInParent>
+      // separator:        <itemId>\n<>\n<parentId>\n<indexInParent>
       var wrapped = "";
-      if (this.nodeIsFolder(aNode))
-        wrapped += asFolder(aNode).folderId + NEWLINE;
-      else if (this.nodeIsBookmark(aNode))
-        wrapped += aNode.bookmarkId + NEWLINE;
+      if (aNode.itemId != -1) // 
+        wrapped += aNode.itemId + NEWLINE;
       else
         wrapped += "0" + NEWLINE;
 
@@ -448,7 +474,7 @@ var PlacesUtils = {
         wrapped += NEWLINE;
 
       if (this.nodeIsFolder(aNode.parent))
-        wrapped += asFolder(aNode.parent).folderId + NEWLINE;
+        wrapped += aNode.parent.itemId + NEWLINE;
       else
         wrapped += "0" + NEWLINE;
 
@@ -501,7 +527,7 @@ var PlacesUtils = {
     var itemURL = bookmarks.getBookmarkURI(aId);
     var itemTitle = bookmarks.getItemTitle(aId);
     var keyword = bookmarks.getKeywordForBookmark(aId);
-    var annos = this.getAnnotationsForURI(bookmarks.getItemURI(aId));
+    var annos = this.getAnnotationsForItem(aId);
     if (aExcludeAnnotations) {
       annos =
         annos.filter(function(aValue, aIndex, aArray) {
@@ -536,16 +562,16 @@ var PlacesUtils = {
         var txn = null;
         var node = children.getChild(i);
         if (self.nodeIsFolder(node)) {
-          var nodeFolderId = asFolder(node).folderId;
-          var title = self.bookmarks.getFolderTitle(nodeFolderId);
-          var annos = self.getAnnotationsForURI(self._uri(node.uri));
+          var nodeFolderId = node.itemId;
+          var title = self.bookmarks.getItemTitle(nodeFolderId);
+          var annos = self.getAnnotationsForItem(nodeFolderId);
           var folderItemsTransactions =
             getChildItemsTransactions(nodeFolderId);
           txn = new PlacesCreateFolderTransaction(title, -1, aIndex, annos,
                                                   folderItemsTransactions);
         }
         else if (self.nodeIsBookmark(node)) {
-          txn = self._getBookmarkItemCopyTransaction(node.bookmarkId, -1,
+          txn = self._getBookmarkItemCopyTransaction(node.itemId, -1,
                                                      aIndex);
         }
         else if (self.nodeIsURI(node) || self.nodeIsQuery(node)) {
@@ -563,9 +589,8 @@ var PlacesUtils = {
       return childItemsTransactions;
     }
 
-    var title = this.bookmarks.getFolderTitle(aData.id);
-    var annos =
-      this.getAnnotationsForURI(this.bookmarks.getFolderURI(aData.id));
+    var title = this.bookmarks.getItemTitle(aData.id);
+    var annos = this.getAnnotationsForItem(aData.id);
     var createTxn =
       new PlacesCreateFolderTransaction(title, aContainer, aIndex, annos,
                                         getChildItemsTransactions(aData.id));
@@ -605,7 +630,7 @@ var PlacesUtils = {
         if (i > (parts.length - 2))
           break;
         nodes.push({  uri: this._uri(parts[i++]),
-                      title: parts[i] });
+                      title: parts[i] ? parts[i] : parts[i-1] });
         break;
       case this.TYPE_UNICODE:
         // See above.
@@ -641,53 +666,46 @@ var PlacesUtils = {
                                                index, copy) {
     switch (type) {
     case this.TYPE_X_MOZ_PLACE_CONTAINER:
-      if (data.id > 0 && data.uri == null) {
+      if (data.id > 0) {
         // Place is a folder.
         if (copy)
           return this._getFolderCopyTransaction(data, container, index);
-        return new PlacesMoveFolderTransaction(data.id, data.parent,
-                                               data.index, container,
-                                               index);
       }
+      break;
     case this.TYPE_X_MOZ_PLACE:
-      if (data.id > 0) {
-        if (copy) {
-          // Copying a child of a live-bookmark by itself should result
-          // as a new normal bookmark item (bug 376731)
-          var copyBookmarkAnno = 
-            this._getBookmarkItemCopyTransaction(data.id, container, index,
-                                                 ["livemark/bookmarkFeedURI"]);
-          return copyBookmarkAnno;
-        }
-        return new PlacesMoveItemTransaction(data.id, data.uri, data.parent,
-                                             data.index, container,
-                                             index);
+      if (data.id <= 0)
+        return this._getURIItemCopyTransaction(data.uri, container, index);
+  
+      if (copy) {
+        // Copying a child of a live-bookmark by itself should result
+        // as a new normal bookmark item (bug 376731)
+        var copyBookmarkAnno = 
+          this._getBookmarkItemCopyTransaction(data.id, container, index,
+                                               ["livemark/bookmarkFeedURI"]);
+        return copyBookmarkAnno;
       }
-      return this._getURIItemCopyTransaction(data.uri, container, index);
+      break;
     case this.TYPE_X_MOZ_PLACE_SEPARATOR:
       if (copy) {
         // There is no data in a separator, so copying it just amounts to
         // inserting a new separator.
         return new PlacesCreateSeparatorTransaction(container, index);
       }
-      // Similarly, moving a separator is just removing the old one and
-      // then creating a new one.
-      var removeTxn =
-        new PlacesRemoveSeparatorTransaction(data.parent, data.index);
-      var createTxn =
-        new PlacesCreateSeparatorTransaction(container, index);
-      return new PlacesAggregateTransaction("SeparatorMove", [removeTxn, createTxn]);
+      break;
     case this.TYPE_X_MOZ_URL:
     case this.TYPE_UNICODE:
-      // Creating and Setting the title is a two step process
+      var title = type == this.TYPE_X_MOZ_URL ? data.title : data.uri.spec;
       var createTxn =
-        new PlacesCreateItemTransaction(data.uri, container, index);
-      var title = type == this.TYPE_X_MOZ_URL ? data.title : data.uri;
-      createTxn.childTransactions.push(
-          new PlacesEditItemTitleTransaction(-1, title));
+        new PlacesCreateItemTransaction(data.uri, container, index, title);
       return createTxn;
+    default:
+      return null;
     }
-    return null;
+    if (data.id <= 0)
+      return null;
+
+    // Move the item otherwise
+    return new PlacesMoveItemTransaction(data.id, container, index);
   },
 
   /**
@@ -750,6 +768,8 @@ var PlacesUtils = {
    * @param [optional] aKeyword
    *        The default keyword for the new bookmark. The keyword field
    *        will be shown in the dialog if this is used.
+   * @param [optional] aPostData
+   *        POST data for POST-style keywords.
    * @return true if any transaction has been performed.
    *
    * Notes:
@@ -764,7 +784,8 @@ var PlacesUtils = {
                                                    aDefaultInsertionPoint,
                                                    aShowPicker,
                                                    aLoadInSidebar,
-                                                   aKeyword) {
+                                                   aKeyword,
+                                                   aPostData) {
     var info = {
       action: "add",
       type: "bookmark"
@@ -789,8 +810,11 @@ var PlacesUtils = {
     if (aLoadInSidebar)
       info.loadBookmarkInSidebar = true;
 
-    if (typeof(aKeyword) == "string")
+    if (typeof(aKeyword) == "string") {
       info.keyword = aKeyword;
+      if (typeof(aPostData) == "string")
+        info.postData = aPostData;
+    }
 
     return this._showBookmarkDialog(info);
   },
@@ -809,11 +833,11 @@ var PlacesUtils = {
   showMinimalAddBookmarkUI:
   function PU_showMinimalAddBookmarkUI(aURI, aTitle, aDescription,
                                        aDefaultInsertionPoint, aShowPicker,
-                                       aLoadInSidebar, aKeyword) {
+                                       aLoadInSidebar, aKeyword, aPostData) {
     var info = {
       action: "add",
       type: "bookmark",
-      hiddenRows: ["location", "keyword", "description", "load in sidebar"]
+      hiddenRows: ["location", "description", "load in sidebar"]
     };
     if (aURI)
       info.uri = aURI;
@@ -834,8 +858,11 @@ var PlacesUtils = {
     if (aLoadInSidebar)
       info.loadBookmarkInSidebar = true;
 
-    if (typeof(aKeyword) == "string")
+    if (typeof(aKeyword) == "string") {
       info.keyword = aKeyword;
+      if (typeof(aPostData) == "string")
+        info.postData = aPostData;
+    }
     else
       info.hiddenRows.push("keyword");
 
@@ -1038,7 +1065,7 @@ var PlacesUtils = {
    */
   _showBookmarkDialog: function PU__showBookmarkDialog(aInfo, aMinimalUI) {
     var dialogURL = aMinimalUI ?
-                    "chrome://browser/content/places/bookmarkPageDialog.xul" :
+                    "chrome://browser/content/places/bookmarkProperties2.xul" :
                     "chrome://browser/content/places/bookmarkProperties.xul";
 
     var features;
@@ -1094,7 +1121,7 @@ var PlacesUtils = {
                             getService(Ci.nsIPromptService);
 
         var errorStr = this.getString("load-js-data-url-error");
-        promptService.alert(window, brandStr, errorStr);
+        promptService.alert(window, brandShortName, errorStr);
         return false;
       }
     }
@@ -1115,23 +1142,69 @@ var PlacesUtils = {
     var annoNames = annosvc.getPageAnnotationNames(aURI, {});
     for (var i = 0; i < annoNames.length; i++) {
       var flags = {}, exp = {}, mimeType = {}, storageType = {};
-      annosvc.getAnnotationInfo(aURI, annoNames[i], flags, exp, mimeType, storageType);
+      annosvc.getPageAnnotationInfo(aURI, annoNames[i], flags, exp, mimeType, storageType);
       switch (storageType.value) {
         case annosvc.TYPE_INT32:
-          val = annosvc.getAnnotationInt32(aURI, annoNames[i]);
+          val = annosvc.getPageAnnotationInt32(aURI, annoNames[i]);
           break;
         case annosvc.TYPE_INT64:
-          val = annosvc.getAnnotationInt64(aURI, annoNames[i]);
+          val = annosvc.getPageAnnotationInt64(aURI, annoNames[i]);
           break;
         case annosvc.TYPE_DOUBLE:
-          val = annosvc.getAnnotationDouble(aURI, annoNames[i]);
+          val = annosvc.getPageAnnotationDouble(aURI, annoNames[i]);
           break;
         case annosvc.TYPE_STRING:
-          val = annosvc.getAnnotationString(aURI, annoNames[i]);
+          val = annosvc.getPageAnnotationString(aURI, annoNames[i]);
           break;
         case annosvc.TYPE_BINARY:
           var data = {}, length = {}, mimeType = {};
-          annosvc.getAnnotationBinary(aURI, annoNames[i], data, length, mimeType);
+          annosvc.getPageAnnotationBinary(aURI, annoNames[i], data, length, mimeType);
+          val = data.value;
+          break;
+      }
+      annos.push({name: annoNames[i],
+                  flags: flags.value,
+                  expires: exp.value,
+                  mimeType: mimeType.value,
+                  type: storageType.value,
+                  value: val});
+    }
+    return annos;
+  },
+
+  /**
+   * Fetch all annotations for a URI, including all properties of each
+   * annotation which would be required to recreate it.
+   * @param aItemId
+   *        The identifier of the itme for which annotations are to be
+   *        retrieved.
+   * @return Array of objects, each containing the following properties:
+   *         name, flags, expires, mimeType, type, value
+   */
+  getAnnotationsForItem: function PU_getAnnotationsForItem(aItemId) {
+    var annosvc = this.annotations;
+    var annos = [], val = null;
+    var annoNames = annosvc.getItemAnnotationNames(aItemId, {});
+    for (var i = 0; i < annoNames.length; i++) {
+      var flags = {}, exp = {}, mimeType = {}, storageType = {};
+      annosvc.getItemAnnotationInfo(aItemId, annoNames[i], flags, exp,
+                                    mimeType, storageType);
+      switch (storageType.value) {
+        case annosvc.TYPE_INT32:
+          val = annosvc.getItemAnnotationInt32(aItemId, annoNames[i]);
+          break;
+        case annosvc.TYPE_INT64:
+          val = annosvc.getItemAnnotationInt64(aItemId, annoNames[i]);
+          break;
+        case annosvc.TYPE_DOUBLE:
+          val = annosvc.getItemAnnotationDouble(aItemId, annoNames[i]);
+          break;
+        case annosvc.TYPE_STRING:
+          val = annosvc.getItemAnnotationString(aItemId, annoNames[i]);
+          break;
+        case annosvc.TYPE_BINARY:
+          var data = {}, length = {}, mimeType = {};
+          annosvc.getItemAnnotationBinary(aItemId, annoNames[i], data, length, mimeType);
           val = data.value;
           break;
       }
@@ -1148,7 +1221,7 @@ var PlacesUtils = {
   /**
    * Annotate a URI with a batch of annotations.
    * @param aURI
-   *        The URI for which annotations are to be retrieved.
+   *        The URI for which annotations are to be set.
    * @param aAnnotations
    *        Array of objects, each containing the following properties:
    *        name, flags, expires, type, mimeType (only used for binary
@@ -1159,25 +1232,63 @@ var PlacesUtils = {
     aAnnos.forEach(function(anno) {
       switch (anno.type) {
         case annosvc.TYPE_INT32:
-          annosvc.setAnnotationInt32(aURI, anno.name, anno.value,
-                                     anno.flags, anno.expires);
+          annosvc.setPageAnnotationInt32(aURI, anno.name, anno.value,
+                                         anno.flags, anno.expires);
           break;
         case annosvc.TYPE_INT64:
-          annosvc.setAnnotationInt64(aURI, anno.name, anno.value,
-                                     anno.flags, anno.expires);
+          annosvc.setPageAnnotationInt64(aURI, anno.name, anno.value,
+                                         anno.flags, anno.expires);
           break;
         case annosvc.TYPE_DOUBLE:
-          annosvc.setAnnotationDouble(aURI, anno.name, anno.value,
-                                      anno.flags, anno.expires);
+          annosvc.setPageAnnotationDouble(aURI, anno.name, anno.value,
+                                          anno.flags, anno.expires);
           break;
         case annosvc.TYPE_STRING:
-          annosvc.setAnnotationString(aURI, anno.name, anno.value,
-                                      anno.flags, anno.expires);
+          annosvc.setPageAnnotationString(aURI, anno.name, anno.value,
+                                          anno.flags, anno.expires);
           break;
         case annosvc.TYPE_BINARY:
-          annosvc.setAnnotationBinary(aURI, anno.name, anno.value,
-                                      anno.value.length, anno.mimeType,
-                                      anno.flags, anno.expires);
+          annosvc.setPageAnnotationBinary(aURI, anno.name, anno.value,
+                                          anno.value.length, anno.mimeType,
+                                          anno.flags, anno.expires);
+          break;
+      }
+    });
+  },
+
+  /**
+   * Annotate a URI with a batch of annotations.
+   * @param aItemId
+   *        The identifier of the item for which annotations are to be set
+   * @param aAnnotations
+   *        Array of objects, each containing the following properties:
+   *        name, flags, expires, type, mimeType (only used for binary
+   *        annotations) value.
+   */
+  setAnnotationsForItem: function PU_setAnnotationsForItem(aItemId, aAnnos) {
+    var annosvc = this.annotations;
+    aAnnos.forEach(function(anno) {
+      switch (anno.type) {
+        case annosvc.TYPE_INT32:
+          annosvc.setItemAnnotationInt32(aItemId, anno.name, anno.value,
+                                         anno.flags, anno.expires);
+          break;
+        case annosvc.TYPE_INT64:
+          annosvc.setItemAnnotationInt64(aItemId, anno.name, anno.value,
+                                         anno.flags, anno.expires);
+          break;
+        case annosvc.TYPE_DOUBLE:
+          annosvc.setItemAnnotationDouble(aItemId, anno.name, anno.value,
+                                          anno.flags, anno.expires);
+          break;
+        case annosvc.TYPE_STRING:
+          annosvc.setItemAnnotationString(aItemId, anno.name, anno.value,
+                                          anno.flags, anno.expires);
+          break;
+        case annosvc.TYPE_BINARY:
+          annosvc.setItemAnnotationBinary(aItemId, anno.name, anno.value,
+                                          anno.value.length, anno.mimeType,
+                                          anno.flags, anno.expires);
           break;
       }
     });
@@ -1235,10 +1346,38 @@ var PlacesUtils = {
       this._toolbarFolderId = this.bookmarks.toolbarFolder;
 
     return this._toolbarFolderId;
+  },
+
+  /**
+   * Set the POST data associated with a URI, if any.
+   * Used by POST keywords.
+   *   @param aURI
+   *   @returns string of POST data
+   */
+  setPostDataForURI: function PU_setPostDataForURI(aURI, aPostData) {
+    const annos = this.annotations;
+    if (aPostData)
+      annos.setPageAnnotationString(aURI, POST_DATA_ANNO, aPostData, 0, 0);
+    else if (annos.pageHasAnnotation(aURI, POST_DATA_ANNO))
+      annos.removePageAnnotation(aURI, POST_DATA_ANNO);
+  },
+
+  /**
+   * Get the POST data associated with a bookmark, if any.
+   * @param aURI
+   * @returns string of POST data if set for aURI. null otherwise.
+   */
+  getPostDataForURI: function PU_getPostDataForURI(aURI) {
+    const annos = this.annotations;
+    if (annos.pageHasAnnotation(aURI, POST_DATA_ANNO))
+      return annos.getPageAnnotationString(aURI, POST_DATA_ANNO);
+
+    return null;
   }
 };
 
 PlacesUtils.GENERIC_VIEW_DROP_TYPES = [PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
                                        PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
                                        PlacesUtils.TYPE_X_MOZ_PLACE,
-                                       PlacesUtils.TYPE_X_MOZ_URL];
+                                       PlacesUtils.TYPE_X_MOZ_URL,
+                                       PlacesUtils.TYPE_UNICODE];

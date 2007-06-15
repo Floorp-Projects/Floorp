@@ -66,6 +66,7 @@ components/dom_core.xpt
 components/dom_css.xpt
 components/dom_events.xpt
 components/dom_html.xpt
+components/dom_offline.xpt
 components/dom_range.xpt
 components/dom_stylesheets.xpt
 components/dom_traversal.xpt
@@ -263,10 +264,6 @@ res/fonts/mathfontMTExtra.properties
 res/fonts/mathfontPUA.properties
 res/fonts/mathfontSymbol.properties
 components/libucvmath.dylib
-
-; p3p
-components/libp3p.dylib
-components/p3p.xpt
 
 ; svg
 components/dom_svg.xpt

@@ -454,48 +454,66 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
                   SheetCount(eHTMLPresHintSheet) == 0,
                   "Can't have both types of preshint sheets at once!");
   
+  mRuleWalker->SetLevel(eAgentSheet, PR_FALSE);
   if (mRuleProcessors[eAgentSheet])
     (*aCollectorFunc)(mRuleProcessors[eAgentSheet], aData);
   nsRuleNode* lastAgentRN = mRuleWalker->GetCurrentNode();
 
+  mRuleWalker->SetLevel(ePresHintSheet, PR_FALSE);
   if (mRuleProcessors[ePresHintSheet])
     (*aCollectorFunc)(mRuleProcessors[ePresHintSheet], aData);
   nsRuleNode* lastPresHintRN = mRuleWalker->GetCurrentNode();
-  
-  if (mRuleProcessors[eUserSheet])
+
+  mRuleWalker->SetLevel(eUserSheet, PR_FALSE);
+  PRBool skipUserStyles = aData->mContent &&
+    aData->mContent == aData->mContent->GetBindingParent();
+  NS_ASSERTION(!skipUserStyles || aData->mContent->IsNativeAnonymous() ||
+               aData->mContent->IsNodeOfType(nsINode::eXUL),
+               "Content with bogus binding parent");
+  if (!skipUserStyles && mRuleProcessors[eUserSheet]) // NOTE: different
     (*aCollectorFunc)(mRuleProcessors[eUserSheet], aData);
   nsRuleNode* lastUserRN = mRuleWalker->GetCurrentNode();
 
+  mRuleWalker->SetLevel(eHTMLPresHintSheet, PR_FALSE);
   if (mRuleProcessors[eHTMLPresHintSheet])
     (*aCollectorFunc)(mRuleProcessors[eHTMLPresHintSheet], aData);
   nsRuleNode* lastHTMLPresHintRN = mRuleWalker->GetCurrentNode();
   
+  mRuleWalker->SetLevel(eDocSheet, PR_FALSE);
   PRBool cutOffInheritance = PR_FALSE;
   if (mBindingManager) {
     // We can supply additional document-level sheets that should be walked.
     mBindingManager->WalkRules(this, aCollectorFunc, aData,
                                &cutOffInheritance);
   }
-  if (!cutOffInheritance && mRuleProcessors[eDocSheet]) // NOTE: different
+  if (!skipUserStyles && !cutOffInheritance &&
+      mRuleProcessors[eDocSheet]) // NOTE: different
     (*aCollectorFunc)(mRuleProcessors[eDocSheet], aData);
+  mRuleWalker->SetLevel(eStyleAttrSheet, PR_FALSE);
   if (mRuleProcessors[eStyleAttrSheet])
     (*aCollectorFunc)(mRuleProcessors[eStyleAttrSheet], aData);
+  nsRuleNode* lastDocRN = mRuleWalker->GetCurrentNode();
 
+  mRuleWalker->SetLevel(eOverrideSheet, PR_FALSE);
   if (mRuleProcessors[eOverrideSheet])
     (*aCollectorFunc)(mRuleProcessors[eOverrideSheet], aData);
   nsRuleNode* lastOvrRN = mRuleWalker->GetCurrentNode();
 
-  // There should be no important rules in the preshint or HTMLpreshint level
-  AddImportantRules(lastOvrRN, lastHTMLPresHintRN);  // doc and override
+  mRuleWalker->SetLevel(eDocSheet, PR_TRUE);
+  AddImportantRules(lastDocRN, lastHTMLPresHintRN);  // doc
+  mRuleWalker->SetLevel(eOverrideSheet, PR_TRUE);
+  AddImportantRules(lastOvrRN, lastDocRN);  // override
 #ifdef DEBUG
   AssertNoCSSRules(lastHTMLPresHintRN, lastUserRN);
   AssertNoImportantRules(lastHTMLPresHintRN, lastUserRN); // HTML preshints
 #endif
+  mRuleWalker->SetLevel(eUserSheet, PR_TRUE);
   AddImportantRules(lastUserRN, lastPresHintRN); //user
 #ifdef DEBUG
   AssertNoCSSRules(lastPresHintRN, lastAgentRN);
   AssertNoImportantRules(lastPresHintRN, lastAgentRN); // preshints
 #endif
+  mRuleWalker->SetLevel(eAgentSheet, PR_TRUE);
   AddImportantRules(lastAgentRN, nsnull);     //agent
 
 }
@@ -514,8 +532,15 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
     (*aFunc)(mRuleProcessors[eAgentSheet], aData);
   if (mRuleProcessors[ePresHintSheet])
     (*aFunc)(mRuleProcessors[ePresHintSheet], aData);
-  if (mRuleProcessors[eUserSheet])
+
+  PRBool skipUserStyles = aData->mContent &&
+    aData->mContent == aData->mContent->GetBindingParent();
+  NS_ASSERTION(!skipUserStyles || aData->mContent->IsNativeAnonymous() ||
+               aData->mContent->IsNodeOfType(nsINode::eXUL),
+               "Content with bogus binding parent");
+  if (!skipUserStyles && mRuleProcessors[eUserSheet]) // NOTE: different
     (*aFunc)(mRuleProcessors[eUserSheet], aData);
+
   if (mRuleProcessors[eHTMLPresHintSheet])
     (*aFunc)(mRuleProcessors[eHTMLPresHintSheet], aData);
   
@@ -524,7 +549,8 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
     // We can supply additional document-level sheets that should be walked.
     mBindingManager->WalkRules(this, aFunc, aData, &cutOffInheritance);
   }
-  if (!cutOffInheritance && mRuleProcessors[eDocSheet]) // NOTE: different
+  if (!skipUserStyles && !cutOffInheritance &&
+      mRuleProcessors[eDocSheet]) // NOTE: different
     (*aFunc)(mRuleProcessors[eDocSheet], aData);
   if (mRuleProcessors[eStyleAttrSheet])
     (*aFunc)(mRuleProcessors[eStyleAttrSheet], aData);

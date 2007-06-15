@@ -184,43 +184,6 @@ NS_IMETHODIMP nsXULTabBoxAccessible::GetChildCount(PRInt32 *_retval)
 #endif
 
 /**
-  * XUL TabPanels
-  *  XXX jgaunt -- this has to report the info for the selected child, reachable through
-  *                the DOMNode. The TabPanels object has as its children the different
-  *                vbox/hbox/whatevers that provide what you look at when you click on
-  *                a tab.
-  * Here is how this will work: when asked about an object the tabPanels object will find
-  *  out the selected child and create the tabPanel object using the child. That should wrap
-  *  any XUL/HTML content in the child, since it is a simple nsAccessible basically.
-  * or maybe we just do that on creation. Not use the DOMnode we are given, but cache the selected
-  *  DOMnode and then run from there.
-  */
-
-/** Constructor */
-nsXULTabPanelsAccessible::nsXULTabPanelsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessibleWrap(aNode, aShell)
-{ 
-}
-
-/** We are a Property Page */
-NS_IMETHODIMP nsXULTabPanelsAccessible::GetRole(PRUint32 *aRole)
-{
-  *aRole = nsIAccessibleRole::ROLE_PROPERTYPAGE;
-  return NS_OK;
-}
-
-/** 
-  * The name for the panel is the name from the tab associated with
-  *  the panel. XXX not sure if the "panels" object should have the
-  *  same name.
-  */
-NS_IMETHODIMP nsXULTabPanelsAccessible::GetName(nsAString& aName)
-{
-  aName.Truncate();
-  return NS_OK;
-}
-
-/**
   * XUL Tabs - the s really stands for strip. this is a collection of tab objects
   */
 

@@ -331,9 +331,7 @@ destroy_java_member_descriptor(JSContext *cx, JNIEnv *jEnv, JavaMemberDescriptor
         method = next_method;
     }
 
-    if (member_descriptor->invoke_func_obj)
-        JS_RemoveRoot(cx, &member_descriptor->invoke_func_obj);
-
+    JS_RemoveRoot(cx, &member_descriptor->invoke_func_obj);
     JS_FREE_IF(cx, (char *)member_descriptor->name);
     JS_free(cx, member_descriptor);
 }

@@ -36,10 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.9.5.31-1.js';
+
 /**
    File Name:          15.9.5.31-1.js
 
-   ECMA Section:       
+   ECMA Section:      
    15.9.5.31 Date.prototype.setUTCHours(hour [, min [, sec [, ms ]]] )
 
    Description:
@@ -52,11 +54,11 @@
 
    1.Let t be this time value.
    2.Call ToNumber(hour).
-   3.If min is not specified, compute MinFromTime(t); 
+   3.If min is not specified, compute MinFromTime(t);
    otherwise, call ToNumber(min).
-   4.If sec is not specified, compute SecFromTime(t); 
+   4.If sec is not specified, compute SecFromTime(t);
    otherwise, call ToNumber(sec).
-   5.If ms is not specified, compute msFromTime(t); 
+   5.If ms is not specified, compute msFromTime(t);
    otherwise, call ToNumber(ms).
    6.Compute MakeTime(Result(2), Result(3), Result(4), Result(5)).
    7.Compute MakeDate(Day(t), Result(6)).
@@ -70,7 +72,7 @@ var SECTION = "15.9.5.31-1";
 var VERSION = "ECMA_1";
 startTest();
 
-writeHeaderToLog(SECTION + 
+writeHeaderToLog(SECTION +
                  " Date.prototype.setUTCHours(hour [, min [, sec [, ms ]]] )");
 
 addNewTestCase( 0, 0, void 0, void 0, void 0,
@@ -168,7 +170,7 @@ function addNewTestCase( time, hours, min, sec, ms, DateString, UTCDate, LocalDa
   DateCase.toString = Object.prototype.toString;
 
   new TestCase( SECTION,
-                DateString+".toString=Object.prototype.toString;" + 
+                DateString+".toString=Object.prototype.toString;" +
                 DateString+".toString()",
                 "[object Date]",
                 DateCase.toString() );

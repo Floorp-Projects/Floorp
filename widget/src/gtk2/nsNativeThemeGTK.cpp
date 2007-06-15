@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Brian Ryner <bryner@brianryner.com>  (Original Author)
+ *  Michael Ventnor <m.ventnor@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -72,6 +73,16 @@ NS_IMPL_ISUPPORTS2(nsNativeThemeGTK, nsITheme, nsIObserver)
 
 static int gLastXError;
 
+static inline bool IsCheckboxWidgetType(PRUint8 aWidgetType)
+{
+  return (aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_CHECKBOX_SMALL);
+}
+
+static inline bool IsRadioWidgetType(PRUint8 aWidgetType)
+{
+  return (aWidgetType == NS_THEME_RADIO || aWidgetType == NS_THEME_RADIO_SMALL);
+}
+
 nsNativeThemeGTK::nsNativeThemeGTK()
 {
   if (moz_gtk_init() != MOZ_GTK_SUCCESS) {
@@ -86,16 +97,6 @@ nsNativeThemeGTK::nsNativeThemeGTK()
 
   memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));
   memset(mSafeWidgetStates, 0, sizeof(mSafeWidgetStates));
-
-#ifdef MOZ_WIDGET_GTK
-  // Look up the symbol for gtk_style_get_prop_experimental
-  PRLibrary* gtkLibrary;
-  PRFuncPtr stylePropFunc = PR_FindFunctionSymbolAndLibrary("gtk_style_get_prop_experimental", &gtkLibrary);
-  if (stylePropFunc) {
-    moz_gtk_enable_style_props((style_prop_t) stylePropFunc);
-    PR_UnloadLibrary(gtkLibrary);
-  }
-#endif
 }
 
 nsNativeThemeGTK::~nsNativeThemeGTK() {
@@ -183,8 +184,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       // For XUL checkboxes and radio buttons, the state of the parent
       // determines our state.
       nsIFrame *stateFrame = aFrame;
-      if (aFrame && ((aWidgetFlags && (aWidgetType == NS_THEME_CHECKBOX ||
-                                       aWidgetType == NS_THEME_RADIO)) ||
+      if (aFrame && ((aWidgetFlags && (IsCheckboxWidgetType(aWidgetType) ||
+                                       IsRadioWidgetType(aWidgetType))) ||
                      aWidgetType == NS_THEME_CHECKBOX_LABEL ||
                      aWidgetType == NS_THEME_RADIO_LABEL)) {
 
@@ -202,7 +203,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
           }
           if (aWidgetFlags) {
             if (!atom) {
-              atom = (aWidgetType == NS_THEME_CHECKBOX ||
+              atom = (IsCheckboxWidgetType(aWidgetType) ||
                       aWidgetType == NS_THEME_CHECKBOX_LABEL) ? nsWidgetAtoms::checked
                                                               : nsWidgetAtoms::selected;
             }
@@ -222,7 +223,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
 
       PRInt32 eventState = GetContentState(stateFrame, aWidgetType);
 
-      aState->disabled = IsDisabled(aFrame);
+      aState->disabled = (IsDisabled(aFrame) || IsReadOnly(aFrame));
       aState->active  = (eventState & NS_EVENT_STATE_ACTIVE) == NS_EVENT_STATE_ACTIVE;
       aState->focused = (eventState & NS_EVENT_STATE_FOCUS) == NS_EVENT_STATE_FOCUS;
       aState->inHover = (eventState & NS_EVENT_STATE_HOVER) == NS_EVENT_STATE_HOVER;
@@ -233,10 +234,11 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       // actually has element focus, so we check the focused attribute
       // to see whether to draw in the focused state.
       if (aWidgetType == NS_THEME_TEXTFIELD ||
+          aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
           aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||
           aWidgetType == NS_THEME_RADIO_CONTAINER ||
           aWidgetType == NS_THEME_RADIO_LABEL ||
-          aWidgetType == NS_THEME_RADIO) {
+          IsRadioWidgetType(aWidgetType)) {
         aState->focused = IsFocused(aFrame);
       }
 
@@ -308,8 +310,10 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     aGtkWidgetType = MOZ_GTK_BUTTON;
     break;
   case NS_THEME_CHECKBOX:
+  case NS_THEME_CHECKBOX_SMALL:
   case NS_THEME_RADIO:
-    aGtkWidgetType = (aWidgetType == NS_THEME_RADIO) ? MOZ_GTK_RADIOBUTTON : MOZ_GTK_CHECKBUTTON;
+  case NS_THEME_RADIO_SMALL:
+    aGtkWidgetType = IsRadioWidgetType(aWidgetType) ? MOZ_GTK_RADIOBUTTON : MOZ_GTK_CHECKBUTTON;
     break;
   case NS_THEME_SCROLLBAR_BUTTON_UP:
   case NS_THEME_SCROLLBAR_BUTTON_DOWN:
@@ -361,7 +365,9 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     aGtkWidgetType = MOZ_GTK_GRIPPER;
     break;
   case NS_THEME_TEXTFIELD:
+  case NS_THEME_TEXTFIELD_MULTILINE:
   case NS_THEME_DROPDOWN_TEXTFIELD:
+  case NS_THEME_LISTBOX:
     aGtkWidgetType = MOZ_GTK_ENTRY;
     break;
   case NS_THEME_DROPDOWN:
@@ -656,6 +662,8 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
 
   gfxContext* ctx =
     (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+
+  // XXXbz do we really want to round here, then snap, then round again?
   gfxRect rect(0, 0, NSAppUnitsToIntPixels(drawingRect.width, p2a),
                      NSAppUnitsToIntPixels(drawingRect.height, p2a));
   // Don't snap if it's a non-unit scale factor. We're going to have to take
@@ -673,7 +681,9 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
     ctx->SetMatrix(current);
   } else {
     renderer.Draw(gdk_x11_get_default_xdisplay(), ctx,
-                  drawingRect.width, drawingRect.height, rendererFlags, nsnull);
+                  NSToIntCeil(NSAppUnitsToFloatPixels(drawingRect.width, p2a)),
+                  NSToIntCeil(NSAppUnitsToFloatPixels(drawingRect.height, p2a)),
+                  rendererFlags, nsnull);
   }
 
   if (!safeState) {
@@ -705,14 +715,14 @@ NS_IMETHODIMP
 nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType, nsMargin* aResult)
 {
-  aResult->top = aResult->left = 0;
+  aResult->top = aResult->left = aResult->right = aResult->bottom = 0;
   switch (aWidgetType) {
   case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
   case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
     {
       MozGtkScrollbarMetrics metrics;
       moz_gtk_get_scrollbar_metrics(&metrics);
-      aResult->top = aResult->left = metrics.trough_border;
+      aResult->top = aResult->left = aResult->right = aResult->bottom = metrics.trough_border;
     }
     break;
   case NS_THEME_TOOLBOX:
@@ -733,14 +743,11 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
       GtkThemeWidgetType gtkWidgetType;
       if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nsnull,
                                nsnull))
-        moz_gtk_get_widget_border(gtkWidgetType, &aResult->left,
-                                  &aResult->top);
+        moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
+                                  &aResult->right, &aResult->bottom,
+                                  (aFrame ? aFrame->GetContent()->IsNodeOfType(nsINode::eHTML) : FALSE));
     }
   }
-
-  aResult->right = aResult->left;
-  aResult->bottom = aResult->top;
-
   return NS_OK;
 }
 
@@ -851,11 +858,13 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
     }
     break;
   case NS_THEME_CHECKBOX:
+  case NS_THEME_CHECKBOX_SMALL:
   case NS_THEME_RADIO:
+  case NS_THEME_RADIO_SMALL:
     {
       gint indicator_size, indicator_spacing;
 
-      if (aWidgetType == NS_THEME_CHECKBOX) {
+      if (IsCheckboxWidgetType(aWidgetType)) {
         moz_gtk_checkbox_get_metrics(&indicator_size, &indicator_spacing);
       } else {
         moz_gtk_radio_get_metrics(&indicator_size, &indicator_spacing);
@@ -935,6 +944,7 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
         aAttribute == nsWidgetAtoms::checked ||
         aAttribute == nsWidgetAtoms::selected ||
         aAttribute == nsWidgetAtoms::focused ||
+        aAttribute == nsWidgetAtoms::readonly ||
         aAttribute == nsWidgetAtoms::mozmenuactive)
       *aShouldRepaint = PR_TRUE;
   }
@@ -960,11 +970,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
                                       nsIFrame* aFrame,
                                       PRUint8 aWidgetType)
 {
-  if (aFrame) {
-    if (aFrame->GetContent()->IsNodeOfType(nsINode::eHTML))
-      return PR_FALSE;
-  }
-
   if (IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType))
     return PR_FALSE;
 
@@ -972,7 +977,9 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_BUTTON:
   case NS_THEME_BUTTON_FOCUS:
   case NS_THEME_RADIO:
+  case NS_THEME_RADIO_SMALL:
   case NS_THEME_CHECKBOX:
+  case NS_THEME_CHECKBOX_SMALL:
   case NS_THEME_TOOLBOX: // N/A
   case NS_THEME_TOOLBAR:
   case NS_THEME_TOOLBAR_BUTTON:
@@ -983,7 +990,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_STATUSBAR:
   case NS_THEME_STATUSBAR_PANEL:
     // case NS_THEME_RESIZER:  (n/a for gtk)
-    // case NS_THEME_LISTBOX:
+  case NS_THEME_LISTBOX:
     // case NS_THEME_LISTBOX_LISTITEM:
     // case NS_THEME_TREEVIEW:
     // case NS_THEME_TREEVIEW_TREEITEM:
@@ -1018,8 +1025,9 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     // case NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL:  (n/a for gtk)
     // case NS_THEME_SCROLLBAR_GRIPPER_VERTICAL:  (n/a for gtk)
   case NS_THEME_TEXTFIELD:
+  case NS_THEME_TEXTFIELD_MULTILINE:
     // case NS_THEME_TEXTFIELD_CARET:
-  case NS_THEME_DROPDOWN_BUTTON:
+    // case NS_THEME_DROPDOWN_BUTTON:
   case NS_THEME_DROPDOWN_TEXTFIELD:
   case NS_THEME_SCALE_HORIZONTAL:
   case NS_THEME_SCALE_THUMB_HORIZONTAL:
@@ -1032,7 +1040,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_RADIO_CONTAINER:
   case NS_THEME_CHECKBOX_LABEL:
   case NS_THEME_RADIO_LABEL:
-#ifdef MOZ_WIDGET_GTK2
   case NS_THEME_MENUBAR:
   case NS_THEME_MENUPOPUP:
   case NS_THEME_MENUITEM:
@@ -1042,7 +1049,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_DIALOG:
   case NS_THEME_DROPDOWN:
   case NS_THEME_DROPDOWN_TEXT:
-#endif
     return !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
   }
 
@@ -1054,14 +1060,24 @@ nsNativeThemeGTK::WidgetIsContainer(PRUint8 aWidgetType)
 {
   // XXXdwh At some point flesh all of this out.
   if (aWidgetType == NS_THEME_DROPDOWN_BUTTON || 
-      aWidgetType == NS_THEME_RADIO ||
-      aWidgetType == NS_THEME_CHECKBOX)
+      IsRadioWidgetType(aWidgetType) ||
+      IsCheckboxWidgetType(aWidgetType))
     return PR_FALSE;
   return PR_TRUE;
 }
 
 PRBool
 nsNativeThemeGTK::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType)
+{
+   if (aWidgetType == NS_THEME_DROPDOWN ||
+      aWidgetType == NS_THEME_BUTTON)
+    return PR_TRUE;
+  
+  return PR_FALSE;
+}
+
+PRBool
+nsNativeThemeGTK::ThemeNeedsComboboxDropmarker()
 {
   return PR_FALSE;
 }

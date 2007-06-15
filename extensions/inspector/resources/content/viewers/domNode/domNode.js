@@ -172,7 +172,7 @@ DOMNodeViewer.prototype =
         var bundle = this.pane.panelset.stringBundle;
         deck.setAttribute("selectedIndex", 0);
         
-        this.setTextValue("nodeName", aObject.nodeName);
+        this.setTextValue("localName", aObject.localName);
         this.setTextValue("nodeType", bundle.getString(aObject.nodeType));
         this.setTextValue("namespace", aObject.namespaceURI);
 

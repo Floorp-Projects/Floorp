@@ -376,16 +376,6 @@ nsSVGGeometryFrame::SetupCairoFill(gfxContext *aContext,
 }
 
 void
-nsSVGGeometryFrame::CleanupCairoFill(gfxContext *aContext, void *aClosure)
-{
-  if (GetStateBits() & NS_STATE_SVG_FILL_PSERVER) {
-    nsSVGPaintServerFrame *ps = NS_STATIC_CAST(nsSVGPaintServerFrame*,
-                                               GetProperty(nsGkAtoms::fill));
-    ps->CleanupPaintServer(aContext, aClosure);
-  }
-}
-
-void
 nsSVGGeometryFrame::SetupCairoStrokeGeometry(gfxContext *aContext)
 {
   aContext->SetLineWidth(GetStrokeWidth());
@@ -453,14 +443,4 @@ nsSVGGeometryFrame::SetupCairoStroke(gfxContext *aContext,
                     opacity);
 
   return PR_TRUE;
-}
-
-void
-nsSVGGeometryFrame::CleanupCairoStroke(gfxContext *aContext, void *aClosure)
-{
-  if (GetStateBits() & NS_STATE_SVG_STROKE_PSERVER) {
-    nsSVGPaintServerFrame *ps = NS_STATIC_CAST(nsSVGPaintServerFrame*,
-                                               GetProperty(nsGkAtoms::stroke));
-    ps->CleanupPaintServer(aContext, aClosure);
-  }
 }

@@ -55,13 +55,8 @@ DIRS += communicator
 endif
 
 ifndef MOZ_XUL_APP
-DIRS += global
-
-# XXX Clean this up once SeaMonkey becomes a full xul app
-ifndef MOZ_SUITE
-DIRS += communicator
+DIRS += global communicator
 endif
-endif # MOZ_XUL_APP
 
 # Because of our great use of encapsulation, there are
 # some header file in xpfe/components that are required

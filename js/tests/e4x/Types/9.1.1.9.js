@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '9.1.1.9.js';
+
 START("9.1.1.9 - XML [[Equals]]");
 
 x = <alpha>one</alpha>;
@@ -98,7 +100,7 @@ one = x.*[0];
 two = y.bravo.*[0];
 TEST(13, true, (one == two) && (two == one));
 
- 
+
 // Compare processing instructions
 XML.ignoreProcessingInstructions = false;
 x = <alpha><?one foo="bar" ?><bravo><?two bar="foo" ?>one</bravo></alpha>;
@@ -116,7 +118,7 @@ TEST(16, true, (one == two) && (two == one));
 // Namepaces
 x = <ns1:alpha xmlns:ns1="http://foo/"><ns1:bravo>one</ns1:bravo></ns1:alpha>;
 y = <ns2:alpha xmlns:ns2="http://foo/"><ns2:bravo>one</ns2:bravo></ns2:alpha>;
- 
+
 TEST(17, true, (x == y) && (y == x));
 
 y = <ns2:alpha xmlns:ns2="http://foo"><ns2:bravo>one</ns2:bravo></ns2:alpha>;

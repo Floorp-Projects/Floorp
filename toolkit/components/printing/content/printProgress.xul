@@ -51,7 +51,7 @@
         onload="onLoad()"
         onunload="onUnload()">
 
-  <script type="application/x-javascript" src="chrome://global/content/printProgress.js"/>
+  <script type="application/javascript" src="chrome://global/content/printProgress.js"/>
 
     <!-- This is non-visible content that simply adds translatable string
          into the document so that it is accessible to JS code.

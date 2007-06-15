@@ -21,6 +21,7 @@
  *  Myk Melez <myk@mozilla.org> (Original Author)
  *  Simon Bünzli <zeniko@gmail.com>
  *  Asaf Romano <mano@mozilla.com>
+ *  Dan Mills <thunder@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -190,6 +191,17 @@ MicrosummaryService.prototype = {
     return Math.max(updateInterval, 1) * 60 * 1000;
   },
 
+  __branch: null,
+  get _branch() {
+    if (!this.__branch) {
+      var prefs = Cc["@mozilla.org/preferences-service;1"].
+                  getService(Ci.nsIPrefService);
+      this.__branch = prefs.getBranch("browser.microsummary.");
+      this.__branch.QueryInterface(Ci.nsIPrefBranch2);
+    }
+    return this.__branch;
+  },
+
   // A cache of local microsummary generators.  This gets built on startup
   // by the _cacheLocalGenerators() method.
   _localGenerators: {},
@@ -219,11 +231,26 @@ MicrosummaryService.prototype = {
       case "xpcom-shutdown":
         this._destroy();
         break;
+      case "nsPref:changed":
+        if (data == "enabled")
+          this._initTimer();
+        break;
     }
   },
 
   _init: function MSS__init() {
     this._obs.addObserver(this, "xpcom-shutdown", true);
+    this._branch.addObserver("", this, true);
+    this._initTimer();
+    this._cacheLocalGenerators();
+  },
+
+  _initTimer: function MSS__initTimer() {
+    if (this._timer)
+      this._timer.cancel();
+
+    if (!getPref("browser.microsummary.enabled", true))
+      return;
 
     // Periodically update microsummaries that need updating.
     this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -234,8 +261,6 @@ MicrosummaryService.prototype = {
     this._timer.initWithCallback(callback,
                                  CHECK_INTERVAL,
                                  this._timer.TYPE_REPEATING_SLACK);
-
-    this._cacheLocalGenerators();
   },
   
   _destroy: function MSS__destroy() {
@@ -272,12 +297,36 @@ MicrosummaryService.prototype = {
   },
   
   _updateMicrosummary: function MSS__updateMicrosummary(bookmarkID, microsummary) {
-    this._setField(bookmarkID, FIELD_GENERATED_TITLE, microsummary.content);
+    // Get the current live title to see if it's actually changed.
+    var oldValue = null;
+    if (this._hasField(bookmarkID, FIELD_GENERATED_TITLE))
+      oldValue = this._getField(bookmarkID, FIELD_GENERATED_TITLE);
+
+    // A string identifying the bookmark to use when logging the update.
+#ifdef MOZ_PLACES_BOOKMARKS
+    var bookmarkIdentity = bookmarkID;
+#else
+    var bookmarkIdentity = bookmarkID.Value + " (" + microsummary.pageURI.spec + ")";
+#endif
+
+    if (oldValue == null || oldValue != microsummary.content) {
+      this._setField(bookmarkID, FIELD_GENERATED_TITLE, microsummary.content);
+      var subject = new LiveTitleNotificationSubject(bookmarkID, microsummary);
+      LOG("updated live title for " + bookmarkIdentity +
+          " from '" + (oldValue == null ? "<no live title>" : oldValue) +
+          "' to '" + microsummary.content + "'");
+      this._obs.notifyObservers(subject, "microsummary-livetitle-updated", oldValue);
+    }
+    else {
+      LOG("didn't update live title for " + bookmarkIdentity + "; it hasn't changed");
+    }
+
+    // Whether or not the title itself has changed, we still save any changes
+    // to the update interval, since the interval represents how long to wait
+    // before checking again for updates, and that can vary across updates,
+    // even when the title itself hasn't changed.
     this._setField(bookmarkID, FIELD_MICSUM_EXPIRATION,
                    Date.now() + (microsummary.updateInterval || this._updateInterval));
-
-    LOG("updated microsummary for page " + microsummary.pageURI.spec +
-        " to " + microsummary.content);
   },
 
   /**
@@ -414,6 +463,17 @@ MicrosummaryService.prototype = {
   // nsIMicrosummaryService
 
   /**
+   * Return a microsummary generator for the given URI.
+   *
+   * @param   generatorURI
+   *          the URI of the generator
+   */
+  getGenerator: function MSS_getGenerator(generatorURI) {
+    return this._localGenerators[generatorURI.spec] ||
+      new MicrosummaryGenerator(generatorURI);
+  },
+
+  /**
    * Install the microsummary generator from the resource at the supplied URI.
    * Callable by content via the addMicrosummaryGenerator() sidebar method.
    *
@@ -527,6 +587,8 @@ MicrosummaryService.prototype = {
       outputStream.close();
   },
 
+
+
   /**
    * Get the set of microsummaries available for a given page.  The set
    * might change after this method returns, since this method will trigger
@@ -552,6 +614,9 @@ MicrosummaryService.prototype = {
   getMicrosummaries: function MSS_getMicrosummaries(pageURI, bookmarkID) {
     var microsummaries = new MicrosummarySet();
 
+    if (!getPref("browser.microsummary.enabled", true))
+      return microsummaries;
+
     // Get microsummaries defined by local generators.
     for (var genURISpec in this._localGenerators) {
       var generator = this._localGenerators[genURISpec];
@@ -561,7 +626,11 @@ MicrosummaryService.prototype = {
 
         // If this is the current microsummary for this bookmark, load the content
         // from the datastore so it shows up immediately in microsummary picking UI.
+#ifdef MOZ_PLACES_BOOKMARKS
+        if (bookmarkID != -1 && this.isMicrosummary(bookmarkID, microsummary))
+#else
         if (bookmarkID && this.isMicrosummary(bookmarkID, microsummary))
+#endif
           microsummary._content = this._getField(bookmarkID, FIELD_GENERATED_TITLE);
 
         microsummaries.AppendElement(microsummary);
@@ -570,7 +639,11 @@ MicrosummaryService.prototype = {
 
     // If a bookmark identifier has been provided, list its microsummary
     // synchronously, if any.
+#ifdef MOZ_PLACES_BOOKMARKS
+    if (bookmarkID != -1 && this.hasMicrosummary(bookmarkID)) {
+#else
     if (bookmarkID && this.hasMicrosummary(bookmarkID)) {
+#endif
       var currentMicrosummary = this.getMicrosummary(bookmarkID);
       if (!microsummaries.hasItemForMicrosummary(currentMicrosummary))
         microsummaries.AppendElement(currentMicrosummary);
@@ -647,7 +720,7 @@ MicrosummaryService.prototype = {
 
     // This try/catch block is a temporary workaround for bug 336194.
     try {
-      bookmarks = this._ans.getPagesWithAnnotation(FIELD_MICSUM_GEN_URI, {});
+      bookmarks = this._ans.getItemsWithAnnotation(FIELD_MICSUM_GEN_URI, {});
     }
     catch(e) {
       bookmarks = [];
@@ -656,71 +729,56 @@ MicrosummaryService.prototype = {
     return bookmarks;
   },
 
-  _getField: function MSS__getField(aPlaceURI, aFieldName) {
-    aPlaceURI.QueryInterface(Ci.nsIURI);
+  _getField: function MSS__getField(aBookmarkId, aFieldName) {
     var fieldValue;
 
     switch(aFieldName) {
     case FIELD_MICSUM_EXPIRATION:
-      fieldValue = this._ans.getAnnotationInt64(aPlaceURI, aFieldName);
+      fieldValue = this._ans.getItemAnnotationInt64(aBookmarkId, aFieldName);
       break;
     case FIELD_MICSUM_GEN_URI:
     case FIELD_GENERATED_TITLE:
     case FIELD_CONTENT_TYPE:
     default:
-      fieldValue = this._ans.getAnnotationString(aPlaceURI, aFieldName);
+      fieldValue = this._ans.getItemAnnotationString(aBookmarkId, aFieldName);
       break;
     }
     
     return fieldValue;
   },
 
-  _setField: function MSS__setField(aPlaceURI, aFieldName, aFieldValue) {
-    aPlaceURI.QueryInterface(Ci.nsIURI);
-
+  _setField: function MSS__setField(aBookmarkId, aFieldName, aFieldValue) {
     switch(aFieldName) {
     case FIELD_MICSUM_EXPIRATION:
-      this._ans.setAnnotationInt64(aPlaceURI,
-                                   aFieldName,
-                                   aFieldValue,
-                                   0,
-                                   this._ans.EXPIRE_NEVER);
+      this._ans.setItemAnnotationInt64(aBookmarkId,
+                                       aFieldName,
+                                       aFieldValue,
+                                       0,
+                                       this._ans.EXPIRE_NEVER);
       break;
     case FIELD_MICSUM_GEN_URI:
     case FIELD_GENERATED_TITLE:
     case FIELD_CONTENT_TYPE:
     default:
-      this._ans.setAnnotationString(aPlaceURI,
-                                    aFieldName,
-                                    aFieldValue,
-                                    0,
-                                    this._ans.EXPIRE_NEVER);
+      this._ans.setItemAnnotationString(aBookmarkId,
+                                        aFieldName,
+                                        aFieldValue,
+                                        0,
+                                        this._ans.EXPIRE_NEVER);
       break;
     }
   },
 
-  _clearField: function MSS__clearField(aPlaceURI, aFieldName) {
-    aPlaceURI.QueryInterface(Ci.nsIURI);
-    this._ans.removeAnnotation(aPlaceURI, aFieldName);
+  _clearField: function MSS__clearField(aBookmarkId, aFieldName) {
+    this._ans.removeItemAnnotation(aBookmarkId, aFieldName);
   },
 
-  _hasField: function MSS__hasField(aPlaceURI, fieldName) {
-    aPlaceURI.QueryInterface(Ci.nsIURI);
-    return this._ans.hasAnnotation(aPlaceURI, fieldName);
+  _hasField: function MSS__hasField(aBookmarkId, fieldName) {
+    return this._ans.itemHasAnnotation(aBookmarkId, fieldName);
   },
 
-  _getPageForBookmark: function MSS__getPageForBookmark(aPlaceURI) {
-    aPlaceURI.QueryInterface(Ci.nsIURI);
-
-    // Manually get the bookmark identifier out of the place uri until
-    // the query system supports parsing this sort of place: uris
-    var matches = /moz_bookmarks.id=([0-9]+)/.exec(aPlaceURI.spec);
-    if (matches) {
-      var bookmarkId = parseInt(matches[1]);
-      return this._bms.getBookmarkURI(bookmarkId);
-    }
-
-    return null;
+  _getPageForBookmark: function MSS__getPageForBookmark(aBookmarkId) {
+    return this._bms.getBookmarkURI(aBookmarkId);
   },
 
 #else
@@ -874,10 +932,25 @@ MicrosummaryService.prototype = {
 
     var pageURI = this._getPageForBookmark(bookmarkID);
     var generatorURI = this._uri(this._getField(bookmarkID, FIELD_MICSUM_GEN_URI));
-    
-    var generator = this._localGenerators[generatorURI.spec] ||
-                    new MicrosummaryGenerator(generatorURI);
+    var generator = this.getGenerator(generatorURI);
 
+    return new Microsummary(pageURI, generator);
+  },
+
+  /**
+   * Get a microsummary for a given page URI and generator URI.
+   *
+   * @param   pageURI
+   *          the URI of the page to be summarized
+   *
+   * @param   generatorURI
+   *          the URI of the microsummary generator
+   *
+   * @returns an nsIMicrosummary for the given page and generator URIs.
+   *
+   */
+  createMicrosummary: function MSS_createMicrosummary(pageURI, generatorURI) {
+    var generator = this.getGenerator(generatorURI);
     return new Microsummary(pageURI, generator);
   },
 
@@ -1065,6 +1138,30 @@ MicrosummaryService.prototype = {
     microsummary.update();
     
     return microsummary;
+  }
+};
+
+
+
+
+
+function LiveTitleNotificationSubject(bookmarkID, microsummary) {
+  this.bookmarkID = bookmarkID;
+  this.microsummary = microsummary;
+}
+
+LiveTitleNotificationSubject.prototype = {
+  bookmarkID: null,
+  microsummary: null,
+
+  interfaces: [Ci.nsILiveTitleNotificationSubject, Ci.nsISupports],
+
+  // nsISupports
+
+  QueryInterface: function (iid) {
+    if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
   }
 };
 

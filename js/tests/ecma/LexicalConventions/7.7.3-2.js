@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '7.7.3-2.js';
+
 /**
    File Name:          7.7.3-2.js
    ECMA Section:       7.7.3 Numeric Literals

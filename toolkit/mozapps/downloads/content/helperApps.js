@@ -343,12 +343,6 @@ HelperApps.prototype = {
     }
     return this._inner.HasAssertion(aSource, aProperty, aTarget, aTruthValue);
   },
-  AddObserver: function (aObserver) {
-    this._inner.AddObserver(aObserver);
-  },
-  RemoveObserver: function (aObserver) {
-    this._inner.RemoveObserver(aObserver);
-  },
   ArcLabelsIn: function (aNode) {
     return this._inner.ArcLabelsIn(aNode);
   },
@@ -400,6 +394,18 @@ HelperApps.prototype = {
   onMove: function (aDataSource, aOldSource, aNewSource, aProperty, aTarget) {
     for (var i = 0; i < this._observers.length; ++i) {
       this._observers[i].onMove(aDataSource, aOldSource, aNewSource, aProperty, aTarget);
+    }
+  },
+  
+  onBeginUpdateBatch: function (aDataSource) {
+    for (var i = 0; i < this._observers.length; ++i) {
+      this._observers[i].onBeginUpdateBatch(aDataSource);
+    }
+  },
+  
+  onEndUpdateBatch: function (aDataSource) {
+    for (var i = 0; i < this._observers.length; ++i) {
+      this._observers[i].onEndUpdateBatch(aDataSource);
     }
   },
   

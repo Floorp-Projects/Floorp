@@ -41,34 +41,57 @@
 
 #include <Cocoa/Cocoa.h>
 #include "HTTPMultipartUpload.h"
+#include "crashreporter.h"
 
 @interface CrashReporterUI : NSObject
 {
-    /* Enabled view */
-    IBOutlet NSView *enableView;
+    IBOutlet NSWindow* window;
 
-    IBOutlet NSTextField *descriptionLabel;
-    IBOutlet NSButton *disableReportingButton;
-    IBOutlet NSButton *dontSendButton;
-    IBOutlet NSButton *sendButton;
+    /* Crash reporter view */
+    IBOutlet NSTextField* headerLabel;
+    IBOutlet NSTextField* descriptionLabel;
+    IBOutlet NSButton* viewReportButton;
+    IBOutlet NSTextField* viewReportLabel;
+    IBOutlet NSScrollView* viewReportScrollView;
+    IBOutlet NSTextView* viewReportTextView;
+    IBOutlet NSButton* submitReportButton;
+    IBOutlet NSButton* emailMeButton;
+    IBOutlet NSTextField* emailText;
+    IBOutlet NSButton* closeButton;
+    IBOutlet NSButton* restartButton;
 
-    /* Upload progress view */
-    IBOutlet NSView *uploadingView;
-
-    IBOutlet NSTextField *progressLabel;
-    IBOutlet NSProgressIndicator *progressBar;
-    IBOutlet NSButton *closeButton;
+    /* Error view */
+    IBOutlet NSView* errorView;
+    IBOutlet NSTextField* errorHeaderLabel;
+    IBOutlet NSTextField* errorLabel;
+    IBOutlet NSButton* errorCloseButton;
 
     HTTPMultipartUpload *mPost;
 }
 
-- (IBAction)closeClicked:(id)sender;
-- (IBAction)sendClicked:(id)sender;
+- (void)showCrashUI:(const std::string&)dumpfile
+    queryParameters:(const StringTable&)queryParameters
+            sendURL:(const std::string&)sendURL;
+- (void)showErrorUI:(const std::string&)dumpfile;
+- (void)showReportInfo;
 
-- (void)setView:(NSWindow *)w newView: (NSView *)v animate: (BOOL) animate;
-- (void)setupPost;
+- (IBAction)viewReportClicked:(id)sender;
+- (IBAction)closeClicked:(id)sender;
+- (IBAction)closeAndSendClicked:(id)sender;
+- (IBAction)restartClicked:(id)sender;
+- (IBAction)emailMeClicked:(id)sender;
+
+- (void)controlTextDidChange:(NSNotification *)note;
+
+- (float)setStringFitVertically:(NSControl*)control
+                         string:(NSString*)str
+                   resizeWindow:(BOOL)resizeWindow;
+- (void)setView:(NSView*)v animate: (BOOL) animate;
+- (void)updateEmail;
+- (void)sendReport;
+- (bool)setupPost;
 - (void)uploadThread:(id)post;
-- (void)uploadComplete:(id)error;
+- (void)uploadComplete:(id)data;
 
 @end
 

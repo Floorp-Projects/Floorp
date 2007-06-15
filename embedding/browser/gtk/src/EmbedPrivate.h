@@ -54,7 +54,7 @@
 // object.
 #include "nsIWebBrowserChrome.h"
 #include "nsIAppShell.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsPIDOMEventTarget.h"
 #include "nsVoidArray.h"
 
 // app component registration
@@ -143,13 +143,6 @@ class EmbedPrivate {
   // visibility is set.
   void        ContentFinishedLoading(void);
 
-#ifdef MOZ_WIDGET_GTK
-  // these let the widget code know when the toplevel window gets and
-  // looses focus.
-  void        TopLevelFocusIn (void);
-  void        TopLevelFocusOut(void);
-#endif
-
   // these are when the widget itself gets focus in and focus out
   // events
   void        ChildFocusIn (void);
@@ -197,8 +190,7 @@ class EmbedPrivate {
   nsCOMPtr<nsIWebNavigation>     mNavigation;
   nsCOMPtr<nsISHistory>          mSessionHistory;
 
-  // our event receiver
-  nsCOMPtr<nsIDOMEventReceiver>  mEventReceiver;
+  nsCOMPtr<nsPIDOMEventTarget>   mEventTarget;
 
   // the currently loaded uri
   nsString                       mURI;

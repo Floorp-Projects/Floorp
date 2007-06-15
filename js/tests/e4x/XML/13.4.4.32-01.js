@@ -38,9 +38,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.4.32-01.js';
+
 START("13.4.4.32-1 - XML replace() by index, text to string");
 
-BUG(291927);
+printBugNumber(291927);
 
 var root = <root>text</root>;
 

@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.9.5.23-16.js';
+
 /**
    File Name:          15.9.5.23-1.js
    ECMA Section:       15.9.5.23 Date.prototype.setTime(time)

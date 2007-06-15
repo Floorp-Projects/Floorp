@@ -17,6 +17,8 @@
   <!ENTITY mnInspectChromeDocument.accesskey "a">
   <!ENTITY cmdShowOpenURLDialog.label "Zbadaj URL...">
   <!ENTITY cmdShowOpenURLDialog.accesskey "u">
+  <!ENTITY cmdSave.label "Zapisz DOM jako...">
+  <!ENTITY cmdSave.accesskey "s">  
   <!ENTITY cmdClose.label "Zamknij">
   <!ENTITY cmdClose.accesskey "Z">
   <!ENTITY cmdExit.label "Zakończ">
@@ -61,4 +63,5 @@
 
 <!ENTITY inspectNewWindow.label "Zbadaj w nowym oknie">
 
+<!ENTITY saveCmd.key "S">
 <!ENTITY closeCmd.key "W">

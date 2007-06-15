@@ -115,16 +115,16 @@ function updateCounts(suiteName)
   var pct = parseInt((suite.selected / suite.count) * 100);
   if (isNaN(pct))
     pct = 0;
-        
-  document.forms.testCases.elements['SUMMARY_' + suiteName].value = 
+       
+  document.forms.testCases.elements['SUMMARY_' + suiteName].value =
     suite.selected + '/' + suite.count +
     ' (' + pct + '%) selected';
 
   pct = parseInt((gTotalSelected / gTotalCount) * 100);
   if (isNaN(pct))
     pct = 0;
-        
-  document.forms.testCases.elements['TOTAL'].value = 
+       
+  document.forms.testCases.elements['TOTAL'].value =
     gTotalSelected + '/' + gTotalCount + ' (' +
     pct + '%) selected';
 }
@@ -142,7 +142,7 @@ function onRadioClick(radio)
 
   return true;
 }
-    
+   
 function updateTotals()
 {
   setCursor('wait');
@@ -197,7 +197,7 @@ function setAllTests(suiteName, testDirName, value)
     }
     radio.checked = value;
   }
- 
+
   suite.selected += incr;
   gTotalSelected += incr;
 
@@ -213,12 +213,12 @@ function createList()
 
   win.document.open();
   writer.writeln('<pre>');
-    
+   
   writer.writeln('# Created ' + new Date());
 
   for (suiteName in suites)
   {
-    writer.writeln('# ' + suiteName + ': ' + 
+    writer.writeln('# ' + suiteName + ': ' +
                    elements['SUMMARY_' + suiteName].value);
   }
 
@@ -230,8 +230,8 @@ function createList()
     for (var testDirName in testDirs)
     {
       var tests = testDirs[testDirName].tests;
-      for (var testName in tests) 
-      {  
+      for (var testName in tests)
+      { 
         var radioName = tests[testName].id;
         var radio     = elements[radioName];
         if (radio.checked)
@@ -240,7 +240,7 @@ function createList()
     }
   }
   writer.writeln('<\/pre>');
-    
+   
   writer.close();
 }
 
@@ -262,7 +262,7 @@ function executeList()
     {
       var tests = testDirs[testDirName].tests;
       for (var testName in tests)
-      {  
+      { 
         var test      = tests[testName];
         var radioName = test.id;
         var radio     = elements[radioName];
@@ -292,10 +292,10 @@ function runNextTest()
     {
       var test  = gTests[gTestNumber];
       test.testCases = [];
-      //test.testCases = test.testCases.concat(gWindow.testcases);
+      //test.testCases = test.testCases.concat(gWindow.gTestcases);
       // note MSIE6 has a bug where instead of concating the new arrays
       // it concats them to the first element. work around...
-      var origtestcases = gWindow.testcases;
+      var origtestcases = gWindow.gTestcases;
       for (iTestCase = 0; iTestCase < origtestcases.length; iTestCase++)
       {
 //        test.testCases[test.testCases.length] = origtestcases[iTestCase];
@@ -324,16 +324,16 @@ function runNextTest()
     // run test
     test      = gTests[gTestNumber];
 
-    gWindow = window.open('js-test-driver-' + 
-                          document.forms.testCases.doctype.value + 
-                          '.html?test=' + 
-                          test.path + 
-                          ';language=' + 
-                          document.forms.testCases.language.value, 
+    gWindow = window.open('js-test-driver-' +
+                          document.forms.testCases.doctype.value +
+                          '.html?test=' +
+                          test.path +
+                          ';language=' +
+                          document.forms.testCases.language.value,
                           'output');
     if (!gWindow)
     {
-      alert('This test suite requires popup windows.\n' + 
+      alert('This test suite requires popup windows.\n' +
             'Please enable them for this site.');
     }
   }
@@ -362,14 +362,14 @@ function reportHTML()
   var writer = new CachedWriter(gWindow.document);
 
   writer.writeln('<!DOCTYPE HTML PUBLIC ' +
-                 '"-//W3C//DTD HTML 4.01 Transitional//EN" ' + 
+                 '"-//W3C//DTD HTML 4.01 Transitional//EN" ' +
                  '"http://www.w3.org/TR/html4/loose.dtd">');
 
   writer.writeln('<html>');
   writer.writeln('<head>');
-  writer.writeln('<title>JavaScript Tests Browser: ' + 
-                 navigator.userAgent + ' Language: ' + 
-                 document.forms.testCases.language.value + 
+  writer.writeln('<title>JavaScript Tests Browser: ' +
+                 navigator.userAgent + ' Language: ' +
+                 document.forms.testCases.language.value +
                  '<\/title>');
   writer.writeln('<style type="text/css">');
   writer.writeln(' .passed { } .failed { background-color: red; }');
@@ -379,9 +379,9 @@ function reportHTML()
 
   writer.writeln('<\/head>');
   writer.writeln('<body>');
-  writer.writeln('<h2>JavaScript Tests Browser: ' + 
-                 navigator.userAgent + ' Language: ' + 
-                 document.forms.testCases.language.value + 
+  writer.writeln('<h2>JavaScript Tests Browser: ' +
+                 navigator.userAgent + ' Language: ' +
+                 document.forms.testCases.language.value +
                  '<\/h2>');
 
   writer.writeln('<table border="1">');
@@ -449,25 +449,25 @@ function reportHTML()
             continue;
           }
 
-          writer.writeln('<tr class="' + 
+          writer.writeln('<tr class="' +
                          (testCase.passed ? 'passed' : 'failed') + '">' +
                          '<td title="Suite">' + suiteName + '<\/td>' +
                          '<td title="Directory">' + testDirName   + '<\/td>' +
                          '<td title="Test">' + testName + '<\/td>' +
-                         '<td title="Status">' + 
-                         (testCase.passed ? 'Test Passed':'Test Failed') + 
+                         '<td title="Status">' +
+                         (testCase.passed ? 'Test Passed':'Test Failed') +
                          '<\/td>' +
-                         '<td title="Description">' + 
-                         splitString(testCase.description, '<br>', 30) + 
+                         '<td title="Description">' +
+                         splitString(testCase.description, '<br>', 30) +
                          '<\/td>' +
-                         '<td title="Actual">' + 
-                         splitString(testCase.actual, '<br>', 30) + 
+                         '<td title="Actual">' +
+                         splitString(testCase.actual, '<br>', 30) +
                          '<\/td>' +
-                         '<td title="Expected">' + 
-                         splitString(testCase.expect, '<br>', 30) + 
+                         '<td title="Expected">' +
+                         splitString(testCase.expect, '<br>', 30) +
                          '<\/td>' +
-                         '<td title="Bug">' + 
-                         (testCase.bugnumber?testCase.bugnumber:'') + 
+                         '<td title="Bug">' +
+                         (testCase.bugnumber?testCase.bugnumber:'') +
                          '<\/td>' +
                          '<td title="Reason">' + testCase.reason + '<\/td>' +
                          '<\/tr>');
@@ -478,7 +478,7 @@ function reportHTML()
           writer.writeln('<tr>' +
                          '<td>' + suiteName + '<\/td>' +
                          '<td>' + testDirName   + '<\/td>' +
-                         '<td colspan="7" style="font-weight:bold;">' + 
+                         '<td colspan="7" style="font-weight:bold;">' +
                          testName + ' ' +
                          'Passed = ' + nameTotals.passed.toString() + ' ' +
                          'Failed = ' + nameTotals.failed.toString() +
@@ -492,7 +492,7 @@ function reportHTML()
       {
         writer.writeln('<tr>' +
                        '<td>' + suiteName + '<\/td>' +
-                       '<td colspan="8" style="font-weight:bold;">' + 
+                       '<td colspan="8" style="font-weight:bold;">' +
                        testDirName  + ' ' +
                        'Passed = ' + dirTotals.passed.toString() + ' ' +
                        'Failed = ' + dirTotals.failed.toString() +
@@ -505,7 +505,7 @@ function reportHTML()
     if (!errorsOnly && suiteTotals.passed + suiteTotals.failed > 0)
     {
       writer.writeln('<tr>' +
-                     '<td colspan="9" style="font-weight:bold;">' + 
+                     '<td colspan="9" style="font-weight:bold;">' +
                      suiteName + ' ' +
                      'Passed = ' + suiteTotals.passed.toString() + ' ' +
                      'Failed = ' + suiteTotals.failed.toString() +
@@ -517,10 +517,10 @@ function reportHTML()
 
   writer.writeln('<\/tbody>');
   writer.writeln('<\/table>');
-    
-  writer.writeln('<p>Total TestCases = ' + totalTestCases + 
-                 ', Passed = ' + totalTestCasesPassed + 
-                 ', Failed = ' + totalTestCasesFailed + 
+   
+  writer.writeln('<p>Total TestCases = ' + totalTestCases +
+                 ', Passed = ' + totalTestCasesPassed +
+                 ', Failed = ' + totalTestCasesFailed +
                  '<\/p>');
   writer.writeln('<\/body>');
   writer.writeln('<\/html>');
@@ -554,9 +554,9 @@ function reportJavaScript()
 
   writer.writeln('<html>');
   writer.writeln('<head>');
-  writer.writeln('<title>JavaScript Tests Browser: ' + 
-                 navigator.userAgent + ' Language: ' + 
-                 document.forms.testCases.language.value + 
+  writer.writeln('<title>JavaScript Tests Browser: ' +
+                 navigator.userAgent + ' Language: ' +
+                 document.forms.testCases.language.value +
                  '<\/title>');
   writer.writeln('<script type="text/javascript">');
   writer.writeln('var global = window.parent;');
@@ -668,7 +668,7 @@ function reportJavaScript()
           var actual = escape(testCase.actual);
           var expect = escape(testCase.expect);
           var reason = escape(testCase.reason);
-          
+         
           var buffer = '';
 
           buffer += 'gTest[gTest.length] = \n';
@@ -679,7 +679,7 @@ function reportJavaScript()
           buffer += 'actual: "' + actual + '",\n';
           buffer += 'passed: ' + testCase.passed + ',\n';
           buffer += 'reason: "' + reason + '",\n';
-          buffer += 'bugnumber: "' + (testCase.bugnumber ? 
+          buffer += 'bugnumber: "' + (testCase.bugnumber ?
                                       testCase.bugnumber : '') + '"\n';
           buffer += '};\n';
 
@@ -687,7 +687,7 @@ function reportJavaScript()
           buffer = '';
 
         } // for iTestCase
- 
+
       }  // for testName
 
     } // for testDirName
@@ -697,15 +697,15 @@ function reportJavaScript()
   writer.writeln('<\/script>');
   writer.writeln('<\/head>');
   writer.writeln('<body>');
-  writer.writeln('<p>JavaScript Tests Browser: ' + 
-                 navigator.userAgent + ' Language: ' + 
-                 document.forms.testCases.language.value + 
+  writer.writeln('<p>JavaScript Tests Browser: ' +
+                 navigator.userAgent + ' Language: ' +
+                 document.forms.testCases.language.value +
                  '<\/p>');
   writer.writeln('<\/body>')
-  writer.writeln('<\/html>');
+    writer.writeln('<\/html>');
   writer.close();
 }
-   
+  
 // improve IE's performance. Mozilla's is fine. ;-)
 function CachedWriter(doc, limit)
 {
@@ -723,7 +723,7 @@ CachedWriter.prototype.destroy = function _cachedWriterDestroy()
   this.lines        = null;
 }
 
-CachedWriter.prototype.writeln = function _cachedWriterWriteLine(s)
+  CachedWriter.prototype.writeln = function _cachedWriterWriteLine(s)
 {
   this.lines[this.lines.length] = s;
   if (++this.pendingCount >= this.pendingLimit)
@@ -753,7 +753,7 @@ CachedWriter.prototype.flush = function _cachedWriterFlush()
   this.document.writeln(s);
 }
 
-CachedWriter.prototype.close = function _cachedWriterClose()
+  CachedWriter.prototype.close = function _cachedWriterClose()
 {
   this.flush();
   this.document.close();

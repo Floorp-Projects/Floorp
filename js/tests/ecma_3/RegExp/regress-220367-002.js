@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    26 September 2003
  * SUMMARY: Regexp conformance test
@@ -43,8 +45,9 @@
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-220367-002.js';
 var UBound = 0;
-var bug = 220367;
+var BUGNUMBER = 220367;
 var summary = 'Regexp conformance test';
 var status = '';
 var statusitems = [];
@@ -56,26 +59,26 @@ var expectedvalues = [];
 var re = /(a)|(b)/;
 
 re.test('a');
-  status = inSection(1);
-  actual = RegExp.$1;
-  expect = 'a';
-  addThis();
+status = inSection(1);
+actual = RegExp.$1;
+expect = 'a';
+addThis();
 
-  status = inSection(2);
-  actual = RegExp.$2;
-  expect = '';
-  addThis();
+status = inSection(2);
+actual = RegExp.$2;
+expect = '';
+addThis();
 
 re.test('b');
-  status = inSection(3);
-  actual = RegExp.$1;
-  expect = '';
-  addThis();
+status = inSection(3);
+actual = RegExp.$1;
+expect = '';
+addThis();
 
-  status = inSection(4);
-  actual = RegExp.$2;
-  expect = 'b';
-  addThis();
+status = inSection(4);
+actual = RegExp.$2;
+expect = 'b';
+addThis();
 
 
 
@@ -97,7 +100,7 @@ function addThis()
 function test()
 {
   enterFunc('test');
-  printBugNumber(bug);
+  printBugNumber(BUGNUMBER);
   printStatus(summary);
 
   for (var i=0; i<UBound; i++)

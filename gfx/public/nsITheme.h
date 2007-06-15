@@ -151,6 +151,11 @@ public:
   virtual PRBool ThemeDrawsFocusForWidget(nsPresContext* aPresContext,
                                           nsIFrame* aFrame,
                                           PRUint8 aWidgetType)=0;
+  
+  /**
+    * Should we insert a dropmarker inside of combobox button?
+   */
+  virtual PRBool ThemeNeedsComboboxDropmarker()=0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITheme, NS_ITHEME_IID)

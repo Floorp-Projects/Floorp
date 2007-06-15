@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.8.2.11.js';
+
 /**
    File Name:          15.8.2.11.js
    ECMA Section:       15.8.2.11 Math.max(x, y)
@@ -122,7 +124,7 @@ new TestCase( SECTION,
 	      Math.max(Number.NaN,1) );
 
 new TestCase( SECTION,
-	      "Math.max('a string',Infinity)", 
+	      "Math.max('a string',Infinity)",
 	      Number.NaN,
 	      Math.max("a string", Number.POSITIVE_INFINITY) );
 

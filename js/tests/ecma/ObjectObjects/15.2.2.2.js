@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.2.2.2.js';
+
 /**
    File Name:          15.2.2.2.js
    ECMA Section:       15.2.2.2 new Object()

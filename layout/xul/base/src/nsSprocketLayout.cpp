@@ -452,6 +452,8 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       {
         childComputedBoxSize = childComputedBoxSize->next;
         childBoxSize = childBoxSize->next;
+        if (child)
+          child = child->GetNextBox();
         count++;
         x = nextX;
         y = nextY;
@@ -476,7 +478,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
         layout = PR_FALSE;
       } else {
         // Always perform layout if we are dirty or have dirty children
-        if (!(child->GetStateBits() & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)))
+        if (!NS_SUBTREE_DIRTY(child))
           layout = PR_FALSE;
       }
 
@@ -916,6 +918,8 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
 
   // we specified all our children are equal size;
   if (frameState & NS_STATE_EQUAL_SIZE) {
+    nsBox::BoundsCheck(biggestMinWidth, biggestPrefWidth, smallestMaxWidth);
+
     currentBox = aBoxSizes;
 
     while(currentBox)

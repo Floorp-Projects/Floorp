@@ -928,7 +928,8 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
       if (xpcom_obj) {
         // Get matching Java object for given xpcom object
         jobject objLoader = env->CallObjectMethod(mJavaWeakRef, getReferentMID);
-        rv = GetNewOrUsedJavaObject(env, xpcom_obj, iid, objLoader, &java_stub);
+        rv = NativeInterfaceToJavaObject(env, xpcom_obj, iid, objLoader,
+                                         &java_stub);
         if (NS_FAILED(rv))
           break;
       }
@@ -1477,7 +1478,7 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
         java_obj = env->GetObjectArrayElement((jobjectArray) aJValue.l, 0);
       }
 
-      nsISupports* xpcom_obj = nsnull;
+      void* xpcom_obj = nsnull;
       if (java_obj) {
         // Get IID for this param
         nsID iid;
@@ -1498,21 +1499,25 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
           isWeakRef = PR_FALSE;
         }
 
-        rv = GetNewOrUsedXPCOMObject(env, java_obj, iid, &xpcom_obj);
+        rv = JavaObjectToNativeInterface(env, java_obj, iid, &xpcom_obj);
+        if (NS_FAILED(rv))
+          break;
+        rv = ((nsISupports*) xpcom_obj)->QueryInterface(iid, &xpcom_obj);
         if (NS_FAILED(rv))
           break;
 
         // If the function expects a weak reference, then we need to
         // create it here.
         if (isWeakRef) {
+          nsISupports* isupports = (nsISupports*) xpcom_obj;
           nsCOMPtr<nsISupportsWeakReference> supportsweak =
-                                                 do_QueryInterface(xpcom_obj);
+                  do_QueryInterface(isupports);
           if (supportsweak) {
             nsWeakPtr weakref;
             supportsweak->GetWeakReference(getter_AddRefs(weakref));
-            NS_RELEASE(xpcom_obj);
+            NS_RELEASE(isupports);
             xpcom_obj = weakref;
-            NS_ADDREF(xpcom_obj);
+            NS_ADDREF((nsISupports*) xpcom_obj);
           } else {
             xpcom_obj = nsnull;
           }
@@ -1524,13 +1529,13 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
       nsISupports** variant = NS_STATIC_CAST(nsISupports**, aVariant.val.p);
       if (aParamInfo.IsIn() && *variant) {
         nsCOMPtr<nsISupports> in = do_QueryInterface(*variant);
-        nsCOMPtr<nsISupports> out = do_QueryInterface(xpcom_obj);
+        nsCOMPtr<nsISupports> out = do_QueryInterface((nsISupports*) xpcom_obj);
         if (in != out) {
           NS_RELEASE(*variant);
         }
       }
 
-      *variant = xpcom_obj;
+      *(NS_STATIC_CAST(void**, aVariant.val.p)) = xpcom_obj;
     }
     break;
 
@@ -1655,4 +1660,54 @@ nsJavaXPTCStub::GetJavaObject()
 #endif
 
   return javaObject;
+}
+
+
+/*static*/ nsresult
+nsJavaXPTCStub::GetNewOrUsed(JNIEnv* env, jobject aJavaObject,
+                             const nsIID& aIID, void** aResult)
+{
+  nsJavaXPTCStub* stub;
+  jint hash = env->CallStaticIntMethod(systemClass, hashCodeMID, aJavaObject);
+  nsresult rv = gJavaToXPTCStubMap->Find(hash, aIID, &stub);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (stub) {
+    // stub is already AddRef'd and QI'd
+    *aResult = stub;
+    return NS_OK;
+  }
+
+  // If there is no corresponding XPCOM object, then that means that the
+  // parameter is a non-generated class (that is, it is not one of our
+  // Java stubs that represent an exising XPCOM object).  So we need to
+  // create an XPCOM stub, that can route any method calls to the class.
+
+  // Get interface info for class
+  nsCOMPtr<nsIInterfaceInfoManager>
+    iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIInterfaceInfo> iinfo;
+  rv = iim->GetInfoForIID(&aIID, getter_AddRefs(iinfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Create XPCOM stub
+  stub = new nsJavaXPTCStub(aJavaObject, iinfo, &rv);
+  if (!stub)
+    return NS_ERROR_OUT_OF_MEMORY;
+  if (NS_FAILED(rv)) {
+    delete stub;
+    return rv;
+  }
+
+  rv = gJavaToXPTCStubMap->Add(hash, stub);
+  if (NS_FAILED(rv)) {
+    delete stub;
+    return rv;
+  }
+
+  NS_ADDREF(stub);
+  *aResult = stub;
+
+  return NS_OK;
 }

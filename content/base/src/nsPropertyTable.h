@@ -233,6 +233,13 @@ class nsPropertyTable
   NS_HIDDEN_(void) DeleteAllPropertiesFor(nsPropertyOwner aObject);
 
   /**
+   * Deletes all of the properties in category |aCategory| for object |aObject|,
+   * calling the destructor function for each property.
+   */
+  NS_HIDDEN_(void) DeleteAllPropertiesFor(nsPropertyOwner aObject,
+                                          PRUint16 aCategory);
+
+  /**
    * Transfers all properties for object |aObject| that were set with the
    * |aTransfer| argument as PR_TRUE to |aTable|. Deletes the other properties
    * for object |aObject|, calling the destructor function for each property.

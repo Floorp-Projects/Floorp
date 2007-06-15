@@ -1,0 +1,6 @@
+product=js
+branch=1.9.0
+sourcepath=/work/mozilla/builds/1.9.0/mozilla/js/src
+buildtype=debug
+
+

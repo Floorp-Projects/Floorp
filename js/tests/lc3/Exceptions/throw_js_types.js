@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'throw_js_types.js';
+
 /**
    File Name:          throw_js_type.js
    Title:              Throw JS types as exceptions through Java
@@ -64,12 +67,12 @@ var data_type = "no type";
  * JS String
  *************************/
 try {
-    exception = Packages.com.netscape.javascript.qa.liveconnect.JSObjectEval.eval(this, "throw 'foo';");
+  exception = Packages.com.netscape.javascript.qa.liveconnect.JSObjectEval.eval(this, "throw 'foo';");
 } catch ( e ) {
-    exception = e.toString();
-    data_type = typeof e;
-    if (exception == "foo")
-	result = "Passed!";
+  exception = e.toString();
+  data_type = typeof e;
+  if (exception == "foo")
+    result = "Passed!";
 }
 
 new TestCase("Throwing JS string through Java "+
@@ -85,12 +88,12 @@ result = "Failed";
 data_type = "no type";
 
 try {
-    exception = Packages.com.netscape.javascript.qa.liveconnect.JSObjectEval.eval(this, "throw 42;");
+  exception = Packages.com.netscape.javascript.qa.liveconnect.JSObjectEval.eval(this, "throw 42;");
 } catch ( e ) {
-    exception = e.toString();
-    data_type = typeof e;
-    if (exception == "42")
-	result = "Passed!";
+  exception = e.toString();
+  data_type = typeof e;
+  if (exception == "42")
+    result = "Passed!";
 }
 
 new TestCase("Throwing JS number (int) through Java "+
@@ -106,12 +109,12 @@ result = "Failed";
 data_type = "no type";
 
 try {
-    exception = Packages.com.netscape.javascript.qa.liveconnect.JSObjectEval.eval(this, "throw 4.2;");
+  exception = Packages.com.netscape.javascript.qa.liveconnect.JSObjectEval.eval(this, "throw 4.2;");
 } catch ( e ) {
-    exception = e.toString();
-    data_type = typeof e;
-    if (exception == "4.2")
-	result = "Passed!";
+  exception = e.toString();
+  data_type = typeof e;
+  if (exception == "4.2")
+    result = "Passed!";
 }
 
 new TestCase("Throwing JS number (float) through Java "+
@@ -127,12 +130,12 @@ result = "Failed";
 data_type = "no type";
 
 try {
-    exception = Packages.com.netscape.javascript.qa.liveconnect.JSObjectEval.eval(this, "throw false;");
+  exception = Packages.com.netscape.javascript.qa.liveconnect.JSObjectEval.eval(this, "throw false;");
 } catch ( e ) {
-    exception = e.toString();
-    data_type = typeof e;
-    if (exception == "false")
-	result = "Passed!";
+  exception = e.toString();
+  data_type = typeof e;
+  if (exception == "false")
+    result = "Passed!";
 }
 
 new TestCase("Throwing JS boolean through Java "+
@@ -148,11 +151,11 @@ result = "Failed";
 data_type = "no type";
 
 try {
-    exception = Packages.com.netscape.javascript.qa.liveconnect.JSObjectEval.eval(this, "throw {a:5};");
+  exception = Packages.com.netscape.javascript.qa.liveconnect.JSObjectEval.eval(this, "throw {a:5};");
 } catch ( e ) {
-    exception = e.toString();
-    data_type = typeof e;
-    result = "Passed!";
+  exception = e.toString();
+  data_type = typeof e;
+  result = "Passed!";
 }
 
 new TestCase("Throwing JS Object through Java "+
@@ -168,11 +171,11 @@ result = "Failed";
 data_type = "no type";
 
 try {
-    exception = Packages.com.netscape.javascript.qa.liveconnect.JSObjectEval.eval(this, "throw new Date();");
+  exception = Packages.com.netscape.javascript.qa.liveconnect.JSObjectEval.eval(this, "throw new Date();");
 } catch ( e ) {
-    exception = e.toString();
-    data_type = typeof e;
-    result = "Passed!";
+  exception = e.toString();
+  data_type = typeof e;
+  result = "Passed!";
 }
 
 new TestCase("Throwing JS Object (Date)through Java "+
@@ -188,11 +191,11 @@ result = "Failed";
 data_type = "no type";
 
 try {
-    exception = Packages.com.netscape.javascript.qa.liveconnect.JSObjectEval.eval(this, "throw new String();");
+  exception = Packages.com.netscape.javascript.qa.liveconnect.JSObjectEval.eval(this, "throw new String();");
 } catch ( e ) {
-    exception = e.toString();
-    data_type = typeof e;
-    result = "Passed!";
+  exception = e.toString();
+  data_type = typeof e;
+  result = "Passed!";
 }
 
 new TestCase("Throwing JS Object (String) through Java "+
@@ -208,11 +211,11 @@ result = "Failed";
 data_type = "no type";
 
 try {
-    exception = Packages.com.netscape.javascript.qa.liveconnect.JSObjectEval.eval(this, "throw undefined");
+  exception = Packages.com.netscape.javascript.qa.liveconnect.JSObjectEval.eval(this, "throw undefined");
 } catch ( e ) {
-    exception = "Exception";
-    data_type = typeof e;
-    result = "Passed!";
+  exception = "Exception";
+  data_type = typeof e;
+  result = "Passed!";
 }
 
 new TestCase("Throwing undefined through Java "+
@@ -228,11 +231,11 @@ result = "Failed";
 data_type = "no type";
 
 try {
-    exception = Packages.com.netscape.javascript.qa.liveconnect.JSObjectEval.eval(this, "throw null;");
+  exception = Packages.com.netscape.javascript.qa.liveconnect.JSObjectEval.eval(this, "throw null;");
 } catch ( e ) {
-    exception = "Exception";
-    data_type = typeof e;
-    result = "Passed!";
+  exception = "Exception";
+  data_type = typeof e;
+  result = "Passed!";
 }
 
 new TestCase("Throwing null through Java "+

@@ -1397,6 +1397,31 @@ public:
   }
 };
 
+// TextRectangleList helper
+
+class nsTextRectangleListSH : public nsArraySH
+{
+protected:
+  nsTextRectangleListSH(nsDOMClassInfoData* aData) : nsArraySH(aData)
+  {
+  }
+
+  virtual ~nsTextRectangleListSH()
+  {
+  }
+
+  // Override nsArraySH::GetItemAt() since our list isn't a
+  // nsIDOMNodeList
+  virtual nsresult GetItemAt(nsISupports *aNative, PRUint32 aIndex,
+                             nsISupports **aResult);
+
+public:
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsTextRectangleListSH(aData);
+  }
+};
+
 
 #ifdef MOZ_XUL
 // TreeColumns helper
@@ -1519,11 +1544,11 @@ protected:
   {
   }
 
-  virtual ~nsDOMConstructorSH()
-  {
-  }
-
 public:
+  NS_IMETHOD Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                  JSObject *obj, PRUint32 argc, jsval *argv, jsval *vp,
+                  PRBool *_retval);
+
   NS_IMETHOD Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject *obj, PRUint32 argc, jsval *argv,
                        jsval *vp, PRBool *_retval);
@@ -1578,6 +1603,29 @@ public:
     return new nsAttributeSH(aData);
   }
 };
+
+class nsOfflineResourceListSH : public nsStringArraySH
+{
+protected:
+  nsOfflineResourceListSH(nsDOMClassInfoData* aData) : nsStringArraySH(aData)
+  {
+  }
+
+  virtual ~nsOfflineResourceListSH()
+  {
+  }
+
+  virtual nsresult GetStringAt(nsISupports *aNative, PRInt32 aIndex,
+                               nsAString& aResult);
+
+public:
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsOfflineResourceListSH(aData);
+  }
+};
+
+
 
 void InvalidateContextAndWrapperCache();
 

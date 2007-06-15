@@ -63,7 +63,7 @@ interface nsIIdleService : nsISupports
      * time, and when they get back from that.
      *
      * @param observer the observer to be notified
-     * @param time the amount of time in minutes the user should idle before
+     * @param time the amount of time in seconds the user should be idle before
      *             the observer should be notified.
      *
      * @note

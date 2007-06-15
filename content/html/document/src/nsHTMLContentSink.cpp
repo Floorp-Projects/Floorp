@@ -52,15 +52,11 @@
 #include "nsScriptLoader.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
-#include "nsIPresShell.h"
-#include "nsIViewManager.h"
-#include "nsIWidget.h"
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsINodeInfo.h"
 #include "nsHTMLTokens.h"
 #include "nsIAppShell.h"
-#include "nsWidgetsCID.h"
 #include "nsCRT.h"
 #include "prtime.h"
 #include "prlog.h"
@@ -89,7 +85,6 @@
 
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
-#include "nsIFrame.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsIDocShell.h"
@@ -1346,8 +1341,10 @@ nsresult
 SinkContext::FlushTags()
 {
   PRBool oldBeganUpdate = mSink->mBeganUpdate;
+  PRUint32 oldUpdates = mSink->mUpdatesInNotification;
 
   ++(mSink->mInNotification);
+  mSink->mUpdatesInNotification = 0;
   {
     // Scope so we call EndUpdate before we decrease mInNotification
     mozAutoDocUpdate updateBatch(mSink->mDocument, UPDATE_CONTENT_MODEL,
@@ -1406,6 +1403,11 @@ SinkContext::FlushTags()
   }
   --(mSink->mInNotification);
 
+  if (mSink->mUpdatesInNotification > 1) {
+    UpdateChildCounts();
+  }
+
+  mSink->mUpdatesInNotification = oldUpdates;
   mSink->mBeganUpdate = oldBeganUpdate;
 
   return NS_OK;
@@ -1850,10 +1852,7 @@ HTMLContentSink::DidBuildModel(void)
 
   ScrollToRef();
 
-  nsScriptLoader *loader = mDocument->GetScriptLoader();
-  if (loader) {
-    loader->RemoveObserver(this);
-  }
+  mDocument->ScriptLoader()->RemoveObserver(this);
 
   // Make sure we no longer respond to document mutations.  We've flushed all
   // our notifications out, so there's no need to do anything else here.
@@ -1872,6 +1871,7 @@ HTMLContentSink::DidBuildModel(void)
 NS_IMETHODIMP
 HTMLContentSink::SetParser(nsIParser* aParser)
 {
+  NS_PRECONDITION(aParser, "Should have a parser here!");
   mParser = aParser;
   return NS_OK;
 }
@@ -3011,7 +3011,9 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
           nsAutoString hrefVal;
           element->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
           if (!hrefVal.IsEmpty()) {
-            PrefetchHref(hrefVal, PR_TRUE, PR_TRUE);
+            AddOfflineResource(hrefVal);
+            if (mSaveOfflineResources)
+              PrefetchHref(hrefVal, PR_TRUE, PR_TRUE);
           }
         }
       }

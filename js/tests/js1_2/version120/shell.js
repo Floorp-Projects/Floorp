@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,5 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* all files in this dir need version(120) called before they are *loaded* */
+
+gTestsubsuite = 'version120';
 
 version(120);

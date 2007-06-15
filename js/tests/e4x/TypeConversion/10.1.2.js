@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '10.1.2.js';
+
 START("10.1.2 - XMLList.toString");
 
 var n = 0;
@@ -48,9 +50,9 @@ var actual;
 var xmllist;
 var xml;
 
-// Example from ECMA 357 10.1.1 
+// Example from ECMA 357 10.1.1
 
-var order = 
+var order =
 <order>
     <customer>
         <firstname>John</firstname>
@@ -129,7 +131,7 @@ for (var pp = 0; pp < truefalse.length; pp++)
     for (var pi = 0; pi < indents.length; pi++)
     {
         XML.prettyIndent = indents[pi];
-   
+  
         xmllist = new XMLList(order);
         expect = order.toXMLString();
         actual = order.toString();

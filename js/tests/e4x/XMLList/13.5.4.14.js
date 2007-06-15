@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.5.4.14.js';
+
 START("13.5.4.14 - XMLList length()");
 
 TEST(1, true, XMLList.prototype.hasOwnProperty("length"));
@@ -60,7 +62,7 @@ emps =
     <employee>
         <name>Sue</name>
     </employee>
-</employees>    
+</employees>   
 
 correct =
 <employees>
@@ -71,7 +73,7 @@ correct =
     <employee>
         <name>Sue</name>
     </employee>
-</employees>    
+</employees>   
 
 TEST(3,2,emps..name.length());
 

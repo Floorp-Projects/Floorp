@@ -34,18 +34,19 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-308566.js';
 //-----------------------------------------------------------------------------
-var bug = 308556;
+var BUGNUMBER = 308556;
 var summary = 'Do not treat octal sequence as regexp backrefs in strict mode';
 var actual = 'No error';
 var expect = 'No error';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
-  
-var jsOptions = new JavaScriptOptions();
-jsOptions.setOption('strict', true);
-jsOptions.setOption('werror', true);
+ 
+options('strict');
+options('werror');
 
 try
 {
@@ -55,7 +56,5 @@ catch(e)
 {
   actual = e + '';
 }
-
-jsOptions.reset();
 
 reportCompare(expect, actual, summary);

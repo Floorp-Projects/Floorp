@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Ted Mielczarek <ted.mielczarek@gmail.com>
+ *   Dave Camp <dcamp@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,561 +41,738 @@
 #undef WIN32_LEAN_AND_MEAN
 #endif
 
+#include "crashreporter.h"
+
 #include <windows.h>
 #include <commctrl.h>
 #include <richedit.h>
 #include <shellapi.h>
 #include <shlobj.h>
 #include <shlwapi.h>
+#include <set>
 #include "resource.h"
 #include "client/windows/sender/crash_report_sender.h"
 #include "common/windows/string_utils-inl.h"
-#include <fstream>
 
-#define CRASH_REPORTER_KEY L"Software\\Mozilla\\Crash Reporter"
 #define CRASH_REPORTER_VALUE L"Enabled"
+#define SUBMIT_REPORT_VALUE  L"SubmitReport"
+#define EMAIL_ME_VALUE       L"EmailMe"
+#define EMAIL_VALUE          L"Email"
+#define MAX_EMAIL_LENGTH     1024
 
 #define WM_UPLOADCOMPLETE WM_APP
 
 using std::string;
 using std::wstring;
 using std::map;
-using std::ifstream;
-using std::ofstream;
-
-
-bool ReadConfig();
-BOOL CALLBACK EnableDialogProc(HWND hwndDlg, UINT message, WPARAM wParam,
-                               LPARAM lParam);
-BOOL CALLBACK SendDialogProc(HWND hwndDlg, UINT message, WPARAM wParam,
-                             LPARAM lParam);
-HANDLE CreateSendThread(HWND hDlg, LPCTSTR dumpFile);
-bool CheckCrashReporterEnabled(bool* enabled);
-void SetCrashReporterEnabled(bool enabled);
-bool SendCrashReport(wstring dumpFile,
-                     const map<wstring,wstring>* query_parameters,
-                     wstring* server_response);
-DWORD WINAPI SendThreadProc(LPVOID param);
+using std::vector;
+using std::set;
 
 typedef struct {
   HWND hDlg;
   wstring dumpFile;
-  const map<wstring,wstring>* query_parameters;
-  wstring* server_response;
-} SENDTHREADDATA;
+  map<wstring,wstring> queryParameters;
+  wstring sendURL;
 
-TCHAR sendURL[2048] = L"\0";
-bool  deleteDump = true;
+  wstring serverResponse;
+} SendThreadData;
 
-// Sort of a hack to get l10n
-enum {
-  ST_OK,
-  ST_CANCEL,
-  ST_CRASHREPORTERTITLE,
-  ST_CRASHREPORTERDESCRIPTION,
-  ST_RADIOENABLE,
-  ST_RADIODISABLE,
-  ST_SENDTITLE,
-  ST_SUBMITSUCCESS,
-  ST_SUBMITFAILED,
-  ST_CRASHID,
-  ST_CRASHDETAILSURL,
-  NUM_STRINGS
+static HANDLE               gThreadHandle;
+static SendThreadData       gSendData = { 0, };
+static vector<string>       gRestartArgs;
+static map<wstring,wstring> gQueryParameters;
+static wstring              gCrashReporterKey(L"Software\\Mozilla\\Crash Reporter");
+
+// When vertically resizing the dialog, these items should move down
+static set<UINT> gAttachedBottom;
+
+// Default set of items for gAttachedBottom
+static const UINT kDefaultAttachedBottom[] = {
+  IDC_VIEWREPORTCHECK,
+  IDC_VIEWREPORTTEXT,
+  IDC_SUBMITCRASHCHECK,
+  IDC_EMAILMECHECK,
+  IDC_EMAILTEXT,
+  IDC_CLOSEBUTTON,
+  IDC_RESTARTBUTTON,
 };
 
-LPCTSTR stringNames[] = {
-  L"Ok",
-  L"Cancel",
-  L"CrashReporterTitle",
-  L"CrashReporterDescription",
-  L"RadioEnable",
-  L"RadioDisable",
-  L"SendTitle",
-  L"SubmitSuccess",
-  L"SubmitFailed",
-  L"CrashID",
-  L"CrashDetailsURL"
-};
+static wstring UTF8ToWide(const string& utf8, bool *success = 0);
+static string WideToUTF8(const wstring& wide, bool *success = 0);
+static DWORD WINAPI SendThreadProc(LPVOID param);
 
-LPTSTR strings[NUM_STRINGS];
-
-const wchar_t* kExtraDataExtension = L".extra";
-
-void DoInitCommonControls()
+static wstring Str(const char* key)
 {
-	INITCOMMONCONTROLSEX ic;
-	ic.dwSize = sizeof(INITCOMMONCONTROLSEX);
-	ic.dwICC = ICC_PROGRESS_CLASS;
-	InitCommonControlsEx(&ic);
+  return UTF8ToWide(gStrings[key]);
+}
+
+/* === win32 helper functions === */
+
+static void DoInitCommonControls()
+{
+  INITCOMMONCONTROLSEX ic;
+  ic.dwSize = sizeof(INITCOMMONCONTROLSEX);
+  ic.dwICC = ICC_PROGRESS_CLASS;
+  InitCommonControlsEx(&ic);
   // also get the rich edit control
   LoadLibrary(L"riched20.dll");
 }
 
-bool LoadStrings(LPCTSTR fileName)
+static bool GetBoolValue(HKEY hRegKey, LPCTSTR valueName, DWORD* value)
 {
-  for (int i=ST_OK; i<NUM_STRINGS; i++) {
-    strings[i] = new TCHAR[1024];
-    GetPrivateProfileString(L"Strings", stringNames[i], L"", strings[i], 1024, fileName);
-    if (stringNames[i][0] == '\0')
-      return false;
-    //XXX should probably check for strings > 1024...
-  }
-  return true;
-}
-
-bool GetSettingsPath(wstring vendor, wstring product,
-                     wstring& settings_path)
-{
-  wchar_t path[MAX_PATH];
-  if(SUCCEEDED(SHGetFolderPath(NULL, 
-                               CSIDL_APPDATA,
-                               NULL, 
-                               0, 
-                               path)))  {
-    if (!vendor.empty()) {
-      PathAppend(path, vendor.c_str());
-    }
-    PathAppend(path, product.c_str());
-    PathAppend(path, L"Crash Reports");
-    // in case it doesn't exist
-    CreateDirectory(path, NULL);
-    settings_path = path;
+  DWORD type, dataSize;
+  dataSize = sizeof(DWORD);
+  if (RegQueryValueEx(hRegKey, valueName, NULL, &type, (LPBYTE)value, &dataSize) == ERROR_SUCCESS
+    && type == REG_DWORD)
     return true;
-  }
+
   return false;
 }
 
-bool EnsurePathExists(wstring base_path, wstring sub_path)
-{
-  wstring path = base_path + L"\\" + sub_path;
-  return CreateDirectory(path.c_str(), NULL) != 0;
-}
-
-bool ReadConfig()
-{
-  TCHAR fileName[MAX_PATH];
-
-  if (GetModuleFileName(NULL, fileName, MAX_PATH)) {
-    // get crashreporter ini
-    LPTSTR s = wcsrchr(fileName, '.');
-    if (s) {
-      wcscpy(s, L".ini");
-
-      GetPrivateProfileString(L"Settings", L"URL", L"", sendURL, 2048, fileName);
-
-      TCHAR tmp[16];
-      GetPrivateProfileString(L"Settings", L"Delete", L"1", tmp, 16, fileName);
-      deleteDump = _wtoi(tmp) > 0;
-
-      return LoadStrings(fileName);
-    }
-  }
-  return false;
-}
-
-BOOL CALLBACK EnableDialogProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam) 
-{ 
-  switch (message) {
-  case WM_INITDIALOG:
-    SetWindowText(hwndDlg, strings[ST_CRASHREPORTERTITLE]);
-    SetDlgItemText(hwndDlg, IDOK, strings[ST_OK]);
-    SetDlgItemText(hwndDlg, IDC_RADIOENABLE, strings[ST_RADIOENABLE]);
-    SetDlgItemText(hwndDlg, IDC_RADIODISABLE, strings[ST_RADIODISABLE]);
-    SetDlgItemText(hwndDlg, IDC_DESCRIPTIONTEXT, strings[ST_CRASHREPORTERDESCRIPTION]);
-    SendDlgItemMessage(hwndDlg, IDC_DESCRIPTIONTEXT, EM_SETTARGETDEVICE, (WPARAM)NULL, 0);
-    SetFocus(GetDlgItem(hwndDlg, IDC_RADIOENABLE));
-    CheckRadioButton(hwndDlg, IDC_RADIOENABLE, IDC_RADIODISABLE, lParam ? IDC_RADIOENABLE : IDC_RADIODISABLE);
-    return FALSE;
-
-  case WM_COMMAND:
-    if (LOWORD(wParam) == IDOK && HIWORD(wParam) == BN_CLICKED)
-      {
-        UINT enableChecked = IsDlgButtonChecked(hwndDlg, IDC_RADIOENABLE);
-        EndDialog(hwndDlg, (enableChecked > 0) ? 1 : 0);
-      }
-    return FALSE;
-
-  default: 
-    return FALSE; 
-  } 
-}
-
-bool GetRegValue(HKEY hRegKey, LPCTSTR valueName, DWORD* value)
-{
-	DWORD type, dataSize;
-	dataSize = sizeof(DWORD);
-	if (RegQueryValueEx(hRegKey, valueName, NULL, &type, (LPBYTE)value, &dataSize) == ERROR_SUCCESS
-		&& type == REG_DWORD)
-		return true;
-
-	return false;
-}
-
-bool CheckCrashReporterEnabled(bool* enabled)
+static bool CheckBoolKey(const wchar_t* key,
+                         const wchar_t* valueName,
+                         bool* enabled)
 {
   *enabled = false;
   bool found = false;
   HKEY hRegKey;
   DWORD val;
   // see if our reg key is set globally
-  if (RegOpenKey(HKEY_LOCAL_MACHINE, CRASH_REPORTER_KEY, &hRegKey) == ERROR_SUCCESS)
-    {
-      if (GetRegValue(hRegKey, CRASH_REPORTER_VALUE, &val))
-        {
-          *enabled = (val == 1);
-          found = true;
-        }
+  if (RegOpenKey(HKEY_LOCAL_MACHINE, key, &hRegKey) == ERROR_SUCCESS) {
+    if (GetBoolValue(hRegKey, valueName, &val)) {
+      *enabled = (val == 1);
+      found = true;
+    }
+    RegCloseKey(hRegKey);
+  } else {
+    // look for it in user settings
+    if (RegOpenKey(HKEY_CURRENT_USER, key, &hRegKey) == ERROR_SUCCESS) {
+      if (GetBoolValue(hRegKey, valueName, &val)) {
+        *enabled = (val == 1);
+        found = true;
+      }
       RegCloseKey(hRegKey);
     }
-  else
-    {
-      // look for it in user settings
-      if (RegOpenKey(HKEY_CURRENT_USER, CRASH_REPORTER_KEY, &hRegKey) == ERROR_SUCCESS)	
-        {
-          if (GetRegValue(hRegKey, CRASH_REPORTER_VALUE, &val))
-            {
-              *enabled = (val == 1);
-              found = true;
-            }
-          RegCloseKey(hRegKey);
-        }
-    }
+  }
 
-  // didn't find our reg key, ask user
   return found;
 }
 
-void SetCrashReporterEnabled(bool enabled)
+static void SetBoolKey(const wchar_t* key, const wchar_t* value, bool enabled)
 {
   HKEY hRegKey;
-  if (RegCreateKey(HKEY_CURRENT_USER, CRASH_REPORTER_KEY, &hRegKey) == ERROR_SUCCESS) {
+  if (RegCreateKey(HKEY_CURRENT_USER, key, &hRegKey) == ERROR_SUCCESS) {
     DWORD data = (enabled ? 1 : 0);
-    RegSetValueEx(hRegKey, CRASH_REPORTER_VALUE, 0, REG_DWORD, (LPBYTE)&data, sizeof(data));
+    RegSetValueEx(hRegKey, value, 0, REG_DWORD, (LPBYTE)&data, sizeof(data));
     RegCloseKey(hRegKey);
   }
 }
 
-BOOL CALLBACK SendDialogProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static bool GetStringValue(HKEY hRegKey, LPCTSTR valueName, wstring& value)
 {
-  static bool finishedOk = false;
-  static HANDLE hThread = NULL;
+  DWORD type, dataSize;
+  wchar_t buf[2048];
+  dataSize = sizeof(buf);
+  if (RegQueryValueEx(hRegKey, valueName, NULL, &type, (LPBYTE)buf, &dataSize) == ERROR_SUCCESS
+      && type == REG_SZ) {
+    value = buf;
+    return true;
+  }
 
-  switch (message) {
-  case WM_INITDIALOG:
-    {
-      //init strings
-      SetWindowText(hwndDlg, strings[ST_SENDTITLE]);
-      SetDlgItemText(hwndDlg, IDCANCEL, strings[ST_CANCEL]);
-      // init progressmeter
-      SendDlgItemMessage(hwndDlg, IDC_PROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, 100));
-      SendDlgItemMessage(hwndDlg, IDC_PROGRESS, PBM_SETPOS, 0, 0);
-      // now create a thread to actually do the sending
-      SENDTHREADDATA* td = (SENDTHREADDATA*)lParam;
-      td->hDlg = hwndDlg;
-      CreateThread(NULL, 0, SendThreadProc, td, 0, NULL);
-    }
-    return TRUE;
-
-  case WM_UPLOADCOMPLETE:
-    WaitForSingleObject(hThread, INFINITE);
-    finishedOk = (wParam == 1);
-    if (finishedOk) {
-      SendDlgItemMessage(hwndDlg, IDC_PROGRESS, PBM_SETPOS, 100, 0);
-      MessageBox(hwndDlg, strings[ST_SUBMITSUCCESS], strings[ST_CRASHREPORTERTITLE], MB_OK | MB_ICONINFORMATION);
-    }
-    else {
-      MessageBox(hwndDlg, strings[ST_SUBMITFAILED], strings[ST_CRASHREPORTERTITLE], MB_OK | MB_ICONERROR);
-    }
-    EndDialog(hwndDlg, finishedOk ? 1 : 0);
-    return TRUE;
-
-  case WM_COMMAND:
-    if (LOWORD(wParam) == IDCANCEL && HIWORD(wParam) == BN_CLICKED) {
-      EndDialog(hwndDlg, finishedOk ? 1 : 0);
-    }
-    return TRUE;
-
-  default:
-    return FALSE; 
-  } 
+  return false;
 }
 
-bool SendCrashReport(wstring dumpFile,
-                     const map<wstring,wstring>* query_parameters,
-                     wstring* server_response)
+static bool GetStringKey(const wchar_t* key,
+                         const wchar_t* valueName,
+                         wstring& value)
 {
-  SENDTHREADDATA td;
-  td.hDlg = NULL;
-  td.dumpFile = dumpFile;
-  td.query_parameters = query_parameters;
-  td.server_response = server_response;
+  value = L"";
+  bool found = false;
+  HKEY hRegKey;
+  // see if our reg key is set globally
+  if (RegOpenKey(HKEY_LOCAL_MACHINE, key, &hRegKey) == ERROR_SUCCESS) {
+    if (GetStringValue(hRegKey, valueName, value)) {
+      found = true;
+    }
+    RegCloseKey(hRegKey);
+  } else {
+    // look for it in user settings
+    if (RegOpenKey(HKEY_CURRENT_USER, key, &hRegKey) == ERROR_SUCCESS) {
+      if (GetStringValue(hRegKey, valueName, value)) {
+        found = true;
+      }
+      RegCloseKey(hRegKey);
+    }
+  }
 
-  int res = (int)DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_SENDDIALOG), NULL,
-                                (DLGPROC)SendDialogProc, (LPARAM)&td);
-
-  return (res >= 0);
+  return found;
 }
 
-DWORD WINAPI SendThreadProc(LPVOID param)
+static void SetStringKey(const wchar_t* key,
+                         const wchar_t* valueName,
+                         const wstring& value)
+{
+  HKEY hRegKey;
+  if (RegCreateKey(HKEY_CURRENT_USER, key, &hRegKey) == ERROR_SUCCESS) {
+    RegSetValueEx(hRegKey, valueName, 0, REG_SZ,
+                  (LPBYTE)value.c_str(),
+                  (value.length() + 1) * sizeof(wchar_t));
+    RegCloseKey(hRegKey);
+  }
+}
+
+// Gets the position of a window relative to another window's client area
+static void GetRelativeRect(HWND hwnd, HWND hwndParent, RECT* r)
+{
+  GetWindowRect(hwnd, r);
+  ScreenToClient(hwndParent, (POINT*)&(r->left));
+  ScreenToClient(hwndParent, (POINT*)&(r->right));
+}
+
+static void SetDlgItemVisible(HWND hwndDlg, UINT item, bool visible)
+{
+  HWND hwnd = GetDlgItem(hwndDlg, item);
+  LONG style = GetWindowLong(hwnd, GWL_STYLE);
+  if (visible)
+    style |= WS_VISIBLE;
+  else
+    style &= ~WS_VISIBLE;
+
+  SetWindowLong(hwnd, GWL_STYLE, style);
+}
+
+static void SetDlgItemDisabled(HWND hwndDlg, UINT item, bool disabled)
+{
+  HWND hwnd = GetDlgItem(hwndDlg, item);
+  LONG style = GetWindowLong(hwnd, GWL_STYLE);
+  if (!disabled)
+    style |= WS_DISABLED;
+  else
+    style &= ~WS_DISABLED;
+
+  SetWindowLong(hwnd, GWL_STYLE, style);
+}
+
+/* === Crash Reporting Dialog === */
+
+static void StretchDialog(HWND hwndDlg, int ydiff)
+{
+  RECT r;
+  GetWindowRect(hwndDlg, &r);
+  r.bottom += ydiff;
+  MoveWindow(hwndDlg, r.left, r.top,
+             r.right - r.left, r.bottom - r.top, TRUE);
+}
+
+static void ReflowDialog(HWND hwndDlg, int ydiff)
+{
+  // Move items attached to the bottom down/up by as much as
+  // the window resize
+  for (set<UINT>::const_iterator item = gAttachedBottom.begin();
+       item != gAttachedBottom.end();
+       item++) {
+    RECT r;
+    HWND hwnd = GetDlgItem(hwndDlg, *item);
+    GetRelativeRect(hwnd, hwndDlg, &r);
+    r.top += ydiff;
+    r.bottom += ydiff;
+    MoveWindow(hwnd, r.left, r.top,
+               r.right - r.left, r.bottom - r.top, TRUE);
+  }
+}
+
+static DWORD WINAPI SendThreadProc(LPVOID param)
 {
   bool finishedOk;
-  SENDTHREADDATA* td = (SENDTHREADDATA*)param;
+  SendThreadData* td = (SendThreadData*)param;
 
-  wstring url(sendURL);
-
-  if (url.empty()) {
+  if (td->sendURL.empty()) {
     finishedOk = false;
-  }
-  else {
-    finishedOk = (google_breakpad::CrashReportSender
-      ::SendCrashReport(url,
-                        *(td->query_parameters),
-                        td->dumpFile,
-                        td->server_response)
+  } else {
+    google_breakpad::CrashReportSender sender(L"");
+    finishedOk = (sender.SendCrashReport(td->sendURL,
+                                         td->queryParameters,
+                                         td->dumpFile,
+                                         &td->serverResponse)
                   == google_breakpad::RESULT_SUCCEEDED);
   }
+
   PostMessage(td->hDlg, WM_UPLOADCOMPLETE, finishedOk ? 1 : 0, 0);
 
   return 0;
 }
 
-bool ConvertUTF8ToWide(const char* utf8_string, wstring& ucs2_string)
+static void EndCrashReporterDialog(HWND hwndDlg, int code)
+{
+  // Save the current values to the registry
+  wchar_t email[MAX_EMAIL_LENGTH];
+  GetDlgItemText(hwndDlg, IDC_EMAILTEXT, email, sizeof(email));
+  SetStringKey(gCrashReporterKey.c_str(), EMAIL_VALUE, email);
+
+  SetBoolKey(gCrashReporterKey.c_str(), EMAIL_ME_VALUE,
+             IsDlgButtonChecked(hwndDlg, IDC_EMAILMECHECK) != 0);
+  SetBoolKey(gCrashReporterKey.c_str(), SUBMIT_REPORT_VALUE,
+             IsDlgButtonChecked(hwndDlg, IDC_SUBMITREPORTCHECK) != 0);
+
+  EndDialog(hwndDlg, code);
+}
+
+static void MaybeSendReport(HWND hwndDlg)
+{
+  if (!IsDlgButtonChecked(hwndDlg, IDC_SUBMITREPORTCHECK)) {
+    EndCrashReporterDialog(hwndDlg, 0);
+    return;
+  }
+
+  gThreadHandle = NULL;
+  gSendData.hDlg = hwndDlg;
+  gSendData.queryParameters = gQueryParameters;
+
+  gThreadHandle = CreateThread(NULL, 0, SendThreadProc, &gSendData, 0, NULL);
+}
+
+static void RestartApplication()
+{
+  wstring cmdLine;
+
+  for (unsigned int i = 0; i < gRestartArgs.size(); i++) {
+    cmdLine += L"\"" + UTF8ToWide(gRestartArgs[i]) + L"\" ";
+  }
+
+  STARTUPINFO si;
+  PROCESS_INFORMATION pi;
+
+  ZeroMemory(&si, sizeof(si));
+  si.cb = sizeof(si);
+  si.dwFlags = STARTF_USESHOWWINDOW;
+  si.wShowWindow = SW_SHOWNORMAL;
+  ZeroMemory(&pi, sizeof(pi));
+
+  if (CreateProcess(NULL, (LPWSTR)cmdLine.c_str(), NULL, NULL, FALSE, 0,
+                    NULL, NULL, &si, &pi)) {
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+  }
+}
+
+static void ShowReportInfo(HWND hwndDlg)
+{
+  wstring description;
+
+  for (map<wstring,wstring>::const_iterator i = gQueryParameters.begin();
+       i != gQueryParameters.end();
+       i++) {
+    description += i->first;
+    description += L": ";
+    description += i->second;
+    description += L"\n";
+  }
+
+  description += L"\n";
+  description += Str(ST_EXTRAREPORTINFO);
+
+  SetDlgItemText(hwndDlg, IDC_VIEWREPORTTEXT, description.c_str());
+}
+
+static void ShowHideReport(HWND hwndDlg)
+{
+  // When resizing the dialog to show the report, these items should
+  // stay put
+  gAttachedBottom.erase(IDC_VIEWREPORTCHECK);
+  gAttachedBottom.erase(IDC_VIEWREPORTTEXT);
+
+  RECT r;
+  HWND hwnd = GetDlgItem(hwndDlg, IDC_VIEWREPORTTEXT);
+
+  GetWindowRect(hwnd, &r);
+  int diff = (r.bottom - r.top) + 10;
+  if (IsDlgButtonChecked(hwndDlg, IDC_VIEWREPORTCHECK)) {
+    SetDlgItemVisible(hwndDlg, IDC_VIEWREPORTTEXT, true);
+  } else {
+    SetDlgItemVisible(hwndDlg, IDC_VIEWREPORTTEXT, false);
+    diff = -diff;
+  }
+
+  StretchDialog(hwndDlg, diff);
+
+  // set these back to normal
+  gAttachedBottom.insert(IDC_VIEWREPORTCHECK);
+  gAttachedBottom.insert(IDC_VIEWREPORTTEXT);
+}
+
+static void UpdateEmail(HWND hwndDlg)
+{
+  if (IsDlgButtonChecked(hwndDlg, IDC_EMAILMECHECK)) {
+    wchar_t email[MAX_EMAIL_LENGTH];
+    GetDlgItemText(hwndDlg, IDC_EMAILTEXT, email, sizeof(email));
+    gQueryParameters[L"Email"] = email;
+  } else {
+    gQueryParameters.erase(L"Email");
+  }
+}
+
+static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
+                                             WPARAM wParam, LPARAM lParam)
+{
+  static int sHeight = 0;
+
+  bool success;
+  bool enabled;
+
+  switch (message) {
+  case WM_INITDIALOG: {
+    RECT r;
+    GetClientRect(hwndDlg, &r);
+    sHeight = r.bottom - r.top;
+
+    SetWindowText(hwndDlg, Str(ST_CRASHREPORTERTITLE).c_str());
+
+    SendDlgItemMessage(hwndDlg, IDC_DESCRIPTIONTEXT,
+                       EM_SETEVENTMASK, (WPARAM)NULL,
+                       ENM_REQUESTRESIZE);
+    wstring description = Str(ST_CRASHREPORTERHEADER);
+    description += L"\n\n";
+    description += Str(ST_CRASHREPORTERDESCRIPTION);
+    SetDlgItemText(hwndDlg, IDC_DESCRIPTIONTEXT, description.c_str());
+
+    // Make the title bold.
+    CHARFORMAT fmt = { 0, };
+    fmt.cbSize = sizeof(fmt);
+    fmt.dwMask = CFM_BOLD;
+    fmt.dwEffects = CFE_BOLD;
+    SendDlgItemMessage(hwndDlg, IDC_DESCRIPTIONTEXT, EM_SETSEL,
+                       0, Str(ST_CRASHREPORTERHEADER).length());
+    SendDlgItemMessage(hwndDlg, IDC_DESCRIPTIONTEXT, EM_SETCHARFORMAT,
+                       SCF_SELECTION, (LPARAM)&fmt);
+    SendDlgItemMessage(hwndDlg, IDC_DESCRIPTIONTEXT, EM_SETSEL, 0, 0);
+    SendDlgItemMessage(hwndDlg, IDC_DESCRIPTIONTEXT,
+                       EM_SETTARGETDEVICE, (WPARAM)NULL, 0);
+
+    SetDlgItemText(hwndDlg, IDC_VIEWREPORTCHECK, Str(ST_VIEWREPORT).c_str());
+    SendDlgItemMessage(hwndDlg, IDC_VIEWREPORTTEXT,
+                       EM_SETTARGETDEVICE, (WPARAM)NULL, 0);
+
+
+    SetDlgItemText(hwndDlg, IDC_SUBMITREPORTCHECK,
+                   Str(ST_CHECKSUBMIT).c_str());
+    if (CheckBoolKey(gCrashReporterKey.c_str(),
+                     SUBMIT_REPORT_VALUE, &enabled) &&
+        !enabled) {
+      CheckDlgButton(hwndDlg, IDC_SUBMITREPORTCHECK, BST_UNCHECKED);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILMECHECK), enabled);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILTEXT), enabled);
+    } else {
+      CheckDlgButton(hwndDlg, IDC_SUBMITREPORTCHECK, BST_CHECKED);
+    }
+
+    SetDlgItemText(hwndDlg, IDC_EMAILMECHECK, Str(ST_CHECKEMAIL).c_str());
+    if (CheckBoolKey(gCrashReporterKey.c_str(), EMAIL_ME_VALUE, &enabled) &&
+        enabled) {
+      CheckDlgButton(hwndDlg, IDC_EMAILMECHECK, BST_CHECKED);
+    } else {
+      CheckDlgButton(hwndDlg, IDC_EMAILMECHECK, BST_UNCHECKED);
+    }
+
+    wstring email;
+    if (GetStringKey(gCrashReporterKey.c_str(), EMAIL_VALUE, email)) {
+      SetDlgItemText(hwndDlg, IDC_EMAILTEXT, email.c_str());
+    }
+
+    SetDlgItemText(hwndDlg, IDC_CLOSEBUTTON, Str(ST_CLOSE).c_str());
+
+    if (gRestartArgs.size() > 0) {
+      SetDlgItemText(hwndDlg, IDC_RESTARTBUTTON, Str(ST_RESTART).c_str());
+    } else {
+      // No restart arguments, move the close button over to the side
+      // and hide the restart button
+      SetDlgItemVisible(hwndDlg, IDC_RESTARTBUTTON, false);
+
+      RECT closeRect;
+      HWND hwndClose = GetDlgItem(hwndDlg, IDC_CLOSEBUTTON);
+      GetRelativeRect(hwndClose, hwndDlg, &closeRect);
+
+      RECT restartRect;
+      HWND hwndRestart = GetDlgItem(hwndDlg, IDC_RESTARTBUTTON);
+      GetRelativeRect(hwndRestart, hwndDlg, &restartRect);
+
+      int size = closeRect.right - closeRect.left;
+      closeRect.right = restartRect.right;
+      closeRect.left = closeRect.right - size;
+
+      MoveWindow(hwndClose, closeRect.left, closeRect.top,
+                 closeRect.right - closeRect.left,
+                 closeRect.bottom - closeRect.top,
+                 TRUE);
+    }
+    UpdateEmail(hwndDlg);
+    ShowReportInfo(hwndDlg);
+
+    SetFocus(GetDlgItem(hwndDlg, IDC_EMAILTEXT));
+    return FALSE;
+  }
+  case WM_SIZE: {
+    ReflowDialog(hwndDlg, HIWORD(lParam) - sHeight);
+    sHeight = HIWORD(lParam);
+    InvalidateRect(hwndDlg, NULL, TRUE);
+    return FALSE;
+  }
+  case WM_NOTIFY: {
+    NMHDR* notification = reinterpret_cast<NMHDR*>(lParam);
+    if (notification->code == EN_REQUESTRESIZE) {
+      // Resizing the rich edit control to fit the description text.
+      REQRESIZE* reqresize = reinterpret_cast<REQRESIZE*>(lParam);
+      RECT newSize = reqresize->rc;
+      RECT oldSize;
+      GetRelativeRect(notification->hwndFrom, hwndDlg, &oldSize);
+
+      // resize the text box as requested
+      MoveWindow(notification->hwndFrom, newSize.left, newSize.top,
+                 newSize.right - newSize.left, newSize.bottom - newSize.top,
+                 TRUE);
+
+      // Resize the dialog to fit (the WM_SIZE handler will move the controls)
+      StretchDialog(hwndDlg, newSize.bottom - oldSize.bottom);
+    }
+    return FALSE;
+  }
+  case WM_COMMAND: {
+    if (HIWORD(wParam) == BN_CLICKED) {
+      switch(LOWORD(wParam)) {
+      case IDC_VIEWREPORTCHECK:
+        ShowHideReport(hwndDlg);
+        break;
+      case IDC_SUBMITREPORTCHECK:
+        enabled = (IsDlgButtonChecked(hwndDlg, IDC_SUBMITREPORTCHECK) != 0);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILMECHECK), enabled);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILTEXT), enabled);
+        break;
+      case IDC_EMAILMECHECK:
+        UpdateEmail(hwndDlg);
+        ShowReportInfo(hwndDlg);
+        break;
+      case IDC_CLOSEBUTTON:
+        // Hide the dialog after "closing", but leave it around to coordinate
+        // with the upload thread
+        ShowWindow(hwndDlg, SW_HIDE);
+        MaybeSendReport(hwndDlg);
+        break;
+      case IDC_RESTARTBUTTON:
+        // Hide the dialog after "closing", but leave it around to coordinate
+        // with the upload thread
+        ShowWindow(hwndDlg, SW_HIDE);
+        RestartApplication();
+        MaybeSendReport(hwndDlg);
+        break;
+      }
+    } else if (HIWORD(wParam) == EN_CHANGE) {
+      switch(LOWORD(wParam)) {
+      case IDC_EMAILTEXT:
+        wchar_t email[MAX_EMAIL_LENGTH];
+        if (GetDlgItemText(hwndDlg, IDC_EMAILTEXT, email, sizeof(email)) > 0)
+          CheckDlgButton(hwndDlg, IDC_EMAILMECHECK, BST_CHECKED);
+        else
+          CheckDlgButton(hwndDlg, IDC_EMAILMECHECK, BST_UNCHECKED);
+        UpdateEmail(hwndDlg);
+        ShowReportInfo(hwndDlg);
+      }
+    }
+
+    return FALSE;
+  }
+  case WM_UPLOADCOMPLETE: {
+    WaitForSingleObject(gThreadHandle, INFINITE);
+    success = (wParam == 1);
+    CrashReporterSendCompleted(success, WideToUTF8(gSendData.serverResponse));
+    if (!success) {
+      MessageBox(hwndDlg,
+                 Str(ST_SUBMITFAILED).c_str(),
+                 Str(ST_CRASHREPORTERTITLE).c_str(),
+                 MB_OK | MB_ICONERROR);
+    }
+    EndCrashReporterDialog(hwndDlg, success ? 1 : 0);
+    return TRUE;
+  }
+  }
+  return FALSE;
+}
+
+static wstring UTF8ToWide(const string& utf8, bool *success)
 {
   wchar_t* buffer = NULL;
-  int buffer_size = MultiByteToWideChar(CP_UTF8, 0, utf8_string,
+  int buffer_size = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(),
                                         -1, NULL, 0);
-  if(buffer_size == 0)
-    return false;
+  if(buffer_size == 0) {
+    if (success)
+      *success = false;
+    return L"";
+  }
 
   buffer = new wchar_t[buffer_size];
-  if(buffer == NULL)
-    return false;
-  
-  MultiByteToWideChar(CP_UTF8, 0, utf8_string,
+  if(buffer == NULL) {
+    if (success)
+      *success = false;
+    return L"";
+  }
+
+  MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(),
                       -1, buffer, buffer_size);
-  ucs2_string = buffer;
+  wstring str = buffer;
   delete [] buffer;
-  return true;
+
+  if (success)
+    *success = true;
+
+  return str;
 }
 
-bool ConvertWideToUTF8(const wchar_t* ucs2_string, string& utf8_string)
+static string WideToUTF8(const wstring& wide, bool *success)
 {
   char* buffer = NULL;
-  int buffer_size = WideCharToMultiByte(CP_UTF8, 0, ucs2_string,
+  int buffer_size = WideCharToMultiByte(CP_UTF8, 0, wide.c_str(),
                                         -1, NULL, 0, NULL, NULL);
-  if(buffer_size == 0)
-    return false;
+  if(buffer_size == 0) {
+    if (success)
+      *success = false;
+    return "";
+  }
 
   buffer = new char[buffer_size];
-  if(buffer == NULL)
-    return false;
-  
-  WideCharToMultiByte(CP_UTF8, 0, ucs2_string,
+  if(buffer == NULL) {
+    if (success)
+      *success = false;
+    return "";
+  }
+
+  WideCharToMultiByte(CP_UTF8, 0, wide.c_str(),
                       -1, buffer, buffer_size, NULL, NULL);
-  utf8_string = buffer;
+  string utf8 = buffer;
   delete [] buffer;
-  return true;
+
+  if (success)
+    *success = true;
+
+  return utf8;
 }
 
-void ReadKeyValuePairs(const wstring& data,
-                       map<wstring, wstring>& values)
-{
-  if (data.empty())
-    return;
+/* === Crashreporter UI Functions === */
 
-  string line;
-  int line_begin = 0;
-  int line_end = data.find('\n');
-  while(line_end >= 0) {
-    int pos = data.find('=', line_begin);
-    if (pos >= 0 && pos < line_end) {
-      wstring key, value;
-      key = data.substr(line_begin, pos - line_begin);
-      value = data.substr(pos + 1, line_end - pos - 1);
-      values[key] = value;
-    }
-    line_begin = line_end + 1;
-    line_end = data.find('\n', line_begin);
+bool UIInit()
+{
+  for (int i = 0; i < sizeof(kDefaultAttachedBottom) / sizeof(UINT); i++) {
+    gAttachedBottom.insert(kDefaultAttachedBottom[i]);
   }
-}
-
-bool ReadExtraData(const wstring& filename,
-                   map<wstring, wstring>& query_parameters)
-{
-#if _MSC_VER >= 1400  // MSVC 2005/8
-  ifstream file;
-  file.open(filename.c_str(), std::ios::in);
-#else  // _MSC_VER >= 1400
-  ifstream file(_wfopen(filename.c_str(), L"rb"));
-#endif  // _MSC_VER >= 1400
-  if (!file.is_open())
-    return false;
-
-  wstring data;
-  char* buf;
-  file.seekg(0, std::ios::end);
-  int file_size = file.tellg();
-  file.seekg(0, std::ios::beg);
-  buf = new char[file_size+1];
-  if (!buf)
-    return false;
-
-  file.read(buf, file_size);
-  buf[file_size] ='\0';
-  ConvertUTF8ToWide(buf, data);
-  delete buf;
-
-  ReadKeyValuePairs(data, query_parameters);
-
-  file.close();
-  return true;
-}
-
-wstring GetExtraDataFilename(const wstring& dumpfile)
-{
-  wstring filename(dumpfile);
-  int dot = filename.rfind('.');
-  if (dot < 0)
-    return L"";
-
-  filename.replace(dot, filename.length() - dot, kExtraDataExtension);
-  return filename;
-}
-
-bool AddSubmittedReport(wstring settings_path, wstring server_response)
-{
-  map<wstring, wstring> response_items;
-  ReadKeyValuePairs(server_response, response_items);
-
-  if (response_items.find(L"CrashID") == response_items.end())
-    return false;
-
-  wstring submitted_path = settings_path + L"\\submitted\\" +
-    response_items[L"CrashID"] + L".txt";
-
-#if _MSC_VER >= 1400  // MSVC 2005/8
-  ofstream file;
-  file.open(submitted_path.c_str(), std::ios::out);
-#else  // _MSC_VER >= 1400
-  ofstream file(_wfopen(submitted_path.c_str(), L"wb"));
-#endif  // _MSC_VER >= 1400
-  if (!file.is_open())
-    return false;
-
-  wchar_t buf[1024];
-  wsprintf(buf, strings[ST_CRASHID], response_items[L"CrashID"].c_str());
-  wstring data = buf;
-  data += L"\n";
-  if (response_items.find(L"ViewURL") != response_items.end()) {
-    wsprintf(buf, strings[ST_CRASHDETAILSURL],
-             response_items[L"ViewURL"].c_str());
-    data += buf;
-    data += L"\n";
-  }
-
-  string utf8_data;
-  if (!ConvertWideToUTF8(data.c_str(), utf8_data))
-    return false;
-
-  file << utf8_data;
-  file.close();
-  return true;
-}
-
-int main(int argc, char **argv)
-{
-  map<wstring,wstring> query_parameters;
 
   DoInitCommonControls();
-  if (!ReadConfig()) {
-    MessageBox(NULL, L"Missing crashreporter.ini file", L"Crash Reporter Error", MB_OK | MB_ICONSTOP);
-    return 0;
-  }
-
-  wstring dumpfile;
-  bool enabled = false;
-
-  if (argc > 1) {
-    if (!ConvertUTF8ToWide(argv[1], dumpfile))
-      return 0;
-  }
-
-  if (dumpfile.empty()) {
-    // no dump file specified, just ask about enabling
-    if (!CheckCrashReporterEnabled(&enabled))
-      enabled = true;
-
-    enabled = (1 == DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_ENABLEDIALOG), NULL, (DLGPROC)EnableDialogProc, (LPARAM)enabled));
-    SetCrashReporterEnabled(enabled);
-  }
-  else {
-    wstring extrafile = GetExtraDataFilename(dumpfile);
-    if (!extrafile.empty()) {
-      ReadExtraData(extrafile, query_parameters);
-    }
-    else {
-      //XXX: print error message
-      return 0;
-    }
-
-    if (query_parameters.find(L"ProductName") == query_parameters.end()) {
-      //XXX: print error message
-      return 0;
-    }
-
-    wstring product = query_parameters[L"ProductName"];
-    wstring vendor;
-    if (query_parameters.find(L"Vendor") != query_parameters.end()) {
-      vendor = query_parameters[L"Vendor"];
-    }
-    wstring settings_path;
-
-    if(!GetSettingsPath(vendor, product, settings_path)) {
-      //XXX: print error message
-      return 0;
-    }
-
-    EnsurePathExists(settings_path, L"pending");
-    EnsurePathExists(settings_path, L"submitted");
-
-    // now we move the crash report and extra data to pending
-    wstring newfile = settings_path + L"\\pending\\" +
-      google_breakpad::WindowsStringUtils::GetBaseName(dumpfile);
-    MoveFile(dumpfile.c_str(), newfile.c_str());
-    dumpfile = newfile;
-
-    newfile = settings_path + L"\\pending\\" +
-      google_breakpad::WindowsStringUtils::GetBaseName(extrafile);
-    MoveFile(extrafile.c_str(), newfile.c_str());
-    extrafile = newfile;
-
-    if (!CheckCrashReporterEnabled(&enabled)) {
-      //ask user if crash reporter should be enabled
-      enabled = (1 == DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_ENABLEDIALOG), NULL, (DLGPROC)EnableDialogProc, (LPARAM)true));
-      SetCrashReporterEnabled(enabled);
-    }
-    // if enabled, send crash report
-    if (enabled) {
-      wstring server_response;
-      if (SendCrashReport(dumpfile, &query_parameters, &server_response)) {
-        if (deleteDump) {
-          DeleteFile(dumpfile.c_str());
-          if (!extrafile.empty())
-            DeleteFile(extrafile.c_str());
-        }
-        AddSubmittedReport(settings_path, server_response);
-      }
-      //TODO: show details?
-    }
-  }
+  return true;
 }
 
-#if defined(XP_WIN) && !defined(__GNUC__)
-// We need WinMain in order to not be a console app.  This function is unused
-// if we are a console application.
-int WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR args, int )
+void UIShutdown()
 {
-  // Do the real work.
-  return main(__argc, __argv);
 }
-#endif
+
+void UIShowDefaultUI()
+{
+  MessageBox(NULL, Str(ST_CRASHREPORTERDEFAULT).c_str(),
+             L"Crash Reporter",
+             MB_OK | MB_ICONSTOP);
+}
+
+void UIShowCrashUI(const string& dumpFile,
+                   const StringTable& queryParameters,
+                   const string& sendURL,
+                   const vector<string>& restartArgs)
+{
+  gSendData.hDlg = NULL;
+  gSendData.dumpFile = UTF8ToWide(dumpFile);
+  gSendData.sendURL = UTF8ToWide(sendURL);
+
+  for (StringTable::const_iterator i = queryParameters.begin();
+       i != queryParameters.end();
+       i++) {
+    gQueryParameters[UTF8ToWide(i->first)] = UTF8ToWide(i->second);
+  }
+
+  if (gQueryParameters.find(L"Vendor") != gQueryParameters.end()) {
+    gCrashReporterKey = L"Software\\" +
+                        gQueryParameters[L"Vendor"] +
+                        L"\\Crash Reporter";
+  }
+
+  gRestartArgs = restartArgs;
+
+  DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_SENDDIALOG), NULL,
+                 (DLGPROC)CrashReporterDialogProc, 0);
+}
+
+void UIError(const string& message)
+{
+  wstring title = Str(ST_CRASHREPORTERTITLE);
+  if (title.empty())
+    title = L"Crash Reporter Error";
+
+  MessageBox(NULL, UTF8ToWide(message).c_str(), title.c_str(),
+             MB_OK | MB_ICONSTOP);
+}
+
+bool UIGetIniPath(string& path)
+{
+  wchar_t fileName[MAX_PATH];
+  if (GetModuleFileName(NULL, fileName, MAX_PATH)) {
+    // get crashreporter ini
+    wchar_t* s = wcsrchr(fileName, '.');
+    if (s) {
+      wcscpy(s, L".ini");
+      path = WideToUTF8(fileName);
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool UIGetSettingsPath(const string& vendor,
+                       const string& product,
+                       string& settings_path)
+{
+  wchar_t path[MAX_PATH];
+  if(SUCCEEDED(SHGetFolderPath(NULL,
+                               CSIDL_APPDATA,
+                               NULL,
+                               0,
+                               path)))  {
+    if (!vendor.empty()) {
+      PathAppend(path, UTF8ToWide(vendor).c_str());
+    }
+    PathAppend(path, UTF8ToWide(product).c_str());
+    PathAppend(path, L"Crash Reports");
+    // in case it doesn't exist
+    CreateDirectory(path, NULL);
+    settings_path = WideToUTF8(path);
+    return true;
+  }
+  return false;
+}
+
+bool UIEnsurePathExists(const string& path)
+{
+  if (CreateDirectory(UTF8ToWide(path).c_str(), NULL) == 0) {
+    if (GetLastError() != ERROR_ALREADY_EXISTS)
+      return false;
+  }
+
+  return true;
+}
+
+bool UIMoveFile(const string& oldfile, const string& newfile)
+{
+  if (oldfile == newfile)
+    return true;
+
+  return MoveFile(UTF8ToWide(oldfile).c_str(), UTF8ToWide(newfile).c_str())
+    == TRUE;
+}
+
+bool UIDeleteFile(const string& oldfile)
+{
+  return DeleteFile(UTF8ToWide(oldfile).c_str()) == TRUE;
+}

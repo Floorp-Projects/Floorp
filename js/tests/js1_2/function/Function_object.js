@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'Function_object.js';
+
 /**
    Filename:     Function_object.js
    Description:  'Testing Function objects'
@@ -55,7 +57,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 function a_test_function(a,b,c)
 {
-    return a + b + c;
+  return a + b + c;
 }
 
 f = a_test_function;

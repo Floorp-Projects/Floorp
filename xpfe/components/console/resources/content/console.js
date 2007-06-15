@@ -134,8 +134,9 @@ function onEvalKeyPress(aEvent)
 function evaluateTypein()
 {
   var code = document.getElementById("TextboxEval").value;
-  var iframe = document.getElementById("Evaluator");
-  iframe.setAttribute("src", "javascript: " + code);
+  var evaluator = document.getElementById("Evaluator").contentWindow;
+  evaluator.location = "about:blank"; // reset the iframe
+  evaluator.location = "javascript: " + code.replace(/%/g, "%25");
 }
 
 function displayResult()
@@ -146,8 +147,6 @@ function displayResult()
   if (result)
     gConsole.mCService.logStringMessage(result);
     // or could use appendMessage which doesn't persist
-  var iframe = document.getElementById("Evaluator");
-  iframe.setAttribute("src", "chrome://global/content/blank.html");
 }
 
 /* :::::::: Command Controller for the Window ::::::::::::::: */

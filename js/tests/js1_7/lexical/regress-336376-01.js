@@ -34,12 +34,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-336376-01.js';
 //-----------------------------------------------------------------------------
-var bug     = "336376";
+var BUGNUMBER     = "336376";
 var summary = "Tests reserved words in contexts in which they are not reserved";
 var actual, expect;
 
-printBugNumber(bug);
+printBugNumber(BUGNUMBER);
 printStatus(summary);
 
 /**************
@@ -69,7 +71,7 @@ const ALL_TESTS =
     "CONTEXT_XML_NAMESPACE_QUALIFIED_ELEMENT",
     "CONTEXT_XML_NAMESPACE_QUALIFIED_ATTR",
     "CONTEXT_XML_ATTRIBUTE_SELECTOR",
-  ];
+    ];
 
 function r(keyword, tests)
 {
@@ -91,11 +93,11 @@ function r(keyword, tests)
   Reserved.prototype =
     {
       toString:
-        function()
-        {
-          return "'" + this.keyword + "' being run against tests " +
-                 this.tests;
-        }
+      function()
+      {
+	return "'" + this.keyword + "' being run against tests " +
+	this.tests;
+      }
     };
   return new Reserved(keyword, tests);
 }
@@ -128,7 +130,7 @@ const ECMA_262_3_KEYWORD =
     r("void"),
     r("while"),
     r("with"),
-  ];
+    ];
 
 // ECMA-262, 3rd. ed. future reserved keywords -- see 7.5.3
 const ECMA_262_3_FUTURERESERVEDKEYWORD =
@@ -164,7 +166,7 @@ const ECMA_262_3_FUTURERESERVEDKEYWORD =
     r("throws"),
     r("transient"),
     r("volatile"),
-  ];
+    ];
 
 // like reserved words, but not quite reserved words
 const PSEUDO_RESERVED =
@@ -173,13 +175,13 @@ const PSEUDO_RESERVED =
     r("false"),
     r("null"),
     r("each"),  // |for each|
-  ];
+    ];
 
 // new-in-ES4 reserved words -- fill this as each is implemented
 const ECMA_262_4_RESERVED_WORDS =
   [
     r("let")
-  ];
+    ];
 
 
 
@@ -198,159 +200,159 @@ function Failure(keyword, test, error)
   this.error = error;
 }
 Failure.prototype =
+{
+  toString:
+  function()
   {
-    toString:
-      function()
-      {
-        return "*** FAILURE on '" + this.keyword + "'!\n" +
-               "* test:     " + this.test + "\n" +
-               "* error:    " + this.error + "\n";
-      }
-  };
+    return "*** FAILURE on '" + this.keyword + "'!\n" +
+    "* test:     " + this.test + "\n" +
+    "* error:    " + this.error + "\n";
+  }
+};
 
 function Tester()
 {
   this._failedTests = [];
 }
 Tester.prototype =
+{
+  testReservedWords:
+  function(reservedArray)
   {
-    testReservedWords:
-      function(reservedArray)
-      {
-        var rv;
-        for (var i = 0, sz = reservedArray.length; i < sz; i++)
-        {
-          var res = reservedArray[i];
-          if (!res)
-            continue;
+    var rv;
+    for (var i = 0, sz = reservedArray.length; i < sz; i++)
+    {
+      var res = reservedArray[i];
+      if (!res)
+	continue;
 
-          var tests = res.tests;
-          for (var j = 0, sz2 = tests.length; j < sz2; j++)
-          {
-             var test = tests[j];
-             if (!test)
-               continue;
+      var tests = res.tests;
+      for (var j = 0, sz2 = tests.length; j < sz2; j++)
+      {
+	var test = tests[j];
+	if (!test)
+	  continue;
 
-             try
-            {
-              this._tests[test](res.keyword);
-            }
-            catch (e)
-            {
-              this._failedTests.push(new Failure(res.keyword, test, e));
-            }
-          }
-        }
-      },
-    flushErrors:
-      function ()
+	try
+	{
+	  this._tests[test](res.keyword);
+	}
+	catch (e)
+	{
+	  this._failedTests.push(new Failure(res.keyword, test, e));
+	}
+      }
+    }
+  },
+  flushErrors:
+  function ()
+  {
+    if (this._failedTests.length > 0) {
+      var except = "*************************\n" +
+      "* FAILURES ENCOUNTERED! *\n" +
+      "*************************\n";
+      for (var i = 0, sz = this._failedTests.length; i < sz; i++)
+	except += this._failedTests[i];
+      throw except;
+    }
+  },
+  _tests:
+  {
+    CONTEXT_OBJECT_LITERAL_PROPERTY:
+    function(keyword)
+    {
+      try
       {
-        if (this._failedTests.length > 0) {
-          var except = "*************************\n" +
-                       "* FAILURES ENCOUNTERED! *\n" +
-                       "*************************\n";
-          for (var i = 0, sz = this._failedTests.length; i < sz; i++)
-            except += this._failedTests[i];
-          throw except;
-        }
-      },
-    _tests:
+	eval("var o = { " + keyword + ": 17 };\n" +
+	     "if (o['" + keyword + "'] != 17)\n" +
+	     "throw \"o['" + keyword + "'] == 17\";");
+      }
+      catch (e)
       {
-        CONTEXT_OBJECT_LITERAL_PROPERTY:
-          function(keyword)
-          {
-            try
-            {
-              eval("var o = { " + keyword + ": 17 };\n" +
-                   "if (o['" + keyword + "'] != 17)\n" +
-                     "throw \"o['" + keyword + "'] == 17\";");
-            }
-            catch (e)
-            {
-              throw e;
-            }
-          },
-        CONTEXT_OBJECT_PROPERTY_DOT_REFERENCE:
-          function(keyword)
-          {
-            try
-            {
-              eval("var o = { \"" + keyword + "\": 17, baz: null };\n" +
-                   "if (o." + keyword + " != 17)\n" +
-                     "throw \"o." + keyword + " == 17\";");
-            }
-            catch (e)
-            {
-              throw e;
-            }
-          },
-        CONTEXT_OBJECT_PROPERTY_DOT_REFERENCE_IS_FUNCTION:
-          function(keyword)
-          {
-            try
-            {
-              eval("var o = { '" + keyword + "': function() { return 17; }, baz: null };\n" +
-                   "if (o." + keyword + "() != 17)\n" +
-                     "throw \"o." + keyword + " == 17\";");
-            }
-            catch (e)
-            {
-              throw e;
-            }
-          },
-        CONTEXT_OBJECT_PROPERTY_DOT_GET:
-          function(keyword)
-          {
-            try
-            {
-              var o = {};
-              eval("o['" + keyword + "'] = 17;\n" +
-                   "if (o." + keyword + " != 17)\n" +
-                     "throw \"'o." + keyword + " != 17' failed!\";");
-            }
-            catch (e)
-            {
-              throw e;
-            }
-          },
-        CONTEXT_OBJECT_PROPERTY_DOT_SET:
-          function(keyword)
-          {
-            try
-            {
-              var o = {};
-              eval("o." + keyword + " = 17;\n" +
-                   "if (o['" + keyword + "'] != 17)\n" +
-                     "throw \"'o." + keyword + " = 17' failed!\";");
-            }
-            catch (e)
-            {
-              throw e;
-            }
-          },
-        CONTEXT_XML_DESCENDANTS:
-          function(keyword)
-          {
-            try
-            {
-              eval("var x = <foo><biz><" + keyword + " id='1'/></biz><" + keyword + " f='g'/></foo>;\n" +
-                   "if (x.." + keyword + ".length() != 2 ||\n" +
-                   "    x.." + keyword + " !=              \n" +
-                   "      <><" + keyword + " id='1'/><" + keyword + " f='g'/></>)\n" +
-                     "throw \"'x.." + keyword + ".length()' failed!\";");
-            }
-            catch (e)
-            {
-              throw e;
-            }
-          },
-        CONTEXT_XML_NAMESPACE_QUALIFIED_ELEMENT:
-          function(keyword)
-          {
-            try
-            {
-              var bar = new Namespace("http://localhost/");
-              eval("var x = <foo xmlns:bar='http://localhost/'>\n\
+	throw e;
+      }
+    },
+    CONTEXT_OBJECT_PROPERTY_DOT_REFERENCE:
+    function(keyword)
+    {
+      try
+      {
+	eval("var o = { \"" + keyword + "\": 17, baz: null };\n" +
+	     "if (o." + keyword + " != 17)\n" +
+	     "throw \"o." + keyword + " == 17\";");
+      }
+      catch (e)
+      {
+	throw e;
+      }
+    },
+    CONTEXT_OBJECT_PROPERTY_DOT_REFERENCE_IS_FUNCTION:
+    function(keyword)
+    {
+      try
+      {
+	eval("var o = { '" + keyword + "': function() { return 17; }, baz: null };\n" +
+	     "if (o." + keyword + "() != 17)\n" +
+	     "throw \"o." + keyword + " == 17\";");
+      }
+      catch (e)
+      {
+	throw e;
+      }
+    },
+    CONTEXT_OBJECT_PROPERTY_DOT_GET:
+    function(keyword)
+    {
+      try
+      {
+	var o = {};
+	eval("o['" + keyword + "'] = 17;\n" +
+	     "if (o." + keyword + " != 17)\n" +
+	     "throw \"'o." + keyword + " != 17' failed!\";");
+      }
+      catch (e)
+      {
+	throw e;
+      }
+    },
+    CONTEXT_OBJECT_PROPERTY_DOT_SET:
+    function(keyword)
+    {
+      try
+      {
+	var o = {};
+	eval("o." + keyword + " = 17;\n" +
+	     "if (o['" + keyword + "'] != 17)\n" +
+	     "throw \"'o." + keyword + " = 17' failed!\";");
+      }
+      catch (e)
+      {
+	throw e;
+      }
+    },
+    CONTEXT_XML_DESCENDANTS:
+    function(keyword)
+    {
+      try
+      {
+	eval("var x = <foo><biz><" + keyword + " id='1'/></biz><" + keyword + " f='g'/></foo>;\n" +
+	     "if (x.." + keyword + ".length() != 2 ||\n" +
+	     "    x.." + keyword + " !=              \n" +
+	     "      <><" + keyword + " id='1'/><" + keyword + " f='g'/></>)\n" +
+	     "throw \"'x.." + keyword + ".length()' failed!\";");
+      }
+      catch (e)
+      {
+	throw e;
+      }
+    },
+    CONTEXT_XML_NAMESPACE_QUALIFIED_ELEMENT:
+    function(keyword)
+    {
+      try
+      {
+	var bar = new Namespace("http://localhost/");
+	eval("var x = <foo xmlns:bar='http://localhost/'>\n\
                               <bar>\n\
                                 <baz/>\n\
                               </bar>\n\
@@ -372,45 +374,45 @@ Tester.prototype =
                                 <bunk/>\n\
                               </bar:" + keyword + "></>)\n\
                       throw 'reserved names in XML namespace-qualified stuff are broken!';");
-            }
-            catch (e)
-            {
-              throw e;
-            }
-          },
-        CONTEXT_XML_NAMESPACE_QUALIFIED_ATTR:
-          function(keyword)
-          {
-            try
-            {
-              var bar = new Namespace("http://localhost/");
-              eval("var x = <foo xmlns:bar='http://localhost/'>\
+      }
+      catch (e)
+      {
+	throw e;
+      }
+    },
+    CONTEXT_XML_NAMESPACE_QUALIFIED_ATTR:
+    function(keyword)
+    {
+      try
+      {
+	var bar = new Namespace("http://localhost/");
+	eval("var x = <foo xmlns:bar='http://localhost/'>\
                               <fin bar:" + keyword + "='5'/>\
                             </foo>;\n\
                     if (x.fin.@bar::" + keyword + " != 5)\n\
                       throw 'namespaced attributes which are keywords are broken!';");
-            }
-            catch (e)
-            {
-              throw e;
-            }
-          },
-        CONTEXT_XML_ATTRIBUTE_SELECTOR:
-          function(keyword)
-          {
-            try
-            {
-              eval("var x = <foo " + keyword + "='idref'/>;\n\
+      }
+      catch (e)
+      {
+	throw e;
+      }
+    },
+    CONTEXT_XML_ATTRIBUTE_SELECTOR:
+    function(keyword)
+    {
+      try
+      {
+	eval("var x = <foo " + keyword + "='idref'/>;\n\
                     if (x.@" + keyword + " != 'idref')\n\
                       throw 'keywords on the right of the @ E4X selector are broken!';");
-            }
-            catch (e)
-            {
-              throw e;
-            }
-          }
       }
-  };
+      catch (e)
+      {
+	throw e;
+      }
+    }
+  }
+};
 
 
 /***************

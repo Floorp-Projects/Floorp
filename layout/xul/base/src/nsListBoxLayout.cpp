@@ -205,7 +205,7 @@ nsListBoxLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
     // relayout if we must or we are dirty or some of our children are dirty
     //   or the client area is wider than us
     // XXXldb There should probably be a resize check here too!
-    if ((box->GetStateBits() & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) || childRect.width < clientRect.width) {
+    if (NS_SUBTREE_DIRTY(box) || childRect.width < clientRect.width) {
       childRect.x = 0;
       childRect.y = yOffset;
       childRect.width = clientRect.width;

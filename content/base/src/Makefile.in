@@ -59,6 +59,7 @@ REQUIRES	= xpcom \
 		  js \
 		  webshell \
 		  necko \
+		  nkcache \
 		  mimetype \
 		  caps \
 		  lwbrk \
@@ -76,7 +77,9 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  rdf \
 		  xultmpl \
- 		  util \
+		  util \
+		  appshell \
+		  shistory \
 		  $(NULL)
 
 EXPORTS		= \
@@ -92,7 +95,6 @@ EXPORTS		= \
 		nsStubImageDecoderObserver.h \
 		nsStubMutationObserver.h \
 		nsTextFragment.h \
-		nsTObserverArray.h \
 		$(NULL)
 
 CPPSRCS		= \
@@ -100,6 +102,7 @@ CPPSRCS		= \
 		nsAtomListUtils.cpp \
 		nsAttrAndChildArray.cpp \
 		nsAttrValue.cpp \
+		nsCCUncollectableMarker.cpp \
 		nsCommentNode.cpp \
 		nsContentAreaDragDrop.cpp \
 		nsContentIterator.cpp \
@@ -126,7 +129,7 @@ CPPSRCS		= \
 		nsGkAtoms.cpp \
 		nsHTMLContentSerializer.cpp \
 		nsImageLoadingContent.cpp \
-                nsLineBreaker.cpp \
+		nsLineBreaker.cpp \
 		nsLoadListenerProxy.cpp \
 		nsMappedAttributes.cpp \
 		nsNameSpaceManager.cpp \
@@ -149,7 +152,6 @@ CPPSRCS		= \
 		nsSyncLoadService.cpp \
 		nsTextFragment.cpp \
 		nsTextNode.cpp \
-		nsTObserverArray.cpp \
 		nsTreeWalker.cpp \
 		nsXMLContentSerializer.cpp \
 		nsXMLHttpRequest.cpp \

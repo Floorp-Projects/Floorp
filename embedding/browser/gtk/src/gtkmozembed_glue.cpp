@@ -43,17 +43,14 @@
 
 #include "gtkmozembed.h"
 #include "gtkmozembed_internal.h"
-#ifdef MOZ_WIDGET_GTK2
 #include "gtkmozembed_common.h"
 #include "gtkmozembed_download.h"
-#endif
 #include "nsXPCOMGlue.h"
 
 #ifndef XPCOM_GLUE
 #error This file only makes sense when XPCOM_GLUE is defined.
 #endif
 
-#ifdef MOZ_WIDGET_GTK2
 #define GTKMOZEMBED2_FUNCTIONS \
   GTKF(gtk_moz_embed_download_get_type) \
   GTKF(gtk_moz_embed_download_new) \
@@ -80,9 +77,6 @@
   GTKF(gtk_moz_embed_shistory_goto_index) \
   GTKF(gtk_moz_embed_get_server_cert) \
   GTKF(gtk_moz_embed_get_nsIWebBrowser)
-#else
-#define GTKMOZEMBED2_FUNCTIONS
-#endif
 
 #define GTKMOZEMBED_FUNCTIONS \
   GTKF(gtk_moz_embed_get_type) \
@@ -111,6 +105,7 @@
   GTKF(gtk_moz_embed_get_chrome_mask) \
   GTKF(gtk_moz_embed_single_get_type) \
   GTKF(gtk_moz_embed_single_get) \
+  GTKF(gtk_moz_embed_set_directory_service_provider) \
   GTKMOZEMBED2_FUNCTIONS
 
 #define GTKF(fname) fname##Type fname;

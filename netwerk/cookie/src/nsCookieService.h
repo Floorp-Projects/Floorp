@@ -190,7 +190,7 @@ class nsCookieService : public nsICookieServiceInternal
     void                          RemoveExpiredCookies(nsInt64 aCurrentTime);
     PRBool                        FindCookie(const nsAFlatCString &aHost, const nsAFlatCString &aName, const nsAFlatCString &aPath, nsListIter &aIter);
     void                          FindOldestCookie(nsEnumerationData &aData);
-    PRUint32                      CountCookiesFromHost(nsCookie *aCookie, nsEnumerationData &aData);
+    PRUint32                      CountCookiesFromHostInternal(const nsACString &aHost, nsEnumerationData &aData);
     void                          NotifyRejected(nsIURI *aHostURI);
     void                          NotifyChanged(nsICookie2 *aCookie, const PRUnichar *aData);
 
