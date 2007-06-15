@@ -41,9 +41,12 @@
 
 function BrowserGlue() {
   this._init();
+  this._profileStarted = false;
 }
 
 BrowserGlue.prototype = {
+  _saveSession: false,
+
   QueryInterface: function(iid) 
   {
      xpcomCheckInterfaces(iid, kServiceIIds, Components.results.NS_ERROR_NO_INTERFACE);
@@ -56,6 +59,9 @@ BrowserGlue.prototype = {
     switch(topic) {
       case "xpcom-shutdown":
         this._dispose();
+        break;
+      case "profile-before-change":
+        this._onProfileChange();
         break;
       case "profile-change-teardown": 
         this._onProfileShutdown();
@@ -70,6 +76,16 @@ BrowserGlue.prototype = {
         cs.logStringMessage(null); // clear the console (in case it's open)
         cs.reset();
         break;
+      case "quit-application-requested":
+        this._onQuitRequest(subject);
+        break;
+      case "quit-application-granted":
+        if (this._saveSession) {
+          var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                      .getService(Components.interfaces.nsIPrefBranch);
+          prefService.setBoolPref("browser.sessionstore.resume_session_once", true);
+        }
+        break;
     }
   }
 , 
@@ -79,10 +95,13 @@ BrowserGlue.prototype = {
     // observer registration
     const osvr = Components.classes['@mozilla.org/observer-service;1']
                            .getService(Components.interfaces.nsIObserverService);
+    osvr.addObserver(this, "profile-before-change", false);
     osvr.addObserver(this, "profile-change-teardown", false);
     osvr.addObserver(this, "xpcom-shutdown", false);
     osvr.addObserver(this, "final-ui-startup", false);
     osvr.addObserver(this, "browser:purge-session-history", false);
+    osvr.addObserver(this, "quit-application-requested", false);
+    osvr.addObserver(this, "quit-application-granted", false);
   },
 
   // cleanup (called on application shutdown)
@@ -91,10 +110,13 @@ BrowserGlue.prototype = {
     // observer removal 
     const osvr = Components.classes['@mozilla.org/observer-service;1']
                            .getService(Components.interfaces.nsIObserverService);
+    osvr.removeObserver(this, "profile-before-change");
     osvr.removeObserver(this, "profile-change-teardown");
     osvr.removeObserver(this, "xpcom-shutdown");
     osvr.removeObserver(this, "final-ui-startup");
     osvr.removeObserver(this, "browser:purge-session-history");
+    osvr.removeObserver(this, "quit-application-requested");
+    osvr.removeObserver(this, "quit-application-granted");
   },
 
   // profile startup handler (contains profile initialization routines)
@@ -127,6 +149,22 @@ BrowserGlue.prototype = {
       ww.openWindow(null, "chrome://browser/content/safeMode.xul", 
                     "_blank", "chrome,centerscreen,modal,resizable=no", null);
     }
+
+    // initialize Places
+    this._initPlaces();
+
+    // indicate that the profile was initialized
+    this._profileStarted = true;
+  },
+
+  _onProfileChange: function()
+  {
+    // this block is for code that depends on _onProfileStartup() having 
+    // been called.
+    if (this._profileStarted) {
+      // final places cleanup
+      this._shutdownPlaces();
+    }
   },
 
   // profile shutdown handler (contains profile cleanup routines)
@@ -147,6 +185,92 @@ BrowserGlue.prototype = {
     }
   },
 
+  _onQuitRequest: function(aCancelQuit)
+  {
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Components.interfaces.nsIWindowMediator);
+    var windowcount = 0;
+    var pagecount = 0;
+    var browserEnum = wm.getEnumerator("navigator:browser");
+    while (browserEnum.hasMoreElements()) {
+      windowcount++;
+
+      var browser = browserEnum.getNext();
+      var tabbrowser = browser.document.getElementById("content");
+      if (tabbrowser)
+        pagecount += tabbrowser.browsers.length;
+    }
+
+    this._saveSession = false;
+    if (pagecount < 2)
+      return;
+
+    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                .getService(Components.interfaces.nsIPrefBranch);
+    var showPrompt = true;
+    try {
+      if (prefService.getIntPref("browser.startup.page") == 3 ||
+          prefService.getBoolPref("browser.sessionstore.resume_session_once"))
+        showPrompt = false;
+      else
+        showPrompt = prefService.getBoolPref("browser.warnOnQuit");
+    } catch (ex) {}
+
+    var buttonChoice = 0;
+    if (showPrompt) {
+      var bundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                    .getService(Components.interfaces.nsIStringBundleService);
+      var quitBundle = bundleService.createBundle("chrome://browser/locale/quitDialog.properties");
+      var brandBundle = bundleService.createBundle("chrome://branding/locale/brand.properties");
+
+      var appName = brandBundle.GetStringFromName("brandShortName");
+      var quitDialogTitle = quitBundle.formatStringFromName("quitDialogTitle",
+                                                            [appName], 1);
+      var quitTitle = quitBundle.GetStringFromName("quitTitle");
+      var cancelTitle = quitBundle.GetStringFromName("cancelTitle");
+      var saveTitle = quitBundle.GetStringFromName("saveTitle");
+      var neverAskText = quitBundle.GetStringFromName("neverAsk");
+
+      if (windowcount == 1)
+        var message = quitBundle.formatStringFromName("messageNoWindows",
+                                                      [appName], 1);
+      else
+        var message = quitBundle.formatStringFromName("message",
+                                                      [appName], 1);
+
+      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                    .getService(Components.interfaces.nsIPromptService);
+
+      var flags = promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0 +
+                  promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1 +
+                  promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2 +
+                  promptService.BUTTON_POS_0_DEFAULT;
+      var neverAsk = {value:false};
+      buttonChoice = promptService.confirmEx(null, quitDialogTitle, message,
+                                   flags, quitTitle, cancelTitle, saveTitle,
+                                   neverAskText, neverAsk);
+
+      switch (buttonChoice) {
+      case 0:
+        if (neverAsk.value)
+          prefService.setBoolPref("browser.warnOnQuit", false);
+        break;
+      case 1:
+        aCancelQuit.QueryInterface(Components.interfaces.nsISupportsPRBool);
+        aCancelQuit.data = true;
+        break;
+      case 2:
+        // could also set browser.warnOnQuit to false here,
+        // but not setting it is a little safer.
+        if (neverAsk.value)
+          prefService.setIntPref("browser.startup.page", 3);
+        break;
+      }
+
+      this._saveSession = buttonChoice == 2;
+    }
+  },
+
   // returns the (cached) Sanitizer constructor
   get Sanitizer() 
   {
@@ -157,6 +281,77 @@ BrowserGlue.prototype = {
     }
     return Sanitizer;
   },
+
+  /**
+   * Initialize Places
+   * - imports the bookmarks html file if bookmarks datastore is empty
+   */
+  _initPlaces: function bg__initPlaces() {
+#ifdef MOZ_PLACES_BOOKMARKS
+    // we need to instantiate the history service before we check the 
+    // the browser.places.importBookmarksHTML pref, as 
+    // nsNavHistory::ForceMigrateBookmarksDB() will set that pref
+    // if we need to force a migration (due to a schema change)
+    var histsvc = Components.classes["@mozilla.org/browser/nav-history-service;1"]
+                            .getService(Components.interfaces.nsINavHistoryService);
+
+    var importBookmarks = false;
+    try {
+      var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                  .getService(Components.interfaces.nsIPrefBranch);
+      importBookmarks = prefService.getBoolPref("browser.places.importBookmarksHTML");
+    } catch(ex) {}
+
+    if (!importBookmarks)
+      return;
+
+    var dirService = Components.classes["@mozilla.org/file/directory_service;1"]
+                               .getService(Components.interfaces.nsIProperties);
+
+    var bookmarksFile = dirService.get("BMarks", Components.interfaces.nsILocalFile);
+
+    if (bookmarksFile.exists()) {
+      // import the file
+      try {
+        var importer = 
+          Components.classes["@mozilla.org/browser/places/import-export-service;1"]
+                    .getService(Components.interfaces.nsIPlacesImportExportService);
+        importer.importHTMLFromFile(bookmarksFile, true);
+      } catch(ex) {
+      } finally {
+        prefService.setBoolPref("browser.places.importBookmarksHTML", false);
+      }
+
+      // backup pre-places bookmarks.html
+      // XXXtodo remove this before betas, after import/export is solid
+      var profDir = dirService.get("ProfD", Components.interfaces.nsILocalFile);
+      var bookmarksBackup = profDir.clone();
+      bookmarksBackup.append("bookmarks.preplaces.html");
+      if (!bookmarksBackup.exists()) {
+        // save old bookmarks.html file as bookmarks.preplaces.html
+        try {
+          bookmarksFile.copyTo(profDir, "bookmarks.preplaces.html");
+        } catch(ex) {
+          dump("nsBrowserGlue::_initPlaces(): copy of bookmarks.html to bookmarks.preplaces.html failed: " + ex + "\n");
+        }
+      }
+    }
+#endif
+  },
+
+  /**
+   * Places shut-down tasks
+   * - back up and archive bookmarks
+   */
+  _shutdownPlaces: function bg__shutdownPlaces() {
+#ifdef MOZ_PLACES_BOOKMARKS
+    // backup bookmarks to bookmarks.html
+    var importer =
+      Components.classes["@mozilla.org/browser/places/import-export-service;1"]
+                .getService(Components.interfaces.nsIPlacesImportExportService);
+    importer.backupBookmarksFile();
+#endif
+  },
   
   // ------------------------------
   // public nsIBrowserGlue members
@@ -166,7 +361,6 @@ BrowserGlue.prototype = {
   {
     this.Sanitizer.sanitize(aParentWindow);
   }
-
 }
 
 
@@ -233,7 +427,7 @@ var Module = {
       var len = kServiceCats.length;
       for (var j = 0; j < len; j++) {
         catman.addCategoryEntry(kServiceCats[j],
-          kServiceCtrId, kServiceCtrId, true, true, null);
+          kServiceCtrId, kServiceCtrId, true, true);
       }
       this.registered = true;
     } 

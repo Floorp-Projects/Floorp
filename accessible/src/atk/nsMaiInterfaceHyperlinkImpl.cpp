@@ -53,14 +53,16 @@ AtkHyperlink*
 getHyperlinkCB(AtkHyperlinkImpl *aImpl)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aImpl));
-    NS_ENSURE_TRUE(accWrap, nsnull);
+    if (!accWrap)
+        return nsnull;
 
     nsCOMPtr<nsIAccessibleHyperLink> accHyperlink;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleHyperLink),
                             getter_AddRefs(accHyperlink));
     NS_ENSURE_TRUE(accHyperlink, nsnull);
     
-    MaiHyperlink *maiHyperlink = new MaiHyperlink(accHyperlink);
+    MaiHyperlink *maiHyperlink = accWrap->GetMaiHyperlink();
+    NS_ENSURE_TRUE(maiHyperlink, nsnull);
     return maiHyperlink->GetAtkHyperlink();
 
 }

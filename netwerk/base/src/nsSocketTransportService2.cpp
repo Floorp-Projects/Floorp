@@ -63,6 +63,7 @@ PRThread                 *gSocketThread           = nsnull;
 nsSocketTransportService::nsSocketTransportService()
     : mThread(nsnull)
     , mThreadEvent(nsnull)
+    , mThreadEventLock(PR_NewLock())
     , mAutodialEnabled(PR_FALSE)
     , mLock(PR_NewLock())
     , mInitialized(PR_FALSE)
@@ -88,6 +89,9 @@ nsSocketTransportService::~nsSocketTransportService()
     if (mLock)
         PR_DestroyLock(mLock);
     
+    if (mThreadEventLock)
+        PR_DestroyLock(mThreadEventLock);
+
     if (mThreadEvent)
         PR_DestroyPollableEvent(mThreadEvent);
 
@@ -351,7 +355,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS5(nsSocketTransportService,
 NS_IMETHODIMP
 nsSocketTransportService::Init()
 {
-    NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(mThreadEventLock && mLock, NS_ERROR_OUT_OF_MEMORY);
 
     if (!NS_IsMainThread()) {
         NS_ERROR("wrong thread");
@@ -403,9 +407,11 @@ nsSocketTransportService::Shutdown()
         // signal the socket thread to shutdown
         mShuttingDown = PR_TRUE;
 
+        PR_Lock(mThreadEventLock);
         if (mThreadEvent)
             PR_SetPollableEvent(mThreadEvent);
         // else wait for Poll timeout
+        PR_Unlock(mThreadEventLock);
     }
 
     // join with thread
@@ -461,8 +467,10 @@ nsSocketTransportService::SetAutodialEnabled(PRBool value)
 NS_IMETHODIMP
 nsSocketTransportService::OnDispatchedEvent(nsIThreadInternal *thread)
 {
+    PR_Lock(mThreadEventLock);
     if (mThreadEvent)
         PR_SetPollableEvent(mThreadEvent);
+    PR_Unlock(mThreadEventLock);
     return NS_OK;
 }
 
@@ -503,6 +511,7 @@ nsSocketTransportService::Run()
     // add thread event to poll list (mThreadEvent may be NULL)
     mPollList[0].fd = mThreadEvent;
     mPollList[0].in_flags = PR_POLL_READ;
+    mPollList[0].out_flags = 0;
 
     nsIThread *thread = NS_GetCurrentThread();
 
@@ -643,7 +652,28 @@ nsSocketTransportService::DoPollIteration(PRBool wait)
 
         if (n != 0 && mPollList[0].out_flags == PR_POLL_READ) {
             // acknowledge pollable event (wait should not block)
-            PR_WaitForPollableEvent(mThreadEvent);
+            if (PR_WaitForPollableEvent(mThreadEvent) != PR_SUCCESS) {
+                // On Windows, the TCP loopback connection in the
+                // pollable event may become broken when a laptop
+                // switches between wired and wireless networks or
+                // wakes up from hibernation.  We try to create a
+                // new pollable event.  If that fails, we fall back
+                // on "busy wait".
+                PR_Lock(mThreadEventLock);
+                PR_DestroyPollableEvent(mThreadEvent);
+                mThreadEvent = PR_NewPollableEvent();
+                PR_Unlock(mThreadEventLock);
+                if (!mThreadEvent) {
+                    NS_WARNING("running socket transport thread without "
+                               "a pollable event");
+                    LOG(("running socket transport thread without "
+                         "a pollable event"));
+                }
+                mPollList[0].fd = mThreadEvent;
+                // mPollList[0].in_flags was already set to PR_POLL_READ
+                // in Run().
+                mPollList[0].out_flags = 0;
+            }
         }
     }
 

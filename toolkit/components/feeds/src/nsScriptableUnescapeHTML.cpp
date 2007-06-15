@@ -138,10 +138,8 @@ nsScriptableUnescapeHTML::ParseFragment(const nsAString &aFragment,
   nsRefPtr<nsScriptLoader> loader;
   PRBool scripts_enabled = PR_FALSE;
   if (document) {
-    loader = document->GetScriptLoader();
-    if (loader) {
-      scripts_enabled = loader->GetEnabled();
-    }
+    loader = document->ScriptLoader();
+    scripts_enabled = loader->GetEnabled();
   }
   if (scripts_enabled) {
     loader->SetEnabled(PR_FALSE);

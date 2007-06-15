@@ -611,7 +611,8 @@ GConfProxy::~GConfProxy()
         delete mObservers;
     }
 
-    PR_UnloadLibrary(mGConfLib);
+    // bug 379666: can't unload GConf-2 since it registers atexit handlers
+    //PR_UnloadLibrary(mGConfLib);
 }
 
 PRBool

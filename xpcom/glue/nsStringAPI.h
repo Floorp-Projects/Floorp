@@ -1228,32 +1228,32 @@ inline PRBool
 StringBeginsWith(const nsAString& aSource, const nsAString& aSubstring,
                  nsAString::ComparatorFunc aComparator = nsAString::DefaultComparator)
 {
-  return StringHead(aSource, aSubstring.Length()).
-    Equals(aSubstring, aComparator);
+  return aSubstring.Length() <= aSource.Length() &&
+      StringHead(aSource, aSubstring.Length()).Equals(aSubstring, aComparator);
 }
 
 inline PRBool
 StringEndsWith(const nsAString& aSource, const nsAString& aSubstring,
                nsAString::ComparatorFunc aComparator = nsAString::DefaultComparator)
 {
-  return StringTail(aSource, aSubstring.Length()).
-    Equals(aSubstring, aComparator);
+  return aSubstring.Length() <= aSource.Length() &&
+      StringTail(aSource, aSubstring.Length()).Equals(aSubstring, aComparator);
 }
 
 inline PRBool
 StringBeginsWith(const nsACString& aSource, const nsACString& aSubstring,
                  nsACString::ComparatorFunc aComparator = nsACString::DefaultComparator)
 {
-  return StringHead(aSource, aSubstring.Length()).
-    Equals(aSubstring, aComparator);
+  return aSubstring.Length() <= aSource.Length() &&
+      StringHead(aSource, aSubstring.Length()).Equals(aSubstring, aComparator);
 }
 
 inline PRBool
 StringEndsWith(const nsACString& aSource, const nsACString& aSubstring,
                nsACString::ComparatorFunc aComparator = nsACString::DefaultComparator)
 {
-  return StringTail(aSource, aSubstring.Length()).
-    Equals(aSubstring, aComparator);
+  return aSubstring.Length() <= aSource.Length() &&
+      StringTail(aSource, aSubstring.Length()).Equals(aSubstring, aComparator);
 }
 
 /**

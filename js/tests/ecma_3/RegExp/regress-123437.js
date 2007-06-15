@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    04 Feb 2002
  * SUMMARY: regexp backreferences must hold |undefined| if not used
@@ -44,8 +46,9 @@
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-123437.js';
 var i = 0;
-var bug = 123437;
+var BUGNUMBER = 123437;
 var summary = 'regexp backreferences must hold |undefined| if not used';
 var status = '';
 var statusmessages = new Array();
@@ -102,7 +105,7 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
   testRegExp(statusmessages, patterns, strings, actualmatches, expectedmatches);
   exitFunc ('test');

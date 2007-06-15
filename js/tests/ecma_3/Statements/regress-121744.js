@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    30 Jan 2002
  * Revised: 10 Apr 2002
@@ -56,17 +58,18 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=136893
  *
 
-  |--------------------------------------------------------------------|
-  |                                                                    |
-  | So for now, adding an early return for this test so it won't run.  |
-  |                                                                    |
-  |--------------------------------------------------------------------|
+ |--------------------------------------------------------------------|
+ |                                                                    |
+ | So for now, adding an early return for this test so it won't run.  |
+ |                                                                    |
+ |--------------------------------------------------------------------|
 
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-121744.js';
 var UBound = 0;
-var bug = 121744;
+var BUGNUMBER = 121744;
 var summary = 'JS should error on |for(i in undefined)|, |for(i in null)|';
 var TEST_PASSED = 'TypeError';
 var TEST_FAILED = 'Generated an error, but NOT a TypeError!';
@@ -202,9 +205,9 @@ function addThis()
 function test()
 {
   enterFunc('test');
-  printBugNumber(bug);
+  printBugNumber(BUGNUMBER);
   printStatus(summary);
- 
+
   for (var i=0; i<UBound; i++)
   {
     reportCompare(expectedvalues[i], actualvalues[i], statusitems[i]);

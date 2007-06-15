@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 06 February 2001
  *
  * SUMMARY:  Arose from Bugzilla bug 78156:
@@ -45,9 +47,10 @@
  * The m flag means a regular expression should search strings
  * across multiple lines, i.e. across '\n', '\r'.
  */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+var gTestfile = 'regress-78156.js';
 var i = 0;
-var bug = 78156;
+var BUGNUMBER = 78156;
 var summary = 'Testing regular expressions with  ^, $, and the m flag -';
 var status = '';
 var statusmessages = new Array();
@@ -66,30 +69,30 @@ var expectedmatches = new Array();
  */
 
 string = 'aaa\n789\r\nccc\r\n345';
-    status = inSection(1);
-    pattern = /^\d/gm;
-    actualmatch = string.match(pattern);
-    expectedmatch = ['7','3'];
-    addThis();
+status = inSection(1);
+pattern = /^\d/gm;
+actualmatch = string.match(pattern);
+expectedmatch = ['7','3'];
+addThis();
 
-    status = inSection(2);
-    pattern = /\d$/gm;
-    actualmatch = string.match(pattern);
-    expectedmatch = ['9','5'];
-    addThis();
+status = inSection(2);
+pattern = /\d$/gm;
+actualmatch = string.match(pattern);
+expectedmatch = ['9','5'];
+addThis();
 
 string = 'aaa\n789\r\nccc\r\nddd';
-    status = inSection(3);
-    pattern = /^\d/gm;
-    actualmatch = string.match(pattern);
-    expectedmatch = ['7'];
-    addThis();
+status = inSection(3);
+pattern = /^\d/gm;
+actualmatch = string.match(pattern);
+expectedmatch = ['7'];
+addThis();
 
-    status = inSection(4);
-    pattern = /\d$/gm;
-    actualmatch = string.match(pattern);
-    expectedmatch = ['9'];
-    addThis();
+status = inSection(4);
+pattern = /\d$/gm;
+actualmatch = string.match(pattern);
+expectedmatch = ['9'];
+addThis();
 
 
 
@@ -113,7 +116,7 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
   testRegExp(statusmessages, patterns, strings, actualmatches, expectedmatches);
   exitFunc ('test');

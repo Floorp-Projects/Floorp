@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '11.7.3.js';
+
 /**
    File Name:          11.7.3.js
    ECMA Section:       11.7.3  The unsigned right shift operator ( >>> )

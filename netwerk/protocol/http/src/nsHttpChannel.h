@@ -208,7 +208,6 @@ private:
     void     SetAuthorizationHeader(nsHttpAuthCache *, nsHttpAtom header, const char *scheme, const char *host, PRInt32 port, const char *path, nsHttpAuthIdentity &ident);
     void     AddAuthorizationHeaders();
     nsresult GetCurrentPath(nsACString &);
-    void     ClearPasswordManagerEntry(const char *scheme, const char *host, PRInt32 port, const char *realm, const PRUnichar *user);
     nsresult DoAuthRetry(nsAHttpConnection *);
 
 private:

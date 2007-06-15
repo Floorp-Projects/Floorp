@@ -92,6 +92,7 @@ static const PRUint32 kLazyWriteTimeout = 5000; //msec
 static const PRUint32 kMaxNumberOfCookies = 1000;
 static const PRUint32 kMaxCookiesPerHost  = 50;
 static const PRUint32 kMaxBytesPerCookie  = 4096;
+static const PRUint32 kMaxBytesPerPath    = 1024;
 
 // this constant augments those defined on nsICookie, and indicates
 // the cookie should be rejected because of an error (rather than
@@ -1329,6 +1330,11 @@ nsCookieService::CheckAndAdd(nsIURI               *aHostURI,
     return;
   }
 
+  if (aAttributes.name.FindChar('\t') != kNotFound) {
+    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "invalid name character");
+    return;
+  }
+
   // domain & path checks
   if (!CheckDomain(aAttributes, aHostURI)) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "failed the domain tests");
@@ -1426,7 +1432,7 @@ nsCookieService::AddInternal(nsCookie   *aCookie,
 
     // check if we have to delete an old cookie.
     nsEnumerationData data(aCurrentTime, LL_MAXINT);
-    if (CountCookiesFromHost(aCookie, data) >= mMaxCookiesPerHost) {
+    if (CountCookiesFromHostInternal(aCookie->RawHost(), data) >= mMaxCookiesPerHost) {
       // remove the oldest cookie from host
       oldCookie = data.iter.current;
       RemoveCookieFromList(data.iter);
@@ -1467,7 +1473,7 @@ nsCookieService::AddInternal(nsCookie   *aCookie,
 /******************************************************************************
  ** Augmented BNF, modified from RFC2109 Section 4.2.2 and RFC2616 Section 2.1
  ** please note: this BNF deviates from both specifications, and reflects this
- ** implementation. <bnf> indicates a reference to the defined grammer "bnf".
+ ** implementation. <bnf> indicates a reference to the defined grammar "bnf".
 
  ** Differences from RFC2109/2616 and explanations:
     1. implied *LWS
@@ -2039,6 +2045,10 @@ nsCookieService::CheckPath(nsCookieAttributes &aCookieAttributes,
 #endif
   }
 
+  if (aCookieAttributes.path.Length() > kMaxBytesPerPath ||
+      aCookieAttributes.path.FindChar('\t') != kNotFound )
+    return PR_FALSE;
+
   return PR_TRUE;
 }
 
@@ -2137,34 +2147,31 @@ nsCookieService::RemoveExpiredCookies(nsInt64 aCurrentTime)
   mHostTable.EnumerateEntries(removeExpiredCallback, &aCurrentTime);
 }
 
-// find whether a previous cookie has been set, and count the number of cookies from
-// this host, for prompting purposes. this is provided by the nsICookieManager2
-// interface.
+// find whether a given cookie has been previously set. this is provided by the
+// nsICookieManager2 interface.
 NS_IMETHODIMP
-nsCookieService::FindMatchingCookie(nsICookie2 *aCookie,
-                                    PRUint32   *aCountFromHost,
-                                    PRBool     *aFoundCookie)
+nsCookieService::CookieExists(nsICookie2 *aCookie,
+                              PRBool     *aFoundCookie)
 {
   NS_ENSURE_ARG_POINTER(aCookie);
 
-  // we don't care about finding the oldest cookie here, so disable the search
+  // just a placeholder
   nsEnumerationData data(NOW_IN_SECONDS, LL_MININT);
   nsCookie *cookie = NS_STATIC_CAST(nsCookie*, aCookie);
 
-  *aCountFromHost = CountCookiesFromHost(cookie, data);
   *aFoundCookie = FindCookie(cookie->Host(), cookie->Name(), cookie->Path(), data.iter);
   return NS_OK;
 }
 
-// count the number of cookies from this host, and find the oldest cookie
-// from this host.
+// count the number of cookies from a given host, and simultaneously find the
+// oldest cookie from the host.
 PRUint32
-nsCookieService::CountCookiesFromHost(nsCookie          *aCookie,
-                                      nsEnumerationData &aData)
+nsCookieService::CountCookiesFromHostInternal(const nsACString  &aHost,
+                                              nsEnumerationData &aData)
 {
   PRUint32 countFromHost = 0;
 
-  nsCAutoString hostWithDot(NS_LITERAL_CSTRING(".") + aCookie->RawHost());
+  nsCAutoString hostWithDot(NS_LITERAL_CSTRING(".") + aHost);
 
   const char *currentDot = hostWithDot.get();
   const char *nextDot = currentDot + 1;
@@ -2190,6 +2197,19 @@ nsCookieService::CountCookiesFromHost(nsCookie          *aCookie,
   } while (currentDot);
 
   return countFromHost;
+}
+
+// count the number of cookies stored by a particular host. this is provided by the
+// nsICookieManager2 interface.
+NS_IMETHODIMP
+nsCookieService::CountCookiesFromHost(const nsACString &aHost,
+                                      PRUint32         *aCountFromHost)
+{
+  // we don't care about finding the oldest cookie here, so disable the search
+  nsEnumerationData data(NOW_IN_SECONDS, LL_MININT);
+  
+  *aCountFromHost = CountCookiesFromHostInternal(aHost, data);
+  return NS_OK;
 }
 
 // find an exact previous match.

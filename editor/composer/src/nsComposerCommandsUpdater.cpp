@@ -49,14 +49,12 @@
 #include "nsString.h"
 
 #include "nsICommandManager.h"
-#include "nsPICommandUpdater.h"
 
 #include "nsIDocShell.h"
 #include "nsITransactionManager.h"
 
 nsComposerCommandsUpdater::nsComposerCommandsUpdater()
 :  mDOMWindow(nsnull)
-,  mDocShell(nsnull)
 ,  mDirtyState(eStateUninitialized)
 ,  mSelectionCollapsed(eStateUninitialized)
 ,  mFirstDoOfFirstUndo(PR_TRUE)
@@ -248,7 +246,7 @@ nsComposerCommandsUpdater::Init(nsIDOMWindow* aDOMWindow)
   nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aDOMWindow));
   if (window)
   {
-    mDocShell = window->GetDocShell();
+    mDocShell = do_GetWeakReference(window->GetDocShell());
   }
   return NS_OK;
 }
@@ -301,10 +299,7 @@ nsComposerCommandsUpdater::UpdateDirtyState(PRBool aNowDirty)
 nsresult
 nsComposerCommandsUpdater::UpdateCommandGroup(const nsAString& aCommandGroup)
 {
-  if (!mDocShell) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(mDocShell);
-  nsCOMPtr<nsPICommandUpdater> commandUpdater = do_QueryInterface(commandManager);
+  nsCOMPtr<nsPICommandUpdater> commandUpdater = GetCommandUpdater();
   if (!commandUpdater) return NS_ERROR_FAILURE;
 
   
@@ -358,10 +353,7 @@ nsComposerCommandsUpdater::UpdateCommandGroup(const nsAString& aCommandGroup)
 nsresult
 nsComposerCommandsUpdater::UpdateOneCommand(const char *aCommand)
 {
-  if (!mDocShell) return NS_ERROR_FAILURE;
-  
-  nsCOMPtr<nsICommandManager>  	commandManager = do_GetInterface(mDocShell);
-  nsCOMPtr<nsPICommandUpdater>	commandUpdater = do_QueryInterface(commandManager);
+  nsCOMPtr<nsPICommandUpdater> commandUpdater = GetCommandUpdater();
   if (!commandUpdater) return NS_ERROR_FAILURE;
 
   commandUpdater->CommandStatusChanged(aCommand);
@@ -385,6 +377,18 @@ nsComposerCommandsUpdater::SelectionIsCollapsed()
   NS_WARNING("nsComposerCommandsUpdater::SelectionIsCollapsed - no domSelection");
 
   return PR_FALSE;
+}
+
+already_AddRefed<nsPICommandUpdater>
+nsComposerCommandsUpdater::GetCommandUpdater()
+{
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
+  NS_ENSURE_TRUE(docShell, nsnull);
+  nsCOMPtr<nsICommandManager> manager = do_GetInterface(docShell);
+  nsCOMPtr<nsPICommandUpdater> updater = do_QueryInterface(manager);
+  nsPICommandUpdater* retVal = nsnull;
+  updater.swap(retVal);
+  return retVal;
 }
 
 #if 0

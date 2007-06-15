@@ -34,18 +34,20 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-316885-03.js';
 //-----------------------------------------------------------------------------
-var bug = 316885;
+var BUGNUMBER = 316885;
 var summary = 'Unrooted access in jsinterp.c';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var str = "test";
 
-var lval = { 
+var lval = {
   valueOf: function() {
     return str+"1";
   }
@@ -53,13 +55,13 @@ var lval = {
 
 var ONE = 1;
 
-var rval = { 
+var rval = {
   valueOf: function() {
-    // Make sure that the result of the previous lval.valueOf 
+    // Make sure that the result of the previous lval.valueOf
     // is not GC-rooted.
     var tmp = "x"+lval;
     if (typeof gc == "function")
-    gc();
+      gc();
     for (var i = 0; i != 40000; ++i) {
       tmp = 1e100 / ONE;
     }

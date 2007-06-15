@@ -76,6 +76,8 @@
   <commandset id="baseMenuCommandSet"/>
 
   <keyset id="tasksKeys">
+    <key id="key_saveInspector" key="&saveCmd.key;" command="cmdSave"
+         modifiers="accel"/>
     <key id="key_closeInspector" key="&closeCmd.key;" command="cmdClose"
          modifiers="accel"/>
     <key id="key_quit"/>

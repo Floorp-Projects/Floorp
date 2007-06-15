@@ -56,7 +56,7 @@ public:
 	already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMIMEType, const nsACString& aFileExt, PRBool *aFound);
 
 	// override nsIExternalProtocolService methods
-	NS_IMETHOD ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
+	nsresult OSProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
 	nsresult LoadUriInternal(nsIURI * aURL);
 
 protected:

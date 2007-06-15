@@ -49,6 +49,8 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 nsProperties::Get(const char* prop, const nsIID & uuid, void* *result)
 {
+    NS_ENSURE_ARG(prop);
+
     nsCOMPtr<nsISupports> value;
     if (!nsProperties_HashBase::Get(prop, getter_AddRefs(value))) {
         return NS_ERROR_FAILURE;
@@ -59,12 +61,16 @@ nsProperties::Get(const char* prop, const nsIID & uuid, void* *result)
 NS_IMETHODIMP
 nsProperties::Set(const char* prop, nsISupports* value)
 {
+    NS_ENSURE_ARG(prop);
+
     return Put(prop, value) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsProperties::Undefine(const char* prop)
 {
+    NS_ENSURE_ARG(prop);
+
     nsCOMPtr<nsISupports> value;
     if (!nsProperties_HashBase::Get(prop, getter_AddRefs(value)))
         return NS_ERROR_FAILURE;
@@ -76,6 +82,8 @@ nsProperties::Undefine(const char* prop)
 NS_IMETHODIMP
 nsProperties::Has(const char* prop, PRBool *result)
 {
+    NS_ENSURE_ARG(prop);
+
     nsCOMPtr<nsISupports> value;
     *result = nsProperties_HashBase::Get(prop,
                                          getter_AddRefs(value));
@@ -108,10 +116,12 @@ GetKeysEnumerate(const char *key, nsISupports* data,
 NS_IMETHODIMP 
 nsProperties::GetKeys(PRUint32 *count, char ***keys)
 {
+    NS_ENSURE_ARG(count);
+    NS_ENSURE_ARG(keys);
+
     PRUint32 n = Count();
     char ** k = (char **) nsMemory::Alloc(n * sizeof(char *));
-    if (!k)
-        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ENSURE_TRUE(k, NS_ERROR_OUT_OF_MEMORY);
 
     GetKeysEnumData gked;
     gked.keys = k;

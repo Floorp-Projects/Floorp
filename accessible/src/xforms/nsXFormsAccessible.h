@@ -39,7 +39,7 @@
 #ifndef _nsXFormsAccessible_H_
 #define _nsXFormsAccessible_H_
 
-#include "nsHyperTextAccessible.h"
+#include "nsHyperTextAccessibleWrap.h"
 #include "nsIXFormsUtilityService.h"
 
 #define NS_NAMESPACE_XFORMS "http://www.w3.org/2002/xforms"
@@ -66,7 +66,7 @@ protected:
  * XForms hint and XForms label elements should have accessible object. This
  * class is base class for accessible objects for these XForms elements.
  */
-class nsXFormsAccessible : public nsHyperTextAccessible,
+class nsXFormsAccessible : public nsHyperTextAccessibleWrap,
                            public nsXFormsAccessibleBase
 {
 public:

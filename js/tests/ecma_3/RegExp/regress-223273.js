@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    23 October 2003
  * SUMMARY: Unescaped, unbalanced parens in a regexp should cause SyntaxError.
@@ -47,16 +49,18 @@
  * 2. an unescaped, unbalanced left brace    {
  * 3. an unescaped, unbalanced right brace   }
  *
- * If any of these should occur, Perl treats each as a literal character.
- * Therefore we permit all three of these cases, even though not ECMA-compliant.
- * Note Perl errors on an unescaped, unbalanced left bracket; so will we.
+ * If any of these should occur, Perl treats each as a literal
+ * character.  Therefore we permit all three of these cases, even
+ * though not ECMA-compliant.  Note Perl errors on an unescaped,
+ * unbalanced left bracket; so will we.
  *
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=223273
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-223273.js';
 var UBound = 0;
-var bug = 223273;
+var BUGNUMBER = 223273;
 var summary = 'Unescaped, unbalanced parens in regexp should be a SyntaxError';
 var TEST_PASSED = 'SyntaxError';
 var TEST_FAILED = 'Generated an error, but NOT a SyntaxError!';
@@ -263,7 +267,7 @@ function checkThis(sValidSyntax)
 function test()
 {
   enterFunc('test');
-  printBugNumber(bug);
+  printBugNumber(BUGNUMBER);
   printStatus(summary);
 
   for (var i=0; i<UBound; i++)

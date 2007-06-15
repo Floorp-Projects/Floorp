@@ -51,6 +51,8 @@ typedef struct {
 
 static void pixmap_free_func (void *);
 
+#define XLIB_IMAGE_SIDE_SIZE_LIMIT 0xffff
+
 gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual)
     : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable)
 {
@@ -62,6 +64,9 @@ gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual)
 gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual, const gfxIntSize& size)
     : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable), mSize(size)
 {
+    if (!CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT))
+        return;
+
     cairo_surface_t *surf = cairo_xlib_surface_create(dpy, drawable, visual, mSize.width, mSize.height);
     Init(surf);
 }
@@ -70,6 +75,9 @@ gfxXlibSurface::gfxXlibSurface(Display *dpy, Visual *visual, const gfxIntSize& s
     : mPixmapTaken(PR_FALSE), mDisplay(dpy), mSize(size)
 
 {
+    if (!CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT))
+        return;
+
     mDrawable = (Drawable)XCreatePixmap(dpy,
                                         RootWindow(dpy, DefaultScreen(dpy)),
                                         mSize.width, mSize.height,
@@ -85,6 +93,9 @@ gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, XRenderPictForma
                                const gfxIntSize& size)
     : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable), mSize(size)
 {
+    if (!CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT))
+        return;
+
     cairo_surface_t *surf = cairo_xlib_surface_create_with_xrender_format(dpy, drawable,
                                                                           ScreenOfDisplay(dpy,DefaultScreen(dpy)),
                                                                           format, mSize.width, mSize.height);

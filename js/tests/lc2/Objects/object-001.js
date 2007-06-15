@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'object-001.js';
+
 /**
    File Name:      object-001.js
    Description:
@@ -120,17 +122,17 @@ i++;
 */
 
 for ( i = 0; i < java_array.length; i++ ) {
-    CompareValues( java_array[i], test_array[i] );
+  CompareValues( java_array[i], test_array[i] );
 }
 
 test();
 
 function CompareValues( javaval, testval ) {
-    //  Check type, which should be E_TYPE
-    new TestCase( SECTION,
-		  "typeof (" + testval.description +" )",
-		  testval.type,
-		  javaval.type );
+  //  Check type, which should be E_TYPE
+  new TestCase( SECTION,
+		"typeof (" + testval.description +" )",
+		testval.type,
+		javaval.type );
 /*
 //  Check JavaScript class, which should be E_JSCLASS
 new TestCase( SECTION,
@@ -138,28 +140,28 @@ new TestCase( SECTION,
 testval.jsclass,
 javaval.jsclass );
 */
-    // Check the JavaClass, which should be the same as the result as Class.forName(description).
-    new TestCase( SECTION,
-		  testval.description +".getClass().equals( " +
-		  "java.lang.Class.forName( '" + testval.classname +
-		  "' ) )",
-		  true,
-		  javaval.javaclass.equals( testval.javaclass ) );
+  // Check the JavaClass, which should be the same as the result as Class.forName(description).
+  new TestCase( SECTION,
+		testval.description +".getClass().equals( " +
+		"java.lang.Class.forName( '" + testval.classname +
+		"' ) )",
+		true,
+		javaval.javaclass.equals( testval.javaclass ) );
 }
 function JavaValue( value ) {
-    this.type   = typeof value;
+  this.type   = typeof value;
 //  LC2 does not support the __proto__ property in Java objects
-    // Object.prototype.toString will show its JavaScript wrapper object.
+  // Object.prototype.toString will show its JavaScript wrapper object.
 //    value.__proto__.getJSClass = Object.prototype.toString;
 //    this.jsclass = value.getJSClass();
-    this.javaclass = value.getClass();
-    return this;
+  this.javaclass = value.getClass();
+  return this;
 }
 function TestValue( description, classname ) {
-    this.description = description;
-    this.classname = classname;
-    this.type =  E_TYPE;
-    this.jsclass = E_JSCLASS;
-    this.javaclass = java.lang.Class.forName( classname );
-    return this;
+  this.description = description;
+  this.classname = classname;
+  this.type =  E_TYPE;
+  this.jsclass = E_JSCLASS;
+  this.javaclass = java.lang.Class.forName( classname );
+  return this;
 }

@@ -69,6 +69,8 @@ extern NSPasteboard* globalDragPboard;
 extern NSView* globalDragView;
 extern NSEvent* globalDragEvent;
 
+NSString* const kWildcardPboardType = @"MozillaWildcard";
+
 NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
 NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
 NS_IMPL_QUERY_INTERFACE2(nsDragService, nsIDragService, nsIDragSession)
@@ -224,8 +226,17 @@ static nsresult SetUpDragClipboard(nsISupportsArray* aTransferableArray)
       id currentValue = [pasteboardOutputDict valueForKey:currentKey];
       if (currentKey == NSStringPboardType)
         [generalPBoard setString:currentValue forType:currentKey];
-      else
+      else {
         [generalPBoard setData:currentValue forType:currentKey];
+        // Record miscellaneous types of data a second time, under a
+        // generic type that is always registered with Cocoa as
+        // draggable. This allows types dynamically synthesized from
+        // JS to work; if in the future several different types of
+        // drag data need to be distinguished, it will be the
+        // responsibility of higher-level drag code to detect the
+        // situation (which it would normally have to do anyway.)
+        [generalPBoard setData:nil forType:kWildcardPboardType];
+      }
     }
   }
 

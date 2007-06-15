@@ -59,7 +59,6 @@
 #include "nsIDOMDocumentRange.h"
 #include "nsIDOMDocumentTraversal.h"
 #include "nsStubDocumentObserver.h"
-#include "nsIDOMEventReceiver.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMNSEventTarget.h"
 #include "nsIDOMStyleSheetList.h"
@@ -102,6 +101,7 @@
 #include "pldhash.h"
 #include "nsAttrAndChildArray.h"
 #include "nsDOMAttributeMap.h"
+#include "nsPresShellIterator.h"
 
 #define XML_DECLARATION_BITS_DECLARATION_EXISTS   (1 << 0)
 #define XML_DECLARATION_BITS_ENCODING_EXISTS      (1 << 1)
@@ -288,7 +288,7 @@ class nsDocument : public nsIDocument,
                    public nsIDOMDocumentXBL,
                    public nsIDOM3Document,
                    public nsSupportsWeakReference,
-                   public nsIDOMEventReceiver,
+                   public nsIDOMEventTarget,
                    public nsIDOM3EventTarget,
                    public nsIDOMNSEventTarget,
                    public nsIScriptObjectPrincipal,
@@ -375,9 +375,7 @@ public:
                                nsStyleSet* aStyleSet,
                                nsIPresShell** aInstancePtrResult);
   virtual PRBool DeleteShell(nsIPresShell* aShell);
-  virtual PRUint32 GetNumberOfShells() const;
-  virtual nsIPresShell *GetShellAt(PRUint32 aIndex) const;
-  virtual void SetShellsHidden(PRBool aHide);
+  virtual nsIPresShell *GetPrimaryShell() const;
 
   virtual nsresult SetSubDocumentFor(nsIContent *aContent,
                                      nsIDocument* aSubDoc);
@@ -453,7 +451,7 @@ public:
   /**
    * Get the script loader for this document
    */
-  virtual nsScriptLoader* GetScriptLoader();
+  virtual nsScriptLoader* ScriptLoader();
 
   virtual void AddMutationObserver(nsIMutationObserver* aObserver);
   virtual void RemoveMutationObserver(nsIMutationObserver* aMutationObserver);
@@ -530,6 +528,13 @@ public:
   virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
                                     nsPresContext* aPresContext,
                                     nsEventStatus* aEventStatus);
+  virtual nsresult GetListenerManager(PRBool aCreateIfNotFound,
+                                      nsIEventListenerManager** aResult);
+  virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener,
+                                         const nsIID& aIID);
+  virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
+                                            const nsIID& aIID);
+  virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -600,15 +605,6 @@ public:
 
   // nsIDOMDocumentXBL
   NS_DECL_NSIDOMDOCUMENTXBL
-
-  // nsIDOMEventReceiver interface
-  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                   const nsIID& aIID);
-  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                      const nsIID& aIID);
-  NS_IMETHOD GetListenerManager(PRBool aCreateIfNotFound,
-                                nsIEventListenerManager** aResult);
-  NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
 
   // nsIDOMEventTarget
   NS_DECL_NSIDOMEVENTTARGET
@@ -722,8 +718,6 @@ protected:
   nsDocument(const char* aContentType);
   virtual ~nsDocument();
 
-  void LastRelease();
-
   nsCString mReferrer;
   nsString mLastModified;
 
@@ -769,8 +763,6 @@ protected:
   // True if the document "page" is not hidden
   PRPackedBool mVisible:1;
 
-  PRPackedBool mShellsAreHidden:1;
-
   PRUint8 mXMLDeclarationBits;
 
   PRUint8 mDefaultElementType;
@@ -810,8 +802,6 @@ private:
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);
   nsDocument& operator=(const nsDocument& aOther);
-
-  nsSmallVoidArray mPresShells;
 
   nsCOMPtr<nsISupports> mXPathEvaluatorTearoff;
 

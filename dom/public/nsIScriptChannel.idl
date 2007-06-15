@@ -54,7 +54,7 @@
  *   principal of the environment in which the program is to be executed the
  *   execution will be forced to happen in a sandbox.
  */
-[scriptable, uuid(6dec981b-6fce-4f57-bf97-d518c6079c77)]
+[scriptable, uuid(33234b99-9588-4c7d-9da6-86b8b7cba565)]
 interface nsIScriptChannel : nsISupports
 {
   /**
@@ -85,4 +85,18 @@ interface nsIScriptChannel : nsISupports
    * @throws NS_ERROR_INVALID_ARG when set to an unrecognized value.
    */
   attribute unsigned long executionPolicy;
+
+  /**
+   * Control whether the program should be executed synchronosly when
+   * the channel's AsyncOpen method is called or whether it should be
+   * executed asynchronously.  In both cases, any data that the
+   * channel returns will be returned asynchronously; the only thing
+   * this property affects is when the program executes.
+   *
+   * The default value of this property is TRUE.
+   *
+   * Setting this property after asyncOpen has been called on the
+   * channel has no effect.
+   */
+  attribute boolean executeAsync;   
 };

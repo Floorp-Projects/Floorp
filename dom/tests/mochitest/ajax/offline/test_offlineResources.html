@@ -1,0 +1,150 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>navigator.offlineResources Test</title>
+<script type="text/javascript" src="/MochiKit/packed.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+
+<script type="text/javascript">
+
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+var nsICache = Components.interfaces.nsICache;
+var base = window.location.protocol + "//" + window.location.host;
+var packedURL = base + "/MochiKit/packed.js";
+var simpleTestURL = base + "/tests/SimpleTest/SimpleTest.js";
+var thisURL = base + window.location.pathname;
+
+function check_cache(url, expectEntry)
+{
+  var cacheService = Components.classes["@mozilla.org/network/cache-service;1"]
+    .getService(Components.interfaces.nsICacheService);
+  var cacheSession = cacheService.createSession("HTTP-offline",
+                                                nsICache.STORE_OFFLINE,
+                                                true);
+  try {
+    var entry = cacheSession.openCacheEntry(url, nsICache.ACCESS_READ, true);
+    ok(expectEntry == true, url + " should exist in the offline cache");
+    entry.close();
+  } catch (e) {
+    // this constant isn't in Components.results
+    const kNetBase = 2152398848; // 0x804B0000
+    var NS_ERROR_CACHE_KEY_NOT_FOUND = kNetBase + 61
+    if (e.result == NS_ERROR_CACHE_KEY_NOT_FOUND) {
+      ok(expectEntry == false, url + " should not exist in the offline cache");
+    } else {
+      throw e;
+    }
+  }
+}
+
+function check_list(array)
+{
+  var checkObj = {};
+  for (var i = 0; i < array.length; i++) {
+    checkObj[array[i]] = true;
+  }
+  for (var i = 0; i < navigator.offlineResources.length; i++) {
+    ok (navigator.offlineResources[i] in checkObj,
+        navigator.offlineResources[i] + " should not be in offlineResources");
+    delete checkObj[navigator.offlineResources[i]];
+  }
+
+  for (var key in checkObj) {
+    ok(false, key + " was not in navigator.offlineResources");
+  }
+}
+
+function run_eviction()
+{
+  var cacheService = Components.classes["@mozilla.org/network/cache-service;1"]
+    .getService(Components.interfaces.nsICacheService);
+  var cacheSession = cacheService.createSession("HTTP-offline",
+                                                nsICache.STORE_OFFLINE,
+                                                true)
+                     .QueryInterface(Components.interfaces.nsIOfflineCacheSession);
+  cacheSession.evictUnownedEntries();
+}
+
+function clear_cache()
+{
+  var cacheService = Components.classes["@mozilla.org/network/cache-service;1"]
+    .getService(Components.interfaces.nsICacheService);
+
+  cacheService.evictEntries(nsICache.STORE_OFFLINE);
+}
+
+function load_done() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  check_list([packedURL, simpleTestURL, thisURL]);
+
+  check_cache(packedURL, true);
+  check_cache(simpleTestURL, true);
+  check_cache(thisURL, true);
+
+  navigator.offlineResources.remove(packedURL);
+  run_eviction();
+
+  check_list([simpleTestURL, thisURL]);
+
+  // Make sure the removed entry was evicted but the others weren't
+  check_cache(packedURL, false);
+  check_cache(simpleTestURL, true);
+  check_cache(thisURL, true);
+
+  navigator.offlineResources.clear();
+  run_eviction();
+
+  check_list([]);
+
+  check_cache(packedURL, false);
+  check_cache(simpleTestURL, false);
+  check_cache(thisURL, false);
+
+  // Clear out the offline cache on the way out
+  clear_cache();
+  SimpleTest.finish();
+}
+
+function run_test()
+{
+  // Clear the offline cache to make sure we're the one adding to it
+  clear_cache();
+
+  // Check invalid urls
+  try {
+    navigator.offlineResources.add("/blah/blah");
+    ok(false, "relative URLs cannot be added");
+  } catch(e) {
+    ok(true, "relative URLs should throw an error");
+  }
+
+  try {
+    navigator.offlineResources.add("ftp://localhost/blah/blah");
+    ok(false, "urls must be http or https");
+  } catch(e) {
+    ok(true, "urls must be http or https");
+  }
+
+  // Add the correct resources
+  navigator.offlineResources.add(packedURL);
+  navigator.offlineResources.add(simpleTestURL);
+  navigator.offlineResources.add(thisURL);
+
+  // Give the offline resources some time to load;  Once pendingOfflineLoads
+  // is implemented, we can use that instead.
+  setTimeout("load_done()", 1000);
+
+  SimpleTest.waitForExplicitFinish();
+}
+
+run_test();
+
+</script>
+
+</head>
+<body>
+
+
+
+</body>
+</html>

@@ -41,6 +41,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.4.36.js';
+
 START("13.4.4.36 - setNamespace");
 
 TEST(1, true, XML.prototype.hasOwnProperty("setNamespace"));
@@ -55,7 +57,7 @@ correct =
     <foo:bravo>one</foo:bravo>
 </bar:alpha>;
 
-x.setNamespace("http://bar/");   
+x.setNamespace("http://bar/");  
 
 TEST(2, correct, x);
 

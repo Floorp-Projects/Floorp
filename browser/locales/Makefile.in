@@ -65,11 +65,14 @@ AB = $(firstword $(subst -, ,$(AB_CD)))
 
 APP_VERSION := $(shell cat $(srcdir)/../config/version.txt)
 
+PWD := $(shell pwd)
+core_abspath = $(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(PWD)/$(1)))
+
 DEFINES += \
 	-DAB_CD=$(AB_CD) \
 	-DMOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox.mozilla.org \
 	-DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
-	-DLOCALE_SRCDIR=$(LOCALE_SRCDIR) \
+	-DLOCALE_SRCDIR=$(call core_abspath,$(LOCALE_SRCDIR)) \
 	-DPKG_BASENAME=$(PKG_BASENAME) \
 	$(NULL)
 
@@ -84,6 +87,17 @@ endif
 PREF_JS_EXPORTS = $(LOCALE_SRCDIR)/firefox-l10n.js
 
 include $(topsrcdir)/config/rules.mk
+
+libs::
+	@if test -f "$(LOCALE_SRCDIR)/existing-profile-defaults.js"; then \
+	  $(PERL) $(topsrcdir)/config/preprocessor.pl $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) \
+	    $(LOCALE_SRCDIR)/existing-profile-defaults.js > $(FINAL_TARGET)/defaults/existing-profile-defaults.js; \
+	fi
+install::
+	@if test -f "$(LOCALE_SRCDIR)/existing-profile-defaults.js"; then \
+	  $(PERL) $(topsrcdir)/config/preprocessor.pl $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) \
+	    $(LOCALE_SRCDIR)/existing-profile-defaults.js > $(DESTDIR)$(mozappdir)/defaults/existing-profile-defaults.js; \
+	fi
 
 ifeq ($(OS_ARCH),OS2)
 README_FILES = \

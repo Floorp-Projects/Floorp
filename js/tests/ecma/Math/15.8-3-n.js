@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.8-3-n.js';
+
 /**
    File Name:          15.8-3.js
    ECMA Section:       15.8 The Math Object

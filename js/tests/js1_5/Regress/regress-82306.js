@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 23 May 2001
  *
  * SUMMARY: Regression test for Bugzilla bug 82306
@@ -43,21 +45,22 @@
  * This test used to crash the JS engine. This was discovered
  * by Mike Epstein <epstein@tellme.com>
  */
-//-------------------------------------------------------------------------------------------------
-var bug = 82306;
+//-----------------------------------------------------------------------------
+var gTestfile = 'regress-82306.js';
+var BUGNUMBER = 82306;
 var summary = "Testing we don't crash on encodeURI()";
 var URI = '';
 
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 test();
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
 
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   URI += '<?xml version="1.0"?>';

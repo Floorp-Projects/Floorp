@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.4.1.2.js';
+
 /**
    File Name:          15.4.1.2.js
    ECMA Section:       15.4.1.2 Array(len)
@@ -59,84 +61,84 @@ var TITLE   = "Array Constructor Called as a Function:  Array(len)";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,  
-	      "(Array()).length",             
-	      0,                              
+new TestCase( SECTION, 
+	      "(Array()).length",            
+	      0,                             
 	      (Array()).length );
 
-new TestCase( SECTION,	
-	      "(Array(0)).length",            
-	      0,                              
+new TestCase( SECTION,
+	      "(Array(0)).length",           
+	      0,                             
 	      (Array(0)).length );
 
-new TestCase( SECTION,	
-	      "(Array(1)).length",            
-	      1,                              
+new TestCase( SECTION,
+	      "(Array(1)).length",           
+	      1,                             
 	      (Array(1)).length );
 
-new TestCase( SECTION,	
-	      "(Array(10)).length",           
-	      10,                             
+new TestCase( SECTION,
+	      "(Array(10)).length",          
+	      10,                            
 	      (Array(10)).length );
 
-new TestCase( SECTION,	
-	      "(Array('1')).length",          
-	      1,                              
+new TestCase( SECTION,
+	      "(Array('1')).length",         
+	      1,                             
 	      (Array('1')).length );
 
-new TestCase( SECTION,	
-	      "(Array(1000)).length",         
-	      1000,                           
+new TestCase( SECTION,
+	      "(Array(1000)).length",        
+	      1000,                          
 	      (Array(1000)).length );
 
-new TestCase( SECTION,	
-	      "(Array('1000')).length",       
-	      1,                              
+new TestCase( SECTION,
+	      "(Array('1000')).length",      
+	      1,                             
 	      (Array('1000')).length );
 
-new TestCase( SECTION,	
-	      "(Array(4294967295)).length",   
-	      ToUint32(4294967295),           
+new TestCase( SECTION,
+	      "(Array(4294967295)).length",  
+	      ToUint32(4294967295),          
 	      (Array(4294967295)).length );
 
-new TestCase( SECTION,	
-	      "(Array(Math.pow(2,31)-1)).length",     
-	      ToUint32(Math.pow(2,31)-1),     
+new TestCase( SECTION,
+	      "(Array(Math.pow(2,31)-1)).length",    
+	      ToUint32(Math.pow(2,31)-1),    
 	      (Array(Math.pow(2,31)-1)).length );
 
-new TestCase( SECTION,	
-	      "(Array(Math.pow(2,31))).length",       
-	      ToUint32(Math.pow(2,31)),       
+new TestCase( SECTION,
+	      "(Array(Math.pow(2,31))).length",      
+	      ToUint32(Math.pow(2,31)),      
 	      (Array(Math.pow(2,31))).length );
 
-new TestCase( SECTION,	
-	      "(Array(Math.pow(2,31)+1)).length",     
-	      ToUint32(Math.pow(2,31)+1),     
+new TestCase( SECTION,
+	      "(Array(Math.pow(2,31)+1)).length",    
+	      ToUint32(Math.pow(2,31)+1),    
 	      (Array(Math.pow(2,31)+1)).length );
 
-new TestCase( SECTION,	
-	      "(Array('8589934592')).length", 
-	      1,                              
+new TestCase( SECTION,
+	      "(Array('8589934592')).length",
+	      1,                             
 	      (Array("8589934592")).length );
 
-new TestCase( SECTION,	
-	      "(Array('4294967296')).length", 
-	      1,                              
+new TestCase( SECTION,
+	      "(Array('4294967296')).length",
+	      1,                             
 	      (Array("4294967296")).length );
 
-new TestCase( SECTION,	
-	      "(Array(1073741823)).length",   
-	      ToUint32(1073741823),           
+new TestCase( SECTION,
+	      "(Array(1073741823)).length",  
+	      ToUint32(1073741823),          
 	      (Array(1073741823)).length );
 
-new TestCase( SECTION,	
-	      "(Array(1073741824)).length",   
-	      ToUint32(1073741824),	        
+new TestCase( SECTION,
+	      "(Array(1073741824)).length",  
+	      ToUint32(1073741824),	       
 	      (Array(1073741824)).length );
 
-new TestCase( SECTION,	
-	      "(Array('a string')).length",   
-	      1,                              
+new TestCase( SECTION,
+	      "(Array('a string')).length",  
+	      1,                             
 	      (Array("a string")).length );
 
 test();

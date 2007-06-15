@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-349619.js';
 //-----------------------------------------------------------------------------
-var bug = 349619;
+var BUGNUMBER = 349619;
 var summary = 'Do not assert with let block, object literal getter/setter';
 var actual = 'No Crash';
 var expect = 'No Crash';
@@ -48,10 +50,10 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
-  function() { let(y=3) { ({ get y() { }, set y(z) { } }) } }
+ 
+  (function() { let(y=3) { ({ get y() { }, set y(z) { } }) } });
 
   reportCompare(expect, actual, summary);
 

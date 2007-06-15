@@ -40,10 +40,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.4.24.js';
+
 START("13.4.4.24 - XML namespaceDeclarations()");
 
 TEST(1, true, XML.prototype.hasOwnProperty("namespaceDeclarations"));
-    
+   
 x =
 <foo:alpha xmlns:foo="http://foo/" xmlns:bar="http://bar/">
     <foo:bravo>one</foo:bravo>

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 15 Feb 2001
  *
  * SUMMARY: create a Deletable local variable using eval
@@ -46,8 +48,9 @@
  *
  * "Demonstrate the creation of a Deletable local variable using eval"
  */
-//-------------------------------------------------------------------------------------------------
-var bug = 68498;
+//-----------------------------------------------------------------------------
+var gTestfile = 'regress-68498-002.js';
+var BUGNUMBER = 68498;
 var summary = 'Creating a Deletable local variable using eval';
 var statprefix = '; currently at expect[';
 var statsuffix = '] within test -';
@@ -77,12 +80,12 @@ test();
 //-------------------------------------------------------------------------------------------------
 
 
-function test() 
+function test()
 {
-  enterFunc ('test'); 
-  printBugNumber (bug);
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   for (var i in expect)
   {
     reportCompare(expect[i], actual[i], getStatus(i));

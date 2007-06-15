@@ -1303,11 +1303,6 @@ function Apply()
   return false;
 }
 
-function doHelpButton()
-{
-  openHelp("table_properties");
-}
-
 function onAccept()
 {
   // Do same as Apply and close window if ValidateData succeeded

@@ -47,14 +47,21 @@
 #include <mach/mach_interface.h>
 #include <mach/mach_init.h>
 
+#import <Cocoa/Cocoa.h>
 #import <Carbon/Carbon.h>
 #import <IOKit/pwr_mgt/IOPMLib.h>
 #import <IOKit/IOMessage.h>
 
 #include "nsWidgetAtoms.h"
+#include "nsIRollupListener.h"
+#include "nsIWidget.h"
 
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
+
+// defined in nsChildView.mm
+extern nsIRollupListener * gRollupListener;
+extern nsIWidget         * gRollupWidget;
 
 static io_connect_t gRootPort = MACH_PORT_NULL;
 
@@ -89,6 +96,7 @@ nsToolkit::Init(PRThread * aThread)
   mInited = true;
   
   RegisterForSleepWakeNotifcations();
+  RegisterForAllProcessMouseEvents();
 
   return NS_OK;
 }
@@ -170,6 +178,26 @@ nsToolkit::RemoveSleepWakeNotifcations()
 
     mSleepWakeNotificationRLS = nsnull;
   }
+}
+
+
+static OSStatus AllAppMouseEventHandler(EventHandlerCallRef aCaller, EventRef aEvent, void* aRefcon)
+{
+  if (![NSApp isActive]) {
+    if (gRollupListener != nsnull && gRollupWidget != nsnull)
+      gRollupListener->Rollup();
+  }
+
+  return noErr;
+}
+
+
+void
+nsToolkit::RegisterForAllProcessMouseEvents()
+{
+  EventTypeSpec kEvents[] = {{kEventClassMouse, kEventMouseDown}};
+
+  InstallEventHandler(GetEventMonitorTarget(), AllAppMouseEventHandler, GetEventTypeCount(kEvents), kEvents, 0, NULL);
 }
 
 

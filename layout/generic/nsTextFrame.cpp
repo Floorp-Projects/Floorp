@@ -105,6 +105,16 @@
 #include "nsBidiFrames.h"
 #include "nsBidiPresUtils.h"
 #include "nsBidiUtils.h"
+#include "nsTextFrameTextRunCache.h"
+
+nsresult
+nsTextFrameTextRunCache::Init() {
+  return NS_OK;
+}
+
+void
+nsTextFrameTextRunCache::Shutdown() {
+}
 
 #ifdef SUNCTL
 #include "nsILE.h"
@@ -321,7 +331,8 @@ public:
   {
     // Set the frame state bit for text frames to mark them as replaced.
     // XXX kipp: temporary
-    return nsFrame::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced));
+    return nsFrame::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced |
+                                             nsIFrame::eLineParticipant));
   }
   
 #ifdef DEBUG
@@ -893,7 +904,8 @@ nsTextStyle::nsTextStyle(nsPresContext* aPresContext,
   PRUint8 originalDecorations = plainFont->decorations;
   plainFont->decorations = NS_FONT_DECORATION_NONE;
   mAveCharWidth = 0;
-  SetFontFromStyle(&aRenderingContext, sc); // some users of the struct expect this state
+  // Set the font: some users of the struct expect this state
+  nsLayoutUtils::SetFontFromStyle(&aRenderingContext, sc);
   aRenderingContext.GetFontMetrics(mNormalFont);
   mNormalFont->GetSpaceWidth(mSpaceWidth);
   mNormalFont->GetAveCharWidth(mAveCharWidth);
@@ -1945,32 +1957,34 @@ nsTextFrame::CharacterDataChanged(nsPresContext* aPresContext,
 {
   nsIFrame* targetTextFrame = this;
 
-  PRBool markAllDirty = PR_TRUE;
   if (aAppend) {
-    markAllDirty = PR_FALSE;
-    nsTextFrame* frame = NS_STATIC_CAST(nsTextFrame*, GetLastInFlow());
+    nsTextFrame* frame = NS_STATIC_CAST(nsTextFrame*, GetLastContinuation());
     frame->mState &= ~TEXT_WHITESPACE_FLAGS;
-    frame->mState |= NS_FRAME_IS_DIRTY;
     targetTextFrame = frame;
-  }
-
-  if (markAllDirty) {
+  } else {
     // Mark this frame and all the next-in-flow frames as dirty and reset all
     // the content offsets and lengths to 0, since they no longer know what
     // content is ok to access.
+
+    // Don't set NS_FRAME_IS_DIRTY on |this|, since we call FrameNeedsReflow
+    // below.
     nsTextFrame*  textFrame = this;
-    while (textFrame) {
+    do {
       textFrame->mState &= ~TEXT_WHITESPACE_FLAGS;
-      textFrame->mState |= NS_FRAME_IS_DIRTY;
       textFrame->mContentOffset = 0;
       textFrame->mContentLength = 0;
       textFrame = NS_STATIC_CAST(nsTextFrame*, textFrame->GetNextContinuation());
-    }
+      if (!textFrame) {
+        break;
+      }
+      textFrame->mState |= NS_FRAME_IS_DIRTY;
+    } while (1);
   }
 
   // Ask the parent frame to reflow me.  
   aPresContext->GetPresShell()->FrameNeedsReflow(targetTextFrame,
-                                                 nsIPresShell::eStyleChange);
+                                                 nsIPresShell::eStyleChange,
+                                                 NS_FRAME_IS_DIRTY);
 
   return NS_OK;
 }
@@ -2140,7 +2154,7 @@ nsTextFrame::FillClusterBuffer(nsPresContext *aPresContext, const PRUnichar *aTe
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Find the font metrics for this text
-    SetFontFromStyle(acx, mStyleContext);
+    nsLayoutUtils::SetFontFromStyle(acx, mStyleContext);
 
     acx->GetHints(clusterHint);
     clusterHint &= NS_RENDERING_HINT_TEXT_CLUSTERS;
@@ -4131,7 +4145,7 @@ nsTextFrame::GetPositionHelper(const nsPoint&  aPoint,
       }
 
       // Find the font metrics for this text
-      SetFontFromStyle(rendContext, mStyleContext);
+      nsLayoutUtils::SetFontFromStyle(rendContext, mStyleContext);
 
       // Get the renderable form of the text
       nsTextTransformer tx(PresContext());
@@ -6173,7 +6187,7 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
 
 #ifdef MOZ_MATHML
     if (calcMathMLMetrics) {
-      SetFontFromStyle(aReflowState.rendContext, mStyleContext);
+      nsLayoutUtils::SetFontFromStyle(aReflowState.rendContext, mStyleContext);
       nsBoundingMetrics bm;
       rv = aReflowState.rendContext->GetBoundingMetrics(textBuffer.mBuffer, textLength, bm);
       if (NS_SUCCEEDED(rv))
@@ -6277,7 +6291,7 @@ nsTextFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
         if (XP_IS_SPACE(ch)) {
           // Get font metrics for a space so we can adjust the width by the
           // right amount.
-          SetFontFromStyle(&aRC, mStyleContext);
+          nsLayoutUtils::SetFontFromStyle(&aRC, mStyleContext);
 
           aRC.GetWidth(' ', dw);
           // NOTE: Trailing whitespace includes word and letter spacing!

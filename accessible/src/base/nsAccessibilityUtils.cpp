@@ -39,6 +39,7 @@
 #include "nsAccessibilityUtils.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
+#include "nsIEventListenerManager.h"
 
 void
 nsAccessibilityUtils::GetAccAttr(nsIPersistentProperties *aAttributes,
@@ -155,3 +156,13 @@ nsAccessibilityUtils::SetAccAttrsForXULSelectControlItem(nsIDOMNode *aNode,
 
   SetAccGroupAttrs(aAttributes, 0, indexOf + 1, itemsCount);
 }
+
+PRBool nsAccessibilityUtils::HasListener(nsIContent *aContent, const nsAString& aEventType)
+{
+  NS_ENSURE_ARG_POINTER(aContent);
+  nsCOMPtr<nsIEventListenerManager> listenerManager;
+  aContent->GetListenerManager(PR_FALSE, getter_AddRefs(listenerManager));
+
+  return listenerManager && listenerManager->HasListenersFor(aEventType);  
+}
+

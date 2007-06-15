@@ -371,11 +371,6 @@ function AllowDefaultButton()
   gAllowEnterKey = true;
 }
 
-function doTroubleshooting()
-{
-  openHelp("comp-doc-publish-troubleshooting");
-}
-
 function onEnterKey()
 {
   if (gAllowEnterKey)

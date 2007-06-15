@@ -413,7 +413,7 @@
                 oldval = this.second;
               }
 
-              newval = this._constrainValue(field, oldval + change, false);
+              var newval = this._constrainValue(field, oldval + change, false);
 
               if (field == this.hourField)
                 this.hour = newval;
@@ -677,7 +677,7 @@
             else if (field == this.dateField)
               oldval = this.date;
 
-            newval = this._constrainValue(field, oldval + aDir, false);
+            var newval = this._constrainValue(field, oldval + aDir, false);
 
             if (field == this.yearField)
               this.year = newval;

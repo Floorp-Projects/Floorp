@@ -38,8 +38,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'regress-291930.js';
+
 START("If document starts with comment, document is discarded");
-BUG(291930);
+printBugNumber(291930);
 
 XML.ignoreComments = false;
 try {

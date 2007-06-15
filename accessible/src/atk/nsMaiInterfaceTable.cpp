@@ -72,7 +72,8 @@ AtkObject*
 refAtCB(AtkTable *aTable, gint aRow, gint aColumn)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-    NS_ENSURE_TRUE(accWrap, nsnull);
+    if (!accWrap)
+        return nsnull;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
@@ -84,20 +85,19 @@ refAtCB(AtkTable *aTable, gint aRow, gint aColumn)
     if (NS_FAILED(rv) || !cell)
         return nsnull;
 
-    nsIAccessible *tmpAcc = cell;
-    nsAccessibleWrap *cellAccWrap = NS_STATIC_CAST(nsAccessibleWrap *, tmpAcc);
-
-    AtkObject *atkObj = cellAccWrap->GetAtkObject();
-    if (atkObj)
-        g_object_ref(atkObj);
-    return atkObj;
+    AtkObject *cellAtkObj = nsAccessibleWrap::GetAtkObject(cell);
+    if (cellAtkObj) {
+        g_object_ref(cellAtkObj);
+    }
+    return cellAtkObj;
 }
 
 gint
 getIndexAtCB(AtkTable *aTable, gint aRow, gint aColumn)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-    NS_ENSURE_TRUE(accWrap, -1);
+    if (!accWrap)
+        return -1;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
@@ -115,7 +115,8 @@ gint
 getColumnAtIndexCB(AtkTable *aTable, gint aIndex)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-    NS_ENSURE_TRUE(accWrap, -1);
+    if (!accWrap)
+        return -1;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
@@ -133,7 +134,8 @@ gint
 getRowAtIndexCB(AtkTable *aTable, gint aIndex)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-    NS_ENSURE_TRUE(accWrap, -1);
+    if (!accWrap)
+        return -1;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
@@ -151,7 +153,8 @@ gint
 getColumnCountCB(AtkTable *aTable)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-    NS_ENSURE_TRUE(accWrap, -1);
+    if (!accWrap)
+        return -1;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
@@ -169,7 +172,8 @@ gint
 getRowCountCB(AtkTable *aTable)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-    NS_ENSURE_TRUE(accWrap, -1);
+    if (!accWrap)
+        return -1;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
@@ -188,7 +192,8 @@ getColumnExtentAtCB(AtkTable *aTable,
                     gint aRow, gint aColumn)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-    NS_ENSURE_TRUE(accWrap, -1);
+    if (!accWrap)
+        return -1;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
@@ -207,7 +212,8 @@ getRowExtentAtCB(AtkTable *aTable,
                  gint aRow, gint aColumn)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-    NS_ENSURE_TRUE(accWrap, -1);
+    if (!accWrap)
+        return -1;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
@@ -225,7 +231,8 @@ AtkObject*
 getCaptionCB(AtkTable *aTable)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-    NS_ENSURE_TRUE(accWrap, nsnull);
+    if (!accWrap)
+        return nsnull;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
@@ -237,18 +244,15 @@ getCaptionCB(AtkTable *aTable)
     if (NS_FAILED(rv) || !caption)
         return nsnull;
 
-    nsIAccessible *tmpAcc = caption;
-    nsAccessibleWrap *captionAccWrap =
-        NS_STATIC_CAST(nsAccessibleWrap *, tmpAcc);
-
-    return captionAccWrap->GetAtkObject();
+    return nsAccessibleWrap::GetAtkObject(caption);
 }
 
 const gchar*
 getColumnDescriptionCB(AtkTable *aTable, gint aColumn)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-    NS_ENSURE_TRUE(accWrap, nsnull);
+    if (!accWrap)
+        return nsnull;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
@@ -266,7 +270,8 @@ AtkObject*
 getColumnHeaderCB(AtkTable *aTable, gint aColumn)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-    NS_ENSURE_TRUE(accWrap, nsnull);
+    if (!accWrap)
+        return nsnull;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
@@ -291,18 +296,15 @@ getColumnHeaderCB(AtkTable *aTable, gint aColumn)
     header->CellRefAt(0, aColumn, getter_AddRefs(accHeader));
     NS_ENSURE_TRUE(accHeader, nsnull);
 
-    nsIAccessible *tmpAcc = accHeader;
-    nsAccessibleWrap *headerAccWrap =
-        NS_STATIC_CAST(nsAccessibleWrap *, tmpAcc);
-
-    return headerAccWrap->GetAtkObject();
+    return nsAccessibleWrap::GetAtkObject(accHeader);
 }
 
 const gchar*
 getRowDescriptionCB(AtkTable *aTable, gint aRow)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-    NS_ENSURE_TRUE(accWrap, nsnull);
+    if (!accWrap)
+        return nsnull;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
@@ -320,7 +322,8 @@ AtkObject*
 getRowHeaderCB(AtkTable *aTable, gint aRow)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-    NS_ENSURE_TRUE(accWrap, nsnull);
+    if (!accWrap)
+        return nsnull;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
@@ -332,13 +335,9 @@ getRowHeaderCB(AtkTable *aTable, gint aRow)
     NS_ENSURE_SUCCESS(rv, nsnull);
 
     nsCOMPtr<nsIAccessible> accHeader(do_QueryInterface(header));
-    NS_ENSURE_TRUE(accTable, nsnull);
+    NS_ENSURE_TRUE(accHeader, nsnull);
 
-    nsIAccessible *tmpAcc = accHeader;
-    nsAccessibleWrap *headerAccWrap =
-        NS_STATIC_CAST(nsAccessibleWrap *, tmpAcc);
-
-    return headerAccWrap->GetAtkObject();
+    return nsAccessibleWrap::GetAtkObject(accHeader);
 }
 
 AtkObject*
@@ -352,7 +351,8 @@ gint
 getSelectedColumnsCB(AtkTable *aTable, gint **aSelected)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-    NS_ENSURE_TRUE(accWrap, 0);
+    if (!accWrap)
+        return 0;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
@@ -386,7 +386,8 @@ gint
 getSelectedRowsCB(AtkTable *aTable, gint **aSelected)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-    NS_ENSURE_TRUE(accWrap, 0);
+    if (!accWrap)
+        return 0;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
@@ -420,7 +421,8 @@ gboolean
 isColumnSelectedCB(AtkTable *aTable, gint aColumn)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-    NS_ENSURE_TRUE(accWrap, FALSE);
+    if (!accWrap)
+        return FALSE;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
@@ -436,7 +438,8 @@ gboolean
 isRowSelectedCB(AtkTable *aTable, gint aRow)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-    NS_ENSURE_TRUE(accWrap, FALSE);
+    if (!accWrap)
+        return FALSE;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
@@ -452,7 +455,8 @@ gboolean
 isCellSelectedCB(AtkTable *aTable, gint aRow, gint aColumn)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-    NS_ENSURE_TRUE(accWrap, FALSE);
+    if (!accWrap)
+        return FALSE;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),

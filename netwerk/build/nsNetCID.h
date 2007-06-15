@@ -713,6 +713,14 @@
     { 0xa2, 0x8a, 0x5b, 0xa2, 0x44, 0x7f, 0xba, 0xce } \
 }
 
+#define NS_UDPSOCKETPROVIDER_CID                       \
+{ /* 320706D2-2E81-42c6-89C3-8D83B17D3FB4 */           \
+    0x320706d2,                                        \
+    0x2e81,                                            \
+    0x42c6,                                            \
+    { 0x89, 0xc3, 0x8d, 0x83, 0xb1, 0x7d, 0x3f, 0xb4 } \
+}
+
 #define NS_SSLSOCKETPROVIDER_CONTRACTID \
     NS_NETWORK_SOCKET_CONTRACTID_PREFIX "ssl"
 

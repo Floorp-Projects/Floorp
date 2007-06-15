@@ -48,20 +48,13 @@
 #include "nsPresContext.h"
 #include "nsPoint.h"
 #include "nsGUIEvent.h"
-#include "nsRecycled.h"
 
 class nsIContent;
 class nsIScrollableView;
-
-/* Currently we use a single-object recycler (nsRecycledSingle).
- * With our current usage pattern, we almost never have more than
- * a single nsDOMEvent active in memory at a time under normal circumstances.
- */
  
 class nsDOMEvent : public nsIDOMEvent,
                    public nsIDOMNSEvent,
-                   public nsIPrivateDOMEvent,
-                   public nsRecycledSingle<nsDOMEvent>
+                   public nsIPrivateDOMEvent
 {
 public:
 
@@ -129,7 +122,9 @@ public:
     eDOMEvents_DOMFocusOut,
     eDOMEvents_pageshow,
     eDOMEvents_pagehide,
-    eDOMEvents_DOMMouseScroll
+    eDOMEvents_DOMMouseScroll,
+    eDOMEvents_offline,
+    eDOMEvents_online
 #ifdef MOZ_SVG
    ,
     eDOMEvents_SVGLoad,

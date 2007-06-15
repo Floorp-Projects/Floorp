@@ -125,6 +125,9 @@ union nsPluginPort;
 // these are sent to the first responder when the window key status changes
 - (void)viewsWindowDidBecomeKey;
 - (void)viewsWindowDidResignKey;
+
+// Stop NSView hierarchy being changed during [ChildView drawRect:]
+- (void)delayedTearDown;
 @end
 
 

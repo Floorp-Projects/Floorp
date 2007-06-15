@@ -532,12 +532,10 @@ nsImageFrame::OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage)
   // already gotten the initial reflow
   if (!(mState & IMAGE_SIZECONSTRAINED) && (mState & IMAGE_GOTINITIALREFLOW)) { 
     nsIPresShell *presShell = presContext->GetPresShell();
-    NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
     NS_ASSERTION(presShell, "No PresShell.");
-    if (mParent && presShell) { 
-      AddStateBits(NS_FRAME_IS_DIRTY);
-      presShell->FrameNeedsReflow(NS_STATIC_CAST(nsIFrame*, this),
-                                  nsIPresShell::eStyleChange);
+    if (presShell) { 
+      presShell->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
+                                  NS_FRAME_IS_DIRTY);
     }
   }
 
@@ -560,10 +558,14 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
     return NS_OK;
   }
   
+  // XXX We really need to round this out, now that we're doing better
+  // image scaling!
+  nsRect r = SourceRectToDest(*aRect);
+
   // handle iconLoads first...
   if (HandleIconLoads(aRequest, PR_FALSE)) {
     // Image changed, invalidate
-    Invalidate(*aRect, PR_FALSE);
+    Invalidate(r, PR_FALSE);
     return NS_OK;
   }
 
@@ -585,9 +587,6 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
     }
   }
 
-  // XXX We really need to round this out, now that we're doing better
-  // image scaling!
-  nsRect r = SourceRectToDest(*aRect);
 #ifdef DEBUG_decode
   printf("Source rect (%d,%d,%d,%d) -> invalidate dest rect (%d,%d,%d,%d)\n",
          aRect->x, aRect->y, aRect->width, aRect->height,
@@ -639,11 +638,9 @@ nsImageFrame::OnStopDecode(imgIRequest *aRequest,
 
     if (mState & IMAGE_GOTINITIALREFLOW) { // do nothing if we haven't gotten the initial reflow yet
       if (!(mState & IMAGE_SIZECONSTRAINED) && intrinsicSizeChanged) {
-        NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
-        if (mParent && presShell) { 
-          AddStateBits(NS_FRAME_IS_DIRTY);
-          presShell->FrameNeedsReflow(NS_STATIC_CAST(nsIFrame*, this),
-                                      nsIPresShell::eStyleChange);
+        if (presShell) { 
+          presShell->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
+                                      NS_FRAME_IS_DIRTY);
         }
       } else {
         nsSize s = GetSize();
@@ -724,7 +721,7 @@ nsImageFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
   return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
                             aRenderingContext, this,
                             mIntrinsicSize,
-                            aCBSize, aBorder, aPadding);
+                            aCBSize, aMargin, aBorder, aPadding);
 }
 
 nsRect 
@@ -770,6 +767,13 @@ nsImageFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   // convert from normal twips to scaled twips (printing...)
   result = mIntrinsicSize.width;
   return result;
+}
+
+/* virtual */ nsSize
+nsImageFrame::GetIntrinsicRatio()
+{
+  EnsureIntrinsicSize(PresContext());
+  return mIntrinsicSize;
 }
 
 NS_IMETHODIMP
@@ -940,7 +944,7 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
 {
   // Set font and color
   aRenderingContext.SetColor(GetStyleColor()->mColor);
-  SetFontFromStyle(&aRenderingContext, mStyleContext);
+  nsLayoutUtils::SetFontFromStyle(&aRenderingContext, mStyleContext);
 
   // Format the text to display within the formatting rect
   nsIFontMetrics* fm;
@@ -1576,10 +1580,9 @@ nsImageFrame::AttributeChanged(PRInt32 aNameSpaceID,
   }
   if (nsGkAtoms::alt == aAttribute)
   {
-    AddStateBits(NS_FRAME_IS_DIRTY);
-    PresContext()->PresShell()->FrameNeedsReflow(
-                                       NS_STATIC_CAST(nsIFrame*, this),
-                                       nsIPresShell::eStyleChange);
+    PresContext()->PresShell()->FrameNeedsReflow(this,
+                                                 nsIPresShell::eStyleChange,
+                                                 NS_FRAME_IS_DIRTY);
   }
 
   return NS_OK;

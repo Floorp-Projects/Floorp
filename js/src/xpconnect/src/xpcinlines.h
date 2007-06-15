@@ -44,6 +44,25 @@
 #define xpcinlines_h___
 
 /***************************************************************************/
+inline void
+XPCJSRuntime::AddVariantRoot(XPCTraceableVariant* variant)
+{
+    variant->AddToRootSet(GetJSRuntime(), &mVariantRoots);
+}
+
+inline void
+XPCJSRuntime::AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS)
+{
+    wrappedJS->AddToRootSet(GetJSRuntime(), &mWrappedJSRoots);
+}
+
+inline void
+XPCJSRuntime::AddObjectHolderRoot(XPCJSObjectHolder* holder)
+{
+    holder->AddToRootSet(GetJSRuntime(), &mObjectHolderRoots);
+}
+
+/***************************************************************************/
 
 inline JSBool
 XPCCallContext::IsValid() const

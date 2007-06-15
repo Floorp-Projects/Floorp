@@ -521,12 +521,12 @@ PRBool
 nsHTMLScrollFrame::InInitialReflow() const
 {
   // We're in an initial reflow if NS_FRAME_FIRST_REFLOW is set, unless we're a
-  // root scrollframe during a non-eager StartLayout call on the presshell.  In
-  // that case we want to skip this clause altogether.
-  return
-    (GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
-    (!mInner.mIsRoot ||
-     PresContext()->PresShell()->IsInEagerStartLayout());
+  // root scrollframe.  In that case we want to skip this clause altogether.
+  // The guess here is that there are lots of overflow:auto divs out there that
+  // end up auto-sizing so they don't overflow, and that the root basically
+  // always needs a scrollbar if it did last time we loaded this page (good
+  // assumption, because our initial reflow is no longer synchronous).
+  return !mInner.mIsRoot && (GetStateBits() & NS_FRAME_FIRST_REFLOW);
 }
 
 nsresult
@@ -734,9 +734,7 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
   PRBool reflowScrollCorner = PR_TRUE;
   if (!aReflowState.ShouldReflowAllKids()) {
     #define NEEDS_REFLOW(frame_) \
-      ((frame_) && \
-       ((frame_)->GetStateBits() & \
-        (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) != 0)
+      ((frame_) && NS_SUBTREE_DIRTY(frame_))
 
     reflowContents = NEEDS_REFLOW(mInner.mScrolledFrame);
     reflowHScrollbar = NEEDS_REFLOW(mInner.mHScrollbarBox);
@@ -851,14 +849,6 @@ nsHTMLScrollFrame::CurPosAttributeChanged(nsIContent* aChild,
                                           PRInt32 aModType)
 {
   mInner.CurPosAttributeChanged(aChild);
-}
-
-nsresult 
-nsHTMLScrollFrame::GetContentOf(nsIContent** aContent)
-{
-  *aContent = GetContent();
-  NS_IF_ADDREF(*aContent);
-  return NS_OK;
 }
 
 NS_INTERFACE_MAP_BEGIN(nsHTMLScrollFrame)
@@ -1196,15 +1186,6 @@ nsXULScrollFrame::DoLayout(nsBoxLayoutState& aState)
 
   nsBox::DoLayout(aState);
   return rv;
-}
-
-
-nsresult 
-nsXULScrollFrame::GetContentOf(nsIContent** aContent)
-{
-  *aContent = GetContent();
-  NS_IF_ADDREF(*aContent);
-  return NS_OK;
 }
 
 NS_INTERFACE_MAP_BEGIN(nsXULScrollFrame)
@@ -1653,7 +1634,8 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   }
 
   // The anonymous <div> used by <inputs> never gets scrollbars.
-  nsCOMPtr<nsITextControlFrame> textFrame(do_QueryInterface(parent));
+  nsITextControlFrame* textFrame = nsnull;
+  CallQueryInterface(parent, &textFrame);
   if (textFrame) {
     // Make sure we are not a text area.
     nsCOMPtr<nsIDOMHTMLTextAreaElement> textAreaElement(do_QueryInterface(parent->GetContent()));
@@ -2488,10 +2470,10 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
            parentFrame->GetFirstChild(nsGkAtoms::fixedList);
          fixedChild; fixedChild = fixedChild->GetNextSibling()) {
       // force a reflow of the fixed child
-      fixedChild->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
       // XXX Will this work given where we currently are in reflow?
       aState.PresContext()->PresShell()->
-        FrameNeedsReflow(fixedChild, nsIPresShell::eResize);
+        FrameNeedsReflow(fixedChild, nsIPresShell::eResize,
+                         NS_FRAME_HAS_DIRTY_CHILDREN);
     }
   }
   

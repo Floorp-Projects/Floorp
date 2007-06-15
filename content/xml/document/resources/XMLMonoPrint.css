@@ -38,7 +38,7 @@
 
 @import url("chrome://global/content/xml/XMLPrettyPrint.css");
 
-#top > table {
+#top > .expander-open {
   font-family: monospace;
   white-space: pre;
 }

@@ -475,9 +475,8 @@ int nsGIFDecoder2::HaveDecodedRow(
     }
 
     if (!cmap) { // cmap could have null value if the global color table flag is 0
-      for (int i = 0; i < aDuplicateCount; ++i) {
-        imgContainer::BlackenFrame(decoder->mImageFrame, 0, aRowNumber+i, width, 1);
-      }
+      nsIntRect r(0, aRowNumber, width, aDuplicateCount);
+      imgContainer::ClearFrame(decoder->mImageFrame, r);
     } else {
       PRUint8* rowBufIndex = aRowBufPtr;
       PRUint32 *rgbRowIndex = (PRUint32*)decoder->mRGBLine;

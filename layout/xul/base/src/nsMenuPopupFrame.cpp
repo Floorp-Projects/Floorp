@@ -44,6 +44,7 @@
 #include "nsMenuPopupFrame.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
+#include "nsContentUtils.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsPresContext.h"
@@ -155,6 +156,7 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
                        nsIFrame*        aPrevInFlow)
 {
   nsresult rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Set up a mediator which can be used for callbacks on this frame.
   mTimerMediator = new nsMenuPopupTimerMediator(this);
@@ -170,7 +172,8 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
     GetMetric(nsILookAndFeel::eMetric_MenusCanOverlapOSBar, tempBool);
   mMenuCanOverlapOSBar = tempBool;
 
-  CreateViewForFrame(presContext, this, GetStyleContext(), PR_TRUE);
+  rv = CreateViewForFrame(presContext, this, GetStyleContext(), PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Now that we've made a view, remove it and insert it at the correct
   // position in the view hierarchy (as the root view).  We do this so that we
@@ -219,14 +222,8 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
   widgetData.mBorderStyle = eBorderStyle_default;
   widgetData.clipSiblings = PR_TRUE;
 
-  PRBool isCanvas;
-  const nsStyleBackground* bg;
-  PRBool hasBG =
-    nsCSSRendering::FindBackground(PresContext(), this, &bg, &isCanvas);
-  PRBool viewHasTransparentContent = hasBG &&
-    (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) &&
-    !GetStyleDisplay()->mAppearance && !mInContentShell;
-
+  PRBool viewHasTransparentContent = !mInContentShell &&
+                                     nsLayoutUtils::FrameHasTransparency(this);
   nsIContent* parentContent = GetContent()->GetParent();
   nsIAtom *tag = nsnull;
   if (parentContent)
@@ -378,7 +375,7 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
   if ( targetAsContent ) {
     nsCOMPtr<nsIDocument> targetDocument = targetAsContent->GetDocument();
     if (targetDocument) {
-      nsIPresShell *shell = targetDocument->GetShellAt(0);
+      nsIPresShell *shell = targetDocument->GetPrimaryShell();
       if ( shell ) {
         // We might be inside a popup widget. If so, we need to use that widget and
         // not the root view's widget.
@@ -1791,7 +1788,7 @@ nsMenuPopupFrame::InstallKeyboardNavigator()
   if (mKeyboardNavigator)
     return NS_OK;
 
-  nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(mContent->GetDocument());
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mContent->GetDocument());
   
   mTarget = target;
   mKeyboardNavigator = new nsMenuListener(this);
@@ -1800,7 +1797,9 @@ nsMenuPopupFrame::InstallKeyboardNavigator()
   target->AddEventListener(NS_LITERAL_STRING("keypress"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE); 
   target->AddEventListener(NS_LITERAL_STRING("keydown"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);  
   target->AddEventListener(NS_LITERAL_STRING("keyup"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);   
-  
+
+  nsContentUtils::NotifyInstalledMenuKeyboardListener(PR_TRUE);
+
   return NS_OK;
 }
 
@@ -1813,8 +1812,10 @@ nsMenuPopupFrame::RemoveKeyboardNavigator()
   mTarget->RemoveEventListener(NS_LITERAL_STRING("keypress"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
   mTarget->RemoveEventListener(NS_LITERAL_STRING("keydown"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
   mTarget->RemoveEventListener(NS_LITERAL_STRING("keyup"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
-  
+
   NS_IF_RELEASE(mKeyboardNavigator);
+
+  nsContentUtils::NotifyInstalledMenuKeyboardListener(PR_FALSE);
 
   return NS_OK;
 }

@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.7.3.2-2.js';
+
 /**
    File Name:          15.7.3.2-2.js
    ECMA Section:       15.7.3.2 Number.MAX_VALUE
@@ -55,14 +57,14 @@ var TITLE =  "Number.MAX_VALUE:  DontDelete Attribute";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION, 
-	      "delete( Number.MAX_VALUE ); Number.MAX_VALUE",      
-	      1.7976931348623157e308, 
+new TestCase( SECTION,
+	      "delete( Number.MAX_VALUE ); Number.MAX_VALUE",     
+	      1.7976931348623157e308,
 	      eval("delete( Number.MAX_VALUE );Number.MAX_VALUE") );
 
-new TestCase( SECTION, 
-	      "delete( Number.MAX_VALUE )",  
-	      false,  
+new TestCase( SECTION,
+	      "delete( Number.MAX_VALUE )", 
+	      false, 
 	      eval("delete( Number.MAX_VALUE )") );
 
 test();

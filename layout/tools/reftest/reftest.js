@@ -45,6 +45,8 @@ const NS_LOCAL_FILE_CONTRACTID = "@mozilla.org/file/local;1";
 const IO_SERVICE_CONTRACTID = "@mozilla.org/network/io-service;1";
 const NS_LOCALFILEINPUTSTREAM_CONTRACTID =
           "@mozilla.org/network/file-input-stream;1";
+const NS_SCRIPTSECURITYMANAGER_CONTRACTID =
+          "@mozilla.org/scriptsecuritymanager;1";
 
 const LOAD_FAILURE_TIMEOUT = 10000; // ms
 
@@ -58,6 +60,7 @@ var gFailureTimeout;
 const EXPECTED_PASS = 0;
 const EXPECTED_FAIL = 1;
 const EXPECTED_RANDOM = 2;
+const EXPECTED_DEATH = 3;  // test must be skipped to avoid e.g. crash/hang
 
 function OnRefTestLoad()
 {
@@ -98,6 +101,9 @@ function ReadManifest(aURL)
     var ios = CC[IO_SERVICE_CONTRACTID].getService(CI.nsIIOService);
     var listURL = aURL.QueryInterface(CI.nsIFileURL);
 
+    var secMan = CC[NS_SCRIPTSECURITYMANAGER_CONTRACTID]
+                     .getService(CI.nsIScriptSecurityManager);
+
     var fis = CC[NS_LOCALFILEINPUTSTREAM_CONTRACTID].
                   createInstance(CI.nsIFileInputStream);
     fis.init(listURL.file, -1, -1, false);
@@ -123,16 +129,16 @@ function ReadManifest(aURL)
         var items = str.split(/\s+/); // split on whitespace
 
         var expected_status = EXPECTED_PASS;
-        while (items[0].match(/^(fails|random)/)) {
+        while (items[0].match(/^(fails|random|skip)/)) {
             var item = items.shift();
             var stat;
             var cond;
-            var m = item.match(/^(fails|random)-if(\(.*\))$/);
+            var m = item.match(/^(fails|random|skip)-if(\(.*\))$/);
             if (m) {
                 stat = m[1];
                 // Note: m[2] contains the parentheses, and we want them.
                 cond = Components.utils.evalInSandbox(m[2], sandbox);
-            } else if (item.match(/^(fails|random)$/)) {
+            } else if (item.match(/^(fails|random|skip)$/)) {
                 stat = item;
                 cond = true;
             } else {
@@ -144,6 +150,8 @@ function ReadManifest(aURL)
                     expected_status = EXPECTED_FAIL;
                 } else if (stat == "random") {
                     expected_status = EXPECTED_RANDOM;
+                } else if (stat == "skip") {
+                    expected_status = EXPECTED_DEATH;
                 }
             }
         }
@@ -151,14 +159,23 @@ function ReadManifest(aURL)
         if (items[0] == "include") {
             if (items.length != 2)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo;
-            ReadManifest(ios.newURI(items[1], null, listURL));
+            var incURI = ios.newURI(items[1], null, listURL);
+            secMan.checkLoadURI(aURL, incURI,
+                                CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+            ReadManifest(incURI);
         } else if (items[0] == "==" || items[0] == "!=") {
             if (items.length != 3)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo;
+            var testURI = ios.newURI(items[1], null, listURL);
+            var refURI = ios.newURI(items[2], null, listURL);
+            secMan.checkLoadURI(aURL, testURI,
+                                CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+            secMan.checkLoadURI(aURL, refURI,
+                                CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             gURLs.push( { equal: (items[0] == "=="),
                           expected: expected_status,
-                          url1: ios.newURI(items[1], null, listURL),
-                          url2: ios.newURI(items[2], null, listURL)} );
+                          url1: testURI,
+                          url2: refURI} );
         } else {
             throw "Error in manifest file " + aURL.spec + " line " + lineNo;
         }
@@ -167,6 +184,12 @@ function ReadManifest(aURL)
 
 function StartCurrentTest()
 {
+    // make sure we don't run tests that are expected to kill the browser
+    while (gURLs.length > 0 && gURLs[0].expected == EXPECTED_DEATH) {
+        dump("REFTEST KNOWN FAIL (SKIP): " + gURLs[0].url1.spec + "\n");
+        gURLs.shift();
+    }
+
     if (gURLs.length == 0)
         DoneTests();
     else

@@ -257,6 +257,15 @@ private:
   nsresult PostCRLImportEvent(const nsCSubstring &urlString, nsIStreamListener *psmDownloader);
   nsresult getParamsForNextCrlToDownload(nsAutoString *url, PRTime *time, nsAutoString *key);
   nsresult DispatchEventToWindow(nsIDOMWindow *domWin, const nsAString &eventType, const nsAString &token);
+
+  // Methods that we use to handle the profile change notifications (and to
+  // synthesize a full profile change when we're just doing a profile startup):
+  void DoProfileApproveChange(nsISupports* aSubject);
+  void DoProfileChangeNetTeardown();
+  void DoProfileChangeTeardown(nsISupports* aSubject);
+  void DoProfileBeforeChange(nsISupports* aSubject);
+  void DoProfileChangeNetRestore();
+  
   PRLock *mutex;
   
   nsCOMPtr<nsIScriptSecurityManager> mScriptSecurityManager;

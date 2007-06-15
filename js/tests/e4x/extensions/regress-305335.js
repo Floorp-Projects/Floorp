@@ -35,21 +35,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("Regression - XML instance methods should type check in JS_GetPrivate()");
+gTestfile = 'regress-305335.js';
 
-var bug = 305335;
-var summary = 'XML instance methods should type check in JS_GetPrivate()';
+var summary = "Regression - XML instance methods should type check in " +
+    "JS_GetPrivate()";
+var BUGNUMBER = 305335;
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
-var o = new Number(0); 
-o.__proto__ = XML(); 
+var o = new Number(0);
+o.__proto__ = XML();
 
 try
-{  
+{ 
     o.parent();
 }
 catch(e)

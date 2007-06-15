@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.4.34.js';
+
 START("13.4.4.34 - XML setLocalName()");
 
 TEST(1, true, XML.prototype.hasOwnProperty("setLocalName"));

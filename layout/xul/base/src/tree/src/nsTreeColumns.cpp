@@ -106,7 +106,7 @@ nsTreeColumn::GetFrame()
   if (!document)
     return nsnull;
 
-  nsIPresShell *shell = document->GetShellAt(0);
+  nsIPresShell *shell = document->GetPrimaryShell();
   if (!shell)
     return nsnull;
 
@@ -589,7 +589,7 @@ nsTreeColumns::EnsureColumns()
       return;
 
     nsCOMPtr<nsIDocument> document = treeContent->GetDocument();
-    nsIPresShell *shell = document->GetShellAt(0);
+    nsIPresShell *shell = document->GetPrimaryShell();
     if (!shell)
       return;
 

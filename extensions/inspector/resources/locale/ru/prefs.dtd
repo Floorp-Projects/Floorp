@@ -1,14 +1,14 @@
 <!ENTITY Inspector.label "Инспектор DOM">
 <!ENTITY Sidebar.label "Боковая панель">
-<!ENTITY addNavigatorHooks.label "Добавить контекстные меню в Навигатор">
-<!ENTITY blinkDuration.label "Длительность подсветки">
+<!ENTITY elementBlinking.label "Подсветка элемента">
 <!ENTITY blinkSelectedElement.label "Подсвечивать выбранный элемент">
-<!ENTITY blinkSpeed.label "Скорость мигания при подсветке">
 <!ENTITY borderColor.label "Цвет границы">
 <!ENTITY borderWidth.label "Ширина границы">
-<!ENTITY elementBlinking.label "Подсветка элемента">
-<!ENTITY install.label "Добавить">
-<!ENTITY installHowTo.label "Боковая панель для Инспектора DOM не установлена. Чтобы добавить её туда, нажмите кнопку Добавить.">
-<!ENTITY invertColors.label "Обратить цвета">
-<!ENTITY ms.label "(мс)">
 <!ENTITY px.label "(пикселов)">
+<!ENTITY blinkDuration.label "Длительность подсветки">
+<!ENTITY ms.label "(мс)">
+<!ENTITY blinkSpeed.label "Скорость мигания при подсветке">
+<!ENTITY invertColors.label "Обратить цвета">
+<!ENTITY installHowTo.label "Боковая панель для Инспектора DOM не установлена. Чтобы добавить её туда, нажмите кнопку «Добавить».">
+<!ENTITY install.label "Добавить">
+<!ENTITY addNavigatorHooks.label "Добавить контекстные меню в Навигатор">

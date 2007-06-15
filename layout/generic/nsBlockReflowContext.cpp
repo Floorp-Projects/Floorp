@@ -277,7 +277,6 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
     }
   }
 
-  aFrameRS.mLineLayout = nsnull;
   if (!aIsAdjacentWithTop) {
     aFrameRS.mFlags.mIsTopOfPage = PR_FALSE;  // make sure this is cleared
   }

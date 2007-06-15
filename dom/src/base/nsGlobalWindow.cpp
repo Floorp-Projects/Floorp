@@ -50,6 +50,7 @@
 #include "nsHistory.h"
 #include "nsBarProps.h"
 #include "nsDOMStorage.h"
+#include "nsDOMOfflineResourceList.h"
 #include "nsDOMError.h"
 
 // Helper Classes
@@ -75,6 +76,7 @@
 #include "nsContentCID.h"
 #include "nsLayoutStatics.h"
 #include "nsCycleCollector.h"
+#include "nsCCUncollectableMarker.h"
 
 // Interfaces Needed
 #include "nsIWidget.h"
@@ -103,6 +105,7 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMPkcs11.h"
+#include "nsIDOMOfflineResourceList.h"
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsThreadUtils.h"
@@ -697,7 +700,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMJSWindow)
   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
@@ -718,6 +720,11 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsGlobalWindow,
 
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
+  if (tmp->mDoc && nsCCUncollectableMarker::InGeneration(
+                     tmp->mDoc->GetMarkedCCGeneration())) {
+    return NS_OK;
+  }
+
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContext)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOpener)
@@ -1287,9 +1294,9 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     if (internal == NS_STATIC_CAST(nsIDOMWindowInternal *, this)) {
       nsCOMPtr<nsIXBLService> xblService = do_GetService("@mozilla.org/xbl;1");
       if (xblService) {
-        nsCOMPtr<nsIDOMEventReceiver> rec =
+        nsCOMPtr<nsPIDOMEventTarget> piTarget =
           do_QueryInterface(mChromeEventHandler);
-        xblService->AttachGlobalKeyHandler(rec);
+        xblService->AttachGlobalKeyHandler(piTarget);
       }
     }
   }
@@ -3336,8 +3343,10 @@ nsGlobalWindow::SetFullScreen(PRBool aFullScreen)
 {
   FORWARD_TO_OUTER(SetFullScreen, (aFullScreen), NS_ERROR_NOT_INITIALIZED);
 
+  PRBool rootWinFullScreen;
+  GetFullScreen(&rootWinFullScreen);
   // Only chrome can change our fullScreen mode.
-  if (aFullScreen == mFullScreen || 
+  if (aFullScreen == rootWinFullScreen || 
       !nsContentUtils::IsCallerTrustedForWrite()) {
     return NS_OK;
   }
@@ -3383,6 +3392,18 @@ nsGlobalWindow::GetFullScreen(PRBool* aFullScreen)
 {
   FORWARD_TO_OUTER(GetFullScreen, (aFullScreen), NS_ERROR_NOT_INITIALIZED);
 
+  // Get the fullscreen value of the root window, to always have the value
+  // accurate, even when called from content.
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(mDocShell);
+  nsCOMPtr<nsIDocShellTreeItem> rootItem;
+  treeItem->GetRootTreeItem(getter_AddRefs(rootItem));
+  if (rootItem != treeItem) {
+    nsCOMPtr<nsIDOMWindowInternal> window = do_GetInterface(rootItem);
+    if (window)
+      return window->GetFullScreen(aFullScreen);
+  }
+
+  // We are the root window, or something went wrong. Return our internal value.
   *aFullScreen = mFullScreen;
   return NS_OK;
 }
@@ -5471,7 +5492,7 @@ nsGlobalWindow::DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval)
   }
 
   // Obtain a presentation shell
-  nsIPresShell *shell = mDoc->GetShellAt(0);
+  nsIPresShell *shell = mDoc->GetPrimaryShell();
   nsCOMPtr<nsPresContext> presContext;
   if (shell) {
     // Retrieve the context
@@ -5561,12 +5582,7 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
   return manager->AddEventListenerByType(aListener, aType, flags, nsnull);
 }
 
-
-//*****************************************************************************
-// nsGlobalWindow::nsIDOMEventReceiver
-//*****************************************************************************
-
-NS_IMETHODIMP
+nsresult
 nsGlobalWindow::AddEventListenerByIID(nsIDOMEventListener* aListener,
                                       const nsIID& aIID)
 {
@@ -5579,7 +5595,7 @@ nsGlobalWindow::AddEventListenerByIID(nsIDOMEventListener* aListener,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGlobalWindow::RemoveEventListenerByIID(nsIDOMEventListener* aListener,
                                          const nsIID& aIID)
 {
@@ -5594,7 +5610,7 @@ nsGlobalWindow::RemoveEventListenerByIID(nsIDOMEventListener* aListener,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGlobalWindow::GetListenerManager(PRBool aCreateIfNotFound,
                                    nsIEventListenerManager** aResult)
 {
@@ -5613,7 +5629,7 @@ nsGlobalWindow::GetListenerManager(PRBool aCreateIfNotFound,
     mListenerManager = do_CreateInstance(kEventListenerManagerCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     mListenerManager->SetListenerTarget(
-      NS_STATIC_CAST(nsIDOMEventReceiver*, this));
+      NS_STATIC_CAST(nsPIDOMEventTarget*, this));
   }
 
   NS_ADDREF(*aResult = mListenerManager);
@@ -5621,7 +5637,7 @@ nsGlobalWindow::GetListenerManager(PRBool aCreateIfNotFound,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGlobalWindow::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 {
   nsCOMPtr<nsIEventListenerManager> manager;
@@ -6886,14 +6902,17 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
       // disabled (!aTimeout), set the next interval to be relative to
       // "now", and not to when the timeout that was pending should
       // have fired.
-      PRTime nextInterval = (aTimeout ? timeout->mWhen : now) +
-        ((PRTime)timeout->mInterval * PR_USEC_PER_MSEC);
+      // Also check if the next interval timeout is overdue.  If so,
+      // then restart the interval from now.
+      PRTime nextInterval = (PRTime)timeout->mInterval * PR_USEC_PER_MSEC;
+      if (!aTimeout || nextInterval + timeout->mWhen <= now)
+        nextInterval += now;
+      else
+        nextInterval += timeout->mWhen;
+
       PRTime delay = nextInterval - PR_Now();
 
-      // If the next interval timeout is already supposed to have
-      // happened then run the timeout as soon as we can (meaning
-      // after DOM_MIN_TIMEOUT_VALUE time has passed).
-
+      // Make sure the delay is at least DOM_MIN_TIMEOUT_VALUE.
       // Note: We must cast the rhs expression to PRTime to work
       // around what looks like a compiler bug on x86_64.
       if (delay < (PRTime)(DOM_MIN_TIMEOUT_VALUE * PR_USEC_PER_MSEC)) {
@@ -7445,7 +7464,7 @@ nsGlobalWindow::RestoreWindowState(nsISupports *aState)
       // focusable now.
       nsIDocument *doc = focusedContent->GetCurrentDoc();
       if (doc) {
-        nsIPresShell *shell = doc->GetShellAt(0);
+        nsIPresShell *shell = doc->GetPrimaryShell();
         if (shell) {
           nsPresContext *pc = shell->GetPresContext();
           if (pc) {
@@ -8415,6 +8434,7 @@ nsNavigator::LoadingNewDocument()
   // arrays may have changed.  See bug 150087.
   mMimeTypes = nsnull;
   mPlugins = nsnull;
+  mOfflineResources = nsnull;
 }
 
 nsresult
@@ -8463,3 +8483,34 @@ nsNavigator::RegisterProtocolHandler(const nsAString& aProtocol,
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsNavigator::GetOfflineResources(nsIDOMOfflineResourceList **aList)
+{
+  NS_ENSURE_ARG_POINTER(aList);
+
+  if (!mOfflineResources) {
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetDocShell()));
+    if (!webNav) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = webNav->GetCurrentURI(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mOfflineResources = new nsDOMOfflineResourceList();
+    if (!mOfflineResources) return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = mOfflineResources->Init(uri);
+    if (NS_FAILED(rv)) {
+      mOfflineResources = nsnull;
+      return rv;
+    }
+  }
+
+  NS_IF_ADDREF(*aList = mOfflineResources);
+
+  return NS_OK;
+}
+

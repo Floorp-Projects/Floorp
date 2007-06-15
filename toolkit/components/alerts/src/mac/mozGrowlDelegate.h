@@ -39,8 +39,9 @@
 
 #import <Cocoa/Cocoa.h>
 
-// XXX should this be localized?  Bug 378527
-#define NOTIFICATION_NAME @"Application Notice"
+#define GROWL_STRING_BUNDLE_LOCATION \
+  "chrome://alerts/locale/notificationNames.properties"
+
 #define OBSERVER_KEY      @"ALERT_OBSERVER"
 #define COOKIE_KEY        @"ALERT_COOKIE"
 
@@ -48,23 +49,27 @@
 {
 @private
   PRUint32 mKey;
-  NSMutableDictionary* mDict;
+  NSMutableDictionary *mDict;
+  NSMutableArray *mNames;
+  NSMutableArray *mEnabled;
 }
 
 /**
  * Dispatches a notification to Growl
  *
+ * @param aName   The notification name to dispatch
  * @param aTitle  The title of the notification
  * @param aText   The body of the notification
  * @param aImage  The image data, or [NSData data] if no image
  * @param aKey    The observer key to use as a lookup (or 0 if no observer)
  * @param aCookie The string to be used as a cookie if there is an observer
  */
-+ (void) notifyWithTitle:(const nsAString&)aTitle
-             description:(const nsAString&)aText
-                iconData:(NSData*)aImage
-                     key:(PRUint32)aKey
-                  cookie:(const nsAString&)aCookie;
++ (void) notifyWithName:(const nsAString&)aName
+                  title:(const nsAString&)aTitle
+            description:(const nsAString&)aText
+               iconData:(NSData*)aImage
+                    key:(PRUint32)aKey
+                 cookie:(const nsAString&)aCookie;
 
 /**
  * Adds an nsIObserver that we can query later for dispatching obsevers.

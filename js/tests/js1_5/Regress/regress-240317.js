@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-240317.js';
 //-----------------------------------------------------------------------------
-var bug = 240317;
+var BUGNUMBER = 240317;
 var summary = 'Using Reserved identifiers warns';
 var actual = '';
 var expect = 'no error';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 function testvar(words)
@@ -83,15 +85,15 @@ function testvar(words)
 }
 
 // future reserved words
-var reserved = 
-['abstract',    'enum',      'int',      'short',      'boolean', 
-                'interface', 'static',   'byte',       'extends', 
-'long',         'super',     'char',     'final',      'native', 
-'synchronized', 'class',     'float',    'package',    'throws', 
-                'goto',      'private',  'transient',              
-'implements',   'protected', 'volatile', 'double',                
-'public'];
+var reserved =
+  ['abstract',    'enum',      'int',      'short',      'boolean',
+   'interface', 'static',   'byte',       'extends',
+   'long',         'super',     'char',     'final',      'native',
+   'synchronized', 'class',     'float',    'package',    'throws',
+   'goto',      'private',  'transient',             
+   'implements',   'protected', 'volatile', 'double',               
+   'public'];
 
 testvar(reserved);
-  
+ 
 

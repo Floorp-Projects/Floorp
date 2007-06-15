@@ -55,15 +55,8 @@ void
 nsLicenseDlg::Back(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("Back");
-    if (aData != gCtx->ldlg) return;
-#ifdef MOZ_WIDGET_GTK
-    if (gCtx->bMoving) 
-    {
-        gCtx->bMoving = FALSE;
+    if (aData != gCtx->ldlg)
         return;
-    }
-#endif
-    
     gtk_main_quit();
     return;
 }
@@ -72,23 +65,14 @@ void
 nsLicenseDlg::Next(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("Next");
-    if (aData != gCtx->ldlg) return;
-#ifdef MOZ_WIDGET_GTK
-    if (gCtx->bMoving) 
-    {
-        gCtx->bMoving = FALSE;
+    if (aData != gCtx->ldlg)
         return;
-    }
-#endif
 
     // hide this notebook page
     gCtx->ldlg->Hide();
 
     // show the next dlg
     gCtx->sdlg->Show();
-#ifdef MOZ_WIDGET_GTK
-    gCtx->bMoving = TRUE;
-#endif
 }
 
 int
@@ -161,31 +145,7 @@ nsLicenseDlg::Show()
             goto BAIL;
         }
 
-#if defined(MOZ_WIDGET_GTK)
-        // create a new scrollable textarea and add it to the table
-        GtkWidget *text = gtk_text_new(NULL, NULL);
-        GdkFont *font = gdk_font_load( LICENSE_FONT );
-        gtk_text_set_editable(GTK_TEXT(text), FALSE);
-        gtk_text_set_word_wrap(GTK_TEXT(text), TRUE);
-        gtk_text_set_line_wrap(GTK_TEXT(text), TRUE);
-        gtk_table_attach(GTK_TABLE(mTable), text, 1, 2, 0, 1,
-            static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-            static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-			0, 0);
-        gtk_text_freeze(GTK_TEXT(text));
-        gtk_text_insert (GTK_TEXT(text), font, &text->style->black, NULL,
-                          licenseContents, -1);
-        gtk_text_thaw(GTK_TEXT(text));
-        gtk_widget_show(text);
-
-        // Add a vertical scrollbar to the GtkText widget 
-        GtkWidget *vscrollbar = gtk_vscrollbar_new (GTK_TEXT (text)->vadj);
-        gtk_table_attach(GTK_TABLE(mTable), vscrollbar, 2, 3, 0, 1,
-            GTK_FILL,
-			static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_SHRINK | GTK_FILL),
-			0, 0);
-        gtk_widget_show(vscrollbar);
-#elif defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK2)
         GtkWidget *text = gtk_scrolled_window_new (NULL, NULL);
         GtkWidget *textview = gtk_text_view_new();
         GtkTextBuffer *textbuffer;

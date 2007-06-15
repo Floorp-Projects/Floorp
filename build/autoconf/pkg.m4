@@ -50,7 +50,9 @@ AC_DEFUN([PKG_CHECK_MODULES],
   if test $succeeded = yes; then
      ifelse([$3], , :, [$3])
   else
-     ifelse([$4], , AC_MSG_ERROR([Library requirements ($2) not met; consider adjusting the PKG_CONFIG_PATH environment variable if your libraries are in a nonstandard prefix so pkg-config can find them.]), [$4])
+     if test "$COMPILE_ENVIRONMENT"; then 
+       ifelse([$4], , AC_MSG_ERROR([Library requirements ($2) not met; consider adjusting the PKG_CONFIG_PATH environment variable if your libraries are in a nonstandard prefix so pkg-config can find them.]), [$4])
+     fi
   fi
 ])
 

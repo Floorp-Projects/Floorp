@@ -72,25 +72,6 @@ public:
   //NS_IMETHOD GetChildCount(PRInt32 *_retval); // aaronl remove this?
 };
 
-/** 
-  * Represents the content area associated with the tabs object (when
-  *   used together)
-  */
-class nsXULTabPanelsAccessible : public nsAccessibleWrap
-{
-public:
-  nsXULTabPanelsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetRole(PRUint32 *_retval); 
-  NS_IMETHOD GetName(nsAString& _retval); 
-
-protected:
-  nsresult GetAccPluginChild(nsIAccessible **_retval);
-
-  // data members
-  nsCOMPtr<nsIDOMNode> mGParentDOMNode;
-  nsCOMPtr<nsIDOMNode> mParentDOMNode;
-};
-
 /** merely a container of tab obejcts */
 class nsXULTabsAccessible : public nsXULSelectableAccessible
 {

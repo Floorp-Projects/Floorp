@@ -211,13 +211,13 @@
                          class="findbar-closebutton"
                          tooltiptext="&findCloseButton.tooltip;"
                          oncommand="close();"/>
-      <xul:label anonid="find-label" class="findbar-find-fast"/>
+      <xul:label anonid="find-label" class="findbar-find-fast" control="findbar-textbox"/>
       <xul:hbox anonid="find-field-container"
                 class="find-field-container findbar-find-fast">
         <xul:textbox class="findbar-textbox" anonid="findbar-textbox"/>
       </xul:hbox>
       <xul:toolbarbutton anonid="find-next"
-                         class="findbar-find-next"
+                         class="findbar-find-next tabbable"
                          label="&next.label;"
                          accesskey="&next.accesskey;"
                          tooltiptext="&next.tooltip;"
@@ -225,7 +225,7 @@
                          disabled="true"
                          xbl:inherits="accesskey=findnextaccesskey"/>
       <xul:toolbarbutton anonid="find-previous"
-                         class="findbar-find-previous"
+                         class="findbar-find-previous tabbable"
                          label="&previous.label;"
                          accesskey="&previous.accesskey;"
                          tooltiptext="&previous.tooltip;"
@@ -233,7 +233,7 @@
                          disabled="true"
                          xbl:inherits="accesskey=findpreviousaccesskey"/>
       <xul:toolbarbutton anonid="highlight"
-                         class="findbar-highlight"
+                         class="findbar-highlight tabbable"
                          label="&highlight.label;"
                          accesskey="&highlight.accesskey;"
                          tooltiptext="&highlight.tooltiptext;"
@@ -708,9 +708,7 @@
           if (this.hidden) {
             this.hidden = false;
 
-            this._updateCaseSensitivity(this._findField.value);
             this._updateStatusUI(this.nsITypeAheadFind.FIND_FOUND);
-
             return true;
           }
           return false;
@@ -1052,6 +1050,7 @@
 
             nodes[i].hidden = showMinimalUI;
           }
+          this._updateCaseSensitivity();
 
           if (this._findMode == this.FIND_TYPEAHEAD)
             this.getElement("find-label").value = this._fastFindStr;

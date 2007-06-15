@@ -125,16 +125,14 @@ nsInlineFrame::GetType() const
 inline PRBool
 IsPaddingZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
 {
-    return (aUnit == eStyleUnit_Null ||
-            (aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0) ||
+    return ((aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0) ||
             (aUnit == eStyleUnit_Percent && aCoord.GetPercentValue() == 0.0));
 }
 
 inline PRBool
 IsMarginZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
 {
-    return (aUnit == eStyleUnit_Null ||
-            aUnit == eStyleUnit_Auto ||
+    return (aUnit == eStyleUnit_Auto ||
             (aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0) ||
             (aUnit == eStyleUnit_Percent && aCoord.GetPercentValue() == 0.0));
 }
@@ -548,51 +546,42 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   // whitespace in an inline element don't affect the line-height.
   nsSize size;
   lineLayout->EndSpan(this, size);
-  if ((0 == size.height) && (0 == size.width) &&
-      ((nsnull != GetPrevInFlow()) || (nsnull != GetNextInFlow()))) {
-    // This is a continuation of a previous inline. Therefore make
-    // sure we don't affect the line-height.
-    aMetrics.width = 0;
-    aMetrics.height = 0;
-    aMetrics.ascent = 0;
-  }
-  else {
-    // Compute final width
-    aMetrics.width = size.width;
-    if (nsnull == GetPrevContinuation()) {
-      aMetrics.width += ltr ? aReflowState.mComputedBorderPadding.left
-                            : aReflowState.mComputedBorderPadding.right;
-    }
-    if (NS_FRAME_IS_COMPLETE(aStatus) && (!GetNextContinuation() || GetNextInFlow())) {
-      aMetrics.width += ltr ? aReflowState.mComputedBorderPadding.right
-                            : aReflowState.mComputedBorderPadding.left;
-    }
 
-    SetFontFromStyle(aReflowState.rendContext, mStyleContext);
-    nsCOMPtr<nsIFontMetrics> fm;
-    aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
-
-    if (fm) {
-      // Compute final height of the frame.
-      //
-      // Do things the standard css2 way -- though it's hard to find it
-      // in the css2 spec! It's actually found in the css1 spec section
-      // 4.4 (you will have to read between the lines to really see
-      // it).
-      //
-      // The height of our box is the sum of our font size plus the top
-      // and bottom border and padding. The height of children do not
-      // affect our height.
-      fm->GetMaxAscent(aMetrics.ascent);
-      fm->GetHeight(aMetrics.height);
-    } else {
-      NS_WARNING("Cannot get font metrics - defaulting sizes to 0");
-      aMetrics.ascent = aMetrics.height = 0;
-    }
-    aMetrics.ascent += aReflowState.mComputedBorderPadding.top;
-    aMetrics.height += aReflowState.mComputedBorderPadding.top +
-      aReflowState.mComputedBorderPadding.bottom;
+  // Compute final width
+  aMetrics.width = size.width;
+  if (nsnull == GetPrevContinuation()) {
+    aMetrics.width += ltr ? aReflowState.mComputedBorderPadding.left
+                          : aReflowState.mComputedBorderPadding.right;
   }
+  if (NS_FRAME_IS_COMPLETE(aStatus) && (!GetNextContinuation() || GetNextInFlow())) {
+    aMetrics.width += ltr ? aReflowState.mComputedBorderPadding.right
+                          : aReflowState.mComputedBorderPadding.left;
+  }
+
+  nsLayoutUtils::SetFontFromStyle(aReflowState.rendContext, mStyleContext);
+  nsCOMPtr<nsIFontMetrics> fm;
+  aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
+
+  if (fm) {
+    // Compute final height of the frame.
+    //
+    // Do things the standard css2 way -- though it's hard to find it
+    // in the css2 spec! It's actually found in the css1 spec section
+    // 4.4 (you will have to read between the lines to really see
+    // it).
+    //
+    // The height of our box is the sum of our font size plus the top
+    // and bottom border and padding. The height of children do not
+    // affect our height.
+    fm->GetMaxAscent(aMetrics.ascent);
+    fm->GetHeight(aMetrics.height);
+  } else {
+    NS_WARNING("Cannot get font metrics - defaulting sizes to 0");
+    aMetrics.ascent = aMetrics.height = 0;
+  }
+  aMetrics.ascent += aReflowState.mComputedBorderPadding.top;
+  aMetrics.height += aReflowState.mComputedBorderPadding.top +
+    aReflowState.mComputedBorderPadding.bottom;
 
   // For now our overflow area is zero. The real value will be
   // computed during vertical alignment of the line we are on.

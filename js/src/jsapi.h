@@ -856,6 +856,16 @@ extern JS_PUBLIC_API(JSBool)
 JS_UnlockGCThingRT(JSRuntime *rt, void *thing);
 
 /*
+ * Register externally maintained GC roots.
+ *
+ * traceOp: the trace operation. For each root the implementation should call
+ *          JS_CallTracer whenever the root contains a traceable thing.
+ * data:    the data argument to pass to each invocation of traceOp.
+ */
+extern JS_PUBLIC_API(void)
+JS_SetExtraGCRoots(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
+
+/*
  * For implementors of JSMarkOp. All new code should implement JSTraceOp
  * instead.
  */
@@ -866,7 +876,7 @@ JS_MarkGCThing(JSContext *cx, void *thing, const char *name, void *arg);
  * JS_CallTracer API and related macros for implementors of JSTraceOp, to
  * enumerate all references to traceable things reachable via a property or
  * other strong ref identified for debugging purposes by name or index or
- * a naming callaback.
+ * a naming callback.
  *
  * By definition references to traceable things include non-null pointers
  * to JSObject, JSString and jsdouble and corresponding jsvals.
@@ -902,7 +912,7 @@ struct JSTracer {
 };
 
 /*
- * The method to call on each reference to a traceable thing storted in a
+ * The method to call on each reference to a traceable thing stored in a
  * particular JSObject or other runtime structure. With DEBUG defined the
  * caller before calling JS_CallTracer must initialize JSTracer fields
  * describing the reference using the macros below.
@@ -977,21 +987,21 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind);
 #define JS_CALL_OBJECT_TRACER(trc, object, name)                              \
     JS_BEGIN_MACRO                                                            \
         JSObject *obj_ = (object);                                            \
-        JS_ASSERT(object);                                                    \
+        JS_ASSERT(obj_);                                                      \
         JS_CALL_TRACER((trc), obj_, JSTRACE_OBJECT, name);                    \
     JS_END_MACRO
 
 #define JS_CALL_STRING_TRACER(trc, string, name)                              \
     JS_BEGIN_MACRO                                                            \
         JSString *str_ = (string);                                            \
-        JS_ASSERT(string);                                                    \
+        JS_ASSERT(str_);                                                      \
         JS_CALL_TRACER((trc), str_, JSTRACE_STRING, name);                    \
     JS_END_MACRO
 
 #define JS_CALL_DOUBLE_TRACER(trc, number, name)                              \
     JS_BEGIN_MACRO                                                            \
         jsdouble *num_ = (number);                                            \
-        JS_ASSERT(number);                                                    \
+        JS_ASSERT(num_);                                                      \
         JS_CALL_TRACER((trc), num_, JSTRACE_DOUBLE, name);                    \
     JS_END_MACRO
 
@@ -1016,25 +1026,26 @@ JS_TraceRuntime(JSTracer *trc);
 extern JS_PUBLIC_API(void)
 JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
                        void *thing, uint32 kind, JSBool includeDetails);
+
 /*
- * DEBUG-only method to dump an object graph of heap-allocated things.
+ * DEBUG-only method to dump the object graph of heap-allocated things.
  *
- * start: when non-null, dump only things reachable from start thing. Otherwise
- *        dump all things rechable from runtime roots.
- * startKind: trace kind of start if start is not null. Must be 0 when start
- *            is null.
- * thingToFind: dump only paths in the object graph leading to thingToFind
- *              when non-null.
- * maxDepth: the upper bound on the number of edges to descend from the graph
- *           roots.
- * thingToIgnore: thing to ignore during graph traversal when non-null.
- * format: callback to format the dump output.
- * closure: an argument to pass to formater.
+ * fp:              file for the dump output.
+ * start:           when non-null, dump only things reachable from start
+ *                  thing. Otherwise dump all things reachable from the
+ *                  runtime roots.
+ * startKind:       trace kind of start if start is not null. Must be 0 when
+ *                  start is null.
+ * thingToFind:     dump only paths in the object graph leading to thingToFind
+ *                  when non-null.
+ * maxDepth:        the upper bound on the number of edges to descend from the
+ *                  graph roots.
+ * thingToIgnore:   thing to ignore during the graph traversal when non-null.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_DumpHeap(JSContext *cx, void* startThing, uint32 startKind,
-            void *thingToFind, size_t maxDepth, void *thingToIgnore,
-            JSPrintfFormater format, void *closure);
+JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, uint32 startKind,
+            void *thingToFind, size_t maxDepth, void *thingToIgnore);
+
 #endif
 
 /*
@@ -1054,9 +1065,6 @@ JS_SetGCCallbackRT(JSRuntime *rt, JSGCCallback cb);
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsGCMarkingTracer(JSTracer *trc);
-
-extern JS_PUBLIC_API(JSTracer *)
-JS_GetGCMarkingTracer(JSContext *cx);
 
 extern JS_PUBLIC_API(void)
 JS_SetGCThingCallback(JSContext *cx, JSGCThingCallback cb, void *closure);
@@ -2030,15 +2038,15 @@ JS_SetCallReturnValue2(JSContext *cx, jsval v);
 /*
  * Saving and restoring frame chains.
  *
- * These two functions are used to set aside cx->fp while that frame is
- * inactive. After a call to JS_SaveFrameChain, it looks as if there is no
+ * These two functions are used to set aside cx's call stack while that stack
+ * is inactive. After a call to JS_SaveFrameChain, it looks as if there is no
  * code running on cx. Before calling JS_RestoreFrameChain, cx's call stack
  * must be balanced and all nested calls to JS_SaveFrameChain must have had
  * matching JS_RestoreFrameChain calls.
  *
  * JS_SaveFrameChain deals with cx not having any code running on it. A null
- * return does not signify an error and JS_RestoreFrameChain handles null
- * frames.
+ * return does not signify an error, and JS_RestoreFrameChain handles a null
+ * frame pointer argument safely.
  */
 extern JS_PUBLIC_API(JSStackFrame *)
 JS_SaveFrameChain(JSContext *cx);
@@ -2410,6 +2418,15 @@ JS_ClearContextThread(JSContext *cx);
 #endif /* JS_THREADSAFE */
 
 /************************************************************************/
+
+#ifdef DEBUG
+#define JS_GC_ZEAL 1
+#endif
+
+#ifdef JS_GC_ZEAL
+extern JS_PUBLIC_API(void)
+JS_SetGCZeal(JSContext *cx, uint8 zeal);
+#endif
 
 JS_END_EXTERN_C
 

@@ -231,14 +231,6 @@ nsButtonFrameRenderer::PaintBorderAndBackground(nsPresContext* aPresContext,
 
 
 void
-nsButtonFrameRenderer::GetButtonOutlineRect(const nsRect& aRect, nsRect& outlineRect)
-{
-  outlineRect = aRect;
-  outlineRect.Inflate(GetButtonOutlineBorderAndPadding());
-}
-
-
-void
 nsButtonFrameRenderer::GetButtonOuterFocusRect(const nsRect& aRect, nsRect& focusRect)
 {
   focusRect = aRect;
@@ -258,13 +250,6 @@ nsButtonFrameRenderer::GetButtonInnerFocusRect(const nsRect& aRect, nsRect& focu
   GetButtonRect(aRect, focusRect);
   focusRect.Deflate(GetButtonBorderAndPadding());
   focusRect.Deflate(GetButtonInnerFocusMargin());
-}
-
-void
-nsButtonFrameRenderer::GetButtonContentRect(const nsRect& aRect, nsRect& r)
-{
-  GetButtonInnerFocusRect(aRect, r);
-  r.Deflate(GetButtonInnerFocusBorderAndPadding());
 }
 
 
@@ -346,7 +331,7 @@ nsButtonFrameRenderer::GetAddedButtonBorderAndPadding()
 /**
  * Call this when styles change
  */
-void 
+void
 nsButtonFrameRenderer::ReResolveStyles(nsPresContext* aPresContext)
 {
   // get all the styles

@@ -40,9 +40,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '11.1.2.js';
+
 START("11.1.2 - Qualified Identifiers");
 
-x = 
+x =
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
     soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
     <soap:Body>
@@ -50,7 +52,7 @@ x =
             <symbol>DIS</symbol>
         </m:getLastTradePrice>
     </soap:Body>
-</soap:Envelope>;    
+</soap:Envelope>;   
 
 soap = new Namespace("http://schemas.xmlsoap.org/soap/envelope/");
 stock = new Namespace("http://mycompany.com/stocks");
@@ -58,7 +60,7 @@ stock = new Namespace("http://mycompany.com/stocks");
 encodingStyle = x.@soap::encodingStyle;
 TEST_XML(1, "http://schemas.xmlsoap.org/soap/encoding/", encodingStyle);
 
-correct = 
+correct =
 <soap:Body xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
     <m:getLastTradePrice xmlns:m="http://mycompany.com/stocks">
         <symbol>DIS</symbol>
@@ -75,7 +77,7 @@ q = new QName(soap, "Body");
 body = x[q];
 TEST_XML(4, correct.toXMLString(), body);
 
-correct = 
+correct =
 <symbol xmlns:m="http://mycompany.com/stocks" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">MYCO</symbol>;
 
 x.soap::Body.stock::getLastTradePrice.symbol = "MYCO";

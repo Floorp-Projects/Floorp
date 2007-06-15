@@ -89,35 +89,10 @@
 #include "nsICacheService.h"
 #include "nsICache.h"
 
-#ifdef MOZ_WIDGET_GTK2
 #include "gtkmozembedmarshal.h"
 #define NEW_TOOLKIT_STRING(x) g_strdup(NS_ConvertUTF16toUTF8(x).get())
 #define GET_TOOLKIT_STRING(x) NS_ConvertUTF16toUTF8(x).get()
 #define GET_OBJECT_CLASS_TYPE(x) G_OBJECT_CLASS_TYPE(x)
-#endif /* MOZ_WIDGET_GTK2 */
-
-#ifdef MOZ_WIDGET_GTK
-// so we can get callbacks from the mozarea
-#include <gtkmozarea.h>
-// so we get the right marshaler for gtk 1.2
-#define gtkmozembed_VOID__INT_UINT \
-  gtk_marshal_NONE__INT_INT
-#define gtkmozembed_VOID__STRING_INT_INT \
-  gtk_marshal_NONE__POINTER_INT_INT
-#define gtkmozembed_VOID__STRING_INT_UINT \
-  gtk_marshal_NONE__POINTER_INT_INT
-#define gtkmozembed_VOID__POINTER_INT_POINTER \
-  gtk_marshal_NONE__POINTER_INT_POINTER
-#define gtkmozembed_BOOL__STRING \
-  gtk_marshal_BOOL__POINTER
-#define gtkmozembed_VOID__INT_INT_BOOLEAN \
-  gtk_marshal_NONE__INT_INT_BOOLEAN
-
-#define G_SIGNAL_TYPE_STATIC_SCOPE 0
-#define NEW_TOOLKIT_STRING(x) g_strdup(NS_LossyConvertUTF16toASCII(x).get())
-#define GET_TOOLKIT_STRING(x) NS_LossyConvertUTF16toASCII(x).get()
-#define GET_OBJECT_CLASS_TYPE(x) (GTK_OBJECT_CLASS(x)->type)
-#endif /* MOZ_WIDGET_GTK */
 
 #define UNACCEPTABLE_CRASHY_GLIB_ALLOCATION(newed) PR_BEGIN_MACRO \
   /* OOPS this code is using a glib allocation function which     \
@@ -297,10 +272,6 @@ gtk_moz_embed_common_class_init(GtkMozEmbedCommonClass *klass)
                    G_TYPE_INT, G_TYPE_INT,
                    G_TYPE_INT, G_TYPE_INT);
   */
-#ifdef MOZ_WIDGET_GTK
-    gtk_object_class_add_signals(object_class, moz_embed_common_signals,
-                                 COMMON_LAST_SIGNAL);
-#endif /* MOZ_WIDGET_GTK */
 }
 
 static void

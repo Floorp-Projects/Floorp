@@ -46,6 +46,20 @@ const CSS_TYPE_TRUE_SHORTHAND = 1;
 // the current spec or earlier versions of the spec.
 const CSS_TYPE_SHORTHAND_AND_LONGHAND = 2;
 
+// Each property has the following fields:
+//   domProp: The name of the relevant member of nsIDOM[NS]CSS2Properties
+//   inherited: Whether the property is inherited by default (stated as 
+//     yes or no in the property header in all CSS specs)
+//   type: see above
+//   initial_values: Values whose computed value should be the same as the
+//     computed value for the property's initial value.
+//   other_values: Values whose computed value should be different from the
+//     computed value for the property's initial value.
+//   XXX Should have a third field for values whose computed value may or
+//     may not be the same as for the property's initial value.
+//   invalid_values: Things that are not values for the property and
+//     should be rejected.
+
 var gCSSProperties = {
 	"-moz-appearance": {
 		domProp: "MozAppearance",
@@ -110,7 +124,7 @@ var gCSSProperties = {
 		subproperties: [ "-moz-border-radius-bottomleft", "-moz-border-radius-bottomright", "-moz-border-radius-topleft", "-moz-border-radius-topright" ],
 		initial_values: [ "0", "0px", "0px 0 0 0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em", "3em 2px", "2pt 3% 4em", "2px 2px 2px 2px" ],
-		invalid_values: []
+		invalid_values: [ "2px -2px" ]
 	},
 	"-moz-border-radius-bottomleft": {
 		domProp: "MozBorderRadiusBottomleft",
@@ -118,7 +132,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em" ],
-		invalid_values: []
+		invalid_values: [ "-1px" ]
 	},
 	"-moz-border-radius-bottomright": {
 		domProp: "MozBorderRadiusBottomright",
@@ -126,7 +140,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em" ],
-		invalid_values: []
+		invalid_values: [ "-1px" ]
 	},
 	"-moz-border-radius-topleft": {
 		domProp: "MozBorderRadiusTopleft",
@@ -134,7 +148,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em" ],
-		invalid_values: []
+		invalid_values: [ "-1px" ]
 	},
 	"-moz-border-radius-topright": {
 		domProp: "MozBorderRadiusTopright",
@@ -142,7 +156,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em" ],
-		invalid_values: []
+		invalid_values: [ "-1px" ]
 	},
 	"-moz-border-right-colors": {
 		domProp: "MozBorderRightColors",
@@ -294,7 +308,7 @@ var gCSSProperties = {
 		subproperties: [ "-moz-outline-radius-bottomleft", "-moz-outline-radius-bottomright", "-moz-outline-radius-topleft", "-moz-outline-radius-topright" ],
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "2px", "0.3em", "2%" ],
-		invalid_values: []
+		invalid_values: [ "-2px" ]
 	},
 	"-moz-outline-radius-bottomleft": {
 		domProp: "MozOutlineRadiusBottomleft",
@@ -302,7 +316,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "2px", "0.3em", "2%" ],
-		invalid_values: []
+		invalid_values: [ "-2px" ]
 	},
 	"-moz-outline-radius-bottomright": {
 		domProp: "MozOutlineRadiusBottomright",
@@ -310,7 +324,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "2px", "0.3em", "2%" ],
-		invalid_values: []
+		invalid_values: [ "-2px" ]
 	},
 	"-moz-outline-radius-topleft": {
 		domProp: "MozOutlineRadiusTopleft",
@@ -318,7 +332,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "2px", "0.3em", "2%" ],
-		invalid_values: []
+		invalid_values: [ "-2px" ]
 	},
 	"-moz-outline-radius-topright": {
 		domProp: "MozOutlineRadiusTopright",
@@ -326,7 +340,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "2px", "0.3em", "2%" ],
-		invalid_values: []
+		invalid_values: [ "-2px" ]
 	},
 	"-moz-padding-end": {
 		domProp: "MozPaddingEnd",
@@ -456,7 +470,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-bottom-color", "border-bottom-style", "border-bottom-width" ],
 		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
-		other_values: [ "solid", "thin", "green", "medium solid", "green solid", "10px solid", "thick solid" ],
+		other_values: [ "solid", "thin", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
 		invalid_values: [ "5%" ]
 	},
 	"border-bottom-color": {
@@ -508,7 +522,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-left-color", "border-left-style", "border-left-width" ],
 		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
-		other_values: [ "solid", "medium solid", "green solid", "10px solid", "thick solid" ],
+		other_values: [ "solid", "thin", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
 		invalid_values: [ "5%" ]
 	},
 	"border-left-color": {
@@ -543,7 +557,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-right-color", "border-right-style", "border-right-width" ],
 		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
-		other_values: [ "solid", "medium solid", "green solid", "10px solid", "thick solid" ],
+		other_values: [ "solid", "thin", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
 		invalid_values: [ "5%" ]
 	},
 	"border-right-color": {
@@ -596,7 +610,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-top-color", "border-top-style", "border-top-width" ],
 		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
-		other_values: [ "solid", "medium solid", "green solid", "10px solid", "thick solid" ],
+		other_values: [ "solid", "thin", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
 		invalid_values: [ "5%" ]
 	},
 	"border-top-color": {
@@ -855,7 +869,15 @@ var gCSSProperties = {
 		initial_values: [ " auto" ],
 		/* XXX these have prerequisites */
 		other_values: [ "15px", "3em", "15%" ],
-		invalid_values: []
+		invalid_values: [ "none", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ]
+	},
+	"ime-mode": {
+		domProp: "imeMode",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "auto" ],
+		other_values: [ "normal", "disabled", "active", "inactive" ],
+		invalid_values: [ "none", "enabled", "1px" ]
 	},
 	"left": {
 		domProp: "left",
@@ -987,14 +1009,14 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "30px", "50%", "0" ],
-		invalid_values: [ "auto" ]
+		invalid_values: [ "auto", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ]
 	},
 	"max-width": {
 		domProp: "maxWidth",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "30px", "50%", "0" ],
+		other_values: [ "30px", "50%", "0", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ],
 		invalid_values: [ "auto" ]
 	},
 	"min-height": {
@@ -1003,14 +1025,14 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0" ],
 		other_values: [ "30px", "50%" ],
-		invalid_values: [ "auto", "none" ]
+		invalid_values: [ "auto", "none", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ]
 	},
 	"min-width": {
 		domProp: "minWidth",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0" ],
-		other_values: [ "30px", "50%" ],
+		other_values: [ "30px", "50%", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ],
 		invalid_values: [ "auto", "none" ]
 	},
 	"opacity": {
@@ -1468,8 +1490,8 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ " auto" ],
 		/* XXX these have prerequisites */
-		other_values: [ "15px", "3em", "15%" ],
-		invalid_values: []
+		other_values: [ "15px", "3em", "15%", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ],
+		invalid_values: [ "none" ]
 	},
 	"word-spacing": {
 		domProp: "wordSpacing",

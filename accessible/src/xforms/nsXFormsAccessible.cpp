@@ -64,7 +64,7 @@ nsXFormsAccessibleBase::nsXFormsAccessibleBase()
 
 nsXFormsAccessible::
 nsXFormsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-  nsHyperTextAccessible(aNode, aShell)
+  nsHyperTextAccessibleWrap(aNode, aShell)
 {
 }
 
@@ -193,7 +193,7 @@ nsXFormsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   rv = sXFormsService->IsValid(mDOMNode, &isValid);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsHyperTextAccessible::GetState(aState, aExtraState);
+  rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!isRelevant)
@@ -246,7 +246,7 @@ nsXFormsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {
   NS_ENSURE_ARG_POINTER(aAttributes);
 
-  nsresult rv = nsHyperTextAccessible::GetAttributesInternal(aAttributes);
+  nsresult rv = nsHyperTextAccessibleWrap::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString name;

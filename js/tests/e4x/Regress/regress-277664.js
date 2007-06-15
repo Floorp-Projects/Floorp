@@ -35,17 +35,18 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'regress-277664.js';
+
 // testcase from  Martin.Honnen@arcor.de
 
-var bug = 277664;
 var summary = 'duplicate attribute names';
+var BUGNUMBER = 277664;
 var actual = '';
 var expect = '';
 
+printBugNumber(BUGNUMBER);
 START(summary);
-
-printBugNumber (bug);
-printStatus (summary);
 
 expect = 'error';
 try

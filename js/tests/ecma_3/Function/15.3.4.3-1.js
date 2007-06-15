@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    21 May 2002
  * SUMMARY: ECMA conformance of Function.prototype.apply
@@ -44,8 +46,9 @@
  * See ECMA-262 Edition 3 Final, Section 15.3.4.3
  */
 //-----------------------------------------------------------------------------
+var gTestfile = '15.3.4.3-1.js';
 var UBound = 0;
-var bug = 145791;
+var BUGNUMBER = 145791;
 var summary = 'Testing ECMA conformance of Function.prototype.apply';
 var status = '';
 var statusitems = [];
@@ -195,7 +198,7 @@ function addThis()
 function test()
 {
   enterFunc('test');
-  printBugNumber(bug);
+  printBugNumber(BUGNUMBER);
   printStatus(summary);
 
   for (var i=0; i<UBound; i++)

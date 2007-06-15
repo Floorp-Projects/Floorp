@@ -36,13 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var bug = 354998;
+gTestfile = 'regress-354998.js';
+
+var BUGNUMBER = 354998;
 var summary = 'prototype should not be enumerated for XML objects.';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 function test()
 {
@@ -53,7 +55,7 @@ function test()
   for (var i in list) {
     ++count;
   }
-  time = now() - time; 
+  time = now() - time;
   if (count != 2) {
     if (count < 2)
       throw "Enumerator has not looped over all properties, count="+count;
@@ -62,13 +64,20 @@ function test()
   return time;
 }
 
-var time1 = test(); 
+var time1 = test();
 
 for (var i = 0; i != 1000*1000; ++i)
   Object.prototype[i] = i;
 
-var time2 = test(); 
-if (time1 * 10 < time2) {
+var time2 = test();
+
+// clean up Object prototype so it won't
+// hang enumerations in options()...
+
+for (var i = 0; i != 1000*1000; ++i)
+    delete Object.prototype[i];
+
+if (time1 * 10 + 1 < time2) {
   throw "Assigns to Object.prototype increased time of XML enumeration from "+
         time1+"ms to "+time2+"ms";
 }

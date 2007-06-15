@@ -36,15 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("E4X - Entities");
+gTestfile = 'regress-301573.js';
 
-var bug = 301573;
-var summary = 'parse entities';
+var summary = "E4X - Entities";
+var BUGNUMBER = 301573;
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 actual = <xml>&lt;</xml>;
 

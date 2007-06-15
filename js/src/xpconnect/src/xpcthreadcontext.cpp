@@ -46,7 +46,7 @@
 /***************************************************************************/
 
 XPCJSContextStack::XPCJSContextStack()
-    : mStack(nsnull),
+    : mStack(),
       mSafeJSContext(nsnull),
       mOwnSafeJSContext(nsnull)
 {
@@ -76,7 +76,7 @@ XPCJSContextStack::SyncJSContexts()
 NS_IMETHODIMP
 XPCJSContextStack::GetCount(PRInt32 *aCount)
 {
-    *aCount = mStack.GetSize();
+    *aCount = mStack.Length();
     return NS_OK;
 }
 
@@ -84,7 +84,7 @@ XPCJSContextStack::GetCount(PRInt32 *aCount)
 NS_IMETHODIMP
 XPCJSContextStack::Peek(JSContext * *_retval)
 {
-    *_retval = (JSContext*) mStack.Peek();
+    *_retval = mStack.IsEmpty() ? nsnull : mStack[mStack.Length() - 1].cx;
     return NS_OK;
 }
 
@@ -92,12 +92,28 @@ XPCJSContextStack::Peek(JSContext * *_retval)
 NS_IMETHODIMP
 XPCJSContextStack::Pop(JSContext * *_retval)
 {
-    NS_ASSERTION(mStack.GetSize() > 0, "ThreadJSContextStack underflow");
+    NS_ASSERTION(!mStack.IsEmpty(), "ThreadJSContextStack underflow");
+
+    PRUint32 idx = mStack.Length() - 1; // The thing we're popping
+    NS_ASSERTION(!mStack[idx].frame,
+                 "Shouldn't have a pending frame to restore on the context "
+                 "we're popping!");
 
     if(_retval)
-        *_retval = (JSContext*) mStack.Pop();
-    else
-        mStack.Pop();
+        *_retval = mStack[idx].cx;
+
+    mStack.RemoveElementAt(idx);
+    if(idx > 0)
+    {
+        --idx; // Advance to new top of the stack
+        JSContextAndFrame & e = mStack[idx];
+        NS_ASSERTION(!e.frame || e.cx, "Shouldn't have frame without a cx!");
+        if(e.cx)
+        {
+            JS_RestoreFrameChain(e.cx, e.frame);
+            e.frame = nsnull;
+        }
+    }
     return NS_OK;
 }
 
@@ -105,7 +121,14 @@ XPCJSContextStack::Pop(JSContext * *_retval)
 NS_IMETHODIMP
 XPCJSContextStack::Push(JSContext * cx)
 {
-    mStack.Push(cx);
+    if(!mStack.AppendElement(cx))
+        return NS_ERROR_OUT_OF_MEMORY;
+    if(mStack.Length() > 1)
+    {
+        JSContextAndFrame & e = mStack[mStack.Length() - 2];
+        if(e.cx)
+            e.frame = JS_SaveFrameChain(e.cx);
+    }
     return NS_OK;
 }
 
@@ -113,8 +136,8 @@ XPCJSContextStack::Push(JSContext * cx)
 JSBool 
 XPCJSContextStack::DEBUG_StackHasJSContext(JSContext*  aJSContext)
 {
-    for(PRInt32 i = 0; i < mStack.GetSize(); i++)
-        if(aJSContext == (JSContext*)mStack.ObjectAt(i))
+    for(PRUint32 i = 0; i < mStack.Length(); i++)
+        if(aJSContext == mStack[i].cx)
             return JS_TRUE;
     return JS_FALSE;
 }
@@ -504,7 +527,7 @@ xpc_ThreadDataDtorCB(void* ptr)
         delete data;
 }
 
-void XPCPerThreadData::MarkAutoRootsBeforeJSFinalize(JSContext* cx)
+void XPCPerThreadData::TraceJS(JSTracer *trc)
 {
 #ifdef XPC_TRACK_AUTOMARKINGPTR_STATS
     {
@@ -520,7 +543,7 @@ void XPCPerThreadData::MarkAutoRootsBeforeJSFinalize(JSContext* cx)
 #endif
 
     if(mAutoRoots)
-        mAutoRoots->MarkBeforeJSFinalize(cx);
+        mAutoRoots->TraceJS(trc);
 }
 
 void XPCPerThreadData::MarkAutoRootsAfterJSFinalize()
@@ -643,17 +666,11 @@ nsXPCJSContextStackIterator::Reset(nsIJSContextStack *aStack)
     XPCJSContextStack *stack = impl->GetStackForCurrentThread();
     if(!stack)
         return NS_ERROR_FAILURE;
-    const nsDeque &deque = stack->GetStack();
-
-    if(deque.GetSize() == 0)
-    {
-        mIterator = nsnull;
-        return NS_OK;
-    }
-
-    mIterator = new nsDequeIterator(deque.End());
-    if(!mIterator)
-        return NS_ERROR_OUT_OF_MEMORY;
+    mStack = stack->GetStack();
+    if(mStack->IsEmpty())
+        mStack = nsnull;
+    else
+        mPosition = mStack->Length() - 1;
 
     return NS_OK;
 }
@@ -661,25 +678,23 @@ nsXPCJSContextStackIterator::Reset(nsIJSContextStack *aStack)
 NS_IMETHODIMP
 nsXPCJSContextStackIterator::Done(PRBool *aDone)
 {
-    *aDone = !mIterator;
+    *aDone = !mStack;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXPCJSContextStackIterator::Prev(JSContext **aContext)
 {
-    if(!mIterator)
+    if(!mStack)
         return NS_ERROR_NOT_INITIALIZED;
 
-    *aContext = (JSContext*)(mIterator->GetCurrent());
+    *aContext = mStack->ElementAt(mPosition).cx;
 
-    // XXX This temporary shouldn't be necessary.
-    nsDequeIterator first(*mIterator);
-    if(*mIterator == first.First())
-        mIterator = nsnull;
+    if(mPosition == 0)
+        mStack = nsnull;
     else
-        --*mIterator;
-
+        --mPosition;
+    
     return NS_OK;
 }
 

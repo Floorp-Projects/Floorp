@@ -47,4 +47,4 @@
 !define SurveyURL             "https://survey.mozilla.com/1/Mozilla%20Firefox/${AppVersion}/${AB_CD}/exit.html"
 
 # Percentage of new "Standard" installs to enable talkback for
-!define RandomPercent         "100"
+!define RandomPercent         "50"

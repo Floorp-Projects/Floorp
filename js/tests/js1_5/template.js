@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'template.js';
 //-----------------------------------------------------------------------------
-var bug = 99999;
+var BUGNUMBER = 99999;
 var summary = '';
 var actual = '';
 var expect = '';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');

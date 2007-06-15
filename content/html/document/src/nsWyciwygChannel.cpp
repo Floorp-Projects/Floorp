@@ -389,6 +389,59 @@ nsWyciwygChannel::SetSecurityInfo(nsISupports *aSecurityInfo)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWyciwygChannel::SetCharsetAndSource(PRInt32 aSource,
+                                      const nsACString& aCharset)
+{
+  NS_ENSURE_ARG(!aCharset.IsEmpty());
+
+  if (!mCacheEntry) {
+    nsCAutoString spec;
+    nsresult rv = mURI->GetAsciiSpec(spec);
+    if (NS_FAILED(rv)) return rv;
+    rv = OpenCacheEntry(spec, nsICache::ACCESS_WRITE);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  mCacheEntry->SetMetaDataElement("charset",
+                                  PromiseFlatCString(aCharset).get());
+  nsCAutoString source;
+  source.AppendInt(aSource);
+  mCacheEntry->SetMetaDataElement("charset-source", source.get());
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWyciwygChannel::GetCharsetAndSource(PRInt32* aSource, nsACString& aCharset)
+{
+  if (!mCacheEntry) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsXPIDLCString data;
+  mCacheEntry->GetMetaDataElement("charset", getter_Copies(data));
+
+  if (data.IsEmpty()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsXPIDLCString sourceStr;
+  mCacheEntry->GetMetaDataElement("charset-source", getter_Copies(sourceStr));
+
+  PRInt32 source;
+  // XXXbz ToInteger takes an PRInt32* but outputs an nsresult in it... :(
+  PRInt32 err;
+  source = sourceStr.ToInteger(&err);
+  if (NS_FAILED(err) || source == 0) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  *aSource = source;
+  aCharset = data;
+  return NS_OK;
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // nsICachelistener
 //////////////////////////////////////////////////////////////////////////////

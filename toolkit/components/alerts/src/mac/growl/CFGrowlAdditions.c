@@ -264,7 +264,8 @@ URL_TYPE createURLByMakingDirectoryAtURLWithName(URL_TYPE parent, STRING_TYPE na
 				FSRef newDirectoryRef;
 
 				struct HFSUniStr255 nameUnicode;
-				CFRange range = { 0, MIN(CFStringGetLength(name), USHRT_MAX) };
+				CFIndex nameLength = CFStringGetLength(name);
+				CFRange range = { 0, (nameLength < USHRT_MAX ? nameLength : USHRT_MAX) };
 				CFStringGetCharacters(name, range, nameUnicode.unicode);
 				nameUnicode.length = range.length;
 

@@ -218,7 +218,7 @@ nsXULDocument::~nsXULDocument()
 
     // In case we failed somewhere early on and the forward observer
     // decls never got resolved.
-    DestroyForwardReferences();
+    mForwardReferences.Clear();
 
     // Destroy our broadcaster map.
     if (mBroadcasterMap) {
@@ -901,9 +901,9 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
         // |onbroadcast| event handler
         nsEvent event(PR_TRUE, NS_XUL_BROADCAST);
 
-        PRInt32 j = GetNumberOfShells();
-        while (--j >= 0) {
-            nsCOMPtr<nsIPresShell> shell = GetShellAt(j);
+        nsPresShellIterator iter(this);
+        nsCOMPtr<nsIPresShell> shell;
+        while ((shell = iter.GetNextShell())) {
 
             nsCOMPtr<nsPresContext> aPresContext = shell->GetPresContext();
 
@@ -1070,11 +1070,14 @@ nsXULDocument::GetElementsForID(const nsAString& aID,
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsXULDocument::AddForwardReference(nsForwardReference* aRef)
 {
     if (mResolutionPhase < aRef->GetPhase()) {
-        mForwardReferences.AppendElement(aRef);
+        if (!mForwardReferences.AppendElement(aRef)) {
+            delete aRef;
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
     }
     else {
         NS_ERROR("forward references have already been resolved");
@@ -1085,7 +1088,7 @@ nsXULDocument::AddForwardReference(nsForwardReference* aRef)
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsXULDocument::ResolveForwardReferences()
 {
     if (mResolutionPhase == nsForwardReference::eDone)
@@ -1099,12 +1102,13 @@ nsXULDocument::ResolveForwardReferences()
 
     const nsForwardReference::Phase* pass = nsForwardReference::kPasses;
     while ((mResolutionPhase = *pass) != nsForwardReference::eDone) {
-        PRInt32 previous = 0;
-        while (mForwardReferences.Count() && mForwardReferences.Count() != previous) {
-            previous = mForwardReferences.Count();
+        PRUint32 previous = 0;
+        while (mForwardReferences.Length() &&
+               mForwardReferences.Length() != previous) {
+            previous = mForwardReferences.Length();
 
-            for (PRInt32 i = 0; i < mForwardReferences.Count(); ++i) {
-                nsForwardReference* fwdref = NS_REINTERPRET_CAST(nsForwardReference*, mForwardReferences[i]);
+            for (PRUint32 i = 0; i < mForwardReferences.Length(); ++i) {
+                nsForwardReference* fwdref = mForwardReferences[i];
 
                 if (fwdref->GetPhase() == *pass) {
                     nsForwardReference::Result result = fwdref->Resolve();
@@ -1113,7 +1117,6 @@ nsXULDocument::ResolveForwardReferences()
                     case nsForwardReference::eResolve_Succeeded:
                     case nsForwardReference::eResolve_Error:
                         mForwardReferences.RemoveElementAt(i);
-                        delete fwdref;
 
                         // fixup because we removed from list
                         --i;
@@ -1130,7 +1133,7 @@ nsXULDocument::ResolveForwardReferences()
         ++pass;
     }
 
-    DestroyForwardReferences();
+    mForwardReferences.Clear();
     return NS_OK;
 }
 
@@ -1367,62 +1370,26 @@ nsXULDocument::Persist(nsIContent* aElement, PRInt32 aNameSpaceID,
 }
 
 
-
 nsresult
-nsXULDocument::DestroyForwardReferences()
+nsXULDocument::GetViewportSize(PRInt32* aWidth,
+                               PRInt32* aHeight)
 {
-    for (PRInt32 i = mForwardReferences.Count() - 1; i >= 0; --i) {
-        nsForwardReference* fwdref =
-            NS_REINTERPRET_CAST(nsForwardReference*, mForwardReferences[i]);
-        delete fwdref;
-    }
-
-    mForwardReferences.Clear();
-    return NS_OK;
-}
-
-
-nsresult
-nsXULDocument::GetPixelDimensions(nsIPresShell* aShell, PRInt32* aWidth,
-                                  PRInt32* aHeight)
-{
-    nsresult result = NS_OK;
-    nsSize size;
+    *aWidth = *aHeight = 0;
 
     FlushPendingNotifications(Flush_Layout);
 
-    nsIFrame* frame =
-        mRootContent ? aShell->GetPrimaryFrameFor(mRootContent) : nsnull;
-    if (frame) {
-        nsIView* view = frame->GetView();
-        // If we have a view check if it's scrollable. If not,
-        // just use the view size itself
-        if (view) {
-            nsIScrollableView* scrollableView = view->ToScrollableView();
+    nsIPresShell *shell = GetPrimaryShell();
+    NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
 
-            if (scrollableView) {
-                scrollableView->GetScrolledView(view);
-            }
+    nsIFrame* frame = shell->GetRootFrame();
+    NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
-            nsRect r = view->GetBounds();
-            size.height = r.height;
-            size.width = r.width;
-        }
-        // If we don't have a view, use the frame size
-        else {
-            size = frame->GetSize();
-        }
+    nsSize size = frame->GetSize();
 
-        *aWidth = nsPresContext::AppUnitsToIntCSSPixels(size.width);
-        *aHeight = nsPresContext::AppUnitsToIntCSSPixels(size.height);
-    }
-    else {
-        *aWidth = 0;
-        *aHeight = 0;
-        result = NS_ERROR_FAILURE;
-    }
+    *aWidth = nsPresContext::AppUnitsToIntCSSPixels(size.width);
+    *aHeight = nsPresContext::AppUnitsToIntCSSPixels(size.height);
 
-    return result;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1430,20 +1397,8 @@ nsXULDocument::GetWidth(PRInt32* aWidth)
 {
     NS_ENSURE_ARG_POINTER(aWidth);
 
-    nsresult rv = NS_OK;
-
-    // We make the assumption that the first presentation shell
-    // is the one for which we need information.
-    nsIPresShell *shell = GetShellAt(0);
-    if (shell) {
-        PRInt32 width, height;
-
-        rv = GetPixelDimensions(shell, &width, &height);
-        *aWidth = width;
-    } else
-        *aWidth = 0;
-
-    return rv;
+    PRInt32 height;
+    return GetViewportSize(aWidth, &height);
 }
 
 NS_IMETHODIMP
@@ -1451,20 +1406,8 @@ nsXULDocument::GetHeight(PRInt32* aHeight)
 {
     NS_ENSURE_ARG_POINTER(aHeight);
 
-    nsresult rv = NS_OK;
-
-    // We make the assumption that the first presentation shell
-    // is the one for which we need information.
-    nsIPresShell *shell = GetShellAt(0);
-    if (shell) {
-        PRInt32 width, height;
-
-        rv = GetPixelDimensions(shell, &width, &height);
-        *aHeight = height;
-    } else
-        *aHeight = 0;
-
-    return rv;
+    PRInt32 width;
+    return GetViewportSize(&width, aHeight);
 }
 
 //----------------------------------------------------------------------
@@ -1698,8 +1641,8 @@ nsXULDocument::AddElementToDocumentPost(nsIContent* aElement)
         // Create our XUL key listener and hook it up.
         nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));
         if (xblService) {
-            nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(aElement));
-            xblService->AttachGlobalKeyHandler(rec);
+            nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryInterface(aElement));
+            xblService->AttachGlobalKeyHandler(piTarget);
         }
     }
 
@@ -1985,9 +1928,9 @@ nsXULDocument::StartLayout(void)
         return NS_OK;
     }
 
-    PRUint32 count = GetNumberOfShells();
-    for (PRUint32 i = 0; i < count; ++i) {
-        nsIPresShell *shell = GetShellAt(i);
+    nsPresShellIterator iter(this);
+    nsCOMPtr<nsIPresShell> shell;
+    while ((shell = iter.GetNextShell())) {
 
         // Resize-reflow this time
         nsPresContext *cx = shell->GetPresContext();
@@ -2012,6 +1955,7 @@ nsXULDocument::StartLayout(void)
         // dropping dirty rects if refresh is disabled rather than
         // accumulating them until refresh is enabled and then
         // triggering a repaint...
+        // XXXbz Is that still the case?
         nsresult rv = NS_OK;
         nsIViewManager* vm = shell->GetViewManager();
         if (vm) {
@@ -2026,12 +1970,18 @@ nsXULDocument::StartLayout(void)
             }
         }
 
+        // Make sure we're holding a strong ref to |shell| before we call
+        // InitialReflow()
+        nsCOMPtr<nsIPresShell> shellGrip = shell;
         rv = shell->InitialReflow(r.width, r.height);
         NS_ENSURE_SUCCESS(rv, rv);
 
         // Start observing the document _after_ we do the initial
         // reflow. Otherwise, we'll get into an trouble trying to
         // create kids before the root frame is established.
+        // XXXbz why is that an issue here and not in nsContentSink or
+        // nsDocumentViewer?  Perhaps we should just flush the way
+        // nsDocumentViewer does?
         shell->BeginObservingDocument();
     }
 
@@ -3810,7 +3760,7 @@ nsXULDocument::OverlayForwardReference::Resolve()
     nsCOMPtr<nsIContent> target;
 
     PRBool notify = PR_FALSE;
-    nsIPresShell *shell = mDocument->GetShellAt(0);
+    nsIPresShell *shell = mDocument->GetPrimaryShell();
     if (shell)
         shell->GetDidInitialReflow(&notify);
 

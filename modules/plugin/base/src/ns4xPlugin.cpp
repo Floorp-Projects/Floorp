@@ -74,12 +74,6 @@
 #endif
 
 //needed for nppdf plugin
-#ifdef MOZ_WIDGET_GTK
-#include <gdk/gdk.h>
-#include <gdk/gdkx.h>
-#include "gtkxtbin.h"
-#endif
-
 #ifdef MOZ_WIDGET_GTK2
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
@@ -1829,8 +1823,6 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
         return NPERR_NO_ERROR;
       }
     }
-#endif
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
     // adobe nppdf calls XtGetApplicationNameAndClass(display,
     // &instance, &class) we have to init Xt toolkit before get
     // XtDisplay just call gtk_xtbin_new(w,0) once
@@ -1941,10 +1933,6 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
   }
 
   case NPNVToolkit: {
-#ifdef MOZ_WIDGET_GTK
-    *((NPNToolkitType*)result) = NPNVGtk12;
-#endif
-
 #ifdef MOZ_WIDGET_GTK2
     *((NPNToolkitType*)result) = NPNVGtk2;
 #endif

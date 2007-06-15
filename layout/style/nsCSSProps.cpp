@@ -182,7 +182,6 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_checkbox,               NS_THEME_CHECKBOX,
   eCSSKeyword_radio_small,            NS_THEME_RADIO_SMALL,
   eCSSKeyword_checkbox_small,         NS_THEME_CHECKBOX_SMALL,
-  eCSSKeyword_button_small,           NS_THEME_BUTTON_SMALL,
   eCSSKeyword_button_bevel,           NS_THEME_BUTTON_BEVEL,
   eCSSKeyword_toolbox,                NS_THEME_TOOLBOX,
   eCSSKeyword_toolbar,                NS_THEME_TOOLBAR,
@@ -231,6 +230,7 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_scrollbargripper_horizontal,  NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL,
   eCSSKeyword_scrollbargripper_vertical,    NS_THEME_SCROLLBAR_GRIPPER_VERTICAL,
   eCSSKeyword_textfield,              NS_THEME_TEXTFIELD,
+  eCSSKeyword_textfield_multiline,    NS_THEME_TEXTFIELD_MULTILINE,
   eCSSKeyword_caret,                  NS_THEME_TEXTFIELD_CARET,
   eCSSKeyword_menulist,               NS_THEME_DROPDOWN,
   eCSSKeyword_menulistbutton,         NS_THEME_DROPDOWN_BUTTON,
@@ -646,6 +646,13 @@ const PRInt32 nsCSSProps::kFontWeightKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const PRInt32 nsCSSProps::kIMEModeKTable[] = {
+  eCSSKeyword_active, NS_STYLE_IME_MODE_ACTIVE,
+  eCSSKeyword_disabled, NS_STYLE_IME_MODE_DISABLED,
+  eCSSKeyword_inactive, NS_STYLE_IME_MODE_INACTIVE,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 // XXX What's the point?
 const PRInt32 nsCSSProps::kKeyEquivalentKTable[] = {
   eCSSKeyword_UNKNOWN,-1
@@ -938,6 +945,14 @@ const PRInt32 nsCSSProps::kWhitespaceKTable[] = {
   eCSSKeyword_pre, NS_STYLE_WHITESPACE_PRE,
   eCSSKeyword_nowrap, NS_STYLE_WHITESPACE_NOWRAP,
   eCSSKeyword__moz_pre_wrap, NS_STYLE_WHITESPACE_MOZ_PRE_WRAP,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const PRInt32 nsCSSProps::kWidthKTable[] = {
+  eCSSKeyword__moz_intrinsic, NS_STYLE_WIDTH_INTRINSIC,
+  eCSSKeyword__moz_min_intrinsic, NS_STYLE_WIDTH_MIN_INTRINSIC,
+  eCSSKeyword__moz_shrink_wrap, NS_STYLE_WIDTH_SHRINK_WRAP,
+  eCSSKeyword__moz_fill, NS_STYLE_WIDTH_FILL,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -1318,6 +1333,7 @@ static const nsCSSProperty gFontSubpropTable[] = {
   eCSSProperty_line_height,
   eCSSProperty_font_size_adjust, // XXX Added LDB.
   eCSSProperty_font_stretch, // XXX Added LDB.
+  eCSSProperty__x_system_font,
   eCSSProperty_UNKNOWN
 };
 

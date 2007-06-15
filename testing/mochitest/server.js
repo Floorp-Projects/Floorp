@@ -42,7 +42,9 @@
 // sucks.
 
 const SERVER_PORT = 8888;
+const SERVER_PORT_OTHER_DOMAIN = 8889;
 var server; // for use in the shutdown handler, if necessary
+var otherDomainServer; // for use in the shutdown handler, if necessary
 
 //
 // HTML GENERATION
@@ -136,12 +138,16 @@ function runServer()
   serverBasePath.append("mochitest");
   server = new nsHttpServer();
   server.registerDirectory("/", serverBasePath);
+  otherDomainServer = new nsHttpServer();
+  otherDomainServer.registerDirectory("/", serverBasePath);
 
   if (environment["CLOSE_WHEN_DONE"])
     server.registerPathHandler("/server/shutdown", serverShutdown);
 
   server.setIndexHandler(defaultDirHandler);
   server.start(SERVER_PORT);
+  otherDomainServer.setIndexHandler(defaultDirHandler);
+  otherDomainServer.start(SERVER_PORT_OTHER_DOMAIN);
   
   // touch a file in the profile directory to indicate we're alive
   var foStream = Cc["@mozilla.org/network/file-output-stream;1"]
@@ -195,6 +201,7 @@ function serverShutdown(metadata, response)
 
   // Note: this doesn't disrupt the current request.
   server.stop();
+  otherDomainServer.stop();
 }
 
 //
@@ -235,7 +242,7 @@ function list(requestPath, directory, recurse)
   
   count = files.length;
   for each (var file in files) {
-    var key = requestPath + file.leafName;
+    var key = path + file.leafName;
     var childCount = 0;
     if (file.isDirectory()) {
       key += "/";
@@ -244,7 +251,9 @@ function list(requestPath, directory, recurse)
       [links[key], childCount] = list(key, file, recurse);
       count += childCount;
     } else {
-      links[key] = true;
+      if (file.leafName.charAt(0) != '.') {
+        links[key] = true;
+      }
     }
   }
 

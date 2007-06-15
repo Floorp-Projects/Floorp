@@ -578,9 +578,34 @@ void nsScrollPortView::Scroll(nsView *aScrolledView, nsPoint aTwipsDelta, nsPoin
       // consistent with the view hierarchy.
       mViewManager->UpdateView(this, 0);
     } else { // if we can blit and have a scrollwidget then scroll.
+      nsRect* toScrollPtr = nsnull;
+
+#ifdef XP_WIN
+      nsRect toScroll;
+      if (!updateRegion.IsEmpty()) {
+        nsRegion regionToScroll;
+        regionToScroll.Sub(nsRect(nsPoint(0,0), GetBounds().Size()),
+                           updateRegion);
+        nsRegionRectIterator iter(regionToScroll);
+        nsRect biggestRect(0,0,0,0);
+        const nsRect* r;
+        for (r = iter.Next(); r; r = iter.Next()) {
+          if (r->width*r->height > biggestRect.width*biggestRect.height) {
+            biggestRect = *r;
+          }
+        }
+        toScrollPtr = &toScroll;
+        biggestRect.ScaleRoundIn(1.0/aP2A);
+        toScroll = biggestRect;
+        biggestRect *= aP2A;
+        regionToScroll.Sub(regionToScroll, biggestRect);
+        updateRegion.Or(updateRegion, regionToScroll);
+      }
+#endif
+
       // Scroll the contents of the widget by the specified amount, and scroll
       // the child widgets
-      scrollWidget->Scroll(aPixDelta.x, aPixDelta.y, nsnull);
+      scrollWidget->Scroll(aPixDelta.x, aPixDelta.y, toScrollPtr);
       mViewManager->UpdateViewAfterScroll(this, updateRegion);
     }
   }

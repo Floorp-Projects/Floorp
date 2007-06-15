@@ -38,41 +38,43 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 
-NS_INTERFACE_MAP_BEGIN(nsCycleCollectionParticipant)
-  NS_INTERFACE_MAP_ENTRY(nsCycleCollectionParticipant)
-NS_INTERFACE_MAP_END
-
-NS_IMETHODIMP_(nsrefcnt) nsCycleCollectionParticipant::AddRef(void)
+NS_IMETHODIMP
+nsXPCOMCycleCollectionParticipant::Root(void *p)
 {
-  // Do nothing, it's a singleton.
-  return 1;
+    nsISupports *s = NS_STATIC_CAST(nsISupports*, p);
+    NS_ADDREF(s);
+    return NS_OK;
 }
 
-NS_IMETHODIMP_(nsrefcnt) nsCycleCollectionParticipant::Release(void)
-{
-  // Do nothing, it's a singleton.
-  return 1;
-}
-
-NS_IMETHODIMP nsCycleCollectionParticipant::Unlink(nsISupports *n)
+NS_IMETHODIMP
+nsXPCOMCycleCollectionParticipant::Unlink(void *p)
 {
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCOMCycleCollectionParticipant::Unroot(void *p)
+{
+    nsISupports *s = NS_STATIC_CAST(nsISupports*, p);
+    NS_RELEASE(s);
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsCycleCollectionParticipant::Traverse(nsISupports *n, 
-                                       nsCycleCollectionTraversalCallback &cb)
+nsXPCOMCycleCollectionParticipant::Traverse
+    (void *p, nsCycleCollectionTraversalCallback &cb)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP_(void) nsCycleCollectionParticipant::UnmarkPurple(nsISupports *n)
+NS_IMETHODIMP_(void)
+nsXPCOMCycleCollectionParticipant::UnmarkPurple(nsISupports *n)
 {
 }
 
 #ifdef DEBUG
 PRBool
-nsCycleCollectionParticipant::CheckForRightISupports(nsISupports *s)
+nsXPCOMCycleCollectionParticipant::CheckForRightISupports(nsISupports *s)
 {
     nsCOMPtr<nsISupports> foo;
     s->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),

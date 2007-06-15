@@ -444,31 +444,27 @@ XPCDispIDArray::XPCDispIDArray(XPCCallContext& ccx, JSIdArray* array) :
     }   
 }
 
-void XPCDispIDArray::Mark()
+void XPCDispIDArray::TraceJS(JSTracer* trc)
 {
     // If already marked nothing to do
-    if(IsMarked())
-        return;
-    mMarked = JS_TRUE;
-    XPCCallContext ccx(NATIVE_CALLER);
-    // Bail if our call context is bad
-    if(!ccx.IsValid())
-        return;
+    if(JS_IsGCMarkingTracer(trc))
+    {
+        if (IsMarked())
+            return;
+        mMarked = JS_TRUE;
+    }
 
     PRInt32 count = Length();
     jsval val;
-    JSContext* cx = ccx;
+
     // Iterate each of the ID's and mark them
     for(PRInt32 index = 0; index < count; ++index)
     {
-        if(JS_IdToValue(cx,
-                        NS_REINTERPRET_CAST(jsid,
-                                            mIDArray.ElementAt(index)),
-                        &val) &&
-            JSVAL_IS_GCTHING(val))
+        if(JS_IdToValue(trc->context,
+                        NS_REINTERPRET_CAST(jsid, mIDArray.ElementAt(index)),
+                        &val))
         {
-            JS_MarkGCThing(cx, NS_REINTERPRET_CAST(void*,val),
-                           nsnull, nsnull);
+            JS_CALL_VALUE_TRACER(trc, val, "disp_id_array_element");
         }
     }
 }

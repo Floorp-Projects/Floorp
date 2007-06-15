@@ -49,6 +49,10 @@
 #include <string>
 #include <Carbon/Carbon.h>
 #include <fcntl.h>
+#include "mac_utils.h"
+#elif defined(XP_LINUX)
+#include "client/linux/handler/exception_handler.h"
+#include <fcntl.h>
 #else
 #error "Not yet implemented for this platform"
 #endif // defined(XP_WIN32)
@@ -98,6 +102,12 @@ static google_breakpad::ExceptionHandler* gExceptionHandler = nsnull;
 
 static XP_CHAR* crashReporterPath;
 
+// if this is false, we don't launch the crash reporter
+static bool doReport = true;
+
+// if this is true, we pass the exception on to the OS crash reporter
+static bool showOSCrashReporter = false;
+
 // this holds additional data sent via the API
 static nsDataHashtable<nsCStringHashKey,nsCString>* crashReporterAPIData_Hash;
 static nsCString* crashReporterAPIData = nsnull;
@@ -125,6 +135,8 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
 #endif
                       bool succeeded)
 {
+  bool returnValue = showOSCrashReporter ? false : succeeded;
+
   XP_CHAR minidumpPath[XP_PATH_MAX];
   int size = XP_PATH_MAX;
   XP_CHAR* p = Concat(minidumpPath, dump_path, &size);
@@ -161,6 +173,10 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
     }
   }
 
+  if (!doReport) {
+    return returnValue;
+  }
+
   STARTUPINFO si;
   PROCESS_INFORMATION pi;
 
@@ -191,6 +207,10 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
     }
   }
 
+  if (!doReport) {
+    return returnValue;
+  }
+
   pid_t pid = fork();
 
   if (pid == -1)
@@ -202,95 +222,26 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
   }
 #endif
 
- return succeeded;
+ return returnValue;
 }
 
-static nsresult GetExecutablePath(nsString& exePath)
-{
-#if !defined(XP_MACOSX)
-
-#ifdef XP_WIN32
-  exePath.SetLength(XP_PATH_MAX);
-  if (!GetModuleFileName(NULL, (LPWSTR)exePath.BeginWriting(), XP_PATH_MAX))
-    return NS_ERROR_FAILURE;
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
-
-  NS_NAMED_LITERAL_STRING(pathSep, PATH_SEPARATOR);
-
-  PRInt32 lastSlash = exePath.RFind(pathSep);
-  if (lastSlash < 0)
-    return NS_ERROR_FAILURE;
-
-  exePath.Truncate(lastSlash + 1);
-
-  return NS_OK;
-
-#else // !defined(XP_MACOSX)
-
-  CFBundleRef appBundle = CFBundleGetMainBundle();
-  if (!appBundle)
-    return NS_ERROR_FAILURE;
-
-  CFURLRef executableURL = CFBundleCopyExecutableURL(appBundle);
-  if (!executableURL)
-    return NS_ERROR_FAILURE;
-
-  CFURLRef bundleURL = CFURLCreateCopyDeletingLastPathComponent(NULL,
-                                                                executableURL);
-  CFRelease(executableURL);
-
-  if (!bundleURL)
-    return NS_ERROR_FAILURE;
-
-  CFURLRef reporterURL = CFURLCreateCopyAppendingPathComponent(
-    NULL,
-    bundleURL,
-    CFSTR("crashreporter.app/Contents/MacOS/"),
-    false);
-  CFRelease(bundleURL);
-
-  if (!reporterURL)
-    return NS_ERROR_FAILURE;
-
-  FSRef fsRef;
-  if (!CFURLGetFSRef(reporterURL, &fsRef)) {
-    CFRelease(reporterURL);
-    return NS_ERROR_FAILURE;
-  }
-
-  CFRelease(reporterURL);
-
-  char path[PATH_MAX + 1];
-  OSStatus status = FSRefMakePath(&fsRef, (UInt8*)path, PATH_MAX);
-  if (status != noErr)
-    return NS_ERROR_FAILURE;
-
-  int len = strlen(path);
-  path[len] = '/';
-  path[len + 1] = '\0';
-
-  exePath = NS_ConvertUTF8toUTF16(path);
-
-  return NS_OK;
-#endif
-}
-
-nsresult SetExceptionHandler(nsILocalFile* aXREDirectory)
+nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
+                             const char* aServerURL)
 {
   nsresult rv;
 
   if (gExceptionHandler)
     return NS_ERROR_ALREADY_INITIALIZED;
 
-  // check environment var to see if we're enabled.
-  // we're off by default until we sort out the
-  // rest of the infrastructure,
-  // so it must exist and be set to a non-zero value.
-  const char* airbagEnv = PR_GetEnv("MOZ_AIRBAG");
-  if (airbagEnv == NULL || atoi(airbagEnv) == 0)
-    return NS_ERROR_NOT_AVAILABLE;
+  const char *envvar = PR_GetEnv("MOZ_CRASHREPORTER_DISABLE");
+  if (envvar && *envvar)
+    return NS_OK;
+
+  // this environment variable prevents us from launching
+  // the crash reporter client
+  envvar = PR_GetEnv("MOZ_CRASHREPORTER_NO_REPORT");
+  if (envvar && *envvar)
+    doReport = false;
 
   // allocate our strings
   crashReporterAPIData = new nsCString();
@@ -304,23 +255,26 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // locate crashreporter executable
-  nsString exePath;
+  nsCOMPtr<nsIFile> exePath;
+  rv = aXREDirectory->Clone(getter_AddRefs(exePath));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aXREDirectory) {
-    aXREDirectory->GetPath(exePath);
-  }
-  else {
-    rv = GetExecutablePath(exePath);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+#if defined(XP_MACOSX)
+  exePath->Append(NS_LITERAL_STRING("crashreporter.app"));
+  exePath->Append(NS_LITERAL_STRING("Contents"));
+  exePath->Append(NS_LITERAL_STRING("MacOS"));
+#endif
 
-  NS_NAMED_LITERAL_STRING(crashReporterFilename, CRASH_REPORTER_FILENAME);
+  exePath->Append(NS_LITERAL_STRING(CRASH_REPORTER_FILENAME));
 
-  crashReporterPath = TO_NEW_XP_CHAR(exePath + crashReporterFilename);
+  nsString crashReporterPath_temp;
+  exePath->GetPath(crashReporterPath_temp);
+
+  crashReporterPath = TO_NEW_XP_CHAR(crashReporterPath_temp);
 
   // get temp path to use for minidump path
   nsString tempPath;
-#ifdef XP_WIN32
+#if defined(XP_WIN32)
   // first figure out buffer size
   int pathLen = GetTempPath(0, NULL);
   if (pathLen == 0)
@@ -335,17 +289,21 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory)
   if (err != noErr)
     return NS_ERROR_FAILURE;
 
-  tempPath.SetLength(PATH_MAX);
-  OSStatus status = FSRefMakePath(&fsRef,
-                                  (UInt8*)tempPath.BeginWriting(), PATH_MAX);
+  char path[PATH_MAX];
+  OSStatus status = FSRefMakePath(&fsRef, (UInt8*)path, PATH_MAX);
   if (status != noErr)
     return NS_ERROR_FAILURE;
+  tempPath = NS_ConvertUTF8toUTF16(path);
+
+#elif defined(XP_UNIX)
+  // we assume it's always /tmp on unix systems
+  tempPath = NS_LITERAL_STRING("/tmp/");
 #else
   //XXX: implement get temp path on other platforms
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
 
-  // finally, set the exception handler
+  // now set the exception handler
   gExceptionHandler = new google_breakpad::
     ExceptionHandler(CONVERT_UTF16_TO_XP_CHAR(tempPath).get(),
                      nsnull,
@@ -355,6 +313,18 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory)
 
   if (!gExceptionHandler)
     return NS_ERROR_OUT_OF_MEMORY;
+
+  // store server URL with the API data
+  if (aServerURL)
+    AnnotateCrashReport(NS_LITERAL_CSTRING("ServerURL"),
+                        nsDependentCString(aServerURL));
+
+#if defined(XP_MACOSX)
+  // On OS X, many testers like to see the OS crash reporting dialog
+  // since it offers immediate stack traces.  We allow them to set
+  // a default to pass exceptions to the OS handler.
+  showOSCrashReporter = PassToOSCrashReporter();
+#endif
 
   return NS_OK;
 }
@@ -459,4 +429,43 @@ nsresult AnnotateCrashReport(const nsACString &key, const nsACString &data)
   return NS_OK;
 }
 
+nsresult
+SetRestartArgs(int argc, char **argv)
+{
+  if (!gExceptionHandler)
+    return NS_OK;
+
+  int i;
+  nsCAutoString envVar;
+  char *env;
+  for (i = 0; i < argc; i++) {
+    envVar = "MOZ_CRASHREPORTER_RESTART_ARG_";
+    envVar.AppendInt(i);
+    envVar += "=";
+    envVar += argv[i];
+
+    // PR_SetEnv() wants the string to be available for the lifetime
+    // of the app, so dup it here
+    env = ToNewCString(envVar);
+    if (!env)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    PR_SetEnv(env);
+  }
+
+  // make sure the arg list is terminated
+  envVar = "MOZ_CRASHREPORTER_RESTART_ARG_";
+  envVar.AppendInt(i);
+  envVar += "=";
+
+  // PR_SetEnv() wants the string to be available for the lifetime
+  // of the app, so dup it here
+  env = ToNewCString(envVar);
+  if (!env)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  PR_SetEnv(env);
+
+  return NS_OK;
+}
 } // namespace CrashReporter

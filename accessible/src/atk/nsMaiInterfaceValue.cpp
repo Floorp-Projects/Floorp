@@ -130,7 +130,7 @@ getMinimumIncrementCB(AtkValue *obj, GValue *minimumIncrement)
     if (!accValue)
         return;
 
-    memset (accValue,  0, sizeof (GValue));
+    memset (minimumIncrement,  0, sizeof (GValue));
     double accDouble;
     if (NS_FAILED(accValue->GetMinimumIncrement(&accDouble)))
         return;
@@ -142,7 +142,8 @@ gboolean
 setCurrentValueCB(AtkValue *obj, const GValue *value)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
-    NS_ENSURE_TRUE(accWrap, FALSE);
+    if (!accWrap)
+        return FALSE;
 
     nsCOMPtr<nsIAccessibleValue> accValue;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleValue),

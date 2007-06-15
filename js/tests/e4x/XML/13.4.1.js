@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.1.js';
+
 START("13.4.1 - XML Constructor as Function");
 
 x = XML();
@@ -47,7 +49,7 @@ TEST(1, "xml", typeof(x));
 TEST(2, true, x instanceof XML);
 
 correct =
-<Envelope 
+<Envelope
     xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
     xmlns:stock="http://mycompany.com/stocks"
     soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
@@ -62,7 +64,7 @@ x = XML(correct);
 TEST(3, correct, x);
 
 text =
-"<Envelope" + 
+"<Envelope" +
 "    xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"" +
 "    xmlns:stock=\"http://mycompany.com/stocks\"" +
 "    soap:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">" +
@@ -77,7 +79,7 @@ x =  XML(text);
 TEST(4, correct, x);
 
 // Make sure it's not copied if it's XML
-x = 
+x =
 <alpha>
     <bravo>two</bravo>
 </alpha>;
@@ -86,7 +88,7 @@ y = XML(x);
 
 x.bravo = "three";
 
-correct = 
+correct =
 <alpha>
     <bravo>three</bravo>
 </alpha>;
@@ -99,13 +101,13 @@ TEST_XML(6, 4, x);
 
 x = XML(4);
 TEST_XML(7, 4, x);
- 
+
 // Undefined and null should behave like ""
 x = XML(null);
 TEST_XML(8, "", x);
 
 x = XML(undefined);
 TEST_XML(9, "", x);
-  
+ 
 
 END();

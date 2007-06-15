@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'length.js';
+
 /**
    File Name:          15.3.5.1.js
    ECMA Section:       Function.length
@@ -68,26 +70,26 @@ var f = new Function( "a","b", "c", "return f.length");
 
 if ( version() <= 120 ) {
 
-    new TestCase( SECTION,
-		  'var f = new Function( "a","b", "c", "return f.length"); f()',
-		  0,
-		  f() );
+  new TestCase( SECTION,
+		'var f = new Function( "a","b", "c", "return f.length"); f()',
+		0,
+		f() );
 
-    new TestCase( SECTION,
-		  'var f = new Function( "a","b", "c", "return f.length"); f(1,2,3,4,5)',
-		  5,
-		  f(1,2,3,4,5) );
+  new TestCase( SECTION,
+		'var f = new Function( "a","b", "c", "return f.length"); f(1,2,3,4,5)',
+		5,
+		f(1,2,3,4,5) );
 } else {
 
-    new TestCase( SECTION,
-		  'var f = new Function( "a","b", "c", "return f.length"); f()',
-		  3,
-		  f() );
+  new TestCase( SECTION,
+		'var f = new Function( "a","b", "c", "return f.length"); f()',
+		3,
+		f() );
 
-    new TestCase( SECTION,
-		  'var f = new Function( "a","b", "c", "return f.length"); f(1,2,3,4,5)',
-		  3,
-		  f(1,2,3,4,5) );
+  new TestCase( SECTION,
+		'var f = new Function( "a","b", "c", "return f.length"); f(1,2,3,4,5)',
+		3,
+		f(1,2,3,4,5) );
 
 
 }

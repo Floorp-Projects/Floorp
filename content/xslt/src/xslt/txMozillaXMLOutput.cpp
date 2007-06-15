@@ -883,8 +883,8 @@ txMozillaXMLOutput::createResultDocument(const nsSubstring& aName, PRInt32 aNsID
 
         if (calias &&
             NS_SUCCEEDED(calias->GetPreferred(charset, canonicalCharset))) {
-            mDocument->SetDocumentCharacterSet(canonicalCharset);
             mDocument->SetDocumentCharacterSetSource(kCharsetFromOtherComponent);
+            mDocument->SetDocumentCharacterSet(canonicalCharset);
         }
     }
 
@@ -920,15 +920,13 @@ txMozillaXMLOutput::createResultDocument(const nsSubstring& aName, PRInt32 aNsID
     }
 
     // Set up script loader of the result document.
-    nsScriptLoader *loader = mDocument->GetScriptLoader();
-    if (loader) {
-        if (mNotifier) {
-            loader->AddObserver(mNotifier);
-        }
-        else {
-            // Don't load scripts, we can't notify the caller when they're loaded.
-            loader->SetEnabled(PR_FALSE);
-        }
+    nsScriptLoader *loader = mDocument->ScriptLoader();
+    if (mNotifier) {
+        loader->AddObserver(mNotifier);
+    }
+    else {
+        // Don't load scripts, we can't notify the caller when they're loaded.
+        loader->SetEnabled(PR_FALSE);
     }
 
     if (mNotifier) {
@@ -1120,11 +1118,8 @@ txTransformNotifier::SignalTransformEnd(nsresult aResult)
 
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
     if (doc) {
-        nsScriptLoader *scriptLoader = doc->GetScriptLoader();
-        if (scriptLoader) {
-            scriptLoader->RemoveObserver(this);
-            // XXX Maybe we want to cancel script loads if NS_FAILED(rv)?
-        }
+        doc->ScriptLoader()->RemoveObserver(this);
+        // XXX Maybe we want to cancel script loads if NS_FAILED(rv)?
 
         if (NS_FAILED(aResult)) {
             doc->CSSLoader()->Stop();

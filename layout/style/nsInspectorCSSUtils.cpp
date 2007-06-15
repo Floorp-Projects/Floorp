@@ -167,7 +167,7 @@ nsInspectorCSSUtils::GetRuleNodeForContent(nsIContent* aContent,
     nsIDocument* doc = aContent->GetDocument();
     NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
-    nsIPresShell *presShell = doc->GetShellAt(0);
+    nsIPresShell *presShell = doc->GetPrimaryShell();
     NS_ENSURE_TRUE(presShell, NS_ERROR_UNEXPECTED);
 
     nsRefPtr<nsStyleContext> sContext =

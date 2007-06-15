@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '12.7-1-n.js';
+
 /**
    File Name:          12.7-1-n.js
    ECMA Section:       12.7 The continue statement

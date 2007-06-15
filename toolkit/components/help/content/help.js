@@ -584,10 +584,6 @@ function UpdateBackForwardButtons() {
     }
 }
 
-function getMarkupDocumentViewer() {
-    return helpBrowser.markupDocumentViewer;
-}
-
 function onselect_loadURI(tree) {
     try {
         var resource = tree.view.getResourceAtIndex(tree.currentIndex);

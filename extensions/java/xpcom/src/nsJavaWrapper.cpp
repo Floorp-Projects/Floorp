@@ -728,7 +728,7 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
                                                         aIndex);
       }
 
-      nsISupports* xpcom_obj;
+      void* xpcom_obj;
       if (java_obj) {
         // If the requested interface is nsIWeakReference, then we look for or
         // create a stub for the nsISupports interface.  Then we create a weak
@@ -743,21 +743,25 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
           iid = aIID;
         }
 
-        rv = GetNewOrUsedXPCOMObject(env, java_obj, iid, &xpcom_obj);
+        rv = JavaObjectToNativeInterface(env, java_obj, iid, &xpcom_obj);
+        if (NS_FAILED(rv))
+          break;
+        rv = ((nsISupports*) xpcom_obj)->QueryInterface(iid, &xpcom_obj);
         if (NS_FAILED(rv))
           break;
 
         // If the function expects a weak reference, then we need to
         // create it here.
         if (isWeakRef) {
+          nsISupports* isupports = (nsISupports*) xpcom_obj;
           nsCOMPtr<nsISupportsWeakReference> supportsweak =
-                                                 do_QueryInterface(xpcom_obj);
+                  do_QueryInterface(isupports);
           if (supportsweak) {
             nsWeakPtr weakref;
             supportsweak->GetWeakReference(getter_AddRefs(weakref));
-            NS_RELEASE(xpcom_obj);
+            NS_RELEASE(isupports);
             xpcom_obj = weakref;
-            NS_ADDREF(xpcom_obj);
+            NS_ADDREF((nsISupports*) xpcom_obj);
           } else {
             xpcom_obj = nsnull;
           }
@@ -774,7 +778,7 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
           aVariant.SetPtrIsData();
         }
       } else {  // 'array'
-        NS_STATIC_CAST(nsISupports**, aVariant.val.p)[aIndex] = xpcom_obj;
+        NS_STATIC_CAST(void**, aVariant.val.p)[aIndex] = xpcom_obj;
       }
       break;
     }
@@ -881,6 +885,67 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
         aVariant.ptr = &aVariant.val.p;
         aVariant.SetPtrIsData();
       }
+      break;
+    }
+
+    case nsXPTType::T_PSTRING_SIZE_IS:
+    case nsXPTType::T_PWSTRING_SIZE_IS:
+    {
+      NS_PRECONDITION(!aIsArrayElement, "sized string array not supported");
+      
+      LOG(("Sized string\n"));
+      jstring data = nsnull;
+      if (!aIsOut) {  // 'in'
+        data = (jstring) aParam;
+      } else if (aParam) {  // 'inout'
+        data = (jstring) env->GetObjectArrayElement((jobjectArray) aParam,
+                                                    aIndex);
+      }
+
+      PRUint32 length = 0;
+      if (data) {
+        if (aType == nsXPTType::T_PSTRING_SIZE_IS) {
+          length = env->GetStringUTFLength(data);
+        } else {
+          length = env->GetStringLength(data);
+        }
+        if (length > aArraySize) {
+          rv = NS_ERROR_ILLEGAL_VALUE;
+          break;
+        }
+      }
+
+      PRUint32 size_of_char = (aType == nsXPTType::T_PSTRING_SIZE_IS) ?
+                              sizeof(char) : sizeof(jchar);
+      PRUint32 allocLength = (aArraySize + 1) * size_of_char;
+      void* buf = nsMemory::Alloc(allocLength);
+      if (!buf) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        break;
+      }
+
+      if (data) {
+        if (aType == nsXPTType::T_PSTRING_SIZE_IS) {
+          const char* str = env->GetStringUTFChars(data, nsnull);
+          if (!str) {
+            nsMemory::Free(buf);
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
+          }
+          memcpy(buf, str, length);
+          env->ReleaseStringUTFChars(data, str);
+        } else {
+          jchar* jchar_str = NS_STATIC_CAST(jchar*, buf);
+          env->GetStringRegion(data, 0, length, jchar_str);
+        }
+      }
+      
+      aVariant.val.p = buf;
+      if (aIsOut) { // 'inout'
+        aVariant.ptr = &aVariant.val;
+        aVariant.SetPtrIsData();
+      }
+
       break;
     }
 
@@ -1111,7 +1176,8 @@ FinalizeParams(JNIEnv *env, const nsXPTParamInfo &aParamInfo, PRUint8 aType,
         jobject java_obj = nsnull;
         if (xpcom_obj) {
           // Get matching Java object for given xpcom object
-          rv = GetNewOrUsedJavaObject(env, xpcom_obj, aIID, nsnull, &java_obj);
+          rv = NativeInterfaceToJavaObject(env, xpcom_obj, aIID, nsnull,
+                                           &java_obj);
           if (NS_FAILED(rv))
             break;
         }
@@ -1235,7 +1301,7 @@ FinalizeParams(JNIEnv *env, const nsXPTParamInfo &aParamInfo, PRUint8 aType,
       // cleanup
       // If this is not an out param or if the invokeResult is a failure case,
       // then the array elements have not been cleaned up.  Do so now.
-      if (!aParamInfo.IsOut() || NS_FAILED(aInvokeResult)) {
+      if (!aParamInfo.IsOut() || (NS_FAILED(aInvokeResult) && aVariant.val.p)) {
         nsXPTCVariant var;
         for (PRUint32 i = 0; i < aArraySize; i++) {
           rv = GetNativeArrayElement(aArrayType, aVariant.val.p, i, &var);
@@ -1246,6 +1312,48 @@ FinalizeParams(JNIEnv *env, const nsXPTParamInfo &aParamInfo, PRUint8 aType,
         }
       }
       PR_Free(aVariant.val.p);
+      break;
+    }
+
+    case nsXPTType::T_PSTRING_SIZE_IS:
+    case nsXPTType::T_PWSTRING_SIZE_IS:
+    {
+      NS_PRECONDITION(!aIsArrayElement, "sized string array not supported");
+
+      if ((aParamInfo.IsOut()) && NS_SUCCEEDED(aInvokeResult))
+      {
+        // create new string from data
+        jstring str = nsnull;
+        if (aVariant.val.p) {
+          if (aType == nsXPTType::T_PSTRING_SIZE_IS) {
+            PRUint32 len = (aArraySize + 1) * sizeof(char);
+            char* buf = (char*) nsMemory::Alloc(len);
+            if (buf) {
+              memcpy(buf, aVariant.val.p, len);
+              buf[aArraySize] = '\0';
+              str = env->NewStringUTF((const char*) buf);
+              nsMemory::Free(buf);
+            }
+          } else {
+            str = env->NewString((const jchar*) aVariant.val.p, aArraySize);
+          }
+          if (!str) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
+          }
+        }
+
+        if (aParamInfo.IsRetval()) {
+          *aParam = str;
+        } else if (*aParam) {
+          // put new string into output array
+          env->SetObjectArrayElement((jobjectArray) *aParam, aIndex, str);
+        }
+      }
+
+      // cleanup
+      if (aVariant.val.p)
+        nsMemory::Free(aVariant.val.p);
       break;
     }
 
@@ -1406,45 +1514,25 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
     }
     memset(params, 0, paramCount * sizeof(nsXPTCVariant));
 
+    PRBool foundDependentParam = PR_FALSE;
     for (PRUint8 i = 0; i < paramCount && NS_SUCCEEDED(rv); i++)
     {
       LOG(("\t Param %d: ", i));
       const nsXPTParamInfo &paramInfo = methodInfo->GetParam(i);
       params[i].type = paramInfo.GetType();
 
+      if (params[i].type.IsDependent() && paramInfo.IsIn()) {
+        foundDependentParam = PR_TRUE;
+        continue;
+      }
+      
       if (paramInfo.IsIn()) {
         PRUint8 type = params[i].type.TagPart();
 
-        // is paramater an array?
-        PRUint8 arrayType = 0;
-        PRUint32 arraySize = 0;
-        if (type == nsXPTType::T_ARRAY) {
-          // get array type
-          nsXPTType xpttype;
-          rv = iinfo->GetTypeForParam(methodIndex, &paramInfo, 1, &xpttype);
-          if (NS_FAILED(rv))
-            break;
-          arrayType = xpttype.TagPart();
-
-          // get size of array
-          PRUint8 argnum;
-          rv = iinfo->GetSizeIsArgNumberForParam(methodIndex, &paramInfo, 0,
-                                                 &argnum);
-          if (NS_FAILED(rv))
-            break;
-          arraySize = params[argnum].val.u32;
-        }
-
         // get IID for interface params
         nsID iid;
-        if (type == nsXPTType::T_INTERFACE ||
-            type == nsXPTType::T_INTERFACE_IS ||
-            type == nsXPTType::T_ARRAY &&
-              (arrayType == nsXPTType::T_INTERFACE ||
-               arrayType == nsXPTType::T_INTERFACE_IS))
-        {
-          PRUint8 paramType = type == nsXPTType::T_ARRAY ? arrayType : type;
-          rv = GetIIDForMethodParam(iinfo, methodInfo, paramInfo, paramType,
+        if (type == nsXPTType::T_INTERFACE) {
+          rv = GetIIDForMethodParam(iinfo, methodInfo, paramInfo, type,
                                     methodIndex, params, PR_TRUE, iid);
         }
 
@@ -1453,8 +1541,8 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
           if (aParams && !paramInfo.IsRetval()) {
             param = env->GetObjectArrayElement(aParams, i);
           }
-          rv = SetupParams(env, param, type, paramInfo.IsOut(), iid, arrayType,
-                           arraySize, PR_FALSE, 0, params[i]);
+          rv = SetupParams(env, param, type, paramInfo.IsOut(), iid, 0, 0,
+                           PR_FALSE, 0, params[i]);
         }
       } else {
         LOG(("out/retval\n"));
@@ -1462,6 +1550,76 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
         params[i].SetPtrIsData();
       }
     }
+    
+    // Handle any dependent params by doing a second pass
+    if (foundDependentParam) {
+      
+      for (PRUint8 j = 0; j < paramCount && NS_SUCCEEDED(rv); j++) {
+        
+        const nsXPTParamInfo &paramInfo = methodInfo->GetParam(j);
+        params[j].type = paramInfo.GetType();
+
+        if (!params[j].type.IsDependent())
+          continue;
+
+        if (paramInfo.IsIn()) {
+          PRUint8 type = params[j].type.TagPart();
+
+          // is paramater an array or sized string?
+          PRUint8 arrayType = 0;
+          PRUint32 arraySize = 0;
+          PRBool isArray = params[j].type.IsArray();
+          PRBool isSizedString = isArray ? PR_FALSE :
+                   type == nsXPTType::T_PSTRING_SIZE_IS ||
+                   type == nsXPTType::T_PWSTRING_SIZE_IS;
+
+          if (isArray) {
+            // get array type
+            nsXPTType xpttype;
+            rv = iinfo->GetTypeForParam(methodIndex, &paramInfo, 1, &xpttype);
+            if (NS_FAILED(rv))
+              break;
+            arrayType = xpttype.TagPart();
+            // IDL 'octet' arrays are not 'promoted' to short, but kept as 'byte';
+            // therefore, treat as a signed 8bit value
+            if (arrayType == nsXPTType::T_U8)
+              arrayType = nsXPTType::T_I8;
+          }
+
+          if (isArray || isSizedString) {
+            // get size of array or string
+            PRUint8 argnum;
+            rv = iinfo->GetSizeIsArgNumberForParam(methodIndex, &paramInfo, 0,
+                                                   &argnum);
+            if (NS_FAILED(rv))
+              break;
+            arraySize = params[argnum].val.u32;
+          }
+
+          // get IID for interface params
+          nsID iid;
+          if (type == nsXPTType::T_INTERFACE_IS ||
+              type == nsXPTType::T_ARRAY &&
+                (arrayType == nsXPTType::T_INTERFACE ||
+                 arrayType == nsXPTType::T_INTERFACE_IS))
+          {
+            PRUint8 paramType = type == nsXPTType::T_ARRAY ? arrayType : type;
+            rv = GetIIDForMethodParam(iinfo, methodInfo, paramInfo, paramType,
+                                      methodIndex, params, PR_TRUE, iid);
+          }
+
+          if (NS_SUCCEEDED(rv)) {
+            jobject param = nsnull;
+            if (aParams && !paramInfo.IsRetval()) {
+              param = env->GetObjectArrayElement(aParams, j);
+            }
+            rv = SetupParams(env, param, type, paramInfo.IsOut(), iid, arrayType,
+                             arraySize, PR_FALSE, 0, params[j]);
+          }
+        }
+      }
+    }
+    
     if (NS_FAILED(rv)) {
       ThrowException(env, rv, "SetupParams failed");
       return nsnull;
@@ -1488,17 +1646,28 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
     const nsXPTParamInfo &paramInfo = methodInfo->GetParam(i);
     PRUint8 type = paramInfo.GetType().TagPart();
 
-    // is paramater an array?
+    // is paramater an array or sized string?
     PRUint8 arrayType = 0;
     PRUint32 arraySize = 0;
-    if (type == nsXPTType::T_ARRAY) {
+    PRBool isArray = params[i].type.IsArray();
+    PRBool isSizedString = isArray ? PR_FALSE :
+             type == nsXPTType::T_PSTRING_SIZE_IS ||
+             type == nsXPTType::T_PWSTRING_SIZE_IS;
+
+    if (isArray) {
       // get array type
       nsXPTType array_xpttype;
       rv = iinfo->GetTypeForParam(methodIndex, &paramInfo, 1, &array_xpttype);
       if (NS_FAILED(rv))
         break;
       arrayType = array_xpttype.TagPart();
+      // IDL 'octet' arrays are not 'promoted' to short, but kept as 'byte';
+      // therefore, treat as a signed 8bit value
+      if (arrayType == nsXPTType::T_U8)
+        arrayType = nsXPTType::T_I8;
+    }
 
+    if (isArray || isSizedString) {
       // get size of array
       PRUint8 argnum;
       rv = iinfo->GetSizeIsArgNumberForParam(methodIndex, &paramInfo, 0,
@@ -1531,16 +1700,12 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
     rv = FinalizeParams(env, paramInfo, type, params[i], iid, PR_FALSE,
                         arrayType, arraySize, 0, invokeResult, javaElement);
   }
-  if (NS_FAILED(rv)) {
-    ThrowException(env, rv, "FinalizeParams failed");
-    return nsnull;
-  }
 
   // Normally, we would delete any created nsID object in the above loop.
   // However, GetIIDForMethodParam may need some of the nsID params when it's
   // looking for the IID of an INTERFACE_IS.  Therefore, we can't delete it
   // until we've gone through the 'Finalize' loop once and created the result.
-  for (PRUint8 j = 0; j < paramCount && NS_SUCCEEDED(rv); j++)
+  for (PRUint8 j = 0; j < paramCount; j++)
   {
     const nsXPTParamInfo &paramInfo = methodInfo->GetParam(j);
     const nsXPTType &type = paramInfo.GetType();
@@ -1562,18 +1727,37 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
     message.AppendLiteral("\" returned an error condition");
     ThrowException(env, invokeResult, message.get());
   }
+  if (NS_FAILED(rv)) {
+    ThrowException(env, rv, "FinalizeParams failed");
+    return nsnull;
+  }
 
   LOG(("<=== (XPCOM) %s::%s()\n", ifaceName, methodInfo->GetName()));
   return result;
 }
 
 nsresult
-CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject, const nsIID& aIID,
-                jobject aObjectLoader, jobject* aResult)
+GetNewOrUsedJavaWrapper(JNIEnv* env, nsISupports* aXPCOMObject,
+                        const nsIID& aIID, jobject aObjectLoader,
+                        jobject* aResult)
 {
   NS_PRECONDITION(aResult != nsnull, "null ptr");
   if (!aResult)
     return NS_ERROR_NULL_POINTER;
+
+  // Get the root nsISupports of the xpcom object
+  nsresult rv;
+  nsCOMPtr<nsISupports> rootObject = do_QueryInterface(aXPCOMObject, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get associated Java object from hash table
+  rv = gNativeToJavaProxyMap->Find(env, rootObject, aIID, aResult);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (*aResult)
+    return NS_OK;
+
+  // No Java object is associated with the given XPCOM object, so we
+  // create a Java proxy.
 
   nsCOMPtr<nsIInterfaceInfoManager>
     iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
@@ -1583,12 +1767,12 @@ CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject, const nsIID& aIID,
 
   // Get interface info for class
   nsCOMPtr<nsIInterfaceInfo> info;
-  nsresult rv = iim->GetInfoForIID(&aIID, getter_AddRefs(info));
+  rv = iim->GetInfoForIID(&aIID, getter_AddRefs(info));
   if (NS_FAILED(rv))
     return rv;
 
-  // Wrap XPCOM object (addrefs aXPCOMObject)
-  JavaXPCOMInstance* inst = new JavaXPCOMInstance(aXPCOMObject, info);
+  // Wrap XPCOM object (addrefs rootObject)
+  JavaXPCOMInstance* inst = new JavaXPCOMInstance(rootObject, info);
   if (!inst)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1618,12 +1802,12 @@ CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject, const nsIID& aIID,
       LOG(("+ CreateJavaProxy (Java=%08x | XPCOM=%08x | IID=%s)\n",
            (PRUint32) env->CallStaticIntMethod(systemClass, hashCodeMID,
                                                java_obj),
-           (PRUint32) aXPCOMObject, iid_str));
+           (PRUint32) rootObject, iid_str));
       PR_Free(iid_str);
 #endif
 
       // Associate XPCOM object with Java proxy
-      rv = gNativeToJavaProxyMap->Add(env, aXPCOMObject, aIID, java_obj);
+      rv = gNativeToJavaProxyMap->Add(env, rootObject, aIID, java_obj);
       if (NS_SUCCEEDED(rv)) {
         *aResult = java_obj;
         return NS_OK;

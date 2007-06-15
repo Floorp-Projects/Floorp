@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '12.2-1.js';
+
 /**
    File Name:          12.2-1.js
    ECMA Section:       The variable statement

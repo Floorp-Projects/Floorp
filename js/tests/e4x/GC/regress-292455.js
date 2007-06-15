@@ -35,29 +35,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("Regress - Do not crash on gc");
+gTestfile = 'regress-292455.js';
 
-var bug = 292455;
-var summary = 'Regress - Do not crash on gc';
+var summary = "Regress - Do not crash on gc";
+var BUGNUMBER = 292455;
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
-function output (text) 
+function output (text)
 {
-    if (typeof alert != 'undefined') 
+    if (typeof alert != 'undefined')
     {
         alert(text);
     }
-    else if (typeof print != 'undefined') 
+    else if (typeof print != 'undefined')
     {
         print(text);
     }
 }
 
-function doTest () 
+function doTest ()
 {
     var html = <div xml:lang="en">
         <h1>Kibology for all</h1>

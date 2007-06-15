@@ -203,6 +203,7 @@ static gchar* getAppForScheme(const nsACString& aProtocolScheme)
   if (!gconfLib)
     return nsnull;
 
+  GError *error = nsnull;
   GConfClient *client = _gconf_client_get_default();
   NS_ASSERTION(client, "no gconf client");
 
@@ -210,8 +211,11 @@ static gchar* getAppForScheme(const nsACString& aProtocolScheme)
                           aProtocolScheme +
                           NS_LITERAL_CSTRING("/command"));
 
-  gchar *app = _gconf_client_get_string(client, gconfPath.get(), NULL);
+  gchar *app = _gconf_client_get_string(client, gconfPath.get(), &error);
   g_object_unref(G_OBJECT(client));
+
+  if (error)
+    g_error_free(error);
 
   return app;
 }

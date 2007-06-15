@@ -83,6 +83,10 @@ ScopedAppData::ScopedAppData(const nsXREAppData* aAppData)
     SetAllocatedString(this->minVersion, aAppData->minVersion);
     SetAllocatedString(this->maxVersion, aAppData->maxVersion);
   }
+
+  if (aAppData->size > offsetof(nsXREAppData, crashReporterURL)) {
+    SetAllocatedString(this->crashReporterURL, aAppData->crashReporterURL);
+  }
 }
 
 ScopedAppData::~ScopedAppData()
@@ -99,6 +103,8 @@ ScopedAppData::~ScopedAppData()
   SetStrongPtr(this->xreDirectory, (nsILocalFile*) nsnull);
   SetAllocatedString(this->minVersion, nsnull);
   SetAllocatedString(this->maxVersion, nsnull);
+
+  SetAllocatedString(this->crashReporterURL, nsnull);
 }
 
 nsresult
@@ -209,6 +215,19 @@ XRE_ParseAppData(nsILocalFile* aINIFile, nsXREAppData *aAppData)
       { nsnull }
     };
     ReadStrings(parser, strings2);
+  }
+
+  if (aAppData->size > offsetof(nsXREAppData, crashReporterURL)) {
+    ReadString strings3[] = {
+      { "Crash Reporter", "ServerURL", &aAppData->crashReporterURL },
+      { nsnull }
+    };
+    ReadStrings(parser, strings3);
+    ReadFlag flags2[] = {
+      { "Crash Reporter", "Enabled", NS_XRE_ENABLE_CRASH_REPORTER },
+      { nsnull }
+    };
+    ReadFlags(parser, flags2, &aAppData->flags);
   }
 
   return NS_OK;

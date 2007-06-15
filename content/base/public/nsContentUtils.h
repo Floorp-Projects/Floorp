@@ -869,25 +869,6 @@ public:
                                 PRInt32 aNamespaceID);
 
   /**
-   * Associate an object aData to aKey on node aNode. If aData is null any
-   * previously registered object and UserDataHandler associated to aKey on
-   * aNode will be removed.
-   * Should only be used to implement the DOM Level 3 UserData API.
-   *
-   * @param aNode canonical nsINode pointer of the node to add aData to
-   * @param aKey the key to associate the object to
-   * @param aData the object to associate to aKey on aNode (may be nulll)
-   * @param aHandler the UserDataHandler to call when the node is
-   *                 cloned/deleted/imported/renamed (may be nulll)
-   * @param aResult [out] the previously registered object for aKey on aNode, if
-   *                      any
-   * @return whether adding the object and UserDataHandler succeeded
-   */
-  static nsresult SetUserData(nsINode *aNode, nsIAtom *aKey, nsIVariant *aData,
-                              nsIDOMUserDataHandler *aHandler,
-                              nsIVariant **aResult);
-
-  /**
    * Creates a DocumentFragment from text using a context node to resolve
    * namespaces.
    *
@@ -1015,6 +996,10 @@ public:
       }
       return rv;
     }
+    void traverse(nsCycleCollectionTraversalCallback &cb)
+    {
+      cb.NoteScriptChild(mLangID, mObject);
+    }
     PRUint32 mLangID;
     void *mObject;
   };
@@ -1023,6 +1008,46 @@ public:
    * Convert nsIContent::IME_STATUS_* to nsIKBStateControll::IME_STATUS_*
    */
   static PRUint32 GetKBStateControlStatusFromIMEStatus(PRUint32 aState);
+
+  /*
+   * Notify when the first XUL menu is opened and when the all XUL menus are
+   * closed. At opening, aInstalling should be TRUE, otherwise, it should be
+   * FALSE.
+   */
+  static void NotifyInstalledMenuKeyboardListener(PRBool aInstalling);
+
+  /**
+   * Do security checks before loading a resource. Does the following checks:
+   *   nsIScriptSecurityManager::CheckLoadURIWithPrincipal
+   *   NS_CheckContentLoadPolicy
+   *   nsIScriptSecurityManager::CheckSameOriginURI
+   *
+   * You will still need to do at least SameOrigin checks before on redirects.
+   *
+   * @param aURIToLoad         URI that is getting loaded.
+   * @param aLoadingPrincipal  Principal of the resource that is initiating
+   *                           the load
+   * @param aCheckLoadFlags    Flags to be passed to
+   *                           nsIScriptSecurityManager::CheckLoadURIWithPrincipal
+   *                           NOTE: If this contains ALLOW_CHROME the
+   *                                 CheckSameOriginURI check will be skipped if
+   *                                 aURIToLoad is a chrome uri.
+   * @param aAllowData         Set to true to skip CheckSameOriginURI check when
+                               aURIToLoad is a data uri.
+   * @param aContentPolicyType Type     \
+   * @param aContext           Context   |- to be passed to
+   * @param aMimeGuess         Mimetype  |      NS_CheckContentLoadPolicy
+   * @param aExtra             Extra    /
+   */
+  static nsresult CheckSecurityBeforeLoad(nsIURI* aURIToLoad,
+                                          nsIPrincipal* aLoadingPrincipal,
+                                          PRUint32 aCheckLoadFlags,
+                                          PRBool aAllowData,
+                                          PRUint32 aContentPolicyType,
+                                          nsISupports* aContext,
+                                          const nsACString& aMimeGuess = EmptyCString(),
+                                          nsISupports* aExtra = nsnull);
+
 private:
 
   static PRBool InitializeEventTable();

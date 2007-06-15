@@ -75,7 +75,24 @@ XULAPP_DEFINES = \
 include $(topsrcdir)/config/rules.mk
 
 export::
-ifeq ($(OS_ARCH),WINNT)
+ifdef MOZ_XUL_APP
+	$(NSINSTALL) -D $(FINAL_TARGET)/platform/Linux/chrome/icons/default
+	$(INSTALL) $(srcdir)/resources/content/res/winInspectorMain.xpm $(FINAL_TARGET)/platform/Linux/chrome/icons/default
+	$(INSTALL) $(srcdir)/resources/content/res/winInspectorMain16.xpm $(FINAL_TARGET)/platform/Linux/chrome/icons/default
+	$(NSINSTALL) -D $(FINAL_TARGET)/platform/WINNT/chrome/icons/default
+	$(INSTALL) $(srcdir)/resources/content/res/winInspectorMain.ico $(FINAL_TARGET)/platform/WINNT/chrome/icons/default
+	$(NSINSTALL) -D $(FINAL_TARGET)/platform/OS2/chrome/icons/default
+	cp $(srcdir)/resources/content/res/winInspectorMainOS2.ico $(FINAL_TARGET)/platform/OS2/chrome/icons/default/winInspectorMain.ico
+else
 	$(NSINSTALL) -D $(FINAL_TARGET)/chrome/icons/default
+ifeq ($(OS_ARCH),WINNT)
 	$(INSTALL) $(srcdir)/resources/content/res/winInspectorMain.ico $(FINAL_TARGET)/chrome/icons/default
+endif
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+	$(INSTALL) $(srcdir)/resources/content/res/winInspectorMain.xpm $(FINAL_TARGET)/chrome/icons/default
+	$(INSTALL) $(srcdir)/resources/content/res/winInspectorMain16.xpm $(FINAL_TARGET)/chrome/icons/default
+endif
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+	cp $(srcdir)/resources/content/res/winInspectorMainOS2.ico $(FINAL_TARGET)/chrome/icons/default/winInspectorMain.ico
+endif
 endif

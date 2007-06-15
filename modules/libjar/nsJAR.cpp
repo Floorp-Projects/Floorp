@@ -1291,15 +1291,25 @@ nsZipReaderCache::Observe(nsISupports *aSubject,
 
 PRTime GetModTime(PRUint16 aDate, PRUint16 aTime)
 {
-  char buffer[17];
+  PRExplodedTime time;
 
-  PR_snprintf(buffer, sizeof(buffer), "%02d/%02d/%04d %02d:%02d",
-        ((aDate >> 5) & 0x0F), (aDate & 0x1F), (aDate >> 9) + 1980,
-        ((aTime >> 11) & 0x1F), ((aTime >> 5) & 0x3F));
+  time.tm_usec = 0;
+  
+  time.tm_hour = (aTime >> 11) & 0x1F;
+  time.tm_min = (aTime >> 5) & 0x3F;
+  time.tm_sec = (aTime & 0x1F) * 2;
 
-  PRTime result;
-  PR_ParseTimeString(buffer, PR_FALSE, &result);
-  return result;
+  time.tm_year = (aDate >> 9) + 1980;
+  time.tm_month = ((aDate >> 5) & 0x0F)-1;
+  time.tm_mday = aDate & 0x1F;
+  
+  time.tm_params.tp_gmt_offset = 0;
+  time.tm_params.tp_dst_offset = 0;
+  
+  PR_NormalizeTime(&time, PR_GMTParameters);
+  time.tm_params = PR_LocalTimeParameters(&time);
+  
+  return PR_ImplodeTime(&time);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

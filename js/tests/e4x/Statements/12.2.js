@@ -40,10 +40,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '12.2.js';
+
 START("12.2 - For-in statement");
 
 // All the employee names
-e = 
+e =
 <employees>
     <employee id="1">
         <name>Joe</name>
@@ -67,7 +69,7 @@ TEST("1.count", 2, i);
 
 
 // Each child of the first item
-order = 
+order =
 <order>
     <customer>
         <name>John Smith</name>

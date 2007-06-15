@@ -68,11 +68,7 @@ ifdef SUNCTL
 REQUIRES	+= ctl
 endif
 
-ifdef MOZ_ENABLE_XPRINT
-REQUIRES	+= xprintutil
-endif
-
-# Code shared between GTK+, Xlib and Xprint gfx modules
+# Code used by the GTK+ gfx module
 X11SHARED_LCPPSRCS = \
 		nsAntiAliasedGlyph.cpp \
 		nsX11AlphaBlend.cpp \
@@ -118,12 +114,6 @@ CPPSRCS		+= \
 		mozilla-decoder.cpp
 endif
 
-ifdef MOZ_ENABLE_GTK
-CPPSRCS 	+= \
-		nsRegionGTK.cpp \
-		$(NULL)
-endif
-
 ifdef MOZ_ENABLE_GTK2
 CPPSRCS		+= \
 		nsRegionGTK2.cpp \
@@ -145,24 +135,12 @@ ifdef MOZ_ENABLE_XINERAMA
 GFX_XINERAMA_LIBS += $(MOZ_XINERAMA_LIBS)
 endif
 
-ifdef MOZ_ENABLE_GTK
-EXTRA_DSO_LDOPTS += \
-		$(LIBS_DIR) \
-		-lgkgfx \
-		$(GFX_XINERAMA_LIBS) \
-		-lgtksuperwin \
-		$(MOZ_COMPONENT_LIBS) \
-		$(MOZ_JS_LIBS) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(NULL)
-endif
-
 ifdef MOZ_ENABLE_XFT
 EXTRA_DSO_LDOPTS += $(FT2_LIBS)
 
 libs:: fontEncoding.properties pangoFontEncoding.properties
 	$(INSTALL) $^ $(DIST)/bin/res/fonts
- 
+
 install:: fontEncoding.properties pangoFontEncoding.properties
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res/fonts
 endif
@@ -182,9 +160,9 @@ ifdef MOZ_ENABLE_PANGO
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS)
 endif
 
-EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS) $(MOZ_GTK_LDFLAGS) $(MOZ_XFT_LIBS) $(MOZ_GTK2_LIBS)
-CXXFLAGS	+= $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS)
-CFLAGS		+= $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS)
+EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS) $(MOZ_XFT_LIBS) $(MOZ_GTK2_LIBS)
+CXXFLAGS	+= $(MOZ_GTK2_CFLAGS)
+CFLAGS		+= $(MOZ_GTK2_CFLAGS)
 
 ifeq ($(OS_ARCH), SunOS)
 ifndef GNU_CC
@@ -207,13 +185,6 @@ DEFINES         += -DUSE_POSTSCRIPT
 EXTRA_DSO_LDOPTS += -lgfxpsshar
 endif
 
-ifdef MOZ_ENABLE_XPRINT
-DEFINES         += -DUSE_XPRINT -DUSE_MOZILLA_TYPES
-EXTRA_DSO_LDOPTS += \
-		-lxprintutil \
-		$(MOZ_XPRINT_LDFLAGS)
-endif
-
 LOCAL_INCLUDES	= \
 		-I../.. \
 		-I$(srcdir)/. \
@@ -228,11 +199,5 @@ INCLUDES        += $(FT2_CFLAGS)
 LOCAL_INCLUDES        += -I$(srcdir)/../freetype
 endif
 
-ifdef MOZ_ENABLE_XPRINT
-export:: $(addprefix $(srcdir)/../xprint/,$(XPU_LCSRCS)) $(addprefix $(srcdir)/../x11shared/,$(X11SHARED_LCPPSRCS))
-	$(INSTALL) $^ .
-else
 export:: $(addprefix $(srcdir)/../x11shared/,$(X11SHARED_LCPPSRCS))
 	$(INSTALL) $^ .
-endif
-

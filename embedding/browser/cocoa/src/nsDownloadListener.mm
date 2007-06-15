@@ -137,7 +137,7 @@ nsDownloadListener::GetSize(PRUint64 *aSize)
 
 /* attribute wstring displayName; */
 NS_IMETHODIMP
-nsDownloadListener::GetDisplayName(PRUnichar * *aDisplayName)
+nsDownloadListener::GetDisplayName(nsAString &aDisplayName)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -176,6 +176,18 @@ nsDownloadListener::GetListener(nsIWebProgressListener * *aListener)
 
 NS_IMETHODIMP
 nsDownloadListener::SetListener(nsIWebProgressListener * aListener)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDownloadListener::GetId(PRUint64 *aId)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDownloadListener::GetState(PRInt16 *aState)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

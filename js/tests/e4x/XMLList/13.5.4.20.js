@@ -40,10 +40,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.5.4.20.js';
+
 START("13.5.4.20 - XMLList toString()");
 
 TEST(1, true, XMLList.prototype.hasOwnProperty("toString"));
-    
+   
 x = <><alpha>one</alpha></>;
 
 TEST(2, "one", x.toString());

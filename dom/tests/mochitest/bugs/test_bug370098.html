@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=370098
+-->
+<head>
+  <title>Test for Bug 370098</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=370098">Mozilla Bug 370098</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Bug 370098 **/
+var dom_protos =
+    [ "Document", "Element", "Image", "DOMParser", "XMLSerializer",
+      "XMLHttpRequest", "XPathEvaluator", "XSLTProcessor" ];
+for each (var dom_proto in dom_protos) {
+    var shouldthrow = typeof window[dom_proto] != "function";
+    var threw = false;
+    try {
+        window[dom_proto]();
+    } catch (e) {
+        threw = true;
+    }
+    is(threw, shouldthrow, "Calling |" + dom_proto + "()| should" + (shouldthrow ? " " : " not ") + "throw");
+
+    threw = false;
+    try {
+        new window[dom_proto]();
+    } catch (e) {
+        threw = true;
+    }
+    is(threw, shouldthrow, "Calling |new " + dom_proto + "()| should" + (shouldthrow ? " " : " not ") + "throw");
+}
+</script>
+</pre>
+</body>
+</html>
+

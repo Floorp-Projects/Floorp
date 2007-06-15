@@ -129,6 +129,8 @@ public:
                                  const nsCString& aClassStr,
                                  void* aClassObject);
 
+  virtual void Traverse(nsCycleCollectionTraversalCallback &cb) const;
+
 protected:
   union {
     nsXBLUncompiledMethod* mUncompiledMethod; // An object that represents the method before being compiled.

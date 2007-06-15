@@ -35,14 +35,16 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-321874.js';
 //-----------------------------------------------------------------------------
-var bug = 321874;
+var BUGNUMBER = 321874;
 var summary = 'lhs must be a reference in (for lhs in rhs) ...';
 var actual = '';
 var expect = '';
 var section;
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 function a() {}
@@ -63,7 +65,7 @@ catch(ex)
 {
   printStatus(ex+'');
   actual = 'error';
-}  
+} 
 reportCompare(expect, actual, section);
 
 section = summary + ': function foo(){for((v) in b);};foo();';
@@ -78,7 +80,7 @@ catch(ex)
 {
   printStatus(ex+'');
   actual = 'error';
-}  
+} 
 reportCompare(expect, actual, section);
 
 section = summary + ': for(a() in b);';
@@ -93,7 +95,7 @@ catch(ex)
 {
   printStatus(ex+'');
   actual = 'error';
-}  
+} 
 reportCompare(expect, actual, section);
 
 section = summary + ': function foo(){for(a() in b);};foo();';
@@ -108,7 +110,7 @@ catch(ex)
 {
   printStatus(ex+'');
   actual = 'error';
-}  
+} 
 reportCompare(expect, actual, section);
 
 section = ': for(new a() in b);';
@@ -123,7 +125,7 @@ catch(ex)
 {
   printStatus(ex+'');
   actual = 'error';
-}  
+} 
 reportCompare(expect, actual, summary + section);
 
 section = ': function foo(){for(new a() in b);};foo();';
@@ -138,7 +140,7 @@ catch(ex)
 {
   printStatus(ex+'');
   actual = 'error';
-}  
+} 
 reportCompare(expect, actual, summary + section);
 
 section = ': for(void in b);';
@@ -153,7 +155,7 @@ catch(ex)
 {
   printStatus(ex+'');
   actual = 'error';
-}  
+} 
 reportCompare(expect, actual, summary + section);
 
 section = ': function foo(){for(void in b);};foo();';
@@ -168,7 +170,7 @@ catch(ex)
 {
   printStatus(ex+'');
   actual = 'error';
-}  
+} 
 reportCompare(expect, actual, summary + section);
 
 var d = 1;
@@ -185,7 +187,7 @@ catch(ex)
 {
   printStatus(ex+'');
   actual = 'error';
-}  
+} 
 reportCompare(expect, actual, summary + section);
 
 var d = 1;
@@ -202,7 +204,7 @@ catch(ex)
 {
   printStatus(ex+'');
   actual = 'error';
-}  
+} 
 reportCompare(expect, actual, summary + section);
 
 const c = 0;
@@ -219,7 +221,7 @@ catch(ex)
 {
   printStatus(ex+'');
   actual = 'error';
-}  
+} 
 reportCompare(expect, actual, summary + section);
 
 expect = 0;
@@ -235,7 +237,7 @@ catch(ex)
 {
   printStatus(ex+'');
   actual = 'error';
-}  
+} 
 reportCompare(expect, actual, summary + section);
 
 if (typeof it != 'undefined')
@@ -254,7 +256,7 @@ if (typeof it != 'undefined')
   {
     printStatus(ex+'');
     actual = 'error';
-  }  
+  } 
   reportCompare(expect, actual, summary + section);
 
   expect = 'foo';
@@ -269,6 +271,6 @@ if (typeof it != 'undefined')
   {
     printStatus(ex+'');
     actual = 'error';
-  }  
+  } 
   reportCompare(expect, actual, summary + section);
 }

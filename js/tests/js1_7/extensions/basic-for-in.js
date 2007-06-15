@@ -34,12 +34,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'basic-for-in.js';
 //-----------------------------------------------------------------------------
-var bug     = "346582";
+var BUGNUMBER     = "346582";
 var summary = "Basic support for iterable objects and for-in";
 var actual, expect;
 
-printBugNumber(bug);
+printBugNumber(BUGNUMBER);
 printStatus(summary);
 
 /**************
@@ -68,16 +70,16 @@ try
     function(keysOnly)
     {
       var gen =
-        function()
-        {
-          for (var i = 0; i < keys.length; i++)
-          {
-            if (keysOnly)
-              yield keys[i];
-            else
-              yield [keys[i], vals[i]];
-          }
-        };
+      function()
+      {
+	for (var i = 0; i < keys.length; i++)
+	{
+	  if (keysOnly)
+	    yield keys[i];
+	  else
+	    yield [keys[i], vals[i]];
+	}
+      };
       return gen();
     };
 
@@ -91,7 +93,7 @@ try
   }
   if (index != keys.length)
     throw "not everything iterated!  index=" + index +
-          ", keys.length=" + keys.length;
+      ", keys.length=" + keys.length;
 
   if (iterable.persistedProp != 17)
     throw "iterable.persistedProp not persisted!";

@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLTableColElement.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsMappedAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
@@ -161,10 +161,6 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
       }
       case nsAttrValue::eInteger: {
         aData->mPositionData->mWidth.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
-        break;
-      }
-      case nsAttrValue::eProportional: {
-        aData->mPositionData->mWidth.SetFloatValue((float)value->GetProportionalValue(), eCSSUnit_Proportional);
         break;
       }
       default:

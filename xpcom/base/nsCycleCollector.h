@@ -39,8 +39,7 @@
 #define nsCycleCollector_h__
 
 class nsISupports;
-class nsDeque;
-struct nsCycleCollectionTraversalCallback;
+class nsCycleCollectionParticipant;
 
 // An nsCycleCollectionLanguageRuntime is a per-language object that
 // implements language-specific aspects of the cycle collection task.
@@ -48,18 +47,10 @@ struct nsCycleCollectionTraversalCallback;
 struct nsCycleCollectionLanguageRuntime
 {
     virtual nsresult BeginCycleCollection() = 0;
-
-    virtual nsresult Traverse(void *p, nsCycleCollectionTraversalCallback &cb) = 0;
-
-    virtual nsresult Root(const nsDeque &nodes) = 0;
-    virtual nsresult Unlink(const nsDeque &nodes) = 0;
-    virtual nsresult Unroot(const nsDeque &nodes) = 0;
-
     virtual nsresult FinishCycleCollection() = 0;
+    virtual nsCycleCollectionParticipant *ToParticipant(void *p) = 0;
 };
 
-
-NS_COM PRBool nsCycleCollector_isScanSafe(nsISupports *n);
 NS_COM void nsCycleCollector_suspect(nsISupports *n);
 NS_COM void nsCycleCollector_suspectCurrent(nsISupports *n);
 NS_COM void nsCycleCollector_forget(nsISupports *n);

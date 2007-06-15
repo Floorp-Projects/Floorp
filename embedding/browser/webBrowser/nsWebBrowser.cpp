@@ -613,16 +613,44 @@ NS_IMETHODIMP nsWebBrowser::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
    return mDocShellTreeOwner->SetTreeOwner(aTreeOwner);
 }
 
-NS_IMETHODIMP nsWebBrowser::SetChildOffset(PRInt32 aChildOffset)
+//*****************************************************************************
+// nsWebBrowser::nsIDocShellTreeItem
+//*****************************************************************************
+
+NS_IMETHODIMP nsWebBrowser::GetChildCount(PRInt32 * aChildCount)
 {
-  // Not implemented
-  return NS_OK;
+    NS_ENSURE_ARG_POINTER(aChildCount);
+    *aChildCount = 0;
+    return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowser::GetChildOffset(PRInt32 *aChildOffset)
+NS_IMETHODIMP nsWebBrowser::AddChild(nsIDocShellTreeItem * aChild)
 {
-  // Not implemented
-  return NS_OK;
+    return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP nsWebBrowser::RemoveChild(nsIDocShellTreeItem * aChild)
+{
+    return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP nsWebBrowser::GetChildAt(PRInt32 aIndex,
+                                       nsIDocShellTreeItem ** aChild)
+{
+    return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP nsWebBrowser::FindChildWithName(
+                                       const PRUnichar * aName,
+                                       PRBool aRecurse, PRBool aSameType,
+                                       nsIDocShellTreeItem * aRequestor,
+                                       nsIDocShellTreeItem * aOriginalRequestor,
+                                       nsIDocShellTreeItem ** _retval)
+{
+    NS_ENSURE_ARG_POINTER(_retval);
+
+    *_retval = nsnull;
+    return NS_OK;
 }
 
 //*****************************************************************************

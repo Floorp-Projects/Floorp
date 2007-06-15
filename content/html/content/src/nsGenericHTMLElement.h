@@ -185,8 +185,10 @@ public:
                      nsIFrame **aFrame = nsnull);
 
   /**
-   * Get this element's client area rect in app units.
-   * @return the frame's client area
+   * Get this element's client area dimensions in app units.
+   * The rect x, y, width, height are the clientLeft, clientTop, clientWidth,
+   * clientHeight values.
+   * @return the frame's client dimensions
    */
   nsRect GetClientAreaRect();
 
@@ -1062,7 +1064,7 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
   {                                                                           \
     NS_ENSURE_ARG_POINTER(aInstancePtr);                                      \
                                                                               \
-    if ( aIID.Equals(NS_GET_IID(nsCycleCollectionParticipant)) ) {            \
+    if ( aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant)) ) {       \
       *aInstancePtr = &NS_CYCLE_COLLECTION_NAME(_class);                      \
       return NS_OK;                                                           \
     }                                                                         \

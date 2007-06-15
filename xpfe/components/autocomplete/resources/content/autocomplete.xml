@@ -30,7 +30,7 @@
                       xbl:inherits="open,hidden=disablehistory" anonid="historydropmarker"/>
 
       <xul:popupset>
-        <xul:popup ignorekeys="true" anonid="popup" class="autocomplete-result-popup" hidden="true" xbl:inherits="for=id,nomatch"/>
+        <xul:popup type="autocomplete" ignorekeys="true" anonid="popup" class="autocomplete-result-popup" hidden="true" xbl:inherits="for=id,nomatch"/>
       </xul:popupset>
       
       <children includes="menupopup"/>
@@ -52,8 +52,10 @@
         this.ifSetAttribute("disableKeyNavigation", true);
         
         // initialize the search sessions
-        this.initSearchSessions();
-        this.initAutoCompleteSearch();
+        if (this.hasAttribute("searchSessions"))
+          this.initSearchSessions();
+        if (this.hasAttribute("autocompletesearch"))
+          this.initAutoCompleteSearch();
         
         // hack to work around lack of bottom-up constructor calling
         if ("initialize" in this.resultsPopup)
@@ -90,8 +92,8 @@
           var list = this.getAttribute("searchSessions").split(" ");
           for (var i = 0; i < list.length; i++) {
             var name = list[i];
-            if (name != "") {
-              var contractid = "@mozilla.org/autocompleteSession;1?type=" + name;
+            var contractid = "@mozilla.org/autocompleteSession;1?type=" + name;
+            if (contractid in Components.classes) {
               try {
                 var session =
                   Components.classes[contractid].getService(Components.interfaces.nsIAutoCompleteSession);
@@ -99,6 +101,8 @@
               } catch (e) {
                 dump("### ERROR - unable to create search session \"" + name + "\".\n");
               }
+            } else {
+              dump("search session \"" + name + "\" not found - skipping.\n");
             }
           }
         ]]></body>
@@ -109,8 +113,8 @@
           var list = this.getAttribute("autocompletesearch").split(" ");
           for (var i = 0; i < list.length; i++) {
             var name = list[i];
-            if (name != "") {
-              var contractid = "@mozilla.org/autocomplete/search;1?name=" + name;
+            var contractid = "@mozilla.org/autocomplete/search;1?name=" + name;
+            if (contractid in Components.classes) {
               try {
                 var search =
                   Components.classes[contractid].getService(Components.interfaces.nsIAutoCompleteSearch);
@@ -119,6 +123,8 @@
               } catch (e) {
                 dump("### ERROR - unable to create search \"" + name + "\".\n");
               }
+            } else {
+              dump("search \"" + name + "\" not found - skipping.\n");
             }
           }
         ]]></body>
@@ -158,8 +164,7 @@
       <!-- toggles a second column in the results list which contains
            the string in the comment field of each autocomplete result -->
       <property name="showCommentColumn"
-                onget=
-		  "return this.getAttribute('showCommentColumn') == 'true';">
+                onget="return this.getAttribute('showCommentColumn') == 'true';">
         <setter><![CDATA[
 
           var currentState = this.getAttribute('showCommentColumn');          
@@ -842,8 +847,7 @@
           var val = this.resultsPopup.getOverrideValue();
             if (val)
               this.setTextValue(val);
-          else if (this.resultsPopup.selectedIndex != null &&
-                   !this.noMatch) {
+          else if (this.resultsPopup.selectedIndex != -1 && !this.noMatch) {
             if (this.getSessionStatusAt(this.resultsPopup.selectedIndex) ==
                 Components.interfaces.nsIAutoCompleteStatus.failureItems) {
               this.setTextValue(this.currentSearchString);
@@ -926,7 +930,7 @@
           this.mNeedToComplete = true;
           var str = this.value;
           this.currentSearchString = str;
-          this.resultsPopup.selectedIndex = null;
+          this.resultsPopup.selectedIndex = -1;
           this.removeAttribute("noMatchesFound");
           
           this.mAutoCompleteTimer = setTimeout(this.callListener, this.timeout, this, "startLookup");
@@ -957,7 +961,7 @@
 
               // if this is a failure item, save it for fireErrorCommand
               var errItem = null;
-              if (this.resultsPopup.selectedIndex != null && 
+              if (this.resultsPopup.selectedIndex != -1 && 
                   this.getSessionStatusAt(this.resultsPopup.selectedIndex) ==
                   Components.interfaces.nsIAutoCompleteStatus.failureItems) {
                 errItem = this.getResultAt(this.resultsPopup.selectedIndex);
@@ -1056,16 +1060,16 @@
             this.userAction = "scrolling";
             this.mNeedToComplete = false;
             
-            var dir = k == KeyEvent.DOM_VK_DOWN ||
-                      k == KeyEvent.DOM_VK_PAGE_DOWN ||
-                     (k == KeyEvent.DOM_VK_TAB && !aEvent.shiftKey) ? 1 : -1;
-            var amt = k == KeyEvent.DOM_VK_PAGE_UP ||
-                      k == KeyEvent.DOM_VK_PAGE_DOWN ? this.resultsPopup.pageCount-1 : 1;
-            var selected = this.resultsPopup.selectBy(dir, amt);
+            var reverse = k == KeyEvent.DOM_VK_TAB && aEvent.shiftKey ||
+                          k == KeyEvent.DOM_VK_UP ||
+                          k == KeyEvent.DOM_VK_PAGE_UP;
+            var page = k == KeyEvent.DOM_VK_PAGE_UP ||
+                       k == KeyEvent.DOM_VK_PAGE_DOWN;
+            var selected = this.resultsPopup.selectBy(reverse, page);
           
             // determine which value to place in the textbox
             this.ignoreInputEvent = true;
-            if (selected != null) {
+            if (selected != -1) {
               if (this.getSessionStatusAt(selected) == 
                   Components.interfaces.nsIAutoCompleteStatus.failureItems) { 
                 if (this.currentSearchString)
@@ -1279,10 +1283,10 @@
         ({
           mTextbox: this,
           mTree: null,
-          mBoxObject: null,
+          mSelection: null,
           mResults: [],
           mRowCount: 0,
-          mSelectedIndex: null,
+          mSelectedIndex: -1,
           
           get treeBoxObject()
           {
@@ -1291,24 +1295,15 @@
           
           set selectedIndex(aRow)
           {
-            if (!this.mBoxObject)
-              return;
-              
-            if (this.mSelectedIndex != null)
-              this.mBoxObject.invalidateRow(this.mSelectedIndex);
-              
-            this.mSelectedIndex = aRow;
-            
-            if (aRow != null) {
-              this.mBoxObject.invalidateRow(aRow);
-
-              this.mBoxObject.ensureRowIsVisible(aRow);
-              // Fire select event on xul:tree so that accessibility API 
-              // support layer can fire appropriate accessibility events.
-              var event = document.createEvent('Events');
-              event.initEvent("select", true, true);
-              this.mTree.element.dispatchEvent(event);
+            if (this.mSelection) {
+              this.mSelectedIndex = aRow;
+              this.mSelection.select(aRow);
+              if (aRow >= 0) {
+                this.mSelection.currentIndex = -1;
+                this.mTree.ensureRowIsVisible(aRow);
+              }
             }
+            return aRow;
           },
           
           get selectedIndex()
@@ -1322,10 +1317,10 @@
             this.mRowCount = 0;  
             this.mResults = [];
             
-            if (this.mTree)
+            if (this.mTree) {
               this.mTree.rowCountChanged(0, -oldCount);
-            if (this.mBoxObject)
-              this.mBoxObject.scrollToRow(0);
+              this.mTree.scrollToRow(0);
+            }
           },
           
           addResults: function(aResults)
@@ -1355,20 +1350,17 @@
             return this.mRowCount;
           },
           
-          // implementing these results in a crash
-          // get selection() {},
-          // set selection(aVal) { },
+          get selection() {
+            return this.mSelection;
+          },
+
+          set selection(aVal) {
+            return this.mSelection = aVal;
+          },
           
           setTree: function(aTree)
           {
             this.mTree = aTree;
-            
-            if (aTree) {
-              this.mBoxObject = this.mTextbox.resultsPopup.tree.treeBoxObject;
-            
-              // cache atoms for pseudoelement properties
-              this.mAtomSelected = this.createAtom("menuactive")
-            }
           },
           
           getCellText: function(aRow, aCol)
@@ -1380,14 +1372,10 @@
 
           getRowProperties: function(aIndex, aProperties) 
           {
-            if (aIndex == this.mSelectedIndex)
-              aProperties.AppendElement(this.mAtomSelected);
           },
 
           getCellProperties: function(aIndex, aCol, aProperties)
           {
-            this.getRowProperties(aIndex, aProperties);
-
             // for the value column, append nsIAutoCompleteItem::className
             // to the property list so that we can style this column
             // using that property
@@ -1508,7 +1496,7 @@
         this.tree.__AUTOCOMPLETE_BOX__ = this.textbox;
         this.treebody.__AUTOCOMPLETE_BOX__ = this.textbox;
 
-        this._selectedIndex = null;
+        this._selectedIndex = -1;
 
         this.initColumns();
         this.view = this.textbox.view;
@@ -1569,43 +1557,40 @@
       </method>
 
       <method name="selectBy">
-        <parameter name="aDir"/>
-        <parameter name="aAmount"/>
+        <parameter name="aReverse"/>
+        <parameter name="aPage"/>
         <body><![CDATA[
           try {
-            var view = this.textbox.view;
-            this.selectedIndex = this.getNextIndex(aDir, aAmount, this.selectedIndex, view.rowCount-1);
-  
-            return this.selectedIndex;
+            return this.selectedIndex = this.getNextIndex(aReverse, aPage, this.selectedIndex, this.textbox.view.rowCount - 1);
           } catch (ex) {
             // do nothing - occasionally timer-related js errors happen here
             // e.g. "this.selectedIndex has no properties", when you type fast and hit a
             // navigation key before this popup has opened
-            return null;
+            return -1;
           }
         ]]></body>
       </method>
 
       <method name="getNextIndex">
-        <parameter name="aDir"/>
-        <parameter name="aAmount"/>
+        <parameter name="aReverse"/>
+        <parameter name="aPage"/>
         <parameter name="aIndex"/>
         <parameter name="aMaxRow"/>
         <body><![CDATA[
           if (aMaxRow < 0)
-            return null;
-            
-          var newIdx = aIndex + aDir*aAmount;
-          if (aDir < 0 && aIndex == null || newIdx > aMaxRow && aIndex != aMaxRow)
-            newIdx = aMaxRow;
-          else if (aDir > 0 && aIndex == null || newIdx < 0 && aIndex != 0)
-            newIdx = 0;
-          
-          if (newIdx < 0 && aIndex == 0 || newIdx > aMaxRow && aIndex == aMaxRow)
-            aIndex = null;
-          else
-            aIndex = newIdx;
-          
+            return -1;
+
+          if (aIndex == -1)
+            return aReverse ? aMaxRow : 0;
+          if (aIndex == (aReverse ? 0 : aMaxRow))
+            return -1;
+
+          var amount = aPage ? this.pageCount - 1 : 1;
+          aIndex = aReverse ? aIndex - amount : aIndex + amount;
+          if (aIndex > aMaxRow)
+            return aMaxRow;
+          if (aIndex < 0)
+            return 0;
           return aIndex;
         ]]></body>
       </method>
@@ -1628,7 +1613,7 @@
 
       <handler event="popuphiding">
         this.textbox.mMenuOpen = false;
-        this.selectedIndex = null;
+        this.selectedIndex = -1;
       </handler>
 
       <handler event="mousedown" phase="capturing" preventdefault="true"/>
@@ -1639,8 +1624,6 @@
     <implementation>
       <property name="textbox"
                 onget="return this.__AUTOCOMPLETE_BOX__;"/>
-      <property name="currentIndex" onget="return this.textbox.view.selectedIndex;"
-                                    onset="this.textbox.view.selectedIndex = val; return val;"/>
     </implementation>
   </binding>
 
@@ -1658,19 +1641,16 @@
            // popup!
            var x = aEvent.screenX - document.documentElement.boxObject.screenX;
            var y = aEvent.screenY - document.documentElement.boxObject.screenY;
-           var row = this.textbox.view.treeBoxObject.getRowAt(x, y);
-           if (row >= 0)
-             return row;
-           return null;
+           return this.textbox.view.treeBoxObject.getRowAt(x, y);
         ]]></body>
       </method>
     </implementation>
     
     <handlers>
-      <handler event="mouseout" action="this.textbox.view.selectedIndex = null;"/>
+      <handler event="mouseout" action="this.textbox.view.selectedIndex = -1;"/>
       <handler event="mouseup"><![CDATA[
         var rc = this.getHoverRow(event);
-        if (rc != null) {
+        if (rc != -1) {
           this.textbox.view.selectedIndex = rc;
           this.textbox.onResultClick();
         }
@@ -1679,7 +1659,7 @@
       <handler event="mousemove"><![CDATA[
         if (Date.now() - this.mLastMoveTime > 30) {
           var rc = this.getHoverRow(event);
-          if (rc != null && rc != this.textbox.view.selectedIndex) 
+          if (rc != -1 && rc != this.textbox.view.selectedIndex) 
             this.textbox.view.selectedIndex = rc;
           this.mLastMoveTime = Date.now();
         }

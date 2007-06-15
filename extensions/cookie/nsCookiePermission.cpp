@@ -361,11 +361,17 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
       // get some useful information to present to the user:
       // whether a previous cookie already exists, and how many cookies this host
       // has set
-      PRBool foundCookie;
+      PRBool foundCookie = PR_FALSE;
       PRUint32 countFromHost;
       nsCOMPtr<nsICookieManager2> cookieManager = do_GetService(NS_COOKIEMANAGER_CONTRACTID, &rv);
-      if (NS_SUCCEEDED(rv))
-        rv = cookieManager->FindMatchingCookie(aCookie, &countFromHost, &foundCookie);
+      if (NS_SUCCEEDED(rv)) {
+        nsCAutoString rawHost;
+        aCookie->GetRawHost(rawHost);
+        rv = cookieManager->CountCookiesFromHost(rawHost, &countFromHost);
+
+        if (NS_SUCCEEDED(rv) && countFromHost > 0)
+          rv = cookieManager->CookieExists(aCookie, &foundCookie);
+      }
       if (NS_FAILED(rv)) return rv;
 
       // check if the cookie we're trying to set is already expired, and return;

@@ -54,6 +54,7 @@ XPIDLSRCS	= \
 		xpccomponents.idl \
 		xpcjsid.idl \
 		xpcexception.idl \
+		xpcIJSModuleLoader.idl \
 		nsIJSContextStack.idl \
 		nsIJSRuntimeService.idl \
 		nsIXPConnect.idl \

@@ -4390,19 +4390,21 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
         /* 2(f). */
         else if (vxml && vxml->xml_class == JSXML_CLASS_LIST) {
-            /* 2(f)(i) Create a shallow copy _c_ of _V_. */
-            copyobj = js_NewXMLObject(cx, JSXML_CLASS_LIST);
+            /*
+             * 2(f)(i)
+             *
+             * Erratum: the spec says to create a shallow copy _c_ of _V_, but
+             * if we do that we never change the parent of each child in the
+             * list.  Since [[Put]] when called on an XML object deeply copies
+             * the provided list _V_, we also do so here.  Perhaps the shallow
+             * copy was a misguided optimization?
+             */
+            copy = DeepCopyInLRS(cx, vxml, 0);
+            if (!copy)
+                goto bad;
+            copyobj = js_GetXMLObject(cx, copy);
             if (!copyobj)
                 goto bad;
-            copy = (JSXML *) JS_GetPrivate(cx, copyobj);
-            n = vxml->xml_kids.length;
-            ok = XMLArraySetCapacity(cx, &copy->xml_kids, n);
-            if (!ok)
-                goto out;
-            for (k = 0; k < n; k++) {
-                kid2 = XMLARRAY_MEMBER(&vxml->xml_kids, k, JSXML);
-                XMLARRAY_SET_MEMBER(&copy->xml_kids, k, kid2);
-            }
 
             JS_ASSERT(parent != xml);
             if (parent) {
@@ -4427,6 +4429,7 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
              * Erratum: notice the unhandled zero-length V basis case and
              * the off-by-one errors for the n != 0 cases in the spec.
              */
+            n = copy->xml_kids.length;
             if (n == 0) {
                 XMLArrayDelete(cx, &xml->xml_kids, i, JS_TRUE);
             } else {

@@ -39,20 +39,25 @@
 #ifndef _nsAccessible_H_
 #define _nsAccessible_H_
 
-#include "nsIAccessibleRole.h"
-#include "nsIAccessibleStates.h"
 #include "nsAccessNodeWrap.h"
 #include "nsAccessibilityUtils.h"
+
 #include "nsIAccessible.h"
 #include "nsPIAccessible.h"
 #include "nsIAccessibleHyperLink.h"
 #include "nsIAccessibleSelectable.h"
 #include "nsIAccessibleValue.h"
+#include "nsIAccessibleRole.h"
+#include "nsIAccessibleStates.h"
+#include "nsAccessibleRelationWrap.h"
+#include "nsIAccessibleEvent.h"
+
 #include "nsIDOMNodeList.h"
 #include "nsINameSpaceManager.h"
 #include "nsWeakReference.h"
 #include "nsString.h"
 #include "nsIDOMDOMStringList.h"
+#include "nsARIAMap.h"
 
 struct nsRect;
 class nsIContent;
@@ -68,55 +73,6 @@ class nsIView;
 // Saves a data member -- if child count equals this value we haven't
 // cached children or child count yet
 enum { eChildCountUninitialized = -1 };
-
-struct nsStateMapEntry
-{
-  const char* attributeName;  // magic value of nsnull means last entry in map
-  const char* attributeValue; // magic value of nsnull means any value
-  PRUint32 state;       // OR state with this
-};
-
-enum ENameRule {
-  eNameLabelOrTitle,     // Collect name if explicitly specified from 
-                         // 1) content subtree pointed to by labelledby
-                         //    which contains the ID for the label content, or
-                         // 2) title attribute if specified
-  eNameOkFromChildren    // Collect name from
-                         // 1) labelledby attribute if specified, or
-                         // 2) text & img descendents, or
-                         // 3) title attribute if specified
-};
-
-enum EValueRule {
-  eNoValue,
-  eHasValueMinMax    // Supports value, min and max from waistate:valuenow, valuemin and valuemax
-};
-
-#define eNoReqStates 0
-#define END_ENTRY {0, 0, 0}  // To fill in array of state mappings
-#define BOOL_STATE 0
-
-struct nsRoleMapEntry
-{
-  const char *roleString; // such as "button"
-  PRUint32 role;   // use this role
-  ENameRule nameRule;  // how to compute name
-  EValueRule valueRule;  // how to compute name
-  PRUint32 state;  // always OR state with this
-  // For this role with a DOM attribute/value match definined in
-  // nsStateMapEntry.attributeName && .attributeValue, OR accessible state with
-  // nsStateMapEntry.state
-  // Currently you can have up to 3 DOM attributes with accessible state mappings.
-  // A variable sized array would not allow use of C++'s struct initialization feature.
-  nsStateMapEntry attributeMap1;
-  nsStateMapEntry attributeMap2;
-  nsStateMapEntry attributeMap3;
-  nsStateMapEntry attributeMap4;
-  nsStateMapEntry attributeMap5;
-  nsStateMapEntry attributeMap6;
-  nsStateMapEntry attributeMap7;
-};
-
 
 class nsAccessibleDOMStringList : public nsIDOMDOMStringList
 {
@@ -307,9 +263,6 @@ protected:
   nsIAccessible *mFirstChild, *mNextSibling;
   nsRoleMapEntry *mRoleMapEntry; // Non-null indicates author-supplied role; possibly state & value as well
   PRInt32 mAccChildCount;
-
-  static nsRoleMapEntry gWAIRoleMap[];
-  static nsStateMapEntry gUnivStateMap[];
 };
 
 

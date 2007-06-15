@@ -67,6 +67,9 @@ private:
 
 public:
   // nsIFrame:
+  // XXX Should this implement intrinsic width methods (esp.
+  // GetIntrinsicRatio)?
+
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,

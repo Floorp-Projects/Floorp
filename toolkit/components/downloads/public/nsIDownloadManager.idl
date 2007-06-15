@@ -47,11 +47,11 @@ interface nsILocalFile;
 interface nsIDownload;
 interface nsICancelable;
 interface nsIMIMEInfo;
-interface nsIRDFDataSource;
 interface nsIDownloadProgressListener;
-interface nsISupportsArray;
+interface nsISimpleEnumerator;
+interface mozIStorageConnection;
 
-[scriptable, uuid(1f280341-30f4-4009-bb0d-a78f2936d1fb)]
+[scriptable, uuid(bbf6561b-d7d7-48fa-967c-9cc46cc372b4)]
 interface nsIDownloadManager : nsISupports {
   // Download States
   const short DOWNLOAD_NOTSTARTED       = -1;
@@ -62,8 +62,6 @@ interface nsIDownloadManager : nsISupports {
   const short DOWNLOAD_PAUSED           = 4;
 
   const short DOWNLOAD_TYPE_DOWNLOAD    = 0;
-
-  // Methods called by clients to carry out various managing functions
 
   /**
    * Creates an nsIDownload and adds it to be managed by the download manager.
@@ -91,6 +89,11 @@ interface nsIDownloadManager : nsISupports {
    *                    Must not be null.
    *
    * @return The newly created download item with the passed-in properties.
+   *
+   * @note This does not actually start a download.  If you want to add and
+   *       start a download, you need to create an nsIWebBrowserPersist, pass it
+   *       as the aCancelable object, call this method, set the progressListener
+   *       as the returned download object, then call saveURI.
    */
   nsIDownload addDownload(in short aDownloadType, 
                           in nsIURI aSource,
@@ -103,79 +106,77 @@ interface nsIDownloadManager : nsISupports {
                           in nsICancelable aCancelable);
 
   /**
-   *  Retrieves an in-progress download managed by the download manager.
+   * Retrieves a download managed by the download manager.  This can be one that
+   * is in progress, or one that has completed in the past and is stored in the
+   * database.
    *
-   *  @param aPersistentDescriptor The unique identifier used to describe a
-   *                               a download, and an attribute of nsILocalFile.
-   *                               On Windows and Linux, this is just the path
-   *                               of the target, but on Mac this is guaranteed
-   *                               to be unique.
-   *
-   *  @return The download with the specified persistent descriptor.
+   * @param aID The unique ID of the download.
+   * @return The download with the specified ID.
+   * @throws NS_ERROR_NOT_AVAILABLE if the download is not in the database.
    */
-  nsIDownload getDownload(in wstring aPersistentDescriptor);
+  nsIDownload getDownload(in unsigned long aID);
 
   /**
-   * Cancels the download with the specified persistent descriptor if it's
-   * currently in progress. This calls cancel(NS_BINDING_ABORTED) on the
-   * nsICancelable provided for the download.
+   * Cancels the download with the specified ID if it's currently in-progress.
+   * This calls cancel(NS_BINDING_ABORTED) on the nsICancelable provided by the
+   * download.
    *
-   * @param aPersistentDescriptor The persistent descriptor of the download to
-   *                              be cancelled.
+   * @param aID The unique ID of the download.
+   * @throws NS_ERROR_FAILURE if the download is not in-progress.
    */
-  void cancelDownload(in wstring aPersistentDescriptor);
+  void cancelDownload(in unsigned long aID);
 
   /**
-   * Removes the download with the specified persistent descriptor if it's not
-   * currently in progress.  Whereas cancelDownload simply cancels the transfer
-   * but retains information about it, removeDownload removes all knowledge of it.
+   * Removes the download with the specified id if it's not currently
+   * in-progress.  Whereas cancelDownload simply cancels the transfer, but
+   * retains information about it, removeDownload removes all knowledge of it.
    *
-   * @param aPersistentDescriptor The persistent descriptor of the download to
-   *                              be removed.
+   * @param aID The unique ID of the download.
+   * @throws NS_ERROR_FAILURE if the download is active.
    */
-  void removeDownload(in wstring aPersistentDescriptor);
+  void removeDownload(in unsigned long aID);
 
   /**
    * Pause the specified download.
+   *
+   * @param aID The unique ID of the download.
+   * @throws NS_ERROR_FAILURE if the download is not in-progress.
    */
-  void pauseDownload(in wstring aPersistentDescriptor);
+  void pauseDownload(in unsigned long aID);
 
   /**
    * Resume the specified download.
+   *
+   * @param aID The unique ID of the download.
+   * @throws NS_ERROR_FAILURE if the download is not in-progress.
    */
-  void resumeDownload(in wstring aPersistentDescriptor);
+  void resumeDownload(in unsigned long aID);
 
-  // Front end and Front end update methods. 
+  /**
+   * Retries a failed download.
+   *
+   * @param aID The unique ID of the download.
+   * @throws NS_ERROR_NOT_AVAILALE if the download id is not known.
+   * @throws NS_ERROR_FAILURE if the download is not in the following states:
+   *           nsIDownloadManager::DOWNLOAD_CANCELED
+   *           nsIDownloadManager::DOWNLOAD_FAILED
+   */
+  void retryDownload(in unsigned long aID);
 
   /** 
-   * Opens the Download Manager front end.
+   * Opens the Download Manager front end, selecting the specified download.
    * 
    * @param aParent   The parent, or opener, of the front end (optional).
-   * @param aDownload A download to pass to the manager widnow. Useful if,
-   *                  for example, you want the window to select a certain
-   *                  download (optional).
+   * @param aID The unique ID of the download to be selected.
+   * @see nsIWindowWatcher::openWindow for behavior of null aParent.
+   * @throws NS_ERROR_FAILUIRE if the download is not in-progress.
    */
-
-  void open(in nsIDOMWindow aParent, in wstring aPersistentDescriptor);
-
-  /** 
-   * The Download Manager's progress listener.
-   */
-  attribute nsIDownloadProgressListener listener;
+  void open(in nsIDOMWindow aParent, in unsigned long aID);
 
   /**
-  * Indicate that a batch update (e.g. mass removal) is about to start.
-  */
-
-  void startBatchUpdate();
-  
-  /**
-  * Indicate that a batch update is ending.
-  */
-  
-  void endBatchUpdate();
-
-  // Downloads list book-keeping
+   * The database connection to the downloads database.
+   */
+  readonly attribute mozIStorageConnection DBConnection;
 
   /** 
    * Whether or not there are downloads that can be cleaned up (removed)
@@ -194,21 +195,19 @@ interface nsIDownloadManager : nsISupports {
   readonly attribute long activeDownloadCount;
 
   /**
-   * An enumeration of active downloads.
+   * An enumeration of active nsIDownloads
    */
-  readonly attribute nsISupportsArray activeDownloads;
+  readonly attribute nsISimpleEnumerator activeDownloads;
 
-  /** 
-   * Update the download datasource. 
+  /**
+   * Adds a listener from the download manager.
    */
-  void saveState();
+  void addListener(in nsIDownloadProgressListener aListener);
 
-  /** 
-   * Flush the download datasource to disk.
+  /**
+   * Removes a listener from the download manager.
    */
-  void flush();
-
-  readonly attribute nsIRDFDataSource datasource;
+  void removeListener(in nsIDownloadProgressListener aListener);
 };
 
 

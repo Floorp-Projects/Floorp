@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 01 May 2001
  *
  * SUMMARY: Regression test for Bugzilla bug 76683 on Rhino:
@@ -42,9 +44,10 @@
  *
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=76683
  */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+var gTestfile = 'regress-76683.js';
 var i = 0;
-var bug = 76683;
+var BUGNUMBER = 76683;
 var summary = 'Regression test for Bugzilla bug 76683';
 var status = '';
 var statusmessages = new Array();
@@ -63,24 +66,24 @@ var expectedmatches = new Array();
  * It didn't matter what the string was. No problem in SpiderMonkey -
  */
 string = 'abc';
-    status = inSection(1);
-    pattern = /(<!--([^-]|-[^-]|--[^>])*-->)|(<([\$\w:\.\-]+)((([ ][^\/>]*)?\/>)|(([ ][^>]*)?>)))/;
-    actualmatch = string.match(pattern);
-    expectedmatch = null;
-    addThis();
+status = inSection(1);
+pattern = /(<!--([^-]|-[^-]|--[^>])*-->)|(<([\$\w:\.\-]+)((([ ][^\/>]*)?\/>)|(([ ][^>]*)?>)))/;
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
-    status = inSection(2);
-    pattern = /(<!--([^-]|-[^-]|--[^>])*-->)|(<(tagPattern)((([ ][^\/>]*)?\/>)|(([ ][^>]*)?>)))/;
-    actualmatch = string.match(pattern);
-    expectedmatch = null;
-    addThis();
+status = inSection(2);
+pattern = /(<!--([^-]|-[^-]|--[^>])*-->)|(<(tagPattern)((([ ][^\/>]*)?\/>)|(([ ][^>]*)?>)))/;
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
-    // This was the one causing a Rhino crash -
-    status = inSection(3);
-    pattern = /(<!--([^-]|-[^-]|--[^>])*-->)|(<(tagPattern)((([ ][^\/>]*)?\/>)|(([ ][^>]*)?>)))|(<\/tagPattern[^>]*>)/;
-    actualmatch = string.match(pattern);
-    expectedmatch = null;
-    addThis();
+// This was the one causing a Rhino crash -
+status = inSection(3);
+pattern = /(<!--([^-]|-[^-]|--[^>])*-->)|(<(tagPattern)((([ ][^\/>]*)?\/>)|(([ ][^>]*)?>)))|(<\/tagPattern[^>]*>)/;
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
 
 
@@ -104,7 +107,7 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
   testRegExp(statusmessages, patterns, strings, actualmatches, expectedmatches);
   exitFunc ('test');

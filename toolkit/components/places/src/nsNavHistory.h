@@ -101,7 +101,8 @@ class nsNavHistory : public nsSupportsWeakReference,
                      public nsIObserver,
                      public nsIBrowserHistory,
                      public nsIGlobalHistory3,
-                     public nsIAutoCompleteSearch
+                     public nsIAutoCompleteSearch,
+                     public nsIAutoCompleteSimpleResultListener
 {
   friend class AutoCompleteIntermediateResultSet;
   friend class AutoCompleteResultComparator;
@@ -116,6 +117,7 @@ public:
   NS_DECL_NSIBROWSERHISTORY
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIAUTOCOMPLETESEARCH
+  NS_DECL_NSIAUTOCOMPLETESIMPLERESULTLISTENER
 
   nsresult Init();
 
@@ -220,7 +222,9 @@ public:
   static const PRInt32 kGetInfoIndex_Title;
   static const PRInt32 kGetInfoIndex_RevHost;
   static const PRInt32 kGetInfoIndex_VisitCount;
-  static const PRInt32 kGetInfoIndex_BookmarkItemId;
+  static const PRInt32 kGetInfoIndex_ItemId;
+  static const PRInt32 kGetInfoIndex_ItemDateAdded;
+  static const PRInt32 kGetInfoIndex_ItemLastModified;
 
   // select a history row by URL, with visit date info (extra work)
   mozIStorageStatement* DBGetURLPageInfoFull()
@@ -299,6 +303,11 @@ public:
                           const PRUint16* aGroupingMode, PRUint32 aGroupCount,
                           nsCOMArray<nsNavHistoryResultNode>* aDest);
 
+  // Don't use these directly, inside nsNavHistory use UpdateBatchScoper,
+  // else use nsINavHistoryService::RunInBatchMode
+  nsresult BeginUpdateBatch();
+  nsresult EndUpdateBatch();
+
   // better alternative to QueryStringToQueries (in nsNavHistoryQuery.cpp)
   nsresult QueryStringToQueryArray(const nsACString& aQueryString,
                                    nsCOMArray<nsNavHistoryQuery>* aQueries,
@@ -321,6 +330,9 @@ public:
   // all but the first are removed.  This must be called after using
   // AddPageWithVisit, to ensure that the database is in a consistent state.
   nsresult RemoveDuplicateURIs();
+
+  // sets the schema version in the database to match SCHEMA_VERSION
+  nsresult UpdateSchemaVersion();
 
  private:
   ~nsNavHistory();
@@ -470,6 +482,7 @@ protected:
   nsresult BindQueryClauseParameters(mozIStorageStatement* statement,
                                      PRInt32 aStartParameter,
                                      nsNavHistoryQuery* aQuery,
+                                     nsNavHistoryQueryOptions* aOptions,
                                      PRInt32* aParamCount);
 
   nsresult ResultsAsList(mozIStorageStatement* statement,

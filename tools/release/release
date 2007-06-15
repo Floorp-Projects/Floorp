@@ -2,12 +2,15 @@
 use strict;
 
 use Getopt::Long;
+
 use MozBuild::Util qw(Email);
+
 use Bootstrap::Step::Tag;
 use Bootstrap::Step::TinderConfig;
 use Bootstrap::Step::Build;
 use Bootstrap::Step::Source;
 use Bootstrap::Step::Repack;
+use Bootstrap::Step::PatcherConfig;
 use Bootstrap::Step::Updates;
 use Bootstrap::Step::Stage;
 use Bootstrap::Step::Sign;
@@ -18,6 +21,7 @@ my @allSteps = (
     'Build',
     'Source',
     'Repack',
+    'PatcherConfig',
     'Updates',
     'Stage',
     'Sign',
@@ -161,4 +165,4 @@ sub PerformStep {
     }
 }
 
-&main();
+main();

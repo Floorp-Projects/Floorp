@@ -120,7 +120,7 @@ sub main {
     $html .= "<dl>\n";
     foreach $i (0 .. $#suite_list) {
 	local $prev_href = ($i > 0) ? "\#SUITE_" . $suite_list[$i - 1] : "";
-	local $next_href = ($i < $#suite_list) ? "\#SUITE_" . 
+	local $next_href = ($i < $#suite_list) ? "\#SUITE_" .
 	    $suite_list[$i + 1] : "";
 	&process_suite ($suite_path, $suite_list[$i], $prev_href, $next_href);
     }
@@ -136,7 +136,7 @@ sub main {
 #
 sub process_suite {
     local ($suite_path, $suite, $prev_href, $next_href) = @_;
-    local $i, @test_dir_list;    
+    local $i, @test_dir_list;   
     local $suite_count = 0;
 
     # suite js object
@@ -170,13 +170,13 @@ sub process_suite {
     $html .= "<dd>\n";
 
     foreach $i (0 .. $#test_dir_list) {
-	local $prev_href = ($i > 0) ? "\#TESTDIR_" . $suite . 
+	local $prev_href = ($i > 0) ? "\#TESTDIR_" . $suite .
 	    $test_dir_list[$i - 1] :
 	    "";
 	local $next_href = ($i < $#test_dir_list) ?
 	  "\#TESTDIR_" . $suite . $test_dir_list[$i + 1] : "";
-	&process_test_dir ($suite_path . $suite . "/", $test_dir_list[$i], 
-			   $suite, 
+	&process_test_dir ($suite_path . $suite . "/", $test_dir_list[$i],
+			   $suite,
 			   $prev_href, $next_href);
     }
     $javascript .= "currSuite.count = $suite_count;\n";
@@ -185,7 +185,7 @@ sub process_suite {
 }
 
 #
-# Append detail from a test directory, 
+# Append detail from a test directory,
 # calling process_test for subordinate js files
 #
 sub process_test_dir {
@@ -197,7 +197,7 @@ sub process_test_dir {
     {
 	$suite_count += @test_list;
 
-	$javascript .= "currDirectory = currTestDirs[\"$test_dir\"] = " . 
+	$javascript .= "currDirectory = currTestDirs[\"$test_dir\"] = " .
 	    "{tests:{}};\n";
 	$javascript .= "currTests = currDirectory.tests;\n";
 
@@ -224,7 +224,7 @@ sub process_test_dir {
 	foreach $test (@test_list) {
 	    &process_test ($test_dir_path . $test_dir, $test);
 	}
-	
+
 	$html .= "</dl>\n";
     }
 }
@@ -317,7 +317,7 @@ sub get_js_files {
 
     foreach ( @subdir_files ) {
 #	print "excluded $test_subdir/$_\n" if $excludedhash{"$test_subdir/$_"};
-        if ( ($_ =~ /\.js$/) && ($_ ne 'shell.js') && ($_ ne 'browser.js') && 
+        if ( ($_ =~ /\.js$/) && ($_ ne 'shell.js') && ($_ ne 'browser.js') &&
 	     (!$excludedhash{"$test_subdir/$_"}) ) {
             $js_file_array[$#js_file_array+1] = $_;
         }
@@ -396,7 +396,7 @@ sub expand_test_list_entry {
         # Entry is in the form suite_dir/test_dir[/*]
         # so iterate all tests under it
         my $suite_and_test_dir = $1;
-        my @test_files = &get_js_files ($opt_suite_path . 
+        my @test_files = &get_js_files ($opt_suite_path .
                                         $suite_and_test_dir);
         my $i;
 

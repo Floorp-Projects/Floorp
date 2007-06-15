@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 28 May 2001
  *
  * SUMMARY:  Functions are scoped statically, not dynamically
@@ -48,9 +50,10 @@
  * (This section defines the scope chain of a function object as that
  *  of the running execution context when the function was declared)
  */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+var gTestfile = 'scope-001.js';
 var UBound = 0;
-var bug = '(none)';
+var BUGNUMBER = '(none)';
 var summary = 'Testing that functions are scoped statically, not dynamically';
 var self = this;  // capture a reference to the global object
 var status = '';
@@ -250,9 +253,9 @@ function resetTestVars()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
- 
+
   for (var i = 0; i < UBound; i++)
   {
     reportCompare(expectedvalues[i], actualvalues[i], statusitems[i]);

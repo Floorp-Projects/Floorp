@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = '11.13.2-3.js';
+
 /**
    File Name:          11.13.2-4.js
    ECMA Section:       11.13.2 Compound Assignment: %=
@@ -67,211 +70,211 @@ writeHeaderToLog( SECTION + " Compound Assignment: +=");
 
 // If either operand is NaN,  result is NaN
 
-new TestCase( SECTION,    
-              "VAR1 = NaN; VAR2=1; VAR1 %= VAR2",       
-              Number.NaN, 
+new TestCase( SECTION,   
+              "VAR1 = NaN; VAR2=1; VAR1 %= VAR2",      
+              Number.NaN,
               eval("VAR1 = Number.NaN; VAR2=1; VAR1 %= VAR2") );
 
-new TestCase( SECTION,    
-              "VAR1 = NaN; VAR2=1; VAR1 %= VAR2; VAR1", 
-              Number.NaN, 
+new TestCase( SECTION,   
+              "VAR1 = NaN; VAR2=1; VAR1 %= VAR2; VAR1",
+              Number.NaN,
               eval("VAR1 = Number.NaN; VAR2=1; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = NaN; VAR2=0; VAR1 %= VAR2",       
-              Number.NaN, 
+new TestCase( SECTION,   
+              "VAR1 = NaN; VAR2=0; VAR1 %= VAR2",      
+              Number.NaN,
               eval("VAR1 = Number.NaN; VAR2=0; VAR1 %= VAR2") );
 
-new TestCase( SECTION,    
-              "VAR1 = NaN; VAR2=0; VAR1 %= VAR2; VAR1", 
-              Number.NaN, 
+new TestCase( SECTION,   
+              "VAR1 = NaN; VAR2=0; VAR1 %= VAR2; VAR1",
+              Number.NaN,
               eval("VAR1 = Number.NaN; VAR2=0; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = 0; VAR2=NaN; VAR1 %= VAR2",       
-              Number.NaN, 
+new TestCase( SECTION,   
+              "VAR1 = 0; VAR2=NaN; VAR1 %= VAR2",      
+              Number.NaN,
               eval("VAR1 = 0; VAR2=Number.NaN; VAR1 %= VAR2") );
 
-new TestCase( SECTION,    
-              "VAR1 = 0; VAR2=NaN; VAR1 %= VAR2; VAR1", 
-              Number.NaN, 
+new TestCase( SECTION,   
+              "VAR1 = 0; VAR2=NaN; VAR1 %= VAR2; VAR1",
+              Number.NaN,
               eval("VAR1 = 0; VAR2=Number.NaN; VAR1 %= VAR2; VAR1") );
 
 // if the dividend is infinity or the divisor is zero or both, the result is NaN
 
-new TestCase( SECTION,    
-              "VAR1 = Infinity; VAR2= Infinity; VAR1 %= VAR2; VAR1",   
-              Number.NaN,      
+new TestCase( SECTION,   
+              "VAR1 = Infinity; VAR2= Infinity; VAR1 %= VAR2; VAR1",  
+              Number.NaN,     
               eval("VAR1 = Number.POSITIVE_INFINITY; VAR2 = Number.POSITIVE_INFINITY; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = Infinity; VAR2= -Infinity; VAR1 %= VAR2; VAR1",  
-              Number.NaN,      
+new TestCase( SECTION,   
+              "VAR1 = Infinity; VAR2= -Infinity; VAR1 %= VAR2; VAR1", 
+              Number.NaN,     
               eval("VAR1 = Number.POSITIVE_INFINITY; VAR2 = Number.NEGATIVE_INFINITY; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 =-Infinity; VAR2= Infinity; VAR1 %= VAR2; VAR1",   
-              Number.NaN,      
+new TestCase( SECTION,   
+              "VAR1 =-Infinity; VAR2= Infinity; VAR1 %= VAR2; VAR1",  
+              Number.NaN,     
               eval("VAR1 = Number.NEGATIVE_INFINITY; VAR2 = Number.POSITIVE_INFINITY; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 =-Infinity; VAR2=-Infinity; VAR1 %= VAR2; VAR1",   
-              Number.NaN,      
+new TestCase( SECTION,   
+              "VAR1 =-Infinity; VAR2=-Infinity; VAR1 %= VAR2; VAR1",  
+              Number.NaN,     
               eval("VAR1 = Number.NEGATIVE_INFINITY; VAR2 = Number.NEGATIVE_INFINITY; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = 0; VAR2= Infinity; VAR2 %= VAR1",    
-              Number.NaN,      
+new TestCase( SECTION,   
+              "VAR1 = 0; VAR2= Infinity; VAR2 %= VAR1",   
+              Number.NaN,     
               eval("VAR1 = 0; VAR2 = Number.POSITIVE_INFINITY; VAR2 %= VAR1; VAR2") );
 
-new TestCase( SECTION,    
-              "VAR1 = -0; VAR2= Infinity; VAR2 %= VAR1",   
-              Number.NaN,      
+new TestCase( SECTION,   
+              "VAR1 = -0; VAR2= Infinity; VAR2 %= VAR1",  
+              Number.NaN,     
               eval("VAR1 = -0; VAR2 = Number.POSITIVE_INFINITY; VAR2 %= VAR1; VAR2") );
 
-new TestCase( SECTION,    
-              "VAR1 = -0; VAR2= -Infinity; VAR2 %= VAR1",  
-              Number.NaN,      
+new TestCase( SECTION,   
+              "VAR1 = -0; VAR2= -Infinity; VAR2 %= VAR1", 
+              Number.NaN,     
               eval("VAR1 = -0; VAR2 = Number.NEGATIVE_INFINITY; VAR2 %= VAR1; VAR2") );
 
-new TestCase( SECTION,    
-              "VAR1 = 0; VAR2= -Infinity; VAR2 %= VAR1",   
-              Number.NaN,      
+new TestCase( SECTION,   
+              "VAR1 = 0; VAR2= -Infinity; VAR2 %= VAR1",  
+              Number.NaN,     
               eval("VAR1 = 0; VAR2 = Number.NEGATIVE_INFINITY; VAR2 %= VAR1; VAR2") );
 
-new TestCase( SECTION,    
-              "VAR1 = 1; VAR2= Infinity; VAR2 %= VAR1",    
-              Number.NaN,      
+new TestCase( SECTION,   
+              "VAR1 = 1; VAR2= Infinity; VAR2 %= VAR1",   
+              Number.NaN,     
               eval("VAR1 = 1; VAR2 = Number.POSITIVE_INFINITY; VAR2 %= VAR1; VAR2") );
 
-new TestCase( SECTION,    
-              "VAR1 = -1; VAR2= Infinity; VAR2 %= VAR1",   
-              Number.NaN,      
+new TestCase( SECTION,   
+              "VAR1 = -1; VAR2= Infinity; VAR2 %= VAR1",  
+              Number.NaN,     
               eval("VAR1 = -1; VAR2 = Number.POSITIVE_INFINITY; VAR2 %= VAR1; VAR2") );
 
-new TestCase( SECTION,    
-              "VAR1 = -1; VAR2= -Infinity; VAR2 %= VAR1",  
-              Number.NaN,      
+new TestCase( SECTION,   
+              "VAR1 = -1; VAR2= -Infinity; VAR2 %= VAR1", 
+              Number.NaN,     
               eval("VAR1 = -1; VAR2 = Number.NEGATIVE_INFINITY; VAR2 %= VAR1; VAR2") );
 
-new TestCase( SECTION,    
-              "VAR1 = 1; VAR2= -Infinity; VAR2 %= VAR1",   
-              Number.NaN,      
+new TestCase( SECTION,   
+              "VAR1 = 1; VAR2= -Infinity; VAR2 %= VAR1",  
+              Number.NaN,     
               eval("VAR1 = 1; VAR2 = Number.NEGATIVE_INFINITY; VAR2 %= VAR1; VAR2") );
 
-new TestCase( SECTION,    
-              "VAR1 = 0; VAR2= 0; VAR1 %= VAR2",    
-              Number.NaN,      
+new TestCase( SECTION,   
+              "VAR1 = 0; VAR2= 0; VAR1 %= VAR2",   
+              Number.NaN,     
               eval("VAR1 = 0; VAR2 = 0; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = 0; VAR2= -0; VAR1 %= VAR2",   
-              Number.NaN,      
+new TestCase( SECTION,   
+              "VAR1 = 0; VAR2= -0; VAR1 %= VAR2",  
+              Number.NaN,     
               eval("VAR1 = 0; VAR2 = -0; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = -0; VAR2= 0; VAR1 %= VAR2",   
-              Number.NaN,      
+new TestCase( SECTION,   
+              "VAR1 = -0; VAR2= 0; VAR1 %= VAR2",  
+              Number.NaN,     
               eval("VAR1 = -0; VAR2 = 0; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = -0; VAR2= -0; VAR1 %= VAR2",  
-              Number.NaN,      
+new TestCase( SECTION,   
+              "VAR1 = -0; VAR2= -0; VAR1 %= VAR2", 
+              Number.NaN,     
               eval("VAR1 = -0; VAR2 = -0; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = 1; VAR2= 0; VAR1 %= VAR2",    
-              Number.NaN,      
+new TestCase( SECTION,   
+              "VAR1 = 1; VAR2= 0; VAR1 %= VAR2",   
+              Number.NaN,     
               eval("VAR1 = 1; VAR2 = 0; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = 1; VAR2= -0; VAR1 %= VAR2",   
-              Number.NaN,      
+new TestCase( SECTION,   
+              "VAR1 = 1; VAR2= -0; VAR1 %= VAR2",  
+              Number.NaN,     
               eval("VAR1 = 1; VAR2 = -0; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = -1; VAR2= 0; VAR1 %= VAR2",   
-              Number.NaN,      
+new TestCase( SECTION,   
+              "VAR1 = -1; VAR2= 0; VAR1 %= VAR2",  
+              Number.NaN,     
               eval("VAR1 = -1; VAR2 = 0; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = -1; VAR2= -0; VAR1 %= VAR2",  
-              Number.NaN,      
+new TestCase( SECTION,   
+              "VAR1 = -1; VAR2= -0; VAR1 %= VAR2", 
+              Number.NaN,     
               eval("VAR1 = -1; VAR2 = -0; VAR1 %= VAR2; VAR1") );
 
 // if the dividend is finite and the divisor is an infinity, the result equals the dividend.
 
-new TestCase( SECTION,    
-              "VAR1 = 0; VAR2= Infinity; VAR1 %= VAR2;VAR1",    
-              0,      
+new TestCase( SECTION,   
+              "VAR1 = 0; VAR2= Infinity; VAR1 %= VAR2;VAR1",   
+              0,     
               eval("VAR1 = 0; VAR2 = Number.POSITIVE_INFINITY; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = -0; VAR2= Infinity; VAR1 %= VAR2;VAR1",   
-              -0,     
+new TestCase( SECTION,   
+              "VAR1 = -0; VAR2= Infinity; VAR1 %= VAR2;VAR1",  
+              -0,    
               eval("VAR1 = -0; VAR2 = Number.POSITIVE_INFINITY; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = -0; VAR2= -Infinity; VAR1 %= VAR2;VAR1",  
-              -0,     
+new TestCase( SECTION,   
+              "VAR1 = -0; VAR2= -Infinity; VAR1 %= VAR2;VAR1", 
+              -0,    
               eval("VAR1 = -0; VAR2 = Number.NEGATIVE_INFINITY; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = 0; VAR2= -Infinity; VAR1 %= VAR2;VAR1",   
-              0,      
+new TestCase( SECTION,   
+              "VAR1 = 0; VAR2= -Infinity; VAR1 %= VAR2;VAR1",  
+              0,     
               eval("VAR1 = 0; VAR2 = Number.NEGATIVE_INFINITY; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = 1; VAR2= Infinity; VAR1 %= VAR2;VAR1",    
-              1,      
+new TestCase( SECTION,   
+              "VAR1 = 1; VAR2= Infinity; VAR1 %= VAR2;VAR1",   
+              1,     
               eval("VAR1 = 1; VAR2 = Number.POSITIVE_INFINITY; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = -1; VAR2= Infinity; VAR1 %= VAR2;VAR1",   
-              -1,     
+new TestCase( SECTION,   
+              "VAR1 = -1; VAR2= Infinity; VAR1 %= VAR2;VAR1",  
+              -1,    
               eval("VAR1 = -1; VAR2 = Number.POSITIVE_INFINITY; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = -1; VAR2= -Infinity; VAR1 %= VAR2;VAR1",  
-              -1,     
+new TestCase( SECTION,   
+              "VAR1 = -1; VAR2= -Infinity; VAR1 %= VAR2;VAR1", 
+              -1,    
               eval("VAR1 = -1; VAR2 = Number.NEGATIVE_INFINITY; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = 1; VAR2= -Infinity; VAR1 %= VAR2;VAR1",   
-              1,      
+new TestCase( SECTION,   
+              "VAR1 = 1; VAR2= -Infinity; VAR1 %= VAR2;VAR1",  
+              1,     
               eval("VAR1 = 1; VAR2 = Number.NEGATIVE_INFINITY; VAR1 %= VAR2; VAR1") );
 
 // if the dividend is a zero and the divisor is finite, the result is the same as the dividend
 
-new TestCase( SECTION,    
-              "VAR1 = 0; VAR2= 1; VAR1 %= VAR2; VAR1",    
-              0,    
+new TestCase( SECTION,   
+              "VAR1 = 0; VAR2= 1; VAR1 %= VAR2; VAR1",   
+              0,   
               eval("VAR1 = 0; VAR2 = 1; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = -0; VAR2= 1; VAR1 %= VAR2; VAR1",   
-              -0,   
+new TestCase( SECTION,   
+              "VAR1 = -0; VAR2= 1; VAR1 %= VAR2; VAR1",  
+              -0,  
               eval("VAR1 = -0; VAR2 = 1; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = -0; VAR2= -1; VAR1 %= VAR2; VAR1",  
-              -0,   
+new TestCase( SECTION,   
+              "VAR1 = -0; VAR2= -1; VAR1 %= VAR2; VAR1", 
+              -0,  
               eval("VAR1 = -0; VAR2 = -1; VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = 0; VAR2= -1; VAR1 %= VAR2; VAR1",   
-              0,    
+new TestCase( SECTION,   
+              "VAR1 = 0; VAR2= -1; VAR1 %= VAR2; VAR1",  
+              0,   
               eval("VAR1 = 0; VAR2 = -1; VAR1 %= VAR2; VAR1") );
 
 // string cases
-new TestCase( SECTION,    
-              "VAR1 = 1000; VAR2 = '10', VAR1 %= VAR2; VAR1", 
-              0,       
+new TestCase( SECTION,   
+              "VAR1 = 1000; VAR2 = '10', VAR1 %= VAR2; VAR1",
+              0,      
               eval("VAR1 = 1000; VAR2 = '10', VAR1 %= VAR2; VAR1") );
 
-new TestCase( SECTION,    
-              "VAR1 = '1000'; VAR2 = 10, VAR1 %= VAR2; VAR1", 
-              0,       
+new TestCase( SECTION,   
+              "VAR1 = '1000'; VAR2 = 10, VAR1 %= VAR2; VAR1",
+              0,      
               eval("VAR1 = '1000'; VAR2 = 10, VAR1 %= VAR2; VAR1") );
 /*
   new TestCase( SECTION,    "VAR1 = 10; VAR2 = '0XFF', VAR1 %= VAR2", 2550,       eval("VAR1 = 10; VAR2 = '0XFF', VAR1 %= VAR2") );

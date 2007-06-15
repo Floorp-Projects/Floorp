@@ -84,7 +84,7 @@
 #include "nsBoxLayoutState.h"
 //for keylistener for "return" check
 #include "nsIPrivateDOMEvent.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDocument.h" //observe documents to send onchangenotifications
 #include "nsIStyleSheet.h"//observe documents to send onchangenotifications
 #include "nsIStyleRule.h"//observe documents to send onchangenotifications
@@ -305,7 +305,7 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* 
       nsCOMPtr<nsIDocument> doc = content->GetDocument();
       if (doc) 
       {
-        nsCOMPtr<nsIPresShell> presShell = doc->GetShellAt(0);
+        nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
         if (presShell) 
         {
           nsEventStatus status = nsEventStatus_eIgnore;
@@ -1134,14 +1134,13 @@ nsTextControlFrame::PreDestroy()
   nsFormControlFrame::RegUnRegAccessKey(NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
   if (mTextListener)
   {
-    nsCOMPtr<nsIDOMEventReceiver> erP = do_QueryInterface(mContent);
-    if (erP)
+    if (mContent)
     {
-      erP->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener  *,mTextListener), NS_GET_IID(nsIDOMFocusListener));
+      mContent->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener  *,mTextListener), NS_GET_IID(nsIDOMFocusListener));
     }
 
     nsCOMPtr<nsIDOMEventGroup> systemGroup;
-    erP->GetSystemEventGroup(getter_AddRefs(systemGroup));
+    mContent->GetSystemEventGroup(getter_AddRefs(systemGroup));
     nsCOMPtr<nsIDOM3EventTarget> dom3Targ = do_QueryInterface(mContent);
     if (dom3Targ) {
       // cast because of ambiguous base
@@ -1282,9 +1281,7 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
   NS_ENSURE_SUCCESS(rv, rv);
   aRenderingContext->SetFont(fontMet);
 
-  nsPresContext* presContext = PresContext();
-  lineHeight = nsHTMLReflowState::CalcLineHeight(presContext,
-                                                 aRenderingContext,
+  lineHeight = nsHTMLReflowState::CalcLineHeight(aRenderingContext,
                                                  this);
   fontMet->GetAveCharWidth(charWidth);
   fontMet->GetMaxAdvance(charMaxAdvance);
@@ -1313,7 +1310,7 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
   } else {
     // This is to account for the anonymous <br> having a 1 twip width
     // in Full Standards mode, see BRFrame::Reflow and bug 228752.
-    if (presContext->CompatibilityMode() == eCompatibility_FullStandards) {
+    if (PresContext()->CompatibilityMode() == eCompatibility_FullStandards) {
       aIntrinsicSize.width += 1;
     }
   }
@@ -2734,10 +2731,10 @@ nsTextControlFrame::SetInitialChildList(nsIAtom*        aListName,
   }
 
   //register focus and key listeners
-  nsCOMPtr<nsIDOMEventReceiver> erP = do_QueryInterface(mContent);
-  if (erP) {
+  if (mContent) {
     // register the event listeners with the DOM event receiver
-    rv = erP->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener *,mTextListener), NS_GET_IID(nsIDOMFocusListener));
+    rv = mContent->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener *,mTextListener),
+                                         NS_GET_IID(nsIDOMFocusListener));
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register focus listener");
     // XXXbryner do we need to check for a null presshell here?
     if (!PresContext()->GetPresShell())
@@ -2745,7 +2742,7 @@ nsTextControlFrame::SetInitialChildList(nsIAtom*        aListName,
   }
 
   nsCOMPtr<nsIDOMEventGroup> systemGroup;
-  erP->GetSystemEventGroup(getter_AddRefs(systemGroup));
+  mContent->GetSystemEventGroup(getter_AddRefs(systemGroup));
   nsCOMPtr<nsIDOM3EventTarget> dom3Targ = do_QueryInterface(mContent);
   if (dom3Targ) {
     // cast because of ambiguous base

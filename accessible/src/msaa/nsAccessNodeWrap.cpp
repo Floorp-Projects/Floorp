@@ -41,6 +41,7 @@
 #include "nsAccessibilityAtoms.h"
 #include "nsIAccessibilityService.h"
 #include "nsIAccessible.h"
+#include "nsAttrName.h"
 #include "nsIDocument.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMNodeList.h"
@@ -52,9 +53,8 @@
 #include "nsIPrefBranch.h"
 #include "nsIPresShell.h"
 #include "nsPIDOMWindow.h"
+#include "nsRootAccessible.h"
 #include "nsIServiceManager.h"
-#include "nsIServiceManager.h"
-#include "nsAttrName.h"
 
 /// the accessible library and cached methods
 HINSTANCE nsAccessNodeWrap::gmAccLib = nsnull;
@@ -64,6 +64,9 @@ LPFNNOTIFYWINEVENT nsAccessNodeWrap::gmNotifyWinEvent = nsnull;
 LPFNGETGUITHREADINFO nsAccessNodeWrap::gmGetGUIThreadInfo = nsnull;
 
 PRBool nsAccessNodeWrap::gIsEnumVariantSupportDisabled = 0;
+
+nsIAccessibleTextChangeEvent *nsAccessNodeWrap::gTextEvent = nsnull;
+
 
 /* For documentation of the accessibility architecture, 
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
@@ -89,20 +92,25 @@ nsAccessNodeWrap::~nsAccessNodeWrap()
 {
 }
 
+//-----------------------------------------------------
+// nsISupports methods
+//-----------------------------------------------------
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsAccessNodeWrap, nsAccessNode, nsIWinAccessNode);
+
+//-----------------------------------------------------
+// nsIWinAccessNode methods
+//-----------------------------------------------------
+
+NS_IMETHODIMP
+nsAccessNodeWrap::QueryNativeInterface(REFIID aIID, void** aInstancePtr)
+{
+  return QueryInterface(aIID, aInstancePtr);
+}
 
 //-----------------------------------------------------
 // IUnknown interface methods - see iunknown.h for documentation
 //-----------------------------------------------------
-
-STDMETHODIMP_(ULONG) nsAccessNodeWrap::AddRef()
-{
-  return nsAccessNode::AddRef();
-}
-
-STDMETHODIMP_(ULONG) nsAccessNodeWrap::Release()
-{
-  return nsAccessNode::Release();
-}
 
 STDMETHODIMP nsAccessNodeWrap::QueryInterface(REFIID iid, void** ppv)
 {
@@ -118,7 +126,6 @@ STDMETHODIMP nsAccessNodeWrap::QueryInterface(REFIID iid, void** ppv)
   return S_OK;
 }
 
-
 //-----------------------------------------------------
 // ISimpleDOMNode methods
 //-----------------------------------------------------
@@ -131,10 +138,12 @@ STDMETHODIMP nsAccessNodeWrap::get_nodeInfo(
     /* [out] */ unsigned int __RPC_FAR *aUniqueID,
     /* [out] */ unsigned short __RPC_FAR *aNodeType)
 {
+  *aNodeName = nsnull;
+  *aNodeValue = nsnull;
+
   if (!mDOMNode)
     return E_FAIL;
  
-  *aNodeName = nsnull;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
 
   PRUint16 nodeType = 0;
@@ -476,25 +485,11 @@ STDMETHODIMP
 nsAccessNodeWrap::get_language(BSTR __RPC_FAR *aLanguage)
 {
   *aLanguage = nsnull;
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content) {
-    return E_FAIL;
-  }
 
   nsAutoString language;
-  for (nsIContent *walkUp = content; walkUp = walkUp->GetParent(); walkUp) {
-    if (walkUp->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::lang, language)) {
-      break;
-    }
+  if (NS_FAILED(GetLanguage(language))) {
+    return E_FAIL;
   }
-
-  if (language.IsEmpty()) { // Nothing found, so use document's language
-    nsIDocument *doc = content->GetOwnerDoc();
-    if (doc) {
-      doc->GetHeaderData(nsAccessibilityAtoms::headerContentLanguage, language);
-    }
-  }
- 
   *aLanguage = ::SysAllocString(language.get());
   return S_OK;
 }
@@ -535,6 +530,9 @@ void nsAccessNodeWrap::InitAccessibility()
 
 void nsAccessNodeWrap::ShutdownAccessibility()
 {
+  NS_IF_RELEASE(gTextEvent);
+  ::DestroyCaret();
+
   if (!gIsAccessibilityActive) {
     return;
   }

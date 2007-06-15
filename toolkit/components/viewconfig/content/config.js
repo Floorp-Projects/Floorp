@@ -23,6 +23,7 @@
 #   Chip Clark <chipc@netscape.com>
 #   Seth Spitzer <sspitzer@netscape.com>
 #   Neil Rashbrook <neil@parkwaycc.co.uk>
+#   Mats Palmgren <mats.palmgren@bredband.net>.
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -519,9 +520,6 @@ function updateContextMenu()
   var toggleSelected = document.getElementById("toggleSelected");
   toggleSelected.setAttribute("disabled", isLocked);
   toggleSelected.hidden = !canToggle;
-
-  document.getElementById("lockSelected").hidden = !prefSelected || isLocked;
-  document.getElementById("unlockSelected").hidden = !prefSelected || !isLocked;
 }
 
 function copyPref()
@@ -595,18 +593,26 @@ function ModifyPref(entry)
     if (!entry.valueCol && !gPromptService.select(window, title, entry.prefCol, 2, [false, true], check))
       return false;
     gPrefBranch.setBoolPref(entry.prefCol, check.value);
-  } else {
+  }
+  else if (entry.typeCol == nsIPrefBranch.PREF_INT) {
+    var params = { windowTitle: title,
+                   label: entry.prefCol,
+                   value: entry.valueCol,
+                   cancelled: true };
+    window.openDialog("chrome://global/content/configIntValue.xul", "_blank",
+                      "chrome,titlebar,centerscreen,modal", params);
+    if (params.cancelled)
+      return false;
+    gPrefBranch.setIntPref(entry.prefCol, params.value);
+  }
+  else {
     var result = { value: entry.valueCol };
     var dummy = { value: 0 };
     if (!gPromptService.prompt(window, title, entry.prefCol, result, null, dummy))
       return false;
-    if (entry.typeCol == nsIPrefBranch.PREF_INT) {
-      gPrefBranch.setIntPref(entry.prefCol, parseInt(result.value, 10));
-    } else {
-      var supportsString = Components.classes[nsSupportsString_CONTRACTID].createInstance(nsISupportsString);
-      supportsString.data = result.value;
-      gPrefBranch.setComplexValue(entry.prefCol, nsISupportsString, supportsString);
-    }
+    var supportsString = Components.classes[nsSupportsString_CONTRACTID].createInstance(nsISupportsString);
+    supportsString.data = result.value;
+    gPrefBranch.setComplexValue(entry.prefCol, nsISupportsString, supportsString);
   }
   
   gPrefService.savePrefFile(null);
@@ -618,16 +624,3 @@ function ModifyPref(entry)
 
   return true;
 }
-
-function LockSelected()
-{
-  var entry = gPrefView[view.selection.currentIndex];
-  gPrefBranch.lockPref(entry.prefCol);
-}
-
-function UnlockSelected()
-{
-  var entry = gPrefView[view.selection.currentIndex];
-  gPrefBranch.unlockPref(entry.prefCol);
-}
-

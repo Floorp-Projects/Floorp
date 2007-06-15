@@ -393,7 +393,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsEventListenerManager)
    NS_INTERFACE_MAP_ENTRY(nsIEventListenerManager)
    NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
    NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
-   NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsEventListenerManager, nsIEventListenerManager)
@@ -754,20 +753,21 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
     }
   }
 
-  if (global) {
-    // This might be the first reference to this language in the global
-    // We must init the language before we attempt to fetch its context.
-    if (NS_FAILED(global->EnsureScriptEnvironment(aLanguage))) {
-      NS_WARNING("Failed to setup script environment for this language");
-      // but fall through and let the inevitable failure below handle it.
-    }
-
-    context = global->GetScriptContext(aLanguage);
+  if (!global) {
+    // This can happen; for example this document might have been
+    // loaded as data.
+    return NS_OK;
   }
-  NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
+  
+  // This might be the first reference to this language in the global
+  // We must init the language before we attempt to fetch its context.
+  if (NS_FAILED(global->EnsureScriptEnvironment(aLanguage))) {
+    NS_WARNING("Failed to setup script environment for this language");
+    // but fall through and let the inevitable failure below handle it.
+  }
 
-  NS_ASSERTION(global, "How could we possibly have a context without an "
-               "nsIScriptGlobalObject?");
+  context = global->GetScriptContext(aLanguage);
+  NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
   void *scope = global->GetScriptGlobal(aLanguage);
   nsresult rv;
@@ -1288,7 +1288,10 @@ nsEventListenerManager::AddEventListener(const nsAString& aType,
 {
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
-  return AddEventListenerByType(aListener, aType, flags, nsnull);
+  nsresult rv = AddEventListenerByType(aListener, aType, flags, nsnull);
+  NS_ASSERTION(NS_FAILED(rv) || HasListenersFor(aType), 
+               "Adding event listener didn't work!");
+  return rv;
 }
 
 NS_IMETHODIMP 
@@ -1320,7 +1323,7 @@ nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
   }
 
   // Obtain a presentation shell
-  nsIPresShell *shell = document->GetShellAt(0);
+  nsIPresShell *shell = document->GetPrimaryShell();
   nsCOMPtr<nsPresContext> context;
   if (shell) {
     context = shell->GetPresContext();
@@ -1367,35 +1370,6 @@ NS_IMETHODIMP
 nsEventListenerManager::IsRegisteredHere(const nsAString & type, PRBool *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-// nsIDOMEventReceiver interface
-NS_IMETHODIMP 
-nsEventListenerManager::AddEventListenerByIID(nsIDOMEventListener *aListener, 
-                                              const nsIID& aIID)
-{
-  return AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-}
-
-NS_IMETHODIMP 
-nsEventListenerManager::RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
-{
-  return RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-}
-
-NS_IMETHODIMP 
-nsEventListenerManager::GetListenerManager(PRBool aCreateIfNotFound,
-                                           nsIEventListenerManager** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  NS_ADDREF(*aResult = this);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsEventListenerManager::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
-{
-  return GetSystemEventGroupLM(aGroup);
 }
 
 nsresult
@@ -1732,6 +1706,42 @@ nsEventListenerManager::MutationListenerBits()
     }
   }
   return bits;
+}
+
+PRBool
+nsEventListenerManager::HasListenersFor(const nsAString& aEventName)
+{
+  nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + aEventName);
+  PRUint32 type = nsContentUtils::GetEventId(atom);
+
+  const EventTypeData* typeData = nsnull;
+  const EventDispatchData* dispData = nsnull;
+  if (type != NS_USER_DEFINED_EVENT) {
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sEventTypes); ++i) {
+     typeData = &sEventTypes[i];
+     for (PRInt32 j = 0; j < typeData->numEvents; ++j) {
+       dispData = &(typeData->events[j]);
+       if (type == dispData->message) {
+         goto found;
+       }
+     }
+     typeData = nsnull;
+     dispData = nsnull;
+    }
+  }
+found:
+
+  PRInt32 i, count = mListeners.Count();
+  for (i = 0; i < count; ++i) {
+    nsListenerStruct* ls = NS_STATIC_CAST(nsListenerStruct*,
+                                          mListeners.FastElementAt(i));
+    if (ls &&
+        (ls->mTypeAtom == atom ||
+         EVENT_TYPE_DATA_EQUALS(ls->mTypeData, typeData))) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
 }
 
 PRBool

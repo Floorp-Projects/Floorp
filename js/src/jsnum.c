@@ -686,23 +686,6 @@ js_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval)
     return JS_TRUE;
 }
 
-JSObject *
-js_NumberToObject(JSContext *cx, jsdouble d)
-{
-    JSObject *obj;
-    jsval v;
-
-    obj = js_NewObject(cx, &js_NumberClass, NULL, NULL);
-    if (!obj)
-        return NULL;
-    if (!js_NewNumberValue(cx, d, &v)) {
-        cx->weakRoots.newborn[GCX_OBJECT] = NULL;
-        return NULL;
-    }
-    OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, v);
-    return obj;
-}
-
 JSString *
 js_NumberToString(JSContext *cx, jsdouble d)
 {

@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'package-001.js';
+
 /**
    File Name:      package-001.js
    Description:
@@ -117,37 +119,37 @@ test_array[i] = new TestValue(  "Packages.javax.javascript.examples" );
 i++;
 
 for ( i = 0; i < java_array.length; i++ ) {
-    CompareValues( java_array[i], test_array[i] );
+  CompareValues( java_array[i], test_array[i] );
 
 }
 
 test();
 function CompareValues( javaval, testval ) {
-    //  Check typeof, which should be E_TYPE
-    new TestCase( SECTION,
-		  "typeof (" + testval.description +")",
-		  testval.type,
-		  javaval.type );
+  //  Check typeof, which should be E_TYPE
+  new TestCase( SECTION,
+		"typeof (" + testval.description +")",
+		testval.type,
+		javaval.type );
 
-    //  Check JavaScript class, which should be E_JSCLASS + the package name
-    new TestCase( SECTION,
-		  "(" + testval.description +").getJSClass()",
-		  testval.jsclass,
-		  javaval.jsclass );
+  //  Check JavaScript class, which should be E_JSCLASS + the package name
+  new TestCase( SECTION,
+		"(" + testval.description +").getJSClass()",
+		testval.jsclass,
+		javaval.jsclass );
 }
 function JavaValue( value ) {
-    this.value  = value;
-    this.type   = typeof value;
-    this.jsclass = value +""
-	return this;
+  this.value  = value;
+  this.type   = typeof value;
+  this.jsclass = value +""
+    return this;
 }
 function TestValue( description ) {
-    this.packagename = (description.substring(0, "Packages.".length) ==
-			"Packages.") ? description.substring("Packages.".length, description.length ) :
-        description;
+  this.packagename = (description.substring(0, "Packages.".length) ==
+		      "Packages.") ? description.substring("Packages.".length, description.length ) :
+    description;
 
-    this.description = description;
-    this.type =  E_TYPE;
-    this.jsclass = E_JSCLASS +  this.packagename +"]";
-    return this;
+  this.description = description;
+  this.type =  E_TYPE;
+  this.jsclass = E_JSCLASS +  this.packagename +"]";
+  return this;
 }

@@ -65,6 +65,7 @@
 #include "nsInstallResources.h"
 #include "nsIProxyObjectManager.h"
 #include "nsIWindowWatcher.h"
+#include "nsIAuthPrompt.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsDirectoryService.h"
@@ -1151,6 +1152,22 @@ nsXPInstallManager::OnStatus(nsIRequest* request, nsISupports *ctxt,
 NS_IMETHODIMP
 nsXPInstallManager::GetInterface(const nsIID & eventSinkIID, void* *_retval)
 {
+    if (eventSinkIID.Equals(NS_GET_IID(nsIAuthPrompt))) {    
+        *_retval = nsnull;
+ 
+        nsresult rv;
+        nsCOMPtr<nsIWindowWatcher> ww(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
+        NS_ENSURE_SUCCESS(rv, rv);
+ 
+        nsCOMPtr<nsIAuthPrompt> prompt;
+        rv = ww->GetNewAuthPrompter(nsnull, getter_AddRefs(prompt));
+        NS_ENSURE_SUCCESS(rv, rv);
+ 
+        nsIAuthPrompt *p = prompt.get();
+        NS_ADDREF(p);
+        *_retval = p;
+        return NS_OK;
+    }
     return QueryInterface(eventSinkIID, (void**)_retval);
 }
 

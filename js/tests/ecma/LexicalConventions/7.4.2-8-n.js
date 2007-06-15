@@ -36,35 +36,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '7.4.2-8-n.js';
+
 /**
-    File Name:          7.4.2-8-n.js
-    ECMA Section:       7.4.2
+   File Name:          7.4.2-8-n.js
+   ECMA Section:       7.4.2
 
-    Description:
-    The following tokens are ECMAScript keywords and may not be used as
-    identifiers in ECMAScript programs.
+   Description:
+   The following tokens are ECMAScript keywords and may not be used as
+   identifiers in ECMAScript programs.
 
-    Syntax
+   Syntax
 
-    Keyword :: one of
-     break          for         new         var
-     continue       function    return      void
-     delete         if          this        while
-     else           in          typeof      with
+   Keyword :: one of
+   break          for         new         var
+   continue       function    return      void
+   delete         if          this        while
+   else           in          typeof      with
 
-    This test verifies that the keyword cannot be used as an identifier.
-    Functioinal tests of the keyword may be found in the section corresponding
-    to the function of the keyword.
+   This test verifies that the keyword cannot be used as an identifier.
+   Functioinal tests of the keyword may be found in the section corresponding
+   to the function of the keyword.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 
 */
-    var SECTION = "7.4.2-8";
-    var VERSION = "ECMA_1";
-    startTest();
+var SECTION = "7.4.2-8";
+var VERSION = "ECMA_1";
+startTest();
 
-    writeHeaderToLog( SECTION + " Keywords");
+writeHeaderToLog( SECTION + " Keywords");
 
 DESCRIPTION = "var void = true";
 EXPECTED = "error";

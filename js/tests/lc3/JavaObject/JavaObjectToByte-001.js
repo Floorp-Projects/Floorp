@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'JavaObjectToByte-001.js';
+
 /* -*- Mode: java; tab-width: 8 -*-
  * Copyright (C) 1997, 1998 Netscape Communications Corporation,
  * All Rights Reserved.
@@ -59,7 +62,7 @@
 var SECTION = "JavaObject to boolean";
 var VERSION = "1_4";
 var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-SECTION;
+  SECTION;
 var BUGNUMBER = "335589";
 
 startTest();
@@ -80,128 +83,128 @@ var i = 0;
 
 
 a[i++] = new TestObject (
-    "dt.PUB_DOUBLE_REPRESENTATION = 0.5 ;"+
-    "dt.setByte( dt )",
-    "dt.PUB_BYTE",
-    "dt.getByte()",
-    "typeof dt.getByte()",
-    0,
-    "number" );
+  "dt.PUB_DOUBLE_REPRESENTATION = 0.5 ;"+
+  "dt.setByte( dt )",
+  "dt.PUB_BYTE",
+  "dt.getByte()",
+  "typeof dt.getByte()",
+  0,
+  "number" );
 
 a[i++] = new TestObject (
-    "dt.PUB_DOUBLE_REPRESENTATION = -0.5;"+
-    "dt.setByte( dt )",
-    "dt.PUB_BYTE",
-    "dt.getByte()",
-    "typeof dt.getByte()",
-    0,
-    "number" );
+  "dt.PUB_DOUBLE_REPRESENTATION = -0.5;"+
+  "dt.setByte( dt )",
+  "dt.PUB_BYTE",
+  "dt.getByte()",
+  "typeof dt.getByte()",
+  0,
+  "number" );
 
 a[i++] = new TestObject (
-    "dt.PUB_DOUBLE_REPRESENTATION = 0.5;"+
-    "dt.setByte( dt )",
-    "dt.PUB_BYTE",
-    "dt.getByte()",
-    "typeof dt.getByte()",
-    0,
-    "number" );
+  "dt.PUB_DOUBLE_REPRESENTATION = 0.5;"+
+  "dt.setByte( dt )",
+  "dt.PUB_BYTE",
+  "dt.getByte()",
+  "typeof dt.getByte()",
+  0,
+  "number" );
 
 a[i++] = new TestObject (
-    "dt.PUB_DOUBLE_REPRESENTATION = -0.4;"+
-    "dt.setByte( dt )",
-    "dt.PUB_BYTE",
-    "dt.getByte()",
-    "typeof dt.getByte()",
-    0,
-    "number" );
+  "dt.PUB_DOUBLE_REPRESENTATION = -0.4;"+
+  "dt.setByte( dt )",
+  "dt.PUB_BYTE",
+  "dt.getByte()",
+  "typeof dt.getByte()",
+  0,
+  "number" );
 
 a[i++] = new TestObject (
-    "dt.PUB_DOUBLE_REPRESENTATION = 0.6;"+
-    "dt.setByte( dt )",
-    "dt.PUB_BYTE",
-    "dt.getByte()",
-    "typeof dt.getByte()",
-    0,
-    "number" );
+  "dt.PUB_DOUBLE_REPRESENTATION = 0.6;"+
+  "dt.setByte( dt )",
+  "dt.PUB_BYTE",
+  "dt.getByte()",
+  "typeof dt.getByte()",
+  0,
+  "number" );
 
 a[i++] = new TestObject (
-    "dt.PUB_DOUBLE_REPRESENTATION = -0.6;"+
-    "dt.setByte( dt )",
-    "dt.PUB_BYTE",
-    "dt.getByte()",
-    "typeof dt.getByte()",
-    0,
-    "number" );
+  "dt.PUB_DOUBLE_REPRESENTATION = -0.6;"+
+  "dt.setByte( dt )",
+  "dt.PUB_BYTE",
+  "dt.getByte()",
+  "typeof dt.getByte()",
+  0,
+  "number" );
 
 a[i++] = new TestObject (
-    "dt.PUB_DOUBLE_REPRESENTATION = "+Math.PI+";"+
-    "dt.setByte( dt )",
-    "dt.PUB_BYTE",
-    "dt.getByte()",
-    "typeof dt.getByte()",
-    3,
-    "number" );
+  "dt.PUB_DOUBLE_REPRESENTATION = "+Math.PI+";"+
+  "dt.setByte( dt )",
+  "dt.PUB_BYTE",
+  "dt.getByte()",
+  "typeof dt.getByte()",
+  3,
+  "number" );
 
 a[i++] = new TestObject (
-    "dt.PUB_DOUBLE_REPRESENTATION = -" +Math.PI+";"+
-    "dt.setByte( dt )",
-    "dt.PUB_BYTE",
-    "dt.getByte()",
-    "typeof dt.getByte()",
-    -3,
-    "number" );
+  "dt.PUB_DOUBLE_REPRESENTATION = -" +Math.PI+";"+
+  "dt.setByte( dt )",
+  "dt.PUB_BYTE",
+  "dt.getByte()",
+  "typeof dt.getByte()",
+  -3,
+  "number" );
 
 a[i++] = new TestObject (
-    "dt.PUB_DOUBLE_REPRESENTATION = 127;"+
-    "dt.setByte( dt )",
-    "dt.PUB_BYTE",
-    "dt.getByte()",
-    "typeof dt.getByte()",
-    127,
-    "number" );
+  "dt.PUB_DOUBLE_REPRESENTATION = 127;"+
+  "dt.setByte( dt )",
+  "dt.PUB_BYTE",
+  "dt.getByte()",
+  "typeof dt.getByte()",
+  127,
+  "number" );
 
 a[i++] = new TestObject (
-    "dt.PUB_DOUBLE_REPRESENTATION = -128;"+
-    "dt.setByte( dt )",
-    "dt.PUB_BYTE",
-    "dt.getByte()",
-    "typeof dt.getByte()",
-    -128,
-    "number" );
+  "dt.PUB_DOUBLE_REPRESENTATION = -128;"+
+  "dt.setByte( dt )",
+  "dt.PUB_BYTE",
+  "dt.getByte()",
+  "typeof dt.getByte()",
+  -128,
+  "number" );
 
 a[i++] = new TestObject (
-    "dt.PUB_DOUBLE_REPRESENTATION = -128.5;"+
-    "dt.setByte( dt )",
-    "dt.PUB_BYTE",
-    "dt.getByte()",
-    "typeof dt.getByte()",
-    -128,
-    "number" );
+  "dt.PUB_DOUBLE_REPRESENTATION = -128.5;"+
+  "dt.setByte( dt )",
+  "dt.PUB_BYTE",
+  "dt.getByte()",
+  "typeof dt.getByte()",
+  -128,
+  "number" );
 
 a[i++] = new TestObject (
-    "dt.PUB_DOUBLE_REPRESENTATION = 127.5;"+
-    "dt.setByte( dt )",
-    "dt.PUB_BYTE",
-    "dt.getByte()",
-    "typeof dt.getByte()",
-    127,
-    "number" );
+  "dt.PUB_DOUBLE_REPRESENTATION = 127.5;"+
+  "dt.setByte( dt )",
+  "dt.PUB_BYTE",
+  "dt.getByte()",
+  "typeof dt.getByte()",
+  127,
+  "number" );
 
 for ( i = 0; i < a.length; i++ ) {
-    new TestCase(
-	a[i].description +"; "+ a[i].javaFieldName,
-	a[i].jsValue,
-	a[i].javaFieldValue );
+  new TestCase(
+    a[i].description +"; "+ a[i].javaFieldName,
+    a[i].jsValue,
+    a[i].javaFieldValue );
 
-    new TestCase(
-	a[i].description +"; " + a[i].javaMethodName,
-	a[i].jsValue,
-	a[i].javaMethodValue );
+  new TestCase(
+    a[i].description +"; " + a[i].javaMethodName,
+    a[i].jsValue,
+    a[i].javaMethodValue );
 
-    new TestCase(
-	a[i].javaTypeName,
-	a[i].jsType,
-	a[i].javaTypeValue );
+  new TestCase(
+    a[i].javaTypeName,
+    a[i].jsType,
+    a[i].javaTypeValue );
 
 }
 
@@ -210,16 +213,16 @@ test();
 function TestObject( description, javaField, javaMethod, javaType,
 		     jsValue, jsType )
 {
-    eval (description );
+  eval (description );
 
-    this.description = description;
-    this.javaFieldName = javaField;
-    this.javaFieldValue = eval( javaField );
-    this.javaMethodName = javaMethod;
-    this.javaMethodValue = eval( javaMethod );
-    this.javaTypeName = javaType,
-	this.javaTypeValue = typeof this.javaFieldValue;
+  this.description = description;
+  this.javaFieldName = javaField;
+  this.javaFieldValue = eval( javaField );
+  this.javaMethodName = javaMethod;
+  this.javaMethodValue = eval( javaMethod );
+  this.javaTypeName = javaType,
+    this.javaTypeValue = typeof this.javaFieldValue;
 
-    this.jsValue   = jsValue;
-    this.jsType      = jsType;
+  this.jsValue   = jsValue;
+  this.jsType      = jsType;
 }

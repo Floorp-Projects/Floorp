@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 16 May 2001
  *
  * SUMMARY: Regression test for bug 76054
@@ -43,9 +45,10 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=78706
  * All String HTML methods should be LOWER case -
  */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+var gTestfile = 'regress-76054.js';
 var UBound = 0;
-var bug = 76054;
+var BUGNUMBER = 76054;
 var summary = 'Testing that String HTML methods produce all lower-case';
 var statprefix = 'Currently testing String.';
 var status = '';
@@ -139,9 +142,9 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
- 
+
   for (var i = 0; i < UBound; i++)
   {
     reportCompare(expectedvalues[i], actualvalues[i], getStatus(i));

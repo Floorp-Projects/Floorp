@@ -1,1 +1,1 @@
-// dummy file
+gTestsubsuite = 'Regress';

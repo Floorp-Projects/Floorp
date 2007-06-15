@@ -138,9 +138,8 @@ nsContainerFrame::AppendFrames(nsIAtom*  aListName,
     if (nsnull == aListName)
 #endif
     {
-      AddStateBits(NS_FRAME_IS_DIRTY);
       PresContext()->PresShell()->
-        FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+        FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
     }
   }
   return NS_OK;
@@ -171,10 +170,8 @@ nsContainerFrame::InsertFrames(nsIAtom*  aListName,
     if (nsnull == aListName)
 #endif
     {
-      // Ask the parent frame to reflow me.
-      AddStateBits(NS_FRAME_IS_DIRTY);
       PresContext()->PresShell()->
-        FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+        FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
     }
   }
   return NS_OK;
@@ -229,10 +226,8 @@ nsContainerFrame::RemoveFrame(nsIAtom*  aListName,
     }
 
     if (generateReflowCommand) {
-      // Ask the parent frame to reflow me.
-      AddStateBits(NS_FRAME_IS_DIRTY);
       PresContext()->PresShell()->
-        FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+        FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
     }
   }
 
@@ -399,39 +394,6 @@ nsContainerFrame::PositionFrameView(nsIFrame* aKidFrame)
   vm->MoveViewTo(view, pt.x, pt.y);
 }
 
-// This code is duplicated in nsDisplayList.cpp. We'll remove the duplication
-// when we remove all this view sync code.
-static PRBool
-NonZeroStyleCoord(const nsStyleCoord& aCoord) {
-  switch (aCoord.GetUnit()) {
-  case eStyleUnit_Percent:
-    return aCoord.GetPercentValue() > 0;
-  case eStyleUnit_Coord:
-    return aCoord.GetCoordValue() > 0;
-  case eStyleUnit_Null:
-    return PR_FALSE;
-  default:
-    return PR_TRUE;
-  }
-}
-
-static PRBool
-HasNonZeroBorderRadius(nsStyleContext* aStyleContext) {
-  const nsStyleBorder* border = aStyleContext->GetStyleBorder();
-
-  nsStyleCoord coord;
-  border->mBorderRadius.GetTop(coord);
-  if (NonZeroStyleCoord(coord)) return PR_TRUE;
-  border->mBorderRadius.GetRight(coord);
-  if (NonZeroStyleCoord(coord)) return PR_TRUE;
-  border->mBorderRadius.GetBottom(coord);
-  if (NonZeroStyleCoord(coord)) return PR_TRUE;
-  border->mBorderRadius.GetLeft(coord);
-  if (NonZeroStyleCoord(coord)) return PR_TRUE;
-
-  return PR_FALSE;
-}
-
 static void
 SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
                                          nsIFrame*        aFrame,
@@ -446,26 +408,10 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
   PRBool hasBG =
     nsCSSRendering::FindBackground(aPresContext, aFrame, &bg, &isCanvas);
 
-  const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
-  // If the frame has a solid background color, 'background-clip:border',
-  // and it's a kind of frame that paints its background, and rounded borders aren't
-  // clipping the background, then it's opaque.
-  // If the frame has a native theme appearance then its background
-  // color is actually not relevant.
-  PRBool  viewHasTransparentContent =
-    !(hasBG && !(bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) &&
-      !display->mAppearance && bg->mBackgroundClip == NS_STYLE_BG_CLIP_BORDER &&
-      !HasNonZeroBorderRadius(aStyleContext));
-
   if (isCanvas) {
     nsIView* rootView;
     vm->GetRootView(rootView);
     nsIView* rootParent = rootView->GetParent();
-    if (!rootParent) {
-      // We're the root of a view manager hierarchy. We will have to
-      // paint something. NOTE: this can be overridden below.
-      viewHasTransparentContent = PR_FALSE;
-    }
 
     nsIDocument *doc = aPresContext->PresShell()->GetDocument();
     if (doc) {
@@ -478,13 +424,11 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
         // don't proceed unless this is the root view
         // (sometimes the non-root-view is a canvas)
         if (aView->HasWidget() && aView == rootView) {
-          viewHasTransparentContent = hasBG && (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
-          aView->GetWidget()->SetWindowTranslucency(viewHasTransparentContent);
+          aView->GetWidget()->SetWindowTranslucency(nsLayoutUtils::FrameHasTransparency(aFrame));
         }
       }
     }
   }
-  // XXX we should also set widget transparency for XUL popups
 }
 
 void

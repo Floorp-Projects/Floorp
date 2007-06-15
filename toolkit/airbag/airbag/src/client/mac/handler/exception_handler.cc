@@ -32,6 +32,7 @@
 
 #include "client/mac/handler/exception_handler.h"
 #include "client/mac/handler/minidump_generator.h"
+#include "common/mac/macho_utilities.h"
 
 namespace google_breakpad {
 
@@ -133,6 +134,7 @@ ExceptionHandler::ExceptionHandler(const string &dump_path,
       filter_(filter),
       callback_(callback),
       callback_context_(callback_context),
+      directCallback_(NULL),
       handler_thread_(NULL),
       handler_port_(0),
       previous_(NULL),
@@ -142,6 +144,27 @@ ExceptionHandler::ExceptionHandler(const string &dump_path,
       use_minidump_write_mutex_(false) {
   // This will update to the ID and C-string pointers
   set_dump_path(dump_path);
+  MinidumpGenerator::GatherSystemInformation();
+  Setup(install_handler);
+}
+
+// special constructor if we want to bypass minidump writing and
+// simply get a callback with the exception information
+ExceptionHandler::ExceptionHandler(DirectCallback callback,
+                                   void *callback_context,
+                                   bool install_handler)
+    : dump_path_(),
+      filter_(NULL),
+      callback_(NULL),
+      callback_context_(callback_context),
+      directCallback_(callback),
+      handler_thread_(NULL),
+      handler_port_(0),
+      previous_(NULL),
+      installed_exception_handler_(false),
+      is_in_teardown_(false),
+      last_minidump_write_result_(false),
+      use_minidump_write_mutex_(false) {
   MinidumpGenerator::GatherSystemInformation();
   Setup(install_handler);
 }
@@ -186,36 +209,47 @@ bool ExceptionHandler::WriteMinidumpWithException(int exception_type,
                                                   int exception_code,
                                                   mach_port_t thread_name) {
   bool result = false;
-  string minidump_id;
 
-  // Putting the MinidumpGenerator in its own context will ensure that the
-  // destructor is executed, closing the newly created minidump file.
-  if (!dump_path_.empty()) {
-    MinidumpGenerator md;
-    if (exception_type && exception_code) {
-      // If this is a real exception, give the filter (if any) a chance to
-      // decided if this should be sent
-      if (filter_ && !filter_(callback_context_))
-        return false;
-
-      md.SetExceptionInformation(exception_type, exception_code, thread_name);
-    }
-
-    result = md.Write(next_minidump_path_c_);
-  }
-
-  // Call user specified callback (if any)
-  if (callback_) {
-    // If the user callback returned true and we're handling an exception
-    // (rather than just writing out the file), then we should exit without
-    // forwarding the exception to the next handler.
-    if (callback_(dump_path_c_, next_minidump_id_c_, callback_context_, 
-                  result)) {
+  if (directCallback_) {
+    if (directCallback_(callback_context_,
+                        exception_type,
+                        exception_code,
+                        thread_name) ) {
       if (exception_type && exception_code)
-        exit(exception_type);
+        _exit(exception_type);
+    }
+  } else {
+    string minidump_id;
+
+    // Putting the MinidumpGenerator in its own context will ensure that the
+    // destructor is executed, closing the newly created minidump file.
+    if (!dump_path_.empty()) {
+      MinidumpGenerator md;
+      if (exception_type && exception_code) {
+        // If this is a real exception, give the filter (if any) a chance to
+        // decided if this should be sent
+        if (filter_ && !filter_(callback_context_))
+          return false;
+
+        md.SetExceptionInformation(exception_type, exception_code, thread_name);
+      }
+
+      result = md.Write(next_minidump_path_c_);
+    }
+
+    // Call user specified callback (if any)
+    if (callback_) {
+      // If the user callback returned true and we're handling an exception
+      // (rather than just writing out the file), then we should exit without
+      // forwarding the exception to the next handler.
+      if (callback_(dump_path_c_, next_minidump_id_c_, callback_context_, 
+                    result)) {
+        if (exception_type && exception_code)
+          _exit(exception_type);
+      }
     }
   }
-
+  
   return result;
 }
 
@@ -257,7 +291,7 @@ kern_return_t ForwardException(mach_port_t task, mach_port_t failed_thread,
   thread_state_flavor_t target_flavor = current.flavors[found];
 
   mach_msg_type_number_t thread_state_count = THREAD_STATE_MAX;
-  thread_state_data_t thread_state;
+  breakpad_thread_state_data_t thread_state;
   switch (target_behavior) {
     case EXCEPTION_DEFAULT:
       result = exception_raise(target_port, failed_thread, task, exception,
@@ -326,14 +360,11 @@ void *ExceptionHandler::WaitForMessage(void *exception_handler_class) {
                                     MACH_RCV_MSG | MACH_RCV_LARGE, 0,
                                     sizeof(receive), self->handler_port_,
                                     MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
-
     if (result == KERN_SUCCESS) {
       // Uninstall our handler so that we don't get in a loop if the process of
       // writing out a minidump causes an exception.  However, if the exception
       // was caused by a fork'd process, don't uninstall things
       if (receive.task.name == mach_task_self())
-        self->UninstallHandler();
-      
       // If the actual exception code is zero, then we're calling this handler
       // in a way that indicates that we want to either exit this thread or
       // generate a minidump
@@ -342,6 +373,8 @@ void *ExceptionHandler::WaitForMessage(void *exception_handler_class) {
       // to avoid misleading stacks.  If appropriate they will be resumed
       // afterwards.
       if (!receive.exception) {
+        self->UninstallHandler(false);
+      
         if (self->is_in_teardown_)
           return NULL;
 
@@ -356,6 +389,8 @@ void *ExceptionHandler::WaitForMessage(void *exception_handler_class) {
         if (self->use_minidump_write_mutex_)
           pthread_mutex_unlock(&self->minidump_write_mutex_);
       } else {
+        self->UninstallHandler(true);
+
         // When forking a child process with the exception handler installed,
         // if the child crashes, it will send the exception back to the parent
         // process.  The check for task == self_task() ensures that only 
@@ -419,7 +454,7 @@ bool ExceptionHandler::InstallHandler() {
   return installed_exception_handler_;
 }
 
-bool ExceptionHandler::UninstallHandler() {
+bool ExceptionHandler::UninstallHandler(bool in_exception) {
   kern_return_t result = KERN_SUCCESS;
   
   if (installed_exception_handler_) {
@@ -435,7 +470,11 @@ bool ExceptionHandler::UninstallHandler() {
         return false;
     }
     
-    delete previous_;
+    // this delete should NOT happen if an exception just occurred!
+    if (!in_exception) {
+      delete previous_; 
+    }
+    
     previous_ = NULL;
     installed_exception_handler_ = false;
   }
@@ -479,7 +518,7 @@ bool ExceptionHandler::Teardown() {
   kern_return_t result = KERN_SUCCESS;
   is_in_teardown_ = true;
 
-  if (!UninstallHandler())
+  if (!UninstallHandler(false))
     return false;
   
   // Send an empty message so that the handler_thread exits

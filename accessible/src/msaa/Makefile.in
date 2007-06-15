@@ -75,6 +75,20 @@ CPPSRCS = \
   nsHTMLWin32ObjectAccessible.cpp \
   nsXULMenuAccessibleWrap.cpp \
   nsXULTreeAccessibleWrap.cpp \
+  nsHyperTextAccessibleWrap.cpp \
+  nsHTMLImageAccessibleWrap.cpp \
+  nsHTMLTableAccessibleWrap.cpp \
+  nsAccessibleRelationWrap.cpp \
+  nsApplicationAccessibleWrap.cpp \
+  CAccessibleAction.cpp \
+  CAccessibleImage.cpp \
+  CAccessibleComponent.cpp \
+  CAccessibleText.cpp \
+  CAccessibleEditableText.cpp \
+  CAccessibleHyperlink.cpp \
+  CAccessibleHypertext.cpp \
+  CAccessibleTable.cpp \
+  CAccessibleValue.cpp \
   $(NULL)
 
 EXPORTS = \
@@ -86,6 +100,20 @@ EXPORTS = \
   nsHTMLWin32ObjectAccessible.h \
   nsXULMenuAccessibleWrap.h \
   nsXULTreeAccessibleWrap.h \
+  nsHyperTextAccessibleWrap.h \
+  nsHTMLImageAccessibleWrap.h \
+  nsHTMLTableAccessibleWrap.h \
+  nsAccessibleRelationWrap.h \
+  nsApplicationAccessibleWrap.h \
+  CAccessibleAction.h \
+  CAccessibleImage.h \
+  CAccessibleComponent.h \
+  CAccessibleText.h \
+  CAccessibleEditableText.h \
+  CAccessibleHyperlink.h \
+  CAccessibleHypertext.h \
+  CAccessibleTable.h \
+  CAccessibleValue.h \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

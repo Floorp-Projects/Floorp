@@ -41,7 +41,7 @@
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsGkAtoms.h"
 #include "nsSVGUtils.h"
-#include "nsSVGGraphicElement.h"
+#include "nsSVGClipPathElement.h"
 #include "gfxContext.h"
 #include "nsIDOMSVGRect.h"
 
@@ -198,9 +198,10 @@ nsSVGClipPathFrame::GetCanvasTM()
 {
   NS_ASSERTION(mClipParentMatrix, "null parent matrix");
 
-  nsSVGGraphicElement *element =
-    NS_STATIC_CAST(nsSVGGraphicElement*, mContent);
-  nsCOMPtr<nsIDOMSVGMatrix> localTM = element->GetLocalTransformMatrix();
+  nsSVGClipPathElement *clipPath = NS_STATIC_CAST(nsSVGClipPathElement*,
+                                                  mContent);
+
+  nsCOMPtr<nsIDOMSVGMatrix> localTM = clipPath->GetLocalTransformMatrix();
 
   nsCOMPtr<nsIDOMSVGMatrix> canvasTM;
 
@@ -211,10 +212,7 @@ nsSVGClipPathFrame::GetCanvasTM()
 
   /* object bounding box? */
   PRUint16 units;
-  nsCOMPtr<nsIDOMSVGClipPathElement> path = do_QueryInterface(mContent);
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> aEnum;
-  path->GetClipPathUnits(getter_AddRefs(aEnum));
-  aEnum->GetAnimVal(&units);
+  clipPath->mClipPathUnits->GetAnimVal(&units);
   
   if (mClipParent &&
       units == nsIDOMSVGClipPathElement::SVG_CPUNITS_OBJECTBOUNDINGBOX) {

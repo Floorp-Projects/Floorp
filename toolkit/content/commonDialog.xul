@@ -16,7 +16,7 @@
         buttonpack="center"
         style="min-width: 29em; min-height: 8.5em; -moz-user-focus: ignore;"> 
     
-  <script type="application/x-javascript" src="chrome://global/content/commonDialog.js"/>
+  <script type="application/javascript" src="chrome://global/content/commonDialog.js"/>
 
   <hbox flex="1">
     <hbox align="start">
@@ -64,5 +64,5 @@
        So, by calling this inline, we guarantee the textboxes and checkboxes 
        above will have their bindings before initButtons is called, and the
        dialog will be intrinsically sized correctly. -->
-  <script type="application/x-javascript">showControls();</script>
+  <script type="application/javascript">showControls();</script>
 </dialog>

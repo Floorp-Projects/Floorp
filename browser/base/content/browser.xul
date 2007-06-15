@@ -397,14 +397,12 @@
                        observes="viewHistorySidebar" label="&historyButton.label;"
                        tooltiptext="&historyButton.tooltip;"/>
 
-#ifndef MOZ_PLACES_BOOKMARKS
         <toolbarbutton id="bookmarks-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        observes="viewBookmarksSidebar"
                        tooltiptext="&bookmarksButton.tooltip;"
                        ondragover="nsDragAndDrop.dragOver(event, bookmarksButtonObserver);"
                        ondragdrop="nsDragAndDrop.drop(event, bookmarksButtonObserver);"
                        ondragexit="nsDragAndDrop.dragExit(event, bookmarksButtonObserver);"/>
-#endif
 
         <toolbarbutton id="new-tab-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        label="&tabCmd.label;"

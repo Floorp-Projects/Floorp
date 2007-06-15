@@ -36,13 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var bug = 354151;
+gTestfile = 'regress-354151-02.js';
+
+var BUGNUMBER = 354151;
 var summary = 'Bad assumptions about Array elements';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
-printStatus (summary);
+printBugNumber(BUGNUMBER);
+START(summary);
 
 var xml = <tag xmlns:n="uri:1" xmlns:n2="uri:2" n:a="1" n2:a="1"/>;
 

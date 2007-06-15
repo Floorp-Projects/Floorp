@@ -131,7 +131,7 @@ nsSVGTextElement::Init()
   // DOM property: nsIDOMSVGTextPositioningElement::x, #IMPLIED attrib: x
   {
     nsCOMPtr<nsIDOMSVGLengthList> lengthList;
-    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this);
+    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this, nsSVGUtils::X);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mX),
                                      lengthList);
@@ -143,7 +143,7 @@ nsSVGTextElement::Init()
   // DOM property: nsIDOMSVGTextPositioningElement::y, #IMPLIED attrib: y
   {
     nsCOMPtr<nsIDOMSVGLengthList> lengthList;
-    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this);
+    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this, nsSVGUtils::Y);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mY),
                                      lengthList);
@@ -155,7 +155,7 @@ nsSVGTextElement::Init()
   // DOM property: nsIDOMSVGTextPositioningElement::dx, #IMPLIED attrib: dx
   {
     nsCOMPtr<nsIDOMSVGLengthList> lengthList;
-    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this);
+    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this, nsSVGUtils::X);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mdX),
                                      lengthList);
@@ -167,7 +167,7 @@ nsSVGTextElement::Init()
   // DOM property: nsIDOMSVGTextPositioningElement::dy, #IMPLIED attrib: dy
   {
     nsCOMPtr<nsIDOMSVGLengthList> lengthList;
-    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this);
+    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this, nsSVGUtils::Y);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mdY),
                                      lengthList);

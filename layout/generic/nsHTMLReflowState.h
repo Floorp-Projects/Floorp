@@ -188,9 +188,36 @@ private:
   void ComputePadding(nscoord aContainingBlockWidth);
 
 protected:
+
+  /*
+   * Convert nsStyleCoord to nscoord when percentages depend on the
+   * containing block width.
+   */
+  // XXX Make aResult a return value
   inline void ComputeWidthDependentValue(nscoord aContainingBlockWidth,
                                          const nsStyleCoord& aCoord,
                                          nscoord& aResult);
+
+  /*
+   * Convert nsStyleCoord to nscoord when percentages depend on the
+   * containing block width, and enumerated values are for width,
+   * min-width, or max-width.  Does not handle auto widths.
+   */
+  inline nscoord ComputeWidthValue(nscoord aContainingBlockWidth,
+                                   nscoord aContentEdgeToBoxSizing,
+                                   nscoord aBoxSizingToMarginEdge,
+                                   const nsStyleCoord& aCoord);
+  // same as previous, but using mComputedBorderPadding, mComputedPadding,
+  // and mComputedMargin
+  nscoord ComputeWidthValue(nscoord aContainingBlockWidth,
+                            PRUint8 aBoxSizing,
+                            const nsStyleCoord& aCoord);
+
+  /*
+   * Convert nsStyleCoord to nscoord when percentages depend on the
+   * containing block height.
+   */
+  // XXX Make aResult a return value
   inline void ComputeHeightDependentValue(nscoord aContainingBlockHeight,
                                           const nsStyleCoord& aCoord,
                                           nscoord& aResult);
@@ -379,12 +406,15 @@ public:
 
   /**
    * Calculate the raw line-height property for the given frame. The return
-   * value, if line-height was applied and is valid will be >= 0. Otherwise,
-   * the return value will be <0 which is illegal (CSS2 spec: section 10.8.1).
+   * value will be >= 0.
    */
-  static nscoord CalcLineHeight(nsPresContext* aPresContext,
-                                nsIRenderingContext* aRenderingContext,
+  static nscoord CalcLineHeight(nsIRenderingContext* aRenderingContext,
                                 nsIFrame* aFrame);
+  /**
+   * Same as above, but doesn't need quite as much info.
+   */
+  static nscoord CalcLineHeight(nsStyleContext* aStyleContext,
+                                nsIDeviceContext* aDeviceContext);
 
   void InitFrameType();
 
@@ -462,7 +492,9 @@ protected:
                            nscoord                  aContainingBlockHeight,
                            const nsHTMLReflowState* aContainingBlockRS);
 
-  nscoord CalculateHorizBorderPaddingMargin(nscoord aContainingBlockWidth);
+  void CalculateHorizBorderPaddingMargin(nscoord aContainingBlockWidth,
+                                         nscoord* aInsideBoxSizing,
+                                         nscoord* aOutsideBoxSizing);
 
 };
 

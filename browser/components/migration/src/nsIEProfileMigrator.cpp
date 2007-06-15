@@ -79,8 +79,8 @@
 #include "nsIGlobalHistory.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIURI.h"
-#include "nsIPasswordManager.h"
-#include "nsIPasswordManagerInternal.h"
+#include "nsILoginManager.h"
+#include "nsILoginInfo.h"
 #include "nsIFormHistory.h"
 #include "nsIRDFService.h"
 #include "nsIRDFContainer.h"
@@ -755,7 +755,7 @@ static GUID IEPStoreSiteAuthGUID = { 0x5e7e8100, 0x9138, 0x11d1, { 0x94, 0x5a, 0
 // username as a value in each such subkey's value list. If we have a match, 
 // we assume that the subkey (with its uniquifier prefix) is a login field. 
 //
-// With this information, we call Password Manager's "AddUserFull" method 
+// With this information, we call Password Manager's "AddLogin" method 
 // providing this detail. We don't need to provide the password field name, 
 // we have no means of retrieving this info from IE, and the Password Manager
 // knows to hunt for a password field near the login field if none is specified.
@@ -808,7 +808,7 @@ nsIEProfileMigrator::CopyPasswords(PRBool aReplace)
 // We bail out if that's the case, because we can't handle those yet.
 // However, if everything is all and well, we convert the itemName to a realm
 // string that the password manager can work with and save this login
-// via AddUser.
+// via AddLogin.
 
 nsresult
 nsIEProfileMigrator::MigrateSiteAuthSignons(IPStore* aPStore)
@@ -817,7 +817,7 @@ nsIEProfileMigrator::MigrateSiteAuthSignons(IPStore* aPStore)
 
   NS_ENSURE_ARG_POINTER(aPStore);
 
-  nsCOMPtr<nsIPasswordManager> pwmgr(do_GetService("@mozilla.org/passwordmanager;1"));
+  nsCOMPtr<nsILoginManager> pwmgr(do_GetService("@mozilla.org/login-manager;1"));
   if (!pwmgr)
     return NS_OK;
 
@@ -843,22 +843,33 @@ nsIEProfileMigrator::MigrateSiteAuthSignons(IPStore* aPStore)
             break;
           }
 
-        nsAutoString realm(itemName);
-        if (Substring(realm, 0, 6).EqualsLiteral("DPAPI:")) // often FTP logins
+        nsAutoString host(itemName), realm;
+        if (Substring(host, 0, 6).EqualsLiteral("DPAPI:")) // often FTP logins
           password = NULL; // We can't handle these yet
 
         if (password) {
           int idx;
-          idx = realm.FindChar('/');
+          idx = host.FindChar('/');
           if (idx) {
-            realm.Replace(idx, 1, NS_LITERAL_STRING(" ("));
-            realm.Append(')');
+            realm.Assign(Substring(host, idx));
+            host.Assign(Substring(host, 0, idx));
           }
           // XXX: username and password are always ASCII in IPStore?
           // If not, are they in UTF-8 or the default codepage? (ref. bug 41489)
-          pwmgr->AddUser(NS_ConvertUTF16toUTF8(realm),
-                         NS_ConvertASCIItoUTF16((char *)data),
-                         NS_ConvertASCIItoUTF16((char *)password));
+          nsresult rv;
+
+          nsCOMPtr<nsILoginInfo> aLogin (do_CreateInstance(
+                                           NS_LOGININFO_CONTRACTID, &rv));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          // nsStringAPI doesn't let us create void strings, so we won't
+          // use Init() here.
+          aLogin->SetHostname(host);
+          aLogin->SetHttpRealm(realm);
+          aLogin->SetUsername(NS_ConvertUTF8toUTF16((char *)data));
+          aLogin->SetPassword(NS_ConvertUTF8toUTF16((char *)password));
+
+          pwmgr->AddLogin(aLogin);
         }
         ::CoTaskMemFree(data);
       }
@@ -1000,7 +1011,7 @@ nsIEProfileMigrator::ResolveAndMigrateSignons(IPStore* aPStore, nsVoidArray* aSi
 void
 nsIEProfileMigrator::EnumerateUsernames(const nsAString& aKey, PRUnichar* aData, unsigned long aCount, nsVoidArray* aSignonsFound)
 {
-  nsCOMPtr<nsIPasswordManagerInternal> pwmgr(do_GetService("@mozilla.org/passwordmanager;1"));
+  nsCOMPtr<nsILoginManager> pwmgr(do_GetService("@mozilla.org/login-manager;1"));
   if (!pwmgr)
     return;
 
@@ -1018,7 +1029,16 @@ nsIEProfileMigrator::EnumerateUsernames(const nsAString& aKey, PRUnichar* aData,
         // Bingo! Found a username in the saved data for this item. Now, add a Signon.
         nsDependentString usernameStr(sd->user), passStr(sd->pass);
         nsDependentCString realm(sd->realm);
-        pwmgr->AddUserFull(realm, usernameStr, passStr, aKey, EmptyString());
+
+        nsresult rv;
+
+        nsCOMPtr<nsILoginInfo> aLogin (do_CreateInstance(NS_LOGININFO_CONTRACTID, &rv));
+        NS_ENSURE_SUCCESS(rv, /* */);
+
+        // XXX Init() needs to treat EmptyString()s the same as void strings, disable for now
+        //aLogin->Init(realm, EmptyString(), nsnull, usernameStr, passStr, aKey, EmptyString());
+
+        pwmgr->AddLogin(aLogin);
       }
     }
 
@@ -1224,6 +1244,16 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
   if (favoritesDirectory) {
     rv = ParseFavoritesFolder(favoritesDirectory, folder, bms, personalToolbarFolderName, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
+
+#ifdef MOZ_PLACES_BOOKMARKS
+    // after importing the favorites, 
+    // we need to set this pref so that on startup
+    // we don't blow away what we just imported
+    nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    NS_ENSURE_TRUE(pref, NS_ERROR_FAILURE);
+    rv = pref->SetBoolPref("browser.places.importBookmarksHTML", PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+#endif
   }
 
   return CopySmartKeywords(root);
@@ -1298,9 +1328,9 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
           }
 #ifdef MOZ_PLACES_BOOKMARKS
           PRInt64 id;
-          bms->InsertItem(keywordsFolder, uri,
-                          nsINavBookmarksService::DEFAULT_INDEX, &id);
-          bms->SetItemTitle(id, keyName);
+          bms->InsertBookmark(keywordsFolder, uri,
+                              nsINavBookmarksService::DEFAULT_INDEX, keyName,
+                              &id);
 #else
           nsCAutoString hostCStr;
           uri->GetHost(hostCStr);
@@ -1441,10 +1471,9 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
       rv = NS_NewFileURI(getter_AddRefs(bookmarkURI), localFile);
       NS_ENSURE_SUCCESS(rv, rv);
       PRInt64 id;
-      rv = aBookmarksService->InsertItem(aParentFolder, bookmarkURI,
-                                         nsINavBookmarksService::DEFAULT_INDEX, &id);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = aBookmarksService->SetItemTitle(id, bookmarkName);
+      rv = aBookmarksService->InsertBookmark(aParentFolder, bookmarkURI,
+                                             nsINavBookmarksService::DEFAULT_INDEX,
+                                             bookmarkName, &id);
       NS_ENSURE_SUCCESS(rv, rv);
 #else
       nsCAutoString spec;
@@ -1546,10 +1575,10 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
       rv = NS_NewURI(getter_AddRefs(resolvedURI), resolvedURL);
       NS_ENSURE_SUCCESS(rv, rv);
       PRInt64 id;
-      rv = aBookmarksService->InsertItem(aParentFolder, resolvedURI,
-                                         nsINavBookmarksService::DEFAULT_INDEX, &id);
+      rv = aBookmarksService->InsertBookmark(aParentFolder, resolvedURI,
+                                             nsINavBookmarksService::DEFAULT_INDEX,
+                                             name, &id);
       if (NS_FAILED(rv)) continue;
-      rv = aBookmarksService->SetItemTitle(id, name);
 #else
       nsCOMPtr<nsIRDFResource> bookmark;
       // As far as I can tell reading the MSDN API document,

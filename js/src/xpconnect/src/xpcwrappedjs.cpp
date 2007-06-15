@@ -49,7 +49,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsXPCWrappedJS)
 
 NS_IMETHODIMP
 NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
-   (nsISupports *s, nsCycleCollectionTraversalCallback &cb)
+   (void *p, nsCycleCollectionTraversalCallback &cb)
 {
     // REVIEW ME PLEASE: this is a very odd area and it's easy to get
     // it wrong. I'm not sure I got it right.
@@ -68,7 +68,8 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
     {
         // Put the nsCOMPtr in a local scope, to avoid messing up the refcount
         // below.
-        nsCOMPtr<nsIXPConnectWrappedJS> owner = do_QueryInterface(s, &rv);
+        nsCOMPtr<nsIXPConnectWrappedJS> owner =
+            do_QueryInterface(NS_STATIC_CAST(nsISupports*, p), &rv);
         if (NS_FAILED(rv))
             return rv;
 
@@ -112,7 +113,7 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
 }
 
 NS_IMETHODIMP
-NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Unlink(nsISupports *s)
+NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Unlink(void *p)
 {
     // NB: We might unlink our outgoing references in the future; for
     // now we do nothing. This is a harmless conservative behavior; it
@@ -156,7 +157,7 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     }
 
-    if ( aIID.Equals(NS_GET_IID(nsCycleCollectionParticipant)) ) {
+    if ( aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant)) ) {
         *aInstancePtr = & NS_CYCLE_COLLECTION_NAME(nsXPCWrappedJS);
         return NS_OK;
     }
@@ -216,17 +217,8 @@ nsXPCWrappedJS::AddRef(void)
 
     if(2 == cnt && IsValid())
     {
-        XPCCallContext ccx(NATIVE_CALLER);
-        if(ccx.IsValid()) {
-#ifdef GC_MARK_DEBUG
-            mGCRootName = JS_smprintf("nsXPCWrappedJS::mJSObj[%s,0x%p,0x%p]",
-                                      GetClass()->GetInterfaceName(),
-                                      this, mJSObj);
-            JS_AddNamedRoot(ccx.GetJSContext(), &mJSObj, mGCRootName);
-#else
-            JS_AddNamedRoot(ccx.GetJSContext(), &mJSObj, "nsXPCWrappedJS::mJSObj");
-#endif
-        }
+        XPCJSRuntime* rt = mClass->GetRuntime();
+        rt->AddWrappedJSRoot(this);
     }
 
     return cnt;
@@ -255,16 +247,7 @@ do_decrement:
     if(1 == cnt)
     {
         if(IsValid())
-        {
-            XPCJSRuntime* rt = mClass->GetRuntime();
-            if(rt) {
-                JS_RemoveRootRT(rt->GetJSRuntime(), &mJSObj);
-#ifdef GC_MARK_DEBUG
-                JS_smprintf_free(mGCRootName);
-                mGCRootName = nsnull;
-#endif
-            }
-        }
+            RemoveFromRootSet(nsXPConnect::GetRuntime()->GetJSRuntime());
 
         // If we are not the root wrapper or if we are not being used from a
         // weak reference, then this extra ref is not needed and we can let
@@ -275,6 +258,26 @@ do_decrement:
     }
     return cnt;
 }
+
+void
+nsXPCWrappedJS::TraceJS(JSTracer* trc)
+{
+    NS_ASSERTION(mRefCnt >= 2 && IsValid(), "must be strongly referenced");
+    JS_SET_TRACING_DETAILS(trc, PrintTraceName, this, 0);
+    JS_CallTracer(trc, mJSObj, JSTRACE_OBJECT);
+}
+
+#ifdef DEBUG
+// static
+void
+nsXPCWrappedJS::PrintTraceName(JSTracer* trc, char *buf, size_t bufsize)
+{
+    const nsXPCWrappedJS* self = NS_STATIC_CAST(const nsXPCWrappedJS*,
+                                                trc->debugPrintArg);
+    JS_smprintf(buf, bufsize, "nsXPCWrappedJS[%s,0x%p].mJSObj",
+                self->GetClass()->GetInterfaceName(), self);
+}
+#endif
 
 NS_IMETHODIMP
 nsXPCWrappedJS::GetWeakReference(nsIWeakReference** aInstancePtr)
@@ -424,9 +427,6 @@ nsXPCWrappedJS::nsXPCWrappedJS(XPCCallContext& ccx,
       mRoot(root ? root : this),
       mNext(nsnull),
       mOuter(root ? nsnull : aOuter)
-#ifdef GC_MARK_DEBUG
-      , mGCRootName(nsnull)
-#endif
 {
 #ifdef DEBUG_stats_jband
     static int count = 0;

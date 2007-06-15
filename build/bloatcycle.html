@@ -25,16 +25,17 @@ window.onload = function () {
 };
 function loadURL () {
     w.location.href = list[idx++];
-    if (list[idx]) {
+    if (idx < list.length) {
 	window.setTimeout(loadURL, interval);
     } else {
-    window.setTimeout("w.close();", interval);
-	window.setTimeout("window.close();", interval);
+	window.setTimeout("w.close();", interval);
+	window.setTimeout("window.close();", interval*2);
     }
 }
-    var i;
-    for(i=0;i<6;i++) {
-      document.write(list[i]);
-      document.write("<br>");
-    }
+var i;
+
+for(i=0; i < list.length;i++) {
+    document.write(list[i]);
+    document.write("<br>");
+}
 </script>

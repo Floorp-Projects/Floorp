@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.9.4.2.js';
+
 /**
    File Name:          15.9.4.2.js
    ECMA Section:       15.9.4.2 Date.parse()
@@ -100,7 +102,7 @@ var SECONDS     = 15;
 var MS          = 16;
 var TYPEOF  = "object";
 
-//  for TCMS, the testcases array must be global.
+//  for TCMS, the gTestcases array must be global.
 writeHeaderToLog("15.9.4.2 Date.parse()" );
 
 // Dates around 1970

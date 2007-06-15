@@ -34,18 +34,20 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-304897.js';
 //-----------------------------------------------------------------------------
-var bug = 304897;
+var BUGNUMBER = 304897;
 var summary = 'uneval("\\t"), uneval("\\x09")';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 expect = '"\\t"';
-actual = uneval('\t');  
+actual = uneval('\t'); 
 reportCompare(expect, actual, summary);
 
-actual = uneval('\x09');  
+actual = uneval('\x09'); 
 reportCompare(expect, actual, summary);

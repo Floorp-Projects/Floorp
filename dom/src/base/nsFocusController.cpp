@@ -211,7 +211,7 @@ nsFocusController::UpdateCommands()
   }
 
   // If there is no presshell, it's a zombie document which can't handle the command updates
-  if (window && doc && doc->GetNumberOfShells()) {
+  if (window && doc && doc->GetPrimaryShell()) {
     // Not a zombie document, so we can handle the command update
     window->UpdateCommands(NS_LITERAL_STRING("focus"));
     mNeedUpdateCommands = PR_FALSE;
@@ -283,11 +283,7 @@ nsFocusController::MoveFocus(PRBool aForward, nsIDOMElement* aElt)
 
 
   // Obtain a presentation context
-  PRInt32 count = doc->GetNumberOfShells();
-  if (count == 0)
-    return NS_OK;
-
-  nsIPresShell *shell = doc->GetShellAt(0);
+  nsIPresShell *shell = doc->GetPrimaryShell();
   if (!shell)
     return NS_OK;
 

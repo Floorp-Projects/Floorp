@@ -76,7 +76,7 @@
   <!ENTITY cmdInspectBrowser.label "Examiner le contenu du document">
   <!ENTITY cmdInspectInNewWindow.label "Examiner dans une nouvelle fenêtre">
   
-  <!ENTITY cmdShowPseudoClasses.label "Montrer les styles des pseudo-classes…">
+  <!ENTITY cmdShowPseudoClasses.label "Afficher les styles des pseudo-classes…">
   <!ENTITY cmdShowPseudoClasses.accesskey "p">
   
   <!ENTITY pseudoClasses.title "Pseudo-classes">
@@ -100,3 +100,38 @@
   <!ENTITY mnEditPasteFirstChild.label "Comme premier enfant">
   <!ENTITY mnEditPasteLastChild.label "Comme dernier enfant">
   <!ENTITY mnEditPasteAsParent.label "Comme parent">
+
+  <!ENTITY mnEditInsertMenu.label "Insérer">
+  <!ENTITY mnEditInsertAfter.label "Après">
+  <!ENTITY mnEditInsertBefore.label "Avant">
+  <!ENTITY mnEditInsertFirstChild.label "Comme premier enfant">
+  <!ENTITY mnEditInsertLastChild.label "Comme dernier enfant">
+
+  <!ENTITY insertNode.title "Insérer un nœud">
+  <!ENTITY nodeType.label "Type de nœud :">
+  <!ENTITY nodeType.element.label "Élément">
+  <!ENTITY nodeType.text.label "Texte">
+  <!ENTITY namespaceURI.label "URI de l'espace de noms :">
+  <!ENTITY tagName.label "Nom de la balise :">
+  <!ENTITY nodeValue.label "Valeur du nœud :">
+
+  <!ENTITY namespaceTitle.null.label "null">
+  <!ENTITY namespaceTitle.default.label "Espace de noms par défaut du document">
+  <!ENTITY namespaceTitle.custom.label "Personnalisé">
+
+<!-- LOCALIZATION NOTE: The following entities are names of W3C specifications.
+                        Please consult http://www.w3.org/Consortium/Translation/
+                        for appropriate translation or leave unchanged. -->
+  <!ENTITY namespaceTitle.XMLNS.label "XMLNS">
+  <!ENTITY namespaceTitle.XML.label "XML">
+  <!ENTITY namespaceTitle.XHTML.label "XHTML">
+  <!ENTITY namespaceTitle.XLink.label "XLink">
+  <!ENTITY namespaceTitle.XSLT.label "XSLT">
+  <!ENTITY namespaceTitle.XBL.label "XBL">
+  <!ENTITY namespaceTitle.MathML.label "MathML">
+  <!ENTITY namespaceTitle.RDF.label "RDF">
+  <!ENTITY namespaceTitle.XUL.label "XUL">
+  <!ENTITY namespaceTitle.SVG.label "SVG">
+  <!ENTITY namespaceTitle.XMLEvents.label "Événements XML">
+  <!ENTITY namespaceTitle.WAIRoles.label "Rôles WAI">
+  <!ENTITY namespaceTitle.WAIProperties.label "Propriétés WAI">

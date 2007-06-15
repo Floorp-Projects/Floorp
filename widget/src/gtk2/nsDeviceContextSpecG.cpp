@@ -58,11 +58,8 @@
 
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
+#include "nsStringEnumerator.h"
 #include "nsIServiceManager.h" 
-
-#ifdef USE_XPRINT
-#include "xprintutil.h"
-#endif /* USE_XPRINT */
 
 #ifdef USE_POSTSCRIPT
 #include "nsPSPrinters.h"
@@ -393,32 +390,18 @@ nsDeviceContextSpecGTK::~nsDeviceContextSpecGTK()
   delete mPrintJob;
 }
 
-/* Use both PostScript and Xprint module */
 #ifdef MOZ_CAIRO_GFX
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecGTK,
                    nsIDeviceContextSpec)
 #else
-#if defined(USE_XPRINT) && defined(USE_POSTSCRIPT)
-NS_IMPL_ISUPPORTS3(nsDeviceContextSpecGTK,
-                   nsIDeviceContextSpec,
-                   nsIDeviceContextSpecPS,
-                   nsIDeviceContextSpecXp)
 /* Use only PostScript module */
-#elif !defined(USE_XPRINT) && defined(USE_POSTSCRIPT)
+#if defined(USE_POSTSCRIPT)
 NS_IMPL_ISUPPORTS2(nsDeviceContextSpecGTK,
                    nsIDeviceContextSpec,
                    nsIDeviceContextSpecPS)
-/* Use only Xprint module module */
-#elif defined(USE_XPRINT) && !defined(USE_POSTSCRIPT)
-NS_IMPL_ISUPPORTS2(nsDeviceContextSpecGTK,
-                   nsIDeviceContextSpec,
-                   nsIDeviceContextSpecXp)
-/* Both Xprint and PostScript module are missing */
-#elif !defined(USE_XPRINT) && !defined(USE_POSTSCRIPT)
+#else
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecGTK,
                    nsIDeviceContextSpec)
-#else
-#error "This should not happen"
 #endif
 #endif
 
@@ -714,17 +697,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetPrintMethod(PrintMethod &aMethod)
 /* static !! */
 nsresult nsDeviceContextSpecGTK::GetPrintMethod(const char *aPrinter, PrintMethod &aMethod)
 {
-#if defined(USE_POSTSCRIPT) && defined(USE_XPRINT)
-  if (nsPSPrinterList::kTypeUnknown ==
-      nsPSPrinterList::GetPrinterType(nsDependentCString(aPrinter)))
-    aMethod = pmXprint;
-  else
-    aMethod = pmPostScript;
-  return NS_OK;
-#elif defined(USE_XPRINT)
-  aMethod = pmXprint;
-  return NS_OK;
-#elif defined(USE_POSTSCRIPT)
+#if defined(USE_POSTSCRIPT)
   aMethod = pmPostScript;
   return NS_OK;
 #else
@@ -828,20 +801,10 @@ nsPrinterEnumeratorGTK::nsPrinterEnumeratorGTK()
 
 NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorGTK, nsIPrinterEnumerator)
 
-NS_IMETHODIMP nsPrinterEnumeratorGTK::EnumeratePrinters(PRUint32* aCount, PRUnichar*** aResult)
+NS_IMETHODIMP nsPrinterEnumeratorGTK::GetPrinterNameList(nsIStringEnumerator **aPrinterNameList)
 {
-  NS_ENSURE_ARG(aCount);
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  if (aCount) 
-    *aCount = 0;
-  else 
-    return NS_ERROR_NULL_POINTER;
-  
-  if (aResult) 
-    *aResult = nsnull;
-  else 
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aPrinterNameList);
+  *aPrinterNameList = nsnull;
   
   nsresult rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
   if (NS_FAILED(rv)) {
@@ -849,9 +812,8 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::EnumeratePrinters(PRUint32* aCount, PRUnic
   }
 
   PRInt32 numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
-
-  PRUnichar** array = (PRUnichar**) nsMemory::Alloc(numPrinters * sizeof(PRUnichar*));
-  if (!array && numPrinters > 0) {
+  nsStringArray *printers = new nsStringArray(numPrinters);
+  if (!printers) {
     GlobalPrinters::GetInstance()->FreeGlobalPrinters();
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -859,25 +821,11 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::EnumeratePrinters(PRUint32* aCount, PRUnic
   int count = 0;
   while( count < numPrinters )
   {
-    PRUnichar *str = ToNewUnicode(*GlobalPrinters::GetInstance()->GetStringAt(count));
-
-    if (!str) {
-      for (int i = count - 1; i >= 0; i--) 
-        nsMemory::Free(array[i]);
-      
-      nsMemory::Free(array);
-
-      GlobalPrinters::GetInstance()->FreeGlobalPrinters();
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    array[count++] = str;
-    
+    printers->AppendString(*GlobalPrinters::GetInstance()->GetStringAt(count++));
   }
-  *aCount = count;
-  *aResult = array;
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 
-  return NS_OK;
+  return NS_NewAdoptingStringEnumerator(aPrinterNameList, printers);
 }
 
 /* readonly attribute wstring defaultPrinterName; */
@@ -953,266 +901,6 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
   aPrintSettings->SetToFileName(NS_ConvertUTF8toUTF16(filename).get());
 
   aPrintSettings->SetIsInitializedFromPrinter(PR_TRUE);
-
-#ifdef USE_XPRINT
-  if (type == pmXprint) {
-    DO_PR_DEBUG_LOG(("InitPrintSettingsFromPrinter() for Xprint printer\n"));
-
-    /* Setup the capabilities list of Mozilla's Xprint print module */
-#ifdef SET_PRINTER_FEATURES_VIA_PREFS
-    nsPrinterFeatures printerFeatures(fullPrinterName);
-
-    printerFeatures.SetSupportsPaperSizeChange(PR_TRUE);
-    printerFeatures.SetSupportsOrientationChange(PR_TRUE);
-    printerFeatures.SetSupportsPlexChange(PR_TRUE);
-    printerFeatures.SetSupportsResolutionNameChange(PR_TRUE);
-    printerFeatures.SetSupportsColorspaceChange(PR_TRUE);
-    printerFeatures.SetSupportsJobTitleChange(PR_TRUE);
-    printerFeatures.SetSupportsSpoolerCommandChange(PR_FALSE); /* won't work by design and very good reasons! */
-#endif /* SET_PRINTER_FEATURES_VIA_PREFS */ 
-    
-    /* Setup the capabilities list of this specific printer */
-
-    Display   *pdpy;
-    XPContext  pcontext;
-    if (XpuGetPrinter(printerName, &pdpy, &pcontext) != 1)
-      return NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND;
-      
-    XpuSupportedFlags supported_doc_attrs = XpuGetSupportedDocAttributes(pdpy, pcontext);
-
-    /* Setup orientation stuff */
-    XpuOrientationList  olist;
-    int                 ocount;
-    XpuOrientationRec  *default_orientation;
-
-    /* Setup plex stuff */
-    XpuPlexList         plexlist;
-    int                 plexcount;
-    XpuPlexRec         *default_plex;
-
-#ifdef SET_PRINTER_FEATURES_VIA_PREFS
-    PRBool canSetOrientation = MAKE_PR_BOOL(supported_doc_attrs & XPUATTRIBUTESUPPORTED_CONTENT_ORIENTATION);
-    printerFeatures.SetCanChangeOrientation(canSetOrientation);
-#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
-      
-    /* Get list of supported orientations */
-    olist = XpuGetOrientationList(pdpy, pcontext, &ocount);
-    if (olist) {
-      default_orientation = &olist[0]; /* First entry is the default one */
-    
-      if (!PL_strcasecmp(default_orientation->orientation, "portrait")) {
-        DO_PR_DEBUG_LOG(("setting default orientation to 'portrait'\n"));
-        aPrintSettings->SetOrientation(nsIPrintSettings::kPortraitOrientation);
-      }
-      else if (!PL_strcasecmp(default_orientation->orientation, "landscape")) {
-        DO_PR_DEBUG_LOG(("setting default orientation to 'landscape'\n"));
-        aPrintSettings->SetOrientation(nsIPrintSettings::kLandscapeOrientation);
-      }  
-      else {
-        DO_PR_DEBUG_LOG(("Unknown default orientation '%s'\n", default_orientation->orientation));
-      }
-
-#ifdef SET_PRINTER_FEATURES_VIA_PREFS
-      int i;
-      for( i = 0 ; i < ocount ; i++ )
-      {
-        XpuOrientationRec *curr = &olist[i];
-        printerFeatures.SetOrientationRecord(i, curr->orientation);
-      }
-      printerFeatures.SetNumOrientationRecords(ocount);
-#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
-   
-      XpuFreeOrientationList(olist);
-    }  
-
-#ifdef SET_PRINTER_FEATURES_VIA_PREFS
-    PRBool canSetPlexMode = MAKE_PR_BOOL(supported_doc_attrs & XPUATTRIBUTESUPPORTED_PLEX);
-    printerFeatures.SetCanChangePlex(canSetPlexMode);
-#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
-
-    /* Get list of supported plex modes */
-    plexlist = XpuGetPlexList(pdpy, pcontext, &plexcount);
-    if (plexlist) {
-      default_plex = &plexlist[0]; /* First entry is the default one */
-    
-      DO_PR_DEBUG_LOG(("setting default plex to '%s'\n", default_plex->plex));
-      aPrintSettings->SetPlexName(NS_ConvertUTF8toUTF16(default_plex->plex).get());
-
-#ifdef SET_PRINTER_FEATURES_VIA_PREFS
-      int i;
-      for( i = 0 ; i < plexcount ; i++ )
-      {
-        XpuPlexRec *curr = &plexlist[i];
-        printerFeatures.SetPlexRecord(i, curr->plex);
-      }
-      printerFeatures.SetNumPlexRecords(plexcount);
-#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
-   
-      XpuFreePlexList(plexlist);
-    }  
-
-    /* Setup Number of Copies */
-#ifdef SET_PRINTER_FEATURES_VIA_PREFS
-    PRBool canSetNumCopies = MAKE_PR_BOOL(supported_doc_attrs & XPUATTRIBUTESUPPORTED_COPY_COUNT);
-    printerFeatures.SetCanChangeNumCopies(canSetNumCopies);
-#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
-    long numCopies;
-    if( XpuGetOneLongAttribute(pdpy, pcontext, XPDocAttr, "copy-count", &numCopies) != 1 )
-    {
-      /* Fallback on failure */
-      numCopies = 1;
-    }
-    aPrintSettings->SetNumCopies(numCopies);
-
-    /* Setup paper size stuff */
-    XpuMediumSourceSizeList mlist;
-    int                     mcount;
-    XpuMediumSourceSizeRec *default_medium;
-    
-#ifdef SET_PRINTER_FEATURES_VIA_PREFS
-    PRBool canSetPaperSize = MAKE_PR_BOOL(supported_doc_attrs & XPUATTRIBUTESUPPORTED_DEFAULT_MEDIUM);
-    printerFeatures.SetCanChangePaperSize(canSetPaperSize);
-#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
-    
-    mlist = XpuGetMediumSourceSizeList(pdpy, pcontext, &mcount);
-    if (mlist) {
-      nsCAutoString papername;
-
-      default_medium = &mlist[0]; /* First entry is the default one */
-      double total_width  = default_medium->ma1 + default_medium->ma2,
-             total_height = default_medium->ma3 + default_medium->ma4;
-
-      /* Either "paper" or "tray/paper" */
-      if (default_medium->tray_name) {
-        papername.Append(default_medium->tray_name);
-        papername.Append('/');
-      }
-      papername.Append(default_medium->medium_name);
- 
-      DO_PR_DEBUG_LOG(("setting default paper size to '%s' (%g/%g mm)\n", papername.get(), total_width, total_height));
-      aPrintSettings->SetPaperSizeType(nsIPrintSettings::kPaperSizeDefined);
-      aPrintSettings->SetPaperSizeUnit(nsIPrintSettings::kPaperSizeMillimeters);
-      aPrintSettings->SetPaperWidth(total_width);
-      aPrintSettings->SetPaperHeight(total_height);
-      aPrintSettings->SetPaperName(NS_ConvertUTF8toUTF16(papername).get());     
-
-#ifdef SET_PRINTER_FEATURES_VIA_PREFS
-      int i;
-      for( i = 0 ; i < mcount ; i++ )
-      {
-        XpuMediumSourceSizeRec *curr = &mlist[i];
-        double total_width  = curr->ma1 + curr->ma2,
-               total_height = curr->ma3 + curr->ma4;
-
-        papername.Truncate();
-        if (curr->tray_name) {
-          papername.Append(curr->tray_name);
-          papername.Append('/');
-        }
-        papername.Append(curr->medium_name);
-
-        printerFeatures.SetPaperRecord(i, papername.get(), PRInt32(total_width), PRInt32(total_height), PR_FALSE);
-      }
-      printerFeatures.SetNumPaperSizeRecords(mcount);
-#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
-
-      XpuFreeMediumSourceSizeList(mlist);
-    }
-
-    /* Setup resolution/quality stuff */
-    XpuResolutionList rlist;
-    int               rcount;
-    XpuResolutionRec *default_resolution;
-    
-#ifdef SET_PRINTER_FEATURES_VIA_PREFS
-    PRBool canSetResolutionName = MAKE_PR_BOOL(supported_doc_attrs & XPUATTRIBUTESUPPORTED_DEFAULT_PRINTER_RESOLUTION);
-    printerFeatures.SetCanChangeResolutionName(canSetResolutionName);
-#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
-    
-    rlist = XpuGetResolutionList(pdpy, pcontext, &rcount);
-    if (rlist) {
-      default_resolution = &rlist[0]; /* First entry is the default one */
-    
-      DO_PR_DEBUG_LOG(("setting default resolution to '%s'/%ldx%ld\n",
-                       default_resolution->name,
-                       default_resolution->x_dpi,
-                       default_resolution->y_dpi));
-      aPrintSettings->SetResolutionName(NS_ConvertUTF8toUTF16(default_resolution->name).get());
-
-#ifdef SET_PRINTER_FEATURES_VIA_PREFS
-      int i;
-      for( i = 0 ; i < rcount ; i++ )
-      {
-        XpuResolutionRec *curr = &rlist[i];
-        printerFeatures.SetResolutionNameRecord(i, curr->name);
-      }
-      printerFeatures.SetNumResolutionNameRecords(rcount);
-#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
-   
-      XpuFreeResolutionList(rlist);
-    }
-
-    /* We still support the old print-in-color boolean */
-    printerFeatures.SetSupportsPrintInColorChange(PR_TRUE);
-    printerFeatures.SetCanChangePrintInColor(PR_TRUE);
-
-    /* Setup colorspace stuff */
-    XpuColorspaceList cslist;
-    int               cscount;
-    XpuColorspaceRec *default_colorspace;
-    
-#ifdef SET_PRINTER_FEATURES_VIA_PREFS
-    printerFeatures.SetCanChangeColorspace(PR_TRUE);
-#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
-    
-    cslist = XpuGetColorspaceList(pdpy, pcontext, &cscount);
-    if (cslist) {
-      default_colorspace = &cslist[0]; /* First entry is the default one */
-    
-      DO_PR_DEBUG_LOG(("setting default colorspace to '%s'\n", default_colorspace->name));
-      aPrintSettings->SetColorspace(NS_ConvertUTF8toUTF16(default_colorspace->name).get());
-
-#ifdef SET_PRINTER_FEATURES_VIA_PREFS
-      int i;
-      for( i = 0 ; i < cscount ; i++ )
-      {
-        XpuColorspaceRec *curr = &cslist[i];
-        printerFeatures.SetColorspaceRecord(i, curr->name);
-      }
-      printerFeatures.SetNumColorspaceRecords(cscount);
-#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
-   
-      XpuFreeColorspaceList(cslist);
-    }
-
-    /* Fonts */
-    PRBool canSetListFontsMode = MAKE_PR_BOOL(supported_doc_attrs & XPUATTRIBUTESUPPORTED_LISTFONTS_MODES);
-    printerFeatures.SetCanChangeDownloadFonts(canSetListFontsMode);
-    printerFeatures.SetSupportsDownloadFontsChange(PR_TRUE);
-
-    Bool downloadFonts = XpuGetEnableFontDownload(pdpy, pcontext);
-    aPrintSettings->SetDownloadFonts(downloadFonts);
-
-#ifdef SET_PRINTER_FEATURES_VIA_PREFS
-    /* Xprint does not allow the client to set a spooler command. 
-     * Job spooling is the job of the server side (=Xprt) */
-    printerFeatures.SetCanChangeSpoolerCommand(PR_FALSE);
-
-    /* Check whether printer/driver allow changes of the job name */
-    PRBool canSetJobName = MAKE_PR_BOOL(XpuGetSupportedJobAttributes(pdpy, pcontext) & XPUATTRIBUTESUPPORTED_JOB_NAME);
-    printerFeatures.SetCanChangeJobTitle(canSetJobName);
-
-    /* Mozilla's Xprint support allows multiple nsIDeviceContext instances
-     * be used in parallel */
-    printerFeatures.SetMultipleConcurrentDeviceContextsSupported(PR_TRUE);
-#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
-
-    XpuClosePrinterDisplay(pdpy, pcontext);
-    
-    return NS_OK;    
-  }
-  else
-#endif /* USE_XPRINT */
 
 #ifdef USE_POSTSCRIPT
   if (type == pmPostScript) {
@@ -1389,26 +1077,6 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
   if (NS_FAILED(rv))
     return rv;
       
-#ifdef USE_XPRINT   
-  int printerCount;
-  XPPrinterList plist = XpuGetPrinterList(nsnull, &printerCount);
-  
-  if (plist)
-  {  
-    int i;
-    for( i = 0 ; i < printerCount ; i++ )
-    {
-      /* Add name to our list of printers... */
-      mGlobalPrinterList->AppendString(nsString(NS_ConvertUTF8toUTF16(plist[i].name)));
-
-      /* ... and store the description text for this printer */
-      pPrefs->SetCharPref(nsPrintfCString(256, "print.printer_%s.printer_description", plist[i].name).get(), plist[i].desc);      
-    }
-    
-    XpuFreePrinterList(plist);
-  }
-#endif /* USE_XPRINT */
-
 #ifdef USE_POSTSCRIPT
   nsPSPrinterList psMgr;
   if (NS_SUCCEEDED(psMgr.Init()) && psMgr.Enabled()) {
@@ -1424,13 +1092,6 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
   {
     /* Make sure we do not cache an empty printer list */
     FreeGlobalPrinters();
-
-#ifdef USE_XPRINT
-    /* Check if there are actually any Xprint servers available */
-    if (!XpuXprintServersAvailable()) {
-      return NS_ERROR_GFX_PRINTER_XPRINT_NO_XPRINT_SERVERS_FOUND;
-    }
-#endif /* USE_XPRINT */
 
     return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
   }

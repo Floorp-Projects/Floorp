@@ -130,7 +130,7 @@ LIBS += \
 	$(NULL)
 
 # Add explicit X11 dependency when building against X11 toolkits
-ifneq (,$(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 LIBS += $(XLDFLAGS) $(XLIBS)
 ifdef MOZ_ENABLE_CAIRO_GFX
 LIBS += $(ZLIB_LIBS)
@@ -218,6 +218,10 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DFIREFOX_ICO=\"$(DIST)/branding/firefox.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\"
 
+ifdef MOZILLA_OFFICIAL
+DEFINES += -DMOZILLA_OFFICIAL
+endif
+
 ifdef BUILD_STATIC_LIBS
 include $(topsrcdir)/config/static-rules.mk
 
@@ -226,7 +230,6 @@ endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 ifdef BUILD_STATIC_LIBS
-LIBS	+= -framework QuickTime -framework IOKit -lcrypto
 ifdef USE_PREBINDING
 BIN_FLAGS += -Wl,-headerpad -Wl,5a0c
 endif
@@ -288,7 +291,7 @@ GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, firefox.js)
 
 endif
 
-ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 
 ICON_FILES	= \
 		$(DIST)/branding/mozicon128.png \
@@ -328,7 +331,7 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/macbuild/disk.icns $(DIST)/branding/disk.icns
 	cp $(srcdir)/macbuild/license.r $(DIST)/branding/license.r
 endif
-ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/mozicon128.png $(DIST)/branding/mozicon128.png
 	cp $(srcdir)/mozicon16.xpm $(DIST)/branding/mozicon16.xpm
 	cp $(srcdir)/mozicon50.xpm $(DIST)/branding/mozicon50.xpm
@@ -367,8 +370,8 @@ libs repackage:: $(PROGRAM)
 	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app --exclude English.lproj
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
 	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
-	sed -e "s/@APP_VERSION@/$(APP_VERSION)/" -e "s/@APP_NAME@/$(APP_NAME)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
-	sed -e "s/@APP_VERSION@/$(APP_VERSION)/" -e "s/@APP_NAME@/$(APP_NAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj/InfoPlist.strings
+	sed -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%APP_NAME%/$(APP_NAME)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
+	sed -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%APP_NAME%/$(APP_NAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj/InfoPlist.strings
 	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
 	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS/mangle $(DIST)/$(APP_NAME).app/Contents/MacOS/shlibsign
 	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS

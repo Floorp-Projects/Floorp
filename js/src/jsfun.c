@@ -173,8 +173,7 @@ ArgWasDeleted(JSContext *cx, JSStackFrame *fp, uintN slot)
 }
 
 JSBool
-js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id,
-                   JSObject **objp, jsval *vp)
+js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, jsval *vp)
 {
     jsval val;
     JSObject *obj;
@@ -195,11 +194,9 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id,
         } else {
             obj = JSVAL_TO_OBJECT(val);
         }
-        *objp = obj;
         return OBJ_GET_PROPERTY(cx, obj, id, vp);
     }
 
-    *objp = NULL;
     *vp = JSVAL_VOID;
     if (JSID_IS_INT(id)) {
         slot = (uintN) JSID_TO_INT(id);
@@ -642,9 +639,11 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
      * Get the arguments object to snapshot fp's actual argument values.
      */
     if (fp->argsobj) {
-        argsid = ATOM_TO_JSID(cx->runtime->atomState.argumentsAtom);
-        ok &= js_GetProperty(cx, callobj, argsid, &aval);
-        ok &= js_SetProperty(cx, callobj, argsid, &aval);
+        if (!TEST_OVERRIDE_BIT(fp, CALL_ARGUMENTS)) {
+            argsid = ATOM_TO_JSID(cx->runtime->atomState.argumentsAtom);
+            aval = OBJECT_TO_JSVAL(fp->argsobj);
+            ok &= js_SetProperty(cx, callobj, argsid, &aval);
+        }
         ok &= js_PutArgsObject(cx, fp);
     }
 
@@ -1092,16 +1091,21 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     JSString *str;
     JSAtom *prototypeAtom;
 
+    /*
+     * No need to reflect fun.prototype in 'fun.prototype = ...' or in an
+     * unqualified reference to prototype, which the emitter looks up as a
+     * hidden atom when attempting to bind to a formal parameter or local
+     * variable slot.
+     */
+    if (flags & (JSRESOLVE_ASSIGNING | JSRESOLVE_HIDDEN))
+        return JS_TRUE;
+
     if (!JSVAL_IS_STRING(id))
         return JS_TRUE;
 
     /* No valid function object should lack private data, but check anyway. */
     fun = (JSFunction *)JS_GetInstancePrivate(cx, obj, &js_FunctionClass, NULL);
     if (!fun || !fun->object)
-        return JS_TRUE;
-
-    /* No need to reflect fun.prototype in 'fun.prototype = ...'. */
-    if (flags & JSRESOLVE_ASSIGNING)
         return JS_TRUE;
 
     /*

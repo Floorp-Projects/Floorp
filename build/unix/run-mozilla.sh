@@ -391,16 +391,6 @@ then
         XSUNSMESIZE="512"
         export XSUNTRANSPORT XSUNSMESIZE
 fi
-## Populate XPSERVERLIST if it was not set yet
-if [ "$XPSERVERLIST" = "" ]
-then
-    if [ -f /etc/init.d/xprint ] ; then
-        XPSERVERLIST="`/bin/sh /etc/init.d/xprint get_xpserverlist`"
-        if [ "$XPSERVERLIST" != "" ] ; then
-            export XPSERVERLIST
-        fi
-    fi
-fi
 
 if [ "$moz_debug" -eq 1 ]
 then
@@ -422,9 +412,6 @@ then
   fi
   if [ -n "$FONTCONFIG_PATH" ]; then
 	echo "FONTCONFIG_PATH=$FONTCONFIG_PATH"
-  fi
-  if [ -n "$XPSERVERLIST" ]; then
-       echo "XPSERVERLIST=$XPSERVERLIST"
   fi
   if [ -n "$MOZILLA_POSTSCRIPT_PRINTER_LIST" ]; then
        echo "MOZILLA_POSTSCRIPT_PRINTER_LIST=$MOZILLA_POSTSCRIPT_PRINTER_LIST"

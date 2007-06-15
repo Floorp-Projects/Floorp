@@ -48,6 +48,7 @@
 #include "jstypes.h"
 #include "jsatom.h"
 #include "jsopcode.h"
+#include "jsscript.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
 
@@ -183,6 +184,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_FUN_FLAGS         0x1E0 /* flags to propagate from FunctionBody */
 #define TCF_HAS_DEFXMLNS      0x200 /* default xml namespace = ...; parsed */
 #define TCF_HAS_FUNCTION_STMT 0x400 /* block contains a function statement */
+#define TCF_GENEXP_LAMBDA     0x800 /* flag lambda from generator expression */
 
 #define TREE_CONTEXT_INIT(tc)                                                 \
     ((tc)->flags = (tc)->numGlobalVars = 0,                                   \
@@ -528,6 +530,7 @@ typedef enum JSSrcNoteType {
     SRC_INITPROP    = 1,        /* disjoint meaning applied to JSOP_INITELEM or
                                    to an index label in a regular (structuring)
                                    or a destructuring object initialiser */
+    SRC_GENEXP      = 1,        /* JSOP_ANONFUNOBJ from generator expression */
     SRC_IF_ELSE     = 2,        /* JSOP_IFEQ bytecode is from an if-then-else */
     SRC_WHILE       = 3,        /* JSOP_IFEQ is from a while loop */
     SRC_FOR         = 4,        /* JSOP_NOP or JSOP_POP in for loop head */
@@ -716,24 +719,12 @@ js_AllocTryNotes(JSContext *cx, JSCodeGenerator *cg);
  * Grab the next trynote slot in cg, filling it in appropriately.
  */
 extern JSTryNote *
-js_NewTryNote(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t start,
-              ptrdiff_t end, ptrdiff_t catchStart);
-
-/*
- * Finish generating exception information into the space at notes.  As with
- * js_FinishTakingSrcNotes, the caller must use CG_COUNT_FINAL_TRYNOTES(cg) to
- * preallocate enough space in a JSTryNote[] to pass as the notes parameter of
- * js_FinishTakingTryNotes.
- */
-#define CG_COUNT_FINAL_TRYNOTES(cg, cnt)                                      \
-    JS_BEGIN_MACRO                                                            \
-        cnt = ((cg)->tryNext > (cg)->tryBase)                                 \
-              ? PTRDIFF(cg->tryNext, cg->tryBase, JSTryNote) + 1              \
-              : 0;                                                            \
-    JS_END_MACRO
+js_NewTryNote(JSContext *cx, JSCodeGenerator *cg, JSTryNoteKind kind,
+              uintN stackDepth, size_t start, size_t end);
 
 extern void
-js_FinishTakingTryNotes(JSContext *cx, JSCodeGenerator *cg, JSTryNote *notes);
+js_FinishTakingTryNotes(JSContext *cx, JSCodeGenerator *cg,
+                        JSTryNoteArray *array);
 
 JS_END_EXTERN_C
 

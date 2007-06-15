@@ -57,13 +57,10 @@
 #include "nsGfxCIID.h"
 #include "nsIServiceManager.h"
 #include "nsGkAtoms.h"
-#include "nsISimpleEnumerator.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 
-// PrintOptions is now implemented by PrintSettingsService
 static const char sPrintSettingsServiceContractID[] = "@mozilla.org/gfx/printsettings-service;1";
-static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printsettings-service;1";
 
 // Printing Events
 #include "nsPrintPreviewListener.h"
@@ -102,7 +99,7 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsIDocument.h"
 
 // Focus
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMFocusListener.h"
 #include "nsISelectionController.h"
 
@@ -468,9 +465,7 @@ nsPrintEngine::DoCommonPrint(PRBool                  aIsPrintPreview,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mPrt->mPrintOptions = do_GetService(sPrintOptionsContractID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = CheckForPrinters(mPrt->mPrintOptions, mPrt->mPrintSettings);
+  rv = CheckForPrinters(mPrt->mPrintSettings);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mPrt->mPrintSettings->SetIsCancelled(PR_FALSE);
@@ -914,48 +909,32 @@ nsPrintEngine::GetCurrentPrintSettings(nsIPrintSettings * *aCurrentPrintSettings
 // and if so, it sets the first printer in the list as the default name
 // in the PrintSettings which is then used for Printer Preview
 nsresult
-nsPrintEngine::CheckForPrinters(nsIPrintOptions*  aPrintOptions,
-                                nsIPrintSettings* aPrintSettings)
+nsPrintEngine::CheckForPrinters(nsIPrintSettings* aPrintSettings)
 {
-  NS_ENSURE_ARG_POINTER(aPrintOptions);
+#if defined(XP_MAC) || defined(XP_MACOSX)
+  // Mac doesn't support retrieving a printer list.
+  return NS_OK;
+#else
   NS_ENSURE_ARG_POINTER(aPrintSettings);
 
-  nsresult rv;
+  // See if aPrintSettings already has a printer
+  nsXPIDLString printerName;
+  nsresult rv = aPrintSettings->GetPrinterName(getter_Copies(printerName));
+  if (NS_SUCCEEDED(rv) && !printerName.IsEmpty()) {
+    return NS_OK;
+  }
 
-  nsCOMPtr<nsISimpleEnumerator> simpEnum;
-  rv = aPrintOptions->AvailablePrinters(getter_AddRefs(simpEnum));
-  if (simpEnum) {
-    PRBool fndPrinter = PR_FALSE;
-    simpEnum->HasMoreElements(&fndPrinter);
-    if (fndPrinter) {
-      // For now, it assumes the first item in the list
-      // is the default printer, but only set the
-      // printer name if there isn't one
-      nsCOMPtr<nsISupports> supps;
-      simpEnum->GetNext(getter_AddRefs(supps));
-      PRUnichar* defPrinterName;
-      aPrintSettings->GetPrinterName(&defPrinterName);
-      if (!defPrinterName || !*defPrinterName) {
-        if (defPrinterName) nsMemory::Free(defPrinterName);
-        nsCOMPtr<nsISupportsString> wStr = do_QueryInterface(supps);
-        if (wStr) {
-          wStr->ToString(&defPrinterName);
-          aPrintSettings->SetPrinterName(defPrinterName);
-          nsMemory::Free(defPrinterName);
-        }
-      } else {
-        nsMemory::Free(defPrinterName);
-      }
-      rv = NS_OK;
-    }
-  } else {
-    // this means there were no printers
-    // XXX the ifdefs are temporary until they correctly implement Available Printers
-#if defined(XP_MAC) || defined(XP_MACOSX)
-    rv = NS_OK;
-#endif
+  // aPrintSettings doesn't have a printer set. Try to fetch the default.
+  nsCOMPtr<nsIPrintSettingsService> printSettingsService =
+    do_GetService(sPrintSettingsServiceContractID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = printSettingsService->GetDefaultPrinterName(getter_Copies(printerName));
+  if (NS_SUCCEEDED(rv) && !printerName.IsEmpty()) {
+    rv = aPrintSettings->SetPrinterName(printerName.get());
   }
   return rv;
+#endif
 }
 
 //----------------------------------------------------------------------
@@ -1505,13 +1484,11 @@ nsPrintEngine::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrinting)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_COLORSPACE_NOT_SUPPORTED)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_TOO_MANY_COPIES)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_DRIVER_CONFIGURATION_ERROR)
-      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_XPRINT_BROKEN_XPRT)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_DOC_IS_BUSY_PP)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_DOC_WAS_DESTORYED)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_NO_PRINTDIALOG_IN_TOOLKIT)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_NO_PRINTROMPTSERVICE)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_NO_XUL)   // Temporary code for Bug 136185 / bug 240490
-      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_XPRINT_NO_XPRINT_SERVERS_FOUND)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_PLEX_NOT_SUPPORTED)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_DOC_IS_BUSY)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTING_NOT_IMPLEMENTED)
@@ -1938,6 +1915,10 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   rv = aPO->mPresShell->InitialReflow(adjSize.width, adjSize.height);
 
   NS_ENSURE_SUCCESS(rv, rv);
+  NS_ASSERTION(aPO->mPresShell, "Presshell should still be here");
+
+  // Process the reflow event InitialReflow posted
+  aPO->mPresShell->FlushPendingNotifications(Flush_OnlyReflow);
 
   nsCOMPtr<nsIPresShell> displayShell;
   aPO->mDocShell->GetPresShell(getter_AddRefs(displayShell));

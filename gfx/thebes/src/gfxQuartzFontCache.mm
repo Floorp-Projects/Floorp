@@ -685,6 +685,11 @@ PRBool
 gfxQuartzFontCache::ResolveFontName(const nsAString& aFontName,
                                     nsAString& aResolvedFontName)
 {
+    // We don't need to resolve such long font name,
+    // because ATSUFindFontFromName doesn't support it.
+    if (aFontName.Length() * sizeof(PRUnichar) >= 1024)
+        return PR_FALSE;
+
     nsAutoString name, key;
     nsRefPtr<FontEntry> fe;
     GenerateFontListKey(aFontName, key);

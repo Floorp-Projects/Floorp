@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = '15.3.4.js';
+
 /**
    File Name:          15.3.4.js
    ECMA Section:       15.3.4  Properties of the Function Prototype Object

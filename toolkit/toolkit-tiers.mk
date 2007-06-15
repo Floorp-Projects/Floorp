@@ -81,14 +81,6 @@ tier_gecko_dirs += \
 		intl/chardet \
 		$(NULL)
 
-ifdef MOZ_ENABLE_XLIB
-tier_gecko_dirs	+= gfx/src/xlibrgb widget/src/xlibxtbin
-endif
-
-ifdef MOZ_ENABLE_GTK
-tier_gecko_dirs	+= widget/src/gtksuperwin widget/src/gtkxtbin
-endif
-
 ifdef MOZ_ENABLE_GTK2
 tier_gecko_dirs     += widget/src/gtkxtbin
 endif
@@ -244,7 +236,7 @@ endif
 
 ifndef BUILD_STATIC_LIBS
 ifdef MOZ_XUL_APP
-ifneq (,$(MOZ_ENABLE_GTK)$(MOZ_ENABLE_GTK2))
+ifneq (,$(MOZ_ENABLE_GTK2))
 tier_toolkit_dirs += embedding/browser/gtk
 endif
 endif

@@ -100,11 +100,11 @@ public:                                                                     \
 
 #define NS_DECL_AGGREGATED_CYCLE_COLLECTION_CLASS(_class)                   \
 class NS_CYCLE_COLLECTION_INNERCLASS                                        \
- : public nsCycleCollectionParticipant                                      \
+ : public nsXPCOMCycleCollectionParticipant                                 \
 {                                                                           \
 public:                                                                     \
-  NS_IMETHOD Unlink(nsISupports *p);                                        \
-  NS_IMETHOD Traverse(nsISupports *p,                                       \
+  NS_IMETHOD Unlink(void *p);                                               \
+  NS_IMETHOD Traverse(void *p,                                              \
                       nsCycleCollectionTraversalCallback &cb);              \
   NS_IMETHOD_(void) UnmarkPurple(nsISupports *p)                            \
   {                                                                         \
@@ -297,12 +297,13 @@ _class::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr)        \
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_AGGREGATED(_class)          \
   NS_IMETHODIMP                                                             \
   NS_CYCLE_COLLECTION_CLASSNAME(_class)::Traverse                           \
-                         (nsISupports *p,                                   \
+                         (void *p,                                          \
                           nsCycleCollectionTraversalCallback &cb)           \
   {                                                                         \
-    NS_ASSERTION(CheckForRightISupports(p),                                 \
+    nsISupports *s = NS_STATIC_CAST(nsISupports*, p);                       \
+    NS_ASSERTION(CheckForRightISupports(s),                                 \
                  "not the nsISupports pointer we expect");                  \
-    _class *tmp = NS_STATIC_CAST(_class*, Downcast(p));                     \
+    _class *tmp = NS_STATIC_CAST(_class*, Downcast(s));                     \
     if (!tmp->IsPartOfAggregated())                                         \
         NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class)
 

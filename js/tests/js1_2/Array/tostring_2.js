@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = 'tostring_2.js';
+
 /**
    File Name:          tostring_2.js
    Reference:          http://scopus.mcom.com/bugsplat/show_bug.cgi?id=114564
@@ -56,9 +59,9 @@ var a = [];
 
 
 if ( version() == 120 ) {
-    VERSION = "120";
+  VERSION = "120";
 } else {
-    VERSION = "";
+  VERSION = "";
 }
 
 new TestCase ( SECTION,

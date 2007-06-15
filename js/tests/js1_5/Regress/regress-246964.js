@@ -37,15 +37,17 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-246964.js';
 //-----------------------------------------------------------------------------
-var bug = 246964;
+var BUGNUMBER = 246964;
 // see also bug 248549, bug 253150, bug 259935
 var summary = 'undetectable document.all';
 var actual = '';
 var expect = '';
 
-  printBugNumber (bug);
-  printStatus (summary);
+printBugNumber(BUGNUMBER);
+printStatus (summary);
 
 if (typeof document != 'undefined')
 {
@@ -141,7 +143,7 @@ if (typeof document != 'undefined')
   }
   reportCompare(expect, actual, status);
 
-  status = summary + ' ' + inSection(11) + 
+  status = summary + ' ' + inSection(11) +
     ' if (typeof document.all == "undefined") ';
   expect = true;
   actual = false;
@@ -151,7 +153,7 @@ if (typeof document != 'undefined')
   }
   reportCompare(expect, actual, status);
 
-  status = summary + ' ' + inSection(12) + 
+  status = summary + ' ' + inSection(12) +
     ' if (typeof document.all != "undefined") ';
   expect = false;
   actual = false;
@@ -173,7 +175,7 @@ if (typeof document != 'undefined')
   status = summary + ' ' + inSection(14) + ' if (f.ie) ';
   var f = new foo();
 
-  expect = false; 
+  expect = false;
   actual = false;
   if (f.ie)
   {

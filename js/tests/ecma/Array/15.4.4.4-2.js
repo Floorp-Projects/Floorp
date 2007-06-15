@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.4.4.4-2.js';
+
 /**
    File Name:          15.4.4.3-1.js
    ECMA Section:       15.4.4.3-1 Array.prototype.reverse()

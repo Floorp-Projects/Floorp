@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<RDF:RDF xmlns:NC="http://home.netscape.com/NC-rdf#"
+         xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <RDF:Description RDF:about="/Users/jruderman/Desktop/download/Google.htm"
+                   NC:Name="Google.htm"
+                   NC:Transferred="1KB of  1KB">
+    <NC:URL RDF:resource="http://www.google.com/"/>
+    <NC:File RDF:resource="/Users/jruderman/Desktop/download/Google.htm"/>
+    <NC:DateEnded NC:parseType="Date">Mon May 21 21:32:50 PDT 2007 +368521</NC:DateEnded>
+    <NC:DownloadState NC:parseType="Integer">1</NC:DownloadState>
+    <NC:ProgressPercent NC:parseType="Integer">100</NC:ProgressPercent>
+  </RDF:Description>
+  <RDF:Seq RDF:about="NC:DownloadsRoot">
+    <RDF:li RDF:resource="/Users/jruderman/Desktop/download/Google.htm"/>
+  </RDF:Seq>
+</RDF:RDF>

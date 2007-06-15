@@ -16,8 +16,10 @@ bin/.autoreg
 bin/chrome/@AB_CD@.jar
 bin/chrome/@AB_CD@.manifest
 bin/defaults/pref/firefox-l10n.js
+bin/defaults/existing-profile-defaults.js
 ; If you add a new directory you must explicitly call addDirectory in ab-CD.jst
 bin/browserconfig.properties
+bin/old-homepage-default.properties
 bin/searchplugins/*
 bin/defaults/profile/bookmarks.html
 bin/defaults/profile/localstore.rdf
@@ -58,6 +60,7 @@ bin/components/autocomplete.xpt
 bin/components/autoconfig.xpt
 bin/components/bookmarks.xpt
 bin/components/browsercompsbase.xpt
+bin/components/browserplaces.xpt
 bin/components/browsersearch.xpt
 bin/components/browser-feeds.xpt
 bin/components/caps.xpt
@@ -82,6 +85,7 @@ bin/components/dom_core.xpt
 bin/components/dom_css.xpt
 bin/components/dom_events.xpt
 bin/components/dom_html.xpt
+bin/components/dom_offline.xpt
 bin/components/dom_range.xpt
 bin/components/dom_sidebar.xpt
 bin/components/dom_storage.xpt
@@ -100,6 +104,7 @@ bin/components/fastfind.xpt
 bin/components/feeds.xpt
 bin/components/filepicker.xpt
 bin/components/find.xpt
+bin/components/fuel.xpt
 bin/components/gfx.xpt
 bin/components/helperAppDlg.xpt
 bin/components/history.xpt
@@ -137,7 +142,7 @@ bin/components/necko_strconv.xpt
 bin/components/necko_viewsource.xpt
 bin/components/necko.xpt
 bin/components/oji.xpt
-bin/components/passwordmgr.xpt
+bin/components/loginmgr.xpt
 bin/components/places.xpt
 bin/components/plugin.xpt
 bin/components/prefetch.xpt
@@ -183,6 +188,7 @@ bin/components/shellservice.xpt
 bin/components/FeedProcessor.js
 bin/components/FeedConverter.js
 bin/components/FeedWriter.js
+bin/components/fuelApplication.js
 bin/components/WebContentConverter.js
 bin/components/nsBrowserContentHandler.js
 bin/components/nsBrowserGlue.js
@@ -190,6 +196,10 @@ bin/components/nsSetDefaultBrowser.js
 bin/components/nsMicrosummaryService.js
 bin/components/nsSearchService.js
 bin/components/nsSearchSuggestions.js
+bin/components/nsLoginInfo.js
+bin/components/nsLoginManager.js
+bin/components/nsLoginManagerPrompter.js
+bin/components/storage-Legacy.js
 bin/components/jsconsole-clhandler.js
 bin/components/nsCloseAllWindows.js
 bin/components/nsDictionary.js
@@ -217,6 +227,7 @@ bin/components/libbrowserdirprovider.so
 bin/components/libbrowsercomps.so
 bin/components/txEXSLTRegExFunctions.js
 bin/components/nsLivemarkService.js
+bin/components/nsTaggingService.js
 bin/components/nsDefaultCLH.js
 
 ; Safe Browsing

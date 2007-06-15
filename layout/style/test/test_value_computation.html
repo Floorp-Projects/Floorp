@@ -86,7 +86,6 @@ var gNotAccepted = {
   "-moz-column-width": [ "50%" ],
   "-moz-user-select": [ "auto" ],
   "background-color": [ "rgb(255.0,0.387,3489)" ],
-  "content": [ "none" ],
   "list-style": [ "none disc outside" ],
 };
 
@@ -107,19 +106,12 @@ var gBadComputed = {
 
   "clip": [ "rect(auto,auto,auto,auto)" ],
 
-  // This seems really broken!
-  "counter-increment": [ "none" ],
-  "counter-reset": [ "none" ],
-
-  // So does this.
-  "marker-offset": [ "auto" ],
-
   // No idea what's happening for these two either
+  "border-top": [ "thin" ],
+  "border-right": [ "thin" ],
   "border-bottom": [ "thin" ],
+  "border-left": [ "thin" ],
   "outline-width": [ "3px" ],
-
-  // Something wrong with our alpha-component parsing or clamping.
-  "background-color": [ "rgba(255,255,255,-3.7)" ],
 
   // 'normal' should compute to 0
   "word-spacing": [ "0", "0px", "-0em" ],

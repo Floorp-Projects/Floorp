@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * Spider hook function to check if an individual browser based JS test 
+ * Spider hook function to check if an individual browser based JS test
  * has completed executing.
  */
 
@@ -82,21 +82,21 @@ function checkTestCompleted()
     unregisterDialogCloser();
     gPageCompleted = true;
 
-    var testcases = win.testcases;
-    if (typeof testcases == 'undefined')
+    var gTestcases = win.gTestcases;
+    if (typeof gTestcases == 'undefined')
     {
       return;
     }
 
-    for (var i = 0; i < testcases.length; i++)
+    for (var i = 0; i < gTestcases.length; i++)
     {
-      var testcase = testcases[i];
+      var testcase = gTestcases[i];
       cdump('test: '    + testcase.path + ' ' +
-            'bug: '         + testcase.bugnumber + ' ' + 
+            'bug: '         + testcase.bugnumber + ' ' +
             'result: ' + (testcase.passed ? 'PASSED':'FAILED') + ' ' +
-            'type: browser ' + 
-            'description: ' + testcase.description + ' ' + 
-            'expected: '    + testcase.expect + ' ' + 
+            'type: browser ' +
+            'description: ' + testcase.description + ' ' +
+            'expected: '    + testcase.expect + ' ' +
             'actual: '      + testcase.actual + ' ' +
             'reason: '      + testcase.reason);
     }
@@ -109,11 +109,11 @@ function checkTestCompleted()
     dlog('page not completed, recheck');
     setTimeout(checkTestCompleted, gCheckInterval);
   }
-  
+ 
 }
 
-gConsoleListener.onConsoleMessage = 
-function userOnConsoleMessage(s)
+gConsoleListener.onConsoleMessage =
+  function userOnConsoleMessage(s)
 {
   dump(s);
 };

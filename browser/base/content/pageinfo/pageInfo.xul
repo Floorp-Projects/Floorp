@@ -191,7 +191,7 @@
         </tree>        
       </groupbox>
       <groupbox id="securityBox">
-        <caption label="&securityHeader;"/>
+        <caption id="securityBoxCaption" label="&securityHeader;"/>
         <description id="general-security-identity" class="header"/>
         <description id="general-security-privacy"  class="header"/>
         <hbox align="right">
@@ -371,103 +371,113 @@
     <!-- Security & Privacy -->
     <vbox id="securityPanel">
       <!-- Identity Section -->
-      <label id="security-identity" class="header" value="&securityView.identity.header;"/>
-      <grid>
-        <columns>
-          <column/>
-          <column flex="1"/>
-        </columns>
-        <rows>
-          <row><!-- Domain -->
-            <label id="security-identity-domain-label"
-                   class="fieldLabel"
-                   value="&securityView.identity.domain;"
-                   control="security-identity-domain-value"/>
-            <textbox id="security-identity-domain-value"
-                     class="fieldValue" readonly="true"/>
-          </row>
-          <row><!-- Owner -->
-            <label id="security-identity-owner-label"
-                   class="fieldLabel"
-                   value="&securityView.identity.owner;"
-                   control="security-identity-owner-value"/>
-            <textbox id="security-identity-owner-value"
-                     class="fieldValue" readonly="true"/>
-          </row>
-          <row><!-- Verifier -->
-            <label id="security-identity-verifier-label"
-                   class="fieldLabel"
-                   value="&securityView.identity.verifier;"
-                   control="security-identity-verifier-value"/>
-            <textbox id="security-identity-verifier-value"
-                     class="fieldValue" readonly="true" />
-          </row>
-          <row><!-- Cert button -->
-            <button id="security-view-cert" label="&securityView.label;"
-                    accesskey="&securityView.accesskey;"
-                    oncommand="security.viewCert();"/>
-            <label id="security-view-text" class="fieldLabel"
-                   control="security-view-cert" flex="1"/>
-          </row>
-        </rows>
-      </grid>
-        
-      <separator class="groove"/>
+      <groupbox id="security-identity-groupbox" flex="1">
+        <caption id="security-identity" label="&securityView.identity.header;"/>
+        <grid flex="1">
+          <columns>
+            <column/>
+            <column flex="1"/>
+          </columns>
+          <rows>
+            <row><!-- Domain -->
+              <label id="security-identity-domain-label"
+                     class="fieldLabel"
+                     value="&securityView.identity.domain;"
+                     control="security-identity-domain-value"/>
+              <textbox id="security-identity-domain-value"
+                       class="fieldValue" readonly="true"/>
+            </row>
+            <row><!-- Owner -->
+              <label id="security-identity-owner-label"
+                     class="fieldLabel"
+                     value="&securityView.identity.owner;"
+                     control="security-identity-owner-value"/>
+              <textbox id="security-identity-owner-value"
+                       class="fieldValue" readonly="true"/>
+            </row>
+            <row><!-- Verifier -->
+              <label id="security-identity-verifier-label"
+                     class="fieldLabel"
+                     value="&securityView.identity.verifier;"
+                     control="security-identity-verifier-value"/>
+              <textbox id="security-identity-verifier-value"
+                       class="fieldValue" readonly="true" />
+            </row>
+          </rows>
+        </grid>
+        <spacer flex="1"/>
+        <hbox><!-- Cert button -->
+          <label id="security-view-text" class="fieldLabel"
+                 control="security-view-cert" flex="1"/>
+          <button id="security-view-cert" label="&securityView.certView;"
+                  accesskey="&securityView.accesskey;"
+                  oncommand="security.viewCert();"/>
+        </hbox>
+      </groupbox>
       
       <!-- Privacy & History section -->
-      <label id="security-privacy" class="header" value="&securityView.privacy.header;" />
-      <grid>
-        <columns>
-          <column flex="1"/>
-          <column/>
-          <column/>
-        </columns>
-        
-        <rows>
-          <row><!-- History -->
-            <description id="security-privacy-history-label"
-                         control="security-privacy-history-value"
-                         class="fieldLabel">&securityView.privacy.history;</description>
-            <textbox id="security-privacy-history-value"
-                     class="fieldValue"
-                     value="&securityView.unknown;" />
-          </row>
-          <row><!-- Cookies -->
-            <description id="security-privacy-cookies-label"
-                         control="security-privacy-cookies-value"
-                         class="fieldLabel">&securityView.privacy.cookies;</description>
-            <textbox id="security-privacy-cookies-value"
-                     class="fieldValue"
-                     value="&securityView.unknown;" />
-            <button id="security-view-cookies"
-                    label="&securityView.privacy.viewCookies;"
-                    accesskey="&securityView.privacy.viewCookies.accessKey;"
-                    oncommand="security.viewCookies();"/>
-          </row>
-          <row><!-- Passwords -->
-            <description  id="security-privacy-passwords-label"
-                          control="security-privacy-passwords-value"
-                          class="fieldLabel">&securityView.privacy.passwords;</description>
-            <textbox id="security-privacy-passwords-value"
-                     class="fieldValue"
-                     value="&securityView.unknown;" />
-            <button id="security-view-password"
-                    label="&securityView.privacy.viewPasswords;"
-                    accesskey="&securityView.privacy.viewPasswords.accessKey;"
-                    oncommand="security.viewPasswords();"/>
-          </row>
-        </rows>
-      </grid>
-
-      <separator class="groove"/>
+      <groupbox id="security-privacy-groupbox" flex="1">
+        <caption id="security-privacy" label="&securityView.privacy.header;" />
+        <grid>
+          <columns>
+            <column flex="1"/>
+            <column flex="1"/>
+          </columns>
+          <rows>
+            <row><!-- History -->
+              <description id="security-privacy-history-label"
+                           control="security-privacy-history-value"
+                           class="fieldLabel">&securityView.privacy.history;</description>
+              <textbox id="security-privacy-history-value"
+                       class="fieldValue"
+                       value="&securityView.unknown;"
+                       readonly="true"/>
+            </row>
+            <row><!-- Cookies -->
+              <description id="security-privacy-cookies-label"
+                           control="security-privacy-cookies-value"
+                           class="fieldLabel">&securityView.privacy.cookies;</description>
+              <hbox>
+                <textbox id="security-privacy-cookies-value"
+                         class="fieldValue"
+                         value="&securityView.unknown;"
+                         flex="1"
+                         readonly="true"/>
+                <button id="security-view-cookies"
+                        label="&securityView.privacy.viewCookies;"
+                        accesskey="&securityView.privacy.viewCookies.accessKey;"
+                        oncommand="security.viewCookies();"/>
+              </hbox>
+            </row>
+            <row><!-- Passwords -->
+              <description  id="security-privacy-passwords-label"
+                            control="security-privacy-passwords-value"
+                            class="fieldLabel">&securityView.privacy.passwords;</description>
+              <hbox>
+                <textbox id="security-privacy-passwords-value"
+                         class="fieldValue"
+                         value="&securityView.unknown;"
+                         flex="1"
+                         readonly="true"/>
+                <button id="security-view-password"
+                        label="&securityView.privacy.viewPasswords;"
+                        accesskey="&securityView.privacy.viewPasswords.accessKey;"
+                        oncommand="security.viewPasswords();"/>
+              </hbox>
+            </row>
+          </rows>
+        </grid>
+      </groupbox>
       
       <!-- Technical Details section -->
-      <label id="security-technical" class="header" value="&securityView.technical.header;" />
-      <vbox flex="1">
-        <label id="security-technical-shortform" class="fieldValue"/>
-        <description id="security-technical-longform1" class="fieldLabel"/>
-        <description id="security-technical-longform2" class="fieldLabel"/>
-      </vbox>
+      <groupbox id="security-technical-groupbox" flex="1">
+        <caption id="security-technical" label="&securityView.technical.header;" />
+        <vbox flex="1">
+          <label id="security-technical-shortform" class="fieldValue"/>
+          <description id="security-technical-longform1" class="fieldLabel"/>
+          <description id="security-technical-longform2" class="fieldLabel"/>
+        </vbox>
+      </groupbox>
     </vbox>
     <!-- Others added by overlay -->
   </deck>

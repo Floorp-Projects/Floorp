@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-345967.js';
 //-----------------------------------------------------------------------------
-var bug = 345967;
+var BUGNUMBER = 345967;
 var summary = 'Yet another unrooted atom in jsarray.c';
 var actual = '';
 var expect = '';
@@ -48,7 +50,7 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   expectExitCode(0);
@@ -56,7 +58,7 @@ function test()
 
   print('This test will probably run out of memory');
   print('This test really should only fail on 64 bit machines');
-  
+ 
   var JSVAL_INT_MAX = (1 << 30) - 1;
 
   var a = new Array(JSVAL_INT_MAX + 2);
@@ -66,23 +68,23 @@ function test()
   a.__defineGetter__(JSVAL_INT_MAX, function() { return 0; });
 
   a.__defineSetter__(JSVAL_INT_MAX, function(value) {
-    delete a[JSVAL_INT_MAX + 1];
-    var tmp = [];
-    tmp[JSVAL_INT_MAX + 2] = 2;
+		       delete a[JSVAL_INT_MAX + 1];
+		       var tmp = [];
+		       tmp[JSVAL_INT_MAX + 2] = 2;
 
-    if (typeof gc == 'function')
-      gc();
-    for (var i = 0; i != 50000; ++i) {
-      var tmp = 1 / 3;
-      tmp /= 10;
-    }
-    for (var i = 0; i != 1000; ++i) {
-      // Make string with 11 characters that would take
-      // (11 + 1) * 2 bytes or sizeof(JSAtom) so eventually
-      // malloc will ovewrite just freed atoms. 
-      var tmp2 = Array(12).join(' ');
-    }
-  });
+		       if (typeof gc == 'function')
+			 gc();
+		       for (var i = 0; i != 50000; ++i) {
+			 var tmp = 1 / 3;
+			 tmp /= 10;
+		       }
+		       for (var i = 0; i != 1000; ++i) {
+			 // Make string with 11 characters that would take
+			 // (11 + 1) * 2 bytes or sizeof(JSAtom) so eventually
+			 // malloc will ovewrite just freed atoms.
+			 var tmp2 = Array(12).join(' ');
+		       }
+		     });
 
 
   a.shift();

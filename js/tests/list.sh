@@ -21,7 +21,7 @@ find $dirs \
     sed 's/^\.\///' | \
     while read jsfile
   do
-  result=`grep $jsfile spidermonkey-n.tests`
+  result=`grep $jsfile excluded-n.tests`
   if [[ -z $result ]]; then
       result=`echo $jsfile | sed 's/.*js\([0-9]\)_\([0-9]\).*/\1.\2/'`
       case $result in
@@ -32,7 +32,6 @@ find $dirs \
 	  1.5) version=";version=1.5";;
 	  1.6) version=";version=1.6";;
 	  1.7) version=";version=1.7";;
-	  *) version="";;
       esac
       
       echo "http://${TEST_HTTP}/tests/mozilla.org/$jsdir/js-test-driver-standards.html?test=$jsfile;language=type;text/javascript$version"

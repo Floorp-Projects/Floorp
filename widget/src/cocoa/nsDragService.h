@@ -43,6 +43,8 @@
 
 #include <Cocoa/Cocoa.h>
 
+extern NSString* const kWildcardPboardType;
+
 class nsILocalFile;
 class nsIDOMDragEvent;
 

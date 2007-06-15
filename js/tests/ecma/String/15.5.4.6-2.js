@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = '15.5.4.6-2.js';
+
 /**
    File Name:          15.5.4.6-1.js
    ECMA Section:       15.5.4.6 String.prototype.indexOf( searchString, pos)
@@ -94,11 +97,11 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 // regress http://scopus/bugsplat/show_bug.cgi?id=105721
 
-new TestCase( SECTION, 
-              "function f() { return this; }; function g() { var h = f; return h(); }; g().toString()",    
-              GLOBAL,  
+new TestCase( SECTION,
+              "function f() { return this; }; function g() { var h = f; return h(); }; g().toString()",   
+              GLOBAL, 
               g().toString()
-              );
+  );
 
 
 new TestCase( SECTION, "String.prototype.indexOf.length",                                               1,     String.prototype.indexOf.length );
@@ -106,9 +109,9 @@ new TestCase( SECTION, "String.prototype.indexOf.length = null; String.prototype
 new TestCase( SECTION, "delete String.prototype.indexOf.length",                                        false,  delete String.prototype.indexOf.length );
 new TestCase( SECTION, "delete String.prototype.indexOf.length; String.prototype.indexOf.length",       1,      eval("delete String.prototype.indexOf.length; String.prototype.indexOf.length") );
 
-new TestCase( SECTION, 
-              "var s = new String(); s.indexOf()",     
-              -1,     
+new TestCase( SECTION,
+              "var s = new String(); s.indexOf()",    
+              -1,    
               eval("var s = new String(); s.indexOf()") );
 
 // some Unicode tests.

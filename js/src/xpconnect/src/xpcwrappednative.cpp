@@ -50,10 +50,10 @@
 NS_IMPL_CYCLE_COLLECTION_CLASS(XPCWrappedNative)
 
 NS_IMETHODIMP
-NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(nsISupports *s,
+NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(void *p,
                                                           nsCycleCollectionTraversalCallback &cb)
 {
-    XPCWrappedNative *tmp = NS_STATIC_CAST(XPCWrappedNative*, s);
+    XPCWrappedNative *tmp = NS_STATIC_CAST(XPCWrappedNative*, p);
     if(!tmp->IsValid())
         return NS_OK;
 
@@ -89,24 +89,6 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(nsISupports *s,
             cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, obj);
     }
 
-    // XXX If there is a scriptable helper we will not be able to find out what
-    //     it marked.
-
-
-    // xpc_MarkForValidWrapper calls MarkBeforeJSFinalize and
-    // MarkScopeJSObjects.
-
-    // XPCWrappedNative marks its proto (see MarkBeforeJSFinalize).
-    if(tmp->HasProto())
-        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                           tmp->GetProto()->GetJSProtoObject());
-
-    // XPCWrappedNative marks its mNativeWrapper (see MarkBeforeJSFinalize).
-    cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, tmp->mNativeWrapper);
-
-    // XPCWrappedNative marks its scope.
-    tmp->GetScope()->Traverse(cb);
-
     // XPCWrappedNative keeps its native object alive.
     cb.NoteXPCOMChild(tmp->GetIdentityObject());
 
@@ -114,7 +96,7 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(nsISupports *s,
 }
 
 NS_IMETHODIMP
-NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Unlink(nsISupports *s)
+NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Unlink(void *p)
 {
     // NB: We might unlink our outgoing references in the future; for
     // now we do nothing. This is a harmless conservative behavior; it
@@ -1977,20 +1959,21 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
         // set 'src' to be the object from which we get the value and
         // prepare for out param
 
+        if((paramInfo.IsOut() || paramInfo.IsDipper()) &&
+           !paramInfo.IsRetval() &&
+           (JSVAL_IS_PRIMITIVE(argv[i]) ||
+            !OBJ_GET_PROPERTY(ccx, JSVAL_TO_OBJECT(argv[i]),
+                              rt->GetStringID(XPCJSRuntime::IDX_VALUE),
+                              &src)))
+        {
+            ThrowBadParam(NS_ERROR_XPC_NEED_OUT_OBJECT, i, ccx);
+            goto done;
+        }
+
         if(paramInfo.IsOut())
         {
             dp->SetPtrIsData();
             dp->ptr = &dp->val;
-
-            if(!paramInfo.IsRetval() &&
-               (JSVAL_IS_PRIMITIVE(argv[i]) ||
-                !OBJ_GET_PROPERTY(ccx, JSVAL_TO_OBJECT(argv[i]),
-                                  rt->GetStringID(XPCJSRuntime::IDX_VALUE),
-                                  &src)))
-            {
-                ThrowBadParam(NS_ERROR_XPC_NEED_OUT_OBJECT, i, ccx);
-                goto done;
-            }
 
             if(type.IsPointer() &&
                type_tag != nsXPTType::T_INTERFACE &&
@@ -3227,24 +3210,42 @@ XPCJSObjectHolder::GetJSObject(JSObject** aJSObj)
     return NS_OK;
 }
 
-XPCJSObjectHolder::XPCJSObjectHolder(JSContext* cx, JSObject* obj)
-    : mRuntime(JS_GetRuntime(cx)), mJSObj(obj)
+XPCJSObjectHolder::XPCJSObjectHolder(XPCCallContext& ccx, JSObject* obj)
+    : mJSObj(obj)
 {
-    JS_AddNamedRoot(cx, &mJSObj, "XPCJSObjectHolder::mJSObj");
+    ccx.GetRuntime()->AddObjectHolderRoot(this);
 }
 
 XPCJSObjectHolder::~XPCJSObjectHolder()
 {
-    JS_RemoveRootRT(mRuntime, &mJSObj);
+    RemoveFromRootSet(nsXPConnect::GetRuntime()->GetJSRuntime());
 }
 
-XPCJSObjectHolder*
-XPCJSObjectHolder::newHolder(JSContext* cx, JSObject* obj)
+void
+XPCJSObjectHolder::TraceJS(JSTracer *trc)
 {
-    if(!cx || !obj)
+    JS_SET_TRACING_DETAILS(trc, PrintTraceName, this, 0);
+    JS_CallTracer(trc, mJSObj, JSTRACE_OBJECT);
+}
+
+#ifdef DEBUG
+// static
+void
+XPCJSObjectHolder::PrintTraceName(JSTracer* trc, char *buf, size_t bufsize)
+{
+    JS_snprintf(buf, bufsize, "XPCJSObjectHolder[0x%p].mJSObj",
+                trc->debugPrintArg);
+}
+#endif
+
+// static
+XPCJSObjectHolder*
+XPCJSObjectHolder::newHolder(XPCCallContext& ccx, JSObject* obj)
+{
+    if(!obj)
     {
         NS_ASSERTION(0, "bad param");
         return nsnull;
     }
-    return new XPCJSObjectHolder(cx, obj);
+    return new XPCJSObjectHolder(ccx, obj);
 }

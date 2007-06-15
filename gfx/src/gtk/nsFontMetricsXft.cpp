@@ -1532,11 +1532,6 @@ nsFontMetricsXft::PrepareToDraw(nsRenderingContextGTK *aContext,
         GdkRegion *rgn = nsnull;
         clipRegion->GetNativeRegion((void *&)rgn);
 
-#ifdef MOZ_WIDGET_GTK
-        GdkRegionPrivate  *priv = (GdkRegionPrivate *)rgn;
-        XftDrawSetClip(*aDraw, priv->xregion);
-#endif
-
 #ifdef MOZ_WIDGET_GTK2
         GdkRegionSetXftClip(rgn, *aDraw);
 #endif

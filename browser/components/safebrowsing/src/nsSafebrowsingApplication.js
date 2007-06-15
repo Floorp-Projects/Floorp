@@ -10,10 +10,6 @@ Function.prototype.inherits = function(parentCtor) {
   this.prototype = new tempCtor();
 }  
 
-#include ../content/js/eventregistrar.js
-#include ../content/js/listdictionary.js
-#include ../content/moz/tabbedbrowserwatcher.js
-
 #include ../content/application.js
 #include ../content/browser-view.js
 #include ../content/controller.js
@@ -29,7 +25,6 @@ var modScope = this;
 function Init() {
   var jslib = Cc["@mozilla.org/url-classifier/jslib;1"]
               .getService().wrappedJSObject;
-  modScope.String.prototype.startsWith = jslib.String.prototype.startsWith;
   modScope.G_Debug = jslib.G_Debug;
   modScope.G_Assert = jslib.G_Assert;
   modScope.G_Alarm = jslib.G_Alarm;
@@ -39,7 +34,6 @@ function Init() {
   modScope.PROT_XMLFetcher = jslib.PROT_XMLFetcher;
   modScope.BindToObject = jslib.BindToObject;
   modScope.G_Protocol4Parser = jslib.G_Protocol4Parser;
-  modScope.G_ObjectSafeMap = jslib.G_ObjectSafeMap;
   modScope.PROT_UrlCrypto = jslib.PROT_UrlCrypto;
   modScope.RequestBackoff = jslib.RequestBackoff;
   

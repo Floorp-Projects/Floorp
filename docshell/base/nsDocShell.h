@@ -148,7 +148,6 @@ protected:
 class nsDocShell : public nsDocLoader,
                    public nsIDocShell,
                    public nsIDocShellTreeItem, 
-                   public nsIDocShellTreeNode,
                    public nsIDocShellHistory,
                    public nsIWebNavigation,
                    public nsIBaseWindow, 
@@ -381,6 +380,7 @@ protected:
                              const PRUnichar *aPage,
                              const PRUnichar *aDescription,
                              nsIChannel* aFailedChannel);
+    PRBool IsNavigationAllowed(PRBool aDisplayPrintErrorDialog = PR_TRUE);
     PRBool IsPrintingOrPP(PRBool aDisplayErrorDialog = PR_TRUE);
 
     nsresult SetBaseUrlForWyciwyg(nsIContentViewer * aContentViewer);
@@ -475,6 +475,10 @@ protected:
     // Call BeginRestore(nsnull, PR_FALSE) for each child of this shell.
     nsresult BeginRestoreChildren();
 
+    // Method to get our current position and size without flushing
+    void DoGetPositionAndSize(PRInt32 * x, PRInt32 * y, PRInt32 * cx,
+                              PRInt32 * cy);
+    
     // Check whether aURI should inherit our security context
     static nsresult URIInheritsSecurityContext(nsIURI* aURI, PRBool* aResult);
 
@@ -532,7 +536,16 @@ protected:
     PRUint32                   mAppType;
 
     // Offset in the parent's child list.
-    PRInt32                    mChildOffset;
+    // XXXmats the line above is bogus, it's the offset in the parent's
+    // child list at the time this docshell was added to it,
+    // see nsDocShell::AddChild().  It isn't updated after that so if children
+    // with lower indices are removed this offset is no longer valid to be used
+    // as an index into the parent's child list (see bug 162283).  It MUST not
+    // be used for that purpose.  It's used as an index to get/add history
+    // entries into nsIDocShellHistory, although I very much doubt that it
+    // can be correct for that purpose as well...
+    // Try not to use it, we should get rid of it.
+    PRUint32                   mChildOffset;
 
     PRUint32                   mBusyFlags;
 

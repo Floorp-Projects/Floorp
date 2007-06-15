@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '11.5.1.js';
+
 /**
    File Name:          11.5.1.js
    ECMA Section:       11.5.1 Applying the * operator

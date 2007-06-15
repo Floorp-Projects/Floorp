@@ -38,147 +38,160 @@
 #ifndef GFX_TEXT_RUN_CACHE_H
 #define GFX_TEXT_RUN_CACHE_H
 
-#include "nsRefPtrHashtable.h"
-#include "nsClassHashtable.h"
-
 #include "gfxFont.h"
+#include "nsCheapSets.h"
 
-#include "prtime.h"
-
+/**
+ * A textrun cache object. A general textrun caching solution. If you use
+ * this class to create a textrun cache, you are responsible for managing
+ * textrun lifetimes. The full power of textrun creation is exposed; you can
+ * set all textrun creation flags and parameters.
+ */
 class THEBES_API gfxTextRunCache {
 public:
-    /*
-     * Get the global gfxTextRunCache.  You must call Init() before
-     * calling this method.
-     */
-    static gfxTextRunCache* GetCache() {
-        return mGlobalCache;
+    gfxTextRunCache() {
+        mCache.Init(100);
+    }
+    ~gfxTextRunCache() {
+        NS_ASSERTION(mCache.Count() == 0, "Textrun cache not empty!");
     }
 
-    static nsresult Init();
-    // It's OK to call Shutdown if we never actually started or we already
-    // shut down.
-    static void Shutdown();
-
-    /* Will return a pointer to a gfxTextRun, which may or may not be from
-     * the cache. If aCallerOwns is set to true, the caller owns the textrun
-     * and must delete it. Otherwise the returned textrun is only valid until
-     * the next GetOrMakeTextRun call and the caller must not delete it.
+    /**
+     * Get a textrun from the cache, create one if necessary.
+     * @param aFlags the flags TEXT_IS_ASCII, TEXT_IS_8BIT and TEXT_HAS_SURROGATES
+     * are ignored; the cache sets them based on the string.
+     * @param aCallerOwns if this is null, the cache always creates a new
+     * textrun owned by the caller. If non-null, the cache may return a textrun
+     * that was previously created and is owned by some previous caller
+     * to GetOrMakeTextRun on this cache. If so, *aCallerOwns will be set
+     * to false.
      */
-    gfxTextRun *GetOrMakeTextRun (gfxContext* aContext, gfxFontGroup *aFontGroup,
-                                  const char *aString, PRUint32 aLength,
-                                  PRUint32 aAppUnitsPerDevUnit, PRBool aIsRTL,
-                                  PRBool aEnableSpacing, PRBool *aCallerOwns);
-    gfxTextRun *GetOrMakeTextRun (gfxContext* aContext, gfxFontGroup *aFontGroup,
-                                  const PRUnichar *aString, PRUint32 aLength,
-                                  PRUint32 aAppUnitsPerDevUnit, PRBool aIsRTL,
-                                  PRBool aEnableSpacing, PRBool *aCallerOwns);
+    gfxTextRun *GetOrMakeTextRun(const PRUnichar *aText, PRUint32 aLength,
+                                 gfxFontGroup *aFontGroup,
+                                 const gfxFontGroup::Parameters *aParams,
+                                 PRUint32 aFlags, PRBool *aCallerOwns = nsnull);
+    /**
+     * Get a textrun from the cache, create one if necessary.
+     * @param aFlags the flags TEXT_IS_ASCII, TEXT_IS_8BIT and TEXT_HAS_SURROGATES
+     * are ignored; the cache sets them based on the string.
+     * @param aCallerOwns if this is null, the cache always creates a new
+     * textrun owned by the caller. If non-null, the cache may return a textrun
+     * that was previously created and is owned by some previous caller
+     * to GetOrMakeTextRun on this cache. If so, *aCallerOwns will be set
+     * to false.
+     */
+    gfxTextRun *GetOrMakeTextRun(const PRUint8 *aText, PRUint32 aLength,
+                                 gfxFontGroup *aFontGroup,
+                                 const gfxFontGroup::Parameters *aParams,
+                                 PRUint32 aFlags, PRBool *aCallerOwns = nsnull);
+
+    /**
+     * Notify that a text run was hit in the cache, a new one created, and
+     * that the new one has replaced the old one in the cache.
+     */
+    virtual void NotifyRemovedFromCache(gfxTextRun *aTextRun) {}
+
+    /**
+     * Remove a textrun from the cache. This must be called before aTextRun
+     * is deleted!
+     */
+    void RemoveTextRun(gfxTextRun *aTextRun);
+
+    /** The following flags are part of the cache key: */
+    enum { FLAG_MASK =
+        gfxTextRunFactory::TEXT_IS_RTL |
+        gfxTextRunFactory::TEXT_ENABLE_SPACING |
+        gfxTextRunFactory::TEXT_ABSOLUTE_SPACING |
+        gfxTextRunFactory::TEXT_ENABLE_NEGATIVE_SPACING |
+        gfxTextRunFactory::TEXT_ENABLE_HYPHEN_BREAKS |
+        gfxTextRunFactory::TEXT_NEED_BOUNDING_BOX
+    };
 
 protected:
-    gfxTextRunCache();
+    struct THEBES_API CacheHashKey {
+        void       *mFontOrGroup;
+        const void *mString;
+        PRUint32    mLength;
+        PRUint32    mAppUnitsPerDevUnit;
+        PRUint32    mFlags;
+        PRUint32    mStringHash;
 
-    static gfxTextRunCache *mGlobalCache;
-
-    /* A small container class to hold a gfxFontGroup ref and a string.
-     * This is used as the key for the cache hash table; to avoid
-     * copying a whole pile of strings every time we do a hash lookup.
-     * we only create our own copy of the string when Realize() is called.
-     * gfxTextRunCache calls Realize whenever it puts a new entry into
-     * the hashtable.
-     */
-    template<class GenericString, class RealString>
-    struct FontGroupAndStringT {
-        FontGroupAndStringT(gfxFontGroup *fg, const GenericString* str)
-            : mFontGroup(fg), mString(str) { }
-
-        FontGroupAndStringT(const FontGroupAndStringT<GenericString,RealString>& other)
-            : mFontGroup(other.mFontGroup), mString(&mRealString)
-        {
-            mRealString.Assign(*other.mString);
-        }
-
-        void Realize() {
-            mRealString.Assign(*mString);
-            mString = &mRealString;
-        }
-
-        nsRefPtr<gfxFontGroup> mFontGroup;
-        RealString mRealString;
-        const GenericString* mString;
+        CacheHashKey(void *aFontOrGroup, const void *aString, PRUint32 aLength,
+                     PRUint32 aAppUnitsPerDevUnit, PRUint32 aFlags, PRUint32 aStringHash)
+            : mFontOrGroup(aFontOrGroup), mString(aString), mLength(aLength),
+              mAppUnitsPerDevUnit(aAppUnitsPerDevUnit), mFlags(aFlags),
+              mStringHash(aStringHash) {}
     };
 
-    static PRUint32 HashDouble(const double d) {
-        if (d == 0.0)
-            return 0;
-        int exponent;
-        double mantissa = frexp (d, &exponent);
-        return (PRUint32) (2 * fabs(mantissa) - 1);
-    }
+    class THEBES_API CacheHashEntry : public PLDHashEntryHdr {
+    public:
+        typedef const CacheHashKey &KeyType;
+        typedef const CacheHashKey *KeyTypePointer;
 
-    template<class T>
-    struct FontGroupAndStringHashKeyT : public PLDHashEntryHdr {
-        typedef const T& KeyType;
-        typedef const T* KeyTypePointer;
+        // When constructing a new entry in the hashtable, mTextRuns will be
+        // blank. The caller of Put() will fill it in.
+        CacheHashEntry(KeyTypePointer aKey)  { }
+        CacheHashEntry(const CacheHashEntry& toCopy) { NS_ERROR("Should not be called"); }
+        ~CacheHashEntry() { }
 
-        FontGroupAndStringHashKeyT(KeyTypePointer aObj) : mObj(*aObj) { }
-        FontGroupAndStringHashKeyT(const FontGroupAndStringHashKeyT<T>& other) : mObj(other.mObj) { }
-        ~FontGroupAndStringHashKeyT() { }
-
-        KeyType GetKey() const { return mObj; }
-
-        PRBool KeyEquals(KeyTypePointer aKey) const {
-            return
-                mObj.mString->Equals(*(aKey->mString)) &&
-                mObj.mFontGroup->Equals(*(aKey->mFontGroup.get()));
-        }
-
+        PRBool KeyEquals(const KeyTypePointer aKey) const;
         static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
-        static PLDHashNumber HashKey(KeyTypePointer aKey) {
-            PRUint32 h1 = HashString(*(aKey->mString));
-            PRUint32 h2 = HashString(aKey->mFontGroup->GetFamilies());
-            PRUint32 h3 = HashDouble(aKey->mFontGroup->GetStyle()->size);
+        static PLDHashNumber HashKey(const KeyTypePointer aKey);
+        enum { ALLOW_MEMMOVE = PR_TRUE };
 
-            return h1 ^ h2 ^ h3;
-        }
-        enum { ALLOW_MEMMOVE = PR_FALSE };
-
-    private:
-        const T mObj;
+        gfxTextRun *mTextRun;
     };
 
-    struct TextRunEntry {
-        TextRunEntry(gfxTextRun *tr) : textRun(tr), lastUse(PR_Now()) { }
-        void Used() { lastUse = PR_Now(); }
+    CacheHashKey GetKeyForTextRun(gfxTextRun *aTextRun);
 
-        gfxTextRun* textRun;
-        PRTime      lastUse;
-        
-        ~TextRunEntry() { delete textRun; }
-    };
-
-    typedef FontGroupAndStringT<nsAString, nsString> FontGroupAndString;
-    typedef FontGroupAndStringT<nsACString, nsCString> FontGroupAndCString;
-
-    typedef FontGroupAndStringHashKeyT<FontGroupAndString> FontGroupAndStringHashKey;
-    typedef FontGroupAndStringHashKeyT<FontGroupAndCString> FontGroupAndCStringHashKey;
-
-    nsClassHashtable<FontGroupAndStringHashKey, TextRunEntry> mHashTableUTF16;
-    nsClassHashtable<FontGroupAndCStringHashKey, TextRunEntry> mHashTableASCII;
-
-    void EvictUTF16();
-    void EvictASCII();
-
-    PRTime mLastUTF16Eviction;
-    PRTime mLastASCIIEviction;
-
-    static PLDHashOperator UTF16EvictEnumerator(const FontGroupAndString& key,
-                                                nsAutoPtr<TextRunEntry> &value,
-                                                void *closure);
-
-    static PLDHashOperator ASCIIEvictEnumerator(const FontGroupAndCString& key,
-                                                nsAutoPtr<TextRunEntry> &value,
-                                                void *closure);
+    nsTHashtable<CacheHashEntry> mCache;
 };
 
+/**
+ * A simple global textrun cache for textruns that do not carry state
+ * (e.g., actual or potential linebreaks) and do not need complex initialization.
+ * The lifetimes of these textruns are managed by the cache (they are auto-expired
+ * after a certain period of time).
+ */
+class THEBES_API gfxGlobalTextRunCache {
+public:
+    /**
+     * Get a textrun for the given text, using a global cache. The returned
+     * textrun is valid until the next event loop. We own it, the caller
+     * must not free it.
+     * Do not set any state in the textrun (e.g. actual or potential linebreaks).
+     * Flags IS_8BIT, IS_ASCII and HAS_SURROGATES are automatically set
+     * appropriately.
+     * Flag IS_PERSISTENT must NOT be set unless aText is guaranteed to live
+     * forever.
+     */
+    static gfxTextRun *GetTextRun(const PRUnichar *aText, PRUint32 aLength,
+                                  gfxFontGroup *aFontGroup,
+                                  gfxContext *aRefContext,
+                                  PRUint32 aAppUnitsPerDevUnit,
+                                  PRUint32 aFlags);
+
+    /**
+     * Get a textrun for the given text, using a global cache. The returned
+     * textrun is valid until the next event loop. We own it, the caller
+     * must not free it.
+     * Do not set any state in the textrun (e.g. actual or potential linebreaks).
+     * Flags IS_8BIT, IS_ASCII and HAS_SURROGATES are automatically set
+     * appropriately.
+     * Flag IS_PERSISTENT must NOT be set unless aText is guaranteed to live
+     * forever.
+     */
+    static gfxTextRun *GetTextRun(const PRUint8 *aText, PRUint32 aLength,
+                                  gfxFontGroup *aFontGroup,
+                                  gfxContext *aRefContext,
+                                  PRUint32 aAppUnitsPerDevUnit,
+                                  PRUint32 aFlags);
+
+protected:
+    friend class gfxPlatform;
+
+    static nsresult Init();
+    static void Shutdown();
+};
 
 #endif /* GFX_TEXT_RUN_CACHE_H */

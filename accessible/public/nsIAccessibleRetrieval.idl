@@ -44,6 +44,8 @@ interface nsIWeakReference;
 interface nsIPresShell;
 interface nsIDOMWindow;
 interface nsIAccessNode;
+interface nsIDOMDOMStringList;
+
 
 /**
  * An interface for in-process accessibility clients
@@ -139,6 +141,21 @@ interface nsIAccessibleRetrieval : nsISupports
     *         an accessible does not already exist for this DOM node.
     */
   nsIAccessible getCachedAccessible(in nsIDOMNode aNode, in nsIWeakReference aShell);
+  
+   /**
+    * Returns accessible role as a string.
+    *
+    * @param aRole - the accessible role constants.
+    */
+  AString getStringRole(in unsigned long aRole);
+  
+   /**
+    * Returns list which contains accessible states as a strings.
+    *
+    * @param aStates - accessible states.
+    * @param aExtraStates - accessible extra states.
+    */
+  nsIDOMDOMStringList getStringStates(in unsigned long aStates, in unsigned long aExtraStates);
 };
 
 

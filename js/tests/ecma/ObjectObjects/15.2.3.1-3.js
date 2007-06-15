@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.2.3.1-3.js';
+
 /**
    File Name:          15.2.3.1-3.js
    ECMA Section:       15.2.3.1 Object.prototype
@@ -60,7 +62,7 @@ var TITLE   = "Object.prototype";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,  
+new TestCase( SECTION, 
 	      "Object.prototype = null; Object.prototype",
 	      Object.prototype,
 	      eval("Object.prototype = null; Object.prototype"));

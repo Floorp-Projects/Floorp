@@ -34,13 +34,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-322957.js';
 //-----------------------------------------------------------------------------
-var bug = 322957;
+var BUGNUMBER = 322957;
 var summary = 'TryMethod should not eat getter exceptions';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var obj = { get toSource() { throw "EXCEPTION"; } };

@@ -1374,7 +1374,8 @@ nsXULTreeBuilder::RebuildAll()
     mRoot->GetAttr(kNameSpaceID_None, nsGkAtoms::ref, ref);
 
     if (! ref.IsEmpty()) {
-        rv = mQueryProcessor->TranslateRef(mDB, ref, getter_AddRefs(mRootResult));
+        rv = mQueryProcessor->TranslateRef(mDataSource, ref,
+                                           getter_AddRefs(mRootResult));
         if (NS_FAILED(rv))
             return rv;
 
@@ -1577,7 +1578,7 @@ nsXULTreeBuilder::OpenSubtreeForQuerySet(nsTreeRows::Subtree* aSubtree,
     PRInt32 count = *aDelta;
     
     nsCOMPtr<nsISimpleEnumerator> results;
-    nsresult rv = mQueryProcessor->GenerateResults(mDB, aResult,
+    nsresult rv = mQueryProcessor->GenerateResults(mDataSource, aResult,
                                                    aQuerySet->mCompiledQuery,
                                                    getter_AddRefs(results));
     if (NS_FAILED(rv))
@@ -1638,7 +1639,7 @@ nsXULTreeBuilder::OpenSubtreeForQuerySet(nsTreeRows::Subtree* aSubtree,
                     nsCOMPtr<nsIRDFResource> parentid;
                     rv = GetResultResource(iter->mMatch->mResult, getter_AddRefs(parentid));
                     if (NS_FAILED(rv)) {
-                        nsTemplateMatch::Destroy(mPool, newmatch);
+                        nsTemplateMatch::Destroy(mPool, newmatch, PR_FALSE);
                         return rv;
                     }
 
@@ -1651,7 +1652,7 @@ nsXULTreeBuilder::OpenSubtreeForQuerySet(nsTreeRows::Subtree* aSubtree,
 
             if (cyclic) {
                 NS_WARNING("tree cannot handle cyclic graphs");
-                nsTemplateMatch::Destroy(mPool, newmatch);
+                nsTemplateMatch::Destroy(mPool, newmatch, PR_FALSE);
                 continue;
             }
 
@@ -1660,7 +1661,7 @@ nsXULTreeBuilder::OpenSubtreeForQuerySet(nsTreeRows::Subtree* aSubtree,
             rv = DetermineMatchedRule(nsnull, nextresult, aQuerySet,
                                       &matchedrule, &ruleindex);
             if (NS_FAILED(rv)) {
-                nsTemplateMatch::Destroy(mPool, newmatch);
+                nsTemplateMatch::Destroy(mPool, newmatch, PR_FALSE);
                 return rv;
             }
 
@@ -1668,7 +1669,7 @@ nsXULTreeBuilder::OpenSubtreeForQuerySet(nsTreeRows::Subtree* aSubtree,
                 rv = newmatch->RuleMatched(aQuerySet, matchedrule, ruleindex,
                                            nextresult);
                 if (NS_FAILED(rv)) {
-                    nsTemplateMatch::Destroy(mPool, newmatch);
+                    nsTemplateMatch::Destroy(mPool, newmatch, PR_FALSE);
                     return rv;
                 }
 
@@ -1692,7 +1693,7 @@ nsXULTreeBuilder::OpenSubtreeForQuerySet(nsTreeRows::Subtree* aSubtree,
             prevmatch->mNext = newmatch;
         }
         else if (!mMatchMap.Put(resultid, newmatch)) {
-            nsTemplateMatch::Destroy(mPool, newmatch);
+            nsTemplateMatch::Destroy(mPool, newmatch, PR_TRUE);
             return NS_ERROR_OUT_OF_MEMORY;
         }
     }
@@ -1748,11 +1749,8 @@ nsXULTreeBuilder::RemoveMatchesFor(nsTreeRows::Subtree& subtree)
         nsTemplateMatch* existingmatch;
         if (mMatchMap.Get(id, &existingmatch)) {
             while (existingmatch) {
-                if (existingmatch->mResult)
-                    existingmatch->mResult->HasBeenRemoved();
-
                 nsTemplateMatch* nextmatch = existingmatch->mNext;
-                nsTemplateMatch::Destroy(mPool, existingmatch);
+                nsTemplateMatch::Destroy(mPool, existingmatch, PR_TRUE);
                 existingmatch = nextmatch;
             }
 
@@ -1815,7 +1813,9 @@ nsXULTreeBuilder::Compare(const void* aLeft, const void* aRight, void* aClosure)
 PRInt32
 nsXULTreeBuilder::CompareResults(nsIXULTemplateResult* aLeft, nsIXULTemplateResult* aRight)
 {
-    if (mSortDirection == eDirection_Natural) {
+    // this is an extra check done for RDF queries such that results appear in
+    // the order they appear in their containing Seq
+    if (mSortDirection == eDirection_Natural && mDB) {
         // If the sort order is ``natural'', then see if the container
         // is an RDF sequence. If so, we'll try to use the ordinal
         // properties to determine order.

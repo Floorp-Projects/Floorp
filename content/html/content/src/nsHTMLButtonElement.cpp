@@ -37,7 +37,7 @@
 #include "nsIDOMHTMLButtonElement.h"
 #include "nsIDOMNSHTMLButtonElement.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
@@ -218,7 +218,7 @@ nsHTMLButtonElement::Click()
   nsCOMPtr<nsIDocument> doc = GetCurrentDoc();
 
   if (doc) {
-    nsIPresShell *shell = doc->GetShellAt(0);
+    nsIPresShell *shell = doc->GetPrimaryShell();
     if (shell) {
       nsCOMPtr<nsPresContext> context = shell->GetPresContext();
       if (context) {

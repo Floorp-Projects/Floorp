@@ -188,12 +188,6 @@ function ValidateData()
   return ValidateImage();
 }
 
-function doHelpButton()
-{
-  openHelp("image_properties");
-  return true;
-}
-
 function onAccept()
 {
   // Use this now (default = false) so Advanced Edit button dialog doesn't trigger error message

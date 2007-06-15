@@ -1,7 +1,7 @@
 do_import_script("netwerk/test/httpserver/httpd.js");
 
 var server;
-var BUGID = "331825";
+const BUGID = "331825";
 
 function TestListener() {
 }

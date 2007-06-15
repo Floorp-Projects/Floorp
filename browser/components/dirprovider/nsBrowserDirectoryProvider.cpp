@@ -113,12 +113,16 @@ nsBrowserDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
   nsCOMPtr<nsIFile> file;
 
   char const* leafName = nsnull;
+#ifndef MOZ_PLACES_BOOKMARKS
   PRBool restoreBookmarksBackup = PR_FALSE;
   PRBool ensureFilePermissions = PR_FALSE;
+#endif
 
   if (!strcmp(aKey, NS_APP_BOOKMARKS_50_FILE)) {
+#ifndef MOZ_PLACES_BOOKMARKS
     ensureFilePermissions = PR_TRUE;
     restoreBookmarksBackup = PR_TRUE;
+#endif
     leafName = "bookmarks.html";
 
     nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
@@ -126,9 +130,18 @@ nsBrowserDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
       nsCString path;
       rv = prefs->GetCharPref("browser.bookmarks.file", getter_Copies(path));
       if (NS_SUCCEEDED(rv)) {
-	NS_NewNativeLocalFile(path, PR_TRUE, (nsILocalFile**)(nsIFile**) getter_AddRefs(file));
+        NS_NewNativeLocalFile(path, PR_TRUE, (nsILocalFile**)(nsIFile**) getter_AddRefs(file));
       }
     }
+  }
+  else if (!strcmp(aKey, NS_APP_EXISTING_PREF_OVERRIDE)) {
+    rv = NS_GetSpecialDirectory(NS_APP_DEFAULTS_50_DIR,
+                                getter_AddRefs(file));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    file->AppendNative(NS_LITERAL_CSTRING("existing-profile-defaults.js"));
+    file.swap(*aResult);
+    return NS_OK;
   }
   else if (!strcmp(aKey, NS_APP_MICROSUMMARY_DIR)) {
     rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
@@ -171,7 +184,7 @@ nsBrowserDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
 
     file->AppendNative(leafstr);
   }
-
+#ifndef MOZ_PLACES_BOOKMARKS
   PRBool exists;
   rv = file->Exists(&exists);
 
@@ -203,7 +216,7 @@ nsBrowserDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
       }
     }
   }
-
+#endif
   *aPersist = PR_TRUE;
   NS_ADDREF(*aResult = file);
 
@@ -325,7 +338,7 @@ static const nsModuleComponentInfo components[] = {
 };
 
 NS_IMPL_NSGETMODULE(BrowserDirProvider, components)
-
+#ifndef MOZ_PLACES_BOOKMARKS
 nsresult
 nsBrowserDirectoryProvider::RestoreBookmarksFromBackup(const nsACString& aLeafName,
 						       nsIFile* aParentDir,
@@ -370,7 +383,7 @@ nsBrowserDirectoryProvider::EnsureProfileFile(const nsACString& aLeafName,
 
   defaults->CopyToNative(aParentDir, aLeafName);
 }
-
+#endif
 NS_IMPL_ISUPPORTS1(nsBrowserDirectoryProvider::AppendingEnumerator,
                    nsISimpleEnumerator)
 

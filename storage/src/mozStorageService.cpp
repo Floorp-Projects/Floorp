@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
  *   Brett Wilson <brettw@gmail.com>
+ *   Shawn Wilsher <me@shawnwilsher.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,9 +49,6 @@
 #include "sqlite3file.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(mozStorageService, mozIStorageService, nsIObserver)
-
-// XXX this sucks that we have to pull in nsIFile and all that
-// just to use NS_GetSpecialDirectory
 
 static const char kShutdownMessage[] = "xpcom-shutdown-threads";
 
@@ -122,14 +120,13 @@ mozStorageService::OpenSpecialDatabase(const char *aStorageKey, mozIStorageConne
     }
 
     mozStorageConnection *msc = new mozStorageConnection(this);
-    if (! msc)
+    if (!msc)
         return NS_ERROR_OUT_OF_MEMORY;
-    nsCOMPtr<mozIStorageConnection> conn = msc;
-    rv = msc->Initialize (storageFile);
-    if (NS_FAILED(rv)) return rv;
 
-    *_retval = conn;
-    NS_ADDREF(*_retval);
+    rv = msc->Initialize (storageFile);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_ADDREF(*_retval = msc);
     return NS_OK;
 }
 
@@ -140,14 +137,13 @@ mozStorageService::OpenDatabase(nsIFile *aDatabaseFile, mozIStorageConnection **
     nsresult rv;
 
     mozStorageConnection *msc = new mozStorageConnection(this);
-    if (! msc)
+    if (!msc)
         return NS_ERROR_OUT_OF_MEMORY;
-    nsCOMPtr<mozIStorageConnection> conn = msc;
-    rv = msc->Initialize (aDatabaseFile);
-    if (NS_FAILED(rv)) return rv;
 
-    *_retval = conn;
-    NS_ADDREF(*_retval);
+    rv = msc->Initialize (aDatabaseFile);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_ADDREF(*_retval = msc);
     return NS_OK;
 }
 
@@ -156,9 +152,8 @@ mozStorageService::Observe(nsISupports *aSubject, const char *aTopic,
                            const PRUnichar *aData)
 {
     nsresult rv;
-    if (nsCRT::strcmp(aTopic, kShutdownMessage) == 0) {
+    if (strcmp(aTopic, kShutdownMessage) == 0) {
         rv = FinishAsyncIO();
-        NS_ENSURE_SUCCESS(rv, rv);
     }
-    return NS_OK;
+    return rv;
 }

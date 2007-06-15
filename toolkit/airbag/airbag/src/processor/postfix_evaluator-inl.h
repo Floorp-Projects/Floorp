@@ -27,6 +27,7 @@
 
 #include "processor/postfix_evaluator.h"
 #include "google_breakpad/processor/memory_region.h"
+#include "processor/logging.h"
 
 namespace google_breakpad {
 
@@ -83,8 +84,11 @@ bool PostfixEvaluator<ValueType>::Evaluate(const string &expression,
     if (operation != BINARY_OP_NONE) {
       // Get the operands.
       ValueType operand1, operand2;
-      if (!PopValues(&operand1, &operand2))
+      if (!PopValues(&operand1, &operand2)) {
+        BPLOG(ERROR) << "Could not PopValues to get two values for binary "
+                        "operation " << token << ": " << expression;
         return false;
+      }
 
       // Perform the operation.
       ValueType result;
@@ -107,6 +111,7 @@ bool PostfixEvaluator<ValueType>::Evaluate(const string &expression,
         case BINARY_OP_NONE:
           // This will not happen, but compilers will want a default or
           // BINARY_OP_NONE case.
+          BPLOG(ERROR) << "Not reached!";
           return false;
           break;
       }
@@ -115,32 +120,51 @@ bool PostfixEvaluator<ValueType>::Evaluate(const string &expression,
       PushValue(result);
     } else if (token == "^") {
       // ^ for unary dereference.  Can't dereference without memory.
-      if (!memory_)
+      if (!memory_) {
+        BPLOG(ERROR) << "Attempt to dereference without memory: " <<
+                        expression;
         return false;
+      }
 
       ValueType address;
-      if (!PopValue(&address))
+      if (!PopValue(&address)) {
+        BPLOG(ERROR) << "Could not PopValue to get value to derefence: " <<
+                        expression;
         return false;
+      }
 
       ValueType value;
-      if (!memory_->GetMemoryAtAddress(address, &value))
+      if (!memory_->GetMemoryAtAddress(address, &value)) {
+        BPLOG(ERROR) << "Could not dereference memory at address " <<
+                        HexString(address) << ": " << expression;
         return false;
+      }
 
       PushValue(value);
     } else if (token == "=") {
       // = for assignment.
       ValueType value;
-      if (!PopValue(&value))
+      if (!PopValue(&value)) {
+        BPLOG(ERROR) << "Could not PopValue to get value to assign: " <<
+                        expression;
         return false;
+      }
 
       // Assignment is only meaningful when assigning into an identifier.
       // The identifier must name a variable, not a constant.  Variables
       // begin with '$'.
       string identifier;
-      if (PopValueOrIdentifier(NULL, &identifier) != POP_RESULT_IDENTIFIER)
+      if (PopValueOrIdentifier(NULL, &identifier) != POP_RESULT_IDENTIFIER) {
+        BPLOG(ERROR) << "PopValueOrIdentifier returned a value, but an "
+                        "identifier is needed to assign " <<
+                        HexString(value) << ": " << expression;
         return false;
-      if (identifier.empty() || identifier[0] != '$')
+      }
+      if (identifier.empty() || identifier[0] != '$') {
+        BPLOG(ERROR) << "Can't assign " << HexString(value) << " to " <<
+                        identifier << ": " << expression;
         return false;
+      }
 
       (*dictionary_)[identifier] = value;
       if (assigned)
@@ -157,6 +181,7 @@ bool PostfixEvaluator<ValueType>::Evaluate(const string &expression,
   // If there's anything left on the stack, it indicates incomplete execution.
   // This is a failure case.  If the stack is empty, evalution was complete
   // and successful.
+  BPLOG_IF(ERROR, !stack_.empty()) << "Incomplete execution: " << expression;
   return stack_.empty();
 }
 
@@ -210,6 +235,7 @@ bool PostfixEvaluator<ValueType>::PopValue(ValueType *value) {
     if (iterator == dictionary_->end()) {
       // The identifier wasn't found in the dictionary.  Don't imply any
       // default value, just fail.
+      BPLOG(ERROR) << "Identifier " << token << " not in dictionary";
       return false;
     }
 

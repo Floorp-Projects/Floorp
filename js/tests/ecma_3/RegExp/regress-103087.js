@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 04 October 2001
  *
  * SUMMARY:  Arose from Bugzilla bug 103087:
@@ -47,8 +49,9 @@
  * I crashed on that, and also on i=43 ('XML_SPE' regexp)
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-103087.js';
 var UBound = 0;
-var bug = 103087;
+var BUGNUMBER = 103087;
 var summary = "Testing that we don't crash on any of these regexps -";
 var re = '';
 var lm = '';
@@ -56,7 +59,7 @@ var lc = '';
 var rc = '';
 
 
-// the regexps are built in pieces  - 
+// the regexps are built in pieces  -
 var NameStrt = "[A-Za-z_:]|[^\\x00-\\x7F]";
 var NameChar = "[A-Za-z0-9_:.-]|[^\\x00-\\x7F]";
 var Name = "(" + NameStrt + ")(" + NameChar + ")*";
@@ -140,7 +143,7 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   for (var i=0; i<rePatterns.length; i++)

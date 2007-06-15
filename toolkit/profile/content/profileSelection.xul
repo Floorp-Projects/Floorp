@@ -68,7 +68,7 @@
   <stringbundle id="bundle_brand"
                 src="chrome://branding/locale/brand.properties"/>
 
-  <script type="application/x-javascript" src="chrome://mozapps/content/profile/profileSelection.js"/>
+  <script type="application/javascript" src="chrome://mozapps/content/profile/profileSelection.js"/>
 
   <description class="label">&pmDescription.label;</description>
 

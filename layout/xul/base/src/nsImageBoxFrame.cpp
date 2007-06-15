@@ -59,7 +59,6 @@
 #include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
 #include "nsIImage.h"
-#include "nsIWidget.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsStyleConsts.h"
@@ -114,7 +113,7 @@ nsImageBoxFrameEvent::Run()
     return NS_OK;
   }
 
-  nsIPresShell *pres_shell = doc->GetShellAt(0);
+  nsIPresShell *pres_shell = doc->GetPrimaryShell();
   if (!pres_shell) {
     return NS_OK;
   }
@@ -172,9 +171,8 @@ nsImageBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
 
   if (aAttribute == nsGkAtoms::src) {
     UpdateImage();
-    AddStateBits(NS_FRAME_IS_DIRTY);
     PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eStyleChange);
+      FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
   }
   else if (aAttribute == nsGkAtoms::validate)
     UpdateLoadFlags();
@@ -507,9 +505,10 @@ NS_IMETHODIMP nsImageBoxFrame::OnStartContainer(imgIRequest *request,
   mIntrinsicSize.SizeTo(nsPresContext::CSSPixelsToAppUnits(w),
                         nsPresContext::CSSPixelsToAppUnits(h));
 
-  AddStateBits(NS_FRAME_IS_DIRTY);
-  PresContext()->PresShell()->
-    FrameNeedsReflow(this, nsIPresShell::eStyleChange);
+  if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    PresContext()->PresShell()->
+      FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+  }
 
   return NS_OK;
 }
@@ -533,9 +532,8 @@ NS_IMETHODIMP nsImageBoxFrame::OnStopDecode(imgIRequest *request,
   else {
     // Fire an onerror DOM event.
     mIntrinsicSize.SizeTo(0, 0);
-    AddStateBits(NS_FRAME_IS_DIRTY);
     PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eStyleChange);
+      FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
     FireImageDOMEvent(mContent, NS_LOAD_ERROR);
   }
 

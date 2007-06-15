@@ -49,7 +49,7 @@ interface nsIWebNavigation;
  * Interface for communicating with the built-in drag and drop
  * implementation in the content area. Use this to register where
  * the listeners should attach (something that implements
- * |nsIDOMEventReceiver| which is what we end up using under the hood).
+ * |nsPIDOMEventTarget| which is what we end up using under the hood).
  */
 
 [scriptable,uuid(4f418f58-f834-4736-a755-e0395bedca9d)]

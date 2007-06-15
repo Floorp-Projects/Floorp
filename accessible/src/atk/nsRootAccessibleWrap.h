@@ -44,28 +44,13 @@
 
 #include "nsRootAccessible.h"
 
-/* nsRootAccessibleWrap is the accessible class for toplevel Window.
- * The instance of nsRootAccessibleWrap will be child of MaiAppRoot instance.
+typedef nsRootAccessible nsRootAccessibleWrap;
+
+/* nsNativeRootAccessibleWrap is the accessible class for gtk+ native window.
+ * The instance of nsNativeRootAccessibleWrap is a child of MaiAppRoot instance.
  * It is added into root when the toplevel window is created, and removed
  * from root when the toplevel window is destroyed.
  */
-
-class nsRootAccessibleWrap: public nsRootAccessible
-{
-public:
-    nsRootAccessibleWrap(nsIDOMNode *aDOMNode, nsIWeakReference* aShell);
-    virtual ~nsRootAccessibleWrap();
-
-    NS_IMETHOD Init();
-    NS_IMETHOD Shutdown();
-    NS_IMETHOD GetParent(nsIAccessible **  aParent);
-protected:
-    virtual nsresult HandleEventWithTarget(nsIDOMEvent *aEvent, 
-                                           nsIDOMNode  *aTargetNode);
-    
-};
-
-// For gtk+ native window
 class nsNativeRootAccessibleWrap: public nsRootAccessible
 {
 public:

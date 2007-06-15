@@ -199,6 +199,22 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
 }
 
 void
+nsXBLProtoImpl::Traverse(nsCycleCollectionTraversalCallback &cb) const
+{
+  // If we don't have a class object then we either didn't compile members
+  // or we only have fields, in both cases there are no cycles through our
+  // members.
+  if (!mClassObject) {
+    return;
+  }
+
+  nsXBLProtoImplMember *member;
+  for (member = mMembers; member; member = member->GetNext()) {
+    member->Traverse(cb);
+  }
+}
+
+void
 nsXBLProtoImpl::DestroyMembers(nsXBLProtoImplMember* aBrokenMember)
 {
   NS_ASSERTION(mClassObject, "This should never be called when there is no class object");

@@ -165,11 +165,6 @@ nsSVGInnerSVGFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
   gfx->Save();
 
   if (GetStyleDisplay()->IsScrollableOverflow()) {
-    nsSVGSVGElement *svg = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
-
-    float x, y, width, height;
-    svg->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
-
     nsCOMPtr<nsIDOMSVGMatrix> clipTransform;
     if (!mPropagateTransform) {
       NS_NewSVGMatrix(getter_AddRefs(clipTransform));
@@ -179,8 +174,14 @@ nsSVGInnerSVGFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
       clipTransform = parent->GetCanvasTM();
     }
 
-    if (clipTransform)
+    if (clipTransform) {
+      nsSVGSVGElement *svg = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
+
+      float x, y, width, height;
+      svg->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
+
       nsSVGUtils::SetClipRect(gfx, clipTransform, x, y, width, height);
+    }
   }
 
   rv = nsSVGInnerSVGFrameBase::PaintSVG(aContext, aDirtyRect);

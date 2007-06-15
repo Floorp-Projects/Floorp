@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-354246.js';
 //-----------------------------------------------------------------------------
-var bug = 354246;
+var BUGNUMBER = 354246;
 var summary = 'calling Error constructor with object with bad toString';
 var actual = '';
 var expect = '';
@@ -48,13 +50,13 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   expect = '13';
 
-  actual += '1'; 
-  try 
+  actual += '1';
+  try
   {
     new Error({toString: function() { x.y } });
   }

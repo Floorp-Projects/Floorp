@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/licenses/publicdomain/  */
+
 function checkDOM(target, data) {
   // assuming whitespace and the XML declaration are not in the DOM.
   var piNode = document.firstChild;

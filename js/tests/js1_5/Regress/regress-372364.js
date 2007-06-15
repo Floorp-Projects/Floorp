@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-372364.js';
 //-----------------------------------------------------------------------------
-var bug = 372364;
+var BUGNUMBER = 372364;
 var summary = 'Incorrect error message "() has no properties"';
 var actual = '';
 var expect = '';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
- 
+
   print('See Also bug 365891');
   expect = 'TypeError: a(1) has no properties';
   try

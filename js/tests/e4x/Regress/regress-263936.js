@@ -39,10 +39,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("Testing replacing an element with a list that contains a text node");
-BUG(263936);
+gTestfile = 'regress-263936.js';
 
-var x = 
+START("Testing replacing an element with a list that contains a text node");
+printBugNumber(263936);
+
+var x =
 <x>
   <a>one</a>
   <b>three</b>

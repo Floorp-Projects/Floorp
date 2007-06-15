@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Ryan Jones <sciguyryan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -454,29 +455,8 @@ nsHTMLContentSerializer::IsJavaScript(nsIAtom* aAttrNameAtom, const nsAString& a
       return PR_FALSE;  
   }
 
-  PRBool result = 
-                 (aAttrNameAtom == nsGkAtoms::onblur)      || (aAttrNameAtom == nsGkAtoms::onchange)
-              || (aAttrNameAtom == nsGkAtoms::onclick)     || (aAttrNameAtom == nsGkAtoms::ondblclick)
-              || (aAttrNameAtom == nsGkAtoms::onfocus)     || (aAttrNameAtom == nsGkAtoms::onkeydown)
-              || (aAttrNameAtom == nsGkAtoms::onkeypress)  || (aAttrNameAtom == nsGkAtoms::onkeyup)
-              || (aAttrNameAtom == nsGkAtoms::onload)      || (aAttrNameAtom == nsGkAtoms::onmousedown)
-              || (aAttrNameAtom == nsGkAtoms::onpageshow)  || (aAttrNameAtom == nsGkAtoms::onpagehide)
-              || (aAttrNameAtom == nsGkAtoms::onmousemove) || (aAttrNameAtom == nsGkAtoms::onmouseout)
-              || (aAttrNameAtom == nsGkAtoms::onmouseover) || (aAttrNameAtom == nsGkAtoms::onmouseup)
-              || (aAttrNameAtom == nsGkAtoms::onreset)     || (aAttrNameAtom == nsGkAtoms::onselect)
-              || (aAttrNameAtom == nsGkAtoms::onsubmit)    || (aAttrNameAtom == nsGkAtoms::onunload)
-              || (aAttrNameAtom == nsGkAtoms::onabort)     || (aAttrNameAtom == nsGkAtoms::onerror)
-              || (aAttrNameAtom == nsGkAtoms::onpaint)     || (aAttrNameAtom == nsGkAtoms::onresize)
-              || (aAttrNameAtom == nsGkAtoms::onscroll)    || (aAttrNameAtom == nsGkAtoms::onbroadcast)
-              || (aAttrNameAtom == nsGkAtoms::onclose)     || (aAttrNameAtom == nsGkAtoms::oncontextmenu)
-              || (aAttrNameAtom == nsGkAtoms::oncommand)   || (aAttrNameAtom == nsGkAtoms::oncommandupdate)
-              || (aAttrNameAtom == nsGkAtoms::ondragdrop)  || (aAttrNameAtom == nsGkAtoms::ondragenter)
-              || (aAttrNameAtom == nsGkAtoms::ondragexit)  || (aAttrNameAtom == nsGkAtoms::ondraggesture)
-              || (aAttrNameAtom == nsGkAtoms::ondragover)  || (aAttrNameAtom == nsGkAtoms::ondragstart)
-              || (aAttrNameAtom == nsGkAtoms::ondragleave) || (aAttrNameAtom == nsGkAtoms::ondrop)
-              || (aAttrNameAtom == nsGkAtoms::ondragend)   || (aAttrNameAtom == nsGkAtoms::ondrag)
-              || (aAttrNameAtom == nsGkAtoms::oninput);
-  return result;
+  return nsContentUtils::IsEventAttributeName(aAttrNameAtom,
+                                              EventNameType_HTML);
 }
 
 nsresult 
@@ -654,6 +634,16 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
 
   nsIAtom *name = content->Tag();
 
+  if (name == nsGkAtoms::meta) {
+    // We need too skip any meta tags that set the content type
+    // becase we set our own later.
+    nsAutoString header;
+    content->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
+    if (header.LowerCaseEqualsLiteral("content-type")) {
+      return NS_OK;
+    }
+  }
+
   if (name == nsGkAtoms::br && mPreLevel > 0
       && (mFlags & nsIDocumentEncoder::OutputNoFormattingInPre)) {
     AppendToString(mLineBreak, aStr);
@@ -747,6 +737,18 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
       name == nsGkAtoms::noframes) {
     mInCDATA = PR_TRUE;
   }
+
+  if (name == nsGkAtoms::head) {
+    // We should also obey the line break rules set for a normal meta tag here.
+    // We add a line break before and after the tag's opening.
+    AppendToString(mLineBreak, aStr);
+    AppendToString(NS_LITERAL_STRING("<meta http-equiv=\"content-type\""),
+                   aStr);
+    AppendToString(NS_LITERAL_STRING(" content=\"text/html; "), aStr);
+    AppendToString(NS_ConvertASCIItoUTF16(mCharset), aStr);
+    AppendToString(NS_LITERAL_STRING("\">"), aStr);
+    AppendToString(mLineBreak, aStr);
+  }  
 
   return NS_OK;
 }

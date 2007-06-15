@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'RegExp_multiline.js';
+
 /**
    Filename:     RegExp_multiline.js
    Description:  'Tests RegExps multiline property'

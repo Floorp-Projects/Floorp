@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '12.6.1-1.js';
+
 /**
    File Name:          12.6.1-1.js
    ECMA Section:       The while statement

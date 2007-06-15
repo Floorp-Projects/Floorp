@@ -90,7 +90,7 @@
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMContextMenuListener.h"
 #include "nsIDOMDragListener.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDocumentEncoder.h"
@@ -639,7 +639,7 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
                                aReflowState.mComputedMaxHeight);
     }
 
-#if defined (MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2) || defined (MOZ_WIDGET_XLIB)  
+#if defined (MOZ_WIDGET_GTK2)
     // We need to make sure that the size of the object frame does not
     // exceed the maximum size of X coordinates.  See bug #225357 for
     // more information.  In theory Gtk2 can handle large coordinates,
@@ -755,9 +755,8 @@ nsObjectFrame::InstantiatePlugin(nsIPluginHost* aPluginHost,
 
   // XXX having to do this sucks. it'd be better to move the code from DidReflow
   // to FixupWindow or something.
-  AddStateBits(NS_FRAME_IS_DIRTY);
   PresContext()->GetPresShell()->
-    FrameNeedsReflow(this, nsIPresShell::eStyleChange);
+    FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
   return rv;
 }
 
@@ -981,7 +980,7 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
 
   // now we need to get the shell for the screen
   // XXX assuming that the shell at zero will always be the screen one
-  nsIPresShell *shell = doc->GetShellAt(0);
+  nsIPresShell *shell = doc->GetPrimaryShell();
   if (!shell)
     return;
 
@@ -1321,7 +1320,7 @@ nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamList
   // XXX having to do this sucks. it'd be better to move the code from DidReflow
   // to FixupWindow.
   PresContext()->GetPresShell()->
-    FrameNeedsReflow(this, nsIPresShell::eStyleChange);
+    FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
   return rv;
 }
 
@@ -3104,32 +3103,32 @@ nsPluginInstanceOwner::Destroy()
     NS_RELEASE(mCXMenuListener);
   }
 
-  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));
-  if (receiver) {
+  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mContent));
+  if (target) {
 
     nsCOMPtr<nsIDOMEventListener> listener;
     QueryInterface(NS_GET_IID(nsIDOMEventListener), getter_AddRefs(listener));
 
     // Unregister focus event listener
-    receiver->RemoveEventListenerByIID(listener, NS_GET_IID(nsIDOMFocusListener));
+    mContent->RemoveEventListenerByIID(listener, NS_GET_IID(nsIDOMFocusListener));
 
     // Unregister mouse event listener
-    receiver->RemoveEventListenerByIID(listener, NS_GET_IID(nsIDOMMouseListener));
+    mContent->RemoveEventListenerByIID(listener, NS_GET_IID(nsIDOMMouseListener));
 
     // now for the mouse motion listener
-    receiver->RemoveEventListenerByIID(listener, NS_GET_IID(nsIDOMMouseMotionListener));
+    mContent->RemoveEventListenerByIID(listener, NS_GET_IID(nsIDOMMouseMotionListener));
 
     // Unregister key event listener;
-    receiver->RemoveEventListener(NS_LITERAL_STRING("keypress"), listener, PR_TRUE);
-    receiver->RemoveEventListener(NS_LITERAL_STRING("keydown"), listener, PR_TRUE);
-    receiver->RemoveEventListener(NS_LITERAL_STRING("keyup"), listener, PR_TRUE);
+    target->RemoveEventListener(NS_LITERAL_STRING("keypress"), listener, PR_TRUE);
+    target->RemoveEventListener(NS_LITERAL_STRING("keydown"), listener, PR_TRUE);
+    target->RemoveEventListener(NS_LITERAL_STRING("keyup"), listener, PR_TRUE);
 
     // Unregister drag event listener;
-    receiver->RemoveEventListener(NS_LITERAL_STRING("dragdrop"), listener, PR_TRUE);
-    receiver->RemoveEventListener(NS_LITERAL_STRING("dragover"), listener, PR_TRUE);
-    receiver->RemoveEventListener(NS_LITERAL_STRING("dragexit"), listener, PR_TRUE);
-    receiver->RemoveEventListener(NS_LITERAL_STRING("dragenter"), listener, PR_TRUE);
-    receiver->RemoveEventListener(NS_LITERAL_STRING("draggesture"), listener, PR_TRUE);
+    target->RemoveEventListener(NS_LITERAL_STRING("dragdrop"), listener, PR_TRUE);
+    target->RemoveEventListener(NS_LITERAL_STRING("dragover"), listener, PR_TRUE);
+    target->RemoveEventListener(NS_LITERAL_STRING("dragexit"), listener, PR_TRUE);
+    target->RemoveEventListener(NS_LITERAL_STRING("dragenter"), listener, PR_TRUE);
+    target->RemoveEventListener(NS_LITERAL_STRING("draggesture"), listener, PR_TRUE);
   }
 
   // Unregister scroll position listener
@@ -3291,32 +3290,32 @@ nsresult nsPluginInstanceOwner::Init(nsPresContext* aPresContext,
     mCXMenuListener->Init(aContent);
   }
 
-  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));
-  if (receiver) {
+  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mContent));
+  if (target) {
 
     nsCOMPtr<nsIDOMEventListener> listener;
     QueryInterface(NS_GET_IID(nsIDOMEventListener), getter_AddRefs(listener));
 
     // Register focus listener
-    receiver->AddEventListenerByIID(listener, NS_GET_IID(nsIDOMFocusListener));
+    mContent->AddEventListenerByIID(listener, NS_GET_IID(nsIDOMFocusListener));
 
     // Register mouse listener
-    receiver->AddEventListenerByIID(listener, NS_GET_IID(nsIDOMMouseListener));
+    mContent->AddEventListenerByIID(listener, NS_GET_IID(nsIDOMMouseListener));
 
     // now do the mouse motion listener
-    receiver->AddEventListenerByIID(listener, NS_GET_IID(nsIDOMMouseMotionListener));
+    mContent->AddEventListenerByIID(listener, NS_GET_IID(nsIDOMMouseMotionListener));
 
     // Register key listener
-    receiver->AddEventListener(NS_LITERAL_STRING("keypress"), listener, PR_TRUE);
-    receiver->AddEventListener(NS_LITERAL_STRING("keydown"), listener, PR_TRUE);
-    receiver->AddEventListener(NS_LITERAL_STRING("keyup"), listener, PR_TRUE);
+    target->AddEventListener(NS_LITERAL_STRING("keypress"), listener, PR_TRUE);
+    target->AddEventListener(NS_LITERAL_STRING("keydown"), listener, PR_TRUE);
+    target->AddEventListener(NS_LITERAL_STRING("keyup"), listener, PR_TRUE);
 
     // Register drag listener
-    receiver->AddEventListener(NS_LITERAL_STRING("dragdrop"), listener, PR_TRUE);
-    receiver->AddEventListener(NS_LITERAL_STRING("dragover"), listener, PR_TRUE);
-    receiver->AddEventListener(NS_LITERAL_STRING("dragexit"), listener, PR_TRUE);
-    receiver->AddEventListener(NS_LITERAL_STRING("dragenter"), listener, PR_TRUE);
-    receiver->AddEventListener(NS_LITERAL_STRING("draggesture"), listener, PR_TRUE);
+    target->AddEventListener(NS_LITERAL_STRING("dragdrop"), listener, PR_TRUE);
+    target->AddEventListener(NS_LITERAL_STRING("dragover"), listener, PR_TRUE);
+    target->AddEventListener(NS_LITERAL_STRING("dragexit"), listener, PR_TRUE);
+    target->AddEventListener(NS_LITERAL_STRING("dragenter"), listener, PR_TRUE);
+    target->AddEventListener(NS_LITERAL_STRING("draggesture"), listener, PR_TRUE);
   }
   
   // Register scroll position listener
@@ -3514,7 +3513,30 @@ WindowRef nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
     mPluginWindow->x = -pluginPort->qdPort.portx;
     mPluginWindow->y = -pluginPort->qdPort.porty;
   }
+  else if (drawingModel == NPDrawingModelCoreGraphics)
 #endif
+  {
+    // This would be a lot easier if we could use obj-c here,
+    // but we can't. Since we have only nsIWidget and we can't
+    // use its native widget (an obj-c object) we have to go
+    // from the widget's screen coordinates to its window coords
+    // instead of straight to window coords.
+    nsRect geckoBounds;
+    mWidget->GetBounds(geckoBounds);
+    // we need a rect that is the entire *internal* rect, so the
+    // x and y coords are 0, width is the same.
+    geckoBounds.x = 0;
+    geckoBounds.y = 0;
+    nsRect geckoScreenCoords;
+    mWidget->WidgetToScreen(geckoBounds, geckoScreenCoords);
+
+    Rect windowRect;
+    WindowRef window = (WindowRef)pluginPort->cgPort.window;
+    ::GetWindowBounds(window, kWindowStructureRgn, &windowRect);
+
+    mPluginWindow->x = geckoScreenCoords.x - windowRect.left;
+    mPluginWindow->y = geckoScreenCoords.y - windowRect.top;
+  }
 
   nsPluginRect oldClipRect = mPluginWindow->clipRect;
   

@@ -202,6 +202,7 @@ struct nsCSSFont : public nsCSSStruct {
   nsCSSFont(const nsCSSFont& aCopy);
   ~nsCSSFont(void);
 
+  nsCSSValue mSystemFont;
   nsCSSValue mFamily;
   nsCSSValue mStyle;
   nsCSSValue mVariant;
@@ -427,6 +428,7 @@ struct nsCSSUserInterface : public nsCSSStruct  { // NEW
   
   nsCSSValueList* mCursor;
   nsCSSValue      mForceBrokenImageIcon;
+  nsCSSValue      mIMEMode;
 };
 
 struct nsRuleDataUserInterface : public nsCSSUserInterface {

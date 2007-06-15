@@ -148,7 +148,7 @@ protected:
 /*
  * Options inside the select, contained within the list
  */
-class nsHTMLSelectOptionAccessible : public nsHyperTextAccessible
+class nsHTMLSelectOptionAccessible : public nsHyperTextAccessibleWrap
 {
 public:
   enum { eAction_Select = 0 };  
@@ -174,9 +174,10 @@ private:
   /**
    * Get Select element's accessible state
    * @param aState, Select element state
+   * @param aExtraState, Select element extra state
    * @return Select element content, returns null if not avaliable
    */ 
-  nsIContent* GetSelectState(PRUint32* aState);
+  nsIContent* GetSelectState(PRUint32* aState, PRUint32* aExtraState = nsnull);
 };
 
 /*

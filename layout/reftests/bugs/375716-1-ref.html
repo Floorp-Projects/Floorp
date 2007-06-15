@@ -1,0 +1,18 @@
+<html><head>
+<title>Bug 375716 - Incremental reflow bug with direction: rtl and bidi-override</title>
+<style>
+
+div {
+border: 1px solid black;
+width:200px;
+}
+</style>
+</head><body>
+<div>
+<i style="direction: rtl;">
+text text text text 
+<b>&#8238;text text text text text&#8236;</b>
+text
+</i>
+</div>
+</body></html>

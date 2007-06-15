@@ -87,12 +87,14 @@
 // = nsAnonymousContentList 
 // ==================================================================
 
-class nsAnonymousContentList : public nsGenericDOMNodeList
+class nsAnonymousContentList : public nsIDOMNodeList
 {
 public:
   nsAnonymousContentList(nsInsertionPointList* aElements);
   virtual ~nsAnonymousContentList();
 
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsAnonymousContentList)
   // nsIDOMNodeList interface
   NS_DECL_NSIDOMNODELIST
 
@@ -119,6 +121,29 @@ nsAnonymousContentList::~nsAnonymousContentList()
   MOZ_COUNT_DTOR(nsAnonymousContentList);
   delete mElements;
 }
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsAnonymousContentList)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsAnonymousContentList)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsAnonymousContentList)
+
+NS_INTERFACE_MAP_BEGIN(nsAnonymousContentList)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNodeList)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(NodeList)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsAnonymousContentList)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsAnonymousContentList)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsAnonymousContentList)
+  {
+    PRInt32 i, count = tmp->mElements->Length();
+    for (i = 0; i < count; ++i) {
+      NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mElements->ElementAt(i),
+                                                      nsXBLInsertionPoint);
+    }
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMETHODIMP
 nsAnonymousContentList::GetLength(PRUint32* aLength)
@@ -257,7 +282,7 @@ RemoveObjectEntry(PLDHashTable& table, nsISupports* aKey)
 }
 
 static nsresult
-SetOrRemoveObject(PLDHashTable& table, nsISupports* aKey, nsISupports* aValue)
+SetOrRemoveObject(PLDHashTable& table, nsIContent* aKey, nsISupports* aValue)
 {
   if (aValue) {
     // lazily create the table, but only when adding elements
@@ -267,6 +292,7 @@ SetOrRemoveObject(PLDHashTable& table, nsISupports* aKey, nsISupports* aValue)
       table.ops = nsnull;
       return NS_ERROR_OUT_OF_MEMORY;
     }
+    aKey->SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
     return AddObjectEntry(table, aKey, aValue);
   }
 
@@ -308,7 +334,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsBindingManager)
     PL_DHashTableFinish(&(tmp->mWrapperTable));
   tmp->mWrapperTable.ops = nsnull;
 
-  tmp->mAttachedStack.Clear();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSTARRAY(mAttachedStack)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
@@ -340,6 +366,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsBindingManager)
       tmp->mDocumentTable.EnumerateRead(&DocumentInfoHashtableTraverser, &cb);
   if (tmp->mLoadingDocTable.IsInitialized())
       tmp->mLoadingDocTable.EnumerateRead(&LoadingDocHashtableTraverser, &cb);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY_MEMBER(mAttachedStack,
+                                                    nsXBLBinding)
   // No need to traverse mProcessAttachedQueueEvent, since it'll just
   // fire at some point.
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -356,7 +384,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsBindingManager)
 
 // Constructors/Destructors
 nsBindingManager::nsBindingManager(void)
-: mProcessingAttachedStack(PR_FALSE)
+  : mProcessingAttachedStack(PR_FALSE),
+    mProcessOnEndUpdate(PR_FALSE)
 {
   mContentListTable.ops = nsnull;
   mAnonymousNodesTable.ops = nsnull;
@@ -379,8 +408,10 @@ nsBindingManager::~nsBindingManager(void)
 nsXBLBinding*
 nsBindingManager::GetBinding(nsIContent* aContent)
 {
-  if (mBindingTable.IsInitialized())
+  if (aContent && aContent->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR) &&
+      mBindingTable.IsInitialized()) {
     return mBindingTable.GetWeak(aContent);
+  }
 
   return nsnull;
 }
@@ -407,6 +438,7 @@ nsBindingManager::SetBinding(nsIContent* aContent, nsXBLBinding* aBinding)
   PRBool result = PR_TRUE;
 
   if (aBinding) {
+    aContent->SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
     result = mBindingTable.Put(aContent, aBinding);
   } else {
     mBindingTable.Remove(aContent);
@@ -726,7 +758,7 @@ nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL)
   // been removed and style may have changed due to the removal of the
   // anonymous children.
   // XXXbz this should be using the current doc (if any), not the owner doc.
-  nsIPresShell *presShell = doc->GetShellAt(0);
+  nsIPresShell *presShell = doc->GetPrimaryShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
   return presShell->RecreateFramesFor(aContent);;
@@ -734,19 +766,11 @@ nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL)
 
 nsresult
 nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc,
-                                      nsIURI* aURL,
-                                      nsIDocument** aResult)
+                                      nsIURI* aURL)
 {
   NS_PRECONDITION(aURL, "Must have a URI to load!");
   
-  nsCAutoString otherScheme;
-  aURL->GetScheme(otherScheme);
-  
-  nsCAutoString scheme;
-  aBoundDoc->GetDocumentURI()->GetScheme(scheme);
-
   // First we need to load our binding.
-  *aResult = nsnull;
   nsresult rv;
   nsCOMPtr<nsIXBLService> xblService = 
            do_GetService("@mozilla.org/xbl;1", &rv);
@@ -760,11 +784,6 @@ nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc,
   if (!info)
     return NS_ERROR_FAILURE;
 
-  // XXXbz Why is this based on a scheme comparison?  Shouldn't this
-  // be a real security check???
-    if (!strcmp(scheme.get(), otherScheme.get()))
-    info->GetDocument(aResult); // Addref happens here.
-    
   return NS_OK;
 }
 
@@ -1090,11 +1109,14 @@ nsBindingManager::WalkRules(nsStyleSet* aStyleSet,
     }
 
     nsIContent* parent = content->GetBindingParent();
-    if (parent == content)
-      break; // The scrollbar case only is deliberately hacked to return itself
-             // (see GetBindingParent in nsXULElement.cpp).  Actually, all
-             // native anonymous content is thus hacked.  Cut off inheritance
-             // here.
+    if (parent == content) {
+      NS_ASSERTION(content->IsNativeAnonymous() ||
+                   content->IsNodeOfType(nsINode::eXUL),
+                   "Unexpected binding parent");
+                             
+      break; // The anonymous content case is often deliberately hacked to
+             // return itself to cut off style inheritance here.  Do that.
+    }
 
     content = parent;
   } while (content);
@@ -1179,7 +1201,8 @@ nsBindingManager::ContentAppended(nsIDocument* aDocument,
                                   PRInt32     aNewIndexInContainer)
 {
   // XXX This is hacked and not quite correct. See below.
-  if (aNewIndexInContainer != -1 && mContentListTable.ops) {
+  if (aNewIndexInContainer != -1 &&
+      (mContentListTable.ops || mAnonymousNodesTable.ops)) {
     // It's not anonymous.
     PRInt32 childCount = aContainer->GetChildCount();
 
@@ -1230,7 +1253,8 @@ nsBindingManager::ContentInserted(nsIDocument* aDocument,
                                   PRInt32 aIndexInContainer)
 {
   // XXX This is hacked just to make menus work again.
-  if (aIndexInContainer != -1 && mContentListTable.ops) {
+  if (aIndexInContainer != -1 &&
+      (mContentListTable.ops || mAnonymousNodesTable.ops)) {
     // It's not anonymous.
     nsCOMPtr<nsIContent> ins = GetNestedInsertionPoint(aContainer, aChild);
 
@@ -1304,7 +1328,8 @@ nsBindingManager::ContentRemoved(nsIDocument* aDocument,
                                      (aDocument, aContainer, aChild,
                                       aIndexInContainer));  
 
-  if (aIndexInContainer == -1 || !mContentListTable.ops)
+  if (aIndexInContainer == -1 ||
+      (!mContentListTable.ops && !mAnonymousNodesTable.ops))
     // It's anonymous.
     return;
 
@@ -1349,11 +1374,14 @@ void
 nsBindingManager::Traverse(nsIContent *aContent,
                            nsCycleCollectionTraversalCallback &cb)
 {
+  if (!aContent->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    return;
+  }
+
   nsXBLBinding *binding = GetBinding(aContent);
   if (binding) {
-    // XXX nsXBLBinding isn't nsISupports but it is refcounted, so we can't
-    //     traverse it.
     cb.NoteXPCOMChild(aContent);
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(binding, nsXBLBinding)
   }
   nsISupports *value;
   if (mContentListTable.ops &&
@@ -1375,5 +1403,20 @@ nsBindingManager::Traverse(nsIContent *aContent,
       (value = LookupObject(mWrapperTable, aContent))) {
     cb.NoteXPCOMChild(aContent);
     cb.NoteXPCOMChild(value);
+  }
+}
+
+void
+nsBindingManager::BeginOutermostUpdate()
+{
+  mProcessOnEndUpdate = (mAttachedStack.Length() == 0);
+}
+
+void
+nsBindingManager::EndOutermostUpdate()
+{
+  if (mProcessOnEndUpdate) {
+    mProcessOnEndUpdate = PR_FALSE;
+    ProcessAttachedQueue();
   }
 }

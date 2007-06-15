@@ -122,7 +122,7 @@ interface nsIRemoteContainer : nsISupports
    * @param container   The folderId of the bookmark folder
    *                    representing the container to be deleted.
    */
-  void onContainerRemoving(in PRInt64 container);
+  void onContainerRemoving(in long long container);
 
   /**
    * Called when the given container has just been moved, in case
@@ -136,8 +136,8 @@ interface nsIRemoteContainer : nsISupports
    * @param newIndex    The index the container will be inserted at,
    *                    or -1 for append.
    */
-  void onContainerMoved(in PRInt64 container,
-                        in PRInt64 newFolder, in PRInt32 newIndex);
+  void onContainerMoved(in long long container,
+                        in long long newFolder, in long newIndex);
 
   /**
    * Returns true if containers of this type should not expose UI for

@@ -38,9 +38,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAccessible.h"
+#include "nsAccessibleRelation.h"
 #include "nsIAccessibleDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMNSDocument.h"
+#include "nsIDOMNSHTMLElement.h"
 #include "nsIImageDocument.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
@@ -510,14 +512,14 @@ NS_IMETHODIMP nsAccessible::Init()
         nsCString utf8Role = NS_ConvertUTF16toUTF8(roleString); // For easy comparison
         ToLowerCase(utf8Role);
         PRUint32 index;
-        for (index = 0; gWAIRoleMap[index].roleString; index ++) {
-          if (utf8Role.Equals(gWAIRoleMap[index].roleString)) {
+        for (index = 0; nsARIAMap::gWAIRoleMap[index].roleString; index ++) {
+          if (utf8Role.Equals(nsARIAMap::gWAIRoleMap[index].roleString)) {
             break; // The dynamic role attribute maps to an entry in our table
           }
         }
         // Always use some entry if there is a role string
         // If no match, we use the last entry which maps to ROLE_NOTHING
-        mRoleMapEntry = &gWAIRoleMap[index];
+        mRoleMapEntry = &nsARIAMap::gWAIRoleMap[index];
       }
     }
   }
@@ -595,7 +597,7 @@ NS_IMETHODIMP nsAccessible::GetParent(nsIAccessible **  aParent)
   nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
   NS_ENSURE_TRUE(docAccessible, NS_ERROR_FAILURE);
 
-  return docAccessible->GetAccessibleInParentChain(mDOMNode, aParent);
+  return docAccessible->GetAccessibleInParentChain(mDOMNode, PR_TRUE, aParent);
 }
 
 NS_IMETHODIMP nsAccessible::GetCachedParent(nsIAccessible **  aParent)
@@ -925,9 +927,13 @@ PRBool nsAccessible::IsVisible(PRBool *aIsOffscreen)
   // indicator
 
   nsRect relFrameRect = frame->GetRect();
-  nsPoint frameOffset;
   nsIView *containingView = frame->GetViewExternal();
-  if (!containingView) {
+  if (containingView) {
+    // When frame itself has a view, it has the same bounds as the view
+    relFrameRect.x = relFrameRect.y = 0;
+  }
+  else {
+    nsPoint frameOffset;
     frame->GetOffsetFromView(frameOffset, &containingView);
     if (!containingView)
       return PR_FALSE;  // no view -- not visible
@@ -1059,9 +1065,12 @@ nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     const nsStyleXUL *xulStyle = frame->GetStyleXUL();
     if (xulStyle) {
       // In XUL all boxes are either vertical or horizontal
-      *aExtraState |= (xulStyle->mBoxOrient == NS_STYLE_BOX_ORIENT_VERTICAL) ?
-        nsIAccessibleStates::EXT_STATE_VERTICAL :
-        nsIAccessibleStates::EXT_STATE_HORIZONTAL;
+      if (xulStyle->mBoxOrient == NS_STYLE_BOX_ORIENT_VERTICAL) {
+        *aExtraState |= nsIAccessibleStates::EXT_STATE_VERTICAL;
+      }
+      else {
+        *aExtraState |= nsIAccessibleStates::EXT_STATE_HORIZONTAL;
+      }
     }
   }
 
@@ -1070,8 +1079,12 @@ nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
       mRoleMapEntry->role == nsIAccessibleRole::ROLE_PASSWORD_TEXT)) {
     PRBool isEqual =
       NS_LITERAL_CSTRING("textarea").Equals(mRoleMapEntry->roleString);
-    *aExtraState =  isEqual? nsIAccessibleStates::EXT_STATE_MULTI_LINE :
-                             nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
+    if (isEqual) {
+      *aExtraState |= nsIAccessibleStates::EXT_STATE_MULTI_LINE;
+    }
+    else {
+      *aExtraState |= nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
+    }
   }
 
   if (!(state & nsIAccessibleStates::STATE_UNAVAILABLE)) {  // If not disabled
@@ -1410,6 +1423,12 @@ NS_IMETHODIMP nsAccessible::TakeSelection()
 /* void takeFocus (); */
 NS_IMETHODIMP nsAccessible::TakeFocus()
 { 
+  nsCOMPtr<nsIDOMNSHTMLElement> htmlElement(do_QueryInterface(mDOMNode));
+  if (htmlElement) {
+    // HTML Elements also set the caret position
+    // in order to affect tabbing order
+    return htmlElement->Focus();
+  }
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (!content) {
     return NS_ERROR_FAILURE;
@@ -1866,7 +1885,7 @@ nsresult nsAccessible::GetHTMLName(nsAString& aLabel, PRBool aCanAggregateSubtre
   if (aCanAggregateSubtree) {
     // Don't use AppendFlatStringFromSubtree for container widgets like menulist
     nsresult rv = AppendFlatStringFromSubtree(content, &aLabel);
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) && !aLabel.IsEmpty()) {
       return NS_OK;
     }
   }
@@ -2017,132 +2036,6 @@ nsAccessible::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
 
   return obsService->NotifyObservers(aEvent, NS_ACCESSIBLE_EVENT_TOPIC, nsnull);
 }
-
-nsRoleMapEntry nsAccessible::gWAIRoleMap[] = 
-{
-  // This list of WAI-defined roles are currently hardcoded.
-  // Eventually we will most likely be loading an RDF resource that contains this information
-  // Using RDF will also allow for role extensibility. See bug 280138.
-  // XXX Should we store attribute names in this table as atoms instead of strings?
-  // Definition of nsRoleMapEntry and nsStateMapEntry contains comments explaining this table.
-  {"alert", nsIAccessibleRole::ROLE_ALERT, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
-  {"alertdialog", nsIAccessibleRole::ROLE_ALERT, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
-  {"application", nsIAccessibleRole::ROLE_APPLICATION, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"button", nsIAccessibleRole::ROLE_PUSHBUTTON, eNameOkFromChildren, eNoValue, eNoReqStates,
-            {"pressed", BOOL_STATE, nsIAccessibleStates::STATE_PRESSED},
-            {"haspopup", BOOL_STATE, nsIAccessibleStates::STATE_HASPOPUP}, END_ENTRY},
-  {"buttonsubmit", nsIAccessibleRole::ROLE_PUSHBUTTON, eNameOkFromChildren, eNoValue, nsIAccessibleStates::STATE_DEFAULT, END_ENTRY},
-  {"buttoncancel", nsIAccessibleRole::ROLE_PUSHBUTTON, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
-  {"checkbox", nsIAccessibleRole::ROLE_CHECKBUTTON, eNameOkFromChildren, eNoValue, nsIAccessibleStates::STATE_CHECKABLE,
-            {"checked", BOOL_STATE, nsIAccessibleStates::STATE_CHECKED},
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, END_ENTRY},
-  {"checkboxtristate", nsIAccessibleRole::ROLE_CHECKBUTTON, eNameOkFromChildren, eNoValue, nsIAccessibleStates::STATE_CHECKABLE,
-            {"checked", BOOL_STATE, nsIAccessibleStates::STATE_CHECKED},
-            {"checked", "mixed", nsIAccessibleStates::STATE_MIXED},
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, END_ENTRY},
-  {"columnheader", nsIAccessibleRole::ROLE_COLUMNHEADER, eNameOkFromChildren, eNoValue, eNoReqStates,
-            {"selected", BOOL_STATE, nsIAccessibleStates::STATE_SELECTED | nsIAccessibleStates::STATE_SELECTABLE},
-            {"selected", "false", nsIAccessibleStates::STATE_SELECTABLE},
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, END_ENTRY},
-  {"combobox", nsIAccessibleRole::ROLE_COMBOBOX, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY},
-            {"expanded", BOOL_STATE, nsIAccessibleStates::STATE_EXPANDED},
-            {"multiselectable", BOOL_STATE, nsIAccessibleStates::STATE_MULTISELECTABLE | nsIAccessibleStates::STATE_EXTSELECTABLE}, END_ENTRY},
-  {"description", nsIAccessibleRole::ROLE_TEXT_CONTAINER, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
-  {"dialog", nsIAccessibleRole::ROLE_DIALOG, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"document", nsIAccessibleRole::ROLE_DOCUMENT, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"label", nsIAccessibleRole::ROLE_LABEL, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
-  {"list", nsIAccessibleRole::ROLE_LIST, eNameLabelOrTitle, eNoValue, eNoReqStates,
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY},
-            {"multiselectable", BOOL_STATE, nsIAccessibleStates::STATE_MULTISELECTABLE | nsIAccessibleStates::STATE_EXTSELECTABLE}, END_ENTRY},
-  {"listbox", nsIAccessibleRole::ROLE_LIST, eNameLabelOrTitle, eNoValue, eNoReqStates,
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY},
-            {"multiselectable", BOOL_STATE, nsIAccessibleStates::STATE_MULTISELECTABLE | nsIAccessibleStates::STATE_EXTSELECTABLE}, END_ENTRY},
-  {"listitem", nsIAccessibleRole::ROLE_LISTITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
-            {"selected", BOOL_STATE, nsIAccessibleStates::STATE_SELECTED | nsIAccessibleStates::STATE_SELECTABLE},
-            {"selected", "false", nsIAccessibleStates::STATE_SELECTABLE},
-            {"checked", BOOL_STATE, nsIAccessibleStates::STATE_CHECKED | nsIAccessibleStates::STATE_CHECKABLE},
-            {"checked", "false", nsIAccessibleStates::STATE_CHECKABLE}, END_ENTRY},
-  {"menu", nsIAccessibleRole::ROLE_MENUPOPUP, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"menubar", nsIAccessibleRole::ROLE_MENUBAR, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"menuitem", nsIAccessibleRole::ROLE_MENUITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
-            {"haspopup", BOOL_STATE, nsIAccessibleStates::STATE_HASPOPUP},
-            {"checked", BOOL_STATE, nsIAccessibleStates::STATE_CHECKED | nsIAccessibleStates::STATE_CHECKABLE},
-            {"checked", "mixed", nsIAccessibleStates::STATE_MIXED},
-            {"checked", "false", nsIAccessibleStates::STATE_CHECKABLE}, END_ENTRY},
-  {"menuitemcheckbox", nsIAccessibleRole::ROLE_MENUITEM, eNameOkFromChildren, eNoValue, nsIAccessibleStates::STATE_CHECKABLE,
-            {"checked", BOOL_STATE, nsIAccessibleStates::STATE_CHECKED }, END_ENTRY},
-  {"menuitemradio", nsIAccessibleRole::ROLE_MENUITEM, eNameOkFromChildren, eNoValue, nsIAccessibleStates::STATE_CHECKABLE,
-            {"checked", BOOL_STATE, nsIAccessibleStates::STATE_CHECKED }, END_ENTRY},
-  {"grid", nsIAccessibleRole::ROLE_TABLE, eNameLabelOrTitle, eNoValue, nsIAccessibleStates::STATE_FOCUSABLE,
-            {"multiselectable", BOOL_STATE, nsIAccessibleStates::STATE_MULTISELECTABLE | nsIAccessibleStates::STATE_EXTSELECTABLE},
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, END_ENTRY},
-  {"gridcell", nsIAccessibleRole::ROLE_CELL, eNameOkFromChildren, eNoValue, eNoReqStates,
-            {"selected", BOOL_STATE, nsIAccessibleStates::STATE_SELECTED | nsIAccessibleStates::STATE_SELECTABLE},
-            {"selected", "false", nsIAccessibleStates::STATE_SELECTABLE},
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, END_ENTRY},
-  {"group", nsIAccessibleRole::ROLE_GROUPING, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"link", nsIAccessibleRole::ROLE_LINK, eNameOkFromChildren, eNoValue, nsIAccessibleStates::STATE_LINKED, END_ENTRY},
-  {"option", nsIAccessibleRole::ROLE_LISTITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
-            {"selected", BOOL_STATE, nsIAccessibleStates::STATE_SELECTED | nsIAccessibleStates::STATE_SELECTABLE},
-            {"selected", "false", nsIAccessibleStates::STATE_SELECTABLE},
-            {"checked", BOOL_STATE, nsIAccessibleStates::STATE_CHECKED | nsIAccessibleStates::STATE_CHECKABLE},
-            {"checked", "false", nsIAccessibleStates::STATE_CHECKABLE}, END_ENTRY},
-  {"progressbar", nsIAccessibleRole::ROLE_PROGRESSBAR, eNameLabelOrTitle, eHasValueMinMax, nsIAccessibleStates::STATE_READONLY,
-            {"valuenow", "unknown", nsIAccessibleStates::STATE_MIXED}, END_ENTRY},
-  {"radio", nsIAccessibleRole::ROLE_RADIOBUTTON, eNameOkFromChildren, eNoValue, eNoReqStates,
-            {"checked", BOOL_STATE, nsIAccessibleStates::STATE_CHECKED}, END_ENTRY},
-  {"radiogroup", nsIAccessibleRole::ROLE_GROUPING, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"rowheader", nsIAccessibleRole::ROLE_ROWHEADER, eNameOkFromChildren, eNoValue, eNoReqStates,
-            {"selected", BOOL_STATE, nsIAccessibleStates::STATE_SELECTED | nsIAccessibleStates::STATE_SELECTABLE},
-            {"selected", "false", nsIAccessibleStates::STATE_SELECTABLE},
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, END_ENTRY},
-  {"secret", nsIAccessibleRole::ROLE_PASSWORD_TEXT, eNameLabelOrTitle, eNoValue, nsIAccessibleStates::STATE_PROTECTED,
-             END_ENTRY},  // nsIAccessibleStates::EXT_STATE_SINGLE_LINE manually supported in code
-  {"separator", nsIAccessibleRole::ROLE_SEPARATOR, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"slider", nsIAccessibleRole::ROLE_SLIDER, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, END_ENTRY},
-  {"spinbutton", nsIAccessibleRole::ROLE_SPINBUTTON, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, END_ENTRY},
-  {"spreadsheet", nsIAccessibleRole::ROLE_TABLE, eNameLabelOrTitle, eNoValue, nsIAccessibleStates::STATE_MULTISELECTABLE | nsIAccessibleStates::STATE_EXTSELECTABLE | nsIAccessibleStates::STATE_FOCUSABLE,
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, END_ENTRY}, // Still supported, but deprecated in favor of grid
-  {"status", nsIAccessibleRole::ROLE_STATUSBAR, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"tab", nsIAccessibleRole::ROLE_PAGETAB, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
-  {"table", nsIAccessibleRole::ROLE_TABLE, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"td", nsIAccessibleRole::ROLE_CELL, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"th", nsIAccessibleRole::ROLE_CELL, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"tablist", nsIAccessibleRole::ROLE_PAGETABLIST, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"tabpanel", nsIAccessibleRole::ROLE_PROPERTYPAGE, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"textarea", nsIAccessibleRole::ROLE_ENTRY, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, END_ENTRY}, // XXX nsIAccessibleStates::EXT_STATE_MULTI_LINE supported in code
-  {"textfield", nsIAccessibleRole::ROLE_ENTRY, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY}, 
-            {"haspopup", BOOL_STATE, nsIAccessibleStates::STATE_HASPOPUP}, END_ENTRY}, // XXX nsIAccessibleStates::EXT_STATE_SINGLE_LINE supported in code
-  {"toolbar", nsIAccessibleRole::ROLE_TOOLBAR, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"tree", nsIAccessibleRole::ROLE_OUTLINE, eNameLabelOrTitle, eNoValue, eNoReqStates,
-            {"readonly", BOOL_STATE, nsIAccessibleStates::STATE_READONLY},
-            {"multiselectable", BOOL_STATE, nsIAccessibleStates::STATE_MULTISELECTABLE | nsIAccessibleStates::STATE_EXTSELECTABLE}, END_ENTRY},
-  {"treeitem", nsIAccessibleRole::ROLE_OUTLINEITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
-            {"selected", BOOL_STATE, nsIAccessibleStates::STATE_SELECTED | nsIAccessibleStates::STATE_SELECTABLE},
-            {"selected", "false", nsIAccessibleStates::STATE_SELECTABLE},
-            {"expanded", BOOL_STATE, nsIAccessibleStates::STATE_EXPANDED},
-            {"expanded", "false", nsIAccessibleStates::STATE_COLLAPSED},
-            {"checked", BOOL_STATE, nsIAccessibleStates::STATE_CHECKED | nsIAccessibleStates::STATE_CHECKABLE},
-            {"checked", "mixed", nsIAccessibleStates::STATE_MIXED},
-            {"checked", "false", nsIAccessibleStates::STATE_CHECKABLE},},
-  {"treegroup", nsIAccessibleRole::ROLE_GROUPING, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {nsnull, nsIAccessibleRole::ROLE_NOTHING, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY} // Last item
-};
-
-// XHTML 2 roles
-// These don't need a mapping - they are exposed either through DOM or via MSAA role string
-// banner, contentinfo, main, navigation, note, search, secondary, seealso
-
-nsStateMapEntry nsAccessible::gUnivStateMap[] = {
-  {"disabled", BOOL_STATE, nsIAccessibleStates::STATE_UNAVAILABLE},
-  {"required", BOOL_STATE, nsIAccessibleStates::STATE_REQUIRED},
-  {"invalid", BOOL_STATE, nsIAccessibleStates::STATE_INVALID}
-};
 
 NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
 {
@@ -2338,7 +2231,7 @@ PRBool nsAccessible::MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut
   nsAutoString attribValue;
   nsCOMPtr<nsIAtom> attribAtom = do_GetAtom(aStateMapEntry->attributeName); // XXX put atoms directly in entry
   if (aContent->GetAttr(kNameSpaceID_WAIProperties, attribAtom, attribValue)) {
-    if (aStateMapEntry->attributeValue == BOOL_STATE) {
+    if (aStateMapEntry->attributeValue == kBoolState) {
       // No attribute value map specified in state map entry indicates state cleared
       if (attribValue.EqualsLiteral("false")) {
         return *aStateInOut &= ~aStateMapEntry->state;
@@ -2376,9 +2269,10 @@ nsAccessible::GetARIAState(PRUint32 *aState)
   nsIContent *content = GetRoleContent(mDOMNode);
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE); // Node already shut down
 
-  PRUint32 length = NS_ARRAY_LENGTH(nsAccessible::gUnivStateMap);
-  for (PRUint32 index = 0; index < length; index++) {
-    MappedAttrState(content, aState, &nsAccessible::gUnivStateMap[index]);
+  PRUint32 index = 0;
+  while (nsARIAMap::gWAIUnivStateMap[index].attributeName != nsnull) {
+    MappedAttrState(content, aState, &nsARIAMap::gWAIUnivStateMap[index]);
+    ++ index;
   }
 
   if (!mRoleMapEntry)
@@ -2676,7 +2570,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
   // Search for the related DOM node according to the specified "relation type"
   switch (aRelationType)
   {
-  case RELATION_LABEL_FOR:
+  case nsIAccessibleRelation::RELATION_LABEL_FOR:
     {
       if (content->Tag() == nsAccessibilityAtoms::label) {
         nsIAtom *relatedIDAttr = content->IsNodeOfType(nsINode::eHTML) ?
@@ -2690,7 +2584,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
       }
       break;
     }
-  case RELATION_LABELLED_BY:
+  case nsIAccessibleRelation::RELATION_LABELLED_BY:
     {
       content->GetAttr(kNameSpaceID_WAIProperties,
                        nsAccessibilityAtoms::labelledby, relatedID);
@@ -2699,7 +2593,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
       }
       break;
     }
-  case RELATION_DESCRIBED_BY:
+  case nsIAccessibleRelation::RELATION_DESCRIBED_BY:
     {
       content->GetAttr(kNameSpaceID_WAIProperties,
                        nsAccessibilityAtoms::describedby, relatedID);
@@ -2713,7 +2607,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
       }
       break;
     }
-  case RELATION_DESCRIPTION_FOR:
+  case nsIAccessibleRelation::RELATION_DESCRIPTION_FOR:
     {
       const PRUint32 kAncestorLevelsToSearch = 3;
       relatedNode =
@@ -2730,35 +2624,35 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
       }
       break;
     }
-  case RELATION_NODE_CHILD_OF:
+  case nsIAccessibleRelation::RELATION_NODE_CHILD_OF:
     {
       relatedNode = FindNeighbourPointingToThis(nsAccessibilityAtoms::owns);
       break;
     }
-  case RELATION_CONTROLLED_BY:
+  case nsIAccessibleRelation::RELATION_CONTROLLED_BY:
     {
       relatedNode = FindNeighbourPointingToThis(nsAccessibilityAtoms::controls);
       break;
     }
-  case RELATION_CONTROLLER_FOR:
+  case nsIAccessibleRelation::RELATION_CONTROLLER_FOR:
     {
       content->GetAttr(kNameSpaceID_WAIProperties,
                        nsAccessibilityAtoms::controls, relatedID);
       break;
     }
-  case RELATION_FLOWS_TO:
+  case nsIAccessibleRelation::RELATION_FLOWS_TO:
     {
       content->GetAttr(kNameSpaceID_WAIProperties,
                        nsAccessibilityAtoms::flowto, relatedID);
       break;
     }
-  case RELATION_FLOWS_FROM:
+  case nsIAccessibleRelation::RELATION_FLOWS_FROM:
     {
       relatedNode = FindNeighbourPointingToThis(nsAccessibilityAtoms::flowto);
       break;
     }
 
-  case RELATION_DEFAULT_BUTTON:
+  case nsIAccessibleRelation::RELATION_DEFAULT_BUTTON:
     {
       if (content->IsNodeOfType(nsINode::eHTML)) {
         nsCOMPtr<nsIForm> form;
@@ -2826,12 +2720,70 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
 
   // Return the corresponding accessible if the related DOM node is found
   if (relatedNode) {
-    nsCOMPtr<nsIAccessibilityService> accService =
-      do_GetService("@mozilla.org/accessibilityService;1");
+    nsCOMPtr<nsIAccessibilityService> accService = GetAccService();
     NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
     return accService->GetAccessibleInWeakShell(relatedNode, mWeakShell, aRelated);
   }
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsAccessible::GetRelationsCount(PRUint32 *aCount)
+{
+  NS_ENSURE_ARG_POINTER(aCount);
+  *aCount = 0;
+
+  nsCOMPtr<nsIArray> relations;
+  nsresult rv = GetRelations(getter_AddRefs(relations));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return relations->GetLength(aCount);
+}
+
+NS_IMETHODIMP
+nsAccessible::GetRelation(PRUint32 aIndex, nsIAccessibleRelation **aRelation)
+{
+  NS_ENSURE_ARG_POINTER(aRelation);
+  *aRelation = nsnull;
+
+  nsCOMPtr<nsIArray> relations;
+  nsresult rv = GetRelations(getter_AddRefs(relations));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIAccessibleRelation> relation;
+  rv = relations->QueryElementAt(aIndex, NS_GET_IID(nsIAccessibleRelation),
+                                 getter_AddRefs(relation));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_IF_ADDREF(*aRelation = relation);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsAccessible::GetRelations(nsIArray **aRelations)
+{
+  NS_ENSURE_ARG_POINTER(aRelations);
+
+  nsCOMPtr<nsIMutableArray> relations = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  NS_ENSURE_TRUE(relations, NS_ERROR_OUT_OF_MEMORY);
+
+  // Latest nsIAccessibleRelation is RELATION_DESCRIPTION_FOR (0xof)
+  for (PRUint32 relType = 0; relType < 0x0f; ++relType) {
+    nsCOMPtr<nsIAccessible> accessible;
+    nsresult rv = GetAccessibleRelated(relType, getter_AddRefs(accessible));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (accessible) {
+      nsCOMPtr<nsIAccessibleRelation> relation =
+        new nsAccessibleRelationWrap(relType, accessible);
+      NS_ENSURE_TRUE(relation, NS_ERROR_OUT_OF_MEMORY);
+
+      relations->AppendElement(relation, PR_FALSE);
+    }
+  }
+
+  NS_ADDREF(*aRelations = relations);
+  return NS_OK;
 }
 
 /* void extendSelection (); */
@@ -2862,7 +2814,7 @@ void nsAccessible::DoCommandCallback(nsITimer *aTimer, void *aClosure)
     if (!doc) {
       return;
     }
-    nsCOMPtr<nsIPresShell> presShell = doc->GetShellAt(0);
+    nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
     nsPIDOMWindow *outerWindow = doc->GetWindow();
     if (presShell && outerWindow) {
       nsAutoPopupStatePusher popupStatePusher(outerWindow, openAllowed);
@@ -3241,7 +3193,7 @@ PRBool nsAccessible::CheckVisibilityInParentChain(nsIDocument* aDocument, nsIVie
     if (parentDoc != nsnull) {
       nsIContent* content = parentDoc->FindContentForSubDocument(document);
       if (content != nsnull) {
-        nsIPresShell* shell = parentDoc->GetShellAt(0);
+        nsIPresShell* shell = parentDoc->GetPrimaryShell();
         nsIFrame* frame = shell->GetPrimaryFrameFor(content);
         while (frame != nsnull && !frame->HasView()) {
           frame = frame->GetParent();

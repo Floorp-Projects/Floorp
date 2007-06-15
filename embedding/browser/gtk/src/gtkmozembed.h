@@ -97,9 +97,7 @@ struct _GtkMozHistoryItem
   long accessed;      /** < The last time that the URL was accessed */
 };
 
-#ifdef MOZ_WIDGET_GTK2
 #include "gtkmozembed_common.h"
-#endif
 
 #define GTK_TYPE_MOZ_EMBED             (gtk_moz_embed_get_type())
 #define GTK_MOZ_EMBED(obj)             GTK_CHECK_CAST((obj), GTK_TYPE_MOZ_EMBED, GtkMozEmbed)

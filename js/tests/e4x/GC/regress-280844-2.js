@@ -36,15 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var bug = 280844;
-var summary = 'Uncontrolled recursion in js_MarkXML during GC  	';
+gTestfile = 'regress-280844-2.js';
+
+var summary = 'Uncontrolled recursion in js_MarkXML during GC';
+var BUGNUMBER = 280844;
 var actual = 'No Crash';
 var expect = 'No Crash';
 
+printBugNumber(BUGNUMBER);
 START(summary);
-
-printBugNumber (bug);
-printStatus (summary);
 
 var N = 100 * 1000;
 
@@ -53,7 +53,7 @@ function prepare_list(N)
     var head = {};
     var cursor = head;
     for (var i = 0; i != N; ++i) {
-        var ns = new Namespace();  
+        var ns = new Namespace(); 
         var x = <xml/>;
         x.addNamespace(ns);
         cursor.next = x;

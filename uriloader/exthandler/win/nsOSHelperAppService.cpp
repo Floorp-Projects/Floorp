@@ -137,7 +137,7 @@ static nsresult GetExtensionFrom4xRegistryInfo(const nsACString& aMimeType,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
+nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
 {
   // look up the protocol scheme in the windows registry....if we find a match then we have a handler for it...
   *aHandlerExists = PR_FALSE;

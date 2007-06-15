@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'object-006.js';
+
 /**
    File Name:      object-006.js
    Description:
@@ -55,11 +57,11 @@ startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var testcase = new TestCase (
-    SECTION,
-    "var string = new java.lang.String(\"hi\"); "+
-    "var c = new java.lang.Character(string.charAt(0)); String(c.toString())",
-    "h",
-    "" );
+  SECTION,
+  "var string = new java.lang.String(\"hi\"); "+
+  "var c = new java.lang.Character(string.charAt(0)); String(c.toString())",
+  "h",
+  "" );
 
 var string = new java.lang.String("hi");
 var c = new java.lang.Character( string.charAt(0) );

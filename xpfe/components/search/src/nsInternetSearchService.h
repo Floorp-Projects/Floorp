@@ -51,7 +51,7 @@
 #include "nsIChannel.h"
 #include "nsILoadGroup.h"
 #include "nsIPref.h"
-
+#include "nsCycleCollectionParticipant.h"
 
 class InternetSearchDataSource : public nsIInternetSearchService,
                                  public nsIRDFDataSource,
@@ -173,7 +173,7 @@ protected:
   nsresult  SetHint(nsIRDFResource *mParent, nsIRDFResource *hintRes);
   nsresult  ConvertEntities(nsString &str, PRBool removeHTMLFlag = PR_TRUE, PRBool removeCRLFsFlag = PR_TRUE, PRBool trimWhiteSpaceFlag = PR_TRUE);
   nsresult  saveContents(nsIChannel* channel, nsIInternetSearchContext *context, PRUint32 contextType);
-  char *    getSearchURI(nsIRDFResource *src);
+  PRBool    getSearchURI(nsIRDFResource *src, nsAString &_retval);  // returns true on success
   nsresult  addToBookmarks(nsIRDFResource *src);
   nsresult  addQueryToBookmarks(nsIRDFResource *src);
   nsresult  filterResult(nsIRDFResource *src);
@@ -196,7 +196,9 @@ static  void    FireTimer(nsITimer* aTimer, void* aClosure);
                                    nsIRDFResource *aOldEngineResource);
 
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(InternetSearchDataSource,
+                                           nsIInternetSearchService)
   NS_DECL_NSIINTERNETSEARCHSERVICE
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER

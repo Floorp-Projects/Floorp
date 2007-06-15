@@ -34,8 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-352212.js';
 //-----------------------------------------------------------------------------
-var bug = 352212;
+var BUGNUMBER = 352212;
 var summary = 'Do not crash with XML filtering predicate, |let|, string.replace';
 var actual = 'No Crash';
 var expect = 'No Crash';
@@ -48,9 +50,9 @@ test();
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
-  
+ 
   expect = 'TypeError: XML filtering predicate operator called on incompatible Number';
 
   try

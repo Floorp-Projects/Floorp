@@ -39,6 +39,9 @@
 #include "TestCommon.h"
 #include "nsIServiceManager.h"
 #include "nsICookieService.h"
+#include "nsICookieManager.h"
+#include "nsICookieManager2.h"
+#include "nsICookie2.h"
 #include <stdio.h>
 #include "plstr.h"
 #include "nsNetUtil.h"
@@ -279,7 +282,7 @@ main(PRInt32 argc, char *argv[])
        *
        * the results of each individual testing operation from CheckResult() is
        * stored in an array of bools, which is then checked against the expected
-       * outcomes (all successes), by PrintResult()). the overall result of all
+       * outcomes (all successes), by PrintResult(). the overall result of all
        * tests to date is kept in |allTestsPassed|, for convenient display at the
        * end.
        *
@@ -403,7 +406,33 @@ main(PRInt32 argc, char *argv[])
       GetACookie(cookieService, "http://path.net/foo/", nsnull, getter_Copies(cookie));
       rv[12] = CheckResult(cookie.get(), MUST_BE_NULL);
 
-      allTestsPassed = PrintResult(rv, 13) && allTestsPassed;
+      // bug 373228: make sure cookies with paths longer than 1024 bytes,
+      // and cookies with paths or names containing tabs, are rejected.
+      // the following cookie has a path > 1024 bytes explicitly specified in the cookie
+      SetACookie(cookieService, "http://path.net/", nsnull, "test=path; path=/1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890/", nsnull);
+      GetACookie(cookieService, "http://path.net/1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890", nsnull, getter_Copies(cookie));
+      rv[13] = CheckResult(cookie.get(), MUST_BE_NULL);
+      // the following cookie has a path > 1024 bytes implicitly specified by the uri path
+      SetACookie(cookieService, "http://path.net/1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890/", nsnull, "test=path", nsnull);
+      GetACookie(cookieService, "http://path.net/1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890/", nsnull, getter_Copies(cookie));
+      rv[14] = CheckResult(cookie.get(), MUST_BE_NULL);
+      // the following cookie includes a tab in the path
+      SetACookie(cookieService, "http://path.net/", nsnull, "test=path; path=/foo\tbar/", nsnull);
+      GetACookie(cookieService, "http://path.net/foo\tbar/", nsnull, getter_Copies(cookie));
+      rv[15] = CheckResult(cookie.get(), MUST_BE_NULL);
+      // the following cookie includes a tab in the name
+      SetACookie(cookieService, "http://path.net/", nsnull, "test\ttabs=tab", nsnull);
+      GetACookie(cookieService, "http://path.net/", nsnull, getter_Copies(cookie));
+      rv[16] = CheckResult(cookie.get(), MUST_BE_NULL);
+      // the following cookie includes a tab in the value - allowed
+      SetACookie(cookieService, "http://path.net/", nsnull, "test=tab\ttest", nsnull);
+      GetACookie(cookieService, "http://path.net/", nsnull, getter_Copies(cookie));
+      rv[17] = CheckResult(cookie.get(), MUST_EQUAL, "test=tab\ttest");
+      SetACookie(cookieService, "http://path.net/", nsnull, "test=tab\ttest; max-age=-1", nsnull);
+      GetACookie(cookieService, "http://path.net/", nsnull, getter_Copies(cookie));
+      rv[18] = CheckResult(cookie.get(), MUST_BE_NULL);
+
+      allTestsPassed = PrintResult(rv, 19) && allTestsPassed;
 
 
       // *** expiry & deletion tests
@@ -613,6 +642,7 @@ main(PRInt32 argc, char *argv[])
       GetACookie(cookieService, "http://multi.path.tests/one/two/three/four/five/six/", nsnull, getter_Copies(cookie));
       rv[0] = CheckResult(cookie.get(), MUST_EQUAL, "test7=path; test6=path; test3=path; test1=path; test5=path; test4=path; test2=path; test8=path");
 
+
       // *** httponly tests 
       printf("*** Beginning httponly tests...\n");
       // Since this cookie is set via http, it can be retrieved
@@ -625,6 +655,88 @@ main(PRInt32 argc, char *argv[])
       rv[1] = CheckResult(cookie.get(), MUST_NOT_EQUAL, "test=httponly");
 
       allTestsPassed = PrintResult(rv, 2) && allTestsPassed;
+
+
+      // *** nsICookieManager{2} interface tests
+      printf("*** Beginning nsICookieManager{2} interface tests...\n");
+      nsCOMPtr<nsICookieManager> cookieMgr = do_GetService(NS_COOKIEMANAGER_CONTRACTID, &rv0);
+      if (NS_FAILED(rv0)) return -1;
+      nsCOMPtr<nsICookieManager2> cookieMgr2 = do_QueryInterface(cookieMgr);
+      if (!cookieMgr2) return -1;
+      
+      // first, ensure a clean slate
+      rv[0] = NS_SUCCEEDED(cookieMgr->RemoveAll());
+      // add some cookies
+      rv[1] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("cookiemgr.test"), // domain
+                                           NS_LITERAL_CSTRING("/foo"),           // path
+                                           NS_LITERAL_CSTRING("test1"),          // name
+                                           NS_LITERAL_CSTRING("yes"),            // value
+                                           PR_FALSE,                             // is secure
+                                           PR_TRUE,                              // is session
+                                           LL_MAXINT));                          // expiry time
+      rv[2] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("cookiemgr.test"), // domain
+                                           NS_LITERAL_CSTRING("/foo"),           // path
+                                           NS_LITERAL_CSTRING("test2"),          // name
+                                           NS_LITERAL_CSTRING("yes"),            // value
+                                           PR_FALSE,                             // is secure
+                                           PR_TRUE,                              // is session
+                                           LL_MAXINT));                          // expiry time
+      rv[3] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("new.domain"),     // domain
+                                           NS_LITERAL_CSTRING("/rabbit"),        // path
+                                           NS_LITERAL_CSTRING("test3"),          // name
+                                           NS_LITERAL_CSTRING("yes"),            // value
+                                           PR_FALSE,                             // is secure
+                                           PR_TRUE,                              // is session
+                                           LL_MAXINT));                          // expiry time
+      // confirm using enumerator
+      nsCOMPtr<nsISimpleEnumerator> enumerator;
+      rv[4] = NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator)));
+      PRInt32 i = 0;
+      PRBool more;
+      nsCOMPtr<nsICookie2> newDomainCookie;
+      while (NS_SUCCEEDED(enumerator->HasMoreElements(&more)) && more) {
+        nsCOMPtr<nsISupports> cookie;
+        if (NS_FAILED(enumerator->GetNext(getter_AddRefs(cookie)))) break;
+        ++i;
+        
+        // keep tabs on the third cookie, so we can check it later
+        nsCOMPtr<nsICookie2> cookie2(do_QueryInterface(cookie));
+        if (!cookie2) break;
+        nsCAutoString domain;
+        cookie2->GetRawHost(domain);
+        if (domain == NS_LITERAL_CSTRING("new.domain"))
+          newDomainCookie = cookie2;
+      }
+      rv[5] = i == 3;
+      // check CountCookiesFromHost()
+      PRUint32 hostCookies = 0;
+      rv[6] = NS_SUCCEEDED(cookieMgr2->CountCookiesFromHost(NS_LITERAL_CSTRING("cookiemgr.test"), &hostCookies)) &&
+              hostCookies == 2;
+      // check CookieExists() using the third cookie
+      PRBool found;
+      rv[7] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && found;
+      // remove the cookie, block it, and ensure it can't be added again
+      rv[8] = NS_SUCCEEDED(cookieMgr->Remove(NS_LITERAL_CSTRING("new.domain"), // domain
+                                             NS_LITERAL_CSTRING("test3"),      // name
+                                             NS_LITERAL_CSTRING("/rabbit"),    // path
+                                             PR_TRUE));                        // is blocked
+      rv[9] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && !found;
+      rv[10] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("new.domain"),     // domain
+                                            NS_LITERAL_CSTRING("/rabbit"),        // path
+                                            NS_LITERAL_CSTRING("test3"),          // name
+                                            NS_LITERAL_CSTRING("yes"),            // value
+                                            PR_FALSE,                             // is secure
+                                            PR_TRUE,                              // is session
+                                            LL_ZERO));                            // expiry time
+      rv[11] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && !found;
+      // double-check RemoveAll() using the enumerator
+      rv[12] = NS_SUCCEEDED(cookieMgr->RemoveAll());
+      rv[13] = NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator))) &&
+               NS_SUCCEEDED(enumerator->HasMoreElements(&more)) &&
+               !more;
+
+      allTestsPassed = PrintResult(rv, 14) && allTestsPassed;
+
 
       // XXX the following are placeholders: add these tests please!
       // *** "noncompliant cookie" tests

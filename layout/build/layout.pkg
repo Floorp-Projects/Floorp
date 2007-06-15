@@ -19,6 +19,7 @@ dist/bin/components/@SHARED_LIBRARY@
 !xpt dist/bin/components/dom_css.xpt
 !xpt dist/bin/components/dom_events.xpt
 !xpt dist/bin/components/dom_html.xpt
+!xpt dist/bin/components/dom_offline.xpt
 !xpt dist/bin/components/dom_range.xpt
 !xpt dist/bin/components/dom_stylesheets.xpt
 !xpt dist/bin/components/dom_traversal.xpt

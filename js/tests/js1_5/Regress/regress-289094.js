@@ -35,15 +35,17 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-289094.js';
 //-----------------------------------------------------------------------------
-var bug = 289094;
+var BUGNUMBER = 289094;
 var summary = 'argument shadowing function property special case for lambdas';
 var actual = '';
 var expect = 'function:function';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
-  
+ 
 function fn()
 {
   var o = {

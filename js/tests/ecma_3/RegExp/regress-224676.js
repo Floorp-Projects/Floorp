@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    04 November 2003
  * SUMMARY: Testing regexps with various disjunction + character class patterns
@@ -43,8 +45,9 @@
  *
  */
 //-----------------------------------------------------------------------------
+var gTestfile = 'regress-224676.js';
 var i = 0;
-var bug = 224676;
+var BUGNUMBER = 224676;
 var summary = 'Regexps with various disjunction + character class patterns';
 var status = '';
 var statusmessages = new Array();
@@ -59,170 +62,170 @@ var expectedmatches = new Array();
 
 
 string = 'ZZZxZZZ';
-  status = inSection(1);
-  pattern = /[x]|x/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('x');
-  addThis();
+status = inSection(1);
+pattern = /[x]|x/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('x');
+addThis();
 
-  status = inSection(2);
-  pattern = /x|[x]/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('x');
-  addThis();
+status = inSection(2);
+pattern = /x|[x]/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('x');
+addThis();
 
 
 string = 'ZZZxbZZZ';
-  status = inSection(3);
-  pattern = /a|[x]b/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('xb');
-  addThis();
+status = inSection(3);
+pattern = /a|[x]b/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('xb');
+addThis();
 
-  status = inSection(4);
-  pattern = /[x]b|a/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('xb');
-  addThis();
+status = inSection(4);
+pattern = /[x]b|a/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('xb');
+addThis();
 
-  status = inSection(5);
-  pattern = /([x]b|a)/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('xb', 'xb');
-  addThis();
+status = inSection(5);
+pattern = /([x]b|a)/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('xb', 'xb');
+addThis();
 
-  status = inSection(6);
-  pattern = /([x]b|a)|a/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('xb', 'xb');
-  addThis();
+status = inSection(6);
+pattern = /([x]b|a)|a/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('xb', 'xb');
+addThis();
 
-  status = inSection(7);
-  pattern = /^[x]b|a/;
-  actualmatch = string.match(pattern);
-  expectedmatch = null;
-  addThis();
+status = inSection(7);
+pattern = /^[x]b|a/;
+actualmatch = string.match(pattern);
+expectedmatch = null;
+addThis();
 
 
 string = 'xb';
-  status = inSection(8);
-  pattern = /^[x]b|a/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('xb');
-  addThis();
+status = inSection(8);
+pattern = /^[x]b|a/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('xb');
+addThis();
 
 
 string = 'ZZZxbZZZ';
-  status = inSection(9);
-  pattern = /([x]b)|a/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('xb', 'xb');
-  addThis();
+status = inSection(9);
+pattern = /([x]b)|a/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('xb', 'xb');
+addThis();
 
-  status = inSection(10);
-  pattern = /()[x]b|a/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('xb', '');
-  addThis();
+status = inSection(10);
+pattern = /()[x]b|a/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('xb', '');
+addThis();
 
-  status = inSection(11);
-  pattern = /x[b]|a/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('xb');
-  addThis();
+status = inSection(11);
+pattern = /x[b]|a/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('xb');
+addThis();
 
-  status = inSection(12);
-  pattern = /[x]{1}b|a/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('xb');
-  addThis();
+status = inSection(12);
+pattern = /[x]{1}b|a/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('xb');
+addThis();
 
-  status = inSection(13);
-  pattern = /[x]b|a|a/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('xb');
-  addThis();
+status = inSection(13);
+pattern = /[x]b|a|a/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('xb');
+addThis();
 
-  status = inSection(14);
-  pattern = /[x]b|[a]/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('xb');
-  addThis();
+status = inSection(14);
+pattern = /[x]b|[a]/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('xb');
+addThis();
 
-  status = inSection(15);
-  pattern = /[x]b|a+/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('xb');
-  addThis();
+status = inSection(15);
+pattern = /[x]b|a+/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('xb');
+addThis();
 
-  status = inSection(16);
-  pattern = /[x]b|a{1}/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('xb');
-  addThis();
+status = inSection(16);
+pattern = /[x]b|a{1}/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('xb');
+addThis();
 
-  status = inSection(17);
-  pattern = /[x]b|(a)/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('xb', undefined);
-  addThis();
+status = inSection(17);
+pattern = /[x]b|(a)/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('xb', undefined);
+addThis();
 
-  status = inSection(18);
-  pattern = /[x]b|()a/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('xb', undefined);
-  addThis();
+status = inSection(18);
+pattern = /[x]b|()a/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('xb', undefined);
+addThis();
 
-  status = inSection(19);
-  pattern = /[x]b|^a/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('xb');
-  addThis();
+status = inSection(19);
+pattern = /[x]b|^a/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('xb');
+addThis();
 
-  status = inSection(20);
-  pattern = /a|[^b]b/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('xb');
-  addThis();
+status = inSection(20);
+pattern = /a|[^b]b/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('xb');
+addThis();
 
-  status = inSection(21);
-  pattern = /a|[^b]{1}b/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('xb');
-  addThis();
+status = inSection(21);
+pattern = /a|[^b]{1}b/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('xb');
+addThis();
 
 
 string = 'hallo\";'
   status = inSection(22);
-  pattern = /^((\\[^\x00-\x1f]|[^\x00-\x1f"\\])*)"/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('hallo"', 'hallo', 'o');
-  addThis();
+pattern = /^((\\[^\x00-\x1f]|[^\x00-\x1f"\\])*)"/;
+			      actualmatch = string.match(pattern);
+			      expectedmatch = Array('hallo"', 'hallo', 'o');
+			      addThis();
 
 
 
 
 //-------------------------------------------------------------------------------------------------
-test();
+			      test();
 //-------------------------------------------------------------------------------------------------
 
 
 
-function addThis()
-{
-  statusmessages[i] = status;
-  patterns[i] = pattern;
-  strings[i] = string;
-  actualmatches[i] = actualmatch;
-  expectedmatches[i] = expectedmatch;
-  i++;
-}
+			      function addThis()
+			      {
+				statusmessages[i] = status;
+				patterns[i] = pattern;
+				strings[i] = string;
+				actualmatches[i] = actualmatch;
+				expectedmatches[i] = expectedmatch;
+				i++;
+			      }
 
 
-function test()
+			      function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
   testRegExp(statusmessages, patterns, strings, actualmatches, expectedmatches);
   exitFunc ('test');

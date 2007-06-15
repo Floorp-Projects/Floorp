@@ -169,8 +169,7 @@
         // Hide the ``Print...'' button when the underlying gfx code does not
         // support multiple devicecontext to be used concurrently
         // (e.g. printing and printpreview at the same time; required as 
-        // legacy support for unices.'s PostScript module (Xprint
-        // on unices. does not have problems with that))
+        // legacy support for unices.'s PostScript module
         // XXX the scaling widgets, and the orientation widgets on unices.
         var canPrint = true;
         try

@@ -44,7 +44,7 @@
 
 #include "nsIDragDropHandler.h"
 #include "nsIDOMDragListener.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsPIDOMEventTarget.h"
 #include "nsITransferable.h"
 
 class nsIDOMNode;
@@ -120,7 +120,7 @@ private:
 
   PRPackedBool mListenerInstalled;
 
-  nsCOMPtr<nsIDOMEventReceiver> mEventReceiver;
+  nsCOMPtr<nsPIDOMEventTarget> mEventTarget;
 
   // weak ref, this is probably my owning webshell
   // FIXME: we set this and never null it out.  That's bad!  See bug 332187.

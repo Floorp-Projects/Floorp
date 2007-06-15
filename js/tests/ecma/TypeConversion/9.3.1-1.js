@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+gTestfile = '9.3.1-1.js';
+
 /**
    File Name:          9.3.1-1.js
    ECMA Section:       9.3  Type Conversion:  ToNumber

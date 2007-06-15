@@ -129,7 +129,8 @@ nsSVGTextPathFrame::Init(nsIContent*      aContent,
       return NS_ERROR_FAILURE;
 
     NS_NewSVGLengthList(getter_AddRefs(mX),
-                        NS_STATIC_CAST(nsSVGElement*, mContent));
+                        NS_STATIC_CAST(nsSVGElement*, mContent),
+                        nsSVGUtils::X);
     if (mX) {
       nsCOMPtr<nsIDOMSVGLength> length;
       mX->AppendItem(mStartOffset, getter_AddRefs(length));

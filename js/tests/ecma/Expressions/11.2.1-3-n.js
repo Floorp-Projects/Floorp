@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '11.2.1-3-n.js';
+
 /**
    File Name:          11.2.1-2.js
    ECMA Section:       11.2.1 Property Accessors

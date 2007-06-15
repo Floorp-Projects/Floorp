@@ -131,17 +131,10 @@ MaiHyperlink::MaiHyperlink(nsIAccessibleHyperLink *aAcc):
 
 MaiHyperlink::~MaiHyperlink()
 {
-    if (mMaiAtkHyperlink)
+    if (mMaiAtkHyperlink) {
+        MAI_ATK_HYPERLINK(mMaiAtkHyperlink)->maiHyperlink = nsnull;
         g_object_unref(mMaiAtkHyperlink);
-}
-
-// MaiHyperlink use its nsIAccessibleHyperlink raw pointer as ID
-NS_IMETHODIMP MaiHyperlink::GetUniqueID(void **aUniqueID)
-{
-    if (!mHyperlink)
-        return NS_ERROR_FAILURE;
-    *aUniqueID = NS_STATIC_CAST(void*, mHyperlink.get());
-    return NS_OK;
+    }
 }
 
 AtkHyperlink *
@@ -212,10 +205,10 @@ finalizeCB(GObject *aObj)
     if (!MAI_IS_ATK_HYPERLINK(aObj))
         return;
 
-    MaiAtkHyperlink *maiHyperlink = MAI_ATK_HYPERLINK(aObj);
-    if (maiHyperlink->uri)
-        g_free(maiHyperlink->uri);
-    maiHyperlink->maiHyperlink = nsnull;
+    MaiAtkHyperlink *maiAtkHyperlink = MAI_ATK_HYPERLINK(aObj);
+    if (maiAtkHyperlink->uri)
+        g_free(maiAtkHyperlink->uri);
+    maiAtkHyperlink->maiHyperlink = nsnull;
 
     /* call parent finalize function */
     if (G_OBJECT_CLASS (parent_class)->finalize)
@@ -228,9 +221,9 @@ getUriCB(AtkHyperlink *aLink, gint aLinkIndex)
     nsIAccessibleHyperLink *accHyperlink = get_accessible_hyperlink(aLink);
     NS_ENSURE_TRUE(accHyperlink, nsnull);
 
-    MaiAtkHyperlink *maiHyperlink = MAI_ATK_HYPERLINK(aLink);
-    if (maiHyperlink->uri)
-        return g_strdup(maiHyperlink->uri);
+    MaiAtkHyperlink *maiAtkHyperlink = MAI_ATK_HYPERLINK(aLink);
+    if (maiAtkHyperlink->uri)
+        return g_strdup(maiAtkHyperlink->uri);
 
     nsCOMPtr<nsIURI> uri;
     nsresult rv = accHyperlink->GetURI(aLinkIndex,getter_AddRefs(uri));
@@ -239,8 +232,8 @@ getUriCB(AtkHyperlink *aLink, gint aLinkIndex)
     nsCAutoString cautoStr;
     rv = uri->GetSpec(cautoStr);
 
-    maiHyperlink->uri = ToNewCString(cautoStr);
-    return g_strdup(maiHyperlink->uri);
+    maiAtkHyperlink->uri = ToNewCString(cautoStr);
+    return g_strdup(maiAtkHyperlink->uri);
 }
 
 AtkObject *
@@ -250,15 +243,11 @@ getObjectCB(AtkHyperlink *aLink, gint aLinkIndex)
     NS_ENSURE_TRUE(accHyperlink, nsnull);
 
     nsCOMPtr<nsIAccessible> accObj;
-    nsresult rv = accHyperlink->GetObject(aLinkIndex, getter_AddRefs(accObj));
-    NS_ENSURE_SUCCESS(rv, nsnull);
-    AtkObject *atkObj = nsnull;
-    if (accObj) {
-        nsIAccessible *tmpObj = accObj;
-        nsAccessibleWrap *accWrap = NS_STATIC_CAST(nsAccessibleWrap *, tmpObj);
-        atkObj = accWrap->GetAtkObject();
-    }
-    //no need to add ref it, because it is "get" not "ref" ???
+    accHyperlink->GetObject(aLinkIndex, getter_AddRefs(accObj));
+    NS_ENSURE_TRUE(accObj, nsnull);
+
+    AtkObject *atkObj = nsAccessibleWrap::GetAtkObject(accObj);
+    //no need to add ref it, because it is "get" not "ref"
     return atkObj;
 }
 

@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.4.4.js';
+
 /**
    File Name:          15.4.4.js
    ECMA Section:       15.4.4 Properties of the Array Prototype Object

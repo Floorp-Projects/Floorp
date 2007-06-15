@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,20 +34,22 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  * Date: 14 April 2001
  *
  * SUMMARY: Testing  obj.__lookupGetter__(), obj.__lookupSetter__()
- * See http://bugzilla.mozilla.org/show_bug.cgi?id=71992 
+ * See http://bugzilla.mozilla.org/show_bug.cgi?id=71992
  *
- * Brendan: "I see no need to provide more than the minimum: 
- * o.__lookupGetter__('p') returns the getter function for o.p, 
+ * Brendan: "I see no need to provide more than the minimum:
+ * o.__lookupGetter__('p') returns the getter function for o.p,
  * or undefined if o.p has no getter.  Users can wrap and layer."
  */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+var gTestfile = 'getset-006.js';
 var UBound = 0;
-var bug = 71992;
+var BUGNUMBER = 71992;
 var summary = 'Testing  obj.__lookupGetter__(), obj.__lookupSetter__()';
 var statprefix = 'Status: ';
 var status = '';
@@ -65,7 +68,7 @@ var obj = {};
 var obj2 = {};
 var s;
 
- 
+
 // The only setter and getter functions we'll use in the three sections below -
 var cnNameSetter = function(newValue) {this._name=newValue; this.nameSETS++;};
 var cnNameGetter = function() {this.nameGETS++; return this._name;};
@@ -173,9 +176,9 @@ function addThis()
 function test()
 {
   enterFunc ('test');
-  printBugNumber (bug);
+  printBugNumber(BUGNUMBER);
   printStatus (summary);
- 
+
   for (var i = 0; i < UBound; i++)
   {
     reportCompare(expectedvalues[i], actualvalues[i], getStatus(i));

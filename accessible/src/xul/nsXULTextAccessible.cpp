@@ -39,6 +39,7 @@
 
 // NOTE: alphabetically ordered
 #include "nsAccessibilityAtoms.h"
+#include "nsAccessibilityUtils.h"
 #include "nsBaseWidgetAccessible.h"
 #include "nsIDOMXULDescriptionElement.h"
 #include "nsINameSpaceManager.h"
@@ -49,7 +50,7 @@
   * For XUL descriptions and labels
   */
 nsXULTextAccessible::nsXULTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsHyperTextAccessible(aDomNode, aShell)
+nsHyperTextAccessibleWrap(aDomNode, aShell)
 { 
 }
 
@@ -72,7 +73,7 @@ NS_IMETHODIMP nsXULTextAccessible::GetName(nsAString& aName)
 NS_IMETHODIMP
 nsXULTextAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsHyperTextAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Labels and description have read only state
@@ -169,7 +170,7 @@ void nsXULLinkAccessible::CacheActionContent()
     mIsLink = PR_TRUE;
     mActionContent = mTempContent;
   }
-  else if (mTempContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::onclick)) {
+  else if (nsAccessibilityUtils::HasListener(mTempContent, NS_LITERAL_STRING("click"))) {
     mIsOnclick = PR_TRUE;
     mActionContent = mTempContent;
   }

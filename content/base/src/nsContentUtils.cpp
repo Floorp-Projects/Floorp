@@ -107,7 +107,6 @@
 #include "nsCRT.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMEventReceiver.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMDocumentEvent.h"
 #ifdef MOZ_XTF
@@ -137,6 +136,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsGUIEvent.h"
 #include "nsMutationEvent.h"
 #include "nsIKBStateControl.h"
+#include "nsIMEStateManager.h"
+#include "nsContentErrors.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -336,8 +337,8 @@ nsContentUtils::InitializeEventTable() {
     { &nsGkAtoms::onkeypress,                    { NS_KEY_PRESS, EventNameType_HTMLXUL }},
     { &nsGkAtoms::onfocus,                       { NS_FOCUS_CONTENT, EventNameType_HTMLXUL }},
     { &nsGkAtoms::onblur,                        { NS_BLUR_CONTENT, EventNameType_HTMLXUL }},
-    { &nsGkAtoms::onoffline,                     { NS_EVENT, EventNameType_HTMLXUL }},
-    { &nsGkAtoms::ononline,                      { NS_EVENT, EventNameType_HTMLXUL }},
+    { &nsGkAtoms::onoffline,                     { NS_OFFLINE, EventNameType_HTMLXUL }},
+    { &nsGkAtoms::ononline,                      { NS_ONLINE, EventNameType_HTMLXUL }},
     { &nsGkAtoms::onsubmit,                      { NS_FORM_SUBMIT, EventNameType_HTMLXUL }},
     { &nsGkAtoms::onreset,                       { NS_FORM_RESET, EventNameType_HTMLXUL }},
     { &nsGkAtoms::onchange,                      { NS_FORM_CHANGE, EventNameType_HTMLXUL }},
@@ -2404,7 +2405,7 @@ nsCxPusher::Push(nsISupports *aCurrentTarget)
   nsCOMPtr<nsIDocument> document;
 
   if (content) {
-    document = content->GetDocument();
+    document = content->GetOwnerDoc();
   }
 
   if (!document) {
@@ -2979,10 +2980,10 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
   }
 
   // If we have a window, we can check it for mutation listeners now.
-  nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(window));
-  if (rec) {
+  nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryInterface(window));
+  if (piTarget) {
     nsCOMPtr<nsIEventListenerManager> manager;
-    rec->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+    piTarget->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
     if (manager) {
       PRBool hasListeners = PR_FALSE;
       manager->HasMutationListeners(&hasListeners);
@@ -3144,52 +3145,6 @@ nsContentUtils::IsValidNodeName(nsIAtom *aLocalName, nsIAtom *aPrefix,
   // If the namespace is not the XML namespace then the prefix must not be xml.
   return aPrefix != nsGkAtoms::xmlns &&
          (aNamespaceID == kNameSpaceID_XML || aPrefix != nsGkAtoms::xml);
-}
-
-/* static */
-nsresult
-nsContentUtils::SetUserData(nsINode *aNode, nsIAtom *aKey,
-                            nsIVariant *aData, nsIDOMUserDataHandler *aHandler,
-                            nsIVariant **aResult)
-{
-  *aResult = nsnull;
-
-  nsresult rv;
-  void *data;
-  if (aData) {
-    rv = aNode->SetProperty(DOM_USER_DATA, aKey, aData,
-                            nsPropertyTable::SupportsDtorFunc, PR_TRUE,
-                            &data);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_ADDREF(aData);
-  }
-  else {
-    data = aNode->UnsetProperty(DOM_USER_DATA, aKey);
-  }
-
-  // Take over ownership of the old data from the property table.
-  nsCOMPtr<nsIVariant> oldData = dont_AddRef(NS_STATIC_CAST(nsIVariant*, data));
-
-  if (aData && aHandler) {
-    rv = aNode->SetProperty(DOM_USER_DATA_HANDLER, aKey, aHandler,
-                            nsPropertyTable::SupportsDtorFunc, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      // We failed to set the handler, remove the data.
-      aNode->DeleteProperty(DOM_USER_DATA, aKey);
-
-      return rv;
-    }
-
-    NS_ADDREF(aHandler);
-  }
-  else {
-    aNode->DeleteProperty(DOM_USER_DATA_HANDLER, aKey);
-  }
-
-  oldData.swap(*aResult);
-
-  return NS_OK;
 }
 
 /* static */
@@ -3590,4 +3545,64 @@ nsContentUtils::GetKBStateControlStatusFromIMEStatus(PRUint32 aState)
       NS_ERROR("The given state doesn't have valid enable state");
       return nsIKBStateControl::IME_STATUS_ENABLED;
   }
+}
+
+/* static */
+void
+nsContentUtils::NotifyInstalledMenuKeyboardListener(PRBool aInstalling)
+{
+  nsIMEStateManager::OnInstalledMenuKeyboardListener(aInstalling);
+}
+
+static PRBool SchemeIs(nsIURI* aURI, const char* aScheme)
+{
+  nsCOMPtr<nsIURI> baseURI = NS_GetInnermostURI(aURI);
+  NS_ENSURE_TRUE(baseURI, PR_FALSE);
+
+  PRBool isScheme = PR_FALSE;
+  return NS_SUCCEEDED(baseURI->SchemeIs(aScheme, &isScheme)) && isScheme;
+}
+
+/* static */
+nsresult
+nsContentUtils::CheckSecurityBeforeLoad(nsIURI* aURIToLoad,
+                                        nsIPrincipal* aLoadingPrincipal,
+                                        PRUint32 aCheckLoadFlags,
+                                        PRBool aAllowData,
+                                        PRUint32 aContentPolicyType,
+                                        nsISupports* aContext,
+                                        const nsACString& aMimeGuess,
+                                        nsISupports* aExtra)
+{
+  nsCOMPtr<nsIURI> loadingURI;
+  nsresult rv = aLoadingPrincipal->GetURI(getter_AddRefs(loadingURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // CheckLoadURIWithPrincipal
+  rv = sSecurityManager->
+    CheckLoadURIWithPrincipal(aLoadingPrincipal, aURIToLoad, aCheckLoadFlags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Content Policy
+  PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+  rv = NS_CheckContentLoadPolicy(aContentPolicyType,
+                                 aURIToLoad,
+                                 loadingURI,
+                                 aContext,
+                                 aMimeGuess,
+                                 aExtra,
+                                 &shouldLoad,
+                                 GetContentPolicy());
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_CP_REJECTED(shouldLoad)) {
+    return NS_ERROR_CONTENT_BLOCKED;
+  }
+
+  // Same Origin
+  if ((aAllowData && SchemeIs(aURIToLoad, "data")) ||
+      ((aCheckLoadFlags & nsIScriptSecurityManager::ALLOW_CHROME) &&
+       SchemeIs(aURIToLoad, "chrome"))) {
+    return NS_OK;
+  }
+  return sSecurityManager->CheckSameOriginURI(loadingURI, aURIToLoad);
 }

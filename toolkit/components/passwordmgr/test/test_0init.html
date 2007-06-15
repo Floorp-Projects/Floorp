@@ -1,14 +1,14 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test initialization for Password Manager</title>
+  <title>Test initialization for Login Manager</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
   <script type="text/javascript" src="pwmgr_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-Password Manager test: initialization.
+Login Manager test: initialization.
 <p id="display"></p>
 <div id="content" style="display: none">
   
@@ -16,54 +16,65 @@ Password Manager test: initialization.
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-/** Test for Password Manger: initialization **/
+/** Test for Login Manager: initialization **/
 
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
 
 // Get the pwmgr service
-var Cc_pwmgr = Components.classes["@mozilla.org/passwordmanager;1"];
-ok(Cc_pwmgr != null, "Access Cc[@mozilla.org/passwordmanager;1]");
+var Cc_pwmgr = Components.classes["@mozilla.org/login-manager;1"];
+ok(Cc_pwmgr != null, "Access Cc[@mozilla.org/login-manager;1]");
 
-var Ci_pwmgr = Components.interfaces.nsIPasswordManager;
-ok(Ci_pwmgr != null, "Access Ci.nsIPasswordManager");
+var Ci_pwmgr = Components.interfaces.nsILoginManager;
+ok(Ci_pwmgr != null, "Access Ci.nsILoginManager");
 
 var pwmgr = Cc_pwmgr.getService(Ci_pwmgr);
 ok(pwmgr != null, "pwmgr getService()");
 
 
 // Make sure it's not already initialized somehow
-var count, enum;
-count = 0;
-enum = pwmgr.enumerator;
-while (enum.hasMoreElements()) { count++; enum.getNext(); }
-ok(count == 0, "ensure no pre-existing logins");
-if (count != 0) { throw "Aborting test."; }
+var logins = pwmgr.getAllLogins({});
+ok(logins != null, "getAllLogins()");
+is(logins.length, 0, "ensure no pre-existing logins");
+if (logins.length != 0) { throw "aborting test init -- found existing logins"; }
 
-count = 0;
-enum = pwmgr.rejectEnumerator;
-while (enum.hasMoreElements()) { count++; enum.getNext(); }
-ok(count == 0, "ensure no pre-existing disabled logins");
-if (count != 0) { throw "Aborting test"; }
+var disabledHosts = pwmgr.getAllDisabledHosts({});
+ok(disabledHosts != null, "getAllDisabledHosts()");
+is(disabledHosts.length, 0, "ensure no pre-existing disabled hosts");
+if (disabledHosts.length != 0) { throw "aborting test init -- found existing disabled hosts"; }
 
 
-pwmgr = pwmgr.QueryInterface(Components.interfaces.nsIPasswordManagerInternal);
+// Get nsLoginInfo constructor for simpler code
+var nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1", Components.interfaces.nsILoginInfo);
+ok(nsLoginInfo != null, "nsLoginInfo constructor");
+
+
 // Add some logins for testing.
-const TESTHOST = "http://localhost:8888";
-for (var u = 1; u <= 15; u++) {
-  pwmgr.addUserFull2(TESTHOST, "testuser"+u, "testpass"+u, "uname"+u, "pword"+u, TESTHOST);
+function initLogin(login, username, ufieldName, password, pfieldName, hostname, formSubmitURL) {
+	login.username      = username;
+	login.usernameField = ufieldName;
+	login.password      = password;
+	login.passwordField = pfieldName;
+	login.hostname      = hostname;
+	login.formSubmitURL = formSubmitURL
+	login.httpRealm     = null;
+}
+
+for (var u = 1; u <= 10; u++) {
+	// TODO: don't really need |new| here, could even detect possible breakage with refs to user objs
+	login = new nsLoginInfo();
+	ok(login != null, "Adding login #" + u);
+
+	initLogin(login, "testuser"+u, "uname"+u, "testpass"+u, "pword"+u,
+			"http://localhost:8888", "http://localhost:8888");
+
+	pwmgr.addLogin(login);
 }
 
 // Simple check to see if everything was added fine.
-count = 0;
-enum = pwmgr.enumerator;
-while (enum.hasMoreElements()) { count++; enum.getNext(); }
-ok(count == 15, "check number of added logins");
-
-count = 0;
-enum = pwmgr.rejectEnumerator;
-while (enum.hasMoreElements()) { count++; enum.getNext(); }
-ok(count == 0, "check no disable logins");
+var logins = pwmgr.getAllLogins({});
+ok(logins != null, "getAllLogins()");
+is(logins.length, 10, "check expected final number of logins");
 
 </script>
 </pre>

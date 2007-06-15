@@ -172,6 +172,10 @@ PROT_PhishMsgDisplayerBase.prototype.getMeOutOfHereUrl_ = function() {
   try {
     url = prefs.getComplexValue("browser.startup.homepage",
                                 Ci.nsIPrefLocalizedString).data;
+    // If url is a pipe-delimited set of pages, just take the first one.
+    // This will need to change once bug 221445 is fixed.
+    if (url.indexOf("|") != -1)
+      url = url.split("|")[0];
   } catch(e) {
     G_Debug(this, "Couldn't get homepage pref: " + e);
   }

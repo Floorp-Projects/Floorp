@@ -45,7 +45,6 @@
 #include "nsIAccessibleWin32Object.h"
 
 #include "Accessible2_i.c"
-#include "AccessibleAction_i.c"
 #include "AccessibleStates.h"
 
 #include "nsIMutableArray.h"
@@ -55,6 +54,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
 #include "nsIPrefService.h"
+#include "nsRootAccessible.h"
 #include "nsIServiceManager.h"
 #include "nsTextFormatter.h"
 #include "nsIView.h"
@@ -94,18 +94,11 @@ nsAccessibleWrap::~nsAccessibleWrap()
 {
 }
 
+NS_IMPL_ISUPPORTS_INHERITED0(nsAccessibleWrap, nsAccessible);
+
 //-----------------------------------------------------
 // IUnknown interface methods - see iunknown.h for documentation
 //-----------------------------------------------------
-STDMETHODIMP_(ULONG) nsAccessibleWrap::AddRef()
-{
-  return nsAccessNode::AddRef();
-}
-
-STDMETHODIMP_(ULONG) nsAccessibleWrap::Release()
-{
-  return nsAccessNode::Release();
-}
 
 // Microsoft COM QueryInterface
 STDMETHODIMP nsAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
@@ -123,8 +116,24 @@ STDMETHODIMP nsAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
     *ppv = NS_STATIC_CAST(IServiceProvider*, this);
   else if (IID_IAccessible2 == iid)
     *ppv = NS_STATIC_CAST(IAccessible2*, this);
-  else if (IID_IAccessibleAction == iid)
-    *ppv = NS_STATIC_CAST(IAccessibleAction*, this);
+
+  if (NULL == *ppv) {
+    HRESULT hr = CAccessibleComponent::QueryInterface(iid, ppv);
+    if (SUCCEEDED(hr))
+      return hr;
+  }
+
+  if (NULL == *ppv) {
+    HRESULT hr = CAccessibleHyperlink::QueryInterface(iid, ppv);
+    if (SUCCEEDED(hr))
+      return hr;
+  }
+
+  if (NULL == *ppv) {
+    HRESULT hr = CAccessibleValue::QueryInterface(iid, ppv);
+    if (SUCCEEDED(hr))
+      return hr;
+  }
 
   if (NULL == *ppv)
     return nsAccessNodeWrap::QueryInterface(iid, ppv);
@@ -259,7 +268,9 @@ STDMETHODIMP nsAccessibleWrap::get_accChild(
   nsCOMPtr<nsIAccessible> childAccessible;
   if (!MustPrune(this)) {
     GetChildAt(varChild.lVal - 1, getter_AddRefs(childAccessible));
-    *ppdispChild = NativeAccessible(childAccessible);
+    if (childAccessible) {
+      *ppdispChild = NativeAccessible(childAccessible);
+    }
   }
 
   return (*ppdispChild)? S_OK: E_FAIL;
@@ -752,6 +763,7 @@ STDMETHODIMP nsAccessibleWrap::accSelect(
   // currently only handle focus and selection
   nsCOMPtr<nsIAccessible> xpAccessible;
   GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
+  NS_ENSURE_TRUE(xpAccessible, E_FAIL);
 
   if (flagsSelect & (SELFLAG_TAKEFOCUS|SELFLAG_TAKESELECTION|SELFLAG_REMOVESELECTION))
   {
@@ -843,23 +855,56 @@ STDMETHODIMP nsAccessibleWrap::accNavigate(
     case NAVDIR_UP:
       xpAccessibleStart->GetAccessibleAbove(getter_AddRefs(xpAccessibleResult));
       break;
+
     // MSAA relationship extensions to accNavigate
-    case NAVRELATION_CONTROLLED_BY:    xpRelation = RELATION_CONTROLLED_BY;    break;
-    case NAVRELATION_CONTROLLER_FOR:   xpRelation = RELATION_CONTROLLER_FOR;   break;
-    case NAVRELATION_LABEL_FOR:        xpRelation = RELATION_LABEL_FOR;        break;
-    case NAVRELATION_LABELLED_BY:      xpRelation = RELATION_LABELLED_BY;      break;
-    case NAVRELATION_MEMBER_OF:        xpRelation = RELATION_MEMBER_OF;        break;
-    case NAVRELATION_NODE_CHILD_OF:    xpRelation = RELATION_NODE_CHILD_OF;    break;
-    case NAVRELATION_FLOWS_TO:         xpRelation = RELATION_FLOWS_TO;         break;
-    case NAVRELATION_FLOWS_FROM:       xpRelation = RELATION_FLOWS_FROM;       break;
-    case NAVRELATION_SUBWINDOW_OF:     xpRelation = RELATION_SUBWINDOW_OF;     break;
-    case NAVRELATION_EMBEDS:           xpRelation = RELATION_EMBEDS;           break;
-    case NAVRELATION_EMBEDDED_BY:      xpRelation = RELATION_EMBEDDED_BY;      break;
-    case NAVRELATION_POPUP_FOR:        xpRelation = RELATION_POPUP_FOR;        break;
-    case NAVRELATION_PARENT_WINDOW_OF: xpRelation = RELATION_PARENT_WINDOW_OF; break;
-    case NAVRELATION_DEFAULT_BUTTON:   xpRelation = RELATION_DEFAULT_BUTTON;   break;
-    case NAVRELATION_DESCRIBED_BY:     xpRelation = RELATION_DESCRIBED_BY;     break;
-    case NAVRELATION_DESCRIPTION_FOR:  xpRelation = RELATION_DESCRIPTION_FOR;  break;
+    case NAVRELATION_CONTROLLED_BY:
+      xpRelation = nsIAccessibleRelation::RELATION_CONTROLLED_BY;
+      break;
+    case NAVRELATION_CONTROLLER_FOR:
+      xpRelation = nsIAccessibleRelation::RELATION_CONTROLLER_FOR;
+      break;
+    case NAVRELATION_LABEL_FOR:
+      xpRelation = nsIAccessibleRelation::RELATION_LABEL_FOR;
+      break;
+    case NAVRELATION_LABELLED_BY:
+      xpRelation = nsIAccessibleRelation::RELATION_LABELLED_BY;
+      break;
+    case NAVRELATION_MEMBER_OF:
+      xpRelation = nsIAccessibleRelation::RELATION_MEMBER_OF;
+      break;
+    case NAVRELATION_NODE_CHILD_OF:
+      xpRelation = nsIAccessibleRelation::RELATION_NODE_CHILD_OF;
+      break;
+    case NAVRELATION_FLOWS_TO:
+      xpRelation = nsIAccessibleRelation::RELATION_FLOWS_TO;
+      break;
+    case NAVRELATION_FLOWS_FROM:
+      xpRelation = nsIAccessibleRelation::RELATION_FLOWS_FROM;
+      break;
+    case NAVRELATION_SUBWINDOW_OF:
+      xpRelation = nsIAccessibleRelation::RELATION_SUBWINDOW_OF;
+      break;
+    case NAVRELATION_EMBEDS:
+      xpRelation = nsIAccessibleRelation::RELATION_EMBEDS;
+      break;
+    case NAVRELATION_EMBEDDED_BY:
+      xpRelation = nsIAccessibleRelation::RELATION_EMBEDDED_BY;
+      break;
+    case NAVRELATION_POPUP_FOR:
+      xpRelation = nsIAccessibleRelation::RELATION_POPUP_FOR;
+      break;
+    case NAVRELATION_PARENT_WINDOW_OF:
+      xpRelation = nsIAccessibleRelation::RELATION_PARENT_WINDOW_OF;
+      break;
+    case NAVRELATION_DEFAULT_BUTTON:
+      xpRelation = nsIAccessibleRelation::RELATION_DEFAULT_BUTTON;
+      break;
+    case NAVRELATION_DESCRIBED_BY:
+      xpRelation = nsIAccessibleRelation::RELATION_DESCRIBED_BY;
+      break;
+    case NAVRELATION_DESCRIPTION_FOR:
+      xpRelation = nsIAccessibleRelation::RELATION_DESCRIPTION_FOR;
+      break;
   }
 
   pvarEndUpAt->vt = VT_EMPTY;
@@ -1049,24 +1094,82 @@ nsAccessibleWrap::Reset(void)
 // IAccessible2
 
 STDMETHODIMP
-nsAccessibleWrap::get_nRelations(long *nRelations)
+nsAccessibleWrap::get_nRelations(long *aNRelations)
 {
-  return E_NOTIMPL;
+  PRUint32 count = 0;
+  nsresult rv = GetRelationsCount(&count);
+  *aNRelations = count;
+
+  return NS_FAILED(rv) ? E_FAIL : S_OK;
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_relation(long relationIndex,
-                               IAccessibleRelation **relation)
+nsAccessibleWrap::get_relation(long aRelationIndex,
+                               IAccessibleRelation **aRelation)
 {
-  return E_NOTIMPL;
+  nsCOMPtr<nsIAccessibleRelation> relation;
+  nsresult rv = GetRelation(aRelationIndex, getter_AddRefs(relation));
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryInterface(relation));
+  if (!winAccessNode)
+    return E_FAIL;
+
+  void *instancePtr = NULL;
+  rv =  winAccessNode->QueryNativeInterface(IID_IAccessibleRelation,
+                                            &instancePtr);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  *aRelation = NS_STATIC_CAST(IAccessibleRelation*, instancePtr);
+  return S_OK;
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_relations(long maxRelations,
-                                IAccessibleRelation **relation,
-                                long *nRelations)
+nsAccessibleWrap::get_relations(long aMaxRelations,
+                                IAccessibleRelation **aRelation,
+                                long *aNRelations)
 {
-  return E_NOTIMPL;
+  *aNRelations = 0;
+
+  nsCOMPtr<nsIArray> relations;
+  nsresult rv = GetRelations(getter_AddRefs(relations));
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  PRUint32 length = 0;
+  rv = relations->GetLength(&length);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  PRUint32 count = length < (PRUint32)aMaxRelations ? length : aMaxRelations;
+
+  PRUint32 index = 0;
+  for (; index < count; index++) {
+    nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryElementAt(relations, index, &rv));
+    if (NS_FAILED(rv) || !winAccessNode)
+      break;
+
+    void *instancePtr = NULL;
+    nsresult rv =  winAccessNode->QueryNativeInterface(IID_IAccessibleRelation,
+                                                       &instancePtr);
+    if (NS_FAILED(rv))
+      break;
+
+    aRelation[index] = NS_STATIC_CAST(IAccessibleRelation*, instancePtr);
+  }
+
+  if (NS_FAILED(rv)) {
+    for (PRUint32 index2 = 0; index2 < index; index2++) {
+      aRelation[index2]->Release();
+      aRelation[index2] = NULL;
+    }
+    return E_FAIL;
+  }
+
+  *aNRelations = count;
+  return S_OK;
 }
 
 STDMETHODIMP
@@ -1309,103 +1412,6 @@ nsAccessibleWrap::get_attributes(BSTR *aAttributes)
   return S_OK;
 }
 
-
-// IAccessibleAction
-
-STDMETHODIMP
-nsAccessibleWrap::nActions(long *aNumActions)
-{
-  PRUint8 count = 0;
-  nsresult rv = GetNumActions(&count);
-  *aNumActions = count;
-
-  if (NS_SUCCEEDED(rv))
-    return NS_OK;
-  return E_FAIL;
-}
-
-STDMETHODIMP
-nsAccessibleWrap::doAction(long aActionIndex)
-{
-  PRUint8 index = NS_STATIC_CAST(PRUint8, aActionIndex);
-  if (NS_SUCCEEDED(DoAction(index)))
-    return S_OK;
-  return E_FAIL;
-}
-
-STDMETHODIMP
-nsAccessibleWrap::get_description(long aActionIndex, BSTR *aDescription)
-{
-  *aDescription = NULL;
-
-  nsAutoString description;
-  PRUint8 index = NS_STATIC_CAST(PRUint8, aActionIndex);
-  if (NS_FAILED(GetActionDescription(index, description)))
-    return E_FAIL;
-
-  if (!description.IsVoid())
-    *aDescription = ::SysAllocString(description.get());
-
-  return S_OK;
-}
-
-STDMETHODIMP
-nsAccessibleWrap::get_keyBinding(long aActionIndex, long aNumMaxBinding,
-                                 BSTR **aKeyBinding,
-                                 long *aNumBinding)
-{
-  nsCOMPtr<nsIDOMDOMStringList> keys;
-  PRUint8 index = NS_STATIC_CAST(PRUint8, aActionIndex);
-  nsresult rv = GetKeyBindings(index, getter_AddRefs(keys));
-  if (NS_FAILED(rv))
-    return E_FAIL;
-
-  PRUint32 length = 0;
-  keys->GetLength(&length);
-
-  PRBool aUseNumMaxBinding = length > NS_STATIC_CAST(PRUint32, aNumMaxBinding);
-
-  PRUint32 maxBinding = NS_STATIC_CAST(PRUint32, aNumMaxBinding);
-
-  PRUint32 numBinding = length > maxBinding ? maxBinding : length;
-  *aNumBinding = numBinding;
-
-  *aKeyBinding = new BSTR[numBinding];
-  if (!*aKeyBinding)
-    return E_OUTOFMEMORY;
-
-  for (PRUint32 i = 0; i < numBinding; i++) {
-    nsAutoString key;
-    keys->Item(i, key);
-    *aKeyBinding[i] = ::SysAllocString(key.get());
-  }
-
-  return S_OK;
-}
-
-STDMETHODIMP
-nsAccessibleWrap::get_name(long aActionIndex, BSTR *aName)
-{
-  *aName = NULL;
-
-  nsAutoString name;
-  PRUint8 index = NS_STATIC_CAST(PRUint8, aActionIndex);
-  if (NS_FAILED(GetActionName(index, name)))
-    return E_FAIL;
-
-  if (!name.IsVoid())
-    *aName = ::SysAllocString(name.get());
-
-  return S_OK;
-}
-
-STDMETHODIMP
-nsAccessibleWrap::get_localizedName(long aActionIndex, BSTR *aLocalizedName)
-{
-  return E_NOTIMPL;
-}
-
-
 STDMETHODIMP
 nsAccessibleWrap::Clone(IEnumVARIANT FAR* FAR* ppenum)
 {
@@ -1500,38 +1506,54 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
   if (!accessible)
     return NS_OK;
 
-  PRInt32 childID, worldID = OBJID_CLIENT;
   PRUint32 role = ROLE_SYSTEM_TEXT; // Default value
 
   nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(accessible));
   NS_ENSURE_STATE(accessNode);
 
-  HWND hWnd = 0;
+  if (eventType == nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED ||
+      eventType == nsIAccessibleEvent::EVENT_FOCUS) {
+    UpdateSystemCaret();
+  }
+ 
+  PRInt32 childID = GetChildIDFor(accessible); // get the id for the accessible
+  if (!childID)
+    return NS_OK; // Can't fire an event without a child ID
 
-  if (NS_SUCCEEDED(accessible->GetRole(&role)) && role == ROLE_SYSTEM_CARET) {
-    childID = CHILDID_SELF;
-    worldID = OBJID_CARET;
+  // See if we're in a scrollable area with its own window
+  nsCOMPtr<nsIAccessible> newAccessible;
+  if (eventType == nsIAccessibleEvent::EVENT_HIDE) {
+    // Don't use frame from current accessible when we're hiding that
+    // accessible.
+    accessible->GetParent(getter_AddRefs(newAccessible));
   } else {
-    childID = GetChildIDFor(accessible); // get the id for the accessible
-    if (!childID)
-      return NS_OK; // Can't fire an event without a child ID
-
-    // See if we're in a scrollable area with its own window
-    nsCOMPtr<nsIAccessible> newAccessible;
-    if (eventType == nsIAccessibleEvent::EVENT_HIDE) {
-      // Don't use frame from current accessible when we're hiding that
-      // accessible.
-      accessible->GetParent(getter_AddRefs(newAccessible));
-    } else {
-      newAccessible = accessible;
-    }
-
-    nsCOMPtr<nsPIAccessNode> privateAccessNode =
-      do_QueryInterface(newAccessible);
-    if (privateAccessNode) {
-      nsIFrame *frame = privateAccessNode->GetFrame();
-      if (frame)
+    newAccessible = accessible;
+  }
+  
+  HWND hWnd = 0;
+  nsCOMPtr<nsPIAccessNode> privateAccessNode =
+    do_QueryInterface(newAccessible);
+  if (privateAccessNode) {
+    nsIFrame *frame = privateAccessNode->GetFrame();
+    if (frame) {
+      nsIWidget *window = frame->GetWindow();
+      PRBool isVisible;
+      window->IsVisible(isVisible);
+      if (isVisible) {
+        // Short explanation:
+        // If HWND for frame is inside a hidden window, fire the event on the 
+        // containing document's visible window.
+        //
+        // Long explanation:
+        // This is really just to fix combo boxes with JAWS. Window-Eyes already worked with
+        // combo boxes because they use the value change event in the closed combo box
+        // case. JAWS will only pay attention to the focus events on the list items.
+        // The JAWS developers haven't fixed that, so we'll use the focus events to make JAWS work.
+        // However, JAWS is ignoring events on a hidden window. So, in order to fix the bug where
+        // JAWS doesn't echo the current option as it changes in a closed combo box, we need to use an
+        // ensure that we never fire an event with an HWND for a hidden window.
         hWnd = (HWND)frame->GetWindow()->GetNativeData(NS_NATIVE_WINDOW);
+      }
     }
   }
 
@@ -1551,7 +1573,7 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
   // * Client area window: text drawing window & MSAA event window
 
   // Fire MSAA event for client area window.
-  NotifyWinEvent(winEvent, hWnd, worldID, childID);
+  NotifyWinEvent(winEvent, hWnd, OBJID_CLIENT, childID);
 
   return NS_OK;
 }
@@ -1578,6 +1600,11 @@ PRInt32 nsAccessibleWrap::GetChildIDFor(nsIAccessible* aAccessible)
 
 IDispatch *nsAccessibleWrap::NativeAccessible(nsIAccessible *aXPAccessible)
 {
+  if (!aXPAccessible) {
+   NS_WARNING("Not passing in an aXPAccessible");
+   return NULL;
+  }
+
   nsCOMPtr<nsIAccessibleWin32Object> accObject(do_QueryInterface(aXPAccessible));
   if (accObject) {
     void* hwnd;
@@ -1629,5 +1656,40 @@ void nsAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild, nsIAccessibl
     }
   }
   NS_IF_ADDREF(*aXPAccessible);
+}
+
+void nsAccessibleWrap::UpdateSystemCaret()
+{
+  // Move the system caret so that Windows Tablet Edition and tradional ATs with 
+  // off-screen model can follow the caret
+  ::DestroyCaret();
+
+  nsRefPtr<nsRootAccessible> rootAccessible = GetRootAccessible();
+  if (!rootAccessible) {
+    return;
+  }
+
+  nsRefPtr<nsCaretAccessible> caretAccessible = rootAccessible->GetCaretAccessible();
+  if (!caretAccessible) {
+    return;
+  }
+
+  nsIWidget *widget;
+  nsRect caretRect = caretAccessible->GetCaretRect(&widget);        
+  HWND caretWnd; 
+  if (caretRect.IsEmpty() || !(caretWnd = (HWND)widget->GetNativeData(NS_NATIVE_WINDOW))) {
+    return;
+  }
+
+  // Create invisible bitmap for caret, otherwise its appearance interferes
+  // with Gecko caret
+  HBITMAP caretBitMap = CreateBitmap(1, caretRect.height, 1, 1, NULL);
+  if (::CreateCaret(caretWnd, caretBitMap, 1, caretRect.height)) {  // Also destroys the last caret
+    ::ShowCaret(caretWnd);
+    RECT windowRect;
+    ::GetWindowRect(caretWnd, &windowRect);
+    ::SetCaretPos(caretRect.x - windowRect.left, caretRect.y - windowRect.top);
+    ::DeleteObject(caretBitMap);
+  }
 }
 

@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLLegendElement.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"

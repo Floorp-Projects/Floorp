@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '13.4.4.8.js';
+
 START("13.4.4.8 - XML children()");
 
 TEST(1, true, XML.prototype.hasOwnProperty("children"));

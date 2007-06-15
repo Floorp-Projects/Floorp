@@ -36,6 +36,7 @@
 
 #include "processor/address_map-inl.h"
 #include "processor/linked_ptr.h"
+#include "processor/logging.h"
 
 #define ASSERT_TRUE(condition) \
   if (!(condition)) { \
@@ -107,7 +108,6 @@ static bool DoAddressMapTest() {
   ASSERT_EQ(entry->id(), 1);
   ASSERT_EQ(address, 10);
   ASSERT_TRUE(test_map.Retrieve(11, &entry, &address));
-  ASSERT_FALSE(test_map.Retrieve(11, NULL, &address));  // parameter error
   ASSERT_TRUE(test_map.Retrieve(11, &entry, NULL));     // NULL ok here
 
   // Add some more elements.
@@ -190,5 +190,7 @@ static bool RunTests() {
 }  // namespace
 
 int main(int argc, char **argv) {
+  BPLOG_INIT(&argc, &argv);
+
   return RunTests() ? 0 : 1;
 }

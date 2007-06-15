@@ -72,7 +72,7 @@ typedef enum REOp {
 
 #define REOP_IS_SIMPLE(op)  ((op) <= (unsigned)REOP_NCLASS)
 
-#ifdef REGEXP_DEBUG 
+#ifdef REGEXP_DEBUG
 const char *reop_names[] = {
 #define REOP_DEF(opcode, name) name,
 #include "jsreops.tbl"
@@ -649,12 +649,14 @@ ParseRegExp(CompilerState *state)
                 operand = state->result;
 pushOperand:
                 if (operandSP == operandStackSize) {
+                    RENode **tmp;
                     operandStackSize += operandStackSize;
-                    operandStack = (RENode **)
+                    tmp = (RENode **)
                         JS_realloc(state->context, operandStack,
                                    sizeof(RENode *) * operandStackSize);
-                    if (!operandStack)
+                    if (!tmp)
                         goto out;
+                    operandStack = tmp;
                 }
                 operandStack[operandSP++] = operand;
                 break;
@@ -788,12 +790,14 @@ restartOperator:
             op = REOP_CONCAT;
 pushOperator:
             if (operatorSP == operatorStackSize) {
+                REOpData *tmp;
                 operatorStackSize += operatorStackSize;
-                operatorStack = (REOpData *)
+                tmp = (REOpData *)
                     JS_realloc(state->context, operatorStack,
                                sizeof(REOpData) * operatorStackSize);
-                if (!operatorStack)
+                if (!tmp)
                     goto out;
+                operatorStack = tmp;
             }
             operatorStack[operatorSP].op = op;
             operatorStack[operatorSP].errPos = state->cp;
@@ -981,8 +985,14 @@ lexHex:
                                          JSMSG_BAD_CLASS_RANGE);
                     return JS_FALSE;
                 }
-                target->u.ucclass.bmsize = 65535;
-                return JS_TRUE;
+                max = 65535;
+
+                /*
+                 * If this is the start of a range, ensure that it's less than
+                 * the end.
+                 */
+                localMax = 0;
+                break;
               case '0':
               case '1':
               case '2':
@@ -1543,7 +1553,7 @@ ParseMinMaxQuantifier(CompilerState *state, JSBool ignoreValues)
         if (c == '}') {
             state->result = NewRENode(state, REOP_QUANT);
             if (!state->result)
-                return JS_FALSE;
+                return JSMSG_OUT_OF_MEMORY;
             state->result->u.range.min = min;
             state->result->u.range.max = max;
             /*
@@ -1948,6 +1958,8 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
 
     if (len != 0 && flat) {
         state.result = NewRENode(&state, REOP_FLAT);
+        if (!state.result)
+            goto out;
         state.result->u.flat.chr = *state.cpbegin;
         state.result->u.flat.length = len;
         state.result->kid = (void *) state.cpbegin;
@@ -2419,10 +2431,14 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
         }
         if (inRange) {
             if (gData->regexp->flags & JSREG_FOLD) {
-                AddCharacterRangeToCharSet(charSet, upcase(rangeStart),
-                                                    upcase(thisCh));
-                AddCharacterRangeToCharSet(charSet, downcase(rangeStart),
-                                                    downcase(thisCh));
+                if (upcase(rangeStart) < upcase(thisCh)) {
+                    AddCharacterRangeToCharSet(charSet, upcase(rangeStart),
+                                                        upcase(thisCh));
+                }
+                if (downcase(rangeStart) < downcase(thisCh)) {
+                    AddCharacterRangeToCharSet(charSet, downcase(rangeStart),
+                                                        downcase(thisCh));
+                }
             } else {
                 AddCharacterRangeToCharSet(charSet, rangeStart, thisCh);
             }
@@ -2557,13 +2573,13 @@ SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
         }
         break;
       case REOP_DIGIT:
-        if (x->cp != gData->cpend && JS_ISDIGIT(*x->cp)) {
+        if (x->cp != gData->cpend && JS7_ISDEC(*x->cp)) {
             result = x;
             result->cp++;
         }
         break;
       case REOP_NONDIGIT:
-        if (x->cp != gData->cpend && !JS_ISDIGIT(*x->cp)) {
+        if (x->cp != gData->cpend && !JS7_ISDEC(*x->cp)) {
             result = x;
             result->cp++;
         }
@@ -3236,13 +3252,13 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
         JS_ASSERT(op < REOP_LIMIT);
     }
 
-bad:            
+bad:
     re_debug("\n");
     return NULL;
-              
-good:           
+
+good:
     re_debug("\n");
-    return x;   
+    return x;
 }
 
 static REMatchState *

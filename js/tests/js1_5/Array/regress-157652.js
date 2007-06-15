@@ -34,8 +34,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
- *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
  *
  * Date:    16 July 2002
  * SUMMARY: Testing that Array.sort() doesn't crash on very large arrays
@@ -113,12 +114,13 @@
  *
  */
 //-----------------------------------------------------------------------------
-var bug = 157652;
+var gTestfile = 'regress-157652.js';
+var BUGNUMBER = 157652;
 var summary = "Testing that Array.sort() doesn't crash on very large arrays";
 var expect = 'No Crash';
 var actual = 'No Crash';
 
-printBugNumber(bug);
+printBugNumber(BUGNUMBER);
 printStatus(summary);
 
 expectExitCode(5);

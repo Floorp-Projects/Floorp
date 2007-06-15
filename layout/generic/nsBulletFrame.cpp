@@ -1615,11 +1615,8 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
     // a reflow of the bullet frame.
     nsIPresShell *shell = presContext->GetPresShell();
     if (shell) {
-      NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
-      if (mParent) {
-        mState |= NS_FRAME_IS_DIRTY;
-        shell->FrameNeedsReflow(this, nsIPresShell::eStyleChange);
-      }
+      shell->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
+                              NS_FRAME_IS_DIRTY);
     }
   }
 

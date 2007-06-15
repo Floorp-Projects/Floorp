@@ -35,18 +35,20 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-157334-01.js';
 //-----------------------------------------------------------------------------
-var bug = 56940;
+var BUGNUMBER = 56940;
 var summary = 'String concat should not be O(N**2)';
 var actual = '';
 var expect = '';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var data = {X:[], Y:[]};
 for (var size = 1000; size < 10000; size += 1000)
-{  
+{ 
   data.X.push(size);
   data.Y.push(concat(size));
   gc();
@@ -56,14 +58,14 @@ var order = BigO(data);
 
 var msg = '';
 for (var p = 0; p < data.X.length; p++)
-{ 
+{
   msg += '(' + data.X[p] + ', ' + data.Y[p] + '); ';
 }
 printStatus(msg);
 printStatus('Order: ' + order);
 reportCompare(true, order < 2, 'BigO ' + order + ' < 2');
 
-function concat(size) 
+function concat(size)
 {
   var c='qwertyuiop';
   var x='';
@@ -79,10 +81,10 @@ function concat(size)
   x = x + 'x';
 
   var start = new Date();
-  for (loop = 0; loop < 1000; loop++) 
-  { 
+  for (loop = 0; loop < 1000; loop++)
+  {
     var z = x + y + loop.toString();
-  } 
+  }
   var stop = new Date();
   return stop - start;
-} 
+}

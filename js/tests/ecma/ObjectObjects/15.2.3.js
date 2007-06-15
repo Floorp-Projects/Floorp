@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = '15.2.3.js';
+
 /**
    File Name:          15.2.3.js
    ECMA Section:       15.2.3 Properties of the Object Constructor

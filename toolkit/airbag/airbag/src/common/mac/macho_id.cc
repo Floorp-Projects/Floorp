@@ -47,6 +47,7 @@
 
 #include "common/mac/macho_id.h"
 #include "common/mac/macho_walker.h"
+#include "common/mac/macho_utilities.h"
 
 namespace MacFileUtilities {
 
@@ -142,7 +143,7 @@ void MachoID::Update(MachoWalker *walker, unsigned long offset, size_t size) {
 }
 
 bool MachoID::UUIDCommand(int cpu_type, unsigned char bytes[16]) {
-  struct uuid_command uuid_cmd;
+  struct breakpad_uuid_command uuid_cmd;
   MachoWalker walker(path_, UUIDWalkerCB, &uuid_cmd);
 
   uuid_cmd.cmd = 0;
@@ -274,7 +275,11 @@ bool MachoID::WalkerCB(MachoWalker *walker, load_command *cmd, off_t offset,
       if (swap)
         swap_section(&sec, 1, NXHostByteOrder());
 
-      macho_id->Update(walker, header_offset + sec.offset, sec.size);
+      // sections of type S_ZEROFILL are "virtual" and contain no data
+      // in the file itself
+      if ((sec.flags & SECTION_TYPE) != S_ZEROFILL && sec.offset != 0)
+        macho_id->Update(walker, header_offset + sec.offset, sec.size);
+
       offset += sizeof(struct section);
     }
   } else if (cmd->cmd == LC_SEGMENT_64) {
@@ -284,7 +289,7 @@ bool MachoID::WalkerCB(MachoWalker *walker, load_command *cmd, off_t offset,
       return false;
 
     if (swap)
-      swap_segment_command_64(&seg64, NXHostByteOrder());
+      breakpad_swap_segment_command_64(&seg64, NXHostByteOrder());
 
     struct mach_header_64 header;
     off_t header_offset;
@@ -301,9 +306,13 @@ bool MachoID::WalkerCB(MachoWalker *walker, load_command *cmd, off_t offset,
         return false;
 
       if (swap)
-        swap_section_64(&sec64, 1, NXHostByteOrder());
+        breakpad_swap_section_64(&sec64, 1, NXHostByteOrder());
 
-      macho_id->Update(walker, header_offset + sec64.offset, sec64.size);
+      // sections of type S_ZEROFILL are "virtual" and contain no data
+      // in the file itself
+      if ((sec64.flags & SECTION_TYPE) != S_ZEROFILL && sec64.offset != 0)
+        macho_id->Update(walker, header_offset + sec64.offset, sec64.size);
+
       offset += sizeof(struct section_64);
     }
   }
@@ -316,13 +325,15 @@ bool MachoID::WalkerCB(MachoWalker *walker, load_command *cmd, off_t offset,
 bool MachoID::UUIDWalkerCB(MachoWalker *walker, load_command *cmd, off_t offset,
                            bool swap, void *context) {
   if (cmd->cmd == LC_UUID) {
-    struct uuid_command *uuid_cmd = (struct uuid_command *)context;
+    struct breakpad_uuid_command *uuid_cmd =
+      (struct breakpad_uuid_command *)context;
 
-    if (!walker->ReadBytes(uuid_cmd, sizeof(struct uuid_command), offset))
+    if (!walker->ReadBytes(uuid_cmd, sizeof(struct breakpad_uuid_command),
+                           offset))
       return false;
 
     if (swap)
-      swap_uuid_command(uuid_cmd, NXHostByteOrder());
+      breakpad_swap_uuid_command(uuid_cmd, NXHostByteOrder());
 
     return false;
   }

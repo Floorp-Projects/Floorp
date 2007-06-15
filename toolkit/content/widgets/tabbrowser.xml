@@ -620,12 +620,13 @@
             // If location bar is hidden and the URL type supports a host,
             // add the scheme and host to the title to prevent spoofing.
             // XXX https://bugzilla.mozilla.org/show_bug.cgi?id=22183#c239
-            // (only for schemes that support a host)
             try {
               if (docElement.getAttribute("chromehidden").indexOf("location") != -1) {
                 var uri = this.mURIFixup.createExposableURI(
                             this.mCurrentBrowser.currentURI);
-                if (uri.host)
+                if (uri.scheme == "about")
+                  newTitle = uri.spec + sep + newTitle;
+                else
                   newTitle = uri.prePath + sep + newTitle;
               }
             } catch (e) {}
@@ -1149,7 +1150,7 @@
               t.setAttribute("label", aURI);
 
             t.setAttribute("crop", "end");
-            t.maxWidth = 250;
+            t.maxWidth = this.mTabContainer.mTabMaxWidth;
             t.minWidth = this.mTabContainer.mTabMinWidth;
             t.width = 0;
             t.setAttribute("flex", "100");
@@ -2662,13 +2663,23 @@
 
           try {
             this.mTabMinWidth = pb2.getIntPref("browser.tabs.tabMinWidth");
-            this.mTabClipWidth = pb2.getIntPref("browser.tabs.tabClipWidth");
-            this.mCloseButtons = pb2.getIntPref("browser.tabs.closeButtons");
+          } catch (e) {
           }
-          catch (e) {
+          try {
+            this.mTabMaxWidth = pb2.getIntPref("browser.tabs.tabMaxWidth");
+          } catch (e) {
+          }
+          try {
+            this.mTabClipWidth = pb2.getIntPref("browser.tabs.tabClipWidth");
+          } catch (e) {
+          }
+          try {
+            this.mCloseButtons = pb2.getIntPref("browser.tabs.closeButtons");
+          } catch (e) {
           }
 
           this.firstChild.minWidth = this.mTabMinWidth;
+          this.firstChild.maxWidth = this.mTabMaxWidth;
           this.adjustTabstrip();
 
           pb2.addObserver("browser.tabs.closeButtons", 
@@ -2751,6 +2762,7 @@
         });
       </field>
       <field name="mTabMinWidth">100</field>
+      <field name="mTabMaxWidth">250</field>
       <field name="mTabClipWidth">140</field>
       <field name="mCloseButtons">1</field>
 
@@ -2766,18 +2778,13 @@
             this.setAttribute("closebuttons", "activetab");
             break;
           case 1:
-            try {
-              var width = this.firstChild.boxObject.width;
-              // 0 width is an invalid value and indicates
-              // an item without display, so ignore.
-              if (width > this.mTabClipWidth || width == 0)
-                this.setAttribute("closebuttons", "alltabs");
-              else
-                this.setAttribute("closebuttons", "activetab");
-            }
-            catch (e) {
-              // XXXzeniko what error are we catching here?
-            }
+            var width = this.firstChild.boxObject.width;
+            // 0 width is an invalid value and indicates
+            // an item without display, so ignore.
+            if (width > this.mTabClipWidth || width == 0)
+              this.setAttribute("closebuttons", "alltabs");
+            else
+              this.setAttribute("closebuttons", "activetab");
             break;
           case 2:
           case 3:
@@ -3162,11 +3169,14 @@
              * can be dispatched on an in-tab close button is when it is shown
              * after the first click (i.e. the first click event was dispatched
              * on the tab). This happens when we show the close button only on
-             * the active tab; in which case, it is most likely that the close
-             * button area has been accidentally clicked, therefore we do not
-             * close the tab. See bug 352021 for no details.
+             * the active tab. (bug 352021)
+             * The only sequence in which a third click event can be dispatched
+             * on an in-tab close button is when the tab was opened with a
+             * double click on the tabbar. (bug 378344)
+             * In both cases, it is most likely that the close button area has
+             * been accidentally clicked, therefore we do not close the tab.
              */
-            if (event.detail == 2)
+            if (event.detail > 1)
               return;
 
             tabbedBrowser.removeTab(bindingParent);
@@ -3177,15 +3187,21 @@
              * double-clicks this button, the dblclick event will be dispatched
              * with the tabbar as its event target (and explicit/originalTarget),
              * which treats that as a mouse gesture for opening a new tab.
-             * In this context, there is no way to prevent the dispatching
-             * of the dblclick event, so we're manually blocking it (see
-             * onTabBarDblClick) until the mouse is moved.
+             * In this context, we're manually blocking the dblclick event
+             * (see onTabBarDblClick).
              */
-            function mouseMoveHandler() {
-              tabbedBrowser._blockDblClick = false;
-              tabbedBrowser.removeEventListener("mousemove", mouseMoveHandler, false);
+            var clickedOnce = false;
+            function enableDblClick(event) {
+              if (event.detail == 1 && !clickedOnce) {
+                clickedOnce = true;
+                return;
+              }
+              setTimeout(function() {
+                tabbedBrowser._blockDblClick = false;
+              }, 0);
+              tabbedBrowser.removeEventListener("click", enableDblClick, false);
             }
-            tabbedBrowser.addEventListener("mousemove",  mouseMoveHandler, false);
+            tabbedBrowser.addEventListener("click", enableDblClick, false);
           }
           else // "tabs"
             tabbedBrowser.removeCurrentTab();

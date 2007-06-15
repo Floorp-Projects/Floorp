@@ -50,7 +50,6 @@
 #include "nsISupportsArray.h"
 #include "nsPresContext.h"
 #include "nsINameSpaceManager.h"
-#include "nsIScrollbarFrame.h"
 
 #include "nsTreeBodyFrame.h"
 #include "nsTreeSelection.h"
@@ -101,6 +100,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsEventDispatcher.h"
 #include "nsDisplayList.h"
+#include "nsTreeBoxObject.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -207,13 +207,21 @@ nsTreeBodyFrame::Init(nsIContent*     aContent,
                       nsIFrame*       aPrevInFlow)
 {
   nsresult rv = nsLeafBoxFrame::Init(aContent, aParent, aPrevInFlow);
-  nsBoxFrame::CreateViewForFrame(PresContext(), this, GetStyleContext(), PR_TRUE);
-  nsLeafBoxFrame::GetView()->CreateWidget(kWidgetCID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = nsBoxFrame::CreateViewForFrame(PresContext(), this, GetStyleContext(), PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsIView* view = nsLeafBoxFrame::GetView();
+  if (!view->HasWidget()) {
+    view->CreateWidget(kWidgetCID);
+  }
 
   mIndentation = GetIndentation();
   mRowHeight = GetRowHeight();
 
   NS_ENSURE_TRUE(mImageCache.Init(16), NS_ERROR_OUT_OF_MEMORY);
+  EnsureBoxObject();
   return rv;
 }
 
@@ -309,6 +317,7 @@ nsTreeBodyFrame::CalcMaxRowWidth()
 void
 nsTreeBodyFrame::Destroy()
 {
+  mScrollEvent.Revoke();
   // Make sure we cancel any posted callbacks. 
   if (mReflowCallbackPosted) {
     PresContext()->PresShell()->CancelReflowCallback(this);
@@ -319,7 +328,6 @@ nsTreeBodyFrame::Destroy()
     mColumns->SetTree(nsnull);
 
   // Save off our info into the box object.
-  EnsureBoxObject();
   nsCOMPtr<nsPIBoxObject> box(do_QueryInterface(mTreeBoxObject));
   if (box) {
     if (mTopRowIndex > 0) {
@@ -362,8 +370,15 @@ nsTreeBodyFrame::EnsureBoxObject()
       // Ensure that we got a native box object.
       nsCOMPtr<nsPIBoxObject> pBox = do_QueryInterface(box);
       if (pBox) {
-        mTreeBoxObject = do_QueryInterface(pBox);
-        mColumns->SetTree(mTreeBoxObject);
+        nsCOMPtr<nsITreeBoxObject> realTreeBoxObject = do_QueryInterface(pBox);
+        if (realTreeBoxObject) {
+          nsITreeBoxObject* innerTreeBoxObject =
+            NS_STATIC_CAST(nsTreeBoxObject*, realTreeBoxObject.get())->GetTreeBody();
+          ENSURE_TRUE(!innerTreeBoxObject || innerTreeBoxObject ==
+                      NS_STATIC_CAST(nsITreeBoxObject*, this));
+          mTreeBoxObject = realTreeBoxObject;
+          mColumns->SetTree(mTreeBoxObject);
+        }
       }
     }
   }
@@ -373,7 +388,15 @@ void
 nsTreeBodyFrame::EnsureView()
 {
   if (!mView) {
-    EnsureBoxObject();
+    PRBool isInReflow;
+    PresContext()->PresShell()->IsReflowLocked(&isInReflow);
+    if (isInReflow) {
+      if (!mReflowCallbackPosted) {
+        mReflowCallbackPosted = PR_TRUE;
+        PresContext()->PresShell()->PostReflowCallback(this);
+      }
+      return;
+    }
     nsCOMPtr<nsIBoxObject> box = do_QueryInterface(mTreeBoxObject);
     if (box) {
       nsCOMPtr<nsITreeView> treeView;
@@ -420,6 +443,11 @@ nsTreeBodyFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRec
 PRBool
 nsTreeBodyFrame::ReflowFinished()
 {
+  if (!mView) {
+    nsWeakFrame weakFrame(this);
+    EnsureView();
+    NS_ENSURE_TRUE(weakFrame.IsAlive(), PR_FALSE);
+  }
   if (mView) {
     CalcInnerBox();
     ScrollParts parts = GetScrollParts();
@@ -443,8 +471,9 @@ nsTreeBodyFrame::ReflowFinished()
         EnsureRowIsVisibleInternal(parts, currentIndex);
     }
 
-    InvalidateScrollbars(parts);
-    CheckOverflow(parts);
+    if (!FullScrollbarsUpdate(PR_FALSE)) {
+      return PR_FALSE;
+    }
   }
 
   mReflowCallbackPosted = PR_FALSE;
@@ -462,8 +491,6 @@ NS_IMETHODIMP nsTreeBodyFrame::GetView(nsITreeView * *aView)
 NS_IMETHODIMP nsTreeBodyFrame::SetView(nsITreeView * aView)
 {
   // First clear out the old view.
-  EnsureBoxObject();
-  
   if (mView) {
     nsCOMPtr<nsITreeSelection> sel;
     mView->GetSelection(getter_AddRefs(sel));
@@ -504,14 +531,15 @@ NS_IMETHODIMP nsTreeBodyFrame::SetView(nsITreeView * aView)
     mView->SetTree(mTreeBoxObject);
     mView->GetRowCount(&mRowCount);
  
-    ScrollParts parts = GetScrollParts();
-    // The scrollbar will need to be updated.
-    InvalidateScrollbars(parts);
-
-    // Reset scrollbar position.
-    UpdateScrollbars(parts);
-
-    CheckOverflow(parts);
+    PRBool isInReflow;
+    PresContext()->PresShell()->IsReflowLocked(&isInReflow);
+    if (!isInReflow) {
+      // The scrollbar will need to be updated.
+      FullScrollbarsUpdate(PR_FALSE);
+    } else if (!mReflowCallbackPosted) {
+      mReflowCallbackPosted = PR_TRUE;
+      PresContext()->PresShell()->PostReflowCallback(this);
+    }
   }
  
   return NS_OK;
@@ -552,7 +580,6 @@ nsTreeBodyFrame::GetTreeBody(nsIDOMElement** aElement)
 NS_IMETHODIMP 
 nsTreeBodyFrame::GetColumns(nsITreeColumns** aColumns)
 {
-  EnsureBoxObject();
   NS_IF_ADDREF(*aColumns = mColumns);
   return NS_OK;
 }
@@ -826,6 +853,7 @@ void
 nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts)
 {
   PRBool verticalOverflowChanged = PR_FALSE;
+  PRBool horizontalOverflowChanged = PR_FALSE;
 
   if (!mVerticalOverflow && mRowCount > mPageLength) {
     mVerticalOverflow = PR_TRUE;
@@ -836,47 +864,39 @@ nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts)
     verticalOverflowChanged = PR_TRUE;
   }
 
-  nsPresContext* presContext = PresContext();
+  if (aParts.mColumnsScrollableView) {
+    nsRect bounds = aParts.mColumnsScrollableView->View()->GetBounds();
+    if (bounds.width != 0) {
+      /* Ignore overflows that are less than half a pixel. Yes these happen
+         all over the place when flex boxes are compressed real small. 
+         Probably a result of a rounding errors somewhere in the layout code. */
+      bounds.width += nsPresContext::CSSPixelsToAppUnits(0.5f);
+      if (!mHorizontalOverflow && bounds.width < mHorzWidth) {
+        mHorizontalOverflow = PR_TRUE;
+        horizontalOverflowChanged = PR_TRUE;
+      } else if (mHorizontalOverflow && bounds.width >= mHorzWidth) {
+        mHorizontalOverflow = PR_FALSE;
+        horizontalOverflowChanged = PR_TRUE;
+      }
+    }
+  }
+ 
+  nsRefPtr<nsPresContext> presContext = PresContext();
+  nsCOMPtr<nsIContent> content = mContent;
 
   if (verticalOverflowChanged) {
     nsScrollPortEvent event(PR_TRUE, mVerticalOverflow ? NS_SCROLLPORT_OVERFLOW
                             : NS_SCROLLPORT_UNDERFLOW, nsnull);
     event.orient = nsScrollPortEvent::vertical;
-
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsEventDispatcher::Dispatch(mContent, presContext, &event, nsnull, &status);
-  }
-
-  if (!aParts.mColumnsScrollableView)
-    return;
-
-  nsRect bounds = aParts.mColumnsScrollableView->View()->GetBounds();
-  if (bounds.width == 0)
-    return;
-
-  /* Ignore overflows that are less than half a pixel. Yes these happen
-     all over the place when flex boxes are compressed real small. 
-     Probably a result of a rounding errors somewhere in the layout code. */
-  bounds.width += nsPresContext::CSSPixelsToAppUnits(0.5f);
-  
-  PRBool horizontalOverflowChanged = PR_FALSE;
-  if (!mHorizontalOverflow && bounds.width < mHorzWidth) {
-    mHorizontalOverflow = PR_TRUE;
-    horizontalOverflowChanged = PR_TRUE;
-  } else if (mHorizontalOverflow && bounds.width >= mHorzWidth) {
-    mHorizontalOverflow = PR_FALSE;
-    horizontalOverflowChanged = PR_TRUE;
+    nsEventDispatcher::Dispatch(content, presContext, &event);
   }
 
   if (horizontalOverflowChanged) {
     nsScrollPortEvent event(PR_TRUE,
                             mHorizontalOverflow ? NS_SCROLLPORT_OVERFLOW
-                                                : NS_SCROLLPORT_UNDERFLOW,
-                            nsnull);
+                            : NS_SCROLLPORT_UNDERFLOW, nsnull);
     event.orient = nsScrollPortEvent::horizontal;
-
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsEventDispatcher::Dispatch(mContent, presContext, &event, nsnull, &status);
+    nsEventDispatcher::Dispatch(content, presContext, &event);
   }
 }
 
@@ -1730,8 +1750,9 @@ nsTreeBodyFrame::MarkDirtyIfSelect()
     // XXX optimize this more
 
     mStringWidth = -1;
-    AddStateBits(NS_FRAME_IS_DIRTY);
-    PresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+    PresContext()->PresShell()->FrameNeedsReflow(this,
+                                                 nsIPresShell::eTreeChange,
+                                                 NS_FRAME_IS_DIRTY);
   }
 }
 
@@ -1789,18 +1810,18 @@ NS_IMETHODIMP nsTreeBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
 
   if (mTopRowIndex == 0) {    
     // Just update the scrollbar and return.
-    InvalidateScrollbars(parts);
-    CheckOverflow(parts);
-    MarkDirtyIfSelect();
+    if (FullScrollbarsUpdate(PR_FALSE)) {
+      MarkDirtyIfSelect();
+    }
     return NS_OK;
   }
 
+  PRBool needsInvalidation = PR_FALSE;
   // Adjust our top row index.
   if (aCount > 0) {
     if (mTopRowIndex > aIndex) {
       // Rows came in above us.  Augment the top row index.
       mTopRowIndex += aCount;
-      UpdateScrollbars(parts);
     }
   }
   else if (aCount < 0) {
@@ -1808,22 +1829,19 @@ NS_IMETHODIMP nsTreeBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
       // No need to invalidate. The remove happened
       // completely above us (offscreen).
       mTopRowIndex -= count;
-      UpdateScrollbars(parts);
     }
     else if (mTopRowIndex >= aIndex) {
       // This is a full-blown invalidate.
       if (mTopRowIndex + mPageLength > mRowCount - 1) {
         mTopRowIndex = PR_MAX(0, mRowCount - 1 - mPageLength);
-        UpdateScrollbars(parts);
       }
-      Invalidate();
+      needsInvalidation = PR_TRUE;
     }
   }
 
-  InvalidateScrollbars(parts);
-  CheckOverflow(parts);
-  MarkDirtyIfSelect();
-
+  if (FullScrollbarsUpdate(needsInvalidation)) {
+    MarkDirtyIfSelect();
+  }
   return NS_OK;
 }
 
@@ -1844,14 +1862,10 @@ NS_IMETHODIMP nsTreeBodyFrame::EndUpdateBatch()
       PRInt32 countBeforeUpdate = mRowCount;
       mView->GetRowCount(&mRowCount);
       if (countBeforeUpdate != mRowCount) {
-        ScrollParts parts = GetScrollParts();
-        
         if (mTopRowIndex + mPageLength > mRowCount - 1) {
           mTopRowIndex = PR_MAX(0, mRowCount - 1 - mPageLength);
-          UpdateScrollbars(parts);
         }
-        InvalidateScrollbars(parts);
-        CheckOverflow(parts);
+        FullScrollbarsUpdate(PR_FALSE);
       }
     }
   }
@@ -2694,9 +2708,8 @@ nsTreeBodyFrame::PaintTreeBody(nsIRenderingContext& aRenderingContext,
 
   if (oldPageCount != mPageLength || mHorzWidth != CalcHorzWidth(GetScrollParts())) {
     // Schedule a ResizeReflow that will update our info properly.
-    AddStateBits(NS_FRAME_IS_DIRTY);
     PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eResize);
+      FrameNeedsReflow(this, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
   }
   #ifdef DEBUG
   PRInt32 rowCount = mRowCount;
@@ -2743,7 +2756,7 @@ nsTreeBodyFrame::PaintTreeBody(nsIRenderingContext& aRenderingContext,
     nsRect dirtyRect;
     feedbackRect += aPt;
     if (dirtyRect.IntersectRect(aDirtyRect, feedbackRect)) {
-      PaintDropFeedback(feedbackRect, PresContext(), aRenderingContext, aDirtyRect);
+      PaintDropFeedback(feedbackRect, PresContext(), aRenderingContext, aDirtyRect, aPt);
     }
   }
   aRenderingContext.PopState();
@@ -3580,7 +3593,8 @@ void
 nsTreeBodyFrame::PaintDropFeedback(const nsRect&        aDropFeedbackRect,
                                    nsPresContext*      aPresContext,
                                    nsIRenderingContext& aRenderingContext,
-                                   const nsRect&        aDirtyRect)
+                                   const nsRect&        aDirtyRect,
+                                   nsPoint              aPt)
 {
   // Paint the drop feedback in between rows.
 
@@ -3593,7 +3607,7 @@ nsTreeBodyFrame::PaintDropFeedback(const nsRect&        aDropFeedbackRect,
     nsresult rv = primaryCol->GetXInTwips(this, &currX);
     NS_ASSERTION(NS_SUCCEEDED(rv), "primary column is invalid?");
 
-    currX -= mHorzPosition;
+    currX += aPt.x - mHorzPosition;
   } else {
     currX = aDropFeedbackRect.x;
   }
@@ -3703,7 +3717,11 @@ nsTreeBodyFrame::PaintBackgroundLayer(nsStyleContext*      aStyleContext,
 // Scrolling
 NS_IMETHODIMP nsTreeBodyFrame::EnsureRowIsVisible(PRInt32 aRow)
 {
-  return EnsureRowIsVisibleInternal(GetScrollParts(), aRow);
+  ScrollParts parts = GetScrollParts();
+  nsresult rv = EnsureRowIsVisibleInternal(parts, aRow);
+  NS_ENSURE_SUCCESS(rv, rv);
+  UpdateScrollbars(parts);
+  return rv;
 }
 
 nsresult nsTreeBodyFrame::EnsureRowIsVisibleInternal(const ScrollParts& aParts, PRInt32 aRow)
@@ -3758,21 +3776,32 @@ NS_IMETHODIMP nsTreeBodyFrame::EnsureCellIsVisible(PRInt32 aRow, nsITreeColumn* 
     if(NS_FAILED(rv)) return rv;
   }
 
-  return EnsureRowIsVisibleInternal(parts, aRow);
+  rv = EnsureRowIsVisibleInternal(parts, aRow);
+  NS_ENSURE_SUCCESS(rv, rv);
+  UpdateScrollbars(parts);
+  return rv;
 }
 
 NS_IMETHODIMP nsTreeBodyFrame::ScrollToCell(PRInt32 aRow, nsITreeColumn* aCol)
 {
   ScrollParts parts = GetScrollParts();
   nsresult rv = ScrollToRowInternal(parts, aRow);
-  if(NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return ScrollToColumnInternal(parts, aCol);
+  rv = ScrollToColumnInternal(parts, aCol);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  UpdateScrollbars(parts);
+  return rv;
 }
 
 NS_IMETHODIMP nsTreeBodyFrame::ScrollToColumn(nsITreeColumn* aCol)
 {
-  return ScrollToColumnInternal(GetScrollParts(), aCol);
+  ScrollParts parts = GetScrollParts();
+  nsresult rv = ScrollToColumnInternal(parts, aCol);
+  NS_ENSURE_SUCCESS(rv, rv);
+  UpdateScrollbars(parts);
+  return rv;
 }
 
 nsresult nsTreeBodyFrame::ScrollToColumnInternal(const ScrollParts& aParts,
@@ -3792,20 +3821,26 @@ nsresult nsTreeBodyFrame::ScrollToColumnInternal(const ScrollParts& aParts,
 
 NS_IMETHODIMP nsTreeBodyFrame::ScrollToHorizontalPosition(PRInt32 aHorizontalPosition)
 {
-  ScrollHorzInternal(GetScrollParts(),
-                     nsPresContext::CSSPixelsToAppUnits(aHorizontalPosition));
-  return NS_OK;
+  ScrollParts parts = GetScrollParts();
+  PRInt32 position = nsPresContext::CSSPixelsToAppUnits(aHorizontalPosition);
+  nsresult rv = ScrollHorzInternal(parts, position);
+  NS_ENSURE_SUCCESS(rv, rv);
+  UpdateScrollbars(parts);
+  return rv;
 }
 
 NS_IMETHODIMP nsTreeBodyFrame::ScrollToRow(PRInt32 aRow)
 {
-  return ScrollToRowInternal(GetScrollParts(), aRow);
+  ScrollParts parts = GetScrollParts();
+  nsresult rv = ScrollToRowInternal(parts, aRow);
+  NS_ENSURE_SUCCESS(rv, rv);
+  UpdateScrollbars(parts);
+  return rv;
 }
 
 nsresult nsTreeBodyFrame::ScrollToRowInternal(const ScrollParts& aParts, PRInt32 aRow)
 {
   ScrollInternal(aParts, aRow);
-  UpdateScrollbars(aParts);
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
   // mac can't process the event loop during a drag, so if we're dragging,
@@ -3878,8 +3913,6 @@ nsTreeBodyFrame::ScrollInternal(const ScrollParts& aParts, PRInt32 aRow)
 
   mTopRowIndex += delta;
 
-  nsPresContext* presContext = PresContext();
-
   // See if we have a transparent background or a background image.  
   // If we do, then we cannot blit.
   const nsStyleBackground* background = GetStyleBackground();
@@ -3889,19 +3922,13 @@ nsTreeBodyFrame::ScrollInternal(const ScrollParts& aParts, PRInt32 aRow)
   } else {
     nsIWidget* widget = nsLeafBoxFrame::GetView()->GetWidget();
     if (widget) {
-      nscoord rowHeightAsPixels = presContext->AppUnitsToDevPixels(mRowHeight);
+      nscoord rowHeightAsPixels =
+        PresContext()->AppUnitsToDevPixels(mRowHeight);
       widget->Scroll(0, -delta*rowHeightAsPixels, nsnull);
     }
   }
 
-  nsScrollbarEvent event(PR_TRUE, NS_SCROLL_EVENT, nsnull);
-  // scroll events fired at elements don't bubble (although scroll events
-  // fired at documents do, to the window)
-  event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
-
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsEventDispatcher::Dispatch(mContent, presContext, &event, nsnull, &status);
-
+  PostScrollEvent();
   return NS_OK;
 }
 
@@ -3936,26 +3963,11 @@ nsTreeBodyFrame::ScrollHorzInternal(const ScrollParts& aParts, PRInt32 aPosition
     }
   }
 
-  // Reflect the change in the scrollbar 
-  nsAutoString curPos;
-  curPos.AppendInt(aPosition);
-  nsWeakFrame weakFrame(this);
-  aParts.mHScrollbarContent->SetAttr(kNameSpaceID_None,
-                                     nsGkAtoms::curpos, curPos, PR_TRUE);
-  NS_ENSURE_TRUE(weakFrame.IsAlive(), NS_OK);
   // Update the column scroll view
   aParts.mColumnsScrollableView->ScrollTo(mHorzPosition, 0, 0);
 
   // And fire off an event about it all
-  nsScrollbarEvent event(PR_TRUE, NS_SCROLL_EVENT, nsnull);
-  // scroll events fired at elements don't bubble (although scroll events
-  // fired at documents do, to the window)
-  event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
-
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsEventDispatcher::Dispatch(mContent, PresContext(), &event, nsnull,
-                              &status);
-
+  PostScrollEvent();
   return NS_OK;
 }
 
@@ -3969,7 +3981,6 @@ nsTreeBodyFrame::ScrollbarButtonPressed(nsISupports* aScrollbar, PRInt32 aOldInd
 
   ScrollParts parts = GetScrollParts();
 
-  nsWeakFrame weakFrame(this);
   if (sf == parts.mVScrollbar) {
     if (aNewIndex > aOldIndex)
       ScrollToRowInternal(parts, mTopRowIndex+1);
@@ -3979,7 +3990,6 @@ nsTreeBodyFrame::ScrollbarButtonPressed(nsISupports* aScrollbar, PRInt32 aOldInd
     ScrollHorzInternal(parts, aNewIndex);
   }
 
-  NS_ENSURE_TRUE(weakFrame.IsAlive(), NS_OK);
   UpdateScrollbars(parts);
 
   return NS_OK;
@@ -4003,22 +4013,13 @@ nsTreeBodyFrame::PositionChanged(nsISupports* aScrollbar, PRInt32 aOldIndex, PRI
     nscoord rh = nsPresContext::AppUnitsToIntCSSPixels(mRowHeight);
 
     nscoord newrow = aNewIndex/rh;
-    nsWeakFrame weakFrame(this);
     ScrollInternal(parts, newrow);
-    NS_ENSURE_TRUE(weakFrame.IsAlive(), NS_OK);
-
-    // Go exactly where we're supposed to
-    // Update the scrollbar.
-    nsAutoString curPos;
-    curPos.AppendInt(aNewIndex);
-    parts.mVScrollbarContent->SetAttr(kNameSpaceID_None,
-                                      nsGkAtoms::curpos, curPos, PR_TRUE);
-
   // Horizontal Scrollbar
   } else if (parts.mHScrollbar == sf) {
     ScrollHorzInternal(parts, aNewIndex);
   }
 
+  UpdateScrollbars(parts);
   return NS_OK;
 }
 
@@ -4241,11 +4242,12 @@ nsTreeBodyFrame::LazyScrollCallback(nsITimer *aTimer, void *aClosure)
     self->mSlots->mTimer = nsnull;
 
     if (self->mView) {
-      self->ScrollByLines(self->mSlots->mScrollLines);
       // Set a new timer to scroll the tree repeatedly.
       self->CreateTimer(nsILookAndFeel::eMetric_TreeScrollDelay,
                         ScrollCallback, nsITimer::TYPE_REPEATING_SLACK,
                         getter_AddRefs(self->mSlots->mTimer));
+      self->ScrollByLines(self->mSlots->mScrollLines);
+      // ScrollByLines may have deleted |self|.
     }
   }
 }
@@ -4264,4 +4266,54 @@ nsTreeBodyFrame::ScrollCallback(nsITimer *aTimer, void *aClosure)
       self->mSlots->mTimer = nsnull;
     }
   }
+}
+
+NS_IMETHODIMP
+nsTreeBodyFrame::ScrollEvent::Run()
+{
+  if (mInner) {
+    mInner->FireScrollEvent();
+  }
+  return NS_OK;
+}
+
+
+void
+nsTreeBodyFrame::FireScrollEvent()
+{
+  mScrollEvent.Forget();
+  nsScrollbarEvent event(PR_TRUE, NS_SCROLL_EVENT, nsnull);
+  // scroll events fired at elements don't bubble
+  event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+  nsEventDispatcher::Dispatch(GetContent(), PresContext(), &event);
+}
+
+void
+nsTreeBodyFrame::PostScrollEvent()
+{
+  if (mScrollEvent.IsPending())
+    return;
+
+  nsRefPtr<ScrollEvent> ev = new ScrollEvent(this);
+  if (NS_FAILED(NS_DispatchToCurrentThread(ev))) {
+    NS_WARNING("failed to dispatch ScrollEvent");
+  } else {
+    mScrollEvent = ev;
+  }
+}
+
+PRBool
+nsTreeBodyFrame::FullScrollbarsUpdate(PRBool aNeedsFullInvalidation)
+{
+  ScrollParts parts = GetScrollParts();
+  nsWeakFrame weakFrame(this);
+  UpdateScrollbars(parts);
+  NS_ENSURE_TRUE(weakFrame.IsAlive(), PR_FALSE);
+  if (aNeedsFullInvalidation) {
+    Invalidate();
+  }
+  InvalidateScrollbars(parts);
+  NS_ENSURE_TRUE(weakFrame.IsAlive(), PR_FALSE);
+  CheckOverflow(parts);
+  return weakFrame.IsAlive();
 }

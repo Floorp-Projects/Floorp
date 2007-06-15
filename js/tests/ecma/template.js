@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'template.js';
+
 /**
  *  File Name:          template.js
  *  Reference:          ** replace with bugzilla URL or document reference **
@@ -58,11 +60,11 @@ startTest();               // leave this alone
  *
  * For example, a test might look like this:
  *
- * AddTestCase("** description", 
- *             "** expected value", 
+ * AddTestCase("** description",
+ *             "** expected value",
  *             "** actual value");
  */
 
 // leave this alone.  this executes the test cases and
 // displays results.
-test();       
+test();      

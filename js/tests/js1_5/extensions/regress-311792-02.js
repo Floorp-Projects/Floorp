@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Igor Bukanov 
+ * Contributor(s): Igor Bukanov
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,31 +34,33 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+var gTestfile = 'regress-311792-02.js';
 //-----------------------------------------------------------------------------
-var bug = 311792;
+var BUGNUMBER = 311792;
 var summary = 'Root Array.prototype methods';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-printBugNumber (bug);
+printBugNumber(BUGNUMBER);
 printStatus (summary);
-  
+ 
 var subverted = 0;
 
 function index_getter()
 {
-	delete a[0];
-	gc();
-	for (var i = 0; i != 1 << 14; ++i) {
-		var tmp = new String("test");
-		tmp = null;
-	}
-	return 1;
+  delete a[0];
+  gc();
+  for (var i = 0; i != 1 << 14; ++i) {
+    var tmp = new String("test");
+    tmp = null;
+  }
+  return 1;
 }
 
 function index_setter(value)
 {
-	subverted = value;
+  subverted = value;
 }
 
 var a = [ Math.sqrt(2), 0 ];
@@ -68,4 +70,4 @@ a.__defineSetter__(1, index_setter);
 a.reverse();
 printStatus(subverted)
 
-reportCompare(expect, actual, summary);
+  reportCompare(expect, actual, summary);
