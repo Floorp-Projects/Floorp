@@ -57,8 +57,8 @@ try {
 
 var list = child.*;
 var text = uneval(list[1]);
-if (text !== "undefined")
-  throw "child got unecxpected second element: "+text;
+if (!/(undefined|\(void 0\))/.test(text))
+  throw "child got unexpected second element: "+text;
 
 TEST(1, expect, actual);
 END();
