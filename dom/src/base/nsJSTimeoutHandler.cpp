@@ -238,7 +238,8 @@ nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool aIsInterval,
     ::JS_ReportError(cx, "Function %s requires at least 1 parameter",
                      aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
 
-    return ncc->SetExceptionWasThrown(PR_TRUE);
+    ncc->SetExceptionWasThrown(PR_TRUE);
+    return NS_ERROR_DOM_TYPE_ERR;
   }
 
   if (argc > 1 && !::JS_ValueToECMAInt32(cx, argv[1], &interval)) {
@@ -246,7 +247,8 @@ nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool aIsInterval,
                      "Second argument to %s must be a millisecond interval",
                      aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
 
-    return ncc->SetExceptionWasThrown(PR_TRUE);
+    ncc->SetExceptionWasThrown(PR_TRUE);
+    return NS_ERROR_DOM_TYPE_ERR;
   }
 
   switch (::JS_TypeOfValue(cx, argv[0])) {
