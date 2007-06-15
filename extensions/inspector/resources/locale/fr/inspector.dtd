@@ -16,39 +16,41 @@
 <!ENTITY mnInspectContentDocument.accesskey "E">
 <!ENTITY mnInspectChromeDocument.label "Examiner le Chrome d'un document">
 <!ENTITY mnInspectChromeDocument.accesskey "x">
-  <!ENTITY cmdShowOpenURLDialog.label "Examiner une URL…">
-  <!ENTITY cmdShowOpenURLDialog.accesskey "U">
-  <!ENTITY cmdClose.label "Fermer">
-  <!ENTITY cmdClose.accesskey "m">
-  <!ENTITY cmdExit.label "Quitter">
-  <!ENTITY cmdExit.accesskey "Q">
+<!ENTITY cmdShowOpenURLDialog.label "Examiner une URL…">
+<!ENTITY cmdShowOpenURLDialog.accesskey "U">
+<!ENTITY cmdSave.label "Enregistrer le DOM sous…">
+<!ENTITY cmdSave.accesskey "D">
+<!ENTITY cmdClose.label "Fermer">
+<!ENTITY cmdClose.accesskey "m">
+<!ENTITY cmdExit.label "Quitter">
+<!ENTITY cmdExit.accesskey "Q">
 
 <!ENTITY mnEdit.label "Édition">
 <!ENTITY mnEdit.accesskey "n">
-  <!ENTITY cmdUndo.label "Annuler">
-  <!ENTITY cmdUndo.accesskey "n">
-  <!ENTITY cmdRedo.label "Refaire">
-  <!ENTITY cmdRedo.accesskey "b">
-  <!ENTITY cmdCut.label "Couper">
-  <!ENTITY cmdCut.accesskey "C">
-  <!ENTITY cmdCopy.label "Copier">
-  <!ENTITY cmdCopy.accesskey "p">
-  <!ENTITY cmdPaste.label "Coller">
-  <!ENTITY cmdPaste.accesskey "l">
-  <!ENTITY cmdDelete.label "Supprimer">
-  <!ENTITY cmdDelete.accesskey "e">
+<!ENTITY cmdUndo.label "Annuler">
+<!ENTITY cmdUndo.accesskey "n">
+<!ENTITY cmdRedo.label "Refaire">
+<!ENTITY cmdRedo.accesskey "b">
+<!ENTITY cmdCut.label "Couper">
+<!ENTITY cmdCut.accesskey "C">
+<!ENTITY cmdCopy.label "Copier">
+<!ENTITY cmdCopy.accesskey "p">
+<!ENTITY cmdPaste.label "Coller">
+<!ENTITY cmdPaste.accesskey "l">
+<!ENTITY cmdDelete.label "Supprimer">
+<!ENTITY cmdDelete.accesskey "e">
 
 <!ENTITY mnSearch.label "Rechercher">
 <!ENTITY mnSearch.accesskey "R">
-  <!ENTITY mnSearchPlugins.label "Extensions">
-  <!ENTITY mnSearchPlugins.accesskey "E">
-    <!ENTITY cmdRunSearch.label "Lancer…">
-    <!ENTITY cmdRunSearch.accesskey "a">
+<!ENTITY mnSearchPlugins.label "Extensions">
+<!ENTITY mnSearchPlugins.accesskey "E">
+<!ENTITY cmdRunSearch.label "Lancer…">
+<!ENTITY cmdRunSearch.accesskey "a">
 
 <!ENTITY mnView.label "Affichage">
 <!ENTITY mnView.accesskey "A">
-  <!ENTITY cmdToggleBrowser.label "Navigateur">
-  <!ENTITY cmdToggleSearch.label "Résultats de la recherche">
+<!ENTITY cmdToggleBrowser.label "Navigateur">
+<!ENTITY cmdToggleSearch.label "Résultats de la recherche">
 
 <!ENTITY cmdViewSearchItem.label "Vue…">
 <!ENTITY cmdEditSearchItem.label "Ouvrir…">
@@ -62,4 +64,5 @@
 
 <!ENTITY inspectNewWindow.label "Inspecter dans une nouvelle fenêtre">
 
+<!ENTITY saveCmd.key "S">
 <!ENTITY closeCmd.key "W">
