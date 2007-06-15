@@ -474,11 +474,12 @@ SetTitletipLabel(nsITreeBoxObject* aTreeBox, nsIContent* aTooltip,
 {
   nsCOMPtr<nsITreeView> view;
   aTreeBox->GetView(getter_AddRefs(view));
-
-  nsAutoString label;
-  view->GetCellText(aRow, aCol, label);
-  
-  aTooltip->SetAttr(nsnull, nsGkAtoms::label, label, PR_TRUE);
+  if (view) {
+    nsAutoString label;
+    nsresult rv = view->GetCellText(aRow, aCol, label);
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Couldn't get the cell text!");
+    aTooltip->SetAttr(kNameSpaceID_None, nsGkAtoms::label, label, PR_TRUE);
+  }
 }
 #endif
 
@@ -510,9 +511,20 @@ nsXULTooltipListener::LaunchTooltip()
 #endif
 
       SetTitletipLabel(obx, mCurrentTooltip, mLastTreeRow, mLastTreeCol);
-      mCurrentTooltip->SetAttr(nsnull, nsGkAtoms::titletip, NS_LITERAL_STRING("true"), PR_TRUE);
-    } else
-      mCurrentTooltip->UnsetAttr(nsnull, nsGkAtoms::titletip, PR_TRUE);
+      if (!mCurrentTooltip) {
+        // Because of mutation events, mCurrentTooltip can be null.
+        return;
+      }
+      mCurrentTooltip->SetAttr(kNameSpaceID_None, nsGkAtoms::titletip,
+                               NS_LITERAL_STRING("true"), PR_TRUE);
+    } else {
+      mCurrentTooltip->UnsetAttr(kNameSpaceID_None, nsGkAtoms::titletip,
+                                 PR_TRUE);
+    }
+    if (!mCurrentTooltip) {
+      // Because of mutation events, mCurrentTooltip can be null.
+      return;
+    }
 #endif
 
     nsCOMPtr<nsIDOMElement> targetEl(do_QueryInterface(mSourceNode));
@@ -739,15 +751,17 @@ nsXULTooltipListener::CreateAutoHideTimer()
 void
 nsXULTooltipListener::sTooltipCallback(nsITimer *aTimer, void *aListener)
 {
-  if (mInstance)
-    mInstance->ShowTooltip();
+  nsRefPtr<nsXULTooltipListener> instance = mInstance;
+  if (instance)
+    instance->ShowTooltip();
 }
 
 void
 nsXULTooltipListener::sAutoHideCallback(nsITimer *aTimer, void* aListener)
 {
-  if (mInstance)
-    mInstance->HideTooltip();
+  nsRefPtr<nsXULTooltipListener> instance = mInstance;
+  if (instance)
+    instance->HideTooltip();
 }
 
 #ifdef MOZ_XUL
