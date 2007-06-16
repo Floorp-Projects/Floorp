@@ -62,8 +62,11 @@
       ]]></constructor>
       
       <destructor><![CDATA[
-        this._result = null;
         this._resultNode = null;
+        if (this._result) {
+          this._result.viewer = null;
+          this._result = null;
+        }
       ]]></destructor>
 
       <method name="_init">
@@ -88,11 +91,10 @@
         <body><![CDATA[
         if (!this._resultNode)
           this._init();
-        if (PlacesUtils.nodeIsContainer(this._resultNode)) {
-          this._resultNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
+
+        if (!this._resultNode.containerOpen)
           this._resultNode.containerOpen = true;
-        }
-        this._rebuild();
+
         if (this.popupShowingCallback)
           this.popupShowingCallback();
         ]]></body>
@@ -180,7 +182,105 @@
           //LOG("KIDS = " + this.childNodes.length);
         ]]></body>
       </method>
-      
+
+      <!-- Map for containerNodes<->domNodes. There's only one map per
+           result/viewer, the field is initialized once for the root menu,
+           for sub menus it is set to the root's map (see insertNewItem) -->
+      <field name="_containerNodesMap">null</field>
+
+      <method name="removeItem">
+        <parameter name="child"/>
+        <body><![CDATA[
+          if (PlacesUtils.nodeIsContainer(child.node)) {
+            for (var i=0; i < this._containerNodesMap.length; i++) {
+              if (this._containerNodesMap[i].resultNode == child.node)
+                this._containerNodesMap.splice(i, 1);
+            }
+          }
+
+          this.removeChild(child);
+        ]]></body>
+      </method>
+
+      <method name="insertNewItem">
+        <parameter name="child"/>
+        <parameter name="before"/>
+        <body><![CDATA[
+          const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          var element = null;
+          if (PlacesUtils.nodeIsURI(child)) {
+            element = document.createElementNS(XULNS, "menuitem");
+            element.setAttribute("label", child.title);
+            element.setAttribute("url", child.uri);
+            element.setAttribute("statustext", child.uri);
+            element.className = "menuitem-iconic bookmark-item";
+          }
+          else if (PlacesUtils.nodeIsSeparator(child)) {
+            element = document.createElementNS(XULNS, "menuseparator");
+          }
+          else if (PlacesUtils.nodeIsContainer(child)) {
+            element = document.createElementNS(XULNS, "menu");
+            element.setAttribute("type", "menu");
+            element.setAttribute("container", "true");
+            element.setAttribute("label", child.title);
+
+            if (PlacesUtils.nodeIsLivemarkContainer(child)) {
+              element.setAttribute("livemark", "true");
+              var folder = child.itemId;
+              var siteURI = PlacesUtils.livemarks.getSiteURI(folder);
+              if (siteURI)
+                element.setAttribute("siteURI", siteURI.spec);
+            }
+            var popup = document.createElementNS(XULNS, "menupopup");
+            popup.setAttribute("type", "places");
+            element.appendChild(popup);
+#ifndef XP_MACOSX
+            // No context menus on menus on Mac
+            // The context menu is set here instead of in the xbl constructor
+            // because it doesn't get initialized properly if set in the constructor.
+            popup.setAttribute("context", "placesContext");
+#endif
+            popup._result = this._result;
+            popup._resultNode = child;
+            element.className = "menu-iconic bookmark-item";
+#ifdef XP_MACOSX
+            // If this is a child of the bookmarks menubar, we have to manually attach
+            // its xbl binding, because it's not a dom node and the style rules don't
+            // get applied correctly.
+            if (this._needsBindingAttachment) {
+              const MENU_URI = "chrome://browser/content/places/menu.xml#places-menupopup";
+              document.addBinding(popup, MENU_URI);
+            }
+#endif
+            popup._containerNodesMap = this._containerNodesMap;
+            this._containerNodesMap.push({ resultNode: child, domNode: popup });
+          }
+          // else if (nodeIsQuery) ... add menu to build kids
+           
+          if (element) {
+            element.node = child;
+            if (child.icon)
+              element.setAttribute("image", child.icon.spec);
+
+            if (before)
+              this.insertBefore(element, before);
+            else {
+              // Add the new element to the menu.  If there is static content at
+              // the end of the menu, add the element before that.  Otherwise,
+              // just add to the end.
+              if (this._endMarker != -1)
+                this.insertBefore(element, this.childNodes[this._endMarker++]);
+              else
+                this.appendChild(element);
+            }
+          }
+        ]]></body>
+      </method>
+
+#ifdef XP_MACOSX
+      <field name="_needsBindingAttachment">false</field>
+#endif
+
       <method name="_rebuild">
         <body><![CDATA[
           // Make sure not to hold onto any references to menu nodes when we
@@ -191,117 +291,183 @@
             this._DNDObserver._clearOverFolder();
 
           this._cleanMenu();
-          const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-          if (PlacesUtils.nodeIsContainer(this._resultNode))
-            this._resultNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
-          else
-            return; // Nothing to do if this menu isn't a container.
           
-          // Keep track of whether to make submenus for children
-          var noSubmenus = (this.getAttribute("nosubmenus") == "true");
-          
-          // Container should always be open while rebuilding.
-          var wasOpen = this._resultNode.containerOpen;
-          this._resultNode.containerOpen = true;
-          
+          NS_ASSERT(PlacesUtils.nodeIsContainer(this._resultNode),
+                    "Result-node of a places popup has to be a container node");
+
 #ifdef XP_MACOSX
           // On Mac OSX, we need to manually attach the XBL binding for the bookmarks menu,
           // because menus in the OSX menubar aren't real DOM nodes, and they don't get styles
           // applied.
-          var needsBindingAttachment = false;
           var currentNode = this.parentNode;
-          while (currentNode && !needsBindingAttachment) {
+          while (currentNode && !this._needsBindingAttachment) {
             if (currentNode.id && currentNode.id == "bookmarksMenu")
-              needsBindingAttachment = true;
+              this._needsBindingAttachment = true;
             currentNode = currentNode.parentNode;
           }
 #endif
-          
+
           var cc = this._resultNode.childCount;
           if (cc > 0) {
             for (var i = 0; i < cc; ++i) {
               var child = this._resultNode.getChild(i);
-              var element = null;
-              if (PlacesUtils.nodeIsURI(child) || noSubmenus) {
-                element = document.createElementNS(XULNS, "menuitem");
-                element.setAttribute("label", child.title);
-                element.setAttribute("url", child.uri);
-                element.setAttribute("statustext", child.uri);
-                element.className = "menuitem-iconic bookmark-item";
-              }
-              else if (PlacesUtils.nodeIsSeparator(child)) {
-                element = document.createElementNS(XULNS, "menuseparator");
-              }
-              else if (PlacesUtils.nodeIsContainer(child)) {
-                element = document.createElementNS(XULNS, "menu");
-                element.setAttribute("type", "menu");
-                element.setAttribute("container", "true");
-                element.setAttribute("label", child.title);
-
-                if (PlacesUtils.nodeIsLivemarkContainer(child)) {
-                  element.setAttribute("livemark", "true");
-                  var folder = child.itemId;
-                  var siteURI = PlacesUtils.livemarks.getSiteURI(folder);
-                  if (siteURI) {            
-                    element.setAttribute("siteURI", siteURI.spec);
-                  }
-                }
-
-                var popup = document.createElementNS(XULNS, "menupopup");
-                popup.setAttribute("type", "places");
-                element.appendChild(popup);
-#ifndef XP_MACOSX
-                // No context menus on menus on Mac
-                // The context menu is set here instead of in the xbl constructor
-                // because it doesn't get initialized properly if set in the constructor.
-                popup.setAttribute("context", "placesContext");
-#endif
-                popup._result = this._result;
-                popup._resultNode = child;
-                element.className = "menu-iconic bookmark-item";
-#ifdef XP_MACOSX
-                // If this is a child of the bookmarks menubar, we have to manually attach
-                // its xbl binding, because it's not a dom node and the style rules don't
-                // get applied correctly.
-                if (needsBindingAttachment) {
-                  const MENU_URI = "chrome://browser/content/places/menu.xml#places-menupopup";
-                  document.addBinding(popup, MENU_URI);
-                }
-#endif
-              }
-              // else if (nodeIsQuery) ... add menu to build kids
-              if (element) {
-                element.node = child;
-                
-                // Add the new element to the menu.  If there is static content at
-                // the end of the menu, add the element before that.  Otherwise,
-                // just add to the end.
-                if (this._endMarker != -1)
-                  this.insertBefore(element, this.childNodes[this._endMarker++]);
-                else
-                  this.appendChild(element);
-              }
-              if (child.icon)
-                element.setAttribute("image", child.icon.spec);
+              this.insertNewItem(child, null);
             }
-          } else {
+          }
+          else {
             // This menu is empty.  If there is no static content, add
             // an element to show it is empty.
             if (this._startMarker == -1 && this._endMarker == -1) {
               var label = PlacesUtils.getString("bookmarksMenuEmptyFolder");
-              var element = null;
-              element = document.createElementNS(XULNS, "menuitem");
+              const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+              var element = document.createElementNS(XULNS, "menuitem");
               element.setAttribute("label", label);
               element.setAttribute("disabled", true);
               this.appendChild(element);
             }
           }
-          
-          // Reset the container to the same state it was in before the function was called.
-          this._resultNode.containerOpen = wasOpen;
         ]]></body>
       </method>
-      
+
+      <!-- nsINavHistoryResultViewer -->
+      <field name="_viewer"><![CDATA[({
+        _self: this,
+
+        _forwardToChildView:
+        function PMV__forwardToChildView(aNode, aFunction, aArguments) {
+          for (var i=0; i < this._self._containerNodesMap.length; i++) {
+            if (this._self._containerNodesMap[i].resultNode == aNode) {
+              var childView = this._self._containerNodesMap[i].domNode._viewer;
+              childView[aFunction].apply(childView, aArguments);
+              return;
+            }
+          }
+          thorw("Container view not found");
+        },
+
+        itemInserted: function PMV_itemInserted(aParentNode, aNode, aIndex) {
+          if (aParentNode == this._self.getResultNode()) {
+            var index = this._self._startMarker + 1 + aIndex;
+            var before = this._self.childNodes[index] || null;
+            this._self.insertNewItem(aNode, before);
+          }
+          else
+            this._forwardToChildView(aParentNode, "itemInserted", arguments);
+        },
+
+        itemRemoved: function PMV_itemRemoved(aParentNode, aNode, aIndex) {
+          if (aParentNode == this._self.getResultNode()) {
+            var children = this._self.childNodes;
+            
+            for (var i = 0; i < children.length; i++) {
+              if (children[i].node == aNode) {
+                this._self.removeItem(children[i]);
+                return;
+              }
+            }
+          }
+          else
+            this._forwardToChildView(aParentNode, "itemRemoved", arguments);
+        },
+
+        itemChanged: function PMV_itemChanged(aNode) {
+          // this check can be removed once we fix bug #382397
+          var parentNode = aNode.parent;
+          if (!parentNode)
+            return;
+
+          if (parentNode != this._self.getResultNode()) {
+            this._forwardToChildView(parentNode, "itemChanged", arguments);
+            return;
+          }
+
+          var menuitem;
+
+          var children = this._self.childNodes;
+          for (var i = 0; i < children.length; i++) {
+            if (children[i].node == aNode) {
+              menuitem = children[i];
+              break;
+            }
+          }
+
+          NS_ASSERT(menuitem, "unable to find menuitem");
+          if (!menuitem)
+            return;
+
+          var title = aNode.title;
+
+          if (PlacesUtils.nodeIsSeparator(aNode)) {
+            // nothing to do when a separator changes
+            return;
+          } 
+          else if (PlacesUtils.nodeIsContainer(aNode)) {
+            if (PlacesUtils.nodeIsLivemarkContainer(aNode)) {
+              var folder = aNode.itemId;
+              var siteURIString = PlacesUtils.livemarks.getSiteURI(folder);
+              if (siteURIString) {
+                if (menuitem.getAttribute("siteURI") != siteURIString)
+                  menuitem.setAttribute("siteURI", siteURIString);
+              }
+              else
+                menuitem.removeAttribute("siteURI");
+            }
+          }
+
+          if (aNode.icon) {
+            if (menuitem.getAttribute("image") != aNode.icon.spec)
+              menuitem.setAttribute("image", aNode.icon.spec);
+          }
+          else
+            menuitem.removeAttribute("image");
+
+          if (menuitem.getAttribute("label") != title)
+            menuitem.setAttribute("label", title);
+        },
+
+        itemReplaced:
+        function PMV_itemReplaced(aParentNode, aOldNode, aNewNode, aIndex) {
+          if (aParentNode == this._self.getResultNode()) {
+            var children = this._self.childNodes;
+            for (var i = 0; i < children.length; i++) {
+              if (children[i].node == aOldNode) {
+                var next = children[i].nextSibling;
+                this._self.removeItem(children[i]);
+                this._self.insertNewItem(aNewNode, next);
+                return;
+              }
+            }
+          }
+          else
+            this._forwardToChildView(aParentNode, "itemReplaced", arguments);
+        },
+
+        containerOpened: function PMV_containerOpened(aNode) {
+          if (aNode == this._self.getResultNode())
+            this._self._rebuild();
+          else
+            this._forwardToChildView(aNode, "containerOpened", arguments);
+        },
+
+        containerClosed: function PMV_containerClosed(aNode) {
+        },
+
+        invalidateContainer: function PMV_invalidateContainer(aNode) {
+          if (aNode == this._self.getResultNode())
+            this._self._rebuild();
+          else {
+           this._forwardToChildView(aNode, "invalidateContainer", arguments);
+          }
+        },
+
+        invalidateAll: function PMV_invalidateAll() {
+          this._self._rebuild();
+        },
+
+        sortingChanged: function PMV_sortingChanged(aSortingMode) {
+        }
+      })]]></field>
+
       <!-- Sometimes calling hidePopup() on a menu can leave submenus
            open.  This calls hidePopup() on the menu and recursively
            hides its submenus as well. -->
@@ -316,7 +482,7 @@
           this.hidePopup();
         ]]></body>
       </method>
-      
+
       <!-- nsIPlacesView -->
       <property name="place">
         <getter><![CDATA[
@@ -332,13 +498,13 @@
             PlacesUtils.history.executeQueries(queries.value,
                                                queries.value.length,
                                                options.value);
+          this._result.viewer = this._viewer;
           this._resultNode = this._result.root;
-          if (this._resultNode.containerOpen)
-            this._rebuild();
+          this._containerNodesMap = [];
           return val;
         ]]></setter>
       </property>
-      
+
       <!-- nsIPlacesView -->
       <property name="hasSelection">
         <getter><![CDATA[ 
@@ -352,28 +518,28 @@
           return this.hasSelection;
         ]]></getter>
       </property>
-      
+
       <!-- nsIPlacesView -->
       <method name="getSelectionNodes">
         <body><![CDATA[
           return this.hasSelection ? [this.selectedNode] : [];
         ]]></body>
       </method>
-      
+
       <!-- nsIPlacesView -->
       <method name="getRemovableSelectionRanges">
         <body><![CDATA[ 
           return [this.getSelectionNodes()];
         ]]></body>
       </method>
-      
+
       <!-- nsIPlacesView -->
       <method name="getCopyableSelection">
         <body><![CDATA[
           return this.getSelectionNodes();
         ]]></body>
       </method>
-      
+
       <!-- nsIPlacesView -->
       <method name="getDragableSelection">
         <body><![CDATA[
@@ -382,14 +548,14 @@
           return this.getSelectionNodes();
         ]]></body>
       </method>
-      
+
       <!-- nsIPlacesView -->
       <property name="selectedNode">
         <getter><![CDATA[ 
           return this.hasSelection ? this._selection : null;
         ]]></getter>
       </property>
-      
+
       <!-- nsIPlacesView -->
       <property name="selectedURINode">
         <getter><![CDATA[
@@ -397,7 +563,7 @@
           return node && PlacesUtils.nodeIsURI(node) ? node : null;
         ]]></getter>
       </property>
-      
+
       <!-- nsIPlacesView -->
       <property name="insertionPoint">
         <getter><![CDATA[ 
@@ -406,7 +572,7 @@
           var folderId = 0;
           if (PlacesUtils.nodeIsFolder(this._resultNode))
             folderId = this._resultNode.itemId;
-          
+
           if (this.hasSelection) {
             if (PlacesUtils.nodeIsFolder(this.selectedNode)) {
               // If there is a folder selected, the insertion point is the
@@ -457,7 +623,7 @@
         // close it because the mouse dragged into it, the menu should close itself
         // onDragExit.  This timer is set in dragExit to close the menu.
         _closeMenuTimer: null,
-        
+
         _setTimer: function TBV_DO_setTimer(time) {
           var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
           timer.initWithCallback(this, time, timer.TYPE_ONE_SHOT);
@@ -483,14 +649,14 @@
             if (draggingOverChild)
               this._overFolder.node = null;
             this._clearOverFolder();
-            
+
             // Close any parent folders which aren't being dragged over.
             // (This is necessary because of the above code that keeps a folder
             // open while its children are being dragged over.)
             if (!draggingOverChild)
               this._closeParentMenus();
           }
-          
+
           // Timer to close this menu after the drag exit.
           if (timer == this._closeMenuTimer) {
             if (!PlacesControllerDragHelper.draggingOverChildNode(this._self)) {
@@ -502,7 +668,7 @@
             }
           }
         },
-        
+
         // Helper function to close all parent menus of this menu,
         // as long as none of the parent's children are currently being
         // dragged over.
@@ -518,7 +684,7 @@
             parent = parent.parentNode;
           }
         },
-        
+
         // The mouse is no longer dragging over the stored menubutton.
         // Close the menubutton, clear out drag styles, and clear all
         // timers for opening/closing it.
@@ -537,7 +703,7 @@
             this._overFolder.closeTimer = null;
           }
         },
-        
+
         // This function returns information about where to drop when
         // dragging over this menu--insertion point, child index to drop
         // before, and folder to drop into.
@@ -547,7 +713,7 @@
           if (!PlacesUtils.nodeIsFolder(this._self._result.root) ||
               !PlacesUtils.nodeIsFolder(resultNode))
             return null;
-          
+
           var dropPoint = { ip: null, beforeIndex: null, folderNode: null };
           // Loop through all the nodes to see which one this should
           // get dropped in/above/below.
@@ -578,7 +744,7 @@
                 dropPoint.folderNode = xulNode;
                 return dropPoint;
               }
-            } else{
+            } else {
               // This is a non-folder node. If the mouse is above the middle,
               // drop above the folder.  Otherwise, drop below.
               if (event.clientY < nodeY + (nodeHeight / 2)) {
@@ -594,7 +760,7 @@
           dropPoint.beforeIndex = -1;
           return dropPoint;
         },
-        
+
         // This function clears all of the dragover styles that were set when
         // a menuitem was dragged over.
         _clearStyles: function TBV_DO_clearStyles() {
@@ -605,24 +771,24 @@
             this._self.childNodes[i].removeAttribute("dragover-into");
           }
         },
-        
+
         onDragStart: function TBV_DO_onDragStart(event, xferData, dragAction) {
           this._self._selection = event.target.node;
           if (event.ctrlKey)
             dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
           xferData.data = this._self._controller.getTransferData(dragAction.action);
         },
-        
+
         canDrop: function TBV_DO_canDrop(event, session) {
           return PlacesControllerDragHelper.canDrop(this._self, -1);
         },
-        
+
         onDragOver: function TBV_DO_onDragOver(event, flavor, session) {
           PlacesControllerDragHelper.currentDropTarget = event.target;
           var dropPoint = this._getDropPoint(event);
           if (dropPoint == null)
             return;
-          
+
           this._clearStyles();
           if (dropPoint.folderNode) {
             // Dragging over a folder; set the appropriate styles.
@@ -650,7 +816,7 @@
           }
           this._self.setAttribute("dragover", "true");
         },
-        
+
         onDrop: function TBV_DO_onDrop(event, dropData, session) {
           var dropPoint = this._getDropPoint(event);
           if (dropPoint == null)
@@ -658,7 +824,7 @@
           PlacesControllerDragHelper.onDrop(null, this._self, dropPoint.ip);
           this._self._rebuild();
         },
-        
+
         onDragExit: function TBV_DO_onDragExit(event, session) {
           PlacesControllerDragHelper.currentDropTarget = null;
           this._clearStyles();
@@ -671,16 +837,15 @@
           if (this._self.hasAttribute("autoopened"))
             this._closeMenuTimer = this._setTimer(this._overFolder.hoverTime);
         },
-        
+
         getSupportedFlavours: function TBV_DO_getSupportedFlavours() {
           var flavorSet = new FlavourSet();
           for (var i = 0; i < this._self.peerDropTypes.length; ++i)
             flavorSet.appendFlavour(this._self.peerDropTypes[i]);
           return flavorSet;
         }
-        
       })]]></field>
-      
+
       <!-- Checks whether and event should be acted on by this menu
            (It should be if the event affects one of this menu's child
             nodes) -->
@@ -695,7 +860,7 @@
           return true;
         ]]></body>
       </method>
-      
+
       <!-- Sets the active view to this view, and sets the selection 
            to the node from this event. -->
       <method name="setSelectionForEvent">
@@ -710,8 +875,8 @@
         ]]></body>
       </method>
       
-      <property name="selType" onget="return 'single';"/>
-                
+      <property name="selType" readonly="true" onget="return 'single';"/>
+
       <method name="buildContextMenu">
         <parameter name="aPopup"/>
         <body><![CDATA[
@@ -736,17 +901,18 @@
           this.onPopupShowing();
       </handler>
       <handler event="popuphidden">
-        if (event.target == this) {
-          if (PlacesUtils.nodeIsContainer(this._resultNode)) {
-            this._resultNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
-            this._resultNode.containerOpen = false;
-          }
-          // The autoopened attribute is set for folders which have been
-          // automatically opened when dragged over.  Turn off this attribute
-          // when the folder closes because it is no longer applicable.
-          this.removeAttribute("autoopened");
-        }
+        if (event.target != this)
+          return;
+
+        // UI performance: keep the resultnode open so we don't rebuild its
+        // contents whenever the popup is reopened.
+
+        // The autoopened attribute is set for folders which have been
+        // automatically opened when dragged over.  Turn off this attribute
+        // when the folder closes because it is no longer applicable.
+        this.removeAttribute("autoopened");
       </handler>
+
       <!-- Set selected node/active view on mousedown/DOMMenuItemActive events
            so that they're set up when command and click events fire. -->
       <handler event="mousedown"><![CDATA[
