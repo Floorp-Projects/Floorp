@@ -74,5 +74,35 @@ function test()
   }
   reportCompare(expect, actual, summary + ': local indirect');
 
+  options('strict');
+  options('werror');
+  try
+  {
+    var foo = eval;
+    print("foo(1+1)" + foo('1+1'));
+    actual = 'No Error';
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+  reportCompare(expect, actual, summary + ': strict, rename warning');
+
+  options('strict');
+  options('werror');
+
+  expect = 'No Error';
+  try
+  {
+    var foo = eval;
+    foo('1+1');
+    actual = 'No Error';
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+  reportCompare(expect, actual, summary + ': not strict, no rename warning');
+
   exitFunc ('test');
 }
