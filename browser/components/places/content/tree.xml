@@ -675,11 +675,15 @@
           var nodes = this.getSelectionNodes();
           for (var i = 0; i < nodes.length; ++i) {
             var node = nodes[i];
- 
+
+            // Disallow dragging the root node of a tree
+            var parent = node.parent;
+            if (!parent)
+              throw Cr.NS_OK;
+
             // If this node is part of a readonly container (e.g. a livemark) it 
             // cannot be moved, only copied, so we must change the action used
             // by the drag session.
-            var parent = node.parent;
             if (PlacesUtils.nodeIsReadOnly(parent)) {
               dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
               break;
