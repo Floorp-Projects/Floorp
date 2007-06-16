@@ -213,15 +213,13 @@
           // No context menus on menuitems on Mac
           popup.setAttribute("context", "placesContext");
 #endif
-          popup._result = this._result;
-          popup._resultNode = this._result.root;
+          popup.place = this.place;
           var t = this;
-          popup.popupShowingCallback = function() {t.chevronPopupShowing();};
+          popup.popupShowingCallback = function() { t.chevronPopupShowing(); };
 
           // This needs to be in a timeout to make sure our boxObject has time
           // to get its proper size
-          var self = this;
-          setTimeout(function() { self.updateChevron(); }, 0);
+          setTimeout(function() { t.updateChevron(); }, 0);
         ]]></body>
       </method>
 
@@ -274,6 +272,9 @@
             button.appendChild(popup);
             popup._result = this._result;
             popup._resultNode = child;
+            popup._containerNodesMap = this._containerNodesMap;
+            this._containerNodesMap.push({ resultNode: child,
+                                           domNode: popup });
           }
 
           button.setAttribute("label", title);
@@ -289,24 +290,24 @@
       </method>
 
       <method name="removeItem">
-        <parameter name="parent"/>
         <parameter name="child"/>
         <body><![CDATA[
-          if (PlacesUtils.nodeIsFolder(parent) &&
-              parent.itemId == PlacesUtils.bookmarks.toolbarFolder)
-            return this.removeChild(child);
-          return null;
+          if (PlacesUtils.nodeIsContainer(child.node)) {
+            for (var i=0; i < this._containerNodesMap.length; i++) {
+              if (this._containerNodesMap[i].resultNode == child.node)
+                this._containerNodesMap.splice(i, 1);
+            }
+          }
+
+          this.removeChild(child);
         ]]></body>
       </method>
 
       <method name="chevronPopupShowing">
         <body><![CDATA[
           var popup = this._chevron.firstChild;
-          for (var i = 0; i < popup.childNodes.length; i++) {
-            if (!this.childNodes[i].collapsed) {
-              popup.childNodes[i].hidden = true;
-            }
-          }
+          for (var i = 0; i < popup.childNodes.length; i++)
+            popup.childNodes[i].hidden = !this.childNodes[i].collapsed;
         ]]></body>
       </method>
 
@@ -370,7 +371,6 @@
                                      options.value);
             this._result.viewer = this._viewer;
             this._result.root.containerOpen = true;
-            this._rebuild();
           }
           catch(ex) {
             // Invalid query, or had no results.
@@ -379,42 +379,42 @@
           return val;
         ]]></setter>
       </property>
-      
+
       <!-- nsIPlacesView -->
       <property name="hasSelection">
         <getter><![CDATA[ 
           return this._selection != null;
         ]]></getter>
       </property>
-      
+
       <!-- nsIPlacesView -->
       <property name="hasSingleSelection">
         <getter><![CDATA[ 
           return this.hasSelection;
         ]]></getter>
       </property>
-      
+
       <!-- nsIPlacesView -->
       <method name="getSelectionNodes">
         <body><![CDATA[
           return this.hasSelection ? [this.selectedNode] : [];
         ]]></body>
       </method>
-      
+
       <!-- nsIPlacesView -->
       <method name="getRemovableSelectionRanges">
         <body><![CDATA[ 
           return [this.getSelectionNodes()];
         ]]></body>
       </method>
-      
+
       <!-- nsIPlacesView -->
       <method name="getCopyableSelection">
         <body><![CDATA[ 
           return this.getSelectionNodes();
         ]]></body>
       </method>
-      
+
       <!-- nsIPlacesView -->
       <method name="getDragableSelection">
         <body><![CDATA[
@@ -423,14 +423,14 @@
           return this.getSelectionNodes();
         ]]></body>
       </method>
-      
+
       <!-- nsIPlacesView -->
       <property name="selectedNode">
         <getter><![CDATA[ 
           return this.hasSelection ? this._selection : null;
         ]]></getter>
       </property>
-      
+
       <!-- nsIPlacesView -->
       <property name="selectedURINode">
         <getter><![CDATA[
@@ -438,14 +438,14 @@
           return node && PlacesUtils.nodeIsURI(node) ? node : null;
         ]]></getter>
       </property>
-      
+
       <!-- nsIPlacesView -->
       <property name="insertionPoint">
         <getter><![CDATA[
           // By default, the insertion point is at the top level, at the end. 
           var index = -1;
           var folderId = this._result.root.itemId;
-          
+
           if (this.hasSelection) {
             if(PlacesUtils.nodeIsFolder(this.selectedNode)) {
               // If there is a folder selected, the insertion point is the
@@ -466,7 +466,7 @@
 
       <!-- nsIPlacesView -->
       <field name="childDropTypes">PlacesUtils.GENERIC_VIEW_DROP_TYPES</field>
-     
+
       <!-- nsIPlacesView -->
       <method name="selectAll">
         <body><![CDATA[ 
@@ -474,40 +474,66 @@
         ]]></body>
       </method>
 
+      <!-- Map for containerNodes<->domNodes. There's only one map per
+          result/viewer, i.e. the field is initialized just for the toolbar,
+          for sub menus it is set to the root's map -->
+      <field name="_containerNodesMap">[]</field>
+
       <!-- nsINavHistoryResultViewer -->
       <field name="_viewer"><![CDATA[({
         _self: this,
-        itemInserted: function MV_V_itemInserted(aParentNode, aNode, aIndex) {
+
+        _forwardToChildView:
+        function TV_V__forwardToChildView(aNode, aFunction, aArguments) {
+          for (var i=0; i < this._self._containerNodesMap.length; i++) {
+            if (this._self._containerNodesMap[i].resultNode == aNode) {
+              var childView = this._self._containerNodesMap[i].domNode._viewer;
+              childView[aFunction].apply(childView, aArguments);
+              return;
+            }
+          }
+          thorw("Container view not found");
+        },
+
+        itemInserted: function TV_V_itemInserted(aParentNode, aNode, aIndex) {
           // don't insert new items into the toolbar
           // if the parent is not the root 
-          if (PlacesUtils.nodeIsFolder(aParentNode) &&
-              aParentNode == this._self.getResult().root) {
+          if (aParentNode == this._self.getResult().root) {
             var children = this._self.childNodes;
             this._self.insertNewItem(aNode,
               aIndex < children.length ? children[aIndex] : null);
             this._self.updateChevron();
           }
-        },
-        itemRemoved: function MV_V_itemRemoved(aParentNode, aNode, aIndex) {
-          var children = this._self.childNodes;
-          for (var i = 0; i < children.length; i++) {
-            if (children[i].node == aNode) {
-              this._self.removeItem(aParentNode, children[i]);
-              this._self.updateChevron();
-              return;
-            }
+          else {
+            this._forwardToChildView(aParentNode, "itemInserted", arguments);
           }
         },
-        itemChanged: function MV_V_itemChanged(aNode) {
+
+        itemRemoved: function TV_V_itemRemoved(aParentNode, aNode, aIndex) {
+          if (aParentNode == this._self.getResult().root) {
+            var children = this._self.childNodes;
+            for (var i = 0; i < children.length; i++) {
+              if (children[i].node == aNode) {
+                this._self.removeItem(children[i]);
+                this._self.updateChevron();
+                return;
+              }
+            }
+          }
+          else
+            this._forwardToChildView(aParentNode, "itemRemoved", arguments);
+        },
+
+        itemChanged: function TV_V_itemChanged(aNode) {
           // this check can be removed once we fix bug #382397
-          if (!aNode.parent)
+          var parentNode = aNode.parent;
+          if (!parentNode)
             return;
 
-          // for the toolbar,
-          // we only care if children of the root are changing  
-          if (!PlacesUtils.nodeIsFolder(aNode.parent) ||
-              aNode.parent != this._self.getResult().root)
+          if (parentNode != this._self.getResult().root) {
+            this._forwardToChildView(parentNode, "itemChanged", arguments);
             return;
+          }
 
           var button;
 
@@ -556,35 +582,52 @@
         
           // the only change that might require a chevron update
           // is when the title changes
-          if (button.getAttribute("label") != title)
-          {
+          if (button.getAttribute("label") != title) {
             button.setAttribute("label", title);
             this._self.updateChevron();
           }
         },
-        itemReplaced: function MV_V_itemReplaced(aParentNode, aOldNode, aNewNode, aIndex) {
-          var children = this._self.childNodes;
-          for (var i = 0; i < children.length; i++) {
-            if (children[i].node == aOldNode) {
-              var next = children[i].nextSibling;
-              if (this._self.removeItem(aParentNode, children[i])) {
+
+        itemReplaced:
+        function TV_V_itemReplaced(aParentNode, aOldNode, aNewNode, aIndex) {
+          if (aParentNode == this._self.getResult().root) {
+            var children = this._self.childNodes;
+            for (var i = 0; i < children.length; i++) {
+              if (children[i].node == aOldNode) {
+                var next = children[i].nextSibling;
+                this._self.removeItem(children[i]);
                 this._self.insertNewItem(aNewNode, next);
                 this._self.updateChevron();
+                return;
               }
-              return;
             }
           }
+          else
+            this._forwardToChildView(aParentNode, "itemReplaced", arguments);
         },
-        containerOpened: function MV_V_containerOpened(aNode) {
+
+        containerOpened: function TV_V_containerOpened(aNode) {
+          if (aNode == this._self.getResult().root)
+            this._self._rebuild();
+          else
+            this._forwardToChildView(aNode, "containerOpened", arguments);
         },
-        containerClosed: function MV_V_containerClosed(aNode) {
+
+        containerClosed: function TV_V_containerClosed(aNode) {
         },
-        invalidateContainer: function MV_V_invalidateContainer(aNode) {
+
+        invalidateContainer: function TV_V_invalidateContainer(aNode) {
+          if (aNode == this._self.getResult().root)
+            this._self._rebuild();
+          else
+           this._forwardToChildView(aNode, "invalidateContainer", arguments);
         },
-        invalidateAll: function MV_V_invalidateAll() {
+
+        invalidateAll: function TV_V_invalidateAll() {
           this._self._rebuild();
         },
-        sortingChanged: function MV_V_sortingChanged(aSortingMode) {
+
+        sortingChanged: function TV_V_sortingChanged(aSortingMode) {
         }
       })]]></field>
 
