@@ -350,9 +350,7 @@ public:
    NS_IMETHOD          UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas);
 #endif
 
-#ifdef MOZ_CAIRO_GFX
     gfxASurface       *GetThebesSurface();
-#endif
 
 #ifdef ACCESSIBILITY
     static PRBool      sAccessibilityEnabled;
@@ -386,9 +384,7 @@ private:
     PRUint32            mTransparencyBitmapWidth;
     PRUint32            mTransparencyBitmapHeight;
 
-#ifdef MOZ_CAIRO_GFX
     nsRefPtr<gfxASurface> mThebesSurface;
-#endif
 
 #ifdef ACCESSIBILITY
     nsCOMPtr<nsIAccessible> mRootAccessible;

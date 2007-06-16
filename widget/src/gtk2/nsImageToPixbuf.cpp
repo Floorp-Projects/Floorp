@@ -37,11 +37,9 @@
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
-#ifdef MOZ_CAIRO_GFX
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
-#endif
 
 #include "nsIGdkPixbufImage.h"
 
@@ -70,7 +68,6 @@ nsImageToPixbuf::ConvertImageToPixbuf(nsIImage* aImage)
 GdkPixbuf*
 nsImageToPixbuf::ImageToPixbuf(nsIImage* aImage)
 {
-#ifdef MOZ_CAIRO_GFX
     PRInt32 width = aImage->GetWidth(),
             height = aImage->GetHeight();
 
@@ -78,15 +75,8 @@ nsImageToPixbuf::ImageToPixbuf(nsIImage* aImage)
     aImage->GetSurface(getter_AddRefs(surface));
 
     return SurfaceToPixbuf(surface, width, height);
-#else
-    nsCOMPtr<nsIGdkPixbufImage> img(do_QueryInterface(aImage));
-    if (img)
-        return img->GetGdkPixbuf();
-    return NULL;
-#endif
 }
 
-#ifdef MOZ_CAIRO_GFX
 GdkPixbuf*
 nsImageToPixbuf::SurfaceToPixbuf(gfxASurface* aSurface, PRInt32 aWidth, PRInt32 aHeight)
 {
@@ -162,4 +152,3 @@ nsImageToPixbuf::SurfaceToPixbuf(gfxASurface* aSurface, PRInt32 aWidth, PRInt32 
 
     return pixbuf;
 }
-#endif

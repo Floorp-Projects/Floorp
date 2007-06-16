@@ -390,22 +390,9 @@ nsDeviceContextSpecGTK::~nsDeviceContextSpecGTK()
   delete mPrintJob;
 }
 
-#ifdef MOZ_CAIRO_GFX
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecGTK,
                    nsIDeviceContextSpec)
-#else
-/* Use only PostScript module */
-#if defined(USE_POSTSCRIPT)
-NS_IMPL_ISUPPORTS2(nsDeviceContextSpecGTK,
-                   nsIDeviceContextSpec,
-                   nsIDeviceContextSpecPS)
-#else
-NS_IMPL_ISUPPORTS1(nsDeviceContextSpecGTK,
-                   nsIDeviceContextSpec)
-#endif
-#endif
 
-#ifdef MOZ_CAIRO_GFX
 //#define USE_PDF 1
 #include "gfxPDFSurface.h"
 #include "gfxPSSurface.h"
@@ -447,7 +434,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
 
   return NS_OK;
 }
-#endif
 
 /** -------------------------------------------------------
  *  Initialize the nsDeviceContextSpecGTK
