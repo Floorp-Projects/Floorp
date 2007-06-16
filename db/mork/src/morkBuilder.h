@@ -198,7 +198,7 @@ protected: // protected morkBuilder members
 protected: // protected inlines
 
   mork_bool  CellVectorIsFull() const
-  { return ( mBuilder_CellsVecFill == morkBuilder_kCellsVecSize ); };
+  { return ( mBuilder_CellsVecFill == morkBuilder_kCellsVecSize ); }
   
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods
