@@ -82,9 +82,7 @@
 #ifdef MOZ_CAIRO_GFX
 #  define GFX_MODULES MODULE(nsGfxModule)
 #else
-#  if defined(MOZ_WIDGET_GTK2)
-#    define GFX_MODULES MODULE(nsGfxGTKModule)
-#  elif defined(MOZ_WIDGET_PHOTON)
+#  if defined(MOZ_WIDGET_PHOTON)
 #    define GFX_MODULES MODULE(nsGfxPhModule)
 #  elif defined(XP_WIN)
 #    define GFX_MODULES MODULE(nsGfxModule)

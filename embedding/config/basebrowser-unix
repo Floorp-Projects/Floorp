@@ -50,10 +50,9 @@ libgkgfx.so
 libgtksuperwin.so 
 libgtkembedmoz.so 
 libgfxpsshar.so
-components/libgfx_gtk.so
+components/libgkgfxthebes.so
 components/libgfxps.so
 components/gfx.xpt 
-components/libwidget_gtk.so
 components/libwidget_gtk2.so
 components/widget.xpt
 
