@@ -2730,6 +2730,7 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
                 StoreURI(NS_ConvertUTF16toUTF8(href).get());
             }
         }
+        return NS_OK;
     }
 
     // Test the node to see if it's an image, frame, iframe, css, js
