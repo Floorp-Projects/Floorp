@@ -2228,15 +2228,12 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
         break;
 
       case PN_UNARY:
-        if (pn->pn_type == TOK_INC || pn->pn_type == TOK_DEC ||
-            pn->pn_type == TOK_THROW ||
-#if JS_HAS_GENERATORS
-            pn->pn_type == TOK_YIELD ||
-#endif
-            pn->pn_type == TOK_DEFSHARP) {
-            /* All these operations have effects that we must commit. */
-            *answer = JS_TRUE;
-        } else if (pn->pn_type == TOK_DELETE) {
+        switch (pn->pn_type) {
+          case TOK_RP:
+            ok = CheckSideEffects(cx, tc, pn->pn_kid, answer);
+            break;
+
+          case TOK_DELETE:
             pn2 = pn->pn_kid;
             switch (pn2->pn_type) {
               case TOK_NAME:
@@ -2255,12 +2252,17 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
                 ok = CheckSideEffects(cx, tc, pn2, answer);
                 break;
             }
-        } else {
+            break;
+
+          default:
             /*
-             * We can't easily prove that our operand never denotes an object
+             * All of TOK_INC, TOK_DEC, TOK_THROW, TOK_YIELD, and TOK_DEFSHARP
+             * have direct effects. Of the remaining unary-arity node types,
+             * we can't easily prove that the operand never denotes an object
              * with a toString or valueOf method.
              */
             *answer = JS_TRUE;
+            break;
         }
         break;
 
