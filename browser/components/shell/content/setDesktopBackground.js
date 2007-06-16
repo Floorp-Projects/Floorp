@@ -56,7 +56,7 @@ var gSetBackground = {
            parseInt(aString.substring(3,5), 16) << 8 |
            parseInt(aString.substring(5,7), 16);
   },
-  
+
   _rgbToHex: function(aR, aG, aB) 
   {
     var rHex = aR.toString(16).toUpperCase();
@@ -85,11 +85,11 @@ var gSetBackground = {
 #endif
     this.init(window.arguments[0]);
   },
-        
+
   init: function (aImage)
   {
     this._image = aImage;
- 
+
 #ifndef XP_MACOSX
     this._initColor();
     var position = parseInt(document.getElementById("menuPosition").value);
@@ -101,7 +101,7 @@ var gSetBackground = {
     var bundle = document.getElementById("backgroundBundle");
     setDesktopBackground.label = bundle.getString("DesktopBackgroundSet");
     setDesktopBackground.disabled = false;
-    
+
     var showDesktopPreferences = document.getElementById("showDesktopPreferences");
     showDesktopPreferences.hidden = true;
 
@@ -109,7 +109,7 @@ var gSetBackground = {
 #endif
     this.updatePosition(position);
   },
-        
+
 #ifndef XP_MACOSX
   _initColor: function ()
   {
@@ -124,7 +124,7 @@ var gSetBackground = {
     this._backgroundColor = this._rgbToHex(r, g, b);
 
     var colorpicker = document.getElementById("desktopColor");
-    colorpicker.color = this._rgbToHex(r, g, b);
+    colorpicker.color = this._backgroundColor;
   },
 #endif
 
@@ -133,7 +133,7 @@ var gSetBackground = {
     if (aTopic == "shell:desktop-background-changed") {
       var setDesktopBackground = document.getElementById("setDesktopBackground");
       setDesktopBackground.hidden = true;
-      
+
       var showDesktopPreferences = document.getElementById("showDesktopPreferences");
       showDesktopPreferences.hidden = false;
 
@@ -149,7 +149,7 @@ var gSetBackground = {
     var os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
     os.addObserver(this, "shell:desktop-background-changed", false);
-    
+
     var bundle = document.getElementById("backgroundBundle");
     var setDesktopBackground = document.getElementById("setDesktopBackground");
     setDesktopBackground.disabled = true;
@@ -183,7 +183,7 @@ var gSetBackground = {
   
   updatePosition: function (aPosition)
   {
-    if (this._monitor.childNodes.length)
+    if (this._monitor.hasChildNodes())
       this._monitor.removeChild(this._monitor.firstChild);
       
     this._position = aPosition;
@@ -214,17 +214,17 @@ var gSetBackground = {
     img.setAttribute("src", imgURI.spec);
     return img;
   },
-        
+
   _stretchImage: function ()
-  {  
+  {
     this.updateColor(this._backgroundColor);
 
     var img = this._createImage();
-    img.width = parseInt(this._monitor.style.width);
-    img.height = parseInt(this._monitor.style.height);
+    img.width = this._monitor.boxObject.width;
+    img.height = this._monitor.boxObject.height;
     this._monitor.appendChild(img);
   },
-        
+
   _tileImage: function ()
   {
     var bundle = document.getElementById("backgroundBundle");
@@ -236,11 +236,11 @@ var gSetBackground = {
     text.setAttribute("value", bundle.getString("DesktopBackgroundNoPreview"));
     this._monitor.appendChild(text);
   },
-        
+
   _centerImage: function ()
   {
     this.updateColor(this._backgroundColor);
-             
+
     var img = this._createImage();
     // Use naturalHeight/Width here so we don't scale an image improperly in
     // the preview window if the image is resized in the browser window.

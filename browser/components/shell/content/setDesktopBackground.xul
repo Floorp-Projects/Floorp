@@ -93,10 +93,7 @@
     <groupbox align="center">
       <caption label="&preview.label;"/>
       <stack>
-        <vbox id="monitor" align="center" pack="center"
-              style="width: 153px !important; height: 114px !important; overflow: hidden;"
-              left="13" top="18"/>
-
+        <vbox id="monitor" align="center" pack="center"/>
         <image id="monitorImage"/>
       </stack>
     </groupbox>
