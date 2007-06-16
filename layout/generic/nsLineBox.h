@@ -67,24 +67,11 @@ public:
 
   nsPlaceholderFrame* mPlaceholder;     // nsPlaceholderFrame
 
-  // This will be true if the float was placed on the current line
-  // instead of below the current line.
-  PRBool mIsCurrentLineFloat;
-
-  nsMargin mMargins;                    // computed margins
-
-  nsMargin mOffsets;                    // computed offsets (relative pos)
-
   // Region in the spacemanager impacted by this float; the
   // coordinates are relative to the containing block frame. The
   // region includes the margins around the float, but doesn't
   // include the relative offsets.
   nsRect mRegion;
-
-  // Combined area for the float. This will not include the margins
-  // for the float. Like mRegion, the coordinates are relative to
-  // the containing block frame.
-  nsRect mCombinedArea;
 
 protected:
   nsFloatCache* mNext;

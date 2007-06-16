@@ -153,12 +153,9 @@ ListFloats(FILE* out, PRInt32 aIndent, const nsFloatCacheList& aFloats)
           fputs(NS_LossyConvertUTF16toASCII(frameName).get(), out);
         }
       }
-      fprintf(out, " %s region={%d,%d,%d,%d} combinedArea={%d,%d,%d,%d}",
-              fc->mIsCurrentLineFloat ? "cl" : "bcl",
+      fprintf(out, " %s region={%d,%d,%d,%d}",
               fc->mRegion.x, fc->mRegion.y,
-              fc->mRegion.width, fc->mRegion.height,
-              fc->mCombinedArea.x, fc->mCombinedArea.y,
-              fc->mCombinedArea.width, fc->mCombinedArea.height);
+              fc->mRegion.width, fc->mRegion.height);
 
       fprintf(out, "\n");
     }
@@ -992,10 +989,6 @@ nsFloatCacheFreeList::Append(nsFloatCache* aFloat)
 
 nsFloatCache::nsFloatCache()
   : mPlaceholder(nsnull),
-    mIsCurrentLineFloat(PR_TRUE),
-    mMargins(0, 0, 0, 0),
-    mOffsets(0, 0, 0, 0),
-    mCombinedArea(0, 0, 0, 0),
     mNext(nsnull)
 {
   MOZ_COUNT_CTOR(nsFloatCache);
