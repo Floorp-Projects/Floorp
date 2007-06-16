@@ -166,6 +166,6 @@ function searchHistory(aInput)
   }
 
   gHistoryTree.applyFilter(aInput, false /* onlyBookmarks */, 
-                           0 /* folderRestrict */, null); 
+                           null /* folderRestrict */, null); 
 }
 
