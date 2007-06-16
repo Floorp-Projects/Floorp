@@ -5217,7 +5217,7 @@ nsBlockFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
 nsresult
 nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
                           nsPlaceholderFrame* aPlaceholder,
-                          nsFloatCache*       aFloatCache,
+                          nsMargin&           aFloatMargin,
                           nsReflowStatus&     aReflowStatus)
 {
   // Reflow the float.
@@ -5295,9 +5295,11 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
       }
     }
 
+    nsMargin offsets; // Don't bother returning this to the caller; it's stored
+                      // on a frame property anyawy
     rv = brc.ReflowBlock(availSpace, PR_TRUE, margin,
                          0, isAdjacentWithTop,
-                         aFloatCache->mOffsets, floatRS,
+                         offsets, floatRS,
                          aReflowStatus);
   } while (NS_SUCCEEDED(rv) && clearanceFrame);
 
@@ -5336,17 +5338,16 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
 
   // Capture the margin information for the caller
   const nsMargin& m = brc.GetMargin();
-  aFloatCache->mMargins.top = brc.GetTopMargin();
-  aFloatCache->mMargins.right = m.right;
+  aFloatMargin.top = brc.GetTopMargin();
+  aFloatMargin.right = m.right;
   // Only last in flows get a bottom margin
   if (NS_FRAME_IS_COMPLETE(aReflowStatus)) {
     brc.GetCarriedOutBottomMargin().Include(m.bottom);
   }
-  aFloatCache->mMargins.bottom = brc.GetCarriedOutBottomMargin().get();
-  aFloatCache->mMargins.left = m.left;
+  aFloatMargin.bottom = brc.GetCarriedOutBottomMargin().get();
+  aFloatMargin.left = m.left;
 
   const nsHTMLReflowMetrics& metrics = brc.GetMetrics();
-  aFloatCache->mCombinedArea = metrics.mOverflowArea;
 
   // Set the rect, make sure the view is properly sized and positioned,
   // and tell the frame we're done reflowing it
