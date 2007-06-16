@@ -214,6 +214,12 @@ static void    drag_data_received_event_cb(GtkWidget *aWidget,
                                            guint32 aTime,
                                            gpointer aData);
 
+static GdkModifierType gdk_keyboard_get_modifiers();
+static PRBool gdk_keyboard_get_modmap_masks(Display*  aDisplay,
+                                            PRUint32* aCapsLockMask,
+                                            PRUint32* aNumLockMask,
+                                            PRUint32* aScrollLockMask);
+
 /* initialization static functions */
 static nsresult    initialize_prefs        (void);
 
@@ -1536,16 +1542,6 @@ nsWindow::LoseFocus(void)
 
 #define WANT_PAINT_FLASHING \
 (debug_WantPaintFlashing() && CAPS_LOCK_IS_ON)
-
-static GdkModifierType
-gdk_keyboard_get_modifiers()
-{
-  GdkModifierType m = (GdkModifierType) 0;
-
-  gdk_window_get_pointer(NULL, NULL, NULL, &m);
-
-  return m;
-}
 
 static void
 gdk_window_flash(GdkWindow *    aGdkWindow,
@@ -4725,13 +4721,14 @@ initialize_prefs(void)
 {
     // check to see if we should set our raise pref
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefs) {
-        PRBool val = PR_TRUE;
-        nsresult rv;
-        rv = prefs->GetBoolPref("mozilla.widget.raise-on-setfocus", &val);
-        if (NS_SUCCEEDED(rv))
-            gRaiseWindows = val;
-    }
+    if (!prefs)
+        return NS_OK;
+
+    PRBool val = PR_TRUE;
+    nsresult rv;
+    rv = prefs->GetBoolPref("mozilla.widget.raise-on-setfocus", &val);
+    if (NS_SUCCEEDED(rv))
+        gRaiseWindows = val;
 
     return NS_OK;
 }
@@ -4892,6 +4889,74 @@ is_parent_grab_leave(GdkEventCrossing *aEvent)
     return (GDK_CROSSING_GRAB == aEvent->mode) &&
         ((GDK_NOTIFY_ANCESTOR == aEvent->detail) ||
             (GDK_NOTIFY_VIRTUAL == aEvent->detail));
+}
+
+static GdkModifierType
+gdk_keyboard_get_modifiers()
+{
+    GdkModifierType m = (GdkModifierType) 0;
+
+    gdk_window_get_pointer(NULL, NULL, NULL, &m);
+
+    return m;
+}
+
+// Get the modifier masks for GDK_Caps_Lock, GDK_Num_Lock and GDK_Scroll_Lock.
+// Return PR_TRUE on success, PR_FALSE on error.
+static PRBool
+gdk_keyboard_get_modmap_masks(Display*  aDisplay,
+                              PRUint32* aCapsLockMask,
+                              PRUint32* aNumLockMask,
+                              PRUint32* aScrollLockMask)
+{
+    *aCapsLockMask = 0;
+    *aNumLockMask = 0;
+    *aScrollLockMask = 0;
+
+    int min_keycode = 0;
+    int max_keycode = 0;
+    XDisplayKeycodes(aDisplay, &min_keycode, &max_keycode);
+
+    int keysyms_per_keycode = 0;
+    KeySym* xkeymap = XGetKeyboardMapping(aDisplay, min_keycode,
+                                          max_keycode - min_keycode + 1,
+                                          &keysyms_per_keycode);
+    if (!xkeymap) {
+        return PR_FALSE;
+    }
+
+    XModifierKeymap* xmodmap = XGetModifierMapping(aDisplay);
+    if (!xmodmap) {
+        XFree(xkeymap);
+        return PR_FALSE;
+    }
+
+    /*
+      The modifiermap member of the XModifierKeymap structure contains 8 sets
+      of max_keypermod KeyCodes, one for each modifier in the order Shift,
+      Lock, Control, Mod1, Mod2, Mod3, Mod4, and Mod5.
+      Only nonzero KeyCodes have meaning in each set, and zero KeyCodes are ignored.
+    */
+    const unsigned int map_size = 8 * xmodmap->max_keypermod;
+    for (unsigned int i = 0; i < map_size; i++) {
+        KeyCode keycode = xmodmap->modifiermap[i];
+        if (!keycode || keycode < min_keycode || keycode > max_keycode)
+            continue;
+
+        const KeySym* syms = xkeymap + (keycode - min_keycode) * keysyms_per_keycode;
+        const unsigned int mask = 1 << (i / xmodmap->max_keypermod);
+        for (int j = 0; j < keysyms_per_keycode; j++) {
+            switch (syms[j]) {
+                case GDK_Caps_Lock:   *aCapsLockMask |= mask;   break;
+                case GDK_Num_Lock:    *aNumLockMask |= mask;    break;
+                case GDK_Scroll_Lock: *aScrollLockMask |= mask; break;
+            }
+        }
+    }
+
+    XFreeModifiermap(xmodmap);
+    XFree(xkeymap);
+    return PR_TRUE;
 }
 
 #ifdef ACCESSIBILITY
@@ -5445,6 +5510,30 @@ nsWindow::CancelIMEComposition()
         win->IMEComposeEnd();
     }
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState)
+{
+    NS_ENSURE_ARG_POINTER(aLEDState);
+
+    GdkModifierType modifiers = gdk_keyboard_get_modifiers();
+    PRUint32 capsLockMask, numLockMask, scrollLockMask;
+    PRBool foundMasks = gdk_keyboard_get_modmap_masks(
+                          GDK_WINDOW_XDISPLAY(mDrawingarea->inner_window),
+                          &capsLockMask, &numLockMask, &scrollLockMask);
+
+    PRUint32 mask = 0;
+    switch (aKeyCode) {
+        case NS_VK_CAPS_LOCK:   mask = capsLockMask;   break;
+        case NS_VK_NUM_LOCK:    mask = numLockMask;    break;
+        case NS_VK_SCROLL_LOCK: mask = scrollLockMask; break;
+    }
+    if (mask == 0)
+        return NS_ERROR_NOT_IMPLEMENTED;
+
+    *aLEDState = (modifiers & mask) != 0;
     return NS_OK;
 }
 

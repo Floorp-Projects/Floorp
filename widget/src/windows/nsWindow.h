@@ -233,6 +233,7 @@ public:
   NS_IMETHOD SetIMEEnabled(PRUint32 aState);
   NS_IMETHOD GetIMEEnabled(PRUint32* aState);
   NS_IMETHOD CancelIMEComposition();
+  NS_IMETHOD GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState);
 
   PRBool IMEMouseHandling(PRInt32 aAction, LPARAM lParam);
   PRBool IMECompositionHitTest(POINT * ptPos);

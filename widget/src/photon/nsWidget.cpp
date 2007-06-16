@@ -251,6 +251,11 @@ NS_IMETHODIMP nsWidget::CancelIMEComposition() {
   return NS_ERROR_NOT_IMPLEMENTED;
 	}
 
+NS_IMETHODIMP nsWidget::GetToggledKeyState(PRUint32 aKeyCode,
+                                           PRBool* aLEDState) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+	}
+
 //-------------------------------------------------------------------------
 //
 // Hide or show this component

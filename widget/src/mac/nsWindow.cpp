@@ -2379,3 +2379,7 @@ NS_IMETHODIMP nsWindow::CancelIMEComposition() {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsWindow::GetToggledKeyState(PRUint32 aKeyCode,
+                                           PRBool* aLEDState) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

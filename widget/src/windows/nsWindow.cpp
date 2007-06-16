@@ -7508,6 +7508,17 @@ NS_IMETHODIMP nsWindow::CancelIMEComposition()
   return NS_OK;
 }
 
+//==========================================================================
+NS_IMETHODIMP
+nsWindow::GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState)
+{
+#ifdef DEBUG_KBSTATE
+  printf("GetToggledKeyState\n");
+#endif 
+  NS_ENSURE_ARG_POINTER(aLEDState);
+  *aLEDState = (::GetKeyState(aKeyCode) & 1) != 0;
+  return NS_OK;
+}
 
 #define PT_IN_RECT(pt, rc)  ((pt).x>(rc).left && (pt).x <(rc).right && (pt).y>(rc).top && (pt).y<(rc).bottom)
 

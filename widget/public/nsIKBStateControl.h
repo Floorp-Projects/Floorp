@@ -41,10 +41,10 @@
 
 #include "nsISupports.h"
 
-// {BC33E975-C433-4df5-B4BA-041CDE6D1A17}
+// {AC4EBF71-86B6-4dab-A7FD-177501ADEC98}
 #define NS_IKBSTATECONTROL_IID \
-{ 0xbc33e975, 0xc433, 0x4df5, \
-{ 0xb4, 0xba, 0x04, 0x1c, 0xde, 0x6d, 0x1a, 0x17 } }
+{ 0xac4ebf71, 0x86b6, 0x4dab, \
+{ 0xa7, 0xfd, 0x17, 0x75, 0x01, 0xad, 0xec, 0x98 } }
 
 
 #if defined(XP_MACOSX)
@@ -131,6 +131,17 @@ class nsIKBStateControl : public nsISupports {
      * Destruct and don't commit the IME composition string.
      */
     NS_IMETHOD CancelIMEComposition() = 0;
+
+    /*
+     * Get toggled key states.
+     * aKeyCode should be NS_VK_CAPS_LOCK or  NS_VK_NUM_LOCK or
+     * NS_VK_SCROLL_LOCK.
+     * aLEDState is the result for current LED state of the key.
+     * If the LED is 'ON', it returns TRUE, otherwise, FALSE.
+     * If the platform doesn't support the LED state (or we cannot get the
+     * state), this method returns NS_ERROR_NOT_IMPLEMENTED.
+     */
+    NS_IMETHOD GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIKBStateControl, NS_IKBSTATECONTROL_IID)
