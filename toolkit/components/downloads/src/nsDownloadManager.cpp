@@ -130,6 +130,24 @@ nsDownloadManager::CancelAllDownloads()
 }
 
 nsresult
+nsDownloadManager::FinishDownload(nsDownload *aDownload, DownloadState aState,
+                                  const char *aTopic) {
+  // This has to be done in this exact order to not mess up our invariants
+  // 1) when the state changed listener is dispatched, it must no longer be
+  //    an active download.
+  // 2) when the observer is dispatched, the same conditions for 1 must be
+  //    true as well as the state being up to date.
+  (void)mCurrentDownloads.RemoveObject(aDownload);
+
+  nsresult rv = aDownload->SetState(aState);
+  if (NS_FAILED(rv)) return rv;
+  
+  (void)mObserverService->NotifyObservers(aDownload, aTopic, nsnull);
+
+  return NS_OK;
+}
+
+nsresult
 nsDownloadManager::InitDB(PRBool *aDoImport)
 {
   nsresult rv;
@@ -666,15 +684,9 @@ nsDownloadManager::CancelDownload(PRUint32 aID)
       dl->mTempFile->Remove(PR_FALSE);
   }
 
-  // This have to be done in this exact order to not mess up our invariants
-  // 1) when the state changed listener is dispatched, it must no longer be
-  //    an active download.
-  // 2) when the dl-cancel observer is dispatched, the same conditions for 1
-  //    must be true as well as the state being up to date.
-  RemoveDownloadFromCurrent(dl);
-  nsresult rv = dl->SetState(nsIDownloadManager::DOWNLOAD_CANCELED);
+  nsresult rv = FinishDownload(dl, nsIDownloadManager::DOWNLOAD_CANCELED,
+                               "dl-cancel");
   NS_ENSURE_SUCCESS(rv, rv);
-  mObserverService->NotifyObservers(dl, "dl-cancel", nsnull);
 
   // if there's a progress dialog open for the item,
   // we have to notify it that we're cancelling
@@ -1452,10 +1464,9 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
                            const PRUnichar *aMessage)
 {   
   if (NS_FAILED(aStatus)) {
-    SetState(nsIDownloadManager::DOWNLOAD_FAILED);
-    mDownloadManager->mObserverService->NotifyObservers(this, "dl-failed", nsnull);
-
-    mDownloadManager->RemoveDownloadFromCurrent(this);
+    (void)mDownloadManager->FinishDownload(this,
+                                           nsIDownloadManager::DOWNLOAD_FAILED,
+                                           "dl-failed");
 
     // Get title for alert.
     nsXPIDLString title;
@@ -1513,8 +1524,9 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
 
       mPercentComplete = 100;
 
-      // We can safely remove it from the current downloads
-      mDownloadManager->RemoveDownloadFromCurrent(this);
+      (void)mDownloadManager->FinishDownload(this,
+                                             nsIDownloadManager::DOWNLOAD_FINISHED,
+                                             "dl-done");
 
       // Master pref to control this function. 
       PRBool showTaskbarAlert = PR_TRUE;
@@ -1555,14 +1567,6 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
           }
         }
       }
-
-      if (mDownloadState != nsIXPInstallManagerUI::INSTALL_INSTALLING)
-        SetState(nsIDownloadManager::DOWNLOAD_FINISHED);
-      else
-        SetState(nsIXPInstallManagerUI::INSTALL_FINISHED);
-
-      mDownloadManager->mObserverService->NotifyObservers(this, "dl-done",
-                                                          nsnull);
     }
 
 #ifdef XP_WIN
