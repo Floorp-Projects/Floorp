@@ -119,8 +119,6 @@ nsThebesDeviceContext::nsThebesDeviceContext()
     mWidth = 0;
     mHeight = 0;
 
-    mDeviceContextSpec = nsnull;
-
     mWidgetSurfaceCache.Init();
 
 #ifdef XP_WIN
@@ -525,7 +523,7 @@ nsThebesDeviceContext::InitForPrinting(nsIDeviceContextSpec *aDevice)
 {
     NS_ENSURE_ARG_POINTER(aDevice);
 
-    NS_ADDREF(mDeviceContextSpec = aDevice);
+    mDeviceContextSpec = aDevice;
 
     nsresult rv = aDevice->GetSurfaceForPrinter(getter_AddRefs(mPrintingSurface));
     if (NS_FAILED(rv))
