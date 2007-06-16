@@ -57,6 +57,6 @@ class nsCCUncollectableMarker : public nsIObserver
   static PRUint32 sGeneration;
 
 private:
-  nsCCUncollectableMarker() {};
+  nsCCUncollectableMarker() {}
 
 };
