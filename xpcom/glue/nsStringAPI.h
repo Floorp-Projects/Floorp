@@ -51,6 +51,7 @@
 
 #include "nsXPCOMStrings.h"
 #include "nsISupportsImpl.h"
+#include "prlog.h"
 
 class nsAString
 {
@@ -949,6 +950,7 @@ private:
  */
 
 #ifdef HAVE_CPP_2BYTE_WCHAR_T
+  PR_STATIC_ASSERT(sizeof(wchar_t) == 2);
   #define NS_LL(s)                                L##s
   #define NS_MULTILINE_LITERAL_STRING(s)          nsDependentString(NS_REINTERPRET_CAST(const nsAString::char_type*, s), PRUint32((sizeof(s)/sizeof(wchar_t))-1))
   #define NS_MULTILINE_LITERAL_STRING_INIT(n,s)   n(NS_REINTERPRET_CAST(const nsAString::char_type*, s), PRUint32((sizeof(s)/sizeof(wchar_t))-1))
@@ -961,6 +963,9 @@ private:
   #define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  const NS_ConvertASCIItoUTF16 n(s, PRUint32(sizeof(s)-1))
   typedef NS_ConvertASCIItoUTF16 nsLiteralString;
 #endif
+
+/* Check that PRUnichar is unsigned */
+PR_STATIC_ASSERT(PRUnichar(-1) > PRUnichar(0));
 
 /*
  * Macro arguments used in concatenation or stringification won't be expanded.
