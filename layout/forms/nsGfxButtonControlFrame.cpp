@@ -138,14 +138,13 @@ nsGfxButtonControlFrame::CreateFrameFor(nsIContent*      aContent)
 
   if (aContent == mTextContent) {
     nsIFrame * parentFrame = mFrames.FirstChild();
-    nsStyleContext* styleContext = parentFrame->GetStyleContext();
 
     nsPresContext* presContext = PresContext();
     nsRefPtr<nsStyleContext> textStyleContext;
     textStyleContext = presContext->StyleSet()->
-      ResolveStyleForNonElement(styleContext);
+      ResolveStyleForNonElement(mStyleContext);
 
-    if (textStyleContext && styleContext) {
+    if (textStyleContext) {
       newFrame = NS_NewTextFrame(presContext->PresShell(), textStyleContext);
       if (newFrame) {
         // initialize the text frame

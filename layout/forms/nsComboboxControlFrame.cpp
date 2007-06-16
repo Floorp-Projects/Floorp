@@ -1164,7 +1164,7 @@ nsComboboxControlFrame::CreateFrameFor(nsIContent*      aContent)
   }
 
   nsRefPtr<nsStyleContext> textStyleContext;
-  textStyleContext = styleSet->ResolveStyleForNonElement(styleContext);
+  textStyleContext = styleSet->ResolveStyleForNonElement(mStyleContext);
   if (NS_UNLIKELY(!textStyleContext)) {
     return nsnull;
   }
