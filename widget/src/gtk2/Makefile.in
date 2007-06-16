@@ -69,14 +69,12 @@ REQUIRES	= xpcom \
 		  layout \
 		  util \
 		  locale \
+		  thebes \
+		  cairo \
 		  $(NULL)
-
-ifeq ($(MOZ_ENABLE_CAIRO_GFX),1)
-REQUIRES += thebes cairo
 
 ifeq ($(MOZ_ENABLE_GLITZ),1)
 REQUIRES += glitz glitzglx
-endif
 endif
 
 CSRCS		= \
@@ -130,11 +128,9 @@ EXTRA_DSO_LDOPTS += \
                 $(MOZ_STARTUP_NOTIFICATION_LIBS) \
 		$(XLDFLAGS) \
 		$(XLIBS) \
-		$(MOZ_GTK2_LIBS)
-
-ifeq ($(MOZ_ENABLE_CAIRO_GFX),1)
-EXTRA_DSO_LDOPTS += -lthebes
-endif
+		$(MOZ_GTK2_LIBS) \
+		-lthebes \
+		$(NULL)
 
 EXPORTS		= \
 		nsIGdkPixbufImage.h \
@@ -156,10 +152,7 @@ CFLAGS          += $(MOZ_GTK2_CFLAGS) $(MOZ_STARTUP_NOTIFICATION_CFLAGS)
 CXXFLAGS        += $(MOZ_GTK2_CFLAGS) $(MOZ_STARTUP_NOTIFICATION_CFLAGS)
 
 DEFINES         += -DUSE_XIM
-
-ifdef MOZ_ENABLE_CAIRO_GFX
 DEFINES		+= -DCAIRO_GFX
-endif
 
 ifdef MOZ_ENABLE_POSTSCRIPT
 DEFINES         += -DUSE_POSTSCRIPT

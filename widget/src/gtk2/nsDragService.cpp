@@ -58,10 +58,8 @@
 #include <gdk/gdkx.h>
 #include "nsCRT.h"
 
-#ifdef MOZ_CAIRO_GFX
 #include "gfxASurface.h"
 #include "nsImageToPixbuf.h"
-#endif
 
 static PRLogModuleInfo *sDragLm = NULL;
 
@@ -203,7 +201,6 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
                                                  1,
                                                  &event);
 
-#ifdef MOZ_CAIRO_GFX
         GdkPixbuf* dragPixbuf = nsnull;
         nsRect dragRect;
         if (mHasImage || mSelection) {
@@ -222,10 +219,7 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
                                    mScreenY - NSToIntRound(dragRect.y));
         else
           gtk_drag_set_icon_default(context);
-#else
-        // use a default icon
-        gtk_drag_set_icon_default(context);
-#endif
+
         gtk_target_list_unref(sourceList);
     }
 

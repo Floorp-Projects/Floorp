@@ -276,9 +276,6 @@ else # Platform-specific GFX layer
   ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
   COMPONENT_LIBS += gfx_mac
   endif
-  ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-  COMPONENT_LIBS += gfx_gtk
-  endif
   ifdef MOZ_ENABLE_PHOTON
   COMPONENT_LIBS += gfx_photon
   endif

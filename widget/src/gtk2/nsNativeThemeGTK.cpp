@@ -63,11 +63,9 @@
 #include <gdk/gdkprivate.h>
 #include <gdk/gdkx.h>
 
-#ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
 #include "gfxPlatformGtk.h"
 #include "gfxXlibNativeRenderer.h"
-#endif
 
 NS_IMPL_ISUPPORTS2(nsNativeThemeGTK, nsITheme, nsIObserver)
 
@@ -463,7 +461,6 @@ NativeThemeErrorHandler(Display* dpy, XErrorEvent* error) {
   return 0;
 }
 
-#ifdef MOZ_CAIRO_GFX
 class ThemeRenderer : public gfxXlibNativeRenderer {
 public:
   ThemeRenderer(GtkWidgetState aState, GtkThemeWidgetType aGTKWidgetType,
@@ -525,7 +522,6 @@ ThemeRenderer::NativeDraw(Display* dpy, Drawable drawable, Visual* visual,
   g_object_unref(G_OBJECT(gdkPixmap));
   return NS_OK;
 }
-#endif
 
 static PRBool
 GetExtraSizeForWidget(PRUint8 aWidgetType, nsIntMargin* aExtra)
@@ -571,55 +567,6 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
                             &flags))
     return NS_OK;
     
-#ifndef MOZ_CAIRO_GFX
-  GdkWindow* window = NS_STATIC_CAST(GdkWindow*,
-    aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_GDK_DRAWABLE));
-
-  nsTransform2D* transformMatrix;
-  aContext->GetCurrentTransform(transformMatrix);
-
-  nsRect tr(aRect);
-  transformMatrix->TransformCoord(&tr.x, &tr.y, &tr.width, &tr.height);
-  GdkRectangle gdk_rect = {tr.x, tr.y, tr.width, tr.height};
-
-  nsRect cr(aClipRect);
-  transformMatrix->TransformCoord(&cr.x, &cr.y, &cr.width, &cr.height);
-  GdkRectangle gdk_clip = {cr.x, cr.y, cr.width, cr.height};
-
-  NS_ASSERTION(!IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType),
-               "Trying to render an unsafe widget!");
-
-  PRBool safeState = IsWidgetStateSafe(mSafeWidgetStates, aWidgetType, &state);
-  XErrorHandler oldHandler = nsnull;
-  if (!safeState) {
-    gLastXError = 0;
-    oldHandler = XSetErrorHandler(NativeThemeErrorHandler);
-  }
-
-  moz_gtk_widget_paint(gtkWidgetType, window, &gdk_rect, &gdk_clip, &state,
-                       flags);
-
-  if (!safeState) {
-    gdk_flush();
-    XSetErrorHandler(oldHandler);
-
-    if (gLastXError) {
-#ifdef DEBUG
-      printf("GTK theme failed for widget type %d, error was %d, state was "
-             "[active=%d,focused=%d,inHover=%d,disabled=%d]\n",
-             aWidgetType, gLastXError, state.active, state.focused,
-             state.inHover, state.disabled);
-#endif
-      NS_WARNING("GTK theme failed; disabling unsafe widget");
-      SetWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType);
-      // force refresh of the window, because the widget was not
-      // successfully drawn it must be redrawn using the default look
-      RefreshWidgetWindow(aFrame);
-    } else {
-      SetWidgetStateSafe(mSafeWidgetStates, aWidgetType, &state);
-    }
-  }
-#else
   nsCOMPtr<nsIDeviceContext> dctx = nsnull;
   aContext->GetDeviceContext(*getter_AddRefs(dctx));
   PRInt32 p2a = dctx->AppUnitsPerDevPixel();
@@ -706,7 +653,6 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
       SetWidgetStateSafe(mSafeWidgetStates, aWidgetType, &state);
     }
   }
-#endif
 
   return NS_OK;
 }

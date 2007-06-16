@@ -104,7 +104,6 @@ static const char sAccessibilityKey [] = "config.use_system_prefs.accessibility"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsAutoPtr.h"
 
-#ifdef MOZ_CAIRO_GFX
 #include "gfxPlatformGtk.h"
 #include "gfxXlibSurface.h"
 #include "gfxContext.h"
@@ -113,7 +112,6 @@ static const char sAccessibilityKey [] = "config.use_system_prefs.accessibility"
 #ifdef MOZ_ENABLE_GLITZ
 #include "gfxGlitzSurface.h"
 #include "glitz-glx.h"
-#endif
 #endif
 
 /* For PrepareNativeWidget */
@@ -464,11 +462,9 @@ nsWindow::Destroy(void)
     // window this isn't going to harm anything.
     mWindowGroup = nsnull;
 
-#ifdef MOZ_CAIRO_GFX
     // Destroy thebes surface now. Badness can happen if we destroy
     // the surface after its X Window.
     mThebesSurface = nsnull;
-#endif
 
     if (mDragMotionTimerID) {
         gtk_timeout_remove(mDragMotionTimerID);
@@ -1652,7 +1648,6 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 
     nsCOMPtr<nsIRenderingContext> rc = getter_AddRefs(GetRenderingContext());
 
-#ifdef MOZ_CAIRO_GFX
     PRBool translucent;
     GetWindowTranslucency(translucent);
     nsIntRect boundsRect;
@@ -1722,16 +1717,17 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         }
 #endif // MOZ_ENABLE_GLITZ
     }
-#endif // MOZ_CAIRO_GFX
 
+#if 0
     // NOTE: Paint flashing region would be wrong for cairo, since
     // cairo inflates the update region, etc.  So don't paint flash
     // for cairo.
-#if !defined(MOZ_CAIRO_GFX) && defined(DEBUG)
+#ifdef DEBUG
     if (WANT_PAINT_FLASHING && aEvent->window)
         gdk_window_flash(aEvent->window, 1, 100, aEvent->region);
-#endif // !defined(MOZ_CAIRO_GFX) && defined(DEBUG)
-    
+#endif
+#endif
+
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
     event.refPoint.x = aEvent->area.x;
     event.refPoint.y = aEvent->area.y;
@@ -1745,8 +1741,6 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     // DispatchEvent can Destroy us (bug 378273), avoid doing any paint
     // operations below if that happened - it will lead to XError and exit().
     if (NS_LIKELY(!mIsDestroyed)) {
-
-#ifdef MOZ_CAIRO_GFX
         if (status != nsEventStatus_eIgnore) {
             if (translucent) {
                 nsRefPtr<gfxPattern> pattern = ctx->PopGroup();
@@ -1794,8 +1788,6 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         }
 
         ctx->Restore();
-#endif // MOZ_CAIRO_GFX
-
     }
 
     g_free(rects);
@@ -5728,7 +5720,6 @@ IM_get_input_context(nsWindow *aWindow)
 
 #endif
 
-#ifdef MOZ_CAIRO_GFX
 // return the gfxASurface for rendering to this widget
 gfxASurface*
 nsWindow::GetThebesSurface()
@@ -5791,4 +5782,3 @@ nsWindow::GetThebesSurface()
 
     return mThebesSurface;
 }
-#endif

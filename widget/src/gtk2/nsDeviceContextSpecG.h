@@ -45,12 +45,6 @@
 #include "nsVoidArray.h"
 #include "nsCOMPtr.h"
 
-#ifndef MOZ_CAIRO_GFX
-#ifdef USE_POSTSCRIPT
-#include "nsIDeviceContextSpecPS.h"
-#endif /* USE_POSTSCRIPT */
-#endif
-
 #include "nsCRT.h" /* should be <limits.h>? */
 
 #include "nsIPrintJobGTK.h"
@@ -65,20 +59,13 @@ typedef enum
 } PrintMethod;
 
 class nsDeviceContextSpecGTK : public nsIDeviceContextSpec
-#ifndef MOZ_CAIRO_GFX
-#ifdef USE_POSTSCRIPT
-                              , public nsIDeviceContextSpecPS
-#endif /* USE_POSTSCRIPT */
-#endif
 {
 public:
   nsDeviceContextSpecGTK();
 
   NS_DECL_ISUPPORTS
 
-#ifdef MOZ_CAIRO_GFX
   NS_IMETHOD GetSurfaceForPrinter(gfxASurface **surface);
-#endif
 
   NS_IMETHOD Init(nsIWidget *aWidget, nsIPrintSettings* aPS, PRBool aIsPrintPreview);
   NS_IMETHOD ClosePrintManager(); 
