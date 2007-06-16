@@ -364,7 +364,7 @@ var PlacesSearchBox = {
     switch (PlacesSearchBox.filterCollection) {
     case "collection":
       var folderId = content.getResult().root.itemId;
-      content.applyFilter(filterString, true, folderId, OptionsFilter);
+      content.applyFilter(filterString, true, [folderId], OptionsFilter);
       PO.setHeaderText(PO.HEADER_TYPE_SEARCH, filterString);
       break;
     case "bookmarks":
@@ -374,7 +374,7 @@ var PlacesSearchBox = {
         PlacesOrganizer.onPlaceSelected();
       break;
     case "all":
-      content.applyFilter(filterString, false, 0, OptionsFilter);
+      content.applyFilter(filterString, false, null, OptionsFilter);
       PO.setHeaderText(PO.HEADER_TYPE_SEARCH, filterString);
       break;
     }
