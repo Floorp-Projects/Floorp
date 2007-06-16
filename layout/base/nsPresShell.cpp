@@ -3099,11 +3099,14 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
   }  
 #endif
 
-  // Grab |wasDirty| now so we can go ahead and update the bits on
-  // aFrame and then get |targetFrameDirty|.
+  // Grab |wasDirty| now so we can go ahead and update the bits on aFrame.
   PRBool wasDirty = NS_SUBTREE_DIRTY(aFrame);
   aFrame->AddStateBits(aBitToAdd);
-  PRBool targetFrameDirty = ((aFrame->GetStateBits() & NS_FRAME_IS_DIRTY) != 0);
+
+  // Now if aFrame is a reflow root we can cut off this reflow at it if the bit
+  // being added is NS_FRAME_HAS_DIRTY_CHILDREN.
+  PRBool targetFrameDirty = (aBitToAdd == NS_FRAME_IS_DIRTY);
+
 #define FRAME_IS_REFLOW_ROOT(_f)                   \
   ((_f->GetStateBits() & NS_FRAME_REFLOW_ROOT) &&  \
    (_f != aFrame || !targetFrameDirty))
