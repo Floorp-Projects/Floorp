@@ -1679,6 +1679,34 @@ NS_IMETHODIMP nsChildView::CancelIMEComposition()
 }
 
 
+NS_IMETHODIMP nsChildView::GetToggledKeyState(PRUint32 aKeyCode,
+                                              PRBool* aLEDState)
+{
+#ifdef DEBUG_IME
+  NSLog(@"**** GetToggledKeyState");
+#endif
+  NS_ENSURE_ARG_POINTER(aLEDState);
+  PRUint32 key;
+  switch (aKeyCode) {
+    case NS_VK_CAPS_LOCK:
+      key = alphaLock;
+      break;
+    case NS_VK_NUM_LOCK:
+      // 10.3 doesn't return the NUM_LOCK state.
+      if (nsToolkit::OSXVersion() < MAC_OS_X_VERSION_10_4_HEX)
+        return NS_ERROR_NOT_IMPLEMENTED;
+      key = kEventKeyModifierNumLockMask;
+      break;
+    // Mac doesn't support SCROLL_LOCK state.
+    default:
+      return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  PRUint32 modifierFlags = ::GetCurrentKeyModifiers();
+  *aLEDState = (modifierFlags & key) != 0;
+  return NS_OK;
+}
+
+
 GrafPtr
 nsChildView::GetChildViewQuickDrawPort()
 {
