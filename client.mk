@@ -68,8 +68,6 @@
 #   MOZ_UNIFY_BDATE      - Set to use the same bdate for each project in
 #                          MOZ_BUILD_PROJECTS
 #
-
-  mozilla/other-licenses/7zstub/seamonkey       \
 #######################################################################
 # Defines
 #
