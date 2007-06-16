@@ -926,6 +926,9 @@
         if (this.eventValid(event))
           this.setSelectionForEvent(event);
       ]]></handler>
+      <handler event="DOMMenuItemInactive"><![CDATA[
+        this._selection = null;
+      ]]></handler>
       <handler event="command"><![CDATA[
         if (this.eventValid(event))
           this.setSelectionForEvent(event);
