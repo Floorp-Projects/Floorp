@@ -658,7 +658,6 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
 }
 
 static JSPropertySpec call_props[] = {
-    {js_arguments_str,  CALL_ARGUMENTS, JSPROP_PERMANENT,0,0},
     {"__callee__",      CALL_CALLEE,    0,0,0},
     {0,0,0,0,0}
 };
@@ -913,8 +912,32 @@ call_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
             }
             *objp = obj;
         }
+        return JS_TRUE;
     }
 
+    if (!(flags & JSRESOLVE_ASSIGNING)) {
+        /*
+         * Resolve arguments so that we never store a particular Call object's
+         * arguments object reference in a Call prototype's |arguments| slot.
+         */
+        atom = cx->runtime->atomState.argumentsAtom;
+        if (id == ATOM_KEY(atom)) {
+            if (!js_DefineNativeProperty(cx, obj,
+                                         ATOM_TO_JSID(atom), JSVAL_VOID,
+                                         NULL, NULL, JSPROP_PERMANENT,
+                                         SPROP_HAS_SHORTID, CALL_ARGUMENTS,
+                                         NULL)) {
+                return JS_FALSE;
+            }
+            *objp = obj;
+            return JS_TRUE;
+        }
+
+        /*
+         * FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=384642 -- same
+         * magic needed for __callee__, if we decide to keep it.
+         */
+    }
     return JS_TRUE;
 }
 
