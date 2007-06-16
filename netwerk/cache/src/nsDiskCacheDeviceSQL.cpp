@@ -770,7 +770,7 @@ nsOfflineCacheDevice::Init()
     nsCOMPtr<mozIStorageStatement> &statement;
     const char *sql;
     StatementSql (nsCOMPtr<mozIStorageStatement> &aStatement, const char *aSql):
-      statement (aStatement), sql (aSql) {};
+      statement (aStatement), sql (aSql) {}
   } prepared[] = {
     StatementSql ( mStatement_CacheSize,         "SELECT Sum(DataSize) from moz_cache;" ),
     StatementSql ( mStatement_EntryCount,        "SELECT count(*) from moz_cache;" ),
