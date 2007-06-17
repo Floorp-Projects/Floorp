@@ -1122,7 +1122,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       // check if we need to update hdc
       HDC hdc = (HDC)aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
 
-      if (NS_REINTERPRET_CAST(PRUint32, window->window) != (PRUint32)(HDC)hdc) {
+      if (NS_REINTERPRET_CAST(HDC, window->window) != hdc) {
         window->window = NS_REINTERPRET_CAST(nsPluginPort*, hdc);
         doupdatewindow = PR_TRUE;
       }
