@@ -2520,38 +2520,17 @@
         <children/>
       </xul:scrollbox>
       <xul:stack align="center" pack="end" class="scrollbutton-down-stack">
-        <!-- XXXsspitzer hack
-             this extra hbox with position: relative
-             is needed to work around two bugs.
-             see bugs #346307 and #346035 
-        -->
-        <xul:hbox style="position: relative;" class="scrollbutton-rel-box">
-          <xul:hbox flex="1" class="scrollbutton-down-box" 
-                             collapsed="true" anonid="down-box"/>
-        </xul:hbox>
-        <!-- XXXsspitzer hack
-             this extra hbox with position: relative
-             is needed to work around two bugs.
-             see bugs #346307 and #346035 
-        -->
-        <xul:hbox style="position: relative;" class="scrollbutton-rel-box">
-          <xul:hbox flex="1" class="scrollbutton-down-box-animate" 
-                             collapsed="true" anonid="down-box-animate"/>
-        </xul:hbox>
-        <!-- XXXsspitzer hack
-             this extra hbox with position: relative
-             is needed to work around two bugs.
-             see bugs #346307 and #346035 
-        -->
-        <xul:hbox style="position: relative;" class="scrollbutton-rel-box">
-          <xul:toolbarbutton class="scrollbutton-down" collapsed="true"
-                             xbl:inherits="orient"
-                             anonid="scrollbutton-down"
-                             onmousedown="_startScroll(1);"
-                             onmouseup="_stopScroll();"
-                             onmouseout="_stopScroll();"
-                             chromedir="&locale.dir;"/>
-        </xul:hbox>
+        <xul:hbox flex="1" class="scrollbutton-down-box" 
+                           collapsed="true" anonid="down-box"/>
+        <xul:hbox flex="1" class="scrollbutton-down-box-animate" 
+                           collapsed="true" anonid="down-box-animate"/>
+        <xul:toolbarbutton class="scrollbutton-down" collapsed="true"
+                           xbl:inherits="orient"
+                           anonid="scrollbutton-down"
+                           onmousedown="_startScroll(1);"
+                           onmouseup="_stopScroll();"
+                           onmouseout="_stopScroll();"
+                           chromedir="&locale.dir;"/>
       </xul:stack>
     </content>
     <implementation>
@@ -2618,37 +2597,16 @@
         <children includes="tab"/>
       </xul:arrowscrollbox>
       <xul:stack align="center" pack="end" class="tabs-alltabs-stack">
-        <!-- XXXsspitzer hack
-             this extra hbox with position: relative
-             is needed to work around two bugs.
-             see bugs #346307 and #346035 
-        -->
-        <xul:hbox style="position: relative;">
-          <xul:hbox flex="1" class="tabs-alltabs-box" anonid="alltabs-box"/>
-        </xul:hbox>
-        <!-- XXXsspitzer hack
-             this extra hbox with position: relative
-             is needed to work around two bugs.
-             see bugs #346307 and #346035 
-        -->
-        <xul:hbox style="position: relative;">
-          <xul:hbox flex="1" class="tabs-alltabs-box-animate" 
-                    anonid="alltabs-box-animate"/>
-        </xul:hbox>
-        <!-- XXXsspitzer hack
-             this extra hbox with position: relative
-             is needed to work around two bugs.
-             see bugs #346307 and #346035 
-        -->
-        <xul:hbox style="position: relative;">
-          <xul:toolbarbutton class="tabs-alltabs-button" type="menu"
-                             anonid="alltabs-button"
-                             tooltipstring="&listAllTabs.label;">
-            <xul:menupopup class="tabs-alltabs-popup"
-                           anonid="alltabs-popup" 
-                           position="after_end"/>
+        <xul:hbox flex="1" class="tabs-alltabs-box" anonid="alltabs-box"/>
+        <xul:hbox flex="1" class="tabs-alltabs-box-animate" 
+                  anonid="alltabs-box-animate"/>
+        <xul:toolbarbutton class="tabs-alltabs-button" type="menu"
+                           anonid="alltabs-button"
+                           tooltipstring="&listAllTabs.label;">
+          <xul:menupopup class="tabs-alltabs-popup"
+                         anonid="alltabs-popup" 
+                         position="after_end"/>
         </xul:toolbarbutton>
-        </xul:hbox>
       </xul:stack>
       <xul:hbox class="tabs-closebutton-box" align="center" pack="end" anonid="tabstrip-closebutton">
         <xul:toolbarbutton class="close-button tabs-closebutton"/>
