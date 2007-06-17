@@ -134,6 +134,9 @@ protected:
   /**
    * Removes download from "current downloads," updates download state, and
    * notifies observers.
+   *
+   * This method removes the cycle created when starting the download, so 
+   * make sure to use kungFuDeathGrip if you want to access member variables
    */
   nsresult FinishDownload(nsDownload *aDownload, DownloadState aState,
                           const char *aTopic);

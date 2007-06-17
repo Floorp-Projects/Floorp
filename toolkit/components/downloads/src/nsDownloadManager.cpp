@@ -132,6 +132,12 @@ nsDownloadManager::CancelAllDownloads()
 nsresult
 nsDownloadManager::FinishDownload(nsDownload *aDownload, DownloadState aState,
                                   const char *aTopic) {
+  // We don't want to lose access to the download's member variables
+  nsRefPtr<nsDownload> kungFuDeathGrip = aDownload;
+
+  // we've stopped, so break the cycle we created at download start
+  aDownload->mCancelable = nsnull;
+
   // This has to be done in this exact order to not mess up our invariants
   // 1) when the state changed listener is dispatched, it must no longer be
   //    an active download.
@@ -602,7 +608,7 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
   dl->mMIMEInfo = aMIMEInfo;
   dl->SetStartTime(aStartTime);
 
-  // this will create a cycle that will be broken in nsDownload::OnStateChange
+  // Creates a cycle that will be broken when the download finishes
   dl->mCancelable = aCancelable;
 
   // Adding to the DB
@@ -722,7 +728,7 @@ nsDownloadManager::RetryDownload(PRUint32 aID)
     do_CreateInstance("@mozilla.org/embedding/browser/nsWebBrowserPersist;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Creates a cycle that will be broken in nsDownload::OnStateChange
+  // Creates a cycle that will be broken when the download finishes
   dl->mCancelable = wbp;
   wbp->SetProgressListener(dl);
 
@@ -1464,6 +1470,9 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
                            const PRUnichar *aMessage)
 {   
   if (NS_FAILED(aStatus)) {
+    // We don't want to lose access to our member variables
+    nsRefPtr<nsDownload> kungFuDeathGrip = this;
+
     (void)mDownloadManager->FinishDownload(this,
                                            nsIDownloadManager::DOWNLOAD_FAILED,
                                            "dl-failed");
@@ -1601,9 +1610,6 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       }
     }
 #endif
-
-    // break the cycle we created in AddDownload
-    mCancelable = nsnull;
 
     // Now remove the download if the user's retention policy is "Remove when Done"
     if (mDownloadManager->GetRetentionBehavior() == 0)
