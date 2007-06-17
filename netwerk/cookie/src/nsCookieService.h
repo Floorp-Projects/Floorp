@@ -50,8 +50,6 @@
 #include "nsString.h"
 #include "nsTHashtable.h"
 
-#include "nsInt64.h"
-
 struct nsCookieAttributes;
 struct nsListIter;
 struct nsEnumerationData;
@@ -65,8 +63,8 @@ class nsIPrefBranch;
 class nsIObserverService;
 class nsIURI;
 class nsIChannel;
-class nsITimer;
-class nsIFile;
+class mozIStorageConnection;
+class mozIStorageStatement;
 
 // hash entry class
 class nsCookieEntry : public PLDHashEntryHdr
@@ -168,15 +166,17 @@ class nsCookieService : public nsICookieServiceInternal
 
   protected:
     void                          PrefChanged(nsIPrefBranch *aPrefBranch);
+    nsresult                      InitDB();
+    nsresult                      CreateTable();
+    nsresult                      ImportCookies();
     nsresult                      Read();
-    nsresult                      Write();
     void                          GetCookieList(nsIURI *aHostURI, nsIURI *aFirstURI, nsIChannel *aChannel, const nsACString *aName, PRBool isHttpBound, nsAutoVoidArray &aResult);
     char*                         CookieStringFromArray(const nsAutoVoidArray& aCookieList, nsIURI *aHostURI);
-    PRBool                        SetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, nsDependentCString &aCookieHeader, nsInt64 aServerTime, nsCookieStatus aStatus, nsCookiePolicy aPolicy);
+    PRBool                        SetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, nsDependentCString &aCookieHeader, PRInt64 aServerTime, nsCookieStatus aStatus, nsCookiePolicy aPolicy);
     void                          CheckAndAdd(nsIURI *aHostURI, nsIChannel *aChannel, nsCookieAttributes &aAttributes, nsCookieStatus aStatus, nsCookiePolicy aPolicy, const nsAFlatCString &aCookieHeader);
-    void                          AddInternal(nsCookie *aCookie, nsInt64 aCurrentTime, nsIURI *aHostURI, const char *aCookieHeader);
+    void                          AddInternal(nsCookie *aCookie, PRInt64 aCurrentTime, nsIURI *aHostURI, const char *aCookieHeader);
     void                          RemoveCookieFromList(nsListIter &aIter);
-    PRBool                        AddCookieToList(nsCookie *aCookie);
+    PRBool                        AddCookieToList(nsCookie *aCookie, PRBool aWriteToDB = PR_TRUE);
     static PRBool                 GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter, nsASingleFragmentCString::const_char_iterator &aEndIter, nsDependentCSubstring &aTokenString, nsDependentCSubstring &aTokenValue, PRBool &aEqualsFound);
     static PRBool                 ParseAttributes(nsDependentCString &aCookieHeader, nsCookieAttributes &aCookie);
     static PRBool                 IsIPAddress(const nsAFlatCString &aHost);
@@ -185,32 +185,27 @@ class nsCookieService : public nsICookieServiceInternal
     nsCookieStatus                CheckPrefs(nsIURI *aHostURI, nsIURI *aFirstURI, nsIChannel *aChannel, const char *aCookieHeader, nsCookiePolicy &aPolicy);
     static PRBool                 CheckDomain(nsCookieAttributes &aCookie, nsIURI *aHostURI);
     static PRBool                 CheckPath(nsCookieAttributes &aCookie, nsIURI *aHostURI);
-    static PRBool                 GetExpiry(nsCookieAttributes &aCookie, nsInt64 aServerTime, nsInt64 aCurrentTime, nsCookieStatus aStatus);
+    static PRBool                 GetExpiry(nsCookieAttributes &aCookie, PRInt64 aServerTime, PRInt64 aCurrentTime, nsCookieStatus aStatus);
     void                          RemoveAllFromMemory();
-    void                          RemoveExpiredCookies(nsInt64 aCurrentTime);
+    void                          RemoveExpiredCookies(PRInt64 aCurrentTime);
     PRBool                        FindCookie(const nsAFlatCString &aHost, const nsAFlatCString &aName, const nsAFlatCString &aPath, nsListIter &aIter);
     void                          FindOldestCookie(nsEnumerationData &aData);
     PRUint32                      CountCookiesFromHostInternal(const nsACString &aHost, nsEnumerationData &aData);
     void                          NotifyRejected(nsIURI *aHostURI);
     void                          NotifyChanged(nsICookie2 *aCookie, const PRUnichar *aData);
 
-    // Use LazyWrite to save the cookies file on a timer. It will write
-    // the file only once if repeatedly hammered quickly.
-    void                          LazyWrite();
-    static void                   DoLazyWrite(nsITimer *aTimer, void *aClosure);
-
   protected:
     // cached members
-    nsCOMPtr<nsIFile>             mCookieFile;
+    nsCOMPtr<mozIStorageConnection> mDBConn;
+    nsCOMPtr<mozIStorageStatement> mStmtInsert;
+    nsCOMPtr<mozIStorageStatement> mStmtDelete;
     nsCOMPtr<nsIObserverService>  mObserverService;
     nsCOMPtr<nsICookieConsent>    mP3PService;
     nsCOMPtr<nsICookiePermission> mPermissionService;
 
     // impl members
-    nsCOMPtr<nsITimer>            mWriteTimer;
     nsTHashtable<nsCookieEntry>   mHostTable;
     PRUint32                      mCookieCount;
-    PRPackedBool                  mCookieChanged;
     PRPackedBool                  mCookieIconVisible;
 
     // cached prefs
