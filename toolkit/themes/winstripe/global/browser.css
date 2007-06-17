@@ -301,7 +301,7 @@ tabpanels {
   height: 23px;
 }
 
-.scrollbutton-rel-box > .scrollbutton-down-box {
+.tabbrowser-arrowscrollbox > stack > .scrollbutton-down-box {
   -moz-appearance: none !important;
   border: none !important;
   width: 18px;
@@ -311,31 +311,31 @@ tabpanels {
   -moz-border-radius-topleft: 4px;
 }
 
-.tabbrowser-arrowscrollbox[chromedir="rtl"] > stack > .scrollbutton-rel-box > .scrollbutton-down-box {
+.tabbrowser-arrowscrollbox[chromedir="rtl"] > stack > .scrollbutton-down-box {
   background-image: url("chrome://global/skin/icons/tab-arrow-start-bkgnd-enabled.png");
   -moz-border-radius-topleft: 0px;
   -moz-border-radius-topright: 4px;
 }
 
-.scrollbutton-rel-box > .scrollbutton-down-box[disabled="true"] {
+.tabbrowser-arrowscrollbox > stack > .scrollbutton-down-box[disabled="true"] {
   background-image: url("chrome://global/skin/icons/tab-arrow-end-bkgnd-disabled.png");
 }
 
-.tabbrowser-arrowscrollbox[chromedir="rtl"] > stack > .scrollbutton-rel-box > .scrollbutton-down-box[disabled="true"] {
+.tabbrowser-arrowscrollbox[chromedir="rtl"] > stack > .scrollbutton-down-box[disabled="true"] {
   background-image: url("chrome://global/skin/icons/tab-arrow-start-bkgnd-disabled.png");
 }
 
-.scrollbutton-rel-box > .scrollbutton-down-box-animate {
+.tabbrowser-arrowscrollbox > stack > .scrollbutton-down-box-animate {
   background-image: url("chrome://global/skin/icons/tab-arrow-end-bkgnd-animate.png");
   background-repeat: no-repeat;
   opacity: 0.0;
 }
 
-.tabbrowser-arrowscrollbox[chromedir="rtl"] > stack > .scrollbutton-rel-box > .scrollbutton-down-box-animate {
+.tabbrowser-arrowscrollbox[chromedir="rtl"] > stack > .scrollbutton-down-box-animate {
   background-image: url("chrome://global/skin/icons/tab-arrow-start-bkgnd-animate.png");
 }
 
-.scrollbutton-rel-box > .scrollbutton-down {
+.tabbrowser-arrowscrollbox > stack > .scrollbutton-down {
   -moz-appearance: none !important;
   border: none !important;
   width: 18px;
@@ -345,30 +345,30 @@ tabpanels {
   padding: 0px;
 }
 
-.tabbrowser-arrowscrollbox[chromedir="rtl"] > stack > .scrollbutton-rel-box > .scrollbutton-down {
+.tabbrowser-arrowscrollbox[chromedir="rtl"] > stack > .scrollbutton-down {
   list-style-image: url("chrome://global/skin/icons/tab-arrow-start.png");
 }
 
-.scrollbutton-rel-box > .scrollbutton-down[disabled="true"] {
+.tabbrowser-arrowscrollbox > stack > .scrollbutton-down[disabled="true"] {
   -moz-image-region: rect(0, 33px, 14px, 22px);
 }
 
-.scrollbutton-rel-box > .scrollbutton-down:not([disabled="true"]):hover {
+.tabbrowser-arrowscrollbox > stack > .scrollbutton-down:not([disabled="true"]):hover {
   -moz-image-region: rect(0, 22px, 14px, 11px);
   background-image: url("chrome://global/skin/icons/tab-arrow-end-bkgnd-hover.png");
   background-repeat: no-repeat;
   background-position: top left;
 }
 
-.tabbrowser-arrowscrollbox[chromedir="rtl"] > stack > .scrollbutton-rel-box > .scrollbutton-down:not([disabled="true"]):hover {
+.tabbrowser-arrowscrollbox[chromedir="rtl"] > stack > .scrollbutton-down:not([disabled="true"]):hover {
   background-image: url("chrome://global/skin/icons/tab-arrow-start-bkgnd-hover.png");
 }
 
-.scrollbutton-rel-box > .scrollbutton-down:not([disabled="true"]):hover:active {
+.tabbrowser-arrowscrollbox > stack > .scrollbutton-down:not([disabled="true"]):hover:active {
   -moz-image-region: rect(0, 44px, 14px, 33px);
 }
 
-.scrollbutton-rel-box > .scrollbutton-down > .toolbarbutton-icon {
+.tabbrowser-arrowscrollbox > stack > .scrollbutton-down > .toolbarbutton-icon {
   margin: 6px 0px 0px 1px;
 }
 
