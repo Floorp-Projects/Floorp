@@ -288,7 +288,19 @@ function linksToListItems(links)
     } else {
       children = "";
     }
-    response += LI({class: classVal}, A({href: link}, link), children);
+
+    var bug_title = link.match(/test_bug\S+/);
+    var bug_num = null;
+    if (bug_title != null) {
+        bug_num = bug_title[0].match(/\d+/);
+    }
+
+    if ((bug_title == null) || (bug_num == null)) {
+      response += LI({class: classVal}, A({href: link}, link), children);
+    } else {
+      var bug_url = "http://bugzilla.mozilla.org/show_bug.cgi?id="+bug_num;
+      response += LI({class: classVal}, A({href: link}, link), " - ", A({href: bug_url}, "Bug "+bug_num), children);
+    }
 
   }
   return response;
