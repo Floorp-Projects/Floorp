@@ -16,7 +16,6 @@ inspector.jar:
 % overlay chrome://inspector/content/popupOverlay.xul chrome://inspector/content/viewers/dom/popupOverlay.xul
 % overlay chrome://inspector/content/popupOverlay.xul chrome://inspector/content/viewers/styleRules/popupOverlay.xul
 % overlay chrome://inspector/content/popupOverlay.xul chrome://inspector/content/search/modules/popupOverlay.xul
-* content/inspector/contents.rdf                                      (resources/content/contents.rdf)
   content/inspector/inspector.xul                                     (resources/content/inspector.xul)
   content/inspector/inspector.js                                      (resources/content/inspector.js)
   content/inspector/inspector.css                                     (resources/content/inspector.css)
@@ -118,7 +117,6 @@ inspector.jar:
   content/inspector/viewers/xblBindings/xblBindings.js                (resources/content/viewers/xblBindings/xblBindings.js)
   content/inspector/viewers/xblBindings/xblBindings.xul               (resources/content/viewers/xblBindings/xblBindings.xul)
 % skin inspector classic/1.0 %skin/classic/inspector/
-* skin/classic/inspector/contents.rdf                                 (resources/skin/classic/contents.rdf)
   skin/classic/inspector/btnFind.gif                                  (resources/skin/classic/btnFind.gif)
   skin/classic/inspector/btnFind-dis.gif                              (resources/skin/classic/btnFind-dis.gif)
   skin/classic/inspector/btnSelecting.gif                             (resources/skin/classic/btnSelecting.gif)
@@ -146,7 +144,6 @@ inspector.jar:
   skin/classic/inspector/viewers/styleRules/styleRules.css            (resources/skin/classic/viewers/styleRules/styleRules.css)
   skin/classic/inspector/viewers/xblBindings/xblBindings.css          (resources/skin/classic/viewers/xblBindings/xblBindings.css)
 % skin inspector modern/1.0 %skin/modern/inspector/
-* skin/modern/inspector/contents.rdf                                  (resources/skin/modern/contents.rdf)
   skin/modern/inspector/btnFind.gif                                   (resources/skin/modern/btnFind.gif)
   skin/modern/inspector/btnFind-dis.gif                               (resources/skin/modern/btnFind-dis.gif)
   skin/modern/inspector/btnSelecting.gif                              (resources/skin/modern/btnSelecting.gif)
