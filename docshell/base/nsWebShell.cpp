@@ -225,7 +225,7 @@ CheckPingURI(nsIURI* uri, nsIContent* content)
   if (doc) {
     docURI = doc->GetDocumentURI();
   }
-  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OTHER,
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_PING,
                                  uri,
                                  docURI,
                                  content,

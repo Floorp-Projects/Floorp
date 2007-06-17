@@ -534,7 +534,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
                                                document->NodePrincipal(),
                                                nsIScriptSecurityManager::ALLOW_CHROME,
                                                PR_TRUE,
-                                               nsIContentPolicy::TYPE_OTHER,
+                                               nsIContentPolicy::TYPE_XBL,
                                                document);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -971,7 +971,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
       CheckSecurityBeforeLoad(aBindingURI, aBoundDocument->NodePrincipal(),
                               nsIScriptSecurityManager::ALLOW_CHROME,
                               PR_TRUE,
-                              nsIContentPolicy::TYPE_OTHER,
+                              nsIContentPolicy::TYPE_XBL,
                               aBoundDocument);
     NS_ENSURE_SUCCESS(rv, rv);
   }
