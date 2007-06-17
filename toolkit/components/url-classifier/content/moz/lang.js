@@ -40,7 +40,7 @@
  */
 
 /**
- * Partially applies this function to a particular "this object" and zero or
+ * Partially applies a function to a particular "this object" and zero or
  * more arguments. The result is a new function with some arguments of the first
  * function pre-filled and the value of |this| "pre-specified".
  *
@@ -48,31 +48,29 @@
  * specified ones.
  *
  * Usage:
- * var barMethBound = bind(myFunction, myObj, "arg1", "arg2");
+ * var barMethBound = BindToObject(myFunction, myObj, "arg1", "arg2");
  * barMethBound("arg3", "arg4");
  *
- * @param thisObj {object} Specifies the object which |this| should point to
+ * @param fn {string} Reference to the function to be bound
+ *
+ * @param self {object} Specifies the object which |this| should point to
  * when the function is run. If the value is null or undefined, it will default
  * to the global object.
  *
- * @returns {function} A partially-applied form of the function bind() was
- * invoked as a method of.
+ * @returns {function} A partially-applied form of the speficied function.
  */
-function bind(fn, self, opt_args) {
-  var boundargs = (typeof fn.boundArgs_ != "undefined") ? fn.boundArgs_ : [];
-  boundargs = boundargs.concat(Array.prototype.slice.call(arguments, 2));
+function BindToObject(fn, self, opt_args) {
+  var boundargs = fn.boundArgs_ || [];
+  boundargs = boundargs.concat(Array.slice(arguments, 2, arguments.length));
 
-  if (typeof fn.boundSelf_ != "undefined") {
+  if (fn.boundSelf_)
     self = fn.boundSelf_;
-  }
-
-  if (typeof fn.boundFn_ != "undefined") {
+  if (fn.boundFn_)
     fn = fn.boundFn_;
-  }
 
   var newfn = function() {
     // Combine the static args and the new args into one big array
-    var args = boundargs.concat(Array.prototype.slice.call(arguments));
+    var args = boundargs.concat(Array.slice(arguments));
     return fn.apply(self, args);
   }
 
@@ -81,51 +79,6 @@ function bind(fn, self, opt_args) {
   newfn.boundFn_ = fn;
 
   return newfn;
-}
-
-/**
- * An alias to the bind() global function.
- *
- * Usage:
- * var g = f.bind(obj, arg1, arg2);
- * g(arg3, arg4);
- */
-Function.prototype.bind = function(self, opt_args) {
-  return bind.apply(
-    null, [this, self].concat(Array.prototype.slice.call(arguments, 1)));
-}
-
-/**
- * Unbelievably, Function inheritence is broken in chrome in Firefox
- * (still as of FFox 1.5b1). Hence if you're working in an extension
- * and not using the subscriptloader, you can't use the method
- * above. Instead, use this global function that does roughly the same
- * thing.
- *
- * //XXX is this still the case?
- *
- ***************************************************************************
- *   NOTE THE REVERSED ORDER OF FUNCTION AND OBJECT REFERENCES AS bind()   *
- ***************************************************************************
- * 
- * // Example to bind foo.bar():
- * var bound = BindToObject(bar, foo, "arg1", "arg2");
- * bound("arg3", "arg4");
- * 
- * @param func {string} Reference to the function to be bound
- *
- * @param obj {object} Specifies the object which |this| should point to
- * when the function is run. If the value is null or undefined, it will default
- * to the global object.
- *
- * @param opt_{...} Dummy optional arguments to make a jscompiler happy
- *
- * @returns {function} A partially-applied form of the speficied function.
- */
-function BindToObject(func, obj, opt_A, opt_B, opt_C, opt_D, opt_E, opt_F) {
-  // This is the sick product of Aaron's mind. Not for the feint of heart.
-  var args = Array.prototype.splice.call(arguments, 1, arguments.length);
-  return Function.prototype.bind.apply(func, args);
 }
 
 /**
