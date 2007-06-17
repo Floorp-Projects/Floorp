@@ -2436,6 +2436,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
 #if defined(MOZ_WIDGET_GTK2)
+    g_thread_init(NULL);
     // setup for private colormap.  Ideally we'd like to do this
     // in nsAppShell::Create, but we need to get in before gtk
     // has been initialized to make sure everything is running
