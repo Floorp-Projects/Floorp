@@ -183,11 +183,6 @@
         ]]></body>
       </method>
 
-      <!-- Map for containerNodes<->domNodes. There's only one map per
-           result/viewer, the field is initialized once for the root menu,
-           for sub menus it is set to the root's map (see insertNewItem) -->
-      <field name="_containerNodesMap">null</field>
-
       <method name="removeItem">
         <parameter name="child"/>
         <body><![CDATA[
@@ -488,7 +483,12 @@
         <getter><![CDATA[
           return this.getAttribute("place");
         ]]></getter>
-        <setter><![CDATA[ 
+        <setter><![CDATA[
+          // Map for containerNodes<->domNodes. There's only one map per
+          // result/viewer, the field is initialized once for the root menu,
+          // for sub menus it is set to the root's map (see insertNewItem)
+          this._containerNodesMap = [];
+
           this.setAttribute("place", val);
           var queries = { }, options = { };
           PlacesUtils.history.queryStringToQueries(val, queries, { }, options);
@@ -500,7 +500,6 @@
                                                options.value);
           this._result.viewer = this._viewer;
           this._resultNode = this._result.root;
-          this._containerNodesMap = [];
           return val;
         ]]></setter>
       </property>
