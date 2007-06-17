@@ -110,7 +110,6 @@ CPPSRCS		= \
 		nsAccessibilityHelper.cpp \
 		nsPrintJobFactoryGTK.cpp \
 		nsPrintJobGTK.cpp \
-		nsTempfilePS.cpp \
 		nsIdleServiceGTK.cpp \
 		$(NULL)
 
