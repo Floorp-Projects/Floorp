@@ -3832,6 +3832,8 @@ void nsWindow::ConstrainZLevel(HWND *aAfter)
 // Process all nsWindows messages
 //
 //-------------------------------------------------------------------------
+static PRBool gJustGotDeactivate = PR_FALSE;
+static PRBool gJustGotActivate = PR_FALSE;
 
 #ifdef NS_DEBUG
 
@@ -4305,6 +4307,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
   PRBool result = PR_FALSE;                 // call the default nsWindow proc
   static PRBool getWheelInfo = PR_TRUE;
   *aRetValue = 0;
+  PRBool isMozWindowTakingFocus = PR_TRUE;
   nsPaletteInfo palInfo;
 
   // Uncomment this to see all windows messages
@@ -4864,15 +4867,17 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         PRInt32 fActive = LOWORD(wParam);
 
         if (WA_INACTIVE == fActive) {
+          gJustGotDeactivate = PR_TRUE;
           if (mIsTopWidgetWindow)
             mLastKeyboardLayout = gKeyboardLayout;
         } else {
+          gJustGotActivate = PR_TRUE;
           nsMouseEvent event(PR_TRUE, NS_MOUSE_ACTIVATE, this,
                              nsMouseEvent::eReal);
           InitEvent(event);
 
           event.acceptActivation = PR_TRUE;
-
+  
           PRBool result = DispatchWindowEvent(&event);
           NS_RELEASE(event.widget);
 
@@ -4884,13 +4889,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           if (gSwitchKeyboardLayout && mLastKeyboardLayout)
             ActivateKeyboardLayout(mLastKeyboardLayout, 0);
         }
-
-        // XXX We want DefWindowProc processing when switching between Mozilla
-        // windows. Otherwise, we might receive a WM_ACTIVATE without a 
-        // following WM_SETFOCUS. Leverage on an undocumented finding where
-        // lParam is always NULL when switching between windows of different
-        // processes.
-        result = (HWND)lParam == NULL;
       }
       break;
 
@@ -4963,29 +4961,20 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         ImmSetOpenStatus(hC, FALSE);
       }
 #endif
-      {
-        nsWindow* topWindow = GetNSWindowPtr(::GetAncestor(mWnd, GA_ROOT));
- 
-        if ((HWND)wParam == NULL ||
-            (topWindow && topWindow->mWnd != ::GetAncestor((HWND)wParam, GA_ROOT))) {
-          result = DispatchFocus(NS_DEACTIVATE, PR_FALSE);
-        }
-        else {
-          PRBool isMozWindowTakingFocus = PR_TRUE;
-          WCHAR className[kMaxClassNameLength];
-          
-          ::GetClassNameW((HWND)wParam, className, kMaxClassNameLength);
-          if (wcscmp(className, kWClassNameUI) &&
-              wcscmp(className, kWClassNameContent) &&
-              wcscmp(className, kWClassNameContentFrame) &&
-              wcscmp(className, kWClassNameDialog) &&
-              wcscmp(className, kWClassNameGeneral)) {
-            isMozWindowTakingFocus = PR_FALSE;
-          }
-
-          result = DispatchFocus(NS_LOSTFOCUS, isMozWindowTakingFocus);
-        }
+      WCHAR className[kMaxClassNameLength];
+      ::GetClassNameW((HWND)wParam, className, kMaxClassNameLength);
+      if (wcscmp(className, kWClassNameUI) &&
+          wcscmp(className, kWClassNameContent) &&
+          wcscmp(className, kWClassNameContentFrame) &&
+          wcscmp(className, kWClassNameDialog) &&
+          wcscmp(className, kWClassNameGeneral)) {
+        isMozWindowTakingFocus = PR_FALSE;
       }
+      if (gJustGotDeactivate) {
+        gJustGotDeactivate = PR_FALSE;
+        result = DispatchFocus(NS_DEACTIVATE, isMozWindowTakingFocus);
+      }
+      result = DispatchFocus(NS_LOSTFOCUS, isMozWindowTakingFocus);
       break;
 
     case WM_WINDOWPOSCHANGED:
@@ -5083,6 +5072,26 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         InitEvent(event);
 
         result = DispatchWindowEvent(&event);
+
+        if (pl.showCmd == SW_SHOWMINIMIZED) {
+          // Deactivate
+          WCHAR className[kMaxClassNameLength];
+          ::GetClassNameW((HWND)wParam, className, kMaxClassNameLength);
+          if (wcscmp(className, kWClassNameUI) &&
+              wcscmp(className, kWClassNameContent) &&
+              wcscmp(className, kWClassNameContentFrame) &&
+              wcscmp(className, kWClassNameDialog) &&
+              wcscmp(className, kWClassNameGeneral)) {
+            isMozWindowTakingFocus = PR_FALSE;
+          }
+          gJustGotDeactivate = PR_FALSE;
+          result = DispatchFocus(NS_DEACTIVATE, isMozWindowTakingFocus);
+        } else if (pl.showCmd == SW_SHOWNORMAL){
+          // Make sure we're active
+          result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
+          result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
+        }
+
         NS_RELEASE(event.widget);
       }
     }
