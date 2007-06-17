@@ -549,8 +549,6 @@ toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"] {
   border: 0 !important;
 }
 
-/* ::::: small back button ::::: */
-
 /* back button */
 
 toolbar[iconsize="small"] #back-button .toolbarbutton-icon {
