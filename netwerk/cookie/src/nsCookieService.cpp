@@ -1051,6 +1051,7 @@ nsCookieService::Add(const nsACString &aDomain,
                      const nsACString &aName,
                      const nsACString &aValue,
                      PRBool            aIsSecure,
+                     PRBool            aIsHttpOnly,
                      PRBool            aIsSession,
                      PRInt64           aExpiry)
 {
@@ -1062,7 +1063,7 @@ nsCookieService::Add(const nsACString &aDomain,
                      currentTimeInUsec,
                      aIsSession,
                      aIsSecure,
-                     PR_FALSE,
+                     aIsHttpOnly,
                      nsICookie::STATUS_UNKNOWN,
                      nsICookie::POLICY_UNKNOWN);
   if (!cookie) {
