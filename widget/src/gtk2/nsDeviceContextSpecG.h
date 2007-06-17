@@ -42,12 +42,11 @@
 #include "nsIDeviceContextSpec.h"
 #include "nsIPrintSettings.h"
 #include "nsIPrintOptions.h" 
-#include "nsVoidArray.h"
 #include "nsCOMPtr.h"
 
 #include "nsCRT.h" /* should be <limits.h>? */
 
-#include "nsIPrintJobGTK.h"
+class nsIPrintJobGTK;
 
 #define NS_PORTRAIT  0
 #define NS_LANDSCAPE 1

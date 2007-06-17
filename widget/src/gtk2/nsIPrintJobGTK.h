@@ -39,16 +39,17 @@
 #ifndef nsIPrintJobGTK_h__
 #define nsIPrintJobGTK_h__
 
-#include <stdio.h>
+#include "nsCOMPtr.h"
 
 class nsDeviceContextSpecGTK;
+class nsILocalFile;
 
 /*
  * This is an interface for a class that accepts and submits print jobs.
  *
  * Instances should be obtained through nsPrintJobFactoryGTK::CreatePrintJob().
- * After obtaining a print job object, the caller can retrieve the PostScript
- * object associated with the print job and use that to generate the content.
+ * After obtaining a print job object, the caller can retrieve the spool file
+ * object associated with the print job and write the print job to that.
  * Once that is done, the caller may call Submit() to finalize and print
  * the job, or Cancel() to abort the job.
  */
@@ -56,9 +57,6 @@ class nsDeviceContextSpecGTK;
 class nsIPrintJobGTK
 {
 public:
-    /**
-     * Obligatory virtual destructor for polymorphic objects.
-     */
     virtual ~nsIPrintJobGTK();
 
     /* Allow the print job factory to create instances */
@@ -77,7 +75,8 @@ public:
      * @return NS_OK     The print job class will request the specified
      *                   number of copies when printing the job.
      */
-    virtual nsresult SetNumCopies(int aNumCopies) = 0;
+    virtual nsresult SetNumCopies(int aNumCopies)
+            { return NS_ERROR_NOT_IMPLEMENTED; }
 
     /**
      * Set the print job title. Some printing systems accept a job title
@@ -92,43 +91,51 @@ public:
     virtual void SetJobTitle(const PRUnichar *aTitle) { }
 
     /**
-     * Begin submitting a print job. 
-     * @param aHandle If the return value is NS_OK, this will be filled
-     *                in with a file handle which the caller should use
-     *                to write the text of the print job. The file
-     *                handle may not support seeking. The caller must
-     *                not close the file handle.
-     * @return NS_ERROR_GFX_PRINTING_NOT_IMPLEMENTED if the print
-     *               job object doesn't actually support printing (e.g.
-     *               for print preview)
-     *         NS_OK for success
-     *         Another value for initialization/startup failures.
+     * Get the temporary file that the print job should be written to. The
+     * caller may open this file for writing and write the text of the print
+     * job to it.
+     * 
+     * The spool file is owned by the print job object, and will be removed
+     * by the print job dtor. Each print job object has one spool file.
+     * 
+     * @return NS_ERROR_NOT_INITIALIZED if the object hasn't been initialized.
+     *         NS_OK otherwise.
+     * 
+     * This is currently non-virtual for efficiency.
      */
-    virtual nsresult StartSubmission(FILE **aHandle) = 0;
+    nsresult GetSpoolFile(nsILocalFile **aFile); 
 
     /**
-     * Finish submitting a print job. The caller must call this after
-     * calling StartSubmission() and writing the text of the print job
-     * to the file handle. The return value indicates the overall success
-     * or failure of the print operation.
+     * Submit a finished print job. The caller may call this after
+     * calling GetSpoolFile(), writing the text of the print job to the
+     * spool file, and closing the spool file. The return value indicates
+     * the overall success or failure of the print operation.
+     * 
+     * The caller must not try to access the spool file in any way after
+     * calling this function.
      *
      * @return NS_ERROR_GFX_PRINTING_NOT_IMPLEMENTED if the print
      *               job object doesn't actually support printing (e.g.
      *               for print preview)
      *         NS_OK for success
-     *         Another value for initialization/startup failures.
+     *         Other values indicate failure of the print operation.
      */
-    virtual nsresult FinishSubmission() = 0;
+    virtual nsresult Submit() = 0;
 
 protected:
     /**
      * Initialize an object from a device context spec. This must be
-     * called before any of the public methods.
+     * called before any of the public methods. Implementations must
+     * initialize mSpoolFile declared below.
+     * 
      * @param aContext The device context spec describing the
      *                 desired print job.
      * @return NS_OK or a suitable error value.
      */
     virtual nsresult Init(nsDeviceContextSpecGTK *aContext) = 0;
+    
+    /* The spool file */
+    nsCOMPtr<nsILocalFile> mSpoolFile;
 };
 
 
