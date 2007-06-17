@@ -83,7 +83,11 @@ interface nsICookie : nsISupports {
     readonly attribute boolean isSecure;
 
     /**
-     * expiration time (local timezone) expressed as number of seconds since Jan 1, 1970
+     * @DEPRECATED - use nsICookie2.expiry and nsICookie2.isSession instead.
+     *
+     * expiration time in seconds since midnight (00:00:00), January 1, 1970 UTC.
+     * expires = 0 represents a session cookie.
+     * expires = 1 represents an expiration time earlier than Jan 1, 1970.
      */
     readonly attribute PRUint64 expires;
 

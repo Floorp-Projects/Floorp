@@ -75,18 +75,21 @@ StrBlockCopy(const nsACString &aSource1,
  * creation helper
  ******************************************************************************/
 
-// This is a counter that is incremented each time we allocate a new nsCookie.
-// The value of the counter is stored with each nsCookie so that we can sort
-// cookies by creation time (within the current browser session).
-static PRUint32 gLastCreationTime;
+// This is a counter that keeps track of the last used creation id, each time we
+// create a new nsCookie. The creation id is nominally the time (in microseconds)
+// the cookie was created. This id also corresponds to the row id used in the
+// sqlite database, which must be unique. However, since it's possible two cookies
+// may be created at the same time, or the system clock isn't monotonic, we must
+// check each id to enforce monotonicity.
+static PRInt64 gLastCreationID;
 
 nsCookie *
 nsCookie::Create(const nsACString &aName,
                  const nsACString &aValue,
                  const nsACString &aHost,
                  const nsACString &aPath,
-                 nsInt64          aExpiry,
-                 nsInt64          aLastAccessed,
+                 PRInt64          aExpiry,
+                 PRInt64          aCreationID,
                  PRBool           aIsSession,
                  PRBool           aIsSecure,
                  PRBool           aIsHttpOnly,
@@ -109,9 +112,16 @@ nsCookie::Create(const nsACString &aName,
   StrBlockCopy(aName, aValue, aHost, aPath,
                name, value, host, path, end);
 
+  // check if the creation id given to us is greater than the running maximum
+  // (it should always be monotonically increasing). if it's not, make up our own.
+  if (aCreationID > gLastCreationID)
+    gLastCreationID = aCreationID;
+  else
+    aCreationID = ++gLastCreationID;
+
   // construct the cookie. placement new, oh yeah!
   return new (place) nsCookie(name, value, host, path, end,
-                              aExpiry, aLastAccessed, ++gLastCreationTime,
+                              aExpiry, aCreationID,
                               aIsSession, aIsSecure, aIsHttpOnly,
                               aStatus, aPolicy);
 }
@@ -143,7 +153,7 @@ nsCookie::GetExpires(PRUint64 *aExpires)
   if (IsSession()) {
     *aExpires = 0;
   } else {
-    *aExpires = Expiry() > nsInt64(0) ? PRInt64(Expiry()) : 1;
+    *aExpires = Expiry() > 0 ? Expiry() : 1;
   }
   return NS_OK;
 }
