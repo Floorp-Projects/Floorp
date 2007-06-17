@@ -5753,7 +5753,7 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
       pti2->GetDOMElement(getter_AddRefs(element));
 
     PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
-    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OTHER,
+    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
                                    url,
                                    (doc ? doc->GetDocumentURI() : nsnull),
                                    element,
