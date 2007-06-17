@@ -182,6 +182,66 @@ treechildren::-moz-tree-cell-text(date, session-continue) {
   margin: 9px -3px -4px 8px;
 }
 
+/* Calendar */
+.history-calendar {
+  margin: 0px 0px 7px 6px;
+}
+
+.calendar-box {
+  -moz-appearance: listbox;
+  border: 1px solid black;
+  background-color: white;
+}
+.calendar-header {
+  background-color: #EEE;
+}
+.calendar-month-jump {
+  cursor: pointer;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.calendar-month-jump:hover {
+  background-color: #DDD;
+}
+.calendar-grid {
+  padding-left: 8px;
+  padding-right: 8px;
+  padding-bottom: 4px;
+}
+.calendar-grid label { /* everything in the calendar grid */
+  padding: 4px;
+  margin: 0px;
+  text-align: center;
+  font-size: 80%;
+}
+.calendar-month-title {
+  text-align: center;
+}
+.calendar-day-header {
+  border-bottom: 1px solid #888;
+}
+.calendar-day { /* just days (excluding the day headers) */
+  cursor: w-resize;
+  color: white;
+  background-color:white;
+}
+.calendar-day:hover {
+  background-color: #DDD;
+}
+.calendar-day[selected="true"] {
+  cursor: w-resize;
+  background-color: #8C8;
+}
+.calendar-day[selected="true"]:hover {
+  background-color: #6A6;
+}
+.calendar-day[month="this"] {
+  color: black;
+}
+.calendar-day[month="other"] {
+  color: #888;
+}
+
 #advancedSearchRows {
   border-bottom: 2px solid;
   -moz-border-bottom-colors: ThreeDHighlight ThreeDShadow;
