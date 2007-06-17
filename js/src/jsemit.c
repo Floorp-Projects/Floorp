@@ -5855,7 +5855,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
           default:
             /*
              * If useless, just emit JSOP_TRUE; otherwise convert delete foo()
-             * to foo(), true (a comma expression, requiring SRC_PCDELTA).
+             * to foo(), true (a comma expression, requiring SRC_PCDELTA, and
+             * also JSOP_GROUP for correctly parenthesized decompilation).
              */
             useful = JS_FALSE;
             if (!CheckSideEffects(cx, &cg->treeContext, pn2, &useful))
@@ -5877,6 +5878,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0, tmp-off))
                     return JS_FALSE;
             }
+            if (js_Emit1(cx, cg, JSOP_GROUP) < 0)
+                return JS_FALSE;
         }
         break;
 
