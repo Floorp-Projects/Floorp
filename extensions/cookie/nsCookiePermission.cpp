@@ -87,11 +87,6 @@ static const char kCookiesAskPermission[] = "network.cookie.warnAboutCookies";
 
 static const char kPermissionType[] = "cookie";
 
-// XXX these casts and constructs are horrible, but our nsInt64/nsTime
-// classes are lacking so we need them for now. see bug 198694.
-#define USEC_PER_SEC   (nsInt64(1000000))
-#define NOW_IN_SECONDS (nsInt64(PR_Now()) / USEC_PER_SEC)
-
 #ifdef MOZ_MAIL_NEWS
 // returns PR_TRUE if URI appears to be the URI of a mailnews protocol
 static PRBool
@@ -166,7 +161,7 @@ void
 nsCookiePermission::PrefChanged(nsIPrefBranch *aPrefBranch,
                                 const char    *aPref)
 {
-  PRBool val;
+  PRInt32 val;
 
 #define PREF_CHANGED(_P) (!aPref || !strcmp(aPref, _P))
 
@@ -312,8 +307,8 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
     }
     
     // declare this here since it'll be used in all of the remaining cases
-    nsInt64 currentTime = NOW_IN_SECONDS;
-    nsInt64 delta = nsInt64(*aExpiry) - currentTime;
+    PRInt64 currentTime = PR_Now() / PR_USEC_PER_SEC;
+    PRInt64 delta = *aExpiry - currentTime;
     
     // check whether the user wants to be prompted
     if (mCookiesLifetimePolicy == ASK_BEFORE_ACCEPT) {
@@ -377,7 +372,7 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
       // check if the cookie we're trying to set is already expired, and return;
       // but only if there's no previous cookie, because then we need to delete the previous
       // cookie. we need this check to avoid prompting the user for already-expired cookies.
-      if (!foundCookie && !*aIsSession && delta <= nsInt64(0)) {
+      if (!foundCookie && !*aIsSession && delta <= 0) {
         // the cookie has already expired. accept it, and let the backend figure
         // out it's expired, so that we get correct logging & notifications.
         *aResult = PR_TRUE;
@@ -411,7 +406,7 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
     } else {
       // we're not prompting, so we must be limiting the lifetime somehow
       // if it's a session cookie, we do nothing
-      if (!*aIsSession && delta > nsInt64(0)) {
+      if (!*aIsSession && delta > 0) {
         if (mCookiesLifetimePolicy == ACCEPT_SESSION) {
           // limit lifetime to session
           *aIsSession = PR_TRUE;
