@@ -906,7 +906,8 @@ nsOperaCookieMigrator::AddCookie(nsICookieManager2* aManager)
                               mCurrCookie.id, 
                               mCurrCookie.data, 
                               mCurrCookie.isSecure, 
-                              PR_FALSE, 
+                              PR_FALSE, // isHttpOnly
+                              PR_FALSE, // isSession
                               PRInt64(mCurrCookie.expiryTime));
 
   mCurrCookie.isSecure = 0;

@@ -88,13 +88,13 @@ nsCookie::Create(const nsACString &aName,
                  const nsACString &aValue,
                  const nsACString &aHost,
                  const nsACString &aPath,
-                 PRInt64          aExpiry,
-                 PRInt64          aCreationID,
-                 PRBool           aIsSession,
-                 PRBool           aIsSecure,
-                 PRBool           aIsHttpOnly,
-                 nsCookieStatus   aStatus,
-                 nsCookiePolicy   aPolicy)
+                 PRInt64           aExpiry,
+                 PRInt64           aCreationID,
+                 PRBool            aIsSession,
+                 PRBool            aIsSecure,
+                 PRBool            aIsHttpOnly,
+                 nsCookieStatus    aStatus,
+                 nsCookiePolicy    aPolicy)
 {
   // find the required string buffer size, adding 4 for the terminating nulls
   const PRUint32 stringLength = aName.Length() + aValue.Length() +
@@ -143,7 +143,7 @@ NS_IMETHODIMP nsCookie::GetIsDomain(PRBool *aIsDomain)     { *aIsDomain = IsDoma
 NS_IMETHODIMP nsCookie::GetIsSecure(PRBool *aIsSecure)     { *aIsSecure = IsSecure();   return NS_OK; }
 NS_IMETHODIMP nsCookie::GetStatus(nsCookieStatus *aStatus) { *aStatus = Status();       return NS_OK; }
 NS_IMETHODIMP nsCookie::GetPolicy(nsCookiePolicy *aPolicy) { *aPolicy = Policy();       return NS_OK; }
-NS_IMETHODIMP nsCookie::GetHttpOnly(PRBool *aHttpOnly)     { *aHttpOnly = IsHttpOnly(); return NS_OK; }
+NS_IMETHODIMP nsCookie::GetIsHttpOnly(PRBool *aHttpOnly)   { *aHttpOnly = IsHttpOnly(); return NS_OK; }
 
 // compatibility method, for use with the legacy nsICookie interface.
 // here, expires == 0 denotes a session cookie.
