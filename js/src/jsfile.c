@@ -470,6 +470,7 @@ js_canonicalPath(JSContext *cx, char *oldpath)
         tmp = js_absolutePath(cx, path);
         if (!tmp)
             return NULL;
+        JS_free(cx, path);
         path = tmp;
     }
 
