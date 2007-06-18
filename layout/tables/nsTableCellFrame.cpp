@@ -755,6 +755,10 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsTableCellFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
+  if (aReflowState.mFlags.mSpecialHeightReflow) {
+    GetFirstInFlow()->AddStateBits(NS_TABLE_CELL_HAD_SPECIAL_REFLOW);
+  }
+
   // work around pixel rounding errors, round down to ensure we don't exceed the avail height in
   nscoord availHeight = aReflowState.availableHeight;
 
@@ -818,7 +822,11 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
   // but only those than are tables in standards mode.  NeedsToObserve
   // will determine how far this is propagated to descendants.
   kidReflowState.mPercentHeightObserver = this;
-  if (aReflowState.mFlags.mSpecialHeightReflow) {
+  if (aReflowState.mFlags.mSpecialHeightReflow ||
+      (GetFirstInFlow()->GetStateBits() & NS_TABLE_CELL_HAD_SPECIAL_REFLOW)) {
+    // We need to force the kid to have mVResize set if we've had a
+    // special reflow in the past, since the non-special reflow needs to
+    // resize back to what it was without the special height reflow.
     kidReflowState.mFlags.mVResize = PR_TRUE;
   }
 

@@ -52,6 +52,7 @@
 #include "nsLineBox.h"
 #include "nsImageFrame.h"
 #include "nsTableFrame.h"
+#include "nsTableCellFrame.h"
 #include "nsIServiceManager.h"
 #include "nsIPercentHeightObserver.h"
 #include "nsContentUtils.h"
@@ -364,8 +365,14 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext)
 
   // XXX Should we really need to null check mCBReflowState?  (We do for
   // at least nsBoxFrame).
-  if (mFlags.mSpecialHeightReflow && IS_TABLE_CELL(frame->GetType()) &&
+  if (IS_TABLE_CELL(frame->GetType()) &&
+      (mFlags.mSpecialHeightReflow ||
+       (frame->GetFirstInFlow()->GetStateBits() &
+         NS_TABLE_CELL_HAD_SPECIAL_REFLOW)) &&
       (frame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT)) {
+    // Need to set the bit on the cell so that
+    // mCBReflowState->mFlags.mVResize is set correctly below when
+    // reflowing descendant.
     mFlags.mVResize = PR_TRUE;
   } else if (mCBReflowState && !frame->IsContainingBlock()) {
     // XXX Is this problematic for relatively positioned inlines acting
@@ -374,7 +381,6 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext)
   } else if (mComputedHeight == NS_AUTOHEIGHT) {
     if (eCompatibility_NavQuirks == aPresContext->CompatibilityMode() &&
         mCBReflowState) {
-      // XXX This condition doesn't quite match CalcQuirkContainingBlockHeight.
       mFlags.mVResize = mCBReflowState->mFlags.mVResize;
     } else {
       mFlags.mVResize = mFlags.mHResize || NS_SUBTREE_DIRTY(frame); 
@@ -385,6 +391,25 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext)
                         mComputedHeight + mComputedBorderPadding.TopBottom();
   }
 
+  const PRBool dependsOnCBHeight =
+    mStylePosition->mHeight.GetUnit() == eStyleUnit_Percent ||
+    mStylePosition->mMinHeight.GetUnit() == eStyleUnit_Percent ||
+    mStylePosition->mMaxHeight.GetUnit() == eStyleUnit_Percent ||
+    mStylePosition->mOffset.GetTopUnit() == eStyleUnit_Percent ||
+    mStylePosition->mOffset.GetBottomUnit() == eStyleUnit_Percent ||
+    frame->IsBoxFrame();
+
+  // If we're the child of a table cell that performs special height
+  // reflows and we could be the child that requires them, always set
+  // the vertical resize in case this is the first pass before the
+  // special height reflow.
+  if (!mFlags.mVResize && mCBReflowState &&
+      IS_TABLE_CELL(mCBReflowState->frame->GetType()) &&
+      dependsOnCBHeight)
+    mFlags.mVResize = PR_TRUE;
+
+  // Set NS_FRAME_CONTAINS_RELATIVE_HEIGHT if it's needed.
+
   // It would be nice to check that |mComputedHeight != NS_AUTOHEIGHT|
   // &&ed with the percentage height check.  However, this doesn't get
   // along with table special height reflows, since a special height
@@ -392,13 +417,7 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext)
   // of table cells) can cause not just a single percentage height to
   // become fixed, but an entire descendant chain of percentage heights
   // to become fixed.
-  if ((mStylePosition->mHeight.GetUnit() == eStyleUnit_Percent ||
-       mStylePosition->mMinHeight.GetUnit() == eStyleUnit_Percent ||
-       mStylePosition->mMaxHeight.GetUnit() == eStyleUnit_Percent ||
-       mStylePosition->mOffset.GetTopUnit() == eStyleUnit_Percent ||
-       mStylePosition->mOffset.GetBottomUnit() == eStyleUnit_Percent ||
-       frame->IsBoxFrame()) &&
-      mCBReflowState) {
+  if (dependsOnCBHeight && mCBReflowState) {
     const nsHTMLReflowState *rs = this;
     PRBool hitCBReflowState = PR_FALSE;
     do {
