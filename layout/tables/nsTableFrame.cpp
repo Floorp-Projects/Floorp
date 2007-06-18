@@ -1864,7 +1864,12 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
   PRBool haveDesiredHeight = PR_FALSE;
   PRBool reflowedChildren  = PR_FALSE;
 
-  if (aReflowState.mComputedHeight != NS_UNCONSTRAINEDSIZE) {
+  if (aReflowState.mComputedHeight != NS_UNCONSTRAINEDSIZE ||
+      // Also check mVResize, to handle the first Reflow preceding a
+      // special height Reflow, when we've already had a special height
+      // Reflow (where mComputedHeight would not be
+      // NS_UNCONSTRAINEDSIZE, but without a style change in between).
+      aReflowState.mFlags.mVResize) {
     // XXX Eventually, we should modify DistributeHeightToRows to use
     // nsTableRowFrame::GetHeight instead of nsIFrame::GetSize().height.
     // That way, it will make its calculations based on internal table
