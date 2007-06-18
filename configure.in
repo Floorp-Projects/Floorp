@@ -4000,9 +4000,11 @@ if test -z "$PNG_DIR" -o "$PNG_DIR" = no; then
 else
     _SAVE_PNG_LIBS=$PNG_LIBS
     AC_CHECK_LIB(png, png_get_valid, [SYSTEM_PNG=1 PNG_LIBS="-lpng $PNG_LIBS"],
-                 SYSTEM_PNG=, $PNG_LIBS)
+                 AC_MSG_ERROR([--with-system-png requested but no working libpng found]), 
+                 $PNG_LIBS)
     AC_CHECK_LIB(png, png_get_acTL, ,
-                 [SYSTEM_PNG= PNG_LIBS=$_SAVE_PNG_LIBS], $_SAVE_PNG_LIBS)
+                 AC_MSG_ERROR([--with-system-png won't work because the system's libpng doesn't have APNG support]),
+                 $_SAVE_PNG_LIBS)
 fi
 if test "$SYSTEM_PNG" = 1; then
     LIBS="$PNG_LIBS $LIBS"
@@ -4016,7 +4018,7 @@ if test "$SYSTEM_PNG" = 1; then
                      #error "Insufficient libpng version."
                      #endif ],
                    SYSTEM_PNG=1,
-                   [SYSTEM_PNG= PNG_CFLAGS= PNG_LIBS=]) 
+                   AC_MSG_ERROR([--with-system-png requested but no working libpng found]))
 fi
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
