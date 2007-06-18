@@ -170,8 +170,7 @@
   ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
 
   StrCpy $0 "Software\Clients\StartMenuInternet\$R9"
-  ; Remove existing keys so we only have our settings
-  DeleteRegKey HKLM "$0"
+
   WriteRegStr HKLM "$0" "" "${BrandFullName}"
 
   WriteRegStr HKLM "$0\DefaultIcon" "" "$8,0"
