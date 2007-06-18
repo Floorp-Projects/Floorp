@@ -12,7 +12,7 @@
 ** This header file defines the interface that the SQLite library
 ** presents to client programs.
 **
-** @(#) $Id: sqlite3.h,v 1.6 2006/05/22 17:48:14 brettw%gmail.com Exp $
+** @(#) $Id: sqlite3.h,v 1.7 2007/06/18 23:42:24 sdwilsh%shawnwilsher.com Exp $
 */
 #ifndef _SQLITE3_H_
 #define _SQLITE3_H_
@@ -1475,20 +1475,6 @@ int sqlite3_table_column_metadata(
 #ifdef SQLITE_OMIT_FLOATING_POINT
 # undef double
 #endif
-
-/*
-** Given a wildcard parameter name, return the set of indexes of the
-** variables with that name.  If there are no variables with the given
-** name, return 0.  Otherwise, return the number of indexes returned
-** in *pIndexes.  The array should be freed with
-** sqlite3_free_parameter_indexes.
-*/
-int sqlite3_bind_parameter_indexes(
-    sqlite3_stmt *pStmt,
-    const char *zName,
-    int **pIndexes
-);
-void sqlite3_free_parameter_indexes(int *pIndexes);
 
 /*
 ** Preload the databases into the pager cache, up to the maximum size of the
