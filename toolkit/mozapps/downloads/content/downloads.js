@@ -154,13 +154,8 @@ function autoRemoveAndClose(aDownload)
   var pref = Components.classes["@mozilla.org/preferences-service;1"]
                        .getService(Components.interfaces.nsIPrefBranch);
 
-  var autoRemove = false;
-  try {
-    // this can throw, since it doesn't exist
-    autoRemove = pref.getBoolPref(PREF_BDM_RETENTION);
-  } catch (e) { }
-  if (dl && autoRemove) {
-    // The download manager backed removes this, but we have to update the UI!
+  if (aDownload && (pref.getIntPref(PREF_BDM_RETENTION) == 0)) {
+    // The download manager backend removes this, but we have to update the UI!
     var dl = getDownload(aDownload.id);
     dl.parentNode.removeChild(dl);
   }
