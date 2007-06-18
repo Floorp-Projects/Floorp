@@ -1463,7 +1463,11 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
             return ReportOnCaller(cc, ERROR_GETTING_ARRAY_LENGTH,
                                   PromiseFlatCString(aLocation).get());
         }
-    
+
+#ifdef DEBUG
+        nsCAutoString logBuffer;
+#endif
+
         for (jsuint i = 0; i < symbolCount; ++i) {
             jsval val;
             JSString *symbolName;
@@ -1490,11 +1494,13 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
             }
 #ifdef DEBUG
             if (i == 0) {
-                printf("Installing symbols [ ");
+                logBuffer.AssignLiteral("Installing symbols [ ");
             }
-            printf("%s ", JS_GetStringBytes(symbolName));
+            logBuffer.Append(JS_GetStringBytes(symbolName));
+            logBuffer.AppendLiteral(" ");
             if (i == symbolCount - 1) {
-                printf("] from %s\n", PromiseFlatCString(aLocation).get());
+                LOG(("%s] from %s\n", PromiseFlatCString(logBuffer).get(),
+                                      PromiseFlatCString(aLocation).get()));
             }
 #endif
         }
