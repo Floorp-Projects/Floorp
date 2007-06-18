@@ -149,9 +149,9 @@ nsSVGUseFrame::AttributeChanged(PRInt32         aNameSpaceID,
 void
 nsSVGUseFrame::Destroy()
 {
-  nsSVGUseElement *use = NS_STATIC_CAST(nsSVGUseElement*, mContent);
-  use->DestroyAnonymousContent();
+  nsRefPtr<nsSVGUseElement> use = NS_STATIC_CAST(nsSVGUseElement*, mContent);
   nsSVGUseFrameBase::Destroy();
+  use->DestroyAnonymousContent();
 }
 
 
