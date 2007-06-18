@@ -434,6 +434,17 @@
                                corrvalue : (this.innerDiv.offsetWidth + this.startAt));
             }
 
+            // RTL Support.  If text direction is right-to-left and marquee 
+            // axis is horizontal, then negate and swap stopAt and startAt.
+            var dir = document.defaultView.getComputedStyle(this, "").direction;
+            if (dir == "rtl") {
+                if (this._direction == "right" || this._direction == "left") {
+                   var tmp = this.startAt;
+                   this.startAt = -this.stopAt;
+                   this.stopAt = -tmp;
+                }
+            }
+
             if (aResetPosition) {
               this.newPosition = this.startAt;
               this._fireEvent("start", false, false);
