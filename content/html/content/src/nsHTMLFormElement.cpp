@@ -363,7 +363,7 @@ protected:
   /** The request currently being submitted */
   nsCOMPtr<nsIRequest> mSubmittingRequest;
   /** The web progress object we are currently listening to */
-  nsCOMPtr<nsIWebProgress> mWebProgress;
+  nsWeakPtr mWebProgress;
 
   /** The default submit element -- WEAK */
   nsIFormControl* mDefaultSubmitElement;
@@ -1057,10 +1057,12 @@ nsHTMLFormElement::SubmitSubmission(nsIFormSubmission* aFormSubmission)
     PRBool pending = PR_FALSE;
     mSubmittingRequest->IsPending(&pending);
     if (pending && !schemeIsJavaScript) {
-      mWebProgress = do_GetInterface(docShell);
-      NS_ASSERTION(mWebProgress, "nsIDocShell not converted to nsIWebProgress!");
-      rv = mWebProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_ALL);
+      nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
+      NS_ASSERTION(webProgress, "nsIDocShell not converted to nsIWebProgress!");
+      rv = webProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_ALL);
       NS_ENSURE_SUBMIT_SUCCESS(rv);
+      mWebProgress = do_GetWeakReference(webProgress);
+      NS_ASSERTION(mWebProgress, "can't hold weak ref to webprogress!");
     } else {
       ForgetCurrentSubmission();
     }
@@ -1632,10 +1634,11 @@ nsHTMLFormElement::ForgetCurrentSubmission()
   mNotifiedObservers = PR_FALSE;
   mIsSubmitting = PR_FALSE;
   mSubmittingRequest = nsnull;
-  if (mWebProgress) {
-    mWebProgress->RemoveProgressListener(this);
-    mWebProgress = nsnull;
+  nsCOMPtr<nsIWebProgress> webProgress = do_QueryReferent(mWebProgress);
+  if (webProgress) {
+    webProgress->RemoveProgressListener(this);
   }
+  mWebProgress = nsnull;
 }
 
 // nsIWebProgressListener
