@@ -61,7 +61,6 @@
 #include "nsEnumeratorUtils.h"
 #include "nsIFileURL.h"
 #include "nsEmbedCID.h"
-#include "nsInt64.h"
 #include "mozStorageCID.h"
 #include "mozIStorageService.h"
 #include "mozIStorageStatement.h"
