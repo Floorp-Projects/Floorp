@@ -547,12 +547,13 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
     return;
 
   // Iterate over the elements in the array.
-  nsIContent* content = GetImmediateChild(nsGkAtoms::content);
+  nsCOMPtr<nsIContent> content = GetImmediateChild(nsGkAtoms::content);
   while (xblAttr) {
     nsIContent* element = xblAttr->GetElement();
 
-    nsIContent *realElement = LocateInstance(aChangedElement, content,
-                                             aAnonymousContent, element);
+    nsCOMPtr<nsIContent> realElement = LocateInstance(aChangedElement, content,
+                                                      aAnonymousContent,
+                                                      element);
 
     if (realElement) {
       nsIAtom* dstAttr = xblAttr->GetDstAttribute();
