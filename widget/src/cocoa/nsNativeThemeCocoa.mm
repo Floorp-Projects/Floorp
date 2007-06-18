@@ -156,11 +156,11 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
   // If any of the origin and size offset arithmatic seems strange here, check out the
   // actual dimensions of an HITheme button compared to the rect you pass to HIThemeDrawButton.
   if (inKind == kThemePushButton && inBoxRect.size.height < MIN_UNSCALED_PUSH_BUTTON_HEIGHT) {
+    // adjust width up to componsate for the down-scaling we will do later
+    float scaleFactor = inBoxRect.size.height / MIN_UNSCALED_PUSH_BUTTON_HEIGHT;
     // We'll use these two values to size the button we draw offscreen
-    float offscreenWidth = inBoxRect.size.width;
+    float offscreenWidth = inBoxRect.size.width / scaleFactor;
     float offscreenHeight = MIN_UNSCALED_PUSH_BUTTON_HEIGHT;
-    if (inBoxRect.size.height > offscreenHeight)
-      offscreenHeight = inBoxRect.size.height;
 
     // create an offscreen image
     NSImage* image = [[NSImage alloc] initWithSize:NSMakeSize(offscreenWidth, offscreenHeight)];
@@ -181,7 +181,7 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
     [image unlockFocus];
 
     // resize vertically
-    [image setSize:NSMakeSize(offscreenWidth, inBoxRect.size.height)];
+    [image setSize:NSMakeSize(inBoxRect.size.width, inBoxRect.size.height)];
 
     // render to the given CGContextRef
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
@@ -871,8 +871,8 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
       // Top has a single pixel line, bottom has a single pixel line plus a single
-      // pixel shadow. We say 3 for the sides so that text doesn't hit the border.
-      aResult->SizeTo(3, 1, 3, 3);
+      // pixel shadow. We say 2 for the sides so that text doesn't hit the border.
+      aResult->SizeTo(2, 1, 2, 3);
       break;
 
     case NS_THEME_DROPDOWN:
