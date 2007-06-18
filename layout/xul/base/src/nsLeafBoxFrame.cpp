@@ -73,7 +73,7 @@ NS_NewLeafBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 } // NS_NewLeafBoxFrame
 
 nsLeafBoxFrame::nsLeafBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext)
-    : nsLeafFrame(aContext)
+    : nsLeafFrame(aContext), mMouseThrough(unset)
 {
     mState |= NS_FRAME_IS_BOX;
 }
@@ -110,8 +110,57 @@ nsLeafBoxFrame::Init(
            view->CreateWidget(kWidgetCID);   
     }
   }
+  
+  mMouseThrough = unset;
+
+  UpdateMouseThrough();
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsLeafBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
+                                 nsIAtom* aAttribute,
+                                 PRInt32 aModType)
+{
+  nsresult rv = nsLeafFrame::AttributeChanged(aNameSpaceID, aAttribute,
+                                              aModType);
+
+  if (aAttribute == nsGkAtoms::mousethrough) 
+    UpdateMouseThrough();
+
+  return rv;
+}
+
+void nsLeafBoxFrame::UpdateMouseThrough()
+{
+  if (mContent) {
+    static nsIContent::AttrValuesArray strings[] =
+      {&nsGkAtoms::never, &nsGkAtoms::always, nsnull};
+    switch (mContent->FindAttrValueIn(kNameSpaceID_None,
+                                      nsGkAtoms::mousethrough,
+                                      strings, eCaseMatters)) {
+      case 0: mMouseThrough = never; break;
+      case 1: mMouseThrough = always; break;
+    }
+  }
+}
+
+PRBool
+nsLeafBoxFrame::GetMouseThrough() const
+{
+  switch (mMouseThrough)
+  {
+    case always:
+      return PR_TRUE;
+    case never:
+      return PR_FALSE;
+    case unset:
+      if (mParent && mParent->IsBoxFrame())
+        return mParent->GetMouseThrough();
+  }
+
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP
