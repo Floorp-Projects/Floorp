@@ -272,6 +272,13 @@ public:
 
   virtual void OnRemoving();
 
+  // Called from result's onItemChanged, see also bookmark observer declaration in
+  // nsNavHistoryFolderResultNode
+  NS_IMETHOD OnItemChanged(PRInt64 aItemId,
+                           const nsACString &aProperty,
+                           PRBool aIsAnnotationProperty,
+                           const nsACString &aValue);
+
 public:
 
   nsNavHistoryResult* GetResult();
