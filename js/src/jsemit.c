@@ -1784,7 +1784,7 @@ EmitBigIndexPrefix(JSContext *cx, JSCodeGenerator *cg, jsatomid atomIndex)
             return -1;
         return JSOP_RESETBASE0;
     }
-    if (js_Emit2(cx, cg, JSOP_ATOMBASE, atomIndex) < 0)
+    if (js_Emit2(cx, cg, JSOP_ATOMBASE, (JSOp)atomIndex) < 0)
         return -1;
     return JSOP_RESETBASE;
 }

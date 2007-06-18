@@ -1567,7 +1567,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
                 lastptr = &tmpthing->next;
                 METER(++nfree);
             }
-            arenaList->lastLimit = offset;
+            arenaList->lastLimit = (uint16)offset;
             *lastptr = NULL;
             METER(arenaList->stats.freelen += nfree);
 #endif
