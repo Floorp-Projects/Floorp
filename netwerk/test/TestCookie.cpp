@@ -672,6 +672,7 @@ main(PRInt32 argc, char *argv[])
                                            NS_LITERAL_CSTRING("test1"),          // name
                                            NS_LITERAL_CSTRING("yes"),            // value
                                            PR_FALSE,                             // is secure
+                                           PR_FALSE,                             // is httponly
                                            PR_TRUE,                              // is session
                                            LL_MAXINT));                          // expiry time
       rv[2] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("cookiemgr.test"), // domain
@@ -679,6 +680,7 @@ main(PRInt32 argc, char *argv[])
                                            NS_LITERAL_CSTRING("test2"),          // name
                                            NS_LITERAL_CSTRING("yes"),            // value
                                            PR_FALSE,                             // is secure
+                                           PR_TRUE,                              // is httponly
                                            PR_TRUE,                              // is session
                                            LL_MAXINT));                          // expiry time
       rv[3] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("new.domain"),     // domain
@@ -686,6 +688,7 @@ main(PRInt32 argc, char *argv[])
                                            NS_LITERAL_CSTRING("test3"),          // name
                                            NS_LITERAL_CSTRING("yes"),            // value
                                            PR_FALSE,                             // is secure
+                                           PR_FALSE,                             // is httponly
                                            PR_TRUE,                              // is session
                                            LL_MAXINT));                          // expiry time
       // confirm using enumerator
@@ -708,34 +711,40 @@ main(PRInt32 argc, char *argv[])
           newDomainCookie = cookie2;
       }
       rv[5] = i == 3;
+      // check the httpOnly attribute of the second cookie is honored
+      GetACookie(cookieService, "http://cookiemgr.test/foo/", nsnull, getter_Copies(cookie));
+      rv[6] = CheckResult(cookie.get(), MUST_CONTAIN, "test2=yes");
+      GetACookieNoHttp(cookieService, "http://cookiemgr.test/foo/", getter_Copies(cookie));
+      rv[7] = CheckResult(cookie.get(), MUST_NOT_CONTAIN, "test2=yes");
       // check CountCookiesFromHost()
       PRUint32 hostCookies = 0;
-      rv[6] = NS_SUCCEEDED(cookieMgr2->CountCookiesFromHost(NS_LITERAL_CSTRING("cookiemgr.test"), &hostCookies)) &&
+      rv[8] = NS_SUCCEEDED(cookieMgr2->CountCookiesFromHost(NS_LITERAL_CSTRING("cookiemgr.test"), &hostCookies)) &&
               hostCookies == 2;
       // check CookieExists() using the third cookie
       PRBool found;
-      rv[7] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && found;
+      rv[9] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && found;
       // remove the cookie, block it, and ensure it can't be added again
-      rv[8] = NS_SUCCEEDED(cookieMgr->Remove(NS_LITERAL_CSTRING("new.domain"), // domain
-                                             NS_LITERAL_CSTRING("test3"),      // name
-                                             NS_LITERAL_CSTRING("/rabbit"),    // path
-                                             PR_TRUE));                        // is blocked
-      rv[9] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && !found;
-      rv[10] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("new.domain"),     // domain
+      rv[10] = NS_SUCCEEDED(cookieMgr->Remove(NS_LITERAL_CSTRING("new.domain"), // domain
+                                              NS_LITERAL_CSTRING("test3"),      // name
+                                              NS_LITERAL_CSTRING("/rabbit"),    // path
+                                              PR_TRUE));                        // is blocked
+      rv[11] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && !found;
+      rv[12] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("new.domain"),     // domain
                                             NS_LITERAL_CSTRING("/rabbit"),        // path
                                             NS_LITERAL_CSTRING("test3"),          // name
                                             NS_LITERAL_CSTRING("yes"),            // value
                                             PR_FALSE,                             // is secure
+                                            PR_FALSE,                             // is httponly
                                             PR_TRUE,                              // is session
-                                            LL_ZERO));                            // expiry time
-      rv[11] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && !found;
+                                            LL_MININT));                          // expiry time
+      rv[13] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && !found;
       // double-check RemoveAll() using the enumerator
-      rv[12] = NS_SUCCEEDED(cookieMgr->RemoveAll());
-      rv[13] = NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator))) &&
+      rv[14] = NS_SUCCEEDED(cookieMgr->RemoveAll());
+      rv[15] = NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator))) &&
                NS_SUCCEEDED(enumerator->HasMoreElements(&more)) &&
                !more;
 
-      allTestsPassed = PrintResult(rv, 14) && allTestsPassed;
+      allTestsPassed = PrintResult(rv, 16) && allTestsPassed;
 
 
       // XXX the following are placeholders: add these tests please!
