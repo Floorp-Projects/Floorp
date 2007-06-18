@@ -249,9 +249,7 @@
 
       <!-- reference to the results popup element -->
       <field name="resultsPopup"><![CDATA[
-        var elt = document.getAnonymousElementByAttribute(this, "anonid", "popup");
-        elt.__AUTOCOMPLETE_BOX__ = this;
-        elt;
+        document.getAnonymousElementByAttribute(this, "anonid", "popup");
       ]]></field>
 
       <!-- nsIAccessibleProvider --> 
@@ -1458,9 +1456,10 @@
           this.initialize();
       ]]></constructor>
 
-     <property name="textbox"
-                onget="return '__AUTOCOMPLETE_BOX__' in this ? this.__AUTOCOMPLETE_BOX__ : null;"/>
-      
+      <field name="textbox">
+        document.getBindingParent(this);
+      </field>
+
       <field name="tree">
         document.getAnonymousElementByAttribute(this, "anonid", "tree");
       </field>
