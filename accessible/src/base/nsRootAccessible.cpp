@@ -476,13 +476,6 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
     return PR_FALSE;
   }
 
-  nsCOMPtr<nsPIAccessible> privateAccessible =
-    do_QueryInterface(finalFocusAccessible);
-  NS_ASSERTION(privateAccessible , "No nsPIAccessible for nsIAccessible");
-  if (!privateAccessible) {
-    return PR_FALSE;
-  }
-
   PRUint32 role = Role(finalFocusAccessible);
   if (role == nsIAccessibleRole::ROLE_MENUITEM) {
     if (!mIsInDHTMLMenu) {  // Entering menus
@@ -503,7 +496,7 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
   gLastFocusedNode = finalFocusNode;
   NS_IF_ADDREF(gLastFocusedNode);
 
-  nsCOMPtr<nsIAccessibleDocument> docAccessible = do_QueryInterface(privateAccessible);
+  nsCOMPtr<nsIAccessibleDocument> docAccessible = do_QueryInterface(finalFocusAccessible);
   if (docAccessible) {
     // Doc is gaining focus, but actual focus may be on an element within document
     nsCOMPtr<nsIDOMNode> realFocusedNode = GetCurrentFocus();
@@ -515,15 +508,15 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
     }
   }
 
-  privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS,
-                                      finalFocusAccessible, nsnull);
+  FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS,
+                          finalFocusNode, nsnull);
 
   // Fire state change event for focus
   nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
-    new nsAccStateChangeEvent(finalFocusAccessible,
+    new nsAccStateChangeEvent(finalFocusNode,
                               nsIAccessibleStates::STATE_FOCUSED,
                               PR_FALSE, PR_TRUE);
-  FireAccessibleEvent(accEvent);
+  FireDelayedAccessibleEvent(accEvent);
 
   return PR_TRUE;
 }
