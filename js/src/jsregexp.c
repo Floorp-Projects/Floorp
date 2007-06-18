@@ -2885,8 +2885,10 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 JS_ASSERT(parenIndex < gData->regexp->parenCount);
                 cap = &x->parens[parenIndex];
                 cap->length = x->cp - (gData->cpbegin + cap->index);
+#if defined(DEBUG_crowder) || defined(DEBUG_mrbkap)
                 JS_ASSERT(x->cp >= (gData->cpbegin + cap->index));
                 JS_ASSERT((int)cap->length <= (gData->cpend - gData->cpbegin));
+#endif
                 op = (REOp) *pc++;
 
                 if (!result)
