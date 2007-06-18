@@ -265,8 +265,26 @@ nsPrincipal::Equals(nsIPrincipal *aOther, PRBool *aResult)
         aOther->GetSubjectName(str);
         *aResult = str.Equals(mCert->subjectName) || str.IsEmpty();
       }
-        
-      return NS_OK;
+
+      if (!*aResult) {
+        return NS_OK;
+      }
+
+      // If either principal has no URI, it's the saved principal from
+      // preferences; in that case, test true.  Do NOT test true if the two
+      // principals have URIs with different codebases.
+      nsCOMPtr<nsIURI> otherURI;
+      nsresult rv = aOther->GetURI(getter_AddRefs(otherURI));
+      if (NS_FAILED(rv)) {
+        *aResult = PR_FALSE;
+        return rv;
+      }
+
+      if (!otherURI || !mCodebase) {
+        return NS_OK;
+      }
+
+      // Fall through to the codebase comparison.
     }
 
     // Codebases are equal if they have the same origin.
