@@ -57,6 +57,15 @@
 
 #include "nsPrincipal.h"
 
+static PRBool URIIsImmutable(nsIURI* aURI)
+{
+  nsCOMPtr<nsIMutable> mutableObj(do_QueryInterface(aURI));
+  PRBool isMutable;
+  return
+    mutableObj &&
+    NS_SUCCEEDED(mutableObj->GetMutable(&isMutable)) &&
+    !isMutable;                               
+}
 
 // Static member variables
 PRInt32 nsPrincipal::sCapabilitiesOrdinal = 0;
@@ -97,7 +106,9 @@ nsPrincipal::nsPrincipal()
   : mCapabilities(7),
     mSecurityPolicy(nsnull),
     mTrusted(PR_FALSE),
-    mInitialized(PR_FALSE)
+    mInitialized(PR_FALSE),
+    mCodebaseImmutable(PR_FALSE),
+    mDomainImmutable(PR_FALSE)
 {
 }
 
@@ -113,7 +124,8 @@ nsPrincipal::Init(const nsACString& aCertFingerprint,
 
   mInitialized = PR_TRUE;
 
-  mCodebase = aCodebase;
+  mCodebase = NS_TryToMakeImmutable(aCodebase);
+  mCodebaseImmutable = URIIsImmutable(mCodebase);
 
   // Invalidate our cached origin
   mOrigin = nsnull;
@@ -514,6 +526,11 @@ nsPrincipal::GetHasCertificate(PRBool* aResult)
 NS_IMETHODIMP
 nsPrincipal::GetURI(nsIURI** aURI)
 {
+  if (mCodebaseImmutable) {
+    NS_ADDREF(*aURI = mCodebase);
+    return NS_OK;
+  }
+
   if (!mCodebase) {
     *aURI = nsnull;
     return NS_OK;
@@ -526,6 +543,7 @@ void
 nsPrincipal::SetURI(nsIURI* aURI)
 {
   mCodebase = NS_TryToMakeImmutable(aURI);
+  mCodebaseImmutable = URIIsImmutable(mCodebase);
 
   // Invalidate our cached origin
   mOrigin = nsnull;
@@ -620,6 +638,11 @@ nsPrincipal::GetDomain(nsIURI** aDomain)
     return NS_OK;
   }
 
+  if (mDomainImmutable) {
+    NS_ADDREF(*aDomain = mDomain);
+    return NS_OK;
+  }
+
   return NS_EnsureSafeToReturn(mDomain, aDomain);
 }
 
@@ -627,6 +650,8 @@ NS_IMETHODIMP
 nsPrincipal::SetDomain(nsIURI* aDomain)
 {
   mDomain = NS_TryToMakeImmutable(aDomain);
+  mDomainImmutable = URIIsImmutable(mDomain);
+  
   // Domain has changed, forget cached security policy
   SetSecurityPolicy(nsnull);
 
@@ -669,6 +694,9 @@ nsPrincipal::InitFromPersistent(const char* aPrefName,
       NS_ERROR("Malformed URI in capability.principal preference.");
       return rv;
     }
+
+    NS_TryToSetImmutable(mCodebase);
+    mCodebaseImmutable = URIIsImmutable(mCodebase);
 
     mTrusted = aTrusted;
 
