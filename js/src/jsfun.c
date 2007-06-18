@@ -73,12 +73,11 @@
 /* Generic function/call/arguments tinyids -- also reflected bit numbers. */
 enum {
     CALL_ARGUMENTS  = -1,       /* predefined arguments local variable */
-    CALL_CALLEE     = -2,       /* reference to active function's object */
-    ARGS_LENGTH     = -3,       /* number of actual args, arity if inactive */
-    ARGS_CALLEE     = -4,       /* reference from arguments to active funobj */
-    FUN_ARITY       = -5,       /* number of formal parameters; desired argc */
-    FUN_NAME        = -6,       /* function name, "" if anonymous */
-    FUN_CALLER      = -7        /* Function.prototype.caller, backward compat */
+    ARGS_LENGTH     = -2,       /* number of actual args, arity if inactive */
+    ARGS_CALLEE     = -3,       /* reference from arguments to active funobj */
+    FUN_ARITY       = -4,       /* number of formal parameters; desired argc */
+    FUN_NAME        = -5,       /* function name, "" if anonymous */
+    FUN_CALLER      = -6        /* Function.prototype.caller, backward compat */
 };
 
 #if JSFRAME_OVERRIDE_BITS < 8
@@ -657,11 +656,6 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     return ok;
 }
 
-static JSPropertySpec call_props[] = {
-    {"__callee__",      CALL_CALLEE,    0,0,0},
-    {0,0,0,0,0}
-};
-
 static JSBool
 call_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
@@ -684,11 +678,6 @@ call_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 return JS_FALSE;
             *vp = OBJECT_TO_JSVAL(argsobj);
         }
-        break;
-
-      case CALL_CALLEE:
-        if (!TEST_OVERRIDE_BIT(fp, slot))
-            *vp = fp->argv ? fp->argv[-2] : OBJECT_TO_JSVAL(fp->fun->object);
         break;
 
       default:
@@ -715,7 +704,6 @@ call_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     slot = JSVAL_TO_INT(id);
     switch (slot) {
       case CALL_ARGUMENTS:
-      case CALL_CALLEE:
         SET_OVERRIDE_BIT(fp, slot);
         break;
 
@@ -932,11 +920,6 @@ call_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
             *objp = obj;
             return JS_TRUE;
         }
-
-        /*
-         * FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=384642 -- same
-         * magic needed for __callee__, if we decide to keep it.
-         */
     }
     return JS_TRUE;
 }
@@ -2120,7 +2103,7 @@ js_InitCallClass(JSContext *cx, JSObject *obj)
     JSObject *proto;
 
     proto = JS_InitClass(cx, obj, NULL, &js_CallClass, NULL, 0,
-                         call_props, NULL, NULL, NULL);
+                         NULL, NULL, NULL, NULL);
     if (!proto)
         return NULL;
 
