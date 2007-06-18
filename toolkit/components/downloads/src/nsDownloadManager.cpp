@@ -64,6 +64,7 @@
 #include "mozStorageCID.h"
 #include "mozIStorageService.h"
 #include "mozIStorageStatement.h"
+#include "mozStorageHelper.h"
 #include "nsIMutableArray.h"
 #include "nsIAlertsService.h"
 
@@ -258,6 +259,8 @@ nsDownloadManager::ImportDownloadHistory()
                          getter_AddRefs(NC_DownloadState));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mozStorageTransaction transaction(mDBConn, PR_TRUE);
+
   // OK, now we can actually start to read and process our data
   nsCOMPtr<nsIRDFContainer> container =
     do_CreateInstance(NS_RDF_CONTRACTID "/container;1", &rv);
@@ -329,8 +332,8 @@ nsDownloadManager::ImportDownloadHistory()
     rv = rdfInt->GetValue(&state);
     if (NS_FAILED(rv)) continue;
  
-    AddDownloadToDB(name, source, target, EmptyString(), startTime,
-                    endTime, state);
+    (void)AddDownloadToDB(name, source, target, EmptyString(), startTime,
+                          endTime, state);
   }
 
   return NS_OK;
