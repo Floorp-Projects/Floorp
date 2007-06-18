@@ -3572,7 +3572,8 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (document) {
-    nsXBLBinding *binding = document->BindingManager()->GetBinding(this);
+    nsRefPtr<nsXBLBinding> binding =
+      document->BindingManager()->GetBinding(this);
     if (binding) {
       binding->AttributeChanged(aName, aNamespaceID, PR_FALSE, aNotify);
     }
