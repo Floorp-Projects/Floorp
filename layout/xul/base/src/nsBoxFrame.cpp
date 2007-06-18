@@ -136,7 +136,8 @@ nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell,
                        nsStyleContext* aContext,
                        PRBool aIsRoot,
                        nsIBoxLayout* aLayoutManager) :
-  nsContainerFrame(aContext)
+  nsContainerFrame(aContext),
+  mMouseThrough(unset)
 {
   mState |= NS_FRAME_IS_BOX;
   mState |= NS_STATE_IS_HORIZONTAL;
@@ -223,10 +224,45 @@ nsBoxFrame::Init(nsIContent*      aContent,
       GetDebugPref(GetPresContext());
 #endif
 
+  mMouseThrough = unset;
+
+  UpdateMouseThrough();
+
   // register access key
   rv = RegUnregAccessKey(PR_TRUE);
 
   return rv;
+}
+
+void nsBoxFrame::UpdateMouseThrough()
+{
+  if (mContent) {
+    static nsIContent::AttrValuesArray strings[] =
+      {&nsGkAtoms::never, &nsGkAtoms::always, nsnull};
+    static const eMouseThrough values[] = {never, always};
+    PRInt32 index = mContent->FindAttrValueIn(kNameSpaceID_None,
+        nsGkAtoms::mousethrough, strings, eCaseMatters);
+    if (index >= 0) {
+      mMouseThrough = values[index];
+    }
+  }
+}
+
+PRBool
+nsBoxFrame::GetMouseThrough() const
+{
+  switch(mMouseThrough)
+  {
+    case always:
+      return PR_TRUE;
+    case never:
+      return PR_FALSE;
+    case unset:
+      if (mParent && mParent->IsBoxFrame())
+        return mParent->GetMouseThrough();
+  }
+
+  return PR_FALSE;
 }
 
 void
@@ -1081,6 +1117,7 @@ nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
       aAttribute == nsGkAtoms::orient       ||
       aAttribute == nsGkAtoms::pack         ||
       aAttribute == nsGkAtoms::dir          ||
+      aAttribute == nsGkAtoms::mousethrough ||
       aAttribute == nsGkAtoms::equalsize) {
 
     if (aAttribute == nsGkAtoms::align  ||
@@ -1144,6 +1181,9 @@ nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
     else if (aAttribute == nsGkAtoms::left ||
              aAttribute == nsGkAtoms::top) {
       mState &= ~NS_STATE_STACK_NOT_POSITIONED;
+    }
+    else if (aAttribute == nsGkAtoms::mousethrough) {
+      UpdateMouseThrough();
     }
 
     PresContext()->PresShell()->
