@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: sw=4 ts=4 sts=4
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -21,6 +22,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *   Shawn Wilsher <me@shawnwilsher.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -97,34 +99,22 @@ protected:
 static PRBool
 JSValStorageStatementBinder (JSContext *cx,
                              mozIStorageStatement *aStatement,
-                             int *aParamIndexes,
-                             int aNumIndexes,
+                             int aIdx,
                              jsval val)
 {
-    int i;
     if (JSVAL_IS_INT(val)) {
         int v = JSVAL_TO_INT(val);
-        for (i = 0; i < aNumIndexes; i++)
-            aStatement->BindInt32Parameter(aParamIndexes[i], v);
+        (void)aStatement->BindInt32Parameter(aIdx, v);
     } else if (JSVAL_IS_DOUBLE(val)) {
         double d = *JSVAL_TO_DOUBLE(val);
-        for (i = 0; i < aNumIndexes; i++)
-            aStatement->BindDoubleParameter(aParamIndexes[i], d);
+        (void)aStatement->BindDoubleParameter(aIdx, d);
     } else if (JSVAL_IS_STRING(val)) {
         JSString *str = JSVAL_TO_STRING(val);
-        for (i = 0; i < aNumIndexes; i++)
-            aStatement->BindStringParameter(aParamIndexes[i], nsDependentString(NS_REINTERPRET_CAST(PRUnichar*, JS_GetStringChars(str)), JS_GetStringLength(str)));
+        (void)aStatement->BindStringParameter(aIdx, nsDependentString(NS_REINTERPRET_CAST(PRUnichar*, JS_GetStringChars(str)), JS_GetStringLength(str)));
     } else if (JSVAL_IS_BOOLEAN(val)) {
-        if (val == JSVAL_TRUE) {
-            for (i = 0; i < aNumIndexes; i++)
-                aStatement->BindInt32Parameter(aParamIndexes[i], 1);
-        } else {
-            for (i = 0; i < aNumIndexes; i++)
-                aStatement->BindInt32Parameter(aParamIndexes[i], 0);
-        }
+        (void)aStatement->BindInt32Parameter(aIdx, (val == JSVAL_TRUE) ? 1 : 0);
     } else if (JSVAL_IS_NULL(val)) {
-        for (i = 0; i < aNumIndexes; i++)
-            aStatement->BindNullParameter(aParamIndexes[i]);
+        (void)aStatement->BindNullParameter(aIdx);
     } else if (JSVAL_IS_OBJECT(val)) {
         JSObject *obj = JSVAL_TO_OBJECT(val);
         // some special things
@@ -134,8 +124,7 @@ JSValStorageStatementBinder (JSContext *cx,
             PRInt64 msec;
             LL_D2L(msec, msecd);
 
-            for (i = 0; i < aNumIndexes; i++)
-                aStatement->BindInt64Parameter(aParamIndexes[i], msec);
+            (void)aStatement->BindInt64Parameter(aIdx, msec);
         } else {
             return PR_FALSE;
         }
@@ -313,7 +302,7 @@ mozStorageStatementWrapper::Call(nsIXPConnectWrappedNative *wrapper, JSContext *
 
     // bind parameters
     for (int i = 0; i < (int) argc; i++) {
-        if (!JSValStorageStatementBinder(cx, mStatement, &i, 1, argv[i])) {
+        if (!JSValStorageStatementBinder(cx, mStatement, i, argv[i])) {
             *_retval = PR_FALSE;
             return NS_ERROR_INVALID_ARG;
         }
@@ -811,9 +800,9 @@ mozStorageStatementParams::SetProperty(nsIXPConnectWrappedNative *wrapper, JSCon
     if (JSVAL_IS_INT(id)) {
         int idx = JSVAL_TO_INT(id);
 
-        *_retval = JSValStorageStatementBinder (cx, mStatement, &idx, 1, *vp);
+        *_retval = JSValStorageStatementBinder (cx, mStatement, idx, *vp);
     } else if (JSVAL_IS_STRING(id)) {
-        int indexCount = 0, *indexes;
+        sqlite3_stmt *stmt = mStatement->GetNativeStatementPointer();
 
         JSString *str = JSVAL_TO_STRING(id);
         nsCAutoString name(":");
@@ -821,28 +810,25 @@ mozStorageStatementParams::SetProperty(nsIXPConnectWrappedNative *wrapper, JSCon
                                                             ::JS_GetStringLength(str))));
 
         // check to see if there's a parameter with this name
-        indexCount = sqlite3_bind_parameter_indexes(mStatement->GetNativeStatementPointer(), name.get(), &indexes);
-        if (indexCount == 0) {
-            // er, not found? How'd we get past NewResolve?
-            fprintf (stderr, "********** mozStorageStatementWrapper: Couldn't find parameter %s\n", name.get());
+        if (sqlite3_bind_parameter_index(stmt, name.get()) == 0) {
             *_retval = PR_FALSE;
-            return NS_ERROR_FAILURE;
-        } else {
-            // drop this by 1, to account for sqlite's indexes being 1-based
-            for (int i = 0; i < indexCount; i++)
-                indexes[i]--;
-
-            *_retval = JSValStorageStatementBinder (cx, mStatement, indexes, indexCount, *vp);
-            sqlite3_free_parameter_indexes(indexes);
+            return NS_ERROR_INVALID_ARG;
+        }
+        
+        *_retval = PR_TRUE;
+        // You can use a named parameter more than once in a statement...
+        int count = sqlite3_bind_parameter_count(stmt);
+        for (int i = 0; (i < count) && (*_retval); i++) {
+            // sqlite indices start at 1
+            const char *pName = sqlite3_bind_parameter_name(stmt, i + 1);
+            if (name.Equals(pName))
+                *_retval = JSValStorageStatementBinder(cx, mStatement, i, *vp);
         }
     } else {
         *_retval = PR_FALSE;
     }
 
-    if (*_retval)
-        return NS_OK;
-    else
-        return NS_ERROR_INVALID_ARG;
+    return (*_retval) ? NS_OK : NS_ERROR_INVALID_ARG;
 }
 
 /* void preCreate (in nsISupports nativeObj, in JSContextPtr cx, in JSObjectPtr globalObj, out JSObjectPtr parentObj); */

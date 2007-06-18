@@ -22,8 +22,6 @@ the parser and all that goop as part of our build.
 If you do a configure, you may want to --disable-tcl because the tcl
 part may not work on all systems.
 
-You will also need to apply sqlite3-param-indexes.patch.
-
 They you need to update sqlite3file.h, which pulls out random bits of the
 internal files that we need to export. If any of these internal structures
 change, they need to be changed in sqlite3file.h as well.

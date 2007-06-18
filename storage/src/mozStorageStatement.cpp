@@ -222,18 +222,41 @@ mozStorageStatement::GetParameterIndexes(const nsACString &aParameterName, PRUin
     NS_ENSURE_ARG_POINTER(aCount);
     NS_ENSURE_ARG_POINTER(aIndexes);
 
-    int *indexes, count;
-    count = sqlite3_bind_parameter_indexes(mDBStatement, nsPromiseFlatCString(aParameterName).get(), &indexes);
-    if (count) {
-        *aIndexes = (PRUint32*) nsMemory::Alloc(sizeof(PRUint32) * count);
-        for (int i = 0; i < count; i++)
-            (*aIndexes)[i] = indexes[i];
-        sqlite3_free_parameter_indexes(indexes);
-        *aCount = count;
-    } else {
+    nsCAutoString name(":");
+    name.Append(aParameterName);
+
+    if (sqlite3_bind_parameter_index(mDBStatement, name.get()) == 0) {
+        // Named parameter not found
         *aCount = 0;
         *aIndexes = nsnull;
+        return NS_OK;
     }
+    
+    int count = sqlite3_bind_parameter_count(mDBStatement);
+    int *idxs = new int[count];
+    if (!idxs)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    int size = 0;
+    for (int i = 0; i < count; i++) {
+        // sqlite indices start at 1
+        const char *pName = sqlite3_bind_parameter_name(mDBStatement, i + 1);
+        if (name.Equals(pName))
+            idxs[size++] = i;
+    }
+
+    *aCount = size;
+    *aIndexes = (PRUint32*) NS_Alloc(sizeof(PRUint32) * size);
+    if (!aIndexes) {
+        delete[] idxs;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    for (int i = 0; i < size; i++)
+        (*aIndexes)[i] = idxs[i];
+
+    delete[] idxs;
+
     return NS_OK;
 }
 
