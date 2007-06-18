@@ -385,6 +385,14 @@ nsScriptSecurityManager::GetChannelPrincipal(nsIChannel* aChannel,
     return GetCodebasePrincipal(uri, aPrincipal);
 }
 
+NS_IMETHODIMP
+nsScriptSecurityManager::IsSystemPrincipal(nsIPrincipal* aPrincipal,
+                                           PRBool* aIsSystem)
+{
+    *aIsSystem = (aPrincipal == mSystemPrincipal);
+    return NS_OK;
+}
+
 ////////////////////
 // Policy Storage //
 ////////////////////
