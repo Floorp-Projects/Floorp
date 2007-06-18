@@ -40,7 +40,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAccessibleWrap.h"
-#include "nsAccessibleEventData.h"
+#include "nsRootAccessible.h"
+#include "nsDocAccessibleWrap.h"
+#include "nsIAccessibleValue.h"
 #include "nsString.h"
 #include "nsAutoPtr.h"
 #include "prprf.h"
@@ -1095,6 +1097,9 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
     rv = aEvent->GetEventType(&type);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    nsAccEvent *event = NS_REINTERPRET_CAST(nsAccEvent*, aEvent);
+    void *eventData = event->mEventData;
+
     AtkObject *atkObj = nsAccessibleWrap::GetAtkObject(accessible);
 
     // We don't create ATK objects for nsIAccessible plain text leaves,
@@ -1106,6 +1111,10 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
         return NS_OK;
     }
 
+    nsAccessibleWrap *accWrap = GetAccessibleWrap(atkObj);
+
+    AtkTableChange * pAtkTableChange = nsnull;
+
     switch (type) {
     case nsIAccessibleEvent::EVENT_STATE_CHANGE:
         return FireAtkStateChangeEvent(aEvent, atkObj);
@@ -1115,6 +1124,250 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
 
     case nsIAccessibleEvent::EVENT_PROPERTY_CHANGED:
         return FireAtkPropChangedEvent(aEvent, atkObj);
+
+    case nsIAccessibleEvent::EVENT_FOCUS:
+      {
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_FOCUS\n"));
+        nsRefPtr<nsRootAccessible> rootAccWrap = accWrap->GetRootAccessible();
+        if (rootAccWrap && rootAccWrap->mActivated) {
+            atk_focus_tracker_notify(atkObj);
+        }
+      } break;
+
+    case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
+      {
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_VALUE_CHANGE\n"));
+        nsCOMPtr<nsIAccessibleValue> value(do_QueryInterface(accessible));
+        if (value) {    // Make sure this is a numeric value
+            // Don't fire for MSAA string value changes (e.g. text editing)
+            // ATK values are always numeric
+            g_object_notify( (GObject*)atkObj, "accessible-value" );
+        }
+      } break;
+
+    case nsIAccessibleEvent::EVENT_SELECTION_CHANGED:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_SELECTION_CHANGED\n"));
+        g_signal_emit_by_name(atkObj, "selection_changed");
+        break;
+
+    case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TEXT_SELECTION_CHANGED\n"));
+        g_signal_emit_by_name(atkObj, "text_selection_changed");
+        break;
+
+    case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TEXT_CARET_MOVED\n"));
+        NS_ASSERTION(eventData, "Event needs event data");
+        if (!eventData)
+            break;
+
+        MAI_LOG_DEBUG(("\n\nCaret postion: %d", *(gint *)eventData ));
+        g_signal_emit_by_name(atkObj,
+                              "text_caret_moved",
+                              // Curent caret position
+                              *(gint *)eventData);
+        break;
+
+    case nsIAccessibleEvent::EVENT_TABLE_MODEL_CHANGED:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_MODEL_CHANGED\n"));
+        g_signal_emit_by_name(atkObj, "model_changed");
+        break;
+
+    case nsIAccessibleEvent::EVENT_TABLE_ROW_INSERT:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_ROW_INSERT\n"));
+        NS_ASSERTION(eventData, "Event needs event data");
+        if (!eventData)
+            break;
+
+        pAtkTableChange = NS_REINTERPRET_CAST(AtkTableChange *, eventData);
+
+        g_signal_emit_by_name(atkObj,
+                              "row_inserted",
+                              // After which the rows are inserted
+                              pAtkTableChange->index,
+                              // The number of the inserted
+                              pAtkTableChange->count);
+        break;
+
+   case nsIAccessibleEvent::EVENT_TABLE_ROW_DELETE:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_ROW_DELETE\n"));
+        NS_ASSERTION(eventData, "Event needs event data");
+        if (!eventData)
+            break;
+
+        pAtkTableChange = NS_REINTERPRET_CAST(AtkTableChange *, eventData);
+
+        g_signal_emit_by_name(atkObj,
+                              "row_deleted",
+                              // After which the rows are deleted
+                              pAtkTableChange->index,
+                              // The number of the deleted
+                              pAtkTableChange->count);
+        break;
+
+    case nsIAccessibleEvent::EVENT_TABLE_ROW_REORDER:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_ROW_REORDER\n"));
+        g_signal_emit_by_name(atkObj, "row_reordered");
+        break;
+
+    case nsIAccessibleEvent::EVENT_TABLE_COLUMN_INSERT:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_COLUMN_INSERT\n"));
+        NS_ASSERTION(eventData, "Event needs event data");
+        if (!eventData)
+            break;
+
+        pAtkTableChange = NS_REINTERPRET_CAST(AtkTableChange *, eventData);
+
+        g_signal_emit_by_name(atkObj,
+                              "column_inserted",
+                              // After which the columns are inserted
+                              pAtkTableChange->index,
+                              // The number of the inserted
+                              pAtkTableChange->count);
+        break;
+
+    case nsIAccessibleEvent::EVENT_TABLE_COLUMN_DELETE:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_COLUMN_DELETE\n"));
+        NS_ASSERTION(eventData, "Event needs event data");
+        if (!eventData)
+            break;
+
+        pAtkTableChange = NS_REINTERPRET_CAST(AtkTableChange *, eventData);
+
+        g_signal_emit_by_name(atkObj,
+                              "column_deleted",
+                              // After which the columns are deleted
+                              pAtkTableChange->index,
+                              // The number of the deleted
+                              pAtkTableChange->count);
+        break;
+
+    case nsIAccessibleEvent::EVENT_TABLE_COLUMN_REORDER:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_COLUMN_REORDER\n"));
+        g_signal_emit_by_name(atkObj, "column_reordered");
+        break;
+
+    case nsIAccessibleEvent::EVENT_SECTION_CHANGED:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_SECTION_CHANGED\n"));
+        g_signal_emit_by_name(atkObj, "visible_data_changed");
+        break;
+
+    case nsIAccessibleEvent::EVENT_HYPERTEXT_LINK_SELECTED:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_HYPERTEXT_LINK_SELECTED\n"));
+        atk_focus_tracker_notify(atkObj);
+        g_signal_emit_by_name(atkObj,
+                              "link_selected",
+                              // Selected link index 
+                              *(gint *)eventData);
+        break;
+
+        // Is a superclass of ATK event children_changed
+    case nsIAccessibleEvent::EVENT_REORDER:
+        AtkChildrenChange *pAtkChildrenChange;
+
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_REORDER(children_change)\n"));
+
+        pAtkChildrenChange = NS_REINTERPRET_CAST(AtkChildrenChange *,
+                                                 eventData);
+        nsAccessibleWrap *childAccWrap;
+        if (pAtkChildrenChange && pAtkChildrenChange->child) {
+            childAccWrap = NS_STATIC_CAST(nsAccessibleWrap *,
+                                          pAtkChildrenChange->child);
+            g_signal_emit_by_name (atkObj,
+                                   pAtkChildrenChange->add ? \
+                                   "children_changed::add" : \
+                                   "children_changed::remove",
+                                   pAtkChildrenChange->index,
+                                   childAccWrap->GetAtkObject(),
+                                   NULL);
+        }
+        else {
+            //
+            // EVENT_REORDER is normally fired by "HTML Document".
+            //
+            // In GOK, [only] "children_changed::add" can cause foreground
+            // window accessible to update it children, which will
+            // refresh "UI-Grab" window.
+            //
+            g_signal_emit_by_name (atkObj,
+                                   "children_changed::add",
+                                   -1, NULL, NULL);
+        }
+
+        break;
+        /*
+         * Because dealing with menu is very different between nsIAccessible
+         * and ATK, and the menu activity is important, specially transfer the
+         * following two event.
+         * Need more verification by AT test.
+         */
+    case nsIAccessibleEvent::EVENT_MENU_START:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_MENU_START\n"));
+        break;
+
+    case nsIAccessibleEvent::EVENT_MENU_END:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_MENU_END\n"));
+        break;
+
+    case nsIAccessibleEvent::EVENT_WINDOW_ACTIVATE:
+      {
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_WINDOW_ACTIVATED\n"));
+        nsDocAccessibleWrap *accDocWrap =
+          NS_STATIC_CAST(nsDocAccessibleWrap *, accessible.get());
+        accDocWrap->mActivated = PR_TRUE;
+        guint id = g_signal_lookup ("activate", MAI_TYPE_ATK_OBJECT);
+        g_signal_emit(atkObj, id, 0);
+      } break;
+
+    case nsIAccessibleEvent::EVENT_WINDOW_DEACTIVATE:
+      {
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_WINDOW_DEACTIVATED\n"));
+        nsDocAccessibleWrap *accDocWrap =
+          NS_STATIC_CAST(nsDocAccessibleWrap *, accessible.get());
+        accDocWrap->mActivated = PR_FALSE;
+        guint id = g_signal_lookup ("deactivate", MAI_TYPE_ATK_OBJECT);
+        g_signal_emit(atkObj, id, 0);
+      } break;
+
+    case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
+      {
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_DOCUMENT_LOAD_COMPLETE\n"));
+        g_signal_emit_by_name (atkObj, "load_complete");
+      } break;
+
+    case nsIAccessibleEvent::EVENT_DOCUMENT_RELOAD:
+      {
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_DOCUMENT_RELOAD\n"));
+        g_signal_emit_by_name (atkObj, "reload");
+      } break;
+
+    case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED:
+      {
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_DOCUMENT_LOAD_STOPPED\n"));
+        g_signal_emit_by_name (atkObj, "load_stopped");
+      } break;
+    case nsIAccessibleEvent::EVENT_DOCUMENT_ATTRIBUTES_CHANGED:
+      {
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_DOCUMENT_ATTRIBUTES_CHANGED\n"));
+        g_signal_emit_by_name (atkObj, "attributes_changed");
+      } break;
+
+    case nsIAccessibleEvent::EVENT_MENUPOPUP_START:
+        // fire extra focus event, then go down to EVENT_SHOW
+        atk_focus_tracker_notify(atkObj);
+
+    case nsIAccessibleEvent::EVENT_SHOW:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_SHOW\n"));
+        atk_object_notify_state_change(atkObj, ATK_STATE_VISIBLE, PR_TRUE);
+        atk_object_notify_state_change(atkObj, ATK_STATE_SHOWING, PR_TRUE);
+        break;
+
+    case nsIAccessibleEvent::EVENT_HIDE:
+    case nsIAccessibleEvent::EVENT_MENUPOPUP_END:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_HIDE\n"));
+        atk_object_notify_state_change(atkObj, ATK_STATE_VISIBLE, PR_FALSE);
+        atk_object_notify_state_change(atkObj, ATK_STATE_SHOWING, PR_FALSE);
+        break; 
     }
 
     return NS_OK;
