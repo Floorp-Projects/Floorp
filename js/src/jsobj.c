@@ -2074,8 +2074,8 @@ block_xdrObject(JSXDRState *xdr, JSObject **objp)
         obj = *objp;
         parent = OBJ_GET_PARENT(cx, obj);
         parentId = FindObjectAtomIndex(atomMap, parent);
-        depth = OBJ_BLOCK_DEPTH(cx, obj);
-        count = OBJ_BLOCK_COUNT(cx, obj);
+        depth = (uint16)OBJ_BLOCK_DEPTH(cx, obj);
+        count = (uint16)OBJ_BLOCK_COUNT(cx, obj);
         tmp = (uint32)(depth << 16) | count;
     }
 #ifdef __GNUC__ /* suppress bogus gcc warnings */
