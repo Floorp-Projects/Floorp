@@ -3130,36 +3130,25 @@ nsNavHistoryFolderResultNode::OnItemRemoved(PRInt64 aItemId,
 }
 
 
-// nsNavHistoryFolderResultNode::OnItemChanged (nsINavBookmarkObserver)
+// nsNavHistoryResultNode::OnItemChanged
 
 NS_IMETHODIMP
-nsNavHistoryFolderResultNode::OnItemChanged(PRInt64 aItemId,
-                                            const nsACString& aProperty,
-                                            PRBool aIsAnnotationProperty,
-                                            const nsACString& aValue)
+nsNavHistoryResultNode::OnItemChanged(PRInt64 aItemId,
+                                      const nsACString& aProperty,
+                                      PRBool aIsAnnotationProperty,
+                                      const nsACString& aValue)
 {
-  PRUint32 nodeIndex;
-  nsNavHistoryResultNode* node = FindChildById(aItemId, &nodeIndex);
-  if (!node)
-    return NS_ERROR_FAILURE;
-
-  if ((node->IsURI() || node->IsSeparator()) && mOptions->ExcludeItems())
-    return NS_OK; // don't update items when we aren't displaying them
-
-  if (!StartIncrementalUpdate())
-    return NS_OK;
-
   if (aProperty.EqualsLiteral("title")) {
-    node->mTitle = aValue;
+    mTitle = aValue;
   }
   else if (aProperty.EqualsLiteral("uri")) {
-    node->mURI = aValue;
+    mURI = aValue;
   }
   else if (aProperty.EqualsLiteral("favicon")) {
-    node->mFaviconURI = aValue;
+    mFaviconURI = aValue;
   }
   else if (aProperty.EqualsLiteral("cleartime")) {
-    node->mTime = 0;
+    mTime = 0;
   }
   else if (!aProperty.EqualsLiteral("keyword") && !aIsAnnotationProperty) {
     // XXX: expose a keyword getter on bookmarks nodes?
@@ -3173,42 +3162,58 @@ nsNavHistoryFolderResultNode::OnItemChanged(PRInt64 aItemId,
   PRTime lastModified;
   nsresult rv = bookmarks->GetItemLastModified(aItemId, &lastModified);
   if (NS_SUCCEEDED(rv)) {
-    node->mLastModified = lastModified;
+    mLastModified = lastModified;
   }
   else {
-    node->mLastModified = 0;
+    mLastModified = 0;
   }
 
   PRTime dateAdded;
   rv = bookmarks->GetItemDateAdded(aItemId, &dateAdded);
   if (NS_SUCCEEDED(rv)) {
-    node->mDateAdded = dateAdded;
+    mDateAdded = dateAdded;
   }
   else {
-    node->mDateAdded = 0;
+    mDateAdded = 0;
   }
 
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
 
   if (result->GetView()) {
-    result->GetView()->ItemChanged(node);
+    result->GetView()->ItemChanged(this);
   }
+
+  if (!mParent)
+    return NS_OK;
 
   // DO NOT OPTIMIZE THIS TO CHECK aProperty
   // the sorting methods fall back to each other so we need to re-sort the
   // result even if it's not set to sort by the given property
-  SortComparator comparator = GetSortingComparator(GetSortType());
-  nsCAutoString sortingAnnotation;
-  GetSortingAnnotation(sortingAnnotation);
-  if (DoesChildNeedResorting(nodeIndex, comparator, sortingAnnotation.get())) {
-    RemoveChildAt(nodeIndex, PR_TRUE);
-    InsertChildAt(node,
-                  FindInsertionPoint(node, comparator, sortingAnnotation.get()),
-                  PR_TRUE);
+  nsNavHistoryContainerResultNode::SortComparator comparator =
+    mParent->GetSortingComparator(mParent->GetSortType());
+  PRInt32 ourIndex = mParent->FindChild(this);
+  nsCAutoString sortAnno;
+  mParent->GetSortingAnnotation(sortAnno);
+  if (mParent->DoesChildNeedResorting(ourIndex, comparator, sortAnno.get())) {
+    nsCOMPtr<nsINavHistoryResultNode> nodeLock(this);
+    mParent->RemoveChildAt(ourIndex, PR_TRUE);
+    mParent->InsertChildAt(this,
+                           mParent->FindInsertionPoint(this, comparator, sortAnno.get()),
+                           PR_TRUE);
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistoryFolderResultNode::OnItemChanged(PRInt64 aItemId,
+                                            const nsACString& aProperty,
+                                            PRBool aIsAnnotationProperty,
+                                            const nsACString& aValue) {
+  return nsNavHistoryResultNode::OnItemChanged(aItemId, aProperty,
+                                               aIsAnnotationProperty,
+                                               aValue);
 }
 
 // nsNavHistoryFolderResultNode::OnItemVisited (nsINavBookmarkObserver)
@@ -3730,16 +3735,42 @@ nsNavHistoryResult::OnItemChanged(PRInt64 aItemId,
                                   PRBool aIsAnnotationProperty,
                                   const nsACString &aValue)
 {
-  nsresult rv;
   nsNavBookmarks* bookmarkService = nsNavBookmarks::GetBookmarksService();
   NS_ENSURE_TRUE(bookmarkService, NS_ERROR_OUT_OF_MEMORY);
 
-  // find the folder to notify about this item
+
+  PRUint16 itemType;
+  nsresult rv = bookmarkService->GetItemType(aItemId, &itemType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (itemType == nsINavBookmarksService::TYPE_FOLDER) {
+    // simple case: Just notify the folder nodes direct
+    NS_ENSURE_SUCCESS(rv, rv);
+    ENUMERATE_BOOKMARK_OBSERVERS_FOR_FOLDER(aItemId,
+        OnItemChanged(aItemId, aProperty, aIsAnnotationProperty, aValue));
+    return NS_OK;
+  }
+
+  // Here we need to find the changed items under the folders list
   PRInt64 folderId;
   rv = bookmarkService->GetFolderIdForItem(aItemId, &folderId);
   NS_ENSURE_SUCCESS(rv, rv);
-  ENUMERATE_BOOKMARK_OBSERVERS_FOR_FOLDER(folderId,
-      OnItemChanged(aItemId, aProperty, aIsAnnotationProperty, aValue));
+
+  FolderObserverList* list = BookmarkObserversForId(folderId, PR_FALSE);
+  if (!list)
+    return NS_OK;
+
+  for (PRUint32 i = 0; i < list->Length(); i++) {
+    nsNavHistoryFolderResultNode* folder = list->ElementAt(i);
+    if (folder) {
+      PRUint32 nodeIndex;
+      nsNavHistoryResultNode* node = folder->FindChildById(aItemId, &nodeIndex);
+      if (node && !(folder->mOptions->ExcludeItems()) &&
+          folder->StartIncrementalUpdate()) {
+        node->OnItemChanged(aItemId, aProperty, aIsAnnotationProperty, aValue);
+      }
+    }
+  }
 
   // Note: we do NOT call history observers in this case. This notification is
   // the same as other history notification, except that here we know the item
