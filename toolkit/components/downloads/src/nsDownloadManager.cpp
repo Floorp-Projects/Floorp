@@ -1326,9 +1326,9 @@ NS_IMPL_ISUPPORTS4(nsDownload, nsIDownload, nsITransfer, nsIWebProgressListener,
 nsDownload::nsDownload() : mDownloadState(nsIDownloadManager::DOWNLOAD_NOTSTARTED),
                            mID(0),
                            mPercentComplete(0),
-                           mCurrBytes(LL_ZERO),
+                           mCurrBytes(0),
                            mMaxBytes(LL_MAXUINT),
-                           mStartTime(LL_ZERO),
+                           mStartTime(0),
                            mLastUpdate(PR_Now() - (PRUint32)gUpdateInterval),
                            mPaused(PR_FALSE),
                            mSpeed(0)
@@ -1508,7 +1508,7 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
                           nsresult aStatus)
 {
   // Record the start time only if it hasn't been set.
-  if (LL_IS_ZERO(mStartTime) && (aStateFlags & STATE_START))
+  if (mStartTime == 0 && (aStateFlags & STATE_START))
     SetStartTime(PR_Now());
 
   // We don't want to lose access to our member variables
@@ -1545,11 +1545,7 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
         PRInt32 alertInterval = -1;
         pref->GetIntPref(PREF_BDM_SHOWALERTINTERVAL, &alertInterval);
 
-        PRInt64 temp, uSecPerMSec, alertIntervalUSec;
-        LL_I2L(temp, alertInterval);
-        LL_I2L(uSecPerMSec, PR_USEC_PER_MSEC);
-        LL_MUL(alertIntervalUSec, temp, uSecPerMSec);
-        
+        PRInt64 alertIntervalUSec = alertInterval * PR_USEC_PER_MSEC;
         PRInt64 goat = PR_Now() - mStartTime;
         showTaskbarAlert = goat > alertIntervalUSec;
        
