@@ -2924,7 +2924,7 @@ js_DeflateStringToBuffer(JSContext *cx, const jschar *src, size_t srclen,
         }
         if (v < 0x0080) {
             /* no encoding necessary - performance hack */
-            if (!dstlen)
+            if (dstlen == 0)
                 goto bufferTooSmall;
             *dst++ = (char) v;
             utf8Len = 1;
@@ -3038,7 +3038,7 @@ bufferTooSmall:
     return JS_FALSE;
 }
 
-#else
+#else /* !JS_C_STRINGS_ARE_UTF8 */
 
 JSBool
 js_InflateStringToBuffer(JSContext* cx, const char *bytes, size_t length,
@@ -3190,6 +3190,15 @@ js_GetStringBytes(JSContext *cx, JSString *str)
     } else {
         /* JS_GetStringBytes calls us with null cx. */
         rt = js_GetGCStringRuntime(str);
+    }
+
+    if (!rt->deflatedStringCache) {
+        /*
+         * Called from last GC (see js_DestroyContext), after runtime string
+         * state has been finalized.  We have no choice but to leak here.
+         */
+        return js_DeflateString(NULL, JSSTRING_CHARS(str),
+                                      JSSTRING_LENGTH(str));
     }
 
     JS_ACQUIRE_LOCK(rt->deflatedStringCacheLock);
