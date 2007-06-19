@@ -132,7 +132,6 @@ EXTRA_DSO_LDOPTS += \
 		$(NULL)
 
 EXPORTS		= \
-		nsIGdkPixbufImage.h \
                 nsGTKToolkit.h \
 		nsIImageToPixbuf.h \
 		mozdrawingarea.h \
