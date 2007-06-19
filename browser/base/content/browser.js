@@ -1146,6 +1146,17 @@ function delayedStartup()
   // to create its singleton, whose constructor initializes the service.
   Cc["@mozilla.org/microsummary/service;1"].getService(Ci.nsIMicrosummaryService);
 
+  // Initialize the content pref event sink and the text zoom setting.
+  // We do this before the session restore service gets initialized so we can
+  // apply text zoom settings to tabs restored by the session restore service.
+  try {
+    ContentPrefSink.init();
+    TextZoom.init();
+  }
+  catch(ex) {
+    Components.utils.reportError(ex);
+  }
+
   // initialize the session-restore service (in case it's not already running)
   if (document.documentElement.getAttribute("windowtype") == "navigator:browser") {
     try {
@@ -1170,6 +1181,14 @@ function delayedStartup()
 
 function BrowserShutdown()
 {
+  try {
+    TextZoom.destroy();
+    ContentPrefSink.destroy();
+  }
+  catch(ex) {
+    Components.utils.reportError(ex);
+  }
+
   var os = Components.classes["@mozilla.org/observer-service;1"]
     .getService(Components.interfaces.nsIObserverService);
   os.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
@@ -5668,6 +5687,9 @@ var FeedHandler = {
 #ifdef MOZ_PLACES
 #include browser-places.js
 #endif
+
+#include browser-contentPrefSink.js
+#include browser-textZoom.js
 
 /**
  * This object is for augmenting tabs
