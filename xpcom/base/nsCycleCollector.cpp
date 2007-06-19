@@ -569,13 +569,23 @@ private:
     PtrInfo *mLast;
 };
 
+
+struct GCGraph;
+
+static GCGraph *sCurrGraph = nsnull;
+
 struct GCGraph
 {
     NodePool mNodes;
     EdgePool mEdges;
     PRUint32 mRootCount;
 
-    GCGraph() : mRootCount(0) {}
+    GCGraph() : mRootCount(0) {
+        sCurrGraph = this;
+    }
+    ~GCGraph() { 
+        sCurrGraph = nsnull;
+    }
 };
 
 // XXX Would be nice to have an nsHashSet<KeyType> API that has
@@ -586,6 +596,9 @@ typedef nsBaseHashtable<nsVoidPtrHashKey, PRUint32, PRUint32>
 
 static void
 Fault(const char *msg, const void *ptr);
+
+static void
+WriteGraph(FILE *stream, GCGraph &graph, const void *redPtr);
 
 struct nsPurpleBuffer
 {
@@ -882,9 +895,22 @@ Fault(const char *msg, const void *ptr=nsnull)
         else
             printf("Fatal fault in cycle collector: %s\n", msg);
 
-        exit(1);
+     
+        if (sCurrGraph) {
+            FILE *stream;
+#ifdef WIN32
+            char *fname = "c:\\fault-graph.dot";
+#else
+            char *fname = "/tmp/fault-graph.dot";
+#endif
+            printf("depositing faulting cycle-collection graph in %s\n", fname);
+            stream = fopen(fname, "w+");
+            WriteGraph(stream, *sCurrGraph, ptr);
+            fclose(stream);
+        } 
 
-    } 
+        exit(1);
+    }
 #endif
 
     NS_NOTREACHED(nsPrintfCString(256,
@@ -1655,6 +1681,39 @@ nsCycleCollector::ForgetRuntime(PRUint32 langID)
 
 
 #ifdef DEBUG_CC
+static void
+WriteGraph(FILE *stream, GCGraph &graph, const void *redPtr)
+{
+    fprintf(stream, 
+            "digraph collection {\n"
+            "rankdir=LR\n"
+            "node [fontname=fixed, fontsize=10, style=filled, shape=box]\n"
+            );
+    
+    NodePool::Enumerator etor(graph.mNodes);
+    while (!etor.IsDone()) {
+        PtrInfo *pi = etor.GetNext();
+        const void *p = pi->mPointer;
+        fprintf(stream, 
+                "n%p [label=\"%s\\n%p\\n%u/%u refs found\", "
+                "fillcolor=%s, fontcolor=%s]\n", 
+                p,
+                pi->mName,
+                p,
+                pi->mInternalRefs, pi->mRefCount,
+                (redPtr && redPtr == p ? "red" : (pi->mColor == black ? "black" : "white")),
+                (pi->mColor == black ? "white" : "black"));
+        for (EdgePool::Iterator child = pi->mFirstChild,
+                 child_end = pi->mLastChild;
+             child != child_end; ++child) {
+            fprintf(stream, "n%p -> n%p\n", p, (*child)->mPointer);
+        }
+    }
+    
+    fprintf(stream, "\n}\n");    
+}
+
+
 void 
 nsCycleCollector::MaybeDrawGraphs(GCGraph &graph)
 {
@@ -1680,33 +1739,7 @@ nsCycleCollector::MaybeDrawGraphs(GCGraph &graph)
 #else
             stream = popen("dotty -", "w");
 #endif
-            fprintf(stream, 
-                    "digraph collection {\n"
-                    "rankdir=LR\n"
-                    "node [fontname=fixed, fontsize=10, style=filled, shape=box]\n"
-                    );
-
-            NodePool::Enumerator etor(graph.mNodes);
-            while (!etor.IsDone()) {
-                PtrInfo *pi = etor.GetNext();
-                const void *p = pi->mPointer;
-                fprintf(stream, 
-                        "n%p [label=\"%s\\n%p\\n%u/%u refs found\", "
-                        "fillcolor=%s, fontcolor=%s]\n", 
-                        p,
-                        pi->mName,
-                        p,
-                        pi->mInternalRefs, pi->mRefCount,
-                        (pi->mColor == black ? "black" : "white"),
-                        (pi->mColor == black ? "white" : "black"));
-                for (EdgePool::Iterator child = pi->mFirstChild,
-                                    child_end = pi->mLastChild;
-                     child != child_end; ++child) {
-                    fprintf(stream, "n%p -> n%p\n", p, (*child)->mPointer);
-                }
-            }
-
-            fprintf(stream, "\n}\n");
+            WriteGraph(stream, graph, nsnull);
 #ifdef WIN32
             fclose(stream);
             // Even dotty doesn't work terribly well on windows, since
