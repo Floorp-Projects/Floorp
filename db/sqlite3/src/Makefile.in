@@ -21,7 +21,6 @@
 #
 # Contributor(s):
 #   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
-#   Shawn Wilsher <me@shawnwilsher.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -49,22 +48,52 @@ LIBRARY_NAME     = sqlite3_s
 MODULE_NAME      = sqlite3
 FORCE_STATIC_LIB = 1
 
-ifdef GNU_CC
-MODULE_OPTIMIZE_FLAGS = -O3
-else
-ifeq ($(OS_ARCH),SunOS)
-MODULE_OPTIMIZE_FLAGS = -fast
-endif
-ifeq ($(OS_ARCH),WINNT)
-MODULE_OPTIMIZE_FLAGS = -Ox
-endif
-endif
-
-
 EXPORTS = sqlite3.h sqlite3file.h
 
 CSRCS = \
-	sqlite3.c \
+	alter.c \
+	analyze.c \
+	attach.c \
+	auth.c \
+	btree.c \
+	build.c \
+	callback.c \
+	complete.c \
+	date.c \
+	delete.c \
+	experimental.c \
+	expr.c \
+	func.c \
+	hash.c \
+	insert.c \
+	legacy.c \
+	main.c \
+	opcodes.c \
+	os.c \
+	os_unix.c \
+	os_win.c \
+	os_os2.c \
+	os_beos.c \
+	pager.c \
+	parse.c \
+	pragma.c \
+	prepare.c \
+	printf.c \
+	random.c \
+	select.c \
+	table.c \
+	tokenize.c \
+	trigger.c \
+	update.c \
+	utf.c \
+	util.c \
+	vacuum.c \
+	vdbe.c \
+	vdbeapi.c \
+	vdbeaux.c \
+	vdbefifo.c \
+	vdbemem.c \
+	where.c \
 	$(NULL)
 
 # REFEF_IO allows us to override IO functions, which is used in the AsyncIO

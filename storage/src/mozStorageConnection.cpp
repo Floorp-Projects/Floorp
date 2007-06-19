@@ -475,11 +475,8 @@ mozStorageConnection::CreateFunction(const char *aFunctionName,
 nsresult
 mozStorageConnection::Preload()
 {
-/*
   int srv = sqlite3Preload(mDBConn);
   return ConvertResultCode(srv);
-*/
-    return NS_OK; // XXX restore after sqlite upgrade
 }
 
 /**
