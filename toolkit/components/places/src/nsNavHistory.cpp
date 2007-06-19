@@ -4756,6 +4756,8 @@ void GetSubstringFromNthDot(const nsCString& aInput, PRInt32 aStartingSpot,
 nsresult BindStatementURI(mozIStorageStatement* statement, PRInt32 index,
                           nsIURI* aURI)
 {
+  NS_ENSURE_ARG_POINTER(aURI);
+
   nsCAutoString utf8URISpec;
   nsresult rv = aURI->GetSpec(utf8URISpec);
   NS_ENSURE_SUCCESS(rv, rv);
