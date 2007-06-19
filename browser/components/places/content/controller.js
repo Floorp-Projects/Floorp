@@ -170,7 +170,10 @@ PlacesController.prototype = {
     case "placesCmd_new:separator":
       return this._canInsert() &&
              this._view.peerDropTypes
-                 .indexOf(PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR) != -1;
+                 .indexOf(PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR) != -1 &&
+             !asQuery(this._view.getResult().root).queryOptions.excludeItems &&
+             this._view.getResult().sortingMode ==
+                 Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
     case "placesCmd_show:info":
       if (this._view.hasSingleSelection) {
         var selectedNode = this._view.selectedNode;
