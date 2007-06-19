@@ -447,20 +447,6 @@ function fileIsItemPackage(file) {
   return extension == "xpi" || extension == "jar";
 }
 
-/** 
- * Return the leaf name used by the extension system for staging an item.
- * @param   id
- *          The GUID of the item
- * @param   type
- *          The nsIUpdateItem type of the item
- * @returns The leaf name of the staged file.
- */
-function getStagedLeafName(id, type) {
-  if (type == nsIUpdateItem.TYPE_THEME) 
-    return id + ".jar";
-  return id + ".xpi";
-}
-
 /**
  * Opens a safe file output stream for writing. 
  * @param   file
@@ -2236,17 +2222,6 @@ var StartupCache = {
     return entries;
   },
 
-  /**
-   * Call a function on each entry.  The callback function takes a single
-   * parameter, which is an entry object.
-   */
-  forEachEntry: function(callback) {
-    for (var key in this.entries) {
-      for (id in this.entries[key])
-        callback(this.entries[key][id]);
-    }
-  },
-  
   /** 
    * Read the Item-Change manifest file into a hash of properties.
    * The Item-Change manifest currently holds a list of paths, with the last
@@ -6811,35 +6786,6 @@ ExtensionsDataSource.prototype = {
       }
     }
     countRef.value = items.length;
-    return items;
-  },
-
-  /**
-   * Get a list of Item IDs that have a flag set
-   * @param   flag
-   *          The name of an RDF property (less EM_NS) to check for
-   * @param   desiredType
-   *          The nsIUpdateItem type of item to look for
-   * @returns An array of Item IDs 
-   *
-   * XXXben - this function is a little weird since it returns an array of 
-   *          strings, not an array of nsIUpdateItems...  
-   */
-  getItemsWithFlagUnset: function(flag, desiredType) {
-    var items = [];
-
-    var ctr = getContainer(this, this._itemRoot);    
-    var elements = ctr.GetElements();
-    while (elements.hasMoreElements()) {
-      var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-      var id = stripPrefix(e.Value, PREFIX_ITEM_URI);
-      var type = this.getItemProperty(id, "type");
-      if (type != -1 && type & desiredType) {
-        var value = this.GetTarget(e, EM_R(flag), true);
-        if (!value)
-          items.push(id);
-      }
-    }
     return items;
   },
   
