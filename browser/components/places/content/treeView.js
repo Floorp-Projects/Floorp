@@ -734,6 +734,9 @@ PlacesTreeView.prototype = {
     if (!this._tree || !this._result)
       return;
 
+    // depending on the sort mode, certain commands may be disabled
+    window.updateCommands("sort");
+
     var columns = this._tree.columns;
 
     // clear old sorting indicator
