@@ -146,10 +146,12 @@ public:
   NS_DECL_NSINAVHISTORYRESULT
   NS_DECL_BOOKMARK_HISTORY_OBSERVER
 
-  void AddEverythingObserver(nsNavHistoryQueryResultNode* aNode);
-  void AddBookmarkObserver(nsNavHistoryFolderResultNode* aNode, PRInt64 aFolder);
-  void RemoveEverythingObserver(nsNavHistoryQueryResultNode* aNode);
-  void RemoveBookmarkObserver(nsNavHistoryFolderResultNode* aNode, PRInt64 aFolder);
+  void AddHistoryObserver(nsNavHistoryQueryResultNode* aNode);
+  void AddBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNode, PRInt64 aFolder);
+  void AddAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode);
+  void RemoveHistoryObserver(nsNavHistoryQueryResultNode* aNode);
+  void RemoveBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNode, PRInt64 aFolder);
+  void RemoveAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode);
 
   // returns the view. NOT-ADDREFED. May be NULL if there is no view
   nsINavHistoryResultViewer* GetView() const
@@ -182,11 +184,14 @@ public:
 
   // node observers
   PRBool mIsHistoryObserver;
-  PRBool mIsBookmarksObserver;
-  nsTArray<nsNavHistoryQueryResultNode*> mEverythingObservers;
+  PRBool mIsBookmarkFolderObserver;
+  PRBool mIsAllBookmarksObserver;
+
+  nsTArray<nsNavHistoryQueryResultNode*> mHistoryObservers;
+  nsTArray<nsNavHistoryQueryResultNode*> mAllBookmarksObservers;
   typedef nsTArray<nsNavHistoryFolderResultNode*> FolderObserverList;
-  nsDataHashtable<nsTrimInt64HashKey, FolderObserverList* > mBookmarkObservers;
-  FolderObserverList* BookmarkObserversForId(PRInt64 aFolderId, PRBool aCreate);
+  nsDataHashtable<nsTrimInt64HashKey, FolderObserverList* > mBookmarkFolderObservers;
+  FolderObserverList* BookmarkFolderObserversForId(PRInt64 aFolderId, PRBool aCreate);
 
   void RecursiveExpandCollapse(nsNavHistoryContainerResultNode* aContainer,
                                PRBool aExpand);
