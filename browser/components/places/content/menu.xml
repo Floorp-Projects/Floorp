@@ -845,35 +845,6 @@
         }
       })]]></field>
 
-      <!-- Checks whether and event should be acted on by this menu
-           (It should be if the event affects one of this menu's child
-            nodes) -->
-      <method name="eventValid">
-        <parameter name="event"/>
-        <body><![CDATA[
-          if ((event.target.localName != "menuitem" &&
-               event.target.localName != "menuseparator" &&
-               event.target.localName != "menu") ||
-              event.target.parentNode != this)
-            return false;
-          return true;
-        ]]></body>
-      </method>
-
-      <!-- Sets the active view to this view, and sets the selection 
-           to the node from this event. -->
-      <method name="setSelectionForEvent">
-        <parameter name="event"/>
-        <body><![CDATA[
-          // Set the selection to the node that was clicked on.  If that
-          // node has a command but no data associated with it, it should
-          // act on the entire menu.
-          this._selection = event.target.node;
-          if (event.target.node == null)
-            this._selection = this._resultNode;
-        ]]></body>
-      </method>
-      
       <property name="selType" readonly="true" onget="return 'single';"/>
 
       <method name="buildContextMenu">
@@ -899,6 +870,7 @@
         if (event.target == this)
           this.onPopupShowing();
       </handler>
+
       <handler event="popuphidden">
         if (event.target != this)
           return;
@@ -912,26 +884,26 @@
         this.removeAttribute("autoopened");
       </handler>
 
-      <!-- Set selected node/active view on mousedown/DOMMenuItemActive events
+      <!-- Set selected node on DOMMenuItemActive/contextmenu events
            so that they're set up when command and click events fire. -->
-      <handler event="mousedown"><![CDATA[
-        if (this.eventValid(event)) {
-          this.setSelectionForEvent(event);
-          // Don't let the event bubble up to a parent toolbar.
-          event.stopPropagation();
+      <handler event="DOMMenuItemActive"><![CDATA[
+        if (event.target.parentNode == this) {
+          // Set the selection to the node that was activated.  If that
+          // node has a command but no data associated with it, it should
+          // act on the entire menu.
+          this._selection = event.target.node || this._resultNode;
         }
       ]]></handler>
-      <handler event="DOMMenuItemActive"><![CDATA[
-        if (this.eventValid(event))
-          this.setSelectionForEvent(event);
+      <handler event="contextmenu"><![CDATA[
+        // DOMMenuItemActive is not dispatched for disabled menuitems and
+        // menuseparators. Set the selection here manually.
+        var popupNode = document.popupNode;
+        // |popupNode == this| happens when the area between menuseparators
+        // is clicked.
+        if (popupNode == this || popupNode.parentNode == this)
+          this._selection = popupNode.node || this._resultNode;
       ]]></handler>
-      <handler event="DOMMenuItemInactive"><![CDATA[
-        this._selection = null;
-      ]]></handler>
-      <handler event="command"><![CDATA[
-        if (this.eventValid(event))
-          this.setSelectionForEvent(event);
-      ]]></handler>
+
       <handler event="draggesture"><![CDATA[
         if (event.target.localName == "menuitem")
           // TODO--allow menu drag if shift (or alt??) key is down
