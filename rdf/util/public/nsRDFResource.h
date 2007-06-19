@@ -42,8 +42,9 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFResource.h"
 #include "nscore.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 #include "rdf.h"
+
 class nsIRDFService;
 
 /**

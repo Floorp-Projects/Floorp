@@ -37,13 +37,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsRDFResource.h"
-#include "nsCRT.h"
 #include "nsIServiceManager.h"
 #include "nsIRDFDelegateFactory.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
-#include "nsXPIDLString.h"
 #include "prlog.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
