@@ -5792,7 +5792,7 @@ dnl ========================================================
 dnl = Enable places bookmarks (use places for bookmarks)
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(places-bookmarks,
-[  --enable-places_bookmarks        Enable 'places' for bookmarks backend],
+[  --enable-places-bookmarks        Enable 'places' for bookmarks backend],
     MOZ_PLACES_BOOKMARKS=1,
     MOZ_PLACES_BOOKMARKS= )
 if test -n "$MOZ_PLACES_BOOKMARKS"; then
