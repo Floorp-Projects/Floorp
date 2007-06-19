@@ -82,6 +82,7 @@
 <!ENTITY  feedTab               "Feeds">
 <!ENTITY  feedTab.accesskey     "F">
 <!ENTITY  feedSubscribe         "Subscribe">
+<!ENTITY  feedSubscribe.accesskey "u">
 
 <!ENTITY  permTab               "Permissions">
 <!ENTITY  permTab.accesskey     "P">
