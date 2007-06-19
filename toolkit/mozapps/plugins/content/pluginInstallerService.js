@@ -43,12 +43,15 @@ var PluginInstallService = {
 
   pluginPidArray: null,
 
-  startPluginInsallation: function (aPluginXPIUrlsArray, aPluginPidArray) {
+  startPluginInstallation: function (aPluginXPIUrlsArray,
+                                     aPluginHashes,
+                                     aPluginPidArray) {
      this.pluginPidArray = aPluginPidArray;
 
      var xpiManager = Components.classes["@mozilla.org/xpinstall/install-manager;1"]
                                 .createInstance(Components.interfaces.nsIXPInstallManager);
-     xpiManager.initManagerFromChrome(aPluginXPIUrlsArray, aPluginXPIUrlsArray.length, this);
+     xpiManager.initManagerWithHashes(aPluginXPIUrlsArray, aPluginHashes,
+                                      aPluginXPIUrlsArray.length, this);
   },
 
   // XPI progress listener stuff
