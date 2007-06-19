@@ -54,8 +54,6 @@ PACKAGE_VARS += \
 	SSL3_LIB \
 	SOFTOKEN3_LIB \
 	SOFTOKEN3_CHK \
-	SQLITE_LIB \
-	NSSDBM3_LIB \
 	LOADABLE_ROOT_MODULE \
 	HAVE_FREEBL_LIBS \
 	HAVE_FREEBL_LIBS_32 \
@@ -71,8 +69,6 @@ SMIME3_LIB = $(DLL_PREFIX)smime3$(DLL_SUFFIX)
 SSL3_LIB =  $(DLL_PREFIX)ssl3$(DLL_SUFFIX)
 SOFTOKEN3_LIB = $(DLL_PREFIX)softokn3$(DLL_SUFFIX)
 SOFTOKEN3_CHK = $(DLL_PREFIX)softokn3.chk
-SQLITE_LIB = $(DLL_PREFIX)sqlite3$(DLL_SUFFIX)
-NSSDBM3_LIB = $(DLL_PREFIX)nssdbm3$(DLL_SUFFIX)
 
 # Default
 HAVE_FREEBL_LIBS = 1
@@ -263,8 +259,6 @@ ifndef SKIP_CHK
 	$(INSTALL) -m 644 $(DIST)/lib/$(SOFTOKEN3_CHK) $(DIST)/bin
 endif
 	$(INSTALL) -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(DIST)/bin
-	$(INSTALL) -m 755 $(DIST)/lib/$(SQLITE_LIB) $(DIST)/bin
-	$(INSTALL) -m 755 $(DIST)/lib/$(NSSDBM3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(SMIME3_LIB) $(DIST)/bin
@@ -311,8 +305,6 @@ ifndef SKIP_CHK
 	$(SYSINSTALL) -m 644 $(DIST)/lib/$(SOFTOKEN3_CHK) $(DESTDIR)$(mozappdir)
 endif
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(DESTDIR)$(mozappdir)
-	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SQLITE_LIB) $(DESTDIR)$(mozappdir)
-	$(SYSINSTALL) -m 755 $(DIST)/lib/$(NSSDBM3_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SMIME3_LIB) $(DESTDIR)$(mozappdir)
