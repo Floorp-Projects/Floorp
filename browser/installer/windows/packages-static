@@ -81,6 +81,7 @@ bin\components\content_htmldoc.xpt
 bin\components\content_xmldoc.xpt
 bin\components\content_xslt.xpt
 bin\components\content_xtf.xpt
+bin\components\contentprefs.xpt
 bin\components\cookie.xpt
 bin\components\directory.xpt
 bin\components\docshell_base.xpt
