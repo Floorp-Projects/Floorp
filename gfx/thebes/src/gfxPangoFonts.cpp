@@ -332,7 +332,7 @@ ThebesStyleToPangoWeight (const gfxFontStyle *fs)
         baseWeight = 9;
 
     /* Map from weight value to fcWeights index */
-    static int fcWeightLookup[10] = {
+    static const int fcWeightLookup[10] = {
         0, 0, 0, 0, 1, 1, 2, 3, 3, 4,
     };
 
@@ -350,12 +350,12 @@ ThebesStyleToPangoWeight (const gfxFontStyle *fs)
         fcWeight = 4;
 
     /* Map to final PANGO_WEIGHT value */
-    static int fcWeights[5] = {
+    static const int fcWeights[5] = {
         349,
         499,
         649,
         749,
-        999
+        900
     };
 
     return (PangoWeight)fcWeights[fcWeight];
