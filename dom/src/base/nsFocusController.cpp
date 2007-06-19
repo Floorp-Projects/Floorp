@@ -297,15 +297,14 @@ nsFocusController::MoveFocus(PRBool aForward, nsIDOMElement* aElt)
     }
   }
 
-  if (!doc)
+  if (!doc) {
     // No way to obtain an event state manager.  Give up.
-    return NS_OK;
+    return NS_ERROR_FAILURE;
+  }
 
-
-  // Obtain a presentation context
   nsIPresShell *shell = doc->GetPrimaryShell();
   if (!shell)
-    return NS_OK;
+    return NS_ERROR_FAILURE;
 
   // Make sure frames have been constructed before shifting focus, bug 273092.
   shell->FlushPendingNotifications(Flush_Frames);
@@ -314,9 +313,7 @@ nsFocusController::MoveFocus(PRBool aForward, nsIDOMElement* aElt)
   nsCOMPtr<nsPresContext> presContext = shell->GetPresContext();
 
   // Make this ESM shift the focus per our instructions.
-  presContext->EventStateManager()->ShiftFocus(aForward, content);
-
-  return NS_OK;
+  return presContext->EventStateManager()->ShiftFocus(aForward, content);
 }
 
 /////
