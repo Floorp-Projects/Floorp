@@ -52,14 +52,30 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(mozStorageService, mozIStorageService, nsIObserver
 
 static const char kShutdownMessage[] = "xpcom-shutdown-threads";
 
-mozStorageService::mozStorageService()
+mozStorageService *mozStorageService::gStorageService = nsnull;
+
+mozStorageService *
+mozStorageService::GetSingleton()
 {
+    if (gStorageService) {
+        NS_ADDREF(gStorageService);
+        return gStorageService;
+    }
     
+    gStorageService = new mozStorageService();
+    if (gStorageService) {
+        NS_ADDREF(gStorageService);
+        if (NS_FAILED(gStorageService->Init()))
+            NS_RELEASE(gStorageService);
+    }
+    
+    return gStorageService;
 }
 
 mozStorageService::~mozStorageService()
 {
     FreeLocks();
+    gStorageService = nsnull;
 }
 
 nsresult
