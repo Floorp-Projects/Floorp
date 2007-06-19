@@ -73,6 +73,7 @@
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "nsITimelineService.h"
+#include "nsFind.h"
 
 #if DEBUG
 #include "nsIWebNavigation.h"
@@ -84,8 +85,6 @@
 #include <Scrap.h>
 #endif
 
-
-static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
 //*****************************************************************************
 // nsWebBrowserFind
@@ -771,11 +770,11 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
     GetFrameSelection(aWindow, getter_AddRefs(sel));
     NS_ENSURE_ARG_POINTER(sel);
 
-    nsCOMPtr<nsIDOMRange> searchRange (do_CreateInstance(kRangeCID));
+    nsCOMPtr<nsIDOMRange> searchRange = nsFind::CreateRange();
     NS_ENSURE_ARG_POINTER(searchRange);
-    nsCOMPtr<nsIDOMRange> startPt (do_CreateInstance(kRangeCID));
+    nsCOMPtr<nsIDOMRange> startPt  = nsFind::CreateRange();
     NS_ENSURE_ARG_POINTER(startPt);
-    nsCOMPtr<nsIDOMRange> endPt (do_CreateInstance(kRangeCID));
+    nsCOMPtr<nsIDOMRange> endPt  = nsFind::CreateRange();
     NS_ENSURE_ARG_POINTER(endPt);
 
     nsCOMPtr<nsIDOMRange> foundRange;

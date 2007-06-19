@@ -388,8 +388,6 @@ nsRange::ComparePoint(nsIDOMNode* aParent, PRInt32 aOffset, PRInt16* aResult)
  * Private helper routines
  ******************************************************/
 
-static nsINode* IsValidBoundary(nsINode* aNode);
-
 // Get the length of aNode
 static PRInt32 GetNodeLength(nsINode *aNode)
 {
@@ -551,8 +549,7 @@ nsresult nsRange::GetCommonAncestorContainer(nsIDOMNode** aCommonParent)
   return NS_ERROR_NOT_INITIALIZED;
 }
 
-static nsINode*
-IsValidBoundary(nsINode* aNode)
+nsINode* nsRange::IsValidBoundary(nsINode* aNode)
 {
   if (!aNode) {
     return nsnull;
@@ -564,11 +561,13 @@ IsValidBoundary(nsINode* aNode)
       return nsnull;
     }
 
-    // If the node has a binding parent, that should be the root.
-    // XXXbz maybe only for native anonymous content?
-    nsINode* root = content->GetBindingParent();
-    if (root) {
-      return root;
+    if (!mMaySpanAnonymousSubtrees) {
+      // If the node has a binding parent, that should be the root.
+      // XXXbz maybe only for native anonymous content?
+      nsINode* root = content->GetBindingParent();
+      if (root) {
+        return root;
+      }
     }
   }
 
@@ -1546,6 +1545,8 @@ nsresult nsRange::CloneRange(nsIDOMRange** aReturn)
 
   NS_ADDREF(*aReturn = range);
   
+  range->SetMaySpanAnonymousSubtrees(mMaySpanAnonymousSubtrees);
+
   range->DoSetRange(mStartParent, mStartOffset, mEndParent, mEndOffset, mRoot);
 
   return NS_OK;
