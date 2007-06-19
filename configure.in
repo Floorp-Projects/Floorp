@@ -2695,8 +2695,8 @@ EOF
 EOF
                       ac_cv_visibility_pragma=no
                       if ${CC-cc} -Werror -S conftest.c -o conftest.s >/dev/null 2>&1; then
-                        if egrep '\.(hidden|extern_private).*foo_hidden' conftest.s >/dev/null; then
-                          if ! egrep '\.(hidden|extern_private).*foo_default' conftest.s > /dev/null; then
+                        if egrep '\.(hidden|private_extern).*foo_hidden' conftest.s >/dev/null; then
+                          if ! egrep '\.(hidden|private_extern).*foo_default' conftest.s > /dev/null; then
                             ac_cv_visibility_pragma=yes
                           fi
                         fi
@@ -2719,7 +2719,7 @@ EOF
                        if ! ${CXX-g++} ${CXXFLAGS} ${DSO_PIC_CFLAGS} ${DSO_LDOPTS} -S -o conftest.S conftest.c > /dev/null 2>&1 ; then
                          ac_cv_have_visibility_class_bug=yes
                        else
-                         if test `grep -c "@PLT" conftest.S` = 0; then
+                         if test `egrep -c '@PLT|\\$stub' conftest.S` = 0; then
                            ac_cv_have_visibility_class_bug=yes
                          fi
                        fi
