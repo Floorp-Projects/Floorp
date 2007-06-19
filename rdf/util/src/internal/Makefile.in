@@ -35,63 +35,37 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= rdf
+# This makefile builds the version of unicharutils_s static library which uses
+# internal linkage. Components that use frozen (external) linkage should use
+# rdfutil_external_s.
 
-LIBRARY_NAME	= rdf
-EXPORT_LIBRARY  = 1
-IS_COMPONENT	= 1
-MODULE_NAME	= nsRDFModule
-GRE_MODULE	= 1
-LIBXUL_LIBRARY = 1
+include $(srcdir)/../objs.mk
 
-PACKAGE_FILE = rdf.pkg
+EXTRA_DEPS += $(srcdir)/../objs.mk
 
-EXTRA_DSO_LIBS	= 
+MODULE		= rdfutil
+LIBRARY_NAME	= rdfutil_s
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= xpcom \
 		  string \
-		  content \
-		  htmlparser \
-		  necko \
+		  rdf \
 		  $(NULL)
 
-CPPSRCS		= \
-		nsRDFModule.cpp \
-		$(NULL)
+CPPSRCS		= $(RDF_UTIL_SRC_LCPPSRCS)
 
-# XXX Note dependencies on implementation headers for factory functions
-
-SHARED_LIBRARY_LIBS = \
-		../base/src/$(LIB_PREFIX)rdfbase_s.$(LIB_SUFFIX) \
-		../datasource/src/$(LIB_PREFIX)rdfdatasource_s.$(LIB_SUFFIX) \
-		$(NULL)
-
-ifndef MOZ_ENABLE_LIBXUL
-SHARED_LIBRARY_LIBS += \
-		../util/src/internal/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
-		$(NULL)
-endif
-
-EXTRA_DSO_LDOPTS = \
-		$(LIBS_DIR) \
-		$(EXTRA_DSO_LIBS) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
-
-EXPORTS		= nsRDFCID.h
+# we don't want the shared lib, but we want to force the creation of a static lib.
+FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES	= \
-		-I$(srcdir)/../base/src \
-		-I$(srcdir)/../content/src \
-		-I$(srcdir)/../datasource/src \
-		$(NULL)
+$(RDF_UTIL_SRC_LCPPSRCS): %: $(srcdir)/../%
+	$(INSTALL) $^ .
 
