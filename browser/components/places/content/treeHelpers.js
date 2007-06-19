@@ -292,9 +292,5 @@ var OptionsFilter = {
     var options = queryNode.queryOptions.clone();
     options.sortingMode = result.sortingMode;
     this.getHandler(queries).value = options;
-
-    // Makes sure that changes to the view triggers the updating of
-    // the commandset placesCommands
-    window.document.commandDispatcher.updateCommands("sort");
   }
 };
