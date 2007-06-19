@@ -120,9 +120,9 @@
     <command id="Browser:Stop"    oncommand="BrowserStop();" disabled="true"/>
     <command id="Browser:Reload"  oncommand="if (event.shiftKey) BrowserReloadSkipCache(); else BrowserReload()" disabled="true"/>
     <command id="Browser:ReloadSkipCache"  oncommand="BrowserReloadSkipCache()" disabled="true"/>
-    <command id="cmd_textZoomReduce"  oncommand="ZoomManager.prototype.getInstance().reduce();"/>
-    <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
-    <command id="cmd_textZoomReset" oncommand="ZoomManager.prototype.getInstance().reset();"/>
+    <command id="cmd_textZoomReduce"  oncommand="TextZoom.reduce()"/>
+    <command id="cmd_textZoomEnlarge" oncommand="TextZoom.enlarge()"/>
+    <command id="cmd_textZoomReset" oncommand="TextZoom.reset()"/>
     <command id="Browser:OpenLocation" oncommand="openLocation();"/>
 
     <command id="Tools:Search" oncommand="BrowserSearch.webSearch();"/>    
