@@ -697,6 +697,8 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
 
         he = JS_HashTableRawAdd(table, hep, keyHash, (void *)key, NULL);
         if (!he) {
+            if (flags & ATOM_NOCOPY)
+                str->chars = NULL;
             JS_ReportOutOfMemory(cx);
             atom = NULL;
             goto out;

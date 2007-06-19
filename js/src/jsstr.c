@@ -2369,6 +2369,8 @@ js_InitRuntimeStringState(JSContext *cx)
     return JS_TRUE;
 
   bad:
+    if (empty)
+        js_UnlockGCThingRT(rt, empty);
 #ifdef JS_THREADSAFE
     JS_DESTROY_LOCK(rt->deflatedStringCacheLock);
     rt->deflatedStringCacheLock = NULL;
