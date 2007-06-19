@@ -1105,6 +1105,12 @@ PlacesController.prototype = {
         transactions.push(new PlacesRemoveItemTransaction(node.itemId,
           PlacesUtils._uri(node.uri), node.parent.itemId, index));
       }
+      else if (PlacesUtils.nodeIsBookmark(node)) {
+        // A Bookmark in a query.
+        var folderId = PlacesUtils.bookmarks.getFolderIdForItem(node.itemId);
+        transactions.push(new PlacesRemoveItemTransaction(node.itemId,
+          PlacesUtils._uri(node.uri), folderId, index));
+      }
     }
   },
 
@@ -1116,6 +1122,8 @@ PlacesController.prototype = {
   _removeRowsFromBookmarks: function PC__removeRowsFromBookmarks(txnName) {
     var ranges = this._view.getRemovableSelectionRanges();
     var transactions = [];
+    // Delete the selected rows. Do this by walking the selection backward, so
+    // that when undo is performed they are re-inserted in the correct order.
     for (var i = ranges.length - 1; i >= 0 ; --i)
       this._removeRange(ranges[i], transactions);
     if (transactions.length > 0) {
@@ -1151,14 +1159,22 @@ PlacesController.prototype = {
     NS_ASSERT(aTxnName !== undefined, "Must supply Transaction Name");
     this._view.saveSelection(this._view.SAVE_SELECTION_REMOVE);
 
-    // Delete the selected rows. Do this by walking the selection backward, so
-    // that when undo is performed they are re-inserted in the correct order.
-    var type = this._view.getResult().root.type; 
-    if (PlacesUtils.nodeIsFolder(this._view.getResult().root))
-      this._removeRowsFromBookmarks(aTxnName);
-    else
-      this._removeRowsFromHistory();
+    var root = this._view.getResult().root;
 
+    if (PlacesUtils.nodeIsFolder(root)) 
+      this._removeRowsFromBookmarks(aTxnName);
+    else if (PlacesUtils.nodeIsQuery(root)) {
+      var queryType = asQuery(root).queryOptions.queryType;
+      if (queryType == Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS)
+        this._removeRowsFromBookmarks(aTxnName);
+      else if (queryType == Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY)
+        this._removeRowsFromHistory();
+      else
+        NS_ASSERT(false, "implement support for QUERY_TYPE_UNIFIED");
+    }
+    else
+      NS_ASSERT(false, "unexpected root");
+      
     this._view.restoreSelection();
   },
 

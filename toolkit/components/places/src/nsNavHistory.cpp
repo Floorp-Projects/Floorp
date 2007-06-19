@@ -2118,7 +2118,7 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
       groupBy = NS_LITERAL_CSTRING(" GROUP BY b.id");
     }
     else {
-      // XXX: implement me
+      // XXX: implement support for nsINavHistoryQueryOptions::QUERY_TYPE_UNIFIED 
       return NS_ERROR_NOT_IMPLEMENTED;
     }
   }
