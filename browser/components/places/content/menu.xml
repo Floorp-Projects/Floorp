@@ -821,7 +821,6 @@
           if (dropPoint == null)
             return;
           PlacesControllerDragHelper.onDrop(null, this._self, dropPoint.ip);
-          this._self._rebuild();
         },
 
         onDragExit: function TBV_DO_onDragExit(event, session) {
