@@ -1259,29 +1259,6 @@ UpdateService.prototype = {
   },
   
   /**
-   *
-   */
-  _needsToPromptForUpdate: function(updates) {
-    // First, check for Extension incompatibilities. These trump any preference
-    // settings.
-    var em = Components.classes["@mozilla.org/extensions/manager;1"]
-                       .getService(Components.interfaces.nsIExtensionManager);
-    var incompatibleList = { };
-    for (var i = 0; i < updates.length; ++i) {
-      var count = {};
-      em.getIncompatibleItemList(gApp.ID, updates[i].extensionVersion,
-                                 nsIUpdateItem.TYPE_ADDON, false, count);
-      if (count.value > 0)
-        return true;
-    }
-
-    // Now, inspect user preferences.
-    
-    // No prompt necessary, silently update...
-    return false;
-  },
-  
-  /**
    * Notified when a timer fires
    * @param   timer
    *          The timer that fired
