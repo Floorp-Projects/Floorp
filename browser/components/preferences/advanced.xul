@@ -331,7 +331,7 @@
                       oncommand="gAdvancedPane.showCRLs();"
                       preference="security.OCSP.disable_button.managecrl"/>
               <button id="verificationButton"
-                      label="&verify.label;" accesskey="&verify.accesskey;" 
+                      label="&verify2.label;" accesskey="&verify2.accesskey;" 
                       oncommand="gAdvancedPane.showOCSP();"/>
 #ifdef XP_MACOSX
             </hbox>
