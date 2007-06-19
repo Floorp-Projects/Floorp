@@ -1954,13 +1954,13 @@ ParseXMLSource(JSContext *cx, JSString *src)
     size_t urilen, srclen, length, offset, dstlen;
     jschar *chars;
     const jschar *srcp, *endp;
+    JSXML *xml;
     void *mark;
     JSTokenStream *ts;
     uintN lineno;
     JSStackFrame *fp;
     JSOp op;
     JSParseNode *pn;
-    JSXML *xml;
     JSXMLArray nsarray;
     uintN flags;
 
@@ -2000,10 +2000,11 @@ ParseXMLSource(JSContext *cx, JSString *src)
                              &dstlen);
     chars [offset + dstlen] = 0;
 
+    xml = NULL;
     mark = JS_ARENA_MARK(&cx->tempPool);
     ts = js_NewBufferTokenStream(cx, chars, length);
     if (!ts)
-        return NULL;
+        goto out;
     for (fp = cx->fp; fp && !fp->pc; fp = fp->down)
         continue;
     if (fp) {
@@ -2020,7 +2021,6 @@ ParseXMLSource(JSContext *cx, JSString *src)
 
     JS_KEEP_ATOMS(cx->runtime);
     pn = js_ParseXMLTokenStream(cx, cx->fp->scopeChain, ts, JS_FALSE);
-    xml = NULL;
     if (pn && XMLArrayInit(cx, &nsarray, 1)) {
         if (GetXMLSettingFlags(cx, &flags))
             xml = ParseNodeToXML(cx, pn, &nsarray, flags);
@@ -2029,6 +2029,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
     }
     JS_UNKEEP_ATOMS(cx->runtime);
 
+out:
     JS_ARENA_RELEASE(&cx->tempPool, mark);
     JS_free(cx, chars);
     return xml;
@@ -2334,8 +2335,10 @@ AppendAttributeValue(JSContext *cx, JSStringBuffer *sb, JSString *valstr)
     js_AppendCString(sb, "=\"");
     valstr = js_EscapeAttributeValue(cx, valstr);
     if (!valstr) {
-        free(sb->base);
-        sb->base = STRING_BUFFER_ERROR_BASE;
+        if (STRING_BUFFER_OK(sb)) {
+            free(sb->base);
+            sb->base = STRING_BUFFER_ERROR_BASE;
+        }
         return;
     }
     js_AppendJSString(sb, valstr);
@@ -2682,8 +2685,14 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
         return NULL;
 
     js_InitStringBuffer(&sb);
-    if (pretty)
+    if (pretty) {
         js_RepeatChar(&sb, ' ', indentLevel);
+
+        if (!STRING_BUFFER_OK(&sb)) {
+            JS_ReportOutOfMemory(cx);
+            return NULL;
+        }
+    }
     str = NULL;
 
     switch (xml->xml_class) {
@@ -2729,17 +2738,17 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
         if (kid)
             goto list_out;
 
-        if (!sb.base) {
-            if (!STRING_BUFFER_OK(&sb)) {
-                JS_ReportOutOfMemory(cx);
-                return NULL;
-            }
+        if (!sb.base)
             return cx->runtime->emptyString;
+
+        if (!STRING_BUFFER_OK(&sb)) {
+            JS_ReportOutOfMemory(cx);
+            return NULL;
         }
 
         str = js_NewString(cx, sb.base, STRING_BUFFER_OFFSET(&sb), 0);
       list_out:
-        if (!str)
+        if (!str && STRING_BUFFER_OK(&sb))
             js_FinishStringBuffer(&sb);
         return str;
 
@@ -7124,7 +7133,8 @@ xml_toString_helper(JSContext *cx, JSXML *xml)
         return ToXMLString(cx, OBJECT_TO_JSVAL(xml->object));
 
     str = cx->runtime->emptyString;
-    js_EnterLocalRootScope(cx);
+    if (!js_EnterLocalRootScope(cx))
+        return NULL;
     XMLArrayCursorInit(&cursor, &xml->xml_kids);
     while ((kid = (JSXML *) XMLArrayCursorNext(&cursor)) != NULL) {
         if (kid->xml_class != JSXML_CLASS_COMMENT &&

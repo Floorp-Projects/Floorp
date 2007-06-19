@@ -3329,10 +3329,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 ok = JS_TRUE;
                 for (i = argc; i > 0; i--) {
                     argv[i] = JS_strdup(cx, POP_STR());
-                    if (!argv[i]) {
+                    if (!argv[i])
                         ok = JS_FALSE;
-                        break;
-                    }
                 }
 
                 /* Skip the JSOP_PUSHOBJ-created empty string. */

@@ -222,15 +222,15 @@ NewOrRecycledNode(JSContext *cx, JSTreeContext *tc)
             break;
         }
     }
-#ifdef METER_PARSENODES
     if (pn) {
+#ifdef METER_PARSENODES
         parsenodes++;
         if (parsenodes - recyclednodes > maxparsenodes)
             maxparsenodes = parsenodes - recyclednodes;
-    }
 #endif
-    memset(&pn->pn_u, 0, sizeof pn->pn_u);
-    pn->pn_next = NULL;
+        memset(&pn->pn_u, 0, sizeof pn->pn_u);
+        pn->pn_next = NULL;
+    }
     return pn;
 }
 
