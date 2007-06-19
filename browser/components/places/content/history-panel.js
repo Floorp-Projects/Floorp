@@ -64,14 +64,7 @@ function HistorySidebarInit()
 
   initContextMenu();
   
-  // set the place on the tree dynamically
-  // otherwise, we will end up calling the place's tree's load() twice
-  var optionsRef = {};
-  var queriesRef = {};
-  PlacesUtils.history.queryStringToQueries(ORGANIZER_ROOT_HISTORY_UNSORTED, queriesRef, {}, optionsRef);
-  SetSortingAndGrouping(optionsRef.value);
-  var place = PlacesUtils.history.queriesToQueryString(queriesRef.value, 1, optionsRef.value);
-  gHistoryTree.place = place;
+  initPlace();
 
   gSearchBox.focus();
 }
@@ -148,24 +141,34 @@ function SetSortingAndGrouping(aOptions)
   aOptions.sortingMode = sortingMode;
 }
 
+function initPlace()
+{
+  // call load() on the tree manually
+  // instead of setting the place attribute in history-panel.xul
+  // otherwise, we will end up calling load() twice
+  var optionsRef = {};
+  var queriesRef = {};
+  PlacesUtils.history.queryStringToQueries(ORGANIZER_ROOT_HISTORY_UNSORTED, queriesRef, {}, optionsRef);
+  SetSortingAndGrouping(optionsRef.value);
+  gHistoryTree.load(queriesRef.value, optionsRef.value);
+}
+
 function searchHistory(aInput)
 {
   if (aInput) {
     if (!gSearching) {
-      // Unset grouping when searching; applyFilter will update the view
+      // Unset grouping when searching; 
       var options = gHistoryTree.getResult().root.queryOptions;
       options.setGroupingMode([], 0);
       gSearching = true;
     }
+    
+    // applyFilter will update the view by calling load()
+    gHistoryTree.applyFilter(aInput, false /* onlyBookmarks */, 
+                             null /* folderRestrict */, null);
   }
   else {
-    // applyFilter will update the view
-    var options = gHistoryTree.getResult().root.queryOptions;
-    SetSortingAndGrouping(options);
+    initPlace();
     gSearching = false;
   }
-
-  gHistoryTree.applyFilter(aInput, false /* onlyBookmarks */, 
-                           null /* folderRestrict */, null); 
 }
-
