@@ -48,7 +48,10 @@ include $(DEPTH)/config/autoconf.mk
 ifdef MOZ_ENABLE_XREMOTE
 DIRS += remote
 endif
-DIRS += urlformatter
+DIRS += \
+        urlformatter \
+        contentprefs \
+        $(NULL)
 
 # These component dirs are built only for XUL apps
 

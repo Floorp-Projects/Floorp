@@ -1,0 +1,142 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Content Preferences (cpref).
+ *
+ * The Initial Developer of the Original Code is Mozilla.
+ * Portions created by the Initial Developer are Copyright (C) 2006
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Myk Melez <myk@mozilla.org>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsIVariant.idl"
+#include "nsIURI.idl"
+#include "nsIPropertyBag2.idl"
+#include "nsIContentURIGrouper.idl"
+
+[scriptable, uuid(746c7a02-f6c1-4869-b434-7c8b86e60e61)]
+interface nsIContentPrefObserver : nsISupports
+{
+  /**
+   * Called when a content pref is set to a different value.
+   * 
+   * @param    aGroup      the group to which the pref belongs, or null
+   *                       if it's a global pref (applies to all URIs)
+   * @param    aName       the name of the pref that was set
+   * @param    aValue      the new value of the pref
+   */
+  void onContentPrefSet(in AString aGroup, in AString aName, in nsIVariant aValue);
+
+  /**
+   * Called when a content pref is removed.
+   * 
+   * @param    aGroup      the group to which the pref belongs, or null
+   *                       if it's a global pref (applies to all URIs)
+   * @param    aName       the name of the pref that was removed
+   */
+  void onContentPrefRemoved(in AString aGroup, in AString aName);
+};
+
+[scriptable, uuid(5b1f6044-72f8-4920-9043-0c52d0ae4f4c)]
+interface nsIContentPrefService : nsISupports
+{
+  /**
+   * Get a pref.
+   *
+   * Besides the regular string, integer, boolean, etc. values, this method
+   * may return null (nsIDataType::VTYPE_EMPTY), which means the pref is set
+   * to NULL in the database, as well as undefined (nsIDataType::VTYPE_VOID),
+   * which means there is no record for this pref in the database.
+   *
+   * @param    aURI        the URI for which to get the pref, or null to get
+   *                       the global pref (applies to all URIs)
+   * @param    aName       the name of the pref to get
+   *
+   * @returns  the value of the pref
+   */
+  nsIVariant getPref(in nsIURI aURI, in AString aName);
+  
+  /**
+   * Set a pref.
+   *
+   * @param    aURI        the URI for which to set the pref, or null to set
+   *                       the global pref (applies to all URIs)
+   * @param    aName       the name of the pref to set
+   * @param    aValue      the new value of the pref
+   */
+  void setPref(in nsIURI aURI, in AString aName, in nsIVariant aValue);
+  
+  /**
+   * Check whether or not a pref exists.
+   *
+   * @param    aURI        the URI for which to check for the pref
+   * @param    aName       the name of the pref to check for
+   */
+  boolean hasPref(in nsIURI aURI, in AString aName);
+  
+  /**
+   * Remove a pref.
+   *
+   * @param    aURI        the URI for which to remove the pref
+   * @param    aName       the name of the pref to remove
+   */
+  void removePref(in nsIURI aURI, in AString aName);
+
+  /**
+   * Get the prefs that apply to the given URI.
+   *
+   * @param    aURI        the URI for which to retrieve prefs
+   * 
+   * @returns  a property bag of prefs
+   */
+  nsIPropertyBag2 getPrefs(in nsIURI aURI);
+  
+  /**
+   * Add an observer.
+   * 
+   * @param    aName       the setting to observe, or null to add
+   *                       a generic observer that observes all settings
+   * @param    aObserver   the observer to add
+   */
+  void addObserver(in AString aName, in nsIContentPrefObserver aObserver);
+  
+  /**
+   * Remove an observer.
+   *
+   * @param    aName       the setting being observed, or null to remove
+   *                       a generic observer that observes all settings
+   * @param    aObserver   the observer to remove
+   */
+  void removeObserver(in AString aName, in nsIContentPrefObserver aObserver);
+
+  // The component that the service uses to determine the groups to which
+  // URIs belong.  By default this is the "hostname grouper", which groups
+  // URIs by full hostname (a.k.a. site).
+  readonly attribute nsIContentURIGrouper grouper;
+};
