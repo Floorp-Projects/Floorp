@@ -41,7 +41,7 @@
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
 
-#include "nsIGdkPixbufImage.h"
+#include "nsIImage.h"
 
 #include "nsAutoPtr.h"
 
