@@ -316,6 +316,10 @@ DEFINES += -DMOZ_SPELLCHECK
 COMPONENT_LIBS += spellchecker
 endif
 
+ifneq (,$(filter layout-debug,$(MOZ_EXTENSIONS)))
+COMPONENT_LIBS += gkdebug
+endif
+
 ifdef GC_LEAK_DETECTOR
 EXTRA_DSO_LIBS += boehm
 endif
