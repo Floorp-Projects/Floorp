@@ -54,6 +54,8 @@ class Parser:
       logging.getLogger('locales').error("Can't read file: " + file + '; ' + str(e))
       self.contents = u''
     f.close()
+  def parse(self, contents):
+    (self.contents, length) = codecs.getdecoder(self.encoding)(contents)
   def mapping(self):
     m = {}
     for p in self:
