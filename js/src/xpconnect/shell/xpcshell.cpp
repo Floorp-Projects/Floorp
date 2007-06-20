@@ -62,6 +62,7 @@
 #include "nsIGenericFactory.h"
 #include "nsIJSRuntimeService.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsIXPCSecurityManager.h"
 
 #ifndef XPCONNECT_STANDALONE
@@ -896,22 +897,59 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
 /***************************************************************************/
 
-class FullTrustSecMan : public nsIXPCSecurityManager
+class FullTrustSecMan
+#ifndef XPCONNECT_STANDALONE
+  : public nsIScriptSecurityManager
+#else
+  : public nsIXPCSecurityManager
+#endif
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXPCSECURITYMANAGER
+#ifndef XPCONNECT_STANDALONE
+  NS_DECL_NSISCRIPTSECURITYMANAGER
+#endif
+
   FullTrustSecMan();
+  virtual ~FullTrustSecMan();
+
+#ifndef XPCONNECT_STANDALONE
+  void SetSystemPrincipal(nsIPrincipal *aPrincipal) {
+    mSystemPrincipal = aPrincipal;
+  }
+
+private:
+  nsCOMPtr<nsIPrincipal> mSystemPrincipal;
+#endif
 };
 
-NS_IMPL_ISUPPORTS1(FullTrustSecMan, nsIXPCSecurityManager)
+NS_INTERFACE_MAP_BEGIN(FullTrustSecMan)
+  NS_INTERFACE_MAP_ENTRY(nsIXPCSecurityManager)
+#ifndef XPCONNECT_STANDALONE
+  NS_INTERFACE_MAP_ENTRY(nsIScriptSecurityManager)
+#endif
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCSecurityManager)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(FullTrustSecMan)
+NS_IMPL_RELEASE(FullTrustSecMan)
 
 FullTrustSecMan::FullTrustSecMan()
+{
+#ifndef XPCONNECT_STANDALONE
+  mSystemPrincipal = nsnull;
+#endif
+}
+
+FullTrustSecMan::~FullTrustSecMan()
 {
 }
 
 NS_IMETHODIMP
-FullTrustSecMan::CanCreateWrapper(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIClassInfo *aClassInfo, void * *aPolicy)
+FullTrustSecMan::CanCreateWrapper(JSContext * aJSContext, const nsIID & aIID,
+                                  nsISupports *aObj, nsIClassInfo *aClassInfo,
+                                  void * *aPolicy)
 {
     return NS_OK;
 }
@@ -928,12 +966,230 @@ FullTrustSecMan::CanGetService(JSContext * aJSContext, const nsCID & aCID)
     return NS_OK;
 }
 
+#ifndef XPCONNECT_STANDALONE
 /* void CanAccess (in PRUint32 aAction, in nsIXPCNativeCallContext aCallContext, in JSContextPtr aJSContext, in JSObjectPtr aJSObject, in nsISupports aObj, in nsIClassInfo aClassInfo, in JSVal aName, inout voidPtr aPolicy); */
-NS_IMETHODIMP 
-FullTrustSecMan::CanAccess(PRUint32 aAction, nsIXPCNativeCallContext *aCallContext, JSContext * aJSContext, JSObject * aJSObject, nsISupports *aObj, nsIClassInfo *aClassInfo, jsval aName, void * *aPolicy)
+NS_IMETHODIMP
+FullTrustSecMan::CanAccess(PRUint32 aAction,
+                           nsIXPCNativeCallContext *aCallContext,
+                           JSContext * aJSContext, JSObject * aJSObject,
+                           nsISupports *aObj, nsIClassInfo *aClassInfo,
+                           jsval aName, void * *aPolicy)
 {
     return NS_OK;
 }
+
+/* [noscript] void checkPropertyAccess (in JSContextPtr aJSContext, in JSObjectPtr aJSObject, in string aClassName, in JSVal aProperty, in PRUint32 aAction); */
+NS_IMETHODIMP
+FullTrustSecMan::CheckPropertyAccess(JSContext * aJSContext,
+                                     JSObject * aJSObject,
+                                     const char *aClassName,
+                                     jsval aProperty, PRUint32 aAction)
+{
+    return NS_OK;
+}
+
+/* [noscript] void checkConnect (in JSContextPtr aJSContext, in nsIURI aTargetURI, in string aClassName, in string aProperty); */
+NS_IMETHODIMP
+FullTrustSecMan::CheckConnect(JSContext * aJSContext, nsIURI *aTargetURI,
+                              const char *aClassName, const char *aProperty)
+{
+    return NS_OK;
+}
+
+/* [noscript] void checkLoadURIFromScript (in JSContextPtr cx, in nsIURI uri); */
+NS_IMETHODIMP
+FullTrustSecMan::CheckLoadURIFromScript(JSContext * cx, nsIURI *uri)
+{
+    return NS_OK;
+}
+
+/* void checkLoadURIWithPrincipal (in nsIPrincipal aPrincipal, in nsIURI uri, in unsigned long flags); */
+NS_IMETHODIMP
+FullTrustSecMan::CheckLoadURIWithPrincipal(nsIPrincipal *aPrincipal,
+                                           nsIURI *uri, PRUint32 flags)
+{
+    return NS_OK;
+}
+
+/* void checkLoadURI (in nsIURI from, in nsIURI uri, in unsigned long flags); */
+NS_IMETHODIMP
+FullTrustSecMan::CheckLoadURI(nsIURI *from, nsIURI *uri, PRUint32 flags)
+{
+    return NS_OK;
+}
+
+/* void checkLoadURIStrWithPrincipal (in nsIPrincipal aPrincipal, in AUTF8String uri, in unsigned long flags); */
+NS_IMETHODIMP
+FullTrustSecMan::CheckLoadURIStrWithPrincipal(nsIPrincipal *aPrincipal,
+                                              const nsACString & uri,
+                                              PRUint32 flags)
+{
+    return NS_OK;
+}
+
+/* void checkLoadURIStr (in AUTF8String from, in AUTF8String uri, in unsigned long flags); */
+NS_IMETHODIMP
+FullTrustSecMan::CheckLoadURIStr(const nsACString & from,
+                                 const nsACString & uri, PRUint32 flags)
+{
+    return NS_OK;
+}
+
+/* [noscript] void checkFunctionAccess (in JSContextPtr cx, in voidPtr funObj, in voidPtr targetObj); */
+NS_IMETHODIMP
+FullTrustSecMan::CheckFunctionAccess(JSContext * cx, void * funObj,
+                                     void * targetObj)
+{
+    return NS_OK;
+}
+
+/* [noscript] boolean canExecuteScripts (in JSContextPtr cx, in nsIPrincipal principal); */
+NS_IMETHODIMP
+FullTrustSecMan::CanExecuteScripts(JSContext * cx, nsIPrincipal *principal,
+                                   PRBool *_retval)
+{
+    *_retval = PR_TRUE;
+    return NS_OK;
+}
+
+/* [noscript] nsIPrincipal getSubjectPrincipal (); */
+NS_IMETHODIMP
+FullTrustSecMan::GetSubjectPrincipal(nsIPrincipal **_retval)
+{
+    NS_IF_ADDREF(*_retval = mSystemPrincipal);
+    return *_retval ? NS_OK : NS_ERROR_FAILURE;
+}
+
+/* [noscript] nsIPrincipal getSystemPrincipal (); */
+NS_IMETHODIMP
+FullTrustSecMan::GetSystemPrincipal(nsIPrincipal **_retval)
+{
+    NS_IF_ADDREF(*_retval = mSystemPrincipal);
+    return *_retval ? NS_OK : NS_ERROR_FAILURE;
+}
+
+/* [noscript] nsIPrincipal getCertificatePrincipal (in AUTF8String aCertFingerprint, in AUTF8String aSubjectName, in AUTF8String aPrettyName, in nsISupports aCert, in nsIURI aURI); */
+NS_IMETHODIMP
+FullTrustSecMan::GetCertificatePrincipal(const nsACString & aCertFingerprint,
+                                         const nsACString & aSubjectName,
+                                         const nsACString & aPrettyName,
+                                         nsISupports *aCert, nsIURI *aURI,
+                                         nsIPrincipal **_retval)
+{
+    NS_IF_ADDREF(*_retval = mSystemPrincipal);
+    return *_retval ? NS_OK : NS_ERROR_FAILURE;
+}
+
+/* [noscript] nsIPrincipal getCodebasePrincipal (in nsIURI aURI); */
+NS_IMETHODIMP
+FullTrustSecMan::GetCodebasePrincipal(nsIURI *aURI, nsIPrincipal **_retval)
+{
+    NS_IF_ADDREF(*_retval = mSystemPrincipal);
+    return *_retval ? NS_OK : NS_ERROR_FAILURE;
+}
+
+/* [noscript] short requestCapability (in nsIPrincipal principal, in string capability); */
+NS_IMETHODIMP
+FullTrustSecMan::RequestCapability(nsIPrincipal *principal,
+                                   const char *capability, PRInt16 *_retval)
+{
+    *_retval = nsIPrincipal::ENABLE_GRANTED;
+    return NS_OK;
+}
+
+/* boolean isCapabilityEnabled (in string capability); */
+NS_IMETHODIMP
+FullTrustSecMan::IsCapabilityEnabled(const char *capability, PRBool *_retval)
+{
+    *_retval = PR_TRUE;
+    return NS_OK;
+}
+
+/* void enableCapability (in string capability); */
+NS_IMETHODIMP
+FullTrustSecMan::EnableCapability(const char *capability)
+{
+    return NS_OK;;
+}
+
+/* void revertCapability (in string capability); */
+NS_IMETHODIMP
+FullTrustSecMan::RevertCapability(const char *capability)
+{
+    return NS_OK;
+}
+
+/* void disableCapability (in string capability); */
+NS_IMETHODIMP
+FullTrustSecMan::DisableCapability(const char *capability)
+{
+    return NS_OK;
+}
+
+/* void setCanEnableCapability (in AUTF8String certificateFingerprint, in string capability, in short canEnable); */
+NS_IMETHODIMP
+FullTrustSecMan::SetCanEnableCapability(const nsACString & certificateFingerprint,
+                                        const char *capability,
+                                        PRInt16 canEnable)
+{
+    return NS_OK;
+}
+
+/* [noscript] nsIPrincipal getObjectPrincipal (in JSContextPtr cx, in JSObjectPtr obj); */
+NS_IMETHODIMP
+FullTrustSecMan::GetObjectPrincipal(JSContext * cx, JSObject * obj,
+                                    nsIPrincipal **_retval)
+{
+    NS_IF_ADDREF(*_retval = mSystemPrincipal);
+    return *_retval ? NS_OK : NS_ERROR_FAILURE;
+}
+
+/* [noscript] boolean subjectPrincipalIsSystem (); */
+NS_IMETHODIMP
+FullTrustSecMan::SubjectPrincipalIsSystem(PRBool *_retval)
+{
+    *_retval = PR_TRUE;
+    return NS_OK;
+}
+
+/* [noscript] void checkSameOrigin (in JSContextPtr aJSContext, in nsIURI aTargetURI); */
+NS_IMETHODIMP
+FullTrustSecMan::CheckSameOrigin(JSContext * aJSContext, nsIURI *aTargetURI)
+{
+    return NS_OK;
+}
+
+/* void checkSameOriginURI (in nsIURI aSourceURI, in nsIURI aTargetURI); */
+NS_IMETHODIMP
+FullTrustSecMan::CheckSameOriginURI(nsIURI *aSourceURI, nsIURI *aTargetURI)
+{
+    return NS_OK;
+}
+
+/* void checkSameOriginPrincipal (in nsIPrincipal aSourcePrincipal, in nsIPrincipal aTargetPrincipal); */
+NS_IMETHODIMP
+FullTrustSecMan::CheckSameOriginPrincipal(nsIPrincipal *aSourcePrincipal,
+                                          nsIPrincipal *aTargetPrincipal)
+{
+    return NS_OK;
+}
+
+/* [noscript] nsIPrincipal getPrincipalFromContext (in JSContextPtr cx); */
+NS_IMETHODIMP
+FullTrustSecMan::GetPrincipalFromContext(JSContext * cx, nsIPrincipal **_retval)
+{
+    NS_IF_ADDREF(*_retval = mSystemPrincipal);
+    return *_retval ? NS_OK : NS_ERROR_FAILURE;
+}
+
+/* [noscript] nsIPrincipal getChannelPrincipal (in nsIChannel aChannel); */
+NS_IMETHODIMP
+FullTrustSecMan::GetChannelPrincipal(nsIChannel *aChannel, nsIPrincipal **_retval)
+{
+    NS_IF_ADDREF(*_retval = mSystemPrincipal);
+    return *_retval ? NS_OK : NS_ERROR_FAILURE;
+}
+#endif
 
 /***************************************************************************/
 
@@ -1076,12 +1332,8 @@ main(int argc, char **argv, char **envp)
 
         // Since the caps security system might set a default security manager
         // we will be sure that the secman on this context gives full trust.
-        // That way we can avoid getting principals from the caps security manager
-        // just to shut it up. Also, note that even though our secman will allow
-        // anything, we set the flags to '0' so it ought never get called anyway.
-        nsCOMPtr<nsIXPCSecurityManager> secman =
-            NS_STATIC_CAST(nsIXPCSecurityManager*, new FullTrustSecMan());
-        xpc->SetSecurityManagerForJSContext(cx, secman, 0);
+        nsRefPtr<FullTrustSecMan> secman = new FullTrustSecMan();
+        xpc->SetSecurityManagerForJSContext(cx, secman, 0xFFFF);
 
         //    xpc->SetCollectGarbageOnMainThreadOnly(PR_TRUE);
         //    xpc->SetDeferReleasesUntilAfterGarbageCollection(PR_TRUE);
@@ -1105,6 +1357,7 @@ main(int argc, char **argv, char **envp)
                     if (NS_FAILED(rv)) {
                         fprintf(gErrFile, "+++ Failed to obtain JS principals from SystemPrincipal.\n");
                     }
+                    secman->SetSystemPrincipal(princ);
                 }
             } else {
                 fprintf(gErrFile, "+++ Failed to get ScriptSecurityManager service, running without principals");
@@ -1180,6 +1433,7 @@ main(int argc, char **argv, char **envp)
                     (void**) getter_AddRefs(bogus));
 #endif
 
+        JSPRINCIPALS_DROP(cx, gJSPrincipals);
         JS_ClearScope(cx, glob);
         JS_GC(cx);
         JSContext *oldcx;
