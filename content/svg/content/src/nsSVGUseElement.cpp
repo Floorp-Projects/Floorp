@@ -38,7 +38,6 @@
 #include "nsIDOMSVGGElement.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMSVGAnimatedLength.h"
-#include "nsISVGSVGElement.h"
 #include "nsIDOMSVGAnimatedString.h"
 #include "nsSVGAnimatedString.h"
 #include "nsIDOMDocument.h"

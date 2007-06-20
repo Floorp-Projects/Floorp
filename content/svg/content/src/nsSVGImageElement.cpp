@@ -40,7 +40,6 @@
 #include "nsSVGLength.h"
 #include "nsSVGAnimatedString.h"
 #include "nsCOMPtr.h"
-#include "nsISVGSVGElement.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsSVGAnimatedPreserveAspectRatio.h"

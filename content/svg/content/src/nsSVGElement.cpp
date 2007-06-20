@@ -55,7 +55,6 @@
 #include "nsIXBLService.h"
 #include "nsGkAtoms.h"
 #include "nsICSSStyleRule.h"
-#include "nsISVGSVGElement.h"
 #include "nsRuleWalker.h"
 #include "nsCSSDeclaration.h"
 #include "nsCSSProps.h"
