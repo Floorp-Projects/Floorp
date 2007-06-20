@@ -36,6 +36,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
+# $Id: fix-linux-stack.pl,v 1.15 2007/06/20 22:01:17 dbaron%dbaron.org Exp $
+#
 # This script uses addr2line (part of binutils) to process the output of
 # nsTraceRefcnt's Linux stack walking code.  This is useful for two
 # things:
@@ -109,8 +111,9 @@ sub separate_debug_file_for($) {
     # We can read the .gnu_debuglink section using either of:
     #   objdump -s --section=.gnu_debuglink $file
     #   readelf -x .gnu_debuglink $file
-    # Since we already depend on readelf in |address_adjustment|, use it
-    # again here.
+    # Since readelf prints things backwards on little-endian platforms
+    # for some versions only (backwards on Fedora Core 6, forwards on
+    # Fedora 7), use objdump.
 
     # See if there's a .gnu_debuglink section
     my $have_debuglink = 0;
@@ -139,19 +142,13 @@ sub separate_debug_file_for($) {
         return '';
     }
 
-    # Read the debuglink section as an array of words, in hexidecimal,
-    # library endianness.  (I'm guessing that readelf's big-endian
-    # output is sensible; I've only tested little-endian, where it's a
-    # bit odd.)
-    open(DEBUGLINK, '-|', 'readelf', '-x', '.gnu_debuglink', $file);
+
+    # Read the debuglink section as an array of words, in hexidecimal.
+    open(DEBUGLINK, '-|', 'objdump', '-s', '--section=.gnu_debuglink', $file);
     my @words;
     while (<DEBUGLINK>) {
-        if ($_ =~ /^  0x[0-9a-f]{8} ([0-9a-f ]{8}) ([0-9a-f ]{8}) ([0-9a-f ]{8}) ([0-9a-f ]{8}).*/) {
-            if ($endian eq 'little') {
-                push @words, $4, $3, $2, $1;
-            } else {
-                push @words, $1, $2, $3, $4;
-            }
+        if ($_ =~ /^ [0-9a-f]* ([0-9a-f ]{8}) ([0-9a-f ]{8}) ([0-9a-f ]{8}) ([0-9a-f ]{8}).*/) {
+            push @words, $1, $2, $3, $4;
         }
     }
     close(DEBUGLINK);
@@ -169,13 +166,9 @@ sub separate_debug_file_for($) {
     while ($#words >= 0) {
         my $w = shift @words;
         if ($w =~ /^([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/) {
-            if ($endian eq 'little') {
-                push @chars, $4, $3, $2, $1;
-            } else {
-                push @chars, $1, $2, $3, $4;
-            }
+            push @chars, $1, $2, $3, $4;
         } else {
-            print STDERR "Warning: malformed readelf output for $file.\n";
+            print STDERR "Warning: malformed objdump output for $file.\n";
             return '';
         }
     }
