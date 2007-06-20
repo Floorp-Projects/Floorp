@@ -1,0 +1,199 @@
+#! python
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is l10n test automation.
+#
+# The Initial Developer of the Original Code is
+# Mozilla Foundation
+# Portions created by the Initial Developer are Copyright (C) 2007
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#	Axel Hecht <l10n@mozilla.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+
+import logging
+import os.path
+import re
+from optparse import OptionParser
+from pprint   import pprint
+from zipfile  import ZipFile
+
+from Mozilla import Parser
+
+usage = 'usage: %prog [options] language-pack reference-pack'
+parser = OptionParser(usage=usage)
+
+parser.add_option('-v', '--verbose', action='count', dest='v', default=0,
+                  help='Report more detail')
+parser.add_option('-q', '--quiet', action='count', dest='q', default=0,
+                  help='Report less detail')
+
+(options, args) = parser.parse_args()
+if len(args) != 2:
+  parser.error('language pack and reference pack required')
+
+# log as verbose or quiet as we want, warn by default
+logging.basicConfig(level=(logging.WARNING - (options.v - options.q)*10))
+
+# we expect two jar files
+assert args[0].endswith('.jar') and args[1].endswith('.jar') \
+       , "Only jar files supported at the moment"
+
+l10n_jar = ZipFile(args[0])
+if l10n_jar.testzip():
+  parser.error('bad language pack: ' + args[0])
+l10n_locale = os.path.basename(args[0][:-4])
+
+ref_jar = ZipFile(args[1])
+if ref_jar.testzip():
+  parser.error('bad language pack: ' + args[1])
+ref_locale = os.path.basename(args[1][:-4])
+
+l10n_entries = set(l10n_jar.namelist())
+ref_entries = set(ref_jar.namelist())
+
+common_entries = l10n_entries & ref_entries
+l10n_entries = sorted(l10n_entries - common_entries)
+ref_entries = sorted(ref_entries - common_entries)
+common_entries = sorted(common_entries)
+
+result = {'missing':[],'obsolete':[],
+          'missingFiles':[],'obsoleteFiles':[],
+          'changed':0,'unchanged':0,'keys':0}
+key = re.compile('[kK]ey')
+
+# helper function to compare two jar entries
+
+def compareFiles(l10n_name, ref_name):
+  try:
+    parser = Parser.getParser(ref_name)
+  except UserWarning:
+    logging.warning(" Can't compare " + ref_name)
+    return
+  parser.parse(ref_jar.read(ref_name))
+  enTmp = parser.mapping()
+  parser.parse(l10n_jar.read(l10n_name))
+  for k,v in parser:
+    if k not in enTmp:
+      result['obsolete'].append((l10n_name,k))
+      continue
+    enVal = enTmp[k]
+    del enTmp[k]
+    if key.search(k):
+      result['keys'] += 1
+    else:
+      if enVal == v:
+        result['unchanged'] +=1
+        logging.info('%s in %s unchanged' %
+                     (k, name))
+      else:
+        result['changed'] +=1
+  result['missing'] += [(l10n_name,k) for k in enTmp.keys()]
+
+# compare those entries with identical name
+
+for name in common_entries:
+  compareFiles(name, name)
+
+# compare those entries with different name.
+# if the path matches locale/ab-CD/foo, replace the
+# language code with @AB_CD@ to compare
+#
+# We detect missing and obsolete files here, too.
+
+l10n_key = ref_key = None
+while len(l10n_entries) and len(ref_entries):
+  # we need to check the next entry in the tested pack
+  if not l10n_key:
+    l10n_key = l10n_entry = l10n_entries.pop(0)
+    if l10n_key.startswith('locale/' + l10n_locale) and \
+           not l10n_key.endswith('/'):
+      # it's a locale/ab-CD file, but not a directory
+      l10n_key = l10n_key.replace('locale/' + l10n_locale, 'locale/@AB_CD@')
+    else:
+      # directories and non-locale/ab-CD files are assumed to be obsolete
+      l10n_key = None
+      result['obsoleteFiles'].append(l10n_entry)
+      continue
+  # we need to check the next entry in the reference pack
+  if not ref_key:
+    ref_key = ref_entry = ref_entries.pop(0)
+    if ref_key.startswith('locale/' + ref_locale) and \
+           not ref_key.endswith('/'):
+      ref_key = ref_key.replace('locale/' + ref_locale, 'locale/@AB_CD@')
+    else:
+      ref_key = None
+      result['missingFiles'].append(ref_entry)
+      continue
+  # check if we found matching files
+  if l10n_key != ref_key:
+    # not, report missing or obsolete, and skip
+    if l10n_key < ref_key:
+      l10n_key = None
+      result['obsoleteFiles'].append(l10n_entry)
+    else:
+      ref_key = None
+      result['missingFiles'].append(ref_entry)
+    continue
+  compareFiles(l10n_entry, ref_entry)
+  # both entries dealt with, unset keys to pop new ones in both jars
+  l10n_key = ref_key = None
+
+# remaining files are either missing or obsolete
+result['missingFiles'] += ref_entries
+result['obsoleteFiles'] += l10n_entries
+
+# collapse the arrays to a more consice hash.
+dic = dict()
+def collectList(name):
+  dic[name] = {}
+  if name not in result:
+    result[name] = []
+  for path, key in result[name]:
+    if path not in dic[name]:
+      dic[name][path] = [key]
+    else:
+      dic[name][path].append(key)
+      dic[name][path].sort()
+  name += 'Files'
+  dic[name] = []
+  if name not in result:
+    result[name] = []
+  for path in result[name]:
+    dic[name].append(path)
+
+collectList('missing')
+collectList('obsolete')
+
+pprint(dic)
+
+rate = result['changed']*100/ \
+       (result['changed'] + result['unchanged'] + result['missing'])
+
+print('%d%% of entries changed' % rate)
