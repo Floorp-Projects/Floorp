@@ -2918,7 +2918,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
             }
         }
         if (!messageStr.IsEmpty())
-            error.AssignLiteral("nssFailure");
+            error.AssignLiteral("nssFailure2");
     }
     else {
         // Errors requiring simple formatting
