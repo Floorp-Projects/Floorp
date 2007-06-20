@@ -2120,7 +2120,7 @@ nsNavHistoryQueryResultNode::FillChildren()
   // get the results from the history service
   nsresult rv = VerifyQueriesParsed();
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = history->GetQueryResults(mQueries, mOptions, &mChildren);
+  rv = history->GetQueryResults(this, mQueries, mOptions, &mChildren);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // it is important to call FillStats to fill in the parents on all
@@ -2398,7 +2398,7 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, PRInt64 aVisitId,
     nsCOMArray<nsNavHistoryResultNode> itemSource;
     if (! itemSource.AppendObject(addition))
       return NS_ERROR_OUT_OF_MEMORY;
-    history->RecursiveGroup(itemSource, groupings, groupCount, &grouped);
+    history->RecursiveGroup(this, itemSource, groupings, groupCount, &grouped);
   } else {
     // no grouping
     if (! grouped.AppendObject(addition))

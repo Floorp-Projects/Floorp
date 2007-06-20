@@ -247,7 +247,8 @@ public:
 
   // this actually executes a query and gives you results, it is used by
   // nsNavHistoryQueryResultNode
-  nsresult GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
+  nsresult GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
+                           const nsCOMArray<nsNavHistoryQuery>& aQueries,
                            nsNavHistoryQueryOptions *aOptions,
                            nsCOMArray<nsNavHistoryResultNode>* aResults);
 
@@ -299,7 +300,8 @@ public:
   static void DomainNameFromHostName(const nsCString& aHostName,
                                      nsACString& aDomainName);
   static PRTime NormalizeTime(PRUint32 aRelative, PRTime aOffset);
-  nsresult RecursiveGroup(const nsCOMArray<nsNavHistoryResultNode>& aSource,
+  nsresult RecursiveGroup(nsNavHistoryQueryResultNode *aResultNode,
+                          const nsCOMArray<nsNavHistoryResultNode>& aSource,
                           const PRUint16* aGroupingMode, PRUint32 aGroupCount,
                           nsCOMArray<nsNavHistoryResultNode>* aDest);
 
@@ -499,10 +501,12 @@ protected:
   nsresult SetPageTitleInternal(nsIURI* aURI, PRBool aIsUserTitle,
                                 const nsAString& aTitle);
 
-  nsresult GroupByDay(const nsCOMArray<nsNavHistoryResultNode>& aSource,
-                       nsCOMArray<nsNavHistoryResultNode>* aDest);
+  nsresult GroupByDay(nsNavHistoryQueryResultNode *aResultNode,
+                      const nsCOMArray<nsNavHistoryResultNode>& aSource,
+                      nsCOMArray<nsNavHistoryResultNode>* aDest);
 
-  nsresult GroupByHost(const nsCOMArray<nsNavHistoryResultNode>& aSource,
+  nsresult GroupByHost(nsNavHistoryQueryResultNode *aResultNode,
+                       const nsCOMArray<nsNavHistoryResultNode>& aSource,
                        nsCOMArray<nsNavHistoryResultNode>* aDest,
                        PRBool aIsDomain);
 

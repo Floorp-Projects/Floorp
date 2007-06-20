@@ -837,8 +837,8 @@ PlacesTreeView.prototype = {
 
   _getResourceForNode : function PTV_getResourceForNode(aNode)
   {
-    // XXXndeakin bug 380735, need to support day/host containers as well
     var uri = aNode.uri;
+    NS_ASSERT(uri, "if there is no uri, we can't persist the open state");
     return uri ? PlacesUtils.RDF.GetResource(uri) : null;
   },
 
