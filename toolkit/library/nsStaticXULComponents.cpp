@@ -160,6 +160,12 @@
 #define SYSTEMPREF_MODULES
 #endif
 
+#ifdef MOZ_ENABLE_EXTENSION_LAYOUT_DEBUG
+#define LAYOUT_DEBUG_MODULE MODULE(nsLayoutDebugModule)
+#else
+#define LAYOUT_DEBUG_MODULE
+#endif
+
 #ifdef MOZ_PLUGINS
 #define PLUGINS_MODULES \
     MODULE(nsPluginModule)
@@ -293,6 +299,7 @@
     MODULE(NSS)                              \
     SYSTEMPREF_MODULES                       \
     SPELLCHECK_MODULE                        \
+    LAYOUT_DEBUG_MODULE                      \
     /* end of list */
 
 #define MODULE(_name) \
