@@ -38,7 +38,6 @@
 #include "nsSVGAnimatedEnumeration.h"
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsCOMPtr.h"
-#include "nsISVGSVGElement.h"
 #include "nsGkAtoms.h"
 #include "nsSVGMaskElement.h"
 
