@@ -39,7 +39,7 @@
 #include "nsContentUtils.h"
 #include "nsSVGRect.h"
 #include "nsSVGPoint.h"
-#include "nsISVGSVGElement.h"
+#include "nsSVGSVGElement.h"
 #include "nsIDOMSVGSVGElement.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
@@ -74,7 +74,7 @@ nsDOMSVGZoomEvent::nsDOMSVGZoomEvent(nsPresContext* aPresContext,
     if (doc) {
       nsIContent *rootContent = doc->GetRootContent();
       if (rootContent) {
-        // If the root element isn't an SVG 'svg' element these QIs will fail
+        // If the root element isn't an SVG 'svg' element this QI will fail
         // (e.g. if this event was created by calling createEvent on a
         // non-SVGDocument). In these circumstances the "New" and "Previous"
         // properties will be left null which is probably what we want.
@@ -87,16 +87,16 @@ nsDOMSVGZoomEvent::nsDOMSVGZoomEvent(nsPresContext* aPresContext,
           currentTranslate->GetX(&x);
           currentTranslate->GetY(&y);
           NS_NewSVGReadonlyPoint(getter_AddRefs(mNewTranslate), x, y);
-        }
-        nsCOMPtr<nsISVGSVGElement> privSVGElement = do_QueryInterface(rootContent);
-        if (svgElement) {
-          mPreviousScale = privSVGElement->GetPreviousScale();
+
+          nsSVGSVGElement *SVGSVGElement =
+            NS_STATIC_CAST(nsSVGSVGElement*, rootContent);
+          mPreviousScale = SVGSVGElement->GetPreviousScale();
           NS_NewSVGReadonlyPoint(getter_AddRefs(mPreviousTranslate),
-                                 privSVGElement->GetPreviousTranslate_x(),
-                                 privSVGElement->GetPreviousTranslate_y());
+                                 SVGSVGElement->GetPreviousTranslate_x(),
+                                 SVGSVGElement->GetPreviousTranslate_y());
           // Important: we call RecordCurrentST() here to make sure that
           // scripts that create an SVGZoomEvent won't get our "Previous" data
-          privSVGElement->RecordCurrentScaleTranslate();
+          SVGSVGElement->RecordCurrentScaleTranslate();
         }
       }
     }

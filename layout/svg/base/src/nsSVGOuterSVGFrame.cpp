@@ -137,9 +137,7 @@ NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleCo
 {  
   nsCOMPtr<nsIDOMSVGSVGElement> svgElement = do_QueryInterface(aContent);
   if (!svgElement) {
-#ifdef DEBUG
-    printf("warning: trying to construct an SVGOuterSVGFrame for a content element that doesn't support the right interfaces\n");
-#endif
+    NS_ERROR("Can't create frame! Content is not an SVG 'svg' element!");
     return nsnull;
   }
 
@@ -157,13 +155,11 @@ nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
 NS_IMETHODIMP
 nsSVGOuterSVGFrame::InitSVG()
 {
-  nsCOMPtr<nsISVGSVGElement> SVGElement = do_QueryInterface(mContent);
-  NS_ASSERTION(SVGElement, "wrong content element");
-
   nsIDocument* doc = mContent->GetCurrentDoc();
   if (doc) {
     // we only care about our content's zoom and pan values if it's the root element
     if (doc->GetRootContent() == mContent) {
+      nsSVGSVGElement *SVGElement = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
       SVGElement->GetZoomAndPanEnum(getter_AddRefs(mZoomAndPan));
       SVGElement->GetCurrentTranslate(getter_AddRefs(mCurrentTranslate));
       SVGElement->GetCurrentScaleNumber(getter_AddRefs(mCurrentScale));
