@@ -223,3 +223,7 @@ ifdef MOZ_JAVAXPCOM
 dlldeps-javaxpcom.cpp: $(topsrcdir)/extensions/java/xpcom/src/dlldeps-javaxpcom.cpp
 	$(INSTALL) $^ .
 endif
+
+ifneq (,$(filter layout-debug,$(MOZ_EXTENSIONS)))
+DEFINES += -DMOZ_ENABLE_EXTENSION_LAYOUT_DEBUG
+endif
