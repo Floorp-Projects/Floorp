@@ -1513,7 +1513,7 @@ fun_trace(JSTracer *trc, JSObject *obj)
     fun = (JSFunction *) JS_GetPrivate(trc->context, obj);
     if (fun) {
         JS_CALL_TRACER(trc, fun, JSTRACE_FUNCTION, "private");
-        if (fun->object != obj)
+        if (IS_GC_MARKING_TRACER(trc) && fun->object != obj)
             JS_CALL_TRACER(trc, fun->object, JSTRACE_OBJECT, "object");
         if (fun->atom)
             JS_CALL_TRACER(trc, fun->atom, JSTRACE_ATOM, "atom");
