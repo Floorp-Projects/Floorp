@@ -337,7 +337,7 @@
               return;
             }
           }
-          thorw("Container view not found");
+          throw("Container view not found");
         },
 
         itemInserted: function PMV_itemInserted(aParentNode, aNode, aIndex) {
