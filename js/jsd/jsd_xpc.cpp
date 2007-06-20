@@ -683,12 +683,11 @@ jsds_ExecutionHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
         
     if (hook_rv == JSD_HOOK_RETURN_RET_WITH_VAL ||
         hook_rv == JSD_HOOK_RETURN_THROW_WITH_VAL) {
+        *rval = JSVAL_VOID;
         if (js_rv) {
             JSDValue *jsdv;
-            js_rv->GetJSDValue (&jsdv);
-            *rval = JSD_GetValueWrappedJSVal(jsdc, jsdv);
-        } else {
-            *rval = JSVAL_VOID;
+            if (NS_SUCCEEDED(js_rv->GetJSDValue (&jsdv)))
+                *rval = JSD_GetValueWrappedJSVal(jsdc, jsdv);
         }
     }
     
@@ -1168,7 +1167,9 @@ void
 jsdScript::InvalidateAll ()
 {
     JSDContext *cx;
-    gJsds->GetJSDContext (&cx);
+    if (NS_FAILED(gJsds->GetJSDContext (&cx)))
+        return;
+
     JSDScript *script;
     JSDScript *iter = NULL;
     
@@ -1235,16 +1236,17 @@ jsdScript::GetFunctionObject(jsdIValue **_rval)
         return NS_ERROR_FAILURE;
 
     JSDContext *cx;
-    gJsds->GetJSDContext (&cx);
+    if (NS_FAILED(gJsds->GetJSDContext (&cx)))
+        return NS_ERROR_NOT_INITIALIZED;
 
     JSDValue *jsdv = JSD_NewValue(cx, OBJECT_TO_JSVAL(obj));
     if (!jsdv)
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_OUT_OF_MEMORY;
 
     *_rval = jsdValue::FromPtr(cx, jsdv);
     if (!*_rval) {
         JSD_DropValue(cx, jsdv);
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_OUT_OF_MEMORY;
     }
 
     return NS_OK;
