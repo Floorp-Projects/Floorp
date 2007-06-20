@@ -134,6 +134,7 @@ protected:
                       PRUint32 aStart, PRUint32 aEnd, PRUint32 aHash,
                       nsTArray<DeferredWord>* aDeferredWords);
     void FinishTextRun(gfxTextRun *aTextRun, gfxTextRun *aNewRun,
+                       gfxContext *aContext,
                        const nsTArray<DeferredWord>& aDeferredWords,
                        PRBool aSuccessful);
     void RemoveWord(gfxTextRun *aTextRun, PRUint32 aStart,
