@@ -3175,6 +3175,7 @@ main(int argc, char **argv, char **envp)
     if (!cx)
         return 1;
     JS_SetErrorReporter(cx, my_ErrorReporter);
+    JS_SetVersion(cx, JSVERSION_LATEST);
 
 #ifdef JS_THREADSAFE
     JS_BeginRequest(cx);
