@@ -530,6 +530,8 @@ mozJSComponentLoader::ReallyInit()
         return NS_ERROR_OUT_OF_MEMORY;
     if (!mImports.Init(32))
         return NS_ERROR_OUT_OF_MEMORY;
+    if (!mInProgressImports.Init(32))
+        return NS_ERROR_OUT_OF_MEMORY;
 
     // Set up our fastload file
     nsCOMPtr<nsIFastLoadService> flSvc = do_GetFastLoadService(&rv);
@@ -1251,11 +1253,16 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
     // Restore the old state of the fastload service.
     flState.pop();
 
+    // Assign aGlobal here so that it's available to recursive imports.
+    // See bug 384168.
+    *aGlobal = global;
+
     jsval retval;
     if (!JS_ExecuteScript(cx, global, script, &retval)) {
 #ifdef DEBUG_shaver_off
         fprintf(stderr, "mJCL: failed to execute %s\n", nativePath.get());
 #endif
+        *aGlobal = nsnull;
         return NS_ERROR_FAILURE;
     }
 
@@ -1263,10 +1270,11 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
     nsCAutoString path;
     aComponent->GetNativePath(path);
     *aLocation = ToNewCString(path);
-    if (!*aLocation)
+    if (!*aLocation) {
+        *aGlobal = nsnull;
         return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-    *aGlobal = global;
     JS_AddNamedRoot(cx, aGlobal, *aLocation);
     return NS_OK;
 }
@@ -1276,15 +1284,15 @@ mozJSComponentLoader::UnloadModules()
 {
     mInitialized = PR_FALSE;
 
-    mModules.Clear();
+    mInProgressImports.Clear();
     mImports.Clear();
+    mModules.Clear();
 
     // Destroying our context will force a GC.
     JS_DestroyContext(mContext);
     mContext = nsnull;
 
     mRuntimeService = nsnull;
-
 #ifdef DEBUG_shaver_off
     fprintf(stderr, "mJCL: UnloadAll(%d)\n", aWhen);
 #endif
@@ -1422,18 +1430,21 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
 
     ModuleEntry* mod;
     nsAutoPtr<ModuleEntry> newEntry;
-    if (!mImports.Get(lfhash, &mod)) {
+    if (!mImports.Get(lfhash, &mod) && !mInProgressImports.Get(lfhash, &mod)) {
         newEntry = new ModuleEntry;
-        if (!newEntry)
+        if (!newEntry || !mInProgressImports.Put(lfhash, newEntry))
             return NS_ERROR_OUT_OF_MEMORY;
-        
+
         rv = GlobalForLocation(componentFile, &newEntry->global,
                                &newEntry->location);
+
+        mInProgressImports.Remove(lfhash);
+
         if (NS_FAILED(rv)) {
             *_retval = nsnull;
             return NS_ERROR_FILE_NOT_FOUND;
         }
-        
+
         mod = newEntry;
     }
 
