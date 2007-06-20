@@ -248,10 +248,6 @@ struct JSAtomState {
 #endif
 };
 
-#define ATOM_OFFSET(name)       offsetof(JSAtomState, name##Atom)
-#define OFFSET_TO_ATOM(rt,off)  (*(JSAtom **)((char*)&(rt)->atomState + (off)))
-#define CLASS_ATOM_OFFSET(name) offsetof(JSAtomState,classAtoms[JSProto_##name])
-
 #define CLASS_ATOM(cx,name) \
     ((cx)->runtime->atomState.classAtoms[JSProto_##name])
 
