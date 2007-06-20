@@ -615,7 +615,7 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter)
     if (JSID_IS_ATOM(id)) {
         atom = JSID_TO_ATOM(id);
     } else if (JSID_IS_INT(id)) {
-        atom = js_AtomizeInt(cx, JSID_TO_INT(id), 0);
+        atom = js_ValueToStringAtom(cx, INT_JSID_TO_JSVAL(id));
         if (!atom)
             return NULL;
     } else {
