@@ -1267,7 +1267,11 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
            js_InitDateClass(cx, obj);
 }
 
-#define CLASP(name)                 ((JSClass *)&js_##name##Class)
+#define ATOM_OFFSET(name)       offsetof(JSAtomState,name##Atom)
+#define CLASS_ATOM_OFFSET(name) offsetof(JSAtomState,classAtoms[JSProto_##name])
+#define OFFSET_TO_ATOM(rt,off)  (*(JSAtom **)((char*)&(rt)->atomState + (off)))
+#define CLASP(name)             (JSClass *)&js_##name##Class
+
 #define EAGER_ATOM(name)            ATOM_OFFSET(name), NULL
 #define EAGER_CLASS_ATOM(name)      CLASS_ATOM_OFFSET(name), NULL
 #define EAGER_ATOM_AND_CLASP(name)  EAGER_CLASS_ATOM(name), CLASP(name)
@@ -1636,7 +1640,11 @@ JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj,
     return js_SetIdArrayLength(cx, ida, i);
 }
 
+#undef ATOM_OFFSET
+#undef CLASS_ATOM_OFFSET
+#undef OFFSET_TO_ATOM
 #undef CLASP
+
 #undef EAGER_ATOM
 #undef EAGER_CLASS_ATOM
 #undef EAGER_ATOM_CLASP
