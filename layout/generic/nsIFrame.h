@@ -248,8 +248,7 @@ enum {
 
   // Box layout bits
   NS_STATE_IS_HORIZONTAL =                      0x00400000,
-  NS_STATE_IS_DIRECTION_NORMAL =                0x80000000,
-
+  NS_STATE_IS_DIRECTION_NORMAL =                0x80000000
 };
 
 // Helper macros
