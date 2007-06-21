@@ -293,6 +293,7 @@ SessionStoreService.prototype = {
           delete aBrowser.parentNode.__SS_data;
         });
       });
+      this._lastWindowClosed = null;
       this._clearDisk();
       // also clear all data about closed tabs
       for (ix in this._windows) {
@@ -412,7 +413,7 @@ SessionStoreService.prototype = {
       this._loadState = STATE_RUNNING;
       this._lastSaveTime = Date.now();
       
-      // don't save during the first five seconds
+      // don't save during the first ten seconds
       // (until most of the pages have been restored)
       this.saveStateDelayed(aWindow, 10000);
 
@@ -1296,8 +1297,8 @@ SessionStoreService.prototype = {
     }
 
     // helper hash for ensuring unique frame IDs
-    var aIdMap = { used: {} };
-    this.restoreHistory(aWindow, aTabs, aIdMap);
+    var idMap = { used: {} };
+    this.restoreHistory(aWindow, aTabs, idMap);
   },
 
   /**
