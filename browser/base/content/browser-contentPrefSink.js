@@ -84,7 +84,14 @@ var ContentPrefSink = {
     gBrowser.removeEventListener("DOMContentLoaded", this, false);
     gBrowser.removeProgressListener(this);
 
-    this._observers = null;
+    // Delete reference to an XPCOM component to make sure we don't leak it
+    // (although we haven't observed leakage in tests).
+    this.__cps = null;
+
+    // Delete references to observers to avoid cycles with those that refer
+    // to us and don't remove themselves from the observer pool.
+    this._observers = {};
+    this._genericObservers = [];
   },
 
 

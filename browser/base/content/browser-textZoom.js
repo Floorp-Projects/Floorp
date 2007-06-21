@@ -133,6 +133,11 @@ var TextZoom = {
     ContentPrefSink.removeObserver(this.name, this);
     this._cps.removeObserver(this.name, this);
     window.removeEventListener("DOMMouseScroll", this, false);
+
+    // Delete references to XPCOM components to make sure we don't leak them
+    // (although we haven't observed leakage in tests).
+    this.__cps = null;
+    this.__prefBranch = null;
   },
 
 
