@@ -1112,6 +1112,9 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
     }
 
     nsAccessibleWrap *accWrap = GetAccessibleWrap(atkObj);
+    if (!accWrap) {
+        return NS_OK; // Node is shut down
+    }
 
     AtkTableChange * pAtkTableChange = nsnull;
 
