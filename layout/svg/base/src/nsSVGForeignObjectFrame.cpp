@@ -38,21 +38,16 @@
 
 #include "nsSVGForeignObjectFrame.h"
 
-#include "nsISVGValue.h"
-#include "nsIDOMSVGGElement.h"
 #include "nsIDOMSVGForeignObjectElem.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsIDOMSVGSVGElement.h"
-#include "nsIDOMSVGPoint.h"
 #include "nsSpaceManager.h"
 #include "nsSVGOuterSVGFrame.h"
-#include "nsISVGValueUtils.h"
 #include "nsRegion.h"
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "nsSVGUtils.h"
 #include "nsIURI.h"
-#include "nsSVGPoint.h"
 #include "nsSVGRect.h"
 #include "nsSVGMatrix.h"
 #include "nsINameSpaceManager.h"
@@ -65,13 +60,13 @@
 // Implementation
 
 nsIFrame*
-NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
+NS_NewSVGForeignObjectFrame(nsIPresShell   *aPresShell,
+                            nsIContent     *aContent,
+                            nsStyleContext *aContext)
 {
   nsCOMPtr<nsIDOMSVGForeignObjectElement> foreignObject = do_QueryInterface(aContent);
   if (!foreignObject) {
-#ifdef DEBUG
-    printf("warning: trying to construct an SVGForeignObjectFrame for a content element that doesn't support the right interfaces\n");
-#endif
+    NS_ERROR("Can't create frame! Content is not an SVG foreignObject!");
     return nsnull;
   }
 
@@ -80,7 +75,8 @@ NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsSt
 
 nsSVGForeignObjectFrame::nsSVGForeignObjectFrame(nsStyleContext* aContext)
   : nsSVGForeignObjectFrameBase(aContext),
-    mPropagateTransform(PR_TRUE), mInReflow(PR_FALSE)
+    mPropagateTransform(PR_TRUE),
+    mInReflow(PR_FALSE)
 {
   AddStateBits(NS_FRAME_REFLOW_ROOT);
 }
@@ -97,6 +93,9 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGForeignObjectFrameBase)
 
 void nsSVGForeignObjectFrame::Destroy()
 {
+  // Delete any clipPath/filter/mask properties _before_ we die. The properties
+  // and property hash table have weak pointers to us that are dereferenced
+  // when the properties are destroyed.
   nsSVGUtils::StyleEffects(this);
   nsSVGForeignObjectFrameBase::Destroy();
 }
@@ -108,15 +107,15 @@ nsSVGForeignObjectFrame::GetType() const
 }
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::AttributeChanged(PRInt32         aNameSpaceID,
-                                          nsIAtom*        aAttribute,
-                                          PRInt32         aModType)
+nsSVGForeignObjectFrame::AttributeChanged(PRInt32  aNameSpaceID,
+                                          nsIAtom *aAttribute,
+                                          PRInt32  aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::width ||
         aAttribute == nsGkAtoms::height) {
+      UpdateGraphic(); // update mRect before requesting reflow
       RequestReflow(nsIPresShell::eStyleChange);
-      UpdateGraphic();
     } else if (aAttribute == nsGkAtoms::x ||
                aAttribute == nsGkAtoms::y) {
       UpdateGraphic();
@@ -140,8 +139,8 @@ nsSVGForeignObjectFrame::DidSetStyleContext()
 /* virtual */ void
 nsSVGForeignObjectFrame::MarkIntrinsicWidthsDirty()
 {
-  // Since we don't know whether this is because of a style change on an
-  // ancestor or descendant, mark the kid dirty.  If it's a descendant,
+  // Since we don't know whether this call is because of a style change on an
+  // ancestor or a descendant, mark the kid dirty.  If it's a descendant,
   // all we need is the NS_FRAME_HAS_DIRTY_CHILDREN that our caller is
   // going to set, though. (If we could differentiate between a style change on
   // an ancestor or descendant, we'd need to add a parameter to RequestReflow
@@ -160,6 +159,9 @@ nsSVGForeignObjectFrame::Reflow(nsPresContext*           aPresContext,
                                 const nsHTMLReflowState& aReflowState,
                                 nsReflowStatus&          aStatus)
 {
+  // InitialUpdate and AttributeChanged make sure mRect is up to date before
+  // we're called (UpdateCoveredRegion sets mRect).
+
   NS_ASSERTION(!aReflowState.parentReflowState,
                "should only get reflow from being reflow root");
   NS_ASSERTION(aReflowState.ComputedWidth() == GetSize().width &&
@@ -169,6 +171,7 @@ nsSVGForeignObjectFrame::Reflow(nsPresContext*           aPresContext,
 
   DoReflow();
 
+  // XXX why don't we convert from CSS pixels to app units? How does this work?
   aDesiredSize.width = aReflowState.ComputedWidth();
   aDesiredSize.height = aReflowState.mComputedHeight;
   aDesiredSize.mOverflowArea =
@@ -178,52 +181,61 @@ nsSVGForeignObjectFrame::Reflow(nsPresContext*           aPresContext,
   return NS_OK;
 }
 
+void
+nsSVGForeignObjectFrame::InvalidateInternal(const nsRect& aDamageRect,
+                                            nscoord aX, nscoord aY,
+                                            nsIFrame* aForChild,
+                                            PRBool aImmediate)
+{
+  if (mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
+    return;
+
+  mDirtyRegion.Or(mDirtyRegion, aDamageRect + nsPoint(aX, aY));
+  FlushDirtyRegion();
+}
+
 
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods
 
 /**
- * Transform a rectangle with a given matrix. Since the image of the
- * rectangle may not be a rectangle, the output rectangle is the
- * bounding box of the true image.
+ * Gets the rectangular region in rounded out CSS pixels that encloses the
+ * rectangle after it has been transformed by aMatrix. Useful in
+ * UpdateCoveredRegion/FlushDirtyRegion.
  */
-static void
-TransformRect(float* aX, float *aY, float* aWidth, float *aHeight,
-              nsIDOMSVGMatrix* aMatrix)
+static nsRect
+GetTransformedRegion(float aX, float aY, float aWidth, float aHeight,
+                     nsIDOMSVGMatrix* aMatrix)
 {
   float x[4], y[4];
-  x[0] = *aX;
-  y[0] = *aY;
-  x[1] = x[0] + *aWidth;
-  y[1] = y[0];
-  x[2] = x[0] + *aWidth;
-  y[2] = y[0] + *aHeight;
-  x[3] = x[0];
-  y[3] = y[0] + *aHeight;
+  x[0] = aX;
+  y[0] = aY;
+  x[1] = aX + aWidth;
+  y[1] = aY;
+  x[2] = aX + aWidth;
+  y[2] = aY + aHeight;
+  x[3] = aX;
+  y[3] = aY + aHeight;
  
-  int i;
-  for (i = 0; i < 4; i++) {
+  for (int i = 0; i < 4; i++) {
     nsSVGUtils::TransformPoint(aMatrix, &x[i], &y[i]);
   }
 
   float xmin, xmax, ymin, ymax;
   xmin = xmax = x[0];
   ymin = ymax = y[0];
-  for (i=1; i<4; i++) {
+  for (int i = 1; i < 4; i++) {
     if (x[i] < xmin)
       xmin = x[i];
+    else if (x[i] > xmax)
+      xmax = x[i];
     if (y[i] < ymin)
       ymin = y[i];
-    if (x[i] > xmax)
-      xmax = x[i];
-    if (y[i] > ymax)
+    else if (y[i] > ymax)
       ymax = y[i];
   }
  
-  *aX = xmin;
-  *aY = ymin;
-  *aWidth = xmax - xmin;
-  *aHeight = ymax - ymin;
+  return nsSVGUtils::ToBoundingPixelRect(xmin, ymin, xmax, ymax);
 }
 
 NS_IMETHODIMP
@@ -324,11 +336,15 @@ nsSVGForeignObjectFrame::UpdateCoveredRegion()
   if (mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIDOMSVGMatrix> ctm = GetCanvasTM();
+  if (!ctm)
+    return NS_ERROR_FAILURE;
+
   float x, y, w, h;
-  GetBBoxInternal(&x, &y, &w, &h);
+  NS_STATIC_CAST(nsSVGForeignObjectElement*, mContent)->
+    GetAnimatedLengthValues(&x, &y, &w, &h, nsnull);
 
-  mRect = nsSVGUtils::ToBoundingPixelRect(x, y, x + w, y + h);
-
+  mRect = GetTransformedRegion(x, y, w, h, ctm);
   return NS_OK;
 }
 
@@ -394,21 +410,6 @@ nsSVGForeignObjectFrame::SetOverrideCTM(nsIDOMSVGMatrix *aCTM)
   return NS_OK;
 }
 
-void
-nsSVGForeignObjectFrame::GetBBoxInternal(float* aX, float *aY, float* aWidth,
-                                         float *aHeight)
-{
-  nsCOMPtr<nsIDOMSVGMatrix> ctm = GetCanvasTM();
-  if (!ctm)
-    return;
-  
-  nsSVGForeignObjectElement *fO = NS_STATIC_CAST(nsSVGForeignObjectElement*,
-                                                 mContent);
-  fO->GetAnimatedLengthValues(aX, aY, aWidth, aHeight, nsnull);
-  
-  TransformRect(aX, aY, aWidth, aHeight, ctm);
-}
-  
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
@@ -418,7 +419,9 @@ nsSVGForeignObjectFrame::GetBBox(nsIDOMSVGRect **_retval)
   }
 
   float x, y, w, h;
-  GetBBoxInternal(&x, &y, &w, &h);
+  NS_STATIC_CAST(nsSVGForeignObjectElement*, mContent)->
+    GetAnimatedLengthValues(&x, &y, &w, &h, nsnull);
+
   return NS_NewSVGRect(_retval, x, y, w, h);
 }
 
@@ -510,12 +513,13 @@ void nsSVGForeignObjectFrame::UpdateGraphic()
   } else {
     RemoveStateBits(NS_STATE_SVG_DIRTY);
 
+    // Invalidate the area we used to cover
     outerSVGFrame->InvalidateRect(mRect);
 
     UpdateCoveredRegion();
 
-    nsRect filterRect;
-    filterRect = nsSVGUtils::FindFilterInvalidation(this);
+    // Invalidate the area we now cover
+    nsRect filterRect = nsSVGUtils::FindFilterInvalidation(this);
     if (!filterRect.IsEmpty()) {
       outerSVGFrame->InvalidateRect(filterRect);
     } else {
@@ -592,7 +596,8 @@ nsSVGForeignObjectFrame::DoReflow()
 }
 
 void
-nsSVGForeignObjectFrame::FlushDirtyRegion() {
+nsSVGForeignObjectFrame::FlushDirtyRegion()
+{
   if (mDirtyRegion.IsEmpty() || mInReflow)
     return;
 
@@ -616,21 +621,9 @@ nsSVGForeignObjectFrame::FlushDirtyRegion() {
   nsRect r = mDirtyRegion.GetBounds();
   r.ScaleRoundOut(1.0f / nsPresContext::AppUnitsPerCSSPixel());
   float x = r.x, y = r.y, w = r.width, h = r.height;
-  TransformRect(&x, &y, &w, &h, tm);
-  r = nsSVGUtils::ToBoundingPixelRect(x, y, x+w, y+h);
+  r = GetTransformedRegion(x, y, w, h, tm);
   outerSVGFrame->InvalidateRect(r);
 
   mDirtyRegion.SetEmpty();
 }
 
-void
-nsSVGForeignObjectFrame::InvalidateInternal(const nsRect& aDamageRect,
-                                            nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                            PRBool aImmediate)
-{
-  if (mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
-    return;
-
-  mDirtyRegion.Or(mDirtyRegion, aDamageRect + nsPoint(aX, aY));
-  FlushDirtyRegion();
-}

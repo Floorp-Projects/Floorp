@@ -39,10 +39,9 @@
 #ifndef NSSVGFOREIGNOBJECTFRAME_H__
 #define NSSVGFOREIGNOBJECTFRAME_H__
 
-#include "nsBlockFrame.h"
+#include "nsContainerFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsIDOMSVGMatrix.h"
-#include "nsIDOMSVGLength.h"
 #include "nsRegion.h"
 #include "nsIPresShell.h"
 
@@ -140,8 +139,6 @@ protected:
   void DoReflow();
   void RequestReflow(nsIPresShell::IntrinsicDirty aType);
   void UpdateGraphic();
-  // Get the bounding box relative to the outer SVG element, in user units
-  void GetBBoxInternal(float* aX, float *aY, float* aWidth, float *aHeight);
   already_AddRefed<nsIDOMSVGMatrix> GetTMIncludingOffset();
   nsresult TransformPointFromOuterPx(float aX, float aY, nsPoint* aOut);
   void FlushDirtyRegion();
