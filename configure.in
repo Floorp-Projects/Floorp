@@ -5334,7 +5334,8 @@ dnl = Airbag crash reporting (on by default on supported platforms)
 dnl ========================================================
 
 if test "$OS_ARCH" = "WINNT" -a -z "$GNU_CC" \
-  || test "$OS_ARCH" = "Darwin"; then
+  || test "$OS_ARCH" = "Darwin" \
+  || test "$OS_ARCH" = "Linux"; then
    MOZ_AIRBAG=1
 fi
 
@@ -5347,7 +5348,9 @@ if test -n "$MOZ_AIRBAG"; then
    AC_DEFINE(MOZ_AIRBAG)
 
   if test "$OS_ARCH" = "Linux"; then
-    PKG_CHECK_MODULES(MOZ_LIBCURL, libcurl)
+    PKG_CHECK_MODULES(MOZ_LIBCURL, libcurl, [], [
+      AC_MSG_ERROR([Couldn't find libcurl, which is required by the crash reporter.  Use --disable-airbag to disable the crash reporter.])
+    ])
   fi
 fi
 
