@@ -1530,8 +1530,18 @@ ProcessAsyncMessages()
       // check for error
       if (rc != SQLITE_OK) {
         AsyncWriteError = rc;
-        NS_NOTREACHED("FILE ERROR");
 
+        nsAutoString logMessage;
+        logMessage.AssignLiteral("mozStorage: error code ");
+        logMessage.AppendInt(rc);
+        logMessage.AppendLiteral(" for database ");
+        if (message->mFile && message->mFile->mFilename)
+          logMessage.Append(NS_ConvertUTF8toUTF16(*message->mFile->mFilename));
+
+#ifdef DEBUG
+        printf("%s\n", NS_ConvertUTF16toUTF8(logMessage).get());
+#endif
+          
         // log error to console
         nsresult rv;
         nsCOMPtr<nsIConsoleService> consoleSvc =
@@ -1539,15 +1549,11 @@ ProcessAsyncMessages()
         if (NS_FAILED(rv)) {
           NS_WARNING("Couldn't get the console service for logging file error");
         } else {
-          nsAutoString logMessage;
-          logMessage.AssignLiteral("mozStorage: error code ");
-          logMessage.AppendInt(rc);
-          logMessage.AppendLiteral(" for database ");
-          if (message->mFile && message->mFile->mFilename)
-            logMessage.Append(NS_ConvertUTF8toUTF16(*message->mFile->mFilename));
           rv = consoleSvc->LogStringMessage(logMessage.get());
           NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Couldn't log message on async error");
         }
+
+        NS_NOTREACHED("FILE ERROR");
 
         // tell user to restart
         DisplayAsyncWriteError();
