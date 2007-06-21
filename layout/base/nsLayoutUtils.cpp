@@ -1910,7 +1910,7 @@ nsLayoutUtils::MinWidthFromInline(nsIFrame* aFrame,
   nsIFrame::InlineMinWidthData data;
   DISPLAY_MIN_WIDTH(aFrame, data.prevLines);
   aFrame->AddInlineMinWidth(aRenderingContext, &data);
-  data.Break(aRenderingContext);
+  data.ForceBreak(aRenderingContext);
   return data.prevLines;
 }
 
@@ -1921,7 +1921,7 @@ nsLayoutUtils::PrefWidthFromInline(nsIFrame* aFrame,
   nsIFrame::InlinePrefWidthData data;
   DISPLAY_PREF_WIDTH(aFrame, data.prevLines);
   aFrame->AddInlinePrefWidth(aRenderingContext, &data);
-  data.Break(aRenderingContext);
+  data.ForceBreak(aRenderingContext);
   return data.prevLines;
 }
 

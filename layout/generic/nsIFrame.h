@@ -1122,18 +1122,29 @@ public:
   struct InlineMinWidthData : public InlineIntrinsicWidthData {
     InlineMinWidthData()
       : trailingTextFrame(nsnull)
+      , atStartOfLine(PR_TRUE)
     {}
 
-    void Break(nsIRenderingContext *aRenderingContext);
+    // We need to distinguish forced and optional breaks for cases where the
+    // current line total is negative.  When it is, we need to ignore
+    // optional breaks to prevent min-width from ending up bigger than
+    // pref-width.
+    void ForceBreak(nsIRenderingContext *aRenderingContext);
+    void OptionallyBreak(nsIRenderingContext *aRenderingContext);
 
     // The last text frame processed so far in the current line, when
     // the last characters in that text frame are relevant for line
     // break opportunities.
     nsIFrame *trailingTextFrame;
+
+    // Whether we're currently at the start of the line.  If we are, we
+    // can't break (for example, between the text-indent and the first
+    // word).
+    PRBool atStartOfLine;
   };
 
   struct InlinePrefWidthData : public InlineIntrinsicWidthData {
-    void Break(nsIRenderingContext *aRenderingContext);
+    void ForceBreak(nsIRenderingContext *aRenderingContext);
   };
 
   /**
