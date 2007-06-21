@@ -5727,7 +5727,7 @@ nsTextFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
                       aData->skipWhitespace, // XXX ???
                       nsnull)) // XXX Better to pass real frame
   {
-    aData->Break(aRenderingContext);
+    aData->OptionallyBreak(aRenderingContext);
   }
 
   for (;;) {
@@ -5753,7 +5753,7 @@ nsTextFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
         firstChar = *bp2;
       }
       if ('\n' == firstChar) {
-        aData->Break(aRenderingContext);
+        aData->ForceBreak(aRenderingContext);
         aData->skipWhitespace = PR_TRUE;
         aData->trailingWhitespace = 0;
       } else if (!aData->skipWhitespace || wsSignificant) {
@@ -5771,6 +5771,7 @@ nsTextFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
             wordLen*(ts.mWordSpacing + ts.mLetterSpacing + ts.mSpaceWidth);// XXX simplistic
         }
         aData->currentLine += width;
+        aData->atStartOfLine = PR_FALSE;
         if (wsSignificant) {
           aData->trailingWhitespace = 0;
           aData->skipWhitespace = PR_FALSE;
@@ -5780,12 +5781,12 @@ nsTextFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
         }
 
         if (wrapping) {
-          aData->Break(aRenderingContext);
+          aData->OptionallyBreak(aRenderingContext);
         }
       }
     } else {
       if (!atStart && wrapping) {
-        aData->Break(aRenderingContext);
+        aData->OptionallyBreak(aRenderingContext);
       }
 
       atStart = PR_FALSE;
@@ -5818,6 +5819,7 @@ nsTextFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
       }
 
       aData->currentLine += width;
+      aData->atStartOfLine = PR_FALSE;
       aData->skipWhitespace = PR_FALSE;
       aData->trailingWhitespace = 0;
     }
@@ -5878,7 +5880,7 @@ nsTextFrame::AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
         firstChar = *bp2;
       }
       if ('\n' == firstChar) {
-        aData->Break(aRenderingContext);
+        aData->ForceBreak(aRenderingContext);
       } else if (!aData->skipWhitespace) {
         nscoord width;
         if ('\t' == firstChar) {
