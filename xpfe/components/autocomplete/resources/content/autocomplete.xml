@@ -769,7 +769,7 @@
           this.mFireAfterSearch = false;
           if (this.mNeedToFinish && !this.disableAutocomplete) {
             // set textbox value to either override value, or default search result 
-            var val = this.resultsPopup.getOverrideValue();
+            var val = this.resultsPopup.overrideValue;
             if (val) {
               this.setTextValue(val);
               this.mNeedToFinish = false;
@@ -842,7 +842,7 @@
         <body><![CDATA[
          // set textbox value to either override value, or the clicked result
           var errItem=null;
-          var val = this.resultsPopup.getOverrideValue();
+          var val = this.resultsPopup.overrideValue;
             if (val)
               this.setTextValue(val);
           else if (this.resultsPopup.selectedIndex != -1 && !this.noMatch) {
@@ -1594,14 +1594,11 @@
         ]]></body>
       </method>
 
-      <!-- This method is meant to be overriden by bindings extending this one.  When the 
-           user selects an item from the list by hitting enter or clicking, this method
-           can set the value of the textbox to a different value if it wants to. -->
-      <method name="getOverrideValue">
-        <body><![CDATA[
-          return null;
-        ]]></body>
-      </method>
+      <!-- This property is meant to be overriden by bindings extending
+           this one.  When the user selects an item from the list by
+           hitting enter or clicking, this method can set the value
+           of the textbox to a different value if it wants to. -->
+      <property name="overrideValue" readonly="true" onget="return null;"/>
 
     </implementation>
 
