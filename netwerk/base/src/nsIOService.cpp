@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *      Prasad Sunkari <prasad@medhas.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -962,17 +963,23 @@ nsIOService::EscapeString(const nsACString& aString,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsIOService::UnescapeString(const nsACString& aString, nsACString& aResult)
+NS_IMETHODIMP 
+nsIOService::EscapeURL(const nsACString &aStr, 
+                       PRUint32 aFlags, nsACString &aResult)
 {
-  char *str = ToNewCString(aString);
-  
-  if (!str)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  str = nsUnescape(str);
-  aResult.Assign(str);
-
-  NS_Free(str);
+  aResult.Truncate();
+  PRBool escaped = NS_EscapeURL(aStr.BeginReading(), aStr.Length(), 
+                                aFlags | esc_AlwaysCopy, aResult);
   return NS_OK;
 }
+
+NS_IMETHODIMP 
+nsIOService::UnescapeString(const nsACString &aStr, 
+                            PRUint32 aFlags, nsACString &aResult)
+{
+  aResult.Truncate();
+  PRBool unescaped = NS_UnescapeURL(aStr.BeginReading(), aStr.Length(), 
+                                    aFlags | esc_AlwaysCopy, aResult);
+  return NS_OK;
+}
+
