@@ -75,8 +75,29 @@ class nsSVGMaskFrame : public nsSVGMaskFrameBase
 #endif
 
  private:
+  // A helper class to allow us to paint masks safely. The helper
+  // automatically sets and clears the mInUse flag on the mask frame
+  // (to prevent nasty reference loops). It's easy to mess this up
+  // and break things, so this helper makes the code far more robust.
+  class AutoMaskReferencer
+  {
+  public:
+    AutoMaskReferencer(nsSVGMaskFrame *aFrame)
+       : mFrame(aFrame) {
+      NS_ASSERTION(mFrame->mInUse == PR_FALSE, "reference loop!");
+      mFrame->mInUse = PR_TRUE;
+    }
+    ~AutoMaskReferencer() {
+      mFrame->mInUse = PR_FALSE;
+    }
+  private:
+    nsSVGMaskFrame *mFrame;
+  };
+
   nsISVGChildFrame *mMaskParent;
   nsCOMPtr<nsIDOMSVGMatrix> mMaskParentMatrix;
+  // recursion prevention flag
+  PRPackedBool mInUse;
 
   // nsSVGContainerFrame methods:
   virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
