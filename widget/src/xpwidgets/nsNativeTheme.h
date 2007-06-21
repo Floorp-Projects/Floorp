@@ -135,8 +135,10 @@ class nsNativeTheme
 
   PRBool GetCheckedOrSelected(nsIFrame* aFrame, PRBool aCheckSelected);
 
-  // these should be set to appropriate platform values by the subclass, to
-  // match the values in forms.css.  These defaults match forms.css
+  // The following should be set to appropriate platform values by the subclass,
+  // to match the values in forms.css. The defaults match forms.css.
+  
+  // push buttons
   static nsMargin                  sButtonBorderSize;
   static nsMargin                  sButtonDisabledBorderSize;
   static PRUint8                   sButtonActiveBorderStyle;
@@ -145,12 +147,14 @@ class nsNativeTheme
   static nsILookAndFeel::nsColorID sButtonDisabledBorderColorID;
   static nsILookAndFeel::nsColorID sButtonBGColorID;
   static nsILookAndFeel::nsColorID sButtonDisabledBGColorID;
+  // text fields
   static nsMargin                  sTextfieldBorderSize;
   static PRUint8                   sTextfieldBorderStyle;
   static nsILookAndFeel::nsColorID sTextfieldBorderColorID;
   static PRBool                    sTextfieldBGTransparent;
   static nsILookAndFeel::nsColorID sTextfieldBGColorID;
   static nsILookAndFeel::nsColorID sTextfieldDisabledBGColorID;
+  // listboxes
   static nsMargin                  sListboxBorderSize;
   static PRUint8                   sListboxBorderStyle;
   static nsILookAndFeel::nsColorID sListboxBorderColorID;
