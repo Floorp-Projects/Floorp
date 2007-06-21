@@ -136,8 +136,11 @@ var TextZoom = {
 
     // Delete references to XPCOM components to make sure we don't leak them
     // (although we haven't observed leakage in tests).
-    this.__cps = null;
-    this.__prefBranch = null;
+    for (var i in this) {
+      try { this[i] = null }
+      // Ignore "setting a property that has only a getter" exceptions.
+      catch(ex) {}
+    }
   },
 
 

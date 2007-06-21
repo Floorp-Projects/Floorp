@@ -82,31 +82,14 @@ ContentPrefService.prototype = {
     this._observerSvc.removeObserver(this, "xpcom-shutdown");
 
     // Delete references to XPCOM components to make sure we don't leak them
-    // (although we haven't observed leakage in tests).
-    this.__observerSvc = null;
-    this.__consoleSvc = null;
-    this._grouper = null;
-    this.__stmtSelectPref = null;
-    this.__stmtSelectGlobalPref = null;
-    this.__stmtSelectGroupID = null;
-    this.__stmtInsertGroup = null;
-    this.__stmtSelectSettingID = null;
-    this.__stmtInsertSetting = null;
-    this.__stmtSelectPrefID = null;
-    this.__stmtSelectGlobalPrefID = null;
-    this.__stmtInsertPref = null;
-    this.__stmtUpdatePref = null;
-    this.__stmtDeletePref = null;
-    this.__stmtDeleteSettingIfUnused = null;
-    this.__stmtDeleteGroupIfUnused = null;
-    this.__stmtSelectPrefs = null;
-    this.__stmtSelectGlobalPrefs = null;
-    this._dbConnection = null;
-
-    // Delete references to observers to avoid cycles with those that refer
-    // to us and don't remove themselves from the observer pool.
-    this._observers = {};
-    this._genericObservers = [];
+    // (although we haven't observed leakage in tests).  Also delete references
+    // in _observers and _genericObservers to avoid cycles with those that
+    // refer to us and don't remove themselves from those observer pools.
+    for (var i in this) {
+      try { this[i] = null }
+      // Ignore "setting a property that has only a getter" exceptions.
+      catch(ex) {}
+    }
   },
 
 
