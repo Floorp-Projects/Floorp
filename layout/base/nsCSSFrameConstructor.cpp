@@ -4300,7 +4300,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
     else
 #endif 
 #ifdef MOZ_SVG
-    if (aDocElement->GetNameSpaceID() == kNameSpaceID_SVG && NS_SVGEnabled()) {
+    if (aDocElement->GetNameSpaceID() == kNameSpaceID_SVG &&
+        aDocElement->Tag() == nsGkAtoms::svg &&
+        NS_SVGEnabled()) {
       contentFrame = NS_NewSVGOuterSVGFrame(mPresShell, aDocElement, styleContext);
     }
     else 
