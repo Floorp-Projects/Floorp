@@ -45,6 +45,13 @@
 [scriptable, uuid(68c59967-d043-4659-a973-f8f11b1d2aca)]
 interface nsIBrowserHistory : nsIGlobalHistory2
 {
+    /** 
+     * addPageWithDetails
+     * Adds a page to history with specific time stamp information. This is used in
+     * the History migrator. 
+     */
+    void addPageWithDetails(in string aURL, in wstring aTitle, in long long aLastVisited);
+
     /**
      * lastPageVisited
      * The last page that was visited in a top-level window.
