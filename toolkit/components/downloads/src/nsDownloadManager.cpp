@@ -953,9 +953,8 @@ nsDownloadManager::OpenDownloadManager(PRBool aShouldFocus,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<mozIStorageConnection> DBConn;
-    rv = dlMgr->GetDBConnection(getter_AddRefs(DBConn));
-    NS_ENSURE_SUCCESS(rv, rv);
-    
+    (void)dlMgr->GetDBConnection(getter_AddRefs(DBConn));
+
     params->AppendElement(DBConn, PR_FALSE);
     params->AppendElement(aDownload, PR_FALSE);
     
