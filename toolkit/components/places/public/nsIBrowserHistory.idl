@@ -40,28 +40,22 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIGlobalHistory2.idl"
 
-[scriptable, uuid(1a9129f7-2490-49d1-ba54-196ddb848ddb)]
-interface nsIBrowserHistory : nsISupports
+[scriptable, uuid(68c59967-d043-4659-a973-f8f11b1d2aca)]
+interface nsIBrowserHistory : nsIGlobalHistory2
 {
+    /**
+     * lastPageVisited
+     * The last page that was visited in a top-level window.
+     */
+    readonly attribute string lastPageVisited;
+
     /**
      * count
      * The number of entries in global history
      */
     readonly attribute PRUint32 count;
-
-    /**
-     * setPageTitle
-     * set the page title for the given url. Ignores urls that are not
-     * already in the history
-     */
-    void setPageTitle(in string aURL, in wstring aTitle);
-
-    /**
-     * removePage
-     * Remove the specified page from the global history
-     */
-    void removePage(in string aURL);
 
     /**
      * removePagesFromHost
@@ -78,13 +72,6 @@ interface nsIBrowserHistory : nsISupports
     void removeAllPages();
 
     /**
-     * lastPageVisited
-     * the most recently visited page
-     */
-    attribute string lastPageVisited;
-
-
-    /**
      * hidePage
      * Hide the specified URL from being enumerated (and thus
      * displayed in the UI)
@@ -92,31 +79,12 @@ interface nsIBrowserHistory : nsISupports
      * if the page hasn't been visited yet, then it will be added
      * as if it was visited, and then marked as hidden
      */
-
-    void hidePage(in string url);
+    void hidePage(in nsIURI aURI);
 
     /**
      * markPageAsTyped
      * Designate the url as having been explicitly typed in by
      * the user, so it's okay to be an autocomplete result.
      */
-
     void markPageAsTyped(in string url);
-
-    /**
-     * outputReferrerURL
-     * Prints out referrer information for a url to a
-     * data file if browser.history.url.datacapture.mode is set
-     * to 1 or 2 (see the comment in nsGlobalHistory.cpp for
-     * more details).
-     *
-     * This method is a big hack and only temporary.  Please do NOT use
-     * it in your code.  It will be removed after the data
-     * collection phase of the project described in bug 182366 is
-     * over.
-     *
-     * @param aURL      a url in global history
-     * @param aReferrer the referrer url to aURL
-     */
-    void outputReferrerURL(in string aURL, in string aReferrer);
 };
