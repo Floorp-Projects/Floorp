@@ -81,7 +81,8 @@ ContentPrefService.prototype = {
   _destroy: function ContentPrefService__destroy() {
     this._observerSvc.removeObserver(this, "xpcom-shutdown");
 
-    // Delete various references to XPCOM components so we don't leak them.
+    // Delete references to XPCOM components to make sure we don't leak them
+    // (although we haven't observed leakage in tests).
     this.__observerSvc = null;
     this.__consoleSvc = null;
     this._grouper = null;
@@ -101,6 +102,11 @@ ContentPrefService.prototype = {
     this.__stmtSelectPrefs = null;
     this.__stmtSelectGlobalPrefs = null;
     this._dbConnection = null;
+
+    // Delete references to observers to avoid cycles with those that refer
+    // to us and don't remove themselves from the observer pool.
+    this._observers = {};
+    this._genericObservers = [];
   },
 
 
