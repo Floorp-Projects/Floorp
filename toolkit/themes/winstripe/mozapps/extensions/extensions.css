@@ -196,11 +196,12 @@ richlistitem .notifyBadge {
   -moz-margin-start: -2px;
 }
 
-richlistitem[availableUpdateURL="none"] .updateBadge,
+.updateBadge,
 .notifyBadge {
   display: none;
 }
 
+richlistitem[availableUpdateURL] .updateBadge,
 richlistitem[compatible="false"] .notifyBadge,
 richlistitem[blocklisted="true"] .notifyBadge,
 richlistitem[satisfiesDependencies="false"] .notifyBadge {
