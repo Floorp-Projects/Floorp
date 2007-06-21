@@ -641,26 +641,31 @@ nsBlockFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
   ResolveBidi();
 #endif // IBMBIDI
 
-  PRInt32 lineNumber = 0;
   InlineMinWidthData data;
   for (line_iterator line = begin_lines(), line_end = end_lines();
-       line != line_end; ++line, ++lineNumber)
+       line != line_end; ++line)
   {
 #ifdef DEBUG
     if (gNoisyIntrinsic) {
       IndentBy(stdout, gNoiseIndent);
-      printf("line %d (%s%s)\n", lineNumber,
+      printf("line (%s%s)\n",
              line->IsBlock() ? "block" : "inline",
-             line->IsEmpty() ? ",empty" : "");
+             line->IsEmpty() ? ", empty" : "");
     }
     AutoNoisyIndenter lineindent(gNoisyIntrinsic);
 #endif
     if (line->IsBlock()) {
-      data.Break(aRenderingContext);
+      data.ForceBreak(aRenderingContext);
       data.currentLine = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
           line->mFirstChild, nsLayoutUtils::MIN_WIDTH);
-      data.Break(aRenderingContext);
+      data.ForceBreak(aRenderingContext);
     } else {
+      if (line == begin_lines() && !GetPrevContinuation()) {
+        const nsStyleCoord &indent = GetStyleText()->mTextIndent;
+        if (indent.GetUnit() == eStyleUnit_Coord)
+          data.currentLine += indent.GetCoordValue();
+      }
+      // XXX Bug NNNNNN Should probably handle percentage text-indent.
 
       nsIFrame *kid = line->mFirstChild;
       for (PRInt32 i = 0, i_end = line->GetChildCount(); i != i_end;
@@ -676,7 +681,7 @@ nsBlockFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
     }
 #endif
   }
-  data.Break(aRenderingContext);
+  data.ForceBreak(aRenderingContext);
 
   mMinWidth = data.prevLines;
   return mMinWidth;
@@ -702,26 +707,31 @@ nsBlockFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   ResolveBidi();
 #endif // IBMBIDI
 
-  PRInt32 lineNumber = 0;
   InlinePrefWidthData data;
   for (line_iterator line = begin_lines(), line_end = end_lines();
-       line != line_end; ++line, ++lineNumber)
+       line != line_end; ++line)
   {
 #ifdef DEBUG
     if (gNoisyIntrinsic) {
       IndentBy(stdout, gNoiseIndent);
-      printf("line %d (%s%s)\n", lineNumber,
+      printf("line (%s%s)\n",
              line->IsBlock() ? "block" : "inline",
-             line->IsEmpty() ? ",empty" : "");
+             line->IsEmpty() ? ", empty" : "");
     }
     AutoNoisyIndenter lineindent(gNoisyIntrinsic);
 #endif
     if (line->IsBlock()) {
-      data.Break(aRenderingContext);
+      data.ForceBreak(aRenderingContext);
       data.currentLine = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                       line->mFirstChild, nsLayoutUtils::PREF_WIDTH);
-      data.Break(aRenderingContext);
+      data.ForceBreak(aRenderingContext);
     } else {
+      if (line == begin_lines() && !GetPrevContinuation()) {
+        const nsStyleCoord &indent = GetStyleText()->mTextIndent;
+        if (indent.GetUnit() == eStyleUnit_Coord)
+          data.currentLine += indent.GetCoordValue();
+      }
+      // XXX Bug NNNNNN Should probably handle percentage text-indent.
 
       nsIFrame *kid = line->mFirstChild;
       for (PRInt32 i = 0, i_end = line->GetChildCount(); i != i_end;
@@ -737,7 +747,7 @@ nsBlockFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
     }
 #endif
   }
-  data.Break(aRenderingContext);
+  data.ForceBreak(aRenderingContext);
 
   mPrefWidth = data.prevLines;
   return mPrefWidth;

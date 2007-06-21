@@ -193,14 +193,14 @@ BRFrame::Reflow(nsPresContext* aPresContext,
 BRFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
                            nsIFrame::InlineMinWidthData *aData)
 {
-  aData->Break(aRenderingContext);
+  aData->ForceBreak(aRenderingContext);
 }
 
 /* virtual */ void
 BRFrame::AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
                             nsIFrame::InlinePrefWidthData *aData)
 {
-  aData->Break(aRenderingContext);
+  aData->ForceBreak(aRenderingContext);
 }
 
 /* virtual */ nscoord

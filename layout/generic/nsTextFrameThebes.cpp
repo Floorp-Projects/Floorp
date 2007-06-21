@@ -4896,42 +4896,48 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
   if (start >= flowEndInTextRun)
     return;
 
-  if (mTextRun->CanBreakLineBefore(start)) {
-    aData->Break(aRenderingContext);
-  }
-
-  PRUint32 i;
-  PRUint32 wordStart = start;
   // XXX Should we consider hyphenation here?
-  for (i = start + 1; i <= flowEndInTextRun; ++i) {
-    if (i < flowEndInTextRun && !mTextRun->CanBreakLineBefore(i)) {
-      PRBool preformattedNewline = !collapseWhitespace &&
+  for (PRUint32 i = start, wordStart = start; i <= flowEndInTextRun; ++i) {
+    PRBool preformattedNewline = PR_FALSE;
+    if (i < flowEndInTextRun) {
+      // XXXldb Shouldn't we be including the newline as part of the
+      // segment that it ends rather than part of the segment that it
+      // starts?
+      preformattedNewline = !collapseWhitespace &&
         frag->CharAt(iter.ConvertSkippedToOriginal(i)) == '\n';
-      if (!preformattedNewline) {
-        // we can't break here
+      if (!mTextRun->CanBreakLineBefore(i) && !preformattedNewline) {
+        // we can't break here (and it's not the end of the flow)
         continue;
       }
     }
 
-    nscoord width =
-      NSToCoordCeil(mTextRun->GetAdvanceWidth(wordStart, i - wordStart, &provider));
-    aData->currentLine += width;
+    if (i > wordStart) {
+      nscoord width =
+        NSToCoordCeil(mTextRun->GetAdvanceWidth(wordStart, i - wordStart, &provider));
+      aData->currentLine += width;
+      aData->atStartOfLine = PR_FALSE;
 
-    if (collapseWhitespace) {
-      nscoord trailingWhitespaceWidth;
-      PRUint32 trimStart = GetEndOfTrimmedText(frag, wordStart, i, &iter);
-      if (trimStart == start) {
-        trailingWhitespaceWidth = width;
+      if (collapseWhitespace) {
+        nscoord trailingWhitespaceWidth;
+        PRUint32 trimStart = GetEndOfTrimmedText(frag, wordStart, i, &iter);
+        if (trimStart == start) {
+          trailingWhitespaceWidth = width;
+        } else {
+          trailingWhitespaceWidth =
+            NSToCoordCeil(mTextRun->GetAdvanceWidth(trimStart, i - trimStart, &provider));
+        }
+        aData->trailingWhitespace += trailingWhitespaceWidth;
       } else {
-        trailingWhitespaceWidth =
-          NSToCoordCeil(mTextRun->GetAdvanceWidth(trimStart, i - trimStart, &provider));
+        aData->trailingWhitespace = 0;
       }
-      aData->trailingWhitespace += trailingWhitespaceWidth;
-    } else {
-      aData->trailingWhitespace = 0;
     }
+
     if (i < flowEndInTextRun) {
-      aData->Break(aRenderingContext);
+      if (preformattedNewline) {
+        aData->ForceBreak(aRenderingContext);
+      } else {
+        aData->OptionallyBreak(aRenderingContext);
+      }
       wordStart = i;
     }
   }
@@ -5016,7 +5022,7 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
         PRUint32 endRun = iter.GetSkippedOffset();
         aData->currentLine +=
           NSToCoordCeil(mTextRun->GetAdvanceWidth(startRun, endRun - startRun, &provider));
-        aData->Break(aRenderingContext);
+        aData->ForceBreak(aRenderingContext);
         startRun = endRun;
       }
       iter.AdvanceOriginal(1);
