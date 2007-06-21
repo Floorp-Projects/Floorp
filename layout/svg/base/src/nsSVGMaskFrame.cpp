@@ -74,6 +74,7 @@ nsSVGMaskFrame::InitSVG()
     return rv;
 
   mMaskParentMatrix = nsnull;
+  mInUse = PR_FALSE;
 
   nsCOMPtr<nsIDOMSVGMaskElement> mask = do_QueryInterface(mContent);
   NS_ASSERTION(mask, "wrong content element");
@@ -88,6 +89,15 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
                                  nsIDOMSVGMatrix* aMatrix,
                                  float aOpacity)
 {
+  // If the flag is set when we get here, it means this mask frame
+  // has already been used painting the current mask, and the document
+  // has a mask reference loop.
+  if (mInUse) {
+    NS_WARNING("Mask loop detected!");
+    return nsnull;
+  }
+  AutoMaskReferencer maskRef(this);
+
   gfxContext *gfx = aContext->GetGfxContext();
 
   gfx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
