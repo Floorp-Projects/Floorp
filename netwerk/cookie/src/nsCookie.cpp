@@ -92,9 +92,7 @@ nsCookie::Create(const nsACString &aName,
                  PRInt64           aCreationID,
                  PRBool            aIsSession,
                  PRBool            aIsSecure,
-                 PRBool            aIsHttpOnly,
-                 nsCookieStatus    aStatus,
-                 nsCookiePolicy    aPolicy)
+                 PRBool            aIsHttpOnly)
 {
   // find the required string buffer size, adding 4 for the terminating nulls
   const PRUint32 stringLength = aName.Length() + aValue.Length() +
@@ -122,8 +120,7 @@ nsCookie::Create(const nsACString &aName,
   // construct the cookie. placement new, oh yeah!
   return new (place) nsCookie(name, value, host, path, end,
                               aExpiry, aCreationID,
-                              aIsSession, aIsSecure, aIsHttpOnly,
-                              aStatus, aPolicy);
+                              aIsSession, aIsSecure, aIsHttpOnly);
 }
 
 /******************************************************************************
@@ -141,9 +138,9 @@ NS_IMETHODIMP nsCookie::GetExpiry(PRInt64 *aExpiry)        { *aExpiry = Expiry()
 NS_IMETHODIMP nsCookie::GetIsSession(PRBool *aIsSession)   { *aIsSession = IsSession(); return NS_OK; }
 NS_IMETHODIMP nsCookie::GetIsDomain(PRBool *aIsDomain)     { *aIsDomain = IsDomain();   return NS_OK; }
 NS_IMETHODIMP nsCookie::GetIsSecure(PRBool *aIsSecure)     { *aIsSecure = IsSecure();   return NS_OK; }
-NS_IMETHODIMP nsCookie::GetStatus(nsCookieStatus *aStatus) { *aStatus = Status();       return NS_OK; }
-NS_IMETHODIMP nsCookie::GetPolicy(nsCookiePolicy *aPolicy) { *aPolicy = Policy();       return NS_OK; }
 NS_IMETHODIMP nsCookie::GetIsHttpOnly(PRBool *aHttpOnly)   { *aHttpOnly = IsHttpOnly(); return NS_OK; }
+NS_IMETHODIMP nsCookie::GetStatus(nsCookieStatus *aStatus) { *aStatus = 0;              return NS_OK; }
+NS_IMETHODIMP nsCookie::GetPolicy(nsCookiePolicy *aPolicy) { *aPolicy = 0;              return NS_OK; }
 
 // compatibility method, for use with the legacy nsICookie interface.
 // here, expires == 0 denotes a session cookie.
