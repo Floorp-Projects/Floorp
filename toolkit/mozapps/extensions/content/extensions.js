@@ -544,8 +544,7 @@ function Startup()
   
   gExtensionsView = document.getElementById("extensionsView");
   gExtensionManager = Components.classes["@mozilla.org/extensions/manager;1"]
-                                .getService(Components.interfaces.nsIExtensionManager)
-                                .QueryInterface(Components.interfaces.nsIExtensionManager_MOZILLA_1_8_BRANCH);
+                                .getService(Components.interfaces.nsIExtensionManager);
   var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
                           .getService(Components.interfaces.nsIXULAppInfo)
                           .QueryInterface(Components.interfaces.nsIXULRuntime);
