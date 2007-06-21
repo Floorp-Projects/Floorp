@@ -5345,7 +5345,14 @@ MOZ_ARG_DISABLE_BOOL(airbag,
 
 if test -n "$MOZ_AIRBAG"; then
    AC_DEFINE(MOZ_AIRBAG)
+
+  if test "$OS_ARCH" = "Linux"; then
+    PKG_CHECK_MODULES(MOZ_LIBCURL, libcurl)
+  fi
 fi
+
+AC_SUBST(MOZ_LIBCURL_CFLAGS)
+AC_SUBST(MOZ_LIBCURL_LIBS)
 
 dnl ========================================================
 dnl = Build mochitest JS/DOM tests (on by default)

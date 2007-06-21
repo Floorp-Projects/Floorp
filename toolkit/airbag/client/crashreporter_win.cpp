@@ -68,6 +68,8 @@ using std::map;
 using std::vector;
 using std::set;
 
+using namespace CrashReporter;
+
 typedef struct {
   HWND hDlg;
   wstring dumpFile;
@@ -582,7 +584,7 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
   case WM_UPLOADCOMPLETE: {
     WaitForSingleObject(gThreadHandle, INFINITE);
     success = (wParam == 1);
-    CrashReporterSendCompleted(success, WideToUTF8(gSendData.serverResponse));
+    SendCompleted(success, WideToUTF8(gSendData.serverResponse));
     if (!success) {
       MessageBox(hwndDlg,
                  Str(ST_SUBMITFAILED).c_str(),
