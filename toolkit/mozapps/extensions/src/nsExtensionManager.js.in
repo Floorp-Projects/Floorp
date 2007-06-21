@@ -7316,12 +7316,17 @@ ExtensionsDataSource.prototype = {
    *          The property (less EM_NS) to update.
    */
   _updateProperty: function(item, property) {
-    var propertyResource = EM_R(property);
-    var value = this.GetTarget(item, propertyResource, true);
-    if (item && value) {
-      for (var i = 0; i < this._observers.length; ++i)
-        this._observers[i].onChange(this, item, propertyResource, 
-                                    EM_L(""), value);
+    if (item) {
+      var propertyResource = EM_R(property);
+      var value = this.GetTarget(item, propertyResource, true);
+      for (var i = 0; i < this._observers.length; ++i) {
+        if (value)
+          this._observers[i].onChange(this, item, propertyResource, 
+                                      EM_L(""), value);
+        else
+          this._observers[i].onUnassert(this, item, propertyResource, 
+                                        EM_L(""));
+      }
     }
   },
   
@@ -7885,18 +7890,6 @@ ExtensionsDataSource.prototype = {
     return null;
   },
 
-  /** 
-   * Gets the em:availableUpdateURL - the URL to an XPI update package, if
-   * present, or a literal string "none" if there is no update XPI URL.
-   * XXXrstrong we return none due to bug 331689 
-   */
-  _rdfGet_availableUpdateURL: function(item, property) {
-    var value = this._inner.GetTarget(item, property, true);
-    if (!value) 
-      return EM_L("none");
-    return value;
-  },
-
   /**
    * Get the em:satisfiesDependencies property - literal string "false" for
    * dependencies not satisfied (e.g. dependency disabled, incorrect version,
@@ -7912,7 +7905,6 @@ ExtensionsDataSource.prototype = {
   /**
    * Get the em:opType property (controls widget state for the EM UI)
    * from the Startup Cache (e.g. extensions.cache)
-   * XXXrstrong we return none for OP_NONE due to bug 331689 
    */
   _rdfGet_opType: function(item, property) {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
@@ -7920,7 +7912,7 @@ ExtensionsDataSource.prototype = {
     if (key in StartupCache.entries && id in StartupCache.entries[key] &&
         StartupCache.entries[key][id] && StartupCache.entries[key][id].op != OP_NONE)
       return EM_L(StartupCache.entries[key][id].op);
-    return EM_L("none");
+    return null;
   },
 
   /**

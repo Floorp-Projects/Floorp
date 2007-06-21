@@ -1343,10 +1343,8 @@ function updateOptionalViews() {
     if (!showUpdates) {
       var updateURLArc = rdfs.GetResource(PREFIX_NS_EM + "availableUpdateURL");
       var updateURL = ds.GetTarget(e, updateURLArc, true);
-      if (updateURL && updateURL instanceof Components.interfaces.nsIRDFLiteral) {
-        if (updateURL.Value != "none")
-          var showUpdates = true;
-      }
+      if (updateURL)
+        var showUpdates = true;
     }
 
     if (showInstalls)
@@ -1378,7 +1376,7 @@ function updateGlobalCommands() {
       var child = children[i];
       if (disableUpdateCheck && child.getAttribute("updateable") == "true")
         disableUpdateCheck = false;
-      if (disableInstallUpdate && child.getAttribute("availableUpdateURL") != "none")
+      if (disableInstallUpdate && child.hasAttribute("availableUpdateURL"))
         disableInstallUpdate = false;
       if (disableAppRestart && child.hasAttribute("state")) {
         if (child.getAttribute("state") == "success")
@@ -1534,10 +1532,10 @@ var gExtensionsViewController = {
       return selectedItem.getAttribute("updateable") != "false" &&
              !gExtensionsView.hasAttribute("update-operation");
     case "cmd_installUpdate":
-      return selectedItem.getAttribute("availableUpdateURL") != "none" &&
+      return selectedItem.hasAttribute("availableUpdateURL") &&
              !gExtensionsView.hasAttribute("update-operation");
     case "cmd_includeUpdate":
-      return selectedItem.getAttribute("availableUpdateURL") != "none" &&
+      return selectedItem.hasAttribute("availableUpdateURL") &&
              !gExtensionsView.hasAttribute("update-operation");
     case "cmd_reallyEnable":
     // controls whether to show Enable or Disable in extensions' context menu
