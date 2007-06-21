@@ -111,7 +111,7 @@ ifeq ($(OS_ARCH),WINNT)
 rebase:
 ifdef MOZILLA_OFFICIAL
 	echo rebasing $(DIST)
-	/bin/find $(DIST) -name "*.dll" > rebase.lst
+	/bin/find $(DIST) -name "*.dll" -a -not -name "msvc*" > rebase.lst
 	rebase -b 60000000 -R . -G rebase.lst
 	rm rebase.lst
 endif
