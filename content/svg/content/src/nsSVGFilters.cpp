@@ -1836,7 +1836,8 @@ nsSVGComponentTransferFunctionElement::nsSVGComponentTransferFunctionElement(nsI
 nsresult
 nsSVGComponentTransferFunctionElement::Init()
 {
-  nsresult rv;
+  nsresult rv = nsSVGComponentTransferFunctionElementBase::Init();
+  NS_ENSURE_SUCCESS(rv,rv);
 
   // enumeration mappings
   static struct nsSVGEnumMapping gComponentTransferTypes[] = {
