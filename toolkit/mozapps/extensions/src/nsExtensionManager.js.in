@@ -2384,8 +2384,7 @@ var Blocklist = {
     this.entries = this._loadBlocklistFromFile(getFile(KEY_PROFILEDIR,
                                                        [FILE_BLOCKLIST]));
     var em = Components.classes["@mozilla.org/extensions/manager;1"]
-                       .getService(Components.interfaces.nsIExtensionManager)
-                       .QueryInterface(Components.interfaces.nsIExtensionManager_MOZILLA_1_8_BRANCH);
+                       .getService(Components.interfaces.nsIExtensionManager);
     em.checkForBlocklistChanges();
   },
 
@@ -5749,7 +5748,6 @@ ExtensionManager.prototype = {
    */
   QueryInterface: function(iid) {
     if (!iid.equals(Components.interfaces.nsIExtensionManager) &&
-        !iid.equals(Components.interfaces.nsIExtensionManager_MOZILLA_1_8_BRANCH) &&
         !iid.equals(Components.interfaces.nsITimerCallback) &&
         !iid.equals(Components.interfaces.nsIObserver) &&
         !iid.equals(Components.interfaces.nsISupports))

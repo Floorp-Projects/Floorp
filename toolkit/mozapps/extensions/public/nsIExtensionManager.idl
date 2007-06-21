@@ -166,7 +166,7 @@ interface nsIInstallLocation : nsISupports
  * XXXben - Some of this stuff should go into a management-ey interface, 
  *          some into an app-startup-ey interface.
  */
-[scriptable, uuid(a3f5396c-a6e8-414a-8fbc-c8d831746328)]
+[scriptable, uuid(585a8d98-ed73-41d3-a540-061b148f1683)]
 interface nsIExtensionManager : nsISupports
 {
   /**
@@ -365,16 +365,7 @@ interface nsIExtensionManager : nsISupports
    *          The ID of an item to move an item to.
    */
   void moveToIndexOf(in AString movingID, in AString destinationID);
-};
 
-/**
- * A temporary interface to allow adding new methods without changing existing
- * interfaces for Gecko 1.8.1. After the 1.8.1 release this interface should
- * not be used.
- */
-[scriptable, uuid(0fd5caa9-1ffc-42b1-aea1-3fbe73116070)]
-interface nsIExtensionManager_MOZILLA_1_8_BRANCH : nsIExtensionManager
-{
   /**
    * Cancels a pending uninstall of an item
    * @param   id
