@@ -65,6 +65,11 @@ interface nsIBrowserHistory : nsIGlobalHistory2
     readonly attribute PRUint32 count;
 
     /**
+     * remove a page from history
+     */
+    void removePage(in string aURI);
+
+    /**
      * removePagesFromHost
      * Remove all pages from the given host.
      * If aEntireDomain is true, will assume aHost is a domain,
