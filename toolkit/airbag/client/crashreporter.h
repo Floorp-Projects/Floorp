@@ -12,6 +12,7 @@
 #include <vector>
 #include <stdlib.h>
 #include <stdio.h>
+#include <iostream>
 
 #if defined(XP_WIN32)
 
@@ -44,13 +45,31 @@ typedef std::map<std::string, std::string> StringTable;
 // implemented in crashreporter.cpp
 //=============================================================================
 
-extern StringTable  gStrings;
-extern int          gArgc;
-extern const char** gArgv;
+namespace CrashReporter {
+  extern StringTable  gStrings;
+  extern std::string  gSettingsPath;
+  extern int          gArgc;
+  extern char**       gArgv;
 
-// The UI finished sending the report
-bool CrashReporterSendCompleted(bool success,
-                                const std::string& serverResponse);
+  // The UI finished sending the report
+  bool SendCompleted(bool success, const std::string& serverResponse);
+
+  bool ReadStrings(std::istream& in,
+                   StringTable& strings,
+                   bool unescape);
+  bool ReadStringsFromFile(const std::string& path,
+                           StringTable& strings,
+                           bool unescape);
+  bool WriteStrings(std::ostream& out,
+                    const std::string& header,
+                    StringTable& strings,
+                    bool escape);
+  bool WriteStringsToFile(const std::string& path,
+                          const std::string& header,
+                          StringTable& strings,
+                          bool escape);
+
+}
 
 //=============================================================================
 // implemented in the platform-specific files

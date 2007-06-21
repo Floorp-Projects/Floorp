@@ -56,13 +56,15 @@ using std::ostream;
 using std::ofstream;
 using std::vector;
 
+namespace CrashReporter {
+
 StringTable  gStrings;
+string       gSettingsPath;
 int          gArgc;
-const char** gArgv;
+char**       gArgv;
 
 static string       gDumpFile;
 static string       gExtraFile;
-static string       gSettingsPath;
 
 static string kExtraDataExtension = ".extra";
 
@@ -89,7 +91,27 @@ static string Unescape(const string& str)
   return ret;
 }
 
-static bool ReadStrings(istream& in, StringTable& strings, bool unescape)
+static string Escape(const string& str)
+{
+  string ret;
+  for (string::const_iterator iter = str.begin();
+       iter != str.end();
+       iter++) {
+    if (*iter == '\\') {
+      ret += "\\\\";
+    } else if (*iter == '\n') {
+      ret += "\\n";
+    } else if (*iter == '\t') {
+      ret += "\\t";
+    } else {
+      ret.push_back(*iter);
+    }
+  }
+
+  return ret;
+}
+
+bool ReadStrings(istream& in, StringTable& strings, bool unescape)
 {
   string currentSection;
   while (!in.eof()) {
@@ -109,14 +131,46 @@ static bool ReadStrings(istream& in, StringTable& strings, bool unescape)
   return true;
 }
 
-static bool ReadStringsFromFile(const string& path,
-                                StringTable& strings,
-                                bool unescape)
+bool ReadStringsFromFile(const string& path,
+                         StringTable& strings,
+                         bool unescape)
 {
   ifstream f(path.c_str(), std::ios::in);
   if (!f.is_open()) return false;
 
   return ReadStrings(f, strings, unescape);
+}
+
+bool WriteStrings(ostream& out,
+                  const string& header,
+                  StringTable& strings,
+                  bool escape)
+{
+  out << "[" << header << "]" << std::endl;
+  for (StringTable::iterator iter = strings.begin();
+       iter != strings.end();
+       iter++) {
+    out << iter->first << "=";
+    if (escape)
+      out << Escape(iter->second);
+    else
+      out << iter->second;
+
+    out << std::endl;
+  }
+
+  return true;
+}
+
+bool WriteStringsToFile(const string& path,
+                        const string& header,
+                        StringTable& strings,
+                        bool escape)
+{
+  ofstream f(path.c_str(), std::ios::out);
+  if (!f.is_open()) return false;
+
+  return WriteStrings(f, header, strings, escape);
 }
 
 static bool ReadConfig()
@@ -214,8 +268,7 @@ static bool AddSubmittedReport(const string& serverResponse)
 
 }
 
-bool CrashReporterSendCompleted(bool success,
-                                const string& serverResponse)
+bool SendCompleted(bool success, const string& serverResponse)
 {
   if (success) {
     const char* noDelete = getenv("MOZ_CRASHREPORTER_NO_DELETE_DUMP");
@@ -231,7 +284,11 @@ bool CrashReporterSendCompleted(bool success,
   return true;
 }
 
-int main(int argc, const char** argv)
+} // namespace CrashReporter
+
+using namespace CrashReporter;
+
+int main(int argc, char** argv)
 {
   gArgc = argc;
   gArgv = argv;
@@ -349,6 +406,6 @@ int main(int argc, const char** argv)
 int WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR args, int )
 {
   // Do the real work.
-  return main(__argc, (const char**)__argv);
+  return main(__argc, __argv);
 }
 #endif
