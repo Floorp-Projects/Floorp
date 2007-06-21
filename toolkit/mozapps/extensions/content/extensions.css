@@ -38,11 +38,11 @@ richlistitem[state="finishing"] hbox.addon-install-status {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-install-finishing");
 }
 
-richlistitem[state="success"] hbox.addon-install-status {
+richlistitem[state="success"][opType] hbox.addon-install-status {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-install-restart");
 }
 
-richlistitem[state="success"][opType="none"] hbox.addon-install-status {
+richlistitem[state="success"] hbox.addon-install-status {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-install-success");
 }
 
@@ -62,12 +62,11 @@ hbox.addon-name-version {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-name-version");
 }
 
-/* XXXrstrong due to bug 331689 none is used for some attribute values */
-richlistitem[opType="none"] hbox.addon-optype {
+richlistitem:not([opType]) hbox.addon-optype {
   display: none;
 }
 
-richlistitem[opType="none"] hbox.addon-description {
+richlistitem hbox.addon-description {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-description-crop");
 }
 
