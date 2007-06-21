@@ -240,6 +240,17 @@ function list(requestPath, directory, recurse)
   var files = [file for (file in dirIter(dir))
                if (file.path.indexOf("SimpleTest") == -1)];
   
+  // Sort files by name, so that tests can be run in a pre-defined order inside
+  // a given directory (see bug 384823)
+  function leafNameComparator(first, second) {
+    if (first.leafName < second.leafName)
+      return -1;
+    if (first.leafName > second.leafName)
+      return 1;
+    return 0;
+  }
+  files.sort(leafNameComparator);
+  
   count = files.length;
   for each (var file in files) {
     var key = path + file.leafName;
