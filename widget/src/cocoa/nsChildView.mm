@@ -3785,13 +3785,14 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
 
 // This method is called when are are about to lose focus.
+// We must always call through to our superclass, even when mGeckoChild is
+// nil -- otherwise the keyboard focus can end up in the wrong NSView.
 - (BOOL)resignFirstResponder
 {
-  if (!mGeckoChild)
-    return NO;
-
-  nsFocusEvent event(PR_TRUE, NS_LOSTFOCUS, mGeckoChild);
-  mGeckoChild->DispatchWindowEvent(event);
+  if (mGeckoChild) {
+    nsFocusEvent event(PR_TRUE, NS_LOSTFOCUS, mGeckoChild);
+    mGeckoChild->DispatchWindowEvent(event);
+  }
 
   return [super resignFirstResponder];
 }
@@ -3834,16 +3835,18 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 }
 
 
-// If the call to removeFromSuperviewWithoutNeedingDisplay isn't delayed from
-// nsChildView::TearDownView(), the NSView hierarchy might get changed during
-// calls to [ChildView drawRect:], which leads to "beyond bounds" exceptions
-// in NSCFArray.  For more info see bmo bug 373122.  Apple's docs claim that
+// If the call to removeFromSuperview isn't delayed from nsChildView::
+// TearDownView(), the NSView hierarchy might get changed during calls to
+// [ChildView drawRect:], which leads to "beyond bounds" exceptions in
+// NSCFArray.  For more info see bmo bug 373122.  Apple's docs claim that
 // removeFromSuperviewWithoutNeedingDisplay "can be safely invoked during
 // display" (whatever "display" means).  But it's _not_ true that it can be
-// safely invoked during calls to [NSView drawRect:].
+// safely invoked during calls to [NSView drawRect:].  We use
+// removeFromSuperview here because there's no longer any danger of being
+// "invoked during display", and because doing do clears up bmo bug 384343.
 - (void)delayedTearDown
 {
-  [self removeFromSuperviewWithoutNeedingDisplay];
+  [self removeFromSuperview];
   [self release];
 }
 
