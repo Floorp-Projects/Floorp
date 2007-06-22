@@ -403,60 +403,6 @@
     </content>  
   </binding>
   
-  <binding id="install-downloading" extends="chrome://mozapps/content/downloads/download.xml#download-downloading">
-    <content>
-      <xul:hbox flex="1" class="downloadContentBox" xbl:inherits="animated,animated-temp">
-        <xul:vbox pack="start">
-          <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
-        </xul:vbox>
-        <xul:vbox flex="1">
-          <xul:hbox flex="1">
-            <xul:vbox flex="1">
-              <xul:label xbl:inherits="value=target" crop="center"/>
-              <xul:progressmeter mode="normal" value="0" flex="1"
-                                xbl:inherits="value=progress,mode=progressmode"/>
-            </xul:vbox>
-          </xul:hbox>                              
-          <xul:hbox align="center">
-            <xul:label xbl:inherits="value=status" flex="1" crop="right"/>
-          </xul:hbox>                            
-        </xul:vbox>
-      </xul:hbox>
-    </content>
-  </binding>
-  
-  <binding id="install-installing" extends="chrome://mozapps/content/downloads/download.xml#download-base">
-    <content>
-      <xul:hbox flex="1">
-        <xul:vbox pack="start">
-          <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
-        </xul:vbox>
-        <xul:vbox pack="start" flex="1">
-          <xul:label xbl:inherits="value=target" crop="center"/>
-          <xul:label value="&installing.label;"/>
-        </xul:vbox>
-      </xul:hbox>
-    </content>  
-  </binding>
-  
-  <binding id="install-done" extends="chrome://mozapps/content/downloads/download.xml#download-base">
-    <content>
-      <xul:hbox flex="1">
-        <xul:vbox pack="start">
-          <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
-        </xul:vbox>
-        <xul:vbox pack="start" flex="1">
-          <xul:label xbl:inherits="value=target" crop="center"/>
-          <xul:label value="&done.label;"/>
-        </xul:vbox>
-        <xul:vbox pack="start">
-          <xul:label value="&cmd.remove.label;" class="text-link" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"/>
-        </xul:vbox>
-      </xul:hbox>
-    </content>  
-  </binding>
-  
   <binding id="download-view">
     <implementation>
       <field name="_selected">null</field>
