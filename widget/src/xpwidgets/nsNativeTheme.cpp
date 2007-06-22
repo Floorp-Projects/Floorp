@@ -195,7 +195,8 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
   if (aFrame && (aWidgetType == NS_THEME_BUTTON ||
                  aWidgetType == NS_THEME_TEXTFIELD ||
                  aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
-                 aWidgetType == NS_THEME_LISTBOX)) {
+                 aWidgetType == NS_THEME_LISTBOX ||
+                 aWidgetType == NS_THEME_DROPDOWN)) {
     if (aFrame->GetContent()->IsNodeOfType(nsINode::eHTML)) {
       nscolor defaultBGColor, defaultBorderColor;
       PRUint8 defaultBorderStyle;
@@ -246,6 +247,7 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
         break;
 
       case NS_THEME_LISTBOX:
+      case NS_THEME_DROPDOWN:
         defaultBorderStyle = sListboxBorderStyle;
         ConvertMarginToAppUnits(sListboxBorderSize, defaultBorderSize);
         lookAndFeel->GetColor(sListboxBorderColorID,
