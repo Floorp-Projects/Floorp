@@ -273,7 +273,7 @@ function showView(aView) {
   catch (e) { }
   var showCheckUpdatesAll = true;
   var showInstallUpdatesAll = false;
-  var showRestartApp = false;
+  var showRestartApp = true;
   var showSkip = false;
   var showContinue = false;
   switch (aView) {
@@ -319,10 +319,10 @@ function showView(aView) {
       showInstallFile = false;
       showCheckUpdatesAll = false;
       showInstallUpdatesAll = false;
-      if (gUpdatesOnly)
+      if (gUpdatesOnly) {
         showContinue = true;
-      else
-        showRestartApp = true;
+        showRestartApp = false;
+      }
       bindingList = [ ["aboutURL", "?aboutURL"],
                       ["addonID", "?addonID"],
                       ["availableUpdateURL", "?availableUpdateURL"],
@@ -711,6 +711,7 @@ XPInstallDownloadManager.prototype = {
     }
     
     gExtensionManager.addDownloads(items, items.length, false);
+    updateGlobalCommands();
   },
   
   getElementForAddon: function(aAddon) 
@@ -1365,7 +1366,7 @@ function updateGlobalCommands() {
   var disableInstallFile = false;
   var disableUpdateCheck = true;
   var disableInstallUpdate = true;
-  var disableAppRestart = true;
+  var disableAppRestart = false;
   if (gExtensionsView.hasAttribute("update-operation")) {
     disableInstallFile = true;
     disableAppRestart = true;
@@ -1378,10 +1379,8 @@ function updateGlobalCommands() {
         disableUpdateCheck = false;
       if (disableInstallUpdate && child.hasAttribute("availableUpdateURL"))
         disableInstallUpdate = false;
-      if (disableAppRestart && child.hasAttribute("state")) {
-        if (child.getAttribute("state") == "success")
-          disableAppRestart = false;
-      }
+      if (!disableAppRestart && child.hasAttribute("state") && child.getAttribute("state") != "success")
+        disableAppRestart = true;
     }
   }
   setElementDisabledByID("cmd_checkUpdatesAll", disableUpdateCheck);
@@ -1692,6 +1691,7 @@ var gExtensionsViewController = {
       showView("installs");
       var item = gExtensionManager.getItemForID(getIDFromResourceURI(aSelectedItem.id));
       gExtensionManager.addDownloads([item], 1, true);
+      updateGlobalCommands();
       // Remove the updates view if there are no add-ons left to update
       updateOptionalViews();
     },

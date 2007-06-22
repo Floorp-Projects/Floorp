@@ -207,6 +207,11 @@
               tooltiptext="&cmd.skip.tooltip;"
               command="cmd_close"/>
       <spacer flex="1"/>
+      <label id="getMore" class="text-link"
+             onclick="openURL(this.getAttribute('getMoreURL'));"
+             valuethemes="&getThemes.label;"
+             valueextensions="&getExtensions.label;"/>
+      <spacer flex="1"/>
       <button id="installUpdatesAllButton" label="&cmd.installUpdatesAll.label;"
               accesskey="&cmd.installUpdatesAll.accesskey;"
               tooltiptext="&cmd.installUpdatesAll.tooltip;"
@@ -219,10 +224,6 @@
               accesskey="&cmd.continue.accesskey;"
               tooltiptext="&cmd.continue.tooltip;"
               command="cmd_continue"/>
-      <label id="getMore" class="text-link"
-             onclick="openURL(this.getAttribute('getMoreURL'));"
-             valuethemes="&getThemes.label;"
-             valueextensions="&getExtensions.label;"/>
     </hbox>
     <hbox id="resizerBox" style="min-width:1px;">
       <spacer flex="1"/>
