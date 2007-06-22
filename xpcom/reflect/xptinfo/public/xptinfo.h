@@ -159,7 +159,6 @@ public:
     PRBool IsRetval() const {return 0 != (XPT_PD_IS_RETVAL(flags));}
     PRBool IsShared() const {return 0 != (XPT_PD_IS_SHARED(flags));}
     PRBool IsDipper() const {return 0 != (XPT_PD_IS_DIPPER(flags));}
-    PRBool IsOptional() const {return 0 != (XPT_PD_IS_OPTIONAL(flags));}
     const nsXPTType GetType() const {return type.prefix;}
 
     // NOTE: other activities on types are done via methods on nsIInterfaceInfo
