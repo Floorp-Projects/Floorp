@@ -1433,6 +1433,15 @@ ProcessOneMessage(AsyncMessage* aMessage)
     case ASYNC_DELETE:
       NS_ASSERTION(sqliteOrigDelete, "No delete pointer");
       rc = sqliteOrigDelete(aMessage->mBuf);
+#ifdef XP_WIN
+      if (SQLITE_IOERR == rc) {
+        NS_WARNING("SQLite returned an error when trying to delete.  "
+                   "See http://www.sqlite.org/cvstrac/tktview?tn=2441.  "
+                   "This warning is safe to ignore on shutdown.");
+        // We now ignore the error, which sucks, and is arguably a bug in sqlite
+        rc = SQLITE_OK;
+      }
+#endif
       break;
 
     case ASYNC_SYNCDIRECTORY:
