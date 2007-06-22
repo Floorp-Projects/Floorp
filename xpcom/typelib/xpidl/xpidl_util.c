@@ -559,6 +559,7 @@ verify_method_declaration(IDL_tree method_tree)
     gboolean scriptable_interface;
     gboolean scriptable_method;
     gboolean seen_retval = FALSE;
+    gboolean hasoptional = PR_FALSE;
     const char *method_name = IDL_IDENT(IDL_OP_DCL(method_tree).ident).str;
 
     /* We don't support attributes named IID, conflicts with static GetIID 
@@ -714,6 +715,19 @@ verify_method_declaration(IDL_tree method_tree)
                                "string, wstring or native", param_name);
                 return FALSE;
             }
+        }
+
+        /*
+         * confirm that once an optional argument is used, all remaining
+         * arguments are marked as optional
+         */
+        if (IDL_tree_property_get(simple_decl, "optional") != NULL) {
+            hasoptional = PR_TRUE;
+        }
+        else if (hasoptional) {
+            IDL_tree_error(method_tree,
+                           "non-optional parameter used after one marked [optional]");
+                return FALSE;
         }
 
         /*
