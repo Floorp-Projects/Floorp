@@ -67,7 +67,7 @@ elif config.OS == "win32":
 
 
 # Regular expression to get stats for page load test (Tp)
-TP_REGEX = re.compile('__start_page_load_report(.*)__end_page_load_report',
+TP_REGEX = re.compile('__start_tp_report(.*)__end_tp_report',
                       re.DOTALL | re.MULTILINE)
 TP_REGEX_FAIL = re.compile('__FAIL(.*)__FAIL', re.DOTALL|re.MULTILINE)
 

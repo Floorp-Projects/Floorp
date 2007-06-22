@@ -44,6 +44,9 @@ __author__ = 'annie.sullivan@gmail.com (Annie Sullivan)'
 
 OS = r'win32'
 
+BROWSER_HEIGHT = 768
+BROWSER_WIDTH = 1024
+
 """For some reason, can only get output from dump() in Firefox if
    it's run through cygwin bash.  So here's the path to cygwin.
 """
@@ -57,19 +60,16 @@ SYNC = r'c:\cygwin\bin\sync'
    urls with scheme:file to open in new windows, and the preference to open
    new windows in a tab should be off.
 """
-BASE_PROFILE_DIR = r'C:\win32\base_profile'
-
-"""The directory the generated reports go into."""
-REPORTS_DIR = r'c:\extension_perf_reports'
+BASE_PROFILE_DIR = r'C:\talos\base_profile'
 
 """The path to the file url to load when initializing a new profile"""
-INIT_URL = 'file:///c:/win32/initialize.html'
+INIT_URL = 'file:///c:/talos/initialize.html'
 
 """The path to the file url to load when collecting information from the browser"""
-INFO_URL = 'file:///c:/win32/getInfo.html'
+INFO_URL = 'file:///c:/talos/getInfo.html'
 
 """The path to the file url to load for startup test (Ts)"""
-TS_URL = 'file:///c:/win32/startup_test/startup_test.html?begin='
+TS_URL = 'file:///c:/talos/startup_test/startup_test.html?begin='
 
 """Number of times to run startup test (Ts)"""
 TS_NUM_RUNS = 5
@@ -95,3 +95,4 @@ COUNTERS = ['Private Bytes', 'Working Set', '% Processor Time']
 
 """URL for the results server"""
 RESULTS_SERVER = 'graphserver.url.here'
+RESULTS_LINK = '/bulk.cgi'
