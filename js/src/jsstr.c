@@ -3194,7 +3194,8 @@ js_GetStringBytes(JSContext *cx, JSString *str)
         rt = js_GetGCStringRuntime(str);
     }
 
-    if (!rt->deflatedStringCache) {
+#ifdef JS_THREADSAFE
+    if (!rt->deflatedStringCacheLock) {
         /*
          * Called from last GC (see js_DestroyContext), after runtime string
          * state has been finalized.  We have no choice but to leak here.
@@ -3202,6 +3203,7 @@ js_GetStringBytes(JSContext *cx, JSString *str)
         return js_DeflateString(NULL, JSSTRING_CHARS(str),
                                       JSSTRING_LENGTH(str));
     }
+#endif
 
     JS_ACQUIRE_LOCK(rt->deflatedStringCacheLock);
 
