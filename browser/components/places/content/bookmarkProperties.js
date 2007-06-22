@@ -371,12 +371,19 @@ var BookmarkPropertiesPanel = {
    * @return the new menu item.
    */
   _appendFolderItemToMenupopup:
-  function BPP__appendFolderItemToMenuList(aMenupopup, aFolderId) {
+  function BPP__appendFolderItemToMenupopup(aMenupopup, aFolderId) {
+    try {
+      var folderTitle = PlacesUtils.bookmarks.getItemTitle(aFolderId);
+    }
+    catch (ex) {
+      NS_ASSERT(folderTitle, "no title found for folderId of " + aFolderId);
+      return null;
+    }
+
     // First make sure the folders-separator is visible
     this._element("foldersSeparator").hidden = false;
 
     var folderMenuItem = document.createElement("menuitem");
-    var folderTitle = PlacesUtils.bookmarks.getItemTitle(aFolderId)
     folderMenuItem.folderId = aFolderId;
     folderMenuItem.setAttribute("label", folderTitle);
     folderMenuItem.className = "menuitem-iconic folder-icon";
@@ -424,6 +431,12 @@ var BookmarkPropertiesPanel = {
 
     var defaultItem =
       this._getFolderMenuItem(this._defaultInsertionPoint.itemId, true);
+
+    // if we fail to get a menuitem for the default insertion point
+    // use the Bookmarks root
+    if (!defaultItem)
+      defaultItem = this._element("bookmarksRootItem");
+
     this._folderMenuList.selectedItem = defaultItem;
   },
 
@@ -1055,7 +1068,7 @@ var BookmarkPropertiesPanel = {
     var menupopup = this._folderMenuList.menupopup;
 
     // 0: Bookmarks root, 1: toolbar folder, 2: separator
-    for (var i=3;  i < menupopup.childNodes.length; i++) {
+    for (var i=3; i < menupopup.childNodes.length; i++) {
       if (menupopup.childNodes[i].folderId == aFolderId)
         return menupopup.childNodes[i];
     }
