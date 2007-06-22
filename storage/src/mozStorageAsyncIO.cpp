@@ -556,9 +556,6 @@ mozStorageService::InitStorageAsyncIO()
 nsresult
 mozStorageService::FlushAsyncIO()
 {
-  AsyncMessage *message = 0;
-  int rc;
-
   // single threaded? nothing to do.
   if (!AsyncWriteThreadInstance)
     return NS_OK;
@@ -575,7 +572,7 @@ mozStorageService::FlushAsyncIO()
 
   PR_Lock(flushLock);
 
-  rc = AsyncBarrier(flushLock, flushCond);
+  int rc = AsyncBarrier(flushLock, flushCond);
   if (rc == SQLITE_OK) {
     // the async thread will notify us once it reaches
     // the ASYNC_BARRIER operation; only wait if
