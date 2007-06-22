@@ -4635,12 +4635,14 @@ nsTextFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
 PRBool
 ClusterIterator::IsWhitespace()
 {
+  NS_ASSERTION(mCharIndex >= 0, "No cluster selected");
   return IsSelectionSpace(mFrag, mCharIndex);
 }
 
 PRBool
 ClusterIterator::IsPunctuation()
 {
+  NS_ASSERTION(mCharIndex >= 0, "No cluster selected");
   return nsTextFrameUtils::IsPunctuationMark(mFrag->CharAt(mCharIndex));
 }
 
@@ -4653,12 +4655,14 @@ ClusterIterator::HaveWordBreakBefore()
 PRInt32
 ClusterIterator::GetBeforeOffset()
 {
+  NS_ASSERTION(mCharIndex >= 0, "No cluster selected");
   return mCharIndex + (mDirection > 0 ? 0 : 1);
 }
 
 PRInt32
 ClusterIterator::GetAfterOffset()
 {
+  NS_ASSERTION(mCharIndex >= 0, "No cluster selected");
   return mCharIndex + (mDirection > 0 ? 1 : 0);
 }
 
@@ -4747,29 +4751,31 @@ nsTextFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool 
   if (selectStyle == NS_STYLE_USER_SELECT_ALL)
     return PR_FALSE;
 
-  PRBool stopAfterPunctuation = nsTextTransformer::GetWordSelectStopAtPunctuation();
-  PRBool stopBeforePunctuation = stopAfterPunctuation && !aIsKeyboardSelect;
   PRInt32 offset = mContentOffset + (*aOffset < 0 ? mContentLength : *aOffset);
   ClusterIterator cIter(this, offset, aForward ? 1 : -1);
-  PRBool firstCluster = PR_TRUE;
 
-  while (cIter.NextCluster()) {
+  if (!cIter.NextCluster())
+    return PR_FALSE;
+  
+  PRBool stopAfterPunctuation = nsTextTransformer::GetWordSelectStopAtPunctuation();
+  PRBool stopBeforePunctuation = stopAfterPunctuation && !aIsKeyboardSelect;
+  do {
     if (aWordSelectEatSpace == cIter.IsWhitespace() && !*aSawBeforeType) {
       *aSawBeforeType = PR_TRUE;
-    } else if (*aSawBeforeType) {
-      if (!firstCluster &&
-          (cIter.IsPunctuation() ? stopBeforePunctuation
-                                 : cIter.HaveWordBreakBefore())) {
-        *aOffset = cIter.GetBeforeOffset() - mContentOffset;
-        return PR_TRUE;
-      }
-      if (stopAfterPunctuation && cIter.IsPunctuation()) {
-        *aOffset = cIter.GetAfterOffset() - mContentOffset;
-        return PR_TRUE;
-      }
+      continue;
     }
-    firstCluster = PR_FALSE;
-  }
+    if (cIter.GetBeforeOffset() != offset &&
+        (cIter.IsPunctuation() ? stopBeforePunctuation
+                               : cIter.HaveWordBreakBefore() && *aSawBeforeType)) {
+      *aOffset = cIter.GetBeforeOffset() - mContentOffset;
+      return PR_TRUE;
+    }
+    if (stopAfterPunctuation && cIter.IsPunctuation()) {
+      *aOffset = cIter.GetAfterOffset() - mContentOffset;
+      return PR_TRUE;
+    }
+  } while (cIter.NextCluster());
+
   *aOffset = cIter.GetAfterOffset() - mContentOffset;
   return PR_FALSE;
 }
