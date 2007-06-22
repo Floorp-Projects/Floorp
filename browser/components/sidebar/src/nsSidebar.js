@@ -130,7 +130,7 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
     }
     catch(ex) { return; }
 
-    win.PlacesUtils.showAddBookmarkUI(uri, aTitle, null, true, true);
+    win.PlacesUtils.showAddBookmarkUI(uri, aTitle, null, null, true, true);
 #else
     var dialogArgs = {
       name: aTitle,

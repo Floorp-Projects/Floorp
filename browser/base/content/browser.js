@@ -4522,7 +4522,7 @@ function asyncOpenWebPanel(event)
 #else
          PlacesUtils.showAddBookmarkUI(makeURI(wrapper.href),
                                        wrapper.getAttribute("title"),
-                                       null, true, true);
+                                       null, null, true, true);
          event.preventDefault();
 #endif
          return false;
