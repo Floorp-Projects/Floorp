@@ -45,8 +45,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE    = downloads
 
 XPIDLSRCS = nsIDownloadManager.idl \
-            nsIXPInstallManagerUI.idl \
             nsIDownloadProgressListener.idl \
+            $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
