@@ -225,6 +225,10 @@ nsAccTextChangeEvent::IsInserted(PRBool *aIsInserted)
   return NS_OK;
 }
 
+// nsAccCaretMoveEvent
+NS_IMPL_ISUPPORTS_INHERITED1(nsAccCaretMoveEvent, nsAccEvent,
+                             nsIAccessibleCaretMoveEvent)
+
 nsAccCaretMoveEvent::
   nsAccCaretMoveEvent(nsIAccessible *aAccessible, PRInt32 aCaretOffset) :
   nsAccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aAccessible, nsnull),
