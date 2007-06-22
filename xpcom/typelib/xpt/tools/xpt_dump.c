@@ -605,9 +605,6 @@ XPT_DumpMethodDescriptor(XPTHeader *header, XPTMethodDescriptor *md,
                         fprintf(stdout, "retval ");
                     }
                 }
-                if (XPT_PD_IS_OPTIONAL(pd->flags)) {
-                    fprintf(stdout, "optional ");
-                }
             } else {
                 if (XPT_PD_IS_OUT(pd->flags)) {
                     fprintf(stdout, "out ");
@@ -616,9 +613,6 @@ XPT_DumpMethodDescriptor(XPTHeader *header, XPTMethodDescriptor *md,
                     }
                     if (XPT_PD_IS_SHARED(pd->flags)) {
                         fprintf(stdout, "shared ");
-                    }
-                    if (XPT_PD_IS_OPTIONAL(pd->flags)) {
-                        fprintf(stdout, "optional ");
                     }
                 } else {
                     param_problems = PR_TRUE;
@@ -739,12 +733,6 @@ XPT_DumpParamDescriptor(XPTHeader *header, XPTParamDescriptor *pd,
 
     fprintf(stdout, "%*sDipper?     ", indent, " ");
     if (XPT_PD_IS_DIPPER(pd->flags))
-        fprintf(stdout, "TRUE\n");
-    else 
-        fprintf(stdout, "FALSE\n");
-
-    fprintf(stdout, "%*sOptional?     ", indent, " ");
-    if (XPT_PD_IS_OPTIONAL(pd->flags))
         fprintf(stdout, "TRUE\n");
     else 
         fprintf(stdout, "FALSE\n");

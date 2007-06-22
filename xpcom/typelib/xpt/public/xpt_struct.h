@@ -452,15 +452,13 @@ struct XPTParamDescriptor {
 #define XPT_PD_RETVAL   0x20
 #define XPT_PD_SHARED   0x10
 #define XPT_PD_DIPPER   0x08
-#define XPT_PD_OPTIONAL 0x04
-#define XPT_PD_FLAGMASK 0xfc
+#define XPT_PD_FLAGMASK 0xf8
 
 #define XPT_PD_IS_IN(flags)     (flags & XPT_PD_IN)
 #define XPT_PD_IS_OUT(flags)    (flags & XPT_PD_OUT)
 #define XPT_PD_IS_RETVAL(flags) (flags & XPT_PD_RETVAL)
 #define XPT_PD_IS_SHARED(flags) (flags & XPT_PD_SHARED)
 #define XPT_PD_IS_DIPPER(flags) (flags & XPT_PD_DIPPER)
-#define XPT_PD_IS_OPTIONAL(flags) (flags & XPT_PD_OPTIONAL)
 
 extern XPT_PUBLIC_API(PRBool)
 XPT_FillParamDescriptor(XPTArena *arena, 
