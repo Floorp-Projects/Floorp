@@ -26,6 +26,7 @@
 #   Daniel Brooks <db48x@yahoo.com>
 #   Gervase Markham <gerv@gerv.net>
 #   Florian QUEZE <f.qu@queze.net>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -282,7 +283,8 @@
         </grid>
         <hbox align="end">
           <vbox>
-            <checkbox id="blockImage" hidden="true" oncommand="onBlockImage()"/>
+            <checkbox id="blockImage" hidden="true" oncommand="onBlockImage()"
+                      accesskey="&mediaBlockImage.accesskey;"/>
             <label control="thepreviewimage" value="&mediaPreview;" class="header"/>
           </vbox>
           <spacer flex="1"/>

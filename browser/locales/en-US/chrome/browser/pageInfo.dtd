@@ -75,6 +75,7 @@
 <!ENTITY  mediaPhysDimensions   "Actual Dimensions:">
 <!ENTITY  mediaTitle            "Title:">
 <!ENTITY  mediaLongdesc         "Long Description:">
+<!ENTITY  mediaBlockImage.accesskey "B">
 <!ENTITY  mediaSaveAs           "Save As...">
 <!ENTITY  mediaSaveAs.accesskey "A">
 <!ENTITY  mediaPreview          "Media Preview:">
