@@ -1159,17 +1159,23 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
         break;
 
     case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED:
+      {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TEXT_CARET_MOVED\n"));
-        NS_ASSERTION(eventData, "Event needs event data");
-        if (!eventData)
+
+        nsCOMPtr<nsIAccessibleCaretMoveEvent> caretMoveEvent(do_QueryInterface(aEvent));
+        NS_ASSERTION(caretMoveEvent, "Event needs event data");
+        if (!caretMoveEvent)
             break;
 
-        MAI_LOG_DEBUG(("\n\nCaret postion: %d", *(gint *)eventData ));
+        PRInt32 caretOffset = -1;
+        caretMoveEvent->GetCaretOffset(&caretOffset);
+
+        MAI_LOG_DEBUG(("\n\nCaret postion: %d", *(gint *)caretOffset));
         g_signal_emit_by_name(atkObj,
                               "text_caret_moved",
                               // Curent caret position
-                              *(gint *)eventData);
-        break;
+                              *(gint *)caretOffset);
+      } break;
 
     case nsIAccessibleEvent::EVENT_TABLE_MODEL_CHANGED:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_MODEL_CHANGED\n"));

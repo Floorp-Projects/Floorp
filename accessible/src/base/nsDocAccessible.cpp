@@ -1262,8 +1262,12 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
         nsCOMPtr<nsIAccessibleText> accessibleText = do_QueryInterface(accessible);
         PRInt32 caretOffset;
         if (accessibleText && NS_SUCCEEDED(accessibleText->GetCaretOffset(&caretOffset))) {
-          FireToolkitEvent(nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED,
-                           accessible, &caretOffset);
+          nsCOMPtr<nsIAccessibleCaretMoveEvent> caretMoveEvent =
+            new nsAccCaretMoveEvent(accessible, caretOffset);
+          NS_ENSURE_TRUE(caretMoveEvent, NS_ERROR_OUT_OF_MEMORY);
+
+          FireAccessibleEvent(caretMoveEvent);
+
           PRInt32 selectionCount;
           accessibleText->GetSelectionCount(&selectionCount);
           if (selectionCount) {  // There's a selection so fire selection change as well
