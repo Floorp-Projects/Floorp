@@ -189,10 +189,6 @@ public:
   }
 #endif
 
-  // see comment above StartDummyStatement
-  nsresult StartDummyStatement();
-  nsresult StopDummyStatement();
-
   /**
    * These functions return non-owning references to the locale-specific
    * objects for places components. Guaranteed to return non-NULL.
@@ -391,10 +387,6 @@ protected:
 
   nsresult InitMemDB();
 #endif
-
-  // this statement is kept open to persist the cache, see InitDB
-  nsCOMPtr<mozIStorageConnection> mDummyDBConn;
-  nsCOMPtr<mozIStorageStatement> mDBDummyStatement;
 
   nsresult AddURIInternal(nsIURI* aURI, PRTime aTime, PRBool aRedirect,
                           PRBool aToplevel, nsIURI* aReferrer);

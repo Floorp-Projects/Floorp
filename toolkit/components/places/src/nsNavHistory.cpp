@@ -465,20 +465,11 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   rv = mDBConn->ExecuteSimpleSQL(pageSizePragma);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // dummy database connection
-  rv = mDBService->OpenDatabase(dbFile, getter_AddRefs(mDummyDBConn));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
-  // Initialize the other places services' database tables. We do this before:
-  //
-  // - Starting the dummy statement, because once the dummy statement has
-  //   started we can't modify the schema. Stopping and re-starting the
-  //   dummy statement is pretty heavyweight
-  //
-  // - Creating our statements. Some of our statements depend on these external
-  //   tables, such as the bookmarks or favicon tables.
+  // Initialize the other places services' database tables. We do this before
+  // creating our statements. Some of our statements depend on these external
+  // tables, such as the bookmarks or favicon tables.
   rv = nsNavBookmarks::InitTables(mDBConn);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = nsFaviconService::InitTables(mDBConn);
@@ -596,6 +587,12 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   rv = mDBConn->ExecuteSimpleSQL(cacheSizePragma);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // lock the db file
+  // http://www.sqlite.org/pragma.html#pragma_locking_mode
+  rv = mDBConn->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING("PRAGMA locking_mode = EXCLUSIVE"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // moz_places
   if (! tableExists) {
     *aDoImport = PR_TRUE;
@@ -657,14 +654,9 @@ nsNavHistory::InitDB(PRBool *aDoImport)
 
   // --- PUT SCHEMA-MODIFYING THINGS (like create table) ABOVE THIS LINE ---
 
-  // now that the schema has been finalized, we can initialize the dummy stmt.
-  rv = StartDummyStatement();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // This causes the database data to be preloaded up to the maximum cache size
   // set above. This dramatically speeds up some later operations. Failures
-  // here are not fatal since we can run fine without this. It must happen
-  // after the dummy statement is running for the cache to be initialized.
+  // here are not fatal since we can run fine without this.
   if (cachePages > 0) {
     rv = mDBConn->Preload();
     if (NS_FAILED(rv))
@@ -945,99 +937,6 @@ nsNavHistory::InitMemDB()
   return NS_OK;
 }
 #endif
-
-
-// nsNavHistory::StartDummyStatement
-//
-//    sqlite page caches are discarded when a statement is complete. This sucks
-//    for things like history queries where we do many small reads. This means
-//    that for every small transaction, we have to re-read from disk (or the OS
-//    cache) all pages associated with that transaction.
-//
-//    To get around this, we keep a different connection. This dummy connection
-//    has a statement that stays open and thus keeps its pager cache in memory.
-//    When the shared pager cache is enabled before either connection has been
-//    opened (this is done by the storage service on DB init), our main
-//    connection will get the same pager cache, which will be persisted.
-//
-//    HOWEVER, when a statement is open on a database, it is disallowed to
-//    change the schema of the database (add or modify tables or indices).
-//    We deal with this in two ways. First, for initialization, all the
-//    services that depend on the places connection are told to create their
-//    tables using static functions. This happens before StartDummyStatement
-//    is called in InitDB so that this problem doesn't happen.
-//
-//    If some service needs to change the schema for some reason after this,
-//    they can call StopDummyStatement which will terminate the statement and
-//    clear the cache. This will allow the database schema to be modified, but
-//    will have bad performance implications (because the cache will need to
-//    be re-loaded). It is also possible for some buggy function to leave a
-//    statement open that will prevent modifictation of the DB.
-
-nsresult
-nsNavHistory::StartDummyStatement()
-{
-  nsresult rv;
-  NS_ASSERTION(mDummyDBConn, "The dummy connection should have been set up by Init");
-
-  // do nothing if the dummy statement is already running
-  if (mDBDummyStatement)
-    return NS_OK;
-
-  // Make sure the dummy table exists
-  PRBool tableExists;
-  rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_dummy_table"), &tableExists);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (! tableExists) {
-    rv = mDBConn->ExecuteSimpleSQL(
-        NS_LITERAL_CSTRING("CREATE TABLE moz_dummy_table (id INTEGER PRIMARY KEY)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // This table is guaranteed to have something in it and will keep the dummy
-  // statement open. If the table is empty, it won't hold the statement open.
-  // the PRIMARY KEY value on ID means that it is unique. The OR IGNORE means
-  // that if there is already a value of 1 there, this insert will be ignored,
-  // which is what we want so as to avoid growing the table infinitely.
-  rv = mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("INSERT OR IGNORE INTO moz_dummy_table VALUES (1)"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDummyDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT id FROM moz_dummy_table LIMIT 1"),
-    getter_AddRefs(mDBDummyStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // we have to step the dummy statement so that it will hold a lock on the DB
-  PRBool dummyHasResults;
-  rv = mDBDummyStatement->ExecuteStep(&dummyHasResults);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-
-// nsNavHistory::StopDummyStatement
-//
-//    @see StartDummyStatement for how this works.
-//
-//    It is very important that if the dummy statement is ever stopped, that
-//    it is restarted as soon as possible, or else the whole browser will run
-//    without DB cache, which will slow everything down.
-
-nsresult
-nsNavHistory::StopDummyStatement()
-{
-  // do nothing if the dummy statement isn't running
-  if (! mDBDummyStatement)
-    return NS_OK;
-
-  nsresult rv = mDBDummyStatement->Reset();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mDBDummyStatement = nsnull;
-  return NS_OK;
-}
 
 
 // nsNavHistory::SaveExpandItem
@@ -2630,12 +2529,9 @@ nsNavHistory::RemoveAllPages()
   mExpire.ClearHistory();
 
   // Compress DB. Currently commented out because compression is very slow.
-  // Deleted data will be overwritten with 0s by sqlite. Note that we have to
-  // stop the dummy statement before doing this.
+  // Deleted data will be overwritten with 0s by sqlite.
 #if 0
-  StopDummyStatement();
   nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM"));
-  StartDummyStatement();
   NS_ENSURE_SUCCESS(rv, rv);
 #endif
   return NS_OK;
