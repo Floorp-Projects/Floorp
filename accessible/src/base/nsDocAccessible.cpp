@@ -1387,15 +1387,21 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   if (!IsNodeRelevant(childNode)) {
     return NS_OK;  // Don't fire event unless it can be for an attached accessible
   }
-  if (!mIsContentLoaded && mAccessNodeCache.Count() <= 1 &&
-      mAccChildCount == eChildCountUninitialized) {
-    return NS_OK; // Still loading and nothing to invalidate yet
+  if (!mIsContentLoaded && mAccessNodeCache.Count() <= 1) {
+    // Still loading and no accessibles has yet been created other than this
+    // doc accessible. In this case we optimize
+    // by not firing SHOW/HIDE/REORDER events for every document mutation
+    // caused by page load, since AT is not going to want to grab the
+    // document and listen to these changes until after the page is first loaded
+    // Leave early, and ensure mAccChildCount stays uninitialized instead of 0,
+    // which it is if anyone asks for its children right now.
+    return InvalidateChildren();
   }
 
   nsCOMPtr<nsIAccessNode> childAccessNode;
   GetCachedAccessNode(childNode, getter_AddRefs(childAccessNode));
   nsCOMPtr<nsIAccessible> childAccessible = do_QueryInterface(childAccessNode);
-  if (!childAccessible && mIsContentLoaded && aChangeEventType != nsIAccessibleEvent::EVENT_HIDE) {
+  if (!childAccessible && aChangeEventType != nsIAccessibleEvent::EVENT_HIDE) {
     // If not about to hide it, make sure there's an accessible so we can fire an
     // event for it
     GetAccService()->GetAccessibleFor(childNode, getter_AddRefs(childAccessible));
@@ -1452,16 +1458,12 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     }
   }
   if (!containerAccessible) {
-    GetAccessibleInParentChain(childNode, mIsContentLoaded, getter_AddRefs(containerAccessible));
+    GetAccessibleInParentChain(childNode, getter_AddRefs(containerAccessible));
   }
   nsCOMPtr<nsPIAccessible> privateContainerAccessible =
     do_QueryInterface(containerAccessible);
   if (privateContainerAccessible) {
     privateContainerAccessible->InvalidateChildren();
-  }
-
-  if (!mIsContentLoaded) {
-    return NS_OK;
   }
 
   // Fire an event so the assistive technology knows the objects it is holding onto
@@ -1513,7 +1515,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
 }
 
 NS_IMETHODIMP
-nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode, PRBool aCanCreate,
+nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
                                             nsIAccessible **aAccessible)
 {
   // Find accessible in parent chain of DOM nodes, or return null
@@ -1538,12 +1540,7 @@ nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode, PRBool aCanCreate
       currentNode = relevantNode;
     }
 
-    if (aCanCreate) {
-      accService->GetAccessibleInWeakShell(currentNode, mWeakShell, aAccessible);
-    }
-    else {
-      accService->GetCachedAccessible(currentNode, mWeakShell, aAccessible);
-    }
+    accService->GetAccessibleInWeakShell(currentNode, mWeakShell, aAccessible);
   } while (!*aAccessible);
 
   return NS_OK;
