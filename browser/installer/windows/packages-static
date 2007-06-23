@@ -332,7 +332,7 @@ bin\chrome\pippki.manifest
 ;
 bin\updater.exe
 
-; [airbag]
+; [Crash Reporter]
 bin\crashreporter.exe
 bin\crashreporter.ini
 
