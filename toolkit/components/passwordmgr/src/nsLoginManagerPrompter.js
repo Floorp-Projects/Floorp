@@ -38,8 +38,6 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 /*
  * LoginManagerPromptFactory
  *
@@ -52,10 +50,12 @@ function LoginManagerPromptFactory() {}
 
 LoginManagerPromptFactory.prototype = {
 
-    classDescription : "LoginManagerPromptFactory",
-    contractID : "@mozilla.org/passwordmanager/authpromptfactory;1",
-    classID : Components.ID("{447fc780-1d28-412a-91a1-466d48129c65}"),
-    QueryInterface : XPCOMUtils.generateQI([Ci.nsIPromptFactory]),
+    QueryInterface : function (iid) {
+        const interfaces = [Ci.nsIPromptFactory, Ci.nsISupports];
+        if (!interfaces.some( function(v) { return iid.equals(v) } ))
+            throw Components.results.NS_ERROR_NO_INTERFACE;
+        return this;
+    },
 
     _promptService : null,
     _pwmgr         : null,
@@ -106,7 +106,13 @@ LoginManagerPromptFactory.prototype = {
 function LoginManagerPrompter() {}
 LoginManagerPrompter.prototype = {
 
-    QueryInterface : XPCOMUtils.generateQI([Ci.nsIAuthPrompt2]),
+    QueryInterface : function (iid) {
+        var interfaces = [Ci.nsIAuthPrompt2, Ci.nsISupports];
+        if (!interfaces.some( function(v) { return iid.equals(v) } ))
+            throw Components.results.NS_ERROR_NO_INTERFACE;
+        return this;
+    },
+
 
     __logService : null, // Console logging service, used for debugging.
     get _logService() {
@@ -354,7 +360,58 @@ LoginManagerPrompter.prototype = {
     }
 }; // end of LoginManagerPrompter implementation
 
-var component = [LoginManagerPromptFactory];
+
+
+
+// Boilerplate code...
+var gModule = {
+    registerSelf: function(componentManager, fileSpec, location, type) {
+        componentManager = componentManager.QueryInterface(
+                                                Ci.nsIComponentRegistrar);
+        for each (var obj in this._objects) 
+            componentManager.registerFactoryLocation(obj.CID,
+                    obj.className, obj.contractID,
+                    fileSpec, location, type);
+    },
+
+    unregisterSelf: function (componentManager, location, type) {
+        for each (var obj in this._objects) 
+            componentManager.unregisterFactoryLocation(obj.CID, location);
+    },
+  
+    getClassObject: function(componentManager, cid, iid) {
+        if (!iid.equals(Ci.nsIFactory))
+            throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+  
+        for (var key in this._objects) {
+            if (cid.equals(this._objects[key].CID))
+                return this._objects[key].factory;
+        }
+    
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+    },
+
+    _objects: {
+        service: {
+            CID : Components.ID("{447fc780-1d28-412a-91a1-466d48129c65}"),
+            contractID : "@mozilla.org/passwordmanager/authpromptfactory;1",
+            className  : "LoginManagerPromptFactory",
+            factory    : LoginManagerPromptFactory_Factory = {
+                createInstance: function (aOuter, aIID) {
+                    if (aOuter != null)
+                        throw Components.results.NS_ERROR_NO_AGGREGATION;
+
+                    return new LoginManagerPromptFactory().QueryInterface(aIID);
+                }
+            }
+        }
+    },
+
+    canUnload: function(componentManager) {
+        return true;
+    }
+};
+
 function NSGetModule(compMgr, fileSpec) {
-    return XPCOMUtils.generateModule(component);
+    return gModule;
 }
