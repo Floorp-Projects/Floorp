@@ -20,6 +20,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
+   -   Shawn Wilsher <me@shawnwilsher.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,6 +52,9 @@
 
   <!ENTITY cmdToggleAccessibleNodes.label "Zugängliche Knoten anzeigen">
   <!ENTITY cmdToggleAccessibleNodes.accesskey "Z">
+
+  <!ENTITY cmdToggleProcessingInstructions.label "Verarbeitungsbefehle anzeigen">
+  <!ENTITY cmdToggleProcessingInstructions.accesskey "D">
 
   <!ENTITY cmdFlashSelected.label "Ausgewähltes Element blinken lassen">
 
@@ -96,3 +100,38 @@
   <!ENTITY mnEditPasteFirstChild.label "Als erstes &quot;Kind&quot;">
   <!ENTITY mnEditPasteLastChild.label "Als letztes &quot;Kind&quot;">
   <!ENTITY mnEditPasteAsParent.label "Darüberliegend">
+
+  <!ENTITY mnEditInsertMenu.label "Einfügen">
+  <!ENTITY mnEditInsertAfter.label "Danach">
+  <!ENTITY mnEditInsertBefore.label "Davor">
+  <!ENTITY mnEditInsertFirstChild.label "Als erstes &quot;Kind&quot;">
+  <!ENTITY mnEditInsertLastChild.label "Als letztes &quot;Kind&quot;">
+
+  <!ENTITY insertNode.title "Node einfgen">
+  <!ENTITY nodeType.label "Node-Typ:">
+  <!ENTITY nodeType.element.label "Element">
+  <!ENTITY nodeType.text.label "Text">
+  <!ENTITY namespaceURI.label "Namespace-URI:">
+  <!ENTITY tagName.label "Tag-Name:">
+  <!ENTITY nodeValue.label "Knoten-Wert:">
+
+  <!ENTITY namespaceTitle.null.label "null">
+  <!ENTITY namespaceTitle.default.label "Dokumentstandard">
+  <!ENTITY namespaceTitle.custom.label "Benutzerdefiniert">
+
+<!-- LOCALIZATION NOTE: The following entities are names of W3C specifications.
+                        Please consult http://www.w3.org/Consortium/Translation/
+                        for appropriate translation or leave unchanged. -->
+  <!ENTITY namespaceTitle.XMLNS.label "XMLNS">
+  <!ENTITY namespaceTitle.XML.label "XML">
+  <!ENTITY namespaceTitle.XHTML.label "XHTML">
+  <!ENTITY namespaceTitle.XLink.label "XLink">
+  <!ENTITY namespaceTitle.XSLT.label "XSLT">
+  <!ENTITY namespaceTitle.XBL.label "XBL">
+  <!ENTITY namespaceTitle.MathML.label "MathML">
+  <!ENTITY namespaceTitle.RDF.label "RDF">
+  <!ENTITY namespaceTitle.XUL.label "XUL">
+  <!ENTITY namespaceTitle.SVG.label "SVG">
+  <!ENTITY namespaceTitle.XMLEvents.label "XML-Ereignisse">
+  <!ENTITY namespaceTitle.WAIRoles.label "WAI-Rollen">
+  <!ENTITY namespaceTitle.WAIProperties.label "WAI-Eigenschaften">
