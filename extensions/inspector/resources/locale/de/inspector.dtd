@@ -18,6 +18,8 @@
   <!ENTITY mnInspectChromeDocument.accesskey "C">
   <!ENTITY cmdShowOpenURLDialog.label "URL inspizieren...">
   <!ENTITY cmdShowOpenURLDialog.accesskey "U">
+  <!ENTITY cmdSave.label "DOM speichern unter...">
+  <!ENTITY cmdSave.accesskey "D">
   <!ENTITY cmdClose.label "Schließen">
   <!ENTITY cmdClose.accesskey "L">
   <!ENTITY cmdExit.label "Beenden">
@@ -62,4 +64,5 @@
 
 <!ENTITY inspectNewWindow.label "In neuem Fenster inspizieren">
 
+<!ENTITY saveCmd.key "S">
 <!ENTITY closeCmd.key "W">
