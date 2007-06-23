@@ -581,7 +581,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
 
       // Add the parent's origin to our own to get to the
       // right coordinate system.
-      PRBool isOffsetParent = IsOffsetParent(parent);
+      const PRBool isOffsetParent = !isPositioned && IsOffsetParent(parent);
       if (!isAbsolutelyPositioned && !isOffsetParent) {
         origin += parent->GetPositionIgnoringScrolling();
       }
@@ -592,10 +592,9 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
           break;
         }
 
-        // If the tag of this frame is a offset parent tag and this
-        // element is *not* positioned, break here. Also break if we
-        // hit the body element.
-        if ((!isPositioned && isOffsetParent) || IsBody(content)) {
+        // Break if the ancestor frame type makes it suitable as offset parent
+        // and this element is *not* positioned or if we found the body element.
+        if (isOffsetParent || IsBody(content)) {
           *aOffsetParent = content;
           NS_ADDREF(*aOffsetParent);
           break;
