@@ -115,6 +115,7 @@ nsSVGForeignObjectFrame::AttributeChanged(PRInt32  aNameSpaceID,
     if (aAttribute == nsGkAtoms::width ||
         aAttribute == nsGkAtoms::height) {
       UpdateGraphic(); // update mRect before requesting reflow
+      // XXXjwatt: why are we calling MarkIntrinsicWidthsDirty on our ancestors???
       RequestReflow(nsIPresShell::eStyleChange);
     } else if (aAttribute == nsGkAtoms::x ||
                aAttribute == nsGkAtoms::y) {
@@ -344,6 +345,8 @@ nsSVGForeignObjectFrame::UpdateCoveredRegion()
   NS_STATIC_CAST(nsSVGForeignObjectElement*, mContent)->
     GetAnimatedLengthValues(&x, &y, &w, &h, nsnull);
 
+  // XXXjwatt: _this_ is where we should reflow _if_ mRect.width has changed!
+  // we should not unconditionally reflow in AttributeChanged
   mRect = GetTransformedRegion(x, y, w, h, ctm);
   return NS_OK;
 }
@@ -370,8 +373,9 @@ nsSVGForeignObjectFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
   mCanvasTM = nsnull;
   // If our width/height has a percentage value then we need to reflow if the
   // width/height of our parent coordinate context changes. Actually we also
-  // need to reflow if our scale changes since when text is scaled it doesn't
-  // necessarily change by quite the same amount as the change in scale.
+  // need to reflow if our scale changes. Glyph metrics do not necessarily 
+  // scale uniformly with the change in scale, so a change in scale can
+  // (perhaps unexpectedly) cause text to break at different points.
   RequestReflow(nsIPresShell::eResize);
   UpdateGraphic();
   return NS_OK;
@@ -514,11 +518,15 @@ void nsSVGForeignObjectFrame::UpdateGraphic()
     RemoveStateBits(NS_STATE_SVG_DIRTY);
 
     // Invalidate the area we used to cover
+    // XXXjwatt: if we fix the following XXX, try to subtract the new region from the old here.
+    // hmm, if x then y is changed, our second call could invalidate an "old" area we never actually painted to.
     outerSVGFrame->InvalidateRect(mRect);
 
     UpdateCoveredRegion();
 
     // Invalidate the area we now cover
+    // XXXjwatt: when we're called due to an event that also requires reflow,
+    // we want to let reflow trigger this rasterization so it doesn't happen twice.
     nsRect filterRect = nsSVGUtils::FindFilterInvalidation(this);
     if (!filterRect.IsEmpty()) {
       outerSVGFrame->InvalidateRect(filterRect);
