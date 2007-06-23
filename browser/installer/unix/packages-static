@@ -346,6 +346,11 @@ bin/chrome/pippki.manifest
 ;
 bin/updater
 
+; [Crash Reporter]
+;
+bin/crashreporter
+bin/crashreporter.ini
+
 ; [Extensions]
 ;
 bin/components/libnkgnomevfs.so
