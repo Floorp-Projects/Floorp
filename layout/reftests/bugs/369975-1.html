@@ -1,0 +1,21 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Assert: Must have usable originating data here + crash</title>
+</head>
+
+<body>
+
+<table border>
+ <tbody>
+  <tr ><td rowspan="2">1</td></tr>
+  <tr><td rowspan="2">2</td></tr>
+  <tr ><td rowspan="3" colspan="2">3</td></tr>
+  <tr></tr>
+</tbody>
+<tbody>
+  <tr><td rowspan="3">4</td></tr>
+  <tr><td>5</td></tr>
+</tbody>
+</table>
+</body>
+</html>
