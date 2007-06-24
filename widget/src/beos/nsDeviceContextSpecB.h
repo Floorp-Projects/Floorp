@@ -85,6 +85,8 @@ public:
  */
   NS_IMETHOD ClosePrintManager();
   
+  NS_IMETHOD GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight);
+
   NS_IMETHOD GetToPrinter( PRBool &aToPrinter ); 
 
   NS_IMETHOD GetPrinterName ( const char **aPrinter );
