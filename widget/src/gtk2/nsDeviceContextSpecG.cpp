@@ -403,14 +403,13 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
   const char *path;
   GetPath(&path);
 
-  PRInt32 width, height;
-  GetPageSizeInTwips(&width, &height);
-  double w, h;
+  double width, height;
+  mPrintSettings->GetEffectivePageSize(&width, &height);
   // convert twips to points
-  w = width/20;
-  h = height/20;
+  width /= 20;
+  height /= 20;
 
-  printf("\"%s\", %d, %d\n", path, width, height);
+  DO_PR_DEBUG_LOG(("\"%s\", %f, %f\n", path, width, height));
 
   nsresult rv = nsPrintJobFactoryGTK::CreatePrintJob(this, mPrintJob);
   if (NS_FAILED(rv))
@@ -427,9 +426,9 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
     return rv;
 
 #ifdef USE_PDF
-  gfxPDFSurface *surface = new gfxPDFSurface(stream, gfxSize(w, h));
+  gfxPDFSurface *surface = new gfxPDFSurface(stream, gfxSize(width, height));
 #else
-  gfxPSSurface *surface = new gfxPSSurface(stream, gfxSize(w, h));
+  gfxPSSurface *surface = new gfxPSSurface(stream, gfxSize(width, height));
 #endif
 //  surface->SetDPI(600, 600);
   
@@ -661,11 +660,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetDownloadFonts(PRBool &aDownloadFonts)
 {
   aDownloadFonts = mDownloadFonts;
   return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight)
-{
-  return mPrintSettings->GetPageSizeInTwips(aWidth, aHeight);
 }
 
 NS_IMETHODIMP nsDeviceContextSpecGTK::GetPrintMethod(PrintMethod &aMethod)
