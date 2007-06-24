@@ -428,7 +428,8 @@ void UIShutdown()
 
 void UIShowDefaultUI()
 {
-  UIError(gStrings[ST_CRASHREPORTERDEFAULT]);
+  [gUI showErrorUI: gStrings[ST_CRASHREPORTERDEFAULT]];
+  [NSApp run];
 }
 
 void UIShowCrashUI(const string& dumpfile,
@@ -444,7 +445,7 @@ void UIShowCrashUI(const string& dumpfile,
   [NSApp run];
 }
 
-void UIError(const string& message)
+void UIError_impl(const string& message)
 {
   if (!gUI) {
     // UI failed to initialize, printing is the best we can do
@@ -497,6 +498,16 @@ bool UIEnsurePathExists(const string& path)
   int ret = mkdir(path.c_str(), S_IRWXU);
   int e = errno;
   if (ret == -1 && e != EEXIST)
+    return false;
+
+  return true;
+}
+
+bool UIFileExists(const string& path)
+{
+  struct stat sb;
+  int ret = stat(path.c_str(), &sb);
+  if (ret == -1 || !(sb.st_mode & S_IFREG))
     return false;
 
   return true;

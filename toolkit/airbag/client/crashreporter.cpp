@@ -68,6 +68,22 @@ static string       gExtraFile;
 
 static string kExtraDataExtension = ".extra";
 
+void UIError(const string& message)
+{
+  string errorMessage;
+  if (!gStrings[ST_CRASHREPORTERERROR].empty()) {
+    char buf[2048];
+    UI_SNPRINTF(buf, 2048,
+                gStrings[ST_CRASHREPORTERERROR].c_str(),
+                message.c_str());
+    errorMessage = buf;
+  } else {
+    errorMessage = message;
+  }
+
+  UIError_impl(errorMessage);
+}
+
 static string Unescape(const string& str)
 {
   string ret;
@@ -210,14 +226,20 @@ static bool MoveCrashData(const string& toDir,
                           string& extrafile)
 {
   if (!UIEnsurePathExists(toDir)) {
+    UIError(gStrings[ST_ERROR_CREATEDUMPDIR]);
     return false;
   }
 
   string newDump = toDir + UI_DIR_SEPARATOR + Basename(dumpfile);
   string newExtra = toDir + UI_DIR_SEPARATOR + Basename(extrafile);
 
-  if (!UIMoveFile(dumpfile, newDump) ||
-      !UIMoveFile(extrafile, newExtra)) {
+  if (!UIMoveFile(dumpfile, newDump)) {
+    UIError(gStrings[ST_ERROR_DUMPFILEMOVE]);
+    return false;
+  }
+
+  if (!UIMoveFile(extrafile, newExtra)) {
+    UIError(gStrings[ST_ERROR_EXTRAFILEMOVE]);
     return false;
   }
 
@@ -288,13 +310,52 @@ bool SendCompleted(bool success, const string& serverResponse)
 
 using namespace CrashReporter;
 
+void RewriteStrings(StringTable& queryParameters)
+{
+  // rewrite some UI strings with the values from the query parameters
+  string product = queryParameters["ProductName"];
+  string vendor = queryParameters["Vendor"];
+  if (vendor.empty()) {
+    // Assume Mozilla if no vendor is specified
+    vendor = "Mozilla";
+  }
+
+  char buf[4096];
+  UI_SNPRINTF(buf, sizeof(buf),
+              gStrings[ST_CRASHREPORTERVENDORTITLE].c_str(),
+              vendor.c_str());
+  gStrings[ST_CRASHREPORTERTITLE] = buf;
+
+  // Leave a format specifier for UIError to fill in
+  UI_SNPRINTF(buf, sizeof(buf),
+              gStrings[ST_CRASHREPORTERPRODUCTERROR].c_str(),
+              product.c_str(),
+              "%s");
+  gStrings[ST_CRASHREPORTERERROR] = buf;
+
+  UI_SNPRINTF(buf, sizeof(buf),
+              gStrings[ST_CRASHREPORTERDESCRIPTION].c_str(),
+              product.c_str());
+  gStrings[ST_CRASHREPORTERDESCRIPTION] = buf;
+
+  UI_SNPRINTF(buf, sizeof(buf),
+              gStrings[ST_CHECKSUBMIT].c_str(),
+              vendor.c_str());
+  gStrings[ST_CHECKSUBMIT] = buf;
+
+  UI_SNPRINTF(buf, sizeof(buf),
+              gStrings[ST_RESTART].c_str(),
+              product.c_str());
+  gStrings[ST_RESTART] = buf;
+}
+
 int main(int argc, char** argv)
 {
   gArgc = argc;
   gArgv = argv;
 
   if (!ReadConfig()) {
-    UIError("Couldn't read configuration");
+    UIError("Couldn't read configuration.");
     return 0;
   }
 
@@ -311,36 +372,49 @@ int main(int argc, char** argv)
   } else {
     gExtraFile = GetExtraDataFilename(gDumpFile);
     if (gExtraFile.empty()) {
-      UIError("Couldn't get extra data filename");
+      UIError(gStrings[ST_ERROR_BADARGUMENTS]);
+      return 0;
+    }
+
+    if (!UIFileExists(gExtraFile)) {
+      UIError(gStrings[ST_ERROR_EXTRAFILEEXISTS]);
       return 0;
     }
 
     StringTable queryParameters;
     if (!ReadStringsFromFile(gExtraFile, queryParameters, true)) {
-      UIError("Couldn't read extra data");
+      UIError(gStrings[ST_ERROR_EXTRAFILEREAD]);
       return 0;
     }
 
     if (queryParameters.find("ProductName") == queryParameters.end()) {
-      UIError("No product name specified");
+      UIError(gStrings[ST_ERROR_NOPRODUCTNAME]);
       return 0;
     }
 
+    // There is enough information in the extra file to rewrite strings
+    // to be product specific
+    RewriteStrings(queryParameters);
+
     if (queryParameters.find("ServerURL") == queryParameters.end()) {
-      UIError("No server URL specified");
+      UIError(gStrings[ST_ERROR_NOSERVERURL]);
       return 0;
     }
 
     string product = queryParameters["ProductName"];
     string vendor = queryParameters["Vendor"];
     if (!UIGetSettingsPath(vendor, product, gSettingsPath)) {
-      UIError("Couldn't get settings path");
+      UIError(gStrings[ST_ERROR_NOSETTINGSPATH]);
+      return 0;
+    }
+
+    if (!UIFileExists(gDumpFile)) {
+      UIError(gStrings[ST_ERROR_DUMPFILEEXISTS]);
       return 0;
     }
 
     string pendingDir = gSettingsPath + UI_DIR_SEPARATOR + "pending";
     if (!MoveCrashData(pendingDir, gDumpFile, gExtraFile)) {
-      UIError("Couldn't move crash data");
       return 0;
     }
 
@@ -369,28 +443,6 @@ int main(int argc, char** argv)
     if (urlEnv && *urlEnv) {
       sendURL = urlEnv;
     }
-
-    // rewrite some UI strings with the values from the query parameters
-    char buf[4096];
-    UI_SNPRINTF(buf, sizeof(buf),
-                gStrings[ST_RESTART].c_str(),
-                product.c_str());
-    gStrings[ST_RESTART] = buf;
-
-    UI_SNPRINTF(buf, sizeof(buf),
-                gStrings[ST_CRASHREPORTERDESCRIPTION].c_str(),
-                product.c_str());
-    gStrings[ST_CRASHREPORTERDESCRIPTION] = buf;
-
-    UI_SNPRINTF(buf, sizeof(buf),
-                gStrings[ST_CHECKSUBMIT].c_str(),
-                vendor.empty() ? "Mozilla" : vendor.c_str());
-    gStrings[ST_CHECKSUBMIT] = buf;
-
-    UI_SNPRINTF(buf, sizeof(buf),
-                gStrings[ST_CRASHREPORTERTITLE].c_str(),
-                vendor.empty() ? "Mozilla" : vendor.c_str());
-    gStrings[ST_CRASHREPORTERTITLE] = buf;
 
     UIShowCrashUI(gDumpFile, queryParameters, sendURL, restartArgs);
   }
