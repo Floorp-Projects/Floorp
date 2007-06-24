@@ -67,6 +67,9 @@ using std::wstring;
 using std::map;
 using std::vector;
 using std::set;
+using std::ios;
+using std::ifstream;
+using std::ofstream;
 
 using namespace CrashReporter;
 
@@ -100,7 +103,6 @@ static const UINT kDefaultAttachedBottom[] = {
 };
 
 static wstring UTF8ToWide(const string& utf8, bool *success = 0);
-static string WideToUTF8(const wstring& wide, bool *success = 0);
 static DWORD WINAPI SendThreadProc(LPVOID param);
 
 static wstring Str(const char* key)
@@ -627,7 +629,7 @@ static wstring UTF8ToWide(const string& utf8, bool *success)
   return str;
 }
 
-static string WideToUTF8(const wstring& wide, bool *success)
+string WideToUTF8(const wstring& wide, bool* success)
 {
   char* buffer = NULL;
   int buffer_size = WideCharToMultiByte(CP_UTF8, 0, wide.c_str(),
@@ -783,4 +785,40 @@ bool UIMoveFile(const string& oldfile, const string& newfile)
 bool UIDeleteFile(const string& oldfile)
 {
   return DeleteFile(UTF8ToWide(oldfile).c_str()) == TRUE;
+}
+
+ifstream* UIOpenRead(const string& filename)
+{
+  // adapted from breakpad's src/common/windows/http_upload.cc
+
+  // The "open" method on pre-MSVC8 ifstream implementations doesn't accept a
+  // wchar_t* filename, so use _wfopen directly in that case.  For VC8 and
+  // later, _wfopen has been deprecated in favor of _wfopen_s, which does
+  // not exist in earlier versions, so let the ifstream open the file itself.
+#if _MSC_VER >= 1400  // MSVC 2005/8
+  ifstream* file = new ifstream();
+  file->open(UTF8ToWide(filename).c_str(), ios::in);
+#else  // _MSC_VER >= 1400
+  ifstream* file = new ifstream(_wfopen(UTF8ToWide(filename).c_str(), L"r"));
+#endif  // _MSC_VER >= 1400
+
+  return file;
+}
+
+ofstream* UIOpenWrite(const string& filename)
+{
+  // adapted from breakpad's src/common/windows/http_upload.cc
+
+  // The "open" method on pre-MSVC8 ifstream implementations doesn't accept a
+  // wchar_t* filename, so use _wfopen directly in that case.  For VC8 and
+  // later, _wfopen has been deprecated in favor of _wfopen_s, which does
+  // not exist in earlier versions, so let the ifstream open the file itself.
+#if _MSC_VER >= 1400  // MSVC 2005/8
+  ofstream* file = new ofstream();
+  file->open(UTF8ToWide(filename).c_str(), ios::out);
+#else  // _MSC_VER >= 1400
+  ofstream* file = new ofstream(_wfopen(UTF8ToWide(filename).c_str(), L"w"));
+#endif  // _MSC_VER >= 1400
+
+  return file;
 }
