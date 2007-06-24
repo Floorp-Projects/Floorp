@@ -464,12 +464,12 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame *aFrame,
     *aAccessible = new nsHTMLListAccessible(aNode, aWeakShell);
   }
   else if (tag == nsAccessibilityAtoms::a) {
-    *aAccessible = new nsHTMLLinkAccessible(aNode, aWeakShell, aFrame);
+    *aAccessible = new nsHTMLLinkAccessible(aNode, aWeakShell);
   }
   else if (tag == nsAccessibilityAtoms::li && aFrame->GetType() != nsAccessibilityAtoms::blockFrame) {
     // Normally this is created by the list item frame which knows about the bullet frame
     // However, in this case the list item must have been styled using display: foo
-    *aAccessible = new nsHTMLLIAccessible(aNode, aWeakShell, nsnull, EmptyString());
+    *aAccessible = new nsHTMLLIAccessible(aNode, aWeakShell, EmptyString());
   }
   else if (tag == nsAccessibilityAtoms::abbr ||
            tag == nsAccessibilityAtoms::acronym ||
@@ -509,10 +509,8 @@ nsAccessibilityService::CreateHTMLLIAccessible(nsISupports *aFrame,
   nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
   if (NS_FAILED(rv))
     return rv;
-  nsIFrame *bulletFrame = NS_STATIC_CAST(nsIFrame*, aBulletFrame);
-  NS_ASSERTION(bulletFrame, "bullet frame argument not a frame");
 
-  *_retval = new nsHTMLLIAccessible(node, weakShell, bulletFrame, aBulletText);
+  *_retval = new nsHTMLLIAccessible(node, weakShell, aBulletText);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -801,7 +799,7 @@ nsAccessibilityService::CreateHTMLTextAccessible(nsISupports *aFrame, nsIAccessi
     return rv;
 
   // XXX Don't create ATK objects for these
-  *_retval = new nsHTMLTextAccessible(node, weakShell, frame);
+  *_retval = new nsHTMLTextAccessible(node, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
