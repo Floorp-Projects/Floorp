@@ -57,8 +57,6 @@ REQUIRES	= xpcom \
 CPPSRCS		= \
 		nsJapaneseToUnicode.cpp \
 		nsUnicodeToSJIS.cpp \
-		nsCP932ToUnicode.cpp \
-		nsUnicodeToCP932.cpp \
 		nsUnicodeToEUCJP.cpp \
 		nsUnicodeToISO2022JP.cpp \
 		nsUnicodeToJISx0201.cpp \
