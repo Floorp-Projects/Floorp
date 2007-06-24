@@ -180,6 +180,26 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
     return *mMetrics;
 }
 
+// weight list copied from fontconfig.h
+// unfortunately, the OS/2 version so far only supports regular and bold
+static const PRInt8 nFcWeight = 2; // 10; // length of weight list
+static const int fcWeight[] = {
+    //FC_WEIGHT_THIN,
+    //FC_WEIGHT_EXTRALIGHT, // == FC_WEIGHT_ULTRALIGHT
+    //FC_WEIGHT_LIGHT,
+    //FC_WEIGHT_BOOK,
+    FC_WEIGHT_REGULAR, // == FC_WEIGHT_NORMAL
+    //FC_WEIGHT_MEDIUM,
+    //FC_WEIGHT_DEMIBOLD, // == FC_WEIGHT_SEMIBOLD
+    FC_WEIGHT_BOLD,
+    //FC_WEIGHT_EXTRABOLD, // == FC_WEIGHT_ULTRABOLD
+    //FC_WEIGHT_BLACK // == FC_WEIGHT_HEAVY
+};
+
+// gfxOS2Font::CairoFontFace()
+// return a font face usable by cairo for font rendering
+// if none was created yet, use FontConfig patterns based on the current style
+// to create a new font face
 cairo_font_face_t *gfxOS2Font::CairoFontFace()
 {
 #ifdef DEBUG_thebes_2
@@ -197,20 +217,34 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
         FcPatternAddString(fcPattern, FC_FAMILY,
                            (FcChar8 *)NS_LossyConvertUTF16toASCII(mName).get());
 
-        PRUint8 fcProperty;
-        // add weight to pattern
-        switch (mStyle.weight) {
-        case FONT_WEIGHT_NORMAL:
-            fcProperty = FC_WEIGHT_NORMAL;
-            break;
-        case FONT_WEIGHT_BOLD:
-            fcProperty = FC_WEIGHT_BOLD;
-            break;
-        default:
-            fcProperty = FC_WEIGHT_MEDIUM;
+        // adjust font weight using the offset
+        // The requirements outlined in gfxFont.h are difficult to meet without
+        // having a table of available font weights, so we map the gfxFont
+        // weight to possible FontConfig weights.
+        PRInt8 weight, offset;
+        mStyle.ComputeWeightAndOffset(&weight, &offset);
+        // gfxFont weight   FC weight
+        //    400              80
+        //    700             200
+        PRInt16 fcW = 40 * weight - 80; // match gfxFont weight to base FC weight
+        // find the correct weight in the list 
+        PRInt8 i = 0;
+        while (i < nFcWeight && fcWeight[i] < fcW) {
+            i++;
         }
-        FcPatternAddInteger(fcPattern, FC_WEIGHT, fcProperty);
+        // add the offset, but observe the available number of weights
+        i += offset;
+        if (i < 0) {
+            i = 0;
+        } else if (i >= nFcWeight) {
+            i = nFcWeight - 1;
+        }
+        fcW = fcWeight[i];
 
+        // add weight to pattern
+        FcPatternAddInteger(fcPattern, FC_WEIGHT, fcW);
+
+        PRUint8 fcProperty;
         // add style to pattern
         switch (mStyle.style) {
         case FONT_STYLE_ITALIC:
@@ -253,11 +287,6 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
         mFontFace = cairo_ft_font_face_create_for_pattern(fcMatch);
         FcPatternDestroy(fcMatch);
     }
-#ifdef DEBUG_thebes_2
-    printf("  cairo_font_face_type=%s (%d)\n",
-           cairo_font_face_get_type(mFontFace) == CAIRO_FONT_TYPE_FT ? "FT" : "??",
-           cairo_font_face_get_type(mFontFace));
-#endif
 
     NS_ASSERTION(mFontFace, "Failed to make font face");
     return mFontFace;
