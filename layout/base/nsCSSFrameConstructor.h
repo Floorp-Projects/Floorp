@@ -827,7 +827,7 @@ private:
 
   nsresult ReframeContainingBlock(nsIFrame* aFrame);
 
-  nsresult StyleChangeReflow(nsIFrame* aFrame, nsIAtom* aAttribute);
+  nsresult StyleChangeReflow(nsIFrame* aFrame);
 
   /** Helper function that searches the immediate child frames 
     * (and their children if the frames are "special")
