@@ -529,7 +529,7 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
     nsXPIDLString filename;
     mPrintSettings->GetToFileName(getter_Copies(filename));
 
-    PRInt32 width, height;
+    double width, height;
     mPrintSettings->GetEffectivePageSize(&width, &height);
     // convert twips to points
     width /= 20;
