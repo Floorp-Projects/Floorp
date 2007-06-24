@@ -530,11 +530,10 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
     mPrintSettings->GetToFileName(getter_Copies(filename));
 
     PRInt32 width, height;
-    mPrintSettings->GetPageSizeInTwips(&width, &height);
-    double w, h;
+    mPrintSettings->GetEffectivePageSize(&width, &height);
     // convert twips to points
-    w = width/20;
-    h = height/20;
+    width /= 20;
+    height /= 20;
 
     nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
     nsresult rv = file->InitWithPath(filename);
@@ -546,7 +545,7 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
     if (NS_FAILED(rv))
       return rv;
 
-    newSurface = new gfxPDFSurface(stream, gfxSize(w, h));
+    newSurface = new gfxPDFSurface(stream, gfxSize(width, height));
   } else {
     if (mDevMode) {
       HDC dc = ::CreateDC(mDriverName, mDeviceName, NULL, mDevMode);
