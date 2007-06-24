@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,19 +40,24 @@ function initFeedTab()
 {
   const feedTypes = {
     "application/rss+xml": gBundle.getString("feedRss"),
-    "application/atom+xml": gBundle.getString("feedAtom")
+    "application/atom+xml": gBundle.getString("feedAtom"),
+    "text/xml": gBundle.getString("feedXML"),
+    "application/xml": gBundle.getString("feedXML"),
+    "application/rdf+xml": gBundle.getString("feedXML")
   };
 
   // get the feeds
   var linkNodes = gDocument.getElementsByTagName("link");
   var length = linkNodes.length;
   for (var i = 0; i < length; i++) {
-    if (linkNodes[i].rel == "alternate" &&
-        linkNodes[i].type in feedTypes &&
-        linkNodes[i].href) {
-      addRow(linkNodes[i].title,
-             feedTypes[linkNodes[i].type],
-             linkNodes[i].href);
+    var feed = recognizeFeedFromLink(linkNodes[i], gDocument.nodePrincipal);
+    if (feed) {
+      var type = feed.type;
+      if (type in feedTypes)
+        type = feedTypes[type];
+      else
+        type = feedTypes["application/rss+xml"];
+      addRow(feed.title, type, feed.href);
     }
   }
 
