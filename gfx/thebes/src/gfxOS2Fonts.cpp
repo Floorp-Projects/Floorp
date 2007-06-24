@@ -89,6 +89,10 @@ gfxOS2Font::~gfxOS2Font()
 #define MOZ_FT_TRUNC(x) ((x) >> 6)
 #define CONVERT_DESIGN_UNITS_TO_PIXELS(v, s) \
         MOZ_FT_TRUNC(MOZ_FT_ROUND(FT_MulFix((v), (s))))
+#define CONVERT_DESIGN_UNITS_TO_PIXELS_X(v) \
+        CONVERT_DESIGN_UNITS_TO_PIXELS(v, face->size->metrics.x_scale)
+#define CONVERT_DESIGN_UNITS_TO_PIXELS_Y(v) \
+        CONVERT_DESIGN_UNITS_TO_PIXELS(v, face->size->metrics.y_scale)
 
 const gfxFont::Metrics& gfxOS2Font::GetMetrics()
 {
@@ -98,78 +102,67 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
     if (!mMetrics) {
         mMetrics = new gfxFont::Metrics;
     
-        // XXX maybe use CONVERT_DESIGN_UNITS_TO_PIXELS(..., face->size->metrics.y_scale);
-        //     on all (y) properties?!
         FT_UInt gid;
         FT_Face face = cairo_ft_scaled_font_lock_face(CairoScaledFont());
 
-#if 0
-        // face->units_per_EM doesn't work here, so use height of 'm' (the font's emHeight)
-        // and scale to correct height
-        gid = FT_Get_Char_Index(face, 'm'); // select the glyph
-        FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT); // load it into the slot
-        gfxFloat scale = face->glyph->metrics.height / mStyle.size;
-        // XXX no, that doesn't work, gives completely bogus results for maxHeight etc.
-#endif
-        // instead, use this hack to scale, seems to give good results for all fonts
-        // and sizes
-        gfxFloat scale = face->units_per_EM / 8;
-    
         // properties of 'x', also use its width as average width
         gid = FT_Get_Char_Index(face, 'x'); // select the glyph
         FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT); // load it into the slot
-        mMetrics->xHeight = face->glyph->metrics.height / scale;
-        mMetrics->aveCharWidth = face->glyph->metrics.width / scale;
+        mMetrics->xHeight = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->glyph->metrics.height);
+        mMetrics->aveCharWidth = CONVERT_DESIGN_UNITS_TO_PIXELS_X(face->glyph->metrics.width);
         // properties of space
         gid = FT_Get_Char_Index(face, ' ');
         FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT);
         // face->glyph->metrics.width doesn't work for spaces, use advance.x instead
-        // XXX spaces are always too narrow, unless I multiply by some extra factor
-        mMetrics->spaceWidth = face->glyph->advance.x / scale * 2;
+        // spaces are always too narrow, unless I multiply by some extra factor
+        mMetrics->spaceWidth = CONVERT_DESIGN_UNITS_TO_PIXELS_X(face->glyph->advance.x) * 2;
         // save the space glyph
         mSpaceGlyph = gid;
     
         // now load the OS/2 TrueType table to load access some more properties
         TT_OS2 *os2 = (TT_OS2 *)FT_Get_Sfnt_Table(face, ft_sfnt_os2);
         if (os2 && os2->version !=  0xFFFF) { // should be there if not old Mac font
-            mMetrics->superscriptOffset = PR_MAX(1, os2->ySuperscriptYOffset) / scale;
+            mMetrics->superscriptOffset = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(os2->ySuperscriptYOffset);
+            mMetrics->superscriptOffset = PR_MAX(1, mMetrics->superscriptOffset);
             // some fonts have the incorrect sign (from gfxPangoFonts)
-            mMetrics->subscriptOffset   = PR_MAX(1, fabs(os2->ySubscriptYOffset)) / scale;
+            mMetrics->subscriptOffset   = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(os2->ySubscriptYOffset);
+            mMetrics->subscriptOffset   = PR_MAX(1, fabs(mMetrics->subscriptOffset));
         } else {
-            mMetrics->superscriptOffset = mMetrics->xHeight / scale;
-            mMetrics->subscriptOffset   = mMetrics->xHeight / scale;
+            mMetrics->superscriptOffset = mMetrics->xHeight;
+            mMetrics->subscriptOffset   = mMetrics->xHeight;
         }
         // could access these via os2 table, but copy behavior from gfxPangoFonts
-        mMetrics->strikeoutOffset = mMetrics->xHeight / 2.0 / scale;
-        mMetrics->strikeoutSize   = face->underline_thickness / scale;
-        mMetrics->underlineOffset = face->underline_position / scale;
-        mMetrics->underlineSize   = face->underline_thickness / scale;
+        mMetrics->strikeoutOffset = mMetrics->xHeight / 2.0;
+        mMetrics->strikeoutSize   = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->underline_thickness);
+        mMetrics->underlineOffset = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->underline_position);
+        mMetrics->underlineSize   = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->underline_thickness);
     
-        // dividing by scale doesn't make sense
-        mMetrics->emHeight        = face->size->metrics.y_ppem;
-        mMetrics->emAscent        = face->ascender / scale;
-        mMetrics->emDescent       = face->descender / scale;
-        mMetrics->maxHeight       = face->height / scale;
-        mMetrics->maxAscent       = face->bbox.yMax / scale;
-        mMetrics->maxDescent      = face->bbox.yMin / scale;
-        mMetrics->maxAdvance      = face->max_advance_width / scale;
+        // descents are negative in FT but Thebes wants them positive
+        mMetrics->emHeight        = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->size->metrics.y_ppem);
+        mMetrics->emAscent        = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->ascender);
+        mMetrics->emDescent       = -CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->descender);
+        mMetrics->maxHeight       = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->height);
+        mMetrics->maxAscent       = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->bbox.yMax);
+        mMetrics->maxDescent      = -CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->bbox.yMin);
+        mMetrics->maxAdvance      = CONVERT_DESIGN_UNITS_TO_PIXELS_X(face->max_advance_width);
         // leading are not available directly (only for WinFNTs)
-        mMetrics->internalLeading = (face->bbox.yMax - face->bbox.yMin
-                                     - mMetrics->xHeight) / scale;
-        mMetrics->externalLeading = 0; // normal value for OS/2 fonts
+        double lineHeight = mMetrics->maxAscent + mMetrics->maxDescent;
+        if (lineHeight > mMetrics->emHeight) {
+            mMetrics->internalLeading = lineHeight - mMetrics->emHeight;
+        } else {
+            mMetrics->internalLeading = 0;
+        }
+        mMetrics->externalLeading = 0; // normal value for OS/2 fonts, too
     
 #ifdef DEBUG_thebes_1
         printf("gfxOS2Font[%#x]::GetMetrics():\n"
-               "  scale=%f\n"
                "  emHeight=%f==%f=gfxFont::mStyle.size\n"
                "  maxHeight=%f\n"
                "  xHeight=%f\n"
                "  aveCharWidth=%f==xWidth\n"
                "  spaceWidth=%f\n",
                (unsigned)this,
-               scale,
-               mStyle.size,
-               mMetrics->emHeight,
+               mMetrics->emHeight, mStyle.size,
                mMetrics->maxHeight,
                mMetrics->xHeight,
                mMetrics->aveCharWidth,
