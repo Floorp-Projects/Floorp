@@ -155,9 +155,9 @@ bool ReadStringsFromFile(const string& path,
   bool success = false;
   if (f->is_open()) {
     success = ReadStrings(*f, strings, unescape);
+    f->close();
   }
 
-  f->close();
   delete f;
   return success;
 }
@@ -192,9 +192,9 @@ bool WriteStringsToFile(const string& path,
   bool success = false;
   if (f->is_open()) {
     success = WriteStrings(*f, header, strings, escape);
+    f->close();
   }
 
-  f->close();
   delete f;
   return success;
 }
