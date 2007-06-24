@@ -41,6 +41,7 @@
 #   Michael Ventnor <m.ventnor@gmail.com>
 #   Simon Bünzli <zeniko@gmail.com>
 #   Johnathan Nightingale <johnath@mozilla.com>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -5612,38 +5613,10 @@ var FeedHandler = {
     // along all events.  It should give us the browser for the tab, as well as
     // the actual event.
 
-    var erel = event.target.rel;
-    var etype = event.target.type;
-    var etitle = event.target.title;
-    const rssTitleRegex = /(^|\s)rss($|\s)/i;
-    var rels = {};
+    var feed = recognizeFeedFromLink(event.target,
+      event.target.ownerDocument.contentPrincipal);
 
-    if (erel) {
-      for each (var relValue in erel.split(/\s+/))
-        rels[relValue] = true;
-    }
-    var isFeed = rels.feed;
-
-    if (!isFeed &&
-        (!rels.alternate || rels.stylesheet || !etype))
-      return;
-
-    if (!isFeed) {
-      // Use type value
-      etype = etype.replace(/^\s+/, "");
-      etype = etype.replace(/\s+$/, "");
-      etype = etype.replace(/\s*;.*/, "");
-      etype = etype.toLowerCase();
-      isFeed = (etype == "application/rss+xml" ||
-                etype == "application/atom+xml");
-      if (!isFeed) {
-        // really slimy: general XML types with magic letters in the title
-        isFeed = ((etype == "text/xml" || etype == "application/xml" ||
-                   etype == "application/rdf+xml") && rssTitleRegex.test(etitle));
-      }
-    }
-
-    if (isFeed) {
+    if (feed) {
       const targetDoc = event.target.ownerDocument;
 
       // find which tab this is for, and set the attribute on the browser
@@ -5656,21 +5629,8 @@ var FeedHandler = {
       var feeds = [];
       if (browserForLink.feeds != null)
         feeds = browserForLink.feeds;
-      var wrapper = event.target;
 
-      try { 
-        urlSecurityCheck(wrapper.href,
-                         gBrowser.contentPrincipal,
-                         Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
-      }
-      catch (ex) {
-        dump(ex.message);
-        return; // doesn't pass security check
-      }
-
-      feeds.push({ href: wrapper.href,
-                   type: etype,
-                   title: wrapper.title});
+      feeds.push(feed);
       browserForLink.feeds = feeds;
       if (browserForLink == gBrowser || browserForLink == gBrowser.mCurrentBrowser) {
         var feedButton = document.getElementById("feed-button");
