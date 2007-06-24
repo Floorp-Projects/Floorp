@@ -412,7 +412,7 @@ void UIShowCrashUI(const string& dumpfile,
   gtk_main();
 }
 
-void UIError(const string& message)
+void UIError_impl(const string& message)
 {
   if (!gInitialized) {
     // Didn't initialize, this is the best we can do
@@ -472,6 +472,16 @@ bool UIEnsurePathExists(const string& path)
   int ret = mkdir(path.c_str(), S_IRWXU);
   int e = errno;
   if (ret == -1 && e != EEXIST)
+    return false;
+
+  return true;
+}
+
+bool UIFileExists(const string& path)
+{
+  struct stat sb;
+  int ret = stat(path.c_str(), &sb);
+  if (ret == -1 || !(sb.st_mode & S_IFREG))
     return false;
 
   return true;
