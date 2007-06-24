@@ -303,7 +303,7 @@
       </vbox>
       <hbox id="mediaSaveBox" collapsed="true">
         <spacer flex="1"/>
-        <button label="&mediaSaveAs;" accesskey="&mediaSaveAs.accesskey;"
+        <button label="&mediaSaveAs;" accesskey="&mediaSaveAs2.accesskey;"
                 icon="save" oncommand="saveMedia();"/>
       </hbox>
     </vbox>
