@@ -13,12 +13,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
+#include <fstream>
 
 #if defined(XP_WIN32)
 
 #include <windows.h>
+
 #define UI_SNPRINTF _snprintf
 #define UI_DIR_SEPARATOR "\\"
+
+std::string WideToUTF8(const std::wstring& wide, bool* success = 0);
 
 #else
 
@@ -113,6 +117,8 @@ bool UIEnsurePathExists(const std::string& path);
 bool UIFileExists(const std::string& path);
 bool UIMoveFile(const std::string& oldfile, const std::string& newfile);
 bool UIDeleteFile(const std::string& oldfile);
+std::ifstream* UIOpenRead(const std::string& filename);
+std::ofstream* UIOpenWrite(const std::string& filename);
 
 #ifdef _MSC_VER
 # pragma warning( pop )
