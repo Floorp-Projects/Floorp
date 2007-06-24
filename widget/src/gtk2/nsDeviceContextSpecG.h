@@ -89,6 +89,7 @@ public:
   NS_IMETHOD GetUserCancelled(PRBool &aCancel);      
   NS_IMETHOD GetPrintMethod(PrintMethod &aMethod);
   static nsresult GetPrintMethod(const char *aPrinter, PrintMethod &aMethod);
+  NS_IMETHOD GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight);
   NS_IMETHOD GetPaperName(const char **aPaperName);
   NS_IMETHOD GetPlexName(const char **aPlexName);
   NS_IMETHOD GetResolutionName(const char **aResolutionName);
