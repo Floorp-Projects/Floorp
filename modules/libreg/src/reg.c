@@ -65,22 +65,19 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef XP_MACOSX
+#include <Carbon/Carbon.h>
+#endif
+
 #ifdef STANDALONE_REGISTRY
 #include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
-
-#if defined(XP_MAC) || defined(XP_MACOSX)
-  #include <Errors.h>
-#endif
-
 #else
-
 #include "prtypes.h"
 #include "prlog.h"
 #include "prerror.h"
 #include "prprf.h"
-
 #endif /*STANDALONE_REGISTRY*/
 
 #if defined(SUNOS4)
@@ -90,9 +87,7 @@
 #include "reg.h"
 #include "NSReg.h"
 
-#if defined(XP_MAC)
-#define MAX_PATH 512
-#elif defined(XP_MACOSX)
+#if defined(XP_MACOSX)
 #define MAX_PATH PATH_MAX
 #elif defined(XP_UNIX)
 #ifndef MAX_PATH
@@ -159,21 +154,12 @@ static char     *user_name = NULL;
 
 
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 
 void nr_MacAliasFromPath(const char * fileName, void ** alias, int32 * length);
 char * nr_PathFromMacAlias(const void * alias, uint32 aliasLength);
 
-#include <Aliases.h>
-#include <TextUtils.h>
-#include <Memory.h>
-#include <Folders.h>
-
-#ifdef XP_MACOSX
-  #include "MoreFilesX.h"
-#else
-  #include "FullPath.h"
-#endif
+#include "MoreFilesX.h"
 
 static void copyCStringToPascal(Str255 dest, const char *src)
 {
@@ -184,7 +170,6 @@ static void copyCStringToPascal(Str255 dest, const char *src)
     dest[0] = copyLen;
 }
 
-#ifdef XP_MACOSX
 static OSErr isFileInTrash(FSRef *fsRef, PRBool *inTrash)
 {
     OSErr err;
@@ -216,26 +201,6 @@ static OSErr isFileInTrash(FSRef *fsRef, PRBool *inTrash)
     }
     return err;
 }
-#else
-static OSErr isFileInTrash(FSSpec *fileSpec, PRBool *inTrash)
-{
-    OSErr err;
-    short vRefNum;
-    long dirID;
-    
-    if (fileSpec == NULL || inTrash == NULL)
-        return paramErr;
-    *inTrash = PR_FALSE;
-    
-    /* XXX - Only works if the file is in the top level of the trash dir */
-    err = FindFolder(fileSpec->vRefNum, kTrashFolderType, false, &vRefNum, &dirID);
-    if (err == noErr)
-        if (dirID == fileSpec->parID)  /* File is inside the trash */
-            *inTrash = PR_TRUE;
-    
-    return err;
-}
-#endif
 
 /* returns an alias as a malloc'd pointer.
  * On failure, *alias is NULL
@@ -250,18 +215,10 @@ void nr_MacAliasFromPath(const char * fileName, void ** alias, int32 * length)
     *alias = NULL;
     *length = 0;
     
-#ifdef XP_MACOSX
     err = FSPathMakeRef((const UInt8*)fileName, &fsRef, NULL);
     if ( err != noErr )
         return;
     err = FSNewAlias(NULL, &fsRef, &macAlias);
-#else
-    copyCStringToPascal(pascalName, fileName);
-    err = FSMakeFSSpec(0, 0, pascalName, &fs);
-    if ( err != noErr )
-        return;
-    err = NewAlias(NULL, &fs, &macAlias);
-#endif
     
     if ( (err != noErr) || ( macAlias == NULL ))
         return;
@@ -311,7 +268,6 @@ char * nr_PathFromMacAlias(const void * alias, uint32 aliasLength)
     XP_MEMCPY( *h, alias, aliasLength );
     HUnlock( (Handle) h);
     
-#ifdef XP_MACOSX
     err = FSResolveAlias(NULL, h, &fsRef, &wasChanged);
     if (err != noErr)
         goto fail;
@@ -328,31 +284,6 @@ char * nr_PathFromMacAlias(const void * alias, uint32 aliasLength)
     if ( cpath == NULL)
         goto fail;
     XP_MEMCPY(cpath, pathBuf, fullPathLength + 1);
-#else    
-    err = ResolveAlias(NULL, h, &fs, &wasChanged);
-    if (err != noErr)
-        goto fail;
-    
-    /* if the alias has changed and the file is now in the trash,
-       assume that user has deleted it and that we do not want to look at it */
-    if (wasChanged && (isFileInTrash(&fs, &inTrash) == noErr) && inTrash)
-        goto fail;
-    
-    /* Get the full path and create a char * out of it */
-
-    err = GetFullPath(fs.vRefNum, fs.parID,fs.name, &fullPathLength, &fullPath);
-    if ( (err != noErr) || (fullPath == NULL) )
-        goto fail;
-    
-    cpath = (char*) XP_ALLOC(fullPathLength + 1);
-    if ( cpath == NULL)
-        goto fail;
-    
-    HLock( fullPath );
-    XP_MEMCPY(cpath, *fullPath, fullPathLength);
-    cpath[fullPathLength] = 0;
-    HUnlock( fullPath );
-#endif    
     /* Drop through */
 fail:
     if (h != NULL)
@@ -457,14 +388,14 @@ static REGERR nr_OpenFile(const char *path, FILEHANDLE *fh)
     {
         switch (errno)
         {
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
         case fnfErr:
 #else
         case ENOENT:    /* file not found */
 #endif
             return REGERR_NOFILE;
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
         case opWrErr:
 #else
         case EROFS:     /* read-only file system */
@@ -564,7 +495,7 @@ static REGERR nr_ReadFile(FILEHANDLE fh, REGOFF offset, int32 len, void *buffer)
         readlen = XP_FileRead(buffer, len, fh );
         /* PR_READ() returns an unreliable length, check EOF separately */
         if (readlen < 0) {
-#if !defined(STANDALONE_REGISTRY) || (!defined(XP_MAC) && !defined(XP_MACOSX))
+#if !defined(STANDALONE_REGISTRY) || (!defined(XP_MACOSX))
     #if defined(STANDALONE_REGISTRY)
             if (errno == EBADF) /* bad file handle, not open for read, etc. */
     #else
@@ -3147,7 +3078,7 @@ VR_INTERFACE(REGERR) NR_RegGetEntry( HREG hReg, RKEY key, char *name,
                 case REGTYPE_ENTRY_FILE:
 
                     err = nr_ReadData( reg, &desc, *size, (char*)buffer );
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
                     if (err == 0)
                     {
                         tmpbuf = nr_PathFromMacAlias(buffer, *size);
@@ -3309,7 +3240,7 @@ VR_INTERFACE(REGERR) NR_RegSetEntry( HREG hReg, RKEY key, char *name, uint16 typ
 
         case REGTYPE_ENTRY_FILE:
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
             nr_MacAliasFromPath(buffer, (void **)&data, &datalen);
             if (data)
                 needFree = TRUE;
@@ -4038,11 +3969,6 @@ safe_exit:
 #endif /* RESURRECT_LATER */
 }
 
-
-#ifdef XP_MAC
-#pragma export reset
-#endif
-
 #endif /* STANDALONE_REGISTRY */
 
 
@@ -4067,10 +3993,6 @@ extern PRLock *vr_lock;
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(STANDALONE_REGISTRY)
 extern XP_Bool bGlobalRegistry;
-#endif
-
-#ifdef XP_MAC
-#pragma export on
 #endif
 
 VR_INTERFACE(REGERR) NR_StartupRegistry(void)
@@ -4171,9 +4093,5 @@ VR_INTERFACE(void) NR_ShutdownRegistry(void)
 #endif
 
 }   /* NR_ShutdownRegistry */
-
-#ifdef XP_MAC
-#pragma export reset
-#endif
 
 /* EOF: reg.c */
