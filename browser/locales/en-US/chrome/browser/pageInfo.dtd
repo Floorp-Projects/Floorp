@@ -78,6 +78,7 @@
 <!ENTITY  mediaBlockImage.accesskey "B">
 <!ENTITY  mediaSaveAs           "Save As...">
 <!ENTITY  mediaSaveAs.accesskey "A">
+<!ENTITY  mediaSaveAs2.accesskey "e">
 <!ENTITY  mediaPreview          "Media Preview:">
 
 <!ENTITY  feedTab               "Feeds">
