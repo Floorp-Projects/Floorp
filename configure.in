@@ -5497,6 +5497,15 @@ fi
 dnl Remove dupes
 MOZ_EXTENSIONS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_EXTENSIONS}`
 
+dnl Ensure every extension exists, to avoid mostly-inscrutable error messages
+dnl when trying to build a non-existent extension.
+for extension in $MOZ_EXTENSIONS; do
+    if test ! -d "${srcdir}/extensions/${extension}"; then
+        AC_MSG_ERROR([Unrecognized extension provided to --enable-extensions: ${extension}.])
+    fi
+done
+
+
 dnl ========================================================
 dnl Image decoders
 dnl ========================================================
