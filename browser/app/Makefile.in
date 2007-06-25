@@ -65,15 +65,26 @@ DEFINES += -DAPP_VERSION="$(APP_VERSION)"
 APP_UA_NAME = $(shell echo $(MOZ_APP_DISPLAYNAME) | sed -e's/[^A-Za-z]//g')
 DEFINES += -DAPP_UA_NAME="$(APP_UA_NAME)"
 
+ifdef LIBXUL_SDK
+# Build application.ini for a XULRunner app
+
 DIST_FILES = application.ini
 
-GRE_MILESTONE = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build Milestone)
-GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build BuildID)
+# GRE_BUILD_ID is only available in nsBuildID.h in a form that we can't use
+# directly. So munge it. Beware makefile and shell escaping
+AWK_EXPR = '/\#define GRE_BUILD_ID/ { gsub(/"/, "", $$3); print $$3 }'
+AWK_CMD = awk $(AWK_EXPR) < $(LIBXUL_DIST)/include/nsBuildID.h
 
-DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID)
+GRE_BUILD_ID = $(shell $(AWK_CMD))
 
-ifndef LIBXUL_SDK
+DEFINES += -DGRE_BUILD_ID=$(GRE_BUILD_ID)
+
+include $(topsrcdir)/config/rules.mk
+
+else
 # Build a binary bootstrapping with XRE_main
+
+MOZILLA_INTERNAL_API = 1
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
 PROGRAM = $(MOZ_APP_NAME)$(BIN_SUFFIX)
@@ -83,7 +94,6 @@ endif
 
 REQUIRES = \
 	xpcom \
-	string \
 	xulapp \
 	$(NULL)
 
@@ -110,18 +120,11 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 TK_LIBS := -framework Cocoa $(TK_LIBS)
 endif
 
-ifdef MOZ_ENABLE_LIBXUL
-APP_XPCOM_LIBS = $(XPCOM_GLUE_LDOPTS)
-else
-MOZILLA_INTERNAL_API = 1
-APP_XPCOM_LIBS = $(XPCOM_LIBS)
-endif
-
 LIBS += \
 	$(STATIC_COMPONENTS_LINKER_PATH) \
 	$(EXTRA_DSO_LIBS) \
 	$(MOZ_JS_LIBS) \
-	$(APP_XPCOM_LIBS) \
+	$(XPCOM_LIBS) \
 	$(NSPR_LIBS) \
 	$(TK_LIBS) \
 	$(NULL)

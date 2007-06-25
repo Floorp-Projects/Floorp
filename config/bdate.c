@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,15 +16,14 @@
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,45 +35,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsXULAppAPI.h"
-#ifdef XP_WIN
-#include <windows.h>
-#include <stdlib.h>
-#endif
-#include "nsBuildID.h"
+/*
+**
+** bdate.c: Possibly cross-platform date-based build number
+**          generator.  Output is YYJJJ, where YY == 2-digit
+**          year, and JJJ is the Julian date (day of the year).
+**
+** Author: briano@netscape.com
+**
+*/
 
-static const nsXREAppData kAppData = {
-  sizeof(nsXREAppData),
-  nsnull,
-  "Mozilla",
-  "Firefox",
-  NS_STRINGIFY(APP_VERSION),
-  NS_STRINGIFY(BUILD_ID),
-  "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}",
-  "Copyright (c) 1998 - 2007 mozilla.org",
-  NS_XRE_ENABLE_PROFILE_MIGRATOR |
-  NS_XRE_ENABLE_EXTENSION_MANAGER
-#if defined(MOZILLA_OFFICIAL) && (defined(XP_WIN) || defined(XP_MACOSX))
-  | NS_XRE_ENABLE_CRASH_REPORTER
-#endif
-,
-  nsnull, // xreDirectory
-  nsnull, // minVersion
-  nsnull, // maxVersion
-  "https://crash-reports.mozilla.com/submit"
-};
+#include <stdio.h>
+#include <time.h>
 
-int main(int argc, char* argv[])
+#ifdef SUNOS4
+#include "sunos4.h"
+#endif
+
+void main(void)
 {
-  return XRE_main(argc, argv, &kAppData);
-}
+	time_t t = time(NULL);
+	struct tm *tms;
 
-#if defined( XP_WIN ) && defined( WIN32 ) && !defined(__GNUC__)
-// We need WinMain in order to not be a console app.  This function is
-// unused if we are a console application.
-int WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR args, int )
-{
-    // Do the real work.
-    return main( __argc, __argv );
+	tms = localtime(&t);
+	printf("500%02d%03d%02d\n", tms->tm_year, 1+tms->tm_yday, tms->tm_hour);
+	exit(0);
 }
-#endif
