@@ -956,7 +956,7 @@ nsAnnotationService::GetPagesWithAnnotation(const nsACString& aName,
     return NS_OK;
   *aResults = NS_STATIC_CAST(nsIURI**,
                              nsMemory::Alloc(results.Count() * sizeof(nsIURI*)));
-  if (! aResults)
+  if (! *aResults)
     return NS_ERROR_OUT_OF_MEMORY;
   *aResultCount = results.Count();
   for (PRUint32 i = 0; i < *aResultCount; i ++) {
@@ -1027,7 +1027,7 @@ nsAnnotationService::GetItemsWithAnnotation(const nsACString& aName,
 
   *aResults = NS_STATIC_CAST(PRInt64*,
                              nsMemory::Alloc(results.Length() * sizeof(PRInt64)));
-  if (!aResults)
+  if (! *aResults)
     return NS_ERROR_OUT_OF_MEMORY;
 
   *aResultCount = results.Length();
