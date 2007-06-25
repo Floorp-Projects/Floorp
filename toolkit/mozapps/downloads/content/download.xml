@@ -169,7 +169,7 @@
           <xul:hbox flex="1">
             <xul:vbox flex="1">
               <xul:label xbl:inherits="value=target" crop="center"/>
-              <xul:progressmeter mode="normal" value="0" flex="1"
+              <xul:progressmeter anonid="progressmeter" mode="normal" value="0" flex="1"
                                 xbl:inherits="value=progress,mode=progressmode"/>
             </xul:vbox>
             <xul:vbox pack="start">
@@ -310,7 +310,7 @@
           <xul:hbox flex="1">
             <xul:vbox flex="1">
               <xul:label xbl:inherits="value=target" crop="center"/>
-              <xul:progressmeter mode="normal" value="0" flex="1"
+              <xul:progressmeter anonid="progressmeter" mode="normal" value="0" flex="1"
                                 xbl:inherits="value=progress,mode=progressmode"/>
             </xul:vbox>
             <xul:vbox pack="start">
