@@ -78,6 +78,8 @@ const PREF_BLOCKLIST_DETAILS_URL      = "extensions.blocklist.detailsURL";
 const PREF_BLOCKLIST_ENABLED          = "extensions.blocklist.enabled";
 const PREF_BLOCKLIST_INTERVAL         = "extensions.blocklist.interval";
 const PREF_UPDATE_NOTIFYUSER          = "extensions.update.notifyUser";
+const PREF_MATCH_OS_LOCALE            = "intl.locale.matchOS";
+const PREF_SELECTED_LOCALE            = "general.useragent.locale";
 
 const DIR_EXTENSIONS                  = "extensions";
 const DIR_CHROME                      = "chrome";
@@ -172,6 +174,7 @@ var gInstallManifestRoot  = null;
 var gVersionChecker       = null;
 var gLoggingEnabled       = null;
 var gCheckCompatibility   = true;
+var gLocale               = "en-US";
 
 /** 
  * Valid GUIDs fit this pattern.
@@ -2712,6 +2715,8 @@ ExtensionManager.prototype = {
         this._loggingToggled();
       else if (data == PREF_EM_CHECK_COMPATIBILITY)
         this._checkCompatToggled();
+      else if ((data == PREF_MATCH_OS_LOCALE) || (data == PREF_SELECTED_LOCALE))
+        this._updateLocale();
       break;
     }
   },
@@ -2724,6 +2729,23 @@ ExtensionManager.prototype = {
     gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
   },
 
+  /**
+   * Retrieves the current locale
+   */
+  _updateLocale: function() {
+    try {
+      if (gPref.getBoolPref(PREF_MATCH_OS_LOCALE)) {
+        var localeSvc = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
+                                  .getService(Components.interfaces.nsILocaleService);
+        gLocale = localeSvc.getLocaleComponentForUserAgent();
+        return;
+      }
+    }
+    catch (ex) {
+    }
+    gLocale = gPref.getCharPref(PREF_SELECTED_LOCALE);
+  },
+  
   /**
    * Enables or disables extensions that are incompatible depending upon the pref
    * setting for compatibility checking.
@@ -2767,6 +2789,9 @@ ExtensionManager.prototype = {
     gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
     gCheckCompatibility = getPref("getBoolPref", PREF_EM_CHECK_COMPATIBILITY, true);
     gPref.addObserver("extensions.", this, false);
+    gPref.addObserver(PREF_MATCH_OS_LOCALE, this, false);
+    gPref.addObserver(PREF_SELECTED_LOCALE, this, false);
+    this._updateLocale();
   },
 
   /**
@@ -4711,7 +4736,24 @@ ExtensionManager.prototype = {
   _configureForthcomingItem: function(installManifest, id, installLocation, type) {
     var ds = this.datasource;
     ds.updateVisibleList(id, installLocation.name, false);
-    var props = { name            : EM_L(getManifestProperty(installManifest, "name")),
+    
+    var name = null;
+    var localizationProp = EM_R("localized");
+    var localeProp = EM_R("locale");
+    var localizations = installManifest.GetTargets(gInstallManifestRoot, localizationProp, true);
+    while (localizations.hasMoreElements()) {
+      var localization = localizations.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+      var locales = installManifest.GetTargets(localization, localeProp, true);
+      while (locales.hasMoreElements()) {
+        var locale = locales.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+        if (stringData(locale) == gLocale)
+          name = installManifest.GetTarget(localization, EM_R("name"), true);
+      }
+    }
+    if (!name)
+      name = EM_L(getManifestProperty(installManifest, "name"));
+
+    var props = { name            : name,
                   version         : EM_L(getManifestProperty(installManifest, "version")),
                   installLocation : EM_L(installLocation.name),
                   type            : EM_I(type),
@@ -7179,6 +7221,46 @@ ExtensionsDataSource.prototype = {
   },
   
   /**
+   * Copies localized properties from an install manifest to the datasource
+   *
+   * @param   installManifest
+   *          The Install Manifest datasource we are copying from
+   * @param   source
+   *          The source resource of the localized properties
+   * @param   target
+   *          The target resource to store the localized properties
+   */
+  _addLocalizedMetadata: function(installManifest, sourceRes, targetRes)
+  {
+    var singleProps = ["name", "description", "creator", "homepageURL"];
+
+    for (var i = 0; i < singleProps.length; ++i) {
+      var property = EM_R(singleProps[i]);
+      var literal = installManifest.GetTarget(sourceRes, property, true);
+      // If literal is null, _setProperty will remove any existing.
+      this._setProperty(this._inner, targetRes, property, literal);
+    }    
+    
+    // Assert properties with multiple values    
+    var manyProps = ["developer", "translator", "contributor"];
+    for (var i = 0; i < manyProps.length; ++i) {
+      var property = EM_R(manyProps[i]);
+      var literals = installManifest.GetTargets(sourceRes, property, true);
+      
+      var oldValues = this._inner.GetTargets(targetRes, property, true);
+      while (oldValues.hasMoreElements()) {
+        var oldValue = oldValues.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+        this._inner.Unassert(targetRes, property, oldValue);
+      }
+      while (literals.hasMoreElements()) {
+        var literal = literals.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+        this._inner.Assert(targetRes, property, literal, true);
+      }
+    }
+
+  },
+  
+  /**
    * Copies metadata from an Install Manifest Datasource into the Extensions
    * DataSource.
    * @param   id
@@ -7192,9 +7274,8 @@ ExtensionsDataSource.prototype = {
     // Copy the assertions over from the source datasource. 
     var targetRes = getResourceForID(id);
     // Assert properties with single values
-    var singleProps = ["version", "name", "description", "creator", "homepageURL", 
-                       "updateURL", "updateService", "optionsURL", "aboutURL", 
-                       "iconURL", "internalName"];
+    var singleProps = ["version", "updateURL", "updateService", "optionsURL",
+                       "aboutURL", "iconURL", "internalName"];
 
     // Items installed into restricted Install Locations can also be locked 
     // (can't be removed or disabled), and hidden (not shown in the UI)
@@ -7209,22 +7290,30 @@ ExtensionsDataSource.prototype = {
       this._setProperty(this._inner, targetRes, property, literal);
     }    
     
-    // Assert properties with multiple values    
-    var manyProps = ["developer", "translator", "contributor"];
-    for (var i = 0; i < manyProps.length; ++i) {
-      var property = EM_R(manyProps[i]);
-      var literals = installManifest.GetTargets(gInstallManifestRoot, property, true);
-      
-      var oldValues = this._inner.GetTargets(targetRes, property, true);
-      while (oldValues.hasMoreElements()) {
-        var oldValue = oldValues.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
-        this._inner.Unassert(targetRes, property, oldValue);
-      }
+    var localizedProp = EM_R("localized");
+    var localeProp = EM_R("locale");
+    // Remove old localized properties
+    var oldValues = this._inner.GetTargets(targetRes, localizedProp, true);
+    while (oldValues.hasMoreElements()) {
+      var oldValue = oldValues.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+      this._cleanResource(oldValue);
+      this._inner.Unassert(targetRes, localizedProp, oldValue);
+    }
+    // Add each localized property
+    var localizations = installManifest.GetTargets(gInstallManifestRoot, localizedProp, true);
+    while (localizations.hasMoreElements()) {
+      var localization = localizations.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var anon = gRDF.GetAnonymousResource();
+      var literals = installManifest.GetTargets(localization, localeProp, true);
       while (literals.hasMoreElements()) {
         var literal = literals.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
-        this._inner.Assert(targetRes, property, literal, true);
+        this._inner.Assert(anon, localeProp, literal, true);
       }
+      this._addLocalizedMetadata(installManifest, localization, anon);
+      this._inner.Assert(targetRes, localizedProp, anon, true);
     }
+    // Add the fallback properties
+    this._addLocalizedMetadata(installManifest, gInstallManifestRoot, targetRes);
 
     // Version/Dependency Info
     var versionProps = ["targetApplication", "requires"];
@@ -7262,7 +7351,7 @@ ExtensionsDataSource.prototype = {
    */
   removeItemMetadata: function(id) {
     var item = getResourceForID(id);
-    var resources = ["targetApplication", "requires"];
+    var resources = ["targetApplication", "requires", "localized"];
     for (var i = 0; i < resources.length; ++i) {
       var targetApps = this._inner.GetTargets(item, EM_R(resources[i]), true);
       while (targetApps.hasMoreElements()) {
@@ -7921,6 +8010,26 @@ ExtensionsDataSource.prototype = {
   },
 
   /**
+   * Finds the localized resource for an add-on.
+   */
+  _getLocalizedResource: function(item)
+  {
+    var localizedProp = EM_R("localized");
+    var localeProp = EM_R("locale");
+    var localizations = this._inner.GetTargets(item, localizedProp, true);
+    while (localizations.hasMoreElements()) {
+      var localized = localizations.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+      var list = this._inner.GetTargets(localized, localeProp, true);
+      while (list.hasMoreElements()) {
+        var locale = list.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+        if (stringData(locale) == gLocale)
+          return localized;
+      }
+    }
+    return null;
+  },
+  
+  /**
    * Gets a localizable property. Install Manifests are generally only in one 
    * language, however an item can customize by providing localized prefs in 
    * the form:
@@ -7930,6 +8039,12 @@ ExtensionsDataSource.prototype = {
    * to specify localized text for each of these properties.
    */
   _getLocalizablePropertyValue: function(item, property) {
+    var localized = this._getLocalizedResource(item);
+    if (localized) {
+      var value = this._inner.GetTarget(localized, property, true);
+      return value ? value : EM_L("");
+    }
+    
     // These are localizable properties that a language pack supplied by the 
     // Extension may override.          
     var prefName = PREF_EM_EXTENSION_FORMAT.replace(/%UUID%/, 
@@ -8044,6 +8159,10 @@ ExtensionsDataSource.prototype = {
    * to specify localized text for each of these properties.
    */
   _getLocalizablePropertyValues: function(item, property) {
+    var localized = this._getLocalizedResource(item);
+    if (localized)
+      return this._inner.GetTargets(localized, property, true);
+    
     // These are localizable properties that a language pack supplied by the 
     // Extension may override.          
     var values = [];
