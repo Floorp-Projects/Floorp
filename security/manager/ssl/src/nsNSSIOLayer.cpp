@@ -73,6 +73,7 @@
 #include "nsThreadUtils.h"
 #include "nsIDocShell.h"
 #include "nsISecureBrowserUI.h"
+#include "nsProxyRelease.h"
 
 #include "ssl.h"
 #include "secerr.h"
@@ -335,10 +336,18 @@ nsNSSSocketInfo::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
   nsCOMPtr<nsIDocShell> docshell(do_GetInterface(mCallbacks));
   if (docshell)
   {
-    nsCOMPtr<nsISecureBrowserUI> secureUI;
-    docshell->GetSecurityUI(getter_AddRefs(secureUI));
+    nsCOMPtr<nsIDocShell> proxiedDocShell;
+    NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                         NS_GET_IID(nsIDocShell),
+                         docshell.get(),
+                         NS_PROXY_SYNC,
+                         getter_AddRefs(proxiedDocShell));
+    nsISecureBrowserUI* secureUI;
+    proxiedDocShell->GetSecurityUI(&secureUI);
     if (secureUI)
     {
+      nsCOMPtr<nsIThread> mainThread(do_GetMainThread());
+      NS_ProxyRelease(mainThread, secureUI, PR_FALSE);
       mExternalErrorReporting = PR_TRUE;
     }
   }
