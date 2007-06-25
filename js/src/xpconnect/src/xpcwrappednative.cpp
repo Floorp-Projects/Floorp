@@ -1842,6 +1842,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
     nsIInterfaceInfo* ifaceInfo = ccx.GetInterface()->GetInterfaceInfo();
     jsval name = ccx.GetMember()->GetName();
     jsval* argv = ccx.GetArgv();
+    PRUint32 argc = ccx.GetArgc();
 
 #ifdef DEBUG_stats_jband
     PRIntervalTime startTime = PR_IntervalNow();
@@ -1904,10 +1905,16 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
     requiredArgs = paramCount;
     if(paramCount && methodInfo->GetParam(paramCount-1).IsRetval())
         requiredArgs--;
-    if(ccx.GetArgc() < requiredArgs)
+    if(argc < requiredArgs)
     {
-        Throw(NS_ERROR_XPC_NOT_ENOUGH_ARGS, ccx);
-        goto done;
+        // skip over any optional arguments
+        while (requiredArgs && methodInfo->GetParam(requiredArgs-1).IsOptional())
+          requiredArgs--;
+
+        if(argc < requiredArgs) {
+            Throw(NS_ERROR_XPC_NOT_ENOUGH_ARGS, ccx);
+            goto done;
+        }
     }
 
     // setup variant array pointer
@@ -1960,14 +1967,16 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
         // prepare for out param
 
         if((paramInfo.IsOut() || paramInfo.IsDipper()) &&
-           !paramInfo.IsRetval() &&
-           (JSVAL_IS_PRIMITIVE(argv[i]) ||
-            !OBJ_GET_PROPERTY(ccx, JSVAL_TO_OBJECT(argv[i]),
-                              rt->GetStringID(XPCJSRuntime::IDX_VALUE),
-                              &src)))
-        {
-            ThrowBadParam(NS_ERROR_XPC_NEED_OUT_OBJECT, i, ccx);
-            goto done;
+           !paramInfo.IsRetval()) {
+          jsval arg = paramInfo.IsOptional() && argc < i ? JSVAL_NULL : argv[i];
+          if(JSVAL_IS_PRIMITIVE(arg) ||
+             !OBJ_GET_PROPERTY(ccx, JSVAL_TO_OBJECT(arg),
+                               rt->GetStringID(XPCJSRuntime::IDX_VALUE),
+                               &src))
+          {
+              ThrowBadParam(NS_ERROR_XPC_NEED_OUT_OBJECT, i, ccx);
+              goto done;
+          }
         }
 
         if(paramInfo.IsOut())
@@ -2057,9 +2066,9 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
             }
 
             // Do this *after* the above because in the case where we have a
-            // "T_DOMSTRING && IsDipper()" then argv might be null since this
+            // "T_DOMSTRING && IsDipper()" then arg might be null since this
             // is really an 'out' param masquerading as an 'in' param.
-            src = argv[i];
+            src = paramInfo.IsOptional() && argc < i ? JSVAL_NULL : argv[i];
         }
 
         if(type_tag == nsXPTType::T_INTERFACE &&
@@ -2130,13 +2139,15 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                 dp->SetPtrIsData();
                 dp->ptr = &dp->val;
 
-                if(!paramInfo.IsRetval() &&
-                   (JSVAL_IS_PRIMITIVE(argv[i]) ||
-                    !OBJ_GET_PROPERTY(ccx, JSVAL_TO_OBJECT(argv[i]),
-                        rt->GetStringID(XPCJSRuntime::IDX_VALUE), &src)))
-                {
-                    ThrowBadParam(NS_ERROR_XPC_NEED_OUT_OBJECT, i, ccx);
-                    goto done;
+                if (!paramInfo.IsRetval()) {
+                  jsval arg = paramInfo.IsOptional() && argc < i ? JSVAL_NULL : argv[i];
+                  if(JSVAL_IS_PRIMITIVE(arg) ||
+                     !OBJ_GET_PROPERTY(ccx, JSVAL_TO_OBJECT(arg),
+                         rt->GetStringID(XPCJSRuntime::IDX_VALUE), &src))
+                  {
+                      ThrowBadParam(NS_ERROR_XPC_NEED_OUT_OBJECT, i, ccx);
+                      goto done;
+                  }
                 }
 
                 if(datum_type.IsPointer() &&
@@ -2152,7 +2163,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
             }
             else
             {
-                src = argv[i];
+                src = paramInfo.IsOptional() && argc < i ? JSVAL_NULL : argv[i];
 
                 if(datum_type.IsPointer() &&
                    datum_type.TagPart() == nsXPTType::T_IID)
@@ -2328,7 +2339,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
             if(!ccx.GetReturnValueWasSet())
                 ccx.SetRetVal(v);
         }
-        else
+        else if (!paramInfo.IsOptional() || argc > i)
         {
             // we actually assured this before doing the invoke
             NS_ASSERTION(JSVAL_IS_OBJECT(argv[i]), "out var is not object");

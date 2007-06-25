@@ -988,6 +988,11 @@ fill_pd_from_param(TreeState *state, XPTParamDescriptor *pd, IDL_tree tree)
         flags |= XPT_PD_SHARED;
     }
 
+    if (IDL_tree_property_get(IDL_PARAM_DCL(tree).simple_declarator,
+                              "optional")) {
+        flags |= XPT_PD_OPTIONAL;
+    }
+
     /* stick param where we can see it later */
     state->tree = tree;
     return fill_pd_from_type(state, pd, flags,
