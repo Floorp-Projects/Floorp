@@ -3,9 +3,19 @@
 from optparse import OptionParser
 from datetime import datetime
 import sys
+import os
 
-(milestoneFile,) = sys.argv[1:]
+o = OptionParser()
+o.add_option("--print-buildid", action="store_true", dest="print_buildid")
 
+(options, args) = o.parse_args()
+buildid = os.environ.get('MOZ_BUILD_DATE', datetime.now().strftime('%Y%m%d%H'))
+
+if options.print_buildid:
+    print buildid
+    sys.exit(0)
+
+(milestoneFile,) = args
 for line in open(milestoneFile, 'r'):
     if line[0] == '#':
         continue
@@ -18,4 +28,4 @@ for line in open(milestoneFile, 'r'):
 
 print """[Build]
 BuildID=%s
-Milestone=%s""" % (datetime.now().strftime('%Y%m%d%H'), milestone)
+Milestone=%s""" % (buildid, milestone)
