@@ -39,9 +39,22 @@ const Cc = Components.classes;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-function ContentPrefService() {}
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+function ContentPrefService() {
+  this._init();
+}
 
 ContentPrefService.prototype = {
+  //**************************************************************************//
+  // XPCOM Plumbing
+
+  classDescription: "Content Pref Service",
+  classID:          Components.ID("{e6a3f533-4ffa-4615-8eb4-d4e72d883fa7}"),
+  contractID:       "@mozilla.org/content-pref/service;1",
+  QueryInterface:   XPCOMUtils.generateQI([Ci.nsIContentPrefService]),
+
+
   //**************************************************************************//
   // Convenience Getters
 
@@ -90,18 +103,6 @@ ContentPrefService.prototype = {
       // Ignore "setting a property that has only a getter" exceptions.
       catch(ex) {}
     }
-  },
-
-
-  //**************************************************************************//
-  // nsISupports
-
-  _interfaces: [Ci.nsIContentPrefService, Ci.nsISupports],
-
-  QueryInterface: function ContentPrefService_QueryInterface(aIID) {
-    if (!this._interfaces.some( function(v) { return aIID.equals(v) } ))
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    return this;
   },
 
 
@@ -846,17 +847,13 @@ ContentPrefService.prototype = {
 function HostnameGrouper() {}
 
 HostnameGrouper.prototype = {
-
   //**************************************************************************//
-  // nsISupports
-
-  _interfaces: [Ci.nsIContentURIGrouper, Ci.nsISupports],
-
-  QueryInterface: function HostnameGrouper_QueryInterface(aIID) {
-    if (!this._interfaces.some( function(v) { return aIID.equals(v) } ))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
-  },
+  // XPCOM Plumbing
+  
+  classDescription: "Hostname Grouper",
+  classID:          Components.ID("{8df290ae-dcaa-4c11-98a5-2429a4dc97bb}"),
+  contractID:       "@mozilla.org/content-pref/hostname-grouper;1",
+  QueryInterface:   XPCOMUtils.generateQI([Ci.nsIContentURIGrouper]),
 
 
   //**************************************************************************//
@@ -902,70 +899,10 @@ HostnameGrouper.prototype = {
 };
 
 
-var gModule = {
-  registerSelf: function(aComponentManager, aFileSpec, aLocation, aType) {
-    aComponentManager = aComponentManager.QueryInterface(Ci.nsIComponentRegistrar);
-    
-    for (var key in this._objects) {
-      var obj = this._objects[key];
-      aComponentManager.registerFactoryLocation(obj.CID,
-                                                obj.className,
-                                                obj.contractID,
-                                                aFileSpec,
-                                                aLocation,
-                                                aType);
-    }
-  },
-  
-  unregisterSelf: function(aComponentManager, aFileSpec, aLocation) {},
+//****************************************************************************//
+// XPCOM Plumbing
 
-  getClassObject: function(aComponentManager, aCID, aIID) {
-    if (!aIID.equals(Components.interfaces.nsIFactory))
-      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-  
-    for (var key in this._objects) {
-      if (aCID.equals(this._objects[key].CID))
-      return this._objects[key].factory;
-    }
-    
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
-  
-  _objects: {
-    service: {
-      CID        : Components.ID("{e6a3f533-4ffa-4615-8eb4-d4e72d883fa7}"),
-      contractID : "@mozilla.org/content-pref/service;1",
-      className  : "Content Pref Service",
-      factory    : ContentPrefServiceFactory = {
-                     createInstance: function(aOuter, aIID) {
-                       if (aOuter != null)
-                         throw Components.results.NS_ERROR_NO_AGGREGATION;
-                       var service = new ContentPrefService();
-                       service._init();
-                       return service.QueryInterface(aIID);
-                     }
-                   }
-    },
-    grouper: {
-      CID        : Components.ID("{8df290ae-dcaa-4c11-98a5-2429a4dc97bb}"),
-      contractID : "@mozilla.org/content-pref/hostname-grouper;1",
-      className  : "Hostname Grouper",
-      factory    : HostnameGrouperFactory = {
-                     createInstance: function(aOuter, aIID) {
-                       if (aOuter != null)
-                         throw Components.results.NS_ERROR_NO_AGGREGATION;
-                       var grouper = new HostnameGrouper();
-                       return grouper.QueryInterface(aIID);
-                     }
-                   }
-    }
-  },
-  
-  canUnload: function(aComponentManager) {
-    return true;
-  }
-};
-
-function NSGetModule(aComponentManager, aFileSpec) {
-  return gModule;
+var components = [ContentPrefService, HostnameGrouper];
+function NSGetModule(compMgr, fileSpec) {
+  return XPCOMUtils.generateModule(components);
 }
