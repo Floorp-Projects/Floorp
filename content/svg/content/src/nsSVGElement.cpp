@@ -854,13 +854,17 @@ nsSVGElement::GetAnimatedLengthValues(float *aFirst, ...)
   va_start(args, aFirst);
 
   while (f && i < info.mLengthCount) {
+    PRUint8 type = info.mLengths[i].GetSpecifiedUnitType();
     if (!ctx) {
-      PRUint8 type = info.mLengths[i].GetSpecifiedUnitType();
       if (type != nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER &&
           type != nsIDOMSVGLength::SVG_LENGTHTYPE_PX)
         ctx = GetCtx();
     }
-    *f = info.mLengths[i++].GetAnimValue(ctx);
+    if (type == nsIDOMSVGLength::SVG_LENGTHTYPE_EMS ||
+        type == nsIDOMSVGLength::SVG_LENGTHTYPE_EXS)
+      *f = info.mLengths[i++].GetAnimValue(this);
+    else
+      *f = info.mLengths[i++].GetAnimValue(ctx);
     f = va_arg(args, float*);
   }
 

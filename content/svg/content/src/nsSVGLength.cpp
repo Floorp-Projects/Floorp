@@ -98,6 +98,8 @@ protected:
   // implementation helpers:
   float mmPerPixel();
   float AxisLength();
+  float EmLength();
+  float ExLength();
   PRBool IsValidUnitType(PRUint16 unit);
   void MaybeAddAsObserver();
   void MaybeRemoveAsObserver();
@@ -253,10 +255,11 @@ nsSVGLength::GetValue(float *aValue)
       *aValue = mValueInSpecifiedUnits * AxisLength() / 100.0f;
       break;
     case SVG_LENGTHTYPE_EMS:
+      *aValue = mValueInSpecifiedUnits * EmLength();
+      break;
     case SVG_LENGTHTYPE_EXS:
-      NS_NOTYETIMPLEMENTED("SVG_LENGTHTYPE_EXS");
-      *aValue = 0;
-      return NS_ERROR_NOT_IMPLEMENTED;
+      *aValue = mValueInSpecifiedUnits * ExLength();
+      break;
     default:
       NS_NOTREACHED("Unknown unit type");
       *aValue = 0;
@@ -296,10 +299,10 @@ nsSVGLength::SetValue(float aValue)
       mValueInSpecifiedUnits = aValue * 100.0f / AxisLength();
       break;
     case SVG_LENGTHTYPE_EMS:
+      mValueInSpecifiedUnits = aValue / EmLength();
+      break;
     case SVG_LENGTHTYPE_EXS:
-      NS_NOTYETIMPLEMENTED("SVG_LENGTHTYPE_EXS");
-      mValueInSpecifiedUnits = 0;
-      rv = NS_ERROR_NOT_IMPLEMENTED;
+      mValueInSpecifiedUnits = aValue / ExLength();
       break;
     default:
       NS_NOTREACHED("Unknown unit type");
@@ -557,6 +560,18 @@ float nsSVGLength::AxisLength()
   }
 
   return d;
+}
+
+float nsSVGLength::EmLength()
+{
+  nsCOMPtr<nsIContent> element = do_QueryReferent(mElement);
+  return nsSVGUtils::GetFontSize(element);
+}
+
+float nsSVGLength::ExLength()
+{
+  nsCOMPtr<nsIContent> element = do_QueryReferent(mElement);
+  return nsSVGUtils::GetFontXHeight(element);
 }
 
 PRBool nsSVGLength::IsValidUnitType(PRUint16 unit)
