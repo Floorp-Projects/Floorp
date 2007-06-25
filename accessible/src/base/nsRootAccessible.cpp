@@ -842,17 +842,6 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     FireCurrentFocusEvent();
   }
   else if (eventType.EqualsLiteral("ValueChange")) {
-    PRUint32 role;
-    accessible->GetFinalRole(&role);
-    if (role == nsIAccessibleRole::ROLE_PROGRESSBAR) {
-      // For progressmeter, fire EVENT_SHOW on 1st value change
-      nsAutoString value;
-      accessible->GetValue(value);
-      if (value.EqualsLiteral("0%")) {
-        privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_SHOW, 
-                                  accessible, nsnull);
-      }
-    }
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, 
                               accessible, nsnull);
   }
