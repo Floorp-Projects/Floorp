@@ -135,13 +135,23 @@ nsTableCellFrame::NotifyPercentHeight(const nsHTMLReflowState& aReflowState)
     // are based on the height of the cell, since its containing block
     // is the inner cell frame.
 
-    for (const nsHTMLReflowState *rs = aReflowState.parentReflowState;
-         rs != cellRS;
-         rs = rs->parentReflowState) {
-      rs->frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
-    }
+    // We'll only honor the percent height if sibling-cells/ancestors
+    // have specified/pct height. (Also, siblings only count for this if
+    // both this cell and the sibling cell span exactly 1 row.)
 
-    nsTableFrame::RequestSpecialHeightReflow(*cellRS);
+    if (nsTableFrame::AncestorsHaveStyleHeight(*cellRS) ||
+        (nsTableFrame::GetTableFrame(this)->GetEffectiveRowSpan(*this) == 1 &&
+         (cellRS->parentReflowState->frame->GetStateBits() &
+          NS_ROW_HAS_CELL_WITH_STYLE_HEIGHT))) {
+
+      for (const nsHTMLReflowState *rs = aReflowState.parentReflowState;
+           rs != cellRS;
+           rs = rs->parentReflowState) {
+        rs->frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
+      }
+      
+      nsTableFrame::RequestSpecialHeightReflow(*cellRS);
+    }
   }
 }
 

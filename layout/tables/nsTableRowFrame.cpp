@@ -1034,6 +1034,9 @@ nsTableRowFrame::Reflow(nsPresContext*          aPresContext,
   // see if a special height reflow needs to occur due to having a pct height
   nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);
 
+  // See if we have a cell with specified/pct height
+  InitHasCellWithStyleHeight(tableFrame);
+
   rv = ReflowChildren(aPresContext, aDesiredSize, aReflowState, *tableFrame,
                       aStatus);
 
@@ -1331,6 +1334,32 @@ void nsTableRowFrame::SetContinuousBCBorderWidth(PRUint8     aForSide,
     default:
       NS_ERROR("invalid NS_SIDE arg");
   }
+}
+
+/**
+ * Sets the NS_ROW_HAS_CELL_WITH_STYLE_HEIGHT bit to indicate whether
+ * this row has any cells that have non-auto-height.  (Row-spanning
+ * cells are ignored.)
+ */
+void nsTableRowFrame::InitHasCellWithStyleHeight(nsTableFrame* aTableFrame)
+{
+  nsTableIterator iter(*this);
+
+  for (nsIFrame* kidFrame = iter.First(); kidFrame; kidFrame = iter.Next()) {
+    nsIAtom* frameType = kidFrame->GetType();
+    if (!IS_TABLE_CELL(frameType)) {
+      NS_NOTREACHED("Table row has a non-cell child.");
+      continue;
+    }
+    nsTableCellFrame* cellFrame = NS_STATIC_CAST(nsTableCellFrame*, kidFrame);
+    // Ignore row-spanning cells
+    if (aTableFrame->GetEffectiveRowSpan(*cellFrame) == 1 &&
+        cellFrame->GetStylePosition()->mHeight.GetUnit() != eStyleUnit_Auto) {
+      AddStateBits(NS_ROW_HAS_CELL_WITH_STYLE_HEIGHT);
+      return;
+    }
+  }
+  RemoveStateBits(NS_ROW_HAS_CELL_WITH_STYLE_HEIGHT);
 }
 
 /* ----- global methods ----- */
