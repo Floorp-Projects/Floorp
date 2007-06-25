@@ -115,6 +115,10 @@ public:
 
   static float GetTwipsToPixels(nsPresContext* aPresContext);
 
+  // Return true if aParentReflowState.frame or any of its ancestors within
+  // the containing table have non-auto height. (e.g. pct or fixed height)
+  static PRBool AncestorsHaveStyleHeight(const nsHTMLReflowState& aParentReflowState);
+
   // See if a special height reflow will occur due to having a pct height when
   // the pct height basis may not yet be valid.
   static void CheckRequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState);
