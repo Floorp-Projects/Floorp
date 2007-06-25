@@ -2827,8 +2827,11 @@ ExtensionManager.prototype = {
     if (this._ds && gRDF) 
       gRDF.UnregisterDataSource(this._ds)
     gRDF = null;
-    if (gPref)
+    if (gPref) {
       gPref.removeObserver("extensions.", this);
+      gPref.removeObserver(PREF_MATCH_OS_LOCALE, this);
+      gPref.removeObserver(PREF_SELECTED_LOCALE, this);
+    }
     gPref = null;
     gConsole = null;
     gVersionChecker = null;
