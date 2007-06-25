@@ -97,11 +97,13 @@ ifndef MOZ_SUITE
 ifdef MOZ_XUL
 DIRS += \
 	autocomplete \
-	history \
 	passwordmgr \
 	satchel \
 	$(NULL)
 endif # MOZ_XUL
+ifndef MOZ_PLACES
+DIRS +=	history
+endif # MOZ_PLACES
 endif # MOZ_SUITE
 endif # MOZ_THUNDERBIRD
 
