@@ -5614,7 +5614,7 @@ var FeedHandler = {
     // the actual event.
 
     var feed = recognizeFeedFromLink(event.target,
-      event.target.ownerDocument.contentPrincipal);
+      event.target.ownerDocument.nodePrincipal);
 
     if (feed) {
       const targetDoc = event.target.ownerDocument;
