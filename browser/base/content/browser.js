@@ -4511,19 +4511,19 @@ function asyncOpenWebPanel(event)
          // This is the Opera convention for a special link that - when clicked - allows
          // you to add a sidebar panel.  We support the Opera convention here.  The link's
          // title attribute contains the title that should be used for the sidebar panel.
+#ifndef MOZ_PLACES_BOOKMARKS
          var dialogArgs = {
            name: wrapper.getAttribute("title"),
            url: wrapper.href,
            bWebPanel: true
          }
-#ifndef MOZ_PLACES_BOOKMARKS
          openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
                     BROWSER_ADD_BM_FEATURES, dialogArgs);
          event.preventDefault();
 #else
-         PlacesUtils.showAddBookmarkUI(makeURI(wrapper.href),
-                                       wrapper.getAttribute("title"),
-                                       null, null, true, true);
+         PlacesUtils.showMinimalAddBookmarkUI(makeURI(wrapper.href),
+                                              wrapper.getAttribute("title"),
+                                              null, null, true, true);
          event.preventDefault();
 #endif
          return false;
