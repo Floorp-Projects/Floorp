@@ -511,13 +511,6 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
   FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS,
                           finalFocusNode, nsnull);
 
-  // Fire state change event for focus
-  nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
-    new nsAccStateChangeEvent(finalFocusNode,
-                              nsIAccessibleStates::STATE_FOCUSED,
-                              PR_FALSE, PR_TRUE);
-  FireDelayedAccessibleEvent(accEvent);
-
   return PR_TRUE;
 }
 

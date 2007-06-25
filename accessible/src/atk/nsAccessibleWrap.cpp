@@ -1134,6 +1134,12 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
         nsRefPtr<nsRootAccessible> rootAccWrap = accWrap->GetRootAccessible();
         if (rootAccWrap && rootAccWrap->mActivated) {
             atk_focus_tracker_notify(atkObj);
+            // Fire state change event for focus
+            nsCOMPtr<nsIAccessibleStateChangeEvent> stateChangeEvent =
+              new nsAccStateChangeEvent(accessible,
+                                        nsIAccessibleStates::STATE_FOCUSED,
+                                        PR_FALSE, PR_TRUE);
+            return FireAtkStateChangeEvent(stateChangeEvent, atkObj);
         }
       } break;
 
