@@ -104,7 +104,7 @@ nsProxyAutoConfig.prototype = {
 function proxyAlert(msg) {
     // Ensure that we have a string.
     if (typeof msg != "string")
-        msg = new XPCSafeJSObjectWraper(msg).toString();
+        msg = new XPCSafeJSObjectWrapper(msg).toString();
 
     try {
         // It would appear that the console service is threadsafe.
