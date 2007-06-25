@@ -38,6 +38,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 // Globals
+const nsIExtensionManager    = Components.interfaces.nsIExtensionManager;
 const nsIUpdateItem          = Components.interfaces.nsIUpdateItem;
 const nsIFilePicker          = Components.interfaces.nsIFilePicker;
 const nsIIOService           = Components.interfaces.nsIIOService;
@@ -544,7 +545,7 @@ function Startup()
   
   gExtensionsView = document.getElementById("extensionsView");
   gExtensionManager = Components.classes["@mozilla.org/extensions/manager;1"]
-                                .getService(Components.interfaces.nsIExtensionManager);
+                                .getService(nsIExtensionManager);
   var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
                           .getService(Components.interfaces.nsIXULAppInfo)
                           .QueryInterface(Components.interfaces.nsIXULRuntime);
@@ -1405,7 +1406,9 @@ function checkUpdatesAll() {
   if (items.length > 0) {
     showProgressBar();
     var listener = new UpdateCheckListener();
-    gExtensionManager.update(items, items.length, false, listener);
+    gExtensionManager.update(items, items.length,
+                             nsIExtensionManager.UPDATE_CHECK_NEWVERSION,
+                             listener);
   }
   if (gExtensionsView.selectedItem)
     gExtensionsView.selectedItem.focus();
@@ -1677,7 +1680,9 @@ var gExtensionsViewController = {
       var id = getIDFromResourceURI(aSelectedItem.id);
       var items = [gExtensionManager.getItemForID(id)];
       var listener = new UpdateCheckListener();
-      gExtensionManager.update(items, items.length, false, listener);
+      gExtensionManager.update(items, items.length,
+                               nsIExtensionManager.UPDATE_CHECK_NEWVERSION,
+                               listener);
     },
 
     cmd_installUpdate: function (aSelectedItem)

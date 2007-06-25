@@ -2918,7 +2918,8 @@ ExtensionManager.prototype = {
 
     var updater = new ExtensionItemUpdater(gApp.ID, gApp.version, this);
     updater._background = true;
-    updater.checkForUpdates(items, items.length, false, null);
+    updater.checkForUpdates(items, items.length,
+                            nsIExtensionManager.UPDATE_CHECK_NEWVERSION, null);
   },
   
   /**
@@ -4443,7 +4444,7 @@ ExtensionManager.prototype = {
                             "", /* Icon URL */
                             installData.updateURL || "", 
                             installData.type);
-        em.update([item], 1, true, this);
+        em.update([item], 1, nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY, this);
       },
       
       /**
@@ -5274,7 +5275,7 @@ ExtensionManager.prototype = {
   /**
    * See nsIExtensionManager.idl
    */
-  update: function(items, itemCount, versionUpdateOnly, listener) {
+  update: function(items, itemCount, updateCheckType, listener) {
     var appID = gApp.ID;
     var appVersion = gApp.version;
 
@@ -5282,7 +5283,7 @@ ExtensionManager.prototype = {
       items = this.getItemList(nsIUpdateItem.TYPE_ADDON, { });
 
     var updater = new ExtensionItemUpdater(appID, appVersion, this);
-    updater.checkForUpdates(items, items.length, versionUpdateOnly, listener);
+    updater.checkForUpdates(items, items.length, updateCheckType, listener);
   },
 
 
@@ -5905,7 +5906,7 @@ ExtensionItemUpdater.prototype = {
   _appVersion         : "",
   _emDS               : null,
   _em                 : null,
-  _versionUpdateOnly  : 0,
+  _updateCheckType    : 0,
   _items              : [],
   _listener           : null,
   _background         : false,
@@ -5939,12 +5940,12 @@ ExtensionItemUpdater.prototype = {
   //      we look ONLY for compatibility updates in this case to determine
   //      whether or not the item can be installed.
   //  
-  checkForUpdates: function(aItems, aItemCount, aVersionUpdateOnly, 
+  checkForUpdates: function(aItems, aItemCount, aUpdateCheckType, 
                             aListener) {
     this._listener = new AddonUpdateCheckListener(aListener, this._emDS);
     if (this._listener)
       this._listener.onUpdateStarted();
-    this._versionUpdateOnly = aVersionUpdateOnly;
+    this._updateCheckType = aUpdateCheckType;
     this._items = aItems;
     this._responseCount = aItemCount;
     
@@ -5955,7 +5956,7 @@ ExtensionItemUpdater.prototype = {
       var e = this._items[i];
       if (this._listener)
         this._listener.onAddonUpdateStarted(e);
-      (new RDFItemUpdater(this)).checkForUpdates(e, aVersionUpdateOnly);
+      (new RDFItemUpdater(this)).checkForUpdates(e, aUpdateCheckType);
     }
   },
   
@@ -5989,7 +5990,7 @@ ExtensionItemUpdater.prototype = {
         this._em._appEnableItem(aLocalItem.id);
       return true;
     }
-    else if (this._versionUpdateOnly == 2)
+    else if (this._updateCheckType == nsIExtensionManager.UPDATE_SYNC_COMPATIBILITY)
       this._emDS.updateTargetAppInfo(aLocalItem.id, aRemoteItem.minAppVersion,
                                      aRemoteItem.maxAppVersion);
     return false;
@@ -6047,10 +6048,10 @@ function RDFItemUpdater(aUpdater) {
 
 RDFItemUpdater.prototype = {
   _updater            : null,
-  _versionUpdateOnly  : 0,
+  _updateCheckType    : 0,
   _item               : null,
   
-  checkForUpdates: function(aItem, aVersionUpdateOnly) {
+  checkForUpdates: function(aItem, aUpdateCheckType) {
     // A preference setting can disable updating for this item
     try {
       if (!gPref.getBoolPref(PREF_EM_ITEM_UPDATE_ENABLED.replace(/%UUID%/, aItem.id))) {
@@ -6091,13 +6092,14 @@ RDFItemUpdater.prototype = {
 
     // Don't check items for updates if the location can't be written to except
     // when performing a version only update.
-    if (!aVersionUpdateOnly && (!installLocation || !installLocation.canAccess)) {
+    if ((aUpdateCheckType == nsIExtensionManager.UPDATE_CHECK_NEWVERSION) && 
+        (!installLocation || !installLocation.canAccess)) {
       var status = nsIAddonUpdateCheckListener.STATUS_READ_ONLY;
       this._updater.checkForDone(aItem, status);
       return;
     }
 
-    this._versionUpdateOnly = aVersionUpdateOnly;
+    this._updateCheckType = aUpdateCheckType;
     this._item = aItem;
   
     var itemStatus;
@@ -6305,12 +6307,13 @@ RDFItemUpdater.prototype = {
     var newerItem, sameItem;
     
     // Firefox 1.0PR+ update.rdf format
-    if (!this._versionUpdateOnly) {
+    if (this._updateCheckType == nsIExtensionManager.UPDATE_CHECK_NEWVERSION) {
       // Look for newer versions of this item, we only do this in "normal" 
       // mode... see comment by ExtensionItemUpdater_checkForUpdates 
       // about how we do this in all cases but Install Phone Home - which 
       // only needs to do a version check.
-      this._parseV20UpdateInfo(aDatasource, aLocalItem, newestUpdate, false);
+      this._parseV20UpdateInfo(aDatasource, aLocalItem, newestUpdate,
+                               nsIExtensionManager.UPDATE_CHECK_NEWVERSION);
 
       newerItem = makeItem(aLocalItem.id, 
                            newestUpdate.version, 
@@ -6331,7 +6334,8 @@ RDFItemUpdater.prototype = {
     
     // Now look for updated version compatibility metadata for the currently
     // installed version...
-    this._parseV20UpdateInfo(aDatasource, aLocalItem, versionUpdate, true);
+    this._parseV20UpdateInfo(aDatasource, aLocalItem, versionUpdate,
+                             nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY);
 
     var result = gVersionChecker.compare(versionUpdate.version, 
                                           aLocalItem.version);
@@ -6370,7 +6374,8 @@ RDFItemUpdater.prototype = {
           "version of this item: " + sameItem.objectSource);
     }
     var item = null, status = nsIAddonUpdateCheckListener.STATUS_NONE;
-    if (!this._versionUpdateOnly && newerItem) {
+    if (this._updateCheckType == nsIExtensionManager.UPDATE_CHECK_NEWVERSION
+        && newerItem) {
       item = newerItem;
       status = nsIAddonUpdateCheckListener.STATUS_UPDATE;
     }
@@ -6405,7 +6410,7 @@ RDFItemUpdater.prototype = {
   },
   
   // Parses Firefox 1.0RC1+ update.rdf format
-  _parseV20UpdateInfo: function(aDataSource, aLocalItem, aUpdateData, aVersionUpdatesOnly) {
+  _parseV20UpdateInfo: function(aDataSource, aLocalItem, aUpdateData, aUpdateCheckType) {
     var extensionRes  = gRDF.GetResource(getItemPrefix(aLocalItem.type) + aLocalItem.id);
 
     var updatesArc = gRDF.GetResource(EM_NS("updates"));
@@ -6434,7 +6439,7 @@ RDFItemUpdater.prototype = {
 
       // In "all update types" mode, we look for newer versions, starting with the 
       // current installed version.
-      if (!aVersionUpdatesOnly) 
+      if (aUpdateCheckType != nsIExtensionManager.UPDATE_CHECK_NEWVERSION) 
         aUpdateData.version = aLocalItem.version;
 
       var versions = ctr.GetElements();
@@ -6443,14 +6448,14 @@ RDFItemUpdater.prototype = {
         // information depending on whether or not we've bene invoked in 
         // "version updates only" mode or "version+newest" mode. 
         var version = versions.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-        this._parseV20Update(aDataSource, version, aLocalItem, aUpdateData, aVersionUpdatesOnly);
-        if (aVersionUpdatesOnly && aUpdateData.updateLink)
+        this._parseV20Update(aDataSource, version, aLocalItem, aUpdateData, aUpdateCheckType);
+        if (aUpdateCheckType && aUpdateData.updateLink)
           break;
       }
     }
   },
   
-  _parseV20Update: function(aDataSource, aUpdateResource, aLocalItem, aUpdateData, aVersionUpdatesOnly) {
+  _parseV20Update: function(aDataSource, aUpdateResource, aLocalItem, aUpdateData, aUpdateCheckType) {
     var version = this._getPropertyFromResource(aDataSource, aUpdateResource, 
                                                 "version", aLocalItem);
     var taArc = gRDF.GetResource(EM_NS("targetApplication"));
@@ -6462,7 +6467,7 @@ RDFItemUpdater.prototype = {
         continue;
       
       var result = gVersionChecker.compare(version, aLocalItem.version);
-      if (aVersionUpdatesOnly ? result == 0 : result > 0) {
+      if (aUpdateCheckType == nsIExtensionManager.UPDATE_CHECK_NEWVERSION ? result > 0 : result == 0) {
         aUpdateData.version = version;
         aUpdateData.updateLink = this._getPropertyFromResource(aDataSource, targetApp, "updateLink", aLocalItem);
         aUpdateData.updateHash = this._getPropertyFromResource(aDataSource, targetApp, "updateHash", aLocalItem);

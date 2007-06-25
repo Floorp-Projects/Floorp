@@ -103,13 +103,9 @@ const DOWNLOAD_CHUNK_SIZE           = 300000; // bytes
 const DOWNLOAD_BACKGROUND_INTERVAL  = 600;    // seconds
 const DOWNLOAD_FOREGROUND_INTERVAL  = 0;
 
-// Values for the PREF_APP_UPDATE_INCOMPATIBLE_MODE pref. See documentation in
-// code below. 
-const INCOMPATIBLE_MODE_NEWVERSIONS   = 0;
-const INCOMPATIBLE_MODE_NONEWVERSIONS = 1;
-
 const POST_UPDATE_CONTRACTID = "@mozilla.org/updates/post-update;1";
 
+const nsIExtensionManager     = Components.interfaces.nsIExtensionManager;
 const nsILocalFile            = Components.interfaces.nsILocalFile;
 const nsIUpdateService        = Components.interfaces.nsIUpdateService;
 const nsIUpdateItem           = Components.interfaces.nsIUpdateItem;
@@ -2900,7 +2896,7 @@ function isCompatible(update) {
 #ifdef MOZ_XUL_APP
   var em = 
       Components.classes["@mozilla.org/extensions/manager;1"].
-      getService(Components.interfaces.nsIExtensionManager);
+      getService(nsIExtensionManager);
   var items = em.getIncompatibleItemList("", update.extensionVersion,
     nsIUpdateItem.TYPE_ADDON, false, { });
   return items.length == 0;
@@ -2970,23 +2966,24 @@ function showPromptIfNoIncompatibilities(update) {
       // 
       // PREF_APP_UPDATE_INCOMPATIBLE_MODE controls the mode in which we 
       // handle incompatibilities:
-      // 0    We count both VersionInfo updates _and_ NewerVersion updates
-      //      against the list of incompatible addons installed - i.e. if
-      //      Foo 1.2 is installed and it is incompatible with the update, and
-      //      we find Foo 2.0 which is but which is not yet downloaded or 
-      //      installed, then we do NOT prompt because the user can download
-      //      Foo 2.0 when they restart after the update during the mismatch
-      //      checking UI. This is the default, since it suppresses most 
-      //      prompt dialogs. 
-      // 1    We count only VersionInfo updates against the list of 
-      //      incompatible addons installed - i.e. if the situation above
-      //      with Foo 1.2 and available update to 2.0 applies, we DO show
-      //      the prompt since a download operation will be required after
-      //      the update. This is not the default and is supplied only as
-      //      a hidden option for those that want it. 
+      // UPDATE_CHECK_NEWVERSION    We count both VersionInfo updates _and_
+      //      NewerVersion updates against the list of incompatible addons
+      //      installed - i.e. if Foo 1.2 is installed and it is incompatible
+      //      with the update, and we find Foo 2.0 which is but which is not
+      //      yet downloaded or installed, then we do NOT prompt because the
+      //      user can download Foo 2.0 when they restart after the update
+      //      during the mismatch checking UI. This is the default, since it
+      //      suppresses most prompt dialogs. 
+      // UPDATE_CHECK_COMPATIBILITY    We count only VersionInfo updates
+      //      against the list of incompatible addons installed - i.e. if the
+      //      situation above with Foo 1.2 and available update to 2.0
+      //      applies, we DO show the prompt since a download operation will
+      //      be required after the update. This is not the default and is
+      //      supplied only as a hidden option for those that want it. 
       var mode = getPref("getIntPref", PREF_APP_UPDATE_INCOMPATIBLE_MODE, 
-                         INCOMPATIBLE_MODE_NEWVERSIONS);
-      if ((mode == 0 && this._addons.length) || !isCompatible(update))
+                         nsIExtensionManager.UPDATE_CHECK_NEWVERSION);
+      if ((mode == nsIExtensionManager.UPDATE_CHECK_NEWVERSION
+           && this._addons.length) || !isCompatible(update))
         showPrompt(update);
     },
     onAddonUpdateStarted: function(addon) {
@@ -3016,13 +3013,13 @@ function showPromptIfNoIncompatibilities(update) {
   if (!isCompatible(update)) {
     var em = 
         Components.classes["@mozilla.org/extensions/manager;1"].
-        getService(Components.interfaces.nsIExtensionManager);
+        getService(nsIExtensionManager);
     var listener = new Listener(em.getIncompatibleItemList("", 
       update.extensionVersion, nsIUpdateItem.TYPE_ADDON, false, { }));
     // See documentation on |mode| above. 
     var mode = getPref("getIntPref", PREF_APP_UPDATE_INCOMPATIBLE_MODE, 
-                       INCOMPATIBLE_MODE_NEWVERSIONS);
-    em.update([], 0, mode != 0, listener);
+                       nsIExtensionManager.UPDATE_CHECK_NEWVERSION);
+    em.update([], 0, mode, listener);
   }
   else
 #endif
