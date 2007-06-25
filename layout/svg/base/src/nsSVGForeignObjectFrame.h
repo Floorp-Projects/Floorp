@@ -143,6 +143,9 @@ protected:
   nsresult TransformPointFromOuterPx(float aX, float aY, nsPoint* aOut);
   void FlushDirtyRegion();
 
+  // If width or height is less than or equal to zero we must disable rendering
+  PRBool IsDisabled() const { return mRect.width <= 0 || mRect.height <= 0; }
+
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
   nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
   nsRegion                  mDirtyRegion;
