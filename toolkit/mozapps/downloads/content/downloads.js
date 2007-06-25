@@ -433,6 +433,12 @@ function onUpdateProgress()
     // Update progress
     getDownload(dl.id).setAttribute("progress", dl.percentComplete);
 
+    // Fire DOM event so that accessible value change events occur
+    var progressmeter = document.getAnonymousElementByAttribute(getDownload(dl.id), "anonid", "progressmeter");
+    var event = document.createEvent('Events');
+    event.initEvent('ValueChange', true, true);
+    progressmeter.dispatchEvent(event);
+
     // gActiveDownloads is screwed so it's possible 
     // to have more files than we're really downloading.
     // The good news is that those files have size==0.
