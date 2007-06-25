@@ -1078,7 +1078,7 @@ nsNavHistoryQueryOptions::GetGroupingMode(PRUint32 *aGroupCount,
   }
   *aGroupingMode = NS_STATIC_CAST(PRUint16*,
                                   nsMemory::Alloc(sizeof(PRUint16) * mGroupCount));
-  if (! aGroupingMode)
+  if (! *aGroupingMode)
     return NS_ERROR_OUT_OF_MEMORY;
   for(PRUint32 i = 0; i < mGroupCount; i ++)
     (*aGroupingMode)[i] = mGroupings[i];
