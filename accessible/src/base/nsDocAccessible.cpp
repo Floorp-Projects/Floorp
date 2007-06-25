@@ -1322,11 +1322,6 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode, PRUint32 aChangeEvent
                 event = nsIAccessibleEvent::EVENT_MENUPOPUP_END;
               }
             }
-            else if (role == nsIAccessibleRole::ROLE_PROGRESSBAR &&
-                     iterNode != aStartNode) {
-              // Make sure EVENT_HIDE gets fired for progress meters
-              event = nsIAccessibleEvent::EVENT_HIDE;
-            }
             if (event) {
               FireToolkitEvent(event, accessible, nsnull);
             }
