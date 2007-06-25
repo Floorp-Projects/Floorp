@@ -161,4 +161,11 @@ class nsNativeTheme
   static PRBool                    sListboxBGTransparent;
   static nsILookAndFeel::nsColorID sListboxBGColorID;
   static nsILookAndFeel::nsColorID sListboxDisabledBGColorID;
+  // comboboxes
+  static nsMargin                  sComboboxBorderSize;
+  static PRUint8                   sComboboxBorderStyle;
+  static nsILookAndFeel::nsColorID sComboboxBorderColorID;
+  static PRBool                    sComboboxBGTransparent;
+  static nsILookAndFeel::nsColorID sComboboxBGColorID;
+  static nsILookAndFeel::nsColorID sComboboxDisabledBGColorID;
 };
