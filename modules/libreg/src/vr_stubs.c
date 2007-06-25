@@ -606,16 +606,9 @@ int strncasecmp(const char *str1, const char *str2, int length)
 
 #include "NSReg.h"
 #include "VerReg.h"
-#include "nsBuildID.h"
 
 char *TheRegistry = "registry"; 
 char *Flist;
-
-/* WARNING: build hackery */
-#if defined(STANDALONE_REGISTRY) && !defined(XP_MAC) && !defined(XP_MACOSX)
-long BUILDNUM = NS_BUILD_ID;
-#endif
-
 
 REGERR vr_ParseVersion(char *verstr, VERSION *result);
 
