@@ -510,11 +510,11 @@
               index = -1;
             }
             else {
-              // Any visible selected item will always have a parent. The parent of
-              // an item at the root is the result itself, which can be QI'ed to 
-              // nsINavHistoryResult
-              container = lastSelected.parent;
- 
+              // Use the last-selected node's container unless the root node
+              // is selected, in which case we use the root node itself as the
+              // insertion point.
+              container = lastSelected.parent || container;
+
               // avoid the potentially expensive call to getIndexOfNode() 
               // if we know this container doesn't allow insertion
               if (this._disallowInsertion(container))
