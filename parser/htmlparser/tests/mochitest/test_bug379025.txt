@@ -1,0 +1,10 @@
+#data
+<!DOCTYPE html><html><head><noscript></noscript><style></style></head><frameset></frameset>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|     <noscript>
+|     <style>
+|   <frameset>
