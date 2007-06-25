@@ -111,11 +111,11 @@ ContentPrefService.prototype = {
 
   observe: function ContentPrefService_observe(subject, topic, data) {
     switch (topic) {
-    case "xpcom-shutdown":
-      this._destroy();
-      break;
-    default:
-      break;
+      case "xpcom-shutdown":
+        this._destroy();
+        break;
+      default:
+        break;
     }
   },
 
@@ -128,8 +128,8 @@ ContentPrefService.prototype = {
       var group = this.grouper.group(aURI);
       return this._selectPref(group, aName);
     }
-    else
-      return this._selectGlobalPref(aName);
+
+    return this._selectGlobalPref(aName);
   },
 
   setPref: function ContentPrefService_setPref(aURI, aName, aValue) {
@@ -213,8 +213,8 @@ ContentPrefService.prototype = {
       var group = this.grouper.group(aURI);
       return this._selectPrefs(group);
     }
-    else
-      return this._selectGlobalPrefs();
+
+    return this._selectGlobalPrefs();
   },
 
   // A hash of arrays of observers, indexed by setting name.
@@ -820,11 +820,13 @@ ContentPrefService.prototype = {
       var prefBranch = Cc["@mozilla.org/preferences-service;1"].
                        getService(Ci.nsIPrefBranch);
       switch (prefBranch.getPrefType(aPrefName)) {
-      case prefBranch.PREF_STRING:
+        case prefBranch.PREF_STRING:
           return prefBranch.getCharPref(aPrefName);
-      case prefBranch.PREF_INT:
+
+        case prefBranch.PREF_INT:
           return prefBranch.getIntPref(aPrefName);
-      case prefBranch.PREF_BOOL:
+
+        case prefBranch.PREF_BOOL:
           return prefBranch.getBoolPref(aPrefName);
       }
     }
