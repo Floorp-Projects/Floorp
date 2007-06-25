@@ -7055,9 +7055,9 @@ nsTypedSelection::GetSelectionRegionRectAndScrollableView(SelectionRegion aRegio
 
   // If the point we are interested in is outside the clip region, we aim
   // to over-scroll it by a quarter of the clip's width.
-  PRInt32 pad = clipRect.width >> 2;
+  PRInt32 pad = clipRect.width / 4;
 
-  if (pad <= 0)
+  if (pad == 0)
     pad = 3; // Arbitrary
 
   if (aRect->x >= clipRect.XMost()) {
