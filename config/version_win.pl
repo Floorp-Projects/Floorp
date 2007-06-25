@@ -138,6 +138,7 @@ if ($bits eq "16") { $fileos="VOS__WINDOWS16"; }
 my $bufferstr="    ";
 
 my $MILESTONE_FILE = "$topsrcdir/config/milestone.txt";
+my $BUILDID_FILE = "$depth/config/build_number";
 
 #Read module.ver file
 #Version file overrides for WIN32:
@@ -242,7 +243,17 @@ if ($official eq "1") {
 
 	}
 
-	$mfversion = $mpversion = "$milestone";
+	my ($buildid, $buildid_hi, $buildid_lo);
+	open(NUMBER, "<$BUILDID_FILE") || die "No build number file\n";
+	while ( <NUMBER> ) { $buildid = $_ }
+	close (NUMBER);
+	$buildid =~ s/^\s*(.*)\s*$/$1/;
+	$buildid_hi = substr($buildid, 0, 5);
+	$buildid_lo = substr($buildid, 5);
+
+	$mfversion = $mpversion = "$milestone: $buildid";
+	my @pvarray = split(',', $productversion);
+	$fileversion = "$pvarray[0],$pvarray[1],$buildid_hi,$buildid_lo";
 }
 
 my $copyright = "License: MPL 1.1/GPL 2.0/LGPL 2.1";
@@ -379,6 +390,7 @@ print RCFILE qq{
 //
 
 1 VERSIONINFO
+ FILEVERSION $fileversion
  PRODUCTVERSION $productversion
  FILEFLAGSMASK 0x3fL
  FILEFLAGS $fileflags
