@@ -1182,28 +1182,26 @@ public:
                     this->GetPrefFonts(langGroup, fonts);
                     selectedFont = WhichFontSupportsChar(fonts, ch);
                 }
-            }
-        }
-        // maybe it is cjk?
-        if (!selectedFont) {
-            PRUint32 unicodeRange = FindCharUnicodeRange(ch);
+            } else if (ch <= 0xFFFF) {
+                PRUint32 unicodeRange = FindCharUnicodeRange(ch);
 
-            /* special case CJK */
-            if (unicodeRange == kRangeSetCJK) {
-                if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
-                    PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Trying to find fonts for: CJK"));
-
-                nsTArray<nsRefPtr<FontEntry> > fonts;
-                this->GetCJKPrefFonts(fonts);
-                selectedFont = WhichFontSupportsChar(fonts, ch);
-            } else {
-                const char *langGroup = LangGroupFromUnicodeRange(unicodeRange);
-                if (langGroup) {
-                    PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Trying to find fonts for: %s", langGroup));
+                /* special case CJK */
+                if (unicodeRange == kRangeSetCJK) {
+                    if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
+                        PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Trying to find fonts for: CJK"));
 
                     nsTArray<nsRefPtr<FontEntry> > fonts;
-                    this->GetPrefFonts(langGroup, fonts);
+                    this->GetCJKPrefFonts(fonts);
                     selectedFont = WhichFontSupportsChar(fonts, ch);
+                } else {
+                    const char *langGroup = LangGroupFromUnicodeRange(unicodeRange);
+                    if (langGroup) {
+                        PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Trying to find fonts for: %s", langGroup));
+
+                        nsTArray<nsRefPtr<FontEntry> > fonts;
+                        this->GetPrefFonts(langGroup, fonts);
+                        selectedFont = WhichFontSupportsChar(fonts, ch);
+                    }
                 }
             }
         }
@@ -1237,6 +1235,13 @@ public:
     PRUint32 ComputeRanges() {
         if (mItemLength == 0)
             return 0;
+
+        /* disable font fallback when using symbol fonts */
+        if (mGroup->GetFontEntryAt(0)->mSymbolFont) {
+            TextRange r(0,mItemLength);
+            mRanges.AppendElement(r);
+            return 1;
+        }
 
         PR_LOG(gFontLog, PR_LOG_DEBUG, ("Computing ranges for string: (len = %d)", mItemLength));
 

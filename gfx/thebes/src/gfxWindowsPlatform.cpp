@@ -97,6 +97,9 @@ gfxWindowsPlatform::FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
     const LOGFONTW& logFont = lpelfe->elfLogFont;
     const NEWTEXTMETRICW& metrics = nmetrics->ntmTm;
 
+    printf("%s %d %d %d\n", NS_ConvertUTF16toUTF8(nsDependentString(logFont.lfFaceName)).get(),
+           logFont.lfCharSet, logFont.lfItalic, logFont.lfWeight);
+
     // Ignore vertical fonts
     if (logFont.lfFaceName[0] == L'@') {
         return 1;
@@ -149,6 +152,12 @@ static inline PRUint16
 ReadShortAt(const PRUint8 *aBuf, PRUint32 aIndex)
 {
     return (aBuf[aIndex] << 8) | aBuf[aIndex + 1];
+}
+
+static inline PRUint16
+ReadShortAt16(const PRUint16 *aBuf, PRUint32 aIndex)
+{
+    return (((aBuf[aIndex]&0xFF) << 8) | ((aBuf[aIndex]&0xFF00) >> 8));
 }
 
 static inline PRUint32
@@ -224,14 +233,16 @@ ReadCMAPTableFormat4(PRUint8 *aBuf, PRInt32 aLength, FontEntry *aFontEntry)
     PRUint16 segCountX2 = ReadShortAt(aBuf, OffsetSegCountX2);
     NS_ENSURE_TRUE(tablelen >= 16 + (segCountX2 * 4), NS_ERROR_FAILURE);
 
-    const PRUint8 *endCounts = aBuf + 14;
-    const PRUint8 *startCounts = endCounts + segCountX2 + 2;
-    const PRUint8 *idDeltas = startCounts + segCountX2;
-    const PRUint8 *idRangeOffsets = idDeltas + segCountX2;
-    for (PRUint16 i = 0; i < segCountX2; i += 2) {
-        const PRUint16 endCount = ReadShortAt(endCounts, i);
-        const PRUint16 startCount = ReadShortAt(startCounts, i);
-        const PRUint16 idRangeOffset = ReadShortAt(idRangeOffsets, i);
+    const PRUint16 segCount = segCountX2 / 2;
+
+    const PRUint16 *endCounts = (PRUint16*)(aBuf + 14);
+    const PRUint16 *startCounts = endCounts + 1 /* skip one uint16 for reservedPad */ + segCount;
+    const PRUint16 *idDeltas = startCounts + segCount;
+    const PRUint16 *idRangeOffsets = idDeltas + segCount;
+    for (PRUint16 i = 0; i < segCount; i++) {
+        const PRUint16 endCount = ReadShortAt16(endCounts, i);
+        const PRUint16 startCount = ReadShortAt16(startCounts, i);
+        const PRUint16 idRangeOffset = ReadShortAt16(idRangeOffsets, i);
         if (idRangeOffset == 0) {
             for (PRUint32 c = startCount; c <= endCount; c++) {
                 aFontEntry->mCharacterMap.set(c);
@@ -242,14 +253,22 @@ ReadCMAPTableFormat4(PRUint8 *aBuf, PRInt32 aLength, FontEntry *aFontEntry)
 #endif
             }
         } else {
-            const PRUint8 *gdata = idRangeOffsets + i + idRangeOffset;
-            if (gdata + ((endCount - startCount) * 2) >= aBuf + aLength) {
-                NS_WARNING("gdata + (endCount - startCount) * 2) >= aBuf + length");
-                continue;
-            }
-            for (PRUint16 c = startCount; c <= endCount; ++c, gdata += 2) {
+            const PRUint16 idDelta = ReadShortAt16(idDeltas, i);
+            for (PRUint32 c = startCount; c <= endCount; ++c) {
+                if (c == 0xFFFF)
+                    break;
+
+                const PRUint16 *gdata = (idRangeOffset/2 
+                                         + (c - startCount)
+                                         + &idRangeOffsets[i]);
+
+                NS_ENSURE_TRUE((PRUint8*)gdata > aBuf && (PRUint8*)gdata < aBuf + aLength, NS_ERROR_FAILURE);
+
                 // make sure we have a glyph
-                if (PRUint16 g = ReadShortAt(gdata, 0)) {
+                if (*gdata != 0) {
+                    // The glyph index at this point is:
+                    // glyph = (ReadShortAt16(idDeltas, i) + *gdata) % 65536;
+
                     aFontEntry->mCharacterMap.set(c);
 #ifdef UPDATE_RANGES
                     PRUint16 b = CharRangeBit(c);
@@ -296,6 +315,7 @@ ReadCMAP(HDC hdc, FontEntry *aFontEntry)
         PlatformIDMicrosoft = 3
     };
     enum {
+        EncodingIDSymbol = 0,
         EncodingIDMicrosoft = 1,
         EncodingIDUCS4 = 10
     };
@@ -316,14 +336,20 @@ ReadCMAP(HDC hdc, FontEntry *aFontEntry)
         const PRUint16 encodingID = ReadShortAt(table, TableOffsetEncodingID);
         const PRUint32 offset = ReadLongAt(table, TableOffsetOffset);
 
+        NS_ASSERTION(offset < newLen, "ugh");
         const PRUint8 *subtable = buf + offset;
         const PRUint16 format = ReadShortAt(subtable, SubtableOffsetFormat);
 
-        if (format == 4 && encodingID == EncodingIDMicrosoft) {
+        if (encodingID == EncodingIDSymbol) {
+            aFontEntry->mUnicodeFont = PR_FALSE;
+            aFontEntry->mSymbolFont = PR_TRUE;
             keepFormat = format;
             keepOffset = offset;
-        }
-        else if (format == 12 && encodingID == EncodingIDUCS4) {
+            break;
+        } else if (format == 4 && encodingID == EncodingIDMicrosoft) {
+            keepFormat = format;
+            keepOffset = offset;
+        } else if (format == 12 && encodingID == EncodingIDUCS4) {
             keepFormat = format;
             keepOffset = offset;
             break; // we don't want to try anything else when this format is available.
@@ -345,8 +371,18 @@ gfxWindowsPlatform::FontGetCMapDataProc(nsStringHashKey::KeyType aKey,
                                         nsRefPtr<FontEntry>& aFontEntry,
                                         void* userArg)
 {
-    if (aFontEntry->IsCrappyFont())
+    if (aFontEntry->mFontType != TRUETYPE_FONTTYPE) {
+        /* bitmap fonts suck -- just claim they support everything
+           between 0x21 and 0xFF.  All the ones on my system do...
+           If we really wanted to test which characters in this
+           range were supported we could just generate a string with
+           each codepoint and do GetGlyphIndicies or similar to determine
+           what is there.
+        */
+        for (PRUint16 ch = 0x21; ch <= 0xFF; ch++)
+            aFontEntry->mCharacterMap.set(ch);
         return PL_DHASH_NEXT;
+    }
 
     HDC hdc = GetDC(nsnull);
 
@@ -396,6 +432,10 @@ gfxWindowsPlatform::HashEnumFunc(nsStringHashKey::KeyType aKey,
                                  void* userArg)
 {
     FontListData *data = (FontListData*)userArg;
+
+    /* skip symbol fonts */
+    if (aFontEntry->mSymbolFont)
+        return PL_DHASH_NEXT;
 
     if (aFontEntry->SupportsLangGroup(data->mLangGroup) &&
         aFontEntry->MatchesGenericFamily(data->mGenericFamily))
