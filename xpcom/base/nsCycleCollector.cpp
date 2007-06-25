@@ -435,6 +435,7 @@ struct PtrInfo
 #ifdef DEBUG_CC
     size_t mBytes;
     char *mName;
+    PRUint32 mSCCIndex; // strongly connected component
 #endif
 
     PtrInfo(void *aPointer, nsCycleCollectionParticipant *aParticipant)
@@ -448,7 +449,8 @@ struct PtrInfo
           mLastChild()
 #ifdef DEBUG_CC
         , mBytes(0),
-          mName(nsnull)
+          mName(nsnull),
+          mSCCIndex(0)
 #endif
     {
     }
@@ -2139,6 +2141,21 @@ AddExpectedGarbage(nsVoidPtrHashKey *p, void *arg)
     return PL_DHASH_NEXT;
 }
 
+struct SetSCCWalker : public GraphWalker
+{
+    SetSCCWalker(PRUint32 aIndex) : mIndex(aIndex) {}
+    PRBool ShouldVisitNode(PtrInfo const *pi) { return pi->mSCCIndex == 0; }
+    void VisitNode(PtrInfo *pi) { pi->mSCCIndex = mIndex; }
+private:
+    PRUint32 mIndex;
+};
+
+struct SetNonRootGreyWalker : public GraphWalker
+{
+    PRBool ShouldVisitNode(PtrInfo const *pi) { return pi->mColor == white; }
+    void VisitNode(PtrInfo *pi) { pi->mColor = grey; }
+};
+
 void
 nsCycleCollector::ExplainLiveExpectedGarbage()
 {
@@ -2173,14 +2190,13 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
         mScanInProgress = PR_FALSE;
 
         PRBool giveKnownReferences = PR_FALSE;
+        PRBool findCycleRoots = PR_FALSE;
         {
             NodePool::Enumerator queue(graph.mNodes);
             while (!queue.IsDone()) {
                 PtrInfo *pi = queue.GetNext();
                 if (pi->mColor == white) {
-                    printf("nsCycleCollector: %s %p was not collected due to\n"
-                           "  missing call to suspect or failure to unlink\n",
-                           pi->mName, pi->mPointer);
+                    findCycleRoots = PR_TRUE;
                 }
 
                 if (pi->mInternalRefs != pi->mRefCount) {
@@ -2209,6 +2225,103 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                     if ((*child)->mInternalRefs != (*child)->mRefCount) {
                         printf("  to: %p from %s %p\n",
                                (*child)->mPointer, pi->mName, pi->mPointer);
+                    }
+                }
+            }
+        }
+
+        if (findCycleRoots) {
+            // NOTE: This code changes the white nodes that are not
+            // roots to gray.
+
+            // Put the nodes in post-order traversal order from a
+            // depth-first search.
+            nsDeque DFSPostOrder;
+
+            {
+                // Use mSCCIndex temporarily to track the DFS numbering:
+                const PRUint32 INDEX_UNREACHED = 0;
+                const PRUint32 INDEX_REACHED = 1;
+                const PRUint32 INDEX_NUMBERED = 2;
+
+                NodePool::Enumerator etor_clear(graph.mNodes);
+                while (!etor_clear.IsDone()) {
+                    PtrInfo *pi = etor_clear.GetNext();
+                    pi->mSCCIndex = INDEX_UNREACHED;
+                }
+
+                nsDeque stack;
+
+                NodePool::Enumerator etor_roots(graph.mNodes);
+                for (PRUint32 i = 0; i < graph.mRootCount; ++i) {
+                    PtrInfo *root_pi = etor_roots.GetNext();
+                    stack.Push(root_pi);
+                }
+
+                while (stack.GetSize() > 0) {
+                    PtrInfo *pi = (PtrInfo*)stack.Peek();
+                    if (pi->mSCCIndex == INDEX_UNREACHED) {
+                        pi->mSCCIndex = INDEX_REACHED;
+                        for (EdgePool::Iterator child = pi->mFirstChild,
+                                            child_end = pi->mLastChild;
+                             child != child_end; ++child) {
+                            stack.Push(*child);
+                        }
+                    } else {
+                        stack.Pop();
+                        // Somebody else might have numbered it already
+                        // (since this is depth-first, not breadth-first).
+                        if (pi->mSCCIndex == INDEX_REACHED) {
+                            pi->mSCCIndex = INDEX_NUMBERED;
+                            DFSPostOrder.Push(pi);
+                        }
+                    }
+                }
+            }
+
+            // Put the nodes into strongly-connected components.
+            {
+                NodePool::Enumerator etor_clear(graph.mNodes);
+                while (!etor_clear.IsDone()) {
+                    PtrInfo *pi = etor_clear.GetNext();
+                    pi->mSCCIndex = 0;
+                }
+
+                PRUint32 currentSCC = 1;
+
+                while (DFSPostOrder.GetSize() > 0) {
+                    SetSCCWalker(currentSCC).Walk((PtrInfo*)DFSPostOrder.PopFront());
+                    ++currentSCC;
+                }
+            }
+
+            // Mark any white nodes reachable from other components as
+            // grey.
+            {
+                NodePool::Enumerator queue(graph.mNodes);
+                while (!queue.IsDone()) {
+                    PtrInfo *pi = queue.GetNext();
+                    if (pi->mColor != white)
+                        continue;
+                    for (EdgePool::Iterator child = pi->mFirstChild,
+                                        child_end = pi->mLastChild;
+                         child != child_end; ++child) {
+                        if ((*child)->mSCCIndex != pi->mSCCIndex) {
+                            SetNonRootGreyWalker().Walk(*child);
+                        }
+                    }
+                }
+            }
+
+            {
+                NodePool::Enumerator queue(graph.mNodes);
+                while (!queue.IsDone()) {
+                    PtrInfo *pi = queue.GetNext();
+                    if (pi->mColor == white) {
+                        printf("nsCycleCollector: %s %p in component %d\n"
+                               "  was not collected due to missing call to "
+                               "suspect or failure to unlink\n",
+                               pi->mName, pi->mPointer, pi->mSCCIndex);
                     }
                 }
             }
