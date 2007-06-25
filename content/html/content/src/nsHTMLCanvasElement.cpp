@@ -455,10 +455,16 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
       return NS_ERROR_INVALID_ARG;
 
     rv = mCurrentContext->SetCanvasElement(this);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      mCurrentContext = nsnull;
+      return rv;
+    }
 
     rv = UpdateContext();
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      mCurrentContext = nsnull;
+      return rv;
+    }
 
     mCurrentContextId.Assign(aContextId);
   } else if (!mCurrentContextId.Equals(aContextId)) {
