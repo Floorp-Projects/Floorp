@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE          = xpcom
 
 XPIDLSRCS = \
+	nsIXULAppInfo.idl \
         nsIGConfService.idl \
         nsIGnomeVFSService.idl \
         $(NULL)

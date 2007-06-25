@@ -59,9 +59,6 @@ PLSRCS		= nfspwd.pl revdepth.pl
 
 TARGETS		= $(HOST_PROGRAM) $(PLSRCS:.pl=) $(SIMPLE_PROGRAMS)
 
-# Generate the build number on the fly.
-TARGETS		+= build_number nsBuildID.h
-
 ifndef CROSS_COMPILE
 ifdef USE_ELF_DYNSTR_GC
 TARGETS		+= elf-dynstr-gc
@@ -96,7 +93,6 @@ NSPR_CFLAGS	+= -I$(srcdir)/../nsprpub/pr/include/md
 endif
 
 HEADERS = \
-	nsBuildID.h \
 	$(DEPTH)/mozilla-config.h \
 	$(srcdir)/nsStaticComponents.h \
 	$(NULL)
@@ -123,34 +119,11 @@ export::
 	$(INSTALL) system_wrappers $(DIST)/include
 endif
 
-# we don't use an explicit dependency here because then we would
-# regenerate nsBuildID.h during the make install phase and that would
-# be bad.
 install::
-	@if test ! -f nsBuildID.h; then\
-		echo "You must have done at least a make export before trying to do a make install."; \
-		echo "(nsBuildID.h is missing.)"; \
-		exit 1; \
-	fi;
 	$(SYSINSTALL) $(IFLAGS1) $(DEPTH)/mozilla-config.h $(DESTDIR)$(includedir)
 
-GARBAGE += build_number nsBuildID \
+GARBAGE += \
 	$(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES)
-
-ifneq (,$(BUILD_OFFICIAL)$(MOZILLA_OFFICIAL))
-_BN_OFFICIAL=1
-else
-_BN_OFFICIAL=
-endif
-
-build_number: FORCE
-	$(PERL) -I$(srcdir) $(srcdir)/bdate.pl $@ $(_BN_OFFICIAL)
-
-nsBuildID.h: nsBuildID.h.in build_number $(srcdir)/milestone.txt Makefile
-	$(RM) $@
-	MOZ_MILESTONE_RELEASE=$(MOZ_MILESTONE_RELEASE); \
-	export MOZ_MILESTONE_RELEASE; \
-	$(PERL) -I$(srcdir) $(srcdir)/aboutime.pl -m $(srcdir)/milestone.txt $@ build_number $(srcdir)/nsBuildID.h.in
 
 ifndef CROSS_COMPILE
 ifdef USE_ELF_DYNSTR_GC
