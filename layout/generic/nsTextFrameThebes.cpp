@@ -139,10 +139,16 @@
 // This bit is set on frames that trimmed trailing whitespace characters when
 // calculating their width during reflow.
 #define TEXT_TRIMMED_TRAILING_WHITESPACE 0x01000000
+// Set when the frame's text may have a different style from its in-flow
+// brethren (e.g. the frame is in first-letter or first-line), so text runs
+// may need to be reconstructed when the frame's content offset/length changes.
+// We set this on the frame that has in first-letter or first-line, but not
+// in-flow siblings outside first-letter or first-line.
+#define TEXT_RUN_LAYOUT_DEPENDENT  0x02000000
 
 #define TEXT_REFLOW_FLAGS    \
   (TEXT_FIRST_LETTER|TEXT_START_OF_LINE|TEXT_END_OF_LINE|TEXT_HYPHEN_BREAK| \
-   TEXT_TRIMMED_TRAILING_WHITESPACE)
+   TEXT_TRIMMED_TRAILING_WHITESPACE|TEXT_RUN_LAYOUT_DEPENDENT)
 
 // Cache bits for IsEmpty().
 // Set this bit if the textframe is known to be only collapsible whitespace.
@@ -513,6 +519,8 @@ public:
    * the textrun, if available (if not, we'll create one which will just be slower)
    * @param aBlock the block ancestor for this frame, or nsnull if unknown
    * @param aLine the line that this frame is on, if any, or nsnull if unknown
+   * @param aFlowEndInTextRun if non-null, this returns the textrun offset of
+   * end of the text associated with this frame and its in-flow siblings
    * @return a gfxSkipCharsIterator set up to map DOM offsets for this frame
    * to offsets into the textrun; its initial offset is set to this frame's
    * content offset
@@ -975,6 +983,16 @@ TextContainsLineBreakerWhiteSpace(const void* aText, PRUint32 aLength,
   }
 }
 
+static PRBool
+CanTextRunCrossFrameBoundary(nsIFrame* aFrame)
+{
+  // placeholders are "invisible", so a text run should be able to span
+  // across one. The text in the out-of-flow, if any, will not be included
+  // in this textrun of course.
+  return aFrame->CanContinueTextRun() ||
+    aFrame->GetType() == nsGkAtoms::placeholderFrame;
+}
+
 BuildTextRunsScanner::FindBoundaryResult
 BuildTextRunsScanner::FindBoundaries(nsIFrame* aFrame, FindBoundaryState* aState)
 {
@@ -1014,7 +1032,7 @@ BuildTextRunsScanner::FindBoundaries(nsIFrame* aFrame, FindBoundaryState* aState
     return FB_CONTINUE; 
   }
 
-  PRBool continueTextRun = aFrame->CanContinueTextRun();
+  PRBool continueTextRun = CanTextRunCrossFrameBoundary(aFrame);
   PRBool descendInto = PR_TRUE;
   if (!continueTextRun) {
     // XXX do we need this? are there frames we need to descend into that aren't
@@ -1355,7 +1373,7 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
     return;
   }
 
-  PRBool continueTextRun = aFrame->CanContinueTextRun();
+  PRBool continueTextRun = CanTextRunCrossFrameBoundary(aFrame);
   PRBool descendInto = PR_TRUE;
   if (!continueTextRun) {
     FlushFrames(PR_TRUE);
@@ -4909,8 +4927,7 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
       // XXXldb Shouldn't we be including the newline as part of the
       // segment that it ends rather than part of the segment that it
       // starts?
-      preformattedNewline = !collapseWhitespace &&
-        frag->CharAt(iter.ConvertSkippedToOriginal(i)) == '\n';
+      preformattedNewline = !collapseWhitespace && mTextRun->GetChar(i) == '\n';
       if (!mTextRun->CanBreakLineBefore(i) && !preformattedNewline) {
         // we can't break here (and it's not the end of the flow)
         continue;
@@ -5020,21 +5037,20 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
     }
   } else {
     // We respect line breaks, so measure off each line (or part of line).
-    PRInt32 end = mContentOffset + GetInFlowContentLength();
-    PRUint32 startRun = start;
     aData->trailingWhitespace = 0;
-    while (iter.GetOriginalOffset() < end) {
-      if (provider.GetFragment()->CharAt(iter.GetOriginalOffset()) == '\n') {
-        PRUint32 endRun = iter.GetSkippedOffset();
-        aData->currentLine +=
-          NSToCoordCeil(mTextRun->GetAdvanceWidth(startRun, endRun - startRun, &provider));
+    PRUint32 i;
+    PRUint32 startRun = start;
+    for (i = start; i <= flowEndInTextRun; ++i) {
+      if (i < flowEndInTextRun && mTextRun->GetChar(i) != '\n')
+        continue;
+        
+      aData->currentLine +=
+        NSToCoordCeil(mTextRun->GetAdvanceWidth(startRun, i - startRun, &provider));
+      if (i < flowEndInTextRun) {
         aData->ForceBreak(aRenderingContext);
-        startRun = endRun;
+        startRun = i;
       }
-      iter.AdvanceOriginal(1);
     }
-    aData->currentLine +=
-      NSToCoordCeil(mTextRun->GetAdvanceWidth(startRun, iter.GetSkippedOffset() - startRun, &provider));
   }
 
   // Check if we have whitespace at the end
@@ -5183,7 +5199,10 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   PRBool layoutDependentTextRun =
     lineLayout.GetFirstLetterStyleOK() || lineLayout.GetInFirstLine();
   if (layoutDependentTextRun) {
-    // Nuke any text run since it may not be valid for our reflow
+    AddStateBits(TEXT_RUN_LAYOUT_DEPENDENT);
+  }
+  if (layoutDependentTextRun ||
+      (prevInFlow && (prevInFlow->GetStateBits() & TEXT_RUN_LAYOUT_DEPENDENT))) {
     ClearTextRun();
   }
 
