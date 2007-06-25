@@ -684,6 +684,7 @@ sys/prctl.h
 sys/priv.h
 sys/procfs.h
 sys/pstat.h
+sys/ptrace.h
 sys/queue.h
 sys/reg.h
 sys/regset.h
