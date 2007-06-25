@@ -166,9 +166,16 @@ interface nsIInstallLocation : nsISupports
  * XXXben - Some of this stuff should go into a management-ey interface, 
  *          some into an app-startup-ey interface.
  */
-[scriptable, uuid(585a8d98-ed73-41d3-a540-061b148f1683)]
+[scriptable, uuid(c2aef3c3-8ce1-4470-94e4-1167e5ca8928)]
 interface nsIExtensionManager : nsISupports
 {
+  /**
+   * Constants representing types of update checks.
+   */
+  const unsigned long UPDATE_CHECK_NEWVERSION    = 0;
+  const unsigned long UPDATE_CHECK_COMPATIBILITY = 1;
+  const unsigned long UPDATE_SYNC_COMPATIBILITY  = 2;
+  
   /**
    * Starts the Extension Manager, checking for item changes, additions and
    * removals, and finishing pending operations.
@@ -251,20 +258,22 @@ interface nsIExtensionManager : nsISupports
    *          An array of nsIUpdateItems to check for updates for.
    * @param   itemCount
    *          The length of |items|
-   * @param   versionUpdateOnly
-   *          false if this check should find the newest versions available,
-   *          true if it should only find newer target application compatibility
-   *          information for the currently installed version.
-   *          2 if this check should only find target application compatibility
-   *          information for the currently installed version and synchronize
-   *          the values.
+   * @param   updateCheckType
+   *          UPDATE_CHECK_NEWVERSION if this check should find the newest
+   *          versions available,
+   *          UPDATE_CHECK_COMPATIBILITY if it should only find newer target
+   *          application compatibility information for the currently
+   *          installed version.
+   *          UPDATE_SYNC_COMPATIBILITY if this check should only find target
+   *          application compatibility information for the currently
+   *          installed version and synchronize the values.
    * @param   listener
    *          An nsIAddonUpdateCheckListener object which will be notified during
    *          the update check process. 
    */
    void update([array, size_is(itemCount)] in nsIUpdateItem items,
                in unsigned long itemCount, 
-               in unsigned long versionUpdateOnly,
+               in unsigned long updateCheckType,
                in nsIAddonUpdateCheckListener listener);
 
   /**
