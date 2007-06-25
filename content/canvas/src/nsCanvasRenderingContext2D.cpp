@@ -720,6 +720,14 @@ nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
 {
     nsresult rv = NS_OK;
 
+    if (!mSurface || !mCairo ||
+        cairo_surface_status(mSurface) != CAIRO_STATUS_SUCCESS ||
+        cairo_status(mCairo) != CAIRO_STATUS_SUCCESS)
+        return NS_ERROR_FAILURE;
+
+    if (!mThebesSurface)
+        return NS_ERROR_FAILURE;
+
     gfxContext* ctx = (gfxContext*) rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
     nsRefPtr<gfxPattern> pat = new gfxPattern(mThebesSurface);
 
@@ -748,13 +756,11 @@ nsCanvasRenderingContext2D::GetInputStream(const nsACString& aMimeType,
                                            const nsAString& aEncoderOptions,
                                            nsIInputStream **aStream)
 {
+    if (!mSurface || cairo_surface_status(mSurface) != CAIRO_STATUS_SUCCESS)
+        return NS_ERROR_FAILURE;
+
     nsCString conid(NS_LITERAL_CSTRING("@mozilla.org/image/encoder;2?type="));
     conid += aMimeType;
-
-    if (cairo_status(mCairo)) {
-        fprintf (stderr, "Cairo error! %d %s\n", cairo_status(mCairo), cairo_status_to_string(cairo_status(mCairo)));
-        fflush (stderr);
-    }
 
     nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(conid.get());
     if (!encoder)
