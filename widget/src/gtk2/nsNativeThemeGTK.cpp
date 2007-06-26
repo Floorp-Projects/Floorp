@@ -228,77 +228,72 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       aState->isDefault = FALSE; // XXX fix me
       aState->canDefault = FALSE; // XXX fix me
 
-      if (aFrame && aFrame->GetContent()->IsNodeOfType(nsINode::eXUL)) {
-        // For these widget types, some element (either a child or parent)
-        // actually has element focus, so we check the focused attribute
-        // to see whether to draw in the focused state.
-        if (aWidgetType == NS_THEME_TEXTFIELD ||
-            aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
-            aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||
-            aWidgetType == NS_THEME_RADIO_CONTAINER ||
-            aWidgetType == NS_THEME_RADIO_LABEL) {
-          aState->focused = IsFocused(aFrame);
-        } else if (IsRadioWidgetType(aWidgetType) ||
-                   IsCheckboxWidgetType(aWidgetType)) {
-          // In XUL, checkboxes and radios shouldn't have focus rings, their labels do
-          aState->focused = FALSE;
+      // For these widget types, some element (either a child or parent)
+      // actually has element focus, so we check the focused attribute
+      // to see whether to draw in the focused state.
+      if (aWidgetType == NS_THEME_TEXTFIELD ||
+          aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
+          aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||
+          aWidgetType == NS_THEME_RADIO_CONTAINER ||
+          aWidgetType == NS_THEME_RADIO_LABEL ||
+          IsRadioWidgetType(aWidgetType)) {
+        aState->focused = IsFocused(aFrame);
+      }
+
+      if (aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL ||
+          aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL) {
+        // for scrollbars we need to go up two to go from the thumb to
+        // the slider to the actual scrollbar object
+        nsIFrame *tmpFrame = aFrame->GetParent()->GetParent();
+
+        aState->curpos = CheckIntAttr(tmpFrame, nsWidgetAtoms::curpos);
+        aState->maxpos = CheckIntAttr(tmpFrame, nsWidgetAtoms::maxpos);
+      }
+
+      // In order to simulate native GTK scrollbar click behavior, we set the
+      // active attribute on the element to true if it's pressed with any mouse
+      // button. This allows us to show that it's active without setting :active
+      if (aWidgetType == NS_THEME_SCROLLBAR_BUTTON_UP ||
+          aWidgetType == NS_THEME_SCROLLBAR_BUTTON_DOWN ||
+          aWidgetType == NS_THEME_SCROLLBAR_BUTTON_LEFT ||
+          aWidgetType == NS_THEME_SCROLLBAR_BUTTON_RIGHT) {
+          if (CheckBooleanAttr(aFrame, nsWidgetAtoms::active))
+            aState->active = PR_TRUE;
+      }
+
+      // menu item state is determined by the attribute "_moz-menuactive",
+      // and not by the mouse hovering (accessibility).  as a special case,
+      // menus which are children of a menu bar are only marked as prelight
+      // if they are open, not on normal hover.
+
+      if (aWidgetType == NS_THEME_MENUITEM ||
+          aWidgetType == NS_THEME_CHECKMENUITEM ||
+          aWidgetType == NS_THEME_RADIOMENUITEM) {
+        PRBool isTopLevel = PR_FALSE;
+        nsIMenuFrame *menuFrame;
+        CallQueryInterface(aFrame, &menuFrame);
+
+        if (menuFrame) {
+          nsIMenuParent *menuParent = menuFrame->GetMenuParent();
+          if (menuParent)
+            menuParent->IsMenuBar(isTopLevel);
         }
 
-        if (aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL ||
-            aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL) {
-          // for scrollbars we need to go up two to go from the thumb to
-          // the slider to the actual scrollbar object
-          nsIFrame *tmpFrame = aFrame->GetParent()->GetParent();
-
-          aState->curpos = CheckIntAttr(tmpFrame, nsWidgetAtoms::curpos);
-          aState->maxpos = CheckIntAttr(tmpFrame, nsWidgetAtoms::maxpos);
+        if (isTopLevel) {
+          PRBool isOpen;
+          menuFrame->MenuIsOpen(isOpen);
+          aState->inHover = isOpen;
+        } else {
+          aState->inHover = CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive);
         }
 
-        // In order to simulate native GTK scrollbar click behavior, we set the
-        // active attribute on the element to true if it's pressed with any mouse
-        // button. This allows us to show that it's active without setting :active
-        if (aWidgetType == NS_THEME_SCROLLBAR_BUTTON_UP ||
-            aWidgetType == NS_THEME_SCROLLBAR_BUTTON_DOWN ||
-            aWidgetType == NS_THEME_SCROLLBAR_BUTTON_LEFT ||
-            aWidgetType == NS_THEME_SCROLLBAR_BUTTON_RIGHT) {
-            if (CheckBooleanAttr(aFrame, nsWidgetAtoms::active))
-              aState->active = PR_TRUE;
-        }
-
-        // menu item state is determined by the attribute "_moz-menuactive",
-        // and not by the mouse hovering (accessibility).  as a special case,
-        // menus which are children of a menu bar are only marked as prelight
-        // if they are open, not on normal hover.
-
-        if (aWidgetType == NS_THEME_MENUITEM ||
-            aWidgetType == NS_THEME_CHECKMENUITEM ||
-            aWidgetType == NS_THEME_RADIOMENUITEM) {
-          PRBool isTopLevel = PR_FALSE;
-          nsIMenuFrame *menuFrame;
-          CallQueryInterface(aFrame, &menuFrame);
-
-          if (menuFrame) {
-            nsIMenuParent *menuParent = menuFrame->GetMenuParent();
-            if (menuParent)
-              menuParent->IsMenuBar(isTopLevel);
-          }
-
-          if (isTopLevel) {
-            PRBool isOpen;
-            menuFrame->MenuIsOpen(isOpen);
-            aState->inHover = isOpen;
-          } else {
-            aState->inHover = CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive);
-          }
-
-          aState->active = FALSE;
+        aState->active = FALSE;
         
-          if (aWidgetType == NS_THEME_CHECKMENUITEM ||
-              aWidgetType == NS_THEME_RADIOMENUITEM) {
-            *aWidgetFlags = aFrame && aFrame->GetContent()->
-              AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::checked,
-                          nsWidgetAtoms::_true, eIgnoreCase);
-          }
+        if (aWidgetType == NS_THEME_CHECKMENUITEM ||
+            aWidgetType == NS_THEME_RADIOMENUITEM) {
+          *aWidgetFlags = aFrame && aFrame->GetContent()->
+            AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::checked,
+                        nsWidgetAtoms::_true, eIgnoreCase);
         }
       }
     }
