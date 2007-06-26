@@ -2594,3 +2594,19 @@ nsNavBookmarks::OnItemAnnotationRemoved(PRInt64 aItemId, const nsACString& aName
 
   return NS_OK;
 }
+
+PRBool
+nsNavBookmarks::ItemExists(PRInt64 aItemId) {
+  mozStorageStatementScoper scope(mDBGetItemProperties);
+  nsresult rv = mDBGetItemProperties->BindInt64Parameter(0, aItemId);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  PRBool results;
+  rv = mDBGetItemProperties->ExecuteStep(&results);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  if (!results)
+    return PR_FALSE;
+
+  return PR_TRUE;
+}
