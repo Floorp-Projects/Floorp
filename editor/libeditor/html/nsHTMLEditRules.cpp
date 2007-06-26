@@ -3915,6 +3915,9 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
              (nsHTMLEditUtils::IsTable(n) || !nsHTMLEditUtils::IsTableElement(n)))
       {
         n->GetParentNode(getter_AddRefs(tmp));
+        if (!tmp) {
+          break;
+        }
         n = tmp;
         if (nsHTMLEditUtils::IsBlockquote(n))
         {
