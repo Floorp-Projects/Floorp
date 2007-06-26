@@ -473,7 +473,7 @@ nsCookieService::InitDB()
         NS_ENSURE_SUCCESS(rv, rv);
 
         // set this to a large number, to force the downgrade codepath
-        dbSchemaVersion = PR_UINT32_MAX;
+        dbSchemaVersion = PR_INT32_MAX;
       }
     }
 
