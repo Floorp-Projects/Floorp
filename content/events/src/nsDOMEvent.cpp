@@ -141,16 +141,71 @@ nsDOMEvent::~nsDOMEvent()
   }
 }
 
-NS_IMPL_ADDREF(nsDOMEvent)
-NS_IMPL_RELEASE(nsDOMEvent)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMEvent)
 
-NS_INTERFACE_MAP_BEGIN(nsDOMEvent)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEvent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEvent)
   NS_INTERFACE_MAP_ENTRY(nsIPrivateDOMEvent)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Event)
 NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMEvent)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMEvent)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEvent)
+  if (tmp->mEventIsInternal) {
+    tmp->mEvent->target = nsnull;
+    tmp->mEvent->currentTarget = nsnull;
+    tmp->mEvent->originalTarget = nsnull;
+    switch (tmp->mEvent->eventStructType) {
+      case NS_MOUSE_EVENT:
+      case NS_MOUSE_SCROLL_EVENT:
+        NS_STATIC_CAST(nsMouseEvent_base*, tmp->mEvent)->relatedTarget = nsnull;
+        break;
+      case NS_XUL_COMMAND_EVENT:
+        NS_STATIC_CAST(nsXULCommandEvent*, tmp->mEvent)->sourceEvent = nsnull;
+        break;
+      case NS_MUTATION_EVENT:
+        NS_STATIC_CAST(nsMutationEvent*, tmp->mEvent)->mRelatedNode = nsnull;
+        break;
+      default:
+        break;
+    }
+  }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mPresContext);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTmpRealOriginalTarget)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mExplicitOriginalTarget)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
+  if (tmp->mEventIsInternal) {
+    cb.NoteXPCOMChild(tmp->mEvent->target);
+    cb.NoteXPCOMChild(tmp->mEvent->currentTarget);
+    cb.NoteXPCOMChild(tmp->mEvent->originalTarget);
+    switch (tmp->mEvent->eventStructType) {
+      case NS_MOUSE_EVENT:
+      case NS_MOUSE_SCROLL_EVENT:
+        cb.NoteXPCOMChild(
+          NS_STATIC_CAST(nsMouseEvent_base*, tmp->mEvent)->relatedTarget);
+        break;
+      case NS_XUL_COMMAND_EVENT:
+        cb.NoteXPCOMChild(
+          NS_STATIC_CAST(nsXULCommandEvent*, tmp->mEvent)->sourceEvent);
+        break;
+      case NS_MUTATION_EVENT:
+        cb.NoteXPCOMChild(
+          NS_STATIC_CAST(nsMutationEvent*, tmp->mEvent)->mRelatedNode);
+        break;
+      default:
+        break;
+    }
+  }
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPresContext)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTmpRealOriginalTarget)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mExplicitOriginalTarget)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // nsIDOMEventInterface
 NS_METHOD nsDOMEvent::GetType(nsAString& aType)
