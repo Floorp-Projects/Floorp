@@ -73,10 +73,6 @@
 #include "nsCRT.h"
 #include "nsFontMetricsPS.h"
 
-#ifndef NS_BUILD_ID
-#include "nsBuildID.h"
-#endif /* !NS_BUILD_ID */
-
 #include "nsPrintfCString.h"
 
 #include "prenv.h"
@@ -413,8 +409,8 @@ nsPostScriptObj::write_prolog(FILE *aHandle, PRBool aFTPEnable)
     fpCString(fWidth).get(),
     fpCString(fHeight).get());
 
-  fprintf(f, "%%%%Creator: Mozilla PostScript module (%s/%lu)\n",
-             "rv:" MOZILLA_VERSION, (unsigned long)NS_BUILD_ID);
+  fprintf(f, "%%%%Creator: Mozilla PostScript module (%s)\n",
+             "rv:" MOZILLA_VERSION);
   fprintf(f, "%%%%DocumentData: Clean8Bit\n");
   fprintf(f, "%%%%DocumentPaperSizes: %s\n", mPrintSetup->paper_name);
   fprintf(f, "%%%%Orientation: %s\n",

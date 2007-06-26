@@ -50,12 +50,12 @@
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
 #include "nsCRTGlue.h"
-#include "nsBuildID.h"
 #include "nsStringAPI.h"
 #include "nsServiceManagerUtils.h"
 #include "plstr.h"
 #include "prprf.h"
 #include "prenv.h"
+#include "nsINIParser.h"
 
 /**
  * Output a string to the user.  This method is really only meant to be used to
@@ -110,8 +110,11 @@ static PRBool IsArg(const char* arg, const char* s)
   return PR_FALSE;
 }
 
-static void Usage()
+static void Usage(const char *argv0)
 {
+    nsCAutoString milestone;
+    GetGREVersion(argv0, &milestone, nsnull);
+
     // display additional information (XXX make localizable?)
     Output(PR_FALSE,
            "Mozilla XULRunner %s\n\n"
@@ -139,7 +142,7 @@ static void Usage()
            "\n"
            "APP-OPTIONS\n"
            "  Application specific options.\n",
-           GRE_BUILD_ID);
+           milestone.get());
 }
 
 static nsresult
@@ -159,6 +162,41 @@ GetXULRunnerDir(const char *argv0, nsIFile* *aResult)
     Output(PR_TRUE, "Could not find XULRunner installation dir.\n");
   }
   return rv;
+}
+
+nsresult
+GetGREVersion(const char *argv0,
+              nsACString *aMilestone,
+              nsACString *aVersion)
+{
+  if (aMilestone)
+    aMilestone->Assign("<Error>");
+  if (aVersion)
+    aVersion->Assign("<Error>");
+
+  nsCOMPtr<nsILocalFile> iniFile;
+  nsresult rv = XRE_GetBinaryPath(argv0, getter_AddRefs(iniFile));
+  if (NS_FAILED(rv))
+    return rv;
+
+  iniFile->SetNativeLeafName(NS_LITERAL_CSTRING("platform.ini"));
+
+  nsINIParser parser;
+  rv = parser.Init(iniFile);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (aMilestone) {
+    rv = parser.GetString("Build", "Milestone", *aMilestone);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+  if (aVersion) {
+    rv = parser.GetString("Build", "BuildID", *aVersion);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+  return NS_OK;
 }
 
 static int
@@ -242,13 +280,17 @@ int main(int argc, char* argv[])
                    IsArg(argv[1], "help") ||
                    IsArg(argv[1], "?")))
   {
-    Usage();
+    Usage(argv[0]);
     return 0;
   }
 
   if (argc == 2 && (IsArg(argv[1], "v") || IsArg(argv[1], "version")))
   {
-    Output(PR_FALSE, "Mozilla XULRunner %s\n", GRE_BUILD_ID);
+    nsCAutoString milestone;
+    nsCAutoString version;
+    GetGREVersion(argv[0], &milestone, &version);
+    Output(PR_FALSE, "Mozilla XULRunner %s - %s\n",
+           milestone.get(), version.get());
     return 0;
   }
 
@@ -257,7 +299,7 @@ int main(int argc, char* argv[])
     PRBool registerUser   = IsArg(argv[1], "register-user");
     if (registerGlobal || registerUser) {
       if (argc != 2) {
-        Usage();
+        Usage(argv[0]);
         return 1;
       }
 
@@ -275,7 +317,7 @@ int main(int argc, char* argv[])
     registerUser   = IsArg(argv[1], "unregister-user");
     if (registerGlobal || registerUser) {
       if (argc != 2) {
-        Usage();
+        Usage(argv[0]);
         return 1;
       }
 
@@ -289,7 +331,7 @@ int main(int argc, char* argv[])
 
     if (IsArg(argv[1], "find-gre")) {
       if (argc != 3) {
-        Usage();
+        Usage(argv[0]);
         return 1;
       }
 
@@ -314,17 +356,21 @@ int main(int argc, char* argv[])
 
     if (IsArg(argv[1], "gre-version")) {
       if (argc != 2) {
-        Usage();
+        Usage(argv[0]);
         return 1;
       }
 
-      printf("%s\n", GRE_BUILD_ID);
+      nsCAutoString milestone;
+      nsresult rv = GetGREVersion(argv[0], &milestone, nsnull);
+      if (NS_FAILED(rv))
+        return 1;
+      printf("%s\n", milestone.get());
       return 0;
     }
 
     if (IsArg(argv[1], "install-app")) {
       if (argc < 3 || argc > 5) {
-        Usage();
+        Usage(argv[0]);
         return 1;
       }
 
@@ -357,13 +403,13 @@ int main(int argc, char* argv[])
 
   if (!(appDataFile && *appDataFile)) {
     if (argc < 2) {
-      Usage();
+      Usage(argv[0]);
       return 1;
     }
 
     if (IsArg(argv[1], "app")) {
       if (argc == 2) {
-        Usage();
+        Usage(argv[0]);
         return 1;
       }
       argv[1] = argv[0];
