@@ -40,7 +40,7 @@
 #ifndef nsCookieService_h__
 #define nsCookieService_h__
 
-#include "nsICookieServiceInternal.h"
+#include "nsICookieService.h"
 #include "nsICookieManager.h"
 #include "nsICookieManager2.h"
 #include "nsIObserver.h"
@@ -144,7 +144,7 @@ class nsCookieEntry : public PLDHashEntryHdr
  * class declaration
  ******************************************************************************/
 
-class nsCookieService : public nsICookieServiceInternal
+class nsCookieService : public nsICookieService
                       , public nsICookieManager2
                       , public nsIObserver
                       , public nsSupportsWeakReference
@@ -154,7 +154,6 @@ class nsCookieService : public nsICookieServiceInternal
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
     NS_DECL_NSICOOKIESERVICE
-    NS_DECL_NSICOOKIESERVICEINTERNAL
     NS_DECL_NSICOOKIEMANAGER
     NS_DECL_NSICOOKIEMANAGER2
 
@@ -169,11 +168,9 @@ class nsCookieService : public nsICookieServiceInternal
     nsresult                      CreateTable();
     nsresult                      ImportCookies();
     nsresult                      Read();
-    void                          GetCookieList(nsIURI *aHostURI, nsIURI *aFirstURI, nsIChannel *aChannel, const nsACString *aName, PRBool isHttpBound, nsAutoVoidArray &aResult);
-    char*                         CookieStringFromArray(const nsAutoVoidArray& aCookieList, nsIURI *aHostURI);
+    void                          GetCookieInternal(nsIURI *aHostURI, nsIURI *aFirstURI, nsIChannel *aChannel, PRBool aHttpBound, char **aCookie);
     nsresult                      SetCookieStringInternal(nsIURI *aHostURI, nsIURI *aFirstURI, nsIPrompt *aPrompt, const char *aCookieHeader, const char *aServerTime, nsIChannel *aChannel, PRBool aFromHttp);
     PRBool                        SetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, nsDependentCString &aCookieHeader, PRInt64 aServerTime, PRBool aFromHttp);
-    void                          CheckAndAdd(nsIURI *aHostURI, nsIChannel *aChannel, nsCookieAttributes &aAttributes, const nsAFlatCString &aCookieHeader, PRBool aFromHttp);
     void                          AddInternal(nsCookie *aCookie, PRInt64 aCurrentTime, nsIURI *aHostURI, const char *aCookieHeader, PRBool aFromHttp);
     void                          RemoveCookieFromList(nsListIter &aIter);
     PRBool                        AddCookieToList(nsCookie *aCookie, PRBool aWriteToDB = PR_TRUE);
