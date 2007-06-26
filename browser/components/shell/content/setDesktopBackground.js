@@ -21,6 +21,7 @@
 # Contributor(s):
 #   Blake Ross <blake@blakeross.com>
 #   Ben Goodger <ben@mozilla.org>
+#   Dao Gottwald <dao@design-noir.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,7 +37,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
-const kXUL_NS            = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const kXUL_NS           = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const kHTML_NS          = "http://www.w3.org/1999/xhtml";
 const kIShellService    = Components.interfaces.nsIShellService;
 #ifdef XP_MACOSX
 const kIMacShellService = Components.interfaces.nsIMacShellService;
@@ -121,7 +123,7 @@ var gSetBackground = {
     var r = (color & rMask) >> 16;
     var g = (color & gMask) >> 8;
     var b = (color & bMask);
-    this._backgroundColor = this._rgbToHex(r, g, b);
+    this.updateColor(this._rgbToHex(r, g, b));
 
     var colorpicker = document.getElementById("desktopColor");
     colorpicker.color = this._backgroundColor;
@@ -175,9 +177,7 @@ var gSetBackground = {
   {
 #ifndef XP_MACOSX
     this._backgroundColor = color;
-    
-    if (this._position != kIShellService.BACKGROUND_TILE)
-      this._monitor.style.backgroundColor = color;
+    this._monitor.style.backgroundColor = color;
 #endif
   },
   
@@ -217,8 +217,6 @@ var gSetBackground = {
 
   _stretchImage: function ()
   {
-    this.updateColor(this._backgroundColor);
-
     var img = this._createImage();
     img.width = this._monitor.boxObject.width;
     img.height = this._monitor.boxObject.height;
@@ -227,20 +225,26 @@ var gSetBackground = {
 
   _tileImage: function ()
   {
-    var bundle = document.getElementById("backgroundBundle");
+    var canvas = document.createElementNS(kHTML_NS, "canvas");
+    var width = this._monitor.boxObject.width;
+    var height = this._monitor.boxObject.height;
+    canvas.width = width;
+    canvas.height = height;
 
-    this._monitor.style.backgroundColor = "white";
+    var tileWidth = Math.floor(this._image.naturalWidth * width / screen.width);
+    var tileHeight = Math.floor(this._image.naturalHeight * height / screen.height);
+    var ctx = canvas.getContext("2d");
+    for (var x = 0; x < width; x += tileWidth) {
+      for (var y = 0; y < height; y += tileHeight) {
+        ctx.drawImage(this._image, x, y, tileWidth, tileHeight);
+      }
+    }
 
-    var text = document.createElementNS(kXUL_NS, "label");
-    text.setAttribute("id", "noPreviewAvailable");
-    text.setAttribute("value", bundle.getString("DesktopBackgroundNoPreview"));
-    this._monitor.appendChild(text);
+    this._monitor.appendChild(canvas);
   },
 
   _centerImage: function ()
   {
-    this.updateColor(this._backgroundColor);
-
     var img = this._createImage();
     // Use naturalHeight/Width here so we don't scale an image improperly in
     // the preview window if the image is resized in the browser window.
