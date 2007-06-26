@@ -184,6 +184,7 @@ LoginManager.prototype = {
         var observerService = Cc["@mozilla.org/observer-service;1"]
                                 .getService(Ci.nsIObserverService);
         observerService.addObserver(this._observer, "earlyformsubmit", false);
+        observerService.addObserver(this._observer, "xpcom-shutdown", false);
 
         // WebProgressListener for getting notification of new doc loads.
         var progress = Cc["@mozilla.org/docloaderservice;1"]
@@ -261,6 +262,13 @@ LoginManager.prototype = {
                 } else {
                     this._pwmgr.log("Oops! Pref not handled, change ignored.");
                 }
+            } else if (topic == "xpcom-shutdown") {
+                for (i in this._pwmgr) {
+                  try {
+                    this._pwmgr[i] = null;
+                  } catch(ex) {}
+                }
+                this._pwmgr = null;
             } else {
                 this._pwmgr.log("Oops! Unexpected notification: " + topic);
             }
