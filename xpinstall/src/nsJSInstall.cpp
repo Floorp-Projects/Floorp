@@ -41,6 +41,7 @@
 #include "nscore.h"
 #include "nsIScriptContext.h"
 
+#include "nsBuildID.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsInstall.h"
@@ -1854,6 +1855,8 @@ static JSConstDoubleSpec install_constants[] =
     { CHROME_PROFILE,                        "PROFILE_CHROME"               },
     { CHROME_DELAYED,                        "DELAYED_CHROME"               },
     { CHROME_SELECT,                         "SELECT_CHROME"                },
+
+    { NS_BUILD_ID,                           "buildID"                      },
 
     {0}
 };
