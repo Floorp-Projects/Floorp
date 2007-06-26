@@ -49,6 +49,7 @@
 #include "nsIVariant.h"
 #include "nsString.h"
 #include "nsVariant.h"
+#include "nsNavBookmarks.h"
 
 const PRInt32 nsAnnotationService::kAnnoIndex_ID = 0;
 const PRInt32 nsAnnotationService::kAnnoIndex_PageOrItem = 1;
@@ -1624,6 +1625,14 @@ nsAnnotationService::StartSetAnnotation(PRInt64 aFkId,
                                         PRUint16 aType,
                                         mozIStorageStatement** aStatement)
 {
+  // Disallow setting item-annotations on invalid item ids
+  if (aIsItemAnnotation) {
+    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+    NS_ENSURE_STATE(bookmarks);
+    if (!bookmarks->ItemExists(aFkId))
+      return NS_ERROR_INVALID_ARG;
+  }
+
   PRBool hasAnnotation;
   PRInt64 annotationID;
   nsresult rv = HasAnnotationInternal(aFkId, aIsItemAnnotation, aName,
