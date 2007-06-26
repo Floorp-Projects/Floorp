@@ -855,7 +855,7 @@ nsCookieService::SetCookieValue(nsIURI *aHostURI,
   attributes.isSecure = PR_FALSE;
   aHostURI->SchemeIs("https", &attributes.isSecure);
 
-  CheckAndAdd(aHostURI, aChannel, attributes, EmptyCString());
+  CheckAndAdd(aHostURI, aChannel, attributes, EmptyCString(), PR_FALSE);
   return NS_OK;
 }
 
@@ -874,7 +874,7 @@ nsCookieService::SetCookieString(nsIURI     *aHostURI,
       httpInternal->GetDocumentURI(getter_AddRefs(firstURI));
   }
 
-  return SetCookieStringFromHttp(aHostURI, firstURI, aPrompt, aCookieHeader, nsnull, aChannel);
+  return SetCookieStringInternal(aHostURI, firstURI, aPrompt, aCookieHeader, nsnull, aChannel, PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -884,6 +884,18 @@ nsCookieService::SetCookieStringFromHttp(nsIURI     *aHostURI,
                                          const char *aCookieHeader,
                                          const char *aServerTime,
                                          nsIChannel *aChannel) 
+{
+  return SetCookieStringInternal(aHostURI, aFirstURI, aPrompt, aCookieHeader, aServerTime, aChannel, PR_TRUE);
+}
+
+nsresult
+nsCookieService::SetCookieStringInternal(nsIURI     *aHostURI,
+                                         nsIURI     *aFirstURI,
+                                         nsIPrompt  *aPrompt,
+                                         const char *aCookieHeader,
+                                         const char *aServerTime,
+                                         nsIChannel *aChannel,
+                                         PRBool      aFromHttp) 
 {
   if (!aHostURI) {
     COOKIE_LOGFAILURE(SET_COOKIE, nsnull, aCookieHeader, "host URI is null");
@@ -919,7 +931,7 @@ nsCookieService::SetCookieStringFromHttp(nsIURI     *aHostURI,
  
   // switch to a nice string type now, and process each cookie in the header
   nsDependentCString cookieHeader(aCookieHeader);
-  while (SetCookieInternal(aHostURI, aChannel, cookieHeader, serverTime));
+  while (SetCookieInternal(aHostURI, aChannel, cookieHeader, serverTime, aFromHttp));
 
   return NS_OK;
 }
@@ -1030,7 +1042,7 @@ nsCookieService::Add(const nsACString &aDomain,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  AddInternal(cookie, currentTimeInUsec / PR_USEC_PER_SEC, nsnull, nsnull);
+  AddInternal(cookie, currentTimeInUsec / PR_USEC_PER_SEC, nsnull, nsnull, PR_TRUE);
   return NS_OK;
 }
 
@@ -1284,7 +1296,8 @@ PRBool
 nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
                                    nsIChannel         *aChannel,
                                    nsDependentCString &aCookieHeader,
-                                   PRInt64             aServerTime)
+                                   PRInt64             aServerTime,
+                                   PRBool              aFromHttp)
 {
   // create a stack-based nsCookieAttributes, to store all the
   // attributes parsed from the cookie
@@ -1309,7 +1322,7 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
   cookieAttributes.isSession = GetExpiry(cookieAttributes, aServerTime,
                                          currentTimeInUsec / PR_USEC_PER_SEC);
 
-  CheckAndAdd(aHostURI, aChannel, cookieAttributes, savedCookieHeader);
+  CheckAndAdd(aHostURI, aChannel, cookieAttributes, savedCookieHeader, aFromHttp);
 
   return newCookie;
 }
@@ -1318,7 +1331,8 @@ void
 nsCookieService::CheckAndAdd(nsIURI               *aHostURI,
                              nsIChannel           *aChannel,
                              nsCookieAttributes   &aAttributes,
-                             const nsAFlatCString &aCookieHeader)
+                             const nsAFlatCString &aCookieHeader,
+                             PRBool                aFromHttp)
 {
   // reject cookie if it's over the size limit, per RFC2109
   if ((aAttributes.name.Length() + aAttributes.value.Length()) > kMaxBytesPerCookie) {
@@ -1381,7 +1395,7 @@ nsCookieService::CheckAndAdd(nsIURI               *aHostURI,
 
   // add the cookie to the list. AddInternal() takes care of logging.
   // we get the current time again here, since it may have changed during prompting
-  AddInternal(cookie, PR_Now() / PR_USEC_PER_SEC, aHostURI, aCookieHeader.get());
+  AddInternal(cookie, PR_Now() / PR_USEC_PER_SEC, aHostURI, aCookieHeader.get(), aFromHttp);
 }
 
 // this is a backend function for adding a cookie to the list, via SetCookie.
@@ -1393,7 +1407,8 @@ void
 nsCookieService::AddInternal(nsCookie   *aCookie,
                              PRInt64     aCurrentTime,
                              nsIURI     *aHostURI,
-                             const char *aCookieHeader)
+                             const char *aCookieHeader,
+                             PRBool      aFromHttp)
 {
   // start a transaction on the storage db, to optimize deletions/insertions.
   // transaction will automically commit on completion. if we already have a
@@ -1407,6 +1422,13 @@ nsCookieService::AddInternal(nsCookie   *aCookie,
   nsRefPtr<nsCookie> oldCookie;
   if (foundCookie) {
     oldCookie = matchIter.current;
+
+    // if the old cookie is httponly, make sure we're not coming from script
+    if (!aFromHttp && oldCookie->IsHttpOnly()) {
+      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "previously stored cookie is httponly; coming from script");
+      return;
+    }
+
     RemoveCookieFromList(matchIter);
 
     // check if the cookie has expired
@@ -1420,6 +1442,12 @@ nsCookieService::AddInternal(nsCookie   *aCookie,
     // check if cookie has already expired
     if (aCookie->Expiry() <= aCurrentTime) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "cookie has already expired");
+      return;
+    }
+
+    // if the new cookie is httponly, make sure we're not coming from script
+    if (!aFromHttp && aCookie->IsHttpOnly()) {
+      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "cookie is httponly; coming from script");
       return;
     }
 
