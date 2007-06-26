@@ -998,8 +998,10 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
   NS_ENSURE_ARG(!method.IsEmpty());
   NS_ENSURE_ARG(!url.IsEmpty());
 
-  // Disallow HTTP/1.1 TRACE method (see bug 302489).
-  if (method.LowerCaseEqualsASCII("trace")) {
+  // Disallow HTTP/1.1 TRACE method (see bug 302489)
+  // and MS IIS equivalent TRACK (see bug 381264)
+  if (method.LowerCaseEqualsASCII("trace") ||
+      method.LowerCaseEqualsASCII("track")) {
     return NS_ERROR_INVALID_ARG;
   }
 
