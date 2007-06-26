@@ -263,7 +263,7 @@ LoginManager.prototype = {
                     this._pwmgr.log("Oops! Pref not handled, change ignored.");
                 }
             } else if (topic == "xpcom-shutdown") {
-                for (i in this._pwmgr) {
+                for (let i in this._pwmgr) {
                   try {
                     this._pwmgr[i] = null;
                   } catch(ex) {}
