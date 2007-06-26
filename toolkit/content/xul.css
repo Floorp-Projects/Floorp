@@ -629,7 +629,7 @@ tab {
 }
 
 .tabbrowser-tabs > .tabbrowser-tab > .tab-close-button,
-.tabs-closebutton-box > .tabs-closebutton {
+.tabbrowser-tabs .tabs-closebutton-box > .tabs-closebutton {
   -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser-close-tab-button");
 }
 
