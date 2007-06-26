@@ -589,8 +589,7 @@ public:
      * breaks are the same as the old
      */
     virtual PRBool SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
-                                          PRPackedBool *aBreakBefore,
-                                          gfxContext *aRefContext);
+                                          PRPackedBool *aBreakBefore);
 
     /**
      * Layout provides PropertyProvider objects. These allow detection of
@@ -720,8 +719,7 @@ public:
      */
     virtual PRBool SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
                                  PRBool aLineBreakBefore, PRBool aLineBreakAfter,
-                                 gfxFloat *aAdvanceWidthDelta,
-                                 gfxContext *aRefContext);
+                                 gfxFloat *aAdvanceWidthDelta);
 
     /**
      * Finds the longest substring that will fit into the given width.
