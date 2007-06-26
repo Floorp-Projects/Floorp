@@ -46,6 +46,7 @@ bin/components/libjar50.so
 bin/@MOZ_APP_NAME@-bin
 bin/@MOZ_APP_NAME@
 bin/application.ini
+bin/platform.ini
 bin/mozilla-xremote-client
 bin/run-mozilla.sh
 bin/plugins/libnullplugin.so
