@@ -416,11 +416,6 @@ public:
                                               nsPoint aDelta,
                                               const nsRect& aCopyRect,
                                               nsRegion* aRepaintRegion);
-                                       
-  static nsresult CreateOffscreenContext(nsIDeviceContext* deviceContext,
-                                         nsIDrawingSurface* surface,
-                                         const nsRect& aRect,
-                                         nsIRenderingContext** aResult);
 
   /**
    * Compute the used z-index of aFrame; returns zero for elements to which
