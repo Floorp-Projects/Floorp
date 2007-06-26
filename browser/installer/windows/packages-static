@@ -48,8 +48,6 @@ bin\msvcr80.dll
 [browser]
 ; [Base Browser Files]
 bin\@MOZ_APP_NAME@.exe
-bin\application.ini
-bin\platform.ini
 bin\plugins\npnul32.dll
 bin\res\cmessage.txt
 bin\res\effective_tld_names.dat

@@ -1,3 +1,4 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,19 +12,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla XULRunner.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Benjamin Smedberg <benjamin@smedbergs.us>.
- *
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,21 +35,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsRegisterGRE_h__
-#define nsRegisterGRE_h__
+/*
+**
+** bdate.c: Possibly cross-platform date-based build number
+**          generator.  Output is YYJJJ, where YY == 2-digit
+**          year, and JJJ is the Julian date (day of the year).
+**
+** Author: briano@netscape.com
+**
+*/
 
-#include "nscore.h"
-class nsIFile;
-struct GREProperty;
+#include <stdio.h>
+#include <time.h>
 
-/**
- * @return PR_TRUE on success
- */
-NS_HIDDEN_(PRBool)
-RegisterXULRunner(PRBool aRegisterGlobally, nsIFile* aLocation,
-                  const GREProperty *aProperties, PRUint32 aPropertiesLen);
+#ifdef SUNOS4
+#include "sunos4.h"
+#endif
 
-NS_HIDDEN_(void)
-UnregisterXULRunner(PRBool aUnregisterGlobally, nsIFile* aLocation);
+void main(void)
+{
+	time_t t = time(NULL);
+	struct tm *tms;
 
-#endif // nsRegisterGRE_h__
+	tms = localtime(&t);
+	printf("500%02d%03d%02d\n", tms->tm_year, 1+tms->tm_yday, tms->tm_hour);
+	exit(0);
+}

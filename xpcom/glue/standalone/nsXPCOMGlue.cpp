@@ -42,6 +42,7 @@
 #include "nspr.h"
 #include "nsDebug.h"
 #include "nsIServiceManager.h"
+#include "nsGREDirServiceProvider.h"
 #include "nsXPCOMPrivate.h"
 #include "nsCOMPtr.h"
 #include <stdlib.h>
@@ -516,4 +517,69 @@ NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
 
     return xpcomFunctions.invokeByIndexFunc(that, methodIndex,
                                             paramCount, params);
+}
+
+// Default GRE startup/shutdown code
+
+extern "C"
+nsresult GRE_Startup()
+{
+    const char* xpcomLocation = GRE_GetXPCOMPath();
+
+    // Startup the XPCOM Glue that links us up with XPCOM.
+    nsresult rv = XPCOMGlueStartup(xpcomLocation);
+    
+    if (NS_FAILED(rv)) {
+        NS_WARNING("gre: XPCOMGlueStartup failed");
+        return rv;
+    }
+
+#ifdef XP_WIN
+    // On windows we have legacy GRE code that does not load the GRE dependent
+    // libs (seamonkey GRE, not libxul)... add the GRE to the PATH.
+    // See bug 301043.
+
+    const char *lastSlash = strrchr(xpcomLocation, '\\');
+    if (lastSlash) {
+        int xpcomPathLen = lastSlash - xpcomLocation;
+        DWORD pathLen = GetEnvironmentVariable("PATH", nsnull, 0);
+
+        char *newPath = (char*) _alloca(xpcomPathLen + pathLen + 1);
+        strncpy(newPath, xpcomLocation, xpcomPathLen);
+        // in case GetEnvironmentVariable fails
+        newPath[xpcomPathLen] = ';';
+        newPath[xpcomPathLen + 1] = '\0';
+
+        GetEnvironmentVariable("PATH", newPath + xpcomPathLen + 1, pathLen);
+        SetEnvironmentVariable("PATH", newPath);
+    }
+#endif
+
+    nsGREDirServiceProvider *provider = new nsGREDirServiceProvider();
+    if ( !provider ) {
+        NS_WARNING("GRE_Startup failed");
+        XPCOMGlueShutdown();
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_ADDREF( provider );
+    rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, provider);
+    NS_RELEASE(provider);
+
+    if ( NS_FAILED(rv) || !servMan) {
+        NS_WARNING("gre: NS_InitXPCOM failed");
+        XPCOMGlueShutdown();
+        return rv;
+    }
+
+    return NS_OK;
+}
+
+extern "C"
+nsresult GRE_Shutdown()
+{
+    NS_ShutdownXPCOM(nsnull);
+    XPCOMGlueShutdown();
+    return NS_OK;
 }

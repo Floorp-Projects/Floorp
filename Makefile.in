@@ -203,4 +203,4 @@ deliver: splitsymbols rebase signnss
 
 endif # WINNT
 
-BUILDID = $(shell $(PYTHON) $(srcdir)/config/printconfigsetting.py $(DIST)/bin/application.ini App BuildID)
+BUILDID = $(shell cat $(DEPTH)/config/build_number)
