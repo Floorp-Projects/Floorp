@@ -157,7 +157,6 @@
 #include "nsCDefaultURIFixup.h"
 #include "nsEventDispatcher.h"
 #include "nsIObserverService.h"
-#include "nsIXULAppInfo.h"
 #include "nsNetUtil.h"
 
 #include "plbase64.h"
@@ -193,6 +192,8 @@
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gDOMLeakPRLog;
 #endif
+
+#include "nsBuildID.h"
 
 nsIFactory *nsGlobalWindow::sComputedDOMStyleFactory   = nsnull;
 
@@ -8246,18 +8247,8 @@ nsNavigator::GetOnLine(PRBool* aOnline)
 NS_IMETHODIMP
 nsNavigator::GetBuildID(nsAString& aBuildID)
 {
-  nsCOMPtr<nsIXULAppInfo> appInfo =
-    do_GetService("@mozilla.org/xre/app-info;1");
-  if (!appInfo)
-    return NS_ERROR_NOT_IMPLEMENTED;
+  aBuildID = NS_LITERAL_STRING(NS_STRINGIFY(NS_BUILD_ID));
 
-  nsCAutoString buildID;
-  nsresult rv = appInfo->GetAppBuildID(buildID);
-  if (NS_FAILED(rv))
-    return rv;
-
-  aBuildID.Truncate();
-  AppendASCIItoUTF16(buildID, aBuildID);
   return NS_OK;
 }
 

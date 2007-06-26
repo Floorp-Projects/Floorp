@@ -871,6 +871,12 @@ ifdef LOCALE_SRCDIR
 MAKE_JARS_FLAGS += -c $(LOCALE_SRCDIR)
 endif
 
+#
+# Add BUILD_ID to set of DEFINES
+#
+BUILD_ID := $(shell cat $(DEPTH)/config/build_number)
+DEFINES += -DBUILD_ID=$(BUILD_ID)
+
 ifeq (,$(filter WINCE WINNT OS2,$(OS_ARCH)))
 RUN_TEST_PROGRAM = $(DIST)/bin/run-mozilla.sh
 endif
