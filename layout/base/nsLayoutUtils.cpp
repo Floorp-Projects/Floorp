@@ -955,26 +955,6 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
   return NS_OK;
 }
 
-nsresult
-nsLayoutUtils::CreateOffscreenContext(nsIDeviceContext* deviceContext, nsIDrawingSurface* surface,
-                                      const nsRect& aRect, nsIRenderingContext** aResult)
-{
-  nsresult            rv;
-  nsIRenderingContext *context = nsnull;
-
-  rv = deviceContext->CreateRenderingContext(surface, context);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // always initialize clipping, linux won't draw images otherwise.
-  nsRect clip(0, 0, aRect.width, aRect.height);
-  context->SetClipRect(clip, nsClipCombine_kReplace);
-
-  context->Translate(-aRect.x, -aRect.y);
-  
-  *aResult = context;
-  return NS_OK;
-}
-
 PRInt32
 nsLayoutUtils::GetZIndex(nsIFrame* aFrame) {
   if (!aFrame->GetStyleDisplay()->IsPositioned())
