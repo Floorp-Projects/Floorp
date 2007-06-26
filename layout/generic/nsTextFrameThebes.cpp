@@ -910,20 +910,22 @@ public:
 
   class BreakSink : public nsILineBreakSink {
   public:
-    BreakSink(gfxTextRun* aTextRun, PRUint32 aOffsetIntoTextRun,
+    BreakSink(gfxTextRun* aTextRun, gfxContext* aContext, PRUint32 aOffsetIntoTextRun,
               PRBool aExistingTextRun) :
-                  mTextRun(aTextRun), mOffsetIntoTextRun(aOffsetIntoTextRun),
-                  mChangedBreaks(PR_FALSE), mExistingTextRun(aExistingTextRun) {}
+                mTextRun(aTextRun), mContext(aContext),
+                mOffsetIntoTextRun(aOffsetIntoTextRun),
+                mChangedBreaks(PR_FALSE), mExistingTextRun(aExistingTextRun) {}
 
     virtual void SetBreaks(PRUint32 aOffset, PRUint32 aLength,
                            PRPackedBool* aBreakBefore) {
       if (mTextRun->SetPotentialLineBreaks(aOffset + mOffsetIntoTextRun, aLength,
-                                           aBreakBefore)) {
+                                           aBreakBefore, mContext)) {
         mChangedBreaks = PR_TRUE;
       }
     }
 
     gfxTextRun*  mTextRun;
+    gfxContext*  mContext;
     PRUint32     mOffsetIntoTextRun;
     PRPackedBool mChangedBreaks;
     PRPackedBool mExistingTextRun;
@@ -1806,7 +1808,7 @@ HasCompressedLeadingWhitespace(nsTextFrame* aFrame, PRInt32 aContentEndOffset,
 }
 
 void
-BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun, 
+BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
                                                 PRBool aIsExistingTextRun,
                                                 PRBool aSuppressSink)
 {
@@ -1821,7 +1823,8 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
   for (i = 0; i < mMappedFlows.Length(); ++i) {
     MappedFlow* mappedFlow = &mMappedFlows[i];
     nsAutoPtr<BreakSink>* breakSink = mBreakSinks.AppendElement(
-      new BreakSink(aTextRun, mappedFlow->mTransformedTextOffset, aIsExistingTextRun));
+      new BreakSink(aTextRun, mContext,
+                    mappedFlow->mTransformedTextOffset, aIsExistingTextRun));
     if (!breakSink || !*breakSink)
       return;
     PRUint32 offset = mappedFlow->mTransformedTextOffset;
@@ -5566,10 +5569,12 @@ nsTextFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
     }
   }
 
+  gfxContext* ctx = NS_STATIC_CAST(gfxContext*,
+    aRC.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
   gfxFloat advanceDelta;
   mTextRun->SetLineBreaks(trimmedStart, trimmedEnd - trimmedStart,
                           (GetStateBits() & TEXT_START_OF_LINE) != 0, PR_TRUE,
-                          &advanceDelta);
+                          &advanceDelta, ctx);
 
   // aDeltaWidth is *subtracted* from our width.
   // If advanceDelta is positive then setting the line break made us longer,
