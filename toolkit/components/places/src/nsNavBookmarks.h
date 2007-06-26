@@ -110,6 +110,8 @@ public:
   nsresult BeginUpdateBatch();
   nsresult EndUpdateBatch();
 
+  PRBool ItemExists(PRInt64 aItemId);
+
 private:
   static nsNavBookmarks *sInstance;
 
