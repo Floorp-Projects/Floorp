@@ -57,7 +57,7 @@ public:
                           gfxFontGroup* aFontGroup, PRUint32 aFlags,
                           nsStyleContext** aStyles, PRBool aOwnsFactory = PR_TRUE);
 
-  virtual void RebuildTextRun(nsTransformedTextRun* aTextRun, gfxContext* aRefContext) = 0;
+  virtual void RebuildTextRun(nsTransformedTextRun* aTextRun) = 0;
 };
 
 /**
@@ -66,7 +66,7 @@ public:
  */
 class nsFontVariantTextRunFactory : public nsTransformingTextRunFactory {
 public:
-  virtual void RebuildTextRun(nsTransformedTextRun* aTextRun, gfxContext* aRefContext);
+  virtual void RebuildTextRun(nsTransformedTextRun* aTextRun);
 };
 
 /**
@@ -87,7 +87,7 @@ public:
     : mInnerTransformingTextRunFactory(aInnerTransformingTextRunFactory),
       mAllUppercase(aAllUppercase) {}
 
-  virtual void RebuildTextRun(nsTransformedTextRun* aTextRun, gfxContext* aRefContext);
+  virtual void RebuildTextRun(nsTransformedTextRun* aTextRun);
 
 protected:
   nsAutoPtr<nsTransformingTextRunFactory> mInnerTransformingTextRunFactory;

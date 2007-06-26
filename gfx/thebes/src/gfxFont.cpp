@@ -686,8 +686,7 @@ gfxTextRun::Clone(const gfxTextRunFactory::Parameters *aParams, const void *aTex
 
 PRBool
 gfxTextRun::SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
-                                   PRPackedBool *aBreakBefore,
-                                   gfxContext *aRefContext)
+                                   PRPackedBool *aBreakBefore)
 {
     NS_ASSERTION(aStart + aLength <= mCharacterCount, "Overflow");
 
@@ -1417,8 +1416,7 @@ gfxTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
 PRBool
 gfxTextRun::SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
                           PRBool aLineBreakBefore, PRBool aLineBreakAfter,
-                          gfxFloat *aAdvanceWidthDelta,
-                          gfxContext *aRefContext)
+                          gfxFloat *aAdvanceWidthDelta)
 {
     // Do nothing because our shaping does not currently take linebreaks into
     // account. There is no change in advance width.
