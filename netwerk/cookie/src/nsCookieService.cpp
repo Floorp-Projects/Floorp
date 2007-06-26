@@ -469,7 +469,7 @@ nsCookieService::InitDB()
         // they don't, we're dropping the table anyway).
         nsCAutoString stmtString(NS_LITERAL_CSTRING("PRAGMA user_version="));
         stmtString.AppendInt(COOKIES_SCHEMA_VERSION);
-        nsresult rv = mDBConn->ExecuteSimpleSQL(stmtString);
+        rv = mDBConn->ExecuteSimpleSQL(stmtString);
         NS_ENSURE_SUCCESS(rv, rv);
 
         // set this to a large number, to force the downgrade codepath
