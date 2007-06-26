@@ -38,7 +38,6 @@
 
 #include "nsLayoutStatics.h"
 #include "nsContentCID.h"
-#include "nsContentHTTPStartup.h"
 #include "nsContentDLF.h"
 #include "nsContentPolicyUtils.h"
 #include "nsDataDocumentContentPolicy.h"
@@ -517,7 +516,6 @@ MAKE_CTOR(CreateXULPopupListener,         nsIXULPopupListener,         NS_NewXUL
 MAKE_CTOR(CreateXTFService,               nsIXTFService,               NS_NewXTFService)
 MAKE_CTOR(CreateXMLContentBuilder,        nsIXMLContentBuilder,        NS_NewXMLContentBuilder)
 #endif
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentHTTPStartup)
 MAKE_CTOR(CreateContentDLF,               nsIDocumentLoaderFactory,    NS_NewContentDocumentLoaderFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCSSOMFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsInspectorCSSUtils)
@@ -1217,13 +1215,6 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_XMLCONTENTBUILDER_CONTRACTID,
     CreateXMLContentBuilder },
 #endif
-
-  { "Content HTTP Startup Listener",
-    NS_CONTENTHTTPSTARTUP_CID,
-    NS_CONTENTHTTPSTARTUP_CONTRACTID,
-    nsContentHTTPStartupConstructor,
-    nsContentHTTPStartup::RegisterHTTPStartup,
-    nsContentHTTPStartup::UnregisterHTTPStartup },
 
   { "Document Loader Factory",
     NS_CONTENT_DOCUMENT_LOADER_FACTORY_CID,

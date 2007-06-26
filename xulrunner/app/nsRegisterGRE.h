@@ -39,6 +39,7 @@
 #define nsRegisterGRE_h__
 
 #include "nscore.h"
+#include "nsStringAPI.h"
 class nsIFile;
 struct GREProperty;
 
@@ -51,5 +52,10 @@ RegisterXULRunner(PRBool aRegisterGlobally, nsIFile* aLocation,
 
 NS_HIDDEN_(void)
 UnregisterXULRunner(PRBool aUnregisterGlobally, nsIFile* aLocation);
+
+// Shared helper function to get the GRE milestone and optionally buildid
+// from platform.ini
+NS_HIDDEN_(nsresult)
+GetGREVersion(const char *argv0, nsACString *aMilestone, nsACString *aVersion);
 
 #endif // nsRegisterGRE_h__

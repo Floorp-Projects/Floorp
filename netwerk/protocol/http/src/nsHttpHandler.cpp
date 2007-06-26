@@ -75,6 +75,8 @@
 #include "nsNetUtil.h"
 #include "nsIOService.h"
 
+#include "nsIXULAppInfo.h"
+
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #include <sys/utsname.h>
 #endif
@@ -164,6 +166,7 @@ nsHttpHandler::nsHttpHandler()
     , mPhishyUserPassLength(1)
     , mLastUniqueID(NowInSeconds())
     , mSessionStartTime(0)
+    , mProduct("Gecko")
     , mUserAgentIsDirty(PR_TRUE)
     , mUseCache(PR_TRUE)
     , mSendSecureXSiteReferrer(PR_TRUE)
@@ -257,6 +260,11 @@ nsHttpHandler::Init()
 
     rv = InitConnectionMgr();
     if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIXULAppInfo> appInfo =
+        do_GetService("@mozilla.org/xre/app-info;1");
+    if (appInfo)
+        appInfo->GetPlatformBuildID(mProductSub);
 
     // Startup the http category
     // Bring alive the objects in the http-protocol-startup category
@@ -816,16 +824,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     // Gather product values.
-    if (PREF_CHANGED(UA_PREF("product"))) {
-        prefs->GetCharPref(UA_PREF_PREFIX "product",
-            getter_Copies(mProduct));
-        mUserAgentIsDirty = PR_TRUE;
-    }
-    if (PREF_CHANGED(UA_PREF("productSub"))) {
-        prefs->GetCharPref(UA_PREF("productSub"),
-            getter_Copies(mProductSub));
-        mUserAgentIsDirty = PR_TRUE;
-    }
     if (PREF_CHANGED(UA_PREF("productComment"))) {
         prefs->GetCharPref(UA_PREF("productComment"),
             getter_Copies(mProductComment));
