@@ -61,7 +61,8 @@ public:
                        const PRUint32 aFlags, nsStyleContext** aStyles,
                        PRBool aOwnsFactory)
     : gfxTextRun(aParams, aString, aLength, aFontGroup, aFlags),
-      mFactory(aFactory), mOwnsFactory(aOwnsFactory)
+      mFactory(aFactory), mRefContext(aParams->mContext),
+      mOwnsFactory(aOwnsFactory)
   {
     PRUint32 i;
     for (i = 0; i < aLength; ++i) {
@@ -79,20 +80,18 @@ public:
   }
 
   virtual PRBool SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
-                                        PRPackedBool* aBreakBefore,
-                                        gfxContext* aRefContext)
+                                        PRPackedBool* aBreakBefore)
   {
-    PRBool changed = gfxTextRun::SetPotentialLineBreaks(aStart, aLength,
-        aBreakBefore, aRefContext);
-    mFactory->RebuildTextRun(this, aRefContext);
+    PRBool changed = gfxTextRun::SetPotentialLineBreaks(aStart, aLength, aBreakBefore);
+    mFactory->RebuildTextRun(this);
     return changed;
   }
   virtual PRBool SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
                                PRBool aLineBreakBefore, PRBool aLineBreakAfter,
-                               gfxFloat* aAdvanceWidthDelta,
-                               gfxContext* aRefContext);
+                               gfxFloat* aAdvanceWidthDelta);
 
   nsTransformingTextRunFactory       *mFactory;
+  nsRefPtr<gfxContext>                mRefContext;
   nsTArray<PRUint32>                  mLineBreaks;
   nsTArray<nsRefPtr<nsStyleContext> > mStyles;
   PRPackedBool                        mOwnsFactory;
@@ -101,8 +100,7 @@ public:
 PRBool
 nsTransformedTextRun::SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
                                     PRBool aLineBreakBefore, PRBool aLineBreakAfter,
-                                    gfxFloat* aAdvanceWidthDelta,
-                                    gfxContext* aRefContext)
+                                    gfxFloat* aAdvanceWidthDelta)
 {
   nsTArray<PRUint32> newBreaks;
   PRUint32 i;
@@ -143,7 +141,7 @@ nsTransformedTextRun::SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
   mLineBreaks.SwapElements(newBreaks);
 
   gfxFloat currentAdvance = GetAdvanceWidth(aStart, aLength, nsnull);
-  mFactory->RebuildTextRun(this, aRefContext);
+  mFactory->RebuildTextRun(this);
   if (aAdvanceWidthDelta) {
     *aAdvanceWidthDelta = GetAdvanceWidth(aStart, aLength, nsnull) - currentAdvance;
   }
@@ -162,7 +160,7 @@ nsTransformingTextRunFactory::MakeTextRun(const PRUnichar* aString, PRUint32 aLe
   if (!textRun)
     return nsnull;
 
-  RebuildTextRun(textRun, aParams->mContext);
+  RebuildTextRun(textRun);
   return textRun;
 }
 
@@ -312,11 +310,10 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
 }
 
 static gfxTextRunFactory::Parameters
-GetParametersForInner(nsTransformedTextRun* aTextRun, PRUint32* aFlags,
-    gfxContext* aRefContext)
+GetParametersForInner(nsTransformedTextRun* aTextRun, PRUint32* aFlags)
 {
   gfxTextRunFactory::Parameters params =
-    { aRefContext, nsnull, nsnull,
+    { aTextRun->mRefContext, nsnull, nsnull,
       nsnull, nsnull, PRUint32(aTextRun->GetAppUnitsPerDevUnit())
     };
   *aFlags = aTextRun->GetFlags() & ~gfxFontGroup::TEXT_IS_PERSISTENT;
@@ -324,8 +321,7 @@ GetParametersForInner(nsTransformedTextRun* aTextRun, PRUint32* aFlags,
 }
 
 void
-nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
-    gfxContext* aRefContext)
+nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun)
 {
   nsICaseConversion* converter = nsTextTransformer::GetCaseConv();
   if (!converter)
@@ -339,8 +335,7 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
     return;
 
   PRUint32 flags;
-  gfxTextRunFactory::Parameters innerParams =
-      GetParametersForInner(aTextRun, &flags, aRefContext);
+  gfxTextRunFactory::Parameters innerParams = GetParametersForInner(aTextRun, &flags);
   // The text outlives the child and inner textruns
   flags |= gfxFontGroup::TEXT_IS_PERSISTENT;
 
@@ -409,8 +404,7 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       // (and also child will be shaped appropriately)
       NS_ASSERTION(canBreakBeforeArray.Length() == i - runStart,
                    "lost some break-before values?");
-      child->SetPotentialLineBreaks(0, canBreakBeforeArray.Length(),
-          canBreakBeforeArray.Elements(), aRefContext);
+      child->SetPotentialLineBreaks(0, canBreakBeforeArray.Length(), canBreakBeforeArray.Elements());
       AppendTextRun(aTextRun, child, runStart);
 
       runStart = i;
@@ -433,8 +427,7 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
 }
 
 void
-nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
-    gfxContext* aRefContext)
+nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun)
 {
   nsICaseConversion* converter = nsTextTransformer::GetCaseConv();
   if (!converter)
@@ -514,8 +507,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
                "lost track of line breaks somehow");
 
   PRUint32 flags;
-  gfxTextRunFactory::Parameters innerParams =
-      GetParametersForInner(aTextRun, &flags, aRefContext);
+  gfxTextRunFactory::Parameters innerParams = GetParametersForInner(aTextRun, &flags);
   gfxFontGroup* fontGroup = aTextRun->GetFontGroup();
 
   nsAutoPtr<gfxTextRun> child;
@@ -539,8 +531,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   // (and also child will be shaped appropriately)
   NS_ASSERTION(convertedString.Length() == canBreakBeforeArray.Length(),
                "Dropped characters or break-before values somewhere!");
-  child->SetPotentialLineBreaks(0, canBreakBeforeArray.Length(),
-      canBreakBeforeArray.Elements(), aRefContext);
+  child->SetPotentialLineBreaks(0, canBreakBeforeArray.Length(), canBreakBeforeArray.Elements());
   // Now merge multiple characters into one multi-glyph character as required
   MergeCharactersInTextRun(aTextRun, child, charsToMergeArray.Elements());
 }
