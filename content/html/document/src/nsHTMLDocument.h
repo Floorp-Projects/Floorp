@@ -59,6 +59,8 @@
 
 #include "nsICommandManager.h"
 
+class nsIEditor;
+class nsIEditorDocShell;
 class nsIParser;
 class nsIURI;
 class nsIMarkupDocumentViewer;
@@ -206,6 +208,13 @@ public:
                               PRBool aDocumentDefaultType,
                               nsIContent** aResult);
 #endif
+
+  nsresult ChangeContentEditableCount(nsIContent *aElement, PRInt32 aChange);
+
+  virtual PRBool IsEditingOn()
+  {
+    return mEditingState != eOff;
+  }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLDocument, nsDocument)
 
@@ -365,7 +374,19 @@ protected:
                                            PRBool& isBoolean,
                                            PRBool& boolValue);
   nsCOMPtr<nsICommandManager> mMidasCommandManager;
-  PRBool                      mEditingIsOn;
+
+  nsresult TurnEditingOff();
+  nsresult EditingStateChanged();
+
+  PRUint32 mContentEditableCount;
+  enum EditingState {
+    eOff = 0,
+    eDesignMode,
+    eContentEditable
+  };
+  EditingState mEditingState;
+  PRPackedBool mScriptsEnabled;
+  PRPackedBool mPluginsEnabled;
 
   nsresult   DoClipboardSecurityCheck(PRBool aPaste);
   static jsval       sCutCopyInternal_id;

@@ -129,6 +129,8 @@ protected:
   //  before creating an editor
   PRPackedBool    mCanCreateEditor; 
 
+  PRPackedBool    mInteractive;
+
   // True if scripts were enabled before the editor turned scripts
   // off, otherwise false.
   PRPackedBool    mScriptsEnabled;

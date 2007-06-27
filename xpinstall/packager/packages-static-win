@@ -258,6 +258,8 @@ bin\res\quirk.css
 bin\res\forms.css
 bin\res\platform-forms.css
 bin\res\EditorOverride.css
+bin\res\contenteditable.css
+bin\res\designmode.css
 bin\res\viewsource.css
 bin\res\mathml.css
 bin\res\arrow.gif

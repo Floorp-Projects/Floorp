@@ -1296,7 +1296,9 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsISelection *aSelection)
   nsresult res = mBody->GetFirstChild(getter_AddRefs(bodyChild));        
   while ((NS_SUCCEEDED(res)) && bodyChild)
   { 
-    if (mEditor->IsMozEditorBogusNode(bodyChild) || mEditor->IsEditable(bodyChild))
+    if (mEditor->IsMozEditorBogusNode(bodyChild) ||
+        !mEditor->IsEditable(mBody) ||
+        mEditor->IsEditable(bodyChild))
     {
       needsBogusContent = PR_FALSE;
       break;

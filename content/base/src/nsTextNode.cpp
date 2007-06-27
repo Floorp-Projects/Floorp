@@ -239,7 +239,9 @@ nsTextNode::List(FILE* out, PRInt32 aIndent) const
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  fprintf(out, "Text@%p refcount=%d<", this, mRefCnt.get());
+  fprintf(out, "Text@%p", this);
+  fprintf(out, " intrinsicstate=[%08x]", IntrinsicState());
+  fprintf(out, " refcount=%d<", mRefCnt.get());
 
   nsAutoString tmp;
   ToCString(tmp, 0, mText.GetLength());

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,15 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * The Original Code is Mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998-1999
+ * Disruptive Innovations.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Peter Van der Beken <peterv@propagandism.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,21 +36,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-*|* {
-  -moz-user-modify: read-write;
+::-moz-canvas {
+  cursor: text;
 }
 
-/* Styles to alter look of things in the Editor content window 
- *  that should NOT be removed when we display in completely WYSIWYG 
- *  "Browser Preview" mode.
- *  Anything that should change, like appearance of table borders
- *  and Named Anchors, should be placed in EditorContent.css instead of here.
-*/
+:focus:-moz-read-write :-moz-read-only {
+  -moz-user-select: all !important;
+}
 
-/* Primary cursor is text I-beam */
-
-::-moz-canvas, a:link {
-  cursor: text;
+input:-moz-read-write > .anonymous-div:-moz-read-only,
+textarea:-moz-read-write > .anonymous-div:-moz-read-only {
+  -moz-user-select: text !important;
 }
 
 /* Use default arrow over objects with size that 
@@ -57,15 +54,16 @@
    Override the browser's pointer cursor over links
 */
 
-img, img[usemap], area,
-object, object[usemap], 
-applet, hr, button, input, isindex, textarea, select,
+img:-moz-read-write, img:-moz-read-write[usemap], area:-moz-read-write,
+object:-moz-read-write, object:-moz-read-write[usemap], 
+applet:-moz-read-write, hr:-moz-read-write, button:-moz-read-write,
+isindex:-moz-read-write, select:-moz-read-write,
 a:link img, a:visited img, a:active img,
 a[name]:-moz-only-whitespace {
   cursor: default;
 }
 
-a:visited, a:active {
+:-moz-any-link:-moz-read-write {
   cursor: text;
   color : inherit;
 }
@@ -78,39 +76,50 @@ a:link img, a:visited img {
 /* We suppress user/author's prefs for link underline, 
    so we must set explicitly. This isn't good!
 */
-a:link {
+a:link:-moz-read-write {
   text-decoration: underline -moz-anchor-decoration;
   color: -moz-hyperlinktext;
 }
 
 /* Allow double-clicks on these widgets to open properties dialogs
    XXX except when the widget has disabled attribute */
-input, button, textarea {
+:-moz-read-write > input:-moz-read-only,
+:-moz-read-write > button:-moz-read-only,
+:-moz-read-write > textarea:-moz-read-only {
   -moz-user-select: all !important;
   -moz-user-input: auto !important;
   -moz-user-focus: none !important;
 }
 
 /* XXX Still need a better way of blocking other events to these widgets */
-select, input[disabled], input[type="checkbox"], input[type="radio"], input[type="file"] {
+select:-moz-read-write,
+:-moz-read-write > input[disabled],
+:-moz-read-write > input[type="checkbox"],
+:-moz-read-write > input[type="radio"],
+:-moz-read-write > input[type="file"],
+input[contenteditable="true"][disabled],
+input[contenteditable="true"][type="checkbox"],
+input[contenteditable="true"][type="radio"],
+input[contenteditable="true"][type="file"] {
   -moz-user-select: all !important;
   -moz-user-input: none !important;
   -moz-user-focus: none !important;
 }
 
-isindex[prompt]
+isindex:-moz-read-write[prompt]
 {
   -moz-user-select: none !important;
   -moz-user-input: none !important;
   -moz-user-focus: none !important;
 }
 
-input[type="hidden"] {
+:-moz-read-write > input[type="hidden"],
+input[contenteditable="true"][type="hidden"] {
   border: 1px solid black !important;
   visibility: visible !important;
 }
 
-label {
+label:-moz-read-write {
     -moz-user-select: all !important;
 }
 
@@ -118,13 +127,8 @@ label {
   -moz-user-select: text !important;
 }
 
-option {
+option:-moz-read-write {
   -moz-user-select: text !important;
-}
-
-#mozToc.readonly {
-  -moz-user-select: all !important;
-  -moz-user-input: none !important;
 }
 
 /* the following rules are for Image Resizing */

@@ -286,6 +286,8 @@ bin/res/quirk.css
 bin/res/forms.css
 bin/res/platform-forms.css
 bin/res/EditorOverride.css
+bin/res/contenteditable.css
+bin/res/designmode.css
 bin/res/table-add-column-after-active.gif
 bin/res/table-add-column-after-hover.gif
 bin/res/table-add-column-after.gif

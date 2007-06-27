@@ -457,6 +457,9 @@ public:
    */
   nsIContent* GetLimiter() { return mLimiter; }
 
+  nsIContent* GetAncestorLimiter() { return mAncestorLimiter; }
+  void SetAncestorLimiter(nsIContent *aLimiter);
+
   /** This will tell the frame selection that a double click has been pressed 
    *  so it can track abort future drags if inside the same selection
    *  @aDoubleDown has the double click down happened
@@ -631,6 +634,8 @@ private:
   PRInt32 mBatching;
     
   nsIContent *mLimiter;     //limit selection navigation to a child of this node.
+  nsIContent *mAncestorLimiter; // Limit selection navigation to a descendant of
+                                // this node.
   nsIPresShell *mShell;
 
   PRInt16 mSelectionChangeReason; // reason for notifications of selection changing
