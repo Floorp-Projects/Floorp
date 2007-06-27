@@ -68,7 +68,6 @@
 #include "nsEditorUtils.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIEventStateManager.h"
-#include "nsISelectionPrivate.h"
 
 //#define DEBUG_IME
 
@@ -224,8 +223,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       case nsIDOMKeyEvent::DOM_VK_TAB:
         if ((flags & nsIPlaintextEditor::eEditorSingleLineMask) ||
             (flags & nsIPlaintextEditor::eEditorPasswordMask)   ||
-            (flags & nsIPlaintextEditor::eEditorWidgetMask)     ||
-            (flags & nsIPlaintextEditor::eEditorAllowInteraction))
+            (flags & nsIPlaintextEditor::eEditorWidgetMask))
           return NS_OK; // let it be used for focus switching
 
         if (isAnyModifierKeyButShift)
@@ -1034,30 +1032,6 @@ IsTargetFocused(nsIDOMEventTarget* aTarget)
   return (focusedContent == content);
 }
 
-static nsIContent*
-FindEditableRoot(nsIContent *aContent)
-{
-  nsIDocument *document = aContent->GetCurrentDoc();
-  if (!document) {
-    return nsnull;
-  }
-
-  if (document->HasFlag(NODE_IS_EDITABLE)) {
-    return document->GetRootContent();
-  }
-
-  if (!aContent->HasFlag(NODE_IS_EDITABLE)) {
-    return nsnull;
-  }
-
-  nsIContent *parent, *content = aContent;
-  while ((parent = content->GetParent()) && parent->HasFlag(NODE_IS_EDITABLE)) {
-    content = parent;
-  }
-
-  return content;
-}
-
 nsresult
 nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
 {
@@ -1085,38 +1059,18 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
     mEditor->GetFlags(&flags);
     if (! (flags & nsIPlaintextEditor::eEditorDisabledMask))
     { // only enable caret and selection if the editor is not disabled
-      nsCOMPtr<nsIContent> content = do_QueryInterface(target);
-
-      nsIContent *editableRoot = content ? FindEditableRoot(content) : nsnull;
-
-      nsCOMPtr<nsISelectionController> selCon;
-      mEditor->GetSelectionController(getter_AddRefs(selCon));
-      nsCOMPtr<nsIPresShell> presShell = do_QueryInterface(selCon);
-      if (selCon && editableRoot)
+      nsCOMPtr<nsIEditor>editor = do_QueryInterface(mEditor);
+      if (editor)
       {
-        nsCOMPtr<nsISelection> selection;
-        selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                             getter_AddRefs(selection));
-
-        if (presShell && selection) {
-          nsCOMPtr<nsICaret> caret;
-          presShell->GetCaret(getter_AddRefs(caret));
-          if (caret) {
-            caret->SetCaretDOMSelection(selection);
-          }
-        }
-
-        const PRBool kIsReadonly = (flags & nsIPlaintextEditor::eEditorReadonlyMask) != 0;
-        selCon->SetCaretReadOnly(kIsReadonly);
-        selCon->SetCaretEnabled(PR_TRUE);
-        selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
-        selCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
-
-        nsCOMPtr<nsISelectionPrivate> selectionPrivate =
-          do_QueryInterface(selection);
-        if (selectionPrivate)
+        nsCOMPtr<nsISelectionController>selCon;
+        editor->GetSelectionController(getter_AddRefs(selCon));
+        if (selCon)
         {
-          selectionPrivate->SetAncestorLimiter(editableRoot);
+          const PRBool kIsReadonly = (flags & nsIPlaintextEditor::eEditorReadonlyMask) != 0;
+          selCon->SetCaretReadOnly(kIsReadonly);
+          selCon->SetCaretEnabled(PR_TRUE);
+          selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
+          selCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
         }
       }
     }
@@ -1151,16 +1105,6 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
       editor->GetSelectionController(getter_AddRefs(selCon));
       if (selCon)
       {
-        nsCOMPtr<nsISelection> selection;
-        selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                             getter_AddRefs(selection));
-
-        nsCOMPtr<nsISelectionPrivate> selectionPrivate =
-          do_QueryInterface(selection);
-        if (selectionPrivate) {
-          selectionPrivate->SetAncestorLimiter(nsnull);
-        }
-
         selCon->SetCaretEnabled(PR_FALSE);
 
         PRUint32 flags;

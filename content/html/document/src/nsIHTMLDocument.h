@@ -55,8 +55,8 @@ class nsIDOMHTMLBodyElement;
 class nsIScriptElement;
 
 #define NS_IHTMLDOCUMENT_IID \
-{ 0xf6aa3582, 0x67c3, 0x4f42, \
-  { 0xb6, 0xee, 0x89, 0x19, 0x24, 0x5c, 0x15, 0x89 } }
+{ 0xcfe72003, 0xcc90, 0x4624, \
+ { 0xb4, 0x1b, 0xc3, 0x14, 0x1d, 0x31, 0x7a, 0x71 } }
 
 
 /**
@@ -127,23 +127,6 @@ public:
    * the document that are of type nsIContent::eHTML_FORM_CONTROL).
    */
   virtual nsContentList* GetFormControls() = 0;
-
-  /**
-   * Should be called when an element's editable changes as a result of
-   * changing its contentEditable attribute/property.
-   *
-   * @param aElement the element for which the contentEditable
-   *                 attribute/property was changed
-   * @param aChange +1 if the contentEditable attribute/property was changed to
-   *                true, -1 if it was changed to false
-   */
-  virtual nsresult ChangeContentEditableCount(nsIContent *aElement,
-                                              PRInt32 aChange) = 0;
-
-  /**
-   * Returns whether the document is editable.
-   */
-  virtual PRBool IsEditingOn() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLDocument, NS_IHTMLDOCUMENT_IID)

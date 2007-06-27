@@ -772,11 +772,7 @@ nsWebShell::OnLinkClick(nsIContent* aContent,
   if (mFiredUnloadEvent) {
     return NS_OK;
   }
-
-  if (aContent->HasFlag(NODE_IS_EDITABLE)) {
-    return NS_OK;
-  }
-
+  
   nsCOMPtr<nsIRunnable> ev =
       new OnLinkClickEvent(this, aContent, aURI, aTargetSpec,
                            aPostDataStream, aHeadersDataStream);
@@ -801,10 +797,6 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
   }
 
   if (mFiredUnloadEvent) {
-    return NS_OK;
-  }
-
-  if (aContent->HasFlag(NODE_IS_EDITABLE)) {
     return NS_OK;
   }
 
@@ -903,10 +895,6 @@ nsWebShell::OnOverLink(nsIContent* aContent,
                        nsIURI* aURI,
                        const PRUnichar* aTargetSpec)
 {
-  if (aContent->HasFlag(NODE_IS_EDITABLE)) {
-    return NS_OK;
-  }
-
   nsCOMPtr<nsIWebBrowserChrome2> browserChrome2 = do_GetInterface(mTreeOwner);
   nsresult rv = NS_ERROR_FAILURE;
 

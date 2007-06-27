@@ -300,28 +300,6 @@ nsIContent::SetNativeAnonymous(PRBool aAnonymous)
   }
 }
 
-PRInt32
-nsIContent::IntrinsicState() const
-{
-  PRBool editable = HasFlag(NODE_IS_EDITABLE);
-  if (!editable) {
-    nsIDocument *doc = GetCurrentDoc();
-    if (doc) {
-      editable = doc->HasFlag(NODE_IS_EDITABLE);
-    }
-  }
-
-  return editable ? NS_EVENT_STATE_MOZ_READWRITE : NS_EVENT_STATE_MOZ_READONLY;
-}
-
-void
-nsIContent::UpdateEditableState()
-{
-  nsIContent *parent = GetParent();
-
-  SetEditableFlag(parent && parent->HasFlag(NODE_IS_EDITABLE));
-}
-
 //----------------------------------------------------------------------
 
 nsChildContentList::~nsChildContentList()
@@ -2023,8 +2001,6 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
       }
     }
   }
-
-  UpdateEditableState();
 
   // Now recurse into our kids
   PRUint32 i;

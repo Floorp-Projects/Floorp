@@ -238,11 +238,6 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  virtual void UpdateEditableState()
-  {
-    return UpdateEditableFormControlState();
-  }
-
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLInputElement,
                                                      nsGenericHTMLFormElement)
 
@@ -604,21 +599,6 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                        NS_EVENT_STATE_USERDISABLED |
                                        NS_EVENT_STATE_SUPPRESSED |
                                        NS_EVENT_STATE_LOADING);
-      }
-    }
-
-    // If readonly is changed for text and password we need to handle
-    // :read-only / :read-write
-    if (aNotify && aName == nsGkAtoms::readonly &&
-        (mType == NS_FORM_INPUT_TEXT || mType == NS_FORM_INPUT_PASSWORD)) {
-      UpdateEditableState();
-
-      nsIDocument* document = GetCurrentDoc();
-      if (document) {
-        mozAutoDocUpdate(document, UPDATE_CONTENT_STATE, PR_TRUE);
-        document->ContentStatesChanged(this, nsnull,
-                                       NS_EVENT_STATE_MOZ_READONLY |
-                                       NS_EVENT_STATE_MOZ_READWRITE);
       }
     }
   }

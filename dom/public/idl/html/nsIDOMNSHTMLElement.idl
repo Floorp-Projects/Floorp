@@ -38,7 +38,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(eac0a4ee-2e4f-403c-9b77-5cf32cfb42f7)]
+[scriptable, uuid(b0a29b0a-ce2b-4cdf-b98a-4c7ed994d6e2)]
 interface nsIDOMNSHTMLElement : nsISupports
 {
   readonly attribute long             offsetTop;
@@ -59,8 +59,6 @@ interface nsIDOMNSHTMLElement : nsISupports
   readonly attribute long             clientWidth;
 
            attribute long             tabIndex;
-
-           attribute DOMString        contentEditable;
 
   void blur();
   void focus();

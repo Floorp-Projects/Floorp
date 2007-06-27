@@ -101,8 +101,7 @@ void CnsIEditSession::MakeWinEditTest(PRBool afterUriLoad, PRInt16 displayMode)
 	editingSession = GetEditSessionObject();
 	domWindow = GetTheDOMWindow(qaWebBrowser);
 	if (editingSession) {
-		rv= editingSession->MakeWindowEditable(domWindow, "text", afterUriLoad,
-		                                       PR_TRUE, PR_FALSE);
+		rv= editingSession->MakeWindowEditable(domWindow, "text", afterUriLoad);
 		RvTestResult(rv, "MakeWindowEditable() test", displayMode);
 		if (displayMode == 1)
 			RvTestResultDlg(rv, "MakeWindowEditable() test");
@@ -172,7 +171,7 @@ void CnsIEditSession::TearEditorWinTest(PRInt16 displayMode)
 	editingSession = GetEditSessionObject();
 	domWindow = GetTheDOMWindow(qaWebBrowser);
 	if (editingSession) {
-		rv = editingSession->TearDownEditorOnWindow(domWindow, PR_FALSE);
+		rv = editingSession->TearDownEditorOnWindow(domWindow);
 		RvTestResult(rv, "TearDownEditorOnWindow() test", displayMode);
 		if (displayMode == 1)
 			RvTestResultDlg(rv, "TearDownEditorOnWindow() test");
