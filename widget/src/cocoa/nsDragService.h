@@ -45,9 +45,6 @@
 
 extern NSString* const kWildcardPboardType;
 
-class nsILocalFile;
-class nsIDOMDragEvent;
-
 class nsDragService : public nsBaseDragService
 {
 public:
