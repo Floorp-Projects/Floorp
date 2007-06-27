@@ -92,7 +92,7 @@ target_js="$5"
 # files matching the pattern head_*.js are treated like test setup files
 # - they are run after head.js but before the test file
 headfiles="-f $topsrcdir/tools/test-harness/xpcshell-simple/head.js"
-for h in $testdir/head_*.js
+for h in $testdir/unit/head_*.js
 do
     if [ -f $h ]; then
 	headfiles="$headfiles -f $h"
@@ -103,7 +103,7 @@ done
 # - they are run after tail.js
 tailfiles="-f $topsrcdir/tools/test-harness/xpcshell-simple/tail.js"
 #tailfiles="$tailfiles -f $topsrcdir/tools/test-harness/xpcshell-simple/execute_test.js"
-for t in $testdir/tail_*.js
+for t in $testdir/unit/tail_*.js
 do
     if [ -f $t ]; then
 	tailfiles="$tailfiles -f $t"
