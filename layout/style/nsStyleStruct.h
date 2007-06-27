@@ -783,11 +783,6 @@ struct nsStyleDisplay : public nsStyleStruct {
   PRUint8 mOverflowY;           // [reset] see nsStyleConsts.h
   PRUint8   mClipFlags;         // [reset] see nsStyleConsts.h
   
-  // XXX Deprecated.  Prefer |IsBlockOutside|.
-  PRBool IsBlockLevel() const {
-    return IsBlockOutside();
-  }
-
   PRBool IsBlockInside() const {
     return NS_STYLE_DISPLAY_BLOCK == mDisplay ||
            NS_STYLE_DISPLAY_LIST_ITEM == mDisplay ||
@@ -809,11 +804,7 @@ struct nsStyleDisplay : public nsStyleStruct {
            NS_STYLE_DISPLAY_INLINE_TABLE == mDisplay ||
            NS_STYLE_DISPLAY_INLINE_BOX == mDisplay ||
            NS_STYLE_DISPLAY_INLINE_GRID == mDisplay ||
-           NS_STYLE_DISPLAY_INLINE_STACK == mDisplay ||
-           // Are these really inlines? :
-           NS_STYLE_DISPLAY_DECK == mDisplay ||
-           NS_STYLE_DISPLAY_POPUP == mDisplay ||
-           NS_STYLE_DISPLAY_GROUPBOX == mDisplay;
+           NS_STYLE_DISPLAY_INLINE_STACK == mDisplay;
   }
 
   PRBool IsFloating() const {
