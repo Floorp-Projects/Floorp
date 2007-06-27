@@ -40,7 +40,6 @@
 #include "imgRequest.h"
 
 #include "imgLoader.h"
-#include "imgCache.h"
 #include "imgRequestProxy.h"
 
 #include "imgILoader.h"
@@ -534,16 +533,12 @@ NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request,
 
   if (mCacheEntry) {
     PRUint32 cacheSize = 0;
-
     mCacheEntry->GetDataSize(&cacheSize);
 
     PRUint32 imageSize = 0;
-    PRUint32 alphaSize = 0;
-
     frame->GetImageDataLength(&imageSize);
-    frame->GetAlphaDataLength(&alphaSize);
 
-    mCacheEntry->SetDataSize(cacheSize + imageSize + alphaSize);
+    mCacheEntry->SetDataSize(cacheSize + imageSize);
   }
 
   PRInt32 count = mObservers.Count();
