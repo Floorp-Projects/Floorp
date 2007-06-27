@@ -475,7 +475,7 @@ PRBool IsBidiLeaf(nsIFrame* aFrame) {
   // always of type eBidiInlineContainer, even if it's floating.
   return !kid
     || !aFrame->IsFrameOfType(nsIFrame::eBidiInlineContainer)
-    || aFrame->GetStyleDisplay()->IsBlockLevel();
+    || aFrame->GetStyleDisplay()->IsBlockOutside();
 }
 
 nsresult

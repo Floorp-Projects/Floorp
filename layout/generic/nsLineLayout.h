@@ -311,10 +311,6 @@ public:
 
   //----------------------------------------
 
-  static PRBool TreatFrameAsBlock(nsIFrame* aFrame);
-
-  //----------------------------------------
-
   nsPresContext* mPresContext;
 
   /**

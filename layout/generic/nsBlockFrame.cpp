@@ -794,7 +794,7 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
     if (aLastRS != &aReflowState) {
       // The wrapper frame should be block-level. If it isn't, how the
       // heck did it end up wrapping this block frame?
-      NS_ASSERTION(aLastRS->frame->GetStyleDisplay()->IsBlockLevel(),
+      NS_ASSERTION(aLastRS->frame->GetStyleDisplay()->IsBlockOutside(),
                    "Wrapping frame should be block-level");
       // Scrollbars need to be specifically excluded, if present, because they are outside the
       // padding-edge. We need better APIs for getting the various boxes from a frame.
@@ -2283,7 +2283,7 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
   NS_ABORT_IF_FALSE(fromLine->GetChildCount(), "empty line");
   NS_ABORT_IF_FALSE(aLine->GetChildCount(), "empty line");
 
-  NS_ASSERTION(fromLine->IsBlock() == fromLine->mFirstChild->GetStyleDisplay()->IsBlockLevel(),
+  NS_ASSERTION(fromLine->IsBlock() == fromLine->mFirstChild->GetStyleDisplay()->IsBlockOutside(),
                "Disagreement about whether it's a block or not");
 
   if (fromLine->IsBlock()) {
@@ -4732,7 +4732,7 @@ nsBlockFrame::AddFrames(nsIFrame* aFrameList,
   // structures to fit.
   nsIFrame* newFrame = aFrameList;
   while (newFrame) {
-    PRBool isBlock = nsLineLayout::TreatFrameAsBlock(newFrame);
+    PRBool isBlock = newFrame->GetStyleDisplay()->IsBlockOutside();
 
     // If the frame is a block frame, or if there is no previous line or if the
     // previous line is a block line we need to make a new line.  We also make

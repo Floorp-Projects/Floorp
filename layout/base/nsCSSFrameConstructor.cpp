@@ -532,31 +532,16 @@ GetIBContainingBlockFor(nsIFrame* aFrame)
 
 //----------------------------------------------------------------------
 
-// XXX this predicate and its cousins need to migrated to a single
-// place in layout - something in nsStyleDisplay maybe?
 static PRBool
-IsInlineFrame(nsIFrame* aFrame)
+IsInlineOutside(nsIFrame* aFrame)
 {
-  // XXXwaterson why don't we use |! display->IsBlockLevel()| here?
-  switch (aFrame->GetStyleDisplay()->mDisplay) {
-    case NS_STYLE_DISPLAY_INLINE:
-    case NS_STYLE_DISPLAY_INLINE_BLOCK:
-    case NS_STYLE_DISPLAY_INLINE_TABLE:
-    case NS_STYLE_DISPLAY_INLINE_BOX:
-    case NS_STYLE_DISPLAY_INLINE_GRID:
-    case NS_STYLE_DISPLAY_INLINE_STACK:
-      return PR_TRUE;
-    default:
-      break;
-  }
-  return PR_FALSE;
+  return aFrame->GetStyleDisplay()->IsInlineOutside();
 }
 
-// NeedSpecialFrameReframe uses this until we decide what to do about IsInlineFrame() above
 static PRBool
-IsInlineFrame2(nsIFrame* aFrame)
+IsBlockOutside(nsIFrame* aFrame)
 {
-  return !aFrame->GetStyleDisplay()->IsBlockLevel();
+  return aFrame->GetStyleDisplay()->IsBlockOutside();
 }
 
 //----------------------------------------------------------------------
@@ -569,23 +554,12 @@ IsInlineFrame2(nsIFrame* aFrame)
 // child then the block child is migrated upward until it lands in a block
 // parent (the inline frames containing block is where it will end up).
 
-// XXX consolidate these things
-static PRBool
-IsBlockFrame(nsIFrame* aFrame)
-{
-  // XXXwaterson this seems wrong; see IsInlineFrame() immediately
-  // above, which will treat inline-block (e.g.) as an inline. Why
-  // don't we use display->IsBlockLevel() here?
-  const nsStyleDisplay* display = aFrame->GetStyleDisplay();
-  return NS_STYLE_DISPLAY_INLINE != display->mDisplay;
-}
-
 static nsIFrame*
 FindFirstBlock(nsIFrame* aKid, nsIFrame** aPrevKid)
 {
   nsIFrame* prevKid = nsnull;
   while (aKid) {
-    if (IsBlockFrame(aKid)) {
+    if (!IsInlineOutside(aKid)) {
       *aPrevKid = prevKid;
       return aKid;
     }
@@ -601,7 +575,7 @@ FindLastBlock(nsIFrame* aKid)
 {
   nsIFrame* lastBlock = nsnull;
   while (aKid) {
-    if (IsBlockFrame(aKid)) {
+    if (!IsInlineOutside(aKid)) {
       lastBlock = aKid;
     }
     aKid = aKid->GetNextSibling();
@@ -4818,7 +4792,7 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
     }
 
     rv = ProcessChildren(aState, aContent, areaFrame, PR_TRUE, childItems,
-                         buttonFrame->GetStyleDisplay()->IsBlockLevel());
+                         buttonFrame->GetStyleDisplay()->IsBlockOutside());
     if (NS_FAILED(rv)) return rv;
   
     // Set the areas frame's initial child lists
@@ -6323,7 +6297,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
   // block-level.
   NS_ASSERTION(!(aDisplay->IsFloating() ||
                  aDisplay->IsAbsolutelyPositioned()) ||
-               aDisplay->IsBlockLevel(),
+               aDisplay->IsBlockOutside(),
                "Style system did not apply CSS2.1 section 9.7 fixups");
 
   // If this is "body", try propagating its scroll style to the viewport
@@ -8462,7 +8436,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
         styleContext = ResolveStyleContext(parentFrame, child);
         // XXX since the block child goes in the last inline of the sacred triad, frames would 
         // need to be moved into the 2nd triad (block) but that is more work, for now bail.
-        needReframe = styleContext->GetStyleDisplay()->IsBlockLevel();
+        needReframe = styleContext->GetStyleDisplay()->IsBlockOutside();
       }
       if (needReframe)
         return ReframeContainingBlock(parentFrame);
@@ -8639,7 +8613,7 @@ nsCSSFrameConstructor::NeedSpecialFrameReframe(nsIContent*     aParent1,
 {
   // XXXbz aNextSibling is utterly unused.  Why?
   
-  if (!IsInlineFrame2(aParentFrame)) 
+  if (IsBlockOutside(aParentFrame)) 
     return PR_FALSE;
 
   // find out if aChild is a block or inline
@@ -8648,7 +8622,7 @@ nsCSSFrameConstructor::NeedSpecialFrameReframe(nsIContent*     aParent1,
     nsRefPtr<nsStyleContext> styleContext;
     styleContext = ResolveStyleContext(aParentFrame, aChild);
     const nsStyleDisplay* display = styleContext->GetStyleDisplay();
-    childIsBlock = display->IsBlockLevel();
+    childIsBlock = display->IsBlockOutside();
   }
   nsIFrame* prevParent; // parent of prev sibling
   nsIFrame* nextParent; // parent of next sibling
@@ -8657,7 +8631,7 @@ nsCSSFrameConstructor::NeedSpecialFrameReframe(nsIContent*     aParent1,
     if (aPrevSibling) {
       prevParent = aPrevSibling->GetParent(); 
       NS_ASSERTION(prevParent, "program error - null parent frame");
-      if (IsInlineFrame2(prevParent)) { // prevParent is an inline
+      if (!IsBlockOutside(prevParent)) { // prevParent is an inline
         // XXX we need to find out if prevParent is the 1st inline or the last. If it
         // is the 1st, then aChild and the frames after aPrevSibling within the 1st inline
         // need to be moved to the block(inline). If it is the last, then aChild and the
@@ -8678,7 +8652,7 @@ nsCSSFrameConstructor::NeedSpecialFrameReframe(nsIContent*     aParent1,
       if (nextSibling) {
         nextParent = nextSibling->GetParent(); 
         NS_ASSERTION(nextParent, "program error - null parent frame");
-        if (IsInlineFrame2(nextParent)) {
+        if (!IsBlockOutside(nextParent)) {
           // XXX we need to move aChild, aNextSibling and all the frames after aNextSibling within
           // the 1st inline to the block(inline).
           return PR_TRUE; // for now, bail
@@ -8692,7 +8666,7 @@ nsCSSFrameConstructor::NeedSpecialFrameReframe(nsIContent*     aParent1,
     if (aPrevSibling) {
       prevParent = aPrevSibling->GetParent(); 
       NS_ASSERTION(prevParent, "program error - null parent frame");
-      if (IsInlineFrame2(prevParent)) { // prevParent is an inline
+      if (!IsBlockOutside(prevParent)) { // prevParent is an inline
         // aChild goes into the same inline frame as aPrevSibling
         aParentFrame = aPrevSibling->GetParent();
         NS_ASSERTION(aParentFrame, "program error - null parent frame");
@@ -8710,7 +8684,7 @@ nsCSSFrameConstructor::NeedSpecialFrameReframe(nsIContent*     aParent1,
         if (nextSibling) {
           nextParent = nextSibling->GetParent();
           NS_ASSERTION(nextParent, "program error - null parent frame");
-          if (IsInlineFrame2(nextParent)) {
+          if (!IsBlockOutside(nextParent)) {
             // nextParent is the ending inline frame. Put aChild there and
             // set aPrevSibling to null so aChild is its first element.
             aParentFrame = nextSibling->GetParent(); 
@@ -11102,7 +11076,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent)
     // possibly have caused the splitting, and if the inline is changing to a
     // block, any reframing that's needed will happen in ContentInserted.
     if (MaybeRecreateContainerForIBSplitterFrame(frame, &rv) ||
-        (!IsInlineFrame(frame) &&
+        (!IsInlineOutside(frame) &&
          MaybeRecreateContainerForIBSplitterFrame(frame->GetParent(), &rv)))
       return rv;
   }
@@ -11351,7 +11325,7 @@ nsCSSFrameConstructor::WrapFramesInFirstLineFrame(
   nsIFrame* firstInlineFrame = nsnull;
   nsIFrame* lastInlineFrame = nsnull;
   while (kid) {
-    if (IsInlineFrame(kid)) {
+    if (IsInlineOutside(kid)) {
       if (!firstInlineFrame) firstInlineFrame = kid;
       lastInlineFrame = kid;
     }
@@ -11450,7 +11424,7 @@ nsCSSFrameConstructor::AppendFirstLineFrames(
   nsIFrame* firstInlineFrame = nsnull;
   nsIFrame* lastInlineFrame = nsnull;
   while (kid) {
-    if (IsInlineFrame(kid)) {
+    if (IsInlineOutside(kid)) {
       if (!firstInlineFrame) firstInlineFrame = kid;
       lastInlineFrame = kid;
     }
@@ -11507,7 +11481,7 @@ nsCSSFrameConstructor::InsertFirstLineFrames(
 #if 0
   nsIFrame* parentFrame = *aParentFrame;
   nsIFrame* newFrame = aFrameItems.childList;
-  PRBool isInline = IsInlineFrame(newFrame);
+  PRBool isInline = IsInlineOutside(newFrame);
 
   if (!aPrevSibling) {
     // Insertion will become the first frame. Two cases: we either
@@ -12389,7 +12363,7 @@ nsCSSFrameConstructor::AreAllKidsInline(nsIFrame* aFrameList)
 {
   nsIFrame* kid = aFrameList;
   while (kid) {
-    if (!IsInlineFrame(kid)) {
+    if (!IsInlineOutside(kid)) {
       return PR_FALSE;
     }
     kid = kid->GetNextSibling();
@@ -12636,7 +12610,7 @@ nsCSSFrameConstructor::ProcessInlineChildren(nsFrameConstructorState& aState,
         kid = aFrameItems.childList;
       }
       while (kid) {
-        if (!IsInlineFrame(kid)) {
+        if (!IsInlineOutside(kid)) {
           allKidsInline = PR_FALSE;
           break;
         }
@@ -12756,7 +12730,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
   // pseudo-frames -- telling which ones are or are not OK to walk out of is
   // too hard (and I suspect that we do in fact need to walk out of all of
   // them).
-  while (IsFrameSpecial(aContainingBlock) || IsInlineFrame(aContainingBlock) ||
+  while (IsFrameSpecial(aContainingBlock) || IsInlineOutside(aContainingBlock) ||
          aContainingBlock->GetStyleContext()->GetPseudoType()) {
     aContainingBlock = aContainingBlock->GetParent();
     NS_ASSERTION(aContainingBlock,
