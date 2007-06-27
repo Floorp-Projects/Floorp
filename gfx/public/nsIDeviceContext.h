@@ -166,9 +166,10 @@ const PRUint8 kUseAltDCFor_CREATERC_PAINT  = 0x04; // Use when creating Renderin
 const PRUint8 kUseAltDCFor_SURFACE_DIM     = 0x08; // Use it for getting the Surface Dimensions
 #endif
 
+// 22ef9292-c998-406f-a2db-93096d727594
 #define NS_IDEVICE_CONTEXT_IID   \
-{ 0xb05ae6b9, 0x280c, 0x4b16, \
- { 0xb1, 0x36, 0x86, 0x7c, 0x48, 0xd2, 0x15, 0x54 } }
+{ 0x22ef9292, 0xc998, 0x406f, \
+ { 0xa2, 0xdb, 0x93, 0x09, 0x6d, 0x72, 0x75, 0x94 } }
 
 //a cross platform way of specifying a native palette handle
 typedef void * nsPalette;
