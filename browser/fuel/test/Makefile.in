@@ -44,11 +44,15 @@ relativesrcdir = browser/fuel/test
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES =	test_Application.html \
-		test_ApplicationPrefs.html \
-		test_ApplicationStorage.html \
-		test_Extensions.html \
+_CHROME_FILES =	test_Application.xul \
+		test_ApplicationPrefs.xul \
+		test_ApplicationStorage.xul \
+		test_Extensions.xul \
+		test_Bookmarks.xul \
+		test_Browser.xul \
+		test_ContentA.html \
+		test_ContentB.html \
 		$(NULL)
 
-libs::	$(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+libs::	$(_CHROME_FILES)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
