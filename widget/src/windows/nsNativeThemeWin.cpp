@@ -834,20 +834,14 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
 
   nsCOMPtr<nsIDeviceContext> dc;
   aContext->GetDeviceContext(*getter_AddRefs(dc));
-  PRInt32 p2a = dc->AppUnitsPerDevPixel();
+  gfxFloat p2a = gfxFloat(dc->AppUnitsPerDevPixel());
   RECT widgetRect;
   RECT clipRect;
-  gfxRect tr, cr;
+  gfxRect tr(aRect.x, aRect.y, aRect.width, aRect.height),
+          cr(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
 
-  tr.pos.x = NSAppUnitsToIntPixels(aRect.x, p2a);
-  tr.pos.y = NSAppUnitsToIntPixels(aRect.y, p2a);
-  tr.size.width  = NSAppUnitsToIntPixels(aRect.width, p2a);
-  tr.size.height = NSAppUnitsToIntPixels(aRect.height, p2a);
-
-  cr.pos.x = NSAppUnitsToIntPixels(aClipRect.x, p2a);
-  cr.pos.y = NSAppUnitsToIntPixels(aClipRect.y, p2a);
-  cr.size.width  = NSAppUnitsToIntPixels(aClipRect.width, p2a);
-  cr.size.height = NSAppUnitsToIntPixels(aClipRect.height, p2a);
+  tr.ScaleInverse(p2a);
+  cr.ScaleInverse(p2a);
 
   nsRefPtr<gfxContext> ctx = (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
 
@@ -1979,19 +1973,13 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
 
   nsCOMPtr<nsIDeviceContext> dc;
   aContext->GetDeviceContext(*getter_AddRefs(dc));
-  PRInt32 p2a = dc->AppUnitsPerDevPixel();
+  gfxFloat p2a = gfxFloat(dc->AppUnitsPerDevPixel());
   RECT widgetRect;
-  gfxRect tr, cr;
+  gfxRect tr(aRect.x, aRect.y, aRect.width, aRect.height),
+          cr(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
 
-  tr.pos.x = NSAppUnitsToIntPixels(aRect.x, p2a);
-  tr.pos.y = NSAppUnitsToIntPixels(aRect.y, p2a);
-  tr.size.width  = NSAppUnitsToIntPixels(aRect.width, p2a);
-  tr.size.height = NSAppUnitsToIntPixels(aRect.height, p2a);
-
-  cr.pos.x = NSAppUnitsToIntPixels(aClipRect.x, p2a);
-  cr.pos.y = NSAppUnitsToIntPixels(aClipRect.y, p2a);
-  cr.size.width  = NSAppUnitsToIntPixels(aClipRect.width, p2a);
-  cr.size.height = NSAppUnitsToIntPixels(aClipRect.height, p2a);
+  tr.ScaleInverse(p2a);
+  cr.ScaleInverse(p2a);
 
   nsRefPtr<gfxContext> ctx = (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
 
