@@ -544,7 +544,7 @@ nsBlockReflowState::AddFloat(nsLineLayout&       aLineLayout,
     placed = FlowAndPlaceFloat(fc, &isLeftFloat, aReflowStatus, forceFit);
     NS_ASSERTION(placed || !forceFit,
                  "If we asked for force-fit, it should have been placed");
-    if (placed) {
+    if (forceFit || (placed && !NS_FRAME_IS_TRUNCATED(aReflowStatus))) {
       // Pass on updated available space to the current inline reflow engine
       GetAvailableSpace(mY, forceFit);
       aLineLayout.UpdateBand(mAvailSpaceRect.x + BorderPadding().left, mY,
@@ -555,8 +555,22 @@ nsBlockReflowState::AddFloat(nsLineLayout&       aLineLayout,
       
       // Record this float in the current-line list
       mCurrentLineFloats.Append(fc);
+      // If we can't break here, hide the fact that it's truncated
+      // XXX We can probably do this more cleanly
+      aReflowStatus &= ~NS_FRAME_TRUNCATED;
     }
     else {
+      if (IsAdjacentWithTop()) {
+        // Pushing the line to the next page won't give us any more space;
+        // therefore, we break.
+        NS_ASSERTION(aLineLayout.LineIsBreakable(),
+                     "We can't get here unless forceFit is false");
+        aReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
+      } else {
+        // Make sure we propagate the truncated status; this signals the
+        // block to push the line to the next page.
+        aReflowStatus |= NS_FRAME_TRUNCATED;
+      }
       delete fc;
     }
 
@@ -564,6 +578,9 @@ nsBlockReflowState::AddFloat(nsLineLayout&       aLineLayout,
     mSpaceManager->Translate(dx, dy);
   }
   else {
+    // Always claim to be placed; we don't know whether we fit yet, so we
+    // deal with this in PlaceBelowCurrentLineFloats
+    placed = PR_TRUE;
     // This float will be placed after the line is done (it is a
     // below-current-line float).
     mBelowCurrentLineFloats.Append(fc);
@@ -576,16 +593,9 @@ nsBlockReflowState::AddFloat(nsLineLayout&       aLineLayout,
       // Note that we could have unconstrained height and yet have
       // a next-in-flow placeholder --- for example columns can switch
       // from constrained height to unconstrained height.
-      if (aPlaceholder->GetSplittableType() == NS_FRAME_NOT_SPLITTABLE) {
-        placed = PR_FALSE;
-      }
-      else {
-        placed = PR_TRUE;
+      if (aPlaceholder->GetSplittableType() != NS_FRAME_NOT_SPLITTABLE) {
         aReflowStatus = NS_FRAME_NOT_COMPLETE;
       }
-    }
-    else {
-      placed = PR_TRUE;
     }
   }
   return placed;
@@ -991,7 +1001,12 @@ nsBlockReflowState::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList, PRB
       NS_ASSERTION(placed || !aForceFit,
                    "If we're in force-fit mode, we should have placed the float");
 
-      if (!placed || NS_FRAME_IS_TRUNCATED(reflowStatus)) {
+      // XXX We could deal with this situation better by breaking before
+      // the associated placeholder
+      NS_WARN_IF_FALSE(NS_FRAME_IS_TRUNCATED(reflowStatus) && aForceFit,
+                       "This situation currently leads to data not printing");
+
+      if (!placed || (NS_FRAME_IS_TRUNCATED(reflowStatus) && !aForceFit)) {
         // return before processing all of the floats, since the line will be pushed.
         return PR_FALSE;
       }
