@@ -130,7 +130,8 @@ public:
 
     if (NS_UNLIKELY(purple)) {
       NS_ASSERTION(tmp != 0, "purple ISupports pointer with zero refcnt");
-      nsCycleCollector_forget(owner);
+      if (!nsCycleCollector_forget(owner))
+        tmp |= NS_PURPLE_BIT;
     }
 
     mValue = tmp + 1;
@@ -154,9 +155,12 @@ public:
     PRBool shouldBePurple = tmp > 1;
 
     if (NS_UNLIKELY(shouldBePurple && !purple)) {
-      nsCycleCollector_suspect(owner);
+      if (!nsCycleCollector_suspect(owner))
+        shouldBePurple = PR_FALSE;
     } else if (NS_UNLIKELY(tmp == 1 && purple)) {
-      nsCycleCollector_forget(owner);
+      if (!nsCycleCollector_forget(owner)) {
+        NS_NOTREACHED("forget should not fail when reference count hits 0");
+      }
     }
 
     --tmp;
