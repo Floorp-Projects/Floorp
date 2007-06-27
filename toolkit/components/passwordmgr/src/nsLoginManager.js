@@ -456,13 +456,13 @@ LoginManager.prototype = {
 
 
     /*
-     * clearAllLogins
+     * removeAllLogins
      *
-     * Clears all stored logins.
+     * Remove all stored logins.
      */
-    clearAllLogins : function () {
-        this.log("Clearing all logins");
-        this._storage.clearAllLogins();
+    removeAllLogins : function () {
+        this.log("Removing all logins");
+        this._storage.removeAllLogins();
     },
 
     /*
