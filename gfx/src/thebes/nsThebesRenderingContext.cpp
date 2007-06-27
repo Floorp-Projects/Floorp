@@ -53,7 +53,6 @@
 #include "nsIImage.h"
 
 #include "nsIThebesFontMetrics.h"
-#include "nsThebesDrawingSurface.h"
 #include "nsThebesRegion.h"
 #include "nsThebesImage.h"
 
@@ -80,7 +79,7 @@ static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
 //////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS2(nsThebesRenderingContext, nsIRenderingContext, nsIThebesRenderingContext)
+NS_IMPL_ISUPPORTS1(nsThebesRenderingContext, nsIRenderingContext)
 
 nsThebesRenderingContext::nsThebesRenderingContext() :
     mLineStyle(nsLineStyle_kNone)
@@ -104,10 +103,6 @@ nsThebesRenderingContext::Init(nsIDeviceContext* aContext, gfxASurface *aThebesS
     mDeviceContext = aContext;
     mWidget = nsnull;
 
-    mLocalDrawingSurface = new nsThebesDrawingSurface();
-    mLocalDrawingSurface->Init(thebesDC, aThebesSurface);
-    mDrawingSurface = mLocalDrawingSurface;
-
     mThebes = new gfxContext(aThebesSurface);
 
     return (CommonInit());
@@ -120,9 +115,6 @@ nsThebesRenderingContext::Init(nsIDeviceContext* aContext, gfxContext *aThebesCo
 
     mDeviceContext = aContext;
     mWidget = nsnull;
-
-    mLocalDrawingSurface = nsnull;
-    mDrawingSurface = nsnull;
 
     mThebes = aThebesContext;
 
@@ -139,17 +131,7 @@ nsThebesRenderingContext::Init(nsIDeviceContext* aContext, nsIWidget *aWidget)
     mDeviceContext = aContext;
     mWidget = aWidget;
 
-    mLocalDrawingSurface = new nsThebesDrawingSurface();
-
-    nsRefPtr<gfxASurface> surface(aWidget->GetThebesSurface());
-    if (surface) {
-        mLocalDrawingSurface->Init(thebesDC, surface);
-    } else {
-        mLocalDrawingSurface->Init(thebesDC, aWidget);
-    }
-    mDrawingSurface = mLocalDrawingSurface;
-
-    mThebes = new gfxContext(mLocalDrawingSurface->GetThebesSurface());
+    mThebes = new gfxContext(aWidget->GetThebesSurface());
 
     //mThebes->SetColor(gfxRGBA(0.9, 0.0, 0.0, 0.3));
     //mThebes->Paint();
@@ -158,13 +140,6 @@ nsThebesRenderingContext::Init(nsIDeviceContext* aContext, nsIWidget *aWidget)
     //mThebes->Rotate(M_PI/4);
 
     return (CommonInit());
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::Init(nsIDeviceContext* aContext, nsIDrawingSurface *aSurface)
-{
-    NS_ERROR("Should never be called.");
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -180,32 +155,11 @@ nsThebesRenderingContext::CommonInit(void)
 }
 
 NS_IMETHODIMP
-nsThebesRenderingContext::Reset(void)
-{
-    NS_ERROR("nsThebesRenderingContext::Reset called!\n");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsThebesRenderingContext::GetDeviceContext(nsIDeviceContext *& aDeviceContext)
 {
     aDeviceContext = mDeviceContext;
     NS_IF_ADDREF(aDeviceContext);
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::SelectOffScreenDrawingSurface(nsIDrawingSurface *aSurface)
-{
-    NS_ERROR("nsThebesRenderingContext::SelectOffScreenDrawingSurface called!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::GetDrawingSurface(nsIDrawingSurface **aSurface)
-{
-    NS_ERROR("nsThebesRenderingContext::GetDrawingSurface called!");
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP 
@@ -351,29 +305,6 @@ nsThebesRenderingContext::SetClipRegion(const nsIRegion& pxRegion,
 
     return NS_OK;
 }
-
-NS_IMETHODIMP
-nsThebesRenderingContext::GetClipRegion(nsIRegion **aRegion)
-{
-    // used in a few misc places (FontMetricsXft, generic RenderingContextImpl for DrawImage,
-    // and SVGGDIPlusCanvas
-    NS_WARNING("Unimplemented function called");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-// only gets called from the caret blinker.
-NS_IMETHODIMP
-nsThebesRenderingContext::FlushRect(const nsRect& aRect)
-{
-    return FlushRect(aRect.x, aRect.y, aRect.width, aRect.height);
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::FlushRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
-{
-    return NS_OK;
-}
-
 //
 // other junk
 //
@@ -495,45 +426,6 @@ nsThebesRenderingContext::TransformCoord (nscoord *aX, nscoord *aY)
 
     *aX = TO_TWIPS(pt.x);
     *aY = TO_TWIPS(pt.y);
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::CreateDrawingSurface(const nsRect &aBounds,
-                                              PRUint32 aSurfFlags,
-                                              nsIDrawingSurface* &aSurface)
-{
-    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::CreateDrawingSurface [%d,%d,%d,%d] 0x%08x\n", this, aBounds.x, aBounds.y, aBounds.width, aBounds.height, aSurfFlags));
-
-    nsThebesDrawingSurface *cds = new nsThebesDrawingSurface();
-    nsIDeviceContext *dc = mDeviceContext.get();
-    cds->Init (NS_STATIC_CAST(nsThebesDeviceContext *, dc),
-               aBounds.width, aBounds.height,
-               PR_FALSE);
-    aSurface = (nsIDrawingSurface*) cds;
-    NS_ADDREF(aSurface);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::CreateDrawingSurface(nsNativeWidget aWidget, nsIDrawingSurface* &aSurface)
-{
-    nsThebesDrawingSurface *cds = new nsThebesDrawingSurface();
-    nsIDeviceContext *dc = mDeviceContext.get();
-    cds->Init (NS_STATIC_CAST(nsThebesDeviceContext *, dc), aWidget);
-    aSurface = (nsIDrawingSurface*) cds;
-    NS_ADDREF(aSurface);
-
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsThebesRenderingContext::DestroyDrawingSurface(nsIDrawingSurface *aDS)
-{
-    NS_RELEASE(aDS);
-
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -804,7 +696,7 @@ nsThebesRenderingContext::GetNativeGraphicData(GraphicDataType aType)
     if (aType == NATIVE_GDK_DRAWABLE &&
         !gfxPlatform::GetPlatform()->UseGlitz())
     {
-        if (mWidget && mDrawingSurface == mLocalDrawingSurface)
+        if (mWidget)
             return mWidget->GetNativeData(NS_NATIVE_WIDGET);
     }
     if (aType == NATIVE_THEBES_CONTEXT)
@@ -819,54 +711,6 @@ nsThebesRenderingContext::GetNativeGraphicData(GraphicDataType aType)
 #endif
 
     return nsnull;
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::DrawNativeWidgetPixmap(void* aSrcSurfaceBlack,
-                                                 void* aSrcSurfaceWhite,
-                                                 const nsIntSize& pxSrcSize, 
-                                                 const nsPoint& twDestPos)
-{
-    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::DrawNativeWidgetPixmap %p %p [%d,%d] [%d,%d]\n", this, aSrcSurfaceBlack, aSrcSurfaceWhite, pxSrcSize.width, pxSrcSize.height, twDestPos.x, twDestPos.y));
-
-#if 0
-    // debug
-    mThebes->Save();
-    mThebes->SetColor(gfxRGBA(0.9, 0.9, 1.0, 1.0));
-    mThebes->NewPath();
-    mThebes->Rectangle(gfxRect(FROM_TWIPS(twDestPos.x),
-                               FROM_TWIPS(twDestPos.y),
-                               pxSrcSize.width,
-                               pxSrcSize.height),
-                       PR_TRUE);
-    mThebes->Fill();
-    mThebes->Restore();
-
-    return NS_OK;
-#endif
-
-    nsThebesDrawingSurface* tmpSurf = new nsThebesDrawingSurface();
-    nsIDeviceContext* dc = mDeviceContext.get();
-    nsThebesDeviceContext* cdc = NS_STATIC_CAST(nsThebesDeviceContext*, dc);
-
-    tmpSurf->Init(cdc, aSrcSurfaceBlack, aSrcSurfaceWhite, pxSrcSize);
-
-    nsRefPtr<gfxPattern> pat = new gfxPattern(tmpSurf->GetThebesSurface());
-
-    mThebes->Save();
-    mThebes->NewPath();
-    // mm, mixed twips and pixels. are we having fun yet?
-    mThebes->PixelSnappedRectangleAndSetPattern(gfxRect(FROM_TWIPS(twDestPos.x),
-                                                        FROM_TWIPS(twDestPos.y),
-                                                        pxSrcSize.width,
-                                                        pxSrcSize.height),
-                                                pat);
-    mThebes->Fill();
-    mThebes->Restore();
-
-    delete tmpSurf;
-
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -910,35 +754,6 @@ nsThebesRenderingContext::PopFilter()
 
 
     return NS_OK;
-}
-
-//
-// Both twSrcRect and twDestRect need to be
-// transformed by the CTM.  This is especially odd
-// for the SrcRect!
-//
-
-NS_IMETHODIMP
-nsThebesRenderingContext::DrawImage(imgIContainer *aImage,
-                                    const nsRect &twSrcRect,
-                                    const nsRect &twDestRect)
-{
-    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::DrawImage %p [%d,%d,%d,%d] [%d,%d,%d,%d]\n",
-           this, aImage, twSrcRect.x, twSrcRect.y, twSrcRect.width, twSrcRect.height,
-           twDestRect.x, twDestRect.y, twDestRect.width, twDestRect.height));
-    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p translation: %f %f\n",
-                                         this,
-                                         mThebes->CurrentMatrix().GetTranslation().x,
-                                         mThebes->CurrentMatrix().GetTranslation().y));
-#if 0
-    fprintf (stderr, "DrawImage: src [%f %f %f %f]\n           dst [%f %f %f %f]\n           x0: %f y0: %f\n",
-             FROM_TWIPS(twSrcRect.x), FROM_TWIPS(twSrcRect.y), FROM_TWIPS(twSrcRect.width), FROM_TWIPS(twSrcRect.height),
-             FROM_TWIPS(twDestRect.x), FROM_TWIPS(twDestRect.y), FROM_TWIPS(twDestRect.width), FROM_TWIPS(twDestRect.height),
-             mThebes->CurrentMatrix().GetTranslation().x, mThebes->CurrentMatrix().GetTranslation().y);
-#endif
-
-    NS_NOTREACHED("DrawImage should no longer be called with thebes");
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -1235,129 +1050,6 @@ nsThebesRenderingContext::GetRangeWidth(const char *aText,
 NS_IMETHODIMP
 nsThebesRenderingContext::RenderEPS(const nsRect& aRect, FILE *aDataFile)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-////
-//// Unused junk
-////
-
-NS_IMETHODIMP
-nsThebesRenderingContext::IsVisibleRect(const nsRect& aRect, PRBool &aIsVisible)
-{
-    NS_ERROR("not used anywhere");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::GetClipRect(nsRect &aRect, PRBool &aHasLocalClip)
-{
-    NS_ERROR("not used anywhere");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::LockDrawingSurface(PRInt32 aX, PRInt32 aY,
-                                             PRUint32 aWidth, PRUint32 aHeight,
-                                             void **aBits, PRInt32 *aStride,
-                                             PRInt32 *aWidthBytes,
-                                             PRUint32 aFlags)
-{
-    NS_WARNING("Unimplemented function called");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::UnlockDrawingSurface(void)
-{
-    NS_WARNING("Unimplemented function called");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::CopyClipRegion(nsIRegion &aRegion)
-{
-    NS_WARNING("Unimplemented function called");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::GetLineStyle(nsLineStyle &aLineStyle)
-{
-    NS_ERROR("not used anywhere");
-    aLineStyle = mLineStyle;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::SetPenMode(nsPenMode aPenMode)
-{
-    // aPenMode == nsPenMode_kNone, nsPenMode_kInverted.
-    NS_ERROR("not used anywhere");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::GetPenMode(nsPenMode &aPenMode)
-{
-    //NS_ERROR("not used anywhere, but used in a debug thing");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-NS_IMETHODIMP
-nsThebesRenderingContext::DrawArc(const nsRect& aRect,
-                                 float aStartAngle, float aEndAngle)
-{
-    return DrawArc(aRect.x, aRect.y, aRect.width, aRect.height, aStartAngle, aEndAngle);
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                                 float aStartAngle, float aEndAngle)
-{
-    NS_ERROR("not used");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::FillArc(const nsRect& aRect,
-                                 float aStartAngle, float aEndAngle)
-{
-    return FillArc(aRect.x, aRect.y, aRect.width, aRect.height, aStartAngle, aEndAngle);
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                                 float aStartAngle, float aEndAngle)
-{
-    NS_ERROR("not used");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::DrawPolyline(const nsPoint aPoints[],
-                                      PRInt32 aNumPoints)
-{
-    NS_ERROR("DrawPolyline called!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
-{
-    NS_ERROR("DrawPolygon called!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-NS_IMETHODIMP
-nsThebesRenderingContext::CopyOffScreenBits(nsIDrawingSurface *aSrcSurf,
-                                           PRInt32 aSrcX, PRInt32 aSrcY,
-                                           const nsRect &aDestBounds,
-                                           PRUint32 aCopyFlags)
-{
-    NS_NOTREACHED("CopyOffScreenBits should not be called in cairo builds");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
