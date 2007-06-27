@@ -200,17 +200,6 @@ class nsParser : public nsIParser,
                      nsDTDMode aMode = eDTDMode_autodetect);
 
     /**
-     * Cause parser to parse input from given stream 
-     * @update	gess5/11/98
-     * @param   aStream is the i/o source
-     * @return  TRUE if all went well -- FALSE otherwise
-     */
-    NS_IMETHOD Parse(nsIInputStream* aStream,
-                     const nsACString& aMimeType,
-                     void* aKey = 0,
-                     nsDTDMode aMode = eDTDMode_autodetect);
-
-    /**
      * @update	gess5/11/98
      * @param   anHTMLString contains a string-full of real HTML
      * @param   appendTokens tells us whether we should insert tokens inline, or append them.
