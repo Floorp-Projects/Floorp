@@ -1097,7 +1097,7 @@ PlacesController.prototype = {
       }
       else if (PlacesUtils.nodeIsSeparator(node)) {
         // A Bookmark separator.
-        transactions.push(new PlacesRemoveSeparatorTransaction(
+        transactions.push(new PlacesRemoveSeparatorTransaction(node.itemId,
           node.parent.itemId, index));
       }
       else if (PlacesUtils.nodeIsFolder(node.parent)) {
@@ -1882,7 +1882,7 @@ PlacesRemoveFolderTransaction.prototype = {
         txn = new PlacesRemoveFolderTransaction(child.itemId);
       }
       else if (child.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
-        txn = new PlacesRemoveSeparatorTransaction(this._id, i);
+        txn = new PlacesRemoveSeparatorTransaction(child.itemId, this._id, i);
       }
       else {
         txn = new PlacesRemoveItemTransaction(child.itemId,
@@ -1951,7 +1951,8 @@ PlacesRemoveItemTransaction.prototype = {
 /**
  * Remove a separator
  */
-function PlacesRemoveSeparatorTransaction(oldContainer, oldIndex) {
+function PlacesRemoveSeparatorTransaction(id, oldContainer, oldIndex) {
+  this._id = id;
   this._oldContainer = oldContainer;
   this._oldIndex = oldIndex;
   this.redoTransaction = this.doTransaction;
@@ -1961,7 +1962,7 @@ PlacesRemoveSeparatorTransaction.prototype = {
 
   doTransaction: function PRST_doTransaction() {
     this.LOG("Remove Separator from: " + this._oldContainer + "," + this._oldIndex);
-    this.bookmarks.removeChildAt(this._oldContainer, this._oldIndex);
+    this.utils.bookmarks.removeItem(this._id);
   },
   
   undoTransaction: function PRST_undoTransaction() {
