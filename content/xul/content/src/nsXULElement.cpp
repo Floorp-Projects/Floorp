@@ -1040,6 +1040,15 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
             HideWindowChrome(aValue && NS_LITERAL_STRING("true").Equals(*aValue));
         }
 
+        // handle :read-only/:read-write
+        nsIDocument *document = GetCurrentDoc();
+        if (aName == nsGkAtoms::readonly && document) {
+            mozAutoDocUpdate(document, UPDATE_CONTENT_STATE, PR_TRUE);
+            document->ContentStatesChanged(this, nsnull,
+                                           NS_EVENT_STATE_MOZ_READONLY |
+                                           NS_EVENT_STATE_MOZ_READWRITE);
+        }
+
         // XXX need to check if they're changing an event handler: if
         // so, then we need to unhook the old one.  Or something.
     }
@@ -2096,6 +2105,22 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
     target->AddEventListener(NS_LITERAL_STRING("mousedown"), eventListener, PR_FALSE);
     target->AddEventListener(NS_LITERAL_STRING("contextmenu"), eventListener, PR_FALSE);
     return NS_OK;
+}
+
+PRInt32
+nsXULElement::IntrinsicState() const
+{
+    PRInt32 state = nsGenericElement::IntrinsicState();
+
+    const nsIAtom* tag = Tag();
+    if (GetNameSpaceID() == kNameSpaceID_XUL &&
+        (tag == nsGkAtoms::textbox || tag == nsGkAtoms::textarea) &&
+        !HasAttr(kNameSpaceID_None, nsGkAtoms::readonly)) {
+        state |= NS_EVENT_STATE_MOZ_READWRITE;
+        state &= ~NS_EVENT_STATE_MOZ_READONLY;
+    }
+
+    return state;
 }
 
 //----------------------------------------------------------------------

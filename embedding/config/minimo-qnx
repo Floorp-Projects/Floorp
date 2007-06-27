@@ -185,6 +185,8 @@ res/quirk.css
 res/viewsource.css
 res/ua.css
 res/forms.css
+res/contenteditable.css
+res/designmode.css
 res/arrow.gif
 res/arrowd.gif
 res/loading-image.gif

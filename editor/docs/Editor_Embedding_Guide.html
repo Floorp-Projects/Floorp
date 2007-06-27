@@ -18,10 +18,12 @@ GetContentDOMWindow call.&nbsp; Then simply call
 nsIWebBrowser-&gt;do_GetInterface on the nsIWebBrowser to retrieve the
 nsIEditingSession from it.&nbsp; From there you call
 editingSession-&gt;MakeWindowEditable(domWindow, editortype,
-PR_TRUE);&nbsp;&nbsp;&nbsp; The first parameter is the nsIDOMWindow you
-just retrieved, the second is the editor type you want to create and the
+PR_TRUE, PR_FALSE);&nbsp;&nbsp;&nbsp; The first parameter is the nsIDOMWindow
+you just retrieved, the second is the editor type you want to create and the
 third is whether you want the window editable immediately or when the
-document is done loading.&nbsp; In calling this method the editor is
+document is done loading, the fourth is whether you want the editor to make
+the whole document editable, the fifth is whether you want to turn of
+scripts, plugins, ...&nbsp; In calling this method the editor is
 created underneath and the event listeners etc. are all prepared.<br>
 </p>
 <p><i>&nbsp;&nbsp;&nbsp; nsCOMPtr&lt;nsIDOMWindow&gt; domWindow;<br>
@@ -36,7 +38,8 @@ editingSession;<br>
 nsIWebBrowser-&gt;do_GetInterface(getter_AddRefs(editingSession));<br>
 &nbsp;&nbsp;&nbsp; if (editingSession)<br>
 &nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
-editingSession-&gt;MakeWindowEditable(domWindow, "html", PR_TRUE);</i></p>
+editingSession-&gt;MakeWindowEditable(domWindow, "html", PR_TRUE,
+PR_FALSE, PR_TRUE, PR_FALSE);</i></p>
 <p>The valid editor types are:<br>
 </p>
 <ul>
