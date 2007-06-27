@@ -50,7 +50,6 @@
 #include "nsISupports.h"
 #include "nsIStreamListener.h"
 #include "nsIDTD.h"
-#include "nsIInputStream.h"
 #include "nsStringGlue.h"
 #include "nsVoidArray.h"
 
@@ -226,10 +225,6 @@ class nsIParser : public nsISupports {
     
     NS_IMETHOD Parse(nsIURI* aURL,
                      nsIRequestObserver* aListener = nsnull,
-                     void* aKey = 0,
-                     nsDTDMode aMode = eDTDMode_autodetect) = 0;
-    NS_IMETHOD Parse(nsIInputStream* aStream,
-                     const nsACString& aMimeType,
                      void* aKey = 0,
                      nsDTDMode aMode = eDTDMode_autodetect) = 0;
     NS_IMETHOD Parse(const nsAString& aSourceBuffer,

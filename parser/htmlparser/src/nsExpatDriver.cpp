@@ -1177,7 +1177,7 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, PRBool& aFlushTokens)
          ("Remaining in expat's buffer: %i, remaining in scanner: %i.",
           mExpatBuffered, Distance(currentExpatPosition, end)));
 
-  return NS_SUCCEEDED(mInternalState) ? aScanner.FillBuffer() : NS_OK;
+  return NS_SUCCEEDED(mInternalState) ? kEOF : NS_OK;
 }
 
 NS_IMETHODIMP
