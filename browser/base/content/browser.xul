@@ -132,6 +132,10 @@
     </popup>
 
     <popup id="placesContext"/>
+
+    <tooltip id="urlTooltip">
+      <label crop="center" flex="1"/>
+    </tooltip>
   </popupset>
 
 #ifndef MOZ_PLACES
