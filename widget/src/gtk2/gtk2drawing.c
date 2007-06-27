@@ -644,7 +644,7 @@ moz_gtk_toggle_paint(GdkDrawable* drawable, GdkRectangle* rect,
                         gCheckboxWidget, "checkbutton", x, y, width, height);
         if (state->focused) {
             gtk_paint_focus(style, drawable, GTK_STATE_ACTIVE, cliprect,
-                            gRadiobuttonWidget, "checkbutton", rect->x, rect->y,
+                            gCheckboxWidget, "checkbutton", rect->x, rect->y,
                             rect->width, rect->height);
         }
     }
