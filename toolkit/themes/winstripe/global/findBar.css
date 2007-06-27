@@ -76,11 +76,11 @@ findbar {
   -moz-image-region: rect(32px 48px 48px 32px) !important;
 }
 
-.findbar-highlight:active, findbar > .findbar-highlight[checked="true"] {
+.findbar-highlight:active, .findbar-highlight[checked="true"] {
   -moz-image-region: rect(48px 48px 64px 32px);
 }
 
-findbar > .findbar-highlight[checked="true"]:hover {
+.findbar-highlight[checked="true"]:hover {
   -moz-image-region: rect(64px 48px 80px 32px);
 }
 
