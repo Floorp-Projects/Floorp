@@ -128,6 +128,9 @@
 // db file name
 #define DB_FILENAME NS_LITERAL_STRING("places.sqlite")
 
+// db backup file name
+#define DB_CORRUPT_FILENAME NS_LITERAL_STRING("places.sqlite.corrupt")
+
 // Lazy adding
 
 #ifdef LAZY_ADD
@@ -276,11 +279,22 @@ nsNavHistory::Init()
   rv = prefService->GetBranch(PREF_BRANCH_BASE, getter_AddRefs(mPrefBranch));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // init db file
+  rv = InitDBFile(PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // init db and statements
   PRBool doImport;
   rv = InitDB(&doImport);
+  if (NS_FAILED(rv)) {
+    // if unable to initialize the db, force-re-initialize it:
+    // InitDBFile will backup the old db and create a new one.
+    rv = InitDBFile(PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = InitDB(&doImport);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = InitStatements();
-  NS_ENSURE_SUCCESS(rv, rv);
+
 #ifdef IN_MEMORY_LINKS
   rv = InitMemDB();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -336,9 +350,6 @@ nsNavHistory::Init()
   mDateFormatter = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // annotation service - just ignore errors
-  //mAnnotationService = do_GetService("@mozilla.org/annotation-service;1", &rv);
-
   // prefs
   LoadPrefs();
 
@@ -387,6 +398,85 @@ nsNavHistory::Init()
   return NS_OK;
 }
 
+// nsNavHistory::BackupDBFile
+//
+//    backup a corrupted db file
+//
+nsresult
+nsNavHistory::BackupDBFile()
+{
+  // move the database file to a uniquely named backup
+  nsCOMPtr<nsIFile> profDir;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                              getter_AddRefs(profDir));
+  
+  nsCOMPtr<nsIFile> corruptBackup;
+  rv = profDir->Clone(getter_AddRefs(corruptBackup));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = corruptBackup->Append(DB_CORRUPT_FILENAME);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = corruptBackup->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return mDBFile->MoveTo(profDir, DB_CORRUPT_FILENAME);
+}
+  
+// nsNavHistory::InitDBFile
+nsresult
+nsNavHistory::InitDBFile(PRBool aForceInit)
+{
+  // get profile dir, file
+  nsCOMPtr<nsIFile> profDir;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                       getter_AddRefs(profDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = profDir->Clone(getter_AddRefs(mDBFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBFile->Append(DB_FILENAME);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // if forcing, backup and remove the old file
+  if (aForceInit) {
+    rv = BackupDBFile();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // file exists?
+  PRBool dbExists;
+  rv = mDBFile->Exists(&dbExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // open the database
+  mDBService = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBService->OpenDatabase(mDBFile, getter_AddRefs(mDBConn));
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
+    dbExists = PR_FALSE;
+  
+    // backup file
+    rv = BackupDBFile();
+    NS_ENSURE_SUCCESS(rv, rv);
+  
+    // create new db file, and try to open again
+    rv = profDir->Clone(getter_AddRefs(mDBFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBFile->Append(DB_FILENAME);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBService->OpenDatabase(mDBFile, getter_AddRefs(mDBConn));
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // if the db didn't previously exist, or was corrupted, re-import bookmarks.
+  if (!dbExists) {
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService("@mozilla.org/preferences-service;1"));
+    if (prefs) {
+      rv = prefs->SetBoolPref(PREF_BROWSER_IMPORT_BOOKMARKS, PR_TRUE);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+  
+  return NS_OK;
+}
 
 // nsNavHistory::InitDB
 //
@@ -400,62 +490,6 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   nsresult rv;
   PRBool tableExists;
   *aDoImport = PR_FALSE;
-
-  // init DB
-  nsCOMPtr<nsIFile> profDir;
-  nsCOMPtr<nsIFile> dbFile;
-  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                              getter_AddRefs(profDir));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = profDir->Clone(getter_AddRefs(dbFile));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = dbFile->Append(DB_FILENAME);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // import bookmarks if places.sqlite doesn't exist
-  PRBool dbExists;
-  rv = dbFile->Exists(&dbExists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // open the database
-  mDBService = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBService->OpenDatabase(dbFile, getter_AddRefs(mDBConn));
-  if (rv == NS_ERROR_FILE_CORRUPTED) {
-    dbExists = PR_FALSE;
-    // backup the corrupted db file
-    nsAutoString corruptFileName;
-    rv = dbFile->GetLeafName(corruptFileName);
-    NS_ENSURE_SUCCESS(rv, rv);
-    corruptFileName.Append(NS_LITERAL_STRING(".corrupt"));
-
-    nsCOMPtr<nsIFile> corruptBackup;
-    rv = profDir->Clone(getter_AddRefs(corruptBackup));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = corruptBackup->Append(corruptFileName);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = corruptBackup->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = dbFile->MoveTo(nsnull, corruptFileName);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = profDir->Clone(getter_AddRefs(dbFile));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = dbFile->Append(DB_FILENAME);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBService->OpenDatabase(dbFile, getter_AddRefs(mDBConn));
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // if the db didn't previously exist, or was corrupted, re-import bookmarks.
-  if (!dbExists) {
-    nsCOMPtr<nsIPrefBranch> prefs(do_GetService("@mozilla.org/preferences-service;1"));
-    if (prefs) {
-      rv = prefs->SetBoolPref(PREF_BROWSER_IMPORT_BOOKMARKS, PR_TRUE);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
 
   // Set the database page size. This will only have any effect on empty files,
   // so must be done before anything else. If the file already exists, we'll
@@ -594,7 +628,7 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // moz_places
-  if (! tableExists) {
+  if (!tableExists) {
     *aDoImport = PR_TRUE;
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_places ("
         "id INTEGER PRIMARY KEY, "
@@ -664,6 +698,10 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   }
 
   // DO NOT PUT ANY SCHEMA-MODIFYING THINGS HERE
+
+  rv = InitStatements();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
