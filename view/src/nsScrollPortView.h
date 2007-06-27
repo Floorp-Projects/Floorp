@@ -59,8 +59,6 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID,
                             void** aInstancePtr);
 
-  NS_IMETHOD  SetWidget(nsIWidget *aWidget);
-
   //nsIScrollableView interface
   NS_IMETHOD  CreateScrollControls(nsNativeWidget aNative = nsnull);
   NS_IMETHOD  GetContainerSize(nscoord *aWidth, nscoord *aHeight) const;

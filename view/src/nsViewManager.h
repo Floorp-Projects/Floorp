@@ -49,9 +49,7 @@
 #include "nsIScrollableView.h"
 #include "nsIRegion.h"
 #include "nsView.h"
-
-class nsISupportsArray;
-class BlendingBuffers;
+#include "nsIViewObserver.h"
 
 //Uncomment the following line to enable generation of viewmanager performance data.
 #ifdef MOZ_PERF_METRICS
@@ -61,28 +59,6 @@ class BlendingBuffers;
 #ifdef NS_VM_PERF_METRICS
 #include "nsTimer.h"
 #endif
-
-/**
-   FIXED-POSITION FRAMES AND Z-ORDERING
-
-   Fixed-position frames are special. They have TWO views. There is the "real" view, which is
-   a child of the root view for the viewport (which is the root view of the view manager).
-   There is also a "placeholder" view (of class nsZPlaceholderView) which never really
-   participates in any view operations. It is a child of the view that would have contained
-   the fixed-position element if it had not been fixed-position. The real view keeps track
-   of the placeholder view and returns the placeholder view when you call GetZParent on the
-   real view.
-
-   (Although currently all views which have a placeholder view are themselves children of the
-   root view, we don't want to depend on this. Later we might want to support views that
-   are fixed relative to some container other than the viewport.)
-
-   As we build the display list in CreateDisplayList, once we've processed the parent of
-   real views (i.e., the root), we move those real views from their current position in the
-   display list over to where their placeholder views are in the display list. This ensures that
-   views get repainted in the order they would have been repainted in the absence of
-   fixed-position frames.
- */
 
 /**
    Invalidation model:
@@ -114,28 +90,6 @@ class BlendingBuffers;
    view manager is the only thing keeping track of mUpdateCnt.  As a result,
    Composite() calls should also be forwarded to the root view manager.
 */
-
-class nsZPlaceholderView : public nsView
-{
-public:
-  nsZPlaceholderView(nsViewManager* aViewManager) : nsView(aViewManager) {}
-
-  void RemoveReparentedView() { mReparentedView = nsnull; }
-  void SetReparentedView(nsView* aView) { mReparentedView = aView; }
-  nsView* GetReparentedView() const { return mReparentedView; }
-
-  virtual PRBool IsZPlaceholderView() const { return PR_TRUE; }
-
-protected:
-  virtual ~nsZPlaceholderView() {
-    if (nsnull != mReparentedView) {
-      mReparentedView->SetZParent(nsnull);
-    }
-  }
-
-protected:
-  nsView   *mReparentedView;
-};
 
 class nsViewManagerEvent : public nsRunnable {
 public:
@@ -188,9 +142,6 @@ public:
   NS_IMETHOD  InsertChild(nsIView *parent, nsIView *child,
                           PRInt32 zindex);
 
-  NS_IMETHOD  InsertZPlaceholder(nsIView *parent, nsIView *child, nsIView *sibling,
-                                 PRBool above);
-
   NS_IMETHOD  RemoveChild(nsIView *parent);
 
   NS_IMETHOD  MoveViewBy(nsIView *aView, nscoord aX, nscoord aY);
@@ -198,8 +149,6 @@ public:
   NS_IMETHOD  MoveViewTo(nsIView *aView, nscoord aX, nscoord aY);
 
   NS_IMETHOD  ResizeView(nsIView *aView, const nsRect &aRect, PRBool aRepaintExposedAreaOnly = PR_FALSE);
-
-  NS_IMETHOD  SetViewCheckChildEvents(nsIView *aView, PRBool aEnable);
 
   NS_IMETHOD  SetViewFloating(nsIView *aView, PRBool aFloating);
 
@@ -442,7 +391,6 @@ private:
   // visible again.
   nsSize            mDelayedResize;
 
-  nsISupportsArray  *mCompositeListeners;
   nsCOMPtr<nsIFactory> mRegionFactory;
   nsView            *mRootView;
   // mRootViewManager is a strong ref unless it equals |this|.  It's

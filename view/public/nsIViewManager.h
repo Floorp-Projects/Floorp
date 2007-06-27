@@ -46,8 +46,6 @@
 
 class nsIScrollableView;
 class nsIWidget;
-class nsIBlender;
-class nsICompositeListener;
 struct nsRect;
 class nsRegion;
 class nsIDeviceContext;
@@ -218,18 +216,6 @@ public:
                           PRBool aAfter) = 0;
 
   /**
-   * Given a parent view, insert a placeholder for a view that logically
-   * belongs to this parent but has to be moved somewhere else for geometry
-   * reasons ("fixed" positioning).
-   * @param aParent parent view
-   * @param aChild child view
-   * @param aSibling sibling view
-   * @param aAfter after or before in the document order
-   */
-  NS_IMETHOD  InsertZPlaceholder(nsIView *aParent, nsIView *aChild, nsIView *aSibling,
-                                 PRBool aAfter) = 0;
-
-  /**
    * Remove a specific child view from its parent. This will NOT remove its placeholder
    * if there is one.
    * The view manager generates the appropriate dirty regions.
@@ -298,11 +284,6 @@ public:
    * views that need to be drawn in front of all other views.
    */
   NS_IMETHOD  SetViewFloating(nsIView *aView, PRBool aFloatingView) = 0;
-
-  /**
-   * Set whether the view's children should be searched during event processing.
-   */
-  NS_IMETHOD  SetViewCheckChildEvents(nsIView *aView, PRBool aEnable) = 0;
 
   /**
    * Set the view observer associated with this manager
