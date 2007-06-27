@@ -2003,114 +2003,88 @@ function BrowserLoadURL(aTriggeringEvent, aPostData) {
   focusElement(content);
 }
 
-function getShortcutOrURI(aURL, aPostDataRef)
-{
-  // rjc: added support for URL shortcuts (3/30/1999)
+function getShortcutOrURI(aURL, aPostDataRef) {
+  var shortcutURL = null;
+  var keyword = aURL;
+  var param = "";
+  var searchService = Cc["@mozilla.org/browser/search-service;1"].
+                      getService(Ci.nsIBrowserSearchService);
+
+  var offset = aURL.indexOf(" ");
+  if (offset > 0) {
+    keyword = aURL.substr(0, offset);
+    param = aURL.substr(offset + 1);
+  }
+
+  var engine = searchService.getEngineByAlias(keyword);
+  if (engine)
+    return engine.getSubmission(param, null).uri.spec;
+
   try {
-    var shortcutURL = null;
 #ifdef MOZ_PLACES_BOOKMARKS
-    var shortcutURI = PlacesUtils.bookmarks.getURIForKeyword(aURL);
-    if (shortcutURI) {
-      shortcutURL = shortcutURI.spec;
-      // get POST data
-      var postData = PlacesUtils.getPostDataForURI(shortcutURI);
-      aPostDataRef.value = postData;
-    }
+    var shortcutURI = PlacesUtils.bookmarks.getURIForKeyword(keyword);
+    shortcutURL = shortcutURI.spec;
+    aPostDataRef.value = PlacesUtils.getPostDataForURI(shortcutURI);
 #else
-    shortcutURL = BMSVC.resolveKeyword(aURL, aPostDataRef);
+    shortcutURL = BMSVC.resolveKeyword(keyword, aPostDataRef);
 #endif
-    if (!shortcutURL) {
-      // rjc: add support for string substitution with shortcuts (4/4/2000)
-      //      (see bug # 29871 for details)
-      var aOffset = aURL.indexOf(" ");
-      if (aOffset > 0) {
-        var cmd = aURL.substr(0, aOffset);
-        var text = aURL.substr(aOffset+1);
-#ifdef MOZ_PLACES_BOOKMARKS
-        shortcutURI = PlacesUtils.bookmarks.getURIForKeyword(cmd);
-        if (shortcutURI)
-          shortcutURL = shortcutURI.spec;
-#else
-        shortcutURL = BMSVC.resolveKeyword(cmd, aPostDataRef);
-#endif
-        if (shortcutURL && text) {
-          var encodedText = null; 
-          var charset = "";
-          const re = /^(.*)\&mozcharset=([a-zA-Z][_\-a-zA-Z0-9]+)\s*$/; 
-          var matches = shortcutURL.match(re);
-          if (matches) {
-             shortcutURL = matches[1];
-             charset = matches[2];
-          }
+  } catch(ex) {}
+
+  if (!shortcutURL)
+    return aURL;
+
+  var postData = "";
+  if (aPostDataRef && aPostDataRef.value)
+    postData = unescape(aPostDataRef.value);
+
+  if (/%s/i.test(shortcutURL) || /%s/i.test(postData)) {
+    var charset = "";
+    const re = /^(.*)\&mozcharset=([a-zA-Z][_\-a-zA-Z0-9]+)\s*$/;
+    var matches = shortcutURL.match(re);
+    if (matches)
+      [, shortcutURL, charset] = matches;
+    else {
+      try {
+        //XXX Bug 317472 will add lastCharset support to places.
 #ifndef MOZ_PLACES_BOOKMARKS
-          // FIXME: Bug #317472, we don't have last charset in places yet.
-          else if (/%s/.test(shortcutURL) || 
-                   (aPostDataRef && /%s/.test(aPostDataRef.value))) {
-            try {
-              charset = BMSVC.getLastCharset(shortcutURL);
-            } catch (ex) {
-            }
-          }
+        charset = BMSVC.getLastCharset(shortcutURL);
 #endif
-
-          if (charset)
-            encodedText = escape(convertFromUnicode(charset, text)); 
-          else  // default case: charset=UTF-8
-            encodedText = encodeURIComponent(text);
-
-          if (aPostDataRef && aPostDataRef.value) {
-            // XXXben - currently we only support "application/x-www-form-urlencoded"
-            //          enctypes.
-            aPostDataRef.value = unescape(aPostDataRef.value);
-            if (aPostDataRef.value.match(/%[sS]/)) {
-              aPostDataRef.value = getPostDataStream(aPostDataRef.value,
-                                                     text, encodedText,
-                                                     "application/x-www-form-urlencoded");
-            }
-            else {
-              shortcutURL = null;
-              aPostDataRef.value = null;
-            }
-          }
-          else {
-            if (/%[sS]/.test(shortcutURL))
-              shortcutURL = shortcutURL.replace(/%s/g, encodedText)
-                                       .replace(/%S/g, text);
-            else 
-              shortcutURL = null;
-          }
-        }
+      } catch (ex) {
+        Components.utils.reportError(ex);
       }
     }
 
-    if (shortcutURL)
-      aURL = shortcutURL;
+    var encodedParam = "";
+    if (charset)
+      encodedParam = escape(converFromUnicode(charset, param));
+    else // Default charset is UTF-8
+      encodedParam = encodeURIComponent(param);
 
-  } catch (ex) {
+    shortcutURL = shortcutURL.replace(/%s/g, encodedParam).replace(/%S/g, param);
+
+    if (/%s/i.test(postData)) // POST keyword
+      aPostDataRef.value = getPostDataStream(postData, param, encodedParam,
+                                             "application/x-www-form-urlencoded");
   }
-  return aURL;
+  else
+    aPostDataRef.value = null;
+
+  return shortcutURL;
 }
-
-function getPostDataStream(aStringData, aKeyword, aEncKeyword, aType)
-{
-  var dataStream = Components.classes["@mozilla.org/io/string-input-stream;1"]
-                            .createInstance(Components.interfaces.nsIStringInputStream);
+ 
+function getPostDataStream(aStringData, aKeyword, aEncKeyword, aType) {
+  var dataStream = Cc["@mozilla.org/io/string-input-stream;1"].
+                   createInstance(Ci.nsIStringInputStream);
   aStringData = aStringData.replace(/%s/g, aEncKeyword).replace(/%S/g, aKeyword);
-#ifdef MOZILLA_1_8_BRANCH
-# bug 318193
-  dataStream.setData(aStringData, aStringData.length);
-#else
   dataStream.data = aStringData;
-#endif
-
-  var mimeStream = Components.classes["@mozilla.org/network/mime-input-stream;1"]
-                              .createInstance(Components.interfaces.nsIMIMEInputStream);
+ 
+  var mimeStream = Cc["@mozilla.org/network/mime-input-stream;1"].
+                   createInstance(Ci.nsIMIMEInputStream);
   mimeStream.addHeader("Content-Type", aType);
   mimeStream.addContentLength = true;
   mimeStream.setData(dataStream);
-  return mimeStream.QueryInterface(Components.interfaces.nsIInputStream);
+  return mimeStream.QueryInterface(Ci.nsIInputStream);
 }
-
 
 function readFromClipboard()
 {
