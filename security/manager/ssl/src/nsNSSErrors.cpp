@@ -348,13 +348,19 @@ nsNSSErrors::getErrorMessageFromCode(PRInt32 err,
   const char *nss_error_id_str = getDefaultErrorStringName(err);
   const char *id_str = getOverrideErrorStringName(err);
 
-  if (!id_str)
-    id_str = nss_error_id_str;
-
-  if (id_str)
+  if (id_str || nss_error_id_str)
   {
     nsString defMsg;
-    nsresult rv = component->GetPIPNSSBundleString(id_str, defMsg);
+    nsresult rv;
+    if (id_str)
+    {
+      rv = component->GetPIPNSSBundleString(id_str, defMsg);
+    }
+    else
+    {
+      rv = component->GetNSSBundleString(nss_error_id_str, defMsg);
+    }
+
     if (NS_SUCCEEDED(rv))
     {
       returnedMessage.Append(defMsg);
