@@ -182,13 +182,14 @@ ReadCMAPTableFormat12(PRUint8 *aBuf, PRInt32 aLength, FontEntry *aFontEntry)
         GroupOffsetStartCode = 0,
         GroupOffsetEndCode = 4
     };
+    NS_ENSURE_TRUE(aLength >= 16, NS_ERROR_FAILURE);
 
     NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetFormat) == 12, NS_ERROR_FAILURE);
     NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetReserved) == 0, NS_ERROR_FAILURE);
 
     PRUint32 tablelen = ReadLongAt(aBuf, OffsetTableLength);
     NS_ENSURE_TRUE(tablelen <= aLength, NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(tablelen > 16, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(tablelen >= 16, NS_ERROR_FAILURE);
 
     NS_ENSURE_TRUE(ReadLongAt(aBuf, OffsetLanguage) == 0, NS_ERROR_FAILURE);
 
