@@ -664,11 +664,21 @@ IsValidSelectionPoint(nsFrameSelection *aFrameSel, nsIContent *aContent)
     return PR_FALSE;
   if (aFrameSel)
   {
-    nsCOMPtr<nsIContent> tLimiter = aFrameSel->GetLimiter();
-    if (tLimiter && tLimiter != aContent)
+    nsIContent *limiter = aFrameSel->GetLimiter();
+    if (limiter)
     {
-      if (tLimiter != aContent->GetParent()) //if newfocus == the limiter. that's ok. but if not there and not parent bad
+      if (limiter != aContent && limiter != aContent->GetParent()) //if newfocus == the limiter. that's ok. but if not there and not parent bad
         return PR_FALSE; //not in the right content. tLimiter said so
+    }
+    limiter = aFrameSel->GetAncestorLimiter();
+    if (limiter)
+    {
+      nsIContent *content = aContent;
+      while (content && content != limiter)
+      {
+        content = content->GetParent();
+      }
+      return content != nsnull;
     }
   }
   return PR_TRUE;
@@ -825,6 +835,7 @@ nsFrameSelection::nsFrameSelection()
   mChangesDuringBatching = PR_FALSE;
   mNotifyFrames = PR_TRUE;
   mLimiter = nsnull; //no default limiter.
+  mAncestorLimiter = nsnull;
   
   mMouseDoubleDownState = PR_FALSE;
   
@@ -2220,8 +2231,10 @@ nsFrameSelection::HandleClick(nsIContent *aNewFocus,
 
   InvalidateDesiredX();
 
-  if (!aContinueSelection)
+  if (!aContinueSelection) {
     mMaintainRange = nsnull;
+    mAncestorLimiter = nsnull;
+  }
 
   mHint = HINT(aHint);
   // Don't take focus when dragging off of a table
@@ -2786,6 +2799,9 @@ nsFrameSelection::SelectAll()
   {
     rootContent = mLimiter;//addrefit
   }
+  else if (mAncestorLimiter) {
+    rootContent = mAncestorLimiter;
+  }
   else
   {
     nsIDocument *doc = mShell->GetDocument();
@@ -2797,7 +2813,7 @@ nsFrameSelection::SelectAll()
   }
   PRInt32 numChildren = rootContent->GetChildCount();
   PostReason(nsISelectionListener::NO_REASON);
-  return TakeFocus(mLimiter, 0, numChildren, PR_FALSE, PR_FALSE);
+  return TakeFocus(rootContent, 0, numChildren, PR_FALSE, PR_FALSE);
 }
 
 //////////END FRAMESELECTION
@@ -3822,6 +3838,23 @@ nsFrameSelection::CreateAndAddRange(nsIDOMNode *aParentNode, PRInt32 aOffset)
 }
 
 // End of Table Selection
+
+void
+nsFrameSelection::SetAncestorLimiter(nsIContent *aLimiter)
+{
+  if (mAncestorLimiter != aLimiter) {
+    mAncestorLimiter = aLimiter;
+    PRInt8 index =
+      GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+    if (!IsValidSelectionPoint(this, mDomSelections[index]->FetchFocusNode())) {
+      ClearNormalSelection();
+      if (mAncestorLimiter) {
+        PostReason(nsISelectionListener::NO_REASON);
+        TakeFocus(mAncestorLimiter, 0, 0, PR_FALSE, PR_FALSE);
+      }
+    }
+  }
+}
 
 //END nsFrameSelection methods
 
@@ -5288,6 +5321,13 @@ nsTypedSelection::GetFrameSelection(nsFrameSelection **aFrameSelection) {
   NS_ENSURE_ARG_POINTER(aFrameSelection);
   *aFrameSelection = mFrameSelection;
   NS_IF_ADDREF(*aFrameSelection);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTypedSelection::SetAncestorLimiter(nsIContent *aContent)
+{
+  mFrameSelection->SetAncestorLimiter(aContent);
   return NS_OK;
 }
 

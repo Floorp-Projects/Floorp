@@ -35,6 +35,8 @@ dist/bin/res/html.css
 dist/bin/res/quirk.css
 dist/bin/res/viewsource.css
 dist/bin/res/forms.css
+dist/bin/res/contenteditable.css
+dist/bin/res/designmode.css
 dist/bin/res/arrow.gif
 dist/bin/res/arrowd.gif
 dist/bin/res/ua.css

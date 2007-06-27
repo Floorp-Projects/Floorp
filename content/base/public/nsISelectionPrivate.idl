@@ -41,6 +41,7 @@
 
 interface nsIDOMRange;
 interface nsISelectionListener;
+interface nsIContent;
 
 %{C++
 class nsFrameSelection;
@@ -54,7 +55,7 @@ struct nsPoint;
 [ptr] native nsIPresShell(nsIPresShell);
 [ref] native nsPointRef(nsPoint);
 
-[scriptable, uuid(3225CA54-D7E1-4FF5-8EE9-091B0BFCDA1F)]
+[scriptable, uuid(b416c692-eeb8-4186-addd-c444e81b68e5)]
 interface nsISelectionPrivate : nsISupports
  {
     const short ENDOFPRECEDINGLINE=0;
@@ -115,5 +116,7 @@ interface nsISelectionPrivate : nsISupports
      * Returnes a reference to the frame selection associated with this selection 
      */
     [noscript] nsFrameSelection getFrameSelection();
+
+    [noscript] void setAncestorLimiter(in nsIContent aContent);
 };
 
