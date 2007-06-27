@@ -8499,14 +8499,8 @@ nsNavigator::GetOfflineResources(nsIDOMOfflineResourceList **aList)
     nsresult rv = webNav->GetCurrentURI(getter_AddRefs(uri));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mOfflineResources = new nsDOMOfflineResourceList();
+    mOfflineResources = new nsDOMOfflineResourceList(uri);
     if (!mOfflineResources) return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = mOfflineResources->Init(uri);
-    if (NS_FAILED(rv)) {
-      mOfflineResources = nsnull;
-      return rv;
-    }
   }
 
   NS_IF_ADDREF(*aList = mOfflineResources);

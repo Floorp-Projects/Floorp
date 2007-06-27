@@ -53,18 +53,19 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMOFFLINERESOURCELIST
 
-  nsDOMOfflineResourceList();
+  nsDOMOfflineResourceList(nsIURI* aURI);
   virtual ~nsDOMOfflineResourceList();
 
-  nsresult Init(nsIURI *aURI);
-
 private:
+  nsresult Init();
+
   nsresult GetCacheKey(const nsAString &aURI, nsCString &aKey);
   nsresult GetCacheKey(nsIURI *aURI, nsCString &aKey);
 
   nsresult CacheKeys();
   void ClearCachedKeys();
 
+  PRBool mInitialized;
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIOfflineCacheSession> mCacheSession;
   nsCAutoString mHostPort;
