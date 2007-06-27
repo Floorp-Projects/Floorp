@@ -134,6 +134,13 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
                                            PRUint32 numParams,
                                            nsAString &outString) = 0;
 
+  NS_IMETHOD GetNSSBundleString(const char *name,
+                                nsAString &outString) = 0;
+  NS_IMETHOD NSSBundleFormatStringFromName(const char *name,
+                                           const PRUnichar **params,
+                                           PRUint32 numParams,
+                                           nsAString &outString) = 0;
+
   // This method will just disable OCSP in NSS, it will not
   // alter the respective pref values.
   NS_IMETHOD SkipOcsp() = 0;
@@ -212,6 +219,12 @@ public:
                                            const PRUnichar **params,
                                            PRUint32 numParams,
                                            nsAString &outString);
+  NS_IMETHOD GetNSSBundleString(const char *name,
+                               nsAString &outString);
+  NS_IMETHOD NSSBundleFormatStringFromName(const char *name,
+                                           const PRUnichar **params,
+                                           PRUint32 numParams,
+                                           nsAString &outString);
   NS_IMETHOD SkipOcsp();
   NS_IMETHOD SkipOcspOff();
   nsresult InitializeCRLUpdateTimer();
@@ -270,6 +283,7 @@ private:
   
   nsCOMPtr<nsIScriptSecurityManager> mScriptSecurityManager;
   nsCOMPtr<nsIStringBundle> mPIPNSSBundle;
+  nsCOMPtr<nsIStringBundle> mNSSErrorsBundle;
   nsCOMPtr<nsIURIContentListener> mPSMContentListener;
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
   nsCOMPtr<nsITimer> mTimer;
