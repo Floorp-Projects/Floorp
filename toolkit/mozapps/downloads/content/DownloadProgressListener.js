@@ -60,11 +60,8 @@ function DownloadProgressListener (aDocument, aStringBundle)
 
 DownloadProgressListener.prototype = 
 {
-  rateChanges: 0,
-  rateChangeLimit: 0,
-  priorRate: 0,
-  lastUpdate: -500,
   doc: null,
+
   onDownloadStateChange: function dlPL_onDownloadStateChange(aState, aDownload)
   {
     var downloadID = "dl" + aDownload.id;
@@ -87,17 +84,6 @@ DownloadProgressListener.prototype =
                               aCurTotalProgress, aMaxTotalProgress, aDownload)
   {
     var overallProgress = aCurTotalProgress;
-    // Get current time.
-    var now = (new Date()).getTime();
-    
-    // If interval hasn't elapsed, ignore it.
-    if (now - this.lastUpdate < interval && aMaxTotalProgress != "-1" &&  
-        parseInt(aCurTotalProgress) < parseInt(aMaxTotalProgress)) {
-      return;
-    }
-
-    // Update this time.
-    this.lastUpdate = now;
 
     var downloadID = "dl" + aDownload.id;
     var download = this.doc.getElementById(downloadID);
@@ -153,20 +139,7 @@ DownloadProgressListener.prototype =
     }
 
     // Update the download rate
-    let ([rate, unit] = this._convertByteUnits(byteRate)) {
-      // Don't update too often!
-      if (rate != this.priorRate) {
-        if (this.rateChanges++ == this.rateChangeLimit) {
-          // Time to update download rate.
-          this.priorRate = rate;
-          this.rateChanges = 0;
-        } else {
-          // Stick with old rate for a bit longer.
-          rate = this.priorRate;
-        }
-      } else
-        this.rateChanges = 0;
-
+    let ([rate, unit] = this._convertByteUnits(aDownload.speed)) {
       // Insert 2 is the download rate
       status = this._replaceInsert(status, 2, rate);
       // Insert 3 is the |unit|/sec
