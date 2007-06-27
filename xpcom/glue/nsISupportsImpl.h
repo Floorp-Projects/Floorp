@@ -154,8 +154,7 @@ public:
     PRBool shouldBePurple = tmp > 1;
 
     if (NS_UNLIKELY(shouldBePurple && !purple)) {
-      if (!nsCycleCollector_suspect(owner))
-        shouldBePurple = PR_FALSE;
+      nsCycleCollector_suspect(owner);
     } else if (NS_UNLIKELY(tmp == 1 && purple)) {
       nsCycleCollector_forget(owner);
     }
