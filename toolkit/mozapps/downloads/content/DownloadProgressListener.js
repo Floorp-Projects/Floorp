@@ -45,16 +45,17 @@ function DownloadProgressListener (aDocument, aStringBundle)
   this.doc = aDocument;
   
   this._statusFormat = aStringBundle.getString("statusFormat");
-  this._statusFormatKBMB = aStringBundle.getString("statusFormatKBMB");
-  this._statusFormatKBKB = aStringBundle.getString("statusFormatKBKB");
-  this._statusFormatMBMB = aStringBundle.getString("statusFormatMBMB");
-  this._statusFormatUnknownMB = aStringBundle.getString("statusFormatUnknownMB");
-  this._statusFormatUnknownKB = aStringBundle.getString("statusFormatUnknownKB");
+  this._transferSameUnits = aStringBundle.getString("transferSameUnits");
+  this._transferDiffUnits = aStringBundle.getString("transferDiffUnits");
+  this._transferNoTotal = aStringBundle.getString("transferNoTotal");
   this._remain = aStringBundle.getString("remain");
-  this._unknownFilesize = aStringBundle.getString("unknownFilesize");
+  this._unknownTimeLeft = aStringBundle.getString("unknownTimeLeft");
   this._longTimeFormat = aStringBundle.getString("longTimeFormat");
   this._shortTimeFormat = aStringBundle.getString("shortTimeFormat");
-  
+  this._units = [aStringBundle.getString("bytes"),
+                 aStringBundle.getString("kilobyte"),
+                 aStringBundle.getString("megabyte"),
+                 aStringBundle.getString("gigabyte")];
 }
 
 DownloadProgressListener.prototype = 
@@ -116,8 +117,7 @@ DownloadProgressListener.prototype =
         
         onUpdateProgress();
       }
-    }
-    else {
+    } else {
       percent = -1;
 
       // Progress meter should be barber-pole in this case.
@@ -127,56 +127,63 @@ DownloadProgressListener.prototype =
     // Now that we've set the progress and the time, update the UI with 
     // all the the pertinent information (bytes transferred, bytes total,
     // download rate, time remaining). 
-    var status = this._statusFormat;
+    let status = this._statusFormat;
 
-    // Insert the progress so far using the formatting routine. 
-    var KBProgress = parseInt(overallProgress/1024 + .5);
-    var KBTotal = parseInt(aMaxTotalProgress/1024 + .5);
-    var kbProgress = this._formatKBytes(KBProgress, KBTotal);
-    status = this._replaceInsert(status, 1, kbProgress);
-    if (download)
-      download.setAttribute("status-internal", kbProgress);
-
-    var rate = aDownload.speed;
-    if (rate) {
-      // rate is bytes/sec
-      var kRate = rate / 1024; // K bytes/sec;
-      kRate = parseInt( kRate * 10 + .5 ); // xxx (3 digits)
-      // Don't update too often!
-      if (kRate != this.priorRate) {
-        if (this.rateChanges++ == this.rateChangeLimit) {
-            // Time to update download rate.
-            this.priorRate = kRate;
-            this.rateChanges = 0;
-        }
-        else {
-          // Stick with old rate for a bit longer.
-          kRate = this.priorRate;
-        }
-      }
+    // Update the bytes transferred and bytes total
+    let ([progress, progressUnits] = this._convertByteUnits(aCurTotalProgress),
+         [total, totalUnits] = this._convertByteUnits(aMaxTotalProgress),
+         transfer) {
+      if (total <= 0)
+        transfer = this._transferNoTotal;
+      else if (progressUnits == totalUnits)
+        transfer = this._transferSameUnits;
       else
+        transfer = this._transferDiffUnits;
+
+      transfer = this._replaceInsert(transfer, 1, progress);
+      transfer = this._replaceInsert(transfer, 2, progressUnits);
+      transfer = this._replaceInsert(transfer, 3, total);
+      transfer = this._replaceInsert(transfer, 4, totalUnits);
+
+      // Insert 1 is the download progress
+      status = this._replaceInsert(status, 1, transfer);
+
+      if (download)
+        download.setAttribute("status-internal", transfer);
+    }
+
+    // Update the download rate
+    let ([rate, unit] = this._convertByteUnits(byteRate)) {
+      // Don't update too often!
+      if (rate != this.priorRate) {
+        if (this.rateChanges++ == this.rateChangeLimit) {
+          // Time to update download rate.
+          this.priorRate = rate;
+          this.rateChanges = 0;
+        } else {
+          // Stick with old rate for a bit longer.
+          rate = this.priorRate;
+        }
+      } else
         this.rateChanges = 0;
 
-      var fraction = kRate % 10;
-      kRate = parseInt((kRate - fraction) / 10);
-
-      // Insert 3 is the download rate (in kilobytes/sec).
-      if (kRate < 100)
-        kRate += "." + fraction;
-      status = this._replaceInsert(status, 2, kRate);
+      // Insert 2 is the download rate
+      status = this._replaceInsert(status, 2, rate);
+      // Insert 3 is the |unit|/sec
+      status = this._replaceInsert(status, 3, unit);
     }
-    else
-      status = this._replaceInsert(status, 2, "??.?");
 
     // Update time remaining.
-    if (rate && (aMaxTotalProgress > 0)) {
-      var rem = (aMaxTotalProgress - aCurTotalProgress) / rate;
-      rem = parseInt(rem + .5);
-      
-      status = this._replaceInsert(status, 3, this._formatSeconds(rem, this.doc) + " " + this._remain);
+    let (remain) {
+      if ((aDownload.speed > 0) && (aMaxTotalProgress > 0))
+        remain = this._formatSeconds((aMaxTotalProgress - aCurTotalProgress) /
+                                     aDownload.speed) + " " + this._remain;
+      else
+        remain = this._unknownTimeLeft;
+
+      // Insert 4 is the time remaining
+      status = this._replaceInsert(status, 4, remain);
     }
-    else
-      status = this._replaceInsert(status, 3, this._unknownFilesize);
     
     if (download)
       download.setAttribute("status", status);
@@ -207,46 +214,25 @@ DownloadProgressListener.prototype =
     return result;
   },
   
-  // aBytes     aTotalKBytes    returns:
-  // x, < 1MB   y < 1MB         x of y KB
-  // x, < 1MB   y >= 1MB        x KB of y MB
-  // x, >= 1MB  y >= 1MB        x of y MB
-  _formatKBytes: function (aKBytes, aTotalKBytes)
+  // converts a number of bytes to the appropriate unit that results in a
+  // number that needs fewer than 4 digits
+  // returns a pair: [new value with 3 sig. figs., its unit]
+  _convertByteUnits: function(aBytes)
   {
-    var progressHasMB = parseInt(aKBytes/1024) > 0;
-    var totalHasMB = parseInt(aTotalKBytes/1024) > 0;
-    
-    var format = "";
-    if (!progressHasMB && !totalHasMB) {
-      if (!aTotalKBytes) {
-      	 format = this._statusFormatUnknownKB;
-        format = this._replaceInsert(format, 1, aKBytes);
-      } else {
-        format = this._statusFormatKBKB;
-        format = this._replaceInsert(format, 1, aKBytes);
-        format = this._replaceInsert(format, 2, aTotalKBytes);
-      }
+    let unitIndex = 0;
+
+    // convert to next unit if it needs 4 digits (after rounding), but only if
+    // we know the name of the next unit
+    while ((aBytes >= 999.5) && (unitIndex < this._units.length - 1)) {
+      aBytes /= 1024;
+      unitIndex++;
     }
-    else if (progressHasMB && totalHasMB) {
-      format = this._statusFormatMBMB;
-      format = this._replaceInsert(format, 1, (aKBytes / 1024).toFixed(1));
-      format = this._replaceInsert(format, 2, (aTotalKBytes / 1024).toFixed(1));
-    }
-    else if (totalHasMB && !progressHasMB) {
-      format = this._statusFormatKBMB;
-      format = this._replaceInsert(format, 1, aKBytes);
-      format = this._replaceInsert(format, 2, (aTotalKBytes / 1024).toFixed(1));
-    }
-    else if (progressHasMB && !totalHasMB) {
-      format = this._statusFormatUnknownMB;
-      format = this._replaceInsert(format, 1, (aKBytes / 1024).toFixed(1));
-    }
-    else {
-      // This is an undefined state!
-      dump("*** huh?!\n");
-    }
-    
-    return format;  
+
+    // Get rid of insignificant bits by truncating to 1 or 0 decimal points
+    // 0 -> 0; 1.2 -> 1.2; 12.3 -> 12.3; 123.4 -> 123; 234.5 -> 235
+    aBytes = aBytes.toFixed((aBytes > 0) && (aBytes < 100) ? 1 : 0);
+
+    return [aBytes, this._units[unitIndex]];
   },
 
   _formatSeconds: function (secs, doc)
