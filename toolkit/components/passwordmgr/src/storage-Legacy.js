@@ -238,11 +238,11 @@ LoginManagerStorage_legacy.prototype = {
 
 
     /*
-     * clearAllLogins
+     * removeAllLogins
      *
-     * Clears all logins from storage.
+     * Removes all logins from storage.
      */
-    clearAllLogins : function () {
+    removeAllLogins : function () {
         this._logins = {};
         // Disabled hosts kept, as one presumably doesn't want to erase those.
 
