@@ -3,10 +3,6 @@ searchbar {
 }
 
 /* ::::: location bar ::::: */
-#urlbar {
-  -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
-}
-
 #PopupAutoComplete {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#urlbar-result-popup");
 }
