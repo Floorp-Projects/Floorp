@@ -115,6 +115,10 @@ struct THEBES_API gfxRect {
         Outset(sides[0], sides[1], sides[2], sides[3]);
     }
 
+    // Round the rectangle to integer coordinates; rounds to the neearest
+    // pixel centers. Suitable for most places where integral device coordinates
+    // are needed, but note that any translation should be applied first to
+    // avoid pixel rounding errors
     void Round();
 
     // grabbing specific points
@@ -135,6 +139,14 @@ struct THEBES_API gfxRect {
         pos.y *= k;
         size.width *= k;
         size.height *= k;
+    }
+
+    void ScaleInverse(gfxFloat k) {
+        NS_ASSERTION(k > 0.0, "Invalid (negative) scale factor");
+        pos.x /= k;
+        pos.y /= k;
+        size.width /= k;
+        size.height /= k;
     }
 };
 
