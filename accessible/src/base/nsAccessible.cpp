@@ -1508,7 +1508,7 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
         // block's text, so we don't get words jammed together in final name
         // Extra spaces will be trimmed out later
         const nsStyleDisplay* display = frame->GetStyleDisplay();
-        if (display->IsBlockLevel() ||
+        if (display->IsBlockOutside() ||
           display->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL) {
           isHTMLBlock = PR_TRUE;
           if (!aFlatString->IsEmpty()) {
