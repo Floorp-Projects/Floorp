@@ -5737,6 +5737,17 @@ nsIFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
     const nsStyleVisibility* vis = GetStyleVisibility();
     if (vis->mVisible != NS_STYLE_VISIBILITY_COLLAPSE &&
         vis->mVisible != NS_STYLE_VISIBILITY_HIDDEN) {
+      if (mContent->IsNodeOfType(nsINode::eHTML)) {
+        nsCOMPtr<nsISupports> container(PresContext()->GetContainer());
+        nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(container));
+        if (editorDocShell) {
+          PRBool isEditable;
+          editorDocShell->GetEditable(&isEditable);
+          if (isEditable) {
+            return NS_OK;  // Editor content is not focusable
+          }
+        }
+      }
       const nsStyleUserInterface* ui = GetStyleUserInterface();
       if (ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE &&
           ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE) {

@@ -95,7 +95,6 @@
 nsEditingSession::nsEditingSession()
 : mDoneSetup(PR_FALSE)
 , mCanCreateEditor(PR_FALSE)
-, mInteractive(PR_FALSE)
 , mScriptsEnabled(PR_TRUE)
 , mPluginsEnabled(PR_TRUE)
 , mProgressListenerRegistered(PR_FALSE)
@@ -129,18 +128,14 @@ NS_IMPL_ISUPPORTS3(nsEditingSession, nsIEditingSession, nsIWebProgressListener,
 
   aEditorType string, "html" "htmlsimple" "text" "textsimple"
   void makeWindowEditable(in nsIDOMWindow aWindow, in string aEditorType, 
-                          in boolean aDoAfterUriLoad,
-                          in boolean aMakeWholeDocumentEditable,
-                          in boolean aInteractive);
+                          in boolean aDoAfterUriLoad);
 ----------------------------------------------------------------------------*/
 #define DEFAULT_EDITOR_TYPE "html"
 
 NS_IMETHODIMP
 nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
                                      const char *aEditorType, 
-                                     PRBool aDoAfterUriLoad,
-                                     PRBool aMakeWholeDocumentEditable,
-                                     PRBool aInteractive)
+                                     PRBool aDoAfterUriLoad)
 {
   mEditorType.Truncate();
   mEditorFlags = 0;
@@ -151,42 +146,27 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
   if (!docShell) return NS_ERROR_FAILURE;
 
   nsresult rv;
-  if (aMakeWholeDocumentEditable) {
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    rv = aWindow->GetDocument(getter_AddRefs(domDoc));
-    NS_ENSURE_SUCCESS(rv, rv);
+  // Disable JavaScript in this document:
+  PRBool tmp;
+  rv = docShell->GetAllowJavascript(&tmp);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+  mScriptsEnabled = tmp;
 
-    doc->SetEditableFlag(PR_TRUE);
-  }
+  rv = docShell->SetAllowJavascript(PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  mInteractive = aInteractive;
+  // Disable plugins in this document:
+  rv = docShell->GetAllowPlugins(&tmp);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!mInteractive) {
-    // Disable JavaScript in this document:
-    PRBool tmp;
-    rv = docShell->GetAllowJavascript(&tmp);
-    NS_ENSURE_SUCCESS(rv, rv);
+  mPluginsEnabled = tmp;
 
-    mScriptsEnabled = tmp;
-
-    rv = docShell->SetAllowJavascript(PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Disable plugins in this document:
-    rv = docShell->GetAllowPlugins(&tmp);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mPluginsEnabled = tmp;
-
-    rv = docShell->SetAllowPlugins(PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  rv = docShell->SetAllowPlugins(PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Always remove existing editor
-  TearDownEditorOnWindow(aWindow, PR_FALSE);
+  TearDownEditorOnWindow(aWindow);
   
   // Tells embedder that startup is in progress
   mEditorStatus = eEditorCreationInProgress;
@@ -235,7 +215,7 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
     // Since this is used only when editing an existing page,
     //  it IS ok to destroy current editor
     if (NS_FAILED(rv))
-      TearDownEditorOnWindow(aWindow, PR_FALSE);
+      TearDownEditorOnWindow(aWindow);
   }
   return rv;
 }
@@ -381,10 +361,6 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
     needHTMLController = PR_TRUE;
   }
 
-  if (mInteractive) {
-    mEditorFlags |= nsIPlaintextEditor::eEditorAllowInteraction;
-  }
-
   // make the UI state maintainer
   nsComposerCommandsUpdater *stateMaintainer;
   NS_NEWXPCOM(stateMaintainer, nsComposerCommandsUpdater);
@@ -414,15 +390,13 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
   if (!docShell) return NS_ERROR_FAILURE;  
 
-  if (!mInteractive) {
-    // Disable animation of images in this document:
-    nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(aWindow));
-    if (!utils) return NS_ERROR_FAILURE;
+  // Disable animation of images in this document:
+  nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(aWindow));
+  if (!utils) return NS_ERROR_FAILURE;
 
-    rv = utils->GetImageAnimationMode(&mImageAnimationMode);
-    if (NS_FAILED(rv)) return rv;
-    utils->SetImageAnimationMode(imgIContainer::kDontAnimMode);
-  }
+  rv = utils->GetImageAnimationMode(&mImageAnimationMode);
+  if (NS_FAILED(rv)) return rv;
+  utils->SetImageAnimationMode(imgIContainer::kDontAnimMode);
 
   // create and set editor
   nsCOMPtr<nsIEditorDocShell> editorDocShell = do_QueryInterface(docShell, &rv);
@@ -506,12 +480,10 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
 
   TearDownEditorOnWindow
 
-  void tearDownEditorOnWindow (in nsIDOMWindow aWindow,
-                               in boolean aStopEditing);
+  void tearDownEditorOnWindow (in nsIDOMWindow aWindow);
 ----------------------------------------------------------------------------*/
 NS_IMETHODIMP
-nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow,
-                                         PRBool aStopEditing)
+nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
 {
   if (!mDoneSetup)
     return NS_OK;
@@ -529,7 +501,23 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow,
 
   mDoneSetup = PR_FALSE;
 
-  if (aStopEditing) {
+  nsCOMPtr<nsIDOMDocument> dom_doc;
+  aWindow->GetDocument(getter_AddRefs(dom_doc));
+
+  nsCOMPtr<nsIDOMNSHTMLDocument> html_doc(do_QueryInterface(dom_doc));
+  PRBool isMidas = PR_FALSE;
+
+  if (html_doc) {
+    nsAutoString designMode;
+    html_doc->GetDesignMode(designMode);
+
+    isMidas = designMode.EqualsLiteral("on");
+  }
+
+  if (isMidas) {
+    // We're tearing down a midas editor, unregister callbacks since
+    // we're all done editing here.
+
     nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
     if (webProgress) {
       webProgress->RemoveProgressListener(this);
@@ -634,7 +622,7 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow,
     mHTMLCommandControllerId = 0;
   }
 
-  if (aStopEditing && !mInteractive) {
+  if (isMidas) {
     // Make things the way they were before we started editing.
     if (mScriptsEnabled) {
       docShell->SetAllowJavascript(PR_TRUE);
@@ -984,7 +972,7 @@ nsEditingSession::StartDocumentLoad(nsIWebProgress *aWebProgress,
   aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
   if (domWindow)
   {
-    TearDownEditorOnWindow(domWindow, PR_FALSE);
+    TearDownEditorOnWindow(domWindow);
   }
     
   if (aIsToBeMadeEditable)
@@ -1054,45 +1042,27 @@ nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress,
   
     if (makeEditable)
     {
-      // do we already have an editor here?
-      nsCOMPtr<nsIEditor> editor;
-      rv = editorDocShell->GetEditor(getter_AddRefs(editor));
+      mCanCreateEditor = PR_FALSE;
+      rv = SetupEditorOnWindow(domWindow);
       if (NS_FAILED(rv))
-        return rv;
-      if (!editor)
       {
-        mCanCreateEditor = PR_FALSE;
-        rv = SetupEditorOnWindow(domWindow);
-        if (NS_FAILED(rv))
+        // If we had an error, setup timer to load a blank page later
+        if (mLoadBlankDocTimer)
         {
-          // If we had an error, setup timer to load a blank page later
-          if (mLoadBlankDocTimer)
-          {
-            // Must cancel previous timer?
-            mLoadBlankDocTimer->Cancel();
-            mLoadBlankDocTimer = NULL;
-          }
-  
-          mLoadBlankDocTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-          if (NS_FAILED(rv)) return rv;
-
-          mEditorStatus = eEditorCreationInProgress;
-          mLoadBlankDocTimer->InitWithFuncCallback(
-                                          nsEditingSession::TimerCallback,
-                                          (void*)docShell,
-                                          10, nsITimer::TYPE_ONE_SHOT);
+          // Must cancel previous timer?
+          mLoadBlankDocTimer->Cancel();
+          mLoadBlankDocTimer = NULL;
         }
+  
+        mLoadBlankDocTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        mEditorStatus = eEditorCreationInProgress;
+        mLoadBlankDocTimer->InitWithFuncCallback(
+                                        nsEditingSession::TimerCallback,
+                                        (void*)docShell,
+                                        10, nsITimer::TYPE_ONE_SHOT);
       }
-
-      // XXX This should move somewhere else!
-      nsCOMPtr<nsIDOMDocument> domDoc;
-      rv = domWindow->GetDocument(getter_AddRefs(domDoc));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      doc->SetEditableFlag(PR_TRUE);
     }
   }
   return rv;
@@ -1174,7 +1144,7 @@ nsEditingSession::EndPageLoad(nsIWebProgress *aWebProgress,
 
 #if 0
   // Shouldn't we do this when we want to edit sub-frames?
-  return MakeWindowEditable(domWindow, "html", PR_FALSE, mInteractive);
+  return MakeWindowEditable(domWindow, "html", PR_FALSE);
 #else
   return NS_OK;
 #endif

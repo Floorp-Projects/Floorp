@@ -178,8 +178,6 @@ _FILES	= \
 	viewsource.css \
 	arrow.gif \
 	arrowd.gif \
-	contenteditable.css \
-	designmode.css \
 	$(NULL)
 
 GARBAGE		+= $(addprefix $(DIST)/bin/res/,$(_FILES))

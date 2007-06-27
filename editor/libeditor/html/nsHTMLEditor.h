@@ -363,13 +363,6 @@ public:
   NS_IMETHODIMP DeleteText(nsIDOMCharacterData *aTextNode,
                            PRUint32             aOffset,
                            PRUint32             aLength);
-  NS_IMETHOD InsertTextImpl(const nsAString& aStringToInsert, 
-                            nsCOMPtr<nsIDOMNode> *aInOutNode, 
-                            PRInt32 *aInOutOffset,
-                            nsIDOMDocument *aDoc);
-  NS_IMETHOD_(PRBool) IsModifiableNode(nsIDOMNode *aNode);
-
-  NS_IMETHOD SelectAll();
 
   /* ------------ nsICSSLoaderObserver -------------- */
   NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aWasAlternate,

@@ -58,21 +58,11 @@ DeleteElementTxn::DeleteElementTxn()
 {
 }
 
-NS_IMETHODIMP DeleteElementTxn::Init(nsIEditor *aEditor,
-                                     nsIDOMNode *aElement,
+NS_IMETHODIMP DeleteElementTxn::Init(nsIDOMNode *aElement,
                                      nsRangeUpdater *aRangeUpdater)
 {
-  if (!aEditor || !aElement) return NS_ERROR_NULL_POINTER;
-  mEditor = aEditor;
+  if (!aElement) return NS_ERROR_NULL_POINTER;
   mElement = do_QueryInterface(aElement);
-  nsresult result = mElement->GetParentNode(getter_AddRefs(mParent));
-  if (NS_FAILED(result)) { return result; }
-
-  // do nothing if the parent is read-only
-  if (mParent && !mEditor->IsModifiableNode(mParent)) {
-    return NS_ERROR_FAILURE;
-  }
-
   mRangeUpdater = aRangeUpdater;
   return NS_OK;
 }
@@ -86,6 +76,8 @@ NS_IMETHODIMP DeleteElementTxn::DoTransaction(void)
 
   if (!mElement) return NS_ERROR_NOT_INITIALIZED;
 
+  nsresult result = mElement->GetParentNode(getter_AddRefs(mParent));
+  if (NS_FAILED(result)) { return result; }
   if (!mParent) { return NS_OK; }  // this is a no-op, there's no parent to delete mElement from
 
 #ifdef NS_DEBUG
@@ -113,7 +105,7 @@ NS_IMETHODIMP DeleteElementTxn::DoTransaction(void)
 #endif
 
   // remember which child mElement was (by remembering which child was next)
-  nsresult result = mElement->GetNextSibling(getter_AddRefs(mRefNode));  // can return null mRefNode
+  result = mElement->GetNextSibling(getter_AddRefs(mRefNode));  // can return null mRefNode
 
   // give range updater a chance.  SelAdjDeleteNode() needs to be called *before*
   // we do the action, unlike some of the other nsRangeStore update methods.
