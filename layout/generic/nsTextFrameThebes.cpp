@@ -1888,7 +1888,7 @@ BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun)
     nsTextFrame* f;
     for (f = startFrame; f != endFrame;
          f = NS_STATIC_CAST(nsTextFrame*, f->GetNextInFlow())) {
-#ifdef DEBUG
+#ifdef DEBUG_roc
       if (f->GetTextRun()) {
         gfxTextRun* textRun = f->GetTextRun();
         if (textRun->GetFlags() & nsTextFrameUtils::TEXT_IS_SIMPLE_FLOW) {
