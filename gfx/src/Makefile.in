@@ -89,7 +89,6 @@ else
 endif
 
 CPPSRCS = \
-        nsBlender.cpp \
         nsColor.cpp \
         nsColorNames.cpp \
         nsDeviceContext.cpp \

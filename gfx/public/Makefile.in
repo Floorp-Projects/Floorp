@@ -61,7 +61,6 @@ EXPORTS		= \
 		nsIFontMetrics.h \
 		nsIDeviceContext.h \
 		nsIImage.h \
-		nsIBlender.h \
 		nsGfxCIID.h \
 		nsIRegion.h \
 		nsDeviceContext.h \

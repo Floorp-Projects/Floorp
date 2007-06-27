@@ -48,7 +48,6 @@
 #include "nsThreadUtils.h"
 #include "nsIScrollableView.h"
 #include "nsIRegion.h"
-#include "nsIBlender.h"
 #include "nsView.h"
 
 class nsISupportsArray;
