@@ -35,18 +35,29 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
+DEPTH		= ../../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir	= dom/tests/mochitest/ajax/scriptaculous/src
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS =	lib \
-	prototype \
-	offline \
-	mochikit \
-	scriptaculous \
+DIRS	= \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+_TEST_FILES	= \
+	builder.js \
+	controls.js \
+	dragdrop.js \
+	effects.js \
+	scriptaculous.js \
+	slider.js \
+	sound.js \
+	unittest.js \
+	$(NULL)
+
+libs::	$(_TEST_FILES)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
