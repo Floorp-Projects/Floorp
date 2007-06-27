@@ -567,14 +567,6 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIFrame* aFrame,
     // in which case we want to call with aAbove == PR_FALSE to insert at the beginning
     // in document order
     viewManager->InsertChild(parentView, view, insertBefore, insertBefore != nsnull);
-
-    if (nsnull != aContentParentFrame) {
-      nsIView* zParentView = aContentParentFrame->GetClosestView();
-      if (zParentView != parentView) {
-        insertBefore = nsLayoutUtils::FindSiblingViewFor(zParentView, aFrame);
-        viewManager->InsertZPlaceholder(zParentView, view, insertBefore, insertBefore != nsnull);
-      }
-    }
   }
 
   // REVIEW: Don't create a widget for fixed-pos elements anymore.
