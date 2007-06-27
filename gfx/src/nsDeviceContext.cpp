@@ -141,24 +141,6 @@ NS_IMETHODIMP DeviceContextImpl::CreateRenderingContext(nsIView *aView, nsIRende
   return rv;
 }
 
-NS_IMETHODIMP DeviceContextImpl::CreateRenderingContext(nsIDrawingSurface* aSurface, nsIRenderingContext *&aContext)
-{
-  nsresult rv;
-
-  aContext = nsnull;
-  nsCOMPtr<nsIRenderingContext> pContext;
-  rv = CreateRenderingContextInstance(*getter_AddRefs(pContext));
-  if (NS_SUCCEEDED(rv)) {
-    rv = InitRenderingContext(pContext, aSurface);
-    if (NS_SUCCEEDED(rv)) {
-      aContext = pContext;
-      NS_ADDREF(aContext);
-    }
-  }
-  
-  return rv;
-}
-
 NS_IMETHODIMP DeviceContextImpl::CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext)
 {
   nsresult rv;
@@ -193,11 +175,6 @@ NS_IMETHODIMP DeviceContextImpl::CreateRenderingContextInstance(nsIRenderingCont
 nsresult DeviceContextImpl::InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWin)
 {
   return aContext->Init(this, aWin);
-}
-
-nsresult DeviceContextImpl::InitRenderingContext(nsIRenderingContext *aContext, nsIDrawingSurface* aSurface)
-{
-  return aContext->Init(this, aSurface);
 }
 
 NS_IMETHODIMP DeviceContextImpl::CreateFontCache()
