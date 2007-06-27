@@ -1016,8 +1016,10 @@ function delayedStartup()
       goButtonStack.setAttribute("hidden", "true");
   }
 
-  if (gURLBar)
+  if (gURLBar) {
+    gURLBar.addEventListener("dragover", URLBarOnDragOver, true);
     gURLBar.addEventListener("dragdrop", URLBarOnDrop, true);
+  }
 
   gBrowser.addEventListener("pageshow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
 
@@ -2443,12 +2445,21 @@ function PageProxyClickHandler(aEvent)
   return true;
 }
 
+function URLBarOnDragOver(evt)
+{
+  nsDragAndDrop.dragOver(evt, urlbarObserver);
+}
+
 function URLBarOnDrop(evt)
 {
   nsDragAndDrop.drop(evt, urlbarObserver);
 }
 
 var urlbarObserver = {
+  onDragOver: function ()
+    {
+      return true;
+    },
   onDrop: function (aEvent, aXferData, aDragSession)
     {
       var url = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
