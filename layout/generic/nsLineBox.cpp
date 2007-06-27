@@ -67,7 +67,7 @@ nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock)
   NS_ASSERTION(!aIsBlock || aCount == 1, "Blocks must have exactly one child");
   nsIFrame* f = aFrame;
   for (PRInt32 n = aCount; n > 0; f = f->GetNextSibling(), --n) {
-    NS_ASSERTION(aIsBlock == f->GetStyleDisplay()->IsBlockLevel(),
+    NS_ASSERTION(aIsBlock == f->GetStyleDisplay()->IsBlockOutside(),
                  "wrong kind of child frame");
   }
 #endif

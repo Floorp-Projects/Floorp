@@ -2710,24 +2710,3 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
   }
   aCombinedArea = combinedAreaResult;
 }
-
-PRBool
-nsLineLayout::TreatFrameAsBlock(nsIFrame* aFrame)
-{
-  const nsStyleDisplay* display = aFrame->GetStyleDisplay();
-  if (NS_STYLE_POSITION_ABSOLUTE == display->mPosition) {
-    return PR_FALSE;
-  }
-  if (NS_STYLE_FLOAT_NONE != display->mFloats) {
-    return PR_FALSE;
-  }
-  switch (display->mDisplay) {
-  case NS_STYLE_DISPLAY_BLOCK:
-  case NS_STYLE_DISPLAY_LIST_ITEM:
-  case NS_STYLE_DISPLAY_RUN_IN:
-  case NS_STYLE_DISPLAY_COMPACT:
-  case NS_STYLE_DISPLAY_TABLE:
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}

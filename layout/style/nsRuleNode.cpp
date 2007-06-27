@@ -167,7 +167,7 @@ static void EnsureBlockDisplay(PRUint8& display)
   case NS_STYLE_DISPLAY_BLOCK :
   case NS_STYLE_DISPLAY_LIST_ITEM :
     // do not muck with these at all - already blocks
-    // This is equivalent to nsStyleDisplay::IsBlockLevel.  (XXX Maybe we
+    // This is equivalent to nsStyleDisplay::IsBlockOutside.  (XXX Maybe we
     // should just call that?)
     break;
 
@@ -2922,8 +2922,7 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
         displayValue != NS_STYLE_DISPLAY_INLINE &&
         displayValue != NS_STYLE_DISPLAY_INLINE_BLOCK) {
       inherited = PR_TRUE;
-      // XXX IsBlockInside?  (except for the marker bit)
-      if (parentDisplay->IsBlockLevel() ||
+      if (parentDisplay->IsBlockOutside() ||
           parentDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE_BLOCK ||
           parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL ||
           parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION) {
