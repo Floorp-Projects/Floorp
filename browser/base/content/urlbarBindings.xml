@@ -22,6 +22,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+# Dão Gottwald <dao@design-noir.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,7 +38,492 @@
 #
 # ***** END LICENSE BLOCK *****
 
-<bindings id="urlbarBindings" xmlns="http://www.mozilla.org/xbl">
+<bindings id="urlbarBindings" xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="urlbar" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
+    <content sizetopopup="pref">
+      <xul:hbox class="autocomplete-textbox-container" flex="1">
+        <children includes="image|deck|stack">
+          <xul:image class="autocomplete-icon" allowevents="true"/>
+        </children>
+
+        <xul:stack flex="1" class="textbox-stack">
+          <xul:hbox anonid="textbox-input-box" class="textbox-input-box"
+                    flex="1" xbl:inherits="tooltiptext=inputtooltiptext">
+            <children/>
+            <html:input anonid="input" class="autocomplete-textbox textbox-input"
+                        flex="1" allowevents="true"
+                        xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction"/>
+          </xul:hbox>
+          <xul:hbox anonid="presentation-box" class="textbox-presentation-box" flex="1"
+                         onmousedown="focus();">
+            <xul:scrollbox anonid="presentation" class="textbox-presentation" flex="1"
+                           onoverflow="_contentIsCropped = true;"
+                           onunderflow="_contentIsCropped = false;">
+              <xul:hbox anonid="prePath" class="textbox-presentation-prePath">
+                <xul:label anonid="protocol" class="textbox-presentation-protocol"/>
+                <xul:label anonid="subdomain" class="textbox-presentation-subdomain"/>
+                <xul:label anonid="domain" class="textbox-presentation-domain"/>
+                <xul:label anonid="port" class="textbox-presentation-port"/>
+              </xul:hbox>
+              <xul:label anonid="directory" class="textbox-presentation-directory"/>
+              <xul:label anonid="fileBaseName" class="textbox-presentation-fileBaseName"/>
+              <xul:label anonid="fileExtension" class="textbox-presentation-fileExtension"/>
+              <xul:label anonid="param" class="textbox-presentation-param"/>
+              <xul:label anonid="query" class="textbox-presentation-query"/>
+              <xul:label anonid="ref" class="textbox-presentation-ref"/>
+            </xul:scrollbox>
+            <xul:label anonid="overflow-ellipsis" class="textbox-overflow-ellipsis"
+                       value="&#8230;" hidden="true"/>
+          </xul:hbox>
+        </xul:stack>
+
+        <children includes="hbox"/>
+      </xul:hbox>
+
+      <xul:dropmarker anonid="historydropmarker" class="autocomplete-history-dropmarker"
+                      allowevents="true"
+                      xbl:inherits="open,enablehistory"/>
+
+      <xul:popupset anonid="popupset" class="autocomplete-result-popupset"/>
+    </content>
+
+    <implementation implements="nsIObserver">
+      <constructor><![CDATA[
+        this._ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                                    .getService(Components.interfaces.nsIIOService);
+        this._tldService = Components.classes["@mozilla.org/network/effective-tld-service;1"]
+                                     .getService(Components.interfaces.nsIEffectiveTLDService);
+        this._prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                                .getService(Components.interfaces.nsIPrefService)
+                                .getBranch("browser.urlbar.")
+                                .QueryInterface(Components.interfaces.nsIPrefBranch2);
+
+        this._prefs.addObserver("", this, false);
+        this._hideProtocols = this._prefs.getCharPref("hideProtocols").split(" ");
+        this._animateBlend = this._prefs.getBoolPref("animateBlend");
+
+        this.inputField.controllers.insertControllerAt(0, this._copyCutController);
+
+        this.plain = true;
+      ]]></constructor>
+
+      <destructor><![CDATA[
+        this._prefs.removeObserver("", this);
+        this._prefs = null;
+        this._ioService = null;
+        this._tldService = null;
+        this.inputField.controllers.removeController(this._copyCutController);
+      ]]></destructor>
+
+      <field name="_uri"/>
+      <field name="_protocolHidden"/>
+      <field name="_focused"/>
+      <field name="_mouseover"/>
+      <field name="_blendingTimers">[]</field>
+      <field name="_tooltipTimer"/>
+      <field name="_inputBox">
+        document.getAnonymousElementByAttribute(this, "anonid", "textbox-input-box");
+      </field>
+      <field name="_presentationBox">
+        document.getAnonymousElementByAttribute(this, "anonid", "presentation-box");
+      </field>
+      <field name="_overflowEllipsis">
+        document.getAnonymousElementByAttribute(this, "anonid", "overflow-ellipsis");
+      </field>
+      <field name="_prePath">
+        document.getAnonymousElementByAttribute(this, "anonid", "prePath");
+      </field>
+      <field name="_protocol">
+        document.getAnonymousElementByAttribute(this, "anonid", "protocol");
+      </field>
+      <field name="_subDomain">
+        document.getAnonymousElementByAttribute(this, "anonid", "subdomain");
+      </field>
+      <field name="_domain">
+        document.getAnonymousElementByAttribute(this, "anonid", "domain");
+      </field>
+      <field name="_port">
+        document.getAnonymousElementByAttribute(this, "anonid", "port");
+      </field>
+      <field name="_directory">
+        document.getAnonymousElementByAttribute(this, "anonid", "directory");
+      </field>
+      <field name="_fileBaseName">
+        document.getAnonymousElementByAttribute(this, "anonid", "fileBaseName");
+      </field>
+      <field name="_fileExtension">
+        document.getAnonymousElementByAttribute(this, "anonid", "fileExtension");
+      </field>
+      <field name="_param">
+        document.getAnonymousElementByAttribute(this, "anonid", "param");
+      </field>
+      <field name="_query">
+        document.getAnonymousElementByAttribute(this, "anonid", "query");
+      </field>
+      <field name="_ref">
+        document.getAnonymousElementByAttribute(this, "anonid", "ref");
+      </field>
+      <field name="_urlTooltip">
+        document.getElementById("urlTooltip");
+      </field>
+      <field name="_urlTooltipLabel">
+        this._urlTooltip.getElementsByTagName("label")[0];
+      </field>
+
+      <field name="_plain">true</field>
+      <property name="plain" onget="return this._plain">
+        <setter><![CDATA[
+          this._plain = !!val;
+          while (this._blendingTimers.length)
+            clearTimeout(this._blendingTimers.pop());
+          if (val) {
+            this._inputBox.style.removeProperty("opacity");
+            this._presentationBox.hidden = true;
+          } else {
+            this._inputBox.style.setProperty("opacity", "0", "important");
+          }
+          this._presentationBox.style.removeProperty("opacity");
+          this._hideURLTooltip();
+          return val;
+        ]]></setter>
+      </property>
+
+      <property name="_contentIsCropped"
+                onget="return !this._overflowEllipsis.hidden;"
+                onset="this._overflowEllipsis.hidden = !val; return val;"/>
+
+      <property name="value"
+                onget="return this.inputField.value;">
+        <setter><![CDATA[
+          this.mIgnoreInput = true;
+          this._syncValue(val);
+          this.mIgnoreInput = false;
+          if (this._focused)
+            this.plain = true;
+          else if (!this._mouseover || !this.plain)
+            this._prettyView(false);
+          var event = document.createEvent("Events");
+          event.initEvent("ValueChange", true, true);
+          this.inputField.dispatchEvent(event);
+          return val;
+        ]]></setter>
+      </property>
+
+      <method name="_decodeURI">
+        <body><![CDATA[
+          try {
+            // try to decode as UTF-8
+            for (var i = 0; i < arguments.length; i++)
+              arguments[i] = decodeURI(arguments[i]);
+          } catch(e) {}
+          return arguments.length > 1 ? arguments : arguments[0];
+        ]]></body>
+      </method>
+
+      <method name="_syncValue">
+        <parameter name="aValue"/>
+        <body><![CDATA[
+          var value = aValue != null ? aValue : this.value;
+          if (value == "") {
+            this._uri = null;
+          } else {
+            try {
+              this._uri = this._ioService.newURI(value, null, null);
+              // next line throws if .host is not defined
+              this._uri.host;
+              this._uri.QueryInterface(Components.interfaces.nsIURL);
+            } catch(e) {
+              this._uri = null;
+            }
+          }
+          if (!this._uri) {
+            this._contentIsCropped = false;
+            if (aValue != null)
+              this.inputField.value = aValue;
+            return;
+          }
+
+          if (!this._focused || aValue != null)
+            this.inputField.value = this._decodeURI(this._uri.spec);
+
+          this._protocol.setAttribute("value", this._uri.scheme + "://");
+          this._protocolHidden = this._hideProtocols.indexOf(this._uri.scheme) > -1;
+          this._subDomain.removeAttribute("value");
+          this._port.removeAttribute("value");
+
+          var host = this._uri.host;
+          if (host) {
+            //XXX workaround for bug 364129
+            if (!/^[.0-9]+$/.test(host)) {
+              // getEffectiveTLDLength might convert our host and return a misleading length.
+              // To avoid this, pass the ASCII host, count the dots of its effective TLD
+              // and use that number to operate on our actual host.
+
+              var asciiHost = this._uri.asciiHost;
+              var domainSegments = host.split(".");
+              var cSubdomain = domainSegments.length -
+                               asciiHost.slice(asciiHost.length -
+                                               this._tldService.getEffectiveTLDLength(asciiHost))
+                                        .split(".").length - 1;
+              if (cSubdomain > 0) {
+                host = domainSegments;
+                var subdomain = host.splice(0, cSubdomain);
+                this._subDomain.setAttribute("value", subdomain.join(".") + ".");
+                host = host.join(".");
+              }
+            }
+            this._domain.setAttribute("value", host);
+            if (this._uri.port > -1)
+              this._port.setAttribute("value", ":" + this._uri.port);
+          } else {
+            this._domain.removeAttribute("value");
+          }
+
+          [directory, fileBaseName, fileExtension, param, query, ref]
+            = this._decodeURI(this._uri.directory,
+                              this._uri.fileBaseName,
+                              this._uri.fileExtension,
+                              this._uri.param,
+                              this._uri.query,
+                              this._uri.ref);
+
+          this._directory.setAttribute("value", directory);
+          this._fileBaseName.setAttribute("value", fileBaseName);
+          this._fileExtension.setAttribute("value", fileExtension ? "." + fileExtension : "");
+          this._param.setAttribute("value", param ? ";" + param : "");
+          this._query.setAttribute("value", query ? "?" + query : "");
+          this._ref.setAttribute("value", ref ? "#" + ref : "");
+        ]]></body>
+      </method>
+
+      <method name="_initPrettyView">
+        <body><![CDATA[
+          this._plain = false;
+          this._protocol.hidden = false;
+          this._presentationBox.hidden = false;
+          this._prePath.width = "";
+          this.removeAttribute("protocolhidden");
+          if (this._protocolHidden) {
+            this._prePath.width = this._prePath.boxObject.width;
+            this._protocol.hidden = true;
+            this.setAttribute("protocolhidden","true");
+          }
+        ]]></body>
+      </method>
+
+      <method name="_prettyView">
+        <parameter name="aAnimateBlend"/>
+        <body><![CDATA[
+          if (!this._uri) {
+            this.plain = true;
+            return;
+          }
+
+          if (!aAnimateBlend || !this._animateBlend) {
+            this._initPrettyView();
+            this.plain = false;
+            return;
+          }
+
+          const INITIAL_DELAY = 150;
+          const FRAME_LENGTH = 60;
+          const DECLINATION_REL = .2;
+          const DECLINATION_ABS = .15;
+
+          var inputBox = this._inputBox;
+          var presentationBox = this._presentationBox;
+          var self = this;
+          var opacity = parseFloat(document.defaultView.getComputedStyle(inputBox, null).opacity);
+          var delay = INITIAL_DELAY;
+
+          function processFrame(opacity, init) {
+            inputBox.style.setProperty("opacity", opacity, "important");
+            presentationBox.style.setProperty("opacity", 1-opacity, "important");
+            if (init)
+              self._initPrettyView();
+            if (!opacity)
+              self.plain = false;
+          }
+
+          while (opacity > 0) {
+            opacity -= opacity * DECLINATION_REL + DECLINATION_ABS;
+            if (opacity < 0)
+              opacity = 0;
+            this._blendingTimers.push(setTimeout(processFrame, delay, opacity, delay == INITIAL_DELAY));
+            delay += FRAME_LENGTH;
+          }
+        ]]></body>
+      </method>
+
+      <method name="_initURLTooltip">
+        <parameter name="aCallback"/>
+        <parameter name="aObject"/>
+        <parameter name="aCrop"/>
+        <body><![CDATA[
+          if (this._tooltipTimer)
+            clearTimeout(this._tooltipTimer);
+          this._tooltipTimer = setTimeout(function(self) {
+            self._tooltipTimer = 0;
+            var tooltipText = aCallback.apply(aObject);
+            if (tooltipText) {
+              self._urlTooltipLabel.value = tooltipText;
+              self._urlTooltipLabel.crop = aCrop || "center";
+              var bO = self.boxObject;
+              self._urlTooltip.maxWidth = bO.width;
+              self._urlTooltip.showPopup(self, bO.screenX, bO.screenY + bO.height, "tooltip");
+            }
+          }, 400, this);
+        ]]></body>
+      </method>
+
+      <method name="_hideURLTooltip">
+        <body><![CDATA[
+          if (this._tooltipTimer) {
+            clearTimeout(this._tooltipTimer);
+            this._tooltipTimer = 0;
+          }
+          this._urlTooltip.hidePopup();
+        ]]></body>
+      </method>
+
+      <field name="_copyCutController"><![CDATA[
+        ({
+          urlbar: this,
+          doCommand: function(aCommand) {
+            this.urlbar._copy(aCommand == "cmd_cut");
+          },
+          supportsCommand: function(aCommand) {
+            switch (aCommand) {
+              case "cmd_copy":
+              case "cmd_cut":
+                return true;
+            }
+            return false;
+          },
+          isCommandEnabled: function(aCommand) {
+            return this.supportsCommand(aCommand) && this.urlbar.selectionStart < this.urlbar.selectionEnd;
+          },
+          onEvent: function(aEventName) {}
+        })
+      ]]></field>
+
+      <method name="_copy">
+        <parameter name="aCut"/>
+        <body><![CDATA[
+          var start = this.selectionStart;
+          var end = this.selectionEnd;
+          if (start == end)
+            return;
+          var val;
+          if (start == 0 && end == this.textLength) {
+            // if the entire value is selected and it's a valid URI, encode it
+            val = this.value;
+            try {
+              val = this._ioService.newURI(val, null, null).spec;
+            } catch(e) {}
+            if (aCut)
+              this.value = "";
+          } else {
+            val = this.value.substring(start, end);
+            if (aCut) {
+              this.value = this.value.substring(0, start) + this.value.substring(end);
+              this.selectionStart = this.selectionEnd = start;
+            }
+          }
+          Components.classes["@mozilla.org/widget/clipboardhelper;1"]
+                    .getService(Components.interfaces.nsIClipboardHelper)
+                    .copyString(val);
+        ]]></body>
+      </method>
+
+      <method name="observe">
+        <parameter name="aSubject"/>
+        <parameter name="aTopic"/>
+        <parameter name="aData"/>
+        <body><![CDATA[
+          if (aTopic == "nsPref:changed") {
+            switch(aData) {
+              case "hideProtocols":
+                this._hideProtocols = this._prefs.getCharPref(aData).split(" ");
+                this._syncValue();
+                if (!this.plain)
+                  this._prettyView(false);
+                break;
+              case "clickSelectsAll":
+                this.clickSelectsAll = this._prefs.getBoolPref(aData);
+                break;
+              case "animateBlend":
+                this._animateBlend = this._prefs.getBoolPref(aData);
+                break;
+            }
+          }
+        ]]></body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="input"
+               action="this._syncValue();"/>
+
+      <handler event="mousemove"><![CDATA[
+        if (!this._focused && this._contentIsCropped)
+          this._initURLTooltip(function() {
+            return this.plain ? this.value : null;
+          }, this, "start");
+      ]]></handler>
+
+      <handler event="mouseover"><![CDATA[
+        if (this._mouseover)
+          return;
+        if (!this.plain) {
+          // do nothing if we're over the favicon, history dropmarker et al
+          var pBO = this._presentationBox.boxObject;
+          if (event.screenX < pBO.screenX || event.screenX > pBO.screenX + pBO.width)
+            return;
+        }
+        this._mouseover = true;
+        setTimeout(function(self) {
+          if (self._mouseover) {
+            self.plain = true;
+            if (!self._focused && self._contentIsCropped)
+              self._initURLTooltip(function() {
+                return this.plain ? this.value : null;
+              }, self, "start");
+          }
+        }, 60, this);
+      ]]></handler>
+
+      <handler event="mouseout" phase="target"><![CDATA[
+        this._mouseover = false;
+        if (!this._focused && this.plain)
+          this._prettyView(true);
+        else
+          this._hideURLTooltip();
+      ]]></handler>
+
+      <handler event="focus" phase="capturing"><![CDATA[
+        if (!this._focused) {
+          this._focused = true;
+          this.plain = true;
+        }
+      ]]></handler>
+
+      <handler event="blur" phase="capturing"><![CDATA[
+        if (this._focused && !this._dontBlur) {
+          this._focused = false;
+          this._syncValue();
+          if (!this._mouseover)
+            this._prettyView(true);
+        }
+      ]]></handler>
+    </handlers>
+
+  </binding>
+
   <binding id="urlbar-result-popup" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-result-popup">
     <implementation>
       <method name="onPopupClick">
