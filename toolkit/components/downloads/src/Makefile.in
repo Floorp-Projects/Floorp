@@ -62,7 +62,6 @@ REQUIRES  = xpcom \
             webbrowserpersist \
             appshell \
             dom \
-            xpinstall \
             embed_base \
             alerts \
             storage \
