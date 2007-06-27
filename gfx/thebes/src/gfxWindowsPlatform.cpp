@@ -97,8 +97,10 @@ gfxWindowsPlatform::FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
     const LOGFONTW& logFont = lpelfe->elfLogFont;
     const NEWTEXTMETRICW& metrics = nmetrics->ntmTm;
 
+#ifdef DEBUG_pavlov
     printf("%s %d %d %d\n", NS_ConvertUTF16toUTF8(nsDependentString(logFont.lfFaceName)).get(),
            logFont.lfCharSet, logFont.lfItalic, logFont.lfWeight);
+#endif
 
     // Ignore vertical fonts
     if (logFont.lfFaceName[0] == L'@') {
