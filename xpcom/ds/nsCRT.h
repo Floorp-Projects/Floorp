@@ -268,7 +268,10 @@ public:
 #define CRLF "\015\012"     /* A CR LF equivalent string */
 
 
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_MACOSX)
+  #define FILE_PATH_SEPARATOR       "/"
+  #define FILE_ILLEGAL_CHARACTERS   ":"
+#elif defined(XP_WIN) || defined(XP_OS2)
   #define FILE_PATH_SEPARATOR       "\\"
   #define FILE_ILLEGAL_CHARACTERS   "/:*?\"<>|"
 #elif defined(XP_UNIX) || defined(XP_BEOS)
