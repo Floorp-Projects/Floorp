@@ -100,79 +100,79 @@ PR_BEGIN_EXTERN_C
   // Static stub functions that are exported to the 4.x plugin as entry
   // points via the CALLBACKS variable.
   //
-  static NPError NP_EXPORT
+  static NPError NP_CALLBACK
   _requestread(NPStream *pstream, NPByteRange *rangeList);
 
-  static NPError NP_EXPORT
+  static NPError NP_CALLBACK
   _geturlnotify(NPP npp, const char* relativeURL, const char* target,
                 void* notifyData);
 
-  static NPError NP_EXPORT
+  static NPError NP_CALLBACK
   _getvalue(NPP npp, NPNVariable variable, void *r_value);
 
-  static NPError NP_EXPORT
+  static NPError NP_CALLBACK
   _setvalue(NPP npp, NPPVariable variable, void *r_value);
 
-  static NPError NP_EXPORT
+  static NPError NP_CALLBACK
   _geturl(NPP npp, const char* relativeURL, const char* target);
 
-  static NPError NP_EXPORT
+  static NPError NP_CALLBACK
   _posturlnotify(NPP npp, const char* relativeURL, const char *target,
                  uint32 len, const char *buf, NPBool file, void* notifyData);
 
-  static NPError NP_EXPORT
+  static NPError NP_CALLBACK
   _posturl(NPP npp, const char* relativeURL, const char *target, uint32 len,
               const char *buf, NPBool file);
 
-  static NPError NP_EXPORT
+  static NPError NP_CALLBACK
   _newstream(NPP npp, NPMIMEType type, const char* window, NPStream** pstream);
 
-  static int32 NP_EXPORT
+  static int32 NP_CALLBACK
   _write(NPP npp, NPStream *pstream, int32 len, void *buffer);
 
-  static NPError NP_EXPORT
+  static NPError NP_CALLBACK
   _destroystream(NPP npp, NPStream *pstream, NPError reason);
 
-  static void NP_EXPORT
+  static void NP_CALLBACK
   _status(NPP npp, const char *message);
 
-  static void NP_EXPORT
+  static void NP_CALLBACK
   _memfree (void *ptr);
 
-  static uint32 NP_EXPORT
+  static uint32 NP_CALLBACK
   _memflush(uint32 size);
 
-  static void NP_EXPORT
+  static void NP_CALLBACK
   _reloadplugins(NPBool reloadPages);
 
-  static void NP_EXPORT
+  static void NP_CALLBACK
   _invalidaterect(NPP npp, NPRect *invalidRect);
 
-  static void NP_EXPORT
+  static void NP_CALLBACK
   _invalidateregion(NPP npp, NPRegion invalidRegion);
 
-  static void NP_EXPORT
+  static void NP_CALLBACK
   _forceredraw(NPP npp);
 
-  static void NP_EXPORT
+  static void NP_CALLBACK
   _pushpopupsenabledstate(NPP npp, NPBool enabled);
 
-  static void NP_EXPORT
+  static void NP_CALLBACK
   _poppopupsenabledstate(NPP npp);
 
-  static const char* NP_EXPORT
+  static const char* NP_CALLBACK
   _useragent(NPP npp);
 
-  static void* NP_EXPORT
+  static void* NP_CALLBACK
   _memalloc (uint32 size);
 
 #ifdef OJI
-  static JRIEnv* NP_EXPORT
+  static JRIEnv* NP_CALLBACK
   _getJavaEnv(void);
 
 #if 1
 
-  static jref NP_EXPORT
+  static jref NP_CALLBACK
   _getJavaPeer(NPP npp);
 
 #endif
@@ -963,7 +963,7 @@ MakeNew4xStreamInternal(NPP npp, const char *relativeURL, const char *target,
 // Static callbacks that get routed back through the new C++ API
 //
 
-NPError NP_EXPORT
+NPError NP_CALLBACK
 _geturl(NPP npp, const char* relativeURL, const char* target)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
@@ -991,7 +991,7 @@ _geturl(NPP npp, const char* relativeURL, const char* target)
 
 
 ////////////////////////////////////////////////////////////////////////
-NPError NP_EXPORT
+NPError NP_CALLBACK
 _geturlnotify(NPP npp, const char* relativeURL, const char* target,
               void* notifyData)
 {
@@ -1006,7 +1006,7 @@ _geturlnotify(NPP npp, const char* relativeURL, const char* target,
 
 
 ////////////////////////////////////////////////////////////////////////
-NPError NP_EXPORT
+NPError NP_CALLBACK
 _posturlnotify(NPP npp, const char *relativeURL, const char *target,
                uint32 len, const char *buf, NPBool file, void *notifyData)
 {
@@ -1023,7 +1023,7 @@ _posturlnotify(NPP npp, const char *relativeURL, const char *target,
 
 
 ////////////////////////////////////////////////////////////////////////
-NPError NP_EXPORT
+NPError NP_CALLBACK
 _posturl(NPP npp, const char *relativeURL, const char *target,
          uint32 len, const char *buf, NPBool file)
 {
@@ -1088,7 +1088,7 @@ ns4xStreamWrapper::GetStream(nsIOutputStream* &result)
 
 
 ////////////////////////////////////////////////////////////////////////
-NPError NP_EXPORT
+NPError NP_CALLBACK
 _newstream(NPP npp, NPMIMEType type, const char* target, NPStream* *result)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
@@ -1120,7 +1120,7 @@ _newstream(NPP npp, NPMIMEType type, const char* target, NPStream* *result)
 
 
 ////////////////////////////////////////////////////////////////////////
-int32 NP_EXPORT
+int32 NP_CALLBACK
 _write(NPP npp, NPStream *pstream, int32 len, void *buffer)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
@@ -1152,7 +1152,7 @@ _write(NPP npp, NPStream *pstream, int32 len, void *buffer)
 
 
 ////////////////////////////////////////////////////////////////////////
-NPError NP_EXPORT
+NPError NP_CALLBACK
 _destroystream(NPP npp, NPStream *pstream, NPError reason)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
@@ -1193,7 +1193,7 @@ _destroystream(NPP npp, NPStream *pstream, NPError reason)
 
 
 ////////////////////////////////////////////////////////////////////////
-void NP_EXPORT
+void NP_CALLBACK
 _status(NPP npp, const char *message)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_Status: npp=%p, message=%s\n",
@@ -1214,7 +1214,7 @@ _status(NPP npp, const char *message)
 
 
 ////////////////////////////////////////////////////////////////////////
-void NP_EXPORT
+void NP_CALLBACK
 _memfree (void *ptr)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NOISY, ("NPN_MemFree: ptr=%p\n", ptr));
@@ -1225,7 +1225,7 @@ _memfree (void *ptr)
 
 
 ////////////////////////////////////////////////////////////////////////
-uint32 NP_EXPORT
+uint32 NP_CALLBACK
 _memflush(uint32 size)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NOISY, ("NPN_MemFlush: size=%d\n", size));
@@ -1236,7 +1236,7 @@ _memflush(uint32 size)
 
 
 ////////////////////////////////////////////////////////////////////////
-void NP_EXPORT
+void NP_CALLBACK
 _reloadplugins(NPBool reloadPages)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
@@ -1249,7 +1249,7 @@ _reloadplugins(NPBool reloadPages)
 
 
 ////////////////////////////////////////////////////////////////////////
-void NP_EXPORT
+void NP_CALLBACK
 _invalidaterect(NPP npp, NPRect *invalidRect)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
@@ -1276,7 +1276,7 @@ _invalidaterect(NPP npp, NPRect *invalidRect)
 
 
 ////////////////////////////////////////////////////////////////////////
-void NP_EXPORT
+void NP_CALLBACK
 _invalidateregion(NPP npp, NPRegion invalidRegion)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
@@ -1302,7 +1302,7 @@ _invalidateregion(NPP npp, NPRegion invalidRegion)
 
 
 ////////////////////////////////////////////////////////////////////////
-void NP_EXPORT
+void NP_CALLBACK
 _forceredraw(NPP npp)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_ForceDraw: npp=%p\n", (void*)npp));
@@ -1353,7 +1353,7 @@ GetJSContextFromNPP(NPP npp)
   return (JSContext *)scx->GetNativeContext();
 }
 
-NPObject* NP_EXPORT
+NPObject* NP_CALLBACK
 _getwindowobject(NPP npp)
 {
   JSContext *cx = GetJSContextFromNPP(npp);
@@ -1365,7 +1365,7 @@ _getwindowobject(NPP npp)
   return nsJSObjWrapper::GetNewOrUsed(npp, cx, ::JS_GetGlobalObject(cx));
 }
 
-NPObject* NP_EXPORT
+NPObject* NP_CALLBACK
 _getpluginelement(NPP npp)
 {
   nsIDOMElement *elementp = nsnull;
@@ -1412,7 +1412,7 @@ doGetIdentifier(JSContext *cx, const NPUTF8* name)
   return (NPIdentifier)STRING_TO_JSVAL(str);
 }
 
-NPIdentifier NP_EXPORT
+NPIdentifier NP_CALLBACK
 _getstringidentifier(const NPUTF8* name)
 {
   nsCOMPtr<nsIThreadJSContextStack> stack =
@@ -1429,7 +1429,7 @@ _getstringidentifier(const NPUTF8* name)
   return doGetIdentifier(cx, name);
 }
 
-void NP_EXPORT
+void NP_CALLBACK
 _getstringidentifiers(const NPUTF8** names, int32_t nameCount,
                       NPIdentifier *identifiers)
 {
@@ -1450,13 +1450,13 @@ _getstringidentifiers(const NPUTF8** names, int32_t nameCount,
   }
 }
 
-NPIdentifier NP_EXPORT
+NPIdentifier NP_CALLBACK
 _getintidentifier(int32_t intid)
 {
   return (NPIdentifier)INT_TO_JSVAL(intid);
 }
 
-NPUTF8* NP_EXPORT
+NPUTF8* NP_CALLBACK
 _utf8fromidentifier(NPIdentifier identifier)
 {
   if (!identifier)
@@ -1475,7 +1475,7 @@ _utf8fromidentifier(NPIdentifier identifier)
                                       ::JS_GetStringLength(str)));
 }
 
-int32_t NP_EXPORT
+int32_t NP_CALLBACK
 _intfromidentifier(NPIdentifier identifier)
 {
   jsval v = (jsval)identifier;
@@ -1487,7 +1487,7 @@ _intfromidentifier(NPIdentifier identifier)
   return JSVAL_TO_INT(v);
 }
 
-bool NP_EXPORT
+bool NP_CALLBACK
 _identifierisstring(NPIdentifier identifier)
 {
   jsval v = (jsval)identifier;
@@ -1495,7 +1495,7 @@ _identifierisstring(NPIdentifier identifier)
   return JSVAL_IS_STRING(v);
 }
 
-NPObject* NP_EXPORT
+NPObject* NP_CALLBACK
 _createobject(NPP npp, NPClass* aClass)
 {
   if (!npp) {
@@ -1528,7 +1528,7 @@ _createobject(NPP npp, NPClass* aClass)
   return npobj;
 }
 
-NPObject* NP_EXPORT
+NPObject* NP_CALLBACK
 _retainobject(NPObject* npobj)
 {
   if (npobj) {
@@ -1538,7 +1538,7 @@ _retainobject(NPObject* npobj)
   return npobj;
 }
 
-void NP_EXPORT
+void NP_CALLBACK
 _releaseobject(NPObject* npobj)
 {
   if (!npobj)
@@ -1555,7 +1555,7 @@ _releaseobject(NPObject* npobj)
   }
 }
 
-bool NP_EXPORT
+bool NP_CALLBACK
 _invoke(NPP npp, NPObject* npobj, NPIdentifier method, const NPVariant *args,
         uint32_t argCount, NPVariant *result)
 {
@@ -1568,7 +1568,7 @@ _invoke(NPP npp, NPObject* npobj, NPIdentifier method, const NPVariant *args,
   return npobj->_class->invoke(npobj, method, args, argCount, result);
 }
 
-bool NP_EXPORT
+bool NP_CALLBACK
 _invokeDefault(NPP npp, NPObject* npobj, const NPVariant *args,
                uint32_t argCount, NPVariant *result)
 {
@@ -1581,7 +1581,7 @@ _invokeDefault(NPP npp, NPObject* npobj, const NPVariant *args,
   return npobj->_class->invokeDefault(npobj, args, argCount, result);
 }
 
-bool NP_EXPORT
+bool NP_CALLBACK
 _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
 {
   if (!npp)
@@ -1631,7 +1631,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
          (!result || JSValToNPVariant(npp, cx, *rval, result));
 }
 
-bool NP_EXPORT
+bool NP_CALLBACK
 _getproperty(NPP npp, NPObject* npobj, NPIdentifier property,
              NPVariant *result)
 {
@@ -1644,7 +1644,7 @@ _getproperty(NPP npp, NPObject* npobj, NPIdentifier property,
   return npobj->_class->getProperty(npobj, property, result);
 }
 
-bool NP_EXPORT
+bool NP_CALLBACK
 _setproperty(NPP npp, NPObject* npobj, NPIdentifier property,
              const NPVariant *value)
 {
@@ -1657,7 +1657,7 @@ _setproperty(NPP npp, NPObject* npobj, NPIdentifier property,
   return npobj->_class->setProperty(npobj, property, value);
 }
 
-bool NP_EXPORT
+bool NP_CALLBACK
 _removeproperty(NPP npp, NPObject* npobj, NPIdentifier property)
 {
   if (!npp || !npobj || !npobj->_class || !npobj->_class->removeProperty)
@@ -1669,7 +1669,7 @@ _removeproperty(NPP npp, NPObject* npobj, NPIdentifier property)
   return npobj->_class->removeProperty(npobj, property);
 }
 
-bool NP_EXPORT
+bool NP_CALLBACK
 _hasproperty(NPP npp, NPObject* npobj, NPIdentifier propertyName)
 {
   if (!npp || !npobj || !npobj->_class || !npobj->_class->hasProperty)
@@ -1681,7 +1681,7 @@ _hasproperty(NPP npp, NPObject* npobj, NPIdentifier propertyName)
   return npobj->_class->hasProperty(npobj, propertyName);
 }
 
-bool NP_EXPORT
+bool NP_CALLBACK
 _hasmethod(NPP npp, NPObject* npobj, NPIdentifier methodName)
 {
   if (!npp || !npobj || !npobj->_class || !npobj->_class->hasMethod)
@@ -1693,7 +1693,7 @@ _hasmethod(NPP npp, NPObject* npobj, NPIdentifier methodName)
   return npobj->_class->hasProperty(npobj, methodName);
 }
 
-bool NP_EXPORT
+bool NP_CALLBACK
 _enumerate(NPP npp, NPObject *npobj, NPIdentifier **identifier,
            uint32_t *count)
 {
@@ -1713,7 +1713,7 @@ _enumerate(NPP npp, NPObject *npobj, NPIdentifier **identifier,
   return npobj->_class->enumerate(npobj, identifier, count);
 }
 
-void NP_EXPORT
+void NP_CALLBACK
 _releasevariantvalue(NPVariant* variant)
 {
   switch (variant->type) {
@@ -1748,7 +1748,7 @@ _releasevariantvalue(NPVariant* variant)
   VOID_TO_NPVARIANT(*variant);
 }
 
-bool NP_EXPORT
+bool NP_CALLBACK
 _tostring(NPObject* npobj, NPVariant *result)
 {
   NS_ERROR("Write me!");
@@ -1758,7 +1758,7 @@ _tostring(NPObject* npobj, NPVariant *result)
 
 static char *gNPPException;
 
-void NP_EXPORT
+void NP_CALLBACK
 _setexception(NPObject* npobj, const NPUTF8 *message)
 {
   if (gNPPException) {
@@ -1802,7 +1802,7 @@ NPPExceptionAutoHolder::~NPPExceptionAutoHolder()
 }
 
 ////////////////////////////////////////////////////////////////////////
-NPError NP_EXPORT
+NPError NP_CALLBACK
 _getvalue(NPP npp, NPNVariable variable, void *result)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_GetValue: npp=%p, var=%d\n",
@@ -1999,7 +1999,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
 
 ////////////////////////////////////////////////////////////////////////
-NPError NP_EXPORT
+NPError NP_CALLBACK
 _setvalue(NPP npp, NPPVariable variable, void *result)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_SetValue: npp=%p, var=%d\n",
@@ -2086,7 +2086,7 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
 }
 
 ////////////////////////////////////////////////////////////////////////
-NPError NP_EXPORT
+NPError NP_CALLBACK
 _requestread(NPStream *pstream, NPByteRange *rangeList)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_RequestRead: stream=%p\n",
@@ -2122,7 +2122,7 @@ _requestread(NPStream *pstream, NPByteRange *rangeList)
 
 ////////////////////////////////////////////////////////////////////////
 #ifdef OJI
-JRIEnv* NP_EXPORT
+JRIEnv* NP_CALLBACK
 _getJavaEnv(void)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_GetJavaEnv\n"));
@@ -2131,7 +2131,7 @@ _getJavaEnv(void)
 #endif
 
 ////////////////////////////////////////////////////////////////////////
-const char * NP_EXPORT
+const char * NP_CALLBACK
 _useragent(NPP npp)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_UserAgent: npp=%p\n", (void*)npp));
@@ -2147,7 +2147,7 @@ _useragent(NPP npp)
 
 
 ////////////////////////////////////////////////////////////////////////
-void * NP_EXPORT
+void * NP_CALLBACK
 _memalloc (uint32 size)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NOISY, ("NPN_MemAlloc: size=%d\n", size));
@@ -2156,7 +2156,7 @@ _memalloc (uint32 size)
 
 #ifdef OJI
 ////////////////////////////////////////////////////////////////////////
-jref NP_EXPORT
+jref NP_CALLBACK
 _getJavaPeer(NPP npp)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_GetJavaPeer: npp=%p\n", (void*)npp));
@@ -2165,7 +2165,7 @@ _getJavaPeer(NPP npp)
 
 #endif /* OJI */
 
-void NP_EXPORT
+void NP_CALLBACK
 _pushpopupsenabledstate(NPP npp, NPBool enabled)
 {
   ns4xPluginInstance *inst = (ns4xPluginInstance *)npp->ndata;
@@ -2175,7 +2175,7 @@ _pushpopupsenabledstate(NPP npp, NPBool enabled)
   inst->PushPopupsEnabledState(enabled);
 }
 
-void NP_EXPORT
+void NP_CALLBACK
 _poppopupsenabledstate(NPP npp)
 {
   ns4xPluginInstance *inst = (ns4xPluginInstance *)npp->ndata;
