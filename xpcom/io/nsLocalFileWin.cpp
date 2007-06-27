@@ -2929,7 +2929,8 @@ nsLocalFile::EnsureShortPath()
     WCHAR thisshort[MAX_PATH];
     DWORD thisr = ::GetShortPathNameW(mWorkingPath.get(), thisshort,
                                       sizeof(thisshort));
-    if (thisr < sizeof(thisshort))
+    // If an error occured (thisr == 0) thisshort is uninitialized memory!
+    if (thisr != 0 && thisr < sizeof(thisshort))
         mShortWorkingPath.Assign(thisshort);
     else
         mShortWorkingPath.Assign(mWorkingPath);
