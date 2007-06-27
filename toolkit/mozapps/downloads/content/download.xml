@@ -95,12 +95,9 @@
         <![CDATA[
           var state = parseInt(this.getAttribute("state"));
           const dl = Components.interfaces.nsIDownloadManager;
-          const xpi = Components.interfaces.nsIXPInstallManagerUI;
           return state == dl.DOWNLOAD_NOTSTARTED || 
                  state == dl.DOWNLOAD_DOWNLOADING || 
-                 state == dl.DOWNLOAD_PAUSED ||
-                 state == xpi.INSTALL_DOWNLOADING ||
-                 state == xpi.INSTALL_INSTALLING;
+                 state == dl.DOWNLOAD_PAUSED;
         ]]>
         </getter>
       </property>
@@ -109,11 +106,9 @@
         <![CDATA[
           var state = parseInt(this.getAttribute("state"));
           const dl = Components.interfaces.nsIDownloadManager;
-          const xpi = Components.interfaces.nsIXPInstallManagerUI;
           return state == dl.DOWNLOAD_FINISHED || 
                  state == dl.DOWNLOAD_CANCELED || 
-                 state == dl.DOWNLOAD_FAILED ||
-                 state == xpi.INSTALL_FINISHED;
+                 state == dl.DOWNLOAD_FAILED;
         ]]>
         </getter>
       </property>
