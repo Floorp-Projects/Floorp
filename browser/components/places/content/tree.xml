@@ -509,6 +509,15 @@
               container = lastSelected;
               index = -1;
             }
+            else if (!this._disallowInsertion(lastSelected) &&
+                     lastSelected.containerOpen &&
+                     orientation == NHRVO.DROP_AFTER) {
+             // If the last selected item is an open container and the user is
+             // trying to drag into it as a first item, really insert into it.
+             container = lastSelected;
+             orientation = NHRVO.DROP_BEFORE;
+             index = 0;
+            }
             else {
               // Use the last-selected node's container unless the root node
               // is selected, in which case we use the root node itself as the
@@ -845,34 +854,6 @@
 
           return PlacesControllerDragHelper.canDrop(this._self, orientation);
         },
-
-        /**
-         * Adjusts an InsertionPoint's insertion index using these rules:
-         *  XXXben define rules
-         */
-        _adjustInsertionPoint: function VO__adjustInsertionPoint(insertionPoint) {
-          var index = this._self._getInsertionIndex(insertionPoint);
-          
-          // If the dropped items are invisible, we don't need to adjust the 
-          // insertion point. 
-          if (index == Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE)
-            return;
-        
-          var selection = this._self.view.selection;
-          var rc = selection.getRangeCount();
-          var selectionAbove = 0;
-          for (var i = 0; i < rc; ++i) {
-            var min = { }, max = { };
-            selection.getRangeAt(i, min, max);
-            if (min.value > index)
-              break;
-            if (max.value >= index)
-              selectionAbove += index - min.value;
-            else
-              selectionAbove += max.value - min.value + 1;
-          }
-          insertionPoint.index -= selectionAbove;
-        },
         
         /**
          * @returns the view where the drag was initiated. 
@@ -916,14 +897,6 @@
           var ip = this._self._getInsertionPoint(index, orientation);
           if (!ip)
             throw Cr.NS_ERROR_NOT_AVAILABLE;
-          if (sourceView == this._self && ip.index > -1) {
-            // We are moving nodes within the same view, we need to adjust the
-            // insertion point to take into account the fact that rows may
-            // disappear above it, causing its index to be incorrect. 
-            // Note that nodes with an index of -1 were dropped in the system area,
-            // and do not need adjustment.
-            this._adjustInsertionPoint(ip);
-          }
           PlacesControllerDragHelper.onDrop(sourceView, this._self, ip);
         },
         
