@@ -810,9 +810,14 @@ nsNSSComponent::InstallLoadableRoots()
                             PR_FALSE); // do not recurse
 
     if (RootsModule) {
-      // found a module, no need to try other directories
+      PRBool found = (RootsModule->loaded);
+
       SECMOD_DestroyModule(RootsModule);
-      break;
+      RootsModule = nsnull;
+
+      if (found) {
+        break;
+      }
     }
   }
 }
