@@ -287,24 +287,21 @@ gfxWindowsNativeDrawing::TransformToNativeRect(const gfxRect& r,
      * of the context; otherwise, we're in our own little world,
      * relative to the passed-in nativeRect.
      */
+
+    gfxRect roundedRect(r);
+
     if (mRenderState == RENDER_STATE_NATIVE_DRAWING) {
         if (mTransformType == TRANSLATION_ONLY) {
-            rout.left = (LONG) (r.pos.x + NS_round(mTranslation.x));
-            rout.right = (LONG) (rout.left + r.size.width);
-            rout.top = (LONG) (r.pos.y + NS_round(mTranslation.y));
-            rout.bottom = (LONG) (rout.top + r.size.height);
-        } else {
-            rout.left = (LONG) r.pos.x;
-            rout.right = (LONG) (r.pos.x + r.size.width);
-            rout.top = (LONG) r.pos.y;
-            rout.bottom = (LONG) (r.pos.y + r.size.height);
+            roundedRect.MoveBy(mTranslation);
         }
     } else {
-        rout.left = (LONG) (r.pos.x - NS_round(mNativeRect.pos.x));
-        rout.right = (LONG) (rout.left + r.size.width);
-        rout.top = (LONG) (r.pos.y - NS_round(mNativeRect.pos.y));
-        rout.bottom = (LONG) (rout.top + r.size.height);
+        roundedRect.MoveBy(- mNativeRect.pos);
     }
+
+    roundedRect.Round();
+
+    rout.left   = LONG(roundedRect.X());
+    rout.right  = LONG(roundedRect.XMost());
+    rout.top    = LONG(roundedRect.Y());
+    rout.bottom = LONG(roundedRect.YMost());
 }
-
-
