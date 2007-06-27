@@ -924,9 +924,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         else {
           placedFloat = AddFloat(placeholder, aReflowStatus);
         }
-        if (!placedFloat) {
-          aReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
-        }
         if (outOfFlowFrame->GetType() == nsGkAtoms::letterFrame) {
           SetFlag(LL_FIRSTLETTERSTYLEOK, PR_FALSE);
         }
