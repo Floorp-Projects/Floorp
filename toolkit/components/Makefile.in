@@ -113,10 +113,8 @@ endif
 
 ifndef MOZ_SUITE
 # XXX Suite doesn't want these just yet
-ifdef MOZ_XPINSTALL
 ifdef MOZ_RDF
 DIRS +=	downloads
-endif
 endif
 endif # MOZ_SUITE
 
