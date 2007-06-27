@@ -834,7 +834,7 @@ struct nsCycleCollector
     nsCycleCollector();
     ~nsCycleCollector();
 
-    PRBool Suspect(nsISupports *n, PRBool current = PR_FALSE);
+    void Suspect(nsISupports *n, PRBool current = PR_FALSE);
     void Forget(nsISupports *n);
     void Allocated(void *n, size_t sz);
     void Freed(void *n);
@@ -1831,7 +1831,7 @@ nsCycleCollector_isScanSafe(nsISupports *s)
 }
 #endif
 
-PRBool
+void 
 nsCycleCollector::Suspect(nsISupports *n, PRBool current)
 {
     // Re-entering ::Suspect during collection used to be a fault, but
@@ -1839,20 +1839,20 @@ nsCycleCollector::Suspect(nsISupports *n, PRBool current)
     // see some spurious refcount traffic here. 
 
     if (mScanInProgress)
-        return PR_FALSE;
+        return;
 
     NS_ASSERTION(nsCycleCollector_isScanSafe(n),
                  "suspected a non-scansafe pointer");
     NS_ASSERTION(NS_IsMainThread(), "trying to suspect from non-main thread");
 
     if (mParams.mDoNothing)
-        return PR_FALSE;
+        return;
 
 #ifdef DEBUG_CC
     mStats.mSuspectNode++;
 
     if (nsCycleCollector_shouldSuppress(n))
-        return PR_FALSE;
+        return;
 
 #ifndef __MINGW32__
     if (mParams.mHookMalloc)
@@ -1870,8 +1870,6 @@ nsCycleCollector::Suspect(nsISupports *n, PRBool current)
         mBuf.Push(n);
     else
         mPurpleBuf.Put(n);
-
-    return PR_TRUE;
 }
 
 
@@ -2373,22 +2371,19 @@ nsCycleCollector_forgetRuntime(PRUint32 langID)
 }
 
 
-PRBool
+void 
 nsCycleCollector_suspect(nsISupports *n)
 {
     if (sCollector)
-        return sCollector->Suspect(n);
-    return PR_FALSE;
+        sCollector->Suspect(n);
 }
 
 
 void 
 nsCycleCollector_suspectCurrent(nsISupports *n)
 {
-    if (sCollector) {
-        PRBool res = sCollector->Suspect(n, PR_TRUE);
-        NS_ASSERTION(res, "suspectCurrent should not fail");
-    }
+    if (sCollector)
+        sCollector->Suspect(n, PR_TRUE);
 }
 
 
