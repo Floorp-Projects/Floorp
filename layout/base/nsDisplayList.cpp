@@ -47,15 +47,8 @@
 #include "nsISelectionController.h"
 #include "nsIPresShell.h"
 #include "nsRegion.h"
-#include "nsIViewManager.h"
-#include "nsIBlender.h"
-#include "nsTransform2D.h"
 #include "nsFrameManager.h"
-#include "nsPlaceholderFrame.h"
-
-#ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
-#endif
 
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     PRBool aIsForEvents, PRBool aBuildCaret, nsIFrame* aMovingFrame)
@@ -779,8 +772,6 @@ void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
   nsRect bounds;
   bounds.IntersectRect(GetBounds(aBuilder), aDirtyRect);
 
-#ifdef MOZ_CAIRO_GFX
-
   nsCOMPtr<nsIDeviceContext> devCtx;
   aCtx->GetDeviceContext(*getter_AddRefs(devCtx));
   float a2p = 1.0f / devCtx->AppUnitsPerDevPixel();
@@ -809,44 +800,6 @@ void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
   ctx->Paint(opacity);
 
   ctx->Restore();
-
-#elif !defined(XP_MACOSX)
-
-  nsIViewManager* vm = mFrame->GetPresContext()->GetViewManager();
-  nsIViewManager::BlendingBuffers* buffers =
-      vm->CreateBlendingBuffers(aCtx, PR_FALSE, nsnull, mNeedAlpha, bounds);
-  if (!buffers) {
-    NS_WARNING("Could not create blending buffers for translucent painting; ignoring opacity");
-    nsDisplayWrapList::Paint(aBuilder, aCtx, aDirtyRect);
-    return;
-  }
-  
-  // Paint onto black, and also onto white if necessary
-  nsDisplayWrapList::Paint(aBuilder, buffers->mBlackCX, bounds);
-  if (buffers->mWhiteCX) {
-    nsDisplayWrapList::Paint(aBuilder, buffers->mWhiteCX, bounds);
-  }
-
-  nsTransform2D* transform;
-  nsresult rv = aCtx->GetCurrentTransform(transform);
-  if (NS_FAILED(rv))
-    return;
-
-  nsRect damageRectInPixels = bounds;
-  transform->TransformCoord(&damageRectInPixels.x, &damageRectInPixels.y,
-                            &damageRectInPixels.width, &damageRectInPixels.height);
-  // If blender creation failed then we would have not received a buffers object
-  nsIBlender* blender = vm->GetBlender();
-  blender->Blend(0, 0, damageRectInPixels.width, damageRectInPixels.height,
-                 buffers->mBlackCX, aCtx,
-                 damageRectInPixels.x, damageRectInPixels.y,
-                 opacity, buffers->mWhiteCX,
-                 NS_RGB(0, 0, 0), NS_RGB(255, 255, 255));
-  delete buffers;
-#else
-// bug 325296 workaround
-  nsDisplayWrapList::Paint(aBuilder, aCtx, aDirtyRect);
-#endif /* MOZ_CAIRO_GFX */
 }
 
 PRBool nsDisplayOpacity::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
