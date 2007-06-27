@@ -43,7 +43,6 @@
 
 #include "nsThebesDeviceContext.h"
 #include "nsThebesRenderingContext.h"
-#include "nsThebesDrawingSurface.h"
 
 #include "nsIView.h"
 #include "nsILookAndFeel.h"
@@ -284,26 +283,6 @@ nsThebesDeviceContext::CreateRenderingContext(nsIView *aView,
     widget = aView->GetWidget();
 
     return CreateRenderingContext(widget, aContext);
-}
-
-NS_IMETHODIMP
-nsThebesDeviceContext::CreateRenderingContext(nsIDrawingSurface *aSurface,
-                                              nsIRenderingContext *&aContext)
-{
-    nsresult rv;
-
-    aContext = nsnull;
-    nsCOMPtr<nsIRenderingContext> pContext;
-    rv = CreateRenderingContextInstance(*getter_AddRefs(pContext));
-    if (NS_SUCCEEDED(rv)) {
-        rv = pContext->Init(this, aSurface);
-        if (NS_SUCCEEDED(rv)) {
-            aContext = pContext;
-            NS_ADDREF(aContext);
-        }
-    }
-
-    return rv;
 }
 
 NS_IMETHODIMP

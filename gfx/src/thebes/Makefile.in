@@ -79,7 +79,6 @@ REQUIRES =  xpcom \
 
 CPPSRCS		= \
 		nsThebesDeviceContext.cpp \
-		nsThebesDrawingSurface.cpp \
 		nsThebesImage.cpp \
 		nsThebesRegion.cpp \
 		nsThebesGfxFactory.cpp \
@@ -131,7 +130,7 @@ CPPSRCS          += nsSystemFontsMac.cpp
  endif
 endif
 
-EXPORTS         += nsIThebesRenderingContext.h nsIThebesFontMetrics.h
+EXPORTS         += nsIThebesFontMetrics.h
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/. \

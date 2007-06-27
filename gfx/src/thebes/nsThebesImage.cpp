@@ -583,17 +583,6 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
     return NS_OK;
 }
 
-/* This function is going away; it's been replaced by ThebesDrawTile above. */
-NS_IMETHODIMP
-nsThebesImage::DrawTile(nsIRenderingContext &aContext,
-                        nsIDrawingSurface *aSurface,
-                        PRInt32 aSXOffset, PRInt32 aSYOffset,
-                        PRInt32 aPadX, PRInt32 aPadY,
-                        const nsRect &aTileRect)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /* This is only used by the GIF decoder, via gfxImageFrame::DrawTo */
 NS_IMETHODIMP
 nsThebesImage::DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)

@@ -52,7 +52,6 @@
 #include "nsFrameManager.h"
 #include "nsStyleContext.h"
 #include "nsGkAtoms.h"
-#include "nsIDrawingSurface.h"
 #include "nsTransform2D.h"
 #include "nsIDeviceContext.h"
 #include "nsIContent.h"
@@ -259,13 +258,6 @@ void nsCSSRendering::FillPolygon (nsIRenderingContext& aContext,
                                   PRInt32 aNumPoints,
                                   nsRect* aGap)
 {
-#ifdef DEBUG
-  nsPenMode penMode;
-  if (NS_SUCCEEDED(aContext.GetPenMode(penMode)) &&
-      penMode == nsPenMode_kInvert) {
-    NS_WARNING( "Invert mode ignored in FillPolygon" );
-  }
-#endif
 
   if (nsnull == aGap) {
     aContext.FillPolygon(aPoints, aNumPoints);

@@ -97,7 +97,6 @@ public:
   NS_IMETHOD  CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext);
   NS_IMETHOD  CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext);
   NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext){return NS_ERROR_NOT_IMPLEMENTED;}
-  NS_IMETHOD  CreateRenderingContext(nsIDrawingSurface* aSurface, nsIRenderingContext *&aContext);
   NS_IMETHOD  CreateRenderingContextInstance(nsIRenderingContext *&aContext);
 
   NS_IMETHOD  GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
@@ -127,7 +126,6 @@ public:
 private:
   /* Helper methods for |CreateRenderingContext|&co. */
   nsresult InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWindow);
-  nsresult InitRenderingContext(nsIRenderingContext *aContext, nsIDrawingSurface* aSurface);
 
 protected:
   virtual ~DeviceContextImpl();

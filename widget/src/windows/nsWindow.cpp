@@ -102,7 +102,6 @@
 #include <commctrl.h>
 #include "prtime.h"
 #ifdef MOZ_CAIRO_GFX
-#include "nsIThebesRenderingContext.h"
 #include "gfxContext.h"
 #include "gfxWindowsSurface.h"
 #else
