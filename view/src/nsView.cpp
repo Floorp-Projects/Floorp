@@ -182,7 +182,6 @@ nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
   // SetViewContentTransparency.
   mVFlags = 0;
   mViewManager = aViewManager;
-  mChildRemoved = PR_FALSE;
   mDirtyRegion = nsnull;
 }
 
@@ -243,12 +242,6 @@ nsView::~nsView()
     mParent->RemoveChild(this);
   }
 
-  if (mZParent)
-  {
-    mZParent->RemoveReparentedView();
-    mZParent->Destroy();
-  }
-
   // Destroy and release the widget
   if (mWindow)
   {
@@ -261,7 +254,6 @@ nsView::~nsView()
     NS_RELEASE(mWindow);
   }
   delete mDirtyRegion;
-  delete mClipRect;
 }
 
 nsresult nsView::QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -553,7 +545,6 @@ void nsView::RemoveChild(nsView *child)
         break;
       }
       prevKid = kid;
-      mChildRemoved = PR_TRUE;
 	    kid = kid->GetNextSibling();
     }
     NS_ASSERTION(found, "tried to remove non child");
@@ -702,31 +693,6 @@ void nsView::SetZIndex(PRBool aAuto, PRInt32 aZIndex, PRBool aTopMost)
   }
 }
 
-NS_IMETHODIMP nsView::SetWidget(nsIWidget *aWidget)
-{
-  ViewWrapper* wrapper = new ViewWrapper(this);
-  if (!wrapper)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(wrapper); // Will be released in ~nsView or upon setting a new widget
-
-  // Destroy any old wrappers if there are any
-  ViewWrapper* oldWrapper = GetWrapperFor(aWidget);
-  NS_IF_RELEASE(oldWrapper);
-  NS_IF_RELEASE(mWindow);
-
-  mWindow = aWidget;
-
-  if (nsnull != mWindow)
-  {
-    NS_ADDREF(mWindow);
-    mWindow->SetClientData(wrapper);
-  }
-
-  UpdateNativeWidgetZIndexes(this, FindNonAutoZIndex(this));
-
-  return NS_OK;
-}
-
 //
 // internal window creation functions
 //
@@ -780,13 +746,6 @@ void nsIView::List(FILE* out, PRInt32 aIndent) const
   fprintf(out, "{%d,%d,%d,%d}",
           brect.x, brect.y, brect.width, brect.height);
   const nsView* v = NS_STATIC_CAST(const nsView*, this);
-  if (v->IsZPlaceholderView()) {
-    fprintf(out, " z-placeholder(%p)",
-            (void*)NS_STATIC_CAST(const nsZPlaceholderView*, this)->GetReparentedView());
-  }
-  if (v->GetZParent()) {
-    fprintf(out, " zparent=%p", (void*)v->GetZParent());
-  }
   fprintf(out, " z=%d vis=%d clientData=%p <\n",
           mZIndex, mVis, mClientData);
   for (nsView* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {

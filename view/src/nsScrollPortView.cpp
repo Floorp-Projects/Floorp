@@ -157,15 +157,6 @@ NS_IMETHODIMP nsScrollPortView::CreateScrollControls(nsNativeWidget aNative)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScrollPortView::SetWidget(nsIWidget *aWidget)
-{
-  if (nsnull != aWidget) {
-    NS_ASSERTION(PR_FALSE, "please don't try and set a widget here");
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsScrollPortView::GetContainerSize(nscoord *aWidth, nscoord *aHeight) const
 {
   if (!aWidth || !aHeight)
