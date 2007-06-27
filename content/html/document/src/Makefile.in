@@ -76,7 +76,6 @@ REQUIRES	= xpcom \
 		  composer \
 		  editor \
 		  plugin \
-		  txtsvc \
 		  $(NULL)
 
 CPPSRCS		= \

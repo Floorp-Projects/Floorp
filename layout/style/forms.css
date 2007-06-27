@@ -134,11 +134,6 @@ input > .anonymous-div {
   ime-mode: inherit;
 }
 
-input:-moz-read-write,
-textarea:-moz-read-write {
-  -moz-user-modify: read-write !important;
-}
-
 select {
   margin: 0;
   border-color: ThreeDFace;

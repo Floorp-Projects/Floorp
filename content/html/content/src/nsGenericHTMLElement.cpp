@@ -1102,12 +1102,18 @@ nsGenericHTMLElement::GetSpellcheck(PRBool* aSpellcheck)
     return NS_OK;                       // Not spellchecked by default
   }
 
+  // Is this the actual body of the current document?
   if (IsCurrentBodyElement()) {
-    nsCOMPtr<nsIHTMLDocument> doc = do_QueryInterface(GetCurrentDoc());
-    if (doc) {
-      *aSpellcheck = doc->IsEditingOn();
+    // Is designMode on?
+    nsCOMPtr<nsIDOMNSHTMLDocument> nsHTMLDocument =
+      do_QueryInterface(GetCurrentDoc());
+    if (!nsHTMLDocument) {
+      return PR_FALSE;
     }
 
+    nsAutoString designMode;
+    nsHTMLDocument->GetDesignMode(designMode);
+    *aSpellcheck = designMode.EqualsLiteral("on");
     return NS_OK;
   }
 
@@ -1158,20 +1164,6 @@ nsGenericHTMLElement::InNavQuirksMode(nsIDocument* aDoc)
   return aDoc && aDoc->GetCompatibilityMode() == eCompatibility_NavQuirks;
 }
 
-void
-nsGenericHTMLElement::UpdateEditableState()
-{
-  // XXX Should we do this only when in a document?
-  ContentEditableTristate value = GetContentEditableValue();
-  if (value != eInherit) {
-    SetEditableFlag(value);
-
-    return;
-  }
-
-  nsGenericElement::UpdateEditableState();
-}
-
 nsresult
 nsGenericHTMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                  nsIContent* aBindingParent,
@@ -1181,14 +1173,6 @@ nsGenericHTMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                              aBindingParent,
                                              aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (aDocument && HasFlag(NODE_IS_EDITABLE) &&
-      GetContentEditableValue() == eTrue) {
-    nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(aDocument);
-    if (htmlDocument) {
-      htmlDocument->ChangeContentEditableCount(this, +1);
-    }
-  }
 
   // XXXbz if we already have a style attr parsed, this won't do
   // anything... need to fix that.
@@ -1204,19 +1188,6 @@ nsGenericHTMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   }
 
   return rv;
-}
-
-void
-nsGenericHTMLElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
-{
-  if (GetContentEditableValue() == eTrue) {
-    nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(GetCurrentDoc());
-    if (htmlDocument) {
-      htmlDocument->ChangeContentEditableCount(this, -1);
-    }
-  }
-
-  nsGenericElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 already_AddRefed<nsIDOMHTMLFormElement>
@@ -1428,49 +1399,17 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(nsIEventListenerManager** a
 }
 
 nsresult
-nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                              nsIAtom* aPrefix, const nsAString& aValue,
-                              PRBool aNotify)
-{
-  PRBool contentEditable = aNameSpaceID == kNameSpaceID_None &&
-                           aName == nsGkAtoms::contenteditable;
-  PRInt32 change;
-  if (contentEditable) {
-    change = GetContentEditableValue() == eTrue ? -1 : 0;
-  }
-
-  nsresult rv = nsGenericElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
-                                          aNotify);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (contentEditable) {
-    if (aValue.IsEmpty() || aValue.LowerCaseEqualsLiteral("true")) {
-      change += 1;
-    }
-
-    ChangeEditableState(change);
-  }
-
-  return NS_OK;
-}
-
-nsresult
 nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                 PRBool aNotify)
 {
   // Check for event handlers
-  if (aNameSpaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::contenteditable) {
-      ChangeEditableState(GetContentEditableValue() == eTrue ? -1 : 0);
-    }
-    else if (nsContentUtils::IsEventAttributeName(aAttribute,
-                                                  EventNameType_HTML)) {
-      nsCOMPtr<nsIEventListenerManager> manager;
-      GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+  if (aNameSpaceID == kNameSpaceID_None &&
+      nsContentUtils::IsEventAttributeName(aAttribute, EventNameType_HTML)) {
+    nsCOMPtr<nsIEventListenerManager> manager;
+    GetListenerManager(PR_FALSE, getter_AddRefs(manager));
 
-      if (manager) {
-        manager->RemoveScriptEventListener(aAttribute);
-      }
+    if (manager) {
+      manager->RemoveScriptEventListener(aAttribute);
     }
   }
 
@@ -1638,11 +1577,6 @@ nsGenericHTMLElement::ParseAttribute(PRInt32 aNamespaceID,
     if (aAttribute == nsGkAtoms::name && !aValue.IsEmpty()) {
       // Store name as an atom.  name="" means that the element has no name,
       // not that it has an emptystring as the name.
-      aResult.ParseAtom(aValue);
-      return PR_TRUE;
-    }
-
-    if (aAttribute == nsGkAtoms::contenteditable) {
       aResult.ParseAtom(aValue);
       return PR_TRUE;
     }
@@ -2087,24 +2021,6 @@ void
 nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttributes,
                                               nsRuleData* aData)
 {
-  if (aData->mSID == eStyleStruct_UserInterface) {
-    nsRuleDataUserInterface *ui = aData->mUserInterfaceData;
-    if (ui->mUserModify.GetUnit() == eCSSUnit_Null) {
-      const nsAttrValue* value =
-        aAttributes->GetAttr(nsGkAtoms::contenteditable);
-      if (value) {
-        if (value->Equals(nsGkAtoms::_empty, eCaseMatters) ||
-            value->Equals(nsGkAtoms::_true, eIgnoreCase)) {
-          ui->mUserModify.SetIntValue(NS_STYLE_USER_MODIFY_READ_WRITE,
-                                      eCSSUnit_Enumerated);
-        }
-        else {
-          ui->mUserModify.SetIntValue(NS_STYLE_USER_MODIFY_READ_ONLY,
-                                      eCSSUnit_Enumerated);
-        }
-      }
-    }
-  }
   if (aData->mSID == eStyleStruct_Visibility) {
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::lang);
     if (value && value->Type() == nsAttrValue::eString) {
@@ -2114,34 +2030,10 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
   }
 }
 
-void
-nsGenericHTMLFormElement::UpdateEditableFormControlState()
-{
-  ContentEditableTristate value = GetContentEditableValue();
-  if (value != eInherit) {
-    SetEditableFlag(value);
-
-    return;
-  }
-
-  nsIContent *parent = GetParent();
-  PRBool editable = parent && parent->HasFlag(NODE_IS_EDITABLE);
-
-  if (!editable) {
-    // If not contentEditable we still need to check the readonly attribute.
-    PRBool roState;
-    GetBoolAttr(nsGkAtoms::readonly, &roState);
-
-    editable = !roState;
-  }
-
-  SetEditableFlag(editable);
-}
 
 
 /* static */ const nsGenericHTMLElement::MappedAttributeEntry
 nsGenericHTMLElement::sCommonAttributeMap[] = {
-  { &nsGkAtoms::contenteditable },
   { &nsGkAtoms::lang },
   { nsnull }
 };
@@ -2632,47 +2524,6 @@ nsGenericHTMLElement::GetURIListAttr(nsIAtom* aAttr, nsAString& aResult)
         break;
     }
   }
-
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::GetContentEditable(nsAString& aContentEditable)
-{
-  ContentEditableTristate value = GetContentEditableValue();
-
-  if (value == eTrue) {
-    aContentEditable.AssignLiteral("true");
-  }
-  else if (value == eFalse) {
-    aContentEditable.AssignLiteral("false");
-  }
-  else {
-    aContentEditable.AssignLiteral("inherit");
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::SetContentEditable(const nsAString& aContentEditable)
-{
-  nsString contentEditable;
-  ToLowerCase(aContentEditable, contentEditable);
-
-  if (contentEditable.EqualsLiteral("inherit")) {
-    UnsetAttr(kNameSpaceID_None, nsGkAtoms::contenteditable, PR_TRUE);
-
-    return NS_OK;
-  }
-
-  if (!contentEditable.EqualsLiteral("true") &&
-      !contentEditable.EqualsLiteral("false")) {
-    return NS_ERROR_DOM_SYNTAX_ERR;
-  }
-
-  SetAttr(kNameSpaceID_None, nsGkAtoms::contenteditable, contentEditable,
-          PR_TRUE);
 
   return NS_OK;
 }
@@ -3302,19 +3153,10 @@ nsGenericHTMLElement::IsFocusable(PRInt32 *aTabIndex)
   PRInt32 tabIndex = 0;   // Default value for non HTML elements with -moz-user-focus
   GetTabIndex(&tabIndex);
 
-  PRBool disabled;
-  if (IsEditableRoot()) {
-    disabled = PR_FALSE;
-    if (!HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)) {
-      tabIndex = 0;
-    }
-  }
-  else {
-    // Just check for disabled attribute on all HTML elements
-    disabled = HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
-    if (disabled) {
-      tabIndex = -1;
-    }
+  // Just check for disabled attribute on all HTML elements
+  PRBool disabled = HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
+  if (disabled) {
+    tabIndex = -1;
   }
 
   if (aTabIndex) {
@@ -3925,94 +3767,4 @@ nsGenericHTMLElement::RecompileScriptEventListeners()
         GetAttr(kNameSpaceID_None, attr, value);
         AddScriptEventListener(attr, value, PR_TRUE);
     }
-}
-
-PRBool
-nsGenericHTMLElement::IsEditableRoot() const
-{
-  nsIDocument *document = GetCurrentDoc();
-  if (!document) {
-    return PR_FALSE;
-  }
-
-  if (document->HasFlag(NODE_IS_EDITABLE)) {
-    return this == document->GetRootContent();
-  }
-
-  if (!HasFlag(NODE_IS_EDITABLE)) {
-    return PR_FALSE;
-  }
-
-  nsIContent *parent = GetParent();
-
-  return !parent || !parent->HasFlag(NODE_IS_EDITABLE);
-}
-
-nsIContent*
-nsGenericHTMLElement::FindEditableRoot()
-{
-  nsIDocument *document = GetCurrentDoc();
-  if (!document) {
-    return nsnull;
-  }
-
-  if (document->HasFlag(NODE_IS_EDITABLE)) {
-    return document->GetRootContent();
-  }
-
-  if (!HasFlag(NODE_IS_EDITABLE)) {
-    return nsnull;
-  }
-
-  nsIContent *parent, *content = this;
-  while ((parent = content->GetParent()) && parent->HasFlag(NODE_IS_EDITABLE)) {
-    content = parent;
-  }
-
-  return content;
-}
-
-static void
-MakeContentDescendantsEditable(nsIContent *aContent, nsIDocument *aDocument)
-{
-  PRInt32 stateBefore = aContent->IntrinsicState();
-
-  aContent->UpdateEditableState();
-
-  if (aDocument && stateBefore != aContent->IntrinsicState()) {
-    aDocument->ContentStatesChanged(aContent, nsnull,
-                                    NS_EVENT_STATE_MOZ_READONLY |
-                                    NS_EVENT_STATE_MOZ_READWRITE);
-  }
-
-  PRUint32 i, n = aContent->GetChildCount();
-  for (i = 0; i < n; ++i) {
-    nsIContent *child = aContent->GetChildAt(i);
-    if (!child->HasAttr(kNameSpaceID_None, nsGkAtoms::contenteditable)) {
-      MakeContentDescendantsEditable(child, aDocument);
-    }
-  }
-}
-
-void
-nsGenericHTMLElement::ChangeEditableState(PRInt32 aChange)
-{
-  nsIDocument* document = GetCurrentDoc();
-  if (!document) {
-    return;
-  }
-
-  if (aChange != 0) {
-    nsCOMPtr<nsIHTMLDocument> htmlDocument =
-      do_QueryInterface(document);
-    if (htmlDocument) {
-      htmlDocument->ChangeContentEditableCount(this, aChange);
-    }
-  }
-
-  if (document->HasFlag(NODE_IS_EDITABLE)) {
-    document = nsnull;
-  }
-
-  MakeContentDescendantsEditable(this, document);
 }

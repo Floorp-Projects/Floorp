@@ -57,12 +57,6 @@ NS_IMETHODIMP JoinElementTxn::Init(nsEditor   *aEditor,
   if (!aEditor || !aLeftNode || !aRightNode) { return NS_ERROR_NULL_POINTER; }
   mEditor = aEditor;
   mLeftNode = do_QueryInterface(aLeftNode);
-  nsCOMPtr<nsIDOMNode>leftParent;
-  nsresult result = mLeftNode->GetParentNode(getter_AddRefs(leftParent));
-  if (NS_FAILED(result)) return result;
-  if (!mEditor->IsModifiableNode(leftParent)) {
-    return NS_ERROR_FAILURE;
-  }
   mRightNode = do_QueryInterface(aRightNode);
   mOffset=0;
   return NS_OK;
