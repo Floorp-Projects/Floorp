@@ -53,6 +53,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGAElement.idl \
 		nsIDOMSVGAngle.idl \
 		nsIDOMSVGAnimatedAngle.idl \
+		nsIDOMSVGAnimatedBoolean.idl \
 		nsIDOMSVGAnimatedEnum.idl \
 		nsIDOMSVGAnimatedInteger.idl \
 		nsIDOMSVGAnimatedLength.idl \
