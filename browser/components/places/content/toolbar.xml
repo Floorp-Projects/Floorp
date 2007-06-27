@@ -334,6 +334,11 @@
               event.target != content)
             return;
 
+          if (this.childNodes.length == 0) {
+            this._chevron.collapsed = true;
+            return;
+          }
+
           var spaceLeft = this.boxObject.width;
           this._chevron.collapsed = false;
           var chevronWidth = this._chevron.boxObject.width;
