@@ -599,9 +599,6 @@ moz_gtk_toggle_paint(GdkDrawable* drawable, GdkRectangle* rect,
     GtkWidget *w;
     GtkStyle *style;
 
-    if (state->focused && state_type == GTK_STATE_NORMAL)
-      state_type = GTK_STATE_PRELIGHT;
-
     if (isradio) {
         moz_gtk_radio_get_metrics(&indicator_size, &indicator_spacing);
         w = gRadiobuttonWidget;
@@ -636,10 +633,20 @@ moz_gtk_toggle_paint(GdkDrawable* drawable, GdkRectangle* rect,
         gtk_paint_option(style, drawable, state_type, shadow_type, cliprect,
                          gRadiobuttonWidget, "radiobutton", x, y,
                          width, height);
+        if (state->focused) {
+            gtk_paint_focus(style, drawable, GTK_STATE_ACTIVE, cliprect,
+                            gRadiobuttonWidget, "radiobutton", rect->x, rect->y,
+                            rect->width, rect->height);
+        }
     }
     else {
         gtk_paint_check(style, drawable, state_type, shadow_type, cliprect, 
                         gCheckboxWidget, "checkbutton", x, y, width, height);
+        if (state->focused) {
+            gtk_paint_focus(style, drawable, GTK_STATE_ACTIVE, cliprect,
+                            gRadiobuttonWidget, "checkbutton", rect->x, rect->y,
+                            rect->width, rect->height);
+        }
     }
 
     return MOZ_GTK_SUCCESS;
