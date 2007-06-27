@@ -82,7 +82,6 @@ CPPSRCS		= \
 		nsThebesDrawingSurface.cpp \
 		nsThebesImage.cpp \
 		nsThebesRegion.cpp \
-		nsThebesBlender.cpp \
 		nsThebesGfxFactory.cpp \
 		nsThebesRenderingContext.cpp \
 		nsThebesFontMetrics.cpp \

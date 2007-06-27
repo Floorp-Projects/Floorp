@@ -74,12 +74,9 @@
 #include "nsReadableUtils.h"
 
 #include "nsColor.h"
-#include "nsTransform2D.h"
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
-#include "nsIBlender.h"
 #include "nsGfxCIID.h"
-#include "nsIDrawingSurface.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIDocShell.h"
 #include "nsPresContext.h"
