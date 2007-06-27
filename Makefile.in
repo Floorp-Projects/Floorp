@@ -137,32 +137,27 @@ endif # MOZILLA_OFFICIAL
 endif # WINNT
 
 ifeq ($(OS_ARCH),WINNT)
-SYM_FIND_CMD := /bin/find . -path dist -prune -o -name "*.exe" \
-    -o -name "*.dll" -o -name "*.EXE" | sed "s/\.[^\.]*$$/\.pdb/"
 # we want to copy PDB files on Windows
 MAKE_SYM_STORE_ARGS := -c
 DUMP_SYMS_BIN := $(topsrcdir)/toolkit/airbag/tools/win32/dump_syms.exe
+# PDB files don't get moved to dist, so we need to scan the whole objdir
+MAKE_SYM_STORE_PATH := .
 endif
 ifeq ($(OS_ARCH),Darwin)
 # need to pass arch flags for universal builds
 ifdef UNIVERSAL_BINARY
 MAKE_SYM_STORE_ARGS := -a "ppc i386"
-SYM_DIST := $(DIST)/universal
+MAKE_SYM_STORE_PATH := $(DIST)/universal
 else
 MAKE_SYM_STORE_ARGS := -a $(OS_TEST)
-SYM_DIST := $(DIST)
+MAKE_SYM_STORE_PATH := $(DIST)/bin
 endif
-# |file| is stupid on universal binaries, it produces one line of output
-# for the file, and one line of output for each architecture contained within.
-SYM_FIND_CMD := find -L $(SYM_DIST) -type f -a -perm -100 -o -name "*.dylib" \
-    | xargs file -L | grep "Mach-O" | grep -v "for architecture" | cut -f1 -d':'
 DUMP_SYMS_BIN := $(DIST)/host/bin/dump_syms
 endif
 ifeq ($(OS_ARCH),Linux)
 MAKE_SYM_STORE_ARGS :=
-SYM_FIND_CMD := find -L $(DIST)/bin -type f -a -perm -100 -o -name "*.so" \
-    | xargs file -L | grep "ELF" | cut -f1 -d':'
 DUMP_SYMS_BIN := $(DIST)/host/bin/dump_syms
+MAKE_SYM_STORE_PATH := $(DIST)/bin
 endif
 
 ifdef MOZ_SYMBOLS_EXTRA_BUILDID
@@ -173,10 +168,10 @@ buildsymbols:
 ifdef MOZ_AIRBAG
 	echo building symbol store
 	mkdir -p $(DIST)/crashreporter-symbols/$(BUILDID)
-	$(SYM_FIND_CMD) | \
-	  xargs $(topsrcdir)/toolkit/airbag/tools/make_symbol_store.pl    \
-	  $(MAKE_SYM_STORE_ARGS) $(DUMP_SYMS_BIN)                         \
-	  $(DIST)/crashreporter-symbols/$(BUILDID) >                      \
+	$(PYTHON) $(topsrcdir)/toolkit/airbag/tools/symbolstore.py    \
+	  $(MAKE_SYM_STORE_ARGS) -s $(topsrcdir) $(DUMP_SYMS_BIN)     \
+	  $(DIST)/crashreporter-symbols/$(BUILDID)                    \
+	  $(MAKE_SYM_STORE_PATH) >                                    \
 	  $(DIST)/crashreporter-symbols/$(BUILDID)/$(MOZ_APP_NAME)-$(MOZ_APP_VERSION)-$(OS_ARCH)-$(BUILDID)$(EXTRA_BUILDID)-symbols.txt
 	echo packing symbols
 	mkdir -p $(topsrcdir)/../$(BUILDID)
