@@ -232,6 +232,9 @@ bin/components/nsTaggingService.js
 bin/components/nsDefaultCLH.js
 bin/components/nsContentPrefService.js
 
+; Modules
+bin/modules/*
+
 ; Safe Browsing
 bin/components/nsSafebrowsingApplication.js
 bin/components/safebrowsing.xpt
