@@ -901,9 +901,9 @@ Fault(const char *msg, const void *ptr=nsnull)
         if (sCurrGraph) {
             FILE *stream;
 #ifdef WIN32
-            char *fname = "c:\\fault-graph.dot";
+            const char fname[] = "c:\\fault-graph.dot";
 #else
-            char *fname = "/tmp/fault-graph.dot";
+            const char fname[] = "/tmp/fault-graph.dot";
 #endif
             printf("depositing faulting cycle-collection graph in %s\n", fname);
             stream = fopen(fname, "w+");
