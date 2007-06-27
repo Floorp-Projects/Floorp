@@ -74,10 +74,10 @@ interface nsILoginManager : nsISupports {
 
 
     /**
-    * Clear all logins known to login manager.
+    * Remove all logins known to login manager.
     *
     * The browser sanitization feature allows the user to clear any stored
-    * passwords. This interface allows that to be done without gettng each
+    * passwords. This interface allows that to be done without getting each
     * login first (which might require knowing the master password).
     *
     */
