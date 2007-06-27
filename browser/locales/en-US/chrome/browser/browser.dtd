@@ -217,7 +217,7 @@
 <!ENTITY openFrameCmdInTab.label      "Open Frame in New Tab">
 <!ENTITY openFrameCmdInTab.accesskey  "T">
 <!ENTITY showOnlyThisFrameCmd.label     "Show Only This Frame">
-<!ENTITY showOnlyThisFrameCmd.accesskey "w">
+<!ENTITY showOnlyThisFrameCmd.accesskey "S">
 <!ENTITY reloadCmd.commandkey         "r">
 <!ENTITY reloadFrameCmd.label         "Reload Frame">
 <!ENTITY reloadFrameCmd.accesskey     "R">
@@ -231,7 +231,7 @@
 <!ENTITY viewPageInfoCmd.label        "View Page Info">
 <!ENTITY viewPageInfoCmd.accesskey    "I">
 <!ENTITY viewFrameInfoCmd.label       "View Frame Info">
-<!ENTITY viewFrameInfoCmd.accesskey   "i">
+<!ENTITY viewFrameInfoCmd.accesskey   "I">
 <!ENTITY viewImageCmd.label           "View Image">
 <!ENTITY viewImageCmd.accesskey       "I">
 <!ENTITY viewBGImageCmd.label         "View Background Image">
@@ -243,7 +243,7 @@
 <!ENTITY bookmarkLinkCmd.label        "Bookmark This Link...">
 <!ENTITY bookmarkLinkCmd.accesskey    "L">
 <!ENTITY bookmarkFrameCmd.label       "Bookmark This Frame...">
-<!ENTITY bookmarkFrameCmd.accesskey   "F">
+<!ENTITY bookmarkFrameCmd.accesskey   "m">
 <!ENTITY sendPageCmd.label            "Send Link...">
 <!ENTITY sendPageCmd.accesskey        "e">
 <!ENTITY savePageCmd.label            "Save Page As...">
