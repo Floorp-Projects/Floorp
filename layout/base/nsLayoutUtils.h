@@ -326,7 +326,7 @@ public:
    * for some reason the coordinates for the mouse are not known (e.g.,
    * the event is not a GUI event).
    */
-  static nsPoint GetEventCoordinatesRelativeTo(nsEvent* aEvent,
+  static nsPoint GetEventCoordinatesRelativeTo(const nsEvent* aEvent,
                                                nsIFrame* aFrame);
 
 /**
