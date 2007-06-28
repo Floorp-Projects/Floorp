@@ -2786,6 +2786,8 @@ nsXPCComponents_Utils::LookupMethod()
 
     JSObject* obj = JSVAL_TO_OBJECT(argv[0]);
 
+    OBJ_TO_INNER_OBJECT(cx, obj);
+
     // second param must be a string
     if(!JSVAL_IS_STRING(argv[1]))
         return NS_ERROR_XPC_BAD_CONVERT_JS;
