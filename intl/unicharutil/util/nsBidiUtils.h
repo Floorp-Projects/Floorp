@@ -179,6 +179,7 @@
 #define IS_HINDI_DIGIT(u)   ( ( (u) >= START_HINDI_DIGITS )  && ( (u) <= END_HINDI_DIGITS ) )
 #define IS_ARABIC_DIGIT(u)  ( ( (u) >= START_ARABIC_DIGITS ) && ( (u) <= END_ARABIC_DIGITS ) )
 #define IS_FARSI_DIGIT(u)  ( ( (u) >= START_FARSI_DIGITS ) && ( (u) <= END_FARSI_DIGITS ) )
+#define IS_ARABIC_SEPARATOR(u) ( ( (u) == 0x066A ) || ( (u) == 0x066B ) || ( (u) == 0x066C ) )
 
 #define IS_BIDI_DIACRITIC(u) ( \
   ( (u) >= 0x0591 && (u) <= 0x05A1) || ( (u) >= 0x05A3 && (u) <= 0x05B9) \
@@ -193,7 +194,8 @@
 #define IS_FE_CHAR(c) (((0xfb50 <= (c)) && ((c)<= 0xfbFF)) \
                        || ((0xfe70 <= (c)) && ((c)<= 0xfeFC)))
 #define IS_ARABIC_CHAR(c) ((0x0600 <= (c)) && ((c)<= 0x06FF))
-#define IS_ARABIC_ALPHABETIC(c) (IS_ARABIC_CHAR(c) && !(IS_HINDI_DIGIT(c) || IS_FARSI_DIGIT(c)))
+#define IS_ARABIC_ALPHABETIC(c) (IS_ARABIC_CHAR(c) && \
+                                !(IS_HINDI_DIGIT(c) || IS_FARSI_DIGIT(c) || IS_ARABIC_SEPARATOR(c)))
 
 #define CHAR_IS_BIDI(c) ( (IS_HINDI_DIGIT(c) ) || (IS_HEBREW_CHAR(c) ) \
                         || (IS_06_CHAR(c) ) || (IS_FE_CHAR(c) ) )
