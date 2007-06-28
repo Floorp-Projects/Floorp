@@ -302,6 +302,9 @@
           }
 #endif
 
+          NS_ASSERT(this._resultNode.containerOpen,
+                    "container must be opened when _rebuild is called");
+
           var cc = this._resultNode.childCount;
           if (cc > 0) {
             for (var i = 0; i < cc; ++i) {
@@ -438,24 +441,44 @@
         },
 
         containerOpened: function PMV_containerOpened(aNode) {
-          if (aNode == this._self.getResultNode())
-            this._self._rebuild();
-          else
-            this._forwardToChildView(aNode, "containerOpened", arguments);
+          this.invalidateContainer(aNode);
         },
 
         containerClosed: function PMV_containerClosed(aNode) {
+          this.invalidateContainer(aNode);
         },
 
-        invalidateContainer: function PMV_invalidateContainer(aNode) {
-          if (aNode == this._self.getResultNode())
-            this._self._rebuild();
-          else {
-           this._forwardToChildView(aNode, "invalidateContainer", arguments);
+        invalidateContainer: function PMV_invalidateContainer(aContainer) {
+          function isChildOf(node, container) {
+            var parent = node.parent;
+            while (parent) {
+              if (parent == container)
+                return true;
+              parent = parent.parent;
+            }
+            return false;
+          }
+
+          var viewerToRebuild = null;
+          for (var i=0; i < this._self._containerNodesMap.length; i++) {
+            var node = this._self._containerNodesMap[i].resultNode;
+            
+            if (node == aContainer)
+              viewerToRebuild = this._self._containerNodesMap[i].domNode._viewer;
+            if (isChildOf(node, aContainer))
+              this._self._containerNodesMap.splice(i,1);
+          }
+        
+          if (aContainer.containerOpen) {
+            if (viewerToRebuild)
+              viewerToRebuild._self._rebuild();
+            else
+              this._self._rebuild();
           }
         },
 
         invalidateAll: function PMV_invalidateAll() {
+          this._self._containerNodesMap.splice(0);
           this._self._rebuild();
         },
 

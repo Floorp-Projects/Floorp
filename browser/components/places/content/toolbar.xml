@@ -200,7 +200,6 @@
           while (this.hasChildNodes())
             this.removeChild(this.firstChild);
           const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-          this._result.root.containerOpen = true;
           var cc = this._result.root.childCount;
           for (var i = 0; i < cc; ++i)
             this.insertNewItem(this._result.root.getChild(i), null);
@@ -612,23 +611,44 @@
         },
 
         containerOpened: function TV_V_containerOpened(aNode) {
-          if (aNode == this._self.getResult().root)
-            this._self._rebuild();
-          else
-            this._forwardToChildView(aNode, "containerOpened", arguments);
+          this.invalidateContainer(aNode);
         },
 
         containerClosed: function TV_V_containerClosed(aNode) {
+          this.invalidateContainer(aNode);
         },
 
-        invalidateContainer: function TV_V_invalidateContainer(aNode) {
-          if (aNode == this._self.getResult().root)
-            this._self._rebuild();
-          else
-           this._forwardToChildView(aNode, "invalidateContainer", arguments);
+        invalidateContainer: function TV_V_invalidateContainer(aContainer) {
+          function isChildOf(node, container) {
+            var parent = node.parent;
+            while (parent) {
+              if (parent == container)
+                return true;
+              parent = parent.parent;
+            }
+            return false;
+          }
+
+          var viewerToRebuild = null;
+          for (var i=0; i < this._self._containerNodesMap.length; i++) {
+            var node = this._self._containerNodesMap[i].resultNode;
+            
+            if (node == aContainer)
+              viewerToRebuild = this._self._containerNodesMap[i].domNode._viewer;
+            if (isChildOf(node, aContainer))
+              this._self._containerNodesMap.splice(i,1);
+          }
+        
+          if (aContainer.containerOpen) {
+            if (viewerToRebuild)
+              viewerToRebuild._self._rebuild();
+            else
+              this._self._rebuild();
+          }
         },
 
         invalidateAll: function TV_V_invalidateAll() {
+          this._self._containerNodesMap.splice(0);
           this._self._rebuild();
         },
 
