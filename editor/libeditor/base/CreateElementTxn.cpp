@@ -94,18 +94,38 @@ NS_IMETHODIMP CreateElementTxn::DoTransaction(void)
 
   NS_ASSERTION(mEditor && mParent, "bad state");
   if (!mEditor || !mParent) return NS_ERROR_NOT_INITIALIZED;
+  // create a new node
+  nsAutoString textNodeTag;
+  nsresult result = nsEditor::GetTextNodeTag(textNodeTag);
+  if (NS_FAILED(result)) { return result; }
 
-  nsCOMPtr<nsIContent> newContent;
+  if (textNodeTag == mTag) 
+  {
+    nsCOMPtr<nsIDOMDocument>doc;
+    result = mEditor->GetDocument(getter_AddRefs(doc));
+    if (NS_FAILED(result)) return result;
+    if (!doc) return NS_ERROR_NULL_POINTER;
+
+    const nsString stringData;
+    nsCOMPtr<nsIDOMText>newTextNode;
+    result = doc->CreateTextNode(stringData, getter_AddRefs(newTextNode));
+    if (NS_FAILED(result)) return result;
+    if (!newTextNode) return NS_ERROR_NULL_POINTER;
+    mNewNode = do_QueryInterface(newTextNode);
+  }
+  else 
+  {
+    nsCOMPtr<nsIContent> newContent;
  
-  //new call to use instead to get proper HTML element, bug# 39919
-  nsresult result = mEditor->CreateHTMLContent(mTag, getter_AddRefs(newContent));
-  if (NS_FAILED(result)) return result;
-  nsCOMPtr<nsIDOMElement>newElement = do_QueryInterface(newContent);
-  if (!newElement) return NS_ERROR_NULL_POINTER;
-  mNewNode = do_QueryInterface(newElement);
-  // Try to insert formatting whitespace for the new node:
-  mEditor->MarkNodeDirty(mNewNode);
- 
+    //new call to use instead to get proper HTML element, bug# 39919
+    result = mEditor->CreateHTMLContent(mTag, getter_AddRefs(newContent));
+    if (NS_FAILED(result)) return result;
+    nsCOMPtr<nsIDOMElement>newElement = do_QueryInterface(newContent);
+    if (!newElement) return NS_ERROR_NULL_POINTER;
+    mNewNode = do_QueryInterface(newElement);
+    // Try to insert formatting whitespace for the new node:
+    mEditor->MarkNodeDirty(mNewNode);
+  }
   NS_ASSERTION(((NS_SUCCEEDED(result)) && (mNewNode)), "could not create element.");
   if (!mNewNode) return NS_ERROR_NULL_POINTER;
 
