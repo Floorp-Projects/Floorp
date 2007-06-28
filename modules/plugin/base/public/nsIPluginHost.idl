@@ -40,7 +40,6 @@
 #include "nsIPluginInstanceOwner.idl"
 #include "nsIStreamListener.idl"
 #include "nsIStringStream.idl"
-#include "nsIPluginTag.idl"
 
 %{C++
 #include "nsplugindefs.h"
@@ -59,49 +58,46 @@ interface nsIChannel;
 [ptr] native PRLibraryPtr(PRLibrary);
 [ref] native nsIStreamListenerRef(nsIStreamListener *);
 
-[scriptable, uuid(2af1c32d-38dd-4f72-b0ab-24697d836e61)]
+[uuid(ABB36800-EA77-4172-AD14-603A02DB2B53)]
 interface nsIPluginHost : nsIFactory
 {
-  [noscript] void init();
+  void init();
 
-  [noscript] void destroy();
+  void destroy();
 
-  [noscript] void loadPlugins();
+  void loadPlugins();
   
-  [noscript] void getPluginFactory(in string aMimeType, out nsIPlugin aPlugin);
+  void getPluginFactory(in string aMimeType, out nsIPlugin aPlugin);
 
-  [noscript] void instantiateEmbeddedPlugin(in string aMimeType, in nsIURI aURL, in nsIPluginInstanceOwner aOwner);
+  void instantiateEmbeddedPlugin(in string aMimeType, in nsIURI aURL, in nsIPluginInstanceOwner aOwner);
 
-  [noscript] void instantiateFullPagePlugin(in string aMimeType, in nsIURI aURI, in nsIStreamListenerRef aStreamListener, in nsIPluginInstanceOwner aOwner);
+  void instantiateFullPagePlugin(in string aMimeType, in nsIURI aURI, in nsIStreamListenerRef aStreamListener, in nsIPluginInstanceOwner aOwner);
 
   /**
    * Instantiate an embedded plugin for an existing channel. The caller is
    * responsible for opening the channel. It may or may not be already opened
    * when this function is called.
    */
-  [noscript] nsIStreamListener instantiatePluginForChannel(in nsIChannel aChannel, in nsIPluginInstanceOwner aOwner);
+  nsIStreamListener instantiatePluginForChannel(in nsIChannel aChannel, in nsIPluginInstanceOwner aOwner);
 
-  [noscript] void setUpPluginInstance(in string aMimeType, in nsIURI aURL, in nsIPluginInstanceOwner aOwner);
+  void setUpPluginInstance(in string aMimeType, in nsIURI aURL, in nsIPluginInstanceOwner aOwner);
 
   // The return code is NS_OK if the plugin is enabled,
   // NS_ERROR_PLUGIN_DISABLED if the plugin is explicitly disabled, and
   // NS_ERROR_FAILURE if there is no plugin for this type.
-  [noscript] void isPluginEnabledForType(in string aMimeType);
+  void isPluginEnabledForType(in string aMimeType);
 
   // The return code is NS_OK if the plugin is enabled and NS_ERROR_FAILURE if
   // the plugin is explicitly disabled or there is no plugin.
-  [noscript] void isPluginEnabledForExtension(in string aExtension, in constCharStarRef aMimeType);
+  void isPluginEnabledForExtension(in string aExtension, in constCharStarRef aMimeType);
 
-  [noscript] readonly attribute unsigned long pluginCount;
+  readonly attribute unsigned long pluginCount;
   
   [noscript] void getPlugins(in unsigned long aPluginCount, out /*array*/ nsIDOMPlugin aPluginArray);
 
-  void getPluginTags(out unsigned long aPluginCount,
-    [retval, array, size_is(aPluginCount)] out nsIPluginTag aResults);
+  void stopPluginInstance(in nsIPluginInstance aInstance);
 
-  [noscript] void stopPluginInstance(in nsIPluginInstance aInstance);
-
-  [noscript] void handleBadPlugin(in PRLibraryPtr aLibrary, in nsIPluginInstance instance);
+  void handleBadPlugin(in PRLibraryPtr aLibrary, in nsIPluginInstance instance);
 };
 
 %{C++
