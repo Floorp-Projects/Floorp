@@ -47,6 +47,8 @@
 #include <algorithm>
 #include <cctype>
 
+#include <signal.h>
+
 #include <gtk/gtkhbbox.h>
 #include <gtk/gtkcheckbutton.h>
 #include <gtk/gtkcontainer.h>
@@ -276,6 +278,11 @@ static void EmailChanged(GtkEditable* editable, gpointer userData)
 
 bool UIInit()
 {
+  // breakpad probably left us with blocked signals, unblock them here
+  sigset_t signals, old;
+  sigfillset(&signals);
+  sigprocmask(SIG_UNBLOCK, &signals, &old);
+
   if (gtk_init_check(&gArgc, &gArgv)) {
     gInitialized = true;
     return true;
