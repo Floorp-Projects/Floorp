@@ -1724,9 +1724,17 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
         if (argc >= 2) {
             *rval = argv[1];
         } else {
-            if (!GetArrayElement(cx, obj, start, &hole, rval))
+            do {
+                if (!GetArrayElement(cx, obj, start, &hole, rval))
+                    return JS_FALSE;
+                start += step;
+            } while (hole && start != end);
+
+            if (hole && start == end) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                     JSMSG_EMPTY_ARRAY_REDUCE);
                 return JS_FALSE;
-            start += step;
+            }
         }
         break;
       case MAP:
