@@ -820,7 +820,7 @@ nsIWidget* nsIView::GetNearestWidget(nsPoint* aOffset) const
   // not coincide with v's origin
   if (aOffset) {
     nsRect vBounds = v->GetBounds();
-    *aOffset = pt + v->GetPosition() -  nsPoint(vBounds.x, vBounds.y) -
+    *aOffset = pt + v->GetPosition() -  nsPoint(vBounds.x, vBounds.y) +
                v->ViewToWidgetOffset();
   }
   return v->GetWidget();
