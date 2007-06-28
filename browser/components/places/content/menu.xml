@@ -87,17 +87,13 @@
                 readonly="true"
                 onget="return this._controller;"/>
 
-      <field name="_built">false</field>
-
       <method name="onPopupShowing">
         <body><![CDATA[
         if (!this._resultNode)
           this._init();
 
         if (!this._resultNode.containerOpen)
-          this._resultNode.containerOpen = true;  
-        if (!this._built)
-          this._rebuild();
+          this._resultNode.containerOpen = true;
 
         if (this.popupShowingCallback)
           this.popupShowingCallback();
@@ -328,7 +324,6 @@
               this.appendChild(element);
             }
           }
-          this._built = true;
         ]]></body>
       </method>
 
@@ -349,9 +344,6 @@
         },
 
         itemInserted: function PMV_itemInserted(aParentNode, aNode, aIndex) {
-          if (!this._self._built)
-            return;
-
           if (aParentNode == this._self.getResultNode()) {
             var index = this._self._startMarker + 1 + aIndex;
             var before = this._self.childNodes[index] || null;
@@ -362,9 +354,6 @@
         },
 
         itemRemoved: function PMV_itemRemoved(aParentNode, aNode, aIndex) {
-          if (!this._self._built)
-            return;
-
           if (aParentNode == this._self.getResultNode()) {
             var children = this._self.childNodes;
             
@@ -380,9 +369,6 @@
         },
 
         itemChanged: function PMV_itemChanged(aNode) {
-          if (!this._self._built)
-            return;
-
           // this check can be removed once we fix bug #382397
           var parentNode = aNode.parent;
           if (!parentNode)
@@ -439,9 +425,6 @@
 
         itemReplaced:
         function PMV_itemReplaced(aParentNode, aOldNode, aNewNode, aIndex) {
-          if (!this._self._built)
-            return;
-
           if (aParentNode == this._self.getResultNode()) {
             var children = this._self.childNodes;
             for (var i = 0; i < children.length; i++) {
@@ -466,9 +449,6 @@
         },
 
         invalidateContainer: function PMV_invalidateContainer(aContainer) {
-          if (!this._self._built)
-            return;
-
           function isChildOf(node, container) {
             var parent = node.parent;
             while (parent) {
@@ -491,15 +471,15 @@
         
           if (aContainer.containerOpen) {
             if (viewerToRebuild)
-              viewerToRebuild._built = false;
+              viewerToRebuild._self._rebuild();
             else
-              this._self._built = false;
+              this._self._rebuild();
           }
         },
 
         invalidateAll: function PMV_invalidateAll() {
           this._self._containerNodesMap.splice(0);
-          this._self._built = false;
+          this._self._rebuild();
         },
 
         sortingChanged: function PMV_sortingChanged(aSortingMode) {
@@ -917,12 +897,8 @@
         if (event.target != this)
           return;
 
-        // UI performance: folder queries are cheap, keep the resultnode open
-        // so we don't rebuild its contents whenever the popup is reopened.
-        if (!PlacesUtils.nodeIsFolder(this._resultNode)) {
-          this._resultNode.containerOpen = false;
-          this._built = false;
-        }
+        // UI performance: keep the resultnode open so we don't rebuild its
+        // contents whenever the popup is reopened.
 
         // The autoopened attribute is set for folders which have been
         // automatically opened when dragged over.  Turn off this attribute
