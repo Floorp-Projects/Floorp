@@ -63,9 +63,8 @@ class nsIDocShell;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0xb6408b0, 0x20c6, 0x4d60, \
-  { 0xb7, 0x2f, 0x90, 0xb7, 0x7a, 0x9d, 0xb9, 0xb6 } }
-
+{ 0x36b375cb, 0xf01e, 0x4c18, \
+  { 0xbf, 0x9e, 0xba, 0xad, 0x77, 0x1d, 0xce, 0x22 } }
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsIContent_base : public nsINode {
@@ -715,11 +714,8 @@ public:
    */
   // XXXbz this is PRInt32 because all the ESM content state APIs use
   // PRInt32.  We should really use PRUint32 instead.
-  virtual PRInt32 IntrinsicState() const
-  {
-    return 0;
-  }
-    
+  virtual PRInt32 IntrinsicState() const;
+
   /* The default script type (language) ID for this content.
      All content must support fetching the default script language.
    */
@@ -790,6 +786,12 @@ public:
    */
   virtual nsIAtom *GetClassAttributeName() const = 0;
 
+  /**
+   * Should be called when the node can become editable or when it can stop
+   * being editable (for example when its contentEditable attribute changes,
+   * when it is moved into an editable parent, ...).
+   */
+  virtual void UpdateEditableState();
 
 #ifdef DEBUG
   /**

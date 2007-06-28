@@ -3777,8 +3777,8 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
   GetPresShell(getter_AddRefs(shell));
   if (!shell)  return PR_FALSE;
 
-  if (IsMozEditorBogusNode(aNode)) return PR_FALSE;
-  
+  if (IsMozEditorBogusNode(aNode) || !IsModifiableNode(aNode)) return PR_FALSE;
+
   // see if it has a frame.  If so, we'll edit it.
   // special case for textnodes: frame must have width.
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
@@ -4734,7 +4734,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aElement,
   {
     result = TransactionFactory::GetNewTransaction(DeleteElementTxn::GetCID(), (EditTxn **)aTxn);
     if (NS_SUCCEEDED(result)) {
-      result = (*aTxn)->Init(aElement, &mRangeUpdater);
+      result = (*aTxn)->Init(this, aElement, &mRangeUpdater);
     }
   }
   return result;
@@ -5355,3 +5355,9 @@ nsEditor::DumpNode(nsIDOMNode *aNode, PRInt32 indent)
   }
 }
 #endif
+
+PRBool
+nsEditor::IsModifiableNode(nsIDOMNode *aNode)
+{
+  return PR_TRUE;
+}
