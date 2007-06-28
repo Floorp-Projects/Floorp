@@ -847,6 +847,7 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
   nsView* view = NS_STATIC_CAST(nsView*, aView);
 
   nsRect damagedRect(aRect);
+  NS_ASSERTION(damagedRect.IsEmpty() || view->GetDimensions().Contains(damagedRect),"");
 
    // If the rectangle is not visible then abort
    // without invalidating. This is a performance 
@@ -1939,7 +1940,9 @@ void nsViewManager::ViewToWidget(nsView *aView, nsView* aWidgetView, nsRect &aRe
   // account for the view's origin not lining up with the widget's
   aRect.x -= bounds.x;
   aRect.y -= bounds.y;
-  
+
+  aRect += aView->ViewToWidgetOffset();
+
   // finally, convert to device coordinates.
   aRect.ScaleRoundOut(1.0f / mContext->AppUnitsPerDevPixel());
 }
