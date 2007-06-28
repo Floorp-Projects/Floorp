@@ -1053,6 +1053,12 @@ class nsIWidget : public nsISupports {
      */
     NS_IMETHOD GetAnimatedResize(PRUint16* aAnimation) = 0;
 
+    /*
+     * Return the the nearest ancestor widget which does not have a
+     * Gecko parent.
+     */
+    virtual nsIWidget* GetTopLevelWindow(void) = 0;
+
 protected:
     // keep the list of children.  We also keep track of our siblings.
     // The ownership model is as follows: parent holds a strong ref to

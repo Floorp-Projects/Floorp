@@ -183,6 +183,7 @@ nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
   mVFlags = 0;
   mViewManager = aViewManager;
   mDirtyRegion = nsnull;
+  mWidgetDisowned = PR_FALSE;
 }
 
 void nsView::DropMouseGrabbing() {
@@ -250,7 +251,9 @@ nsView::~nsView()
     NS_IF_RELEASE(wrapper);
 
     mWindow->SetClientData(nsnull);
-    mWindow->Destroy();
+    if (!mWidgetDisowned) {
+      mWindow->Destroy();
+    }
     NS_RELEASE(mWindow);
   }
   delete mDirtyRegion;

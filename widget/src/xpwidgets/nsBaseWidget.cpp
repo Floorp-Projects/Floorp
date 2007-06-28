@@ -856,6 +856,13 @@ nsBaseWidget::GetAnimatedResize(PRUint16* aAnimation)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+nsIWidget* nsBaseWidget::GetTopLevelWindow(void)
+{
+  NS_WARNING("Not implemented");
+
+  return nsnull;
+}
+
 /**
  * Modifies aFile to point at an icon file with the given name and suffix.  The
  * suffix may correspond to a file extension with leading '.' if appropriate.

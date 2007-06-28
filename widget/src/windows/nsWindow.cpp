@@ -7374,7 +7374,7 @@ nsWindow::ResolveIMECaretPos(nsWindow* aClient,
                              nsRect&   aResult)
 {
   // RootView coordinates -> Screen coordinates
-  GetTopLevelWindow()->WidgetToScreen(aEventResult, aResult);
+  GetTopLevelWindowInternal()->WidgetToScreen(aEventResult, aResult);
   // if aClient is nsnull, returns screen coordinates
   if (!aClient)
     return;
@@ -7765,6 +7765,26 @@ nsWindow::GetLastInputEventTime(PRUint32& aTime)
 
   return NS_OK;
 }
+
+nsIWidget* nsWindow::GetTopLevelWindow(void)
+{
+  HWND hWnd = (HWND)GetNativeData(NS_NATIVE_WINDOW);
+  HWND rootWnd = hWnd;
+  nsIWidget *topWidget = nsnull;
+
+  while (1) {
+    HWND parent = ::GetParent(rootWnd);
+
+    if (!parent || GetNSWindowPtr(parent) == nsnull) {
+      break;
+    }
+
+    rootWnd = parent;
+  }
+
+  return GetNSWindowPtr(rootWnd);
+}
+
 
 //-------------------------------------------------------------------------
 //-------------------------------------------------------------------------
@@ -8184,7 +8204,7 @@ STDMETHODIMP_(LRESULT) nsWindow::LresultFromObject(REFIID riid, WPARAM wParam, L
 
 #ifdef MOZ_XUL
 
-nsWindow* nsWindow::GetTopLevelWindow()
+nsWindow* nsWindow::GetTopLevelWindowInternal()
 {
   nsWindow* curWindow = this;
 
@@ -8303,21 +8323,21 @@ void nsWindow::ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight, PR
 
 NS_IMETHODIMP nsWindow::GetWindowTranslucency(PRBool& aTranslucent)
 {
-  aTranslucent = GetTopLevelWindow()->GetWindowTranslucencyInner();
+  aTranslucent = GetTopLevelWindowInternal()->GetWindowTranslucencyInner();
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsWindow::SetWindowTranslucency(PRBool aTranslucent)
 {
-  nsresult rv = GetTopLevelWindow()->SetWindowTranslucencyInner(aTranslucent);
+  nsresult rv = GetTopLevelWindowInternal()->SetWindowTranslucencyInner(aTranslucent);
 
   return rv;
 }
 
 NS_IMETHODIMP nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas)
 {
-  GetTopLevelWindow()->UpdateTranslucentWindowAlphaInner(aRect, aAlphas);
+  GetTopLevelWindowInternal()->UpdateTranslucentWindowAlphaInner(aRect, aAlphas);
 
   return NS_OK;
 }
