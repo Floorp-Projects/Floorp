@@ -182,7 +182,11 @@ typedef enum {
 // All letters without an equivalen in the FB50 block are 'eNJ' here. This
 // should be fixed after finding some better mechanism for handling Arabic.
 static const PRInt8 gJoiningClass[] = {
-          eNJ, eRJ, eRJ, eRJ, eRJ, eDJ, eRJ, // 0621-0627
+eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, // 0600-0607
+eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, // 0608-060F
+eTr, eTr, eTr, eTr, eTr, eTr, eNJ, eNJ, // 0610-0617
+eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, // 0618-061F
+eNJ, eNJ, eRJ, eRJ, eRJ, eRJ, eDJ, eRJ, // 0620-0627
 eDJ, eRJ, eDJ, eDJ, eDJ, eDJ, eDJ, eRJ, // 0628-062F
 eRJ, eRJ, eRJ, eDJ, eDJ, eDJ, eDJ, eDJ, // 0630-0637
 eDJ, eDJ, eDJ, eNJ, eNJ, eNJ, eNJ, eNJ, // 0638-063F
@@ -213,8 +217,8 @@ eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ  // 06F8-06FF
 };
 
 #define GetJoiningClass(c)                   \
-  (((0x0621 <= (c)) && ((c) <= 0x06FF)) ?    \
-       (gJoiningClass[(c) - 0x0621]) :       \
+  ((IS_ARABIC_CHAR(c)) ?                     \
+      (gJoiningClass[(c) - 0x0600]) :        \
       ((0x200D == (c)) ? eJC : eTr))
 
 static const PRUint16 gArabicLigatureMap[] = 
