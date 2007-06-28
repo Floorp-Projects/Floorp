@@ -6620,6 +6620,8 @@ nsEventReceiverSH::AddEventListenerHelper(JSContext *cx, JSObject *obj,
     return JS_FALSE;
   }
 
+  OBJ_TO_INNER_OBJECT(cx, obj);
+
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
   nsresult rv =
     sXPConnect->GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wrapper));
