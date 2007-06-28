@@ -125,6 +125,7 @@
 #include "nsIMutableArray.h"
 #include "nsArrayUtils.h"
 #include "nsIEffectiveTLDService.h"
+#include "nsIEventStateManager.h"
 
 #include "nsIPrompt.h"
 //AHMED 12-2
@@ -133,6 +134,11 @@
 #include "nsIEditingSession.h"
 #include "nsIEditor.h"
 #include "nsNodeInfoManager.h"
+#include "nsIEditor.h"
+#include "nsIEditorDocShell.h"
+#include "nsIEditorStyleSheets.h"
+#include "nsIInlineSpellChecker.h"
+#include "nsRange.h"
 
 #define NS_MAX_DOCUMENT_WRITE_DEPTH 20
 
@@ -1204,8 +1210,13 @@ nsHTMLDocument::EndLoad()
                mWriteState == eDocumentClosed, "EndLoad called early");
   mWriteState = eNotWriting;
 
+  PRBool turnOnEditing =
+    mParser && (HasFlag(NODE_IS_EDITABLE) || mContentEditableCount > 0);
   // Note: nsDocument::EndLoad nulls out mParser.
   nsDocument::EndLoad();
+  if (turnOnEditing) {
+    EditingStateChanged();
+  }
 }
 
 NS_IMETHODIMP
@@ -2207,14 +2218,14 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     mRootContent = root;
   }
 
-  if (mEditingIsOn) {
+  if (IsEditingOn()) {
     // Reset() blows away all event listeners in the document, and our
     // editor relies heavily on those. Midas is turned on, to make it
     // work, re-initialize it to give it a chance to add its event
     // listeners again.
 
-    SetDesignMode(NS_LITERAL_STRING("off"));
-    SetDesignMode(NS_LITERAL_STRING("on"));
+    TurnEditingOff();
+    EditingStateChanged();
   }
 
   // Zap the old title -- otherwise it would hang around until document.close()
@@ -3717,7 +3728,7 @@ nsHTMLDocument::GenerateParserKey(void)
 NS_IMETHODIMP
 nsHTMLDocument::GetDesignMode(nsAString & aDesignMode)
 {
-  if (mEditingIsOn) {
+  if (HasFlag(NODE_IS_EDITABLE)) {
     aDesignMode.AssignLiteral("on");
   }
   else {
@@ -3726,9 +3737,152 @@ nsHTMLDocument::GetDesignMode(nsAString & aDesignMode)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
+nsresult
+nsHTMLDocument::ChangeContentEditableCount(nsIContent *aElement,
+                                           PRInt32 aChange)
 {
+  NS_ASSERTION(mContentEditableCount + aChange >= 0,
+               "Trying to decrement too much.");
+
+  mContentEditableCount += aChange;
+
+  if (mParser) {
+    return NS_OK;
+  }
+
+  EditingState oldState = mEditingState;
+
+  nsresult rv = EditingStateChanged();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (oldState == mEditingState && mEditingState == eContentEditable) {
+    // We just changed the contentEditable state of a node, we need to reset
+    // the spellchecking state of that node.
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
+    if (node) {
+      nsPIDOMWindow *window = GetWindow();
+      if (!window)
+        return NS_ERROR_FAILURE;
+
+      nsIDocShell *docshell = window->GetDocShell();
+      if (!docshell)
+        return NS_ERROR_FAILURE;
+
+      nsCOMPtr<nsIEditorDocShell> editorDocShell =
+        do_QueryInterface(docshell, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIEditor> editor;
+      rv = editorDocShell->GetEditor(getter_AddRefs(editor));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIDOMRange> range;
+      rv = NS_NewRange(getter_AddRefs(range));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = range->SelectNode(node);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIInlineSpellChecker> spellChecker;
+      rv = editor->GetInlineSpellChecker(PR_FALSE,
+                                         getter_AddRefs(spellChecker));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (spellChecker) {
+        rv = spellChecker->SpellCheckRange(range);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+static void
+NotifyEditableStateChange(nsINode *aNode, nsIDocument *aDocument,
+                          PRBool aEditable)
+{
+  PRUint32 i, n = aNode->GetChildCount();
+  for (i = 0; i < n; ++i) {
+    nsIContent *child = aNode->GetChildAt(i);
+    if (child->HasFlag(NODE_IS_EDITABLE) != aEditable) {
+      aDocument->ContentStatesChanged(child, nsnull,
+                                      NS_EVENT_STATE_MOZ_READONLY |
+                                      NS_EVENT_STATE_MOZ_READWRITE);
+    }
+    NotifyEditableStateChange(child, aDocument, aEditable);
+  }
+}
+
+nsresult
+nsHTMLDocument::TurnEditingOff()
+{
+  NS_ASSERTION(mEditingState != eOff, "Editing is already off.");
+
+  nsPIDOMWindow *window = GetWindow();
+  if (!window)
+    return NS_ERROR_FAILURE;
+
+  nsIDocShell *docshell = window->GetDocShell();
+  if (!docshell)
+    return NS_ERROR_FAILURE;
+
+  nsresult rv;
+  nsCOMPtr<nsIEditorDocShell> editorDocShell =
+    do_QueryInterface(docshell, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIEditor> editor;
+  rv = editorDocShell->GetEditor(getter_AddRefs(editor));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIEditingSession> editSession = do_GetInterface(docshell, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // turn editing off
+  rv = editSession->TearDownEditorOnWindow(window, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIEditorStyleSheets> editorss = do_QueryInterface(editor, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!HasFlag(NODE_IS_EDITABLE)) {
+    editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/contenteditable.css"));
+    editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/designmode.css"));
+
+    rv = docshell->SetAllowJavascript(mScriptsEnabled);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = docshell->SetAllowPlugins(mPluginsEnabled);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  mEditingState = eOff;
+
+  return NS_OK;
+}
+
+nsresult
+nsHTMLDocument::EditingStateChanged()
+{
+  if (mEditingState == eSettingUp) {
+    // XXX We shouldn't recurse.
+    return NS_OK;
+  }
+
+  PRBool designMode = HasFlag(NODE_IS_EDITABLE);
+  EditingState newState = designMode ? eDesignMode :
+                          (mContentEditableCount > 0 ? eContentEditable : eOff);
+  if (mEditingState == newState) {
+    // No changes in editing mode.
+    return NS_OK;
+  }
+
+  if (newState == eOff) {
+    // Editing is being turned off.
+    return TurnEditingOff();
+  }
+
   // get editing session
   nsPIDOMWindow *window = GetWindow();
   if (!window)
@@ -3738,6 +3892,128 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
   if (!docshell)
     return NS_ERROR_FAILURE;
 
+  nsresult rv;
+  nsCOMPtr<nsIEditingSession> editSession = do_GetInterface(docshell, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool makeWindowEditable = (mEditingState == eOff);
+  if (makeWindowEditable) {
+    // Editing is being turned on (through designMode or contentEditable)
+    // Turn on editor.
+    // XXX This can cause flushing which can change the editing state, so make
+    //     sure to avoid recursing.
+    EditingState oldState = mEditingState;
+    mEditingState = eSettingUp;
+
+    rv = editSession->MakeWindowEditable(window, "html", PR_FALSE, PR_FALSE,
+                                         PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mEditingState = oldState;
+  }
+
+  // XXX Need to call TearDownEditorOnWindow for all failures.
+  nsCOMPtr<nsIEditorDocShell> editorDocShell =
+    do_QueryInterface(docshell, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIEditor> editor;
+  rv = editorDocShell->GetEditor(getter_AddRefs(editor));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIEditorStyleSheets> editorss = do_QueryInterface(editor, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  editorss->AddOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/contenteditable.css"));
+
+  // Should we update the editable state of all the nodes in the document? We
+  // need to do this when the designMode value changes, as that overrides
+  // specific states on the elements.
+  PRBool updateState;
+
+  PRBool spellRecheckAll = PR_FALSE;
+  if (designMode) {
+    // designMode is being turned on (overrides contentEditable).
+    editorss->AddOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/designmode.css"));
+
+    // Store scripting and plugins state.
+    PRBool tmp;
+    rv = docshell->GetAllowJavascript(&tmp);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mScriptsEnabled = tmp;
+
+    rv = docshell->GetAllowPlugins(&tmp);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mPluginsEnabled = tmp;
+
+    updateState = PR_TRUE;
+    spellRecheckAll = mEditingState == eContentEditable;
+  }
+  else if (mEditingState == eDesignMode) {
+    // designMode is being turned off (contentEditable is still on).
+    editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/designmode.css"));
+
+    rv = docshell->SetAllowJavascript(mScriptsEnabled);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = docshell->SetAllowPlugins(mPluginsEnabled);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    updateState = PR_TRUE;
+  }
+  else {
+    // contentEditable is being turned on (and designMode is off).
+    updateState = PR_FALSE;
+  }
+
+  mEditingState = newState;
+
+  if (makeWindowEditable) {
+    // Set the editor to not insert br's on return when in p
+    // elements by default.
+    // XXX Do we only want to do this for designMode?
+    PRBool unused;
+    rv = ExecCommand(NS_LITERAL_STRING("insertBrOnReturn"), PR_FALSE,
+                     NS_LITERAL_STRING("false"), &unused);
+
+    if (NS_FAILED(rv)) {
+      // Editor setup failed. Editing is not on after all.
+      // XXX Should we reset the editable flag on nodes?
+      editSession->TearDownEditorOnWindow(window, PR_TRUE);
+      mEditingState = eOff;
+
+      return rv;
+    }
+  }
+
+  if (updateState) {
+    mozAutoDocUpdate upd(this, UPDATE_CONTENT_STATE, PR_TRUE);
+    NotifyEditableStateChange(this, this, !designMode);
+  }
+
+  // Resync the editor's spellcheck state.
+  if (spellRecheckAll) {
+    nsCOMPtr<nsISelectionController> selcon;
+    nsresult rv = editor->GetSelectionController(getter_AddRefs(selcon));
+    NS_ENSURE_SUCCESS(rv, rv); 
+
+    nsCOMPtr<nsISelection> spellCheckSelection;
+    rv = selcon->GetSelection(nsISelectionController::SELECTION_SPELLCHECK,
+                              getter_AddRefs(spellCheckSelection));
+    if (NS_SUCCEEDED(rv)) {
+      spellCheckSelection->RemoveAllRanges();
+    }
+  }
+  editor->SyncRealTimeSpell();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
+{
   nsresult rv = NS_OK;
 
   if (!nsContentUtils::IsCallerTrustedForWrite()) {
@@ -3751,53 +4027,14 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
     }
   }
 
-  nsCOMPtr<nsIEditingSession> editSession = do_GetInterface(docshell);
-  if (!editSession)
-    return NS_ERROR_FAILURE;
+  PRBool editableMode = HasFlag(NODE_IS_EDITABLE);
+  if (aDesignMode.LowerCaseEqualsASCII(editableMode ? "off" : "on")) {
+    SetEditableFlag(!editableMode);
 
-  if (aDesignMode.LowerCaseEqualsLiteral("on") && !mEditingIsOn) {
-    rv = editSession->MakeWindowEditable(window, "html", PR_FALSE);
-
-    if (NS_SUCCEEDED(rv)) {
-      // now that we've successfully created the editor, we can
-      // reset our flag
-      mEditingIsOn = PR_TRUE;
-
-      // Set the editor to not insert br's on return when in p
-      // elements by default.
-      PRBool unused;
-      rv = ExecCommand(NS_LITERAL_STRING("insertBrOnReturn"), PR_FALSE,
-                       NS_LITERAL_STRING("false"), &unused);
-
-      if (NS_FAILED(rv)) {
-        // Editor setup failed. Editing is is not on after all.
-
-        editSession->TearDownEditorOnWindow(window);
-
-        mEditingIsOn = PR_FALSE;
-      } else {
-        // Resync the editor's spellcheck state, since when the editor was
-        // created it asked us whether designMode was on, and we told it no.
-        // Note that reporting "yes" (by setting mEditingIsOn true before
-        // calling MakeWindowEditable()) exposed several crash bugs (see bugs
-        // 348497, 348981).
-        nsCOMPtr<nsIEditor> editor;
-        rv = editSession->GetEditorForWindow(window, getter_AddRefs(editor));
-        if (NS_SUCCEEDED(rv)) {
-          editor->SyncRealTimeSpell();
-        }
-      }
-    }
-  } else if (aDesignMode.LowerCaseEqualsLiteral("off") && mEditingIsOn) {
-    // turn editing off
-    rv = editSession->TearDownEditorOnWindow(window);
-
-    if (NS_SUCCEEDED(rv)) {
-      mEditingIsOn = PR_FALSE;
-    }
+    return EditingStateChanged();
   }
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -3982,19 +4219,21 @@ nsHTMLDocument::ConvertToMidasInternalCommand(const nsAString & inCommandID,
         NS_ConvertUTF16toUTF8 convertedParam(inParam);
 
         // check to see if we need to convert the parameter
-        PRUint32 j;
-        for (j = 0; j < MidasParamCount; ++j) {
-          if (convertedParam.Equals(gMidasParamTable[j].incomingParamString,
-                                    nsCaseInsensitiveCStringComparator())) {
-            outParam.Assign(gMidasParamTable[j].internalParamString);
-            break;
+        if (outCommandID.EqualsLiteral("cmd_paragraphState")) {
+          PRUint32 j;
+          for (j = 0; j < MidasParamCount; ++j) {
+            if (convertedParam.Equals(gMidasParamTable[j].incomingParamString,
+                                      nsCaseInsensitiveCStringComparator())) {
+              outParam.Assign(gMidasParamTable[j].internalParamString);
+              break;
+            }
           }
-        }
 
-        // if we didn't convert the parameter, just
-        // pass through the parameter that was passed to us
-        if (j == MidasParamCount)
+          return j != MidasParamCount;
+        }
+        else {
           outParam.Assign(convertedParam);
+        }
       }
     }
   } // end else for useNewParam (do convert existing param)
@@ -4069,12 +4308,12 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
   *_retval = PR_FALSE;
 
   // if editing is not on, bail
-  if (!mEditingIsOn)
+  if (!IsEditingOn())
     return NS_ERROR_FAILURE;
 
   // if they are requesting UI from us, let's fail since we have no UI
   if (doShowUI)
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 
   nsresult rv = NS_OK;
 
@@ -4105,7 +4344,7 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
   PRBool isBool, boolVal;
   if (!ConvertToMidasInternalCommand(commandID, value,
                                      cmdToDispatch, paramStr, isBool, boolVal))
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 
   if (!isBool && paramStr.IsEmpty()) {
     rv = cmdMgr->DoCommand(cmdToDispatch.get(), nsnull, window);
@@ -4144,7 +4383,7 @@ nsHTMLDocument::ExecCommandShowHelp(const nsAString & commandID,
   *_retval = PR_FALSE;
 
   // if editing is not on, bail
-  if (!mEditingIsOn)
+  if (!IsEditingOn())
     return NS_ERROR_FAILURE;
 
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -4159,7 +4398,7 @@ nsHTMLDocument::QueryCommandEnabled(const nsAString & commandID,
   *_retval = PR_FALSE;
 
   // if editing is not on, bail
-  if (!mEditingIsOn)
+  if (!IsEditingOn())
     return NS_ERROR_FAILURE;
 
   // get command manager and dispatch command to our window if it's acceptable
@@ -4190,7 +4429,7 @@ nsHTMLDocument::QueryCommandIndeterm(const nsAString & commandID,
   *_retval = PR_FALSE;
 
   // if editing is not on, bail
-  if (!mEditingIsOn)
+  if (!IsEditingOn())
     return NS_ERROR_FAILURE;
 
   // get command manager and dispatch command to our window if it's acceptable
@@ -4232,7 +4471,7 @@ nsHTMLDocument::QueryCommandState(const nsAString & commandID, PRBool *_retval)
   *_retval = PR_FALSE;
 
   // if editing is not on, bail
-  if (!mEditingIsOn)
+  if (!IsEditingOn())
     return NS_ERROR_FAILURE;
 
   // get command manager and dispatch command to our window if it's acceptable
@@ -4294,7 +4533,7 @@ nsHTMLDocument::QueryCommandSupported(const nsAString & commandID,
   *_retval = PR_FALSE;
 
   // if editing is not on, bail
-  if (!mEditingIsOn)
+  if (!IsEditingOn())
     return NS_ERROR_FAILURE;
 
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -4308,7 +4547,7 @@ nsHTMLDocument::QueryCommandText(const nsAString & commandID,
   _retval.SetLength(0);
 
   // if editing is not on, bail
-  if (!mEditingIsOn)
+  if (!IsEditingOn())
     return NS_ERROR_FAILURE;
 
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -4322,7 +4561,7 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
   _retval.SetLength(0);
 
   // if editing is not on, bail
-  if (!mEditingIsOn)
+  if (!IsEditingOn())
     return NS_ERROR_FAILURE;
 
   // get command manager and dispatch command to our window if it's acceptable

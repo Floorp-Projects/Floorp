@@ -64,7 +64,7 @@ find-menu appears in editor element which has had makeEditable() called but desi
       var webnav = gBrowser.webNavigation;
       var edsession = webnav.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                             .getInterface(Components.interfaces.nsIEditingSession);
-      edsession.makeWindowEditable(gBrowser.contentWindow, "html", false);
+      edsession.makeWindowEditable(gBrowser.contentWindow, "html", false, true, false);
       gBrowser.contentWindow.focus();
       enterStringIntoEditor("'");
       enterStringIntoEditor("/");
