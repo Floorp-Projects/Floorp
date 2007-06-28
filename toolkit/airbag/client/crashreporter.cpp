@@ -277,27 +277,29 @@ static bool AddSubmittedReport(const string& serverResponse)
   string path = submittedDir + UI_DIR_SEPARATOR +
     responseItems["CrashID"] + ".txt";
 
-  ofstream file(path.c_str());
-  if (!file.is_open())
+  ofstream* file = UIOpenWrite(path);
+  if (!file->is_open()) {
+    delete file;
     return false;
+  }
 
   char buf[1024];
   UI_SNPRINTF(buf, 1024,
               gStrings["CrashID"].c_str(),
               responseItems["CrashID"].c_str());
-  file << buf << "\n";
+  *file << buf << "\n";
 
   if (responseItems.find("ViewURL") != responseItems.end()) {
     UI_SNPRINTF(buf, 1024,
                 gStrings["CrashDetailsURL"].c_str(),
                 responseItems["ViewURL"].c_str());
-    file << buf << "\n";
+    *file << buf << "\n";
   }
 
-  file.close();
+  file->close();
+  delete file;
 
   return true;
-
 }
 
 bool SendCompleted(bool success, const string& serverResponse)
