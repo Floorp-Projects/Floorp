@@ -165,6 +165,11 @@ public:
                               nsIContent* aChild,
                               PRInt32 aIndexInContainer);
 
+  virtual void UpdateEditableState()
+  {
+    return UpdateEditableFormControlState();
+  }
+
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLTextAreaElement,
                                            nsGenericHTMLFormElement)
 
@@ -202,6 +207,9 @@ protected:
    * parent; we should only respond to the change if aContent is non-anonymous.
    */
   void ContentChanged(nsIContent* aContent);
+
+  virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom *aName,
+                                const nsAString* aValue, PRBool aNotify);
 };
 
 
@@ -989,4 +997,24 @@ nsHTMLTextAreaElement::ContentChanged(nsIContent* aContent)
       nsContentUtils::IsInSameAnonymousTree(this, aContent)) {
     Reset();
   }
+}
+
+nsresult
+nsHTMLTextAreaElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                    const nsAString* aValue, PRBool aNotify)
+{
+  if (aNotify && aNameSpaceID == kNameSpaceID_None &&
+      aName == nsGkAtoms::readonly) {
+    UpdateEditableState();
+
+    nsIDocument* document = GetCurrentDoc();
+    if (document) {
+      mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, PR_TRUE);
+      document->ContentStatesChanged(this, nsnull,
+                                     NS_EVENT_STATE_MOZ_READONLY |
+                                     NS_EVENT_STATE_MOZ_READWRITE);
+    }
+  }
+  return nsGenericHTMLFormElement::AfterSetAttr(aNameSpaceID, aName, aValue,
+                                                aNotify);
 }
