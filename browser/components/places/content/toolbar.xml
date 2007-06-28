@@ -638,10 +638,10 @@
             if (isChildOf(node, aContainer))
               this._self._containerNodesMap.splice(i,1);
           }
-        
+
           if (aContainer.containerOpen) {
             if (viewerToRebuild)
-              viewerToRebuild._self._rebuild();
+              viewerToRebuild._self._built = false;
             else
               this._self._rebuild();
           }
