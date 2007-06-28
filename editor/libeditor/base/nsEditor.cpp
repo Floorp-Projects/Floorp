@@ -2523,6 +2523,22 @@ NS_IMETHODIMP nsEditor::ScrollSelectionIntoView(PRBool aScrollToAnchor)
   return NS_OK;
 }
 
+/** static helper method */
+nsresult nsEditor::GetTextNodeTag(nsAString& aOutString)
+{
+  aOutString.Truncate();
+  static nsString *gTextNodeTag=nsnull;
+  if (!gTextNodeTag)
+  {
+    if ( (gTextNodeTag = new nsString) == 0 )
+      return NS_ERROR_OUT_OF_MEMORY;
+    gTextNodeTag->AssignLiteral("special text node tag");
+  }
+  aOutString = *gTextNodeTag;
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP nsEditor::InsertTextImpl(const nsAString& aStringToInsert, 
                                           nsCOMPtr<nsIDOMNode> *aInOutNode, 
                                           PRInt32 *aInOutOffset,
