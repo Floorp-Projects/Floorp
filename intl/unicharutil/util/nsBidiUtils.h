@@ -36,9 +36,12 @@
    * @param aLen is the length of aStrong
    * @param aBuf receives the shaped output
    * @param aBuflen receives the length of aBuf
+   * @param aInputLogical indicates that the input is in logical order
+   * @param aOutputLogical indicates that the output should be in logical order
    */
   nsresult ArabicShaping(const PRUnichar* aString, PRUint32 aLen,
-                         PRUnichar* aBuf, PRUint32* aBufLen);
+                         PRUnichar* aBuf, PRUint32* aBufLen,
+                         PRBool aInputLogical, PRBool aOutputLogical);
 
   /**
    * Scan an nsString, converting characters in the FExx range (Arabic presentation forms) to the equivalent characters in the 06xx
