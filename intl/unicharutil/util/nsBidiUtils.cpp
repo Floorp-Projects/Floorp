@@ -495,7 +495,8 @@ nsresult Conv_06_FE_WithReverse(const nsString& aSrc,
 nsresult HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32 aNumFlag)
 {
   PRUint32 i;
-  // IBMBIDI_NUMERAL_REGULAR *
+  // IBMBIDI_NUMERAL_NOMINAL *
+  // IBMBIDI_NUMERAL_REGULAR
   // IBMBIDI_NUMERAL_HINDICONTEXT
   // IBMBIDI_NUMERAL_ARABIC
   // IBMBIDI_NUMERAL_HINDI
@@ -509,13 +510,18 @@ nsresult HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32 aNumFlag)
       for (i=0;i<aSize;i++)
         aBuffer[i] = NUM_TO_ARABIC(aBuffer[i]);
       break;
-    default : // IBMBIDI_NUMERAL_REGULAR, IBMBIDI_NUMERAL_HINDICONTEXT for HandleNum() which is called for clipboard handling
+    case IBMBIDI_NUMERAL_REGULAR:
+    case IBMBIDI_NUMERAL_HINDICONTEXT:
+        // for clipboard handling
+        //XXX do we really want to convert numerals when copying text?
       for (i=1;i<aSize;i++) {
         if (IS_ARABIC_CHAR(aBuffer[i-1])) 
           aBuffer[i] = NUM_TO_HINDI(aBuffer[i]);
         else 
           aBuffer[i] = NUM_TO_ARABIC(aBuffer[i]);
       }
+    case IBMBIDI_NUMERAL_NOMINAL:
+    default:
       break;
   }
   return NS_OK;
