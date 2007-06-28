@@ -847,7 +847,6 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
   nsView* view = NS_STATIC_CAST(nsView*, aView);
 
   nsRect damagedRect(aRect);
-  NS_ASSERTION(damagedRect.IsEmpty() || view->GetDimensions().Contains(damagedRect),"");
 
    // If the rectangle is not visible then abort
    // without invalidating. This is a performance 
