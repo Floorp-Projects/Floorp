@@ -95,8 +95,6 @@
       <constructor><![CDATA[
         this._ioService = Components.classes["@mozilla.org/network/io-service;1"]
                                     .getService(Components.interfaces.nsIIOService);
-        this._tldService = Components.classes["@mozilla.org/network/effective-tld-service;1"]
-                                     .getService(Components.interfaces.nsIEffectiveTLDService);
         this._prefs = Components.classes["@mozilla.org/preferences-service;1"]
                                 .getService(Components.interfaces.nsIPrefService)
                                 .getBranch("browser.urlbar.")
@@ -192,6 +190,19 @@
         ]]></setter>
       </property>
 
+      <field name="_tldService"/>
+      <property name="tldService" readonly="true">
+        <getter><![CDATA[
+          if (!this._tldService) {
+            this._tldService =
+              Components.classes["@mozilla.org/network/effective-tld-service;1"]
+                        .getService(Components.interfaces.nsIEffectiveTLDService);
+          }
+
+          return this._tldService;
+        ]]></getter>
+      </property>
+
       <property name="_contentIsCropped"
                 onget="return !this._overflowEllipsis.hidden;"
                 onset="this._overflowEllipsis.hidden = !val; return val;"/>
@@ -267,7 +278,7 @@
               var domainSegments = host.split(".");
               var cSubdomain = domainSegments.length -
                                asciiHost.slice(asciiHost.length -
-                                               this._tldService.getEffectiveTLDLength(asciiHost))
+                                               this.tldService.getEffectiveTLDLength(asciiHost))
                                         .split(".").length - 1;
               if (cSubdomain > 0) {
                 host = domainSegments;
