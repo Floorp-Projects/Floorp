@@ -277,6 +277,8 @@ nsresult ArabicShaping(const PRUnichar* aString, PRUint32 aLen,
                        PRBool aInputLogical, PRBool aOutputLogical)
 {
   nsAutoString tempString(aString, aLen);
+  if (tempString.Length() != aLen)
+    return NS_ERROR_OUT_OF_MEMORY;
   PRUnichar *tempBuf = tempString.BeginWriting();
   if (aInputLogical) {
     ReverseString(tempBuf, aLen);
