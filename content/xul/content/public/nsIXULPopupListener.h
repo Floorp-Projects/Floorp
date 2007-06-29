@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,21 +12,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998-2001
+ * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Joe Hewitt (hewitt@netscape.com)
- *   Kevin Gerich (webmail@kmgerich.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -37,51 +35,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* ===== popup.css ===================================================
-  == Styles used by the XUL popup element.
-  ======================================================================= */
+#ifndef nsIXULPopupListener_h__
+#define nsIXULPopupListener_h__
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+// {2C453161-0942-11d3-BF87-00105A1B0627}
+#define NS_IXULPOPUPLISTENER_IID \
+{ 0x2c453161, 0x942, 0x11d3, { 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
 
-/* ::::: menupopup ::::: */
+class nsIDOMElement;
 
-menupopup,
-popup {
-  -moz-appearance: menupopup;
-}
+typedef enum {
+    eXULPopupType_popup,
+    eXULPopupType_context,
+    eXULPopupType_tooltip,
+    eXULPopupType_blur
+} XULPopupType;
 
-/* ::::: popup internal box ::::: */
+class nsIXULPopupListener: public nsISupports {
+public:
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXULPOPUPLISTENER_IID)
 
-.popup-internal-box {
-        -moz-appearance: none;
-	padding: 4px 0px 4px 0px !important;
-}
+    NS_IMETHOD Init(nsIDOMElement* anElement, const XULPopupType& aPopupType) = 0;
+};
 
-/* ::::: tooltip ::::: */
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIXULPopupListener, NS_IXULPOPUPLISTENER_IID)
 
-tooltip {
-  -moz-appearance: tooltip;
-  margin-top: 18px;
-  padding: 2px 3px;
-  max-width: 40em;
-  color: InfoText;
-  font: message-box;
-}
+nsresult
+NS_NewXULPopupListener(nsIXULPopupListener** result);
 
-.tooltip-label {
-  margin: 0px !important;
-}
-
-tooltip[titletip="true"] {
- /* See bug 32157 comment 128
-  * margin: -2px 0px 0px -3px;
-  */
-  max-width: none;
-}
-
-/* rules for popups associated with menulists */
-
-menulist > menupopup,
-.menulist-menupopup {
-  min-width: 0px;
-}
+#endif // nsIXULPopupListener_h__

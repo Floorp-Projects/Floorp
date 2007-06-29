@@ -35,63 +35,68 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsMenuBarListener_h__
-#define nsMenuBarListener_h__
+#ifndef nsMenuDismissalListener_h__
+#define nsMenuDismissalListener_h__
 
-#include "nsIDOMMouseMotionListener.h"
+#include "nsIWidget.h"
 #include "nsIDOMMouseListener.h"
-#include "nsIDOMKeyListener.h"
-#include "nsIDOMFocusListener.h"
+#include "nsIRollupListener.h"
+#include "nsIMenuRollup.h"
 #include "nsIDOMEventTarget.h"
+#include "nsCOMPtr.h"
 
-class nsMenuBarFrame;
-class nsPresContext;
-class nsIDOMKeyEvent;
+class nsIMenuParent;
 
-/** editor Implementation of the DragListener interface
+/**
+ * The object responsible for rolling up the open menu popups in cases when
+ * it's not done by menu code (for example, when clicking outside a popup
+ * on Windows).
+ *
+ * It is a singleton, which exists as long as there is a menu popup open.
  */
-class nsMenuBarListener : public nsIDOMKeyListener, public nsIDOMFocusListener, public nsIDOMMouseListener
+class nsMenuDismissalListener : public nsIDOMMouseListener,
+                                public nsIMenuRollup,
+                                public nsIRollupListener
 {
+
 public:
-  /** default constructor
-   */
-  nsMenuBarListener(nsMenuBarFrame* aMenuBar);
-  /** default destructor
-   */
-  virtual ~nsMenuBarListener();
-   
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
-  
-  NS_IMETHOD KeyUp(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD KeyDown(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD KeyPress(nsIDOMEvent* aMouseEvent);
-  
-  NS_IMETHOD Focus(nsIDOMEvent* aEvent);
-  NS_IMETHOD Blur(nsIDOMEvent* aEvent);
-  
-  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent);
+  friend class nsMenuPopupFrame;
 
-  static nsresult GetMenuAccessKey(PRInt32* aAccessKey);
-  
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
+  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIROLLUPLISTENER
+  NS_DECL_NSIMENUROLLUP
 
-  static PRBool IsAccessKeyPressed(nsIDOMKeyEvent* event);
+  void EnableListener(PRBool aEnabled);
+  void SetCurrentMenuParent(nsIMenuParent* aMenuParent);
+  nsIMenuParent* GetCurrentMenuParent();
+
+  static nsMenuDismissalListener* GetInstance();
+  static nsMenuDismissalListener* sInstance;
+  static void Shutdown();
 
 protected:
-  static void InitAccessKey();
+  nsMenuDismissalListener();
+  ~nsMenuDismissalListener();
 
-  static PRUint32 GetModifiers(nsIDOMKeyEvent* event);
+  /**
+   * Registers itself as a rollup event listener for current mMenuParent's
+   * widget. mMenuParent must be non-null.
+   */
+  void Register();
+  
+  void Unregister();
 
-  nsMenuBarFrame* mMenuBarFrame; // The menu bar object.
-  PRBool mAccessKeyDown;         // Whether or not the ALT key is currently down.
-  static PRBool mAccessKeyFocuses; // Does the access key by itself focus the menubar?
-  static PRInt32 mAccessKey;     // See nsIDOMKeyEvent.h for sample values
-  static PRUint32 mAccessKeyMask;// Modifier mask for the access key
+  nsIMenuParent* mMenuParent;
+  nsCOMPtr<nsIWidget> mWidget;
+  PRBool mEnabled;
 };
 
 

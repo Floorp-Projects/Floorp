@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
@@ -20,8 +20,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David W. Hyatt <hyatt@netscape.com>
- *   Ben Goodger <ben@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,63 +34,48 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef nsMenuListener_h__
+#define nsMenuListener_h__
 
-#include "nsIBoxObject.idl"
+#include "nsIDOMMouseMotionListener.h"
+#include "nsIDOMMouseListener.h"
+#include "nsIDOMKeyListener.h"
+#include "nsIDOMFocusListener.h"
+#include "nsIDOMEventTarget.h"
 
-interface nsIDOMElement;
+class nsIMenuParent;
+class nsPresContext;
 
-
-[scriptable, uuid(116ffbea-336d-4ff1-a978-7335f54d11da)]
-interface nsIPopupBoxObject : nsISupports
+/** editor Implementation of the DragListener interface
+ */
+class nsMenuListener : public nsIDOMKeyListener, public nsIDOMFocusListener, public nsIDOMMouseListener
 {
-  void showPopup(in nsIDOMElement srcContent, in nsIDOMElement popupContent,
-                 in long xpos, in long ypos,
-                 in wstring popupType, in wstring anchorAlignment, 
-                 in wstring popupAlignment);
-  void hidePopup();
+public:
+  nsMenuListener(nsIMenuParent* aMenuParent);
+  
+  virtual ~nsMenuListener();
+   
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+  
+  NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
+  
+  NS_IMETHOD Focus(nsIDOMEvent* aEvent);
+  NS_IMETHOD Blur(nsIDOMEvent* aEvent);
+  
+  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent);
+  
+  NS_DECL_ISUPPORTS
 
-
-  /** 
-   * Allow the popup to automatically position itself.
-   */
-  attribute boolean autoPosition;
-
-  /**
-   * Allow the popup to eat all key events
-   */
-  void enableKeyboardNavigator(in boolean enableKeyboardNavigator);
-
-  /** 
-   * Enable automatic popup dismissal. This only has effect when called
-   * on an open popup.
-   */
-  void enableRollup(in boolean enableRollup);
-
-  /**
-   * Control whether the event that caused the popup to be automatically
-   * dismissed ("rolled up") should be consumed, or dispatched as a
-   * normal event.  This should be set immediately before calling showPopup()
-   * if non-default behavior is desired.
-   */
-  const PRUint32 ROLLUP_DEFAULT = 0;   /* widget/platform default */
-  const PRUint32 ROLLUP_CONSUME = 1;   /* consume the rollup event */
-  const PRUint32 ROLLUP_NO_CONSUME = 2; /* don't consume the rollup event */
-  void setConsumeRollupEvent(in PRUint32 consume);
-
-  /** 
-   * Size the popup to the given dimensions
-   */
-  void sizeTo(in long width, in long height);
-
-  /**
-   * Move the popup to a point on screen
-   */
-  void moveTo(in long left, in long top);
-
+protected:
+  nsIMenuParent* mMenuParent;    // The outermost object capturing events (either a menu bar or menupopup).
 };
 
-%{C++
-nsresult
-NS_NewPopupBoxObject(nsIBoxObject** aResult);
 
-%}
+#endif

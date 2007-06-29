@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,21 +12,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * The Original Code is Mozilla Communicator client code.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998-2001
+ * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Joe Hewitt (hewitt@netscape.com)
- *   Kevin Gerich (webmail@kmgerich.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -37,51 +35,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* ===== popup.css ===================================================
-  == Styles used by the XUL popup element.
-  ======================================================================= */
+#ifndef nsIPopupSetFrame_h___
+#define nsIPopupSetFrame_h___
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+// 043ecc8e-469f-40e1-9569-0529ac0c3039
+#define NS_IPOPUPSETFRAME_IID \
+{ 0x043ecc8e, 0x469f, 0x40e1, \
+ { 0x95, 0x69, 0x05, 0x29, 0xac, 0x0c, 0x30, 0x39 } }
 
-/* ::::: menupopup ::::: */
+class nsIFrame;
+class nsIContent;
+class nsIDOMElement;
 
-menupopup,
-popup {
-  -moz-appearance: menupopup;
-}
+#include "nsString.h"
 
-/* ::::: popup internal box ::::: */
+class nsIPopupSetFrame : public nsISupports {
 
-.popup-internal-box {
-        -moz-appearance: none;
-	padding: 4px 0px 4px 0px !important;
-}
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPOPUPSETFRAME_IID)
 
-/* ::::: tooltip ::::: */
+  NS_IMETHOD ShowPopup(nsIContent* aElementContent, nsIContent* aPopupContent, 
+                       PRInt32 aXPos, PRInt32 aYPos, 
+                       const nsString& aPopupType, const nsString& anAnchorAlignment,
+                       const nsString& aPopupAlignment) = 0;
+  NS_IMETHOD HidePopup(nsIFrame* aPopup) = 0;
+  NS_IMETHOD DestroyPopup(nsIFrame* aPopup, PRBool aDestroyEntireChain) = 0;
+};
 
-tooltip {
-  -moz-appearance: tooltip;
-  margin-top: 18px;
-  padding: 2px 3px;
-  max-width: 40em;
-  color: InfoText;
-  font: message-box;
-}
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIPopupSetFrame, NS_IPOPUPSETFRAME_IID)
 
-.tooltip-label {
-  margin: 0px !important;
-}
+#endif
 
-tooltip[titletip="true"] {
- /* See bug 32157 comment 128
-  * margin: -2px 0px 0px -3px;
-  */
-  max-width: none;
-}
-
-/* rules for popups associated with menulists */
-
-menulist > menupopup,
-.menulist-menupopup {
-  min-width: 0px;
-}
