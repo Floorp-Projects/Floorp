@@ -236,7 +236,6 @@ static NS_DEFINE_CID(kWindowCommandTableCID, NS_WINDOWCOMMANDTABLE_CID);
 #ifdef MOZ_XUL
 #include "nsIBoxObject.h"
 #include "nsIXULDocument.h"
-#include "nsIXULPopupListener.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsIXULSortService.h"
 
@@ -509,7 +508,6 @@ MAKE_CTOR(CreateXULSortService,           nsIXULSortService,           NS_NewXUL
 // NS_NewXULContentBuilder
 // NS_NewXULTreeBuilder
 MAKE_CTOR(CreateXULDocument,              nsIXULDocument,              NS_NewXULDocument)
-MAKE_CTOR(CreateXULPopupListener,         nsIXULPopupListener,         NS_NewXULPopupListener)
 // NS_NewXULControllers
 // NS_NewXULPrototypeCache
 #endif
@@ -1193,11 +1191,6 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_XULDOCUMENT_CID,
     "@mozilla.org/xul/xul-document;1",
     CreateXULDocument },
-
-  { "XUL PopupListener",
-    NS_XULPOPUPLISTENER_CID,
-    "@mozilla.org/xul/xul-popup-listener;1",
-    CreateXULPopupListener },
 
   { "XUL Prototype Cache",
     NS_XULPROTOTYPECACHE_CID,

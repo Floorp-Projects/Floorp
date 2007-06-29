@@ -47,15 +47,30 @@
 
 #include "prtypes.h"
 #include "nsIAtom.h"
+#include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
+#include "nsMenuFrame.h"
 #include "nsIDOMEventTarget.h"
-#include "nsMenuListener.h"
 
 #include "nsBoxFrame.h"
 #include "nsIMenuParent.h"
 #include "nsIWidget.h"
 
 #include "nsITimer.h"
+
+enum nsPopupType {
+  ePopupTypePanel,
+  ePopupTypeMenu,
+  ePopupTypeTooltip
+};
+
+// values are selected so that the direction can be flipped just by
+// changing the sign
+#define POPUPALIGNMENT_NONE 0
+#define POPUPALIGNMENT_TOPLEFT 1
+#define POPUPALIGNMENT_TOPRIGHT -1
+#define POPUPALIGNMENT_BOTTOMLEFT 2
+#define POPUPALIGNMENT_BOTTOMRIGHT -2
 
 #define INC_TYP_INTERVAL  1000  // 1s. If the interval between two keypresses is shorter than this, 
                                 //   treat as a continue typing
@@ -69,75 +84,54 @@ nsIFrame* NS_NewMenuPopupFrame(nsIPresShell* aPresShell, nsStyleContext* aContex
 class nsIViewManager;
 class nsIView;
 class nsIMenuParent;
-class nsIMenuFrame;
-class nsIDOMXULDocument;
-
 class nsMenuPopupFrame;
-
-/**
- * nsMenuPopupTimerMediator is a wrapper around an nsMenuPopupFrame which can be safely
- * passed to timers. The class is reference counted unlike the underlying
- * nsMenuPopupFrame, so that it will exist as long as the timer holds a reference
- * to it. The callback is delegated to the contained nsMenuPopupFrame as long as
- * the contained nsMenuPopupFrame has not been destroyed.
- */
-class nsMenuPopupTimerMediator : public nsITimerCallback
-{
-public:
-  nsMenuPopupTimerMediator(nsMenuPopupFrame* aFrame);
-  ~nsMenuPopupTimerMediator();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSITIMERCALLBACK
-
-  void ClearFrame();
-
-private:
-
-  // Pointer to the wrapped frame.
-  nsMenuPopupFrame* mFrame;
-};
 
 class nsMenuPopupFrame : public nsBoxFrame, public nsIMenuParent
 {
 public:
   nsMenuPopupFrame(nsIPresShell* aShell, nsStyleContext* aContext);
 
-  NS_DECL_ISUPPORTS
-
-
   // nsIMenuParentInterface
-  virtual nsIMenuFrame* GetCurrentMenuItem();
-  NS_IMETHOD SetCurrentMenuItem(nsIMenuFrame* aMenuItem);
-  virtual nsIMenuFrame* GetNextMenuItem(nsIMenuFrame* aStart);
-  virtual nsIMenuFrame* GetPreviousMenuItem(nsIMenuFrame* aStart);
+  virtual nsMenuFrame* GetCurrentMenuItem();
+  NS_IMETHOD SetCurrentMenuItem(nsMenuFrame* aMenuItem);
+  virtual void CurrentMenuIsBeingDestroyed();
+  NS_IMETHOD ChangeMenuItem(nsMenuFrame* aMenuItem, PRBool aSelectFirstItem);
+
+  // as popups are opened asynchronously, the popup pending state is used to
+  // prevent multiple requests from attempting to open the same popup twice
+  PRBool IsOpenPending() { return mIsOpenPending; }
+  void ClearOpenPending() { mIsOpenPending = PR_FALSE; }
+
   NS_IMETHOD SetActive(PRBool aActiveFlag) { return NS_OK; } // We don't care.
-  NS_IMETHOD GetIsActive(PRBool& isActive) { isActive = PR_FALSE; return NS_OK; }
-  NS_IMETHOD IsMenuBar(PRBool& isMenuBar) { isMenuBar = PR_FALSE; return NS_OK; }
-  NS_IMETHOD ConsumeOutsideClicks(PRBool& aConsumeOutsideClicks);
-  NS_IMETHOD ClearRecentlyRolledUp() {return NS_OK;}
-  NS_IMETHOD RecentlyRolledUp(nsIMenuFrame *aMenuFrame, PRBool *aJustRolledUp) {*aJustRolledUp = PR_FALSE; return NS_OK;}
-  NS_IMETHOD SetIsContextMenu(PRBool aIsContextMenu) { mIsContextMenu = aIsContextMenu; return NS_OK; }
-  NS_IMETHOD GetIsContextMenu(PRBool& aIsContextMenu) { aIsContextMenu = mIsContextMenu; return NS_OK; }
-  
-  NS_IMETHOD GetParentPopup(nsIMenuParent** aResult);
+  virtual PRBool IsActive() { return PR_FALSE; }
+  virtual PRBool IsMenuBar() { return PR_FALSE; }
 
-  // Closes up the chain of open cascaded menus.
-  NS_IMETHOD DismissChain();
+  /*
+   * When this popup is open, should clicks outside of it be consumed?
+   * Return PR_TRUE if the popup should rollup on an outside click, 
+   * but consume that click so it can't be used for anything else.
+   * Return PR_FALSE to allow clicks outside the popup to activate content 
+   * even when the popup is open.
+   * ---------------------------------------------------------------------
+   * 
+   * Should clicks outside of a popup be eaten?
+   *
+   *       Menus     Autocomplete     Comboboxes
+   * Mac     Eat           No              Eat
+   * Win     No            No              Eat     
+   * Unix    Eat           No              Eat
+   *
+   */
+  PRBool ConsumeOutsideClicks();
 
-  // Hides the chain of cascaded menus without closing them up.
-  NS_IMETHOD HideChain();
+  virtual PRBool IsContextMenu() { return mIsContextMenu; }
 
-  NS_IMETHOD KillPendingTimers();
-  NS_IMETHOD CancelPendingTimers();
-
-  NS_IMETHOD InstallKeyboardNavigator();
-  NS_IMETHOD RemoveKeyboardNavigator();
+  virtual PRBool MenuClosed() { return PR_TRUE; }
 
   NS_IMETHOD GetWidget(nsIWidget **aWidget);
 
   // The dismissal listener gets created and attached to the window.
-  NS_IMETHOD AttachedDismissalListener();
+  void AttachedDismissalListener();
 
   // Overridden methods
   NS_IMETHOD Init(nsIContent*      aContent,
@@ -148,10 +142,6 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aModType);
 
-  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
-                         nsGUIEvent*     aEvent,
-                         nsEventStatus*  aEventStatus);
-
   virtual void Destroy();
 
   virtual void InvalidateInternal(const nsRect& aDamageRect,
@@ -160,29 +150,82 @@ public:
 
   virtual nsresult CreateWidgetForView(nsIView* aView);
 
+  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
+
+  virtual PRBool IsLeaf() const
+  {
+    if (!mGeneratedChildren && mPopupType == ePopupTypeMenu) {
+      // menu popups generate their child frames lazily only when opened, so
+      // behave like a leaf frame. However, generate child frames normally if
+      // the parent menu has a sizetopopup attribute. In this case the size of
+      // the parent menu is dependant on the size of the popup, so the frames
+      // need to exist in order to calculate this size.
+      nsIContent* parentContent = mContent->GetParent();
+      if (parentContent &&
+          !parentContent->HasAttr(kNameSpaceID_None, nsGkAtoms::sizetopopup))
+        return PR_TRUE;
+    }
+
+    return PR_FALSE;
+  }
+
+  // AdjustView should be called by the parent frame after the popup has been
+  // laid out, so that the view can be shown.
+  void AdjustView();
+
   void GetViewOffset(nsIView* aView, nsPoint& aPoint);
-  static void GetRootViewForPopup(nsIFrame* aStartFrame,
-                                  PRBool aStopAtViewManagerRoot,
-                                  nsIView** aResult);
+  nsIView* GetRootViewForPopup(nsIFrame* aStartFrame,
+                               PRBool aStopAtViewManagerRoot);
 
-  nsresult SyncViewWithFrame(nsPresContext* aPresContext, const nsString& aPopupAnchor,
-                             const nsString& aPopupAlign,
-                             nsIFrame* aFrame, PRInt32 aXPos, PRInt32 aYPos);
+  // set the position of the popup either relative to the anchor aAnchorFrame
+  // (or the frame for mAnchorContent if aAnchorFrame is null) or at a specific
+  // point if a screen position (mScreenXPos and mScreenYPos) are set. The popup
+  // will be adjusted so that it is on screen.
+  nsresult SetPopupPosition(nsIFrame* aAnchorFrame);
 
-  NS_IMETHOD KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag);
-  NS_IMETHOD ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFlag);
-  
-  NS_IMETHOD Escape(PRBool& aHandledFlag);
-  NS_IMETHOD Enter();
+  PRBool HasGeneratedChildren() { return mGeneratedChildren; }
+  void SetGeneratedChildren() { mGeneratedChildren = PR_TRUE; }
 
-  nsIMenuFrame* FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doAction);
+  // called when the Enter key is pressed while the popup is open. This will
+  // just pass the call down to the current menu, if any. Also, calling Enter
+  // will reset the current incremental search string, calculated in
+  // FindMenuWithShortcut
+  nsMenuFrame* Enter();
 
-  PRBool IsValidItem(nsIContent* aContent);
-  PRBool IsDisabled(nsIContent* aContent);
+  PRInt32 PopupType() const { return mPopupType; }
+  PRBool IsMenu() { return mPopupType == ePopupTypeMenu; }
+  PRBool IsOpen() { return mIsOpen; }
+  PRBool HasOpenChanged() { return mIsOpenChanged; }
 
-  nsIMenuParent* GetContextMenu();
+  // the Initialize methods are used to set the anchor position for
+  // each way of opening a popup.
+  void InitializePopup(nsIContent* aAnchorContent,
+                       const nsAString& aPosition,
+                       PRInt32 aXPos, PRInt32 aYPos,
+                       PRBool aAttributesOverride);
 
-  NS_IMETHOD KillCloseTimer();
+  void InitializePopupAtScreen(PRInt32 aXPos, PRInt32 aYPos);
+
+  void InitializePopupWithAnchorAlign(nsIContent* aAnchorContent,
+                                      nsAString& aAnchor,
+                                      nsAString& aAlign,
+                                      PRInt32 aXPos, PRInt32 aYPos);
+
+  // indicate that the popup should be opened
+  PRBool ShowPopup(PRBool aIsContextMenu, PRBool aSelectFirstItem);
+  // indicate that the popup should be hidden
+  void HidePopup(PRBool aDeselectMenu);
+
+  // locate and return the menu frame that should be activated for the
+  // supplied key event. If doAction is set to true by this method,
+  // then the menu's action should be carried out, as if the user had pressed
+  // the Enter key. If doAction is false, the menu should just be highlighted.
+  // This method also handles incremental searching in menus so the user can
+  // type the first few letters of an item/s name to select it.
+  nsMenuFrame* FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doAction);
+
+  void ClearIncrementalString() { mIncrementalString.Truncate(); }
 
   virtual nsIAtom* GetType() const { return nsGkAtoms::menuPopupFrame; }
 
@@ -193,7 +236,7 @@ public:
   }
 #endif
 
-  void EnsureMenuItemIsVisible(nsIMenuFrame* aMenuFrame);
+  void EnsureMenuItemIsVisible(nsMenuFrame* aMenuFrame);
 
   // This sets 'left' and 'top' attributes.
   // May kill the frame.
@@ -201,30 +244,22 @@ public:
 
   void GetAutoPosition(PRBool* aShouldAutoPosition);
   void SetAutoPosition(PRBool aShouldAutoPosition);
-  void EnableRollup(PRBool aShouldRollup);
   void SetConsumeRollupEvent(PRUint32 aConsumeMode);
 
   nsIScrollableView* GetScrollableView(nsIFrame* aStart);
   
 protected:
-  friend class nsMenuPopupTimerMediator;
-  NS_HIDDEN_(nsresult) Notify(nsITimer* aTimer);
+  // Move without updating attributes.                                          
+  void MoveToInternal(PRInt32 aLeft, PRInt32 aTop);                             
 
-  // Move without updating attributes.
-  void MoveToInternal(PRInt32 aLeft, PRInt32 aTop);
-
-  // redefine to tell the box system not to move the
-  // views.
+  // redefine to tell the box system not to move the views.
   virtual void GetLayoutFlags(PRUint32& aFlags);
 
-  // given x,y in client coordinates, compensate for nested documents like framesets.
-  void AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupDoc, nsIPresShell* inPopupShell, 
-                                            PRInt32 inClientX, PRInt32 inClientY, 
-                                            PRInt32* outAdjX, PRInt32* outAdjY ) ;
+  void InitPositionFromAnchorAlign(const nsAString& aAnchor,
+                                   const nsAString& aAlign);
 
   void AdjustPositionForAnchorAlign ( PRInt32* ioXPos, PRInt32* ioYPos, const nsRect & inParentRect,
-                                        const nsString& aPopupAnchor, const nsString& aPopupAlign,
-                                        PRBool* outFlushWithTopBottom ) ;
+                                      PRBool* outFlushWithTopBottom ) ;
 
   PRBool IsMoreRoomOnOtherSideOfParent ( PRBool inFlushAboveBelow, PRInt32 inScreenViewLocX, PRInt32 inScreenViewLocY,
                                            const nsRect & inScreenParentFrameRect, PRInt32 inScreenTopTwips, PRInt32 inScreenLeftTwips,
@@ -238,24 +273,33 @@ protected:
   // Move the popup to the position specified in its |left| and |top| attributes.
   void MoveToAttributePosition();
 
+  // the content that the popup is anchored to, if any, which may be in a
+  // different document than the popup.
+  nsCOMPtr<nsIContent> mAnchorContent;
 
-  nsIMenuFrame* mCurrentMenu; // The current menu that is active.
+  nsMenuFrame* mCurrentMenu; // The current menu that is active.
 
-  nsMenuListener* mKeyboardNavigator; // The listener that tells us about key events.
-  nsIDOMEventTarget* mTarget;
+  // popup alignment relative to the anchor node
+  PRInt8 mPopupAlignment;
+  PRInt8 mPopupAnchor;
 
-  nsIMenuFrame* mTimerMenu; // A menu awaiting closure.
-  nsCOMPtr<nsITimer> mCloseTimer; // Close timer.
+  // the position of the popup. The screen coordinates, if set to values other
+  // than -1, override mXPos and mYPos.
+  PRInt32 mXPos;
+  PRInt32 mYPos;
+  PRInt32 mScreenXPos;
+  PRInt32 mScreenYPos;
 
-  // Reference to the mediator which wraps this frame.
-  nsRefPtr<nsMenuPopupTimerMediator> mTimerMediator;
+  nsPopupType mPopupType; // type of popup
 
-  PRPackedBool mIsContextMenu;  // is this a context menu?
-  
+  PRPackedBool mIsOpen;  // true if the popup is open
+  PRPackedBool mIsOpenChanged; // true if the open state changed since the last layout
+  PRPackedBool mIsOpenPending; // true if an open is pending
+  PRPackedBool mIsContextMenu; // true for context menus
+  PRPackedBool mGeneratedChildren; // true if the contents have been created
+
   PRPackedBool mMenuCanOverlapOSBar;    // can we appear over the taskbar/menubar?
-
-  PRPackedBool mShouldAutoPosition; // Should SyncViewWithFrame be allowed to auto position popup?
-  PRPackedBool mShouldRollup; // Should this menupopup be allowed to dismiss automatically?
+  PRPackedBool mShouldAutoPosition; // Should SetPopupPosition be allowed to auto position popup?
   PRPackedBool mConsumeRollupEvent; // Should the rollup event be consumed?
   PRPackedBool mInContentShell; // True if the popup is in a content shell
 

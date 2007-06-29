@@ -39,145 +39,53 @@
 #ifndef nsIMenuParent_h___
 #define nsIMenuParent_h___
 
-
-// {33f700c8-976a-4cdb-8f6c-d9f4cfee8366}
-#define NS_IMENUPARENT_IID \
-{ 0x33f700c8, 0x976a, 0x4cdb, { 0x8f, 0x6c, 0xd9, 0xf4, 0xcf, 0xee, 0x83, 0x66 } }
-
-class nsIMenuFrame;
-class nsIDOMKeyEvent;
+class nsMenuFrame;
 
 /*
- * nsIMenuParent is implemented on frames and thus should not be
- * refcounted.  Eventually it should not inherit from nsISupports.
- */
-
-/**
- * nsNavigationDirection: an enum expressing navigation through the menus in
- * terms which are independent of the directionality of the chrome. The
- * terminology, derived from XSL-FO and CSS3 (e.g. 
- * http://www.w3.org/TR/css3-text/#TextLayout), is BASE (Before, After, Start,
- * End), with the addition of First and Last (mapped to Home and End
- * respectively).
+ * nsIMenuParent is an interface implemented by nsMenuBarFrame and nsMenuPopupFrame
+ * as both serve as parent frames to nsMenuFrame.
  *
- * In languages such as English where the inline progression is left-to-right
- * and the block progression is top-to-bottom (lr-tb), these terms will map out
- * as in the following diagram
- *
- *  --- inline progression --->
- *
- *           First              |
- *           ...                |
- *           Before             |
- *         +--------+         block
- *   Start |        | End  progression
- *         +--------+           |
- *           After              |
- *           ...                |
- *           Last               V
- * 
+ * Don't implement this interface on other classes unless you also fix up references,
+ * as this interface is directly cast to and from nsMenuBarFrame and nsMenuPopupFrame.
  */
 
-enum nsNavigationDirection {
-  eNavigationDirection_Last,
-  eNavigationDirection_First,
-  eNavigationDirection_Start,
-  eNavigationDirection_Before,
-  eNavigationDirection_End,
-  eNavigationDirection_After
-};
-
-#define NS_DIRECTION_IS_INLINE(dir) (dir == eNavigationDirection_Start ||     \
-                                     dir == eNavigationDirection_End)
-#define NS_DIRECTION_IS_BLOCK(dir) (dir == eNavigationDirection_Before || \
-                                    dir == eNavigationDirection_After)
-#define NS_DIRECTION_IS_BLOCK_TO_EDGE(dir) (dir == eNavigationDirection_First ||    \
-                                            dir == eNavigationDirection_Last)
-
-/**
- * DirectionFromKeyCode_lr_tb: an array that maps keycodes to values of
- * nsNavigationDirection for left-to-right and top-to-bottom flow orientation
- */
-static nsNavigationDirection DirectionFromKeyCode_lr_tb [6] = {
-  eNavigationDirection_Last,   // NS_VK_END
-  eNavigationDirection_First,  // NS_VK_HOME
-  eNavigationDirection_Start,  // NS_VK_LEFT
-  eNavigationDirection_Before, // NS_VK_UP
-  eNavigationDirection_End,    // NS_VK_RIGHT
-  eNavigationDirection_After   // NS_VK_DOWN
-};
-
-/**
- * DirectionFromKeyCode_rl_tb: an array that maps keycodes to values of
- * nsNavigationDirection for right-to-left and top-to-bottom flow orientation
- */
-static nsNavigationDirection DirectionFromKeyCode_rl_tb [6] = {
-  eNavigationDirection_Last,   // NS_VK_END
-  eNavigationDirection_First,  // NS_VK_HOME
-  eNavigationDirection_End,    // NS_VK_LEFT
-  eNavigationDirection_Before, // NS_VK_UP
-  eNavigationDirection_Start,  // NS_VK_RIGHT
-  eNavigationDirection_After   // NS_VK_DOWN
-};
-
-#ifdef IBMBIDI
-#define NS_DIRECTION_FROM_KEY_CODE(direction, keycode)           \
-  NS_ASSERTION(keycode >= NS_VK_END && keycode <= NS_VK_DOWN,    \
-               "Illegal key code");                              \
-  const nsStyleVisibility* vis = GetStyleVisibility();           \
-  if (vis->mDirection == NS_STYLE_DIRECTION_RTL)                 \
-    direction = DirectionFromKeyCode_rl_tb[keycode - NS_VK_END]; \
-  else                                                           \
-    direction = DirectionFromKeyCode_lr_tb[keycode - NS_VK_END];
-#else
-#define NS_DIRECTION_FROM_KEY_CODE(direction, keycode)           \
-    direction = DirectionFromKeyCode_lr_tb[keycode - NS_VK_END];
-#endif
-
-class nsIMenuParent : public nsISupports {
+class nsIMenuParent {
 
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMENUPARENT_IID)
+  // returns the menu frame of the currently active item within the menu
+  virtual nsMenuFrame *GetCurrentMenuItem() = 0;
+  // sets the currently active menu frame.
+  NS_IMETHOD SetCurrentMenuItem(nsMenuFrame* aMenuItem) = 0;
+  // indicate that the current menu frame is being destroyed, so clear the
+  // current menu item
+  virtual void CurrentMenuIsBeingDestroyed() = 0;
+  // deselects the current item and closes its popup if any, then selects the
+  // new item aMenuItem. For a menubar, if another menu is already open, the
+  // new menu aMenuItem is opened. In this case, if aSelectFirstItem is true,
+  // select the first item in it. For menupoups, the menu is not opened and
+  // the aSelectFirstItem argument is not used.
+  NS_IMETHOD ChangeMenuItem(nsMenuFrame* aMenuItem, PRBool aSelectFirstItem) = 0;
 
-  virtual nsIMenuFrame *GetCurrentMenuItem() = 0;
-  NS_IMETHOD SetCurrentMenuItem(nsIMenuFrame* aMenuItem) = 0;
-  virtual nsIMenuFrame *GetNextMenuItem(nsIMenuFrame* aStart) = 0;
-  virtual nsIMenuFrame *GetPreviousMenuItem(nsIMenuFrame* aStart) = 0;
+  // returns true if the menupopup is open. For menubars, returns false.
+  virtual PRBool IsOpen() = 0;
+  // returns true if the menubar is currently active. For menupopups, returns false.
+  virtual PRBool IsActive() = 0;
+  // returns true if this is a menubar. If false, it is a popup
+  virtual PRBool IsMenuBar() = 0;
+  // returns true if this is a menu, which has a tag of menupopup or popup.
+  // Otherwise, this returns false
+  virtual PRBool IsMenu() = 0;
+  // returns true if this is a context menu
+  virtual PRBool IsContextMenu() = 0;
 
+  // indicate that the menubar should become active or inactive
   NS_IMETHOD SetActive(PRBool aActiveFlag) = 0;
-  NS_IMETHOD GetIsActive(PRBool& isActive) = 0;
-  NS_IMETHOD GetWidget(nsIWidget **aWidget) = 0;
-  
-  NS_IMETHOD IsMenuBar(PRBool& isMenuBar) = 0;
-  NS_IMETHOD ConsumeOutsideClicks(PRBool& aConsumeOutsideClicks) = 0;
-  NS_IMETHOD ClearRecentlyRolledUp() = 0;
-  NS_IMETHOD RecentlyRolledUp(nsIMenuFrame *aMenuFrame, PRBool *aJustRolledUp) = 0;
 
-  NS_IMETHOD DismissChain() = 0;
-  NS_IMETHOD HideChain() = 0;
-  NS_IMETHOD KillPendingTimers() = 0;
-  NS_IMETHOD CancelPendingTimers() = 0;
-
-  NS_IMETHOD AttachedDismissalListener() = 0;
-
-  NS_IMETHOD InstallKeyboardNavigator() = 0;
-  NS_IMETHOD RemoveKeyboardNavigator() = 0;
-
-  // Used to move up, down, left, and right in menus.
-  NS_IMETHOD KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag) = 0;
-  NS_IMETHOD ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFlag) = 0;
-  // Called when the ESC key is held down to close levels of menus.
-  NS_IMETHOD Escape(PRBool& aHandledFlag) = 0;
-  // Called to execute a menu item.
-  NS_IMETHOD Enter() = 0;
-
-  NS_IMETHOD SetIsContextMenu(PRBool aIsContextMenu) = 0;
-  NS_IMETHOD GetIsContextMenu(PRBool& aIsContextMenu) = 0;
-
-  NS_IMETHOD GetParentPopup(nsIMenuParent** aResult) = 0;
+  // notify that the menu has been closed and any active state should be
+  // cleared. This should return true if the menu should be deselected
+  // by the caller.
+  virtual PRBool MenuClosed() = 0;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIMenuParent, NS_IMENUPARENT_IID)
 
 #endif
 

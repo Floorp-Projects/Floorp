@@ -717,7 +717,12 @@ nsContainerFrame::PositionChildViews(nsIFrame* aFrame)
       childFrame = childFrame->GetNextSibling();
     }
 
-    childListName = aFrame->GetAdditionalChildListName(childListIndex++);
+    // also process the additional child lists, but skip the popup list as the
+    // view for popups is managed by the parent. Currently only nsMenuFrame
+    // has a popupList and during layout will call nsMenuPopupFrame::AdjustView.
+    do {
+      childListName = aFrame->GetAdditionalChildListName(childListIndex++);
+    } while (childListName == nsGkAtoms::popupList);
   } while (childListName);
 }
 
