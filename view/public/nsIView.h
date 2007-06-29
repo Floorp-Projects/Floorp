@@ -299,14 +299,6 @@ public:
    */
   PRBool HasWidget() const { return mWindow != nsnull; }
 
-  /**
-   * If called, will make the view disown the widget and leave it up
-   * to other code to destroy it.
-   */
-  void DisownWidget() {
-    mWidgetDisowned = PR_TRUE;
-  }
-
 #ifdef DEBUG
   /**
    * Output debug info to FILE
@@ -337,7 +329,6 @@ protected:
   nsRect            mDimBounds; // relative to parent
   float             mOpacity;
   PRUint32          mVFlags;
-  PRBool            mWidgetDisowned;
 
   virtual ~nsIView() {}
 };

@@ -204,9 +204,7 @@ public:
 
   NS_IMETHOD              GetAttention(PRInt32 aCycleCount);
   NS_IMETHOD              GetLastInputEventTime(PRUint32& aTime);
-  virtual nsIWidget*      GetTopLevelWindow(void);
-
-  nsWindow*               GetTopLevelWindowInternal();
+  nsWindow*               GetTopLevelWindow();
 
 #ifdef MOZ_CAIRO_GFX
   gfxASurface             *GetThebesSurface();
