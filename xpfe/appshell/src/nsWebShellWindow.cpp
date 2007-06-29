@@ -114,8 +114,6 @@
 #define USE_NATIVE_MENUS
 #endif
 
-#include "nsIPopupSetFrame.h"
-
 /* Define Class IDs */
 static NS_DEFINE_CID(kWindowCID,           NS_WINDOW_CID);
 

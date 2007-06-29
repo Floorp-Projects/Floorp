@@ -320,24 +320,23 @@ popup,
 menupopup {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#popup");
   -moz-box-orient: vertical;
-  display: none;
+}
+
+panel {
+  -moz-binding: url("chrome://global/content/bindings/popup.xml#panel");
+  -moz-box-orient: vertical;
 }
 
 popup,
 menupopup,
+panel,
 tooltip {
-  z-index: 2147483647; 
-}
-
-menupopup[menugenerated="true"],
-popup[menugenerated="true"],
-tooltip[menugenerated="true"] {
   display: -moz-popup;
+  z-index: 2147483647; 
 }
 
 tooltip {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#tooltip");
-  display: -moz-popup;
   margin-top: 21px;
 }
 
@@ -782,9 +781,8 @@ textbox[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete");
 }
 
-popup[type="autocomplete"] {
+panel[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-result-popup");
-  display: -moz-popup !important;
 }
 
 .autocomplete-tree {

@@ -110,9 +110,4 @@ interface nsIDOMXULDocument : nsISupports
    * Like trustedGetPopupNode, but gets the tooltip node instead.
    */
   [noscript] nsIDOMNode     trustedGetTooltipNode();
-
-  /**
-   * Like trustedGetPopupNode, but gets the 
-   */
-  [noscript] attribute nsIDOMEvent trustedPopupEvent;
 };

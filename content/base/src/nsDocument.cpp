@@ -3682,6 +3682,7 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
       contractID += "-menu";
     else if (tag == nsGkAtoms::popup ||
              tag == nsGkAtoms::menupopup ||
+             tag == nsGkAtoms::panel ||
              tag == nsGkAtoms::tooltip)
       contractID += "-popup";
     else if (tag == nsGkAtoms::tree)
