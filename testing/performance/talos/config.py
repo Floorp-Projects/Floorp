@@ -72,7 +72,7 @@ INFO_URL = 'file:///c:/talos/getInfo.html'
 TS_URL = 'file:///c:/talos/startup_test/startup_test.html?begin='
 
 """Number of times to run startup test (Ts)"""
-TS_NUM_RUNS = 5
+TS_NUM_RUNS = 20
 
 """The path to the file url to load for page load test (Tp)"""
 TP_URL = 'http://localhost/page_load_test/framecycler.html'
