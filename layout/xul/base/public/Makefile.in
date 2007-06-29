@@ -49,8 +49,8 @@ GRE_MODULE	= 1
 EXPORTS		= \
 		nsPIBoxObject.h \
 		nsIMenuFrame.h \
-		nsIPopupSetFrame.h \
 		nsIScrollbarMediator.h \
+		nsXULPopupManager.h \
 		$(NULL)
 
 XPIDLSRCS=      nsIBoxObject.idl                  \

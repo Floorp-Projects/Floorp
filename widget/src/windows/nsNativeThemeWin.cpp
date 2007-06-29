@@ -55,7 +55,6 @@
 #include "nsILookAndFeel.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIMenuFrame.h"
-#include "nsIMenuParent.h"
 #include "nsWidgetAtoms.h"
 #include <malloc.h>
 
@@ -787,8 +786,8 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       nsIContent* content = aFrame->GetContent();
 
       nsIFrame* parentFrame = aFrame->GetParent();
-      nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(parentFrame));
-      if (menuFrame || (content && content->IsNodeOfType(nsINode::eHTML)) )
+      if (parentFrame->GetType() == nsWidgetAtoms::menuFrame ||
+          (content && content->IsNodeOfType(nsINode::eHTML)))
          // XUL menu lists and HTML selects get state from parent         
          aFrame = parentFrame;
 
@@ -1411,9 +1410,7 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsIDeviceContext* aContext,
       if (menuFrame) {
         // If this is a real menu item, we should check if it is part of the
         // main menu bar or not, as this affects rendering.
-        nsIMenuParent *menuParent = menuFrame->GetMenuParent();
-        if (menuParent)
-          menuParent->IsMenuBar(isTopLevel);
+        isTopLevel = menuFrame->IsOnMenuBar();
       }
 
       // These values are obtained from visual inspection of equivelant
@@ -1633,11 +1630,9 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
         // If this is a real menu item, we should check if it is part of the
         // main menu bar or not, and if it is a container, as these affect
         // rendering.
-        nsIMenuParent *menuParent = menuFrame->GetMenuParent();
-        if (menuParent)
-          menuParent->IsMenuBar(isTopLevel);
-        menuFrame->MenuIsOpen(isOpen);
-        menuFrame->MenuIsContainer(isContainer);
+        isTopLevel = menuFrame->IsOnMenuBar();
+        isOpen = menuFrame->IsOpen();
+        isContainer = menuFrame->IsMenu();
       }
 
       if (IsDisabled(aFrame))
@@ -1704,8 +1699,8 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       
       nsIContent* content = aFrame->GetContent();
       nsIFrame* parentFrame = aFrame->GetParent();
-      nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(parentFrame));
-      if (menuFrame || (content && content->IsNodeOfType(nsINode::eHTML)) )
+      if (parentFrame->GetType() == nsWidgetAtoms::menuFrame ||
+          (content && content->IsNodeOfType(nsINode::eHTML)))
          // XUL menu lists and HTML selects get state from parent         
          aFrame = parentFrame;
          // XXX the button really shouldn't depress when clicking the 
