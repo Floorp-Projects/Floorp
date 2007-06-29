@@ -46,6 +46,7 @@
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
+#include "nsIMenuFrame.h"
 #include "nsIPopupBoxObject.h"
 #include "nsIServiceManager.h"
 #ifdef MOZ_XUL
@@ -58,7 +59,6 @@
 #include "nsIScriptContext.h"
 #include "nsPIDOMWindow.h"
 #include "nsContentUtils.h"
-#include "nsXULPopupManager.h"
 #include "nsIRootBox.h"
 
 nsXULTooltipListener* nsXULTooltipListener::mInstance = nsnull;
@@ -209,8 +209,8 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
   // mouse has really moved before proceeding.
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aMouseEvent));
   PRInt32 newMouseX, newMouseY;
-  mouseEvent->GetScreenX(&newMouseX);
-  mouseEvent->GetScreenY(&newMouseY);
+  mouseEvent->GetClientX(&newMouseX);
+  mouseEvent->GetClientY(&newMouseY);
   if (mMouseClientX == newMouseX && mMouseClientY == newMouseY)
     return NS_OK;
   mMouseClientX = newMouseX;
@@ -413,8 +413,12 @@ nsXULTooltipListener::ShowTooltip()
       // at this point, |mCurrentTooltip| holds the content node of
       // the tooltip. If there is an attribute on the popup telling us
       // not to create the auto-hide timer, don't.
-      if (mCurrentTooltip->AttrValueIs(kNameSpaceID_None, nsGkAtoms::noautohide,
-                                       nsGkAtoms::_true, eCaseMatters))
+      nsCOMPtr<nsIDOMElement> tooltipEl(do_QueryInterface(mCurrentTooltip));
+      if (!tooltipEl)
+        return NS_ERROR_FAILURE;
+      nsAutoString noAutoHide;
+      tooltipEl->GetAttribute(NS_LITERAL_STRING("noautohide"), noAutoHide);
+      if (!noAutoHide.EqualsLiteral("true"))
         CreateAutoHideTimer();
 
       // listen for popuphidden on the tooltip node, so that we can
@@ -485,38 +489,66 @@ nsXULTooltipListener::LaunchTooltip()
   if (!mCurrentTooltip)
     return;
 
-#ifdef MOZ_XUL
-  if (mIsSourceTree && mNeedTitletip) {
-    nsCOMPtr<nsITreeBoxObject> obx;
-    GetSourceTreeBoxObject(getter_AddRefs(obx));
+  nsCOMPtr<nsIBoxObject> popupBox;
+  nsCOMPtr<nsIDOMXULElement> xulTooltipEl(do_QueryInterface(mCurrentTooltip));
+  if (!xulTooltipEl) {
+    NS_ERROR("tooltip isn't a XUL element!");
+    return;
+  }
 
-    SetTitletipLabel(obx, mCurrentTooltip, mLastTreeRow, mLastTreeCol);
+  xulTooltipEl->GetBoxObject(getter_AddRefs(popupBox));
+  nsCOMPtr<nsIPopupBoxObject> popupBoxObject(do_QueryInterface(popupBox));
+  if (popupBoxObject) {
+    PRInt32 x = mMouseClientX;
+    PRInt32 y = mMouseClientY;
+#ifdef MOZ_XUL
+    if (mIsSourceTree && mNeedTitletip) {
+      nsCOMPtr<nsITreeBoxObject> obx;
+      GetSourceTreeBoxObject(getter_AddRefs(obx));
+#ifdef DEBUG_crap
+      GetTreeCellCoords(obx, mSourceNode,
+                        mLastTreeRow, mLastTreeCol, &x, &y);
+#endif
+
+      SetTitletipLabel(obx, mCurrentTooltip, mLastTreeRow, mLastTreeCol);
+      if (!mCurrentTooltip) {
+        // Because of mutation events, mCurrentTooltip can be null.
+        return;
+      }
+      mCurrentTooltip->SetAttr(kNameSpaceID_None, nsGkAtoms::titletip,
+                               NS_LITERAL_STRING("true"), PR_TRUE);
+    } else {
+      mCurrentTooltip->UnsetAttr(kNameSpaceID_None, nsGkAtoms::titletip,
+                                 PR_TRUE);
+    }
     if (!mCurrentTooltip) {
       // Because of mutation events, mCurrentTooltip can be null.
       return;
     }
-    mCurrentTooltip->SetAttr(nsnull, nsGkAtoms::titletip, NS_LITERAL_STRING("true"), PR_TRUE);
-  } else {
-    mCurrentTooltip->UnsetAttr(nsnull, nsGkAtoms::titletip, PR_TRUE);
-  }
-  if (!mCurrentTooltip) {
-    // Because of mutation events, mCurrentTooltip can be null.
-    return;
-  }
 #endif
 
-  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  if (pm)
-    pm->ShowPopupAtScreen(mCurrentTooltip, mMouseClientX, mMouseClientY, PR_FALSE);
+    nsCOMPtr<nsIDOMElement> targetEl(do_QueryInterface(mSourceNode));
+    popupBoxObject->ShowPopup(targetEl, xulTooltipEl, x, y,
+                              NS_LITERAL_STRING("tooltip").get(),
+                              NS_LITERAL_STRING("none").get(),
+                              NS_LITERAL_STRING("topleft").get());
+  }
+
+  return;
 }
 
 nsresult
 nsXULTooltipListener::HideTooltip()
 {
   if (mCurrentTooltip) {
-    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-    if (pm)
-      pm->HidePopup(mCurrentTooltip, PR_FALSE, PR_FALSE, PR_FALSE);
+    // hide the popup through its box object
+    nsCOMPtr<nsIDOMXULElement> tooltipEl(do_QueryInterface(mCurrentTooltip));
+    nsCOMPtr<nsIBoxObject> boxObject;
+    if (tooltipEl)
+      tooltipEl->GetBoxObject(getter_AddRefs(boxObject));
+    nsCOMPtr<nsIPopupBoxObject> popupObject(do_QueryInterface(boxObject));
+    if (popupObject)
+      popupObject->HidePopup();
   }
 
   DestroyTooltip();
@@ -637,9 +669,10 @@ nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
     nsIDocument* doc = parent->GetCurrentDoc();
     nsIPresShell* presShell = doc ? doc->GetPrimaryShell() : nsnull;
     nsIFrame* frame = presShell ? presShell->GetPrimaryFrameFor(parent) : nsnull;
-    if (frame && frame->GetType() == nsGkAtoms::menuFrame) {
-      NS_WARNING("Menu cannot be used as a tooltip");
-      return NS_ERROR_FAILURE;
+    if (frame) {
+      nsIMenuFrame* menu = nsnull;
+      CallQueryInterface(frame, &menu);
+      NS_ENSURE_FALSE(menu, NS_ERROR_FAILURE);
     }
   }
 
@@ -708,7 +741,7 @@ nsXULTooltipListener::CreateAutoHideTimer()
     mAutoHideTimer->Cancel();
     mAutoHideTimer = nsnull;
   }
-
+  
   mAutoHideTimer = do_CreateInstance("@mozilla.org/timer;1");
   if ( mAutoHideTimer )
     mAutoHideTimer->InitWithFuncCallback(sAutoHideCallback, this, kTooltipAutoHideTime, 
