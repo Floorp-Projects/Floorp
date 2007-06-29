@@ -128,7 +128,6 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIXULWindow.h"
-#include "nsXULPopupManager.h"
 
 //----------------------------------------------------------------------
 //
@@ -1457,49 +1456,84 @@ nsXULDocument::SetPopupNode(nsIDOMNode* aNode)
     return rv;
 }
 
-// Returns the rangeOffset element from the XUL Popup Manager. This is for
-// chrome callers only.
+NS_IMETHODIMP
+nsXULDocument::GetTrustedPopupEvent(nsIDOMEvent** aEvent)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIFocusController> focusController;
+    GetFocusController(getter_AddRefs(focusController));
+    NS_ENSURE_TRUE(focusController, NS_ERROR_FAILURE);
+
+    rv = focusController->GetPopupEvent(aEvent);
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsXULDocument::SetTrustedPopupEvent(nsIDOMEvent* aEvent)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIFocusController> focusController;
+    GetFocusController(getter_AddRefs(focusController));
+    NS_ENSURE_TRUE(focusController, NS_ERROR_FAILURE);
+
+    rv = focusController->SetPopupEvent(aEvent);
+
+    return rv;
+}
+
+// Returns the rangeOffset element from the popupEvent. This is for chrome
+// callers only.
 NS_IMETHODIMP
 nsXULDocument::GetPopupRangeParent(nsIDOMNode** aRangeParent)
 {
     NS_ENSURE_ARG_POINTER(aRangeParent);
     *aRangeParent = nsnull;
 
-    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-    if (!pm)
-        return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIDOMEvent> event;
+    nsresult rv = GetTrustedPopupEvent(getter_AddRefs(event));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (! event)
+        return NS_ERROR_UNEXPECTED; // no event active
 
-    PRInt32 offset;
-    pm->GetMouseLocation(aRangeParent, &offset);
+    nsCOMPtr<nsIDOMNSUIEvent> uiEvent = do_QueryInterface(event, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = uiEvent->GetRangeParent(aRangeParent); // addrefs
 
-    if (*aRangeParent && !nsContentUtils::CanCallerAccess(*aRangeParent)) {
+    if (NS_SUCCEEDED(rv) && *aRangeParent &&
+            !nsContentUtils::CanCallerAccess(*aRangeParent)) {
         NS_RELEASE(*aRangeParent);
         return NS_ERROR_DOM_SECURITY_ERR;
     }
-
-    return NS_OK;
+    return rv;
 }
 
-// Returns the rangeOffset element from the XUL Popup Manager. We check the
-// rangeParent to determine if the caller has rights to access to the data.
+// Returns the rangeOffset element from the popupEvent. We check the rangeParent
+// to determine if the caller has rights to access to the data.
 NS_IMETHODIMP
 nsXULDocument::GetPopupRangeOffset(PRInt32* aRangeOffset)
 {
     NS_ENSURE_ARG_POINTER(aRangeOffset);
 
-    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-    if (!pm)
-        return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIDOMEvent> event;
+    nsresult rv = GetTrustedPopupEvent(getter_AddRefs(event));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (! event)
+        return NS_ERROR_UNEXPECTED; // no event active
 
-    PRInt32 offset;
+    nsCOMPtr<nsIDOMNSUIEvent> uiEvent = do_QueryInterface(event, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIDOMNode> parent;
-    pm->GetMouseLocation(getter_AddRefs(parent), &offset);
+    rv = uiEvent->GetRangeParent(getter_AddRefs(parent));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (parent && !nsContentUtils::CanCallerAccess(parent))
         return NS_ERROR_DOM_SECURITY_ERR;
 
-    *aRangeOffset = offset;
-    return NS_OK;
+    return uiEvent->GetRangeOffset(aRangeOffset);
 }
 
 NS_IMETHODIMP

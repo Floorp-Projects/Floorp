@@ -42,28 +42,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= layout
-XPIDL_MODULE	= layout_xul
-GRE_MODULE	= 1
+MODULE		= xul
 
+ifdef MOZ_XUL
 EXPORTS		= \
-		nsPIBoxObject.h \
-		nsIMenuFrame.h \
-		nsIPopupSetFrame.h \
-		nsIScrollbarMediator.h \
+                nsIXULPopupListener.h \
 		$(NULL)
-
-XPIDLSRCS=      nsIBoxObject.idl                  \
-                nsIScrollBoxObject.idl              \
-                nsIScrollBoxObject.idl \
-                nsIPopupBoxObject.idl \
-                nsIMenuBoxObject.idl \
-                nsIBrowserBoxObject.idl \
-                nsIIFrameBoxObject.idl \
-                nsIEditorBoxObject.idl \
-                nsIContainerBoxObject.idl \
-                nsIListBoxObject.idl \
-                $(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
 

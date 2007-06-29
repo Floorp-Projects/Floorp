@@ -34,41 +34,7 @@
           return this.boxObject.QueryInterface(Components.interfaces.nsIPopupBoxObject);
         </getter>
       </property>
-
-      <method name="openPopup">
-        <parameter name="aAnchorElement"/>
-        <parameter name="aPosition"/>
-        <parameter name="aX"/>
-        <parameter name="aY"/>
-        <parameter name="aIsContextMenu"/>
-        <parameter name="aAttributesOverride"/>
-        <body>
-        <![CDATA[
-          try {
-            var popupBox = this.popupBoxObject;
-            if (popupBox)
-              popupBox.openPopup(aAnchorElement, aPosition, aX, aY,
-                                 aIsContextMenu, aAttributesOverride);
-          } catch(e) {}
-        ]]>
-        </body>
-      </method>
-
-      <method name="openPopupAtScreen">
-        <parameter name="aX"/>
-        <parameter name="aY"/>
-        <parameter name="aIsContextMenu"/>
-        <body>
-        <![CDATA[
-          try {
-            var popupBox = this.popupBoxObject;
-            if (popupBox)
-              popupBox.openPopupAtScreen(aX, aY, aIsContextMenu);
-          } catch(e) {}
-        ]]>
-        </body>
-      </method>
-
+      
       <method name="showPopup">
         <parameter name="element"/>
         <parameter name="xpos"/>

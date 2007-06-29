@@ -107,7 +107,7 @@
       </hbox>
     </tooltip>
 
-    <panel type="autocomplete" chromedir="&locale.dir;" id="PopupAutoComplete"/>
+    <popup type="autocomplete" chromedir="&locale.dir;" id="PopupAutoComplete"/>
 
     <popup id="toolbar-context-menu"
            onpopupshowing="onViewToolbarsPopupShowing(event);">
