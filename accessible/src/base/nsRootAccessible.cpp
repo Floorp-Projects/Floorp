@@ -62,7 +62,6 @@
 #include "nsIEventListenerManager.h"
 #include "nsIFocusController.h"
 #include "nsIFrame.h"
-#include "nsIMenuFrame.h"
 #include "nsIHTMLDocument.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIMenuParent.h"
@@ -802,23 +801,22 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   }
   else if (eventType.EqualsLiteral("DOMMenuItemActive")) {
     if (!treeItemAccessible) {
-      nsCOMPtr<nsPIAccessNode> menuAccessNode = do_QueryInterface(accessible);
-      NS_ENSURE_TRUE(menuAccessNode, NS_ERROR_FAILURE);
-      nsIFrame* menuFrame = menuAccessNode->GetFrame();
-      NS_ENSURE_TRUE(menuFrame, NS_ERROR_FAILURE);
-      nsIMenuFrame* imenuFrame;
-      CallQueryInterface(menuFrame, &imenuFrame);
-      NS_ENSURE_TRUE(imenuFrame, NS_ERROR_FAILURE);
-      if (imenuFrame->IsOnMenuBar()) {
-        if (!imenuFrame->IsOnActiveMenuBar()) {
+      nsCOMPtr<nsIAccessible> containerAccessible;
+      accessible->GetParent(getter_AddRefs(containerAccessible));
+      NS_ENSURE_TRUE(containerAccessible, NS_OK);
+      if (Role(containerAccessible) == nsIAccessibleRole::ROLE_MENUBAR) {
+        nsCOMPtr<nsPIAccessNode> menuBarAccessNode(do_QueryInterface(containerAccessible));
+        NS_ENSURE_TRUE(menuBarAccessNode, NS_ERROR_FAILURE);
+        nsCOMPtr<nsIMenuParent> menuParent = do_QueryInterface(menuBarAccessNode->GetFrame());
+        NS_ENSURE_TRUE(menuParent, NS_ERROR_FAILURE);
+        PRBool isActive;
+        menuParent->GetIsActive(isActive);
+        if (!isActive) {
           // It is a top level menuitem. Only fire a focus event when the menu bar
           // is active.
           return NS_OK;
         }
       } else {
-        nsCOMPtr<nsIAccessible> containerAccessible;
-        accessible->GetParent(getter_AddRefs(containerAccessible));
-        NS_ENSURE_TRUE(containerAccessible, NS_ERROR_FAILURE);
         // It is not top level menuitem
         // Only fire focus event if it is not inside collapsed popup
         if (State(containerAccessible) & nsIAccessibleStates::STATE_COLLAPSED)

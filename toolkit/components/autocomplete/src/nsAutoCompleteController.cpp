@@ -611,6 +611,27 @@ nsAutoCompleteController::SetSearchString(const nsAString &aSearchString)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsAutoCompleteController::AttachRollupListener()
+{
+  nsIWidget* widget = GetPopupWidget();
+  NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
+  NS_ASSERTION(mInput, "mInput must not be null.");
+  PRBool consumeRollupEvent = PR_FALSE;
+  mInput->GetConsumeRollupEvent(&consumeRollupEvent);
+  return widget->CaptureRollupEvents((nsIRollupListener*)this,
+                                     PR_TRUE, consumeRollupEvent);
+}
+
+NS_IMETHODIMP
+nsAutoCompleteController::DetachRollupListener()
+{
+  nsIWidget* widget = GetPopupWidget();
+  NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
+  return widget->CaptureRollupEvents((nsIRollupListener*)this,
+                                     PR_FALSE, PR_FALSE);
+}
+
 ////////////////////////////////////////////////////////////////////////
 //// nsIAutoCompleteObserver
 

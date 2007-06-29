@@ -41,7 +41,7 @@
 
 interface nsIAutoCompleteInput;
 
-[scriptable, uuid(476E1472-4357-4CD0-AFE3-FEA3112617B2)]
+[scriptable, uuid(bafcfe4f-0850-4106-a176-be5aef2e1e52)]
 interface nsIAutoCompleteController : nsISupports
 {
   /*
@@ -141,4 +141,10 @@ interface nsIAutoCompleteController : nsISupports
    * Set the current search string, but don't start searching
    */
   void setSearchString(in AString aSearchString);
+
+  /*
+   * Attach or Detach rollup-listener
+   */
+  void attachRollupListener();
+  void detachRollupListener();
 };

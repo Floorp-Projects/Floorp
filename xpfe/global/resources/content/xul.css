@@ -298,22 +298,27 @@ menuseparator {
 /* <popup> is deprecated.  Only <menupopup> and <tooltip> are still valid. */ 
 
 popup,
-menupopup,
-panel {
+menupopup {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#popup");
   -moz-box-orient: vertical;
+  display: none;
 }
 
 popup,
 menupopup,
-panel,
 tooltip {
-  display: -moz-popup;
   z-index: 2147483647; 
+}
+
+menupopup[menugenerated="true"],
+popup[menugenerated="true"],
+tooltip[menugenerated="true"] {
+  display: -moz-popup;
 }
 
 tooltip {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#tooltip");
+  display: -moz-popup;
   margin-top: 21px;
 }
 

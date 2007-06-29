@@ -40,7 +40,6 @@
 
 #include "nsMenuBarListener.h"
 #include "nsMenuBarFrame.h"
-#include "nsMenuPopupFrame.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMEventListener.h"
@@ -132,18 +131,6 @@ void nsMenuBarListener::InitAccessKey()
     nsContentUtils::GetBoolPref("ui.key.menuAccessKeyFocuses");
 }
 
-void
-nsMenuBarListener::ToggleMenuActiveState()
-{
-  nsMenuFrame* closemenu = mMenuBarFrame->ToggleMenuActiveState();
-  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  if (pm && closemenu) {
-    nsMenuPopupFrame* popupFrame = closemenu->GetPopup();
-    if (popupFrame)
-      pm->HidePopup(popupFrame->GetContent(), PR_FALSE, PR_FALSE, PR_TRUE);
-  }
-}
-
 ////////////////////////////////////////////////////////////////////////
 nsresult
 nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
@@ -174,7 +161,7 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
     {
       // The access key was down and is now up, and no other
       // keys were pressed in between.
-      ToggleMenuActiveState();
+      mMenuBarFrame->ToggleMenuActiveState();
     }
     mAccessKeyDown = PR_FALSE; 
 
@@ -182,7 +169,7 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
     if (active) {
       aKeyEvent->StopPropagation();
       aKeyEvent->PreventDefault();
-      return NS_OK; // I am consuming event
+      return NS_ERROR_BASE; // I am consuming event
     }
   }
   
@@ -193,6 +180,8 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
 nsresult
 nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
+  mMenuBarFrame->ClearRecentlyRolledUp();
+
   // if event has already been handled, bail
   nsCOMPtr<nsIDOMNSUIEvent> uiEvent ( do_QueryInterface(aKeyEvent) );
   if ( uiEvent ) {
@@ -240,13 +229,14 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
         // Do shortcut navigation.
         // A letter was pressed. We want to see if a shortcut gets matched. If
         // so, we'll know the menu got activated.
-        nsMenuFrame* result = mMenuBarFrame->FindMenuWithShortcut(keyEvent);
-        if (result) {
-          mMenuBarFrame->SetActive(PR_TRUE);
-          result->OpenMenu(PR_TRUE);
+        PRBool active = PR_FALSE;
+        mMenuBarFrame->ShortcutNavigation(keyEvent, active);
+
+        if (active) {
           aKeyEvent->StopPropagation();
           aKeyEvent->PreventDefault();
-          retVal = NS_OK;       // I am consuming event
+
+          retVal = NS_ERROR_BASE;       // I am consuming event
         }
       }    
 #if !defined(XP_MAC) && !defined(XP_MACOSX)
@@ -255,17 +245,16 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
         if ((GetModifiers(keyEvent) & ~MODIFIER_CONTROL) == 0) {
           // The F10 key just went down by itself or with ctrl pressed.
           // In Windows, both of these activate the menu bar.
-          ToggleMenuActiveState();
+          mMenuBarFrame->ToggleMenuActiveState();
 
           aKeyEvent->StopPropagation();
           aKeyEvent->PreventDefault();
-          return NS_OK; // consume the event
+          return NS_ERROR_BASE; // consume the event
         }
       }
 #endif   // !XP_MAC && !XP_MACOSX
     } 
   }
-
   return retVal;
 }
 
@@ -360,8 +349,10 @@ nsMenuBarListener::Focus(nsIDOMEvent* aEvent)
 nsresult
 nsMenuBarListener::Blur(nsIDOMEvent* aEvent)
 {
-  if (!mMenuBarFrame->IsMenuOpen() && mMenuBarFrame->IsActive()) {
-    ToggleMenuActiveState();
+  if (!mMenuBarFrame->IsOpen() && mMenuBarFrame->IsActive()) {
+    mMenuBarFrame->ToggleMenuActiveState();
+    PRBool handled;
+    mMenuBarFrame->Escape(handled);
     mAccessKeyDown = PR_FALSE;
   }
   return NS_OK; // means I am NOT consuming event
@@ -371,8 +362,12 @@ nsMenuBarListener::Blur(nsIDOMEvent* aEvent)
 nsresult 
 nsMenuBarListener::MouseDown(nsIDOMEvent* aMouseEvent)
 {
-  if (!mMenuBarFrame->IsMenuOpen() && mMenuBarFrame->IsActive())
-    ToggleMenuActiveState();
+  if (!mMenuBarFrame->IsOpen() && mMenuBarFrame->IsActive()) {
+    mMenuBarFrame->ToggleMenuActiveState();
+    PRBool handled;
+    mMenuBarFrame->Escape(handled);
+  }
+
   mAccessKeyDown = PR_FALSE;
 
   return NS_OK; // means I am NOT consuming event
@@ -382,6 +377,8 @@ nsMenuBarListener::MouseDown(nsIDOMEvent* aMouseEvent)
 nsresult 
 nsMenuBarListener::MouseUp(nsIDOMEvent* aMouseEvent)
 {
+  mMenuBarFrame->ClearRecentlyRolledUp();
+
   return NS_OK; // means I am NOT consuming event
 }
 

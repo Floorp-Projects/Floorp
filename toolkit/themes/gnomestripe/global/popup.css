@@ -44,9 +44,7 @@
 
 /* ::::: menupopup ::::: */
 
-menupopup,
-popup,
-panel {
+menupopup, popup {
   -moz-appearance: menupopup;
   min-width: 1px;
 }

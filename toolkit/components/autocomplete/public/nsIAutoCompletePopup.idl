@@ -39,7 +39,7 @@
 
 interface nsIAutoCompleteInput;
 
-[scriptable, uuid(816668CC-6AC0-47C3-944E-9C2CF37F224A)]
+[scriptable, uuid(65F6CD46-22EC-4329-BB3B-BCD1103F2204)]
 interface nsIAutoCompletePopup : nsISupports
 {
   /*
@@ -71,7 +71,7 @@ interface nsIAutoCompletePopup : nsISupports
    * @param y - The y coordinate to display the popup at
    * @param width - The width that the popup should size itself to
    */
-  void openAutocompletePopup(in nsIAutoCompleteInput input, in long x, in long y, in long width);
+  void openPopup(in nsIAutoCompleteInput input, in long x, in long y, in long width);
   
   /* 
    * Close the popup and detach from the bound input

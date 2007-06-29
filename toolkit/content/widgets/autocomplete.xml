@@ -110,8 +110,9 @@
         if (popupId)
           popup = document.getElementById(popupId);
         if (!popup) {
-          popup = document.createElement("panel");
+          popup = document.createElement("popup");
           popup.setAttribute("type", "autocomplete");
+          popup.setAttribute("hidden", "true");
           
           var popupset = document.getAnonymousElementByAttribute(this, "anonid", "popupset");
           popupset.appendChild(popup);
@@ -319,7 +320,7 @@
 
       <method name="openPopup">
         <body><![CDATA[
-          this.popup.openAutocompletePopup(this, -1, -1, this.boxObject.width);
+          this.popup.openPopup(this, -1, -1, this.boxObject.width);
         ]]></body>
       </method>
 
@@ -564,7 +565,7 @@
       <property name="popupOpen" readonly="true"
                 onget="return this.mPopupOpen;"/>
 
-      <method name="openAutocompletePopup">
+      <method name="openPopup">
         <parameter name="aInput"/>
         <parameter name="aX"/>
         <parameter name="aY"/>
@@ -577,6 +578,7 @@
             
             this.showCommentColumn = this.mInput.showCommentColumn;
             
+            this.removeAttribute("hidden");
             this.setAttribute("width", aWidth < 100 ? 100 : aWidth);
 
             document.popupNode = null;
@@ -586,7 +588,8 @@
             else {
               this.showPopup(document.documentElement, aX, aY, "popup", null, null);            
             }
-            this.popupBoxObject.setConsumeRollupEvent(this.mInput.consumeRollupEvent);
+            this.enableRollup(false);
+            this.mInput.controller.attachRollupListener();
           }
         ]]></body>
       </method>
@@ -596,8 +599,10 @@
           if (this.mPopupOpen) {
             this.hidePopup();
             document.popupNode = null;
-//            this.setAttribute("hidden", "true");
+
+            this.setAttribute("hidden", "true");
             this.removeAttribute("width");
+            this.mInput.controller.detachRollupListener();
           }
         ]]></body>
       </method>
@@ -711,8 +716,6 @@
           // detect the desired height of the tree
           var bx = this.tree.treeBoxObject;
           var view = this.tree.view;
-          if (!view)
-            return;
           var rows = this.maxRows;
           if (!view.rowCount || (rows && view.rowCount < rows))
             rows = view.rowCount;

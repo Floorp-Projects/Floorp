@@ -246,9 +246,7 @@ nsFormFillController::SetPopupOpen(PRBool aPopupOpen)
                                        NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
 
       nsRect popupRect = GetScreenOrigin(mFocusedInput);
-      mFocusedPopup->OpenAutocompletePopup(this, popupRect.x,
-                                           popupRect.y+popupRect.height,
-                                           popupRect.width);
+      mFocusedPopup->OpenPopup(this, popupRect.x, popupRect.y+popupRect.height, popupRect.width);
     } else
       mFocusedPopup->ClosePopup();
   }
