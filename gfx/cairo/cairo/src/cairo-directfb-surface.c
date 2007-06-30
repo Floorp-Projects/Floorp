@@ -35,9 +35,10 @@
  *    Claudio Ciccani <klan@users.sf.net>
  */
 
-#include "cairoint.h"
-
-#include "cairo-directfb.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <assert.h>
 
 #include <directfb.h>
 
@@ -45,6 +46,9 @@
 #include <direct/debug.h>
 #include <direct/memcpy.h>
 #include <direct/util.h>
+
+#include "cairo-directfb.h"
+#include "cairoint.h"
 
 
 /*
@@ -333,7 +337,7 @@ _directfb_acquire_surface (cairo_directfb_surface_t *surface,
     cairo_format_t            cairo_format;
     cairo_format = surface->format;    
         
-    if (surface->format == (cairo_format_t) -1) {
+    if (surface->format == -1) {
         if( intrest_rec ) {
             source_rect.x = intrest_rec->x;
             source_rect.y = intrest_rec->y;
@@ -1511,17 +1515,6 @@ _cairo_directfb_surface_show_glyphs ( void                 *abstract_dst,
 #endif /* DFB_SHOW_GLYPHS */
 
 
-static cairo_bool_t
-_cairo_directfb_surface_is_similar (void *surface_a,
-	                           void *surface_b,
-				   cairo_content_t content)
-{
-    cairo_directfb_surface_t *a = (cairo_directfb_surface_t *) surface_a;
-    cairo_directfb_surface_t *b = (cairo_directfb_surface_t *) surface_b;
-
-    return a->dfb == b->dfb;
-}
-
 static cairo_surface_backend_t cairo_directfb_surface_backend = {
          CAIRO_SURFACE_TYPE_DIRECTFB, /*type*/
         _cairo_directfb_surface_create_similar,/*create_similar*/
@@ -1571,9 +1564,7 @@ static cairo_surface_backend_t cairo_directfb_surface_backend = {
 #else
         NULL, /* show_glyphs */
 #endif
-        NULL, /* snapshot */
-	_cairo_directfb_surface_is_similar,
-	NULL /* reset */
+        NULL /* snapshot */
 };
 
 

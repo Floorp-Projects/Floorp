@@ -21,7 +21,7 @@
  * Author:  Keith Packard, SuSE, Inc.
  */
 
-#include "pixmanint.h"
+#include "icint.h"
 
 #ifdef ICINT_NEED_IC_ONES
 /* Fall back on HACKMEM 169.  */

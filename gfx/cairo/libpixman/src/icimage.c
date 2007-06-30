@@ -21,8 +21,6 @@
  * Author:  Keith Packard, SuSE, Inc.
  */
 
-#include "pixmanint.h"
-
 #include "pixman-xserver-compat.h"
 
 pixman_image_t *
@@ -189,8 +187,6 @@ _pixman_create_source_image (void)
     pixman_image_t *image;
 
     image = (pixman_image_t *) malloc (sizeof (pixman_image_t));
-    if (image == NULL)
-	return NULL;
     image->pDrawable   = NULL;
     image->pixels      = NULL;
     image->format_code = PICT_a8r8g8b8;
@@ -307,8 +303,8 @@ pixman_image_init (pixman_image_t *image)
      * In the server this was 0 because the composite clip list
      * can be referenced from a window (and often is)
      */
-    image->hasCompositeClip = 0;
-    image->hasSourceClip = 0;
+    image->freeCompClip = 0;
+    image->freeSourceClip = 0;
     image->clientClipType = CT_NONE;
     image->componentAlpha = 0;
     image->compositeClipSource = 0;
@@ -319,6 +315,7 @@ pixman_image_init (pixman_image_t *image)
 
     image->clipOrigin.x = 0;
     image->clipOrigin.y = 0;
+    image->clientClip = NULL;
 
     image->dither = 0L;
 
@@ -327,16 +324,24 @@ pixman_image_init (pixman_image_t *image)
     image->serialNumber = GC_CHANGE_SERIAL_BIT;
 */
 
-    if (image->pixels) {
-	pixman_region_init_rect (&image->compositeClip,
-				 0, 0, image->pixels->width,
-				 image->pixels->height);
-	image->hasCompositeClip = 1;
+    if (image->pixels)
+    {
+	image->pCompositeClip = pixman_region_create();
+	pixman_region_union_rect (image->pCompositeClip, image->pCompositeClip,
+				  0, 0, image->pixels->width,
+				  image->pixels->height);
+	image->freeCompClip = 1;
 
-	pixman_region_init_rect (&image->sourceClip,
-				 0, 0, image->pixels->width,
-				 image->pixels->height);
-	image->hasSourceClip = 1;
+	image->pSourceClip = pixman_region_create ();
+	pixman_region_union_rect (image->pSourceClip, image->pSourceClip,
+				  0, 0, image->pixels->width,
+				  image->pixels->height);
+	image->freeSourceClip = 1;
+    }
+    else
+    {
+	image->pCompositeClip = NULL;
+	image->pSourceClip    = NULL;
     }
 
     image->transform = NULL;
@@ -464,14 +469,14 @@ pixman_image_destroy (pixman_image_t *image)
 {
     pixman_image_destroyClip (image);
 
-    if (image->hasCompositeClip) {
-	pixman_region_fini (&image->compositeClip);
-	image->hasCompositeClip = 0;
+    if (image->freeCompClip) {
+	pixman_region_destroy (image->pCompositeClip);
+	image->pCompositeClip = NULL;
     }
 
-    if (image->hasSourceClip) {
-	pixman_region_fini (&image->sourceClip);
-	image->hasSourceClip = 0;
+    if (image->freeSourceClip) {
+	pixman_region_destroy (image->pSourceClip);
+	image->pSourceClip = NULL;
     }
 
     if (image->owns_pixels) {
@@ -495,9 +500,17 @@ pixman_image_destroy (pixman_image_t *image)
 void
 pixman_image_destroyClip (pixman_image_t *image)
 {
-    if (CT_NONE != image->clientClipType)
-	pixman_region_fini (&image->clientClip);
-
+    switch (image->clientClipType) {
+    case CT_NONE:
+	return;
+    case CT_PIXMAP:
+	pixman_image_destroy (image->clientClip);
+	break;
+    default:
+	pixman_region_destroy (image->clientClip);
+	break;
+    }
+    image->clientClip = NULL;
     image->clientClipType = CT_NONE;
 }
 
@@ -506,14 +519,9 @@ pixman_image_set_clip_region (pixman_image_t	*image,
 			      pixman_region16_t	*region)
 {
     pixman_image_destroyClip (image);
-
     if (region) {
-        pixman_region_init (&image->clientClip);
-	if (pixman_region_copy (&image->clientClip, region) !=
-		PIXMAN_REGION_STATUS_SUCCESS) {
-	    pixman_region_fini (&image->clientClip);
-	    return 1;
-	}
+	image->clientClip = pixman_region_create ();
+	pixman_region_copy (image->clientClip, region);
 	image->clientClipType = CT_REGION;
     }
 
@@ -521,28 +529,20 @@ pixman_image_set_clip_region (pixman_image_t	*image,
     if (image->pSourcePict)
 	return 0;
 
-    if (image->hasCompositeClip)
-        pixman_region_fini (&image->compositeClip);
-
-    pixman_region_init_rect (&image->compositeClip, 0, 0,
-                             image->pixels->width,
-                             image->pixels->height);
-
-    image->hasCompositeClip = 1;
-
+    if (image->freeCompClip)
+	pixman_region_destroy (image->pCompositeClip);
+    image->pCompositeClip = pixman_region_create();
+    pixman_region_union_rect (image->pCompositeClip, image->pCompositeClip,
+			      0, 0, image->pixels->width, image->pixels->height);
+    image->freeCompClip = 1;
     if (region) {
-	pixman_region_translate (&image->compositeClip,
+	pixman_region_translate (image->pCompositeClip,
 				 - image->clipOrigin.x,
 				 - image->clipOrigin.y);
-	if (pixman_region_intersect (&image->compositeClip,
-				 &image->compositeClip,
-				 region) != PIXMAN_REGION_STATUS_SUCCESS) {
-	    pixman_image_destroyClip (image);
-	    pixman_region_fini (&image->compositeClip);
-	    image->hasCompositeClip = 0;
-	    return 1;
-	}
-	pixman_region_translate (&image->compositeClip,
+	pixman_region_intersect (image->pCompositeClip,
+				 image->pCompositeClip,
+				 region);
+	pixman_region_translate (image->pCompositeClip,
 				 image->clipOrigin.x,
 				 image->clipOrigin.y);
     }
@@ -552,13 +552,12 @@ pixman_image_set_clip_region (pixman_image_t	*image,
 
 #define BOUND(v)	(int16_t) ((v) < MINSHORT ? MINSHORT : (v) > MAXSHORT ? MAXSHORT : (v))
 
-static inline int
+static __inline int
 FbClipImageReg (pixman_region16_t	*region,
 		pixman_region16_t	*clip,
 		int		dx,
 		int		dy)
 {
-    int ret = 1;
     if (pixman_region_num_rects (region) == 1 &&
 	pixman_region_num_rects (clip) == 1)
     {
@@ -582,17 +581,14 @@ FbClipImageReg (pixman_region16_t	*region,
     }
     else
     {
-	pixman_region_status_t status;
-
 	pixman_region_translate (region, dx, dy);
-	status = pixman_region_intersect (region, clip, region);
-	ret = status == PIXMAN_REGION_STATUS_SUCCESS;
+	pixman_region_intersect (region, clip, region);
 	pixman_region_translate (region, -dx, -dy);
     }
-    return ret;
+    return 1;
 }
 
-static inline int
+static __inline int
 FbClipImageSrc (pixman_region16_t	*region,
 		pixman_image_t		*image,
 		int		dx,
@@ -601,42 +597,224 @@ FbClipImageSrc (pixman_region16_t	*region,
     /* XXX what to do with clipping from transformed pictures? */
     if (image->transform)
 	return 1;
-
     /* XXX davidr hates this, wants to never use source-based clipping */
-    if (image->repeat != PIXMAN_REPEAT_NONE || image->pSourcePict) {
-	int ret = 1;
+    if (image->repeat != PIXMAN_REPEAT_NONE || image->pSourcePict)
+    {
 	/* XXX no source clipping */
 	if (image->compositeClipSource &&
-	    image->clientClipType != CT_NONE) {
-	    pixman_region_status_t status;
-
+	    image->clientClipType != CT_NONE)
+	{
 	    pixman_region_translate (region,
 			   dx - image->clipOrigin.x,
 			   dy - image->clipOrigin.y);
-	    status = pixman_region_intersect (region,
-		                              &image->clientClip,
-					      region);
-	    ret = status == PIXMAN_REGION_STATUS_SUCCESS;
+	    pixman_region_intersect (region, image->clientClip, region);
 	    pixman_region_translate (region,
 			   - (dx - image->clipOrigin.x),
 			   - (dy - image->clipOrigin.y));
 	}
-
-	return ret;
-    } else {
-	pixman_region16_t *clip;
-
-	if (image->compositeClipSource) {
-	    clip = (image->hasCompositeClip ? &image->compositeClip : NULL);
-	} else {
-	    clip = (image->hasSourceClip ? &image->sourceClip : NULL);
-        }
-
-	return FbClipImageReg (region, clip, dx, dy);
+	return 1;
     }
+    else
+    {
+	pixman_region16_t   *clip;
 
+	if (image->compositeClipSource)
+	    clip = image->pCompositeClip;
+	else
+	    clip = image->pSourceClip;
+	return FbClipImageReg (region,
+			       clip,
+			       dx,
+			       dy);
+    }
     return 1;
 }
+
+/* XXX: Need to decide what to do with this
+#define NEXT_VAL(_type) (vlist ? (_type) *vlist++ : (_type) ulist++->val)
+
+#define NEXT_PTR(_type) ((_type) ulist++->ptr)
+
+int
+pixman_image_change (pixman_image_t		*image,
+	       Mask		vmask,
+	       unsigned int	*vlist,
+	       DevUnion		*ulist,
+	       int		*error_value)
+{
+    BITS32		index2;
+    int			error = 0;
+    BITS32		maskQ;
+
+    maskQ = vmask;
+    while (vmask && !error)
+    {
+	index2 = (BITS32) lowbit (vmask);
+	vmask &= ~index2;
+	image->stateChanges |= index2;
+	switch (index2)
+	{
+	case CPRepeat:
+	    {
+		unsigned int	newr;
+		newr = NEXT_VAL(unsigned int);
+		if (newr <= xTrue)
+		    image->repeat = newr;
+		else
+		{
+		    *error_value = newr;
+		    error = BadValue;
+		}
+	    }
+	    break;
+	case CPAlphaMap:
+	    {
+		pixman_image_t *iAlpha;
+
+		iAlpha = NEXT_PTR(pixman_image_t *);
+		if (iAlpha)
+		    iAlpha->refcnt++;
+		if (image->alphaMap)
+		    pixman_image_destroy ((void *) image->alphaMap);
+		image->alphaMap = iAlpha;
+	    }
+	    break;
+	case CPAlphaXOrigin:
+	    image->alphaOrigin.x = NEXT_VAL(int16_t);
+	    break;
+	case CPAlphaYOrigin:
+	    image->alphaOrigin.y = NEXT_VAL(int16_t);
+	    break;
+	case CPClipXOrigin:
+	    image->clipOrigin.x = NEXT_VAL(int16_t);
+	    break;
+	case CPClipYOrigin:
+	    image->clipOrigin.y = NEXT_VAL(int16_t);
+	    break;
+	case CPClipMask:
+	    {
+		pixman_image_t	    *mask;
+		int	    clipType;
+
+		mask = NEXT_PTR(pixman_image_t *);
+		if (mask) {
+		    clipType = CT_PIXMAP;
+		    mask->refcnt++;
+		} else {
+		    clipType = CT_NONE;
+		}
+		error = pixman_image_change_clip (image, clipType,
+					   (void *)mask, 0);
+		break;
+	    }
+	case CPGraphicsExposure:
+	    {
+		unsigned int	newe;
+		newe = NEXT_VAL(unsigned int);
+		if (newe <= xTrue)
+		    image->graphicsExposures = newe;
+		else
+		{
+		    *error_value = newe;
+		    error = BadValue;
+		}
+	    }
+	    break;
+	case CPSubwindowMode:
+	    {
+		unsigned int	news;
+		news = NEXT_VAL(unsigned int);
+		if (news == ClipByChildren || news == IncludeInferiors)
+		    image->subWindowMode = news;
+		else
+		{
+		    *error_value = news;
+		    error = BadValue;
+		}
+	    }
+	    break;
+	case CPPolyEdge:
+	    {
+		unsigned int	newe;
+		newe = NEXT_VAL(unsigned int);
+		if (newe == PolyEdgeSharp || newe == PolyEdgeSmooth)
+		    image->polyEdge = newe;
+		else
+		{
+		    *error_value = newe;
+		    error = BadValue;
+		}
+	    }
+	    break;
+	case CPPolyMode:
+	    {
+		unsigned int	newm;
+		newm = NEXT_VAL(unsigned int);
+		if (newm == PolyModePrecise || newm == PolyModeImprecise)
+		    image->polyMode = newm;
+		else
+		{
+		    *error_value = newm;
+		    error = BadValue;
+		}
+	    }
+	    break;
+	case CPDither:
+	    image->dither = NEXT_VAL(unsigned long);
+	    break;
+	case CPComponentAlpha:
+	    {
+		unsigned int	newca;
+
+		newca = NEXT_VAL (unsigned int);
+		if (newca <= xTrue)
+		    image->componentAlpha = newca;
+		else
+		{
+		    *error_value = newca;
+		    error = BadValue;
+		}
+	    }
+	    break;
+	default:
+	    *error_value = maskQ;
+	    error = BadValue;
+	    break;
+	}
+    }
+    return error;
+}
+*/
+
+/* XXX: Do we need this?
+int
+SetPictureClipRects (PicturePtr	pPicture,
+		     int	xOrigin,
+		     int	yOrigin,
+		     int	nRect,
+		     xRectangle	*rects)
+{
+    ScreenPtr		pScreen = pPicture->pDrawable->pScreen;
+    PictureScreenPtr	ps = GetPictureScreen(pScreen);
+    pixman_region16_t		*clientClip;
+    int			result;
+
+    clientClip = RECTS_TO_REGION(pScreen,
+				 nRect, rects, CT_UNSORTED);
+    if (!clientClip)
+	return 1;
+    result =(*ps->ChangePictureClip) (pPicture, CT_REGION,
+				      (void *) clientClip, 0);
+    if (result == 0)
+    {
+	pPicture->clipOrigin.x = xOrigin;
+	pPicture->clipOrigin.y = yOrigin;
+	pPicture->stateChanges |= CPClipXOrigin|CPClipYOrigin|CPClipMask;
+	pPicture->serialNumber |= GC_CHANGE_SERIAL_BIT;
+    }
+    return result;
+}
+*/
 
 int
 FbComputeCompositeRegion (pixman_region16_t	*region,
@@ -666,48 +844,63 @@ FbComputeCompositeRegion (pixman_region16_t	*region,
     y1 = yDst;
     v = yDst + height;
     y2 = BOUND(v);
-
     /* Check for empty operation */
-    if (x1 >= x2 || y1 >= y2) {
+    if (x1 >= x2 ||
+	y1 >= y2)
+    {
 	pixman_region_empty (region);
 	return 1;
     }
-
     /* clip against src */
     if (!FbClipImageSrc (region, iSrc, xDst - xSrc, yDst - ySrc))
+    {
+	pixman_region_destroy (region);
 	return 0;
-
-    if (iSrc->alphaMap &&
-	!FbClipImageSrc (region, iSrc->alphaMap,
-                         xDst - (xSrc + iSrc->alphaOrigin.x),
-                         yDst - (ySrc + iSrc->alphaOrigin.y)))
-        return 0;
-
-    /* clip against mask */
-    if (iMask) {
-	if (!FbClipImageSrc (region, iMask, xDst - xMask, yDst - yMask))
-	    return 0;
-
-	if (iMask->alphaMap &&
-	    !FbClipImageSrc (region, iMask->alphaMap,
-                             xDst - (xMask + iMask->alphaOrigin.x),
-                             yDst - (yMask + iMask->alphaOrigin.y)))
-            return 0;
     }
-
-    if (!FbClipImageReg (region,
-                         iDst->hasCompositeClip ?
-                         &iDst->compositeClip : NULL,
-                         0, 0))
+    if (iSrc->alphaMap)
+    {
+	if (!FbClipImageSrc (region, iSrc->alphaMap,
+			     xDst - (xSrc + iSrc->alphaOrigin.x),
+			     yDst - (ySrc + iSrc->alphaOrigin.y)))
+	{
+	    pixman_region_destroy (region);
+	    return 0;
+	}
+    }
+    /* clip against mask */
+    if (iMask)
+    {
+	if (!FbClipImageSrc (region, iMask, xDst - xMask, yDst - yMask))
+	{
+	    pixman_region_destroy (region);
+	    return 0;
+	}
+	if (iMask->alphaMap)
+	{
+	    if (!FbClipImageSrc (region, iMask->alphaMap,
+				 xDst - (xMask + iMask->alphaOrigin.x),
+				 yDst - (yMask + iMask->alphaOrigin.y)))
+	    {
+		pixman_region_destroy (region);
+		return 0;
+	    }
+	}
+    }
+    if (!FbClipImageReg (region, iDst->pCompositeClip, 0, 0))
+    {
+	pixman_region_destroy (region);
 	return 0;
-
-    if (iDst->alphaMap &&
-        !FbClipImageReg (region,
-                         iDst->hasCompositeClip ?
-                         &iDst->alphaMap->compositeClip : NULL,
-                         -iDst->alphaOrigin.x, -iDst->alphaOrigin.y))
-        return 0;
-
+    }
+    if (iDst->alphaMap)
+    {
+	if (!FbClipImageReg (region, iDst->alphaMap->pCompositeClip,
+			     -iDst->alphaOrigin.x,
+			     -iDst->alphaOrigin.y))
+	{
+	    pixman_region_destroy (region);
+	    return 0;
+	}
+    }
     return 1;
 }
 
