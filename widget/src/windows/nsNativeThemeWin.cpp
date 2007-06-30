@@ -228,6 +228,8 @@ nsNativeThemeWin::nsNativeThemeWin() {
     getThemeSysFont = (GetThemeSysFontPtr)GetProcAddress(mThemeDLL, "GetThemeSysFont");
     getThemeColor = (GetThemeColorPtr)GetProcAddress(mThemeDLL, "GetThemeColor");
   }
+  mOsVersion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+  GetVersionEx(&mOsVersion);
 
   UpdateConfig();
 
@@ -823,6 +825,14 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   HANDLE theme = GetTheme(aWidgetType);
   if (!theme)
     return ClassicDrawWidgetBackground(aContext, aFrame, aWidgetType, aRect, aClipRect); 
+
+#ifndef WINCE
+  if (aWidgetType == NS_THEME_TOOLTIP && mOsVersion.dwMajorVersion < 6) {
+    // BUG #161600: When rendering a non-classic tooltip, check
+    // for Windows prior to Vista, and if so, force a classic rendering
+    return ClassicDrawWidgetBackground(aContext, aFrame, aWidgetType, aRect, aClipRect);
+  }
+#endif
 
   if (!drawThemeBG)
     return NS_ERROR_FAILURE;    
@@ -2069,12 +2079,9 @@ RENDER_AGAIN:
     }
     // Draw ToolTip background
     case NS_THEME_TOOLTIP:
-      HBRUSH brush;
-      brush = ::GetSysColorBrush(COLOR_3DDKSHADOW);
-      if (brush)
-        ::FrameRect(hdc, &widgetRect, brush);
+      ::FrameRect(hdc, &widgetRect, ::GetSysColorBrush(COLOR_WINDOWFRAME));
       InflateRect(&widgetRect, -1, -1);
-      ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_INFOBK+1));
+      ::FillRect(hdc, &widgetRect, ::GetSysColorBrush(COLOR_INFOBK));
 
       break;
     // Draw 3D face background controls
