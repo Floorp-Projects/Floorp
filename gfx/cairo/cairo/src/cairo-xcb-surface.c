@@ -1577,6 +1577,39 @@ _cairo_xcb_surface_show_glyphs (void                *abstract_dst,
 				 int		      num_glyphs,
 				 cairo_scaled_font_t *scaled_font);
 
+static cairo_bool_t
+_cairo_xcb_surface_is_similar (void *surface_a,
+	                       void *surface_b,
+			       cairo_content_t content)
+{
+    cairo_xcb_surface_t *a = surface_a;
+    cairo_xcb_surface_t *b = surface_b;
+    xcb_render_pictforminfo_t *xrender_format;
+
+    if (! _cairo_xcb_surface_same_screen (a, b))
+	return FALSE;
+
+    /* now check that the target is a similar format */
+    xrender_format = _CAIRO_FORMAT_TO_XRENDER_FORMAT (b->dpy,
+	    _cairo_format_from_content (content));
+
+    return a->xrender_format.id == xrender_format->id;
+}
+
+static cairo_status_t
+_cairo_xcb_surface_reset (void *abstract_surface)
+{
+    cairo_xcb_surface_t *surface = abstract_surface;
+    cairo_status_t status;
+
+    status = _cairo_xcb_surface_set_clip_region (surface, NULL);
+    if (status)
+	return status;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+
 /* XXX: move this to the bottom of the file, XCB and Xlib */
 
 static const cairo_surface_backend_t cairo_xcb_surface_backend = {
@@ -1608,7 +1641,11 @@ static const cairo_surface_backend_t cairo_xcb_surface_backend = {
     NULL, /* stroke */
     NULL, /* fill */
     _cairo_xcb_surface_show_glyphs,
-    NULL  /* snapshot */
+    NULL,  /* snapshot */
+
+    _cairo_xcb_surface_is_similar,
+
+    _cairo_xcb_surface_reset
 };
 
 /**
@@ -2344,7 +2381,8 @@ _cairo_xcb_surface_show_glyphs (void                *abstract_dst,
      * so PictOpClear was never used with CompositeText before.
      */
     if (op == CAIRO_OPERATOR_CLEAR) {
-	_cairo_pattern_init_solid (&solid_pattern.solid, CAIRO_COLOR_WHITE);
+	_cairo_pattern_init_solid (&solid_pattern.solid, CAIRO_COLOR_WHITE,
+				   CAIRO_CONTENT_COLOR);
 	src_pattern = &solid_pattern.base;
 	op = CAIRO_OPERATOR_DEST_OUT;
     }

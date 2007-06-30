@@ -1,6 +1,4 @@
 /*
- * $Id: fbtrap.c,v 1.17 2007/06/11 04:39:03 gavin%gavinsharp.com Exp $
- *
  * Copyright © 2004 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -21,6 +19,8 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
+
+#include "pixmanint.h"
 
 #include "pixman-xserver-compat.h"
 

@@ -1,5 +1,4 @@
-/* $Id: cairo-analysis-surface-private.h,v 1.6 2007/06/11 00:01:29 vladimir%pobox.com Exp $
- *
+/*
  * Copyright © 2005 Keith Packard
  *
  * This library is free software; you can redistribute it and/or
