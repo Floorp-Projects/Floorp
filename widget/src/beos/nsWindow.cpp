@@ -2799,7 +2799,6 @@ bool nsWindowBeOS::QuitRequested( void )
 			MethodInfo *info = nsnull;
 			if (nsnull != (info = new MethodInfo(w, w, nsSwitchToUIThread::CLOSEWINDOW)))
 				t->CallMethodAsync(info);
-			NS_RELEASE(t);
 		}
 	}
 	return true;
@@ -2844,7 +2843,6 @@ void nsWindowBeOS::DispatchMessage(BMessage *msg, BHandler *handler)
 			MethodInfo *info = nsnull;
 			if (nsnull != (info = new MethodInfo(w, w, nsSwitchToUIThread::CLOSEWINDOW)))
 				t->CallMethodAsync(info);
-			NS_RELEASE(t);
 		}		
 	}
 	else
@@ -2870,7 +2868,6 @@ void nsWindowBeOS::FrameMoved(BPoint origin)
 		MethodInfo *info = nsnull;
 		if (nsnull != (info = new MethodInfo(w, w, nsSwitchToUIThread::ONMOVE)))
 			t->CallMethodAsync(info);
-		NS_RELEASE(t);
 	}
 }
 
@@ -2887,7 +2884,6 @@ void nsWindowBeOS::WindowActivated(bool active)
 		MethodInfo *info = nsnull;
 		if (nsnull != (info = new MethodInfo(w, w, nsSwitchToUIThread::ONACTIVATE, 2, args)))
 			t->CallMethodAsync(info);
-		NS_RELEASE(t);
 	}
 }
 
@@ -2905,7 +2901,6 @@ void  nsWindowBeOS::WorkspacesChanged(uint32 oldworkspace, uint32 newworkspace)
 		MethodInfo *info = nsnull;
 		if (nsnull != (info = new MethodInfo(w, w, nsSwitchToUIThread::ONWORKSPACE, 2, args)))
 			t->CallMethodAsync(info);
-		NS_RELEASE(t);
 	}	
 }
 
@@ -2926,7 +2921,6 @@ void  nsWindowBeOS::FrameResized(float width, float height)
 			if (t->CallMethodAsync(info))
 				fJustGotBounds = false;
 		}
-		NS_RELEASE(t);
 	}	
 }
 
@@ -2987,7 +2981,6 @@ void nsViewBeOS::Draw(BRect updateRect)
 			if (t->CallMethodAsync(info))
 				fJustValidated = false;
 		}
-		NS_RELEASE(t);
 	}
 }
 
@@ -3059,7 +3052,6 @@ void nsViewBeOS::MouseDown(BPoint point)
 	MethodInfo *info = nsnull;
 	if (nsnull != (info = new MethodInfo(w, w, nsSwitchToUIThread::BTNCLICK, 6, args)))
 		t->CallMethodAsync(info);
-	NS_RELEASE(t);
 }
 
 void nsViewBeOS::MouseMoved(BPoint point, uint32 transit, const BMessage *msg)
@@ -3078,7 +3070,7 @@ void nsViewBeOS::MouseMoved(BPoint point, uint32 transit, const BMessage *msg)
 	nsWindow	*w = (nsWindow *)GetMozillaWidget();
 	if (w == NULL)
 		return;
-	nsToolkit	*t = t = w->GetToolkit();
+	nsToolkit	*t = w->GetToolkit();
 	if (t == NULL)
 		return;
 	uint32	args[4];
@@ -3121,7 +3113,6 @@ void nsViewBeOS::MouseMoved(BPoint point, uint32 transit, const BMessage *msg)
 	MethodInfo *moveInfo = nsnull;
 	if (nsnull != (moveInfo = new MethodInfo(w, w, nsSwitchToUIThread::ONMOUSE, 4, args)))
 		t->CallMethodAsync(moveInfo);
-	NS_RELEASE(t);
 }
 
 void nsViewBeOS::MouseUp(BPoint point)
@@ -3143,7 +3134,7 @@ void nsViewBeOS::MouseUp(BPoint point)
 	nsWindow	*w = (nsWindow *)GetMozillaWidget();
 	if (w == NULL)
 		return;
-	nsToolkit	*t = t = w->GetToolkit();
+	nsToolkit	*t = w->GetToolkit();
 	if (t == NULL)
 		return;
 
@@ -3158,7 +3149,6 @@ void nsViewBeOS::MouseUp(BPoint point)
 	MethodInfo *info = nsnull;
 	if (nsnull != (info = new MethodInfo(w, w, nsSwitchToUIThread::BTNCLICK, 6, args)))
 		t->CallMethodAsync(info);
-	NS_RELEASE(t);
 }
 
 void nsViewBeOS::MessageReceived(BMessage *msg)
@@ -3168,7 +3158,7 @@ void nsViewBeOS::MessageReceived(BMessage *msg)
 		nsWindow	*w = (nsWindow *)GetMozillaWidget();
 		if (w == NULL)
 			return;
-		nsToolkit	*t = t = w->GetToolkit();
+		nsToolkit	*t = w->GetToolkit();
 		if (t == NULL)
 			return;
 
@@ -3238,7 +3228,6 @@ void nsViewBeOS::MessageReceived(BMessage *msg)
 						fWheelDispatched = false;
 					
 				}
-				NS_RELEASE(t);
 			}
 		}
 		break;
@@ -3285,7 +3274,6 @@ void nsViewBeOS::KeyDown(const char *bytes, int32 numBytes)
 		MethodInfo *info = nsnull;
 		if (nsnull != (info = new MethodInfo(w, w, nsSwitchToUIThread::ONKEY, 6, args)))
 			t->CallMethodAsync(info);
-		NS_RELEASE(t);
 	}
 }
 
@@ -3319,7 +3307,6 @@ void nsViewBeOS::KeyUp(const char *bytes, int32 numBytes)
 		MethodInfo *info = nsnull;
 		if (nsnull != (info = new MethodInfo(w, w, nsSwitchToUIThread::ONKEY, 6, args)))
 			t->CallMethodAsync(info);
-		NS_RELEASE(t);
 	}
 }
 
@@ -3346,7 +3333,6 @@ void nsViewBeOS::MakeFocus(bool focused)
 				t->CallMethodAsync(info);
 		}
 #endif		
-		NS_RELEASE(t);
 	}
 }
 
