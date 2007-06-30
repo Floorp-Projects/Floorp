@@ -367,7 +367,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
         // when we show it.
         mOffsetParent = aParent;
         if( aParent )
-          theToolkit = getter_AddRefs(aParent->GetToolkit());
+          theToolkit = aParent->GetToolkit();
 
         mAcceptsActivation = PR_FALSE;
 

@@ -868,7 +868,10 @@ void nsWindow::DoCreate( HWND hwndP, nsWindow *aParent,
          NS_ADDREF(mToolkit);
       }
       else if( aParent)
+      {
          mToolkit = aParent->GetToolkit();
+         NS_IF_ADDREF(mToolkit);
+      }
       else
       {
          // it's some top level window with no toolkit passed in.
