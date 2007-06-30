@@ -20,8 +20,6 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "pixmanint.h"
-
 #include <string.h>
 #include "pixman-xserver-compat.h"
 
@@ -79,14 +77,14 @@
  * 8 bit alpha
  */
 
-static inline CARD8
+static INLINE CARD8
 clip255 (int x)
 {
     if (x > 255) return 255;
     return x;
 }
 
-static inline void
+static INLINE void
 add_saturate_8 (CARD8 *buf, int value, int length)
 {
     while (length--)

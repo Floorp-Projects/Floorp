@@ -160,13 +160,3 @@ _cairo_color_get_rgba_premultiplied (cairo_color_t *color,
     *blue  = color->blue  * color->alpha;
     *alpha = color->alpha;
 }
-
-cairo_bool_t
-_cairo_color_equal (const cairo_color_t *color_a,
-	            const cairo_color_t *color_b)
-{
-    return color_a->red_short   == color_b->red_short   &&
-           color_a->green_short == color_b->green_short &&
-           color_a->blue_short  == color_b->blue_short  &&
-           color_a->alpha_short == color_b->alpha_short;
-}

@@ -74,6 +74,10 @@ SOFTWARE.
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #if   HAVE_STDINT_H
 # include <stdint.h>
 #elif HAVE_INTTYPES_H
@@ -96,19 +100,12 @@ SOFTWARE.
 #include "pixman-remap.h"
 
 #if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__) && !defined(__sun__)
-#define pixman_private_no_warn	__attribute__((__visibility__("hidden")))
+#define pixman_private		__attribute__((__visibility__("hidden")))
 #elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
-#define pixman_private_no_warn	__hidden
+#define pixman_private		__hidden
 #else /* not gcc >= 3.3 and not Sun Studio >= 8 */
-#define pixman_private_no_warn
+#define pixman_private
 #endif
-
-#ifndef WARN_UNUSED_RESULT
-#define WARN_UNUSED_RESULT
-#endif
-/* Add attribute(warn_unused_result) if supported */
-#define pixman_warn WARN_UNUSED_RESULT
-#define pixman_private pixman_private_no_warn pixman_warn
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -116,16 +113,11 @@ extern "C" {
 
 /* pixregion.h */
 
-typedef struct pixman_region16_data pixman_region16_data_t;
+typedef struct pixman_region16 pixman_region16_t;
 
 typedef struct pixman_box16 {
     short x1, y1, x2, y2;
 } pixman_box16_t;
-
-typedef struct pixman_region16 {
-    pixman_box16_t          extents;
-    pixman_region16_data_t  *data;
-} pixman_region16_t;
 
 typedef enum {
     PIXMAN_REGION_STATUS_FAILURE,
@@ -134,17 +126,14 @@ typedef enum {
 
 /* creation/destruction */
 
+pixman_private pixman_region16_t *
+pixman_region_create (void);
+
+pixman_private pixman_region16_t *
+pixman_region_create_simple (pixman_box16_t *extents);
+
 pixman_private void
-pixman_region_init(pixman_region16_t *region);
-pixman_private void
-pixman_region_init_rect(pixman_region16_t *region,
-                        int x, int y, unsigned int width, unsigned int height);
-pixman_private void
-pixman_region_init_with_extents(pixman_region16_t *region, pixman_box16_t *extents);
-pixman_private pixman_region_status_t
-pixman_region_init_rects(pixman_region16_t *region, pixman_box16_t *boxes, int count);
-pixman_private void
-pixman_region_fini (pixman_region16_t *region);
+pixman_region_destroy (pixman_region16_t *region);
 
 /* manipulation */
 
@@ -251,27 +240,20 @@ typedef enum pixman_format_name {
     PIXMAN_FORMAT_NAME_BGR24
 } pixman_format_name_t;
 
-/* XXX: Is depth redundant here? */
-typedef struct pixman_format {
-    int		format_code;
-    int		depth;
-    int		red, redMask;
-    int		green, greenMask;
-    int		blue, blueMask;
-    int		alpha, alphaMask;
-} pixman_format_t;
+typedef struct pixman_format pixman_format_t;
 
+pixman_private pixman_format_t *
+pixman_format_create (pixman_format_name_t name);
 
-pixman_private int
-pixman_format_init (pixman_format_t *format, pixman_format_name_t name);
+pixman_private pixman_format_t *
+pixman_format_create_masks (int bpp,
+			    int alpha_mask,
+			    int red_mask,
+			    int green_mask,
+			    int blue_mask);
 
 pixman_private void
-pixman_format_init_masks (pixman_format_t *format,
-	                  int bpp,
-			  int alpha_mask,
-			  int red_mask,
-			  int green_mask,
-			  int blue_mask);
+pixman_format_destroy (pixman_format_t *format);
 
 pixman_private void
 pixman_format_get_masks (pixman_format_t *format,
@@ -460,7 +442,7 @@ pixman_pixel_to_color (const pixman_format_t	*format,
 
 /* icrect.c */
 
-pixman_private int
+pixman_private void
 pixman_fill_rectangle (pixman_operator_t	op,
 		       pixman_image_t		*dst,
 		       const pixman_color_t	*color,
@@ -469,7 +451,7 @@ pixman_fill_rectangle (pixman_operator_t	op,
 		       unsigned int		width,
 		       unsigned int		height);
 
-pixman_private int
+pixman_private void
 pixman_fill_rectangles (pixman_operator_t		op,
 			pixman_image_t			*dst,
 			const pixman_color_t		*color,
@@ -478,7 +460,7 @@ pixman_fill_rectangles (pixman_operator_t		op,
 
 /* ictrap.c */
 
-pixman_private int
+pixman_private void
 pixman_composite_trapezoids (pixman_operator_t		op,
 			     pixman_image_t		*src,
 			     pixman_image_t		*dst,
