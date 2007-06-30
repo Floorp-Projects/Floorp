@@ -26,8 +26,6 @@
 #include <stddef.h>
 
 /* Opaque implementation types. */
-struct _cairo_freelist;
-struct _cairo_freelist_node;
 typedef struct _cairo_freelist cairo_freelist_t;
 typedef struct _cairo_freelist_node cairo_freelist_node_t;
 

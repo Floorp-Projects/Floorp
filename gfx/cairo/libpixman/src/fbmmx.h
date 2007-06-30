@@ -283,16 +283,6 @@ void fbCompositeSrc_8888x8888mmx (pixman_operator_t      op,
 				  CARD16     width,
 				  CARD16     height);
 pixman_private
-Bool fbCopyAreammx (FbPixels	*pSrc,
-		    FbPixels	*pDst,
-		    int		src_x,
-		    int		src_y,
-		    int		dst_x,
-		    int		dst_y,
-		    int		width,
-		    int		height);
-
-pixman_private
 void fbCompositeCopyAreammx (pixman_operator_t	op,
 			     PicturePtr	pSrc,
 			     PicturePtr	pMask,
@@ -305,13 +295,4 @@ void fbCompositeCopyAreammx (pixman_operator_t	op,
 			     INT16      yDst,
 			     CARD16     width,
 			     CARD16     height);
-
-pixman_private
-Bool fbSolidFillmmx (FbPixels	*pDraw,
-		     int		x,
-		     int		y,
-		     int		width,
-		     int		height,
-		     FbBits		xor);
-
 #endif /* USE_MMX */

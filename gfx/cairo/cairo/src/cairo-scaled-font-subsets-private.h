@@ -39,19 +39,17 @@
 
 #include "cairoint.h"
 
-typedef struct _cairo_scaled_font_subsets cairo_scaled_font_subsets_t;
+typedef struct _cairo_scaled_font_subsets_glyph {
+    unsigned int font_id;
+    unsigned int subset_id;
+    unsigned int subset_glyph_index;
+    cairo_bool_t is_scaled;
+    cairo_bool_t is_composite;
+    double       x_advance;
+} cairo_scaled_font_subsets_glyph_t;
 
 /**
- * _cairo_scaled_font_subsets_create:
- *
- * @max_glyphs_per_unscaled_subset: the maximum number of glyphs that
- * should appear in any unscaled subset. A value of 0 indicates that
- * no unscaled subset will be created. All glyphs will mapped to
- * scaled subsets.
- *
- * @max_glyphs_per_scaled_subset: the maximum number of glyphs that
- * should appear in any scaled subset. A value of 0 indicates that
- * no scaled subset will be created.
+ * _cairo_scaled_font_subsets_create_scaled:
  *
  * Create a new #cairo_scaled_font_subsets_t object which can be used
  * to create subsets of any number of cairo_scaled_font_t
@@ -60,16 +58,57 @@ typedef struct _cairo_scaled_font_subsets cairo_scaled_font_subsets_t;
  * subsets with glyph indices packed into the range
  * [0 .. max_glyphs_per_subset).
  *
- * @max_glyphs_per_unscaled_subset and @max_glyphs_per_scaled_subset
- * cannot both be 0.
+ * Return value: a pointer to the newly creates font subsets. The
+ * caller owns this object and should call
+ * _cairo_scaled_font_subsets_destroy() when done with it.
+ **/
+cairo_private cairo_scaled_font_subsets_t *
+_cairo_scaled_font_subsets_create_scaled (void);
+
+/**
+ * _cairo_scaled_font_subsets_create_simple:
+ *
+ * Create a new #cairo_scaled_font_subsets_t object which can be used
+ * to create font subsets suitable for embedding as Postscript or PDF
+ * simple fonts.
+ *
+ * Glyphs with an outline path available will be mapped to one font
+ * subset for each font face. Glyphs from bitmap fonts will mapped to
+ * separate font subsets for each cairo_scaled_font_t object.
+ *
+ * The maximum number of glyphs per subset is 256. Each subset
+ * reserves the first glyph for the .notdef glyph.
  *
  * Return value: a pointer to the newly creates font subsets. The
  * caller owns this object and should call
  * _cairo_scaled_font_subsets_destroy() when done with it.
  **/
 cairo_private cairo_scaled_font_subsets_t *
-_cairo_scaled_font_subsets_create (int max_glyphs_unscaled_per_subset,
-                                   int max_glyphs_scaled_per_subset);
+_cairo_scaled_font_subsets_create_simple (void);
+
+/**
+ * _cairo_scaled_font_subsets_create_composite:
+ *
+ * Create a new #cairo_scaled_font_subsets_t object which can be used
+ * to create font subsets suitable for embedding as Postscript or PDF
+ * composite fonts.
+ *
+ * Glyphs with an outline path available will be mapped to one font
+ * subset for each font face. Each unscaled subset has a maximum of
+ * 65536 glyphs except for Type1 fonts which have a maximum of 256 glyphs.
+ *
+ * Glyphs from bitmap fonts will mapped to separate font subsets for
+ * each cairo_scaled_font_t object. Each unscaled subset has a maximum
+ * of 256 glyphs.
+ *
+ * Each subset reserves the first glyph for the .notdef glyph.
+ *
+ * Return value: a pointer to the newly creates font subsets. The
+ * caller owns this object and should call
+ * _cairo_scaled_font_subsets_destroy() when done with it.
+ **/
+cairo_private cairo_scaled_font_subsets_t *
+_cairo_scaled_font_subsets_create_composite (void);
 
 /**
  * _cairo_scaled_font_subsets_destroy:
@@ -85,6 +124,8 @@ _cairo_scaled_font_subsets_destroy (cairo_scaled_font_subsets_t *font_subsets);
  * @font_subsets: a #cairo_scaled_font_subsets_t
  * @scaled_font: the font of the glyph to be mapped
  * @scaled_font_glyph_index: the index of the glyph to be mapped
+ * @subset_glyph_ret: return structure containing subset font and glyph id
+ *
  * @font_id_ret: return value giving the font ID of the mapped glyph
  * @subset_id_ret: return value giving the subset ID of the mapped glyph within the @font_id_ret
  * @subset_glyph_index_ret: return value giving the index of the mapped glyph within the @subset_id_ret subset
@@ -126,6 +167,17 @@ _cairo_scaled_font_subsets_destroy (cairo_scaled_font_subsets_t *font_subsets);
  * used by #cairo_scaled_font_subset_t as provided by
  * _cairo_scaled_font_subsets_foreach.
  *
+ * The returned values in the cairo_scaled_font_subsets_glyph_t struct are:
+ *
+ * @font_id: The font ID of the mapped glyph
+ * @subset_id : The subset ID of the mapped glyph within the @font_id
+ * @subset_glyph_index: The index of the mapped glyph within the @subset_id subset
+ * @is_scaled: If true, the mapped glyph is from a bitmap font, and separate font
+ * subset is created for each font scale used. If false, the outline of the mapped glyph
+ * is available. One font subset for each font face is created.
+ * @x_advance: When @is_scaled is true, @x_advance contains the x_advance for the mapped glyph in device space.
+ * When @is_scaled is false, @x_advance contains the x_advance for the the mapped glyph from an unhinted 1 point font.
+ *
  * Return value: CAIRO_STATUS_SUCCESS if successful, or a non-zero
  * value indicating an error. Possible errors include
  * CAIRO_STATUS_NO_MEMORY.
@@ -134,9 +186,7 @@ cairo_private cairo_status_t
 _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*font_subsets,
 				      cairo_scaled_font_t		*scaled_font,
 				      unsigned long			 scaled_font_glyph_index,
-				      unsigned int			*font_id_ret,
-				      unsigned int			*subset_id_ret,
-				      unsigned int			*subset_glyph_index_ret);
+                                      cairo_scaled_font_subsets_glyph_t *subset_glyph_ret);
 
 typedef void
 (*cairo_scaled_font_subset_callback_func_t) (cairo_scaled_font_subset_t	*font_subset,
@@ -253,6 +303,37 @@ _cairo_cff_subset_init (cairo_cff_subset_t          *cff_subset,
 cairo_private void
 _cairo_cff_subset_fini (cairo_cff_subset_t *cff_subset);
 
+/**
+ * _cairo_cff_fallback_init:
+ * @cff_subset: a #cairo_cff_subset_t to initialize
+ * @font_subset: the #cairo_scaled_font_subset_t to initialize from
+ *
+ * If possible (depending on the format of the underlying
+ * cairo_scaled_font_t and the font backend in use) generate a cff
+ * file corresponding to @font_subset and initialize @cff_subset
+ * with information about the subset and the cff data.
+ *
+ * Return value: CAIRO_STATUS_SUCCESS if successful,
+ * CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a
+ * cff file, or an non-zero value indicating an error.  Possible
+ * errors include CAIRO_STATUS_NO_MEMORY.
+ **/
+cairo_private cairo_status_t
+_cairo_cff_fallback_init (cairo_cff_subset_t          *cff_subset,
+                          const char                  *name,
+                          cairo_scaled_font_subset_t  *font_subset);
+
+/**
+ * _cairo_cff_fallback_fini:
+ * @cff_subset: a #cairo_cff_subset_t
+ *
+ * Free all resources associated with @cff_subset.  After this
+ * call, @cff_subset should not be used again without a
+ * subsequent call to _cairo_cff_subset_init() again first.
+ **/
+cairo_private void
+_cairo_cff_fallback_fini (cairo_cff_subset_t *cff_subset);
+
 typedef struct _cairo_truetype_subset {
     char *base_font;
     double *widths;
@@ -342,6 +423,15 @@ cairo_private void
 _cairo_type1_subset_fini (cairo_type1_subset_t *subset);
 
 /**
+ * _cairo_type1_scaled_font_is_type1:
+ * @scaled_font: a #cairo_scaled_font_t
+ *
+ * Return TRUE if @scaled_font is a Type 1 font, otherwise return FALSE.
+ **/
+cairo_private cairo_bool_t
+_cairo_type1_scaled_font_is_type1 (cairo_scaled_font_t	*scaled_font);
+
+/**
  * _cairo_type1_fallback_init_binary:
  * @type1_subset: a #cairo_type1_subset_t to initialize
  * @font_subset: the #cairo_scaled_font_subset_t to initialize from
@@ -393,6 +483,43 @@ _cairo_type1_fallback_init_hex (cairo_type1_subset_t	   *type_subset,
  **/
 cairo_private void
 _cairo_type1_fallback_fini (cairo_type1_subset_t *subset);
+
+typedef struct _cairo_type2_charstrings {
+    int *widths;
+    long x_min, y_min, x_max, y_max;
+    long ascent, descent;
+    cairo_array_t charstrings;
+} cairo_type2_charstrings_t;
+
+/**
+ * _cairo_type2_charstrings_init:
+ * @type2_subset: a #cairo_type2_subset_t to initialize
+ * @font_subset: the #cairo_scaled_font_subset_t to initialize from
+ *
+ * If possible (depending on the format of the underlying
+ * cairo_scaled_font_t and the font backend in use) generate type2
+ * charstrings to @font_subset and initialize @type2_subset
+ * with information about the subset.
+ *
+ * Return value: CAIRO_STATUS_SUCCESS if successful,
+ * CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a type2
+ * charstrings, or an non-zero value indicating an error.  Possible errors
+ * include CAIRO_STATUS_NO_MEMORY.
+ **/
+cairo_private cairo_status_t
+_cairo_type2_charstrings_init (cairo_type2_charstrings_t   *charstrings,
+                               cairo_scaled_font_subset_t  *font_subset);
+
+/**
+ * _cairo_type2_charstrings_fini:
+ * @subset: a #cairo_type2_charstrings_t
+ *
+ * Free all resources associated with @type2_charstring.  After this call,
+ * @type2_charstring should not be used again without a subsequent call to
+ * _cairo_type2_charstring_init() again first.
+ **/
+cairo_private void
+_cairo_type2_charstrings_fini (cairo_type2_charstrings_t *charstrings);
 
 /**
  * _cairo_truetype_create_glyph_to_unicode_map:

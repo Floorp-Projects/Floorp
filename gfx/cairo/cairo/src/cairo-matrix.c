@@ -35,7 +35,6 @@
  */
 
 #define _GNU_SOURCE
-#include <stdlib.h>
 
 #include "cairoint.h"
 
@@ -198,7 +197,7 @@ slim_hidden_def(cairo_matrix_init_scale);
  * @sx: scale factor in the X direction
  * @sy: scale factor in the Y direction
  *
- * Applies scaling by @tx, @ty to the transformation in @matrix. The
+ * Applies scaling by @sx, @sy to the transformation in @matrix. The
  * effect of the new transformation is to first scale the coordinates
  * by @sx and @sy, then apply the original transformation to the coordinates.
  **/
@@ -496,7 +495,7 @@ _cairo_matrix_compute_determinant (const cairo_matrix_t *matrix,
 }
 
 /* Compute the amount that each basis vector is scaled by. */
-cairo_status_t
+void
 _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
 				     double *sx, double *sy, int x_major)
 {
@@ -536,8 +535,6 @@ _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
 	    *sy = major;
 	}
     }
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_bool_t

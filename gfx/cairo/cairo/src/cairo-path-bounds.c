@@ -51,7 +51,7 @@ _cairo_path_bounder_init (cairo_path_bounder_t *bounder);
 static void
 _cairo_path_bounder_fini (cairo_path_bounder_t *bounder);
 
-static cairo_status_t
+static void
 _cairo_path_bounder_add_point (cairo_path_bounder_t *bounder, cairo_point_t *point);
 
 static cairo_status_t
@@ -81,7 +81,7 @@ _cairo_path_bounder_fini (cairo_path_bounder_t *bounder)
     bounder->has_point = 0;
 }
 
-static cairo_status_t
+static void
 _cairo_path_bounder_add_point (cairo_path_bounder_t *bounder, cairo_point_t *point)
 {
     if (bounder->has_point) {
@@ -104,8 +104,6 @@ _cairo_path_bounder_add_point (cairo_path_bounder_t *bounder, cairo_point_t *poi
 
 	bounder->has_point = 1;
     }
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t

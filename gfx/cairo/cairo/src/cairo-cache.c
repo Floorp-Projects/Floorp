@@ -38,17 +38,6 @@
 
 #include "cairoint.h"
 
-struct _cairo_cache {
-    cairo_hash_table_t *hash_table;
-
-    cairo_destroy_func_t entry_destroy;
-
-    unsigned long max_size;
-    unsigned long size;
-
-    int freeze_count;
-};
-
 static void
 _cairo_cache_remove (cairo_cache_t	 *cache,
 		     cairo_cache_entry_t *entry);
