@@ -2722,9 +2722,9 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
   if (relatedNode) {
     nsCOMPtr<nsIAccessibilityService> accService = GetAccService();
     NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
-    return accService->GetAccessibleInWeakShell(relatedNode, mWeakShell, aRelated);
+    accService->GetAccessibleInWeakShell(relatedNode, mWeakShell, aRelated);
   }
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

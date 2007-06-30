@@ -454,7 +454,10 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame *aFrame,
   *aAccessible = nsnull;
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
   nsIAtom *tag = content->Tag();
-  if (tag == nsAccessibilityAtoms::option) {
+  if (tag == nsAccessibilityAtoms::legend) {
+    *aAccessible = new nsHTMLLegendAccessible(aNode, aWeakShell);
+  }
+  else if (tag == nsAccessibilityAtoms::option) {
     *aAccessible = new nsHTMLSelectOptionAccessible(aNode, aWeakShell);
   }
   else if (tag == nsAccessibilityAtoms::optgroup) {
