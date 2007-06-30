@@ -1,4 +1,3 @@
-/* -*- Mode: c; tab-width: 8; c-basic-offset: 4; indent-tabs-mode: t; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2005 Red Hat, Inc
@@ -33,8 +32,9 @@
  * Contributor(s):
  */
 
+#include <string.h>
+#include <stdio.h>
 #include "cairoint.h"
-
 #include "cairo-win32-private.h"
 
 #ifndef SPI_GETFONTSMOOTHINGTYPE
@@ -245,6 +245,8 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
     cairo_matrix_t scale;
     cairo_status_t status;
 
+    _cairo_win32_initialize ();
+
     f = malloc (sizeof(cairo_win32_scaled_font_t));
     if (f == NULL)
 	return NULL;
@@ -283,7 +285,6 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
     f->em_square = 0;
     f->scaled_hfont = NULL;
     f->unscaled_hfont = NULL;
-
     if (f->quality == logfont->lfQuality ||
         (logfont->lfQuality == DEFAULT_QUALITY &&
          options->antialias == CAIRO_ANTIALIAS_DEFAULT)) {
@@ -300,13 +301,11 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
     cairo_matrix_multiply (&scale, font_matrix, ctm);
     _compute_transform (f, &scale);
 
-    status = _cairo_scaled_font_init (&f->base, font_face,
-				      font_matrix, ctm, options,
-				      &cairo_win32_scaled_font_backend);
+    _cairo_scaled_font_init (&f->base, font_face,
+			     font_matrix, ctm, options,
+			     &cairo_win32_scaled_font_backend);
 
-    if (status == CAIRO_STATUS_SUCCESS)
-	status = _cairo_win32_scaled_font_set_metrics (f);
-
+    status = _cairo_win32_scaled_font_set_metrics (f);
     if (status) {
 	cairo_scaled_font_destroy (&f->base);
 	return NULL;
@@ -487,6 +486,8 @@ _cairo_win32_scaled_font_create_toy (cairo_toy_font_face_t *toy_face,
     uint16_t *face_name;
     int face_name_len;
     cairo_status_t status;
+
+    _cairo_win32_initialize ();
 
     status = _cairo_utf8_to_utf16 (toy_face->family, -1,
 				   &face_name, &face_name_len);
@@ -1470,14 +1471,16 @@ _cairo_win32_scaled_font_init_glyph_path (cairo_win32_scaled_font_t *scaled_font
     }
     free(buffer);
 
+CLEANUP_FONT:
+
     _cairo_scaled_glyph_set_path (scaled_glyph,
 				  &scaled_font->base,
 				  path);
 
- CLEANUP_FONT:
     cairo_win32_scaled_font_done_font (&scaled_font->base);
 
  CLEANUP_PATH:
+
     if (status != CAIRO_STATUS_SUCCESS)
 	_cairo_path_fixed_destroy (path);
 
@@ -1537,6 +1540,8 @@ _cairo_win32_font_face_scaled_font_create (void			*abstract_face,
 
     cairo_win32_font_face_t *font_face = abstract_face;
 
+    _cairo_win32_initialize ();
+
     if (font_face->hfont) {
         /* Check whether it's OK to go ahead and use the font-face's HFONT. */
         if (_is_scale (ctm, 1.) &&
@@ -1584,6 +1589,8 @@ cairo_font_face_t *
 cairo_win32_font_face_create_for_logfontw_hfont (LOGFONTW *logfont, HFONT font)
 {
     cairo_win32_font_face_t *font_face;
+
+    _cairo_win32_initialize ();
 
     font_face = malloc (sizeof (cairo_win32_font_face_t));
     if (!font_face) {

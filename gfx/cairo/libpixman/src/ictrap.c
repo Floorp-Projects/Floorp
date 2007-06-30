@@ -20,9 +20,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "pixmanint.h"
-
-#include <assert.h>
+#include "icint.h"
 
 pixman_image_t *
 FbCreateAlphaPicture (pixman_image_t	*dst,
@@ -30,24 +28,30 @@ FbCreateAlphaPicture (pixman_image_t	*dst,
 		      uint16_t	width,
 		      uint16_t	height)
 {
-    pixman_format_t	 local_format;
+    pixman_image_t	*image;
+    int own_format = 0;
 
     if (width > 32767 || height > 32767)
 	return NULL;
 
     if (!format)
     {
-	int ret;
-	format = &local_format;
+	own_format = 1;
 	if (dst->polyEdge == PolyEdgeSharp)
-	     ret = pixman_format_init (format, PIXMAN_FORMAT_NAME_A1);
+	    format = pixman_format_create (PIXMAN_FORMAT_NAME_A1);
 	else
-	     ret = pixman_format_init (format, PIXMAN_FORMAT_NAME_A8);
-	assert (ret);
+	    format = pixman_format_create (PIXMAN_FORMAT_NAME_A8);
+	if (!format)
+	    return NULL;
     }
 
     /* pixman_image_create zeroes out the pixels, so we don't have to */
-    return pixman_image_create (format, width, height);
+    image = pixman_image_create (format, width, height);
+
+    if (own_format)
+	pixman_format_destroy (format);
+
+    return image;
 }
 
 static pixman_fixed16_16_t
@@ -94,7 +98,10 @@ pixman_trapezoid_bounds (int ntrap, const pixman_trapezoid_t *traps, pixman_box1
     }
 }
 
-int
+/* XXX: There are failure cases in this function. Don't we need to
+ * propagate the errors out?
+ */
+void
 pixman_composite_trapezoids (pixman_operator_t	      op,
 			     pixman_image_t	      *src,
 			     pixman_image_t	      *dst,
@@ -103,17 +110,15 @@ pixman_composite_trapezoids (pixman_operator_t	      op,
 			     const pixman_trapezoid_t *traps,
 			     int		      ntraps)
 {
-    pixman_image_t		*image = NULL;
-    pixman_box16_t		 traps_bounds, dst_bounds, bounds;
-    pixman_region16_t		 traps_region, dst_region;
-    int16_t			 xDst, yDst;
-    int16_t			 xRel, yRel;
-    pixman_format_t		 format;
-    pixman_region_status_t	 status;
-    int                          ret;
+    pixman_image_t	*image = NULL;
+    pixman_box16_t	traps_bounds, dst_bounds, bounds;
+    pixman_region16_t	*traps_region, *dst_region;
+    int16_t		xDst, yDst;
+    int16_t		xRel, yRel;
+    pixman_format_t	*format;
 
     if (ntraps == 0)
-	return 0;
+	return;
 
     /*
      * Check for solid alpha add
@@ -122,14 +127,15 @@ pixman_composite_trapezoids (pixman_operator_t	      op,
     {
 	for (; ntraps; ntraps--, traps++)
 	    fbRasterizeTrapezoid (dst, traps, 0, 0);
-	return 0;
+	return;
     }
 
     xDst = traps[0].left.p1.x >> 16;
     yDst = traps[0].left.p1.y >> 16;
 
     pixman_trapezoid_bounds (ntraps, traps, &traps_bounds);
-    pixman_region_init_with_extents (&traps_region, &traps_bounds);
+
+    traps_region = pixman_region_create_simple (&traps_bounds);
 
     /* XXX: If the image has a clip region set, we should really be
      * fetching it here instead, but it looks like we don't yet expose
@@ -139,30 +145,30 @@ pixman_composite_trapezoids (pixman_operator_t	      op,
     dst_bounds.x2 = pixman_image_get_width (dst);
     dst_bounds.y2 = pixman_image_get_height (dst);
 
-    pixman_region_init_with_extents (&dst_region, &dst_bounds);
-    status = pixman_region_intersect (&traps_region, &traps_region, &dst_region);
-    if (status != PIXMAN_REGION_STATUS_SUCCESS) {
-	pixman_region_fini (&traps_region);
-	pixman_region_fini (&dst_region);
-	return 1;
-    }
+    dst_region = pixman_region_create_simple (&dst_bounds);
 
-    bounds = *(pixman_region_extents (&traps_region));
+    pixman_region_intersect (traps_region, traps_region, dst_region);
 
-    pixman_region_fini (&traps_region);
-    pixman_region_fini (&dst_region);
+    bounds = *(pixman_region_extents (traps_region));
+
+    pixman_region_destroy (traps_region);
+    pixman_region_destroy (dst_region);
 
     if (bounds.y1 >= bounds.y2 || bounds.x1 >= bounds.x2)
-	return 0;
+	return;
 
-    ret = pixman_format_init (&format, PIXMAN_FORMAT_NAME_A8);
-    assert (ret);
+    format = pixman_format_create (PIXMAN_FORMAT_NAME_A8);
+    if (!format)
+	return;
 
-    image = FbCreateAlphaPicture (dst, &format,
+    image = FbCreateAlphaPicture (dst, format,
 				  bounds.x2 - bounds.x1,
 				  bounds.y2 - bounds.y1);
     if (!image)
-	return 1;
+    {
+	pixman_format_destroy (format);
+	return;
+    }
 
     for (; ntraps; ntraps--, traps++)
     {
@@ -180,7 +186,7 @@ pixman_composite_trapezoids (pixman_operator_t	      op,
 		      bounds.y2 - bounds.y1);
     pixman_image_destroy (image);
 
-    return 0;
+    pixman_format_destroy (format);
 }
 
 void
