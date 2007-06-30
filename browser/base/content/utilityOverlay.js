@@ -597,8 +597,8 @@ function recognizeFeedFromLink(aLink, aPrincipal)
   if (!aLink || !aPrincipal)
     return null;
 
-  var erel = aLink.rel;
-  var etype = aLink.type;
+  var erel = aLink.rel && aLink.rel.toLowerCase();
+  var etype = aLink.type && aLink.type.toLowerCase();
   var etitle = aLink.title;
   const rssTitleRegex = /(^|\s)rss($|\s)/i;
   var rels = {};
@@ -617,7 +617,6 @@ function recognizeFeedFromLink(aLink, aPrincipal)
     etype = etype.replace(/^\s+/, "");
     etype = etype.replace(/\s+$/, "");
     etype = etype.replace(/\s*;.*/, "");
-    etype = etype.toLowerCase();
     isFeed = (etype == "application/rss+xml" ||
               etype == "application/atom+xml");
     if (!isFeed) {
