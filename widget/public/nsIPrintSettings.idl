@@ -58,7 +58,7 @@ interface nsIPrintSession;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(266c6ed9-e4e9-4bdf-8ee8-7627b9bc229f)]
+[scriptable, uuid(f1094df6-ce0e-42c9-9847-2f663172c38d)]
 
 interface nsIPrintSettings : nsISupports
 {
