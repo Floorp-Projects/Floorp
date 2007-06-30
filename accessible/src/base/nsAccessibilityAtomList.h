@@ -109,6 +109,7 @@ ACCESSIBILITY_ATOM(itemset, "itemset") // XForms
 ACCESSIBILITY_ATOM(img, "img")
 ACCESSIBILITY_ATOM(input, "input")
 ACCESSIBILITY_ATOM(label, "label")
+ACCESSIBILITY_ATOM(legend, "legend")
 ACCESSIBILITY_ATOM(li, "li")
 ACCESSIBILITY_ATOM(link, "link")
 ACCESSIBILITY_ATOM(map, "map")
