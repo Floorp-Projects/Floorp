@@ -3495,6 +3495,7 @@ nsContentUtils::GetDOMScriptObjectFactory()
 nsresult
 nsContentUtils::HoldScriptObject(PRUint32 aLangID, void *aObject)
 {
+  NS_ASSERTION(aObject, "unexpected null object");
   nsresult rv;
 
   PRUint32 langIndex = NS_STID_INDEX(aLangID);
@@ -3514,6 +3515,8 @@ nsContentUtils::HoldScriptObject(PRUint32 aLangID, void *aObject)
   NS_ENSURE_SUCCESS(rv, rv);
 
   ++sScriptRootCount[langIndex];
+  NS_LOG_ADDREF(sScriptRuntimes[langIndex], sScriptRootCount[langIndex],
+                "HoldScriptObject", sizeof(void*));
 
   return NS_OK;
 }
@@ -3522,7 +3525,10 @@ nsContentUtils::HoldScriptObject(PRUint32 aLangID, void *aObject)
 nsresult
 nsContentUtils::DropScriptObject(PRUint32 aLangID, void *aObject)
 {
+  NS_ASSERTION(aObject, "unexpected null object");
   PRUint32 langIndex = NS_STID_INDEX(aLangID);
+  NS_LOG_RELEASE(sScriptRuntimes[langIndex], sScriptRootCount[langIndex] - 1,
+                 "HoldScriptObject");
   nsresult rv = sScriptRuntimes[langIndex]->DropScriptObject(aObject);
   if (--sScriptRootCount[langIndex] == 0) {
     NS_RELEASE(sScriptRuntimes[langIndex]);
