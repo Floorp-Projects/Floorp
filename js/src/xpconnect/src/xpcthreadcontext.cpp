@@ -448,6 +448,8 @@ GetThreadStackLimit()
   return stackLimit;
 }
 
+MOZ_DECL_CTOR_COUNTER(xpcPerThreadData)
+
 XPCPerThreadData::XPCPerThreadData()
     :   mJSContextStack(new XPCJSContextStack()),
         mNextThread(nsnull),
@@ -465,6 +467,7 @@ XPCPerThreadData::XPCPerThreadData()
       , mWrappedNativeThreadsafetyReportDepth(0)
 #endif
 {
+    MOZ_COUNT_CTOR(xpcPerThreadData);
     if(gLock)
     {
         nsAutoLock lock(gLock);
@@ -489,6 +492,8 @@ XPCPerThreadData::Cleanup()
 
 XPCPerThreadData::~XPCPerThreadData()
 {
+    MOZ_COUNT_DTOR(xpcPerThreadData);
+
     Cleanup();
 
     // Unlink 'this' from the list of threads.

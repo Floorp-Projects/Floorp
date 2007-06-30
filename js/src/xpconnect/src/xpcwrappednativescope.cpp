@@ -485,10 +485,10 @@ XPCWrappedNativeScope::KillDyingScopes()
 
 struct ShutdownData
 {
-    ShutdownData(XPCCallContext& accx)
-        : ccx(accx), wrapperCount(0),
+    ShutdownData(JSContext* acx)
+        : cx(acx), wrapperCount(0),
           sharedProtoCount(0), nonSharedProtoCount(0) {}
-    XPCCallContext& ccx;
+    JSContext* cx;
     int wrapperCount;
     int sharedProtoCount;
     int nonSharedProtoCount;
@@ -505,7 +505,7 @@ WrappedNativeShutdownEnumerator(JSDHashTable *table, JSDHashEntryHdr *hdr,
     {
         if(wrapper->HasProto() && !wrapper->HasSharedProto())
             data->nonSharedProtoCount++;
-        wrapper->SystemIsBeingShutDown(data->ccx);
+        wrapper->SystemIsBeingShutDown(data->cx);
         data->wrapperCount++;
     }
     return JS_DHASH_REMOVE;
@@ -517,21 +517,21 @@ WrappedNativeProtoShutdownEnumerator(JSDHashTable *table, JSDHashEntryHdr *hdr,
 {
     ShutdownData* data = (ShutdownData*) arg;
     ((ClassInfo2WrappedNativeProtoMap::Entry*)hdr)->value->
-        SystemIsBeingShutDown(data->ccx);
+        SystemIsBeingShutDown(data->cx);
     data->sharedProtoCount++;
     return JS_DHASH_REMOVE;
 }
 
 //static
 void
-XPCWrappedNativeScope::SystemIsBeingShutDown(XPCCallContext& ccx)
+XPCWrappedNativeScope::SystemIsBeingShutDown(JSContext* cx)
 {
     DEBUG_TrackScopeTraversal();
     DEBUG_TrackScopeShutdown();
 
     int liveScopeCount = 0;
 
-    ShutdownData data(ccx);
+    ShutdownData data(cx);
 
     XPCWrappedNativeScope* cur;
 
