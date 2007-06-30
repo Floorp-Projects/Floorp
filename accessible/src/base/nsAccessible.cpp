@@ -1730,7 +1730,8 @@ nsresult nsAccessible::GetTextFromRelationID(nsIAtom *aIDAttrib, nsString &aName
 
 nsIContent*
 nsAccessible::FindNeighbourPointingToNode(nsIContent *aForNode,
-                                          nsIAtom *aTagName, nsIAtom *aAttr,
+                                          nsIAtom *aTagName, nsIAtom *aRelationAttr,
+                                          PRUint32 aRelationNameSpaceID,
                                           PRUint32 aAncestorLevelsToSearch)
 {
   nsCOMPtr<nsIContent> binding;
@@ -1785,8 +1786,8 @@ nsAccessible::FindNeighbourPointingToNode(nsIContent *aForNode,
           return nsnull;
 
         if (content != prevSearched) {
-          labelContent = FindDescendantPointingToID(&controlID, content,  aAttr,
-                                                    nsnull, kNameSpaceID_None,
+          labelContent = FindDescendantPointingToID(&controlID, content,  aRelationAttr,
+                                                    aRelationNameSpaceID, nsnull,
                                                     aTagName);
         }
       }
@@ -1794,28 +1795,28 @@ nsAccessible::FindNeighbourPointingToNode(nsIContent *aForNode,
     }
 
     labelContent = FindDescendantPointingToID(&controlID, aForNode,
-                                              aAttr, prevSearched,
-                                              kNameSpaceID_None, aTagName);
+                                              aRelationAttr, aRelationNameSpaceID,
+                                              prevSearched, aTagName);
     prevSearched = aForNode;
   }
 
   return labelContent;
 }
 
-// Pass in aForAttrib == nsnull if any <label> will do
+// Pass in aRelationAttr == nsnull if any <label> will do
 nsIContent*
 nsAccessible::FindDescendantPointingToID(const nsAString *aId,
                                          nsIContent *aLookContent,
-                                         nsIAtom *aForAttrib,
+                                         nsIAtom *aRelationAttr,
+                                         PRUint32 aRelationNameSpaceID,
                                          nsIContent *aExcludeContent,
-                                         PRUint32 aForAttribNameSpace,
                                          nsIAtom *aTagType)
 {
   if (!aTagType || aLookContent->Tag() == aTagType) {
-    if (aForAttrib) {
-      // Check for ID in the attribute aForAttrib, which can be a list
+    if (aRelationAttr) {
+      // Check for ID in the attribute aRelationAttr, which can be a list
       nsAutoString idList;
-      if (aLookContent->GetAttr(aForAttribNameSpace, aForAttrib, idList)) {
+      if (aLookContent->GetAttr(aRelationNameSpaceID, aRelationAttr, idList)) {
         idList.Insert(' ', 0);  // Surround idlist with spaces for search
         idList.Append(' ');
         nsAutoString id(*aId);
@@ -1841,12 +1842,12 @@ nsAccessible::FindDescendantPointingToID(const nsAString *aId,
 
   while ((child = aLookContent->GetChildAt(count++)) != nsnull) {
     if (child != aExcludeContent) {
-      labelContent = FindDescendantPointingToID(aId, child, aForAttrib,
-                                                aExcludeContent,
-                                                aForAttribNameSpace, aTagType);
-    }
-    if (labelContent) {
-      return labelContent;
+      labelContent = FindDescendantPointingToID(aId, child, aRelationAttr,
+                                                aRelationNameSpaceID, aExcludeContent,
+                                                aTagType);
+      if (labelContent) {
+        return labelContent;
+      }
     }
   }
   return nsnull;
@@ -2531,6 +2532,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleBelow(nsIAccessible **_retval)
 
 already_AddRefed<nsIDOMNode>
 nsAccessible::FindNeighbourPointingToThis(nsIAtom *aRelationAttr,
+                                          PRUint32 aRelationNameSpaceID,
                                           PRUint32 aAncestorLevelsToSearch)
 {
   nsIContent *content = GetRoleContent(mDOMNode);
@@ -2539,6 +2541,7 @@ nsAccessible::FindNeighbourPointingToThis(nsIAtom *aRelationAttr,
 
   nsIContent* description = FindNeighbourPointingToNode(content, nsnull,
                                                         aRelationAttr,
+                                                        aRelationNameSpaceID,
                                                         aAncestorLevelsToSearch);
 
   if (!description)
@@ -2580,6 +2583,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
       if (relatedID.IsEmpty()) {
         const PRUint32 kAncestorLevelsToSearch = 3;
         relatedNode = FindNeighbourPointingToThis(nsAccessibilityAtoms::labelledby,
+                                                  kNameSpaceID_WAIProperties,
                                                   kAncestorLevelsToSearch);
       }
       break;
@@ -2612,6 +2616,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
       const PRUint32 kAncestorLevelsToSearch = 3;
       relatedNode =
         FindNeighbourPointingToThis(nsAccessibilityAtoms::describedby,
+                                    kNameSpaceID_WAIProperties,
                                     kAncestorLevelsToSearch);
 
       if (!relatedNode && content->Tag() == nsAccessibilityAtoms::description &&
@@ -2626,12 +2631,14 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
     }
   case nsIAccessibleRelation::RELATION_NODE_CHILD_OF:
     {
-      relatedNode = FindNeighbourPointingToThis(nsAccessibilityAtoms::owns);
+      relatedNode = FindNeighbourPointingToThis(nsAccessibilityAtoms::owns,
+                                                kNameSpaceID_WAIProperties);
       break;
     }
   case nsIAccessibleRelation::RELATION_CONTROLLED_BY:
     {
-      relatedNode = FindNeighbourPointingToThis(nsAccessibilityAtoms::controls);
+      relatedNode = FindNeighbourPointingToThis(nsAccessibilityAtoms::controls,
+                                                kNameSpaceID_WAIProperties);
       break;
     }
   case nsIAccessibleRelation::RELATION_CONTROLLER_FOR:
@@ -2648,7 +2655,8 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
     }
   case nsIAccessibleRelation::RELATION_FLOWS_FROM:
     {
-      relatedNode = FindNeighbourPointingToThis(nsAccessibilityAtoms::flowto);
+      relatedNode = FindNeighbourPointingToThis(nsAccessibilityAtoms::flowto,
+                                                kNameSpaceID_WAIProperties);
       break;
     }
 
