@@ -112,6 +112,7 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsEmbedCID.h"
 #include "nsNetUtil.h"
+#include "nsReadableUtils.h"
 #include "nsStaticComponents.h"
 #include "nsXPCOM.h"
 #include "nsXPIDLString.h"
@@ -273,17 +274,33 @@ static char **gRestartArgv;
 #include "nsGTKToolkit.h"
 #endif
 
+// Save the given word to the specified environment variable.
+static void
+SaveWordToEnv(const char *name, const nsACString & word)
+{
+  char *expr = PR_smprintf("%s=%s", name, PromiseFlatCString(word).get());
+  if (expr)
+    PR_SetEnv(expr);
+  // We intentionally leak |expr| here since it is required by PR_SetEnv.
+}
+
 // Save the path of the given file to the specified environment variable.
 static void
 SaveFileToEnv(const char *name, nsIFile *file)
 {
   nsCAutoString path;
   file->GetNativePath(path);
+  SaveWordToEnv(name, path);
+}
 
-  char *expr = PR_smprintf("%s=%s", name, path.get());
-  if (expr)
-    PR_SetEnv(expr);
-  // We intentionally leak |expr| here since it is required by PR_SetEnv.
+// Save the path of the given word to the specified environment variable
+// provided the environment variable does not have a value.
+static void
+SaveWordToEnvIfUnset(const char *name, const nsACString & word)
+{
+  const char *val = PR_GetEnv(name);
+  if (!(val && *val))
+    SaveWordToEnv(name, word);
 }
 
 // Save the path of the given file to the specified environment variable
@@ -1540,6 +1557,8 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
   nsresult rv;
 
   nsCOMPtr<nsILocalFile> profD, profLD;
+  PRUnichar* profileNamePtr;
+  nsCAutoString profileName;
 
   {
     ScopedXPCOMStartup xpcom;
@@ -1600,12 +1619,19 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
       rv = lock->GetLocalDirectory(getter_AddRefs(profLD));
       NS_ENSURE_SUCCESS(rv, rv);
 
+      rv = ioParamBlock->GetString(0, &profileNamePtr);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      CopyUTF16toUTF8(profileNamePtr, profileName);
+      NS_Free(profileNamePtr);
+
       lock->Unlock();
     }
   }
 
   SaveFileToEnv("XRE_PROFILE_PATH", profD);
   SaveFileToEnv("XRE_PROFILE_LOCAL_PATH", profLD);
+  SaveWordToEnv("XRE_PROFILE_NAME", profileName);
 
   PRBool offline = PR_FALSE;
   aProfileSvc->GetStartOffline(&offline);
@@ -1661,7 +1687,7 @@ static PRBool gDoMigration = PR_FALSE;
 
 static nsresult
 SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
-              PRBool* aStartOffline)
+              PRBool* aStartOffline, nsACString* aProfileName)
 {
   nsresult rv;
   ArgResult ar;
@@ -1689,6 +1715,11 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     } else {
       localDir = lf;
     }
+
+    arg = PR_GetEnv("XRE_PROFILE_NAME");
+    if (arg && *arg && aProfileName)
+      aProfileName->Assign(nsDependentCString(arg));
+
 
     // Clear out flags that we handled (or should have handled!) last startup.
     const char *dummy;
@@ -1800,8 +1831,11 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIProfileUnlocker> unlocker;
       rv = profile->Lock(nsnull, aResult);
-      if (NS_SUCCEEDED(rv))
+      if (NS_SUCCEEDED(rv)) {
+        if (aProfileName)
+          aProfileName->Assign(nsDependentCString(arg));
         return NS_OK;
+      }
 
       nsCOMPtr<nsILocalFile> profileDir;
       rv = profile->GetRootDir(getter_AddRefs(profileDir));
@@ -1834,8 +1868,11 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     if (NS_SUCCEEDED(rv)) {
       profileSvc->Flush();
       rv = profile->Lock(nsnull, aResult);
-      if (NS_SUCCEEDED(rv))
+      if (NS_SUCCEEDED(rv)) {
+        if (aProfileName)
+          aProfileName->Assign(NS_LITERAL_CSTRING("default"));
         return NS_OK;
+      }
     }
   }
 
@@ -1850,8 +1887,15 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     if (profile) {
       nsCOMPtr<nsIProfileUnlocker> unlocker;
       rv = profile->Lock(getter_AddRefs(unlocker), aResult);
-      if (NS_SUCCEEDED(rv))
+      if (NS_SUCCEEDED(rv)) {
+        // Try to grab the profile name.
+        if (aProfileName) {
+          rv = profile->GetName(*aProfileName);
+          if (NS_FAILED(rv))
+            aProfileName->Truncate(0);
+        }
         return NS_OK;
+      }
 
       nsCOMPtr<nsILocalFile> profileDir;
       rv = profile->GetRootDir(getter_AddRefs(profileDir));
@@ -2548,8 +2592,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
     nsCOMPtr<nsIProfileLock> profileLock;
     PRBool startOffline = PR_FALSE;
+    nsCAutoString profileName;
 
-    rv = SelectProfile(getter_AddRefs(profileLock), nativeApp, &startOffline);
+    rv = SelectProfile(getter_AddRefs(profileLock), nativeApp, &startOffline,
+                       &profileName);
     if (rv == NS_ERROR_LAUNCHED_CHILD_PROCESS ||
         rv == NS_ERROR_ABORT) return 0;
     if (NS_FAILED(rv)) return 1;
@@ -2764,6 +2810,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           // during the relaunch process now that we know we won't be relaunching.
           PR_SetEnv("XRE_PROFILE_PATH=");
           PR_SetEnv("XRE_PROFILE_LOCAL_PATH=");
+          PR_SetEnv("XRE_PROFILE_NAME=");
           PR_SetEnv("XRE_START_OFFLINE=");
           PR_SetEnv("XRE_IMPORT_PROFILES=");
           PR_SetEnv("NO_EM_RESTART=");
@@ -2800,7 +2847,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           nsCOMPtr<nsIRemoteService> remoteService;
           remoteService = do_GetService("@mozilla.org/toolkit/remote-service;1");
           if (remoteService)
-            remoteService->Startup(gAppData->name, nsnull);
+            remoteService->Startup(gAppData->name,
+                                   PromiseFlatCString(profileName).get());
 #endif /* MOZ_ENABLE_XREMOTE */
 
           // enable win32 DDE responses and Mac appleevents responses
@@ -2871,6 +2919,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       // Ensure that these environment variables are set:
       SaveFileToEnvIfUnset("XRE_PROFILE_PATH", profD);
       SaveFileToEnvIfUnset("XRE_PROFILE_LOCAL_PATH", profLD);
+      SaveWordToEnvIfUnset("XRE_PROFILE_NAME", profileName);
 
 #ifdef XP_MACOSX
       if (gBinaryPath) {
