@@ -142,13 +142,44 @@ function test_rollbackTransaction_no_transaction()
   }
 }
 
+function test_get_schemaVersion_not_set()
+{
+  do_check_eq(0, getOpenedDatabase().schemaVersion);
+}
+
+function test_set_schemaVersion()
+{
+  var msc = getOpenedDatabase();
+  const version = 1;
+  msc.schemaVersion = version;
+  do_check_eq(version, msc.schemaVersion);
+}
+
+function test_set_schemaVersion_same()
+{
+  var msc = getOpenedDatabase();
+  const version = 1;
+  msc.schemaVersion = version; // should still work ok
+  do_check_eq(version, msc.schemaVersion);
+}
+
+function test_set_schemaVersion_negative()
+{
+  var msc = getOpenedDatabase();
+  const version = -1;
+  msc.schemaVersion = version;
+  do_check_eq(version, msc.schemaVersion);
+}
+
 var tests = [test_connectionReady, test_databaseFile,
              test_tableExists_not_created, test_indexExists_not_created,
              test_createTable_not_created, test_indexExists_created,
              test_createTable_already_created, test_lastInsertRowID,
              test_transactionInProgress_no, test_transactionInProgress_yes,
              test_commitTransaction_no_transaction,
-             test_rollbackTransaction_no_transaction];
+             test_rollbackTransaction_no_transaction,
+             test_get_schemaVersion_not_set, test_set_schemaVersion,
+             test_set_schemaVersion_same, test_set_schemaVersion_negative];
 
 function run_test()
 {

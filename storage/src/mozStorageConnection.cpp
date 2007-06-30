@@ -217,6 +217,35 @@ mozStorageConnection::GetLastErrorString(nsACString& aLastErrorString)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+mozStorageConnection::GetSchemaVersion(PRInt32 *version)
+{
+    NS_ASSERTION(mDBConn, "Connection not initialized");
+
+    nsCOMPtr<mozIStorageStatement> stmt;
+    nsresult rv = CreateStatement(NS_LITERAL_CSTRING(
+        "PRAGMA user_version"), getter_AddRefs(stmt));
+    if (NS_FAILED(rv)) return rv;
+
+    *version = 0;
+    PRBool hasResult;
+    if (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult)
+        *version = stmt->AsInt32(0);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+mozStorageConnection::SetSchemaVersion(PRInt32 aVersion)
+{
+    NS_ASSERTION(mDBConn, "Connection not initialized");
+    
+    nsCAutoString stmt(NS_LITERAL_CSTRING("PRAGMA user_version = "));
+    stmt.AppendInt(aVersion);
+
+    return ExecuteSimpleSQL(stmt);
+}
+
 /**
  ** Statements & Queries
  **/
