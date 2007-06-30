@@ -2998,7 +2998,21 @@ enum
   kKeypad7KeyCode     = 0x59,
   kKeypad8KeyCode     = 0x5B,
   kKeypad9KeyCode     = 0x5C,
-  
+
+// The following key codes are not defined until Mac OS X 10.5
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4
+  kVK_ANSI_1          = 0x12,
+  kVK_ANSI_2          = 0x13,
+  kVK_ANSI_3          = 0x14,
+  kVK_ANSI_4          = 0x15,
+  kVK_ANSI_5          = 0x17,
+  kVK_ANSI_6          = 0x16,
+  kVK_ANSI_7          = 0x1A,
+  kVK_ANSI_8          = 0x1C,
+  kVK_ANSI_9          = 0x19,
+  kVK_ANSI_0          = 0x1D,
+#endif
+
   kKeypadMultiplyKeyCode  = 0x43,
   kKeypadAddKeyCode       = 0x45,
   kKeypadSubtractKeyCode  = 0x4E,
@@ -3030,7 +3044,7 @@ static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, 
   PRUint8 charCode = 0;
   if ([characters length])
     charCode = [characters characterAtIndex: 0];
-  
+
   switch (keyCode)
   {
     // modifiers. We don't get separate events for these
@@ -3041,8 +3055,8 @@ static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, 
     case kControlKeyCode:       geckoKeyCode = NS_VK_CONTROL;        break;
     case kOptionkeyCode:        geckoKeyCode = NS_VK_ALT;            break;
     case kClearKeyCode:         geckoKeyCode = NS_VK_CLEAR;          break;
-      
-      // function keys
+
+    // function keys
     case kF1KeyCode:            geckoKeyCode = NS_VK_F1;             break;
     case kF2KeyCode:            geckoKeyCode = NS_VK_F2;             break;
     case kF3KeyCode:            geckoKeyCode = NS_VK_F3;             break;
@@ -3055,14 +3069,14 @@ static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, 
     case kF10KeyCode:           geckoKeyCode = NS_VK_F10;            break;
     case kF11KeyCode:           geckoKeyCode = NS_VK_F11;            break;
     case kF12KeyCode:           geckoKeyCode = NS_VK_F12;            break;
-      // case kF13KeyCode:           geckoKeyCode = NS_VK_F13;            break;    // clash with the 3 below
-      // case kF14KeyCode:           geckoKeyCode = NS_VK_F14;            break;
-      // case kF15KeyCode:           geckoKeyCode = NS_VK_F15;            break;
+    // case kF13KeyCode:           geckoKeyCode = NS_VK_F13;            break;    // clash with the 3 below
+    // case kF14KeyCode:           geckoKeyCode = NS_VK_F14;            break;
+    // case kF15KeyCode:           geckoKeyCode = NS_VK_F15;            break;
     case kPauseKeyCode:         geckoKeyCode = NS_VK_PAUSE;          break;
     case kScrollLockKeyCode:    geckoKeyCode = NS_VK_SCROLL_LOCK;    break;
     case kPrintScreenKeyCode:   geckoKeyCode = NS_VK_PRINTSCREEN;    break;
-      
-      // keypad
+
+    // keypad
     case kKeypad0KeyCode:       geckoKeyCode = NS_VK_NUMPAD0;        break;
     case kKeypad1KeyCode:       geckoKeyCode = NS_VK_NUMPAD1;        break;
     case kKeypad2KeyCode:       geckoKeyCode = NS_VK_NUMPAD2;        break;
@@ -3073,17 +3087,17 @@ static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, 
     case kKeypad7KeyCode:       geckoKeyCode = NS_VK_NUMPAD7;        break;
     case kKeypad8KeyCode:       geckoKeyCode = NS_VK_NUMPAD8;        break;
     case kKeypad9KeyCode:       geckoKeyCode = NS_VK_NUMPAD9;        break;
-      
+
     case kKeypadMultiplyKeyCode:  geckoKeyCode = NS_VK_MULTIPLY;     break;
     case kKeypadAddKeyCode:       geckoKeyCode = NS_VK_ADD;          break;
     case kKeypadSubtractKeyCode:  geckoKeyCode = NS_VK_SUBTRACT;     break;
     case kKeypadDecimalKeyCode:   geckoKeyCode = NS_VK_DECIMAL;      break;
     case kKeypadDivideKeyCode:    geckoKeyCode = NS_VK_DIVIDE;       break;
-      
-      // these may clash with forward delete and help
+
+    // these may clash with forward delete and help
     case kInsertKeyCode:        geckoKeyCode = NS_VK_INSERT;         break;
     case kDeleteKeyCode:        geckoKeyCode = NS_VK_DELETE;         break;
-      
+
     case kBackspaceKeyCode:     geckoKeyCode = NS_VK_BACK;           break;
     case kTabKeyCode:           geckoKeyCode = NS_VK_TAB;            break;
     case kHomeKeyCode:          geckoKeyCode = NS_VK_HOME;           break;
@@ -3094,11 +3108,18 @@ static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, 
     case kRightArrowKeyCode:    geckoKeyCode = NS_VK_RIGHT;          break;
     case kUpArrowKeyCode:       geckoKeyCode = NS_VK_UP;             break;
     case kDownArrowKeyCode:     geckoKeyCode = NS_VK_DOWN;           break;
-      
+    case kVK_ANSI_1:            geckoKeyCode = NS_VK_1;              break;
+    case kVK_ANSI_2:            geckoKeyCode = NS_VK_2;              break;
+    case kVK_ANSI_3:            geckoKeyCode = NS_VK_3;              break;
+    case kVK_ANSI_4:            geckoKeyCode = NS_VK_4;              break;
+    case kVK_ANSI_5:            geckoKeyCode = NS_VK_5;              break;
+    case kVK_ANSI_6:            geckoKeyCode = NS_VK_6;              break;
+    case kVK_ANSI_7:            geckoKeyCode = NS_VK_7;              break;
+    case kVK_ANSI_8:            geckoKeyCode = NS_VK_8;              break;
+    case kVK_ANSI_9:            geckoKeyCode = NS_VK_9;              break;
+    case kVK_ANSI_0:            geckoKeyCode = NS_VK_0;              break;
+
     default:
-      if (aKeyEvent->isControl)
-        charCode += 64;
-      
       // if we haven't gotten the key code already, look at the char code
       switch (charCode)
       {
@@ -3118,18 +3139,16 @@ static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, 
         case ']':                   geckoKeyCode = NS_VK_CLOSE_BRACKET; break;
         case '\'':
         case '"':                   geckoKeyCode = NS_VK_QUOTE;         break;
-          
+
         default:
-          if (charCode >= '0' && charCode <= '9') // numerals
-            geckoKeyCode = charCode;
-          else if (charCode >= 'a' && charCode <= 'z') // lowercase
+          if (charCode >= 'a' && charCode <= 'z') // lowercase
             geckoKeyCode = toupper(charCode);
           else if (charCode >= 'A' && charCode <= 'Z') // uppercase
             geckoKeyCode = charCode;
             break;
       }
   }
-  
+
   return geckoKeyCode;
 }
 
@@ -3269,7 +3288,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   else {
     NSString* characters = nil;
     if ([aKeyEvent type] != NSFlagsChanged)
-      characters = [aKeyEvent characters];
+      characters = [aKeyEvent charactersIgnoringModifiers];
     
     outGeckoEvent->keyCode = ConvertMacToGeckoKeyCode([aKeyEvent keyCode], outGeckoEvent, characters);
     outGeckoEvent->charCode = 0;
