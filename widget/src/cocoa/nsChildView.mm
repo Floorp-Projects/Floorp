@@ -3864,8 +3864,15 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 // if it wasn't.
 - (BOOL)doDragAction:(PRUint32)aMessage sender:(id)aSender
 {
-  if (!mGeckoChild || !mDragService)
+  if (!mGeckoChild)
     return NO;
+
+  if (!mDragService) {
+    CallGetService(kDragServiceContractID, &mDragService);
+    NS_ASSERTION(mDragService, "Couldn't get a drag service - big problem!");
+    if (!mDragService)
+      return NO;
+  }
 
   if (aMessage == NS_DRAGDROP_ENTER)
     mDragService->StartDragSession();
@@ -3926,11 +3933,6 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
 {
-  CallGetService(kDragServiceContractID, &mDragService);
-  NS_ASSERTION(mDragService, "Couldn't get a drag service - big problem!");
-  if (!mDragService)
-    return NSDragOperationNone;
-
   // there should never be a globalDragPboard when "draggingEntered:" is
   // called, but just in case we'll take care of it here.
   [globalDragPboard release];
@@ -3948,44 +3950,46 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
 - (NSDragOperation)draggingUpdated:(id <NSDraggingInfo>)sender
 {
-  if (!mDragService)
-    return NSDragOperationNone;
-
   BOOL handled = [self doDragAction:NS_DRAGDROP_OVER sender:sender];
-
   return handled ? NSDragOperationGeneric : NSDragOperationNone;
 }
 
 
 - (void)draggingExited:(id <NSDraggingInfo>)sender
 {
-  if (!mDragService)
-    return;
-
   [self doDragAction:NS_DRAGDROP_EXIT sender:sender];
-
-  // Gecko event handling for this drag session is over. Release our
-  // cached drag service and set globalDragPboard back to nil.
-  NS_IF_RELEASE(mDragService);
-  [globalDragPboard release];
-  globalDragPboard = nil;
 }
 
 
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
-  if (!mDragService)
-    return NO;
+  return [self doDragAction:NS_DRAGDROP_DROP sender:sender];
+}
 
-  BOOL rv = [self doDragAction:NS_DRAGDROP_DROP sender:sender];
 
-  // Gecko event handling for this drag session is over. Release our
-  // cached drag service and set globalDragPboard back to nil.
-  NS_IF_RELEASE(mDragService);
+// NSDraggingSource
+- (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation
+{
+  if (!mDragService) {
+    CallGetService(kDragServiceContractID, &mDragService);
+    NS_ASSERTION(mDragService, "Couldn't get a drag service - big problem!");
+  }
+
+  if (mDragService) {
+    mDragService->EndDragSession(PR_TRUE);
+    NS_RELEASE(mDragService);
+  }
+
   [globalDragPboard release];
   globalDragPboard = nil;
+}
 
-  return rv;
+
+// NSDraggingSource
+// this is just implemented so we comply with the NSDraggingSource informal protocol
+- (unsigned int)draggingSourceOperationMaskForLocal:(BOOL)isLocal
+{
+  return UINT_MAX;
 }
 
 
