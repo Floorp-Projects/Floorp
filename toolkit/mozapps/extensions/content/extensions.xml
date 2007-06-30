@@ -232,7 +232,7 @@
           <xul:hbox anonid="addonNameVersion" class="addon-name-version" xbl:inherits="name, version"/>
           <xul:label anonid="addonDescriptionWrap" class="descriptionWrap" xbl:inherits="xbl:text=description"/>
           <xul:vbox anonid="addonSelectedStatusMsgs" class="selectedStatusMsgs">
-            <xul:hbox anonid="addonOpType" class="addon-optype attention" align="center"/>
+            <xul:hbox anonid="addonOpType" class="addon-optype attention" align="center" xbl:inherits="newVersion"/>
             <xul:hbox flex="1" class="updateAvailableBox attention">
               <xul:label xbl:inherits="value=updateAvailableMsg" crop="end"/>
             </xul:hbox>
@@ -456,7 +456,7 @@
 
   <binding id="addon-needs-upgrade">
     <content>
-      <xul:label value="&toBeUpgraded.label;" crop="end"/>
+      <xul:label value="&toBeUpdated.label;" crop="end"/>
     </content>
   </binding>
 
@@ -558,7 +558,7 @@
           </xul:stack>
         </xul:vbox>
         <xul:vbox flex="1">
-          <xul:hbox class="addon-name-version" xbl:inherits="name, version"/>
+          <xul:hbox class="addon-name-version" xbl:inherits="name, version=newVersion"/>
           <xul:hbox class="addon-install-status" xbl:inherits="state"/>
         </xul:vbox>
       </xul:hbox>
@@ -598,6 +598,12 @@
   <binding id="addon-install-restart">
     <content>
       <xul:label value="&installSuccessRestart.label;" flex="1" crop="end"/>
+    </content>
+  </binding>
+
+  <binding id="addon-upgrade-restart">
+    <content>
+      <xul:label value="&updateSuccessRestart.label;" flex="1" crop="end"/>
     </content>
   </binding>
 

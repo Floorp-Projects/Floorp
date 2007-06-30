@@ -4758,6 +4758,7 @@ ExtensionManager.prototype = {
 
     var props = { name            : name,
                   version         : EM_L(getManifestProperty(installManifest, "version")),
+                  newVersion      : EM_L(getManifestProperty(installManifest, "version")),
                   installLocation : EM_L(installLocation.name),
                   type            : EM_I(type),
                   availableUpdateURL    : null,
@@ -4799,6 +4800,7 @@ ExtensionManager.prototype = {
     ds.updateVisibleList(id, installLocation.name, false);
     var props = { installLocation : EM_L(installLocation.name),
                   type            : EM_I(type),
+                  newVersion      : EM_L(getManifestProperty(installManifest, "version")),
                   availableUpdateURL      : null,
                   availableUpdateHash     : null,
                   availableUpdateVersion  : null };
@@ -7274,8 +7276,10 @@ ExtensionsDataSource.prototype = {
    *          The Install Location of the item. 
    */
   addItemMetadata: function(id, installManifest, installLocation) {
-    // Copy the assertions over from the source datasource. 
     var targetRes = getResourceForID(id);
+    // Remove any temporary assertions used for the install process
+    this._setProperty(this._inner, targetRes, EM_R("newVersion"), null);
+    // Copy the assertions over from the source datasource. 
     // Assert properties with single values
     var singleProps = ["version", "updateURL", "updateService", "optionsURL",
                        "aboutURL", "iconURL", "internalName"];
