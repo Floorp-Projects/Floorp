@@ -38,8 +38,12 @@ richlistitem[state="finishing"] hbox.addon-install-status {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-install-finishing");
 }
 
-richlistitem[state="success"][opType] hbox.addon-install-status {
+richlistitem[state="success"][opType="needs-install"] hbox.addon-install-status {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-install-restart");
+}
+
+richlistitem[state="success"][opType="needs-upgrade"] hbox.addon-install-status {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-upgrade-restart");
 }
 
 richlistitem[state="success"] hbox.addon-install-status {

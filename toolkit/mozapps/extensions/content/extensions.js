@@ -349,6 +349,7 @@ function showView(aView) {
                       ["updateable", "?updateable"],
                       ["updateURL", "?updateURL"],
                       ["version", "?version"],
+                      ["newVersion", "?newVersion"],
                       ["typeName", "install"] ];
       types = [ [ ["state", "?state", null ] ] ];
       break;
