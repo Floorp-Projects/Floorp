@@ -1294,6 +1294,9 @@ void nsDocAccessible::FlushEventsCallback(nsITimer *aTimer, void *aClosure)
 
 void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode, PRUint32 aChangeEvent)
 {
+  NS_ASSERTION(aChangeEvent != nsIAccessibleEvent::EVENT_SHOW,
+               "nsDocAccessible::RefreshNodes isn't supposed to work with show event.");
+
   nsCOMPtr<nsIDOMNode> iterNode(aStartNode), nextNode;
   nsCOMPtr<nsIAccessNode> accessNode;
 
@@ -1306,27 +1309,24 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode, PRUint32 aChangeEvent
 
       // Don't shutdown our doc object!
       if (accessNode != NS_STATIC_CAST(nsIAccessNode*, this)) {
-        if (aChangeEvent != nsIAccessibleEvent::EVENT_SHOW) {
-          nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(accessNode));
-          if (accessible) {
-            // Fire menupopupend events for menu popups that go away
-            PRUint32 role, event = 0;
-            accessible->GetFinalRole(&role);
-            if (role == nsIAccessibleRole::ROLE_MENUPOPUP) {
-              nsCOMPtr<nsIDOMNode> domNode;
-              accessNode->GetDOMNode(getter_AddRefs(domNode));
-              nsCOMPtr<nsIDOMXULPopupElement> popup(do_QueryInterface(domNode));
-              if (!popup) {
-                // Popup elements already fire these via DOMMenuInactive
-                // handling in nsRootAccessible::HandleEvent
-                event = nsIAccessibleEvent::EVENT_MENUPOPUP_END;
-              }
-            }
-            if (event) {
-              FireToolkitEvent(event, accessible, nsnull);
+
+        nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(accessNode));
+        if (accessible) {
+          // Fire menupopupend events for menu popups that go away
+          PRUint32 role = Role(accessible);
+          if (role == nsIAccessibleRole::ROLE_MENUPOPUP) {
+            nsCOMPtr<nsIDOMNode> domNode;
+            accessNode->GetDOMNode(getter_AddRefs(domNode));
+            nsCOMPtr<nsIDOMXULPopupElement> popup(do_QueryInterface(domNode));
+            if (!popup) {
+              // Popup elements already fire these via DOMMenuInactive
+              // handling in nsRootAccessible::HandleEvent
+              FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_END,
+                               accessible, nsnull);
             }
           }
         }
+
         void *uniqueID;
         accessNode->GetUniqueID(&uniqueID);
         nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(accessNode));
@@ -1403,6 +1403,8 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   }
   nsCOMPtr<nsPIAccessible> privateChildAccessible =
     do_QueryInterface(childAccessible);
+  NS_ENSURE_STATE(privateChildAccessible);
+
 #ifdef DEBUG_A11Y
   nsAutoString localName;
   childNode->GetLocalName(localName);
@@ -1418,13 +1420,12 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   }
 #endif
 
-  if (aChangeEventType == nsIAccessibleEvent::EVENT_HIDE) {
-    // Fire EVENT_HIDE or EVENT_MENUPOPUP_END if previous accessible existed
-    // for node being hidden. Fire this before the accessible goes away
-    if (privateChildAccessible) {
-      privateChildAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_HIDE,
-                                               childAccessible, nsnull);
-    }
+  if (aChangeEventType == nsIAccessibleEvent::EVENT_HIDE ||
+      aChangeEventType == nsIAccessibleEvent::EVENT_REORDER) {
+    // Fire EVENT_HIDE if previous accessible existed for node being hidden.
+    // Fire this before the accessible goes away.
+    privateChildAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_HIDE,
+                                             childAccessible, nsnull);
   }
 
   // Shutdown nsIAccessNode's or nsIAccessibles for any DOM nodes in this subtree
@@ -1465,7 +1466,8 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     }
   }
 
-  if (aChangeEventType == nsIAccessibleEvent::EVENT_SHOW && aChild) {
+  if (aChild && (aChangeEventType == nsIAccessibleEvent::EVENT_SHOW ||
+      aChangeEventType == nsIAccessibleEvent::EVENT_REORDER)) {
     // Fire EVENT_SHOW, EVENT_MENUPOPUP_START for newly visible content.
     // Fire after a short timer, because we want to make sure the view has been
     // updated to make this accessible content visible. If we don't wait,

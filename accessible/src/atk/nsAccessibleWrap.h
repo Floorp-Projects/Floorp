@@ -121,6 +121,8 @@ protected:
                                      AtkObject *aObject);
     nsresult FireAtkPropChangedEvent(nsIAccessibleEvent *aEvent,
                                      AtkObject *aObject);
+    nsresult FireAtkShowHideEvent(nsIAccessibleEvent *aEvent,
+                                  AtkObject *aObject, PRBool aIsAdded);
 
     AtkObject *mAtkObject;
 
