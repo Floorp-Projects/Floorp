@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
  *   Brett Wilson <brettw@gmail.com>
+ *   Shawn Wilsher <me@shawnwilsher.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,7 +51,7 @@ interface nsIFile;
  * creating prepared statements, executing SQL, and examining database
  * errors.
  */
-[scriptable, uuid(77015f88-bfc2-4669-b1c3-cc19fb07cd4e)]
+[scriptable, uuid(0b3d9b17-6c07-4c39-9ee6-314f9fbc56a6)]
 interface mozIStorageConnection : nsISupports {
   /*
    * Initialization and status
@@ -83,6 +84,12 @@ interface mozIStorageConnection : nsISupports {
    * sqlite library).
    */
   readonly attribute AUTF8String lastErrorString;
+
+  /**
+   * The schema version of the database.  This should not be used until the 
+   * database is ready.  The schema will be reported as zero if it is not set.
+   */
+  attribute long schemaVersion;
 
   /*
    * Statement creation
