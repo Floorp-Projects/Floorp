@@ -1788,6 +1788,9 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
       }
     }
     mContext = nsnull; // we nuked it above also
+#ifdef DEBUG
+    nsCycleCollector_DEBUG_shouldBeFreed(NS_STATIC_CAST(nsIScriptGlobalObject*, this));
+#endif
   }
 
   mDocShell = aDocShell;        // Weak Reference
