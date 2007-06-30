@@ -44,7 +44,7 @@
 
 /* First, include the primary internal header file for libpixman. */
 
-#include "icint.h"
+#include "pixmanint.h"
 
 /* Then, define any names that the server code will be expecting in
  * terms of libpixman names. */
@@ -109,7 +109,7 @@ typedef pixman_vector_t* PictVectorPtr;
 
 /* And finally, this one prototype must come after the include of
  * renderedge.h, so it can't live alongside the other prototypes in
- * the horrible mess that is icint.h.
+ * the horrible mess that is pixmanint.h.
  */
 
 pixman_private void

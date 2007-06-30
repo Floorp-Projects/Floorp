@@ -33,34 +33,7 @@
  *	Owen Taylor <otaylor@redhat.com>
  */
 
-#include <cairoint.h>
-
-/**
- * _cairo_region_create_from_rectangle:
- * @rect: a #cairo_rectangle_int16_t
- *
- * Creates a region with extents initialized from the given
- * rectangle.
- *
- * Return value: a newly created #pixman_region16_t or %NULL if
- *    memory couldn't a allocated.
- **/
-pixman_region16_t *
-_cairo_region_create_from_rectangle (cairo_rectangle_int16_t *rect)
-{
-    /* We can't use pixman_region_create_simple(), because it doesn't
-     * have an error return
-     */
-    pixman_region16_t *region = pixman_region_create ();
-    if (pixman_region_union_rect (region, region,
-				  rect->x, rect->y,
-				  rect->width, rect->height) != PIXMAN_REGION_STATUS_SUCCESS) {
-	pixman_region_destroy (region);
-	return NULL;
-    }
-
-    return region;
-}
+#include "cairoint.h"
 
 /**
  * _cairo_region_extents_rectangle:
