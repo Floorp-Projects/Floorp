@@ -1136,6 +1136,9 @@ public:
     TraceJS(JSTracer* trc, XPCJSRuntime* rt);
 
     static void
+    SuspectAllWrappers(XPCJSRuntime* rt);
+
+    static void
     FinishedMarkPhaseOfGC(JSContext* cx, XPCJSRuntime* rt);
 
     static void
