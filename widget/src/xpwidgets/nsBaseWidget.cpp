@@ -144,7 +144,8 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
     }
     else {
       if (nsnull != aParent) {
-        mToolkit = (nsIToolkit*)(aParent->GetToolkit()); // the call AddRef's, we don't have to
+        mToolkit = aParent->GetToolkit();
+        NS_IF_ADDREF(mToolkit);
       }
       // it's some top level window with no toolkit passed in.
       // Create a default toolkit with the current thread
@@ -641,7 +642,6 @@ nsIRenderingContext* nsBaseWidget::GetRenderingContext()
 //-------------------------------------------------------------------------
 nsIToolkit* nsBaseWidget::GetToolkit()
 {
-  NS_IF_ADDREF(mToolkit);
   return mToolkit;
 }
 
