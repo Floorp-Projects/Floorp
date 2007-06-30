@@ -572,7 +572,7 @@ void nsHTMLTextFieldAccessible::CheckForEditor()
  */
 
 nsHTMLGroupboxAccessible::nsHTMLGroupboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessibleWrap(aNode, aShell)
+nsHyperTextAccessibleWrap(aNode, aShell)
 { 
 }
 
@@ -582,19 +582,30 @@ NS_IMETHODIMP nsHTMLGroupboxAccessible::GetRole(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLGroupboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsIContent* nsHTMLGroupboxAccessible::GetLegend()
 {
-  // Groupbox doesn't support any states!
-  *aState = 0;
-  if (aExtraState)
-    *aExtraState = 0;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+  NS_ENSURE_TRUE(content, nsnull);
 
-  return NS_OK;
+  nsresult count = 0;
+  nsIContent *testLegendContent;
+  while ((testLegendContent = content->GetChildAt(count ++ )) != nsnull) {
+    if (testLegendContent->NodeInfo()->Equals(nsAccessibilityAtoms::legend,
+                                              content->GetNameSpaceID())) {
+      // Either XHTML namespace or no namespace
+      return testLegendContent;
+    }
+  }
+
+  return nsnull;
 }
 
 NS_IMETHODIMP nsHTMLGroupboxAccessible::GetName(nsAString& aName)
 {
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;
+  }
+  aName.Truncate();
   if (mRoleMapEntry) {
     nsAccessible::GetName(aName);
     if (!aName.IsEmpty()) {
@@ -602,59 +613,77 @@ NS_IMETHODIMP nsHTMLGroupboxAccessible::GetName(nsAString& aName)
     }
   }
 
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  if (element) {
-    nsCOMPtr<nsIDOMNodeList> legends;
-    nsAutoString nameSpaceURI;
-    element->GetNamespaceURI(nameSpaceURI);
-    element->GetElementsByTagNameNS(nameSpaceURI, NS_LITERAL_STRING("legend"),
-                                  getter_AddRefs(legends));
-    if (legends) {
-      nsCOMPtr<nsIDOMNode> legendNode;
-      legends->Item(0, getter_AddRefs(legendNode));
-      nsCOMPtr<nsIContent> legendContent(do_QueryInterface(legendNode));
-      if (legendContent) {
-        aName.Truncate();  // Default name is blank 
-        return AppendFlatStringFromSubtree(legendContent, &aName);
-      }
-    }
+  nsIContent *legendContent = GetLegend();
+  if (legendContent) {
+    return AppendFlatStringFromSubtree(legendContent, &aName);
   }
+
   return NS_OK;
 }
 
-void nsHTMLGroupboxAccessible::CacheChildren()
+NS_IMETHODIMP
+nsHTMLGroupboxAccessible::GetAccessibleRelated(PRUint32 aRelationType,
+                                               nsIAccessible **aRelated)
 {
-  if (!mWeakShell) {
-    // This node has been shut down
-    mAccChildCount = eChildCountUninitialized;
-    return;
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;
+  }
+  NS_ENSURE_ARG_POINTER(aRelated, NS_ERROR_NULL_POINTER);
+
+  *aRelated = nsnull;
+
+  nsresult rv = nsHyperTextAccessibleWrap::GetAccessibleRelated(aRelationType, aRelated);
+  if (NS_FAILED(rv) || *aRelated) {
+    // Either the node is shut down, or another relation mechanism has been used
+    return rv;
   }
 
-  if (mAccChildCount == eChildCountUninitialized) {
-    PRBool allowsAnonChildren = PR_FALSE;
-    GetAllowsAnonChildAccessibles(&allowsAnonChildren);
-    nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, allowsAnonChildren);
-    walker.mState.frame = GetFrame();
-    PRInt32 childCount = 0;
-    walker.GetFirstChild();
-    // Check for <legend> and skip it if it's there
-    if (walker.mState.accessible && walker.mState.domNode) {
-      nsCOMPtr<nsIDOMNode> mightBeLegendNode;
-      walker.mState.domNode->GetParentNode(getter_AddRefs(mightBeLegendNode));
-      nsCOMPtr<nsIDOMHTMLLegendElement> legend(do_QueryInterface(mightBeLegendNode));
-      if (legend) {
-        walker.GetNextSibling();      // Skip the legend
+  if (aRelationType == nsIAccessibleRelation::RELATION_LABELLED_BY) {
+    // No override for label, so use <legend> for this <fieldset>
+    nsCOMPtr<nsIDOMNode> legendNode = do_QueryInterface(GetLegend());
+    if (legendNode) {
+      GetAccService()->GetAccessibleInWeakShell(legendNode, mWeakShell, aRelated);
+    }
+  }
+
+  return NS_OK;
+}
+
+nsHTMLLegendAccessible::nsHTMLLegendAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
+nsHyperTextAccessibleWrap(aNode, aShell)
+{ 
+}
+
+NS_IMETHODIMP
+nsHTMLLegendAccessible::GetAccessibleRelated(PRUint32 aRelationType,
+                                             nsIAccessible **aRelated)
+{
+  *aRelated = nsnull;
+
+  nsresult rv = nsHyperTextAccessibleWrap::GetAccessibleRelated(aRelationType, aRelated);
+  if (NS_FAILED(rv) || *aRelated) {
+    // Either the node is shut down, or another relation mechanism has been used
+    return rv;
+  }
+
+  if (aRelationType == nsIAccessibleRelation::RELATION_LABEL_FOR) {
+    // Look for groupbox parent
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+    if (!content) {
+      return NS_ERROR_FAILURE;  // Node already shut down
+    }
+    nsCOMPtr<nsIAccessible> groupboxAccessible = GetParent();
+    if (groupboxAccessible &&
+        Role(groupboxAccessible) == nsIAccessibleRole::ROLE_GROUPING) {
+      nsCOMPtr<nsIAccessible> testLabelAccessible;
+      groupboxAccessible->GetAccessibleRelated(nsIAccessibleRelation::RELATION_LABELLED_BY,
+                                               getter_AddRefs(testLabelAccessible));
+      if (testLabelAccessible == this) {
+        // We're the first child of the parent groupbox
+        NS_ADDREF(*aRelated = groupboxAccessible);
       }
     }
-    SetFirstChild(walker.mState.accessible);
-    nsCOMPtr<nsPIAccessible> privatePrevAccessible;
-    while (walker.mState.accessible) {
-      ++ childCount;
-      privatePrevAccessible = do_QueryInterface(walker.mState.accessible);
-      privatePrevAccessible->SetParent(this);
-      walker.GetNextSibling();
-      privatePrevAccessible->SetNextSibling(walker.mState.accessible);
-    }
-    mAccChildCount = childCount;
   }
+
+  return NS_OK;
 }
