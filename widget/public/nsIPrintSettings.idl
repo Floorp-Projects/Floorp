@@ -58,7 +58,7 @@ interface nsIPrintSession;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(f1094df6-ce0e-42c9-9847-2f663172c38d)]
+[scriptable, uuid(89c06ccb-6d41-4846-a8e2-63bfa7bd3157)]
 
 interface nsIPrintSettings : nsISupports
 {
@@ -178,9 +178,10 @@ interface nsIPrintSettings : nsISupports
   PRInt32 GetPrintOptionsBits();
 
   /**
-   * Returns W/H in Twips from Paper Size H/W
+   * Get the page size in twips, considering the
+   * orientation (portrait or landscape).
    */
-  void GetPageSizeInTwips(out long aWidth, out long aHeight);
+  void GetEffectivePageSize(out double aWidth, out double aHeight);
 
   /**
    * Makes a new copy
