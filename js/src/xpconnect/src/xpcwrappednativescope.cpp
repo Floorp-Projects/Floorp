@@ -271,15 +271,8 @@ WrappedNativeJSGCThingTracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
         JSTracer* trc = (JSTracer *)arg;
         JS_CALL_OBJECT_TRACER(trc, wrapper->GetFlatJSObject(),
                               "XPCWrappedNative::mFlatJSObject");
-
-        // FIXME: this call appears to do more harm than good, but
-        // there is reason to imagine it might clean up some cycles
-        // formed by a poor order between C++ and JS garbage cycle
-        // formations. See Bug 368869.
-        //
-        // if (JS_IsGCMarkingTracer(trc))
-        //   nsCycleCollector_suspectCurrent(wrapper);
     }
+
     return JS_DHASH_NEXT;
 }
 
@@ -291,10 +284,39 @@ XPCWrappedNativeScope::TraceJS(JSTracer* trc, XPCJSRuntime* rt)
     // access to JS runtime. See bug 380139.
     XPCAutoLock lock(rt->GetMapLock());
 
-    // Do JS_CallTracer for all wrapperednatives with external references.
+    // Do JS_CallTracer for all wrapped natives with external references.
     for(XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext)
     {
         cur->mWrappedNativeMap->Enumerate(WrappedNativeJSGCThingTracer, trc);
+    }
+}
+
+JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+WrappedNativeSuspecter(JSDHashTable *table, JSDHashEntryHdr *hdr,
+                       uint32 number, void *arg)
+{
+    XPCWrappedNative* wrapper = ((Native2WrappedNativeMap::Entry*)hdr)->value;
+    XPCWrappedNativeProto* proto = wrapper->GetProto();
+    if(proto && proto->ClassIsMainThreadOnly()) 
+    {
+        NS_ASSERTION(NS_IsMainThread(), 
+                     "Suspecting wrapped natives from non-main thread");
+        nsCycleCollector_suspectCurrent(wrapper);
+    }
+
+    return JS_DHASH_NEXT;
+}
+
+// static
+void
+XPCWrappedNativeScope::SuspectAllWrappers(XPCJSRuntime* rt)
+{
+    XPCAutoLock lock(rt->GetMapLock());
+
+    // Do nsCycleCollector_suspectCurrent for all wrapped natives.
+    for(XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext)
+    {
+        cur->mWrappedNativeMap->Enumerate(WrappedNativeSuspecter, nsnull);
     }
 }
 
