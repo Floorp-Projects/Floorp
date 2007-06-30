@@ -94,6 +94,11 @@ gfxOS2Font::~gfxOS2Font()
 #define CONVERT_DESIGN_UNITS_TO_PIXELS_Y(v) \
         CONVERT_DESIGN_UNITS_TO_PIXELS(v, face->size->metrics.y_scale)
 
+// gfxOS2Font::GetMetrics()
+// return the metrics of the current font using the gfxFont metrics structure.
+// If the metrics are not available yet, compute them using the FreeType
+// function on the font. (This is partly based on the respective function from
+// gfxPangoFonts)
 const gfxFont::Metrics& gfxOS2Font::GetMetrics()
 {
 #ifdef DEBUG_thebes_1
@@ -115,7 +120,7 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
         FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT);
         // face->glyph->metrics.width doesn't work for spaces, use advance.x instead
         // spaces are always too narrow, unless I multiply by some extra factor
-        mMetrics->spaceWidth = CONVERT_DESIGN_UNITS_TO_PIXELS_X(face->glyph->advance.x) * 2;
+        mMetrics->spaceWidth = CONVERT_DESIGN_UNITS_TO_PIXELS_X(face->glyph->advance.x);
         // save the space glyph
         mSpaceGlyph = gid;
     
@@ -134,11 +139,12 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
         // could access these via os2 table, but copy behavior from gfxPangoFonts
         mMetrics->strikeoutOffset = mMetrics->xHeight / 2.0;
         mMetrics->strikeoutSize   = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->underline_thickness);
+        // seems that underlineOffset really has to be negative
         mMetrics->underlineOffset = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->underline_position);
         mMetrics->underlineSize   = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->underline_thickness);
     
         // descents are negative in FT but Thebes wants them positive
-        mMetrics->emHeight        = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->size->metrics.y_ppem);
+        mMetrics->emHeight        = face->size->metrics.y_ppem;
         mMetrics->emAscent        = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->ascender);
         mMetrics->emDescent       = -CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->descender);
         mMetrics->maxHeight       = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->height);
@@ -156,17 +162,27 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
     
 #ifdef DEBUG_thebes_1
         printf("gfxOS2Font[%#x]::GetMetrics():\n"
+               "  %s\n"
                "  emHeight=%f==%f=gfxFont::mStyle.size\n"
                "  maxHeight=%f\n"
                "  xHeight=%f\n"
                "  aveCharWidth=%f==xWidth\n"
-               "  spaceWidth=%f\n",
+               "  spaceWidth=%f\n"
+               "  others: %f %f   %f %f   %f %f\n      %f %f %f   %f %f %f\n      %f %f\n",
                (unsigned)this,
+               NS_LossyConvertUTF16toASCII(mName).get(),
                mMetrics->emHeight, mStyle.size,
                mMetrics->maxHeight,
                mMetrics->xHeight,
                mMetrics->aveCharWidth,
-               mMetrics->spaceWidth);
+               mMetrics->spaceWidth,
+               mMetrics->superscriptOffset, mMetrics->subscriptOffset,
+               mMetrics->strikeoutOffset, mMetrics->strikeoutSize,
+               mMetrics->underlineOffset, mMetrics->underlineSize,
+               mMetrics->emAscent, mMetrics->emDescent, mMetrics->maxHeight,
+               mMetrics->maxAscent, mMetrics->maxDescent, mMetrics->maxAdvance,
+               mMetrics->internalLeading, mMetrics->externalLeading
+              );
 #endif
         cairo_ft_scaled_font_unlock_face(CairoScaledFont());
     }
