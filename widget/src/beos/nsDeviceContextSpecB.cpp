@@ -402,6 +402,11 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS :: ClosePrintManager()
   return NS_OK;
 }  
 
+NS_IMETHODIMP nsDeviceContextSpecBeOS::GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight)
+{
+  return mPrintSettings->GetPageSizeInTwips(aWidth, aHeight);
+}
+
 //  Printer Enumerator
 nsPrinterEnumeratorBeOS::nsPrinterEnumeratorBeOS()
 {
