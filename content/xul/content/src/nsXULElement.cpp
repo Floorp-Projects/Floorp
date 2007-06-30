@@ -2830,8 +2830,8 @@ nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
                         NS_ERROR("XUL cache gave different language?");
                         return NS_ERROR_UNEXPECTED;
                     }
+                    mScriptObject.set(newScriptObject);
                 }
-                mScriptObject.set(newScriptObject);
             }
         }
 
