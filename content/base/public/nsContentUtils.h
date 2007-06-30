@@ -982,14 +982,18 @@ public:
     ScriptObjectHolder(PRUint32 aLangID) : mLangID(aLangID),
                                            mObject(nsnull)
     {
+      MOZ_COUNT_CTOR(ScriptObjectHolder);
     }
     ~ScriptObjectHolder()
     {
+      MOZ_COUNT_DTOR(ScriptObjectHolder);
       if (mObject)
         DropScriptObject(mLangID, mObject);
     }
     nsresult set(void *aObject)
     {
+      NS_ASSERTION(aObject, "unexpected null object");
+      NS_ASSERTION(!mObject, "already have an object");
       nsresult rv = HoldScriptObject(mLangID, aObject);
       if (NS_SUCCEEDED(rv)) {
         mObject = aObject;
