@@ -161,6 +161,13 @@ CAIRO_BEGIN_DECLS
 #define M_PI 3.14159265358979323846
 #endif
 
+#ifndef NDEBUG
+#undef assert
+#define assert(expr) \
+    do { if (!(expr)) fprintf(stderr, "Assertion failed at %s:%d: %s\n", \
+          __FILE__, __LINE__, #expr); } while (0)
+#endif
+
 #undef  ARRAY_LENGTH
 #define ARRAY_LENGTH(__array) ((int) (sizeof (__array) / sizeof (__array[0])))
 
