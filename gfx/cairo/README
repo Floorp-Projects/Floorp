@@ -26,4 +26,6 @@ win32-scaled-font-size.patch: Add cairo_win32_font_face_create_for_logfontw_hfon
 allow win32 scaled_fonts to rescale themselves properly to the required CTM
 and only use the font_face's hfont if we're sure it's appropriate
 
+win32-logical-font-scale.patch: set CAIRO_WIN32_LOGICAL_FONT_SCALE to 1
+
 nonfatal-assertions.patch: Make assertions non-fatal
