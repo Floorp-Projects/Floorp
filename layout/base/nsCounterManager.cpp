@@ -237,6 +237,7 @@ nsCounterManager::AddResetOrIncrement(nsIFrame *aFrame, PRInt32 aIndex,
     if (!counterList->IsLast(node)) {
         // Tell the caller it's responsible for recalculating the entire
         // list.
+        counterList->SetDirty();
         return PR_TRUE;
     }
 
