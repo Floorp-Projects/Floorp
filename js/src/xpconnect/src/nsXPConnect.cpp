@@ -573,6 +573,8 @@ nsXPConnect::BeginCycleCollection()
     JS_SetGCCallback(cx, gOldJSGCCallback);
     gOldJSGCCallback = nsnull;
 
+    XPCWrappedNativeScope::SuspectAllWrappers(mRuntime);
+
 #ifndef XPCONNECT_STANDALONE
     NS_ASSERTION(mObjRefcounts->mScopes.Count() == 0, "Didn't clear mScopes?");
     XPCWrappedNativeScope::TraverseScopes(*mCycleCollectionContext);
