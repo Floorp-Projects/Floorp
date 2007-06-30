@@ -2603,6 +2603,7 @@ NS_IMETHODIMP XPCWrappedNative::DebugDump(PRInt16 depth)
             XPC_LOG_ALWAYS(("mSet @ %x", mSet));
 
         XPC_LOG_ALWAYS(("mFlatJSObject of %x", mFlatJSObject));
+        XPC_LOG_ALWAYS(("mIdentity of %x", mIdentity));
         XPC_LOG_ALWAYS(("mScriptableInfo @ %x", mScriptableInfo));
 
         if(depth && mScriptableInfo)
