@@ -407,18 +407,16 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUnichar* aString, PRUint32 aLen
     printf("gfxOS2FontGroup[%#x]::MakeTextRun(PRUnichar aString, %d, %#x, %d)\n",
            (unsigned)this, /*(const char*)aString,*/ aLength, (unsigned)aParams, aFlags);
 #endif
-    NS_ASSERTION(!(aFlags & TEXT_NEED_BOUNDING_BOX), "Glyph extents not yet supported");
     gfxTextRun *textRun = new gfxTextRun(aParams, aString, aLength, this, aFlags);
     if (!textRun)
         return nsnull;
-    NS_ASSERTION(aParams->mContext, "MakeTextRun called without a gfxContext");
 
     textRun->RecordSurrogates(aString);
     
     nsCAutoString utf8;
     PRInt32 headerLen = AppendDirectionalIndicatorUTF8(textRun->IsRightToLeft(), utf8);
     AppendUTF16toUTF8(Substring(aString, aString + aLength), utf8);
-    InitTextRun(textRun, (PRUint8 *)utf8.get(), utf8.Length(), headerLen, aString, aLength);
+    InitTextRun(textRun, (PRUint8 *)utf8.get(), utf8.Length(), headerLen);
 
 #ifdef DEBUG_thebes_2
     printf("gfxOS2FontGroup[%#x]::MakeTextRun(PRUnichar aString, %d, %#x) is done: %#x\n",
@@ -434,24 +432,26 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUint8* aString, PRUint32 aLengt
     printf("gfxOS2FontGroup[%#x]::MakeTextRun(PRUint8 aString, %d, %#x, %d)\n",
            (unsigned)this, /*(const char*)aString,*/ aLength, (unsigned)aParams, aFlags);
 #endif
-    NS_ASSERTION(aFlags & TEXT_IS_8BIT, "should be marked 8bit");
+    NS_ASSERTION(aFlags & TEXT_IS_8BIT, "8bit should have been set");
     gfxTextRun *textRun = new gfxTextRun(aParams, aString, aLength, this, aFlags);
     if (!textRun)
         return nsnull;
-    NS_ASSERTION(aParams->mContext, "MakeTextRun called without a gfxContext");
 
-    const char *utf8Chars = NS_REINTERPRET_CAST(const char *, aString);
+    const char *chars = NS_REINTERPRET_CAST(const char *, aString);
     PRBool isRTL = textRun->IsRightToLeft();
-    if (!isRTL) {
-        // We don't need to send an override character here, the characters must
-        // be all LTR
-        InitTextRun(textRun, (PRUint8 *)utf8Chars, aLength, 0, nsnull, 0);
+    if ((aFlags & TEXT_IS_ASCII) && !isRTL) {
+        // We don't need to send an override character here, the characters must be all
+        // LTR
+        InitTextRun(textRun, (PRUint8 *)chars, aLength, 0);
     } else {
-        NS_ConvertASCIItoUTF16 unicodeString(utf8Chars, aLength);
+        // Although chars in not necessarily ASCII (as it may point to the low
+        // bytes of any UCS-2 characters < 256), NS_ConvertASCIItoUTF16 seems
+        // to DTRT.
+        NS_ConvertASCIItoUTF16 unicodeString(chars, aLength);
         nsCAutoString utf8;
         PRInt32 headerLen = AppendDirectionalIndicatorUTF8(isRTL, utf8);
         AppendUTF16toUTF8(unicodeString, utf8);
-        InitTextRun(textRun, (PRUint8 *)utf8.get(), utf8.Length(), headerLen, nsnull, 0);
+        InitTextRun(textRun, (PRUint8 *)utf8.get(), utf8.Length(), headerLen);
     }
 
 #ifdef DEBUG_thebes_2
@@ -463,9 +463,7 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUint8* aString, PRUint32 aLengt
 
 void gfxOS2FontGroup::InitTextRun(gfxTextRun *aTextRun, const PRUint8 *aUTF8Text,
                                   PRUint32 aUTF8Length,
-                                  PRUint32 aUTF8HeaderLength,
-                                  const PRUnichar *aUTF16Text,
-                                  PRUint32 aUTF16Length)
+                                  PRUint32 aUTF8HeaderLength)
 {
     CreateGlyphRunsFT(aTextRun, aUTF8Text + aUTF8HeaderLength,
                       aUTF8Length - aUTF8HeaderLength);
@@ -555,7 +553,8 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
                 advance = MOZ_FT_TRUNC(face->glyph->advance.x) * appUnitsPerDevUnit;
             }
 #ifdef DEBUG_thebes_2
-            printf(" gid=%d, advance=%d\n", gid, advance);
+            printf(" gid=%d, advance=%d (%s)\n", gid, advance,
+                   NS_LossyConvertUTF16toASCII(font->GetName()).get());
 #endif
             
             if (advance >= 0 &&
