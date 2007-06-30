@@ -628,7 +628,7 @@ nsHTMLGroupboxAccessible::GetAccessibleRelated(PRUint32 aRelationType,
   if (!mDOMNode) {
     return NS_ERROR_FAILURE;
   }
-  NS_ENSURE_ARG_POINTER(aRelated, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_ARG_POINTER(aRelated);
 
   *aRelated = nsnull;
 
