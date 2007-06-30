@@ -1097,6 +1097,11 @@ ifdef NO_LD_ARCHIVE_FLAGS
 SUB_SHLOBJS = $(SUB_LOBJS)
 endif
 
+# On Darwin (Mac OS X), dwarf2 debugging uses debug info left in .o files,
+# so instead of deleting .o files after repacking them into a dylib, we make
+# symlinks back to the originals. The symlinks are a no-op for stabs debugging,
+# so no need to conditionalize on OS version or debugging format.
+
 $(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(DEF_FILE) $(RESFILE) $(SHARED_LIBRARY_LIBS) $(EXTRA_DEPS) $(DSO_LDOPTS_DEPS) Makefile Makefile.in
 ifndef INCREMENTAL_LINKER
 	rm -f $@
@@ -1133,7 +1138,22 @@ ifdef EMBED_MANIFEST_AT
 endif   # embed manifest
 endif	# MSVC with manifest tool
 endif	# WINNT && !GCC
-	@rm -f foodummyfilefoo $(SUB_SHLOBJS) $(DELETE_AFTER_LINK)
+ifeq ($(OS_ARCH),Darwin)
+	@for lib in $(SHARED_LIBRARY_LIBS); do \
+		libdir=`echo $$lib|sed -e 's,/[^/]*\.a,,'`; \
+		ofiles=`$(AR_LIST) $${lib}`; \
+		for ofile in $$ofiles; do \
+			if [ -f $$libdir/$$ofile ]; then \
+				rm -f $$ofile; \
+				ln -s $$libdir/$$ofile $$ofile; \
+			fi; \
+		done; \
+	done
+	@touch $(SHARED_LIBRARY)
+else # non-Darwin
+	@rm -f $(SUB_SHLOBJS)
+endif # Darwin
+	@rm -f foodummyfilefoo $(DELETE_AFTER_LINK)
 else # os2 vacpp
 	$(MKSHLIB) -O:$@ -DLL -INC:_dllentry $(LDFLAGS) $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
 endif # !os2 vacpp
