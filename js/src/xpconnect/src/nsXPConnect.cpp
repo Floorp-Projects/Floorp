@@ -217,11 +217,6 @@ struct JSObjectRefcounts
 
 nsXPConnect::~nsXPConnect()
 {
-    // XXX It would be nice if we could get away with doing a GC here and also
-    // calling Release on the natives no longer reachable via XPConnect. As
-    // noted all over the place, this makes bad things happen since shutdown is
-    // an unstable time for so many modules who have not planned well for it.
-
     NS_ASSERTION(!mCycleCollectionContext,
                  "Didn't call FinishCycleCollection?");
     nsCycleCollector_forgetRuntime(nsIProgrammingLanguage::JAVASCRIPT);
@@ -231,35 +226,30 @@ nsXPConnect::~nsXPConnect()
         mObjRefcounts = NULL;
     }
 
+    JSContext *cx = nsnull;
+    if (mRuntime) {
+        cx = JS_NewContext(mRuntime->GetJSRuntime(), 8192);
+    }
+
+    XPCPerThreadData::CleanupAllThreads();
     mShuttingDown = JS_TRUE;
-    { // scoped callcontext
-        XPCCallContext ccx(NATIVE_CALLER);
-        if(ccx.IsValid())
-        {
-            XPCWrappedNativeScope::SystemIsBeingShutDown(ccx);
-            if(mRuntime)
-                mRuntime->SystemIsBeingShutDown(&ccx);
-                
-        }
+    if (cx) {
+        // Create our own JSContext rather than an XPCCallContext, since
+        // otherwise we will create a new safe JS context and attach a
+        // components object that won't get GCed.
+        JS_BeginRequest(cx);
+
+        // XXX Call even if |mRuntime| null?
+        XPCWrappedNativeScope::SystemIsBeingShutDown(cx);
+
+        mRuntime->SystemIsBeingShutDown(cx);
+
+        JS_EndRequest(cx);
+        JS_DestroyContext(cx);
     }
 
     NS_IF_RELEASE(mContextStack);
     NS_IF_RELEASE(mDefaultSecurityManager);
-
-    // Unfortunately calling CleanupAllThreads before the stuff above
-    // (esp. SystemIsBeingShutDown) causes too many bad things to happen
-    // as the Release calls propagate. See the comment in this function in
-    // revision 1.35 of this file.
-    //
-    // I filed a bug on xpcom regarding the bad things that happen
-    // if people try to create components during shutdown.
-    // http://bugzilla.mozilla.org/show_bug.cgi?id=37058
-    //
-    // Also, we just plain need the context stack for at least the current
-    // thread to be in place. Unfortunately, this will leak stuff on the
-    // stacks' safeJSContexts. But, this is a shutdown leak only.
-
-    XPCPerThreadData::CleanupAllThreads();
 
     // shutdown the logging system
     XPC_LOG_FINISH();

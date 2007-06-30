@@ -1017,8 +1017,21 @@ XPCWrappedNative::FlatJSObjectFinalized(JSContext *cx, JSObject *obj)
 }
 
 void
-XPCWrappedNative::SystemIsBeingShutDown(XPCCallContext& ccx)
+XPCWrappedNative::SystemIsBeingShutDown(JSContext* cx)
 {
+#ifdef DEBUG_xpc_hacker
+    {
+        printf("Removing root for still-live XPCWrappedNative %p wrapping:\n",
+               NS_STATIC_CAST(void*, this));
+        for(PRUint16 i = 0, i_end = mSet->GetInterfaceCount(); i < i_end; ++i)
+        {
+            nsXPIDLCString name;
+            mSet->GetInterfaceAt(i)->GetInterfaceInfo()
+                ->GetName(getter_Copies(name));
+            printf("  %s\n", name.get());
+        }
+    }
+#endif
     DEBUG_TrackShutdownWrapper(this);
 
     if(!IsValid())
@@ -1031,13 +1044,13 @@ XPCWrappedNative::SystemIsBeingShutDown(XPCCallContext& ccx)
     // We leak mIdentity (see above).
 
     // short circuit future finalization
-    JS_SetPrivate(ccx, mFlatJSObject, nsnull);
+    JS_SetPrivate(cx, mFlatJSObject, nsnull);
     mFlatJSObject = nsnull; // This makes 'IsValid()' return false.
 
     XPCWrappedNativeProto* proto = GetProto();
 
     if(HasProto())
-        proto->SystemIsBeingShutDown(ccx);
+        proto->SystemIsBeingShutDown(cx);
 
     if(mScriptableInfo &&
        (!HasProto() ||
@@ -1056,7 +1069,7 @@ XPCWrappedNative::SystemIsBeingShutDown(XPCCallContext& ccx)
         {
             if(to->GetJSObject())
             {
-                JS_SetPrivate(ccx, to->GetJSObject(), nsnull);
+                JS_SetPrivate(cx, to->GetJSObject(), nsnull);
 #ifdef XPC_IDISPATCH_SUPPORT
                 if(to->IsIDispatch())
                     delete to->GetIDispatchInfo();
