@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsBidiUtils.h"
+#include "symmtable.h"
+#include "bidicattable.h"
 
 #define FE_TO_06_OFFSET 0xfe70
 
@@ -247,6 +249,32 @@ static const PRUint16 gArabicLigatureMap[] =
 0x88E0, // 0xFE88 0xFEE0 -> 0xFEFA
 0x8EDF, // 0xFE8E 0xFEDF -> 0xFEFB
 0x8EE0  // 0xFE8E 0xFEE0 -> 0xFEFC
+};
+
+static nsCharType ebc2ucd[15] = {
+  eCharType_OtherNeutral, /* Placeholder -- there will never be a 0 index value */
+  eCharType_LeftToRight,
+  eCharType_RightToLeft,
+  eCharType_RightToLeftArabic,
+  eCharType_ArabicNumber,
+  eCharType_EuropeanNumber,
+  eCharType_EuropeanNumberSeparator,
+  eCharType_EuropeanNumberTerminator,
+  eCharType_CommonNumberSeparator,
+  eCharType_OtherNeutral,
+  eCharType_DirNonSpacingMark,
+  eCharType_BoundaryNeutral,
+  eCharType_BlockSeparator,
+  eCharType_SegmentSeparator,
+  eCharType_WhiteSpaceNeutral
+};
+
+static nsCharType cc2ucd[5] = {
+  eCharType_LeftToRightEmbedding,
+  eCharType_RightToLeftEmbedding,
+  eCharType_PopDirectionalFormat,
+  eCharType_LeftToRightOverride,
+  eCharType_RightToLeftOverride
 };
 
 #define ARABIC_TO_HINDI_DIGIT_INCREMENT (START_HINDI_DIGITS - START_ARABIC_DIGITS)
@@ -558,3 +586,49 @@ nsresult HandleNumbers(const nsString& aSrc, nsString& aDst)
   return HandleNumbers((PRUnichar *)aDst.get(),aDst.Length(), IBMBIDI_NUMERAL_REGULAR);
 }
 
+PRUint32 SymmSwap(PRUint32 aChar)
+{
+  return Mirrored(aChar);
+}
+
+eBidiCategory GetBidiCategory(PRUint32 aChar)
+{
+  eBidiCategory oResult = GetBidiCat(aChar);
+  if (eBidiCat_CC == oResult)
+    oResult = (eBidiCategory)(aChar & 0xFF); /* Control codes have special treatment to keep the tables smaller */
+  return oResult;
+}
+
+PRBool IsBidiCategory(PRUint32 aChar, eBidiCategory aBidiCategory)
+{
+  return (GetBidiCategory(aChar) == aBidiCategory);
+}
+
+#define LRM_CHAR 0x200e
+PRBool IsBidiControl(PRUint32 aChar)
+{
+  // This method is used when stripping Bidi control characters for
+  // display, so it will return TRUE for LRM and RLM as
+  // well as the characters with category eBidiCat_CC
+  return (eBidiCat_CC == GetBidiCat(aChar) || ((aChar)&0xfffffe)==LRM_CHAR);
+}
+
+nsCharType GetCharType(PRUint32 aChar)
+{
+  nsCharType oResult;
+  eBidiCategory bCat = GetBidiCat(aChar);
+  if (eBidiCat_CC != bCat) {
+    NS_ASSERTION(bCat < (sizeof(ebc2ucd)/sizeof(nsCharType)), "size mismatch");
+    if(bCat < (sizeof(ebc2ucd)/sizeof(nsCharType)))
+      oResult = ebc2ucd[bCat];
+    else 
+      oResult = ebc2ucd[0]; // something is very wrong, but we need to return a value
+  } else {
+    NS_ASSERTION((aChar-0x202a) < (sizeof(cc2ucd)/sizeof(nsCharType)), "size mismatch");
+    if((aChar-0x202a) < (sizeof(cc2ucd)/sizeof(nsCharType)))
+      oResult = cc2ucd[aChar - 0x202a];
+    else 
+      oResult = ebc2ucd[0]; // something is very wrong, but we need to return a value
+  }
+  return oResult;
+}
