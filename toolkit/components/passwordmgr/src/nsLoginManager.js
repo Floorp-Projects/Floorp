@@ -38,19 +38,19 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 function LoginManager() {
     this.init();
 }
 
 LoginManager.prototype = {
 
-    QueryInterface : function (iid) {
-        const interfaces = [Ci.nsILoginManager,
-                            Ci.nsISupports, Ci.nsISupportsWeakReference];
-        if (!interfaces.some( function(v) { return iid.equals(v) } ))
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-        return this;
-    },
+    classDescription: "LoginManager",
+    contractID: "@mozilla.org/login-manager;1",
+    classID: Components.ID("{cb9e0de8-3598-4ed7-857b-827f011ad5d8}"),
+    QueryInterface : XPCOMUtils.generateQI([Ci.nsILoginManager,
+                                            Ci.nsISupportsWeakReference]),
 
 
     /* ---------- private memebers ---------- */
@@ -221,13 +221,9 @@ LoginManager.prototype = {
     _observer : {
         _pwmgr : null,
 
-        QueryInterface : function (iid) {
-            const interfaces = [Ci.nsIObserver, Ci.nsIFormSubmitObserver,
-                                Ci.nsISupports, Ci.nsISupportsWeakReference];
-            if (!interfaces.some( function(v) { return iid.equals(v) } ))
-                throw Components.results.NS_ERROR_NO_INTERFACE;
-            return this;
-        },
+        QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver, 
+                                                Ci.nsIFormSubmitObserver,
+                                                Ci.nsISupportsWeakReference]),
 
 
         // nsFormSubmitObserver
@@ -287,13 +283,8 @@ LoginManager.prototype = {
         _pwmgr : null,
         _domEventListener : null,
 
-        QueryInterface : function (iid) {
-            const interfaces = [Ci.nsIWebProgressListener,
-                                Ci.nsISupports, Ci.nsISupportsWeakReference];
-            if (!interfaces.some( function(v) { return iid.equals(v) } ))
-                throw Components.results.NS_ERROR_NO_INTERFACE;
-            return this;
-        },
+        QueryInterface : XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
+                                                Ci.nsISupportsWeakReference]),
 
 
         onStateChange : function (aWebProgress, aRequest,
@@ -347,13 +338,8 @@ LoginManager.prototype = {
     _domEventListener : {
         _pwmgr : null,
 
-        QueryInterface : function (iid) {
-            const interfaces = [Ci.nsIDOMEventListener,
-                                Ci.nsISupports, Ci.nsISupportsWeakReference];
-            if (!interfaces.some( function(v) { return iid.equals(v) } ))
-                throw Components.results.NS_ERROR_NO_INTERFACE;
-            return this;
-        },
+        QueryInterface : XPCOMUtils.generateQI([Ci.nsIDOMEventListener,
+                                                Ci.nsISupportsWeakReference]),
 
 
         handleEvent : function (event) {
@@ -1270,13 +1256,8 @@ function UserAutoCompleteResult (aSearchString, matchingLogins) {
 }
 
 UserAutoCompleteResult.prototype = {
-    QueryInterface : function (iid) {
-        const interfaces = [Ci.nsIAutoCompleteResult,
-                            Ci.nsISupports, Ci.nsISupportsWeakReference];
-        if (!interfaces.some( function(v) { return iid.equals(v) } ))
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-        return this;
-    },
+    QueryInterface : XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult,
+                                            Ci.nsISupportsWeakReference]),
 
     // private
     logins : null,
@@ -1320,60 +1301,7 @@ UserAutoCompleteResult.prototype = {
     },
 };
 
-
-
-
-// Boilerplate code for component registration...
-var gModule = {
-    registerSelf: function (componentManager, fileSpec, location, type) {
-        componentManager = componentManager.QueryInterface(
-                                                Ci.nsIComponentRegistrar);
-        for each (var obj in this._objects)
-            componentManager.registerFactoryLocation(obj.CID,
-                    obj.className, obj.contractID,
-                    fileSpec, location, type);
-    },
-
-    unregisterSelf: function (componentManager, location, type) {
-        for each (var obj in this._objects)
-            componentManager.unregisterFactoryLocation(obj.CID, location);
-    },
-
-    getClassObject: function (componentManager, cid, iid) {
-        if (!iid.equals(Ci.nsIFactory))
-            throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-
-        for (var key in this._objects) {
-            if (cid.equals(this._objects[key].CID))
-                return this._objects[key].factory;
-        }
-
-        throw Components.results.NS_ERROR_NO_INTERFACE;
-    },
-
-    _objects: {
-        service: {
-            CID : Components.ID("{cb9e0de8-3598-4ed7-857b-827f011ad5d8}"),
-            contractID : "@mozilla.org/login-manager;1",
-            className  : "LoginManager",
-            factory    : LoginManagerFactory = {
-                createInstance: function (aOuter, aIID) {
-                    if (aOuter != null)
-                        throw Components.results.NS_ERROR_NO_AGGREGATION;
-        
-                    var svc = new LoginManager();
-
-                    return svc.QueryInterface(aIID);
-                }
-            }
-        }
-    },
-
-    canUnload: function (componentManager) {
-        return true;
-    }
-};
-
+var component = [LoginManager];
 function NSGetModule (compMgr, fileSpec) {
-    return gModule;
+    return XPCOMUtils.generateModule(component);
 }
