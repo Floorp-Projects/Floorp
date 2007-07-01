@@ -1152,13 +1152,15 @@ function delayedStartup()
   // Initialize the content pref event sink and the text zoom setting.
   // We do this before the session restore service gets initialized so we can
   // apply text zoom settings to tabs restored by the session restore service.
+  /** disable to check perf impact 
   try {
     ContentPrefSink.init();
     TextZoom.init();
   }
   catch(ex) {
     Components.utils.reportError(ex);
-  }
+  } 
+  **/
 
   // initialize the session-restore service (in case it's not already running)
   if (document.documentElement.getAttribute("windowtype") == "navigator:browser") {
@@ -1184,6 +1186,7 @@ function delayedStartup()
 
 function BrowserShutdown()
 {
+  /** disable to check perf impact 
   try {
     TextZoom.destroy();
     ContentPrefSink.destroy();
@@ -1191,6 +1194,7 @@ function BrowserShutdown()
   catch(ex) {
     Components.utils.reportError(ex);
   }
+  **/
 
   var os = Components.classes["@mozilla.org/observer-service;1"]
     .getService(Components.interfaces.nsIObserverService);
@@ -5633,8 +5637,10 @@ var FeedHandler = {
 #include browser-places.js
 #endif
 
-#include browser-contentPrefSink.js
-#include browser-textZoom.js
+/** disable to check perf impact 
+ include browser-contentPrefSink.js
+ include browser-textZoom.js
+**/
 
 /**
  * This object is for augmenting tabs
