@@ -110,6 +110,8 @@
             extends="chrome://global/content/bindings/general.xml#basecontrol">
 
     <implementation implements="nsIDOMXULMultiSelectControlElement, nsIAccessibleProvider">
+      <field name="_lastKeyTime">0</field>
+      <field name="_incrementalString">""</field>
 
     <!-- nsIAccessibleProvider -->
       <property name="accessibleType" readonly="true">
@@ -569,10 +571,60 @@
                action="moveByOffset(this.scrollOnePage(1), !event.ctrlKey, event.shiftKey);"
                phase="target" preventdefault="true"/>
       <handler event="keypress" key=" " modifiers="control" phase="target">
-        <![CDATA[
-          if (this.currentItem && this.selType == "multiple")
-            this.toggleItemSelection(this.currentItem);
-        ]]>
+      <![CDATA[
+        if (this.currentItem && this.selType == "multiple")
+          this.toggleItemSelection(this.currentItem);
+      ]]>
+      </handler>
+      <handler event="focus">
+      <![CDATA[
+        if (this.currentIndex == -1 && this.getRowCount() > 0) {
+          this.currentIndex = this.getIndexOfFirstVisibleRow();
+        }
+        this._lastKeyTime = 0;
+      ]]>
+      </handler>
+      <handler event="keypress" phase="target">
+      <![CDATA[
+        if (this.disableKeyNavigation || !event.charCode ||
+            event.altKey || event.ctrlKey || event.metaKey)
+          return;
+
+        if (event.timeStamp - this._lastKeyTime > 1000)
+          this._incrementalString = "";
+
+        var key = String.fromCharCode(event.charCode).toLowerCase();
+        this._incrementalString += key;
+        this._lastKeyTime = event.timeStamp;
+
+        // If all letters in the incremental string are the same, just
+        // try to match the first one
+        var incrementalString = /^(.)\1+$/.test(this._incrementalString) ?
+                                RegExp.$1 : this._incrementalString;
+        var length = incrementalString.length;
+
+        var rowCount = this.getRowCount();
+        var l = this.selectedItems.length;
+        var start = l > 0 ? this.getIndexOfItem(this.selectedItems[l - 1]) : -1;
+        // start from the first element if none was selected or from the one
+        // following the selected one if it's a new or a repeated-letter search
+        if (start == -1 || length == 1)
+          start++;
+
+        for (var i = 0; i < rowCount; i++) {
+          var k = (start + i) % rowCount;
+          var listitem = this.getItemAtIndex(k);
+          // allow richlistitems to specify the string being searched for
+          var searchText = "searchLabel" in listitem ? listitem.searchLabel :
+                           listitem.getAttribute("label"); // (see also bug 250123)
+          searchText = searchText.substring(0, length).toLowerCase();
+          if (searchText == incrementalString) {
+            this.ensureIndexIsVisible(k);
+            this.timedSelect(listitem, this._selectDelay);
+            break;
+          }
+        }
+      ]]>
       </handler>
     </handlers>
   </binding>
@@ -602,8 +654,6 @@
     </content>
 
     <implementation>
-      <field name="_lastKeyTime">0</field>
-      <field name="_incrementalString">""</field>
 
       <!-- ///////////////// public listbox members ///////////////// -->
 
@@ -744,64 +794,6 @@
           }
         ]]>
       </handler>
-      <handler event="focus">
-        <![CDATA[
-          if (this.currentIndex == -1 && this.getRowCount() > 0) {
-            this.currentIndex = this.getIndexOfFirstVisibleRow();
-          }
-          this._lastKeyTime = 0;
-        ]]>
-      </handler>
-      <handler event="keypress" phase="target">
-      <![CDATA[
-         if (!this.disableKeyNavigation && event.charCode > 0 && 
-             !event.altKey && !event.ctrlKey && !event.metaKey) {
-           var key = String.fromCharCode(event.charCode);
-           key = key.toLowerCase();
-           if (event.timeStamp - this._lastKeyTime > 1000)
-             this._incrementalString = key;
-           else
-             this._incrementalString += key;
-           this._lastKeyTime = event.timeStamp;
-           
-           var length = this._incrementalString.length;
-           var incrementalString = this._incrementalString;
-           var charIndex = 1;
-           while (charIndex < length && incrementalString[charIndex] == incrementalString[charIndex - 1])
-             charIndex++;
-           // If all letters in incremental string are same, just try to match the first one
-           if (charIndex == length) {
-             length = 1;
-             incrementalString = incrementalString.substring(0, length);
-           }
-
-           var l = this.selectedItems.length;
-           var c = -1;
-           if (l > 0)
-             c = this.getIndexOfItem(this.selectedItems[l-1]);
-           var rowCount = this.getRowCount();
-           var start = 1;
-           
-           if (length > 1) {
-             start = 0;
-             if (c < 0)
-               c = 0;
-           }
-
-           for (var i = 0; i < rowCount; i++) {
-             var k = (i + start + c) % rowCount;
-             var item = this.getItemAtIndex(k); //listitem
-             var cellText = item.getAttribute("label");
-             cellText = cellText.substring(0, length).toLowerCase();
-             if (cellText == incrementalString) {
-               this.ensureIndexIsVisible(k);
-               this.timedSelect(item, this._selectDelay);
-               break;
-             }
-           }
-         }
-       ]]>
-       </handler>
     </handlers>    
   </binding>
 
