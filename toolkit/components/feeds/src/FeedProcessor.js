@@ -44,12 +44,38 @@ function LOG(str) {
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+const FP_CONTRACTID = "@mozilla.org/feed-processor;1";
+const FP_CLASSID = Components.ID("{26acb1f0-28fc-43bc-867a-a46aabc85dd4}");
+const FP_CLASSNAME = "Feed Processor";
+const FR_CONTRACTID = "@mozilla.org/feed-result;1";
+const FR_CLASSID = Components.ID("{072a5c3d-30c6-4f07-b87f-9f63d51403f2}");
+const FR_CLASSNAME = "Feed Result";
+const FEED_CONTRACTID = "@mozilla.org/feed;1";
+const FEED_CLASSID = Components.ID("{5d0cfa97-69dd-4e5e-ac84-f253162e8f9a}");
+const FEED_CLASSNAME = "Feed";
+const ENTRY_CONTRACTID = "@mozilla.org/feed-entry;1";
+const ENTRY_CLASSID = Components.ID("{8e4444ff-8e99-4bdd-aa7f-fb3c1c77319f}");
+const ENTRY_CLASSNAME = "Feed Entry";
+const TEXTCONSTRUCT_CONTRACTID = "@mozilla.org/feed-textconstruct;1";
+const TEXTCONSTRUCT_CLASSID =
+  Components.ID("{b992ddcd-3899-4320-9909-924b3e72c922}");
+const TEXTCONSTRUCT_CLASSNAME = "Feed Text Construct";
+const GENERATOR_CONTRACTID = "@mozilla.org/feed-generator;1";
+const GENERATOR_CLASSID =
+  Components.ID("{414af362-9ad8-4296-898e-62247f25a20e}");
+const GENERATOR_CLASSNAME = "Feed Generator";
+const PERSON_CONTRACTID = "@mozilla.org/feed-person;1";
+const PERSON_CLASSID = Components.ID("{95c963b7-20b2-11db-92f6-001422106990}");
+const PERSON_CLASSNAME = "Feed Person";
 
 const IO_CONTRACTID = "@mozilla.org/network/io-service;1"
 const BAG_CONTRACTID = "@mozilla.org/hash-property-bag;1"
 const ARRAY_CONTRACTID = "@mozilla.org/array;1";
 const SAX_CONTRACTID = "@mozilla.org/saxparser/xmlreader;1";
 const UNESCAPE_CONTRACTID = "@mozilla.org/feed-unescapehtml;1";
+
 
 var gIoService = Cc[IO_CONTRACTID].getService(Ci.nsIIOService);
 var gUnescapeHTML = Cc[UNESCAPE_CONTRACTID].
@@ -310,13 +336,11 @@ FeedResult.prototype = {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
-  QueryInterface: function FR_QI(iid) {
-    if (iid.equals(Ci.nsIFeedResult) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-
-    throw Cr.NS_ERROR_NOINTERFACE;
-  },
+  // XPCOM stuff
+  classDescription: FR_CLASSNAME,
+  classID: FR_CLASSID,
+  contractID: FR_CONTRACTID,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFeedResult])
 }  
 
 function Feed() {
@@ -422,14 +446,12 @@ Feed.prototype = {
       }
     }
   },
-   
-  QueryInterface: function Feed_QI(iid) {
-    if (iid.equals(Ci.nsIFeed) ||
-        iid.equals(Ci.nsIFeedContainer) ||
-        iid.equals(Ci.nsISupports))
-    return this;
-    throw Cr.NS_ERROR_NOINTERFACE;
-  }
+  
+  // XPCOM stuff
+  classDescription: FEED_CLASSNAME,
+  classID: FEED_CLASSID,
+  contractID: FEED_CONTRACTID,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFeed, Ci.nsIFeedContainer])
 }
 
 function Entry() {
@@ -496,15 +518,14 @@ Entry.prototype = {
                                     this.searchLists.summary, 
                                     this.searchLists.title]);
   },
-  
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIFeedEntry) ||
-        iid.equals(Ci.nsIFeedContainer) ||
-        iid.equals(Ci.nsISupports))
-    return this;
 
-    throw Cr.NS_ERROR_NOINTERFACE;
-  }
+  // XPCOM stuff
+  classDescription: ENTRY_CLASSNAME,
+  classID: ENTRY_CLASSID,
+  contractID: ENTRY_CONTRACTID,
+  QueryInterface: XPCOMUtils.generateQI(
+    [Ci.nsIFeedEntry, Ci.nsIFeedContainer]
+  )
 }
 
 Entry.prototype._atomLinksToURI = Feed.prototype._atomLinksToURI;
@@ -547,13 +568,11 @@ TextConstruct.prototype = {
     return gUnescapeHTML.parseFragment(this.text, isXML, this.base, element);
   },
  
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIFeedTextConstruct) ||
-        iid.equals(Ci.nsISupports))
-    return this;
-
-    throw Cr.NS_ERROR_NOINTERFACE;
-  }
+  // XPCOM stuff
+  classDescription: TEXTCONSTRUCT_CLASSNAME,
+  classID: TEXTCONSTRUCT_CLASSID,
+  contractID: TEXTCONSTRUCT_CONTRACTID,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFeedTextConstruct])
 }
 
 // Generator represents the software that produced the feed
@@ -589,14 +608,13 @@ Generator.prototype = {
     }
   },
 
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIFeedGenerator) ||
-        iid.equals(Ci.nsIFeedElementBase) ||
-        iid.equals(Ci.nsISupports))
-    return this;
-
-    throw Cr.NS_ERROR_NOINTERFACE;
-  }
+  // XPCOM stuff
+  classDescription: GENERATOR_CLASSNAME,
+  classID: GENERATOR_CLASSID,
+  contractID: GENERATOR_CONTRACTID,
+  QueryInterface: XPCOMUtils.generateQI(
+    [Ci.nsIFeedGenerator, Ci.nsIFeedElementBase]
+  )
 }
 
 function Person() {
@@ -610,14 +628,13 @@ function Person() {
 }
 
 Person.prototype = {
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIFeedPerson) ||
-        iid.equals(Ci.nsIFeedElementBase) ||
-        iid.equals(Ci.nsISupports))
-    return this;
-
-    throw Cr.NS_ERROR_NOINTERFACE;
-  }
+  // XPCOM stuff
+  classDescription: PERSON_CLASSNAME,
+  classID: PERSON_CLASSID,
+  contractID: PERSON_CONTRACTID,
+  QueryInterface: XPCOMUtils.generateQI(
+    [Ci.nsIFeedPerson, Ci.nsIFeedElementBase]
+  )
 }
 
 /** 
@@ -1780,148 +1797,19 @@ FeedProcessor.prototype = {
     this.endElement(uri, localName, qName);
   },
 
-  // nsISupports
-  QueryInterface: function FP_QueryInterface(iid) {
-    if (iid.equals(Ci.nsIFeedProcessor) ||
-        iid.equals(Ci.nsISAXContentHandler) ||
-        iid.equals(Ci.nsISAXErrorHandler) ||
-        iid.equals(Ci.nsIStreamListener) ||
-        iid.equals(Ci.nsIRequestObserver) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-
-    throw Cr.NS_ERROR_NOINTERFACE;
-  },
+  // XPCOM stuff
+  classDescription: FP_CLASSNAME,
+  classID: FP_CLASSID,
+  contractID: FP_CONTRACTID,
+  QueryInterface: XPCOMUtils.generateQI(
+    [Ci.nsIFeedProcessor, Ci.nsISAXContentHandler, Ci.nsISAXErrorHandler,
+     Ci.nsIStreamListener, Ci.nsIRequestObserver]
+  )
 }
 
-const FP_CONTRACTID = "@mozilla.org/feed-processor;1";
-const FP_CLASSID = Components.ID("{26acb1f0-28fc-43bc-867a-a46aabc85dd4}");
-const FP_CLASSNAME = "Feed Processor";
-const FR_CONTRACTID = "@mozilla.org/feed-result;1";
-const FR_CLASSID = Components.ID("{072a5c3d-30c6-4f07-b87f-9f63d51403f2}");
-const FR_CLASSNAME = "Feed Result";
-const FEED_CONTRACTID = "@mozilla.org/feed;1";
-const FEED_CLASSID = Components.ID("{5d0cfa97-69dd-4e5e-ac84-f253162e8f9a}");
-const FEED_CLASSNAME = "Feed";
-const ENTRY_CONTRACTID = "@mozilla.org/feed-entry;1";
-const ENTRY_CLASSID = Components.ID("{8e4444ff-8e99-4bdd-aa7f-fb3c1c77319f}");
-const ENTRY_CLASSNAME = "Feed Entry";
-const TEXTCONSTRUCT_CONTRACTID = "@mozilla.org/feed-textconstruct;1";
-const TEXTCONSTRUCT_CLASSID =
-  Components.ID("{b992ddcd-3899-4320-9909-924b3e72c922}");
-const TEXTCONSTRUCT_CLASSNAME = "Feed Text Construct";
-const GENERATOR_CONTRACTID = "@mozilla.org/feed-generator;1";
-const GENERATOR_CLASSID =
-  Components.ID("{414af362-9ad8-4296-898e-62247f25a20e}");
-const GENERATOR_CLASSNAME = "Feed Generator";
-const PERSON_CONTRACTID = "@mozilla.org/feed-person;1";
-const PERSON_CLASSID = Components.ID("{95c963b7-20b2-11db-92f6-001422106990}");
-const PERSON_CLASSNAME = "Feed Person";
-
-function GenericComponentFactory(ctor) {
-  this._ctor = ctor;
-}
-
-GenericComponentFactory.prototype = {
-
-  _ctor: null,
-
-  // nsIFactory
-  createInstance: function(outer, iid) {
-    if (outer != null)
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    return (new this._ctor()).QueryInterface(iid);
-  },
-
-  // nsISupports
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIFactory) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-
-};
-
-var Module = {
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIModule) || 
-        iid.equals(Ci.nsISupports))
-      return this;
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-
-  getClassObject: function(cm, cid, iid) {
-    if (!iid.equals(Ci.nsIFactory))
-      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-
-    if (cid.equals(FP_CLASSID))
-      return new GenericComponentFactory(FeedProcessor);
-    if (cid.equals(FR_CLASSID))
-      return new GenericComponentFactory(FeedResult);
-    if (cid.equals(FEED_CLASSID))
-      return new GenericComponentFactory(Feed);
-    if (cid.equals(ENTRY_CLASSID))
-      return new GenericComponentFactory(Entry);
-    if (cid.equals(TEXTCONSTRUCT_CLASSID))
-      return new GenericComponentFactory(TextConstruct);
-    if (cid.equals(GENERATOR_CLASSID))
-      return new GenericComponentFactory(Generator);
-    if (cid.equals(PERSON_CLASSID))
-      return new GenericComponentFactory(Person);
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-
-  registerSelf: function(cm, file, location, type) {
-    var cr = cm.QueryInterface(Ci.nsIComponentRegistrar);
-    // Feed Processor
-    cr.registerFactoryLocation(FP_CLASSID, FP_CLASSNAME,
-      FP_CONTRACTID, file, location, type);
-    // Feed Result
-    cr.registerFactoryLocation(FR_CLASSID, FR_CLASSNAME,
-      FR_CONTRACTID, file, location, type);
-    // Feed
-    cr.registerFactoryLocation(FEED_CLASSID, FEED_CLASSNAME,
-      FEED_CONTRACTID, file, location, type);
-    // Entry
-    cr.registerFactoryLocation(ENTRY_CLASSID, ENTRY_CLASSNAME,
-      ENTRY_CONTRACTID, file, location, type);
-    // Text Construct
-    cr.registerFactoryLocation(TEXTCONSTRUCT_CLASSID, TEXTCONSTRUCT_CLASSNAME,
-      TEXTCONSTRUCT_CONTRACTID, file, location, type);
-    // Generator
-    cr.registerFactoryLocation(GENERATOR_CLASSID, GENERATOR_CLASSNAME,
-      GENERATOR_CONTRACTID, file, location, type);
-    // Person
-    cr.registerFactoryLocation(PERSON_CLASSID, PERSON_CLASSNAME,
-      PERSON_CONTRACTID, file, location, type);
-  },
-
-  unregisterSelf: function(cm, location, type) {
-    var cr = cm.QueryInterface(Ci.nsIComponentRegistrar);
-    // Feed Processor
-    cr.unregisterFactoryLocation(FP_CLASSID, location);
-    // Feed Result
-    cr.unregisterFactoryLocation(FR_CLASSID, location);
-    // Feed
-    cr.unregisterFactoryLocation(FEED_CLASSID, location);
-    // Entry
-    cr.unregisterFactoryLocation(ENTRY_CLASSID, location);
-    // Text Construct
-    cr.unregisterFactoryLocation(TEXTCONSTRUCT_CLASSID, location);
-    // Generator
-    cr.unregisterFactoryLocation(GENERATOR_CLASSID, location);
-    // Person
-    cr.unregisterFactoryLocation(PERSON_CLASSID, location);
-  },
-
-  canUnload: function(cm) {
-    return true;
-  },
-};
-
-function NSGetModule(cm, file) {
-  return Module;
+var components = [FeedProcessor, FeedResult, Feed, Entry,
+                  TextConstruct, Generator, Person];
+function NSGetModule(compMgr, fileSpec) {
+  return XPCOMUtils.generateModule(components);
+  
 }
