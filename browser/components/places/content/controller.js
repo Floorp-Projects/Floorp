@@ -218,7 +218,9 @@ PlacesController.prototype = {
       var selectedNode = this._view.selectedNode;
       return selectedNode &&
              PlacesUtils.nodeIsFolder(selectedNode) &&
-             !PlacesUtils.nodeIsReadOnly(selectedNode);
+             !PlacesUtils.nodeIsReadOnly(selectedNode) &&
+             this._view.getResult().sortingMode ==
+                 Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
     case "placesCmd_setAsBookmarksToolbarFolder":
       if (this._view.hasSingleSelection) {
         var selectedNode = this._view.selectedNode;
@@ -2233,19 +2235,38 @@ PlacesSortFolderByNameTransaction.prototype = {
   doTransaction: function PSSFBN_doTransaction() {
     this._oldOrder = [];
 
-    var items = [];
     var contents = this.utils.getFolderContents(this._folderId, false, false);
     var count = contents.childCount;
+
+    // sort between separators
+    var newOrder = []; 
+    var preSep = []; // temporary array for sorting each group of items
+    var sortingMethod =
+      function (a, b) { return a.title.localeCompare(b.title); };
+
     for (var i = 0; i < count; ++i) {
       var item = contents.getChild(i);
       this._oldOrder[item.itemId] = i;
-      items.push(item);
+      if (this.utils.nodeIsSeparator(item)) {
+        if (preSep.length > 0) {
+          preSep.sort(sortingMethod);
+          newOrder = newOrder.concat(preSep);
+          preSep.splice(0);
+        }
+        newOrder.push(item);
+      }
+      else
+        preSep.push(item);
+    }
+    if (preSep.length > 0) {
+      preSep.sort(sortingMethod);
+      newOrder = newOrder.concat(preSep);
     }
 
-    items.sort(function (a, b) { return a.title.localeCompare(b.title); });
-
-    for (var i = 0; i < count; ++i)
-      this.bookmarks.setItemIndex(items[i].itemId, i);
+    // set the nex indexs
+    for (var i = 0; i < count; ++i) {
+      this.bookmarks.setItemIndex(newOrder[i].itemId, i);
+    }
   },
 
   undoTransaction: function PSSFBN_undoTransaction() {
