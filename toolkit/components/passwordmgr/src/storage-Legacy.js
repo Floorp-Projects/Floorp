@@ -38,16 +38,16 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 function LoginManagerStorage_legacy() { };
 
 LoginManagerStorage_legacy.prototype = {
 
-    QueryInterface : function (iid) {
-        const interfaces = [Ci.nsILoginManagerStorage, Ci.nsISupports];
-        if (!interfaces.some( function(v) { return iid.equals(v) } ))
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-        return this;
-    },
+    classDescription  : "LoginManagerStorage_legacy",
+    contractID : "@mozilla.org/login-manager/storage/legacy;1",
+    classID : Components.ID("{e09e4ca6-276b-4bb4-8b71-0635a3a2a007}"),
+    QueryInterface : XPCOMUtils.generateQI([Ci.nsILoginManagerStorage]),
 
     __logService : null, // Console logging service, used for debugging.
     get _logService() {
@@ -678,58 +678,7 @@ LoginManagerStorage_legacy.prototype = {
 
 }; // end of nsLoginManagerStorage_legacy implementation
 
-
-
-
-// Boilerplate code for component registration...
-var gModule = {
-    registerSelf: function(componentManager, fileSpec, location, type) {
-        componentManager = componentManager.QueryInterface(
-                                                Ci.nsIComponentRegistrar);
-        for each (var obj in this._objects) 
-            componentManager.registerFactoryLocation(obj.CID,
-                    obj.className, obj.contractID,
-                    fileSpec, location, type);
-    },
-
-    unregisterSelf: function (componentManager, location, type) {
-        for each (var obj in this._objects) 
-            componentManager.unregisterFactoryLocation(obj.CID, location);
-    },
-    
-    getClassObject: function(componentManager, cid, iid) {
-        if (!iid.equals(Ci.nsIFactory))
-            throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-  
-        for (var key in this._objects) {
-            if (cid.equals(this._objects[key].CID))
-                return this._objects[key].factory;
-        }
-    
-        throw Components.results.NS_ERROR_NO_INTERFACE;
-    },
-  
-    _objects: {
-        service: {
-            CID : Components.ID("{e09e4ca6-276b-4bb4-8b71-0635a3a2a007}"),
-            contractID : "@mozilla.org/login-manager/storage/legacy;1",
-            className  : "LoginManagerStorage_legacy",
-            factory    : aFactory = {
-                createInstance: function(aOuter, aIID) {
-                    if (aOuter != null)
-                        throw Components.results.NS_ERROR_NO_AGGREGATION;
-                    var svc = new LoginManagerStorage_legacy();
-                    return svc.QueryInterface(aIID);
-                }
-            }
-        }
-    },
-  
-    canUnload: function(componentManager) {
-        return true;
-    }
-};
-
+var component = [LoginManagerStorage_legacy];
 function NSGetModule(compMgr, fileSpec) {
-    return gModule;
+    return XPCOMUtils.generateModule(component);
 }
