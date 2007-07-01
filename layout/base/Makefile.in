@@ -93,7 +93,6 @@ endif
 EXPORTS		= \
 		nsBidi.h \
 		nsBidiPresUtils.h \
-		nsBidiUtils.h \
 		nsCSSFrameConstructor.h \
 		nsChangeHint.h \
 		nsCompatibility.h \
@@ -119,7 +118,6 @@ EXPORTS		= \
 		$(NULL)
 
 CPPSRCS		= \
-		nsBidiUtils.cpp \
 		nsCSSColorUtils.cpp \
 		nsCSSFrameConstructor.cpp \
 		nsCSSRendering.cpp \

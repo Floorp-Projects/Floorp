@@ -142,6 +142,8 @@ GARBAGE	+= \
 	dlldeps-javaxpcom.cpp \
 	$(NULL)
 
+LOCAL_INCLUDES += -I$(topsrcdir)/intl/unicharutil/util
+
 ifdef MOZ_RDF
 EXTRA_DEPS += \
 	$(topsrcdir)/rdf/util/src/objs.mk \
