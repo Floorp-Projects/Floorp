@@ -221,6 +221,13 @@ nsTableCellFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                    nsIAtom*        aAttribute,
                                    PRInt32         aModType)
 {
+  // We need to recalculate in this case because of the nowrap quirk in
+  // BasicTableLayoutStrategy
+  if (aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::nowrap &&
+      PresContext()->CompatibilityMode() == eCompatibility_NavQuirks) {
+    PresContext()->PresShell()->
+      FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
+  }
   // let the table frame decide what to do
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (tableFrame) {
