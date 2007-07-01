@@ -2262,11 +2262,11 @@ NS_IMETHODIMP
 jsdValue::GetWrappedValue()
 {
     ASSERT_VALID_EPHEMERAL;
-    nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
-    if (!xpc)
-        return NS_ERROR_FAILURE;
-
     nsresult rv;
+    nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID(), &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
     nsCOMPtr<nsIXPCNativeCallContext> cc;
     rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
     if (NS_FAILED(rv))
@@ -2381,6 +2381,8 @@ jsdService::SetInitAtStartup (PRBool state)
     
     nsCOMPtr<nsICategoryManager>
         categoryManager(do_GetService(NS_CATMAN_CTRID, &rv));
+    if (NS_FAILED(rv))
+        return rv;
 
     if (state) {
         rv = categoryManager->AddCategoryEntry(AUTOREG_CATEGORY,
@@ -2463,16 +2465,16 @@ jsdService::On (void)
     nsresult  rv;
 
     /* get JS things from the CallContext */
-    nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
-    if (!xpc) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID(), &rv);
+    if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIXPCNativeCallContext> cc;
     rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    if (NS_FAILED(rv)) return rv;
 
     JSContext *cx;
     rv = cc->GetJSContext (&cx);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    if (NS_FAILED(rv)) return rv;
     
     return OnForRuntime(JS_GetRuntime (cx));
     
@@ -2499,9 +2501,10 @@ jsdService::OnForRuntime (JSRuntime *rt)
 
     /* init xpconnect on the debugger's context in case xpconnect tries to
      * use it for stuff. */
-    nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
-    if (!xpc)
-        return NS_ERROR_FAILURE;
+    nsresult rv;
+    nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID(), &rv);
+    if (NS_FAILED(rv))
+        return rv;
     
     xpc->InitClasses (cx, glob);
     
@@ -2930,11 +2933,11 @@ jsdService::WrapValue(jsdIValue **_rval)
 {
     ASSERT_VALID_CONTEXT;
 
-    nsCOMPtr<nsIXPConnect> xpc = do_GetService (nsIXPConnect::GetCID());
-    if (!xpc)
-        return NS_ERROR_FAILURE;
-
     nsresult rv;
+    nsCOMPtr<nsIXPConnect> xpc = do_GetService (nsIXPConnect::GetCID(), &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
     nsCOMPtr<nsIXPCNativeCallContext> cc;
     rv = xpc->GetCurrentNativeCallContext (getter_AddRefs(cc));
     if (NS_FAILED(rv))
@@ -2967,14 +2970,16 @@ jsdService::EnterNestedEventLoop (jsdINestCallback *callback, PRUint32 *_rval)
     // Nesting event queues is a thing of the past.  Now, we just spin the
     // current event loop.
  
+    nsresult rv;
     nsCOMPtr<nsIJSContextStack> 
-        stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
-    nsresult rv = NS_OK;
+        stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv));
+    if (NS_FAILED(rv))
+        return rv;
     PRUint32 nestLevel = ++mNestedLoopLevel;
     
     nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
 
-    if (stack && NS_SUCCEEDED(stack->Push(nsnull))) {
+    if (NS_SUCCEEDED(stack->Push(nsnull))) {
         if (callback) {
             Pause(nsnull);
             rv = callback->OnNest();
@@ -3300,6 +3305,8 @@ jsdASObserver::Observe (nsISupports *aSubject, const char *aTopic,
     // Hmm.  Why is the app-startup observer called multiple times?
     //NS_ASSERTION(!gJsds, "app startup observer called twice");
     nsCOMPtr<jsdIDebuggerService> jsds = do_GetService(jsdServiceCtrID, &rv);
+    if (NS_FAILED(rv))
+        return rv;
 
     PRBool on;
     rv = jsds->GetIsOn(&on);
