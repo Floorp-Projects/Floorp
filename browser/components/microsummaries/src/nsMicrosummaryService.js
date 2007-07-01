@@ -40,6 +40,7 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
+const Cu = Components.utils;
 
 const PERMS_FILE    = 0644;
 const MODE_WRONLY   = 0x02;
@@ -75,7 +76,9 @@ const FIELD_BOOKMARK_URL      = NC_NS + "URL";
 
 const MAX_SUMMARY_LENGTH = 4096;
 
-function MicrosummaryService() {}
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+function MicrosummaryService() { this._init() }
 
 MicrosummaryService.prototype = {
 
@@ -209,23 +212,15 @@ MicrosummaryService.prototype = {
   // The timer that periodically checks for microsummaries needing updating.
   _timer: null,
 
-  // Interfaces this component implements.
-  interfaces: [Ci.nsIMicrosummaryService, Ci.nsIObserver, Ci.nsISupports],
-
-  // nsISupports
-
-  QueryInterface: function MSS_QueryInterface(iid) {
-    //if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
-    if (!iid.equals(Ci.nsIMicrosummaryService) &&
-        !iid.equals(Ci.nsIObserver) &&
-        !iid.equals(Ci.nsISupportsWeakReference) &&
-        !iid.equals(Ci.nsISupports))
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    return this;
-  },
+  // XPCOM registration
+  classDescription: "Microsummary Service",
+  contractID: "@mozilla.org/microsummary/service;1",
+  classID: Components.ID("{460a9792-b154-4f26-a922-0f653e2c8f91}"),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIMicrosummaryService, 
+                                         Ci.nsISupportsWeakReference,
+                                         Ci.nsIObserver]),
 
   // nsIObserver
-
   observe: function MSS_observe(subject, topic, data) {
     switch (topic) {
       case "xpcom-shutdown":
@@ -291,7 +286,7 @@ MicrosummaryService.prototype = {
         this.refreshMicrosummary(bookmarkID);
       }
       catch(ex) {
-        Components.utils.reportError(ex);
+        Cu.reportError(ex);
       }
     }
   },
@@ -1154,15 +1149,8 @@ LiveTitleNotificationSubject.prototype = {
   bookmarkID: null,
   microsummary: null,
 
-  interfaces: [Ci.nsILiveTitleNotificationSubject, Ci.nsISupports],
-
   // nsISupports
-
-  QueryInterface: function (iid) {
-    if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
-  }
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsILiveTitleNotificationSubject]),
 };
 
 
@@ -1207,17 +1195,8 @@ Microsummary.prototype = {
     return this._ios.newURI(spec, null, null);
   },
 
-  interfaces: [Ci.nsIMicrosummary, Ci.nsISupports],
-
   // nsISupports
-
-  QueryInterface: function (iid) {
-    //if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
-    if (!iid.equals(Ci.nsIMicrosummary) &&
-        !iid.equals(Ci.nsISupports))
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    return this;
-  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIMicrosummary]),
 
   // nsIMicrosummary
   get content() {
@@ -1408,7 +1387,7 @@ Microsummary.prototype = {
       resource.load(loadCallback, errorCallback);
     }
     catch(ex) {
-      Components.utils.reportError(ex);
+      Cu.reportError(ex);
       this._handleMissingGeneratorError();
     }
   },
@@ -1445,7 +1424,7 @@ Microsummary.prototype = {
         throw("supposedly installed, but not in cache " + this.generator.uri.spec);
     }
     catch(ex) {
-      Components.utils.reportError(ex);
+      Cu.reportError(ex);
       this._handleMissingGeneratorError(resource);
       return;
     }
@@ -1504,17 +1483,8 @@ MicrosummaryGenerator.prototype = {
     return this.__ios;
   },
 
-  interfaces: [Ci.nsIMicrosummaryGenerator, Ci.nsISupports],
-
   // nsISupports
-
-  QueryInterface: function (iid) {
-    //if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
-    if (!iid.equals(Ci.nsIMicrosummaryGenerator) &&
-        !iid.equals(Ci.nsISupports))
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    return this;
-  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIMicrosummaryGenerator]),
 
   // nsIMicrosummaryGenerator
 
@@ -1720,7 +1690,7 @@ MicrosummaryGenerator.prototype = {
           return this._updateIntervals[i].interval;
       }
       catch (ex) {
-        Components.utils.reportError(ex);
+        Cu.reportError(ex);
         // remove the offending conditional update interval
         this._updateIntervals.splice(i--, 1);
       }
@@ -1775,18 +1745,8 @@ MicrosummarySet.prototype = {
     return this.__ios;
   },
 
-  interfaces: [Ci.nsIMicrosummarySet,
-               Ci.nsIMicrosummaryObserver,
-               Ci.nsISupports],
-
-  QueryInterface: function (iid) {
-    //if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
-    if (!iid.equals(Ci.nsIMicrosummarySet) &&
-        !iid.equals(Ci.nsIMicrosummaryObserver) &&
-        !iid.equals(Ci.nsISupports))
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    return this;
-  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIMicrosummarySet,
+                                         Ci.nsIMicrosummaryObserver]),
 
   // nsIMicrosummaryObserver
 
@@ -1931,15 +1891,7 @@ function ArrayEnumerator(aItems) {
 }
 
 ArrayEnumerator.prototype = {
-  interfaces: [Ci.nsISimpleEnumerator, Ci.nsISupports],
-
-  QueryInterface: function (iid) {
-    //if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
-    if (!iid.equals(Ci.nsISimpleEnumerator) &&
-        !iid.equals(Ci.nsISupports))
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    return this;
-  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISimpleEnumerator]),
   
   hasMoreElements: function() {
     return this._index < this._contents.length;
@@ -2112,12 +2064,7 @@ MicrosummaryResource.prototype = {
   get authPrompt() {
     var resource = this;
     return {
-      interfaces: [Ci.nsIPrompt, Ci.nsISupports],
-      QueryInterface: function(iid) {
-        if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
-          throw Cr.NS_ERROR_NO_INTERFACE;
-        return this;
-      },
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt]),
       prompt: function(dialogTitle, text, passwordRealm, savePassword, defaultText, result) {
         resource._authFailed = true;
         return false;
@@ -2138,12 +2085,7 @@ MicrosummaryResource.prototype = {
   get prompt() {
     var resource = this;
     return {
-      interfaces: [Ci.nsIPrompt, Ci.nsISupports],
-      QueryInterface: function(iid) {
-        if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
-          throw Cr.NS_ERROR_NO_INTERFACE;
-        return this;
-      },
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt]),
       alert: function(dialogTitle, text) {
         throw Cr.NS_ERROR_NOT_IMPLEMENTED;
       },
@@ -2566,61 +2508,6 @@ function sanitizeName(aName) {
   return name;
 }
 
-
-
-
-
-var gModule = {
-  registerSelf: function(componentManager, fileSpec, location, type) {
-    componentManager = componentManager.QueryInterface(Ci.nsIComponentRegistrar);
-    
-    for (var key in this._objects) {
-      var obj = this._objects[key];
-      componentManager.registerFactoryLocation(obj.CID,
-                                               obj.className,
-                                               obj.contractID,
-                                               fileSpec,
-                                               location,
-                                               type);
-    }
-  },
-  
-  unregisterSelf: function(componentManager, fileSpec, location) {},
-
-  getClassObject: function(componentManager, cid, iid) {
-    if (!iid.equals(Components.interfaces.nsIFactory))
-      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  
-    for (var key in this._objects) {
-      if (cid.equals(this._objects[key].CID))
-      return this._objects[key].factory;
-    }
-    
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-  
-  _objects: {
-    service: {
-      CID        : Components.ID("{460a9792-b154-4f26-a922-0f653e2c8f91}"),
-      contractID : "@mozilla.org/microsummary/service;1",
-      className  : "Microsummary Service",
-      factory    : MicrosummaryServiceFactory = {
-                     createInstance: function(aOuter, aIID) {
-                       if (aOuter != null)
-                         throw Cr.NS_ERROR_NO_AGGREGATION;
-                       var svc = new MicrosummaryService();
-                       svc._init();
-                      return svc.QueryInterface(aIID);
-                     }
-                   }
-    }
-  },
-  
-  canUnload: function(componentManager) {
-    return true;
-  }
-};
-
 function NSGetModule(compMgr, fileSpec) {
-  return gModule;
+  return XPCOMUtils.generateModule([MicrosummaryService]);
 }
