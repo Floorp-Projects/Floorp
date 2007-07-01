@@ -527,6 +527,15 @@
           ]]>
         </getter>
       </property>
+
+      <property name="searchLabel" readonly="true">
+        <getter>
+          <![CDATA[
+            return this.hasAttribute("searchlabel") ?
+                   this.getAttribute("searchlabel") : this.label;
+          ]]>
+        </getter>
+      </property>
     </implementation>
 
     <handlers>
