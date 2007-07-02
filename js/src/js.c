@@ -1070,8 +1070,9 @@ Notes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 JS_STATIC_ASSERT(JSTN_CATCH == 0);
 JS_STATIC_ASSERT(JSTN_FINALLY == 1);
+JS_STATIC_ASSERT(JSTN_ITER == 2);
 
-static const char* const TryNoteNames[] = { "catch", "finally" };
+static const char* const TryNoteNames[] = { "catch", "finally", "iter" };
 
 static JSBool
 TryNotes(JSContext *cx, JSScript *script)
@@ -1086,7 +1087,7 @@ TryNotes(JSContext *cx, JSScript *script)
     fprintf(gOutFile, "\nException table:\n"
             "kind      stack    start      end\n");
     do {
-        JS_ASSERT(tn->kind == JSTN_CATCH || tn->kind == JSTN_FINALLY);
+        JS_ASSERT(tn->kind < JS_ARRAY_LENGTH(TryNoteNames));
         fprintf(gOutFile, " %-7s %6u %8u %8u\n",
                 TryNoteNames[tn->kind], tn->stackDepth,
                 tn->start, tn->start + tn->length);
