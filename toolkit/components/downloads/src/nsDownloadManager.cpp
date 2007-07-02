@@ -63,7 +63,6 @@
 #include "nsEmbedCID.h"
 #include "mozStorageCID.h"
 #include "mozIStorageService.h"
-#include "mozIStorageStatement.h"
 #include "mozStorageHelper.h"
 #include "nsIMutableArray.h"
 #include "nsIAlertsService.h"
@@ -435,6 +434,13 @@ nsDownloadManager::Init()
   mObserverService->AddObserver(this, "quit-application", PR_FALSE);
   mObserverService->AddObserver(this, "quit-application-requested", PR_FALSE);
   mObserverService->AddObserver(this, "offline-requested", PR_FALSE);
+
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "UPDATE moz_downloads "
+    "SET name = ?1, source = ?2, target = ?3, startTime = ?4, endTime = ?5,"
+    "state = ?6 "
+    "WHERE id = ?7"), getter_AddRefs(mUpdateDownloadStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -1581,16 +1587,10 @@ nsDownload::UpdateDB()
   NS_ASSERTION(mID, "Download ID is stored as zero.  This is bad!");
   NS_ASSERTION(mDownloadManager, "Egads!  We have no download manager!");
 
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = mDownloadManager->mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "UPDATE moz_downloads "
-    "SET name = ?1, source = ?2, target = ?3, startTime = ?4, endTime = ?5,"
-    "state = ?6 "
-    "WHERE id = ?7"), getter_AddRefs(stmt));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
+  mozIStorageStatement *stmt = mDownloadManager->mUpdateDownloadStatement;
+
   // name
-  rv = stmt->BindStringParameter(0, mDisplayName);
+  nsresult rv = stmt->BindStringParameter(0, mDisplayName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // source
