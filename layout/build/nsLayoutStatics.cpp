@@ -73,13 +73,13 @@
 #include "nsStackLayout.h"
 #include "nsStyleSet.h"
 #include "nsTextControlFrame.h"
-#include "nsTextTransformer.h"
 #include "nsXBLWindowKeyHandler.h"
 #include "txMozillaXSLTProcessor.h"
 #include "nsDOMStorage.h"
 #include "nsCellMap.h"
 #include "nsTextFrameTextRunCache.h"
 #include "nsCCUncollectableMarker.h"
+#include "nsTextFragment.h"
 
 #ifdef MOZ_XUL
 #include "nsXULContentUtils.h"
@@ -198,11 +198,6 @@ nsLayoutStatics::Initialize()
 #ifdef DEBUG
   nsFrame::DisplayReflowStartup();
 #endif
-  rv = nsTextTransformer::Initialize();
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Could not initialize nsTextTransformer");
-    return rv;
-  }
   nsDOMAttribute::Initialize();
 
   rv = txMozillaXSLTProcessor::Init();
@@ -265,7 +260,6 @@ nsLayoutStatics::Shutdown()
 #endif
 
   nsCSSFrameConstructor::ReleaseGlobals();
-  nsTextTransformer::Shutdown();
   nsSpaceManager::Shutdown();
   nsImageFrame::ReleaseGlobals();
 

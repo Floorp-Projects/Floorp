@@ -37,7 +37,6 @@
 
 #include "nsTextRunTransformations.h"
 
-#include "nsTextTransformer.h"
 #include "nsTextFrameUtils.h"
 #include "gfxSkipChars.h"
 
@@ -45,6 +44,7 @@
 #include "nsStyleConsts.h"
 #include "nsStyleContext.h"
 #include "gfxContext.h"
+#include "nsContentUtils.h"
 
 #define SZLIG 0x00DF
 
@@ -327,7 +327,7 @@ void
 nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
     gfxContext* aRefContext)
 {
-  nsICaseConversion* converter = nsTextTransformer::GetCaseConv();
+  nsICaseConversion* converter = nsContentUtils::GetCaseConv();
   if (!converter)
     return;
 
@@ -436,7 +436,7 @@ void
 nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
     gfxContext* aRefContext)
 {
-  nsICaseConversion* converter = nsTextTransformer::GetCaseConv();
+  nsICaseConversion* converter = nsContentUtils::GetCaseConv();
   if (!converter)
     return;
 
