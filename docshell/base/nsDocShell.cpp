@@ -5874,9 +5874,8 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
     NS_ENSURE_SUCCESS(docLoaderFactory->CreateInstance("view",
                                                        aOpenedChannel,
                                                        aLoadGroup, aContentType,
-                                                       NS_STATIC_CAST
-                                                       (nsIContentViewerContainer
-                                                        *, this), nsnull,
+                                                       static_cast<nsIContentViewerContainer*>(this),
+                                                       nsnull,
                                                        aContentHandler,
                                                        aViewer),
                       NS_ERROR_FAILURE);
@@ -8479,8 +8478,7 @@ nsDocShell::EnsureScriptEnvironment()
     nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mScriptGlobal));
     win->SetDocShell(NS_STATIC_CAST(nsIDocShell *, this));
     mScriptGlobal->
-        SetGlobalObjectOwner(NS_STATIC_CAST
-                             (nsIScriptGlobalObjectOwner *, this));
+        SetGlobalObjectOwner(static_cast<nsIScriptGlobalObjectOwner *>(this));
 
     // Ensure the script object is set to run javascript - other languages
     // setup on demand.
