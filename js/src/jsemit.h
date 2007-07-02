@@ -157,7 +157,6 @@ struct JSStmtInfo {
 struct JSTreeContext {              /* tree context for semantic checks */
     uint16          flags;          /* statement state flags, see below */
     uint16          numGlobalVars;  /* max. no. of global variables/regexps */
-    uint32          tryCount;       /* total count of try statements parsed */
     uint32          globalUses;     /* optimizable global var uses in total */
     uint32          loopyGlobalUses;/* optimizable global var uses in loops */
     JSStmtInfo      *topStmt;       /* top of statement info stack */
@@ -188,7 +187,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
 
 #define TREE_CONTEXT_INIT(tc)                                                 \
     ((tc)->flags = (tc)->numGlobalVars = 0,                                   \
-     (tc)->tryCount = (tc)->globalUses = (tc)->loopyGlobalUses = 0,           \
+     (tc)->globalUses = (tc)->loopyGlobalUses = 0,                            \
      (tc)->topStmt = (tc)->topScopeStmt = NULL,                               \
      (tc)->blockChain = NULL,                                                 \
      ATOM_LIST_INIT(&(tc)->decls),                                            \
@@ -258,6 +257,13 @@ struct JSJumpTarget {
                                  ? JT_CLR_TAG((sd)->target)->offset - (pivot) \
                                  : 0)
 
+typedef struct JSTryNode JSTryNode;
+
+struct JSTryNode {
+    JSTryNote       note;
+    JSTryNode       *prev;
+};
+
 struct JSCodeGenerator {
     JSTreeContext   treeContext;    /* base state: statement info stack, etc. */
 
@@ -286,9 +292,8 @@ struct JSCodeGenerator {
     intN            stackDepth;     /* current stack depth in script frame */
     uintN           maxStackDepth;  /* maximum stack depth so far */
 
-    JSTryNote       *tryBase;       /* first exception handling note */
-    JSTryNote       *tryNext;       /* next available note */
-    size_t          tryNoteSpace;   /* # of bytes allocated at tryBase */
+    uintN           ntrynotes;      /* number of allocated so far try notes */
+    JSTryNode       *lastTryNode;   /* the last allocated try node */
 
     JSSpanDep       *spanDeps;      /* span dependent instruction records */
     JSJumpTarget    *jumpTargets;   /* AVL tree of jump target offsets */
@@ -706,21 +711,6 @@ js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
 
 extern JSBool
 js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg, jssrcnote *notes);
-
-/*
- * Allocate cg->treeContext.tryCount notes (plus one for the end sentinel)
- * from cx->tempPool and set up cg->tryBase/tryNext for exactly tryCount
- * js_NewTryNote calls.  The storage is freed by js_FinishCodeGenerator.
- */
-extern JSBool
-js_AllocTryNotes(JSContext *cx, JSCodeGenerator *cg);
-
-/*
- * Grab the next trynote slot in cg, filling it in appropriately.
- */
-extern JSTryNote *
-js_NewTryNote(JSContext *cx, JSCodeGenerator *cg, JSTryNoteKind kind,
-              uintN stackDepth, size_t start, size_t end);
 
 extern void
 js_FinishTakingTryNotes(JSContext *cx, JSCodeGenerator *cg,

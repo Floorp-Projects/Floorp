@@ -989,7 +989,7 @@ js_RegisterCloseableIterator(JSContext *cx, JSObject *obj)
 }
 
 static void
-CloseIteratorStates(JSContext *cx)
+CloseNativeIterators(JSContext *cx)
 {
     JSRuntime *rt;
     size_t count, newCount, i;
@@ -1004,7 +1004,7 @@ CloseIteratorStates(JSContext *cx)
     for (i = 0; i != count; ++i) {
         obj = (JSObject *)array[i];
         if (js_IsAboutToBeFinalized(cx, obj))
-            js_CloseIteratorState(cx, obj);
+            js_CloseNativeIterator(cx, obj);
         else
             array[newCount++] = obj;
     }
@@ -1321,7 +1321,7 @@ js_RunCloseHooks(JSContext *cx)
             METER(deferCount++);
             continue;
         }
-        ok = js_CloseGeneratorObject(cx, gen);
+        ok = js_CloseGenerator(cx, gen->obj);
 
         /*
          * Unlink the generator after closing it to make sure it always stays
@@ -2778,7 +2778,7 @@ restart:
     rt->gcMarkingTracer = NULL;
 
     /* Finalize iterator states before the objects they iterate over. */
-    CloseIteratorStates(cx);
+    CloseNativeIterators(cx);
 
 #ifdef DUMP_CALL_TABLE
     /*
