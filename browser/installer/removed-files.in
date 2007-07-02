@@ -466,6 +466,7 @@ searchplugins/zoznam-sk.png
 searchplugins/zoznam-sk.gif
 components/sidebar.xpt
 components/xmlextras.xpt
+components/xpcom.xpt
 #ifdef XP_MACOSX
 extensions/talkback@mozilla.org/install.rdf
 extensions/talkback@mozilla.org/chrome.manifest
