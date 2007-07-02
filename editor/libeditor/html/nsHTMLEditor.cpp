@@ -708,11 +708,11 @@ nsHTMLEditor::IsBlockNode(nsIDOMNode *aNode)
 NS_IMETHODIMP 
 nsHTMLEditor::SetDocumentTitle(const nsAString &aTitle)
 {
-  SetDocTitleTxn *txn;
-  nsresult result = TransactionFactory::GetNewTransaction(SetDocTitleTxn::GetCID(), (EditTxn **)&txn);
+  nsRefPtr<EditTxn> txn;
+  nsresult result = TransactionFactory::GetNewTransaction(SetDocTitleTxn::GetCID(), getter_AddRefs(txn));
   if (NS_SUCCEEDED(result))  
   {
-    result = txn->Init(this, &aTitle);
+    result = NS_STATIC_CAST(SetDocTitleTxn*, txn.get())->Init(this, &aTitle);
 
     if (NS_SUCCEEDED(result)) 
     {
@@ -721,8 +721,6 @@ nsHTMLEditor::SetDocumentTitle(const nsAString &aTitle)
 
       result = nsEditor::DoTransaction(txn);  
     }
-    // The transaction system (if any) has taken ownership of txn
-    NS_IF_RELEASE(txn);
   }
   return result;
 }
@@ -3569,8 +3567,8 @@ nsHTMLEditor::RemoveStyleSheet(const nsAString &aURL)
   if (!sheet)
     return NS_ERROR_UNEXPECTED;
 
-  RemoveStyleSheetTxn* txn;
-  rv = CreateTxnForRemoveStyleSheet(sheet, &txn);
+  nsRefPtr<RemoveStyleSheetTxn> txn;
+  rv = CreateTxnForRemoveStyleSheet(sheet, getter_AddRefs(txn));
   if (!txn) rv = NS_ERROR_NULL_POINTER;
   if (NS_SUCCEEDED(rv))
   {
@@ -3581,8 +3579,6 @@ nsHTMLEditor::RemoveStyleSheet(const nsAString &aURL)
     // Remove it from our internal list
     rv = RemoveStyleSheetFromList(aURL);
   }
-  // The transaction system (if any) has taken ownership of txns
-  NS_IF_RELEASE(txn);
   
   return rv;
 }
@@ -4100,8 +4096,8 @@ nsHTMLEditor::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,
   if (!mLastStyleSheetURL.IsEmpty())
     RemoveStyleSheet(mLastStyleSheetURL);
 
-  AddStyleSheetTxn* txn;
-  rv = CreateTxnForAddStyleSheet(aSheet, &txn);
+  nsRefPtr<AddStyleSheetTxn> txn;
+  rv = CreateTxnForAddStyleSheet(aSheet, getter_AddRefs(txn));
   if (!txn) rv = NS_ERROR_NULL_POINTER;
   if (NS_SUCCEEDED(rv))
   {
@@ -4129,8 +4125,6 @@ nsHTMLEditor::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,
       }
     }
   }
-  // The transaction system (if any) has taken ownership of txns
-  NS_IF_RELEASE(txn);
 
   return NS_OK;
 }

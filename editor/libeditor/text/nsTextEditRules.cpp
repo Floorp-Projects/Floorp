@@ -62,6 +62,7 @@
 #include "nsUnicharUtils.h"
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
+#include "DeleteTextTxn.h"
 
 // for IBMBIDI
 #include "nsIPresShell.h"
@@ -1225,17 +1226,16 @@ nsTextEditRules::ReplaceNewlines(nsIDOMRange *aRange)
       if (offset == -1) break; // done with this node
       
       // delete the newline
-      EditTxn *txn;
+      nsRefPtr<DeleteTextTxn> txn;
       // note 1: we are not telling edit listeners about these because they don't care
       // note 2: we are not wrapping these in a placeholder because we know they already are,
       //         or, failing that, undo is disabled
-      res = mEditor->CreateTxnForDeleteText(textNode, offset, 1, (DeleteTextTxn**)&txn);
+      res = mEditor->CreateTxnForDeleteText(textNode, offset, 1,
+                                            getter_AddRefs(txn));
       if (NS_FAILED(res))  return res; 
       if (!txn)  return NS_ERROR_OUT_OF_MEMORY;
       res = mEditor->DoTransaction(txn); 
       if (NS_FAILED(res))  return res; 
-      // The transaction system (if any) has taken ownership of txn
-      NS_IF_RELEASE(txn);
       
       // insert a break
       res = mEditor->CreateBR(textNode, offset, address_of(brNode));
