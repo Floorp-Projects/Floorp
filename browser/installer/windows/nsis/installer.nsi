@@ -251,23 +251,7 @@ Section "-Application" Section1
   StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal} (${AppVersion})"
   DeleteRegKey HKLM "$0"
 
-  ; For a "Standard" upgrade without talkback installed add the InstallDisabled
-  ; file to the talkback source files so it will be disabled by the extension
-  ; manager. This is done at the start of the installation since we check for
-  ; the existence of a directory to determine if this is an upgrade.
-  ${If} $InstallType == 1
-  ${AndIf} ${FileExists} "$INSTDIR\greprefs"
-  ${AndIf} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
-    ${Unless} ${FileExists} "$INSTDIR\extensions\talkback@mozilla.org"
-      ${Unless} ${FileExists} "$INSTDIR\extensions"
-        CreateDirectory "$INSTDIR\extensions"
-      ${EndUnless}
-      CreateDirectory "$INSTDIR\extensions\talkback@mozilla.org"
-      FileOpen $2 "$EXEDIR\optional\extensions\talkback@mozilla.org\InstallDisabled" w
-      FileWrite $2 "$\r$\n"
-      FileClose $2
-    ${EndUnless}
-  ${Else}
+  ${If} $InstallType != 1
     ; Custom installs.
     ; If DOMi is installed and this install includes DOMi remove it from
     ; the installation directory. This will remove it if the user deselected
@@ -275,13 +259,6 @@ Section "-Application" Section1
     ${If} ${FileExists} "$INSTDIR\extensions\inspector@mozilla.org"
     ${AndIf} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
       RmDir /r "$INSTDIR\extensions\inspector@mozilla.org"
-    ${EndIf}
-    ; If TalkBack is installed and this install includes TalkBack remove it from
-    ; the installation directory. This will remove it if the user deselected
-    ; TalkBack on the components page.
-    ${If} ${FileExists} "$INSTDIR\extensions\talkback@mozilla.org"
-    ${AndIf} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
-      RmDir /r "$INSTDIR\extensions\talkback@mozilla.org"
     ${EndIf}
   ${EndIf}
 
@@ -381,7 +358,6 @@ Section "-Application" Section1
   Call DoCopyFiles
 
   ${If} $InstallType != 4
-    Call installTalkback
     ${If} ${FileExists} "$INSTDIR\extensions\inspector@mozilla.org"
       Call installInspector
     ${EndIf}
@@ -530,10 +506,6 @@ Section /o "Developer Tools" Section2
   Call installInspector
 SectionEnd
 
-Section /o "Quality Feedback Agent" Section3
-  Call installTalkback
-SectionEnd
-
 ################################################################################
 # Helper Functions
 
@@ -547,43 +519,6 @@ Function installInspector
     ${LogHeader} "Installing Developer Tools"
     StrCpy $R0 "$EXEDIR\optional\extensions\inspector@mozilla.org"
     StrCpy $R1 "$INSTDIR\extensions\inspector@mozilla.org"
-    Call DoCopyFiles
-  ${EndIf}
-FunctionEnd
-
-Function installTalkback
-  StrCpy $R0 "$EXEDIR\optional\extensions\talkback@mozilla.org"
-  ${If} ${FileExists} "$R0"
-    SetDetailsPrint textonly
-    DetailPrint $(STATUS_INSTALL_OPTIONAL)
-    SetDetailsPrint none
-    StrCpy $R1 "$INSTDIR\extensions\talkback@mozilla.org"
-    ${If} ${FileExists} "$R1"
-      ; If there is an existing InstallDisabled file copy it to the source dir.
-      ; This will add it during install to the uninstall.log and retains the
-      ; original disabled state from the installation.
-      ${If} ${FileExists} "$R1\InstallDisabled"
-        CopyFiles /SILENT "$R1\InstallDisabled" "$R0"
-      ${EndIf}
-      ; Remove the existing install of talkback
-      RmDir /r "$R1"
-    ${ElseIf} $InstallType == 1
-      ; For standard installations only enable talkback for the x percent as
-      ; defined by the application. We use QueryPerformanceCounter for the seed
-      ; since it returns a 64bit integer which should improve the accuracy.
-      System::Call "kernel32::QueryPerformanceCounter(*l.r1)"
-      System::Int64Op $1 % 100
-      Pop $0
-      ; The percentage provided by the application refers to the percentage to
-      ; include so all numbers equal or greater than should be disabled.
-      ${If} $0 >= ${RandomPercent}
-        FileOpen $2 "$R0\InstallDisabled" w
-        FileWrite $2 "$\r$\n"
-        FileClose $2
-      ${EndIf}
-    ${EndIf}
-    ClearErrors
-    ${LogHeader} "Installing Quality Feedback Agent"
     Call DoCopyFiles
   ${EndIf}
 FunctionEnd
@@ -879,8 +814,6 @@ FunctionEnd
 
 Function leaveComponents
   ; If DOMi exists then it will be Field 2.
-  ; If DOMi doesn't exist and talkback exists then TalkBack will be Field 2 but
-  ; if DOMi doesn't exist we won't display this page anyways.
   StrCpy $R1 2
   ${If} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
     ${MUI_INSTALLOPTIONS_READ} $R0 "components.ini" "Field $R1" "State"
@@ -892,14 +825,7 @@ Function leaveComponents
     SectionSetFlags 1 0 ; Disable install for DOMi
   ${EndIf}
 
-  ${If} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
-    ${MUI_INSTALLOPTIONS_READ} $R0 "components.ini" "Field $R1" "State"
-    ; State will be 1 for checked and 0 for unchecked so we can use that to set
-    ; the section flags for installation.
-    SectionSetFlags 2 $R0
-  ${Else}
-    SectionSetFlags 2 0 ; Disable install for TalkBack
-  ${EndIf}
+  SectionSetFlags 2 0 ; Disable install of TalkBack
 FunctionEnd
 
 Function preDirectory
@@ -1128,14 +1054,6 @@ Function .onInit
     SectionSetText 1 ""
   ${EndIf}
 
-  ; Set the section size for Talkback only if it exists.
-  ${If} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
-    ${GetSize} "$EXEDIR\optional\extensions\talkback@mozilla.org" "/S=0K" $0 $8 $9
-    SectionSetSize 2 $0
-    ; Install Talkback by default.
-    SectionSetFlags 2 1
-  ${Else}
-    ; Hide Talkback in the components page if it isn't available.
-    SectionSetText 2 ""
-  ${EndIf}
+  ; Hide Talkback in the components page
+  SectionSetText 2 ""
 FunctionEnd
