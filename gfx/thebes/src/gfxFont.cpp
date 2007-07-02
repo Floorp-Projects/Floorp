@@ -57,6 +57,11 @@
 
 gfxFontCache *gfxFontCache::gGlobalCache = nsnull;
 
+#ifdef DEBUG
+static PRUint32 gTextRunStorageHighWaterMark = 0;
+static PRUint32 gTextRunStorage = 0;
+#endif
+
 nsresult
 gfxFontCache::Init()
 {
@@ -70,6 +75,10 @@ gfxFontCache::Shutdown()
 {
     delete gGlobalCache;
     gGlobalCache = nsnull;
+
+#ifdef DEBUG
+    printf("Textrun storage high water mark=%d\n", gTextRunStorageHighWaterMark);
+#endif
 }
 
 PRBool
@@ -610,6 +619,26 @@ gfxTextRun::GlyphRunIterator::NextRun()  {
     return PR_TRUE;
 }
 
+#ifdef DEBUG
+static void
+AccountStorageForTextRun(gfxTextRun *aTextRun, PRInt32 aSign)
+{
+    // Ignores detailed glyphs... we don't know when those have been constructed
+    // Also ignores gfxSkipChars dynamic storage (which won't be anything
+    // for preformatted text)
+    // Also ignores GlyphRun array, again because it hasn't been constructed
+    // by the time this gets called. If there's only one glyphrun that's stored
+    // directly in the textrun anyway so no additional overhead.
+    PRInt32 bytesPerChar = sizeof(gfxTextRun::CompressedGlyph);
+    if (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_IS_PERSISTENT) {
+      bytesPerChar += (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_IS_8BIT) ? 1 : 2;
+    }
+    PRInt32 bytes = sizeof(gfxTextRun) + aTextRun->GetLength()*bytesPerChar;
+    gTextRunStorage += bytes*aSign;
+    gTextRunStorageHighWaterMark = PR_MAX(gTextRunStorageHighWaterMark, gTextRunStorage);
+}
+#endif
+
 gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void *aText,
                        PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags)
   : mUserData(aParams->mUserData),
@@ -653,10 +682,16 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void 
             mText.mDouble = newText;    
         }
     }
+#ifdef DEBUG
+    AccountStorageForTextRun(this, 1);
+#endif
 }
 
 gfxTextRun::~gfxTextRun()
 {
+#ifdef DEBUG
+    AccountStorageForTextRun(this, -1);
+#endif
     if (!(mFlags & gfxTextRunFactory::TEXT_IS_PERSISTENT)) {
         if (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) {
             delete[] mText.mSingle;
@@ -1328,12 +1363,14 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
     // 2) some of the text fit up to a break opportunity (width > aWidth && lastBreak >= 0)
     // 3) none of the text fits before a break opportunity (width > aWidth && lastBreak < 0)
     PRUint32 charsFit;
+    PRBool usedHyphenation = PR_FALSE;
     if (width - trimmableAdvance <= aWidth) {
         charsFit = aMaxLength;
     } else if (lastBreak >= 0) {
         charsFit = lastBreak - aStart;
         trimmableChars = lastBreakTrimmableChars;
         trimmableAdvance = lastBreakTrimmableAdvance;
+        usedHyphenation = lastBreakUsedHyphenation;
     } else {
         charsFit = aMaxLength;
     }
@@ -1345,7 +1382,7 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
         *aTrimWhitespace = trimmableAdvance;
     }
     if (aUsedHyphenation) {
-        *aUsedHyphenation = lastBreakUsedHyphenation;
+        *aUsedHyphenation = usedHyphenation;
     }
     if (aLastBreak && charsFit == aMaxLength) {
         if (lastBreak < 0) {
