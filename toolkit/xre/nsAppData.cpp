@@ -69,6 +69,8 @@ ScopedAppData::ScopedAppData(const nsXREAppData* aAppData)
 {
   Zero();
 
+  this->size = aAppData->size;
+
   SetAllocatedString(this->vendor, aAppData->vendor);
   SetAllocatedString(this->name, aAppData->name);
   SetAllocatedString(this->version, aAppData->version);
