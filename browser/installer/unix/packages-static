@@ -173,6 +173,7 @@ bin/components/windowds.xpt
 bin/components/windowwatcher.xpt
 bin/components/xml-rpc.xpt
 bin/components/xpcom_base.xpt
+bin/components/xpcom_system.xpt
 bin/components/xpcom_components.xpt
 bin/components/xpcom_ds.xpt
 bin/components/xpcom_io.xpt
