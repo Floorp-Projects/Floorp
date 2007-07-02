@@ -55,6 +55,7 @@ _TEST_FILES = 	pass.html \
 		load-stopping-1d.html \
 		test_bug351633-3.html \
 		test_bug351633-4.html \
+		test_bug384981.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
