@@ -276,7 +276,6 @@ ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 
 $(MOZ_APP_NAME):: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
-                -e "s|%MOZ_USER_DIR%|.mozilla/firefox|" \
 		-e "s|%MREDIR%|$(mredir)|" > $@
 	chmod +x $@
 
