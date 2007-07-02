@@ -126,14 +126,20 @@ CallPeekFunc(nsIInputStream *aInStream, void *aClosure,
   return NS_BINDING_ABORTED;
 }
 
-void
+nsresult
 nsInputStreamPump::PeekStream(PeekSegmentFun callback, void* closure)
 {
   NS_ASSERTION(mAsyncStream, "PeekStream called without stream");
+
+  // See if the pipe is closed by checking the return of Available.
+  PRUint32 dummy;
+  nsresult rv = mAsyncStream->Available(&dummy);
+  if (NS_FAILED(rv))
+    return rv;
+
   PeekData data(callback, closure);
-  PRUint32 read;
-  mAsyncStream->ReadSegments(CallPeekFunc, &data, NET_DEFAULT_SEGMENT_SIZE,
-                             &read);
+  return mAsyncStream->ReadSegments(CallPeekFunc, &data,
+                                    NET_DEFAULT_SEGMENT_SIZE, &dummy);
 }
 
 nsresult
