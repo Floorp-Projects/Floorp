@@ -80,6 +80,7 @@ Var fhUninstallLog
 !insertmacro WordReplace
 !insertmacro GetSize
 !insertmacro GetParameters
+!insertmacro GetParent
 !insertmacro GetOptions
 !insertmacro GetRoot
 !insertmacro DriveSpace
@@ -107,6 +108,7 @@ VIAddVersionKey "FileDescription" "${BrandShortName} Installer"
 !insertmacro CanWriteToInstallDir
 !insertmacro CheckDiskSpace
 !insertmacro AddHandlerValues
+!insertmacro GetSingleInstallPath
 
 !include shared.nsh
 
@@ -829,6 +831,17 @@ Function leaveComponents
 FunctionEnd
 
 Function preDirectory
+  SetShellVarContext all  ; Set SHCTX to HKLM
+  ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
+  ${If} $R9 == "false"
+    SetShellVarContext current  ; Set SHCTX to HKCU
+    ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
+  ${EndIf}
+
+  ${Unless} $R9 == "false"
+    StrCpy $INSTDIR "$R9"
+  ${EndUnless}
+
   ${If} $InstallType != 4
     ${CheckDiskSpace} $R9
     ${If} $R9 != "false"
