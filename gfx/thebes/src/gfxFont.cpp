@@ -57,7 +57,11 @@
 
 gfxFontCache *gfxFontCache::gGlobalCache = nsnull;
 
-#ifdef DEBUG
+#ifdef DEBUG_roc
+#define DEBUG_TEXT_RUN_STORAGE_METRICS
+#endif
+
+#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
 static PRUint32 gTextRunStorageHighWaterMark = 0;
 static PRUint32 gTextRunStorage = 0;
 #endif
@@ -76,7 +80,7 @@ gfxFontCache::Shutdown()
     delete gGlobalCache;
     gGlobalCache = nsnull;
 
-#ifdef DEBUG
+#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
     printf("Textrun storage high water mark=%d\n", gTextRunStorageHighWaterMark);
 #endif
 }
@@ -619,7 +623,7 @@ gfxTextRun::GlyphRunIterator::NextRun()  {
     return PR_TRUE;
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
 static void
 AccountStorageForTextRun(gfxTextRun *aTextRun, PRInt32 aSign)
 {
@@ -682,14 +686,14 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void 
             mText.mDouble = newText;    
         }
     }
-#ifdef DEBUG
+#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
     AccountStorageForTextRun(this, 1);
 #endif
 }
 
 gfxTextRun::~gfxTextRun()
 {
-#ifdef DEBUG
+#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
     AccountStorageForTextRun(this, -1);
 #endif
     if (!(mFlags & gfxTextRunFactory::TEXT_IS_PERSISTENT)) {
