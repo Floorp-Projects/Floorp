@@ -1272,7 +1272,8 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
         // break.  If our bottom border/padding straddles the break
         // point, then this will increase our height and push the
         // border/padding to the next page/column.
-        aMetrics.height = aReflowState.availableHeight;
+        aMetrics.height = PR_MAX(aReflowState.availableHeight,
+                                 aState.mY + nonCarriedOutVerticalMargin);
         aState.mReflowStatus |= NS_FRAME_NOT_COMPLETE;
       }
     }
