@@ -724,7 +724,6 @@ RemovePropertyTreeChild(JSRuntime *rt, JSScopeProperty *child)
                             if (!list)
                                 parent->kids = NULL;
                             freeChunk = lastChunk;
-                            goto out;
                         }
                         goto out;
                     }
