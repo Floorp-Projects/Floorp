@@ -467,11 +467,21 @@ searchplugins/zoznam-sk.gif
 components/sidebar.xpt
 components/xmlextras.xpt
 components/xpcom.xpt
-#ifdef XP_MACOSX
+extensions/talkback@mozilla.org/
 extensions/talkback@mozilla.org/install.rdf
 extensions/talkback@mozilla.org/chrome.manifest
-extensions/talkback@mozilla.org/components/@DLL_PREFIX@qfaservices@DLL_SUFFIX@
 extensions/talkback@mozilla.org/components/qfaservices.xpt
+extensions/talkback@mozilla.org/components/@DLL_PREFIX@qfaservices@DLL_SUFFIX@
+#ifdef XP_WIN
+extensions/talkback@mozilla.org/components/BrandRes.dll
+extensions/talkback@mozilla.org/components/fullsoft.dll
+extensions/talkback@mozilla.org/components/master.ini
+extensions/talkback@mozilla.org/components/talkback-l10n.ini
+extensions/talkback@mozilla.org/components/talkback.cnt
+extensions/talkback@mozilla.org/components/talkback.exe
+extensions/talkback@mozilla.org/components/talkback.hlp
+#else
+#ifdef XP_MACOSX
 extensions/talkback@mozilla.org/components/talkback/master.ini
 extensions/talkback@mozilla.org/components/talkback/talkback@DLL_SUFFIX@
 extensions/talkback@mozilla.org/components/talkback/Talkback.app/Contents/Info.plist
@@ -504,4 +514,10 @@ extensions/talkback@mozilla.org/components/talkback/Talkback.app/Contents/Resour
 extensions/talkback@mozilla.org/components/talkback/Talkback.app/Contents/Resources/sort_ascending.tiff
 extensions/talkback@mozilla.org/components/talkback/Talkback.app/Contents/Resources/sort_descending.tiff
 extensions/talkback@mozilla.org/components/talkback/Talkback.app/Contents/Resources/Talkback.icns
+#else
+extensions/talkback@mozilla.org/components/talkback/talkback
+extensions/talkback@mozilla.org/components/talkback/XTalkback.ad
+extensions/talkback@mozilla.org/components/master.ini
+extensions/talkback@mozilla.org/components/talkback.so
+#endif
 #endif
