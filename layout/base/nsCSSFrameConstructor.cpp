@@ -4274,10 +4274,12 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
     else
 #endif 
 #ifdef MOZ_SVG
-    if (aDocElement->GetNameSpaceID() == kNameSpaceID_SVG &&
-        aDocElement->Tag() == nsGkAtoms::svg &&
-        NS_SVGEnabled()) {
-      contentFrame = NS_NewSVGOuterSVGFrame(mPresShell, aDocElement, styleContext);
+    if (aDocElement->GetNameSpaceID() == kNameSpaceID_SVG) {
+      if (aDocElement->Tag() == nsGkAtoms::svg && NS_SVGEnabled()) {
+        contentFrame = NS_NewSVGOuterSVGFrame(mPresShell, aDocElement, styleContext);
+      } else {
+        return NS_ERROR_FAILURE;
+      }
     }
     else 
 #endif
@@ -8826,39 +8828,37 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
       nsIFrame*               docElementFrame;
       nsFrameConstructorState state(mPresShell, mFixedContainingBlock, nsnull,
                                     nsnull, aFrameState);
-      ConstructDocElementFrame(state,
-                               docElement, 
-                               mDocElementContainingBlock,
-                               &docElementFrame);
+      rv = ConstructDocElementFrame(state,
+                                    docElement, 
+                                    mDocElementContainingBlock,
+                                    &docElementFrame);
     
-      if (mDocElementContainingBlock->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
-        // Set the initial child list for the parent and wait on the initial
-        // reflow.
-        mDocElementContainingBlock->SetInitialChildList(nsnull, 
-                                                        docElementFrame);
-      } else {
-        // Whoops, we've already received our initial reflow! Insert the doc.
-        // element as a child so it reflows (note that containing block is
-        // empty, so we can simply append).
-        NS_ASSERTION(mDocElementContainingBlock->GetFirstChild(nsnull) == nsnull,
-                     "Unexpected child of document element containing block");
-        mDocElementContainingBlock->AppendFrames(nsnull, docElementFrame);
-      }
-
-      if (docElementFrame) {
-        InvalidateCanvasIfNeeded(docElementFrame);
-      }
-
-#ifdef DEBUG
-      if (gReallyNoisyContentUpdates && docElementFrame) {
-        nsIFrameDebug* fdbg = nsnull;
-        CallQueryInterface(docElementFrame, &fdbg);
-        if (fdbg) {
-          printf("nsCSSFrameConstructor::ContentInserted: resulting frame model:\n");
-          fdbg->List(stdout, 0);
+      if (NS_SUCCEEDED(rv) && docElementFrame) {
+        if (mDocElementContainingBlock->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+          // Set the initial child list for the parent and wait on the initial
+          // reflow.
+          mDocElementContainingBlock->SetInitialChildList(nsnull, 
+                                                          docElementFrame);
+        } else {
+          // Whoops, we've already received our initial reflow! Insert the doc.
+          // element as a child so it reflows (note that containing block is
+          // empty, so we can simply append).
+          NS_ASSERTION(mDocElementContainingBlock->GetFirstChild(nsnull) == nsnull,
+                       "Unexpected child of document element containing block");
+          mDocElementContainingBlock->AppendFrames(nsnull, docElementFrame);
         }
-      }
+        InvalidateCanvasIfNeeded(docElementFrame);
+#ifdef DEBUG
+        if (gReallyNoisyContentUpdates) {
+          nsIFrameDebug* fdbg = nsnull;
+          CallQueryInterface(docElementFrame, &fdbg);
+          if (fdbg) {
+            printf("nsCSSFrameConstructor::ContentInserted: resulting frame model:\n");
+            fdbg->List(stdout, 0);
+          }
+        }
 #endif
+      }
     }
 
     // otherwise this is not a child of the root element, and we
