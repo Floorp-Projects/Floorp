@@ -1912,6 +1912,12 @@ nsXULTemplateBuilder::CompileTemplate(nsIContent* aTemplate,
                 if (! memberVariable) continue;
 
                 if (hasQuery) {
+                    nsCOMPtr<nsIAtom> tag;
+                    DetermineRDFQueryRef(aQuerySet->mQueryNode,
+                                         getter_AddRefs(tag));
+                    if (tag)
+                        aQuerySet->SetTag(tag);
+
                     if (! aQuerySet->mCompiledQuery) {
                         nsCOMPtr<nsIDOMNode> query(do_QueryInterface(aQuerySet->mQueryNode));
 
