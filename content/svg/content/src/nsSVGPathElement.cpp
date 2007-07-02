@@ -130,9 +130,7 @@ nsSVGPathElement::GetPointAtLength(float distance, nsIDOMSVGPoint **_retval)
   distance = PR_MAX(0,           distance);
   distance = PR_MIN(totalLength, distance);
 
-  gfxPoint pt = flat->FindPoint(gfxPoint(distance, 0));
-
-  return NS_NewSVGPoint(_retval, pt.x, pt.y);
+  return NS_NewSVGPoint(_retval, flat->FindPoint(gfxPoint(distance, 0)));
 }
 
 /* unsigned long getPathSegAtLength (in float distance); */
@@ -516,7 +514,8 @@ CalcVectorAngle(double ux, double uy, double vx, double vy)
 }
 
 void
-nsSVGPathElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks) {
+nsSVGPathElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
+{
   if (NS_FAILED(CreatePathSegList()))
     return;
 
