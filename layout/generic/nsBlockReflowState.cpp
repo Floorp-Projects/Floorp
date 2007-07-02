@@ -701,6 +701,8 @@ nsBlockReflowState::CanPlaceFloat(const nsSize& aFloatSize,
         GetAvailableSpace(mY, aForceFit);
       }
     }
+  } else if (!aForceFit && (aFloatSize.height > mAvailSpaceRect.height)) {
+    result = PR_FALSE;
   }
   return result;
 }
