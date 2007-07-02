@@ -8046,12 +8046,6 @@ ExtensionsDataSource.prototype = {
    * to specify localized text for each of these properties.
    */
   _getLocalizablePropertyValue: function(item, property) {
-    var localized = this._getLocalizedResource(item);
-    if (localized) {
-      var value = this._inner.GetTarget(localized, property, true);
-      return value ? value : EM_L("");
-    }
-    
     // These are localizable properties that a language pack supplied by the 
     // Extension may override.          
     var prefName = PREF_EM_EXTENSION_FORMAT.replace(/%UUID%/, 
@@ -8064,6 +8058,12 @@ ExtensionsDataSource.prototype = {
         return EM_L(value.data);
     }
     catch (e) {
+    }
+
+    var localized = this._getLocalizedResource(item);
+    if (localized) {
+      var value = this._inner.GetTarget(localized, property, true);
+      return value ? value : EM_L("");
     }
     return null;
   },
@@ -8166,10 +8166,6 @@ ExtensionsDataSource.prototype = {
    * to specify localized text for each of these properties.
    */
   _getLocalizablePropertyValues: function(item, property) {
-    var localized = this._getLocalizedResource(item);
-    if (localized)
-      return this._inner.GetTargets(localized, property, true);
-    
     // These are localizable properties that a language pack supplied by the 
     // Extension may override.          
     var values = [];
@@ -8196,7 +8192,17 @@ ExtensionsDataSource.prototype = {
         break;
       }
     }
-    return values.length > 0 ? values : null;
+    if (values.length > 0)
+      return values;
+
+    var localized = this._getLocalizedResource(item);
+    if (localized) {
+      var targets = this._inner.GetTargets(localized, property, true);
+      while (targets.hasMoreElements())
+        values.push(targets.getNext());
+      return values;
+    }
+    return null;
   },
 
   /**
