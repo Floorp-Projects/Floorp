@@ -501,8 +501,9 @@ public:
   void ToCString(nsString& aBuf, PRInt32* aTotalContentLength) const;
 #endif
 
-  PRInt32 GetContentOffset() { return mContentOffset; }
-  PRInt32 GetContentLength() { return mContentLength; }
+  PRInt32 GetContentOffset() const { return mContentOffset; }
+  PRInt32 GetContentLength() const { return mContentLength; }
+  PRInt32 GetContentEnd() const { return mContentOffset + mContentLength; }
 
   // Compute the length of the content mapped by this frame
   // and all its in-flow siblings. Basically this means starting at mContentOffset
@@ -888,7 +889,7 @@ public:
   };
   FindBoundaryResult FindBoundaries(nsIFrame* aFrame, FindBoundaryState* aState);
 
-  PRBool StylesMatchForTextRun(nsIFrame* aFrame1, nsIFrame* aFrame2);
+  PRBool ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFrame* aFrame2);
 
   // Like TextRunMappedFlow but with some differences. mStartFrame to mEndFrame
   // are a sequence of in-flow frames. There can be multiple MappedFlows per
@@ -1003,7 +1004,7 @@ BuildTextRunsScanner::FindBoundaries(nsIFrame* aFrame, FindBoundaryState* aState
   if (textFrame) {
     if (aState->mLastTextFrame &&
         textFrame != aState->mLastTextFrame->GetNextInFlow() &&
-        !StylesMatchForTextRun(aState->mLastTextFrame, textFrame)) {
+        !ContinueTextRunAcrossFrames(aState->mLastTextFrame, textFrame)) {
       aState->mSeenTextRunBoundaryOnThisLine = PR_TRUE;
       if (aState->mSeenSpaceForLineBreakingOnThisLine)
         return FB_FOUND_VALID_TEXTRUN_BOUNDARY;
@@ -1176,8 +1177,8 @@ BuildTextRuns(nsIRenderingContext* aRC, nsTextFrame* aForFrame,
     if (foundBoundary)
       break;
     if (!stopAtFrame && state.mLastTextFrame && nextLineFirstTextFrame &&
-        !scanner.StylesMatchForTextRun(state.mLastTextFrame, nextLineFirstTextFrame)) {
-      // Found a textrun boundary at the end of the line
+        !scanner.ContinueTextRunAcrossFrames(state.mLastTextFrame, nextLineFirstTextFrame)) {
+      // Found a usable textrun boundary at the end of the line
       if (state.mSeenSpaceForLineBreakingOnThisLine)
         break;
       seenTextRunBoundaryOnLaterLine = PR_TRUE;
@@ -1299,21 +1300,39 @@ ShouldDisableLigatures(const nsStyleText* aTextStyle)
   return StyleToCoord(aTextStyle->mLetterSpacing) != 0;
 }
 
+static PRBool
+HasTerminalNewline(const nsTextFrame* aFrame)
+{
+  if (aFrame->GetContentLength() == 0)
+    return PR_FALSE;
+  const nsTextFragment* frag = aFrame->GetContent()->GetText();
+  return frag->CharAt(aFrame->GetContentEnd() - 1) == '\n';
+}
+
 PRBool
-BuildTextRunsScanner::StylesMatchForTextRun(nsIFrame* aFrame1, nsIFrame* aFrame2)
+BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFrame* aFrame2)
 {
   if (mBidiEnabled &&
       NS_GET_EMBEDDING_LEVEL(aFrame1) != NS_GET_EMBEDDING_LEVEL(aFrame2))
     return PR_FALSE;
 
   nsStyleContext* sc1 = aFrame1->GetStyleContext();
-  nsStyleContext* sc2 = aFrame2->GetStyleContext();
+  const nsStyleText* textStyle1 = sc1->GetStyleText();
+  // If the first frame ends in a preformatted newline, then we end the textrun
+  // here. This avoids creating giant textruns for an entire plain text file.
+  // Note that we create a single text frame for a preformatted text node,
+  // even if it has newlines in it, so typically we won't see trailing newlines
+  // until after reflow has broken up the frame into one (or more) frames per
+  // line. That's OK though.
+  if (textStyle1->WhiteSpaceIsSignificant() && HasTerminalNewline(aFrame1))
+    return PR_FALSE;
 
+  nsStyleContext* sc2 = aFrame2->GetStyleContext();
   if (sc1 == sc2)
     return PR_TRUE;
   return sc1->GetStyleFont()->mFont.BaseEquals(sc2->GetStyleFont()->mFont) &&
     sc1->GetStyleVisibility()->mLangGroup == sc2->GetStyleVisibility()->mLangGroup &&
-    ShouldDisableLigatures(sc1->GetStyleText()) == ShouldDisableLigatures(sc2->GetStyleText());
+    ShouldDisableLigatures(textStyle1) == ShouldDisableLigatures(sc2->GetStyleText());
 }
 
 void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
@@ -1325,8 +1344,11 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
       NS_ASSERTION(aFrame->GetType() == nsGkAtoms::textFrame,
                    "Flow-sibling of a text frame is not a text frame?");
 
-      // this is almost always true
-      if (mLastFrame->GetStyleContext() == aFrame->GetStyleContext()) {
+      // Don't do this optimization if mLastFrame has a terminal newline...
+      // it's quite likely preformatted and we might want to end the textrun here.
+      // This is almost always true:
+      if (mLastFrame->GetStyleContext() == aFrame->GetStyleContext() &&
+          !HasTerminalNewline(mLastFrame)) {
         nsTextFrame* frame = NS_STATIC_CAST(nsTextFrame*, aFrame);
         mappedFlow->mEndFrame = NS_STATIC_CAST(nsTextFrame*, frame->GetNextInFlow());
         // Frames in the same flow can overlap at least temporarily
@@ -1346,7 +1368,7 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
   if (aFrame->GetType() == nsGkAtoms::textFrame) {
     nsTextFrame* frame = NS_STATIC_CAST(nsTextFrame*, aFrame);
 
-    if (mLastFrame && !StylesMatchForTextRun(mLastFrame, aFrame)) {
+    if (mLastFrame && !ContinueTextRunAcrossFrames(mLastFrame, frame)) {
       FlushFrames(PR_FALSE);
     }
 
@@ -1909,6 +1931,8 @@ BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun)
       f->SetTextRun(aTextRun);
     }
     nsIContent* content = startFrame->GetContent();
+    // BuildTextRunForFrames mashes together mapped flows for the same element,
+    // so we do that here too.
     if (content != lastContent) {
       startFrame->AddStateBits(TEXT_IS_RUN_OWNER);
       lastContent = content;
@@ -3500,12 +3524,21 @@ nsTextFrame::ClearTextRun()
   }
 }
 
+static void
+ClearTextRunsInFlowChain(nsTextFrame* aFrame)
+{
+  nsTextFrame* f;
+  for (f = aFrame; f; f = NS_STATIC_CAST(nsTextFrame*, f->GetNextInFlow())) {
+    f->ClearTextRun();
+  }
+}
+
 NS_IMETHODIMP
 nsTextFrame::CharacterDataChanged(nsPresContext* aPresContext,
                                   nsIContent*     aChild,
                                   PRBool          aAppend)
 {
-  ClearTextRun();
+  ClearTextRunsInFlowChain(this);
 
   nsTextFrame* targetTextFrame;
   nsTextFrame* lastTextFrame;
@@ -5841,7 +5874,7 @@ nsTextFrame::AdjustOffsetsForBidi(PRInt32 aStart, PRInt32 aEnd)
    * This is called during bidi resolution from the block container, so we
    * shouldn't be holding a local reference to a textrun anywhere.
    */
-  ClearTextRun();
+  ClearTextRunsInFlowChain(this);
 }
 
 void
@@ -5858,11 +5891,5 @@ nsTextFrame::SetOffsets(PRInt32 aStart, PRInt32 aEnd)
 PRBool
 nsTextFrame::HasTerminalNewline() const
 {
-  const nsTextFragment* frag = mContent->GetText();
-  if (frag && mContentLength > 0) {
-    PRUnichar ch = frag->CharAt(mContentOffset + mContentLength - 1);
-    if (ch == '\n')
-      return PR_TRUE;
-  }
-  return PR_FALSE;
+  return ::HasTerminalNewline(this);
 }
