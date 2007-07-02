@@ -1,0 +1,9 @@
+== bidi-000.html bidi-000-ref.html
+== bidi-001.html bidi-001-ref.html
+== bidi-001-j.html bidi-001-ref.html
+== bidi-001-v.html bidi-001-ref.html
+== bidi-002.html bidi-002-ref.html
+== bidi-003.html bidi-003-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == bidi-004.html bidi-004-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == bidi-004-j.html bidi-004-ref.html
+skip == bidi-005.html bidi-005-ref.html # depends on bug 376532

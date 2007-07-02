@@ -50,3 +50,5 @@ include text-transform/reftest.list
 # native-theme/
 include native-theme/reftest.list
 
+# bidi
+include bidi/reftest.list
