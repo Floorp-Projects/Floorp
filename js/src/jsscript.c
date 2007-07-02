@@ -1398,15 +1398,15 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 ntrynotes)
 JS_FRIEND_API(JSScript *)
 js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun)
 {
-    uint32 mainLength, prologLength, nsrcnotes, ntrynotes;
+    uint32 mainLength, prologLength, nsrcnotes;
     JSScript *script;
     const char *filename;
 
     mainLength = CG_OFFSET(cg);
     prologLength = CG_PROLOG_OFFSET(cg);
     CG_COUNT_FINAL_SRCNOTES(cg, nsrcnotes);
-    ntrynotes = (uint32)(cg->tryNext - cg->tryBase);
-    script = js_NewScript(cx, prologLength + mainLength, nsrcnotes, ntrynotes);
+    script = js_NewScript(cx, prologLength + mainLength, nsrcnotes,
+                          cg->ntrynotes);
     if (!script)
         return NULL;
 

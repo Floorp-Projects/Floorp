@@ -1474,7 +1474,6 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     pn->pn_op = op;
     pn->pn_body = body;
     pn->pn_flags = funtc.flags & (TCF_FUN_FLAGS | TCF_HAS_DEFXMLNS);
-    pn->pn_tryCount = funtc.tryCount;
     TREE_CONTEXT_FINISH(&funtc);
     return result;
 }
@@ -1549,7 +1548,6 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 tc->flags &= ~TCF_RETURN_EXPR;
             }
             if (!js_FoldConstants(cx, pn2, tc) ||
-                !js_AllocTryNotes(cx, (JSCodeGenerator *)tc) ||
                 !js_EmitTree(cx, (JSCodeGenerator *)tc, pn2)) {
                 tt = TOK_ERROR;
                 break;
@@ -3185,7 +3183,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn->pn_kid2 = catchList;
 
         if (tt == TOK_FINALLY) {
-            tc->tryCount++;
             MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_FINALLY);
             js_PushStatement(tc, &stmtInfo, STMT_FINALLY, -1);
             pn->pn_kid3 = Statements(cx, ts, tc);
@@ -3201,7 +3198,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                                         JSMSG_CATCH_OR_FINALLY);
             return NULL;
         }
-        tc->tryCount++;
         return pn;
       }
 
@@ -4294,6 +4290,7 @@ ComprehensionTail(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     JSTokenType tt;
     JSAtom *atom;
 
+    JS_ASSERT(type == TOK_SEMI || type == TOK_ARRAYPUSH);
     JS_ASSERT(CURRENT_TOKEN(ts).type == TOK_FOR);
 
     /*

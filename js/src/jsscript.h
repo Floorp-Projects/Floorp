@@ -50,11 +50,13 @@
 JS_BEGIN_EXTERN_C
 
 /*
- * Type of try note associated with each catch block or finally block.
+ * Type of try note associated with each catch or finally block or with for-in
+ * loop.
  */
 typedef enum JSTryNoteKind {
     JSTN_CATCH,
-    JSTN_FINALLY
+    JSTN_FINALLY,
+    JSTN_ITER
 } JSTryNoteKind;
 
 /*
@@ -64,9 +66,9 @@ struct JSTryNote {
     uint8           kind;       /* one of JSTryNoteKind */
     uint8           padding;    /* explicit padding on uint16 boundary */
     uint16          stackDepth; /* stack depth upon exception handler entry */
-    uint32          start;      /* start of the try statement relative to
-                                   script->main */
-    uint32          length;     /* length of the try statement */
+    uint32          start;      /* start of the try statement or for-in loop
+                                   relative to script->main */
+    uint32          length;     /* length of the try statement or for-in loop */
 };
 
 typedef struct JSTryNoteArray {

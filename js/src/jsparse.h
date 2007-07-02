@@ -68,7 +68,6 @@ JS_BEGIN_EXTERN_C
  *                          pn_body: TOK_LC node for function body statements
  *                          pn_flags: TCF_FUN_* flags (see jsemit.h) collected
  *                            while parsing the function's body
- *                          pn_tryCount: of try statements in function
  *
  * <Statements>
  * TOK_LC       list        pn_head: list of pn_count statements
@@ -281,7 +280,6 @@ struct JSParseNode {
             JSAtom      *funAtom;       /* atomized function object */
             JSParseNode *body;          /* TOK_LC list of statements */
             uint32      flags;          /* accumulated tree context flags */
-            uint32      tryCount;       /* count of try statements in body */
         } func;
         struct {                        /* list of next-linked nodes */
             JSParseNode *head;          /* first node in list */
@@ -323,7 +321,6 @@ struct JSParseNode {
 #define pn_funAtom      pn_u.func.funAtom
 #define pn_body         pn_u.func.body
 #define pn_flags        pn_u.func.flags
-#define pn_tryCount     pn_u.func.tryCount
 #define pn_head         pn_u.list.head
 #define pn_tail         pn_u.list.tail
 #define pn_count        pn_u.list.count
