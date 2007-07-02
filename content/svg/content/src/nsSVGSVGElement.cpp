@@ -689,7 +689,7 @@ nsSVGSVGElement::GetBBox(nsIDOMSVGRect **_retval)
 
   if (frame) {
     nsISVGChildFrame* svgframe;
-    frame->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&svgframe);
+    CallQueryInterface(frame, &svgframe);
     if (svgframe) {
       svgframe->SetMatrixPropagation(PR_FALSE);
       svgframe->NotifyCanvasTMChanged(PR_TRUE);
@@ -1369,7 +1369,8 @@ nsSVGSVGElement::SetCoordCtxRect(nsIDOMSVGRect* aCtxRect)
 }
 
 already_AddRefed<nsIDOMSVGRect>
-nsSVGSVGElement::GetCtxRect() {
+nsSVGSVGElement::GetCtxRect()
+{
   nsCOMPtr<nsIDOMSVGRect> vb;
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
     mViewBox->GetAnimVal(getter_AddRefs(vb));
@@ -1392,7 +1393,8 @@ nsSVGSVGElement::GetCtxRect() {
 }
 
 float
-nsSVGSVGElement::GetLength(PRUint8 aCtxType) {
+nsSVGSVGElement::GetLength(PRUint8 aCtxType)
+{
   float h, w;
 
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
