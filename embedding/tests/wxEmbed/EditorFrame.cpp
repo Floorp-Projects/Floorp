@@ -84,7 +84,8 @@ void EditorFrame::MakeEditable()
     nsCOMPtr<nsIEditingSession> editingSession = do_GetInterface(mWebBrowser);
     if (!editingSession)
         return;// NS_ERROR_FAILURE;
-    editingSession->MakeWindowEditable(domWindow, NULL, PR_TRUE, PR_FALSE);
+    editingSession->MakeWindowEditable(domWindow, NULL, PR_TRUE, PR_TRUE,
+                                       PR_FALSE);
 }
 
 nsresult EditorFrame::DoCommand(const char *aCommand, nsICommandParams *aCommandParams)
