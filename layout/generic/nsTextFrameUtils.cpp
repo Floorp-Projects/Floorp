@@ -40,9 +40,9 @@
 #include "nsContentUtils.h"
 #include "nsIWordBreaker.h"
 #include "gfxFont.h"
-#include "nsTextTransformer.h"
 #include "nsCompressedCharMap.h"
 #include "nsUnicharUtils.h"
+#include "nsBidiUtils.h"
 
 // XXX TODO implement transform of backslash to yen that nsTextTransform does
 // when requested by PresContext->LanguageSpecificTransformType(). Do it with
@@ -83,7 +83,7 @@ static PRBool IsDiscardable(PRUnichar ch, PRUint32* aFlags)
     // Not a Bidi control character
     return PR_FALSE;
   }
-  return IS_BIDI_CONTROL(ch);
+  return IS_BIDI_CONTROL_CHAR(ch);
 }
 
 static PRBool IsDiscardable(PRUint8 ch, PRUint32* aFlags)

@@ -76,7 +76,6 @@
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
 #include "nsFrame.h"
-#include "nsTextTransformer.h"
 #include "nsTextFrameUtils.h"
 #include "nsTextRunTransformations.h"
 #include "nsFrameManager.h"
@@ -751,7 +750,7 @@ static PRBool IsCSSWordSpacingSpace(const nsTextFragment* aFrag, PRUint32 aPos)
 {
   NS_ASSERTION(aPos < aFrag->GetLength(), "No text for IsSpace!");
   PRUnichar ch = aFrag->CharAt(aPos);
-  if (ch == ' ' || ch == 0x3000/*IDEOGRAPHIC SPACE*/)
+  if (ch == ' ' || ch == CH_CJKSP)
     return !IsSpaceCombiningSequenceTail(aFrag, aPos + 1);
   return ch == '\t' || ch == '\n' || ch == '\f';
 }
@@ -786,7 +785,7 @@ static PRBool IsSelectionSpace(const nsTextFragment* aFrag, PRUint32 aPos)
 {
   NS_ASSERTION(aPos < aFrag->GetLength(), "No text for IsSpace!");
   PRUnichar ch = aFrag->CharAt(aPos);
-  if (ch == ' ' || ch == 0x00A0/*NBSP*/)
+  if (ch == ' ' || ch == CH_NBSP)
     return !IsSpaceCombiningSequenceTail(aFrag, aPos + 1);
   return ch == '\t' || ch == '\n' || ch == '\f';
 }
@@ -4809,7 +4808,8 @@ nsTextFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool 
   if (!cIter.NextCluster())
     return PR_FALSE;
   
-  PRBool stopAfterPunctuation = nsTextTransformer::GetWordSelectStopAtPunctuation();
+  PRBool stopAfterPunctuation =
+	  nsContentUtils::GetBoolPref("layout.word_select.stop_at_punctuation");
   PRBool stopBeforePunctuation = stopAfterPunctuation && !aIsKeyboardSelect;
   do {
     if (aWordSelectEatSpace == cIter.IsWhitespace() && !*aSawBeforeType) {

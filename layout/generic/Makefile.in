@@ -114,7 +114,6 @@ EXPORTS		= \
 
 ifdef IBMBIDI
 EXPORTS		+= \
-		nsTextTransformer.h \
 		nsBidiFrames.h      \
 		$(NULL)
 endif
@@ -161,7 +160,6 @@ CPPSRCS		= \
 		nsTextFrameThebes.cpp \
 		nsTextFrameUtils.cpp \
 		nsTextRunTransformations.cpp \
-		nsTextTransformer.cpp \
 		nsViewportFrame.cpp \
 		$(NULL)
 
