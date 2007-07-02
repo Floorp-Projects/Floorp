@@ -54,6 +54,10 @@ public:
   nsDocAccessibleWrap(nsIDOMNode *aNode, nsIWeakReference *aShell);
   virtual ~nsDocAccessibleWrap();
 
+  // Override SetEditor because we need to recreate atkobject
+  // when editable interface is added/removed
+  void SetEditor(nsIEditor* aEditor);
+
   PRBool mActivated;
 };
 
