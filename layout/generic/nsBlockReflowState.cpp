@@ -379,6 +379,8 @@ nsBlockReflowState::RecoverFloats(nsLineList::iterator aLine,
         fc->mRegion.y += aDeltaY;
         nsPoint p = floatFrame->GetPosition();
         floatFrame->SetPosition(nsPoint(p.x, p.y + aDeltaY));
+        nsContainerFrame::PositionFrameView(floatFrame);
+        nsContainerFrame::PositionChildViews(floatFrame);
       }
 #ifdef DEBUG
       if (nsBlockFrame::gNoisyReflow || nsBlockFrame::gNoisySpaceManager) {
