@@ -503,7 +503,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(AsyncWriteThread, nsIRunnable)
 nsresult
 mozStorageService::InitStorageAsyncIO()
 {
-  sqlite3OsVtbl* vtable = sqlite3_os_switch();
+  sqlite3OsVtbl* vtable = &sqlite3Os;
 
   sqliteOrigOpenReadWrite = vtable->xOpenReadWrite;
   sqliteOrigOpenReadOnly = vtable->xOpenReadOnly;
