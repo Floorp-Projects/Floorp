@@ -1783,28 +1783,23 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   AssignTextRun(textRun);
 }
 
-// XXX
 static PRBool
 HasCompressedLeadingWhitespace(nsTextFrame* aFrame, PRInt32 aContentEndOffset,
-                               gfxSkipCharsIterator* aIterator)
+                               const gfxSkipCharsIterator& aIterator)
 {
-  if (!aIterator->IsOriginalCharSkipped())
+  if (!aIterator.IsOriginalCharSkipped())
     return PR_FALSE;
 
-  PRBool result = PR_FALSE;
-  PRInt32 savedOffset = aIterator->GetOriginalOffset();
+  gfxSkipCharsIterator iter = aIterator;
   PRInt32 frameContentOffset = aFrame->GetContentOffset();
   const nsTextFragment* frag = aFrame->GetContent()->GetText();
-  while (frameContentOffset < aContentEndOffset &&
-         aIterator->IsOriginalCharSkipped()) {
-    if (IsTrimmableSpace(frag, frameContentOffset)) {
-      result = PR_TRUE;
-      break;
-    }
+  while (frameContentOffset < aContentEndOffset && iter.IsOriginalCharSkipped()) {
+    if (IsTrimmableSpace(frag, frameContentOffset))
+      return PR_TRUE;
     ++frameContentOffset;
+    iter.AdvanceOriginal(1);
   }
-  aIterator->SetOriginalOffset(savedOffset);
-  return result;
+  return PR_FALSE;
 }
 
 void
@@ -1835,7 +1830,7 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
       - offset;
 
     nsTextFrame* startFrame = mappedFlow->mStartFrame;
-    if (HasCompressedLeadingWhitespace(startFrame, mappedFlow->mContentEndOffset, &iter)) {
+    if (HasCompressedLeadingWhitespace(startFrame, mappedFlow->mContentEndOffset, iter)) {
       mLineBreaker.AppendInvisibleWhitespace();
     }
 
@@ -2537,7 +2532,10 @@ PropertyProvider::GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
     } else {
       PRInt32 runOffsetInSubstring = run.GetSkippedOffset() - aStart;
       memset(aBreakBefore + runOffsetInSubstring, 0, run.GetRunLength());
-      aBreakBefore[runOffsetInSubstring] = allowHyphenBreakBeforeNextChar;
+      // Don't allow hyphen breaks at the start of the line
+      aBreakBefore[runOffsetInSubstring] = allowHyphenBreakBeforeNextChar &&
+          (!(mFrame->GetStateBits() & TEXT_START_OF_LINE) ||
+           run.GetSkippedOffset() > mStart.GetSkippedOffset());
       allowHyphenBreakBeforeNextChar = PR_FALSE;
     }
   }
@@ -5122,6 +5120,23 @@ AddCharToMetrics(gfxTextRun* aCharTextRun, gfxTextRun* aBaseTextRun,
   aMetrics->mAdvanceWidth += width;
 }
 
+static PRBool
+HasSoftHyphenBefore(const nsTextFragment* aFrag, gfxTextRun* aTextRun,
+                    PRInt32 aStartOffset, const gfxSkipCharsIterator& aIter)
+{
+  if (!(aTextRun->GetFlags() & nsTextFrameUtils::TEXT_HAS_SHY))
+    return PR_FALSE;
+  gfxSkipCharsIterator iter = aIter;
+  while (iter.GetOriginalOffset() > aStartOffset) {
+    iter.AdvanceOriginal(-1);
+    if (!iter.IsOriginalCharSkipped())
+      break;
+    if (aFrag->CharAt(iter.GetOriginalOffset()) == CH_SHY)
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP
 nsTextFrame::Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aMetrics,
@@ -5320,7 +5335,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
                                   &textMetrics, needTightBoundingBox,
                                   &usedHyphenation, &transformedLastBreak);
   // The "end" iterator points to the first character after the string mapped
-  // by this frame. Basically, it's original-string offset is offset+charsFit
+  // by this frame. Basically, its original-string offset is offset+charsFit
   // after we've computed charsFit.
   gfxSkipCharsIterator end(provider.GetEndHint());
   end.SetSkippedOffset(transformedOffset + transformedCharsFit);
@@ -5332,13 +5347,15 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   if (charsFit >= limitLength) {
     charsFit = limitLength;
     if (transformedLastBreak != PR_UINT32_MAX) {
-      // lastBreak is needed. Use the "end" iterator for this because
-      // it's likely to be close to the desired point
-      end.SetSkippedOffset(transformedOffset + transformedLastBreak);
+      // lastBreak is needed.
       // This may set lastBreak greater than 'length', but that's OK
-      lastBreak = end.GetOriginalOffset();
-      // Reset 'end' to the correct offset.
-      end.SetOriginalOffset(offset + charsFit);
+      lastBreak = end.ConvertSkippedToOriginal(transformedOffset + transformedLastBreak);
+    }
+    end.SetOriginalOffset(offset + charsFit);
+    // If we were forced to fit, and the break position is after a soft hyphen,
+    // note that this is a hyphenation break.
+    if (forceBreak >= 0 && HasSoftHyphenBefore(frag, mTextRun, offset, end)) {
+      usedHyphenation = PR_TRUE;
     }
   }
   if (usedHyphenation) {
@@ -5354,7 +5371,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   // If everything fits including trimmed whitespace, then we should add the
   // trimmed whitespace to our metrics now because it probably won't be trimmed
   // and we need to position subsequent frames correctly...
-  if (textMetrics.mAdvanceWidth + trimmedWidth <= availWidth) {
+  if (forceBreak < 0 && textMetrics.mAdvanceWidth + trimmedWidth <= availWidth) {
     textMetrics.mAdvanceWidth += trimmedWidth;
     if (mTextRun->IsRightToLeft()) {
       // Space comes before text, so the bounding box is moved to the
@@ -5362,10 +5379,9 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
       textMetrics.mBoundingBox.MoveBy(gfxPoint(trimmedWidth, 0));
     }
     
-    // All text fit. Record the last potential break, if there is one.
     if (lastBreak >= 0) {
       lineLayout.NotifyOptionalBreakPosition(mContent, lastBreak,
-          textMetrics.mAdvanceWidth < aReflowState.availableWidth);
+          textMetrics.mAdvanceWidth <= aReflowState.availableWidth);
     }
   } else {
     // We're definitely going to break and our whitespace will definitely
@@ -5423,16 +5439,22 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   /////////////////////////////////////////////////////////////////////
 
   lineLayout.SetUnderstandsWhiteSpace(PR_TRUE);
-  PRBool endsInWhitespace = PR_FALSE;
   if (charsFit > 0) {
-    endsInWhitespace = IsTrimmableSpace(frag, offset + charsFit - 1);
+    PRBool endsInWhitespace = IsTrimmableSpace(frag, offset + charsFit - 1);
     lineLayout.SetInWord(!endsInWhitespace);
     lineLayout.SetEndsInWhiteSpace(endsInWhitespace);
     PRBool wrapping = textStyle->WhiteSpaceCanWrap();
     lineLayout.SetTrailingTextFrame(this, wrapping);
-    if (charsFit == length && endsInWhitespace && wrapping) {
-      // Record a potential break after final breakable whitespace
-      lineLayout.NotifyOptionalBreakPosition(mContent, offset + length, PR_TRUE);
+    if (charsFit == length) {
+      if (endsInWhitespace && wrapping) {
+        // Record a potential break after final breakable whitespace
+        lineLayout.NotifyOptionalBreakPosition(mContent, offset + length,
+            textMetrics.mAdvanceWidth <= aReflowState.availableWidth);
+      } else if (HasSoftHyphenBefore(frag, mTextRun, offset, end)) {
+        // Record a potential break after final soft hyphen
+        lineLayout.NotifyOptionalBreakPosition(mContent, offset + length,
+            textMetrics.mAdvanceWidth + provider.GetHyphenWidth() <= availWidth);
+      }
     }
   } else {
     // Don't allow subsequent text frame to break-before. All our text is       
