@@ -119,10 +119,7 @@
  * are find-node and insert-node, then the only hazard is duplicate insertion.
  * This is harmless except for minor bloat.  When all requests have ended or
  * been suspended, the GC is free to sweep the tree after marking all nodes
- * reachable from scopes, performing remove-node operations as needed.  Note
- * also that the stable storage of the property nodes during active requests
- * permits the property cache (see jsinterp.h) to dereference JSScopeProperty
- * weak references safely.
+ * reachable from scopes, performing remove-node operations as needed.
  *
  * Is the property tree worth it compared to property storage in each table's
  * entries?  To decide, we must find the relation <> between the words used
