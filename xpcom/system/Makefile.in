@@ -46,6 +46,7 @@ MODULE          = xpcom
 XPIDL_MODULE    = xpcom_system
 
 XPIDLSRCS = \
+        nsIXULAppInfo.idl \
         nsIGConfService.idl \
         nsIGnomeVFSService.idl \
         $(NULL)

@@ -46,7 +46,6 @@
 
 #include "nsAppRunner.h"
 #include "nsUpdateDriver.h"
-#include "nsBuildID.h"
 
 #ifdef XP_MACOSX
 #include "MacLaunchHelper.h"
@@ -265,6 +264,9 @@ extern "C" {
 
 int    gArgc;
 char **gArgv;
+
+static char gToolkitVersion[20];
+static char gToolkitBuildID[40];
 
 static int    gRestartArgc;
 static char **gRestartArgv;
@@ -590,7 +592,7 @@ nsXULAppInfo::GetVersion(nsACString& aResult)
 NS_IMETHODIMP
 nsXULAppInfo::GetPlatformVersion(nsACString& aResult)
 {
-  aResult.AssignLiteral(TOOLKIT_EM_VERSION);
+  aResult.AssignLiteral(gToolkitVersion);
 
   return NS_OK;
 }
@@ -606,7 +608,7 @@ nsXULAppInfo::GetAppBuildID(nsACString& aResult)
 NS_IMETHODIMP
 nsXULAppInfo::GetPlatformBuildID(nsACString& aResult)
 {
-  aResult.Assign(NS_STRINGIFY(BUILD_ID));
+  aResult.Assign(gToolkitBuildID);
 
   return NS_OK;
 }
@@ -1980,7 +1982,7 @@ static void BuildVersion(nsCString &aBuf)
   aBuf.Append('_');
   aBuf.Append(gAppData->buildID);
   aBuf.Append('/');
-  aBuf.AppendLiteral(GRE_BUILD_ID);
+  aBuf.Append(gToolkitBuildID);
 }
 
 static void
@@ -2305,27 +2307,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     return 1;
   }
 
-  if (appData.size > offsetof(nsXREAppData, minVersion)) {
-    if (!appData.minVersion) {
-      Output(PR_TRUE, "Error: Gecko:MinVersion not specified in application.ini\n");
-      return 1;
-    }
-
-    if (!appData.maxVersion) {
-      // If no maxVersion is specified, we assume the app is only compatible
-      // with the initial preview release. Do not increment this number ever!
-      SetAllocatedString(appData.maxVersion, "1.*");
-    }
-
-    if (NS_CompareVersions(appData.minVersion, TOOLKIT_EM_VERSION) > 0 ||
-        NS_CompareVersions(appData.maxVersion, TOOLKIT_EM_VERSION) < 0) {
-      Output(PR_TRUE, "Error: Platform version " TOOLKIT_EM_VERSION " is not compatible with\n"
-             "minVersion >= %s\nmaxVersion <= %s\n",
-             appData.minVersion, appData.maxVersion);
-      return 1;
-    }
-  }
-
   ScopedLogging log;
 
   if (!appData.xreDirectory) {
@@ -2342,6 +2323,54 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     rv = CallQueryInterface(greDir, &appData.xreDirectory);
     if (NS_FAILED(rv))
       return 2;
+  }
+
+  nsCOMPtr<nsIFile> iniFile;
+  rv = appData.xreDirectory->Clone(getter_AddRefs(iniFile));
+  if (NS_FAILED(rv))
+    return 2;
+
+  iniFile->AppendNative(NS_LITERAL_CSTRING("platform.ini"));
+
+  nsCOMPtr<nsILocalFile> localIniFile = do_QueryInterface(iniFile);
+  if (!localIniFile)
+    return 2;
+
+  nsINIParser parser;
+  rv = parser.Init(localIniFile);
+  if (NS_SUCCEEDED(rv)) {
+    rv = parser.GetString("Build", "Milestone",
+                          gToolkitVersion, sizeof(gToolkitVersion));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get toolkit version");
+
+    rv = parser.GetString("Build", "BuildID",
+                          gToolkitBuildID, sizeof(gToolkitBuildID));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get toolkit buildid");
+  }
+  else {
+    NS_ERROR("Couldn't parse platform.ini!");
+  }
+
+  if (appData.size > offsetof(nsXREAppData, minVersion)) {
+    if (!appData.minVersion) {
+      Output(PR_TRUE, "Error: Gecko:MinVersion not specified in application.ini\n");
+      return 1;
+    }
+
+    if (!appData.maxVersion) {
+      // If no maxVersion is specified, we assume the app is only compatible
+      // with the initial preview release. Do not increment this number ever!
+      SetAllocatedString(appData.maxVersion, "1.*");
+    }
+
+    if (NS_CompareVersions(appData.minVersion, gToolkitVersion) > 0 ||
+        NS_CompareVersions(appData.maxVersion, gToolkitVersion) < 0) {
+      Output(PR_TRUE, "Error: Platform version '%s' is not compatible with\n"
+             "minVersion >= %s\nmaxVersion <= %s\n",
+             gToolkitVersion,
+             appData.minVersion, appData.maxVersion);
+      return 1;
+    }
   }
 
 #ifdef MOZ_AIRBAG

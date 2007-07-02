@@ -84,7 +84,6 @@ CSRCS		= \
 CPPSRCS		= \
 		$(XPCOM_GLUE_SRC_LCPPSRCS)   \
 		nsXPCOMGlue.cpp              \
-		nsGREDirServiceProvider.cpp  \
 		$(LINKSRC)                   \
 		$(NULL)
 
