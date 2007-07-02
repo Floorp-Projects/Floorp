@@ -724,7 +724,22 @@ nsViewManager::UpdateViewAfterScroll(nsView *aView, const nsRegion& aUpdateRegio
 {
   NS_ASSERTION(RootViewManager()->mScrollCnt > 0,
                "Someone forgot to call WillBitBlit()");
+  // Look at the view's clipped rect. It may be that part of the view is clipped out
+  // in which case we don't need to worry about invalidating the clipped-out part.
+  nsRect damageRect = aView->GetDimensions();
+  if (damageRect.IsEmpty()) {
+    return;
+  }
   nsPoint offset = ComputeViewOffset(aView);
+  damageRect.MoveBy(offset);
+
+  // if this is a floating view, it isn't covered by any widgets other than
+  // its children, which are handled by the widget scroller.
+  if (aView->GetFloating()) {
+    return;
+  }
+
+  UpdateWidgetArea(RootViewManager()->GetRootView(), nsRegion(damageRect), aView);
   if (!aUpdateRegion.IsEmpty()) {
     // XXX We should update the region, not the bounds rect, but that requires
     // a little more work. Fix this when we reshuffle this code.
