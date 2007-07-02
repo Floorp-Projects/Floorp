@@ -706,9 +706,20 @@ nsHttpChannel::CallOnStartRequest()
         gIOService->GetContentSniffers().Count() != 0) {
         // NOTE: We can have both a txn pump and a cache pump when the cache
         // content is partial. In that case, we need to read from the cache,
-        // because that's the one that has the initial contents.
-        nsInputStreamPump* pump = mCachePump ? mCachePump : mTransactionPump;
-        pump->PeekStream(CallTypeSniffers, NS_STATIC_CAST(nsIChannel*, this));
+        // because that's the one that has the initial contents. If that fails
+        // then give the transaction pump a shot.
+
+        nsIChannel* thisChannel = NS_STATIC_CAST(nsIChannel*, this);
+
+        PRBool typeSniffersCalled = PR_FALSE;
+        if (mCachePump) {
+          typeSniffersCalled =
+            NS_SUCCEEDED(mCachePump->PeekStream(CallTypeSniffers, thisChannel));
+        }
+        
+        if (!typeSniffersCalled && mTransactionPump) {
+          mTransactionPump->PeekStream(CallTypeSniffers, thisChannel);
+        }
     }
 
     LOG(("  calling mListener->OnStartRequest\n"));
