@@ -1292,7 +1292,7 @@ HRESULT CMozillaBrowser::SetEditorMode(BOOL bEnabled)
         return E_FAIL;
 
     rv = mEditingSession->MakeWindowEditable(domWindow, "html", PR_FALSE,
-                                             PR_FALSE);
+                                             PR_TRUE, PR_FALSE);
  
     return S_OK;
 }
