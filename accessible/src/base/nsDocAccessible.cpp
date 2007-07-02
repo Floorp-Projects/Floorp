@@ -201,6 +201,13 @@ NS_IMETHODIMP nsDocAccessible::GetValue(nsAString& aValue)
   return GetURL(aValue);
 }
 
+NS_IMETHODIMP 
+nsDocAccessible::GetDescription(nsAString& aDescription)
+{
+  aDescription.Truncate();
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsDocAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
