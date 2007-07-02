@@ -138,6 +138,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIKBStateControl.h"
 #include "nsIMEStateManager.h"
 #include "nsContentErrors.h"
+#include "nsUnicharUtilCIID.h"
+#include "nsICaseConversion.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -176,6 +178,7 @@ nsIContentPolicy *nsContentUtils::sContentPolicyService;
 PRBool nsContentUtils::sTriedToGetContentPolicy = PR_FALSE;
 nsILineBreaker *nsContentUtils::sLineBreaker;
 nsIWordBreaker *nsContentUtils::sWordBreaker;
+nsICaseConversion *nsContentUtils::sCaseConv;
 nsVoidArray *nsContentUtils::sPtrsToPtrsToRelease;
 nsIJSRuntimeService *nsContentUtils::sJSRuntimeService;
 JSRuntime *nsContentUtils::sJSScriptRuntime;
@@ -270,6 +273,9 @@ nsContentUtils::Init()
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = CallGetService(NS_WBRK_CONTRACTID, &sWordBreaker);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = CallGetService(NS_UNICHARUTIL_CONTRACTID, &sCaseConv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Ignore failure and just don't load images
@@ -667,6 +673,7 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sIOService);
   NS_IF_RELEASE(sLineBreaker);
   NS_IF_RELEASE(sWordBreaker);
+  NS_IF_RELEASE(sCaseConv);
 #ifdef MOZ_XTF
   NS_IF_RELEASE(sXTFService);
 #endif

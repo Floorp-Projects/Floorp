@@ -99,7 +99,6 @@
 #include "nsITextControlFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsIPercentHeightObserver.h"
-#include "nsTextTransformer.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -4818,9 +4817,9 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
         // Use the hidden preference which is based on operating system behavior.
         // This pref only affects whether moving forward by word should go to the end of this word or start of the next word.
         // When going backwards, the start of the word is always used, on every operating system.
-        nsTextTransformer::Initialize();
-        wordSelectEatSpace = aPos->mDirection == eDirNext && nsTextTransformer::GetWordSelectEatSpaceAfter();
-      }      
+        wordSelectEatSpace = aPos->mDirection == eDirNext &&
+          nsContentUtils::GetBoolPref("layout.word_select.eat_space_to_next_word");
+      }
       
       // sawBeforeType means "we already saw characters of the type
       // before the boundary we're looking for". Examples:
