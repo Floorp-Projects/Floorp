@@ -40,6 +40,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsMai.h"
 #include "nsDocAccessibleWrap.h"
 
 //----- nsDocAccessibleWrap -----
@@ -53,3 +54,29 @@ nsDocAccessibleWrap::nsDocAccessibleWrap(nsIDOMNode *aDOMNode,
 nsDocAccessibleWrap::~nsDocAccessibleWrap()
 {
 }
+
+void nsDocAccessibleWrap::SetEditor(nsIEditor* aEditor)
+{
+  // Recreate atkobject if editable interface is changing
+  PRBool needRecreate = mAtkObject && (mEditor != aEditor)
+                                   && (!mEditor || !aEditor);
+  nsDocAccessible::SetEditor(aEditor);
+
+  if (needRecreate) {
+    // Clear old atkobject
+    ShutdownAtkObject();
+
+    // Get new atkobject
+    GetAtkObject();
+
+    // Set every child's parent to new created atkobject
+    nsCOMPtr<nsIAccessible> accChild;
+    while (NextChild(accChild)) {
+      if (IsEmbeddedObject(accChild)) {
+        AtkObject* childAtkObj = nsAccessibleWrap::GetAtkObject(accChild);
+        atk_object_set_parent(childAtkObj, mAtkObject);
+      }
+    }
+  }
+}
+

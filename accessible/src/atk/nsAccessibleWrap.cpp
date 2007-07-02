@@ -309,7 +309,7 @@ nsAccessibleWrap::~nsAccessibleWrap()
                    (mAccWrapCreated-mAccWrapDeleted)));
 }
 
-NS_IMETHODIMP nsAccessibleWrap::Shutdown()
+void nsAccessibleWrap::ShutdownAtkObject()
 {
     if (mAtkObject) {
         if (IS_MAI_OBJECT(mAtkObject)) {
@@ -319,6 +319,11 @@ NS_IMETHODIMP nsAccessibleWrap::Shutdown()
         g_object_unref(mAtkObject);
         mAtkObject = nsnull;
     }
+}
+
+NS_IMETHODIMP nsAccessibleWrap::Shutdown()
+{
+    ShutdownAtkObject();
     return nsAccessible::Shutdown();
 }
 
