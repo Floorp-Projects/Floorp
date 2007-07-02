@@ -203,11 +203,4 @@ struct sqlite3OsVtbl {
   extern struct sqlite3OsVtbl sqlite3Os;
 #endif /* _SQLITE_OS_C_ */
 
-
-/* FROM os.h
-** ---------
-** This additional API routine is available with redefinable I/O
-*/
-struct sqlite3OsVtbl *sqlite3_os_switch(void);
-
 } // extern "C"
