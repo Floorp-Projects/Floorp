@@ -60,6 +60,7 @@
 #include "nsIMIMEInfo.h"
 #include "nsITimer.h"
 #include "mozIStorageConnection.h"
+#include "mozIStorageStatement.h"
 #include "nsISupportsArray.h"
 #include "nsCOMArray.h"
 #include "nsArrayEnumerator.h"
@@ -184,6 +185,7 @@ private:
   nsCOMPtr<mozIStorageConnection> mDBConn;
   nsCOMArray<nsDownload> mCurrentDownloads;
   nsCOMPtr<nsIObserverService> mObserverService;
+  nsCOMPtr<mozIStorageStatement> mUpdateDownloadStatement;
 
   friend class nsDownload;
 };
