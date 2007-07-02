@@ -823,14 +823,16 @@ nsDownloadManager::PauseResumeDownload(PRUint32 aID, PRBool aPause)
 NS_IMETHODIMP
 nsDownloadManager::Open(nsIDOMWindow* aParent, PRUint32 aID)
 {
-  nsDownload *dl = FindDownload(aID);
-  
-  if (!dl)
-    return NS_ERROR_FAILURE;
+  // try to get an active download
+  nsRefPtr<nsDownload> dl = FindDownload(aID);
+  if (!dl) {
+    // try to get a finished download from the database
+    (void)GetDownloadFromDB(aID, getter_AddRefs(dl));
+    if (!dl) return NS_ERROR_FAILURE;
+  }
 
   TimerParams* params = new TimerParams();
-  if (!params)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(params, NS_ERROR_OUT_OF_MEMORY);
 
   params->parent = aParent;
   params->download = dl;
