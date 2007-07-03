@@ -199,7 +199,7 @@ function test_backup_new_folder()
   var msc = getOpenedDatabase();
   var parentDir = getTestDB().parent;
   parentDir.append("test_storage_temp");
-  parentDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0600);
+  parentDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
   do_check_true(parentDir.exists());
 
   var backup = msc.backupDB(BACKUP_FILE_NAME, parentDir);
