@@ -2390,7 +2390,8 @@ nsCycleCollector_suspectCurrent(nsISupports *n)
 {
     if (sCollector) {
         PRBool res = sCollector->Suspect(n, PR_TRUE);
-        NS_ASSERTION(res, "suspectCurrent should not fail");
+        NS_ASSERTION(res || sCollector->mParams.mDoNothing,
+                     "suspectCurrent should not fail");
     }
 }
 
