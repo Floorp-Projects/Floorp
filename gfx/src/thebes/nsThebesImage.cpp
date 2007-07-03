@@ -383,7 +383,7 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
     }
 
     // Reject over-wide or over-tall images.
-    if (!AllowedImageSize(destRect.size.width, destRect.size.height))
+    if (!AllowedImageSize(destRect.size.width + 1, destRect.size.height + 1))
         return NS_ERROR_FAILURE;
 
     nsRefPtr<gfxPattern> pat;
