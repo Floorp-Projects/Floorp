@@ -53,3 +53,9 @@
 
 <!ENTITY nssFailure2.title "Secure Connection Failed">
 <!ENTITY nssFailure2.longDesc "<p>The page you are trying to view can not be shown because the authenticity of the received data could not be verified.</p><ul><li>Please contact the web site owners to inform them of this problem.</li></ul>">
+
+<!ENTITY malwareBlocked.title "Suspected Attack Site!">
+<!ENTITY malwareBlocked.longDesc "<p>
+Attack sites try to install programs that steal private information, use your computer to attack others, or damage your system.</p>
+<p>You should not visit this site.</p>
+">
