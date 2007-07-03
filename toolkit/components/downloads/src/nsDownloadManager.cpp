@@ -90,6 +90,10 @@ static const PRInt64 gUpdateInterval = 400 * PR_USEC_PER_MSEC;
 
 static PRInt32 gRefCnt = 0;
 
+#define DM_SCHEMA_VERSION      1
+#define DM_DB_NAME             NS_LITERAL_STRING("downloads.sqlite")
+#define DM_DB_CORRUPT_FILENAME NS_LITERAL_STRING("downloads.sqlite.corrupt")
+
 ///////////////////////////////////////////////////////////////////////////////
 // nsDownloadManager
 
@@ -166,7 +170,7 @@ nsDownloadManager::InitDB(PRBool *aDoImport)
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                               getter_AddRefs(dbFile));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = dbFile->Append(NS_LITERAL_STRING("downloads.sqlite"));
+  rv = dbFile->Append(DM_DB_NAME);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = storage->OpenDatabase(dbFile, getter_AddRefs(mDBConn));
@@ -185,6 +189,69 @@ nsDownloadManager::InitDB(PRBool *aDoImport)
     *aDoImport = PR_TRUE;
     rv = CreateTable();
     NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    // Checking the database schema now
+    PRInt32 schemaVersion;
+    rv = mDBConn->GetSchemaVersion(&schemaVersion);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (0 == schemaVersion) {
+      NS_WARNING("Could not get downlaod's database schema version!");
+
+      // The table may still be usable - someone may have just messed with the
+      // schema version, so let's just treat this like a downgrade and verify
+      // that the needed columns are there.  If they aren't there, we'll drop
+      // the table anyway.
+      rv = mDBConn->SetSchemaVersion(DM_SCHEMA_VERSION);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // setting it to a large number so we execute a downgrade.  This may
+      // seem odd, but downgrading checks to see if we have the correct
+      // columns in our table.  At this point we've established that we have
+      // a table, but no schema version, so we want to check this.
+      schemaVersion = DM_SCHEMA_VERSION + 1;
+    }
+
+    if (schemaVersion != DM_SCHEMA_VERSION) {
+      // Changing the database?  Be sure to do these two things!
+      // 1) Increment DM_SCHEMA_VERSION
+      // 2) Implement the proper downgrade/upgrade code for the current version
+
+      if (schemaVersion > DM_SCHEMA_VERSION) {
+        // Downgrading
+        // If columns have been added to the table, we can still use the ones we
+        // understand safely.  If columns have been deleted or alterd, we just
+        // drop the table and start from scratch.  If you change how a column
+        // should be interpreted, make sure you also change its name so this
+        // check will catch it.
+
+        nsCOMPtr<mozIStorageStatement> stmt;
+        rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+          "SELECT id, name, source, target, iconURL, startTime, endTime, state "
+          "FROM moz_downloads"), getter_AddRefs(stmt));
+        if (NS_FAILED(rv)) {
+          // if the statement fails, that means all the columns were not there.
+          // First we backup the database
+          nsCOMPtr<nsIFile> backup;
+          rv = mDBConn->BackupDB(DM_DB_CORRUPT_FILENAME, nsnull,
+                                 getter_AddRefs(backup));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          // Then we dump it
+          rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+            "DROP TABLE moz_downloads"));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          rv = CreateTable();
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+      } else {
+        // Upgrading
+        // Every time you increment the database schema, you need to implement
+        // the upgrading code from the previous version to the new one.
+        // Also, don't forget to make a unit test to test your upgradeing code!
+      }
+    }
   }
 
   return NS_OK;
@@ -193,6 +260,9 @@ nsDownloadManager::InitDB(PRBool *aDoImport)
 nsresult
 nsDownloadManager::CreateTable()
 {
+  nsresult rv = mDBConn->SetSchemaVersion(DM_SCHEMA_VERSION);
+  if (NS_FAILED(rv)) return rv;
+
   return mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE moz_downloads ("
     "id INTEGER PRIMARY KEY, name TEXT, source TEXT, target TEXT,"
