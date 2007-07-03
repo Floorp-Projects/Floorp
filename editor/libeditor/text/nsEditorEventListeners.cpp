@@ -1079,8 +1079,6 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
   // turn on selection and caret
   if (mEditor)
   {
-    aEvent->StopPropagation();
-
     PRUint32 flags;
     mEditor->GetFlags(&flags);
     if (! (flags & nsIPlaintextEditor::eEditorDisabledMask))
@@ -1135,8 +1133,6 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
   // turn off selection and caret
   if (mEditor)
   {
-    aEvent->StopPropagation();
-
     // when imeEditor exists, call ForceCompositionEnd() to tell
     // the input focus is leaving first
     nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(mEditor);
