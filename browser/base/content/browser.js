@@ -101,6 +101,7 @@ var gNavigatorBundle = null;
 var gIsLoadingBlank = false;
 var gLastValidURLStr = "";
 var gLastValidURL = null;
+var gClickSelectsAll = false;
 var gMustLoadSidebar = false;
 var gProgressMeterPanel = null;
 var gProgressCollapseTimer = null;
@@ -116,6 +117,7 @@ var gChromeState = null; // chrome state before we went into print preview
 
 var gSanitizeListener = null;
 
+var gURLBarAutoFillPrefListener = null;
 var gAutoHideTabbarPrefListener = null;
 var gBookmarkAllTabsHandler = null;
 
@@ -1074,6 +1076,11 @@ function delayedStartup()
   // Set up Sanitize Item
   gSanitizeListener = new SanitizeListener();
 
+  // Enable/Disable URL Bar Auto Fill
+  gURLBarAutoFillPrefListener = new URLBarAutoFillPrefListener();
+  gPrefService.addObserver(gURLBarAutoFillPrefListener.domain,
+                           gURLBarAutoFillPrefListener, false);
+
   // Enable/Disable auto-hide tabbar
   gAutoHideTabbarPrefListener = new AutoHideTabbarPrefListener();
   gPrefService.addObserver(gAutoHideTabbarPrefListener.domain,
@@ -1081,6 +1088,10 @@ function delayedStartup()
 
   gPrefService.addObserver(gHomeButton.prefDomain, gHomeButton, false);
   gHomeButton.updateTooltip();
+
+  gClickSelectsAll = gPrefService.getBoolPref("browser.urlbar.clickSelectsAll");
+  if (gURLBar)
+    gURLBar.clickSelectsAll = gClickSelectsAll;
 
 #ifdef HAVE_SHELL_SERVICE
   // Perform default browser checking (after window opens).
@@ -1210,6 +1221,8 @@ function BrowserShutdown()
 #endif
 
   try {
+    gPrefService.removeObserver(gURLBarAutoFillPrefListener.domain,
+                                gURLBarAutoFillPrefListener);
     gPrefService.removeObserver(gAutoHideTabbarPrefListener.domain,
                                 gAutoHideTabbarPrefListener);
     gPrefService.removeObserver(gHomeButton.prefDomain, gHomeButton);
@@ -1314,6 +1327,41 @@ function nonBrowserWindowDelayedStartup()
   gSanitizeListener = new SanitizeListener();
 }
 #endif
+
+function URLBarAutoFillPrefListener()
+{
+  this.toggleAutoFillInURLBar();
+}
+
+URLBarAutoFillPrefListener.prototype =
+{
+  domain: "browser.urlbar.autoFill",
+  observe: function (aSubject, aTopic, aPrefName)
+  {
+    if (aTopic != "nsPref:changed" || aPrefName != this.domain)
+      return;
+
+    this.toggleAutoFillInURLBar();
+  },
+
+  toggleAutoFillInURLBar: function ()
+  {
+    if (!gURLBar)
+      return;
+
+    var prefValue = false;
+    try {
+      prefValue = gPrefService.getBoolPref(this.domain);
+    }
+    catch (e) {
+    }
+
+    if (prefValue)
+      gURLBar.setAttribute("completedefaultindex", "true");
+    else
+      gURLBar.removeAttribute("completedefaultindex");
+  }
+}
 
 function AutoHideTabbarPrefListener()
 {
@@ -3309,6 +3357,8 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
   // Update global UI elements that may have been added or removed
   if (aToolboxChanged) {
     gURLBar = document.getElementById("urlbar");
+    if (gURLBar)
+      gURLBar.clickSelectsAll = gClickSelectsAll;
     gProxyButton = document.getElementById("page-proxy-button");
     gProxyFavIcon = document.getElementById("page-proxy-favicon");
     gProxyDeck = document.getElementById("page-proxy-deck");
