@@ -18,6 +18,7 @@ skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") == pseudo-classes-02.svg pseudo-classes-02-r
 == rect-with-rx-or-ry-01.svg rect-with-rx-or-ry-01-ref.svg
 == rootElement-null-01.svg pass.svg
 == stroke-width-percentage-01.svg pass.svg
+== text-font-weight-01.svg text-font-weight-01-ref.svg
 skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") == text-in-link-01.svg text-in-link-01-ref.svg # bug 379600 (crashes linux)
 == viewport-percent-graphic-user-01.svg pass.svg
 == dynamic-reflow-01.svg dynamic-reflow-01-ref.svg
