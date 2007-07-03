@@ -1615,15 +1615,6 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
     mTagText = nsnull;
   }
 
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
-  // the mem for this struct is allocated
-  // by PR_MALLOC in ns4xPluginInstance.cpp:ns4xPluginInstance::SetWindow()
-  if (mPluginWindow && mPluginWindow->ws_info) {
-    PR_Free(mPluginWindow->ws_info);
-    mPluginWindow->ws_info = nsnull;
-  }
-#endif
-
   // clean up plugin native window object
   nsCOMPtr<nsIPluginHost> ph = do_GetService(kCPluginManagerCID);
   nsCOMPtr<nsPIPluginHost> pph(do_QueryInterface(ph));
