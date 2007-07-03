@@ -72,6 +72,7 @@
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsDocShellLoadTypes.h"
 #include "nsIWebNavigation.h"
 #include "nsIBaseWindow.h"
 #include "nsIWebShellServices.h"
@@ -2263,21 +2264,10 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
     // Now check whether we were opened with a "replace" argument.  If
     // so, we need to tell the docshell to not create a new history
-    // entry for this load.
-    // XXXbz we're basically duplicating the MAKE_LOAD_TYPE macro from
-    // nsDocShell.h.  All this stuff needs better apis.
-    PRUint32 loadType;
-    if (aReplace) {
-      loadType = nsIDocShell::LOAD_CMD_NORMAL |
-        (nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY << 16);
-    } else {
-      // Make sure that we're doing a normal load, not whatever type
-      // of load was previously done on this docshell.
-      loadType = nsIDocShell::LOAD_CMD_NORMAL |
-        (nsIWebNavigation::LOAD_FLAGS_NONE << 16);
-    }
-    docshell->SetLoadType(loadType);
-    
+    // entry for this load. Otherwise, make sure that we're doing a normal load,
+    // not whatever type of load was previously done on this docshell.
+    docshell->SetLoadType(aReplace ? LOAD_NORMAL_REPLACE : LOAD_NORMAL);
+
     nsCOMPtr<nsIContentViewer> cv;
     docshell->GetContentViewer(getter_AddRefs(cv));
     nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(cv);
