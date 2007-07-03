@@ -174,10 +174,6 @@ enum {
   // If this bit is set, then the frame corresponds to generated content
   NS_FRAME_GENERATED_CONTENT =                  0x00000040,
 
-  // If this bit is set, then the frame uses XUL flexible box layout
-  // for its children.
-  NS_FRAME_IS_BOX =                             0x00000080,
-
   // If this bit is set, then the frame has been moved out of the flow,
   // e.g., it is absolutely positioned or floated
   NS_FRAME_OUT_OF_FLOW =                        0x00000100,
@@ -1463,6 +1459,7 @@ public:
     // A frame that participates in inline reflow, i.e., one that
     // requires nsHTMLReflowState::mLineLayout.
     eLineParticipant =                  1 << 6,
+    eXULBox =                           1 << 7,
 
 
     // These are to allow nsFrame::Init to assert that IsFrameOfType
@@ -1852,7 +1849,10 @@ NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::embeddingLevel))
   // BOX LAYOUT METHODS
   // These methods have been migrated from nsIBox and are in the process of
   // being refactored. DO NOT USE OUTSIDE OF XUL.
-  PRBool IsBoxFrame() const { return (mState & NS_FRAME_IS_BOX) != 0; }
+  PRBool IsBoxFrame() const
+  {
+    return IsFrameOfType(nsIFrame::eXULBox);
+  }
   PRBool IsBoxWrapped() const
   { return (!IsBoxFrame() && mParent && mParent->IsBoxFrame()); }
 
