@@ -202,6 +202,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, PRInt32 aWhi
 }
 
 
+// returns true if we have *any* of the passed in flavors available for pasting
 NS_IMETHODIMP
 nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList, PRInt32 aWhichClipboard, PRBool* outResult) 
 {
@@ -210,28 +211,55 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList, PRInt32 aWhic
   if ((aWhichClipboard != kGlobalClipboard) || !aFlavorList)
     return NS_OK;
 
+  // first see if we have data for this in our cached transferable
+  if (mTransferable) {    
+    nsCOMPtr<nsISupportsArray> transferableFlavorList;
+    nsresult rv = mTransferable->FlavorsTransferableCanImport(getter_AddRefs(transferableFlavorList));
+    if (NS_SUCCEEDED(rv)) {
+      PRUint32 transferableFlavorCount;
+      transferableFlavorList->Count(&transferableFlavorCount);
+      for (PRUint32 j = 0; j < transferableFlavorCount; j++) {
+        nsCOMPtr<nsISupports> transferableFlavorSupports;
+        transferableFlavorList->GetElementAt(j, getter_AddRefs(transferableFlavorSupports));
+        nsCOMPtr<nsISupportsCString> currentTransferableFlavor(do_QueryInterface(transferableFlavorSupports));
+        if (!currentTransferableFlavor)
+          continue;
+        nsXPIDLCString transferableFlavorStr;
+        currentTransferableFlavor->ToString(getter_Copies(transferableFlavorStr));
+        
+        PRUint32 passedFlavorCount;
+        aFlavorList->Count(&passedFlavorCount);
+        for (PRUint32 k = 0; k < passedFlavorCount; k++) {
+          nsCOMPtr<nsISupports> passedFlavorSupports;
+          aFlavorList->GetElementAt(j, getter_AddRefs(passedFlavorSupports));
+          nsCOMPtr<nsISupportsCString> currentPassedFlavor(do_QueryInterface(passedFlavorSupports));
+          if (!currentPassedFlavor)
+            continue;
+          nsXPIDLCString passedFlavorStr;
+          currentPassedFlavor->ToString(getter_Copies(passedFlavorStr));
+          if (passedFlavorStr.Equals(transferableFlavorStr)) {
+            *outResult = PR_TRUE;
+            return NS_OK;
+          }
+        }
+      }      
+    }    
+  }
+
   NSPasteboard* generalPBoard = [NSPasteboard generalPasteboard];
 
-  PRUint32 flavorCount;
-  aFlavorList->Count(&flavorCount);
-  for (PRUint32 i = 0; i < flavorCount; i++) {
-    nsCOMPtr<nsISupports> genericFlavor;
-    aFlavorList->GetElementAt(i, getter_AddRefs(genericFlavor));
-    nsCOMPtr<nsISupportsCString> flavorWrapper(do_QueryInterface(genericFlavor));
+  PRUint32 passedFlavorCount;
+  aFlavorList->Count(&passedFlavorCount);
+  for (PRUint32 i = 0; i < passedFlavorCount; i++) {
+    nsCOMPtr<nsISupports> passedFlavorSupports;
+    aFlavorList->GetElementAt(i, getter_AddRefs(passedFlavorSupports));
+    nsCOMPtr<nsISupportsCString> flavorWrapper(do_QueryInterface(passedFlavorSupports));
     if (flavorWrapper) {
       nsXPIDLCString flavorStr;
       flavorWrapper->ToString(getter_Copies(flavorStr));
       if (flavorStr.EqualsLiteral(kUnicodeMime)) {
         NSString* availableType = [generalPBoard availableTypeFromArray:[NSArray arrayWithObject:NSStringPboardType]];
         if (availableType && [availableType isEqualToString:NSStringPboardType]) {
-          *outResult = PR_TRUE;
-          break;
-        }
-      }
-      else {
-        NSString* lookingForType = [NSString stringWithUTF8String:flavorStr];
-        NSString* availableType = [generalPBoard availableTypeFromArray:[NSArray arrayWithObject:lookingForType]];
-        if (availableType && [availableType isEqualToString:lookingForType]) {
           *outResult = PR_TRUE;
           break;
         }
