@@ -148,7 +148,7 @@ public:
     // that contains a block so nsHTMLReflowState doesn't tell us to be
     // NS_INTRINSICSIZE wide.)
     return nsContainerFrame::IsFrameOfType(aFlags &
-      ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
+      ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock | eXULBox));
   }
 
 #ifdef DEBUG

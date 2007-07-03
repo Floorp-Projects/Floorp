@@ -75,7 +75,6 @@ NS_NewLeafBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 nsLeafBoxFrame::nsLeafBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext)
     : nsLeafFrame(aContext), mMouseThrough(unset)
 {
-    mState |= NS_FRAME_IS_BOX;
 }
 
 #ifdef DEBUG_LAYOUT
@@ -372,6 +371,12 @@ nsLeafBoxFrame::GetFrameName(nsAString& aResult) const
   return MakeFrameName(NS_LITERAL_STRING("LeafBox"), aResult);
 }
 #endif
+
+nsIAtom*
+nsLeafBoxFrame::GetType() const
+{
+  return nsGkAtoms::leafBoxFrame;
+}
 
 NS_IMETHODIMP_(nsrefcnt) 
 nsLeafBoxFrame::AddRef(void)
