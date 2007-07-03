@@ -228,15 +228,17 @@ nsXPConnect::~nsXPConnect()
 
     JSContext *cx = nsnull;
     if (mRuntime) {
+        // Create our own JSContext rather than an XPCCallContext, since
+        // otherwise we will create a new safe JS context and attach a
+        // components object that won't get GCed.
+        // And do this before calling CleanupAllThreads, so that we
+        // don't create an extra xpcPerThreadData.
         cx = JS_NewContext(mRuntime->GetJSRuntime(), 8192);
     }
 
     XPCPerThreadData::CleanupAllThreads();
     mShuttingDown = JS_TRUE;
     if (cx) {
-        // Create our own JSContext rather than an XPCCallContext, since
-        // otherwise we will create a new safe JS context and attach a
-        // components object that won't get GCed.
         JS_BeginRequest(cx);
 
         // XXX Call even if |mRuntime| null?
