@@ -688,15 +688,7 @@ ContentPrefService.prototype = {
         dbConnection = dbService.openDatabase(dbFile);
 
         // Get the version of the database in the file.
-        var statement, version;
-        try {
-          statement = dbConnection.createStatement("PRAGMA user_version");
-          statement.executeStep();
-          version = statement.getInt32(0);
-        }
-        finally {
-          statement.reset();
-        }
+        var version = dbConnection.schemaVersion;
 
         if (version != this._dbVersion) {
           this._log("database: v" + version + ", application: v" +
@@ -732,7 +724,7 @@ ContentPrefService.prototype = {
       var dbConnection = aDBService.openDatabase(aDBFile);
       for (var table in this._dbSchema)
         dbConnection.createTable(table, this._dbSchema[table]);
-      dbConnection.executeSimpleSQL("PRAGMA user_version = " + this._dbVersion);
+      dbConnection.schemaVersion = this._dbVersion;
       return dbConnection;
   },
 
@@ -784,7 +776,7 @@ ContentPrefService.prototype = {
     aDBConnection.executeSimpleSQL("DROP TABLE keys");
     aDBConnection.executeSimpleSQL("DROP TABLE sites");
 
-    aDBConnection.executeSimpleSQL("PRAGMA user_version = " + this._dbVersion);
+    aDBConnection.schemaVersion = this._dbVersion;
   },
 
   _dbMigrate1To2: function ContentPrefService___dbMigrate1To2(aDBConnection) {
@@ -800,7 +792,7 @@ ContentPrefService.prototype = {
     aDBConnection.executeSimpleSQL("DROP TABLE groupers");
     aDBConnection.executeSimpleSQL("DROP TABLE groupsOld");
 
-    aDBConnection.executeSimpleSQL("PRAGMA user_version = " + this._dbVersion);
+    aDBConnection.schemaVersion = this._dbVersion;
   },
 
 
