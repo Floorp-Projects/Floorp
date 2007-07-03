@@ -3335,10 +3335,7 @@ IsSpecialContent(nsIContent*     aContent,
       aTag == nsGkAtoms::menu ||
       aTag == nsGkAtoms::menuitem ||
       aTag == nsGkAtoms::menubutton ||
-  #ifndef XP_MACOSX
-      // keep this in sync  with ConstructXULFrame especially for the MAC
       aTag == nsGkAtoms::menubar ||
-  #endif
       aTag == nsGkAtoms::popupgroup ||
       aTag == nsGkAtoms::iframe ||
       aTag == nsGkAtoms::editor ||
@@ -5795,7 +5792,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
   #ifdef XP_MACOSX
         // On Mac OS X, we use the system menubar for any root chrome shell
         // XUL menubars.
-        // keep this in sync  with IsSpecialContent
         PRBool isRootChromeShell = PR_FALSE;
         nsCOMPtr<nsISupports> container = aState.mPresContext->GetContainer();
         if (container) {
