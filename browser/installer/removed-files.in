@@ -480,6 +480,7 @@ extensions/talkback@mozilla.org/components/talkback-l10n.ini
 extensions/talkback@mozilla.org/components/talkback.cnt
 extensions/talkback@mozilla.org/components/talkback.exe
 extensions/talkback@mozilla.org/components/talkback.hlp
+extensions/talkback@mozilla.org/InstallDisabled
 #else
 #ifdef XP_MACOSX
 extensions/talkback@mozilla.org/components/talkback/master.ini
