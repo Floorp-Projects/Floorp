@@ -3083,12 +3083,23 @@ nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
+#ifdef MOZ_X11
+static unsigned int XInputEventState(const nsInputEvent& anEvent)
+{
+  unsigned int state = 0;
+  if(anEvent.isShift) state |= ShiftMask;
+  if(anEvent.isControl) state |= ControlMask;
+  if(anEvent.isAlt) state |= Mod1Mask;
+  if(anEvent.isMeta) state |= Mod4Mask;
+  return state;
+}
+#endif
 
 nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 {
   // printf("nsGUIEvent.message: %d\n", anEvent.message);
   nsEventStatus rv = nsEventStatus_eIgnore;
-  if (!mInstance)   // if mInstance is null, we shouldn't be here
+  if (!mInstance || !mOwner)   // if mInstance is null, we shouldn't be here
     return rv;
 
 #ifdef XP_MACOSX
@@ -3162,6 +3173,198 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
     if (eventHandled)
       rv = nsEventStatus_eConsumeNoDefault;
   }
+#endif
+
+#ifdef MOZ_X11
+  // this code supports windowless plugins
+  nsIWidget* widget = anEvent.widget;
+  nsPluginEvent pluginEvent;
+  pluginEvent.event.type = 0;
+
+  switch(anEvent.eventStructType)
+    {
+    case NS_MOUSE_EVENT:
+      {
+        switch (anEvent.message)
+          {
+          case NS_MOUSE_CLICK:
+          case NS_MOUSE_DOUBLECLICK:
+            // Button up/down events sent instead.
+            return rv;
+          }
+
+        // Get reference point relative to plugin origin.
+        const nsPresContext* presContext = mOwner->PresContext();
+        nsPoint appPoint =
+          nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mOwner); 
+        nsIntPoint pluginPoint(presContext->AppUnitsToDevPixels(appPoint.x),
+                               presContext->AppUnitsToDevPixels(appPoint.y));
+        const nsMouseEvent& mouseEvent =
+          NS_STATIC_CAST(const nsMouseEvent&, anEvent);
+        // Get reference point relative to screen:
+        nsRect windowRect(anEvent.refPoint, nsSize(1, 1));
+        nsRect rootPoint(-1,-1,1,1);
+        if (widget)
+          widget->WidgetToScreen(windowRect, rootPoint);
+#ifdef MOZ_WIDGET_GTK2
+        Window root = GDK_ROOT_WINDOW();
+#else
+        Window root = None; // Could XQueryTree, but this is not important.
+#endif
+
+        switch (anEvent.message)
+          {
+          case NS_MOUSE_ENTER_SYNTH:
+          case NS_MOUSE_EXIT_SYNTH:
+            {
+              XCrossingEvent& event = pluginEvent.event.xcrossing;
+              event.type = anEvent.message == NS_MOUSE_ENTER_SYNTH ?
+                EnterNotify : LeaveNotify;
+              event.root = root;
+              event.time = anEvent.time;
+              event.x = pluginPoint.x;
+              event.y = pluginPoint.y;
+              event.x_root = rootPoint.x;
+              event.y_root = rootPoint.y;
+              event.state = XInputEventState(mouseEvent);
+              // information lost
+              event.subwindow = None;
+              event.mode = -1;
+              event.detail = NotifyDetailNone;
+              event.same_screen = True;
+              event.focus = mContentFocused;
+            }
+            break;
+          case NS_MOUSE_MOVE:
+            {
+              XMotionEvent& event = pluginEvent.event.xmotion;
+              event.type = MotionNotify;
+              event.root = root;
+              event.time = anEvent.time;
+              event.x = pluginPoint.x;
+              event.y = pluginPoint.y;
+              event.x_root = rootPoint.x;
+              event.y_root = rootPoint.y;
+              event.state = XInputEventState(mouseEvent);
+              // information lost
+              event.subwindow = None;
+              event.is_hint = NotifyNormal;
+              event.same_screen = True;
+            }
+            break;
+          case NS_MOUSE_BUTTON_DOWN:
+          case NS_MOUSE_BUTTON_UP:
+            {
+              XButtonEvent& event = pluginEvent.event.xbutton;
+              event.type = anEvent.message == NS_MOUSE_BUTTON_DOWN ?
+                ButtonPress : ButtonRelease;
+              event.root = root;
+              event.time = anEvent.time;
+              event.x = pluginPoint.x;
+              event.y = pluginPoint.y;
+              event.x_root = rootPoint.x;
+              event.y_root = rootPoint.y;
+              event.state = XInputEventState(mouseEvent);
+              switch (mouseEvent.button)
+                {
+                case nsMouseEvent::eMiddleButton:
+                  event.button = 2;
+                  break;
+                case nsMouseEvent::eRightButton:
+                  event.button = 3;
+                  break;
+                default: // nsMouseEvent::eLeftButton;
+                  event.button = 1;
+                  break;
+                }
+              // information lost:
+              event.subwindow = None;
+              event.same_screen = True;
+            }
+            break;
+          }
+      }
+      break;
+
+   //XXX case NS_MOUSE_SCROLL_EVENT: not received.
+ 
+   case NS_KEY_EVENT:
+      if (anEvent.nativeMsg)
+        {
+          XKeyEvent &event = pluginEvent.event.xkey;
+#ifdef MOZ_WIDGET_GTK2
+          event.root = GDK_ROOT_WINDOW();
+          event.time = anEvent.time;
+          const GdkEventKey* gdkEvent =
+            NS_STATIC_CAST(const GdkEventKey*, anEvent.nativeMsg);
+          event.keycode = gdkEvent->hardware_keycode;
+          event.state = gdkEvent->state;
+          switch (anEvent.message)
+            {
+            case NS_KEY_DOWN:
+              event.type = XKeyPress;
+              break;
+            case NS_KEY_UP:
+              event.type = KeyRelease;
+              break;
+            }
+#endif
+          // Information that could be obtained from nativeMsg but we may not
+          // want to promise to provide:
+          event.subwindow = None;
+          event.x = 0;
+          event.y = 0;
+          event.x_root = -1;
+          event.y_root = -1;
+          event.same_screen = False;
+        }
+      else
+        {
+          // If we need to send synthesized key events, then
+          // DOMKeyCodeToGdkKeyCode(keyEvent.keyCode) and
+          // gdk_keymap_get_entries_for_keyval will be useful, but the
+          // mappings will not be unique.
+          NS_WARNING("Synthesized key event not sent to plugin");
+        }
+      break;
+
+    default: 
+      switch (anEvent.message)
+        {
+        case NS_FOCUS_CONTENT:
+        case NS_BLUR_CONTENT:
+          {
+            XFocusChangeEvent &event = pluginEvent.event.xfocus;
+            event.type =
+              anEvent.message == NS_FOCUS_CONTENT ? FocusIn : FocusOut;
+            // information lost:
+            event.mode = -1;
+            event.detail = NotifyDetailNone;
+          }
+          break;
+        }
+    }
+
+  if (!pluginEvent.event.type) {
+    PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
+           ("Unhandled event message %d with struct type %d\n",
+            anEvent.message, anEvent.eventStructType));
+    return rv;
+  }
+
+  // Fill in (useless) generic event information.
+  XAnyEvent& event = pluginEvent.event.xany;
+  event.display = widget ?
+    NS_STATIC_CAST(Display*, widget->GetNativeData(NS_NATIVE_DISPLAY)) : nsnull;
+  event.window = None; // not a real window
+  // information lost:
+  event.serial = 0;
+  event.send_event = False;
+
+  PRBool eventHandled = PR_FALSE;
+  mInstance->HandleEvent(&pluginEvent, &eventHandled);
+  if (eventHandled)
+      rv = nsEventStatus_eConsumeNoDefault;
 #endif
 
   return rv;
