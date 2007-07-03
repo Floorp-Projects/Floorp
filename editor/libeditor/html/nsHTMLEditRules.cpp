@@ -5609,6 +5609,21 @@ nsHTMLEditRules::PromoteRange(nsIDOMRange *inRange,
   return res;
 } 
 
+class nsUniqueFunctor : public nsBoolDomIterFunctor
+{
+public:
+  nsUniqueFunctor(nsCOMArray<nsIDOMNode> &aArray) : mArray(aArray)
+  {
+  }
+  virtual PRBool operator()(nsIDOMNode* aNode)  // used to build list of all nodes iterator covers
+  {
+    return mArray.IndexOf(aNode) < 0;
+  }
+
+private:
+  nsCOMArray<nsIDOMNode> &mArray;
+};
+
 ///////////////////////////////////////////////////////////////////////////
 // GetNodesForOperation: run through the ranges in the array and construct 
 //                       a new array of nodes to be acted on.
@@ -5673,12 +5688,25 @@ nsHTMLEditRules::GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges,
   {
     opRange = inArrayOfRanges[i];
     
-    nsTrivialFunctor functor;
     nsDOMSubtreeIterator iter;
     res = iter.Init(opRange);
     if (NS_FAILED(res)) return res;
-    res = iter.AppendList(functor, outArrayOfNodes);
-    if (NS_FAILED(res)) return res;    
+    if (outArrayOfNodes.Count() == 0) {
+      nsTrivialFunctor functor;
+      res = iter.AppendList(functor, outArrayOfNodes);
+      if (NS_FAILED(res)) return res;    
+    }
+    else {
+      // We don't want duplicates in outArrayOfNodes, so we use an
+      // iterator/functor that only return nodes that are not already in
+      // outArrayOfNodes.
+      nsCOMArray<nsIDOMNode> nodes;
+      nsUniqueFunctor functor(outArrayOfNodes);
+      res = iter.AppendList(functor, nodes);
+      if (NS_FAILED(res)) return res;
+      if (!outArrayOfNodes.AppendObjects(nodes))
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
   }    
 
   // certain operations should not act on li's and td's, but rather inside 
