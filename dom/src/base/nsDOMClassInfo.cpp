@@ -1244,8 +1244,6 @@ jsval nsDOMClassInfo::sOnkeypress_id      = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnmousemove_id     = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnfocus_id         = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnblur_id          = JSVAL_VOID;
-jsval nsDOMClassInfo::sOnonline_id        = JSVAL_VOID;
-jsval nsDOMClassInfo::sOnoffline_id       = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnsubmit_id        = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnreset_id         = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnchange_id        = JSVAL_VOID;
@@ -1437,8 +1435,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sOnmousemove_id,     cx, "onmousemove");
   SET_JSVAL_TO_STRING(sOnfocus_id,         cx, "onfocus");
   SET_JSVAL_TO_STRING(sOnblur_id,          cx, "onblur");
-  SET_JSVAL_TO_STRING(sOnoffline_id,       cx, "onoffline");
-  SET_JSVAL_TO_STRING(sOnonline_id,        cx, "ononline");
   SET_JSVAL_TO_STRING(sOnsubmit_id,        cx, "onsubmit");
   SET_JSVAL_TO_STRING(sOnreset_id,         cx, "onreset");
   SET_JSVAL_TO_STRING(sOnchange_id,        cx, "onchange");
@@ -3889,8 +3885,6 @@ nsDOMClassInfo::ShutDown()
   sOnmousemove_id     = JSVAL_VOID;
   sOnfocus_id         = JSVAL_VOID;
   sOnblur_id          = JSVAL_VOID;
-  sOnoffline_id       = JSVAL_VOID;
-  sOnonline_id        = JSVAL_VOID;
   sOnsubmit_id        = JSVAL_VOID;
   sOnreset_id         = JSVAL_VOID;
   sOnchange_id        = JSVAL_VOID;
@@ -6586,9 +6580,6 @@ nsEventReceiverSH::ReallyIsEventName(jsval id, jschar aFirstChar)
     return (id == sOnkeydown_id      ||
             id == sOnkeypress_id     ||
             id == sOnkeyup_id);
-  case 'o' :
-    return (id == sOnoffline_id      ||
-            id == sOnonline_id);
   case 'u' :
     return id == sOnunload_id;
   case 'm' :
