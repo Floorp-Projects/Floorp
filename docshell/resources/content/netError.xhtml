@@ -38,6 +38,7 @@
    -   William R. Price <wrprice@alumni.rice.edu>
    -   Henrik Skupin <mozilla@hskupin.info>
    -   Jeff Walden <jwalden+code@mit.edu>
+   -   Johnathan Nightingale <johnath@mozilla.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -57,12 +58,16 @@
   <head>
     <title>&loadError.label;</title>
     <link rel="stylesheet" href="chrome://global/skin/netError.css" type="text/css" media="all" />
-    <!-- XXX this needs to be themeable -->
-    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAANbY1E9YMgAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAICSURBVHjaYvz//z8DJQAggJhwiDPvnmlzc2aR0O+JGezt+AwACCCsBhxfYhn59N41FWtXIxZOLu70niRGXVwGAAQQNgNYHj96O8HaWYdJW5ubwd4/mI2Ng7sblwEAAYRhwMm1URk/vn4SUNWVYGD8+YZBXZOZm5OLzRjoCmNsBgAEEKoBN82Y7l851GLrqMjM8Oc7A8O/3wwMP54wuAQFCXNycUzGZgBAAKEYcOaKZO2/f//5FbUVgBrfMoRVcgHpNwyKGjKMXDwCan0prFboBgAEELIBzDcvXyy2cVZhYPj9GWj7H4jo/38MDJ9OMDj7O/KzsjH3oxsAEEBwA/bNNipiZf7FI6cqwcDw8x2qqp8fGORUpVn4BEXlgGHhhCwFEEAwA9gfP3hdZ+Oizcjw+wvCdjgAuuLrFQbXIH9hTm7uqcgyAAEENuD4ctcebm5mbikFYRTbV7V/Q6j88Z5BSuY7q4CQgAjQFR4wYYAAAhtw89L5ZFsnRaDtn4CW/YXrAQcisit+PGVwDgrnZ2NnnwATBQggpsNLvGYLCAmxi8tLARWg+h3FBVBXSEj/ZZWQkRcCuiIQJAQQQCyvnj5KMDTkZ2JgYmRg4FchnHv+vmEwttLmeXT3VjKQtx4ggFgk5TXebV63UfT3ijOMxOZAVlZWdiB1EMQGCCBGSrMzQIABAFR3kRM3KggZAAAAAElFTkSuQmCC" />
+    <link rel="icon" type="image/png" id="favicon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAANbY1E9YMgAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAICSURBVHjaYvz//z8DJQAggJhwiDPvnmlzc2aR0O+JGezt+AwACCCsBhxfYhn59N41FWtXIxZOLu70niRGXVwGAAQQNgNYHj96O8HaWYdJW5ubwd4/mI2Ng7sblwEAAYRhwMm1URk/vn4SUNWVYGD8+YZBXZOZm5OLzRjoCmNsBgAEEKoBN82Y7l851GLrqMjM8Oc7A8O/3wwMP54wuAQFCXNycUzGZgBAAKEYcOaKZO2/f//5FbUVgBrfMoRVcgHpNwyKGjKMXDwCan0prFboBgAEELIBzDcvXyy2cVZhYPj9GWj7H4jo/38MDJ9OMDj7O/KzsjH3oxsAEEBwA/bNNipiZf7FI6cqwcDw8x2qqp8fGORUpVn4BEXlgGHhhCwFEEAwA9gfP3hdZ+Oizcjw+wvCdjgAuuLrFQbXIH9hTm7uqcgyAAEENuD4ctcebm5mbikFYRTbV7V/Q6j88Z5BSuY7q4CQgAjQFR4wYYAAAhtw89L5ZFsnRaDtn4CW/YXrAQcisit+PGVwDgrnZ2NnnwATBQggpsNLvGYLCAmxi8tLARWg+h3FBVBXSEj/ZZWQkRcCuiIQJAQQQCyvnj5KMDTkZ2JgYmRg4FchnHv+vmEwttLmeXT3VjKQtx4ggFgk5TXebV63UfT3ijOMxOZAVlZWdiB1EMQGCCBGSrMzQIABAFR3kRM3KggZAAAAAElFTkSuQmCC"/>
 
     <script type="application/x-javascript"><![CDATA[
       // Error url MUST be formatted like this:
       //   moz-neterror:page?e=error&u=url&d=desc
+      //
+      // or optionally, to specify an alternate CSS class to allow for
+      // custom styling and favicon:
+      //
+      //   moz-neterror:page?c=classname&e=error&u=url&d=desc
 
       // Note that this file uses document.documentURI to get
       // the URL (with the format from above). This is because
@@ -76,6 +81,19 @@
         var error = url.search(/e\=/);
         var duffUrl = url.search(/\&u\=/);
         return decodeURIComponent(url.slice(error + 2, duffUrl));
+      }
+
+      function getCSSClass()
+      {
+        var url = document.documentURI;
+        var class = url.search(/c\=/);
+        
+        // c is optional, if class === -1 just return nothing
+        if (class === -1)
+          return "";
+          
+        var rest = url.search(/\&/);
+        return decodeURIComponent(url.slice(class + 2, rest));
       }
 
       function getDescription()
@@ -142,6 +160,22 @@
         // remove undisplayed errors to avoid bug 39098
         var errContainer = document.getElementById("errorContainer");
         errContainer.parentNode.removeChild(errContainer);
+
+        var class = getCSSClass();
+        if (class) {
+          // Associate a CSS class with the root of the page, if one was passed in,
+          // to allow custom styling.
+          document.documentElement.className = class;
+
+          // Also, if they specified a CSS class, they must supply their own
+          // favicon.  In order to trigger the browser to repaint though, we
+          // need to remove/add the link element. 
+          var favicon = document.getElementById("favicon");
+          var faviconParent = favicon.parentNode;
+          faviconParent.removeChild(favicon);
+          favicon.setAttribute("href", "chrome://global/skin/icons/" + class + "_favicon.png");
+          faviconParent.appendChild(favicon);
+        }
       }
     ]]></script>
   </head>
@@ -168,6 +202,7 @@
         <h1 id="et_proxyConnectFailure">&proxyConnectFailure.title;</h1>
         <h1 id="et_contentEncodingError">&contentEncodingError.title;</h1>
         <h1 id="et_nssFailure2">&nssFailure2.title;</h1>
+        <h1 id="et_malwareBlocked">&malwareBlocked.title;</h1>
       </div>
       <div id="errorDescriptionsContainer">
         <div id="ed_generic">&generic.longDesc;</div>
@@ -187,6 +222,7 @@
         <div id="ed_proxyConnectFailure">&proxyConnectFailure.longDesc;</div>
         <div id="ed_contentEncodingError">&contentEncodingError.longDesc;</div>
         <div id="ed_nssFailure2">&nssFailure2.longDesc;</div>
+        <div id="ed_malwareBlocked">&malwareBlocked.longDesc;</div>
       </div>
     </div>
 
