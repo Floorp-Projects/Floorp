@@ -58,13 +58,15 @@ public:
 
   // Helper methods, used also by nsDragService
   static NSDictionary* PasteboardDictFromTransferable(nsITransferable *aTransferable);
-  static nsresult CopyPasteboardDataToTransferable(NSPasteboard* aPasteboard, nsITransferable* aTransferable, PRUint32 aItemIndex);
 
 protected:
 
   // impelement the native clipboard behavior
   NS_IMETHOD SetNativeClipboardData(PRInt32 aWhichClipboard);
   NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable, PRInt32 aWhichClipboard);
+  
+private:
+  int mChangeCount; // this is always set to the native change count after any clipboard modifications
 
 };
 
