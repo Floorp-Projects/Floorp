@@ -402,6 +402,14 @@ nsNativeThemeCocoa::GetScrollbarPressStates(nsIFrame *aFrame, PRInt32 aButtonSta
 }
 
 
+// These magic numbers are the minimum sizes we can draw a scrollbar and still 
+// have room for everything to display, including the thumb
+#define MIN_SCROLLBAR_SIZE_WITH_THUMB 61
+#define MIN_SMALL_SCROLLBAR_SIZE_WITH_THUMB 49
+// And these are the minimum sizes if we don't draw the thumb
+#define MIN_SCROLLBAR_SIZE 56
+#define MIN_SMALL_SCROLLBAR_SIZE 46
+
 void
 nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *aFrame, 
                                          const HIRect& aRect, PRBool aShouldGetButtonStates)
@@ -420,11 +428,27 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
   aTdi.min = minpos;
   aTdi.max = maxpos;
   aTdi.value = curpos;
-  aTdi.attributes = kThemeTrackShowThumb;
+  aTdi.attributes = 0;
   if (isHorizontal)
     aTdi.attributes |= kThemeTrackHorizontal;
 
   aTdi.trackInfo.scrollbar.viewsize = (SInt32)(isHorizontal ? (aRect.size.width) : (aRect.size.height));
+
+  // Only display the thumb if we have room for it to display. Note that this doesn't 
+  // affect the actual tracking rects Gecko maintains -- this is a purely cosmetic
+  // change. See bmo bug 380185 for more info.
+  if ((isHorizontal ? aRect.size.width : aRect.size.height) >=
+      (isSmall ? MIN_SMALL_SCROLLBAR_SIZE_WITH_THUMB : MIN_SCROLLBAR_SIZE_WITH_THUMB)) {
+    aTdi.attributes |= kThemeTrackShowThumb;
+  }
+  // If we don't have enough room to display *any* features, we're done creating 
+  // this tdi, so return early. Again, this doesn't affect the tracking rects Gecko 
+  // maintains. See bmo bug 380185 for more info.
+  else if ((isHorizontal ? aRect.size.width : aRect.size.height) < 
+           (isSmall ? MIN_SMALL_SCROLLBAR_SIZE : MIN_SCROLLBAR_SIZE)) {
+    aTdi.enableState = kThemeTrackNothingToScroll;
+    return;
+  }
 
   // Only go get these scrollbar button states if we need it. For example, there's no reaon to look up scrollbar button 
   // states when we're only creating a TrackDrawInfo to determine the size of the thumb.
