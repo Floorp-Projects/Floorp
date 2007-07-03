@@ -3943,10 +3943,16 @@ nsHTMLDocument::EditingStateChanged()
 
     mScriptsEnabled = tmp;
 
+    rv = docshell->SetAllowJavascript(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     rv = docshell->GetAllowPlugins(&tmp);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mPluginsEnabled = tmp;
+
+    rv = docshell->SetAllowPlugins(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     updateState = PR_TRUE;
     spellRecheckAll = mEditingState == eContentEditable;
