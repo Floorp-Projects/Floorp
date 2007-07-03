@@ -103,6 +103,8 @@
         this._prefs.addObserver("", this, false);
         this._hideProtocols = this._prefs.getCharPref("hideProtocols").split(" ");
         this._animateBlend = this._prefs.getBoolPref("animateBlend");
+        this.clickSelectsAll = this._prefs.getBoolPref("clickSelectsAll");
+        this.completeDefaultIndex = this._prefs.getBoolPref("autoFill");
 
         this._inputBox = document.getAnonymousElementByAttribute(this, "anonid", "textbox-input-box");
         this._presentationBox = document.getAnonymousElementByAttribute(this, "anonid", "presentation-box");
@@ -134,9 +136,17 @@
         this.inputField.controllers.removeController(this._copyCutController);
       ]]></destructor>
 
+      <!-- initially empty fields:
+        <field name="_uri"/>
+        <field name="_protocolHidden"/>
+        <field name="_focused"/>
+        <field name="_mouseover"/>
+        <field name="_tooltipTimer"/>
+        <field name="_tldService"/>
+        <field name="_plain"/>
+      -->
       <field name="_blendingTimers">[]</field>
 
-      <field name="_plain">true</field>
       <property name="plain" onget="return this._plain">
         <setter><![CDATA[
           this._plain = !!val;
@@ -154,7 +164,6 @@
         ]]></setter>
       </property>
 
-      <field name="_tldService"/>
       <property name="tldService" readonly="true">
         <getter><![CDATA[
           if (!this._tldService) {
@@ -431,6 +440,9 @@
                 break;
               case "clickSelectsAll":
                 this.clickSelectsAll = this._prefs.getBoolPref(aData);
+                break;
+              case "autoFill":
+                this.completeDefaultIndex = this._prefs.getBoolPref(aData);
                 break;
               case "animateBlend":
                 this._animateBlend = this._prefs.getBoolPref(aData);
