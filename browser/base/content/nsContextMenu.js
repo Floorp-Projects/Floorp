@@ -693,11 +693,19 @@ nsContextMenu.prototype = {
 
   // Change current window to the URL of the image.
   viewImage: function(e) {
-    urlSecurityCheck(this.imageURL,
-                     this.browser.contentPrincipal,
-                     Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+    var viewURL;
+
+    if (this.onCanvas)
+      viewURL = this.target.toDataURL();
+    else {
+      viewURL = this.imageURL;
+      urlSecurityCheck(viewURL,
+                       this.browser.contentPrincipal,
+                       Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+    }
+
     var doc = this.target.ownerDocument;
-    openUILink( this.imageURL, e, null, null, null, null, doc.documentURIObject );
+    openUILink(viewURL, e, null, null, null, null, doc.documentURIObject );
   },
 
   // Change current window to the URL of the background image.
