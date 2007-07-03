@@ -1125,6 +1125,8 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
                                    cbWidthChanged, cbHeightChanged,
                                    &childBounds);
 
+    //XXXfr Why isn't this rv (and others in this file) checked/returned?
+
     // Factor the absolutely positioned child bounds into the overflow area
     aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, childBounds);
   }
