@@ -265,9 +265,10 @@ nsImageBoxFrame::UpdateImage()
                                               doc,
                                               baseURI);
 
-    if (uri && nsContentUtils::CanLoadImage(uri, mContent, doc)) {
-      nsContentUtils::LoadImage(uri, doc, doc->GetDocumentURI(),
-                                mListener, mLoadFlags,
+    if (uri && nsContentUtils::CanLoadImage(uri, mContent, doc,
+                                            mContent->NodePrincipal())) {
+      nsContentUtils::LoadImage(uri, doc, mContent->NodePrincipal(),
+                                doc->GetDocumentURI(), mListener, mLoadFlags,
                                 getter_AddRefs(mImageRequest));
     }
   } else {

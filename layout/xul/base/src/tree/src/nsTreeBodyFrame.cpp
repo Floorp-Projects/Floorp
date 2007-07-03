@@ -2125,9 +2125,13 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, nsTreeColumn* aCol, PRBool aUseCont
       if (!srcURI)
         return NS_ERROR_FAILURE;
 
-      if (nsContentUtils::CanLoadImage(srcURI, mContent, doc)) {
+      // XXXbz what's the origin principal for this stuff that comes from our
+      // view?  I guess we should assume that it's the node's principal...
+      if (nsContentUtils::CanLoadImage(srcURI, mContent, doc,
+                                       mContent->NodePrincipal())) {
         nsresult rv = nsContentUtils::LoadImage(srcURI,
                                                 doc,
+                                                mContent->NodePrincipal(),
                                                 doc->GetDocumentURI(),
                                                 imgDecoderObserver,
                                                 nsIRequest::LOAD_NORMAL,
