@@ -139,7 +139,6 @@ nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell,
   nsContainerFrame(aContext),
   mMouseThrough(unset)
 {
-  mState |= NS_FRAME_IS_BOX;
   mState |= NS_STATE_IS_HORIZONTAL;
   mState |= NS_STATE_AUTO_STRETCH;
 

@@ -58,12 +58,13 @@ public:
   virtual nscoord GetFlex(nsBoxLayoutState& aState);
   virtual nscoord GetBoxAscent(nsBoxLayoutState& aState);
 
+  virtual nsIAtom* GetType() const;
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
     // This is bogus, but it's what we've always done.
     // Note that nsLeafFrame is also eReplacedContainsBlock.
     return nsLeafFrame::IsFrameOfType(aFlags &
-      ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
+      ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock | nsIFrame::eXULBox));
   }
 
 #ifdef DEBUG
