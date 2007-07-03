@@ -355,7 +355,7 @@ void nsCSSValue::SetSystemFontValue()
   mUnit = eCSSUnit_System_Font;
 }
 
-void nsCSSValue::StartImageLoad(nsIDocument* aDocument, PRBool aIsBGImage) const
+void nsCSSValue::StartImageLoad(nsIDocument* aDocument) const
 {
   NS_PRECONDITION(eCSSUnit_URL == mUnit, "Not a URL value!");
   nsCSSValue::Image* image =
@@ -363,7 +363,7 @@ void nsCSSValue::StartImageLoad(nsIDocument* aDocument, PRBool aIsBGImage) const
                           mValue.mURL->mString,
                           mValue.mURL->mReferrer,
                           mValue.mURL->mOriginPrincipal,
-                          aDocument, aIsBGImage);
+                          aDocument);
   if (image) {
     nsCSSValue* writable = NS_CONST_CAST(nsCSSValue*, this);
     writable->SetImageValue(image);
@@ -429,28 +429,15 @@ nsCSSValue::URL::operator==(const URL& aOther) const
 
 nsCSSValue::Image::Image(nsIURI* aURI, nsStringBuffer* aString,
                          nsIURI* aReferrer, nsIPrincipal* aOriginPrincipal,
-                         nsIDocument* aDocument, PRBool aIsBGImage)
+                         nsIDocument* aDocument)
   : URL(aURI, aString, aReferrer, aOriginPrincipal)
 {
   MOZ_COUNT_CTOR(nsCSSValue::Image);
 
-  // If the pref is enabled, force all background image loads to
-  // complete before firing onload for the document.  Otherwise, background
-  // image loads are special and don't block onload.
-  PRInt32 loadFlag = (PRInt32)nsIRequest::LOAD_NORMAL;
-  if (aIsBGImage) {
-    static PRBool onloadAfterImageBackgroundLoads =
-      nsContentUtils::GetBoolPref
-        ("layout.fire_onload_after_image_background_loads");
-    if (!onloadAfterImageBackgroundLoads) {
-      loadFlag = (PRInt32)nsIRequest::LOAD_BACKGROUND;
-    }
-  }
-
   if (mURI &&
       nsContentUtils::CanLoadImage(mURI, aDocument, aDocument)) {
     nsContentUtils::LoadImage(mURI, aDocument, aReferrer, nsnull,
-                              loadFlag,
+                              nsIRequest::LOAD_NORMAL,
                               getter_AddRefs(mRequest));
   }
 }
