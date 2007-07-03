@@ -6671,15 +6671,16 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
                    NS_ERROR_NOT_INITIALIZED);
 
   PRInt32 interval = 0;
+  PRBool isInterval = aIsInterval;
   nsCOMPtr<nsIScriptTimeoutHandler> handler;
   nsresult rv = NS_CreateJSTimeoutHandler(GetContextInternal(),
-                                          aIsInterval,
+                                          &isInterval,
                                           &interval,
                                           getter_AddRefs(handler));
   if (NS_FAILED(rv))
     return (rv == NS_ERROR_DOM_TYPE_ERR) ? NS_OK : rv;
 
-  return SetTimeoutOrInterval(handler, interval, aIsInterval, aReturn);
+  return SetTimeoutOrInterval(handler, interval, isInterval, aReturn);
 }
 
 // static

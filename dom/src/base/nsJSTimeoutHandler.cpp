@@ -87,7 +87,7 @@ public:
   // added.
   virtual void SetLateness(PRIntervalTime aHowLate);
 
-  nsresult Init(nsIScriptContext *aContext, PRBool aIsInterval,
+  nsresult Init(nsIScriptContext *aContext, PRBool *aIsInterval,
                 PRInt32 *aInterval);
 
   void ReleaseJSObjects();
@@ -197,7 +197,7 @@ nsJSScriptTimeoutHandler::ReleaseJSObjects()
 }
 
 nsresult
-nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool aIsInterval,
+nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool *aIsInterval,
                                PRInt32 *aInterval)
 {
   if (!aContext) {
@@ -236,7 +236,7 @@ nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool aIsInterval,
 
   if (argc < 1) {
     ::JS_ReportError(cx, "Function %s requires at least 1 parameter",
-                     aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
+                     *aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
 
     ncc->SetExceptionWasThrown(PR_TRUE);
     return NS_ERROR_DOM_TYPE_ERR;
@@ -249,6 +249,12 @@ nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool aIsInterval,
 
     ncc->SetExceptionWasThrown(PR_TRUE);
     return NS_ERROR_DOM_TYPE_ERR;
+  }
+
+  if (argc == 1) {
+    // If no interval was specified, treat this like a timeout, to avoid
+    // setting an interval of 0 milliseconds.
+    *aIsInterval = PR_FALSE;
   }
 
   switch (::JS_TypeOfValue(cx, argv[0])) {
@@ -266,7 +272,7 @@ nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool aIsInterval,
 
   default:
     ::JS_ReportError(cx, "useless %s call (missing quotes around argument?)",
-                     aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
+                     *aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
 
     // Return an error that nsGlobalWindow can recognize and turn into NS_OK.
     ncc->SetExceptionWasThrown(PR_TRUE);
@@ -347,7 +353,7 @@ nsJSScriptTimeoutHandler::GetHandlerText()
 }
 
 nsresult NS_CreateJSTimeoutHandler(nsIScriptContext *aContext,
-                                   PRBool aIsInterval,
+                                   PRBool *aIsInterval,
                                    PRInt32 *aInterval,
                                    nsIScriptTimeoutHandler **aRet)
 {
