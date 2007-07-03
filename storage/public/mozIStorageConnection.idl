@@ -51,7 +51,7 @@ interface nsIFile;
  * creating prepared statements, executing SQL, and examining database
  * errors.
  */
-[scriptable, uuid(0b3d9b17-6c07-4c39-9ee6-314f9fbc56a6)]
+[scriptable, uuid(43933f76-3376-4999-9096-6f1d545fe5f6)]
 interface mozIStorageConnection : nsISupports {
   /*
    * Initialization and status
@@ -200,6 +200,25 @@ interface mozIStorageConnection : nsISupports {
   void createFunction(in string aFunctionName,
                       in long aNumArguments,
                       in mozIStorageFunction aFunction);
+
+  /*
+   * Utilities
+   */
+
+  /**
+   * Copies the current database file to the specified parent directory with the
+   * specified file name.  If the parent directory is not specified, it places
+   * the backup in the same directory as the current file.  This function
+   * ensures that the file being created is unique.
+   *
+   * @param aFileName
+   *        The name of the new file to create.
+   * @param [optional] aParentDirectory
+   *        The directory you'd like the file to be placed.
+   * @return The nsIFile representing the backup file.
+   */
+  nsIFile backupDB(in AString aFileName,
+                   [optional] in nsIFile aParentDirectory);
 
   /**
    * This is used to preload the database cache. It loads pages from the
