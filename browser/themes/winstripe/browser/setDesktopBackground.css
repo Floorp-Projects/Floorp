@@ -2,6 +2,9 @@
 
 #monitor {
   margin: 12px 11px 32px;
+  width: 153px;
+  height: 114px;
+  overflow: hidden;
 }
 
 #monitorImage {
