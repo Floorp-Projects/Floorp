@@ -644,7 +644,7 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
     if (mDocumentOnloadBlockedOn) {
         // If we're a document channel, we need to actually block onload on our
         // _parent_ document.  This is because we don't actually set our
-        // LOAD_DOCUMENT_URI flag, so a docloader we're loding in as the
+        // LOAD_DOCUMENT_URI flag, so a docloader we're loading in as the
         // document channel will claim to not be busy, and our parent's onload
         // could fire too early.
         nsLoadFlags loadFlags;
