@@ -5333,6 +5333,10 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
 
   PRInt32 limitLength = length;
   PRInt32 forceBreak = lineLayout.GetForcedBreakPosition(mContent);
+  if (forceBreak >= offset + length) {
+    // The break is not within the text considered for this textframe.
+    forceBreak = -1;
+  }
   if (forceBreak >= 0) {
     limitLength = forceBreak - offset;
     NS_ASSERTION(limitLength >= 0, "Weird break found!");
