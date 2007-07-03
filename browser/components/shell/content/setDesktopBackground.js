@@ -231,14 +231,10 @@ var gSetBackground = {
     canvas.width = width;
     canvas.height = height;
 
-    var tileWidth = Math.floor(this._image.naturalWidth * width / screen.width);
-    var tileHeight = Math.floor(this._image.naturalHeight * height / screen.height);
     var ctx = canvas.getContext("2d");
-    for (var x = 0; x < width; x += tileWidth) {
-      for (var y = 0; y < height; y += tileHeight) {
-        ctx.drawImage(this._image, x, y, tileWidth, tileHeight);
-      }
-    }
+    ctx.fillStyle = ctx.createPattern(this._image, "repeat");
+    ctx.scale(width / screen.width, height / screen.height);
+    ctx.fillRect(0, 0, screen.width, screen.height);
 
     this._monitor.appendChild(canvas);
   },
