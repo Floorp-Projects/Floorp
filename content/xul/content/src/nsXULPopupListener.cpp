@@ -580,7 +580,8 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
     NS_ERROR("GetElementById had some kind of spasm.");
     return rv;
   }
-  if ( !popupContent )
+
+  if (!popupContent || mElement == popupContent)
     return NS_OK;
 
   // Submenus can't be used as context menus or popups, bug 288763.

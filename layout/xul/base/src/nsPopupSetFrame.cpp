@@ -362,6 +362,8 @@ nsPopupSetFrame::ShowPopup(nsIContent* aElementContent, nsIContent* aPopupConten
                            const nsString& aPopupType, const nsString& anAnchorAlignment,
                            const nsString& aPopupAlignment)
 {
+  NS_ASSERTION(aElementContent != aPopupContent, "self referential popup");
+
   if (!MayOpenPopup(this))
     return NS_OK;
 

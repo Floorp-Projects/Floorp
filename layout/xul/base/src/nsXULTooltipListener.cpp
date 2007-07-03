@@ -390,7 +390,7 @@ nsXULTooltipListener::ShowTooltip()
 {
   // get the tooltip content designated for the target node 
   GetTooltipFor(mSourceNode, getter_AddRefs(mCurrentTooltip));
-  if (!mCurrentTooltip)
+  if (!mCurrentTooltip || mSourceNode == mCurrentTooltip)
     return NS_ERROR_FAILURE; // the target node doesn't need a tooltip
 
   // set the node in the document that triggered the tooltip and show it
