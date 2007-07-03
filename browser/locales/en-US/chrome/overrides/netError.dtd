@@ -134,3 +134,9 @@
     that &brandShortName; is permitted to access the Web.</li>
 </ul>
 ">
+
+<!ENTITY malwareBlocked.title "Suspected Attack Site!">
+<!ENTITY malwareBlocked.longDesc "<p>
+Attack sites try to install programs that steal private information, use your computer to attack others, or damage your system.</p>
+<p>You should not visit this site.</p>
+">
