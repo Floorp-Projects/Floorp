@@ -210,8 +210,7 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                         if ((iProp == eCSSProperty_background_image ||
                              iProp == eCSSProperty_list_style_image) &&
                             val->GetUnit() == eCSSUnit_URL) {
-                            val->StartImageLoad(aRuleData->mPresContext->Document(),
-                                                iProp == eCSSProperty_background_image);
+                            val->StartImageLoad(aRuleData->mPresContext->Document());
                         }
                         *target = *val;
                         if (iProp == eCSSProperty_font_family) {
