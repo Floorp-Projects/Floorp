@@ -186,6 +186,11 @@ protected:
   nsresult WillDirty();
   void     DidDirty();
 
+  // Return success if the subject principal subsumes the principal of our
+  // inner, error otherwise.  This will also succeed if the subject has
+  // UniversalBrowserWrite.
+  nsresult SubjectSubsumesInnerPrincipal() const;
+
 protected:
   nsString              mTitle;
   nsCOMPtr<nsMediaList> mMedia;

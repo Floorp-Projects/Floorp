@@ -435,9 +435,10 @@ nsCSSValue::Image::Image(nsIURI* aURI, nsStringBuffer* aString,
   MOZ_COUNT_CTOR(nsCSSValue::Image);
 
   if (mURI &&
-      nsContentUtils::CanLoadImage(mURI, aDocument, aDocument)) {
-    nsContentUtils::LoadImage(mURI, aDocument, aReferrer, nsnull,
-                              nsIRequest::LOAD_NORMAL,
+      nsContentUtils::CanLoadImage(mURI, aDocument, aDocument,
+                                   aOriginPrincipal)) {
+    nsContentUtils::LoadImage(mURI, aDocument, aOriginPrincipal, aReferrer,
+                              nsnull, nsIRequest::LOAD_NORMAL,
                               getter_AddRefs(mRequest));
   }
 }
