@@ -100,21 +100,9 @@ const unsigned char kRemoteVersion[] = "5.1";
 const unsigned char kRemoteVersion[] = "5.0";
 #endif
 
-NS_IMPL_QUERY_INTERFACE2(nsGTKRemoteService,
-                         nsIRemoteService,
-                         nsIObserver)
-
-NS_IMETHODIMP_(nsrefcnt)
-nsGTKRemoteService::AddRef()
-{
-  return 1;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-nsGTKRemoteService::Release()
-{
-  return 1;
-}
+NS_IMPL_ISUPPORTS2(nsGTKRemoteService,
+                   nsIRemoteService,
+                   nsIObserver)
 
 NS_IMETHODIMP
 nsGTKRemoteService::Startup(const char* aAppName, const char* aProfileName)
