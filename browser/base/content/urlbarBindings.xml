@@ -268,7 +268,7 @@
 
           var host = this._uri.host;
           if (host) {
-            //XXX Disabled for now due to perf/leak regressions
+            //XXX Bug 386727: Disabled for now due to perf/leak regressions
             //XXX workaround for bug 364129
             if (0 && !/^[.0-9]+$/.test(host)) {
               // getEffectiveTLDLength might convert our host and return a misleading length.
