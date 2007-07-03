@@ -2102,7 +2102,7 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
   }
 
   nsCOMPtr<nsIURI> loadingURI;
-  nsresult rv = aLoadingPrincipal->GetURI(getter_AddRefs(loadingURI));
+  rv = aLoadingPrincipal->GetURI(getter_AddRefs(loadingURI));
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   PRInt16 decision = nsIContentPolicy::ACCEPT;
