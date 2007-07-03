@@ -48,6 +48,7 @@
 #include "prlink.h"
 
 #include "nsIPlugin.h"
+#include "nsIPluginTag.h"
 #include "nsIPluginTagInfo2.h"
 #include "nsIPluginInstancePeer2.h"
 
@@ -84,9 +85,12 @@ class nsPluginHostImpl;
  * instantiating plugins and reflecting plugin information
  * into JavaScript.
  */
-class nsPluginTag
+class nsPluginTag : public nsIPluginTag
 {
 public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPLUGINTAG
+
   nsPluginTag(nsPluginTag* aPluginTag);
   nsPluginTag(nsPluginInfo* aPluginInfo);
 
@@ -132,7 +136,7 @@ public:
   void RegisterWithCategoryManager(PRBool aOverrideInternalTypes,
                                    nsRegisterType aType = ePluginRegister);
 
-  nsPluginTag   *mNext;
+  nsRefPtr<nsPluginTag>   mNext;
   nsPluginHostImpl *mPluginHost;
   char          *mName;
   char          *mDescription;
@@ -156,7 +160,7 @@ struct nsActivePlugin
   nsActivePlugin*        mNext;
   char*                  mURL;
   nsIPluginInstancePeer* mPeer;
-  nsPluginTag*           mPluginTag;
+  nsRefPtr<nsPluginTag>  mPluginTag;
   nsIPluginInstance*     mInstance;
   PRTime                 mllStopTime;
   PRPackedBool           mStopped;
@@ -315,6 +319,9 @@ public:
 
   static nsresult GetPluginTempDir(nsIFile **aDir);
 
+  // Writes updated plugins settings to disk
+  nsresult UpdatePluginInfo();
+
 private:
   NS_IMETHOD
   TrySetUpPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
@@ -380,7 +387,8 @@ private:
 
   // Given a filename, returns the plugins info from our cache
   // and removes it from the cache.
-  nsPluginTag* RemoveCachedPluginsInfo(const char *filename);
+  void RemoveCachedPluginsInfo(const char *filename,
+                               nsPluginTag **result);
 
   //checks if the list already have the same plugin as given
   nsPluginTag* HaveSamePlugin(nsPluginTag * aPluginTag);
@@ -390,7 +398,7 @@ private:
   PRBool IsDuplicatePlugin(nsPluginTag * aPluginTag);
 
   // checks whether the given plugin is an unwanted Java plugin
-  // (e.g. Java is disabled, or no OJI support is compiled in)
+  // (e.g. no OJI support is compiled in)
   PRBool IsUnwantedJavaPlugin(nsPluginTag * aPluginTag);
 
   // checks whether aTag is a "java" plugin tag (a tag for a plugin
@@ -418,8 +426,8 @@ private:
   nsresult AddPrefObserver();
   
   char        *mPluginPath;
-  nsPluginTag *mPlugins;
-  nsPluginTag *mCachedPlugins;
+  nsRefPtr<nsPluginTag> mPlugins;
+  nsRefPtr<nsPluginTag> mCachedPlugins;
   PRPackedBool mPluginsLoaded;
   PRPackedBool mDontShowBadPluginMessage;
   PRPackedBool mIsDestroyed;
