@@ -199,6 +199,8 @@ function test_backup_new_folder()
   var msc = getOpenedDatabase();
   var parentDir = getTestDB().parent;
   parentDir.append("test_storage_temp");
+  if (parentDir.exists())
+    parentDir.remove(true);
   parentDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
   do_check_true(parentDir.exists());
 
