@@ -254,6 +254,7 @@ nsHTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         // of redirecting |SetFocus|.
         {
           nsEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent), NS_FOCUS_CONTENT);
+          event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
           nsEventStatus status = aVisitor.mEventStatus;
           DispatchEvent(aVisitor.mPresContext, &event,
                         content, PR_TRUE, &status);
