@@ -147,11 +147,11 @@ public:
    * Flags:
    * NS_FRAME_NO_MOVE_VIEW - don't position the frame's view. Set this if you
    *    don't want to automatically sync the frame and view
-   * NS_FRAME_NO_MOVE_VIEW - don't move the frame. aX and aY are ignored in this
+   * NS_FRAME_NO_MOVE_FRAME - don't move the frame. aX and aY are ignored in this
    *    case. Also implies NS_FRAME_NO_MOVE_VIEW
    */
   nsresult ReflowChild(nsIFrame*                aKidFrame,
-                       nsPresContext*          aPresContext,
+                       nsPresContext*           aPresContext,
                        nsHTMLReflowMetrics&     aDesiredSize,
                        const nsHTMLReflowState& aReflowState,
                        nscoord                  aX,
@@ -177,7 +177,7 @@ public:
    * NS_FRAME_NO_SIZE_VIEW - don't size the frame's view
    */
   static nsresult FinishReflowChild(nsIFrame*                 aKidFrame,
-                                    nsPresContext*           aPresContext,
+                                    nsPresContext*            aPresContext,
                                     const nsHTMLReflowState*  aReflowState,
                                     nsHTMLReflowMetrics&      aDesiredSize,
                                     nscoord                   aX,
@@ -221,13 +221,13 @@ protected:
   /**
    * Get the frames on the overflow list
    */
-  nsIFrame* GetOverflowFrames(nsPresContext* aPresContext,
+  nsIFrame* GetOverflowFrames(nsPresContext*  aPresContext,
                               PRBool          aRemoveProperty) const;
 
   /**
    * Set the overflow list
    */
-  nsresult SetOverflowFrames(nsPresContext* aPresContext,
+  nsresult SetOverflowFrames(nsPresContext*  aPresContext,
                              nsIFrame*       aOverflowFrames);
 
   /**
@@ -255,7 +255,7 @@ protected:
    * @param   aPrevSibling aFromChild's previous sibling. Must not be null.
    *            It's an error to push a parent's first child frame
    */
-  void PushChildren(nsPresContext* aPresContext,
+  void PushChildren(nsPresContext*  aPresContext,
                     nsIFrame*       aFromChild,
                     nsIFrame*       aPrevSibling);
 
