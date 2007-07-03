@@ -1,0 +1,166 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=238987
+-->
+<head>
+  <title>Test for Bug 238987</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=238987">Mozilla Bug 238987</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  /** Test for Bug 238987 **/
+
+  var shouldStop = false;
+  var modifier = 0;
+  var expectedResult = "i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12";
+  var forwardArray = expectedResult.split(",");
+  var backwardArray = expectedResult.split(",");
+  // Adding 3 for "begin", "end", "begin" and one for the <a> in the Mochitest template.
+  var expectedWindowFocusCount = forwardArray.length + backwardArray.length + 4;
+
+  // accessibility.tabfocus must be set to value 7 before running test also
+  // on a mac.
+  function setOrRestoreTabFocus(newValue) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    const prefSvcContractID = "@mozilla.org/preferences-service;1";
+    const prefSvcIID = Components.interfaces.nsIPrefService;
+    var prefs = Components.classes[prefSvcContractID].getService(prefSvcIID)
+                                                     .getBranch("accessibility.");
+    if (!newValue) {
+      try {
+        prefs.clearUserPref("tabfocus");
+      } catch(ex) {}
+    } else {
+      prefs.setIntPref("tabfocus", newValue);
+    }
+  }
+
+  function handleFocus(e) {
+    if (e.target.id == "begin") {
+      // if the modifier is set, the test is coming back from the end.
+      if (modifier) {
+        shouldStop = true;
+      }
+    } else if (e.target.id == "end") {
+      modifier = Components.interfaces.nsIDOMNSEvent.SHIFT_MASK;
+    } else if (modifier) {
+      var expected = backwardArray.pop();
+      ok(expected == e.target.id,
+         "Backward tabbing, expected [" + expected + "], got [" + e.target.id + "]");
+    } else {
+      var expected = forwardArray.shift();
+      ok(expected == e.target.id,
+         "Forward tabbing, expected [" + expected + "], got [" + e.target.id + "]");
+    }
+  }
+
+  function handleWindowFocus(e) {
+    --expectedWindowFocusCount;
+    var s = "target " + e.target;
+    if ("id" in e.target) {
+      s = s + ", id=\"" + e.target.id + "\"";
+    }
+    ok(e.eventPhase == Components.interfaces.nsIDOMEvent.CAPTURING_PHASE,
+       "|window| should not have got focus, " + s + "\n");
+  }
+
+  function tab() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                       getInterface(Components.interfaces.nsIDOMWindowUtils);
+    // Send tab key events.
+    var key = Components.interfaces.nsIDOMKeyEvent.DOM_VK_TAB;
+    utils.sendKeyEvent("keydown", key, 0, modifier);
+    utils.sendKeyEvent("keypress", key, 0, modifier);
+    utils.sendKeyEvent("keyup", key, 0, modifier);
+    if (shouldStop) {
+      ok(forwardArray.length == 0,
+         "Not all forward tabbing tests were run, " + forwardArray.toString());
+      ok(backwardArray.length == 0,
+         "Not all forward tabbing tests were run, " + backwardArray.toString());
+      ok(expectedWindowFocusCount == 0,
+         "|window| didn't get right amount focus events")
+      setOrRestoreTabFocus(0);
+      SimpleTest.finish();
+    } else {
+      setTimeout(tab, 50);
+    }
+  }
+
+  function start() {
+    window.focus();
+    window.addEventListener("focus", handleWindowFocus, true);
+    window.addEventListener("focus", handleWindowFocus, false);
+    var elements = document.getElementsByTagName("*");
+    for (var i = 0; i < elements.length; ++i) {
+      if (elements[i].hasAttribute("id")) {
+        elements[i].addEventListener("focus", handleFocus, false);
+      }
+    }
+    tab();
+  }
+
+  function doTest() {
+    setOrRestoreTabFocus(7)
+    setTimeout(start, 100);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(doTest);
+
+</script>
+</pre>
+  <h4 tabindex="0" id="begin">Test:</h4>
+  <table>
+    <tbody>
+      <tr>
+        <td>type="text"</td><td><input type="text"  id="i1" value=""></td>
+      </tr>
+      <tr>
+        <td>type="button"</td><td><input type="button" id="i2" value="type='button'"></td>
+      </tr>
+      <tr>
+        <td>type="checkbox"</td><td><input type="checkbox" id="i3" ></td>
+      </tr>
+      <tr>
+        <td>type="radio" checked</td><td><input type="radio" id="i4" name="radio" checked>
+                                         <input type="radio" id="i4b" name="radio"></td>
+      </tr>
+      <tr>
+        <td>type="radio"</td><td><input type="radio" id="i5" name="radio2">
+                                 <input type="radio" id="i6" name="radio2"></td>
+      </tr>
+      <tr>
+        <td>type="password"</td><td><input type="password" id="i7"></td>
+      </tr>
+      <tr>
+        <td>type="file"</td><td><input type="file" id="i8"></td>
+      </tr>
+      <tr>
+        <td>button</td><td><button id="i9">button</button></td>
+      </tr>
+      <tr>
+        <td>select</td><td><select id="i10"><option>select</option></select></td>
+      </tr>
+      <tr>
+        <td>a</td><td><a href="#radio" id="i11">a link</a></td>
+      </tr>
+      <tr>
+        <td>tabindex="0"</td><td><span tabindex="0" id="i12">span</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <h4 tabindex="0" id="end">done.</h4>
+</body>
+</html>
+
