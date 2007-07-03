@@ -37,6 +37,8 @@
 
 // This file tests the functions of mozIStorageConnection
 
+const BACKUP_FILE_NAME = "test_storage.sqlite.backup";
+
 function test_connectionReady()
 {
   // there doesn't seem to be a way for the connection to not be ready
@@ -171,6 +173,42 @@ function test_set_schemaVersion_negative()
   do_check_eq(version, msc.schemaVersion);
 }
 
+function test_backup_not_new_filename()
+{
+  var msc = getOpenedDatabase();
+  const fname = getTestDB().leafName;
+
+  var backup = msc.backupDB(fname);
+  do_check_neq(fname, backup.leafName);
+
+  backup.remove(false);
+}
+
+function test_backup_new_filename()
+{
+  var msc = getOpenedDatabase();
+
+  var backup = msc.backupDB(BACKUP_FILE_NAME);
+  do_check_eq(BACKUP_FILE_NAME, backup.leafName);
+  
+  backup.remove(false);
+}
+
+function test_backup_new_folder()
+{
+  var msc = getOpenedDatabase();
+  var parentDir = getTestDB().parent;
+  parentDir.append("test_storage_temp");
+  parentDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0600);
+  do_check_true(parentDir.exists());
+
+  var backup = msc.backupDB(BACKUP_FILE_NAME, parentDir);
+  do_check_eq(BACKUP_FILE_NAME, backup.leafName);
+  do_check_true(parentDir.equals(backup.parent));
+
+  parentDir.remove(true);
+}
+
 var tests = [test_connectionReady, test_databaseFile,
              test_tableExists_not_created, test_indexExists_not_created,
              test_createTable_not_created, test_indexExists_created,
@@ -179,7 +217,9 @@ var tests = [test_connectionReady, test_databaseFile,
              test_commitTransaction_no_transaction,
              test_rollbackTransaction_no_transaction,
              test_get_schemaVersion_not_set, test_set_schemaVersion,
-             test_set_schemaVersion_same, test_set_schemaVersion_negative];
+             test_set_schemaVersion_same, test_set_schemaVersion_negative,
+             test_backup_not_new_filename, test_backup_new_filename,
+             test_backup_new_folder];
 
 function run_test()
 {
