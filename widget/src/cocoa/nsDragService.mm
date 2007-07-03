@@ -114,11 +114,15 @@ static nsresult SetUpDragClipboard(nsISupportsArray* aTransferableArray)
       return NS_ERROR_FAILURE;
 
     // write everything out to the general pasteboard
-    unsigned int outputCount = [pasteboardOutputDict count];
-    NSArray* outputKeys = [pasteboardOutputDict allKeys];
-    [dragPBoard declareTypes:outputKeys owner:nil];
-    for (unsigned int i = 0; i < outputCount; i++) {
-      NSString* currentKey = [outputKeys objectAtIndex:i];
+    unsigned int typeCount = [pasteboardOutputDict count];
+    NSMutableArray* types = [NSMutableArray arrayWithCapacity:typeCount + 1];
+    [types addObjectsFromArray:[pasteboardOutputDict allKeys]];
+    // Gecko is initiating this drag so we always want its own views to consider
+    // it. Add our wildcard type to the pasteboard to accomplish this.
+    [types addObject:kWildcardPboardType]; // we don't increase the count for the loop below on purpose
+    [dragPBoard declareTypes:types owner:nil];
+    for (unsigned int i = 0; i < typeCount; i++) {
+      NSString* currentKey = [types objectAtIndex:i];
       id currentValue = [pasteboardOutputDict valueForKey:currentKey];
       if (currentKey == NSStringPboardType) {
         [dragPBoard setString:currentValue forType:currentKey];
@@ -128,11 +132,6 @@ static nsresult SetUpDragClipboard(nsISupportsArray* aTransferableArray)
       }
     }
   }
-
-  // Gecko is initiating this drag so we always want its own views to consider
-  // it. Add our wildcard type to the pasteboard to accomplish this. Note that the
-  // wildcard type is not declared above but it doesn't seem to matter.
-  [dragPBoard setData:nil forType:kWildcardPboardType];
 
   return NS_OK;
 }
@@ -421,6 +420,43 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
 
   nsDependentCString dataFlavor(aDataFlavor);
 
+  // first see if we have data for this in our cached transferable
+  if (mDataItems) {
+    PRUint32 dataItemsCount;
+    mDataItems->Count(&dataItemsCount);
+    for (unsigned int i = 0; i < dataItemsCount; i++) {
+      nsCOMPtr<nsISupports> currentTransferableSupports;
+      mDataItems->GetElementAt(i, getter_AddRefs(currentTransferableSupports));
+      if (!currentTransferableSupports)
+        continue;
+
+      nsCOMPtr<nsITransferable> currentTransferable(do_QueryInterface(currentTransferableSupports));
+      if (!currentTransferable)
+        continue;
+
+      nsCOMPtr<nsISupportsArray> flavorList;
+      nsresult rv = currentTransferable->FlavorsTransferableCanImport(getter_AddRefs(flavorList));
+      if (NS_FAILED(rv))
+        continue;
+
+      PRUint32 flavorCount;
+      flavorList->Count(&flavorCount);
+      for (PRUint32 j = 0; j < flavorCount; j++) {
+        nsCOMPtr<nsISupports> genericFlavor;
+        flavorList->GetElementAt(j, getter_AddRefs(genericFlavor));
+        nsCOMPtr<nsISupportsCString> currentFlavor(do_QueryInterface(genericFlavor));
+        if (!currentFlavor)
+          continue;
+        nsXPIDLCString flavorStr;
+        currentFlavor->ToString(getter_Copies(flavorStr));
+        if (dataFlavor.Equals(flavorStr)) {
+          *_retval = PR_TRUE;
+          return NS_OK;
+        }
+      }
+    }
+  }
+
   if (dataFlavor.EqualsLiteral(kFileMime)) {
     NSString* availableType = [globalDragPboard availableTypeFromArray:[NSArray arrayWithObject:NSFilenamesPboardType]];
     if (availableType && [availableType isEqualToString:NSFilenamesPboardType])
@@ -429,12 +465,6 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
   else if (dataFlavor.EqualsLiteral(kUnicodeMime)) {
     NSString* availableType = [globalDragPboard availableTypeFromArray:[NSArray arrayWithObject:NSStringPboardType]];
     if (availableType && [availableType isEqualToString:NSStringPboardType])
-      *_retval = PR_TRUE;
-  }
-  else {
-    NSString* lookingForType = [NSString stringWithUTF8String:aDataFlavor];
-    NSString* availableType = [globalDragPboard availableTypeFromArray:[NSArray arrayWithObject:lookingForType]];
-    if (availableType && [availableType isEqualToString:lookingForType])
       *_retval = PR_TRUE;
   }
 
