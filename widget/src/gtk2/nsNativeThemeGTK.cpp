@@ -55,7 +55,6 @@
 #include "nsGfxCIID.h"
 #include "nsTransform2D.h"
 #include "nsIMenuFrame.h"
-#include "nsIMenuParent.h"
 #include "prlink.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsWidgetAtoms.h"
@@ -278,15 +277,11 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
           CallQueryInterface(aFrame, &menuFrame);
 
           if (menuFrame) {
-            nsIMenuParent *menuParent = menuFrame->GetMenuParent();
-            if (menuParent)
-              menuParent->IsMenuBar(isTopLevel);
+            isTopLevel = menuFrame->IsOnMenuBar();
           }
 
           if (isTopLevel) {
-            PRBool isOpen;
-            menuFrame->MenuIsOpen(isOpen);
-            aState->inHover = isOpen;
+            aState->inHover = menuFrame->IsOpen();
           } else {
             aState->inHover = CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive);
           }

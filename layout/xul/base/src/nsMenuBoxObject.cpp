@@ -39,11 +39,12 @@
 #include "nsIMenuBoxObject.h"
 #include "nsBoxObject.h"
 #include "nsIPresShell.h"
-#include "nsIMenuFrame.h"
 #include "nsIFrame.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsMenuBarListener.h"
+#include "nsMenuFrame.h"
+#include "nsMenuPopupFrame.h"
 #include "nsPopupSetFrame.h"
 
 class nsMenuBoxObject : public nsIMenuBoxObject, public nsBoxObject
@@ -88,47 +89,41 @@ nsMenuBoxObject::~nsMenuBoxObject()
 /* void openMenu (in boolean openFlag); */
 NS_IMETHODIMP nsMenuBoxObject::OpenMenu(PRBool aOpenFlag)
 {
-  nsIFrame* frame = GetFrame(PR_FALSE);
-  if (!frame)
-    return NS_OK;
+  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+  if (pm) {
+    nsIFrame* frame = GetFrame(PR_FALSE);
+    if (frame) {
+      if (aOpenFlag) {
+        nsCOMPtr<nsIContent> content = mContent;
+        pm->ShowMenu(content, PR_FALSE, PR_FALSE);
+      }
+      else {
+        if (frame->GetType() == nsGkAtoms::menuFrame) {
+          nsMenuPopupFrame* popupFrame = (NS_STATIC_CAST(nsMenuFrame *, frame))->GetPopup();
+          if (popupFrame)
+            pm->HidePopup(popupFrame->GetContent(), PR_FALSE, PR_TRUE, PR_FALSE);
+        }
+      }
+    }
+  }
 
-  if (!nsPopupSetFrame::MayOpenPopup(frame))
-    return NS_OK;
-
-  nsIMenuFrame* menuFrame;
-  CallQueryInterface(frame, &menuFrame);
-  if (!menuFrame)
-    return NS_OK;
-
-  return menuFrame->OpenMenu(aOpenFlag);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMenuBoxObject::GetActiveChild(nsIDOMElement** aResult)
 {
   *aResult = nsnull;
   nsIFrame* frame = GetFrame(PR_FALSE);
-  if (!frame)
-    return NS_OK;
-
-  nsIMenuFrame* menuFrame;
-  CallQueryInterface(frame, &menuFrame);
-  if (menuFrame)
-    menuFrame->GetActiveChild(aResult);
+  if (frame && frame->GetType() == nsGkAtoms::menuFrame)
+    return NS_STATIC_CAST(nsMenuFrame *, frame)->GetActiveChild(aResult);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsMenuBoxObject::SetActiveChild(nsIDOMElement* aResult)
 {
   nsIFrame* frame = GetFrame(PR_FALSE);
-  if (!frame)
-    return NS_OK;
-
-  nsIMenuFrame* menuFrame;
-  CallQueryInterface(frame, &menuFrame);
-  if (menuFrame) {
-    menuFrame->MarkAsGenerated();
-    menuFrame->SetActiveChild(aResult);
-  }
+  if (frame && frame->GetType() == nsGkAtoms::menuFrame)
+    return NS_STATIC_CAST(nsMenuFrame *, frame)->SetActiveChild(aResult);
   return NS_OK;
 }
 
@@ -137,6 +132,10 @@ NS_IMETHODIMP nsMenuBoxObject::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent, PRBool*
 {
   *aHandledFlag = PR_FALSE;
   NS_ENSURE_ARG(aKeyEvent);
+
+  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+  if (!pm)
+    return NS_OK;
 
   // if event has already been handled, bail
   nsCOMPtr<nsIDOMNSUIEvent> uiEvent(do_QueryInterface(aKeyEvent));
@@ -152,12 +151,11 @@ NS_IMETHODIMP nsMenuBoxObject::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent, PRBool*
     return NS_OK;
 
   nsIFrame* frame = GetFrame(PR_FALSE);
-  if (!frame)
+  if (!frame || frame->GetType() != nsGkAtoms::menuFrame)
     return NS_OK;
 
-  nsIMenuFrame* menuFrame;
-  CallQueryInterface(frame, &menuFrame);
-  if (!menuFrame)
+  nsMenuPopupFrame* popupFrame = NS_STATIC_CAST(nsMenuFrame *, frame)->GetPopup();
+  if (!popupFrame)
     return NS_OK;
 
   PRUint32 keyCode;
@@ -167,9 +165,11 @@ NS_IMETHODIMP nsMenuBoxObject::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent, PRBool*
     case NS_VK_DOWN:
     case NS_VK_HOME:
     case NS_VK_END:
-      return menuFrame->KeyboardNavigation(keyCode, *aHandledFlag);
+      *aHandledFlag = pm->HandleKeyboardNavigation(keyCode);
+      return NS_OK;
     default:
-      return menuFrame->ShortcutNavigation(aKeyEvent, *aHandledFlag);
+      *aHandledFlag = pm->HandleShortcutNavigation(aKeyEvent);
+      return NS_OK;
   }
 }
 

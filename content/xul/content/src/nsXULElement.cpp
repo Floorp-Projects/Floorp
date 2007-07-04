@@ -107,7 +107,6 @@
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsIXULDocument.h"
-#include "nsIXULPopupListener.h"
 #include "nsIXULTemplateBuilder.h"
 #include "nsIXBLService.h"
 #include "nsLayoutCID.h"
@@ -119,6 +118,7 @@
 #include "nsIBoxObject.h"
 #include "nsPIBoxObject.h"
 #include "nsXULDocument.h"
+#include "nsXULPopupListener.h"
 #include "nsRuleWalker.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIDOMCSSStyleDeclaration.h"
@@ -2046,18 +2046,17 @@ static void
 PopupListenerPropertyDtor(void* aObject, nsIAtom* aPropertyName,
                           void* aPropertyValue, void* aData)
 {
-  nsIXULPopupListener* listener =
-    NS_STATIC_CAST(nsIXULPopupListener*, aPropertyValue);
+  nsIDOMEventListener* listener =
+    NS_STATIC_CAST(nsIDOMEventListener*, aPropertyValue);
   if (!listener) {
     return;
   }
-  nsCOMPtr<nsIDOMEventListener> eventListener = do_QueryInterface(listener);
   nsCOMPtr<nsIDOMEventTarget> target =
     do_QueryInterface(NS_STATIC_CAST(nsINode*, aObject));
   if (target) {
-    target->RemoveEventListener(NS_LITERAL_STRING("mousedown"), eventListener,
+    target->RemoveEventListener(NS_LITERAL_STRING("mousedown"), listener,
                                 PR_FALSE);
-    target->RemoveEventListener(NS_LITERAL_STRING("contextmenu"), eventListener,
+    target->RemoveEventListener(NS_LITERAL_STRING("contextmenu"), listener,
                                 PR_FALSE);
   }
   NS_RELEASE(listener);
@@ -2066,43 +2065,38 @@ PopupListenerPropertyDtor(void* aObject, nsIAtom* aPropertyName,
 nsresult
 nsXULElement::AddPopupListener(nsIAtom* aName)
 {
-    XULPopupType popupType;
-    nsCOMPtr<nsIAtom> listenerAtom;
-    if (aName == nsGkAtoms::context || aName == nsGkAtoms::contextmenu) {
-        popupType = eXULPopupType_context;
-        listenerAtom = nsGkAtoms::contextmenulistener;
-    } else {
-        popupType = eXULPopupType_popup;
-        listenerAtom = nsGkAtoms::popuplistener;
-    }
+    // Add a popup listener to the element
+    PRBool isContext = (aName == nsGkAtoms::context ||
+                        aName == nsGkAtoms::contextmenu);
+    nsIAtom* listenerAtom = isContext ?
+                            nsGkAtoms::contextmenulistener :
+                            nsGkAtoms::popuplistener;
 
-    nsCOMPtr<nsIXULPopupListener> popupListener =
-        NS_STATIC_CAST(nsIXULPopupListener*, GetProperty(listenerAtom));
+    nsCOMPtr<nsIDOMEventListener> popupListener =
+        NS_STATIC_CAST(nsIDOMEventListener*, GetProperty(listenerAtom));
     if (popupListener) {
         // Popup listener is already installed.
         return NS_OK;
     }
-    // Add a popup listener to the element
-    nsresult rv;
 
-    popupListener = do_CreateInstance(kXULPopupListenerCID, &rv);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to create an instance of the popup listener object.");
-    if (NS_FAILED(rv)) return rv;
-
-    // Add a weak reference to the node.
-    popupListener->Init(this, popupType);
+    nsresult rv = NS_NewXULPopupListener(this, isContext,
+                                         getter_AddRefs(popupListener));
+    if (NS_FAILED(rv))
+        return rv;
 
     // Add the popup as a listener on this element.
-    nsCOMPtr<nsIDOMEventListener> eventListener = do_QueryInterface(popupListener);
     nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
     NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
     rv = SetProperty(listenerAtom, popupListener, PopupListenerPropertyDtor,
                      PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
-    nsIXULPopupListener* listener = popupListener;
-    NS_ADDREF(listener);
-    target->AddEventListener(NS_LITERAL_STRING("mousedown"), eventListener, PR_FALSE);
-    target->AddEventListener(NS_LITERAL_STRING("contextmenu"), eventListener, PR_FALSE);
+    // Want the property to have a reference to the listener.
+    nsIDOMEventListener* listener = nsnull;
+    popupListener.swap(listener);
+    if (isContext)
+      target->AddEventListener(NS_LITERAL_STRING("contextmenu"), listener, PR_FALSE);
+    else
+      target->AddEventListener(NS_LITERAL_STRING("mousedown"), listener, PR_FALSE);
     return NS_OK;
 }
 

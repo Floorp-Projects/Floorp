@@ -162,11 +162,14 @@ public:
   virtual ~nsBoxFrame();
   
   nsBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
- 
+
+  // if aIsPopup is true, then the view is for a popup. In this case,
+  // the view is added a child of the root view, and is initially hidden
   static nsresult CreateViewForFrame(nsPresContext* aPresContext,
                                      nsIFrame* aChild,
                                      nsStyleContext* aStyleContext,
-                                     PRBool aForce);
+                                     PRBool aForce,
+                                     PRBool aIsPopup = PR_FALSE);
 
   // virtual so nsStackFrame, nsButtonBoxFrame, nsSliderFrame and nsMenuFrame
   // can override it

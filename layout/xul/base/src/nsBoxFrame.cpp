@@ -1793,25 +1793,37 @@ nsresult
 nsBoxFrame::CreateViewForFrame(nsPresContext*  aPresContext,
                                nsIFrame*        aFrame,
                                nsStyleContext*  aStyleContext,
-                               PRBool           aForce)
+                               PRBool           aForce,
+                               PRBool           aIsPopup)
 {
   NS_ASSERTION(aForce, "We only get called to force view creation now");
   // If we don't yet have a view, see if we need a view
   if (!aFrame->HasView()) {
+    nsViewVisibility visibility = nsViewVisibility_kShow;
     PRInt32 zIndex = 0;
     PRBool  autoZIndex = PR_FALSE;
 
     if (aForce) {
-      // Create a view
-      nsIFrame* parent = aFrame->GetAncestorWithView();
-      NS_ASSERTION(parent, "GetAncestorWithView failed");
-      nsIView* parentView = parent->GetView();
-      NS_ASSERTION(parentView, "no parent with view");
-      nsIViewManager* viewManager = parentView->GetViewManager();
+      nsIView* parentView;
+      nsIViewManager* viewManager = aPresContext->GetViewManager();
       NS_ASSERTION(nsnull != viewManager, "null view manager");
 
       // Create a view
-      nsIView *view = viewManager->CreateView(aFrame->GetRect(), parentView);
+      if (aIsPopup) {
+        viewManager->GetRootView(parentView);
+        visibility = nsViewVisibility_kHide;
+        zIndex = PR_INT32_MAX;
+      }
+      else {
+        nsIFrame* parent = aFrame->GetAncestorWithView();
+        NS_ASSERTION(parent, "GetAncestorWithView failed");
+        parentView = parent->GetView();
+      }
+
+      NS_ASSERTION(parentView, "no parent view");
+
+      // Create a view
+      nsIView *view = viewManager->CreateView(aFrame->GetRect(), parentView, visibility);
       if (view) {
         // Insert the view into the view hierarchy. If the parent view is a
         // scrolling view we need to do this differently

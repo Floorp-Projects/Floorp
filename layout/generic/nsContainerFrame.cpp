@@ -497,7 +497,7 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
       // visible in all cases because the scrollbars will be showing
       // XXXldb Does the view system really enforce this correctly?
       viewIsVisible = PR_FALSE;
-    } else {
+    } else if (aFrame->GetType() == nsGkAtoms::menuPopupFrame) {
       // if the view is for a popup, don't show the view if the popup is closed
       nsIWidget* widget = aView->GetWidget();
       if (widget) {
@@ -506,6 +506,11 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
         if (windowType == eWindowType_popup) {
           widget->IsVisible(viewIsVisible);
         }
+      }
+      else {
+        // widgets for popups can be created later when the popup is opened,
+        // so if there is no widget, the popup won't be open.
+        viewIsVisible = PR_FALSE;
       }
     }
 
@@ -716,7 +721,12 @@ nsContainerFrame::PositionChildViews(nsIFrame* aFrame)
       childFrame = childFrame->GetNextSibling();
     }
 
-    childListName = aFrame->GetAdditionalChildListName(childListIndex++);
+    // also process the additional child lists, but skip the popup list as the
+    // view for popups is managed by the parent. Currently only nsMenuFrame
+    // has a popupList and during layout will call nsMenuPopupFrame::AdjustView.
+    do {
+      childListName = aFrame->GetAdditionalChildListName(childListIndex++);
+    } while (childListName == nsGkAtoms::popupList);
   } while (childListName);
 }
 
