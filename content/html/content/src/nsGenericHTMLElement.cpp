@@ -225,6 +225,8 @@ nsresult
 nsGenericHTMLElement::DOMQueryInterface(nsIDOMHTMLElement *aElement,
                                         REFNSIID aIID, void **aInstancePtr)
 {
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
   nsISupports *inst = nsnull;
 
   if (aIID.Equals(NS_GET_IID(nsIDOMNode))) {
@@ -236,13 +238,20 @@ nsGenericHTMLElement::DOMQueryInterface(nsIDOMHTMLElement *aElement,
   } else if (aIID.Equals(NS_GET_IID(nsIDOMNSHTMLElement))) {
     inst = NS_STATIC_CAST(nsIDOMNSHTMLElement *,
                           new nsGenericHTMLElementTearoff(this));
-    NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
+    if (NS_UNLIKELY(!inst)) {
+      *aInstancePtr = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   } else if (aIID.Equals(NS_GET_IID(nsIDOMElementCSSInlineStyle))) {
     inst = NS_STATIC_CAST(nsIDOMElementCSSInlineStyle *,
                           new nsGenericHTMLElementTearoff(this));
-    NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
+    if (NS_UNLIKELY(!inst)) {
+      *aInstancePtr = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   } else {
-    return NS_NOINTERFACE;
+    *aInstancePtr = nsnull;
+    return NS_ERROR_NO_INTERFACE;
   }
 
   NS_ADDREF(inst);

@@ -100,12 +100,10 @@ nsGfxCheckboxControlFrame::~nsGfxCheckboxControlFrame()
 NS_IMETHODIMP
 nsGfxCheckboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  NS_ASSERTION(aInstancePtr, "QueryInterface requires a non-NULL destination!");
-  if ( !aInstancePtr )
-    return NS_ERROR_NULL_POINTER;
+  NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsICheckboxControlFrame))) {
-    *aInstancePtr = (void*) ((nsICheckboxControlFrame*) this);
+    *aInstancePtr = NS_STATIC_CAST(nsICheckboxControlFrame*, this);
     return NS_OK;
   }
 

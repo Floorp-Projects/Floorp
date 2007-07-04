@@ -106,8 +106,7 @@ NS_IMPL_ISUPPORTS1(nsDeviceContextSpecBeOS, nsIDeviceContextSpec)
  
 NS_IMETHODIMP nsDeviceContextSpecBeOS :: QueryInterface(REFNSIID aIID, void** aInstancePtr) 
 { 
-  if (nsnull == aInstancePtr) 
-    return NS_ERROR_NULL_POINTER; 
+  NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(kIDeviceContextSpecIID)) 
   { 
@@ -138,7 +137,8 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS :: QueryInterface(REFNSIID aIID, void** aI
     return NS_OK; 
   } 
  
-  return NS_NOINTERFACE; 
+  *aInstancePtr = nsnull;
+  return NS_ERROR_NO_INTERFACE;
 } 
  
 NS_IMPL_ADDREF(nsDeviceContextSpecBeOS)

@@ -983,27 +983,26 @@ NS_IMPL_RELEASE_INHERITED(nsTextControlFrame, nsBoxFrame)
 NS_IMETHODIMP
 nsTextControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
   if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
-    *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
+    *aInstancePtr = NS_STATIC_CAST(nsIFormControlFrame*, this);
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsIAnonymousContentCreator))) {
-    *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;
+    *aInstancePtr = NS_STATIC_CAST(nsIAnonymousContentCreator*, this);
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsITextControlFrame))) {
-    *aInstancePtr = (void*)(nsITextControlFrame*) this;
+    *aInstancePtr = NS_STATIC_CAST(nsITextControlFrame*, this);
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsIScrollableViewProvider)) && IsScrollable()) {
-    *aInstancePtr = (void*)(nsIScrollableViewProvider*) this;
+    *aInstancePtr = NS_STATIC_CAST(nsIScrollableViewProvider*, this);
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsIPhonetic))) {
-    *aInstancePtr = (void*)(nsIPhonetic*) this;
+    *aInstancePtr = NS_STATIC_CAST(nsIPhonetic*, this);
     return NS_OK;
   }
 

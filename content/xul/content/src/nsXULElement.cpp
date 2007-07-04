@@ -366,10 +366,9 @@ NS_IMPL_RELEASE_INHERITED(nsXULElement, nsGenericElement)
 NS_IMETHODIMP
 nsXULElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-    NS_ENSURE_ARG_POINTER(aInstancePtr);
-    *aInstancePtr = nsnull;
+    NS_PRECONDITION(aInstancePtr, "null out param");
 
-    if ( aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant)) ) {
+    if (aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant))) {
       *aInstancePtr = &NS_CYCLE_COLLECTION_NAME(nsXULElement);
       return NS_OK;
     }

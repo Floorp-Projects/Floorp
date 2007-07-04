@@ -70,9 +70,10 @@ NS_NewScrollbarButtonFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMETHODIMP 
 nsScrollbarButtonFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {           
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
   if (aIID.Equals(NS_GET_IID(nsITimerCallback))) {                                         
-    *aInstancePtr = (void*)(nsITimerCallback*) this;                                        
-    NS_ADDREF_THIS();                                                    
+    *aInstancePtr = NS_STATIC_CAST(nsITimerCallback*, this);
     return NS_OK;                                                        
   }   
 

@@ -202,14 +202,10 @@ NS_IMETHODIMP nsSubDocumentFrame::GetAccessible(nsIAccessible** aAccessible)
 NS_IMETHODIMP
 nsSubDocumentFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsIFrameFrame))) {
-    nsISupports *tmp = NS_STATIC_CAST(nsIFrameFrame *, this);
-    *aInstancePtr = tmp;
+    *aInstancePtr = NS_STATIC_CAST(nsIFrameFrame*, this);
     return NS_OK;
   }
 

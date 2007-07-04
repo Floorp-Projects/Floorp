@@ -290,31 +290,28 @@ nsComboboxControlFrame::~nsComboboxControlFrame()
 NS_IMETHODIMP
 nsComboboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsIComboboxControlFrame))) {
-    *aInstancePtr = (void*)(nsIComboboxControlFrame*)this;
+    *aInstancePtr = NS_STATIC_CAST(nsIComboboxControlFrame*, this);
     return NS_OK;
   } else if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
-    *aInstancePtr = (void*)(nsIFormControlFrame*)this;
+    *aInstancePtr = NS_STATIC_CAST(nsIFormControlFrame*, this);
     return NS_OK;
   } else if (aIID.Equals(NS_GET_IID(nsIAnonymousContentCreator))) {                                         
-    *aInstancePtr = (void*)(nsIAnonymousContentCreator*)this;
+    *aInstancePtr = NS_STATIC_CAST(nsIAnonymousContentCreator*, this);
     return NS_OK;   
   } else if (aIID.Equals(NS_GET_IID(nsISelectControlFrame))) {
-    *aInstancePtr = (void *)(nsISelectControlFrame*)this;
+    *aInstancePtr = NS_STATIC_CAST(nsISelectControlFrame*, this);
     return NS_OK;
   } else if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
-    *aInstancePtr = (void*)(nsIStatefulFrame*)this;
+    *aInstancePtr = NS_STATIC_CAST(nsIStatefulFrame*, this);
     return NS_OK;
   } else if (aIID.Equals(NS_GET_IID(nsIRollupListener))) {
-    *aInstancePtr = (void*)(nsIRollupListener*)this;
+    *aInstancePtr = NS_STATIC_CAST(nsIRollupListener*, this);
     return NS_OK;
   } else if (aIID.Equals(NS_GET_IID(nsIScrollableViewProvider))) {
-    *aInstancePtr = (void*)(nsIScrollableViewProvider*)this;
+    *aInstancePtr = NS_STATIC_CAST(nsIScrollableViewProvider*, this);
     return NS_OK;
   } 
   

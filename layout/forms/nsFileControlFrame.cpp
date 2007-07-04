@@ -208,10 +208,8 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 NS_IMETHODIMP
 nsFileControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  NS_PRECONDITION(aInstancePtr, "null ptr");
-  if (NS_UNLIKELY(!aInstancePtr)) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
   if (aIID.Equals(NS_GET_IID(nsIAnonymousContentCreator))) {
     *aInstancePtr = NS_STATIC_CAST(nsIAnonymousContentCreator*, this);
     return NS_OK;
@@ -220,6 +218,7 @@ nsFileControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = NS_STATIC_CAST(nsIFormControlFrame*, this);
     return NS_OK;
   }
+
   return nsAreaFrame::QueryInterface(aIID, aInstancePtr);
 }
 

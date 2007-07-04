@@ -911,18 +911,17 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
 NS_IMPL_ADDREF_INHERITED(nsTableCellFrame, nsHTMLContainerFrame)
 NS_IMPL_RELEASE_INHERITED(nsTableCellFrame, nsHTMLContainerFrame)
 
-nsresult nsTableCellFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+NS_IMETHODIMP
+nsTableCellFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsITableCellLayout))) {
-    *aInstancePtr = (void*) (nsITableCellLayout *)this;
+    *aInstancePtr = NS_STATIC_CAST(nsITableCellLayout*, this);
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsIPercentHeightObserver))) {
-    *aInstancePtr = (void*) (nsIPercentHeightObserver *)this;
+    *aInstancePtr = NS_STATIC_CAST(nsIPercentHeightObserver*, this);
     return NS_OK;
   }
 

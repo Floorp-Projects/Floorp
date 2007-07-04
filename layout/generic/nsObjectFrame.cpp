@@ -448,27 +448,14 @@ nsObjectFrame::~nsObjectFrame()
 NS_IMETHODIMP
 nsObjectFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  NS_ENSURE_ARG_POINTER(aInstancePtr);
-  *aInstancePtr = nsnull;
-
-#ifdef DEBUG
-  if (aIID.Equals(NS_GET_IID(nsIFrameDebug))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIFrameDebug*,this);
-    return NS_OK;
-  }
-#endif
+  NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsIObjectFrame))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIObjectFrame*,this);
-    return NS_OK;
-  } else if (aIID.Equals(NS_GET_IID(nsIFrame))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIFrame*,this);
-    return NS_OK;
-  } else if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIObjectFrame*,this);
+    *aInstancePtr = NS_STATIC_CAST(nsIObjectFrame*, this);
     return NS_OK;
   }
-  return NS_NOINTERFACE;
+
+  return nsObjectFrameSuper::QueryInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP_(nsrefcnt) nsObjectFrame::AddRef(void)

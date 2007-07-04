@@ -136,15 +136,13 @@ nsSimplePageSequenceFrame::~nsSimplePageSequenceFrame()
   if (mPageData) delete mPageData;
 }
 
-nsresult
+NS_IMETHODIMP
 nsSimplePageSequenceFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
   if (aIID.Equals(NS_GET_IID(nsIPageSequenceFrame))) {
-    *aInstancePtr = (void*)(nsIPageSequenceFrame*)this;
+    *aInstancePtr = NS_STATIC_CAST(nsIPageSequenceFrame*, this);
     return NS_OK;
   }
   return nsContainerFrame::QueryInterface(aIID, aInstancePtr);

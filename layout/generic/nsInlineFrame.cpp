@@ -78,14 +78,13 @@ NS_NewInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMETHODIMP
 nsInlineFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
   if (aIID.Equals(kInlineFrameCID)) {
-    nsInlineFrame* tmp = this;
-    *aInstancePtr = (void*) tmp;
+    *aInstancePtr = this;
     return NS_OK;
   }
+
   return nsInlineFrameSuper::QueryInterface(aIID, aInstancePtr);
 }
 

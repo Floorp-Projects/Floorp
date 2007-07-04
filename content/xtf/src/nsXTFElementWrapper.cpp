@@ -110,33 +110,34 @@ NS_IMPL_RELEASE_INHERITED(nsXTFElementWrapper,nsXTFElementWrapperBase)
 NS_IMETHODIMP
 nsXTFElementWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  nsresult rv;
-  
-  if(aIID.Equals(NS_GET_IID(nsIClassInfo))) {
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
+  if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
     *aInstancePtr = NS_STATIC_CAST(nsIClassInfo*, this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  else if(aIID.Equals(NS_GET_IID(nsIXTFElementWrapper))) {
+  if (aIID.Equals(NS_GET_IID(nsIXTFElementWrapper))) {
     *aInstancePtr = NS_STATIC_CAST(nsIXTFElementWrapper*, this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  else if (NS_SUCCEEDED(rv = nsXTFElementWrapperBase::QueryInterface(aIID, aInstancePtr))) {
+
+  nsresult rv = nsXTFElementWrapperBase::QueryInterface(aIID, aInstancePtr);
+  if (NS_SUCCEEDED(rv)) {
     return rv;
   }
-  else {
-    // try to get get the interface from our wrapped element:
-    nsCOMPtr<nsISupports> inner;
-    QueryInterfaceInner(aIID, getter_AddRefs(inner));
 
-    if (inner) {
-      rv = NS_NewXTFInterfaceAggregator(aIID, inner,
-                                        NS_STATIC_CAST(nsIContent*, this),
-                                        aInstancePtr);
+  // try to get get the interface from our wrapped element:
+  nsCOMPtr<nsISupports> inner;
+  QueryInterfaceInner(aIID, getter_AddRefs(inner));
 
-      return rv;
-    }
+  if (inner) {
+    rv = NS_NewXTFInterfaceAggregator(aIID, inner,
+                                      NS_STATIC_CAST(nsIContent*, this),
+                                      aInstancePtr);
+
+    return rv;
   }
 
   return NS_ERROR_NO_INTERFACE;

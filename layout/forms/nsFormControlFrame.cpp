@@ -66,14 +66,13 @@ nsFormControlFrame::Destroy()
 NS_IMETHODIMP
 nsFormControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
   if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
-    *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
+    *aInstancePtr = NS_STATIC_CAST(nsIFormControlFrame*, this);
     return NS_OK;
   }
+
   return nsLeafFrame::QueryInterface(aIID, aInstancePtr);
 }
 
