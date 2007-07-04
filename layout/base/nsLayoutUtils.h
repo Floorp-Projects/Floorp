@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Boris Zbarsky <bzbarsky@mit.edu> (original author)
  *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -91,13 +92,27 @@ public:
 
   /** 
    * Given a frame, search up the frame tree until we find an
-   * ancestor "Page" frame, if any.
+   * ancestor that (or the frame itself) is of type aFrameType, if any.
    *
-   * @param the frame to start at
+   * @param aFrame the frame to start at
+   * @param aFrameType the frame type to look for
+   * @return a frame of the given type or nsnull if no
+   *         such ancestor exists
+   */
+  static nsIFrame* GetClosestFrameOfType(nsIFrame* aFrame, nsIAtom* aFrameType);
+
+  /** 
+   * Given a frame, search up the frame tree until we find an
+   * ancestor that (or the frame itself) is a "Page" frame, if any.
+   *
+   * @param aFrame the frame to start at
    * @return a frame of type nsGkAtoms::pageFrame or nsnull if no
    *         such ancestor exists
    */
-  static nsIFrame* GetPageFrame(nsIFrame* aFrame);
+  static nsIFrame* GetPageFrame(nsIFrame* aFrame)
+  {
+    return GetClosestFrameOfType(aFrame, nsGkAtoms::pageFrame);
+  }
 
   /**
    * IsGeneratedContentFor returns PR_TRUE if aFrame is generated
