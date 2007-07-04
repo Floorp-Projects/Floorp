@@ -1062,9 +1062,9 @@ public:
                 }
                 PRInt32 advance = mAdvances[k]*appUnitsPerDevUnit;
                 WORD glyph = mGlyphs[k];
-                if (gfxFontGroup::IsInvisibleChar(mRangeString[offset])) {
-                    aRun->SetCharacterGlyph(runOffset, g.SetMissing());
-                } else if (missing) {
+                NS_ASSERTION(!gfxFontGroup::IsInvalidChar(mRangeString[offset]),
+                		     "invalid character detected");
+                if (missing) {
                     aRun->SetMissingGlyph(runOffset, mRangeString[offset]);
                 } else if (glyphCount == 1 && advance >= 0 &&
                     mOffsets[k].dv == 0 && mOffsets[k].du == 0 &&
