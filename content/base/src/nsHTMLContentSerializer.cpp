@@ -775,9 +775,8 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
 
   if (name == nsGkAtoms::script) {
     nsCOMPtr<nsIScriptElement> script = do_QueryInterface(aElement);
-    NS_ASSERTION(script, "What kind of weird script element is this?");
 
-    if (script->IsMalformed()) {
+    if (script && script->IsMalformed()) {
       // We're looking at a malformed script tag. This means that the end tag
       // was missing in the source. Imitate that here by not serializing the end
       // tag.
