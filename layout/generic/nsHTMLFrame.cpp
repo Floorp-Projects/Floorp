@@ -162,21 +162,16 @@ NS_NewCanvasFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMETHODIMP
 CanvasFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsIScrollPositionListener))) {
-    *aInstancePtr = (void*) ((nsIScrollPositionListener*) this);
+    *aInstancePtr = NS_STATIC_CAST(nsIScrollPositionListener*, this);
     return NS_OK;
   } 
-  
   if (aIID.Equals(NS_GET_IID(nsICanvasFrame))) {
-    *aInstancePtr = (void*) ((nsICanvasFrame*) this);
+    *aInstancePtr = NS_STATIC_CAST(nsICanvasFrame*, this);
     return NS_OK;
   } 
-  
 
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
 }

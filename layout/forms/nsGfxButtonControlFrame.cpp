@@ -190,16 +190,14 @@ NS_IMETHODIMP nsGfxButtonControlFrame::GetAccessible(nsIAccessible** aAccessible
 NS_IMETHODIMP
 nsGfxButtonControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  NS_ENSURE_ARG_POINTER(aInstancePtr);
+  NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsIAnonymousContentCreator))) {
     *aInstancePtr = NS_STATIC_CAST(nsIAnonymousContentCreator*, this);
-  }
-else {
-    return nsHTMLButtonControlFrame::QueryInterface(aIID, aInstancePtr);
+    return NS_OK;
   }
 
-  return NS_OK;
+  return nsHTMLButtonControlFrame::QueryInterface(aIID, aInstancePtr);
 }
 
 // Initially we hardcoded the default strings here.

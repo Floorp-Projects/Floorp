@@ -1094,9 +1094,7 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
 #define NS_HTML_CONTENT_INTERFACE_MAP_AMBIGOUS_BEGIN(_class, _base, _base_if) \
   NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)    \
   {                                                                           \
-    NS_ENSURE_ARG_POINTER(aInstancePtr);                                      \
-                                                                              \
-    *aInstancePtr = nsnull;                                                   \
+    NS_PRECONDITION(aInstancePtr, "null out param");                          \
                                                                               \
     nsresult rv;                                                              \
                                                                               \
@@ -1122,14 +1120,12 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
                                                         _base_if)             \
   NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)    \
   {                                                                           \
-    NS_ENSURE_ARG_POINTER(aInstancePtr);                                      \
+    NS_PRECONDITION(aInstancePtr, "null out param");                          \
                                                                               \
     if ( aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant)) ) {       \
       *aInstancePtr = &NS_CYCLE_COLLECTION_NAME(_class);                      \
       return NS_OK;                                                           \
     }                                                                         \
-                                                                              \
-    *aInstancePtr = nsnull;                                                   \
                                                                               \
     nsresult rv;                                                              \
                                                                               \

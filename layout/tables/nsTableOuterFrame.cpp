@@ -165,15 +165,13 @@ nsTableOuterFrame::~nsTableOuterFrame()
 {
 }
 
-nsresult nsTableOuterFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+NS_IMETHODIMP
+nsTableOuterFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aInstancePtr, "null out param");
 
-  if (aIID.Equals(NS_GET_IID(nsITableLayout))) 
-  { // note there is no addref here, frames are not addref'd
-    *aInstancePtr = (void*)(nsITableLayout*)this;
+  if (aIID.Equals(NS_GET_IID(nsITableLayout))) {
+    *aInstancePtr = NS_STATIC_CAST(nsITableLayout*, this);
     return NS_OK;
   }
 

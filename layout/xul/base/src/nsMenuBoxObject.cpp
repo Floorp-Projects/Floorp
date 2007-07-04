@@ -65,11 +65,10 @@ NS_IMPL_RELEASE(nsMenuBoxObject)
 NS_IMETHODIMP 
 nsMenuBoxObject::QueryInterface(REFNSIID iid, void** aResult)
 {
-  if (!aResult)
-    return NS_ERROR_NULL_POINTER;
-  
+  NS_PRECONDITION(aResult, "null out param");
+
   if (iid.Equals(NS_GET_IID(nsIMenuBoxObject))) {
-    *aResult = (nsIMenuBoxObject*)this;
+    *aResult = NS_STATIC_CAST(nsIMenuBoxObject*, this);
     NS_ADDREF(this);
     return NS_OK;
   }

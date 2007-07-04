@@ -510,25 +510,26 @@ nsFrame::~nsFrame()
 /////////////////////////////////////////////////////////////////////////////
 // nsISupports
 
-nsresult nsFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+NS_IMETHODIMP
+nsFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   NS_PRECONDITION(aInstancePtr, "null out param");
 
 #ifdef DEBUG
   if (aIID.Equals(NS_GET_IID(nsIFrameDebug))) {
-    *aInstancePtr = NS_STATIC_CAST(void*,NS_STATIC_CAST(nsIFrameDebug*,this));
+    *aInstancePtr = NS_STATIC_CAST(nsIFrameDebug*, this);
     return NS_OK;
   }
 #endif
 
   if (aIID.Equals(NS_GET_IID(nsIFrame)) ||
       aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = NS_STATIC_CAST(void*,NS_STATIC_CAST(nsIFrame*,this));
+    *aInstancePtr = NS_STATIC_CAST(nsIFrame*, this);
     return NS_OK;
   }
 
   *aInstancePtr = nsnull;
-  return NS_NOINTERFACE;
+  return NS_ERROR_NO_INTERFACE;
 }
 
 nsrefcnt nsFrame::AddRef(void)
