@@ -799,7 +799,7 @@ GetAttributeSet(nsIAccessible* aAccessible)
         if (State(aAccessible) & nsIAccessibleStates::STATE_HASPOPUP) {
           // There is no ATK state for haspopup, must use object attribute to expose the same info
           nsAutoString oldValueUnused;
-          attributes->SetStringProperty(NS_LITERAL_STRING("haspopup"), NS_LITERAL_STRING("true"),
+          attributes->SetStringProperty(NS_LITERAL_CSTRING("haspopup"), NS_LITERAL_STRING("true"),
                                         oldValueUnused);
         }
 
