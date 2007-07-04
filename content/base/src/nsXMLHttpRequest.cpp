@@ -1518,6 +1518,12 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   if (doc) {
     mPrincipal = doc->NodePrincipal();
   }
+  else {
+    nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+    if (secMan) {
+      secMan->GetSubjectPrincipal(getter_AddRefs(mPrincipal));
+    }
+  }
 
   // Ignore argument if method is GET, there is no point in trying to
   // upload anything
