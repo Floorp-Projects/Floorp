@@ -72,6 +72,9 @@ struct nsFindFrameHint
   nsFindFrameHint() : mPrimaryFrameForPrevSibling(nsnull) { }
 };
 
+typedef void (PR_CALLBACK nsLazyFrameConstructionCallback)
+             (nsIContent* aContent, nsIFrame* aFrame, void* aArg);
+
 class nsFrameConstructorState;
 class nsFrameConstructorSaveState;
   
@@ -121,6 +124,17 @@ public:
   nsresult ContentStatesChanged(nsIContent*     aContent1,
                                 nsIContent*     aContent2,
                                 PRInt32         aStateMask);
+
+  // Process the children of aContent and indicate that frames should be
+  // created for them. This is used for lazily built content such as that
+  // inside popups so that it is only created when the popup is opened.
+  // This method constructs the frames asynchronously.
+  // aCallback will be called with three arguments, the first is the value
+  // of aContent, the second is aContent's primary frame, and the third is
+  // the value of aArg.
+  nsresult AddLazyChildren(nsIContent* aContent,
+                           nsLazyFrameConstructionCallback* aCallback,
+                           void* aArg);
 
   // Should be called when a frame is going to be destroyed and
   // WillDestroyFrameTree hasn't been called yet.
@@ -1003,6 +1017,27 @@ public:
   friend class nsFrameConstructorState;
 
 private:
+
+  class LazyGenerateChildrenEvent;
+  friend class LazyGenerateChildrenEvent;
+
+  class LazyGenerateChildrenEvent : public nsRunnable {
+  public:
+    NS_DECL_NSIRUNNABLE
+    LazyGenerateChildrenEvent(nsIContent *aContent,
+                              nsIPresShell *aPresShell,
+                              nsLazyFrameConstructionCallback* aCallback,
+                              void* aArg)
+      : mContent(aContent), mPresShell(aPresShell), mCallback(aCallback), mArg(aArg)
+    {}
+
+  private:
+    nsCOMPtr<nsIContent> mContent;
+    nsCOMPtr<nsIPresShell> mPresShell;
+    nsLazyFrameConstructionCallback* mCallback;
+    void* mArg;
+  };
+
   nsIDocument*        mDocument;  // Weak ref
   nsIPresShell*       mPresShell; // Weak ref
 
