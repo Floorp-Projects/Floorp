@@ -59,7 +59,7 @@
                         xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction"/>
           </xul:hbox>
           <xul:hbox anonid="presentation-box" class="textbox-presentation-box" flex="1"
-                         onmousedown="focus();">
+                    onmousedown="focus();" hidden="true">
             <xul:scrollbox anonid="presentation" class="textbox-presentation" flex="1"
                            onoverflow="_contentIsCropped = true;"
                            onunderflow="_contentIsCropped = false;">
@@ -69,12 +69,7 @@
                 <xul:label anonid="domain" class="textbox-presentation-domain"/>
                 <xul:label anonid="port" class="textbox-presentation-port"/>
               </xul:hbox>
-              <xul:label anonid="directory" class="textbox-presentation-directory"/>
-              <xul:label anonid="fileBaseName" class="textbox-presentation-fileBaseName"/>
-              <xul:label anonid="fileExtension" class="textbox-presentation-fileExtension"/>
-              <xul:label anonid="param" class="textbox-presentation-param"/>
-              <xul:label anonid="query" class="textbox-presentation-query"/>
-              <xul:label anonid="ref" class="textbox-presentation-ref"/>
+              <xul:label anonid="path" class="textbox-presentation-path"/>
             </xul:scrollbox>
             <xul:label anonid="overflow-ellipsis" class="textbox-overflow-ellipsis"
                        value="&#8230;" hidden="true"/>
@@ -114,18 +109,12 @@
         this._subDomain = document.getAnonymousElementByAttribute(this, "anonid", "subdomain");
         this._domain = document.getAnonymousElementByAttribute(this, "anonid", "domain");
         this._port = document.getAnonymousElementByAttribute(this, "anonid", "port");
-        this._directory = document.getAnonymousElementByAttribute(this, "anonid", "directory");
-        this._fileBaseName = document.getAnonymousElementByAttribute(this, "anonid", "fileBaseName");
-        this._fileExtension = document.getAnonymousElementByAttribute(this, "anonid", "fileExtension");
-        this._param = document.getAnonymousElementByAttribute(this, "anonid", "param");
-        this._query = document.getAnonymousElementByAttribute(this, "anonid", "query");
-        this._ref = document.getAnonymousElementByAttribute(this, "anonid", "ref");
+        this._path = document.getAnonymousElementByAttribute(this, "anonid", "path");
         this._urlTooltip = document.getElementById("urlTooltip");
-        this._urlTooltipLabel = this._urlTooltip.getElementsByTagName("label")[0];
 
         this.inputField.controllers.insertControllerAt(0, this._copyCutController);
 
-        this.plain = true;
+        this._blendingTimers = [];
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -143,13 +132,12 @@
         <field name="_mouseover"/>
         <field name="_tooltipTimer"/>
         <field name="_tldService"/>
-        <field name="_plain"/>
+        <field name="_formatted"/>
       -->
-      <field name="_blendingTimers">[]</field>
 
-      <property name="plain" onget="return this._plain">
+      <property name="plain" onget="return !this._formatted">
         <setter><![CDATA[
-          this._plain = !!val;
+          this._formatted = !val;
           while (this._blendingTimers.length)
             clearTimeout(this._blendingTimers.pop());
           if (val) {
@@ -197,17 +185,6 @@
         ]]></setter>
       </property>
 
-      <method name="_decodeURI">
-        <body><![CDATA[
-          try {
-            // try to decode as UTF-8
-            for (var i = 0; i < arguments.length; i++)
-              arguments[i] = decodeURI(arguments[i]);
-          } catch(e) {}
-          return arguments.length > 1 ? arguments : arguments[0];
-        ]]></body>
-      </method>
-
       <method name="_syncValue">
         <parameter name="aValue"/>
         <body><![CDATA[
@@ -219,7 +196,6 @@
               this._uri = this._ioService.newURI(value, null, null);
               // next line throws if .host is not defined
               this._uri.host;
-              this._uri.QueryInterface(Components.interfaces.nsIURL);
             } catch(e) {
               this._uri = null;
             }
@@ -231,8 +207,14 @@
             return;
           }
 
-          if (!this._focused || aValue != null)
-            this.inputField.value = this._decodeURI(this._uri.spec);
+          if (!this._focused || aValue != null) {
+            value = this._uri.spec;
+            try {
+              // try to decode as UTF-8
+              value = decodeURI(value);
+            } catch(e) {}
+            this.inputField.value = value;
+          }
 
           this._protocol.setAttribute("value", this._uri.scheme + "://");
           this._protocolHidden = this._hideProtocols.indexOf(this._uri.scheme) > -1;
@@ -268,20 +250,12 @@
             this._domain.removeAttribute("value");
           }
 
-          [directory, fileBaseName, fileExtension, param, query, ref]
-            = this._decodeURI(this._uri.directory,
-                              this._uri.fileBaseName,
-                              this._uri.fileExtension,
-                              this._uri.param,
-                              this._uri.query,
-                              this._uri.ref);
-
-          this._directory.setAttribute("value", directory);
-          this._fileBaseName.setAttribute("value", fileBaseName);
-          this._fileExtension.setAttribute("value", fileExtension ? "." + fileExtension : "");
-          this._param.setAttribute("value", param ? ";" + param : "");
-          this._query.setAttribute("value", query ? "?" + query : "");
-          this._ref.setAttribute("value", ref ? "#" + ref : "");
+          var path = this._uri.path;
+          try {
+            // try to decode as UTF-8
+            path = decodeURI(path);
+          } catch(e) {}
+          this._path.setAttribute("value", path);
         ]]></body>
       </method>
 
@@ -355,8 +329,9 @@
             self._tooltipTimer = 0;
             var tooltipText = aCallback.apply(aObject);
             if (tooltipText) {
-              self._urlTooltipLabel.value = tooltipText;
-              self._urlTooltipLabel.crop = aCrop || "center";
+              var label = self._urlTooltip.firstChild;
+              label.value = tooltipText;
+              label.crop = aCrop || "center";
               var bO = self.boxObject;
               self._urlTooltip.maxWidth = bO.width;
               self._urlTooltip.showPopup(self, bO.screenX, bO.screenY + bO.height, "tooltip");
@@ -379,7 +354,30 @@
         ({
           urlbar: this,
           doCommand: function(aCommand) {
-            this.urlbar._copy(aCommand == "cmd_cut");
+            var urlbar = this.urlbar;
+            var start = urlbar.selectionStart;
+            var end = urlbar.selectionEnd;
+            if (start == end)
+              return;
+            var val;
+            if (start == 0 && end == urlbar.textLength) {
+              // if the entire value is selected and it's a valid URI, encode it
+              val = urlbar.value;
+              try {
+                val = urlbar._ioService.newURI(val, null, null).spec;
+              } catch(e) {}
+              if (aCommand == "cmd_cut")
+                urlbar.value = "";
+            } else {
+              val = urlbar.value.substring(start, end);
+              if (aCommand == "cmd_cut") {
+                urlbar.value = urlbar.value.substring(0, start) + urlbar.value.substring(end);
+                urlbar.selectionStart = urlbar.selectionEnd = start;
+              }
+            }
+            Components.classes["@mozilla.org/widget/clipboardhelper;1"]
+                      .getService(Components.interfaces.nsIClipboardHelper)
+                      .copyString(val);
           },
           supportsCommand: function(aCommand) {
             switch (aCommand) {
@@ -395,35 +393,6 @@
           onEvent: function(aEventName) {}
         })
       ]]></field>
-
-      <method name="_copy">
-        <parameter name="aCut"/>
-        <body><![CDATA[
-          var start = this.selectionStart;
-          var end = this.selectionEnd;
-          if (start == end)
-            return;
-          var val;
-          if (start == 0 && end == this.textLength) {
-            // if the entire value is selected and it's a valid URI, encode it
-            val = this.value;
-            try {
-              val = this._ioService.newURI(val, null, null).spec;
-            } catch(e) {}
-            if (aCut)
-              this.value = "";
-          } else {
-            val = this.value.substring(start, end);
-            if (aCut) {
-              this.value = this.value.substring(0, start) + this.value.substring(end);
-              this.selectionStart = this.selectionEnd = start;
-            }
-          }
-          Components.classes["@mozilla.org/widget/clipboardhelper;1"]
-                    .getService(Components.interfaces.nsIClipboardHelper)
-                    .copyString(val);
-        ]]></body>
-      </method>
 
       <method name="observe">
         <parameter name="aSubject"/>
