@@ -440,6 +440,17 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
   if (msaaRole == ROLE_SYSTEM_PUSHBUTTON && (State(xpAccessible) & nsIAccessibleStates::STATE_HASPOPUP)) {
     msaaRole = ROLE_SYSTEM_BUTTONMENU;
   }
+  
+  // Special case, if there is a ROLE_ROW inside of a ROLE_TREE_TABLE, then call the MSAA role
+  // a ROLE_OUTLINEITEM for consistency and compatibility.
+  // We need this because ARIA has a role of "row" for both grid and treegrid
+  if (xpRole == nsIAccessibleRole::ROLE_ROW) {
+    nsCOMPtr<nsIAccessible> parent = GetParent();
+    if (parent && Role(parent) == nsIAccessibleRole::ROLE_TREE_TABLE) {
+      msaaRole = ROLE_SYSTEM_OUTLINEITEM;
+    }
+  }
+  
   // -- Try enumerated role
   if (msaaRole != USE_ROLE_STRING) {
     pvarRole->vt = VT_I4;
