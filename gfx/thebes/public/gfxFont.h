@@ -429,9 +429,11 @@ public:
     // Flags in the mask 0x0000F000 are reserved for per-platform fonts
     // Flags in the mask 0x00000FFF are set by the textrun creator.
     enum {
-        USER_TEXT_FLAGS     = 0xFFFF0000,
+        CACHE_TEXT_FLAGS    = 0xF0000000,
+        USER_TEXT_FLAGS     = 0x0FFF0000,
         PLATFORM_TEXT_FLAGS = 0x0000F000,
         TEXTRUN_TEXT_FLAGS  = 0x00000FFF,
+        SETTABLE_FLAGS      = CACHE_TEXT_FLAGS | USER_TEXT_FLAGS,
       
         /**
          * When set, the text string pointer used to create the text run
@@ -517,7 +519,7 @@ public:
  * gfxFont. The glyphs are associated with a string of source text, and the
  * gfxTextRun APIs take parameters that are offsets into that source text.
  * 
- * \r, \t and \n characters (for which gfxFontGroup::IsInvisibleChar returns
+ * \r, \t and \n characters (for which gfxFontGroup::IsInvalidChar returns
  * PR_TRUE) should be set to a CompressedGlyph with SetMissing() to make them
  * invisible and zero-width. 
  * 
@@ -795,12 +797,12 @@ public:
     void SetUserData(void *aUserData) { mUserData = aUserData; }
     PRUint32 GetFlags() const { return mFlags; }
     void SetFlagBits(PRUint32 aFlags) {
-      NS_ASSERTION(!(aFlags & ~gfxTextRunFactory::USER_TEXT_FLAGS),
+      NS_ASSERTION(!(aFlags & ~gfxTextRunFactory::SETTABLE_FLAGS),
                    "Only user flags should be mutable");
       mFlags |= aFlags;
     }
     void ClearFlagBits(PRUint32 aFlags) {
-      NS_ASSERTION(!(aFlags & ~gfxTextRunFactory::USER_TEXT_FLAGS),
+      NS_ASSERTION(!(aFlags & ~gfxTextRunFactory::SETTABLE_FLAGS),
                    "Only user flags should be mutable");
       mFlags &= ~aFlags;
     }
@@ -1168,10 +1170,9 @@ public:
     virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle) = 0;
 
     /**
-     * Tabs, CRs and LFs should be zero-width and invisible. They should
-     * break up shaping.
+     * Tabs, CRs and LFs should not be passed in to MakeTextRun.
      */
-    static PRBool IsInvisibleChar(PRUnichar ch) {
+    static PRBool IsInvalidChar(PRUnichar ch) {
         return ch == '\t' || ch == '\r' || ch == '\n';
     }
 

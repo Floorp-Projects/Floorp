@@ -687,13 +687,8 @@ SetGlyphsForCharacterGroup(ATSLayoutRecord *aGlyphs, PRUint32 aGlyphCount,
         }
     }
 
-    gfxTextRun::CompressedGlyph g;
-    if (gfxFontGroup::IsInvisibleChar(aString[firstOffset/2])) {
-        NS_ASSERTION(firstOffset == lastOffset,
-                     "Invisible character grouped with other characters?");
-        aRun->SetCharacterGlyph(aSegmentStart + firstOffset/2, g.SetMissing());
-        return;
-    }
+    NS_ASSERTION(!gfxFontGroup::IsInvalidChar(aString[firstOffset/2]),
+                 "Invalid char passed in");
 
     if (!allMatched) {
         for (i = firstOffset; i <= lastOffset; ++i) {
@@ -703,6 +698,7 @@ SetGlyphsForCharacterGroup(ATSLayoutRecord *aGlyphs, PRUint32 aGlyphCount,
         return;
     }
 
+    gfxTextRun::CompressedGlyph g;
     PRUint32 offset;
     for (offset = firstOffset + 2; offset <= lastOffset; offset += 2) {
         PRUint32 index = offset/2;
