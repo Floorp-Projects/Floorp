@@ -39,6 +39,7 @@
 #include "prtypes.h"
 #include "prmem.h"
 #include "nsString.h"
+#include "nsBidiUtils.h"
 
 #include "gfxTypes.h"
 
@@ -76,7 +77,7 @@ gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
                            const gfxFontStyle *fontStyle)
     : gfxFont(name, fontStyle),
       mFontStyle(fontStyle), mATSUFontID(fontID), mATSUStyle(nsnull),
-      mAdjustedSize(0)
+      mHasMirroring(PR_FALSE), mHasMirroringLookedUp(PR_FALSE), mAdjustedSize(0)
 {
     ATSFontRef fontRef = FMGetATSFontRefFromFont(fontID);
 
@@ -282,6 +283,23 @@ gfxAtsuiFont::GetMetrics()
 {
     return mMetrics;
 }
+
+PRBool 
+gfxAtsuiFont::HasMirroringInfo()
+{
+    if (!mHasMirroringLookedUp) {
+        OSStatus status;
+        ByteCount size;
+        
+        // 361695 - if the font has a 'prop' table, assume that ATSUI will handle glyph mirroring
+        status = ATSFontGetTable(GetATSUFontID(), 'prop', 0, 0, 0, &size);
+        mHasMirroring = (status == noErr);
+        mHasMirroringLookedUp = PR_TRUE;
+    }
+    
+    return mHasMirroring;
+}
+
 
 /**
  * Look up the font in the gfxFont cache. If we don't find it, create one.
@@ -949,6 +967,49 @@ DisableLigaturesInStyle(ATSUStyle aStyle)
     ATSUSetFontFeatures(aStyle, NS_ARRAY_LENGTH(selectors), types, selectors);
 }
 
+// 361695 - ATSUI only does glyph mirroring when the font contains a 'prop' table
+// with glyph mirroring info, the character mirroring has to be done manually in the 
+// fallback case.  Only used for RTL text runs.  The autoptr for the mirrored copy
+// is owned by the calling routine.
+
+// MirrorSubstring - Do Unicode mirroring on characters within a substring.  If mirroring 
+// needs to be done, copy the original string and change the ATSUI layout to use the mirrored copy.
+//
+//   @param layout      ATSUI layout for the entire text run
+//   @param mirrorStr   container used for mirror string, null until a mirrored character is found
+//   @param aString     original string
+//   @param aLength     length of the original string
+//   @param runStart    start offset of substring to be mirrored
+//   @param runLength   length of substring to be mirrored
+
+static void MirrorSubstring(ATSUTextLayout layout, nsAutoArrayPtr<PRUnichar>& mirroredStr,
+                                    const PRUnichar *aString, PRUint32 aLength,
+                                    UniCharArrayOffset runStart, UniCharCount runLength)
+{
+    UniCharArrayOffset  off;
+    
+    // do the mirroring manually!!
+    for (off = runStart; off < runStart + runLength; off++) {
+        PRUnichar  mirroredChar;
+        
+        mirroredChar = (PRUnichar) SymmSwap(aString[off]);
+        if (mirroredChar != aString[off]) {
+            // string contains characters that need to be mirrored
+            if (mirroredStr == NULL) {
+            
+                // copy the string
+                mirroredStr = new PRUnichar[aLength];
+                memcpy(mirroredStr, aString, sizeof(PRUnichar) * aLength);
+                
+                // adjust the layout
+                ATSUTextMoved(layout, mirroredStr);
+                
+            }
+            mirroredStr[off] = mirroredChar;
+        }
+    }
+}
+
 PRBool
 gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
                                const PRUnichar *aString, PRUint32 aLength,
@@ -1038,6 +1099,7 @@ gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
     UniCharArrayOffset runStart = headerChars;
     UniCharCount totalLength = runStart + aSegmentLength;
     UniCharCount runLength = aSegmentLength;
+    nsAutoArrayPtr<PRUnichar>  mirroredStr;
 
     //fprintf (stderr, "==== Starting font maching [string length: %d]\n", totalLength);
     while (runStart < totalLength) {
@@ -1045,16 +1107,27 @@ gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
         UniCharArrayOffset changedOffset;
         UniCharCount changedLength;
 
-        OSStatus status = ATSUMatchFontsToText (layout, runStart, runLength,
+        OSStatus status = ATSUMatchFontsToText(layout, runStart, runLength,
                                                 &substituteFontID, &changedOffset, &changedLength);
         if (status == noErr) {
-            //fprintf (stderr, "ATSUMatchFontsToText returned noErr\n");
-            // everything's good, finish up
+        
+            // glyphs exist for all characters in the [runStart, runStart + runLength) substring
+            
+            // in the RTL case, handle fallback mirroring
+            if (aRun->IsRightToLeft() && !atsuiFont->HasMirroringInfo()) {
+                MirrorSubstring(layout, mirroredStr, aString, aLength, runStart, runLength);
+            }
+            
+            // add a glyph run for the entire substring
             AddGlyphRun(aRun, atsuiFont, aSegmentStart + runStart - headerChars);
+            
             break;
-        } else if (status == kATSUFontsMatched) {
-            //fprintf (stderr, "ATSUMatchFontsToText returned kATSUFontsMatched: FID %d\n", substituteFontID);
 
+        } else if (status == kATSUFontsMatched) {
+        
+            // substitute font will be used in [changedOffset, changedOffset + changedLength)
+ 
+            // create a new style for the substitute font
             ATSUStyle subStyle;
             ATSUCreateStyle (&subStyle);
             ATSUCopyAttributes (mainStyle, subStyle);
@@ -1065,22 +1138,50 @@ gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
 
             ATSUSetAttributes (subStyle, 1, fontTags, fontArgSizes, fontArgs);
 
+            // apply the new style to the layout for the changed substring
+            ATSUSetRunStyle (layout, subStyle, changedOffset, changedLength);
+
+            // if needed, add a glyph run for [runStart, changedOffset) with the original font
             if (changedOffset > runStart) {
+            
+                // in the RTL case, handle fallback mirroring
+                if (aRun->IsRightToLeft() && !atsuiFont->HasMirroringInfo()) {
+                    MirrorSubstring(layout, mirroredStr, aString, aLength, runStart, 
+                                        changedOffset - runStart);
+                }
+                
                 AddGlyphRun(aRun, atsuiFont, aSegmentStart + runStart - headerChars);
             }
 
-            ATSUSetRunStyle (layout, subStyle, changedOffset, changedLength);
-
+            // add a glyph run for [changedOffset, changedOffset + changedLength) with the
+            // substituted font
             gfxAtsuiFont *font = FindFontFor(substituteFontID);
             if (font) {
+
+                // in the RTL case, handle fallback mirroring
+                if (aRun->IsRightToLeft() && !font->HasMirroringInfo()) {
+                    MirrorSubstring(layout, mirroredStr, aString, aLength, changedOffset, 
+                                        changedLength);
+                }
+                
                 AddGlyphRun(aRun, font, aSegmentStart + changedOffset - headerChars);
             }
             
             stylesToDispose.AppendElement(subStyle);
+            
         } else if (status == kATSUFontsNotMatched) {
+        
             //fprintf (stderr, "ATSUMatchFontsToText returned kATSUFontsNotMatched\n");
             /* I need to select the last resort font; how the heck do I do that? */
             // Record which font is associated with these glyphs, anyway
+
+            // hmmm, so was changedOffset set?  we appear to ignore it...
+            
+            // in the RTL case, handle fallback mirroring
+            if (aRun->IsRightToLeft() && !atsuiFont->HasMirroringInfo()) {
+                MirrorSubstring(layout, mirroredStr, aString, aLength, runStart, runLength);
+            }
+            
             AddGlyphRun(aRun, atsuiFont, aSegmentStart + runStart - headerChars);
             
             if (!closure.mUnmatchedChars) {
@@ -1093,6 +1194,7 @@ gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
                 memset(closure.mUnmatchedChars.get() + changedOffset - headerChars,
                        PR_TRUE, changedLength);
             }
+            
         }
 
         //fprintf (stderr, "total length: %d changedOffset: %d changedLength: %d\p=n",  runLength, changedOffset, changedLength);

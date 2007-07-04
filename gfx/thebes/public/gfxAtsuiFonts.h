@@ -69,12 +69,17 @@ public:
     virtual nsString GetUniqueName();
 
     virtual PRUint32 GetSpaceGlyph() { return mSpaceGlyph; }
+    
+    PRBool HasMirroringInfo();
 
 protected:
     const gfxFontStyle *mFontStyle;
 
     ATSUFontID mATSUFontID;
     ATSUStyle mATSUStyle;
+    
+    PRBool mHasMirroring;
+    PRBool mHasMirroringLookedUp;
 
     nsString mUniqueName;
 
