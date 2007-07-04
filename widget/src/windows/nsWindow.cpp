@@ -756,15 +756,14 @@ void nsWindow::GlobalMsgWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 //-------------------------------------------------------------------------
 NS_IMPL_ADDREF(nsWindow)
 NS_IMPL_RELEASE(nsWindow)
-NS_IMETHODIMP nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+NS_IMETHODIMP
+nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsIKBStateControl))) {
-    *aInstancePtr = (void*) ((nsIKBStateControl*)this);
-    NS_ADDREF((nsBaseWidget*)this);
+    *aInstancePtr = NS_STATIC_CAST(nsIKBStateControl*, this);
+    NS_ADDREF(NS_STATIC_CAST(nsBaseWidget*, this));
     return NS_OK;
   }
 

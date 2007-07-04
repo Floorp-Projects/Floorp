@@ -79,17 +79,16 @@ nsLegendFrame::Destroy()
 
 // Frames are not refcounted, no need to AddRef
 NS_IMETHODIMP
-nsLegendFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
+nsLegendFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  NS_PRECONDITION(aInstancePtrResult, "null pointer");
-  if (NS_UNLIKELY(!aInstancePtrResult)) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
   if (aIID.Equals(kLegendFrameCID)) {
-    *aInstancePtrResult = this;
+    *aInstancePtr = this;
     return NS_OK;
   }
-  return nsAreaFrame::QueryInterface(aIID, aInstancePtrResult);
+
+  return nsAreaFrame::QueryInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP 

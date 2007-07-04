@@ -380,21 +380,21 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
 NS_IMETHODIMP
 nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
   if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
-    *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
+    *aInstancePtr = NS_STATIC_CAST(nsIFormControlFrame*, this);
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsIListControlFrame))) {
-    *aInstancePtr = (void *)((nsIListControlFrame*)this);
+    *aInstancePtr = NS_STATIC_CAST(nsIListControlFrame*, this);
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsISelectControlFrame))) {
-    *aInstancePtr = (void *)((nsISelectControlFrame*)this);
+    *aInstancePtr = NS_STATIC_CAST(nsISelectControlFrame*, this);
     return NS_OK;
   }
+
   return nsHTMLScrollFrame::QueryInterface(aIID, aInstancePtr);
 }
 

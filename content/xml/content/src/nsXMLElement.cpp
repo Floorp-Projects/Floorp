@@ -67,8 +67,7 @@ nsXMLElement::nsXMLElement(nsINodeInfo *aNodeInfo)
 NS_IMETHODIMP 
 nsXMLElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  NS_ENSURE_ARG_POINTER(aInstancePtr);
-  *aInstancePtr = nsnull;
+  NS_PRECONDITION(aInstancePtr, "null out param");
 
   nsresult rv = nsGenericElement::QueryInterface(aIID, aInstancePtr);
 

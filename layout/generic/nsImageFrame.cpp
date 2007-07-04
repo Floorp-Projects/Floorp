@@ -188,28 +188,14 @@ nsImageFrame::~nsImageFrame()
 NS_IMETHODIMP
 nsImageFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  NS_ENSURE_ARG_POINTER(aInstancePtr);
-  *aInstancePtr = nsnull;
-
-#ifdef DEBUG
-  if (aIID.Equals(NS_GET_IID(nsIFrameDebug))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIFrameDebug*,this);
-    return NS_OK;
-  }
-#endif
+  NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsIImageFrame))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIImageFrame*,this);
-    return NS_OK;
-  } else if (aIID.Equals(NS_GET_IID(nsIFrame))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIFrame*,this);
-    return NS_OK;
-  } else if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIImageFrame*,this);
+    *aInstancePtr = NS_STATIC_CAST(nsIImageFrame*, this);
     return NS_OK;
   }
 
-  return NS_NOINTERFACE;
+  return ImageFrameSuper::QueryInterface(aIID, aInstancePtr);
 }
 
 #ifdef ACCESSIBILITY

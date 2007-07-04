@@ -331,13 +331,13 @@ NS_IMETHODIMP
 nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   NS_PRECONDITION(aInstancePtr, "null out param");
+
   if (aIID.Equals(kBlockFrameCID)) {
     *aInstancePtr = NS_STATIC_CAST(void*, NS_STATIC_CAST(nsBlockFrame*, this));
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsILineIterator)) ||
-      aIID.Equals(NS_GET_IID(nsILineIteratorNavigator)))
-  {
+      aIID.Equals(NS_GET_IID(nsILineIteratorNavigator))) {
     nsLineIterator* it = new nsLineIterator;
     if (!it) {
       *aInstancePtr = nsnull;
@@ -348,13 +348,14 @@ nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     nsresult rv = it->Init(mLines,
                            visibility->mDirection == NS_STYLE_DIRECTION_RTL);
     if (NS_FAILED(rv)) {
+      *aInstancePtr = nsnull;
       NS_RELEASE(it);
       return rv;
     }
-    *aInstancePtr = NS_STATIC_CAST(void*,
-            NS_STATIC_CAST(nsILineIteratorNavigator*, it));
+    *aInstancePtr = NS_STATIC_CAST(nsILineIteratorNavigator*, it);
     return NS_OK;
   }
+
   return nsBlockFrameSuper::QueryInterface(aIID, aInstancePtr);
 }
 

@@ -3384,7 +3384,8 @@ nsGenericElement::PostQueryInterface(REFNSIID aIID, void** aInstancePtr)
                                                                 aInstancePtr);
   }
 
-  return NS_NOINTERFACE;
+  *aInstancePtr = nsnull;
+  return NS_ERROR_NO_INTERFACE;
 }
 
 //----------------------------------------------------------------------

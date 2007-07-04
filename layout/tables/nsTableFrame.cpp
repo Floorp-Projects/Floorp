@@ -199,19 +199,17 @@ nsTableFrame::nsTableFrame(nsStyleContext* aContext)
 NS_IMPL_ADDREF_INHERITED(nsTableFrame, nsHTMLContainerFrame)
 NS_IMPL_RELEASE_INHERITED(nsTableFrame, nsHTMLContainerFrame)
 
-nsresult nsTableFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+NS_IMETHODIMP
+nsTableFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsITableLayout))) 
-  { // note there is no addref here, frames are not addref'd
-    *aInstancePtr = (void*)(nsITableLayout*)this;
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
+  if (aIID.Equals(NS_GET_IID(nsITableLayout))) {
+    *aInstancePtr = NS_STATIC_CAST(nsITableLayout*, this);
     return NS_OK;
   }
-  else {
-    return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
-  }
+
+  return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP
