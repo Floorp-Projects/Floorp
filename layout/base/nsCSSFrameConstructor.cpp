@@ -8764,11 +8764,12 @@ PRBool NotifyListBoxBody(nsPresContext*    aPresContext,
     aDocument->BindingManager()->ResolveTag(aContainer, &namespaceID);
 
   // Just ignore tree tags, anyway we don't create any frames for them.
-  if (tag == nsGkAtoms::treechildren ||
-      tag == nsGkAtoms::treeitem ||
-      tag == nsGkAtoms::treerow ||
-      (namespaceID == kNameSpaceID_XUL && aUseXBLForms &&
-       ShouldIgnoreSelectChild(aContainer)))
+  if (aContainer->GetParent() &&
+      (tag == nsGkAtoms::treechildren ||
+       tag == nsGkAtoms::treeitem ||
+       tag == nsGkAtoms::treerow ||
+       (namespaceID == kNameSpaceID_XUL && aUseXBLForms &&
+        ShouldIgnoreSelectChild(aContainer))))
     return PR_TRUE;
 
   return PR_FALSE;
