@@ -12,8 +12,14 @@
 
 <!ENTITY mnFile.label "Fil">
 <!ENTITY mnFile.accesskey "f">
-  <!ENTITY cmdShowOpenURLDialog.label "Inspiser en adresse ...">
+  <!ENTITY mnInspectContentDocument.label "Inspiser innholdsdokument">
+  <!ENTITY mnInspectContentDocument.accesskey "n">
+  <!ENTITY mnInspectChromeDocument.label "Inspiser chrome-dokument">
+  <!ENTITY mnInspectChromeDocument.accesskey "s">
+  <!ENTITY cmdShowOpenURLDialog.label "Inspiser adresse ...">
   <!ENTITY cmdShowOpenURLDialog.accesskey "I">
+  <!ENTITY cmdSave.label "Lagre DOM som ...">
+  <!ENTITY cmdSave.accesskey "L">
   <!ENTITY cmdClose.label "Lukk">
   <!ENTITY cmdClose.accesskey "L">
   <!ENTITY cmdExit.label "Avslutt">
@@ -58,4 +64,5 @@
 
 <!ENTITY inspectNewWindow.label "Inspiser i nytt vindu">
 
+<!ENTITY saveCmd.key "S">
 <!ENTITY closeCmd.key "W">
