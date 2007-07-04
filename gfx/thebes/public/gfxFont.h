@@ -155,10 +155,9 @@ public:
     ~gfxFontCache() {
         // Expire everything that has a zero refcount, so we don't leak them.
         AgeAllGenerations();
-        // All fonts should be gone. Otherwise we will crash releasing them
-        // later, since this cache no longer exists
-        NS_ASSERTION(mFonts.Count() == 0,
-                     "Fonts still alive while shutting down gfxFontCache");
+        // All fonts should be gone.
+        NS_WARN_IF_FALSE(mFonts.Count() == 0,
+                         "Fonts still alive while shutting down gfxFontCache");
         // Note that we have to delete everything through the expiration
         // tracker, since there might be fonts not in the hashtable but in
         // the tracker.
