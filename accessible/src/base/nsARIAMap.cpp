@@ -65,8 +65,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {"alertdialog", nsIAccessibleRole::ROLE_ALERT, eNameOkFromChildren, eNoValue, kNoReqStates, kEndEntry},
   {"application", nsIAccessibleRole::ROLE_APPLICATION, eNameLabelOrTitle, eNoValue, kNoReqStates, kEndEntry},
   {"button", nsIAccessibleRole::ROLE_PUSHBUTTON, eNameOkFromChildren, eNoValue, kNoReqStates,
-            {"pressed", kBoolState, nsIAccessibleStates::STATE_PRESSED},
-            {"haspopup", kBoolState, nsIAccessibleStates::STATE_HASPOPUP}, kEndEntry},
+            {"pressed", kBoolState, nsIAccessibleStates::STATE_PRESSED}, kEndEntry},
   {"buttonsubmit", nsIAccessibleRole::ROLE_PUSHBUTTON, eNameOkFromChildren, eNoValue, nsIAccessibleStates::STATE_DEFAULT, kEndEntry},
   {"buttoncancel", nsIAccessibleRole::ROLE_PUSHBUTTON, eNameOkFromChildren, eNoValue, kNoReqStates, kEndEntry},
   {"checkbox", nsIAccessibleRole::ROLE_CHECKBUTTON, eNameOkFromChildren, eNoValue, nsIAccessibleStates::STATE_CHECKABLE,
@@ -113,7 +112,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {"menu", nsIAccessibleRole::ROLE_MENUPOPUP, eNameLabelOrTitle, eNoValue, kNoReqStates, kEndEntry},
   {"menubar", nsIAccessibleRole::ROLE_MENUBAR, eNameLabelOrTitle, eNoValue, kNoReqStates, kEndEntry},
   {"menuitem", nsIAccessibleRole::ROLE_MENUITEM, eNameOkFromChildren, eNoValue, kNoReqStates,
-            {"haspopup", kBoolState, nsIAccessibleStates::STATE_HASPOPUP},
             {"checked", kBoolState, nsIAccessibleStates::STATE_CHECKED | nsIAccessibleStates::STATE_CHECKABLE},
             {"checked", "mixed", nsIAccessibleStates::STATE_MIXED},
             {"checked", "false", nsIAccessibleStates::STATE_CHECKABLE}, kEndEntry},
@@ -155,8 +153,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {"textarea", nsIAccessibleRole::ROLE_ENTRY, eNameLabelOrTitle, eHasValueMinMax, kNoReqStates,
             {"readonly", kBoolState, nsIAccessibleStates::STATE_READONLY}, kEndEntry}, // XXX nsIAccessibleStates::EXT_STATE_MULTI_LINE supported in code
   {"textfield", nsIAccessibleRole::ROLE_ENTRY, eNameLabelOrTitle, eHasValueMinMax, kNoReqStates,
-            {"readonly", kBoolState, nsIAccessibleStates::STATE_READONLY}, 
-            {"haspopup", kBoolState, nsIAccessibleStates::STATE_HASPOPUP}, kEndEntry}, // XXX nsIAccessibleStates::EXT_STATE_SINGLE_LINE supported in code
+            {"readonly", kBoolState, nsIAccessibleStates::STATE_READONLY}, kEndEntry}, // XXX nsIAccessibleStates::EXT_STATE_SINGLE_LINE supported in code
   {"toolbar", nsIAccessibleRole::ROLE_TOOLBAR, eNameLabelOrTitle, eNoValue, kNoReqStates, kEndEntry},
   {"tree", nsIAccessibleRole::ROLE_OUTLINE, eNameLabelOrTitle, eNoValue, kNoReqStates,
             {"readonly", kBoolState, nsIAccessibleStates::STATE_READONLY},
@@ -184,7 +181,10 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
 nsStateMapEntry nsARIAMap::gWAIUnivStateMap[] = {
   {"disabled", kBoolState, nsIAccessibleStates::STATE_UNAVAILABLE},
   {"required", kBoolState, nsIAccessibleStates::STATE_REQUIRED},
-  {"invalid", kBoolState, nsIAccessibleStates::STATE_INVALID},
+  {"invalid",  kBoolState, nsIAccessibleStates::STATE_INVALID},
+  {"haspopup", kBoolState, nsIAccessibleStates::STATE_HASPOPUP},
+  {"busy",     "true",     nsIAccessibleStates::STATE_BUSY},
+  {"busy",     "error",    nsIAccessibleStates::STATE_INVALID},
   kEndEntry
 };
 
