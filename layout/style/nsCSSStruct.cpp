@@ -68,18 +68,6 @@ nsCSSFont::nsCSSFont(void)
   MOZ_COUNT_CTOR(nsCSSFont);
 }
 
-nsCSSFont::nsCSSFont(const nsCSSFont& aCopy)
-  : mFamily(aCopy.mFamily),
-    mStyle(aCopy.mStyle),
-    mVariant(aCopy.mVariant),
-    mWeight(aCopy.mWeight),
-    mSize(aCopy.mSize),
-    mSizeAdjust(aCopy.mSizeAdjust),
-    mStretch(aCopy.mStretch)
-{
-  MOZ_COUNT_CTOR(nsCSSFont);
-}
-
 nsCSSFont::~nsCSSFont(void)
 {
   MOZ_COUNT_DTOR(nsCSSFont);
@@ -132,21 +120,6 @@ nsCSSColor::nsCSSColor(void)
   MOZ_COUNT_CTOR(nsCSSColor);
 }
 
-nsCSSColor::nsCSSColor(const nsCSSColor& aCopy)
-  : mColor(aCopy.mColor),
-    mBackColor(aCopy.mBackColor),
-    mBackImage(aCopy.mBackImage),
-    mBackRepeat(aCopy.mBackRepeat),
-    mBackAttachment(aCopy.mBackAttachment),
-    mBackPosition(aCopy.mBackPosition),
-    mBackClip(aCopy.mBackClip),
-    mBackOrigin(aCopy.mBackOrigin),
-    mBackInlinePolicy(aCopy.mBackInlinePolicy)
-
-{
-  MOZ_COUNT_CTOR(nsCSSColor);
-}
-
 nsCSSColor::~nsCSSColor(void)
 {
   MOZ_COUNT_DTOR(nsCSSColor);
@@ -158,23 +131,6 @@ nsCSSText::nsCSSText(void)
   : mTextShadow(nsnull)
 {
   MOZ_COUNT_CTOR(nsCSSText);
-}
-
-nsCSSText::nsCSSText(const nsCSSText& aCopy)
-  : mWordSpacing(aCopy.mWordSpacing),
-    mLetterSpacing(aCopy.mLetterSpacing),
-    mVerticalAlign(aCopy.mVerticalAlign),
-    mTextTransform(aCopy.mTextTransform),
-    mTextAlign(aCopy.mTextAlign),
-    mTextIndent(aCopy.mTextIndent),
-    mDecoration(aCopy.mDecoration),
-    mTextShadow(nsnull),
-    mUnicodeBidi(aCopy.mUnicodeBidi),
-    mLineHeight(aCopy.mLineHeight),
-    mWhiteSpace(aCopy.mWhiteSpace)
-{
-  MOZ_COUNT_CTOR(nsCSSText);
-  CSS_IF_COPY(mTextShadow, nsCSSValueList);
 }
 
 nsCSSText::~nsCSSText(void)
@@ -263,27 +219,6 @@ nsCSSDisplay::nsCSSDisplay(void)
   MOZ_COUNT_CTOR(nsCSSDisplay);
 }
 
-nsCSSDisplay::nsCSSDisplay(const nsCSSDisplay& aCopy)
-  : mDirection(aCopy.mDirection),
-    mDisplay(aCopy.mDisplay),
-    mBinding(aCopy.mBinding),
-    mAppearance(aCopy.mAppearance),
-    mPosition(aCopy.mPosition),
-    mFloat(aCopy.mFloat),
-    mClear(aCopy.mClear),
-    mClip(aCopy.mClip),
-    mOverflowX(aCopy.mOverflowX),
-    mOverflowY(aCopy.mOverflowY),
-    mVisibility(aCopy.mVisibility),
-    mOpacity(aCopy.mOpacity),
-    // temp fix for bug 24000
-    mBreakBefore(aCopy.mBreakBefore),
-    mBreakAfter(aCopy.mBreakAfter)
-    // end temp
-{
-  MOZ_COUNT_CTOR(nsCSSDisplay);
-}
-
 nsCSSDisplay::~nsCSSDisplay(void)
 {
   MOZ_COUNT_DTOR(nsCSSDisplay);
@@ -292,54 +227,6 @@ nsCSSDisplay::~nsCSSDisplay(void)
 // --- nsCSSMargin -----------------
 
 nsCSSMargin::nsCSSMargin(void)
-{
-  MOZ_COUNT_CTOR(nsCSSMargin);
-}
-
-nsCSSMargin::nsCSSMargin(const nsCSSMargin& aCopy)
-  : mMargin(aCopy.mMargin),
-    mMarginStart(aCopy.mMarginStart),
-    mMarginEnd(aCopy.mMarginEnd),
-    mMarginLeftLTRSource(aCopy.mMarginLeftLTRSource),
-    mMarginLeftRTLSource(aCopy.mMarginLeftRTLSource),
-    mMarginRightLTRSource(aCopy.mMarginRightLTRSource),
-    mMarginRightRTLSource(aCopy.mMarginRightRTLSource),
-    mPadding(aCopy.mPadding), 
-    mPaddingStart(aCopy.mPaddingStart),
-    mPaddingEnd(aCopy.mPaddingEnd),
-    mPaddingLeftLTRSource(aCopy.mPaddingLeftLTRSource),
-    mPaddingLeftRTLSource(aCopy.mPaddingLeftRTLSource),
-    mPaddingRightLTRSource(aCopy.mPaddingRightLTRSource),
-    mPaddingRightRTLSource(aCopy.mPaddingRightRTLSource),
-    mBorderWidth(aCopy.mBorderWidth),
-    mBorderStartWidth(aCopy.mBorderStartWidth),
-    mBorderEndWidth(aCopy.mBorderEndWidth),
-    mBorderLeftWidthLTRSource(aCopy.mBorderLeftWidthLTRSource),
-    mBorderLeftWidthRTLSource(aCopy.mBorderLeftWidthRTLSource),
-    mBorderRightWidthLTRSource(aCopy.mBorderRightWidthLTRSource),
-    mBorderRightWidthRTLSource(aCopy.mBorderRightWidthRTLSource),
-    mBorderColor(aCopy.mBorderColor),
-    mBorderStartColor(aCopy.mBorderStartColor),
-    mBorderEndColor(aCopy.mBorderEndColor),
-    mBorderLeftColorLTRSource(aCopy.mBorderLeftColorLTRSource),
-    mBorderLeftColorRTLSource(aCopy.mBorderLeftColorRTLSource),
-    mBorderRightColorLTRSource(aCopy.mBorderRightColorLTRSource),
-    mBorderRightColorRTLSource(aCopy.mBorderRightColorRTLSource),
-    mBorderColors(aCopy.mBorderColors),
-    mBorderStyle(aCopy.mBorderStyle),
-    mBorderStartStyle(aCopy.mBorderStartStyle),
-    mBorderEndStyle(aCopy.mBorderEndStyle),
-    mBorderLeftStyleLTRSource(aCopy.mBorderLeftStyleLTRSource),
-    mBorderLeftStyleRTLSource(aCopy.mBorderLeftStyleRTLSource),
-    mBorderRightStyleLTRSource(aCopy.mBorderRightStyleLTRSource),
-    mBorderRightStyleRTLSource(aCopy.mBorderRightStyleRTLSource),
-    mBorderRadius(aCopy.mBorderRadius),
-    mOutlineWidth(aCopy.mOutlineWidth),
-    mOutlineColor(aCopy.mOutlineColor),
-    mOutlineStyle(aCopy.mOutlineStyle),
-    mOutlineOffset(aCopy.mOutlineOffset),
-    mOutlineRadius(aCopy.mOutlineRadius),
-    mFloatEdge(aCopy.mFloatEdge)
 {
   MOZ_COUNT_CTOR(nsCSSMargin);
 }
@@ -356,20 +243,6 @@ nsCSSPosition::nsCSSPosition(void)
   MOZ_COUNT_CTOR(nsCSSPosition);
 }
 
-nsCSSPosition::nsCSSPosition(const nsCSSPosition& aCopy)
-  : mWidth(aCopy.mWidth),
-    mMinWidth(aCopy.mMinWidth),
-    mMaxWidth(aCopy.mMaxWidth),
-    mHeight(aCopy.mHeight),
-    mMinHeight(aCopy.mMinHeight),
-    mMaxHeight(aCopy.mMaxHeight),
-    mBoxSizing(aCopy.mBoxSizing),
-    mOffset(aCopy.mOffset),
-    mZIndex(aCopy.mZIndex)
-{
-  MOZ_COUNT_CTOR(nsCSSPosition);
-}
-
 nsCSSPosition::~nsCSSPosition(void)
 {
   MOZ_COUNT_DTOR(nsCSSPosition);
@@ -378,15 +251,6 @@ nsCSSPosition::~nsCSSPosition(void)
 // --- nsCSSList -----------------
 
 nsCSSList::nsCSSList(void)
-{
-  MOZ_COUNT_CTOR(nsCSSList);
-}
-
-nsCSSList::nsCSSList(const nsCSSList& aCopy)
-  : mType(aCopy.mType),
-    mImage(aCopy.mImage),
-    mPosition(aCopy.mPosition),
-    mImageRegion(aCopy.mImageRegion)
 {
   MOZ_COUNT_CTOR(nsCSSList);
 }
@@ -403,16 +267,6 @@ nsCSSTable::nsCSSTable(void)
   MOZ_COUNT_CTOR(nsCSSTable);
 }
 
-nsCSSTable::nsCSSTable(const nsCSSTable& aCopy)
-  : mBorderCollapse(aCopy.mBorderCollapse),
-    mBorderSpacing(aCopy.mBorderSpacing),
-    mCaptionSide(aCopy.mCaptionSide),
-    mEmptyCells(aCopy.mEmptyCells),
-    mLayout(aCopy.mLayout)
-{
-  MOZ_COUNT_CTOR(nsCSSTable);
-}
-
 nsCSSTable::~nsCSSTable(void)
 {
   MOZ_COUNT_DTOR(nsCSSTable);
@@ -425,18 +279,6 @@ nsCSSBreaks::nsCSSBreaks(void)
   MOZ_COUNT_CTOR(nsCSSBreaks);
 }
 
-nsCSSBreaks::nsCSSBreaks(const nsCSSBreaks& aCopy)
-  : mOrphans(aCopy.mOrphans),
-    mWidows(aCopy.mWidows),
-    mPage(aCopy.mPage),
-    // temp fix for bug 24000
-    //mPageBreakAfter(aCopy.mPageBreakAfter),
-    //mPageBreakBefore(aCopy.mPageBreakBefore),
-    mPageBreakInside(aCopy.mPageBreakInside)
-{
-  MOZ_COUNT_CTOR(nsCSSBreaks);
-}
-
 nsCSSBreaks::~nsCSSBreaks(void)
 {
   MOZ_COUNT_DTOR(nsCSSBreaks);
@@ -445,13 +287,6 @@ nsCSSBreaks::~nsCSSBreaks(void)
 // --- nsCSSPage -----------------
 
 nsCSSPage::nsCSSPage(void)
-{
-  MOZ_COUNT_CTOR(nsCSSPage);
-}
-
-nsCSSPage::nsCSSPage(const nsCSSPage& aCopy)
-  : mMarks(aCopy.mMarks),
-    mSize(aCopy.mSize)
 {
   MOZ_COUNT_CTOR(nsCSSPage);
 }
@@ -546,20 +381,6 @@ nsCSSContent::nsCSSContent(void)
   MOZ_COUNT_CTOR(nsCSSContent);
 }
 
-nsCSSContent::nsCSSContent(const nsCSSContent& aCopy)
-  : mContent(nsnull),
-    mCounterIncrement(nsnull),
-    mCounterReset(nsnull),
-    mMarkerOffset(aCopy.mMarkerOffset),
-    mQuotes(nsnull)
-{
-  MOZ_COUNT_CTOR(nsCSSContent);
-  CSS_IF_COPY(mContent, nsCSSValueList);
-  CSS_IF_COPY(mCounterIncrement, nsCSSCounterData);
-  CSS_IF_COPY(mCounterReset, nsCSSCounterData);
-  CSS_IF_COPY(mQuotes, nsCSSQuotes);
-}
-
 nsCSSContent::~nsCSSContent(void)
 {
   MOZ_COUNT_DTOR(nsCSSContent);
@@ -577,19 +398,6 @@ nsCSSUserInterface::nsCSSUserInterface(void)
   MOZ_COUNT_CTOR(nsCSSUserInterface);
 }
 
-nsCSSUserInterface::nsCSSUserInterface(const nsCSSUserInterface& aCopy)
-  : mUserInput(aCopy.mUserInput),
-    mUserModify(aCopy.mUserModify),
-    mUserSelect(aCopy.mUserSelect),
-    mUserFocus(aCopy.mUserFocus),
-    mCursor(nsnull),
-    mForceBrokenImageIcon(aCopy.mForceBrokenImageIcon),
-    mIMEMode(aCopy.mIMEMode)
-{
-  MOZ_COUNT_CTOR(nsCSSUserInterface);
-  CSS_IF_COPY(mCursor, nsCSSValueList);
-}
-
 nsCSSUserInterface::~nsCSSUserInterface(void)
 {
   MOZ_COUNT_DTOR(nsCSSUserInterface);
@@ -599,28 +407,6 @@ nsCSSUserInterface::~nsCSSUserInterface(void)
 // --- nsCSSAural -----------------
 
 nsCSSAural::nsCSSAural(void)
-{
-  MOZ_COUNT_CTOR(nsCSSAural);
-}
-
-nsCSSAural::nsCSSAural(const nsCSSAural& aCopy)
-  : mAzimuth(aCopy.mAzimuth),
-    mElevation(aCopy.mElevation),
-    mCueAfter(aCopy.mCueAfter),
-    mCueBefore(aCopy.mCueBefore),
-    mPauseAfter(aCopy.mPauseAfter),
-    mPauseBefore(aCopy.mPauseBefore),
-    mPitch(aCopy.mPitch),
-    mPitchRange(aCopy.mPitchRange),
-    mRichness(aCopy.mRichness),
-    mSpeak(aCopy.mSpeak),
-    mSpeakHeader(aCopy.mSpeakHeader),
-    mSpeakNumeral(aCopy.mSpeakNumeral),
-    mSpeakPunctuation(aCopy.mSpeakPunctuation),
-    mSpeechRate(aCopy.mSpeechRate),
-    mStress(aCopy.mStress),
-    mVoiceFamily(aCopy.mVoiceFamily),
-    mVolume(aCopy.mVolume)
 {
   MOZ_COUNT_CTOR(nsCSSAural);
 }
@@ -637,14 +423,6 @@ nsCSSXUL::nsCSSXUL(void)
   MOZ_COUNT_CTOR(nsCSSXUL);
 }
 
-nsCSSXUL::nsCSSXUL(const nsCSSXUL& aCopy)
-  : mBoxAlign(aCopy.mBoxAlign), mBoxDirection(aCopy.mBoxDirection),
-    mBoxFlex(aCopy.mBoxFlex), mBoxOrient(aCopy.mBoxOrient),
-    mBoxPack(aCopy.mBoxPack), mBoxOrdinal(aCopy.mBoxOrdinal)
-{
-  MOZ_COUNT_CTOR(nsCSSXUL);
-}
-
 nsCSSXUL::~nsCSSXUL(void)
 {
   MOZ_COUNT_DTOR(nsCSSXUL);
@@ -653,13 +431,6 @@ nsCSSXUL::~nsCSSXUL(void)
 // --- nsCSSColumn -----------------
 
 nsCSSColumn::nsCSSColumn(void)
-{
-  MOZ_COUNT_CTOR(nsCSSColumn);
-}
-
-nsCSSColumn::nsCSSColumn(const nsCSSColumn& aCopy)
-  : mColumnCount(aCopy.mColumnCount), mColumnWidth(aCopy.mColumnWidth),
-    mColumnGap(aCopy.mColumnGap)
 {
   MOZ_COUNT_CTOR(nsCSSColumn);
 }
@@ -675,39 +446,6 @@ nsCSSColumn::~nsCSSColumn(void)
 nsCSSSVG::nsCSSSVG(void) : mStrokeDasharray(nsnull)
 {
   MOZ_COUNT_CTOR(nsCSSSVG);
-}
-
-nsCSSSVG::nsCSSSVG(const nsCSSSVG& aCopy)
-    : mClipPath(aCopy.mClipPath),
-      mClipRule(aCopy.mClipRule),
-      mDominantBaseline(aCopy.mDominantBaseline),
-      mFill(aCopy.mFill),
-      mFillOpacity(aCopy.mFillOpacity),
-      mFillRule(aCopy.mFillRule),
-      mFilter(aCopy.mFilter),
-      mFloodColor(aCopy.mFloodColor),
-      mFloodOpacity(aCopy.mFloodOpacity),
-      mMarkerEnd(aCopy.mMarkerEnd),
-      mMarkerMid(aCopy.mMarkerMid),
-      mMarkerStart(aCopy.mMarkerStart),
-      mMask(aCopy.mMask),
-      mPointerEvents(aCopy.mPointerEvents),
-      mShapeRendering(aCopy.mShapeRendering),
-      mStopColor(aCopy.mStopColor),
-      mStopOpacity(aCopy.mStopOpacity),
-      mStroke(aCopy.mStroke),
-      mStrokeDasharray(nsnull),
-      mStrokeDashoffset(aCopy.mStrokeDashoffset),
-      mStrokeLinecap(aCopy.mStrokeLinecap),
-      mStrokeLinejoin(aCopy.mStrokeLinejoin),
-      mStrokeMiterlimit(aCopy.mStrokeMiterlimit),
-      mStrokeOpacity(aCopy.mStrokeOpacity),
-      mStrokeWidth(aCopy.mStrokeWidth),
-      mTextAnchor(aCopy.mTextAnchor),
-      mTextRendering(aCopy.mTextRendering)
-{
-  MOZ_COUNT_CTOR(nsCSSSVG);
-  CSS_IF_COPY(mStrokeDasharray, nsCSSValueList);
 }
 
 nsCSSSVG::~nsCSSSVG(void)
