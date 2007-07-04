@@ -347,8 +347,10 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
       case eCSSProperty_background_color:
       case eCSSProperty_border_top_color:
       case eCSSProperty_border_bottom_color:
-      case eCSSProperty_border_left_color:
-      case eCSSProperty_border_right_color:
+      case eCSSProperty_border_left_color_value:
+      case eCSSProperty_border_right_color_value:
+      case eCSSProperty_border_start_color_value:
+      case eCSSProperty_border_end_color_value:
       case eCSSProperty_outline_color: {
         // we can lookup the property in the ColorTable and then
         // get a string mapping the name
@@ -580,6 +582,8 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
     case eCSSProperty_border_right:
     case eCSSProperty_border_bottom:
     case eCSSProperty_border_left:
+    case eCSSProperty_border_start:
+    case eCSSProperty_border_end:
     case eCSSProperty_outline: {
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
@@ -603,7 +607,19 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
     case eCSSProperty_padding_left:
     case eCSSProperty_padding_right:
     case eCSSProperty_padding_start:
-    case eCSSProperty_padding_end: {
+    case eCSSProperty_padding_end:
+    case eCSSProperty_border_left_color:
+    case eCSSProperty_border_left_style:
+    case eCSSProperty_border_left_width:
+    case eCSSProperty_border_right_color:
+    case eCSSProperty_border_right_style:
+    case eCSSProperty_border_right_width:
+    case eCSSProperty_border_start_color:
+    case eCSSProperty_border_start_style:
+    case eCSSProperty_border_start_width:
+    case eCSSProperty_border_end_color:
+    case eCSSProperty_border_end_style:
+    case eCSSProperty_border_end_width: {
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
       NS_ASSERTION(subprops[3] == eCSSProperty_UNKNOWN,
@@ -1082,6 +1098,14 @@ case _prop: \
           } \
           break;
 
+#define NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE_AS(_condition, _prop, _propas, _index) \
+case _prop: \
+          if ((_condition) && _index) { \
+            AppendPropertyAndValueToString(property, _propas, aString); \
+            _index = 0; \
+          } \
+          break;
+
 void nsCSSDeclaration::PropertyIsSet(PRInt32 & aPropertyIndex, PRInt32 aIndex, PRUint32 & aSet, PRUint32 aValue) const
 {
   aPropertyIndex = aIndex + 1;
@@ -1098,6 +1122,8 @@ nsCSSDeclaration::ToString(nsAString& aString) const
   PRInt32 borderBottomWidth = 0, borderBottomStyle = 0, borderBottomColor = 0;
   PRInt32 borderLeftWidth = 0, borderLeftStyle = 0, borderLeftColor = 0;
   PRInt32 borderRightWidth = 0, borderRightStyle = 0, borderRightColor = 0;
+  PRInt32 borderStartWidth = 0, borderStartStyle = 0, borderStartColor = 0;
+  PRInt32 borderEndWidth = 0, borderEndStyle = 0, borderEndColor = 0;
   PRInt32 marginTop = 0,  marginBottom = 0,  marginLeft = 0,  marginRight = 0;
   PRInt32 paddingTop = 0, paddingBottom = 0, paddingLeft = 0, paddingRight = 0;
   PRInt32 bgColor = 0, bgImage = 0, bgRepeat = 0, bgAttachment = 0;
@@ -1117,11 +1143,17 @@ nsCSSDeclaration::ToString(nsAString& aString) const
       case eCSSProperty_border_bottom_width:
         PropertyIsSet(borderBottomWidth, index, borderPropertiesSet, B_BORDER_BOTTOM_WIDTH);
         break;
-      case eCSSProperty_border_left_width:
+      case eCSSProperty_border_left_width_value:
         PropertyIsSet(borderLeftWidth, index, borderPropertiesSet, B_BORDER_LEFT_WIDTH);
         break;
-      case eCSSProperty_border_right_width:
+      case eCSSProperty_border_right_width_value:
         PropertyIsSet(borderRightWidth, index, borderPropertiesSet, B_BORDER_RIGHT_WIDTH);
+        break;
+      case eCSSProperty_border_start_width_value:
+        borderStartWidth = index+1;
+        break;
+      case eCSSProperty_border_end_width_value:
+        borderEndWidth = index+1;
         break;
 
       case eCSSProperty_border_top_style:
@@ -1130,11 +1162,17 @@ nsCSSDeclaration::ToString(nsAString& aString) const
       case eCSSProperty_border_bottom_style:
         PropertyIsSet(borderBottomStyle, index, borderPropertiesSet, B_BORDER_BOTTOM_STYLE);
         break;
-      case eCSSProperty_border_left_style:
+      case eCSSProperty_border_left_style_value:
         PropertyIsSet(borderLeftStyle, index, borderPropertiesSet, B_BORDER_LEFT_STYLE);
         break;
-      case eCSSProperty_border_right_style:
+      case eCSSProperty_border_right_style_value:
         PropertyIsSet(borderRightStyle, index, borderPropertiesSet, B_BORDER_RIGHT_STYLE);
+        break;
+      case eCSSProperty_border_start_style_value:
+        borderStartStyle = index+1;
+        break;
+      case eCSSProperty_border_end_style_value:
+        borderEndStyle = index+1;
         break;
 
       case eCSSProperty_border_top_color:
@@ -1143,11 +1181,17 @@ nsCSSDeclaration::ToString(nsAString& aString) const
       case eCSSProperty_border_bottom_color:
         PropertyIsSet(borderBottomColor, index, borderPropertiesSet, B_BORDER_BOTTOM_COLOR);
         break;
-      case eCSSProperty_border_left_color:
+      case eCSSProperty_border_left_color_value:
         PropertyIsSet(borderLeftColor, index, borderPropertiesSet, B_BORDER_LEFT_COLOR);
         break;
-      case eCSSProperty_border_right_color:
+      case eCSSProperty_border_right_color_value:
         PropertyIsSet(borderRightColor, index, borderPropertiesSet, B_BORDER_RIGHT_COLOR);
+        break;
+      case eCSSProperty_border_start_color_value:
+        borderStartColor = index+1;
+        break;
+      case eCSSProperty_border_end_color_value:
+        borderEndColor = index+1;
         break;
 
       case eCSSProperty_margin_top:            marginTop     = index+1; break;
@@ -1247,6 +1291,16 @@ nsCSSDeclaration::ToString(nsAString& aString) const
 #ifdef MOZ_SVG
   TryMarkerShorthand(aString, markerEnd, markerMid, markerStart);
 #endif
+  // FIXME The order of the declarations should depend on the *-source
+  // properties.
+  if (borderStartWidth && borderStartStyle && borderStartColor &&
+      TryBorderSideShorthand(aString, eCSSProperty_border_start,
+                             borderStartWidth, borderStartStyle, borderStartColor))
+    borderStartWidth = borderStartStyle = borderStartColor = 0;
+  if (borderEndWidth && borderEndStyle && borderEndColor &&
+      TryBorderSideShorthand(aString, eCSSProperty_border_end,
+                             borderEndWidth, borderEndStyle, borderEndColor))
+    borderEndWidth = borderEndStyle = borderEndColor = 0;
 
   for (index = 0; index < count; index++) {
     nsCSSProperty property = OrderValueAt(index);
@@ -1254,30 +1308,48 @@ nsCSSDeclaration::ToString(nsAString& aString) const
 
       NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_TOP_STYLE,
                                                 eCSSProperty_border_top_style, borderTopStyle)
-      NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_LEFT_STYLE,
-                                                eCSSProperty_border_left_style, borderLeftStyle)
-      NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_RIGHT_STYLE,
-                                                eCSSProperty_border_right_style, borderRightStyle)
+      NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE_AS(finalBorderPropertiesToSet & B_BORDER_LEFT_STYLE,
+                                                   eCSSProperty_border_left_style_value,
+                                                   eCSSProperty_border_left_style, borderLeftStyle)
+      NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE_AS(finalBorderPropertiesToSet & B_BORDER_RIGHT_STYLE,
+                                                   eCSSProperty_border_right_style_value,
+                                                   eCSSProperty_border_right_style, borderRightStyle)
       NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_BOTTOM_STYLE,
                                                 eCSSProperty_border_bottom_style, borderBottomStyle)
+      NS_CASE_OUTPUT_PROPERTY_VALUE_AS(eCSSProperty_border_start_style_value,
+                                       eCSSProperty_border_start_style, borderStartStyle)
+      NS_CASE_OUTPUT_PROPERTY_VALUE_AS(eCSSProperty_border_end_style_value,
+                                       eCSSProperty_border_end_style, borderEndStyle)
 
       NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_TOP_COLOR,
                                                 eCSSProperty_border_top_color, borderTopColor)
-      NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_LEFT_COLOR,
-                                                eCSSProperty_border_left_color, borderLeftColor)
-      NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_RIGHT_COLOR,
-                                                eCSSProperty_border_right_color, borderRightColor)
+      NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE_AS(finalBorderPropertiesToSet & B_BORDER_LEFT_COLOR,
+                                                   eCSSProperty_border_left_color_value,
+                                                   eCSSProperty_border_left_color, borderLeftColor)
+      NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE_AS(finalBorderPropertiesToSet & B_BORDER_RIGHT_COLOR,
+                                                   eCSSProperty_border_right_color_value,
+                                                   eCSSProperty_border_right_color, borderRightColor)
       NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_BOTTOM_COLOR,
                                                 eCSSProperty_border_bottom_color, borderBottomColor)
+      NS_CASE_OUTPUT_PROPERTY_VALUE_AS(eCSSProperty_border_start_color_value,
+                                       eCSSProperty_border_start_color, borderStartColor)
+      NS_CASE_OUTPUT_PROPERTY_VALUE_AS(eCSSProperty_border_end_color_value,
+                                       eCSSProperty_border_end_color, borderEndColor)
 
       NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_TOP_WIDTH,
                                                 eCSSProperty_border_top_width, borderTopWidth)
-      NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_LEFT_WIDTH,
-                                                eCSSProperty_border_left_width, borderLeftWidth)
-      NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_RIGHT_WIDTH,
-                                                eCSSProperty_border_right_width, borderRightWidth)
+      NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE_AS(finalBorderPropertiesToSet & B_BORDER_LEFT_WIDTH,
+                                                   eCSSProperty_border_left_width_value,
+                                                   eCSSProperty_border_left_width, borderLeftWidth)
+      NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE_AS(finalBorderPropertiesToSet & B_BORDER_RIGHT_WIDTH,
+                                                   eCSSProperty_border_right_width_value,
+                                                   eCSSProperty_border_right_width, borderRightWidth)
       NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_BOTTOM_WIDTH,
                                                 eCSSProperty_border_bottom_width, borderBottomWidth)
+      NS_CASE_OUTPUT_PROPERTY_VALUE_AS(eCSSProperty_border_start_width_value,
+                                       eCSSProperty_border_start_width, borderStartWidth)
+      NS_CASE_OUTPUT_PROPERTY_VALUE_AS(eCSSProperty_border_end_width_value,
+                                       eCSSProperty_border_end_width, borderEndWidth)
 
       NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_margin_top, marginTop)
       NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_margin_bottom, marginBottom)
@@ -1316,6 +1388,18 @@ nsCSSDeclaration::ToString(nsAString& aString) const
       case eCSSProperty_padding_left_rtl_source:
       case eCSSProperty_padding_right_ltr_source:
       case eCSSProperty_padding_right_rtl_source:
+      case eCSSProperty_border_left_color_ltr_source:
+      case eCSSProperty_border_left_color_rtl_source:
+      case eCSSProperty_border_left_style_ltr_source:
+      case eCSSProperty_border_left_style_rtl_source:
+      case eCSSProperty_border_left_width_ltr_source:
+      case eCSSProperty_border_left_width_rtl_source:
+      case eCSSProperty_border_right_color_ltr_source:
+      case eCSSProperty_border_right_color_rtl_source:
+      case eCSSProperty_border_right_style_ltr_source:
+      case eCSSProperty_border_right_style_rtl_source:
+      case eCSSProperty_border_right_width_ltr_source:
+      case eCSSProperty_border_right_width_rtl_source:
         break;
 
       case eCSSProperty_margin_start_value:

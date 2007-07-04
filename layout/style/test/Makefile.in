@@ -66,7 +66,8 @@ css_properties.js: host_ListCSSProperties$(HOST_BIN_SUFFIX) css_properties_like_
 	./host_ListCSSProperties$(HOST_BIN_SUFFIX) > $@
 	cat $(srcdir)/css_properties_like_longhand.js >> $@
 
-_TEST_FILES = 	test_bug221428.html \
+_TEST_FILES =	test_bug74880.html \
+		test_bug221428.html \
 		test_bug302186.html \
 		test_bug319381.html \
 		test_bug365932.html \
