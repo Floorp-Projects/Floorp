@@ -1,4 +1,4 @@
-<!ENTITY Inspector.label "DOM-inspektør">
+<!ENTITY Inspector.label "DOM-inspeksjon">
 <!ENTITY Sidebar.label "Sidestolpe">
 <!ENTITY elementBlinking.label "Varsling">
 <!ENTITY blinkSelectedElement.label "Blink valgt element">
