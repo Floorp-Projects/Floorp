@@ -377,9 +377,11 @@
 
               // cf. listbox constructor:
               // select items according to their attributes
-              var els = this.getElementsByAttribute("selected", "true");
-              for (i = 0; i < els.length; i++)
-                this.selectedItems.push(els[i]);
+              var children = this.children;
+              for (var i = 0; i < children.length; ++i) {
+                if (children[i].getAttribute("selected") == "true")
+                  this.selectedItems.push(children[i]);
+              }
             }
 
             if (this.selType != "multiple" && this.selectedCount == 0)
