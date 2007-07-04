@@ -337,7 +337,8 @@ nsSVGElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify)
 
   PRBool hasListeners = aNotify &&
     nsContentUtils::HasMutationListeners(this,
-                                         NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
+                                         NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
+                                         this);
 
   // There's no point in comparing the stylerule pointers since we're always
   // getting a new stylerule here. And we can't compare the stringvalues of
@@ -639,7 +640,8 @@ nsSVGElement::DidModifySVGObservable(nsISVGValue* aObservable,
   PRBool modification = PR_FALSE;
   PRBool hasListeners =
     nsContentUtils::HasMutationListeners(this,
-                                         NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
+                                         NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
+                                         this);
 
   if (hasListeners || IsInDoc()) {
     modification = !!mAttrsAndChildren.GetAttr(attrName->LocalName(),

@@ -507,12 +507,9 @@ public:
   virtual void OnPageShow(PRBool aPersisted);
   virtual void OnPageHide(PRBool aPersisted);
   
+  virtual void MayDispatchMutationEvent(nsINode* aTarget);
   virtual void WillDispatchMutationEvent(nsINode* aTarget);
   virtual void MutationEventDispatched(nsINode* aTarget);
-  virtual PRBool MutationEventBeingDispatched()
-  {
-    return (mSubtreeModifiedDepth > 0);
-  }
 
   // nsINode
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
