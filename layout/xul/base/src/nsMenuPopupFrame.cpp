@@ -474,7 +474,7 @@ LazyGeneratePopupDone(nsIContent* aPopup, nsIFrame* aFrame, void* aArg)
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm && popupFrame->IsMenu()) {
       nsCOMPtr<nsIContent> popup = aPopup;
-      PRBool selectFirstItem = (PRBool)aArg;
+      PRBool selectFirstItem = (PRBool)NS_PTR_TO_INT32(aArg);
       if (selectFirstItem) {
         nsMenuFrame* next = pm->GetNextMenuItem(popupFrame, nsnull, PR_TRUE);
         popupFrame->SetCurrentMenuItem(next);
@@ -516,7 +516,7 @@ nsMenuPopupFrame::ShowPopup(PRBool aIsContextMenu, PRBool aSelectFirstItem)
     // frame constructor to build them
     if (mFrames.IsEmpty() && !mGeneratedChildren) {
       PresContext()->PresShell()->FrameConstructor()->
-        AddLazyChildren(mContent, LazyGeneratePopupDone, (void *)aSelectFirstItem);
+        AddLazyChildren(mContent, LazyGeneratePopupDone, NS_INT32_TO_PTR(aSelectFirstItem));
     }
     else {
       hasChildren = PR_TRUE;
