@@ -1005,11 +1005,6 @@ nsBlockReflowState::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList, PRB
       NS_ASSERTION(placed || !aForceFit,
                    "If we're in force-fit mode, we should have placed the float");
 
-      // XXX We could deal with this situation better by breaking before
-      // the associated placeholder
-      NS_WARN_IF_FALSE(NS_FRAME_IS_TRUNCATED(reflowStatus) && aForceFit,
-                       "This situation currently leads to data not printing");
-
       if (!placed || (NS_FRAME_IS_TRUNCATED(reflowStatus) && !aForceFit)) {
         // return before processing all of the floats, since the line will be pushed.
         return PR_FALSE;
@@ -1020,6 +1015,11 @@ nsBlockReflowState::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList, PRB
         if (NS_FAILED(rv)) 
           return PR_FALSE;
       } else {
+        // XXX We could deal with truncated frames better by breaking before
+        // the associated placeholder
+        NS_WARN_IF_FALSE(!NS_FRAME_IS_TRUNCATED(reflowStatus),
+                         "This situation currently leads to data not printing");
+
         // Float is complete. We need to delete any leftover placeholders now.
         nsIFrame* nextPlaceholder = fc->mPlaceholder->GetNextInFlow();
         if (nextPlaceholder) {
