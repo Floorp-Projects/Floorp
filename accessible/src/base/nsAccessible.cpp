@@ -2078,7 +2078,8 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
       attributes->SetStringProperty(NS_LITERAL_CSTRING("xml-roles"), xmlRole, oldValueUnused);          
     }
 
-    char *ariaProperties[] = { "live", "atomic", "relevant", "datatype", "level", "posinset", "setsize", "sort" };
+    char *ariaProperties[] = { "live", "channel", "atomic", "relevant", "datatype", "level",
+                               "posinset", "setsize", "sort", "grab", "dropeffect"};
 
     for (PRUint32 index = 0; index < NS_ARRAY_LENGTH(ariaProperties); index ++) {
       nsAutoString value;
