@@ -409,7 +409,8 @@ nsGenericDOMDataNode::SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
 
   PRBool haveMutationListeners = aNotify &&
     nsContentUtils::HasMutationListeners(this,
-      NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED);
+      NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED,
+      this);
 
   nsCOMPtr<nsIAtom> oldValue;
   if (haveMutationListeners) {

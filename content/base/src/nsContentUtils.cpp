@@ -2978,18 +2978,15 @@ nsContentUtils::HasNonEmptyAttr(nsIContent* aContent, PRInt32 aNameSpaceID,
 /* static */
 PRBool
 nsContentUtils::HasMutationListeners(nsINode* aNode,
-                                     PRUint32 aType)
+                                     PRUint32 aType,
+                                     nsINode* aTargetForSubtreeModified)
 {
   nsIDocument* doc = aNode->GetOwnerDoc();
   if (!doc) {
     return PR_FALSE;
   }
 
-  // To batch DOMSubtreeModified properly, all mutation events should be
-  // processed if one is being processed already.
-  if (doc->MutationEventBeingDispatched()) {
-    return PR_TRUE;
-  }
+  doc->MayDispatchMutationEvent(aTargetForSubtreeModified);
 
   // global object will be null for documents that don't have windows.
   nsCOMPtr<nsPIDOMWindow> window;

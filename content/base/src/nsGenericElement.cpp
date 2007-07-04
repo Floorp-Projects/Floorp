@@ -2637,7 +2637,7 @@ nsGenericElement::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
     }
 
     if (nsContentUtils::HasMutationListeners(aKid,
-          NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
+          NS_EVENT_BITS_MUTATION_NODEINSERTED, container)) {
       nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEINSERTED);
       mutation.mRelatedNode = do_QueryInterface(container);
       mozAutoSubtreeModified subtree(container->GetOwnerDoc(), container);
@@ -2688,7 +2688,7 @@ nsGenericElement::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
   mozAutoSubtreeModified subtree(nsnull, nsnull);
   if (aNotify &&
       nsContentUtils::HasMutationListeners(aKid,
-        NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
+        NS_EVENT_BITS_MUTATION_NODEREMOVED, container)) {
     nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED);
     mutation.mRelatedNode = do_QueryInterface(container);
     subtree.UpdateTarget(container->GetOwnerDoc(), container);
@@ -3521,7 +3521,8 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   PRBool modification = PR_FALSE;
   PRBool hasListeners = aNotify &&
     nsContentUtils::HasMutationListeners(this,
-                                         NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
+                                         NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
+                                         this);
   
   // If we have no listeners and aNotify is false, we are almost certainly
   // coming from the content sink and will almost certainly have no previous
@@ -3813,7 +3814,8 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
   PRBool hasMutationListeners = aNotify &&
     nsContentUtils::HasMutationListeners(this,
-                                         NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
+                                         NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
+                                         this);
 
   // Grab the attr node if needed before we remove it from the attr map
   nsCOMPtr<nsIDOMAttr> attrNode;
