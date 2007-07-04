@@ -109,6 +109,41 @@ var gCSSProperties = {
 		other_values: [ "red green", "red #fc3", "#ff00cc" ],
 		invalid_values: [ "red none", "red inherit", "red, green" ]
 	},
+	"-moz-border-end": {
+		domProp: "MozBorderEnd",
+		inherited: false,
+		type: CSS_TYPE_TRUE_SHORTHAND,
+		subproperties: [ "-moz-border-end-color", "-moz-border-end-style", "-moz-border-end-width" ],
+		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
+		other_values: [ "solid", "thin", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
+		invalid_values: [ "5%" ]
+	},
+	"-moz-border-end-color": {
+		domProp: "MozBorderEndColor",
+		inherited: false,
+		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		initial_values: [ "currentColor" ],
+		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
+		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
+	},
+	"-moz-border-end-style": {
+		domProp: "MozBorderEndStyle",
+		inherited: false,
+		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		/* XXX hidden is sometimes the same as initial */
+		initial_values: [ "none" ],
+		other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
+		invalid_values: []
+	},
+	"-moz-border-end-width": {
+		domProp: "MozBorderEndWidth",
+		inherited: false,
+		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		prerequisites: { "-moz-border-end-style": "solid" },
+		initial_values: [ "medium", "3px" ],
+		other_values: [ "thin", "thick", "1px", "2em" ],
+		invalid_values: [ "5%" ]
+	},
 	"-moz-border-left-colors": {
 		domProp: "MozBorderLeftColors",
 		inherited: false,
@@ -165,6 +200,41 @@ var gCSSProperties = {
 		initial_values: [ "none" ],
 		other_values: [ "red green", "red #fc3", "#ff00cc" ],
 		invalid_values: [ "red none", "red inherit", "red, green" ]
+	},
+	"-moz-border-start": {
+		domProp: "MozBorderStart",
+		inherited: false,
+		type: CSS_TYPE_TRUE_SHORTHAND,
+		subproperties: [ "-moz-border-start-color", "-moz-border-start-style", "-moz-border-start-width" ],
+		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
+		other_values: [ "solid", "thin", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
+		invalid_values: [ "5%" ]
+	},
+	"-moz-border-start-color": {
+		domProp: "MozBorderStartColor",
+		inherited: false,
+		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		initial_values: [ "currentColor" ],
+		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
+		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
+	},
+	"-moz-border-start-style": {
+		domProp: "MozBorderStartStyle",
+		inherited: false,
+		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		/* XXX hidden is sometimes the same as initial */
+		initial_values: [ "none" ],
+		other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
+		invalid_values: []
+	},
+	"-moz-border-start-width": {
+		domProp: "MozBorderStartWidth",
+		inherited: false,
+		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		prerequisites: { "-moz-border-start-style": "solid" },
+		initial_values: [ "medium", "3px" ],
+		other_values: [ "thin", "thick", "1px", "2em" ],
+		invalid_values: [ "5%" ]
 	},
 	"-moz-border-top-colors": {
 		domProp: "MozBorderTopColors",
@@ -528,7 +598,7 @@ var gCSSProperties = {
 	"border-left-color": {
 		domProp: "borderLeftColor",
 		inherited: false,
-		type: CSS_TYPE_LONGHAND,
+		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
 		initial_values: [ "currentColor" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
 		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
@@ -536,7 +606,7 @@ var gCSSProperties = {
 	"border-left-style": {
 		domProp: "borderLeftStyle",
 		inherited: false,
-		type: CSS_TYPE_LONGHAND,
+		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
 		/* XXX hidden is sometimes the same as initial */
 		initial_values: [ "none" ],
 		other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
@@ -545,7 +615,7 @@ var gCSSProperties = {
 	"border-left-width": {
 		domProp: "borderLeftWidth",
 		inherited: false,
-		type: CSS_TYPE_LONGHAND,
+		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
 		prerequisites: { "border-left-style": "solid" },
 		initial_values: [ "medium", "3px" ],
 		other_values: [ "thin", "thick", "1px", "2em" ],
@@ -563,7 +633,7 @@ var gCSSProperties = {
 	"border-right-color": {
 		domProp: "borderRightColor",
 		inherited: false,
-		type: CSS_TYPE_LONGHAND,
+		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
 		initial_values: [ "currentColor" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
 		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
@@ -571,7 +641,7 @@ var gCSSProperties = {
 	"border-right-style": {
 		domProp: "borderRightStyle",
 		inherited: false,
-		type: CSS_TYPE_LONGHAND,
+		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
 		/* XXX hidden is sometimes the same as initial */
 		initial_values: [ "none" ],
 		other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
@@ -580,7 +650,7 @@ var gCSSProperties = {
 	"border-right-width": {
 		domProp: "borderRightWidth",
 		inherited: false,
-		type: CSS_TYPE_LONGHAND,
+		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
 		prerequisites: { "border-right-style": "solid" },
 		initial_values: [ "medium", "3px" ],
 		other_values: [ "thin", "thick", "1px", "2em" ],

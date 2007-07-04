@@ -1245,17 +1245,29 @@ static const nsCSSProperty gBackgroundSubpropTable[] = {
 
 static const nsCSSProperty gBorderSubpropTable[] = {
   eCSSProperty_border_top_width,
-  eCSSProperty_border_right_width,
+  eCSSProperty_border_right_width_value,
+  eCSSProperty_border_right_width_ltr_source,
+  eCSSProperty_border_right_width_rtl_source,
   eCSSProperty_border_bottom_width,
-  eCSSProperty_border_left_width,
+  eCSSProperty_border_left_width_value,
+  eCSSProperty_border_left_width_ltr_source,
+  eCSSProperty_border_left_width_rtl_source,
   eCSSProperty_border_top_style,
-  eCSSProperty_border_right_style,
+  eCSSProperty_border_right_style_value,
+  eCSSProperty_border_right_style_ltr_source,
+  eCSSProperty_border_right_style_rtl_source,
   eCSSProperty_border_bottom_style,
-  eCSSProperty_border_left_style,
+  eCSSProperty_border_left_style_value,
+  eCSSProperty_border_left_style_ltr_source,
+  eCSSProperty_border_left_style_rtl_source,
   eCSSProperty_border_top_color,
-  eCSSProperty_border_right_color,
+  eCSSProperty_border_right_color_value,
+  eCSSProperty_border_right_color_ltr_source,
+  eCSSProperty_border_right_color_rtl_source,
   eCSSProperty_border_bottom_color,
-  eCSSProperty_border_left_color,
+  eCSSProperty_border_left_color_value,
+  eCSSProperty_border_left_color_ltr_source,
+  eCSSProperty_border_left_color_rtl_source,
   eCSSProperty_UNKNOWN
 };
 
@@ -1270,34 +1282,152 @@ static const nsCSSProperty gBorderBottomSubpropTable[] = {
 static const nsCSSProperty gBorderColorSubpropTable[] = {
   // Code relies on these being in top-right-bottom-left order.
   eCSSProperty_border_top_color,
-  eCSSProperty_border_right_color,
+  eCSSProperty_border_right_color_value,
   eCSSProperty_border_bottom_color,
-  eCSSProperty_border_left_color,
+  eCSSProperty_border_left_color_value,
+  // extras:
+  eCSSProperty_border_left_color_ltr_source,
+  eCSSProperty_border_left_color_rtl_source,
+  eCSSProperty_border_right_color_ltr_source,
+  eCSSProperty_border_right_color_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gMozBorderEndColorSubpropTable[] = {
+  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
+  eCSSProperty_border_end_color_value,
+  eCSSProperty_border_right_color_ltr_source,
+  eCSSProperty_border_left_color_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gBorderLeftColorSubpropTable[] = {
+  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
+  eCSSProperty_border_left_color_value,
+  eCSSProperty_border_left_color_ltr_source,
+  eCSSProperty_border_left_color_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gBorderRightColorSubpropTable[] = {
+  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
+  eCSSProperty_border_right_color_value,
+  eCSSProperty_border_right_color_ltr_source,
+  eCSSProperty_border_right_color_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gMozBorderStartColorSubpropTable[] = {
+  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
+  eCSSProperty_border_start_color_value,
+  eCSSProperty_border_left_color_ltr_source,
+  eCSSProperty_border_right_color_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gMozBorderEndSubpropTable[] = {
+  // nsCSSDeclaration.cpp output the subproperties in this order.
+  eCSSProperty_border_end_width_value,
+  eCSSProperty_border_end_style_value,
+  eCSSProperty_border_end_color_value,
+  // extras:
+  eCSSProperty_border_right_width_ltr_source,
+  eCSSProperty_border_left_width_rtl_source,
+  eCSSProperty_border_right_style_ltr_source,
+  eCSSProperty_border_left_style_rtl_source,
+  eCSSProperty_border_right_color_ltr_source,
+  eCSSProperty_border_left_color_rtl_source,
   eCSSProperty_UNKNOWN
 };
 
 static const nsCSSProperty gBorderLeftSubpropTable[] = {
   // nsCSSDeclaration.cpp outputs the subproperties in this order.
-  eCSSProperty_border_left_width,
-  eCSSProperty_border_left_style,
-  eCSSProperty_border_left_color,
+  eCSSProperty_border_left_width_value,
+  eCSSProperty_border_left_style_value,
+  eCSSProperty_border_left_color_value,
+  // extras:
+  eCSSProperty_border_left_width_ltr_source,
+  eCSSProperty_border_left_width_rtl_source,
+  eCSSProperty_border_left_style_ltr_source,
+  eCSSProperty_border_left_style_rtl_source,
+  eCSSProperty_border_left_color_ltr_source,
+  eCSSProperty_border_left_color_rtl_source,
   eCSSProperty_UNKNOWN
 };
 
 static const nsCSSProperty gBorderRightSubpropTable[] = {
   // nsCSSDeclaration.cpp outputs the subproperties in this order.
-  eCSSProperty_border_right_width,
-  eCSSProperty_border_right_style,
-  eCSSProperty_border_right_color,
+  eCSSProperty_border_right_width_value,
+  eCSSProperty_border_right_style_value,
+  eCSSProperty_border_right_color_value,
+  // extras:
+  eCSSProperty_border_right_width_ltr_source,
+  eCSSProperty_border_right_width_rtl_source,
+  eCSSProperty_border_right_style_ltr_source,
+  eCSSProperty_border_right_style_rtl_source,
+  eCSSProperty_border_right_color_ltr_source,
+  eCSSProperty_border_right_color_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gMozBorderStartSubpropTable[] = {
+  // nsCSSDeclaration.cpp outputs the subproperties in this order.
+  eCSSProperty_border_start_width_value,
+  eCSSProperty_border_start_style_value,
+  eCSSProperty_border_start_color_value,
+  // extras:
+  eCSSProperty_border_left_width_ltr_source,
+  eCSSProperty_border_right_width_rtl_source,
+  eCSSProperty_border_left_style_ltr_source,
+  eCSSProperty_border_right_style_rtl_source,
+  eCSSProperty_border_left_color_ltr_source,
+  eCSSProperty_border_right_color_rtl_source,
   eCSSProperty_UNKNOWN
 };
 
 static const nsCSSProperty gBorderStyleSubpropTable[] = {
   // Code relies on these being in top-right-bottom-left order.
   eCSSProperty_border_top_style,
-  eCSSProperty_border_right_style,
+  eCSSProperty_border_right_style_value,
   eCSSProperty_border_bottom_style,
-  eCSSProperty_border_left_style,
+  eCSSProperty_border_left_style_value,
+  // extras:
+  eCSSProperty_border_left_style_ltr_source,
+  eCSSProperty_border_left_style_rtl_source,
+  eCSSProperty_border_right_style_ltr_source,
+  eCSSProperty_border_right_style_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gBorderLeftStyleSubpropTable[] = {
+  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
+  eCSSProperty_border_left_style_value,
+  eCSSProperty_border_left_style_ltr_source,
+  eCSSProperty_border_left_style_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gBorderRightStyleSubpropTable[] = {
+  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
+  eCSSProperty_border_right_style_value,
+  eCSSProperty_border_right_style_ltr_source,
+  eCSSProperty_border_right_style_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gMozBorderStartStyleSubpropTable[] = {
+  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
+  eCSSProperty_border_start_style_value,
+  eCSSProperty_border_left_style_ltr_source,
+  eCSSProperty_border_right_style_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gMozBorderEndStyleSubpropTable[] = {
+  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
+  eCSSProperty_border_end_style_value,
+  eCSSProperty_border_right_style_ltr_source,
+  eCSSProperty_border_left_style_rtl_source,
   eCSSProperty_UNKNOWN
 };
 
@@ -1312,9 +1442,46 @@ static const nsCSSProperty gBorderTopSubpropTable[] = {
 static const nsCSSProperty gBorderWidthSubpropTable[] = {
   // Code relies on these being in top-right-bottom-left order.
   eCSSProperty_border_top_width,
-  eCSSProperty_border_right_width,
+  eCSSProperty_border_right_width_value,
   eCSSProperty_border_bottom_width,
-  eCSSProperty_border_left_width,
+  eCSSProperty_border_left_width_value,
+  // extras:
+  eCSSProperty_border_left_width_ltr_source,
+  eCSSProperty_border_left_width_rtl_source,
+  eCSSProperty_border_right_width_ltr_source,
+  eCSSProperty_border_right_width_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gBorderLeftWidthSubpropTable[] = {
+  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
+  eCSSProperty_border_left_width_value,
+  eCSSProperty_border_left_width_ltr_source,
+  eCSSProperty_border_left_width_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gBorderRightWidthSubpropTable[] = {
+  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
+  eCSSProperty_border_right_width_value,
+  eCSSProperty_border_right_width_ltr_source,
+  eCSSProperty_border_right_width_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gMozBorderStartWidthSubpropTable[] = {
+  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
+  eCSSProperty_border_start_width_value,
+  eCSSProperty_border_left_width_ltr_source,
+  eCSSProperty_border_right_width_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gMozBorderEndWidthSubpropTable[] = {
+  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
+  eCSSProperty_border_end_width_value,
+  eCSSProperty_border_right_width_ltr_source,
+  eCSSProperty_border_left_width_rtl_source,
   eCSSProperty_UNKNOWN
 };
 

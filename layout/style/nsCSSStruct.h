@@ -304,9 +304,27 @@ struct nsCSSMargin : public nsCSSStruct  {
   nsCSSValue  mPaddingRightLTRSource;
   nsCSSValue  mPaddingRightRTLSource;
   nsCSSRect   mBorderWidth;
+  nsCSSValue  mBorderStartWidth;
+  nsCSSValue  mBorderEndWidth;
+  nsCSSValue  mBorderLeftWidthLTRSource;
+  nsCSSValue  mBorderLeftWidthRTLSource;
+  nsCSSValue  mBorderRightWidthLTRSource;
+  nsCSSValue  mBorderRightWidthRTLSource;
   nsCSSRect   mBorderColor;
+  nsCSSValue  mBorderStartColor;
+  nsCSSValue  mBorderEndColor;
+  nsCSSValue  mBorderLeftColorLTRSource;
+  nsCSSValue  mBorderLeftColorRTLSource;
+  nsCSSValue  mBorderRightColorLTRSource;
+  nsCSSValue  mBorderRightColorRTLSource;
   nsCSSValueListRect mBorderColors;
   nsCSSRect   mBorderStyle;
+  nsCSSValue  mBorderStartStyle;
+  nsCSSValue  mBorderEndStyle;
+  nsCSSValue  mBorderLeftStyleLTRSource;
+  nsCSSValue  mBorderLeftStyleRTLSource;
+  nsCSSValue  mBorderRightStyleLTRSource;
+  nsCSSValue  mBorderRightStyleRTLSource;
   nsCSSRect   mBorderRadius;  // (extension)
   nsCSSValue  mOutlineWidth;
   nsCSSValue  mOutlineColor;

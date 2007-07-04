@@ -59,6 +59,7 @@ typedef nsCSSStruct nsRuleDataStruct;
 
 struct nsRuleDataFont;
 class nsCSSValue;
+struct nsCSSRect;
 
 struct nsInheritedStyleData
 {
@@ -620,12 +621,10 @@ protected:
                                         const nsCSSValue& aRTLSource,
                                         const nsCSSValue& aLTRLogicalValue,
                                         const nsCSSValue& aRTLLogicalValue,
-                                        const nsStyleSides& aParentRect,
-                                        nsStyleSides& aRect,
                                         PRUint8 aSide,
-                                        PRInt32 aMask,
+                                        nsCSSRect& aValueRect,
                                         PRBool& aInherited);
-  
+
   inline RuleDetail CheckSpecifiedProperties(const nsStyleStructID aSID, const nsRuleDataStruct& aRuleDataStruct);
 
   NS_HIDDEN_(const nsStyleStruct*) GetParentData(const nsStyleStructID aSID);
