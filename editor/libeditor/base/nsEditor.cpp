@@ -962,8 +962,6 @@ nsEditor::EndPlaceHolderTransaction()
   {
     nsCOMPtr<nsISelection>selection;
     nsresult rv = GetSelection(getter_AddRefs(selection));
-    if (NS_FAILED(rv))
-      return rv;
 
     nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(selection));
 
