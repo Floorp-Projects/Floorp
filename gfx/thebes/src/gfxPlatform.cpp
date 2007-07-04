@@ -53,6 +53,7 @@
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 #include "gfxTextRunCache.h"
+#include "gfxTextRunWordCache.h"
 
 #include "nsIPref.h"
 #include "nsServiceManagerUtils.h"
@@ -108,9 +109,16 @@ gfxPlatform::Init()
         return rv;
     }
 
-    rv = gfxGlobalTextRunCache::Init();
+    rv = gfxTextRunWordCache::Init();
     if (NS_FAILED(rv)) {
-        NS_ERROR("Could not initialize gfxGlobalTextRunCache");
+        NS_ERROR("Could not initialize gfxTextRunWordCache");
+        Shutdown();
+        return rv;
+    }
+
+    rv = gfxTextRunCache::Init();
+    if (NS_FAILED(rv)) {
+        NS_ERROR("Could not initialize gfxTextRunCache");
         Shutdown();
         return rv;
     }
@@ -123,7 +131,8 @@ gfxPlatform::Shutdown()
 {
     // These may be called before the corresponding subsystems have actually
     // started up. That's OK, they can handle it.
-    gfxGlobalTextRunCache::Shutdown();
+    gfxTextRunCache::Shutdown();
+    gfxTextRunWordCache::Shutdown();
     gfxFontCache::Shutdown();
 #if defined(XP_MACOSX)
     gfxQuartzFontCache::Shutdown();

@@ -299,16 +299,15 @@ RunTest (TestEntry *test, gfxContext *ctx) {
         flags |= gfxTextRunFactory::TEXT_IS_RTL;
     }
     PRUint32 length;
-    PRBool isInCache;
     if (test->stringType == S_ASCII) {
         flags |= gfxTextRunFactory::TEXT_IS_ASCII | gfxTextRunFactory::TEXT_IS_8BIT;
         length = strlen(test->string);
-        textRun = gTextRunCache->MakeTextRun(NS_REINTERPRET_CAST(PRUint8*, test->string), length, fontGroup, &params, flags, &isInCache);
+        textRun = gfxTextRunWordCache::MakeTextRun(NS_REINTERPRET_CAST(PRUint8*, test->string), length, fontGroup, &params, flags);
     } else {
         flags |= gfxTextRunFactory::TEXT_HAS_SURROGATES; // just in case
         NS_ConvertUTF8toUTF16 str(nsDependentCString(test->string));
         length = str.Length();
-        textRun = gTextRunCache->MakeTextRun(str.get(), length, fontGroup, &params, flags, &isInCache);
+        textRun = gfxTextRunWordCache::MakeTextRun(str.get(), length, fontGroup, &params, flags);
     }
 
     gfxFontTestStore::NewStore();

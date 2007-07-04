@@ -1062,11 +1062,9 @@ SetGlyphsForCharacterGroup(const PangoGlyphInfo *aGlyphs, PRUint32 aGlyphCount,
         if (ch >= 0x10000) {
             // Skip surrogate
             ++utf16Offset;
-        } else {
-            if (gfxFontGroup::IsInvisibleChar(PRUnichar(ch))) {
-                aTextRun->SetCharacterGlyph(utf16Offset, g.SetMissing());
-            }
         }
+        NS_ASSERTION(!gfxFontGroup::IsInvalidChar(PRUnichar(ch)),
+                     "Invalid character detected");
         ++utf16Offset;
 
         // We produced this UTF8 so we don't need to worry about malformed stuff
@@ -1256,9 +1254,8 @@ gfxPangoFontGroup::CreateGlyphRunsXft(gfxTextRun *aTextRun,
             // treat this null byte as a missing glyph. Pango
             // doesn't create glyphs for these, not even missing-glyphs.
             aTextRun->SetMissingGlyph(utf16Offset, 0);
-        } else if (ch < 0x10000 && IsInvisibleChar(PRUnichar(ch))) {
-            aTextRun->SetCharacterGlyph(utf16Offset, g.SetMissing());
         } else {
+            NS_ASSERTION(!IsInvalidChar(ch), "Invalid char detected");
             FT_UInt glyph = XftCharIndex(dpy, xfont, ch);
             XGlyphInfo info;
             XftGlyphExtents(dpy, xfont, &glyph, 1, &info);

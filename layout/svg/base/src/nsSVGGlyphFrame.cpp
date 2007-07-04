@@ -54,6 +54,7 @@
 #include "gfxContext.h"
 #include "gfxMatrix.h"
 #include "gfxPlatform.h"
+#include "gfxTextRunCache.h"
 
 // XXX: This initial straightforward conversion from accessing cairo
 // directly to Thebes doesn't handle clusters.  Pretty much all code
@@ -215,9 +216,9 @@ nsSVGGlyphFrame::LoopCharacters(gfxContext *aCtx, const nsString &aText,
                                 const nsSVGCharacterPosition *aCP,
                                 FillOrStroke aFillOrStroke)
 {
-  nsAutoPtr<gfxTextRun> textRun(GetTextRun(aCtx, aText));
+  gfxTextRunCache::AutoTextRun textRun = GetTextRun(aCtx, aText);
 
-  if (!textRun)
+  if (!textRun.get())
     return;
 
   if (!aCP) {
@@ -606,8 +607,8 @@ nsSVGGlyphFrame::GetCharacterPosition(gfxContext *aContext,
   gfxFloat length = data->GetLength();
   PRUint32 strLength = aText.Length();
 
-  nsAutoPtr<gfxTextRun> textRun(GetTextRun(aContext, aText));
-  if (!textRun)
+  gfxTextRunCache::AutoTextRun textRun = GetTextRun(aContext, aText);
+  if (!textRun.get())
     return NS_ERROR_OUT_OF_MEMORY;
 
   nsSVGCharacterPosition *cp = new nsSVGCharacterPosition[strLength];
@@ -1347,17 +1348,11 @@ nsSVGGlyphFrame::GetTextRun(gfxContext *aCtx, const nsString &aText)
   // References:
   //   https://bugzilla.mozilla.org/show_bug.cgi?id=375141
   //   http://weblogs.mozillazine.org/roc/archives/2007/03/text_text_text.html
-
-  gfxTextRunFactory::Parameters params =
-    { aCtx, nsnull, nsnull,
-      nsnull, nsnull,
-      1 // see note above
-      };
-
   if (!mFontGroup)
     return nsnull;
 
-  return mFontGroup->MakeTextRun(aText.get(), aText.Length(), &params, 0);
+  return gfxTextRunCache::MakeTextRun(aText.get(), aText.Length(),
+      mFontGroup, aCtx, 1, 0);
 }
 
 //----------------------------------------------------------------------
