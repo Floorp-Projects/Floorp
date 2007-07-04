@@ -645,9 +645,9 @@ SetupTextRunFromGlyphs(gfxTextRun *aRun, WCHAR *aGlyphs, HDC aDC,
         lastWidth = partialWidthArray[i];
         PRInt32 advanceAppUnits = advancePixels*appUnitsPerDevPixel;
         WCHAR glyph = aGlyphs[i];
-        if (gfxFontGroup::IsInvisibleChar(aRun->GetChar(i))) {
-            aRun->SetCharacterGlyph(i, g.SetMissing());
-        } else if (advanceAppUnits >= 0 &&
+        NS_ASSERTION(!gfxFontGroup::IsInvalidChar(aRun->GetChar(i)),
+                     "Invalid character detected!");
+        if (advanceAppUnits >= 0 &&
             gfxTextRun::CompressedGlyph::IsSimpleAdvance(advanceAppUnits) &&
             gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph)) {
             aRun->SetCharacterGlyph(i, g.SetSimpleGlyph(advanceAppUnits, glyph));

@@ -39,153 +39,80 @@
 #define GFX_TEXT_RUN_CACHE_H
 
 #include "gfxFont.h"
-#include "nsCheapSets.h"
 
 /**
- * A textrun cache object. A general textrun caching solution. If you use
- * this class to create a textrun cache, you are responsible for managing
- * textrun lifetimes. The full power of textrun creation is exposed; you can
- * set all textrun creation flags and parameters.
- */
-class THEBES_API gfxTextRunCache {
-public:
-    gfxTextRunCache() {
-        mCache.Init(100);
-    }
-    ~gfxTextRunCache() {
-        NS_ASSERTION(mCache.Count() == 0, "Textrun cache not empty!");
-    }
-
-    /**
-     * Get a textrun from the cache, create one if necessary.
-     * @param aFlags the flags TEXT_IS_ASCII, TEXT_IS_8BIT and TEXT_HAS_SURROGATES
-     * are ignored; the cache sets them based on the string.
-     * @param aCallerOwns if this is null, the cache always creates a new
-     * textrun owned by the caller. If non-null, the cache may return a textrun
-     * that was previously created and is owned by some previous caller
-     * to GetOrMakeTextRun on this cache. If so, *aCallerOwns will be set
-     * to false.
-     */
-    gfxTextRun *GetOrMakeTextRun(const PRUnichar *aText, PRUint32 aLength,
-                                 gfxFontGroup *aFontGroup,
-                                 const gfxFontGroup::Parameters *aParams,
-                                 PRUint32 aFlags, PRBool *aCallerOwns = nsnull);
-    /**
-     * Get a textrun from the cache, create one if necessary.
-     * @param aFlags the flags TEXT_IS_ASCII, TEXT_IS_8BIT and TEXT_HAS_SURROGATES
-     * are ignored; the cache sets them based on the string.
-     * @param aCallerOwns if this is null, the cache always creates a new
-     * textrun owned by the caller. If non-null, the cache may return a textrun
-     * that was previously created and is owned by some previous caller
-     * to GetOrMakeTextRun on this cache. If so, *aCallerOwns will be set
-     * to false.
-     */
-    gfxTextRun *GetOrMakeTextRun(const PRUint8 *aText, PRUint32 aLength,
-                                 gfxFontGroup *aFontGroup,
-                                 const gfxFontGroup::Parameters *aParams,
-                                 PRUint32 aFlags, PRBool *aCallerOwns = nsnull);
-
-    /**
-     * Notify that a text run was hit in the cache, a new one created, and
-     * that the new one has replaced the old one in the cache.
-     */
-    virtual void NotifyRemovedFromCache(gfxTextRun *aTextRun) {}
-
-    /**
-     * Remove a textrun from the cache. This must be called before aTextRun
-     * is deleted!
-     */
-    void RemoveTextRun(gfxTextRun *aTextRun);
-
-    /** The following flags are part of the cache key: */
-    enum { FLAG_MASK =
-        gfxTextRunFactory::TEXT_IS_RTL |
-        gfxTextRunFactory::TEXT_ENABLE_SPACING |
-        gfxTextRunFactory::TEXT_ABSOLUTE_SPACING |
-        gfxTextRunFactory::TEXT_ENABLE_NEGATIVE_SPACING |
-        gfxTextRunFactory::TEXT_ENABLE_HYPHEN_BREAKS |
-        gfxTextRunFactory::TEXT_NEED_BOUNDING_BOX
-    };
-
-protected:
-    struct THEBES_API CacheHashKey {
-        void       *mFontOrGroup;
-        const void *mString;
-        PRUint32    mLength;
-        PRUint32    mAppUnitsPerDevUnit;
-        PRUint32    mFlags;
-        PRUint32    mStringHash;
-
-        CacheHashKey(void *aFontOrGroup, const void *aString, PRUint32 aLength,
-                     PRUint32 aAppUnitsPerDevUnit, PRUint32 aFlags, PRUint32 aStringHash)
-            : mFontOrGroup(aFontOrGroup), mString(aString), mLength(aLength),
-              mAppUnitsPerDevUnit(aAppUnitsPerDevUnit), mFlags(aFlags),
-              mStringHash(aStringHash) {}
-    };
-
-    class THEBES_API CacheHashEntry : public PLDHashEntryHdr {
-    public:
-        typedef const CacheHashKey &KeyType;
-        typedef const CacheHashKey *KeyTypePointer;
-
-        // When constructing a new entry in the hashtable, mTextRuns will be
-        // blank. The caller of Put() will fill it in.
-        CacheHashEntry(KeyTypePointer aKey)  { }
-        CacheHashEntry(const CacheHashEntry& toCopy) { NS_ERROR("Should not be called"); }
-        ~CacheHashEntry() { }
-
-        PRBool KeyEquals(const KeyTypePointer aKey) const;
-        static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
-        static PLDHashNumber HashKey(const KeyTypePointer aKey);
-        enum { ALLOW_MEMMOVE = PR_TRUE };
-
-        gfxTextRun *mTextRun;
-    };
-
-    CacheHashKey GetKeyForTextRun(gfxTextRun *aTextRun);
-
-    nsTHashtable<CacheHashEntry> mCache;
-};
-
-/**
- * A simple global textrun cache for textruns that do not carry state
+ * A simple textrun cache for textruns that do not carry state
  * (e.g., actual or potential linebreaks) and do not need complex initialization.
  * The lifetimes of these textruns are managed by the cache (they are auto-expired
  * after a certain period of time).
  */
-class THEBES_API gfxGlobalTextRunCache {
+class THEBES_API gfxTextRunCache {
 public:
     /**
-     * Get a textrun for the given text, using a global cache. The returned
-     * textrun is valid until the next event loop. We own it, the caller
-     * must not free it.
+     * Get a textrun for the given text, using a global cache. The textrun
+     * must be released via ReleaseTextRun, not deleted.
      * Do not set any state in the textrun (e.g. actual or potential linebreaks).
      * Flags IS_8BIT, IS_ASCII and HAS_SURROGATES are automatically set
      * appropriately.
      * Flag IS_PERSISTENT must NOT be set unless aText is guaranteed to live
      * forever.
+     * The string can contain any characters, invalid ones will be stripped
+     * properly.
      */
-    static gfxTextRun *GetTextRun(const PRUnichar *aText, PRUint32 aLength,
-                                  gfxFontGroup *aFontGroup,
-                                  gfxContext *aRefContext,
-                                  PRUint32 aAppUnitsPerDevUnit,
-                                  PRUint32 aFlags);
+    static gfxTextRun *MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
+                                   gfxFontGroup *aFontGroup,
+                                   gfxContext *aRefContext,
+                                   PRUint32 aAppUnitsPerDevUnit,
+                                   PRUint32 aFlags);
 
     /**
-     * Get a textrun for the given text, using a global cache. The returned
-     * textrun is valid until the next event loop. We own it, the caller
-     * must not free it.
+     * As above, but allows a full Parameters object to be passed in.
+     */
+    static gfxTextRun *MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
+                                   gfxFontGroup *aFontGroup,
+                                   const gfxTextRunFactory::Parameters* aParams,
+                                   PRUint32 aFlags);
+
+    /**
+     * Get a textrun for the given text, using a global cache. The textrun
+     * must be released via ReleaseTextRun, not deleted.
      * Do not set any state in the textrun (e.g. actual or potential linebreaks).
      * Flags IS_8BIT, IS_ASCII and HAS_SURROGATES are automatically set
      * appropriately.
      * Flag IS_PERSISTENT must NOT be set unless aText is guaranteed to live
      * forever.
+     * The string can contain any characters, invalid ones will be stripped
+     * properly.
      */
-    static gfxTextRun *GetTextRun(const PRUint8 *aText, PRUint32 aLength,
-                                  gfxFontGroup *aFontGroup,
-                                  gfxContext *aRefContext,
-                                  PRUint32 aAppUnitsPerDevUnit,
-                                  PRUint32 aFlags);
+    static gfxTextRun *MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
+                                   gfxFontGroup *aFontGroup,
+                                   gfxContext *aRefContext,
+                                   PRUint32 aAppUnitsPerDevUnit,
+                                   PRUint32 aFlags);
+    
+    /**
+     * Release a previously acquired textrun. Consider using AutoTextRun
+     * instead of calling this.
+     */
+    static void ReleaseTextRun(gfxTextRun *aTextRun);
+
+    class AutoTextRun {
+    public:
+    	AutoTextRun(gfxTextRun *aTextRun) : mTextRun(aTextRun) {}
+    	AutoTextRun() : mTextRun(nsnull) {}
+    	AutoTextRun& operator=(gfxTextRun *aTextRun) {
+            gfxTextRunCache::ReleaseTextRun(mTextRun);
+            mTextRun = aTextRun;
+            return *this;
+        }
+        ~AutoTextRun() {
+            gfxTextRunCache::ReleaseTextRun(mTextRun);
+        }
+        gfxTextRun *get() { return mTextRun; }
+        gfxTextRun *operator->() { return mTextRun; }
+    private:
+        gfxTextRun *mTextRun;
+    };
 
 protected:
     friend class gfxPlatform;

@@ -82,7 +82,7 @@ public:
    if (aTextRun->GetExpirationState()->IsTracked()) {
      RemoveObject(aTextRun);
    }
-   mCache.RemoveTextRun(aTextRun);
+   gfxTextRunWordCache::RemoveTextRun(aTextRun);
  }
 
  // This gets called when the timeout has expired on a gfxTextRun
@@ -90,8 +90,6 @@ public:
    RemoveFromCache(aTextRun);
    delete aTextRun;
  }
-
- gfxTextRunWordCache mCache;
 };
 
 static gfxTextRun *
@@ -105,11 +103,8 @@ MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
    } else if (aLength == 1 && aText[0] == ' ') {
        textRun = aFontGroup->MakeSpaceTextRun(aParams, aFlags);
    } else {
-       PRBool isInCache;
-       textRun = gTextRuns->mCache.MakeTextRun(aText, aLength, aFontGroup,
-           aParams, aFlags, &isInCache);
-       if (!isInCache && textRun) {
-       }
+       textRun = gfxTextRunWordCache::MakeTextRun(aText, aLength, aFontGroup,
+           aParams, aFlags);
    }
    if (!textRun)
        return nsnull;
@@ -181,6 +176,7 @@ main (int argc, char **argv) {
        nsDependentCString cStr(cString);
        NS_ConvertUTF8toUTF16 str(cStr);
        gfxTextRun *tr = MakeTextRun(str.get(), str.Length(), fontGroup, &params, flags);
+       tr->GetAdvanceWidth(0, str.Length(), nsnull);
 
        // Now try to trigger an assertion with a word cache bug. The first
        // word is in the cache so it gets added to the new textrun directly.
@@ -189,7 +185,6 @@ main (int argc, char **argv) {
        nsDependentCString cStr2(cString2);
        NS_ConvertUTF8toUTF16 str2(cStr2);
        gfxTextRun *tr2 = MakeTextRun(str2.get(), str2.Length(), fontGroup, &params, flags);
-
        tr2->GetAdvanceWidth(0, str2.Length(), nsnull);
    }
 
