@@ -291,17 +291,73 @@ CSS_PROP_BORDER(border-bottom-style, border_bottom_style, BorderBottomStyle, Mar
 CSS_PROP_BORDER(border-bottom-width, border_bottom_width, BorderBottomWidth, Margin, mBorderWidth.mBottom, eCSSType_Value, kBorderWidthKTable)
 CSS_PROP_TABLEBORDER(border-collapse, border_collapse, BorderCollapse, Table, mBorderCollapse, eCSSType_Value, kBorderCollapseKTable)
 CSS_PROP_SHORTHAND(border-color, border_color, BorderColor)
+CSS_PROP_SHORTHAND(-moz-border-end, border_end, MozBorderEnd)
+CSS_PROP_SHORTHAND(-moz-border-end-color, border_end_color, MozBorderEndColor)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_BORDER(border-end-color-value, border_end_color_value, X, Margin, mBorderEndColor, eCSSType_Value, kBorderColorKTable)
+#endif
+CSS_PROP_SHORTHAND(-moz-border-end-style, border_end_style, MozBorderEndStyle)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_BORDER(border-end-style-value, border_end_style_value, X, Margin, mBorderEndStyle, eCSSType_Value, kBorderStyleKTable)
+#endif
+CSS_PROP_SHORTHAND(-moz-border-end-width, border_end_width, MozBorderEndWidth)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_BORDER(border-end-width-value, border_end_width_value, X, Margin, mBorderEndWidth, eCSSType_Value, kBorderWidthKTable)
+#endif
 CSS_PROP_SHORTHAND(border-left, border_left, BorderLeft)
-CSS_PROP_BORDER(border-left-color, border_left_color, BorderLeftColor, Margin, mBorderColor.mLeft, eCSSType_Value, kBorderColorKTable)
+CSS_PROP_SHORTHAND(border-left-color, border_left_color, BorderLeftColor)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_BORDER(border-left-color-value, border_left_color_value, X, Margin, mBorderColor.mLeft, eCSSType_Value, kBorderColorKTable)
+CSS_PROP_BORDER(border-left-color-ltr-source, border_left_color_ltr_source, X, Margin, mBorderLeftColorLTRSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-left-color-rtl-source, border_left_color_rtl_source, X, Margin, mBorderLeftColorRTLSource, eCSSType_Value, kBoxPropSourceKTable)
+#endif
 CSS_PROP_BORDER(-moz-border-left-colors, border_left_colors, MozBorderLeftColors, Margin, mBorderColors.mLeft, eCSSType_ValueList, nsnull)
-CSS_PROP_BORDER(border-left-style, border_left_style, BorderLeftStyle, Margin, mBorderStyle.mLeft, eCSSType_Value, kBorderStyleKTable)  // on/off will need reflow
-CSS_PROP_BORDER(border-left-width, border_left_width, BorderLeftWidth, Margin, mBorderWidth.mLeft, eCSSType_Value, kBorderWidthKTable)
+CSS_PROP_SHORTHAND(border-left-style, border_left_style, BorderLeftStyle) // on/off will need reflow
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_BORDER(border-left-style-value, border_left_style_value, X, Margin, mBorderStyle.mLeft, eCSSType_Value, kBorderStyleKTable)
+CSS_PROP_BORDER(border-left-style-ltr-source, border_left_style_ltr_source, X, Margin, mBorderLeftStyleLTRSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-left-style-rtl-source, border_left_style_rtl_source, X, Margin, mBorderLeftStyleRTLSource, eCSSType_Value, kBoxPropSourceKTable)
+#endif
+CSS_PROP_SHORTHAND(border-left-width, border_left_width, BorderLeftWidth)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_BORDER(border-left-width-value, border_left_width_value, X, Margin, mBorderWidth.mLeft, eCSSType_Value, kBorderWidthKTable)
+CSS_PROP_BORDER(border-left-width-ltr-source, border_left_width_ltr_source, X, Margin, mBorderLeftWidthLTRSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-left-width-rtl-source, border_left_width_rtl_source, X, Margin, mBorderLeftWidthRTLSource, eCSSType_Value, kBoxPropSourceKTable)
+#endif
 CSS_PROP_SHORTHAND(border-right, border_right, BorderRight)
-CSS_PROP_BORDER(border-right-color, border_right_color, BorderRightColor, Margin, mBorderColor.mRight, eCSSType_Value, kBorderColorKTable)
+CSS_PROP_SHORTHAND(border-right-color, border_right_color, BorderRightColor)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_BORDER(border-right-color-value, border_right_color_value, X, Margin, mBorderColor.mRight, eCSSType_Value, kBorderColorKTable)
+CSS_PROP_BORDER(border-right-color-ltr-source, border_right_color_ltr_source, X, Margin, mBorderRightColorLTRSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-right-color-rtl-source, border_right_color_rtl_source, X, Margin, mBorderRightColorRTLSource, eCSSType_Value, kBoxPropSourceKTable)
+#endif
 CSS_PROP_BORDER(-moz-border-right-colors, border_right_colors, MozBorderRightColors, Margin, mBorderColors.mRight, eCSSType_ValueList, nsnull)
-CSS_PROP_BORDER(border-right-style, border_right_style, BorderRightStyle, Margin, mBorderStyle.mRight, eCSSType_Value, kBorderStyleKTable)  // on/off will need reflow
-CSS_PROP_BORDER(border-right-width, border_right_width, BorderRightWidth, Margin, mBorderWidth.mRight, eCSSType_Value, kBorderWidthKTable)
+CSS_PROP_SHORTHAND(border-right-style, border_right_style, BorderRightStyle) // on/off will need reflow
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_BORDER(border-right-style-value, border_right_style_value, X, Margin, mBorderStyle.mRight, eCSSType_Value, kBorderStyleKTable)
+CSS_PROP_BORDER(border-right-style-ltr-source, border_right_style_ltr_source, X, Margin, mBorderRightStyleLTRSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-right-style-rtl-source, border_right_style_rtl_source, X, Margin, mBorderRightStyleRTLSource, eCSSType_Value, kBoxPropSourceKTable)
+#endif
+CSS_PROP_SHORTHAND(border-right-width, border_right_width, BorderRightWidth)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_BORDER(border-right-width-value, border_right_width_value, X, Margin, mBorderWidth.mRight, eCSSType_Value, kBorderWidthKTable)
+CSS_PROP_BORDER(border-right-width-ltr-source, border_right_width_ltr_source, X, Margin, mBorderRightWidthLTRSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-right-width-rtl-source, border_right_width_rtl_source, X, Margin, mBorderRightWidthRTLSource, eCSSType_Value, kBoxPropSourceKTable)
+#endif
 CSS_PROP_TABLEBORDER(border-spacing, border_spacing, BorderSpacing, Table, mBorderSpacing, eCSSType_ValuePair, nsnull) // XXX bug 3935
+CSS_PROP_SHORTHAND(-moz-border-start, border_start, MozBorderStart)
+CSS_PROP_SHORTHAND(-moz-border-start-color, border_start_color, MozBorderStartColor)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_BORDER(border-start-color-value, border_start_color_value, X, Margin, mBorderStartColor, eCSSType_Value, kBorderColorKTable)
+#endif
+CSS_PROP_SHORTHAND(-moz-border-start-style, border_start_style, MozBorderStartStyle)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_BORDER(border-start-style-value, border_start_style_value, X, Margin, mBorderStartStyle, eCSSType_Value, kBorderStyleKTable)
+#endif
+CSS_PROP_SHORTHAND(-moz-border-start-width, border_start_width, MozBorderStartWidth)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_BORDER(border-start-width-value, border_start_width_value, X, Margin, mBorderStartWidth, eCSSType_Value, kBorderWidthKTable)
+#endif
 CSS_PROP_SHORTHAND(border-style, border_style, BorderStyle)  // on/off will need reflow
 CSS_PROP_SHORTHAND(border-top, border_top, BorderTop)
 CSS_PROP_BORDER(border-top-color, border_top_color, BorderTopColor, Margin, mBorderColor.mTop, eCSSType_Value, kBorderColorKTable)
