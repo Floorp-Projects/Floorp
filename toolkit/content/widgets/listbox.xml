@@ -537,14 +537,6 @@
         </body>
       </method>
 
-      <constructor>
-      <![CDATA[
-        var els = this.getElementsByAttribute("selected", "true");
-        for (var i = 0; i < els.length; ++i)
-          this.selectedItems.push(els[i]);
-      ]]>
-      </constructor>
-
       <field name="_suppressOnSelect">false</field>
       <field name="_selectTimeout">null</field>
       <field name="_currentItem">null</field>
@@ -674,6 +666,17 @@
         ]]>
         </body>
       </method>
+
+      <constructor>
+      <![CDATA[
+        var count = this.itemCount;
+        for (var index = 0; index < count; index++) {
+          var item = this.getItemAtIndex(index);
+          if (item.getAttribute("selected") == "true")
+            this.selectedItems.push(item);
+        }
+      ]]>
+      </constructor>
 
       <!-- ///////////////// nsIDOMXULSelectControlElement ///////////////// -->
 
