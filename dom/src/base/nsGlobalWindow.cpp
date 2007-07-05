@@ -6529,6 +6529,12 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
   FORWARD_TO_INNER(SetTimeoutOrInterval, (aHandler, interval, aIsInterval, aReturn),
                    NS_ERROR_NOT_INITIALIZED);
 
+  // If we don't have a document (we could have been unloaded since
+  // the call to setTimeout was made), do nothing.
+  if (!mDocument) {
+    return NS_OK;
+  }
+
   if (interval < DOM_MIN_TIMEOUT_VALUE) {
     // Don't allow timeouts less than DOM_MIN_TIMEOUT_VALUE from
     // now...
