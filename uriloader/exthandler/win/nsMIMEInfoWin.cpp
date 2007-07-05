@@ -111,11 +111,24 @@ static nsresult GetIconURLVariant(nsIFile* aApplication, nsIVariant* *_retval)
 NS_IMETHODIMP
 nsMIMEInfoWin::GetProperty(const nsAString& aName, nsIVariant* *_retval)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  if (mDefaultApplication && aName.EqualsLiteral(PROPERTY_DEFAULT_APP_ICON_URL))
+  nsresult rv;
+  if (mDefaultApplication && aName.EqualsLiteral(PROPERTY_DEFAULT_APP_ICON_URL)) {
     rv = GetIconURLVariant(mDefaultApplication, _retval);
-  else if (mPreferredApplication && aName.EqualsLiteral(PROPERTY_CUSTOM_APP_ICON_URL))
-    rv = GetIconURLVariant(mPreferredApplication, _retval);
-  return rv;
+    NS_ENSURE_SUCCESS(rv, rv);    
+  } else if (mPreferredApplication && 
+             aName.EqualsLiteral(PROPERTY_CUSTOM_APP_ICON_URL)) {
+    nsCOMPtr<nsILocalHandlerApp> localHandler =
+      do_QueryInterface(mPreferredApplication, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsCOMPtr<nsIFile> executable;
+    rv = localHandler->GetExecutable(getter_AddRefs(executable));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = GetIconURLVariant(executable, _retval);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
 }
 

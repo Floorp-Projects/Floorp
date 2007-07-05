@@ -166,8 +166,8 @@ HelperApps.prototype = {
       entry.saveToDisk       = false;
       entry.useSystemDefault = false;
       entry.handleInternal   = false;
-      entry.appPath = aMIMEInfo.preferredApplicationHandler.path;
-      entry.appDisplayName = aMIMEInfo.applicationDescription;
+      entry.appPath = aMIMEInfo.preferredApplicationHandler.executable.path;
+      entry.appDisplayName = aMIMEInfo.preferredApplicationHandler.name;
     }
     
     // Do RDF magic.
