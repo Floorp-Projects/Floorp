@@ -414,6 +414,15 @@ public:
 
 };
 
+#ifdef DEBUG_CC
+
+struct ReversedEdge {
+    PtrInfo *mTarget;
+    ReversedEdge *mNext;
+};
+
+#endif
+
 
 enum NodeColor { black, white, grey };
 
@@ -435,7 +444,14 @@ struct PtrInfo
 #ifdef DEBUG_CC
     size_t mBytes;
     char *mName;
+
+    // For finding roots in ExplainLiveExpectedGarbage (when there are
+    // missing calls to suspect or failures to unlink).
     PRUint32 mSCCIndex; // strongly connected component
+
+    // For finding roots in ExplainLiveExpectedGarbage (when nodes
+    // expected to be garbage are black).
+    ReversedEdge* mReversedEdges; // linked list
 #endif
 
     PtrInfo(void *aPointer, nsCycleCollectionParticipant *aParticipant)
@@ -450,7 +466,8 @@ struct PtrInfo
 #ifdef DEBUG_CC
         , mBytes(0),
           mName(nsnull),
-          mSCCIndex(0)
+          mSCCIndex(0),
+          mReversedEdges(nsnull)
 #endif
     {
     }
@@ -581,6 +598,9 @@ struct GCGraph
     NodePool mNodes;
     EdgePool mEdges;
     PRUint32 mRootCount;
+#ifdef DEBUG_CC
+    ReversedEdge *mReversedEdges;
+#endif
 
     GCGraph() : mRootCount(0) {
         sCurrGraph = this;
@@ -847,7 +867,10 @@ struct nsCycleCollector
     FILE *mPtrLog;
 
     void MaybeDrawGraphs(GCGraph &graph);
+
     void ExplainLiveExpectedGarbage();
+    PRBool CreateReversedEdges(GCGraph &graph);
+    void DestroyReversedEdges(GCGraph &graph);
     void ShouldBeFreed(nsISupports *n);
     void WasFreed(nsISupports *n);
     PointerSet mExpectedGarbage;
@@ -2112,6 +2135,9 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
     printf("cc: Collect() took %lldms\n",
            (PR_Now() - start) / PR_USEC_PER_MSEC);
 #endif
+#ifdef DEBUG_CC
+    ExplainLiveExpectedGarbage();
+#endif
 }
 
 void
@@ -2130,8 +2156,6 @@ nsCycleCollector::Shutdown()
         printf("Might have been able to release more cycles if the cycle collector would "
                "run once more at shutdown.\n");
     }
-
-    ExplainLiveExpectedGarbage();
 #endif
     mParams.mDoNothing = PR_TRUE;
 }
@@ -2194,7 +2218,7 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
 
         mScanInProgress = PR_FALSE;
 
-        PRBool giveKnownReferences = PR_FALSE;
+        PRBool describeExtraRefcounts = PR_FALSE;
         PRBool findCycleRoots = PR_FALSE;
         {
             NodePool::Enumerator queue(graph.mNodes);
@@ -2205,34 +2229,62 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                 }
 
                 if (pi->mInternalRefs != pi->mRefCount) {
-                    // Note that the external references may have been external
-                    // to a different node in the cycle collection that just
-                    // happened, if that different node was purple and then
-                    // black.
-                    printf("nsCycleCollector: %s %p was not collected due to %d\n"
-                           "  external references\n",
-                           pi->mName, pi->mPointer,
-                           pi->mRefCount - pi->mInternalRefs);
-                    giveKnownReferences = PR_TRUE;
+                    describeExtraRefcounts = PR_TRUE;
                 }
             }
         }
 
-        if (giveKnownReferences) {
-            printf("The known references to the objects above not collected\n"
-                   "due to external references are:\n");
-            NodePool::Enumerator queue(graph.mNodes);
-            while (!queue.IsDone()) {
-                PtrInfo *pi = queue.GetNext();
-                for (EdgePool::Iterator child = pi->mFirstChild,
-                                    child_end = pi->mLastChild;
-                     child != child_end; ++child) {
-                    if ((*child)->mInternalRefs != (*child)->mRefCount) {
-                        printf("  to: %p from %s %p\n",
-                               (*child)->mPointer, pi->mName, pi->mPointer);
+        if (describeExtraRefcounts && CreateReversedEdges(graph)) {
+            // Note that the external references may have been external
+            // to a different node in the cycle collection that just
+            // happened, if that different node was purple and then
+            // black.
+
+            // Use mSCCIndex temporarily to track whether we've reached
+            // nodes in the breadth-first search.
+            const PRUint32 INDEX_UNREACHED = 0;
+            const PRUint32 INDEX_REACHED = 1;
+            NodePool::Enumerator etor_clear(graph.mNodes);
+            while (!etor_clear.IsDone()) {
+                PtrInfo *pi = etor_clear.GetNext();
+                pi->mSCCIndex = INDEX_UNREACHED;
+            }
+
+            nsDeque queue; // for breadth-first search
+            NodePool::Enumerator etor_roots(graph.mNodes);
+            for (PRUint32 i = 0; i < graph.mRootCount; ++i) {
+                PtrInfo *root_pi = etor_roots.GetNext();
+                root_pi->mSCCIndex = INDEX_REACHED;
+                queue.Push(root_pi);
+            }
+
+            while (queue.GetSize() > 0) {
+                PtrInfo *pi = (PtrInfo*)queue.PopFront();
+                for (ReversedEdge *e = pi->mReversedEdges; e; e = e->mNext) {
+                    if (e->mTarget->mSCCIndex == INDEX_UNREACHED) {
+                        e->mTarget->mSCCIndex = INDEX_REACHED;
+                        queue.Push(e->mTarget);
+                    }
+                }
+
+                if (pi->mInternalRefs != pi->mRefCount) {
+                    printf("nsCycleCollector: %s %p was not collected due "
+                           "to %d\n"
+                           "  external references (%d total - %d known)\n",
+                           pi->mName, pi->mPointer,
+                           pi->mRefCount - pi->mInternalRefs,
+                           pi->mRefCount, pi->mInternalRefs);
+                    printf("  The %d known references to it were from:\n",
+                           pi->mInternalRefs);
+                    for (ReversedEdge *e = pi->mReversedEdges;
+                         e; e = e->mNext) {
+                        printf("  %s %p\n",
+                               e->mTarget->mName, e->mTarget->mPointer);
                     }
                 }
             }
+
+            DestroyReversedEdges(graph);
         }
 
         if (findCycleRoots) {
@@ -2246,7 +2298,7 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
             {
                 // Use mSCCIndex temporarily to track the DFS numbering:
                 const PRUint32 INDEX_UNREACHED = 0;
-                const PRUint32 INDEX_REACHED = 1;
+                const PRUint32 INDEX_TRAVERSING = 1;
                 const PRUint32 INDEX_NUMBERED = 2;
 
                 NodePool::Enumerator etor_clear(graph.mNodes);
@@ -2266,7 +2318,7 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                 while (stack.GetSize() > 0) {
                     PtrInfo *pi = (PtrInfo*)stack.Peek();
                     if (pi->mSCCIndex == INDEX_UNREACHED) {
-                        pi->mSCCIndex = INDEX_REACHED;
+                        pi->mSCCIndex = INDEX_TRAVERSING;
                         for (EdgePool::Iterator child = pi->mFirstChild,
                                             child_end = pi->mLastChild;
                              child != child_end; ++child) {
@@ -2276,7 +2328,10 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                         stack.Pop();
                         // Somebody else might have numbered it already
                         // (since this is depth-first, not breadth-first).
-                        if (pi->mSCCIndex == INDEX_REACHED) {
+                        // This happens if a node is pushed on the stack
+                        // a second time while it is on the stack in
+                        // UNREACHED state.
+                        if (pi->mSCCIndex == INDEX_TRAVERSING) {
                             pi->mSCCIndex = INDEX_NUMBERED;
                             DFSPostOrder.Push(pi);
                         }
@@ -2339,6 +2394,56 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
         if (mRuntimes[i])
             mRuntimes[i]->FinishCycleCollection();
     }    
+}
+
+PRBool
+nsCycleCollector::CreateReversedEdges(GCGraph &graph)
+{
+    // Count the edges in the graph.
+    PRUint32 edgeCount = 0;
+    NodePool::Enumerator countQueue(graph.mNodes);
+    while (!countQueue.IsDone()) {
+        PtrInfo *pi = countQueue.GetNext();
+        for (EdgePool::Iterator e = pi->mFirstChild, e_end = pi->mLastChild;
+             e != e_end; ++e, ++edgeCount) {
+        }
+    }
+
+    // Allocate a pool to hold all of the edges.
+    graph.mReversedEdges = new ReversedEdge[edgeCount];
+    if (graph.mReversedEdges == nsnull) {
+        NS_NOTREACHED("allocation failure creating reversed edges");
+        return PR_FALSE;
+    }
+
+    // Fill in the reversed edges by scanning all forward edges.
+    ReversedEdge *current = graph.mReversedEdges;
+    NodePool::Enumerator buildQueue(graph.mNodes);
+    while (!buildQueue.IsDone()) {
+        PtrInfo *pi = buildQueue.GetNext();
+        for (EdgePool::Iterator e = pi->mFirstChild, e_end = pi->mLastChild;
+             e != e_end; ++e) {
+            current->mTarget = pi;
+            current->mNext = (*e)->mReversedEdges;
+            (*e)->mReversedEdges = current;
+            ++current;
+        }
+    }
+    NS_ASSERTION(current - graph.mReversedEdges == edgeCount, "misallocation");
+    return PR_TRUE;
+}
+
+void
+nsCycleCollector::DestroyReversedEdges(GCGraph &graph)
+{
+    NodePool::Enumerator queue(graph.mNodes);
+    while (!queue.IsDone()) {
+        PtrInfo *pi = queue.GetNext();
+        pi->mReversedEdges = nsnull;
+    }
+
+    delete graph.mReversedEdges;
+    graph.mReversedEdges = nsnull;
 }
 
 void
