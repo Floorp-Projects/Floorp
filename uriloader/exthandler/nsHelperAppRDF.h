@@ -57,8 +57,12 @@
 #define NC_RDF_CHILD            NC_NAMESPACE_URI"child"
 #define NC_RDF_ROOT 			      "NC:HelperAppRoot"
 #define NC_CONTENT_NODE_PREFIX  "urn:mimetype:"
-#define NC_CONTENT_NODE_HANDLER_PREFIX "urn:mimetype:handler:"
-#define NC_CONTENT_NODE_EXTERNALAPP_PREFIX "urn:mimetype:externalApplication:"
+#define NC_HANDLER_SUFFIX "handler:"
+#define NC_EXTERNALAPP_SUFFIX "externalApplication:"
+
+// for URI schemes.  We re-use NC_RDF_HANDLER as an arc from these nodes.
+#define NC_SCHEME_NODE_PREFIX "urn:scheme:"
+#define NS_RDF_PROTOCOLSCHEMES NC_NAMESPACE_URI"Protocol-Schemes"
 
 // File Extensions have file extension properties....
 #define NC_RDF_FILEEXTENSION    NC_NAMESPACE_URI"fileExtension"
@@ -72,5 +76,7 @@
 
 // external applications properties....
 #define NC_RDF_PRETTYNAME 			    NC_NAMESPACE_URI"prettyName"
+// for local apps, we'll have the path (but not uriTemplate)
 #define NC_RDF_PATH 			          NC_NAMESPACE_URI"path"
-
+// for web apps, we'll have the uriTemplate (but not path)
+#define NC_RDF_URITEMPLATE NC_NAMESPACE_URI"uriTemplate"  

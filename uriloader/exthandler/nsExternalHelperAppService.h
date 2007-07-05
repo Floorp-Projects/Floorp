@@ -121,14 +121,40 @@ public:
   NS_HIDDEN_(nsresult) Init();
  
   /**
-   * Given a content type, look up the user override information to see if
-   * we have a mime info object representing this content type. The user
-   * over ride information is contained in a in memory data source.
+   * Given an existing MIME info object and a MIME type, fill in any user
+   * override info from the in-memory data source.
+   *
+   * @param aContentType  The MIME content-type 
+   * @param aMIMEInfo     The mime info to fill with the information
+   */
+  NS_HIDDEN_(nsresult) FillMIMEInfoForMimeTypeFromDS(
+    const nsACString& aContentType, nsIMIMEInfo * aMIMEInfo);
+
+  /**
+   * Given an existing protocol info object and a protocol scheme, fill in
+   * any user override info from the in-memory data source.
+   *
+   * @param aScheme   The protocol scheme
    * @param aMIMEInfo The mime info to fill with the information
    */
-  NS_HIDDEN_(nsresult) GetMIMEInfoForMimeTypeFromDS(const nsACString& aContentType,
-                                                    nsIMIMEInfo * aMIMEInfo);
-  
+  NS_HIDDEN_(nsresult) FillProtoInfoForSchemeFromDS(
+    const nsACString& aScheme, nsIHandlerInfo * aMIMEInfo);
+
+  /**
+   * Fill in the generic handler info stuff; called by Fill*InfoFor*FromDS.
+   * 
+   * @param aTypeNodeResource  RDF resource representing the top level scheme
+   *                           or MIME-type node in the graph
+   * @param aType              content-type or scheme name 
+   * @param aRDFService        the RDF service
+   * @param aTypeNodePrefix    One of NC_{CONTENT,SCHEME}_NODE_PREFIX
+   * @param aHandlerInfo       object to be filled in
+   */
+  NS_HIDDEN_(nsresult) FillHandlerInfoForTypeFromDS(
+    nsIRDFResource *aTypeNodeResource, const nsCAutoString& aType,
+    nsIRDFService *aRDFService, const char *aTypeNodePrefix, 
+    nsIHandlerInfo * aHandlerInfo);
+    
   /**
    * Given an extension, look up the user override information to see if we
    * have a mime info object representing this extension. The user over ride
@@ -138,8 +164,8 @@ public:
    *
    * @param aMIMEInfo The mime info to fill with the information
    */
-  NS_HIDDEN_(nsresult) GetMIMEInfoForExtensionFromDS(const nsACString& aFileExtension,
-                                                     nsIMIMEInfo * aMIMEInfo);
+  NS_HIDDEN_(nsresult) FillMIMEInfoForExtensionFromDS(
+    const nsACString& aFileExtension, nsIMIMEInfo * aMIMEInfo);
 
   /**
    * Looks up the MIME Type for a given extension in the RDF Datasource.
@@ -196,8 +222,8 @@ public:
    * Return the URI template for any configured web handler.  This will
    * probably be replaced by something on nsIWebContentConverterService soon. 
    */
-  static NS_HIDDEN_(nsresult) GetWebProtocolHandlerURITemplate(const nsACString &aScheme,
-                                                               nsACString &aUriTemplate);
+  NS_HIDDEN_(nsresult) GetProtocolHandlerInfo(const nsACString &aScheme,
+                                              nsIHandlerInfo **aHandlerInfo);
 
   virtual NS_HIDDEN_(nsresult) OSProtocolHandlerExists(const char *aScheme,
                                                        PRBool *aExists) = 0;
@@ -219,6 +245,7 @@ protected:
   nsCOMPtr<nsIRDFResource> kNC_AlwaysAsk;
   nsCOMPtr<nsIRDFResource> kNC_HandleInternal;
   nsCOMPtr<nsIRDFResource> kNC_PrettyName;
+  nsCOMPtr<nsIRDFResource> kNC_UriTemplate;
 #endif
 
   /**
@@ -232,16 +259,17 @@ protected:
    * The content type of the MIME Info will not be changed.
    */
 #ifdef MOZ_RDF
-  NS_HIDDEN_(nsresult) FillTopLevelProperties(nsIRDFResource * aContentTypeNodeResource, 
-                                              nsIRDFService * aRDFService,
-                                              nsIMIMEInfo * aMIMEInfo);
+  NS_HIDDEN_(nsresult) FillMIMEExtensionProperties(
+    nsIRDFResource * aContentTypeNodeResource, nsIRDFService * aRDFService,
+    nsIMIMEInfo * aMIMEInfo);
+  
   /**
-   * @see FillTopLevelProperties
+   * @see FillMIMEExtensionProperties
    */
   NS_HIDDEN_(nsresult) FillContentHandlerProperties(const char * aContentType,
-                                                    nsIRDFResource * aContentTypeNodeResource,
+                                                    const char * aNodePrefix,
                                                     nsIRDFService * aRDFService,
-                                                    nsIMIMEInfo * aMIMEInfo);
+                                                    nsIHandlerInfo * aHandler);
 
   /**
    * A small helper function which gets the target for a given source and
@@ -261,18 +289,18 @@ protected:
    * @param aContentType The type to search for.
    * @param aMIMEInfo    [inout] The mime info, if found
    */
-  NS_HIDDEN_(nsresult) GetMIMEInfoForMimeTypeFromExtras(const nsACString& aContentType,
-                                                        nsIMIMEInfo * aMIMEInfo);
+  NS_HIDDEN_(nsresult) FillMIMEInfoForMimeTypeFromExtras(
+    const nsACString& aContentType, nsIMIMEInfo * aMIMEInfo);
   /**
    * Searches the "extra" array of MIMEInfo objects for an object
    * with a specific extension.
    *
    * Does not change the MIME Type of the MIME Info.
    *
-   * @see GetMIMEInfoForMimeTypeFromExtras
+   * @see FillMIMEInfoForMimeTypeFromExtras
    */
-  NS_HIDDEN_(nsresult) GetMIMEInfoForExtensionFromExtras(const nsACString& aExtension,
-                                                         nsIMIMEInfo * aMIMEInfo);
+  NS_HIDDEN_(nsresult) FillMIMEInfoForExtensionFromExtras(
+    const nsACString& aExtension, nsIMIMEInfo * aMIMEInfo);
 
   /**
    * Searches the "extra" array for a MIME type, and gets its extension.

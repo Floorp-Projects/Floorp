@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Dan Mosedale <dmose@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -81,14 +82,12 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     NS_IMETHOD GetMacCreator(PRUint32 *aMacCreator);
     NS_IMETHOD SetMacCreator(PRUint32 aMacCreator);
     NS_IMETHOD Equals(nsIMIMEInfo *aMIMEInfo, PRBool *_retval);
-    NS_IMETHOD GetPreferredApplicationHandler(nsIFile * *aPreferredApplicationHandler);
-    NS_IMETHOD SetPreferredApplicationHandler(nsIFile * aPreferredApplicationHandler);
-    NS_IMETHOD GetApplicationDescription(nsAString & aApplicationDescription);
-    NS_IMETHOD SetApplicationDescription(const nsAString & aApplicationDescription);
+    NS_IMETHOD GetPreferredApplicationHandler(nsIHandlerApp * *aPreferredApplicationHandler);
+    NS_IMETHOD SetPreferredApplicationHandler(nsIHandlerApp * aPreferredApplicationHandler);
     NS_IMETHOD GetDefaultDescription(nsAString & aDefaultDescription);
     NS_IMETHOD LaunchWithFile(nsIFile *aFile);
-    NS_IMETHOD GetPreferredAction(nsMIMEInfoHandleAction *aPreferredAction);
-    NS_IMETHOD SetPreferredAction(nsMIMEInfoHandleAction aPreferredAction);
+    NS_IMETHOD GetPreferredAction(nsHandlerInfoAction *aPreferredAction);
+    NS_IMETHOD SetPreferredAction(nsHandlerInfoAction aPreferredAction);
     NS_IMETHOD GetAlwaysAskBeforeHandling(PRBool *aAlwaysAskBeforeHandling);
     NS_IMETHOD SetAlwaysAskBeforeHandling(PRBool aAlwaysAskBeforeHandling); 
 
@@ -143,8 +142,8 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     nsString               mDescription; ///< human readable description
     PRUint32               mMacType, mMacCreator; ///< Mac file type and creator
     nsCString              mMIMEType;
-    nsCOMPtr<nsIFile>      mPreferredApplication; ///< preferred application associated with this type.
-    nsMIMEInfoHandleAction mPreferredAction; ///< preferred action to associate with this type
+    nsCOMPtr<nsIHandlerApp> mPreferredApplication;
+    nsHandlerInfoAction    mPreferredAction; ///< preferred action to associate with this type
     nsString               mPreferredAppDescription;
     nsString               mDefaultAppDescription;
     PRBool                 mAlwaysAskBeforeHandling;
