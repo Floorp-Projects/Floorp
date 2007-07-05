@@ -1,10 +1,9 @@
 product=firefox
 branch=1.9.0
-url=http://stage.mozilla.org/pub/mozilla.org/firefox/nightly/latest-trunk/firefox-3.0a5pre.en-US.linux-i686.tar.bz2
+url=http://stage.mozilla.org/pub/mozilla.org/firefox/nightly/latest-trunk/firefox-3.0a7pre.en-US.linux-i686.tar.bz2
 profilename=firefox-1.9.0-profile
 profiledirectory=/tmp/firefox-1.9.0-profile
 executablepath=/tmp/firefox-1.9.0
 userpreferences=/work/mozilla/mozilla.com/test.mozilla.com/www/prefs/test-user.js
 extensiondir=/work/mozilla/mozilla.com/test.mozilla.com/www/xpi
-
-
+buildtype=nightly

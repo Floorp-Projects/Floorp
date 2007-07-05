@@ -93,13 +93,14 @@ shift 2
 
 datalist=`combo.sh "$@"`
 
-TEST_ID=`dirname $testscript | sed "s|$TEST_DIR/||" | sed "s|/|_|g"`
+TEST_SUITE=`dirname $testscript | sed "s|$TEST_DIR/||" | sed "s|/|_|g"`
 
 for data in $datalist; do
     TEST_DATE=`date -u +%Y-%m-%d-%H-%M-%S``date +%z`
-    TEST_LOG="${TEST_DIR}/results/${TEST_DATE},$data,$OSID,${MACHINE},$TEST_ID.log"
+    TEST_LOG="${TEST_DIR}/results/${TEST_DATE},$data,$OSID,${TEST_MACHINE},$TEST_SUITE.log"
 
-    echo "writing results to $TEST_LOG"
+    # tell caller what the log files are
+    echo "$TEST_LOG "
 
     test-setup.sh -d $TEST_DIR/data/$data.data >> $TEST_LOG 2>&1
 
