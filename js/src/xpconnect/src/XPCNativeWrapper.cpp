@@ -238,7 +238,7 @@ EnsureLegalActivity(JSContext *cx, JSObject *obj)
   }
 
   // Otherwise, we're looking at a non-system file with a handle on an
-  // implcit wrapper. This is a bug! Deny access.
+  // implicit wrapper. This is a bug! Deny access.
   return ThrowException(NS_ERROR_XPC_SECURITY_MANAGER_VETO, cx);
 }
 
