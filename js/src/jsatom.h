@@ -95,7 +95,7 @@ struct JSAtomListElement {
 
 #define ALE_ATOM(ale)   ((JSAtom *) (ale)->entry.key)
 #define ALE_INDEX(ale)  ((jsatomid) JS_PTR_TO_UINT32((ale)->entry.value))
-#define ALE_JSOP(ale)   ((JSOp) (ale)->entry.value)
+#define ALE_JSOP(ale)   ((JSOp) JS_PTR_TO_UINT32((ale)->entry.value))
 #define ALE_VALUE(ale)  ((jsval) (ale)->entry.value)
 #define ALE_NEXT(ale)   ((JSAtomListElement *) (ale)->entry.next)
 

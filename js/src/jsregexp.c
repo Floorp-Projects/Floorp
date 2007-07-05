@@ -70,7 +70,7 @@ typedef enum REOp {
 #undef REOP_DEF
 } REOp;
 
-#define REOP_IS_SIMPLE(op)  ((op) <= (unsigned)REOP_NCLASS)
+#define REOP_IS_SIMPLE(op)  ((op) <= REOP_NCLASS)
 
 #ifdef REGEXP_DEBUG
 const char *reop_names[] = {
@@ -1652,7 +1652,7 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, size_t treeDepth,
             emitStateSP->continueOp = REOP_ENDALT;
             ++emitStateSP;
             JS_ASSERT((size_t)(emitStateSP - emitStateStack) <= treeDepth);
-            t = t->u.kid2;
+            t = (RENode *) t->u.kid2;
             op = t->op;
             JS_ASSERT(op < REOP_LIMIT);
             continue;
@@ -1756,7 +1756,7 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, size_t treeDepth,
             emitStateSP->jumpToJumpFlag = JS_FALSE;
             ++emitStateSP;
             JS_ASSERT((size_t)(emitStateSP - emitStateStack) <= treeDepth);
-            t = t->kid;
+            t = (RENode *) t->kid;
             op = t->op;
             JS_ASSERT(op < REOP_LIMIT);
             continue;
@@ -1906,7 +1906,7 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, size_t treeDepth,
                 break;
             --emitStateSP;
             t = emitStateSP->continueNode;
-            op = emitStateSP->continueOp;
+            op = (REOp) emitStateSP->continueOp;
         }
     }
 
@@ -3021,7 +3021,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
 
               case REOP_ENDCHILD: /* marks the end of a quantifier child */
                 pc = curState[-1].continue_pc;
-                op = curState[-1].continue_op;
+                op = (REOp) curState[-1].continue_op;
 
                 if (!result)
                     result = x;
@@ -3219,7 +3219,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 (REBackTrackData *) ((char *)backTrackData - backTrackData->sz);
             x->cp = backTrackData->cp;
             pc = backTrackData->backtrack_pc;
-            op = backTrackData->backtrack_op;
+            op = (REOp) backTrackData->backtrack_op;
             JS_ASSERT(op < REOP_LIMIT);
             gData->stateStackTop = backTrackData->saveStateStackTop;
             JS_ASSERT(gData->stateStackTop);
@@ -4278,7 +4278,7 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *parent)
     clone = js_NewObject(cx, &js_RegExpClass, NULL, parent);
     if (!clone)
         return NULL;
-    re = JS_GetPrivate(cx, obj);
+    re = (JSRegExp *) JS_GetPrivate(cx, obj);
     if (!JS_SetPrivate(cx, clone, re) || !js_SetLastIndex(cx, clone, 0)) {
         cx->weakRoots.newborn[GCX_OBJECT] = NULL;
         return NULL;

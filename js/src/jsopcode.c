@@ -1274,7 +1274,7 @@ GetLocal(SprintStack *ss, jsint i)
 #if JS_HAS_DESTRUCTURING
 
 #define LOCAL_ASSERT(expr)  LOCAL_ASSERT_RV(expr, NULL)
-#define LOAD_OP_DATA(pc)    (oplen = (cs = &js_CodeSpec[op = *pc])->length)
+#define LOAD_OP_DATA(pc)    (oplen = (cs = &js_CodeSpec[op=(JSOp)*pc])->length)
 
 static jsbytecode *
 DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc);
@@ -1826,9 +1826,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * operand.
                      */
                     if (mode == JOF_PROP) {
-                        op = (format & JOF_SET) ? JSOP_GETPROP2 : JSOP_GETPROP;
+                        op = (JSOp) ((format & JOF_SET)
+                                     ? JSOP_GETPROP2
+                                     : JSOP_GETPROP);
                     } else if (mode == JOF_ELEM) {
-                        op = (format & JOF_SET) ? JSOP_GETELEM2 : JSOP_GETELEM;
+                        op = (JSOp) ((format & JOF_SET)
+                                     ? JSOP_GETELEM2
+                                     : JSOP_GETELEM);
                     } else {
                         /*
                          * Zero mode means precisely that op is uncategorized
@@ -1889,7 +1893,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * expansion: x = x op y (replace y by z = w to see the
                      * problem).
                      */
-                    op = pc[oplen];
+                    op = (JSOp) pc[oplen];
                     LOCAL_ASSERT(op != saveop);
                 }
                 rval = POP_STR();
@@ -2581,6 +2585,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     jp->indent += 4;
                     len = 0;
                     break;
+                  default:
+                    break;
                 }
 
                 todo = -2;
@@ -2750,7 +2756,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                  * destructuring patterns yield zero-count blocks).
                  */
                 pos = ss->top;
-                while ((op = ss->opcodes[--pos]) != JSOP_ENTERBLOCK &&
+                while ((op = (JSOp) ss->opcodes[--pos]) != JSOP_ENTERBLOCK &&
                        op != JSOP_NEWINIT) {
                     if (pos == 0)
                         break;
@@ -3215,8 +3221,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_DUP2:
                 rval = GetStr(ss, ss->top-2);
                 todo = SprintCString(&ss->sprinter, rval);
-                if (todo < 0 || !PushOff(ss, todo, ss->opcodes[ss->top-2]))
+                if (todo < 0 || !PushOff(ss, todo,
+                                         (JSOp) ss->opcodes[ss->top-2])) {
                     return NULL;
+                }
                 /* FALL THROUGH */
 
               case JSOP_DUP:
@@ -3259,7 +3267,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 #endif
 
                 rval = GetStr(ss, ss->top-1);
-                saveop = ss->opcodes[ss->top-1];
+                saveop = (JSOp) ss->opcodes[ss->top-1];
                 todo = SprintCString(&ss->sprinter, rval);
                 break;
 
@@ -3341,7 +3349,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                  * Special case: new (x(y)(z)) must be parenthesized like so.
                  * Same for new (x(y).z) -- contrast with new x(y).z.
                  */
-                op = ss->opcodes[ss->top-1];
+                op = (JSOp) ss->opcodes[ss->top-1];
                 lval = PopStr(ss,
                               (saveop == JSOP_NEW &&
                                (op == JSOP_CALL || op == JSOP_EVAL ||
@@ -5049,7 +5057,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
             jmpoff = js_GetSrcNoteOffset(sn, 0);
             if (pc + jmpoff < begin) {
                 pc += jmpoff;
-                op = *pc;
+                op = (JSOp) *pc;
                 JS_ASSERT(op == JSOP_GOTO || op == JSOP_GOTOX);
                 cs = &js_CodeSpec[op];
                 oplen = cs->length;
@@ -5159,7 +5167,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
         }
         jp->dvgfence = end;
         if (js_DecompileCode(jp, script, begin, (uintN)len, (uintN)pcdepth)) {
-            name = (jp->sprinter.base) ? jp->sprinter.base : "";
+            name = (jp->sprinter.base) ? jp->sprinter.base : (char *) "";
             name = JS_strdup(cx, name);
         }
         js_DestroyPrinter(jp);

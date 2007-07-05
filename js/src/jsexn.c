@@ -631,7 +631,7 @@ StackTraceToString(JSContext *cx, JSExnPrivate *priv)
             ptr_ = JS_realloc(cx, stackbuf, (stackmax+1) * sizeof(jschar));   \
             if (!ptr_)                                                        \
                 goto bad;                                                     \
-            stackbuf = ptr_;                                                  \
+            stackbuf = (jschar *) ptr_;                                       \
         }                                                                     \
         stackbuf[stacklen++] = (c);                                           \
     JS_END_MACRO
@@ -650,7 +650,7 @@ StackTraceToString(JSContext *cx, JSExnPrivate *priv)
             ptr_ = JS_realloc(cx, stackbuf, (stackmax+1) * sizeof(jschar));   \
             if (!ptr_)                                                        \
                 goto bad;                                                     \
-            stackbuf = ptr_;                                                  \
+            stackbuf = (jschar *) ptr_;                                       \
         }                                                                     \
         js_strncpy(stackbuf + stacklen, JSSTRING_CHARS(str_), length_);       \
         stacklen += length_;                                                  \
@@ -700,7 +700,7 @@ StackTraceToString(JSContext *cx, JSExnPrivate *priv)
          */
         void *shrunk = JS_realloc(cx, stackbuf, (stacklen+1) * sizeof(jschar));
         if (shrunk)
-            stackbuf = shrunk;
+            stackbuf = (jschar *) shrunk;
     }
 
     stackbuf[stacklen] = 0;
@@ -835,7 +835,7 @@ exn_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         name_length = JSSTRING_LENGTH(name);
         message_length = JSSTRING_LENGTH(message);
         length = (name_length ? name_length + 2 : 0) + message_length;
-        cp = chars = (jschar*) JS_malloc(cx, (length + 1) * sizeof(jschar));
+        cp = chars = (jschar *) JS_malloc(cx, (length + 1) * sizeof(jschar));
         if (!chars)
             return JS_FALSE;
 
@@ -936,7 +936,7 @@ exn_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
     }
 
-    cp = chars = (jschar*) JS_malloc(cx, (length + 1) * sizeof(jschar));
+    cp = chars = (jschar *) JS_malloc(cx, (length + 1) * sizeof(jschar));
     if (!chars)
         return JS_FALSE;
 
@@ -1153,7 +1153,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
     /* Find the exception index associated with this error. */
     errorNumber = (JSErrNum) reportp->errorNumber;
     errorString = js_GetLocalizedErrorMessage(cx, NULL, NULL, errorNumber);
-    exn = errorString ? errorString->exnType : JSEXN_NONE;
+    exn = errorString ? (JSExnType) errorString->exnType : JSEXN_NONE;
     JS_ASSERT(exn < JSEXN_LIMIT);
 
 #if defined( DEBUG_mccabe ) && defined ( PRINTNAMES )

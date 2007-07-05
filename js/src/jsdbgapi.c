@@ -545,7 +545,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 if (nslots <= JS_ARRAY_LENGTH(smallv)) {
                     argv = smallv;
                 } else {
-                    argv = JS_malloc(cx, nslots * sizeof(jsval));
+                    argv = (jsval *) JS_malloc(cx, nslots * sizeof(jsval));
                     if (!argv) {
                         DBG_LOCK(rt);
                         DropWatchPointAndUnlock(cx, wp, JSWP_HELD);
@@ -1107,7 +1107,7 @@ JS_GetScriptLineExtent(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(JSVersion)
 JS_GetScriptVersion(JSContext *cx, JSScript *script)
 {
-    return script->version & JSVERSION_MASK;
+    return (JSVersion) (script->version & JSVERSION_MASK);
 }
 
 /***************************************************************************/
