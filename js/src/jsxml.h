@@ -178,8 +178,8 @@ struct JSXML {
     uint16              xml_class;      /* discriminates u, below */
     uint16              xml_flags;      /* flags, see below */
     union {
-        struct JSXMLListVar list;
-        struct JSXMLElemVar elem;
+        JSXMLListVar    list;
+        JSXMLElemVar    elem;
         JSString        *value;
     } u;
 
