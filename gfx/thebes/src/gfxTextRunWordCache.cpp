@@ -48,7 +48,7 @@ public:
         mCache.Init(100);
     }
     ~TextRunWordCache() {
-        NS_ASSERTION(mCache.Count() == 0, "Textrun cache not empty!");
+        NS_WARN_IF_FALSE(mCache.Count() == 0, "Textrun cache not empty!");
     }
 
     /**
