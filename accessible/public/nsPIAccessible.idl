@@ -41,7 +41,7 @@
 interface nsIAccessible;
 interface nsIAccessibleEvent;
 
-[uuid(e4865da3-f292-4f1a-9c56-dd307f1bdc17)]
+[uuid(96518e2e-b142-4b5d-9324-0fa5ba4f8bab)]
 interface nsPIAccessible : nsISupports
 {
   /**
@@ -68,18 +68,6 @@ interface nsPIAccessible : nsISupports
    * Set the child count to -1 (unknown) and null out cached child pointers
    */
   void invalidateChildren();
-
-  /**
-   * Fire accessible event.
-   *
-   * @param aEvent - DOM event
-   * @param aTarget - target of DOM event
-   * @param aData - additional information for accessible event.
-   *
-   * XXX: eventually this method will be removed (see bug 377022)
-   */
-  void fireToolkitEvent(in unsigned long aEvent, in nsIAccessible aTarget,
-                        in voidPtr aData);
 
   /**
    * Fire accessible event.

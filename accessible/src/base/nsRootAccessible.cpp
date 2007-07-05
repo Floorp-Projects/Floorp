@@ -483,13 +483,13 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
       PRUint32 naturalRole; // The natural role is the role that this type of element normally has
       finalFocusAccessible->GetRole(&naturalRole);
       if (role != naturalRole) { // Must be a DHTML menuitem
-         FireToolkitEvent(nsIAccessibleEvent::EVENT_MENU_START, this, nsnull);
+         nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENU_START, this);
          mIsInDHTMLMenu = nsIAccessibleRole::ROLE_MENUITEM;
       }
     }
   }
   else if (mIsInDHTMLMenu) {
-    FireToolkitEvent(nsIAccessibleEvent::EVENT_MENU_END, this, nsnull);
+    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENU_END, this);
     mIsInDHTMLMenu = PR_FALSE;
   }
 
@@ -704,12 +704,12 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
         // for each tree item. Perhaps each tree item will need to cache its
         // selection state and fire an event after a DOM "select" event when
         // that state changes. nsXULTreeAccessible::UpdateTreeSelection();
-        return privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
-                                         accessible, nsnull);
+        return nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
+                                        accessible);
       }
 
-      return privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION,
-                                       treeItemAccessible, nsnull);
+      return nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_SELECTION,
+                                      treeItemAccessible);
     }
   }
   else
@@ -747,12 +747,10 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     FireAccessibleFocusEvent(accessible, focusedItem, aEvent);
   }
   else if (eventType.EqualsLiteral("NameChange")) {
-    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE,
-                              accessible, nsnull);
+    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, accessible);
   }
   else if (eventType.EqualsLiteral("AlertActive")) { 
-    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_ALERT, 
-                              accessible, nsnull);
+    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_ALERT, accessible);
   }
   else if (eventType.EqualsLiteral("popupshown")) {
     // Don't fire menupopup events for combobox and autocomplete lists
@@ -769,7 +767,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
       event = nsIAccessibleEvent::EVENT_SHOW;
     }
     if (event) {
-      privAcc->FireToolkitEvent(event, accessible, nsnull);
+      nsAccUtils::FireAccEvent(event, accessible);
     }
   }
 
@@ -796,8 +794,8 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   }
   else if (eventType.EqualsLiteral("DOMMenuInactive")) {
     if (Role(accessible) == nsIAccessibleRole::ROLE_MENUPOPUP) {
-      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_END,
-                                accessible, nsnull);
+      nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_END,
+                               accessible);
     }
   }
   else if (eventType.EqualsLiteral("DOMMenuItemActive")) {
@@ -828,17 +826,14 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     FireAccessibleFocusEvent(accessible, aTargetNode, aEvent, PR_TRUE);
   }
   else if (eventType.EqualsLiteral("DOMMenuBarActive")) {
-    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENU_START,
-                              accessible, nsnull);
+    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENU_START, accessible);
   }
   else if (eventType.EqualsLiteral("DOMMenuBarInactive")) {
-    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENU_END,
-                              accessible, nsnull);
+    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENU_END, accessible);
     FireCurrentFocusEvent();
   }
   else if (eventType.EqualsLiteral("ValueChange")) {
-    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, 
-                              accessible, nsnull);
+    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, accessible);
   }
   return NS_OK;
 }
