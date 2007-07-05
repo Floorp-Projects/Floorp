@@ -839,7 +839,8 @@ class JSAutoTempValueRooter
 #define JSVERSION_MASK                  0x0FFF  /* see JSVersion in jspubtd.h */
 #define JSVERSION_HAS_XML               0x1000  /* flag induced by XML option */
 
-#define JSVERSION_NUMBER(cx)            ((cx)->version & JSVERSION_MASK)
+#define JSVERSION_NUMBER(cx)            ((JSVersion)((cx)->version &          \
+                                                     JSVERSION_MASK))
 #define JS_HAS_XML_OPTION(cx)           ((cx)->version & JSVERSION_HAS_XML || \
                                          JSVERSION_NUMBER(cx) >= JSVERSION_1_6)
 

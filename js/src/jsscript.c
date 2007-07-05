@@ -1053,7 +1053,7 @@ js_InitScriptClass(JSContext *cx, JSObject *obj)
 JS_STATIC_DLL_CALLBACK(int)
 js_compare_strings(const void *k1, const void *k2)
 {
-    return strcmp(k1, k2) == 0;
+    return strcmp((const char *) k1, (const char *) k2) == 0;
 }
 
 /* Shared with jsatom.c to save code space. */
@@ -1076,7 +1076,8 @@ typedef struct ScriptFilenameEntry {
 JS_STATIC_DLL_CALLBACK(JSHashEntry *)
 js_alloc_sftbl_entry(void *priv, const void *key)
 {
-    size_t nbytes = offsetof(ScriptFilenameEntry, filename) + strlen(key) + 1;
+    size_t nbytes = offsetof(ScriptFilenameEntry, filename) +
+                    strlen((const char *) key) + 1;
 
     return (JSHashEntry *) malloc(JS_MAX(nbytes, sizeof(JSHashEntry)));
 }

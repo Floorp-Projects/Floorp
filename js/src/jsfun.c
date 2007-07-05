@@ -545,7 +545,7 @@ args_or_call_trace(JSTracer *trc, JSObject *obj)
 {
     JSStackFrame *fp;
 
-    fp = JS_GetPrivate(trc->context, obj);
+    fp = (JSStackFrame *) JS_GetPrivate(trc->context, obj);
     if (fp && (fp->flags & JSFRAME_GENERATOR)) {
         JS_CALL_OBJECT_TRACER(trc, FRAME_TO_GENERATOR(fp)->obj,
                               "FRAME_TO_GENERATOR(fp)->obj");
@@ -797,7 +797,7 @@ call_enumerate(JSContext *cx, JSObject *obj)
         JS_ASSERT(JSID_IS_ATOM(sprop->id));
         atom = JSID_TO_ATOM(sprop->id);
         JS_ASSERT(atom->flags & ATOM_HIDDEN);
-        atom = atom->entry.value;
+        atom = (JSAtom *) atom->entry.value;
 
         if (!js_LookupProperty(cx, obj, ATOM_TO_JSID(atom), &pobj, &prop))
             return JS_FALSE;
