@@ -820,14 +820,14 @@ js_ValueToStringAtom(JSContext *cx, jsval v)
 JS_STATIC_DLL_CALLBACK(JSHashNumber)
 js_hash_atom_ptr(const void *key)
 {
-    const JSAtom *atom = key;
+    const JSAtom *atom = (const JSAtom *) key;
     return atom->number;
 }
 
 JS_STATIC_DLL_CALLBACK(void *)
 js_alloc_temp_space(void *priv, size_t size)
 {
-    JSContext *cx = priv;
+    JSContext *cx = (JSContext *) priv;
     void *space;
 
     JS_ARENA_ALLOCATE(space, &cx->tempPool, size);
@@ -844,7 +844,7 @@ js_free_temp_space(void *priv, void *item)
 JS_STATIC_DLL_CALLBACK(JSHashEntry *)
 js_alloc_temp_entry(void *priv, const void *key)
 {
-    JSContext *cx = priv;
+    JSContext *cx = (JSContext *) priv;
     JSAtomListElement *ale;
 
     JS_ARENA_ALLOCATE_TYPE(ale, JSAtomListElement, &cx->tempPool);
@@ -949,7 +949,7 @@ JS_STATIC_DLL_CALLBACK(intN)
 js_map_atom(JSHashEntry *he, intN i, void *arg)
 {
     JSAtomListElement *ale = (JSAtomListElement *)he;
-    JSAtom **vector = arg;
+    JSAtom **vector = (JSAtom **) arg;
 
     vector[ALE_INDEX(ale)] = ALE_ATOM(ale);
     return HT_ENUMERATE_NEXT;

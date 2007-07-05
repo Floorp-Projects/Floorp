@@ -940,7 +940,7 @@ js_gcroot_mapper(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
     GCRootMapArgs *args = (GCRootMapArgs *) arg;
     JSGCRootHashEntry *rhe = (JSGCRootHashEntry *)hdr;
     intN mapflags;
-    JSDHashOperator op;
+    int op;
 
     mapflags = args->map(rhe->root, rhe->name, args->data);
 
@@ -956,7 +956,7 @@ js_gcroot_mapper(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
         op |= JS_DHASH_REMOVE;
 #endif
 
-    return op;
+    return (JSDHashOperator) op;
 }
 
 uint32
@@ -1741,7 +1741,7 @@ js_LockGCThingRT(JSRuntime *rt, void *thing)
             goto done;
         }
         if (!lhe->thing) {
-            lhe->thing = thing;
+            lhe->thing = (JSGCThing *) thing;
             lhe->count = deep ? 1 : 2;
         } else {
             JS_ASSERT(lhe->count >= 1);
@@ -2033,7 +2033,7 @@ ScanDelayedChildren(JSTracer *trc)
                  * XXX: inline js_GetGCThingFlags() to use already available
                  * pi.
                  */
-                thing = (void *)((jsuword)pi + thingOffset);
+                thing = (JSGCThing *)((jsuword)pi + thingOffset);
                 flagp = js_GetGCThingFlags(thing);
                 if (thingsPerUnscannedChunk != 1) {
                     /*

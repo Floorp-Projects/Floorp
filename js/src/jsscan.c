@@ -202,7 +202,7 @@ GrowTokenBuf(JSStringBuffer *sb, size_t newlength)
     size_t tbsize;
     JSArenaPool *pool;
 
-    cx = sb->data;
+    cx = (JSContext*) sb->data;
     base = sb->base;
     offset = PTRDIFF(sb->ptr, base, jschar);
     pool = &cx->tempPool;
@@ -577,13 +577,13 @@ ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
 
     switch (flags & JSREPORT_HANDLE) {
       case JSREPORT_TS:
-        ts = handle;
+        ts = (JSTokenStream *) handle;
         break;
       case JSREPORT_CG:
-        cg = handle;
+        cg = (JSCodeGenerator *) handle;
         break;
       case JSREPORT_PN:
-        pn = handle;
+        pn = (JSParseNode *) handle;
         ts = pn->pn_ts;
         break;
     }
@@ -790,7 +790,7 @@ GrowStringBuffer(JSStringBuffer *sb, size_t newlength)
     JS_ASSERT(offset >= 0);
     newlength += offset + 1;
     if ((size_t)offset < newlength && newlength < ~(size_t)0 / sizeof(jschar))
-        bp = realloc(sb->base, newlength * sizeof(jschar));
+        bp = (jschar *) realloc(sb->base, newlength * sizeof(jschar));
     else
         bp = NULL;
     if (!bp) {
@@ -1101,6 +1101,10 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
     JSAtom *atom;
     JSBool hadUnicodeEscape;
     const struct keyword *kw;
+    JSBool inTarget;
+    size_t targetLength;
+    ptrdiff_t contentIndex;
+
 
 #define INIT_TOKENBUF()     (ts->tokenbuf.ptr = ts->tokenbuf.base)
 #define TOKENBUF_LENGTH()   PTRDIFF(ts->tokenbuf.ptr, ts->tokenbuf.base, jschar)
@@ -1700,9 +1704,9 @@ retry:
 
             /* Check for processing instruction. */
             if (MatchChar(ts, '?')) {
-                JSBool inTarget = JS_TRUE;
-                size_t targetLength = 0;
-                ptrdiff_t contentIndex = -1;
+                inTarget = JS_TRUE;
+                targetLength = 0;
+                contentIndex = -1;
 
                 INIT_TOKENBUF();
                 while ((c = GetChar(ts)) != '?' || PeekChar(ts) != '>') {

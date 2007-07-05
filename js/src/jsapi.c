@@ -1142,6 +1142,8 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
 #endif
 }
 
+JS_BEGIN_EXTERN_C
+
 JSObject *
 js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
 {
@@ -1223,6 +1225,8 @@ out:
     }
     return fun_proto;
 }
+
+JS_END_EXTERN_C
 
 JS_PUBLIC_API(JSBool)
 JS_InitStandardClasses(JSContext *cx, JSObject *obj)
@@ -3701,7 +3705,7 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
 
     /* Clear cached class objects on the global object. */
     if (JS_GET_CLASS(cx, obj)->flags & JSCLASS_IS_GLOBAL) {
-        JSProtoKey key;
+        int key;
 
         for (key = JSProto_Null; key < JSProto_LIMIT; key++)
             JS_SetReservedSlot(cx, obj, key, JSVAL_VOID);

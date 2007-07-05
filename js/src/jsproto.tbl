@@ -72,7 +72,8 @@
 
 /*
  * Enumerator codes in the second column must not change -- they are part of
- * the JS XDR API.
+ * the JS XDR API.  Client modules including jsproto.tbl should consider
+ * wrapping the inclusion with JS_BEGIN_EXTERN_C and JS_END_EXTERN_C.
  */
 JS_PROTO(Null,                   0,     js_InitNullClass)
 JS_PROTO(Object,                 1,     js_InitFunctionAndObjectClasses)

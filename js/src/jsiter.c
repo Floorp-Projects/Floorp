@@ -61,14 +61,13 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
+#include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
 #endif
-
-extern const char js_throw_str[]; /* from jsscan.h */
 
 #define JSSLOT_ITER_STATE       (JSSLOT_PRIVATE)
 #define JSSLOT_ITER_FLAGS       (JSSLOT_PRIVATE + 1)

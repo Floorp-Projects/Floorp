@@ -4633,7 +4633,7 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             pn3 = PrimaryExpr(cx, ts, tc, tt, JS_TRUE);
             if (!pn3)
                 return NULL;
-            tt = pn3->pn_type;
+            tt = PN_TYPE(pn3);
             if (tt == TOK_NAME) {
                 pn2->pn_op = JSOP_GETPROP;
                 pn2->pn_expr = pn;
@@ -4686,7 +4686,7 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             pn3 = PrimaryExpr(cx, ts, tc, tt, JS_TRUE);
             if (!pn3)
                 return NULL;
-            tt = pn3->pn_type;
+            tt = PN_TYPE(pn3);
             if (tt == TOK_NAME) {
                 pn3->pn_type = TOK_STRING;
                 pn3->pn_arity = PN_NULLARY;
@@ -5668,7 +5668,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                         op = JSOP_SETTER;
                     else
                         goto property_name;
-                        
+
                     ts->flags |= TSF_KEYWORD_IS_NAME;
                     tt = js_GetToken(cx, ts);
                     ts->flags &= ~TSF_KEYWORD_IS_NAME;
@@ -5681,7 +5681,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                         return NULL;
                     pn3->pn_atom = CURRENT_TOKEN(ts).t_atom;
                     pn3->pn_slot = -1;
-                    
+
                     /* We have to fake a 'function' token here. */
                     CURRENT_TOKEN(ts).t_op = JSOP_NOP;
                     CURRENT_TOKEN(ts).type = TOK_FUNCTION;
@@ -6181,7 +6181,7 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
     uint32 i, j;
 
     JS_ASSERT(pn->pn_arity == PN_LIST);
-    tt = pn->pn_type;
+    tt = PN_TYPE(pn);
     pnp = &pn->pn_head;
     pn1 = *pnp;
     accum = NULL;
@@ -6680,7 +6680,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
                     break;
             }
             if (!pn2) {
-                JSOp op = pn->pn_op;
+                JSOp op = PN_OP(pn);
 
                 pn2 = pn1->pn_next;
                 pn3 = pn2->pn_next;
@@ -6699,7 +6699,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
                 return JS_FALSE;
             }
             if (pn1->pn_type == TOK_NUMBER && pn2->pn_type == TOK_NUMBER) {
-                if (!FoldBinaryNumeric(cx, pn->pn_op, pn1, pn2, pn, tc))
+                if (!FoldBinaryNumeric(cx, PN_OP(pn), pn1, pn2, pn, tc))
                     return JS_FALSE;
             }
         }

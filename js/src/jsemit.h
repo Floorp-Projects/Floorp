@@ -602,8 +602,9 @@ typedef enum JSSrcNoteType {
                                            | ((d) & SN_XDELTA_MASK)))
 
 #define SN_IS_XDELTA(sn)        ((*(sn) >> SN_DELTA_BITS) >= SRC_XDELTA)
-#define SN_TYPE(sn)             (SN_IS_XDELTA(sn) ? SRC_XDELTA                \
-                                                  : *(sn) >> SN_DELTA_BITS)
+#define SN_TYPE(sn)             ((JSSrcNoteType)(SN_IS_XDELTA(sn)             \
+                                                 ? SRC_XDELTA                 \
+                                                 : *(sn) >> SN_DELTA_BITS))
 #define SN_SET_TYPE(sn,type)    SN_MAKE_NOTE(sn, type, SN_DELTA(sn))
 #define SN_IS_GETTABLE(sn)      (SN_TYPE(sn) < SRC_NEWLINE)
 

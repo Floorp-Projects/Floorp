@@ -79,7 +79,7 @@ JS_BEGIN_EXTERN_C
 
 /* Objects, strings, and doubles are GC'ed. */
 #define JSVAL_IS_GCTHING(v)     (!((v) & JSVAL_INT) && !JSVAL_IS_BOOLEAN(v))
-#define JSVAL_TO_GCTHING(v)     ((void *)JSVAL_CLRTAG(v))
+#define JSVAL_TO_GCTHING(v)     ((JSGCThing *)JSVAL_CLRTAG(v))
 #define JSVAL_TO_OBJECT(v)      ((JSObject *)JSVAL_TO_GCTHING(v))
 #define JSVAL_TO_DOUBLE(v)      ((jsdouble *)JSVAL_TO_GCTHING(v))
 #define JSVAL_TO_STRING(v)      ((JSString *)JSVAL_TO_GCTHING(v))
@@ -1237,9 +1237,10 @@ struct JSExtendedClass {
 #define JSCLASS_CACHED_PROTO_WIDTH      8
 #define JSCLASS_CACHED_PROTO_MASK       JS_BITMASK(JSCLASS_CACHED_PROTO_WIDTH)
 #define JSCLASS_HAS_CACHED_PROTO(key)   ((key) << JSCLASS_CACHED_PROTO_SHIFT)
-#define JSCLASS_CACHED_PROTO_KEY(clasp) (((clasp)->flags                      \
-                                          >> JSCLASS_CACHED_PROTO_SHIFT)      \
-                                         & JSCLASS_CACHED_PROTO_MASK)
+#define JSCLASS_CACHED_PROTO_KEY(clasp) ((JSProtoKey)                         \
+                                         (((clasp)->flags                     \
+                                           >> JSCLASS_CACHED_PROTO_SHIFT)     \
+                                          & JSCLASS_CACHED_PROTO_MASK))
 
 /* Initializer for unused members of statically initialized JSClass structs. */
 #define JSCLASS_NO_OPTIONAL_MEMBERS     0,0,0,0,0,0,0,0

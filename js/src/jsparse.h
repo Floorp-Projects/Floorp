@@ -378,6 +378,9 @@ struct JSParseNode {
      (pn)->pn_type == TOK_STRING ||                                           \
      ((pn)->pn_type == TOK_PRIMARY && (pn)->pn_op != JSOP_THIS))
 
+#define PN_OP(pn)    ((JSOp)(pn)->pn_op)
+#define PN_TYPE(pn)  ((JSTokenType)(pn)->pn_type)
+
 /*
  * Compute a pointer to the last JSParseNode element in a singly-linked list.
  * NB: list must be non-empty for correct PN_LAST usage!

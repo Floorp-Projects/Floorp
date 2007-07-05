@@ -52,6 +52,8 @@
 # include "jslock.h"
 #endif
 
+JS_BEGIN_EXTERN_C
+
 /*
  * Given P independent, non-unique properties each of size S words mapped by
  * all scopes in a runtime, construct a property tree of N nodes each of size
@@ -400,5 +402,7 @@ js_InitPropertyTree(JSRuntime *rt);
 
 extern void
 js_FinishPropertyTree(JSRuntime *rt);
+
+JS_END_EXTERN_C
 
 #endif /* jsscope_h___ */

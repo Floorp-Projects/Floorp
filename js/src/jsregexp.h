@@ -50,6 +50,8 @@
 #include "jsdhash.h"
 #endif
 
+JS_BEGIN_EXTERN_C
+
 struct JSRegExpStatics {
     JSString    *input;         /* input string to match (perl $_, GC root) */
     JSBool      multiline;      /* whether input contains newlines (perl $*) */
@@ -179,5 +181,7 @@ js_GetLastIndex(JSContext *cx, JSObject *obj, jsdouble *lastIndex);
 
 extern JSBool
 js_SetLastIndex(JSContext *cx, JSObject *obj, jsdouble lastIndex);
+
+JS_END_EXTERN_C
 
 #endif /* jsregexp_h___ */

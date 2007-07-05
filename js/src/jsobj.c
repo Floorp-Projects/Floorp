@@ -222,8 +222,11 @@ obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     /* __parent__ is readonly and permanent, only __proto__ may be set. */
     propid = ATOM_TO_JSID(cx->runtime->atomState.protoAtom);
-    if (!OBJ_CHECK_ACCESS(cx, obj, propid, JSACC_PROTO|JSACC_WRITE, vp, &attrs))
+    if (!OBJ_CHECK_ACCESS(cx, obj, propid,
+                          (JSAccessMode)(JSACC_PROTO|JSACC_WRITE), vp,
+                          &attrs)) {
         return JS_FALSE;
+    }
 
     return js_SetProtoOrParent(cx, obj, slot, pobj);
 }
@@ -2528,6 +2531,8 @@ bad:
     goto out;
 }
 
+JS_BEGIN_EXTERN_C
+
 JS_STATIC_DLL_CALLBACK(JSObject *)
 js_InitNullClass(JSContext *cx, JSObject *obj)
 {
@@ -2544,6 +2549,8 @@ static JSObjectOp lazy_prototype_init[JSProto_LIMIT] = {
 #include "jsproto.tbl"
 #undef JS_PROTO
 };
+
+JS_END_EXTERN_C
 
 JSBool
 js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
@@ -2637,7 +2644,7 @@ js_FindClassObject(JSContext *cx, JSObject *start, jsid id, jsval *vp)
         return JS_FALSE;
 
     if (JSID_IS_INT(id)) {
-        key = JSID_TO_INT(id);
+        key = (JSProtoKey) JSID_TO_INT(id);
         JS_ASSERT(key != JSProto_Null);
         if (!js_GetClassObject(cx, obj, key, &cobj))
             return JS_FALSE;
@@ -3545,7 +3552,7 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             JSOp op;
             uintN flags;
 
-            op = *pc;
+            op = (JSOp) *pc;
             if (op == JSOP_GETXPROP) {
                 flags = JSREPORT_ERROR;
             } else {
@@ -4694,7 +4701,7 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
     if (xdr->mode == JSXDR_DECODE) {
         if (classDef) {
             /* NB: we know that JSProto_Null is 0 here, for backward compat. */
-            protoKey = classDef >> 1;
+            protoKey = (JSProtoKey) (classDef >> 1);
             classKey = (protoKey != JSProto_Null)
                        ? INT_TO_JSID(protoKey)
                        : ATOM_TO_JSID(atom);

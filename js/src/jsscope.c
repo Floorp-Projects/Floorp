@@ -519,7 +519,7 @@ NewPropTreeKidsChunk(JSRuntime *rt)
 {
     PropTreeKidsChunk *chunk;
 
-    chunk = calloc(1, sizeof *chunk);
+    chunk = (PropTreeKidsChunk *) calloc(1, sizeof *chunk);
     if (!chunk)
         return NULL;
     JS_ASSERT(((jsuword)chunk & CHUNKY_KIDS_TAG) == 0);
