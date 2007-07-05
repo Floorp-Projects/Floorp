@@ -54,6 +54,7 @@
 #include "nsOSHelperAppService.h"
 #include "nsExternalProtocolHandler.h"
 #include "nsPrefetchService.h"
+#include "nsHandlerAppImpl.h"
 
 // session history
 #include "nsSHEntry.h"
@@ -99,6 +100,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsOSHelperAppService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsExternalProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlockedExternalProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefetchService, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLocalHandlerApp)
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
 #include "nsInternetConfigService.h"
@@ -203,11 +205,13 @@ static const nsModuleComponentInfo gDocShellModuleInfo[] = {
      nsBlockedExternalProtocolHandlerConstructor, },
   {  NS_PREFETCHSERVICE_CLASSNAME, NS_PREFETCHSERVICE_CID, NS_PREFETCHSERVICE_CONTRACTID,
      nsPrefetchServiceConstructor, },
+  { "Local Application Handler App", NS_LOCALHANDLERAPP_CID, 
+    NS_LOCALHANDLERAPP_CONTRACTID, nsLocalHandlerAppConstructor, },
 #if defined(XP_MAC) || defined(XP_MACOSX)
   { "Internet Config Service", NS_INTERNETCONFIGSERVICE_CID, NS_INTERNETCONFIGSERVICE_CONTRACTID,
     nsInternetConfigServiceConstructor, },
 #endif
-    
+        
     // session history
    { "nsSHEntry", NS_SHENTRY_CID,
       NS_SHENTRY_CONTRACTID, nsSHEntryConstructor },
