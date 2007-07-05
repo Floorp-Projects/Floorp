@@ -106,9 +106,9 @@ if echo "$buildcommands" | grep -iq clean; then
             for buildtype in $buildtypes; do
 
                 TEST_DATE=`date -u +%Y-%m-%d-%H-%M-%S``date +%z`
-                TEST_LOG="${TEST_DIR}/results/${TEST_DATE},$product,$branch$extra,$buildtype,$OSID,${MACHINE},clean.log"
+                TEST_LOG="${TEST_DIR}/results/${TEST_DATE},$product,$branch$extra,$buildtype,$OSID,${TEST_MACHINE},clean.log"
 
-                echo "writing results to $TEST_LOG"
+                echo "$TEST_LOG"
 
                 clean.sh -p $product -b $branch -T $buildtype $extraflag > $TEST_LOG 2>&1
 
@@ -123,9 +123,9 @@ if echo "$buildcommands" | grep -iq checkout; then
         for branch in $branches; do
 
             TEST_DATE=`date -u +%Y-%m-%d-%H-%M-%S``date +%z`
-            TEST_LOG="${TEST_DIR}/results/${TEST_DATE},$product,$branch$extra,$buildtype,$OSID,${MACHINE},checkout.log"
+            TEST_LOG="${TEST_DIR}/results/${TEST_DATE},$product,$branch$extra,$buildtype,$OSID,${TEST_MACHINE},checkout.log"
 
-            echo "writing results to $TEST_LOG"
+            echo "$TEST_LOG"
 
 
             checkout.sh -p $product -b $branch -T opt $extraflag > $TEST_LOG 2>&1
@@ -140,9 +140,9 @@ if echo "$buildcommands" | grep -iq build; then
             for buildtype in $buildtypes; do
 
                 TEST_DATE=`date -u +%Y-%m-%d-%H-%M-%S``date +%z`
-                TEST_LOG="${TEST_DIR}/results/${TEST_DATE},$product,$branch$extra,$buildtype,$OSID,${MACHINE}-build.log"
+                TEST_LOG="${TEST_DIR}/results/${TEST_DATE},$product,$branch$extra,$buildtype,$OSID,${TEST_MACHINE},build.log"
 
-                echo "writing results to $TEST_LOG"
+                echo "$TEST_LOG"
 
                 build.sh -p $product -b $branch -T $buildtype $extraflag > $TEST_LOG 2>&1
             done

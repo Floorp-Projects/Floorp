@@ -1,10 +1,9 @@
 product=firefox
 branch=1.8.1
-url=http://stage.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla1.8/firefox-2.0.0.4pre.en-US.win32.zip
+url=http://stage.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla1.8/firefox-2.0.0.5pre.en-US.win32.zip
 profilename=firefox-1.8.1-profile
 profiledirectory=/tmp/firefox-1.8.1-profile
 executablepath=/tmp/firefox-1.8.1
 userpreferences=/work/mozilla/mozilla.com/test.mozilla.com/www/prefs/test-user.js
 extensiondir=/work/mozilla/mozilla.com/test.mozilla.com/www/xpi
-
-
+buildtype=nightly

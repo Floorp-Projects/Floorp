@@ -129,31 +129,31 @@ if [[ $talkback -eq 1 ]]; then
     if [[ ! -e master.sed ]]; then
     #echo "$0: editing talkback master.ini in `pwd`"
         cp $TEST_BIN/master.sed .
-        sed -f master.sed -ibak master.ini
-    fi
-
-    if [[ "$OSID" == "mac" ]]; then
-        vendorid=`grep '^VendorID = "' master.ini | sed 's@VendorID = "\([^"]*\)"@\1@'`
-        productid=`grep '^ProductID = "' master.ini | sed 's@ProductID = "\([^"]*\)"@\1@'`
-        platformid=`grep '^PlatformID = "' master.ini | sed 's@PlatformID = "\([^"]*\)"@\1@'`
-        buildid=`grep '^BuildID = "' master.ini | sed 's@BuildID = "\([^"]*\)"@\1@'`
-    else
-        vendorid=`dos2unix < master.ini | grep '^VendorID = "' | sed 's@VendorID = "\([^"]*\)"@\1@'`
-        productid=`dos2unix < master.ini | grep '^ProductID = "' | sed 's@ProductID = "\([^"]*\)"@\1@'`
-        platformid=`dos2unix < master.ini | grep '^PlatformID = "' | sed 's@PlatformID = "\([^"]*\)"@\1@'`
-        buildid=`dos2unix < master.ini | grep '^BuildID = "' | sed 's@BuildID = "\([^"]*\)"@\1@'`
+        sed -f master.sed -i.bak master.ini
     fi
 
     case $OSID in
-        "win32")
+        win32)
+            vendorid=`dos2unix < master.ini | grep '^VendorID = "' | sed 's@VendorID = "\([^"]*\)"@\1@'`
+            productid=`dos2unix < master.ini | grep '^ProductID = "' | sed 's@ProductID = "\([^"]*\)"@\1@'`
+            platformid=`dos2unix < master.ini | grep '^PlatformID = "' | sed 's@PlatformID = "\([^"]*\)"@\1@'`
+            buildid=`dos2unix < master.ini | grep '^BuildID = "' | sed 's@BuildID = "\([^"]*\)"@\1@'`
             appdata=`cygpath -a -d "$APPDATA"`
             talkbackdir="`cygpath -a -u $appdata`/Talkback"
             ;;
-        "linux")
+        linux)
+            vendorid=`dos2unix < master.ini | grep '^VendorID = "' | sed 's@VendorID = "\([^"]*\)"@\1@'`
+            productid=`dos2unix < master.ini | grep '^ProductID = "' | sed 's@ProductID = "\([^"]*\)"@\1@'`
+            platformid=`dos2unix < master.ini | grep '^PlatformID = "' | sed 's@PlatformID = "\([^"]*\)"@\1@'`
+            buildid=`dos2unix < master.ini | grep '^BuildID = "' | sed 's@BuildID = "\([^"]*\)"@\1@'`
             talkbackdir="$HOME/.fullcircle"
             ;;
-        "mac" )
+        mac* )
             # hack around Mac's use of spaces in directory names
+            vendorid=`grep '^VendorID = "' master.ini | sed 's@VendorID = "\([^"]*\)"@\1@'`
+            productid=`grep '^ProductID = "' master.ini | sed 's@ProductID = "\([^"]*\)"@\1@'`
+            platformid=`grep '^PlatformID = "' master.ini | sed 's@PlatformID = "\([^"]*\)"@\1@'`
+            buildid=`grep '^BuildID = "' master.ini | sed 's@BuildID = "\([^"]*\)"@\1@'`
             talkbackdir="$HOME/Library/Application Support/FullCircle"
             IFS=:
             ;;
@@ -172,7 +172,7 @@ if [[ $talkback -eq 1 ]]; then
         win32)
             talkbackinidir="$talkbackdir/$vendorid/$productid/$platformid/$buildid"
             ;;
-        "linux" | "mac" )
+        linux | mac* )
             talkbackinidir="$talkbackdir/$vendorid$productid$platformid$buildid"
             ;;
     esac
@@ -186,14 +186,14 @@ if [[ $talkback -eq 1 ]]; then
     cp /work/mozilla/mozilla.com/test.mozilla.com/www/talkback/$OSID/Talkback.ini .
 
     case "$OSID" in
-        "win32")
-            sed -ibak "s@URLEdit .*@URLEdit = \"mozqa:$talkbackid\"@" Talkback.ini
+        win32)
+            sed -i.bak "s@URLEdit .*@URLEdit = \"mozqa:$talkbackid\"@" Talkback.ini
             ;;
-        "linux" )
-            sed -ibak "s@URLEditControl .*@URLEditControl = \"mozqa:$talkbackid\"@" Talkback.ini
+        linux )
+            sed -i.bak "s@URLEditControl .*@URLEditControl = \"mozqa:$talkbackid\"@" Talkback.ini
             ;;
-        "mac" )
-            sed -ibak "s@URLEditControl .*@URLEditControl = \"mozqa:$talkbackid\"@" Talkback.ini
+        mac* )
+            sed -i.bak "s@URLEditControl .*@URLEditControl = \"mozqa:$talkbackid\"@" Talkback.ini
             ;;
         *)
             error "unknown os=$OSID"

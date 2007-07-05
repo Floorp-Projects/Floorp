@@ -20,3 +20,4 @@ user_pref("signed.applets.codebase_principal_support", true);
 user_pref("mailnews.start_page.override_url", "http://test.mozilla.com/bin/install-extensions-1.html");
 user_pref("mailnews.start_page.url", "http://test.mozilla.com/bin/install-extensions-1.html");
 user_pref("mailnews.start_page.welcome_url", "http://test.mozilla.com/bin/install-extensions-1.html");
+user_pref("browser.warnOnQuit", false);
