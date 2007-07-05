@@ -836,6 +836,23 @@ inline nsresult UnexpectedFailure(nsresult rv)
     return rv;
 }
 
+class SaveFrame
+{
+public:
+    SaveFrame(JSContext *cx)
+        : mJSContext(cx) {
+        mFrame = JS_SaveFrameChain(mJSContext);
+    }
+
+    ~SaveFrame() {
+        JS_RestoreFrameChain(mJSContext, mFrame);
+    }
+
+private:
+    JSContext *mJSContext;
+    JSStackFrame *mFrame;
+};
+
 /* void initClasses (in JSContextPtr aJSContext, in JSObjectPtr aGlobalJSObj); */
 NS_IMETHODIMP
 nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
@@ -843,6 +860,7 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
     NS_ASSERTION(aJSContext, "bad param");
     NS_ASSERTION(aGlobalJSObj, "bad param");
 
+    SaveFrame sf(aJSContext);
     XPCCallContext ccx(NATIVE_CALLER, aJSContext);
     if(!ccx.IsValid())
         return UnexpectedFailure(NS_ERROR_FAILURE);
@@ -980,6 +998,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
         JS_SetPrototype(aJSContext, protoJSObject, scope->GetPrototypeJSObject());
     }
 
+    SaveFrame sf(ccx);
     if(!nsXPCComponents::AttachNewComponentsObject(ccx, scope, globalJSObj))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
