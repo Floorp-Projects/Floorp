@@ -281,7 +281,8 @@ IsSupportedPlugin(const nsCString& aMIMEType)
 }
 
 nsObjectLoadingContent::nsObjectLoadingContent()
-  : mChannel(nsnull)
+  : mPendingInstantiateEvent(nsnull)
+  , mChannel(nsnull)
   , mType(eType_Loading)
   , mInstantiating(PR_FALSE)
   , mUserDisabled(PR_FALSE)
