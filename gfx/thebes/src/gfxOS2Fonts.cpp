@@ -538,10 +538,8 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
         if (ch == 0) {
             // treat this null byte as a missing glyph, don't create a glyph for it
             aTextRun->SetMissingGlyph(utf16Offset, 0);
-        } else if (ch < 0x10000 && IsInvisibleChar(PRUnichar(ch))) {
-            // hide glyphs for invisible chars (tabs, linebreaks)
-            aTextRun->SetCharacterGlyph(utf16Offset, g.SetMissing());
         } else {
+            NS_ASSERTION(!IsInvalidChar(ch), "Invalid char detected");
             FT_UInt gid = FT_Get_Char_Index(face, ch); // find the glyph id
             PRInt32 advance = 0;
             if (gid == font->GetSpaceGlyph()) {
