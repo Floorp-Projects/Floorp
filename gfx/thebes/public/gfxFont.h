@@ -519,10 +519,6 @@ public:
  * gfxFont. The glyphs are associated with a string of source text, and the
  * gfxTextRun APIs take parameters that are offsets into that source text.
  * 
- * \r, \t and \n characters (for which gfxFontGroup::IsInvalidChar returns
- * PR_TRUE) should be set to a CompressedGlyph with SetMissing() to make them
- * invisible and zero-width. 
- * 
  * gfxTextRuns are not refcounted. They should be deleted when no longer required.
  * 
  * gfxTextRuns are mostly immutable. The only things that can change are
@@ -1170,10 +1166,12 @@ public:
     virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle) = 0;
 
     /**
-     * Tabs, CRs and LFs should not be passed in to MakeTextRun.
+     * The listed characters should not be passed in to MakeTextRun and should
+     * be treated as invisible and zero-width.
      */
     static PRBool IsInvalidChar(PRUnichar ch) {
-        return ch == '\t' || ch == '\r' || ch == '\n';
+        return ch == '\t' || ch == '\r' || ch == '\n' ||
+           ch == 0x200B/*ZWSP*/ || ch == 0x2028/*LSEP*/ || ch == 0x2029/*PSEP*/;
     }
 
     /**
