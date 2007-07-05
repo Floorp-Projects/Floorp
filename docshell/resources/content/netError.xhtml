@@ -86,14 +86,14 @@
       function getCSSClass()
       {
         var url = document.documentURI;
-        var class = url.search(/c\=/);
+        var classParam = url.search(/c\=/);
         
-        // c is optional, if class === -1 just return nothing
-        if (class === -1)
+        // c is optional, if classParam == -1 just return nothing
+        if (classParam == -1)
           return "";
           
         var rest = url.search(/\&/);
-        return decodeURIComponent(url.slice(class + 2, rest));
+        return decodeURIComponent(url.slice(classParam + 2, rest));
       }
 
       function getDescription()
@@ -103,7 +103,8 @@
 
         // desc == -1 if not found; if so, return an empty string
         // instead of what would turn out to be portions of the URI
-        if (desc == -1) return "";
+        if (desc == -1)
+          return "";
 
         return decodeURIComponent(url.slice(desc + 2));
       }
@@ -161,11 +162,11 @@
         var errContainer = document.getElementById("errorContainer");
         errContainer.parentNode.removeChild(errContainer);
 
-        var class = getCSSClass();
-        if (class) {
+        var className = getCSSClass();
+        if (className) {
           // Associate a CSS class with the root of the page, if one was passed in,
           // to allow custom styling.
-          document.documentElement.className = class;
+          document.documentElement.className = className;
 
           // Also, if they specified a CSS class, they must supply their own
           // favicon.  In order to trigger the browser to repaint though, we
@@ -173,7 +174,7 @@
           var favicon = document.getElementById("favicon");
           var faviconParent = favicon.parentNode;
           faviconParent.removeChild(favicon);
-          favicon.setAttribute("href", "chrome://global/skin/icons/" + class + "_favicon.png");
+          favicon.setAttribute("href", "chrome://global/skin/icons/" + className + "_favicon.png");
           faviconParent.appendChild(favicon);
         }
       }
