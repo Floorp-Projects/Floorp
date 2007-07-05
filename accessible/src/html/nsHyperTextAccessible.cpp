@@ -851,9 +851,8 @@ nsHyperTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
   if (headLevel) {
     nsAutoString strHeadLevel;
     strHeadLevel.AppendInt(headLevel);
-    nsAccessibilityUtils::SetAccAttr(aAttributes,
-                                     nsAccessibilityAtoms::level,
-                                     strHeadLevel);
+    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::level,
+                           strHeadLevel);
   }
 
   return  NS_OK;

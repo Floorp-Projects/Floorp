@@ -734,16 +734,14 @@ nsXULTreeitemAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribu
   PRInt32 posInSet = mRow - startIndex + 1;
 
   // set the group attributes
-  nsAccessibilityUtils::
-    SetAccGroupAttrs(aAttributes, level + 1, posInSet, setSize);
+  nsAccUtils::SetAccGroupAttrs(aAttributes, level + 1, posInSet, setSize);
 
   // set the "cycles" attribute
   PRBool isCycler;
   mColumn->GetCycler(&isCycler);
   if (isCycler) {
-    nsAccessibilityUtils::SetAccAttr(aAttributes, 
-          nsAccessibilityAtoms::cycles,
-          NS_LITERAL_STRING("true"));
+    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::cycles,
+                           NS_LITERAL_STRING("true"));
   }
 
   return NS_OK;
