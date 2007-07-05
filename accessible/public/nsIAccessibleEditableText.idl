@@ -51,7 +51,7 @@ interface nsIAccessibleEditableText : nsISupports
    * attributes are replaced by the new list of attributes. For example,
    * sets font styles, such as italic, bold...
    *
-   *  @param startPos - start index of the text whose attributes are modified.
+   * @param startPos - start index of the text whose attributes are modified.
    * @param endPos - end index of the text whose attributes are modified.
    * @param attributes - set of attributes that replaces the old list of
    *                     attributes of the specified text portion.
