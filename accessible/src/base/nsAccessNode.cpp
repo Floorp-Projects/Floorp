@@ -293,6 +293,8 @@ void nsAccessNode::ShutdownXPAccessibility()
   NS_IF_RELEASE(gDoCommandTimer);
   NS_IF_RELEASE(gLastFocusedNode);
   NS_IF_RELEASE(sAccService);
+
+  nsApplicationAccessibleWrap::Unload();
   NS_IF_RELEASE(gApplicationAccessible);
 
   ClearCache(gGlobalDocAccessibleCache);
