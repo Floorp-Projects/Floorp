@@ -2,13 +2,19 @@
 # Tag::Bump substep. Bumps version files for Mozilla appropriately.
 # 
 package Bootstrap::Step::Tag::Bump;
+
+use strict;
+
+use File::Copy qw(move);
+
+use MozBuild::Util qw(MkdirWithPath);
+
+use Bootstrap::Util qw(CvsCatfile);
 use Bootstrap::Step;
 use Bootstrap::Config;
 use Bootstrap::Step::Tag;
-use Bootstrap::Util qw(CvsCatfile);
-use File::Copy qw(move);
-use MozBuild::Util qw(MkdirWithPath);
-@ISA = ("Bootstrap::Step::Tag");
+
+our @ISA = ("Bootstrap::Step::Tag");
 
 sub Execute {
     my $this = shift;
@@ -19,22 +25,36 @@ sub Execute {
     my $branchTag = $config->Get(var => 'branchTag');
     my $pullDate = $config->Get(var => 'pullDate');
     my $version = $config->Get(var => 'version');
+    my $rc = int($config->Get(var => 'rc'));
     my $milestone = $config->Exists(var => 'milestone') ? 
      $config->Get(var => 'milestone') : undef;
     my $appName = $config->Get(var => 'appName');
     my $logDir = $config->Get(var => 'logDir');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $tagDir = $config->Get(var => 'tagDir');
+    my $geckoBranchTag = $config->Get(var => 'geckoBranchTag');
 
-    my $minibranchTag = $productTag.'_MINIBRANCH';
-    my $releaseTag = $productTag.'_RELEASE';
-    my $releaseTagDir = catfile($tagDir, $releaseTag);
-    my $cvsrootTagDir = catfile($releaseTagDir, 'cvsroot');
+    my $releaseTag = $productTag . '_RELEASE';
+    my $rcTag = $productTag . '_RC' . $rc;
+
+    my $rcTagDir = catfile($tagDir, $rcTag);
+    my $cvsrootTagDir = catfile($rcTagDir, 'cvsroot');
+ 
+    ## TODO - we need to handle the case here where we're in security firedrill
+    ## mode, and we need to bump versions on the GECKO_ branch, but they
+    ## won't have "pre" in them. :-o
+    #
+    # We only do the bump step for rc1
+
+    if ($rc > 1) {
+        $this->Log(msg => "Skipping Tag::Bump::Execute substep for RC $rc.");
+        return;
+    }
 
     # pull version files
-    my $moduleVer = catfile($appName, 'app', 'module.ver');
-    my $versionTxt = catfile($appName, 'config', 'version.txt');
-    my $milestoneTxt = catfile('config', 'milestone.txt');
+    my $moduleVer = CvsCatfile($appName, 'app', 'module.ver');
+    my $versionTxt = CvsCatfile($appName, 'config', 'version.txt');
+    my $milestoneTxt = CvsCatfile('config', 'milestone.txt');
 
     my @bumpFiles = ('client.mk', $moduleVer, $versionTxt);
 
@@ -49,8 +69,7 @@ sub Execute {
       cmd => 'cvs',
       cmdArgs => ['-d', $mozillaCvsroot, 
                   'co', 
-                  '-r', $branchTag, 
-                  '-D', $pullDate, 
+                  '-r', $geckoBranchTag, 
                   CvsCatfile('mozilla', 'client.mk'),
                   CvsCatfile('mozilla', $appName, 'app', 'module.ver'),
                   CvsCatfile('mozilla', $appName, 'config', 'version.txt'),
@@ -58,26 +77,6 @@ sub Execute {
                  ],
       dir => $cvsrootTagDir,
       logFile => catfile($logDir, 'tag-bump_checkout.log'),
-    );
-
-    # Create a minibranch for the pull scripts so we can change them without
-    # changing anything on the original branch.
-    $this->CvsTag(
-      tagName => $minibranchTag,
-      branch => '1',
-      files => \@bumpFiles,
-      coDir => catfile($cvsrootTagDir, 'mozilla'),
-      logFile => catfile($logDir, 'tag-bump_cvsroot_tag-' . $minibranchTag . '.log'),
-    );
-
-    # pull version files from the version bump minibranch
-    $this->Shell(
-      cmd => 'cvs',
-      cmdArgs => ['up', '-r', $minibranchTag, 
-                  @bumpFiles,
-                 ],
-      dir => catfile($cvsrootTagDir, 'mozilla'),
-      logFile => catfile($logDir, 'tag-bump-pull_minibranch.log'),
     );
 
     ### Perform version bump
@@ -136,15 +135,15 @@ sub Execute {
         }
     }
 
-    my $bumpCiMsg = 'Automated version bump, remove pre tag for ' 
+    my $bumpCiMsg = 'Automated checkin: version bump, remove pre tag for ' 
                         . $product . ' ' . $version . ' release on ' 
-                        . $minibranchTag;
+                        . $geckoBranchTag;
     $this->Shell(
       cmd => 'cvs',
       cmdArgs => ['commit', '-m', $bumpCiMsg, 
                   @bumpFiles,
                  ],
-      dir => catfile($releaseTagDir, 'cvsroot', 'mozilla'),
+      dir => catfile($rcTagDir, 'cvsroot', 'mozilla'),
       logFile => catfile($logDir, 'tag-bump_checkin.log'),
     );
 }
@@ -157,6 +156,12 @@ sub Verify {
     my $appName = $config->Get(var => 'appName');
     my $milestone = $config->Exists(var => 'milestone') ? 
      $config->Get(var => 'milestone') : undef;
+    my $rc = $config->Get(var => 'rc');
+
+    if ($rc > 1) {
+        $this->Log(msg => "Skipping Tag::Bump::Verify substep for RC $rc.");
+        return;
+    }
 
     my $moduleVer = catfile($appName, 'app', 'module.ver');
     my $versionTxt = catfile($appName, 'config', 'version.txt');
