@@ -41,20 +41,73 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(91F0A56C-11BE-47C7-8D02-7C15E00C05F5)]
+interface nsIEditor;
+
+[scriptable, uuid(1e9884d3-4017-4032-a121-e0185d166db5)]
 interface nsIAccessibleEditableText : nsISupports
 {
-    /**
-      * Set font styles, such as italic, bold...
-      */
+  /**
+   * Sets the attributes for the text between the two given indices. The old
+   * attributes are replaced by the new list of attributes. For example,
+   * sets font styles, such as italic, bold...
+   *
+   *  @param startPos - start index of the text whose attributes are modified.
+   * @param endPos - end index of the text whose attributes are modified.
+   * @param attributes - set of attributes that replaces the old list of
+   *                     attributes of the specified text portion.
+   */
   void setAttributes (in long startPos, in long endPos,
                       in nsISupports attributes);
+
+  /**
+   * Replaces the text represented by this object by the given text.
+   */
   void setTextContents (in AString text);
+
+  /**
+   * Inserts text at the specified position.
+   *
+   * @param text - text that is inserted.
+   * @param position - index at which to insert the text.
+   */
   void insertText (in AString text, in long position);
+
+  /**
+   * Copies the text range into the clipboard.
+   *
+   * @param startPos - start index of the text to moved into the clipboard.
+   * @param endPos - end index of the text to moved into the clipboard.
+   */
   void copyText (in long startPos, in long endPos);
+
+  /**
+   * Deletes a range of text and copies it to the clipboard.
+   *
+   * @param startPos - start index of the text to be deleted.
+   * @param endOffset - end index of the text to be deleted.
+   */
   void cutText (in long startPos, in long endPos);
+
+  /**
+   * Deletes a range of text.
+   *
+   * @param startPos - start index of the text to be deleted.
+   * @param endPos - end index of the text to be deleted.
+   */
   void deleteText (in long startPos, in long endPos);
+
+  /**
+   * Pastes text from the clipboard.
+   *
+   * @param position - index at which to insert the text from the system
+   *                   clipboard into the text represented by this object.
+   */
   void pasteText (in long position);
+
+  /**
+   * Returns an editor.
+   */
+  [noscript] readonly attribute nsIEditor editor;
 };
 
 /*
