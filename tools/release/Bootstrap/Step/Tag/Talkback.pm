@@ -2,28 +2,42 @@
 # Tag step. Applies a CVS tag to the appropriate repositories.
 # 
 package Bootstrap::Step::Tag::Talkback;
+
+use strict;
+
+use File::Copy qw(move);
+
+use MozBuild::Util qw(MkdirWithPath);
+
+use Bootstrap::Util qw(CvsCatfile);
 use Bootstrap::Step;
 use Bootstrap::Config;
 use Bootstrap::Step::Tag;
-use Bootstrap::Util qw(CvsCatfile);
-use File::Copy qw(move);
-use MozBuild::Util qw(MkdirWithPath);
-@ISA = ("Bootstrap::Step::Tag");
+
+our @ISA = ("Bootstrap::Step::Tag");
 
 sub Execute {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
-    my $product = $config->Get(var => 'product');
     my $productTag = $config->Get(var => 'productTag');
     my $branchTag = $config->Get(var => 'branchTag');
+    my $rc = int($config->Get(var => 'rc'));
     my $pullDate = $config->Get(var => 'pullDate');
     my $logDir = $config->Get(var => 'logDir');
     my $mofoCvsroot = $config->Get(var => 'mofoCvsroot');
     my $tagDir = $config->Get(var => 'tagDir');
 
-    my $releaseTag = $productTag.'_RELEASE';
-    my $releaseTagDir = catfile($tagDir, $releaseTag);
+    my $releaseTag = $productTag . '_RELEASE';
+    my $rcTag = $productTag . '_RC' . $rc;
+    my $releaseTagDir = catfile($tagDir, $rcTag);
+
+    # Since talkback so seldom changes, we don't include it in our fancy
+    # respin logic; we only need to tag it for RC 1.
+    if ($rc > 1) {
+        $this->Log(msg => "Not tagging Talkback repo for RC $rc.");
+        return;
+    }
 
     # Create the mofo tag directory.
     my $mofoDir = catfile($releaseTagDir, 'mofo');
@@ -56,8 +70,14 @@ sub Verify {
     my $config = new Bootstrap::Config();
     my $logDir = $config->Get(var => 'logDir');
     my $productTag = $config->Get(var => 'productTag');
+    my $rc = $config->Get(var => 'rc');
 
-    my $releaseTag = $productTag.'_RELEASE';
+    if ($rc > 1) {
+        $this->Log(msg => "Not verifying Talkback repo for RC $rc.");
+        return;
+    }
+
+    my $releaseTag = $productTag . '_RELEASE';
 
     $this->CheckLog(
       log => catfile($logDir, 
