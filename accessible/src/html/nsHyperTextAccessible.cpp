@@ -140,10 +140,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetRole(PRUint32 *aRole)
 
   nsIAtom *tag = content->Tag();
 
-  if (tag == nsAccessibilityAtoms::caption) {
-    *aRole = nsIAccessibleRole::ROLE_CAPTION;
-  }
-  else if (tag == nsAccessibilityAtoms::form) {
+  if (tag == nsAccessibilityAtoms::form) {
     *aRole = nsIAccessibleRole::ROLE_FORM;
   }
   else if (tag == nsAccessibilityAtoms::div ||

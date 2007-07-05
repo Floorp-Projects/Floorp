@@ -71,9 +71,8 @@ public:
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetName(nsAString& aResult);
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
-#ifdef SHOW_LAYOUT_HEURISTIC
   NS_IMETHOD GetDescription(nsAString& aDescription);
-#endif
+  NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated);
 
 protected:
 
@@ -106,7 +105,6 @@ protected:
                      PRInt32        aColIndex,
                      nsIDOMElement* &aCell);
   PRBool HasDescendant(char *aTagName, PRBool aAllowEmpty = PR_TRUE);
-  PRBool mHasCaption;
 #ifdef SHOW_LAYOUT_HEURISTIC
   nsAutoString mLayoutHeuristic;
 #endif
@@ -124,11 +122,21 @@ public:
 
   /* nsIAccessibleTable */
   NS_IMETHOD GetCaption(nsIAccessible **aCaption);
-  NS_IMETHOD SetCaption(nsIAccessible *aCaption);
   NS_IMETHOD GetSummary(nsAString &aSummary);
-  NS_IMETHOD SetSummary(const nsAString &aSummary);
   NS_IMETHOD GetColumnHeader(nsIAccessibleTable **aColumnHeader);
   NS_IMETHOD GetRows(PRInt32 *aRows);
+};
+
+class nsHTMLCaptionAccessible : public nsHyperTextAccessibleWrap
+{
+public:
+  nsHTMLCaptionAccessible(nsIDOMNode *aDomNode, nsIWeakReference *aShell) :
+    nsHyperTextAccessibleWrap(aDomNode, aShell) { }
+
+  // nsIAccessible
+  NS_IMETHOD GetRole(PRUint32 *aRole)
+    { *aRole = nsIAccessibleRole::ROLE_CAPTION; return NS_OK; }
+  NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated);
 };
 
 #endif  

@@ -49,7 +49,6 @@
 #include "nsIAccessibilityService.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMHTMLCollection.h"
-#include "nsIDOMHTMLTableCaptionElem.h"
 #include "nsIDOMHTMLTableCellElement.h"
 #include "nsIDOMHTMLTableElement.h"
 #include "nsIDOMHTMLTableRowElement.h"
@@ -92,7 +91,6 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTableAccessible, nsAccessible, nsIAccessibleT
 nsHTMLTableAccessible::nsHTMLTableAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
 nsAccessibleWrap(aDomNode, aShell)
 { 
-  mHasCaption = PR_FALSE;
 }
 
 void nsHTMLTableAccessible::CacheChildren()
@@ -102,51 +100,37 @@ void nsHTMLTableAccessible::CacheChildren()
     mAccChildCount = eChildCountUninitialized;
     return;
   }
-
+  
   if (mAccChildCount == eChildCountUninitialized) {
-    PRInt32 childCount = 0;
-    nsCOMPtr<nsPIAccessible> privatePrevAccessible;
+    nsAccessible::CacheChildren();
     nsCOMPtr<nsIAccessible> captionAccessible;
-    GetCaption(getter_AddRefs(captionAccessible));
-    if (captionAccessible) {
-      mHasCaption = PR_TRUE;
-      SetFirstChild(captionAccessible);
-      ++ childCount;
-      privatePrevAccessible = do_QueryInterface(captionAccessible);
-      privatePrevAccessible->SetParent(this);
-    }
-    else {
-      mHasCaption = PR_FALSE;
-    }
-
-    PRBool allowsAnonChildren = PR_FALSE;
-    GetAllowsAnonChildAccessibles(&allowsAnonChildren);
-    nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, allowsAnonChildren);
-    walker.mState.frame = GetFrame();
-
-    walker.GetFirstChild();
-    while (walker.mState.accessible) {
-      nsCOMPtr<nsIContent> content(do_QueryInterface(walker.mState.domNode));
-      NS_ASSERTION(content, "Creating accessible for node in HTMLTable with no content");
-      if (content && content->IsNodeOfType(nsINode::eHTML) &&
-          content->Tag() == nsAccessibilityAtoms::caption) {
-        // We have already dealt with caption, ignore this one
-        walker.GetNextSibling();
-        continue;
+    while (NextChild(captionAccessible)) {
+      if (Role(captionAccessible) == nsIAccessibleRole::ROLE_CAPTION) {
+        nsCOMPtr<nsIAccessible> captionParentAccessible;
+        captionAccessible->GetParent(getter_AddRefs(captionParentAccessible));
+        if (captionParentAccessible != this) {
+          NS_WARNING("Should not happen: parser ensures caption is the table's child, not the tbody's");
+          return;
+        }
+        nsCOMPtr<nsIAccessible> beforeCaptionAccessible;
+        captionAccessible->GetPreviousSibling(getter_AddRefs(beforeCaptionAccessible));
+        if (beforeCaptionAccessible) {
+          // Move caption accessible so that it's the first child
+          nsCOMPtr<nsIAccessible> afterCaptionAccessible;
+          captionAccessible->GetNextSibling(getter_AddRefs(afterCaptionAccessible));
+          nsCOMPtr<nsPIAccessible> privateAcc = do_QueryInterface(beforeCaptionAccessible);
+          privateAcc->SetNextSibling(afterCaptionAccessible);
+          GetFirstChild(getter_AddRefs(afterCaptionAccessible));
+          SetFirstChild(captionAccessible);
+          privateAcc = do_QueryInterface(captionAccessible);
+          privateAcc->SetNextSibling(afterCaptionAccessible);        
+        }
+        // Don't check for more captions, because nsAccessibilityService ensures
+        // we don't create accessibles for the other captions, since only the
+        // first is actually visible
+        break;
       }
-
-      ++ childCount;
-      if (privatePrevAccessible) {
-        privatePrevAccessible->SetNextSibling(walker.mState.accessible);
-      }
-      else {
-        SetFirstChild(walker.mState.accessible);
-      }
-      privatePrevAccessible = do_QueryInterface(walker.mState.accessible);
-      privatePrevAccessible->SetParent(this);
-      walker.GetNextSibling();
     }
-    mAccChildCount = childCount;
   }
 }
 
@@ -173,34 +157,14 @@ NS_IMETHODIMP nsHTMLTableAccessible::GetName(nsAString& aName)
 {
   aName.Truncate();  // Default name is blank
 
-  if (mRoleMapEntry) {
-    nsAccessible::GetName(aName);
-    if (!aName.IsEmpty()) {
-      return NS_OK;
-    }
-  }
-
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  if (element) {
-    nsCOMPtr<nsIDOMNodeList> captions;
-    nsAutoString nameSpaceURI;
-    element->GetNamespaceURI(nameSpaceURI);
-    element->GetElementsByTagNameNS(nameSpaceURI, NS_LITERAL_STRING("caption"), 
-                                    getter_AddRefs(captions));
-    if (captions) {
-      nsCOMPtr<nsIDOMNode> captionNode;
-      captions->Item(0, getter_AddRefs(captionNode));
-      if (captionNode) {
-        nsCOMPtr<nsIContent> captionContent(do_QueryInterface(captionNode));
-        AppendFlatStringFromSubtree(captionContent, &aName);
-      }
-    }
-    if (aName.IsEmpty()) {
-      nsCOMPtr<nsIContent> content(do_QueryInterface(element));
-      NS_ASSERTION(content, "No content for DOM element");
+  nsAccessible::GetName(aName);
+  if (aName.IsEmpty()) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+    if (content) { 
       content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::summary, aName);
     }
   }
+
   return NS_OK;
 }
 
@@ -226,65 +190,39 @@ nsHTMLTableAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
 }
 
 NS_IMETHODIMP
-nsHTMLTableAccessible::GetCaption(nsIAccessible **aCaption)
+nsHTMLTableAccessible::GetAccessibleRelated(PRUint32 aRelationType,
+                                            nsIAccessible **aRelated)
 {
-  *aCaption = nsnull;
-  nsresult rv = NS_OK;
+  NS_ENSURE_ARG_POINTER(aRelated);
+  *aRelated = nsnull;
 
-  nsCOMPtr<nsIDOMHTMLTableElement> table(do_QueryInterface(mDOMNode));
-  NS_ENSURE_TRUE(table, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDOMHTMLTableCaptionElement> caption;
-  rv = table->GetCaption(getter_AddRefs(caption));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMNode> captionNode(do_QueryInterface(caption));
-  if (!captionNode) {
-    return NS_OK;
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIAccessibilityService> accService = GetAccService();
-  NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
-
-  accService->GetCachedAccessible(captionNode, mWeakShell, aCaption);
-  if (*aCaption)
-    return NS_OK;
-
-  nsCOMPtr<nsIPresShell> presShell(GetPresShell());
-  nsCOMPtr<nsIContent> content(do_QueryInterface(captionNode));
-  NS_ENSURE_TRUE(presShell && content, NS_ERROR_FAILURE);
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
-  if (!frame) {
-    return NS_OK;
+  nsresult rv = nsAccessibleWrap::GetAccessibleRelated(aRelationType, aRelated);
+  if (NS_FAILED(rv) || *aRelated) {
+    // Either the node is shut down, or another relation mechanism has been used
+    return rv;
   }
-  accService->CreateHyperTextAccessible(frame, aCaption);
-  nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(*aCaption));
-  return accessNode ? accessNode->Init() : NS_ERROR_FAILURE;
+
+  if (aRelationType == nsIAccessibleRelation::RELATION_DESCRIBED_BY) {
+    return GetCaption(aRelated);
+  }
+
+  return NS_OK;
 }
 
+
 NS_IMETHODIMP
-nsHTMLTableAccessible::SetCaption(nsIAccessible *aCaption)
+nsHTMLTableAccessible::GetCaption(nsIAccessible **aCaption)
 {
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIDOMHTMLTableElement> table(do_QueryInterface(mDOMNode));
-  NS_ENSURE_TRUE(table, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aCaption));
-  NS_ASSERTION(accessNode, "Unable to QI to nsIAccessNode");
-  nsCOMPtr<nsIDOMNode> domNode;
-  rv = accessNode->GetDOMNode(getter_AddRefs(domNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMNode> newDOMNode;
-  rv = domNode->CloneNode(PR_TRUE, getter_AddRefs(newDOMNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMHTMLTableCaptionElement>
-    captionElement(do_QueryInterface(newDOMNode));
-  NS_ENSURE_TRUE(captionElement, NS_ERROR_FAILURE);
-
-  return table->SetCaption(captionElement);
+  nsCOMPtr<nsIAccessible> firstChild;
+  GetFirstChild(getter_AddRefs(firstChild));
+  if (firstChild && Role(firstChild) == nsIAccessibleRole::ROLE_CAPTION) {
+    NS_ADDREF(*aCaption = firstChild);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -294,15 +232,6 @@ nsHTMLTableAccessible::GetSummary(nsAString &aSummary)
   NS_ENSURE_TRUE(table, NS_ERROR_FAILURE);
 
   return table->GetSummary(aSummary);
-}
-
-NS_IMETHODIMP
-nsHTMLTableAccessible::SetSummary(const nsAString &aSummary)
-{
-  nsCOMPtr<nsIDOMHTMLTableElement> table(do_QueryInterface(mDOMNode));
-  NS_ENSURE_TRUE(table, NS_ERROR_FAILURE);
-
-  return table->SetSummary(aSummary);
 }
 
 NS_IMETHODIMP
@@ -820,20 +749,39 @@ nsHTMLTableAccessible::GetCellAt(PRInt32        aRowIndex,
                                     isSelected);
 }
 
-#ifdef SHOW_LAYOUT_HEURISTIC
 NS_IMETHODIMP nsHTMLTableAccessible::GetDescription(nsAString& aDescription)
 {
   // Helpful for debugging layout vs. data tables
   aDescription.Truncate();
-  PRBool isProbablyForLayout;
-  IsProbablyForLayout(&isProbablyForLayout);
-  aDescription = mLayoutHeuristic;
+  nsAccessible::GetDescription(aDescription);
+  if (!aDescription.IsEmpty()) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIAccessible> captionAccessible;
+  GetCaption(getter_AddRefs(captionAccessible));
+  nsCOMPtr<nsIAccessNode> captionAccessNode = do_QueryInterface(captionAccessible);
+  if (captionAccessNode) {
+    nsCOMPtr<nsIDOMNode> captionNode;
+    captionAccessNode->GetDOMNode(getter_AddRefs(captionNode));
+    nsCOMPtr<nsIContent> captionContent = do_QueryInterface(captionNode);
+    if (captionContent) {
+      AppendFlatStringFromSubtree(captionContent, &aDescription);
+    }
+  }
+#ifdef SHOW_LAYOUT_HEURISTIC
+  if (aDescription.IsEmpty()) {
+    PRBool isProbablyForLayout;
+    IsProbablyForLayout(&isProbablyForLayout);
+    aDescription = mLayoutHeuristic;
+  }
 #ifdef DEBUG_A11Y
   printf("\nTABLE: %s\n", NS_ConvertUTF16toUTF8(mLayoutHeuristic).get());
 #endif
+#endif
+
   return NS_OK;
 }
-#endif
 
 PRBool nsHTMLTableAccessible::HasDescendant(char *aTagName, PRBool aAllowEmpty)
 {
@@ -1060,19 +1008,7 @@ nsHTMLTableHeadAccessible::GetCaption(nsIAccessible **aCaption)
 }
 
 NS_IMETHODIMP
-nsHTMLTableHeadAccessible::SetCaption(nsIAccessible *aCaption)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsHTMLTableHeadAccessible::GetSummary(nsAString &aSummary)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsHTMLTableHeadAccessible::SetSummary(const nsAString &aSummary)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1097,4 +1033,30 @@ nsHTMLTableHeadAccessible::GetRows(PRInt32 *aRows)
 
   return rows->GetLength((PRUint32 *)aRows);
 }
+
+NS_IMETHODIMP
+nsHTMLCaptionAccessible::GetAccessibleRelated(PRUint32 aRelationType,
+                                              nsIAccessible **aRelated)
+{
+  NS_ENSURE_ARG_POINTER(aRelated);
+  *aRelated = nsnull;
+
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = nsHyperTextAccessible::GetAccessibleRelated(aRelationType, aRelated);
+  if (NS_FAILED(rv) || *aRelated) {
+    // Either the node is shut down, or another relation mechanism has been used
+    return rv;
+  }
+
+  if (aRelationType == nsIAccessibleRelation::RELATION_DESCRIPTION_FOR) {
+    return GetParent(aRelated);
+  }
+
+  return NS_OK;
+}
+
+
 
