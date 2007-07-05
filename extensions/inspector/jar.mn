@@ -11,11 +11,9 @@ inspector.jar:
 % overlay chrome://messenger/content/mailWindowOverlay.xul chrome://inspector/content/tasksOverlay-tb.xul application={3550f703-e582-4d05-9a08-453d09bdfdc6}
 % overlay chrome://inspector/content/commandOverlay.xul chrome://inspector/content/viewers/dom/commandOverlay.xul
 % overlay chrome://inspector/content/commandOverlay.xul chrome://inspector/content/viewers/styleRules/commandOverlay.xul
-% overlay chrome://inspector/content/commandOverlay.xul chrome://inspector/content/search/modules/commandOverlay.xul
 % overlay chrome://inspector/content/keysetOverlay.xul chrome://inspector/content/viewers/dom/keysetOverlay.xul
 % overlay chrome://inspector/content/popupOverlay.xul chrome://inspector/content/viewers/dom/popupOverlay.xul
 % overlay chrome://inspector/content/popupOverlay.xul chrome://inspector/content/viewers/styleRules/popupOverlay.xul
-% overlay chrome://inspector/content/popupOverlay.xul chrome://inspector/content/search/modules/popupOverlay.xul
   content/inspector/inspector.xul                                     (resources/content/inspector.xul)
   content/inspector/inspector.js                                      (resources/content/inspector.js)
   content/inspector/inspector.css                                     (resources/content/inspector.css)
@@ -65,18 +63,6 @@ inspector.jar:
   content/inspector/prefs/pref-inspector.xul                          (resources/content/prefs/pref-inspector.xul)
   content/inspector/prefs/prefsOverlay.xul                            (resources/content/prefs/prefsOverlay.xul)
   content/inspector/prefs/pref-sidebar.js                             (resources/content/prefs/pref-sidebar.js)
-  content/inspector/search/inSearchModule.js                          (resources/content/search/inSearchModule.js)
-  content/inspector/search/inSearchService.js                         (resources/content/search/inSearchService.js)
-  content/inspector/search/inSearchTreeBuilder.js                     (resources/content/search/inSearchTreeBuilder.js)
-  content/inspector/search/inSearchUtils.js                           (resources/content/search/inSearchUtils.js)
-  content/inspector/search/modules/commandOverlay.xul                 (resources/content/search/modules/commandOverlay.xul)
-  content/inspector/search/modules/popupOverlay.xul                   (resources/content/search/modules/popupOverlay.xul)
-  content/inspector/search/modules/findFiles/dialog.js                (resources/content/search/modules/findFiles/dialog.js)
-  content/inspector/search/modules/findFiles/dialog.xul               (resources/content/search/modules/findFiles/dialog.xul)
-  content/inspector/search/modules/findFiles/findFiles.xml            (resources/content/search/modules/findFiles/findFiles.xml)
-  content/inspector/search/modules/junkImgs/dialog.js                 (resources/content/search/modules/junkImgs/dialog.js)
-  content/inspector/search/modules/junkImgs/dialog.xul                (resources/content/search/modules/junkImgs/dialog.xul)
-  content/inspector/search/modules/junkImgs/junkImgs.xml              (resources/content/search/modules/junkImgs/junkImgs.xml)
   content/inspector/tests/allskin.xul                                 (resources/content/tests/allskin.xul)
   content/inspector/viewers/accessibleObject/accessibleObject.js      (resources/content/viewers/accessibleObject/accessibleObject.js)
   content/inspector/viewers/accessibleObject/accessibleObject.xul     (resources/content/viewers/accessibleObject/accessibleObject.xul)
