@@ -198,7 +198,7 @@
   <binding id="tooltip" extends="chrome://global/content/bindings/popup.xml#popup">
     <content>
       <children>
-        <xul:label class="tooltip-label" xbl:inherits="value=label,crop" crop="right" flex="1"/>
+        <xul:label class="tooltip-label" xbl:inherits="xbl:text=label" flex="1"/>
       </children>
     </content>
     
