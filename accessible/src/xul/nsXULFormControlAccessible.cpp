@@ -581,8 +581,7 @@ nsXULRadioButtonAccessible::GetAttributesInternal(nsIPersistentProperties *aAttr
   nsresult rv = nsFormControlAccessible::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAccessibilityUtils::
-    SetAccAttrsForXULSelectControlItem(mDOMNode, aAttributes);
+  nsAccUtils::SetAccAttrsForXULSelectControlItem(mDOMNode, aAttributes);
 
   return NS_OK;
 }

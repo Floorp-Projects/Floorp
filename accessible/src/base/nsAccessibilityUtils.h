@@ -45,7 +45,7 @@
 #include "nsIPersistentProperties2.h"
 #include "nsIContent.h"
 
-class nsAccessibilityUtils
+class nsAccUtils
 {
 public:
   /**

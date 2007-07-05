@@ -170,7 +170,7 @@ void nsXULLinkAccessible::CacheActionContent()
     mIsLink = PR_TRUE;
     mActionContent = mTempContent;
   }
-  else if (nsAccessibilityUtils::HasListener(mTempContent, NS_LITERAL_STRING("click"))) {
+  else if (nsAccUtils::HasListener(mTempContent, NS_LITERAL_STRING("click"))) {
     mIsOnclick = PR_TRUE;
     mActionContent = mTempContent;
   }

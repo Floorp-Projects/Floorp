@@ -564,8 +564,8 @@ nsHTMLSelectOptionAccessible::GetAttributesInternal(nsIPersistentProperties *aAt
     }
   }
 
-  nsAccessibilityUtils::
-    SetAccGroupAttrs(aAttributes, level, posInSet, NS_STATIC_CAST(PRInt32, setSize));
+  nsAccUtils::SetAccGroupAttrs(aAttributes, level, posInSet,
+                               NS_STATIC_CAST(PRInt32, setSize));
   return  NS_OK;
 }
 

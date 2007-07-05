@@ -207,8 +207,7 @@ nsHTMLRadioButtonAccessible::GetAttributesInternal(nsIPersistentProperties *aAtt
     }
   }
 
-  nsAccessibilityUtils::
-    SetAccGroupAttrs(aAttributes, 0, indexOf, count);
+  nsAccUtils::SetAccGroupAttrs(aAttributes, 0, indexOf, count);
 
   return  NS_OK;
 }
