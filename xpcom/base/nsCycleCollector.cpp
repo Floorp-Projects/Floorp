@@ -617,9 +617,6 @@ typedef nsBaseHashtable<nsVoidPtrHashKey, PRUint32, PRUint32>
     PointerSetWithGeneration;
 
 static void
-Fault(const char *msg, const void *ptr);
-
-static void
 WriteGraph(FILE *stream, GCGraph &graph, const void *redPtr);
 
 struct nsPurpleBuffer
@@ -952,6 +949,37 @@ Fault(const char *msg, const void *ptr=nsnull)
     sCollector->mParams.mDoNothing = PR_TRUE;
 }
 
+#ifdef DEBUG_CC
+static void
+Fault(const char *msg, PtrInfo *pi)
+{
+    printf("Fault in cycle collector: %s\n"
+           "  while operating on pointer %p %s\n",
+           msg, pi->mPointer, pi->mName);
+    if (pi->mInternalRefs) {
+        printf("  which has internal references from:\n");
+        NodePool::Enumerator queue(sCurrGraph->mNodes);
+        while (!queue.IsDone()) {
+            PtrInfo *ppi = queue.GetNext();
+            for (EdgePool::Iterator e = ppi->mFirstChild, e_end = ppi->mLastChild;
+                 e != e_end; ++e) {
+                if (*e == pi) {
+                    printf("    %p %s\n", ppi->mPointer, ppi->mName);
+                }
+            }
+        }
+    }
+
+    Fault(msg, pi->mPointer);
+}
+#else
+inline void
+Fault(const char *msg, PtrInfo *pi)
+{
+    Fault(msg, pi->mPointer);
+}
+#endif
+
 
 
 static nsISupports *
@@ -1139,7 +1167,7 @@ GCGraphBuilder::Traverse(PtrInfo* aPtrInfo)
 
 #ifdef DEBUG_CC
     if (!mCurrPi->mParticipant) {
-        Fault("unknown pointer during walk");
+        Fault("unknown pointer during walk", aPtrInfo);
         return;
     }
 #endif
@@ -1148,7 +1176,7 @@ GCGraphBuilder::Traverse(PtrInfo* aPtrInfo)
     
     nsresult rv = aPtrInfo->mParticipant->Traverse(aPtrInfo->mPointer, *this);
     if (NS_FAILED(rv)) {
-        Fault("script pointer traversal failed", aPtrInfo->mPointer);
+        Fault("script pointer traversal failed", aPtrInfo);
     }
 
     mCurrPi->mLastChild = mEdgeBuilder.Mark();
@@ -1161,13 +1189,13 @@ GCGraphBuilder::DescribeNode(size_t refCount, size_t objSz, const char *objName)
 GCGraphBuilder::DescribeNode(size_t refCount)
 #endif
 {
-    if (refCount == 0)
-        Fault("zero refcount", mCurrPi->mPointer);
-
 #ifdef DEBUG_CC
     mCurrPi->mBytes = objSz;
     mCurrPi->mName = PL_strdup(objName);
 #endif
+
+    if (refCount == 0)
+        Fault("zero refcount", mCurrPi);
 
     mCurrPi->mRefCount = refCount;
 #ifdef DEBUG_CC
@@ -1306,10 +1334,10 @@ struct scanWalker : public GraphWalker
     void VisitNode(PtrInfo *pi)
     {
         if (pi->mColor != grey)
-            Fault("scanning non-grey node", pi->mPointer);
+            Fault("scanning non-grey node", pi);
 
         if (pi->mInternalRefs > pi->mRefCount)
-            Fault("traversed refs exceed refcount", pi->mPointer);
+            Fault("traversed refs exceed refcount", pi);
 
         if (pi->mInternalRefs == pi->mRefCount) {
             pi->mColor = white;
@@ -1340,7 +1368,7 @@ nsCycleCollector::ScanRoots(GCGraph &graph)
     {
         PtrInfo *pinfo = etor.GetNext();
         if (pinfo->mColor == grey) {
-            Fault("valid grey node after scanning", pinfo->mPointer);
+            Fault("valid grey node after scanning", pinfo);
         }
     }
 #endif
@@ -1414,14 +1442,14 @@ nsCycleCollector::CollectWhite(GCGraph &graph)
         PtrInfo *pinfo = NS_STATIC_CAST(PtrInfo*, mBuf.ObjectAt(i));
         rv = pinfo->mParticipant->Root(pinfo->mPointer);
         if (NS_FAILED(rv))
-            Fault("Failed root call while unlinking");
+            Fault("Failed root call while unlinking", pinfo);
     }
 
     for (i = 0; i < count; ++i) {
         PtrInfo *pinfo = NS_STATIC_CAST(PtrInfo*, mBuf.ObjectAt(i));
         rv = pinfo->mParticipant->Unlink(pinfo->mPointer);
         if (NS_FAILED(rv)) {
-            Fault("Failed unlink call while unlinking");
+            Fault("Failed unlink call while unlinking", pinfo);
 #ifdef DEBUG_CC
             mStats.mFailedUnlink++;
 #endif
@@ -1437,7 +1465,7 @@ nsCycleCollector::CollectWhite(GCGraph &graph)
         PtrInfo *pinfo = NS_STATIC_CAST(PtrInfo*, mBuf.ObjectAt(i));
         rv = pinfo->mParticipant->Unroot(pinfo->mPointer);
         if (NS_FAILED(rv))
-            Fault("Failed unroot call while unlinking");
+            Fault("Failed unroot call while unlinking", pinfo);
     }
 
     mBuf.Empty();
