@@ -477,7 +477,6 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame *aFrame,
   else if (tag == nsAccessibilityAtoms::abbr ||
            tag == nsAccessibilityAtoms::acronym ||
            tag == nsAccessibilityAtoms::blockquote ||
-           tag == nsAccessibilityAtoms::caption ||
            tag == nsAccessibilityAtoms::dd ||
            tag == nsAccessibilityAtoms::dl ||
            tag == nsAccessibilityAtoms::dt ||
@@ -875,6 +874,24 @@ nsAccessibilityService::CreateHTMLBRAccessible(nsISupports *aFrame, nsIAccessibl
     return rv;
 
   *_retval = new nsHTMLBRAccessible(node, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessibilityService::CreateHTMLCaptionAccessible(nsISupports *aFrame, nsIAccessible **_retval)
+{
+  nsIFrame* frame;
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIWeakReference> weakShell;
+  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
+  if (NS_FAILED(rv))
+    return rv;
+
+  *_retval = new nsHTMLCaptionAccessible(node, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1369,6 +1386,10 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     }
 
     if (tryFrame) {
+      if (frame->GetRect().IsEmpty()) {
+        *aIsHidden = PR_TRUE;
+        return NS_OK;
+      }
       frame->GetAccessible(getter_AddRefs(newAcc)); // Try using frame to do it
     }
   }

@@ -43,11 +43,11 @@
 
 interface nsIAccessible;
 
-[scriptable, uuid(a776fee4-c0b8-4872-9e1e-72017243383f)]
+[scriptable, uuid(dc13d184-a6df-45a1-92f0-5476fdaebc5a)]
 interface nsIAccessibleTable : nsISupports
 {
-           attribute nsIAccessible       caption;
-           attribute AString           summary;
+  readonly attribute nsIAccessible       caption;
+  readonly attribute AString             summary;
   readonly attribute long                columns;
   readonly attribute nsIAccessibleTable  columnHeader;
   readonly attribute long                rows;
