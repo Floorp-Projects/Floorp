@@ -2091,7 +2091,7 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
     }
   }
 
-  if (!nsAccessibilityUtils::HasAccGroupAttrs(attributes)) {
+  if (!nsAccUtils::HasAccGroupAttrs(attributes)) {
     // The role of an accessible can be pointed by ARIA attribute but ARIA
     // posinset, level, setsize may be skipped. Therefore we calculate here
     // these properties to map them into description.
@@ -2153,9 +2153,8 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
         }
       }
 
-      nsAccessibilityUtils::SetAccGroupAttrs(attributes, groupLevel,
-                                             positionInGroup,
-                                             setSize);
+      nsAccUtils::SetAccGroupAttrs(attributes, groupLevel, positionInGroup,
+                                   setSize);
     }
   }
 
@@ -2208,8 +2207,7 @@ nsAccessible::GroupPosition(PRInt32 *aGroupLevel,
     return NS_ERROR_FAILURE;
   }
   PRInt32 level, posInSet, setSize;
-  nsAccessibilityUtils::GetAccGroupAttrs(attributes,
-                                         &level, &posInSet, &setSize);
+  nsAccUtils::GetAccGroupAttrs(attributes, &level, &posInSet, &setSize);
 
   if (!posInSet && !setSize)
     return NS_OK;

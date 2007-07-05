@@ -42,9 +42,8 @@
 #include "nsIEventListenerManager.h"
 
 void
-nsAccessibilityUtils::GetAccAttr(nsIPersistentProperties *aAttributes,
-                                 nsIAtom *aAttrName,
-                                 nsAString& aAttrValue)
+nsAccUtils::GetAccAttr(nsIPersistentProperties *aAttributes, nsIAtom *aAttrName,
+                       nsAString& aAttrValue)
 {
   nsCAutoString attrName;
   aAttrName->ToUTF8String(attrName);
@@ -52,9 +51,8 @@ nsAccessibilityUtils::GetAccAttr(nsIPersistentProperties *aAttributes,
 }
 
 void
-nsAccessibilityUtils::SetAccAttr(nsIPersistentProperties *aAttributes,
-                                 nsIAtom *aAttrName,
-                                 const nsAString& aAttrValue)
+nsAccUtils::SetAccAttr(nsIPersistentProperties *aAttributes, nsIAtom *aAttrName,
+                       const nsAString& aAttrValue)
 {
   nsAutoString oldValue;
   nsCAutoString attrName;
@@ -64,10 +62,9 @@ nsAccessibilityUtils::SetAccAttr(nsIPersistentProperties *aAttributes,
 }
 
 void
-nsAccessibilityUtils::GetAccGroupAttrs(nsIPersistentProperties *aAttributes,
-                                       PRInt32 *aLevel,
-                                       PRInt32 *aPosInSet,
-                                       PRInt32 *aSetSize)
+nsAccUtils::GetAccGroupAttrs(nsIPersistentProperties *aAttributes,
+                             PRInt32 *aLevel, PRInt32 *aPosInSet,
+                             PRInt32 *aSetSize)
 {
   *aLevel = 0;
   *aPosInSet = 0;
@@ -99,7 +96,7 @@ nsAccessibilityUtils::GetAccGroupAttrs(nsIPersistentProperties *aAttributes,
 }
 
 PRBool
-nsAccessibilityUtils::HasAccGroupAttrs(nsIPersistentProperties *aAttributes)
+nsAccUtils::HasAccGroupAttrs(nsIPersistentProperties *aAttributes)
 {
   nsAutoString value;
 
@@ -113,10 +110,9 @@ nsAccessibilityUtils::HasAccGroupAttrs(nsIPersistentProperties *aAttributes)
 }
 
 void
-nsAccessibilityUtils::SetAccGroupAttrs(nsIPersistentProperties *aAttributes,
-                                       PRInt32 aLevel,
-                                       PRInt32 aPosInSet,
-                                       PRInt32 aSetSize)
+nsAccUtils::SetAccGroupAttrs(nsIPersistentProperties *aAttributes,
+                             PRInt32 aLevel, PRInt32 aPosInSet,
+                             PRInt32 aSetSize)
 {
   nsAutoString value;
 
@@ -137,8 +133,8 @@ nsAccessibilityUtils::SetAccGroupAttrs(nsIPersistentProperties *aAttributes,
 }
 
 void
-nsAccessibilityUtils::SetAccAttrsForXULSelectControlItem(nsIDOMNode *aNode,
-                                                         nsIPersistentProperties *aAttributes)
+nsAccUtils::SetAccAttrsForXULSelectControlItem(nsIDOMNode *aNode,
+                                               nsIPersistentProperties *aAttributes)
 {
   nsCOMPtr<nsIDOMXULSelectControlItemElement> item(do_QueryInterface(aNode));
   if (!item)
@@ -157,7 +153,8 @@ nsAccessibilityUtils::SetAccAttrsForXULSelectControlItem(nsIDOMNode *aNode,
   SetAccGroupAttrs(aAttributes, 0, indexOf + 1, itemsCount);
 }
 
-PRBool nsAccessibilityUtils::HasListener(nsIContent *aContent, const nsAString& aEventType)
+PRBool
+nsAccUtils::HasListener(nsIContent *aContent, const nsAString& aEventType)
 {
   NS_ENSURE_ARG_POINTER(aContent);
   nsCOMPtr<nsIEventListenerManager> listenerManager;
