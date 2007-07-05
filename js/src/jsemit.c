@@ -1790,11 +1790,11 @@ EmitBigIndexPrefix(JSContext *cx, JSCodeGenerator *cg, jsatomid atomIndex)
     atomIndex >>= 16;
     if (atomIndex <= JSOP_ATOMBASE3 - JSOP_ATOMBASE1 + 1) {
         if (js_Emit1(cx, cg, (JSOp)(JSOP_ATOMBASE1 + atomIndex - 1)) < 0)
-            return (JSOp)-1;
+            return JSOP_FALSE;
         return JSOP_RESETBASE0;
     }
     if (js_Emit2(cx, cg, JSOP_ATOMBASE, (JSOp)atomIndex) < 0)
-        return (JSOp)-1;
+        return JSOP_FALSE;
     return JSOP_RESETBASE;
 }
 
@@ -1814,7 +1814,7 @@ EmitAtomIndexOp(JSContext *cx, JSOp op, jsatomid atomIndex, JSCodeGenerator *cg)
     JSOp bigSuffix;
 
     bigSuffix = EmitBigIndexPrefix(cx, cg, atomIndex);
-    if (bigSuffix < 0)
+    if (bigSuffix == JSOP_FALSE)
         return JS_FALSE;
     EMIT_UINT16_IMM_OP(op, atomIndex);
     return bigSuffix == JSOP_NOP || js_Emit1(cx, cg, bigSuffix) >= 0;
@@ -1863,7 +1863,7 @@ EmitIndexConstOp(JSContext *cx, JSOp op, uintN slot, jsatomid atomIndex,
     jsbytecode *pc;
 
     bigSuffix = EmitBigIndexPrefix(cx, cg, atomIndex);
-    if (bigSuffix < 0)
+    if (bigSuffix == JSOP_FALSE)
         return JS_FALSE;
 
     /* Emit [op, slot, atomIndex]. */
