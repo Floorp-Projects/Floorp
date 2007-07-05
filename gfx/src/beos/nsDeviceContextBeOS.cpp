@@ -49,11 +49,6 @@
 #include "nsFontMetricsBeOS.h"
 #include "nsGfxCIID.h"
 
-#ifdef USE_POSTSCRIPT
-#include "nsGfxPSCID.h"
-#include "nsIDeviceContextPS.h"
-#endif /* USE_POSTSCRIPT */
-
 #include <ScrollBar.h>
 #include <Screen.h>
 
@@ -335,28 +330,7 @@ NS_IMETHODIMP nsDeviceContextBeOS::GetClientRect(nsRect &aRect)
 NS_IMETHODIMP nsDeviceContextBeOS::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                                       nsIDeviceContext *&aContext)
 {
-#ifdef USE_POSTSCRIPT
-  static NS_DEFINE_CID(kCDeviceContextPS, NS_DEVICECONTEXTPS_CID);
-  
-  // Create a Postscript device context 
-  nsresult rv;
-  nsIDeviceContextPS *dcps;
-  
-  rv = CallCreateInstance(kCDeviceContextPS, &dcps);
-
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create PS Device context");
-  
-  dcps->SetSpec(aDevice);
-  dcps->InitDeviceContextPS((nsIDeviceContext*)aContext, (nsIDeviceContext*)this);
-
-  rv = dcps->QueryInterface(NS_GET_IID(nsIDeviceContext), (void **)&aContext);
-
-  NS_RELEASE(dcps);
-  
-  return rv;
-#else
   return NS_ERROR_NOT_IMPLEMENTED;
-#endif /* USE_POSTSCRIPT */
 }
 
 NS_IMETHODIMP nsDeviceContextBeOS::BeginDocument(PRUnichar * aTitle, PRUnichar* aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage)
