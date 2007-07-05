@@ -90,7 +90,6 @@ ACCESSIBILITY_ATOM(area, "area")
 ACCESSIBILITY_ATOM(blockquote, "blockquote")
 ACCESSIBILITY_ATOM(br, "br")
 ACCESSIBILITY_ATOM(body, "body")
-ACCESSIBILITY_ATOM(caption, "caption")
 ACCESSIBILITY_ATOM(choices, "choices") // XForms
 ACCESSIBILITY_ATOM(description, "description")    // XUL
 ACCESSIBILITY_ATOM(dd, "dd")
