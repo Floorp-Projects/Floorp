@@ -154,6 +154,43 @@ nsAccessibleWrap::Shutdown ()
   return nsAccessible::Shutdown();
 }
 
+nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
+{
+  NS_ENSURE_ARG_POINTER(aEvent);
+
+  nsresult rv = nsAccessible::FireAccessibleEvent(aEvent);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 eventType;
+  rv = aEvent->GetEventType(&eventType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // ignore everything but focus-changed and value-changed events for now.
+  if (eventType != nsIAccessibleEvent::EVENT_FOCUS &&
+      eventType != nsIAccessibleEvent::EVENT_VALUE_CHANGE)
+    return NS_OK;
+
+  nsCOMPtr<nsIAccessible> accessible;
+  rv = aEvent->GetAccessible(getter_AddRefs(accessible));
+  NS_ENSURE_STATE(accessible);
+
+  mozAccessible *nativeAcc = nil;
+  accessible->GetNativeInterface((void**)&nativeAcc);
+  if (!nativeAcc)
+    return NS_ERROR_FAILURE;
+
+  switch (eventType) {
+    case nsIAccessibleEvent::EVENT_FOCUS:
+      [nativeAcc didReceiveFocus];
+      break;
+    case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
+      [nativeAcc valueDidChange];
+      break;
+  }
+
+  return NS_OK;
+}
+
 nsresult
 nsAccessibleWrap::InvalidateChildren ()
 {

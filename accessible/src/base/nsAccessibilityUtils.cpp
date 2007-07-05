@@ -37,6 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAccessibilityUtils.h"
+
+#include "nsPIAccessible.h"
+#include "nsAccessibleEventData.h"
+
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIEventListenerManager.h"
@@ -161,5 +165,20 @@ nsAccUtils::HasListener(nsIContent *aContent, const nsAString& aEventType)
   aContent->GetListenerManager(PR_FALSE, getter_AddRefs(listenerManager));
 
   return listenerManager && listenerManager->HasListenersFor(aEventType);  
+}
+
+nsresult
+nsAccUtils::FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible)
+{
+  NS_ENSURE_ARG(aAccessible);
+
+  nsCOMPtr<nsPIAccessible> pAccessible(do_QueryInterface(aAccessible));
+  NS_ASSERTION(pAccessible, "Accessible doesn't implement nsPIAccessible");
+
+  nsCOMPtr<nsIAccessibleEvent> event =
+    new nsAccEvent(aEventType, aAccessible, nsnull);
+  NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
+
+  return pAccessible->FireAccessibleEvent(event);
 }
 
