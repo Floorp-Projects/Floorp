@@ -93,7 +93,6 @@ bin/xpicleanup
 bin/res/cmessage.txt
 ; this is used by gtk embedding clients
 bin/libgtkembedmoz.so
-; This is used by libgfxps
 bin/libgfxpsshar.so
 bin/components/alerts.xpt
 bin/components/libaccessibility.so
