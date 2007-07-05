@@ -2007,22 +2007,6 @@ PRBool nsAccessible::IsNodeRelevant(nsIDOMNode *aNode)
   return aNode == relevantNode;
 }
 
-NS_IMETHODIMP nsAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible *aTarget, void * aData)
-{
-  // Don't fire event for accessible that has been shut down
-  if (!mWeakShell)
-    return NS_ERROR_FAILURE;
-
-  NS_ENSURE_TRUE(IsNodeRelevant(mDOMNode), NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
-  nsCOMPtr<nsPIAccessible> eventHandlingAccessible(do_QueryInterface(docAccessible));
-  if (eventHandlingAccessible)
-    return eventHandlingAccessible->FireToolkitEvent(aEvent, aTarget, aData);
-
-  return NS_ERROR_FAILURE;
-}
-
 NS_IMETHODIMP
 nsAccessible::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
 {

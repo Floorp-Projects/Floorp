@@ -76,7 +76,9 @@ class nsAccessibleWrap : public nsAccessible
     
     virtual nsresult Shutdown ();
     virtual nsresult InvalidateChildren ();
-    
+
+    NS_IMETHOD FireAccessibleEvent(nsIAccessibleEvent *aEvent);
+
     // we'll flatten buttons and checkboxes. usually they have a text node
     // child, that is their title. Works in conjunction with IsPruned() below.
     PRBool IsFlat() {

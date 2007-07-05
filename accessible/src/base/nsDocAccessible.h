@@ -90,9 +90,6 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
     // nsIDocumentObserver
     NS_DECL_NSIDOCUMENTOBSERVER
 
-    NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible,
-                                void* aData);
-
     static void FlushEventsCallback(nsITimer *aTimer, void *aClosure);
 
     // nsIAccessNode
