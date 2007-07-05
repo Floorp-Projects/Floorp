@@ -1134,6 +1134,17 @@ NS_IMETHODIMP nsHyperTextAccessible::PasteText(PRInt32 aPosition)
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsHyperTextAccessible::GetEditor(nsIEditor **aEditor)
+{
+  NS_ENSURE_ARG_POINTER(aEditor);
+
+  nsCOMPtr<nsIEditor> editor(GetEditor());
+  NS_IF_ADDREF(*aEditor = editor);
+
+  return NS_OK;
+}
+
 /**
   * nsIEditActionListener impl.
   */
