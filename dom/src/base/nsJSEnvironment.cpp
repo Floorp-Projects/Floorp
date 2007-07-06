@@ -1671,7 +1671,7 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
                                           aURL, aLineNo);
 
   if (!fun) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_ILLEGAL_VALUE;
   }
 
   JSObject *handler = ::JS_GetFunctionObject(fun);
