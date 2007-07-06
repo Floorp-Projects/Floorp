@@ -441,8 +441,6 @@ nsMenuPopupFrame::InitializePopupWithAnchorAlign(nsIContent* aAnchorContent,
   EnsureWidget();
 
   mIsOpenPending = PR_TRUE;
-  mXPos = aXPos;
-  mYPos = aYPos;
 
   // this popup opening function is provided for backwards compatibility
   // only. It accepts either coordinates or an anchor and alignment value
@@ -451,6 +449,8 @@ nsMenuPopupFrame::InitializePopupWithAnchorAlign(nsIContent* aAnchorContent,
     mAnchorContent = aAnchorContent;
     mScreenXPos = -1;
     mScreenYPos = -1;
+    mXPos = 0;
+    mYPos = 0;
     InitPositionFromAnchorAlign(aAnchor, aAlign);
   }
   else {
@@ -459,6 +459,8 @@ nsMenuPopupFrame::InitializePopupWithAnchorAlign(nsIContent* aAnchorContent,
     mPopupAlignment = POPUPALIGNMENT_NONE;
     mScreenXPos = aXPos;
     mScreenYPos = aYPos;
+    mXPos = aXPos;
+    mYPos = aYPos;
   }
 }
 
