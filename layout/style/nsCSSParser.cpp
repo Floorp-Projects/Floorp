@@ -187,7 +187,7 @@ protected:
                        PRUint32 aLineNumber, nsIURI* aBaseURI,
                        nsIPrincipal* aSheetPrincipal);
   // the caller must hold on to aBuffer until parsing is done
-  nsresult InitScanner(const nsString& aString, nsIURI* aSheetURI,
+  nsresult InitScanner(const nsSubstring& aString, nsIURI* aSheetURI,
                        PRUint32 aLineNumber, nsIURI* aBaseURI,
                        nsIPrincipal* aSheetPrincipal);
   nsresult ReleaseScanner(void);
@@ -203,7 +203,7 @@ protected:
 
   PRBool ExpectSymbol(nsresult& aErrorCode, PRUnichar aSymbol, PRBool aSkipWS);
   PRBool ExpectEndProperty(nsresult& aErrorCode, PRBool aSkipWS);
-  nsString* NextIdent(nsresult& aErrorCode);
+  nsSubstring* NextIdent(nsresult& aErrorCode);
   void SkipUntil(nsresult& aErrorCode, PRUnichar aStopSymbol);
   void SkipRuleSet(nsresult& aErrorCode);
   PRBool SkipAtRule(nsresult& aErrorCode);
@@ -654,7 +654,7 @@ CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
 }
 
 nsresult
-CSSParserImpl::InitScanner(const nsString& aString, nsIURI* aSheetURI,
+CSSParserImpl::InitScanner(const nsSubstring& aString, nsIURI* aSheetURI,
                            PRUint32 aLineNumber, nsIURI* aBaseURI,
                            nsIPrincipal* aSheetPrincipal)
 {
@@ -662,7 +662,7 @@ CSSParserImpl::InitScanner(const nsString& aString, nsIURI* aSheetURI,
   // the stream until we're done parsing.
   NS_ASSERTION(! mScannerInited, "already have scanner");
 
-  mScanner.Init(nsnull, aString.get(), aString.Length(), aSheetURI, aLineNumber);
+  mScanner.Init(nsnull, aString.BeginReading(), aString.Length(), aSheetURI, aLineNumber);
 
 #ifdef DEBUG
   mScannerInited = PR_TRUE;
@@ -802,9 +802,8 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
   
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
 
-  const nsAFlatString& flat = PromiseFlatString(aAttributeValue);
   // XXX line number?
-  nsresult rv = InitScanner(flat, aDocURL, 0, aBaseURL, aNodePrincipal);
+  nsresult rv = InitScanner(aAttributeValue, aDocURL, 0, aBaseURL, aNodePrincipal);
   if (! NS_SUCCEEDED(rv)) {
     return rv;
   }
@@ -861,8 +860,7 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
 //  NS_ASSERTION(nsnull != aBaseURL, "need base URL");
   *aChanged = PR_FALSE;
 
-  const nsAFlatString& flat = PromiseFlatString(aBuffer);
-  nsresult rv = InitScanner(flat, aSheetURL, 0, aBaseURL, aSheetPrincipal);
+  nsresult rv = InitScanner(aBuffer, aSheetURL, 0, aBaseURL, aSheetPrincipal);
   if (! NS_SUCCEEDED(rv)) {
     return rv;
   }
@@ -914,8 +912,7 @@ CSSParserImpl::ParseRule(const nsAString&        aRule,
   
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
 
-  const nsAFlatString& flat = PromiseFlatString(aRule);
-  nsresult rv = InitScanner(flat, aSheetURL, 0, aBaseURL, aSheetPrincipal);
+  nsresult rv = InitScanner(aRule, aSheetURL, 0, aBaseURL, aSheetPrincipal);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -955,8 +952,7 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
   NS_ASSERTION(nsnull != aDeclaration, "Need declaration to parse into!");
   *aChanged = PR_FALSE;
 
-  const nsAFlatString& flat = PromiseFlatString(aPropValue);
-  nsresult rv = InitScanner(flat, aSheetURL, 0, aBaseURL, aSheetPrincipal);
+  nsresult rv = InitScanner(aPropValue, aSheetURL, 0, aBaseURL, aSheetPrincipal);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1066,10 +1062,8 @@ CSSParserImpl::DoParseMediaList(const nsSubstring& aBuffer,
                                 PRUint32 aLineNumber, // for error reporting
                                 nsMediaList* aMediaList)
 {
-  const nsAFlatString& flat = PromiseFlatString(aBuffer);
-
   // fake base URL since media lists don't have URLs in them
-  nsresult rv = InitScanner(flat, aURL, aLineNumber, aURL, nsnull);
+  nsresult rv = InitScanner(aBuffer, aURL, aLineNumber, aURL, nsnull);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1091,8 +1085,7 @@ CSSParserImpl::ParseColorString(const nsSubstring& aBuffer,
 {
   NS_ASSERTION(aHandleAlphaColors == PR_TRUE || aHandleAlphaColors == PR_FALSE, "bad PRBool value");
 
-  const nsAFlatString& flat = PromiseFlatString(aBuffer);
-  nsresult rv = InitScanner(flat, aURL, aLineNumber, aURL, nsnull);
+  nsresult rv = InitScanner(aBuffer, aURL, aLineNumber, aURL, nsnull);
   if (NS_FAILED(rv))
     return rv;
 
@@ -1112,9 +1105,8 @@ CSSParserImpl::ParseColorString(const nsSubstring& aBuffer,
   }
 
   if (value.GetUnit() == eCSSUnit_String) {
-    nsAutoString s;
     nscolor rgba;
-    if (NS_ColorNameToRGB(value.GetStringValue(s), &rgba)) {
+    if (NS_ColorNameToRGB(nsDependentString(value.GetStringBufferValue()), &rgba)) {
       (*aColor) = rgba;
       rv = NS_OK;
     }
@@ -1217,7 +1209,7 @@ PRBool CSSParserImpl::ExpectEndProperty(nsresult& aErrorCode, PRBool aSkipWS)
 }
 
 
-nsString* CSSParserImpl::NextIdent(nsresult& aErrorCode)
+nsSubstring* CSSParserImpl::NextIdent(nsresult& aErrorCode)
 {
   // XXX Error reporting?
   if (!GetToken(aErrorCode, PR_TRUE)) {
@@ -3633,7 +3625,7 @@ static const nsCSSProperty kBorderEndIDs[] = {
 PRBool CSSParserImpl::ParseEnum(nsresult& aErrorCode, nsCSSValue& aValue,
                                 const PRInt32 aKeywordTable[])
 {
-  nsString* ident = NextIdent(aErrorCode);
+  nsSubstring* ident = NextIdent(aErrorCode);
   if (nsnull == ident) {
     return PR_FALSE;
   }
@@ -5688,7 +5680,7 @@ PRBool CSSParserImpl::ParseCounterData(nsresult& aErrorCode,
                                        nsCSSCounterData** aResult,
                                        nsCSSProperty aPropID)
 {
-  nsString* ident = NextIdent(aErrorCode);
+  nsSubstring* ident = NextIdent(aErrorCode);
   if (nsnull == ident) {
     return PR_FALSE;
   }
