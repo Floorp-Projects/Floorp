@@ -264,6 +264,12 @@ nsWindowRoot::GetFocusController(nsIFocusController** aResult)
   return NS_OK;
 }
 
+nsIDOMWindow*
+nsWindowRoot::GetWindow()
+{
+  return mWindow;
+}
+
 NS_IMETHODIMP
 nsWindowRoot::GetScriptTypeID(PRUint32 *aScriptType)
 {
