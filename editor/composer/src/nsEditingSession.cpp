@@ -630,19 +630,19 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow,
 
   if (aStopEditing) {
     if (!mInteractive) {
-    // Make things the way they were before we started editing.
-    if (mScriptsEnabled) {
-      docShell->SetAllowJavascript(PR_TRUE);
-    }
+      // Make things the way they were before we started editing.
+      if (mScriptsEnabled) {
+        docShell->SetAllowJavascript(PR_TRUE);
+      }
 
-    if (mPluginsEnabled) {
-      docShell->SetAllowPlugins(PR_TRUE);
-    }
+      if (mPluginsEnabled) {
+        docShell->SetAllowPlugins(PR_TRUE);
+      }
 
-    nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(aWindow));
-    if (utils)
-      utils->SetImageAnimationMode(mImageAnimationMode);
-  }
+      nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(aWindow));
+      if (utils)
+        utils->SetImageAnimationMode(mImageAnimationMode);
+    }
 
     if (mMakeWholeDocumentEditable) {
       nsCOMPtr<nsIDOMDocument> domDoc;
