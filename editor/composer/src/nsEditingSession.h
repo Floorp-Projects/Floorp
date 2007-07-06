@@ -130,6 +130,7 @@ protected:
   PRPackedBool    mCanCreateEditor; 
 
   PRPackedBool    mInteractive;
+  PRPackedBool    mMakeWholeDocumentEditable;
 
   // True if scripts were enabled before the editor turned scripts
   // off, otherwise false.
