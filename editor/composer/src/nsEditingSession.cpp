@@ -96,6 +96,7 @@ nsEditingSession::nsEditingSession()
 : mDoneSetup(PR_FALSE)
 , mCanCreateEditor(PR_FALSE)
 , mInteractive(PR_FALSE)
+, mMakeWholeDocumentEditable(PR_TRUE)
 , mScriptsEnabled(PR_TRUE)
 , mPluginsEnabled(PR_TRUE)
 , mProgressListenerRegistered(PR_FALSE)
@@ -150,20 +151,10 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
   nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
   if (!docShell) return NS_ERROR_FAILURE;
 
-  nsresult rv;
-  if (aMakeWholeDocumentEditable) {
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    rv = aWindow->GetDocument(getter_AddRefs(domDoc));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    doc->SetEditableFlag(PR_TRUE);
-  }
-
   mInteractive = aInteractive;
+  mMakeWholeDocumentEditable = aMakeWholeDocumentEditable;
 
+  nsresult rv;
   if (!mInteractive) {
     // Disable JavaScript in this document:
     PRBool tmp;
@@ -349,6 +340,9 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
     nsCOMPtr<nsIDocument> document(do_QueryInterface(doc));
     if (document) {
       document->FlushPendingNotifications(Flush_Frames);
+      if (mMakeWholeDocumentEditable) {
+        document->SetEditableFlag(PR_TRUE);
+      }
     }
   }
   PRBool needHTMLController = PR_FALSE;
@@ -634,7 +628,8 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow,
     mHTMLCommandControllerId = 0;
   }
 
-  if (aStopEditing && !mInteractive) {
+  if (aStopEditing) {
+    if (!mInteractive) {
     // Make things the way they were before we started editing.
     if (mScriptsEnabled) {
       docShell->SetAllowJavascript(PR_TRUE);
@@ -647,6 +642,18 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow,
     nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(aWindow));
     if (utils)
       utils->SetImageAnimationMode(mImageAnimationMode);
+  }
+
+    if (mMakeWholeDocumentEditable) {
+      nsCOMPtr<nsIDOMDocument> domDoc;
+      rv = aWindow->GetDocument(getter_AddRefs(domDoc));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      doc->SetEditableFlag(PR_FALSE);
+    }
   }
 
   return rv;
@@ -1083,16 +1090,6 @@ nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress,
                                           10, nsITimer::TYPE_ONE_SHOT);
         }
       }
-
-      // XXX This should move somewhere else!
-      nsCOMPtr<nsIDOMDocument> domDoc;
-      rv = domWindow->GetDocument(getter_AddRefs(domDoc));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      doc->SetEditableFlag(PR_TRUE);
     }
   }
   return rv;
