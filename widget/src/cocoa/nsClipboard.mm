@@ -231,7 +231,7 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList, PRInt32 aWhic
         aFlavorList->Count(&passedFlavorCount);
         for (PRUint32 k = 0; k < passedFlavorCount; k++) {
           nsCOMPtr<nsISupports> passedFlavorSupports;
-          aFlavorList->GetElementAt(j, getter_AddRefs(passedFlavorSupports));
+          aFlavorList->GetElementAt(k, getter_AddRefs(passedFlavorSupports));
           nsCOMPtr<nsISupportsCString> currentPassedFlavor(do_QueryInterface(passedFlavorSupports));
           if (!currentPassedFlavor)
             continue;
