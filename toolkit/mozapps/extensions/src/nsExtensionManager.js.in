@@ -6043,20 +6043,31 @@ ExtensionItemUpdater.prototype = {
     return false;
   },
   
-  _isValidUpdate: function(aLocalItem, aRemoteItem) {
+  /**
+   * Checks whether a discovered update is valid for install
+   * @param   aLocalItem
+   *          The already installed nsIUpdateItem that the update is for
+   * @param   aVersion
+   *          The updated version of the add-on
+   * @param   aMinAppVersion
+   *          The minimum application version that the update supports
+   * @param   aMaxApVersion
+   *          The maximum application version that the update supports
+   */
+  _isValidUpdate: function(aLocalItem, aVersion, aMinAppVersion, aMaxAppVersion) {
     var appExtensionsVersion = gApp.version;
 
     // Check if the update will only run on a newer version of Firefox. 
-    if (aRemoteItem.minAppVersion && 
-        gVersionChecker.compare(appExtensionsVersion, aRemoteItem.minAppVersion) < 0) 
+    if (aMinAppVersion && 
+        gVersionChecker.compare(appExtensionsVersion, aMinAppVersion) < 0) 
       return false;
 
     // Check if the update will only run on an older version of Firefox. 
-    if (aRemoteItem.maxAppVersion && 
-        gVersionChecker.compare(appExtensionsVersion, aRemoteItem.maxAppVersion) > 0) 
+    if (aMaxAppVersion && 
+        gVersionChecker.compare(appExtensionsVersion, aMaxAppVersion) > 0) 
       return false;
 
-    if (this._emDS.isBlocklisted(aRemoteItem.id, aRemoteItem.version,
+    if (this._emDS.isBlocklisted(aLocalItem.id, aVersion,
                                  undefined, undefined))
       return false;
     
@@ -6346,7 +6357,7 @@ RDFItemUpdater.prototype = {
     // Parse the response RDF
     function UpdateData() {}; 
     UpdateData.prototype = { version: "0.0", updateLink: null, updateHash: null,
-                             minVersion: "0.0", maxVersion: "0.0" };
+                             minVersion: "0.0", maxVersion: "0.0", found: false };
     
     var versionUpdate = new UpdateData();
     var newestUpdate  = new UpdateData();
@@ -6362,21 +6373,20 @@ RDFItemUpdater.prototype = {
       this._parseV20UpdateInfo(aDatasource, aLocalItem, newestUpdate,
                                nsIExtensionManager.UPDATE_CHECK_NEWVERSION);
 
-      newerItem = makeItem(aLocalItem.id, 
-                           newestUpdate.version, 
-                           aLocalItem.installLocationKey,
-                           newestUpdate.minVersion, 
-                           newestUpdate.maxVersion, 
-                           aLocalItem.name, 
-                           newestUpdate.updateLink,
-                           newestUpdate.updateHash,
-                           "", /* Icon URL */
-                           "", /* RDF Update URL */
-                           aLocalItem.type);
-      if (this._updater._isValidUpdate(aLocalItem, newerItem))
+      if (newestUpdate.found) {
+        newerItem = makeItem(aLocalItem.id, 
+                             newestUpdate.version, 
+                             aLocalItem.installLocationKey,
+                             newestUpdate.minVersion, 
+                             newestUpdate.maxVersion, 
+                             aLocalItem.name, 
+                             newestUpdate.updateLink,
+                             newestUpdate.updateHash,
+                             "", /* Icon URL */
+                             "", /* RDF Update URL */
+                             aLocalItem.type);
         ++this._updater._updateCount;
-      else
-        newerItem = null;
+      }
     }
     
     // Now look for updated version compatibility metadata for the currently
@@ -6384,9 +6394,7 @@ RDFItemUpdater.prototype = {
     this._parseV20UpdateInfo(aDatasource, aLocalItem, versionUpdate,
                              nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY);
 
-    var result = gVersionChecker.compare(versionUpdate.version, 
-                                          aLocalItem.version);
-    if (result == 0) {
+    if (versionUpdate.found) {
       // Local version exactly matches the "Version Update" remote version, 
       // Apply changes into local datasource.
       sameItem = makeItem(aLocalItem.id, 
@@ -6400,15 +6408,11 @@ RDFItemUpdater.prototype = {
                           "", /* Icon URL */
                           "", /* RDF Update URL */
                           aLocalItem.type);
-      if (this._updater._isValidUpdate(aLocalItem, sameItem)) {
-        // Install-time updates are not written to the DS because there is no
-        // entry yet, EM just uses the notifications to ascertain (by hand)
-        // whether or not there is a remote maxVersion tweak that makes the 
-        // item being installed compatible.
-        if (!this._updater._applyVersionUpdates(aLocalItem, sameItem))
-          sameItem = null;
-      }
-      else 
+      // Install-time updates are not written to the DS because there is no
+      // entry yet, EM just uses the notifications to ascertain (by hand)
+      // whether or not there is a remote maxVersion tweak that makes the 
+      // item being installed compatible.
+      if (!this._updater._applyVersionUpdates(aLocalItem, sameItem))
         sameItem = null;
     }
     
@@ -6484,10 +6488,8 @@ RDFItemUpdater.prototype = {
     if (cu.IsContainer(aDataSource, updates)) {
       var ctr = getContainer(aDataSource, updates);
 
-      // In "all update types" mode, we look for newer versions, starting with the 
-      // current installed version.
-      if (aUpdateCheckType != nsIExtensionManager.UPDATE_CHECK_NEWVERSION) 
-        aUpdateData.version = aLocalItem.version;
+      // Initial target version is the currently installed version
+      aUpdateData.version = aLocalItem.version;
 
       var versions = ctr.GetElements();
       while (versions.hasMoreElements()) {
@@ -6496,7 +6498,7 @@ RDFItemUpdater.prototype = {
         // "version updates only" mode or "version+newest" mode. 
         var version = versions.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
         this._parseV20Update(aDataSource, version, aLocalItem, aUpdateData, aUpdateCheckType);
-        if (aUpdateCheckType && aUpdateData.updateLink)
+        if (aUpdateCheckType && aUpdateData.found)
           break;
       }
     }
@@ -6513,13 +6515,21 @@ RDFItemUpdater.prototype = {
       if (id != this._updater._appID)
         continue;
       
-      var result = gVersionChecker.compare(version, aLocalItem.version);
+      /* If we are looking for new versions then test whether this discovered
+       * version is larger than any previously found update. Otherwise check
+       * if this update is for the same version as we have installed. */
+      var result = gVersionChecker.compare(version, aUpdateData.version);
       if (aUpdateCheckType == nsIExtensionManager.UPDATE_CHECK_NEWVERSION ? result > 0 : result == 0) {
-        aUpdateData.version = version;
-        aUpdateData.updateLink = this._getPropertyFromResource(aDataSource, targetApp, "updateLink", aLocalItem);
-        aUpdateData.updateHash = this._getPropertyFromResource(aDataSource, targetApp, "updateHash", aLocalItem);
-        aUpdateData.minVersion = this._getPropertyFromResource(aDataSource, targetApp, "minVersion", aLocalItem);
-        aUpdateData.maxVersion = this._getPropertyFromResource(aDataSource, targetApp, "maxVersion", aLocalItem);
+        var maxAppVersion = this._getPropertyFromResource(aDataSource, targetApp, "maxVersion", aLocalItem);
+        var minAppVersion = this._getPropertyFromResource(aDataSource, targetApp, "minVersion", aLocalItem);
+        if (this._updater._isValidUpdate(aLocalItem, version, minAppVersion, maxAppVersion)) {
+          aUpdateData.found = true;
+          aUpdateData.version = version;
+          aUpdateData.updateLink = this._getPropertyFromResource(aDataSource, targetApp, "updateLink", aLocalItem);
+          aUpdateData.updateHash = this._getPropertyFromResource(aDataSource, targetApp, "updateHash", aLocalItem);
+          aUpdateData.minVersion = maxAppVersion;
+          aUpdateData.maxVersion = minAppVersion;
+        }
       }
     }
   }
