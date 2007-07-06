@@ -1349,6 +1349,11 @@ nsAutoCompleteController::GetResultValueAt(PRInt32 aIndex, PRBool aValueOnly, ns
   return NS_OK;
 }
 
+/**
+ * Given the index of a row in the autocomplete popup, find the
+ * corresponding nsIAutoCompleteSearch index, and sub-index into 
+ * the search's results list.
+ */
 nsresult
 nsAutoCompleteController::RowIndexToSearch(PRInt32 aRowIndex, PRInt32 *aSearchIndex, PRInt32 *aItemIndex)
 {
@@ -1358,6 +1363,9 @@ nsAutoCompleteController::RowIndexToSearch(PRInt32 aRowIndex, PRInt32 *aSearchIn
   PRUint32 count;
   mSearches->Count(&count);
   PRUint32 index = 0;
+
+  // Move index through the results of each registered nsIAutoCompleteSearch 
+  // until we find the given row
   for (PRUint32 i = 0; i < count; ++i) {
     nsCOMPtr<nsIAutoCompleteResult> result;
     mResults->GetElementAt(i, getter_AddRefs(result));
@@ -1367,17 +1375,24 @@ nsAutoCompleteController::RowIndexToSearch(PRInt32 aRowIndex, PRInt32 *aSearchIn
     PRUint16 searchResult;
     result->GetSearchResult(&searchResult);
     
-    PRUint32 rowCount = 1;
+    // Find out how many results were provided by the 
+    // current nsIAutoCompleteSearch
+    PRUint32 rowCount = 0;
     if (searchResult == nsIAutoCompleteResult::RESULT_SUCCESS) {
       result->GetMatchCount(&rowCount);
     }
     
-    if (index + rowCount-1 >= (PRUint32) aRowIndex) {
+    // If the given row index is within the results range 
+    // of the current nsIAutoCompleteSearch then return the
+    // search index and sub-index into the results array
+    if ((rowCount != 0) && (index + rowCount-1 >= (PRUint32) aRowIndex)) {
       *aSearchIndex = i;
       *aItemIndex = aRowIndex - index;
       return NS_OK;
     }
 
+    // Advance the popup table index cursor past the
+    // results of the current search.
     index += rowCount;
   }
 
