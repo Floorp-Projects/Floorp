@@ -92,6 +92,7 @@ protected:
         PRUint32     mAppUnitsPerDevUnit;
         PRUint32     mStringHash;
         PRPackedBool mIsDoubleByteText;
+        PRPackedBool mIsRTL;
     };
 
     class CacheHashEntry : public PLDHashEntryHdr {
@@ -223,7 +224,8 @@ TextRunWordCache::LookupWord(gfxTextRun *aTextRun, gfxFont *aFirstFont,
     CacheHashKey key =
         { aFirstFont, aTextRun->GetTextAt(aStart),
           length, aTextRun->GetAppUnitsPerDevUnit(), aHash,
-          (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_IS_8BIT) == 0 };
+          (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_IS_8BIT) == 0,
+          aTextRun->IsRightToLeft() };
     CacheHashEntry *fontEntry = mCache.PutEntry(key);
     if (!fontEntry)
         return PR_FALSE;
@@ -305,7 +307,8 @@ TextRunWordCache::FinishTextRun(gfxTextRun *aTextRun, gfxTextRun *aNewRun,
                 CacheHashKey key =
                     { font, aTextRun->GetTextAt(word->mDestOffset),
                       word->mLength, aTextRun->GetAppUnitsPerDevUnit(), word->mHash,
-                      (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_IS_8BIT) == 0 };
+                      (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_IS_8BIT) == 0,
+                      aTextRun->IsRightToLeft() };
                 NS_ASSERTION(mCache.GetEntry(key),
                              "This entry should have been added previously!");
                 mCache.RemoveEntry(key);
@@ -506,7 +509,8 @@ TextRunWordCache::RemoveWord(gfxTextRun *aTextRun, PRUint32 aStart,
     CacheHashKey key =
         { GetWordFontOrGroup(aTextRun, aStart, length), aTextRun->GetTextAt(aStart),
           length, aTextRun->GetAppUnitsPerDevUnit(), aHash,
-          (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_IS_8BIT) == 0 };
+          (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_IS_8BIT) == 0,
+          aTextRun->IsRightToLeft() };
     CacheHashEntry *entry = mCache.GetEntry(key);
     if (entry && entry->mTextRun == aTextRun) {
         // XXX would like to use RawRemoveEntry here plus some extra method
@@ -579,7 +583,8 @@ TextRunWordCache::CacheHashEntry::KeyEquals(const KeyTypePointer aKey) const
     gfxFontGroup *fontGroup = mTextRun->GetFontGroup();
     if (!IsWordEnd(mTextRun, mWordOffset + length) ||
         GetFontOrGroup(fontGroup, mHashedByFont) != aKey->mFontOrGroup ||
-        aKey->mAppUnitsPerDevUnit != mTextRun->GetAppUnitsPerDevUnit())
+        aKey->mAppUnitsPerDevUnit != mTextRun->GetAppUnitsPerDevUnit() ||
+        aKey->mIsRTL != mTextRun->IsRightToLeft())
         return PR_FALSE;
 
     if (mTextRun->GetFlags() & gfxFontGroup::TEXT_IS_8BIT) {
@@ -601,7 +606,7 @@ PLDHashNumber
 TextRunWordCache::CacheHashEntry::HashKey(const KeyTypePointer aKey)
 {
     return aKey->mStringHash + (long)aKey->mFontOrGroup + aKey->mAppUnitsPerDevUnit +
-        aKey->mIsDoubleByteText;
+        aKey->mIsDoubleByteText + aKey->mIsRTL * 2;
 }
 
 static TextRunWordCache *gTextRunWordCache = nsnull;
