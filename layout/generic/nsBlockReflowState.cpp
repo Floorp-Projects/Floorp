@@ -617,93 +617,87 @@ nsBlockReflowState::CanPlaceFloat(const nsSize& aFloatSize,
       // prior float)
       result = PR_FALSE;
     }
+  }
+
+  if (!result)
+    return result;
+
+  // At this point we know that there is enough horizontal space for
+  // the float (somewhere). Lets see if there is enough vertical
+  // space.
+  if (mAvailSpaceRect.height < aFloatSize.height) {
+    // The available height is too short. However, its possible that
+    // there is enough open space below which is not impacted by a
+    // float.
+    //
+    // Compute the X coordinate for the float based on its float
+    // type, assuming its placed on the current line. This is
+    // where the float will be placed horizontally if it can go
+    // here.
+    nscoord xa;
+    if (NS_STYLE_FLOAT_LEFT == aFloats) {
+      xa = mAvailSpaceRect.x;
+    }
     else {
-      // At this point we know that there is enough horizontal space for
-      // the float (somewhere). Lets see if there is enough vertical
-      // space.
-      if (mAvailSpaceRect.height < aFloatSize.height) {
-        // The available height is too short. However, its possible that
-        // there is enough open space below which is not impacted by a
-        // float.
-        //
-        // Compute the X coordinate for the float based on its float
-        // type, assuming its placed on the current line. This is
-        // where the float will be placed horizontally if it can go
-        // here.
-        nscoord xa;
-        if (NS_STYLE_FLOAT_LEFT == aFloats) {
-          xa = mAvailSpaceRect.x;
-        }
-        else {
-          xa = mAvailSpaceRect.XMost() - aFloatSize.width;
+      xa = mAvailSpaceRect.XMost() - aFloatSize.width;
 
-          // In case the float is too big, don't go past the left edge
-          // XXXldb This seems wrong, but we might want to fix bug 6976
-          // first.
-          if (xa < mAvailSpaceRect.x) {
-            xa = mAvailSpaceRect.x;
-          }
-        }
-        nscoord xb = xa + aFloatSize.width;
-
-        // Calculate the top and bottom y coordinates, again assuming
-        // that the float is placed on the current line.
-        const nsMargin& borderPadding = BorderPadding();
-        nscoord ya = mY - borderPadding.top;
-        if (ya < 0) {
-          // CSS2 spec, 9.5.1 rule [4]: "A floating box's outer top may not
-          // be higher than the top of its containing block."  (Since the
-          // containing block is the content edge of the block box, this
-          // means the margin edge of the float can't be higher than the
-          // content edge of the block that contains it.)
-          ya = 0;
-        }
-        nscoord yb = ya + aFloatSize.height;
-
-        nscoord saveY = mY;
-        for (;;) {
-          // Get the available space at the new Y coordinate
-          if (mAvailSpaceRect.height <= 0) {
-            // there is no more available space. We lose.
-            result = PR_FALSE;
-            break;
-          }
-
-          mY += mAvailSpaceRect.height;
-          GetAvailableSpace(mY, aForceFit);
-
-          if (0 == mBand.GetFloatCount()) {
-            // Winner. This band has no floats on it, therefore
-            // there can be no overlap.
-            break;
-          }
-
-          // Check and make sure the float won't intersect any
-          // floats on this band. The floats starting and ending
-          // coordinates must be entirely in the available space.
-          if ((xa < mAvailSpaceRect.x) || (xb > mAvailSpaceRect.XMost())) {
-            // The float can't go here.
-            result = PR_FALSE;
-            break;
-          }
-
-          // See if there is now enough height for the float.
-          if (yb < mY + mAvailSpaceRect.height) {
-            // Winner. The bottom Y coordinate of the float is in
-            // this band.
-            break;
-          }
-        }
-
-        // Restore Y coordinate and available space information
-        // regardless of the outcome.
-        mY = saveY;
-        GetAvailableSpace(mY, aForceFit);
+      // In case the float is too big, don't go past the left edge
+      // XXXldb This seems wrong, but we might want to fix bug 6976
+      // first.
+      if (xa < mAvailSpaceRect.x) {
+        xa = mAvailSpaceRect.x;
       }
     }
-  } else if (!aForceFit && (aFloatSize.height > mAvailSpaceRect.height)) {
-    result = PR_FALSE;
+    nscoord xb = xa + aFloatSize.width;
+
+    // Calculate the top and bottom y coordinates, again assuming
+    // that the float is placed on the current line.
+    const nsMargin& borderPadding = BorderPadding();
+    nscoord ya = mY - borderPadding.top;
+    if (ya < 0) {
+      // CSS2 spec, 9.5.1 rule [4]: "A floating box's outer top may not
+      // be higher than the top of its containing block."  (Since the
+      // containing block is the content edge of the block box, this
+      // means the margin edge of the float can't be higher than the
+      // content edge of the block that contains it.)
+      ya = 0;
+    }
+    nscoord yb = ya + aFloatSize.height;
+
+    nscoord saveY = mY;
+    for (;;) {
+      // Get the available space at the new Y coordinate
+      if (mAvailSpaceRect.height <= 0) {
+        // there is no more available space. We lose.
+        result = PR_FALSE;
+        break;
+      }
+
+      mY += mAvailSpaceRect.height;
+      GetAvailableSpace(mY, aForceFit);
+
+      if (0 != mBand.GetFloatCount()) {
+        if ((xa < mAvailSpaceRect.x) || (xb > mAvailSpaceRect.XMost())) {
+          // The float can't go here.
+          result = PR_FALSE;
+          break;
+        }
+      }
+
+      // See if there is now enough height for the float.
+      if (yb < mY + mAvailSpaceRect.height) {
+        // Winner. The bottom Y coordinate of the float is in
+        // this band.
+        break;
+      }
+    }
+
+    // Restore Y coordinate and available space information
+    // regardless of the outcome.
+    mY = saveY;
+    GetAvailableSpace(mY, aForceFit);
   }
+
   return result;
 }
 
