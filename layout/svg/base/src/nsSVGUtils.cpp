@@ -77,11 +77,9 @@
 #include "gfxMatrix.h"
 #include "gfxRect.h"
 #include "gfxImageSurface.h"
-#include "gfxMatrix.h"
 #include "nsStubMutationObserver.h"
 #include "gfxPlatform.h"
 #include "nsSVGForeignObjectFrame.h"
-#include "nsInspectorCSSUtils.h"
 #include "nsIFontMetrics.h"
 
 class nsSVGPropertyBase : public nsStubMutationObserver {
@@ -487,20 +485,15 @@ nsSVGUtils::GetContextForContent(nsIContent* aContent)
 const nsStyleFont*
 nsSVGUtils::GetStyleFontForContent(nsIContent* aContent)
 {
-
   nsIDocument *doc = aContent->GetCurrentDoc();
 
   if (doc) {
-    nsIPresShell *presShell = doc->GetPrimaryShell();
-    if (presShell) {
-      nsRefPtr<nsStyleContext> styleContext =
-        nsInspectorCSSUtils::GetStyleContextForContent(aContent, nsnull,
-                                                       presShell);
-      if (styleContext)
-        return styleContext->GetStyleFont();
+    nsIFrame* frame = nsGenericElement::GetPrimaryFrameFor(aContent, doc);
+    if (frame) {
+      return frame->GetStyleContext()->GetStyleFont();
     }
   }
-  
+
   return nsnull;
 }
 
