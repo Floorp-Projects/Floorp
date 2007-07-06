@@ -79,6 +79,7 @@
 #include "nsIBoxLayout.h"
 #include "nsIPopupBoxObject.h"
 #include "nsIReflowCallback.h"
+#include "nsBindingManager.h"
 #ifdef XP_WIN
 #include "nsISound.h"
 #endif
