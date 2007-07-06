@@ -3836,8 +3836,8 @@ nsHTMLDocument::TurnEditingOff()
   nsCOMPtr<nsIEditorStyleSheets> editorss = do_QueryInterface(editor, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!HasFlag(NODE_IS_EDITABLE)) {
-    editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/contenteditable.css"));
+  editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/contenteditable.css"));
+  if (mEditingState == eDesignMode) {
     editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/designmode.css"));
 
     rv = docshell->SetAllowJavascript(mScriptsEnabled);
