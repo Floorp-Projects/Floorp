@@ -1077,9 +1077,8 @@ nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   // XXX We can remove this hack once we support RDF-based role & state maps
   if (mRoleMapEntry && (mRoleMapEntry->role == nsIAccessibleRole::ROLE_ENTRY ||
       mRoleMapEntry->role == nsIAccessibleRole::ROLE_PASSWORD_TEXT)) {
-    PRBool isEqual =
-      NS_LITERAL_CSTRING("textarea").Equals(mRoleMapEntry->roleString);
-    if (isEqual) {
+    if (content->AttrValueIs(kNameSpaceID_WAIProperties , nsAccessibilityAtoms::multiline,
+                             nsAccessibilityAtoms::_true, eCaseMatters)) {
       *aExtraState |= nsIAccessibleStates::EXT_STATE_MULTI_LINE;
     }
     else {
@@ -2293,8 +2292,9 @@ nsAccessible::GetARIAState(PRUint32 *aState)
       MappedAttrState(content, aState, &mRoleMapEntry->attributeMap3) &&
       MappedAttrState(content, aState, &mRoleMapEntry->attributeMap4) &&
       MappedAttrState(content, aState, &mRoleMapEntry->attributeMap5) &&
-      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap6)) {
-    MappedAttrState(content, aState, &mRoleMapEntry->attributeMap7);
+      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap6) &&
+      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap7)) {
+    MappedAttrState(content, aState, &mRoleMapEntry->attributeMap8);
   }
 
   return NS_OK;
