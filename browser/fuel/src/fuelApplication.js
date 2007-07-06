@@ -624,7 +624,7 @@ Window.prototype = {
   
   _shutdown : function() {
     for (var type in this._cleanup)
-      this._tabbrowser.removeEventListener(type, this._cleanup[type]);
+      this._tabbrowser.removeEventListener(type, this._cleanup[type], true);
     this._cleanup = null;
 
     this._window = null;
@@ -727,7 +727,7 @@ BrowserTab.prototype = {
   
   _shutdown : function() {
     for (var type in this._cleanup)
-      this._browser.removeEventListener(type, this._cleanup[type]);
+      this._browser.removeEventListener(type, this._cleanup[type], true);
     this._cleanup = null;
     
     this._window = null;
