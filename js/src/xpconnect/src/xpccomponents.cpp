@@ -47,6 +47,7 @@
 #include "xpcIJSModuleLoader.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIDOMWindow.h"
+#include "xpcJSWeakReference.h"
 
 #ifdef MOZ_JSLOADER
 #include "mozJSComponentLoader.h"
@@ -3564,6 +3565,43 @@ nsXPCComponents_Utils::Import(const nsACString & registryLocation)
 #endif
 }
 
+/* xpcIJSWeakReference getWeakReference (); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetWeakReference(xpcIJSWeakReference **_retval)
+{
+    nsRefPtr<xpcJSWeakReference> ref(new xpcJSWeakReference());
+    if (!ref)
+        return NS_ERROR_OUT_OF_MEMORY;
+    ref->Init();
+    *_retval = ref;
+    NS_ADDREF(*_retval);
+    return NS_OK;
+}
+
+/* void forceGC (); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::ForceGC()
+{
+    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
+    if (!xpc)
+        return NS_ERROR_FAILURE;
+
+    // get the xpconnect native call context
+    nsCOMPtr<nsIXPCNativeCallContext> cc;
+    nsresult rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    if (!cc)
+        return rv;
+
+    // Get JSContext of current call
+    JSContext* cx;
+    cc->GetJSContext(&cx);
+    if (!cx)
+        return NS_ERROR_FAILURE;
+
+    JS_GC(cx);
+
+    return NS_OK;
+}
 
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
 /* string canCreateWrapper (in nsIIDPtr iid); */
