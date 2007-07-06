@@ -50,10 +50,10 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIHANDLERAPP
 
-  nsHandlerAppBase() NS_HIDDEN {};
-  nsHandlerAppBase(const PRUnichar *aName) NS_HIDDEN  { mName.Assign(aName); };
-  nsHandlerAppBase(const nsAString & aName) NS_HIDDEN  { mName.Assign(aName); };
-  virtual ~nsHandlerAppBase() {};
+  nsHandlerAppBase() NS_HIDDEN {}
+  nsHandlerAppBase(const PRUnichar *aName) NS_HIDDEN  { mName.Assign(aName); }
+  nsHandlerAppBase(const nsAString & aName) NS_HIDDEN  { mName.Assign(aName); }
+  virtual ~nsHandlerAppBase() {}
 
 protected:
   nsString mName;
@@ -65,7 +65,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSILOCALHANDLERAPP
   
-  nsLocalHandlerApp() {};
+  nsLocalHandlerApp() {}
 
   nsLocalHandlerApp(const PRUnichar *aName, nsIFile *aExecutable) 
     : nsHandlerAppBase(aName), mExecutable(aExecutable) {}
@@ -73,7 +73,7 @@ public:
   nsLocalHandlerApp(const nsAString & aName, nsIFile *aExecutable) 
     : nsHandlerAppBase(aName), mExecutable(aExecutable) {}
 
-  virtual ~nsLocalHandlerApp() {};
+  virtual ~nsLocalHandlerApp() {}
 
   // overriding to keep old caching behavior (that a useful name is returned
   // even if none was given to the constructor)
@@ -92,7 +92,7 @@ class nsWebHandlerApp : public nsHandlerAppBase, public nsIWebHandlerApp
   nsWebHandlerApp(const PRUnichar *aName, const nsACString &aUriTemplate)
     : nsHandlerAppBase(aName), mUriTemplate(aUriTemplate) { }
 
-  virtual ~nsWebHandlerApp() {};
+  virtual ~nsWebHandlerApp() {}
 
   protected:
   nsCString mUriTemplate;
