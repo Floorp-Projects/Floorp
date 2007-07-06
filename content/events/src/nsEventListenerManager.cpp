@@ -826,6 +826,10 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
                                           aBody,
                                           url.get(), lineNo,
                                           handler);
+        if (rv == NS_ERROR_ILLEGAL_VALUE) {
+          NS_WARNING("Probably a syntax error in the event handler!");
+          return NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA;
+        }
         NS_ENSURE_SUCCESS(rv, rv);
         // And bind it.
         rv = context->BindCompiledEventHandler(aObject, scope,
