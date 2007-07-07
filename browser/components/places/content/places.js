@@ -409,7 +409,7 @@ var PlacesSearchBox = {
         PlacesUtils.getFormattedString("searchCurrentDefault", [title]);
     }
     else
-      this.searchFilter.grayText = PlacesUtils.getString("searchDefault");
+      this.searchFilter.grayText = PlacesUtils.getString("searchByDefault");
   },
 
   /**
@@ -446,7 +446,7 @@ var PlacesSearchBox = {
    */
   init: function PSB_init() {
     var searchFilter = this.searchFilter;
-    searchFilter.grayText = PlacesUtils.getString("searchDefault");
+    searchFilter.grayText = PlacesUtils.getString("searchByDefault");
     searchFilter.reset();
   },
   
