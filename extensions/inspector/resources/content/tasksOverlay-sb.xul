@@ -28,8 +28,7 @@
 
   <commandset id="calendar_commands">
     <command id="Tasks:Inspector" oncommand="inspectDOMDocument();"/>
-    <command id="Tasks:InspectPage"
-             oncommand="inspectDOMDocument(window.document.wrappedJSObject);"/>
+    <command id="Tasks:InspectPage" oncommand="inspectDOMDocument(window.document);"/>
   </commandset>
 
   <keyset id="tasksKeys">
