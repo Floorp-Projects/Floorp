@@ -789,20 +789,25 @@
         },
         
         onDragStart: function TBV_DO_onDragStart(event, xferData, dragAction) {
+          if (event.target.localName == "toolbarbutton" &&
+              event.target.getAttribute("type") == "menu") {
+#ifdef XP_WIN
+            // Support folder dragging on the personal toolbar when the user 
+            // holds the "alt" key while they drag (Ctrl+drag has another 
+            // meaning - Copy). This does not appear to work at all on Linux.
+            if (!event.shiftKey && !event.altKey && !event.ctrlKey)
+              return false;
+            event.target.firstChild.hidePopup();
+#else
+            return;
+#endif
+          }
+
           if (event.ctrlKey) {
             dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
           }
           xferData.data = this._self._controller.getTransferData(dragAction.action);
 #ifdef XP_WIN
-          // Support folder dragging on the personal toolbar when the user 
-          // holds the "alt" key while they drag (Ctrl+drag has another 
-          // meaning - Copy). This does not appear to work at all on Linux.
-          if (event.target.localName == "toolbarbutton" &&
-              event.target.getAttribute("type") == "menu") {
-            if (!event.shiftKey && !event.altKey && !event.ctrlKey)
-              return false;
-            event.target.firstChild.hidePopup();
-          }
           return true;
 #endif
         },
