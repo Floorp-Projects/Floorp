@@ -12,16 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Oracle Corporation code.
+ * The Original Code is Storage Code.
  *
  * The Initial Developer of the Original Code is
- *  Oracle Corporation
- * Portions created by the Initial Developer are Copyright (C) 2004
+ *   Lev Serebryakov <lev@serebryakov.spb.ru>
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
- *   Lev Serebryakov <lev@serebryakov.spb.ru>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,29 +43,28 @@ interface nsIArray;
 interface nsIVariant;
 
 /**
- * mozIStorageFunction is to be implemented by storage consumers that
- * wish to receive callbacks during the request execution.
+ * mozIStorageAggregateFunction represents aggregate SQL function.
+ * Common examples of aggregate functions are SUM() and COUNT().
  *
- * SQL can apply functions to values from tables. Examples of
- * such functions are MIN(a1,a2) or SQRT(num). Many functions are
- * implemented in SQL engine.
- *
- * This interface allows consumers to implement their own,
- * problem-specific functions.
- * These functions can be called from triggers, too.
- *
+ * An aggregate function calculates one result for a given set of data, where
+ * a set of data is a group of tuples. There can be one group
+ * per request or many of them, if GROUP BY clause is used or not.
  */
-[scriptable, uuid(9ff02465-21cb-49f3-b975-7d5b38ceec73)]
-interface mozIStorageFunction : nsISupports {
+[scriptable, uuid(763217b7-3123-11da-918d-000347412e16)]
+interface mozIStorageAggregateFunction : nsISupports {
   /**
-   * onFunctionCall is called when execution of a custom
-   * function should occur.
+   * onStep is called when next value should be passed to
+   * a custom function.
    * 
-   * @param aNumArguments         The number of arguments
    * @param aFunctionArguments    The arguments passed in to the function
-   *
-   * @returns any value as Variant type.
    */
+  void onStep(in mozIStorageValueArray aFunctionArguments);
 
-  nsIVariant onFunctionCall(in mozIStorageValueArray aFunctionArguments);
+  /**
+   * Called when all tuples in a group have been processed and the engine
+   * needs the aggregate function's value.
+   *
+   * @returns aggregate result as Variant.
+   */
+  nsIVariant onFinal();
 };
