@@ -166,30 +166,7 @@
       <property name="showCommentColumn"
                 onget="return this.getAttribute('showCommentColumn') == 'true';">
         <setter><![CDATA[
-
-          var currentState = this.getAttribute('showCommentColumn');          
-
-          // if comment column has been switched from off to on
-          //
-          if (val && (currentState == 'false')) { 
-
-            // reset the flex on the value column and add the comment column
-            //
-            document.getElementById("value").setAttribute("flex", 2);
-            this.resultsPopup.addColumn({id: "comment", flex: 1});
-
-          // if comment column has been switched from on to off
-          //
-          } else if (!val && (currentState == 'true')) {
-
-            // reset the flex on the value column and add the comment column
-            //
-            document.getElementById("value").setAttribute("flex", 1);
-            this.resultsPopup.removeColumn('comment');
-          }
-
-          // save and return the current state
-          //
+          this.resultsPopup.showCommentColumn = val;
           this.setAttribute('showCommentColumn', val); return val;
         ]]></setter>
       </property>
@@ -1365,7 +1342,7 @@
           {
             var result = this.mTextbox.getResultAt(aRow);
             if (!result) return "";
-            return aCol.id == "value" ? result.value : (aCol.id == "comment" ? result.comment : "");
+            return aCol.id == "treecolAutoCompleteValue" ? result.value : (aCol.id == "treecolAutoCompleteComment" ? result.comment : "");
           },
 
           getRowProperties: function(aIndex, aProperties) 
@@ -1378,7 +1355,7 @@
             // to the property list so that we can style this column
             // using that property
             try { 
-              if (aCol.id == "value") {
+              if (aCol.id == "treecolAutoCompleteValue") {
                 var className = this.mTextbox.getResultAt(aIndex).className;
                   if ( className != "" ) {
                     aProperties.AppendElement(this.createAtom(className));
@@ -1445,7 +1422,10 @@
   <binding id="autocomplete-result-popup" extends="chrome://global/content/bindings/popup.xml#popup">
     <content>
       <xul:tree anonid="tree" class="autocomplete-tree plain" flex="1">
-        <xul:treecols anonid="treecols"/>
+        <xul:treecols anonid="treecols">
+          <xul:treecol class="autocomplete-treecol" id="treecolAutoCompleteValue" flex="2"/>
+          <xul:treecol class="autocomplete-treecol" id="treecolAutoCompleteComment" flex="1" hidden="true"/>
+        </xul:treecols>
         <xul:treechildren anonid="treebody" class="autocomplete-treebody"/>
       </xul:tree>
     </content>
@@ -1497,42 +1477,14 @@
 
         this._selectedIndex = -1;
 
-        this.initColumns();
+        this.showCommentColumn = this.textbox.showCommentColumn;
         this.view = this.textbox.view;
         ]]></body>
       </method>
 
-      <!-- initialize the columns in the tree -->
-      <method name="initColumns">
-        <body><![CDATA[
-          if (this.textbox.showCommentColumn) {
-            this.addColumn({id: "value", flex: 2});
-            this.addColumn({id: "comment", flex: 1});
-          } else
-            this.addColumn({id: "value", flex: 1});
-        ]]></body>
-      </method>
-
-      <method name="addColumn">
-        <parameter name="aAttrs"/>
-        <body><![CDATA[
-          var col = document.createElement("treecol");
-          col.setAttribute("class", "autocomplete-treecol");
-          for (var name in aAttrs)
-            col.setAttribute(name, aAttrs[name]);
-          this.treecols.appendChild(col);
-          return col;
-        ]]></body>
-      </method>
-
-      <!-- remove a single column from the tree, specified by
-           element id -->
-      <method name="removeColumn">
-        <parameter name="aColId"/>
-        <body><![CDATA[
-          return this.tree.removeChild(document.getElementById(aColId));
-        ]]></body>
-      </method>
+      <property name="showCommentColumn"
+                onget="return !this.treecols.lastChild.hidden;"
+                onset="this.treecols.lastChild.hidden = !val; return val;"/>
 
       <method name="adjustHeight">
         <body><![CDATA[
