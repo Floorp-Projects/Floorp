@@ -347,7 +347,6 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
   // Indent the child inside us by the focus border. We must do this separate
   // from the regular border.
   availSize.width -= aFocusPadding.LeftRight();
-  availSize.width = PR_MAX(availSize.width,0);
   
   // See whether out availSize's width is big enough.  If it's smaller than our
   // intrinsic min width, that means that the kid wouldn't really fit; for a
@@ -367,6 +366,7 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
     xoffset -= extraleft;
     availSize.width += extraleft + extraright;
   }
+  availSize.width = PR_MAX(availSize.width,0);
   
   nsHTMLReflowState reflowState(aPresContext, aReflowState, aFirstKid,
                                 availSize);
