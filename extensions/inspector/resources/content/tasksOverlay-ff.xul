@@ -27,8 +27,7 @@
 
   <commandset id="mainCommandSet">
     <command id="Tasks:Inspector" oncommand="inspectDOMDocument();"/>
-    <command id="Tasks:InspectPage"
-             oncommand="inspectDOMDocument(content.document.wrappedJSObject);"/>
+    <command id="Tasks:InspectPage" oncommand="inspectDOMDocument(content.document);"/>
   </commandset>
 
   <keyset id="mainKeyset">
