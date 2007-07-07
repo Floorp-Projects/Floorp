@@ -216,8 +216,6 @@ nsIFrameDebug::GetVerifyTreeEnable()
     if (nsnull == gFrameVerifyTreeLogModuleInfo) {
       gFrameVerifyTreeLogModuleInfo = PR_NewLogModule("frameverifytree");
       gFrameVerifyTreeEnable = 0 != gFrameVerifyTreeLogModuleInfo->level;
-      printf("Note: frameverifytree is %sabled\n",
-             gFrameVerifyTreeEnable ? "en" : "dis");
     }
   }
   return gFrameVerifyTreeEnable;
@@ -240,8 +238,6 @@ nsIFrameDebug::GetVerifyStyleTreeEnable()
     if (nsnull == gStyleVerifyTreeLogModuleInfo) {
       gStyleVerifyTreeLogModuleInfo = PR_NewLogModule("styleverifytree");
       gStyleVerifyTreeEnable = 0 != gStyleVerifyTreeLogModuleInfo->level;
-      printf("Note: styleverifytree is %sabled\n",
-             gStyleVerifyTreeEnable ? "en" : "dis");
     }
   }
   return gStyleVerifyTreeEnable;

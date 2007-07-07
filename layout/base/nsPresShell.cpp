@@ -1284,25 +1284,25 @@ nsIPresShell::GetVerifyReflowEnable()
 
     if (VERIFY_REFLOW_ON & gVerifyReflowFlags) {
       gVerifyReflowEnabled = PR_TRUE;
-    }
-    printf("Note: verifyreflow is %sabled",
-           gVerifyReflowEnabled ? "en" : "dis");
-    if (VERIFY_REFLOW_NOISY & gVerifyReflowFlags) {
-      printf(" (noisy)");
-    }
-    if (VERIFY_REFLOW_ALL & gVerifyReflowFlags) {
-      printf(" (all)");
-    }
-    if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
-      printf(" (show reflow commands)");
-    }
-    if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
-      printf(" (noisy reflow commands)");
-      if (VERIFY_REFLOW_REALLY_NOISY_RC & gVerifyReflowFlags) {
-        printf(" (REALLY noisy reflow commands)");
+
+      printf("Note: verifyreflow is enabled");
+      if (VERIFY_REFLOW_NOISY & gVerifyReflowFlags) {
+        printf(" (noisy)");
       }
+      if (VERIFY_REFLOW_ALL & gVerifyReflowFlags) {
+        printf(" (all)");
+      }
+      if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
+        printf(" (show reflow commands)");
+      }
+      if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
+        printf(" (noisy reflow commands)");
+        if (VERIFY_REFLOW_REALLY_NOISY_RC & gVerifyReflowFlags) {
+          printf(" (REALLY noisy reflow commands)");
+        }
+      }
+      printf("\n");
     }
-    printf("\n");
   }
 #endif
   return gVerifyReflowEnabled;
