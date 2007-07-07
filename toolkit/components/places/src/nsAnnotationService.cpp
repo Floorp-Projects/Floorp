@@ -263,9 +263,6 @@ nsAnnotationService::InitTables(mozIStorageConnection* aDBConn)
         "id INTEGER PRIMARY KEY,"
         "name VARCHAR(32) UNIQUE NOT NULL)"));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_anno_attributes_nameindex ON moz_anno_attributes (name)"));
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   rv = aDBConn->TableExists(NS_LITERAL_CSTRING("moz_items_annos"), &exists);
