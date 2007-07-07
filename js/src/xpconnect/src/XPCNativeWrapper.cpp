@@ -237,6 +237,21 @@ EnsureLegalActivity(JSContext *cx, JSObject *obj)
     return JS_TRUE;
   }
 
+  XPCCallContext ccx(JS_CALLER, cx);
+  nsIXPCSecurityManager *sm = ccx.GetXPCContext()->
+    GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_CALL_METHOD);
+  nsCOMPtr<nsIScriptSecurityManager> ssm(do_QueryInterface(sm));
+
+  // A last ditch effort to allow access: if the subject principal is
+  // the system principal, then some XPCNativeWrapper-using code has
+  // passed one into other code. If that other code is chrome, then
+  // allow access.
+  PRBool isSystem;
+  nsresult rv = ssm->SubjectPrincipalIsSystem(&isSystem);
+  if (NS_SUCCEEDED(rv) && isSystem) {
+    return JS_TRUE;
+  }
+
   // Otherwise, we're looking at a non-system file with a handle on an
   // implicit wrapper. This is a bug! Deny access.
   return ThrowException(NS_ERROR_XPC_SECURITY_MANAGER_VETO, cx);
