@@ -204,9 +204,10 @@ js_DestroyScope(JSContext *cx, JSScope *scope)
 #ifdef DUMP_SCOPE_STATS
 typedef struct JSScopeStats {
     jsrefcount          searches;
-    jsrefcount          steps;
     jsrefcount          hits;
     jsrefcount          misses;
+    jsrefcount          hashes;
+    jsrefcount          steps;
     jsrefcount          stepHits;
     jsrefcount          stepMisses;
     jsrefcount          adds;
@@ -261,6 +262,8 @@ js_SearchScope(JSScope *scope, jsid id, JSBool adding)
         METER(misses);
         return spp;
     }
+
+    METER(hashes);
 
     /* Compute the primary hash address. */
     hash0 = SCOPE_HASH0(id);
@@ -1646,7 +1649,7 @@ DumpSubtree(JSContext *cx, JSScopeProperty *sprop, int level, FILE *fp)
     } else if (JSID_IS_OBJECT(sprop->id)) {
         str = js_ValueToString(cx, OBJECT_JSID_TO_JSVAL(sprop->id));
     } else {
-        fprintf(fp, "%ld", JSVAL_TO_INT(sprop->id));
+        fprintf(fp, "%d", JSVAL_TO_INT(sprop->id));
         str = NULL;
     }
     if (str)
@@ -1859,6 +1862,49 @@ js_SweepScopeProperties(JSContext *cx)
 #ifdef DUMP_SCOPE_STATS
     fprintf(logfp, " arenautil %g%%\n",
             (totalLiveCount * 100.0) / livePropCapacity);
+
+#define RATE(f1, f2) (((double)js_scope_stats.f1 / js_scope_stats.f2) * 100.0)
+
+    fprintf(logfp, "Scope search stats:\n"
+            "  searches:       %6u\n"
+            "  hits:           %6u %5.2f%% of searches\n"
+            "  misses:         %6u %5.2f%%\n"
+            "  hashes:         %6u %5.2f%%\n"
+            "  steps:          %6u %5.2f%% %5.2f%% of hashes\n"
+            "  stepHits:       %6u %5.2f%% %5.2f%%\n"
+            "  stepMisses:     %6u %5.2f%% %5.2f%%\n"
+            "  adds:           %6u\n"
+            "  redundantAdds:  %6u\n"
+            "  addFailures:    %6u\n"
+            "  changeFailures: %6u\n"
+            "  compresses:     %6u\n"
+            "  grows:          %6u\n"
+            "  removes:        %6u\n"
+            "  removeFrees:    %6u\n"
+            "  uselessRemoves: %6u\n"
+            "  shrinks:        %6u\n",
+            js_scope_stats.searches,
+            js_scope_stats.hits, RATE(hits, searches),
+            js_scope_stats.misses, RATE(misses, searches),
+            js_scope_stats.hashes, RATE(hashes, searches),
+            js_scope_stats.steps, RATE(steps, searches), RATE(steps, hashes),
+            js_scope_stats.stepHits,
+            RATE(stepHits, searches), RATE(stepHits, hashes),
+            js_scope_stats.stepMisses,
+            RATE(stepMisses, searches), RATE(stepMisses, hashes),
+            js_scope_stats.adds,
+            js_scope_stats.redundantAdds,
+            js_scope_stats.addFailures,
+            js_scope_stats.changeFailures,
+            js_scope_stats.compresses,
+            js_scope_stats.grows,
+            js_scope_stats.removes,
+            js_scope_stats.removeFrees,
+            js_scope_stats.uselessRemoves,
+            js_scope_stats.shrinks);
+
+#undef RATE
+
     fflush(logfp);
 #endif
 
