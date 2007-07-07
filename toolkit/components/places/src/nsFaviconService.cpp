@@ -184,8 +184,6 @@ nsFaviconService::InitTables(mozIStorageConnection* aDBConn)
   if (! exists) {
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_favicons (id INTEGER PRIMARY KEY, url LONGVARCHAR UNIQUE, data BLOB, mime_type VARCHAR(32), expiration LONG)"));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE INDEX moz_favicons_url ON moz_favicons (url)"));
-    NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
 }
