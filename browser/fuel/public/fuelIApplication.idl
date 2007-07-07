@@ -227,7 +227,7 @@ interface fuelIPreference : nsISupports
 /**
  * Interface representing a simple storage system
  */
-[scriptable, uuid(bbaf6210-aafe-11db-abbd-0800200c9a66)]
+[scriptable, uuid(0787ac44-29b9-4889-b97f-13573aec6971)]
 interface fuelISessionStorage : nsISupports
 {
   /**
@@ -252,7 +252,7 @@ interface fuelISessionStorage : nsISupports
    * @param   aValue
    *          The value to assign to the item
    */
-  void set(in AString aName, in AString aValue);
+  void set(in AString aName, in nsIVariant aValue);
 
   /**
    * Gets the value of a storage item with the given name. Returns a
@@ -264,7 +264,7 @@ interface fuelISessionStorage : nsISupports
    * @returns value of the item or the given default value if no item
    *          exists with the given name.
    */
-  AString get(in AString aName, in AString aDefaultValue);
+  nsIVariant get(in AString aName, in nsIVariant aDefaultValue);
 }; 
 
 
