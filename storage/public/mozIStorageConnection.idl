@@ -23,6 +23,7 @@
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
  *   Brett Wilson <brettw@gmail.com>
  *   Shawn Wilsher <me@shawnwilsher.com>
+ *   Lev Serebryakov <lev@serebryakov.spb.ru>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,7 +41,9 @@
 
 #include "nsISupports.idl"
 
+interface mozIStorageAggregateFunction;
 interface mozIStorageFunction;
+interface mozIStorageProgressHandler;
 interface mozIStorageStatement;
 interface nsIFile;
 
@@ -51,7 +54,7 @@ interface nsIFile;
  * creating prepared statements, executing SQL, and examining database
  * errors.
  */
-[scriptable, uuid(43933f76-3376-4999-9096-6f1d545fe5f6)]
+[scriptable, uuid(9f36de9d-6471-4249-afed-1ee7760e325c)]
 interface mozIStorageConnection : nsISupports {
   /*
    * Initialization and status
@@ -196,10 +199,56 @@ interface mozIStorageConnection : nsISupports {
 
   /**
    * Create a new SQLite function
+   *
+   * @param aFunctionName  The name of function to create, as seen in SQL.
+   * @param aNumArguments  The number of arguments the function takes. Pass
+   *                       -1 for variable-argument functions.
+   * @param aFunction      The instance of mozIStorageFunction, which implements
+   *                       the function in question.
    */
-  void createFunction(in string aFunctionName,
+  void createFunction(in AUTF8String aFunctionName,
                       in long aNumArguments,
                       in mozIStorageFunction aFunction);
+
+  /**
+   * Create a new SQLite aggregate function
+   *
+   * @param aFunctionName  The name of aggregate function to create, as seen
+   *                       in SQL.
+   * @param aNumArguments  The number of arguments the function takes. Pass
+   *                       -1 for variable-argument functions.
+   * @param aFunction      The instance of mozIStorageAggreagteFunction,
+   *                       which implements the function in question.
+   */
+  void createAggregateFunction(in AUTF8String aFunctionName,
+                               in long aNumArguments,
+                               in mozIStorageAggregateFunction aFunction);
+  /**
+   * Delete custom SQLite function (simple or aggregate one)
+   *
+   * @param aFunctionName  The name of function to remove.
+   */
+  void removeFunction(in AUTF8String aFunctionName);
+
+  /**
+   * Sets a progress handler. Only one handler can be registered at a time.
+   * If you need more than one, you need to chain them yourself.
+   *
+   * @param aGranularity   The number of SQL virtual machine steps between
+   *                       progress handler callbacks.
+   * @param aHandler       The instance of mozIStorageProgressHandler.
+   *
+   * @return previous registered handler.
+   */
+  mozIStorageProgressHandler setProgressHandler(in PRInt32 aGranularity,
+                                                in mozIStorageProgressHandler aHandler);
+
+  /**
+   * Remove a progress handler.
+   *
+   * @return previous registered handler.
+   */
+  mozIStorageProgressHandler removeProgressHandler();
 
   /*
    * Utilities
