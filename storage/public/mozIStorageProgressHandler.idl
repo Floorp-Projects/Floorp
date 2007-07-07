@@ -12,16 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Oracle Corporation code.
+ * The Original Code is Storage Code.
  *
  * The Initial Developer of the Original Code is
- *  Oracle Corporation
- * Portions created by the Initial Developer are Copyright (C) 2004
+ *   Lev Serebryakov <lev@serebryakov.spb.ru>
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
- *   Lev Serebryakov <lev@serebryakov.spb.ru>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,34 +38,21 @@
 #include "nsISupports.idl"
 
 interface mozIStorageConnection;
-interface mozIStorageValueArray;
-interface nsIArray;
-interface nsIVariant;
 
 /**
- * mozIStorageFunction is to be implemented by storage consumers that
+ * mozIProgressHandler is to be implemented by storage consumers that
  * wish to receive callbacks during the request execution.
- *
- * SQL can apply functions to values from tables. Examples of
- * such functions are MIN(a1,a2) or SQRT(num). Many functions are
- * implemented in SQL engine.
- *
- * This interface allows consumers to implement their own,
- * problem-specific functions.
- * These functions can be called from triggers, too.
- *
  */
-[scriptable, uuid(9ff02465-21cb-49f3-b975-7d5b38ceec73)]
-interface mozIStorageFunction : nsISupports {
+[scriptable, uuid(a3a6fcd4-bf89-4208-a837-bf2a73afd30c)]
+interface mozIStorageProgressHandler : nsISupports {
   /**
-   * onFunctionCall is called when execution of a custom
-   * function should occur.
+   * onProgress is invoked periodically during long running calls.
    * 
-   * @param aNumArguments         The number of arguments
-   * @param aFunctionArguments    The arguments passed in to the function
+   * @param aConnection    connection, for which progress handler is
+   *                       invoked.
    *
-   * @returns any value as Variant type.
+   * @return true to abort request, false to continue work.
    */
 
-  nsIVariant onFunctionCall(in mozIStorageValueArray aFunctionArguments);
+  boolean onProgress(in mozIStorageConnection aConnection);
 };

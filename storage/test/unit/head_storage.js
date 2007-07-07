@@ -65,7 +65,7 @@ function getService()
 var gDBConn = null;
 function getOpenedDatabase()
 {
-  return gDBConn ? gDBConn : getService().openDatabase(getTestDB());
+  return gDBConn ? gDBConn : gDBConn = getService().openDatabase(getTestDB());
 }
 
 function createStatement(aSQL)
