@@ -1052,8 +1052,13 @@ nsXULPopupManager::HandleShortcutNavigation(nsIDOMKeyEvent* aKeyEvent)
     nsMenuFrame* result = currentPopup->FindMenuWithShortcut(aKeyEvent, action);
     if (result) {
       currentPopup->ChangeMenuItem(result, PR_FALSE);
-      if (action)
-        result->Enter();
+      if (action) {
+        nsMenuFrame* menuToOpen = result->Enter();
+        if (menuToOpen) {
+          nsCOMPtr<nsIContent> content = menuToOpen->GetContent();
+          ShowMenu(content, PR_TRUE, PR_FALSE);
+        }
+      }
       return PR_TRUE;
     }
 
