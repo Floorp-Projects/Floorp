@@ -70,8 +70,6 @@ struct JSAtom {
 };
 
 #define ATOM_KEY(atom)            ((jsval)(atom)->entry.key)
-#define ATOM_IS_OBJECT(atom)      JSVAL_IS_OBJECT(ATOM_KEY(atom))
-#define ATOM_TO_OBJECT(atom)      JSVAL_TO_OBJECT(ATOM_KEY(atom))
 #define ATOM_IS_INT(atom)         JSVAL_IS_INT(ATOM_KEY(atom))
 #define ATOM_TO_INT(atom)         JSVAL_TO_INT(ATOM_KEY(atom))
 #define ATOM_IS_DOUBLE(atom)      JSVAL_IS_DOUBLE(ATOM_KEY(atom))
@@ -367,13 +365,6 @@ extern void
 js_UnpinPinnedAtoms(JSAtomState *state);
 
 /*
- * Find or create the atom for an object.  If we create a new atom, give it the
- * type indicated in flags.  Return 0 on failure to allocate memory.
- */
-extern JSAtom *
-js_AtomizeObject(JSContext *cx, JSObject *obj, uintN flags);
-
-/*
  * Find or create the atom for a Boolean value.  If we create a new atom, give
  * it the type indicated in flags.  Return 0 on failure to allocate memory.
  */
@@ -415,10 +406,10 @@ extern JSAtom *
 js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length);
 
 /*
- * This variant handles all value tag types.
+ * This variant handles all primitive values.
  */
 extern JSAtom *
-js_AtomizeValue(JSContext *cx, jsval value, uintN flags);
+js_AtomizePrimitiveValue(JSContext *cx, jsval value, uintN flags);
 
 /*
  * Convert v to an atomized string.
@@ -440,19 +431,11 @@ js_GetAtom(JSContext *cx, JSAtomMap *map, jsatomid i);
 
 /*
  * For all unmapped atoms recorded in al, add a mapping from the atom's index
- * to its address.  The GC must not run until all indexed atoms in atomLists
- * have been mapped by scripts connected to live objects (Function and Script
- * class objects have scripts as/in their private data -- the GC knows about
- * these two classes).
- */
-extern JS_FRIEND_API(JSBool)
-js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al);
-
-/*
- * Free map->vector and clear map.
+ * to its address. map->length must already be set to the number of atoms in
+ * the list and map->vector must point to pre-allocated memory.
  */
 extern JS_FRIEND_API(void)
-js_FreeAtomMap(JSContext *cx, JSAtomMap *map);
+js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al);
 
 JS_END_EXTERN_C
 

@@ -179,6 +179,12 @@ struct JSArenaPool {
 #define JS_ARENA_MARK(pool)     ((void *) (pool)->current->avail)
 #define JS_UPTRDIFF(p,q)        ((jsuword)(p) - (jsuword)(q))
 
+/*
+ * Check if the mark is inside arena's allocated area.
+ */
+#define JS_ARENA_MARK_MATCH(a, mark)                                          \
+    (JS_UPTRDIFF(mark, (a)->base) <= JS_UPTRDIFF((a)->avail, (a)->base))
+
 #ifdef DEBUG
 #define JS_FREE_PATTERN         0xDA
 #define JS_CLEAR_UNUSED(a)      (JS_ASSERT((a)->avail <= (a)->limit),         \
@@ -195,8 +201,7 @@ struct JSArenaPool {
     JS_BEGIN_MACRO                                                            \
         char *_m = (char *)(mark);                                            \
         JSArena *_a = (pool)->current;                                        \
-        if (_a != &(pool)->first &&                                           \
-            JS_UPTRDIFF(_m, _a->base) <= JS_UPTRDIFF(_a->avail, _a->base)) {  \
+        if (_a != &(pool)->first && JS_ARENA_MARK_MATCH(_a, _m)) {            \
             _a->avail = (jsuword)JS_ARENA_ALIGN(pool, _m);                    \
             JS_ASSERT(_a->avail <= _a->limit);                                \
             JS_CLEAR_UNUSED(_a);                                              \
@@ -311,6 +316,18 @@ JS_DumpArenaStats(FILE *fp);
 #define JS_ArenaCountRetract(ap, mark)                  /* nothing */
 
 #endif /* !JS_ARENAMETER */
+
+#ifdef DEBUG
+
+/*
+ * Debug-only function to return true if mark was taken after guardMark
+ * calling JS_ARENA_RELEASE(pool, mark) does not affect allocations done
+ * before guardMark.
+ */
+extern JSBool
+js_GuardedArenaMark(JSArenaPool *pool, void *mark, void *guardMark);
+
+#endif
 
 JS_END_EXTERN_C
 

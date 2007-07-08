@@ -183,7 +183,7 @@ OPDEF(JSOP_STRICTEQ,  72, "stricteq",   NULL,         1,  2,  1,  10,  JOF_BYTE|
 OPDEF(JSOP_STRICTNE,  73, "strictne",   NULL,         1,  2,  1,  10,  JOF_BYTE|JOF_DETECTING)
 
 /* Lexical closure constructor. */
-OPDEF(JSOP_CLOSURE,   74, "closure",    NULL,         3,  0,  0,  0,  JOF_CONST)
+OPDEF(JSOP_CLOSURE,   74, "closure",    NULL,         3,  0,  0,  0,  JOF_OBJECT)
 
 /* Export and import ops. */
 OPDEF(JSOP_EXPORTALL, 75, "exportall",  NULL,         1,  0,  0,  0,  JOF_BYTE)
@@ -193,7 +193,7 @@ OPDEF(JSOP_IMPORTPROP,78, "importprop", NULL,         3,  1,  0,  0,  JOF_CONST|
 OPDEF(JSOP_IMPORTELEM,79, "importelem", NULL,         1,  2,  0,  0,  JOF_BYTE |JOF_ELEM|JOF_IMPORT)
 
 /* Push object literal. */
-OPDEF(JSOP_OBJECT,    80, "object",     NULL,         3,  0,  1, 19,  JOF_CONST)
+OPDEF(JSOP_OBJECT,    80, "object",     NULL,         3,  0,  1, 19,  JOF_OBJECT)
 
 /* Pop value and discard it. */
 OPDEF(JSOP_POP,       81, "pop",        NULL,         1,  1,  0,  2,  JOF_BYTE)
@@ -294,15 +294,15 @@ OPDEF(JSOP_SETTER,    124,js_setter_str,NULL,         1,  0,  0,  0,  JOF_BYTE)
 /*
  * Prolog bytecodes for defining function, var, and const names.
  */
-OPDEF(JSOP_DEFFUN,    125,"deffun",     NULL,         3,  0,  0,  0,  JOF_CONST|JOF_DECLARING)
+OPDEF(JSOP_DEFFUN,    125,"deffun",     NULL,         3,  0,  0,  0,  JOF_OBJECT|JOF_DECLARING)
 OPDEF(JSOP_DEFCONST,  126,"defconst",   NULL,         3,  0,  0,  0,  JOF_CONST|JOF_DECLARING)
 OPDEF(JSOP_DEFVAR,    127,"defvar",     NULL,         3,  0,  0,  0,  JOF_CONST|JOF_DECLARING)
 
 /* Auto-clone (if needed due to re-parenting) and push an anonymous function. */
-OPDEF(JSOP_ANONFUNOBJ,  128, "anonfunobj",  NULL,     3,  0,  1, 19,  JOF_CONST)
+OPDEF(JSOP_ANONFUNOBJ,  128, "anonfunobj",  NULL,     3,  0,  1, 19,  JOF_OBJECT)
 
 /* ECMA ed. 3 named function expression. */
-OPDEF(JSOP_NAMEDFUNOBJ, 129, "namedfunobj", NULL,     3,  0,  1, 19,  JOF_CONST)
+OPDEF(JSOP_NAMEDFUNOBJ, 129, "namedfunobj", NULL,     3,  0,  1, 19,  JOF_OBJECT)
 
 /*
  * Like JSOP_SETLOCAL, but specialized to avoid requiring JSOP_POP immediately
@@ -341,7 +341,7 @@ OPDEF(JSOP_ARGCNT,      137,"argcnt",     NULL,       1,  0,  1, 18,  JOF_BYTE)
  * The local variable's slot number is the first immediate two-byte operand.
  * The function object's atom index is the second immediate operand.
  */
-OPDEF(JSOP_DEFLOCALFUN, 138,"deflocalfun",NULL,       5,  0,  0,  0,  JOF_INDEXCONST|JOF_DECLARING)
+OPDEF(JSOP_DEFLOCALFUN, 138,"deflocalfun",NULL,       5,  0,  0,  0,  JOF_INDEXOBJECT|JOF_DECLARING)
 
 /* Extended jumps. */
 OPDEF(JSOP_GOTOX,         139,"gotox",    NULL,       5,  0,  0,  0,  JOF_JUMPX)
@@ -375,7 +375,7 @@ OPDEF(JSOP_GVARINC,       158,"gvarinc",  NULL,       3,  0,  1, 15,  JOF_CONST|
 OPDEF(JSOP_GVARDEC,       159,"gvardec",  NULL,       3,  0,  1, 15,  JOF_CONST|JOF_NAME|JOF_DEC|JOF_POST)
 
 /* Regular expression literal requiring special "fork on exec" handling. */
-OPDEF(JSOP_REGEXP,        160,"regexp",   NULL,       3,  0,  1, 19,  JOF_CONST)
+OPDEF(JSOP_REGEXP,        160,"regexp",   NULL,       3,  0,  1, 19,  JOF_REGEXP)
 
 /* XML (ECMA-357, a.k.a. "E4X") support. */
 OPDEF(JSOP_DEFXMLNS,      161,"defxmlns",   NULL,     1,  1,  0,  0,  JOF_BYTE)
@@ -397,7 +397,7 @@ OPDEF(JSOP_TOXML,         176,"toxml",      NULL,     1,  1,  1, 19,  JOF_BYTE)
 OPDEF(JSOP_TOXMLLIST,     177,"toxmllist",  NULL,     1,  1,  1, 19,  JOF_BYTE)
 OPDEF(JSOP_XMLTAGEXPR,    178,"xmltagexpr", NULL,     1,  1,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_XMLELTEXPR,    179,"xmleltexpr", NULL,     1,  1,  1,  0,  JOF_BYTE)
-OPDEF(JSOP_XMLOBJECT,     180,"xmlobject",  NULL,     3,  0,  1, 19,  JOF_CONST)
+OPDEF(JSOP_XMLOBJECT,     180,"xmlobject",  NULL,     3,  0,  1, 19,  JOF_OBJECT)
 OPDEF(JSOP_XMLCDATA,      181,"xmlcdata",   NULL,     3,  0,  1, 19,  JOF_CONST)
 OPDEF(JSOP_XMLCOMMENT,    182,"xmlcomment", NULL,     3,  0,  1, 19,  JOF_CONST)
 OPDEF(JSOP_XMLPI,         183,"xmlpi",      NULL,     3,  1,  1, 19,  JOF_CONST)
@@ -412,12 +412,12 @@ OPDEF(JSOP_DELDESC,       187,"deldesc",    NULL,     1,  2,  1, 17,  JOF_BYTE |
 OPDEF(JSOP_UINT24,        188,"uint24",     NULL,     4,  0,  1, 16,  JOF_UINT24)
 
 /*
- * Opcodes to allow 24-bit atom indexes. Whenever an atom index exceeds the
- * 16-bit limit, the atom-indexing bytecode must be bracketed by JSOP_ATOMBASE
- * and JSOP_RESETBASE to provide the upper bits of the index.  See jsemit.c,
- * EmitAtomIndexOp.
+ * Opcodes to allow 24-bit atom or object indexes. Whenever an index exceeds
+ * the 16-bit limit, the index-accessing bytecode must be bracketed by
+ * JSOP_INDEXBASE and JSOP_RESETBASE to provide the upper bits of the index.
+ * See jsemit.c, EmitIndexOp.
  */
-OPDEF(JSOP_ATOMBASE,      189,"atombase",   NULL,     2,  0,  0,  0,  JOF_2BYTE|JOF_ATOMBASE)
+OPDEF(JSOP_INDEXBASE,     189,"atombase",   NULL,     2,  0,  0,  0,  JOF_2BYTE|JOF_INDEXBASE)
 OPDEF(JSOP_RESETBASE,     190,"resetbase",  NULL,     1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_RESETBASE0,    191,"resetbase0", NULL,     1,  0,  0,  0,  JOF_BYTE)
 
@@ -451,7 +451,7 @@ OPDEF(JSOP_TYPEOFEXPR,    198,"typeofexpr",  NULL,    1,  1,  1, 15,  JOF_BYTE|J
 /*
  * Block-local scope support.
  */
-OPDEF(JSOP_ENTERBLOCK,    199,"enterblock",  NULL,    3,  0,  0,  0,  JOF_CONST)
+OPDEF(JSOP_ENTERBLOCK,    199,"enterblock",  NULL,    3,  0,  0,  0,  JOF_OBJECT)
 OPDEF(JSOP_LEAVEBLOCK,    200,"leaveblock",  NULL,    3,  0,  0,  0,  JOF_UINT16)
 OPDEF(JSOP_GETLOCAL,      201,"getlocal",    NULL,    3,  0,  1, 19,  JOF_LOCAL|JOF_NAME)
 OPDEF(JSOP_SETLOCAL,      202,"setlocal",    NULL,    3,  1,  1,  3,  JOF_LOCAL|JOF_NAME|JOF_SET)
@@ -495,9 +495,9 @@ OPDEF(JSOP_GETLOCALPROP,  219,"getlocalprop",  NULL,  5,  0,  1, 18,  JOF_INDEXC
  * Optimize atom segments 1-3.  These must be followed by JSOP_RESETBASE0 after
  * the opcode that they prefix.
  */
-OPDEF(JSOP_ATOMBASE1,     220,"atombase1",     NULL,  1,  0,  0,  0,  JOF_BYTE |JOF_ATOMBASE)
-OPDEF(JSOP_ATOMBASE2,     221,"atombase2",     NULL,  1,  0,  0,  0,  JOF_BYTE |JOF_ATOMBASE)
-OPDEF(JSOP_ATOMBASE3,     222,"atombase3",     NULL,  1,  0,  0,  0,  JOF_BYTE |JOF_ATOMBASE)
+OPDEF(JSOP_INDEXBASE1,    220,"atombase1",     NULL,  1,  0,  0,  0,  JOF_BYTE |JOF_INDEXBASE)
+OPDEF(JSOP_INDEXBASE2,    221,"atombase2",     NULL,  1,  0,  0,  0,  JOF_BYTE |JOF_INDEXBASE)
+OPDEF(JSOP_INDEXBASE3,    222,"atombase3",     NULL,  1,  0,  0,  0,  JOF_BYTE |JOF_INDEXBASE)
 
 OPDEF(JSOP_CALLGVAR,      223, "callgvar",     NULL,  3,  0,  2, 19,  JOF_CONST|JOF_NAME|JOF_CALLOP)
 OPDEF(JSOP_CALLVAR,       224, "callvar",      NULL,  3,  0,  2, 19,  JOF_QVAR |JOF_NAME|JOF_CALLOP)

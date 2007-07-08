@@ -383,45 +383,26 @@ js_FreeAtomState(JSContext *cx, JSAtomState *state)
     memset(state, 0, sizeof *state);
 }
 
-typedef struct UninternArgs {
-    JSRuntime   *rt;
-    jsatomid    leaks;
-} UninternArgs;
-
 JS_STATIC_DLL_CALLBACK(intN)
 js_atom_uninterner(JSHashEntry *he, intN i, void *arg)
 {
     JSAtom *atom;
-    UninternArgs *args;
+    JSRuntime   *rt;
 
     atom = (JSAtom *)he;
-    args = (UninternArgs *)arg;
+    rt = (JSRuntime *)arg;
     if (ATOM_IS_STRING(atom))
-        js_FinalizeStringRT(args->rt, ATOM_TO_STRING(atom));
-    else if (ATOM_IS_OBJECT(atom))
-        args->leaks++;
+        js_FinalizeStringRT(rt, ATOM_TO_STRING(atom));
     return HT_ENUMERATE_NEXT;
 }
 
 void
 js_FinishAtomState(JSAtomState *state)
 {
-    UninternArgs args;
-
     if (!state->table)
         return;
-    args.rt = state->runtime;
-    args.leaks = 0;
-    JS_HashTableEnumerateEntries(state->table, js_atom_uninterner, &args);
-#ifdef DEBUG
-    if (args.leaks != 0) {
-        fprintf(stderr,
-"JS engine warning: %lu atoms remain after destroying the JSRuntime.\n"
-"                   These atoms may point to freed memory. Things reachable\n"
-"                   through them have not been finalized.\n",
-                (unsigned long) args.leaks);
-    }
-#endif
+    JS_HashTableEnumerateEntries(state->table, js_atom_uninterner,
+                                 state->runtime);
     js_FreeAtomState(NULL, state);
 }
 
@@ -547,18 +528,6 @@ js_AtomizeHashedKey(JSContext *cx, jsval key, JSHashNumber keyHash, uintN flags)
 out:
     JS_UNLOCK(&state->lock,cx);
     return atom;
-}
-
-JSAtom *
-js_AtomizeObject(JSContext *cx, JSObject *obj, uintN flags)
-{
-    jsval key;
-    JSHashNumber keyHash;
-
-    /* XXX must be set in the following order or MSVC1.52 will crash */
-    keyHash = HASH_OBJECT(obj);
-    key = OBJECT_TO_JSVAL(obj);
-    return js_AtomizeHashedKey(cx, key, keyHash, flags);
 }
 
 JSAtom *
@@ -791,7 +760,7 @@ js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length)
 }
 
 JSAtom *
-js_AtomizeValue(JSContext *cx, jsval value, uintN flags)
+js_AtomizePrimitiveValue(JSContext *cx, jsval value, uintN flags)
 {
     if (JSVAL_IS_STRING(value))
         return js_AtomizeString(cx, JSVAL_TO_STRING(value), flags);
@@ -799,10 +768,9 @@ js_AtomizeValue(JSContext *cx, jsval value, uintN flags)
         return js_AtomizeInt(cx, JSVAL_TO_INT(value), flags);
     if (JSVAL_IS_DOUBLE(value))
         return js_AtomizeDouble(cx, *JSVAL_TO_DOUBLE(value), flags);
-    if (JSVAL_IS_OBJECT(value))
-        return js_AtomizeObject(cx, JSVAL_TO_OBJECT(value), flags);
     if (JSVAL_IS_BOOLEAN(value))
         return js_AtomizeBoolean(cx, JSVAL_TO_BOOLEAN(value), flags);
+    JS_ASSERT(value == JSVAL_NULL || value == JSVAL_VOID);
     return js_AtomizeHashedKey(cx, value, (JSHashNumber)value, flags);
 }
 
@@ -960,33 +928,26 @@ static jsrefcount js_atom_map_count;
 static jsrefcount js_atom_map_hash_table_count;
 #endif
 
-JS_FRIEND_API(JSBool)
+JS_FRIEND_API(void)
 js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
 {
     JSAtom **vector;
     JSAtomListElement *ale;
     uint32 count;
 
+    /* Map length must already be initialized. */
+    JS_ASSERT(al->count == map->length);
 #ifdef DEBUG
     JS_ATOMIC_INCREMENT(&js_atom_map_count);
 #endif
     ale = (JSAtomListElement *)al->list;
     if (!ale && !al->table) {
-        map->vector = NULL;
-        map->length = 0;
-        return JS_TRUE;
+        JS_ASSERT(!map->vector);
+        return;
     }
 
     count = al->count;
-    if (count >= ATOM_INDEX_LIMIT) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_TOO_MANY_LITERALS);
-        return JS_FALSE;
-    }
-    vector = (JSAtom **) JS_malloc(cx, (size_t) count * sizeof *vector);
-    if (!vector)
-        return JS_FALSE;
-
+    vector = map->vector;
     if (al->table) {
 #ifdef DEBUG
         JS_ATOMIC_INCREMENT(&js_atom_map_hash_table_count);
@@ -998,18 +959,4 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
         } while ((ale = ALE_NEXT(ale)) != NULL);
     }
     ATOM_LIST_INIT(al);
-
-    map->vector = vector;
-    map->length = (jsatomid)count;
-    return JS_TRUE;
-}
-
-JS_FRIEND_API(void)
-js_FreeAtomMap(JSContext *cx, JSAtomMap *map)
-{
-    if (map->vector) {
-        JS_free(cx, map->vector);
-        map->vector = NULL;
-    }
-    map->length = 0;
 }
