@@ -52,7 +52,7 @@ class nsISVGEnum;
 
 #define QI_AND_CAST_TO_NSSVGSVGELEMENT(base)                                  \
   (nsCOMPtr<nsIDOMSVGSVGElement>(do_QueryInterface(base)) ?                   \
-   NS_STATIC_CAST(nsSVGSVGElement*, base.get()) : nsnull)
+   static_cast<nsSVGSVGElement*>(base.get()) : nsnull)
 
 typedef nsSVGStylableElement nsSVGSVGElementBase;
 

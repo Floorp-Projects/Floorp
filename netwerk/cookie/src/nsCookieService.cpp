@@ -314,8 +314,8 @@ compareCookiesForSending(const void *aElement1,
                          const void *aElement2,
                          void       *aData)
 {
-  const nsCookie *cookie1 = NS_STATIC_CAST(const nsCookie*, aElement1);
-  const nsCookie *cookie2 = NS_STATIC_CAST(const nsCookie*, aElement2);
+  const nsCookie *cookie1 = static_cast<const nsCookie*>(aElement1);
+  const nsCookie *cookie2 = static_cast<const nsCookie*>(aElement2);
 
   // compare by cookie path length in accordance with RFC2109
   int rv = cookie2->Path().Length() - cookie1->Path().Length();
@@ -764,7 +764,7 @@ COMArrayCallback(nsCookieEntry *aEntry,
                  void          *aArg)
 {
   for (nsCookie *cookie = aEntry->Head(); cookie; cookie = cookie->Next()) {
-    NS_STATIC_CAST(nsCOMArray<nsICookie>*, aArg)->AppendObject(cookie);
+    static_cast<nsCOMArray<nsICookie>*>(aArg)->AppendObject(cookie);
   }
   return PL_DHASH_NEXT;
 }
@@ -1171,7 +1171,7 @@ nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
   nsCAutoString cookieData;
   PRInt32 count = foundCookieList.Count();
   for (PRInt32 i = 0; i < count; ++i) {
-    cookie = NS_STATIC_CAST(nsCookie*, foundCookieList.ElementAt(i));
+    cookie = static_cast<nsCookie*>(foundCookieList.ElementAt(i));
 
     // check if we have anything to write
     if (!cookie->Name().IsEmpty() || !cookie->Value().IsEmpty()) {
@@ -1274,7 +1274,7 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
     // needs one to prompt, so right now it has to fend for itself to get one
     mPermissionService->CanSetCookie(aHostURI,
                                      aChannel,
-                                     NS_STATIC_CAST(nsICookie2*, NS_STATIC_CAST(nsCookie*, cookie)),
+                                     static_cast<nsICookie2*>(static_cast<nsCookie*>(cookie)),
                                      &cookieAttributes.isSession,
                                      &cookieAttributes.expiryTime,
                                      &permission);
@@ -2012,7 +2012,7 @@ PLDHashOperator PR_CALLBACK
 removeExpiredCallback(nsCookieEntry *aEntry,
                       void          *aArg)
 {
-  const PRInt64 &currentTime = *NS_STATIC_CAST(PRInt64*, aArg);
+  const PRInt64 &currentTime = *static_cast<PRInt64*>(aArg);
   for (nsListIter iter(aEntry, nsnull, aEntry->Head()); iter.current; ) {
     if (iter.current->Expiry() <= currentTime)
       // remove from list. this takes care of updating the iterator for us
@@ -2040,7 +2040,7 @@ nsCookieService::CookieExists(nsICookie2 *aCookie,
 
   // just a placeholder
   nsEnumerationData data(PR_Now() / PR_USEC_PER_SEC, LL_MININT);
-  nsCookie *cookie = NS_STATIC_CAST(nsCookie*, aCookie);
+  nsCookie *cookie = static_cast<nsCookie*>(aCookie);
 
   *aFoundCookie = FindCookie(cookie->Host(), cookie->Name(), cookie->Path(), data.iter);
   return NS_OK;
@@ -2220,7 +2220,7 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 findOldestCallback(nsCookieEntry *aEntry,
                    void          *aArg)
 {
-  nsEnumerationData *data = NS_STATIC_CAST(nsEnumerationData*, aArg);
+  nsEnumerationData *data = static_cast<nsEnumerationData*>(aArg);
   for (nsListIter iter(aEntry, nsnull, aEntry->Head()); iter.current; ++iter) {
     // check if we've found the oldest cookie so far
     if (data->oldestID > iter.current->CreationID()) {

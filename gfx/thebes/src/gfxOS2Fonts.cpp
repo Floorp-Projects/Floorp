@@ -437,7 +437,7 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUint8* aString, PRUint32 aLengt
     if (!textRun)
         return nsnull;
 
-    const char *chars = NS_REINTERPRET_CAST(const char *, aString);
+    const char *chars = reinterpret_cast<const char *>(aString);
     PRBool isRTL = textRun->IsRightToLeft();
     if ((aFlags & TEXT_IS_ASCII) && !isRTL) {
         // We don't need to send an override character here, the characters must be all
@@ -590,7 +590,7 @@ PRBool gfxOS2FontGroup::FontCallback(const nsAString& aFontName,
                                      const nsACString& aGenericName,
                                      void *aClosure)
 {
-    nsStringArray *sa = NS_STATIC_CAST(nsStringArray*, aClosure);
+    nsStringArray *sa = static_cast<nsStringArray*>(aClosure);
     if (sa->IndexOf(aFontName) < 0) {
         sa->AppendString(aFontName);
     }

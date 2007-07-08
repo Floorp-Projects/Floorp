@@ -648,7 +648,7 @@ nsHttpChannel::ApplyContentConversions()
 static void
 CallTypeSniffers(void *aClosure, const PRUint8 *aData, PRUint32 aCount)
 {
-  nsIChannel *chan = NS_STATIC_CAST(nsIChannel*, aClosure);
+  nsIChannel *chan = static_cast<nsIChannel*>(aClosure);
 
   const nsCOMArray<nsIContentSniffer>& sniffers =
     gIOService->GetContentSniffers();
@@ -709,7 +709,7 @@ nsHttpChannel::CallOnStartRequest()
         // because that's the one that has the initial contents. If that fails
         // then give the transaction pump a shot.
 
-        nsIChannel* thisChannel = NS_STATIC_CAST(nsIChannel*, this);
+        nsIChannel* thisChannel = static_cast<nsIChannel*>(this);
 
         PRBool typeSniffersCalled = PR_FALSE;
         if (mCachePump) {
@@ -2128,8 +2128,8 @@ nsHttpChannel::InstallOfflineCacheListener()
 PR_STATIC_CALLBACK(PLDHashOperator)
 CopyProperties(const nsAString& aKey, nsIVariant *aData, void *aClosure)
 {
-    nsIWritablePropertyBag* bag = NS_STATIC_CAST(nsIWritablePropertyBag*,
-                                                 aClosure);
+    nsIWritablePropertyBag* bag = static_cast<nsIWritablePropertyBag*>
+                                             (aClosure);
     bag->SetProperty(aKey, aData);
     return PL_DHASH_NEXT;
 }
@@ -2399,7 +2399,7 @@ GetAuthPrompt(nsIInterfaceRequestor *ifreq, PRBool proxyAuth,
     if (promptProvider)
         promptProvider->GetAuthPrompt(promptReason,
                                       NS_GET_IID(nsIAuthPrompt2),
-                                      NS_REINTERPRET_CAST(void**, result));
+                                      reinterpret_cast<void**>(result));
     else
         NS_QueryAuthPrompt2(ifreq, result);
 }

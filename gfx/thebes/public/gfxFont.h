@@ -811,8 +811,8 @@ public:
     { return (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) ? nsnull : mText.mDouble; }
     const void *GetTextAt(PRUint32 aIndex) {
         return (mFlags & gfxTextRunFactory::TEXT_IS_8BIT)
-            ? NS_STATIC_CAST(const void *, mText.mSingle + aIndex)
-            : NS_STATIC_CAST(const void *, mText.mDouble + aIndex);
+            ? static_cast<const void *>(mText.mSingle + aIndex)
+            : static_cast<const void *>(mText.mDouble + aIndex);
     }
     const PRUnichar GetChar(PRUint32 i) const
     { return (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) ? mText.mSingle[i] : mText.mDouble[i]; }
@@ -1150,7 +1150,7 @@ public:
     }
 
     virtual gfxFont *GetFontAt(PRInt32 i) {
-        return NS_STATIC_CAST(gfxFont*, mFonts[i]);
+        return static_cast<gfxFont*>(mFonts[i]);
     }
     virtual PRUint32 FontListLength() const {
         return mFonts.Length();

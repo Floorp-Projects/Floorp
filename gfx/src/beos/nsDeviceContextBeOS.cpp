@@ -97,7 +97,7 @@ NS_IMETHODIMP nsDeviceContextBeOS::Init(nsNativeWidget aNativeWidget)
       screen->GetPixelDepth ( &depth ); 
       mWidthFloat = float(width); 
       mHeightFloat = float(height); 
-      mDepth = NS_STATIC_CAST ( PRUint32, depth ); 
+      mDepth = static_cast<PRUint32>(depth); 
     } 
   } 
   

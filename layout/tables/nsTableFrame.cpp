@@ -171,7 +171,7 @@ nsTableFrame::GetParentStyleContextFrame(nsPresContext* aPresContext,
     return NS_OK;
   }
     
-  return NS_STATIC_CAST(nsFrame*, mParent)->
+  return static_cast<nsFrame*>(mParent)->
           DoGetParentStyleContextFrame(aPresContext, aProviderFrame, aIsChild);
 }
 
@@ -205,7 +205,7 @@ nsTableFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsITableLayout))) {
-    *aInstancePtr = NS_STATIC_CAST(nsITableLayout*, this);
+    *aInstancePtr = static_cast<nsITableLayout*>(this);
     return NS_OK;
   }
 
@@ -899,7 +899,7 @@ nsTableFrame::DidResizeColumns()
     return; // already marked
 
   for (nsTableFrame *f = this; f;
-       f = NS_STATIC_CAST(nsTableFrame*, f->GetNextInFlow()))
+       f = static_cast<nsTableFrame*>(f->GetNextInFlow()))
     f->mBits.mResizedColumns = PR_TRUE;
 }
 
@@ -945,7 +945,7 @@ nsTableFrame::DestroyAnonymousColFrames(PRInt32 aNumFrames)
     nsTableColFrame* colFrame = GetColFrame(colX);
     if (colFrame && (eColAnonymousCell == colFrame->GetColType())) {
       nsTableColGroupFrame* cgFrame =
-        NS_STATIC_CAST(nsTableColGroupFrame*, colFrame->GetParent());
+        static_cast<nsTableColGroupFrame*>(colFrame->GetParent());
       // remove the frame from the colgroup
       cgFrame->RemoveChild(*colFrame, PR_FALSE);
       // remove the frame from the cache, but not the cell map 
@@ -1281,7 +1281,7 @@ public:
   // the table frame, so allow this display element to blow out to our
   // overflow rect.
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
-    return NS_STATIC_CAST(nsTableFrame*, mFrame)->GetOverflowRect() +
+    return static_cast<nsTableFrame*>(mFrame)->GetOverflowRect() +
       aBuilder->ToReferenceFrame(mFrame);
   }
   NS_DISPLAY_DECL_NAME("TableBorderBackground")
@@ -1291,7 +1291,7 @@ void
 nsDisplayTableBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  NS_STATIC_CAST(nsTableFrame*, mFrame)->
+  static_cast<nsTableFrame*>(mFrame)->
     PaintTableBorderBackground(*aCtx, aDirtyRect,
                                aBuilder->ToReferenceFrame(mFrame));
 }
@@ -1584,7 +1584,7 @@ ProcessRowInserted(nsTableFrame&   aTableFrame,
 /* virtual */ void
 nsTableFrame::MarkIntrinsicWidthsDirty()
 {
-  NS_STATIC_CAST(nsTableFrame*, GetFirstInFlow())->
+  static_cast<nsTableFrame*>(GetFirstInFlow())->
     mTableLayoutStrategy->MarkIntrinsicWidthsDirty();
 
   // XXXldb Call SetBCDamageArea?
@@ -1882,7 +1882,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
     nsIFrame* lastChildReflowed = nsnull;
 
     nsHTMLReflowState &mutable_rs =
-      NS_CONST_CAST(nsHTMLReflowState&, aReflowState);
+      const_cast<nsHTMLReflowState&>(aReflowState);
     PRBool oldSpecialHeightReflow = mutable_rs.mFlags.mSpecialHeightReflow;
     mutable_rs.mFlags.mSpecialHeightReflow = PR_FALSE;
 
@@ -2480,7 +2480,7 @@ nsMargin
 nsTableFrame::GetOuterBCBorder() const
 {
   if (NeedToCalcBCBorders())
-    NS_CONST_CAST(nsTableFrame*, this)->CalcBCBorders();
+    const_cast<nsTableFrame*>(this)->CalcBCBorders();
 
   nsMargin border(0, 0, 0, 0);
   PRInt32 p2t = nsPresContext::AppUnitsPerCSSPixel();
@@ -4046,8 +4046,8 @@ BCMapCellIterator::SetInfo(nsTableRowFrame* aRow,
     aCellInfo.cell = (nsBCTableCellFrame*)aCellData->GetCellFrame(); 
     if (aCellInfo.cell) {
       if (!aCellInfo.topRow) {
-        aCellInfo.topRow = NS_STATIC_CAST(nsTableRowFrame*,
-                                          aCellInfo.cell->GetParent());
+        aCellInfo.topRow = static_cast<nsTableRowFrame*>
+                                      (aCellInfo.cell->GetParent());
         if (!aCellInfo.topRow) ABORT0();
         aCellInfo.rowIndex = aCellInfo.topRow->GetRowIndex();
       }
@@ -4101,8 +4101,8 @@ BCMapCellIterator::SetInfo(nsTableRowFrame* aRow,
   }
 
   // col group frame info
-  aCellInfo.cg = NS_STATIC_CAST(nsTableColGroupFrame*,
-                                aCellInfo.leftCol->GetParent());
+  aCellInfo.cg = static_cast<nsTableColGroupFrame*>
+                            (aCellInfo.leftCol->GetParent());
   PRInt32 cgStart  = aCellInfo.cg->GetStartColumnIndex();
   PRInt32 cgEnd    = PR_MAX(0, cgStart + aCellInfo.cg->GetColCount() - 1);
   aCellInfo.cgLeft  = (cgStart == aColIndex);
@@ -6582,7 +6582,7 @@ DestroyCoordFunc(void*           aFrame,
                  void*           aPropertyValue,
                  void*           aDtorData)
 {
-  delete NS_STATIC_CAST(nscoord*, aPropertyValue);
+  delete static_cast<nscoord*>(aPropertyValue);
 }
 
 // Destructor function point properties
@@ -6592,7 +6592,7 @@ DestroyPointFunc(void*           aFrame,
                  void*           aPropertyValue,
                  void*           aDtorData)
 {
-  delete NS_STATIC_CAST(nsPoint*, aPropertyValue);
+  delete static_cast<nsPoint*>(aPropertyValue);
 }
 
 // Destructor function for nscoord properties
@@ -6602,7 +6602,7 @@ DestroyBCPropertyDataFunc(void*           aFrame,
                           void*           aPropertyValue,
                           void*           aDtorData)
 {
-  delete NS_STATIC_CAST(BCPropertyData*, aPropertyValue);
+  delete static_cast<BCPropertyData*>(aPropertyValue);
 }
 
 void*
@@ -6685,15 +6685,15 @@ nsTableFrame::DumpTableFrames(nsIFrame* aFrame)
   nsTableFrame* tableFrame = nsnull;
 
   if (nsGkAtoms::tableFrame == aFrame->GetType()) { 
-    tableFrame = NS_STATIC_CAST(nsTableFrame*, aFrame);
+    tableFrame = static_cast<nsTableFrame*>(aFrame);
   }
   else {
     tableFrame = nsTableFrame::GetTableFrame(aFrame);
   }
-  tableFrame = NS_STATIC_CAST(nsTableFrame*, tableFrame->GetFirstInFlow());
+  tableFrame = static_cast<nsTableFrame*>(tableFrame->GetFirstInFlow());
   while (tableFrame) {
     DumpTableFramesRecur(tableFrame, 0);
-    tableFrame = NS_STATIC_CAST(nsTableFrame*, tableFrame->GetNextInFlow());
+    tableFrame = static_cast<nsTableFrame*>(tableFrame->GetNextInFlow());
   }
 }
 #endif

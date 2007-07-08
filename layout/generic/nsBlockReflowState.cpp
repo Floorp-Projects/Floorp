@@ -104,7 +104,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   mReflowStatus = NS_FRAME_COMPLETE;
 
   mPresContext = aPresContext;
-  mNextInFlow = NS_STATIC_CAST(nsBlockFrame*, mBlock->GetNextInFlow());
+  mNextInFlow = static_cast<nsBlockFrame*>(mBlock->GetNextInFlow());
 
   NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aReflowState.ComputedWidth(),
                "no unconstrained widths should be present anymore");
@@ -411,8 +411,8 @@ nsBlockReflowState::RecoverFloats(nsLineList::iterator aLine,
       // accordingly so that we consider relatively positioned frames
       // at their original position.
       if (NS_STYLE_POSITION_RELATIVE == kid->GetStyleDisplay()->mPosition) {
-        nsPoint *offsets = NS_STATIC_CAST(nsPoint*,
-          mPresContext->PropertyTable()->GetProperty(kid,
+        nsPoint *offsets = static_cast<nsPoint*>
+                                      (mPresContext->PropertyTable()->GetProperty(kid,
                                        nsGkAtoms::computedOffsetProperty));
 
         if (offsets) {
@@ -939,8 +939,8 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
 
   // If float is relatively positioned, factor that in as well
   if (NS_STYLE_POSITION_RELATIVE == floatDisplay->mPosition) {
-    nsPoint *offsets = NS_STATIC_CAST(nsPoint*,
-        floatFrame->GetProperty(nsGkAtoms::computedOffsetProperty));
+    nsPoint *offsets = static_cast<nsPoint*>
+                                  (floatFrame->GetProperty(nsGkAtoms::computedOffsetProperty));
     if (offsets) {
       origin += *offsets;
     }
@@ -1018,7 +1018,7 @@ nsBlockReflowState::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList, PRB
         nsIFrame* nextPlaceholder = fc->mPlaceholder->GetNextInFlow();
         if (nextPlaceholder) {
           nsHTMLContainerFrame* parent =
-            NS_STATIC_CAST(nsHTMLContainerFrame*, nextPlaceholder->GetParent());
+            static_cast<nsHTMLContainerFrame*>(nextPlaceholder->GetParent());
           parent->DeleteNextInFlowChild(mPresContext, nextPlaceholder);
         }
       }

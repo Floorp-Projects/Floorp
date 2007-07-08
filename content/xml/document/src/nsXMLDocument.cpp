@@ -650,7 +650,7 @@ nsXMLDocument::EndLoad()
 
     nsCxPusher pusher(sgo);
 
-    nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIDocument*, this), nsnull,
+    nsEventDispatcher::Dispatch(static_cast<nsIDocument*>(this), nsnull,
                                 &event, nsnull, &status);
   }    
   nsDocument::EndLoad();  

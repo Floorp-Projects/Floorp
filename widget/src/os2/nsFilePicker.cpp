@@ -563,7 +563,7 @@ char * nsFilePicker::ConvertToFileSystemCharset(const nsAString& inString)
     rv = mUnicodeEncoder->GetMaxLength(flatInString.get(), inLength,
                                        &outLength);
     if (NS_SUCCEEDED(rv)) {
-      outString = NS_STATIC_CAST( char*, nsMemory::Alloc( outLength+1 ) );
+      outString = static_cast<char*>(nsMemory::Alloc( outLength+1 ));
       if (nsnull == outString) {
         return nsnull;
       }
@@ -602,7 +602,7 @@ PRUnichar * nsFilePicker::ConvertFromFileSystemCharset(const char *inString)
     PRInt32 outLength;
     rv = mUnicodeDecoder->GetMaxLength(inString, inLength, &outLength);
     if (NS_SUCCEEDED(rv)) {
-      outString = NS_STATIC_CAST( PRUnichar*, nsMemory::Alloc( (outLength+1) * sizeof( PRUnichar ) ) );
+      outString = static_cast<PRUnichar*>(nsMemory::Alloc( (outLength+1) * sizeof( PRUnichar ) ));
       if (nsnull == outString) {
         return nsnull;
       }

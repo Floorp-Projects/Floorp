@@ -208,7 +208,7 @@ nsPlaceholderFrame::List(FILE* out, PRInt32 aIndent) const
   IndentBy(out, aIndent);
   ListTag(out);
 #ifdef DEBUG_waterson
-  fprintf(out, " [parent=%p]", NS_STATIC_CAST(void*, mParent));
+  fprintf(out, " [parent=%p]", static_cast<void*>(mParent));
 #endif
   if (HasView()) {
     fprintf(out, " [view=%p]", (void*)GetView());
@@ -220,10 +220,10 @@ nsPlaceholderFrame::List(FILE* out, PRInt32 aIndent) const
   nsIFrame* prevInFlow = GetPrevInFlow();
   nsIFrame* nextInFlow = GetNextInFlow();
   if (nsnull != prevInFlow) {
-    fprintf(out, " prev-in-flow=%p", NS_STATIC_CAST(void*, prevInFlow));
+    fprintf(out, " prev-in-flow=%p", static_cast<void*>(prevInFlow));
   }
   if (nsnull != nextInFlow) {
-    fprintf(out, " next-in-flow=%p", NS_STATIC_CAST(void*, nextInFlow));
+    fprintf(out, " next-in-flow=%p", static_cast<void*>(nextInFlow));
   }
   if (mOutOfFlowFrame) {
     fprintf(out, " outOfFlowFrame=");

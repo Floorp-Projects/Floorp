@@ -211,13 +211,13 @@ PR_STATIC_CALLBACK(PRBool)                                                    \
 ENTRY_CLASS##MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,    \
                         const void *key)                                      \
 {                                                                             \
-  const ENTRY_CLASS* e = NS_STATIC_CAST(const ENTRY_CLASS*, entry);           \
+  const ENTRY_CLASS* e = static_cast<const ENTRY_CLASS*>(entry);           \
   return e->MatchEntry(key);                                                  \
 }                                                                             \
 PR_STATIC_CALLBACK(void)                                                      \
 ENTRY_CLASS##ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)          \
 {                                                                             \
-  ENTRY_CLASS* e = NS_STATIC_CAST(ENTRY_CLASS *, entry);                      \
+  ENTRY_CLASS* e = static_cast<ENTRY_CLASS *>(entry);                      \
   e->~ENTRY_CLASS();                                                          \
 }                                                                             \
 PR_STATIC_CALLBACK(PRBool)                                                    \
@@ -353,13 +353,13 @@ nsresult CLASSNAME::Init(PRUint32 aNumInitialEntries) {                       \
   return NS_OK;                                                               \
 }                                                                             \
 ENTRY_CLASS* CLASSNAME::GetEntry(const KEY_TYPE aKey) {                       \
-  ENTRY_CLASS* e = NS_STATIC_CAST(ENTRY_CLASS*,                               \
+  ENTRY_CLASS* e = static_cast<ENTRY_CLASS*>(\
                                   PL_DHashTableOperate(&mHashTable, &aKey,    \
                                                        PL_DHASH_LOOKUP));     \
   return PL_DHASH_ENTRY_IS_BUSY(e) ? e : nsnull;                              \
 }                                                                             \
 ENTRY_CLASS* CLASSNAME::AddEntry(const KEY_TYPE aKey) {                       \
-  return NS_STATIC_CAST(ENTRY_CLASS*,                                         \
+  return static_cast<ENTRY_CLASS*>(\
                         PL_DHashTableOperate(&mHashTable, &aKey,              \
                                              PL_DHASH_ADD));                  \
 }                                                                             \
@@ -402,14 +402,14 @@ class NS_COM PLDHashStringEntry : public PLDHashEntryHdr
 {
 public:
   PLDHashStringEntry(const void* aKey) :
-    mKey(*NS_STATIC_CAST(const nsAString*, aKey)) { }
+    mKey(*static_cast<const nsAString*>(aKey)) { }
   ~PLDHashStringEntry() { }
 
   static PLDHashNumber HashKey(const void* key) {
-    return HashString(*NS_STATIC_CAST(const nsAString*, key));
+    return HashString(*static_cast<const nsAString*>(key));
   }
   PRBool MatchEntry(const void* key) const {
-    return NS_STATIC_CAST(const nsAString*, key)->Equals(mKey);
+    return static_cast<const nsAString*>(key)->Equals(mKey);
   }
 
   const nsString mKey;
@@ -422,14 +422,14 @@ class NS_COM PLDHashCStringEntry : public PLDHashEntryHdr
 {
 public:
   PLDHashCStringEntry(const void* aKey) :
-    mKey(*NS_STATIC_CAST(const nsACString*, aKey)) { }
+    mKey(*static_cast<const nsACString*>(aKey)) { }
   ~PLDHashCStringEntry() { }
 
   static PLDHashNumber HashKey(const void* key) {
-    return HashString(*NS_STATIC_CAST(const nsACString*, key));
+    return HashString(*static_cast<const nsACString*>(key));
   }
   PRBool MatchEntry(const void* key) const {
-    return NS_STATIC_CAST(const nsACString*, key)->Equals(mKey);
+    return static_cast<const nsACString*>(key)->Equals(mKey);
   }
 
   const nsCString mKey;
@@ -442,14 +442,14 @@ class NS_COM PLDHashInt32Entry : public PLDHashEntryHdr
 {
 public:
   PLDHashInt32Entry(const void* aKey) :
-    mKey(*(NS_STATIC_CAST(const PRInt32*, aKey))) { }
+    mKey(*(static_cast<const PRInt32*>(aKey))) { }
   ~PLDHashInt32Entry() { }
 
   static PLDHashNumber HashKey(const void* key) {
-    return *NS_STATIC_CAST(const PRInt32*, key);
+    return *static_cast<const PRInt32*>(key);
   }
   PRBool MatchEntry(const void* key) const {
-    return *(NS_STATIC_CAST(const PRInt32*, key)) == mKey;
+    return *(static_cast<const PRInt32*>(key)) == mKey;
   }
 
   const PRInt32 mKey;

@@ -219,7 +219,7 @@ nsPrefetchListener::GetInterface(const nsIID &aIID, void **aResult)
 {
     if (aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
         NS_ADDREF_THIS();
-        *aResult = NS_STATIC_CAST(nsIChannelEventSink *, this);
+        *aResult = static_cast<nsIChannelEventSink *>(this);
         return NS_OK;
     }
 

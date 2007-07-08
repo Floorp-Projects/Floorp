@@ -941,7 +941,7 @@ NS_INTERFACE_MAP_BEGIN(nsStandardURL)
     NS_INTERFACE_MAP_ENTRY(nsIMutable)
     // see nsStandardURL::Equals
     if (aIID.Equals(kThisImplCID))
-        foundInterface = NS_STATIC_CAST(nsIURI *, this);
+        foundInterface = static_cast<nsIURI *>(this);
     else
 NS_INTERFACE_MAP_END
 

@@ -66,7 +66,7 @@ nsTDependentSubstring_CharT::Rebind( const substring_type& str, PRUint32 startPo
     if (startPos > strLength)
       startPos = strLength;
 
-    mData = NS_CONST_CAST(char_type*, str.Data()) + startPos;
+    mData = const_cast<char_type*>(str.Data()) + startPos;
     mLength = NS_MIN(length, strLength - startPos);
 
     SetDataFlags(F_NONE);
@@ -80,7 +80,7 @@ nsTDependentSubstring_CharT::Rebind( const char_type* start, const char_type* en
     // If we currently own a buffer, release it.
     Finalize();
 
-    mData = NS_CONST_CAST(char_type*, start);
+    mData = const_cast<char_type*>(start);
     mLength = end - start;
     SetDataFlags(F_NONE);
   }

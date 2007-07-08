@@ -182,7 +182,7 @@ public:
   PRUnichar CharAt(PRInt32 aIndex) const
   {
     NS_ASSERTION(PRUint32(aIndex) < mState.mLength, "bad index");
-    return mState.mIs2b ? m2b[aIndex] : NS_STATIC_CAST(unsigned char, m1b[aIndex]);
+    return mState.mIs2b ? m2b[aIndex] : static_cast<unsigned char>(m1b[aIndex]);
   }
 
   /**

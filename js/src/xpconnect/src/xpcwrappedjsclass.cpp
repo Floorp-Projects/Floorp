@@ -100,8 +100,8 @@ AutoScriptEvaluate::~AutoScriptEvaluate()
     if (JS_GetOptions(mJSContext) & JSOPTION_PRIVATE_IS_NSISUPPORTS)
     {
         nsCOMPtr<nsIXPCScriptNotify> scriptNotify = 
-            do_QueryInterface(NS_STATIC_CAST(nsISupports*,
-                                             JS_GetContextPrivate(mJSContext)));
+            do_QueryInterface(static_cast<nsISupports*>
+                                         (JS_GetContextPrivate(mJSContext)));
         if(scriptNotify)
             scriptNotify->ScriptExecuted();
     }
@@ -508,7 +508,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     if(aIID.Equals(NS_GET_IID(nsIXPConnectJSObjectHolder)))
     {
         NS_ADDREF(self);
-        *aInstancePtr = (void*) NS_STATIC_CAST(nsIXPConnectJSObjectHolder*,self);
+        *aInstancePtr = (void*) static_cast<nsIXPConnectJSObjectHolder*>(self);
         return NS_OK;
     }
 
@@ -540,7 +540,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         }
 
         NS_ADDREF(root);
-        *aInstancePtr = (void*) NS_STATIC_CAST(nsIPropertyBag*,root);
+        *aInstancePtr = (void*) static_cast<nsIPropertyBag*>(root);
         return NS_OK;
     }
 
@@ -567,7 +567,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         }
 
         NS_ADDREF(root);
-        *aInstancePtr = (void*) NS_STATIC_CAST(nsISupportsWeakReference*,root);
+        *aInstancePtr = (void*) static_cast<nsISupportsWeakReference*>(root);
         return NS_OK;
     }
 
@@ -1177,8 +1177,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                             {
                                 if(!newWrapperIID)
                                     newWrapperIID =
-                                        NS_CONST_CAST(nsIID*,
-                                                      &NS_GET_IID(nsISupports));
+                                        const_cast<nsIID*>
+                                                  (&NS_GET_IID(nsISupports));
                                 nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
                                 JSBool ok =
                                   XPCConvert::NativeInterface2JSObject(ccx,

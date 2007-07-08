@@ -91,7 +91,7 @@ nsBox::ListBox(nsAutoString& aResult)
     GetBoxName(name);
 
     char addr[100];
-    sprintf(addr, "[@%p] ", NS_STATIC_CAST(void*, this));
+    sprintf(addr, "[@%p] ", static_cast<void*>(this));
 
     aResult.AppendASCII(addr);
     aResult.Append(name);
@@ -555,7 +555,7 @@ nsIFrame::Layout(nsBoxLayoutState& aState)
 {
   NS_ASSERTION(aState.GetRenderingContext(), "must have rendering context");
 
-  nsBox *box = NS_STATIC_CAST(nsBox*, this);
+  nsBox *box = static_cast<nsBox*>(this);
   DISPLAY_LAYOUT(box);
 
   box->BeginLayout(aState);

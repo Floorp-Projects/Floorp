@@ -91,7 +91,7 @@ nsXTFElementWrapper::Init()
                                      &weakWrapper);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mXTFElement->OnCreated(NS_STATIC_CAST(nsIXTFElementWrapper*, weakWrapper));
+  mXTFElement->OnCreated(static_cast<nsIXTFElementWrapper*>(weakWrapper));
   weakWrapper->Release();
 
   PRBool innerHandlesAttribs = PR_FALSE;
@@ -113,12 +113,12 @@ nsXTFElementWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIClassInfo*, this);
+    *aInstancePtr = static_cast<nsIClassInfo*>(this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsIXTFElementWrapper))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIXTFElementWrapper*, this);
+    *aInstancePtr = static_cast<nsIXTFElementWrapper*>(this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -134,7 +134,7 @@ nsXTFElementWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   if (inner) {
     rv = NS_NewXTFInterfaceAggregator(aIID, inner,
-                                      NS_STATIC_CAST(nsIContent*, this),
+                                      static_cast<nsIContent*>(this),
                                       aInstancePtr);
 
     return rv;
@@ -474,7 +474,7 @@ nsXTFElementWrapper::GetAttrNameAt(PRUint32 aIndex) const
     nsresult rv = mAttributeHandler->GetAttributeNameAt(aIndex, getter_AddRefs(localName));
     NS_ENSURE_SUCCESS(rv, nsnull);
 
-    NS_CONST_CAST(nsXTFElementWrapper*, this)->mTmpAttrName.SetTo(localName);
+    const_cast<nsXTFElementWrapper*>(this)->mTmpAttrName.SetTo(localName);
     return &mTmpAttrName;
   }
   else { // wrapper handles attrib
@@ -549,7 +549,7 @@ nsXTFElementWrapper::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
     return NS_ERROR_OUT_OF_MEMORY;
 
   nsXTFElementWrapper* wrapper =
-    NS_STATIC_CAST(nsXTFElementWrapper*, it.get());
+    static_cast<nsXTFElementWrapper*>(it.get());
   nsresult rv = CopyInnerTo(wrapper);
 
   if (NS_SUCCEEDED(rv)) {
@@ -570,7 +570,7 @@ nsXTFElementWrapper::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   }
 
   // XXX CloneState should take |const nIDOMElement*|
-  wrapper->CloneState(NS_CONST_CAST(nsXTFElementWrapper*, this));
+  wrapper->CloneState(const_cast<nsXTFElementWrapper*>(this));
   return rv;
 }
 
@@ -673,14 +673,14 @@ nsXTFElementWrapper::GetInterfaces(PRUint32* aCount, nsIID*** aArray)
   }
 
   PRUint32 count = baseCount + xtfCount;
-  nsIID** iids = NS_STATIC_CAST(nsIID**,
-                                nsMemory::Alloc(count * sizeof(nsIID*)));
+  nsIID** iids = static_cast<nsIID**>
+                            (nsMemory::Alloc(count * sizeof(nsIID*)));
   NS_ENSURE_TRUE(iids, NS_ERROR_OUT_OF_MEMORY);
 
   PRUint32 i = 0;
   for (; i < baseCount; ++i) {
-    iids[i] = NS_STATIC_CAST(nsIID*,
-                             nsMemory::Clone(baseArray[i], sizeof(nsIID)));
+    iids[i] = static_cast<nsIID*>
+                         (nsMemory::Clone(baseArray[i], sizeof(nsIID)));
     if (!iids[i]) {
       NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(baseCount, baseArray);
       NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(xtfCount, xtfArray);
@@ -690,8 +690,8 @@ nsXTFElementWrapper::GetInterfaces(PRUint32* aCount, nsIID*** aArray)
   }
 
   for (; i < count; ++i) {
-    iids[i] = NS_STATIC_CAST(nsIID*,
-                             nsMemory::Clone(xtfArray[i - baseCount], sizeof(nsIID)));
+    iids[i] = static_cast<nsIID*>
+                         (nsMemory::Clone(xtfArray[i - baseCount], sizeof(nsIID)));
     if (!iids[i]) {
       NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(baseCount, baseArray);
       NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(xtfCount, xtfArray);
@@ -905,7 +905,7 @@ nsXTFElementWrapper::GetClasses() const
       val->ToString(value);
       nsAttrValue newValue;
       newValue.ParseAtomArray(value);
-      NS_CONST_CAST(nsAttrAndChildArray*, &mAttrsAndChildren)->
+      const_cast<nsAttrAndChildArray*>(&mAttrsAndChildren)->
         SetAndTakeAttr(clazzAttr, newValue);
     }
   }

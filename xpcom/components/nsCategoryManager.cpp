@@ -168,8 +168,8 @@ int
 BaseStringEnumerator::SortCallback(const void *e1, const void *e2,
                                    void * /*unused*/)
 {
-  char const *const *s1 = NS_REINTERPRET_CAST(char const *const *, e1);
-  char const *const *s2 = NS_REINTERPRET_CAST(char const *const *, e2);
+  char const *const *s1 = reinterpret_cast<char const *const *>(e1);
+  char const *const *s2 = reinterpret_cast<char const *const *>(e2);
 
   return strcmp(*s1, *s2);
 }
@@ -198,7 +198,7 @@ private:
 PLDHashOperator PR_CALLBACK
 EntryEnumerator::enumfunc_createenumerator(CategoryLeaf* aLeaf, void* userArg)
 {
-  EntryEnumerator* mythis = NS_STATIC_CAST(EntryEnumerator*, userArg);
+  EntryEnumerator* mythis = static_cast<EntryEnumerator*>(userArg);
   if (aLeaf->nonpValue)
     mythis->mArray[mythis->mCount++] = aLeaf->GetKey();
 
@@ -396,7 +396,7 @@ PLDHashOperator PR_CALLBACK
 enumfunc_pentries(CategoryLeaf* aLeaf, void* userArg)
 {
   persistent_userstruct* args =
-    NS_STATIC_CAST(persistent_userstruct*, userArg);
+    static_cast<persistent_userstruct*>(userArg);
 
   PLDHashOperator status = PL_DHASH_NEXT;
 
@@ -469,7 +469,7 @@ CategoryEnumerator::Create(nsClassHashtable<nsDepCharHashKey, CategoryNode>& aTa
 PLDHashOperator PR_CALLBACK
 CategoryEnumerator::enumfunc_createenumerator(const char* aStr, CategoryNode* aNode, void* userArg)
 {
-  CategoryEnumerator* mythis = NS_STATIC_CAST(CategoryEnumerator*, userArg);
+  CategoryEnumerator* mythis = static_cast<CategoryEnumerator*>(userArg);
 
   // if a category has no entries, we pretend it doesn't exist
   if (aNode->Count())
@@ -748,7 +748,7 @@ struct writecat_struct {
 PLDHashOperator PR_CALLBACK
 enumfunc_categories(const char* aKey, CategoryNode* aCategory, void* userArg)
 {
-  writecat_struct* args = NS_STATIC_CAST(writecat_struct*, userArg);
+  writecat_struct* args = static_cast<writecat_struct*>(userArg);
 
   PLDHashOperator result = PL_DHASH_NEXT;
 
@@ -835,7 +835,7 @@ NS_CategoryManagerGetFactory( nsIFactory** aFactory )
     nsresult status;
 
     *aFactory = 0;
-    nsIFactory* new_factory = NS_STATIC_CAST(nsIFactory*, new nsCategoryManagerFactory);
+    nsIFactory* new_factory = static_cast<nsIFactory*>(new nsCategoryManagerFactory);
     if (new_factory)
       {
         *aFactory = new_factory;

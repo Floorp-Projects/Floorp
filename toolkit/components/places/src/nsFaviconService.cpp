@@ -689,7 +689,7 @@ ExpireFailedFaviconsCallback(nsCStringHashKey::KeyType aKey,
                              PRUint32& aData,
                              void* userArg)
 {
-  PRUint32* threshold = NS_REINTERPRET_CAST(PRUint32*, userArg);
+  PRUint32* threshold = reinterpret_cast<PRUint32*>(userArg);
   if (aData < *threshold)
     return PL_DHASH_REMOVE;
   return PL_DHASH_NEXT;
@@ -876,7 +876,7 @@ FaviconLoadListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
 #ifndef MOZILLA_1_8_BRANCH
                aRequest,
 #endif
-               NS_REINTERPRET_CAST(PRUint8*, NS_CONST_CAST(char*, mData.get())),
+               reinterpret_cast<PRUint8*>(const_cast<char*>(mData.get())),
                mData.Length(), mimeType);
     // ignore errors: mime type will be left empty and we'll try the next sniffer
   }
@@ -899,7 +899,7 @@ FaviconLoadListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
 
   // save the favicon data
   rv = mFaviconService->SetFaviconData(mFaviconURI,
-               NS_REINTERPRET_CAST(PRUint8*, NS_CONST_CAST(char*, mData.get())),
+               reinterpret_cast<PRUint8*>(const_cast<char*>(mData.get())),
                mData.Length(), mimeType, expiration);
   NS_ENSURE_SUCCESS(rv, rv);
 

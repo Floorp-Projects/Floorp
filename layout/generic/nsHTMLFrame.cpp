@@ -165,11 +165,11 @@ CanvasFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsIScrollPositionListener))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIScrollPositionListener*, this);
+    *aInstancePtr = static_cast<nsIScrollPositionListener*>(this);
     return NS_OK;
   } 
   if (aIID.Equals(NS_GET_IID(nsICanvasFrame))) {
-    *aInstancePtr = NS_STATIC_CAST(nsICanvasFrame*, this);
+    *aInstancePtr = static_cast<nsICanvasFrame*>(this);
     return NS_OK;
   } 
 
@@ -361,14 +361,14 @@ public:
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder)
   {
-    CanvasFrame* frame = NS_STATIC_CAST(CanvasFrame*, mFrame);
+    CanvasFrame* frame = static_cast<CanvasFrame*>(mFrame);
     return frame->CanvasArea() + aBuilder->ToReferenceFrame(mFrame);
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
   {
-    CanvasFrame* frame = NS_STATIC_CAST(CanvasFrame*, mFrame);
+    CanvasFrame* frame = static_cast<CanvasFrame*>(mFrame);
     nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
     nsRect bgClipRect = frame->CanvasArea() + offset;
     nsCSSRendering::PaintBackground(mFrame->PresContext(), *aCtx, mFrame,
@@ -398,14 +398,14 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder)
   {
     // This is an overestimate, but that's not a problem.
-    CanvasFrame* frame = NS_STATIC_CAST(CanvasFrame*, mFrame);
+    CanvasFrame* frame = static_cast<CanvasFrame*>(mFrame);
     return frame->CanvasArea() + aBuilder->ToReferenceFrame(mFrame);
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
   {
-    CanvasFrame* frame = NS_STATIC_CAST(CanvasFrame*, mFrame);
+    CanvasFrame* frame = static_cast<CanvasFrame*>(mFrame);
     frame->PaintFocus(*aCtx, aBuilder->ToReferenceFrame(mFrame));
   }
 

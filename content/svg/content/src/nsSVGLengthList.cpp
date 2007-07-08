@@ -105,7 +105,7 @@ protected:
 nsSVGLengthList::nsSVGLengthList(nsSVGElement *aContext, PRUint8 aCtxType)
   : mCtxType(aCtxType)
 {
-  mContext = do_GetWeakReference(NS_STATIC_CAST(nsGenericElement*, aContext));
+  mContext = do_GetWeakReference(static_cast<nsGenericElement*>(aContext));
 }
 
 nsSVGLengthList::~nsSVGLengthList()
@@ -225,7 +225,7 @@ NS_IMETHODIMP nsSVGLengthList::Initialize(nsIDOMSVGLength *newItem,
 /* nsIDOMSVGLength getItem (in unsigned long index); */
 NS_IMETHODIMP nsSVGLengthList::GetItem(PRUint32 index, nsIDOMSVGLength **_retval)
 {
-  if (index >= NS_STATIC_CAST(PRUint32, mLengths.Count())) {
+  if (index >= static_cast<PRUint32>(mLengths.Count())) {
     *_retval = nsnull;
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
@@ -266,7 +266,7 @@ nsSVGLengthList::ReplaceItem(nsIDOMSVGLength *newItem,
 /* nsIDOMSVGLengthList removeItem (in unsigned long index); */
 NS_IMETHODIMP nsSVGLengthList::RemoveItem(PRUint32 index, nsIDOMSVGLength **_retval)
 {
-  if (index >= NS_STATIC_CAST(PRUint32, mLengths.Count())) {
+  if (index >= static_cast<PRUint32>(mLengths.Count())) {
     *_retval = nsnull;
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }

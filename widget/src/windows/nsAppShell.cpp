@@ -71,7 +71,7 @@ static BOOL PeekKeyAndIMEMessage(LPMSG msg, HWND hwnd)
 nsAppShell::EventWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   if (uMsg == sMsgId) {
-    nsAppShell *as = NS_REINTERPRET_CAST(nsAppShell *, lParam);
+    nsAppShell *as = reinterpret_cast<nsAppShell *>(lParam);
     as->NativeEventCallback();
     NS_RELEASE(as);
     return TRUE;
@@ -125,7 +125,7 @@ nsAppShell::ScheduleNativeEventCallback()
 {
   // post a message to the native event queue...
   NS_ADDREF_THIS();
-  ::PostMessage(mEventWnd, sMsgId, 0, NS_REINTERPRET_CAST(LPARAM, this));
+  ::PostMessage(mEventWnd, sMsgId, 0, reinterpret_cast<LPARAM>(this));
 }
 
 PRBool

@@ -187,7 +187,7 @@ NS_IMETHODIMP nsICODecoder::Flush()
 NS_METHOD nsICODecoder::ReadSegCb(nsIInputStream* aIn, void* aClosure,
                              const char* aFromRawSegment, PRUint32 aToOffset,
                              PRUint32 aCount, PRUint32 *aWriteCount) {
-  nsICODecoder *decoder = NS_REINTERPRET_CAST(nsICODecoder*, aClosure);
+  nsICODecoder *decoder = reinterpret_cast<nsICODecoder*>(aClosure);
   *aWriteCount = aCount;
   decoder->mStatus = decoder->ProcessData(aFromRawSegment, aCount);
   return decoder->mStatus;

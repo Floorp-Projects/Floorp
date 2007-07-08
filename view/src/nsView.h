@@ -109,7 +109,7 @@ public:
 
   // Helper function to get the view that's associated with a widget
   static nsView* GetViewFor(nsIWidget* aWidget) {
-    return NS_STATIC_CAST(nsView*, nsIView::GetViewFor(aWidget));
+    return static_cast<nsView*>(nsIView::GetViewFor(aWidget));
   }
 
   // Helper function to get mouse grabbing off this view (by moving it to the

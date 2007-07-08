@@ -75,8 +75,8 @@ public:
 
 protected:
   const nsCOMPtr<T> GetValue() const {
-    return nsCOMPtr<T>(dont_AddRef(NS_STATIC_CAST(T*,
-                                                  GetValueAs(NS_GET_TEMPLATE_IID(T)))));
+    return nsCOMPtr<T>(dont_AddRef(static_cast<T*>
+                                              (GetValueAs(NS_GET_TEMPLATE_IID(T)))));
   }
 };
 

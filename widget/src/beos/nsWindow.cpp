@@ -1010,7 +1010,7 @@ void nsWindow::HideKids(PRBool state)
 {
 	for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) 
 	{
-		nsWindow *childWidget = NS_STATIC_CAST(nsWindow*, kid);
+		nsWindow *childWidget = static_cast<nsWindow*>(kid);
 		nsRect kidrect = ((nsWindow *)kid)->mBounds;
 		//Don't bother about invisible
 		if (mBounds.Intersects(kidrect))
@@ -1739,7 +1739,7 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 		// Time to silently move now invisible children
 		for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) 
 		{
-			nsWindow *childWidget = NS_STATIC_CAST(nsWindow*, kid);
+			nsWindow *childWidget = static_cast<nsWindow*>(kid);
 			// No need to Lock/UnlockLooper with GetBounds() and Move() methods
 			// using cached values and native MoveBy() instead
 			nsRect bounds = childWidget->mBounds;
@@ -1786,7 +1786,7 @@ bool nsWindow::CallMethod(MethodInfo *info)
 
 			for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) 
 			{
-				nsWindow *childWidget = NS_STATIC_CAST(nsWindow*, kid);
+				nsWindow *childWidget = static_cast<nsWindow*>(kid);
 				BWindow* kidwindow = (BWindow *)kid->GetNativeData(NS_NATIVE_WINDOW);
 				if (kidwindow)
 				{

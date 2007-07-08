@@ -152,12 +152,12 @@ struct nsCompressedMap {
 };
 
 static nsCompressedMap gUpperMap = {
-  NS_REINTERPRET_CAST(const PRUnichar*, &gToUpper[0]),
+  reinterpret_cast<const PRUnichar*>(&gToUpper[0]),
   gToUpperItems
 };
 
 static nsCompressedMap gLowerMap = {
-  NS_REINTERPRET_CAST(const PRUnichar*, &gToLower[0]),
+  reinterpret_cast<const PRUnichar*>(&gToLower[0]),
   gToLowerItems
 };
 

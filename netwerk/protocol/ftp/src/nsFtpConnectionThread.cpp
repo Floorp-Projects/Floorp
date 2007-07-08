@@ -660,7 +660,7 @@ nsFtpState::S_user() {
     } else {
         if (mUsername.IsEmpty()) {
             nsCOMPtr<nsIAuthPrompt2> prompter;
-            NS_QueryAuthPrompt2(NS_STATIC_CAST(nsIChannel*, mChannel),
+            NS_QueryAuthPrompt2(static_cast<nsIChannel*>(mChannel),
                                 getter_AddRefs(prompter));
             if (!prompter)
                 return NS_ERROR_NOT_INITIALIZED;
@@ -750,7 +750,7 @@ nsFtpState::S_pass() {
     } else {
         if (mPassword.IsEmpty() || mRetryPass) {
             nsCOMPtr<nsIAuthPrompt2> prompter;
-            NS_QueryAuthPrompt2(NS_STATIC_CAST(nsIChannel*, mChannel),
+            NS_QueryAuthPrompt2(static_cast<nsIChannel*>(mChannel),
                                 getter_AddRefs(prompter));
             if (!prompter)
                 return NS_ERROR_NOT_INITIALIZED;

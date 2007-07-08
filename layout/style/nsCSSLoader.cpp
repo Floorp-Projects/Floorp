@@ -346,7 +346,7 @@ CollectNonAlternates(nsURIAndPrincipalHashKey *aKey,
     return PL_DHASH_NEXT;
   }
 
-  NS_STATIC_CAST(CSSLoaderImpl::LoadDataArray*,aClosure)->AppendElement(aData);
+  static_cast<CSSLoaderImpl::LoadDataArray*>(aClosure)->AppendElement(aData);
   return PL_DHASH_REMOVE;
 }
 
@@ -1798,7 +1798,7 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
 
   if (state == eSheetComplete) {
     LOG(("  Sheet already complete: 0x%p",
-         NS_STATIC_CAST(void*, sheet.get())));
+         static_cast<void*>(sheet.get())));
     if (aObserver) {
       rv = PostLoadEvent(aURL, sheet, aObserver, *aIsAlternate);
       return rv;
@@ -1900,8 +1900,8 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
   PRInt32 count = mParsingDatas.Count();
   if (count > 0) {
     LOG(("  Have a parent load"));
-    parentData = NS_STATIC_CAST(SheetLoadData*,
-                                mParsingDatas.ElementAt(count - 1));
+    parentData = static_cast<SheetLoadData*>
+                            (mParsingDatas.ElementAt(count - 1));
     // Check for cycles
     SheetLoadData* data = parentData;
     while (data && data->mURI) {
@@ -2153,7 +2153,7 @@ StopLoadingSheetCallback(nsURIAndPrincipalHashKey* aKey,
   aData->mIsLoading = PR_FALSE; // we will handle the removal right here
   aData->mIsCancelled = PR_TRUE;
   
-  NS_STATIC_CAST(CSSLoaderImpl::LoadDataArray*,aClosure)->AppendElement(aData);
+  static_cast<CSSLoaderImpl::LoadDataArray*>(aClosure)->AppendElement(aData);
 
   return PL_DHASH_REMOVE;
 }
@@ -2218,7 +2218,7 @@ StopLoadingSheetByURICallback(nsURIAndPrincipalHashKey* aKey,
   NS_PRECONDITION(aClosure, "Must have a loader");
 
   StopLoadingSheetsByURIClosure* closure =
-    NS_STATIC_CAST(StopLoadingSheetsByURIClosure*, aClosure);
+    static_cast<StopLoadingSheetsByURIClosure*>(aClosure);
 
   PRBool equal;
   if (NS_SUCCEEDED(aData->mURI->Equals(closure->uri, &equal)) &&
@@ -2332,7 +2332,7 @@ CollectLoadDatas(nsURIAndPrincipalHashKey *aKey,
                  SheetLoadData* &aData,
                  void* aClosure)
 {
-  NS_STATIC_CAST(CSSLoaderImpl::LoadDataArray*,aClosure)->AppendElement(aData);
+  static_cast<CSSLoaderImpl::LoadDataArray*>(aClosure)->AppendElement(aData);
   return PL_DHASH_REMOVE;
 }
 

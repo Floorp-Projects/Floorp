@@ -61,8 +61,8 @@ CAccessibleTable::QueryInterface(REFIID iid, void** ppv)
   *ppv = NULL;
 
   if (IID_IAccessibleTable == iid) {
-    *ppv = NS_STATIC_CAST(IAccessibleTable*, this);
-    (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
+    *ppv = static_cast<IAccessibleTable*>(this);
+    (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
     return S_OK;
   }
 
@@ -95,7 +95,7 @@ CAccessibleTable::get_accessibleAt(long aRow, long aColumn,
   if (NS_FAILED(rv))
     return E_FAIL;
 
-  *aAccessible = NS_STATIC_CAST(IUnknown*, instancePtr);
+  *aAccessible = static_cast<IUnknown*>(instancePtr);
   return S_OK;
 }
 
@@ -122,7 +122,7 @@ CAccessibleTable::get_caption(IUnknown **aAccessible)
   if (NS_FAILED(rv))
     return E_FAIL;
 
-  *aAccessible = NS_STATIC_CAST(IUnknown*, instancePtr);
+  *aAccessible = static_cast<IUnknown*>(instancePtr);
   return S_OK;
 }
 
@@ -208,7 +208,7 @@ CAccessibleTable::get_columnHeader(IAccessibleTable **aAccessibleTable,
   if (NS_FAILED(rv))
     return E_FAIL;
 
-  *aAccessibleTable = NS_STATIC_CAST(IAccessibleTable*, instancePtr);
+  *aAccessibleTable = static_cast<IAccessibleTable*>(instancePtr);
   return S_OK;
 }
 
@@ -348,7 +348,7 @@ CAccessibleTable::get_rowHeader(IAccessibleTable **aAccessibleTable,
   if (NS_FAILED(rv))
     return E_FAIL;
 
-  *aAccessibleTable = NS_STATIC_CAST(IAccessibleTable*, instancePtr);
+  *aAccessibleTable = static_cast<IAccessibleTable*>(instancePtr);
   return S_OK;
 }
 

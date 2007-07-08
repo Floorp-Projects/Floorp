@@ -126,7 +126,7 @@ txXPathTreeWalker::moveToElementById(const nsAString& aID)
                      "root of subtree wasn't an nsIContent");
 
         content = nsContentUtils::MatchElementId(
-            NS_STATIC_CAST(nsIContent*, rootNode), aID);
+            static_cast<nsIContent*>(rootNode), aID);
     }
 
     if (!content) {
@@ -738,9 +738,9 @@ txXPathNodeUtils::comparePosition(const txXPathNode& aNode,
     PRInt32 i;
     parent = nsnull;
     for (i = 0; i <= lastIndex; ++i) {
-        node = NS_STATIC_CAST(nsINode*, parents.ElementAt(total - i));
-        otherNode = NS_STATIC_CAST(nsINode*,
-                                   otherParents.ElementAt(otherTotal - i));
+        node = static_cast<nsINode*>(parents.ElementAt(total - i));
+        otherNode = static_cast<nsINode*>
+                               (otherParents.ElementAt(otherTotal - i));
         if (node != otherNode) {
             if (!parent) {
                 // The two nodes are in different orphan subtrees.

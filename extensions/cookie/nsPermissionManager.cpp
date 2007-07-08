@@ -66,7 +66,7 @@ ArenaStrDup(const char* str, PLArenaPool* aArena)
   PL_ARENA_ALLOCATE(mem, aArena, size);
   if (mem)
     memcpy(mem, str, size);
-  return NS_STATIC_CAST(char*, mem);
+  return static_cast<char*>(mem);
 }
 
 nsHostEntry::nsHostEntry(const char* aHost)
@@ -455,7 +455,7 @@ AddHostToList(nsHostEntry *entry, void *arg)
   // so we dereference it twice to assign the |const char*| string
   // and once so we can increment the |const char**| array location
   // ready for the next assignment.
-  const char*** elementPtr = NS_STATIC_CAST(const char***, arg);
+  const char*** elementPtr = static_cast<const char***>(arg);
   **elementPtr = entry->GetKey();
   ++(*elementPtr);
   return PL_DHASH_NEXT;
@@ -476,7 +476,7 @@ NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
   const char** hostListCopy = hostList;
   mHostTable.EnumerateEntries(AddHostToList, &hostListCopy);
 
-  nsPermissionEnumerator* permissionEnum = new nsPermissionEnumerator(&mHostTable, hostList, mHostCount, NS_CONST_CAST(const char**, mTypeArray));
+  nsPermissionEnumerator* permissionEnum = new nsPermissionEnumerator(&mHostTable, hostList, mHostCount, const_cast<const char**>(mTypeArray));
   if (!permissionEnum) {
     delete[] hostList;
     return NS_ERROR_OUT_OF_MEMORY;
@@ -833,7 +833,7 @@ AddEntryToList(nsHostEntry *entry, void *arg)
   // so we dereference it twice to assign the |nsHostEntry*|
   // and once so we can increment the |nsHostEntry**| array location
   // ready for the next assignment.
-  nsHostEntry*** elementPtr = NS_STATIC_CAST(nsHostEntry***, arg);
+  nsHostEntry*** elementPtr = static_cast<nsHostEntry***>(arg);
   **elementPtr = entry;
   ++(*elementPtr);
   return PL_DHASH_NEXT;
@@ -857,7 +857,7 @@ void
 nsPermissionManager::DoLazyWrite(nsITimer *aTimer,
                                  void     *aClosure)
 {
-  nsPermissionManager *service = NS_REINTERPRET_CAST(nsPermissionManager*, aClosure);
+  nsPermissionManager *service = reinterpret_cast<nsPermissionManager*>(aClosure);
   service->Write();
   service->mWriteTimer = 0;
 }
@@ -940,7 +940,7 @@ nsPermissionManager::Write()
   mHostTable.EnumerateEntries(AddEntryToList, &hostListCopy);
 
   for (i = 0; i < mHostCount; ++i) {
-    nsHostEntry *entry = NS_STATIC_CAST(nsHostEntry*, hostList[i]);
+    nsHostEntry *entry = static_cast<nsHostEntry*>(hostList[i]);
     NS_ASSERTION(entry, "corrupt permission list");
 
     for (PRInt32 type = 0; type < NUMBER_OF_TYPES; ++type) {

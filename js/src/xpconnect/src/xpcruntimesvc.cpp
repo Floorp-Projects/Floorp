@@ -93,14 +93,14 @@ BackstagePass::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 #endif
     *aCount = count;
     nsIID **array;
-    *aArray = array = NS_STATIC_CAST(nsIID**, nsMemory::Alloc(count * sizeof(nsIID*)));
+    *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
     if(!array)
         return NS_ERROR_OUT_OF_MEMORY;
 
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = NS_STATIC_CAST(nsIID *, nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ), \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \

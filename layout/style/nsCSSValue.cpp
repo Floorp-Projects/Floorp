@@ -365,7 +365,7 @@ void nsCSSValue::StartImageLoad(nsIDocument* aDocument) const
                           mValue.mURL->mOriginPrincipal,
                           aDocument);
   if (image) {
-    nsCSSValue* writable = NS_CONST_CAST(nsCSSValue*, this);
+    nsCSSValue* writable = const_cast<nsCSSValue*>(this);
     writable->SetImageValue(image);
   }
 }
@@ -383,7 +383,7 @@ nsCSSValue::BufferFromString(const nsString& aValue)
   PRUnichar length = aValue.Length();
   buffer = nsStringBuffer::Alloc((length + 1) * sizeof(PRUnichar));
   if (NS_LIKELY(buffer != 0)) {
-    PRUnichar* data = NS_STATIC_CAST(PRUnichar*, buffer->Data());
+    PRUnichar* data = static_cast<PRUnichar*>(buffer->Data());
     nsCharTraits<PRUnichar>::copy(data, aValue.get(), length);
     // Null-terminate.
     data[length] = 0;

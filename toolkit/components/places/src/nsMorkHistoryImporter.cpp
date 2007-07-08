@@ -66,7 +66,7 @@ struct TableReadClosure
     : reader(aReader), history(aHistory), swapBytes(PR_FALSE),
       byteOrderColumn(-1)
   {
-    NS_CONST_CAST(nsString*, &voidString)->SetIsVoid(PR_TRUE);
+    const_cast<nsString*>(&voidString)->SetIsVoid(PR_TRUE);
     for (PRUint32 i = 0; i < kColumnCount; ++i) {
       columnIndexes[i] = -1;
     }
@@ -105,7 +105,7 @@ nsMorkHistoryImporter::AddToHistoryCB(const nsCSubstring &aRowID,
                                       const nsTArray<nsCString> *aValues,
                                       void *aData)
 {
-  TableReadClosure *data = NS_STATIC_CAST(TableReadClosure*, aData);
+  TableReadClosure *data = static_cast<TableReadClosure*>(aData);
   const nsMorkReader *reader = data->reader;
   nsCString values[kColumnCount];
   const PRInt32 *columnIndexes = data->columnIndexes;
@@ -134,12 +134,12 @@ nsMorkHistoryImporter::AddToHistoryCB(const nsCSubstring &aRowID,
 
     // Swap the bytes in the unicode characters if necessary.
     if (data->swapBytes) {
-      SwapBytes(NS_REINTERPRET_CAST(PRUnichar*, titleC.BeginWriting()));
+      SwapBytes(reinterpret_cast<PRUnichar*>(titleC.BeginWriting()));
     }
     titleBytes = titleC.get();
   }
 
-  const PRUnichar *title = NS_REINTERPRET_CAST(const PRUnichar*, titleBytes);
+  const PRUnichar *title = reinterpret_cast<const PRUnichar*>(titleBytes);
 
   PRInt32 err;
   PRInt32 count = values[kVisitCountColumn].ToInteger(&err);
@@ -197,7 +197,7 @@ nsMorkHistoryImporter::ImportHistory(nsIFile *aFile,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Gather up the column ids so we don't need to find them on each row
-  nsNavHistory *history = NS_STATIC_CAST(nsNavHistory*, aHistory);
+  nsNavHistory *history = static_cast<nsNavHistory*>(aHistory);
   TableReadClosure data(&reader, history);
   const nsTArray<nsMorkReader::MorkColumn> &columns = reader.GetColumns();
   for (PRUint32 i = 0; i < columns.Length(); ++i) {

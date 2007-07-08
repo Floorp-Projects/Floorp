@@ -106,7 +106,7 @@ nsCocoaWindow::~nsCocoaWindow()
 {
   // notify the children that we're gone
   for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-    nsCocoaWindow* childWindow = NS_STATIC_CAST(nsCocoaWindow*, kid);
+    nsCocoaWindow* childWindow = static_cast<nsCocoaWindow*>(kid);
     childWindow->mParent = nsnull;
   }
 
@@ -151,7 +151,7 @@ static nsIMenuBar* GetHiddenWindowMenuBar()
   }
   
   nsIWidget* hiddenWindowWidgetNoCOMPtr = hiddenWindowWidget;
-  return NS_STATIC_CAST(nsCocoaWindow*, hiddenWindowWidgetNoCOMPtr)->GetMenuBar();  
+  return static_cast<nsCocoaWindow*>(hiddenWindowWidgetNoCOMPtr)->GetMenuBar();  
 }
 
 
@@ -324,7 +324,7 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
       if (mPopupContentView) {
         NS_ADDREF(mPopupContentView);
 
-        nsIWidget* thisAsWidget = NS_STATIC_CAST(nsIWidget*, this);
+        nsIWidget* thisAsWidget = static_cast<nsIWidget*>(this);
         mPopupContentView->StandardCreate(thisAsWidget, aRect, aHandleEventFunction,
                                           aContext, aAppShell, aToolkit, nsnull, nsnull);
 
@@ -848,12 +848,12 @@ NS_IMETHODIMP nsCocoaWindow::GetChildSheet(PRBool aShown, nsCocoaWindow** _retva
     nsCOMPtr<nsPIWidgetCocoa> piChildWidget(do_QueryInterface(child));
     if (piChildWidget) {
       // if it implements nsPIWidgetCocoa, it must be an nsCocoaWindow
-      nsCocoaWindow* window = NS_STATIC_CAST(nsCocoaWindow*, child);
+      nsCocoaWindow* window = static_cast<nsCocoaWindow*>(child);
       nsWindowType type;
       if (NS_SUCCEEDED(window->GetWindowType(type)) &&
           type == eWindowType_sheet) {
         // if it's a sheet, it must be an nsCocoaWindow
-        nsCocoaWindow* cocoaWindow = NS_STATIC_CAST(nsCocoaWindow*, window);
+        nsCocoaWindow* cocoaWindow = static_cast<nsCocoaWindow*>(window);
         if ((aShown && cocoaWindow->mVisible) ||
             (!aShown && cocoaWindow->mSheetNeedsShow)) {
           *_retval = cocoaWindow;
@@ -1111,8 +1111,8 @@ NS_IMETHODIMP nsCocoaWindow::GetAnimatedResize(PRUint16* aAnimation)
   
   // Gecko already compensates for the title bar, so we have to strip it out here.
   NSRect frameRect = [[[aNotification object] contentView] frame];
-  mGeckoWindow->Resize(NS_STATIC_CAST(PRInt32,frameRect.size.width),
-                       NS_STATIC_CAST(PRInt32,frameRect.size.height), PR_TRUE);
+  mGeckoWindow->Resize(static_cast<PRInt32>(frameRect.size.width),
+                       static_cast<PRInt32>(frameRect.size.height), PR_TRUE);
 }
 
 

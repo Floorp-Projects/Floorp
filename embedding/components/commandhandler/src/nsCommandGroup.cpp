@@ -137,8 +137,8 @@ nsGroupsEnumerator::GetNext(nsISupports **_retval)
 PRBool
 nsGroupsEnumerator::HashEnum(nsHashKey *aKey, void *aData, void* aClosure)
 {
-  nsGroupsEnumerator*   groupsEnum = NS_REINTERPRET_CAST(nsGroupsEnumerator *, aClosure);
-  nsCStringKey*         stringKey = NS_STATIC_CAST(nsCStringKey*, aKey);
+  nsGroupsEnumerator*   groupsEnum = reinterpret_cast<nsGroupsEnumerator *>(aClosure);
+  nsCStringKey*         stringKey = static_cast<nsCStringKey*>(aKey);
   
   groupsEnum->mGroupNames[groupsEnum->mIndex] = (char*)stringKey->GetString();
   groupsEnum->mIndex ++;

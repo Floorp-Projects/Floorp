@@ -199,7 +199,7 @@ nsContainerFrame::RemoveFrame(nsIAtom*  aListName,
     PRBool generateReflowCommand =
       aOldFrame->GetType() == nsGkAtoms::brFrame;
 
-    nsContainerFrame* parent = NS_STATIC_CAST(nsContainerFrame*, aOldFrame->GetParent());
+    nsContainerFrame* parent = static_cast<nsContainerFrame*>(aOldFrame->GetParent());
     while (aOldFrame) {
 #ifdef IBMBIDI
       if (nsGkAtoms::nextBidi != aListName) {
@@ -221,7 +221,7 @@ nsContainerFrame::RemoveFrame(nsIAtom*  aListName,
       parent->mFrames.DestroyFrame(aOldFrame);
       aOldFrame = oldFrameNextContinuation;
       if (aOldFrame) {
-        parent = NS_STATIC_CAST(nsContainerFrame*, aOldFrame->GetParent());
+        parent = static_cast<nsContainerFrame*>(aOldFrame->GetParent());
       }
     }
 
@@ -602,10 +602,10 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsIRenderingContext *aRenderingContext,
          kid = kid->GetNextSibling()) {
       if (aType == nsLayoutUtils::MIN_WIDTH)
         kid->AddInlineMinWidth(aRenderingContext,
-                               NS_STATIC_CAST(InlineMinWidthData*, aData));
+                               static_cast<InlineMinWidthData*>(aData));
       else
         kid->AddInlinePrefWidth(aRenderingContext,
-                                NS_STATIC_CAST(InlinePrefWidthData*, aData));
+                                static_cast<InlinePrefWidthData*>(aData));
     }
   }
 
@@ -683,7 +683,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
       // Remove all of the childs next-in-flows. Make sure that we ask
       // the right parent to do the removal (it's possible that the
       // parent is not this because we are executing pullup code)
-      NS_STATIC_CAST(nsContainerFrame*, kidNextInFlow->GetParent())
+      static_cast<nsContainerFrame*>(kidNextInFlow->GetParent())
         ->DeleteNextInFlowChild(aPresContext, kidNextInFlow);
     }
   }
@@ -811,8 +811,8 @@ nsContainerFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
       frames.AppendElement(f);
     }
     for (PRInt32 i = frames.Count() - 1; i >= 0; --i) {
-      nsIFrame* delFrame = NS_STATIC_CAST(nsIFrame*, frames.ElementAt(i));
-      NS_STATIC_CAST(nsContainerFrame*, delFrame->GetParent())
+      nsIFrame* delFrame = static_cast<nsIFrame*>(frames.ElementAt(i));
+      static_cast<nsContainerFrame*>(delFrame->GetParent())
         ->DeleteNextInFlowChild(aPresContext, delFrame);
     }
   }
@@ -988,32 +988,32 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
   IndentBy(out, aIndent);
   ListTag(out);
 #ifdef DEBUG_waterson
-  fprintf(out, " [parent=%p]", NS_STATIC_CAST(void*, mParent));
+  fprintf(out, " [parent=%p]", static_cast<void*>(mParent));
 #endif
   if (HasView()) {
-    fprintf(out, " [view=%p]", NS_STATIC_CAST(void*, GetView()));
+    fprintf(out, " [view=%p]", static_cast<void*>(GetView()));
   }
   if (nsnull != mNextSibling) {
-    fprintf(out, " next=%p", NS_STATIC_CAST(void*, mNextSibling));
+    fprintf(out, " next=%p", static_cast<void*>(mNextSibling));
   }
   if (nsnull != GetPrevContinuation()) {
-    fprintf(out, " prev-continuation=%p", NS_STATIC_CAST(void*, GetPrevContinuation()));
+    fprintf(out, " prev-continuation=%p", static_cast<void*>(GetPrevContinuation()));
   }
   if (nsnull != GetNextContinuation()) {
-    fprintf(out, " next-continuation=%p", NS_STATIC_CAST(void*, GetNextContinuation()));
+    fprintf(out, " next-continuation=%p", static_cast<void*>(GetNextContinuation()));
   }
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
     fprintf(out, " [state=%08x]", mState);
   }
-  fprintf(out, " [content=%p]", NS_STATIC_CAST(void*, mContent));
-  nsContainerFrame* f = NS_CONST_CAST(nsContainerFrame*, this);
+  fprintf(out, " [content=%p]", static_cast<void*>(mContent));
+  nsContainerFrame* f = const_cast<nsContainerFrame*>(this);
   nsRect* overflowArea = f->GetOverflowAreaProperty(PR_FALSE);
   if (overflowArea) {
     fprintf(out, " [overflow=%d,%d,%d,%d]", overflowArea->x, overflowArea->y,
             overflowArea->width, overflowArea->height);
   }
-  fprintf(out, " [sc=%p]", NS_STATIC_CAST(void*, mStyleContext));
+  fprintf(out, " [sc=%p]", static_cast<void*>(mStyleContext));
   nsIAtom* pseudoTag = mStyleContext->GetPseudoType();
   if (pseudoTag) {
     nsAutoString atomString;

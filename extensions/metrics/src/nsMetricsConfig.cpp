@@ -417,7 +417,7 @@ nsMetricsConfig::ClearEvents()
 /* static */ PLDHashOperator PR_CALLBACK
 nsMetricsConfig::CopyKey(nsStringHashKey *entry, void *userData)
 {
-  NS_STATIC_CAST(nsTArray<nsString> *, userData)->
+  static_cast<nsTArray<nsString> *>(userData)->
     AppendElement(entry->GetKey());
   return PL_DHASH_NEXT;
 }

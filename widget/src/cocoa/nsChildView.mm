@@ -176,10 +176,10 @@ GeckoRectToNSRect(const nsRect & inGeckoRect, NSRect & outCocoaRect)
 static inline void
 NSRectToGeckoRect(const NSRect & inCocoaRect, nsRect & outGeckoRect)
 {
-  outGeckoRect.x = NS_STATIC_CAST(nscoord, inCocoaRect.origin.x);
-  outGeckoRect.y = NS_STATIC_CAST(nscoord, inCocoaRect.origin.y);
-  outGeckoRect.width = NS_STATIC_CAST(nscoord, inCocoaRect.size.width);
-  outGeckoRect.height = NS_STATIC_CAST(nscoord, inCocoaRect.size.height);
+  outGeckoRect.x = static_cast<nscoord>(inCocoaRect.origin.x);
+  outGeckoRect.y = static_cast<nscoord>(inCocoaRect.origin.y);
+  outGeckoRect.width = static_cast<nscoord>(inCocoaRect.size.width);
+  outGeckoRect.height = static_cast<nscoord>(inCocoaRect.size.height);
 }
 
 
@@ -335,7 +335,7 @@ nsChildView::~nsChildView()
 {
   // notify the children that we're gone
   for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-    nsChildView* childView = NS_STATIC_CAST(nsChildView*, kid);
+    nsChildView* childView = static_cast<nsChildView*>(kid);
     childView->mParentWidget = nsnull;
   }
 
@@ -381,7 +381,7 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
     mParentWidget = aParent;   
   }
   else
-    mParentView = NS_REINTERPRET_CAST(NSView*,aNativeParent);
+    mParentView = reinterpret_cast<NSView*>(aNativeParent);
   
   // create our parallel NSView and hook it up to our parent. Recall
   // that NS_NATIVE_WIDGET is the NSView.
@@ -1145,7 +1145,7 @@ NS_IMETHODIMP nsChildView::InvalidateRegion(const nsIRegion *aRegion, PRBool aIs
   // FIXME rewrite to use a Cocoa region when nsIRegion isn't a QD Region
   NSRect r;
   nsRect bounds;
-  nsIRegion* region = NS_CONST_CAST(nsIRegion*, aRegion);     // ugh. this method should be const
+  nsIRegion* region = const_cast<nsIRegion*>(aRegion);     // ugh. this method should be const
   region->GetBoundingBox ( &bounds.x, &bounds.y, &bounds.width, &bounds.height );
   GeckoRectToNSRect(bounds, r);
   
@@ -1456,8 +1456,8 @@ NS_IMETHODIMP nsChildView::CalcOffset(PRInt32 &aX,PRInt32 &aY)
   aX = aY = 0;
   NSRect bounds = {{0, 0}, {0, 0}};
   bounds = [mView convertRect:bounds toView:nil];
-  aX += NS_STATIC_CAST(PRInt32, bounds.origin.x);
-  aY += NS_STATIC_CAST(PRInt32, bounds.origin.y);
+  aX += static_cast<PRInt32>(bounds.origin.x);
+  aY += static_cast<PRInt32>(bounds.origin.y);
 
   return NS_OK;
 }
@@ -1754,8 +1754,8 @@ nsChildView::DragEvent(PRUint32 aMessage, PRInt16 aMouseGlobalX, PRInt16 aMouseG
   FlipCocoaScreenCoordinate(localPoint);
   localPoint = [[mView window] convertScreenToBase:localPoint];
   localPoint = [mView convertPoint:localPoint fromView:nil];
-  geckoEvent.refPoint.x = NS_STATIC_CAST(nscoord, localPoint.x);
-  geckoEvent.refPoint.y = NS_STATIC_CAST(nscoord, localPoint.y);
+  geckoEvent.refPoint.x = static_cast<nscoord>(localPoint.x);
+  geckoEvent.refPoint.y = static_cast<nscoord>(localPoint.y);
 
   DispatchWindowEvent(geckoEvent);
 
@@ -1894,7 +1894,7 @@ NSEvent* globalDragEvent = nil;
 // mozView method, return our gecko child view widget. Note this does not AddRef.
 - (nsIWidget*) widget
 {
-  return NS_STATIC_CAST(nsIWidget*, mGeckoChild);
+  return static_cast<nsIWidget*>(mGeckoChild);
 }
 
 
@@ -3246,8 +3246,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
   // convert point to view coordinate system
   NSPoint localPoint = [self convertPoint:[aMouseEvent locationInWindow] fromView:nil];
-  outGeckoEvent->refPoint.x = NS_STATIC_CAST(nscoord, localPoint.x);
-  outGeckoEvent->refPoint.y = NS_STATIC_CAST(nscoord, localPoint.y);
+  outGeckoEvent->refPoint.x = static_cast<nscoord>(localPoint.x);
+  outGeckoEvent->refPoint.y = static_cast<nscoord>(localPoint.y);
 }
 
 

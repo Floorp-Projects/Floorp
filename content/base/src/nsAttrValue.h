@@ -298,7 +298,7 @@ inline nsIAtom*
 nsAttrValue::GetAtomValue() const
 {
   NS_PRECONDITION(Type() == eAtom, "wrong type");
-  return NS_REINTERPRET_CAST(nsIAtom*, GetPtr());
+  return reinterpret_cast<nsIAtom*>(GetPtr());
 }
 
 inline PRInt32
@@ -321,15 +321,15 @@ nsAttrValue::GetEnumValue() const
   NS_PRECONDITION(Type() == eEnum, "wrong type");
   // We don't need to worry about sign extension here since we're
   // returning an PRInt16 which will cut away the top bits.
-  return NS_STATIC_CAST(PRInt16,
-            GetIntInternal() >> NS_ATTRVALUE_ENUMTABLEINDEX_BITS);
+  return static_cast<PRInt16>
+                    (GetIntInternal() >> NS_ATTRVALUE_ENUMTABLEINDEX_BITS);
 }
 
 inline float
 nsAttrValue::GetPercentValue() const
 {
   NS_PRECONDITION(Type() == ePercent, "wrong type");
-  return NS_STATIC_CAST(float, GetIntInternal()) /
+  return static_cast<float>(GetIntInternal()) /
          100.0f;
 }
 
@@ -359,7 +359,7 @@ nsAttrValue::GetSVGValue() const
 inline nsAttrValue::ValueBaseType
 nsAttrValue::BaseType() const
 {
-  return NS_STATIC_CAST(ValueBaseType, mBits & NS_ATTRVALUE_BASETYPE_MASK);
+  return static_cast<ValueBaseType>(mBits & NS_ATTRVALUE_BASETYPE_MASK);
 }
 
 inline void
@@ -367,7 +367,7 @@ nsAttrValue::SetPtrValueAndType(void* aValue, ValueBaseType aType)
 {
   NS_ASSERTION(!(NS_PTR_TO_INT32(aValue) & ~NS_ATTRVALUE_POINTERVALUE_MASK),
                "pointer not properly aligned, this will crash");
-  mBits = NS_REINTERPRET_CAST(PtrBits, aValue) | aType;
+  mBits = reinterpret_cast<PtrBits>(aValue) | aType;
 }
 
 inline void
@@ -396,14 +396,14 @@ nsAttrValue::GetPtr() const
 {
   NS_ASSERTION(BaseType() != eIntegerBase,
                "getting pointer from non-pointer");
-  return NS_REINTERPRET_CAST(void*, mBits & NS_ATTRVALUE_POINTERVALUE_MASK);
+  return reinterpret_cast<void*>(mBits & NS_ATTRVALUE_POINTERVALUE_MASK);
 }
 
 inline nsAttrValue::MiscContainer*
 nsAttrValue::GetMiscContainer() const
 {
   NS_ASSERTION(BaseType() == eOtherBase, "wrong type");
-  return NS_STATIC_CAST(MiscContainer*, GetPtr());
+  return static_cast<MiscContainer*>(GetPtr());
 }
 
 inline PRInt32
@@ -414,7 +414,7 @@ nsAttrValue::GetIntInternal() const
   // Make sure we get a signed value.
   // Lets hope the optimizer optimizes this into a shift. Unfortunatly signed
   // bitshift right is implementaion dependant.
-  return NS_STATIC_CAST(PRInt32, mBits & ~NS_ATTRVALUE_INTEGERTYPE_MASK) /
+  return static_cast<PRInt32>(mBits & ~NS_ATTRVALUE_INTEGERTYPE_MASK) /
          NS_ATTRVALUE_INTEGERTYPE_MULTIPLIER;
 }
 

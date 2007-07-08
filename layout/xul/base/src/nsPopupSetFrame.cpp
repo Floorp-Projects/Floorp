@@ -291,7 +291,7 @@ nsPopupSetFrame::AddPopupFrame(nsIFrame* aPopup)
   }
 
   // Set the frame connection.
-  entry->mPopupFrame = NS_STATIC_CAST(nsMenuPopupFrame *, aPopup);
+  entry->mPopupFrame = static_cast<nsMenuPopupFrame *>(aPopup);
   
   return NS_OK;
 }

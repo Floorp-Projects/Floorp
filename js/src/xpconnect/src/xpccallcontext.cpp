@@ -494,7 +494,7 @@ XPCCallContext::SetIDispatchInfo(XPCNativeInterface* iface,
     mInterface = iface;
     mMember = nsnull;
     mIDispatchMember = member;
-    mName = NS_REINTERPRET_CAST(XPCDispInterface::Member*,member)->GetName();
+    mName = reinterpret_cast<XPCDispInterface::Member*>(member)->GetName();
 
     if(mState < HAVE_NAME)
         mState = HAVE_NAME;

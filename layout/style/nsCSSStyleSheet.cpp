@@ -212,7 +212,7 @@ nsMediaList::SetText(const nsAString& aMediaText)
 
   PRBool htmlMode = PR_FALSE;
   nsCOMPtr<nsIDOMStyleSheet> domSheet =
-    do_QueryInterface(NS_STATIC_CAST(nsICSSStyleSheet*, mStyleSheet));
+    do_QueryInterface(static_cast<nsICSSStyleSheet*>(mStyleSheet));
   if (domSheet) {
     nsCOMPtr<nsIDOMNode> node;
     domSheet->GetOwnerNode(getter_AddRefs(node));
@@ -242,7 +242,7 @@ nsMediaList::SetStyleSheet(nsICSSStyleSheet *aSheet)
 {
   NS_ASSERTION(aSheet == mStyleSheet || !aSheet || !mStyleSheet,
                "multiple style sheets competing for one media list");
-  mStyleSheet = NS_STATIC_CAST(nsCSSStyleSheet*, aSheet);
+  mStyleSheet = static_cast<nsCSSStyleSheet*>(aSheet);
   return NS_OK;
 }
 
@@ -512,7 +512,7 @@ CloneRuleInto(nsICSSRule* aRule, void* aArray)
   nsICSSRule* clone = nsnull;
   aRule->Clone(clone);
   if (clone) {
-    NS_STATIC_CAST(nsCOMArray<nsICSSRule>*, aArray)->AppendObject(clone);
+    static_cast<nsCOMArray<nsICSSRule>*>(aArray)->AppendObject(clone);
     NS_RELEASE(clone);
   }
   return PR_TRUE;
@@ -581,7 +581,7 @@ CreateNameSpace(nsICSSRule* aRule, void* aNameSpacePtr)
   if (nsICSSRule::NAMESPACE_RULE == type) {
     nsICSSNameSpaceRule*  nameSpaceRule = (nsICSSNameSpaceRule*)aRule;
     nsXMLNameSpaceMap *nameSpaceMap =
-      NS_STATIC_CAST(nsXMLNameSpaceMap*, aNameSpacePtr);
+      static_cast<nsXMLNameSpaceMap*>(aNameSpacePtr);
 
     nsIAtom*      prefix = nsnull;
     nsAutoString  urlSpec;
@@ -1223,7 +1223,7 @@ nsCSSStyleSheet::Clone(nsICSSStyleSheet* aCloneParent,
                                                    aCloneDocument,
                                                    aCloneOwningNode);
   if (clone) {
-    *aClone = NS_STATIC_CAST(nsICSSStyleSheet*, clone);
+    *aClone = static_cast<nsICSSStyleSheet*>(clone);
     NS_ADDREF(*aClone);
   }
   return NS_OK;
@@ -1286,7 +1286,7 @@ static PRBool PR_CALLBACK
 EnumClearRuleCascades(void* aProcessor, void* aData)
 {
   nsCSSRuleProcessor* processor =
-    NS_STATIC_CAST(nsCSSRuleProcessor*, aProcessor);
+    static_cast<nsCSSRuleProcessor*>(aProcessor);
   processor->ClearRuleCascades();
   return PR_TRUE;
 }

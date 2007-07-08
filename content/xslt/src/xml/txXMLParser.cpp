@@ -146,7 +146,7 @@ txParseFromStream(istream& aInputStream, const nsAString& aUri,
  */
 
 // shortcut macro for redirection into txXMLParser method calls
-#define TX_XMLPARSER(_userData) NS_STATIC_CAST(txXMLParser*, _userData)
+#define TX_XMLPARSER(_userData) static_cast<txXMLParser*>(_userData)
 #define TX_ENSURE_DATA(_userData)                       \
   PR_BEGIN_MACRO                                        \
     if (!aUserData) {                                   \
@@ -335,9 +335,9 @@ void
 txXMLParser::CharacterData(const XML_Char* aChars, int aLength)
 {
     Node* prevSib = mCurrentNode->getLastChild();
-    const PRUnichar* pChars = NS_STATIC_CAST(const PRUnichar*, aChars);
+    const PRUnichar* pChars = static_cast<const PRUnichar*>(aChars);
     if (prevSib && prevSib->getNodeType() == Node::TEXT_NODE) {
-        NS_STATIC_CAST(NodeDefinition*, prevSib)->appendData(pChars, aLength);
+        static_cast<NodeDefinition*>(prevSib)->appendData(pChars, aLength);
     }
     else {
         // aChars is not null-terminated so we use Substring here.
@@ -351,7 +351,7 @@ void
 txXMLParser::Comment(const XML_Char* aChars)
 {
     Node* node = mDocument->createComment(
-        nsDependentString(NS_STATIC_CAST(const PRUnichar*, aChars)));
+        nsDependentString(static_cast<const PRUnichar*>(aChars)));
     mCurrentNode->appendChild(node);
 }
 

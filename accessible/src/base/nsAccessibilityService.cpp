@@ -125,7 +125,7 @@ nsAccessibilityService::nsAccessibilityService()
   observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
   nsCOMPtr<nsIWebProgress> progress(do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID));
   if (progress) {
-    progress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*,this),
+    progress->AddProgressListener(static_cast<nsIWebProgressListener*>(this),
                                   nsIWebProgress::NOTIFY_STATE_DOCUMENT |
                                   nsIWebProgress::NOTIFY_LOCATION);
   }
@@ -155,7 +155,7 @@ nsAccessibilityService::Observe(nsISupports *aSubject, const char *aTopic,
     }
     nsCOMPtr<nsIWebProgress> progress(do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID));
     if (progress) {
-      progress->RemoveProgressListener(NS_STATIC_CAST(nsIWebProgressListener*,this));
+      progress->RemoveProgressListener(static_cast<nsIWebProgressListener*>(this));
     }
     nsAccessNodeWrap::ShutdownAccessibility();
   }
@@ -279,7 +279,7 @@ nsresult
 nsAccessibilityService::GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIWeakReference** aShell, nsIDOMNode** aNode)
 {
   NS_ASSERTION(aFrame,"Error -- 1st argument (aFrame) is null!!");
-  *aRealFrame = NS_STATIC_CAST(nsIFrame*, aFrame);
+  *aRealFrame = static_cast<nsIFrame*>(aFrame);
   nsCOMPtr<nsIContent> content = (*aRealFrame)->GetContent();
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
   if (!content || !node)
@@ -651,7 +651,7 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame *aFrame,
   nsCOMPtr<nsIDOMNode> node;
   nsCOMPtr<nsIWeakReference> weakShell;
   nsIFrame *frame;
-  GetInfo(NS_STATIC_CAST(nsIFrame*, aFrame), &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
+  GetInfo(static_cast<nsIFrame*>(aFrame), &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
 
   *aAccessible = nsnull;
   if (!frame || frame->GetRect().IsEmpty()) {
@@ -763,7 +763,7 @@ nsAccessibilityService::CreateHTMLTableHeadAccessible(nsIDOMNode *aDOMNode, nsIA
 
   NS_ENSURE_TRUE(accTableHead, NS_ERROR_OUT_OF_MEMORY);
 
-  *_retval = NS_STATIC_CAST(nsIAccessible *, accTableHead);
+  *_retval = static_cast<nsIAccessible *>(accTableHead);
   NS_IF_ADDREF(*_retval);
 
   return rv;
@@ -922,7 +922,7 @@ NS_IMETHODIMP nsAccessibilityService::GetCachedAccessNode(nsIDOMNode *aNode,
     return NS_ERROR_FAILURE;
   }
 
-  return accessibleDoc->GetCachedAccessNode(NS_STATIC_CAST(void*, aNode), aAccessNode);
+  return accessibleDoc->GetCachedAccessNode(static_cast<void*>(aNode), aAccessNode);
 }
 
 NS_IMETHODIMP
@@ -1724,7 +1724,7 @@ NS_IMETHODIMP nsAccessibilityService::AddNativeRootAccessible(void * aAtkAccessi
   nsNativeRootAccessibleWrap* rootAccWrap =
     new nsNativeRootAccessibleWrap((AtkObject*)aAtkAccessible);
 
-  *aRootAccessible = NS_STATIC_CAST(nsIAccessible*, rootAccWrap);
+  *aRootAccessible = static_cast<nsIAccessible*>(rootAccWrap);
   NS_ADDREF(*aRootAccessible);
 
   nsRefPtr<nsApplicationAccessibleWrap> appRoot =

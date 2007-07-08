@@ -168,7 +168,7 @@ public:
     NS_PRECONDITION(aFrame->GetType() == nsGkAtoms::placeholderFrame,
                     "Must have placeholder frame as input");
     nsIFrame* outOfFlow =
-      NS_STATIC_CAST(nsPlaceholderFrame*, aFrame)->GetOutOfFlowFrame();
+      static_cast<nsPlaceholderFrame*>(aFrame)->GetOutOfFlowFrame();
     NS_ASSERTION(outOfFlow, "Null out-of-flow for placeholder?");
     return outOfFlow;
   }

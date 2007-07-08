@@ -447,7 +447,7 @@ public:
 
     // Store the content from the nearest capturing frame. If this returns null
     // the capturing frame is the root.
-    nsIFrame* clientFrame = NS_STATIC_CAST(nsIFrame*, aView->GetClientData());
+    nsIFrame* clientFrame = static_cast<nsIFrame*>(aView->GetClientData());
     NS_ASSERTION(clientFrame, "Missing client frame");
 
     nsIFrame* capturingFrame = nsFrame::GetNearestCapturingFrame(clientFrame);
@@ -550,7 +550,7 @@ public:
 
       nsIView* captureView = capturingFrame->GetMouseCapturer();
     
-      nsIFrame* viewFrame = NS_STATIC_CAST(nsIFrame*, captureView->GetClientData());
+      nsIFrame* viewFrame = static_cast<nsIFrame*>(captureView->GetClientData());
       NS_ASSERTION(viewFrame, "View must have a client frame");
       
       mFrameSelection->HandleDrag(viewFrame, mPoint);
@@ -2529,7 +2529,7 @@ nsFrameSelection::GetSelection(SelectionType aType)
   if (index < 0)
     return nsnull;
 
-  return NS_STATIC_CAST(nsISelection*, mDomSelections[index]);
+  return static_cast<nsISelection*>(mDomSelections[index]);
 }
 
 nsresult
@@ -2687,7 +2687,7 @@ nsFrameSelection::CommonPageMove(PRBool aForward,
     return;
 
   if (scrolledView)
-    mainframe = NS_STATIC_CAST(nsIFrame*, scrolledView->GetClientData());
+    mainframe = static_cast<nsIFrame*>(scrolledView->GetClientData());
 
   if (!mainframe)
     return;
@@ -3902,7 +3902,7 @@ nsFrameSelection::DeleteFromDocument()
   nsCOMPtr<nsIDOMRange> range;
   while (iter.IsDone())
   {
-    res = iter.CurrentItem(NS_STATIC_CAST(nsIDOMRange**, getter_AddRefs(range)));
+    res = iter.CurrentItem(static_cast<nsIDOMRange**>(getter_AddRefs(range)));
     if (NS_FAILED(res))
       return res;
     res = range->DeleteContents();
@@ -4661,8 +4661,8 @@ nsTypedSelection::GetRangesForInterval(nsIDOMNode* aBeginNode, PRInt32 aBeginOff
   if (results.Count() == 0)
     return NS_OK;
 
-  *aResults = NS_STATIC_CAST(nsIDOMRange**,
-      nsMemory::Alloc(sizeof(nsIDOMRange*) * results.Count()));
+  *aResults = static_cast<nsIDOMRange**>
+                         (nsMemory::Alloc(sizeof(nsIDOMRange*) * results.Count()));
   NS_ENSURE_TRUE(*aResults, NS_ERROR_OUT_OF_MEMORY);
 
   *aResultCount = results.Count();

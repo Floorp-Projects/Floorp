@@ -321,7 +321,7 @@ cryptojs_GetScriptPrincipal(JSContext *cx, JSScript *script,
   if (!jsp) {
     return NS_ERROR_FAILURE;
   }
-  nsJSPrincipals *nsJSPrin = NS_STATIC_CAST(nsJSPrincipals *, jsp);
+  nsJSPrincipals *nsJSPrin = static_cast<nsJSPrincipals *>(jsp);
   *result = nsJSPrin->nsIPrincipalPtr;
   if (!*result) {
     return NS_ERROR_FAILURE;
@@ -614,8 +614,8 @@ nsConvertToActualKeyGenParams(PRUint32 keyGenMech, char *params,
       return nsnull;
 
     PK11RSAGenParams *rsaParams;
-    rsaParams = NS_STATIC_CAST(PK11RSAGenParams*,
-                               nsMemory::Alloc(sizeof(PK11RSAGenParams)));
+    rsaParams = static_cast<PK11RSAGenParams*>
+                           (nsMemory::Alloc(sizeof(PK11RSAGenParams)));
                               
     if (rsaParams == nsnull) {
       return nsnull;
@@ -793,10 +793,10 @@ nsFreeKeyGenParams(CK_MECHANISM_TYPE keyGenMechanism, void *params)
     nsMemory::Free(params);
     break;
   case CKM_EC_KEY_PAIR_GEN:
-    SECITEM_FreeItem(NS_REINTERPRET_CAST(SECItem*, params), PR_TRUE);
+    SECITEM_FreeItem(reinterpret_cast<SECItem*>(params), PR_TRUE);
     break;
   case CKM_DSA_KEY_PAIR_GEN:
-    PK11_PQG_DestroyParams(NS_STATIC_CAST(PQGParams*,params));
+    PK11_PQG_DestroyParams(static_cast<PQGParams*>(params));
     break;
   }
 }
@@ -1131,8 +1131,8 @@ nsSetDNForRequest(CRMFCertRequest *certReq, char *reqDN)
     return NS_ERROR_FAILURE;
   }
   SECStatus srv = CRMF_CertRequestSetTemplateField(certReq, crmfSubject,
-                                                   NS_STATIC_CAST(void*,
-                                                                  subjectName));
+                                                   static_cast<void*>
+                                                              (subjectName));
   CERT_DestroyName(subjectName);
   return (srv == SECSuccess) ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -1911,7 +1911,7 @@ static nsISupports *
 GetISupportsFromContext(JSContext *cx)
 {
     if (JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS)
-        return NS_STATIC_CAST(nsISupports *, JS_GetContextPrivate(cx));
+        return static_cast<nsISupports *>(JS_GetContextPrivate(cx));
 
     return nsnull;
 }
@@ -1999,7 +1999,7 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
 
 
   nrv = xpc->WrapNative(cx, ::JS_GetGlobalObject(cx),
-                        NS_STATIC_CAST(nsIDOMCrypto *, this),
+                        static_cast<nsIDOMCrypto *>(this),
                         NS_GET_IID(nsIDOMCrypto), getter_AddRefs(holder));
   NS_ENSURE_SUCCESS(nrv, nrv);
 
@@ -2489,8 +2489,8 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
       CERTCertListNode *node;
       SECItem *derCerts;
 
-      derCerts = NS_STATIC_CAST(SECItem*,
-                                nsMemory::Alloc(sizeof(SECItem)*numCAs));
+      derCerts = static_cast<SECItem*>
+                            (nsMemory::Alloc(sizeof(SECItem)*numCAs));
       if (!derCerts) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         goto loser;
@@ -2800,8 +2800,8 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
     // of the selected cert.
     PRInt32 selectedIndex = -1;
     rv = proxied_fsd->ConfirmSignText(uiContext, utf16Host, aStringToSign,
-                                      NS_CONST_CAST(const PRUnichar**, certNicknameList.get()),
-                                      NS_CONST_CAST(const PRUnichar**, certDetailsList),
+                                      const_cast<const PRUnichar**>(certNicknameList.get()),
+                                      const_cast<const PRUnichar**>(certDetailsList),
                                       certsToUse, &selectedIndex, password,
                                       &canceled);
     if (NS_FAILED(rv) || canceled) {
@@ -2827,7 +2827,7 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
 
     tryAgain =
       PK11_CheckUserPassword(signingCert->slot,
-                             NS_CONST_CAST(char *, pwUtf8.get())) != SECSuccess;
+                             const_cast<char *>(pwUtf8.get())) != SECSuccess;
     // XXX we should show an error dialog before retrying
   } while (tryAgain);
 
@@ -2902,7 +2902,7 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
   digest.data = hash;
 
   HASH_Begin(hc);
-  HASH_Update(hc, NS_REINTERPRET_CAST(const unsigned char*, buffer.get()),
+  HASH_Update(hc, reinterpret_cast<const unsigned char*>(buffer.get()),
               buffer.Length());
   HASH_End(hc, digest.data, &digest.len, SHA1_LENGTH);
   HASH_Destroy(hc);
@@ -2934,8 +2934,8 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
   }
 
   SECItem binary_item;
-  binary_item.data = NS_REINTERPRET_CAST(unsigned char*,
-                                         NS_CONST_CAST(char*, p7.get()));
+  binary_item.data = reinterpret_cast<unsigned char*>
+                                     (const_cast<char*>(p7.get()));
   binary_item.len = p7.Length();
 
   char *result = NSSBase64_EncodeItem(nsnull, nsnull, 0, &binary_item);

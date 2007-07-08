@@ -166,7 +166,7 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsAutoString prop;
 
         a->GetInstallArguments(prop);
-        *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*, prop.get()), prop.Length()) );
+        *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar*>(prop.get()), prop.Length()) );
 
         break;
       }
@@ -176,7 +176,7 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsString prop;
 
         a->GetInstallURL(prop);
-        *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*, prop.get()), prop.Length()) );
+        *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar*>(prop.get()), prop.Length()) );
 
         break;
       }
@@ -255,7 +255,7 @@ void ConvertJSValToStr(nsString&  aString,
   if ( !JSVAL_IS_NULL(aValue) &&
        (jsstring = JS_ValueToString(aContext, aValue)) != nsnull)
   {
-    aString.Assign(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(jsstring)));
+    aString.Assign(reinterpret_cast<const PRUnichar*>(JS_GetStringChars(jsstring)));
   }
   else
   {
@@ -267,7 +267,7 @@ void ConvertStrToJSVal(const nsString& aProp,
                       JSContext* aContext,
                       jsval* aReturn)
 {
-  JSString *jsstring = JS_NewUCStringCopyN(aContext, NS_REINTERPRET_CAST(const jschar*, aProp.get()), aProp.Length());
+  JSString *jsstring = JS_NewUCStringCopyN(aContext, reinterpret_cast<const jschar*>(aProp.get()), aProp.Length());
   // set the return value
   *aReturn = STRING_TO_JSVAL(jsstring);
 }

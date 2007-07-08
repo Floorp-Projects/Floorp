@@ -269,7 +269,7 @@ nsHttpHandler::Init()
     // Startup the http category
     // Bring alive the objects in the http-protocol-startup category
     NS_CreateServicesFromCategory(NS_HTTP_STARTUP_CATEGORY,
-                                  NS_STATIC_CAST(nsISupports*,NS_STATIC_CAST(void*,this)),
+                                  static_cast<nsISupports*>(static_cast<void*>(this)),
                                   NS_HTTP_STARTUP_TOPIC);    
     
     mObserverService = do_GetService("@mozilla.org/observer-service;1");
@@ -740,8 +740,8 @@ nsHttpHandler::InitUserAgentComponents()
 
 static int StringCompare(const void* s1, const void* s2, void*)
 {
-    return nsCRT::strcmp(*NS_STATIC_CAST(const char *const *, s1),
-                         *NS_STATIC_CAST(const char *const *, s2));
+    return nsCRT::strcmp(*static_cast<const char *const *>(s1),
+                         *static_cast<const char *const *>(s2));
 }
 
 void

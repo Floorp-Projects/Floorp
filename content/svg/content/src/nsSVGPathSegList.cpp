@@ -105,7 +105,7 @@ nsSVGPathSegList::~nsSVGPathSegList()
 {
   PRInt32 count = mSegments.Count();
   for (PRInt32 i = 0; i < count; ++i) {
-    nsSVGPathSeg* seg = NS_STATIC_CAST(nsSVGPathSeg*, mSegments.ObjectAt(i));
+    nsSVGPathSeg* seg = static_cast<nsSVGPathSeg*>(mSegments.ObjectAt(i));
     seg->SetCurrentList(nsnull);
   }
 }
@@ -140,7 +140,7 @@ nsSVGPathSegList::SetValueString(const nsAString& aValue)
 
   PRInt32 count = mSegments.Count();
   for (PRInt32 i=0; i<count; ++i) {
-    nsSVGPathSeg* seg = NS_STATIC_CAST(nsSVGPathSeg*, mSegments.ObjectAt(i));
+    nsSVGPathSeg* seg = static_cast<nsSVGPathSeg*>(mSegments.ObjectAt(i));
     seg->SetCurrentList(this);
   }
 
@@ -164,7 +164,7 @@ nsSVGPathSegList::GetValueString(nsAString& aValue)
   PRInt32 i = 0;
 
   while (1) {
-    nsSVGPathSeg* seg = NS_STATIC_CAST(nsSVGPathSeg*, mSegments.ObjectAt(i));
+    nsSVGPathSeg* seg = static_cast<nsSVGPathSeg*>(mSegments.ObjectAt(i));
 
     nsAutoString str;
     seg->GetValueString(str);
@@ -209,7 +209,7 @@ NS_IMETHODIMP nsSVGPathSegList::Initialize(nsIDOMSVGPathSeg *newItem,
 /* nsIDOMSVGPathSeg getItem (in unsigned long index); */
 NS_IMETHODIMP nsSVGPathSegList::GetItem(PRUint32 index, nsIDOMSVGPathSeg **_retval)
 {
-  if (index >= NS_STATIC_CAST(PRUint32, mSegments.Count())) {
+  if (index >= static_cast<PRUint32>(mSegments.Count())) {
     *_retval = nsnull;
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
@@ -226,11 +226,11 @@ NS_IMETHODIMP nsSVGPathSegList::InsertItemBefore(nsIDOMSVGPathSeg *newItem,
 {
   NS_ENSURE_NATIVE_PATH_SEG(newItem, _retval);
 
-  if (index >= NS_STATIC_CAST(PRUint32, mSegments.Count())) {
+  if (index >= static_cast<PRUint32>(mSegments.Count())) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
-  InsertElementAt(NS_STATIC_CAST(nsSVGPathSeg*, newItem), index);
+  InsertElementAt(static_cast<nsSVGPathSeg*>(newItem), index);
   NS_ADDREF(*_retval = newItem);
 
   return NS_OK;
@@ -243,11 +243,11 @@ NS_IMETHODIMP nsSVGPathSegList::ReplaceItem(nsIDOMSVGPathSeg *newItem,
 {
   NS_ENSURE_NATIVE_PATH_SEG(newItem, _retval);
 
-  if (index >= NS_STATIC_CAST(PRUint32, mSegments.Count())) {
+  if (index >= static_cast<PRUint32>(mSegments.Count())) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
-  InsertElementAt(NS_STATIC_CAST(nsSVGPathSeg*, newItem), index);
+  InsertElementAt(static_cast<nsSVGPathSeg*>(newItem), index);
   RemoveElementAt(index+1);
   NS_ADDREF(*_retval = newItem);
 
@@ -257,7 +257,7 @@ NS_IMETHODIMP nsSVGPathSegList::ReplaceItem(nsIDOMSVGPathSeg *newItem,
 /* nsIDOMSVGPathSeg removeItem (in unsigned long index); */
 NS_IMETHODIMP nsSVGPathSegList::RemoveItem(PRUint32 index, nsIDOMSVGPathSeg **_retval)
 {
-  if (index >= NS_STATIC_CAST(PRUint32, mSegments.Count())) {
+  if (index >= static_cast<PRUint32>(mSegments.Count())) {
     *_retval = nsnull;
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
@@ -276,7 +276,7 @@ NS_IMETHODIMP nsSVGPathSegList::AppendItem(nsIDOMSVGPathSeg *newItem,
 {
   NS_ENSURE_NATIVE_PATH_SEG(newItem, _retval);
   NS_ADDREF(*_retval = newItem);
-  AppendElement(NS_STATIC_CAST(nsSVGPathSeg*, newItem));
+  AppendElement(static_cast<nsSVGPathSeg*>(newItem));
   return NS_OK;
 }
 
@@ -315,7 +315,7 @@ nsSVGPathSegList::ReleaseSegments(PRBool aModify)
   }
   PRInt32 count = mSegments.Count();
   for (PRInt32 i = 0; i < count; ++i) {
-    nsSVGPathSeg* seg = NS_STATIC_CAST(nsSVGPathSeg*, mSegments.ObjectAt(i));
+    nsSVGPathSeg* seg = static_cast<nsSVGPathSeg*>(mSegments.ObjectAt(i));
     seg->SetCurrentList(nsnull);
   }
   mSegments.Clear();
@@ -340,7 +340,7 @@ void
 nsSVGPathSegList::RemoveElementAt(PRInt32 index)
 {
   WillModify();
-  nsSVGPathSeg* seg = NS_STATIC_CAST(nsSVGPathSeg*, mSegments.ObjectAt(index));
+  nsSVGPathSeg* seg = static_cast<nsSVGPathSeg*>(mSegments.ObjectAt(index));
   seg->SetCurrentList(nsnull);
   mSegments.RemoveObjectAt(index);
   DidModify();
@@ -367,7 +367,7 @@ nsSVGPathSegList::RemoveFromCurrentList(nsSVGPathSeg* aSeg)
   nsCOMPtr<nsISVGValue> currentList = aSeg->GetCurrentList();
   if (currentList) {
     // aSeg's current list must be cast back to a nsSVGPathSegList*
-    nsSVGPathSegList* otherSegList = NS_STATIC_CAST(nsSVGPathSegList*, currentList.get());
+    nsSVGPathSegList* otherSegList = static_cast<nsSVGPathSegList*>(currentList.get());
     PRInt32 ix = otherSegList->mSegments.IndexOfObject(aSeg);
     if (ix != -1) { 
       otherSegList->RemoveElementAt(ix); 

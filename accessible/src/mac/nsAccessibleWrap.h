@@ -117,10 +117,10 @@ class nsAccessibleWrap : public nsAccessible
       
       nsCOMPtr<nsIAccessible> curParent = GetParent();
       while (curParent) {
-        nsAccessibleWrap *ancestorWrap = NS_STATIC_CAST(nsAccessibleWrap*, (nsIAccessible*)curParent.get());
+        nsAccessibleWrap *ancestorWrap = static_cast<nsAccessibleWrap*>((nsIAccessible*)curParent.get());
         if (ancestorWrap->IsFlat())
           return PR_TRUE;
-        curParent = NS_STATIC_CAST(nsAccessibleWrap*, (nsIAccessible*)curParent.get())->GetParent();
+        curParent = static_cast<nsAccessibleWrap*>((nsIAccessible*)curParent.get())->GetParent();
       }
       // no parent was flat
       return PR_FALSE;

@@ -952,8 +952,8 @@ nsAnnotationService::GetPagesWithAnnotation(const nsACString& aName,
   // convert to raw array
   if (results.Count() == 0)
     return NS_OK;
-  *aResults = NS_STATIC_CAST(nsIURI**,
-                             nsMemory::Alloc(results.Count() * sizeof(nsIURI*)));
+  *aResults = static_cast<nsIURI**>
+                         (nsMemory::Alloc(results.Count() * sizeof(nsIURI*)));
   if (! *aResults)
     return NS_ERROR_OUT_OF_MEMORY;
   *aResultCount = results.Count();
@@ -1023,8 +1023,8 @@ nsAnnotationService::GetItemsWithAnnotation(const nsACString& aName,
   if (results.Length() == 0)
     return NS_OK;
 
-  *aResults = NS_STATIC_CAST(PRInt64*,
-                             nsMemory::Alloc(results.Length() * sizeof(PRInt64)));
+  *aResults = static_cast<PRInt64*>
+                         (nsMemory::Alloc(results.Length() * sizeof(PRInt64)));
   if (! *aResults)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1078,8 +1078,8 @@ nsAnnotationService::GetPageAnnotationNames(nsIURI* aURI, PRUint32* aCount,
   if (names.Length() == 0)
     return NS_OK;
 
-  *_result = NS_STATIC_CAST(nsIVariant**,
-      nsMemory::Alloc(sizeof(nsIVariant*) * names.Length()));
+  *_result = static_cast<nsIVariant**>
+                        (nsMemory::Alloc(sizeof(nsIVariant*) * names.Length()));
   NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
 
   for (PRUint32 i = 0; i < names.Length(); i ++) {
@@ -1144,8 +1144,8 @@ nsAnnotationService::GetItemAnnotationNames(PRInt64 aItemId, PRUint32* aCount,
   if (names.Length() == 0)
     return NS_OK;
 
-  *_result = NS_STATIC_CAST(nsIVariant**,
-      nsMemory::Alloc(sizeof(nsIVariant*) * names.Length()));
+  *_result = static_cast<nsIVariant**>
+                        (nsMemory::Alloc(sizeof(nsIVariant*) * names.Length()));
   NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
 
   for (PRUint32 i = 0; i < names.Length(); i ++) {

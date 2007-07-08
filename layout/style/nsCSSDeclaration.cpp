@@ -173,7 +173,7 @@ nsCSSDeclaration::GetValueOrImportantValue(nsCSSProperty aProperty, nsCSSValue& 
   const void *storage = data->StorageFor(aProperty);
   if (!storage)
     return NS_OK;
-  aValue = *NS_STATIC_CAST(const nsCSSValue*, storage);
+  aValue = *static_cast<const nsCSSValue*>(storage);
   return NS_OK;
 }
 
@@ -193,11 +193,11 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString&
   if (storage) {
     switch (nsCSSProps::kTypeTable[aProperty]) {
       case eCSSType_Value: {
-        const nsCSSValue *val = NS_STATIC_CAST(const nsCSSValue*, storage);
+        const nsCSSValue *val = static_cast<const nsCSSValue*>(storage);
         AppendCSSValueToString(aProperty, *val, aResult);
       } break;
       case eCSSType_Rect: {
-        const nsCSSRect *rect = NS_STATIC_CAST(const nsCSSRect*, storage);
+        const nsCSSRect *rect = static_cast<const nsCSSRect*>(storage);
         if (rect->mTop.GetUnit() == eCSSUnit_Inherit ||
             rect->mTop.GetUnit() == eCSSUnit_Initial) {
           NS_ASSERTION(rect->mRight.GetUnit() == rect->mTop.GetUnit(),
@@ -221,7 +221,7 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString&
         }
       } break;
       case eCSSType_ValuePair: {
-        const nsCSSValuePair *pair = NS_STATIC_CAST(const nsCSSValuePair*, storage);
+        const nsCSSValuePair *pair = static_cast<const nsCSSValuePair*>(storage);
         AppendCSSValueToString(aProperty, pair->mXValue, aResult);
         if (pair->mYValue != pair->mXValue ||
             (aProperty == eCSSProperty_background_position &&
@@ -236,7 +236,7 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString&
       } break;
       case eCSSType_ValueList: {
         const nsCSSValueList* val =
-            *NS_STATIC_CAST(nsCSSValueList*const*, storage);
+            *static_cast<nsCSSValueList*const*>(storage);
         do {
           AppendCSSValueToString(aProperty, val->mValue, aResult);
           val = val->mNext;
@@ -254,7 +254,7 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString&
       } break;
       case eCSSType_CounterData: {
         const nsCSSCounterData* counter =
-            *NS_STATIC_CAST(nsCSSCounterData*const*, storage);
+            *static_cast<nsCSSCounterData*const*>(storage);
         do {
           if (AppendCSSValueToString(aProperty, counter->mCounter, aResult)) {
             if (counter->mValue.GetUnit() != eCSSUnit_Null) {
@@ -270,7 +270,7 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString&
       } break;
       case eCSSType_Quotes: {
         const nsCSSQuotes* quotes = 
-            *NS_STATIC_CAST(nsCSSQuotes*const*, storage);
+            *static_cast<nsCSSQuotes*const*>(storage);
         NS_ASSERTION((quotes->mOpen.GetUnit() == eCSSUnit_String) ||
                      (quotes->mNext == nsnull),
                      "non-strings must be alone");

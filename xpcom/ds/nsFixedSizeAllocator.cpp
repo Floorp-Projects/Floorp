@@ -53,7 +53,7 @@ nsFixedSizeAllocator::AddBucket(size_t aSize)
     if (! p)
         return nsnull;
 
-    Bucket* bucket = NS_STATIC_CAST(Bucket*, p);
+    Bucket* bucket = static_cast<Bucket*>(p);
     bucket->mSize  = aSize;
     bucket->mFirst = nsnull;
     bucket->mNext  = mBuckets;
@@ -140,7 +140,7 @@ nsFixedSizeAllocator::Alloc(size_t aSize)
 void
 nsFixedSizeAllocator::Free(void* aPtr, size_t aSize)
 {
-    FreeEntry* entry = NS_REINTERPRET_CAST(FreeEntry*, aPtr);
+    FreeEntry* entry = reinterpret_cast<FreeEntry*>(aPtr);
     Bucket* bucket = FindBucket(aSize);
 
 #ifdef DEBUG

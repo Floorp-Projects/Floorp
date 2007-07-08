@@ -467,7 +467,7 @@ TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
                             a_in, 
                             &NS_GET_IID(nsITestXPCFoo2), b_in.get(), 
                             c_in.get(),
-                            NS_STATIC_CAST(const nsAString*, &d_in), 
+                            static_cast<const nsAString*>(&d_in), 
                             e_in);
 
     if(!argv)
@@ -478,9 +478,9 @@ TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
 
     if(!JS_ConvertArguments(jscontext, 5, argv, "s %ip %iv %is s",
                             &a_out, 
-                            NS_STATIC_CAST(nsISupports**, getter_AddRefs(b_out)), 
-                            NS_STATIC_CAST(nsIVariant**, getter_AddRefs(c_out)),
-                            NS_STATIC_CAST(nsAString*, &d_out), 
+                            static_cast<nsISupports**>(getter_AddRefs(b_out)), 
+                            static_cast<nsIVariant**>(getter_AddRefs(c_out)),
+                            static_cast<nsAString*>(&d_out), 
                             &e_out))
     {
         printf(" could not convert from JS to native -- FAILED!\n");

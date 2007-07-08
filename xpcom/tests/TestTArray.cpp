@@ -140,7 +140,7 @@ static PRBool test_basic_array(ElementType *data,
 
   // These shouldn't crash!
   nsTArray<ElementType> empty;
-  ary.AppendElements(NS_REINTERPRET_CAST(ElementType *, 0), 0);
+  ary.AppendElements(reinterpret_cast<ElementType *>(0), 0);
   ary.AppendElements(empty);
 
   // See bug 324981

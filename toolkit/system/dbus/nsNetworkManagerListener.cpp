@@ -108,7 +108,7 @@ NetworkStatusNotify(DBusPendingCall *pending, void* user_data) {
   if (!msg)
     return;
   if (dbus_message_get_type(msg) == DBUS_MESSAGE_TYPE_METHOD_RETURN) {
-    NS_STATIC_CAST(nsNetworkManagerListener*, user_data)->UpdateNetworkStatus(msg);
+    static_cast<nsNetworkManagerListener*>(user_data)->UpdateNetworkStatus(msg);
   }
   dbus_message_unref(msg);
 }
@@ -161,7 +161,7 @@ nsNetworkManagerListener::NotifyNetworkStatusObservers() {
     status = NS_LITERAL_STRING(NS_NETWORK_LINK_DATA_UNKNOWN).get();
   }
 
-  observerService->NotifyObservers(NS_STATIC_CAST(nsISupports*, this),
+  observerService->NotifyObservers(static_cast<nsISupports*>(this),
                                    NS_NETWORK_LINK_TOPIC, status);
 }
 

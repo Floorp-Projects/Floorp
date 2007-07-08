@@ -415,7 +415,7 @@ nsContentIterator::Init(nsIDOMRange* aRange)
       NS_ASSERTION(startNode->IsNodeOfType(nsINode::eCONTENT),
                    "Data node that's not content?");
 
-      mFirst   = NS_STATIC_CAST(nsIContent*, startNode);
+      mFirst   = static_cast<nsIContent*>(startNode);
       mLast    = mFirst;
       mCurNode = mFirst;
 
@@ -459,13 +459,13 @@ nsContentIterator::Init(nsIDOMRange* aRange)
         NS_ASSERTION(startNode->IsNodeOfType(nsINode::eCONTENT),
                    "Data node that's not content?");
 
-        mFirst = NS_STATIC_CAST(nsIContent*, startNode);
+        mFirst = static_cast<nsIContent*>(startNode);
       }
     }
     else {
       // post-order
       if (startNode->IsNodeOfType(nsINode::eCONTENT)) {
-        mFirst = NS_STATIC_CAST(nsIContent*, startNode);
+        mFirst = static_cast<nsIContent*>(startNode);
       } else {
         // What else can we do?
         mFirst = nsnull;
@@ -500,7 +500,7 @@ nsContentIterator::Init(nsIDOMRange* aRange)
   {
     if (mPre) {
       if (endNode->IsNodeOfType(nsINode::eCONTENT)) {
-        mLast = NS_STATIC_CAST(nsIContent*, endNode);
+        mLast = static_cast<nsIContent*>(endNode);
       } else {
         // Not much else to do here...
         mLast = nsnull;
@@ -524,7 +524,7 @@ nsContentIterator::Init(nsIDOMRange* aRange)
         NS_ASSERTION(endNode->IsNodeOfType(nsINode::eCONTENT),
                      "Data node that's not content?");
 
-        mLast = NS_STATIC_CAST(nsIContent*, endNode);
+        mLast = static_cast<nsIContent*>(endNode);
       }
     }
   }

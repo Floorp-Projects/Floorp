@@ -289,7 +289,7 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
         //    the first profile if profiles exist but no current profile is set
         //    an empty string if no profiles exist.
 
-        mCurrentProfile = NS_STATIC_CAST(const PRUnichar*, tmpCurrentProfile);
+        mCurrentProfile = static_cast<const PRUnichar*>(tmpCurrentProfile);
     }
 
     // Get the profile version
@@ -387,7 +387,7 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
             return NS_ERROR_OUT_OF_MEMORY;
 
         profileItem->updateProfileEntry     = PR_TRUE;
-        profileItem->profileName      = NS_STATIC_CAST(const PRUnichar*, profile);
+        profileItem->profileName      = static_cast<const PRUnichar*>(profile);
 
         PRInt64 tmpLongLong;
         rv = registry->GetLongLong(profKey,
@@ -410,16 +410,16 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
         profileItem->isMigrated       = isMigratedString.Equals(kRegistryYesString);
 
         if (NCProfileName)
-            profileItem->NCProfileName = NS_STATIC_CAST(const PRUnichar*, NCProfileName);
+            profileItem->NCProfileName = static_cast<const PRUnichar*>(NCProfileName);
 
         if (NCDeniedService)
-            profileItem->NCDeniedService = NS_STATIC_CAST(const PRUnichar*, NCDeniedService);
+            profileItem->NCDeniedService = static_cast<const PRUnichar*>(NCDeniedService);
 
         if (NCEmailAddress)
-            profileItem->NCEmailAddress = NS_STATIC_CAST(const PRUnichar*, NCEmailAddress);
+            profileItem->NCEmailAddress = static_cast<const PRUnichar*>(NCEmailAddress);
 
         if (NCHavePregInfo)
-            profileItem->NCHavePregInfo = NS_STATIC_CAST(const PRUnichar*, NCHavePregInfo);
+            profileItem->NCHavePregInfo = static_cast<const PRUnichar*>(NCHavePregInfo);
 
         profileItem->isImportType = PR_FALSE;
         if (!mProfiles) {

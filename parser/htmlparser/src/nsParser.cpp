@@ -1454,9 +1454,9 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
     // XXX This is extremely ugly. Maybe CNavDTD should have FlushMisplaced()?
     NS_ASSERTION(mParserContext, "Parsing didn't create a parser context?");
 
-    CNavDTD* dtd = NS_STATIC_CAST(CNavDTD*,
-                                  NS_STATIC_CAST(nsIDTD*,
-                                                 mParserContext->mDTD));
+    CNavDTD* dtd = static_cast<CNavDTD*>
+                              (static_cast<nsIDTD*>
+                                          (mParserContext->mDTD));
     NS_ASSERTION(dtd, "How did we parse anything without a dtd?");
 
     CStartToken bodyToken(NS_LITERAL_STRING("BODY"), eHTMLTag_body);
@@ -2118,7 +2118,7 @@ ParserWriteFunc(nsIInputStream* in,
                 PRUint32 *writeCount)
 {
   nsresult result;
-  ParserWriteStruct* pws = NS_STATIC_CAST(ParserWriteStruct*, closure);
+  ParserWriteStruct* pws = static_cast<ParserWriteStruct*>(closure);
   const char* buf = fromRawSegment;
   PRUint32 theNumRead = count;
 

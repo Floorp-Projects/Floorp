@@ -1321,7 +1321,7 @@ nsOfflineCacheDevice::GetOwnedKeys(const char * clientID,
   }
 
   *count = keyArray.Length();
-  char **ret = NS_STATIC_CAST(char **, NS_Alloc(*count * sizeof(char*)));
+  char **ret = static_cast<char **>(NS_Alloc(*count * sizeof(char*)));
   if (!ret) return NS_ERROR_OUT_OF_MEMORY;
 
   for (PRUint32 i = 0; i <  *count; i++) {

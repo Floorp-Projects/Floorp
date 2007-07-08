@@ -55,7 +55,7 @@ nsGenericFactory::nsGenericFactory(const nsModuleComponentInfo *info)
     : mInfo(info)
 {
     if (mInfo && mInfo->mClassInfoGlobal)
-        *mInfo->mClassInfoGlobal = NS_STATIC_CAST(nsIClassInfo *, this);
+        *mInfo->mClassInfoGlobal = static_cast<nsIClassInfo *>(this);
 }
 
 nsGenericFactory::~nsGenericFactory()
@@ -139,8 +139,8 @@ NS_IMETHODIMP nsGenericFactory::GetClassDescription(char * *aClassDescription)
 NS_IMETHODIMP nsGenericFactory::GetClassID(nsCID * *aClassID)
 {
     *aClassID =
-        NS_REINTERPRET_CAST(nsCID*,
-                            nsMemory::Clone(&mInfo->mCID, sizeof mInfo->mCID));
+        reinterpret_cast<nsCID*>
+                        (nsMemory::Clone(&mInfo->mCID, sizeof mInfo->mCID));
     if (! *aClassID)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
@@ -171,7 +171,7 @@ NS_IMETHODIMP nsGenericFactory::SetComponentInfo(const nsModuleComponentInfo *in
         *mInfo->mClassInfoGlobal = 0;
     mInfo = info;
     if (mInfo && mInfo->mClassInfoGlobal)
-        *mInfo->mClassInfoGlobal = NS_STATIC_CAST(nsIClassInfo *, this);
+        *mInfo->mClassInfoGlobal = static_cast<nsIClassInfo *>(this);
     return NS_OK;
 }
 

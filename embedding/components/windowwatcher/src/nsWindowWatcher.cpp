@@ -967,13 +967,13 @@ nsWindowWatcher::GetPrompt(nsIDOMWindow *aParent, const nsIID& aIID,
                            void **_retval)
 {
   if (aIID.Equals(NS_GET_IID(nsIPrompt)))
-    return NS_NewPrompter(NS_REINTERPRET_CAST(nsIPrompt**, _retval), aParent);
+    return NS_NewPrompter(reinterpret_cast<nsIPrompt**>(_retval), aParent);
   if (aIID.Equals(NS_GET_IID(nsIAuthPrompt)))
-    return NS_NewAuthPrompter(NS_REINTERPRET_CAST(nsIAuthPrompt**, _retval),
+    return NS_NewAuthPrompter(reinterpret_cast<nsIAuthPrompt**>(_retval),
                               aParent);
   if (aIID.Equals(NS_GET_IID(nsIAuthPrompt2))) {
-    nsresult rv = NS_NewAuthPrompter2(NS_REINTERPRET_CAST(nsIAuthPrompt2**,
-                                                          _retval),
+    nsresult rv = NS_NewAuthPrompter2(reinterpret_cast<nsIAuthPrompt2**>
+                                                      (_retval),
                                       aParent);
     if (rv == NS_NOINTERFACE) {
       // Return an wrapped nsIAuthPrompt (if we can)
@@ -981,7 +981,7 @@ nsWindowWatcher::GetPrompt(nsIDOMWindow *aParent, const nsIID& aIID,
       rv = NS_NewAuthPrompter(getter_AddRefs(prompt), aParent);
       if (NS_SUCCEEDED(rv)) {
         NS_WrapAuthPrompt(prompt,
-                          NS_REINTERPRET_CAST(nsIAuthPrompt2**, _retval));
+                          reinterpret_cast<nsIAuthPrompt2**>(_retval));
         if (!*_retval)
           rv = NS_ERROR_NOT_AVAILABLE;
       }
@@ -1208,7 +1208,7 @@ nsWindowWatcher::GetChromeForWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome *
     if (info->mChromeWeak != nsnull) {
       return info->mChromeWeak->
                             QueryReferent(NS_GET_IID(nsIWebBrowserChrome),
-                                          NS_REINTERPRET_CAST(void**, _retval));
+                                          reinterpret_cast<void**>(_retval));
     }
     *_retval = info->mChrome;
     NS_IF_ADDREF(*_retval);

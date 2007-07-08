@@ -131,8 +131,8 @@ void nsPNGDecoder::SetAnimFrameInfo()
     
     // Need to cast delay_num to float to have a proper division and
     // the result to int to avoid compiler warning
-    timeout = NS_STATIC_CAST( PRInt32,
-              NS_STATIC_CAST(PRFloat64, delay_num) * 1000 / delay_den );
+    timeout = static_cast<PRInt32>
+                         (static_cast<PRFloat64>(delay_num) * 1000 / delay_den);
   }
   mFrame->SetTimeout(timeout);
   
@@ -195,7 +195,7 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgILoad *aLoad)
 #endif
 
   /* use this as libpng "progressive pointer" (retrieve in callbacks) */
-  png_set_progressive_read_fn(mPNG, NS_STATIC_CAST(png_voidp, this),
+  png_set_progressive_read_fn(mPNG, static_cast<png_voidp>(this),
                               info_callback, row_callback, end_callback);
 
   return NS_OK;
@@ -224,7 +224,7 @@ static NS_METHOD ReadDataOut(nsIInputStream* in,
                              PRUint32 count,
                              PRUint32 *writeCount)
 {
-  nsPNGDecoder *decoder = NS_STATIC_CAST(nsPNGDecoder*, closure);
+  nsPNGDecoder *decoder = static_cast<nsPNGDecoder*>(closure);
 
   if (decoder->mError) {
     *writeCount = 0;
@@ -241,7 +241,7 @@ static NS_METHOD ReadDataOut(nsIInputStream* in,
   }
 
   png_process_data(decoder->mPNG, decoder->mInfo,
-                   NS_REINTERPRET_CAST(unsigned char *, NS_CONST_CAST(char *, fromRawSegment)), count);
+                   reinterpret_cast<unsigned char *>(const_cast<char *>(fromRawSegment)), count);
 
   *writeCount = count;
   return NS_OK;
@@ -279,7 +279,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   png_bytep trans = NULL;
   int num_trans = 0;
 
-  nsPNGDecoder *decoder = NS_STATIC_CAST(nsPNGDecoder*, png_get_progressive_ptr(png_ptr));
+  nsPNGDecoder *decoder = static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
 
   /* always decode to 24-bit RGB or 32-bit RGBA  */
   png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
@@ -446,7 +446,7 @@ row_callback(png_structp png_ptr, png_bytep new_row,
    * to pass the current row, and the function will combine the
    * old row and the new row.
    */
-  nsPNGDecoder *decoder = NS_STATIC_CAST(nsPNGDecoder*, png_get_progressive_ptr(png_ptr));
+  nsPNGDecoder *decoder = static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
   
   // do nothing
   // is it ok that we're not telling the observer there is some data?
@@ -519,7 +519,7 @@ frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
   png_uint_32 x_offset, y_offset;
   PRInt32 width, height;
   
-  nsPNGDecoder *decoder = NS_STATIC_CAST(nsPNGDecoder*, png_get_progressive_ptr(png_ptr));
+  nsPNGDecoder *decoder = static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
   
   // old frame is done
   if (!(decoder->apngFlags & FRAME_HIDDEN)) {
@@ -554,7 +554,7 @@ end_callback(png_structp png_ptr, png_infop info_ptr)
    * marks the image as finished.
    */
 
-  nsPNGDecoder *decoder = NS_STATIC_CAST(nsPNGDecoder*, png_get_progressive_ptr(png_ptr));
+  nsPNGDecoder *decoder = static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
   
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL)) {
     PRInt32 num_plays = png_get_num_plays(png_ptr, info_ptr);

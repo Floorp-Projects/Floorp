@@ -1840,7 +1840,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
         nsCOMPtr<nsIRDFLiteral> literal; 
 
         for (PRInt32 i = 0; i < tokenList.Count(); ++i) {
-          tokenPair* token = NS_STATIC_CAST(tokenPair*, tokenList[i]);
+          tokenPair* token = static_cast<tokenPair*>(tokenList[i]);
 
           if (!strncmp(token->tokenName, "text", token->tokenNameLength)) {
             rv = gRDFService->GetLiteral(NS_ConvertUTF8toUTF16(Substring(token->tokenValue, token->tokenValue + token->tokenValueLength)).get(),
@@ -4215,8 +4215,8 @@ nsGlobalHistory::StartSearch(const nsAString &aSearchString,
     
     // perform the actual search here
     nsresult rv = AutoCompleteSearch(filtered, &exclude,
-                                     NS_STATIC_CAST(nsIAutoCompleteMdbResult2 *,
-                                                    aPreviousResult),
+                                     static_cast<nsIAutoCompleteMdbResult2 *>
+                                                (aPreviousResult),
                                      getter_AddRefs(result));
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -4375,7 +4375,7 @@ nsGlobalHistory::AutoCompleteSearch(const nsAString &aSearchString,
     closure.prefixes[5] = &prefixFStr;
 
     // sort it
-    resultArray.Sort(AutoCompleteSortComparison, NS_STATIC_CAST(void*, &closure));
+    resultArray.Sort(AutoCompleteSortComparison, static_cast<void*>(&closure));
 
     // place the sorted array into the autocomplete results
     PRUint32 count = resultArray.Count();
@@ -4509,7 +4509,7 @@ nsGlobalHistory::AutoCompleteSortComparison(nsIMdbRow *row1, nsIMdbRow *row2,
   //
   // cast our function parameters back into their real form
   AutoCompleteSortClosure* closure = 
-      NS_STATIC_CAST(AutoCompleteSortClosure*, closureVoid);
+      static_cast<AutoCompleteSortClosure*>(closureVoid);
 
   // get visit counts - we're ignoring all errors from GetRowValue(), 
   // and relying on default values

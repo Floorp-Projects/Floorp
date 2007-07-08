@@ -127,11 +127,11 @@ private:
    */
   const InternalAttr* Attrs() const
   {
-    return NS_REINTERPRET_CAST(const InternalAttr*, &(mAttrs[0]));
+    return reinterpret_cast<const InternalAttr*>(&(mAttrs[0]));
   }
   InternalAttr* Attrs()
   {
-    return NS_REINTERPRET_CAST(InternalAttr*, &(mAttrs[0]));
+    return reinterpret_cast<InternalAttr*>(&(mAttrs[0]));
   }
 
   PRUint16 mAttrCount;

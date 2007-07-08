@@ -413,7 +413,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   
     // put our data into the pipe
     PRUint32 written;
-    rv = outStream->Write( NS_REINTERPRET_CAST(const char*, pOutBuf),
+    rv = outStream->Write( reinterpret_cast<const char*>(pOutBuf),
                            cbOutBuf, &written);
     if (NS_FAILED(rv))
       break;

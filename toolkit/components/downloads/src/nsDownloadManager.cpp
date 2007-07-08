@@ -932,7 +932,7 @@ nsDownloadManager::Open(nsIDOMWindow* aParent, PRUint32 aID)
 void
 nsDownloadManager::OpenTimerCallback(nsITimer* aTimer, void* aClosure)
 {
-  TimerParams* params = NS_STATIC_CAST(TimerParams*, aClosure);
+  TimerParams* params = static_cast<TimerParams*>(aClosure);
   
   PRInt32 complete;
   params->download->GetPercentComplete(&complete);

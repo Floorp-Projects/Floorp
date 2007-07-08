@@ -123,7 +123,7 @@ public:
     ATSUFontFallbacks *GetATSUFontFallbacksPtr() { return &mFallbacks; }
     
     gfxAtsuiFont* GetFontAt(PRInt32 i) {
-        return NS_STATIC_CAST(gfxAtsuiFont*, NS_STATIC_CAST(gfxFont*, mFonts[i]));
+        return static_cast<gfxAtsuiFont*>(static_cast<gfxFont*>(mFonts[i]));
     }
 
     gfxAtsuiFont* FindFontFor(ATSUFontID fid);

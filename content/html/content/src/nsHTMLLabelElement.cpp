@@ -240,7 +240,7 @@ nsHTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           // Ok to use aVisitor.mEvent as parameter because DispatchClickEvent
           // will actually create a new event.
           DispatchClickEvent(aVisitor.mPresContext,
-                             NS_STATIC_CAST(nsInputEvent*, aVisitor.mEvent),
+                             static_cast<nsInputEvent*>(aVisitor.mEvent),
                              content, PR_FALSE, &status);
           // Do we care about the status this returned?  I don't think we do...
         }
@@ -342,7 +342,7 @@ nsHTMLLabelElement::PerformAccesskey(PRBool aKeyCausesActivation,
     nsAutoPopupStatePusher popupStatePusher(aIsTrustedEvent ?
                                             openAllowed : openAbused);
 
-    nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this), presContext,
+    nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext,
                                 &event);
   }
 }

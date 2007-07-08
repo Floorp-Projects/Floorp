@@ -1261,7 +1261,7 @@ nsNavHistory::GetNow()
 
 void nsNavHistory::expireNowTimerCallback(nsITimer* aTimer, void* aClosure)
 {
-  nsNavHistory* history = NS_STATIC_CAST(nsNavHistory*, aClosure);
+  nsNavHistory* history = static_cast<nsNavHistory*>(aClosure);
   history->mNowValid = PR_FALSE;
   history->mExpireNowTimer = nsnull;
 }
@@ -2983,7 +2983,7 @@ nsNavHistory::SetURIGeckoFlags(nsIURI* aURI, PRUint32 aFlags)
 PLDHashOperator PR_CALLBACK nsNavHistory::ExpireNonrecentRedirects(
     nsCStringHashKey::KeyType aKey, RedirectInfo& aData, void* aUserArg)
 {
-  PRInt64* threshold = NS_REINTERPRET_CAST(PRInt64*, aUserArg);
+  PRInt64* threshold = reinterpret_cast<PRInt64*>(aUserArg);
   if (aData.mTimeCreated < *threshold)
     return PL_DHASH_REMOVE;
   return PL_DHASH_NEXT;
@@ -3011,7 +3011,7 @@ nsNavHistory::AddDocumentRedirect(nsIChannel *aOldChannel,
     // expire out-of-date ones
     PRInt64 threshold = PR_Now() - RECENT_EVENT_THRESHOLD;
     mRecentRedirects.Enumerate(ExpireNonrecentRedirects,
-                               NS_REINTERPRET_CAST(void*, &threshold));
+                               reinterpret_cast<void*>(&threshold));
   }
 
   RedirectInfo info;
@@ -3149,7 +3149,7 @@ nsNavHistory::AddLazyMessage(const LazyMessage& aMessage)
 void // static
 nsNavHistory::LazyTimerCallback(nsITimer* aTimer, void* aClosure)
 {
-  nsNavHistory* that = NS_STATIC_CAST(nsNavHistory*, aClosure);
+  nsNavHistory* that = static_cast<nsNavHistory*>(aClosure);
   that->mLazyTimerSet = PR_FALSE;
   that->mLazyTimerDeferments = 0;
   that->CommitLazyMessages();
@@ -3856,7 +3856,7 @@ ExpireNonrecentEventsCallback(nsCStringHashKey::KeyType aKey,
                               PRInt64& aData,
                               void* userArg)
 {
-  PRInt64* threshold = NS_REINTERPRET_CAST(PRInt64*, userArg);
+  PRInt64* threshold = reinterpret_cast<PRInt64*>(userArg);
   if (aData < *threshold)
     return PL_DHASH_REMOVE;
   return PL_DHASH_NEXT;
@@ -3866,7 +3866,7 @@ nsNavHistory::ExpireNonrecentEvents(RecentEventHash* hashTable)
 {
   PRInt64 threshold = GetNow() - RECENT_EVENT_THRESHOLD;
   hashTable->Enumerate(ExpireNonrecentEventsCallback,
-                       NS_REINTERPRET_CAST(void*, &threshold));
+                       reinterpret_cast<void*>(&threshold));
 }
 
 

@@ -192,7 +192,7 @@ nsresult
 nsTableCellFrame::GetRowIndex(PRInt32 &aRowIndex) const
 {
   nsresult result;
-  nsTableRowFrame* row = NS_STATIC_CAST(nsTableRowFrame*, GetParent());
+  nsTableRowFrame* row = static_cast<nsTableRowFrame*>(GetParent());
   if (row) {
     aRowIndex = row->GetRowIndex();
     result = NS_OK;
@@ -381,7 +381,7 @@ public:
 void nsDisplayTableCellBackground::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  NS_STATIC_CAST(nsTableCellFrame*, mFrame)->
+  static_cast<nsTableCellFrame*>(mFrame)->
     PaintBackground(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
 }
 
@@ -389,7 +389,7 @@ static void
 PaintTableCellSelection(nsIFrame* aFrame, nsIRenderingContext* aCtx,
                         const nsRect& aRect, nsPoint aPt)
 {
-  NS_STATIC_CAST(nsTableCellFrame*, aFrame)->DecorateForSelection(*aCtx, aPt);
+  static_cast<nsTableCellFrame*>(aFrame)->DecorateForSelection(*aCtx, aPt);
 }
 
 NS_IMETHODIMP
@@ -742,9 +742,9 @@ CalcUnpaginagedHeight(nsPresContext*       aPresContext,
   const nsTableCellFrame* firstCellInFlow   = (nsTableCellFrame*)aCellFrame.GetFirstInFlow();
   nsTableFrame*           firstTableInFlow  = (nsTableFrame*)aTableFrame.GetFirstInFlow();
   nsTableRowFrame*        row
-    = NS_STATIC_CAST(nsTableRowFrame*, firstCellInFlow->GetParent());
+    = static_cast<nsTableRowFrame*>(firstCellInFlow->GetParent());
   nsTableRowGroupFrame*   firstRGInFlow
-    = NS_STATIC_CAST(nsTableRowGroupFrame*, row->GetParent());
+    = static_cast<nsTableRowGroupFrame*>(row->GetParent());
 
   PRInt32 rowIndex;
   firstCellInFlow->GetRowIndex(rowIndex);
@@ -917,11 +917,11 @@ nsTableCellFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsITableCellLayout))) {
-    *aInstancePtr = NS_STATIC_CAST(nsITableCellLayout*, this);
+    *aInstancePtr = static_cast<nsITableCellLayout*>(this);
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsIPercentHeightObserver))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIPercentHeightObserver*, this);
+    *aInstancePtr = static_cast<nsIPercentHeightObserver*>(this);
     return NS_OK;
   }
 
@@ -934,7 +934,7 @@ NS_IMETHODIMP nsTableCellFrame::GetAccessible(nsIAccessible** aAccessible)
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    return accService->CreateHTMLTableCellAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+    return accService->CreateHTMLTableCellAccessible(static_cast<nsIFrame*>(this), aAccessible);
   }
 
   return NS_ERROR_FAILURE;

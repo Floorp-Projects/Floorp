@@ -86,7 +86,7 @@ nsTableRowGroupFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsILineIteratorNavigator))) {
-    *aInstancePtr = NS_STATIC_CAST(nsILineIteratorNavigator*, this);
+    *aInstancePtr = static_cast<nsILineIteratorNavigator*>(this);
     return NS_OK;
   }
 
@@ -198,7 +198,7 @@ PaintRowGroupBackground(nsIFrame* aFrame, nsIRenderingContext* aCtx,
                                  TableBackgroundPainter::eOrigin_TableRowGroup,
                                  aFrame->PresContext(), *aCtx,
                                  aDirtyRect - aPt);
-  painter.PaintRowGroup(NS_STATIC_CAST(nsTableRowGroupFrame*, aFrame));
+  painter.PaintRowGroup(static_cast<nsTableRowGroupFrame*>(aFrame));
 }
 
 // Handle the child-traversal part of DisplayGenericTablePart
@@ -207,7 +207,7 @@ DisplayRows(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
             const nsRect& aDirtyRect, const nsDisplayListSet& aLists)
 {
   nscoord overflowAbove;
-  nsTableRowGroupFrame* f = NS_STATIC_CAST(nsTableRowGroupFrame*, aFrame);
+  nsTableRowGroupFrame* f = static_cast<nsTableRowGroupFrame*>(aFrame);
   // Don't try to use the row cursor if we have to descend into placeholders;
   // we might have rows containing placeholders, where the row's overflow
   // area doesn't intersect the dirty rect but we need to descend into the row
@@ -1799,7 +1799,7 @@ static void
 DestroyFrameCursorData(void* aObject, nsIAtom* aPropertyName,
                        void* aPropertyValue, void* aData)
 {
-  delete NS_STATIC_CAST(nsTableRowGroupFrame::FrameCursorData*, aPropertyValue);
+  delete static_cast<nsTableRowGroupFrame::FrameCursorData*>(aPropertyValue);
 }
 
 void
@@ -1849,8 +1849,8 @@ nsTableRowGroupFrame::GetFirstRowContaining(nscoord aY, nscoord* aOverflowAbove)
   if (!(GetStateBits() & NS_ROWGROUP_HAS_ROW_CURSOR))
     return nsnull;
 
-  FrameCursorData* property = NS_STATIC_CAST(FrameCursorData*,
-    GetProperty(nsGkAtoms::rowCursorProperty));
+  FrameCursorData* property = static_cast<FrameCursorData*>
+                                         (GetProperty(nsGkAtoms::rowCursorProperty));
   PRUint32 cursorIndex = property->mCursorIndex;
   PRUint32 frameCount = property->mFrames.Length();
   if (cursorIndex >= frameCount)

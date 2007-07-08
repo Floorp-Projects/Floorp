@@ -71,8 +71,8 @@ nsTArray_base::EnsureCapacity(size_type capacity, size_type elemSize) {
 
   if (mHdr == &sEmptyHdr) {
     // NS_Alloc new data
-    Header *header = NS_STATIC_CAST(Header*,
-                         NS_Alloc(sizeof(Header) + capacity * elemSize));
+    Header *header = static_cast<Header*>
+                                (NS_Alloc(sizeof(Header) + capacity * elemSize));
     if (!header)
       return PR_FALSE;
     header->mLength = 0;
@@ -93,8 +93,8 @@ nsTArray_base::EnsureCapacity(size_type capacity, size_type elemSize) {
   Header *header;
   if (UsesAutoArrayBuffer()) {
     // NS_Alloc and copy
-    header = NS_STATIC_CAST(Header*,
-                            NS_Alloc(sizeof(Header) + capacity * elemSize));
+    header = static_cast<Header*>
+                        (NS_Alloc(sizeof(Header) + capacity * elemSize));
     if (!header)
       return PR_FALSE;
 
@@ -102,7 +102,7 @@ nsTArray_base::EnsureCapacity(size_type capacity, size_type elemSize) {
   } else {
     // NS_Realloc existing data
     size_type size = sizeof(Header) + capacity * elemSize;
-    header = NS_STATIC_CAST(Header*, NS_Realloc(mHdr, size));
+    header = static_cast<Header*>(NS_Realloc(mHdr, size));
     if (!header)
       return PR_FALSE;
   }
@@ -146,7 +146,7 @@ nsTArray_base::ShrinkCapacity(size_type elemSize) {
   void *ptr = NS_Realloc(mHdr, size);
   if (!ptr)
     return;
-  mHdr = NS_STATIC_CAST(Header*, ptr);
+  mHdr = static_cast<Header*>(ptr);
   mHdr->mCapacity = length;
 }
 
@@ -172,7 +172,7 @@ nsTArray_base::ShiftData(index_type start, size_type oldLen, size_type newLen,
     newLen *= elemSize;
     oldLen *= elemSize;
     num *= elemSize;
-    char *base = NS_REINTERPRET_CAST(char*, mHdr + 1) + start;
+    char *base = reinterpret_cast<char*>(mHdr + 1) + start;
     memmove(base + newLen, base + oldLen, num);
   }
 }
@@ -267,7 +267,7 @@ nsTArray_base::EnsureNotUsingAutoArrayBuffer(size_type elemSize)
   if (UsesAutoArrayBuffer()) {
     size_type size = sizeof(Header) + Length() * elemSize;
 
-    Header* header = NS_STATIC_CAST(Header*, NS_Alloc(size));
+    Header* header = static_cast<Header*>(NS_Alloc(size));
     if (!header)
       return PR_FALSE;
 

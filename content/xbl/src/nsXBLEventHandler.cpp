@@ -147,8 +147,8 @@ nsXBLKeyEventHandler::HandleEvent(nsIDOMEvent* aEvent)
 
   PRUint32 i;
   for (i = 0; i < count; ++i) {
-    nsXBLPrototypeHandler* handler = NS_STATIC_CAST(nsXBLPrototypeHandler*,
-                                                    mProtoHandlers[i]);
+    nsXBLPrototypeHandler* handler = static_cast<nsXBLPrototypeHandler*>
+                                                (mProtoHandlers[i]);
     PRBool hasAllowUntrustedAttr = handler->HasAllowUntrustedAttr();
     if ((trustedEvent ||
         (hasAllowUntrustedAttr && handler->AllowUntrustedEvents()) ||

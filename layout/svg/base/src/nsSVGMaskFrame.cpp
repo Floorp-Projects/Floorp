@@ -105,11 +105,11 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
   {
     nsIFrame *frame;
     CallQueryInterface(aParent, &frame);
-    nsSVGElement *parent = NS_STATIC_CAST(nsSVGElement*, frame->GetContent());
+    nsSVGElement *parent = static_cast<nsSVGElement*>(frame->GetContent());
 
     float x, y, width, height;
 
-    nsSVGMaskElement *mask = NS_STATIC_CAST(nsSVGMaskElement*, mContent);
+    nsSVGMaskElement *mask = static_cast<nsSVGMaskElement*>(mContent);
 
     nsSVGLength2 *tmpX, *tmpY, *tmpWidth, *tmpHeight;
     tmpX = &mask->mLengthAttributes[nsSVGMaskElement::X];
@@ -226,8 +226,8 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
 
       /* linearRGB -> intensity */
       PRUint8 alpha =
-        NS_STATIC_CAST(PRUint8,
-                       (pixel[GFX_ARGB32_OFFSET_R] * 0.2125 +
+        static_cast<PRUint8>
+                   ((pixel[GFX_ARGB32_OFFSET_R] * 0.2125 +
                         pixel[GFX_ARGB32_OFFSET_G] * 0.7154 +
                         pixel[GFX_ARGB32_OFFSET_B] * 0.0721) *
                        (pixel[GFX_ARGB32_OFFSET_A] / 255.0) * aOpacity);
@@ -257,7 +257,7 @@ nsSVGMaskFrame::GetCanvasTM()
   nsCOMPtr<nsIDOMSVGMatrix> canvasTM = mMaskParentMatrix;
 
   /* object bounding box? */
-  nsSVGMaskElement *mask = NS_STATIC_CAST(nsSVGMaskElement*, mContent);
+  nsSVGMaskElement *mask = static_cast<nsSVGMaskElement*>(mContent);
 
   PRUint16 contentUnits;
   mask->mMaskContentUnits->GetAnimVal(&contentUnits);

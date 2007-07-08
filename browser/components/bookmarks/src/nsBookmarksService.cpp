@@ -2009,7 +2009,7 @@ nsBookmarksService::GetBookmarkToPing(nsIRDFResource **theBookmark)
 void
 nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 {
-    nsBookmarksService *bmks = NS_STATIC_CAST(nsBookmarksService *, aClosure);
+    nsBookmarksService *bmks = static_cast<nsBookmarksService *>(aClosure);
     if (!bmks)  return;
     nsresult            rv;
 
@@ -3613,7 +3613,7 @@ CompareLastModifiedFolders(nsIRDFResource* aResource1, nsIRDFResource* aResource
 {
     
     nsCOMPtr<nsIRDFNode> node1, node2;
-    nsIRDFDataSource* outer = NS_STATIC_CAST(nsIRDFDataSource*, aOuter);
+    nsIRDFDataSource* outer = static_cast<nsIRDFDataSource*>(aOuter);
     outer->GetTarget(aResource1, kWEB_LastModifiedDate, PR_TRUE, getter_AddRefs(node1));
     outer->GetTarget(aResource2, kWEB_LastModifiedDate, PR_TRUE, getter_AddRefs(node2));
 
@@ -3666,7 +3666,7 @@ nsBookmarksService::GetLastModifiedFolders(nsISimpleEnumerator **aResult)
     }
 
     // sort the array containing all the folders
-    folderArray.Sort(CompareLastModifiedFolders, NS_STATIC_CAST(void*, mInner));
+    folderArray.Sort(CompareLastModifiedFolders, static_cast<void*>(mInner));
 
     // only keep the first elements
     PRInt32 index;

@@ -140,7 +140,7 @@ nsXULTemplateBuilder::nsXULTemplateBuilder(void)
 static PLDHashOperator
 DestroyMatchList(nsISupports* aKey, nsTemplateMatch* aMatch, void* aContext)
 {
-    nsFixedSizeAllocator* pool = NS_STATIC_CAST(nsFixedSizeAllocator *, aContext);
+    nsFixedSizeAllocator* pool = static_cast<nsFixedSizeAllocator *>(aContext);
 
     // delete all the matches in the list
     while (aMatch) {
@@ -231,7 +231,7 @@ static PLDHashOperator
 TraverseMatchList(nsISupports* aKey, nsTemplateMatch* aMatch, void* aContext)
 {
     nsCycleCollectionTraversalCallback *cb =
-        NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aContext);
+        static_cast<nsCycleCollectionTraversalCallback*>(aContext);
 
     cb->NoteXPCOMChild(aKey);
     nsTemplateMatch* match = aMatch;
@@ -1425,7 +1425,7 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
     if (! context)
         return NS_ERROR_UNEXPECTED;
 
-    JSContext* jscontext = NS_REINTERPRET_CAST(JSContext*, context->GetNativeContext());
+    JSContext* jscontext = reinterpret_cast<JSContext*>(context->GetNativeContext());
     NS_ASSERTION(context != nsnull, "no jscontext");
     if (! jscontext)
         return NS_ERROR_UNEXPECTED;
@@ -1466,7 +1466,7 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
         // builder
         nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
         rv = xpc->WrapNative(jscontext, jselement,
-                             NS_STATIC_CAST(nsIXULTemplateBuilder*, this),
+                             static_cast<nsIXULTemplateBuilder*>(this),
                              NS_GET_IID(nsIXULTemplateBuilder),
                              getter_AddRefs(wrapper));
         NS_ENSURE_SUCCESS(rv, rv);
@@ -1641,7 +1641,7 @@ nsXULTemplateBuilder::SubstituteTextAppendText(nsXULTemplateBuilder* aThis,
                                                void* aClosure)
 {
     // Append aString to the closure's result
-    SubstituteTextClosure* c = NS_STATIC_CAST(SubstituteTextClosure*, aClosure);
+    SubstituteTextClosure* c = static_cast<SubstituteTextClosure*>(aClosure);
     c->str.Append(aText);
 }
 
@@ -1652,7 +1652,7 @@ nsXULTemplateBuilder::SubstituteTextReplaceVariable(nsXULTemplateBuilder* aThis,
 {
     // Substitute the value for the variable and append to the
     // closure's result.
-    SubstituteTextClosure* c = NS_STATIC_CAST(SubstituteTextClosure*, aClosure);
+    SubstituteTextClosure* c = static_cast<SubstituteTextClosure*>(aClosure);
 
     nsAutoString replacementText;
 
@@ -2511,7 +2511,7 @@ nsXULTemplateBuilder::AddSimpleRuleBindings(nsTemplateRule* aRule,
     while (elements.Count()) {
         // Pop the next element off the stack
         PRUint32 i = (PRUint32)(elements.Count() - 1);
-        nsIContent* element = NS_STATIC_CAST(nsIContent*, elements[i]);
+        nsIContent* element = static_cast<nsIContent*>(elements[i]);
         elements.RemoveElementAt(i);
 
         // Iterate through its attributes, looking for substitutions
@@ -2556,7 +2556,7 @@ nsXULTemplateBuilder::AddBindingsFor(nsXULTemplateBuilder* aThis,
     if (!StringBeginsWith(aVariable, NS_LITERAL_STRING("rdf:")))
         return;
 
-    nsTemplateRule* rule = NS_STATIC_CAST(nsTemplateRule*, aClosure);
+    nsTemplateRule* rule = static_cast<nsTemplateRule*>(aClosure);
 
     nsCOMPtr<nsIAtom> var = do_GetAtom(aVariable);
 

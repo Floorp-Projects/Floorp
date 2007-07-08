@@ -440,7 +440,7 @@ public:
       frameDebug->GetFrameName(tmp);
     }
     fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
-    fprintf(out, "@%p", NS_STATIC_CAST(void*, aFrame));
+    fprintf(out, "@%p", static_cast<void*>(aFrame));
   }
 
   static void IndentBy(FILE* out, PRInt32 aIndent) {

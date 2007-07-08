@@ -2006,7 +2006,7 @@ DocumentViewerImpl::RequestWindowClose(PRBool* aCanClose)
 PR_STATIC_CALLBACK(PRBool)
 AppendAgentSheet(nsIStyleSheet *aSheet, void *aData)
 {
-  nsStyleSet *styleSet = NS_STATIC_CAST(nsStyleSet*, aData);
+  nsStyleSet *styleSet = static_cast<nsStyleSet*>(aData);
   styleSet->AppendStyleSheet(nsStyleSet::eAgentSheet, aSheet);
   return PR_TRUE;
 }
@@ -2014,7 +2014,7 @@ AppendAgentSheet(nsIStyleSheet *aSheet, void *aData)
 PR_STATIC_CALLBACK(PRBool)
 PrependUserSheet(nsIStyleSheet *aSheet, void *aData)
 {
-  nsStyleSet *styleSet = NS_STATIC_CAST(nsStyleSet*, aData);
+  nsStyleSet *styleSet = static_cast<nsStyleSet*>(aData);
   styleSet->PrependStyleSheet(nsStyleSet::eUserSheet, aSheet);
   return PR_TRUE;
 }
@@ -2574,7 +2574,7 @@ DocumentViewerImpl::GetTextZoom(float* aTextZoom)
 static void
 SetChildAuthorStyleDisabled(nsIMarkupDocumentViewer* aChild, void* aClosure)
 {
-  PRBool styleDisabled  = *NS_STATIC_CAST(PRBool*, aClosure);
+  PRBool styleDisabled  = *static_cast<PRBool*>(aClosure);
   aChild->SetAuthorStyleDisabled(styleDisabled);
 }
 
@@ -2622,7 +2622,7 @@ DocumentViewerImpl::GetDefaultCharacterSet(nsACString& aDefaultCharacterSet)
 static void
 SetChildDefaultCharacterSet(nsIMarkupDocumentViewer* aChild, void* aClosure)
 {
-  const nsACString* charset = NS_STATIC_CAST(nsACString*, aClosure);
+  const nsACString* charset = static_cast<nsACString*>(aClosure);
   aChild->SetDefaultCharacterSet(*charset);
 }
 
@@ -2647,7 +2647,7 @@ NS_IMETHODIMP DocumentViewerImpl::GetForceCharacterSet(nsACString& aForceCharact
 static void
 SetChildForceCharacterSet(nsIMarkupDocumentViewer* aChild, void* aClosure)
 {
-  const nsACString* charset = NS_STATIC_CAST(nsACString*, aClosure);
+  const nsACString* charset = static_cast<nsACString*>(aClosure);
   aChild->SetForceCharacterSet(*charset);
 }
 
@@ -2695,7 +2695,7 @@ NS_IMETHODIMP DocumentViewerImpl::GetPrevDocCharacterSet(nsACString& aPrevDocCha
 static void
 SetChildPrevDocCharacterSet(nsIMarkupDocumentViewer* aChild, void* aClosure)
 {
-  const nsACString* charset = NS_STATIC_CAST(nsACString*, aClosure);
+  const nsACString* charset = static_cast<nsACString*>(aClosure);
   aChild->SetPrevDocCharacterSet(*charset);
 }
 
@@ -2728,7 +2728,7 @@ DocumentViewerImpl::SetHintCharacterSetSource(PRInt32 aHintCharacterSetSource)
 static void
 SetChildHintCharacterSet(nsIMarkupDocumentViewer* aChild, void* aClosure)
 {
-  const nsACString* charset = NS_STATIC_CAST(nsACString*, aClosure);
+  const nsACString* charset = static_cast<nsACString*>(aClosure);
   aChild->SetHintCharacterSet(*charset);
 }
 

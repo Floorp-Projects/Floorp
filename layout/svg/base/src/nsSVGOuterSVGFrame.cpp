@@ -102,7 +102,7 @@ nsSVGMutationObserver::AttributeChanged(nsIDocument *aDocument,
     CallQueryInterface(frame, &metrics);
     if (metrics) {
       nsSVGTextContainerFrame *containerFrame =
-        NS_STATIC_CAST(nsSVGTextContainerFrame *, frame);
+        static_cast<nsSVGTextContainerFrame *>(frame);
       containerFrame->UpdateGraphic();
       continue;
     }
@@ -120,7 +120,7 @@ nsSVGMutationObserver::UpdateTextFragmentTrees(nsIFrame *aFrame)
   nsIFrame* kid = aFrame->GetFirstChild(nsnull);
   while (kid) {
     if (kid->GetType() == nsGkAtoms::svgTextFrame) {
-      nsSVGTextFrame* textFrame = NS_STATIC_CAST(nsSVGTextFrame*, kid);
+      nsSVGTextFrame* textFrame = static_cast<nsSVGTextFrame*>(kid);
       textFrame->NotifyGlyphMetricsChange();
     } else {
       UpdateTextFragmentTrees(kid);
@@ -159,7 +159,7 @@ nsSVGOuterSVGFrame::InitSVG()
   if (doc) {
     // we only care about our content's zoom and pan values if it's the root element
     if (doc->GetRootContent() == mContent) {
-      nsSVGSVGElement *SVGElement = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
+      nsSVGSVGElement *SVGElement = static_cast<nsSVGSVGElement*>(mContent);
       SVGElement->GetZoomAndPanEnum(getter_AddRefs(mZoomAndPan));
       SVGElement->GetCurrentTranslate(getter_AddRefs(mCurrentTranslate));
       SVGElement->GetCurrentScaleNumber(getter_AddRefs(mCurrentScale));
@@ -220,7 +220,7 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
   // attributes. These can be thought of as our "computed" width/height in CSS
   // terms (and maybe we should call them that).
 
-  nsSVGSVGElement *svgElem = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
+  nsSVGSVGElement *svgElem = static_cast<nsSVGSVGElement*>(mContent);
   float oldViewportWidth  = svgElem->mViewportWidth;
   float oldViewportHeight = svgElem->mViewportHeight;
 
@@ -321,7 +321,7 @@ public:
 nsIFrame*
 nsDisplaySVG::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt)
 {
-  return NS_STATIC_CAST(nsSVGOuterSVGFrame*, mFrame)->
+  return static_cast<nsSVGOuterSVGFrame*>(mFrame)->
     GetFrameForPoint(aPt - aBuilder->ToReferenceFrame(mFrame));
 }
 
@@ -329,7 +329,7 @@ void
 nsDisplaySVG::Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect)
 {
-  NS_STATIC_CAST(nsSVGOuterSVGFrame*, mFrame)->
+  static_cast<nsSVGOuterSVGFrame*>(mFrame)->
     Paint(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
 }
 
@@ -539,7 +539,7 @@ nsSVGOuterSVGFrame::NotifyViewportChange()
 
 /* XXX this caused reftest failures
   // viewport changes only affect our transform if we have a viewBox attribute
-  nsSVGSVGElement *svgElem = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
+  nsSVGSVGElement *svgElem = static_cast<nsSVGSVGElement*>(mContent);
   if (!svgElem->HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
     return NS_OK;
   }
@@ -569,7 +569,7 @@ already_AddRefed<nsIDOMSVGMatrix>
 nsSVGOuterSVGFrame::GetCanvasTM()
 {
   if (!mCanvasTM) {
-    nsSVGSVGElement *svgElement = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
+    nsSVGSVGElement *svgElement = static_cast<nsSVGSVGElement*>(mContent);
     svgElement->GetViewboxToViewportTransform(getter_AddRefs(mCanvasTM));
 
     if (mZoomAndPan) {

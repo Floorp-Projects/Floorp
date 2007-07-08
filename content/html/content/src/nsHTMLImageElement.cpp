@@ -422,7 +422,7 @@ nsHTMLImageElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   // element. (bug 39723)
   if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
       aVisitor.mEvent->message == NS_MOUSE_CLICK &&
-      NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+      static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
         nsMouseEvent::eLeftButton) {
     PRBool isMap = PR_FALSE;
     GetIsMap(&isMap);
@@ -553,7 +553,7 @@ nsHTMLImageElement::Initialize(JSContext* aContext, JSObject *aObj,
   JSBool ret = JS_ValueToInt32(aContext, argv[0], &width);
   NS_ENSURE_TRUE(ret, NS_ERROR_INVALID_ARG);
 
-  nsresult rv = SetIntAttr(nsGkAtoms::width, NS_STATIC_CAST(PRInt32, width));
+  nsresult rv = SetIntAttr(nsGkAtoms::width, static_cast<PRInt32>(width));
 
   if (NS_SUCCEEDED(rv) && (argc > 1)) {
     // The second (optional) argument is the height of the image
@@ -561,7 +561,7 @@ nsHTMLImageElement::Initialize(JSContext* aContext, JSObject *aObj,
     ret = JS_ValueToInt32(aContext, argv[1], &height);
     NS_ENSURE_TRUE(ret, NS_ERROR_INVALID_ARG);
 
-    rv = SetIntAttr(nsGkAtoms::height, NS_STATIC_CAST(PRInt32, height));
+    rv = SetIntAttr(nsGkAtoms::height, static_cast<PRInt32>(height));
   }
 
   return rv;

@@ -86,7 +86,7 @@ public:
   static nsGenericHTMLElement* FromContent(nsIContent *aContent)
   {
     if (aContent->IsNodeOfType(eHTML))
-      return NS_STATIC_CAST(nsGenericHTMLElement*, aContent);
+      return static_cast<nsGenericHTMLElement*>(aContent);
     return nsnull;
   }
 
@@ -1103,7 +1103,7 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
     if (NS_SUCCEEDED(rv))                                                     \
       return rv;                                                              \
                                                                               \
-    rv = DOMQueryInterface(NS_STATIC_CAST(_base_if *, this), aIID,            \
+    rv = DOMQueryInterface(static_cast<_base_if *>(this), aIID,            \
                            aInstancePtr);                                     \
                                                                               \
     if (NS_SUCCEEDED(rv))                                                     \
@@ -1134,7 +1134,7 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
     if (NS_SUCCEEDED(rv))                                                     \
       return rv;                                                              \
                                                                               \
-    rv = DOMQueryInterface(NS_STATIC_CAST(_base_if *, this), aIID,            \
+    rv = DOMQueryInterface(static_cast<_base_if *>(this), aIID,            \
                            aInstancePtr);                                     \
                                                                               \
     if (NS_SUCCEEDED(rv))                                                     \

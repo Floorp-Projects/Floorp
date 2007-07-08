@@ -267,7 +267,7 @@ nsHTMLLegendElement::SetFocus(nsPresContext* aPresContext)
       nsIFocusController* focusController =
         ourWindow->GetRootFocusController();
       nsCOMPtr<nsIDOMElement> domElement =
-        do_QueryInterface(NS_STATIC_CAST(nsIContent *, this));
+        do_QueryInterface(static_cast<nsIContent *>(this));
       if (focusController && domElement) {
         focusController->MoveFocus(PR_TRUE, domElement);
       }
