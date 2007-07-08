@@ -332,17 +332,21 @@ SuggestAutoComplete.prototype = {
   _sentSuggestRequest: false,
 
   /**
-   * This is the callback for the suggest timeout timer.  If this gets
-   * called, it means that we've given up on receiving a reply from the
-   * search engine's suggestion server in a timely manner.
+   * This is the callback for the suggest timeout timer.
    */
   notify: function SAC_notify(timer) {
-    // make sure we're still waiting for this response before sending
-    if ((timer != this._formHistoryTimer) || !this._listener)
+    // FIXME: bug 387341
+    // Need to break the cycle between us and the timer.
+    this._formHistoryTimer = null;
+
+    // If this._listener is null, we've already sent out suggest results, so
+    // nothing left to do here.
+    if (!this._listener)
       return;
 
+    // Otherwise, the XMLHTTPRequest for suggest results is taking too long,
+    // so send out the form history results and cancel the request.
     this._listener.onSearchResult(this, this._formHistoryResult);
-    this._formHistoryTimer = null;
     this._reset();
   },
 
