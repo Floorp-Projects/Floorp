@@ -1365,6 +1365,10 @@ Engine.prototype = {
         this._type = SEARCH_TYPE_SHERLOCK;
         this._parseAsSherlock();
     }
+
+    // No need to keep a ref to our data (which in some cases can be a document
+    // element) past this point
+    this._data = null;
   },
 
   /**
