@@ -39,7 +39,7 @@
 
 interface nsIDOMOfflineResourceList;
 
-[scriptable, uuid(609439fa-63e4-4f71-9512-904867f154e7)]
+[scriptable, uuid(21c6561e-4778-47ed-96d0-eadc46d6a3ec)]
 interface nsIDOMClientInformation : nsISupports
 {
   /**
@@ -50,6 +50,8 @@ interface nsIDOMClientInformation : nsISupports
    */
   void registerContentHandler(in DOMString mimeType, in DOMString uri, in DOMString title);
   void registerProtocolHandler(in DOMString protocol, in DOMString uri, in DOMString title);
+
+  boolean isLocallyAvailable(in DOMString uri, in boolean whenOffline);
 
   readonly attribute nsIDOMOfflineResourceList offlineResources;
 };

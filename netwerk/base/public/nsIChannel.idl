@@ -259,4 +259,11 @@ interface nsIChannel : nsIRequest
      * should only do so with good reason.
      */
     const unsigned long LOAD_CALL_CONTENT_SNIFFERS = 1 << 21;
+
+    /**
+     * This load flag inhibits fetching from the net.  An error of
+     * NS_ERROR_NEEDS_NETWORK will be sent to the listener's onStopRequest
+     * if network IO is necessary to complete the request.
+     */
+    const unsigned long LOAD_NO_NETWORK_IO = 1 << 22;
 };

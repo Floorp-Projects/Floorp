@@ -272,7 +272,7 @@ nsHttpChannel::Connect(PRBool firstTime)
         // are we offline?
         PRBool offline = gIOService->IsOffline();
         if (offline)
-            mLoadFlags |= LOAD_ONLY_FROM_CACHE;
+            mLoadFlags |= (LOAD_ONLY_FROM_CACHE | LOAD_CHECK_OFFLINE_CACHE);
         else if (PL_strcmp(mConnectionInfo->ProxyType(), "unknown") == 0)
             return ResolveProxy();  // Lazily resolve proxy info
 
@@ -329,6 +329,10 @@ nsHttpChannel::Connect(PRBool firstTime)
 
     // check to see if authorization headers should be included
     AddAuthorizationHeaders();
+
+    if (mLoadFlags & LOAD_NO_NETWORK_IO) {
+        return NS_ERROR_NEEDS_NETWORK;
+    }
 
     // hit the net...
     rv = SetupTransaction();
@@ -1307,9 +1311,10 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
 
     // Set the desired cache access mode accordingly...
     nsCacheAccessMode accessRequested;
-    if (offline || (mLoadFlags & INHIBIT_CACHING)) {
+    if (mLoadFlags & (LOAD_ONLY_FROM_CACHE | INHIBIT_CACHING)) {
         // If we have been asked to bypass the cache and not write to the
-        // cache, then don't use the cache at all.
+        // cache, then don't use the cache at all.  Unless we're actually
+        // offline, which takes precedence over BYPASS_LOCAL_CACHE.
         if (BYPASS_LOCAL_CACHE(mLoadFlags) && !offline)
             return NS_ERROR_NOT_AVAILABLE;
         accessRequested = nsICache::ACCESS_READ;
@@ -1330,7 +1335,7 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
     rv = session->OpenCacheEntry(cacheKey, accessRequested, PR_FALSE,
                                  getter_AddRefs(mCacheEntry));
 
-    if (offline &&
+    if ((mLoadFlags & LOAD_CHECK_OFFLINE_CACHE) &&
         !(NS_SUCCEEDED(rv) || rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION)) {
         // couldn't find it in the main cache, check the offline cache
 
@@ -1545,10 +1550,12 @@ nsHttpChannel::CheckCache()
     NS_ENSURE_SUCCESS(rv, rv);
     buf.Adopt(0);
 
-    // If we were only granted read access, then assume the entry is valid.
-    // unless it is INHBIT_CACHING
-    if (mCacheAccess == nsICache::ACCESS_READ &&
-        !(mLoadFlags & INHIBIT_CACHING)) {
+    // Don't bother to validate LOAD_ONLY_FROM_CACHE items.
+    // Don't bother to validate items that are read-only,
+    // unless they are read-only because of INHIBIT_CACHING.
+    if (mLoadFlags & LOAD_ONLY_FROM_CACHE ||
+        (mCacheAccess == nsICache::ACCESS_READ &&
+         !(mLoadFlags & INHIBIT_CACHING))) {
         mCachedContentIsValid = PR_TRUE;
         return NS_OK;
     }
