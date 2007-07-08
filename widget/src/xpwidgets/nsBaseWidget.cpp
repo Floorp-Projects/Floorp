@@ -345,7 +345,7 @@ NS_IMETHODIMP nsBaseWidget::SetZIndex(PRInt32 aZIndex)
   mZIndex = aZIndex;
 
   // reorder this child in its parent's list.
-  nsBaseWidget* parent = NS_STATIC_CAST(nsBaseWidget*, GetParent());
+  nsBaseWidget* parent = static_cast<nsBaseWidget*>(GetParent());
   if (parent) {
     parent->RemoveChild(this);
     // Scope sib outside the for loop so we can check it afterward

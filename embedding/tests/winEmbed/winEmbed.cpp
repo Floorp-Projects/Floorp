@@ -1099,7 +1099,7 @@ nsresult AppCallbacks::CreateBrowserWindow(PRUint32 aChromeFlags,
 
   // the interface to return and one addref, which we assume will be
   // immediately released
-  CallQueryInterface(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome), aNewWindow);
+  CallQueryInterface(static_cast<nsIWebBrowserChrome*>(chrome), aNewWindow);
   // now an extra addref; the window owns itself (to be released by
   // WebBrowserChromeUI::Destroy)
   NS_ADDREF(*aNewWindow);
@@ -1114,7 +1114,7 @@ nsresult AppCallbacks::CreateBrowserWindow(PRUint32 aChromeFlags,
     return NS_ERROR_FAILURE;
 
   // Place it where we want it.
-  ResizeEmbedding(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome));
+  ResizeEmbedding(static_cast<nsIWebBrowserChrome*>(chrome));
 
   // if opened as chrome, it'll be made visible after the chrome has loaded.
   // otherwise, go ahead and show it now.

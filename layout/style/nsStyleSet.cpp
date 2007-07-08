@@ -305,7 +305,7 @@ nsStyleSet::EnableQuirkStyleSheet(PRBool aEnable)
       nsIStyleSheet *sheet = mSheets[eAgentSheet].ObjectAt(i);
       NS_ASSERTION(sheet, "mAgentSheets should not contain null sheets");
 
-      nsICSSStyleSheet *cssSheet = NS_STATIC_CAST(nsICSSStyleSheet*, sheet);
+      nsICSSStyleSheet *cssSheet = static_cast<nsICSSStyleSheet*>(sheet);
       NS_ASSERTION(nsCOMPtr<nsICSSStyleSheet>(do_QueryInterface(sheet)) == cssSheet,
                    "Agent sheet must be a CSSStyleSheet");
 
@@ -340,7 +340,7 @@ static PRBool
 EnumRulesMatching(nsIStyleRuleProcessor* aProcessor, void* aData)
 {
   ElementRuleProcessorData* data =
-    NS_STATIC_CAST(ElementRuleProcessorData*, aData);
+    static_cast<ElementRuleProcessorData*>(aData);
 
   aProcessor->RulesMatching(data);
   return PR_TRUE;
@@ -644,7 +644,7 @@ static PRBool
 EnumPseudoRulesMatching(nsIStyleRuleProcessor* aProcessor, void* aData)
 {
   PseudoRuleProcessorData* data =
-    NS_STATIC_CAST(PseudoRuleProcessorData*, aData);
+    static_cast<PseudoRuleProcessorData*>(aData);
 
   aProcessor->RulesMatching(data);
   return PR_TRUE;
@@ -798,7 +798,7 @@ nsStyleSet::NotifyStyleContextDestroyed(nsPresContext* aPresContext,
     // undisplayed map and "additional style contexts" since they are
     // descendants of the root.
     for (PRInt32 i = mRoots.Count() - 1; i >= 0; --i) {
-      NS_STATIC_CAST(nsStyleContext*,mRoots[i])->Mark();
+      static_cast<nsStyleContext*>(mRoots[i])->Mark();
     }
 
     // Sweep the rule tree.
@@ -817,7 +817,7 @@ nsStyleSet::ClearStyleData(nsPresContext* aPresContext)
   mRuleTree->ClearStyleData();
 
   for (PRInt32 i = mRoots.Count() - 1; i >= 0; --i) {
-    NS_STATIC_CAST(nsStyleContext*,mRoots[i])->ClearStyleData(aPresContext);
+    static_cast<nsStyleContext*>(mRoots[i])->ClearStyleData(aPresContext);
   }
 }
 

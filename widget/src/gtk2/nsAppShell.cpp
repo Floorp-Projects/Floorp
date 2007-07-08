@@ -60,7 +60,7 @@ nsAppShell::EventProcessorCallback(GIOChannel *source,
                                    GIOCondition condition,
                                    gpointer data)
 {
-    nsAppShell *self = NS_STATIC_CAST(nsAppShell *, data);
+    nsAppShell *self = static_cast<nsAppShell *>(data);
 
     unsigned char c;
     read(self->mPipeFDs[0], &c, 1);

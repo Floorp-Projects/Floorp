@@ -227,7 +227,7 @@ PR_STATIC_CALLBACK(void)
 EventListenerManagerHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
   EventListenerManagerMapEntry *lm =
-    NS_STATIC_CAST(EventListenerManagerMapEntry *, entry);
+    static_cast<EventListenerManagerMapEntry *>(entry);
 
   // Let the EventListenerManagerMapEntry clean itself up...
   lm->~EventListenerManagerMapEntry();
@@ -690,7 +690,7 @@ nsContentUtils::Shutdown()
   if (sPtrsToPtrsToRelease) {
     for (i = 0; i < sPtrsToPtrsToRelease->Count(); ++i) {
       nsISupports** ptrToPtr =
-        NS_STATIC_CAST(nsISupports**, sPtrsToPtrsToRelease->ElementAt(i));
+        static_cast<nsISupports**>(sPtrsToPtrsToRelease->ElementAt(i));
       NS_RELEASE(*ptrToPtr);
     }
     delete sPtrsToPtrsToRelease;
@@ -823,7 +823,7 @@ nsContentUtils::InProlog(nsINode *aNode)
     return PR_FALSE;
   }
 
-  nsIDocument* doc = NS_STATIC_CAST(nsIDocument*, parent);
+  nsIDocument* doc = static_cast<nsIDocument*>(parent);
   nsIContent* root = doc->GetRootContent();
 
   return !root || doc->IndexOf(aNode) < doc->IndexOf(root);
@@ -1000,13 +1000,13 @@ nsContentUtils::ReparentContentWrappersInScope(nsIScriptGlobalObject *aOldScope,
   // Try really hard to find a context to work on.
   nsIScriptContext *context = aOldScope->GetContext();
   if (context) {
-    cx = NS_STATIC_CAST(JSContext *, context->GetNativeContext());
+    cx = static_cast<JSContext *>(context->GetNativeContext());
   }
 
   if (!cx) {
     context = aNewScope->GetContext();
     if (context) {
-      cx = NS_STATIC_CAST(JSContext *, context->GetNativeContext());
+      cx = static_cast<JSContext *>(context->GetNativeContext());
     }
 
     if (!cx) {
@@ -1293,17 +1293,17 @@ nsContentUtils::ComparePosition(nsINode* aNode1,
   // Check if either node is an attribute
   nsIAttribute* attr1 = nsnull;
   if (aNode1->IsNodeOfType(nsINode::eATTRIBUTE)) {
-    attr1 = NS_STATIC_CAST(nsIAttribute*, aNode1);
+    attr1 = static_cast<nsIAttribute*>(aNode1);
     nsIContent* elem = attr1->GetContent();
     // If there is an owner element add the attribute
     // to the chain and walk up to the element
     if (elem) {
       aNode1 = elem;
-      parents1.AppendElement(NS_STATIC_CAST(nsINode*, attr1));
+      parents1.AppendElement(static_cast<nsINode*>(attr1));
     }
   }
   if (aNode2->IsNodeOfType(nsINode::eATTRIBUTE)) {
-    nsIAttribute* attr2 = NS_STATIC_CAST(nsIAttribute*, aNode2);
+    nsIAttribute* attr2 = static_cast<nsIAttribute*>(aNode2);
     nsIContent* elem = attr2->GetContent();
     if (elem == aNode1 && attr1) {
       // Both nodes are attributes on the same element.
@@ -1329,7 +1329,7 @@ nsContentUtils::ComparePosition(nsINode* aNode1,
 
     if (elem) {
       aNode2 = elem;
-      parents2.AppendElement(NS_STATIC_CAST(nsINode*, attr2));
+      parents2.AppendElement(static_cast<nsINode*>(attr2));
     }
   }
 
@@ -1374,8 +1374,8 @@ nsContentUtils::ComparePosition(nsINode* aNode1,
       // IndexOf will return -1 for the attribute making the attribute be
       // considered before any child.
       return parent->IndexOf(child1) < parent->IndexOf(child2) ?
-        NS_STATIC_CAST(PRUint16, nsIDOM3Node::DOCUMENT_POSITION_PRECEDING) :
-        NS_STATIC_CAST(PRUint16, nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING);
+        static_cast<PRUint16>(nsIDOM3Node::DOCUMENT_POSITION_PRECEDING) :
+        static_cast<PRUint16>(nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING);
     }
     parent = child1;
   }
@@ -3039,8 +3039,8 @@ nsContentUtils::TraverseListenerManager(nsINode *aNode,
   }
 
   EventListenerManagerMapEntry *entry =
-    NS_STATIC_CAST(EventListenerManagerMapEntry *,
-                   PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
+    static_cast<EventListenerManagerMapEntry *>
+               (PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
                                         PL_DHASH_LOOKUP));
   if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
     cb.NoteXPCOMChild(entry->mListenerManager);
@@ -3067,8 +3067,8 @@ nsContentUtils::GetListenerManager(nsINode *aNode,
 
   if (!aCreateIfNotFound) {
     EventListenerManagerMapEntry *entry =
-      NS_STATIC_CAST(EventListenerManagerMapEntry *,
-                     PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
+      static_cast<EventListenerManagerMapEntry *>
+                 (PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
                                           PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
       *aResult = entry->mListenerManager;
@@ -3078,8 +3078,8 @@ nsContentUtils::GetListenerManager(nsINode *aNode,
   }
 
   EventListenerManagerMapEntry *entry =
-    NS_STATIC_CAST(EventListenerManagerMapEntry *,
-                   PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
+    static_cast<EventListenerManagerMapEntry *>
+               (PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
                                         PL_DHASH_ADD));
 
   if (!entry) {
@@ -3112,8 +3112,8 @@ nsContentUtils::RemoveListenerManager(nsINode *aNode)
 {
   if (sEventListenerManagersHash.ops) {
     EventListenerManagerMapEntry *entry =
-      NS_STATIC_CAST(EventListenerManagerMapEntry *,
-                     PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
+      static_cast<EventListenerManagerMapEntry *>
+                 (PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
                                           PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
       nsCOMPtr<nsIEventListenerManager> listenerManager;
@@ -3426,7 +3426,7 @@ nsContentUtils::AppendNodeTextContent(nsINode* aNode, PRBool aDeep,
                                       nsAString& aResult)
 {
   if (aNode->IsNodeOfType(nsINode::eTEXT)) {
-    NS_STATIC_CAST(nsIContent*, aNode)->AppendTextTo(aResult);
+    static_cast<nsIContent*>(aNode)->AppendTextTo(aResult);
   }
   else if (aDeep) {
     AppendNodeTextContentsRecurse(aNode, aResult);
@@ -3478,7 +3478,7 @@ nsContentUtils::IsInSameAnonymousTree(nsINode* aNode,
     return aContent->GetBindingParent() == nsnull;
   }
 
-  return NS_STATIC_CAST(nsIContent*, aNode)->GetBindingParent() ==
+  return static_cast<nsIContent*>(aNode)->GetBindingParent() ==
          aContent->GetBindingParent();
  
 }

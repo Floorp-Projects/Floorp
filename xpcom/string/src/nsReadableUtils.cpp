@@ -332,7 +332,7 @@ inline
 ToCharT*
 AllocateStringCopy( const FromStringT& aSource, ToCharT* )
   {
-    return NS_STATIC_CAST(ToCharT*, nsMemory::Alloc((aSource.Length()+1) * sizeof(ToCharT)));
+    return static_cast<ToCharT*>(nsMemory::Alloc((aSource.Length()+1) * sizeof(ToCharT)));
   }
 
 
@@ -362,8 +362,8 @@ ToNewUTF8String( const nsAString& aSource, PRUint32 *aUTF8Count )
     if (aUTF8Count)
       *aUTF8Count = calculator.Size();
 
-    char *result = NS_STATIC_CAST(char*,
-        nsMemory::Alloc(calculator.Size() + 1));
+    char *result = static_cast<char*>
+                              (nsMemory::Alloc(calculator.Size() + 1));
     if (!result)
       return nsnull;
 
@@ -433,8 +433,8 @@ UTF8ToNewUnicode( const nsACString& aSource, PRUint32 *aUTF16Count )
     if (aUTF16Count)
       *aUTF16Count = calculator.Length();
 
-    PRUnichar *result = NS_STATIC_CAST(PRUnichar*,
-        nsMemory::Alloc(sizeof(PRUnichar) * (calculator.Length() + 1)));
+    PRUnichar *result = static_cast<PRUnichar*>
+                                   (nsMemory::Alloc(sizeof(PRUnichar) * (calculator.Length() + 1)));
     if (!result)
       return nsnull;
 
@@ -657,7 +657,7 @@ class ConvertToUpperCase
       PRUint32
       write( const char* aSource, PRUint32 aSourceLength )
         {
-          char* cp = NS_CONST_CAST(char*,aSource);
+          char* cp = const_cast<char*>(aSource);
           const char* end = aSource + aSourceLength;
           while (cp != end) {
             char ch = *cp;
@@ -749,7 +749,7 @@ class ConvertToLowerCase
       PRUint32
       write( const char* aSource, PRUint32 aSourceLength )
         {
-          char* cp = NS_CONST_CAST(char*,aSource);
+          char* cp = const_cast<char*>(aSource);
           const char* end = aSource + aSourceLength;
           while (cp != end) {
             char ch = *cp;

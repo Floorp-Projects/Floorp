@@ -60,7 +60,7 @@ XPCDispObject::WrapIDispatch(IDispatch *pDispatch, XPCCallContext &ccx,
     // Wrap the desired COM object
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     nsresult rv = ccx.GetXPConnect()->WrapNative(
-        ccx, obj, NS_REINTERPRET_CAST(nsISupports*, pDispatch), NSID_IDISPATCH,
+        ccx, obj, reinterpret_cast<nsISupports*>(pDispatch), NSID_IDISPATCH,
         getter_AddRefs(holder));
     if(NS_FAILED(rv) || !holder)
     {
@@ -274,7 +274,7 @@ JSBool XPCDispObject::Invoke(XPCCallContext & ccx, CallMode mode)
     }
 
     // TODO: Remove type cast and change GetIDispatchMember to use the correct type
-    XPCDispInterface::Member* member = NS_REINTERPRET_CAST(XPCDispInterface::Member*,ccx.GetIDispatchMember());
+    XPCDispInterface::Member* member = reinterpret_cast<XPCDispInterface::Member*>(ccx.GetIDispatchMember());
     XPCJSRuntime* rt = ccx.GetRuntime();
     XPCContext* xpcc = ccx.GetXPCContext();
     XPCPerThreadData* tls = ccx.GetThreadData();
@@ -322,8 +322,8 @@ JSBool XPCDispObject::Invoke(XPCCallContext & ccx, CallMode mode)
         return JS_FALSE;
     }
 
-    IDispatch * pObj = NS_REINTERPRET_CAST(IDispatch*,
-                                            ccx.GetTearOff()->GetNative());
+    IDispatch * pObj = reinterpret_cast<IDispatch*>
+                                       (ccx.GetTearOff()->GetNative());
     PRUint32 args = member->GetParamCount();
     uintN err;
     // Make sure setter has one argument
@@ -423,12 +423,12 @@ JSBool GetMember(XPCCallContext& ccx, JSObject* funobj, XPCNativeInterface*& ifa
         return JS_FALSE;
     if(!JSVAL_IS_INT(val))
         return JS_FALSE;
-    iface = NS_REINTERPRET_CAST(XPCNativeInterface*,JSVAL_TO_PRIVATE(val));
+    iface = reinterpret_cast<XPCNativeInterface*>(JSVAL_TO_PRIVATE(val));
     if(!JS_GetReservedSlot(ccx, funobj, 0, &val))
         return JS_FALSE;
     if(!JSVAL_IS_INT(val))
         return JS_FALSE;
-    member = NS_REINTERPRET_CAST(XPCDispInterface::Member*,JSVAL_TO_PRIVATE(val));
+    member = reinterpret_cast<XPCDispInterface::Member*>(JSVAL_TO_PRIVATE(val));
     return JS_TRUE;
 }
 

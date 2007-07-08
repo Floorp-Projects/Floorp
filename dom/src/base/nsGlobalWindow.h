@@ -148,12 +148,12 @@ struct nsTimeout : PRCList
 
   nsTimeout* Next() {
     // Note: might not actually return an nsTimeout.  Use IsTimeout to check.
-    return NS_STATIC_CAST(nsTimeout*, PR_NEXT_LINK(this));
+    return static_cast<nsTimeout*>(PR_NEXT_LINK(this));
   }
 
   nsTimeout* Prev() {
     // Note: might not actually return an nsTimeout.  Use IsTimeout to check.
-    return NS_STATIC_CAST(nsTimeout*, PR_PREV_LINK(this));
+    return static_cast<nsTimeout*>(PR_PREV_LINK(this));
   }
 
   // Window for which this timeout fires
@@ -303,11 +303,11 @@ public:
 
   virtual NS_HIDDEN_(nsPIDOMEventTarget*) GetTargetForDOMEvent()
   {
-    return NS_STATIC_CAST(nsPIDOMEventTarget*, GetOuterWindowInternal());
+    return static_cast<nsPIDOMEventTarget*>(GetOuterWindowInternal());
   }
   virtual NS_HIDDEN_(nsPIDOMEventTarget*) GetTargetForEventTargetChain()
   {
-    return NS_STATIC_CAST(nsPIDOMEventTarget*, GetCurrentInnerWindowInternal());
+    return static_cast<nsPIDOMEventTarget*>(GetCurrentInnerWindowInternal());
   }
   virtual NS_HIDDEN_(nsresult) PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual NS_HIDDEN_(nsresult) PostHandleEvent(nsEventChainPostVisitor& aVisitor);
@@ -376,17 +376,17 @@ public:
 
   nsGlobalWindow *GetOuterWindowInternal()
   {
-    return NS_STATIC_CAST(nsGlobalWindow *, GetOuterWindow());
+    return static_cast<nsGlobalWindow *>(GetOuterWindow());
   }
 
   nsGlobalWindow *GetCurrentInnerWindowInternal()
   {
-    return NS_STATIC_CAST(nsGlobalWindow *, mInnerWindow);
+    return static_cast<nsGlobalWindow *>(mInnerWindow);
   }
 
   nsGlobalWindow *EnsureInnerWindowInternal()
   {
-    return NS_STATIC_CAST(nsGlobalWindow *, EnsureInnerWindow());
+    return static_cast<nsGlobalWindow *>(EnsureInnerWindow());
   }
 
   PRBool IsFrozen() const
@@ -593,12 +593,12 @@ protected:
 
   nsTimeout* FirstTimeout() {
     // Note: might not actually return an nsTimeout.  Use IsTimeout to check.
-    return NS_STATIC_CAST(nsTimeout*, PR_LIST_HEAD(&mTimeouts));
+    return static_cast<nsTimeout*>(PR_LIST_HEAD(&mTimeouts));
   }
 
   nsTimeout* LastTimeout() {
     // Note: might not actually return an nsTimeout.  Use IsTimeout to check.
-    return NS_STATIC_CAST(nsTimeout*, PR_LIST_TAIL(&mTimeouts));
+    return static_cast<nsTimeout*>(PR_LIST_TAIL(&mTimeouts));
   }
 
   PRBool IsTimeout(PRCList* aList) {

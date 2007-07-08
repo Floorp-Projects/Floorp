@@ -82,9 +82,9 @@ class TestTimer
           nsInt64 stopTime = GetTime();
 	        nsInt64 totalTime = stopTime - mStartTime;
 #ifdef HAVE_LONG_LONG
-          cout << setw(10) << NS_STATIC_CAST(PRInt64, totalTime) << " 탎 : ";
+          cout << setw(10) << static_cast<PRInt64>(totalTime) << " 탎 : ";
 #else
-          cout << setw(10) << NS_STATIC_CAST(PRInt32, totalTime) << "탎 : ";
+          cout << setw(10) << static_cast<PRInt32>(totalTime) << "탎 : ";
 #endif
         }
 

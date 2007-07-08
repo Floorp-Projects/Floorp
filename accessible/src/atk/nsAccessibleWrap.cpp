@@ -376,8 +376,8 @@ NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
         GType type = GetMaiAtkType(CreateMaiInterfaces());
         NS_ENSURE_TRUE(type, NS_ERROR_FAILURE);
         mAtkObject =
-            NS_REINTERPRET_CAST(AtkObject *,
-                                g_object_new(type, NULL));
+            reinterpret_cast<AtkObject *>
+                            (g_object_new(type, NULL));
         NS_ENSURE_TRUE(mAtkObject, NS_ERROR_OUT_OF_MEMORY);
 
         atk_object_initialize(mAtkObject, this);
@@ -394,7 +394,7 @@ nsAccessibleWrap::GetAtkObject(void)
 {
     void *atkObj = nsnull;
     GetNativeInterface(&atkObj);
-    return NS_STATIC_CAST(AtkObject *, atkObj);
+    return static_cast<AtkObject *>(atkObj);
 }
 
 // Get AtkObject from nsIAccessible interface
@@ -690,7 +690,7 @@ initializeCB(AtkObject *aAtkObj, gpointer aData)
 
     /* initialize object */
     MAI_ATK_OBJECT(aAtkObj)->accWrap =
-        NS_STATIC_CAST(nsAccessibleWrap*, aData);
+        static_cast<nsAccessibleWrap*>(aData);
 
 #ifdef MAI_LOGGING
     ++sMaiAtkObjCreated;
@@ -782,7 +782,7 @@ getRoleCB(AtkObject *aAtkObj)
         atkRole = atkRoleMap[accRole]; // map to the actual value
         NS_ASSERTION(atkRoleMap[nsIAccessibleRole::ROLE_LAST_ENTRY] ==
                      kROLE_ATK_LAST_ENTRY, "ATK role map skewed");
-        aAtkObj->role = NS_STATIC_CAST(AtkRole, atkRole);
+        aAtkObj->role = static_cast<AtkRole>(atkRole);
     }
     return aAtkObj->role;
 }
@@ -967,7 +967,7 @@ getIndexInParentCB(AtkObject *aAtkObj)
 
     PRInt32 currentIndex = 0;
 
-    while (sibling != NS_STATIC_CAST(nsIAccessible*, accWrap)) {
+    while (sibling != static_cast<nsIAccessible*>(accWrap)) {
       NS_ASSERTION(sibling, "Never ran into the same child that we started from");
 
       if (!sibling) {
@@ -1060,7 +1060,7 @@ refRelationSetCB(AtkObject *aAtkObj)
                                };
 
     for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(relationType); i++) {
-        relation = atk_relation_set_get_relation_by_type(relation_set, NS_STATIC_CAST(AtkRelationType, relationType[i]));
+        relation = atk_relation_set_get_relation_by_type(relation_set, static_cast<AtkRelationType>(relationType[i]));
         if (relation) {
             atk_relation_set_remove(relation_set, relation);
         }
@@ -1070,7 +1070,7 @@ refRelationSetCB(AtkObject *aAtkObj)
         if (NS_SUCCEEDED(rv) && accRelated) {
             accessible_array[0] = nsAccessibleWrap::GetAtkObject(accRelated);
             relation = atk_relation_new(accessible_array, 1,
-                                        NS_STATIC_CAST(AtkRelationType, relationType[i]));
+                                        static_cast<AtkRelationType>(relationType[i]));
             atk_relation_set_add(relation_set, relation);
             g_object_unref(relation);
         }
@@ -1096,7 +1096,7 @@ nsAccessibleWrap *GetAccessibleWrap(AtkObject *aAtkObj)
     nsRefPtr<nsApplicationAccessibleWrap> appAccWrap =
         nsAccessNode::GetApplicationAccessible();
     nsAccessibleWrap* tmpAppAccWrap =
-        NS_STATIC_CAST(nsAccessibleWrap*, appAccWrap.get());
+        static_cast<nsAccessibleWrap*>(appAccWrap.get());
 
     if (tmpAppAccWrap != tmpAccWrap && !tmpAccWrap->IsValidObject())
         return nsnull;
@@ -1118,7 +1118,7 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
     rv = aEvent->GetEventType(&type);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAccEvent *event = NS_REINTERPRET_CAST(nsAccEvent*, aEvent);
+    nsAccEvent *event = reinterpret_cast<nsAccEvent*>(aEvent);
     void *eventData = event->mEventData;
 
     AtkObject *atkObj = nsAccessibleWrap::GetAtkObject(accessible);
@@ -1215,7 +1215,7 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
         if (!eventData)
             break;
 
-        pAtkTableChange = NS_REINTERPRET_CAST(AtkTableChange *, eventData);
+        pAtkTableChange = reinterpret_cast<AtkTableChange *>(eventData);
 
         g_signal_emit_by_name(atkObj,
                               "row_inserted",
@@ -1231,7 +1231,7 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
         if (!eventData)
             break;
 
-        pAtkTableChange = NS_REINTERPRET_CAST(AtkTableChange *, eventData);
+        pAtkTableChange = reinterpret_cast<AtkTableChange *>(eventData);
 
         g_signal_emit_by_name(atkObj,
                               "row_deleted",
@@ -1252,7 +1252,7 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
         if (!eventData)
             break;
 
-        pAtkTableChange = NS_REINTERPRET_CAST(AtkTableChange *, eventData);
+        pAtkTableChange = reinterpret_cast<AtkTableChange *>(eventData);
 
         g_signal_emit_by_name(atkObj,
                               "column_inserted",
@@ -1268,7 +1268,7 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
         if (!eventData)
             break;
 
-        pAtkTableChange = NS_REINTERPRET_CAST(AtkTableChange *, eventData);
+        pAtkTableChange = reinterpret_cast<AtkTableChange *>(eventData);
 
         g_signal_emit_by_name(atkObj,
                               "column_deleted",
@@ -1321,7 +1321,7 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_WINDOW_ACTIVATED\n"));
         nsDocAccessibleWrap *accDocWrap =
-          NS_STATIC_CAST(nsDocAccessibleWrap *, accessible.get());
+          static_cast<nsDocAccessibleWrap *>(accessible.get());
         accDocWrap->mActivated = PR_TRUE;
         guint id = g_signal_lookup ("activate", MAI_TYPE_ATK_OBJECT);
         g_signal_emit(atkObj, id, 0);
@@ -1331,7 +1331,7 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_WINDOW_DEACTIVATED\n"));
         nsDocAccessibleWrap *accDocWrap =
-          NS_STATIC_CAST(nsDocAccessibleWrap *, accessible.get());
+          static_cast<nsDocAccessibleWrap *>(accessible.get());
         accDocWrap->mActivated = PR_FALSE;
         guint id = g_signal_lookup ("deactivate", MAI_TYPE_ATK_OBJECT);
         g_signal_emit(atkObj, id, 0);
@@ -1457,9 +1457,9 @@ nsAccessibleWrap::FireAtkPropChangedEvent(nsIAccessibleEvent *aEvent,
     AtkPropertyValues values = { NULL };
     nsAccessibleWrap *oldAccWrap = nsnull, *newAccWrap = nsnull;
 
-    nsAccEvent *event = NS_REINTERPRET_CAST(nsAccEvent*, aEvent);
+    nsAccEvent *event = reinterpret_cast<nsAccEvent*>(aEvent);
 
-    pAtkPropChange = NS_REINTERPRET_CAST(AtkPropertyChange *, event->mEventData);
+    pAtkPropChange = reinterpret_cast<AtkPropertyChange *>(event->mEventData);
     values.property_name = sAtkPropertyNameArray[pAtkPropChange->type];
 
     NS_ASSERTION(pAtkPropChange, "Event needs event data");
@@ -1474,12 +1474,12 @@ nsAccessibleWrap::FireAtkPropChangedEvent(nsIAccessibleEvent *aEvent,
     case PROP_TABLE_SUMMARY:
 
         if (pAtkPropChange->oldvalue)
-            oldAccWrap = NS_REINTERPRET_CAST(nsAccessibleWrap *,
-                                             pAtkPropChange->oldvalue);
+            oldAccWrap = reinterpret_cast<nsAccessibleWrap *>
+                                         (pAtkPropChange->oldvalue);
 
         if (pAtkPropChange->newvalue)
-            newAccWrap = NS_REINTERPRET_CAST(nsAccessibleWrap *,
-                                             pAtkPropChange->newvalue);
+            newAccWrap = reinterpret_cast<nsAccessibleWrap *>
+                                         (pAtkPropChange->newvalue);
 
         if (oldAccWrap && newAccWrap) {
             g_value_init(&values.old_value, G_TYPE_POINTER);
@@ -1497,8 +1497,8 @@ nsAccessibleWrap::FireAtkPropChangedEvent(nsIAccessibleEvent *aEvent,
     case PROP_TABLE_ROW_DESCRIPTION:
         g_value_init(&values.new_value, G_TYPE_INT);
         g_value_set_int(&values.new_value,
-                        *NS_REINTERPRET_CAST(gint *,
-                                             pAtkPropChange->newvalue));
+                        *reinterpret_cast<gint *>
+                                         (pAtkPropChange->newvalue));
         break;
 
         //Perhaps need more cases in the future

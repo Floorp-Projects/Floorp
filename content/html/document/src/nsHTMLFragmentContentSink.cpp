@@ -347,7 +347,7 @@ nsHTMLFragmentContentSink::AddBaseTagInfo(nsIContent* aContent)
                                nsPropertyTable::SupportsDtorFunc, PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
       // circumvent nsDerivedSafe
-      NS_ADDREF(NS_STATIC_CAST(nsIURI*, mBaseHref));
+      NS_ADDREF(static_cast<nsIURI*>(mBaseHref));
     }
   }
   if (mBaseTarget) {
@@ -355,7 +355,7 @@ nsHTMLFragmentContentSink::AddBaseTagInfo(nsIContent* aContent)
                                nsPropertyTable::SupportsDtorFunc, PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
       // circumvent nsDerivedSafe
-      NS_ADDREF(NS_STATIC_CAST(nsIAtom*, mBaseTarget));
+      NS_ADDREF(static_cast<nsIAtom*>(mBaseTarget));
     }
   }
 }

@@ -98,15 +98,15 @@ EmbedWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
   // realized before that can happen.
   gtk_widget_realize(GTK_WIDGET(newEmbed));
 
-  EmbedPrivate *newEmbedPrivate = NS_STATIC_CAST(EmbedPrivate *,
-             newEmbed->data);
+  EmbedPrivate *newEmbedPrivate = static_cast<EmbedPrivate *>
+                                             (newEmbed->data);
 
   // set the chrome flag on the new window if it's a chrome open
   if (aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)
     newEmbedPrivate->mIsChrome = PR_TRUE;
 
-  *_retval = NS_STATIC_CAST(nsIWebBrowserChrome *,
-            (newEmbedPrivate->mWindow));
+  *_retval = static_cast<nsIWebBrowserChrome *>
+                        ((newEmbedPrivate->mWindow));
 
   if (*_retval) {
     NS_ADDREF(*_retval);

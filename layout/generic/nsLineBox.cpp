@@ -143,7 +143,7 @@ ListFloats(FILE* out, PRInt32 aIndent, const nsFloatCacheList& aFloats)
     nsFrame::IndentBy(out, aIndent);
     nsPlaceholderFrame* ph = fc->mPlaceholder;
     if (nsnull != ph) {
-      fprintf(out, "placeholder@%p ", NS_STATIC_CAST(void*, ph));
+      fprintf(out, "placeholder@%p ", static_cast<void*>(ph));
       nsIFrame* frame = ph->GetOutOfFlowFrame();
       if (nsnull != frame) {
         nsIFrameDebug*  frameDebug;
@@ -206,7 +206,7 @@ nsLineBox::List(FILE* out, PRInt32 aIndent) const
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
   char cbuf[100];
   fprintf(out, "line %p: count=%d state=%s ",
-          NS_STATIC_CAST(const void*, this), GetChildCount(),
+          static_cast<const void*>(this), GetChildCount(),
           StateToString(cbuf, sizeof(cbuf)));
   if (IsBlock() && !GetCarriedOutBottomMargin().IsZero()) {
     fprintf(out, "bm=%d ", GetCarriedOutBottomMargin().get());

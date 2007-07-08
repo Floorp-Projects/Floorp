@@ -106,7 +106,7 @@ nsCookie::Create(const nsACString &aName,
 
   // assign string members
   char *name, *value, *host, *path, *end;
-  name = NS_STATIC_CAST(char *, place) + sizeof(nsCookie);
+  name = static_cast<char *>(place) + sizeof(nsCookie);
   StrBlockCopy(aName, aValue, aHost, aPath,
                name, value, host, path, end);
 

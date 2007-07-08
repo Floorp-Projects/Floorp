@@ -333,7 +333,7 @@ nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(kBlockFrameCID)) {
-    *aInstancePtr = NS_STATIC_CAST(void*, NS_STATIC_CAST(nsBlockFrame*, this));
+    *aInstancePtr = static_cast<void*>(static_cast<nsBlockFrame*>(this));
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsILineIterator)) ||
@@ -352,7 +352,7 @@ nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
       NS_RELEASE(it);
       return rv;
     }
-    *aInstancePtr = NS_STATIC_CAST(nsILineIteratorNavigator*, it);
+    *aInstancePtr = static_cast<nsILineIteratorNavigator*>(it);
     return NS_OK;
   }
 
@@ -375,18 +375,18 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
   fprintf(out, " [parent=%p]", mParent);
 #endif
   if (HasView()) {
-    fprintf(out, " [view=%p]", NS_STATIC_CAST(void*, GetView()));
+    fprintf(out, " [view=%p]", static_cast<void*>(GetView()));
   }
   if (nsnull != mNextSibling) {
-    fprintf(out, " next=%p", NS_STATIC_CAST(void*, mNextSibling));
+    fprintf(out, " next=%p", static_cast<void*>(mNextSibling));
   }
 
   // Output the flow linkage
   if (nsnull != GetPrevInFlow()) {
-    fprintf(out, " prev-in-flow=%p", NS_STATIC_CAST(void*, GetPrevInFlow()));
+    fprintf(out, " prev-in-flow=%p", static_cast<void*>(GetPrevInFlow()));
   }
   if (nsnull != GetNextInFlow()) {
-    fprintf(out, " next-in-flow=%p", NS_STATIC_CAST(void*, GetNextInFlow()));
+    fprintf(out, " next-in-flow=%p", static_cast<void*>(GetNextInFlow()));
   }
 
   // Output the rect and state
@@ -394,7 +394,7 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
   if (0 != mState) {
     fprintf(out, " [state=%08x]", mState);
   }
-  nsBlockFrame* f = NS_CONST_CAST(nsBlockFrame*, this);
+  nsBlockFrame* f = const_cast<nsBlockFrame*>(this);
   nsRect* overflowArea = f->GetOverflowAreaProperty(PR_FALSE);
   if (overflowArea) {
     fprintf(out, " [overflow=%d,%d,%d,%d]", overflowArea->x, overflowArea->y,
@@ -414,7 +414,7 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
     }
   }
   fprintf(out, " sc=%p(i=%d,b=%d)",
-          NS_STATIC_CAST(void*, mStyleContext), numInlineLines, numBlockLines);
+          static_cast<void*>(mStyleContext), numInlineLines, numBlockLines);
   nsIAtom* pseudoTag = mStyleContext->GetPseudoType();
   if (pseudoTag) {
     nsAutoString atomString;
@@ -861,7 +861,7 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
   nsSize oldSize = GetSize();
 
   // Should we create a space manager?
-  nsAutoSpaceManager autoSpaceManager(NS_CONST_CAST(nsHTMLReflowState &, aReflowState));
+  nsAutoSpaceManager autoSpaceManager(const_cast<nsHTMLReflowState &>(aReflowState));
 
   // XXXldb If we start storing the space manager in the frame rather
   // than keeping it around only during reflow then we should create it
@@ -1385,7 +1385,7 @@ nsBlockFrame::MarkLineDirty(line_iterator aLine)
   if (gNoisyReflow) {
     IndentBy(stdout, gNoiseIndent);
     ListTag(stdout);
-    printf(": mark line %p dirty\n", NS_STATIC_CAST(void*, aLine.get()));
+    printf(": mark line %p dirty\n", static_cast<void*>(aLine.get()));
   }
 #endif
 
@@ -1401,7 +1401,7 @@ nsBlockFrame::MarkLineDirty(line_iterator aLine)
       IndentBy(stdout, gNoiseIndent);
       ListTag(stdout);
       printf(": mark prev-line %p dirty\n",
-             NS_STATIC_CAST(void*, aLine.prev().get()));
+             static_cast<void*>(aLine.prev().get()));
     }
 #endif
   }
@@ -1485,8 +1485,8 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
       if (gNoisyReflow && !line->IsDirty()) {
         IndentBy(stdout, gNoiseIndent + 1);
         printf("skipped: line=%p next=%p %s %s%s%s breakTypeBefore/After=%d/%d xmost=%d\n",
-           NS_STATIC_CAST(void*, line.get()),
-           NS_STATIC_CAST(void*, (line.next() != end_lines() ? line.next().get() : nsnull)),
+           static_cast<void*>(line.get()),
+           static_cast<void*>((line.next() != end_lines() ? line.next().get() : nsnull)),
            line->IsBlock() ? "block" : "inline",
            line->HasBreakAfter() ? "has-break-after " : "",
            line->HasFloats() ? "has-floats " : "",
@@ -1639,7 +1639,7 @@ static void DumpLine(const nsBlockReflowState& aState, nsLineBox* aLine,
     nsRect lca(aLine->GetCombinedArea());
     nsBlockFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent + aDeltaIndent);
     printf("line=%p mY=%d dirty=%s oldBounds={%d,%d,%d,%d} oldCombinedArea={%d,%d,%d,%d} deltaY=%d mPrevBottomMargin=%d childCount=%d\n",
-           NS_STATIC_CAST(void*, aLine), aState.mY,
+           static_cast<void*>(aLine), aState.mY,
            aLine->IsDirty() ? "yes" : "no",
            aLine->mBounds.x, aLine->mBounds.y,
            aLine->mBounds.width, aLine->mBounds.height,
@@ -1959,7 +1959,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
         }
         if (!overflowLines) {
           aState.mNextInFlow =
-            NS_STATIC_CAST(nsBlockFrame*, nextInFlow->GetNextInFlow());
+            static_cast<nsBlockFrame*>(nextInFlow->GetNextInFlow());
           continue;
         }
         nifLine = overflowLines->begin();
@@ -2198,7 +2198,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
     printf("%p invalidate (%d, %d, %d, %d)\n",
            this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
     if (aLine->IsForceInvalidate())
-      printf("  dirty line is %p\n", NS_STATIC_CAST(void*, aLine.get());
+      printf("  dirty line is %p\n", static_cast<void*>(aLine.get());
 #endif
     Invalidate(dirtyRect);
   }
@@ -2652,7 +2652,7 @@ nsBlockFrame::UndoSplitPlaceholders(nsBlockReflowState& aState,
     aState.mOverflowPlaceholders.SetFrames(nsnull);
   }
   // remove the next in flows of the placeholders that need to be removed
-  for (nsPlaceholderFrame* placeholder = NS_STATIC_CAST(nsPlaceholderFrame*, undoPlaceholder);
+  for (nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(undoPlaceholder);
        placeholder; ) {
     NS_ASSERTION(!placeholder->GetNextInFlow(), "Must be the last placeholder");
 
@@ -2664,7 +2664,7 @@ nsBlockFrame::UndoSplitPlaceholders(nsBlockReflowState& aState,
 
     nsSplittableFrame::RemoveFromFlow(placeholder);
     nsIFrame* savePlaceholder = placeholder; 
-    placeholder = NS_STATIC_CAST(nsPlaceholderFrame*, placeholder->GetNextSibling());
+    placeholder = static_cast<nsPlaceholderFrame*>(placeholder->GetNextSibling());
     savePlaceholder->Destroy();
   }
 }
@@ -2989,7 +2989,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
             // the line is already marked dirty, so just handle the
             // first case.
             if (!madeContinuation) {
-              nsBlockFrame* nifBlock = NS_STATIC_CAST(nsBlockFrame*, nextFrame->GetParent());
+              nsBlockFrame* nifBlock = static_cast<nsBlockFrame*>(nextFrame->GetParent());
               NS_ASSERTION(nifBlock->GetType() == nsGkAtoms::blockFrame
                            || nifBlock->GetType() == nsGkAtoms::areaFrame,
                            "A block's child's next in flow's parent must be a block!");
@@ -3449,7 +3449,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   if (frameReflowStatus & NS_FRAME_REFLOW_NEXTINFLOW) {
     // we need to ensure that the frame's nextinflow gets reflowed.
     aState.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
-    nsBlockFrame* ourNext = NS_STATIC_CAST(nsBlockFrame*, GetNextInFlow());
+    nsBlockFrame* ourNext = static_cast<nsBlockFrame*>(GetNextInFlow());
     if (ourNext && aFrame->GetNextInFlow()) {
       line_iterator f = ourNext->FindLineFor(aFrame->GetNextInFlow());
       if (f != ourNext->end_lines()) {
@@ -3711,7 +3711,7 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
   if (gNoisyReflow) {
     nsFrame::IndentBy(stdout, gNoiseIndent);
     printf("split line: from line=%p pushCount=%d aFrame=",
-           NS_STATIC_CAST(void*, aLine.get()), pushCount);
+           static_cast<void*>(aLine.get()), pushCount);
     if (aFrame) {
       nsFrame::ListTag(stdout, aFrame);
     }
@@ -3841,7 +3841,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       if (abs(aLine->mBounds.y - lastHeight) > CRAZY_H/10) {
         nsFrame::ListTag(stdout);
         printf(": line=%p y=%d line.bounds.height=%d\n",
-               NS_STATIC_CAST(void*, aLine.get()),
+               static_cast<void*>(aLine.get()),
                aLine->mBounds.y, aLine->mBounds.height);
       }
     }
@@ -4109,7 +4109,7 @@ nsBlockFrame::HandleOverflowPlaceholdersForPulledFrame(
       return PR_FALSE;
   }
 
-  nsBlockFrame* parent = NS_STATIC_CAST(nsBlockFrame*, frame->GetParent());
+  nsBlockFrame* parent = static_cast<nsBlockFrame*>(frame->GetParent());
   // Remove aFrame and all its next in flows from their parents, but
   // don't destroy the frames.
 #ifdef DEBUG
@@ -4123,7 +4123,7 @@ nsBlockFrame::HandleOverflowPlaceholdersForPulledFrame(
     NS_ASSERTION(IsContinuationPlaceholder(frame),
                  "Should only be dealing with continuation placeholders here");
 
-    parent = NS_STATIC_CAST(nsBlockFrame*, frame->GetParent());
+    parent = static_cast<nsBlockFrame*>(frame->GetParent());
     ReparentFrame(frame, parent, this);
 
     // continuation placeholders are always direct children of a block
@@ -4300,8 +4300,8 @@ nsBlockFrame::DrainOverflowLines(nsBlockReflowState& aState)
           nsLineBox* line = iter;
           iter = ll->erase(iter);
           nsIFrame* next;
-          for (nsPlaceholderFrame* f = NS_STATIC_CAST(nsPlaceholderFrame*, line->mFirstChild);
-               n > 0; --n, f = NS_STATIC_CAST(nsPlaceholderFrame*, next)) {
+          for (nsPlaceholderFrame* f = static_cast<nsPlaceholderFrame*>(line->mFirstChild);
+               n > 0; --n, f = static_cast<nsPlaceholderFrame*>(next)) {
             if (!IsContinuationPlaceholder(f)) {
               NS_ASSERTION(IsContinuationPlaceholder(f),
                            "Line frames should all be continuation placeholders");
@@ -4361,7 +4361,7 @@ nsBlockFrame::DrainOverflowLines(nsBlockReflowState& aState)
                   nsLineBox* newLine = aState.NewLineBox(f, 1, PR_FALSE);
                   if (newLine) {
                     nsBlockFrame* target =
-                      NS_STATIC_CAST(nsBlockFrame*, fpAncestor->GetNextInFlow());
+                      static_cast<nsBlockFrame*>(fpAncestor->GetNextInFlow());
                     if (!target->mLines.empty()) {
                       f->SetNextSibling(target->mLines.front()->mFirstChild);
                     } else {
@@ -4443,8 +4443,8 @@ nsBlockFrame::GetOverflowLines() const
   if (!(GetStateBits() & NS_BLOCK_HAS_OVERFLOW_LINES)) {
     return nsnull;
   }
-  nsLineList* lines = NS_STATIC_CAST(nsLineList*,
-    GetProperty(nsGkAtoms::overflowLinesProperty));
+  nsLineList* lines = static_cast<nsLineList*>
+                                 (GetProperty(nsGkAtoms::overflowLinesProperty));
   NS_ASSERTION(lines && !lines->empty(),
                "value should always be stored and non-empty when state set");
   return lines;
@@ -4456,8 +4456,8 @@ nsBlockFrame::RemoveOverflowLines()
   if (!(GetStateBits() & NS_BLOCK_HAS_OVERFLOW_LINES)) {
     return nsnull;
   }
-  nsLineList* lines = NS_STATIC_CAST(nsLineList*,
-    UnsetProperty(nsGkAtoms::overflowLinesProperty));
+  nsLineList* lines = static_cast<nsLineList*>
+                                 (UnsetProperty(nsGkAtoms::overflowLinesProperty));
   NS_ASSERTION(lines && !lines->empty(),
                "value should always be stored and non-empty when state set");
   RemoveStateBits(NS_BLOCK_HAS_OVERFLOW_LINES);
@@ -4472,8 +4472,8 @@ DestroyOverflowLines(void*           aFrame,
                      void*           aDtorData)
 {
   if (aPropertyValue) {
-    nsLineList* lines = NS_STATIC_CAST(nsLineList*, aPropertyValue);
-    nsPresContext *context = NS_STATIC_CAST(nsPresContext*, aDtorData);
+    nsLineList* lines = static_cast<nsLineList*>(aPropertyValue);
+    nsPresContext *context = static_cast<nsPresContext*>(aDtorData);
     nsLineBox::DeleteLineList(context, *lines);
     delete lines;
   }
@@ -4505,8 +4505,8 @@ nsBlockFrame::GetOverflowOutOfFlows() const
   if (!(GetStateBits() & NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS)) {
     return nsFrameList();
   }
-  nsIFrame* result = NS_STATIC_CAST(nsIFrame*,
-    GetProperty(nsGkAtoms::overflowOutOfFlowsProperty));
+  nsIFrame* result = static_cast<nsIFrame*>
+                                (GetProperty(nsGkAtoms::overflowOutOfFlowsProperty));
   NS_ASSERTION(result, "value should always be non-empty when state set");
   return nsFrameList(result);
 }
@@ -4519,8 +4519,8 @@ nsBlockFrame::SetOverflowOutOfFlows(const nsFrameList& aList)
     if (!(GetStateBits() & NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS)) {
       return;
     }
-    nsIFrame* result = NS_STATIC_CAST(nsIFrame*,
-                                      UnsetProperty(nsGkAtoms::overflowOutOfFlowsProperty));
+    nsIFrame* result = static_cast<nsIFrame*>
+                                  (UnsetProperty(nsGkAtoms::overflowOutOfFlowsProperty));
     NS_ASSERTION(result, "value should always be non-empty when state set");
     RemoveStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS);
   } else {
@@ -4536,8 +4536,8 @@ nsBlockFrame::GetOverflowPlaceholders() const
   if (!(GetStateBits() & NS_BLOCK_HAS_OVERFLOW_PLACEHOLDERS)) {
     return nsnull;
   }
-  nsFrameList* result = NS_STATIC_CAST(nsFrameList*,
-    GetProperty(nsGkAtoms::overflowPlaceholdersProperty));
+  nsFrameList* result = static_cast<nsFrameList*>
+                                   (GetProperty(nsGkAtoms::overflowPlaceholdersProperty));
   NS_ASSERTION(result, "value should always be non-empty when state set");
   return result;
 }
@@ -4830,7 +4830,7 @@ static void MarkAllDescendantLinesDirty(nsBlockFrame* aBlock)
       nsIFrame* f = line->mFirstChild;
       void* bf;
       if (NS_SUCCEEDED(f->QueryInterface(kBlockFrameCID, &bf))) {
-        MarkAllDescendantLinesDirty(NS_STATIC_CAST(nsBlockFrame*, f));
+        MarkAllDescendantLinesDirty(static_cast<nsBlockFrame*>(f));
       }
     }
     line->MarkDirty();
@@ -4847,7 +4847,7 @@ static void MarkSameSpaceManagerLinesDirty(nsBlockFrame* aBlock)
                   QueryInterface(kBlockFrameCID, &bf))) {
       break;
     }
-    blockWithSpaceMgr = NS_STATIC_CAST(nsBlockFrame*, blockWithSpaceMgr->GetParent());
+    blockWithSpaceMgr = static_cast<nsBlockFrame*>(blockWithSpaceMgr->GetParent());
   }
     
   // Mark every line at and below the line where the float was
@@ -4865,7 +4865,7 @@ static PRBool BlockHasAnyFloats(nsIFrame* aFrame)
   void* bf;
   if (NS_FAILED(aFrame->QueryInterface(kBlockFrameCID, &bf)))
     return PR_FALSE;
-  nsBlockFrame* block = NS_STATIC_CAST(nsBlockFrame*, aFrame);
+  nsBlockFrame* block = static_cast<nsBlockFrame*>(aFrame);
   if (block->GetFirstChild(nsGkAtoms::floatList))
     return PR_TRUE;
     
@@ -4976,7 +4976,7 @@ static nsresult RemoveBlockChild(nsIFrame* aFrame, PRBool aDestroyFrames)
   if (!aFrame)
     return NS_OK;
 
-  nsBlockFrame* nextBlock = NS_STATIC_CAST(nsBlockFrame*, aFrame->GetParent());
+  nsBlockFrame* nextBlock = static_cast<nsBlockFrame*>(aFrame->GetParent());
   NS_ASSERTION(nextBlock->GetType() == nsGkAtoms::blockFrame ||
                nextBlock->GetType() == nsGkAtoms::areaFrame,
                "Our child's continuation's parent is not a block?");
@@ -5329,7 +5329,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
     // XXX won't this be done later in nsLineLayout::ReflowFrame anyway??
     nsIFrame* nextInFlow = aPlaceholder->GetNextInFlow();
     if (nextInFlow) {
-      NS_STATIC_CAST(nsHTMLContainerFrame*, nextInFlow->GetParent())
+      static_cast<nsHTMLContainerFrame*>(nextInFlow->GetParent())
         ->DeleteNextInFlowChild(aState.mPresContext, nextInFlow);
       // that takes care of all subsequent nextinflows too
     }
@@ -5535,7 +5535,7 @@ static void DebugOutputDrawLine(PRInt32 aDepth, nsLineBox* aLine, PRBool aDrawn)
     nsRect lineArea = aLine->GetCombinedArea();
     printf("%s line=%p bounds=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
            aDrawn ? "draw" : "skip",
-           NS_STATIC_CAST(void*, aLine),
+           static_cast<void*>(aLine),
            aLine->mBounds.x, aLine->mBounds.y,
            aLine->mBounds.width, aLine->mBounds.height,
            lineArea.x, lineArea.y,
@@ -5718,7 +5718,7 @@ NS_IMETHODIMP nsBlockFrame::GetAccessible(nsIAccessible** aAccessible)
 
   // block frame may be for <hr>
   if (mContent->Tag() == nsGkAtoms::hr) {
-    return accService->CreateHTMLHRAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+    return accService->CreateHTMLHRAccessible(static_cast<nsIFrame*>(this), aAccessible);
   }
 
   nsPresContext *aPresContext = PresContext();
@@ -5742,7 +5742,7 @@ NS_IMETHODIMP nsBlockFrame::GetAccessible(nsIAccessible** aAccessible)
     }
 
     // Not a bullet, treat as normal HTML container
-    return accService->CreateHyperTextAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+    return accService->CreateHyperTextAccessible(static_cast<nsIFrame*>(this), aAccessible);
   }
 
   // Create special list bullet accessible
@@ -5757,8 +5757,8 @@ NS_IMETHODIMP nsBlockFrame::GetAccessible(nsIAccessible** aAccessible)
     mBullet->GetListItemText(*myList, bulletText);
   }
 
-  return accService->CreateHTMLLIAccessible(NS_STATIC_CAST(nsIFrame*, this), 
-                                            NS_STATIC_CAST(nsIFrame*, mBullet), 
+  return accService->CreateHTMLLIAccessible(static_cast<nsIFrame*>(this), 
+                                            static_cast<nsIFrame*>(mBullet), 
                                             bulletText,
                                             aAccessible);
 }
@@ -5789,8 +5789,8 @@ nsLineBox* nsBlockFrame::GetFirstLineContaining(nscoord y) {
     return nsnull;
   }
 
-  nsLineBox* property = NS_STATIC_CAST(nsLineBox*,
-    GetProperty(nsGkAtoms::lineCursorProperty));
+  nsLineBox* property = static_cast<nsLineBox*>
+                                   (GetProperty(nsGkAtoms::lineCursorProperty));
   line_iterator cursor = mLines.begin(property);
   nsRect cursorArea = cursor->GetCombinedArea();
 
@@ -6110,7 +6110,7 @@ nsBlockFrame::RenumberListsInBlock(nsPresContext* aPresContext,
     }
 
     // Advance to the next continuation
-    aBlockFrame = NS_STATIC_CAST(nsBlockFrame*, aBlockFrame->GetNextInFlow());
+    aBlockFrame = static_cast<nsBlockFrame*>(aBlockFrame->GetNextInFlow());
   }
 
   return renumberedABullet;

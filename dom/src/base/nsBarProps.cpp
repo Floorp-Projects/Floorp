@@ -264,7 +264,7 @@ nsStatusbarProp::SetVisible(PRBool aVisible)
 nsScrollbarsProp::nsScrollbarsProp(nsGlobalWindow *aWindow)
 {
   mDOMWindow = aWindow;
-  nsISupports *supwin = NS_STATIC_CAST(nsIScriptGlobalObject *, aWindow);
+  nsISupports *supwin = static_cast<nsIScriptGlobalObject *>(aWindow);
   mDOMWindowWeakref = do_GetWeakReference(supwin);
 }
 

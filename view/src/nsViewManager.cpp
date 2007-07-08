@@ -283,7 +283,7 @@ nsViewManager::CreateView(const nsRect& aBounds,
     v->SetPosition(aBounds.x, aBounds.y);
     nsRect dim(0, 0, aBounds.width, aBounds.height);
     v->SetDimensions(dim, PR_FALSE);
-    v->SetParent(NS_STATIC_CAST(nsView*, NS_CONST_CAST(nsIView*, aParent)));
+    v->SetParent(static_cast<nsView*>(const_cast<nsIView*>(aParent)));
   }
   return v;
 }
@@ -297,7 +297,7 @@ nsViewManager::CreateScrollableView(const nsRect& aBounds,
     v->SetPosition(aBounds.x, aBounds.y);
     nsRect dim(0, 0, aBounds.width, aBounds.height);
     v->SetDimensions(dim, PR_FALSE);
-    v->SetParent(NS_STATIC_CAST(nsView*, NS_CONST_CAST(nsIView*, aParent)));
+    v->SetParent(static_cast<nsView*>(const_cast<nsIView*>(aParent)));
   }
   return v;
 }
@@ -310,7 +310,7 @@ NS_IMETHODIMP nsViewManager::GetRootView(nsIView *&aView)
 
 NS_IMETHODIMP nsViewManager::SetRootView(nsIView *aView)
 {
-  nsView* view = NS_STATIC_CAST(nsView*, aView);
+  nsView* view = static_cast<nsView*>(aView);
 
   NS_PRECONDITION(!view || view->GetViewManager() == this,
                   "Unexpected viewmanager on root view");
@@ -655,7 +655,7 @@ NS_IMETHODIMP nsViewManager::Composite()
 NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, PRUint32 aUpdateFlags)
 {
   // Mark the entire view as damaged
-  nsView* view = NS_STATIC_CAST(nsView*, aView);
+  nsView* view = static_cast<nsView*>(aView);
 
   nsRect bounds = view->GetBounds();
   view->ConvertFromParentCoords(&bounds.x, &bounds.y);
@@ -858,7 +858,7 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
 {
   NS_PRECONDITION(nsnull != aView, "null view");
 
-  nsView* view = NS_STATIC_CAST(nsView*, aView);
+  nsView* view = static_cast<nsView*>(aView);
 
   nsRect damagedRect(aRect);
 
@@ -967,7 +967,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
 
     case NS_PAINT:
       {
-        nsPaintEvent *event = NS_STATIC_CAST(nsPaintEvent*, aEvent);
+        nsPaintEvent *event = static_cast<nsPaintEvent*>(aEvent);
         nsView *view = nsView::GetViewFor(aEvent->widget);
 
         if (!view || !mContext)
@@ -1138,7 +1138,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
       {
         if ((NS_IS_MOUSE_EVENT(aEvent) &&
              // Ignore moves that we synthesize.
-             NS_STATIC_CAST(nsMouseEvent*,aEvent)->reason ==
+             static_cast<nsMouseEvent*>(aEvent)->reason ==
                nsMouseEvent::eReal &&
              // Ignore mouse exit and enter (we'll get moves if the user
              // is really moving the mouse) since we get them when we
@@ -1182,7 +1182,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           PRInt32 p2a = mContext->AppUnitsPerDevPixel();
 
           if ((aEvent->message == NS_MOUSE_MOVE &&
-               NS_STATIC_CAST(nsMouseEvent*,aEvent)->reason ==
+               static_cast<nsMouseEvent*>(aEvent)->reason ==
                  nsMouseEvent::eReal) ||
               aEvent->message == NS_MOUSE_ENTER) {
             // aEvent->point is relative to the widget, i.e. the view top-left,
@@ -1303,7 +1303,7 @@ NS_IMETHODIMP nsViewManager::GrabMouseEvents(nsIView *aView, PRBool &aResult)
 
   // Along with nsView::SetVisibility, we enforce that the mouse grabber
   // can never be a hidden view.
-  if (aView && NS_STATIC_CAST(nsView*, aView)->GetVisibility()
+  if (aView && static_cast<nsView*>(aView)->GetVisibility()
                == nsViewVisibility_kHide) {
     aView = nsnull;
   }
@@ -1316,7 +1316,7 @@ NS_IMETHODIMP nsViewManager::GrabMouseEvents(nsIView *aView, PRBool &aResult)
   printf("removing mouse capture from view %x\n",mMouseGrabber);
 #endif
 
-  mMouseGrabber = NS_STATIC_CAST(nsView*, aView);
+  mMouseGrabber = static_cast<nsView*>(aView);
   aResult = PR_TRUE;
   return NS_OK;
 }
@@ -1351,7 +1351,7 @@ void nsViewManager::ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget)
   // Need to check each of the views children to see
   // if they have a widget and reparent it.
 
-  nsView* view = NS_STATIC_CAST(nsView*, aView);
+  nsView* view = static_cast<nsView*>(aView);
   for (nsView *kid = view->GetFirstChild(); kid; kid = kid->GetNextSibling()) {
     ReparentChildWidgets(kid, aNewWidget);
   }
@@ -1371,7 +1371,7 @@ void nsViewManager::ReparentWidgets(nsIView* aView, nsIView *aParent)
   // a reinserting it into a new location in the view hierarchy do we
   // have to consider reparenting the existing widgets for the view and
   // it's descendants.
-  nsView* view = NS_STATIC_CAST(nsView*, aView);
+  nsView* view = static_cast<nsView*>(aView);
   if (view->HasWidget() || view->GetFirstChild()) {
     nsIWidget* parentWidget = aParent->GetNearestWidget(nsnull);
     if (parentWidget) {
@@ -1385,9 +1385,9 @@ void nsViewManager::ReparentWidgets(nsIView* aView, nsIView *aParent)
 NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, nsIView *aSibling,
                                          PRBool aAfter)
 {
-  nsView* parent = NS_STATIC_CAST(nsView*, aParent);
-  nsView* child = NS_STATIC_CAST(nsView*, aChild);
-  nsView* sibling = NS_STATIC_CAST(nsView*, aSibling);
+  nsView* parent = static_cast<nsView*>(aParent);
+  nsView* child = static_cast<nsView*>(aChild);
+  nsView* sibling = static_cast<nsView*>(aSibling);
   
   NS_PRECONDITION(nsnull != parent, "null ptr");
   NS_PRECONDITION(nsnull != child, "null ptr");
@@ -1480,7 +1480,7 @@ NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, PRIn
 
 NS_IMETHODIMP nsViewManager::RemoveChild(nsIView *aChild)
 {
-  nsView* child = NS_STATIC_CAST(nsView*, aChild);
+  nsView* child = static_cast<nsView*>(aChild);
   NS_ENSURE_ARG_POINTER(child);
 
   nsView* parent = child->GetParent();
@@ -1496,7 +1496,7 @@ NS_IMETHODIMP nsViewManager::RemoveChild(nsIView *aChild)
 
 NS_IMETHODIMP nsViewManager::MoveViewBy(nsIView *aView, nscoord aX, nscoord aY)
 {
-  nsView* view = NS_STATIC_CAST(nsView*, aView);
+  nsView* view = static_cast<nsView*>(aView);
 
   nsPoint pt = view->GetPosition();
   MoveViewTo(view, aX + pt.x, aY + pt.y);
@@ -1505,7 +1505,7 @@ NS_IMETHODIMP nsViewManager::MoveViewBy(nsIView *aView, nscoord aX, nscoord aY)
 
 NS_IMETHODIMP nsViewManager::MoveViewTo(nsIView *aView, nscoord aX, nscoord aY)
 {
-  nsView* view = NS_STATIC_CAST(nsView*, aView);
+  nsView* view = static_cast<nsView*>(aView);
   nsPoint oldPt = view->GetPosition();
   nsRect oldArea = view->GetBounds();
   view->SetPosition(aX, aY);
@@ -1554,7 +1554,7 @@ void nsViewManager::InvalidateRectDifference(nsView *aView, const nsRect& aRect,
 
 NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRBool aRepaintExposedAreaOnly)
 {
-  nsView* view = NS_STATIC_CAST(nsView*, aView);
+  nsView* view = static_cast<nsView*>(aView);
   nsRect oldDimensions;
 
   view->GetDimensions(oldDimensions);
@@ -1628,7 +1628,7 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView, nsPoint aDelta,
 
 NS_IMETHODIMP nsViewManager::SetViewFloating(nsIView *aView, PRBool aFloating)
 {
-  nsView* view = NS_STATIC_CAST(nsView*, aView);
+  nsView* view = static_cast<nsView*>(aView);
 
   NS_ASSERTION(!(nsnull == view), "no view");
 
@@ -1639,7 +1639,7 @@ NS_IMETHODIMP nsViewManager::SetViewFloating(nsIView *aView, PRBool aFloating)
 
 NS_IMETHODIMP nsViewManager::SetViewVisibility(nsIView *aView, nsViewVisibility aVisible)
 {
-  nsView* view = NS_STATIC_CAST(nsView*, aView);
+  nsView* view = static_cast<nsView*>(aView);
 
   if (aVisible != view->GetVisibility()) {
     view->SetVisibility(aVisible);
@@ -1706,7 +1706,7 @@ PRBool nsViewManager::IsViewInserted(nsView *aView)
 
 NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, PRBool aAutoZIndex, PRInt32 aZIndex, PRBool aTopMost)
 {
-  nsView* view = NS_STATIC_CAST(nsView*, aView);
+  nsView* view = static_cast<nsView*>(aView);
   nsresult  rv = NS_OK;
 
   NS_ASSERTION((view != nsnull), "no view");
@@ -1971,7 +1971,7 @@ nsresult nsViewManager::GetVisibleRect(nsRect& aVisibleRect)
   if (scrollingView) {   
     // Determine the visible rect in the scrolled view's coordinate space.
     // The size of the visible area is the clip view size
-    nsScrollPortView* clipView = NS_STATIC_CAST(nsScrollPortView*, scrollingView);
+    nsScrollPortView* clipView = static_cast<nsScrollPortView*>(scrollingView);
     clipView->GetDimensions(aVisibleRect);
 
     scrollingView->GetScrollPosition(aVisibleRect.x, aVisibleRect.y);
@@ -1994,7 +1994,7 @@ nsresult nsViewManager::GetAbsoluteRect(nsView *aView, const nsRect &aRect,
   nsIView* scrolledIView = nsnull;
   scrollingView->GetScrolledView(scrolledIView);
   
-  nsView* scrolledView = NS_STATIC_CAST(nsView*, scrolledIView);
+  nsView* scrolledView = static_cast<nsView*>(scrolledIView);
 
   // Calculate the absolute coordinates of the aRect passed in.
   // aRects values are relative to aView
@@ -2018,7 +2018,7 @@ NS_IMETHODIMP nsViewManager::GetRectVisibility(nsIView *aView,
                                                PRUint16 aMinTwips, 
                                                nsRectVisibility *aRectVisibility)
 {
-  nsView* view = NS_STATIC_CAST(nsView*, aView);
+  nsView* view = static_cast<nsView*>(aView);
 
   // The parameter aMinTwips determines how many rows/cols of pixels must be visible on each side of the element,
   // in order to be counted as visible

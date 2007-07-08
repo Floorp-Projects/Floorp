@@ -229,7 +229,7 @@ nsHTMLButtonElement::Click()
                            NS_MOUSE_CLICK, nsnull,
                            nsMouseEvent::eReal);
         nsEventStatus status = nsEventStatus_eIgnore;
-        nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this), context,
+        nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), context,
                                     &event, nsnull, &status);
       }
     }
@@ -369,7 +369,7 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
                                NS_MOUSE_CLICK, nsnull,
                                nsMouseEvent::eReal);
-            nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this),
+            nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
                                         aVisitor.mPresContext, &event, nsnull,
                                         &status);
           }
@@ -423,14 +423,14 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       case NS_MOUSE_BUTTON_DOWN:
         {
           if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT) {
-            if (NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+            if (static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
                   nsMouseEvent::eLeftButton) {
               aVisitor.mPresContext->EventStateManager()->
                 SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
               aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-            } else if (NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+            } else if (static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
                          nsMouseEvent::eMiddleButton ||
-                       NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+                       static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
                          nsMouseEvent::eRightButton) {
               // cancel all of these events for buttons
               //XXXsmaug What to do with these events? Why these should be cancelled?
@@ -449,9 +449,9 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         {
           if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
               aVisitor.mDOMEvent &&
-              (NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+              (static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
                  nsMouseEvent::eMiddleButton ||
-               NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+               static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
                  nsMouseEvent::eRightButton)) {
             aVisitor.mDOMEvent->StopPropagation();
           }

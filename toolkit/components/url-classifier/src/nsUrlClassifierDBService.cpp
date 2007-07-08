@@ -109,7 +109,7 @@ Rot13Line(nsCString &line)
   line.BeginWriting(start);
   line.EndWriting(end);
   while (start != end) {
-    *start = kRot13Table[NS_STATIC_CAST(PRInt32, *start)];
+    *start = kRot13Table[static_cast<PRInt32>(*start)];
     ++start;
   }
 }

@@ -63,7 +63,7 @@ nsScreenManagerMac :: ~nsScreenManagerMac()
 {
   // walk our list of cached screens and delete them.
   for ( int i = 0; i < mScreenList.Count(); ++i ) {
-    ScreenListItem* item = NS_REINTERPRET_CAST(ScreenListItem*, mScreenList[i]);
+    ScreenListItem* item = reinterpret_cast<ScreenListItem*>(mScreenList[i]);
     delete item;
   }
 }
@@ -86,7 +86,7 @@ nsScreenManagerMac :: CreateNewScreenObject ( GDHandle inDevice )
   // look through our screen list, hoping to find it. If it's not there,
   // add it and return the new one.
   for ( int i = 0; i < mScreenList.Count(); ++i ) {
-    ScreenListItem* curr = NS_REINTERPRET_CAST(ScreenListItem*, mScreenList[i]);
+    ScreenListItem* curr = reinterpret_cast<ScreenListItem*>(mScreenList[i]);
     if ( inDevice == curr->mGD ) {
       NS_IF_ADDREF(retScreen = curr->mScreen.get());
       return retScreen;

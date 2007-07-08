@@ -121,12 +121,12 @@ nsNodeUtils::ContentInserted(nsINode* aContainer,
   nsIContent* container;
   nsIDocument* document;
   if (aContainer->IsNodeOfType(nsINode::eCONTENT)) {
-    container = NS_STATIC_CAST(nsIContent*, aContainer);
+    container = static_cast<nsIContent*>(aContainer);
     document = aContainer->GetOwnerDoc();
   }
   else {
     container = nsnull;
-    document = NS_STATIC_CAST(nsIDocument*, aContainer);
+    document = static_cast<nsIDocument*>(aContainer);
   }
 
   IMPL_MUTATION_NOTIFICATION(ContentInserted, aContainer,
@@ -144,12 +144,12 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
   nsIContent* container;
   nsIDocument* document;
   if (aContainer->IsNodeOfType(nsINode::eCONTENT)) {
-    container = NS_STATIC_CAST(nsIContent*, aContainer);
+    container = static_cast<nsIContent*>(aContainer);
     document = aContainer->GetOwnerDoc();
   }
   else {
     container = nsnull;
-    document = NS_STATIC_CAST(nsIDocument*, aContainer);
+    document = static_cast<nsIDocument*>(aContainer);
   }
 
   IMPL_MUTATION_NOTIFICATION(ContentRemoved, aContainer,
@@ -195,7 +195,7 @@ nsNodeUtils::LastRelease(nsINode* aNode)
     // Delete all properties before tearing down the document. Some of the
     // properties are bound to nsINode objects and the destructor functions of
     // the properties may want to use the owner document of the nsINode.
-    NS_STATIC_CAST(nsIDocument*, aNode)->PropertyTable()->DeleteAllProperties();
+    static_cast<nsIDocument*>(aNode)->PropertyTable()->DeleteAllProperties();
   }
   else if (aNode->HasProperties()) {
     // Strong reference to the document so that deleting properties can't
@@ -266,7 +266,7 @@ nsNodeUtils::SetUserData(nsINode *aNode, const nsAString &aKey,
   }
 
   // Take over ownership of the old data from the property table.
-  nsCOMPtr<nsIVariant> oldData = dont_AddRef(NS_STATIC_CAST(nsIVariant*, data));
+  nsCOMPtr<nsIVariant> oldData = dont_AddRef(static_cast<nsIVariant*>(data));
 
   if (aData && aHandler) {
     nsCOMPtr<nsIDOMUserDataHandler> oldHandler;
@@ -298,8 +298,8 @@ nsNodeUtils::GetUserData(nsINode *aNode, const nsAString &aKey,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  *aResult = NS_STATIC_CAST(nsIVariant*,
-                            aNode->GetProperty(DOM_USER_DATA, key));
+  *aResult = static_cast<nsIVariant*>
+                        (aNode->GetProperty(DOM_USER_DATA, key));
   NS_IF_ADDREF(*aResult);
 
   return NS_OK;
@@ -314,12 +314,12 @@ struct nsHandlerData
 static void
 CallHandler(void *aObject, nsIAtom *aKey, void *aHandler, void *aData)
 {
-  nsHandlerData *handlerData = NS_STATIC_CAST(nsHandlerData*, aData);
+  nsHandlerData *handlerData = static_cast<nsHandlerData*>(aData);
   nsCOMPtr<nsIDOMUserDataHandler> handler =
-    NS_STATIC_CAST(nsIDOMUserDataHandler*, aHandler);
-  nsINode *node = NS_STATIC_CAST(nsINode*, aObject);
+    static_cast<nsIDOMUserDataHandler*>(aHandler);
+  nsINode *node = static_cast<nsINode*>(aObject);
   nsCOMPtr<nsIVariant> data =
-    NS_STATIC_CAST(nsIVariant*, node->GetProperty(DOM_USER_DATA, aKey));
+    static_cast<nsIVariant*>(node->GetProperty(DOM_USER_DATA, aKey));
   NS_ASSERTION(data, "Handler without data?");
 
   nsAutoString key;
@@ -371,8 +371,8 @@ static void
 NoteUserData(void *aObject, nsIAtom *aKey, void *aXPCOMChild, void *aData)
 {
   nsCycleCollectionTraversalCallback* cb =
-    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aData);
-  cb->NoteXPCOMChild(NS_STATIC_CAST(nsISupports*, aXPCOMChild));
+    static_cast<nsCycleCollectionTraversalCallback*>(aData);
+  cb->NoteXPCOMChild(static_cast<nsISupports*>(aXPCOMChild));
 }
 
 /* static */
@@ -443,7 +443,7 @@ AdoptFunc(nsAttrHashKey::KeyType aKey, nsIDOMNode *aData, void* aUserArg)
   nsCOMPtr<nsIAttribute> attr = do_QueryInterface(aData);
   NS_ASSERTION(attr, "non-nsIAttribute somehow made it into the hashmap?!");
 
-  AdoptFuncData *data = NS_STATIC_CAST(AdoptFuncData*, aUserArg);
+  AdoptFuncData *data = static_cast<AdoptFuncData*>(aUserArg);
 
   // If we were passed an element we need to clone the attribute nodes and
   // insert them into the element.
@@ -505,7 +505,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
   }
 
   nsGenericElement *elem = aNode->IsNodeOfType(nsINode::eELEMENT) ?
-                           NS_STATIC_CAST(nsGenericElement*, aNode) :
+                           static_cast<nsGenericElement*>(aNode) :
                            nsnull;
 
   nsCOMPtr<nsINode> clone;
@@ -642,7 +642,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
   // in a document.
 #ifdef MOZ_XUL
   if (aClone && !aParent && aNode->IsNodeOfType(nsINode::eXUL)) {
-    nsXULElement *xulElem = NS_STATIC_CAST(nsXULElement*, elem);
+    nsXULElement *xulElem = static_cast<nsXULElement*>(elem);
     if (!xulElem->mPrototype || xulElem->IsInDoc()) {
       clone->SetFlags(NODE_FORCE_XBL_BINDINGS);
     }

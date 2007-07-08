@@ -286,7 +286,7 @@ nsWindow::~nsWindow()
 {
 	// notify the children that we're gone
 	for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-		nsWindow* childWindow = NS_STATIC_CAST(nsWindow*, kid);
+		nsWindow* childWindow = static_cast<nsWindow*>(kid);
 		childWindow->mParent = nsnull;
 	}
 
@@ -1307,7 +1307,7 @@ nsWindow::AddRectToArrayProc(UInt16 message, RgnHandle rgn,
 {
   if (message == kQDRegionToRectsMsgParse) {
     NS_ASSERTION(inArray, "You better pass an array!");
-    TRectArray* rectArray = NS_REINTERPRET_CAST(TRectArray*, inArray);
+    TRectArray* rectArray = reinterpret_cast<TRectArray*>(inArray);
 
     if (rectArray->mNumRects == rectArray->mCapacity) {
       // This should not happen - returning memFullErr below should have
@@ -1338,7 +1338,7 @@ nsWindow::AddRectToArrayProc(UInt16 message, RgnHandle rgn,
 void 
 nsWindow::PaintUpdateRect(Rect *inDirtyRect, void* inData)
 {
-  nsWindow* self = NS_REINTERPRET_CAST(nsWindow*, inData);
+  nsWindow* self = reinterpret_cast<nsWindow*>(inData);
   Rect dirtyRect = *inDirtyRect;
    
 	nsCOMPtr<nsIRenderingContext> renderingContext ( dont_AddRef(self->GetRenderingContext()) );
@@ -1603,7 +1603,7 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 
 	// recursively draw the children
 	for (nsIWidget* kid = FIRST_CHILD(); kid; kid = NEXT_CHILD(kid)) {
-		nsWindow* childWindow = NS_STATIC_CAST(nsWindow*, kid);
+		nsWindow* childWindow = static_cast<nsWindow*>(kid);
 
 		nsRect childBounds;
 		childWindow->GetBounds(childBounds);
@@ -1706,7 +1706,7 @@ scrollChildren:
   //--------
   // Scroll the children
   for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-    nsWindow* childWindow = NS_STATIC_CAST(nsWindow*, kid);
+    nsWindow* childWindow = static_cast<nsWindow*>(kid);
 
     nsRect bounds;
     childWindow->GetBounds(bounds);
@@ -1936,7 +1936,7 @@ void nsWindow::CalcWindowRegions()
 			nsIWidget* child = mFirstChild;
 			do
 			{
-				nsWindow* childWindow = NS_STATIC_CAST(nsWindow*, child);
+				nsWindow* childWindow = static_cast<nsWindow*>(child);
 					
 				PRBool visible;
 				childWindow->IsVisible(visible);
@@ -2053,7 +2053,7 @@ nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 
 	// traverse through all the nsWindows to find out who got hit, lowest level of course
 	for (nsIWidget* kid = mLastChild; kid; kid = kid->GetPrevSibling()) {
-		nsWindow* childWindow = NS_STATIC_CAST(nsWindow*, kid);
+		nsWindow* childWindow = static_cast<nsWindow*>(kid);
 		
 		nsWindow* deeperHit = childWindow->FindWidgetHit(aThePoint);
 		if (deeperHit)

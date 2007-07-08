@@ -191,7 +191,7 @@ nsImageFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsIImageFrame))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIImageFrame*, this);
+    *aInstancePtr = static_cast<nsIImageFrame*>(this);
     return NS_OK;
   }
 
@@ -204,7 +204,7 @@ NS_IMETHODIMP nsImageFrame::GetAccessible(nsIAccessible** aAccessible)
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    return accService->CreateHTMLImageAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+    return accService->CreateHTMLImageAccessible(static_cast<nsIFrame*>(this), aAccessible);
   }
 
   return NS_ERROR_FAILURE;
@@ -241,7 +241,7 @@ nsImageFrame::Destroy()
       imageLoader->RemoveObserver(mListener);
     }
     
-    NS_REINTERPRET_CAST(nsImageListener*, mListener.get())->SetFrame(nsnull);
+    reinterpret_cast<nsImageListener*>(mListener.get())->SetFrame(nsnull);
   }
   
   mListener = nsnull;
@@ -1108,7 +1108,7 @@ nsImageFrame::DisplayAltFeedback(nsIRenderingContext& aRenderingContext,
 static void PaintAltFeedback(nsIFrame* aFrame, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect, nsPoint aPt)
 {
-  nsImageFrame* f = NS_STATIC_CAST(nsImageFrame*, aFrame);
+  nsImageFrame* f = static_cast<nsImageFrame*>(aFrame);
   f->DisplayAltFeedback(*aCtx,
                         aDirtyRect,
                         IMAGE_OK(f->GetContent()->IntrinsicState(), PR_TRUE)
@@ -1120,7 +1120,7 @@ static void PaintAltFeedback(nsIFrame* aFrame, nsIRenderingContext* aCtx,
 #ifdef NS_DEBUG
 static void PaintDebugImageMap(nsIFrame* aFrame, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect, nsPoint aPt) {
-  nsImageFrame* f = NS_STATIC_CAST(nsImageFrame*, aFrame);
+  nsImageFrame* f = static_cast<nsImageFrame*>(aFrame);
   nsRect inner = f->GetInnerArea() + aPt;
   nsPresContext* pc = f->PresContext();
 
@@ -1157,7 +1157,7 @@ private:
 void
 nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
-  NS_STATIC_CAST(nsImageFrame*, mFrame)->
+  static_cast<nsImageFrame*>(mFrame)->
     PaintImage(*aCtx, aBuilder->ToReferenceFrame(mFrame), aDirtyRect, mImage);
 }
 
@@ -1469,7 +1469,7 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
 
   if (aEvent->eventStructType == NS_MOUSE_EVENT &&
       (aEvent->message == NS_MOUSE_BUTTON_UP && 
-      NS_STATIC_CAST(nsMouseEvent*, aEvent)->button == nsMouseEvent::eLeftButton) ||
+      static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton) ||
       aEvent->message == NS_MOUSE_MOVE) {
     map = GetImageMap(aPresContext);
     PRBool isServerMap = IsServerImageMap();

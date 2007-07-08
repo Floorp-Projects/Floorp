@@ -113,7 +113,7 @@ nsProxyEventObject::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
     if( aIID.Equals(GetClass()->GetProxiedIID()) )
     {
-        *aInstancePtr = NS_STATIC_CAST(nsISupports*, mXPTCStub);
+        *aInstancePtr = static_cast<nsISupports*>(mXPTCStub);
         NS_ADDREF_THIS();
         return NS_OK;
     }

@@ -170,7 +170,7 @@ class nsTObserverArray : public nsTObserverArray_base {
     }
 
     T* SafeObserverAt(PRInt32 aIndex) const {
-      return NS_STATIC_CAST(T*, mObservers.SafeElementAt(aIndex));
+      return static_cast<T*>(mObservers.SafeElementAt(aIndex));
     }
 
     /**
@@ -193,7 +193,7 @@ class nsTObserverArray : public nsTObserverArray_base {
          * @return The next observer.
          */
         T* GetNext() {
-          return NS_STATIC_CAST(T*, GetSafeElementAt(mPosition++));
+          return static_cast<T*>(GetSafeElementAt(mPosition++));
         }
     };
 };

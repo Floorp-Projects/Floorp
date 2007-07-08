@@ -267,7 +267,7 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
 
   if (GetStyleDisplay()->IsScrollableOverflow()) {
     float x, y, width, height;
-    NS_STATIC_CAST(nsSVGElement*, mContent)->
+    static_cast<nsSVGElement*>(mContent)->
       GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
 
     // tm already includes the x,y offset
@@ -349,7 +349,7 @@ nsSVGForeignObjectFrame::UpdateCoveredRegion()
     return NS_ERROR_FAILURE;
 
   float x, y, w, h;
-  NS_STATIC_CAST(nsSVGForeignObjectElement*, mContent)->
+  static_cast<nsSVGForeignObjectElement*>(mContent)->
     GetAnimatedLengthValues(&x, &y, &w, &h, nsnull);
 
   // If mRect's width or height are negative, reflow blows up! We must clamp!
@@ -434,7 +434,7 @@ nsSVGForeignObjectFrame::GetBBox(nsIDOMSVGRect **_retval)
   }
 
   float x, y, w, h;
-  NS_STATIC_CAST(nsSVGForeignObjectElement*, mContent)->
+  static_cast<nsSVGForeignObjectElement*>(mContent)->
     GetAnimatedLengthValues(&x, &y, &w, &h, nsnull);
 
   if (w < 0.0f) w = 0.0f;
@@ -453,7 +453,7 @@ nsSVGForeignObjectFrame::GetTMIncludingOffset()
     return nsnull;
 
   nsSVGForeignObjectElement *fO =
-    NS_STATIC_CAST(nsSVGForeignObjectElement*, mContent);
+    static_cast<nsSVGForeignObjectElement*>(mContent);
   float x, y;
   fO->GetAnimatedLengthValues(&x, &y, nsnull);
   nsIDOMSVGMatrix* matrix;
@@ -478,14 +478,14 @@ nsSVGForeignObjectFrame::GetCanvasTM()
   if (!mCanvasTM) {
     // get our parent's tm and append local transforms (if any):
     NS_ASSERTION(mParent, "null parent");
-    nsSVGContainerFrame *containerFrame = NS_STATIC_CAST(nsSVGContainerFrame*,
-                                                         mParent);
+    nsSVGContainerFrame *containerFrame = static_cast<nsSVGContainerFrame*>
+                                                     (mParent);
     nsCOMPtr<nsIDOMSVGMatrix> parentTM = containerFrame->GetCanvasTM();
     NS_ASSERTION(parentTM, "null TM");
 
     // got the parent tm, now check for local tm:
     nsSVGGraphicElement *element =
-      NS_STATIC_CAST(nsSVGGraphicElement*, mContent);
+      static_cast<nsSVGGraphicElement*>(mContent);
     nsCOMPtr<nsIDOMSVGMatrix> localTM = element->GetLocalTransformMatrix();
     
     if (localTM)
@@ -580,8 +580,8 @@ nsSVGForeignObjectFrame::DoReflow()
   if (!renderingContext)
     return;
 
-  nsSVGForeignObjectElement *fO = NS_STATIC_CAST(nsSVGForeignObjectElement*,
-                                                 mContent);
+  nsSVGForeignObjectElement *fO = static_cast<nsSVGForeignObjectElement*>
+                                             (mContent);
 
   float width =
     fO->mLengthAttributes[nsSVGForeignObjectElement::WIDTH].GetAnimValue(fO);

@@ -306,7 +306,7 @@ ForEachPing(nsIContent *content, ForEachPingCallback callback, void *closure)
 static void
 OnPingTimeout(nsITimer *timer, void *closure)
 {
-  nsILoadGroup *loadGroup = NS_STATIC_CAST(nsILoadGroup *, closure);
+  nsILoadGroup *loadGroup = static_cast<nsILoadGroup *>(closure);
   loadGroup->Cancel(NS_ERROR_ABORT);
   loadGroup->Release();
 }
@@ -412,7 +412,7 @@ struct SendPingInfo {
 static void
 SendPing(void *closure, nsIContent *content, nsIURI *uri, nsIIOService *ios)
 {
-  SendPingInfo *info = NS_STATIC_CAST(SendPingInfo *, closure);
+  SendPingInfo *info = static_cast<SendPingInfo *>(closure);
   if (info->numPings >= info->maxPings)
     return;
 
@@ -513,7 +513,7 @@ SendPing(void *closure, nsIContent *content, nsIURI *uri, nsIIOService *ios)
     if (NS_SUCCEEDED(rv)) {
       // When the timer expires, the callback function will release this
       // reference to the loadgroup.
-      NS_STATIC_CAST(nsILoadGroup *, loadGroup.get())->AddRef();
+      static_cast<nsILoadGroup *>(loadGroup.get())->AddRef();
       loadGroup = 0;
     }
   }
@@ -597,7 +597,7 @@ nsWebShell::EnsureCommandHandler()
     nsCOMPtr<nsPICommandUpdater>       commandUpdater = do_QueryInterface(mCommandManager);
     if (!commandUpdater) return NS_ERROR_FAILURE;
     
-    nsCOMPtr<nsIDOMWindow> domWindow = do_GetInterface(NS_STATIC_CAST(nsIInterfaceRequestor *, this));
+    nsCOMPtr<nsIDOMWindow> domWindow = do_GetInterface(static_cast<nsIInterfaceRequestor *>(this));
 #ifdef DEBUG
     nsresult rv =
 #endif

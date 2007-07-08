@@ -714,7 +714,7 @@ PRBool nsScrollPortView::IsSmoothScrollingEnabled() {
 void
 nsScrollPortView::SmoothScrollAnimationCallback (nsITimer *aTimer, void* anInstance) 
 {
-  nsScrollPortView* self = NS_STATIC_CAST(nsScrollPortView*, anInstance);
+  nsScrollPortView* self = static_cast<nsScrollPortView*>(anInstance);
   if (self) {
     self->IncrementalScroll();
   }

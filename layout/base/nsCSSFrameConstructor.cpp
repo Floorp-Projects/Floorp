@@ -417,7 +417,7 @@ SVG_TestLanguage(const nsSubstring& lstr, const nsSubstring& prefs)
       }
       const nsDefaultStringComparator defaultComparator;
       const nsStringComparator& comparator = 
-                  NS_STATIC_CAST(const nsStringComparator&, defaultComparator);
+                  static_cast<const nsStringComparator&>(defaultComparator);
       if (nsStyleUtil::DashMatchCompare(Substring(lstr, vbegin, vend-vbegin),
                                         Substring(prefs, gbegin, gend-gbegin),
                                         comparator)) {
@@ -460,7 +460,7 @@ GetSpecialSibling(nsFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame** aR
 
   void* value = aFrame->GetProperty(nsGkAtoms::IBSplitSpecialSibling);
 
-  *aResult = NS_STATIC_CAST(nsIFrame*, value);
+  *aResult = static_cast<nsIFrame*>(value);
 }
 
 static nsIFrame*
@@ -616,8 +616,8 @@ DoCleanupFrameReferences(nsFrameManager*  aFrameManager,
   nsIContent* content = aFrameIn->GetContent();
 
   if (aFrameIn->GetType() == nsGkAtoms::placeholderFrame) {
-    nsPlaceholderFrame* placeholder = NS_STATIC_CAST(nsPlaceholderFrame*,
-                                                     aFrameIn);
+    nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>
+                                                 (aFrameIn);
     // if the frame is a placeholder use the out of flow frame
     aFrameIn = nsPlaceholderFrame::GetRealFrameForPlaceholder(placeholder);
 
@@ -880,14 +880,14 @@ nsPseudoFrameData::Dump()
 {
   nsIFrame* main = nsnull;
   nsIFrame* second = nsnull;
-  printf("        %p\n", NS_STATIC_CAST(void*, mFrame));
+  printf("        %p\n", static_cast<void*>(mFrame));
   main = mChildList.childList;
 
  
   second = mChildList2.childList;
   while (main || second) {
-    printf("          %p   %p\n", NS_STATIC_CAST(void*, main),
-           NS_STATIC_CAST(void*, second));
+    printf("          %p   %p\n", static_cast<void*>(main),
+           static_cast<void*>(second));
     if (main)
       main = main->GetNextSibling();
     if (second)
@@ -2668,7 +2668,7 @@ ProcessPseudoFrames(nsFrameConstructorState& aState,
 #ifdef DEBUG
   if (gTablePseudoFrame) {
     printf("*** ProcessPseudoFrames complete leave, highestframe:%p***\n",
-           NS_STATIC_CAST(void*, highestFrame));
+           static_cast<void*>(highestFrame));
     aState.mPseudoFrames.Dump();
   }
 #endif
@@ -2708,7 +2708,7 @@ ProcessPseudoFrames(nsFrameConstructorState& aState,
 #ifdef DEBUG
   if (gTablePseudoFrame) {
     printf("*** ProcessPseudoFrames limited leave:%p***\n",
-           NS_STATIC_CAST(void*, highestFrame));
+           static_cast<void*>(highestFrame));
     aState.mPseudoFrames.Dump();
   }
 #endif
@@ -4651,7 +4651,7 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*    aPresShell,
     // Add mapping from absolutely positioned frame to its placeholder frame
     aFrameManager->RegisterPlaceholderFrame(placeholderFrame);
 
-    *aPlaceholderFrame = NS_STATIC_CAST(nsIFrame*, placeholderFrame);
+    *aPlaceholderFrame = static_cast<nsIFrame*>(placeholderFrame);
     
     return NS_OK;
   }
@@ -8257,7 +8257,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
     printf("nsCSSFrameConstructor::ContentAppended container=%p index=%d\n",
-           NS_STATIC_CAST(void*, aContainer), aNewIndexInContainer);
+           static_cast<void*>(aContainer), aNewIndexInContainer);
     if (gReallyNoisyContentUpdates && aContainer) {
       aContainer->List(stdout, 0);
     }
@@ -8746,7 +8746,7 @@ PRBool NotifyListBoxBody(nsPresContext*    aPresContext,
     if (listBoxObject) {
       nsIListBoxObject* listboxBody = listBoxObject->GetListBoxBody();
       if (listboxBody) {
-        nsListBoxBodyFrame *listBoxBodyFrame = NS_STATIC_CAST(nsListBoxBodyFrame*, listboxBody);
+        nsListBoxBodyFrame *listBoxBodyFrame = static_cast<nsListBoxBodyFrame*>(listboxBody);
         if (aOperation == CONTENT_REMOVED) {
           // Except if we have an aChildFrame and its parent is not the right
           // thing, then we don't do this.  Pseudo frames are so much fun....
@@ -8793,8 +8793,8 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
     printf("nsCSSFrameConstructor::ContentInserted container=%p child=%p index=%d\n",
-           NS_STATIC_CAST(void*, aContainer),
-           NS_STATIC_CAST(void*, aChild),
+           static_cast<void*>(aContainer),
+           static_cast<void*>(aChild),
            aIndexInContainer);
     if (gReallyNoisyContentUpdates) {
       (aContainer ? aContainer : aChild)->List(stdout, 0);
@@ -9046,8 +9046,8 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
           nsFrame::ListTag(stdout, parentFrame);
           printf(" is special inline\n");
           printf("  ==> blockContent=%p, parentContainer=%p\n",
-                 NS_STATIC_CAST(void*, blockContent),
-                 NS_STATIC_CAST(void*, parentContainer));
+                 static_cast<void*>(blockContent),
+                 static_cast<void*>(parentContainer));
         }
 #endif
 
@@ -9354,7 +9354,7 @@ DeletingFrameSubtree(nsFrameManager* aFrameManager,
   // Now destroy any out-of-flow frames that have been enqueued for
   // destruction.
   for (PRInt32 i = destroyQueue.Count() - 1; i >= 0; --i) {
-    nsIFrame* outOfFlowFrame = NS_STATIC_CAST(nsIFrame*, destroyQueue[i]);
+    nsIFrame* outOfFlowFrame = static_cast<nsIFrame*>(destroyQueue[i]);
 
     // Ask the out-of-flow's parent to delete the out-of-flow
     // frame from the right list.
@@ -9396,8 +9396,8 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
     printf("nsCSSFrameConstructor::ContentRemoved container=%p child=%p index=%d\n",
-           NS_STATIC_CAST(void*, aContainer),
-           NS_STATIC_CAST(void*, aChild),
+           static_cast<void*>(aContainer),
+           static_cast<void*>(aChild),
            aIndexInContainer);
     if (gReallyNoisyContentUpdates) {
       aContainer->List(stdout, 0);
@@ -10298,8 +10298,8 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresShell* aPresShell,
                                         GetAbsoluteContainingBlock(newFrame),
                                         nsnull);
 
-          headerFooterFrame = NS_STATIC_CAST(nsTableRowGroupFrame*,
-            NS_NewTableRowGroupFrame(aPresShell, rowGroupFrame->GetStyleContext()));
+          headerFooterFrame = static_cast<nsTableRowGroupFrame*>
+                                         (NS_NewTableRowGroupFrame(aPresShell, rowGroupFrame->GetStyleContext()));
           nsIContent* headerFooter = rowGroupFrame->GetContent();
           headerFooterFrame->Init(headerFooter, newFrame, nsnull);
           ProcessChildren(state, headerFooter, headerFooterFrame,
@@ -12725,8 +12725,8 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
     printf("nsCSSFrameConstructor::WipeContainingBlock: blockContent=%p parentContainer=%p\n",
-           NS_STATIC_CAST(void*, blockContent),
-           NS_STATIC_CAST(void*, parentContainer));
+           static_cast<void*>(blockContent),
+           static_cast<void*>(parentContainer));
   }
 #endif
   if (parentContainer) {
@@ -12749,7 +12749,7 @@ nsCSSFrameConstructor::ReframeContainingBlock(nsIFrame* aFrame)
   // very poorly
   if (gNoisyContentUpdates) {
     printf("nsCSSFrameConstructor::ReframeContainingBlock frame=%p\n",
-           NS_STATIC_CAST(void*, aFrame));
+           static_cast<void*>(aFrame));
   }
 #endif
 
@@ -12783,8 +12783,8 @@ nsCSSFrameConstructor::ReframeContainingBlock(nsIFrame* aFrame)
 #ifdef DEBUG
         if (gNoisyContentUpdates) {
           printf("  ==> blockContent=%p, parentContainer=%p\n",
-                 NS_STATIC_CAST(void*, blockContent),
-                 NS_STATIC_CAST(void*, parentContainer));
+                 static_cast<void*>(blockContent),
+                 static_cast<void*>(parentContainer));
         }
 #endif
         return ReinsertContent(parentContainer, blockContent);
@@ -12814,7 +12814,7 @@ nsresult nsCSSFrameConstructor::RemoveFixedItems(const nsFrameConstructorState& 
                      nsGkAtoms::placeholderFrame,
                      "Wrong type");
         aState.mFrameManager->UnregisterPlaceholderFrame(
-          NS_STATIC_CAST(nsPlaceholderFrame*, placeholderFrame));
+          static_cast<nsPlaceholderFrame*>(placeholderFrame));
         nsIFrame* placeholderParent = placeholderFrame->GetParent();
         ::DeletingFrameSubtree(aState.mFrameManager, placeholderFrame);
         rv = aState.mFrameManager->RemoveFrame(placeholderParent, nsnull,
@@ -12846,11 +12846,11 @@ CollectRestyles(nsISupports* aContent,
                 void* aRestyleArrayPtr)
 {
   nsCSSFrameConstructor::RestyleEnumerateData** restyleArrayPtr =
-    NS_STATIC_CAST(nsCSSFrameConstructor::RestyleEnumerateData**,
-                   aRestyleArrayPtr);
+    static_cast<nsCSSFrameConstructor::RestyleEnumerateData**>
+               (aRestyleArrayPtr);
   nsCSSFrameConstructor::RestyleEnumerateData* currentRestyle =
     *restyleArrayPtr;
-  currentRestyle->mContent = NS_STATIC_CAST(nsIContent*, aContent);
+  currentRestyle->mContent = static_cast<nsIContent*>(aContent);
   currentRestyle->mRestyleHint = aData.mRestyleHint;
   currentRestyle->mChangeHint = aData.mChangeHint;
 
@@ -13017,7 +13017,7 @@ nsCSSFrameConstructor::LazyGenerateChildrenEvent::Run()
     // it is possible that the frame is different than the one that requested
     // the lazy generation, but as long as it's a popup frame that hasn't
     // generated its children yet, that's OK.
-    nsMenuPopupFrame* menuPopupFrame = NS_STATIC_CAST(nsMenuPopupFrame *, frame);
+    nsMenuPopupFrame* menuPopupFrame = static_cast<nsMenuPopupFrame *>(frame);
     if (menuPopupFrame->HasGeneratedChildren())
       return NS_OK;
 

@@ -86,19 +86,19 @@ public:
 
   PRBool IsXMLLetter(PRUnichar aChar)
   {
-    return MOZ_XMLIsLetter(NS_REINTERPRET_CAST(const char*, &aChar));
+    return MOZ_XMLIsLetter(reinterpret_cast<const char*>(&aChar));
   }
   PRBool IsXMLNCNameChar(PRUnichar aChar)
   {
-    return MOZ_XMLIsNCNameChar(NS_REINTERPRET_CAST(const char*, &aChar));
+    return MOZ_XMLIsNCNameChar(reinterpret_cast<const char*>(&aChar));
   }
   PRUint32 DecodeEntity(const PRUnichar* aStart, const PRUnichar* aEnd,
                         const PRUnichar** aNext, PRUnichar* aResult)
   {
     *aNext = nsnull;
-    return MOZ_XMLTranslateEntity(NS_REINTERPRET_CAST(const char*, aStart),
-                                  NS_REINTERPRET_CAST(const char*, aEnd),
-                                  NS_REINTERPRET_CAST(const char**, aNext),
+    return MOZ_XMLTranslateEntity(reinterpret_cast<const char*>(aStart),
+                                  reinterpret_cast<const char*>(aEnd),
+                                  reinterpret_cast<const char**>(aNext),
                                   aResult);
   }
 

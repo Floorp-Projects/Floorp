@@ -120,9 +120,9 @@ CallPeekFunc(nsIInputStream *aInStream, void *aClosure,
   NS_ASSERTION(aToOffset == 0, "Called more than once?");
   NS_ASSERTION(aCount > 0, "Called without data?");
 
-  PeekData* data = NS_STATIC_CAST(PeekData*, aClosure);
+  PeekData* data = static_cast<PeekData*>(aClosure);
   data->mFunc(data->mClosure,
-              NS_REINTERPRET_CAST(const PRUint8*, aFromSegment), aCount);
+              reinterpret_cast<const PRUint8*>(aFromSegment), aCount);
   return NS_BINDING_ABORTED;
 }
 

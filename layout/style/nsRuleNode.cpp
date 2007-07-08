@@ -118,7 +118,7 @@ struct ChildrenHashEntry : public PLDHashEntryHdr {
 nsRuleNode::ChildrenHashHashKey(PLDHashTable *aTable, const void *aKey)
 {
   const nsRuleNode::Key *key =
-    NS_STATIC_CAST(const nsRuleNode::Key*, aKey);
+    static_cast<const nsRuleNode::Key*>(aKey);
   // Disagreement on importance and level for the same rule is extremely
   // rare, so hash just on the rule.
   return PL_DHashVoidPtrKeyStub(aTable, key->mRule);
@@ -130,9 +130,9 @@ nsRuleNode::ChildrenHashMatchEntry(PLDHashTable *aTable,
                                    const void *aKey)
 {
   const ChildrenHashEntry *entry =
-    NS_STATIC_CAST(const ChildrenHashEntry*, aHdr);
+    static_cast<const ChildrenHashEntry*>(aHdr);
   const nsRuleNode::Key *key =
-    NS_STATIC_CAST(const nsRuleNode::Key*, aKey);
+    static_cast<const nsRuleNode::Key*>(aKey);
   return entry->mRuleNode->GetKey() == *key;
 }
 
@@ -442,7 +442,7 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 DeleteRuleNodeChildren(PLDHashTable *table, PLDHashEntryHdr *hdr,
                        PRUint32 number, void *arg)
 {
-  ChildrenHashEntry *entry = NS_STATIC_CAST(ChildrenHashEntry*, hdr);
+  ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>(hdr);
   entry->mRuleNode->Destroy();
   return PL_DHASH_NEXT;
 }
@@ -482,8 +482,8 @@ nsRuleNode::Transition(nsIStyleRule* aRule, PRUint8 aLevel,
   }
 
   if (ChildrenAreHashed()) {
-    ChildrenHashEntry *entry = NS_STATIC_CAST(ChildrenHashEntry*,
-        PL_DHashTableOperate(ChildrenHash(), &key, PL_DHASH_ADD));
+    ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>
+                                          (PL_DHashTableOperate(ChildrenHash(), &key, PL_DHASH_ADD));
     if (!entry) {
       return nsnull;
     }
@@ -528,8 +528,8 @@ nsRuleNode::ConvertChildrenToHash()
   for (nsRuleList* curr = ChildrenList(); curr;
        curr = curr->DestroySelf(mPresContext)) {
     // This will never fail because of the initial size we gave the table.
-    ChildrenHashEntry *entry = NS_STATIC_CAST(ChildrenHashEntry*,
-        PL_DHashTableOperate(hash, curr->mRuleNode->mRule, PL_DHASH_ADD));
+    ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>
+                                          (PL_DHashTableOperate(hash, curr->mRuleNode->mRule, PL_DHASH_ADD));
     NS_ASSERTION(!entry->mRuleNode, "duplicate entries in list");
     entry->mRuleNode = curr->mRuleNode;
   }
@@ -540,7 +540,7 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 ClearStyleDataHelper(PLDHashTable *table, PLDHashEntryHdr *hdr,
                                PRUint32 number, void *arg)
 {
-  ChildrenHashEntry *entry = NS_STATIC_CAST(ChildrenHashEntry*, hdr);
+  ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>(hdr);
   entry->mRuleNode->ClearStyleData();
   return PL_DHASH_NEXT;
 }
@@ -670,7 +670,7 @@ CheckFontCallback(const nsRuleDataStruct& aData,
                   nsRuleNode::RuleDetail aResult)
 {
   const nsRuleDataFont& fontData =
-      NS_STATIC_CAST(const nsRuleDataFont&, aData);
+      static_cast<const nsRuleDataFont&>(aData);
   if (eCSSUnit_Enumerated == fontData.mFamily.GetUnit()) {
     // A special case. We treat this as a fully specified font,
     // since no other font props are legal with a system font.
@@ -730,7 +730,7 @@ CheckColorCallback(const nsRuleDataStruct& aData,
                    nsRuleNode::RuleDetail aResult)
 {
   const nsRuleDataColor& colorData =
-      NS_STATIC_CAST(const nsRuleDataColor&, aData);
+      static_cast<const nsRuleDataColor&>(aData);
 
   // currentColor values for color require inheritance
   if (colorData.mColor.GetUnit() == eCSSUnit_Integer && 
@@ -932,50 +932,50 @@ static const StructCheckData gCheckProperties[] = {
 inline const nsCSSValue&
 ValueAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
 {
-  return * NS_REINTERPRET_CAST(const nsCSSValue*,
-                     NS_REINTERPRET_CAST(const char*, &aRuleDataStruct) + aOffset);
+  return * reinterpret_cast<const nsCSSValue*>
+                           (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
 }
 
 inline const nsCSSRect*
 RectAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
 {
-  return NS_REINTERPRET_CAST(const nsCSSRect*,
-                     NS_REINTERPRET_CAST(const char*, &aRuleDataStruct) + aOffset);
+  return reinterpret_cast<const nsCSSRect*>
+                         (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
 }
 
 inline const nsCSSValuePair*
 ValuePairAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
 {
-  return NS_REINTERPRET_CAST(const nsCSSValuePair*,
-                     NS_REINTERPRET_CAST(const char*, &aRuleDataStruct) + aOffset);
+  return reinterpret_cast<const nsCSSValuePair*>
+                         (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
 }
 
 inline const nsCSSValueList*
 ValueListAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
 {
-  return * NS_REINTERPRET_CAST(const nsCSSValueList*const*,
-                     NS_REINTERPRET_CAST(const char*, &aRuleDataStruct) + aOffset);
+  return * reinterpret_cast<const nsCSSValueList*const*>
+                           (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
 }
 
 inline const nsCSSValueList**
 ValueListArrayAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
 {
-  return * NS_REINTERPRET_CAST(const nsCSSValueList**const*,
-                     NS_REINTERPRET_CAST(const char*, &aRuleDataStruct) + aOffset);
+  return * reinterpret_cast<const nsCSSValueList**const*>
+                           (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
 }
 
 inline const nsCSSCounterData*
 CounterDataAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
 {
-  return * NS_REINTERPRET_CAST(const nsCSSCounterData*const*,
-                     NS_REINTERPRET_CAST(const char*, &aRuleDataStruct) + aOffset);
+  return * reinterpret_cast<const nsCSSCounterData*const*>
+                           (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
 }
 
 inline const nsCSSQuotes*
 QuotesAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
 {
-  return * NS_REINTERPRET_CAST(const nsCSSQuotes*const*,
-                     NS_REINTERPRET_CAST(const char*, &aRuleDataStruct) + aOffset);
+  return * reinterpret_cast<const nsCSSQuotes*const*>
+                           (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
 }
 
 inline nsRuleNode::RuleDetail
@@ -1460,7 +1460,7 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
       // should be walked to find the data.
       const nsStyleStruct* parentStruct = parentContext->GetStyleData(aSID);
       aContext->AddStyleBit(bit); // makes const_cast OK.
-      aContext->SetStyle(aSID, NS_CONST_CAST(nsStyleStruct*, parentStruct));
+      aContext->SetStyle(aSID, const_cast<nsStyleStruct*>(parentStruct));
       return parentStruct;
     }
     else
@@ -1763,7 +1763,7 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
   nsStyleContext* parentContext = aContext->GetParent();                      \
                                                                               \
   const nsRuleData##rdtype_& rdata_ =                                         \
-    NS_STATIC_CAST(const nsRuleData##rdtype_&, aData);                        \
+    static_cast<const nsRuleData##rdtype_&>(aData);                        \
   nsStyle##type_* data_ = nsnull;                                             \
   const nsStyle##type_* parentdata_ = nsnull;                                 \
   PRBool inherited = aInherited;                                              \
@@ -1774,7 +1774,7 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
     /* We only need to compute the delta between this computed data and */    \
     /* our computed data. */                                                  \
     data_ = new (mPresContext)                                                \
-            nsStyle##type_(*NS_STATIC_CAST(nsStyle##type_*, aStartStruct));   \
+            nsStyle##type_(*static_cast<nsStyle##type_*>(aStartStruct));   \
   else {                                                                      \
     /* XXXldb What about eRuleFullInherited?  Which path is faster? */        \
     if (aRuleDetail != eRuleFullMixed && aRuleDetail != eRuleFullReset) {     \
@@ -1811,13 +1811,13 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
   nsStyleContext* parentContext = aContext->GetParent();                      \
                                                                               \
   const nsRuleData##rdtype_& rdata_ =                                         \
-    NS_STATIC_CAST(const nsRuleData##rdtype_&, aData);                        \
+    static_cast<const nsRuleData##rdtype_&>(aData);                        \
   nsStyle##type_* data_;                                                      \
   if (aStartStruct)                                                           \
     /* We only need to compute the delta between this computed data and */    \
     /* our computed data. */                                                  \
     data_ = new (mPresContext)                                                \
-            nsStyle##type_(*NS_STATIC_CAST(nsStyle##type_*, aStartStruct));   \
+            nsStyle##type_(*static_cast<nsStyle##type_*>(aStartStruct));   \
   else                                                                        \
     data_ = new (mPresContext) nsStyle##type_ ctorargs_;                      \
                                                                               \
@@ -2260,7 +2260,7 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
 static PRBool ExtractGeneric(const nsString& aFamily, PRBool aGeneric,
                              void *aData)
 {
-  nsAutoString *data = NS_STATIC_CAST(nsAutoString*, aData);
+  nsAutoString *data = static_cast<nsAutoString*>(aData);
 
   if (aGeneric) {
     *data = aFamily;
@@ -4644,14 +4644,14 @@ nsRuleNode::GetStyle##name_(nsStyleContext* aContext, PRBool aComputeData)    \
     return nsnull;                                                            \
                                                                               \
   data =                                                                      \
-    NS_STATIC_CAST(const nsStyle##name_ *, Get##name_##Data(aContext));       \
+    static_cast<const nsStyle##name_ *>(Get##name_##Data(aContext));       \
                                                                               \
   if (NS_LIKELY(data != nsnull))                                              \
     return data;                                                              \
                                                                               \
   NS_NOTREACHED("could not create style struct");                             \
   return                                                                      \
-    NS_STATIC_CAST(const nsStyle##name_ *,                                    \
+    static_cast<const nsStyle##name_ *>(\
                    mPresContext->PresShell()->StyleSet()->                    \
                      DefaultStyleData()->GetStyleData(eStyleStruct_##name_)); \
 }
@@ -4671,7 +4671,7 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 SweepRuleNodeChildren(PLDHashTable *table, PLDHashEntryHdr *hdr,
                       PRUint32 number, void *arg)
 {
-  ChildrenHashEntry *entry = NS_STATIC_CAST(ChildrenHashEntry*, hdr);
+  ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>(hdr);
   if (entry->mRuleNode->Sweep())
     return PL_DHASH_REMOVE; // implies NEXT, unless |ed with STOP
   return PL_DHASH_NEXT;

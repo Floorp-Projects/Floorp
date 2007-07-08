@@ -478,6 +478,6 @@ nsXPCException::NewException(const char *aMessage,
     if(!e)
         return NS_ERROR_FAILURE;
 
-    *exceptn = NS_STATIC_CAST(nsIXPCException*, e);
+    *exceptn = static_cast<nsIXPCException*>(e);
     return NS_OK;
 }

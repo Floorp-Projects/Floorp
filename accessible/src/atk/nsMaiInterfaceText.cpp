@@ -79,7 +79,7 @@ void ConvertTexttoAsterisks(nsAccessibleWrap* accWrap, nsAString& aString)
     // convert each char to "*" when it's "password text" 
     PRUint32 accRole;
     accWrap->GetRole(&accRole);
-    if (NS_STATIC_CAST(AtkRole, accRole) == ATK_ROLE_PASSWORD_TEXT) {
+    if (static_cast<AtkRole>(accRole) == ATK_ROLE_PASSWORD_TEXT) {
         for (PRUint32 i = 0; i < aString.Length(); i++)
             aString.Replace(i, 1, NS_LITERAL_STRING("*"));
     }
@@ -187,11 +187,11 @@ getCharacterAtOffsetCB(AtkText *aText, gint aOffset)
     // convert char to "*" when it's "password text" 
     PRUint32 accRole;
     accWrap->GetRole(&accRole);
-    if (NS_STATIC_CAST(AtkRole, accRole) == ATK_ROLE_PASSWORD_TEXT) {
+    if (static_cast<AtkRole>(accRole) == ATK_ROLE_PASSWORD_TEXT) {
         uniChar = '*';
     }
 
-    return (NS_FAILED(rv)) ? 0 : NS_STATIC_CAST(gunichar, uniChar);
+    return (NS_FAILED(rv)) ? 0 : static_cast<gunichar>(uniChar);
 }
 
 gchar *
@@ -237,7 +237,7 @@ getCaretOffsetCB(AtkText *aText)
 
     PRInt32 offset;
     nsresult rv = accText->GetCaretOffset(&offset);
-    return (NS_FAILED(rv)) ? 0 : NS_STATIC_CAST(gint, offset);
+    return (NS_FAILED(rv)) ? 0 : static_cast<gint>(offset);
 }
 
 AtkAttributeSet *
@@ -358,7 +358,7 @@ getCharacterCountCB(AtkText *aText)
 
     PRInt32 count = 0;
     nsresult rv = accText->GetCharacterCount(&count);
-    return (NS_FAILED(rv)) ? 0 : NS_STATIC_CAST(gint, count);
+    return (NS_FAILED(rv)) ? 0 : static_cast<gint>(count);
 }
 
 gint
@@ -383,7 +383,7 @@ getOffsetAtPointCB(AtkText *aText,
         geckoCoordType = nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE;
 
     accText->GetOffsetAtPoint(aX, aY, geckoCoordType, &offset);
-    return NS_STATIC_CAST(gint, offset);
+    return static_cast<gint>(offset);
 }
 
 gint

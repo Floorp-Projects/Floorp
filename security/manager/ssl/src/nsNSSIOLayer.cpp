@@ -318,7 +318,7 @@ nsNSSSocketInfo::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
   nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
   NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
                        NS_GET_IID(nsIInterfaceRequestor),
-                       NS_STATIC_CAST(nsIInterfaceRequestor*,aCallbacks),
+                       static_cast<nsIInterfaceRequestor*>(aCallbacks),
                        NS_PROXY_SYNC,
                        getter_AddRefs(proxiedCallbacks));
 
@@ -631,7 +631,7 @@ displayAlert(nsAFlatString &formattedString, nsNSSSocketInfo *infoObject)
   nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
   NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
                        NS_GET_IID(nsIInterfaceRequestor),
-                       NS_STATIC_CAST(nsIInterfaceRequestor*, infoObject),
+                       static_cast<nsIInterfaceRequestor*>(infoObject),
                        NS_PROXY_SYNC,
                        getter_AddRefs(proxiedCallbacks));
 
@@ -1427,9 +1427,9 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
     if (NS_FAILED(rv)) 
       return PR_FALSE;
   }
-  nsIInterfaceRequestor *csi = NS_STATIC_CAST(nsIInterfaceRequestor*,
-                                                 infoObject);
-  nsIX509Cert *callBackCert = NS_STATIC_CAST(nsIX509Cert*, nssCert);
+  nsIInterfaceRequestor *csi = static_cast<nsIInterfaceRequestor*>
+                                          (infoObject);
+  nsIX509Cert *callBackCert = static_cast<nsIX509Cert*>(nssCert);
   CERTCertificate *peerCert = nssCert->GetCert();
   NS_ASSERTION(peerCert, "Got nsnull cert back from nsNSSCertificate");
   switch (error) {

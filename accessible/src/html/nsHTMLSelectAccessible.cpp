@@ -132,7 +132,7 @@ void nsHTMLSelectableAccessible::iterator::AddAccessibleIfSelected(nsIAccessibil
   }
 
   if (tempAccess)
-    aSelectedAccessibles->AppendElement(NS_STATIC_CAST(nsISupports*, tempAccess), PR_FALSE);
+    aSelectedAccessibles->AppendElement(static_cast<nsISupports*>(tempAccess), PR_FALSE);
 }
 
 PRBool nsHTMLSelectableAccessible::iterator::GetAccessibleIfSelected(PRInt32 aIndex, 
@@ -565,7 +565,7 @@ nsHTMLSelectOptionAccessible::GetAttributesInternal(nsIPersistentProperties *aAt
   }
 
   nsAccUtils::SetAccGroupAttrs(aAttributes, level, posInSet,
-                               NS_STATIC_CAST(PRInt32, setSize));
+                               static_cast<PRInt32>(setSize));
   return  NS_OK;
 }
 
@@ -1170,7 +1170,7 @@ nsHTMLTextFieldAccessible(aDOMNode, aShell)
 NS_IMETHODIMP nsHTMLComboboxTextFieldAccessible::GetUniqueID(void **aUniqueID)
 {
   // Since mDOMNode is same as for our parent, use |this| pointer as the unique Id
-  *aUniqueID = NS_STATIC_CAST(void*, this);
+  *aUniqueID = static_cast<void*>(this);
   return NS_OK;
 }
 
@@ -1290,7 +1290,7 @@ NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetActionName(PRUint8 aIndex, nsAS
 NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetUniqueID(void **aUniqueID)
 {
   // Since mDOMNode is same for all tree item, use |this| pointer as the unique Id
-  *aUniqueID = NS_STATIC_CAST(void*, this);
+  *aUniqueID = static_cast<void*>(this);
   return NS_OK;
 }
 
@@ -1422,7 +1422,7 @@ NS_IMETHODIMP nsHTMLComboboxListAccessible::GetParent(nsIAccessible **aParent)
 NS_IMETHODIMP nsHTMLComboboxListAccessible::GetUniqueID(void **aUniqueID)
 {
   // Since mDOMNode is same for all tree item, use |this| pointer as the unique Id
-  *aUniqueID = NS_STATIC_CAST(void*, this);
+  *aUniqueID = static_cast<void*>(this);
   return NS_OK;
 }
 

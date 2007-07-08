@@ -73,7 +73,7 @@ txKeyFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
     txExecutionState* es =
-        NS_STATIC_CAST(txExecutionState*, aContext->getPrivateContext());
+        static_cast<txExecutionState*>(aContext->getPrivateContext());
 
     nsAutoString keyQName;
     nsresult rv = mParams[0]->evaluateToString(aContext, keyQName);
@@ -93,9 +93,9 @@ txKeyFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     nsRefPtr<txNodeSet> res;
     txNodeSet* nodeSet;
     if (exprResult->getResultType() == txAExprResult::NODESET &&
-        (nodeSet = NS_STATIC_CAST(txNodeSet*,
-                                  NS_STATIC_CAST(txAExprResult*,
-                                                 exprResult)))->size() > 1) {
+        (nodeSet = static_cast<txNodeSet*>
+                              (static_cast<txAExprResult*>
+                                          (exprResult)))->size() > 1) {
         rv = aContext->recycler()->getNodeSet(getter_AddRefs(res));
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -159,7 +159,7 @@ PRBool
 txKeyValueHashEntry::MatchEntry(const void* aKey) const
 {
     const txKeyValueHashKey* key =
-        NS_STATIC_CAST(const txKeyValueHashKey*, aKey);
+        static_cast<const txKeyValueHashKey*>(aKey);
 
     return mKey.mKeyName == key->mKeyName &&
            mKey.mRootIdentifier == key->mRootIdentifier &&
@@ -170,7 +170,7 @@ PLDHashNumber
 txKeyValueHashEntry::HashKey(const void* aKey)
 {
     const txKeyValueHashKey* key =
-        NS_STATIC_CAST(const txKeyValueHashKey*, aKey);
+        static_cast<const txKeyValueHashKey*>(aKey);
 
     return key->mKeyName.mNamespaceID ^
            NS_PTR_TO_INT32(key->mKeyName.mLocalName.get()) ^
@@ -182,7 +182,7 @@ PRBool
 txIndexedKeyHashEntry::MatchEntry(const void* aKey) const
 {
     const txIndexedKeyHashKey* key =
-        NS_STATIC_CAST(const txIndexedKeyHashKey*, aKey);
+        static_cast<const txIndexedKeyHashKey*>(aKey);
 
     return mKey.mKeyName == key->mKeyName &&
            mKey.mRootIdentifier == key->mRootIdentifier;
@@ -192,7 +192,7 @@ PLDHashNumber
 txIndexedKeyHashEntry::HashKey(const void* aKey)
 {
     const txIndexedKeyHashKey* key =
-        NS_STATIC_CAST(const txIndexedKeyHashKey*, aKey);
+        static_cast<const txIndexedKeyHashKey*>(aKey);
 
     return key->mKeyName.mNamespaceID ^
            NS_PTR_TO_INT32(key->mKeyName.mLocalName.get()) ^
@@ -400,9 +400,9 @@ nsresult txXSLKey::testNode(const txXPathNode& aNode,
             aEs.popEvalContext();
 
             if (exprResult->getResultType() == txAExprResult::NODESET) {
-                txNodeSet* res = NS_STATIC_CAST(txNodeSet*,
-                                                NS_STATIC_CAST(txAExprResult*,
-                                                               exprResult));
+                txNodeSet* res = static_cast<txNodeSet*>
+                                            (static_cast<txAExprResult*>
+                                                        (exprResult));
                 PRInt32 i;
                 for (i = 0; i < res->size(); ++i) {
                     val.Truncate();

@@ -98,7 +98,7 @@ void CnsiWebProg::AddWebProgLstnr(PRUint32 theFlag, PRInt16 displayMode)
 
 			// addWebProgListener
 	qaWebProgress = GetWebProgObject();
-	nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl));
+	nsCOMPtr<nsIWebProgressListener> listener(static_cast<nsIWebProgressListener*>(qaBrowserImpl));
 	rv = qaWebProgress->AddProgressListener(listener, theFlag);
 //	StoreWebProgFlag(theFlag);
 	RvTestResult(rv, "nsIWebProgress::AddProgressListener() test", displayMode);
@@ -110,7 +110,7 @@ void CnsiWebProg::RemoveWebProgLstnr(PRInt16 displayMode)
 {
 		// removeWebProgListener
 	qaWebProgress = GetWebProgObject();
-	nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl));
+	nsCOMPtr<nsIWebProgressListener> listener(static_cast<nsIWebProgressListener*>(qaBrowserImpl));
 	rv = qaWebProgress->RemoveProgressListener(listener);
 	RvTestResult(rv, "nsIWebProgress::RemoveProgressListener() test", displayMode);
 	RvTestResultDlg(rv, "nsIWebProgress::RemoveProgressListener() test");

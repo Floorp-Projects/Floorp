@@ -183,7 +183,7 @@ NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
   }
   if (!trav)
     return NS_ERROR_OUT_OF_MEMORY;
-  *aEnumerator = NS_STATIC_CAST(nsIBidirectionalEnumerator*, trav);
+  *aEnumerator = static_cast<nsIBidirectionalEnumerator*>(trav);
   NS_ADDREF(trav);
   return NS_OK;
 }
@@ -209,7 +209,7 @@ NS_IMETHODIMP
                                      PRBool aFollowOOFs)
 {
   return NS_NewFrameTraversal(aEnumerator, aPresContext, aStart,
-                              NS_STATIC_CAST(nsIteratorType, aType),
+                              static_cast<nsIteratorType>(aType),
                               aVisual, aLockInScrollView, aFollowOOFs);  
 }
 

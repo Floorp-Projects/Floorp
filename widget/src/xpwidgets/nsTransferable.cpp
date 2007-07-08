@@ -224,7 +224,7 @@ DataStruct::WriteCache(nsISupports* aData, PRUint32 aDataLen)
     nsPrimitiveHelpers::CreateDataFromPrimitive ( mFlavor.get(), aData, &buff, aDataLen );
     if ( buff ) {
       PRUint32 ignored;
-      outStr->Write(NS_REINTERPRET_CAST(char*, buff), aDataLen, &ignored);
+      outStr->Write(reinterpret_cast<char*>(buff), aDataLen, &ignored);
       nsMemory::Free(buff);
       return NS_OK;
     }

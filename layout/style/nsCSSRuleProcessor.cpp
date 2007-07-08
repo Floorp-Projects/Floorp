@@ -130,7 +130,7 @@ struct RuleHashTableEntry : public PLDHashEntryHdr {
 PR_STATIC_CALLBACK(PLDHashNumber)
 RuleHash_CIHashKey(PLDHashTable *table, const void *key)
 {
-  nsIAtom *atom = NS_CONST_CAST(nsIAtom*, NS_STATIC_CAST(const nsIAtom*, key));
+  nsIAtom *atom = const_cast<nsIAtom*>(static_cast<const nsIAtom*>(key));
 
   nsAutoString str;
   atom->ToString(str);
@@ -161,8 +161,8 @@ PR_STATIC_CALLBACK(PRBool)
 RuleHash_CIMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                       const void *key)
 {
-  nsIAtom *match_atom = NS_CONST_CAST(nsIAtom*, NS_STATIC_CAST(const nsIAtom*,
-                            key));
+  nsIAtom *match_atom = const_cast<nsIAtom*>(static_cast<const nsIAtom*>
+                                              (key));
   // Use our extra |getKey| callback to avoid code duplication.
   nsIAtom *entry_atom = ToLocalOps(table->ops)->getKey(table, hdr);
 
@@ -181,8 +181,8 @@ PR_STATIC_CALLBACK(PRBool)
 RuleHash_CSMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                       const void *key)
 {
-  nsIAtom *match_atom = NS_CONST_CAST(nsIAtom*, NS_STATIC_CAST(const nsIAtom*,
-                            key));
+  nsIAtom *match_atom = const_cast<nsIAtom*>(static_cast<const nsIAtom*>
+                                              (key));
   // Use our extra |getKey| callback to avoid code duplication.
   nsIAtom *entry_atom = ToLocalOps(table->ops)->getKey(table, hdr);
 
@@ -193,7 +193,7 @@ PR_STATIC_CALLBACK(nsIAtom*)
 RuleHash_TagTable_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
 {
   const RuleHashTableEntry *entry =
-    NS_STATIC_CAST(const RuleHashTableEntry*, hdr);
+    static_cast<const RuleHashTableEntry*>(hdr);
   return entry->mRules->mSelector->mTag;
 }
 
@@ -201,7 +201,7 @@ PR_STATIC_CALLBACK(nsIAtom*)
 RuleHash_ClassTable_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
 {
   const RuleHashTableEntry *entry =
-    NS_STATIC_CAST(const RuleHashTableEntry*, hdr);
+    static_cast<const RuleHashTableEntry*>(hdr);
   return entry->mRules->mSelector->mClassList->mAtom;
 }
 
@@ -209,7 +209,7 @@ PR_STATIC_CALLBACK(nsIAtom*)
 RuleHash_IdTable_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
 {
   const RuleHashTableEntry *entry =
-    NS_STATIC_CAST(const RuleHashTableEntry*, hdr);
+    static_cast<const RuleHashTableEntry*>(hdr);
   return entry->mRules->mSelector->mIDList->mAtom;
 }
 
@@ -225,7 +225,7 @@ RuleHash_NameSpaceTable_MatchEntry(PLDHashTable *table,
                                    const void *key)
 {
   const RuleHashTableEntry *entry =
-    NS_STATIC_CAST(const RuleHashTableEntry*, hdr);
+    static_cast<const RuleHashTableEntry*>(hdr);
 
   return NS_PTR_TO_INT32(key) ==
          entry->mRules->mSelector->mNameSpace;
@@ -432,7 +432,7 @@ RuleHash::~RuleHash()
 "  Content Nodes: Elements(%u) Pseudo-Elements(%u)\n"
 "  Element Calls: Universal(%u) NameSpace(%u) Tag(%u) Class(%u) Id(%u)\n"
 "  Pseudo-Element Calls: Tag(%u)\n",
-         NS_STATIC_CAST(void*, this),
+         static_cast<void*>(this),
          mUniversalSelectors, mNameSpaceSelectors, mTagSelectors,
            mClassSelectors, mIdSelectors,
          mElementsMatched,
@@ -479,8 +479,8 @@ void RuleHash::PrependRuleToTable(PLDHashTable* aTable, const void* aKey,
                                   RuleValue* aRuleInfo)
 {
   // Get a new or existing entry.
-  RuleHashTableEntry *entry = NS_STATIC_CAST(RuleHashTableEntry*,
-      PL_DHashTableOperate(aTable, aKey, PL_DHASH_ADD));
+  RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
+                                         (PL_DHashTableOperate(aTable, aKey, PL_DHASH_ADD));
   if (!entry)
     return;
   entry->mRules = aRuleInfo->Add(mRuleCount++, entry->mRules);
@@ -556,8 +556,8 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
   }
   // universal rules within the namespace
   if (kNameSpaceID_Unknown != aNameSpace) {
-    RuleHashTableEntry *entry = NS_STATIC_CAST(RuleHashTableEntry*,
-        PL_DHashTableOperate(&mNameSpaceTable, NS_INT32_TO_PTR(aNameSpace),
+    RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
+                                           (PL_DHashTableOperate(&mNameSpaceTable, NS_INT32_TO_PTR(aNameSpace),
                              PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
       RuleValue *value = entry->mRules;
@@ -566,8 +566,8 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
     }
   }
   if (nsnull != aTag) {
-    RuleHashTableEntry *entry = NS_STATIC_CAST(RuleHashTableEntry*,
-        PL_DHashTableOperate(&mTagTable, aTag, PL_DHASH_LOOKUP));
+    RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
+                                           (PL_DHashTableOperate(&mTagTable, aTag, PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
       RuleValue *value = entry->mRules;
       mEnumList[valueCount++] = value;
@@ -575,8 +575,8 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
     }
   }
   if (nsnull != aID) {
-    RuleHashTableEntry *entry = NS_STATIC_CAST(RuleHashTableEntry*,
-        PL_DHashTableOperate(&mIdTable, aID, PL_DHASH_LOOKUP));
+    RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
+                                           (PL_DHashTableOperate(&mIdTable, aID, PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
       RuleValue *value = entry->mRules;
       mEnumList[valueCount++] = value;
@@ -585,8 +585,8 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
   }
   { // extra scope to work around compiler bugs with |for| scoping.
     for (PRInt32 index = 0; index < classCount; ++index) {
-      RuleHashTableEntry *entry = NS_STATIC_CAST(RuleHashTableEntry*,
-        PL_DHashTableOperate(&mClassTable, aClassList->AtomAt(index),
+      RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
+                                             (PL_DHashTableOperate(&mClassTable, aClassList->AtomAt(index),
                              PL_DHASH_LOOKUP));
       if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
         RuleValue *value = entry->mRules;
@@ -626,8 +626,8 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
 
 void RuleHash::EnumerateTagRules(nsIAtom* aTag, RuleEnumFunc aFunc, void* aData)
 {
-  RuleHashTableEntry *entry = NS_STATIC_CAST(RuleHashTableEntry*,
-      PL_DHashTableOperate(&mTagTable, aTag, PL_DHASH_LOOKUP));
+  RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
+                                         (PL_DHashTableOperate(&mTagTable, aTag, PL_DHASH_LOOKUP));
 
   RULE_HASH_STAT_INCREMENT(mPseudosMatched);
   if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
@@ -651,7 +651,7 @@ struct AttributeSelectorEntry : public PLDHashEntryHdr {
 PR_STATIC_CALLBACK(void)
 AttributeSelectorClearEntry(PLDHashTable *table, PLDHashEntryHdr *hdr)
 {
-  AttributeSelectorEntry *entry = NS_STATIC_CAST(AttributeSelectorEntry*, hdr);
+  AttributeSelectorEntry *entry = static_cast<AttributeSelectorEntry*>(hdr);
   delete entry->mSelectors;
   memset(entry, 0, table->entrySize);
 }
@@ -702,8 +702,8 @@ struct RuleCascadeData {
 nsVoidArray*
 RuleCascadeData::AttributeListFor(nsIAtom* aAttribute)
 {
-  AttributeSelectorEntry *entry = NS_STATIC_CAST(AttributeSelectorEntry*,
-      PL_DHashTableOperate(&mAttributeSelectors, aAttribute, PL_DHASH_ADD));
+  AttributeSelectorEntry *entry = static_cast<AttributeSelectorEntry*>
+                                             (PL_DHashTableOperate(&mAttributeSelectors, aAttribute, PL_DHASH_ADD));
   if (!entry)
     return nsnull;
   if (!entry->mSelectors) {
@@ -835,8 +835,8 @@ RuleProcessorData::~RuleProcessorData()
     destroyQueue.AppendElement(this);
 
     do {
-      RuleProcessorData *d = NS_STATIC_CAST(RuleProcessorData*,
-        destroyQueue.FastElementAt(destroyQueue.Count() - 1));
+      RuleProcessorData *d = static_cast<RuleProcessorData*>
+                                        (destroyQueue.FastElementAt(destroyQueue.Count() - 1));
       destroyQueue.RemoveElementAt(destroyQueue.Count() - 1);
 
       if (d->mPreviousSiblingData) {
@@ -964,8 +964,8 @@ static PRBool AttrMatchesValue(const nsAttrSelector* aAttrSelector,
   const nsDefaultStringComparator defaultComparator;
   const nsCaseInsensitiveStringComparator ciComparator;
   const nsStringComparator& comparator = aAttrSelector->mCaseSensitive
-                ? NS_STATIC_CAST(const nsStringComparator&, defaultComparator)
-                : NS_STATIC_CAST(const nsStringComparator&, ciComparator);
+                ? static_cast<const nsStringComparator&>(defaultComparator)
+                : static_cast<const nsStringComparator&>(ciComparator);
   switch (aAttrSelector->mFunction) {
     case NS_ATTR_FUNC_EQUALS: 
       return aValue.Equals(aAttrSelector->mValue, comparator);
@@ -1581,10 +1581,10 @@ static void ContentEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
       // would anything multiply inherit nsIStyleRule anyway?)
 #ifdef DEBUG
       nsCOMPtr<nsIStyleRule> iRule = do_QueryInterface(aRule);
-      NS_ASSERTION(NS_STATIC_CAST(nsIStyleRule*, aRule) == iRule.get(),
+      NS_ASSERTION(static_cast<nsIStyleRule*>(aRule) == iRule.get(),
                    "Please fix QI so this performance optimization is valid");
 #endif
-      data->mRuleWalker->Forward(NS_STATIC_CAST(nsIStyleRule*, aRule));
+      data->mRuleWalker->Forward(static_cast<nsIStyleRule*>(aRule));
       // nsStyleSet will deal with the !important rule
     }
   }
@@ -1646,10 +1646,10 @@ static void PseudoEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
     // would anything multiply inherit nsIStyleRule anyway?)
 #ifdef DEBUG
     nsCOMPtr<nsIStyleRule> iRule = do_QueryInterface(aRule);
-    NS_ASSERTION(NS_STATIC_CAST(nsIStyleRule*, aRule) == iRule.get(),
+    NS_ASSERTION(static_cast<nsIStyleRule*>(aRule) == iRule.get(),
                  "Please fix QI so this performance optimization is valid");
 #endif
-    data->mRuleWalker->Forward(NS_STATIC_CAST(nsIStyleRule*, aRule));
+    data->mRuleWalker->Forward(static_cast<nsIStyleRule*>(aRule));
     // nsStyleSet will deal with the !important rule
   }
 }
@@ -1686,9 +1686,9 @@ struct StateEnumData {
 
 PR_STATIC_CALLBACK(PRBool) StateEnumFunc(void* aSelector, void* aData)
 {
-  StateEnumData *enumData = NS_STATIC_CAST(StateEnumData*, aData);
+  StateEnumData *enumData = static_cast<StateEnumData*>(aData);
   StateRuleProcessorData *data = enumData->data;
-  nsCSSSelector* selector = NS_STATIC_CAST(nsCSSSelector*, aSelector);
+  nsCSSSelector* selector = static_cast<nsCSSSelector*>(aSelector);
 
   nsReStyleHint possibleChange = IsSiblingOperator(selector->mOperator) ?
     eReStyle_LaterSiblings : eReStyle_Self;
@@ -1740,9 +1740,9 @@ struct AttributeEnumData {
 
 PR_STATIC_CALLBACK(PRBool) AttributeEnumFunc(void* aSelector, void* aData)
 {
-  AttributeEnumData *enumData = NS_STATIC_CAST(AttributeEnumData*, aData);
+  AttributeEnumData *enumData = static_cast<AttributeEnumData*>(aData);
   AttributeRuleProcessorData *data = enumData->data;
-  nsCSSSelector* selector = NS_STATIC_CAST(nsCSSSelector*, aSelector);
+  nsCSSSelector* selector = static_cast<nsCSSSelector*>(aSelector);
 
   nsReStyleHint possibleChange = IsSiblingOperator(selector->mOperator) ?
     eReStyle_LaterSiblings : eReStyle_Self;
@@ -1797,8 +1797,8 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
       cascade->mClassSelectors.EnumerateForwards(AttributeEnumFunc, &data);
     }
 
-    AttributeSelectorEntry *entry = NS_STATIC_CAST(AttributeSelectorEntry*,
-        PL_DHashTableOperate(&cascade->mAttributeSelectors, aData->mAttribute,
+    AttributeSelectorEntry *entry = static_cast<AttributeSelectorEntry*>
+                                               (PL_DHashTableOperate(&cascade->mAttributeSelectors, aData->mAttribute,
                              PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
       entry->mSelectors->EnumerateForwards(AttributeEnumFunc, &data);
@@ -1862,8 +1862,8 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
 PR_STATIC_CALLBACK(PRBool)
 AddRule(void* aRuleInfo, void* aCascade)
 {
-  RuleValue* ruleInfo = NS_STATIC_CAST(RuleValue*, aRuleInfo);
-  RuleCascadeData *cascade = NS_STATIC_CAST(RuleCascadeData*, aCascade);
+  RuleValue* ruleInfo = static_cast<RuleValue*>(aRuleInfo);
+  RuleCascadeData *cascade = static_cast<RuleCascadeData*>(aCascade);
 
   // Build the rule hash.
   cascade->mRuleHash.PrependRule(ruleInfo);
@@ -1915,7 +1915,7 @@ AddRule(void* aRuleInfo, void* aCascade)
 PR_STATIC_CALLBACK(PRIntn)
 RuleArraysDestroy(nsHashKey *aKey, void *aData, void *aClosure)
 {
-  delete NS_STATIC_CAST(nsAutoVoidArray*, aData);
+  delete static_cast<nsAutoVoidArray*>(aData);
   return PR_TRUE;
 }
 
@@ -1947,7 +1947,7 @@ InsertRuleByWeight(nsICSSRule* aRule, void* aData)
       PRInt32 weight = sel->mWeight;
       nsPRUint32Key key(weight);
       nsAutoVoidArray *rules =
-        NS_STATIC_CAST(nsAutoVoidArray*, data->mRuleArrays.Get(&key));
+        static_cast<nsAutoVoidArray*>(data->mRuleArrays.Get(&key));
       if (!rules) {
         rules = new nsAutoVoidArray();
         if (!rules) return PR_FALSE; // out of memory
@@ -1971,8 +1971,8 @@ InsertRuleByWeight(nsICSSRule* aRule, void* aData)
 static PRBool
 CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData)
 {
-  nsCSSStyleSheet*  sheet = NS_STATIC_CAST(nsCSSStyleSheet*, aSheet);
-  CascadeEnumData* data = NS_STATIC_CAST(CascadeEnumData*, aData);
+  nsCSSStyleSheet*  sheet = static_cast<nsCSSStyleSheet*>(aSheet);
+  CascadeEnumData* data = static_cast<CascadeEnumData*>(aData);
   PRBool bSheetApplicable = PR_TRUE;
   sheet->GetApplicable(bSheetApplicable);
 
@@ -1998,8 +1998,8 @@ struct RuleArrayData {
 PR_STATIC_CALLBACK(int) CompareArrayData(const void* aArg1, const void* aArg2,
                                          void* closure)
 {
-  const RuleArrayData* arg1 = NS_STATIC_CAST(const RuleArrayData*, aArg1);
-  const RuleArrayData* arg2 = NS_STATIC_CAST(const RuleArrayData*, aArg2);
+  const RuleArrayData* arg1 = static_cast<const RuleArrayData*>(aArg1);
+  const RuleArrayData* arg2 = static_cast<const RuleArrayData*>(aArg2);
   return arg1->mWeight - arg2->mWeight; // put lower weight first
 }
 
@@ -2017,9 +2017,9 @@ struct FillArrayData {
 PR_STATIC_CALLBACK(PRBool)
 FillArray(nsHashKey* aKey, void* aData, void* aClosure)
 {
-  nsPRUint32Key* key = NS_STATIC_CAST(nsPRUint32Key*, aKey);
-  nsVoidArray* weightArray = NS_STATIC_CAST(nsVoidArray*, aData);
-  FillArrayData* data = NS_STATIC_CAST(FillArrayData*, aClosure);
+  nsPRUint32Key* key = static_cast<nsPRUint32Key*>(aKey);
+  nsVoidArray* weightArray = static_cast<nsVoidArray*>(aData);
+  FillArrayData* data = static_cast<FillArrayData*>(aClosure);
 
   RuleArrayData& ruleData = data->mArrayData[data->mIndex++];
   ruleData.mRuleArray = weightArray;

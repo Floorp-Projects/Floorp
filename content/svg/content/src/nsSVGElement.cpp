@@ -810,7 +810,7 @@ nsSVGElement::GetCtx()
 {
   nsCOMPtr<nsIDOMSVGSVGElement> svg;
   GetOwnerSVGElement(getter_AddRefs(svg));
-  return NS_STATIC_CAST(nsSVGSVGElement*, svg.get());
+  return static_cast<nsSVGSVGElement*>(svg.get());
 }
 
 nsSVGElement::LengthAttributesInfo

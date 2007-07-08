@@ -569,8 +569,8 @@ static void *
 GetFontOrGroup(gfxFontGroup *aFontGroup, PRBool aUseFont)
 {
     return aUseFont
-        ? NS_STATIC_CAST(void *, aFontGroup->GetFontAt(0))
-        : NS_STATIC_CAST(void *, aFontGroup);
+        ? static_cast<void *>(aFontGroup->GetFontAt(0))
+        : static_cast<void *>(aFontGroup);
 }
 
 PRBool
@@ -592,12 +592,12 @@ TextRunWordCache::CacheHashEntry::KeyEquals(const KeyTypePointer aKey) const
         if (!aKey->mIsDoubleByteText)
             return memcmp(text, aKey->mString, length) == 0;
         return CompareDifferentWidthStrings(text,
-                                            NS_STATIC_CAST(const PRUnichar *, aKey->mString), length);
+                                            static_cast<const PRUnichar *>(aKey->mString), length);
     } else {
         const PRUnichar *text = mTextRun->GetTextUnicode() + mWordOffset;
         if (aKey->mIsDoubleByteText)
             return memcmp(text, aKey->mString, length*sizeof(PRUnichar)) == 0;
-        return CompareDifferentWidthStrings(NS_STATIC_CAST(const PRUint8 *, aKey->mString),
+        return CompareDifferentWidthStrings(static_cast<const PRUint8 *>(aKey->mString),
                                             text, length);
     }
 }

@@ -48,7 +48,7 @@ static OSStatus
 AddRectToArrayProc(UInt16 message, RgnHandle rgn, const Rect *inRect, void *inArray)
 {
   if (message == kQDRegionToRectsMsgParse) {
-    nsRegionRectSet* rects = NS_REINTERPRET_CAST(nsRegionRectSet*, inArray);
+    nsRegionRectSet* rects = reinterpret_cast<nsRegionRectSet*>(inArray);
     nsRegionRect* rect = &rects->mRects[rects->mNumRects++];
     rect->x = inRect->left;
     rect->y = inRect->top;
@@ -64,7 +64,7 @@ static OSStatus
 CountRectProc(UInt16 message, RgnHandle rgn, const Rect* inRect, void* rectCount)
 {
   if (message == kQDRegionToRectsMsgParse)
-    ++(*NS_REINTERPRET_CAST(long*, rectCount));
+    ++(*reinterpret_cast<long*>(rectCount));
 
   return noErr;
 }

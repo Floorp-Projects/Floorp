@@ -176,7 +176,7 @@ static void PR_CALLBACK
 SerialNumberFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
 {
     if (flag == HT_FREE_ENTRY) {
-        PR_Free(NS_REINTERPRET_CAST(serialNumberRecord*,he->value));
+        PR_Free(reinterpret_cast<serialNumberRecord*>(he->value));
         PR_Free(he);
     }
 }
@@ -185,8 +185,8 @@ static void PR_CALLBACK
 TypesToLogFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
 {
     if (flag == HT_FREE_ENTRY) {
-        nsCRT::free(NS_CONST_CAST(char*,
-                     NS_REINTERPRET_CAST(const char*, he->key)));
+        nsCRT::free(const_cast<char*>
+                              (reinterpret_cast<const char*>(he->key)));
         PR_Free(he);
     }
 }
@@ -285,7 +285,7 @@ public:
     BloatEntry* entry = (BloatEntry*)he->value;
     if (entry) {
       entry->Accumulate();
-      NS_STATIC_CAST(nsVoidArray*, arg)->AppendElement(entry);
+      static_cast<nsVoidArray*>(arg)->AppendElement(entry);
     }
     return HT_ENUMERATE_NEXT;
   }
@@ -389,7 +389,7 @@ static void PR_CALLBACK
 BloatViewFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
 {
     if (flag == HT_FREE_ENTRY) {
-        BloatEntry* entry = NS_REINTERPRET_CAST(BloatEntry*,he->value);
+        BloatEntry* entry = reinterpret_cast<BloatEntry*>(he->value);
         delete entry;
         PR_Free(he);
     }
@@ -438,7 +438,7 @@ GetBloatEntry(const char* aTypeName, PRUint32 aInstanceSize)
 
 static PRIntn PR_CALLBACK DumpSerialNumbers(PLHashEntry* aHashEntry, PRIntn aIndex, void* aClosure)
 {
-  serialNumberRecord* record = NS_REINTERPRET_CAST(serialNumberRecord *,aHashEntry->value);
+  serialNumberRecord* record = reinterpret_cast<serialNumberRecord *>(aHashEntry->value);
 #ifdef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
   fprintf((FILE*) aClosure, "%d @%p (%d references; %d from COMPtrs)\n",
                             record->serialNumber,
@@ -505,8 +505,8 @@ nsTraceRefcntImpl::DumpStatistics(StatisticsType type, FILE* out)
     PRInt32 i, j;
     for (i = entries.Count() - 1; i >= 1; --i) {
       for (j = i - 1; j >= 0; --j) {
-        BloatEntry* left  = NS_STATIC_CAST(BloatEntry*, entries[i]);
-        BloatEntry* right = NS_STATIC_CAST(BloatEntry*, entries[j]);
+        BloatEntry* left  = static_cast<BloatEntry*>(entries[i]);
+        BloatEntry* right = static_cast<BloatEntry*>(entries[j]);
 
         if (PL_strcmp(left->GetClassName(), right->GetClassName()) < 0) {
           entries.ReplaceElementAt(right, i);
@@ -517,7 +517,7 @@ nsTraceRefcntImpl::DumpStatistics(StatisticsType type, FILE* out)
 
     // Enumerate from back-to-front, so things come out in alpha order
     for (i = 0; i < entries.Count(); ++i) {
-      BloatEntry* entry = NS_STATIC_CAST(BloatEntry*, entries[i]);
+      BloatEntry* entry = static_cast<BloatEntry*>(entries[i]);
       entry->Dump(i, out, type);
     }
   }
@@ -562,14 +562,14 @@ static PRInt32 GetSerialNumber(void* aPtr, PRBool aCreate)
 #endif
   PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers, PLHashNumber(NS_PTR_TO_INT32(aPtr)), aPtr);
   if (hep && *hep) {
-    return PRInt32((NS_REINTERPRET_CAST(serialNumberRecord*,(*hep)->value))->serialNumber);
+    return PRInt32((reinterpret_cast<serialNumberRecord*>((*hep)->value))->serialNumber);
   }
   else if (aCreate) {
     serialNumberRecord *record = PR_NEW(serialNumberRecord);
     record->serialNumber = ++gNextSerialNumber;
     record->refCount = 0;
     record->COMPtrCount = 0;
-    PL_HashTableRawAdd(gSerialNumbers, hep, PLHashNumber(NS_PTR_TO_INT32(aPtr)), aPtr, NS_REINTERPRET_CAST(void*,record));
+    PL_HashTableRawAdd(gSerialNumbers, hep, PLHashNumber(NS_PTR_TO_INT32(aPtr)), aPtr, reinterpret_cast<void*>(record));
     return gNextSerialNumber;
   }
   else {
@@ -585,7 +585,7 @@ static PRInt32* GetRefCount(void* aPtr)
 #endif
   PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers, PLHashNumber(NS_PTR_TO_INT32(aPtr)), aPtr);
   if (hep && *hep) {
-    return &((NS_REINTERPRET_CAST(serialNumberRecord*,(*hep)->value))->refCount);
+    return &((reinterpret_cast<serialNumberRecord*>((*hep)->value))->refCount);
   } else {
     return nsnull;
   }
@@ -599,7 +599,7 @@ static PRInt32* GetCOMPtrCount(void* aPtr)
 #endif
   PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers, PLHashNumber(NS_PTR_TO_INT32(aPtr)), aPtr);
   if (hep && *hep) {
-    return &((NS_REINTERPRET_CAST(serialNumberRecord*,(*hep)->value))->COMPtrCount);
+    return &((reinterpret_cast<serialNumberRecord*>((*hep)->value))->COMPtrCount);
   } else {
     return nsnull;
   }
@@ -1350,6 +1350,6 @@ static const nsTraceRefcntImpl kTraceRefcntImpl;
 NS_METHOD
 nsTraceRefcntImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
-  return NS_CONST_CAST(nsTraceRefcntImpl*, &kTraceRefcntImpl)->
+  return const_cast<nsTraceRefcntImpl*>(&kTraceRefcntImpl)->
     QueryInterface(aIID, aInstancePtr);
 }

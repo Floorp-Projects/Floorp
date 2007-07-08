@@ -106,7 +106,7 @@ nsNSSCertificateDB::FindCertByNickname(nsISupports *aToken,
   CERTCertificate *cert = NULL;
   char *asciiname = NULL;
   NS_ConvertUTF16toUTF8 aUtf8Nickname(nickname);
-  asciiname = NS_CONST_CAST(char*, aUtf8Nickname.get());
+  asciiname = const_cast<char*>(aUtf8Nickname.get());
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting \"%s\"\n", asciiname));
 #if 0
   // what it should be, but for now...
@@ -170,7 +170,7 @@ nsNSSCertificateDB::FindCertByDBKey(const char *aDBkey, nsISupports *aToken,
     if (nssCert == nsnull)
       return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(nssCert);
-    *_cert = NS_STATIC_CAST(nsIX509Cert*, nssCert);
+    *_cert = static_cast<nsIX509Cert*>(nssCert);
   }
   return NS_OK;
 }
@@ -253,7 +253,7 @@ nsNSSCertificateDB::getCertsFromPackage(PRArenaPool *arena, PRUint8 *data,
     return nsnull;
 
   collectArgs->arena = arena;
-  SECStatus sec_rv = CERT_DecodeCertPackage(NS_REINTERPRET_CAST(char *, data), 
+  SECStatus sec_rv = CERT_DecodeCertPackage(reinterpret_cast<char *>(data), 
                                             length, collect_certs, 
                                             (void *)collectArgs);
   if (sec_rv != SECSuccess)
@@ -403,7 +403,7 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
                    trustBits & nsIX509CertDB::TRUSTED_OBJSIGN);
 
   SECStatus srv = CERT_AddTempCertToPerm(tmpCert, 
-                                         NS_CONST_CAST(char*,nickname.get()), 
+                                         const_cast<char*>(nickname.get()), 
                                          trust.GetTrust()); 
 
   if (srv != SECSuccess)
@@ -1198,7 +1198,7 @@ GetOCSPResponders (CERTCertificate *aCert,
                    SECItem         *aDBKey,
                    void            *aArg)
 {
-  nsIMutableArray *array = NS_STATIC_CAST(nsIMutableArray*, aArg);
+  nsIMutableArray *array = static_cast<nsIMutableArray*>(aArg);
   PRUnichar* nn = nsnull;
   PRUnichar* url = nsnull;
   char *serviceURL = nsnull;
@@ -1373,7 +1373,7 @@ nsNSSCertificateDB::FindEmailEncryptionCert(const nsAString &aNickname, nsIX509C
   nsNSSCertificate *nssCert = nsnull;
   char *asciiname = NULL;
   NS_ConvertUTF16toUTF8 aUtf8Nickname(aNickname);
-  asciiname = NS_CONST_CAST(char*, aUtf8Nickname.get());
+  asciiname = const_cast<char*>(aUtf8Nickname.get());
 
   /* Find a good cert in the user's database */
   cert = CERT_FindUserCertByUsage(CERT_GetDefaultCertDB(), asciiname, 
@@ -1387,7 +1387,7 @@ nsNSSCertificateDB::FindEmailEncryptionCert(const nsAString &aNickname, nsIX509C
   }
   NS_ADDREF(nssCert);
 
-  *_retval = NS_STATIC_CAST(nsIX509Cert*, nssCert);
+  *_retval = static_cast<nsIX509Cert*>(nssCert);
 
 loser:
   if (cert) CERT_DestroyCertificate(cert);
@@ -1413,7 +1413,7 @@ nsNSSCertificateDB::FindEmailSigningCert(const nsAString &aNickname, nsIX509Cert
   nsNSSCertificate *nssCert = nsnull;
   char *asciiname = NULL;
   NS_ConvertUTF16toUTF8 aUtf8Nickname(aNickname);
-  asciiname = NS_CONST_CAST(char*, aUtf8Nickname.get());
+  asciiname = const_cast<char*>(aUtf8Nickname.get());
 
   /* Find a good cert in the user's database */
   cert = CERT_FindUserCertByUsage(CERT_GetDefaultCertDB(), asciiname, 
@@ -1427,7 +1427,7 @@ nsNSSCertificateDB::FindEmailSigningCert(const nsAString &aNickname, nsIX509Cert
   }
   NS_ADDREF(nssCert);
 
-  *_retval = NS_STATIC_CAST(nsIX509Cert*, nssCert);
+  *_retval = static_cast<nsIX509Cert*>(nssCert);
 
 loser:
   if (cert) CERT_DestroyCertificate(cert);
@@ -1463,7 +1463,7 @@ nsNSSCertificateDB::FindCertByEmailAddress(nsISupports *aToken, const char *aEma
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(nssCert);
-  *_retval = NS_STATIC_CAST(nsIX509Cert*, nssCert);
+  *_retval = static_cast<nsIX509Cert*>(nssCert);
   return NS_OK;
 }
 
@@ -1715,7 +1715,7 @@ NS_IMETHODIMP nsNSSCertificateDB::AddCertFromBase64(const char *aBase64, const c
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Created nick \"%s\"\n", nickname.get()));
 
   SECStatus srv = CERT_AddTempCertToPerm(tmpCert, 
-                                         NS_CONST_CAST(char*,nickname.get()), 
+                                         const_cast<char*>(nickname.get()), 
                                          trust.GetTrust()); 
 
 

@@ -41,7 +41,7 @@
 #include "nsVoidArray.h"
 
 #define COUNT 1024
-#define POINTER(i) NS_REINTERPRET_CAST(void*, 4 + 4 * (i))
+#define POINTER(i) reinterpret_cast<void*>(4 + 4 * (i))
 
 static PRBool
 Equal(const nsVoidArray& aControl, const nsVoidBTree& aTest)
@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
     //----------------------------------------
     // Tail fill
     for (i = 0; i < COUNT; ++i)
-        btree.InsertElementAt(NS_REINTERPRET_CAST(void*, POINTER(i)), i);
+        btree.InsertElementAt(reinterpret_cast<void*>(POINTER(i)), i);
 
     for (i = 0; i < COUNT; ++i) {
         if (btree[i] != POINTER(i)) {

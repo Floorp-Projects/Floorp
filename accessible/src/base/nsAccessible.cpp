@@ -192,13 +192,13 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   *aInstancePtr = nsnull;
   
   if (aIID.Equals(NS_GET_IID(nsIAccessible))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIAccessible*, this);
+    *aInstancePtr = static_cast<nsIAccessible*>(this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
 
   if(aIID.Equals(NS_GET_IID(nsPIAccessible))) {
-    *aInstancePtr = NS_STATIC_CAST(nsPIAccessible*, this);
+    *aInstancePtr = static_cast<nsPIAccessible*>(this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -220,7 +220,7 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
                                    nsAccessibilityAtoms::multiselectable,
                                    strings, eCaseMatters) ==
           nsIContent::ATTR_VALUE_NO_MATCH) {
-        *aInstancePtr = NS_STATIC_CAST(nsIAccessibleSelectable*, this);
+        *aInstancePtr = static_cast<nsIAccessibleSelectable*>(this);
         NS_ADDREF_THIS();
       }
     }
@@ -228,7 +228,7 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   if (aIID.Equals(NS_GET_IID(nsIAccessibleValue))) {
     if (mRoleMapEntry && mRoleMapEntry->valueRule != eNoValue) {
-      *aInstancePtr = NS_STATIC_CAST(nsIAccessibleValue*, this);
+      *aInstancePtr = static_cast<nsIAccessibleValue*>(this);
       NS_ADDREF_THIS();
     }
   }                       
@@ -237,7 +237,7 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     nsCOMPtr<nsIAccessible> parent(GetParent());
     nsCOMPtr<nsIAccessibleHyperText> hyperTextParent(do_QueryInterface(parent));
     if (hyperTextParent) {
-      *aInstancePtr = NS_STATIC_CAST(nsIAccessibleHyperLink*, this);
+      *aInstancePtr = static_cast<nsIAccessibleHyperLink*>(this);
       NS_ADDREF_THIS();
       return NS_OK;
     }
@@ -255,7 +255,7 @@ nsAccessible::nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell): nsAcces
    {
      nsCOMPtr<nsIPresShell> shell(do_QueryReferent(aShell));
      printf(">>> %p Created Acc - DOM: %p  PS: %p", 
-            (void*)NS_STATIC_CAST(nsIAccessible*, this), (void*)aNode,
+            (void*)static_cast<nsIAccessible*>(this), (void*)aNode,
             (void*)shell.get());
     nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
     if (content) {
@@ -2810,7 +2810,7 @@ void nsAccessible::DoCommandCallback(nsITimer *aTimer, void *aClosure)
   NS_ASSERTION(gDoCommandTimer, "How did we get here if there was no gDoCommandTimer?");
   NS_RELEASE(gDoCommandTimer);
 
-  nsIContent *content = NS_REINTERPRET_CAST(nsIContent*, aClosure);
+  nsIContent *content = reinterpret_cast<nsIContent*>(aClosure);
   nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(content));
   if (xulElement) {
     xulElement->Click();

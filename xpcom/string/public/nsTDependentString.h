@@ -73,27 +73,27 @@ class nsTDependentString_CharT : public nsTString_CharT
          */
 
       nsTDependentString_CharT( const char_type* start, const char_type* end )
-        : string_type(NS_CONST_CAST(char_type*, start), end - start, F_TERMINATED)
+        : string_type(const_cast<char_type*>(start), end - start, F_TERMINATED)
         {
           AssertValid();
         }
 
       nsTDependentString_CharT( const char_type* data, PRUint32 length )
-        : string_type(NS_CONST_CAST(char_type*, data), length, F_TERMINATED)
+        : string_type(const_cast<char_type*>(data), length, F_TERMINATED)
         {
           AssertValid();
         }
 
       explicit
       nsTDependentString_CharT( const char_type* data )
-        : string_type(NS_CONST_CAST(char_type*, data), char_traits::length(data), F_TERMINATED)
+        : string_type(const_cast<char_type*>(data), char_traits::length(data), F_TERMINATED)
         {
           AssertValid();
         }
 
       explicit
       nsTDependentString_CharT( const substring_type& str )
-        : string_type(NS_CONST_CAST(char_type*, str.Data()), str.Length(), F_TERMINATED)
+        : string_type(const_cast<char_type*>(str.Data()), str.Length(), F_TERMINATED)
         {
           AssertValid();
         }

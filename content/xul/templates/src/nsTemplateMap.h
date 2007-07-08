@@ -69,7 +69,7 @@ public:
                      "aContent already in map");
 
         Entry* entry =
-            NS_REINTERPRET_CAST(Entry*, PL_DHashTableOperate(&mTable, aContent, PL_DHASH_ADD));
+            reinterpret_cast<Entry*>(PL_DHashTableOperate(&mTable, aContent, PL_DHASH_ADD));
 
         if (entry) {
             entry->mContent = aContent;
@@ -107,7 +107,7 @@ public:
     void
     GetTemplateFor(nsIContent* aContent, nsIContent** aResult) {
         Entry* entry =
-            NS_REINTERPRET_CAST(Entry*, PL_DHashTableOperate(&mTable, aContent, PL_DHASH_LOOKUP));
+            reinterpret_cast<Entry*>(PL_DHashTableOperate(&mTable, aContent, PL_DHASH_LOOKUP));
 
         if (PL_DHASH_ENTRY_IS_BUSY(&entry->mHdr))
             NS_IF_ADDREF(*aResult = entry->mTemplate);

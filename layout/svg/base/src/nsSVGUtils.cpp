@@ -115,7 +115,7 @@ nsSVGPropertyBase::nsSVGPropertyBase(nsIContent *aContent,
 
   NS_ADDREF(this); // addref to allow QI - SupportsDtorFunc releases
   mFrame->SetProperty(aName,
-                      NS_STATIC_CAST(nsISupports*, this),
+                      static_cast<nsISupports*>(this),
                       nsPropertyTable::SupportsDtorFunc);
 }
 
@@ -200,9 +200,9 @@ nsSVGFilterProperty::GetFilterFrame()
   nsCOMPtr<nsIContent> filter = do_QueryReferent(mObservedContent);
   if (filter) {
     nsIFrame *frame =
-      NS_STATIC_CAST(nsGenericElement*, filter.get())->GetPrimaryFrame();
+      static_cast<nsGenericElement*>(filter.get())->GetPrimaryFrame();
     if (frame && frame->GetType() == nsGkAtoms::svgFilterFrame)
-      return NS_STATIC_CAST(nsSVGFilterFrame*, frame);
+      return static_cast<nsSVGFilterFrame*>(frame);
   }
 
   return nsnull;
@@ -265,9 +265,9 @@ nsSVGClipPathProperty::GetClipPathFrame()
   nsCOMPtr<nsIContent> clipPath = do_QueryReferent(mObservedContent);
   if (clipPath) {
     nsIFrame *frame =
-      NS_STATIC_CAST(nsGenericElement*, clipPath.get())->GetPrimaryFrame();
+      static_cast<nsGenericElement*>(clipPath.get())->GetPrimaryFrame();
     if (frame && frame->GetType() == nsGkAtoms::svgClipPathFrame)
-      return NS_STATIC_CAST(nsSVGClipPathFrame*, frame);
+      return static_cast<nsSVGClipPathFrame*>(frame);
   }
 
   return nsnull;
@@ -324,9 +324,9 @@ nsSVGMaskProperty::GetMaskFrame()
   nsCOMPtr<nsIContent> mask = do_QueryReferent(mObservedContent);
   if (mask) {
     nsIFrame *frame =
-      NS_STATIC_CAST(nsGenericElement*, mask.get())->GetPrimaryFrame();
+      static_cast<nsGenericElement*>(mask.get())->GetPrimaryFrame();
     if (frame && frame->GetType() == nsGkAtoms::svgMaskFrame)
-      return NS_STATIC_CAST(nsSVGMaskFrame*, frame);
+      return static_cast<nsSVGMaskFrame*>(frame);
   }
 
   return nsnull;
@@ -683,7 +683,7 @@ nsSVGUtils::CoordToFloat(nsPresContext *aPresContext,
         break;
 
       nsWeakPtr weakCtx =
-        do_GetWeakReference(NS_STATIC_CAST(nsGenericElement*, aContent));
+        do_GetWeakReference(static_cast<nsGenericElement*>(aContent));
       length->SetContext(weakCtx, nsSVGUtils::XY);
       length->GetValue(&val);
       break;
@@ -777,8 +777,8 @@ nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame)
 
     if (aFrame->GetStateBits() & NS_STATE_SVG_FILTERED) {
       nsSVGFilterProperty *property;
-      property = NS_STATIC_CAST(nsSVGFilterProperty *,
-                                aFrame->GetProperty(nsGkAtoms::filter));
+      property = static_cast<nsSVGFilterProperty *>
+                            (aFrame->GetProperty(nsGkAtoms::filter));
       rect = property->GetRect();
     }
     aFrame = aFrame->GetParent();
@@ -792,8 +792,8 @@ nsSVGUtils::UpdateFilterRegion(nsIFrame *aFrame)
 {
   if (aFrame->GetStateBits() & NS_STATE_SVG_FILTERED) {
     nsSVGFilterProperty *property;
-    property = NS_STATIC_CAST(nsSVGFilterProperty *,
-                              aFrame->GetProperty(nsGkAtoms::filter));
+    property = static_cast<nsSVGFilterProperty *>
+                          (aFrame->GetProperty(nsGkAtoms::filter));
     property->UpdateRect();
   }
 }
@@ -823,8 +823,8 @@ nsSVGUtils::ObjectSpace(nsIDOMSVGRect *aRect, nsSVGLength2 *aLength)
       nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
     fraction = aLength->GetAnimValInSpecifiedUnits() / 100;
   } else
-    fraction = aLength->GetAnimValue(NS_STATIC_CAST(nsSVGSVGElement*,
-                                                    nsnull));
+    fraction = aLength->GetAnimValue(static_cast<nsSVGSVGElement*>
+                                                (nsnull));
 
   return fraction * axis;
 }
@@ -856,7 +856,7 @@ nsSVGUtils::TransformPoint(nsIDOMSVGMatrix *matrix,
 float
 nsSVGUtils::AngleBisect(float a1, float a2)
 {
-  float delta = fmod(a2 - a1, NS_STATIC_CAST(float, 2*M_PI));
+  float delta = fmod(a2 - a1, static_cast<float>(2*M_PI));
   if (delta < 0) {
     delta += 2*M_PI;
   }
@@ -874,7 +874,7 @@ nsSVGUtils::GetOuterSVGFrame(nsIFrame *aFrame)
 {
   while (aFrame) {
     if (aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG) {
-      return NS_STATIC_CAST(nsSVGOuterSVGFrame*, aFrame);
+      return static_cast<nsSVGOuterSVGFrame*>(aFrame);
     }
     aFrame = aFrame->GetParent();
   }
@@ -997,16 +997,16 @@ nsSVGUtils::GetCanvasTM(nsIFrame *aFrame)
     // foreignObject is the one non-leaf svg frame that isn't a SVGContainer
     if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
       nsSVGForeignObjectFrame *foreignFrame =
-        NS_STATIC_CAST(nsSVGForeignObjectFrame*, aFrame);
+        static_cast<nsSVGForeignObjectFrame*>(aFrame);
       return foreignFrame->GetCanvasTM();
     }
-    nsSVGContainerFrame *containerFrame = NS_STATIC_CAST(nsSVGContainerFrame*,
-                                                         aFrame);
+    nsSVGContainerFrame *containerFrame = static_cast<nsSVGContainerFrame*>
+                                                     (aFrame);
     return containerFrame->GetCanvasTM();
   }
 
-  nsSVGGeometryFrame *geometryFrame = NS_STATIC_CAST(nsSVGGeometryFrame*,
-                                                     aFrame);
+  nsSVGGeometryFrame *geometryFrame = static_cast<nsSVGGeometryFrame*>
+                                                 (aFrame);
   nsCOMPtr<nsIDOMSVGMatrix> matrix;
   nsIDOMSVGMatrix *retval;
   geometryFrame->GetCanvasTM(getter_AddRefs(matrix));
@@ -1078,8 +1078,8 @@ GetFilterFrame(nsFrameState aState, nsIFrame *aFrame)
 {
   if (aState & NS_STATE_SVG_FILTERED) {
     nsSVGFilterProperty *property;
-    property = NS_STATIC_CAST(nsSVGFilterProperty *,
-                              aFrame->GetProperty(nsGkAtoms::filter));
+    property = static_cast<nsSVGFilterProperty *>
+                          (aFrame->GetProperty(nsGkAtoms::filter));
     return property->GetFilterFrame();
   }
   return nsnull;
@@ -1090,8 +1090,8 @@ GetClipPathFrame(nsFrameState aState, nsIFrame *aFrame)
 {
   if (aState & NS_STATE_SVG_CLIPPED) {
     nsSVGClipPathProperty *property;
-    property = NS_STATIC_CAST(nsSVGClipPathProperty *,
-                              aFrame->GetProperty(nsGkAtoms::clipPath));
+    property = static_cast<nsSVGClipPathProperty *>
+                          (aFrame->GetProperty(nsGkAtoms::clipPath));
     return property->GetClipPathFrame();
   }
   return nsnull;
@@ -1102,8 +1102,8 @@ GetMaskFrame(nsFrameState aState, nsIFrame *aFrame)
 {
   if (aState & NS_STATE_SVG_MASKED) {
     nsSVGMaskProperty *property;
-    property = NS_STATIC_CAST(nsSVGMaskProperty *,
-                              aFrame->GetProperty(nsGkAtoms::mask));
+    property = static_cast<nsSVGMaskProperty *>
+                          (aFrame->GetProperty(nsGkAtoms::mask));
     return property->GetMaskFrame();
   }
   return nsnull;
@@ -1483,7 +1483,7 @@ nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
     if (type == nsGkAtoms::svgImageFrame)
       return PR_TRUE;
     if (type == nsGkAtoms::svgPathGeometryFrame) {
-      nsSVGGeometryFrame *geom = NS_STATIC_CAST(nsSVGGeometryFrame*, aFrame);
+      nsSVGGeometryFrame *geom = static_cast<nsSVGGeometryFrame*>(aFrame);
       if (!(geom->HasFill() && geom->HasStroke()))
         return PR_TRUE;
     }
@@ -1496,8 +1496,8 @@ nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
 nsSVGRenderState::nsSVGRenderState(nsIRenderingContext *aContext) :
   mRenderMode(NORMAL), mRenderingContext(aContext)
 {
-  mGfxContext = NS_STATIC_CAST(gfxContext*,
-                               aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  mGfxContext = static_cast<gfxContext*>
+                           (aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
 }
 
 nsSVGRenderState::nsSVGRenderState(gfxContext *aContext) :

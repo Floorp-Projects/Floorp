@@ -104,7 +104,7 @@ mozStorageStatement::Initialize(mozIStorageConnection *aDBConnection, const nsAC
     sqlite3 *db = nsnull;
     // XXX - need to implement a private iid to QI for here, to make sure
     // we have a real mozStorageConnection
-    mozStorageConnection *msc = NS_STATIC_CAST(mozStorageConnection*, aDBConnection);
+    mozStorageConnection *msc = static_cast<mozStorageConnection*>(aDBConnection);
     db = msc->GetNativeConnection();
     NS_ENSURE_TRUE(db != nsnull, NS_ERROR_NULL_POINTER);
 
@@ -143,7 +143,7 @@ mozStorageStatement::Initialize(mozIStorageConnection *aDBConnection, const nsAC
     for (unsigned int i = 0; i < mResultColumnCount; i++) {
         const void *name = sqlite3_column_name16 (mDBStatement, i);
         mColumnNames.AppendString(
-            nsDependentString(NS_STATIC_CAST(const PRUnichar*, name)));
+            nsDependentString(static_cast<const PRUnichar*>(name)));
     }
 
     // doing a sqlite3_prepare sets up the execution engine
@@ -650,7 +650,7 @@ mozStorageStatement::GetString(PRUint32 aIndex, nsAString & _retval)
     } else {
         int slen = sqlite3_column_bytes16 (mDBStatement, aIndex);
         const void *text = sqlite3_column_text16 (mDBStatement, aIndex);
-        const PRUnichar *wstr = NS_STATIC_CAST(const PRUnichar *, text);
+        const PRUnichar *wstr = static_cast<const PRUnichar *>(text);
         _retval.Assign (wstr, slen/2);
     }
     return NS_OK;

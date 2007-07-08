@@ -53,7 +53,7 @@ NS_IMETHODIMP
 NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(void *p,
                                                           nsCycleCollectionTraversalCallback &cb)
 {
-    XPCWrappedNative *tmp = NS_STATIC_CAST(XPCWrappedNative*, p);
+    XPCWrappedNative *tmp = static_cast<XPCWrappedNative*>(p);
     if(!tmp->IsValid())
         return NS_OK;
 
@@ -346,8 +346,8 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     // we'll provide a default one
     if(isIDispatch && !info)
     {
-        info = dont_AddRef(NS_STATIC_CAST(nsIClassInfo*,
-                                          XPCIDispatchClassInfo::GetSingleton()));
+        info = dont_AddRef(static_cast<nsIClassInfo*>
+                                      (XPCIDispatchClassInfo::GetSingleton()));
     }
 #endif
 
@@ -1022,7 +1022,7 @@ XPCWrappedNative::SystemIsBeingShutDown(JSContext* cx)
 #ifdef DEBUG_xpc_hacker
     {
         printf("Removing root for still-live XPCWrappedNative %p wrapping:\n",
-               NS_STATIC_CAST(void*, this));
+               static_cast<void*>(this));
         for(PRUint16 i = 0, i_end = mSet->GetInterfaceCount(); i < i_end; ++i)
         {
             nsXPIDLCString name;

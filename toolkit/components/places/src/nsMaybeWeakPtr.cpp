@@ -69,12 +69,12 @@ nsMaybeWeakPtrArray_base::AppendWeakElementBase(nsTArray_base *aArray,
   if (aOwnsWeak) {
     nsCOMPtr<nsIWeakReference> weakRef;
     weakRef = do_GetWeakReference(aElement);
-    NS_REINTERPRET_CAST(nsCOMPtr<nsISupports>*, &weakRef)->swap(ref);
+    reinterpret_cast<nsCOMPtr<nsISupports>*>(&weakRef)->swap(ref);
   } else {
     ref = aElement;
   }
 
-  isupports_type *array = NS_STATIC_CAST(isupports_type*, aArray);
+  isupports_type *array = static_cast<isupports_type*>(aArray);
   if (array->IndexOf(ref) != isupports_type::NoIndex) {
     return NS_ERROR_INVALID_ARG; // already present
   }
@@ -88,7 +88,7 @@ nsMaybeWeakPtrArray_base::AppendWeakElementBase(nsTArray_base *aArray,
 nsMaybeWeakPtrArray_base::RemoveWeakElementBase(nsTArray_base *aArray,
                                                 nsISupports *aElement)
 {
-  isupports_type *array = NS_STATIC_CAST(isupports_type*, aArray);
+  isupports_type *array = static_cast<isupports_type*>(aArray);
   PRUint32 index = array->IndexOf(aElement);
   if (index != isupports_type::NoIndex) {
     array->RemoveElementAt(index);

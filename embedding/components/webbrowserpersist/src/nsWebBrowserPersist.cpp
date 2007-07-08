@@ -1231,7 +1231,7 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
     // Open a channel to the URI
     nsCOMPtr<nsIChannel> inputChannel;
     rv = NS_NewChannel(getter_AddRefs(inputChannel), aURI,
-            nsnull, nsnull, NS_STATIC_CAST(nsIInterfaceRequestor *, this),
+            nsnull, nsnull, static_cast<nsIInterfaceRequestor *>(this),
             loadFlags);
     
     if (NS_FAILED(rv) || inputChannel == nsnull)
@@ -3571,7 +3571,7 @@ nsWebBrowserPersist::CreateChannelFromURI(nsIURI *aURI, nsIChannel **aChannel)
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_ARG_POINTER(*aChannel);
 
-    rv = (*aChannel)->SetNotificationCallbacks(NS_STATIC_CAST(nsIInterfaceRequestor *, this));
+    rv = (*aChannel)->SetNotificationCallbacks(static_cast<nsIInterfaceRequestor *>(this));
     NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
 } 

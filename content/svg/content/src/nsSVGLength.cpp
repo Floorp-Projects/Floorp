@@ -531,7 +531,7 @@ float nsSVGLength::mmPerPixel()
   }
 
   nsSVGSVGElement *ctx =
-    NS_STATIC_CAST(nsSVGElement*, element.get())->GetCtx();
+    static_cast<nsSVGElement*>(element.get())->GetCtx();
   float mmPerPx = ctx->GetMMPerPx(mCtxType);
 
   if (mmPerPx == 0.0f) {
@@ -551,7 +551,7 @@ float nsSVGLength::AxisLength()
   }
 
   nsSVGSVGElement *ctx =
-    NS_STATIC_CAST(nsSVGElement*, element.get())->GetCtx();
+    static_cast<nsSVGElement*>(element.get())->GetCtx();
   float d = ctx->GetLength(mCtxType);
 
   if (d == 0.0f) {
@@ -588,7 +588,7 @@ already_AddRefed<nsIDOMSVGRect> nsSVGLength::MaybeGetCtxRect()
     nsCOMPtr<nsIContent> element = do_QueryReferent(mElement);
     if (element) {
       nsSVGSVGElement *ctx =
-        NS_STATIC_CAST(nsSVGElement*, element.get())->GetCtx();
+        static_cast<nsSVGElement*>(element.get())->GetCtx();
       if (ctx)
         return ctx->GetCtxRect();
     }

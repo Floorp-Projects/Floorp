@@ -205,8 +205,8 @@ public:
   }
 
   nsFrameManager* FrameManager() const {
-    return NS_REINTERPRET_CAST(nsFrameManager*,
-      &NS_CONST_CAST(nsIPresShell*, this)->mFrameManager);
+    return reinterpret_cast<nsFrameManager*>
+                           (&const_cast<nsIPresShell*>(this)->mFrameManager);
   }
 
 #endif

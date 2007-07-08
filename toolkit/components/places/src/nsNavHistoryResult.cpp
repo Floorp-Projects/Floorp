@@ -176,7 +176,7 @@ nsNavHistoryResultNode::GetResult()
   do {
     if (node->IsContainer()) {
       nsNavHistoryContainerResultNode* container =
-        NS_STATIC_CAST(nsNavHistoryContainerResultNode*, node);
+        static_cast<nsNavHistoryContainerResultNode*>(node);
       NS_ASSERTION(container->mResult, "Containers must have valid results");
       return container->mResult;
     }
@@ -522,8 +522,7 @@ nsNavHistoryContainerResultNode::ReverseUpdateStats(PRInt32 aAccessCountChange)
       // repaint visible rows
       nsNavHistoryResult* result = GetResult();
       if (result && result->GetView()) {
-        result->GetView()->ItemChanged(NS_STATIC_CAST(
-            nsINavHistoryContainerResultNode*, mParent));
+        result->GetView()->ItemChanged(static_cast<nsINavHistoryContainerResultNode*>(mParent));
       }
     }
 
@@ -624,7 +623,7 @@ void
 nsNavHistoryContainerResultNode::RecursiveSort(
     const char* aData, SortComparator aComparator)
 {
-  void* data = NS_CONST_CAST(void*, NS_STATIC_CAST(const void*, aData));
+  void* data = const_cast<void*>(static_cast<const void*>(aData));
 
   mChildren.Sort(aComparator, data);
   for (PRInt32 i = 0; i < mChildren.Count(); i ++) {
@@ -647,7 +646,7 @@ nsNavHistoryContainerResultNode::FindInsertionPoint(
   if (mChildren.Count() == 0)
     return 0;
 
-  void* data = NS_CONST_CAST(void*, NS_STATIC_CAST(const void*, aData));
+  void* data = const_cast<void*>(static_cast<const void*>(aData));
 
   // The common case is the beginning or the end because this is used to insert
   // new items that are added to history, which is usually sorted by date.
@@ -685,7 +684,7 @@ nsNavHistoryContainerResultNode::DoesChildNeedResorting(PRUint32 aIndex,
   if (mChildren.Count() == 1)
     return PR_FALSE;
 
-  void* data = NS_CONST_CAST(void*, NS_STATIC_CAST(const void*, aData));
+  void* data = const_cast<void*>(static_cast<const void*>(aData));
 
   if (aIndex > 0) {
     // compare to previous item
@@ -913,7 +912,7 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_KeywordGreat
 PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_AnnotationLess(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
-  nsCAutoString annoName(NS_STATIC_CAST(char*, closure));
+  nsCAutoString annoName(static_cast<char*>(closure));
   NS_ENSURE_TRUE(!annoName.IsEmpty(), 0);
   
   nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
@@ -1180,7 +1179,7 @@ nsNavHistoryContainerResultNode::InsertChildAt(nsNavHistoryResultNode* aNode,
       mTime = aNode->mTime;
     if (result->GetView())
       result->GetView()->ItemChanged(
-          NS_STATIC_CAST(nsINavHistoryContainerResultNode*, this));
+          static_cast<nsINavHistoryContainerResultNode*>(this));
     ReverseUpdateStats(aNode->mAccessCount);
   }
 
@@ -1501,7 +1500,7 @@ nsNavHistoryContainerResultNode::UpdateURIs(PRBool aRecursive, PRBool aOnlyOne,
         parent->mTime = node->mTime;
       if (result->GetView())
         result->GetView()->ItemChanged(
-            NS_STATIC_CAST(nsINavHistoryContainerResultNode*, parent));
+            static_cast<nsINavHistoryContainerResultNode*>(parent));
       parent->ReverseUpdateStats(node->mAccessCount - oldAccessCount);
     }
 
@@ -1534,7 +1533,7 @@ nsNavHistoryContainerResultNode::UpdateURIs(PRBool aRecursive, PRBool aOnlyOne,
 static void PR_CALLBACK setTitleCallback(
     nsNavHistoryResultNode* aNode, void* aClosure)
 {
-  const nsACString* newTitle = NS_REINTERPRET_CAST(nsACString*, aClosure);
+  const nsACString* newTitle = reinterpret_cast<nsACString*>(aClosure);
   aNode->mTitle = *newTitle;
 }
 nsresult
@@ -1561,7 +1560,7 @@ nsNavHistoryContainerResultNode::ChangeTitles(nsIURI* aURI,
 
   UpdateURIs(aRecursive, aOnlyOne, updateSorting, uriString,
              setTitleCallback,
-             NS_CONST_CAST(void*, NS_REINTERPRET_CAST(const void*, &aNewTitle)));
+             const_cast<void*>(reinterpret_cast<const void*>(&aNewTitle)));
   return NS_OK;
 }
 
@@ -1970,7 +1969,7 @@ nsNavHistoryQueryResultNode::OpenContainer()
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
   if (result->GetView())
     result->GetView()->ContainerOpened(
-        NS_STATIC_CAST(nsNavHistoryContainerResultNode*, this));
+        static_cast<nsNavHistoryContainerResultNode*>(this));
   return NS_OK;
 }
 
@@ -2023,8 +2022,8 @@ nsNavHistoryQueryResultNode::GetQueries(PRUint32* queryCount,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ASSERTION(mQueries.Count() > 0, "Must have >= 1 query");
 
-  *queries = NS_STATIC_CAST(nsINavHistoryQuery**,
-               nsMemory::Alloc(mQueries.Count() * sizeof(nsINavHistoryQuery*)));
+  *queries = static_cast<nsINavHistoryQuery**>
+                        (nsMemory::Alloc(mQueries.Count() * sizeof(nsINavHistoryQuery*)));
   NS_ENSURE_TRUE(*queries, NS_ERROR_OUT_OF_MEMORY);
 
   for (PRInt32 i = 0; i < mQueries.Count(); ++i)
@@ -2089,8 +2088,8 @@ nsNavHistoryQueryResultNode::VerifyQueriesSerialized()
   nsTArray<nsINavHistoryQuery*> flatQueries;
   flatQueries.SetCapacity(mQueries.Count());
   for (PRInt32 i = 0; i < mQueries.Count(); i ++)
-    flatQueries.AppendElement(NS_STATIC_CAST(nsINavHistoryQuery*,
-                                             mQueries.ObjectAt(i)));
+    flatQueries.AppendElement(static_cast<nsINavHistoryQuery*>
+                                         (mQueries.ObjectAt(i)));
 
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
@@ -2217,7 +2216,7 @@ nsNavHistoryQueryResultNode::Refresh()
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
   if (result->GetView())
     return result->GetView()->InvalidateContainer(
-        NS_STATIC_CAST(nsNavHistoryContainerResultNode*, this));
+        static_cast<nsNavHistoryContainerResultNode*>(this));
   return NS_OK;
 }
 
@@ -2509,7 +2508,7 @@ nsNavHistoryQueryResultNode::OnClearHistory()
 static void PR_CALLBACK setFaviconCallback(
    nsNavHistoryResultNode* aNode, void* aClosure)
 {
-  const nsCString* newFavicon = NS_STATIC_CAST(nsCString*, aClosure);
+  const nsCString* newFavicon = static_cast<nsCString*>(aClosure);
   aNode->mFaviconURI = *newFavicon;
 }
 NS_IMETHODIMP
@@ -2721,7 +2720,7 @@ nsNavHistoryFolderResultNode::OpenContainer()
     // remote container API may want to change the bookmarks for this folder.
     nsCOMPtr<nsIRemoteContainer> remote = do_GetService(mRemoteContainerType.get(), &rv);
     if (NS_SUCCEEDED(rv)) {
-      remote->OnContainerOpening(NS_STATIC_CAST(nsINavHistoryFolderResultNode*, this),
+      remote->OnContainerOpening(static_cast<nsINavHistoryFolderResultNode*>(this),
                                  mOptions);
     } else {
       NS_WARNING("Unable to get remote container for ");
@@ -2739,7 +2738,7 @@ nsNavHistoryFolderResultNode::OpenContainer()
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
   if (result->GetView())
     result->GetView()->ContainerOpened(
-        NS_STATIC_CAST(nsNavHistoryContainerResultNode*, this));
+        static_cast<nsNavHistoryContainerResultNode*>(this));
   return NS_OK;
 }
 
@@ -2832,8 +2831,8 @@ nsNavHistoryFolderResultNode::GetQueries(PRUint32* queryCount,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // make array of our 1 query
-  *queries = NS_STATIC_CAST(nsINavHistoryQuery**,
-                            nsMemory::Alloc(sizeof(nsINavHistoryQuery*)));
+  *queries = static_cast<nsINavHistoryQuery**>
+                        (nsMemory::Alloc(sizeof(nsINavHistoryQuery*)));
   if (! *queries)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF((*queries)[0] = query);
@@ -2951,7 +2950,7 @@ nsNavHistoryFolderResultNode::Refresh()
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
   if (result->GetView())
     return result->GetView()->InvalidateContainer(
-        NS_STATIC_CAST(nsNavHistoryContainerResultNode*, this));
+        static_cast<nsNavHistoryContainerResultNode*>(this));
   return NS_OK;
 }
 
@@ -3705,7 +3704,7 @@ nsNavHistoryResult::GetRoot(nsINavHistoryQueryResultNode** aRoot)
     return NS_ERROR_FAILURE;
   }
   return mRootNode->QueryInterface(NS_GET_IID(nsINavHistoryQueryResultNode),
-                                   NS_REINTERPRET_CAST(void**, aRoot));
+                                   reinterpret_cast<void**>(aRoot));
 }
 
 

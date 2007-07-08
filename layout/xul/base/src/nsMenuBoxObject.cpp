@@ -69,7 +69,7 @@ nsMenuBoxObject::QueryInterface(REFNSIID iid, void** aResult)
   NS_PRECONDITION(aResult, "null out param");
 
   if (iid.Equals(NS_GET_IID(nsIMenuBoxObject))) {
-    *aResult = NS_STATIC_CAST(nsIMenuBoxObject*, this);
+    *aResult = static_cast<nsIMenuBoxObject*>(this);
     NS_ADDREF(this);
     return NS_OK;
   }
@@ -99,7 +99,7 @@ NS_IMETHODIMP nsMenuBoxObject::OpenMenu(PRBool aOpenFlag)
       }
       else {
         if (frame->GetType() == nsGkAtoms::menuFrame) {
-          nsMenuPopupFrame* popupFrame = (NS_STATIC_CAST(nsMenuFrame *, frame))->GetPopup();
+          nsMenuPopupFrame* popupFrame = (static_cast<nsMenuFrame *>(frame))->GetPopup();
           if (popupFrame)
             pm->HidePopup(popupFrame->GetContent(), PR_FALSE, PR_TRUE, PR_FALSE);
         }
@@ -115,7 +115,7 @@ NS_IMETHODIMP nsMenuBoxObject::GetActiveChild(nsIDOMElement** aResult)
   *aResult = nsnull;
   nsIFrame* frame = GetFrame(PR_FALSE);
   if (frame && frame->GetType() == nsGkAtoms::menuFrame)
-    return NS_STATIC_CAST(nsMenuFrame *, frame)->GetActiveChild(aResult);
+    return static_cast<nsMenuFrame *>(frame)->GetActiveChild(aResult);
   return NS_OK;
 }
 
@@ -123,7 +123,7 @@ NS_IMETHODIMP nsMenuBoxObject::SetActiveChild(nsIDOMElement* aResult)
 {
   nsIFrame* frame = GetFrame(PR_FALSE);
   if (frame && frame->GetType() == nsGkAtoms::menuFrame)
-    return NS_STATIC_CAST(nsMenuFrame *, frame)->SetActiveChild(aResult);
+    return static_cast<nsMenuFrame *>(frame)->SetActiveChild(aResult);
   return NS_OK;
 }
 
@@ -154,7 +154,7 @@ NS_IMETHODIMP nsMenuBoxObject::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent, PRBool*
   if (!frame || frame->GetType() != nsGkAtoms::menuFrame)
     return NS_OK;
 
-  nsMenuPopupFrame* popupFrame = NS_STATIC_CAST(nsMenuFrame *, frame)->GetPopup();
+  nsMenuPopupFrame* popupFrame = static_cast<nsMenuFrame *>(frame)->GetPopup();
   if (!popupFrame)
     return NS_OK;
 

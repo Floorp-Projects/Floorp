@@ -1352,12 +1352,12 @@ nsContentSink::DidProcessATokenImpl()
   // to pressing the ENTER key in the URL bar...
 
   PRUint32 delayBeforeLoweringThreshold =
-    NS_STATIC_CAST(PRUint32, ((2 * mDynamicIntervalSwitchThreshold) +
+    static_cast<PRUint32>(((2 * mDynamicIntervalSwitchThreshold) +
                               NS_DELAY_FOR_WINDOW_CREATION));
 
   if ((currentTime - mBeginLoadTime) > delayBeforeLoweringThreshold) {
     if ((currentTime - eventTime) <
-        NS_STATIC_CAST(PRUint32, mDynamicIntervalSwitchThreshold)) {
+        static_cast<PRUint32>(mDynamicIntervalSwitchThreshold)) {
 
       if (!mDynamicLowerValue) {
         // lower the dynamic values to favor application
@@ -1380,7 +1380,7 @@ nsContentSink::DidProcessATokenImpl()
   }
 
   if ((currentTime - mDelayTimerStart) >
-      NS_STATIC_CAST(PRUint32, GetMaxTokenProcessingTime())) {
+      static_cast<PRUint32>(GetMaxTokenProcessingTime())) {
     return NS_ERROR_HTMLPARSER_INTERRUPTED;
   }
 

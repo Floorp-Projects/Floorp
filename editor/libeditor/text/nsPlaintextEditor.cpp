@@ -864,7 +864,7 @@ nsPlaintextEditor::BeginComposition(nsTextEventReply* aReply)
   if(mFlags & nsIPlaintextEditor::eEditorPasswordMask)  {
     if (mRules) {
       nsIEditRules *p = mRules.get();
-      nsTextEditRules *textEditRules = NS_STATIC_CAST(nsTextEditRules *, p);
+      nsTextEditRules *textEditRules = static_cast<nsTextEditRules *>(p);
       textEditRules->ResetIMETextPWBuf();
     }
     else  {

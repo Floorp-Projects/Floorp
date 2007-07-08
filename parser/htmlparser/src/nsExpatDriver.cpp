@@ -78,7 +78,7 @@ Driver_HandleXMLDeclaration(void *aUserData,
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
   if (aUserData) {
-    nsExpatDriver* driver = NS_STATIC_CAST(nsExpatDriver*, aUserData);
+    nsExpatDriver* driver = static_cast<nsExpatDriver*>(aUserData);
     driver->HandleXMLDeclaration(aVersion, aEncoding, aStandalone);
   }
 }
@@ -90,7 +90,7 @@ Driver_HandleStartElement(void *aUserData,
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
   if (aUserData) {
-    NS_STATIC_CAST(nsExpatDriver*, aUserData)->HandleStartElement(aName,
+    static_cast<nsExpatDriver*>(aUserData)->HandleStartElement(aName,
                                                                   aAtts);
   }
 }
@@ -101,7 +101,7 @@ Driver_HandleEndElement(void *aUserData,
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
   if (aUserData) {
-    NS_STATIC_CAST(nsExpatDriver*, aUserData)->HandleEndElement(aName);
+    static_cast<nsExpatDriver*>(aUserData)->HandleEndElement(aName);
   }
 }
 
@@ -112,7 +112,7 @@ Driver_HandleCharacterData(void *aUserData,
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
   if (aUserData) {
-    nsExpatDriver* driver = NS_STATIC_CAST(nsExpatDriver*, aUserData);
+    nsExpatDriver* driver = static_cast<nsExpatDriver*>(aUserData);
     driver->HandleCharacterData(aData, PRUint32(aLength));
   }
 }
@@ -123,7 +123,7 @@ Driver_HandleComment(void *aUserData,
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
   if(aUserData) {
-    NS_STATIC_CAST(nsExpatDriver*, aUserData)->HandleComment(aName);
+    static_cast<nsExpatDriver*>(aUserData)->HandleComment(aName);
   }
 }
 
@@ -134,7 +134,7 @@ Driver_HandleProcessingInstruction(void *aUserData,
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
   if (aUserData) {
-    nsExpatDriver* driver = NS_STATIC_CAST(nsExpatDriver*, aUserData);
+    nsExpatDriver* driver = static_cast<nsExpatDriver*>(aUserData);
     driver->HandleProcessingInstruction(aTarget, aData);
   }
 }
@@ -146,7 +146,7 @@ Driver_HandleDefault(void *aUserData,
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
   if (aUserData) {
-    nsExpatDriver* driver = NS_STATIC_CAST(nsExpatDriver*, aUserData);
+    nsExpatDriver* driver = static_cast<nsExpatDriver*>(aUserData);
     driver->HandleDefault(aData, PRUint32(aLength));
   }
 }
@@ -156,7 +156,7 @@ Driver_HandleStartCdataSection(void *aUserData)
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
   if (aUserData) {
-    NS_STATIC_CAST(nsExpatDriver*, aUserData)->HandleStartCdataSection();
+    static_cast<nsExpatDriver*>(aUserData)->HandleStartCdataSection();
   }
 }
 
@@ -165,7 +165,7 @@ Driver_HandleEndCdataSection(void *aUserData)
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
   if (aUserData) {
-    NS_STATIC_CAST(nsExpatDriver*, aUserData)->HandleEndCdataSection();
+    static_cast<nsExpatDriver*>(aUserData)->HandleEndCdataSection();
   }
 }
 
@@ -178,7 +178,7 @@ Driver_HandleStartDoctypeDecl(void *aUserData,
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
   if (aUserData) {
-    NS_STATIC_CAST(nsExpatDriver*, aUserData)->
+    static_cast<nsExpatDriver*>(aUserData)->
       HandleStartDoctypeDecl(aDoctypeName, aSysid, aPubid, aHasInternalSubset);
   }
 }
@@ -188,7 +188,7 @@ Driver_HandleEndDoctypeDecl(void *aUserData)
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
   if (aUserData) {
-    NS_STATIC_CAST(nsExpatDriver*, aUserData)->HandleEndDoctypeDecl();
+    static_cast<nsExpatDriver*>(aUserData)->HandleEndDoctypeDecl();
   }
 }
 
@@ -204,8 +204,8 @@ Driver_HandleExternalEntityRef(void *aExternalEntityRefHandler,
     return 1;
   }
 
-  nsExpatDriver* driver = NS_STATIC_CAST(nsExpatDriver*,
-                                         aExternalEntityRefHandler);
+  nsExpatDriver* driver = static_cast<nsExpatDriver*>
+                                     (aExternalEntityRefHandler);
 
   return driver->HandleExternalEntityRef(aOpenEntityNames, aBase, aSystemId,
                                          aPublicId);
@@ -218,7 +218,7 @@ Driver_HandleStartNamespaceDecl(void *aUserData,
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
   if (aUserData) {
-    NS_STATIC_CAST(nsExpatDriver*, aUserData)->
+    static_cast<nsExpatDriver*>(aUserData)->
       HandleStartNamespaceDecl(aPrefix, aUri);
   }
 }
@@ -229,7 +229,7 @@ Driver_HandleEndNamespaceDecl(void *aUserData,
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
   if (aUserData) {
-    NS_STATIC_CAST(nsExpatDriver*, aUserData)->
+    static_cast<nsExpatDriver*>(aUserData)->
       HandleEndNamespaceDecl(aPrefix);
   }
 }
@@ -243,7 +243,7 @@ Driver_HandleNotationDecl(void *aUserData,
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
   if (aUserData) {
-    NS_STATIC_CAST(nsExpatDriver*, aUserData)->
+    static_cast<nsExpatDriver*>(aUserData)->
       HandleNotationDecl(aNotationName, aBase, aSysid, aPubid);
   }
 }
@@ -258,7 +258,7 @@ Driver_HandleUnparsedEntityDecl(void *aUserData,
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
   if (aUserData) {
-    NS_STATIC_CAST(nsExpatDriver*, aUserData)->
+    static_cast<nsExpatDriver*>(aUserData)->
       HandleUnparsedEntityDecl(aEntityName, aBase, aSysid, aPubid,
                                aNotationName);
   }
@@ -985,7 +985,7 @@ nsExpatDriver::ParseBuffer(const PRUnichar *aBuffer,
     }
     else {
       status = XML_Parse(mExpatParser,
-                         NS_REINTERPRET_CAST(const char*, aBuffer),
+                         reinterpret_cast<const char*>(aBuffer),
                          aLength * sizeof(PRUnichar), aIsFinal);
     }
 

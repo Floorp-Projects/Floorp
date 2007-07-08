@@ -125,7 +125,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
       flags |= SND_ASYNC;
     }
 
-    ::PlaySound(NS_REINTERPRET_CAST(const char*, data), 0, flags);
+    ::PlaySound(reinterpret_cast<const char*>(data), 0, flags);
   }
 
   return NS_OK;

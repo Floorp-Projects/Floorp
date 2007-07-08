@@ -108,7 +108,7 @@ PR_STATIC_CALLBACK(PRBool)
 RequestMapMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                          const void *key)
 {
-  const RequestHashEntry *entry = NS_STATIC_CAST(const RequestHashEntry*, hdr);
+  const RequestHashEntry *entry = static_cast<const RequestHashEntry*>(hdr);
   return entry->r == key;
 }
 
@@ -116,7 +116,7 @@ PR_STATIC_CALLBACK(PRBool)
 RequestMapInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
                      const void *key)
 {
-  RequestHashEntry *entry = NS_STATIC_CAST(RequestHashEntry*, hdr);
+  RequestHashEntry *entry = static_cast<RequestHashEntry*>(hdr);
   entry->r = (void*)key;
   return PR_TRUE;
 }
@@ -219,7 +219,7 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window)
   if (!wp) return NS_ERROR_FAILURE;
   /* end GetWebProgress */
   
-  wp->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*,this),
+  wp->AddProgressListener(static_cast<nsIWebProgressListener*>(this),
                           nsIWebProgress::NOTIFY_STATE_ALL | 
                           nsIWebProgress::NOTIFY_LOCATION  |
                           nsIWebProgress::NOTIFY_SECURITY);

@@ -76,14 +76,14 @@ nsresult WebBrowserChrome::CreateBrowser(PRInt32 aX, PRInt32 aY,
     if (!mWebBrowser)
         return NS_ERROR_FAILURE;
 
-    (void)mWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
+    (void)mWebBrowser->SetContainerWindow(static_cast<nsIWebBrowserChrome*>(this));
 
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(mWebBrowser);
     dsti->SetItemType(nsIDocShellTreeItem::typeContentWrapper);
 
     nsCOMPtr<nsIBaseWindow> browserBaseWindow = do_QueryInterface(mWebBrowser);
 
-    mNativeWindow = WebBrowserChromeUI::CreateNativeWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
+    mNativeWindow = WebBrowserChromeUI::CreateNativeWindow(static_cast<nsIWebBrowserChrome*>(this));
 
     if (!mNativeWindow)
         return NS_ERROR_FAILURE;
@@ -93,7 +93,7 @@ nsresult WebBrowserChrome::CreateBrowser(PRInt32 aX, PRInt32 aY,
                              aX, aY, aCX, aCY);
     browserBaseWindow->Create();
 
-    nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, this));
+    nsCOMPtr<nsIWebProgressListener> listener(static_cast<nsIWebProgressListener*>(this));
     nsCOMPtr<nsIWeakReference> thisListener(do_GetWeakReference(listener));
     (void)mWebBrowser->AddWebBrowserListener(thisListener, 
         NS_GET_IID(nsIWebProgressListener));

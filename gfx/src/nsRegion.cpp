@@ -116,8 +116,8 @@ class RgnRectMemoryAllocator
   void* AllocChunk (PRUint32 aEntries, void* aNextChunk, nsRegion::RgnRect* aTailDest)
   {
     PRUint8* pBuf = new PRUint8 [aEntries * sizeof (nsRegion::RgnRect) + sizeof (void*)];
-    *NS_REINTERPRET_CAST (void**, pBuf) = aNextChunk;
-    nsRegion::RgnRect* pRect = NS_REINTERPRET_CAST (nsRegion::RgnRect*, pBuf + sizeof (void*));
+    *reinterpret_cast<void**>(pBuf) = aNextChunk;
+    nsRegion::RgnRect* pRect = reinterpret_cast<nsRegion::RgnRect*>(pBuf + sizeof (void*));
 
     for (PRUint32 cnt = 0 ; cnt < aEntries - 1 ; cnt++)
       pRect [cnt].next = &pRect [cnt + 1];
@@ -128,10 +128,10 @@ class RgnRectMemoryAllocator
   }
 
   void FreeChunk (void* aChunk) {  delete [] (PRUint8 *) aChunk;  }
-  void* NextChunk (void* aThisChunk) const { return *NS_STATIC_CAST (void**, aThisChunk); }
+  void* NextChunk (void* aThisChunk) const { return *static_cast<void**>(aThisChunk); }
 
   nsRegion::RgnRect* ChunkHead (void* aThisChunk) const
-  {   return NS_REINTERPRET_CAST (nsRegion::RgnRect*, NS_STATIC_CAST (PRUint8*, aThisChunk) + sizeof (void*));  }
+  {   return reinterpret_cast<nsRegion::RgnRect*>(static_cast<PRUint8*>(aThisChunk) + sizeof (void*));  }
 
 public:
   RgnRectMemoryAllocator (PRUint32 aNumOfEntries);
@@ -216,7 +216,7 @@ inline void* nsRegion::RgnRect::operator new (size_t) CPP_THROW_NEW
 
 inline void nsRegion::RgnRect::operator delete (void* aRect, size_t)
 {
-  gRectPool.Free (NS_STATIC_CAST (RgnRect*, aRect));
+  gRectPool.Free (static_cast<RgnRect*>(aRect));
 }
 
 
@@ -485,7 +485,7 @@ void nsRegion::Optimize ()
 
 void nsRegion::MoveInto (nsRegion& aDestRegion, const RgnRect* aStartRect)
 {
-  RgnRect* pRect = NS_CONST_CAST (RgnRect*, aStartRect);
+  RgnRect* pRect = const_cast<RgnRect*>(aStartRect);
   RgnRect* pPrev = pRect->prev;
 
   while (pRect != &mRectListHead)
@@ -595,8 +595,8 @@ nsRegion& nsRegion::Copy (const nsRect& aRect)
   else
   {
     SetToElements (1);
-    *mRectListHead.next = NS_STATIC_CAST (const RgnRect&, aRect);
-    mBoundRect = NS_STATIC_CAST (const nsRectFast&, aRect);
+    *mRectListHead.next = static_cast<const RgnRect&>(aRect);
+    mBoundRect = static_cast<const nsRectFast&>(aRect);
   }
 
   return *this;
@@ -634,8 +634,8 @@ nsRegion& nsRegion::And (const nsRegion& aRgn1, const nsRegion& aRgn2)
         else
         {
           nsRegion TmpRegion;
-          nsRegion* pSrcRgn1 = NS_CONST_CAST (nsRegion*, &aRgn1);
-          nsRegion* pSrcRgn2 = NS_CONST_CAST (nsRegion*, &aRgn2);
+          nsRegion* pSrcRgn1 = const_cast<nsRegion*>(&aRgn1);
+          nsRegion* pSrcRgn2 = const_cast<nsRegion*>(&aRgn2);
 
           if (&aRgn1 == this)     // Copy region if it is both source and result
           {
@@ -714,7 +714,7 @@ nsRegion& nsRegion::And (const nsRegion& aRegion, const nsRect& aRect)
     SetEmpty ();
   else                            // Intersect region with rectangle
   {
-    const nsRectFast& aRectFast = NS_STATIC_CAST (const nsRectFast&, aRect);
+    const nsRectFast& aRectFast = static_cast<const nsRectFast&>(aRect);
     nsRectFast TmpRect;
 
     if (aRegion.mRectCount == 1)  // Intersect rectangle with rectangle
@@ -732,7 +732,7 @@ nsRegion& nsRegion::And (const nsRegion& aRegion, const nsRect& aRect)
         else
         {
           nsRegion TmpRegion;
-          nsRegion* pSrcRegion = NS_CONST_CAST (nsRegion*, &aRegion);
+          nsRegion* pSrcRegion = const_cast<nsRegion*>(&aRegion);
 
           if (&aRegion == this)   // Copy region if it is both source and result
           {
@@ -807,7 +807,7 @@ nsRegion& nsRegion::Or (const nsRegion& aRegion, const nsRect& aRect)
     Copy (aRegion);
   else
   {
-    const nsRectFast& aRectFast = NS_STATIC_CAST (const nsRectFast&, aRect);
+    const nsRectFast& aRectFast = static_cast<const nsRectFast&>(aRect);
 
     if (!aRectFast.Intersects (aRegion.mBoundRect))     // Rectangle does not intersect region
     {
@@ -885,7 +885,7 @@ nsRegion& nsRegion::Xor (const nsRegion& aRegion, const nsRect& aRect)
     Copy (aRegion);
   else
   {
-    const nsRectFast& aRectFast = NS_STATIC_CAST (const nsRectFast&, aRect);
+    const nsRectFast& aRectFast = static_cast<const nsRectFast&>(aRect);
 
     if (!aRectFast.Intersects (aRegion.mBoundRect))     // Rectangle does not intersect region
     {
@@ -955,7 +955,7 @@ nsRegion& nsRegion::Sub (const nsRegion& aRegion, const nsRect& aRect)
     Copy (aRegion);
   else
   {
-    const nsRectFast& aRectFast = NS_STATIC_CAST (const nsRectFast&, aRect);
+    const nsRectFast& aRectFast = static_cast<const nsRectFast&>(aRect);
 
     if (!aRectFast.Intersects (aRegion.mBoundRect))   // Rectangle does not intersect region
       Copy (aRegion);
@@ -1066,7 +1066,7 @@ void nsRegion::SubRect (const nsRectFast& aRect, nsRegion& aResult, nsRegion& aC
 
   aResult.SetToElements (0);
 
-  (NS_CONST_CAST (nsRegion*, pSrcRegion))->mRectListHead.y = PR_INT32_MAX;
+  (const_cast<nsRegion*>(pSrcRegion))->mRectListHead.y = PR_INT32_MAX;
   const RgnRect* pSrcRect = pSrcRegion->mRectListHead.next;
 
   for ( ; pSrcRect->y < aRect.YMost () ; pSrcRect = pSrcRect->next)

@@ -575,7 +575,7 @@ nsFormFillController::RemoveForDOMDocumentEnumerator(nsISupports* aKey,
                                                   PRInt32& aEntry,
                                                   void* aUserData)
 {
-  nsIDOMDocument* domDoc = NS_STATIC_CAST(nsIDOMDocument*, aUserData);
+  nsIDOMDocument* domDoc = static_cast<nsIDOMDocument*>(aUserData);
   nsCOMPtr<nsIDOMHTMLInputElement> element = do_QueryInterface(aKey);
   nsCOMPtr<nsIDOMDocument> elementDoc;
   element->GetOwnerDocument(getter_AddRefs(elementDoc));
@@ -958,43 +958,43 @@ nsFormFillController::AddWindowListeners(nsIDOMWindow *aWindow)
     return;
 
   target->AddEventListener(NS_LITERAL_STRING("focus"),
-                           NS_STATIC_CAST(nsIDOMFocusListener *, this),
+                           static_cast<nsIDOMFocusListener *>(this),
                            PR_TRUE);
 
   target->AddEventListener(NS_LITERAL_STRING("blur"),
-                           NS_STATIC_CAST(nsIDOMFocusListener *, this),
+                           static_cast<nsIDOMFocusListener *>(this),
                            PR_TRUE);
 
   target->AddEventListener(NS_LITERAL_STRING("pagehide"),
-                           NS_STATIC_CAST(nsIDOMFocusListener *, this),
+                           static_cast<nsIDOMFocusListener *>(this),
                            PR_TRUE);
 
   target->AddEventListener(NS_LITERAL_STRING("mousedown"),
-                           NS_STATIC_CAST(nsIDOMMouseListener *, this),
+                           static_cast<nsIDOMMouseListener *>(this),
                            PR_TRUE);
 
   target->AddEventListener(NS_LITERAL_STRING("click"),
-                           NS_STATIC_CAST(nsIDOMMouseListener *, this),
+                           static_cast<nsIDOMMouseListener *>(this),
                            PR_TRUE);
 
   target->AddEventListener(NS_LITERAL_STRING("input"),
-                           NS_STATIC_CAST(nsIDOMFormListener *, this),
+                           static_cast<nsIDOMFormListener *>(this),
                            PR_TRUE);
 
   target->AddEventListener(NS_LITERAL_STRING("unload"),
-                           NS_STATIC_CAST(nsIDOMLoadListener *, this),
+                           static_cast<nsIDOMLoadListener *>(this),
                            PR_TRUE);
 
   target->AddEventListener(NS_LITERAL_STRING("compositionstart"),
-                           NS_STATIC_CAST(nsIDOMCompositionListener *, this),
+                           static_cast<nsIDOMCompositionListener *>(this),
                            PR_TRUE);
 
   target->AddEventListener(NS_LITERAL_STRING("compositionend"),
-                           NS_STATIC_CAST(nsIDOMCompositionListener *, this),
+                           static_cast<nsIDOMCompositionListener *>(this),
                            PR_TRUE);
 
   target->AddEventListener(NS_LITERAL_STRING("contextmenu"),
-                           NS_STATIC_CAST(nsIDOMContextMenuListener *, this),
+                           static_cast<nsIDOMContextMenuListener *>(this),
                            PR_TRUE);
 }
 
@@ -1017,43 +1017,43 @@ nsFormFillController::RemoveWindowListeners(nsIDOMWindow *aWindow)
     return;
 
   target->RemoveEventListener(NS_LITERAL_STRING("focus"),
-                              NS_STATIC_CAST(nsIDOMFocusListener *, this),
+                              static_cast<nsIDOMFocusListener *>(this),
                               PR_TRUE);
 
   target->RemoveEventListener(NS_LITERAL_STRING("blur"),
-                              NS_STATIC_CAST(nsIDOMFocusListener *, this),
+                              static_cast<nsIDOMFocusListener *>(this),
                               PR_TRUE);
 
   target->RemoveEventListener(NS_LITERAL_STRING("pagehide"),
-                              NS_STATIC_CAST(nsIDOMFocusListener *, this),
+                              static_cast<nsIDOMFocusListener *>(this),
                               PR_TRUE);
 
   target->RemoveEventListener(NS_LITERAL_STRING("mousedown"),
-                              NS_STATIC_CAST(nsIDOMMouseListener *, this),
+                              static_cast<nsIDOMMouseListener *>(this),
                               PR_TRUE);
 
   target->RemoveEventListener(NS_LITERAL_STRING("click"),
-                              NS_STATIC_CAST(nsIDOMMouseListener *, this),
+                              static_cast<nsIDOMMouseListener *>(this),
                               PR_TRUE);
 
   target->RemoveEventListener(NS_LITERAL_STRING("input"),
-                              NS_STATIC_CAST(nsIDOMFormListener *, this),
+                              static_cast<nsIDOMFormListener *>(this),
                               PR_TRUE);
 
   target->RemoveEventListener(NS_LITERAL_STRING("unload"),
-                              NS_STATIC_CAST(nsIDOMLoadListener *, this),
+                              static_cast<nsIDOMLoadListener *>(this),
                               PR_TRUE);
 
   target->RemoveEventListener(NS_LITERAL_STRING("compositionstart"),
-                              NS_STATIC_CAST(nsIDOMCompositionListener *, this),
+                              static_cast<nsIDOMCompositionListener *>(this),
                               PR_TRUE);
 
   target->RemoveEventListener(NS_LITERAL_STRING("compositionend"),
-                              NS_STATIC_CAST(nsIDOMCompositionListener *, this),
+                              static_cast<nsIDOMCompositionListener *>(this),
                               PR_TRUE);
 
   target->RemoveEventListener(NS_LITERAL_STRING("contextmenu"),
-                              NS_STATIC_CAST(nsIDOMContextMenuListener *, this),
+                              static_cast<nsIDOMContextMenuListener *>(this),
                               PR_TRUE);
 }
 
@@ -1066,7 +1066,7 @@ nsFormFillController::AddKeyListener(nsIDOMHTMLInputElement *aInput)
     nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aInput);
 
     target->AddEventListener(NS_LITERAL_STRING("keypress"),
-                             NS_STATIC_CAST(nsIDOMKeyListener *, this),
+                             static_cast<nsIDOMKeyListener *>(this),
                              PR_TRUE);
   }
 
@@ -1079,7 +1079,7 @@ nsFormFillController::RemoveKeyListener()
     nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mFocusedInput);
 
     target->RemoveEventListener(NS_LITERAL_STRING("keypress"),
-                                NS_STATIC_CAST(nsIDOMKeyListener *, this),
+                                static_cast<nsIDOMKeyListener *>(this),
                                 PR_TRUE);
 }
 

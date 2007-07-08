@@ -150,8 +150,8 @@ MaiHyperlink::GetAtkHyperlink(void)
         return nsnull;
 
     mMaiAtkHyperlink =
-        NS_REINTERPRET_CAST(AtkHyperlink *,
-                            g_object_new(mai_atk_hyperlink_get_type(), NULL));
+        reinterpret_cast<AtkHyperlink *>
+                        (g_object_new(mai_atk_hyperlink_get_type(), NULL));
     NS_ASSERTION(mMaiAtkHyperlink, "OUT OF MEMORY");
     NS_ENSURE_TRUE(mMaiAtkHyperlink, nsnull);
 
@@ -260,7 +260,7 @@ getEndIndexCB(AtkHyperlink *aLink)
     PRInt32 endIndex = -1;
     nsresult rv = accHyperlink->GetEndIndex(&endIndex);
 
-    return (NS_FAILED(rv)) ? -1 : NS_STATIC_CAST(gint, endIndex);
+    return (NS_FAILED(rv)) ? -1 : static_cast<gint>(endIndex);
 }
 
 gint
@@ -272,7 +272,7 @@ getStartIndexCB(AtkHyperlink *aLink)
     PRInt32 startIndex = -1;
     nsresult rv = accHyperlink->GetStartIndex(&startIndex);
 
-    return (NS_FAILED(rv)) ? -1 : NS_STATIC_CAST(gint, startIndex);
+    return (NS_FAILED(rv)) ? -1 : static_cast<gint>(startIndex);
 }
 
 gboolean
@@ -283,7 +283,7 @@ isValidCB(AtkHyperlink *aLink)
 
     PRBool isValid = PR_FALSE;
     nsresult rv = accHyperlink->IsValid(&isValid);
-    return (NS_FAILED(rv)) ? FALSE : NS_STATIC_CAST(gboolean, isValid);
+    return (NS_FAILED(rv)) ? FALSE : static_cast<gboolean>(isValid);
 }
 
 gint
@@ -294,7 +294,7 @@ getAnchorCountCB(AtkHyperlink *aLink)
 
     PRInt32 count = -1;
     nsresult rv = accHyperlink->GetAnchors(&count);
-    return (NS_FAILED(rv)) ? -1 : NS_STATIC_CAST(gint, count);
+    return (NS_FAILED(rv)) ? -1 : static_cast<gint>(count);
 }
 
 // Check if aHyperlink is a valid MaiHyperlink, and return the

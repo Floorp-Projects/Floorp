@@ -527,7 +527,7 @@ protected:
                                    nsMargin             aBorderPadding);
 
   nsITableLayoutStrategy* LayoutStrategy() {
-    return NS_STATIC_CAST(nsTableFrame*, GetFirstInFlow())->
+    return static_cast<nsTableFrame*>(GetFirstInFlow())->
       mTableLayoutStrategy;
   }
 
@@ -854,7 +854,7 @@ inline PRBool nsTableFrame::NeedColSpanExpansion() const
 
 inline nsFrameList& nsTableFrame::GetColGroups()
 {
-  return NS_STATIC_CAST(nsTableFrame*, GetFirstInFlow())->mColGroups;
+  return static_cast<nsTableFrame*>(GetFirstInFlow())->mColGroups;
 }
 
 inline nsVoidArray& nsTableFrame::GetColCache()

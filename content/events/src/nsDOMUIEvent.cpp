@@ -55,8 +55,8 @@
 
 nsDOMUIEvent::nsDOMUIEvent(nsPresContext* aPresContext, nsGUIEvent* aEvent)
   : nsDOMEvent(aPresContext, aEvent ?
-               NS_STATIC_CAST(nsEvent *, aEvent) :
-               NS_STATIC_CAST(nsEvent *, new nsUIEvent(PR_FALSE, 0, 0)))
+               static_cast<nsEvent *>(aEvent) :
+               static_cast<nsEvent *>(new nsUIEvent(PR_FALSE, 0, 0)))
   , mClientPoint(0,0)
 {
   if (aEvent) {
@@ -73,14 +73,14 @@ nsDOMUIEvent::nsDOMUIEvent(nsPresContext* aPresContext, nsGUIEvent* aEvent)
   {
     case NS_UI_EVENT:
     {
-      nsUIEvent *event = NS_STATIC_CAST(nsUIEvent*, mEvent);
+      nsUIEvent *event = static_cast<nsUIEvent*>(mEvent);
       mDetail = event->detail;
       break;
     }
 
     case NS_SCROLLPORT_EVENT:
     {
-      nsScrollPortEvent* scrollEvent = NS_STATIC_CAST(nsScrollPortEvent*, mEvent);
+      nsScrollPortEvent* scrollEvent = static_cast<nsScrollPortEvent*>(mEvent);
       mDetail = (PRInt32)scrollEvent->orient;
       break;
     }
@@ -444,7 +444,7 @@ NS_METHOD nsDOMUIEvent::GetCompositionReply(nsTextEventReply** aReply)
      (mEvent->message == NS_COMPOSITION_START) ||
      (mEvent->message == NS_COMPOSITION_QUERY))
   {
-    *aReply = &(NS_STATIC_CAST(nsCompositionEvent*, mEvent)->theReply);
+    *aReply = &(static_cast<nsCompositionEvent*>(mEvent)->theReply);
     return NS_OK;
   }
   *aReply = nsnull;
@@ -456,7 +456,7 @@ nsDOMUIEvent::GetReconversionReply(nsReconversionEventReply** aReply)
 {
   if (mEvent->eventStructType == NS_RECONVERSION_EVENT)
   {
-    *aReply = &(NS_STATIC_CAST(nsReconversionEvent*, mEvent)->theReply);
+    *aReply = &(static_cast<nsReconversionEvent*>(mEvent)->theReply);
     return NS_OK;
   }
   *aReply = nsnull;
@@ -468,7 +468,7 @@ nsDOMUIEvent::GetQueryCaretRectReply(nsQueryCaretRectEventReply** aReply)
 {
   if (mEvent->eventStructType == NS_QUERYCARETRECT_EVENT)
   {
-    *aReply = &(NS_STATIC_CAST(nsQueryCaretRectEvent*, mEvent)->theReply);
+    *aReply = &(static_cast<nsQueryCaretRectEvent*>(mEvent)->theReply);
     return NS_OK;
   }
   *aReply = nsnull;

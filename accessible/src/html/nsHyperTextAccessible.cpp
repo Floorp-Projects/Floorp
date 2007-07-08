@@ -81,7 +81,7 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
       PRInt32 numChildren;
       GetChildCount(&numChildren);
       if (numChildren > 0) {
-        *aInstancePtr = NS_STATIC_CAST(nsIAccessibleText*, this);
+        *aInstancePtr = static_cast<nsIAccessibleText*>(this);
         NS_ADDREF_THIS();
         return NS_OK;
       }
@@ -91,7 +91,7 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
     if (aIID.Equals(NS_GET_IID(nsIAccessibleHyperText))) {
       if (IsHyperText()) {
         // If |this| contains text and embedded objects
-        *aInstancePtr = NS_STATIC_CAST(nsIAccessibleHyperText*, this);
+        *aInstancePtr = static_cast<nsIAccessibleHyperText*>(this);
         NS_ADDREF_THIS();
         return NS_OK;
       }
@@ -103,7 +103,7 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
       PRUint32 state, extState;
       GetState(&state, &extState);
       if (extState & nsIAccessibleStates::EXT_STATE_EDITABLE) {
-        *aInstancePtr = NS_STATIC_CAST(nsIAccessibleEditableText*, this);
+        *aInstancePtr = static_cast<nsIAccessibleEditableText*>(this);
         NS_ADDREF_THIS();
         return NS_OK;
       }

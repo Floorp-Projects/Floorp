@@ -502,7 +502,7 @@ NS_NewXULPopupListener(nsIDOMElement* aElement, PRBool aIsContext,
     if (!pl)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    *aListener = NS_STATIC_CAST(nsIDOMMouseListener *, pl);
+    *aListener = static_cast<nsIDOMMouseListener *>(pl);
     NS_ADDREF(*aListener);
     return NS_OK;
 }

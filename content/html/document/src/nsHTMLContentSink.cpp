@@ -1726,7 +1726,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
     // If the document already has a root we'll use it. This will
     // happen when we do document.open()/.write()/.close()...
 
-    NS_ADDREF(mRoot = NS_STATIC_CAST(nsGenericHTMLElement*, doc_root));
+    NS_ADDREF(mRoot = static_cast<nsGenericHTMLElement*>(doc_root));
   } else {
     mRoot = NS_NewHTMLHtmlElement(nodeInfo);
     if (!mRoot) {
@@ -2829,7 +2829,7 @@ HTMLContentSink::AddBaseTagInfo(nsIContent* aContent)
                                nsPropertyTable::SupportsDtorFunc, PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
       // circumvent nsDerivedSafe
-      NS_ADDREF(NS_STATIC_CAST(nsIURI*, mBaseHref));
+      NS_ADDREF(static_cast<nsIURI*>(mBaseHref));
     }
   }
   if (mBaseTarget) {
@@ -2837,7 +2837,7 @@ HTMLContentSink::AddBaseTagInfo(nsIContent* aContent)
                                nsPropertyTable::SupportsDtorFunc, PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
       // circumvent nsDerivedSafe
-      NS_ADDREF(NS_STATIC_CAST(nsIAtom*, mBaseTarget));
+      NS_ADDREF(static_cast<nsIAtom*>(mBaseTarget));
     }
   }
 }

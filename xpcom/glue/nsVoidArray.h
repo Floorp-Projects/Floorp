@@ -190,7 +190,7 @@ public:
 
   void ResetToAutoBuffer()
   {
-    SetArray(NS_REINTERPRET_CAST(Impl*, mAutoBuf), kAutoBufSize, 0, PR_FALSE,
+    SetArray(reinterpret_cast<Impl*>(mAutoBuf), kAutoBufSize, 0, PR_FALSE,
              PR_TRUE);
   }
   
@@ -406,19 +406,19 @@ private:
 
   PRBool HasSingle() const
   {
-    return NS_REINTERPRET_CAST(PRWord, mImpl) & 0x1;
+    return reinterpret_cast<PRWord>(mImpl) & 0x1;
   }
   void* GetSingle() const
   {
     NS_ASSERTION(HasSingle(), "wrong type");
-    return NS_REINTERPRET_CAST(void*,
-                               NS_REINTERPRET_CAST(PRWord, mImpl) & ~0x1);
+    return reinterpret_cast<void*>
+                           (reinterpret_cast<PRWord>(mImpl) & ~0x1);
   }
   void SetSingle(void *aChild)
   {
     NS_ASSERTION(HasSingle() || !mImpl, "overwriting array");
-    mImpl = NS_REINTERPRET_CAST(Impl*,
-                                NS_REINTERPRET_CAST(PRWord, aChild) | 0x1);
+    mImpl = reinterpret_cast<Impl*>
+                            (reinterpret_cast<PRWord>(aChild) | 0x1);
   }
   PRBool IsEmpty() const
   {

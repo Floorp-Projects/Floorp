@@ -977,7 +977,7 @@ nsAutoCompleteController::StartSearch()
     if (NS_FAILED(rv))
         return rv;
     
-    rv = search->StartSearch(mSearchString, searchParam, result, NS_STATIC_CAST(nsIAutoCompleteObserver *, this));
+    rv = search->StartSearch(mSearchString, searchParam, result, static_cast<nsIAutoCompleteObserver *>(this));
     if (NS_FAILED(rv)) {
       ++searchesFailed;
       --mSearchesOngoing;

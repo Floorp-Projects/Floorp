@@ -205,7 +205,7 @@ nsSubDocumentFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsIFrameFrame))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIFrameFrame*, this);
+    *aInstancePtr = static_cast<nsIFrameFrame*>(this);
     return NS_OK;
   }
 
@@ -300,7 +300,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsIView* subdocView = mInnerView->GetFirstChild();
   if (!subdocView)
     return NS_OK;
-  nsIFrame* f = NS_STATIC_CAST(nsIFrame*, subdocView->GetClientData());
+  nsIFrame* f = static_cast<nsIFrame*>(subdocView->GetClientData());
   if (!f)
     return NS_OK;
   

@@ -764,7 +764,7 @@ nsDOMStorage::ClearAll()
 PR_STATIC_CALLBACK(PLDHashOperator)
 CopyStorageItems(nsSessionStorageEntry* aEntry, void* userArg)
 {
-  nsDOMStorage* newstorage = NS_STATIC_CAST(nsDOMStorage*, userArg);
+  nsDOMStorage* newstorage = static_cast<nsDOMStorage*>(userArg);
 
   newstorage->SetItem(aEntry->GetKey(), aEntry->mItem->GetValueInternal());
 

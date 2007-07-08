@@ -98,7 +98,7 @@ nsThebesRenderingContext::Init(nsIDeviceContext* aContext, gfxASurface *aThebesS
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::Init ctx %p thebesSurface %p\n", this, aContext, aThebesSurface));
 
-    nsThebesDeviceContext *thebesDC = NS_STATIC_CAST(nsThebesDeviceContext*, aContext);
+    nsThebesDeviceContext *thebesDC = static_cast<nsThebesDeviceContext*>(aContext);
 
     mDeviceContext = aContext;
     mWidget = nsnull;
@@ -126,7 +126,7 @@ nsThebesRenderingContext::Init(nsIDeviceContext* aContext, nsIWidget *aWidget)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::Init ctx %p widget %p\n", this, aContext, aWidget));
 
-    nsThebesDeviceContext *thebesDC = NS_STATIC_CAST(nsThebesDeviceContext*, aContext);
+    nsThebesDeviceContext *thebesDC = static_cast<nsThebesDeviceContext*>(aContext);
 
     mDeviceContext = aContext;
     mWidget = aWidget;
@@ -269,7 +269,7 @@ nsThebesRenderingContext::SetClipRegion(const nsIRegion& pxRegion,
 
     mThebes->ResetClip();
     // GetBoundingBox, GetRects, FreeRects are non-const
-    nsIRegion *evilPxRegion = NS_CONST_CAST(nsIRegion*, &pxRegion);
+    nsIRegion *evilPxRegion = const_cast<nsIRegion*>(&pxRegion);
     if (cplx == eRegionComplexity_rect) {
         PRInt32 x, y, w, h;
         evilPxRegion->GetBoundingBox(&x, &y, &w, &h);
@@ -706,7 +706,7 @@ nsThebesRenderingContext::GetNativeGraphicData(GraphicDataType aType)
 #ifdef XP_WIN
     if (aType == NATIVE_WINDOWS_DC) {
         nsRefPtr<gfxASurface> surf(mThebes->CurrentSurface());
-        return NS_STATIC_CAST(gfxWindowsSurface*, NS_STATIC_CAST(gfxASurface*, surf.get()))->GetDC();
+        return static_cast<gfxWindowsSurface*>(static_cast<gfxASurface*>(surf.get()))->GetDC();
     }
 #endif
 
@@ -780,7 +780,7 @@ nsThebesRenderingContext::DrawTile(imgIContainer *aImage,
     nsCOMPtr<nsIImage> img(do_GetInterface(imgFrame));
     if (!img) return NS_ERROR_FAILURE;
     
-    nsThebesImage *thebesImage = NS_STATIC_CAST(nsThebesImage*, (nsIImage*) img.get());
+    nsThebesImage *thebesImage = static_cast<nsThebesImage*>((nsIImage*) img.get());
 
     /* Phase offset of the repeated image from the origin */
     gfxPoint phase(FROM_TWIPS(twXOffset), FROM_TWIPS(twYOffset));
@@ -838,7 +838,7 @@ nsThebesRenderingContext::SetFont(const nsFont& aFont, nsIAtom* aLangGroup)
 
     nsCOMPtr<nsIFontMetrics> newMetrics;
     mDeviceContext->GetMetricsFor(aFont, aLangGroup, *getter_AddRefs(newMetrics));
-    mFontMetrics = NS_REINTERPRET_CAST(nsIThebesFontMetrics*, newMetrics.get());
+    mFontMetrics = reinterpret_cast<nsIThebesFontMetrics*>(newMetrics.get());
     return NS_OK;
 }
 
@@ -847,7 +847,7 @@ nsThebesRenderingContext::SetFont(nsIFontMetrics *aFontMetrics)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::SetFont[Metrics] %p\n", this, aFontMetrics));
 
-    mFontMetrics = NS_STATIC_CAST(nsIThebesFontMetrics*, aFontMetrics);
+    mFontMetrics = static_cast<nsIThebesFontMetrics*>(aFontMetrics);
     return NS_OK;
 }
 

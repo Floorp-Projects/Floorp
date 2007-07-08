@@ -530,8 +530,8 @@ XRemoteService::OpenURL(nsCString &aArgument,
     // we own it
     NS_ADDREF(listener);
     nsCOMPtr<nsISupports> listenerRef;
-    listenerRef = do_QueryInterface(NS_STATIC_CAST(nsIURIContentListener *,
-						   listener));
+    listenerRef = do_QueryInterface(static_cast<nsIURIContentListener *>
+                                               (listener));
     // now the listenerref is the only reference
     NS_RELEASE(listener);
 

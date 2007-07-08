@@ -230,21 +230,21 @@ nsGenericHTMLElement::DOMQueryInterface(nsIDOMHTMLElement *aElement,
   nsISupports *inst = nsnull;
 
   if (aIID.Equals(NS_GET_IID(nsIDOMNode))) {
-    inst = NS_STATIC_CAST(nsIDOMNode *, aElement);
+    inst = static_cast<nsIDOMNode *>(aElement);
   } else if (aIID.Equals(NS_GET_IID(nsIDOMElement))) {
-    inst = NS_STATIC_CAST(nsIDOMElement *, aElement);
+    inst = static_cast<nsIDOMElement *>(aElement);
   } else if (aIID.Equals(NS_GET_IID(nsIDOMHTMLElement))) {
-    inst = NS_STATIC_CAST(nsIDOMHTMLElement *, aElement);
+    inst = static_cast<nsIDOMHTMLElement *>(aElement);
   } else if (aIID.Equals(NS_GET_IID(nsIDOMNSHTMLElement))) {
-    inst = NS_STATIC_CAST(nsIDOMNSHTMLElement *,
-                          new nsGenericHTMLElementTearoff(this));
+    inst = static_cast<nsIDOMNSHTMLElement *>
+                      (new nsGenericHTMLElementTearoff(this));
     if (NS_UNLIKELY(!inst)) {
       *aInstancePtr = nsnull;
       return NS_ERROR_OUT_OF_MEMORY;
     }
   } else if (aIID.Equals(NS_GET_IID(nsIDOMElementCSSInlineStyle))) {
-    inst = NS_STATIC_CAST(nsIDOMElementCSSInlineStyle *,
-                          new nsGenericHTMLElementTearoff(this));
+    inst = static_cast<nsIDOMElementCSSInlineStyle *>
+                      (new nsGenericHTMLElementTearoff(this));
     if (NS_UNLIKELY(!inst)) {
       *aInstancePtr = nsnull;
       return NS_ERROR_OUT_OF_MEMORY;
@@ -306,14 +306,14 @@ nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst) const
     rv = aDst->SetProperty(nsGkAtoms::htmlBaseHref, prop,
                            nsPropertyTable::SupportsDtorFunc, PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
-      NS_ADDREF(NS_STATIC_CAST(nsIURI*, prop));
+      NS_ADDREF(static_cast<nsIURI*>(prop));
     }
   }
   if ((prop = GetProperty(nsGkAtoms::htmlBaseTarget))) {
     rv = aDst->SetProperty(nsGkAtoms::htmlBaseTarget, prop,
                            nsPropertyTable::SupportsDtorFunc, PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
-      NS_ADDREF(NS_STATIC_CAST(nsIAtom*, prop));
+      NS_ADDREF(static_cast<nsIAtom*>(prop));
     }
   }
 
@@ -724,8 +724,8 @@ nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML)
     return NS_OK; // We rely on the document for doing HTML conversion
   }
 
-  nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(NS_STATIC_CAST(nsIContent *,
-                                                                 this)));
+  nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(static_cast<nsIContent *>
+                                                             (this)));
   nsresult rv = NS_OK;
 
   nsAutoString contentType;
@@ -791,8 +791,8 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
     loader->SetEnabled(PR_FALSE);
   }
 
-  nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(NS_STATIC_CAST(nsIContent *,
-                                                                 this)));
+  nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(static_cast<nsIContent *>
+                                                             (this)));
   nsresult rv = nsContentUtils::CreateContextualFragment(thisNode, aInnerHTML,
                                                          getter_AddRefs(df));
   if (NS_SUCCEEDED(rv)) {
@@ -1094,7 +1094,7 @@ nsGenericHTMLElement::GetSpellcheck(PRBool* aSpellcheck)
     if (node->IsNodeOfType(nsINode::eHTML)) {
       static nsIContent::AttrValuesArray strings[] =
         {&nsGkAtoms::_true, &nsGkAtoms::_false, nsnull};
-      switch (NS_STATIC_CAST(nsIContent*, node)->
+      switch (static_cast<nsIContent*>(node)->
               FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::spellcheck,
                               strings, eCaseMatters)) {
         case 0:                         // spellcheck = "true"
@@ -1571,7 +1571,7 @@ nsGenericHTMLElement::GetBaseURI() const
 
   void* prop;
   if (HasFlag(NODE_HAS_PROPERTIES) && (prop = GetProperty(nsGkAtoms::htmlBaseHref))) {
-    nsIURI* uri = NS_STATIC_CAST(nsIURI*, prop);
+    nsIURI* uri = static_cast<nsIURI*>(prop);
     NS_ADDREF(uri);
     
     return uri;
@@ -1598,7 +1598,7 @@ nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
 {
   void* prop;
   if (HasFlag(NODE_HAS_PROPERTIES) && (prop = GetProperty(nsGkAtoms::htmlBaseTarget))) {
-    NS_STATIC_CAST(nsIAtom*, prop)->ToString(aBaseTarget);
+    static_cast<nsIAtom*>(prop)->ToString(aBaseTarget);
     
     return;
   }
@@ -3047,8 +3047,8 @@ nsGenericHTMLFormElement::IntrinsicState() const
   
   if (mForm &&
       // XXXbz Need the cast to make VC++6 happy.
-      NS_STATIC_CAST(const nsIFormControl*,
-                     mForm->GetDefaultSubmitElement()) == this) {
+      static_cast<const nsIFormControl*>
+                 (mForm->GetDefaultSubmitElement()) == this) {
       NS_ASSERTION(IsSubmitControl(),
                    "Default submit element that isn't a submit control.");
       // We are the default submit element (:default)

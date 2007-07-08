@@ -58,8 +58,8 @@ nsApplicationAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
   *ppv = NULL;
 
   if (IID_IAccessibleApplication == iid) {
-    *ppv = NS_STATIC_CAST(IAccessibleApplication*, this);
-    (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
+    *ppv = static_cast<IAccessibleApplication*>(this);
+    (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
     return S_OK;
   }
 

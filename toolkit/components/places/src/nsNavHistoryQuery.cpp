@@ -216,8 +216,8 @@ nsNavHistory::QueryStringToQueries(const nsACString& aQueryString,
   *aResultCount = queries.Count();
   if (queries.Count() > 0) {
     // convert COM array to raw
-    *aQueries = NS_STATIC_CAST(nsINavHistoryQuery**,
-                  nsMemory::Alloc(sizeof(nsINavHistoryQuery*) * queries.Count()));
+    *aQueries = static_cast<nsINavHistoryQuery**>
+                           (nsMemory::Alloc(sizeof(nsINavHistoryQuery*) * queries.Count()));
     NS_ENSURE_TRUE(*aQueries, NS_ERROR_OUT_OF_MEMORY);
     for (PRInt32 i = 0; i < queries.Count(); i ++) {
       (*aQueries)[i] = queries[i];
@@ -1021,8 +1021,8 @@ NS_IMETHODIMP nsNavHistoryQuery::GetFolders(PRUint32 *aCount,
   PRUint32 count = mFolders.Length();
   PRInt64 *folders = nsnull;
   if (count > 0) {
-    folders = NS_STATIC_CAST(PRInt64*,
-                             nsMemory::Alloc(count * sizeof(PRInt64)));
+    folders = static_cast<PRInt64*>
+                         (nsMemory::Alloc(count * sizeof(PRInt64)));
     NS_ENSURE_TRUE(folders, NS_ERROR_OUT_OF_MEMORY);
 
     for (PRUint32 i = 0; i < count; ++i) {
@@ -1076,8 +1076,8 @@ nsNavHistoryQueryOptions::GetGroupingMode(PRUint32 *aGroupCount,
     *aGroupingMode = nsnull;
     return NS_OK;
   }
-  *aGroupingMode = NS_STATIC_CAST(PRUint16*,
-                                  nsMemory::Alloc(sizeof(PRUint16) * mGroupCount));
+  *aGroupingMode = static_cast<PRUint16*>
+                              (nsMemory::Alloc(sizeof(PRUint16) * mGroupCount));
   if (! *aGroupingMode)
     return NS_ERROR_OUT_OF_MEMORY;
   for(PRUint32 i = 0; i < mGroupCount; i ++)
@@ -1418,7 +1418,7 @@ SetQueryKeyUint32(const nsCString& aValue, nsINavHistoryQuery* aQuery,
                   Uint32QuerySetter setter)
 {
   nsresult rv;
-  PRUint32 value = aValue.ToInteger(NS_REINTERPRET_CAST(PRInt32*, &rv));
+  PRUint32 value = aValue.ToInteger(reinterpret_cast<PRInt32*>(&rv));
   if (NS_SUCCEEDED(rv)) {
     rv = (aQuery->*setter)(value);
     if (NS_FAILED(rv)) {
@@ -1433,7 +1433,7 @@ SetOptionsKeyUint32(const nsCString& aValue, nsINavHistoryQueryOptions* aOptions
                   Uint32OptionsSetter setter)
 {
   nsresult rv;
-  PRUint32 value = aValue.ToInteger(NS_REINTERPRET_CAST(PRInt32*, &rv));
+  PRUint32 value = aValue.ToInteger(reinterpret_cast<PRInt32*>(&rv));
   if (NS_SUCCEEDED(rv)) {
     rv = (aOptions->*setter)(value);
     if (NS_FAILED(rv)) {
@@ -1449,8 +1449,8 @@ SetOptionsKeyUint16(const nsCString& aValue, nsINavHistoryQueryOptions* aOptions
                     Uint16OptionsSetter setter)
 {
   nsresult rv;
-  PRUint16 value = NS_STATIC_CAST(PRUint16,
-                                  aValue.ToInteger(NS_REINTERPRET_CAST(PRInt32*, &rv)));
+  PRUint16 value = static_cast<PRUint16>
+                              (aValue.ToInteger(reinterpret_cast<PRInt32*>(&rv)));
   if (NS_SUCCEEDED(rv)) {
     rv = (aOptions->*setter)(value);
     if (NS_FAILED(rv)) {

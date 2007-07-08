@@ -150,7 +150,7 @@ public:
 	 inline
    NS_IMETHODIMP CopyClipRegion(nsIRegion &aRegion)
 		{ if( !mClipRegion ) return NS_ERROR_FAILURE;
-			aRegion.SetTo(*NS_STATIC_CAST(nsIRegion*, mClipRegion));
+			aRegion.SetTo(*static_cast<nsIRegion*>(mClipRegion));
 			return NS_OK;
 		}
 

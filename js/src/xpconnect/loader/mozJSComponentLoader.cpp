@@ -146,11 +146,11 @@ mozJSLoaderErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
 
         PRUint32 column = rep->uctokenptr - rep->uclinebuf;
 
-        rv = errorObject->Init(NS_REINTERPRET_CAST(const PRUnichar*,
-                                                   rep->ucmessage),
+        rv = errorObject->Init(reinterpret_cast<const PRUnichar*>
+                                               (rep->ucmessage),
                                fileUni.get(),
-                               NS_REINTERPRET_CAST(const PRUnichar*,
-                                                   rep->uclinebuf),
+                               reinterpret_cast<const PRUnichar*>
+                                               (rep->uclinebuf),
                                rep->lineno, column, rep->flags,
                                "component javascript");
         if (NS_SUCCEEDED(rv)) {
@@ -391,7 +391,7 @@ ReadScriptFromStream(JSContext *cx, nsIObjectInputStream *stream,
         // doesn't get passed to ::JS_free by ::JS_XDRDestroy.
 
         uint32 length;
-        data = NS_STATIC_CAST(char*, JS_XDRMemGetData(xdr, &length));
+        data = static_cast<char*>(JS_XDRMemGetData(xdr, &length));
         if (data) {
             JS_XDRMemSetData(xdr, nsnull, 0);
         }
@@ -435,8 +435,8 @@ WriteScriptToStream(JSContext *cx, JSScript *script,
         // one last buffer of data to write to aStream.
 
         uint32 size;
-        const char* data = NS_REINTERPRET_CAST(const char*,
-                                               JS_XDRMemGetData(xdr, &size));
+        const char* data = reinterpret_cast<const char*>
+                                           (JS_XDRMemGetData(xdr, &size));
         NS_ASSERTION(data, "no decoded JSXDRState data!");
 
         rv = stream->Write32(size);
@@ -797,7 +797,7 @@ FastLoadStateHolder::pop()
 void
 mozJSComponentLoader::CloseFastLoad(nsITimer *timer, void *closure)
 {
-    NS_STATIC_CAST(mozJSComponentLoader*, closure)->CloseFastLoad();
+    static_cast<mozJSComponentLoader*>(closure)->CloseFastLoad();
 }
 
 void
@@ -1181,7 +1181,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
         PRUint32 fileSize32;
         LL_L2UI(fileSize32, fileSize);
 
-        char *buf = NS_STATIC_CAST(char*, PR_MemMap(map, 0, fileSize32));
+        char *buf = static_cast<char*>(PR_MemMap(map, 0, fileSize32));
         if (!buf) {
             NS_WARNING("Failed to map file");
             return NS_ERROR_FAILURE;

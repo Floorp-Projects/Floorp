@@ -144,7 +144,7 @@ NS_IMETHODIMP nsTableCaptionFrame::GetAccessible(nsIAccessible** aAccessible)
   if (!GetRect().IsEmpty()) {
     nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
     if (accService) {
-      return accService->CreateHTMLCaptionAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+      return accService->CreateHTMLCaptionAccessible(static_cast<nsIFrame*>(this), aAccessible);
     }
   }
 
@@ -186,7 +186,7 @@ nsTableOuterFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsITableLayout))) {
-    *aInstancePtr = NS_STATIC_CAST(nsITableLayout*, this);
+    *aInstancePtr = static_cast<nsITableLayout*>(this);
     return NS_OK;
   }
 
@@ -199,7 +199,7 @@ NS_IMETHODIMP nsTableOuterFrame::GetAccessible(nsIAccessible** aAccessible)
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    return accService->CreateHTMLTableAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+    return accService->CreateHTMLTableAccessible(static_cast<nsIFrame*>(this), aAccessible);
   }
 
   return NS_ERROR_FAILURE;
@@ -1268,7 +1268,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
                      innerMargin, captionSize, captionMargin, captionOrigin);
     if (reflowCaption) {
       nsHTMLReflowState *captionRS =
-        NS_STATIC_CAST(nsHTMLReflowState*, (void*)captionRSSpace);
+        static_cast<nsHTMLReflowState*>((void*)captionRSSpace);
       FinishReflowChild(mCaptionFrame, aPresContext, captionRS, captionMet,
                         captionOrigin.x, captionOrigin.y, 0);
       captionRS->~nsHTMLReflowState();
@@ -1285,7 +1285,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
                  captionMargin, innerSize, innerMargin, innerOrigin);
   if (reflowInner) {
     nsHTMLReflowState *innerRS =
-      NS_STATIC_CAST(nsHTMLReflowState*, (void*) innerRSSpace);
+      static_cast<nsHTMLReflowState*>((void*) innerRSSpace);
     FinishReflowChild(mInnerTableFrame, aPresContext, innerRS, innerMet,
                       innerOrigin.x, innerOrigin.y, 0);
     innerRS->~nsHTMLReflowState();
@@ -1334,8 +1334,8 @@ void nsTableOuterFrame::DeleteChildsNextInFlow(nsPresContext* aPresContext,
     return;
   }
 
-  nsTableOuterFrame* parent = NS_STATIC_CAST(nsTableOuterFrame*,
-                                             nextInFlow->GetParent());
+  nsTableOuterFrame* parent = static_cast<nsTableOuterFrame*>
+                                         (nextInFlow->GetParent());
   if (!parent) {
     NS_ASSERTION(PR_FALSE, "null parent");
     return;

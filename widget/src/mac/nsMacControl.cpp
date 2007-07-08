@@ -684,7 +684,7 @@ nsMacControl::ControlEventHandler(EventHandlerCallRef aHandlerCallRef,
                                   EventRef            aEvent,
                                   void*               aUserData)
 {
-  nsMacControl* self = NS_STATIC_CAST(nsMacControl*, aUserData);
+  nsMacControl* self = static_cast<nsMacControl*>(aUserData);
 
   PRBool wasDrawing = self->IsDrawing();
 
@@ -766,7 +766,7 @@ nsMacControl::WindowEventHandler(EventHandlerCallRef aHandlerCallRef,
                                  EventRef            aEvent,
                                  void*               aUserData)
 {
-  nsMacControl* self = NS_STATIC_CAST(nsMacControl*, aUserData);
+  nsMacControl* self = static_cast<nsMacControl*>(aUserData);
 
   // HiliteControl will cause the control to draw, so take care to only
   // call SetupControlHiliteState if the control is supposed to be visible.

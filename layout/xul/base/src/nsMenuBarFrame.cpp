@@ -279,7 +279,7 @@ nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
                                 nsCaseInsensitiveStringComparator()) )  {
           // We match!
           return (currFrame->GetType() == nsGkAtoms::menuFrame) ?
-                 NS_STATIC_CAST(nsMenuFrame *, currFrame) : nsnull;
+                 static_cast<nsMenuFrame *>(currFrame) : nsnull;
         }
       }
     }

@@ -92,7 +92,7 @@ EmbedWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
 		if (aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)
 			newEmbedPrivate->mIsChrome = PR_TRUE;
 
-		*_retval = NS_STATIC_CAST(nsIWebBrowserChrome *, (newEmbedPrivate->mWindow));
+		*_retval = static_cast<nsIWebBrowserChrome *>((newEmbedPrivate->mWindow));
 
 		if (*_retval) 
 		{

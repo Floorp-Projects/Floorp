@@ -278,13 +278,13 @@ void XPCJSRuntime::TraceJS(JSTracer* trc, void* data)
     XPCWrappedNativeScope::TraceJS(trc, self);
 
     for (XPCRootSetElem *e = self->mVariantRoots; e ; e = e->GetNextRoot())
-        NS_STATIC_CAST(XPCTraceableVariant*, e)->TraceJS(trc);
+        static_cast<XPCTraceableVariant*>(e)->TraceJS(trc);
 
     for (XPCRootSetElem *e = self->mWrappedJSRoots; e ; e = e->GetNextRoot())
-        NS_STATIC_CAST(nsXPCWrappedJS*, e)->TraceJS(trc);
+        static_cast<nsXPCWrappedJS*>(e)->TraceJS(trc);
 
     for (XPCRootSetElem *e = self->mObjectHolderRoots; e ; e = e->GetNextRoot())
-        NS_STATIC_CAST(XPCJSObjectHolder*, e)->TraceJS(trc);
+        static_cast<XPCJSObjectHolder*>(e)->TraceJS(trc);
 }
 
 // static
@@ -371,8 +371,8 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                             dyingWrappedJSArray->Compact();
                             break;
                         }
-                        wrapper = NS_STATIC_CAST(nsXPCWrappedJS*,
-                                    dyingWrappedJSArray->ElementAt(count-1));
+                        wrapper = static_cast<nsXPCWrappedJS*>
+                                             (dyingWrappedJSArray->ElementAt(count-1));
                         dyingWrappedJSArray->RemoveElementAt(count-1);
                     }
                     NS_RELEASE(wrapper);
@@ -596,8 +596,8 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                                 array->Compact();
                                 break;
                             }
-                            obj = NS_REINTERPRET_CAST(nsISupports*,
-                                    array->ElementAt(count-1));
+                            obj = reinterpret_cast<nsISupports*>
+                                                  (array->ElementAt(count-1));
                             array->RemoveElementAt(count-1);
                         }
                         NS_RELEASE(obj);

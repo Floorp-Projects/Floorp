@@ -753,7 +753,7 @@ static NS_METHOD AppInfoConstructor(nsISupports* aOuter,
 {
   NS_ENSURE_NO_AGGREGATION(aOuter);
 
-  return NS_CONST_CAST(nsXULAppInfo*, &kAppInfo)->
+  return const_cast<nsXULAppInfo*>(&kAppInfo)->
     QueryInterface(aIID, aResult);
 }
 
@@ -2196,7 +2196,7 @@ static nsGTKToolkit* GetGTKToolkit()
   nsIToolkit* toolkit = widget->GetToolkit();
   if (!toolkit)
     return nsnull;
-  return NS_STATIC_CAST(nsGTKToolkit*, toolkit);
+  return static_cast<nsGTKToolkit*>(toolkit);
 }
 
 #endif

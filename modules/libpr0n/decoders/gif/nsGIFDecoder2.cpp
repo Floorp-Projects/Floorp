@@ -185,7 +185,7 @@ static NS_METHOD ReadDataOut(nsIInputStream* in,
                              PRUint32 count,
                              PRUint32 *writeCount)
 {
-  nsGIFDecoder2 *decoder = NS_STATIC_CAST(nsGIFDecoder2*, closure);
+  nsGIFDecoder2 *decoder = static_cast<nsGIFDecoder2*>(closure);
   nsresult rv = decoder->ProcessData((unsigned char*)fromRawSegment, count, writeCount);
   if (NS_FAILED(rv)) {
     *writeCount = 0;

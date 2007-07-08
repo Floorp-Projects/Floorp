@@ -92,7 +92,7 @@ nsresult
 txPatternOptimizer::optimizeStep(txPattern* aInPattern,
                                  txPattern** aOutPattern)
 {
-    txStepPattern* step = NS_STATIC_CAST(txStepPattern*, aInPattern);
+    txStepPattern* step = static_cast<txStepPattern*>(aInPattern);
 
     // Test for predicates that can be combined into the nodetest
     Expr* pred;

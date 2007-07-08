@@ -68,7 +68,7 @@ class nsIAtom;
 class nsIView;
 
 // When mNextSibling is set to this, it indicates there ar eno more siblings
-#define DEAD_END_ACCESSIBLE NS_STATIC_CAST(nsIAccessible*, (void*)1)
+#define DEAD_END_ACCESSIBLE static_cast<nsIAccessible*>((void*)1)
 
 // Saves a data member -- if child count equals this value we haven't
 // cached children or child count yet

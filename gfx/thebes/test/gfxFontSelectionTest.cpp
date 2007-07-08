@@ -302,7 +302,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
     if (test->stringType == S_ASCII) {
         flags |= gfxTextRunFactory::TEXT_IS_ASCII | gfxTextRunFactory::TEXT_IS_8BIT;
         length = strlen(test->string);
-        textRun = gfxTextRunWordCache::MakeTextRun(NS_REINTERPRET_CAST(PRUint8*, test->string), length, fontGroup, &params, flags);
+        textRun = gfxTextRunWordCache::MakeTextRun(reinterpret_cast<PRUint8*>(test->string), length, fontGroup, &params, flags);
     } else {
         flags |= gfxTextRunFactory::TEXT_HAS_SURROGATES; // just in case
         NS_ConvertUTF8toUTF16 str(nsDependentCString(test->string));

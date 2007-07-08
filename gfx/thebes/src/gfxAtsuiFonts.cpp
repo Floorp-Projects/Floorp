@@ -361,7 +361,7 @@ gfxAtsuiFontGroup::gfxAtsuiFontGroup(const nsAString& families,
         fids = static_fids;
 
     for (unsigned int i = 0; i < mFonts.Length(); i++) {
-        gfxAtsuiFont* atsuiFont = NS_STATIC_CAST(gfxAtsuiFont*, NS_STATIC_CAST(gfxFont*, mFonts[i]));
+        gfxAtsuiFont* atsuiFont = static_cast<gfxAtsuiFont*>(static_cast<gfxFont*>(mFonts[i]));
         fids[i] = atsuiFont->GetATSUFontID();
     }
     ATSUSetObjFontFallbacks(mFallbacks,
@@ -785,10 +785,10 @@ PostLayoutCallback(ATSULineRef aLine, gfxTextRun *aRun,
                    PRUint32 aSegmentStart, PRUint32 aSegmentLength)
 {
     // AutoLayoutDataArrayPtr advanceDeltasArray(aLine, kATSUDirectDataAdvanceDeltaFixedArray);
-    // Fixed *advanceDeltas = NS_STATIC_CAST(Fixed *, advanceDeltasArray.mArray);
+    // Fixed *advanceDeltas = static_cast<Fixed *>(advanceDeltasArray.mArray);
     // AutoLayoutDataArrayPtr deviceDeltasArray(aLine, kATSUDirectDataDeviceDeltaSInt16Array);
     AutoLayoutDataArrayPtr baselineDeltasArray(aLine, kATSUDirectDataBaselineDeltaFixedArray);
-    Fixed *baselineDeltas = NS_STATIC_CAST(Fixed *, baselineDeltasArray.mArray);
+    Fixed *baselineDeltas = static_cast<Fixed *>(baselineDeltasArray.mArray);
     AutoLayoutDataArrayPtr glyphRecordsArray(aLine, kATSUDirectDataLayoutRecordATSLayoutRecordCurrent);
 
     PRUint32 numGlyphs = glyphRecordsArray.mItemCount;
@@ -796,7 +796,7 @@ PostLayoutCallback(ATSULineRef aLine, gfxTextRun *aRun,
         NS_WARNING("Failed to retrieve key glyph data");
         return PR_FALSE;
     }
-    ATSLayoutRecord *glyphRecords = NS_STATIC_CAST(ATSLayoutRecord *, glyphRecordsArray.mArray);
+    ATSLayoutRecord *glyphRecords = static_cast<ATSLayoutRecord *>(glyphRecordsArray.mArray);
     NS_ASSERTION(!baselineDeltas || baselineDeltasArray.mItemCount == numGlyphs,
                  "Mismatched glyph counts");
     NS_ASSERTION(glyphRecords[numGlyphs - 1].flags & kATSGlyphInfoTerminatorGlyph,

@@ -69,7 +69,7 @@ public:
 struct txKeyValueHashEntry : public PLDHashEntryHdr
 {
     txKeyValueHashEntry(const void* aKey)
-        : mKey(*NS_STATIC_CAST(const txKeyValueHashKey*, aKey)),
+        : mKey(*static_cast<const txKeyValueHashKey*>(aKey)),
           mNodeSet(new txNodeSet(nsnull))
     {
     }
@@ -101,7 +101,7 @@ public:
 struct txIndexedKeyHashEntry : public PLDHashEntryHdr
 {
     txIndexedKeyHashEntry(const void* aKey)
-        : mKey(*NS_STATIC_CAST(const txIndexedKeyHashKey*, aKey)),
+        : mKey(*static_cast<const txIndexedKeyHashKey*>(aKey)),
           mIndexed(PR_FALSE)
     {
     }

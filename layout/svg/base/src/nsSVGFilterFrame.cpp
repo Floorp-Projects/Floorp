@@ -136,12 +136,12 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
 
   nsCOMPtr<nsIDOMSVGMatrix> ctm = nsSVGUtils::GetCanvasTM(frame);
 
-  nsSVGElement *target = NS_STATIC_CAST(nsSVGElement*, frame->GetContent());
+  nsSVGElement *target = static_cast<nsSVGElement*>(frame->GetContent());
 
   aTarget->SetMatrixPropagation(PR_FALSE);
   aTarget->NotifyCanvasTMChanged(PR_TRUE);
 
-  nsSVGFilterElement *filter = NS_STATIC_CAST(nsSVGFilterElement*, mContent);
+  nsSVGFilterElement *filter = static_cast<nsSVGFilterElement*>(mContent);
 
   float x, y, width, height;
   nsCOMPtr<nsIDOMSVGRect> bbox;
@@ -318,14 +318,14 @@ nsRect
 nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget)
 {
   nsSVGElement *targetContent =
-    NS_STATIC_CAST(nsSVGElement*, aTarget->GetContent());
+    static_cast<nsSVGElement*>(aTarget->GetContent());
   nsISVGChildFrame *svg;
 
   nsCOMPtr<nsIDOMSVGMatrix> ctm = nsSVGUtils::GetCanvasTM(aTarget);
 
   CallQueryInterface(aTarget, &svg);
 
-  nsSVGFilterElement *filter = NS_STATIC_CAST(nsSVGFilterElement*, mContent);
+  nsSVGFilterElement *filter = static_cast<nsSVGFilterElement*>(mContent);
 
   nsCOMPtr<nsIDOMSVGAnimatedEnumeration> units;
   filter->GetFilterUnits(getter_AddRefs(units));
@@ -440,7 +440,7 @@ nsSVGFilterInstance::GetFilterSubregion(
   nsRect defaultRegion,
   nsRect *result)
 {
-  nsSVGFE *fE = NS_STATIC_CAST(nsSVGFE*, aFilter);
+  nsSVGFE *fE = static_cast<nsSVGFE*>(aFilter);
   nsSVGLength2 *tmpX, *tmpY, *tmpWidth, *tmpHeight;
 
   tmpX = &fE->mLengthAttributes[nsSVGFE::X];

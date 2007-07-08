@@ -112,7 +112,7 @@ nsDisplayTextDecoration::Paint(nsDisplayListBuilder* aBuilder,
 
   // REVIEW: From nsHTMLContainerFrame::PaintTextDecorations
   nscoord ascent, offset, size;
-  nsHTMLContainerFrame* f = NS_STATIC_CAST(nsHTMLContainerFrame*, mFrame);
+  nsHTMLContainerFrame* f = static_cast<nsHTMLContainerFrame*>(mFrame);
   fm->GetMaxAscent(ascent);
   if (mDecoration != NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
     fm->GetUnderline(offset, size);

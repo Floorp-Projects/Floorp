@@ -160,9 +160,9 @@ protected:
         AutoTextRun(nsThebesFontMetrics* aMetrics, nsIRenderingContext* aRC,
                     const char* aString, PRInt32 aLength, PRBool aEnableSpacing) {
             mTextRun = gfxTextRunCache::MakeTextRun(
-                NS_REINTERPRET_CAST(const PRUint8*, aString), aLength,
+                reinterpret_cast<const PRUint8*>(aString), aLength,
                 aMetrics->mFontGroup,
-                NS_STATIC_CAST(gfxContext*, aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT)),
+                static_cast<gfxContext*>(aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT)),
                 aMetrics->mP2A,
                 ComputeFlags(aMetrics, aEnableSpacing));
         }
@@ -170,7 +170,7 @@ protected:
                     const PRUnichar* aString, PRInt32 aLength, PRBool aEnableSpacing) {
             mTextRun = gfxTextRunCache::MakeTextRun(
                 aString, aLength, aMetrics->mFontGroup,
-                NS_STATIC_CAST(gfxContext*, aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT)),
+                static_cast<gfxContext*>(aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT)),
                 aMetrics->mP2A,
                 ComputeFlags(aMetrics, aEnableSpacing));
         }

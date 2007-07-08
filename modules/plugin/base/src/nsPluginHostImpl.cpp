@@ -1834,7 +1834,7 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
     pActivePlugins->mStreams->Count((PRUint32*)&cnt);
     while (--cnt >= 0 && !useExistingCacheFile) {
       nsPluginStreamListenerPeer *lp =
-        NS_REINTERPRET_CAST(nsPluginStreamListenerPeer *, pActivePlugins->mStreams->ElementAt(cnt));
+        reinterpret_cast<nsPluginStreamListenerPeer *>(pActivePlugins->mStreams->ElementAt(cnt));
       if (lp) {
         if (lp->mLocalCachedFile &&
             lp->mPluginStreamInfo &&
@@ -1903,7 +1903,7 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
       return rv;
     }
 
-    nsISupports* supports = NS_STATIC_CAST(nsISupports*, (NS_STATIC_CAST(nsIStreamListener*, this)));
+    nsISupports* supports = static_cast<nsISupports*>((static_cast<nsIStreamListener*>(this)));
     pActivePlugins->mStreams->AppendElement(supports);
   }
 
@@ -2680,7 +2680,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetValue(nsPluginManagerVariable aVariable, void
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX) && defined(MOZ_X11)
   if (nsPluginManagerVariable_XDisplay == aVariable) {
-    Display** value = NS_REINTERPRET_CAST(Display**, aValue);
+    Display** value = reinterpret_cast<Display**>(aValue);
 #if defined (MOZ_WIDGET_GTK2)
     *value = GDK_DISPLAY();
 #endif
@@ -4425,8 +4425,8 @@ nsPluginHostImpl::GetPluginTags(PRUint32* aPluginCount, nsIPluginTag*** aResults
     plugin = plugin->mNext;
   }
 
-  *aResults = NS_STATIC_CAST(nsIPluginTag**,
-                             nsMemory::Alloc(count * sizeof(**aResults)));
+  *aResults = static_cast<nsIPluginTag**>
+                         (nsMemory::Alloc(count * sizeof(**aResults)));
   if (!*aResults)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -4880,8 +4880,8 @@ struct pluginFileinDirectory
 // if the times are the same, compare the filenames
 static int PR_CALLBACK ComparePluginFileInDirectory (const void *v1, const void *v2, void *)
 {
-  const pluginFileinDirectory* pfd1 = NS_STATIC_CAST(const pluginFileinDirectory*, v1);
-  const pluginFileinDirectory* pfd2 = NS_STATIC_CAST(const pluginFileinDirectory*, v2);
+  const pluginFileinDirectory* pfd1 = static_cast<const pluginFileinDirectory*>(v1);
+  const pluginFileinDirectory* pfd2 = static_cast<const pluginFileinDirectory*>(v2);
 
   PRInt32 result = 0;
   if (LL_EQ(pfd1->mModTime, pfd2->mModTime))
@@ -4948,7 +4948,7 @@ public:
   ~nsAutoPluginFileDeleter()
   {
     for (PRInt32 i = 0; i < mPluginFiles.Count(); ++i) {
-      pluginFileinDirectory* pfd = NS_STATIC_CAST(pluginFileinDirectory*, mPluginFiles[i]);
+      pluginFileinDirectory* pfd = static_cast<pluginFileinDirectory*>(mPluginFiles[i]);
       delete pfd;
     }
   }
@@ -5027,7 +5027,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
 
   // finally, go through the array, looking at each entry and continue processing it
   for (PRInt32 i = 0; i < pluginFilesArray.Count(); i++) {
-    pluginFileinDirectory* pfd = NS_STATIC_CAST(pluginFileinDirectory*, pluginFilesArray[i]);
+    pluginFileinDirectory* pfd = static_cast<pluginFileinDirectory*>(pluginFilesArray[i]);
     nsCOMPtr <nsIFile> file = do_CreateInstance("@mozilla.org/file/local;1");
     nsCOMPtr <nsILocalFile> localfile = do_QueryInterface(file);
     localfile->InitWithPath(pfd->mFilename);
@@ -6988,8 +6988,8 @@ nsPluginByteRangeStreamListener::OnStartRequest(nsIRequest *request, nsISupports
   mRemoveMagicNumber = PR_TRUE;
 
   //get nsPluginStreamListenerPeer* ptr from finalStreamListener
-  nsPluginStreamListenerPeer *pslp = NS_REINTERPRET_CAST(nsPluginStreamListenerPeer*,
-                                                         finalStreamListener.get());
+  nsPluginStreamListenerPeer *pslp = reinterpret_cast<nsPluginStreamListenerPeer*>
+                                                     (finalStreamListener.get());
   rv = pslp->ServeStreamAsFile(request, ctxt);
   return rv;
 }

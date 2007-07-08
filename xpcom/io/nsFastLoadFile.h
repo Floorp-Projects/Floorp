@@ -163,7 +163,7 @@ typedef PRUint32 NSFastLoadOID;         // nsFastLoadFooter::mObjectMap index
  *  while (NS_SUCCEEDED(rv = Read(buf + rem, sizeof buf - rem, &len)) && len) {
  *      len += rem;
  *      rem = NS_AccumulateFastLoadChecksum(&checksum,
- *                                          NS_REINTERPRET_CAST(PRUint8*, buf),
+ *                                          reinterpret_cast<PRUint8*>(buf),
  *                                          len,
  *                                          PR_FALSE);
  *      if (rem)
@@ -172,7 +172,7 @@ typedef PRUint32 NSFastLoadOID;         // nsFastLoadFooter::mObjectMap index
  *
  *  if (rem) {
  *      NS_AccumulateFastLoadChecksum(&checksum,
- *                                    NS_REINTERPRET_CAST(PRUint8*, buf),
+ *                                    reinterpret_cast<PRUint8*>(buf),
  *                                    rem,
  *                                    PR_TRUE);
  *  }

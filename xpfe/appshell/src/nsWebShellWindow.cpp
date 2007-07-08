@@ -295,7 +295,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
 
     aEvent->widget->GetClientData(data);
     if (data != nsnull) {
-      eventWindow = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
+      eventWindow = reinterpret_cast<nsWebShellWindow *>(data);
       docShell = eventWindow->mDocShell;
     }
   }
@@ -549,7 +549,7 @@ nsWebShellWindow::SetPersistenceTimer(PRUint32 aDirtyFlags)
 void
 nsWebShellWindow::FirePersistenceTimer(nsITimer *aTimer, void *aClosure)
 {
-  nsWebShellWindow *win = NS_STATIC_CAST(nsWebShellWindow *, aClosure);
+  nsWebShellWindow *win = static_cast<nsWebShellWindow *>(aClosure);
   if (!win->mSPTimerLock)
     return;
   PR_Lock(win->mSPTimerLock);

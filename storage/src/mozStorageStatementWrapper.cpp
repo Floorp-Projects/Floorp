@@ -110,7 +110,7 @@ JSValStorageStatementBinder (JSContext *cx,
         (void)aStatement->BindDoubleParameter(aIdx, d);
     } else if (JSVAL_IS_STRING(val)) {
         JSString *str = JSVAL_TO_STRING(val);
-        (void)aStatement->BindStringParameter(aIdx, nsDependentString(NS_REINTERPRET_CAST(PRUnichar*, JS_GetStringChars(str)), JS_GetStringLength(str)));
+        (void)aStatement->BindStringParameter(aIdx, nsDependentString(reinterpret_cast<PRUnichar*>(JS_GetStringChars(str)), JS_GetStringLength(str)));
     } else if (JSVAL_IS_BOOLEAN(val)) {
         (void)aStatement->BindInt32Parameter(aIdx, (val == JSVAL_TRUE) ? 1 : 0);
     } else if (JSVAL_IS_NULL(val)) {
@@ -168,7 +168,7 @@ mozStorageStatementWrapper::Initialize(mozIStorageStatement *aStatement)
 
     for (unsigned int i = 0; i < mResultColumnCount; i++) {
         const void *name = sqlite3_column_name16 (NativeStatement(), i);
-        mColumnNames.AppendString(nsDependentString(NS_STATIC_CAST(const PRUnichar*, name)));
+        mColumnNames.AppendString(nsDependentString(static_cast<const PRUnichar*>(name)));
     }
 
     return NS_OK;

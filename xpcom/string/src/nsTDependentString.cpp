@@ -43,7 +43,7 @@ nsTDependentString_CharT::Rebind( const char_type* data, size_type length )
     // If we currently own a buffer, release it.
     Finalize();
 
-    mData = NS_CONST_CAST(char_type*, data);
+    mData = const_cast<char_type*>(data);
     mLength = length;
     SetDataFlags(F_TERMINATED);
     AssertValid();

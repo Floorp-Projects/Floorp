@@ -76,7 +76,7 @@ NS_INTERFACE_MAP_BEGIN(nsJARURI)
   NS_INTERFACE_MAP_ENTRY(nsINestedURI)
   // see nsJARURI::Equals
   if (aIID.Equals(NS_GET_IID(nsJARURI)))
-      foundInterface = NS_REINTERPRET_CAST(nsISupports*, this);
+      foundInterface = reinterpret_cast<nsISupports*>(this);
   else
 NS_INTERFACE_MAP_END
 

@@ -1298,12 +1298,12 @@ BookmarkContentSink::SetFaviconForURI(nsIURI* aPageURI, nsIURI* aIconURI,
     return NS_ERROR_FAILURE;
 
   // read all the decoded data
-  PRUint8* buffer = NS_STATIC_CAST(PRUint8*,
-                                   nsMemory::Alloc(sizeof(PRUint8) * available));
+  PRUint8* buffer = static_cast<PRUint8*>
+                               (nsMemory::Alloc(sizeof(PRUint8) * available));
   if (!buffer)
     return NS_ERROR_OUT_OF_MEMORY;
   PRUint32 numRead;
-  rv = stream->Read(NS_REINTERPRET_CAST(char*, buffer), available, &numRead);
+  rv = stream->Read(reinterpret_cast<char*>(buffer), available, &numRead);
   if (NS_FAILED(rv) || numRead != available) {
     nsMemory::Free(buffer);
     return rv;
@@ -1484,7 +1484,7 @@ static nsresult
 DataToDataURI(PRUint8* aData, PRUint32 aDataLen, const nsACString& aMimeType,
               nsACString& aDataURI)
 {
-  char* encoded = PL_Base64Encode(NS_REINTERPRET_CAST(const char*, aData),
+  char* encoded = PL_Base64Encode(reinterpret_cast<const char*>(aData),
                                   aDataLen, nsnull);
   if (!encoded)
     return NS_ERROR_OUT_OF_MEMORY;

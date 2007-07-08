@@ -53,7 +53,7 @@ nsDOMMutationEvent::nsDOMMutationEvent(nsPresContext* aPresContext,
 nsDOMMutationEvent::~nsDOMMutationEvent()
 {
   if (mEventIsInternal) {
-    nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
+    nsMutationEvent* mutation = static_cast<nsMutationEvent*>(mEvent);
     delete mutation;
     mEvent = nsnull;
   }
@@ -71,7 +71,7 @@ NS_IMETHODIMP
 nsDOMMutationEvent::GetRelatedNode(nsIDOMNode** aRelatedNode)
 {
   *aRelatedNode = nsnull;
-  nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
+  nsMutationEvent* mutation = static_cast<nsMutationEvent*>(mEvent);
   *aRelatedNode = mutation->mRelatedNode;
   NS_IF_ADDREF(*aRelatedNode);
   return NS_OK;
@@ -80,7 +80,7 @@ nsDOMMutationEvent::GetRelatedNode(nsIDOMNode** aRelatedNode)
 NS_IMETHODIMP
 nsDOMMutationEvent::GetPrevValue(nsAString& aPrevValue)
 {
-  nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
+  nsMutationEvent* mutation = static_cast<nsMutationEvent*>(mEvent);
   if (mutation->mPrevAttrValue)
     mutation->mPrevAttrValue->ToString(aPrevValue);
   return NS_OK;
@@ -89,7 +89,7 @@ nsDOMMutationEvent::GetPrevValue(nsAString& aPrevValue)
 NS_IMETHODIMP
 nsDOMMutationEvent::GetNewValue(nsAString& aNewValue)
 {
-  nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
+  nsMutationEvent* mutation = static_cast<nsMutationEvent*>(mEvent);
   if (mutation->mNewAttrValue)
       mutation->mNewAttrValue->ToString(aNewValue);
   return NS_OK;
@@ -98,7 +98,7 @@ nsDOMMutationEvent::GetNewValue(nsAString& aNewValue)
 NS_IMETHODIMP
 nsDOMMutationEvent::GetAttrName(nsAString& aAttrName)
 {
-  nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
+  nsMutationEvent* mutation = static_cast<nsMutationEvent*>(mEvent);
   if (mutation->mAttrName)
       mutation->mAttrName->ToString(aAttrName);
   return NS_OK;
@@ -108,7 +108,7 @@ NS_IMETHODIMP
 nsDOMMutationEvent::GetAttrChange(PRUint16* aAttrChange)
 {
   *aAttrChange = 0;
-  nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
+  nsMutationEvent* mutation = static_cast<nsMutationEvent*>(mEvent);
   if (mutation->mAttrChange)
       *aAttrChange = mutation->mAttrChange;
   return NS_OK;
@@ -120,7 +120,7 @@ nsDOMMutationEvent::InitMutationEvent(const nsAString& aTypeArg, PRBool aCanBubb
   nsresult rv = nsDOMEvent::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
+  nsMutationEvent* mutation = static_cast<nsMutationEvent*>(mEvent);
   mutation->mRelatedNode = aRelatedNodeArg;
   if (!aPrevValueArg.IsEmpty())
     mutation->mPrevAttrValue = do_GetAtom(aPrevValueArg);

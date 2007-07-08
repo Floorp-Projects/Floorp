@@ -792,7 +792,7 @@ nsNSSComponent::InstallLoadableRoots()
     /* If a module exists with the same name, delete it. */
     NS_ConvertUTF16toUTF8 modNameUTF8(modName);
     int modType;
-    SECMOD_DeleteModule(NS_CONST_CAST(char*, modNameUTF8.get()), &modType);
+    SECMOD_DeleteModule(const_cast<char*>(modNameUTF8.get()), &modType);
 
     nsCString pkcs11moduleSpec;
     pkcs11moduleSpec.Append(NS_LITERAL_CSTRING("name=\""));
@@ -805,7 +805,7 @@ nsNSSComponent::InstallLoadableRoots()
     PORT_Free(escaped_fullLibraryPath);
 
     RootsModule =
-      SECMOD_LoadUserModule(NS_CONST_CAST(char*, pkcs11moduleSpec.get()), 
+      SECMOD_LoadUserModule(const_cast<char*>(pkcs11moduleSpec.get()), 
                             nsnull, // no parent 
                             PR_FALSE); // do not recurse
 
@@ -1258,7 +1258,7 @@ nsNSSComponent::DefineNextTimer()
     interval = primaryDelay;
   }
   
-  mTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*, this), 
+  mTimer->InitWithCallback(static_cast<nsITimerCallback*>(this), 
                            interval,
                            nsITimer::TYPE_ONE_SHOT);
   crlDownloadTimerOn = PR_TRUE;

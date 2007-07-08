@@ -81,19 +81,19 @@ char* nsCRT::strtok(char* string, const char* delims, char* *newStr)
     delimTable[i] = '\0';
 
   for (i = 0; delims[i]; i++) {
-    SET_DELIM(delimTable, NS_STATIC_CAST(PRUint8, delims[i]));
+    SET_DELIM(delimTable, static_cast<PRUint8>(delims[i]));
   }
   NS_ASSERTION(delims[i] == '\0', "too many delimiters");
 
   // skip to beginning
-  while (*str && IS_DELIM(delimTable, NS_STATIC_CAST(PRUint8, *str))) {
+  while (*str && IS_DELIM(delimTable, static_cast<PRUint8>(*str))) {
     str++;
   }
   result = str;
 
   // fix up the end of the token
   while (*str) {
-    if (IS_DELIM(delimTable, NS_STATIC_CAST(PRUint8, *str))) {
+    if (IS_DELIM(delimTable, static_cast<PRUint8>(*str))) {
       *str++ = '\0';
       break;
     }

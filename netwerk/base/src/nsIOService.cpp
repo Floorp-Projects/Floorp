@@ -224,7 +224,7 @@ nsIOService::Init()
     
     // setup our bad port list stuff
     for(int i=0; gBadPortList[i]; i++)
-        mRestrictedPortList.AppendElement(NS_REINTERPRET_CAST(void *, gBadPortList[i]));
+        mRestrictedPortList.AppendElement(reinterpret_cast<void *>(gBadPortList[i]));
 
     // Further modifications to the port list come from prefs
     nsCOMPtr<nsIPrefBranch2> prefBranch;
@@ -619,7 +619,7 @@ nsIOService::SetOffline(PRBool offline)
         // don't care if notification fails
         // this allows users to attempt a little cleanup before dns and socket transport are shut down.
         if (observerService)
-            observerService->NotifyObservers(NS_STATIC_CAST(nsIIOService *, this),
+            observerService->NotifyObservers(static_cast<nsIIOService *>(this),
                                              NS_IOSERVICE_GOING_OFFLINE_TOPIC,
                                              offlineString.get());
 
@@ -636,7 +636,7 @@ nsIOService::SetOffline(PRBool offline)
 
         // don't care if notification fails
         if (observerService)
-            observerService->NotifyObservers(NS_STATIC_CAST(nsIIOService *, this),
+            observerService->NotifyObservers(static_cast<nsIIOService *>(this),
                                              NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
                                              offlineString.get());
     }
@@ -659,7 +659,7 @@ nsIOService::SetOffline(PRBool offline)
  
         // don't care if notification fails
         if (observerService)
-            observerService->NotifyObservers(NS_STATIC_CAST(nsIIOService *, this),
+            observerService->NotifyObservers(static_cast<nsIIOService *>(this),
                                              NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
                                              NS_LITERAL_STRING(NS_IOSERVICE_ONLINE).get());
     }

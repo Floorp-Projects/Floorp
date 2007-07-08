@@ -60,8 +60,8 @@ CAccessibleImage::QueryInterface(REFIID iid, void** ppv)
     if (!imageAcc)
       return E_FAIL;
 
-    *ppv = NS_STATIC_CAST(IAccessibleImage*, this);
-    (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
+    *ppv = static_cast<IAccessibleImage*>(this);
+    (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
     return S_OK;
   }
 

@@ -252,7 +252,7 @@ nsIChannel * CNsIRequest::GetTheChannel(int i, nsILoadGroup *theLoadGroup)
 	   RvTestResultDlg(rv, "NS_NewChannel");
 	}
 
-	nsCOMPtr<nsIStreamListener> listener(NS_STATIC_CAST(nsIStreamListener*, qaBrowserImpl));
+	nsCOMPtr<nsIStreamListener> listener(static_cast<nsIStreamListener*>(qaBrowserImpl));
 	nsCOMPtr<nsIWeakReference> thisListener(do_GetWeakReference(listener));
 	qaWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsIStreamListener));
 
