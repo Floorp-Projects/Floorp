@@ -2824,8 +2824,10 @@ ExtensionManager.prototype = {
 
     // Release strongly held services.
     gOS = null;
-    if (this._ds && gRDF) 
-      gRDF.UnregisterDataSource(this._ds)
+    if (this._ptr && gRDF) {
+      gRDF.UnregisterDataSource(this._ptr);
+      this._ptr = null;
+    }
     gRDF = null;
     if (gPref) {
       gPref.removeObserver("extensions.", this);
@@ -5739,6 +5741,7 @@ ExtensionManager.prototype = {
    * The Extensions RDF Datasource
    */
   _ds: null,
+  _ptr: null,
 
   /** 
    * Loads the Extensions Datasource. This should not be called unless: 
@@ -5749,8 +5752,11 @@ ExtensionManager.prototype = {
   _ensureDS: function() {
     if (!this._ds) {
       this._ds = new ExtensionsDataSource(this);
-      if (this._ds)
+      if (this._ds) {
         this._ds.loadExtensions();
+        this._ptr = gRDF.GetDataSource("rdf:extensions");
+        gRDF.RegisterDataSource(this._ptr, true);
+      }
     }
   },
 
@@ -6547,7 +6553,6 @@ function ExtensionsDataSource(em) {
   
   this._itemRoot = gRDF.GetResource(RDFURI_ITEM_ROOT);
   this._defaultTheme = gRDF.GetResource(RDFURI_DEFAULT_THEME);
-  gRDF.RegisterDataSource(this, true);
 }
 ExtensionsDataSource.prototype = {
   _inner    : null,
@@ -8442,6 +8447,14 @@ UpdateItem.prototype = {
   }
 };
 
+var ExtensionManagerDataSourceFactory = {
+  createInstance: function() {
+    return Components.classes[ExtensionManager.prototype.contractID]
+                     .getService(Components.interfaces.nsIExtensionManager)
+                     .datasource;
+  }
+}
+
 var gModule = {
   registerSelf: function(componentManager, fileSpec, location, type) {
     componentManager = componentManager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
@@ -8492,6 +8505,11 @@ var gModule = {
                contractID : "@mozilla.org/updates/item;1",
                className  : "Update Item",
                factory    : #1#(UpdateItem)
+             },
+    datasource: { CID        : Components.ID("{69BB8313-2D4F-45EC-97E0-D39DA58ECCE9}"),
+                  contractID : "@mozilla.org/rdf/datasource;1?name=extensions",
+                  className  : "Extension Manager Data Source",
+                  factory    : ExtensionManagerDataSourceFactory
              }
    },
 
