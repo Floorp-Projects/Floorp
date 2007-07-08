@@ -2013,7 +2013,6 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
     }
 
     re->flags = flags;
-    re->cloneIndex = 0;
     re->parenCount = state.parenCount;
     re->source = str;
 
@@ -3839,7 +3838,7 @@ regexp_xdrObject(JSXDRState *xdr, JSObject **objp)
         if (!re)
             return JS_FALSE;
         source = re->source;
-        flagsword = ((uint32)re->cloneIndex << 16) | re->flags;
+        flagsword = (uint32)re->flags;
     }
     if (!JS_XDRString(xdr, &source) ||
         !JS_XDRUint32(xdr, &flagsword)) {
@@ -3849,7 +3848,7 @@ regexp_xdrObject(JSXDRState *xdr, JSObject **objp)
         obj = js_NewObject(xdr->cx, &js_RegExpClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
-        re = js_NewRegExp(xdr->cx, NULL, source, (uint16)flagsword, JS_FALSE);
+        re = js_NewRegExp(xdr->cx, NULL, source, (uint8)flagsword, JS_FALSE);
         if (!re)
             return JS_FALSE;
         if (!JS_SetPrivate(xdr->cx, obj, re) ||
@@ -3857,7 +3856,6 @@ regexp_xdrObject(JSXDRState *xdr, JSObject **objp)
             js_DestroyRegExp(xdr->cx, re);
             return JS_FALSE;
         }
-        re->cloneIndex = (uint16)(flagsword >> 16);
         *objp = obj;
     }
     return JS_TRUE;

@@ -1325,7 +1325,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
             return JS_FALSE;
         }
         nullAtom = !fun->atom;
-        flagsword = ((uint32)fun->u.i.nregexps << 16) | fun->flags;
+        flagsword = fun->flags;
         extraUnused = 0;
     } else {
         fun = js_NewFunction(cx, NULL, NULL, 0, 0, NULL, NULL);
@@ -1454,7 +1454,6 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 
     if (xdr->mode == JSXDR_DECODE) {
         fun->flags = (uint16) flagsword | JSFUN_INTERPRETED;
-        fun->u.i.nregexps = (uint16) (flagsword >> 16);
 
         *objp = fun->object;
         js_CallNewScriptHook(cx, fun->u.i.script, fun);
@@ -1528,7 +1527,10 @@ fun_reserveSlots(JSContext *cx, JSObject *obj)
     JSFunction *fun;
 
     fun = (JSFunction *) JS_GetPrivate(cx, obj);
-    return (fun && FUN_INTERPRETED(fun)) ? fun->u.i.nregexps : 0;
+    return (fun && FUN_INTERPRETED(fun) &&
+            fun->u.i.script && fun->u.i.script->regexpsOffset != 0)
+           ? JS_SCRIPT_REGEXPS(fun->u.i.script)->length
+           : 0;
 }
 
 /*
@@ -2143,7 +2145,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     fun = js_NewFunction(cx, proto, NULL, 0, 0, obj, NULL);
     if (!fun)
         goto bad;
-    fun->u.i.script = js_NewScript(cx, 1, 0, 0);
+    fun->u.i.script = js_NewScript(cx, 1, 0, 0, 0, 0, 0);
     if (!fun->u.i.script)
         goto bad;
     fun->u.i.script->code[0] = JSOP_STOP;

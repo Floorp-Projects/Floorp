@@ -941,8 +941,8 @@ UpdateSwitchTableBounds(JSScript *script, uintN offset,
         jmplen = JUMP_OFFSET_LEN;
       lookup_table:
         pc += jmplen;
-        n = GET_ATOM_INDEX(pc);
-        pc += ATOM_INDEX_LEN;
+        n = GET_INDEX(pc);
+        pc += INDEX_LEN;
         jmplen += JUMP_OFFSET_LEN;
         break;
 
@@ -965,6 +965,7 @@ SrcNotes(JSContext *cx, JSScript *script)
     JSSrcNoteType type;
     const char *name;
     jsatomid atomIndex;
+    uint32 index;
     JSAtom *atom;
 
     fprintf(gOutFile, "\nSource notes:\n");
@@ -1012,23 +1013,27 @@ SrcNotes(JSContext *cx, JSScript *script)
           case SRC_LABEL:
           case SRC_LABELBRACE:
           case SRC_BREAK2LABEL:
-          case SRC_CONT2LABEL:
-          case SRC_FUNCDEF: {
+          case SRC_CONT2LABEL: {
             const char *bytes;
-            JSFunction *fun;
-            JSString *str;
 
             atomIndex = (jsatomid) js_GetSrcNoteOffset(sn, 0);
             atom = js_GetAtom(cx, &script->atomMap, atomIndex);
-            if (type != SRC_FUNCDEF) {
-                bytes = js_AtomToPrintableString(cx, atom);
-            } else {
-                fun = (JSFunction *)
-                    JS_GetPrivate(cx, ATOM_TO_OBJECT(atom));
-                str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
-                bytes = str ? JS_GetStringBytes(str) : "N/A";
-            }
+            bytes = js_AtomToPrintableString(cx, atom);
             fprintf(gOutFile, " atom %u (%s)", (uintN)atomIndex, bytes);
+            break;
+          }
+          case SRC_FUNCDEF: {
+            const char *bytes;
+            JSObject *obj;
+            JSFunction *fun;
+            JSString *str;
+
+            index = js_GetSrcNoteOffset(sn, 0);
+            JS_GET_SCRIPT_OBJECT(script, index, obj);
+            fun = (JSFunction *)JS_GetPrivate(cx, obj);
+            str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
+            bytes = str ? JS_GetStringBytes(str) : "N/A";
+            fprintf(gOutFile, " function %u (%s)", index, bytes);
             break;
           }
           case SRC_SWITCH:
@@ -1081,11 +1086,11 @@ TryNotes(JSContext *cx, JSScript *script)
 {
     JSTryNote *tn, *tnlimit;
 
-    if (!script->trynotes)
+    if (script->trynotesOffset == 0)
         return JS_TRUE;
 
-    tn = script->trynotes->notes;
-    tnlimit = tn + script->trynotes->length;
+    tn = JS_SCRIPT_TRYNOTES(script)->vector;
+    tnlimit = tn + JS_SCRIPT_TRYNOTES(script)->length;
     fprintf(gOutFile, "\nException table:\n"
             "kind      stack    start      end\n");
     do {

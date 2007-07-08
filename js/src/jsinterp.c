@@ -574,6 +574,7 @@ NoSuchMethod(JSContext *cx, JSStackFrame *fp, jsval *vp, uint32 flags,
              uintN argc)
 {
     JSObject *thisp, *argsobj;
+    JSAtom *atom;
     jsval *sp, roots[3];
     JSTempValueRooter tvr;
     jsid id;
@@ -634,7 +635,8 @@ NoSuchMethod(JSContext *cx, JSStackFrame *fp, jsval *vp, uint32 flags,
 #if JS_HAS_XML_SUPPORT
       case JSOP_CALLPROP:
 #endif
-        roots[0] = ATOM_KEY(js_GetAtomFromBytecode(fp->script, pc, 0));
+        GET_ATOM_FROM_BYTECODE(fp->script, pc, 0, atom);
+        roots[0] = ATOM_KEY(atom);
         argsobj = js_NewArrayObject(cx, argc, vp + 2);
         if (!argsobj) {
             ok = JS_FALSE;
@@ -1511,8 +1513,10 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.thisp = chain;
         frame.argc = 0;
         frame.argv = NULL;
-        frame.nvars = script->numGlobalVars;
-        if (frame.nvars) {
+        frame.nvars = script->ngvars;
+        if (script->regexpsOffset != 0)
+            frame.nvars += JS_SCRIPT_REGEXPS(script)->length;
+        if (frame.nvars != 0) {
             frame.vars = js_AllocRawStack(cx, frame.nvars, &mark);
             if (!frame.vars)
                 return JS_FALSE;
@@ -2126,7 +2130,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     void *mark;
     jsbytecode *endpc, *pc2;
     JSOp op, op2;
-    jsatomid atomIndex;
+    jsatomid index;
     JSAtom *atom;
     uintN argc, attrs, flags, slot;
     jsval *vp, lval, rval, ltmp, rtmp;
@@ -2208,10 +2212,33 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     /* Count of JS function calls that nest in this C js_Interpret frame. */
     inlineCallCount = 0;
 
-    /* Load the atom base register used by LOAD_ATOM and inline equivalents. */
+    /*
+     * Initialize the index segment register used by LOAD_ATOM and
+     * GET_FULL_INDEX macros bellow. As a register we use a pointer based on
+     * the atom map to turn frequently executed LOAD_ATOM into simple array
+     * access. For less frequent object and regexp loads we have to recover
+     * the segment from atoms pointer first.
+     */
     atoms = script->atomMap.vector;
 
-#define LOAD_ATOM(PCOFF) (atom = GET_ATOM(script, atoms, pc + PCOFF))
+#define LOAD_ATOM(PCOFF)                                                      \
+    JS_BEGIN_MACRO                                                            \
+        JS_ASSERT((size_t)(atoms - script->atomMap.vector) <                  \
+                  (size_t)(script->atomMap.length - GET_INDEX(pc + PCOFF)));  \
+        atom = atoms[GET_INDEX(pc + PCOFF)];                                  \
+    JS_END_MACRO
+
+#define GET_FULL_INDEX(PCOFF)                                                 \
+    (atoms - script->atomMap.vector + GET_INDEX(pc + PCOFF))
+
+#define LOAD_OBJECT(PCOFF)                                                    \
+    JS_GET_SCRIPT_OBJECT(script, GET_FULL_INDEX(PCOFF), obj)
+
+#define LOAD_FUNCTION(PCOFF)                                                  \
+    JS_BEGIN_MACRO                                                            \
+        LOAD_OBJECT(PCOFF);                                                   \
+        JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_FunctionClass);               \
+    JS_END_MACRO
 
     /*
      * Optimized Get and SetVersion for proper script language versioning.
@@ -4095,17 +4122,19 @@ interrupt:
             PUSH_OPND(rval);
           END_CASE(JSOP_UINT24)
 
-          BEGIN_CASE(JSOP_ATOMBASE)
-            atoms += GET_ATOMBASE(pc);
-            ASSERT_ATOM_INDEX_IN_MAP(script, atoms, 0);
-          END_CASE(JSOP_ATOMBASE)
+          BEGIN_CASE(JSOP_INDEXBASE)
+            /*
+             * Here atoms can exceed script->atomMap.length as we use atoms
+             * as a segment register for object literals as well.
+             */
+            atoms += GET_INDEXBASE(pc);
+          END_CASE(JSOP_INDEXBASE)
 
-          BEGIN_CASE(JSOP_ATOMBASE1)
-          BEGIN_CASE(JSOP_ATOMBASE2)
-          BEGIN_CASE(JSOP_ATOMBASE3)
-            atoms += (op - JSOP_ATOMBASE1 + 1) << 16;
-            ASSERT_ATOM_INDEX_IN_MAP(script, atoms, 0);
-          END_CASE(JSOP_ATOMBASE3)
+          BEGIN_CASE(JSOP_INDEXBASE1)
+          BEGIN_CASE(JSOP_INDEXBASE2)
+          BEGIN_CASE(JSOP_INDEXBASE3)
+            atoms += (op - JSOP_INDEXBASE1 + 1) << 16;
+          END_CASE(JSOP_INDEXBASE3)
 
           BEGIN_CASE(JSOP_RESETBASE0)
           BEGIN_CASE(JSOP_RESETBASE)
@@ -4114,14 +4143,17 @@ interrupt:
 
           BEGIN_CASE(JSOP_NUMBER)
           BEGIN_CASE(JSOP_STRING)
-          BEGIN_CASE(JSOP_OBJECT)
             LOAD_ATOM(0);
             PUSH_OPND(ATOM_KEY(atom));
           END_CASE(JSOP_NUMBER)
 
+          BEGIN_CASE(JSOP_OBJECT)
+            LOAD_OBJECT(0);
+            PUSH_OPND(OBJECT_TO_JSVAL(obj));
+          END_CASE(JSOP_OBJECT)
+
           BEGIN_CASE(JSOP_REGEXP)
           {
-            JSRegExp *re;
             JSObject *funobj;
 
             /*
@@ -4148,19 +4180,16 @@ interrupt:
              * need a similar op for other kinds of object literals, we should
              * push cloning down under JSObjectOps and reuse code here.
              */
-            LOAD_ATOM(0);
-            JS_ASSERT(ATOM_IS_OBJECT(atom));
-            obj = ATOM_TO_OBJECT(atom);
-            JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_RegExpClass);
+            index = GET_FULL_INDEX(0);
+            JS_ASSERT(index < JS_SCRIPT_REGEXPS(script)->length);
 
-            re = (JSRegExp *) JS_GetPrivate(cx, obj);
-            slot = re->cloneIndex;
+            slot = index;
             if (fp->fun) {
                 /*
                  * We're in function code, not global or eval code (in eval
-                 * code, JSOP_REGEXP is never emitted).  The code generator
-                 * recorded in fp->fun->nregexps the number of re->cloneIndex
-                 * slots that it reserved in the cloned funobj.
+                 * code, JSOP_REGEXP is never emitted). The cloned funobj
+                 * contains script->regexps->nregexps reserved slot for the
+                 * cloned regexps, see fun_reserveSlots, jsfun.c.
                  */
                 funobj = JSVAL_TO_OBJECT(fp->argv[-2]);
                 slot += JSCLASS_RESERVED_SLOTS(&js_FunctionClass);
@@ -4171,10 +4200,11 @@ interrupt:
             } else {
                 /*
                  * We're in global code.  The code generator already arranged
-                 * via script->numGlobalVars to reserve a global variable slot
+                 * via script->nregexps to reserve a global variable slot
                  * at cloneIndex.  All global variable slots are initialized
                  * to null, not void, for faster testing in JSOP_*GVAR cases.
                  */
+                slot += script->ngvars;
                 rval = fp->vars[slot];
 #ifdef __GNUC__
                 funobj = NULL;  /* suppress bogus gcc warnings */
@@ -4220,6 +4250,7 @@ interrupt:
                  * objects and separate compilation and execution, even though
                  * it is not specified fully in ECMA.
                  */
+                JS_GET_SCRIPT_REGEXP(script, index, obj);
                 if (OBJ_GET_PARENT(cx, obj) != obj2) {
                     obj = js_CloneRegExpObject(cx, obj, obj2);
                     if (!obj) {
@@ -4345,6 +4376,11 @@ interrupt:
             off = JUMP_OFFSET_LEN;
 
           do_lookup_switch:
+            /*
+             * JSOP_LOOKUPSWITCH and JSOP_LOOKUPSWITCHX are never used if
+             * any atom index in it would exceed 64K limit.
+             */
+            JS_ASSERT(atoms == script->atomMap.vector);
             pc2 = pc;
             lval = POP_OPND();
 
@@ -4361,10 +4397,11 @@ interrupt:
 
 #define SEARCH_PAIRS(MATCH_CODE)                                              \
     for (;;) {                                                                \
-        atom = GET_ATOM(script, atoms, pc2);                                  \
+        JS_ASSERT(GET_INDEX(pc2) < script->atomMap.length);                   \
+        atom = atoms[GET_INDEX(pc2)];                                         \
         rval = ATOM_KEY(atom);                                                \
         MATCH_CODE                                                            \
-        pc2 += ATOM_INDEX_LEN;                                                \
+        pc2 += INDEX_LEN;                                                     \
         if (match)                                                            \
             break;                                                            \
         pc2 += off;                                                           \
@@ -4608,8 +4645,14 @@ interrupt:
 
           BEGIN_CASE(JSOP_DEFCONST)
           BEGIN_CASE(JSOP_DEFVAR)
-            atomIndex = GET_ATOM_INDEX(pc);
-            atom = atoms[atomIndex];
+            index = GET_INDEX(pc);
+            atom = atoms[index];
+
+            /*
+             * index is relative to atoms at this point but for global var
+             * code below we need the absolute value.
+             */
+            index += atoms - script->atomMap.vector;
             obj = fp->varobj;
             attrs = JSPROP_ENUMERATE;
             if (!(fp->flags & JSFRAME_EVAL))
@@ -4640,7 +4683,7 @@ interrupt:
              * and has stub getter and setter, into a "fast global" accessed
              * by the JSOP_*GVAR opcodes.
              */
-            if (atomIndex < script->numGlobalVars &&
+            if (index < script->ngvars &&
                 (attrs & JSPROP_PERMANENT) &&
                 obj2 == obj &&
                 OBJ_IS_NATIVE(obj)) {
@@ -4650,11 +4693,11 @@ interrupt:
                     SPROP_HAS_STUB_SETTER(sprop)) {
                     /*
                      * Fast globals use fp->vars to map the global name's
-                     * atomIndex to the permanent fp->varobj slot number,
-                     * tagged as a jsval.  The atomIndex for the global's
+                     * atom index to the permanent fp->varobj slot number,
+                     * tagged as a jsval.  The atom index for the global's
                      * name literal is identical to its fp->vars index.
                      */
-                    fp->vars[atomIndex] = INT_TO_JSVAL(sprop->slot);
+                    fp->vars[index] = INT_TO_JSVAL(sprop->slot);
                 }
             }
 
@@ -4662,9 +4705,7 @@ interrupt:
           END_CASE(JSOP_DEFVAR)
 
           BEGIN_CASE(JSOP_DEFFUN)
-            atomIndex = GET_ATOM_INDEX(pc);
-            atom = atoms[atomIndex];
-            obj = ATOM_TO_OBJECT(atom);
+            LOAD_FUNCTION(0);
             fun = (JSFunction *) JS_GetPrivate(cx, obj);
             id = ATOM_TO_JSID(fun->atom);
 
@@ -4761,24 +4802,12 @@ interrupt:
             fp->scopeChain = obj2;
             if (!ok)
                 goto out;
-
-#if 0
-            if (attrs == (JSPROP_ENUMERATE | JSPROP_PERMANENT) &&
-                script->numGlobalVars) {
-                /*
-                 * As with JSOP_DEFVAR and JSOP_DEFCONST (above), fast globals
-                 * use fp->vars to map the global function name's atomIndex to
-                 * its permanent fp->varobj slot number, tagged as a jsval.
-                 */
-                sprop = (JSScopeProperty *) prop;
-                fp->vars[atomIndex] = INT_TO_JSVAL(sprop->slot);
-            }
-#endif
             OBJ_DROP_PROPERTY(cx, parent, prop);
           END_CASE(JSOP_DEFFUN)
 
           BEGIN_CASE(JSOP_DEFLOCALFUN)
-            LOAD_ATOM(VARNO_LEN);
+            LOAD_FUNCTION(VARNO_LEN);
+
             /*
              * Define a local function (i.e., one nested at the top level of
              * another function), parented by the current scope chain, and
@@ -4787,7 +4816,6 @@ interrupt:
              * a call object for the outer function's activation.
              */
             slot = GET_VARNO(pc);
-            obj = ATOM_TO_OBJECT(atom);
 
             JS_ASSERT(!fp->blockChain);
             if (!(fp->flags & JSFRAME_POP_BLOCKS)) {
@@ -4840,9 +4868,8 @@ interrupt:
           END_CASE(JSOP_DEFLOCALFUN)
 
           BEGIN_CASE(JSOP_ANONFUNOBJ)
-            /* Push the specified function object literal. */
-            LOAD_ATOM(0);
-            obj = ATOM_TO_OBJECT(atom);
+            /* Load the specified function object literal. */
+            LOAD_FUNCTION(0);
 
             /* If re-parenting, push a clone of the function object. */
             SAVE_SP_AND_PC(fp);
@@ -4863,9 +4890,8 @@ interrupt:
 
           BEGIN_CASE(JSOP_NAMEDFUNOBJ)
             /* ECMA ed. 3 FunctionExpression: function Identifier [etc.]. */
-            LOAD_ATOM(0);
-            rval = ATOM_KEY(atom);
-            JS_ASSERT(VALUE_IS_FUNCTION(cx, rval));
+            LOAD_FUNCTION(0);
+            rval = OBJECT_TO_JSVAL(obj);
 
             /*
              * 1. Create a new object as if by the expression new Object().
@@ -4954,19 +4980,12 @@ interrupt:
           END_CASE(JSOP_NAMEDFUNOBJ)
 
           BEGIN_CASE(JSOP_CLOSURE)
-            atomIndex = GET_ATOM_INDEX(pc);
-            atom = atoms[atomIndex];
-
             /*
              * ECMA ed. 3 extension: a named function expression in a compound
              * statement (not at the top statement level of global code, or at
              * the top level of a function body).
-             *
-             * Get immediate operand atom, which is a function object literal.
-             * From it, get the function to close.
              */
-            JS_ASSERT(VALUE_IS_FUNCTION(cx, ATOM_KEY(atom)));
-            obj = ATOM_TO_OBJECT(atom);
+            LOAD_FUNCTION(0);
 
             /*
              * Clone the function object with the current scope chain as the
@@ -5026,18 +5045,6 @@ interrupt:
                 cx->weakRoots.newborn[GCX_OBJECT] = NULL;
                 goto out;
             }
-
-#if 0
-            if (attrs == 0 && script->numGlobalVars) {
-                /*
-                 * As with JSOP_DEFVAR and JSOP_DEFCONST (above), fast globals
-                 * use fp->vars to map the global function name's atomIndex to
-                 * its permanent fp->varobj slot number, tagged as a jsval.
-                 */
-                sprop = (JSScopeProperty *) prop;
-                fp->vars[atomIndex] = INT_TO_JSVAL(sprop->slot);
-            }
-#endif
             OBJ_DROP_PROPERTY(cx, parent, prop);
           END_CASE(JSOP_CLOSURE)
 
@@ -5047,14 +5054,14 @@ interrupt:
           do_getter_setter:
             op2 = (JSOp) *++pc;
             switch (op2) {
-              case JSOP_ATOMBASE:
-                atoms += GET_ATOMBASE(pc);
-                pc += JSOP_ATOMBASE_LENGTH - 1;
+              case JSOP_INDEXBASE:
+                atoms += GET_INDEXBASE(pc);
+                pc += JSOP_INDEXBASE_LENGTH - 1;
                 goto do_getter_setter;
-              case JSOP_ATOMBASE1:
-              case JSOP_ATOMBASE2:
-              case JSOP_ATOMBASE3:
-                atoms += (op2 - JSOP_ATOMBASE1 + 1) << 16;
+              case JSOP_INDEXBASE1:
+              case JSOP_INDEXBASE2:
+              case JSOP_INDEXBASE3:
+                atoms += (op2 - JSOP_INDEXBASE1 + 1) << 16;
                 goto do_getter_setter;
 
               case JSOP_SETNAME:
@@ -5585,9 +5592,9 @@ interrupt:
           END_CASE(JSOP_XMLELTEXPR)
 
           BEGIN_CASE(JSOP_XMLOBJECT)
-            LOAD_ATOM(0);
+            LOAD_OBJECT(0);
             SAVE_SP_AND_PC(fp);
-            obj = js_CloneXMLObject(cx, ATOM_TO_OBJECT(atom));
+            obj = js_CloneXMLObject(cx, obj);
             if (!obj) {
                 ok = JS_FALSE;
                 goto out;
@@ -5692,8 +5699,7 @@ interrupt:
 #endif /* JS_HAS_XML_SUPPORT */
 
           BEGIN_CASE(JSOP_ENTERBLOCK)
-            LOAD_ATOM(0);
-            obj = ATOM_TO_OBJECT(atom);
+            LOAD_OBJECT(0);
             JS_ASSERT(fp->spbase + OBJ_BLOCK_DEPTH(cx, obj) == sp);
             vp = sp + OBJ_BLOCK_COUNT(cx, obj);
             JS_ASSERT(vp <= fp->spbase + depth);
@@ -6024,12 +6030,12 @@ out:
          /*
           * Look for a try block in script that can catch this exception.
           */
-         if (!script->trynotes)
+         if (script->trynotesOffset == 0)
              goto no_catch;
 
          offset = (uint32)(pc - script->main);
-         tn = script->trynotes->notes;
-         tnlimit = tn + script->trynotes->length;
+         tn = JS_SCRIPT_TRYNOTES(script)->vector;
+         tnlimit = tn + JS_SCRIPT_TRYNOTES(script)->length;
          do {
              if (offset - tn->start >= tn->length)
                  continue;
