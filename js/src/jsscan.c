@@ -1909,6 +1909,7 @@ skipline:
             JSObject *obj;
             uintN flags;
             JSBool inCharClass = JS_FALSE;
+            JSParsedObjectBox *regexpPob;
 
             INIT_TOKENBUF();
             for (;;) {
@@ -1966,8 +1967,9 @@ skipline:
                                      flags);
             if (!obj)
                 goto error;
-            atom = js_AtomizeObject(cx, obj, 0);
-            if (!atom)
+
+            regexpPob = js_NewParsedObjectBox(cx, ts->parseContext, obj);
+            if (!regexpPob)
                 goto error;
 
             /*
@@ -1980,7 +1982,7 @@ skipline:
             tp->t_op = (cx->fp->flags & (JSFRAME_EVAL | JSFRAME_COMPILE_N_GO))
                        ? JSOP_OBJECT
                        : JSOP_REGEXP;
-            tp->t_atom = atom;
+            tp->t_pob = regexpPob;
             tt = TOK_OBJECT;
             break;
         }

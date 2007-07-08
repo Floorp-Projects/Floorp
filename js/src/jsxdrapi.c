@@ -634,7 +634,7 @@ js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
     } else {
         if (!XDRValueBody(xdr, type, &v))
             return JS_FALSE;
-        atom = js_AtomizeValue(xdr->cx, v, 0);
+        atom = js_AtomizePrimitiveValue(xdr->cx, v, 0);
     }
 
     if (!atom)

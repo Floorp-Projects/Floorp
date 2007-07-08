@@ -1960,6 +1960,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
     uintN lineno;
     JSStackFrame *fp;
     JSOp op;
+    JSParseContext pc;
     JSParseNode *pn;
     JSXMLArray nsarray;
     uintN flags;
@@ -2019,7 +2020,9 @@ ParseXMLSource(JSContext *cx, JSString *src)
         }
     }
 
-    JS_KEEP_ATOMS(cx->runtime);
+    js_InitParseContext(cx, &pc);
+    JS_ASSERT(!ts->parseContext);
+    ts->parseContext = &pc;
     pn = js_ParseXMLTokenStream(cx, cx->fp->scopeChain, ts, JS_FALSE);
     if (pn && XMLArrayInit(cx, &nsarray, 1)) {
         if (GetXMLSettingFlags(cx, &flags))
@@ -2027,7 +2030,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
 
         XMLArrayFinish(cx, &nsarray);
     }
-    JS_UNKEEP_ATOMS(cx->runtime);
+    js_FinishParseContext(cx, &pc);
 
 out:
     JS_ARENA_RELEASE(&cx->tempPool, mark);
