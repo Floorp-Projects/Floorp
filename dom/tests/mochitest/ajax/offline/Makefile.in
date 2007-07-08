@@ -47,6 +47,7 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES	= \
         test_offlineResources.html \
+        test_isLocallyAvailable.html \
         $(NULL)
 
 libs::	$(_TEST_FILES)

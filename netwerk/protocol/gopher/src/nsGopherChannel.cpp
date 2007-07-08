@@ -187,7 +187,10 @@ nsresult
 nsGopherContentStream::OpenSocket(nsIEventTarget *target)
 {
     // This function is called to get things started.
-    //
+
+    if (mChannel->HasLoadFlag(nsIChannel::LOAD_NO_NETWORK_IO))
+        return NS_ERROR_NEEDS_NETWORK;
+
     // We begin by opening a socket to the specified host and wait for the
     // socket to become writable.
 

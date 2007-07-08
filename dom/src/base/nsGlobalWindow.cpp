@@ -68,6 +68,7 @@
 #include "nsStyleCoord.h"
 #include "nsMimeTypeArray.h"
 #include "nsNetUtil.h"
+#include "nsICachingChannel.h"
 #include "nsPluginArray.h"
 #include "nsIPluginHost.h"
 #ifdef OJI
@@ -8498,6 +8499,77 @@ nsNavigator::RegisterProtocolHandler(const nsAString& aProtocol,
     if (contentDOMWindow)
       return registrar->RegisterProtocolHandler(aProtocol, aURI, aTitle,
                                                 contentDOMWindow);
+  }
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsNavigator::IsLocallyAvailable(const nsAString &aURI,
+                                PRBool aWhenOffline,
+                                PRBool *aIsAvailable)
+{
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // This method of checking the cache will only work for http/https urls
+  PRBool match;
+  rv = uri->SchemeIs("http", &match);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!match) {
+    rv = uri->SchemeIs("https", &match);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!match) return NS_ERROR_DOM_BAD_URI;
+  }
+
+  // Same origin check
+  nsCOMPtr<nsIJSContextStack> stack = do_GetService(sJSStackContractID);
+  NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
+
+  JSContext *cx = nsnull;
+  rv = stack->Peek(&cx);
+  NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+
+  rv = nsContentUtils::GetSecurityManager()->CheckSameOrigin(cx, uri);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // these load flags cause an error to be thrown if there is no
+  // valid cache entry, and skip the load if there is.
+  // if the cache is busy, assume that it is not yet available rather
+  // than waiting for it to become available.
+  PRUint32 loadFlags = nsIChannel::INHIBIT_CACHING |
+                       nsIChannel::LOAD_NO_NETWORK_IO |
+                       nsICachingChannel::LOAD_ONLY_IF_MODIFIED |
+                       nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
+
+  if (aWhenOffline) {
+    loadFlags |= nsICachingChannel::LOAD_CHECK_OFFLINE_CACHE |
+                 nsICachingChannel::LOAD_ONLY_FROM_CACHE;
+  }
+
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_NewChannel(getter_AddRefs(channel), uri,
+                     nsnull, nsnull, nsnull, loadFlags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIInputStream> stream;
+  rv = channel->Open(getter_AddRefs(stream));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  stream->Close();
+
+  nsresult status;
+  rv = channel->GetStatus(&status);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (NS_SUCCEEDED(status)) {
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
+    rv = httpChannel->GetRequestSucceeded(aIsAvailable);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    *aIsAvailable = PR_FALSE;
   }
 
   return NS_OK;

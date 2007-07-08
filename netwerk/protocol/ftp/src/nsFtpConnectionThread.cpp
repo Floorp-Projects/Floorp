@@ -1662,6 +1662,13 @@ nsFtpState::Connect()
     mState = FTP_COMMAND_CONNECT;
     mNextState = FTP_S_USER;
 
+    if (mChannel->HasLoadFlag(nsIChannel::LOAD_NO_NETWORK_IO)){
+        mInternalError = NS_ERROR_NEEDS_NETWORK;
+        mState = FTP_ERROR;
+        CloseWithStatus(mInternalError);
+        return;
+    }
+
     nsresult rv = Process();
 
     // check for errors.
