@@ -2223,6 +2223,8 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
         return;
     }
 
+    mBuf.Empty();
+
     for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
         if (mRuntimes[i])
             mRuntimes[i]->BeginCycleCollection();
@@ -2233,10 +2235,10 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
 
     {
         GCGraph graph;
-        mBuf.Empty();
 
         // Instead of filling mBuf from the purple buffer, we fill it
         // from the list of nodes we were expected to collect.
+        PRUint32 suspectCurrentCount = mBuf.GetSize();
         mExpectedGarbage.EnumerateEntries(&AddExpectedGarbage, this);
 
         MarkRoots(graph);
@@ -2248,18 +2250,23 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
         PRBool findCycleRoots = PR_FALSE;
         {
             NodePool::Enumerator queue(graph.mNodes);
+            PRUint32 i = 0;
             while (!queue.IsDone()) {
                 PtrInfo *pi = queue.GetNext();
                 if (pi->mColor == white) {
                     findCycleRoots = PR_TRUE;
                 }
 
-                if (pi->mInternalRefs != pi->mRefCount) {
+                if (pi->mInternalRefs != pi->mRefCount && i >= suspectCurrentCount) {
                     describeExtraRefcounts = PR_TRUE;
                 }
+                ++i;
             }
         }
 
+        // The describeExtraRefcounts check isn't much use now that
+        // we're traversing from suspectCurrent roots too.  But it's
+        // just extra work, not extra output.
         if (describeExtraRefcounts && CreateReversedEdges(graph)) {
             // Note that the external references may have been external
             // to a different node in the cycle collection that just
@@ -2278,7 +2285,7 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
 
             nsDeque queue; // for breadth-first search
             NodePool::Enumerator etor_roots(graph.mNodes);
-            for (PRUint32 i = 0; i < graph.mRootCount; ++i) {
+            for (PRUint32 i = suspectCurrentCount; i < graph.mRootCount; ++i) {
                 PtrInfo *root_pi = etor_roots.GetNext();
                 root_pi->mSCCIndex = INDEX_REACHED;
                 queue.Push(root_pi);
