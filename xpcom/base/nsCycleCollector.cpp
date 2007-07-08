@@ -747,7 +747,7 @@ zeroGenerationCallback(const void*  ptr,
                        void*        userArg)
 {
 #ifdef DEBUG_CC
-    nsPurpleBuffer *purp = NS_STATIC_CAST(nsPurpleBuffer*, userArg);
+    nsPurpleBuffer *purp = static_cast<nsPurpleBuffer*>(userArg);
     purp->mStats.mZeroGeneration++;
 #endif
     generation = 0;
@@ -779,10 +779,9 @@ ageSelectionCallback(const void*  ptr,
                      PRUint32&    generation,
                      void*        userArg)
 {
-    nsPurpleBuffer *purp = NS_STATIC_CAST(nsPurpleBuffer*, userArg);
+    nsPurpleBuffer *purp = static_cast<nsPurpleBuffer*>(userArg);
     if (SufficientlyAged(generation, purp)) {
-        nsISupports *root = NS_STATIC_CAST(nsISupports *, 
-                                           NS_CONST_CAST(void*, ptr));
+        nsISupports *root = static_cast<nsISupports *>(const_cast<void*>(ptr));
         purp->mTransferBuffer->Push(root);
     }
     return PL_DHASH_NEXT;
@@ -1011,7 +1010,7 @@ nsCycleCollectionParticipant *
 nsCycleCollectionXPCOMRuntime::ToParticipant(void *p)
 {
     nsXPCOMCycleCollectionParticipant *cp;
-    ::ToParticipant(NS_STATIC_CAST(nsISupports*, p), &cp);
+    ::ToParticipant(static_cast<nsISupports*>(p), &cp);
     return cp;
 }
 
@@ -1041,7 +1040,7 @@ GraphWalker::DoWalk(nsDeque &aQueue)
     // Use a aQueue to match the breadth-first traversal used when we
     // built the graph, for hopefully-better locality.
     while (aQueue.GetSize() > 0) {
-        PtrInfo *pi = NS_STATIC_CAST(PtrInfo*, aQueue.PopFront());
+        PtrInfo *pi = static_cast<PtrInfo*>(aQueue.PopFront());
 
         if (this->ShouldVisitNode(pi)) {
             this->VisitNode(pi);
@@ -1074,7 +1073,7 @@ PtrToNodeMatchEntry(PLDHashTable *table,
                     const PLDHashEntryHdr *entry,
                     const void *key)
 {
-    const PtrToNodeEntry *n = NS_STATIC_CAST(const PtrToNodeEntry*, entry);
+    const PtrToNodeEntry *n = static_cast<const PtrToNodeEntry*>(entry);
     return n->mNode->mPointer == key;
 }
 
@@ -1141,8 +1140,7 @@ GCGraphBuilder::~GCGraphBuilder()
 PtrInfo*
 GCGraphBuilder::AddNode(void *s, nsCycleCollectionParticipant *aParticipant)
 {
-    PtrToNodeEntry *e = NS_STATIC_CAST(PtrToNodeEntry*, 
-        PL_DHashTableOperate(&mPtrToNodeMap, s, PL_DHASH_ADD));
+    PtrToNodeEntry *e = static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, s, PL_DHASH_ADD));
     PtrInfo *result;
     if (!e->mNode) {
         // New entry.
@@ -1281,7 +1279,7 @@ nsCycleCollector::MarkRoots(GCGraph &graph)
 
     int i;
     for (i = 0; i < mBuf.GetSize(); ++i) {
-        nsISupports *s = NS_STATIC_CAST(nsISupports *, mBuf.ObjectAt(i));
+        nsISupports *s = static_cast<nsISupports *>(mBuf.ObjectAt(i));
         nsXPCOMCycleCollectionParticipant *cp;
         ToParticipant(s, &cp);
         if (cp) {
@@ -1415,16 +1413,16 @@ nsCycleCollector::CollectWhite(GCGraph &graph)
             mBuf.Push(pinfo);
 
             if (pinfo->mWasPurple) {
-                nsISupports* s = NS_STATIC_CAST(nsISupports*, p);
+                nsISupports* s = static_cast<nsISupports*>(p);
                 PRBool forgetResult = Forget(s);
                 NS_ASSERTION(forgetResult, "Forget failed");
             }
         }
         else if (pinfo->mWasPurple) {
-            nsISupports* s = NS_STATIC_CAST(nsISupports*, p);
+            nsISupports* s = static_cast<nsISupports*>(p);
             nsXPCOMCycleCollectionParticipant* cp =
-                NS_STATIC_CAST(nsXPCOMCycleCollectionParticipant*,
-                               pinfo->mParticipant);
+                static_cast<nsXPCOMCycleCollectionParticipant*>
+                           (pinfo->mParticipant);
 #ifdef DEBUG
             nsXPCOMCycleCollectionParticipant* checkcp;
             CallQueryInterface(s, &checkcp);
@@ -1439,14 +1437,14 @@ nsCycleCollector::CollectWhite(GCGraph &graph)
 
     PRUint32 i, count = mBuf.GetSize();
     for (i = 0; i < count; ++i) {
-        PtrInfo *pinfo = NS_STATIC_CAST(PtrInfo*, mBuf.ObjectAt(i));
+        PtrInfo *pinfo = static_cast<PtrInfo*>(mBuf.ObjectAt(i));
         rv = pinfo->mParticipant->Root(pinfo->mPointer);
         if (NS_FAILED(rv))
             Fault("Failed root call while unlinking", pinfo);
     }
 
     for (i = 0; i < count; ++i) {
-        PtrInfo *pinfo = NS_STATIC_CAST(PtrInfo*, mBuf.ObjectAt(i));
+        PtrInfo *pinfo = static_cast<PtrInfo*>(mBuf.ObjectAt(i));
         rv = pinfo->mParticipant->Unlink(pinfo->mPointer);
         if (NS_FAILED(rv)) {
             Fault("Failed unlink call while unlinking", pinfo);
@@ -1462,7 +1460,7 @@ nsCycleCollector::CollectWhite(GCGraph &graph)
     }
 
     for (i = 0; i < count; ++i) {
-        PtrInfo *pinfo = NS_STATIC_CAST(PtrInfo*, mBuf.ObjectAt(i));
+        PtrInfo *pinfo = static_cast<PtrInfo*>(mBuf.ObjectAt(i));
         rv = pinfo->mParticipant->Unroot(pinfo->mPointer);
         if (NS_FAILED(rv))
             Fault("Failed unroot call while unlinking", pinfo);
@@ -1915,7 +1913,7 @@ nsCycleCollector::Suspect(nsISupports *n, PRBool current)
     if (mParams.mLogPointers) {
         if (!mPtrLog)
             mPtrLog = fopen("pointer_log", "w");
-        fprintf(mPtrLog, "S %p\n", NS_STATIC_CAST(void*, n));
+        fprintf(mPtrLog, "S %p\n", static_cast<void*>(n));
     }
 #endif
 
@@ -1954,7 +1952,7 @@ nsCycleCollector::Forget(nsISupports *n)
     if (mParams.mLogPointers) {
         if (!mPtrLog)
             mPtrLog = fopen("pointer_log", "w");
-        fprintf(mPtrLog, "F %p\n", NS_STATIC_CAST(void*, n));
+        fprintf(mPtrLog, "F %p\n", static_cast<void*>(n));
     }
 #endif
 
@@ -2193,8 +2191,8 @@ nsCycleCollector::Shutdown()
 PR_STATIC_CALLBACK(PLDHashOperator)
 AddExpectedGarbage(nsVoidPtrHashKey *p, void *arg)
 {
-    nsCycleCollector *c = NS_STATIC_CAST(nsCycleCollector*, arg);
-    c->mBuf.Push(NS_CONST_CAST(void*, p->GetKey()));
+    nsCycleCollector *c = static_cast<nsCycleCollector*>(arg);
+    c->mBuf.Push(const_cast<void*>(p->GetKey()));
     return PL_DHASH_NEXT;
 }
 

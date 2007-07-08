@@ -156,7 +156,7 @@ nsresult CentralizedAdminPrefManagerInit()
 
     // Create a new Security Manger and set it for the new JS context
     nsCOMPtr<nsIXPCSecurityManager> secman =
-        NS_STATIC_CAST(nsIXPCSecurityManager*, new AutoConfigSecMan());
+        static_cast<nsIXPCSecurityManager*>(new AutoConfigSecMan());
     xpc->SetSecurityManagerForJSContext(autoconfig_cx, secman, 0);
 
     autoconfig_glob = JS_NewObject(autoconfig_cx, &global_class, NULL, NULL);

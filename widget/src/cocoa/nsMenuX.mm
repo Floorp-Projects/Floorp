@@ -139,7 +139,7 @@ nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString 
 
   // register this menu to be notified when changes are made to our content object
   mManager = aManager; // weak ref
-  nsCOMPtr<nsIChangeObserver> changeObs(do_QueryInterface(NS_STATIC_CAST(nsIChangeObserver*, this)));
+  nsCOMPtr<nsIChangeObserver> changeObs(do_QueryInterface(static_cast<nsIChangeObserver*>(this)));
   mManager->Register(mMenuContent, changeObs);
 
   NS_ASSERTION(mMenuContent, "Menu not given a dom node at creation time");
@@ -168,7 +168,7 @@ nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString 
   MenuConstruct(fake, nsnull, nsnull, nsnull);
   
   if (menu)
-    mIcon = new nsMenuItemIconX(NS_STATIC_CAST(nsIMenu*, this), menu, mMenuContent);
+    mIcon = new nsMenuItemIconX(static_cast<nsIMenu*>(this), menu, mMenuContent);
 
   return NS_OK;
 }
@@ -717,7 +717,7 @@ void nsMenuX::LoadSubMenu(nsIContent* inMenuContent)
   nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
   if (!docShell)
     return;
-  pnsMenu->Create(NS_REINTERPRET_CAST(nsISupports*, this), menuName, EmptyString(), mManager, docShell, inMenuContent);
+  pnsMenu->Create(reinterpret_cast<nsISupports*>(this), menuName, EmptyString(), mManager, docShell, inMenuContent);
 
   // set if it's enabled or disabled
   if (inMenuContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled,
@@ -979,7 +979,7 @@ nsresult nsMenuX::CountVisibleBefore(PRUint32* outVisibleBefore)
   for (PRUint32 i = 0; i < numMenus; i++) {
     nsCOMPtr<nsIMenu> currMenu;
     menubarParent->GetMenuAt(i, *getter_AddRefs(currMenu));
-    if (currMenu == NS_STATIC_CAST(nsIMenu*, this)) {
+    if (currMenu == static_cast<nsIMenu*>(this)) {
       // we found ourselves, break out
       gotThisMenu = PR_TRUE;
       break;
@@ -1187,7 +1187,7 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
     // don't request a menu item that doesn't exist or we crash
     // this might happen just due to some random quirks in the event system
     PRUint32 itemCount;
-    nsIMenu* targetMenu = NS_REINTERPRET_CAST(nsIMenu*, userData);
+    nsIMenu* targetMenu = reinterpret_cast<nsIMenu*>(userData);
     targetMenu->GetItemCount(itemCount);
     if (aPos >= itemCount)
       return eventNotHandledErr;

@@ -602,7 +602,7 @@ nsDragService::GetData ( nsITransferable * aTransferable, PRUint32 aItemIndex )
             if (!dataFound) {
               loadResult = ExtractDataFromOS(mDragRef, itemRef, 'TEXT', &dataBuff, &dataSize);
               if ( NS_SUCCEEDED(loadResult) && dataBuff ) {
-                const char* castedText = NS_REINTERPRET_CAST(char*, dataBuff);          
+                const char* castedText = reinterpret_cast<char*>(dataBuff);          
                 PRUnichar* convertedText = nsnull;
                 PRInt32 convertedTextLen = 0;
                 nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode ( castedText, dataSize, 
@@ -625,7 +625,7 @@ nsDragService::GetData ( nsITransferable * aTransferable, PRUint32 aItemIndex )
 
 	    if ( strcmp(flavorStr.get(), kFileMime) == 0 ) {
 	      // we have a HFSFlavor struct in |dataBuff|. Create an nsLocalFileMac object.
-	      HFSFlavor* fileData = NS_REINTERPRET_CAST(HFSFlavor*, dataBuff);
+	      HFSFlavor* fileData = reinterpret_cast<HFSFlavor*>(dataBuff);
 	      NS_ASSERTION ( sizeof(HFSFlavor) == dataSize, "Ooops, we really don't have a HFSFlavor" );
 	      nsCOMPtr<nsILocalFileMac> file;
 	      if ( NS_SUCCEEDED(NS_NewLocalFileWithFSSpec(&fileData->fileSpec, PR_TRUE, getter_AddRefs(file))) )
@@ -633,7 +633,7 @@ nsDragService::GetData ( nsITransferable * aTransferable, PRUint32 aItemIndex )
 	    }
       else if ((strcmp(flavorStr.get(), kURLDataMime) == 0) || (strcmp(flavorStr.get(), kURLDescriptionMime) == 0)) {
         // need to convert platform data to unicode
-        const char* castedText        = NS_REINTERPRET_CAST(char*, dataBuff);          
+        const char* castedText        = reinterpret_cast<char*>(dataBuff);          
         PRUnichar*  convertedText     = nsnull;
         PRInt32     convertedTextLen  = 0;
         nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode(castedText, dataSize, 
@@ -649,7 +649,7 @@ nsDragService::GetData ( nsITransferable * aTransferable, PRUint32 aItemIndex )
 	    else {
           // we probably have some form of text. The DOM only wants LF, so convert k
           // from MacOS line endings to DOM line endings.
-          nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(flavorStr.get(), &dataBuff, NS_REINTERPRET_CAST(int*, &dataSize));
+          nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(flavorStr.get(), &dataBuff, reinterpret_cast<int*>(&dataSize));
 
           unsigned char *dataPtr = (unsigned char *) dataBuff;
           // skip BOM (Byte Order Mark to distinguish little or big endian) in 'utxt'
@@ -796,7 +796,7 @@ nsDragService::DragSendDataProc(FlavorType inFlavor, void* inRefCon, ItemReferen
 									DragReference inDragRef)
 {
   OSErr retVal = noErr;
-  nsDragService* dragService = NS_STATIC_CAST(nsDragService*, inRefCon);
+  nsDragService* dragService = static_cast<nsDragService*>(inRefCon);
   NS_ASSERTION ( dragService, "Refcon not set correctly for DragSendDataProc" );
   if (dragService) {
     void* data = nsnull;
@@ -982,7 +982,7 @@ nsDragService::GetDataForFlavor(nsISupportsArray* inDragItems, DragReference inD
     // Convert unix to mac linebreaks, since mac linebreaks are required for clipboard compatibility.
     // I'm making the assumption here that the substitution will be entirely in-place, since both
     // types of line breaks are 1-byte.
-    PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, *outData);
+    PRUnichar* castedUnicode = reinterpret_cast<PRUnichar*>(*outData);
     nsLinebreakConverter::ConvertUnicharLineBreaksInSitu(&castedUnicode,
                                                          nsLinebreakConverter::eLinebreakUnix,
                                                          nsLinebreakConverter::eLinebreakMac,
@@ -1015,8 +1015,8 @@ nsDragService::GetDataForFlavor(nsISupportsArray* inDragItems, DragReference inD
       }
       else if (NS_SUCCEEDED(rv)) {
         // create a single run with the default system script
-        scriptCodeRuns = NS_REINTERPRET_CAST(ScriptCodeRun*,
-                                             nsMemory::Alloc(sizeof(ScriptCodeRun)));
+        scriptCodeRuns = reinterpret_cast<ScriptCodeRun*>
+                                         (nsMemory::Alloc(sizeof(ScriptCodeRun)));
         if (scriptCodeRuns) {
           scriptCodeRuns[0].offset = 0;
           scriptCodeRuns[0].script = (ScriptCode) ::GetScriptManagerVariable(smSysScript);
@@ -1084,7 +1084,7 @@ nsDragService::LookupMimeMappingsForItem ( DragReference inDragRef, ItemReferenc
 #if 0 
   OSErr err = ::GetFlavorDataSize ( inDragRef, itemRef, nsMimeMapperMac::MappingFlavor(), &mapperSize );
   if ( !err && mapperSize > 0 ) {
-    mapperData = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(mapperSize + 1));
+    mapperData = reinterpret_cast<char*>(nsMemory::Alloc(mapperSize + 1));
     if ( !mapperData )
       return nsnull;
 	          
@@ -1122,7 +1122,7 @@ nsDragService::ExtractDataFromOS ( DragReference inDragRef, ItemReference inItem
   Size buffSize = 0;
   OSErr err = ::GetFlavorDataSize ( inDragRef, inItemRef, inFlavor, &buffSize );
   if ( !err && buffSize > 0 ) {
-    buff = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(buffSize + 1));
+    buff = reinterpret_cast<char*>(nsMemory::Alloc(buffSize + 1));
     if ( buff ) {	     
       err = ::GetFlavorData ( inDragRef, inItemRef, inFlavor, buff, &buffSize, 0 );
       if (err == noErr) {

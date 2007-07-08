@@ -205,7 +205,7 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
   // the first is an editor controller
   rv = SetupEditorCommandController("@mozilla.org/editor/editorcontroller;1",
                                     aWindow,
-                                    NS_STATIC_CAST(nsIEditingSession*, this),
+                                    static_cast<nsIEditingSession*>(this),
                                     &mBaseCommandControllerId);
   if (NS_FAILED(rv)) return rv;
 
@@ -213,7 +213,7 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
   // such as creation and "dirty flag"
   rv = SetupEditorCommandController("@mozilla.org/editor/editordocstatecontroller;1",
                                     aWindow,
-                                    NS_STATIC_CAST(nsIEditingSession*, this),
+                                    static_cast<nsIEditingSession*>(this),
                                     &mDocStateControllerId);
   if (NS_FAILED(rv)) return rv;
 
@@ -382,7 +382,7 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   // make the UI state maintainer
   nsComposerCommandsUpdater *stateMaintainer;
   NS_NEWXPCOM(stateMaintainer, nsComposerCommandsUpdater);
-  mStateMaintainer = NS_STATIC_CAST(nsISelectionListener*, stateMaintainer);
+  mStateMaintainer = static_cast<nsISelectionListener*>(stateMaintainer);
 
   if (!mStateMaintainer) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -455,7 +455,7 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   // Set up as a doc state listener
   // Important! We must have this to broadcast the "obs_documentCreated" message
   rv = editor->AddDocumentStateListener(
-      NS_STATIC_CAST(nsIDocumentStateListener*, stateMaintainer));
+      static_cast<nsIDocumentStateListener*>(stateMaintainer));
   if (NS_FAILED(rv)) return rv;
 
   // XXXbz we really shouldn't need a presShell here!
@@ -481,8 +481,8 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   nsCOMPtr<nsITransactionManager> txnMgr;
   editor->GetTransactionManager(getter_AddRefs(txnMgr));
   if (txnMgr)
-    txnMgr->AddListener(NS_STATIC_CAST(nsITransactionListener*,
-                        stateMaintainer));
+    txnMgr->AddListener(static_cast<nsITransactionListener*>
+                                   (stateMaintainer));
 
   // Set context on all controllers to be the editor
   rv = SetEditorOnControllers(aWindow, editor);

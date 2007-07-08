@@ -316,7 +316,7 @@ static PRIntn EnumerateFamily( PLHashEntry* he, PRIntn i, void* arg )
 	EnumerateFamilyInfo* info = (EnumerateFamilyInfo*) arg;
 	PRUnichar** array = info->mArray;
 	int j = info->mIndex;
-	PRUnichar* str = ToNewUnicode(*NS_STATIC_CAST(const nsString*, he->key));
+	PRUnichar* str = ToNewUnicode(*static_cast<const nsString*>(he->key));
 
 	if (!str)
 	  {

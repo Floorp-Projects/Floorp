@@ -186,13 +186,13 @@ XULContentSinkImpl::ContextStack::GetTopNodeScriptType(PRUint32 *aScriptType)
     switch (node->mType) {
         case nsXULPrototypeNode::eType_Element: {
             nsXULPrototypeElement *parent = \
-                NS_REINTERPRET_CAST(nsXULPrototypeElement*, node);
+                reinterpret_cast<nsXULPrototypeElement*>(node);
             *aScriptType = parent->mScriptTypeID;
             break;
         }
         case nsXULPrototypeNode::eType_Script: {
             nsXULPrototypeScript *parent = \
-                NS_REINTERPRET_CAST(nsXULPrototypeScript*, node);
+                reinterpret_cast<nsXULPrototypeScript*>(node);
             *aScriptType = parent->mScriptObject.mLangID;
             break;
         }
@@ -238,7 +238,7 @@ XULContentSinkImpl::~XULContentSinkImpl()
         if (NS_SUCCEEDED(rv)) {
             for (PRInt32 i = children->Count() - 1; i >= 0; --i) {
                 nsXULPrototypeNode* child =
-                    NS_REINTERPRET_CAST(nsXULPrototypeNode*, children->ElementAt(i));
+                    reinterpret_cast<nsXULPrototypeNode*>(children->ElementAt(i));
 
                 child->Release();
             }
@@ -421,7 +421,7 @@ XULContentSinkImpl::FlushText(PRBool aCreateTextNode)
         PRBool stripWhitespace = PR_FALSE;
         if (node->mType == nsXULPrototypeNode::eType_Element) {
             nsINodeInfo *nodeInfo =
-                NS_STATIC_CAST(nsXULPrototypeElement*, node)->mNodeInfo;
+                static_cast<nsXULPrototypeElement*>(node)->mNodeInfo;
 
             if (nodeInfo->NamespaceEquals(kNameSpaceID_XUL))
                 stripWhitespace = !nodeInfo->Equals(nsGkAtoms::label) &&
@@ -593,7 +593,7 @@ XULContentSinkImpl::HandleEndElement(const PRUnichar *aName)
         if (NS_FAILED(rv)) return rv;
 
         nsXULPrototypeElement* element =
-            NS_REINTERPRET_CAST(nsXULPrototypeElement*, node);
+            reinterpret_cast<nsXULPrototypeElement*>(node);
 
         PRInt32 count = children->Count();
         if (count) {
@@ -603,7 +603,7 @@ XULContentSinkImpl::HandleEndElement(const PRUnichar *aName)
 
             for (PRInt32 i = count - 1; i >= 0; --i)
                 element->mChildren[i] =
-                    NS_REINTERPRET_CAST(nsXULPrototypeNode*, children->ElementAt(i));
+                    reinterpret_cast<nsXULPrototypeNode*>(children->ElementAt(i));
 
             element->mNumChildren = count;
         }
@@ -612,7 +612,7 @@ XULContentSinkImpl::HandleEndElement(const PRUnichar *aName)
 
     case nsXULPrototypeNode::eType_Script: {
         nsXULPrototypeScript* script =
-            NS_STATIC_CAST(nsXULPrototypeScript*, node);
+            static_cast<nsXULPrototypeScript*>(node);
 
         // If given a src= attribute, we must ignore script tag content.
         if (! script->mSrcURI && ! script->mScriptObject.mObject) {
@@ -648,7 +648,7 @@ XULContentSinkImpl::HandleEndElement(const PRUnichar *aName)
         // root element. This transfers ownership of the prototype
         // element tree to the prototype document.
         nsXULPrototypeElement* element =
-            NS_STATIC_CAST(nsXULPrototypeElement*, node);
+            static_cast<nsXULPrototypeElement*>(node);
 
         mPrototype->SetRootElement(element);
         mState = eInEpilog;
@@ -760,7 +760,7 @@ XULContentSinkImpl::ReportError(const PRUnichar* aErrorText,
     if (NS_SUCCEEDED(rv)) {
       for (PRInt32 i = children->Count() - 1; i >= 0; --i) {
         nsXULPrototypeNode* child =
-            NS_REINTERPRET_CAST(nsXULPrototypeNode*, children->ElementAt(i));
+            reinterpret_cast<nsXULPrototypeNode*>(children->ElementAt(i));
 
         child->Release();
       }

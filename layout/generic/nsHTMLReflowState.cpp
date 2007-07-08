@@ -914,7 +914,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   // First, determine the hypothetical box's mTop
   nsBlockFrame* blockFrame;
   if (NS_SUCCEEDED(aContainingBlock->QueryInterface(kBlockFrameCID,
-                                  NS_REINTERPRET_CAST(void**, &blockFrame)))) {
+                                  reinterpret_cast<void**>(&blockFrame)))) {
     // We need the immediate child of the block frame, and that may not be
     // the placeholder frame
     nsIFrame *blockChild =
@@ -1574,8 +1574,8 @@ static eNormalLineHeightControl GetNormalLineHeightCalcControl(void)
     // browser.display.normal_lineheight_calc_control is not user
     // changeable, so no need to register callback for it.
     sNormalLineHeightControl =
-      NS_STATIC_CAST(eNormalLineHeightControl,
-                     nsContentUtils::GetIntPref("browser.display.normal_lineheight_calc_control", eNoExternalLeading));
+      static_cast<eNormalLineHeightControl>
+                 (nsContentUtils::GetIntPref("browser.display.normal_lineheight_calc_control", eNoExternalLeading));
   }
   return sNormalLineHeightControl;
 }
@@ -1863,7 +1863,7 @@ nsCSSOffsetState::InitOffsets(nscoord aContainingBlockWidth,
   mComputedBorderPadding += mComputedPadding;
 
   if (frame->GetType() == nsGkAtoms::tableFrame) {
-    nsTableFrame *tableFrame = NS_STATIC_CAST(nsTableFrame*, frame);
+    nsTableFrame *tableFrame = static_cast<nsTableFrame*>(frame);
 
     if (tableFrame->IsBorderCollapse()) {
       // border-collapsed tables don't use any of their padding, and
@@ -2086,7 +2086,7 @@ nsCSSOffsetState::DestroyMarginFunc(void*    aFrame,
                                     void*    aPropertyValue,
                                     void*    aDtorData)
 {
-  delete NS_STATIC_CAST(nsMargin*, aPropertyValue);
+  delete static_cast<nsMargin*>(aPropertyValue);
 }
 
 void

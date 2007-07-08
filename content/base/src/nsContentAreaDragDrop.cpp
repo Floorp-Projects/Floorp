@@ -217,7 +217,7 @@ nsContentAreaDragDrop::AddDragListener()
   nsresult rv = NS_ERROR_FAILURE;
 
   if (mEventTarget) {
-    nsIDOMDragListener *pListener = NS_STATIC_CAST(nsIDOMDragListener *, this);
+    nsIDOMDragListener *pListener = static_cast<nsIDOMDragListener *>(this);
     rv = mEventTarget->AddEventListenerByIID(pListener,
                                              NS_GET_IID(nsIDOMDragListener));
     if (NS_SUCCEEDED(rv))
@@ -239,7 +239,7 @@ nsContentAreaDragDrop::RemoveDragListener()
   nsresult rv = NS_ERROR_FAILURE;
 
   if (mEventTarget) {
-    nsIDOMDragListener *pListener = NS_STATIC_CAST(nsIDOMDragListener *, this);
+    nsIDOMDragListener *pListener = static_cast<nsIDOMDragListener *>(this);
     rv =
       mEventTarget->RemoveEventListenerByIID(pListener,
                                              NS_GET_IID(nsIDOMDragListener));
@@ -743,7 +743,7 @@ nsContentAreaDragDrop::DragGesture(nsIDOMEvent* inMouseEvent)
 
   PRBool isSelection = PR_FALSE;
   nsCOMPtr<nsITransferable> trans;
-  nsTransferableFactory factory(inMouseEvent, NS_STATIC_CAST(nsIFlavorDataProvider*, this));
+  nsTransferableFactory factory(inMouseEvent, static_cast<nsIFlavorDataProvider*>(this));
   factory.Produce(&isSelection, getter_AddRefs(trans));
 
   if (trans) {
@@ -1636,7 +1636,7 @@ void nsTransferableFactory::GetSelectedLink(nsISelection* inSelection,
   nsAutoString nodeStr;
   selectionStart->GetNodeValue(nodeStr);
   if (nodeStr.IsEmpty() ||
-      startOffset+1 >= NS_STATIC_CAST(PRInt32, nodeStr.Length())) {
+      startOffset+1 >= static_cast<PRInt32>(nodeStr.Length())) {
     nsCOMPtr<nsIDOMNode> curr = selectionStart;
     nsIDOMNode* next;
 

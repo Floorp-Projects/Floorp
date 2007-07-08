@@ -91,7 +91,7 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
 
                 mTranslation = m.GetTranslation();
 
-                mWinSurface = NS_STATIC_CAST(gfxWindowsSurface*, NS_STATIC_CAST(gfxASurface*, surf.get()));
+                mWinSurface = static_cast<gfxWindowsSurface*>(static_cast<gfxASurface*>(surf.get()));
             } else if (((mTransformType == AXIS_ALIGNED_SCALE)
                         && (mNativeDrawFlags & CAN_AXIS_ALIGNED_SCALE)) ||
                        (mNativeDrawFlags & CAN_COMPLEX_TRANSFORM))
@@ -104,7 +104,7 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
                 mWorldTransform.eDy  = (FLOAT) m.y0;
 
                 mRenderState = RENDER_STATE_NATIVE_DRAWING;
-                mWinSurface = NS_STATIC_CAST(gfxWindowsSurface*, NS_STATIC_CAST(gfxASurface*, surf.get()));
+                mWinSurface = static_cast<gfxWindowsSurface*>(static_cast<gfxASurface*>(surf.get()));
             }
         }
 

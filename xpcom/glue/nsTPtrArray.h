@@ -102,13 +102,13 @@ class nsAutoTPtrArray : public nsTPtrArray<E> {
     typedef typename base_type::elem_type elem_type;
 
     nsAutoTPtrArray() {
-      base_type::mHdr = NS_REINTERPRET_CAST(Header*, &mAutoBuf);
+      base_type::mHdr = reinterpret_cast<Header*>(&mAutoBuf);
       base_type::mHdr->mLength = 0;
       base_type::mHdr->mCapacity = N;
       base_type::mHdr->mIsAutoArray = 1;
 
       NS_ASSERTION(base_type::GetAutoArrayBuffer() ==
-                   NS_REINTERPRET_CAST(Header*, &mAutoBuf),
+                   reinterpret_cast<Header*>(&mAutoBuf),
                    "GetAutoArrayBuffer needs to be fixed");
     }
 

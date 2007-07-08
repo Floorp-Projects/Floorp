@@ -101,8 +101,8 @@ class nsNodeSupportsWeakRefTearoff;
 // Returns the first argument cast to nsINode if it is non-null, otherwise
 // returns the second (which may be null)
 #define NODE_FROM(content_, document_)                  \
-  ((content_) ? NS_STATIC_CAST(nsINode*, (content_)) :  \
-                NS_STATIC_CAST(nsINode*, (document_)))
+  ((content_) ? static_cast<nsINode*>((content_)) :  \
+                static_cast<nsINode*>((document_)))
 
 
 // IID for the nsINode interface
@@ -460,8 +460,8 @@ public:
   nsIContent* GetParent() const
   {
     return NS_LIKELY(mParentPtrBits & PARENT_BIT_PARENT_IS_CONTENT) ?
-           NS_REINTERPRET_CAST(nsIContent*,
-                               mParentPtrBits & ~kParentBitMask) :
+           reinterpret_cast<nsIContent*>
+                           (mParentPtrBits & ~kParentBitMask) :
            nsnull;
   }
 
@@ -472,7 +472,7 @@ public:
    */
   nsINode* GetNodeParent() const
   {
-    return NS_REINTERPRET_CAST(nsINode*, mParentPtrBits & ~kParentBitMask);
+    return reinterpret_cast<nsINode*>(mParentPtrBits & ~kParentBitMask);
   }
 
   /**
@@ -621,7 +621,7 @@ protected:
   nsSlots* FlagsAsSlots() const
   {
     NS_ASSERTION(HasSlots(), "check HasSlots first");
-    return NS_REINTERPRET_CAST(nsSlots*, mFlagsOrSlots);
+    return reinterpret_cast<nsSlots*>(mFlagsOrSlots);
   }
 
   nsSlots* GetExistingSlots() const
@@ -637,7 +637,7 @@ protected:
 
     nsSlots* slots = CreateSlots();
     if (slots) {
-      mFlagsOrSlots = NS_REINTERPRET_CAST(PtrBits, slots);
+      mFlagsOrSlots = reinterpret_cast<PtrBits>(slots);
     }
 
     return slots;

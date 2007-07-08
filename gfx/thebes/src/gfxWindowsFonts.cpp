@@ -84,7 +84,7 @@ GetDCFromSurface(gfxASurface *aSurface)
         NS_ERROR("GetDCFromSurface: Context target is not win32!");
         return nsnull;
     }
-    return NS_STATIC_CAST(gfxWindowsSurface*, aSurface)->GetDC();
+    return static_cast<gfxWindowsSurface*>(aSurface)->GetDC();
 }
 
 /**********************************************************************
@@ -452,7 +452,7 @@ AddFontEntryToArray(const nsAString& aName,
                     void *closure)
 {
     if (!aName.IsEmpty()) {
-        nsTArray<nsRefPtr<FontEntry> > *list = NS_STATIC_CAST(nsTArray<nsRefPtr<FontEntry> >*, closure);
+        nsTArray<nsRefPtr<FontEntry> > *list = static_cast<nsTArray<nsRefPtr<FontEntry> >*>(closure);
 
         nsRefPtr<FontEntry> fe = gfxWindowsPlatform::GetPlatform()->FindFontEntry(aName);
         if (list->IndexOf(fe) == list->NoIndex)
@@ -495,7 +495,7 @@ gfxWindowsFontGroup::GetFontAt(PRInt32 i)
         mFonts[i] = font;
     }
 
-    return NS_STATIC_CAST(gfxWindowsFont*, mFonts[i].get());
+    return static_cast<gfxWindowsFont*>(mFonts[i].get());
 }
 
 gfxFontGroup *

@@ -628,9 +628,9 @@ mozInlineSpellChecker::RegisterEventListeners()
   nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(doc, &rv);
   NS_ENSURE_SUCCESS(rv, rv); 
 
-  piTarget->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*, this),
+  piTarget->AddEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
                                   NS_GET_IID(nsIDOMMouseListener));
-  piTarget->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMKeyListener*, this),
+  piTarget->AddEventListenerByIID(static_cast<nsIDOMKeyListener*>(this),
                                   NS_GET_IID(nsIDOMKeyListener));
 
   return NS_OK;
@@ -653,9 +653,9 @@ mozInlineSpellChecker::UnregisterEventListeners()
   nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(doc);
   NS_ENSURE_TRUE(piTarget, NS_ERROR_NULL_POINTER);
 
-  piTarget->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*, this),
+  piTarget->RemoveEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
                                      NS_GET_IID(nsIDOMMouseListener));
-  piTarget->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMKeyListener*, this),
+  piTarget->RemoveEventListenerByIID(static_cast<nsIDOMKeyListener*>(this),
                                      NS_GET_IID(nsIDOMKeyListener));
   
   return NS_OK;

@@ -336,7 +336,7 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
         return NS_OK;
     }
 
-    nsThebesRenderingContext *thebesRC = NS_STATIC_CAST(nsThebesRenderingContext*, &aContext);
+    nsThebesRenderingContext *thebesRC = static_cast<nsThebesRenderingContext*>(&aContext);
     gfxContext *ctx = thebesRC->Thebes();
 
 #if 0
@@ -587,7 +587,7 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
 NS_IMETHODIMP
 nsThebesImage::DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-    nsThebesImage *dstThebesImage = NS_STATIC_CAST(nsThebesImage*, aDstImage);
+    nsThebesImage *dstThebesImage = static_cast<nsThebesImage*>(aDstImage);
 
     nsRefPtr<gfxContext> dst = new gfxContext(dstThebesImage->ThebesSurface());
 

@@ -196,7 +196,7 @@ TranslateDWORDtoPRInt32(nsIWindowsRegKey *aRegKey,
   PRInt32 prefIntValue = 0;
 
   if (NS_SUCCEEDED(aRegKey->ReadIntValue(aRegValueName, 
-                   NS_REINTERPRET_CAST(PRUint32 *, &prefIntValue))))
+                   reinterpret_cast<PRUint32 *>(&prefIntValue))))
     aPrefs->SetIntPref(aPrefKeyName, prefIntValue);
 }
 

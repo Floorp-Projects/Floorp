@@ -844,8 +844,8 @@ nsSHistory::EvictGlobalContentViewer()
     nsCOMPtr<nsISHEntry> evictFromSHE;
     nsCOMPtr<nsIContentViewer> evictViewer;
     PRInt32 totalContentViewers = 0;
-    nsSHistory* shist = NS_STATIC_CAST(nsSHistory*,
-                                       PR_LIST_HEAD(&gSHistoryList));
+    nsSHistory* shist = static_cast<nsSHistory*>
+                                   (PR_LIST_HEAD(&gSHistoryList));
     while (shist != &gSHistoryList) {
       // Calculate the window of SHEntries that could possibly have a content
       // viewer.  There could be up to gHistoryMaxViewers content viewers,
@@ -903,7 +903,7 @@ nsSHistory::EvictGlobalContentViewer()
         nsISHTransaction* temp = trans;
         temp->GetNext(getter_AddRefs(trans));
       }
-      shist = NS_STATIC_CAST(nsSHistory*, PR_NEXT_LINK(shist));
+      shist = static_cast<nsSHistory*>(PR_NEXT_LINK(shist));
     }
 
 #ifdef DEBUG_PAGE_CACHE

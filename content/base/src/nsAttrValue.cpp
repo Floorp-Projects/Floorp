@@ -118,7 +118,7 @@ nsAttrValue::Type() const
   switch (BaseType()) {
     case eIntegerBase:
     {
-      return NS_STATIC_CAST(ValueType, mBits & NS_ATTRVALUE_INTEGERTYPE_MASK);
+      return static_cast<ValueType>(mBits & NS_ATTRVALUE_INTEGERTYPE_MASK);
     }
     case eOtherBase:
     {
@@ -126,7 +126,7 @@ nsAttrValue::Type() const
     }
     default:
     {
-      return NS_STATIC_CAST(ValueType, NS_STATIC_CAST(PRUint16, BaseType()));
+      return static_cast<ValueType>(static_cast<PRUint16>(BaseType()));
     }
   }
 }
@@ -137,7 +137,7 @@ nsAttrValue::Reset()
   switch(BaseType()) {
     case eStringBase:
     {
-      nsStringBuffer* str = NS_STATIC_CAST(nsStringBuffer*, GetPtr());
+      nsStringBuffer* str = static_cast<nsStringBuffer*>(GetPtr());
       if (str) {
         str->Release();
       }
@@ -174,7 +174,7 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
     case eStringBase:
     {
       ResetIfSet();
-      nsStringBuffer* str = NS_STATIC_CAST(nsStringBuffer*, aOther.GetPtr());
+      nsStringBuffer* str = static_cast<nsStringBuffer*>(aOther.GetPtr());
       if (str) {
         str->AddRef();
         SetPtrValueAndType(str, eStringBase);
@@ -257,7 +257,7 @@ nsAttrValue::SetTo(const nsAString& aValue)
     if (!buf) {
       return;
     }
-    PRUnichar *data = NS_STATIC_CAST(PRUnichar*, buf->Data());
+    PRUnichar *data = static_cast<PRUnichar*>(buf->Data());
     CopyUnicodeTo(aValue, 0, data, len);
     data[len] = PRUnichar(0);
 
@@ -308,7 +308,7 @@ nsAttrValue::ToString(nsAString& aResult) const
   switch(Type()) {
     case eString:
     {
-      nsStringBuffer* str = NS_STATIC_CAST(nsStringBuffer*, GetPtr());
+      nsStringBuffer* str = static_cast<nsStringBuffer*>(GetPtr());
       if (str) {
         str->ToString(str->StorageSize()/sizeof(PRUnichar) - 1, aResult);
       }
@@ -319,7 +319,7 @@ nsAttrValue::ToString(nsAString& aResult) const
     }
     case eAtom:
     {
-      nsIAtom *atom = NS_STATIC_CAST(nsIAtom*, GetPtr());
+      nsIAtom *atom = static_cast<nsIAtom*>(GetPtr());
       atom->ToString(aResult);
 
       break;
@@ -417,7 +417,7 @@ nsAttrValue::GetStringValue() const
 {
   NS_PRECONDITION(Type() == eString, "wrong type");
 
-  return nsCheapString(NS_STATIC_CAST(nsStringBuffer*, GetPtr()));
+  return nsCheapString(static_cast<nsStringBuffer*>(GetPtr()));
 }
 
 PRBool
@@ -437,7 +437,7 @@ nsAttrValue::GetColorValue(nscolor& aColor) const
     }
     case eIntegerBase:
     {
-      aColor = NS_STATIC_CAST(nscolor, GetIntInternal());
+      aColor = static_cast<nscolor>(GetIntInternal());
       
       break;
     }
@@ -489,10 +489,10 @@ nsAttrValue::HashValue() const
   switch(BaseType()) {
     case eStringBase:
     {
-      nsStringBuffer* str = NS_STATIC_CAST(nsStringBuffer*, GetPtr());
+      nsStringBuffer* str = static_cast<nsStringBuffer*>(GetPtr());
       if (str) {
         PRUint32 len = str->StorageSize()/sizeof(PRUnichar) - 1;
-        return nsCRT::BufferHashCode(NS_STATIC_CAST(PRUnichar*, str->Data()), len);
+        return nsCRT::BufferHashCode(static_cast<PRUnichar*>(str->Data()), len);
       }
 
       return 0;
@@ -622,9 +622,9 @@ nsAttrValue::Equals(const nsAString& aValue,
   switch (BaseType()) {
     case eStringBase:
     {
-      nsStringBuffer* str = NS_STATIC_CAST(nsStringBuffer*, GetPtr());
+      nsStringBuffer* str = static_cast<nsStringBuffer*>(GetPtr());
       if (str) {
-        nsDependentString dep(NS_STATIC_CAST(PRUnichar*, str->Data()),
+        nsDependentString dep(static_cast<PRUnichar*>(str->Data()),
                               str->StorageSize()/sizeof(PRUnichar) - 1);
         return aCaseSensitive == eCaseMatters ? aValue.Equals(dep) :
           aValue.Equals(dep, nsCaseInsensitiveStringComparator());
@@ -634,7 +634,7 @@ nsAttrValue::Equals(const nsAString& aValue,
     case eAtomBase:
       // Need a way to just do case-insensitive compares on atoms..
       if (aCaseSensitive == eCaseMatters) {
-        return NS_STATIC_CAST(nsIAtom*, GetPtr())->Equals(aValue);;
+        return static_cast<nsIAtom*>(GetPtr())->Equals(aValue);;
       }
     default:
       break;
@@ -659,9 +659,9 @@ nsAttrValue::Equals(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
   switch (BaseType()) {
     case eStringBase:
     {
-      nsStringBuffer* str = NS_STATIC_CAST(nsStringBuffer*, GetPtr());
+      nsStringBuffer* str = static_cast<nsStringBuffer*>(GetPtr());
       if (str) {
-        nsDependentString dep(NS_STATIC_CAST(PRUnichar*, str->Data()),
+        nsDependentString dep(static_cast<PRUnichar*>(str->Data()),
                               str->StorageSize()/sizeof(PRUnichar) - 1);
         return aValue->Equals(dep);
       }
@@ -669,7 +669,7 @@ nsAttrValue::Equals(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
     }
     case eAtomBase:
     {
-      return NS_STATIC_CAST(nsIAtom*, GetPtr()) == aValue;
+      return static_cast<nsIAtom*>(GetPtr()) == aValue;
     }
     default:
       break;
@@ -971,7 +971,7 @@ nsAttrValue::ParseColor(const nsAString& aString, nsIDocument* aDocument)
     }
   }
 
-  PRInt32 colAsInt = NS_STATIC_CAST(PRInt32, color);
+  PRInt32 colAsInt = static_cast<PRInt32>(color);
   PRInt32 tmp = colAsInt * NS_ATTRVALUE_INTEGERTYPE_MULTIPLIER;
   if (tmp / NS_ATTRVALUE_INTEGERTYPE_MULTIPLIER == colAsInt) {
     ResetIfSet();

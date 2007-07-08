@@ -979,7 +979,7 @@ public:
   static void DestroyMatchString(void* aData)
   {
     if (aData) {
-      nsString* matchString = NS_STATIC_CAST(nsString*, aData);
+      nsString* matchString = static_cast<nsString*>(aData);
       delete matchString;
     }
   }
@@ -1205,7 +1205,7 @@ private:
 
 #define NS_INTERFACE_MAP_ENTRY_TEAROFF(_interface, _allocator)                \
   if (aIID.Equals(NS_GET_IID(_interface))) {                                  \
-    foundInterface = NS_STATIC_CAST(_interface *, _allocator);                \
+    foundInterface = static_cast<_interface *>(_allocator);                \
     if (!foundInterface) {                                                    \
       *aInstancePtr = nsnull;                                                 \
       return NS_ERROR_OUT_OF_MEMORY;                                          \

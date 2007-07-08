@@ -332,7 +332,7 @@ nsXPConnect::ReleaseXPConnectSingleton()
                 if(dumpFile)
                 {
                     JS_DumpHeap(ccx, dumpFile, nsnull, 0, nsnull,
-                                NS_STATIC_CAST(size_t, -1), nsnull);
+                                static_cast<size_t>(-1), nsnull);
                     if(dumpFile != stdout)
                         fclose(dumpFile);
                 }
@@ -531,7 +531,7 @@ void XPCMarkNotification(void *thing, uint8 flags, void *closure)
        ty != GCX_XML)
         return;
 
-    JSObjectRefcounts* jsr = NS_STATIC_CAST(JSObjectRefcounts*, closure);
+    JSObjectRefcounts* jsr = static_cast<JSObjectRefcounts*>(closure);
     // We're marking after a mark phase ended, so the GC restarted itself and
     // we want to clear the refcounts first.
     if(jsr->mMarkEnded)
@@ -608,7 +608,7 @@ nsXPConnect::Unlink(void *p)
         return NS_ERROR_FAILURE;
     uint8 ty = *js_GetGCThingFlags(p) & GCF_TYPEMASK;
     if(ty == GCX_OBJECT)
-        JS_ClearScope(*mCycleCollectionContext, NS_STATIC_CAST(JSObject*, p));
+        JS_ClearScope(*mCycleCollectionContext, static_cast<JSObject*>(p));
     return NS_OK;
 }
 
@@ -643,7 +643,7 @@ NoteJSChild(JSTracer *trc, void *thing, uint32 kind)
     if(kind == JSTRACE_OBJECT || kind == JSTRACE_NAMESPACE ||
        kind == JSTRACE_QNAME || kind == JSTRACE_XML)
     {
-        ContextCallbackItem *item = NS_STATIC_CAST(ContextCallbackItem*, trc);
+        ContextCallbackItem *item = static_cast<ContextCallbackItem*>(trc);
         item->cb->NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, thing);
     }
 }
@@ -679,7 +679,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 #ifdef DEBUG_CC
     if(ty == GCX_OBJECT)
     {
-        JSObject *obj = NS_STATIC_CAST(JSObject*, p);
+        JSObject *obj = static_cast<JSObject*>(p);
         JSClass *clazz = OBJ_GET_CLASS(cx, obj);
         char name[72];
         if(XPCNativeWrapper::IsNativeWrapperClass(clazz))
@@ -790,7 +790,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     if(ty != GCX_OBJECT)
         return NS_OK;
     
-    JSObject *obj = NS_STATIC_CAST(JSObject*, p);
+    JSObject *obj = static_cast<JSObject*>(p);
     JSClass* clazz = OBJ_GET_CLASS(cx, obj);
 
     if(clazz == &XPC_WN_Tearoff_JSClass)
@@ -810,7 +810,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
             clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS &&
             !XPCNativeWrapper::IsNativeWrapperClass(clazz))
     {
-        cb.NoteXPCOMChild(NS_STATIC_CAST(nsISupports*, JS_GetPrivate(cx, obj)));
+        cb.NoteXPCOMChild(static_cast<nsISupports*>(JS_GetPrivate(cx, obj)));
     }
 
 #ifndef XPCONNECT_STANDALONE
@@ -978,7 +978,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     XPCWrappedNative* wrapper =
-        NS_REINTERPRET_CAST(XPCWrappedNative*, holder.get());
+        reinterpret_cast<XPCWrappedNative*>(holder.get());
     XPCWrappedNativeScope* scope = wrapper->GetScope();
 
     if(!scope)
@@ -1160,7 +1160,7 @@ nsXPConnect::GetWrappedNativeOfNativeObject(JSContext * aJSContext,
                                                 &wrapper);
     if(NS_FAILED(rv))
         return NS_ERROR_FAILURE;
-    *_retval = NS_STATIC_CAST(nsIXPConnectWrappedNative*, wrapper);
+    *_retval = static_cast<nsIXPConnectWrappedNative*>(wrapper);
     return NS_OK;
 }
 
@@ -1196,7 +1196,7 @@ MoveableWrapperFinder(JSDHashTable *table, JSDHashEntryHdr *hdr,
                       uint32 number, void *arg)
 {
     // Every element counts.
-    nsVoidArray *va = NS_STATIC_CAST(nsVoidArray *,arg);
+    nsVoidArray *va = static_cast<nsVoidArray *>(arg);
     va->AppendElement(((Native2WrappedNativeMap::Entry*)hdr)->value);
     return JS_DHASH_NEXT;
 }
@@ -1238,7 +1238,7 @@ nsXPConnect::ReparentScopeAwareWrappers(JSContext *aJSContext,
             // reparented.
 
             XPCWrappedNative *wrapper =
-                NS_STATIC_CAST(XPCWrappedNative *, wrappersToMove[i]);
+                static_cast<XPCWrappedNative *>(wrappersToMove[i]);
             nsISupports *identity = wrapper->GetIdentityObject();
             nsCOMPtr<nsIClassInfo> info(do_QueryInterface(identity));
 

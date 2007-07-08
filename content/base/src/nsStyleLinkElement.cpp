@@ -91,7 +91,7 @@ nsStyleLinkElement::SetStyleSheet(nsIStyleSheet* aStyleSheet)
   if (cssSheet) {
     nsCOMPtr<nsIDOMNode> node;
     CallQueryInterface(this,
-                       NS_STATIC_CAST(nsIDOMNode**, getter_AddRefs(node)));
+                       static_cast<nsIDOMNode**>(getter_AddRefs(node)));
     if (node) {
       cssSheet->SetOwningNode(node);
     }

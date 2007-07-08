@@ -251,7 +251,7 @@ nsChromeRegistry::nsProviderArray::GetProvider(const nsACString& aPreferred, Mat
   ProviderEntry* entry;
 
   while (i--) {
-    entry = NS_REINTERPRET_CAST(ProviderEntry*, mArray[i]);
+    entry = reinterpret_cast<ProviderEntry*>(mArray[i]);
     if (aPreferred.Equals(entry->provider))
       return entry;
 
@@ -318,7 +318,7 @@ nsChromeRegistry::nsProviderArray::EnumerateToArray(nsCStringArray *a)
 {
   PRInt32 i = mArray.Count();
   while (i--) {
-    ProviderEntry *entry = NS_REINTERPRET_CAST(ProviderEntry*, mArray[i]);
+    ProviderEntry *entry = reinterpret_cast<ProviderEntry*>(mArray[i]);
     a->AppendCString(entry->provider);
   }
 }
@@ -328,7 +328,7 @@ nsChromeRegistry::nsProviderArray::Clear()
 {
   PRInt32 i = mArray.Count();
   while (i--) {
-    ProviderEntry* entry = NS_REINTERPRET_CAST(ProviderEntry*, mArray[i]);
+    ProviderEntry* entry = reinterpret_cast<ProviderEntry*>(mArray[i]);
     delete entry;
   }
 
@@ -343,7 +343,7 @@ nsChromeRegistry::PackageEntry::PackageEntry(const nsACString& aPackage) :
 PLHashNumber
 nsChromeRegistry::HashKey(PLDHashTable *table, const void *key)
 {
-  const nsACString& str = *NS_REINTERPRET_CAST(const nsACString*, key);
+  const nsACString& str = *reinterpret_cast<const nsACString*>(key);
   return HashString(str);
 }
 
@@ -351,15 +351,15 @@ PRBool
 nsChromeRegistry::MatchKey(PLDHashTable *table, const PLDHashEntryHdr *entry,
                            const void *key)
 {
-  const nsACString& str = *NS_REINTERPRET_CAST(const nsACString*, key);
-  const PackageEntry* pentry = NS_STATIC_CAST(const PackageEntry*, entry);
+  const nsACString& str = *reinterpret_cast<const nsACString*>(key);
+  const PackageEntry* pentry = static_cast<const PackageEntry*>(entry);
   return str.Equals(pentry->package);
 }
 
 void
 nsChromeRegistry::ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
-  PackageEntry* pentry = NS_STATIC_CAST(PackageEntry*, entry);
+  PackageEntry* pentry = static_cast<PackageEntry*>(entry);
   pentry->~PackageEntry();
 }
 
@@ -367,7 +367,7 @@ PRBool
 nsChromeRegistry::InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                             const void *key)
 {
-  const nsACString& str = *NS_REINTERPRET_CAST(const nsACString*, key);
+  const nsACString& str = *reinterpret_cast<const nsACString*>(key);
 
   new (entry) PackageEntry(str);
   return PR_TRUE;
@@ -701,7 +701,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult)
   NS_ENSURE_SUCCESS(rv, rv);
 
   PackageEntry* entry =
-    NS_STATIC_CAST(PackageEntry*, PL_DHashTableOperate(&mPackagesHash,
+    static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
                                                        & (nsACString&) package,
                                                        PL_DHASH_LOOKUP));
 
@@ -749,7 +749,7 @@ nsresult
 nsChromeRegistry::GetSelectedLocale(const nsACString& aPackage, nsACString& aLocale)
 {
   PackageEntry* entry =
-    NS_STATIC_CAST(PackageEntry*, PL_DHashTableOperate(&mPackagesHash,
+    static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
                                                        & aPackage,
                                                        PL_DHASH_LOOKUP));
 
@@ -772,7 +772,7 @@ nsChromeRegistry::GetLocalesForPackage(const nsACString& aPackage,
     return NS_ERROR_OUT_OF_MEMORY;
 
   PackageEntry* entry =
-    NS_STATIC_CAST(PackageEntry*, PL_DHashTableOperate(&mPackagesHash,
+    static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
                                                        & aPackage,
                                                        PL_DHASH_LOOKUP));
 
@@ -883,7 +883,7 @@ nsChromeRegistry::FlushSkinCaches()
     do_GetService("@mozilla.org/observer-service;1");
   NS_ASSERTION(obsSvc, "Couldn't get observer service.");
 
-  obsSvc->NotifyObservers(NS_STATIC_CAST(nsIChromeRegistry*, this),
+  obsSvc->NotifyObservers(static_cast<nsIChromeRegistry*>(this),
                           NS_CHROME_FLUSH_SKINS_TOPIC, nsnull);
 }
 
@@ -2158,7 +2158,7 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         continue;
 
       PackageEntry* entry =
-        NS_STATIC_CAST(PackageEntry*, PL_DHashTableOperate(&mPackagesHash,
+        static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
                                                             & (const nsACString&) nsDependentCString(package),
                                                             PL_DHASH_ADD));
       if (!entry)
@@ -2227,7 +2227,7 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         continue;
 
       PackageEntry* entry =
-        NS_STATIC_CAST(PackageEntry*, PL_DHashTableOperate(&mPackagesHash,
+        static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
                                                             & (const nsACString&) nsDependentCString(package),
                                                             PL_DHASH_ADD));
       if (!entry)
@@ -2277,7 +2277,7 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         continue;
 
       PackageEntry* entry =
-        NS_STATIC_CAST(PackageEntry*, PL_DHashTableOperate(&mPackagesHash,
+        static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
                                                             & (const nsACString&) nsDependentCString(package),
                                                             PL_DHASH_ADD));
       if (!entry)

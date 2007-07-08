@@ -239,7 +239,7 @@ nsSound::PlaySystemSound(const nsAString &aSoundName)
   if (!soundRequest)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  requestSupports = NS_STATIC_CAST(nsITimerCallback*, soundRequest);
+  requestSupports = static_cast<nsITimerCallback*>(soundRequest);
   
   Str255  soundResource;
   nsresult rv = GetSoundResourceName(NS_ConvertUTF16toUTF8(aSoundName).get(),
@@ -272,11 +272,11 @@ nsSound::Play(nsIURL *aURL)
 
   // try to get from cache
   nsCOMPtr<nsISupports>   requestSupports;
-  (void)GetSoundFromCache(NS_STATIC_CAST(nsIURI*,aURL), getter_AddRefs(requestSupports));
+  (void)GetSoundFromCache(static_cast<nsIURI*>(aURL), getter_AddRefs(requestSupports));
   if (requestSupports)
   {
     nsSoundRequest* cachedRequest = nsSoundRequest::GetFromISupports(requestSupports);
-    nsMovieSoundRequest* movieRequest = NS_STATIC_CAST(nsMovieSoundRequest*, cachedRequest);
+    nsMovieSoundRequest* movieRequest = static_cast<nsMovieSoundRequest*>(cachedRequest);
     // if it was cached, start playing right away
     movieRequest->PlaySound();
   }
@@ -287,7 +287,7 @@ nsSound::Play(nsIURL *aURL)
     if (!soundRequest)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    requestSupports = NS_STATIC_CAST(nsITimerCallback*, soundRequest);
+    requestSupports = static_cast<nsITimerCallback*>(soundRequest);
     nsresult  rv = soundRequest->Init(this, aURL);
     if (NS_FAILED(rv))
       return rv;
@@ -478,7 +478,7 @@ nsSoundRequest::GetFromISupports(nsISupports* inSupports)
   nsCOMPtr<nsITimerCallback>  timerCallback = do_QueryInterface(inSupports);
   if (!timerCallback) return nsnull;
   
-  return NS_REINTERPRET_CAST(nsSoundRequest*, inSupports);
+  return reinterpret_cast<nsSoundRequest*>(inSupports);
 }
 
 
@@ -502,8 +502,8 @@ nsSoundRequest::Cleanup()
   nsCOMPtr<nsISupports>   deathGrip(this);
   if (mSound.get())
   {
-    nsSound*    macSound = NS_REINTERPRET_CAST(nsSound*, mSound.get());
-    rv = macSound->RemoveRequest(NS_STATIC_CAST(nsITimerCallback*, this));
+    nsSound*    macSound = reinterpret_cast<nsSound*>(mSound.get());
+    rv = macSound->RemoveRequest(static_cast<nsITimerCallback*>(this));
     mSound = nsnull;
   }
   
@@ -605,7 +605,7 @@ nsSystemSoundRequest::PlaySound()
   }
   
   const PRInt32   kSoundTimerInterval = 250;      // 250 milliseconds
-  rv = mTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*, this), kSoundTimerInterval,
+  rv = mTimer->InitWithCallback(static_cast<nsITimerCallback*>(this), kSoundTimerInterval,
                                 nsITimer::TYPE_REPEATING_PRECISE);
   if (NS_FAILED(rv)) {
     Cleanup();
@@ -637,7 +637,7 @@ nsSystemSoundRequest::DonePlaying()
 pascal void
 nsSystemSoundRequest::SoundCallback(SndChannelPtr chan, SndCommand *theCmd)
 {
-  nsSystemSoundRequest*   soundRequest = NS_REINTERPRET_CAST(nsSystemSoundRequest*, theCmd->param2);
+  nsSystemSoundRequest*   soundRequest = reinterpret_cast<nsSystemSoundRequest*>(theCmd->param2);
   if (soundRequest)
     soundRequest->DonePlaying();
 }
@@ -735,7 +735,7 @@ nsMovieSoundRequest::Init(nsISound* aSound, nsIURL *aURL)
   NS_ASSERTION(mMovie == nsnull, "nsSound being played twice");
   
   nsCOMPtr<nsIStreamLoader> streamLoader;
-  return NS_NewStreamLoader(getter_AddRefs(streamLoader), aURL, NS_STATIC_CAST(nsIStreamLoaderObserver*, this));
+  return NS_NewStreamLoader(getter_AddRefs(streamLoader), aURL, static_cast<nsIStreamLoaderObserver*>(this));
 }
 
 NS_IMETHODIMP
@@ -774,13 +774,13 @@ nsMovieSoundRequest::OnStreamComplete(nsIStreamLoader *aLoader,
     return NS_ERROR_FAILURE;
   }
 
-  nsSound*    macSound = NS_REINTERPRET_CAST(nsSound*, mSound.get());
+  nsSound*    macSound = reinterpret_cast<nsSound*>(mSound.get());
   NS_ASSERTION(macSound, "Should have nsSound here");
   
   // put it in the cache. Not vital that this succeeds.
   // for the data size we just use the string data, since the movie simply wraps this
   // (we have to keep the handle around until the movies are done playing)
-  nsresult rv = macSound->PutSoundInCache(channel, dataLen, NS_STATIC_CAST(nsITimerCallback*, this));
+  nsresult rv = macSound->PutSoundInCache(channel, dataLen, static_cast<nsITimerCallback*>(this));
   NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to put sound in cache");
   
   return PlaySound();
@@ -864,7 +864,7 @@ nsMovieSoundRequest::PlaySound()
     }
     
     const PRInt32   kMovieTimerInterval = 250;      // 250 milliseconds
-    rv = mTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*, this), kMovieTimerInterval,
+    rv = mTimer->InitWithCallback(static_cast<nsITimerCallback*>(this), kMovieTimerInterval,
                                   nsITimer::TYPE_REPEATING_PRECISE);
     if (NS_FAILED(rv)) {
       Cleanup();

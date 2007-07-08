@@ -451,7 +451,7 @@ nsObjectFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsIObjectFrame))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIObjectFrame*, this);
+    *aInstancePtr = static_cast<nsIObjectFrame*>(this);
     return NS_OK;
   }
 
@@ -946,12 +946,12 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
     nsIWidget* widget = GetWindow();
     if (widget) {
       NPSetWindowCallbackStruct* ws_info = 
-        NS_STATIC_CAST(NPSetWindowCallbackStruct*, window->ws_info);
+        static_cast<NPSetWindowCallbackStruct*>(window->ws_info);
       ws_info->display =
-        NS_STATIC_CAST(Display*, widget->GetNativeData(NS_NATIVE_DISPLAY));
+        static_cast<Display*>(widget->GetNativeData(NS_NATIVE_DISPLAY));
 #ifdef MOZ_WIDGET_GTK2
       GdkWindow* gdkWindow =
-        NS_STATIC_CAST(GdkWindow*, widget->GetNativeData(NS_NATIVE_WINDOW));
+        static_cast<GdkWindow*>(widget->GetNativeData(NS_NATIVE_WINDOW));
       GdkColormap* gdkColormap = gdk_drawable_get_colormap(gdkWindow);
       ws_info->colormap = gdk_x11_colormap_get_xcolormap(gdkColormap);
       GdkVisual* gdkVisual = gdk_colormap_get_visual(gdkColormap);
@@ -979,7 +979,7 @@ static void PaintPrintPlugin(nsIFrame* aFrame, nsIRenderingContext* aCtx,
                              const nsRect& aDirtyRect, nsPoint aPt)
 {
   nsIRenderingContext::AutoPushTranslation translate(aCtx, aPt.x, aPt.y);
-  NS_STATIC_CAST(nsObjectFrame*, aFrame)->PrintPlugin(*aCtx, aDirtyRect);
+  static_cast<nsObjectFrame*>(aFrame)->PrintPlugin(*aCtx, aDirtyRect);
 }
 
 static void PaintPlugin(nsIFrame* aFrame, nsIRenderingContext* aCtx,
@@ -988,9 +988,9 @@ static void PaintPlugin(nsIFrame* aFrame, nsIRenderingContext* aCtx,
   nsIRenderingContext::AutoPushTranslation translate(aCtx, aPt.x, aPt.y);
 #ifdef MOZ_X11 // FIXME - Bug 385435: Don't others want this too!
   nsRect relativeDirtyRect = aDirtyRect - aPt;
-  NS_STATIC_CAST(nsObjectFrame*, aFrame)->PaintPlugin(*aCtx, relativeDirtyRect);
+  static_cast<nsObjectFrame*>(aFrame)->PaintPlugin(*aCtx, relativeDirtyRect);
 #else
-  NS_STATIC_CAST(nsObjectFrame*, aFrame)->PaintPlugin(*aCtx, aDirtyRect);
+  static_cast<nsObjectFrame*>(aFrame)->PaintPlugin(*aCtx, aDirtyRect);
 #endif
 }
 
@@ -1188,8 +1188,8 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       // check if we need to update hdc
       HDC hdc = (HDC)aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
 
-      if (NS_REINTERPRET_CAST(HDC, window->window) != hdc) {
-        window->window = NS_REINTERPRET_CAST(nsPluginPort*, hdc);
+      if (reinterpret_cast<HDC>(window->window) != hdc) {
+        window->window = reinterpret_cast<nsPluginPort*>(hdc);
         doupdatewindow = PR_TRUE;
       }
 
@@ -2017,11 +2017,11 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetValue(nsPluginInstancePeerVariable varia
         if (!win)
           return rv;
         GdkWindow* gdkWindow =
-          NS_STATIC_CAST(GdkWindow*, win->GetNativeData(NS_NATIVE_WINDOW));
+          static_cast<GdkWindow*>(win->GetNativeData(NS_NATIVE_WINDOW));
         if (!gdkWindow)
           return rv;
         gdkWindow = gdk_window_get_toplevel(gdkWindow);
-        *NS_STATIC_CAST(Window*, value) = GDK_WINDOW_XID(gdkWindow);
+        *static_cast<Window*>(value) = GDK_WINDOW_XID(gdkWindow);
         return NS_OK;
 #endif
       } else NS_ASSERTION(mOwner, "plugin owner has no owner in getting doc's window handle");
@@ -2420,7 +2420,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
 
   if (cattrs < 0x0000FFFF) {
     // unsigned 32 bits to unsigned 16 bits conversion
-    mNumCachedAttrs = NS_STATIC_CAST(PRUint16, cattrs);
+    mNumCachedAttrs = static_cast<PRUint16>(cattrs);
   } else {
     mNumCachedAttrs = 0xFFFE;  // minus one in case we add an extra "src" entry below
   }
@@ -2521,7 +2521,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
 
   PRUint32 cparams = ourParams.Count(); // unsigned 32 bits to unsigned 16 bits conversion
   if (cparams < 0x0000FFFF)
-    mNumCachedParams = NS_STATIC_CAST(PRUint16, cparams);
+    mNumCachedParams = static_cast<PRUint16>(cparams);
   else 
     mNumCachedParams = 0xFFFF;
 
@@ -3133,7 +3133,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 
       if (eventHandled && !(anEvent.eventStructType == NS_MOUSE_EVENT &&
                             anEvent.message == NS_MOUSE_BUTTON_DOWN &&
-                            NS_STATIC_CAST(const nsMouseEvent&, anEvent).button ==
+                            static_cast<const nsMouseEvent&>(anEvent).button ==
                               nsMouseEvent::eLeftButton &&
                             !mContentFocused))
         rv = nsEventStatus_eConsumeNoDefault;
@@ -3199,7 +3199,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
         nsIntPoint pluginPoint(presContext->AppUnitsToDevPixels(appPoint.x),
                                presContext->AppUnitsToDevPixels(appPoint.y));
         const nsMouseEvent& mouseEvent =
-          NS_STATIC_CAST(const nsMouseEvent&, anEvent);
+          static_cast<const nsMouseEvent&>(anEvent);
         // Get reference point relative to screen:
         nsRect windowRect(anEvent.refPoint, nsSize(1, 1));
         nsRect rootPoint(-1,-1,1,1);
@@ -3295,7 +3295,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
           event.root = GDK_ROOT_WINDOW();
           event.time = anEvent.time;
           const GdkEventKey* gdkEvent =
-            NS_STATIC_CAST(const GdkEventKey*, anEvent.nativeMsg);
+            static_cast<const GdkEventKey*>(anEvent.nativeMsg);
           event.keycode = gdkEvent->hardware_keycode;
           event.state = gdkEvent->state;
           switch (anEvent.message)
@@ -3354,7 +3354,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
   // Fill in (useless) generic event information.
   XAnyEvent& event = pluginEvent.event.xany;
   event.display = widget ?
-    NS_STATIC_CAST(Display*, widget->GetNativeData(NS_NATIVE_DISPLAY)) : nsnull;
+    static_cast<Display*>(widget->GetNativeData(NS_NATIVE_DISPLAY)) : nsnull;
   event.window = None; // not a real window
   // information lost:
   event.serial = 0;
@@ -3530,15 +3530,15 @@ void nsPluginInstanceOwner::Paint(nsIRenderingContext& aRenderingContext,
     rendererFlags |= Renderer::DRAW_IS_OPAQUE;
 
   gfxContext* ctx =
-    NS_STATIC_CAST(gfxContext*,
-                   aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+    static_cast<gfxContext*>
+               (aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
 
   // The display used by gfxXlibNativeRenderer will be the one for the cairo
   // surface (provided that it is an Xlib surface) but the display argument
   // here needs to be non-NULL for cairo_draw_with_xlib ->
   // _create_temp_xlib_surface -> DefaultScreen(dpy).
   NPSetWindowCallbackStruct* ws_info = 
-    NS_STATIC_CAST(NPSetWindowCallbackStruct*, window->ws_info);
+    static_cast<NPSetWindowCallbackStruct*>(window->ws_info);
   renderer.Draw(ws_info->display, ctx, window->width, window->height,
                 rendererFlags, nsnull);
 }
@@ -3586,7 +3586,7 @@ nsPluginInstanceOwner::Renderer::NativeDraw(Display* dpy, Drawable drawable,
   }
 
   NPSetWindowCallbackStruct* ws_info = 
-    NS_STATIC_CAST(NPSetWindowCallbackStruct*, mWindow->ws_info);
+    static_cast<NPSetWindowCallbackStruct*>(mWindow->ws_info);
   if ( ws_info->visual != visual) {
     // NPAPI needs a colormap but the surface doesn't provide a colormap.  If
     // gfxContent::CurrentSurface is a gfxXlibSurface then the visual here

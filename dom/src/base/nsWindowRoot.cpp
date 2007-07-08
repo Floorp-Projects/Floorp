@@ -67,10 +67,10 @@ nsWindowRoot::nsWindowRoot(nsIDOMWindow* aWindow)
   nsFocusController::Create(getter_AddRefs(mFocusController));
 
   nsCOMPtr<nsIDOMFocusListener> focusListener(do_QueryInterface(mFocusController));
-  mRefCnt.incr(NS_STATIC_CAST(nsIDOMEventTarget*, this));
+  mRefCnt.incr(static_cast<nsIDOMEventTarget*>(this));
   AddEventListener(NS_LITERAL_STRING("focus"), focusListener, PR_TRUE);
   AddEventListener(NS_LITERAL_STRING("blur"), focusListener, PR_TRUE);
-  mRefCnt.decr(NS_STATIC_CAST(nsIDOMEventTarget*, this));
+  mRefCnt.decr(static_cast<nsIDOMEventTarget*>(this));
 }
 
 nsWindowRoot::~nsWindowRoot()
@@ -111,7 +111,7 @@ nsWindowRoot::DispatchEvent(nsIDOMEvent* aEvt, PRBool *_retval)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv =  nsEventDispatcher::DispatchDOMEvent(
-    NS_STATIC_CAST(nsPIDOMEventTarget*, this), nsnull, aEvt, nsnull, &status);
+    static_cast<nsPIDOMEventTarget*>(this), nsnull, aEvt, nsnull, &status);
   *_retval = (status != nsEventStatus_eConsumeNoDefault);
   return rv;
 }
@@ -122,7 +122,7 @@ nsWindowRoot::DispatchDOMEvent(nsEvent* aEvent,
                                nsPresContext* aPresContext,
                                nsEventStatus* aEventStatus)
 {
-  return nsEventDispatcher::DispatchDOMEvent(NS_STATIC_CAST(nsPIDOMEventTarget*, this),
+  return nsEventDispatcher::DispatchDOMEvent(static_cast<nsPIDOMEventTarget*>(this),
                                              aEvent, aDOMEvent,
                                              aPresContext, aEventStatus);
 }
@@ -220,7 +220,7 @@ nsWindowRoot::GetListenerManager(PRBool aCreateIfNotFound,
     mListenerManager = do_CreateInstance(kEventListenerManagerCID, &rv);
     if (NS_FAILED(rv)) return rv;
     mListenerManager->SetListenerTarget(
-      NS_STATIC_CAST(nsPIDOMEventTarget*, this));
+      static_cast<nsPIDOMEventTarget*>(this));
   }
 
   *aResult = mListenerManager;

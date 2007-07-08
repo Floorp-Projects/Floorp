@@ -90,8 +90,8 @@ void nsTableColGroupFrame::ResetColIndices(nsIFrame*       aFirstColGroup,
         colFrame = colFrame->GetNextSibling();
       }
     }
-    colGroupFrame = NS_STATIC_CAST(nsTableColGroupFrame*,
-                                   colGroupFrame->GetNextSibling());
+    colGroupFrame = static_cast<nsTableColGroupFrame*>
+                               (colGroupFrame->GetNextSibling());
   }
 }
 

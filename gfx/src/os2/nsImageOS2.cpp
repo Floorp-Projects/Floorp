@@ -951,7 +951,7 @@ NS_IMETHODIMP nsImageOS2::DrawToImage(nsIImage* aDstImage,
 
   GFX (::GpiCreateLogColorTable (MemPS, 0, LCOLF_RGB, 0, 0, 0), FALSE);
 
-  nsImageOS2* destImg = NS_STATIC_CAST(nsImageOS2*, aDstImage); 
+  nsImageOS2* destImg = static_cast<nsImageOS2*>(aDstImage); 
 
   HBITMAP hTmpBitmap = GFX (::GpiCreateBitmap (MemPS, (PBITMAPINFOHEADER2)destImg->mInfo,
                                                CBM_INIT, (PBYTE)destImg->mImageBits,

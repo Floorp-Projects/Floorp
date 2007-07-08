@@ -265,7 +265,7 @@ PR_STATIC_CALLBACK(PLDHashOperator) EnumAndSetIncomplete(nsISupports * aContent,
                                                          void * aData)
 {
   if (aListener && aData) {
-    nsCOMPtr<nsIContent> content = NS_STATIC_CAST(nsIContent *, aData);
+    nsCOMPtr<nsIContent> content = static_cast<nsIContent *>(aData);
     if (content) { 
       if (aListener->ObserverEquals(content) || aListener->HandlerEquals(content)) {
         aListener->SetIncomplete();

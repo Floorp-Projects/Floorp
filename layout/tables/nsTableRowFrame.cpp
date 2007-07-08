@@ -549,7 +549,7 @@ public:
     // the overflow rect contains any row-spanning cells, so it contains
     // our background. Note that this means we may not be opaque even if
     // the background style is a solid color.
-    return NS_STATIC_CAST(nsTableRowFrame*, mFrame)->GetOverflowRect() +
+    return static_cast<nsTableRowFrame*>(mFrame)->GetOverflowRect() +
       aBuilder->ToReferenceFrame(mFrame);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
@@ -568,7 +568,7 @@ nsDisplayTableRowBackground::Paint(nsDisplayListBuilder* aBuilder,
                                  TableBackgroundPainter::eOrigin_TableRow,
                                  mFrame->PresContext(), *aCtx,
                                  aDirtyRect - pt);
-  painter.PaintRow(NS_STATIC_CAST(nsTableRowFrame*, mFrame));
+  painter.PaintRow(static_cast<nsTableRowFrame*>(mFrame));
 }
 
 NS_IMETHODIMP
@@ -815,7 +815,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
       continue;
     }
 
-    nsTableCellFrame* cellFrame = NS_STATIC_CAST(nsTableCellFrame*, kidFrame);
+    nsTableCellFrame* cellFrame = static_cast<nsTableCellFrame*>(kidFrame);
 
     // See if we should only reflow the dirty child frames
     PRBool doReflowChild = PR_TRUE;
@@ -1101,7 +1101,7 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
 {
   const nsStyleVisibility* rowVis = GetStyleVisibility();
   PRBool collapseRow = (NS_STYLE_VISIBILITY_COLLAPSE == rowVis->mVisible);
-  nsTableFrame* tableFrame = NS_STATIC_CAST(nsTableFrame*, nsTableFrame::GetTableFrame(this)->GetFirstInFlow());
+  nsTableFrame* tableFrame = static_cast<nsTableFrame*>(nsTableFrame::GetTableFrame(this)->GetFirstInFlow());
   if (!tableFrame)
       return 0;
   if (collapseRow) {
@@ -1351,7 +1351,7 @@ void nsTableRowFrame::InitHasCellWithStyleHeight(nsTableFrame* aTableFrame)
       NS_NOTREACHED("Table row has a non-cell child.");
       continue;
     }
-    nsTableCellFrame* cellFrame = NS_STATIC_CAST(nsTableCellFrame*, kidFrame);
+    nsTableCellFrame* cellFrame = static_cast<nsTableCellFrame*>(kidFrame);
     // Ignore row-spanning cells
     if (aTableFrame->GetEffectiveRowSpan(*cellFrame) == 1 &&
         cellFrame->GetStylePosition()->mHeight.GetUnit() != eStyleUnit_Auto) {

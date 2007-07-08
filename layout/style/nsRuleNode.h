@@ -208,17 +208,17 @@ struct nsCachedStyleData
     const StyleStructInfo& info = gInfo[aSID];
 
     // Get either &mInheritedData or &mResetData.
-    char* resetOrInheritSlot = NS_REINTERPRET_CAST(char*, this) + info.mCachedStyleDataOffset;
+    char* resetOrInheritSlot = reinterpret_cast<char*>(this) + info.mCachedStyleDataOffset;
 
     // Get either mInheritedData or mResetData.
-    char* resetOrInherit = NS_REINTERPRET_CAST(char*, *NS_REINTERPRET_CAST(void**, resetOrInheritSlot));
+    char* resetOrInherit = reinterpret_cast<char*>(*reinterpret_cast<void**>(resetOrInheritSlot));
 
     nsStyleStruct* data = nsnull;
     if (resetOrInherit) {
       // If we have the mInheritedData or mResetData, then we might have
       // the struct, so get it.
       char* dataSlot = resetOrInherit + info.mInheritResetOffset;
-      data = *NS_REINTERPRET_CAST(nsStyleStruct**, dataSlot);
+      data = *reinterpret_cast<nsStyleStruct**>(dataSlot);
     }
     return data;
   }
@@ -394,10 +394,10 @@ private:
     return (PRWord(mChildrenTaggedPtr) & kTypeMask) == kHashType;
   }
   nsRuleList* ChildrenList() {
-    return NS_REINTERPRET_CAST(nsRuleList*, mChildrenTaggedPtr);
+    return reinterpret_cast<nsRuleList*>(mChildrenTaggedPtr);
   }
   nsRuleList** ChildrenListPtr() {
-    return NS_REINTERPRET_CAST(nsRuleList**, &mChildrenTaggedPtr);
+    return reinterpret_cast<nsRuleList**>(&mChildrenTaggedPtr);
   }
   PLDHashTable* ChildrenHash() {
     return (PLDHashTable*) (PRWord(mChildrenTaggedPtr) & ~PRWord(kTypeMask));

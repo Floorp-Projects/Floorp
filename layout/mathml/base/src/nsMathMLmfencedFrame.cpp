@@ -260,7 +260,7 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
   aDesiredSize.mBoundingMetrics.Clear();
 
   nsMathMLContainerFrame* mathMLFrame =
-    NS_STATIC_CAST(nsMathMLContainerFrame*, aForFrame);
+    static_cast<nsMathMLContainerFrame*>(aForFrame);
 
   PRInt32 i;
   nsCOMPtr<nsIFontMetrics> fm;

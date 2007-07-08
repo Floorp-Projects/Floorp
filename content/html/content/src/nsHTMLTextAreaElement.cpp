@@ -371,7 +371,7 @@ nsHTMLTextAreaElement::Select()
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsGUIEvent event(PR_TRUE, NS_FORM_SELECTED, nsnull);
-  nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this), presContext,
+  nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext,
                               &event, nsnull, &status);
 
   // If the DOM event was not canceled (e.g. by a JS event handler
@@ -645,7 +645,7 @@ nsHTMLTextAreaElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     aVisitor.mItemFlags |= NS_NO_CONTENT_DISPATCH;
   if (aVisitor.mEvent->message == NS_MOUSE_CLICK &&
       aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
-      NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+      static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
         nsMouseEvent::eMiddleButton) {
     aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_NO_CONTENT_DISPATCH;
   }

@@ -395,7 +395,7 @@ XPCNativeInterface::FindMember(jsval name) const
     const XPCNativeMember* member = mMembers;
     for(int i = (int) mMemberCount; i > 0; i--, member++)
         if(member->GetName() == name)
-            return NS_CONST_CAST(XPCNativeMember*, member);
+            return const_cast<XPCNativeMember*>(member);
     return nsnull;
 }
 
@@ -644,8 +644,8 @@ XPCWrappedNativeTearOff::GetIDispatchInfo() const
 {
     NS_ASSERTION((jsword)mJSObject & 2, "XPCWrappedNativeTearOff::GetIDispatchInfo "
                                 "called on a non IDispatch interface");
-    return NS_REINTERPRET_CAST(XPCDispInterface*,
-                               (((jsword)mJSObject) & ~JSOBJECT_MASK));
+    return reinterpret_cast<XPCDispInterface*>
+                           ((((jsword)mJSObject) & ~JSOBJECT_MASK));
 }
 
 inline JSBool

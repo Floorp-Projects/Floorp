@@ -334,9 +334,9 @@ PR_STATIC_CALLBACK(PRIntn)
 TraverseInsertionPoint(nsHashKey* aKey, void* aData, void* aClosure)
 {
   nsCycleCollectionTraversalCallback &cb = 
-    *NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aClosure);
+    *static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
   nsXBLInsertionPointEntry* entry =
-    NS_STATIC_CAST(nsXBLInsertionPointEntry*, aData);
+    static_cast<nsXBLInsertionPointEntry*>(aData);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(entry,
                                                nsXBLInsertionPointEntry)
   return kHashEnumerateNext;
@@ -346,8 +346,8 @@ PR_STATIC_CALLBACK(PRBool)
 TraverseBinding(nsHashKey *aKey, void *aData, void* aClosure)
 {
   nsCycleCollectionTraversalCallback *cb = 
-    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aClosure);
-  cb->NoteXPCOMChild(NS_STATIC_CAST(nsISupports*, aData));
+    static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
+  cb->NoteXPCOMChild(static_cast<nsISupports*>(aData));
   return kHashEnumerateNext;
 }
 
@@ -535,14 +535,13 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
   if (!mAttributeTable)
     return;
   nsPRUint32Key nskey(aNameSpaceID);
-  nsObjectHashtable *attributesNS = NS_STATIC_CAST(nsObjectHashtable*, 
-                                                   mAttributeTable->Get(&nskey));
+  nsObjectHashtable *attributesNS = static_cast<nsObjectHashtable*>(mAttributeTable->Get(&nskey));
   if (!attributesNS)
     return;
 
   nsISupportsKey key(aAttribute);
-  nsXBLAttributeEntry* xblAttr = NS_STATIC_CAST(nsXBLAttributeEntry*,
-                                                attributesNS->Get(&key));
+  nsXBLAttributeEntry* xblAttr = static_cast<nsXBLAttributeEntry*>
+                                            (attributesNS->Get(&key));
   if (!xblAttr)
     return;
 
@@ -630,8 +629,8 @@ struct InsertionData {
 
 PRBool PR_CALLBACK InstantiateInsertionPoint(nsHashKey* aKey, void* aData, void* aClosure)
 {
-  nsXBLInsertionPointEntry* entry = NS_STATIC_CAST(nsXBLInsertionPointEntry*, aData);
-  InsertionData* data = NS_STATIC_CAST(InsertionData*, aClosure);
+  nsXBLInsertionPointEntry* entry = static_cast<nsXBLInsertionPointEntry*>(aData);
+  InsertionData* data = static_cast<InsertionData*>(aClosure);
   nsXBLBinding* binding = data->mBinding;
   nsXBLPrototypeBinding* proto = data->mPrototype;
 
@@ -699,10 +698,10 @@ nsXBLPrototypeBinding::GetInsertionPoint(nsIContent* aBoundElement,
     return nsnull;
 
   nsISupportsKey key(aChild->Tag());
-  nsXBLInsertionPointEntry* entry = NS_STATIC_CAST(nsXBLInsertionPointEntry*, mInsertionPointTable->Get(&key));
+  nsXBLInsertionPointEntry* entry = static_cast<nsXBLInsertionPointEntry*>(mInsertionPointTable->Get(&key));
   if (!entry) {
     nsISupportsKey key2(nsGkAtoms::children);
-    entry = NS_STATIC_CAST(nsXBLInsertionPointEntry*, mInsertionPointTable->Get(&key2));
+    entry = static_cast<nsXBLInsertionPointEntry*>(mInsertionPointTable->Get(&key2));
   }
 
   nsIContent *realContent = nsnull;
@@ -739,7 +738,7 @@ nsXBLPrototypeBinding::GetSingleInsertionPoint(nsIContent* aBoundElement,
 
   nsISupportsKey key(nsGkAtoms::children);
   nsXBLInsertionPointEntry* entry =
-    NS_STATIC_CAST(nsXBLInsertionPointEntry*, mInsertionPointTable->Get(&key));
+    static_cast<nsXBLInsertionPointEntry*>(mInsertionPointTable->Get(&key));
 
   if (!entry) {
     // The only insertion point specified was actually a filtered insertion
@@ -788,8 +787,7 @@ nsXBLPrototypeBinding::ImplementsInterface(REFNSIID aIID) const
   // Check our IID table.
   if (mInterfaceTable) {
     nsIIDKey key(aIID);
-    nsCOMPtr<nsISupports> supports = getter_AddRefs(NS_STATIC_CAST(nsISupports*, 
-                                                                   mInterfaceTable->Get(&key)));
+    nsCOMPtr<nsISupports> supports = getter_AddRefs(static_cast<nsISupports*>(mInterfaceTable->Get(&key)));
     return supports != nsnull;
   }
 
@@ -889,7 +887,7 @@ nsXBLPrototypeBinding::LocateInstance(nsIContent* aBoundElement,
       // Next we have to find the real insertion point for this proto insertion
       // point.  If it does not contain any default content, then we should 
       // return null, since the content is not in the clone.
-      nsXBLInsertionPoint* currPoint = NS_STATIC_CAST(nsXBLInsertionPoint*, points->ElementAt(i));
+      nsXBLInsertionPoint* currPoint = static_cast<nsXBLInsertionPoint*>(points->ElementAt(i));
       nsCOMPtr<nsIContent> defContent = currPoint->GetDefaultContentTemplate();
       if (defContent == childPoint) {
         // Now check to see if we even built default content at this
@@ -931,8 +929,8 @@ struct nsXBLAttrChangeData
 // XXXbz this duplicates lots of AttributeChanged
 PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
 {
-  nsXBLAttributeEntry* entry = NS_STATIC_CAST(nsXBLAttributeEntry*, aData);
-  nsXBLAttrChangeData* changeData = NS_STATIC_CAST(nsXBLAttrChangeData*, aClosure);
+  nsXBLAttributeEntry* entry = static_cast<nsXBLAttributeEntry*>(aData);
+  nsXBLAttrChangeData* changeData = static_cast<nsXBLAttrChangeData*>(aClosure);
 
   nsIAtom* src = entry->GetSrcAttribute();
   PRInt32 srcNs = changeData->mSrcNamespace;
@@ -998,11 +996,11 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
 PRBool PR_CALLBACK SetAttrsNS(nsHashKey* aKey, void* aData, void* aClosure)
 {
   if (aData && aClosure) {
-    nsPRUint32Key * key = NS_STATIC_CAST(nsPRUint32Key*, aKey);
+    nsPRUint32Key * key = static_cast<nsPRUint32Key*>(aKey);
     nsObjectHashtable* xblAttributes =
-      NS_STATIC_CAST(nsObjectHashtable*, aData);
-    nsXBLAttrChangeData * changeData = NS_STATIC_CAST(nsXBLAttrChangeData *,
-                                                      aClosure);
+      static_cast<nsObjectHashtable*>(aData);
+    nsXBLAttrChangeData * changeData = static_cast<nsXBLAttrChangeData *>
+                                                  (aClosure);
     changeData->mSrcNamespace = key->GetValue();
     xblAttributes->Enumerate(SetAttrs, (void*)changeData);
   }
@@ -1045,7 +1043,7 @@ nsXBLPrototypeBinding::ShouldBuildChildFrames() const
     return PR_TRUE;
   nsPRUint32Key nskey(kNameSpaceID_XBL);
   nsObjectHashtable* xblAttributes =
-    NS_STATIC_CAST(nsObjectHashtable*, mAttributeTable->Get(&nskey));
+    static_cast<nsObjectHashtable*>(mAttributeTable->Get(&nskey));
   if (xblAttributes) {
     nsISupportsKey key(nsGkAtoms::text);
     void* entry = xblAttributes->Get(&key);
@@ -1058,14 +1056,14 @@ nsXBLPrototypeBinding::ShouldBuildChildFrames() const
 static PRBool PR_CALLBACK
 DeleteAttributeEntry(nsHashKey* aKey, void* aData, void* aClosure)
 {
-  nsXBLAttributeEntry::Destroy(NS_STATIC_CAST(nsXBLAttributeEntry*, aData));
+  nsXBLAttributeEntry::Destroy(static_cast<nsXBLAttributeEntry*>(aData));
   return PR_TRUE;
 }
 
 static PRBool PR_CALLBACK
 DeleteAttributeTable(nsHashKey* aKey, void* aData, void* aClosure)
 {
-  delete NS_STATIC_CAST(nsObjectHashtable*, aData);
+  delete static_cast<nsObjectHashtable*>(aData);
   return PR_TRUE;
 }
 
@@ -1134,7 +1132,7 @@ nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
 
         nsPRUint32Key nskey(atomNsID);
         nsObjectHashtable* attributesNS =
-          NS_STATIC_CAST(nsObjectHashtable*, mAttributeTable->Get(&nskey));
+          static_cast<nsObjectHashtable*>(mAttributeTable->Get(&nskey));
         if (!attributesNS) {
           attributesNS = new nsObjectHashtable(nsnull, nsnull,
                                                DeleteAttributeEntry,
@@ -1152,8 +1150,8 @@ nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
         // Now we should see if some element within our anonymous
         // content is already observing this attribute.
         nsISupportsKey key(atom);
-        nsXBLAttributeEntry* entry = NS_STATIC_CAST(nsXBLAttributeEntry*,
-                                                    attributesNS->Get(&key));
+        nsXBLAttributeEntry* entry = static_cast<nsXBLAttributeEntry*>
+                                                (attributesNS->Get(&key));
 
         if (!entry) {
           // Put it in the table.
@@ -1189,7 +1187,7 @@ nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
 static PRBool PR_CALLBACK
 DeleteInsertionPointEntry(nsHashKey* aKey, void* aData, void* aClosure)
 {
-  NS_STATIC_CAST(nsXBLInsertionPointEntry*, aData)->Release();
+  static_cast<nsXBLInsertionPointEntry*>(aData)->Release();
   return PR_TRUE;
 }
 

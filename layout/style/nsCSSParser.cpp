@@ -490,7 +490,7 @@ protected:
 
 PR_STATIC_CALLBACK(void) AppendRuleToArray(nsICSSRule* aRule, void* aArray)
 {
-  NS_STATIC_CAST(nsCOMArray<nsICSSRule>*, aArray)->AppendObject(aRule);
+  static_cast<nsCOMArray<nsICSSRule>*>(aArray)->AppendObject(aRule);
 }
 
 PR_STATIC_CALLBACK(void) AppendRuleToSheet(nsICSSRule* aRule, void* aParser)
@@ -3462,8 +3462,8 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
   void *v_dest = mData.PropertyAt(aPropID);
   switch (nsCSSProps::kTypeTable[aPropID]) {
     case eCSSType_Value: {
-      nsCSSValue *source = NS_STATIC_CAST(nsCSSValue*, v_source);
-      nsCSSValue *dest = NS_STATIC_CAST(nsCSSValue*, v_dest);
+      nsCSSValue *source = static_cast<nsCSSValue*>(v_source);
+      nsCSSValue *dest = static_cast<nsCSSValue*>(v_dest);
       if (*source != *dest)
         *aChanged = PR_TRUE;
       dest->~nsCSSValue();
@@ -3472,8 +3472,8 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
     } break;
 
     case eCSSType_Rect: {
-      nsCSSRect *source = NS_STATIC_CAST(nsCSSRect*, v_source);
-      nsCSSRect *dest = NS_STATIC_CAST(nsCSSRect*, v_dest);
+      nsCSSRect *source = static_cast<nsCSSRect*>(v_source);
+      nsCSSRect *dest = static_cast<nsCSSRect*>(v_dest);
       if (*source != *dest)
         *aChanged = PR_TRUE;
       dest->~nsCSSRect();
@@ -3482,8 +3482,8 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
     } break;
 
     case eCSSType_ValuePair: {
-      nsCSSValuePair *source = NS_STATIC_CAST(nsCSSValuePair*, v_source);
-      nsCSSValuePair *dest = NS_STATIC_CAST(nsCSSValuePair*, v_dest);
+      nsCSSValuePair *source = static_cast<nsCSSValuePair*>(v_source);
+      nsCSSValuePair *dest = static_cast<nsCSSValuePair*>(v_dest);
       if (*source != *dest)
         *aChanged = PR_TRUE;
       dest->~nsCSSValuePair();
@@ -3492,8 +3492,8 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
     } break;
 
     case eCSSType_ValueList: {
-      nsCSSValueList **source = NS_STATIC_CAST(nsCSSValueList**, v_source);
-      nsCSSValueList **dest = NS_STATIC_CAST(nsCSSValueList**, v_dest);
+      nsCSSValueList **source = static_cast<nsCSSValueList**>(v_source);
+      nsCSSValueList **dest = static_cast<nsCSSValueList**>(v_dest);
       if (!nsCSSValueList::Equal(*source, *dest))
         *aChanged = PR_TRUE;
       delete *dest;
@@ -3502,8 +3502,8 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
     } break;
 
     case eCSSType_CounterData: {
-      nsCSSCounterData **source = NS_STATIC_CAST(nsCSSCounterData**, v_source);
-      nsCSSCounterData **dest = NS_STATIC_CAST(nsCSSCounterData**, v_dest);
+      nsCSSCounterData **source = static_cast<nsCSSCounterData**>(v_source);
+      nsCSSCounterData **dest = static_cast<nsCSSCounterData**>(v_dest);
       if (!nsCSSCounterData::Equal(*source, *dest))
         *aChanged = PR_TRUE;
       delete *dest;
@@ -3512,8 +3512,8 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
     } break;
 
     case eCSSType_Quotes: {
-      nsCSSQuotes **source = NS_STATIC_CAST(nsCSSQuotes**, v_source);
-      nsCSSQuotes **dest = NS_STATIC_CAST(nsCSSQuotes**, v_dest);
+      nsCSSQuotes **source = static_cast<nsCSSQuotes**>(v_source);
+      nsCSSQuotes **dest = static_cast<nsCSSQuotes**>(v_dest);
       if (!nsCSSQuotes::Equal(*source, *dest))
         *aChanged = PR_TRUE;
       delete *dest;
@@ -4186,7 +4186,7 @@ CSSParserImpl::AppendValue(nsCSSProperty aPropID,
                nsPrintfCString(64, "type error (property=\'%s\')",
                              nsCSSProps::GetStringValue(aPropID).get()).get());
   nsCSSValue& storage =
-      *NS_STATIC_CAST(nsCSSValue*, mTempData.PropertyAt(aPropID));
+      *static_cast<nsCSSValue*>(mTempData.PropertyAt(aPropID));
   storage = aValue;
   mTempData.SetPropertyBit(aPropID);
 }

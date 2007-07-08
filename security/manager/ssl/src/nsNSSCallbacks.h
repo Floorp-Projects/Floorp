@@ -170,7 +170,7 @@ public:
 
   static SECStatus freeSessionFcn(SEC_HTTP_SERVER_SESSION session)
   {
-    delete NS_STATIC_CAST(nsNSSHttpServerSession*, session);
+    delete static_cast<nsNSSHttpServerSession*>(session);
     return SECSuccess;
   }
 
@@ -191,7 +191,7 @@ public:
                                   const PRUint32 http_data_len,
                                   const char *http_content_type)
   {
-    return NS_STATIC_CAST(nsNSSHttpRequestSession*, request)
+    return static_cast<nsNSSHttpRequestSession*>(request)
             ->setPostDataFcn(http_data, http_data_len, http_content_type);
   }
 
@@ -199,7 +199,7 @@ public:
                                 const char *http_header_name, 
                                 const char *http_header_value)
   {
-    return NS_STATIC_CAST(nsNSSHttpRequestSession*, request)
+    return static_cast<nsNSSHttpRequestSession*>(request)
             ->addHeaderFcn(http_header_name, http_header_value);
   }
 
@@ -211,20 +211,20 @@ public:
                                         const char **http_response_data, 
                                         PRUint32 *http_response_data_len)
   {
-    return NS_STATIC_CAST(nsNSSHttpRequestSession*, request)
+    return static_cast<nsNSSHttpRequestSession*>(request)
             ->trySendAndReceiveFcn(pPollDesc, http_response_code, http_response_content_type, 
                      http_response_headers, http_response_data, http_response_data_len);
   }
 
   static SECStatus cancelFcn(SEC_HTTP_REQUEST_SESSION request)
   {
-    return NS_STATIC_CAST(nsNSSHttpRequestSession*, request)
+    return static_cast<nsNSSHttpRequestSession*>(request)
             ->cancelFcn();
   }
 
   static SECStatus freeFcn(SEC_HTTP_REQUEST_SESSION request)
   {
-    return NS_STATIC_CAST(nsNSSHttpRequestSession*, request)
+    return static_cast<nsNSSHttpRequestSession*>(request)
             ->freeFcn();
   }
 

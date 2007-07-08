@@ -117,7 +117,7 @@ nsSVGFE::ScanDualValueAttribute(const nsAString& aValue, nsIAtom* aAttribute,
   NS_ConvertUTF16toUTF8 value(aValue);
   value.CompressWhitespace(PR_FALSE, PR_TRUE);
   const char *str = value.get();
-  x = NS_STATIC_CAST(float, PR_strtod(str, &rest));
+  x = static_cast<float>(PR_strtod(str, &rest));
   if (str == rest) {
     //first value was illformed
     parseError = PR_TRUE;
@@ -126,7 +126,7 @@ nsSVGFE::ScanDualValueAttribute(const nsAString& aValue, nsIAtom* aAttribute,
       //second value was not supplied
       y = x;
     } else {
-      y = NS_STATIC_CAST(float, PR_strtod(rest, &rest));
+      y = static_cast<float>(PR_strtod(rest, &rest));
       if (*rest != '\0') {
         //second value was illformed or there was trailing content
         parseError = PR_TRUE;
@@ -659,8 +659,8 @@ nsSVGFEGaussianBlurElement::GaussianBlur(PRUint8 *aInput, PRUint8 *aOutput,
   dX = (PRUint32) floor(aStdX * 3*sqrt(2*M_PI)/4 + 0.5);
   dY = (PRUint32) floor(aStdY * 3*sqrt(2*M_PI)/4 + 0.5);
 
-  PRUint8 *tmp = NS_STATIC_CAST(PRUint8*,
-                                calloc(aFilterResource->GetDataLength(), 1));
+  PRUint8 *tmp = static_cast<PRUint8*>
+                            (calloc(aFilterResource->GetDataLength(), 1));
   nsRect rect = aFilterResource->GetRect();
   PRUint32 stride = aFilterResource->GetDataStride();
 
@@ -981,7 +981,7 @@ nsSVGFEBlendElement::Filter(nsSVGFilterInstance *instance)
             break;
         }
         val = PR_MIN(val / 255, 255);
-        targetData[targIndex + i] =  NS_STATIC_CAST(PRUint8, val);
+        targetData[targIndex + i] =  static_cast<PRUint8>(val);
       }
       PRUint32 alpha = 255 * 255 - (255 - qa) * (255 - qb);
       FAST_DIVIDE_BY_255(targetData[targIndex + GFX_ARGB32_OFFSET_A], alpha);
@@ -1265,8 +1265,8 @@ nsSVGFEColorMatrixElement::Filter(nsSVGFilterInstance *instance)
     list->GetItem(0, getter_AddRefs(number));
     number->GetValue(&hueRotateValue);
 
-    c = NS_STATIC_CAST(float, cos(hueRotateValue * M_PI / 180));
-    s = NS_STATIC_CAST(float, sin(hueRotateValue * M_PI / 180));
+    c = static_cast<float>(cos(hueRotateValue * M_PI / 180));
+    s = static_cast<float>(sin(hueRotateValue * M_PI / 180));
 
     memcpy(colorMatrix, identityMatrix, sizeof(colorMatrix));
 
@@ -1308,13 +1308,13 @@ nsSVGFEColorMatrixElement::Filter(nsSVGFilterInstance *instance)
         col[i] = PR_MIN(PR_MAX(0, col[i]), 255);
       }
       targetData[targIndex + GFX_ARGB32_OFFSET_R] =
-        NS_STATIC_CAST(PRUint8, col[0]);
+        static_cast<PRUint8>(col[0]);
       targetData[targIndex + GFX_ARGB32_OFFSET_G] =
-        NS_STATIC_CAST(PRUint8, col[1]);
+        static_cast<PRUint8>(col[1]);
       targetData[targIndex + GFX_ARGB32_OFFSET_B] =
-        NS_STATIC_CAST(PRUint8, col[2]);
+        static_cast<PRUint8>(col[2]);
       targetData[targIndex + GFX_ARGB32_OFFSET_A] =
-        NS_STATIC_CAST(PRUint8, col[3]);
+        static_cast<PRUint8>(col[3]);
     }
   }
   return NS_OK;
@@ -1574,7 +1574,7 @@ nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance)
           PRUint8 i1 = sourceData[targIndex + i];
           float result = k1Scaled*i1*i2 + k2*i1 + k3*i2 + k4Scaled;
           targetData[targIndex + i] =
-                       NS_STATIC_CAST(PRUint8, PR_MIN(PR_MAX(0, result), 255));
+                       static_cast<PRUint8>(PR_MIN(PR_MAX(0, result), 255));
         }
       }
     }
@@ -3988,7 +3988,7 @@ ConvolvePixel(const PRUint8 *aSourceData,
   }
   for (PRInt32 i = 0; i < channels; i++) {
     aTargetData[aY * aStride + 4 * aX + offsets[i]] =
-      BOUND(NS_STATIC_CAST(PRInt32, sum[i] / aDivisor + aBias * 255), 0, 255);
+      BOUND(static_cast<PRInt32>(sum[i] / aDivisor + aBias * 255), 0, 255);
   }
   if (aPreserveAlpha) {
     aTargetData[aY * aStride + 4 * aX + GFX_ARGB32_OFFSET_A] =
@@ -4013,7 +4013,7 @@ nsSVGFEConvolveMatrixElement::Filter(nsSVGFilterInstance *instance)
   mOrderX->GetAnimVal(&orderX);
   mOrderY->GetAnimVal(&orderY);
   if (orderX <= 0 || orderY <= 0 ||
-      NS_STATIC_CAST(PRUint32, orderX * orderY) != num) {
+      static_cast<PRUint32>(orderX * orderY) != num) {
     return NS_ERROR_FAILURE;
   }
 

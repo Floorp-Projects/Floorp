@@ -402,7 +402,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
                                     requestFlags, aRequest, _retval);
 
       if (*_retval)
-        request->mValidator->AddProxy(NS_STATIC_CAST(imgRequestProxy*, *_retval));
+        request->mValidator->AddProxy(static_cast<imgRequestProxy*>(*_retval));
 
       NS_RELEASE(request);
       return rv;
@@ -447,10 +447,10 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
       NS_ADDREF(hvc);
       request->mValidator = hvc;
 
-      hvc->AddProxy(NS_STATIC_CAST(imgRequestProxy*,
-                                   NS_STATIC_CAST(imgIRequest*, req.get())));
+      hvc->AddProxy(static_cast<imgRequestProxy*>
+                               (static_cast<imgIRequest*>(req.get())));
 
-      rv = newChannel->AsyncOpen(NS_STATIC_CAST(nsIStreamListener *, hvc), nsnull);
+      rv = newChannel->AsyncOpen(static_cast<nsIStreamListener *>(hvc), nsnull);
       if (NS_SUCCEEDED(rv))
         NS_ADDREF(*_retval = req.get());
 
@@ -496,7 +496,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
     request->Init(aURI, loadGroup, entry, cacheId, aCX);
 
     // create the proxy listener
-    ProxyListener *pl = new ProxyListener(NS_STATIC_CAST(nsIStreamListener *, request));
+    ProxyListener *pl = new ProxyListener(static_cast<nsIStreamListener *>(request));
     if (!pl) {
       request->Cancel(NS_ERROR_OUT_OF_MEMORY);
       NS_RELEASE(request);
@@ -509,7 +509,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
            ("[this=%p] imgLoader::LoadImage -- Calling channel->AsyncOpen()\n", this));
 
     nsresult openRes;
-    openRes = newChannel->AsyncOpen(NS_STATIC_CAST(nsIStreamListener *, pl), nsnull);
+    openRes = newChannel->AsyncOpen(static_cast<nsIStreamListener *>(pl), nsnull);
 
     NS_RELEASE(pl);
 
@@ -637,7 +637,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
     channel->GetOriginalURI(getter_AddRefs(originalURI));
     request->Init(originalURI, channel, entry, thread, aCX);
 
-    ProxyListener *pl = new ProxyListener(NS_STATIC_CAST(nsIStreamListener *, request));
+    ProxyListener *pl = new ProxyListener(static_cast<nsIStreamListener *>(request));
     if (!pl) {
       NS_RELEASE(request);
       return NS_ERROR_OUT_OF_MEMORY;
@@ -645,7 +645,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
 
     NS_ADDREF(pl);
 
-    *listener = NS_STATIC_CAST(nsIStreamListener*, pl);
+    *listener = static_cast<nsIStreamListener*>(pl);
     NS_ADDREF(*listener);
 
     NS_RELEASE(pl);
@@ -656,7 +656,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
 
   rv = CreateNewProxyForRequest(request, loadGroup, aObserver,
                                 requestFlags, nsnull, _retval);
-  request->NotifyProxyListener(NS_STATIC_CAST(imgRequestProxy*, *_retval));
+  request->NotifyProxyListener(static_cast<imgRequestProxy*>(*_retval));
 
   NS_RELEASE(request);
 
@@ -679,7 +679,7 @@ imgLoader::CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup *aLoadGro
 
   imgRequestProxy *proxyRequest;
   if (aProxyRequest) {
-    proxyRequest = NS_STATIC_CAST(imgRequestProxy *, aProxyRequest);
+    proxyRequest = static_cast<imgRequestProxy *>(aProxyRequest);
   } else {
     NS_NEWXPCOM(proxyRequest, imgRequestProxy);
     if (!proxyRequest) return NS_ERROR_OUT_OF_MEMORY;
@@ -703,7 +703,7 @@ imgLoader::CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup *aLoadGro
     NS_RELEASE(*_retval);
   }
   // transfer reference to caller
-  *_retval = NS_STATIC_CAST(imgIRequest*, proxyRequest);
+  *_retval = static_cast<imgIRequest*>(proxyRequest);
 
   return NS_OK;
 }
@@ -926,7 +926,7 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
 
       PRUint32 count = mProxies.Count();
       for (PRInt32 i = count-1; i>=0; i--) {
-        imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy *, mProxies[i]);
+        imgRequestProxy *proxy = static_cast<imgRequestProxy *>(mProxies[i]);
         mRequest->NotifyProxyListener(proxy);
       }
 
@@ -965,17 +965,17 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
   channel->GetOriginalURI(getter_AddRefs(originalURI));
   request->Init(originalURI, channel, entry, NS_GetCurrentThread(), mContext);
 
-  ProxyListener *pl = new ProxyListener(NS_STATIC_CAST(nsIStreamListener *, request));
+  ProxyListener *pl = new ProxyListener(static_cast<nsIStreamListener *>(request));
   if (!pl) {
     NS_RELEASE(request);
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  mDestListener = NS_STATIC_CAST(nsIStreamListener*, pl);
+  mDestListener = static_cast<nsIStreamListener*>(pl);
 
   PRUint32 count = mProxies.Count();
   for (PRInt32 i = count-1; i>=0; i--) {
-    imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy *, mProxies[i]);
+    imgRequestProxy *proxy = static_cast<imgRequestProxy *>(mProxies[i]);
     proxy->ChangeOwner(request);
     request->NotifyProxyListener(proxy);
   }

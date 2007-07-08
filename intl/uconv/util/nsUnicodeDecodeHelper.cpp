@@ -65,11 +65,11 @@ nsresult nsUnicodeDecodeHelper::ConvertByTable(
     if (aScanClass == uMultibytesCharset) {
       NS_ASSERTION(aShiftInTable, "shift table missing");
       charFound = uScanShift(aShiftInTable, NULL, (PRUint8 *)src,
-                             NS_REINTERPRET_CAST(PRUint16*, &med), srcLen, 
+                             reinterpret_cast<PRUint16*>(&med), srcLen, 
                              (PRUint32 *)&bcr);
     } else {
       charFound = uScan(aScanClass, NULL, (PRUint8 *)src,
-                        NS_REINTERPRET_CAST(PRUint16*, &med),
+                        reinterpret_cast<PRUint16*>(&med),
                         srcLen, (PRUint32 *)&bcr);
     }
     if (!charFound) {
@@ -77,7 +77,7 @@ nsresult nsUnicodeDecodeHelper::ConvertByTable(
       break;
     }
 
-    if (!uMapCode((uTable*) aMappingTable, NS_STATIC_CAST(PRUint16, med), NS_REINTERPRET_CAST(PRUint16*, dest))) {
+    if (!uMapCode((uTable*) aMappingTable, static_cast<PRUint16>(med), reinterpret_cast<PRUint16*>(dest))) {
       if (med < 0x20) {
         // somehow some table miss the 0x00 - 0x20 part
         *dest = med;
@@ -130,13 +130,13 @@ nsresult nsUnicodeDecodeHelper::ConvertByMultiTable(
       {
         passRangeCheck = PR_TRUE;
         if (uScan(aScanClassArray[i], NULL, src, 
-                   NS_REINTERPRET_CAST(PRUint16*, &med), srcLen, 
+                   reinterpret_cast<PRUint16*>(&med), srcLen, 
                    (PRUint32 *)&bcr)) 
         {
           passScan = PR_TRUE;
           done = uMapCode((uTable*) aMappingTable[i], 
-                          NS_STATIC_CAST(PRUint16, med), 
-                          NS_REINTERPRET_CAST(PRUint16*, dest)); 
+                          static_cast<PRUint16>(med), 
+                          reinterpret_cast<PRUint16*>(dest)); 
         } // if (uScan ... )
       } // if Range
     } // for loop
@@ -162,7 +162,7 @@ nsresult nsUnicodeDecodeHelper::ConvertByMultiTable(
           if ((aRangeArray[i].min <= *src) && (*src <= aRangeArray[i].max)) 
           {
             if (uScan(aScanClassArray[i], NULL, src, 
-                   NS_REINTERPRET_CAST(PRUint16*, &med), srcLen, 
+                   reinterpret_cast<PRUint16*>(&med), srcLen, 
                    (PRUint32*)&bcr)) 
             { 
                // match the patten

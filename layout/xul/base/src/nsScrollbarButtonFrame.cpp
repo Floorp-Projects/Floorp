@@ -73,7 +73,7 @@ nsScrollbarButtonFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsITimerCallback))) {                                         
-    *aInstancePtr = NS_STATIC_CAST(nsITimerCallback*, this);
+    *aInstancePtr = static_cast<nsITimerCallback*>(this);
     return NS_OK;                                                        
   }   
 
@@ -106,7 +106,7 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
   nsILookAndFeel::nsMetricID tmpAction;
   if (aEvent->eventStructType == NS_MOUSE_EVENT &&
       aEvent->message == NS_MOUSE_BUTTON_DOWN) {
-    PRUint16 button = NS_STATIC_CAST(nsMouseEvent*, aEvent)->button;
+    PRUint16 button = static_cast<nsMouseEvent*>(aEvent)->button;
     if (button == nsMouseEvent::eLeftButton) {
       tmpAction = nsILookAndFeel::eMetric_ScrollButtonLeftMouseButtonAction;
     } else if (button == nsMouseEvent::eMiddleButton) {

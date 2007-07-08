@@ -177,12 +177,12 @@ txNodeSorter::sortNodeSet(txNodeSet* aNodes, txExecutionState* aEs,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Create and set up memoryblock for sort-values and indexarray
-    PRUint32 len = NS_STATIC_CAST(PRUint32, aNodes->size());
+    PRUint32 len = static_cast<PRUint32>(aNodes->size());
     void* mem = PR_Malloc(len * (sizeof(PRUint32) + mNKeys * sizeof(TxObject*)));
     NS_ENSURE_TRUE(mem, NS_ERROR_OUT_OF_MEMORY);
 
-    PRUint32* indexes = NS_STATIC_CAST(PRUint32*, mem);
-    TxObject** sortValues = NS_REINTERPRET_CAST(TxObject**, indexes + len);
+    PRUint32* indexes = static_cast<PRUint32*>(mem);
+    TxObject** sortValues = reinterpret_cast<TxObject**>(indexes + len);
 
     PRUint32 i;
     for (i = 0; i < len; ++i) {
@@ -234,12 +234,12 @@ int
 txNodeSorter::compareNodes(const void* aIndexA, const void* aIndexB,
                            void* aSortData)
 {
-    SortData* sortData = NS_STATIC_CAST(SortData*, aSortData);
+    SortData* sortData = static_cast<SortData*>(aSortData);
     NS_ENSURE_SUCCESS(sortData->mRv, -1);
 
     txListIterator iter(&sortData->mNodeSorter->mSortKeys);
-    PRUint32 indexA = *NS_STATIC_CAST(const PRUint32*, aIndexA);
-    PRUint32 indexB = *NS_STATIC_CAST(const PRUint32*, aIndexB);
+    PRUint32 indexA = *static_cast<const PRUint32*>(aIndexA);
+    PRUint32 indexB = *static_cast<const PRUint32*>(aIndexB);
     TxObject** sortValuesA = sortData->mSortValues +
                              indexA * sortData->mNodeSorter->mNKeys;
     TxObject** sortValuesB = sortData->mSortValues +

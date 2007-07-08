@@ -373,7 +373,7 @@ nsPACMan::ProcessPendingQ(nsresult status)
   // Now, start any pending queries
   PRCList *node = PR_LIST_HEAD(&mPendingQ);
   while (node != &mPendingQ) {
-    PendingPACQuery *query = NS_STATIC_CAST(PendingPACQuery *, node);
+    PendingPACQuery *query = static_cast<PendingPACQuery *>(node);
     node = PR_NEXT_LINK(node);
     if (NS_SUCCEEDED(status)) {
       // keep the query in the list (so we can complete it from Shutdown if
@@ -466,7 +466,7 @@ nsPACMan::GetInterface(const nsIID &iid, void **result)
   // In case loading the PAC file results in a redirect.
   if (iid.Equals(NS_GET_IID(nsIChannelEventSink))) {
     NS_ADDREF_THIS();
-    *result = NS_STATIC_CAST(nsIChannelEventSink *, this);
+    *result = static_cast<nsIChannelEventSink *>(this);
     return NS_OK;
   }
 

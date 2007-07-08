@@ -100,7 +100,7 @@ public:
         printf("gfxOS2FontGroup[%#x]::GetFontAt(%d), %#x, %#x\n",
                (unsigned)this, i, (unsigned)&mFonts, (unsigned)&mFonts[i]);
 #endif
-        return NS_STATIC_CAST(gfxOS2Font*, NS_STATIC_CAST(gfxFont*, mFonts[i]));
+        return static_cast<gfxOS2Font*>(static_cast<gfxFont*>(mFonts[i]));
     }
 
     gfxOS2Font *GetCachedFont(const nsAString& aName) const {

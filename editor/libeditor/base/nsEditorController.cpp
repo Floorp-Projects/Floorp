@@ -51,7 +51,7 @@
     NS_NEWXPCOM(theCmd, _cmdClass);                                                       \
     if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                                           \
     rv = inCommandTable->RegisterCommand(_cmdName,                                        \
-                                   NS_STATIC_CAST(nsIControllerCommand *, theCmd));       \
+                                   static_cast<nsIControllerCommand *>(theCmd));       \
   }
 
 #define NS_REGISTER_FIRST_COMMAND(_cmdClass, _cmdName)                                    \
@@ -60,15 +60,15 @@
     NS_NEWXPCOM(theCmd, _cmdClass);                                                       \
     if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                                           \
     rv = inCommandTable->RegisterCommand(_cmdName,                                        \
-                                   NS_STATIC_CAST(nsIControllerCommand *, theCmd));
+                                   static_cast<nsIControllerCommand *>(theCmd));
 
 #define NS_REGISTER_NEXT_COMMAND(_cmdClass, _cmdName)                                     \
     rv = inCommandTable->RegisterCommand(_cmdName,                                        \
-                                   NS_STATIC_CAST(nsIControllerCommand *, theCmd));
+                                   static_cast<nsIControllerCommand *>(theCmd));
 
 #define NS_REGISTER_LAST_COMMAND(_cmdClass, _cmdName)                                     \
     rv = inCommandTable->RegisterCommand(_cmdName,                                        \
-                                   NS_STATIC_CAST(nsIControllerCommand *, theCmd));       \
+                                   static_cast<nsIControllerCommand *>(theCmd));       \
   }
 
 

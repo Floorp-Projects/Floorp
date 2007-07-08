@@ -1034,7 +1034,7 @@ nsHTMLSelectElement::Add(nsIDOMHTMLElement* aElement,
 
   nsCOMPtr<nsIDOMNode> ancestor(parent);
   nsCOMPtr<nsIDOMNode> temp;
-  while (ancestor != NS_STATIC_CAST(nsIDOMNode*, this)) {
+  while (ancestor != static_cast<nsIDOMNode*>(this)) {
     ancestor->GetParentNode(getter_AddRefs(temp));
     if (!temp) {
       // NOT_FOUND_ERR: Raised if before is not a descendant of the SELECT
@@ -1947,7 +1947,7 @@ nsHTMLSelectElement::GetBoxObject(nsIBoxObject** aResult)
     return NS_ERROR_FAILURE;
   }
 
-  return nsDoc->GetBoxObjectFor(NS_STATIC_CAST(nsIDOMElement*, this), aResult);
+  return nsDoc->GetBoxObjectFor(static_cast<nsIDOMElement*>(this), aResult);
 }
 
 void
@@ -2102,7 +2102,7 @@ void
 nsHTMLSelectElement::DispatchDOMEvent(const nsAString& aName)
 {
   nsContentUtils::DispatchTrustedEvent(GetOwnerDoc(),
-                                       NS_STATIC_CAST(nsIContent*, this),
+                                       static_cast<nsIContent*>(this),
                                        aName, PR_TRUE, PR_TRUE);
 }
 

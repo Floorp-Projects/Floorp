@@ -1094,7 +1094,7 @@ nsListBoxBodyFrame::GetFirstItemBox(PRInt32 aOffset, PRBool* aCreated)
   mBottomFrame = mTopFrame;
 
   if (mTopFrame) {
-    return mTopFrame->IsBoxFrame() ? NS_STATIC_CAST(nsIBox*, mTopFrame) : nsnull;
+    return mTopFrame->IsBoxFrame() ? static_cast<nsIBox*>(mTopFrame) : nsnull;
   }
 
   // top frame was cleared out
@@ -1102,7 +1102,7 @@ nsListBoxBodyFrame::GetFirstItemBox(PRInt32 aOffset, PRBool* aCreated)
   mBottomFrame = mTopFrame;
 
   if (mTopFrame && mRowsToPrepend <= 0) {
-    return mTopFrame->IsBoxFrame() ? NS_STATIC_CAST(nsIBox*, mTopFrame) : nsnull;
+    return mTopFrame->IsBoxFrame() ? static_cast<nsIBox*>(mTopFrame) : nsnull;
   }
 
   // At this point, we either have no frames at all, 
@@ -1144,7 +1144,7 @@ nsListBoxBodyFrame::GetFirstItemBox(PRInt32 aOffset, PRBool* aCreated)
 
       mBottomFrame = mTopFrame;
 
-      return mTopFrame->IsBoxFrame() ? NS_STATIC_CAST(nsIBox*, mTopFrame) : nsnull;
+      return mTopFrame->IsBoxFrame() ? static_cast<nsIBox*>(mTopFrame) : nsnull;
     } else
       return GetFirstItemBox(++aOffset, 0);
   }

@@ -69,12 +69,12 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
         // Put the nsCOMPtr in a local scope, to avoid messing up the refcount
         // below.
         nsCOMPtr<nsIXPConnectWrappedJS> owner =
-            do_QueryInterface(NS_STATIC_CAST(nsISupports*, p), &rv);
+            do_QueryInterface(static_cast<nsISupports*>(p), &rv);
         if (NS_FAILED(rv))
             return rv;
 
         base = owner.get();
-        tmp = NS_STATIC_CAST(nsXPCWrappedJS*, base);
+        tmp = static_cast<nsXPCWrappedJS*>(base);
         NS_ASSERTION(tmp->mRefCnt.get() > 2,
                      "How can this be, no one else holds a strong ref?");
     }
@@ -107,7 +107,7 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
         cb.NoteXPCOMChild(tmp->GetAggregatedNativeObject());
     else
         // Non-root wrappers keep their root alive.
-        cb.NoteXPCOMChild(NS_STATIC_CAST(nsIXPConnectWrappedJS*, root));
+        cb.NoteXPCOMChild(static_cast<nsIXPConnectWrappedJS*>(root));
 
     return NS_OK;
 }
@@ -138,7 +138,7 @@ nsXPCWrappedJS::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr)
     if(aIID.Equals(NS_GET_IID(nsIXPConnectWrappedJS)))
     {
         NS_ADDREF(this);
-        *aInstancePtr = (void*) NS_STATIC_CAST(nsIXPConnectWrappedJS*,this);
+        *aInstancePtr = (void*) static_cast<nsIXPConnectWrappedJS*>(this);
         return NS_OK;
     }
 
@@ -175,7 +175,7 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     if(aIID.Equals(NS_GET_IID(nsIXPConnectWrappedJS)))
     {
         NS_ADDREF(this);
-        *aInstancePtr = (void*) NS_STATIC_CAST(nsIXPConnectWrappedJS*,this);
+        *aInstancePtr = (void*) static_cast<nsIXPConnectWrappedJS*>(this);
         return NS_OK;
     }
 
@@ -272,8 +272,8 @@ nsXPCWrappedJS::TraceJS(JSTracer* trc)
 void
 nsXPCWrappedJS::PrintTraceName(JSTracer* trc, char *buf, size_t bufsize)
 {
-    const nsXPCWrappedJS* self = NS_STATIC_CAST(const nsXPCWrappedJS*,
-                                                trc->debugPrintArg);
+    const nsXPCWrappedJS* self = static_cast<const nsXPCWrappedJS*>
+                                            (trc->debugPrintArg);
     JS_snprintf(buf, bufsize, "nsXPCWrappedJS[%s,0x%p].mJSObj",
                 self->GetClass()->GetInterfaceName(), self);
 }

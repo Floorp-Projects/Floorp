@@ -470,7 +470,7 @@ LazyGeneratePopupDone(nsIContent* aPopup, nsIFrame* aFrame, void* aArg)
   // be safe and check the frame type
   if (aFrame->GetType() == nsGkAtoms::menuPopupFrame) {
     nsWeakFrame weakFrame(aFrame);
-    nsMenuPopupFrame* popupFrame = NS_STATIC_CAST(nsMenuPopupFrame*, aFrame);
+    nsMenuPopupFrame* popupFrame = static_cast<nsMenuPopupFrame*>(aFrame);
 
     popupFrame->SetGeneratedChildren();
 
@@ -509,7 +509,7 @@ nsMenuPopupFrame::ShowPopup(PRBool aIsContextMenu, PRBool aSelectFirstItem)
     nsIFrame* parent = GetParent();
     if (parent && parent->GetType() == nsGkAtoms::menuFrame) {
       nsWeakFrame weakFrame(this);
-      (NS_STATIC_CAST(nsMenuFrame*, parent))->PopupOpened();
+      (static_cast<nsMenuFrame*>(parent))->PopupOpened();
       if (!weakFrame.IsAlive())
         return PR_FALSE;
       PresContext()->RootPresContext()->NotifyAddedActivePopupToTop(this);
@@ -567,7 +567,7 @@ nsMenuPopupFrame::HidePopup(PRBool aDeselectMenu)
 
   nsIFrame* parent = GetParent();
   if (parent && parent->GetType() == nsGkAtoms::menuFrame) {
-    (NS_STATIC_CAST(nsMenuFrame*, parent))->PopupClosed(aDeselectMenu);
+    (static_cast<nsMenuFrame*>(parent))->PopupClosed(aDeselectMenu);
     PresContext()->RootPresContext()->NotifyRemovedActivePopup(this);
   }
 }
@@ -1439,7 +1439,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
     return nsnull;
   }
   else {
-    PRUnichar uniChar = ToLowerCase(NS_STATIC_CAST(PRUnichar, charCode));
+    PRUnichar uniChar = ToLowerCase(static_cast<PRUnichar>(charCode));
     if (isMenu || // Menu supports only first-letter navigation
         keyTime - lastKeyTime > INC_TYP_INTERVAL) // Interval too long, treat as new typing
       mIncrementalString = uniChar;
@@ -1503,17 +1503,17 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
             // There is one shortcut-key match
             matchShortcutCount++;
             // Record the matched item. If there is only one matched shortcut item, do it
-            frameShortcut = NS_STATIC_CAST(nsMenuFrame *, currFrame);
+            frameShortcut = static_cast<nsMenuFrame *>(currFrame);
           }
           if (!foundActive) {
             // It's a first candidate item located before/on the current item
             if (!frameBefore)
-              frameBefore = NS_STATIC_CAST(nsMenuFrame *, currFrame);
+              frameBefore = static_cast<nsMenuFrame *>(currFrame);
           }
           else {
             // It's a first candidate item located after the current item
             if (!frameAfter)
-              frameAfter = NS_STATIC_CAST(nsMenuFrame *, currFrame);
+              frameAfter = static_cast<nsMenuFrame *>(currFrame);
           }
         }
         else

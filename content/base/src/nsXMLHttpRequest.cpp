@@ -652,7 +652,7 @@ nsXMLHttpRequest::ConvertBodyToText(nsAString& aOutBuffer)
     return rv;
 
   PRUnichar * outBuffer =
-    NS_STATIC_CAST(PRUnichar*, nsMemory::Alloc((outBufferLength + 1) *
+    static_cast<PRUnichar*>(nsMemory::Alloc((outBufferLength + 1) *
                                                sizeof(PRUnichar)));
   if (!outBuffer) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1170,8 +1170,8 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
         JSString* userStr = ::JS_ValueToString(cx, argv[3]);
 
         if (userStr) {
-          user.Assign(NS_REINTERPRET_CAST(PRUnichar *,
-                                          ::JS_GetStringChars(userStr)),
+          user.Assign(reinterpret_cast<PRUnichar *>
+                                      (::JS_GetStringChars(userStr)),
                       ::JS_GetStringLength(userStr));
         }
 
@@ -1179,8 +1179,8 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
           JSString* passwdStr = JS_ValueToString(cx, argv[4]);
 
           if (passwdStr) {
-            password.Assign(NS_REINTERPRET_CAST(PRUnichar *,
-                                                ::JS_GetStringChars(passwdStr)),
+            password.Assign(reinterpret_cast<PRUnichar *>
+                                            (::JS_GetStringChars(passwdStr)),
                             ::JS_GetStringLength(passwdStr));
           }
         }
@@ -1202,7 +1202,7 @@ nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
                                    PRUint32 count,
                                    PRUint32 *writeCount)
 {
-  nsXMLHttpRequest* xmlHttpRequest = NS_STATIC_CAST(nsXMLHttpRequest*, closure);
+  nsXMLHttpRequest* xmlHttpRequest = static_cast<nsXMLHttpRequest*>(closure);
   if (!xmlHttpRequest || !writeCount) {
     NS_WARNING("XMLHttpRequest cannot read from stream: no closure or writeCount");
     return NS_ERROR_FAILURE;
@@ -1300,13 +1300,13 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   nsCOMPtr<nsPIDOMEventTarget> target(do_QueryInterface(mDocument));
   if (target) {
     nsWeakPtr requestWeak =
-      do_GetWeakReference(NS_STATIC_CAST(nsIXMLHttpRequest*, this));
+      do_GetWeakReference(static_cast<nsIXMLHttpRequest*>(this));
     nsCOMPtr<nsIDOMEventListener> proxy = new nsLoadListenerProxy(requestWeak);
     if (!proxy) return NS_ERROR_OUT_OF_MEMORY;
 
     // This will addref the proxy
-    rv = target->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMEventListener*,
-                                                      proxy),
+    rv = target->AddEventListenerByIID(static_cast<nsIDOMEventListener*>
+                                                  (proxy),
                                        NS_GET_IID(nsIDOMLoadListener));
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   }
@@ -2089,12 +2089,12 @@ nsXMLHttpRequest::GetInterface(const nsIID & aIID, void **aResult)
   // need to see these notifications for proper functioning.
   if (aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
     mChannelEventSink = do_GetInterface(mNotificationCallbacks);
-    *aResult = NS_STATIC_CAST(nsIChannelEventSink*, this);
+    *aResult = static_cast<nsIChannelEventSink*>(this);
     NS_ADDREF_THIS();
     return NS_OK;
   } else if (aIID.Equals(NS_GET_IID(nsIProgressEventSink))) {
     mProgressEventSink = do_GetInterface(mNotificationCallbacks);
-    *aResult = NS_STATIC_CAST(nsIProgressEventSink*, this);
+    *aResult = static_cast<nsIProgressEventSink*>(this);
     NS_ADDREF_THIS();
     return NS_OK;
   }

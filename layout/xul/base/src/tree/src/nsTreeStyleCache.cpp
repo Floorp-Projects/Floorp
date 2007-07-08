@@ -66,7 +66,7 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
 
   // The first transition is always made off the supplied pseudo-element.
   nsTransitionKey key(currState->GetStateID(), aPseudoElement);
-  currState = NS_STATIC_CAST(nsDFAState*, mTransitionTable->Get(&key));
+  currState = static_cast<nsDFAState*>(mTransitionTable->Get(&key));
 
   if (!currState) {
     // We had a miss. Make a new state and add it to our hash.
@@ -78,9 +78,9 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
   }
 
   for (PRUint32 i = 0; i < count; i++) {
-    nsCOMPtr<nsIAtom> pseudo = getter_AddRefs(NS_STATIC_CAST(nsIAtom*, aInputWord->ElementAt(i)));
+    nsCOMPtr<nsIAtom> pseudo = getter_AddRefs(static_cast<nsIAtom*>(aInputWord->ElementAt(i)));
     nsTransitionKey key(currState->GetStateID(), pseudo);
-    currState = NS_STATIC_CAST(nsDFAState*, mTransitionTable->Get(&key));
+    currState = static_cast<nsDFAState*>(mTransitionTable->Get(&key));
 
     if (!currState) {
       // We had a miss. Make a new state and add it to our hash.
@@ -97,7 +97,7 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
   // Look up our style context for this state.
   nsStyleContext* result = nsnull;
   if (mCache)
-    result = NS_STATIC_CAST(nsStyleContext*, mCache->Get(currState));
+    result = static_cast<nsStyleContext*>(mCache->Get(currState));
   if (!result) {
     // We missed the cache. Resolve this pseudo-style.
     result = aPresContext->StyleSet()->
@@ -121,7 +121,7 @@ nsTreeStyleCache::DeleteDFAState(nsHashKey *aKey,
                                  void *aData,
                                  void *closure)
 {
-  nsDFAState* entry = NS_STATIC_CAST(nsDFAState*, aData);
+  nsDFAState* entry = static_cast<nsDFAState*>(aData);
   delete entry;
   return PR_TRUE;
 }
@@ -131,7 +131,7 @@ nsTreeStyleCache::ReleaseStyleContext(nsHashKey *aKey,
                                       void *aData,
                                       void *closure)
 {
-  nsStyleContext* context = NS_STATIC_CAST(nsStyleContext*, aData);
+  nsStyleContext* context = static_cast<nsStyleContext*>(aData);
   context->Release();
   return PR_TRUE;
 }

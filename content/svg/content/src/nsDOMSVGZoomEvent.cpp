@@ -89,7 +89,7 @@ nsDOMSVGZoomEvent::nsDOMSVGZoomEvent(nsPresContext* aPresContext,
           NS_NewSVGReadonlyPoint(getter_AddRefs(mNewTranslate), x, y);
 
           nsSVGSVGElement *SVGSVGElement =
-            NS_STATIC_CAST(nsSVGSVGElement*, rootContent);
+            static_cast<nsSVGSVGElement*>(rootContent);
           mPreviousScale = SVGSVGElement->GetPreviousScale();
           NS_NewSVGReadonlyPoint(getter_AddRefs(mPreviousTranslate),
                                  SVGSVGElement->GetPreviousTranslate_x(),

@@ -94,7 +94,7 @@
 NS_IMPL_QUERY_HEAD(nsRootAccessible)
 NS_IMPL_QUERY_BODY(nsIDOMEventListener)
 if (aIID.Equals(NS_GET_IID(nsRootAccessible)))
-  foundInterface = NS_REINTERPRET_CAST(nsISupports*, this);
+  foundInterface = reinterpret_cast<nsISupports*>(this);
 else
 NS_IMPL_QUERY_TAIL_INHERITING(nsDocAccessible)
 
@@ -866,7 +866,7 @@ void nsRootAccessible::GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNo
 
 void nsRootAccessible::FireFocusCallback(nsITimer *aTimer, void *aClosure)
 {
-  nsRootAccessible *rootAccessible = NS_STATIC_CAST(nsRootAccessible*, aClosure);
+  nsRootAccessible *rootAccessible = static_cast<nsRootAccessible*>(aClosure);
   NS_ASSERTION(rootAccessible, "How did we get here without a root accessible?");
   rootAccessible->FireCurrentFocusEvent();
 }

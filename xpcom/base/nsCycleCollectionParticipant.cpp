@@ -41,7 +41,7 @@
 NS_IMETHODIMP
 nsXPCOMCycleCollectionParticipant::Root(void *p)
 {
-    nsISupports *s = NS_STATIC_CAST(nsISupports*, p);
+    nsISupports *s = static_cast<nsISupports*>(p);
     NS_ADDREF(s);
     return NS_OK;
 }
@@ -55,7 +55,7 @@ nsXPCOMCycleCollectionParticipant::Unlink(void *p)
 NS_IMETHODIMP
 nsXPCOMCycleCollectionParticipant::Unroot(void *p)
 {
-    nsISupports *s = NS_STATIC_CAST(nsISupports*, p);
+    nsISupports *s = static_cast<nsISupports*>(p);
     NS_RELEASE(s);
     return NS_OK;
 }

@@ -150,8 +150,8 @@ nsresult nsMacNativeUnicodeConverter::ConvertUnicodetoScript(const PRUnichar *aU
                                               
   ByteCount inputRead;
   ItemCount scriptRunOutLen;
-  ScriptCodeRun *scriptCodeRuns = NS_REINTERPRET_CAST(ScriptCodeRun*,
-                                                      nsMemory::Alloc(sizeof(ScriptCodeRun) * 
+  ScriptCodeRun *scriptCodeRuns = reinterpret_cast<ScriptCodeRun*>
+                                                  (nsMemory::Alloc(sizeof(ScriptCodeRun) * 
                                                       aUnicodeStrLen));
   if (!scriptCodeRuns) {
     ::DisposeUnicodeToTextRunInfo(&unicodeToTextInfo);

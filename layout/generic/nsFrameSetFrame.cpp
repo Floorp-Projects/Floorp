@@ -268,7 +268,7 @@ int
 nsHTMLFramesetFrame::FrameResizePrefCallback(const char* aPref, void* aClosure)
 {
   nsHTMLFramesetFrame *frame =
-    NS_REINTERPRET_CAST(nsHTMLFramesetFrame *, aClosure);
+    reinterpret_cast<nsHTMLFramesetFrame *>(aClosure);
 
   nsIDocument* doc = frame->mContent->GetDocument();
   mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, PR_TRUE);
@@ -791,7 +791,7 @@ NS_METHOD nsHTMLFramesetFrame::HandleEvent(nsPresContext* aPresContext,
 	      break;
       case NS_MOUSE_BUTTON_UP:
         if (aEvent->eventStructType == NS_MOUSE_EVENT &&
-            NS_STATIC_CAST(nsMouseEvent*, aEvent)->button ==
+            static_cast<nsMouseEvent*>(aEvent)->button ==
               nsMouseEvent::eLeftButton) {
           EndMouseDrag(aPresContext);
         }
@@ -1680,7 +1680,7 @@ public:
 void nsDisplayFramesetBorder::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  NS_STATIC_CAST(nsHTMLFramesetBorderFrame*, mFrame)->
+  static_cast<nsHTMLFramesetBorderFrame*>(mFrame)->
     PaintBorder(*aCtx, aBuilder->ToReferenceFrame(mFrame));
 }
 
@@ -1793,7 +1793,7 @@ nsHTMLFramesetBorderFrame::HandleEvent(nsPresContext* aPresContext,
 
   if (aEvent->eventStructType == NS_MOUSE_EVENT &&
       aEvent->message == NS_MOUSE_BUTTON_DOWN &&
-      NS_STATIC_CAST(nsMouseEvent*, aEvent)->button == nsMouseEvent::eLeftButton) {
+      static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton) {
     nsHTMLFramesetFrame* parentFrame;
     nsIFrame* fptr = GetParent();
     parentFrame = (nsHTMLFramesetFrame*) fptr;

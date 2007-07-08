@@ -68,7 +68,7 @@ protected:
   {
     nsIFrame* frame = GetFrame(PR_FALSE);
     if (frame && frame->GetType() == nsGkAtoms::menuPopupFrame)
-      return NS_STATIC_CAST(nsMenuPopupFrame*, frame);
+      return static_cast<nsMenuPopupFrame*>(frame);
     return nsnull;
   }
 };

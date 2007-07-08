@@ -265,11 +265,11 @@ void
 ReadMultipleFiles(gpointer filename, gpointer array)
 {
   nsCOMPtr<nsILocalFile> localfile;
-  nsresult rv = NS_NewNativeLocalFile(nsDependentCString(NS_STATIC_CAST(char*, filename)),
+  nsresult rv = NS_NewNativeLocalFile(nsDependentCString(static_cast<char*>(filename)),
                                       PR_FALSE,
                                       getter_AddRefs(localfile));
   if (NS_SUCCEEDED(rv)) {
-    nsCOMArray<nsILocalFile>& files = *NS_STATIC_CAST(nsCOMArray<nsILocalFile>*, array);
+    nsCOMArray<nsILocalFile>& files = *static_cast<nsCOMArray<nsILocalFile>*>(array);
     files.AppendObject(localfile);
   }
 
@@ -285,7 +285,7 @@ nsFilePicker::ReadValuesFromFileChooser(GtkWidget *file_chooser)
     mFile.Truncate();
 
     GSList *list = _gtk_file_chooser_get_filenames (GTK_FILE_CHOOSER(file_chooser));
-    g_slist_foreach(list, ReadMultipleFiles, NS_STATIC_CAST(gpointer, &mFiles));
+    g_slist_foreach(list, ReadMultipleFiles, static_cast<gpointer>(&mFiles));
     g_slist_free(list);
   } else {
     gchar *filename = _gtk_file_chooser_get_filename (GTK_FILE_CHOOSER(file_chooser));
@@ -296,7 +296,7 @@ nsFilePicker::ReadValuesFromFileChooser(GtkWidget *file_chooser)
   GtkFileFilter *filter = _gtk_file_chooser_get_filter (GTK_FILE_CHOOSER(file_chooser));
   GSList *filter_list = _gtk_file_chooser_list_filters (GTK_FILE_CHOOSER(file_chooser));
 
-  mSelectedType = NS_STATIC_CAST(PRInt16, g_slist_index (filter_list, filter));
+  mSelectedType = static_cast<PRInt16>(g_slist_index (filter_list, filter));
   g_slist_free(filter_list);
 
   // Remember last used directory.
@@ -522,7 +522,7 @@ nsFilePicker::Show(PRInt16 *aReturn)
   } else if (mMode == nsIFilePicker::modeSave) {
     char *default_filename = ToNewUTF8String(mDefault);
     _gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(file_chooser),
-                                       NS_STATIC_CAST(const gchar*, default_filename));
+                                       static_cast<const gchar*>(default_filename));
     nsMemory::Free(default_filename);
   }
 

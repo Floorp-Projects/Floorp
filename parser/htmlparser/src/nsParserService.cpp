@@ -55,7 +55,7 @@ nsParserService::nsParserService() : mEntries(0)
 nsParserService::~nsParserService()
 {
   nsObserverEntry *entry = nsnull;
-  while( (entry = NS_STATIC_CAST(nsObserverEntry*,mEntries.Pop())) ) {
+  while( (entry = static_cast<nsObserverEntry*>(mEntries.Pop())) ) {
     NS_RELEASE(entry);
   }
 }
@@ -171,7 +171,7 @@ nsParserService::UnregisterObserver(nsIElementObserver* aObserver,
   PRInt32 count = mEntries.GetSize();
 
   for (PRInt32 i=0; i < count; ++i) {
-    nsObserverEntry* entry = NS_STATIC_CAST(nsObserverEntry*,mEntries.ObjectAt(i));
+    nsObserverEntry* entry = static_cast<nsObserverEntry*>(mEntries.ObjectAt(i));
     if (entry && entry->Matches(aTopic)) {
       entry->RemoveObserver(aObserver);
     }
@@ -204,10 +204,10 @@ nsParserService::CheckQName(const nsAString& aQName,
   const PRUnichar *begin, *end;
   begin = aQName.BeginReading();
   end = aQName.EndReading();
-  int result = MOZ_XMLCheckQName(NS_REINTERPRET_CAST(const char*, begin),
-                                 NS_REINTERPRET_CAST(const char*, end),
+  int result = MOZ_XMLCheckQName(reinterpret_cast<const char*>(begin),
+                                 reinterpret_cast<const char*>(end),
                                  aNamespaceAware, &colon);
-  *aColon = NS_REINTERPRET_CAST(const PRUnichar*, colon);
+  *aColon = reinterpret_cast<const PRUnichar*>(colon);
 
   if (result == 0) {
     return NS_OK;
@@ -228,7 +228,7 @@ public:
   nsObserverEntry* entry;
   nsMatchesTopic(const nsAString& aString):mString(aString),matched(PR_FALSE){}
   virtual void* operator()(void* anObject){
-    entry=NS_STATIC_CAST(nsObserverEntry*, anObject);
+    entry=static_cast<nsObserverEntry*>(anObject);
     matched=mString.Equals(entry->mTopic);
     return matched ? nsnull : anObject;
   }
@@ -241,7 +241,7 @@ nsParserService::GetEntry(const nsAString& aTopic)
   if (!mHaveNotifiedCategoryObservers) {
     mHaveNotifiedCategoryObservers = PR_TRUE;
     NS_CreateServicesFromCategory("parser-service-category",
-                                  NS_STATIC_CAST(nsISupports*,NS_STATIC_CAST(void*,this)),
+                                  static_cast<nsISupports*>(static_cast<void*>(this)),
                                   "parser-service-start"); 
   }
 

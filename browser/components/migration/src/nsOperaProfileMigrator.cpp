@@ -796,7 +796,7 @@ nsOperaCookieMigrator::Migrate()
       break;
     case COOKIE_EXPIRY:
       mStream->Read16(&length);
-      mStream->Read32(NS_REINTERPRET_CAST(PRUint32*, &(mCurrCookie.expiryTime)));
+      mStream->Read32(reinterpret_cast<PRUint32*>(&(mCurrCookie.expiryTime)));
       break;
     case COOKIE_SECURE:
       mCurrCookie.isSecure = PR_TRUE;
@@ -808,7 +808,7 @@ nsOperaCookieMigrator::Migrate()
       {
         mStream->Read16(&length);
         PRTime temp;
-        mStream->Read32(NS_REINTERPRET_CAST(PRUint32*, &temp));
+        mStream->Read32(reinterpret_cast<PRUint32*>(&temp));
       }
       break;
     case COOKIE_COMMENT:

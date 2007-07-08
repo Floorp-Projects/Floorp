@@ -155,7 +155,7 @@ nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString 
 
   // register this menu to be notified when changes are made to our content object
   mManager = aManager;			// weak ref
-  nsCOMPtr<nsIChangeObserver> changeObs ( do_QueryInterface(NS_STATIC_CAST(nsIChangeObserver*, this)) );
+  nsCOMPtr<nsIChangeObserver> changeObs ( do_QueryInterface(static_cast<nsIChangeObserver*>(this)) );
   mManager->Register(mMenuContent, changeObs);
 
   NS_ASSERTION ( mMenuContent, "Menu not given a dom node at creation time" );
@@ -187,7 +187,7 @@ nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString 
   MenuConstruct(fake, nsnull, nsnull, nsnull);
 
   if (menu)
-    mIcon = new nsMenuItemIcon(NS_STATIC_CAST(nsIMenu*, this),
+    mIcon = new nsMenuItemIcon(static_cast<nsIMenu*>(this),
                                menu, mMenuContent);
 
   return NS_OK;
@@ -1191,7 +1191,7 @@ nsMenuX :: CountVisibleBefore ( PRUint32* outVisibleBefore )
     menubarParent->GetMenuAt(i, *getter_AddRefs(currMenu));
     
     // we found ourselves, break out
-    if ( currMenu == NS_STATIC_CAST(nsIMenu*, this) ) {
+    if ( currMenu == static_cast<nsIMenu*>(this) ) {
       gotThisMenu = PR_TRUE;
       break;
     }

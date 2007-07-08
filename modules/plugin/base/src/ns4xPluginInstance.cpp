@@ -1141,7 +1141,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
     if (!mXtBin && window->ws_info) {
 
       NPSetWindowCallbackStruct* ws =
-        NS_STATIC_CAST(NPSetWindowCallbackStruct*, window->ws_info);
+        static_cast<NPSetWindowCallbackStruct*>(window->ws_info);
 
       if (!isXembed) {  
 #ifdef NS_DEBUG      

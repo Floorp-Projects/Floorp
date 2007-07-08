@@ -58,7 +58,7 @@ void
 nsFormControlFrame::Destroy()
 {
   // Unregister the access key registered in reflow
-  nsFormControlFrame::RegUnRegAccessKey(NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+  nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), PR_FALSE);
   nsLeafFrame::Destroy();
 }
 
@@ -69,7 +69,7 @@ nsFormControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIFormControlFrame*, this);
+    *aInstancePtr = static_cast<nsIFormControlFrame*>(this);
     return NS_OK;
   }
 
@@ -104,7 +104,7 @@ nsFormControlFrame::Reflow(nsPresContext*          aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
   if (mState & NS_FRAME_FIRST_REFLOW) {
-    RegUnRegAccessKey(NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
+    RegUnRegAccessKey(static_cast<nsIFrame*>(this), PR_TRUE);
   }
 
   return nsLeafFrame::Reflow(aPresContext, aDesiredSize, aReflowState,

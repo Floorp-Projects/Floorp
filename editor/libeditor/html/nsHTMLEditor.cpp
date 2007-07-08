@@ -277,7 +277,7 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
   if (1)
   {
     // block to scope nsAutoEditInitRulesTrigger
-    nsAutoEditInitRulesTrigger rulesTrigger(NS_STATIC_CAST(nsPlaintextEditor*,this), rulesRes);
+    nsAutoEditInitRulesTrigger rulesTrigger(static_cast<nsPlaintextEditor*>(this), rulesRes);
 
     // Init the plaintext editor
     result = nsPlaintextEditor::Init(aDoc, aPresShell, aRoot, aSelCon, aFlags);
@@ -432,7 +432,7 @@ nsHTMLEditor::InitRules()
   nsresult res = NS_NewHTMLEditRules(getter_AddRefs(mRules));
   if (NS_FAILED(res)) return res;
   if (!mRules) return NS_ERROR_UNEXPECTED;
-  res = mRules->Init(NS_STATIC_CAST(nsPlaintextEditor*,this), mFlags);
+  res = mRules->Init(static_cast<nsPlaintextEditor*>(this), mFlags);
   
   return res;
 }
@@ -712,7 +712,7 @@ nsHTMLEditor::SetDocumentTitle(const nsAString &aTitle)
   nsresult result = TransactionFactory::GetNewTransaction(SetDocTitleTxn::GetCID(), getter_AddRefs(txn));
   if (NS_SUCCEEDED(result))  
   {
-    result = NS_STATIC_CAST(SetDocTitleTxn*, txn.get())->Init(this, &aTitle);
+    result = static_cast<SetDocTitleTxn*>(txn.get())->Init(this, &aTitle);
 
     if (NS_SUCCEEDED(result)) 
     {

@@ -123,7 +123,7 @@ public:
     nsMdbDerivedSafe<T>*
     get() const
     {
-        return NS_REINTERPRET_CAST(nsMdbDerivedSafe<T>*, mRawPtr);
+        return reinterpret_cast<nsMdbDerivedSafe<T>*>(mRawPtr);
     }
 
     nsMdbDerivedSafe<T>*
@@ -161,7 +161,7 @@ inline
 PRBool
 operator==(const nsMdbPtr<T>& lhs, const nsMdbPtr<U>& rhs)
 {
-    return NS_STATIC_CAST(const void*, lhs.get()) == NS_STATIC_CAST(const void*, rhs.get());
+    return static_cast<const void*>(lhs.get()) == static_cast<const void*>(rhs.get());
 }
 
 template <class T, class U>
@@ -169,7 +169,7 @@ inline
 PRBool
 operator==(const nsMdbPtr<T>& lhs, const U* rhs)
 {
-    return NS_STATIC_CAST(const void*, lhs.get()) == NS_STATIC_CAST(const void*, rhs);
+    return static_cast<const void*>(lhs.get()) == static_cast<const void*>(rhs);
 }
 
 
@@ -178,7 +178,7 @@ inline
 PRBool
 operator==(const U* lhs, const nsMdbPtr<T>& rhs)
 {
-    return NS_STATIC_CAST(const void*, lhs) == NS_STATIC_CAST(const void*, rhs.get());
+    return static_cast<const void*>(lhs) == static_cast<const void*>(rhs.get());
 }
 
 
@@ -189,7 +189,7 @@ inline
 PRBool
 operator!=(const nsMdbPtr<T>& lhs, const nsMdbPtr<U>& rhs)
 {
-    return NS_STATIC_CAST(const void*, lhs.get()) != NS_STATIC_CAST(const void*, rhs.get());
+    return static_cast<const void*>(lhs.get()) != static_cast<const void*>(rhs.get());
 }
 
 template <class T, class U>
@@ -197,7 +197,7 @@ inline
 PRBool
 operator!=(const nsMdbPtr<T>& lhs, const U* rhs)
 {
-    return NS_STATIC_CAST(const void*, lhs.get()) != NS_STATIC_CAST(const void*, rhs);
+    return static_cast<const void*>(lhs.get()) != static_cast<const void*>(rhs);
 }
 
 
@@ -206,7 +206,7 @@ inline
 PRBool
 operator!=(const U* lhs, const nsMdbPtr<T>& rhs)
 {
-    return NS_STATIC_CAST(const void*, lhs) != NS_STATIC_CAST(const void*, rhs.get());
+    return static_cast<const void*>(lhs) != static_cast<const void*>(rhs.get());
 }
 
 

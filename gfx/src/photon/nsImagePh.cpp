@@ -537,7 +537,7 @@ NS_IMETHODIMP nsImagePh::DrawToImage(nsIImage* aDstImage,
                                       nscoord aDX, nscoord aDY,
                                       nscoord aDWidth, nscoord aDHeight)
 {
-  nsImagePh *dest = NS_STATIC_CAST(nsImagePh *, aDstImage);
+  nsImagePh *dest = static_cast<nsImagePh *>(aDstImage);
 
   if (!dest)
     return NS_ERROR_FAILURE;

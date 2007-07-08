@@ -714,8 +714,8 @@ JSBool MaybePreserveWrapper(JSContext* cx, XPCWrappedNative *wn, uintN flags)
   if ((flags & JSRESOLVE_ASSIGNING) &&
       (::JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS)) {
     nsCOMPtr<nsIXPCScriptNotify> scriptNotify = 
-      do_QueryInterface(NS_STATIC_CAST(nsISupports*,
-                                       JS_GetContextPrivate(cx)));
+      do_QueryInterface(static_cast<nsISupports*>
+                                   (JS_GetContextPrivate(cx)));
     if (scriptNotify) {
       return NS_SUCCEEDED(scriptNotify->PreserveWrapper(wn));
     }
@@ -1340,8 +1340,8 @@ XPC_NW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     // toString() called on XPCNativeWrapper.prototype
     NS_NAMED_LITERAL_STRING(protoString, "[object XPCNativeWrapper]");
     JSString *str =
-      ::JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*,
-                                                    protoString.get()),
+      ::JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar*>
+                                                (protoString.get()),
                             protoString.Length());
     NS_ENSURE_TRUE(str, JS_FALSE);
     *rval = STRING_TO_JSVAL(str);
@@ -1415,8 +1415,8 @@ XPC_NW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     resultString.Append(']');
 
-    str = ::JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar *,
-                                                        resultString.get()),
+    str = ::JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar *>
+                                                    (resultString.get()),
                                 resultString.Length());
   }
 

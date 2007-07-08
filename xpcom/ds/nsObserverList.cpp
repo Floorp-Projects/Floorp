@@ -70,7 +70,7 @@ nsObserverList::RemoveObserver(nsIObserver* anObserver)
 {
     NS_ASSERTION(anObserver, "Null input");
 
-    if (mObservers.RemoveElement(NS_STATIC_CAST(nsISupports*, anObserver)))
+    if (mObservers.RemoveElement(static_cast<nsISupports*>(anObserver)))
         return NS_OK;
 
     nsCOMPtr<nsIWeakReference> observerRef = do_GetWeakReference(anObserver);

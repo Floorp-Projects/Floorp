@@ -83,7 +83,7 @@ public:
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey)
-    { return NS_STATIC_CAST(PRUint32, (*aKey) & PR_UINT32_MAX); }
+    { return static_cast<PRUint32>((*aKey) & PR_UINT32_MAX); }
   enum { ALLOW_MEMMOVE = PR_TRUE };
 
 private:
@@ -359,19 +359,19 @@ public:
   }
   nsNavHistoryContainerResultNode* GetAsContainer() {
     NS_ASSERTION(IsContainer(), "Not a container");
-    return NS_REINTERPRET_CAST(nsNavHistoryContainerResultNode*, this);
+    return reinterpret_cast<nsNavHistoryContainerResultNode*>(this);
   }
   nsNavHistoryVisitResultNode* GetAsVisit() {
     NS_ASSERTION(IsVisit(), "Not a visit");
-    return NS_REINTERPRET_CAST(nsNavHistoryVisitResultNode*, this);
+    return reinterpret_cast<nsNavHistoryVisitResultNode*>(this);
   }
   nsNavHistoryFolderResultNode* GetAsFolder() {
     NS_ASSERTION(IsFolder(), "Not a folder");
-    return NS_REINTERPRET_CAST(nsNavHistoryFolderResultNode*, this);
+    return reinterpret_cast<nsNavHistoryFolderResultNode*>(this);
   }
   nsNavHistoryQueryResultNode* GetAsQuery() {
     NS_ASSERTION(IsQuery(), "Not a query");
-    return NS_REINTERPRET_CAST(nsNavHistoryQueryResultNode*, this);
+    return reinterpret_cast<nsNavHistoryQueryResultNode*>(this);
   }
 
   nsNavHistoryContainerResultNode* mParent;

@@ -1128,7 +1128,7 @@ void nsCaret::InvalidateRects(const nsRect &aRect, const nsRect &aHook,
 /* static */
 void nsCaret::CaretBlinkCallback(nsITimer *aTimer, void *aClosure)
 {
-  nsCaret   *theCaret = NS_REINTERPRET_CAST(nsCaret*, aClosure);
+  nsCaret   *theCaret = reinterpret_cast<nsCaret*>(aClosure);
   if (!theCaret) return;
   
   theCaret->DrawCaret(PR_TRUE);

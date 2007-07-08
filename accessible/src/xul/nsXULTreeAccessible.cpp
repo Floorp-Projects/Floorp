@@ -567,7 +567,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetName(nsAString& aName)
 NS_IMETHODIMP nsXULTreeitemAccessible::GetUniqueID(void **aUniqueID)
 {
   // Since mDOMNode is same for all tree item, use |this| pointer as the unique Id
-  *aUniqueID = NS_STATIC_CAST(void*, this);
+  *aUniqueID = static_cast<void*>(this);
   return NS_OK;
 }
 

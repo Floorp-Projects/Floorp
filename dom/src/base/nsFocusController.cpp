@@ -444,8 +444,8 @@ nsFocusController::GetControllerForCommand(const char * aCommand,
   }
   else if (mCurrentWindow) {
     nsGlobalWindow *win =
-      NS_STATIC_CAST(nsGlobalWindow *,
-                     NS_STATIC_CAST(nsIDOMWindowInternal *, mCurrentWindow));
+      static_cast<nsGlobalWindow *>
+                 (static_cast<nsIDOMWindowInternal *>(mCurrentWindow));
     currentWindow = win->GetPrivateParent();
   }
   else return NS_OK;
@@ -465,8 +465,8 @@ nsFocusController::GetControllerForCommand(const char * aCommand,
     }
 
     nsGlobalWindow *win =
-      NS_STATIC_CAST(nsGlobalWindow *,
-                     NS_STATIC_CAST(nsIDOMWindowInternal *, currentWindow));
+      static_cast<nsGlobalWindow *>
+                 (static_cast<nsIDOMWindowInternal *>(currentWindow));
     currentWindow = win->GetPrivateParent();
   }
   

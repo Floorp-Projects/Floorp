@@ -444,7 +444,7 @@ NS_IMETHODIMP nsRegistry::Open( nsIFile *regFile ) {
 
     // Open specified registry.
     PR_Lock(mregLock);
-    err = NR_RegOpen(NS_CONST_CAST(char*,regPath.get()), &mReg);
+    err = NR_RegOpen(const_cast<char*>(regPath.get()), &mReg);
     PR_Unlock(mregLock);
 
     mCurRegID = nsIRegistry::ApplicationCustomRegistry;
@@ -572,7 +572,7 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid )
 #endif /* DEBUG_dp */
 
     PR_Lock(mregLock);
-    err = NR_RegOpen(NS_CONST_CAST(char*, regFile.get()), &mReg );
+    err = NR_RegOpen(const_cast<char*>(regFile.get()), &mReg );
     PR_Unlock(mregLock);
 
     // Store the registry that was opened for optimizing future opens.
@@ -832,7 +832,7 @@ NS_IMETHODIMP nsRegistry::GetBytesUTF8( nsRegistryKey baseKey, const char *path,
             // Attempt to get string into our fixed buffer
             PR_Lock(mregLock);
             uint32 length2 = sizeof regStr;
-            err = NR_RegGetEntry( mReg,(RKEY)baseKey,NS_CONST_CAST(char*,path), regStr, &length2);
+            err = NR_RegGetEntry( mReg,(RKEY)baseKey,const_cast<char*>(path), regStr, &length2);
             PR_Unlock(mregLock);
 
             if ( err == REGERR_OK )
@@ -856,13 +856,13 @@ NS_IMETHODIMP nsRegistry::GetBytesUTF8( nsRegistryKey baseKey, const char *path,
                 // See if that worked.
                 if( rv == NS_OK ) 
                 {
-                    *result = NS_REINTERPRET_CAST(PRUint8*,nsMemory::Alloc( *length ));
+                    *result = reinterpret_cast<PRUint8*>(nsMemory::Alloc( *length ));
                     if( *result ) 
                     {
                         // Get bytes from registry into result field.
                         PR_Lock(mregLock);
                         length2 = *length;
-                        err = NR_RegGetEntry( mReg,(RKEY)baseKey,NS_CONST_CAST(char*,path), *result, &length2);
+                        err = NR_RegGetEntry( mReg,(RKEY)baseKey,const_cast<char*>(path), *result, &length2);
                         *length = length2;
                         PR_Unlock(mregLock);
                         // Convert status.
@@ -870,7 +870,7 @@ NS_IMETHODIMP nsRegistry::GetBytesUTF8( nsRegistryKey baseKey, const char *path,
                         if ( rv != NS_OK )
                         {
                             // Didn't get result, free buffer
-                            nsCRT::free( NS_REINTERPRET_CAST(char*, *result) );
+                            nsCRT::free( reinterpret_cast<char*>(*result) );
                             *result = 0;
                             *length = 0;
                         }
@@ -909,7 +909,7 @@ nsRegistry::GetBytesUTF8IntoBuffer( nsRegistryKey baseKey, const char *path,
 
     // Attempt to get bytes into our fixed buffer
     PR_Lock(mregLock);
-    err = NR_RegGetEntry( mReg,(RKEY)baseKey,NS_CONST_CAST(char*,path),
+    err = NR_RegGetEntry( mReg,(RKEY)baseKey,const_cast<char*>(path),
                           buf, (uint32 *)length );
     PR_Unlock(mregLock);
 

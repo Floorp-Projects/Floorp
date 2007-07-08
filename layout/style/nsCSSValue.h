@@ -420,7 +420,7 @@ public:
 
 private:
   static const PRUnichar* GetBufferValue(nsStringBuffer* aBuffer) {
-    return NS_STATIC_CAST(PRUnichar*, aBuffer->Data());
+    return static_cast<PRUnichar*>(aBuffer->Data());
   }
 
 protected:

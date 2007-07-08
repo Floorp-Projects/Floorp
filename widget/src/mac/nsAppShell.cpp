@@ -106,7 +106,7 @@ nsAppShell::Init()
     return rv;
 
   nsIToolkit *toolkit = mToolkit.get();
-  mMacPump = new nsMacMessagePump(NS_STATIC_CAST(nsToolkit*, toolkit));
+  mMacPump = new nsMacMessagePump(static_cast<nsToolkit*>(toolkit));
   if (!mMacPump.get())
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -197,7 +197,7 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
 void
 nsAppShell::ProcessGeckoEvents(void* aInfo)
 {
-  nsAppShell* self = NS_STATIC_CAST(nsAppShell*, aInfo);
+  nsAppShell* self = static_cast<nsAppShell*>(aInfo);
 
   if (self->mRunningEventLoop) {
     self->mRunningEventLoop = PR_FALSE;

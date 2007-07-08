@@ -93,15 +93,15 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
   // Do we have any children?
   // XXX We should use the overflow list instead...
   nsIFrame*           firstFrame  = mFrames.FirstChild();
-  nsPageContentFrame* contentPage = NS_STATIC_CAST(nsPageContentFrame*, firstFrame);
+  nsPageContentFrame* contentPage = static_cast<nsPageContentFrame*>(firstFrame);
   NS_ASSERTION(contentPage, "There should always be a content page");
   NS_ASSERTION(nsGkAtoms::pageContentFrame == firstFrame->GetType(),
                "This frame isn't a pageContentFrame");
 
   if (contentPage && GetPrevInFlow() && !contentPage->GetFirstChild(nsnull)) {
 
-    nsPageFrame*        prevPage        = NS_STATIC_CAST(nsPageFrame*, GetPrevInFlow());
-    nsPageContentFrame* prevContentPage = NS_STATIC_CAST(nsPageContentFrame*, prevPage->mFrames.FirstChild());
+    nsPageFrame*        prevPage        = static_cast<nsPageFrame*>(GetPrevInFlow());
+    nsPageContentFrame* prevContentPage = static_cast<nsPageContentFrame*>(prevPage->mFrames.FirstChild());
     nsIFrame*           prevLastChild   = prevContentPage->mFrames.LastChild();
 
     // Create a continuing child of the previous page's last child
@@ -416,19 +416,19 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
 static void PaintPrintPreviewBackground(nsIFrame* aFrame, nsIRenderingContext* aCtx,
                                         const nsRect& aDirtyRect, nsPoint aPt)
 {
-  NS_STATIC_CAST(nsPageFrame*, aFrame)->PaintPrintPreviewBackground(*aCtx, aPt);
+  static_cast<nsPageFrame*>(aFrame)->PaintPrintPreviewBackground(*aCtx, aPt);
 }
 
 static void PaintPageContent(nsIFrame* aFrame, nsIRenderingContext* aCtx,
                              const nsRect& aDirtyRect, nsPoint aPt)
 {
-  NS_STATIC_CAST(nsPageFrame*, aFrame)->PaintPageContent(*aCtx, aDirtyRect, aPt);
+  static_cast<nsPageFrame*>(aFrame)->PaintPageContent(*aCtx, aDirtyRect, aPt);
 }
 
 static void PaintHeaderFooter(nsIFrame* aFrame, nsIRenderingContext* aCtx,
                               const nsRect& aDirtyRect, nsPoint aPt)
 {
-  NS_STATIC_CAST(nsPageFrame*, aFrame)->PaintHeaderFooter(*aCtx, aPt);
+  static_cast<nsPageFrame*>(aFrame)->PaintHeaderFooter(*aCtx, aPt);
 }
 
 //------------------------------------------------------------------------------
@@ -592,7 +592,7 @@ nsPageFrame::SetSharedPageData(nsSharedPageData* aPD)
 { 
   mPD = aPD;
   // Set the shared data into the page frame before reflow
-  nsPageContentFrame * pcf = NS_STATIC_CAST(nsPageContentFrame*, mFrames.FirstChild());
+  nsPageContentFrame * pcf = static_cast<nsPageContentFrame*>(mFrames.FirstChild());
   if (pcf) {
     pcf->SetSharedPageData(mPD);
   }

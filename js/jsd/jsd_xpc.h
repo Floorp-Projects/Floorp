@@ -150,12 +150,12 @@ class jsdScript : public jsdIScript
         jsdIScript *rv;
         
         if (data) {
-            rv = NS_STATIC_CAST(jsdIScript *, data);
+            rv = static_cast<jsdIScript *>(data);
         } else {
             rv = new jsdScript (aCx, aScript);
             NS_IF_ADDREF(rv);  /* addref for the SetScriptPrivate, released in
                                 * Invalidate() */
-            JSD_SetScriptPrivate (aScript, NS_STATIC_CAST(void *, rv));
+            JSD_SetScriptPrivate (aScript, static_cast<void *>(rv));
         }
         
         NS_IF_ADDREF(rv); /* addref for return value */
@@ -343,11 +343,11 @@ class jsdContext : public jsdIContext
         jsdIContext *rv;
         
         if (data) {
-            rv = NS_STATIC_CAST(jsdIContext *, data);
+            rv = static_cast<jsdIContext *>(data);
         } else {
             rv = new jsdContext (aCx);
             NS_IF_ADDREF(rv);  // addref for the SetContextPrivate
-            JSD_SetContextPrivate (aCx, NS_STATIC_CAST(void *, rv));
+            JSD_SetContextPrivate (aCx, static_cast<void *>(rv));
         }
         
         NS_IF_ADDREF(rv); // addref for the return value

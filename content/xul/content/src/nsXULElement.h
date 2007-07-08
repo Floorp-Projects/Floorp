@@ -463,7 +463,7 @@ public:
     static nsXULElement* FromContent(nsIContent *aContent)
     {
         if (aContent->IsNodeOfType(eXUL))
-            return NS_STATIC_CAST(nsXULElement*, aContent);
+            return static_cast<nsXULElement*>(aContent);
         return nsnull;
     }
 

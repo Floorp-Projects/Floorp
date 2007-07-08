@@ -41,7 +41,7 @@
 static char int_to_hex_digit(PRInt32 i)
 {
   NS_ASSERTION((i >= 0) && (i <= 15), "int too big in int_to_hex_digit");
-  return NS_STATIC_CAST(char, ((i < 10) ? (i + '0') : ((i - 10) + 'A')));
+  return static_cast<char>(((i < 10) ? (i + '0') : ((i - 10) + 'A')));
 }
 
 nsUrlClassifierUtils::nsUrlClassifierUtils() : mEscapeCharmap(nsnull)
@@ -85,7 +85,7 @@ nsUrlClassifierUtils::EscapeHostname(const nsACString & hostname,
   const char* curChar = hostname.BeginReading();
   const char* end = hostname.EndReading();
   while (curChar != end) {
-    unsigned char c = NS_STATIC_CAST(unsigned char, *curChar);
+    unsigned char c = static_cast<unsigned char>(*curChar);
     if (mEscapeCharmap->Contains(c)) {
       _retval.Append('%');
       _retval.Append(int_to_hex_digit(c / 16));
@@ -113,7 +113,7 @@ nsUrlClassifierUtils::SpecialEncode(const nsACString & url, nsACString & _retval
   const char* end = url.EndReading();
 
   while (curChar != end) {
-    unsigned char c = NS_STATIC_CAST(unsigned char, *curChar);
+    unsigned char c = static_cast<unsigned char>(*curChar);
     if (ShouldURLEscape(c)) {
       // We don't want to deal with 0, as it can break certain strings, just
       // encode as one.

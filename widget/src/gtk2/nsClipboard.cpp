@@ -622,8 +622,8 @@ void ConvertHTMLtoUCS2(guchar * data, PRInt32 dataLength,
     GetHTMLCharset(data, dataLength, charset);// get charset of HTML
     if (charset.EqualsLiteral("UTF-16")) {//current mozilla
         outUnicodeLen = (dataLength / 2) - 1;
-        *unicodeData = NS_REINTERPRET_CAST(PRUnichar*,
-                       nsMemory::Alloc((outUnicodeLen + sizeof('\0')) *
+        *unicodeData = reinterpret_cast<PRUnichar*>
+                                       (nsMemory::Alloc((outUnicodeLen + sizeof('\0')) *
                        sizeof(PRUnichar)));
         if (*unicodeData) {
             memcpy(*unicodeData, data + sizeof(PRUnichar),
@@ -659,8 +659,8 @@ void ConvertHTMLtoUCS2(guchar * data, PRInt32 dataLength,
         decoder->GetMaxLength((const char *)data, dataLength, &outUnicodeLen);
         // |outUnicodeLen| is number of chars
         if (outUnicodeLen) {
-            *unicodeData = NS_REINTERPRET_CAST(PRUnichar*,
-                           nsMemory::Alloc((outUnicodeLen + sizeof('\0')) *
+            *unicodeData = reinterpret_cast<PRUnichar*>
+                                           (nsMemory::Alloc((outUnicodeLen + sizeof('\0')) *
                            sizeof(PRUnichar)));
             if (*unicodeData) {
                 PRInt32 numberTmp = dataLength;
@@ -855,7 +855,7 @@ clipboard_contents_received(GtkClipboard     *clipboard,
                             GtkSelectionData *selection_data,
                             gpointer          data)
 {
-    retrieval_context *context = NS_STATIC_CAST(retrieval_context *, data);
+    retrieval_context *context = static_cast<retrieval_context *>(data);
     context->completed = PR_TRUE;
 
     if (selection_data->length >= 0)
@@ -872,7 +872,7 @@ wait_for_contents(GtkClipboard *clipboard, GdkAtom target)
                                    &context);
 
     wait_for_retrieval(clipboard, &context);
-    return NS_STATIC_CAST(GtkSelectionData *, context.data);
+    return static_cast<GtkSelectionData *>(context.data);
 }
 
 static void
@@ -880,7 +880,7 @@ clipboard_text_received(GtkClipboard *clipboard,
                         const gchar  *text,
                         gpointer      data)
 {
-    retrieval_context *context = NS_STATIC_CAST(retrieval_context *, data);
+    retrieval_context *context = static_cast<retrieval_context *>(data);
     context->completed = PR_TRUE;
     context->data = g_strdup(text);
 }
@@ -892,5 +892,5 @@ wait_for_text(GtkClipboard *clipboard)
     gtk_clipboard_request_text(clipboard, clipboard_text_received, &context);
 
     wait_for_retrieval(clipboard, &context);
-    return NS_STATIC_CAST(gchar *, context.data);
+    return static_cast<gchar *>(context.data);
 }

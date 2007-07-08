@@ -686,14 +686,14 @@ public:
   nsresult Finalize();
 
   nsGlyphTable* TableAt(PRInt32 aIndex) {
-    return NS_STATIC_CAST(nsGlyphTable*, mTableList.ElementAt(aIndex));
+    return static_cast<nsGlyphTable*>(mTableList.ElementAt(aIndex));
   }
   PRInt32 Count(PRBool aEverything = PR_FALSE) {
     return (aEverything) ? mTableList.Count() : mDefaultCount;
   }
 
   nsGlyphTable* AdditionalTableAt(PRInt32 aIndex) {
-    return NS_STATIC_CAST(nsGlyphTable*, mAdditionalTableList.ElementAt(aIndex));
+    return static_cast<nsGlyphTable*>(mAdditionalTableList.ElementAt(aIndex));
   }
   PRInt32 AdditionalCount() {
     return mAdditionalTableList.Count();
@@ -1679,7 +1679,7 @@ nsMathMLChar::Stretch(nsPresContext*      aPresContext,
   count = tableList.Count();
   for (t = 0; t < count; t++) {
     // see if this table has a glyph that matches the container
-    glyphTable = NS_STATIC_CAST(nsGlyphTable*, tableList.ElementAt(t));
+    glyphTable = static_cast<nsGlyphTable*>(tableList.ElementAt(t));
     // figure out the starting size : if this is a largeop, start at 2 else 1
     size = 1; // size=0 is the char at its normal size
     if (largeop && glyphTable->BigOf(aPresContext, this, 2)) {
@@ -1754,7 +1754,7 @@ nsMathMLChar::Stretch(nsPresContext*      aPresContext,
 
   count = tableList.Count();
   for (t = 0; t < count; t++) {
-    glyphTable = NS_STATIC_CAST(nsGlyphTable*, tableList.ElementAt(t));
+    glyphTable = static_cast<nsGlyphTable*>(tableList.ElementAt(t));
     if (!glyphTable->HasPartsOf(aPresContext, this)) continue; // to next table
 
     // See if this is a composite character //////////////////////////////////////////

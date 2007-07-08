@@ -593,22 +593,22 @@ class nsTAString_CharT
 
       const obsolete_string_type* AsObsoleteString() const
         {
-          return NS_REINTERPRET_CAST(const obsolete_string_type*, this);
+          return reinterpret_cast<const obsolete_string_type*>(this);
         }
 
       obsolete_string_type* AsObsoleteString()
         {
-          return NS_REINTERPRET_CAST(obsolete_string_type*, this);
+          return reinterpret_cast<obsolete_string_type*>(this);
         }
 
       const substring_type* AsSubstring() const
         {
-          return NS_REINTERPRET_CAST(const substring_type*, this);
+          return reinterpret_cast<const substring_type*>(this);
         }
 
       substring_type* AsSubstring()
         {
-          return NS_REINTERPRET_CAST(substring_type*, this);
+          return reinterpret_cast<substring_type*>(this);
         }
 
     private:

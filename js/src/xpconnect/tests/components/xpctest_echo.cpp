@@ -447,7 +447,7 @@ xpctestEcho::PrintArgTypes(void)
 
     nsCOMPtr<nsISupports> callee;
     if(NS_FAILED(cc->GetCallee(getter_AddRefs(callee))) ||
-       callee != NS_STATIC_CAST(nsIEcho*, this))
+       callee != static_cast<nsIEcho*>(this))
         return NS_ERROR_FAILURE;
 
     PRUint32 argc;
@@ -503,7 +503,7 @@ xpctestEcho::ThrowArg(void)
 
     nsCOMPtr<nsISupports> callee;
     if(NS_FAILED(cc->GetCallee(getter_AddRefs(callee))) || 
-       callee != NS_STATIC_CAST(nsIEcho*, this))
+       callee != static_cast<nsIEcho*>(this))
         return NS_ERROR_FAILURE;
 
     PRUint32 argc;
@@ -537,7 +537,7 @@ xpctestEcho::CallReceiverSometimeLater(void)
     timer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     if(NS_FAILED(rv))
         return NS_ERROR_FAILURE;
-    timer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*,this), 2000,
+    timer->InitWithCallback(static_cast<nsITimerCallback*>(this), 2000,
                             nsITimer::TYPE_ONE_SHOT);
     return NS_OK;
 #else

@@ -143,7 +143,7 @@ nsApplicationAccessible::GetChildAt(PRInt32 aChildNum, nsIAccessible **aChild)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (aChildNum >= NS_STATIC_CAST(PRInt32, count) || count == 0)
+  if (aChildNum >= static_cast<PRInt32>(count) || count == 0)
     return NS_ERROR_INVALID_ARG;
 
   if (aChildNum < 0)
@@ -213,7 +213,7 @@ nsApplicationAccessible::CacheChildren()
 
     PRUint32 count = 0;
     mChildren->GetLength(&count);
-    mAccChildCount = NS_STATIC_CAST(PRInt32, count);
+    mAccChildCount = static_cast<PRInt32>(count);
   }
 }
 

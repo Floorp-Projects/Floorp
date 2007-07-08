@@ -211,11 +211,11 @@ nsFileControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsIAnonymousContentCreator))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIAnonymousContentCreator*, this);
+    *aInstancePtr = static_cast<nsIAnonymousContentCreator*>(this);
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIFormControlFrame*, this);
+    *aInstancePtr = static_cast<nsIFormControlFrame*>(this);
     return NS_OK;
   }
 

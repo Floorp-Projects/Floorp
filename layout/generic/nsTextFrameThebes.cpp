@@ -567,7 +567,7 @@ protected:
 static void
 DestroyUserData(void* aUserData)
 {
-  TextRunUserData* userData = NS_STATIC_CAST(TextRunUserData*, aUserData);
+  TextRunUserData* userData = static_cast<TextRunUserData*>(aUserData);
   if (userData) {
     nsMemory::Free(userData);
   }
@@ -585,7 +585,7 @@ ClearAllTextRunReferences(nsTextFrame* aFrame, gfxTextRun* aTextRun)
     if (aFrame->GetTextRun() != aTextRun)
       break;
     aFrame->SetTextRun(nsnull);
-    aFrame = NS_STATIC_CAST(nsTextFrame*, aFrame->GetNextContinuation());
+    aFrame = static_cast<nsTextFrame*>(aFrame->GetNextContinuation());
   }
 }
 
@@ -599,11 +599,11 @@ UnhookTextRunFromFrames(gfxTextRun* aTextRun)
   // Kill all references to the textrun. It could be referenced by any of its
   // owners, and all their in-flows.
   if (aTextRun->GetFlags() & nsTextFrameUtils::TEXT_IS_SIMPLE_FLOW) {
-    nsIFrame* firstInFlow = NS_STATIC_CAST(nsIFrame*, aTextRun->GetUserData());
-    ClearAllTextRunReferences(NS_STATIC_CAST(nsTextFrame*, firstInFlow), aTextRun);
+    nsIFrame* firstInFlow = static_cast<nsIFrame*>(aTextRun->GetUserData());
+    ClearAllTextRunReferences(static_cast<nsTextFrame*>(firstInFlow), aTextRun);
   } else {
     TextRunUserData* userData =
-      NS_STATIC_CAST(TextRunUserData*, aTextRun->GetUserData());
+      static_cast<TextRunUserData*>(aTextRun->GetUserData());
     PRInt32 i;
     for (i = 0; i < userData->mMappedFlowCount; ++i) {
       ClearAllTextRunReferences(userData->mMappedFlows[i].mStartFrame, aTextRun);
@@ -712,7 +712,7 @@ PRInt32 nsTextFrame::GetInFlowContentLength() {
   PRInt32      start = -1, end;
 
   if (mState & NS_FRAME_IS_BIDI) {
-    nextBidi = NS_STATIC_CAST(nsTextFrame*, GetLastInFlow()->GetNextContinuation());
+    nextBidi = static_cast<nsTextFrame*>(GetLastInFlow()->GetNextContinuation());
     if (nextBidi) {
       nextBidi->GetOffsets(start, end);
       return start - mContentOffset;
@@ -960,14 +960,14 @@ TextContainsLineBreakerWhiteSpace(const void* aText, PRUint32 aLength,
 {
   PRUint32 i;
   if (aIsDoubleByte) {
-    const PRUnichar* chars = NS_STATIC_CAST(const PRUnichar*, aText);
+    const PRUnichar* chars = static_cast<const PRUnichar*>(aText);
     for (i = 0; i < aLength; ++i) {
       if (nsLineBreaker::IsSpace(chars[i]))
         return PR_TRUE;
     }
     return PR_FALSE;
   } else {
-    const PRUint8* chars = NS_STATIC_CAST(const PRUint8*, aText);
+    const PRUint8* chars = static_cast<const PRUint8*>(aText);
     for (i = 0; i < aLength; ++i) {
       if (nsLineBreaker::IsSpace(chars[i]))
         return PR_TRUE;
@@ -990,7 +990,7 @@ BuildTextRunsScanner::FindBoundaryResult
 BuildTextRunsScanner::FindBoundaries(nsIFrame* aFrame, FindBoundaryState* aState)
 {
   nsTextFrame* textFrame = aFrame->GetType() == nsGkAtoms::textFrame
-    ? NS_STATIC_CAST(nsTextFrame*, aFrame) : nsnull;
+    ? static_cast<nsTextFrame*>(aFrame) : nsnull;
   if (textFrame) {
     if (aState->mLastTextFrame &&
         textFrame != aState->mLastTextFrame->GetNextInFlow() &&
@@ -1013,8 +1013,8 @@ BuildTextRunsScanner::FindBoundaries(nsIFrame* aFrame, FindBoundaryState* aState
       const nsTextFragment* frag = textFrame->GetContent()->GetText();
       PRUint32 start = textFrame->GetContentOffset();
       const void* text = frag->Is2b()
-          ? NS_STATIC_CAST(const void*, frag->Get2b() + start)
-          : NS_STATIC_CAST(const void*, frag->Get1b() + start);
+          ? static_cast<const void*>(frag->Get2b() + start)
+          : static_cast<const void*>(frag->Get1b() + start);
       if (TextContainsLineBreakerWhiteSpace(text, textFrame->GetContentLength(),
                                             frag->Is2b())) {
         aState->mSeenSpaceForLineBreakingOnThisLine = PR_TRUE;
@@ -1075,8 +1075,8 @@ BuildTextRuns(nsIRenderingContext* aRC, nsTextFrame* aForFrame,
   }
 
   nsPresContext* presContext = aLineContainer->PresContext();
-  gfxContext* ctx = NS_STATIC_CAST(gfxContext*,
-    aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  gfxContext* ctx = static_cast<gfxContext*>
+                               (aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
   BuildTextRunsScanner scanner(presContext, ctx, aLineContainer);
 
   nsBlockFrame* block = nsnull;
@@ -1339,8 +1339,8 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
       // This is almost always true:
       if (mLastFrame->GetStyleContext() == aFrame->GetStyleContext() &&
           !HasTerminalNewline(mLastFrame)) {
-        nsTextFrame* frame = NS_STATIC_CAST(nsTextFrame*, aFrame);
-        mappedFlow->mEndFrame = NS_STATIC_CAST(nsTextFrame*, frame->GetNextInFlow());
+        nsTextFrame* frame = static_cast<nsTextFrame*>(aFrame);
+        mappedFlow->mEndFrame = static_cast<nsTextFrame*>(frame->GetNextInFlow());
         NS_ASSERTION(mappedFlow->mContentEndOffset <= frame->GetContentOffset(),
                      "frame offsets overlap!");
         mappedFlow->mContentEndOffset = frame->GetContentEnd();
@@ -1352,7 +1352,7 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
 
   // Now see if we can add a new set of frames to the current textrun
   if (aFrame->GetType() == nsGkAtoms::textFrame) {
-    nsTextFrame* frame = NS_STATIC_CAST(nsTextFrame*, aFrame);
+    nsTextFrame* frame = static_cast<nsTextFrame*>(aFrame);
 
     if (mLastFrame && !ContinueTextRunAcrossFrames(mLastFrame, frame)) {
       FlushFrames(PR_FALSE);
@@ -1363,7 +1363,7 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
       return;
 
     mappedFlow->mStartFrame = frame;
-    mappedFlow->mEndFrame = NS_STATIC_CAST(nsTextFrame*, frame->GetNextInFlow());
+    mappedFlow->mEndFrame = static_cast<nsTextFrame*>(frame->GetNextInFlow());
     mappedFlow->mAncestorControllingInitialBreak = mCommonAncestorWithLastFrame;
     mappedFlow->mContentOffset = frame->GetContentOffset();
     mappedFlow->mContentEndOffset = frame->GetContentEnd();
@@ -1418,7 +1418,7 @@ BuildTextRunsScanner::GetNextBreakBeforeFrame(PRUint32* aIndex)
   if (index >= mLineBreakBeforeFrames.Length())
     return nsnull;
   *aIndex = index + 1;
-  return NS_STATIC_CAST(nsTextFrame*, mLineBreakBeforeFrames.ElementAt(index));
+  return static_cast<nsTextFrame*>(mLineBreakBeforeFrames.ElementAt(index));
 }
 
 static PRUint32
@@ -1446,7 +1446,7 @@ GetFontGroupForFrame(nsIFrame* aFrame)
     return nsnull;
 
   nsIFontMetrics* metricsRaw = metrics;
-  nsIThebesFontMetrics* fm = NS_STATIC_CAST(nsIThebesFontMetrics*, metricsRaw);
+  nsIThebesFontMetrics* fm = static_cast<nsIThebesFontMetrics*>(metricsRaw);
   return fm->GetThebesFontGroup();
 }
 
@@ -1456,8 +1456,8 @@ GetHyphenTextRun(gfxTextRun* aTextRun, nsIRenderingContext* aRefContext)
   if (NS_UNLIKELY(!aRefContext)) {
     return nsnull;
   }
-  gfxContext* ctx = NS_STATIC_CAST(gfxContext*,
-    aRefContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  gfxContext* ctx = static_cast<gfxContext*>
+                               (aRefContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
   gfxFontGroup* fontGroup = aTextRun->GetFontGroup();
   PRUint32 flags = gfxFontGroup::TEXT_IS_PERSISTENT;
 
@@ -1518,9 +1518,9 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     userData = &dummyData;
     dummyData.mMappedFlows = &dummyMappedFlow;
   } else {
-    userData = NS_STATIC_CAST(TextRunUserData*,
-      nsMemory::Alloc(sizeof(TextRunUserData) + mMappedFlows.Length()*sizeof(TextRunMappedFlow)));
-    userData->mMappedFlows = NS_REINTERPRET_CAST(TextRunMappedFlow*, userData + 1);
+    userData = static_cast<TextRunUserData*>
+                          (nsMemory::Alloc(sizeof(TextRunUserData) + mMappedFlows.Length()*sizeof(TextRunMappedFlow)));
+    userData->mMappedFlows = reinterpret_cast<TextRunMappedFlow*>(userData + 1);
   }
   userData->mLastFlowIndex = 0;
 
@@ -1582,7 +1582,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     PRUint32 analysisFlags;
     if (frag->Is2b()) {
       NS_ASSERTION(mDoubleByteText, "Wrong buffer char size!");
-      PRUnichar* bufStart = NS_STATIC_CAST(PRUnichar*, aTextBuffer);
+      PRUnichar* bufStart = static_cast<PRUnichar*>(aTextBuffer);
       PRUnichar* bufEnd = nsTextFrameUtils::TransformText(
           frag->Get2b() + contentStart, contentLength, bufStart,
           compressWhitespace, &mTrimNextRunLeadingWhitespace, &builder, &analysisFlags);
@@ -1598,15 +1598,15 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
         }
         PRUint8* bufStart = tempBuf.Elements();
         PRUint8* end = nsTextFrameUtils::TransformText(
-            NS_REINTERPRET_CAST(const PRUint8*, frag->Get1b()) + contentStart, contentLength,
+            reinterpret_cast<const PRUint8*>(frag->Get1b()) + contentStart, contentLength,
             bufStart, compressWhitespace, &mTrimNextRunLeadingWhitespace,
             &builder, &analysisFlags);
-        aTextBuffer = ExpandBuffer(NS_STATIC_CAST(PRUnichar*, aTextBuffer),
+        aTextBuffer = ExpandBuffer(static_cast<PRUnichar*>(aTextBuffer),
                                    tempBuf.Elements(), end - tempBuf.Elements());
       } else {
-        PRUint8* bufStart = NS_STATIC_CAST(PRUint8*, aTextBuffer);
+        PRUint8* bufStart = static_cast<PRUint8*>(aTextBuffer);
         PRUint8* end = nsTextFrameUtils::TransformText(
-            NS_REINTERPRET_CAST(const PRUint8*, frag->Get1b()) + contentStart, contentLength,
+            reinterpret_cast<const PRUint8*>(frag->Get1b()) + contentStart, contentLength,
             bufStart,
             compressWhitespace, &mTrimNextRunLeadingWhitespace, &builder, &analysisFlags);
         aTextBuffer = end;
@@ -1620,7 +1620,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     textFlags |= analysisFlags;
 
     currentTransformedTextOffset =
-      (NS_STATIC_CAST(const PRUint8*, aTextBuffer) - NS_STATIC_CAST(const PRUint8*, textPtr)) >> mDoubleByteText;
+      (static_cast<const PRUint8*>(aTextBuffer) - static_cast<const PRUint8*>(textPtr)) >> mDoubleByteText;
 
     lastContent = content;
     endOfLastContent = contentEnd;
@@ -1638,11 +1638,11 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     userData = nsnull;
     finalUserData = mMappedFlows[0].mStartFrame;
   } else {
-    userData = NS_STATIC_CAST(TextRunUserData*,
-      nsMemory::Realloc(userData, sizeof(TextRunUserData) + finalMappedFlowCount*sizeof(TextRunMappedFlow)));
+    userData = static_cast<TextRunUserData*>
+                          (nsMemory::Realloc(userData, sizeof(TextRunUserData) + finalMappedFlowCount*sizeof(TextRunMappedFlow)));
     if (!userData)
       return;
-    userData->mMappedFlows = NS_REINTERPRET_CAST(TextRunMappedFlow*, userData + 1);
+    userData->mMappedFlows = reinterpret_cast<TextRunMappedFlow*>(userData + 1);
     userData->mMappedFlowCount = finalMappedFlowCount;
     finalUserData = userData;
   }
@@ -1734,7 +1734,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
         firstFrame->PresContext()->AppUnitsPerDevPixel() };
 
   if (mDoubleByteText) {
-    const PRUnichar* text = NS_STATIC_CAST(const PRUnichar*, textPtr);
+    const PRUnichar* text = static_cast<const PRUnichar*>(textPtr);
     if (transformingFactory) {
       textRun = transformingFactory->MakeTextRun(text, transformedLength, &params,
                                                  fontGroup, textFlags, styles.Elements());
@@ -1746,7 +1746,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
       textRun = MakeTextRun(text, transformedLength, fontGroup, &params, textFlags);
     }
   } else {
-    const PRUint8* text = NS_STATIC_CAST(const PRUint8*, textPtr);
+    const PRUint8* text = static_cast<const PRUint8*>(textPtr);
     textFlags |= gfxFontGroup::TEXT_IS_8BIT;
     if (transformingFactory) {
       textRun = transformingFactory->MakeTextRun(text, transformedLength, &params,
@@ -1888,17 +1888,17 @@ BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun)
     nsTextFrame* endFrame = mappedFlow->mEndFrame;
     nsTextFrame* f;
     for (f = startFrame; f != endFrame;
-         f = NS_STATIC_CAST(nsTextFrame*, f->GetNextInFlow())) {
+         f = static_cast<nsTextFrame*>(f->GetNextInFlow())) {
 #ifdef DEBUG_roc
       if (f->GetTextRun()) {
         gfxTextRun* textRun = f->GetTextRun();
         if (textRun->GetFlags() & nsTextFrameUtils::TEXT_IS_SIMPLE_FLOW) {
-          if (mMappedFlows[0].mStartFrame != NS_STATIC_CAST(nsTextFrame*, textRun->GetUserData())) {
+          if (mMappedFlows[0].mStartFrame != static_cast<nsTextFrame*>(textRun->GetUserData())) {
             NS_WARNING("REASSIGNING SIMPLE FLOW TEXT RUN!");
           }
         } else {
           TextRunUserData* userData =
-            NS_STATIC_CAST(TextRunUserData*, textRun->GetUserData());
+            static_cast<TextRunUserData*>(textRun->GetUserData());
          
           if (PRUint32(userData->mMappedFlowCount) >= mMappedFlows.Length() ||
               userData->mMappedFlows[userData->mMappedFlowCount - 1].mStartFrame !=
@@ -1967,7 +1967,7 @@ nsTextFrame::EnsureTextRun(nsIRenderingContext* aRC, nsIFrame* aLineContainer,
     return gfxSkipCharsIterator(mTextRun->GetSkipChars(), 0, mContentOffset);
   }
 
-  TextRunUserData* userData = NS_STATIC_CAST(TextRunUserData*, mTextRun->GetUserData());
+  TextRunUserData* userData = static_cast<TextRunUserData*>(mTextRun->GetUserData());
   // Find the flow that contains us
   PRInt32 direction;
   PRInt32 startAt = userData->mLastFlowIndex;
@@ -2115,7 +2115,7 @@ static PRInt32 FindChar(const nsTextFragment* frag,
       const char* str = frag->Get1b() + aOffset;
       const void* p = memchr(str, ch, aLength);
       if (p)
-        return (NS_STATIC_CAST(const char*, p) - str) + aOffset;
+        return (static_cast<const char*>(p) - str) + aOffset;
     }
   }
   return -1;
@@ -2406,7 +2406,7 @@ PropertyProvider::GetSpacingInternal(PRUint32 aStart, PRUint32 aLength,
 static void TabWidthDestructor(void* aObject, nsIAtom* aProp, void* aValue,
                                void* aData)
 {
-  delete NS_STATIC_CAST(nsTArray<gfxFloat>*, aValue);
+  delete static_cast<nsTArray<gfxFloat>*>(aValue);
 }
 
 gfxFloat*
@@ -2414,8 +2414,8 @@ PropertyProvider::GetTabWidths(PRUint32 aStart, PRUint32 aLength)
 {
   if (!mTabWidths) {
     if (!mReflowing) {
-      mTabWidths = NS_STATIC_CAST(nsTArray<gfxFloat>*,
-        mFrame->GetProperty(nsGkAtoms::tabWidthProperty));
+      mTabWidths = static_cast<nsTArray<gfxFloat>*>
+                              (mFrame->GetProperty(nsGkAtoms::tabWidthProperty));
       if (!mTabWidths) {
         NS_WARNING("We need precomputed tab widths, but they're not here...");
         return nsnull;
@@ -2989,7 +2989,7 @@ FindElementAncestor(nsINode* aNode)
   while (aNode && !aNode->IsNodeOfType(nsINode::eELEMENT)) {
     aNode = aNode->GetParent();
   }
-  return NS_STATIC_CAST(nsIContent*, aNode);
+  return static_cast<nsIContent*>(aNode);
 }
 
 PRBool
@@ -3171,7 +3171,7 @@ NS_IMETHODIMP nsTextFrame::GetAccessible(nsIAccessible** aAccessible)
     nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
     if (accService) {
-      return accService->CreateHTMLTextAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+      return accService->CreateHTMLTextAccessible(static_cast<nsIFrame*>(this), aAccessible);
     }
   }
   return NS_ERROR_FAILURE;
@@ -3266,9 +3266,9 @@ nsContinuingTextFrame::Init(nsIContent* aContent,
   nsresult rv = nsFrame::Init(aContent, aParent, aPrevInFlow);
 
   // Hook the frame into the flow
-  nsTextFrame* prev = NS_STATIC_CAST(nsTextFrame*, aPrevInFlow);
-  nsTextFrame* nextContinuation = NS_STATIC_CAST(nsTextFrame*,
-      prev->GetNextContinuation());
+  nsTextFrame* prev = static_cast<nsTextFrame*>(aPrevInFlow);
+  nsTextFrame* nextContinuation = static_cast<nsTextFrame*>
+                                             (prev->GetNextContinuation());
   SetPrevInFlow(prev);
   prev->SetNextInFlow(this);
 
@@ -3318,8 +3318,8 @@ nsContinuingTextFrame::GetFirstInFlow() const
 {
   // Can't cast to |nsContinuingTextFrame*| because the first one isn't.
   nsIFrame *firstInFlow,
-           *previous = NS_CONST_CAST(nsIFrame*,
-                                     NS_STATIC_CAST(const nsIFrame*, this));
+           *previous = const_cast<nsIFrame*>
+                                 (static_cast<const nsIFrame*>(this));
   do {
     firstInFlow = previous;
     previous = firstInFlow->GetPrevInFlow();
@@ -3332,8 +3332,8 @@ nsContinuingTextFrame::GetFirstContinuation() const
 {
   // Can't cast to |nsContinuingTextFrame*| because the first one isn't.
   nsIFrame *firstContinuation,
-  *previous = NS_CONST_CAST(nsIFrame*,
-                            NS_STATIC_CAST(const nsIFrame*, mPrevContinuation));
+  *previous = const_cast<nsIFrame*>
+                        (static_cast<const nsIFrame*>(mPrevContinuation));
   do {
     firstContinuation = previous;
     previous = firstContinuation->GetPrevContinuation();
@@ -3460,9 +3460,9 @@ nsTextFrame::GetCursor(const nsPoint& aPoint,
 nsIFrame*
 nsTextFrame::GetLastInFlow() const
 {
-  nsTextFrame* lastInFlow = NS_CONST_CAST(nsTextFrame*, this);
+  nsTextFrame* lastInFlow = const_cast<nsTextFrame*>(this);
   while (lastInFlow->GetNextInFlow())  {
-    lastInFlow = NS_STATIC_CAST(nsTextFrame*, lastInFlow->GetNextInFlow());
+    lastInFlow = static_cast<nsTextFrame*>(lastInFlow->GetNextInFlow());
   }
   NS_POSTCONDITION(lastInFlow, "illegal state in flow chain.");
   return lastInFlow;
@@ -3470,9 +3470,9 @@ nsTextFrame::GetLastInFlow() const
 nsIFrame*
 nsTextFrame::GetLastContinuation() const
 {
-  nsTextFrame* lastInFlow = NS_CONST_CAST(nsTextFrame*, this);
+  nsTextFrame* lastInFlow = const_cast<nsTextFrame*>(this);
   while (lastInFlow->mNextContinuation)  {
-    lastInFlow = NS_STATIC_CAST(nsTextFrame*, lastInFlow->mNextContinuation);
+    lastInFlow = static_cast<nsTextFrame*>(lastInFlow->mNextContinuation);
   }
   NS_POSTCONDITION(lastInFlow, "illegal state in continuation chain.");
   return lastInFlow;
@@ -3511,7 +3511,7 @@ static void
 ClearTextRunsInFlowChain(nsTextFrame* aFrame)
 {
   nsTextFrame* f;
-  for (f = aFrame; f; f = NS_STATIC_CAST(nsTextFrame*, f->GetNextInFlow())) {
+  for (f = aFrame; f; f = static_cast<nsTextFrame*>(f->GetNextInFlow())) {
     f->ClearTextRun();
   }
 }
@@ -3528,7 +3528,7 @@ nsTextFrame::CharacterDataChanged(nsPresContext* aPresContext,
   PRInt32 nodeLength = mContent->GetText()->GetLength();
 
   if (aAppend) {
-    lastTextFrame = NS_STATIC_CAST(nsTextFrame*, GetLastContinuation());
+    lastTextFrame = static_cast<nsTextFrame*>(GetLastContinuation());
     lastTextFrame->mState &= ~TEXT_WHITESPACE_FLAGS;
     targetTextFrame = lastTextFrame;
   } else {
@@ -3548,7 +3548,7 @@ nsTextFrame::CharacterDataChanged(nsPresContext* aPresContext,
         textFrame->mContentLength = newLength - textFrame->mContentOffset;
       }
       lastTextFrame = textFrame;
-      textFrame = NS_STATIC_CAST(nsTextFrame*, textFrame->GetNextContinuation());
+      textFrame = static_cast<nsTextFrame*>(textFrame->GetNextContinuation());
       if (!textFrame) {
         break;
       }
@@ -3597,7 +3597,7 @@ public:
 void
 nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
-  NS_STATIC_CAST(nsTextFrame*, mFrame)->
+  static_cast<nsTextFrame*>(mFrame)->
     PaintText(aCtx, aBuilder->ToReferenceFrame(mFrame), aDirtyRect);
 }
 
@@ -4194,8 +4194,8 @@ nsTextFrame::PaintText(nsIRenderingContext* aRenderingContext, nsPoint aPt,
   // Trim trailing whitespace
   provider.InitializeForDisplay(PR_TRUE);
 
-  gfxContext* ctx = NS_STATIC_CAST(gfxContext*,
-      aRenderingContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  gfxContext* ctx = static_cast<gfxContext*>
+                               (aRenderingContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
 
   gfxPoint framePt(aPt.x, aPt.y);
   gfxPoint textBaselinePt(
@@ -4540,7 +4540,7 @@ nsTextFrame::GetChildFrameContainingOffset(PRInt32   aContentOffset,
   nsTextFrame* f = this;
   if (aContentOffset >= mContentOffset) {
     while (PR_TRUE) {
-      nsTextFrame* next = NS_STATIC_CAST(nsTextFrame*, f->GetNextContinuation());
+      nsTextFrame* next = static_cast<nsTextFrame*>(f->GetNextContinuation());
       if (!next || aContentOffset < next->GetContentOffset())
         break;
       if (aContentOffset == next->GetContentOffset()) {
@@ -4553,7 +4553,7 @@ nsTextFrame::GetChildFrameContainingOffset(PRInt32   aContentOffset,
     }
   } else {
     while (PR_TRUE) {
-      nsTextFrame* prev = NS_STATIC_CAST(nsTextFrame*, f->GetPrevContinuation());
+      nsTextFrame* prev = static_cast<nsTextFrame*>(f->GetPrevContinuation());
       if (!prev || aContentOffset > f->GetContentOffset())
         break;
       if (aContentOffset == f->GetContentOffset()) {
@@ -4829,7 +4829,7 @@ nsTextFrame::CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex,
   // that is not skipped and is mapped by this frame (which is the primary frame)
   // or one of its continuations.
   for (nsTextFrame* f = this; f;
-       f = NS_STATIC_CAST(nsTextFrame*, GetNextContinuation())) {
+       f = static_cast<nsTextFrame*>(GetNextContinuation())) {
     if (f->PeekOffsetNoAmount(PR_TRUE, nsnull)) {
       *aRetval = PR_TRUE;
       return NS_OK;
@@ -5006,7 +5006,7 @@ nsTextFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
   gfxTextRun* lastTextRun = nsnull;
   // nsContinuingTextFrame does nothing for AddInlineMinWidth; all text frames
   // in the flow are handled right here.
-  for (f = this; f; f = NS_STATIC_CAST(nsTextFrame*, f->GetNextContinuation())) {
+  for (f = this; f; f = static_cast<nsTextFrame*>(f->GetNextContinuation())) {
     // f->mTextRun could be null if we haven't set up textruns yet for f.
     // Except in OOM situations, lastTextRun will only be null for the first
     // text frame.
@@ -5094,7 +5094,7 @@ nsTextFrame::AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
   gfxTextRun* lastTextRun = nsnull;
   // nsContinuingTextFrame does nothing for AddInlineMinWidth; all text frames
   // in the flow are handled right here.
-  for (f = this; f; f = NS_STATIC_CAST(nsTextFrame*, f->GetNextContinuation())) {
+  for (f = this; f; f = static_cast<nsTextFrame*>(f->GetNextContinuation())) {
     // f->mTextRun could be null if we haven't set up textruns yet for f.
     // Except in OOM situations, lastTextRun will only be null for the first
     // text frame.
@@ -5167,10 +5167,10 @@ nsTextFrame::AdjustNextInFlowContentOffsetsForGrowth(PRBool aClearTextRuns)
   PRInt32 end = GetContentEnd();
   nsTextFrame* f = this;
   NS_ASSERTION(!GetNextInFlow() ||
-               NS_STATIC_CAST(nsTextFrame*, GetNextInFlow())->GetContentOffset() <= GetContentEnd(),
+               static_cast<nsTextFrame*>(GetNextInFlow())->GetContentOffset() <= GetContentEnd(),
                "We shrunk, this should not be called");
   while (PR_TRUE) {
-    f = NS_STATIC_CAST(nsTextFrame*, f->GetNextInFlow());
+    f = static_cast<nsTextFrame*>(f->GetNextInFlow());
     if (!f || f->GetContentOffset() >= end)
       break;
     f->mContentLength = PR_MAX(end, f->GetContentEnd()) - end;
@@ -5205,7 +5205,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   RemoveStateBits(TEXT_REFLOW_FLAGS | TEXT_WHITESPACE_FLAGS);
 
   NS_ASSERTION(!GetPrevInFlow() ||
-               NS_STATIC_CAST(nsTextFrame*, GetPrevInFlow())->GetContentEnd() == mContentOffset,
+               static_cast<nsTextFrame*>(GetPrevInFlow())->GetContentEnd() == mContentOffset,
                "Discontinuous content offsets!");
   PRInt32 maxContentLength = GetInFlowContentLength();
 
@@ -5435,7 +5435,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   mContentLength = offset + charsFit - mContentOffset;
 
   // Now fix up content offsets/lengths for in-flows
-  nsTextFrame* f = NS_STATIC_CAST(nsTextFrame*, GetNextInFlow());
+  nsTextFrame* f = static_cast<nsTextFrame*>(GetNextInFlow());
   if (f) {
     if (f->GetContentOffset() > GetContentEnd()) {
       // We must have shrunk. Add the leftover text to the start of f.
@@ -5655,8 +5655,8 @@ nsTextFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
     }
   }
 
-  gfxContext* ctx = NS_STATIC_CAST(gfxContext*,
-    aRC.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  gfxContext* ctx = static_cast<gfxContext*>
+                               (aRC.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
   gfxFloat advanceDelta;
   mTextRun->SetLineBreaks(trimmedStart, trimmedEnd - trimmedStart,
                           (GetStateBits() & TEXT_START_OF_LINE) != 0, PR_TRUE,
@@ -5782,7 +5782,7 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
   fprintf(out, " [parent=%p]", mParent);
 #endif
   if (HasView()) {
-    fprintf(out, " [view=%p]", NS_STATIC_CAST(void*, GetView()));
+    fprintf(out, " [view=%p]", static_cast<void*>(GetView()));
   }
 
   PRInt32 totalContentLength;
@@ -5796,14 +5796,14 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
           isComplete ? 'T':'F');
   
   if (nsnull != mNextSibling) {
-    fprintf(out, " next=%p", NS_STATIC_CAST(void*, mNextSibling));
+    fprintf(out, " next=%p", static_cast<void*>(mNextSibling));
   }
   nsIFrame* prevContinuation = GetPrevContinuation();
   if (nsnull != prevContinuation) {
-    fprintf(out, " prev-continuation=%p", NS_STATIC_CAST(void*, prevContinuation));
+    fprintf(out, " prev-continuation=%p", static_cast<void*>(prevContinuation));
   }
   if (nsnull != mNextContinuation) {
-    fprintf(out, " next-continuation=%p", NS_STATIC_CAST(void*, mNextContinuation));
+    fprintf(out, " next-continuation=%p", static_cast<void*>(mNextContinuation));
   }
 
   // Output the rect and state
@@ -5815,8 +5815,8 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
       fprintf(out, " [state=%08x]", mState);
     }
   }
-  fprintf(out, " [content=%p]", NS_STATIC_CAST(void*, mContent));
-  fprintf(out, " sc=%p", NS_STATIC_CAST(void*, mStyleContext));
+  fprintf(out, " [content=%p]", static_cast<void*>(mContent));
+  fprintf(out, " sc=%p", static_cast<void*>(mStyleContext));
   nsIAtom* pseudoTag = mStyleContext->GetPseudoType();
   if (pseudoTag) {
     nsAutoString atomString;
@@ -5911,7 +5911,7 @@ nsTextFrame::AdjustOffsetsForBidi(PRInt32 aStart, PRInt32 aEnd)
      * shouldn't be holding a local reference to a textrun anywhere.
      */
     f->ClearTextRun();
-    f = NS_STATIC_CAST(nsTextFrame*, f->GetNextInFlow());
+    f = static_cast<nsTextFrame*>(f->GetNextInFlow());
     if (!f)
       break;
     f->mContentOffset = aEnd;

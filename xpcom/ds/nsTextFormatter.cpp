@@ -1184,7 +1184,7 @@ StringStuff(SprintfState* ss, const PRUnichar* sp, PRUint32 len)
 {
     ptrdiff_t off = ss->cur - ss->base;
     
-    nsAString* str = NS_STATIC_CAST(nsAString*,ss->stuffclosure);
+    nsAString* str = static_cast<nsAString*>(ss->stuffclosure);
     str->Append(sp, len);
 
     // we can assume contiguous storage

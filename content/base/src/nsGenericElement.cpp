@@ -1091,7 +1091,7 @@ nsGenericElement::~nsGenericElement()
   NS_PRECONDITION(!IsInDoc(),
                   "Please remove this from the document properly");
 #ifdef DEBUG
-  nsCycleCollector_DEBUG_wasFreed(NS_STATIC_CAST(nsINode*, this));
+  nsCycleCollector_DEBUG_wasFreed(static_cast<nsINode*>(this));
 #endif
 }
 
@@ -1959,14 +1959,14 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   // Now set the parent and set the "Force attach xbl" flag if needed.
   if (aParent) {
-    mParentPtrBits = NS_REINTERPRET_CAST(PtrBits, aParent) | PARENT_BIT_PARENT_IS_CONTENT;
+    mParentPtrBits = reinterpret_cast<PtrBits>(aParent) | PARENT_BIT_PARENT_IS_CONTENT;
 
     if (aParent->HasFlag(NODE_FORCE_XBL_BINDINGS)) {
       SetFlags(NODE_FORCE_XBL_BINDINGS);
     }
   }
   else {
-    mParentPtrBits = NS_REINTERPRET_CAST(PtrBits, aDocument);
+    mParentPtrBits = reinterpret_cast<PtrBits>(aDocument);
   }
 
   // XXXbz sXBL/XBL2 issue!
@@ -2109,7 +2109,7 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 
   nsNodeUtils::ParentChainChanged(this);
 #ifdef DEBUG
-  nsCycleCollector_DEBUG_shouldBeFreed(NS_STATIC_CAST(nsINode*, this));
+  nsCycleCollector_DEBUG_shouldBeFreed(static_cast<nsINode*>(this));
 #endif
 }
 
@@ -2150,8 +2150,8 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
   if (aVisitor.mEvent->message == NS_MOUSE_ENTER_SYNTH ||
       aVisitor.mEvent->message == NS_MOUSE_EXIT_SYNTH) {
      nsCOMPtr<nsIContent> relatedTarget =
-       do_QueryInterface(NS_STATIC_CAST(nsMouseEvent*,
-                                        aVisitor.mEvent)->relatedTarget);
+       do_QueryInterface(static_cast<nsMouseEvent*>
+                                    (aVisitor.mEvent)->relatedTarget);
     if (relatedTarget &&
         relatedTarget->GetOwnerDoc() == aContent->GetOwnerDoc()) {
 
@@ -2231,7 +2231,7 @@ nsGenericElement::DispatchDOMEvent(nsEvent* aEvent,
                                    nsPresContext* aPresContext,
                                    nsEventStatus* aEventStatus)
 {
-  return nsEventDispatcher::DispatchDOMEvent(NS_STATIC_CAST(nsIContent*, this),
+  return nsEventDispatcher::DispatchDOMEvent(static_cast<nsIContent*>(this),
                                              aEvent, aDOMEvent,
                                              aPresContext, aEventStatus);
 }
@@ -2256,7 +2256,7 @@ nsGenericElement::GetID() const
         nsAutoString idVal(attrVal->GetStringValue());
 
         // Create an atom from the value and set it into the attribute list. 
-        NS_CONST_CAST(nsAttrValue*, attrVal)->ParseAtom(idVal);
+        const_cast<nsAttrValue*>(attrVal)->ParseAtom(idVal);
         return attrVal->GetAtomValue();
       }
     }
@@ -2699,7 +2699,7 @@ nsGenericElement::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
   // was processing.
   if (guard.Mutated(0)) {
     aIndex = container->IndexOf(aKid);
-    if (NS_STATIC_CAST(PRInt32, aIndex) < 0) {
+    if (static_cast<PRInt32>(aIndex) < 0) {
       return NS_OK;
     }
   }
@@ -2760,7 +2760,7 @@ nsGenericElement::DispatchClickEvent(nsPresContext* aPresContext,
   event.refPoint = aSourceEvent->refPoint;
   PRUint32 clickCount = 1;
   if (aSourceEvent->eventStructType == NS_MOUSE_EVENT) {
-    clickCount = NS_STATIC_CAST(nsMouseEvent*, aSourceEvent)->clickCount;
+    clickCount = static_cast<nsMouseEvent*>(aSourceEvent)->clickCount;
   }
   event.clickCount = clickCount;
   event.isShift = aSourceEvent->isShift;
@@ -3325,11 +3325,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericElement)
 
   if (tmp->HasProperties() && tmp->IsNodeOfType(nsINode::eXUL)) {
     nsISupports* property =
-      NS_STATIC_CAST(nsISupports*,
-                     tmp->GetProperty(nsGkAtoms::contextmenulistener));
+      static_cast<nsISupports*>
+                 (tmp->GetProperty(nsGkAtoms::contextmenulistener));
     cb.NoteXPCOMChild(property);
-    property = NS_STATIC_CAST(nsISupports*,
-                              tmp->GetProperty(nsGkAtoms::popuplistener));
+    property = static_cast<nsISupports*>
+                          (tmp->GetProperty(nsGkAtoms::popuplistener));
     cb.NoteXPCOMChild(property);
   }
 
@@ -3576,8 +3576,8 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
 {
   nsresult rv;
   PRUint8 modType = aModification ?
-    NS_STATIC_CAST(PRUint8, nsIDOMMutationEvent::MODIFICATION) :
-    NS_STATIC_CAST(PRUint8, nsIDOMMutationEvent::ADDITION);
+    static_cast<PRUint8>(nsIDOMMutationEvent::MODIFICATION) :
+    static_cast<PRUint8>(nsIDOMMutationEvent::ADDITION);
 
   nsIDocument* document = GetCurrentDoc();
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
@@ -3683,7 +3683,7 @@ nsGenericElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aMana
 {
   nsresult rv = GetListenerManager(PR_TRUE, aManager);
   if (NS_SUCCEEDED(rv)) {
-    NS_ADDREF(*aTarget = NS_STATIC_CAST(nsIContent*, this));
+    NS_ADDREF(*aTarget = static_cast<nsIContent*>(this));
   }
   *aDefer = PR_TRUE;
   return rv;
@@ -3850,7 +3850,7 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
   if (hasMutationListeners) {
     nsCOMPtr<nsIDOMEventTarget> node =
-      do_QueryInterface(NS_STATIC_CAST(nsIContent *, this));
+      do_QueryInterface(static_cast<nsIContent *>(this));
     nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
 
     mutation.mRelatedNode = attrNode;
@@ -3990,7 +3990,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent,
 
   fputs(">\n", out);
   
-  nsGenericElement* nonConstThis = NS_CONST_CAST(nsGenericElement*, this);
+  nsGenericElement* nonConstThis = const_cast<nsGenericElement*>(this);
 
   // XXX sXBL/XBL2 issue! Owner or current document?
   nsIDocument *document = GetOwnerDoc();
@@ -4198,7 +4198,7 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
   case NS_MOUSE_BUTTON_DOWN:
     {
       if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
-          NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+          static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
           nsMouseEvent::eLeftButton) {
         // don't make the link grab the focus if there is no link handler
         nsILinkHandler *handler = aVisitor.mPresContext->GetLinkHandler();
@@ -4232,7 +4232,7 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
 
   case NS_MOUSE_CLICK:
     if (NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent)) {
-      nsInputEvent* inputEvent = NS_STATIC_CAST(nsInputEvent*, aVisitor.mEvent);
+      nsInputEvent* inputEvent = static_cast<nsInputEvent*>(aVisitor.mEvent);
       if (inputEvent->isControl || inputEvent->isMeta ||
           inputEvent->isAlt ||inputEvent->isShift) {
         break;
@@ -4262,7 +4262,7 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
   case NS_KEY_PRESS:
     {
       if (aVisitor.mEvent->eventStructType == NS_KEY_EVENT) {
-        nsKeyEvent* keyEvent = NS_STATIC_CAST(nsKeyEvent*, aVisitor.mEvent);
+        nsKeyEvent* keyEvent = static_cast<nsKeyEvent*>(aVisitor.mEvent);
         if (keyEvent->keyCode == NS_VK_RETURN) {
           nsEventStatus status = nsEventStatus_eIgnore;
           rv = DispatchClickEvent(aVisitor.mPresContext, keyEvent, this,

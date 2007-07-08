@@ -616,7 +616,7 @@ public:
 #else
   #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                      \
     const nsStyle##name_ * GetStyle##name_ () const {                         \
-      return NS_STATIC_CAST(const nsStyle##name_*,                            \
+      return static_cast<const nsStyle##name_*>(\
                             GetStyleDataExternal(eStyleStruct_##name_));      \
     }
 #endif
@@ -1011,10 +1011,10 @@ public:
   virtual nsIFrame* GetNextContinuation() const = 0;
   NS_IMETHOD SetNextContinuation(nsIFrame*) = 0;
   virtual nsIFrame* GetFirstContinuation() const {
-    return NS_CONST_CAST(nsIFrame*, this);
+    return const_cast<nsIFrame*>(this);
   }
   virtual nsIFrame* GetLastContinuation() const {
-    return NS_CONST_CAST(nsIFrame*, this);
+    return const_cast<nsIFrame*>(this);
   }
   
   /**
@@ -1032,14 +1032,14 @@ public:
    * Return the first frame in our current flow. 
    */
   virtual nsIFrame* GetFirstInFlow() const {
-    return NS_CONST_CAST(nsIFrame*, this);
+    return const_cast<nsIFrame*>(this);
   }
 
   /**
    * Return the last frame in our current flow.
    */
   virtual nsIFrame* GetLastInFlow() const {
-    return NS_CONST_CAST(nsIFrame*, this);
+    return const_cast<nsIFrame*>(this);
   }
 
 

@@ -111,7 +111,7 @@ nsSVGGlyphFrame::UpdateGraphic(PRBool suppressInvalidation)
     return NS_OK;
 
   nsSVGTextContainerFrame *containerFrame =
-    NS_STATIC_CAST(nsSVGTextContainerFrame *, mParent);
+    static_cast<nsSVGTextContainerFrame *>(mParent);
   if (containerFrame)
     containerFrame->UpdateGraphic();
 
@@ -543,8 +543,8 @@ nsSVGGlyphFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
 {
   NS_ASSERTION(mParent, "null parent");
   
-  nsSVGContainerFrame *containerFrame = NS_STATIC_CAST(nsSVGContainerFrame*,
-                                                       mParent);
+  nsSVGContainerFrame *containerFrame = static_cast<nsSVGContainerFrame*>
+                                                   (mParent);
   nsCOMPtr<nsIDOMSVGMatrix> parentTM = containerFrame->GetCanvasTM();
 
   *aCTM = parentTM.get();
@@ -1004,7 +1004,7 @@ nsSVGGlyphFrame::FindTextPathParent()
        frame = frame->GetParent()) {
     nsIAtom* type = frame->GetType();
     if (type == nsGkAtoms::svgTextPathFrame) {
-      return NS_STATIC_CAST(nsSVGTextPathFrame*, frame);
+      return static_cast<nsSVGTextPathFrame*>(frame);
     } else if (type == nsGkAtoms::svgTextFrame)
       return nsnull;
   }
@@ -1030,7 +1030,7 @@ NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGGlyphFrame::GetX()
 {
   nsSVGTextContainerFrame *containerFrame;
-  containerFrame = NS_STATIC_CAST(nsSVGTextContainerFrame *, mParent);
+  containerFrame = static_cast<nsSVGTextContainerFrame *>(mParent);
   if (containerFrame)
     return containerFrame->GetX();
   return nsnull;
@@ -1040,7 +1040,7 @@ NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGGlyphFrame::GetY()
 {
   nsSVGTextContainerFrame *containerFrame;
-  containerFrame = NS_STATIC_CAST(nsSVGTextContainerFrame *, mParent);
+  containerFrame = static_cast<nsSVGTextContainerFrame *>(mParent);
   if (containerFrame)
     return containerFrame->GetY();
   return nsnull;
@@ -1050,7 +1050,7 @@ NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGGlyphFrame::GetDx()
 {
   nsSVGTextContainerFrame *containerFrame;
-  containerFrame = NS_STATIC_CAST(nsSVGTextContainerFrame *, mParent);
+  containerFrame = static_cast<nsSVGTextContainerFrame *>(mParent);
   if (containerFrame)
     return containerFrame->GetDx();
   return nsnull;
@@ -1060,7 +1060,7 @@ NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGGlyphFrame::GetDy()
 {
   nsSVGTextContainerFrame *containerFrame;
-  containerFrame = NS_STATIC_CAST(nsSVGTextContainerFrame *, mParent);
+  containerFrame = static_cast<nsSVGTextContainerFrame *>(mParent);
   if (containerFrame)
     return containerFrame->GetDy();
   return nsnull;

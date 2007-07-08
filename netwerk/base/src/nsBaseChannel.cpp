@@ -51,7 +51,7 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 CopyProperties(const nsAString &key, nsIVariant *data, void *closure)
 {
   nsIWritablePropertyBag *bag =
-      NS_STATIC_CAST(nsIWritablePropertyBag *, closure);
+      static_cast<nsIWritablePropertyBag *>(closure);
 
   bag->SetProperty(key, data);
   return PL_DHASH_NEXT;
@@ -553,7 +553,7 @@ nsBaseChannel::GetInterface(const nsIID &iid, void **result)
 static void
 CallTypeSniffers(void *aClosure, const PRUint8 *aData, PRUint32 aCount)
 {
-  nsIChannel *chan = NS_STATIC_CAST(nsIChannel*, aClosure);
+  nsIChannel *chan = static_cast<nsIChannel*>(aClosure);
 
   const nsCOMArray<nsIContentSniffer>& sniffers =
     gIOService->GetContentSniffers();
@@ -572,7 +572,7 @@ CallTypeSniffers(void *aClosure, const PRUint8 *aData, PRUint32 aCount)
 static void
 CallUnknownTypeSniffer(void *aClosure, const PRUint8 *aData, PRUint32 aCount)
 {
-  nsIChannel *chan = NS_STATIC_CAST(nsIChannel*, aClosure);
+  nsIChannel *chan = static_cast<nsIChannel*>(aClosure);
 
   nsCOMPtr<nsIContentSniffer> sniffer =
     do_CreateInstance(NS_GENERIC_CONTENT_SNIFFER);
@@ -591,13 +591,13 @@ nsBaseChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   // If our content type is unknown, then use the content type sniffer.  If the
   // sniffer is not available for some reason, then we just keep going as-is.
   if (NS_SUCCEEDED(mStatus) && mContentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE)) {
-    mPump->PeekStream(CallUnknownTypeSniffer, NS_STATIC_CAST(nsIChannel*, this));
+    mPump->PeekStream(CallUnknownTypeSniffer, static_cast<nsIChannel*>(this));
   }
 
   // Now, the general type sniffers. Skip this if we have none.
   if ((mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) &&
       gIOService->GetContentSniffers().Count() != 0)
-    mPump->PeekStream(CallTypeSniffers, NS_STATIC_CAST(nsIChannel*, this));
+    mPump->PeekStream(CallTypeSniffers, static_cast<nsIChannel*>(this));
 
   SUSPEND_PUMP_FOR_SCOPE();
 

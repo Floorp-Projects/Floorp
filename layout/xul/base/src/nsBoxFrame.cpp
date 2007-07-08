@@ -1237,7 +1237,7 @@ public:
 #endif
 
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) {
-    NS_STATIC_CAST(nsBoxFrame*, mFrame)->
+    static_cast<nsBoxFrame*>(mFrame)->
       DisplayDebugInfoFor(this, aPt - aBuilder->ToReferenceFrame(mFrame));
     return PR_TRUE;
   }
@@ -1250,7 +1250,7 @@ void
 nsDisplayXULDebug::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  NS_STATIC_CAST(nsBoxFrame*, mFrame)->
+  static_cast<nsBoxFrame*>(mFrame)->
     PaintXULDebugOverlay(*aCtx, aBuilder->ToReferenceFrame(mFrame));
 }
 
@@ -1258,7 +1258,7 @@ static void
 PaintXULDebugBackground(nsIFrame* aFrame, nsIRenderingContext* aCtx,
                         const nsRect& aDirtyRect, nsPoint aPt)
 {
-  NS_STATIC_CAST(nsBoxFrame*, aFrame)->PaintXULDebugBackground(*aCtx, aPt);
+  static_cast<nsBoxFrame*>(aFrame)->PaintXULDebugBackground(*aCtx, aPt);
 }
 #endif
 

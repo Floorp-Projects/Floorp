@@ -94,7 +94,7 @@ nsScannerBufferList::ReleaseAll()
         PRCList* node = PR_LIST_HEAD(&mBuffers);
         PR_REMOVE_LINK(node);
         //printf(">>> freeing buffer @%p\n", node);
-        free(NS_STATIC_CAST(Buffer*, node));
+        free(static_cast<Buffer*>(node));
       }
   }
 
@@ -240,7 +240,7 @@ nsScannerSubstring::AsString() const
   {
     if (mIsDirty)
       {
-        nsScannerSubstring* mutable_this = NS_CONST_CAST(nsScannerSubstring*, this);
+        nsScannerSubstring* mutable_this = const_cast<nsScannerSubstring*>(this);
 
         if (mStart.mBuffer == mEnd.mBuffer) {
           // We only have a single fragment to deal with, so just return it
@@ -299,7 +299,7 @@ nsScannerSubstring::GetNextFragment( nsScannerFragment& frag ) const
     if (frag.mBuffer == mEnd.mBuffer)
       return PR_FALSE;
 
-    frag.mBuffer = NS_STATIC_CAST(const Buffer*, PR_NEXT_LINK(frag.mBuffer));
+    frag.mBuffer = static_cast<const Buffer*>(PR_NEXT_LINK(frag.mBuffer));
 
     if (frag.mBuffer == mStart.mBuffer)
       frag.mFragmentStart = mStart.mPosition;
@@ -321,7 +321,7 @@ nsScannerSubstring::GetPrevFragment( nsScannerFragment& frag ) const
     if (frag.mBuffer == mStart.mBuffer)
       return PR_FALSE;
 
-    frag.mBuffer = NS_STATIC_CAST(const Buffer*, PR_PREV_LINK(frag.mBuffer));
+    frag.mBuffer = static_cast<const Buffer*>(PR_PREV_LINK(frag.mBuffer));
 
     if (frag.mBuffer == mStart.mBuffer)
       frag.mFragmentStart = mStart.mPosition;
@@ -414,7 +414,7 @@ nsScannerString::ReplaceCharacter(nsScannerIterator& aPosition, PRUnichar aChar)
     // XXX Casting a const to non-const. Unless the base class
     // provides support for writing iterators, this is the best
     // that can be done.
-    PRUnichar* pos = NS_CONST_CAST(PRUnichar*, aPosition.get());
+    PRUnichar* pos = const_cast<PRUnichar*>(aPosition.get());
     *pos = aChar;
 
     mIsDirty = PR_TRUE;
@@ -433,7 +433,7 @@ nsScannerSharedSubstring::Rebind(const nsScannerIterator &aStart,
   // acquire ownership of the buffer.  If not, we can optimize by not holding
   // onto it.
 
-  Buffer *buffer = NS_CONST_CAST(Buffer*, aStart.buffer());
+  Buffer *buffer = const_cast<Buffer*>(aStart.buffer());
   PRBool sameBuffer = buffer == aEnd.buffer();
 
   nsScannerBufferList *bufferList;

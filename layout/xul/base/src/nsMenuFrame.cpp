@@ -155,7 +155,7 @@ NS_IMETHODIMP
 nsMenuFrame::SetParent(const nsIFrame* aParent)
 {
   nsBoxFrame::SetParent(aParent);
-  InitMenuParent(NS_CONST_CAST(nsIFrame *, aParent));
+  InitMenuParent(const_cast<nsIFrame *>(aParent));
   return NS_OK;
 }
 
@@ -165,11 +165,11 @@ nsMenuFrame::InitMenuParent(nsIFrame* aParent)
   while (aParent) {
     nsIAtom* type = aParent->GetType();
     if (type == nsGkAtoms::menuPopupFrame) {
-      mMenuParent = NS_STATIC_CAST(nsMenuPopupFrame *, aParent);
+      mMenuParent = static_cast<nsMenuPopupFrame *>(aParent);
       break;
     }
     else if (type == nsGkAtoms::menuBarFrame) {
-      mMenuParent = NS_STATIC_CAST(nsMenuBarFrame *, aParent);
+      mMenuParent = static_cast<nsMenuBarFrame *>(aParent);
       break;
     }
     aParent = aParent->GetParent();
@@ -188,7 +188,7 @@ public:
     PRBool shouldFlush = PR_FALSE;
     if (mWeakFrame.IsAlive()) {
       if (mWeakFrame.GetFrame()->GetType() == nsGkAtoms::menuFrame) {
-        nsMenuFrame* menu = NS_STATIC_CAST(nsMenuFrame*, mWeakFrame.GetFrame());
+        nsMenuFrame* menu = static_cast<nsMenuFrame*>(mWeakFrame.GetFrame());
         menu->UpdateMenuType(menu->PresContext());
         shouldFlush = PR_TRUE;
       }
@@ -384,7 +384,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
   }
   else if (aEvent->eventStructType == NS_MOUSE_EVENT &&
            aEvent->message == NS_MOUSE_BUTTON_DOWN &&
-           NS_STATIC_CAST(nsMouseEvent*, aEvent)->button == nsMouseEvent::eLeftButton &&
+           static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton &&
            !IsDisabled() && IsMenu()) {
     // The menu item was selected. Bring up the menu.
     // We have children.
@@ -400,7 +400,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
 #ifndef NSCONTEXTMENUISMOUSEUP
            (aEvent->eventStructType == NS_MOUSE_EVENT &&
             aEvent->message == NS_MOUSE_BUTTON_UP &&
-            NS_STATIC_CAST(nsMouseEvent*, aEvent)->button ==
+            static_cast<nsMouseEvent*>(aEvent)->button ==
               nsMouseEvent::eRightButton) &&
 #else
             aEvent->message == NS_CONTEXTMENU &&
@@ -423,7 +423,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
   }
   else if (aEvent->eventStructType == NS_MOUSE_EVENT &&
            aEvent->message == NS_MOUSE_BUTTON_UP &&
-           NS_STATIC_CAST(nsMouseEvent*, aEvent)->button == nsMouseEvent::eLeftButton &&
+           static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton &&
            !IsMenu() && !IsDisabled()) {
     // Execute the execute event handler.
     Execute(aEvent);
@@ -918,7 +918,7 @@ nsMenuFrame::UpdateMenuSpecialState(nsPresContext* aPresContext)
 
   while (sib) {
     if (sib != this && sib->GetType() == nsGkAtoms::menuFrame) {
-      nsMenuFrame* menu = NS_STATIC_CAST(nsMenuFrame*, sib);
+      nsMenuFrame* menu = static_cast<nsMenuFrame*>(sib);
       if (menu->GetMenuType() == eMenuType_Radio &&
           menu->IsChecked() &&
           (menu->GetRadioGroupName() == mGroupName)) {      
@@ -1139,7 +1139,7 @@ nsMenuFrame::InsertFrames(nsIAtom*        aListName,
   nsresult          rv;
 
   if (!mPopupFrame && aFrameList->GetType() == nsGkAtoms::menuPopupFrame) {
-    mPopupFrame = NS_STATIC_CAST(nsMenuPopupFrame *, aFrameList);
+    mPopupFrame = static_cast<nsMenuPopupFrame *>(aFrameList);
 
 #ifdef DEBUG_LAYOUT
     nsBoxLayoutState state(PresContext());
@@ -1166,7 +1166,7 @@ nsMenuFrame::AppendFrames(nsIAtom*        aListName,
   nsresult          rv;
 
   if (!mPopupFrame && aFrameList->GetType() == nsGkAtoms::menuPopupFrame) {
-    mPopupFrame = NS_STATIC_CAST(nsMenuPopupFrame *, aFrameList);
+    mPopupFrame = static_cast<nsMenuPopupFrame *>(aFrameList);
 
 #ifdef DEBUG_LAYOUT
     nsBoxLayoutState state(PresContext());
@@ -1256,7 +1256,7 @@ nsMenuFrame::SetActiveChild(nsIDOMElement* aChild)
 
   nsIFrame* kid = PresContext()->PresShell()->GetPrimaryFrameFor(child);
   if (kid && kid->GetType() == nsGkAtoms::menuFrame)
-    mPopupFrame->ChangeMenuItem(NS_STATIC_CAST(nsMenuFrame *, kid), PR_FALSE);
+    mPopupFrame->ChangeMenuItem(static_cast<nsMenuFrame *>(kid), PR_FALSE);
   return NS_OK;
 }
 

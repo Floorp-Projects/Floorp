@@ -96,7 +96,7 @@ NS_IMETHODIMP ViewWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   *aInstancePtr = nsnull;
   
   if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = NS_STATIC_CAST(nsISupports*, this);
+    *aInstancePtr = static_cast<nsISupports*>(this);
   }
   else if (aIID.Equals(NS_GET_IID(ViewWrapper))) {
     *aInstancePtr = this;
@@ -609,7 +609,7 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
     NS_RELEASE(mWindow);
   }
 
-  nsView* v = NS_STATIC_CAST(nsView*, this);
+  nsView* v = static_cast<nsView*>(this);
 
   nsRect trect = v->CalcWidgetBounds(aWidgetInitData
                                      ? aWidgetInitData->mWindowType
@@ -745,7 +745,7 @@ void nsIView::List(FILE* out, PRInt32 aIndent) const
   nsRect brect = GetBounds();
   fprintf(out, "{%d,%d,%d,%d}",
           brect.x, brect.y, brect.width, brect.height);
-  const nsView* v = NS_STATIC_CAST(const nsView*, this);
+  const nsView* v = static_cast<const nsView*>(this);
   fprintf(out, " z=%d vis=%d clientData=%p <\n",
           mZIndex, mVis, mClientData);
   for (nsView* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
@@ -801,7 +801,7 @@ nsIWidget* nsIView::GetNearestWidget(nsPoint* aOffset) const
 {
   nsPoint pt(0, 0);
   const nsView* v;
-  for (v = NS_STATIC_CAST(const nsView*, this);
+  for (v = static_cast<const nsView*>(this);
        v && !v->HasWidget(); v = v->GetParent()) {
     pt += v->GetPosition();
   }
@@ -809,7 +809,7 @@ nsIWidget* nsIView::GetNearestWidget(nsPoint* aOffset) const
     if (aOffset) {
       *aOffset = pt;
     }
-    return NS_STATIC_CAST(const nsView*, this)->GetViewManager()->GetWidget();
+    return static_cast<const nsView*>(this)->GetViewManager()->GetWidget();
   }
 
   // pt is now the offset from v's origin to this's origin

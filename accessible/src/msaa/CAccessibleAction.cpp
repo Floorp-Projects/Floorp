@@ -56,8 +56,8 @@ CAccessibleAction::QueryInterface(REFIID iid, void** ppv)
   *ppv = NULL;
 
   if (IID_IAccessibleAction == iid) {
-    *ppv = NS_STATIC_CAST(IAccessibleAction*, this);
-    (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
+    *ppv = static_cast<IAccessibleAction*>(this);
+    (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
     return S_OK;
   }
 
@@ -89,7 +89,7 @@ CAccessibleAction::doAction(long aActionIndex)
   if (!acc)
     return E_FAIL;
 
-  PRUint8 index = NS_STATIC_CAST(PRUint8, aActionIndex);
+  PRUint8 index = static_cast<PRUint8>(aActionIndex);
   if (NS_SUCCEEDED(acc->DoAction(index)))
     return S_OK;
   return E_FAIL;
@@ -105,7 +105,7 @@ CAccessibleAction::get_description(long aActionIndex, BSTR *aDescription)
     return E_FAIL;
 
   nsAutoString description;
-  PRUint8 index = NS_STATIC_CAST(PRUint8, aActionIndex);
+  PRUint8 index = static_cast<PRUint8>(aActionIndex);
   if (NS_FAILED(acc->GetActionDescription(index, description)))
     return E_FAIL;
 
@@ -130,7 +130,7 @@ CAccessibleAction::get_keyBinding(long aActionIndex, long aNumMaxBinding,
     return E_FAIL;
 
   nsCOMPtr<nsIDOMDOMStringList> keys;
-  PRUint8 index = NS_STATIC_CAST(PRUint8, aActionIndex);
+  PRUint8 index = static_cast<PRUint8>(aActionIndex);
   nsresult rv = acc->GetKeyBindings(index, getter_AddRefs(keys));
   if (NS_FAILED(rv))
     return E_FAIL;
@@ -138,9 +138,9 @@ CAccessibleAction::get_keyBinding(long aActionIndex, long aNumMaxBinding,
   PRUint32 length = 0;
   keys->GetLength(&length);
 
-  PRBool aUseNumMaxBinding = length > NS_STATIC_CAST(PRUint32, aNumMaxBinding);
+  PRBool aUseNumMaxBinding = length > static_cast<PRUint32>(aNumMaxBinding);
 
-  PRUint32 maxBinding = NS_STATIC_CAST(PRUint32, aNumMaxBinding);
+  PRUint32 maxBinding = static_cast<PRUint32>(aNumMaxBinding);
 
   PRUint32 numBinding = length > maxBinding ? maxBinding : length;
   *aNumBinding = numBinding;
@@ -171,7 +171,7 @@ CAccessibleAction::get_name(long aActionIndex, BSTR *aName)
     return E_FAIL;
 
   nsAutoString name;
-  PRUint8 index = NS_STATIC_CAST(PRUint8, aActionIndex);
+  PRUint8 index = static_cast<PRUint8>(aActionIndex);
   if (NS_FAILED(acc->GetActionName(index, name)))
     return E_FAIL;
 

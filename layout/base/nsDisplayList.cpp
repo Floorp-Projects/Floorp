@@ -86,7 +86,7 @@ DestroyRectFunc(void*    aFrame,
                 void*    aPropertyValue,
                 void*    aDtorData)
 {
-  delete NS_STATIC_CAST(nsRect*, aPropertyValue);
+  delete static_cast<nsRect*>(aPropertyValue);
 }
 
 static void MarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame) {
@@ -268,9 +268,9 @@ nsDisplayList::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
   FlattenTo(&elements);
   
   for (PRInt32 i = elements.Count() - 1; i >= 0; --i) {
-    nsDisplayItem* item = NS_STATIC_CAST(nsDisplayItem*, elements.ElementAt(i));
+    nsDisplayItem* item = static_cast<nsDisplayItem*>(elements.ElementAt(i));
     nsDisplayItem* belowItem = i < 1 ? nsnull :
-      NS_STATIC_CAST(nsDisplayItem*, elements.ElementAt(i - 1));
+      static_cast<nsDisplayItem*>(elements.ElementAt(i - 1));
 
     if (belowItem && item->TryMerge(aBuilder, belowItem)) {
       belowItem->~nsDisplayItem();
@@ -336,7 +336,7 @@ nsIFrame* nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) co
     elements.AppendElement(item);
   }
   for (PRInt32 i = elements.Count() - 1; i >= 0; --i) {
-    item = NS_STATIC_CAST(nsDisplayItem*, elements.ElementAt(i));
+    item = static_cast<nsDisplayItem*>(elements.ElementAt(i));
     if (item->GetBounds(aBuilder).Contains(aPt)) {
       nsIFrame* f = item->HitTest(aBuilder, aPt);
       // Handle the XUL 'mousethrough' feature.
@@ -395,7 +395,7 @@ static PRBool IsContentLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
   return nsLayoutUtils::CompareTreePosition(
       aItem1->GetUnderlyingFrame()->GetContent(),
       aItem2->GetUnderlyingFrame()->GetContent(),
-      NS_STATIC_CAST(nsIContent*, aClosure)) <= 0;
+      static_cast<nsIContent*>(aClosure)) <= 0;
 }
 
 static PRBool IsZOrderLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
@@ -432,7 +432,7 @@ void nsDisplayList::ExplodeAnonymousChildLists(nsDisplayListBuilder* aBuilder) {
       list->ExplodeAnonymousChildLists(aBuilder);
       nsDisplayItem* j;
       while ((j = list->RemoveBottom()) != nsnull) {
-        tmp.AppendToTop(NS_STATIC_CAST(nsDisplayWrapList*, i)->
+        tmp.AppendToTop(static_cast<nsDisplayWrapList*>(i)->
             WrapWithClone(aBuilder, j));
       }
       i->~nsDisplayItem();
@@ -827,7 +827,7 @@ PRBool nsDisplayOpacity::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem*
   // aItem->GetUnderlyingFrame() returns non-null because it's nsDisplayOpacity
   if (aItem->GetUnderlyingFrame()->GetContent() != mFrame->GetContent())
     return PR_FALSE;
-  mList.AppendToBottom(&NS_STATIC_CAST(nsDisplayOpacity*, aItem)->mList);
+  mList.AppendToBottom(&static_cast<nsDisplayOpacity*>(aItem)->mList);
   return PR_TRUE;
 }
 
@@ -881,7 +881,7 @@ PRBool nsDisplayClip::TryMerge(nsDisplayListBuilder* aBuilder,
                                nsDisplayItem* aItem) {
   if (aItem->GetType() != TYPE_CLIP)
     return PR_FALSE;
-  nsDisplayClip* other = NS_STATIC_CAST(nsDisplayClip*, aItem);
+  nsDisplayClip* other = static_cast<nsDisplayClip*>(aItem);
   if (other->mClip != mClip)
     return PR_FALSE;
   mList.AppendToBottom(&other->mList);

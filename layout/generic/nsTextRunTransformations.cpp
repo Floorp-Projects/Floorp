@@ -174,7 +174,7 @@ nsTransformingTextRunFactory::MakeTextRun(const PRUint8* aString, PRUint32 aLeng
 {
   // We'll only have a Unicode code path to minimize the amount of code needed
   // for these rarely used features
-  NS_ConvertASCIItoUTF16 unicodeString(NS_REINTERPRET_CAST(const char*, aString), aLength);
+  NS_ConvertASCIItoUTF16 unicodeString(reinterpret_cast<const char*>(aString), aLength);
   return MakeTextRun(unicodeString.get(), aLength, aParams, aFontGroup,
                      aFlags & ~(gfxFontGroup::TEXT_IS_PERSISTENT | gfxFontGroup::TEXT_IS_8BIT),
                      aStyles, aOwnsFactory);

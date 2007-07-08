@@ -166,7 +166,7 @@ InNonScriptingContainer(nsINode* aNode)
     // prefs or per-document container settings for not allowing
     // frames or plugins.
     if (aNode->IsNodeOfType(nsINode::eHTML)) {
-      nsIAtom *localName = NS_STATIC_CAST(nsIContent*, aNode)->Tag();
+      nsIAtom *localName = static_cast<nsIContent*>(aNode)->Tag();
       if (localName == nsGkAtoms::iframe ||
           localName == nsGkAtoms::noframes ||
           localName == nsGkAtoms::noembed) {

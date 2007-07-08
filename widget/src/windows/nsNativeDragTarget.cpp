@@ -186,7 +186,7 @@ nsNativeDragTarget::DispatchDragDropEvent(PRUint32 aEventType, POINTL aPT)
   nsEventStatus status;
   nsMouseEvent event(PR_TRUE, aEventType, mWindow, nsMouseEvent::eReal);
 
-  nsWindow * win = NS_STATIC_CAST(nsWindow *, mWindow);
+  nsWindow * win = static_cast<nsWindow *>(mWindow);
   win->InitEvent(event);
   POINT cpos;
 
@@ -273,7 +273,7 @@ nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource,
   // the actual implementation we wanted, so we know this is
   // a nsDragService. It should be a private interface, though.
   nsDragService * winDragService =
-    NS_STATIC_CAST(nsDragService *, mDragService);
+    static_cast<nsDragService *>(mDragService);
   winDragService->SetIDataObject(pIDataSource);
 
   // Now process the native drag state and then dispatch the event
@@ -352,7 +352,7 @@ nsNativeDragTarget::Drop(LPDATAOBJECT pData,
   // the actual implementation we wanted, so we know this is
   // a nsDragService (but it should still be a private interface)
   nsDragService * winDragService =
-    NS_STATIC_CAST(nsDragService *, mDragService);
+    static_cast<nsDragService *>(mDragService);
   winDragService->SetIDataObject(pData);
 
   // Note: Calling ProcessDrag can destroy us; don't touch members after that.

@@ -105,12 +105,12 @@ public:
                           nsIURI* aURI)
     : mContent(aContent), mFrame(aFrame), mContentType(aType), mURI(aURI)
   {
-    NS_STATIC_CAST(nsIObjectLoadingContent *, mContent)->AddRef();
+    static_cast<nsIObjectLoadingContent *>(mContent)->AddRef();
   }
 
   ~nsAsyncInstantiateEvent()
   {
-    NS_STATIC_CAST(nsIObjectLoadingContent *, mContent)->Release();
+    static_cast<nsIObjectLoadingContent *>(mContent)->Release();
   }
 
   NS_IMETHOD Run();
@@ -339,7 +339,7 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
   }
 
   nsCOMPtr<nsIContent> thisContent = 
-    do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
   switch (newType) {
     case eType_Image:
@@ -543,7 +543,7 @@ nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
     mInstantiating = PR_TRUE;
 
     nsCOMPtr<nsIContent> thisContent = 
-      do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
+      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
     NS_ASSERTION(thisContent, "must be a content");
 
     nsIDocument* doc = thisContent->GetCurrentDoc();
@@ -703,7 +703,7 @@ nsObjectLoadingContent::LoadObject(const nsAString& aURI,
 
   // Avoid StringToURI in order to use the codebase attribute as base URI
   nsCOMPtr<nsIContent> thisContent = 
-    do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
 
   nsIDocument* doc = thisContent->GetOwnerDoc();
@@ -765,7 +765,7 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
   mContentType = aTypeHint;
 
   nsCOMPtr<nsIContent> thisContent = 
-    do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
 
   nsIDocument* doc = thisContent->GetOwnerDoc();
@@ -812,7 +812,7 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
       NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OBJECT,
                                 aURI,
                                 doc->GetDocumentURI(),
-                                NS_STATIC_CAST(nsIImageLoadingContent*, this),
+                                static_cast<nsIImageLoadingContent*>(this),
                                 aTypeHint,
                                 nsnull, //extra
                                 &shouldLoad,
@@ -1095,7 +1095,7 @@ PRBool
 nsObjectLoadingContent::IsSupportedDocument(const nsCString& aMimeType)
 {
   nsCOMPtr<nsIContent> thisContent = 
-    do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
 
   nsresult rv;
@@ -1156,7 +1156,7 @@ nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
        this, aOldType, aOldState, mType, ObjectState(), aSync));
 
   nsCOMPtr<nsIContent> thisContent = 
-    do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
 
   nsIDocument* doc = thisContent->GetCurrentDoc();
@@ -1230,7 +1230,7 @@ nsObjectLoadingContent::GetTypeOfContent(const nsCString& aMIMEType)
   }
 
   nsCOMPtr<nsIContent> thisContent = 
-    do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
 
   if (ShouldShowDefaultPlugin(thisContent, aMIMEType)) {
@@ -1299,7 +1299,7 @@ nsIObjectFrame*
 nsObjectLoadingContent::GetFrame()
 {
   nsCOMPtr<nsIContent> thisContent = 
-    do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
 
   PRBool flushed = PR_FALSE;
@@ -1375,7 +1375,7 @@ nsObjectLoadingContent::Instantiate(const nsACString& aMIMEType, nsIURI* aURI)
     // We need some URI. If we have nothing else, use the base URI.
     // XXX(biesi): The code used to do this. Not sure why this is correct...
     nsCOMPtr<nsIContent> thisContent = 
-      do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
+      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
     NS_ASSERTION(thisContent, "must be a content");
 
     GetObjectBaseURI(thisContent, getter_AddRefs(baseURI));

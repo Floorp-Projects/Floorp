@@ -281,19 +281,19 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
     if (aIID.Equals(kISupportsIID) ||
         aIID.Equals(NS_GET_IID(nsILocalStore))) {
-        *aResult = NS_STATIC_CAST(nsILocalStore*, this);
+        *aResult = static_cast<nsILocalStore*>(this);
     }
     else if (aIID.Equals(NS_GET_IID(nsIRDFDataSource))) {
-        *aResult = NS_STATIC_CAST(nsIRDFDataSource *, this);
+        *aResult = static_cast<nsIRDFDataSource *>(this);
     }
     else if (aIID.Equals(NS_GET_IID(nsIRDFRemoteDataSource))) {
-        *aResult = NS_STATIC_CAST(nsIRDFRemoteDataSource *, this);
+        *aResult = static_cast<nsIRDFRemoteDataSource *>(this);
     }
     else if (aIID.Equals(NS_GET_IID(nsIObserver))) {
-        *aResult = NS_STATIC_CAST(nsIObserver *, this);
+        *aResult = static_cast<nsIObserver *>(this);
     }
     else if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference))) {
-        *aResult = NS_STATIC_CAST(nsISupportsWeakReference *, this);
+        *aResult = static_cast<nsISupportsWeakReference *>(this);
     }
     else {
         *aResult = nsnull;

@@ -244,7 +244,7 @@ public:
     * @return the root frame for the view
     */
   static nsIFrame* GetFrameFor(nsIView *aView)
-  { return NS_STATIC_CAST(nsIFrame*, aView->GetClientData()); }
+  { return static_cast<nsIFrame*>(aView->GetClientData()); }
   
   /**
     * GetScrollableFrameFor returns the scrollable frame for a scrollable view

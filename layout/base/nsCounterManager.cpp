@@ -72,7 +72,7 @@ nsCounterUseNode::GetText(nsString& aResult)
     aResult.Truncate();
 
     nsAutoVoidArray stack;
-    stack.AppendElement(NS_STATIC_CAST(nsCounterNode*, this));
+    stack.AppendElement(static_cast<nsCounterNode*>(this));
 
     if (mAllCounters && mScopeStart)
         for (nsCounterNode *n = mScopeStart; n->mScopePrev; n = n->mScopeStart)
@@ -84,7 +84,7 @@ nsCounterUseNode::GetText(nsString& aResult)
         separator = mCounterStyle->Item(1).GetStringBufferValue();
 
     for (PRInt32 i = stack.Count() - 1;; --i) {
-        nsCounterNode *n = NS_STATIC_CAST(nsCounterNode*, stack[i]);
+        nsCounterNode *n = static_cast<nsCounterNode*>(stack[i]);
         nsBulletFrame::AppendCounterText(style, n->mValueAfter, aResult);
         if (i == 0)
             break;
@@ -295,7 +295,7 @@ struct DestroyNodesData {
 PR_STATIC_CALLBACK(PLDHashOperator)
 DestroyNodesInList(const nsAString& aKey, nsCounterList* aList, void* aClosure)
 {
-    DestroyNodesData *data = NS_STATIC_CAST(DestroyNodesData*, aClosure);
+    DestroyNodesData *data = static_cast<DestroyNodesData*>(aClosure);
     if (aList->DestroyNodesFor(data->mFrame)) {
         data->mDestroyedAny = PR_TRUE;
         aList->SetDirty();
