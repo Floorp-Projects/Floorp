@@ -8134,9 +8134,7 @@ ExtensionsDataSource.prototype = {
   _rdfGet_updateable: function(item, property) {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
     var opType = this.getItemProperty(id, "opType");
-    if (opType == OP_NEEDS_INSTALL || opType == OP_NEEDS_UNINSTALL ||
-        opType == OP_NEEDS_UPGRADE ||
-        this.getItemProperty(id, "appManaged") == "true")
+    if (opType != OP_NONE || this.getItemProperty(id, "appManaged") == "true")
       return EM_L("false");
 
     if (getPref("getBoolPref", (PREF_EM_ITEM_UPDATE_ENABLED.replace(/%UUID%/, id), false)) == true)
