@@ -2617,9 +2617,6 @@ nsPluginHostImpl::~nsPluginHostImpl()
 {
   PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("nsPluginHostImpl::dtor\n"));
 
-#ifdef NS_DEBUG
-  printf("nsPluginHostImpl dtor\n");
-#endif
   Destroy();
   sInst = nsnull;
 }
@@ -6356,9 +6353,6 @@ NS_IMETHODIMP nsPluginHostImpl::Observe(nsISupports *aSubject,
                                         const char *aTopic,
                                         const PRUnichar *someData)
 {
-#ifdef NS_DEBUG
-  printf("nsPluginHostImpl::Observe \"%s\"\n", aTopic ? aTopic : "");
-#endif
   if (!nsCRT::strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic))
   {
     Destroy();
