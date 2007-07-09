@@ -1599,6 +1599,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
             nsCOMPtr<nsIInputStream> stream(do_QueryInterface(supports));
             if (stream) {
               postDataStream = stream;
+              charset.Truncate();
             }
           }
         }
@@ -1648,8 +1649,18 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
         contentType = NS_LITERAL_CSTRING("application/xml");
       }
 
-      contentType.AppendLiteral(";charset=");
-      contentType.Append(charset);
+      // We don't want to set a charset for streams.
+      if (!charset.IsEmpty()) {
+        nsCAutoString actualType, dummy;
+        rv = NS_ParseContentType(contentType, actualType, dummy);
+        if (NS_FAILED(rv)) {
+          actualType.AssignLiteral("application/xml");
+        }
+
+        contentType.Assign(actualType);
+        contentType.AppendLiteral(";charset=");
+        contentType.Append(charset);
+      }
 
       rv = uploadChannel->SetUploadStream(postDataStream, contentType, -1);
       // Reset the method to its original value
