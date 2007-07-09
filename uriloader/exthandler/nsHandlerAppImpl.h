@@ -50,9 +50,9 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIHANDLERAPP
 
-  nsHandlerAppBase() NS_HIDDEN {}
-  nsHandlerAppBase(const PRUnichar *aName) NS_HIDDEN  { mName.Assign(aName); }
-  nsHandlerAppBase(const nsAString & aName) NS_HIDDEN  { mName.Assign(aName); }
+  nsHandlerAppBase() NS_HIDDEN;
+  nsHandlerAppBase(const PRUnichar *aName) NS_HIDDEN;
+  nsHandlerAppBase(const nsAString & aName) NS_HIDDEN;
   virtual ~nsHandlerAppBase() {}
 
 protected:
