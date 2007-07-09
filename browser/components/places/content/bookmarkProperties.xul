@@ -22,6 +22,7 @@
    - Contributor(s):
    -   Joe Hughes <jhughes@google.com>
    -   Asaf Romano <mano@mozilla.com>
+   -   Ehsan Akhgari <ehsan.akhgari@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -53,6 +54,7 @@
 <dialog id="bookmarkproperties"
         buttons="accept, cancel"
         buttonlabelextra2="&bookmarks.newFolderButton.label;"
+        buttonaccesskeyextra2="&bookmarks.newFolderButton.accesskey;"
         ondialogaccept="BookmarkPropertiesPanel.onDialogAccept();"
         ondialogextra2="BookmarkPropertiesPanel.newFolder();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -76,7 +78,8 @@
     </columns>
     <rows id="placesInfoRows">
       <row id="titleRow" align="center">
-        <label value="&bookmarks.name.label;" control="namePicker"/>
+        <label value="&bookmarks.name.label;" accesskey="&bookmarks.name.accesskey;"
+               control="namePicker"/>
         <menulist id="namePicker"
                   editable="true"
                   droppable="false"
@@ -91,33 +94,39 @@
         </menulist>
       </row>
       <row id="locationRow" align="center">
-        <label value="&bookmarks.location.label;" control="editURLBar"/>
+        <label value="&bookmarks.location.label;" accesskey="&bookmarks.location.accesskey;"
+               control="editURLBar"/>
         <textbox id="editURLBar" size="10"
                  onchange="BookmarkPropertiesPanel.validateChanges();"
                  oninput="BookmarkPropertiesPanel.validateChanges();"/>
       </row>
       <row id="livemarkFeedLocationRow" align="center">
-        <label value="&bookmarks.feed_location.label;" control="feedLocationTextfield"/>
+        <label value="&bookmarks.feed_location.label;" accesskey="&bookmarks.feed_location.accesskey;"
+               control="feedLocationTextfield"/>
         <textbox id="feedLocationTextfield"
                  onchange="BookmarkPropertiesPanel.validateChanges();"
                  oninput="BookmarkPropertiesPanel.validateChanges();"/>
       </row>
       <row id="livemarkSiteLocationRow" align="center">
-        <label value="&bookmarks.site_location.label;" control="feedSiteLocationTextfield"/>
+        <label value="&bookmarks.site_location.label;" accesskey="&bookmarks.site_location.accesskey;"
+               control="feedSiteLocationTextfield"/>
         <textbox id="feedSiteLocationTextfield"
                  onchange="BookmarkPropertiesPanel.validateChanges();"
                  oninput="BookmarkPropertiesPanel.validateChanges();"/>
       </row>
       <row id="keywordRow" align="center">
-        <label value="&bookmarks.keyword.label;" control="keywordTextfield"/>
+        <label value="&bookmarks.keyword.label;" accesskey="&bookmarks.keyword.accesskey;"
+               control="keywordTextfield"/>
         <textbox id="keywordTextfield"/>
       </row>
       <row id="descriptionRow">
-        <label value="&bookmarks.description.label;" control="descriptionTextfield"/>
+        <label value="&bookmarks.description.label;" accesskey="&bookmarks.description.accesskey;"
+               control="descriptionTextfield"/>
         <textbox id="descriptionTextfield" multiline="true"/>
       </row>
       <row id="folderRow" align="center">
-        <label value="&bookmarks.createIn.label;" control="folderMenuList"/>
+        <label value="&bookmarks.createIn.label;" accesskey="&bookmarks.createIn.accesskey;"
+               control="folderMenuList"/>
         <menulist id="folderMenuList"
                   class="folder-icon"
                   oncommand="BookmarkPropertiesPanel.onMenuListFolderSelect();">
@@ -140,7 +149,8 @@
                 oncommand="BookmarkPropertiesPanel.toggleTreeVisibility();"/>
       </row>
       <checkbox id="loadInSidebarCheckbox"
-                label="&bookmarks.loadInSidebar.label;"/>
+                label="&bookmarks.loadInSidebar.label;"
+                accesskey="&bookmarks.loadInSidebar.accesskey;"/>
     </rows>
   </grid>
 
