@@ -1415,10 +1415,7 @@ nsTextControlFrame::CreateFrameFor(nsIContent*      aContent)
   // Use async reflow and painting for text widgets to improve
   // performance.
 
-  // XXX: Using editor async updates exposes bugs 158782, 151882,
-  //      and 165130, so we're disabling it for now, until they
-  //      can be addressed.
-  // editorFlags |= nsIPlaintextEditor::eEditorUseAsyncUpdatesMask;
+  editorFlags |= nsIPlaintextEditor::eEditorUseAsyncUpdatesMask;
 
   // Now initialize the editor.
   //
