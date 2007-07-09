@@ -82,7 +82,7 @@ try {
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const POST_DATA_ANNO = "URIProperties/POSTData";
-const LAST_CHARSET_ANNO = "bookmarks/lastCharset";
+const LAST_CHARSET_ANNO = "URIProperties/characterSet";
 
 // main
 function run_test() {
@@ -260,8 +260,8 @@ function testCanonicalBookmarks(aFolder) {
   do_check_eq("hidden1%3Dbar&text1%3D%25s",
               annosvc.getPageAnnotationString(pageURI, POST_DATA_ANNO));
   // last charset 
-  do_check_true(annosvc.itemHasAnnotation(testBookmark1.itemId, LAST_CHARSET_ANNO));
-  do_check_eq("ISO-8859-1", annosvc.getItemAnnotationString(testBookmark1.itemId,
+  do_check_true(annosvc.pageHasAnnotation(pageURI, LAST_CHARSET_ANNO));
+  do_check_eq("ISO-8859-1", annosvc.getPageAnnotationString(pageURI,
                                                             LAST_CHARSET_ANNO));
   // description 
   do_check_true(annosvc.itemHasAnnotation(testBookmark1.itemId,
