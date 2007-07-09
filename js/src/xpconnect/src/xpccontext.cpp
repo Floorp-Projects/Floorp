@@ -71,6 +71,7 @@ XPCContext::XPCContext(XPCJSRuntime* aRuntime,
 {
     MOZ_COUNT_CTOR(XPCContext);
 
+    PR_INIT_CLIST(&mScopes);
     for(const char** p =  XPC_ARG_FORMATTER_FORMAT_STRINGS; *p; p++)
         JS_AddArgumentFormatter(mJSContext, *p, XPC_JSArgumentFormatter);
 }
@@ -80,6 +81,16 @@ XPCContext::~XPCContext()
     MOZ_COUNT_DTOR(XPCContext);
     NS_IF_RELEASE(mException);
     NS_IF_RELEASE(mSecurityManager);
+
+    // Iterate over our scopes and tell them that we have been destroyed
+    for(PRCList *scopeptr = PR_NEXT_LINK(&mScopes);
+        scopeptr != &mScopes;
+        scopeptr = PR_NEXT_LINK(scopeptr))
+    {
+        XPCWrappedNativeScope *scope = (XPCWrappedNativeScope *)scopeptr;
+        scope->SetContext(nsnull);
+    }
+
     // we do not call JS_RemoveArgumentFormatter because we now only
     // delete XPCContext *after* the underlying JSContext is dead
 }
