@@ -56,8 +56,8 @@
  * Bookmark := a
  *   HREF is the destination of the bookmark
  *   FEEDURL is the URI of the RSS feed if this is a livemark.
- *   LAST_CHARSET should be stored as an annotation (FIXME bug 334408) so that the
- *     next time we go to that page we remember the user's preference.
+ *   LAST_CHARSET is stored as an annotation so that the next time we go to
+ *     that page we remember the user's preference.
  *   WEB_PANEL is set to "true" if the bookmark should be loaded in the sidebar.
  *   ICON will be stored in the favicon service
  *   ICON_URI is new for places bookmarks.html, it refers to the original
@@ -127,6 +127,7 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 #define DESCRIPTION_ANNO NS_LITERAL_CSTRING("bookmarkProperties/description")
 #define POST_DATA_ANNO NS_LITERAL_CSTRING("URIProperties/POSTData")
 #define GENERATED_TITLE_ANNO NS_LITERAL_CSTRING("bookmarks/generatedTitle")
+#define LAST_CHARSET_ANNO NS_LITERAL_CSTRING("URIProperties/characterSet")
 
 #define BOOKMARKS_MENU_ICON_URI "chrome://browser/skin/places/bookmarksMenu.png"
 
@@ -946,11 +947,9 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   // recalculated by the microsummary service
   if (!micsumGenURI.IsEmpty()) {
     nsCOMPtr<nsIURI> micsumGenURIObject;
-    nsCOMPtr<nsIURI> hrefObject;
-    if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(micsumGenURIObject), micsumGenURI)) &&
-        NS_SUCCEEDED(NS_NewURI(getter_AddRefs(hrefObject), href))) {
+    if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(micsumGenURIObject), micsumGenURI))) {
       nsCOMPtr<nsIMicrosummary> microsummary;
-      mMicrosummaryService->CreateMicrosummary(hrefObject, micsumGenURIObject,
+      mMicrosummaryService->CreateMicrosummary(frame.mPreviousLink, micsumGenURIObject,
                                                getter_AddRefs(microsummary));
       mMicrosummaryService->SetMicrosummary(frame.mPreviousId, microsummary);
 
@@ -962,7 +961,16 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
     }
   }
 
-  // FIXME bug 334408: save the last charset
+  // import last charset
+  if (!lastCharset.IsEmpty()) {
+    PRBool hasCharset = PR_FALSE;
+    mAnnotationService->PageHasAnnotation(frame.mPreviousLink,
+                                          LAST_CHARSET_ANNO, &hasCharset);
+    if (!hasCharset)
+      mAnnotationService->SetPageAnnotationString(frame.mPreviousLink, LAST_CHARSET_ANNO,
+                                                  lastCharset, 0,
+                                                  nsIAnnotationService::EXPIRE_NEVER);
+  }
 }
 
 
@@ -1441,6 +1449,7 @@ static const char kNameAttribute[] = " NAME=\"";
 static const char kMicsumGenURIAttribute[]    = " MICSUM_GEN_URI=\"";
 static const char kDateAddedAttribute[] = " ADD_DATE=\"";
 static const char kLastModifiedAttribute[] = " LAST_MODIFIED=\"";
+static const char kLastCharsetAttribute[] = " LAST_CHARSET=\"";
 
 // WriteContainerPrologue
 //
@@ -1913,7 +1922,25 @@ nsPlacesImportExportService::WriteItem(nsINavHistoryResultNode* aItem,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // FIXME bug 334408: write last character set here
+  // last charset
+  PRBool hasLastCharset = PR_FALSE;
+  rv = mAnnotationService->PageHasAnnotation(pageURI, LAST_CHARSET_ANNO,
+                                             &hasLastCharset);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (hasLastCharset) {
+    nsAutoString lastCharset;
+    rv = mAnnotationService->GetPageAnnotationString(pageURI, LAST_CHARSET_ANNO,
+                                                     lastCharset);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aOutput->Write(kLastCharsetAttribute, sizeof(kLastCharsetAttribute)-1, &dummy);
+    NS_ENSURE_SUCCESS(rv, rv);
+    char* escapedLastCharset = nsEscapeHTML(NS_ConvertUTF16toUTF8(lastCharset).get());
+    rv = aOutput->Write(escapedLastCharset, strlen(escapedLastCharset), &dummy);
+    nsMemory::Free(escapedLastCharset);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // '>'
   rv = aOutput->Write(kCloseAngle, sizeof(kCloseAngle)-1, &dummy);
