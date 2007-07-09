@@ -155,7 +155,7 @@ endif
 DUMP_SYMS_BIN := $(DIST)/host/bin/dump_syms
 endif
 ifeq ($(OS_ARCH),Linux)
-MAKE_SYM_STORE_ARGS :=
+MAKE_SYM_STORE_ARGS := --vcs-info
 DUMP_SYMS_BIN := $(DIST)/host/bin/dump_syms
 MAKE_SYM_STORE_PATH := $(DIST)/bin
 endif
