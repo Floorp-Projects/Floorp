@@ -4482,7 +4482,6 @@ ExtensionManager.prototype = {
        */
       onUpdateStarted: function() {
         LOG("Phone Home Listener: Update Started");
-        em.datasource.onUpdateStarted();
       },
       
       /**
@@ -4492,7 +4491,6 @@ ExtensionManager.prototype = {
         LOG("Phone Home Listener: Update Ended");
         // We are responsible for cleaning up this file!
         this._installRDF.remove(false);
-        em.datasource.onUpdateEnded();
       },
       
       /**
@@ -4502,7 +4500,6 @@ ExtensionManager.prototype = {
         LOG("Phone Home Listener: Update For " + addon.id + " started");
         em.datasource.addIncompatibleUpdateItem(addon.name, this._xpi.path,
                                                 addon.type, addon.version);
-        em.datasource.onAddonUpdateStarted(addon);
       },
       
       /**
@@ -4546,7 +4543,6 @@ ExtensionManager.prototype = {
           // We are responsible for cleaning up this file!
           InstallLocations.get(aInstallLocationKey).removeFile(this._xpi);
         }
-        em.datasource.onAddonUpdateEnded(addon, status);
       },
 
       /**
