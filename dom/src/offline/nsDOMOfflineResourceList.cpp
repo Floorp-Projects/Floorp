@@ -200,6 +200,7 @@ nsDOMOfflineResourceList::Add(const nsAString& aURI)
 
   return prefetchService->PrefetchURIForOfflineUse(requestedURI,
                                                    mURI,
+                                                   nsnull,
                                                    PR_TRUE);
 }
 
@@ -269,6 +270,7 @@ nsDOMOfflineResourceList::Refresh()
 
     rv = prefetchService->PrefetchURIForOfflineUse(requestedURI,
                                                    mURI,
+                                                   nsnull,
                                                    PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
   }

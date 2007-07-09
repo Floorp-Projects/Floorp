@@ -673,14 +673,14 @@ nsContentSink::ProcessLink(nsIContent* aElement,
   PRBool hasPrefetch = (linkTypes.IndexOf(NS_LITERAL_STRING("prefetch")) != -1);
   // prefetch href if relation is "next" or "prefetch"
   if (hasPrefetch || linkTypes.IndexOf(NS_LITERAL_STRING("next")) != -1) {
-    PrefetchHref(aHref, hasPrefetch, PR_FALSE);
+    PrefetchHref(aHref, aElement, hasPrefetch, PR_FALSE);
   }
 
   // fetch href into the offline cache if relation is "offline-resource"
   if (linkTypes.IndexOf(NS_LITERAL_STRING("offline-resource")) != -1) {
     AddOfflineResource(aHref);
     if (mSaveOfflineResources)
-      PrefetchHref(aHref, PR_TRUE, PR_TRUE);
+      PrefetchHref(aHref, aElement, PR_TRUE, PR_TRUE);
   }
 
   // is it a stylesheet link?
@@ -764,6 +764,7 @@ nsContentSink::ProcessMETATag(nsIContent* aContent)
 
 void
 nsContentSink::PrefetchHref(const nsAString &aHref,
+                            nsIContent *aSource,
                             PRBool aExplicit,
                             PRBool aOffline)
 {
@@ -808,10 +809,14 @@ nsContentSink::PrefetchHref(const nsAString &aHref,
               charset.IsEmpty() ? nsnull : PromiseFlatCString(charset).get(),
               mDocumentBaseURI);
     if (uri) {
+      nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aSource);
       if (aOffline)
-        prefetchService->PrefetchURIForOfflineUse(uri, mDocumentURI, aExplicit);
+        prefetchService->PrefetchURIForOfflineUse(uri,
+                                                  mDocumentURI,
+                                                  domNode,
+                                                  aExplicit);
       else
-        prefetchService->PrefetchURI(uri, mDocumentURI, aExplicit);
+        prefetchService->PrefetchURI(uri, mDocumentURI, domNode, aExplicit);
     }
   }
 }

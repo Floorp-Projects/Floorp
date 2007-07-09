@@ -38,8 +38,10 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
+interface nsIDOMNode;
+interface nsISimpleEnumerator;
 
-[scriptable, uuid(ae241be6-3cb6-47ec-9e38-2d89bc22042a)]
+[scriptable, uuid(cba513eb-c457-4b93-832c-1a979e66edd1)]
 interface nsIPrefetchService : nsISupports
 {
     /**
@@ -47,9 +49,14 @@ interface nsIPrefetchService : nsISupports
      *
      * @param aURI the URI of the document to prefetch
      * @param aReferrerURI the URI of the referring page
+     * @param aSource the DOM node (such as a <link> tag) that requested this
+     *        fetch, or null if the prefetch was not requested by a DOM node.
      * @param aExplicit the link element has an explicit prefetch link type
      */
-    void prefetchURI(in nsIURI aURI, in nsIURI aReferrerURI, in boolean aExplicit);
+    void prefetchURI(in nsIURI aURI,
+                     in nsIURI aReferrerURI,
+                     in nsIDOMNode aSource,
+                     in boolean aExplicit);
 
     /**
      * Enqueue a request to prefetch the specified URI, making sure it's in the
@@ -57,11 +64,25 @@ interface nsIPrefetchService : nsISupports
      *
      * @param aURI the URI of the document to prefetch
      * @param aReferrerURI the URI of the referring page
+     * @param aSource the DOM node (such as a <link> tag) that requested this
+     *        fetch, or null if the prefetch was not requested by a DOM node.
      * @param aExplicit the link element has an explicit offline link type
      */
     void prefetchURIForOfflineUse(in nsIURI aURI,
                                   in nsIURI aReferrerURI,
+                                  in nsIDOMNode aSource,
                                   in boolean aExplicit);
+
+    /**
+     * Enumerate the items in the prefetch queue.  Each element in the
+     * enumeration is an nsIDOMLoadStatus.
+     *
+     * @param aIncludeNormalItems include normal prefetch items in the list.
+     * @param aIncludeOfflineItems include items being fetched for offline
+     *        use.
+     */
+    nsISimpleEnumerator enumerateQueue(in boolean aIncludeNormalItems,
+                                       in boolean aIncludeOfflineItems);
 
     // XXX do we need a way to cancel prefetch requests?
 };
