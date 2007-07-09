@@ -56,6 +56,9 @@ _SERV_FILES = 	runtests.pl \
 		gen_template.pl \
 		server.js \
 		harness.xul \
+		browser-test-overlay.xul \
+		browser-test.js \
+		browser-harness.xul \
 		redirect.html \
 		$(topsrcdir)/netwerk/test/httpserver/httpd.js \
 		$(NULL)	
