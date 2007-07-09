@@ -639,10 +639,6 @@ MAKEFILES_string="$MAKEFILES_xpcom"
 
 MAKEFILES_xpinstall="
 xpinstall/Makefile
-xpinstall/packager/Makefile
-xpinstall/packager/unix/Makefile
-xpinstall/packager/windows/Makefile
-xpinstall/packager/os2/Makefile
 xpinstall/public/Makefile
 xpinstall/res/Makefile
 xpinstall/src/Makefile
