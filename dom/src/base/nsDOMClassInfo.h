@@ -1623,6 +1623,26 @@ public:
   }
 };
 
+class nsLoadStatusListSH : public nsArraySH
+{
+protected:
+  nsLoadStatusListSH(nsDOMClassInfoData *aData) : nsArraySH(aData)
+  {
+  }
+
+  virtual ~nsLoadStatusListSH()
+  {
+  }
+
+  virtual nsresult GetItemAt(nsISupports *aNative, PRUint32 aIndex,
+                             nsISupports **aResult);
+
+public:
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsLoadStatusListSH(aData);
+  }
+};
 
 
 void InvalidateContextAndWrapperCache();

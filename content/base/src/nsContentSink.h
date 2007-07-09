@@ -167,7 +167,8 @@ protected:
                                     const nsSubstring& aType,
                                     const nsSubstring& aMedia);
 
-  void PrefetchHref(const nsAString &aHref, PRBool aExplicit, PRBool aOffline);
+  void PrefetchHref(const nsAString &aHref, nsIContent *aSource,
+                    PRBool aExplicit, PRBool aOffline);
   nsresult GetOfflineCacheSession(nsIOfflineCacheSession **aSession);
   nsresult AddOfflineResource(const nsAString &aHref);
 

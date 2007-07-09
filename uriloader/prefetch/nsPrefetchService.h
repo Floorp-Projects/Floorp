@@ -48,8 +48,10 @@
 #include "nsIChannel.h"
 #include "nsIURI.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMLoadStatus.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 
 class nsPrefetchService;
 class nsPrefetchListener;
@@ -75,20 +77,29 @@ public:
 
     nsresult Init();
     void     ProcessNextURI();
-    void     UpdateCurrentChannel(nsIChannel *c) { mCurrentChannel = c; }
+
+    nsPrefetchNode *GetCurrentNode() { return mCurrentNode.get(); }
+    nsPrefetchNode *GetQueueHead() { return mQueueHead; }
+
+    void NotifyLoadRequested(nsPrefetchNode *node);
+    void NotifyLoadCompleted(nsPrefetchNode *node);
 
 private:
     ~nsPrefetchService();
 
     nsresult Prefetch(nsIURI *aURI,
                       nsIURI *aReferrerURI,
+                      nsIDOMNode *aSource,
                       PRBool aExplicit,
                       PRBool aOffline);
 
     void     AddProgressListener();
     void     RemoveProgressListener();
-    nsresult EnqueueURI(nsIURI *aURI, nsIURI *aReferrerURI, PRBool aOffline);
-    nsresult DequeueURI(nsIURI **aURI, nsIURI **aReferrerURI, PRBool *aOffline);
+    nsresult EnqueueURI(nsIURI *aURI, nsIURI *aReferrerURI,
+                        nsIDOMNode *aSource, PRBool aOffline,
+                        nsPrefetchNode **node);
+    nsresult EnqueueNode(nsPrefetchNode *node);
+    nsresult DequeueNode(nsPrefetchNode **node);
     void     EmptyQueue(PRBool includeOffline);
     nsresult SaveOfflineList(nsIURI *aDocumentUri,
                              nsIDOMDocument *aDoc);
@@ -100,7 +111,7 @@ private:
     nsCOMPtr<nsIOfflineCacheSession>  mOfflineCacheSession;
     nsPrefetchNode                   *mQueueHead;
     nsPrefetchNode                   *mQueueTail;
-    nsCOMPtr<nsIChannel>              mCurrentChannel;
+    nsRefPtr<nsPrefetchNode>          mCurrentNode;
     PRInt32                           mStopCount;
     // true if pending document loads have ever reached zero.
     PRInt32                           mHaveProcessed;
@@ -110,51 +121,44 @@ private:
 };
 
 //-----------------------------------------------------------------------------
-// nsPrefetchListener
+// nsPrefetchNode
 //-----------------------------------------------------------------------------
 
-class nsPrefetchListener : public nsIStreamListener
-                         , public nsIInterfaceRequestor
-                         , public nsIChannelEventSink
+class nsPrefetchNode : public nsIDOMLoadStatus
+                     , public nsIStreamListener
+                     , public nsIInterfaceRequestor
+                     , public nsIChannelEventSink
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIDOMLOADSTATUS
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSICHANNELEVENTSINK
 
-    nsPrefetchListener(nsPrefetchService *aPrefetchService);
+    nsPrefetchNode(nsPrefetchService *aPrefetchService,
+                   nsIURI *aURI,
+                   nsIURI *aReferrerURI,
+                   nsIDOMNode *aSource,
+                   PRBool aOffline);
+
+    ~nsPrefetchNode() {}
+
+    nsresult OpenChannel();
+    nsresult CancelChannel(nsresult error);
+
+    nsPrefetchNode             *mNext;
+    nsCOMPtr<nsIURI>            mURI;
+    nsCOMPtr<nsIURI>            mReferrerURI;
+    nsCOMPtr<nsIWeakReference>  mSource;
+    PRBool                      mOffline;
 
 private:
-    ~nsPrefetchListener();
-
-    static NS_METHOD ConsumeSegments(nsIInputStream *, void *, const char *,
-                                     PRUint32, PRUint32, PRUint32 *);
-
-    nsPrefetchService *mService;
-};
-
-//-----------------------------------------------------------------------------
-// nsPrefetchNode
-//-----------------------------------------------------------------------------
-
-class nsPrefetchNode
-{
-public:
-    nsPrefetchNode(nsIURI *aURI,
-                   nsIURI *aReferrerURI,
-                   PRBool aOffline)
-        : mNext(nsnull)
-        , mURI(aURI)
-        , mReferrerURI(aReferrerURI)
-        , mOffline(aOffline)
-        { }
-
-    nsPrefetchNode  *mNext;
-    nsCOMPtr<nsIURI> mURI;
-    nsCOMPtr<nsIURI> mReferrerURI;
-    PRBool           mOffline;
+    nsRefPtr<nsPrefetchService> mService;
+    nsCOMPtr<nsIChannel>        mChannel;
+    PRUint16                    mState;
+    PRInt32                     mBytesRead;
 };
 
 #endif // !nsPrefetchService_h__

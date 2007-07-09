@@ -51,6 +51,7 @@
 #include "nsBarProps.h"
 #include "nsDOMStorage.h"
 #include "nsDOMOfflineResourceList.h"
+#include "nsDOMOfflineLoadStatusList.h"
 #include "nsDOMError.h"
 
 // Helper Classes
@@ -8455,6 +8456,7 @@ nsNavigator::LoadingNewDocument()
   mMimeTypes = nsnull;
   mPlugins = nsnull;
   mOfflineResources = nsnull;
+  mPendingOfflineLoads = nsnull;
 }
 
 nsresult
@@ -8595,6 +8597,30 @@ nsNavigator::GetOfflineResources(nsIDOMOfflineResourceList **aList)
   }
 
   NS_IF_ADDREF(*aList = mOfflineResources);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavigator::GetPendingOfflineLoads(nsIDOMLoadStatusList **aList)
+{
+  NS_ENSURE_ARG_POINTER(aList);
+
+  if (!mPendingOfflineLoads) {
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetDocShell()));
+    if (!webNav) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = webNav->GetCurrentURI(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mPendingOfflineLoads = new nsDOMOfflineLoadStatusList(uri);
+    if (!mPendingOfflineLoads) return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_IF_ADDREF(*aList = mPendingOfflineLoads);
 
   return NS_OK;
 }
