@@ -276,11 +276,14 @@ function list(requestPath, directory, recurse)
  * is a test case to be executed in the harness, or just
  * a supporting file.
  */
-function isTest(filename)
+function isTest(filename, pattern)
 {
-  return  (filename.indexOf("test_") > -1 &&
-           filename.indexOf(".js") == -1 &&
-           filename.indexOf(".css") == -1);
+  if (pattern)
+    return pattern.test(filename);
+
+  return filename.indexOf("test_") > -1 &&
+         filename.indexOf(".js") == -1 &&
+         filename.indexOf(".css") == -1;
 }
 
 /**
@@ -339,24 +342,23 @@ function linksToTableRows(links)
   return response;
 }
 
+function arrayOfTestFiles(linkArray, fileArray, testPattern) {
+  for (var [link, value] in linkArray) {
+    if (value instanceof Object) {
+      arrayOfTestFiles(value, fileArray, testPattern);
+    } else if (isTest(link, testPattern)) {
+      fileArray.push(link)
+    }
+  }
+}
 /**
  * Produce a flat array of test file paths to be executed in the harness.
  */
 function jsonArrayOfTestFiles(links)
 {
   var testFiles = [];
-  function arrayOfTestFiles(linkArray) {
-    for (var [link, value] in linkArray) {
-      if (value instanceof Object) {
-        arrayOfTestFiles(value);
-      } else {
-        testFiles.push(link)
-      }
-    }
-  }
-  arrayOfTestFiles(links);
-  var testFiles = ['"' + file + '"' for each(file in testFiles)
-                   if (isTest(file))];
+  arrayOfTestFiles(links, testFiles);
+  testFiles = ['"' + file + '"' for each(file in testFiles)];
   return "[" + testFiles.join(",\n") + "]";
 }
 
