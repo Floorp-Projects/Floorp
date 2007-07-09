@@ -1,14 +1,23 @@
 <!ENTITY bookmarks.name.label                 "Name:">
+<!ENTITY bookmarks.name.accesskey             "N">
 <!ENTITY bookmarks.location.label             "Location:">
+<!ENTITY bookmarks.location.accesskey         "L">
 <!ENTITY bookmarks.keyword.label              "Keyword:">
+<!ENTITY bookmarks.keyword.accesskey          "K">
 <!ENTITY bookmarks.description.label          "Description:">
+<!ENTITY bookmarks.description.accesskey      "D">
 <!ENTITY bookmarks.liveTitlesSeparator.label  "Live Titles">
 <!ENTITY bookmarks.createIn.label             "Create in:">
+<!ENTITY bookmarks.createIn.accesskey         "C">
 <!ENTITY bookmarks.feed_location.label        "Feed Location:">
+<!ENTITY bookmarks.feed_location.accesskey    "F">
 <!ENTITY bookmarks.site_location.label        "Site Location:">
+<!ENTITY bookmarks.site_location.accesskey    "S">
 <!ENTITY bookmarks.loadInSidebar.label        "Load this bookmark in the sidebar">
+<!ENTITY bookmarks.loadInSidebar.accesskey    "o">
 <!ENTITY bookmarks.bookmarksFolderItem.label  "Bookmarks">
 <!ENTITY bookmarks.toolbarFolderItem.label    "Bookmarks Toolbar">
 <!ENTITY bookmarks.expanderDown.tooltip       "Show all the bookmarks folders">
 <!ENTITY bookmarks.expanderUp.tooltip         "Hide">
 <!ENTITY bookmarks.newFolderButton.label      "New Folder">
+<!ENTITY bookmarks.newFolderButton.accesskey  "e">
