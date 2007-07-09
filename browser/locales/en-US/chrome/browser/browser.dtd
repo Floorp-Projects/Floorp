@@ -51,6 +51,7 @@
 <!ENTITY fullScreenClose.tooltip "Close">
 
 <!ENTITY closeWindow.label "Close Window">
+<!ENTITY closeWindow.accesskey "d">
 
 <!ENTITY bookmarksMenu.label "Bookmarks">
 <!ENTITY bookmarksMenu.accesskey "B">
