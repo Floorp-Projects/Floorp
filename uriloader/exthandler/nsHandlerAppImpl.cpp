@@ -42,6 +42,20 @@
 // XXX why does nsMIMEInfoImpl have a threadsafe nsISupports?  do we need one 
 // here too?
 
+nsHandlerAppBase::nsHandlerAppBase()
+{
+}
+
+nsHandlerAppBase::nsHandlerAppBase(const PRUnichar *aName)
+  : mName(aName)
+{
+}
+
+nsHandlerAppBase::nsHandlerAppBase(const nsAString & aName)
+  : mName(aName)
+{
+}
+
 NS_IMPL_ISUPPORTS1(nsHandlerAppBase, nsIHandlerApp)
 
 /* AString name; */
