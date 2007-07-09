@@ -119,6 +119,7 @@ class nsGlobalWindowObserver;
 class nsGlobalWindow;
 
 class nsDOMOfflineResourceList;
+class nsDOMOfflineLoadStatusList;
 
 // permissible values for CheckOpenAllow
 enum OpenAllowValue {
@@ -758,6 +759,7 @@ protected:
   nsRefPtr<nsMimeTypeArray> mMimeTypes;
   nsRefPtr<nsPluginArray> mPlugins;
   nsRefPtr<nsDOMOfflineResourceList> mOfflineResources;
+  nsRefPtr<nsDOMOfflineLoadStatusList> mPendingOfflineLoads;
   nsIDocShell* mDocShell; // weak reference
 
   static jsval       sPrefInternal_id;
