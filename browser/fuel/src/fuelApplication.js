@@ -411,11 +411,18 @@ Extension.prototype = {
   // for nsIObserver  
   observe: function ext_observe(aSubject, aTopic, aData)
   {
-    if ((aData == "item-uninstalled") &&
-        (aSubject instanceof Ci.nsIUpdateItem) &&
-        (aSubject.id == this._item.id))
+    if ((aSubject instanceof Ci.nsIUpdateItem) && (aSubject.id == this._item.id))
     {
-      this._events.dispatch("uninstall", this._item.id);
+      if (aData == "item-uninstalled")
+        this._events.dispatch("uninstall", this._item.id);
+      else if (aData == "item-disabled")
+        this._events.dispatch("disable", this._item.id);
+      else if (aData == "item-enabled")
+        this._events.dispatch("enable", this._item.id);
+      else if (aData == "item-cancel-action")
+        this._events.dispatch("cancel", this._item.id);
+      else if (aData == "item-upgraded")
+        this._events.dispatch("upgrade", this._item.id);
     }
   },
 
@@ -454,7 +461,9 @@ Extension.prototype = {
 function Extensions() {
   this._extmgr = Components.classes["@mozilla.org/extensions/manager;1"]
                            .getService(Ci.nsIExtensionManager);
-                             
+                           
+  this._cache = {};
+  
   var self = this;
   gShutdown.push(function() { self._shutdown(); });
 }
@@ -462,8 +471,21 @@ function Extensions() {
 //=================================================
 // Extensions implementation
 Extensions.prototype = {
-  _shutdown : function() {
+  _shutdown : function exts_shutdown() {
     this._extmgr = null;
+    this._cache = null;
+  },
+  
+  /*
+   * Helper method to check cache before creating a new extension
+   */
+  _get : function exts_get(aId) {
+    if (this._cache.hasOwnProperty(aId))
+      return this._cache[aId];
+      
+    var newExt = new Extension(this._extmgr.getItemForID(aId));
+    this._cache[aId] = newExt;
+    return newExt;
   },
   
   get all() {
@@ -481,7 +503,7 @@ Extensions.prototype = {
     var items = this._extmgr.getItemList(Ci.nsIUpdateItem.TYPE_EXTENSION, {});
     
     for (var i = 0; i < items.length; i++) {
-      retVal.push(new Extension(items[i]));
+      retVal.push(this._get(items[i].id));
     }
 
     return retVal;
@@ -495,7 +517,7 @@ Extensions.prototype = {
   },
   
   get : function exts_get(aId) {
-    return this.has(aId) ? new Extension(this._extmgr.getItemForID(aId)) : null;
+    return this.has(aId) ? this._get(aId) : null;
   }
 };
 

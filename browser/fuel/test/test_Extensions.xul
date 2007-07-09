@@ -21,6 +21,7 @@ var test = {
   inspectorid: "inspector@mozilla.org",
   inspectorname: "DOM Inspector"
 };
+var gLastEvent = "";
 
 test_Extensions();
 
@@ -46,6 +47,42 @@ function test_Extensions() {
   
   // Reset the install event preference, so that we can test it again later
   inspector.prefs.get("install-event-fired").reset();
+  
+  // Make sure the we are given the same extension (cached) so things like .storage work right
+  inspector.storage.set("test", "simple check");
+  ok(inspector.storage.has("test"), "Checking that extension storage worked");
+
+  var inspector2 = Application.extensions.get(test.inspectorid);
+  is(inspector2.id, test.inspectorid, "Check 'Extension.id' for known extension - from cache");
+  ok(inspector.storage.has("test"), "Checking that extension storage worked - from cache");
+  is(inspector2.storage.get("test", "cache"), inspector.storage.get("test", "original"), "Checking that the storage of same extension is correct - from cache");
+
+  inspector.events.addListener("disable", onGenericEvent);
+  inspector.events.addListener("enable", onGenericEvent);
+  inspector.events.addListener("uninstall", onGenericEvent);
+  inspector.events.addListener("cancel", onGenericEvent);
+  
+  var extmgr = Components.classes["@mozilla.org/extensions/manager;1"]
+                         .getService(Components.interfaces.nsIExtensionManager);
+                         
+  extmgr.disableItem(test.inspectorid);
+  is(gLastEvent, "disable", "Checking that disable event is fired");
+
+  // enabling after a disable will only fire a 'cancel' event
+  // see - http://mxr.mozilla.org/seamonkey/source/toolkit/mozapps/extensions/src/nsExtensionManager.js.in#5216
+  extmgr.enableItem(test.inspectorid);
+  is(gLastEvent, "cancel", "Checking that enable (cancel) event is fired");
+
+  extmgr.uninstallItem(test.inspectorid);
+  is(gLastEvent, "uninstall", "Checking that uninstall event is fired");
+
+  extmgr.cancelUninstallItem(test.inspectorid);
+  is(gLastEvent, "cancel", "Checking that cancel event is fired");
+}
+
+function onGenericEvent(event) {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  gLastEvent = event.type;
 }
 
 ]]>
