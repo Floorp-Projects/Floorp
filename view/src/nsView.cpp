@@ -358,7 +358,7 @@ nsRect nsView::CalcWidgetBounds(nsWindowType aType)
   }
 
   nsRect newBounds(viewBounds);
-  newBounds.ScaleRoundPreservingCenters(1.0f / p2a);
+  newBounds.ScaleRoundPreservingCentersInverse(p2a);
 
   nsPoint roundedOffset(NSIntPixelsToAppUnits(newBounds.x, p2a),
                         NSIntPixelsToAppUnits(newBounds.y, p2a));
