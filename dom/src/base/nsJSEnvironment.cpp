@@ -83,6 +83,7 @@
 #include "nsEventDispatcher.h"
 #include "nsIContent.h"
 #include "nsCycleCollector.h"
+#include "nsNetUtil.h"
 
 // For locale aware string methods
 #include "plstr.h"
@@ -290,6 +291,7 @@ NS_ScriptErrorReporter(JSContext *cx,
 
     if (globalObject) {
       nsAutoString fileName, msg;
+      NS_NAMED_LITERAL_STRING(xoriginMsg, "Script error.");
 
       if (report) {
         fileName.AssignWithConversion(report->filename);
@@ -333,8 +335,37 @@ NS_ScriptErrorReporter(JSContext *cx,
             nsScriptErrorEvent errorevent(PR_TRUE, NS_LOAD_ERROR);
 
             errorevent.fileName = fileName.get();
-            errorevent.errorMsg = msg.get();
-            errorevent.lineNr = report ? report->lineno : 0;
+
+            nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(win));
+            nsIPrincipal *p = sop->GetPrincipal();
+
+            PRBool sameOrigin = report ? PR_FALSE : PR_TRUE;
+
+            if (p && report) {
+              nsCOMPtr<nsIURI> errorURI;
+              NS_NewURI(getter_AddRefs(errorURI), report->filename);
+
+              nsCOMPtr<nsIURI> codebase;
+              p->GetURI(getter_AddRefs(codebase));
+
+              if (errorURI && codebase) {
+                // FIXME: Once error reports contain the origin of the
+                // error (principals) we should change this to do the
+                // security check based on the principals and not
+                // URIs. See bug 387476.
+                sameOrigin =
+                  NS_SUCCEEDED(sSecurityManager->
+                               CheckSameOriginURI(errorURI, codebase));
+              }
+            }
+
+            if (sameOrigin) {
+              errorevent.errorMsg = msg.get();
+              errorevent.lineNr = report ? report->lineno : 0;
+            } else {
+              errorevent.errorMsg = xoriginMsg.get();
+              errorevent.lineNr = 0;
+            }
 
             // Dispatch() must be synchronous for the recursion block
             // (errorDepth) to work.
