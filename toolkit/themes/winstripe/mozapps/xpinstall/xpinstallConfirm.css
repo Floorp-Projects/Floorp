@@ -1,8 +1,5 @@
-.listbox {
-  -moz-appearance: listbox;
-}
-
 #itemList {
+  -moz-appearance: listbox;
   margin: 10px 4px 10px 4px;
   border: 2px solid;
   -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
