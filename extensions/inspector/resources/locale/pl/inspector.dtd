@@ -41,23 +41,11 @@
 
 <!ENTITY mnSearch.label "Szukaj">
 <!ENTITY mnSearch.accesskey "S">
-<!ENTITY mnSearchPlugins.label "Rozszerzenia">
-<!ENTITY mnSearchPlugins.accesskey "R">
-<!ENTITY cmdRunSearch.label "Uruchom...">
-<!ENTITY cmdRunSearch.accesskey "U">
 
 <!ENTITY mnView.label "Widok">
 <!ENTITY mnView.accesskey "W">
 <!ENTITY cmdToggleBrowser.label "Przeglądarka">
 <!ENTITY cmdToggleSearch.label "Wyniki wyszukiwania">
-  
-<!ENTITY cmdViewSearchItem.label "Widok...">
-<!ENTITY cmdEditSearchItem.label "Edycja...">
-<!ENTITY cmdCopySearchItemLine.label "Kopiuj linię">
-<!ENTITY cmdCopySearchItemAll.label "Kopiuj wszystko">
-<!ENTITY cmdSaveSearchItemText.label "Zapisz...">
-<!ENTITY cmdClearSearch.label "Wyczyść">
-<!ENTITY cmdHideSearchItems.label "Ukryj">
 
 <!ENTITY browserPanel.label "Przeglądarka">
 
