@@ -174,6 +174,7 @@ PROT_PhishingWarden.prototype.QueryInterface = function(iid) {
  * Cleanup on shutdown.
  */
 PROT_PhishingWarden.prototype.shutdown = function() {
+  this.prefs_.removeAllObservers();
   this.progressListener_.callback = null;
   this.progressListener_ = null;
   this.listManager_ = null;
