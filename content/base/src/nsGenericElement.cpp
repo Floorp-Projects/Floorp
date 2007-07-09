@@ -80,7 +80,9 @@
 #include "nsMutationEvent.h"
 #include "nsNodeUtils.h"
 #include "nsDocument.h"
+#ifdef MOZ_XUL
 #include "nsXULElement.h"
+#endif /* MOZ_XUL */
 
 #include "nsBindingManager.h"
 #include "nsXBLBinding.h"
@@ -119,7 +121,9 @@
 #include "nsIFocusController.h"
 #include "nsIControllers.h"
 #include "nsXBLInsertionPoint.h"
+#ifdef MOZ_XUL
 #include "nsIXULDocument.h"
+#endif /* MOZ_XUL */
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsCCUncollectableMarker.h"
@@ -1880,7 +1884,9 @@ BindNodesInInsertPoints(nsXBLBinding* aBinding, nsIContent* aInsertParent,
     aBinding->GetExistingInsertionPointsFor(aInsertParent);
   if (inserts) {
     PRBool allowScripts = aBinding->AllowScripts();
+#ifdef MOZ_XUL
     nsCOMPtr<nsIXULDocument> xulDoc = do_QueryInterface(aDocument);
+#endif
     PRUint32 i;
     for (i = 0; i < inserts->Length(); ++i) {
       nsCOMPtr<nsIContent> insertRoot =
@@ -1893,9 +1899,11 @@ BindNodesInInsertPoints(nsXBLBinding* aBinding, nsIContent* aInsertParent,
                                  aBinding->GetBoundElement(), allowScripts);
           NS_ENSURE_SUCCESS(rv, rv);
 
+#ifdef MOZ_XUL
           if (xulDoc) {
             xulDoc->AddSubtreeToDocument(child);
           }
+#endif
         }
       }
     }
@@ -1938,12 +1946,15 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     aBindingParent = aParent->GetBindingParent();
   }
 
+#ifdef MOZ_XUL
   // First set the binding parent
   nsXULElement* xulElem = nsXULElement::FromContent(this);
   if (xulElem) {
     xulElem->SetXULBindingParent(aBindingParent);
   }
-  else {
+  else 
+#endif
+  {
     if (aBindingParent) {
       nsDOMSlots *slots = GetDOMSlots();
 
@@ -2082,11 +2093,14 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   // Unset this since that's what the old code effectively did.
   UnsetFlags(NODE_FORCE_XBL_BINDINGS);
   
+#ifdef MOZ_XUL
   nsXULElement* xulElem = nsXULElement::FromContent(this);
   if (xulElem) {
     xulElem->SetXULBindingParent(nsnull);
   }
-  else {
+  else
+#endif
+  {
     nsDOMSlots *slots = GetExistingDOMSlots();
     if (slots) {
       slots->mBindingParent = nsnull;
