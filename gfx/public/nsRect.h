@@ -165,9 +165,9 @@ struct NS_GFX nsRect {
   // Scale by aScale, converting coordinates to integers so that the result
   // is the larges integer-coordinate rectangle contained in the unrounded result
   nsRect& ScaleRoundIn(float aScale);
-  // Scale by aScale, converting coordinates to integers so that the result
-  // contains the same pixel centers as the unrounded result
-  nsRect& ScaleRoundPreservingCenters(float aScale);
+  // Scale by the inverse of aScale, converting coordinates to integers so that
+  // the result contains the same pixel centers as the unrounded result
+  nsRect& ScaleRoundPreservingCentersInverse(float aScale);
 
   // Helpers for accessing the vertices
   nsPoint TopLeft() const { return nsPoint(x, y); }
