@@ -312,7 +312,8 @@ function showView(aView) {
                       ["updateURL", "?updateURL"],
                       ["version", "?version"],
                       ["typeName", "update"] ];
-      types = [ [ ["availableUpdateVersion", "?availableUpdateVersion", null] ] ];
+      types = [ [ ["availableUpdateVersion", "?availableUpdateVersion", null],
+                  [ "updateable", "true", null ] ] ];
       break;
     case "installs":
       document.getElementById("installs-view").hidden = false;
@@ -1345,8 +1346,13 @@ function updateOptionalViews() {
     if (!showUpdates) {
       var updateURLArc = rdfs.GetResource(PREFIX_NS_EM + "availableUpdateURL");
       var updateURL = ds.GetTarget(e, updateURLArc, true);
-      if (updateURL)
-        var showUpdates = true;
+      if (updateURL) {
+        var updateableArc = rdfs.GetResource(PREFIX_NS_EM + "updateable");
+        var updateable = ds.GetTarget(e, updateableArc, true);
+        updateable = updateable.QueryInterface(Components.interfaces.nsIRDFLiteral);
+        if (updateable.Value == "true")
+          var showUpdates = true;
+      }
     }
 
     if (showInstalls)
@@ -1400,8 +1406,10 @@ function checkUpdatesAll() {
   // To support custom views we check the add-ons displayed in the list
   var items = [];
   var children = gExtensionsView.children;
-  for (var i = 0; i < children.length; ++i)
-    items.push(gExtensionManager.getItemForID(getIDFromResourceURI(children[i].id)));
+  for (var i = 0; i < children.length; ++i) {
+    if (children[i].getAttribute("updateable") != "false")
+      items.push(gExtensionManager.getItemForID(getIDFromResourceURI(children[i].id)));
+  }
 
   if (items.length > 0) {
     showProgressBar();
@@ -1757,6 +1765,7 @@ var gExtensionsViewController = {
       gExtensionsViewController.onCommandUpdate();
       updateGlobalCommands();
       gExtensionsView.selectedItem.focus();
+      updateOptionalViews();
     },
 
     cmd_disable: function (aSelectedItem)
@@ -1789,6 +1798,7 @@ var gExtensionsViewController = {
       gExtensionManager.disableItem(id);
       gExtensionsViewController.onCommandUpdate();
       gExtensionsView.selectedItem.focus();
+      updateOptionalViews();
     },
     
     cmd_enable: function (aSelectedItem)
@@ -1796,6 +1806,7 @@ var gExtensionsViewController = {
       gExtensionManager.enableItem(getIDFromResourceURI(aSelectedItem.id));
       gExtensionsViewController.onCommandUpdate();
       gExtensionsView.selectedItem.focus();
+      updateOptionalViews();
     }
   }
 };
