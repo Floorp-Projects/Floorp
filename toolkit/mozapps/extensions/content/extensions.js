@@ -151,8 +151,7 @@ var AddonsViewBuilder = {
   updateView: function(aRulesList, aURI, aBindingList, aActionList)
   {
     this._bindingList = aBindingList;
-    if (!aActionList)
-      this._actionList = aBindingList;
+    this._actionList = aActionList ? aActionList : aBindingList;
 
     this.clearChildren(gExtensionsView);
     var template = document.createElementNS(kXULNSURI, "template");
