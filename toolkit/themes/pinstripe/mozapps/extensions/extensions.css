@@ -67,7 +67,7 @@ richlistbox[focused] richlistitem[selected="true"][isDisabled="true"] {
   margin-bottom: 2px;
 }
 
-richlistitem[selected="true"][opType="none"] .descriptionCrop {
+richlistitem[selected="true"]:not([opType]) .descriptionCrop {
   display: none;
 }
 
@@ -128,11 +128,13 @@ richlistitem .notifyBadge {
 }
 
 .updateBadge,
+.updateAvailableBox,
 .notifyBadge {
   display: none;
 }
 
-richlistitem[availableUpdateURL] .updateBadge,
+richlistitem[availableUpdateURL][updateable="true"] .updateBadge,
+richlistitem[availableUpdateURL][updateable="true"] .updateAvailableBox,
 richlistitem[compatible="false"] .notifyBadge,
 richlistitem[blocklisted="true"] .notifyBadge,
 richlistitem[satisfiesDependencies="false"] .notifyBadge {
@@ -205,11 +207,6 @@ richlistitem[opType="needs-uninstall"] .blocklistedBox {
   display: none;
 }
 
-richlistitem[opType="needs-uninstall"] .updateAvailableBox,
-richlistitem[availableUpdateURL="none"] .updateAvailableBox {
-  display: none;
-}
-
 richlistitem[loading="true"] .updateBadge {
   display: -moz-box;
   width: 16px;
@@ -252,7 +249,6 @@ richlistitem[opType="needs-disable"] .needsDisable {
   display: -moz-box;
 }
 
-richlistitem[opType="needs-uninstall"] .updateBadge,
 richlistitem[opType="needs-uninstall"] .notifyBadge {
   display: none;
 }
