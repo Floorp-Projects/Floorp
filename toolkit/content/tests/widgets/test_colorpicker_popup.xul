@@ -72,7 +72,9 @@ function popupShown()
       is(gCp.color, "#FF0000", "key down while open");
       break;
     default:
-      synthesizeKey("VK_ESCAPE", { });
+      synthesizeMouse(gCp, 2, 2, { });
+// this breaks on the Mac, so disable for now
+//      synthesizeKey("VK_ESCAPE", { });
       break;
   }
 }
@@ -92,8 +94,10 @@ function popupHiding()
 function goNext()
 {
   gTestPhase++;
-  if (gTestPhase >= phases.length)
+  if (gTestPhase >= phases.length) {
     SimpleTest.finish();
+    return;
+  }
 
   var phase = phases[gTestPhase];
   switch (phase) {
