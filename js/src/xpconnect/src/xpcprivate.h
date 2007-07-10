@@ -126,6 +126,8 @@
 #include "nsIXPCToolsProfiler.h"
 #endif
 
+#include "nsIThreadInternal.h"
+
 #ifdef XPC_IDISPATCH_SUPPORT
 // This goop was added because of EXCEPINFO in ThrowCOMError
 // This include is here, because it needs to occur before the undefines below
@@ -426,6 +428,7 @@ const PRBool OBJ_IS_NOT_GLOBAL = PR_FALSE;
 struct JSObjectRefcounts;
 
 class nsXPConnect : public nsIXPConnect,
+                    public nsIThreadObserver,
                     public nsSupportsWeakReference,
                     public nsCycleCollectionLanguageRuntime,
                     public nsCycleCollectionParticipant
@@ -434,6 +437,7 @@ public:
     // all the interface method declarations...
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCONNECT
+    NS_DECL_NSITHREADOBSERVER
 
     // non-interface implementation
 public:
