@@ -140,7 +140,7 @@ mozStorageConnection::Initialize(nsIFile *aDatabaseFile)
      */
     sqlite3_stmt *stmt = nsnull;
     nsCString query("SELECT * FROM sqlite_master");
-    srv = sqlite3_prepare_v2(mDBConn, query.get(), query.Length(), &stmt, NULL);
+    srv = sqlite3_prepare (mDBConn, query.get(), query.Length(), &stmt, nsnull);
 
     if (srv == SQLITE_OK) {
         srv = sqlite3_step(stmt);
@@ -304,8 +304,7 @@ mozStorageConnection::TableExists(const nsACString& aSQLStatement, PRBool *_retv
     query.AppendLiteral("'");
 
     sqlite3_stmt *stmt = nsnull;
-    int srv = sqlite3_prepare_v2(mDBConn, query.get(), query.Length(), &stmt,
-                                 NULL);
+    int srv = sqlite3_prepare (mDBConn, query.get(), query.Length(), &stmt, nsnull);
     if (srv != SQLITE_OK) {
         HandleSqliteError(query.get());
         return ConvertResultCode(srv);
@@ -321,9 +320,9 @@ mozStorageConnection::TableExists(const nsACString& aSQLStatement, PRBool *_retv
         exists = PR_TRUE;
     } else if (srv == SQLITE_DONE) {
         exists = PR_FALSE;
-    } else {
+    } else if (srv == SQLITE_ERROR) {
         HandleSqliteError("TableExists finalize");
-        return ConvertResultCode(srv);
+        return NS_ERROR_FAILURE;
     }
 
     *_retval = exists;
@@ -340,8 +339,7 @@ mozStorageConnection::IndexExists(const nsACString& aIndexName, PRBool* _retval)
     query.AppendLiteral("'");
 
     sqlite3_stmt *stmt = nsnull;
-    int srv = sqlite3_prepare_v2(mDBConn, query.get(), query.Length(), &stmt,
-                                 NULL);
+    int srv = sqlite3_prepare(mDBConn, query.get(), query.Length(), &stmt, nsnull);
     if (srv != SQLITE_OK) {
         HandleSqliteError(query.get());
         return ConvertResultCode(srv);
@@ -350,10 +348,14 @@ mozStorageConnection::IndexExists(const nsACString& aIndexName, PRBool* _retval)
     *_retval = PR_FALSE;
 
     srv = sqlite3_step(stmt);
-    (void)sqlite3_finalize(stmt);
+    // we just care about the return value from step
+    sqlite3_finalize(stmt);
 
     if (srv == SQLITE_ROW) {
         *_retval = PR_TRUE;
+    } else if (srv == SQLITE_ERROR) {
+        HandleSqliteError("IndexExists finalize");
+        return NS_ERROR_FAILURE;
     }
 
     return ConvertResultCode(srv);
