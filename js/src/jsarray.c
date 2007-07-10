@@ -707,6 +707,8 @@ static JSBool
 array_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                jsval *rval)
 {
+    if (!JS_InstanceOf(cx, obj, &js_ArrayClass, argv))
+        return JS_FALSE;
     return array_join_sub(cx, obj, TO_SOURCE, NULL, rval);
 }
 #endif
@@ -715,6 +717,8 @@ static JSBool
 array_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                jsval *rval)
 {
+    if (!JS_InstanceOf(cx, obj, &js_ArrayClass, argv))
+        return JS_FALSE;
     return array_join_sub(cx, obj, TO_STRING, NULL, rval);
 }
 
@@ -722,6 +726,9 @@ static JSBool
 array_toLocaleString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                jsval *rval)
 {
+    if (!JS_InstanceOf(cx, obj, &js_ArrayClass, argv))
+        return JS_FALSE;
+
     /*
      *  Passing comma here as the separator. Need a way to get a
      *  locale-specific version.
