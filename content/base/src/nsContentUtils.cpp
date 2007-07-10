@@ -717,6 +717,22 @@ nsContentUtils::Shutdown()
   }
 }
 
+static PRBool IsCallerTrustedForCapability(const char* aCapability)
+{
+  // The secman really should handle UniversalXPConnect case, since that
+  // should include UniversalBrowserRead... doesn't right now, though.
+  PRBool hasCap;
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  if (NS_FAILED(ssm->IsCapabilityEnabled(aCapability, &hasCap)))
+    return PR_FALSE;
+  if (hasCap)
+    return PR_TRUE;
+    
+  if (NS_FAILED(ssm->IsCapabilityEnabled("UniversalXPConnect", &hasCap)))
+    return PR_FALSE;
+  return hasCap;
+}
+
 /**
  * Checks whether two nodes come from the same origin. aTrustedNode is
  * considered 'safe' in that a user can operate on it and that it isn't
@@ -755,8 +771,15 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
     return NS_OK;
   }
 
-  return sSecurityManager->CheckSameOriginPrincipal(trustedPrincipal,
-                                                    unTrustedPrincipal);
+  PRBool equal;
+  // XXXbz should we actually have a Subsumes() check here instead?  Or perhaps
+  // a separate method for that, with callers using one or the other?
+  if (NS_FAILED(trustedPrincipal->Equals(unTrustedPrincipal, &equal)) ||
+      !equal) {
+    return NS_ERROR_DOM_PROP_ACCESS_DENIED;
+  }
+
+  return NS_OK;
 }
 
 // static
@@ -775,41 +798,29 @@ nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
     return PR_TRUE;
   }
 
-  nsCOMPtr<nsIPrincipal> systemPrincipal;
-  sSecurityManager->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
-
-  if (subjectPrincipal == systemPrincipal) {
-    // we're running as system, grant access to the node.
-
-    return PR_TRUE;
-  }
-
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(node, PR_FALSE);
 
-  nsresult rv;
-  PRBool enabled = PR_FALSE;
   nsIPrincipal* nodePrincipal = node->NodePrincipal();
-  if (nodePrincipal == systemPrincipal) {
-    // we know subjectPrincipal != systemPrincipal so we can only
-    // access the object if UniversalXPConnect is enabled. We can
-    // avoid wasting time in CheckSameOriginPrincipal
 
-    rv = sSecurityManager->IsCapabilityEnabled("UniversalXPConnect", &enabled);
-    return NS_SUCCEEDED(rv) && enabled;
-  }
+  PRBool subsumes;
+  nsresult rv = subjectPrincipal->Subsumes(nodePrincipal, &subsumes);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = sSecurityManager->CheckSameOriginPrincipal(subjectPrincipal,
-                                                  nodePrincipal);
-  if (NS_SUCCEEDED(rv)) {
+  if (subsumes) {
     return PR_TRUE;
   }
 
-  // see if the caller has otherwise been given the ability to touch
-  // input args to DOM methods
+  // The subject doesn't subsume the node.  Allow access only if the subject
+  // has either "UniversalXPConnect" (if the node has the system principal) or
+  // "UniversalBrowserRead" (in all other cases).
+  PRBool isSystem;
+  rv = sSecurityManager->IsSystemPrincipal(nodePrincipal, &isSystem);
+  isSystem = NS_FAILED(rv) || isSystem;
+  const char* capability =
+    NS_FAILED(rv) || isSystem ? "UniversalXPConnect" : "UniversalBrowserRead";
 
-  rv = sSecurityManager->IsCapabilityEnabled("UniversalBrowserRead", &enabled);
-  return NS_SUCCEEDED(rv) && enabled;
+  return IsCallerTrustedForCapability(capability);
 }
 
 //static
@@ -1113,22 +1124,6 @@ nsContentUtils::IsCallerChrome()
   }
 
   return is_caller_chrome;
-}
-
-static PRBool IsCallerTrustedForCapability(const char* aCapability)
-{
-  // The secman really should handle UniversalXPConnect case, since that
-  // should include UniversalBrowserRead... doesn't right now, though.
-  PRBool hasCap;
-  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  if (NS_FAILED(ssm->IsCapabilityEnabled(aCapability, &hasCap)))
-    return PR_FALSE;
-  if (hasCap)
-    return PR_TRUE;
-    
-  if (NS_FAILED(ssm->IsCapabilityEnabled("UniversalXPConnect", &hasCap)))
-    return PR_FALSE;
-  return hasCap;
 }
 
 PRBool
