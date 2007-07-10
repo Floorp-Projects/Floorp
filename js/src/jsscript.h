@@ -50,11 +50,13 @@
 JS_BEGIN_EXTERN_C
 
 /*
- * Type of try note associated with each catch block or finally block.
+ * Type of try note associated with each catch or finally block or with for-in
+ * loop.
  */
 typedef enum JSTryNoteKind {
     JSTN_CATCH,
-    JSTN_FINALLY
+    JSTN_FINALLY,
+    JSTN_ITER
 } JSTryNoteKind;
 
 /*
@@ -64,33 +66,81 @@ struct JSTryNote {
     uint8           kind;       /* one of JSTryNoteKind */
     uint8           padding;    /* explicit padding on uint16 boundary */
     uint16          stackDepth; /* stack depth upon exception handler entry */
-    uint32          start;      /* start of the try statement relative to
-                                   script->main */
-    uint32          length;     /* length of the try statement */
+    uint32          start;      /* start of the try statement or for-in loop
+                                   relative to script->main */
+    uint32          length;     /* length of the try statement or for-in loop */
 };
 
 typedef struct JSTryNoteArray {
-    uint32          length;     /* number of notes in the array */
-    JSTryNote       notes[1];   /* the first eleemnt of notes array */
+    JSTryNote       *vector;    /* array of indexed try notes */
+    uint32          length;     /* count of indexded try notes */
 } JSTryNoteArray;
 
+typedef struct JSObjectArray {
+    JSObject        **vector;   /* array of indexed objects */
+    uint32          length;     /* count of indexded objects */
+} JSObjectArray;
+
+#define JS_OBJECT_ARRAY_SIZE(length)                                          \
+    (offsetof(JSObjectArray, vector) + sizeof(JSObject *) * (length))
+
 struct JSScript {
-    jsbytecode   *code;         /* bytecodes and their immediate operands */
-    uint32       length;        /* length of code vector */
-    jsbytecode   *main;         /* main entry point, after predef'ing prolog */
-    uint16       version;       /* JS version under which script was compiled */
-    uint16       numGlobalVars; /* declared global var/const/function count */
-    JSAtomMap    atomMap;       /* maps immediate index to literal struct */
-    const char   *filename;     /* source filename or null */
-    uintN        lineno;        /* base line number of script */
-    uintN        depth;         /* maximum stack depth in slots */
-    JSTryNoteArray *trynotes;   /* exception table for this script */
-    JSPrincipals *principals;   /* principals for this script */
-    JSObject     *object;       /* optional Script-class object wrapper */
+    jsbytecode      *code;      /* bytecodes and their immediate operands */
+    uint32          length;     /* length of code vector */
+    uint16          version;    /* JS version under which script was compiled */
+    uint16          ngvars;     /* declared global var/const/function count */
+    uint8           objectsOffset;  /* offset to the array of nested function,
+                                       block, scope, xml and one-time regexps
+                                       objects or 0 if none */
+    uint8           regexpsOffset;  /* offset to the array of to-be-cloned
+                                       regexps or 0 if none. */
+    uint8           trynotesOffset; /* offset to the array of try notes or
+                                       0 if none */
+    jsbytecode      *main;      /* main entry point, after predef'ing prolog */
+    JSAtomMap       atomMap;    /* maps immediate index to literal struct */
+    const char      *filename;  /* source filename or null */
+    uintN           lineno;     /* base line number of script */
+    uintN           depth;      /* maximum stack depth in slots */
+    JSPrincipals    *principals;/* principals for this script */
+    JSObject        *object;    /* optional Script-class object wrapper */
 };
 
 /* No need to store script->notes now that it is allocated right after code. */
 #define SCRIPT_NOTES(script)    ((jssrcnote*)((script)->code+(script)->length))
+
+#define JS_SCRIPT_OBJECTS(script)                                             \
+    (JS_ASSERT((script)->objectsOffset != 0),                                 \
+     (JSObjectArray *)((uint8 *)(script) + (script)->objectsOffset))
+
+#define JS_SCRIPT_REGEXPS(script)                                             \
+    (JS_ASSERT((script)->regexpsOffset != 0),                                 \
+     (JSObjectArray *)((uint8 *)(script) + (script)->regexpsOffset))
+
+#define JS_SCRIPT_TRYNOTES(script)                                            \
+    (JS_ASSERT((script)->trynotesOffset != 0),                                \
+     (JSTryNoteArray *)((uint8 *)(script) + (script)->trynotesOffset))
+
+#define JS_GET_SCRIPT_ATOM(script, index, atom)                               \
+    JS_BEGIN_MACRO                                                            \
+        JSAtomMap *atoms_ = &(script)->atomMap;                               \
+        JS_ASSERT((uint32)(index) < atoms_->length);                          \
+        (atom) = atoms_->vector[(index)];                                     \
+    JS_END_MACRO
+
+#define JS_GET_SCRIPT_OBJECT(script, index, obj)                              \
+    JS_BEGIN_MACRO                                                            \
+        JSObjectArray *objects_ = JS_SCRIPT_OBJECTS(script);                  \
+        JS_ASSERT((uint32)(index) < objects_->length);                        \
+        (obj) = objects_->vector[(index)];                                    \
+    JS_END_MACRO
+
+#define JS_GET_SCRIPT_REGEXP(script, index, obj)                              \
+    JS_BEGIN_MACRO                                                            \
+        JSObjectArray *regexps_ = JS_SCRIPT_REGEXPS(script);                  \
+        JS_ASSERT((uint32)(index) < regexps_->length);                        \
+        (obj) = regexps_->vector[(index)];                                    \
+        JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_RegExpClass);                   \
+    JS_END_MACRO
 
 /*
  * Check if pc is inside a try block that has finally code. GC calls this to
@@ -159,7 +209,8 @@ js_SweepScriptFilenames(JSRuntime *rt);
  * kind (function or other) of new JSScript.
  */
 extern JSScript *
-js_NewScript(JSContext *cx, uint32 length, uint32 snlength, uint32 tnlength);
+js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
+             uint32 nobjects, uint32 nregexps, uint32 ntrynotes);
 
 extern JS_FRIEND_API(JSScript *)
 js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun);

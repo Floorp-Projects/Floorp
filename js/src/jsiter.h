@@ -39,6 +39,9 @@
 
 #ifndef jsiter_h___
 #define jsiter_h___
+
+JS_BEGIN_EXTERN_C
+
 /*
  * JavaScript iterators.
  */
@@ -49,12 +52,6 @@
 #define JSITER_FOREACH    0x2   /* return [key, value] pair rather than key */
 #define JSITER_KEYVALUE   0x4   /* destructuring for-in wants [key, value] */
 
-extern void
-js_CloseNativeIterator(JSContext *cx, JSObject *iterobj);
-
-extern void
-js_CloseIteratorState(JSContext *cx, JSObject *iterobj);
-
 /*
  * Convert the value stored in *vp to its iteration object. The flags should
  * contain JSITER_ENUMERATE if js_ValueToIterator is called when enumerating
@@ -64,12 +61,21 @@ js_CloseIteratorState(JSContext *cx, JSObject *iterobj);
 extern JSBool
 js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp);
 
+extern JSBool
+js_CloseIterator(JSContext *cx, jsval v);
+
 /*
  * Given iterobj, call iterobj.next().  If the iterator stopped, set *rval to
  * JSVAL_HOLE. Otherwise set it to the result of the next call.
  */
 extern JSBool
 js_CallIteratorNext(JSContext *cx, JSObject *iterobj, jsval *rval);
+
+/*
+ * Close iterobj, whose class must be js_IteratorClass.
+ */
+extern void
+js_CloseNativeIterator(JSContext *cx, JSObject *iterobj);
 
 #if JS_HAS_GENERATORS
 
@@ -100,7 +106,7 @@ extern JSObject *
 js_NewGenerator(JSContext *cx, JSStackFrame *fp);
 
 extern JSBool
-js_CloseGeneratorObject(JSContext *cx, JSGenerator *gen);
+js_CloseGenerator(JSContext *cx, JSObject *obj);
 
 #endif
 
@@ -110,5 +116,7 @@ extern JSClass          js_StopIterationClass;
 
 extern JSObject *
 js_InitIteratorClasses(JSContext *cx, JSObject *obj);
+
+JS_END_EXTERN_C
 
 #endif /* jsiter_h___ */

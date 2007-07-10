@@ -4,11 +4,11 @@
   <RDF:Description RDF:about="chrome://browser/content/browser.xul#toolbar-menubar"
                    currentset="menubar-items,spring,gwa-status-button,gwa-speedo-button,throbber-box" />
   <RDF:Description RDF:about="chrome://browser/content/browser.xul#main-window"
-                   width="994"
-                   height="1010"
+                   width="1024"
+                   height="768"
                    sizemode="normal"
-                   screenX="432"
-                   screenY="69" />
+                   screenX="0"
+                   screenY="0" />
   <RDF:Description RDF:about="chrome://browser/content/browser.xul">
     <NC:persist RDF:resource="chrome://browser/content/browser.xul#main-window"/>
     <NC:persist RDF:resource="chrome://browser/content/browser.xul#toolbar-menubar"/>

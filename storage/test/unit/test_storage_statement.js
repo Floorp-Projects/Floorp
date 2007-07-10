@@ -64,33 +64,27 @@ function test_getParameterIndexes_different()
 {
   var stmt = createStatement("SELECT * FROM test WHERE id = :id OR name = :name");
   var count = { value: 0 };
-  var result = stmt.getParameterIndexes(":id", count);
+  var result = stmt.getParameterIndexes("id", count);
   do_check_eq(1, count.value);
   do_check_eq(1, result.length);
-  do_check_eq(1, result[0]); // XXX is this a bug?
-  // SQLite index is one, but how we treat them, it should be zero
+  do_check_eq(0, result[0]);
   
-  result = stmt.getParameterIndexes(":name", count);
+  result = stmt.getParameterIndexes("name", count);
   do_check_eq(1, count.value);
   do_check_eq(1, result.length);
-  do_check_eq(2, result[0]); // XXX is this a bug?
-  // SQLite index is two, but how we treat them, it should be one
+  do_check_eq(1, result[0]);
 }
 
 function test_getParameterIndexes_same()
 {
-  // XXX SQLite is buggy with this case :(
-  return;
+  // XXX this looks like a bug in sqlite
   var stmt = createStatement("SELECT * FROM test WHERE id = :test OR name = :test");
 
-  print("param count = " + stmt.parameterCount);
   var count = { value: 0 };
-  var result = stmt.getParameterIndexes(":test", count);
-  print("count.value = " + count.value);
-  do_check_eq(2, count.value);
-  print("result.length = " + result.length);
-  print("result[0] = " + result[0]);
-  do_check_eq(2, result.length);
+  var result = stmt.getParameterIndexes("test", count);
+  do_check_eq(1, count.value);
+  do_check_eq(1, result.length);
+  do_check_eq(0, result[0]);
 }
 
 function test_columnCount()

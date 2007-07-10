@@ -75,20 +75,23 @@
 #define SRCNOTE_SIZE(n)         ((n) * sizeof(jssrcnote))
 #define TRYNOTE_SIZE(n)         ((n) * sizeof(JSTryNote))
 
+static JSBool
+NewTryNote(JSContext *cx, JSCodeGenerator *cg, JSTryNoteKind kind,
+           uintN stackDepth, size_t start, size_t end);
+
 JS_FRIEND_API(JSBool)
-js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg,
+js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg, JSParseContext *pc,
                      JSArenaPool *codePool, JSArenaPool *notePool,
                      const char *filename, uintN lineno,
                      JSPrincipals *principals)
 {
     memset(cg, 0, sizeof *cg);
-    TREE_CONTEXT_INIT(&cg->treeContext);
+    TREE_CONTEXT_INIT(&cg->treeContext, pc);
     cg->treeContext.flags |= TCF_COMPILING;
     cg->codePool = codePool;
     cg->notePool = notePool;
     cg->codeMark = JS_ARENA_MARK(codePool);
     cg->noteMark = JS_ARENA_MARK(notePool);
-    cg->tempMark = JS_ARENA_MARK(&cx->tempPool);
     cg->current = &cg->main;
     cg->filename = filename;
     cg->firstLine = cg->prolog.currentLine = cg->main.currentLine = lineno;
@@ -105,7 +108,6 @@ js_FinishCodeGenerator(JSContext *cx, JSCodeGenerator *cg)
     TREE_CONTEXT_FINISH(&cg->treeContext);
     JS_ARENA_RELEASE(cg->codePool, cg->codeMark);
     JS_ARENA_RELEASE(cg->notePool, cg->noteMark);
-    JS_ARENA_RELEASE(&cx->tempPool, cg->tempMark);
 }
 
 static ptrdiff_t
@@ -617,7 +619,7 @@ BuildSpanDepTable(JSContext *cx, JSCodeGenerator *cg)
             npairs = (jsint) GET_UINT16(pc2);
             pc2 += UINT16_LEN;
             while (npairs) {
-                pc2 += ATOM_INDEX_LEN;
+                pc2 += INDEX_LEN;
                 off = GET_JUMP_OFFSET(pc2);
                 if (!AddSpanDep(cx, cg, pc, pc2, off))
                     return JS_FALSE;
@@ -756,7 +758,7 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
     jssrcnote *sn, *snlimit;
     JSSrcNoteSpec *spec;
     uintN i, n, noteIndex;
-    JSTryNote *tn, *tnlimit;
+    JSTryNode *tryNode;
 #ifdef DEBUG_brendan
     int passes = 0;
 #endif
@@ -1064,25 +1066,27 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
          * Fix try/catch notes (O(numTryNotes * log2(numSpanDeps)), but it's
          * not clear how we can beat that).
          */
-        for (tn = cg->tryBase, tnlimit = cg->tryNext; tn < tnlimit; tn++) {
+        for (tryNode = cg->lastTryNode; tryNode; tryNode = tryNode->prev) {
             /*
              * First, look for the nearest span dependency at/above tn->start.
              * There may not be any such spandep, in which case the guard will
              * be returned.
              */
-            offset = tn->start;
+            offset = tryNode->note.start;
             sd = FindNearestSpanDep(cg, offset, 0, &guard);
             delta = sd->offset - sd->before;
-            tn->start = offset + delta;
+            tryNode->note.start = offset + delta;
 
             /*
              * Next, find the nearest spandep at/above tn->start + tn->length.
              * Use its delta minus tn->start's delta to increase tn->length.
              */
-            length = tn->length;
+            length = tryNode->note.length;
             sd2 = FindNearestSpanDep(cg, offset + length, sd - sdbase, &guard);
-            if (sd2 != sd)
-                tn->length = length + sd2->offset - sd2->before - delta;
+            if (sd2 != sd) {
+                tryNode->note.length =
+                    length + sd2->offset - sd2->before - delta;
+            }
         }
     }
 
@@ -1221,7 +1225,6 @@ JSBool
 js_IsGlobalReference(JSTreeContext *tc, JSAtom *atom, JSBool *loopyp)
 {
     JSStmtInfo *stmt;
-    JSObject *obj;
     JSScope *scope;
 
     *loopyp = JS_FALSE;
@@ -1233,9 +1236,9 @@ js_IsGlobalReference(JSTreeContext *tc, JSAtom *atom, JSBool *loopyp)
             continue;
         }
         if (stmt->flags & SIF_SCOPE) {
-            obj = ATOM_TO_OBJECT(stmt->atom);
-            JS_ASSERT(LOCKED_OBJ_GET_CLASS(obj) == &js_BlockClass);
-            scope = OBJ_SCOPE(obj);
+            JS_ASSERT(LOCKED_OBJ_GET_CLASS(stmt->u.blockObj) ==
+                      &js_BlockClass);
+            scope = OBJ_SCOPE(stmt->u.blockObj);
             if (SCOPE_GET_PROPERTY(scope, ATOM_TO_JSID(atom)))
                 return JS_FALSE;
         }
@@ -1250,7 +1253,8 @@ js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,
     stmt->type = type;
     stmt->flags = 0;
     SET_STATEMENT_TOP(stmt, top);
-    stmt->atom = NULL;
+    stmt->u.label = NULL;
+    JS_ASSERT(!stmt->u.blockObj);
     stmt->down = tc->topStmt;
     tc->topStmt = stmt;
     if (STMT_LINKS_SCOPE(stmt)) {
@@ -1262,19 +1266,17 @@ js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,
 }
 
 void
-js_PushBlockScope(JSTreeContext *tc, JSStmtInfo *stmt, JSAtom *blockAtom,
+js_PushBlockScope(JSTreeContext *tc, JSStmtInfo *stmt, JSObject *blockObj,
                   ptrdiff_t top)
 {
-    JSObject *blockObj;
 
     js_PushStatement(tc, stmt, STMT_BLOCK, top);
     stmt->flags |= SIF_SCOPE;
-    blockObj = ATOM_TO_OBJECT(blockAtom);
     STOBJ_SET_PARENT(blockObj, tc->blockChain);
     stmt->downScope = tc->topScopeStmt;
     tc->topScopeStmt = stmt;
     tc->blockChain = blockObj;
-    stmt->atom = blockAtom;
+    stmt->u.blockObj = blockObj;
 }
 
 /*
@@ -1301,7 +1303,7 @@ EmitBackPatchOp(JSContext *cx, JSCodeGenerator *cg, JSOp op, ptrdiff_t *lastp)
  */
 #define EMIT_UINT16_IMM_OP(op, i)                                             \
     JS_BEGIN_MACRO                                                            \
-        if (js_Emit3(cx, cg, op, UINT16_HI(i), UINT16_LO(i)) < 0)             \
+        if (js_Emit3(cx, cg, (JSOp)(op), UINT16_HI(i), UINT16_LO(i)) < 0)     \
             return JS_FALSE;                                                  \
     JS_END_MACRO
 
@@ -1330,19 +1332,21 @@ EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
     ptrdiff_t jmp;
 
     /*
-     * Return from within a try block that has a finally clause must be split
-     * into two ops: JSOP_SETRVAL, to pop the r.v. and store it in fp->rval;
-     * and JSOP_RETRVAL, which makes control flow go back to the caller, who
-     * picks up fp->rval as usual.  Otherwise, the stack will be unbalanced
-     * when executing the finally clause.
+     * Return from a try block that has a finally clause or from a for-in loop
+     * must be split into two ops: JSOP_SETRVAL, to pop the r.v. and store it
+     * in fp->rval; and JSOP_RETRVAL, which makes control flow go back to the
+     * caller, who picks up fp->rval as usual.  Otherwise, the stack will be
+     * unbalanced when executing the finally clause.
      *
      * We mutate *returnop once only if we find an enclosing try-block (viz,
-     * STMT_FINALLY) to ensure that we emit just one JSOP_SETRVAL before one
-     * or more JSOP_GOSUBs and other fixup opcodes emitted by this function.
+     * STMT_FINALLY) or a for-in loop to ensure that we emit just one
+     * JSOP_SETRVAL before one or more JSOP_GOSUBs/JSOP_ENDITERs and other
+     * fixup opcodes emitted by this function.
+     *
      * Our caller (the TOK_RETURN case of js_EmitTree) then emits *returnop.
-     * The fixup opcodes and gosubs must interleave in the proper order, from
-     * inner statement to outer, so that finally clauses run at the correct
-     * stack depth.
+     * The fixup opcodes and gosubs/enditers must interleave in the proper
+     * order, from inner statement to outer, so that finally clauses run at
+     * the correct stack depth.
      */
     if (returnop) {
         JS_ASSERT(*returnop == JSOP_RETURN);
@@ -1350,7 +1354,8 @@ EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
              stmt = stmt->down) {
             if (stmt->type == STMT_FINALLY ||
                 ((cg->treeContext.flags & TCF_FUN_HEAVYWEIGHT) &&
-                 STMT_MAYBE_SCOPE(stmt))) {
+                 STMT_MAYBE_SCOPE(stmt)) ||
+                stmt->type == STMT_FOR_IN_LOOP) {
                 if (js_Emit1(cx, cg, JSOP_SETRVAL) < 0)
                     return JS_FALSE;
                 *returnop = JSOP_RETRVAL;
@@ -1427,7 +1432,7 @@ EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
             FLUSH_POPS();
             if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
                 return JS_FALSE;
-            i = OBJ_BLOCK_COUNT(cx, ATOM_TO_OBJECT(stmt->atom));
+            i = OBJ_BLOCK_COUNT(cx, stmt->u.blockObj);
             EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, i);
         }
     }
@@ -1489,16 +1494,13 @@ void
 js_PopStatement(JSTreeContext *tc)
 {
     JSStmtInfo *stmt;
-    JSObject *blockObj;
 
     stmt = tc->topStmt;
     tc->topStmt = stmt->down;
     if (STMT_LINKS_SCOPE(stmt)) {
         tc->topScopeStmt = stmt->downScope;
-        if (stmt->flags & SIF_SCOPE) {
-            blockObj = ATOM_TO_OBJECT(stmt->atom);
-            tc->blockChain = STOBJ_GET_PARENT(blockObj);
-        }
+        if (stmt->flags & SIF_SCOPE)
+            tc->blockChain = STOBJ_GET_PARENT(stmt->u.blockObj);
     }
 }
 
@@ -1567,7 +1569,7 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, uintN decltype)
         if (!(stmt->flags & SIF_SCOPE))
             continue;
 
-        obj = ATOM_TO_OBJECT(stmt->atom);
+        obj = stmt->u.blockObj;
         JS_ASSERT(LOCKED_OBJ_GET_CLASS(obj) == &js_BlockClass);
         scope = OBJ_SCOPE(obj);
         sprop = SCOPE_GET_PROPERTY(scope, ATOM_TO_JSID(atom));
@@ -1687,152 +1689,99 @@ js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
 }
 
 /*
- * Allocate an index invariant for all activations of the code being compiled
- * in cg, that can be used to store and fetch a reference to a cloned RegExp
- * object that shares the same JSRegExp private data created for the object
- * literal in pn->pn_atom.  We need clones to hold lastIndex and other direct
- * properties that should not be shared among threads sharing a precompiled
- * function or script.
- *
- * If the code being compiled is function code, allocate a reserved slot in
- * the cloned function object that shares its precompiled script with other
- * cloned function objects and with the compiler-created clone-parent.  There
- * are fun->nregexps such reserved slots in each function object cloned from
- * fun->object.  NB: during compilation, funobj slots must never be allocated,
- * because js_AllocSlot could hand out one of the slots that should be given
- * to a regexp clone.
- *
- * If the code being compiled is global code, reserve the fp->vars slot at
- * ALE_INDEX(ale), by ensuring that cg->treeContext.numGlobalVars is at least
- * one more than this index.  For global code, fp->vars is parallel to the
- * global script->atomMap.vector array, but possibly shorter for the common
- * case (where var declarations and regexp literals cluster toward the front
- * of the script or function body).
- *
- * Global variable name literals in script->atomMap have fast-global slot
- * numbers (stored as int-tagged jsvals) in the corresponding fp->vars array
- * element.  The atomIndex for a regexp object literal thus also addresses an
- * fp->vars element that is not used by any optimized global variable, so we
- * use that GC-scanned element to keep the regexp object clone alive, as well
- * as to lazily create and find it at run-time for the JSOP_REGEXP bytecode.
- *
- * In no case can cx->fp->varobj be a Call object here, because that implies
- * we are compiling eval code, in which case (cx->fp->flags & JSFRAME_EVAL)
- * is true, and js_GetToken will have already selected JSOP_OBJECT instead of
- * JSOP_REGEXP, to avoid all this RegExp object cloning business.
- *
- * Why clone regexp objects?  ECMA specifies that when a regular expression
- * literal is scanned, a RegExp object is created.  In the spec, compilation
- * and execution happen indivisibly, but in this implementation and many of
- * its embeddings, code is precompiled early and re-executed in multiple
- * threads, or using multiple global objects, or both, for efficiency.
- *
- * In such cases, naively following ECMA leads to wrongful sharing of RegExp
- * objects, which makes for collisions on the lastIndex property (especially
- * for global regexps) and on any ad-hoc properties.  Also, __proto__ and
- * __parent__ refer to the pre-compilation prototype and global objects, a
- * pigeon-hole problem for instanceof tests.
+ * Return JSOP_NOP to indicate that index fits 2 bytes and no index segment
+ * reset instruction is necessary, JSOP_FALSE to indicate an error or either
+ * JSOP_RESETBASE0 or JSOP_RESETBASE1 to indicate the reset bytecode to issue
+ * after the main bytecode sequence.
  */
-static JSBool
-IndexRegExpClone(JSContext *cx, JSParseNode *pn, JSAtomListElement *ale,
-                 JSCodeGenerator *cg)
+static JSOp
+EmitBigIndexPrefix(JSContext *cx, JSCodeGenerator *cg, uintN index)
 {
-    JSObject *varobj, *reobj;
-    JSClass *clasp;
-    JSFunction *fun;
-    JSRegExp *re;
-    uint16 *countPtr;
-    uintN cloneIndex;
+    uintN indexBase;
 
-    JS_ASSERT(!(cx->fp->flags & (JSFRAME_EVAL | JSFRAME_COMPILE_N_GO)));
+    /*
+     * We have max 3 bytes for indexes and check for INDEX_LIMIT overflow only
+     * for big indexes.
+     */
+    JS_STATIC_ASSERT(INDEX_LIMIT <= JS_BIT(24));
+    JS_STATIC_ASSERT(INDEX_LIMIT >=
+                     (JSOP_INDEXBASE3 - JSOP_INDEXBASE1 + 2) << 16);
 
-    varobj = cx->fp->varobj;
-    clasp = OBJ_GET_CLASS(cx, varobj);
-    if (clasp == &js_FunctionClass) {
-        fun = (JSFunction *) JS_GetPrivate(cx, varobj);
-        countPtr = &fun->u.i.nregexps;
-        cloneIndex = *countPtr;
-    } else {
-        JS_ASSERT(clasp != &js_CallClass);
-        countPtr = &cg->treeContext.numGlobalVars;
-        cloneIndex = ALE_INDEX(ale);
-    }
-
-    if ((cloneIndex + 1) >> 16) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_NEED_DIET, js_script_str);
-        return JS_FALSE;
-    }
-    if (cloneIndex >= *countPtr)
-        *countPtr = cloneIndex + 1;
-
-    reobj = ATOM_TO_OBJECT(pn->pn_atom);
-    JS_ASSERT(OBJ_GET_CLASS(cx, reobj) == &js_RegExpClass);
-    re = (JSRegExp *) JS_GetPrivate(cx, reobj);
-    re->cloneIndex = cloneIndex;
-    return JS_TRUE;
-}
-
-static int
-EmitBigIndexPrefix(JSContext *cx, JSCodeGenerator *cg, jsatomid atomIndex)
-{
-    if (atomIndex < JS_BIT(16))
+    if (index < JS_BIT(16))
         return JSOP_NOP;
-    atomIndex >>= 16;
-    if (atomIndex <= JSOP_ATOMBASE3 - JSOP_ATOMBASE1 + 1) {
-        if (js_Emit1(cx, cg, JSOP_ATOMBASE1 + atomIndex - 1) < 0)
-            return -1;
+    indexBase = index >> 16;
+    if (indexBase <= JSOP_INDEXBASE3 - JSOP_INDEXBASE1 + 1) {
+        if (js_Emit1(cx, cg, JSOP_INDEXBASE1 + indexBase - 1) < 0)
+            return JSOP_FALSE;
         return JSOP_RESETBASE0;
     }
-    if (js_Emit2(cx, cg, JSOP_ATOMBASE, atomIndex) < 0)
-        return -1;
+
+    if (index >= INDEX_LIMIT) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_TOO_MANY_LITERALS);
+        return JSOP_FALSE;
+    }
+
+    if (js_Emit2(cx, cg, JSOP_INDEXBASE, (JSOp)indexBase) < 0)
+        return JSOP_FALSE;
     return JSOP_RESETBASE;
 }
 
 /*
- * Emit a bytecode and its 2-byte constant (atom) index immediate operand.
- * If the atomIndex requires more than 2 bytes, emit a prefix op whose 8-bit
- * immediate operand effectively extends the 16-bit immediate of the prefixed
- * opcode, by changing atom "segment" within script->atomMap (see jsinterp.c).
- * We optimize segments 1-3 with single-byte JSOP_ATOMBASE[123] codes.
+ * Emit a bytecode and its 2-byte constant index immediate operand. If the
+ * index requires more than 2 bytes, emit a prefix op whose 8-bit immediate
+ * operand effectively extends the 16-bit immediate of the prefixed opcode,
+ * by changing index "segment" (see jsinterp.c). We optimize segments 1-3
+ * with single-byte JSOP_INDEXBASE[123] codes.
  *
  * Such prefixing currently requires a suffix to restore the "zero segment"
  * register setting, but this could be optimized further.
  */
 static JSBool
-EmitAtomIndexOp(JSContext *cx, JSOp op, jsatomid atomIndex, JSCodeGenerator *cg)
+EmitIndexOp(JSContext *cx, JSOp op, uintN index, JSCodeGenerator *cg)
 {
-    int bigSuffix;
+    JSOp bigSuffix;
 
-    bigSuffix = EmitBigIndexPrefix(cx, cg, atomIndex);
-    if (bigSuffix < 0)
+    bigSuffix = EmitBigIndexPrefix(cx, cg, index);
+    if (bigSuffix == JSOP_FALSE)
         return JS_FALSE;
-    EMIT_UINT16_IMM_OP(op, atomIndex);
-    return bigSuffix == JSOP_NOP || js_Emit1(cx, cg, bigSuffix) >= 0;
+    EMIT_UINT16_IMM_OP(op, index);
+    return bigSuffix == JSOP_NOP || js_Emit1(cx, cg, (JSOp)bigSuffix) >= 0;
 }
 
 /*
- * Slight sugar for EmitAtomIndexOp, again accessing cx and cg from the macro
+ * Slight sugar for EmitIndexOp, again accessing cx and cg from the macro
  * caller's lexical environment, and embedding a false return on error.
  * XXXbe hey, who checks for fun->nvars and fun->nargs overflow?!
  */
-#define EMIT_ATOM_INDEX_OP(op, atomIndex)                                     \
+#define EMIT_INDEX_OP(op, index)                                              \
     JS_BEGIN_MACRO                                                            \
-        if (!EmitAtomIndexOp(cx, op, atomIndex, cg))                          \
+        if (!EmitIndexOp(cx, op, index, cg))                                  \
             return JS_FALSE;                                                  \
     JS_END_MACRO
+
 
 static JSBool
 EmitAtomOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 {
     JSAtomListElement *ale;
 
+    JS_ASSERT((js_CodeSpec[op].format & JOF_TYPEMASK) == JOF_CONST);
     ale = js_IndexAtom(cx, pn->pn_atom, &cg->atomList);
     if (!ale)
         return JS_FALSE;
-    if (op == JSOP_REGEXP && !IndexRegExpClone(cx, pn, ale, cg))
-        return JS_FALSE;
-    return EmitAtomIndexOp(cx, op, ALE_INDEX(ale), cg);
+    return EmitIndexOp(cx, op, ALE_INDEX(ale), cg);
+}
+
+static uintN
+IndexParsedObject(JSParsedObjectBox *pob, JSEmittedObjectList *list);
+
+static JSBool
+EmitObjectOp(JSContext *cx, JSParsedObjectBox *pob, JSOp op,
+             JSCodeGenerator *cg)
+{
+    JS_ASSERT((js_CodeSpec[op].format & JOF_TYPEMASK) == JOF_OBJECT);
+    return EmitIndexOp(cx, op, IndexParsedObject(pob, &cg->objectList), cg);
 }
 
 /*
@@ -1846,26 +1795,28 @@ JS_STATIC_ASSERT(ARGNO_LEN == 2);
 JS_STATIC_ASSERT(VARNO_LEN == 2);
 
 static JSBool
-EmitIndexConstOp(JSContext *cx, JSOp op, uintN slot, jsatomid atomIndex,
+EmitIndexConstOp(JSContext *cx, JSOp op, uintN slot, uintN index,
                  JSCodeGenerator *cg)
 {
-    int bigSuffix;
+    JSOp bigSuffix;
     ptrdiff_t off;
     jsbytecode *pc;
 
-    bigSuffix = EmitBigIndexPrefix(cx, cg, atomIndex);
-    if (bigSuffix < 0)
+    JS_ASSERT((js_CodeSpec[op].format & JOF_TYPEMASK) == JOF_INDEXCONST ||
+              (js_CodeSpec[op].format & JOF_TYPEMASK) == JOF_INDEXOBJECT);
+    bigSuffix = EmitBigIndexPrefix(cx, cg, index);
+    if (bigSuffix == JSOP_FALSE)
         return JS_FALSE;
 
-    /* Emit [op, slot, atomIndex]. */
-    off = js_EmitN(cx, cg, op, 2 + ATOM_INDEX_LEN);
+    /* Emit [op, slot, index]. */
+    off = js_EmitN(cx, cg, op, 2 + INDEX_LEN);
     if (off < 0)
         return JS_FALSE;
     pc = CG_CODE(cg, off);
     SET_UINT16(pc, slot);
     pc += 2;
-    SET_ATOM_INDEX(pc, atomIndex);
-    return bigSuffix == 0 || js_Emit1(cx, cg, bigSuffix) >= 0;
+    SET_INDEX(pc, index);
+    return bigSuffix == JSOP_NOP || js_Emit1(cx, cg, bigSuffix) >= 0;
 }
 
 /*
@@ -1926,7 +1877,7 @@ BindNameToSlot(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
 
         JS_ASSERT(stmt->flags & SIF_SCOPE);
         JS_ASSERT(slot >= 0);
-        op = pn->pn_op;
+        op = PN_OP(pn);
         switch (op) {
           case JSOP_NAME:     op = JSOP_GETLOCAL; break;
           case JSOP_SETNAME:  op = JSOP_SETLOCAL; break;
@@ -1996,7 +1947,7 @@ BindNameToSlot(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
     if (fp->scopeChain != obj)
         return JS_TRUE;
 
-    op = pn->pn_op;
+    op = PN_OP(pn);
     getter = NULL;
 #ifdef __GNUC__
     attrs = slot = 0;   /* quell GCC overwarning */
@@ -2023,13 +1974,13 @@ BindNameToSlot(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
         if (!ale)
             return JS_FALSE;
 
-        /* Defend against tc->numGlobalVars 16-bit overflow. */
+        /* Defend against tc->ngvars 16-bit overflow. */
         slot = ALE_INDEX(ale);
         if ((slot + 1) >> 16)
             return JS_TRUE;
 
-        if ((uint16)(slot + 1) > tc->numGlobalVars)
-            tc->numGlobalVars = (uint16)(slot + 1);
+        if ((uint16)(slot + 1) > tc->ngvars)
+            tc->ngvars = (uint16)(slot + 1);
     } else {
         /*
          * We may be able to optimize name to stack slot. Look for an argument
@@ -2153,7 +2104,7 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
          * name in that scope object.  See comments at case JSOP_NAMEDFUNOBJ:
          * in jsinterp.c.
          */
-        fun = (JSFunction *) JS_GetPrivate(cx, ATOM_TO_OBJECT(pn->pn_funAtom));
+        fun = (JSFunction *) JS_GetPrivate(cx, pn->pn_funpob->object);
         if (fun->atom)
             *answer = JS_TRUE;
         break;
@@ -2228,15 +2179,12 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
         break;
 
       case PN_UNARY:
-        if (pn->pn_type == TOK_INC || pn->pn_type == TOK_DEC ||
-            pn->pn_type == TOK_THROW ||
-#if JS_HAS_GENERATORS
-            pn->pn_type == TOK_YIELD ||
-#endif
-            pn->pn_type == TOK_DEFSHARP) {
-            /* All these operations have effects that we must commit. */
-            *answer = JS_TRUE;
-        } else if (pn->pn_type == TOK_DELETE) {
+        switch (pn->pn_type) {
+          case TOK_RP:
+            ok = CheckSideEffects(cx, tc, pn->pn_kid, answer);
+            break;
+
+          case TOK_DELETE:
             pn2 = pn->pn_kid;
             switch (pn2->pn_type) {
               case TOK_NAME:
@@ -2255,12 +2203,17 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
                 ok = CheckSideEffects(cx, tc, pn2, answer);
                 break;
             }
-        } else {
+            break;
+
+          default:
             /*
-             * We can't easily prove that our operand never denotes an object
+             * All of TOK_INC, TOK_DEC, TOK_THROW, TOK_YIELD, and TOK_DEFSHARP
+             * have direct effects. Of the remaining unary-arity node types,
+             * we can't easily prove that the operand never denotes an object
              * with a toString or valueOf method.
              */
             *answer = JS_TRUE;
+            break;
         }
         break;
 
@@ -2315,7 +2268,7 @@ EmitNameOp(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 
     if (!BindNameToSlot(cx, &cg->treeContext, pn, 0))
         return JS_FALSE;
-    op = pn->pn_op;
+    op = PN_OP(pn);
 
     if (callContext) {
         switch (op) {
@@ -2471,7 +2424,7 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
                                CG_OFFSET(cg) - pndown->pn_offset) < 0) {
                 return JS_FALSE;
             }
-            if (!EmitAtomOp(cx, pndot, pndot->pn_op, cg))
+            if (!EmitAtomOp(cx, pndot, PN_OP(pndot), cg))
                 return JS_FALSE;
 
             /* Reverse the pn_expr link again. */
@@ -2571,7 +2524,7 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
             left = pn->pn_expr;
             if (!left) {
                 left = &ltmp;
-                left->pn_type = TOK_OBJECT;
+                left->pn_type = TOK_STRING;
                 left->pn_op = JSOP_BINDNAME;
                 left->pn_arity = PN_NULLARY;
                 left->pn_pos = pn->pn_pos;
@@ -2662,7 +2615,7 @@ EmitNumberOp(JSContext *cx, jsdouble dval, JSCodeGenerator *cg)
     ale = js_IndexAtom(cx, atom, &cg->atomList);
     if (!ale)
         return JS_FALSE;
-    return EmitAtomIndexOp(cx, JSOP_NUMBER, ALE_INDEX(ale), cg);
+    return EmitIndexOp(cx, JSOP_NUMBER, ALE_INDEX(ale), cg);
 }
 
 static JSBool
@@ -2680,6 +2633,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     jsval v;
     JSAtom *atom;
     JSAtomListElement *ale;
+    JSParsedObjectBox *pob;
     intN noteIndex;
     size_t switchSize, tableSize;
     jsbytecode *pc, *savepc;
@@ -2703,8 +2657,8 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     pn2 = pn->pn_right;
 #if JS_HAS_BLOCK_SCOPE
     if (pn2->pn_type == TOK_LEXICALSCOPE) {
-        atom = pn2->pn_atom;
-        obj = ATOM_TO_OBJECT(atom);
+        pob = pn2->pn_pob;
+        obj = pob->object;
         OBJ_SET_BLOCK_DEPTH(cx, obj, cg->stackDepth);
 
         /*
@@ -2714,7 +2668,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
          * the stack so that case-dispatch bytecodes can find the discriminant
          * on top of stack.
          */
-        js_PushBlockScope(&cg->treeContext, stmtInfo, atom, -1);
+        js_PushBlockScope(&cg->treeContext, stmtInfo, obj, -1);
         stmtInfo->type = STMT_SWITCH;
 
         count = OBJ_BLOCK_COUNT(cx, obj);
@@ -2723,10 +2677,8 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
             cg->maxStackDepth = cg->stackDepth;
 
         /* Emit JSOP_ENTERBLOCK before code to evaluate the discriminant. */
-        ale = js_IndexAtom(cx, atom, &cg->atomList);
-        if (!ale)
+        if (!EmitObjectOp(cx, pob, JSOP_ENTERBLOCK, cg))
             return JS_FALSE;
-        EMIT_ATOM_INDEX_OP(JSOP_ENTERBLOCK, ALE_INDEX(ale));
 
         /*
          * Pop the switch's statement info around discriminant code-gen.  Note
@@ -2739,7 +2691,6 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     }
 #ifdef __GNUC__
     else {
-        atom = NULL;
         count = -1;
     }
 #endif
@@ -2949,8 +2900,8 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
          * 1 offset (len) and 1 atom index (npairs) before the table,
          * 1 atom index and 1 jump offset per entry.
          */
-        switchSize = (size_t)(JUMP_OFFSET_LEN + ATOM_INDEX_LEN +
-                              (ATOM_INDEX_LEN + JUMP_OFFSET_LEN) * caseCount);
+        switchSize = (size_t)(JUMP_OFFSET_LEN + INDEX_LEN +
+                              (INDEX_LEN + JUMP_OFFSET_LEN) * caseCount);
     }
 
     /*
@@ -3062,8 +3013,8 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
             JS_ASSERT(switchOp == JSOP_LOOKUPSWITCH);
 
             /* Fill in the number of cases. */
-            SET_ATOM_INDEX(pc, caseCount);
-            pc += ATOM_INDEX_LEN;
+            SET_INDEX(pc, caseCount);
+            pc += INDEX_LEN;
         }
 
         /*
@@ -3113,7 +3064,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                             goto bad;
                         }
                     }
-                    pc += ATOM_INDEX_LEN + JUMP_OFFSET_LEN;
+                    pc += INDEX_LEN + JUMP_OFFSET_LEN;
                 }
             }
             CG_NEXT(cg) = savepc;
@@ -3178,19 +3129,19 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
         }
     } else if (switchOp == JSOP_LOOKUPSWITCH) {
         /* Skip over the already-initialized number of cases. */
-        pc += ATOM_INDEX_LEN;
+        pc += INDEX_LEN;
 
         for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
             if (pn3->pn_type == TOK_DEFAULT)
                 continue;
-            atom = js_AtomizeValue(cx, pn3->pn_val, 0);
+            atom = js_AtomizePrimitiveValue(cx, pn3->pn_val, 0);
             if (!atom)
                 goto bad;
             ale = js_IndexAtom(cx, atom, &cg->atomList);
             if (!ale)
                 goto bad;
-            SET_ATOM_INDEX(pc, ALE_INDEX(ale));
-            pc += ATOM_INDEX_LEN;
+            SET_INDEX(pc, ALE_INDEX(ale));
+            pc += INDEX_LEN;
 
             off = pn3->pn_offset - top;
             ok = js_SetJumpOffset(cx, cg, pc, off);
@@ -3223,9 +3174,6 @@ bad:
 JSBool
 js_EmitFunctionBytecode(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
 {
-    if (!js_AllocTryNotes(cx, cg))
-        return JS_FALSE;
-
     if (cg->treeContext.flags & TCF_FUN_IS_GENERATOR) {
         if (js_Emit1(cx, cg, JSOP_GENERATOR) < 0)
             return JS_FALSE;
@@ -3328,7 +3276,7 @@ MaybeEmitVarDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
         CG_SWITCH_TO_PROLOG(cg);
         if (!UpdateLineNumberNotes(cx, cg, pn))
             return JS_FALSE;
-        EMIT_ATOM_INDEX_OP(prologOp, atomIndex);
+        EMIT_INDEX_OP(prologOp, atomIndex);
         CG_SWITCH_TO_MAIN(cg);
     }
 
@@ -3743,7 +3691,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                  */
                 JS_ASSERT(forInVar);
                 JS_ASSERT(pn->pn_count == 1);
-                if (!EmitDestructuringDecls(cx, cg, pn->pn_op, pn2))
+                if (!EmitDestructuringDecls(cx, cg, PN_OP(pn), pn2))
                     return JS_FALSE;
                 break;
             }
@@ -3766,7 +3714,8 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 JS_ASSERT(noteIndex < 0 && !pn2->pn_next);
                 op = JSOP_POP;
                 if (!MaybeEmitGroupAssignment(cx, cg,
-                                              inLetHead ? JSOP_POP : pn->pn_op,
+                                              inLetHead ? JSOP_POP :
+                                              PN_OP(pn),
                                               pn2, &op)) {
                     return JS_FALSE;
                 }
@@ -3777,7 +3726,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
             }
 
             pn3 = pn2->pn_left;
-            if (!EmitDestructuringDecls(cx, cg, pn->pn_op, pn3))
+            if (!EmitDestructuringDecls(cx, cg, PN_OP(pn), pn3))
                 return JS_FALSE;
 
 #if JS_HAS_BLOCK_SCOPE
@@ -3826,7 +3775,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
              * we will emit at the bottom of this function.
              */
             if (!EmitDestructuringOps(cx, cg,
-                                      inLetHead ? JSOP_POP : pn->pn_op,
+                                      inLetHead ? JSOP_POP : PN_OP(pn),
                                       pn3)) {
                 return JS_FALSE;
             }
@@ -3841,7 +3790,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
             return JS_FALSE;
         JS_ASSERT(pn2->pn_slot >= 0 || !let);
 
-        op = pn2->pn_op;
+        op = PN_OP(pn2);
         if (op == JSOP_ARGUMENTS) {
             /* JSOP_ARGUMENTS => no initializer */
             JS_ASSERT(!pn2->pn_expr && !let);
@@ -3850,7 +3799,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
             atomIndex = 0;            /* quell GCC overwarning */
 #endif
         } else {
-            if (!MaybeEmitVarDecl(cx, cg, pn->pn_op, pn2, &atomIndex))
+            if (!MaybeEmitVarDecl(cx, cg, PN_OP(pn), pn2, &atomIndex))
                 return JS_FALSE;
 
             pn3 = pn2->pn_expr;
@@ -3873,7 +3822,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 
                 if (op == JSOP_SETNAME) {
                     JS_ASSERT(!let);
-                    EMIT_ATOM_INDEX_OP(JSOP_BINDNAME, atomIndex);
+                    EMIT_INDEX_OP(JSOP_BINDNAME, atomIndex);
                 }
                 if (pn->pn_op == JSOP_DEFCONST &&
                     !js_DefineCompileTimeConstant(cx, cg, pn2->pn_atom,
@@ -3953,7 +3902,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
         } else if (pn2->pn_slot >= 0) {
             EMIT_UINT16_IMM_OP(op, atomIndex);
         } else {
-            EMIT_ATOM_INDEX_OP(op, atomIndex);
+            EMIT_INDEX_OP(op, atomIndex);
         }
 
 #if JS_HAS_DESTRUCTURING
@@ -4013,6 +3962,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     JSAtom *atom;
     JSAtomListElement *ale;
     jsatomid atomIndex;
+    uintN index;
     ptrdiff_t noteIndex;
     JSSrcNoteType noteType;
     jsbytecode *pc;
@@ -4055,15 +4005,15 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             JS_ReportOutOfMemory(cx);
             return JS_FALSE;
         }
-        if (!js_InitCodeGenerator(cx, cg2, cg->codePool, cg->notePool,
+        if (!js_InitCodeGenerator(cx, cg2, cg->treeContext.parseContext,
+                                  cg->codePool, cg->notePool,
                                   cg->filename, pn->pn_pos.begin.lineno,
                                   cg->principals)) {
             return JS_FALSE;
         }
         cg2->treeContext.flags = (uint16) (pn->pn_flags | TCF_IN_FUNCTION);
-        cg2->treeContext.tryCount = pn->pn_tryCount;
         cg2->parent = cg;
-        fun = (JSFunction *) JS_GetPrivate(cx, ATOM_TO_OBJECT(pn->pn_funAtom));
+        fun = (JSFunction *) JS_GetPrivate(cx, pn->pn_funpob->object);
         if (!js_EmitFunctionBody(cx, cg2, pn->pn_body, fun))
             return JS_FALSE;
 
@@ -4076,13 +4026,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             cg->treeContext.flags |= TCF_FUN_HEAVYWEIGHT;
         }
         js_FinishCodeGenerator(cx, cg2);
+        JS_ASSERT(js_GuardedArenaMark(&cx->tempPool, cg2mark,
+                                      cg->treeContext.
+                                      parseContext->lastAllocMark));
         JS_ARENA_RELEASE(&cx->tempPool, cg2mark);
 
         /* Make the function object a literal in the outer script's pool. */
-        ale = js_IndexAtom(cx, pn->pn_funAtom, &cg->atomList);
-        if (!ale)
-            return JS_FALSE;
-        atomIndex = ALE_INDEX(ale);
+        index = IndexParsedObject(pn->pn_funpob, &cg->objectList);
 
         /* Emit a bytecode pointing to the closure object in its immediate. */
         if (pn->pn_op != JSOP_NOP) {
@@ -4090,12 +4040,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 js_NewSrcNote(cx, cg, SRC_GENEXP) < 0) {
                 return JS_FALSE;
             }
-            EMIT_ATOM_INDEX_OP(pn->pn_op, atomIndex);
+            EMIT_INDEX_OP(PN_OP(pn), index);
             break;
         }
 
         /* Top-level named functions need a nop for decompilation. */
-        noteIndex = js_NewSrcNote2(cx, cg, SRC_FUNCDEF, (ptrdiff_t)atomIndex);
+        noteIndex = js_NewSrcNote2(cx, cg, SRC_FUNCDEF, (ptrdiff_t)index);
         if (noteIndex < 0 ||
             js_Emit1(cx, cg, JSOP_NOP) < 0) {
             return JS_FALSE;
@@ -4135,16 +4085,16 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (stmt && stmt->type == STMT_BLOCK &&
                 stmt->down && stmt->down->type == STMT_BLOCK &&
                 (stmt->down->flags & SIF_SCOPE)) {
-                obj = ATOM_TO_OBJECT(stmt->down->atom);
+                obj = stmt->down->u.blockObj;
                 JS_ASSERT(LOCKED_OBJ_GET_CLASS(obj) == &js_BlockClass);
                 OBJ_SET_PARENT(cx, fun->object, obj);
             }
 
-            if (!EmitIndexConstOp(cx, JSOP_DEFLOCALFUN, slot, atomIndex, cg))
+            if (!EmitIndexConstOp(cx, JSOP_DEFLOCALFUN, slot, index, cg))
                 return JS_FALSE;
         } else {
             JS_ASSERT(!cg->treeContext.topStmt);
-            EMIT_ATOM_INDEX_OP(JSOP_DEFFUN, atomIndex);
+            EMIT_INDEX_OP(JSOP_DEFFUN, index);
         }
 
         CG_SWITCH_TO_MAIN(cg);
@@ -4170,7 +4120,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 ale = js_IndexAtom(cx, pn2->pn_atom, &cg->atomList);
                 if (!ale)
                     return JS_FALSE;
-                EMIT_ATOM_INDEX_OP(JSOP_EXPORTNAME, ALE_INDEX(ale));
+                EMIT_INDEX_OP(JSOP_EXPORTNAME, ALE_INDEX(ale));
             } while ((pn2 = pn2->pn_next) != NULL);
         }
         break;
@@ -4392,7 +4342,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * any side effects.  So we hoist only i in the let case.
              */
             pn3 = pn2->pn_left;
-            type = pn3->pn_type;
+            type = PN_TYPE(pn3);
             cg->treeContext.flags |= TCF_IN_FOR_INIT;
             if (TOKEN_TYPE_IS_DECL(type) && !js_EmitTree(cx, cg, pn3))
                 return JS_FALSE;
@@ -4414,7 +4364,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #else
             JS_ASSERT(pn->pn_op == JSOP_FORIN || pn->pn_op == JSOP_FOREACH);
 #endif
-            if (js_Emit1(cx, cg, pn->pn_op) < 0)
+            if (js_Emit1(cx, cg, PN_OP(pn)) < 0)
                 return JS_FALSE;
 
             top = CG_OFFSET(cg);
@@ -4445,7 +4395,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     JS_ASSERT(pn3->pn_type == TOK_RB || pn3->pn_type == TOK_RC);
                 }
                 if (pn3->pn_type == TOK_RB || pn3->pn_type == TOK_RC) {
-                    op = pn2->pn_left->pn_op;
+                    op = PN_OP(pn2->pn_left);
                     goto destructuring_for;
                 }
 #else
@@ -4475,7 +4425,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 /* FALL THROUGH */
               case TOK_NAME:
                 if (pn3->pn_slot >= 0) {
-                    op = pn3->pn_op;
+                    op = PN_OP(pn3);
                     switch (op) {
                       case JSOP_GETARG:   /* FALL THROUGH */
                       case JSOP_SETARG:   op = JSOP_FORARG; break;
@@ -4491,7 +4441,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     pn3->pn_op = JSOP_FORNAME;
                     if (!BindNameToSlot(cx, &cg->treeContext, pn3, 0))
                         return JS_FALSE;
-                    op = pn3->pn_op;
+                    op = PN_OP(pn3);
                 }
                 if (pn3->pn_slot >= 0) {
                     if (pn3->pn_attrs & JSPROP_READONLY) {
@@ -4732,8 +4682,16 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
 
         if (pn2->pn_type == TOK_IN) {
-            if (js_Emit1(cx, cg, JSOP_ENDITER) < 0)
+            /*
+             * JSOP_ENDITER needs a slot to save an exception thrown from the
+             * body of for-in loop when closing the iterator object.
+             */
+            JS_ASSERT(js_CodeSpec[JSOP_ENDITER].format & JOF_TMPSLOT);
+            if (!NewTryNote(cx, cg, JSTN_ITER, cg->stackDepth, top,
+                            CG_OFFSET(cg)) ||
+                js_Emit1(cx, cg, JSOP_ENDITER) < 0) {
                 return JS_FALSE;
+            }
         }
         break;
 
@@ -4744,7 +4702,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             ale = js_IndexAtom(cx, atom, &cg->atomList);
             if (!ale)
                 return JS_FALSE;
-            while (stmt->type != STMT_LABEL || stmt->atom != atom)
+            while (stmt->type != STMT_LABEL || stmt->u.label != atom)
                 stmt = stmt->down;
             noteType = SRC_BREAK2LABEL;
         } else {
@@ -4767,7 +4725,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             ale = js_IndexAtom(cx, atom, &cg->atomList);
             if (!ale)
                 return JS_FALSE;
-            while (stmt->type != STMT_LABEL || stmt->atom != atom) {
+            while (stmt->type != STMT_LABEL || stmt->u.label != atom) {
                 if (STMT_IS_LOOP(stmt))
                     loop = stmt;
                 stmt = stmt->down;
@@ -4940,7 +4898,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                  * guardJump at the next catch (the guard mismatch case).
                  */
                 JS_ASSERT(pn3->pn_type == TOK_LEXICALSCOPE);
-                count = OBJ_BLOCK_COUNT(cx, ATOM_TO_OBJECT(pn3->pn_atom));
+                count = OBJ_BLOCK_COUNT(cx, pn3->pn_pob->object);
                 if (!js_EmitTree(cx, cg, pn3))
                     return JS_FALSE;
 
@@ -5055,7 +5013,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * (first to last for a given nesting level, inner to outer by level).
          */
         if (pn->pn_kid2 &&
-            !js_NewTryNote(cx, cg, JSTN_CATCH, depth, tryStart, tryEnd)) {
+            !NewTryNote(cx, cg, JSTN_CATCH, depth, tryStart, tryEnd)) {
             return JS_FALSE;
         }
 
@@ -5065,8 +5023,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * for the try{}finally{} case.
          */
         if (pn->pn_kid3 &&
-            !js_NewTryNote(cx, cg, JSTN_FINALLY, depth, tryStart,
-                           finallyStart)) {
+            !NewTryNote(cx, cg, JSTN_FINALLY, depth, tryStart, finallyStart)) {
             return JS_FALSE;
         }
         break;
@@ -5075,6 +5032,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       case TOK_CATCH:
       {
         ptrdiff_t catchStart, guardJump;
+        JSObject *blockObj;
 
         /*
          * Morph STMT_BLOCK to STMT_CATCH, note the block entry code offset,
@@ -5084,7 +5042,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         JS_ASSERT(stmt->type == STMT_BLOCK && (stmt->flags & SIF_SCOPE));
         stmt->type = STMT_CATCH;
         catchStart = stmt->update;
-        atom = stmt->atom;
+        blockObj = stmt->u.blockObj;
 
         /* Go up one statement info record to the TRY or FINALLY record. */
         stmt = stmt->down;
@@ -5115,7 +5073,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
           case TOK_NAME:
             /* Inline BindNameToSlot, adding block depth to pn2->pn_slot. */
-            pn2->pn_slot += OBJ_BLOCK_DEPTH(cx, ATOM_TO_OBJECT(atom));
+            pn2->pn_slot += OBJ_BLOCK_DEPTH(cx, blockObj);
             EMIT_UINT16_IMM_OP(JSOP_SETLOCALPOP, pn2->pn_slot);
             break;
 
@@ -5214,7 +5172,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (pn->pn_arity == PN_UNARY) {
             if (!js_EmitTree(cx, cg, pn->pn_kid))
                 return JS_FALSE;
-            if (js_Emit1(cx, cg, pn->pn_op) < 0)
+            if (js_Emit1(cx, cg, PN_OP(pn)) < 0)
                 return JS_FALSE;
             break;
         }
@@ -5331,7 +5289,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         /* Emit code for the labeled statement. */
         js_PushStatement(&cg->treeContext, &stmtInfo, STMT_LABEL,
                          CG_OFFSET(cg));
-        stmtInfo.atom = atom;
+        stmtInfo.u.label = atom;
         if (!js_EmitTree(cx, cg, pn2))
             return JS_FALSE;
         if (!js_PopStatementCG(cx, cg))
@@ -5392,7 +5350,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 if (!ale)
                     return JS_FALSE;
                 atomIndex = ALE_INDEX(ale);
-                EMIT_ATOM_INDEX_OP(JSOP_BINDNAME, atomIndex);
+                EMIT_INDEX_OP(JSOP_BINDNAME, atomIndex);
             }
             break;
           case TOK_DOT:
@@ -5434,7 +5392,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             JS_ASSERT(0);
         }
 
-        op = pn->pn_op;
+        op = PN_OP(pn);
 #if JS_HAS_GETTER_SETTER
         if (op == JSOP_GETTER || op == JSOP_SETTER) {
             /* We'll emit these prefix bytecodes after emitting the r.h.s. */
@@ -5459,10 +5417,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
               case TOK_DOT:
                 if (js_Emit1(cx, cg, JSOP_DUP) < 0)
                     return JS_FALSE;
-                EMIT_ATOM_INDEX_OP((pn2->pn_type == TOK_NAME)
-                                   ? JSOP_GETXPROP
-                                   : JSOP_GETPROP,
-                                   atomIndex);
+                EMIT_INDEX_OP((pn2->pn_type == TOK_NAME)
+                              ? JSOP_GETXPROP
+                              : JSOP_GETPROP,
+                              atomIndex);
                 break;
               case TOK_LB:
 #if JS_HAS_LVALUE_RETURN
@@ -5520,7 +5478,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     EMIT_UINT16_IMM_OP(pn2->pn_op, atomIndex);
                 } else {
           case TOK_DOT:
-                    EMIT_ATOM_INDEX_OP(pn2->pn_op, atomIndex);
+                    EMIT_INDEX_OP(pn2->pn_op, atomIndex);
                 }
             }
             break;
@@ -5653,7 +5611,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             pn2 = pn->pn_head;
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
-            op = pn->pn_op;
+            op = PN_OP(pn);
             while ((pn2 = pn2->pn_next) != NULL) {
                 if (!js_EmitTree(cx, cg, pn2))
                     return JS_FALSE;
@@ -5668,7 +5626,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (pn->pn_arity == PN_NAME) {
                 if (!js_EmitTree(cx, cg, pn->pn_expr))
                     return JS_FALSE;
-                if (!EmitAtomOp(cx, pn, pn->pn_op, cg))
+                if (!EmitAtomOp(cx, pn, PN_OP(pn), cg))
                     return JS_FALSE;
                 break;
             }
@@ -5690,7 +5648,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #if JS_HAS_XML_SUPPORT
             cg->treeContext.flags |= oldflags & TCF_IN_FOR_INIT;
 #endif
-            if (js_Emit1(cx, cg, pn->pn_op) < 0)
+            if (js_Emit1(cx, cg, PN_OP(pn)) < 0)
                 return JS_FALSE;
         }
         break;
@@ -5707,7 +5665,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         uintN oldflags;
 
         /* Unary op, including unary +/-. */
-        op = pn->pn_op;
+        op = PN_OP(pn);
 #if JS_HAS_XML_SUPPORT
         if (op == JSOP_XMLNAME) {
             if (!EmitXMLName(cx, pn, op, cg))
@@ -5737,13 +5695,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         /* Emit lvalue-specialized code for ++/-- operators. */
         pn2 = pn->pn_kid;
         JS_ASSERT(pn2->pn_type != TOK_RP);
-        op = pn->pn_op;
+        op = PN_OP(pn);
         switch (pn2->pn_type) {
           case TOK_NAME:
             pn2->pn_op = op;
             if (!BindNameToSlot(cx, &cg->treeContext, pn2, 0))
                 return JS_FALSE;
-            op = pn2->pn_op;
+            op = PN_OP(pn2);
             if (pn2->pn_slot >= 0) {
                 if (pn2->pn_attrs & JSPROP_READONLY) {
                     /* Incrementing a declared const: just get its value. */
@@ -5816,7 +5774,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             pn2->pn_op = JSOP_DELNAME;
             if (!BindNameToSlot(cx, &cg->treeContext, pn2, 0))
                 return JS_FALSE;
-            op = pn2->pn_op;
+            op = PN_OP(pn2);
             if (op == JSOP_FALSE) {
                 if (js_Emit1(cx, cg, op) < 0)
                     return JS_FALSE;
@@ -5853,7 +5811,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
           default:
             /*
              * If useless, just emit JSOP_TRUE; otherwise convert delete foo()
-             * to foo(), true (a comma expression, requiring SRC_PCDELTA).
+             * to foo(), true (a comma expression, requiring SRC_PCDELTA, and
+             * also JSOP_GROUP for correctly parenthesized decompilation).
              */
             useful = JS_FALSE;
             if (!CheckSideEffects(cx, &cg->treeContext, pn2, &useful))
@@ -5875,6 +5834,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0, tmp-off))
                     return JS_FALSE;
             }
+            if (js_Emit1(cx, cg, JSOP_GROUP) < 0)
+                return JS_FALSE;
         }
         break;
 
@@ -5899,7 +5860,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * this bytecode's immediate-indexed atom operand, and push its value
          * (not a reference to it).
          */
-        ok = EmitPropOp(cx, pn, pn->pn_op, cg, JS_FALSE);
+        ok = EmitPropOp(cx, pn, PN_OP(pn), cg, JS_FALSE);
         break;
 
       case TOK_LB:
@@ -5912,7 +5873,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * push its value.  Set the "obj" register to the result of ToObject
          * on the left operand.
          */
-        ok = EmitElemOp(cx, pn, pn->pn_op, cg);
+        ok = EmitElemOp(cx, pn, PN_OP(pn), cg);
         break;
 
       case TOK_NEW:
@@ -5932,7 +5893,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
             break;
           case TOK_DOT:
-            if (!EmitPropOp(cx, pn2, pn2->pn_op, cg, JS_TRUE))
+            if (!EmitPropOp(cx, pn2, PN_OP(pn2), cg, JS_TRUE))
                 return JS_FALSE;
             break;
           case TOK_LB:
@@ -5979,7 +5940,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
 
         argc = pn->pn_count - 1;
-        if (js_Emit3(cx, cg, pn->pn_op, ARGC_HI(argc), ARGC_LO(argc)) < 0)
+        if (js_Emit3(cx, cg, PN_OP(pn), ARGC_HI(argc), ARGC_LO(argc)) < 0)
             return JS_FALSE;
         break;
       }
@@ -5989,9 +5950,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         JSObject *obj;
         jsint count;
 
-        atom = pn->pn_atom;
-        obj = ATOM_TO_OBJECT(atom);
-        js_PushBlockScope(&cg->treeContext, &stmtInfo, atom, CG_OFFSET(cg));
+        obj = pn->pn_pob->object;
+        js_PushBlockScope(&cg->treeContext, &stmtInfo, obj, CG_OFFSET(cg));
 
         OBJ_SET_BLOCK_DEPTH(cx, obj, cg->stackDepth);
         count = OBJ_BLOCK_COUNT(cx, obj);
@@ -6008,7 +5968,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * statements get braces by default from the decompiler.
          */
         noteIndex = -1;
-        type = pn->pn_expr->pn_type;
+        type = PN_TYPE(pn->pn_expr);
         if (type != TOK_CATCH && type != TOK_LET && type != TOK_FOR &&
             (!(stmt = stmtInfo.down)
              ? !(cg->treeContext.flags & TCF_IN_FUNCTION)
@@ -6024,16 +5984,14 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
         }
 
-        ale = js_IndexAtom(cx, atom, &cg->atomList);
-        if (!ale)
-            return JS_FALSE;
         JS_ASSERT(CG_OFFSET(cg) == top);
-        EMIT_ATOM_INDEX_OP(JSOP_ENTERBLOCK, ALE_INDEX(ale));
+        if (!EmitObjectOp(cx, pn->pn_pob, JSOP_ENTERBLOCK, cg))
+            return JS_FALSE;
 
         if (!js_EmitTree(cx, cg, pn->pn_expr))
             return JS_FALSE;
 
-        op = pn->pn_op;
+        op = PN_OP(pn);
         if (op == JSOP_LEAVEBLOCKEXPR) {
             if (js_NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - top) < 0)
                 return JS_FALSE;
@@ -6107,7 +6065,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         ale = js_IndexAtom(cx, CLASS_ATOM(cx, Array), &cg->atomList);
         if (!ale)
             return JS_FALSE;
-        EMIT_ATOM_INDEX_OP(JSOP_CALLNAME, ALE_INDEX(ale));
+        EMIT_INDEX_OP(JSOP_CALLNAME, ALE_INDEX(ale));
         if (js_Emit1(cx, cg, JSOP_NEWINIT) < 0)
             return JS_FALSE;
 
@@ -6180,7 +6138,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         ale = js_IndexAtom(cx, CLASS_ATOM(cx, Object), &cg->atomList);
         if (!ale)
             return JS_FALSE;
-        EMIT_ATOM_INDEX_OP(JSOP_CALLNAME, ALE_INDEX(ale));
+        EMIT_INDEX_OP(JSOP_CALLNAME, ALE_INDEX(ale));
         if (js_Emit1(cx, cg, JSOP_NEWINIT) < 0)
             return JS_FALSE;
 
@@ -6215,7 +6173,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
 
 #if JS_HAS_GETTER_SETTER
-            op = pn2->pn_op;
+            op = PN_OP(pn2);
             if (op == JSOP_GETTER || op == JSOP_SETTER) {
                 if (js_Emit1(cx, cg, op) < 0)
                     return JS_FALSE;
@@ -6228,7 +6186,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 if (js_Emit1(cx, cg, JSOP_INITELEM) < 0)
                     return JS_FALSE;
             } else {
-                EMIT_ATOM_INDEX_OP(JSOP_INITPROP, ALE_INDEX(ale));
+                EMIT_INDEX_OP(JSOP_INITPROP, ALE_INDEX(ale));
             }
         }
 
@@ -6281,19 +6239,37 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       case TOK_XMLCOMMENT:
 #endif
       case TOK_STRING:
-      case TOK_OBJECT:
-        ok = EmitAtomOp(cx, pn, pn->pn_op, cg);
+        ok = EmitAtomOp(cx, pn, PN_OP(pn), cg);
         break;
 
       case TOK_NUMBER:
         ok = EmitNumberOp(cx, pn->pn_dval, cg);
         break;
 
+      case TOK_OBJECT:
+        if (pn->pn_op == JSOP_REGEXP) {
+            /*
+             * cx->fp->varobj cannot be a Call object here, because that
+             * implies we are compiling eval code, in which case
+             * (cx->fp->flags & JSFRAME_EVAL) is true, and js_GetToken will
+             * have already selected JSOP_OBJECT instead of JSOP_REGEXP, to
+             * avoid all this RegExp object cloning business.
+             */
+            JS_ASSERT(!(cx->fp->flags & (JSFRAME_EVAL | JSFRAME_COMPILE_N_GO)));
+            ok = EmitIndexOp(cx, pn->pn_op,
+                             IndexParsedObject(pn->pn_pob, &cg->regexpList),
+                             cg);
+        } else {
+            JS_ASSERT(pn->pn_op == JSOP_OBJECT);
+            ok = EmitObjectOp(cx, pn->pn_pob, pn->pn_op, cg);
+        }
+        break;
+
 #if JS_HAS_XML_SUPPORT
       case TOK_ANYNAME:
 #endif
       case TOK_PRIMARY:
-        if (js_Emit1(cx, cg, pn->pn_op) < 0)
+        if (js_Emit1(cx, cg, PN_OP(pn)) < 0)
             return JS_FALSE;
         break;
 
@@ -6308,7 +6284,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       case TOK_XMLELEM:
       case TOK_XMLLIST:
         if (pn->pn_op == JSOP_XMLOBJECT) {
-            ok = EmitAtomOp(cx, pn, pn->pn_op, cg);
+            ok = EmitObjectOp(cx, pn->pn_pob, PN_OP(pn), cg);
             break;
         }
 
@@ -6343,9 +6319,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 ale = js_IndexAtom(cx, atom, &cg->atomList);
                 if (!ale)
                     return JS_FALSE;
-                EMIT_ATOM_INDEX_OP(JSOP_STRING, ALE_INDEX(ale));
+                EMIT_INDEX_OP(JSOP_STRING, ALE_INDEX(ale));
             }
-            if (js_Emit1(cx, cg, pn->pn_op) < 0)
+            if (js_Emit1(cx, cg, PN_OP(pn)) < 0)
                 return JS_FALSE;
         }
 #ifdef DEBUG
@@ -6356,7 +6332,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
       case TOK_XMLPTAGC:
         if (pn->pn_op == JSOP_XMLOBJECT) {
-            ok = EmitAtomOp(cx, pn, pn->pn_op, cg);
+            ok = EmitObjectOp(cx, pn->pn_pob, PN_OP(pn), cg);
             break;
         }
         /* FALL THROUGH */
@@ -6376,7 +6352,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                            &cg->atomList);
         if (!ale)
             return JS_FALSE;
-        EMIT_ATOM_INDEX_OP(JSOP_STRING, ALE_INDEX(ale));
+        EMIT_INDEX_OP(JSOP_STRING, ALE_INDEX(ale));
 
         JS_ASSERT(pn->pn_count != 0);
         pn2 = pn->pn_head;
@@ -6411,11 +6387,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                            &cg->atomList);
         if (!ale)
             return JS_FALSE;
-        EMIT_ATOM_INDEX_OP(JSOP_STRING, ALE_INDEX(ale));
+        EMIT_INDEX_OP(JSOP_STRING, ALE_INDEX(ale));
         if (js_Emit1(cx, cg, JSOP_ADD) < 0)
             return JS_FALSE;
 
-        if ((pn->pn_extra & PNX_XMLROOT) && js_Emit1(cx, cg, pn->pn_op) < 0)
+        if ((pn->pn_extra & PNX_XMLROOT) && js_Emit1(cx, cg, PN_OP(pn)) < 0)
             return JS_FALSE;
         break;
       }
@@ -6431,7 +6407,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             }
         } else {
             JS_ASSERT(pn->pn_arity == PN_NULLARY);
-            ok = EmitAtomOp(cx, pn, pn->pn_op, cg);
+            ok = (pn->pn_op == JSOP_OBJECT)
+                 ? EmitObjectOp(cx, pn->pn_pob, PN_OP(pn), cg)
+                 : EmitAtomOp(cx, pn, PN_OP(pn), cg);
         }
         break;
 
@@ -6439,7 +6417,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         ale = js_IndexAtom(cx, pn->pn_atom2, &cg->atomList);
         if (!ale)
             return JS_FALSE;
-        if (!EmitAtomIndexOp(cx, JSOP_QNAMEPART, ALE_INDEX(ale), cg))
+        if (!EmitIndexOp(cx, JSOP_QNAMEPART, ALE_INDEX(ale), cg))
             return JS_FALSE;
         if (!EmitAtomOp(cx, pn, JSOP_XMLPI, cg))
             return JS_FALSE;
@@ -6829,69 +6807,113 @@ js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg, jssrcnote *notes)
     return JS_TRUE;
 }
 
-JSBool
-js_AllocTryNotes(JSContext *cx, JSCodeGenerator *cg)
-{
-    size_t size, incr;
-    ptrdiff_t delta;
-
-    size = TRYNOTE_SIZE(cg->treeContext.tryCount);
-    if (size <= cg->tryNoteSpace)
-        return JS_TRUE;
-
-    /*
-     * Allocate trynotes from cx->tempPool.
-     * XXX Too much growing and we bloat, as other tempPool allocators block
-     * in-place growth, and we never recycle old free space in an arena.
-     * YYY But once we consume an entire arena, we'll realloc it, letting the
-     * malloc heap recycle old space, while still freeing _en masse_ via the
-     * arena pool.
-     */
-    if (!cg->tryBase) {
-        size = JS_ROUNDUP(size, TRYNOTE_SIZE(TRYNOTE_CHUNK));
-        JS_ARENA_ALLOCATE_CAST(cg->tryBase, JSTryNote *, &cx->tempPool, size);
-        if (!cg->tryBase)
-            return JS_FALSE;
-        cg->tryNoteSpace = size;
-        cg->tryNext = cg->tryBase;
-    } else {
-        delta = PTRDIFF((char *)cg->tryNext, (char *)cg->tryBase, char);
-        incr = size - cg->tryNoteSpace;
-        incr = JS_ROUNDUP(incr, TRYNOTE_SIZE(TRYNOTE_CHUNK));
-        size = cg->tryNoteSpace;
-        JS_ARENA_GROW_CAST(cg->tryBase, JSTryNote *, &cx->tempPool, size, incr);
-        if (!cg->tryBase)
-            return JS_FALSE;
-        cg->tryNoteSpace = size + incr;
-        cg->tryNext = (JSTryNote *)((char *)cg->tryBase + delta);
-    }
-    return JS_TRUE;
-}
-
-JSTryNote *
-js_NewTryNote(JSContext *cx, JSCodeGenerator *cg, JSTryNoteKind kind,
+static JSBool
+NewTryNote(JSContext *cx, JSCodeGenerator *cg, JSTryNoteKind kind,
               uintN stackDepth, size_t start, size_t end)
 {
-    JSTryNote *tn;
+    JSTryNode *tryNode;
 
-    JS_ASSERT(cg->tryBase <= cg->tryNext);
-    JS_ASSERT(kind == JSTN_FINALLY || kind == JSTN_CATCH);
     JS_ASSERT((uintN)(uint16)stackDepth == stackDepth);
     JS_ASSERT(start <= end);
     JS_ASSERT((size_t)(uint32)start == start);
     JS_ASSERT((size_t)(uint32)end == end);
-    tn = cg->tryNext++;
-    tn->kind = kind;
-    tn->stackDepth = (uint16)stackDepth;
-    tn->start = (uint32)start;
-    tn->length = (uint32)(end - start);
-    return tn;
+
+    JS_ARENA_ALLOCATE_TYPE(tryNode, JSTryNode, &cx->tempPool);
+    if (!tryNode)
+        return JS_FALSE;
+
+    tryNode->note.kind = kind;
+    tryNode->note.stackDepth = (uint16)stackDepth;
+    tryNode->note.start = (uint32)start;
+    tryNode->note.length = (uint32)(end - start);
+    tryNode->prev = cg->lastTryNode;
+    cg->lastTryNode = tryNode;
+    cg->ntrynotes++;
+    return JS_TRUE;
 }
 
 void
-js_FinishTakingTryNotes(JSContext *cx, JSCodeGenerator *cg,
-                        JSTryNoteArray *array)
+js_FinishTakingTryNotes(JSCodeGenerator *cg, JSTryNoteArray *array)
 {
-    JS_ASSERT(cg->tryNext - cg->tryBase == (ptrdiff_t) array->length);
-    memcpy(array->notes, cg->tryBase, TRYNOTE_SIZE(array->length));
+    JSTryNode *tryNode;
+    JSTryNote *tn;
+
+    JS_ASSERT(array->length > 0 && array->length == cg->ntrynotes);
+    tn = array->vector + array->length;
+    tryNode = cg->lastTryNode;
+    do {
+        *--tn = tryNode->note;
+    } while ((tryNode = tryNode->prev) != NULL);
+    JS_ASSERT(tn == array->vector);
+}
+
+/*
+ * Find the index of the given object for code generator.
+ *
+ * Since the emitter refers to each parsed object only once, for the index we
+ * use the number of already indexes objects. We also add the object to a list
+ * to convert the list to a fixed-size array when we complete code generation,
+ * see FinishParsedObjects bellow.
+ *
+ * Most of the objects go to JSCodeGenerator.objectList but for regexp we use
+ * a separated JSCodeGenerator.regexpList. In this way the emitted index can
+ * be directly used to store and fetch a reference to a cloned RegExp object
+ * that shares the same JSRegExp private data created for the object literal
+ * in pob. We need clones to hold lastIndex and other direct properties that
+ * should not be shared among threads sharing a precompiled function or
+ * script.
+ *
+ * If the code being compiled is function code, allocate a reserved slot in
+ * the cloned function object that shares its precompiled script with other
+ * cloned function objects and with the compiler-created clone-parent. There
+ * are script->nregexps such reserved slots in each function object cloned
+ * from fun->object. NB: during compilation, funobj slots must never be
+ * allocated, because js_AllocSlot could hand out one of the slots that should
+ * be given to a regexp clone.
+ *
+ * If the code being compiled is global code, the cloned regexp are stored in
+ * fp->vars slot after cg->treeContext.ngvars and to protect regexp slots from
+ * GC we set fp->nvars to ngvars + nregexps.
+ *
+ * The slots initially contain undefined or null. We populate them lazily when
+ * JSOP_REGEXP is executed for the first time.
+ *
+ * Why clone regexp objects?  ECMA specifies that when a regular expression
+ * literal is scanned, a RegExp object is created.  In the spec, compilation
+ * and execution happen indivisibly, but in this implementation and many of
+ * its embeddings, code is precompiled early and re-executed in multiple
+ * threads, or using multiple global objects, or both, for efficiency.
+ *
+ * In such cases, naively following ECMA leads to wrongful sharing of RegExp
+ * objects, which makes for collisions on the lastIndex property (especially
+ * for global regexps) and on any ad-hoc properties.  Also, __proto__ and
+ * __parent__ refer to the pre-compilation prototype and global objects, a
+ * pigeon-hole problem for instanceof tests.
+ */
+static uintN
+IndexParsedObject(JSParsedObjectBox *pob, JSEmittedObjectList *list)
+{
+    JS_ASSERT(!pob->emitLink);
+    pob->emitLink = list->lastPob;
+    list->lastPob = pob;
+    return list->length++;
+}
+
+void
+FinishParsedObjects(JSEmittedObjectList *emittedList, JSObjectArray *array)
+{
+    JSObject **cursor;
+    JSParsedObjectBox *pob;
+
+    JS_ASSERT(emittedList->length <= INDEX_LIMIT);
+    JS_ASSERT(emittedList->length == array->length);
+
+    cursor = array->vector + array->length;
+    pob = emittedList->lastPob;
+    do {
+        --cursor;
+        JS_ASSERT(!*cursor);
+        *cursor = pob->object;
+    } while ((pob = pob->emitLink) != NULL);
+    JS_ASSERT(cursor == array->vector);
 }

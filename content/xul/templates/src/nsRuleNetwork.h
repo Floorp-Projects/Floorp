@@ -598,7 +598,7 @@ public:
     };
 
     ConstIterator First() const { return ConstIterator(mHead.mNext); }
-    ConstIterator Last() const { return ConstIterator(NS_CONST_CAST(List*, &mHead)); }
+    ConstIterator Last() const { return ConstIterator(const_cast<List*>(&mHead)); }
 
     class Iterator : public ConstIterator {
     public:

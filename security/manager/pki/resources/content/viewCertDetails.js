@@ -211,6 +211,8 @@ listener.prototype.notify =
 
 function DisplayVerificationData(cert, result)
 {
+  document.getElementById("verify_pending").setAttribute("hidden", "true");
+
   if (!result || !cert)
     return; // no results could be produced
 

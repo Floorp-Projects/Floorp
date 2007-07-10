@@ -105,7 +105,7 @@ nsSVGMarkerProperty::nsSVGMarkerProperty(nsIURI                 *aMarkerStart,
 
   NS_ADDREF(this); // addref to allow QI - SupportsDtorFunc releases
   mFrame->SetProperty(nsGkAtoms::marker,
-                      NS_STATIC_CAST(nsISupports*, this),
+                      static_cast<nsISupports*>(this),
                       nsPropertyTable::SupportsDtorFunc);
 
   mFrame->AddStateBits(NS_STATE_SVG_HAS_MARKERS);
@@ -126,9 +126,9 @@ nsSVGMarkerProperty::GetMarkerFrame(nsWeakPtr aObservedMarker)
   nsCOMPtr<nsIContent> marker = do_QueryReferent(aObservedMarker);
   if (marker) {
     nsIFrame *frame =
-      NS_STATIC_CAST(nsGenericElement*, marker.get())->GetPrimaryFrame();
+      static_cast<nsGenericElement*>(marker.get())->GetPrimaryFrame();
     if (frame && frame->GetType() == nsGkAtoms::svgMarkerFrame)
-      return NS_STATIC_CAST(nsSVGMarkerFrame*, frame);
+      return static_cast<nsSVGMarkerFrame*>(frame);
   }
   return nsnull;
 }
@@ -256,8 +256,8 @@ nsSVGPathGeometryFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                          PRInt32         aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None &&
-      (NS_STATIC_CAST(nsSVGPathGeometryElement*,
-                      mContent)->IsDependentAttribute(aAttribute) ||
+      (static_cast<nsSVGPathGeometryElement*>
+                  (mContent)->IsDependentAttribute(aAttribute) ||
        aAttribute == nsGkAtoms::transform))
     UpdateGraphic();
 
@@ -292,8 +292,8 @@ nsSVGMarkerProperty *
 nsSVGPathGeometryFrame::GetMarkerProperty()
 {
   if (GetStateBits() & NS_STATE_SVG_HAS_MARKERS)
-    return NS_STATIC_CAST(nsSVGMarkerProperty *,
-                          GetProperty(nsGkAtoms::marker));
+    return static_cast<nsSVGMarkerProperty *>
+                      (GetProperty(nsGkAtoms::marker));
 
   return nsnull;
 }
@@ -338,15 +338,15 @@ nsSVGPathGeometryFrame::PaintSVG(nsSVGRenderState *aContext,
   /* render */
   Render(aContext);
 
-  if (NS_STATIC_CAST(nsSVGPathGeometryElement*, mContent)->IsMarkable()) {
+  if (static_cast<nsSVGPathGeometryElement*>(mContent)->IsMarkable()) {
     nsSVGMarkerProperty *property = GetMarkerProperty();
       
     if (property) {
       float strokeWidth = GetStrokeWidth();
         
       nsTArray<nsSVGMark> marks;
-      NS_STATIC_CAST(nsSVGPathGeometryElement*,
-                     mContent)->GetMarkPoints(&marks);
+      static_cast<nsSVGPathGeometryElement*>
+                 (mContent)->GetMarkPoints(&marks);
         
       PRUint32 num = marks.Length();
 
@@ -414,7 +414,7 @@ nsSVGPathGeometryFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 NS_IMETHODIMP_(nsRect)
 nsSVGPathGeometryFrame::GetCoveredRegion()
 {
-  if (NS_STATIC_CAST(nsSVGPathGeometryElement*, mContent)->IsMarkable()) {
+  if (static_cast<nsSVGPathGeometryElement*>(mContent)->IsMarkable()) {
     nsSVGMarkerProperty *property = GetMarkerProperty();
 
     if (!property)
@@ -425,7 +425,7 @@ nsSVGPathGeometryFrame::GetCoveredRegion()
     float strokeWidth = GetStrokeWidth();
 
     nsTArray<nsSVGMark> marks;
-    NS_STATIC_CAST(nsSVGPathGeometryElement*, mContent)->GetMarkPoints(&marks);
+    static_cast<nsSVGPathGeometryElement*>(mContent)->GetMarkPoints(&marks);
 
     PRUint32 num = marks.Length();
 
@@ -506,9 +506,10 @@ nsSVGPathGeometryFrame::InitialUpdate()
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
-  UpdateGraphic(suppressInvalidation);
   if (!suppressInvalidation)
     nsSVGUtils::UpdateFilterRegion(this);
+
+  UpdateGraphic(suppressInvalidation);
 
   return NS_OK;
 }
@@ -579,14 +580,14 @@ nsSVGPathGeometryFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
     return NS_NewSVGMatrix(aCTM);
   }
 
-  nsSVGContainerFrame *containerFrame = NS_STATIC_CAST(nsSVGContainerFrame*,
-                                                       mParent);
+  nsSVGContainerFrame *containerFrame = static_cast<nsSVGContainerFrame*>
+                                                   (mParent);
   nsCOMPtr<nsIDOMSVGMatrix> parentTM = containerFrame->GetCanvasTM();
   NS_ASSERTION(parentTM, "null TM");
 
   // append our local transformations if we have any:
   nsSVGGraphicElement *element =
-    NS_STATIC_CAST(nsSVGGraphicElement*, mContent);
+    static_cast<nsSVGGraphicElement*>(mContent);
   nsCOMPtr<nsIDOMSVGMatrix> localTM = element->GetLocalTransformMatrix();
 
   if (localTM)
@@ -672,7 +673,7 @@ nsSVGPathGeometryFrame::GeneratePath(gfxContext* aContext)
   aContext->Multiply(matrix);
 
   aContext->NewPath();
-  NS_STATIC_CAST(nsSVGPathGeometryElement*, mContent)->ConstructPath(aContext);
+  static_cast<nsSVGPathGeometryElement*>(mContent)->ConstructPath(aContext);
 }
 
 PRUint16

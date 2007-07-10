@@ -105,17 +105,17 @@ struct nsQuoteNode : public nsGenConNode {
 
 class nsQuoteList : public nsGenConList {
 private:
-  nsQuoteNode* FirstNode() { return NS_STATIC_CAST(nsQuoteNode*, mFirstNode); }
+  nsQuoteNode* FirstNode() { return static_cast<nsQuoteNode*>(mFirstNode); }
 public:
   // assign the correct |mDepthBefore| value to a node that has been inserted
   // Should be called immediately after calling |Insert|.
   void Calc(nsQuoteNode* aNode);
 
   nsQuoteNode* Next(nsQuoteNode* aNode) {
-    return NS_STATIC_CAST(nsQuoteNode*, nsGenConList::Next(aNode));
+    return static_cast<nsQuoteNode*>(nsGenConList::Next(aNode));
   }
   nsQuoteNode* Prev(nsQuoteNode* aNode) {
-    return NS_STATIC_CAST(nsQuoteNode*, nsGenConList::Prev(aNode));
+    return static_cast<nsQuoteNode*>(nsGenConList::Prev(aNode));
   }
   
   void RecalcAll();

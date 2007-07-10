@@ -38,7 +38,6 @@
 
 #include "nsLayoutStatics.h"
 #include "nsContentCID.h"
-#include "nsContentHTTPStartup.h"
 #include "nsContentDLF.h"
 #include "nsContentPolicyUtils.h"
 #include "nsDataDocumentContentPolicy.h"
@@ -236,7 +235,6 @@ static NS_DEFINE_CID(kWindowCommandTableCID, NS_WINDOWCOMMANDTABLE_CID);
 #ifdef MOZ_XUL
 #include "nsIBoxObject.h"
 #include "nsIXULDocument.h"
-#include "nsIXULPopupListener.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsIXULSortService.h"
 
@@ -509,7 +507,6 @@ MAKE_CTOR(CreateXULSortService,           nsIXULSortService,           NS_NewXUL
 // NS_NewXULContentBuilder
 // NS_NewXULTreeBuilder
 MAKE_CTOR(CreateXULDocument,              nsIXULDocument,              NS_NewXULDocument)
-MAKE_CTOR(CreateXULPopupListener,         nsIXULPopupListener,         NS_NewXULPopupListener)
 // NS_NewXULControllers
 // NS_NewXULPrototypeCache
 #endif
@@ -517,7 +514,6 @@ MAKE_CTOR(CreateXULPopupListener,         nsIXULPopupListener,         NS_NewXUL
 MAKE_CTOR(CreateXTFService,               nsIXTFService,               NS_NewXTFService)
 MAKE_CTOR(CreateXMLContentBuilder,        nsIXMLContentBuilder,        NS_NewXMLContentBuilder)
 #endif
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentHTTPStartup)
 MAKE_CTOR(CreateContentDLF,               nsIDocumentLoaderFactory,    NS_NewContentDocumentLoaderFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCSSOMFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsInspectorCSSUtils)
@@ -1194,11 +1190,6 @@ static const nsModuleComponentInfo gComponents[] = {
     "@mozilla.org/xul/xul-document;1",
     CreateXULDocument },
 
-  { "XUL PopupListener",
-    NS_XULPOPUPLISTENER_CID,
-    "@mozilla.org/xul/xul-popup-listener;1",
-    CreateXULPopupListener },
-
   { "XUL Prototype Cache",
     NS_XULPROTOTYPECACHE_CID,
     "@mozilla.org/xul/xul-prototype-cache;1",
@@ -1217,13 +1208,6 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_XMLCONTENTBUILDER_CONTRACTID,
     CreateXMLContentBuilder },
 #endif
-
-  { "Content HTTP Startup Listener",
-    NS_CONTENTHTTPSTARTUP_CID,
-    NS_CONTENTHTTPSTARTUP_CONTRACTID,
-    nsContentHTTPStartupConstructor,
-    nsContentHTTPStartup::RegisterHTTPStartup,
-    nsContentHTTPStartup::UnregisterHTTPStartup },
 
   { "Document Loader Factory",
     NS_CONTENT_DOCUMENT_LOADER_FACTORY_CID,

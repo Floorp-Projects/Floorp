@@ -64,11 +64,16 @@ REQUIRES	= xpcom \
 		  pref \
 		  webbrwsr \
 		  windowwatcher \
-		  history \
 		  $(NULL)
 
+ifdef MOZ_PLACES
+REQUIRES +=	  places
+else
+REQUIRES +=	  history
+endif
+
 ifneq (,$(MOZ_PHOENIX)$(MOZ_XULRUNNER))
-REQUIRES += toolkitcomps history
+REQUIRES += toolkitcomps
 endif
 
 CPPSRCS		= \

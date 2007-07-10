@@ -52,8 +52,17 @@ function test()
   enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
- 
-  (function() { let (x = eval.call(<x/>.(1), "")) {} })();
+
+  try
+  {
+    (function() { let (x = eval.call(<x/>.(1), "")) {} })();
+  }
+  catch(ex)
+  {
+    printStatus('Note eval can no longer be called directly');
+    expect = 'EvalError: function eval must be called directly, and not by way of a function of another name';
+    actual = ex + '';
+  }
 
   reportCompare(expect, actual, summary);
 

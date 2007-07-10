@@ -121,7 +121,7 @@ bool EmbedApp::OnInit()
     GeckoWindowCreator *creatorCallback = new GeckoWindowCreator();
     if (creatorCallback)
     {
-        nsCOMPtr<nsIWindowCreator> windowCreator(NS_STATIC_CAST(nsIWindowCreator *, creatorCallback));
+        nsCOMPtr<nsIWindowCreator> windowCreator(static_cast<nsIWindowCreator *>(creatorCallback));
         if (windowCreator)
         {
             nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));

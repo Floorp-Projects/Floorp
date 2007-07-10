@@ -57,6 +57,15 @@
 
 #include "nsPrincipal.h"
 
+static PRBool URIIsImmutable(nsIURI* aURI)
+{
+  nsCOMPtr<nsIMutable> mutableObj(do_QueryInterface(aURI));
+  PRBool isMutable;
+  return
+    mutableObj &&
+    NS_SUCCEEDED(mutableObj->GetMutable(&isMutable)) &&
+    !isMutable;                               
+}
 
 // Static member variables
 PRInt32 nsPrincipal::sCapabilitiesOrdinal = 0;
@@ -97,7 +106,9 @@ nsPrincipal::nsPrincipal()
   : mCapabilities(7),
     mSecurityPolicy(nsnull),
     mTrusted(PR_FALSE),
-    mInitialized(PR_FALSE)
+    mInitialized(PR_FALSE),
+    mCodebaseImmutable(PR_FALSE),
+    mDomainImmutable(PR_FALSE)
 {
 }
 
@@ -113,7 +124,8 @@ nsPrincipal::Init(const nsACString& aCertFingerprint,
 
   mInitialized = PR_TRUE;
 
-  mCodebase = aCodebase;
+  mCodebase = NS_TryToMakeImmutable(aCodebase);
+  mCodebaseImmutable = URIIsImmutable(mCodebase);
 
   // Invalidate our cached origin
   mOrigin = nsnull;
@@ -223,8 +235,7 @@ nsPrincipal::GetSecurityPolicy(void** aSecurityPolicy)
 NS_IMETHODIMP
 nsPrincipal::SetSecurityPolicy(void* aSecurityPolicy)
 {
-  DomainPolicy *newPolicy = NS_REINTERPRET_CAST(
-                              DomainPolicy *, aSecurityPolicy);
+  DomainPolicy *newPolicy = reinterpret_cast<DomainPolicy *>(aSecurityPolicy);
   if (newPolicy)
     newPolicy->Hold();
  
@@ -265,8 +276,26 @@ nsPrincipal::Equals(nsIPrincipal *aOther, PRBool *aResult)
         aOther->GetSubjectName(str);
         *aResult = str.Equals(mCert->subjectName) || str.IsEmpty();
       }
-        
-      return NS_OK;
+
+      if (!*aResult) {
+        return NS_OK;
+      }
+
+      // If either principal has no URI, it's the saved principal from
+      // preferences; in that case, test true.  Do NOT test true if the two
+      // principals have URIs with different codebases.
+      nsCOMPtr<nsIURI> otherURI;
+      nsresult rv = aOther->GetURI(getter_AddRefs(otherURI));
+      if (NS_FAILED(rv)) {
+        *aResult = PR_FALSE;
+        return rv;
+      }
+
+      if (!otherURI || !mCodebase) {
+        return NS_OK;
+      }
+
+      // Fall through to the codebase comparison.
     }
 
     // Codebases are equal if they have the same origin.
@@ -496,6 +525,11 @@ nsPrincipal::GetHasCertificate(PRBool* aResult)
 NS_IMETHODIMP
 nsPrincipal::GetURI(nsIURI** aURI)
 {
+  if (mCodebaseImmutable) {
+    NS_ADDREF(*aURI = mCodebase);
+    return NS_OK;
+  }
+
   if (!mCodebase) {
     *aURI = nsnull;
     return NS_OK;
@@ -508,6 +542,7 @@ void
 nsPrincipal::SetURI(nsIURI* aURI)
 {
   mCodebase = NS_TryToMakeImmutable(aURI);
+  mCodebaseImmutable = URIIsImmutable(mCodebase);
 
   // Invalidate our cached origin
   mOrigin = nsnull;
@@ -602,6 +637,11 @@ nsPrincipal::GetDomain(nsIURI** aDomain)
     return NS_OK;
   }
 
+  if (mDomainImmutable) {
+    NS_ADDREF(*aDomain = mDomain);
+    return NS_OK;
+  }
+
   return NS_EnsureSafeToReturn(mDomain, aDomain);
 }
 
@@ -609,6 +649,8 @@ NS_IMETHODIMP
 nsPrincipal::SetDomain(nsIURI* aDomain)
 {
   mDomain = NS_TryToMakeImmutable(aDomain);
+  mDomainImmutable = URIIsImmutable(mDomain);
+  
   // Domain has changed, forget cached security policy
   SetSecurityPolicy(nsnull);
 
@@ -651,6 +693,9 @@ nsPrincipal::InitFromPersistent(const char* aPrefName,
       NS_ERROR("Malformed URI in capability.principal preference.");
       return rv;
     }
+
+    NS_TryToSetImmutable(mCodebase);
+    mCodebaseImmutable = URIIsImmutable(mCodebase);
 
     mTrusted = aTrusted;
 
@@ -886,7 +931,7 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
       return rv;
     }
 
-    if (!mAnnotations.InsertElementAt(NS_REINTERPRET_CAST(void*, ht), i)) {
+    if (!mAnnotations.InsertElementAt(reinterpret_cast<void*>(ht), i)) {
       delete ht;
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -931,7 +976,7 @@ nsPrincipal::Write(nsIObjectOutputStream* aStream)
   }
 
   for (PRInt32 i = 0, n = PRInt32(annotationCount); i < n; i++) {
-    nsHashtable *ht = NS_REINTERPRET_CAST(nsHashtable *, mAnnotations[i]);
+    nsHashtable *ht = reinterpret_cast<nsHashtable *>(mAnnotations[i]);
     rv = ht->Write(aStream, WriteScalarValue);
     if (NS_FAILED(rv)) {
       return rv;

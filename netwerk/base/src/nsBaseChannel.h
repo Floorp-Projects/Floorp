@@ -184,7 +184,7 @@ public:
 
   // Helper function for calling QueryInterface on this.
   nsQueryInterface do_QueryInterface() {
-    return nsQueryInterface(NS_STATIC_CAST(nsIChannel *, this));
+    return nsQueryInterface(static_cast<nsIChannel *>(this));
   }
   // MSVC needs this:
   nsQueryInterface do_QueryInterface(nsISupports *obj) {

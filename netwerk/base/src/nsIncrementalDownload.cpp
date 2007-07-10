@@ -725,7 +725,7 @@ nsIncrementalDownload::GetInterface(const nsIID &iid, void **result)
 {
   if (iid.Equals(NS_GET_IID(nsIChannelEventSink))) {
     NS_ADDREF_THIS();
-    *result = NS_STATIC_CAST(nsIChannelEventSink *, this);
+    *result = static_cast<nsIChannelEventSink *>(this);
     return NS_OK;
   }
 

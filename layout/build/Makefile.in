@@ -50,9 +50,6 @@ ifeq ($(OS_ARCH),OSF1)
 SHELL := ksh
 endif
 
-BUILD_DATE = gbdate.h
-BUILD_DATE_TS = gbdate.tstamp
-
 MODULE		= layout
 LIBRARY_NAME	= gklayout
 EXPORT_LIBRARY = 1
@@ -112,7 +109,6 @@ endif
 
 CPPSRCS		= \
 		nsLayoutModule.cpp \
-		nsContentHTTPStartup.cpp \
 		nsContentDLF.cpp \
 		nsLayoutStatics.cpp \
 		$(NULL)
@@ -298,24 +294,8 @@ endif
 
 DEFINES += -D_IMPL_NS_LAYOUT
 
-GARBAGE += $(BUILD_DATE) $(BUILD_DATE_TS)
-
 ifeq ($(OS_ARCH),IRIX)
 ifeq ($(GNU_CXX),1)
 LDFLAGS += -Wl,-LD_LAYOUT:lgot_buffer=50
 endif
 endif
-
-
-export:: $(BUILD_DATE)
-
-$(BUILD_DATE_TS): FORCE
-	@for f in $(SHARED_LIBRARY_LIBS); do \
-		if [ $$f -nt $@ ]; then \
-			touch $@; \
-		fi; \
-	done
-
-$(BUILD_DATE):: gbdate.pl $(BUILD_DATE_TS)
-	$(RM) $@
-	$(PERL) $(srcdir)/gbdate.pl > $@

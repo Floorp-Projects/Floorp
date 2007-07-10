@@ -673,14 +673,14 @@ nsContentSink::ProcessLink(nsIContent* aElement,
   PRBool hasPrefetch = (linkTypes.IndexOf(NS_LITERAL_STRING("prefetch")) != -1);
   // prefetch href if relation is "next" or "prefetch"
   if (hasPrefetch || linkTypes.IndexOf(NS_LITERAL_STRING("next")) != -1) {
-    PrefetchHref(aHref, hasPrefetch, PR_FALSE);
+    PrefetchHref(aHref, aElement, hasPrefetch, PR_FALSE);
   }
 
   // fetch href into the offline cache if relation is "offline-resource"
   if (linkTypes.IndexOf(NS_LITERAL_STRING("offline-resource")) != -1) {
     AddOfflineResource(aHref);
     if (mSaveOfflineResources)
-      PrefetchHref(aHref, PR_TRUE, PR_TRUE);
+      PrefetchHref(aHref, aElement, PR_TRUE, PR_TRUE);
   }
 
   // is it a stylesheet link?
@@ -764,6 +764,7 @@ nsContentSink::ProcessMETATag(nsIContent* aContent)
 
 void
 nsContentSink::PrefetchHref(const nsAString &aHref,
+                            nsIContent *aSource,
                             PRBool aExplicit,
                             PRBool aOffline)
 {
@@ -808,10 +809,14 @@ nsContentSink::PrefetchHref(const nsAString &aHref,
               charset.IsEmpty() ? nsnull : PromiseFlatCString(charset).get(),
               mDocumentBaseURI);
     if (uri) {
+      nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aSource);
       if (aOffline)
-        prefetchService->PrefetchURIForOfflineUse(uri, mDocumentURI, aExplicit);
+        prefetchService->PrefetchURIForOfflineUse(uri,
+                                                  mDocumentURI,
+                                                  domNode,
+                                                  aExplicit);
       else
-        prefetchService->PrefetchURI(uri, mDocumentURI, aExplicit);
+        prefetchService->PrefetchURI(uri, mDocumentURI, domNode, aExplicit);
     }
   }
 }
@@ -1352,12 +1357,12 @@ nsContentSink::DidProcessATokenImpl()
   // to pressing the ENTER key in the URL bar...
 
   PRUint32 delayBeforeLoweringThreshold =
-    NS_STATIC_CAST(PRUint32, ((2 * mDynamicIntervalSwitchThreshold) +
+    static_cast<PRUint32>(((2 * mDynamicIntervalSwitchThreshold) +
                               NS_DELAY_FOR_WINDOW_CREATION));
 
   if ((currentTime - mBeginLoadTime) > delayBeforeLoweringThreshold) {
     if ((currentTime - eventTime) <
-        NS_STATIC_CAST(PRUint32, mDynamicIntervalSwitchThreshold)) {
+        static_cast<PRUint32>(mDynamicIntervalSwitchThreshold)) {
 
       if (!mDynamicLowerValue) {
         // lower the dynamic values to favor application
@@ -1380,7 +1385,7 @@ nsContentSink::DidProcessATokenImpl()
   }
 
   if ((currentTime - mDelayTimerStart) >
-      NS_STATIC_CAST(PRUint32, GetMaxTokenProcessingTime())) {
+      static_cast<PRUint32>(GetMaxTokenProcessingTime())) {
     return NS_ERROR_HTMLPARSER_INTERRUPTED;
   }
 
@@ -1540,3 +1545,178 @@ nsContentSink::ContinueInterruptedParsingAsync()
 
   NS_DispatchToCurrentThread(ev);
 }
+
+// URIs: action, href, src, longdesc, usemap, cite
+PRBool 
+IsAttrURI(nsIAtom *aName)
+{
+  return (aName == nsGkAtoms::action ||
+          aName == nsGkAtoms::href ||
+          aName == nsGkAtoms::src ||
+          aName == nsGkAtoms::longdesc ||
+          aName == nsGkAtoms::usemap ||
+          aName == nsGkAtoms::cite ||
+          aName == nsGkAtoms::background);
+}
+
+//
+// these two lists are used by the sanitizing fragment serializers
+// Thanks to Mark Pilgrim and Sam Ruby for the initial whitelist
+//
+nsIAtom** const kDefaultAllowedTags [] = {
+  &nsGkAtoms::a,
+  &nsGkAtoms::abbr,
+  &nsGkAtoms::acronym,
+  &nsGkAtoms::address,
+  &nsGkAtoms::area,
+  &nsGkAtoms::b,
+  &nsGkAtoms::bdo,
+  &nsGkAtoms::big,
+  &nsGkAtoms::blockquote,
+  &nsGkAtoms::br,
+  &nsGkAtoms::button,
+  &nsGkAtoms::caption,
+  &nsGkAtoms::center,
+  &nsGkAtoms::cite,
+  &nsGkAtoms::code,
+  &nsGkAtoms::col,
+  &nsGkAtoms::colgroup,
+  &nsGkAtoms::dd,
+  &nsGkAtoms::del,
+  &nsGkAtoms::dfn,
+  &nsGkAtoms::dir,
+  &nsGkAtoms::div,
+  &nsGkAtoms::dl,
+  &nsGkAtoms::dt,
+  &nsGkAtoms::em,
+  &nsGkAtoms::fieldset,
+  &nsGkAtoms::font,
+  &nsGkAtoms::form,
+  &nsGkAtoms::h1,
+  &nsGkAtoms::h2,
+  &nsGkAtoms::h3,
+  &nsGkAtoms::h4,
+  &nsGkAtoms::h5,
+  &nsGkAtoms::h6,
+  &nsGkAtoms::hr,
+  &nsGkAtoms::i,
+  &nsGkAtoms::img,
+  &nsGkAtoms::input,
+  &nsGkAtoms::ins,
+  &nsGkAtoms::kbd,
+  &nsGkAtoms::label,
+  &nsGkAtoms::legend,
+  &nsGkAtoms::li,
+  &nsGkAtoms::listing,
+  &nsGkAtoms::map,
+  &nsGkAtoms::menu,
+  &nsGkAtoms::nobr,
+  &nsGkAtoms::ol,
+  &nsGkAtoms::optgroup,
+  &nsGkAtoms::option,
+  &nsGkAtoms::p,
+  &nsGkAtoms::pre,
+  &nsGkAtoms::q,
+  &nsGkAtoms::s,
+  &nsGkAtoms::samp,
+  &nsGkAtoms::select,
+  &nsGkAtoms::small,
+  &nsGkAtoms::span,
+  &nsGkAtoms::strike,
+  &nsGkAtoms::strong,
+  &nsGkAtoms::sub,
+  &nsGkAtoms::sup,
+  &nsGkAtoms::table,
+  &nsGkAtoms::tbody,
+  &nsGkAtoms::td,
+  &nsGkAtoms::textarea,
+  &nsGkAtoms::tfoot,
+  &nsGkAtoms::th,
+  &nsGkAtoms::thead,
+  &nsGkAtoms::tr,
+  &nsGkAtoms::tt,
+  &nsGkAtoms::u,
+  &nsGkAtoms::ul,
+  &nsGkAtoms::var,
+  nsnull
+};
+
+nsIAtom** const kDefaultAllowedAttributes [] = {
+  &nsGkAtoms::abbr,
+  &nsGkAtoms::accept,
+  &nsGkAtoms::acceptcharset,
+  &nsGkAtoms::accesskey,
+  &nsGkAtoms::action,
+  &nsGkAtoms::align,
+  &nsGkAtoms::alt,
+  &nsGkAtoms::autocomplete,
+  &nsGkAtoms::axis,
+  &nsGkAtoms::background,
+  &nsGkAtoms::bgcolor,
+  &nsGkAtoms::border,
+  &nsGkAtoms::cellpadding,
+  &nsGkAtoms::cellspacing,
+  &nsGkAtoms::_char,
+  &nsGkAtoms::charoff,
+  &nsGkAtoms::charset,
+  &nsGkAtoms::checked,
+  &nsGkAtoms::cite,
+  &nsGkAtoms::_class,
+  &nsGkAtoms::clear,
+  &nsGkAtoms::cols,
+  &nsGkAtoms::colspan,
+  &nsGkAtoms::color,
+  &nsGkAtoms::compact,
+  &nsGkAtoms::coords,
+  &nsGkAtoms::datetime,
+  &nsGkAtoms::dir,
+  &nsGkAtoms::disabled,
+  &nsGkAtoms::enctype,
+  &nsGkAtoms::_for,
+  &nsGkAtoms::frame,
+  &nsGkAtoms::headers,
+  &nsGkAtoms::height,
+  &nsGkAtoms::href,
+  &nsGkAtoms::hreflang,
+  &nsGkAtoms::hspace,
+  &nsGkAtoms::id,
+  &nsGkAtoms::ismap,
+  &nsGkAtoms::label,
+  &nsGkAtoms::lang,
+  &nsGkAtoms::longdesc,
+  &nsGkAtoms::maxlength,
+  &nsGkAtoms::media,
+  &nsGkAtoms::method,
+  &nsGkAtoms::multiple,
+  &nsGkAtoms::name,
+  &nsGkAtoms::nohref,
+  &nsGkAtoms::noshade,
+  &nsGkAtoms::nowrap,
+  &nsGkAtoms::pointSize,
+  &nsGkAtoms::prompt,
+  &nsGkAtoms::readonly,
+  &nsGkAtoms::rel,
+  &nsGkAtoms::rev,
+  &nsGkAtoms::role,
+  &nsGkAtoms::rows,
+  &nsGkAtoms::rowspan,
+  &nsGkAtoms::rules,
+  &nsGkAtoms::scope,
+  &nsGkAtoms::selected,
+  &nsGkAtoms::shape,
+  &nsGkAtoms::size,
+  &nsGkAtoms::span,
+  &nsGkAtoms::src,
+  &nsGkAtoms::start,
+  &nsGkAtoms::summary,
+  &nsGkAtoms::tabindex,
+  &nsGkAtoms::target,
+  &nsGkAtoms::title,
+  &nsGkAtoms::type,
+  &nsGkAtoms::usemap,
+  &nsGkAtoms::valign,
+  &nsGkAtoms::value,
+  &nsGkAtoms::vspace,
+  &nsGkAtoms::width,
+  nsnull
+};

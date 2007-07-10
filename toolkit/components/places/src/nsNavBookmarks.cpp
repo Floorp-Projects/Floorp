@@ -332,7 +332,7 @@ struct RenumberItemsArray {
 RenumberItemsArray::~RenumberItemsArray()
 {
   for (PRInt32 i = 0; i < items.Count(); ++i) {
-    delete NS_STATIC_CAST(RenumberItem*, items[i]);
+    delete static_cast<RenumberItem*>(items[i]);
   }
 }
 
@@ -702,7 +702,7 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 RemoveBookmarkHashCallback(nsTrimInt64HashKey::KeyType aKey,
                            PRInt64& aBookmark, void* aUserArg)
 {
-  const PRInt64* removeThisOne = NS_REINTERPRET_CAST(const PRInt64*, aUserArg);
+  const PRInt64* removeThisOne = reinterpret_cast<const PRInt64*>(aUserArg);
   if (aBookmark == *removeThisOne)
     return PL_DHASH_REMOVE;
   return PL_DHASH_NEXT;
@@ -720,7 +720,7 @@ nsNavBookmarks::UpdateBookmarkHashOnRemove(PRInt64 aPlaceId)
 
   // remove it
   mBookmarksHash.Enumerate(RemoveBookmarkHashCallback,
-                           NS_REINTERPRET_CAST(void*, &aPlaceId));
+                           reinterpret_cast<void*>(&aPlaceId));
   return NS_OK;
 }
 
@@ -2139,8 +2139,8 @@ nsNavBookmarks::GetBookmarkIdsForURI(nsIURI *aURI, PRUint32 *aCount,
 
   // Copy the results into a new array for output
   if (bookmarks.Length()) {
-    *aBookmarks = NS_STATIC_CAST(PRInt64*,
-                           nsMemory::Alloc(sizeof(PRInt64) * bookmarks.Length()));
+    *aBookmarks = static_cast<PRInt64*>
+                             (nsMemory::Alloc(sizeof(PRInt64) * bookmarks.Length()));
     if (! *aBookmarks)
       return NS_ERROR_OUT_OF_MEMORY;
     for (PRUint32 i = 0; i < bookmarks.Length(); i ++)
@@ -2593,4 +2593,20 @@ nsNavBookmarks::OnItemAnnotationRemoved(PRInt64 aItemId, const nsACString& aName
                       OnItemChanged(aItemId, aName, PR_TRUE, EmptyCString()));
 
   return NS_OK;
+}
+
+PRBool
+nsNavBookmarks::ItemExists(PRInt64 aItemId) {
+  mozStorageStatementScoper scope(mDBGetItemProperties);
+  nsresult rv = mDBGetItemProperties->BindInt64Parameter(0, aItemId);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  PRBool results;
+  rv = mDBGetItemProperties->ExecuteStep(&results);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  if (!results)
+    return PR_FALSE;
+
+  return PR_TRUE;
 }

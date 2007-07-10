@@ -55,7 +55,7 @@ nsSVGValue::ReleaseObservers()
   PRInt32 count = mObservers.Count();
   PRInt32 i;
   for (i = 0; i < count; ++i) {
-    nsIWeakReference* wr = NS_STATIC_CAST(nsIWeakReference*,mObservers.ElementAt(i));
+    nsIWeakReference* wr = static_cast<nsIWeakReference*>(mObservers.ElementAt(i));
     NS_RELEASE(wr);
   }
   while (i)
@@ -72,10 +72,10 @@ nsSVGValue::NotifyObservers(SVGObserverNotifyFunction f,
   // from the observer list (mod_die), walk backwards through the list
   // to catch everyone.
   for (PRInt32 i = count - 1; i >= 0; i--) {
-    nsIWeakReference* wr = NS_STATIC_CAST(nsIWeakReference*,mObservers.ElementAt(i));
+    nsIWeakReference* wr = static_cast<nsIWeakReference*>(mObservers.ElementAt(i));
     nsCOMPtr<nsISVGValueObserver> observer = do_QueryReferent(wr);
     if (observer)
-       (NS_STATIC_CAST(nsISVGValueObserver*,observer)->*f)(this, aModType);
+       (static_cast<nsISVGValueObserver*>(observer)->*f)(this, aModType);
   }
 }
 
@@ -122,7 +122,7 @@ nsSVGValue::RemoveObserver(nsISVGValueObserver* observer)
   if (!wr) return NS_ERROR_FAILURE;
   PRInt32 i = mObservers.IndexOf((void*)wr);
   if (i<0) return NS_ERROR_FAILURE;
-  nsIWeakReference* wr2 = NS_STATIC_CAST(nsIWeakReference*,mObservers.ElementAt(i));
+  nsIWeakReference* wr2 = static_cast<nsIWeakReference*>(mObservers.ElementAt(i));
   NS_RELEASE(wr2);
   mObservers.RemoveElementAt(i);
   return NS_OK;

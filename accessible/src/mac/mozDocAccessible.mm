@@ -44,7 +44,7 @@
 
 static id <mozAccessible, mozView> getNativeViewFromRootAccessible (nsAccessible *accessible)
 {
-  nsRootAccessibleWrap *root = NS_STATIC_CAST (nsRootAccessibleWrap*, accessible);
+  nsRootAccessibleWrap *root = static_cast<nsRootAccessibleWrap*>(accessible);
   id <mozAccessible, mozView> nativeView = nil;
   root->GetNativeWidget ((void**)&nativeView);
   return nativeView;

@@ -62,7 +62,7 @@ typedef short EDirection;
 
 [ptr] native nsIPresShellPtr(nsIPresShell);
 
-[scriptable, uuid(470e18e4-2e82-48de-8850-7474cdbbd97d)]
+[scriptable, uuid(dc81f464-89dd-47bf-bf21-10df3b65b956)]
 
 interface nsIEditor  : nsISupports
 {
@@ -562,4 +562,7 @@ interface nsIEditor  : nsISupports
 
   /* Run unit tests. Noop in optimized builds */
   void debugUnitTests(out long outNumTests, out long  outNumTestsFailed);
+
+  /* checks if a node is read-only or not */
+  [notxpcom] boolean isModifiableNode(in nsIDOMNode aNode);
 };

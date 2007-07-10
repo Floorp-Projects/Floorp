@@ -245,7 +245,7 @@ public:
   }
  
   nsURIAndPrincipalHashKey* GetKey() const {
-    return NS_CONST_CAST(nsURIAndPrincipalHashKey*, this);
+    return const_cast<nsURIAndPrincipalHashKey*>(this);
   }
   const nsURIAndPrincipalHashKey* GetKeyPointer() const { return this; }
  

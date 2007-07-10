@@ -100,21 +100,9 @@ const unsigned char kRemoteVersion[] = "5.1";
 const unsigned char kRemoteVersion[] = "5.0";
 #endif
 
-NS_IMPL_QUERY_INTERFACE2(nsGTKRemoteService,
-                         nsIRemoteService,
-                         nsIObserver)
-
-NS_IMETHODIMP_(nsrefcnt)
-nsGTKRemoteService::AddRef()
-{
-  return 1;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-nsGTKRemoteService::Release()
-{
-  return 1;
-}
+NS_IMPL_ISUPPORTS2(nsGTKRemoteService,
+                   nsIRemoteService,
+                   nsIObserver)
 
 NS_IMETHODIMP
 nsGTKRemoteService::Startup(const char* aAppName, const char* aProfileName)
@@ -191,7 +179,7 @@ static nsGTKToolkit* GetGTKToolkit()
   nsIToolkit* toolkit = widget->GetToolkit();
   if (!toolkit)
     return nsnull;
-  return NS_STATIC_CAST(nsGTKToolkit*, toolkit);
+  return static_cast<nsGTKToolkit*>(toolkit);
 }
 #endif
 
@@ -437,7 +425,7 @@ nsGTKRemoteService::HandleCommandLine(char* aBuffer, nsIDOMWindow* aWindow,
   // [argc][offsetargv0][offsetargv1...]<workingdir>\0<argv[0]>\0argv[1]...\0
   // (offset is from the beginning of the buffer)
 
-  PRInt32 argc = TO_LITTLE_ENDIAN32(*NS_REINTERPRET_CAST(PRInt32*, aBuffer));
+  PRInt32 argc = TO_LITTLE_ENDIAN32(*reinterpret_cast<PRInt32*>(aBuffer));
   char *wd   = aBuffer + ((argc + 1) * sizeof(PRInt32));
 
 #ifdef DEBUG_bsmedberg
@@ -458,7 +446,7 @@ nsGTKRemoteService::HandleCommandLine(char* aBuffer, nsIDOMWindow* aWindow,
   char **argv = (char**) malloc(sizeof(char*) * argc);
   if (!argv) return "509 internal error";
 
-  PRInt32  *offset = NS_REINTERPRET_CAST(PRInt32*, aBuffer) + 1;
+  PRInt32  *offset = reinterpret_cast<PRInt32*>(aBuffer) + 1;
 
   for (int i = 0; i < argc; ++i) {
     argv[i] = aBuffer + TO_LITTLE_ENDIAN32(offset[i]);
@@ -582,7 +570,7 @@ nsGTKRemoteService::HandlePropertyChange(GtkWidget *aWidget,
       return FALSE;
 
     // Failed to get the data off the window or it was the wrong type?
-    if (!data || !TO_LITTLE_ENDIAN32(*NS_REINTERPRET_CAST(PRInt32*, data)))
+    if (!data || !TO_LITTLE_ENDIAN32(*reinterpret_cast<PRInt32*>(data)))
       return FALSE;
 
     // cool, we got the property data.
@@ -627,7 +615,7 @@ nsGTKRemoteService::HandlePropertyChange(GtkWidget *aWidget,
       return FALSE;
 
     // Failed to get the data off the window or it was the wrong type?
-    if (!data || !TO_LITTLE_ENDIAN32(*NS_REINTERPRET_CAST(PRInt32*, data)))
+    if (!data || !TO_LITTLE_ENDIAN32(*reinterpret_cast<PRInt32*>(data)))
       return FALSE;
 
     // cool, we got the property data.

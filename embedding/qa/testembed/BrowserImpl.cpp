@@ -420,7 +420,7 @@ NS_IMETHODIMP CBrowserImpl::GetSiteWindow(void** aSiteWindow)
   *aSiteWindow = 0;
   if (m_pBrowserFrameGlue) {
     HWND w = m_pBrowserFrameGlue->GetBrowserFrameNativeWnd();
-    *aSiteWindow = NS_REINTERPRET_CAST(void *, w);
+    *aSiteWindow = reinterpret_cast<void *>(w);
   }
   return NS_OK;
 }

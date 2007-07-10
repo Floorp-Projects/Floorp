@@ -50,16 +50,16 @@ PR_STATIC_CALLBACK(PRBool)
 ObjectSetMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                          const void *key)
 {
-  const ObjectHashEntry *entry = NS_STATIC_CAST(const ObjectHashEntry*, hdr);
-  return entry->obj == NS_STATIC_CAST(const nsNSSShutDownObject*, key);
+  const ObjectHashEntry *entry = static_cast<const ObjectHashEntry*>(hdr);
+  return entry->obj == static_cast<const nsNSSShutDownObject*>(key);
 }
 
 PR_STATIC_CALLBACK(PRBool)
 ObjectSetInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
                      const void *key)
 {
-  ObjectHashEntry *entry = NS_STATIC_CAST(ObjectHashEntry*, hdr);
-  entry->obj = NS_CONST_CAST(nsNSSShutDownObject*, NS_STATIC_CAST(const nsNSSShutDownObject*, key));
+  ObjectHashEntry *entry = static_cast<ObjectHashEntry*>(hdr);
+  entry->obj = const_cast<nsNSSShutDownObject*>(static_cast<const nsNSSShutDownObject*>(key));
   return PR_TRUE;
 }
 
@@ -207,10 +207,10 @@ PLDHashOperator PR_CALLBACK
 nsNSSShutDownList::doPK11LogoutHelper(PLDHashTable *table, 
   PLDHashEntryHdr *hdr, PRUint32 number, void *arg)
 {
-  ObjectHashEntry *entry = NS_STATIC_CAST(ObjectHashEntry*, hdr);
+  ObjectHashEntry *entry = static_cast<ObjectHashEntry*>(hdr);
 
   nsOnPK11LogoutCancelObject *pklco = 
-    NS_REINTERPRET_CAST(nsOnPK11LogoutCancelObject*, entry->obj);
+    reinterpret_cast<nsOnPK11LogoutCancelObject*>(entry->obj);
 
   if (pklco) {
     pklco->logout();
@@ -260,7 +260,7 @@ PLDHashOperator PR_CALLBACK
 nsNSSShutDownList::evaporateAllNSSResourcesHelper(PLDHashTable *table, 
   PLDHashEntryHdr *hdr, PRUint32 number, void *arg)
 {
-    ObjectHashEntry *entry = NS_STATIC_CAST(ObjectHashEntry*, hdr);
+    ObjectHashEntry *entry = static_cast<ObjectHashEntry*>(hdr);
     PR_Unlock(singleton->mListLock);
 
   entry->obj->shutdown(nsNSSShutDownObject::calledFromList);

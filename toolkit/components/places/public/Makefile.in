@@ -48,6 +48,7 @@ XPIDL_MODULE = places
 
 XPIDLSRCS  = \
   nsIAnnotationService.idl \
+  nsIBrowserHistory.idl \
   nsIFaviconService.idl \
   nsINavHistoryService.idl \
   nsINavBookmarksService.idl \

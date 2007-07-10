@@ -15,91 +15,91 @@ Login Manager test: 360493
   <!-- The tests in this page exercise things that shouldn't work. -->
 
   <!-- Change port # of action URL from 8888 to 7777 -->
-  <form action="http://localhost:7777/tests/toolkit/components/passwordmgr/test/formtest.js" method="get">
-    <input  type="text"       name="uname1" value="">
-    <input  type="password"   name="pword1" value="">
+  <form id="form1" action="http://localhost:7777/tests/toolkit/components/passwordmgr/test/formtest.js">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
 
     <button type="submit">Submit</button>
     <button type="reset"> Reset </button>
   </form>
 
   <!-- No port # in action URL -->
-  <form action="http://localhost/tests/toolkit/components/passwordmgr/test/formtest.js" method="get">
-    <input  type="text"       name="uname2" value="">
-    <input  type="password"   name="pword2" value="">
+  <form id="form2" action="http://localhost/tests/toolkit/components/passwordmgr/test/formtest.js">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
 
     <button type="submit">Submit</button>
     <button type="reset"> Reset </button>
   </form>
 
   <!-- Change protocol from http:// to ftp://, include the expected 8888 port # -->
-  <form action="ftp://localhost:8888/tests/toolkit/components/passwordmgr/test/formtest.js" method="get">
-    <input  type="text"       name="uname3" value="">
-    <input  type="password"   name="pword3" value="">
+  <form id="form3" action="ftp://localhost:8888/tests/toolkit/components/passwordmgr/test/formtest.js">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
 
     <button type="submit">Submit</button>
     <button type="reset"> Reset </button>
   </form>
 
   <!-- Change protocol from http:// to ftp://, no port # specified -->
-  <form action="ftp://localhost/tests/toolkit/components/passwordmgr/test/formtest.js" method="get">
-    <input  type="text"       name="uname4" value="">
-    <input  type="password"   name="pword4" value="">
+  <form id="form4" action="ftp://localhost/tests/toolkit/components/passwordmgr/test/formtest.js">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
 
     <button type="submit">Submit</button>
     <button type="reset"> Reset </button>
   </form>
 
   <!-- Try a weird URL. -->
-  <form action="about:blank" method="get">
-    <input  type="text"       name="uname5" value="">
-    <input  type="password"   name="pword5" value="">
+  <form id="form5" action="about:blank">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
 
     <button type="submit">Submit</button>
     <button type="reset"> Reset </button>
   </form>
 
   <!-- Try a weird URL. (If the normal embedded action URL doesn't work, that should mean other URLs won't either) -->
-  <form action="view-source:http://localhost:8888/tests/toolkit/components/passwordmgr/test/formtest.js" method="get">
-    <input  type="text"       name="uname6" value="">
-    <input  type="password"   name="pword6" value="">
+  <form id="form6" action="view-source:http://localhost:8888/tests/toolkit/components/passwordmgr/test/formtest.js">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
 
     <button type="submit">Submit</button>
     <button type="reset"> Reset </button>
   </form>
 
   <!-- Try a weird URL. -->
-  <form action="view-source:formtest.js" method="get">
-    <input  type="text"       name="uname7" value="">
-    <input  type="password"   name="pword7" value="">
+  <form id="form7" action="view-source:formtest.js">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
 
     <button type="submit">Submit</button>
     <button type="reset"> Reset </button>
   </form>
 
   <!-- Action URL points to a different host (this is the archetypical exploit) -->
-  <form action="http://www.cnn.com/" method="get">
-    <input  type="text"       name="uname8" value="">
-    <input  type="password"   name="pword8" value="">
+  <form id="form8" action="http://www.cnn.com/">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
 
     <button type="submit">Submit</button>
     <button type="reset"> Reset </button>
   </form>
 
   <!-- Action URL points to a different host, user field prefilled -->
-  <form action="http://www.cnn.com/" method="get">
-    <input  type="text"       name="uname9" value="testuser9">
-    <input  type="password"   name="pword9" value="">
+  <form id="form9" action="http://www.cnn.com/">
+    <input  type="text"       name="uname" value="testuser">
+    <input  type="password"   name="pword">
 
     <button type="submit">Submit</button>
     <button type="reset"> Reset </button>
   </form>
 
   <!-- Try wrapping a evil form around a good form, to see if we can confuse the parser. -->
-  <form action="http://www.cnn.com/" method="get">
-   <form action="formtest.js" method="get">
-    <input  type="text"       name="uname10" value="">
-    <input  type="password"   name="pword10" value="">
+  <form id="form10-A" action="http://www.cnn.com/">
+   <form id="form10-B" action="formtest.js">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
 
     <button type="submit">Submit (inner)</button>
     <button type="reset"> Reset  (inner)</button>
@@ -109,10 +109,10 @@ Login Manager test: 360493
   </form>
 
   <!-- Try wrapping a good form around an evil form, to see if we can confuse the parser. -->
-  <form action="formtest.js" method="get">
-   <form action="http://www.cnn.com/" method="get">
-    <input  type="text"       name="uname11" value="">
-    <input  type="password"   name="pword11" value="">
+  <form id="form11-A" action="formtest.js">
+   <form id="form11-B" action="http://www.cnn.com/">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
 
     <button type="submit">Submit (inner)</button>
     <button type="reset"> Reset  (inner)</button>
@@ -134,24 +134,28 @@ Login Manager test: 360493
 function startTest() {
   for (var i = 1; i <= 8; i++) {
     // Check form i
-    is($_("uname" + i).value, "", "Checking for unfilled username " + i);
-    is($_("pword" + i).value, "", "Checking for unfilled password " + i);
+    is($_(i, "uname").value, "", "Checking for unfilled username " + i);
+    is($_(i, "pword").value, "", "Checking for unfilled password " + i);
   }
 
-  is($_("uname9").value, "testuser9", "Checking for unmodified username 9");
-  is($_("pword9").value, "",    "Checking for unfilled password 9");
+  is($_(9, "uname").value, "testuser", "Checking for unmodified username 9");
+  is($_(9, "pword").value, "",         "Checking for unfilled password 9");
 
-  is($_("uname10").value, "", "Checking for unfilled username 10");
-  is($_("pword10").value, "", "Checking for unfilled password 10");
+  is($_("10-A", "uname").value, "", "Checking for unfilled username 10A");
+  is($_("10-A", "pword").value, "", "Checking for unfilled password 10A");
+  //is($_("10-B", "uname").value, "", "Checking for unfilled username 10B");
+  //is($_("10-B", "pword").value, "", "Checking for unfilled password 10B");
 
   // The DOM indicates this form could be filled, as the evil inner form
   // is discarded. And yet pwmgr seems not to fill it. Not sure why.
   todo(false, "Mangled form combo not being filled when maybe it could be?");
-  is($_("uname11").value, "", "Checking for unfilled username 11");
-  is($_("pword11").value, "", "Checking for unfilled password 11");
+  is($_("11-A", "uname").value, "testuser", "Checking filled username 11A");
+  is($_("11-A", "pword").value, "testpass", "Checking filled password 11A");
+  //is($_("11-B", "uname").value, "", "Checking for unfilled username 11B");
+  //is($_("11-B", "pword").value, "", "Checking for unfilled password 11B");
 
-  // Verify this by making sure there are no extra forms in the document, and that
-  // the submit button for the neutered forms don't do anything.
+  // Verify this by making sure there are no extra forms in the document, and
+  // that the submit button for the neutered forms don't do anything.
   // If the test finds extra forms the submit() causes the test to timeout, then
   // there may be a security issue.
   is(document.forms.length,  11,  "Checking for unexpected forms");

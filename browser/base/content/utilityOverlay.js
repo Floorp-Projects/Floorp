@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   Alec Flett <alecf@netscape.com>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -578,4 +579,71 @@ function openNewWindowWith(aURL, aDocument, aPostData, aAllowThirdPartyFixup)
   window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no",
                     aURL, charsetArg, referrerURI, aPostData,
                     aAllowThirdPartyFixup);
+}
+
+/**
+ * recognizeFeedFromLink: recognizes RSS/ATOM feeds from DOM link elements.
+ *
+ * @param  aLink
+ *         The DOM link element to check for representing a feed.
+ * @param  aPrincipal
+ *         The principal of the document, used for security check.
+ * @return object
+ *         The feed object containing href, type, and title properties,
+ *          if successful, otherwise null.
+ */ 
+function recognizeFeedFromLink(aLink, aPrincipal)
+{
+  if (!aLink || !aPrincipal)
+    return null;
+
+  var erel = aLink.rel && aLink.rel.toLowerCase();
+  var etype = aLink.type && aLink.type.toLowerCase();
+  var etitle = aLink.title;
+  const rssTitleRegex = /(^|\s)rss($|\s)/i;
+  var rels = {};
+
+  if (erel) {
+    for each (var relValue in erel.split(/\s+/))
+      rels[relValue] = true;
+  }
+  var isFeed = rels.feed;
+
+  if (!isFeed && (!rels.alternate || rels.stylesheet || !etype))
+    return null;
+
+  if (!isFeed) {
+    // Use type value
+    etype = etype.replace(/^\s+/, "");
+    etype = etype.replace(/\s+$/, "");
+    etype = etype.replace(/\s*;.*/, "");
+    isFeed = (etype == "application/rss+xml" ||
+              etype == "application/atom+xml");
+    if (!isFeed) {
+      // really slimy: general XML types with magic letters in the title
+      isFeed = ((etype == "text/xml" || etype == "application/xml" ||
+                 etype == "application/rdf+xml") && rssTitleRegex.test(etitle));
+    }
+  }
+
+  if (isFeed) {
+    try { 
+      urlSecurityCheck(aLink.href,
+                       aPrincipal,
+                       Components.interfaces.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
+    }
+    catch (ex) {
+      dump(ex.message);
+      return null; // doesn't pass security check
+    }
+
+    // successful!  return the feed
+    return {
+        href: aLink.href,
+        type: etype,
+        title: aLink.title
+      };
+  }
+
+  return null;
 }

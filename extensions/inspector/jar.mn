@@ -11,12 +11,9 @@ inspector.jar:
 % overlay chrome://messenger/content/mailWindowOverlay.xul chrome://inspector/content/tasksOverlay-tb.xul application={3550f703-e582-4d05-9a08-453d09bdfdc6}
 % overlay chrome://inspector/content/commandOverlay.xul chrome://inspector/content/viewers/dom/commandOverlay.xul
 % overlay chrome://inspector/content/commandOverlay.xul chrome://inspector/content/viewers/styleRules/commandOverlay.xul
-% overlay chrome://inspector/content/commandOverlay.xul chrome://inspector/content/search/modules/commandOverlay.xul
 % overlay chrome://inspector/content/keysetOverlay.xul chrome://inspector/content/viewers/dom/keysetOverlay.xul
 % overlay chrome://inspector/content/popupOverlay.xul chrome://inspector/content/viewers/dom/popupOverlay.xul
 % overlay chrome://inspector/content/popupOverlay.xul chrome://inspector/content/viewers/styleRules/popupOverlay.xul
-% overlay chrome://inspector/content/popupOverlay.xul chrome://inspector/content/search/modules/popupOverlay.xul
-* content/inspector/contents.rdf                                      (resources/content/contents.rdf)
   content/inspector/inspector.xul                                     (resources/content/inspector.xul)
   content/inspector/inspector.js                                      (resources/content/inspector.js)
   content/inspector/inspector.css                                     (resources/content/inspector.css)
@@ -66,18 +63,6 @@ inspector.jar:
   content/inspector/prefs/pref-inspector.xul                          (resources/content/prefs/pref-inspector.xul)
   content/inspector/prefs/prefsOverlay.xul                            (resources/content/prefs/prefsOverlay.xul)
   content/inspector/prefs/pref-sidebar.js                             (resources/content/prefs/pref-sidebar.js)
-  content/inspector/search/inSearchModule.js                          (resources/content/search/inSearchModule.js)
-  content/inspector/search/inSearchService.js                         (resources/content/search/inSearchService.js)
-  content/inspector/search/inSearchTreeBuilder.js                     (resources/content/search/inSearchTreeBuilder.js)
-  content/inspector/search/inSearchUtils.js                           (resources/content/search/inSearchUtils.js)
-  content/inspector/search/modules/commandOverlay.xul                 (resources/content/search/modules/commandOverlay.xul)
-  content/inspector/search/modules/popupOverlay.xul                   (resources/content/search/modules/popupOverlay.xul)
-  content/inspector/search/modules/findFiles/dialog.js                (resources/content/search/modules/findFiles/dialog.js)
-  content/inspector/search/modules/findFiles/dialog.xul               (resources/content/search/modules/findFiles/dialog.xul)
-  content/inspector/search/modules/findFiles/findFiles.xml            (resources/content/search/modules/findFiles/findFiles.xml)
-  content/inspector/search/modules/junkImgs/dialog.js                 (resources/content/search/modules/junkImgs/dialog.js)
-  content/inspector/search/modules/junkImgs/dialog.xul                (resources/content/search/modules/junkImgs/dialog.xul)
-  content/inspector/search/modules/junkImgs/junkImgs.xml              (resources/content/search/modules/junkImgs/junkImgs.xml)
   content/inspector/tests/allskin.xul                                 (resources/content/tests/allskin.xul)
   content/inspector/viewers/accessibleObject/accessibleObject.js      (resources/content/viewers/accessibleObject/accessibleObject.js)
   content/inspector/viewers/accessibleObject/accessibleObject.xul     (resources/content/viewers/accessibleObject/accessibleObject.xul)
@@ -118,7 +103,6 @@ inspector.jar:
   content/inspector/viewers/xblBindings/xblBindings.js                (resources/content/viewers/xblBindings/xblBindings.js)
   content/inspector/viewers/xblBindings/xblBindings.xul               (resources/content/viewers/xblBindings/xblBindings.xul)
 % skin inspector classic/1.0 %skin/classic/inspector/
-* skin/classic/inspector/contents.rdf                                 (resources/skin/classic/contents.rdf)
   skin/classic/inspector/btnFind.gif                                  (resources/skin/classic/btnFind.gif)
   skin/classic/inspector/btnFind-dis.gif                              (resources/skin/classic/btnFind-dis.gif)
   skin/classic/inspector/btnSelecting.gif                             (resources/skin/classic/btnSelecting.gif)
@@ -146,7 +130,6 @@ inspector.jar:
   skin/classic/inspector/viewers/styleRules/styleRules.css            (resources/skin/classic/viewers/styleRules/styleRules.css)
   skin/classic/inspector/viewers/xblBindings/xblBindings.css          (resources/skin/classic/viewers/xblBindings/xblBindings.css)
 % skin inspector modern/1.0 %skin/modern/inspector/
-* skin/modern/inspector/contents.rdf                                  (resources/skin/modern/contents.rdf)
   skin/modern/inspector/btnFind.gif                                   (resources/skin/modern/btnFind.gif)
   skin/modern/inspector/btnFind-dis.gif                               (resources/skin/modern/btnFind-dis.gif)
   skin/modern/inspector/btnSelecting.gif                              (resources/skin/modern/btnSelecting.gif)

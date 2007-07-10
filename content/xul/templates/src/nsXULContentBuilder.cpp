@@ -1521,7 +1521,7 @@ nsXULContentBuilder::RemoveGeneratedContent(nsIContent* aElement)
     while (0 != (count = ungenerated.Count())) {
         // Pull the next "ungenerated" element off the queue.
         PRInt32 last = count - 1;
-        nsIContent* element = NS_STATIC_CAST(nsIContent*, ungenerated[last]);
+        nsIContent* element = static_cast<nsIContent*>(ungenerated[last]);
         ungenerated.RemoveElementAt(last);
 
         PRUint32 i = element->GetChildCount();
@@ -1871,7 +1871,7 @@ nsXULContentBuilder::ReplaceMatch(nsIXULTemplateResult* aOldResult,
 
 {
     nsresult rv;
-    nsIContent* content = NS_STATIC_CAST(nsIContent*, aContext);
+    nsIContent* content = static_cast<nsIContent*>(aContext);
 
     // update the container attributes for the match
     if (content) {

@@ -39,9 +39,8 @@
 #ifndef nsPrintJobFactoryGTK_h__
 #define nsPrintJobFactoryGTK_h__
 
-#include "nscore.h"
-#include "nsIPrintJobGTK.h"
-#include "nsDeviceContextSpecG.h"
+class nsIPrintJobGTK;
+class nsDeviceContextSpecGTK;
 
 /* Factory class for the print job subsystem. This class determines
  * which print job class should handle a print job, and constructs

@@ -97,6 +97,7 @@ ifndef MAKE
 MAKE := gmake
 endif
 PERL ?= perl
+PYTHON ?= python
 
 RUN_AUTOCONF_LOCALLY = 1
 
@@ -187,7 +188,7 @@ everything: clean build
 ifdef MOZ_UNIFY_BDATE
 ifndef MOZ_BUILD_DATE
 ifdef MOZ_BUILD_PROJECTS
-MOZ_BUILD_DATE = $(shell $(PERL) -I$(TOPSRCDIR)/config $(TOPSRCDIR)/config/bdate.pl)
+MOZ_BUILD_DATE = $(shell $(PYTHON) $(TOPSRCDIR)/toolkit/xre/make-platformini.py --print-buildid)
 export MOZ_BUILD_DATE
 endif
 endif

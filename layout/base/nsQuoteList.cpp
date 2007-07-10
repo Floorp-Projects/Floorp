@@ -109,7 +109,7 @@ nsQuoteList::PrintChain()
   }
   nsQuoteNode* node = FirstNode();
   do {
-    printf("  %p %d - ", NS_STATIC_CAST(void*, node), node->mDepthBefore);
+    printf("  %p %d - ", static_cast<void*>(node), node->mDepthBefore);
     switch(node->mType) {
         case (eStyleContentType_OpenQuote):
           printf("open");

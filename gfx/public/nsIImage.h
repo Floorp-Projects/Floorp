@@ -80,10 +80,10 @@ typedef enum {
 #endif
 
 // IID for the nsIImage interface
-// ab6af421-9552-4d18-a3f4-a2bf9d2e44f7
+// fd31e1f2-bd46-47f1-b8b6-b94ce954f9ce
 #define NS_IIMAGE_IID \
-{ 0xab6af421, 0x9552, 0x4d18, \
-  { 0xa3, 0xf4, 0xa2, 0xbf, 0x9d, 0x2e, 0x44, 0xf7 } }
+{ 0xfd31e1f2, 0xbd46, 0x47f1, \
+  { 0xb8, 0xb6, 0xb9, 0x4c, 0xe9, 0x54, 0xf9, 0xce } }
 
 // Interface to Images
 class nsIImage : public nsISupports
@@ -203,12 +203,6 @@ public:
   NS_IMETHOD Draw(nsIRenderingContext &aContext,
                   const gfxRect &aSourceRect,
                   const gfxRect &aDestRect) = 0;
-
-  NS_IMETHOD DrawTile(nsIRenderingContext &aContext,
-                      nsIDrawingSurface* aSurface,
-                      PRInt32 aSXOffset, PRInt32 aSYOffset,
-                      PRInt32 aPadX, PRInt32 aPadY,
-                      const nsRect &aTileRect) = 0;
 
   /**
    * BitBlit the entire (no cropping) nsIImage to another nsImage, the source and dest can be scaled

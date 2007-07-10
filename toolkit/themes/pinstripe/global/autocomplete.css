@@ -74,7 +74,7 @@ textbox.padded {
 
 /* ::::: autocomplete popups ::::: */
 
-popup[type="autocomplete"],
+panel[type="autocomplete"],
 .autocomplete-history-popup {
   padding: 0px !important;
   background-color: -moz-Field !important;

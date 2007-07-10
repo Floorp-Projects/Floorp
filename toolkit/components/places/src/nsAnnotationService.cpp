@@ -49,6 +49,7 @@
 #include "nsIVariant.h"
 #include "nsString.h"
 #include "nsVariant.h"
+#include "nsNavBookmarks.h"
 
 const PRInt32 nsAnnotationService::kAnnoIndex_ID = 0;
 const PRInt32 nsAnnotationService::kAnnoIndex_PageOrItem = 1;
@@ -261,9 +262,6 @@ nsAnnotationService::InitTables(mozIStorageConnection* aDBConn)
         "CREATE TABLE moz_anno_attributes ("
         "id INTEGER PRIMARY KEY,"
         "name VARCHAR(32) UNIQUE NOT NULL)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_anno_attributes_nameindex ON moz_anno_attributes (name)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -954,9 +952,9 @@ nsAnnotationService::GetPagesWithAnnotation(const nsACString& aName,
   // convert to raw array
   if (results.Count() == 0)
     return NS_OK;
-  *aResults = NS_STATIC_CAST(nsIURI**,
-                             nsMemory::Alloc(results.Count() * sizeof(nsIURI*)));
-  if (! aResults)
+  *aResults = static_cast<nsIURI**>
+                         (nsMemory::Alloc(results.Count() * sizeof(nsIURI*)));
+  if (! *aResults)
     return NS_ERROR_OUT_OF_MEMORY;
   *aResultCount = results.Count();
   for (PRUint32 i = 0; i < *aResultCount; i ++) {
@@ -1025,9 +1023,9 @@ nsAnnotationService::GetItemsWithAnnotation(const nsACString& aName,
   if (results.Length() == 0)
     return NS_OK;
 
-  *aResults = NS_STATIC_CAST(PRInt64*,
-                             nsMemory::Alloc(results.Length() * sizeof(PRInt64)));
-  if (!aResults)
+  *aResults = static_cast<PRInt64*>
+                         (nsMemory::Alloc(results.Length() * sizeof(PRInt64)));
+  if (! *aResults)
     return NS_ERROR_OUT_OF_MEMORY;
 
   *aResultCount = results.Length();
@@ -1080,8 +1078,8 @@ nsAnnotationService::GetPageAnnotationNames(nsIURI* aURI, PRUint32* aCount,
   if (names.Length() == 0)
     return NS_OK;
 
-  *_result = NS_STATIC_CAST(nsIVariant**,
-      nsMemory::Alloc(sizeof(nsIVariant*) * names.Length()));
+  *_result = static_cast<nsIVariant**>
+                        (nsMemory::Alloc(sizeof(nsIVariant*) * names.Length()));
   NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
 
   for (PRUint32 i = 0; i < names.Length(); i ++) {
@@ -1146,8 +1144,8 @@ nsAnnotationService::GetItemAnnotationNames(PRInt64 aItemId, PRUint32* aCount,
   if (names.Length() == 0)
     return NS_OK;
 
-  *_result = NS_STATIC_CAST(nsIVariant**,
-      nsMemory::Alloc(sizeof(nsIVariant*) * names.Length()));
+  *_result = static_cast<nsIVariant**>
+                        (nsMemory::Alloc(sizeof(nsIVariant*) * names.Length()));
   NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
 
   for (PRUint32 i = 0; i < names.Length(); i ++) {
@@ -1624,6 +1622,14 @@ nsAnnotationService::StartSetAnnotation(PRInt64 aFkId,
                                         PRUint16 aType,
                                         mozIStorageStatement** aStatement)
 {
+  // Disallow setting item-annotations on invalid item ids
+  if (aIsItemAnnotation) {
+    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+    NS_ENSURE_STATE(bookmarks);
+    if (!bookmarks->ItemExists(aFkId))
+      return NS_ERROR_INVALID_ARG;
+  }
+
   PRBool hasAnnotation;
   PRInt64 annotationID;
   nsresult rv = HasAnnotationInternal(aFkId, aIsItemAnnotation, aName,

@@ -156,11 +156,11 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
   // If any of the origin and size offset arithmatic seems strange here, check out the
   // actual dimensions of an HITheme button compared to the rect you pass to HIThemeDrawButton.
   if (inKind == kThemePushButton && inBoxRect.size.height < MIN_UNSCALED_PUSH_BUTTON_HEIGHT) {
+    // adjust width up to componsate for the down-scaling we will do later
+    float scaleFactor = inBoxRect.size.height / MIN_UNSCALED_PUSH_BUTTON_HEIGHT;
     // We'll use these two values to size the button we draw offscreen
-    float offscreenWidth = inBoxRect.size.width;
+    float offscreenWidth = inBoxRect.size.width / scaleFactor;
     float offscreenHeight = MIN_UNSCALED_PUSH_BUTTON_HEIGHT;
-    if (inBoxRect.size.height > offscreenHeight)
-      offscreenHeight = inBoxRect.size.height;
 
     // create an offscreen image
     NSImage* image = [[NSImage alloc] initWithSize:NSMakeSize(offscreenWidth, offscreenHeight)];
@@ -181,7 +181,7 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
     [image unlockFocus];
 
     // resize vertically
-    [image setSize:NSMakeSize(offscreenWidth, inBoxRect.size.height)];
+    [image setSize:NSMakeSize(inBoxRect.size.width, inBoxRect.size.height)];
 
     // render to the given CGContextRef
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
@@ -402,6 +402,16 @@ nsNativeThemeCocoa::GetScrollbarPressStates(nsIFrame *aFrame, PRInt32 aButtonSta
 }
 
 
+// Both of the following sets of numbers were derived by loading the testcase in
+// bmo bug 380185 in Safari and observing its behavior for various heights of scrollbar.
+// These magic numbers are the minimum sizes we can draw a scrollbar and still 
+// have room for everything to display, including the thumb
+#define MIN_SCROLLBAR_SIZE_WITH_THUMB 61
+#define MIN_SMALL_SCROLLBAR_SIZE_WITH_THUMB 49
+// And these are the minimum sizes if we don't draw the thumb
+#define MIN_SCROLLBAR_SIZE 56
+#define MIN_SMALL_SCROLLBAR_SIZE 46
+
 void
 nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *aFrame, 
                                          const HIRect& aRect, PRBool aShouldGetButtonStates)
@@ -420,11 +430,26 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
   aTdi.min = minpos;
   aTdi.max = maxpos;
   aTdi.value = curpos;
-  aTdi.attributes = kThemeTrackShowThumb;
+  aTdi.attributes = 0;
   if (isHorizontal)
     aTdi.attributes |= kThemeTrackHorizontal;
 
-  aTdi.trackInfo.scrollbar.viewsize = (SInt32)(isHorizontal ? (aRect.size.width) : (aRect.size.height));
+  PRInt32 longSideLength = (PRInt32)(isHorizontal ? (aRect.size.width) : (aRect.size.height));
+  aTdi.trackInfo.scrollbar.viewsize = (SInt32)longSideLength;
+
+  // Only display the thumb if we have room for it to display. Note that this doesn't 
+  // affect the actual tracking rects Gecko maintains -- this is a purely cosmetic
+  // change. See bmo bug 380185 for more info.
+  if (longSideLength >= (isSmall ? MIN_SMALL_SCROLLBAR_SIZE_WITH_THUMB : MIN_SCROLLBAR_SIZE_WITH_THUMB)) {
+    aTdi.attributes |= kThemeTrackShowThumb;
+  }
+  // If we don't have enough room to display *any* features, we're done creating 
+  // this tdi, so return early. Again, this doesn't affect the tracking rects Gecko 
+  // maintains. See bmo bug 380185 for more info.
+  else if (longSideLength < (isSmall ? MIN_SMALL_SCROLLBAR_SIZE : MIN_SCROLLBAR_SIZE)) {
+    aTdi.enableState = kThemeTrackNothingToScroll;
+    return;
+  }
 
   // Only go get these scrollbar button states if we need it. For example, there's no reaon to look up scrollbar button 
   // states when we're only creating a TrackDrawInfo to determine the size of the thumb.
@@ -871,8 +896,8 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
       // Top has a single pixel line, bottom has a single pixel line plus a single
-      // pixel shadow. We say 3 for the sides so that text doesn't hit the border.
-      aResult->SizeTo(3, 1, 3, 3);
+      // pixel shadow. We say 2 for the sides so that text doesn't hit the border.
+      aResult->SizeTo(2, 1, 2, 3);
       break;
 
     case NS_THEME_DROPDOWN:

@@ -634,9 +634,9 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
 
   nsIAtom *name = content->Tag();
 
+  // We need too skip any meta tags that set the content type
+  // becase we set our own later.
   if (name == nsGkAtoms::meta) {
-    // We need too skip any meta tags that set the content type
-    // becase we set our own later.
     nsAutoString header;
     content->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
     if (header.LowerCaseEqualsLiteral("content-type")) {
@@ -739,16 +739,13 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   }
 
   if (name == nsGkAtoms::head) {
-    // We should also obey the line break rules set for a normal meta tag here.
-    // We add a line break before and after the tag's opening.
     AppendToString(mLineBreak, aStr);
     AppendToString(NS_LITERAL_STRING("<meta http-equiv=\"content-type\""),
                    aStr);
-    AppendToString(NS_LITERAL_STRING(" content=\"text/html; "), aStr);
+    AppendToString(NS_LITERAL_STRING(" content=\"text/html; charset="), aStr);
     AppendToString(NS_ConvertASCIItoUTF16(mCharset), aStr);
     AppendToString(NS_LITERAL_STRING("\">"), aStr);
-    AppendToString(mLineBreak, aStr);
-  }  
+  }
 
   return NS_OK;
 }
@@ -767,11 +764,19 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
 
   nsIAtom *name = content->Tag();
 
+  // So that we don't mess up the line breaks.
+  if (name == nsGkAtoms::meta) {
+    nsAutoString header;
+    content->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
+    if (header.LowerCaseEqualsLiteral("content-type")) {
+      return NS_OK;
+    }
+  }
+
   if (name == nsGkAtoms::script) {
     nsCOMPtr<nsIScriptElement> script = do_QueryInterface(aElement);
-    NS_ASSERTION(script, "What kind of weird script element is this?");
 
-    if (script->IsMalformed()) {
+    if (script && script->IsMalformed()) {
       // We're looking at a malformed script tag. This means that the end tag
       // was missing in the source. Imitate that here by not serializing the end
       // tag.

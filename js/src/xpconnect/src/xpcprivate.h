@@ -672,7 +672,7 @@ public:
 
     void DebugDump(PRInt16 depth);
 
-    void SystemIsBeingShutDown(XPCCallContext* ccx);
+    void SystemIsBeingShutDown(JSContext* cx);
 
     PRThread* GetThreadRunningGC() const {return mThreadRunningGC;}
 
@@ -1130,10 +1130,13 @@ public:
                         JSBool OKIfNotInitialized = JS_FALSE);
 
     static void
-    SystemIsBeingShutDown(XPCCallContext& ccx);
+    SystemIsBeingShutDown(JSContext* cx);
 
     static void
     TraceJS(JSTracer* trc, XPCJSRuntime* rt);
+
+    static void
+    SuspectAllWrappers(XPCJSRuntime* rt);
 
     static void
     FinishedMarkPhaseOfGC(JSContext* cx, XPCJSRuntime* rt);
@@ -1765,7 +1768,7 @@ public:
 
     void JSProtoObjectFinalized(JSContext *cx, JSObject *obj);
 
-    void SystemIsBeingShutDown(XPCCallContext& ccx);
+    void SystemIsBeingShutDown(JSContext* cx);
 
     void DebugDump(PRInt16 depth);
 
@@ -2023,7 +2026,7 @@ public:
 
     void FlatJSObjectFinalized(JSContext *cx, JSObject *obj);
 
-    void SystemIsBeingShutDown(XPCCallContext& ccx);
+    void SystemIsBeingShutDown(JSContext* cx);
 
 #ifdef XPC_DETECT_LEADING_UPPERCASE_ACCESS_ERRORS
     // This will try to find a member that is of the form "camelCased"

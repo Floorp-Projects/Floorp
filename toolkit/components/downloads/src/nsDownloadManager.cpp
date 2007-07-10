@@ -61,10 +61,9 @@
 #include "nsEnumeratorUtils.h"
 #include "nsIFileURL.h"
 #include "nsEmbedCID.h"
-#include "nsInt64.h"
 #include "mozStorageCID.h"
 #include "mozIStorageService.h"
-#include "mozIStorageStatement.h"
+#include "mozStorageHelper.h"
 #include "nsIMutableArray.h"
 #include "nsIAlertsService.h"
 
@@ -91,10 +90,14 @@ static const PRInt64 gUpdateInterval = 400 * PR_USEC_PER_MSEC;
 
 static PRInt32 gRefCnt = 0;
 
+#define DM_SCHEMA_VERSION      1
+#define DM_DB_NAME             NS_LITERAL_STRING("downloads.sqlite")
+#define DM_DB_CORRUPT_FILENAME NS_LITERAL_STRING("downloads.sqlite.corrupt")
+
 ///////////////////////////////////////////////////////////////////////////////
 // nsDownloadManager
 
-NS_IMPL_ISUPPORTS3(nsDownloadManager, nsIDownloadManager, nsIXPInstallManagerUI, nsIObserver)
+NS_IMPL_ISUPPORTS2(nsDownloadManager, nsIDownloadManager, nsIObserver)
 
 nsDownloadManager::~nsDownloadManager()
 {
@@ -130,6 +133,30 @@ nsDownloadManager::CancelAllDownloads()
 }
 
 nsresult
+nsDownloadManager::FinishDownload(nsDownload *aDownload, DownloadState aState,
+                                  const char *aTopic) {
+  // We don't want to lose access to the download's member variables
+  nsRefPtr<nsDownload> kungFuDeathGrip = aDownload;
+
+  // we've stopped, so break the cycle we created at download start
+  aDownload->mCancelable = nsnull;
+
+  // This has to be done in this exact order to not mess up our invariants
+  // 1) when the state changed listener is dispatched, it must no longer be
+  //    an active download.
+  // 2) when the observer is dispatched, the same conditions for 1 must be
+  //    true as well as the state being up to date.
+  (void)mCurrentDownloads.RemoveObject(aDownload);
+
+  nsresult rv = aDownload->SetState(aState);
+  if (NS_FAILED(rv)) return rv;
+  
+  (void)mObserverService->NotifyObservers(aDownload, aTopic, nsnull);
+
+  return NS_OK;
+}
+
+nsresult
 nsDownloadManager::InitDB(PRBool *aDoImport)
 {
   nsresult rv;
@@ -143,7 +170,7 @@ nsDownloadManager::InitDB(PRBool *aDoImport)
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                               getter_AddRefs(dbFile));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = dbFile->Append(NS_LITERAL_STRING("downloads.sqlite"));
+  rv = dbFile->Append(DM_DB_NAME);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = storage->OpenDatabase(dbFile, getter_AddRefs(mDBConn));
@@ -162,6 +189,69 @@ nsDownloadManager::InitDB(PRBool *aDoImport)
     *aDoImport = PR_TRUE;
     rv = CreateTable();
     NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    // Checking the database schema now
+    PRInt32 schemaVersion;
+    rv = mDBConn->GetSchemaVersion(&schemaVersion);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (0 == schemaVersion) {
+      NS_WARNING("Could not get downlaod's database schema version!");
+
+      // The table may still be usable - someone may have just messed with the
+      // schema version, so let's just treat this like a downgrade and verify
+      // that the needed columns are there.  If they aren't there, we'll drop
+      // the table anyway.
+      rv = mDBConn->SetSchemaVersion(DM_SCHEMA_VERSION);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // setting it to a large number so we execute a downgrade.  This may
+      // seem odd, but downgrading checks to see if we have the correct
+      // columns in our table.  At this point we've established that we have
+      // a table, but no schema version, so we want to check this.
+      schemaVersion = DM_SCHEMA_VERSION + 1;
+    }
+
+    if (schemaVersion != DM_SCHEMA_VERSION) {
+      // Changing the database?  Be sure to do these two things!
+      // 1) Increment DM_SCHEMA_VERSION
+      // 2) Implement the proper downgrade/upgrade code for the current version
+
+      if (schemaVersion > DM_SCHEMA_VERSION) {
+        // Downgrading
+        // If columns have been added to the table, we can still use the ones we
+        // understand safely.  If columns have been deleted or alterd, we just
+        // drop the table and start from scratch.  If you change how a column
+        // should be interpreted, make sure you also change its name so this
+        // check will catch it.
+
+        nsCOMPtr<mozIStorageStatement> stmt;
+        rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+          "SELECT id, name, source, target, iconURL, startTime, endTime, state "
+          "FROM moz_downloads"), getter_AddRefs(stmt));
+        if (NS_FAILED(rv)) {
+          // if the statement fails, that means all the columns were not there.
+          // First we backup the database
+          nsCOMPtr<nsIFile> backup;
+          rv = mDBConn->BackupDB(DM_DB_CORRUPT_FILENAME, nsnull,
+                                 getter_AddRefs(backup));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          // Then we dump it
+          rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+            "DROP TABLE moz_downloads"));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          rv = CreateTable();
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+      } else {
+        // Upgrading
+        // Every time you increment the database schema, you need to implement
+        // the upgrading code from the previous version to the new one.
+        // Also, don't forget to make a unit test to test your upgradeing code!
+      }
+    }
   }
 
   return NS_OK;
@@ -170,6 +260,9 @@ nsDownloadManager::InitDB(PRBool *aDoImport)
 nsresult
 nsDownloadManager::CreateTable()
 {
+  nsresult rv = mDBConn->SetSchemaVersion(DM_SCHEMA_VERSION);
+  if (NS_FAILED(rv)) return rv;
+
   return mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE moz_downloads ("
     "id INTEGER PRIMARY KEY, name TEXT, source TEXT, target TEXT,"
@@ -234,6 +327,8 @@ nsDownloadManager::ImportDownloadHistory()
   rv = rdfs->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "DownloadState"),
                          getter_AddRefs(NC_DownloadState));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  mozStorageTransaction transaction(mDBConn, PR_TRUE);
 
   // OK, now we can actually start to read and process our data
   nsCOMPtr<nsIRDFContainer> container =
@@ -306,8 +401,8 @@ nsDownloadManager::ImportDownloadHistory()
     rv = rdfInt->GetValue(&state);
     if (NS_FAILED(rv)) continue;
  
-    AddDownloadToDB(name, source, target, EmptyString(), startTime,
-                    endTime, state);
+    (void)AddDownloadToDB(name, source, target, EmptyString(), startTime,
+                          endTime, state);
   }
 
   return NS_OK;
@@ -410,6 +505,13 @@ nsDownloadManager::Init()
   mObserverService->AddObserver(this, "quit-application-requested", PR_FALSE);
   mObserverService->AddObserver(this, "offline-requested", PR_FALSE);
 
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "UPDATE moz_downloads "
+    "SET name = ?1, source = ?2, target = ?3, startTime = ?4, endTime = ?5,"
+    "state = ?6 "
+    "WHERE id = ?7"), getter_AddRefs(mUpdateDownloadStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -501,29 +603,6 @@ nsDownloadManager::GetDownloadFromDB(PRUint32 aID, nsDownload **retVal)
   return NS_OK;
 }
 
-nsresult
-nsDownloadManager::AddToCurrentDownloads(nsDownload *aDl)
-{
-  // If this is an install operation, ensure we have a progress listener for the
-  // install and track this download separately. 
-  if (aDl->mDownloadType == nsIXPInstallManagerUI::DOWNLOAD_TYPE_INSTALL) {
-    if (!mXPIProgress) {
-      mXPIProgress = new nsXPIProgressListener(this);
-      if (!mXPIProgress)
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    nsIXPIProgressDialog *dialog = mXPIProgress.get();
-    nsXPIProgressListener *listener = NS_STATIC_CAST(nsXPIProgressListener*,
-                                                     dialog);
-    listener->AddDownload(aDl);
-  }
-
-  mCurrentDownloads.AppendObject(aDl);
-
-  return NS_OK;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 //// nsIDownloadManager
 
@@ -584,7 +663,7 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
   dl->mMIMEInfo = aMIMEInfo;
   dl->SetStartTime(aStartTime);
 
-  // this will create a cycle that will be broken in nsDownload::OnStateChange
+  // Creates a cycle that will be broken when the download finishes
   dl->mCancelable = aCancelable;
 
   // Adding to the DB
@@ -666,15 +745,9 @@ nsDownloadManager::CancelDownload(PRUint32 aID)
       dl->mTempFile->Remove(PR_FALSE);
   }
 
-  // This have to be done in this exact order to not mess up our invariants
-  // 1) when the state changed listener is dispatched, it must no longer be
-  //    an active download.
-  // 2) when the dl-cancel observer is dispatched, the same conditions for 1
-  //    must be true as well as the state being up to date.
-  RemoveDownloadFromCurrent(dl);
-  nsresult rv = dl->SetState(nsIDownloadManager::DOWNLOAD_CANCELED);
+  nsresult rv = FinishDownload(dl, nsIDownloadManager::DOWNLOAD_CANCELED,
+                               "dl-cancel");
   NS_ENSURE_SUCCESS(rv, rv);
-  mObserverService->NotifyObservers(dl, "dl-cancel", nsnull);
 
   // if there's a progress dialog open for the item,
   // we have to notify it that we're cancelling
@@ -710,7 +783,7 @@ nsDownloadManager::RetryDownload(PRUint32 aID)
     do_CreateInstance("@mozilla.org/embedding/browser/nsWebBrowserPersist;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Creates a cycle that will be broken in nsDownload::OnStateChange
+  // Creates a cycle that will be broken when the download finishes
   dl->mCancelable = wbp;
   wbp->SetProgressListener(dl);
 
@@ -748,18 +821,16 @@ nsDownloadManager::CleanUp()
 {
   DownloadState states[] = { nsIDownloadManager::DOWNLOAD_FINISHED,
                              nsIDownloadManager::DOWNLOAD_FAILED,
-                             nsIDownloadManager::DOWNLOAD_CANCELED,
-                             nsIXPInstallManagerUI::INSTALL_FINISHED };
+                             nsIDownloadManager::DOWNLOAD_CANCELED };
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "DELETE FROM moz_downloads "
     "WHERE state = ?1 "
     "OR state = ?2 "
-    "OR state = ?3 "
-    "OR state = ?4"), getter_AddRefs(stmt));
+    "OR state = ?3"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
-  for (PRUint32 i = 0; i < 4; ++i) {
+  for (PRUint32 i = 0; i < 3; ++i) {
     rv = stmt->BindInt32Parameter(i, states[i]);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -774,8 +845,7 @@ nsDownloadManager::GetCanCleanUp(PRBool *aResult)
 
   DownloadState states[] = { nsIDownloadManager::DOWNLOAD_FINISHED,
                              nsIDownloadManager::DOWNLOAD_FAILED,
-                             nsIDownloadManager::DOWNLOAD_CANCELED,
-                             nsIXPInstallManagerUI::INSTALL_FINISHED };
+                             nsIDownloadManager::DOWNLOAD_CANCELED };
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
@@ -783,10 +853,9 @@ nsDownloadManager::GetCanCleanUp(PRBool *aResult)
     "FROM moz_downloads "
     "WHERE state = ?1 "
     "OR state = ?2 "
-    "OR state = ?3 "
-    "OR state = ?4"), getter_AddRefs(stmt));
+    "OR state = ?3"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
-  for (PRUint32 i = 0; i < 4; ++i) {
+  for (PRUint32 i = 0; i < 3; ++i) {
     rv = stmt->BindInt32Parameter(i, states[i]);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -830,14 +899,16 @@ nsDownloadManager::PauseResumeDownload(PRUint32 aID, PRBool aPause)
 NS_IMETHODIMP
 nsDownloadManager::Open(nsIDOMWindow* aParent, PRUint32 aID)
 {
-  nsDownload *dl = FindDownload(aID);
-  
-  if (!dl)
-    return NS_ERROR_FAILURE;
+  // try to get an active download
+  nsRefPtr<nsDownload> dl = FindDownload(aID);
+  if (!dl) {
+    // try to get a finished download from the database
+    (void)GetDownloadFromDB(aID, getter_AddRefs(dl));
+    if (!dl) return NS_ERROR_FAILURE;
+  }
 
   TimerParams* params = new TimerParams();
-  if (!params)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(params, NS_ERROR_OUT_OF_MEMORY);
 
   params->parent = aParent;
   params->download = dl;
@@ -861,7 +932,7 @@ nsDownloadManager::Open(nsIDOMWindow* aParent, PRUint32 aID)
 void
 nsDownloadManager::OpenTimerCallback(nsITimer* aTimer, void* aClosure)
 {
-  TimerParams* params = NS_STATIC_CAST(TimerParams*, aClosure);
+  TimerParams* params = static_cast<TimerParams*>(aClosure);
   
   PRInt32 complete;
   params->download->GetPercentComplete(&complete);
@@ -933,9 +1004,8 @@ nsDownloadManager::OpenDownloadManager(PRBool aShouldFocus,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<mozIStorageConnection> DBConn;
-    rv = dlMgr->GetDBConnection(getter_AddRefs(DBConn));
-    NS_ENSURE_SUCCESS(rv, rv);
-    
+    (void)dlMgr->GetDBConnection(getter_AddRefs(DBConn));
+
     params->AppendElement(DBConn, PR_FALSE);
     params->AppendElement(aDownload, PR_FALSE);
     
@@ -1036,14 +1106,8 @@ nsDownloadManager::Observe(nsISupports *aSubject,
   } else if (strcmp(aTopic, "quit-application") == 0) {
     gStoppingDownloads = PR_TRUE;
     
-    if (currDownloadCount) {
+    if (currDownloadCount)
       CancelAllDownloads();
-
-      // Download Manager is shutting down! Tell the XPInstallManager to stop
-      // transferring any files that may have been being downloaded. 
-      mObserverService->NotifyObservers(mXPIProgress, "xpinstall-progress",
-                                        NS_LITERAL_STRING("cancel").get());
-    }
 
     // Now that active downloads have been canceled, remove all downloads if 
     // the user's retention policy specifies it. 
@@ -1076,19 +1140,6 @@ nsDownloadManager::Observe(nsISupports *aSubject,
                            NS_LITERAL_STRING("offlineCancelDownloadsAlertMsgMultiple").get(),
                            NS_LITERAL_STRING("offlineCancelDownloadsAlertMsg").get(),
                            NS_LITERAL_STRING("dontGoOfflineButton").get());
-    PRBool data;
-    cancelDownloads->GetData(&data);
-    if (!data) {
-      gStoppingDownloads = PR_TRUE;
-
-      // Network is going down! Tell the XPInstallManager to stop
-      // transferring any files that may have been being downloaded. 
-      mObserverService->NotifyObservers(mXPIProgress, "xpinstall-progress",
-                                        NS_LITERAL_STRING("cancel").get());
-    
-      CancelAllDownloads();
-      gStoppingDownloads = PR_FALSE;
-    }
   } else if (strcmp(aTopic, "alertclickcallback") == 0) {
     // Attempt to locate a browser window to parent the download manager to
     nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
@@ -1153,154 +1204,6 @@ nsDownloadManager::ConfirmCancelDownloads(PRInt32 aCount,
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// nsIXPInstallManagerUI
-NS_IMETHODIMP
-nsDownloadManager::GetXpiProgress(nsIXPIProgressDialog** aProgress)
-{
-  *aProgress = mXPIProgress;
-  NS_IF_ADDREF(*aProgress);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDownloadManager::GetHasActiveXPIOperations(PRBool* aHasOps)
-{
-  nsIXPIProgressDialog* dialog = mXPIProgress.get();
-  nsXPIProgressListener* listener = NS_STATIC_CAST(nsXPIProgressListener*, dialog);
-  *aHasOps = !mXPIProgress ? PR_FALSE : listener->HasActiveXPIOperations();
-  return NS_OK;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// nsXPIProgressListener
-
-NS_IMPL_ISUPPORTS1(nsXPIProgressListener, nsIXPIProgressDialog)
-
-nsXPIProgressListener::nsXPIProgressListener(nsDownloadManager* aDownloadManager)
-{
-  NS_NewISupportsArray(getter_AddRefs(mDownloads));
-
-  mDownloadManager = aDownloadManager;
-}
-
-nsXPIProgressListener::~nsXPIProgressListener()
-{
-  // Release any remaining references to objects held by the downloads array
-  mDownloads->Clear();
-}
-
-void
-nsXPIProgressListener::AddDownload(nsIDownload* aDownload)
-{
-  PRUint32 cnt;
-  mDownloads->Count(&cnt);
-  PRBool foundMatch = PR_FALSE;
-
-  nsCOMPtr<nsIURI> uri1, uri2;
-  for (PRUint32 i = 0; i < cnt; ++i) {
-    nsCOMPtr<nsIDownload> download(do_QueryElementAt(mDownloads, i));
-    download->GetSource(getter_AddRefs(uri1));
-    aDownload->GetSource(getter_AddRefs(uri2));
-
-    uri1->Equals(uri2, &foundMatch);
-    if (foundMatch)
-      break;
-  }
-  if (!foundMatch)
-    mDownloads->AppendElement(aDownload);
-}
-
-void 
-nsXPIProgressListener::RemoveDownloadAtIndex(PRUint32 aIndex)
-{
-  mDownloads->RemoveElementAt(aIndex);
-}
-
-PRBool
-nsXPIProgressListener::HasActiveXPIOperations()
-{
-  PRUint32 count;
-  mDownloads->Count(&count);
-  return count != 0;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// nsIXPIProgressDialog
-NS_IMETHODIMP
-nsXPIProgressListener::OnStateChange(PRUint32 aIndex, PRInt16 aState, PRInt32 aValue)
-{
-  nsCOMPtr<nsIWebProgressListener> wpl(do_QueryElementAt(mDownloads, aIndex));
-  nsIWebProgressListener* temp = wpl.get();
-  nsDownload* dl = NS_STATIC_CAST(nsDownload*, temp);
-  // Sometimes we get XPInstall progress notifications after everything is done, and there's
-  // no more active downloads... this null check is to prevent a crash in this case.
-  if (!dl) 
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIObserverService> os;
-  
-  DownloadState newState = aState;
-  switch (aState) {
-  case nsIXPIProgressDialog::DOWNLOAD_START:
-    wpl->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_START, 0);
-
-    newState = nsIXPInstallManagerUI::INSTALL_DOWNLOADING;
-    
-    os = do_GetService("@mozilla.org/observer-service;1");
-    if (os)
-      os->NotifyObservers(dl, "dl-start", nsnull);
-    break;
-  case nsIXPIProgressDialog::DOWNLOAD_DONE:
-    break;
-  case nsIXPIProgressDialog::INSTALL_START:
-    newState = nsIXPInstallManagerUI::INSTALL_INSTALLING;
-    break;
-  case nsIXPIProgressDialog::INSTALL_DONE:
-    wpl->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, 0);
-    
-    newState = nsIXPInstallManagerUI::INSTALL_FINISHED;
-    
-    // Now, remove it from our internal bookkeeping list. 
-    RemoveDownloadAtIndex(aIndex);
-    break;
-  case nsIXPIProgressDialog::DIALOG_CLOSE:
-    // Close now, if we're allowed to. 
-    os = do_GetService("@mozilla.org/observer-service;1");
-    if (os)
-      os->NotifyObservers(nsnull, "xpinstall-dialog-close", nsnull);
-
-    if (!gStoppingDownloads) {
-      nsCOMPtr<nsIStringBundleService> sbs(do_GetService("@mozilla.org/intl/stringbundle;1"));
-      nsCOMPtr<nsIStringBundle> brandBundle, xpinstallBundle;
-      sbs->CreateBundle("chrome://branding/locale/brand.properties", getter_AddRefs(brandBundle));
-      sbs->CreateBundle("chrome://mozapps/locale/xpinstall/xpinstallConfirm.properties", getter_AddRefs(xpinstallBundle));
-
-      nsXPIDLString brandShortName, message, title;
-      brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(), getter_Copies(brandShortName));
-      const PRUnichar* strings[1] = { brandShortName.get() };
-      xpinstallBundle->FormatStringFromName(NS_LITERAL_STRING("installComplete").get(), strings, 1, getter_Copies(message));
-      xpinstallBundle->GetStringFromName(NS_LITERAL_STRING("installCompleteTitle").get(), getter_Copies(title));
-
-      nsCOMPtr<nsIPromptService> ps(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
-      ps->Alert(nsnull, title, message);
-    }
-
-    break;
-  }
-
-  return dl->SetState(newState);
-}
-
-NS_IMETHODIMP
-nsXPIProgressListener::OnProgress(PRUint32 aIndex, PRUint64 aValue, PRUint64 aMaxValue)
-{
-  nsCOMPtr<nsIWebProgressListener2> wpl(do_QueryElementAt(mDownloads, aIndex));
-  if (wpl) 
-    return wpl->OnProgressChange64(nsnull, nsnull, 0, 0, aValue, aMaxValue);
-  return NS_OK;
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // nsDownload
 
 NS_IMPL_ISUPPORTS4(nsDownload, nsIDownload, nsITransfer, nsIWebProgressListener,
@@ -1309,9 +1212,9 @@ NS_IMPL_ISUPPORTS4(nsDownload, nsIDownload, nsITransfer, nsIWebProgressListener,
 nsDownload::nsDownload() : mDownloadState(nsIDownloadManager::DOWNLOAD_NOTSTARTED),
                            mID(0),
                            mPercentComplete(0),
-                           mCurrBytes(LL_ZERO),
+                           mCurrBytes(0),
                            mMaxBytes(LL_MAXUINT),
-                           mStartTime(LL_ZERO),
+                           mStartTime(0),
                            mLastUpdate(PR_Now() - (PRUint32)gUpdateInterval),
                            mPaused(PR_FALSE),
                            mSpeed(0)
@@ -1452,10 +1355,12 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
                            const PRUnichar *aMessage)
 {   
   if (NS_FAILED(aStatus)) {
-    SetState(nsIDownloadManager::DOWNLOAD_FAILED);
-    mDownloadManager->mObserverService->NotifyObservers(this, "dl-failed", nsnull);
+    // We don't want to lose access to our member variables
+    nsRefPtr<nsDownload> kungFuDeathGrip = this;
 
-    mDownloadManager->RemoveDownloadFromCurrent(this);
+    (void)mDownloadManager->FinishDownload(this,
+                                           nsIDownloadManager::DOWNLOAD_FAILED,
+                                           "dl-failed");
 
     // Get title for alert.
     nsXPIDLString title;
@@ -1489,7 +1394,7 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
                           nsresult aStatus)
 {
   // Record the start time only if it hasn't been set.
-  if (LL_IS_ZERO(mStartTime) && (aStateFlags & STATE_START))
+  if (mStartTime == 0 && (aStateFlags & STATE_START))
     SetStartTime(PR_Now());
 
   // We don't want to lose access to our member variables
@@ -1513,8 +1418,9 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
 
       mPercentComplete = 100;
 
-      // We can safely remove it from the current downloads
-      mDownloadManager->RemoveDownloadFromCurrent(this);
+      (void)mDownloadManager->FinishDownload(this,
+                                             nsIDownloadManager::DOWNLOAD_FINISHED,
+                                             "dl-done");
 
       // Master pref to control this function. 
       PRBool showTaskbarAlert = PR_TRUE;
@@ -1525,11 +1431,7 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
         PRInt32 alertInterval = -1;
         pref->GetIntPref(PREF_BDM_SHOWALERTINTERVAL, &alertInterval);
 
-        PRInt64 temp, uSecPerMSec, alertIntervalUSec;
-        LL_I2L(temp, alertInterval);
-        LL_I2L(uSecPerMSec, PR_USEC_PER_MSEC);
-        LL_MUL(alertIntervalUSec, temp, uSecPerMSec);
-        
+        PRInt64 alertIntervalUSec = alertInterval * PR_USEC_PER_MSEC;
         PRInt64 goat = PR_Now() - mStartTime;
         showTaskbarAlert = goat > alertIntervalUSec;
        
@@ -1555,14 +1457,6 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
           }
         }
       }
-
-      if (mDownloadState != nsIXPInstallManagerUI::INSTALL_INSTALLING)
-        SetState(nsIDownloadManager::DOWNLOAD_FINISHED);
-      else
-        SetState(nsIXPInstallManagerUI::INSTALL_FINISHED);
-
-      mDownloadManager->mObserverService->NotifyObservers(this, "dl-done",
-                                                          nsnull);
     }
 
 #ifdef XP_WIN
@@ -1597,9 +1491,6 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       }
     }
 #endif
-
-    // break the cycle we created in AddDownload
-    mCancelable = nsnull;
 
     // Now remove the download if the user's retention policy is "Remove when Done"
     if (mDownloadManager->GetRetentionBehavior() == 0)
@@ -1766,16 +1657,10 @@ nsDownload::UpdateDB()
   NS_ASSERTION(mID, "Download ID is stored as zero.  This is bad!");
   NS_ASSERTION(mDownloadManager, "Egads!  We have no download manager!");
 
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = mDownloadManager->mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "UPDATE moz_downloads "
-    "SET name = ?1, source = ?2, target = ?3, startTime = ?4, endTime = ?5,"
-    "state = ?6 "
-    "WHERE id = ?7"), getter_AddRefs(stmt));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
+  mozIStorageStatement *stmt = mDownloadManager->mUpdateDownloadStatement;
+
   // name
-  rv = stmt->BindStringParameter(0, mDisplayName);
+  nsresult rv = stmt->BindStringParameter(0, mDisplayName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // source

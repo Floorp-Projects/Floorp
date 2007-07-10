@@ -165,6 +165,11 @@ public:
                               nsIContent* aChild,
                               PRInt32 aIndexInContainer);
 
+  virtual void UpdateEditableState()
+  {
+    return UpdateEditableFormControlState();
+  }
+
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLTextAreaElement,
                                            nsGenericHTMLFormElement)
 
@@ -202,6 +207,9 @@ protected:
    * parent; we should only respond to the change if aContent is non-anonymous.
    */
   void ContentChanged(nsIContent* aContent);
+
+  virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom *aName,
+                                const nsAString* aValue, PRBool aNotify);
 };
 
 
@@ -363,7 +371,7 @@ nsHTMLTextAreaElement::Select()
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsGUIEvent event(PR_TRUE, NS_FORM_SELECTED, nsnull);
-  nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this), presContext,
+  nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext,
                               &event, nsnull, &status);
 
   // If the DOM event was not canceled (e.g. by a JS event handler
@@ -637,7 +645,7 @@ nsHTMLTextAreaElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     aVisitor.mItemFlags |= NS_NO_CONTENT_DISPATCH;
   if (aVisitor.mEvent->message == NS_MOUSE_CLICK &&
       aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
-      NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+      static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
         nsMouseEvent::eMiddleButton) {
     aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_NO_CONTENT_DISPATCH;
   }
@@ -989,4 +997,24 @@ nsHTMLTextAreaElement::ContentChanged(nsIContent* aContent)
       nsContentUtils::IsInSameAnonymousTree(this, aContent)) {
     Reset();
   }
+}
+
+nsresult
+nsHTMLTextAreaElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                    const nsAString* aValue, PRBool aNotify)
+{
+  if (aNotify && aNameSpaceID == kNameSpaceID_None &&
+      aName == nsGkAtoms::readonly) {
+    UpdateEditableState();
+
+    nsIDocument* document = GetCurrentDoc();
+    if (document) {
+      mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, PR_TRUE);
+      document->ContentStatesChanged(this, nsnull,
+                                     NS_EVENT_STATE_MOZ_READONLY |
+                                     NS_EVENT_STATE_MOZ_READWRITE);
+    }
+  }
+  return nsGenericHTMLFormElement::AfterSetAttr(aNameSpaceID, aName, aValue,
+                                                aNotify);
 }

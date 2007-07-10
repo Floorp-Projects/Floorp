@@ -61,14 +61,13 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
+#include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
 #endif
-
-extern const char js_throw_str[]; /* from jsscan.h */
 
 #define JSSLOT_ITER_STATE       (JSSLOT_PRIVATE)
 #define JSSLOT_ITER_FLAGS       (JSSLOT_PRIVATE + 1)
@@ -82,12 +81,12 @@ extern const char js_throw_str[]; /* from jsscan.h */
  * when GC detects that the iterator is no longer reachable.
  */
 void
-js_CloseIteratorState(JSContext *cx, JSObject *iterobj)
+js_CloseNativeIterator(JSContext *cx, JSObject *iterobj)
 {
     jsval state;
     JSObject *iterable;
 
-    JS_ASSERT(JS_InstanceOf(cx, iterobj, &js_IteratorClass, NULL));
+    JS_ASSERT(STOBJ_GET_CLASS(iterobj) == &js_IteratorClass);
 
     /* Avoid double work if js_CloseNativeIterator was called on obj. */
     state = STOBJ_GET_SLOT(iterobj, JSSLOT_ITER_STATE);
@@ -315,29 +314,6 @@ js_GetNativeIteratorFlags(JSContext *cx, JSObject *iterobj)
     return JSVAL_TO_INT(OBJ_GET_SLOT(cx, iterobj, JSSLOT_ITER_FLAGS));
 }
 
-void
-js_CloseNativeIterator(JSContext *cx, JSObject *iterobj)
-{
-    uintN flags;
-
-    /*
-     * If this iterator is not an instance of the native default iterator
-     * class, leave it to be GC'ed.
-     */
-    if (!JS_InstanceOf(cx, iterobj, &js_IteratorClass, NULL))
-        return;
-
-    /*
-     * If this iterator was not created by js_ValueToIterator called from the
-     * for-in loop code in js_Interpret, leave it to be GC'ed.
-     */
-    flags = JSVAL_TO_INT(OBJ_GET_SLOT(cx, iterobj, JSSLOT_ITER_FLAGS));
-    if (!(flags & JSITER_ENUMERATE))
-        return;
-
-    js_CloseIteratorState(cx, iterobj);
-}
-
 /*
  * Call ToObject(v).__iterator__(keyonly) if ToObject(v).__iterator__ exists.
  * Otherwise construct the defualt iterator.
@@ -436,6 +412,28 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
   bad:
     ok = JS_FALSE;
     goto out;
+}
+
+JSBool
+js_CloseIterator(JSContext *cx, jsval v)
+{
+    JSObject *obj;
+    JSClass *clasp;
+
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
+    obj = JSVAL_TO_OBJECT(v);
+    clasp = OBJ_GET_CLASS(cx, obj);
+
+    if (clasp == &js_IteratorClass) {
+        js_CloseNativeIterator(cx, obj);
+    }
+#if JS_HAS_GENERATORS
+    else if (clasp == &js_GeneratorClass) {
+        if (!js_CloseGenerator(cx, obj))
+            return JS_FALSE;
+    }
+#endif
+    return JS_TRUE;
 }
 
 static JSBool
@@ -911,10 +909,23 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
  * unreachable.
  */
 JSBool
-js_CloseGeneratorObject(JSContext *cx, JSGenerator *gen)
+js_CloseGenerator(JSContext *cx, JSObject *obj)
 {
+    JSGenerator *gen;
+
+    JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_GeneratorClass);
+    gen = (JSGenerator *) JS_GetPrivate(cx, obj);
+    if (!gen) {
+        /* Generator prototype object. */
+        return JS_TRUE;
+    }
+
+    JS_ASSERT(gen->state != JSGEN_RUNNING && gen->state != JSGEN_CLOSING);
+    if (gen->state == JSGEN_CLOSED)
+        return JS_TRUE;
+
     /* We pass null as rval since SendToGenerator never uses it with CLOSE. */
-    return SendToGenerator(cx, JSGENOP_CLOSE, gen->obj, gen, JSVAL_VOID, NULL);
+    return SendToGenerator(cx, JSGENOP_CLOSE, obj, gen, JSVAL_VOID, NULL);
 }
 
 /*

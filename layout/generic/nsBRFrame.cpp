@@ -193,14 +193,14 @@ BRFrame::Reflow(nsPresContext* aPresContext,
 BRFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
                            nsIFrame::InlineMinWidthData *aData)
 {
-  aData->Break(aRenderingContext);
+  aData->ForceBreak(aRenderingContext);
 }
 
 /* virtual */ void
 BRFrame::AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
                             nsIFrame::InlinePrefWidthData *aData)
 {
-  aData->Break(aRenderingContext);
+  aData->ForceBreak(aRenderingContext);
 }
 
 /* virtual */ nscoord
@@ -273,7 +273,7 @@ NS_IMETHODIMP BRFrame::GetAccessible(nsIAccessible** aAccessible)
 {
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
   if (accService) {
-    return accService->CreateHTMLBRAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+    return accService->CreateHTMLBRAccessible(static_cast<nsIFrame*>(this), aAccessible);
   }
   return NS_ERROR_FAILURE;
 }

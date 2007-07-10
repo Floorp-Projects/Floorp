@@ -163,7 +163,7 @@ nsDOMParser::ParseFromBuffer(const PRUint8 *buf,
   // The new stream holds a reference to the buffer
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream),
-                                      NS_REINTERPRET_CAST(const char *, buf),
+                                      reinterpret_cast<const char *>(buf),
                                       bufLen, NS_ASSIGNMENT_DEPEND);
   if (NS_FAILED(rv))
     return rv;
@@ -225,13 +225,12 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   // Register as a load listener on the document
   nsCOMPtr<nsPIDOMEventTarget> target(do_QueryInterface(domDocument));
   if (target) {
-    nsWeakPtr requestWeak(do_GetWeakReference(NS_STATIC_CAST(nsIDOMParser*, this)));
+    nsWeakPtr requestWeak(do_GetWeakReference(static_cast<nsIDOMParser*>(this)));
     nsLoadListenerProxy* proxy = new nsLoadListenerProxy(requestWeak);
     if (!proxy) return NS_ERROR_OUT_OF_MEMORY;
 
     // This will addref the proxy
-    rv = target->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMEventListener*, 
-                                                      proxy), 
+    rv = target->AddEventListenerByIID(static_cast<nsIDOMEventListener*>(proxy), 
                                        NS_GET_IID(nsIDOMLoadListener));
     NS_ENSURE_SUCCESS(rv, rv);
   }

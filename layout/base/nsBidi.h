@@ -42,6 +42,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsBidiUtils.h"
 
 // Bidi reordering engine from ICU
 /*
@@ -154,79 +155,6 @@ enum nsBidiDirection {
 typedef enum nsBidiDirection nsBidiDirection;
 
 /* miscellaneous definitions ------------------------------------------------ */
-
-   /**
-    *  Read ftp://ftp.unicode.org/Public/UNIDATA/ReadMe-Latest.txt
-    *  section BIDIRECTIONAL PROPERTIES
-    *  for the detailed definition of the following categories
-    *
-    *  The values here must match the equivalents in %map in
-    * mozilla/intl/unicharutil/tools/genbidicattable.pl
-    */
-
-typedef enum {
-  eBidiCat_Undefined,
-  eBidiCat_L,          /* Left-to-Right               */
-  eBidiCat_R,          /* Right-to-Left               */
-  eBidiCat_AL,         /* Right-to-Left Arabic        */
-  eBidiCat_AN,         /* Arabic Number               */
-  eBidiCat_EN,         /* European Number             */
-  eBidiCat_ES,         /* European Number Separator   */
-  eBidiCat_ET,         /* European Number Terminator  */
-  eBidiCat_CS,         /* Common Number Separator     */
-  eBidiCat_ON,         /* Other Neutrals              */
-  eBidiCat_NSM,        /* Non-Spacing Mark            */
-  eBidiCat_BN,         /* Boundary Neutral            */
-  eBidiCat_B,          /* Paragraph Separator         */
-  eBidiCat_S,          /* Segment Separator           */
-  eBidiCat_WS,         /* Whitespace                  */
-  eBidiCat_CC = 0xf,   /* Control Code                */
-                       /* (internal use only - will never be outputed) */
-  eBidiCat_LRE = 0x2a, /* Left-to-Right Embedding     */
-  eBidiCat_RLE = 0x2b, /* Right-to-Left Embedding     */
-  eBidiCat_PDF = 0x2c, /* Pop Directional Formatting  */
-  eBidiCat_LRO = 0x2d, /* Left-to-Right Override      */
-  eBidiCat_RLO = 0x2e  /* Right-to-Left Override      */
-} eBidiCategory;
-
-enum nsCharType   { 
-  eCharType_LeftToRight              = 0, 
-  eCharType_RightToLeft              = 1, 
-  eCharType_EuropeanNumber           = 2,
-  eCharType_EuropeanNumberSeparator  = 3,
-  eCharType_EuropeanNumberTerminator = 4,
-  eCharType_ArabicNumber             = 5,
-  eCharType_CommonNumberSeparator    = 6,
-  eCharType_BlockSeparator           = 7,
-  eCharType_SegmentSeparator         = 8,
-  eCharType_WhiteSpaceNeutral        = 9, 
-  eCharType_OtherNeutral             = 10, 
-  eCharType_LeftToRightEmbedding     = 11,
-  eCharType_LeftToRightOverride      = 12,
-  eCharType_RightToLeftArabic        = 13,
-  eCharType_RightToLeftEmbedding     = 14,
-  eCharType_RightToLeftOverride      = 15,
-  eCharType_PopDirectionalFormat     = 16,
-  eCharType_DirNonSpacingMark        = 17,
-  eCharType_BoundaryNeutral          = 18,
-  eCharType_CharTypeCount
-};
-
-/**
- * This specifies the language directional property of a character set.
- */
-typedef enum nsCharType nsCharType;
-
-/**
- * definitions of bidirection character types by category
- */
-
-#define CHARTYPE_IS_RTL(val) ( ( (val) == eCharType_RightToLeft) || ( (val) == eCharType_RightToLeftArabic) )
-
-#define CHARTYPE_IS_WEAK(val) ( ( (val) == eCharType_EuropeanNumberSeparator)    \
-                           || ( (val) == eCharType_EuropeanNumberTerminator) \
-                           || ( ( (val) > eCharType_ArabicNumber) && ( (val) != eCharType_RightToLeftArabic) ) )
-
 /** option flags for WriteReverse() */
 /**
  * option bit for WriteReverse():
@@ -956,13 +884,6 @@ public:
    */
   nsresult WriteReverse(const PRUnichar *aSrc, PRInt32 aSrcLength, PRUnichar *aDest, PRUint16 aOptions, PRInt32 *aDestSize);
 
-  /**
-   * Give a UTF-32 codepoint
-   * return PR_TRUE if the codepoint is a Bidi control character (LRE, RLE, PDF, LRO, RLO, LRM, RLM)
-   * return PR_FALSE, otherwise
-   */
-  PRBool IsBidiControl(PRUint32 aChar);
-
 protected:
   /** length of the current text */
   PRInt32 mLength;
@@ -1030,27 +951,6 @@ private:
   void ReorderLine(nsBidiLevel aMinLevel, nsBidiLevel aMaxLevel);
 
   PRBool PrepareReorder(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap, nsBidiLevel *aMinLevel, nsBidiLevel *aMaxLevel);
-  /**
-   * Give a UTF-32 codepoint, return an eBidiCategory
-   */
-  eBidiCategory GetBidiCategory(PRUint32 aChar);
-
-  /**
-   * Give a UTF-32 codepoint and an eBidiCategory, 
-   * return PR_TRUE if the codepoint is in that category, 
-   * return PR_FALSE, otherwise
-   */
-  PRBool IsBidiCategory(PRUint32 aChar, eBidiCategory aBidiCategory);
-
-  /**
-   * Give a UTF-32 codepoint, return a nsCharType (compatible with ICU)
-   */
-  nsCharType GetCharType(PRUint32 aChar);
-
-  /**
-   * Give a Unicode character, return the symmetric equivalent
-   */
-  PRUint32 SymmSwap(PRUint32 aChar);
 
   PRInt32 doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
                          PRUnichar *dest, PRUint16 options);

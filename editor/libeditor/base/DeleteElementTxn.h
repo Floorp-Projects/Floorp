@@ -41,6 +41,7 @@
 #include "EditTxn.h"
 
 #include "nsIDOMNode.h"
+#include "nsIEditor.h"
 #include "nsCOMPtr.h"
 
 #define DELETE_ELEMENT_TXN_CID \
@@ -62,7 +63,7 @@ public:
   /** initialize the transaction.
     * @param aElement the node to delete
     */
-  NS_IMETHOD Init(nsIDOMNode *aElement, nsRangeUpdater *aRangeUpdater);
+  NS_IMETHOD Init(nsIEditor *aEditor, nsIDOMNode *aElement, nsRangeUpdater *aRangeUpdater);
 
 private:
   DeleteElementTxn();
@@ -82,6 +83,9 @@ protected:
 
   /** next sibling to remember for undo/redo purposes */
   nsCOMPtr<nsIDOMNode> mRefNode;
+
+  /** the editor for this transaction */
+  nsIEditor* mEditor;
 
   /** range updater object */
   nsRangeUpdater *mRangeUpdater;

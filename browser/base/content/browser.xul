@@ -107,7 +107,7 @@
       </hbox>
     </tooltip>
 
-    <popup type="autocomplete" chromedir="&locale.dir;" id="PopupAutoComplete"/>
+    <panel type="autocomplete" chromedir="&locale.dir;" id="PopupAutoComplete"/>
 
     <popup id="toolbar-context-menu"
            onpopupshowing="onViewToolbarsPopupShowing(event);">
@@ -132,6 +132,10 @@
     </popup>
 
     <popup id="placesContext"/>
+
+    <tooltip id="urlTooltip">
+      <label crop="center" flex="1"/>
+    </tooltip>
   </popupset>
 
 #ifndef MOZ_PLACES

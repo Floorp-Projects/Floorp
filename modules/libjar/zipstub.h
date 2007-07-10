@@ -91,8 +91,6 @@
 #define PR_CALLBACK
 #define PR_STATIC_CALLBACK(__x) static __x
 
-#define NS_STATIC_CAST(__type, __ptr)      ((__type)(__ptr))
-
 #define PRFileDesc          FILE
 typedef long                PRInt32;
 typedef PRInt32             PROffset32;

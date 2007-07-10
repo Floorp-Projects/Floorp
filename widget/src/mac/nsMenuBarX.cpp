@@ -256,7 +256,7 @@ nsMenuBarX :: InstallCommandEventHandler ( )
 {
   OSStatus err = noErr;
   
-  WindowRef myWindow = NS_REINTERPRET_CAST(WindowRef, mParent->GetNativeData(NS_NATIVE_DISPLAY));
+  WindowRef myWindow = reinterpret_cast<WindowRef>(mParent->GetNativeData(NS_NATIVE_DISPLAY));
   NS_ASSERTION ( myWindow, "Can't get WindowRef to install command handler!" );
   if ( myWindow && sCommandEventHandler ) {
     const EventTypeSpec commandEventList[] = {
@@ -295,7 +295,7 @@ nsMenuBarX :: CommandEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
   NS_ASSERTION(::GetEventKind(inEvent) == kEventCommandProcess,
                "CommandEventHandler asked to handle unknown event kind");
 
-  nsMenuBarX* self = NS_REINTERPRET_CAST(nsMenuBarX*, userData);
+  nsMenuBarX* self = reinterpret_cast<nsMenuBarX*>(userData);
   switch (command.commandID) {
     case kHICommandPreferences: {
       nsEventStatus status = self->ExecuteCommand(self->mPrefItemContent);
@@ -337,8 +337,8 @@ nsMenuBarX :: CommandEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
       // that content node. Recall that we store weak pointers to the content
       // nodes in the hash table.
       nsPRUint32Key key(command.commandID);
-      nsIMenuItem* content = NS_REINTERPRET_CAST(nsIMenuItem*,
-                                               self->mObserverTable.Get(&key));
+      nsIMenuItem* content = reinterpret_cast<nsIMenuItem*>
+                                             (self->mObserverTable.Get(&key));
       if (content) {
         content->DoCommand();
         handled = noErr;
@@ -396,8 +396,8 @@ nsEventStatus
 nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWindow, 
                             void * menubarNode, void * aDocShell )
 {
-  mDocShellWeakRef = do_GetWeakReference(NS_STATIC_CAST(nsIDocShell*, aDocShell));
-  nsIDOMNode* aDOMNode  = NS_STATIC_CAST(nsIDOMNode*, menubarNode);
+  mDocShellWeakRef = do_GetWeakReference(static_cast<nsIDocShell*>(aDocShell));
+  nsIDOMNode* aDOMNode  = static_cast<nsIDOMNode*>(menubarNode);
   mMenuBarContent = do_QueryInterface(aDOMNode);           // strong ref
   NS_ASSERTION ( mMenuBarContent, "No content specified for this menubar" );
   if ( !mMenuBarContent )
@@ -434,9 +434,9 @@ nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWin
         // Create nsMenu, the menubar will own it
         nsCOMPtr<nsIMenu> pnsMenu ( do_CreateInstance(kMenuCID) );
         if ( pnsMenu ) {
-          pnsMenu->Create(NS_STATIC_CAST(nsIMenuBar*, this), menuName, menuAccessKey, 
-                          NS_STATIC_CAST(nsIChangeManager *, this), 
-                          NS_REINTERPRET_CAST(nsIDocShell*, aDocShell), menu);
+          pnsMenu->Create(static_cast<nsIMenuBar*>(this), menuName, menuAccessKey, 
+                          static_cast<nsIChangeManager *>(this), 
+                          reinterpret_cast<nsIDocShell*>(aDocShell), menu);
 
           // Make nsMenu a child of nsMenuBar. nsMenuBar takes ownership
           AddMenu(pnsMenu); 
@@ -780,7 +780,7 @@ nsMenuBarX :: Lookup ( nsIContent *aContent, nsIChangeObserver **_retval )
   *_retval = nsnull;
   
   nsVoidKey key ( aContent );
-  *_retval = NS_REINTERPRET_CAST(nsIChangeObserver*, mObserverTable.Get(&key));
+  *_retval = reinterpret_cast<nsIChangeObserver*>(mObserverTable.Get(&key));
   NS_IF_ADDREF ( *_retval );
   
   return NS_OK;

@@ -74,7 +74,7 @@ SHARED_LIBRARY_LIBS = \
 
 ifndef MOZ_ENABLE_LIBXUL
 SHARED_LIBRARY_LIBS += \
-		../util/src/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
+		../util/src/internal/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
 		$(NULL)
 endif
 

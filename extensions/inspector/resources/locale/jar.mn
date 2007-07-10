@@ -7,8 +7,6 @@ inspector.jar:
   locale/@AB_CD@/inspector/prefs.dtd                  (@AB_CD@/prefs.dtd)
   locale/@AB_CD@/inspector/editing.dtd                (@AB_CD@/editing.dtd)
   locale/@AB_CD@/inspector/tasksOverlay.dtd           (@AB_CD@/tasksOverlay.dtd)
-  locale/@AB_CD@/inspector/search/findFiles.dtd       (@AB_CD@/search/findFiles.dtd)
-  locale/@AB_CD@/inspector/search/junkImgs.dtd        (@AB_CD@/search/junkImgs.dtd)
 * locale/@AB_CD@/inspector/viewers/dom.dtd            (@AB_CD@/viewers/dom.dtd)
 * locale/@AB_CD@/inspector/viewers/domNode.dtd        (@AB_CD@/viewers/domNode.dtd)
 * locale/@AB_CD@/inspector/viewers/styleRules.dtd     (@AB_CD@/viewers/styleRules.dtd)

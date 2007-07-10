@@ -639,7 +639,7 @@ nsWinReg::NativeCreateKey(const nsString& aSubkey, const nsString& aClassname)
         return nsInstall::UNEXPECTED_ERROR;
 
     root   = (HKEY)mRootKey;
-    result = RegCreateKeyEx(root, subkey.get(), 0, NS_CONST_CAST(char*, classname.get()),
+    result = RegCreateKeyEx(root, subkey.get(), 0, const_cast<char*>(classname.get()),
                 REG_OPTION_NON_VOLATILE, KEY_WRITE, nsnull, &newkey, &disposition);
 
     if(ERROR_SUCCESS == result)
@@ -759,7 +759,7 @@ nsWinReg::NativeGetValueString(const nsString& aSubkey, const nsString& aValname
             // this cast is ok until mozilla is compiled in UNICODE, then this
             // will break.
             nsAutoString value;
-            if (NS_SUCCEEDED( NS_CopyNativeToUnicode(nsDependentCString(NS_REINTERPRET_CAST(const char *, valbuf)), value) ) )
+            if (NS_SUCCEEDED( NS_CopyNativeToUnicode(nsDependentCString(reinterpret_cast<const char *>(valbuf)), value) ) )
               aReturn->Assign(value);
             else
               result = nsInstall::UNEXPECTED_ERROR;

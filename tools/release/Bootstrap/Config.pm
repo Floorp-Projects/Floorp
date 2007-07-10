@@ -38,13 +38,13 @@ sub Parse {
       || die("Can't open config file bootstrap.cfg");
 
     while (<CONFIG>) {
-        chomp; # no newline
-        s/#.*//; # no comments
+        # no comments or empty lines
+        next if ($_ =~ /^#/ || $_ =~ /^\s*$/);
         s/^\s+//; # no leading white
         s/\s+$//; # no trailing white
-        next unless length; # anything left?
+        chomp $_; # no newline
         my ($var, $value) = split(/\s*=\s*/, $_, 2);
-        $config{$var} = $value;
+        $this->Set(var => $var, value => $value);
     }
     close(CONFIG);
 }
@@ -93,6 +93,31 @@ sub Get {
     }
 }
 
+sub Set {
+    my $this = shift;
+
+    my %args = @_;
+
+    die "ASSERT: Config::Set(): null var and/or value\n" if
+     (!exists($args{'var'}) || !exists($args{'value'}));
+
+    die "ASSERT: Config::Set(): Cannot set null var\n" if
+     (!defined($args{'var'}) || 
+     (defined($args{'var'}) && $args{'var'} =~ /^\s*$/));
+
+    my $var = $args{'var'};
+    my $value = $args{'value'};
+    my $force = exists($args{'force'}) ? $args{'force'} : 0;
+
+    die "ASSERT: Config::Set(): $var already exists ($value)\n" if 
+     (!$force && exists($config{$var}));
+
+    die "ASSERT: Config::Set(): Attempt to set null value for var $var\n" if 
+     (!$force && (!defined($value) || $value =~ /^\s*$/));
+
+    return ($config{$var} = $value);
+}
+ 
 sub GetLocaleInfo {
     my $this = shift;
 

@@ -57,8 +57,6 @@ CPPSRCS		= \
 		nsBIG5HKSCSToUnicode.cpp \
 		nsUnicodeToBIG5HKSCS.cpp \
 		nsUnicodeToHKSCS.cpp \
-		nsCP950ToUnicode.cpp \
-		nsUnicodeToCP950.cpp \
 		$(NULL)
 
 ifdef MOZ_EXTRA_X11CONVERTERS

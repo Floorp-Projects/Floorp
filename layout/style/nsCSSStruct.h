@@ -199,7 +199,6 @@ typedef nsCSSStruct nsRuleDataStruct;
 
 struct nsCSSFont : public nsCSSStruct {
   nsCSSFont(void);
-  nsCSSFont(const nsCSSFont& aCopy);
   ~nsCSSFont(void);
 
   nsCSSValue mSystemFont;
@@ -210,15 +209,20 @@ struct nsCSSFont : public nsCSSStruct {
   nsCSSValue mSize;
   nsCSSValue mSizeAdjust; // NEW
   nsCSSValue mStretch; // NEW
+
+private:
+  nsCSSFont(const nsCSSFont& aOther); // NOT IMPLEMENTED
 };
 
 struct nsRuleDataFont : public nsCSSFont {
   PRBool mFamilyFromHTML; // Is the family from an HTML FONT element
+  nsRuleDataFont() {}
+private:
+  nsRuleDataFont(const nsRuleDataFont& aOther); // NOT IMPLEMENTED
 };
 
 struct nsCSSColor : public nsCSSStruct  {
   nsCSSColor(void);
-  nsCSSColor(const nsCSSColor& aCopy);
   ~nsCSSColor(void);
 
   nsCSSValue      mColor;
@@ -230,14 +234,18 @@ struct nsCSSColor : public nsCSSStruct  {
   nsCSSValue      mBackClip;
   nsCSSValue      mBackOrigin;
   nsCSSValue      mBackInlinePolicy;
+private:
+  nsCSSColor(const nsCSSColor& aOther); // NOT IMPLEMENTED
 };
 
 struct nsRuleDataColor : public nsCSSColor {
+  nsRuleDataColor() {}
+private:
+  nsRuleDataColor(const nsRuleDataColor& aOther); // NOT IMPLEMENTED
 };
 
 struct nsCSSText : public nsCSSStruct  {
   nsCSSText(void);
-  nsCSSText(const nsCSSText& aCopy);
   ~nsCSSText(void);
 
   nsCSSValue mWordSpacing;
@@ -251,14 +259,18 @@ struct nsCSSText : public nsCSSStruct  {
   nsCSSValue mUnicodeBidi;  // NEW
   nsCSSValue mLineHeight;
   nsCSSValue mWhiteSpace;
+private:
+  nsCSSText(const nsCSSText& aOther); // NOT IMPLEMENTED
 };
 
 struct nsRuleDataText : public nsCSSText {
+  nsRuleDataText() {}
+private:
+  nsRuleDataText(const nsRuleDataText& aOther); // NOT IMPLEMENTED
 };
 
 struct nsCSSDisplay : public nsCSSStruct  {
   nsCSSDisplay(void);
-  nsCSSDisplay(const nsCSSDisplay& aCopy);
   ~nsCSSDisplay(void);
 
   nsCSSValue mDirection;
@@ -278,15 +290,19 @@ struct nsCSSDisplay : public nsCSSStruct  {
   nsCSSValue mBreakBefore;
   nsCSSValue mBreakAfter;
   // end temp fix
+private:
+  nsCSSDisplay(const nsCSSDisplay& aOther); // NOT IMPLEMENTED
 };
 
 struct nsRuleDataDisplay : public nsCSSDisplay {
   nsCSSValue mLang;
+  nsRuleDataDisplay() {}
+private:
+  nsRuleDataDisplay(const nsRuleDataDisplay& aOther); // NOT IMPLEMENTED
 };
 
 struct nsCSSMargin : public nsCSSStruct  {
   nsCSSMargin(void);
-  nsCSSMargin(const nsCSSMargin& aCopy);
   ~nsCSSMargin(void);
 
   nsCSSRect   mMargin;
@@ -304,9 +320,27 @@ struct nsCSSMargin : public nsCSSStruct  {
   nsCSSValue  mPaddingRightLTRSource;
   nsCSSValue  mPaddingRightRTLSource;
   nsCSSRect   mBorderWidth;
+  nsCSSValue  mBorderStartWidth;
+  nsCSSValue  mBorderEndWidth;
+  nsCSSValue  mBorderLeftWidthLTRSource;
+  nsCSSValue  mBorderLeftWidthRTLSource;
+  nsCSSValue  mBorderRightWidthLTRSource;
+  nsCSSValue  mBorderRightWidthRTLSource;
   nsCSSRect   mBorderColor;
+  nsCSSValue  mBorderStartColor;
+  nsCSSValue  mBorderEndColor;
+  nsCSSValue  mBorderLeftColorLTRSource;
+  nsCSSValue  mBorderLeftColorRTLSource;
+  nsCSSValue  mBorderRightColorLTRSource;
+  nsCSSValue  mBorderRightColorRTLSource;
   nsCSSValueListRect mBorderColors;
   nsCSSRect   mBorderStyle;
+  nsCSSValue  mBorderStartStyle;
+  nsCSSValue  mBorderEndStyle;
+  nsCSSValue  mBorderLeftStyleLTRSource;
+  nsCSSValue  mBorderLeftStyleRTLSource;
+  nsCSSValue  mBorderRightStyleLTRSource;
+  nsCSSValue  mBorderRightStyleRTLSource;
   nsCSSRect   mBorderRadius;  // (extension)
   nsCSSValue  mOutlineWidth;
   nsCSSValue  mOutlineColor;
@@ -314,14 +348,18 @@ struct nsCSSMargin : public nsCSSStruct  {
   nsCSSValue  mOutlineOffset;
   nsCSSRect   mOutlineRadius; // (extension)
   nsCSSValue  mFloatEdge; // NEW
+private:
+  nsCSSMargin(const nsCSSMargin& aOther); // NOT IMPLEMENTED
 };
 
 struct nsRuleDataMargin : public nsCSSMargin {
+  nsRuleDataMargin() {}
+private:
+  nsRuleDataMargin(const nsRuleDataMargin& aOther); // NOT IMPLEMENTED
 };
 
 struct nsCSSPosition : public nsCSSStruct  {
   nsCSSPosition(void);
-  nsCSSPosition(const nsCSSPosition& aCopy);
   ~nsCSSPosition(void);
 
   nsCSSValue  mWidth;
@@ -333,28 +371,36 @@ struct nsCSSPosition : public nsCSSStruct  {
   nsCSSValue  mBoxSizing; // NEW
   nsCSSRect   mOffset;
   nsCSSValue  mZIndex;
+private:
+  nsCSSPosition(const nsCSSPosition& aOther); // NOT IMPLEMENTED
 };
 
 struct nsRuleDataPosition : public nsCSSPosition {
+  nsRuleDataPosition() {}
+private:
+  nsRuleDataPosition(const nsRuleDataPosition& aOther); // NOT IMPLEMENTED
 };
 
 struct nsCSSList : public nsCSSStruct  {
   nsCSSList(void);
-  nsCSSList(const nsCSSList& aCopy);
   ~nsCSSList(void);
 
   nsCSSValue mType;
   nsCSSValue mImage;
   nsCSSValue mPosition;
   nsCSSRect  mImageRegion;
+private:
+  nsCSSList(const nsCSSList& aOther); // NOT IMPLEMENTED
 };
 
 struct nsRuleDataList : public nsCSSList {
+  nsRuleDataList() {}
+private:
+  nsRuleDataList(const nsRuleDataList& aOther); // NOT IMPLEMENTED
 };
 
 struct nsCSSTable : public nsCSSStruct  { // NEW
   nsCSSTable(void);
-  nsCSSTable(const nsCSSTable& aCopy);
   ~nsCSSTable(void);
 
   nsCSSValue mBorderCollapse;
@@ -367,14 +413,18 @@ struct nsCSSTable : public nsCSSStruct  { // NEW
   nsCSSValue mRules; // Not mappable via CSS, only using HTML4 table attrs.
   nsCSSValue mSpan; // Not mappable via CSS, only using HTML4 table attrs.
   nsCSSValue mCols; // Not mappable via CSS, only using HTML4 table attrs.
+private:
+  nsCSSTable(const nsCSSTable& aOther); // NOT IMPLEMENTED
 };
 
 struct nsRuleDataTable : public nsCSSTable {
+  nsRuleDataTable() {}
+private:
+  nsRuleDataTable(const nsRuleDataTable& aOther); // NOT IMPLEMENTED
 };
 
 struct nsCSSBreaks : public nsCSSStruct  { // NEW
   nsCSSBreaks(void);
-  nsCSSBreaks(const nsCSSBreaks& aCopy);
   ~nsCSSBreaks(void);
 
   nsCSSValue mOrphans;
@@ -384,26 +434,34 @@ struct nsCSSBreaks : public nsCSSStruct  { // NEW
   //nsCSSValue mPageBreakAfter;
   //nsCSSValue mPageBreakBefore;
   nsCSSValue mPageBreakInside;
+private:
+  nsCSSBreaks(const nsCSSBreaks& aOther); // NOT IMPLEMENTED
 };
 
 struct nsRuleDataBreaks : public nsCSSBreaks {
+  nsRuleDataBreaks() {}
+private:
+  nsRuleDataBreaks(const nsRuleDataBreaks& aOther); // NOT IMPLEMENTED
 };
 
 struct nsCSSPage : public nsCSSStruct  { // NEW
   nsCSSPage(void);
-  nsCSSPage(const nsCSSPage& aCopy);
   ~nsCSSPage(void);
 
   nsCSSValue mMarks;
   nsCSSValuePair mSize;
+private:
+  nsCSSPage(const nsCSSPage& aOther); // NOT IMPLEMENTED
 };
 
 struct nsRuleDataPage : public nsCSSPage {
+  nsRuleDataPage() {}
+private:
+  nsRuleDataPage(const nsRuleDataPage& aOther); // NOT IMPLEMENTED
 };
 
 struct nsCSSContent : public nsCSSStruct  {
   nsCSSContent(void);
-  nsCSSContent(const nsCSSContent& aCopy);
   ~nsCSSContent(void);
 
   nsCSSValueList*   mContent;
@@ -411,14 +469,18 @@ struct nsCSSContent : public nsCSSStruct  {
   nsCSSCounterData* mCounterReset;
   nsCSSValue        mMarkerOffset;
   nsCSSQuotes*      mQuotes;
+private:
+  nsCSSContent(const nsCSSContent& aOther); // NOT IMPLEMENTED
 };
 
 struct nsRuleDataContent : public nsCSSContent {
+  nsRuleDataContent() {}
+private:
+  nsRuleDataContent(const nsRuleDataContent& aOther); // NOT IMPLEMENTED
 };
 
 struct nsCSSUserInterface : public nsCSSStruct  { // NEW
   nsCSSUserInterface(void);
-  nsCSSUserInterface(const nsCSSUserInterface& aCopy);
   ~nsCSSUserInterface(void);
 
   nsCSSValue      mUserInput;
@@ -429,14 +491,18 @@ struct nsCSSUserInterface : public nsCSSStruct  { // NEW
   nsCSSValueList* mCursor;
   nsCSSValue      mForceBrokenImageIcon;
   nsCSSValue      mIMEMode;
+private:
+  nsCSSUserInterface(const nsCSSUserInterface& aOther); // NOT IMPLEMENTED
 };
 
 struct nsRuleDataUserInterface : public nsCSSUserInterface {
+  nsRuleDataUserInterface() {}
+private:
+  nsRuleDataUserInterface(const nsRuleDataUserInterface& aOther); // NOT IMPLEMENTED
 };
 
 struct nsCSSAural : public nsCSSStruct  { // NEW
   nsCSSAural(void);
-  nsCSSAural(const nsCSSAural& aCopy);
   ~nsCSSAural(void);
 
   nsCSSValue mAzimuth;
@@ -457,14 +523,18 @@ struct nsCSSAural : public nsCSSStruct  { // NEW
   nsCSSValue mStress;
   nsCSSValue mVoiceFamily;
   nsCSSValue mVolume;
+private:
+  nsCSSAural(const nsCSSAural& aOther); // NOT IMPLEMENTED
 };
 
 struct nsRuleDataAural : public nsCSSAural {
+  nsRuleDataAural() {}
+private:
+  nsRuleDataAural(const nsRuleDataAural& aOther); // NOT IMPLEMENTED
 };
 
 struct nsCSSXUL : public nsCSSStruct  {
   nsCSSXUL(void);
-  nsCSSXUL(const nsCSSXUL& aCopy);
   ~nsCSSXUL(void);
 
   nsCSSValue  mBoxAlign;
@@ -473,28 +543,36 @@ struct nsCSSXUL : public nsCSSStruct  {
   nsCSSValue  mBoxOrient;
   nsCSSValue  mBoxPack;
   nsCSSValue  mBoxOrdinal;
+private:
+  nsCSSXUL(const nsCSSXUL& aOther); // NOT IMPLEMENTED
 };
 
 struct nsRuleDataXUL : public nsCSSXUL {
+  nsRuleDataXUL() {}
+private:
+  nsRuleDataXUL(const nsRuleDataXUL& aOther); // NOT IMPLEMENTED
 };
 
 struct nsCSSColumn : public nsCSSStruct  {
   nsCSSColumn(void);
-  nsCSSColumn(const nsCSSColumn& aCopy);
   ~nsCSSColumn(void);
 
   nsCSSValue  mColumnCount;
   nsCSSValue  mColumnWidth;
   nsCSSValue  mColumnGap;
+private:
+  nsCSSColumn(const nsCSSColumn& aOther); // NOT IMPLEMENTED
 };
 
 struct nsRuleDataColumn : public nsCSSColumn {
+  nsRuleDataColumn() {}
+private:
+  nsRuleDataColumn(const nsRuleDataColumn& aOther); // NOT IMPLEMENTED
 };
 
 #ifdef MOZ_SVG
 struct nsCSSSVG : public nsCSSStruct {
   nsCSSSVG(void);
-  nsCSSSVG(const nsCSSSVG& aCopy);
   ~nsCSSSVG(void);
 
   nsCSSValue mClipPath;
@@ -526,9 +604,14 @@ struct nsCSSSVG : public nsCSSStruct {
   nsCSSValue mStrokeWidth;
   nsCSSValue mTextAnchor;
   nsCSSValue mTextRendering;
+private:
+  nsCSSSVG(const nsCSSSVG& aOther); // NOT IMPLEMENTED
 };
 
 struct nsRuleDataSVG : public nsCSSSVG {
+  nsRuleDataSVG() {}
+private:
+  nsRuleDataSVG(const nsRuleDataSVG& aOther); // NOT IMPLEMENTED
 };
 #endif
 

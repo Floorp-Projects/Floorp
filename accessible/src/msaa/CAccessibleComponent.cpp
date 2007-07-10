@@ -67,8 +67,8 @@ CAccessibleComponent::QueryInterface(REFIID iid, void** ppv)
   *ppv = NULL;
 
   if (IID_IAccessibleComponent == iid) {
-    *ppv = NS_STATIC_CAST(IAccessibleComponent*, this);
-    (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
+    *ppv = static_cast<IAccessibleComponent*>(this);
+    (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
     return S_OK;
   }
 

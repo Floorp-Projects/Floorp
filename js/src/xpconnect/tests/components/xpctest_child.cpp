@@ -163,7 +163,7 @@ xpctestChild::QueryInterface(REFNSIID iid, void** result)
     if (iid.Equals(NS_GET_IID(nsIXPCTestChild)) ||
         iid.Equals(NS_GET_IID(nsIXPCTestParent)) ||
         iid.Equals(NS_GET_IID(nsISupports))) {
-        *result = NS_STATIC_CAST(nsIXPCTestChild*, this);
+        *result = static_cast<nsIXPCTestChild*>(this);
         NS_ADDREF(this);
         return NS_OK;
     }

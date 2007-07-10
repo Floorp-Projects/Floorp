@@ -184,6 +184,8 @@ pref("browser.cache.disk.capacity",         50000);
 pref("browser.enable_automatic_image_resizing", true);
 pref("browser.urlbar.autoFill", false);
 pref("browser.urlbar.matchOnlyTyped", false);
+pref("browser.urlbar.hideProtocols", "");
+pref("browser.urlbar.animateBlend", true);
 pref("browser.chrome.site_icons", true);
 pref("browser.chrome.favicons", true);
 pref("browser.formfill.enable", true);
@@ -278,7 +280,6 @@ pref("dom.disable_open_during_load",              true);
 #ifdef DEBUG
 pref("javascript.options.showInConsole",          true);
 pref("javascript.options.strict",                 true);
-pref("browser.dom.window.dump.enabled",           true);
 pref("general.warnOnAboutConfig",                 false);
 #else
 pref("javascript.options.showInConsole",          false);

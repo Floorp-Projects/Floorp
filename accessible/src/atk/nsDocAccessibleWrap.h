@@ -54,10 +54,10 @@ public:
   nsDocAccessibleWrap(nsIDOMNode *aNode, nsIWeakReference *aShell);
   virtual ~nsDocAccessibleWrap();
 
-  NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible,
-                              void* aData);
+  // Override SetEditor because we need to recreate atkobject
+  // when editable interface is added/removed
+  void SetEditor(nsIEditor* aEditor);
 
-protected:
   PRBool mActivated;
 };
 

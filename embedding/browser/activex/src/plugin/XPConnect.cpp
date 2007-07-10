@@ -107,11 +107,11 @@ nsScriptablePeer::QueryInterface(const nsIID & aIID, void **aInstancePtr)
 
     nsISupports* foundInterface = nsnull;
     if (aIID.Equals(NS_GET_IID(nsISupports)))
-        foundInterface = NS_STATIC_CAST(nsISupports *, NS_STATIC_CAST(nsIClassInfo *, this));
+        foundInterface = static_cast<nsISupports *>(static_cast<nsIClassInfo *>(this));
     else if (aIID.Equals(NS_GET_IID(nsIClassInfo)))
-        foundInterface = NS_STATIC_CAST(nsIClassInfo*, this);
+        foundInterface = static_cast<nsIClassInfo*>(this);
     else if (aIID.Equals(NS_GET_IID(nsIMozAxPlugin)))
-        foundInterface = NS_STATIC_CAST(nsIMozAxPlugin*, this);
+        foundInterface = static_cast<nsIMozAxPlugin*>(this);
     else if (memcmp(&aIID, &__uuidof(IDispatch), sizeof(nsID)) == 0)
     {
         HRESULT hr = mTearOff->QueryInterface(__uuidof(IDispatch), aInstancePtr);
@@ -751,7 +751,7 @@ nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wF
 
     nsCOMPtr<nsIDOMElement> element;
     NPN_GetValue(mPlugin->pPluginInstance, NPNVDOMElement, 
-        NS_STATIC_CAST(nsIDOMElement **, getter_AddRefs(element)));
+        static_cast<nsIDOMElement **>(getter_AddRefs(element)));
     if (!element)
     {
         NS_ERROR("can't get the object element");
@@ -770,7 +770,7 @@ nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wF
     // Fire the script event handler...
     nsCOMPtr<nsIDOMWindow> window;
     NPN_GetValue(mPlugin->pPluginInstance, NPNVDOMWindow, 
-        NS_STATIC_CAST(nsIDOMWindow **, getter_AddRefs(window)));
+        static_cast<nsIDOMWindow **>(getter_AddRefs(window)));
     
     nsCOMPtr<nsIScriptEventManager> eventManager(do_GetInterface(window));
     if (!eventManager) return S_OK;

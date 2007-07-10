@@ -227,7 +227,7 @@ nsAssignmentSet::Equals(const nsAssignmentSet& aSet) const
 PLHashNumber
 Instantiation::Hash(const void* aKey)
 {
-    const Instantiation* inst = NS_STATIC_CAST(const Instantiation*, aKey);
+    const Instantiation* inst = static_cast<const Instantiation*>(aKey);
 
     PLHashNumber result = 0;
 
@@ -243,8 +243,8 @@ Instantiation::Hash(const void* aKey)
 PRIntn
 Instantiation::Compare(const void* aLeft, const void* aRight)
 {
-    const Instantiation* left  = NS_STATIC_CAST(const Instantiation*, aLeft);
-    const Instantiation* right = NS_STATIC_CAST(const Instantiation*, aRight);
+    const Instantiation* left  = static_cast<const Instantiation*>(aLeft);
+    const Instantiation* right = static_cast<const Instantiation*>(aRight);
 
     return *left == *right;
 }

@@ -198,7 +198,7 @@ NS_IMETHODIMP nsAccessNode::Shutdown()
 
 NS_IMETHODIMP nsAccessNode::GetUniqueID(void **aUniqueID)
 {
-  *aUniqueID = NS_STATIC_CAST(void*, mDOMNode);
+  *aUniqueID = static_cast<void*>(mDOMNode);
   return NS_OK;
 }
 
@@ -293,6 +293,8 @@ void nsAccessNode::ShutdownXPAccessibility()
   NS_IF_RELEASE(gDoCommandTimer);
   NS_IF_RELEASE(gLastFocusedNode);
   NS_IF_RELEASE(sAccService);
+
+  nsApplicationAccessibleWrap::Unload();
   NS_IF_RELEASE(gApplicationAccessible);
 
   ClearCache(gGlobalDocAccessibleCache);
@@ -657,7 +659,7 @@ nsAccessNode::GetDocAccessibleFor(nsIWeakReference *aPresShell)
 {
   nsIAccessibleDocument *docAccessible = nsnull;
   nsCOMPtr<nsIAccessNode> accessNode;
-  gGlobalDocAccessibleCache.Get(NS_STATIC_CAST(void*, aPresShell), getter_AddRefs(accessNode));
+  gGlobalDocAccessibleCache.Get(static_cast<void*>(aPresShell), getter_AddRefs(accessNode));
   if (accessNode) {
     CallQueryInterface(accessNode, &docAccessible);
   }

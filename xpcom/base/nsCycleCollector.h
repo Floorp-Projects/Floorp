@@ -51,9 +51,9 @@ struct nsCycleCollectionLanguageRuntime
     virtual nsCycleCollectionParticipant *ToParticipant(void *p) = 0;
 };
 
-NS_COM void nsCycleCollector_suspect(nsISupports *n);
+NS_COM PRBool nsCycleCollector_suspect(nsISupports *n);
 NS_COM void nsCycleCollector_suspectCurrent(nsISupports *n);
-NS_COM void nsCycleCollector_forget(nsISupports *n);
+NS_COM PRBool nsCycleCollector_forget(nsISupports *n);
 nsresult nsCycleCollector_startup();
 NS_COM void nsCycleCollector_collect();
 void nsCycleCollector_shutdown();

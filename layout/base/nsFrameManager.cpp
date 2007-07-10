@@ -128,7 +128,7 @@ PlaceholderMapMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                          const void *key)
 {
   const PlaceholderMapEntry *entry =
-    NS_STATIC_CAST(const PlaceholderMapEntry*, hdr);
+    static_cast<const PlaceholderMapEntry*>(hdr);
   NS_ASSERTION(entry->placeholderFrame->GetOutOfFlowFrame() !=
                (void*)0xdddddddd,
                "Dead placeholder in placeholder map");
@@ -165,7 +165,7 @@ PrimaryFrameMapMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                          const void *key)
 {
   const PrimaryFrameMapEntry *entry =
-    NS_STATIC_CAST(const PrimaryFrameMapEntry*, hdr);
+    static_cast<const PrimaryFrameMapEntry*>(hdr);
   return entry->frame->GetContent() == key;
 }
 
@@ -335,8 +335,8 @@ nsFrameManager::GetPrimaryFrameFor(nsIContent* aContent,
   }
 
   if (mPrimaryFrameMap.ops) {
-    PrimaryFrameMapEntry *entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
-        PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_LOOKUP));
+    PrimaryFrameMapEntry *entry = static_cast<PrimaryFrameMapEntry*>
+                                             (PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
       return entry->frame;
     }
@@ -374,8 +374,8 @@ nsFrameManager::GetPrimaryFrameFor(nsIContent* aContent,
                   prevSibling->IsNodeOfType(nsINode::eCOMMENT) ||
                   prevSibling->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)));
         if (prevSibling) {
-          entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
-                          PL_DHashTableOperate(&mPrimaryFrameMap, prevSibling,
+          entry = static_cast<PrimaryFrameMapEntry*>
+                             (PL_DHashTableOperate(&mPrimaryFrameMap, prevSibling,
                                                PL_DHASH_LOOKUP));
           if (PL_DHASH_ENTRY_IS_BUSY(entry))
             hint.mPrimaryFrameForPrevSibling = entry->frame;
@@ -421,8 +421,8 @@ nsFrameManager::SetPrimaryFrameFor(nsIContent* aContent,
   }
 
   // Add a mapping to the hash table
-  PrimaryFrameMapEntry *entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
-      PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_ADD));
+  PrimaryFrameMapEntry *entry = static_cast<PrimaryFrameMapEntry*>
+                                           (PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_ADD));
 #ifdef DEBUG_dbaron
   if (entry->frame) {
     NS_WARNING("already have primary frame for content");
@@ -440,8 +440,8 @@ nsFrameManager::RemoveAsPrimaryFrame(nsIContent* aContent,
 {
   NS_PRECONDITION(aPrimaryFrame, "Must have a frame");
   if (aContent && mPrimaryFrameMap.ops) {
-    PrimaryFrameMapEntry *entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
-        PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_LOOKUP));
+    PrimaryFrameMapEntry *entry = static_cast<PrimaryFrameMapEntry*>
+                                             (PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->frame == aPrimaryFrame) {
       // Don't use PL_DHashTableRawRemove, since we want the table to
       // shrink as needed.
@@ -468,8 +468,8 @@ nsFrameManager::GetPlaceholderFrameFor(nsIFrame*  aFrame)
   NS_PRECONDITION(aFrame, "null param unexpected");
 
   if (mPlaceholderMap.ops) {
-    PlaceholderMapEntry *entry = NS_STATIC_CAST(PlaceholderMapEntry*,
-           PL_DHashTableOperate(NS_CONST_CAST(PLDHashTable*, &mPlaceholderMap),
+    PlaceholderMapEntry *entry = static_cast<PlaceholderMapEntry*>
+                                            (PL_DHashTableOperate(const_cast<PLDHashTable*>(&mPlaceholderMap),
                                 aFrame, PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
       return entry->placeholderFrame;
@@ -492,8 +492,7 @@ nsFrameManager::RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
-  PlaceholderMapEntry *entry = NS_STATIC_CAST(PlaceholderMapEntry*, 
-         PL_DHashTableOperate(&mPlaceholderMap,
+  PlaceholderMapEntry *entry = static_cast<PlaceholderMapEntry*>(PL_DHashTableOperate(&mPlaceholderMap,
                               aPlaceholderFrame->GetOutOfFlowFrame(),
                               PL_DHASH_ADD));
   if (!entry)
@@ -523,7 +522,7 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 UnregisterPlaceholders(PLDHashTable* table, PLDHashEntryHdr* hdr,
                        PRUint32 number, void* arg)
 {
-  PlaceholderMapEntry* entry = NS_STATIC_CAST(PlaceholderMapEntry*, hdr);
+  PlaceholderMapEntry* entry = static_cast<PlaceholderMapEntry*>(hdr);
   entry->placeholderFrame->SetOutOfFlowFrame(nsnull);
   return PL_DHASH_NEXT;
 }
@@ -701,8 +700,8 @@ nsFrameManager::NotifyDestroyingFrame(nsIFrame* aFrame)
   // during frame destruction, since this problem keeps coming back to
   // bite us.  We may want to remove the previous caller.
   if (mPrimaryFrameMap.ops) {
-    PrimaryFrameMapEntry *entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
-        PL_DHashTableOperate(&mPrimaryFrameMap, aFrame->GetContent(), PL_DHASH_LOOKUP));
+    PrimaryFrameMapEntry *entry = static_cast<PrimaryFrameMapEntry*>
+                                             (PL_DHashTableOperate(&mPrimaryFrameMap, aFrame->GetContent(), PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->frame == aFrame) {
       NS_NOTREACHED("frame was not removed from primary frame map before "
                     "destruction or was readded to map after being removed");
@@ -724,10 +723,10 @@ DumpContext(nsIFrame* aFrame, nsStyleContext* aContext)
       frameDebug->GetFrameName(name);
       fputs(NS_LossyConvertUTF16toASCII(name).get(), stdout);
     }
-    fprintf(stdout, " (%p)", NS_STATIC_CAST(void*, aFrame));
+    fprintf(stdout, " (%p)", static_cast<void*>(aFrame));
   }
   if (aContext) {
-    fprintf(stdout, " style: %p ", NS_STATIC_CAST(void*, aContext));
+    fprintf(stdout, " style: %p ", static_cast<void*>(aContext));
 
     nsIAtom* pseudoTag = aContext->GetPseudoType();
     if (pseudoTag) {
@@ -980,7 +979,7 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
         // oldContext)" check will prevent us from redoing work.
         if ((aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
             !aFrame->GetPrevInFlow()) {
-          nsIFrame* sib = NS_STATIC_CAST(nsIFrame*, aFrame->GetProperty(nsGkAtoms::IBSplitSpecialSibling));
+          nsIFrame* sib = static_cast<nsIFrame*>(aFrame->GetProperty(nsGkAtoms::IBSplitSpecialSibling));
           if (sib) {
             ReParentStyleContext(sib);
           }
@@ -1238,8 +1237,8 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
           if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
             aChangeList->AppendChange(nsnull,
                                       undisplayed->mContent
-                                      ? NS_STATIC_CAST(nsIContent*,
-                                                       undisplayed->mContent)
+                                      ? static_cast<nsIContent*>
+                                                   (undisplayed->mContent)
                                       : localContent, 
                                       NS_STYLE_HINT_FRAMECHANGE);
             // The node should be removed from the undisplayed map when
@@ -1436,8 +1435,8 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
       return topLevelChange;
     }
     
-    frame2 = NS_STATIC_CAST(nsIFrame*,
-         propTable->GetProperty(frame2, nsGkAtoms::IBSplitSpecialSibling));
+    frame2 = static_cast<nsIFrame*>
+                        (propTable->GetProperty(frame2, nsGkAtoms::IBSplitSpecialSibling));
     frame = frame2;
   } while (frame2);
   return topLevelChange;

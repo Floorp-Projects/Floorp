@@ -108,7 +108,7 @@ getIndexAtCB(AtkTable *aTable, gint aRow, gint aColumn)
     nsresult rv = accTable->GetIndexAt(aRow, aColumn, &index);
     NS_ENSURE_SUCCESS(rv, -1);
 
-    return NS_STATIC_CAST(gint, index);
+    return static_cast<gint>(index);
 }
 
 gint
@@ -127,7 +127,7 @@ getColumnAtIndexCB(AtkTable *aTable, gint aIndex)
     nsresult rv = accTable->GetColumnAtIndex(aIndex, &col);
     NS_ENSURE_SUCCESS(rv, -1);
 
-    return NS_STATIC_CAST(gint, col);
+    return static_cast<gint>(col);
 }
 
 gint
@@ -146,7 +146,7 @@ getRowAtIndexCB(AtkTable *aTable, gint aIndex)
     nsresult rv = accTable->GetRowAtIndex(aIndex, &row);
     NS_ENSURE_SUCCESS(rv, -1);
 
-    return NS_STATIC_CAST(gint, row);
+    return static_cast<gint>(row);
 }
 
 gint
@@ -165,7 +165,7 @@ getColumnCountCB(AtkTable *aTable)
     nsresult rv = accTable->GetColumns(&count);
     NS_ENSURE_SUCCESS(rv, -1);
 
-    return NS_STATIC_CAST(gint, count);
+    return static_cast<gint>(count);
 }
 
 gint
@@ -184,7 +184,7 @@ getRowCountCB(AtkTable *aTable)
     nsresult rv = accTable->GetRows(&count);
     NS_ENSURE_SUCCESS(rv, -1);
 
-    return NS_STATIC_CAST(gint, count);
+    return static_cast<gint>(count);
 }
 
 gint
@@ -204,7 +204,7 @@ getColumnExtentAtCB(AtkTable *aTable,
     nsresult rv = accTable->GetColumnExtentAt(aRow, aColumn, &extent);
     NS_ENSURE_SUCCESS(rv, -1);
 
-    return NS_STATIC_CAST(gint, extent);
+    return static_cast<gint>(extent);
 }
 
 gint
@@ -224,7 +224,7 @@ getRowExtentAtCB(AtkTable *aTable,
     nsresult rv = accTable->GetRowExtentAt(aRow, aColumn, &extent);
     NS_ENSURE_SUCCESS(rv, -1);
 
-    return NS_STATIC_CAST(gint, extent);
+    return static_cast<gint>(extent);
 }
 
 AtkObject*
@@ -375,7 +375,7 @@ getSelectedColumnsCB(AtkTable *aTable, gint **aSelected)
 
     //copy
     for (PRUint32 index = 0; index < size; ++index)
-        atkColumns[index] = NS_STATIC_CAST(gint, columns[index]);
+        atkColumns[index] = static_cast<gint>(columns[index]);
     nsMemory::Free(columns);
 
     *aSelected = atkColumns;
@@ -410,7 +410,7 @@ getSelectedRowsCB(AtkTable *aTable, gint **aSelected)
 
     //copy
     for (PRUint32 index = 0; index < size; ++index)
-        atkRows[index] = NS_STATIC_CAST(gint, rows[index]);
+        atkRows[index] = static_cast<gint>(rows[index]);
     nsMemory::Free(rows);
 
     *aSelected = atkRows;
@@ -431,7 +431,7 @@ isColumnSelectedCB(AtkTable *aTable, gint aColumn)
 
     PRBool outValue;
     nsresult rv = accTable->IsColumnSelected(aColumn, &outValue);
-    return NS_FAILED(rv) ? FALSE : NS_STATIC_CAST(gboolean, outValue);
+    return NS_FAILED(rv) ? FALSE : static_cast<gboolean>(outValue);
 }
 
 gboolean
@@ -448,7 +448,7 @@ isRowSelectedCB(AtkTable *aTable, gint aRow)
 
     PRBool outValue;
     nsresult rv = accTable->IsRowSelected(aRow, &outValue);
-    return NS_FAILED(rv) ? FALSE : NS_STATIC_CAST(gboolean, outValue);
+    return NS_FAILED(rv) ? FALSE : static_cast<gboolean>(outValue);
 }
 
 gboolean
@@ -465,5 +465,5 @@ isCellSelectedCB(AtkTable *aTable, gint aRow, gint aColumn)
 
     PRBool outValue;
     nsresult rv = accTable->IsCellSelected(aRow, aColumn, &outValue);
-    return NS_FAILED(rv) ? FALSE : NS_STATIC_CAST(gboolean, outValue);
+    return NS_FAILED(rv) ? FALSE : static_cast<gboolean>(outValue);
 }

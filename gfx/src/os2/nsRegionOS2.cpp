@@ -118,7 +118,7 @@ nsresult nsRegionOS2::Init (void)
 
 void nsRegionOS2::SetTo (const nsIRegion &aRegion)
 {
-  const nsRegionOS2* pRegion = NS_STATIC_CAST (const nsRegionOS2*, &aRegion);
+  const nsRegionOS2* pRegion = static_cast<const nsRegionOS2*>(&aRegion);
   mRegion = pRegion->mRegion;
 }
 
@@ -129,7 +129,7 @@ void nsRegionOS2::SetTo (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight
 
 void nsRegionOS2::Intersect (const nsIRegion &aRegion)
 {
-  const nsRegionOS2* pRegion = NS_STATIC_CAST (const nsRegionOS2*, &aRegion);
+  const nsRegionOS2* pRegion = static_cast<const nsRegionOS2*>(&aRegion);
   mRegion.And (mRegion, pRegion->mRegion);
 }
 
@@ -140,7 +140,7 @@ void nsRegionOS2::Intersect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHe
 
 void nsRegionOS2::Union (const nsIRegion &aRegion)
 {
-  const nsRegionOS2* pRegion = NS_STATIC_CAST (const nsRegionOS2*, &aRegion);
+  const nsRegionOS2* pRegion = static_cast<const nsRegionOS2*>(&aRegion);
   mRegion.Or (mRegion, pRegion->mRegion);
 }
 
@@ -151,7 +151,7 @@ void nsRegionOS2::Union (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight
 
 void nsRegionOS2::Subtract (const nsIRegion &aRegion)
 {
-  const nsRegionOS2* pRegion = NS_STATIC_CAST (const nsRegionOS2*, &aRegion);
+  const nsRegionOS2* pRegion = static_cast<const nsRegionOS2*>(&aRegion);
   mRegion.Sub (mRegion, pRegion->mRegion);
 }
 
@@ -167,7 +167,7 @@ PRBool nsRegionOS2::IsEmpty (void)
 
 PRBool nsRegionOS2::IsEqual (const nsIRegion &aRegion)
 {
-  const nsRegionOS2* pRegion = NS_STATIC_CAST (const nsRegionOS2*, &aRegion);
+  const nsRegionOS2* pRegion = static_cast<const nsRegionOS2*>(&aRegion);
   return mRegion.IsEqual (pRegion->mRegion);
 }
 
@@ -203,15 +203,15 @@ nsresult nsRegionOS2::GetRects (nsRegionRectSet **aRects)
   if (!pRegionSet)                          // Not yet allocated
   {
     PRUint8* pBuf = new PRUint8 [sizeof (nsRegionRectSet) + NumRects * sizeof (nsRegionRect)];
-    pRegionSet = NS_REINTERPRET_CAST (nsRegionRectSet*, pBuf);
+    pRegionSet = reinterpret_cast<nsRegionRectSet*>(pBuf);
     pRegionSet->mRectsLen = NumRects + 1;
   } else                                    // Already allocated in previous call
   {
     if (NumRects > pRegionSet->mRectsLen)   // passed array is not big enough - reallocate it.
     {
-      delete [] NS_REINTERPRET_CAST (PRUint8*, pRegionSet);
+      delete [] reinterpret_cast<PRUint8*>(pRegionSet);
       PRUint8* pBuf = new PRUint8 [sizeof (nsRegionRectSet) + NumRects * sizeof (nsRegionRect)];
-      pRegionSet = NS_REINTERPRET_CAST (nsRegionRectSet*, pBuf);
+      pRegionSet = reinterpret_cast<nsRegionRectSet*>(pBuf);
       pRegionSet->mRectsLen = NumRects + 1;
     }
   }
@@ -241,7 +241,7 @@ nsresult nsRegionOS2::FreeRects (nsRegionRectSet *aRects)
   if (!aRects)
     return NS_ERROR_NULL_POINTER;
 
-  delete [] NS_REINTERPRET_CAST (PRUint8*, aRects);
+  delete [] reinterpret_cast<PRUint8*>(aRects);
   return NS_OK;
 }
 

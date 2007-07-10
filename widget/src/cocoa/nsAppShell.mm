@@ -252,7 +252,7 @@ nsAppShell::ScheduleNativeEventCallback()
 {
   NS_ADDREF(this);
 
-  void* self = NS_STATIC_CAST(void*, this);
+  void* self = static_cast<void*>(this);
   NSData* data = [[NSData alloc] initWithBytes:&self length:sizeof(this)];
   NSArray* components = [[NSArray alloc] initWithObjects:&data count:1];
 
@@ -387,8 +387,8 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
   NS_ASSERTION(mAutoreleasePools && count,
                "Processed an event, but there's no autorelease pool?");
 
-  NSAutoreleasePool* pool = NS_STATIC_CAST(const NSAutoreleasePool*,
-                               ::CFArrayGetValueAtIndex(mAutoreleasePools,
+  NSAutoreleasePool* pool = static_cast<const NSAutoreleasePool*>
+                                       (::CFArrayGetValueAtIndex(mAutoreleasePools,
                                                         count - 1));
   ::CFArrayRemoveValueAtIndex(mAutoreleasePools, count - 1);
   [pool release];
@@ -432,7 +432,7 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
 - (void)handlePortMessage:(NSPortMessage*)aPortMessage
 {
   NSData* data = [[aPortMessage components] objectAtIndex:0];
-  nsAppShell* appShell = *NS_STATIC_CAST(nsAppShell* const*,[data bytes]);
+  nsAppShell* appShell = *static_cast<nsAppShell* const*>([data bytes]);
   appShell->ProcessGeckoEvents();
 
   NS_RELEASE(appShell);

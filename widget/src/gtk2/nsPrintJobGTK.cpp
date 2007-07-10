@@ -45,6 +45,8 @@
 #include "nsPrintJobGTK.h"
 #include "nsPSPrinters.h"
 #include "nsReadableUtils.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsIFileStreams.h"
 
 #include "prenv.h"
 #include "prinit.h"
@@ -64,29 +66,64 @@ static PRStatus EnvSetPrinter(nsCString&);
 static void EnvClear();
 
 
-/* ~nsIPrintJobGTK() is virtual, so must implement a destructor. */
-nsIPrintJobGTK::~nsIPrintJobGTK() {}
-
-//#ifdef OLD_GFX_PRINTING
-/**** nsPrintJobPreviewGTK - Stub class for print preview ****/
-nsresult
-nsPrintJobPreviewGTK::Init(nsDeviceContextSpecGTK *aSpec)
+/* Interface class. It implements a spoolfile getter and destructor
+ * so that none of the subclasses have to.
+ */
+nsIPrintJobGTK::~nsIPrintJobGTK()
 {
+    if (mSpoolFile)
+        mSpoolFile->Remove(PR_FALSE);
+}
+
+nsresult
+nsIPrintJobGTK::GetSpoolFile(nsILocalFile **aFile)
+{
+    if (!mSpoolFile)
+        return NS_ERROR_NOT_INITIALIZED;
+    *aFile = mSpoolFile;
+    NS_ADDREF(*aFile);
     return NS_OK;
 }
 
+/**** nsPrintJobPreviewGTK - Stub class for print preview ****/
+
+/* nsDeviceContextSpecGTK needs a spool file even for print preview, so this
+ * class includes code to create one. Some of the other print job classes
+ * inherit from this one to reuse the spoolfile initializer.
+ */
+
+nsresult
+nsPrintJobPreviewGTK::InitSpoolFile(PRUint32 aPermissions)
+{
+    nsCOMPtr<nsIFile> spoolFile;
+    nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR,
+                                         getter_AddRefs(spoolFile));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE);
+
+    spoolFile->AppendNative(NS_LITERAL_CSTRING("tmp.prn"));
+    
+    rv = spoolFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, aPermissions);
+    if (NS_FAILED(rv))
+        return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
+    mSpoolFile = do_QueryInterface(spoolFile, &rv);
+    if (NS_FAILED(rv))
+        spoolFile->Remove(PR_FALSE);
+
+    return rv;
+}
+
+nsresult
+nsPrintJobPreviewGTK::Init(nsDeviceContextSpecGTK *aSpec)
+{
+#ifdef DEBUG
+    PRBool isPreview;
+    aSpec->GetIsPrintPreview(isPreview);
+    NS_PRECONDITION(isPreview, "This print job is to a printer");
+#endif
+    return InitSpoolFile(0600);
+}
 
 /**** nsPrintJobFileGTK - Print-to-file support ****/
-
-/* Print-to-file constructor */
-nsPrintJobFileGTK::nsPrintJobFileGTK() : mDestHandle(nsnull) { }
-
-/* Print-to-file destructor */
-nsPrintJobFileGTK::~nsPrintJobFileGTK()
-{
-    if (mDestHandle)
-        fclose(mDestHandle);
-}
 
 /**
  * Initialize the print-to-file object from the printing spec.
@@ -101,174 +138,39 @@ nsPrintJobFileGTK::Init(nsDeviceContextSpecGTK *aSpec)
     aSpec->GetToPrinter(toPrinter);
     NS_PRECONDITION(!toPrinter, "This print job is to a printer");
 #endif
-    const char *path;
-    aSpec->GetPath(&path);
-    mDestination = path;
-    return NS_OK;
-}
 
-
-/**
- * Create the final output file and copy the temporary files there.
- * See nsIPrintJobGTK.h and nsPrintJobGTK.h for details.
- */
-nsresult
-nsPrintJobFileGTK::StartSubmission(FILE **aHandle)
-{
-    NS_PRECONDITION(aHandle, "aHandle is NULL");
-    NS_PRECONDITION(!mDestination.IsEmpty(), "No destination");
-    NS_PRECONDITION(!mDestHandle, "Already have a destination handle");
-
-    nsCOMPtr<nsILocalFile> destFile;
-    nsresult rv = NS_NewNativeLocalFile(GetDestination(),
-            PR_FALSE, getter_AddRefs(destFile));
-    if (NS_SUCCEEDED(rv))
-        rv = destFile->OpenANSIFileDesc("w", &mDestHandle);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE);
-    NS_POSTCONDITION(mDestHandle,
-            "OpenANSIFileDesc succeeded but no file handle");
-    *aHandle = mDestHandle;
-    return rv;
-}
-
-
-/**
- * Finish a print job. See nsIPrintJobGTK.h and nsPrintJobGTK.h for details.
- */
-nsresult
-nsPrintJobFileGTK::FinishSubmission()
-{
-    NS_PRECONDITION(mDestHandle, "No destination file handle");
-
-    fclose(mDestHandle);
-    mDestHandle = nsnull;
-    return NS_OK;
-}
-
-//#endif /* OLD_GFX_PRINTING */
-
-
-#ifdef VMS
-
-/**** Print-to-command on VMS. ****/
-
-/* This implementation writes the print job to a temporary file, then runs
- * the print command with the name of that file appended.
- */
-
-
-/**
- * Initialize a VMS print-to-command object from the printing spec.
- * See nsIPrintJobGTK.h and nsPrintJobGTK.h.
- */
-nsresult
-nsPrintJobVMSCmdGTK::Init(nsIDeviceContextSpec *aSpec)
-{
-    NS_PRECONDITION(aSpec, "argument must not be NULL");
-#ifdef DEBUG
-    PRBool toPrinter;
-    aSpec->GetToPrinter(toPrinter);
-    NS_PRECONDITION(toPrinter, "This print job is not to a printer");
-#endif
-
-    /* Print command. This is stored as the destination string. */
-    const char *command;
-    aSpec->GetCommand(&command);
-    SetDestination(command);
-
-    /* Printer name */
-    const char *printerName;
-    aSpec->GetPrinterName(&printerName);
-    if (printerName) {
-        const char *slash = strchr(printerName, '/');
-        if (slash)
-            printerName = slash + 1;
-        if (0 != strcmp(printerName, "default"))
-            mPrinterName = printerName;
-    }
-    return NS_OK;
-}
-
-
-/**
- * Create the temporary file for the print job and return a file handle
- * to the caller.
- * See nsIPrintJobGTK.h and nsPrintJobGTK.h for details.
- */
-nsresult
-nsPrintJobVMSCmdGTK::StartSubmission(FILE **aHandle)
-{
-    NS_PRECONDITION(aHandle, "aHandle is NULL");
-    NS_PRECONDITION(!GetDestination().IsEmpty(), "No destination");
-    NS_PRECONDITION(!GetDestHandle(), "Already have a destination handle");
-
-    /* Create the final output file */
-    FILE *printHandle = nsnull;
-    nsresult rv = mTempFactory.CreateTempFile(
-            getter_AddRefs(mTempFile), &printHandle, "w+");
+    // The final output file will inherit the permissions of the temporary.
+    nsresult rv = InitSpoolFile(0666);
     if (NS_SUCCEEDED(rv)) {
-        SetDestHandle(printHandle);
-        *aHandle = printHandle;
+        const char *path;
+        aSpec->GetPath(&path);
+        rv = NS_NewNativeLocalFile(nsDependentCString(path), PR_FALSE,
+                                   getter_AddRefs(mDestFile));
     }
     return rv;
 }
 
 nsresult
-nsPrintJobVMSCmdGTK::FinishSubmission()
+nsPrintJobFileGTK::Submit()
 {
-    NS_PRECONDITION(GetDestHandle(), "No destination file handle");
-    NS_PRECONDITION(!GetDestination().IsEmpty(), "No destination");
-
-    /* Close the temporary file handle */
-    fclose(GetDestHandle());
-    SetDestHandle(nsnull);
-
-    /* construct the print command */
-    nsCAutoString printFileName;
-    nsresult rv = mTempFile->GetNativePath(printFileName);
+    // Move the spool file to the destination
+    nsAutoString destLeafName;
+    nsresult rv = mDestFile->GetLeafName(destLeafName);
     if (NS_SUCCEEDED(rv)) {
-        nsCAutoString cmd(GetDestination());
-        cmd += " "; cmd += printFileName; cmd += ".";
-
-        /* Set up the environment. */
-        if (PR_SUCCESS != EnvLock())
-            return NS_ERROR_OUT_OF_MEMORY;
-        if (!mPrinterName.IsEmpty())
-            EnvSetPrinter(mPrinterName);
-
-        /* Run the print command */
-        int presult = system(cmd.get());
-
-        /* Clean up */
-        EnvClear();
-        mTempFile->Remove(PR_FALSE);
-
-        rv = (!WIFEXITED(presult) || (EXIT_SUCCESS != WEXITSTATUS(presult)))
-            ? NS_ERROR_GFX_PRINTER_CMD_FAILURE : NS_OK;
+        nsCOMPtr<nsIFile> mDestDir;
+        rv = mDestFile->GetParent(getter_AddRefs(mDestDir));
+        if (NS_SUCCEEDED(rv)) {
+            rv = mSpoolFile->MoveTo(mDestDir, destLeafName);
+        }
     }
     return rv;
 }
-
-
-#else   /* NOT VMS */
 
 /**** Print-to-Pipe for unix and unix-like systems ****/
 
 /* This launches a command using popen(); the print job is then written
  * to the pipe.
  */
-
-/* Destructor. We must override the print-to-file destructor in order
- * to pclose() any open file handle.
- */
-nsPrintJobPipeGTK::~nsPrintJobPipeGTK()
-{
-    if (GetDestHandle()) {
-        pclose(GetDestHandle());
-        SetDestHandle(nsnull);
-    }
-}
-
 
 /**
  * Initialize a print-to-pipe object.
@@ -284,10 +186,15 @@ nsPrintJobPipeGTK::Init(nsDeviceContextSpecGTK *aSpec)
     NS_PRECONDITION(toPrinter, "Wrong class for this print job");
 #endif
 
-    /* Print command. This is stored as the destination string. */
+    /* Spool file */
+    nsresult rv = InitSpoolFile(0600);
+    if (NS_FAILED(rv))
+        return rv;
+
+    /* Print command */
     const char *command;
     aSpec->GetCommand(&command);
-    SetDestination(command);
+    mCommand = command;
 
     /* Printer name */
     const char *printerName;
@@ -303,46 +210,83 @@ nsPrintJobPipeGTK::Init(nsDeviceContextSpecGTK *aSpec)
 }
 
 
+/* Helper for nsPrintJobPipeGTK::Submit(). Start the print command. */
+static nsresult
+popenPrintCommand(FILE **aPipe, nsCString &aPrinter, nsCString &aCommand)
+{
+    // Set up the environment for the print command
+    if (PR_SUCCESS != EnvLock())
+        return NS_ERROR_OUT_OF_MEMORY;  // Couldn't allocate the object?
+
+    if (!aPrinter.IsEmpty())
+        EnvSetPrinter(aPrinter);
+
+    // Start the print command
+    *aPipe = popen(aCommand.get(), "w");
+    EnvClear();
+    return (*aPipe) ? NS_OK : NS_ERROR_GFX_PRINTER_CMD_FAILURE;
+}
+
+/* Helper for nsPrintJobPipeGTK::Submit(). Copy data from a temporary file
+ * to the command pipe.
+ */
+static nsresult
+CopySpoolToCommand(nsIFileInputStream *aSource, FILE *aDest)
+{
+    nsresult rv;
+    PRUint32 count;
+    do {
+        char buf[256];
+        count = 0;
+        rv = aSource->Read(buf, sizeof buf, &count);
+        fwrite(buf, 1, count, aDest);
+    } while (NS_SUCCEEDED(rv) && count);
+    return rv;
+}
+        
 /**
  * Launch the print command using popen(), then copy the print job data
  * to the pipe. See nsIPrintJobGTK.h and nsPrintJobGTK.h for details.
  */
-nsresult
-nsPrintJobPipeGTK::StartSubmission(FILE **aHandle)
-{
-    NS_PRECONDITION(aHandle, "aHandle is NULL");
-    NS_PRECONDITION(!GetDestination().IsEmpty(), "No destination");
-    NS_PRECONDITION(!GetDestHandle(), "Already have a destination handle");
-
-    if (PR_SUCCESS != EnvLock())
-        return NS_ERROR_OUT_OF_MEMORY;  // Couldn't allocate the object?
-    if (!mPrinterName.IsEmpty())
-        EnvSetPrinter(mPrinterName);
-
-    FILE *destPipe = popen(GetDestination().get(), "w");
-    EnvClear();
-    if (!destPipe)
-        return NS_ERROR_GFX_PRINTER_CMD_FAILURE;
-    SetDestHandle(destPipe);
-    *aHandle = destPipe;
-    return NS_OK;
-}
 
 nsresult
-nsPrintJobPipeGTK::FinishSubmission()
+nsPrintJobPipeGTK::Submit()
 {
-    NS_PRECONDITION(GetDestHandle(), "No destination file handle");
-    NS_PRECONDITION(!GetDestination().IsEmpty(), "No destination");
+    NS_PRECONDITION(mSpoolFile, "No spool file");
 
-    int presult = pclose(GetDestHandle());
-    SetDestHandle(nsnull);
-    if (!WIFEXITED(presult) || (EXIT_SUCCESS != WEXITSTATUS(presult)))
-        return NS_ERROR_GFX_PRINTER_CMD_FAILURE;
-    return NS_OK;
+    // Open the spool file
+    nsCOMPtr<nsIFileInputStream> spoolStream =
+        do_CreateInstance("@mozilla.org/network/file-input-stream;1");
+    if (!spoolStream)
+        return NS_ERROR_OUT_OF_MEMORY;
+    nsresult rv = spoolStream->Init(mSpoolFile, -1, -1,
+        nsIFileInputStream::DELETE_ON_CLOSE|nsIFileInputStream::CLOSE_ON_EOF);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    // Start the print command
+    FILE *destPipe;
+    rv = popenPrintCommand(&destPipe, mPrinterName, mCommand);
+    if (NS_SUCCEEDED(rv)) {
+        rv = CopySpoolToCommand(spoolStream, destPipe);
+        int presult = pclose(destPipe);
+        if (NS_SUCCEEDED(rv)) {
+            if (!WIFEXITED(presult) || (EXIT_SUCCESS != WEXITSTATUS(presult)))
+                rv = NS_ERROR_GFX_PRINTER_CMD_FAILURE;
+        }
+    }            
+    spoolStream->Close();
+    return rv;
 }
-
 
 /**** Print via CUPS ****/
+
+/* nsPrintJobCUPS doesn't inherit its spoolfile code from the preview
+ * class. CupsPrintFile() needs the filename as an 8-bit string, but an
+ * nsILocalFile doesn't portably expose the filename in this format.
+ * So it's necessary to construct the spoolfile name outside of the 
+ * nsILocalFile object, and retain it as a string for use when calling
+ * CupsPrintFile().
+ */
 
 /**
  * Initialize a print-to-CUPS object.
@@ -368,6 +312,24 @@ nsPrintJobCUPS::Init(nsDeviceContextSpecGTK *aSpec)
     const char *slash = strchr(printerName, '/');
     mPrinterName = slash ? slash + 1 : printerName;
     mJobTitle.SetIsVoid(PR_TRUE);
+    
+    /* Spool file */
+    int fd;
+    char buf[FILENAME_MAX];
+
+    fd = (mCups.mCupsTempFd)(buf, sizeof buf);
+    // The CUPS manual doesn't describe what cupsTempFd() returns to
+    // indicate failure. -1 is a likely value.
+    NS_ENSURE_TRUE(fd > 0, NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE);
+    close(fd);
+    
+    nsresult rv = NS_NewNativeLocalFile(nsDependentCString(buf), PR_FALSE,
+                                        getter_AddRefs(mSpoolFile));
+    if (NS_FAILED(rv)) {
+        unlink(buf);
+        return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
+    }
+    mSpoolName = buf;
     return NS_OK;
 }
 
@@ -393,40 +355,11 @@ nsPrintJobCUPS::SetJobTitle(const PRUnichar *aTitle)
     }
 }
 
-
 nsresult
-nsPrintJobCUPS::StartSubmission(FILE **aHandle)
+nsPrintJobCUPS::Submit()
 {
     NS_ENSURE_TRUE(mCups.IsInitialized(), NS_ERROR_NOT_INITIALIZED);
-
-    int fd;
-    char buf[FILENAME_MAX];
-
-    fd = (mCups.mCupsTempFd)(buf, sizeof buf);
-    // The CUPS manual doesn't describe what cupsTempFd() returns to
-    // indicate failure. -1 is a likely value.
-    NS_ENSURE_TRUE(fd > 0, NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE);
-
-    SetDestHandle(fdopen(fd, "r+"));
-    if (!GetDestHandle()) {
-        close(fd);
-        return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
-    }
-    SetDestination(buf);
-    *aHandle = GetDestHandle();
-    return NS_OK;
-}
-
-
-nsresult
-nsPrintJobCUPS::FinishSubmission()
-{
-    NS_ENSURE_TRUE(mCups.IsInitialized(), NS_ERROR_NOT_INITIALIZED);
-    NS_PRECONDITION(GetDestHandle(), "No destination file handle");
-    NS_PRECONDITION(!GetDestination().IsEmpty(), "No destination");
-
-    fclose(GetDestHandle());
-    SetDestHandle(nsnull);
+    NS_PRECONDITION(!mSpoolName.IsEmpty(), "No spool file");
 
     nsCStringArray printer(3);
     printer.ParseString(mPrinterName.get(),"/");
@@ -452,11 +385,10 @@ nsPrintJobCUPS::FinishSubmission()
         const char *title = mJobTitle.IsVoid() ?
             "Untitled Document" : mJobTitle.get();
         result = (mCups.mCupsPrintFile)(printer.CStringAt(0)->get(),
-                                            GetDestination().get(), title, 
+                                            mSpoolName.get(), title, 
                                             dest->num_options, dest->options);
     }
     (mCups.mCupsFreeDests)(num_dests, dests);
-    unlink(GetDestination().get());
 
     // cupsPrintFile() result codes below 0x0300 indicate success.
     // Individual success codes are defined in the cups headers, but
@@ -466,10 +398,6 @@ nsPrintJobCUPS::FinishSubmission()
     else
         return (result < 0x0300) ? NS_OK : NS_ERROR_GFX_PRINTER_CMD_FAILURE;
 }
-
-
-#endif  /* VMS */
-
 
 /* Routines to set the MOZ_PRINTER_NAME environment variable and to
  * single-thread print jobs while the variable is set.

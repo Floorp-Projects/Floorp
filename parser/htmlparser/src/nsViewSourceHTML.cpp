@@ -363,7 +363,7 @@ nsresult CViewSourceHTML::WillBuildModel(const CParserContext& aParserContext,
   //    document that way.
   // #1 doesn't seem worth it, and #2 is even more evil, since we plan to reset
   // the DTD mode right back to what it was before, let's risk this.
-  CParserContext& parserContext = NS_CONST_CAST(CParserContext&, aParserContext);
+  CParserContext& parserContext = const_cast<CParserContext&>(aParserContext);
   parserContext.mDTDMode = eDTDMode_full_standards;
   result = mSink->WillBuildModel();
   // And reset the DTD mode back to the right one
@@ -422,8 +422,8 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
 
       if (theAllocator) {
         CStartToken* theToken=
-          NS_STATIC_CAST(CStartToken*,
-                         theAllocator->CreateTokenOfType(eToken_start,
+          static_cast<CStartToken*>
+                     (theAllocator->CreateTokenOfType(eToken_start,
                                                          eHTMLTag_link,
                                                          NS_LITERAL_STRING("LINK")));
         if (theToken) {
@@ -453,8 +453,8 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
     if (NS_SUCCEEDED(result) && !mHasOpenBody) {
       if (theAllocator) {
         CStartToken* bodyToken=
-          NS_STATIC_CAST(CStartToken*,
-                         theAllocator->CreateTokenOfType(eToken_start,
+          static_cast<CStartToken*>
+                     (theAllocator->CreateTokenOfType(eToken_start,
                                                          eHTMLTag_body,
                                                          NS_LITERAL_STRING("BODY")));
         if (bodyToken) {
@@ -475,8 +475,8 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
         
         if (NS_SUCCEEDED(result)) {
           CStartToken* preToken =
-            NS_STATIC_CAST(CStartToken*,
-                           theAllocator->CreateTokenOfType(eToken_start,
+            static_cast<CStartToken*>
+                       (theAllocator->CreateTokenOfType(eToken_start,
                                                            eHTMLTag_pre,
                                                            NS_LITERAL_STRING("PRE")));
           if (preToken) {
@@ -533,8 +533,8 @@ void CViewSourceHTML::StartNewPreBlock(void){
   }
   
   CStartToken* theToken =
-    NS_STATIC_CAST(CStartToken*,
-                   theAllocator->CreateTokenOfType(eToken_start,
+    static_cast<CStartToken*>
+               (theAllocator->CreateTokenOfType(eToken_start,
                                                    eHTMLTag_pre,
                                                    NS_LITERAL_STRING("PRE")));
   if (!theToken) {
@@ -786,8 +786,8 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PR
   // Highlight all parts of all erroneous tags.
   if (mSyntaxHighlight && aTagInError) {
     CStartToken* theTagToken=
-      NS_STATIC_CAST(CStartToken*,
-                     theAllocator->CreateTokenOfType(eToken_start,
+      static_cast<CStartToken*>
+                 (theAllocator->CreateTokenOfType(eToken_start,
                                                      eHTMLTag_span,
                                                      NS_LITERAL_STRING("SPAN")));
     NS_ENSURE_TRUE(theTagToken, NS_ERROR_OUT_OF_MEMORY);
@@ -816,8 +816,8 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PR
   
   if (mSyntaxHighlight && aTagType != kText) {
     CStartToken* theTagToken=
-      NS_STATIC_CAST(CStartToken*,
-                     theAllocator->CreateTokenOfType(eToken_start,
+      static_cast<CStartToken*>
+                 (theAllocator->CreateTokenOfType(eToken_start,
                                                      eHTMLTag_span,
                                                      NS_LITERAL_STRING("SPAN")));
     NS_ENSURE_TRUE(theTagToken, NS_ERROR_OUT_OF_MEMORY);

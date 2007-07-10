@@ -456,7 +456,7 @@ nsPKCS11ModuleDB::FindModuleByName(const PRUnichar *aName,
   nsNSSShutDownPreventionLock locker;
   NS_ConvertUTF16toUTF8 aUtf8Name(aName);
   SECMODModule *mod =
-    SECMOD_FindModule(NS_CONST_CAST(char *, aUtf8Name.get()));
+    SECMOD_FindModule(const_cast<char *>(aUtf8Name.get()));
   if (!mod)
     return NS_ERROR_FAILURE;
   nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(mod);
@@ -479,7 +479,7 @@ nsPKCS11ModuleDB::FindSlotByName(const PRUnichar *aName,
   nsNSSShutDownPreventionLock locker;
   NS_ConvertUTF16toUTF8 aUtf8Name(aName);
   PK11SlotInfo *slotinfo =
-   PK11_FindSlotByName(NS_CONST_CAST(char*, aUtf8Name.get()));
+   PK11_FindSlotByName(const_cast<char*>(aUtf8Name.get()));
   if (!slotinfo)
     return NS_ERROR_FAILURE;
   nsCOMPtr<nsIPKCS11Slot> slot = new nsPKCS11Slot(slotinfo);

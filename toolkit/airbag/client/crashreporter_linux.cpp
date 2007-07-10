@@ -47,23 +47,265 @@
 #include <algorithm>
 #include <cctype>
 
+#include <signal.h>
+
+#include <gtk/gtkhbbox.h>
+#include <gtk/gtkcheckbutton.h>
+#include <gtk/gtkcontainer.h>
+#include <gtk/gtkdialog.h>
+#include <gtk/gtkentry.h>
+#include <gtk/gtkexpander.h>
+#include <gtk/gtkhbox.h>
+#include <gtk/gtklabel.h>
+#include <gtk/gtkmain.h>
+#include <gtk/gtkmessagedialog.h>
+#include <gtk/gtkscrolledwindow.h>
+#include <gtk/gtktextview.h>
+#include <gtk/gtktextbuffer.h>
+#include <gtk/gtktogglebutton.h>
+#include <gtk/gtkvbox.h>
+#include <gtk/gtkwindow.h>
+
+#include "common/linux/http_upload.h"
+
 using std::string;
 using std::vector;
 
+using namespace CrashReporter;
+
+static GtkWidget* gWindow = 0;
+static GtkWidget* gViewReportTextView = 0;
+static GtkWidget* gSubmitReportCheck = 0;
+static GtkWidget* gEmailMeCheck = 0;
+static GtkWidget* gEmailEntry = 0;
+
+static bool gInitialized = false;
+static string gDumpFile;
+static StringTable gQueryParameters;
+static string gSendURL;
+static vector<string> gRestartArgs;
+
+static const char kIniFile[] = "crashreporter.ini";
+
+static void LoadSettings()
+{
+  StringTable settings;
+  if (ReadStringsFromFile(gSettingsPath + "/" + kIniFile, settings, true)) {
+    if (settings.find("Email") != settings.end()) {
+      gtk_entry_set_text(GTK_ENTRY(gEmailEntry), settings["Email"].c_str());
+    }
+    if (settings.find("EmailMe") != settings.end()) {
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gEmailMeCheck),
+                                   settings["EmailMe"][0] != '0');
+    }
+    if (settings.find("SubmitReport") != settings.end()) {
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gSubmitReportCheck),
+                                   settings["SubmitReport"][0] != '0');
+    }
+  }
+}
+
+static void SaveSettings()
+{
+  StringTable settings;
+
+  ReadStringsFromFile(gSettingsPath + "/" + kIniFile, settings, true);
+  settings["Email"] = gtk_entry_get_text(GTK_ENTRY(gEmailEntry));
+  settings["EmailMe"] =
+    gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gEmailMeCheck)) ? "1" : "0";
+
+  settings["SubmitReport"] =
+    gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gSubmitReportCheck))
+    ? "1" : "0";
+
+  WriteStringsToFile(gSettingsPath + "/" + kIniFile,
+                     "Crash Reporter", settings, true);
+}
+
+static bool RestartApplication()
+{
+  char** argv = reinterpret_cast<char**>(
+    malloc(sizeof(char*) * (gRestartArgs.size() + 1)));
+
+  if (!argv) return false;
+
+  unsigned int i;
+  for (i = 0; i < gRestartArgs.size(); i++) {
+    argv[i] = (char*)gRestartArgs[i].c_str();
+  }
+  argv[i] = 0;
+
+  pid_t pid = fork();
+  if (pid == -1)
+    return false;
+  else if (pid == 0) {
+    (void)execv(argv[0], argv);
+    _exit(1);
+  }
+
+  free(argv);
+
+  return true;
+}
+
+static gboolean SendReportIdle(gpointer userData)
+{
+  string response;
+  bool success = google_breakpad::HTTPUpload::SendRequest
+    (gSendURL,
+     gQueryParameters,
+     gDumpFile,
+     "upload_file_minidump",
+     "", "",
+     &response);
+  SendCompleted(success, response);
+
+  if (!success) {
+    GtkWidget* errorDialog =
+      gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL,
+                             GTK_MESSAGE_ERROR,
+                             GTK_BUTTONS_CLOSE,
+                             "%s", gStrings[ST_SUBMITFAILED].c_str());
+
+    gtk_window_set_title(GTK_WINDOW(errorDialog),
+                         gStrings[ST_CRASHREPORTERTITLE].c_str());
+    gtk_dialog_run(GTK_DIALOG(errorDialog));
+  }
+  gtk_main_quit();
+
+  return FALSE;
+}
+
+static void SendReport()
+{
+  // On the other platforms we spawn off a thread here.  Because the window
+  // should be hidden before the report is sent, don't bother to spawn
+  // a thread here.  Just kick it out to an idle handler (to give
+  // gtk_widget_hide() a chance to take)
+  g_idle_add(SendReportIdle, 0);
+}
+
+static void ShowReportInfo()
+{
+  GtkTextBuffer* buffer =
+    gtk_text_view_get_buffer(GTK_TEXT_VIEW(gViewReportTextView));
+
+  GtkTextIter start, end;
+  gtk_text_buffer_get_start_iter(buffer, &start);
+  gtk_text_buffer_get_end_iter(buffer, &end);
+
+  gtk_text_buffer_delete(buffer, &start, &end);
+
+  for (StringTable::iterator iter = gQueryParameters.begin();
+       iter != gQueryParameters.end();
+       iter++) {
+    gtk_text_buffer_insert(buffer, &end, iter->first.c_str(), -1);
+    gtk_text_buffer_insert(buffer, &end, ": ", -1);
+    gtk_text_buffer_insert(buffer, &end, iter->second.c_str(), -1);
+    gtk_text_buffer_insert(buffer, &end, "\n", -1);
+  }
+
+  gtk_text_buffer_insert(buffer, &end, "\n", -1);
+  gtk_text_buffer_insert(buffer, &end,
+                         gStrings[ST_EXTRAREPORTINFO].c_str(), -1);
+}
+
+static gboolean WindowDeleted(GtkWidget* window,
+                              GdkEvent* event,
+                              gpointer userData)
+{
+  SaveSettings();
+  gtk_main_quit();
+  return TRUE;
+}
+
+static void CloseClicked(GtkButton* button,
+                         gpointer userData)
+{
+  SaveSettings();
+  if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gSubmitReportCheck))) {
+    gtk_widget_hide(gWindow);
+    SendReport();
+  } else {
+    gtk_main_quit();
+  }
+}
+
+static void RestartClicked(GtkButton* button,
+                           gpointer userData)
+{
+  SaveSettings();
+  RestartApplication();
+
+  if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gSubmitReportCheck))) {
+    gtk_widget_hide(gWindow);
+    SendReport();
+  } else {
+    gtk_main_quit();
+  }
+}
+
+static void UpdateEmail()
+{
+  if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gEmailMeCheck))) {
+    gQueryParameters["Email"] = gtk_entry_get_text(GTK_ENTRY(gEmailEntry));
+  } else {
+    gQueryParameters.erase("Email");
+  }
+}
+
+static void EmailMeClicked(GtkButton* sender, gpointer userData)
+{
+  UpdateEmail();
+  ShowReportInfo();
+}
+
+static void EmailChanged(GtkEditable* editable, gpointer userData)
+{
+  // Email text changed, assume they want the "Email me" checkbox
+  // updated appropriately
+  const char* email = gtk_entry_get_text(GTK_ENTRY(editable));
+  if (email[0] == '\0')
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gEmailMeCheck), FALSE);
+  else
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gEmailMeCheck), TRUE);
+
+  UpdateEmail();
+  ShowReportInfo();
+}
+
+/* === Crashreporter UI Functions === */
+
 bool UIInit()
 {
-  //XXX: implement me
-  return true;
+  // breakpad probably left us with blocked signals, unblock them here
+  sigset_t signals, old;
+  sigfillset(&signals);
+  sigprocmask(SIG_UNBLOCK, &signals, &old);
+
+  if (gtk_init_check(&gArgc, &gArgv)) {
+    gInitialized = true;
+    return true;
+  }
+
+  return false;
 }
 
 void UIShutdown()
 {
-  //XXX: implement me
 }
 
 void UIShowDefaultUI()
 {
-  //XXX: implement me
+  GtkWidget* errorDialog =
+    gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL,
+                           GTK_MESSAGE_ERROR,
+                           GTK_BUTTONS_CLOSE,
+                           "%s", gStrings[ST_CRASHREPORTERDEFAULT].c_str());
+
+  gtk_window_set_title(GTK_WINDOW(errorDialog),
+                       gStrings[ST_CRASHREPORTERTITLE].c_str());
+  gtk_dialog_run(GTK_DIALOG(errorDialog));
 }
 
 void UIShowCrashUI(const string& dumpfile,
@@ -71,13 +313,129 @@ void UIShowCrashUI(const string& dumpfile,
                    const string& sendURL,
                    const vector<string>& restartArgs)
 {
-  //XXX: implement me
+  gDumpFile = dumpfile;
+  gQueryParameters = queryParameters;
+  gSendURL = sendURL;
+  gRestartArgs = restartArgs;
+
+  gWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_title(GTK_WINDOW(gWindow),
+                       gStrings[ST_CRASHREPORTERTITLE].c_str());
+  gtk_window_set_resizable(GTK_WINDOW(gWindow), FALSE);
+  gtk_container_set_border_width(GTK_CONTAINER(gWindow), 12);
+  g_signal_connect(gWindow, "delete-event", G_CALLBACK(WindowDeleted), 0);
+
+  GtkWidget* vbox = gtk_vbox_new(FALSE, 6);
+  gtk_container_add(GTK_CONTAINER(gWindow), vbox);
+
+  GtkWidget* titleLabel = gtk_label_new("");
+  gtk_box_pack_start(GTK_BOX(vbox), titleLabel, FALSE, FALSE, 0);
+  gtk_misc_set_alignment(GTK_MISC(titleLabel), 0, 0.5);
+  char* markup = g_strdup_printf("<b>%s</b>",
+                                 gStrings[ST_CRASHREPORTERHEADER].c_str());
+  gtk_label_set_markup(GTK_LABEL(titleLabel), markup);
+  g_free(markup);
+
+  GtkWidget* descriptionLabel =
+    gtk_label_new(gStrings[ST_CRASHREPORTERDESCRIPTION].c_str());
+  gtk_box_pack_start(GTK_BOX(vbox), descriptionLabel, TRUE, TRUE, 0);
+  // force the label to line wrap
+  gtk_widget_set_size_request(descriptionLabel, 400, -1);
+  gtk_label_set_line_wrap(GTK_LABEL(descriptionLabel), TRUE);
+  gtk_label_set_selectable(GTK_LABEL(descriptionLabel), TRUE);
+  gtk_misc_set_alignment(GTK_MISC(descriptionLabel), 0, 0.5);
+
+  // this is honestly how they suggest you indent a section
+  GtkWidget* indentBox = gtk_hbox_new(FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(vbox), indentBox, FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(indentBox), gtk_label_new(""), FALSE, FALSE, 6);
+
+  GtkWidget* innerVBox = gtk_vbox_new(FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(indentBox), innerVBox, TRUE, TRUE, 0);
+
+  GtkWidget* expander = gtk_expander_new(gStrings[ST_VIEWREPORT].c_str());
+  gtk_box_pack_start(GTK_BOX(innerVBox), expander, FALSE, FALSE, 6);
+
+  GtkWidget* scrolled = gtk_scrolled_window_new(0, 0);
+  gtk_container_add(GTK_CONTAINER(expander), scrolled);
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled),
+                                 GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
+  gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled),
+                                      GTK_SHADOW_IN);
+
+  gViewReportTextView = gtk_text_view_new();
+  gtk_container_add(GTK_CONTAINER(scrolled), gViewReportTextView);
+  gtk_text_view_set_editable(GTK_TEXT_VIEW(gViewReportTextView), FALSE);
+  gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(gViewReportTextView),
+                              GTK_WRAP_WORD);
+  gtk_widget_set_size_request(GTK_WIDGET(gViewReportTextView), -1, 100);
+
+  gSubmitReportCheck =
+    gtk_check_button_new_with_label(gStrings[ST_CHECKSUBMIT].c_str());
+  gtk_box_pack_start(GTK_BOX(innerVBox), gSubmitReportCheck, FALSE, FALSE, 0);
+
+  gEmailMeCheck =
+    gtk_check_button_new_with_label(gStrings[ST_CHECKEMAIL].c_str());
+  gtk_box_pack_start(GTK_BOX(innerVBox), gEmailMeCheck, FALSE, FALSE, 0);
+  g_signal_connect(gEmailMeCheck, "clicked", G_CALLBACK(EmailMeClicked), 0);
+
+  GtkWidget* emailIndentBox = gtk_hbox_new(FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(innerVBox), emailIndentBox, FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(emailIndentBox), gtk_label_new(""),
+                     FALSE, FALSE, 9);
+
+  gEmailEntry = gtk_entry_new();
+  gtk_box_pack_start(GTK_BOX(emailIndentBox), gEmailEntry, TRUE, TRUE, 0);
+  g_signal_connect(gEmailEntry, "changed", G_CALLBACK(EmailChanged), 0);
+
+  GtkWidget* buttonBox = gtk_hbutton_box_new();
+  gtk_box_pack_end(GTK_BOX(vbox), buttonBox, FALSE, FALSE, 0);
+  gtk_box_set_spacing(GTK_BOX(buttonBox), 6);
+  gtk_button_box_set_layout(GTK_BUTTON_BOX(buttonBox), GTK_BUTTONBOX_END);
+
+  GtkWidget* closeButton =
+    gtk_button_new_with_label(gStrings[ST_CLOSE].c_str());
+  gtk_box_pack_start(GTK_BOX(buttonBox), closeButton, FALSE, FALSE, 0);
+  GTK_WIDGET_SET_FLAGS(closeButton, GTK_CAN_DEFAULT);
+  g_signal_connect(closeButton, "clicked", G_CALLBACK(CloseClicked), 0);
+
+  GtkWidget* restartButton = 0;
+  if (restartArgs.size() > 0) {
+    restartButton = gtk_button_new_with_label(gStrings[ST_RESTART].c_str());
+    gtk_box_pack_start(GTK_BOX(buttonBox), restartButton, FALSE, FALSE, 0);
+    GTK_WIDGET_SET_FLAGS(restartButton, GTK_CAN_DEFAULT);
+    g_signal_connect(restartButton, "clicked", G_CALLBACK(RestartClicked), 0);
+  }
+
+  gtk_widget_grab_focus(gEmailEntry);
+
+  gtk_widget_grab_default(restartButton ? restartButton : closeButton);
+
+  LoadSettings();
+  ShowReportInfo();
+
+  gtk_widget_show_all(gWindow);
+
+  gtk_main();
 }
 
-void UIError(const string& message)
+void UIError_impl(const string& message)
 {
-  //XXX: implement me
-  printf("Error: %s\n", message.c_str());
+  if (!gInitialized) {
+    // Didn't initialize, this is the best we can do
+    printf("Error: %s\n", message.c_str());
+    return;
+  }
+
+  GtkWidget* errorDialog =
+    gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL,
+                           GTK_MESSAGE_ERROR,
+                           GTK_BUTTONS_CLOSE,
+                           "%s", message.c_str());
+
+  gtk_window_set_title(GTK_WINDOW(errorDialog),
+                       gStrings[ST_CRASHREPORTERTITLE].c_str());
+  gtk_dialog_run(GTK_DIALOG(errorDialog));
 }
 
 bool UIGetIniPath(string& path)
@@ -113,7 +471,6 @@ bool UIGetSettingsPath(const string& vendor,
   std::transform(product.begin(), product.end(), back_inserter(lc_product),
 		 (int(*)(int)) std::tolower);
   settingsPath += lc_product + "/Crash Reports";
-  printf("settingsPath: %s\n", settingsPath.c_str());
   return UIEnsurePathExists(settingsPath);
 }
 
@@ -122,6 +479,16 @@ bool UIEnsurePathExists(const string& path)
   int ret = mkdir(path.c_str(), S_IRWXU);
   int e = errno;
   if (ret == -1 && e != EEXIST)
+    return false;
+
+  return true;
+}
+
+bool UIFileExists(const string& path)
+{
+  struct stat sb;
+  int ret = stat(path.c_str(), &sb);
+  if (ret == -1 || !(sb.st_mode & S_IFREG))
     return false;
 
   return true;
@@ -136,3 +503,14 @@ bool UIDeleteFile(const string& file)
 {
   return (unlink(file.c_str()) != -1);
 }
+
+std::ifstream* UIOpenRead(const string& filename)
+{
+  return new std::ifstream(filename.c_str(), std::ios::in);
+}
+
+std::ofstream* UIOpenWrite(const string& filename)
+{
+  return new std::ofstream(filename.c_str(), std::ios::out);
+}
+

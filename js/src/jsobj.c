@@ -222,8 +222,11 @@ obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     /* __parent__ is readonly and permanent, only __proto__ may be set. */
     propid = ATOM_TO_JSID(cx->runtime->atomState.protoAtom);
-    if (!OBJ_CHECK_ACCESS(cx, obj, propid, JSACC_PROTO|JSACC_WRITE, vp, &attrs))
+    if (!OBJ_CHECK_ACCESS(cx, obj, propid,
+                          (JSAccessMode)(JSACC_PROTO|JSACC_WRITE), vp,
+                          &attrs)) {
         return JS_FALSE;
+    }
 
     return js_SetProtoOrParent(cx, obj, slot, pobj);
 }
@@ -1345,9 +1348,14 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     str = JSVAL_TO_STRING(argv[0]);
     if (caller) {
-        file = caller->script->filename;
-        line = js_PCToLineNumber(cx, caller->script, caller->pc);
         principals = JS_EvalFramePrincipals(cx, fp, caller);
+        if (principals == caller->script->principals) {
+            file = caller->script->filename;
+            line = js_PCToLineNumber(cx, caller->script, caller->pc);
+        } else {
+            file = principals->codebase;
+            line = 0;
+        }
     } else {
         file = NULL;
         line = 0;
@@ -2026,18 +2034,20 @@ block_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 #if JS_HAS_XDR
 
-#define NO_PARENT_INDEX (jsatomid)-1
+#define NO_PARENT_INDEX ((uint32)-1)
 
-jsatomid
-FindObjectAtomIndex(JSAtomMap *map, JSObject *obj)
+uint32
+FindObjectIndex(JSObjectArray *array, JSObject *obj)
 {
     size_t i;
-    JSAtom *atom;
 
-    for (i = 0; i < map->length; i++) {
-        atom = map->vector[i];
-        if (ATOM_KEY(atom) == OBJECT_TO_JSVAL(obj))
-            return i;
+    if (array) {
+        i = array->length;
+        do {
+
+            if (array->vector[--i] == obj)
+                return i;
+        } while (i != 0);
     }
 
     return NO_PARENT_INDEX;
@@ -2047,8 +2057,7 @@ static JSBool
 block_xdrObject(JSXDRState *xdr, JSObject **objp)
 {
     JSContext *cx;
-    jsatomid parentId;
-    JSAtomMap *atomMap;
+    uint32 parentId;
     JSObject *obj, *parent;
     uint16 depth, count, i;
     uint32 tmp;
@@ -2064,13 +2073,14 @@ block_xdrObject(JSXDRState *xdr, JSObject **objp)
     obj = NULL;         /* quell GCC overwarning */
 #endif
 
-    atomMap = &xdr->script->atomMap;
     if (xdr->mode == JSXDR_ENCODE) {
         obj = *objp;
         parent = OBJ_GET_PARENT(cx, obj);
-        parentId = FindObjectAtomIndex(atomMap, parent);
-        depth = OBJ_BLOCK_DEPTH(cx, obj);
-        count = OBJ_BLOCK_COUNT(cx, obj);
+        parentId = (xdr->script->objectsOffset == 0)
+                   ? NO_PARENT_INDEX
+                   : FindObjectIndex(JS_SCRIPT_OBJECTS(xdr->script), parent);
+        depth = (uint16)OBJ_BLOCK_DEPTH(cx, obj);
+        count = (uint16)OBJ_BLOCK_COUNT(cx, obj);
         tmp = (uint32)(depth << 16) | count;
     }
 #ifdef __GNUC__ /* suppress bogus gcc warnings */
@@ -2089,16 +2099,13 @@ block_xdrObject(JSXDRState *xdr, JSObject **objp)
 
         /*
          * If there's a parent id, then get the parent out of our script's
-         * atomMap. We know that we XDR block object in outer-to-inner order,
-         * which means that getting the parent now will work.
+         * object array. We know that we XDR block object in outer-to-inner
+         * order, which means that getting the parent now will work.
          */
-        if (parentId == NO_PARENT_INDEX) {
+        if (parentId == NO_PARENT_INDEX)
             parent = NULL;
-        } else {
-            atom = js_GetAtom(cx, atomMap, parentId);
-            JS_ASSERT(ATOM_IS_OBJECT(atom));
-            parent = ATOM_TO_OBJECT(atom);
-        }
+        else
+            JS_GET_SCRIPT_OBJECT(xdr->script, parentId, parent);
         STOBJ_SET_PARENT(obj, parent);
     }
 
@@ -2523,6 +2530,8 @@ bad:
     goto out;
 }
 
+JS_BEGIN_EXTERN_C
+
 JS_STATIC_DLL_CALLBACK(JSObject *)
 js_InitNullClass(JSContext *cx, JSObject *obj)
 {
@@ -2539,6 +2548,8 @@ static JSObjectOp lazy_prototype_init[JSProto_LIMIT] = {
 #include "jsproto.tbl"
 #undef JS_PROTO
 };
+
+JS_END_EXTERN_C
 
 JSBool
 js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
@@ -2632,7 +2643,7 @@ js_FindClassObject(JSContext *cx, JSObject *start, jsid id, jsval *vp)
         return JS_FALSE;
 
     if (JSID_IS_INT(id)) {
-        key = JSID_TO_INT(id);
+        key = (JSProtoKey) JSID_TO_INT(id);
         JS_ASSERT(key != JSProto_Null);
         if (!js_GetClassObject(cx, obj, key, &cobj))
             return JS_FALSE;
@@ -3131,7 +3142,7 @@ Detecting(JSContext *cx, jsbytecode *pc)
              * worry about someone redefining undefined, which was added by
              * Edition 3, so is read/write for backward compatibility.
              */
-            atom = js_GetAtomFromBytecode(script, pc, 0);
+            GET_ATOM_FROM_BYTECODE(script, pc, 0, atom);
             if (atom == cx->runtime->atomState.typeAtoms[JSTYPE_VOID] &&
                 (pc += js_CodeSpec[op].length) < endpc) {
                 op = (JSOp) *pc;
@@ -3148,7 +3159,7 @@ Detecting(JSContext *cx, jsbytecode *pc)
              * At this point, anything but an extended atom index prefix means
              * we're not detecting.
              */
-            if (!(js_CodeSpec[op].format & JOF_ATOMBASE))
+            if (!(js_CodeSpec[op].format & JOF_INDEXBASE))
                 return JS_FALSE;
             break;
         }
@@ -3540,7 +3551,7 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             JSOp op;
             uintN flags;
 
-            op = *pc;
+            op = (JSOp) *pc;
             if (op == JSOP_GETXPROP) {
                 flags = JSREPORT_ERROR;
             } else {
@@ -4689,7 +4700,7 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
     if (xdr->mode == JSXDR_DECODE) {
         if (classDef) {
             /* NB: we know that JSProto_Null is 0 here, for backward compat. */
-            protoKey = classDef >> 1;
+            protoKey = (JSProtoKey) (classDef >> 1);
             classKey = (protoKey != JSProto_Null)
                        ? INT_TO_JSID(protoKey)
                        : ATOM_TO_JSID(atom);

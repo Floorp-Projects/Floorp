@@ -48,6 +48,9 @@ GRE_MODULE     = 1
 
 SDK_XPIDLSRCS =                       \
         nsIDOMOfflineResourceList.idl \
-       $(NULL)
+        nsIDOMLoadStatusList.idl      \
+        nsIDOMLoadStatus.idl          \
+        nsIDOMLoadStatusEvent.idl     \
+        $(NULL)
 
 include $(topsrcdir)/config/rules.mk

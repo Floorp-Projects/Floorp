@@ -63,7 +63,7 @@
 
   <commandset id="placesCommands"
               commandupdater="true"
-              events="focus"
+              events="focus,sort"
               oncommandupdate="goUpdatePlacesCommands();">
     <command id="placesCmd_open"
              oncommand="goDoCommand('placesCmd_open');"/>

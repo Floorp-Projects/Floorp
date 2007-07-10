@@ -58,12 +58,13 @@ public:
   virtual nscoord GetFlex(nsBoxLayoutState& aState);
   virtual nscoord GetBoxAscent(nsBoxLayoutState& aState);
 
+  virtual nsIAtom* GetType() const;
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
     // This is bogus, but it's what we've always done.
     // Note that nsLeafFrame is also eReplacedContainsBlock.
     return nsLeafFrame::IsFrameOfType(aFlags &
-      ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
+      ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock | nsIFrame::eXULBox));
   }
 
 #ifdef DEBUG
@@ -94,6 +95,11 @@ public:
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
 
+  NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID,
+                              nsIAtom* aAttribute,
+                              PRInt32 aModType);
+
+  virtual PRBool GetMouseThrough() const;
   virtual PRBool ComputesOwnOverflowArea() { return PR_FALSE; }
 
 protected:
@@ -110,6 +116,14 @@ protected:
   virtual nscoord GetIntrinsicWidth();
 
  nsLeafBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext);
+
+protected:
+  eMouseThrough mMouseThrough;
+
+private:
+
+ void UpdateMouseThrough();
+
 
 }; // class nsLeafBoxFrame
 

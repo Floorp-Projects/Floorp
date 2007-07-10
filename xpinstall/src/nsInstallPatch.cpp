@@ -100,7 +100,7 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
 
     char tempTargetFile[MAXREGPATHLEN];
 
-    PRInt32 err = VR_GetPath( NS_CONST_CAST(char *, NS_ConvertUTF16toUTF8(inVRName).get()),
+    PRInt32 err = VR_GetPath( const_cast<char *>(NS_ConvertUTF16toUTF8(inVRName).get()),
                               sizeof(tempTargetFile), tempTargetFile );
     
     if (err != REGERR_OK)
@@ -328,9 +328,9 @@ PRInt32 nsInstallPatch::Complete()
             // DO NOT propagate version registry errors, it will abort 
             // FinalizeInstall() leaving things hosed. These piddly errors
             // aren't worth that.
-            VR_Install( NS_CONST_CAST(char *, NS_ConvertUTF16toUTF8(*mRegistryName).get()),
-                        NS_CONST_CAST(char *, tempPath.get()),
-                        NS_CONST_CAST(char *, NS_ConvertUTF16toUTF8(tempVersionString).get()),
+            VR_Install( const_cast<char *>(NS_ConvertUTF16toUTF8(*mRegistryName).get()),
+                        const_cast<char *>(tempPath.get()),
+                        const_cast<char *>(NS_ConvertUTF16toUTF8(tempVersionString).get()),
                         PR_FALSE );
         }
         else
@@ -491,7 +491,7 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
         nsCAutoString unboundFile;
         uniqueSrcFile->GetNativePath(unboundFile);
 
-        if (su_unbind(NS_CONST_CAST(char*, realfile.get()), NS_CONST_CAST(char*,unboundFile.get())))  //
+        if (su_unbind(const_cast<char*>(realfile.get()), const_cast<char*>(unboundFile.get())))  //
         {
             // un-binding worked, save the tmp name for later
             uniqueSrcFile->GetNativePath(realfile);

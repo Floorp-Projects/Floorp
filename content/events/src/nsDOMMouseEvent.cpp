@@ -65,10 +65,10 @@ nsDOMMouseEvent::nsDOMMouseEvent(nsPresContext* aPresContext,
   switch (mEvent->eventStructType)
   {
     case NS_MOUSE_EVENT:
-      mDetail = NS_STATIC_CAST(nsMouseEvent*, mEvent)->clickCount;
+      mDetail = static_cast<nsMouseEvent*>(mEvent)->clickCount;
       break;
     case NS_MOUSE_SCROLL_EVENT:
-      mDetail = NS_STATIC_CAST(nsMouseScrollEvent*, mEvent)->delta;
+      mDetail = static_cast<nsMouseScrollEvent*>(mEvent)->delta;
       break;
     default:
       break;
@@ -81,10 +81,10 @@ nsDOMMouseEvent::~nsDOMMouseEvent()
     switch (mEvent->eventStructType)
     {
       case NS_MOUSE_EVENT:
-        delete NS_STATIC_CAST(nsMouseEvent*, mEvent);
+        delete static_cast<nsMouseEvent*>(mEvent);
         break;
       case NS_MOUSE_SCROLL_EVENT:
-        delete NS_STATIC_CAST(nsMouseScrollEvent*, mEvent);
+        delete static_cast<nsMouseScrollEvent*>(mEvent);
         break;
       default:
         delete mEvent;
@@ -117,9 +117,9 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString & aType, PRBool aCanBubble, PRBo
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
     {
-       NS_STATIC_CAST(nsMouseEvent_base*, mEvent)->relatedTarget = aRelatedTarget;
-       NS_STATIC_CAST(nsMouseEvent_base*, mEvent)->button = aButton;
-       nsInputEvent* inputEvent = NS_STATIC_CAST(nsInputEvent*, mEvent);
+       static_cast<nsMouseEvent_base*>(mEvent)->relatedTarget = aRelatedTarget;
+       static_cast<nsMouseEvent_base*>(mEvent)->button = aButton;
+       nsInputEvent* inputEvent = static_cast<nsInputEvent*>(mEvent);
        inputEvent->isControl = aCtrlKey;
        inputEvent->isAlt = aAltKey;
        inputEvent->isShift = aShiftKey;
@@ -130,10 +130,10 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString & aType, PRBool aCanBubble, PRBo
        inputEvent->refPoint.y = aScreenY;
 
        if (mEvent->eventStructType == NS_MOUSE_SCROLL_EVENT) {
-         nsMouseScrollEvent* scrollEvent = NS_STATIC_CAST(nsMouseScrollEvent*, mEvent);
+         nsMouseScrollEvent* scrollEvent = static_cast<nsMouseScrollEvent*>(mEvent);
          scrollEvent->delta = aDetail;
        } else {
-         nsMouseEvent* mouseEvent = NS_STATIC_CAST(nsMouseEvent*, mEvent);
+         nsMouseEvent* mouseEvent = static_cast<nsMouseEvent*>(mEvent);
          mouseEvent->clickCount = aDetail;
        }
        break;
@@ -153,7 +153,7 @@ nsDOMMouseEvent::GetButton(PRUint16* aButton)
   {
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
-      *aButton = NS_STATIC_CAST(nsMouseEvent_base*, mEvent)->button;
+      *aButton = static_cast<nsMouseEvent_base*>(mEvent)->button;
       break;
     default:
       NS_WARNING("Tried to get mouse button for non-mouse event!");
@@ -173,7 +173,7 @@ nsDOMMouseEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
   {
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
-      relatedTarget = NS_STATIC_CAST(nsMouseEvent_base*, mEvent)->relatedTarget;
+      relatedTarget = static_cast<nsMouseEvent_base*>(mEvent)->relatedTarget;
       break;
     default:
       break;

@@ -649,11 +649,11 @@ nsDocumentEncoder::SerializeRangeNodes(nsIDOMRange* aRange,
   nsCOMPtr<nsIContent> startNode, endNode;
   PRInt32 start = mStartRootIndex - aDepth;
   if (start >= 0 && start <= mStartNodes.Count())
-    startNode = NS_STATIC_CAST(nsIContent *, mStartNodes[start]);
+    startNode = static_cast<nsIContent *>(mStartNodes[start]);
 
   PRInt32 end = mEndRootIndex - aDepth;
   if (end >= 0 && end <= mEndNodes.Count())
-    endNode = NS_STATIC_CAST(nsIContent *, mEndNodes[end]);
+    endNode = static_cast<nsIContent *>(mEndNodes[end]);
 
   if ((startNode != content) && (endNode != content))
   {
@@ -1236,7 +1236,7 @@ nsHTMLCopyEncoder::EncodeToStringWithContext(nsAString& aContextString,
   PRInt32 i;
   nsCOMPtr<nsIDOMNode> node;
   if (count > 0)
-    node = NS_STATIC_CAST(nsIDOMNode *, mCommonAncestors.ElementAt(0));
+    node = static_cast<nsIDOMNode *>(mCommonAncestors.ElementAt(0));
 
   if (node && IsTextNode(node)) 
   {
@@ -1251,13 +1251,13 @@ nsHTMLCopyEncoder::EncodeToStringWithContext(nsAString& aContextString,
   i = count;
   while (i > 0)
   {
-    node = NS_STATIC_CAST(nsIDOMNode *, mCommonAncestors.ElementAt(--i));
+    node = static_cast<nsIDOMNode *>(mCommonAncestors.ElementAt(--i));
     SerializeNodeStart(node, 0, -1, aContextString);
   }
   //i = 0; guaranteed by above
   while (i < count)
   {
-    node = NS_STATIC_CAST(nsIDOMNode *, mCommonAncestors.ElementAt(i++));
+    node = static_cast<nsIDOMNode *>(mCommonAncestors.ElementAt(i++));
     SerializeNodeEnd(node, aContextString);
   }
 

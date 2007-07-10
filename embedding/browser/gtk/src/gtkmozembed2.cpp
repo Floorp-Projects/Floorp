@@ -793,8 +793,8 @@ gtk_moz_embed_get_accessible (GtkWidget *widget)
 
   GtkMozEmbed  *embed = GTK_MOZ_EMBED(widget);;
   EmbedPrivate *embedPrivate = (EmbedPrivate *)embed->data;
-  return NS_STATIC_CAST(AtkObject *,
-                        embedPrivate->GetAtkObjectForCurrentDocument());
+  return static_cast<AtkObject *>
+                    (embedPrivate->GetAtkObjectForCurrentDocument());
 }
 #endif /* MOZ_ACCESSIBILITY_ATK */
 

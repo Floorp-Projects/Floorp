@@ -193,7 +193,7 @@ nsPrintSettingsWin& nsPrintSettingsWin::operator=(const nsPrintSettingsWin& rhs)
 nsresult 
 nsPrintSettingsWin::_Assign(nsIPrintSettings *aPS)
 {
-  nsPrintSettingsWin *psWin = NS_STATIC_CAST(nsPrintSettingsWin*, aPS);
+  nsPrintSettingsWin *psWin = static_cast<nsPrintSettingsWin*>(aPS);
   *this = *psWin;
   return NS_OK;
 }

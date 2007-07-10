@@ -48,7 +48,7 @@ class nsEmbedChromeRegistry : public nsIChromeRegistry
 {
 public:
     nsEmbedChromeRegistry();
-    virtual ~nsEmbedChromeRegistry() {};
+    virtual ~nsEmbedChromeRegistry() {}
     nsresult Init();
     
     NS_DECL_ISUPPORTS

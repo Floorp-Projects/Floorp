@@ -114,7 +114,6 @@ EXPORTS		= \
 
 ifdef IBMBIDI
 EXPORTS		+= \
-		nsTextTransformer.h \
 		nsBidiFrames.h      \
 		$(NULL)
 endif
@@ -158,7 +157,9 @@ CPPSRCS		= \
 		nsSpaceManager.cpp \
 		nsSpacerFrame.cpp \
 		nsSplittableFrame.cpp \
-		nsTextTransformer.cpp \
+		nsTextFrameThebes.cpp \
+		nsTextFrameUtils.cpp \
+		nsTextRunTransformations.cpp \
 		nsViewportFrame.cpp \
 		$(NULL)
 
@@ -166,21 +167,6 @@ ifdef IBMBIDI
 CPPSRCS		+= \
 		nsBidiFrames.cpp \
 		$(NULL)
-endif
-
-# set this to 1 to enable the new text frame
-MOZ_ENABLE_NEW_TEXT_FRAME ?=
-
-ifdef MOZ_ENABLE_NEW_TEXT_FRAME
-CPPSRCS   += \
-          nsTextFrameThebes.cpp \
-          nsTextRunTransformations.cpp \
-          nsTextFrameUtils.cpp \
-    $(NULL)
-else
-CPPSRCS   += \
-          nsTextFrame.cpp \
-    $(NULL)
 endif
 
 RESOURCES_HTML = \
@@ -215,6 +201,10 @@ LOCAL_INCLUDES += \
 		-I$(srcdir)/../../content/html/content/src \
 		$(MOZ_CAIRO_CFLAGS) \
 		$(NULL)
+
+ifdef MOZ_ENABLE_GTK2
+CXXFLAGS += $(MOZ_GTK2_CFLAGS)
+endif
 
 libs::
 	$(INSTALL) $(RESOURCES_HTML) $(DIST)/bin/res/html

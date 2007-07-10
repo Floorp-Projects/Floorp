@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 336682: online/offline events tests.
+
+Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/licenses/publicdomain/
+-->
+<head>
+  <title>Test for Bug 336682 (online/offline events)</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body ononline="trace('<body ononline=...>');
+                bodyOnonline(this, event)"
+      onoffline="trace('<body onoffline=...>'); bodyOnoffline(this, event)"
+      >
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=336682">Mozilla Bug 336682</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+</pre>
+<script type="text/javascript" src="test_bug336682.js"></script>
+
+<script class="testbody" type="text/javascript">
+
+function makeBodyHandler(eventName) {
+  return function (aThis, aEvent) {
+    var handler = makeHandler("<body on%1='...'>", eventName, [3,4]);
+    handler(aEvent);
+  }
+}
+addLoadEvent(function() {
+  /** @see test_bug336682.js */
+  MAX_STATE = 4;
+
+  for each(var event in ["online", "offline"]) {
+    document.body.addEventListener(
+      event,
+      makeHandler("document.body.addEventListener('%1', ..., false)",
+                  event, [1]),
+      false);
+
+    document.addEventListener(
+      event,
+      makeHandler("document.addEventListener('%1', ..., false)",
+                  event, [2]),
+      false);
+
+    window["bodyOn" + event] = makeBodyHandler(event);
+
+    window.addEventListener(
+      event,
+      makeHandler("window.addEventListener('%1', ..., false)",
+                  event, [3,4]),
+      false);
+  }
+
+  doTest();
+  SimpleTest.finish();
+});
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</body>
+</html>

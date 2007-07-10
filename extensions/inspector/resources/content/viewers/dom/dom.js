@@ -625,6 +625,9 @@ DOMViewer.prototype =
 
   removeClickListeners: function()
   {
+    if (!this.mSelectDocs) // we didn't select an element by click
+      return;
+
     for (var i = 0; i < this.mSelectDocs.length; ++i) {
       this.mSelectDocs[i].removeEventListener("mousedown", MouseDownListener, true);
       this.mSelectDocs[i].removeEventListener("mouseup", EventCanceller, true);

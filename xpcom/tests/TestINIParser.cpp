@@ -52,7 +52,7 @@ StringCB(const char *aKey, const char *aValue, void* aClosure)
 static PRBool
 SectionCB(const char *aSection, void* aClosure)
 {
-  nsINIParser *ini = NS_REINTERPRET_CAST(nsINIParser*, aClosure);
+  nsINIParser *ini = reinterpret_cast<nsINIParser*>(aClosure);
 
   printf("[%s]\n", aSection);
 

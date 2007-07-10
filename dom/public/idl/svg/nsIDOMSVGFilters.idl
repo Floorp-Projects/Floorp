@@ -43,6 +43,7 @@ interface nsIDOMSVGAnimatedNumber;
 interface nsIDOMSVGAnimatedEnumeration;
 interface nsIDOMSVGAnimatedNumberList;
 interface nsIDOMSVGAnimatedInteger;
+interface nsIDOMSVGAnimatedBoolean;
 
 [scriptable, uuid(ab68567a-b830-4c46-9f2f-a28513a9e980)]
 interface nsIDOMSVGFilterPrimitiveStandardAttributes : nsIDOMSVGElement
@@ -223,6 +224,29 @@ interface nsIDOMSVGFEMorphologyElement : nsIDOMSVGFilterPrimitiveStandardAttribu
     readonly attribute nsIDOMSVGAnimatedEnumeration operator;
     
     void setRadius ( in float rx, in float ry );
+};
+
+[scriptable, uuid(42109b58-a8c1-4078-b44c-ec1d5d6b9574)]
+interface nsIDOMSVGFEConvolveMatrixElement : nsIDOMSVGFilterPrimitiveStandardAttributes
+{ 
+    // Edge Mode Values
+    const unsigned short SVG_EDGEMODE_UNKNOWN   = 0;
+    const unsigned short SVG_EDGEMODE_DUPLICATE = 1;
+    const unsigned short SVG_EDGEMODE_WRAP      = 2;
+    const unsigned short SVG_EDGEMODE_NONE      = 3;
+
+    readonly attribute nsIDOMSVGAnimatedString      in1;
+    readonly attribute nsIDOMSVGAnimatedInteger     orderX;
+    readonly attribute nsIDOMSVGAnimatedInteger     orderY;
+    readonly attribute nsIDOMSVGAnimatedNumberList  kernelMatrix;
+    readonly attribute nsIDOMSVGAnimatedNumber      divisor;
+    readonly attribute nsIDOMSVGAnimatedNumber      bias;
+    readonly attribute nsIDOMSVGAnimatedInteger     targetX;
+    readonly attribute nsIDOMSVGAnimatedInteger     targetY;
+    readonly attribute nsIDOMSVGAnimatedEnumeration edgeMode;
+    readonly attribute nsIDOMSVGAnimatedNumber      kernelUnitLengthX;
+    readonly attribute nsIDOMSVGAnimatedNumber      kernelUnitLengthY;
+    readonly attribute nsIDOMSVGAnimatedBoolean     preserveAlpha;
 };
 
 [scriptable, uuid(8698c635-26c7-468b-905e-494e8825d56b)]

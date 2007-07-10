@@ -88,7 +88,7 @@ SpanningCellSorter::HashTableMatchEntry(PLDHashTable *table,
                                         const PLDHashEntryHdr *hdr,
                                         const void *key)
 {
-    const HashTableEntry *entry = NS_STATIC_CAST(const HashTableEntry*, hdr);
+    const HashTableEntry *entry = static_cast<const HashTableEntry*>(hdr);
     return NS_PTR_TO_INT32(key) == entry->mColSpan;
 }
 
@@ -116,8 +116,8 @@ SpanningCellSorter::AddCell(PRInt32 aColSpan, PRInt32 aRow, PRInt32 aCol)
             mHashTable.entryCount = 0;
             return PR_FALSE;
         }
-        HashTableEntry *entry = NS_STATIC_CAST(HashTableEntry*,
-            PL_DHashTableOperate(&mHashTable, NS_INT32_TO_PTR(aColSpan),
+        HashTableEntry *entry = static_cast<HashTableEntry*>
+                                           (PL_DHashTableOperate(&mHashTable, NS_INT32_TO_PTR(aColSpan),
                                  PL_DHASH_ADD));
         NS_ENSURE_TRUE(entry, PR_FALSE);
 
@@ -138,8 +138,8 @@ SpanningCellSorter::AddCell(PRInt32 aColSpan, PRInt32 aRow, PRInt32 aCol)
 SpanningCellSorter::FillSortedArray(PLDHashTable *table, PLDHashEntryHdr *hdr,
                                     PRUint32 number, void *arg)
 {
-    HashTableEntry *entry = NS_STATIC_CAST(HashTableEntry*, hdr);
-    HashTableEntry **sh = NS_STATIC_CAST(HashTableEntry**, arg);
+    HashTableEntry *entry = static_cast<HashTableEntry*>(hdr);
+    HashTableEntry **sh = static_cast<HashTableEntry**>(arg);
 
     sh[number] = entry;
 
@@ -149,8 +149,8 @@ SpanningCellSorter::FillSortedArray(PLDHashTable *table, PLDHashEntryHdr *hdr,
 /* static */ int
 SpanningCellSorter::SortArray(const void *a, const void *b, void *closure)
 {
-    PRInt32 spanA = (*NS_STATIC_CAST(HashTableEntry*const*, a))->mColSpan;
-    PRInt32 spanB = (*NS_STATIC_CAST(HashTableEntry*const*, b))->mColSpan;
+    PRInt32 spanA = (*static_cast<HashTableEntry*const*>(a))->mColSpan;
+    PRInt32 spanB = (*static_cast<HashTableEntry*const*>(b))->mColSpan;
 
     if (spanA < spanB)
         return -1;
@@ -180,7 +180,7 @@ SpanningCellSorter::GetNext(PRInt32 *aColSpan)
 #ifdef DEBUG_SPANNING_CELL_SORTER
                 printf("SpanningCellSorter[%p]:"
                        " returning list for colspan=%d from array\n",
-                       NS_STATIC_CAST(void*, this), *aColSpan);
+                       static_cast<void*>(this), *aColSpan);
 #endif
                 ++mEnumerationIndex;
                 return result;
@@ -210,7 +210,7 @@ SpanningCellSorter::GetNext(PRInt32 *aColSpan)
 #ifdef DEBUG_SPANNING_CELL_SORTER
                 printf("SpanningCellSorter[%p]:"
                        " returning list for colspan=%d from hash\n",
-                       NS_STATIC_CAST(void*, this), *aColSpan);
+                       static_cast<void*>(this), *aColSpan);
 #endif
                 ++mEnumerationIndex;
                 return result;

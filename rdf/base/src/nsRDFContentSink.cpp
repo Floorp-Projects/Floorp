@@ -210,8 +210,7 @@ protected:
     // Text management
     void ParseText(nsIRDFNode **aResult);
 
-    nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
-                       PRBool* aDidFlush=nsnull);
+    nsresult FlushText();
     nsresult AddText(const PRUnichar* aText, PRInt32 aLength);
 
     // RDF-specific parsing
@@ -437,12 +436,12 @@ RDFContentSinkImpl::QueryInterface(REFNSIID iid, void** result)
         iid.Equals(kIXMLContentSinkIID) ||
         iid.Equals(kIContentSinkIID) ||
         iid.Equals(kISupportsIID)) {
-        *result = NS_STATIC_CAST(nsIXMLContentSink*, this);
+        *result = static_cast<nsIXMLContentSink*>(this);
         AddRef();
         return NS_OK;
     }
     else if (iid.Equals(kIExpatSinkIID)) {
-      *result = NS_STATIC_CAST(nsIExpatSink*, this);
+      *result = static_cast<nsIExpatSink*>(this);
        AddRef();
        return NS_OK;
     }
@@ -769,12 +768,11 @@ RDFContentSinkImpl::ParseText(nsIRDFNode **aResult)
 }
 
 nsresult
-RDFContentSinkImpl::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
+RDFContentSinkImpl::FlushText()
 {
     nsresult rv = NS_OK;
-    PRBool didFlush = PR_FALSE;
     if (0 != mTextLength) {
-        if (aCreateTextNode && rdf_IsDataInBuffer(mText, mTextLength)) {
+        if (rdf_IsDataInBuffer(mText, mTextLength)) {
             // XXX if there's anything but whitespace, then we'll
             // create a text node.
 
@@ -803,10 +801,6 @@ RDFContentSinkImpl::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
             }
         }
         mTextLength = 0;
-        didFlush = PR_TRUE;
-    }
-    if (nsnull != aDidFlush) {
-        *aDidFlush = didFlush;
     }
     return rv;
 }
@@ -1496,7 +1490,7 @@ RDFContentSinkImpl::GetContextElement(PRInt32 ancestor /* = 0 */)
     }
 
     RDFContextStackElement* e =
-        NS_STATIC_CAST(RDFContextStackElement*, mContextStack->ElementAt(mContextStack->Count()-ancestor-1));
+        static_cast<RDFContextStackElement*>(mContextStack->ElementAt(mContextStack->Count()-ancestor-1));
 
     return e->mResource;
 }
@@ -1521,7 +1515,7 @@ RDFContentSinkImpl::PushContext(nsIRDFResource         *aResource,
     e->mState     = aState;
     e->mParseMode = aParseMode;
   
-    mContextStack->AppendElement(NS_STATIC_CAST(void*, e));
+    mContextStack->AppendElement(static_cast<void*>(e));
     return mContextStack->Count();
 }
  
@@ -1537,7 +1531,7 @@ RDFContentSinkImpl::PopContext(nsIRDFResource         *&aResource,
     }
 
     PRInt32 i = mContextStack->Count() - 1;
-    e = NS_STATIC_CAST(RDFContextStackElement*, mContextStack->ElementAt(i));
+    e = static_cast<RDFContextStackElement*>(mContextStack->ElementAt(i));
     mContextStack->RemoveElementAt(i);
 
     // don't bother Release()-ing: call it our implicit AddRef().

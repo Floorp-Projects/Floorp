@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *      Prasad Sunkari <prasad@medhas.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -223,7 +224,7 @@ nsIOService::Init()
     
     // setup our bad port list stuff
     for(int i=0; gBadPortList[i]; i++)
-        mRestrictedPortList.AppendElement(NS_REINTERPRET_CAST(void *, gBadPortList[i]));
+        mRestrictedPortList.AppendElement(reinterpret_cast<void *>(gBadPortList[i]));
 
     // Further modifications to the port list come from prefs
     nsCOMPtr<nsIPrefBranch2> prefBranch;
@@ -618,7 +619,7 @@ nsIOService::SetOffline(PRBool offline)
         // don't care if notification fails
         // this allows users to attempt a little cleanup before dns and socket transport are shut down.
         if (observerService)
-            observerService->NotifyObservers(NS_STATIC_CAST(nsIIOService *, this),
+            observerService->NotifyObservers(static_cast<nsIIOService *>(this),
                                              NS_IOSERVICE_GOING_OFFLINE_TOPIC,
                                              offlineString.get());
 
@@ -635,7 +636,7 @@ nsIOService::SetOffline(PRBool offline)
 
         // don't care if notification fails
         if (observerService)
-            observerService->NotifyObservers(NS_STATIC_CAST(nsIIOService *, this),
+            observerService->NotifyObservers(static_cast<nsIIOService *>(this),
                                              NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
                                              offlineString.get());
     }
@@ -658,7 +659,7 @@ nsIOService::SetOffline(PRBool offline)
  
         // don't care if notification fails
         if (observerService)
-            observerService->NotifyObservers(NS_STATIC_CAST(nsIIOService *, this),
+            observerService->NotifyObservers(static_cast<nsIIOService *>(this),
                                              NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
                                              NS_LITERAL_STRING(NS_IOSERVICE_ONLINE).get());
     }
@@ -962,17 +963,23 @@ nsIOService::EscapeString(const nsACString& aString,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsIOService::UnescapeString(const nsACString& aString, nsACString& aResult)
+NS_IMETHODIMP 
+nsIOService::EscapeURL(const nsACString &aStr, 
+                       PRUint32 aFlags, nsACString &aResult)
 {
-  char *str = ToNewCString(aString);
-  
-  if (!str)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  str = nsUnescape(str);
-  aResult.Assign(str);
-
-  NS_Free(str);
+  aResult.Truncate();
+  PRBool escaped = NS_EscapeURL(aStr.BeginReading(), aStr.Length(), 
+                                aFlags | esc_AlwaysCopy, aResult);
   return NS_OK;
 }
+
+NS_IMETHODIMP 
+nsIOService::UnescapeString(const nsACString &aStr, 
+                            PRUint32 aFlags, nsACString &aResult)
+{
+  aResult.Truncate();
+  PRBool unescaped = NS_UnescapeURL(aStr.BeginReading(), aStr.Length(), 
+                                    aFlags | esc_AlwaysCopy, aResult);
+  return NS_OK;
+}
+

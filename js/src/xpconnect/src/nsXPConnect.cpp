@@ -217,11 +217,6 @@ struct JSObjectRefcounts
 
 nsXPConnect::~nsXPConnect()
 {
-    // XXX It would be nice if we could get away with doing a GC here and also
-    // calling Release on the natives no longer reachable via XPConnect. As
-    // noted all over the place, this makes bad things happen since shutdown is
-    // an unstable time for so many modules who have not planned well for it.
-
     NS_ASSERTION(!mCycleCollectionContext,
                  "Didn't call FinishCycleCollection?");
     nsCycleCollector_forgetRuntime(nsIProgrammingLanguage::JAVASCRIPT);
@@ -231,35 +226,32 @@ nsXPConnect::~nsXPConnect()
         mObjRefcounts = NULL;
     }
 
+    JSContext *cx = nsnull;
+    if (mRuntime) {
+        // Create our own JSContext rather than an XPCCallContext, since
+        // otherwise we will create a new safe JS context and attach a
+        // components object that won't get GCed.
+        // And do this before calling CleanupAllThreads, so that we
+        // don't create an extra xpcPerThreadData.
+        cx = JS_NewContext(mRuntime->GetJSRuntime(), 8192);
+    }
+
+    XPCPerThreadData::CleanupAllThreads();
     mShuttingDown = JS_TRUE;
-    { // scoped callcontext
-        XPCCallContext ccx(NATIVE_CALLER);
-        if(ccx.IsValid())
-        {
-            XPCWrappedNativeScope::SystemIsBeingShutDown(ccx);
-            if(mRuntime)
-                mRuntime->SystemIsBeingShutDown(&ccx);
-                
-        }
+    if (cx) {
+        JS_BeginRequest(cx);
+
+        // XXX Call even if |mRuntime| null?
+        XPCWrappedNativeScope::SystemIsBeingShutDown(cx);
+
+        mRuntime->SystemIsBeingShutDown(cx);
+
+        JS_EndRequest(cx);
+        JS_DestroyContext(cx);
     }
 
     NS_IF_RELEASE(mContextStack);
     NS_IF_RELEASE(mDefaultSecurityManager);
-
-    // Unfortunately calling CleanupAllThreads before the stuff above
-    // (esp. SystemIsBeingShutDown) causes too many bad things to happen
-    // as the Release calls propagate. See the comment in this function in
-    // revision 1.35 of this file.
-    //
-    // I filed a bug on xpcom regarding the bad things that happen
-    // if people try to create components during shutdown.
-    // http://bugzilla.mozilla.org/show_bug.cgi?id=37058
-    //
-    // Also, we just plain need the context stack for at least the current
-    // thread to be in place. Unfortunately, this will leak stuff on the
-    // stacks' safeJSContexts. But, this is a shutdown leak only.
-
-    XPCPerThreadData::CleanupAllThreads();
 
     // shutdown the logging system
     XPC_LOG_FINISH();
@@ -340,7 +332,7 @@ nsXPConnect::ReleaseXPConnectSingleton()
                 if(dumpFile)
                 {
                     JS_DumpHeap(ccx, dumpFile, nsnull, 0, nsnull,
-                                NS_STATIC_CAST(size_t, -1), nsnull);
+                                static_cast<size_t>(-1), nsnull);
                     if(dumpFile != stdout)
                         fclose(dumpFile);
                 }
@@ -539,7 +531,7 @@ void XPCMarkNotification(void *thing, uint8 flags, void *closure)
        ty != GCX_XML)
         return;
 
-    JSObjectRefcounts* jsr = NS_STATIC_CAST(JSObjectRefcounts*, closure);
+    JSObjectRefcounts* jsr = static_cast<JSObjectRefcounts*>(closure);
     // We're marking after a mark phase ended, so the GC restarted itself and
     // we want to clear the refcounts first.
     if(jsr->mMarkEnded)
@@ -572,6 +564,8 @@ nsXPConnect::BeginCycleCollection()
     JS_SetGCThingCallback(cx, nsnull, nsnull);
     JS_SetGCCallback(cx, gOldJSGCCallback);
     gOldJSGCCallback = nsnull;
+
+    XPCWrappedNativeScope::SuspectAllWrappers(mRuntime);
 
 #ifndef XPCONNECT_STANDALONE
     NS_ASSERTION(mObjRefcounts->mScopes.Count() == 0, "Didn't clear mScopes?");
@@ -614,7 +608,7 @@ nsXPConnect::Unlink(void *p)
         return NS_ERROR_FAILURE;
     uint8 ty = *js_GetGCThingFlags(p) & GCF_TYPEMASK;
     if(ty == GCX_OBJECT)
-        JS_ClearScope(*mCycleCollectionContext, NS_STATIC_CAST(JSObject*, p));
+        JS_ClearScope(*mCycleCollectionContext, static_cast<JSObject*>(p));
     return NS_OK;
 }
 
@@ -649,7 +643,7 @@ NoteJSChild(JSTracer *trc, void *thing, uint32 kind)
     if(kind == JSTRACE_OBJECT || kind == JSTRACE_NAMESPACE ||
        kind == JSTRACE_QNAME || kind == JSTRACE_XML)
     {
-        ContextCallbackItem *item = NS_STATIC_CAST(ContextCallbackItem*, trc);
+        ContextCallbackItem *item = static_cast<ContextCallbackItem*>(trc);
         item->cb->NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, thing);
     }
 }
@@ -685,7 +679,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 #ifdef DEBUG_CC
     if(ty == GCX_OBJECT)
     {
-        JSObject *obj = NS_STATIC_CAST(JSObject*, p);
+        JSObject *obj = static_cast<JSObject*>(p);
         JSClass *clazz = OBJ_GET_CLASS(cx, obj);
         char name[72];
         if(XPCNativeWrapper::IsNativeWrapperClass(clazz))
@@ -796,7 +790,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     if(ty != GCX_OBJECT)
         return NS_OK;
     
-    JSObject *obj = NS_STATIC_CAST(JSObject*, p);
+    JSObject *obj = static_cast<JSObject*>(p);
     JSClass* clazz = OBJ_GET_CLASS(cx, obj);
 
     if(clazz == &XPC_WN_Tearoff_JSClass)
@@ -816,7 +810,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
             clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS &&
             !XPCNativeWrapper::IsNativeWrapperClass(clazz))
     {
-        cb.NoteXPCOMChild(NS_STATIC_CAST(nsISupports*, JS_GetPrivate(cx, obj)));
+        cb.NoteXPCOMChild(static_cast<nsISupports*>(JS_GetPrivate(cx, obj)));
     }
 
 #ifndef XPCONNECT_STANDALONE
@@ -842,6 +836,23 @@ inline nsresult UnexpectedFailure(nsresult rv)
     return rv;
 }
 
+class SaveFrame
+{
+public:
+    SaveFrame(JSContext *cx)
+        : mJSContext(cx) {
+        mFrame = JS_SaveFrameChain(mJSContext);
+    }
+
+    ~SaveFrame() {
+        JS_RestoreFrameChain(mJSContext, mFrame);
+    }
+
+private:
+    JSContext *mJSContext;
+    JSStackFrame *mFrame;
+};
+
 /* void initClasses (in JSContextPtr aJSContext, in JSObjectPtr aGlobalJSObj); */
 NS_IMETHODIMP
 nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
@@ -849,6 +860,7 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
     NS_ASSERTION(aJSContext, "bad param");
     NS_ASSERTION(aGlobalJSObj, "bad param");
 
+    SaveFrame sf(aJSContext);
     XPCCallContext ccx(NATIVE_CALLER, aJSContext);
     if(!ccx.IsValid())
         return UnexpectedFailure(NS_ERROR_FAILURE);
@@ -966,7 +978,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     XPCWrappedNative* wrapper =
-        NS_REINTERPRET_CAST(XPCWrappedNative*, holder.get());
+        reinterpret_cast<XPCWrappedNative*>(holder.get());
     XPCWrappedNativeScope* scope = wrapper->GetScope();
 
     if(!scope)
@@ -986,6 +998,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
         JS_SetPrototype(aJSContext, protoJSObject, scope->GetPrototypeJSObject());
     }
 
+    SaveFrame sf(ccx);
     if(!nsXPCComponents::AttachNewComponentsObject(ccx, scope, globalJSObj))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
@@ -1147,7 +1160,7 @@ nsXPConnect::GetWrappedNativeOfNativeObject(JSContext * aJSContext,
                                                 &wrapper);
     if(NS_FAILED(rv))
         return NS_ERROR_FAILURE;
-    *_retval = NS_STATIC_CAST(nsIXPConnectWrappedNative*, wrapper);
+    *_retval = static_cast<nsIXPConnectWrappedNative*>(wrapper);
     return NS_OK;
 }
 
@@ -1183,7 +1196,7 @@ MoveableWrapperFinder(JSDHashTable *table, JSDHashEntryHdr *hdr,
                       uint32 number, void *arg)
 {
     // Every element counts.
-    nsVoidArray *va = NS_STATIC_CAST(nsVoidArray *,arg);
+    nsVoidArray *va = static_cast<nsVoidArray *>(arg);
     va->AppendElement(((Native2WrappedNativeMap::Entry*)hdr)->value);
     return JS_DHASH_NEXT;
 }
@@ -1225,7 +1238,7 @@ nsXPConnect::ReparentScopeAwareWrappers(JSContext *aJSContext,
             // reparented.
 
             XPCWrappedNative *wrapper =
-                NS_STATIC_CAST(XPCWrappedNative *, wrappersToMove[i]);
+                static_cast<XPCWrappedNative *>(wrappersToMove[i]);
             nsISupports *identity = wrapper->GetIdentityObject();
             nsCOMPtr<nsIClassInfo> info(do_QueryInterface(identity));
 

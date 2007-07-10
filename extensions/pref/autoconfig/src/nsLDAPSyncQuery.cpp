@@ -146,7 +146,7 @@ nsLDAPSyncQuery::OnLDAPInit(nsILDAPConnection *aConn, nsresult aStatus)
     //
     rv = NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
                               NS_GET_IID(nsILDAPMessageListener), 
-                              NS_STATIC_CAST(nsILDAPMessageListener *, this),
+                              static_cast<nsILDAPMessageListener *>(this),
                               NS_PROXY_ASYNC | NS_PROXY_ALWAYS, 
                               getter_AddRefs(selfProxy));
     if (NS_FAILED(rv)) {
@@ -285,7 +285,7 @@ nsLDAPSyncQuery::StartLDAPSearch()
     //
     rv = NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD, 
                               NS_GET_IID(nsILDAPMessageListener),
-                              NS_STATIC_CAST(nsILDAPMessageListener *, this),
+                              static_cast<nsILDAPMessageListener *>(this),
                               NS_PROXY_ASYNC | NS_PROXY_ALWAYS,
                               getter_AddRefs(selfProxy));
     if (NS_FAILED(rv)) {
@@ -343,7 +343,7 @@ nsLDAPSyncQuery::StartLDAPSearch()
     // time to kick off the search.
     //
     rv = mOperation->SearchExt(dn, scope, urlFilter, mAttrCount,
-                               NS_CONST_CAST(const char **, mAttrs), 0, 0);
+                               const_cast<const char **>(mAttrs), 0, 0);
 
     if (NS_FAILED(rv)) {
         FinishLDAPQuery();
@@ -409,7 +409,7 @@ nsresult nsLDAPSyncQuery::InitConnection()
     //
     rv = NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
                               NS_GET_IID(nsILDAPMessageListener), 
-                              NS_STATIC_CAST(nsILDAPMessageListener *, this), 
+                              static_cast<nsILDAPMessageListener *>(this), 
                               NS_PROXY_ASYNC | NS_PROXY_ALWAYS, 
                               getter_AddRefs(selfProxy));
     if (NS_FAILED(rv)) {

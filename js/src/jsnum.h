@@ -51,19 +51,19 @@
 JS_BEGIN_EXTERN_C
 
 /*
- * Stefan Hanske <sh990154@mail.uni-greifswald.de> reports:
- *  ARM is a little endian architecture but 64 bit double words are stored
- * differently: the 32 bit words are in little endian byte order, the two words
- * are stored in big endian`s way.
+ * The ARM architecture supports two floating point models: VFP and FPA. When
+ * targetting FPA, doubles are mixed-endian on little endian ARMs (meaning that
+ * the high and low words are in big endian order).
  */
-
 #if defined(__arm) || defined(__arm32__) || defined(__arm26__) || defined(__arm__)
-#define CPU_IS_ARM
+#if !defined(__VFP_FP__)
+#define FPU_IS_ARM_FPA
+#endif
 #endif
 
 typedef union jsdpun {
     struct {
-#if defined(IS_LITTLE_ENDIAN) && !defined(CPU_IS_ARM)
+#if defined(IS_LITTLE_ENDIAN) && !defined(FPU_IS_ARM_FPA)
         uint32 lo, hi;
 #else
         uint32 hi, lo;
@@ -92,7 +92,7 @@ typedef union jsdpun {
  * so this code should work.
  */
 
-#if defined(IS_LITTLE_ENDIAN) && !defined(CPU_IS_ARM)
+#if defined(IS_LITTLE_ENDIAN) && !defined(FPU_IS_ARM_FPA)
 #define JSDOUBLE_HI32(x)        (((uint32 *)&(x))[1])
 #define JSDOUBLE_LO32(x)        (((uint32 *)&(x))[0])
 #else

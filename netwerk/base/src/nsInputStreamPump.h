@@ -82,7 +82,7 @@ public:
      *
      * Do not call before asyncRead. Do not call after onStopRequest.
      */
-    NS_HIDDEN_(void) PeekStream(PeekSegmentFun callback, void *closure);
+    NS_HIDDEN_(nsresult) PeekStream(PeekSegmentFun callback, void *closure);
 
 protected:
 

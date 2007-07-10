@@ -135,7 +135,7 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType,
 
   // The syntax used here doesn't work
   nsCOMPtr<nsIContentSerializer> mSerializer;
-  mSerializer = do_CreateInstance(NS_STATIC_CAST(const char *, progId));
+  mSerializer = do_CreateInstance(static_cast<const char *>(progId));
   NS_ENSURE_TRUE(mSerializer, NS_ERROR_NOT_IMPLEMENTED);
 
   mSerializer->Init(flags, wrapCol);

@@ -515,7 +515,7 @@ txMozillaXSLTProcessor::AddXSLTParam(const nsString& aName,
     NS_ENSURE_SUCCESS(rv, rv);
 
     txExpandedName varName(nsId, name);
-    txVariable* var = NS_STATIC_CAST(txVariable*, mVariables.get(varName));
+    txVariable* var = static_cast<txVariable*>(mVariables.get(varName));
     if (var) {
         var->setValue(value);
         
@@ -678,7 +678,7 @@ txMozillaXSLTProcessor::TransformToDoc(nsIDOMDocument *aOutputDoc,
     if (NS_SUCCEEDED(rv)) {
         if (aResult) {
             txAOutputXMLEventHandler* handler =
-                NS_STATIC_CAST(txAOutputXMLEventHandler*, es.mOutputHandler);
+                static_cast<txAOutputXMLEventHandler*>(es.mOutputHandler);
             handler->getOutputDocument(aResult);
         }
     }
@@ -802,8 +802,8 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
 
                 if (result->getResultType() == txAExprResult::NODESET) {
                     txNodeSet *nodeSet =
-                        NS_STATIC_CAST(txNodeSet*,
-                                       NS_STATIC_CAST(txAExprResult*, result));
+                        static_cast<txNodeSet*>
+                                   (static_cast<txAExprResult*>(result));
 
                     nsCOMPtr<nsIDOMNode> node;
                     PRInt32 i, count = nodeSet->size();
@@ -882,7 +882,7 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
                 return NS_ERROR_ILLEGAL_VALUE;
             }
 
-            nsISupports** values = NS_STATIC_CAST(nsISupports**, array);
+            nsISupports** values = static_cast<nsISupports**>(array);
 
             PRUint32 i;
             for (i = 0; i < count; ++i) {
@@ -929,7 +929,7 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
     nsCOMPtr<nsIAtom> localName = do_GetAtom(aLocalName);
     txExpandedName varName(nsId, localName);
 
-    txVariable* var = NS_STATIC_CAST(txVariable*, mVariables.get(varName));
+    txVariable* var = static_cast<txVariable*>(mVariables.get(varName));
     if (var) {
         var->setValue(value);
         return NS_OK;
@@ -953,7 +953,7 @@ txMozillaXSLTProcessor::GetParameter(const nsAString& aNamespaceURI,
     nsCOMPtr<nsIAtom> localName = do_GetAtom(aLocalName);
     txExpandedName varName(nsId, localName);
 
-    txVariable* var = NS_STATIC_CAST(txVariable*, mVariables.get(varName));
+    txVariable* var = static_cast<txVariable*>(mVariables.get(varName));
     if (var) {
         return var->getValue(aResult);
     }
@@ -1429,8 +1429,8 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
                 NS_ENSURE_TRUE(str, NS_ERROR_FAILURE);
 
                 const PRUnichar *strChars =
-                    NS_REINTERPRET_CAST(const PRUnichar*,
-                                        ::JS_GetStringChars(str));
+                    reinterpret_cast<const PRUnichar*>
+                                    (::JS_GetStringChars(str));
                 nsDependentString value(strChars, ::JS_GetStringLength(str));
 
                 *aResult = new StringResult(value, nsnull);
@@ -1459,7 +1459,7 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
                          type == nsIDataType::VTYPE_INTERFACE_IS,
                          "Huh, we checked this in SetParameter?");
 
-            nsISupports** values = NS_STATIC_CAST(nsISupports**, array);
+            nsISupports** values = static_cast<nsISupports**>(array);
 
             nsRefPtr<txNodeSet> nodeSet = new txNodeSet(nsnull);
             if (!nodeSet) {

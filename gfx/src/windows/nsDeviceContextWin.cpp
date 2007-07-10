@@ -228,7 +228,7 @@ nsDeviceContextWin :: FindScreen ( nsIScreen** outScreen )
 {
   // now then, if we have more than one screen, we need to find which screen this
   // window is on.
-  HWND window = NS_REINTERPRET_CAST(HWND, mWidget);
+  HWND window = reinterpret_cast<HWND>(mWidget);
   if ( window ) {
     RECT globalPosition;
     ::GetWindowRect ( window, &globalPosition ); 

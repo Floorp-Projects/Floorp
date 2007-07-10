@@ -1,8 +1,8 @@
 function closeWindow(aClose, aPromptFunction)
 {
   var windowCount = 0;
-   var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                      .getService(Components.interfaces.nsIWindowMediator);
+  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                     .getService(Components.interfaces.nsIWindowMediator);
   var e = wm.getEnumerator(null);
   
   while (e.hasMoreElements()) {
@@ -16,9 +16,10 @@ function closeWindow(aClose, aPromptFunction)
   // If we're down to the last window and someone tries to shut down, check to make sure we can!
   if (windowCount == 1 && !canQuitApplication())
     return false;
+  else if (windowCount != 1)
 #endif
-  if (windowCount != 1 && typeof(aPromptFunction) == "function" && !aPromptFunction())
-    return false;
+    if (typeof(aPromptFunction) == "function" && !aPromptFunction())
+      return false;
 
   if (aClose)    
     window.close();

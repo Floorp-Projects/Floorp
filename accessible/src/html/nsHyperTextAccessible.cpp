@@ -81,7 +81,7 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
       PRInt32 numChildren;
       GetChildCount(&numChildren);
       if (numChildren > 0) {
-        *aInstancePtr = NS_STATIC_CAST(nsIAccessibleText*, this);
+        *aInstancePtr = static_cast<nsIAccessibleText*>(this);
         NS_ADDREF_THIS();
         return NS_OK;
       }
@@ -91,7 +91,7 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
     if (aIID.Equals(NS_GET_IID(nsIAccessibleHyperText))) {
       if (IsHyperText()) {
         // If |this| contains text and embedded objects
-        *aInstancePtr = NS_STATIC_CAST(nsIAccessibleHyperText*, this);
+        *aInstancePtr = static_cast<nsIAccessibleHyperText*>(this);
         NS_ADDREF_THIS();
         return NS_OK;
       }
@@ -103,7 +103,7 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
       PRUint32 state, extState;
       GetState(&state, &extState);
       if (extState & nsIAccessibleStates::EXT_STATE_EDITABLE) {
-        *aInstancePtr = NS_STATIC_CAST(nsIAccessibleEditableText*, this);
+        *aInstancePtr = static_cast<nsIAccessibleEditableText*>(this);
         NS_ADDREF_THIS();
         return NS_OK;
       }
@@ -140,10 +140,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetRole(PRUint32 *aRole)
 
   nsIAtom *tag = content->Tag();
 
-  if (tag == nsAccessibilityAtoms::caption) {
-    *aRole = nsIAccessibleRole::ROLE_CAPTION;
-  }
-  else if (tag == nsAccessibilityAtoms::form) {
+  if (tag == nsAccessibilityAtoms::form) {
     *aRole = nsIAccessibleRole::ROLE_FORM;
   }
   else if (tag == nsAccessibilityAtoms::div ||
@@ -851,9 +848,8 @@ nsHyperTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
   if (headLevel) {
     nsAutoString strHeadLevel;
     strHeadLevel.AppendInt(headLevel);
-    nsAccessibilityUtils::SetAccAttr(aAttributes,
-                                     nsAccessibilityAtoms::level,
-                                     strHeadLevel);
+    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::level,
+                           strHeadLevel);
   }
 
   return  NS_OK;
@@ -1136,6 +1132,17 @@ NS_IMETHODIMP nsHyperTextAccessible::PasteText(PRInt32 aPosition)
     return editor->Paste(nsIClipboard::kGlobalClipboard);
 
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsHyperTextAccessible::GetEditor(nsIEditor **aEditor)
+{
+  NS_ENSURE_ARG_POINTER(aEditor);
+
+  nsCOMPtr<nsIEditor> editor(GetEditor());
+  NS_IF_ADDREF(*aEditor = editor);
+
+  return NS_OK;
 }
 
 /**

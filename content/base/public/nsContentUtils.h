@@ -91,6 +91,7 @@ template<class E> class nsCOMArray;
 class nsIPref;
 class nsVoidArray;
 struct JSRuntime;
+class nsICaseConversion;
 #ifdef MOZ_XTF
 class nsIXTFService;
 #endif
@@ -511,6 +512,11 @@ public:
   {
     return sWordBreaker;
   }
+  
+  static nsICaseConversion* GetCaseConv()
+  {
+    return sCaseConv;
+  }
 
   /**
    * @return PR_TRUE if aContent has an attribute aName in namespace aNameSpaceID,
@@ -525,6 +531,7 @@ public:
    * @param aURI uri of the image to be loaded
    * @param aContext the context the image is loaded in (eg an element)
    * @param aLoadingDocument the document we belong to
+   * @param aLoadingPrincipal the principal doing the load
    * @param aImageBlockingStatus the nsIContentPolicy blocking status for this
    *        image.  This will be set even if a security check fails for the
    *        image, to some reasonable REJECT_* value.  This out param will only
@@ -537,18 +544,22 @@ public:
   static PRBool CanLoadImage(nsIURI* aURI,
                              nsISupports* aContext,
                              nsIDocument* aLoadingDocument,
+                             nsIPrincipal* aLoadingPrincipal,
                              PRInt16* aImageBlockingStatus = nsnull);
   /**
    * Method to start an image load.  This does not do any security checks.
    *
    * @param aURI uri of the image to be loaded
    * @param aLoadingDocument the document we belong to
+   * @param aLoadingPrincipal the principal doing the load
+   * @param aReferrer the referrer URI
    * @param aObserver the observer for the image load
    * @param aLoadFlags the load flags to use.  See nsIRequest
    * @return the imgIRequest for the image load
    */
   static nsresult LoadImage(nsIURI* aURI,
                             nsIDocument* aLoadingDocument,
+                            nsIPrincipal* aLoadingPrincipal,
                             nsIURI* aReferrer,
                             imgIDecoderObserver* aObserver,
                             PRInt32 aLoadFlags,
@@ -769,14 +780,19 @@ public:
   /**
    * Quick helper to determine whether there are any mutation listeners
    * of a given type that apply to this content or any of its ancestors.
+   * The method has the side effect to call document's MayDispatchMutationEvent
+   * using aTargetForSubtreeModified as the parameter.
    *
    * @param aNode  The node to search for listeners
    * @param aType  The type of listener (NS_EVENT_BITS_MUTATION_*)
+   * @param aTargetForSubtreeModified The node which is the target of the
+   *                                  possible DOMSubtreeModified event.
    *
    * @return true if there are mutation listeners of the specified type
    */
   static PRBool HasMutationListeners(nsINode* aNode,
-                                     PRUint32 aType);
+                                     PRUint32 aType,
+                                     nsINode* aTargetForSubtreeModified);
 
   /**
    * This method creates and dispatches a trusted event.
@@ -963,7 +979,7 @@ public:
   static void DestroyMatchString(void* aData)
   {
     if (aData) {
-      nsString* matchString = NS_STATIC_CAST(nsString*, aData);
+      nsString* matchString = static_cast<nsString*>(aData);
       delete matchString;
     }
   }
@@ -982,14 +998,18 @@ public:
     ScriptObjectHolder(PRUint32 aLangID) : mLangID(aLangID),
                                            mObject(nsnull)
     {
+      MOZ_COUNT_CTOR(ScriptObjectHolder);
     }
     ~ScriptObjectHolder()
     {
+      MOZ_COUNT_DTOR(ScriptObjectHolder);
       if (mObject)
         DropScriptObject(mLangID, mObject);
     }
     nsresult set(void *aObject)
     {
+      NS_ASSERTION(aObject, "unexpected null object");
+      NS_ASSERTION(!mObject, "already have an object");
       nsresult rv = HoldScriptObject(mLangID, aObject);
       if (NS_SUCCEEDED(rv)) {
         mObject = aObject;
@@ -1099,6 +1119,7 @@ private:
 
   static nsILineBreaker* sLineBreaker;
   static nsIWordBreaker* sWordBreaker;
+  static nsICaseConversion* sCaseConv;
 
   // Holds pointers to nsISupports* that should be released at shutdown
   static nsVoidArray* sPtrsToPtrsToRelease;
@@ -1184,7 +1205,7 @@ private:
 
 #define NS_INTERFACE_MAP_ENTRY_TEAROFF(_interface, _allocator)                \
   if (aIID.Equals(NS_GET_IID(_interface))) {                                  \
-    foundInterface = NS_STATIC_CAST(_interface *, _allocator);                \
+    foundInterface = static_cast<_interface *>(_allocator);                \
     if (!foundInterface) {                                                    \
       *aInstancePtr = nsnull;                                                 \
       return NS_ERROR_OUT_OF_MEMORY;                                          \

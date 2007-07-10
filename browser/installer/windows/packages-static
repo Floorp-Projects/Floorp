@@ -48,6 +48,8 @@ bin\msvcr80.dll
 [browser]
 ; [Base Browser Files]
 bin\@MOZ_APP_NAME@.exe
+bin\application.ini
+bin\platform.ini
 bin\plugins\npnul32.dll
 bin\res\cmessage.txt
 bin\res\effective_tld_names.dat
@@ -81,6 +83,7 @@ bin\components\content_htmldoc.xpt
 bin\components\content_xmldoc.xpt
 bin\components\content_xslt.xpt
 bin\components\content_xtf.xpt
+bin\components\contentprefs.xpt
 bin\components\cookie.xpt
 bin\components\directory.xpt
 bin\components\docshell_base.xpt
@@ -179,6 +182,7 @@ bin\components\windowwatcher.xpt
 bin\components\shellservice.xpt
 bin\components\xml-rpc.xpt
 bin\components\xpcom_base.xpt
+bin\components\xpcom_system.xpt
 bin\components\xpcom_components.xpt
 bin\components\xpcom_ds.xpt
 bin\components\xpcom_io.xpt
@@ -229,6 +233,10 @@ bin\components\txEXSLTRegExFunctions.js
 bin\components\nsLivemarkService.js
 bin\components\nsTaggingService.js
 bin\components\nsDefaultCLH.js
+bin\components\nsContentPrefService.js
+
+; Modules
+bin\modules\*
 
 ; Safe Browsing
 bin\components\nsSafebrowsingApplication.js
@@ -271,6 +279,8 @@ bin\res\html.css
 bin\res\quirk.css
 bin\res\forms.css
 bin\res\EditorOverride.css
+bin\res\contenteditable.css
+bin\res\designmode.css
 bin\res\table-add-column-after-active.gif
 bin\res\table-add-column-after-hover.gif
 bin\res\table-add-column-after.gif
@@ -330,7 +340,7 @@ bin\chrome\pippki.manifest
 ;
 bin\updater.exe
 
-; [airbag]
+; [Crash Reporter]
 bin\crashreporter.exe
 bin\crashreporter.ini
 
@@ -342,19 +352,3 @@ bin\extensions\inspector@mozilla.org\chrome.manifest
 bin\extensions\inspector@mozilla.org\chrome\inspector.jar
 bin\extensions\inspector@mozilla.org\defaults\preferences\inspector.js
 bin\extensions\inspector@mozilla.org\chrome\icons\default\winInspectorMain.ico
-
-; [Additional Browsing Enhancements]
-[abe]
-
-[talkback]
-bin\extensions\talkback@mozilla.org\install.rdf
-bin\extensions\talkback@mozilla.org\chrome.manifest
-bin\extensions\talkback@mozilla.org\components\qfaservices.dll
-bin\extensions\talkback@mozilla.org\components\qfaservices.xpt
-bin\extensions\talkback@mozilla.org\components\BrandRes.dll
-bin\extensions\talkback@mozilla.org\components\fullsoft.dll
-bin\extensions\talkback@mozilla.org\components\master.ini
-bin\extensions\talkback@mozilla.org\components\talkback-l10n.ini
-bin\extensions\talkback@mozilla.org\components\talkback.cnt
-bin\extensions\talkback@mozilla.org\components\talkback.exe
-bin\extensions\talkback@mozilla.org\components\talkback.hlp

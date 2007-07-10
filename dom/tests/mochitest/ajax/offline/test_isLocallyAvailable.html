@@ -1,0 +1,94 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>navigator.isLocallyAvailable Test</title>
+
+<link rel="offline-resource" href="http://localhost:8888/tests/SimpleTest/SimpleTest.js">
+
+<script type="text/javascript" src="/MochiKit/packed.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+
+<script type="text/javascript">
+
+function run_test()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  // check invalid urls
+  try {
+    navigator.isLocallyAvailable("http://different.origin.com", false);
+    ok(false, "can't check from a different origin");
+  } catch(e) {
+    ok(true, "can't check from a different origin");
+  }
+
+  try {
+    navigator.isLocallyAvailable("ftp://localhost/blah/blah", false);
+    ok(false, "urls must be http or https");
+  } catch(e) {
+    ok(true, "urls must be http or https");
+  }
+
+  // check an URL that should definitely not be there
+  ok(navigator.isLocallyAvailable("http://localhost:8888/blah/blah/blah",
+                                  false) == false,
+     "unknown item shouldn't be available online");
+  ok(navigator.isLocallyAvailable("http://localhost:8888/blah/blah/blah",
+                                  true) == false,
+     "unknown item shouldn't be available offline");
+
+  // check a URL that should be available on and offline
+  var url = "http://localhost:8888/tests/SimpleTest/SimpleTest.js";
+  ok(navigator.isLocallyAvailable(url, false) == true,
+     url + " should be available online");
+  ok(navigator.isLocallyAvailable(url, true) == true,
+     url + " should be available offline");
+
+  // Pull it out of the disk cache
+  var cacheService = Components.classes["@mozilla.org/network/cache-service;1"]
+    .getService(Components.interfaces.nsICacheService);
+  var session = cacheService.createSession
+    ("HTTP",
+     Components.interfaces.nsICache.STORE_ON_DISK,
+     Components.interfaces.nsICache.STREAM_BASED);
+  var entry = session.openCacheEntry(url, Components.interfaces.nsICache.ACCESS_WRITE, false);
+  entry.doom();
+  entry.close();
+
+  // Now it should be available offline but not online
+  ok(navigator.isLocallyAvailable(url, false) == false,
+     url + " should not be available online");
+
+  ok(navigator.isLocallyAvailable(url, true) == true,
+     url + " should be available offline");
+
+  // Clear the offline cache/ownership on the way out
+  var cacheService = Components.classes["@mozilla.org/network/cache-service;1"]
+    .getService(Components.interfaces.nsICacheService);
+  var cacheSession = cacheService.createSession("HTTP-offline",
+                                                Components.interfaces.nsICache.STORE_OFFLINE,
+                                                true)
+    .QueryInterface(Components.interfaces.nsIOfflineCacheSession);
+  cacheSession.setOwnedKeys(window.location.host,
+                            window.location.protocol + "//" + window.location.host + window.location.pathname,
+                            0, []);
+  cacheSession.setOwnedKeys(window.location.host, "", 0, []);
+  cacheSession.evictUnownedEntries();
+
+  cacheService.evictEntries(Components.interfaces.nsICache.STORE_OFFLINE);
+  SimpleTest.finish();
+}
+
+// Give the offline resources some time to load.
+setTimeout("run_test()", 1000);
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+<body>
+
+
+
+</body>
+</html>

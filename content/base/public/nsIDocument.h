@@ -95,8 +95,9 @@ class mozAutoSubtreeModified;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x7dd5790f, 0x110d, 0x4bf6, \
-  { 0x83, 0x50, 0x4b, 0xe3, 0x5d, 0xdc, 0xe1, 0x1e } }
+{ 0x6700e22b, 0x95b8, 0x44cf, \
+  { 0x8f, 0x5a, 0x57, 0x2c, 0x14, 0x5b, 0xd1, 0xa1 } }
+
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -851,9 +852,13 @@ public:
   virtual void FlushSkinBindings() = 0;
 
   /**
-   * Returns PR_TRUE if one or more mutation events are being dispatched.
+   * To batch DOMSubtreeModified, document needs to be informed when
+   * a mutation event might be dispatched, even if the event isn't actually
+   * created because there are no listeners for it.
+   *
+   * @param aTarget is the target for the mutation event.
    */
-  virtual PRBool MutationEventBeingDispatched() = 0;
+  virtual void MayDispatchMutationEvent(nsINode* aTarget) = 0;
 
   /**
    * Marks as not-going-to-be-collected for the given generation of

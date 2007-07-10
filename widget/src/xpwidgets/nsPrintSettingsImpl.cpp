@@ -954,7 +954,7 @@ nsPrintSettings::Clone(nsIPrintSettings **_retval)
 nsresult 
 nsPrintSettings::_Assign(nsIPrintSettings *aPS)
 {
-  nsPrintSettings *ps = NS_STATIC_CAST(nsPrintSettings*, aPS);
+  nsPrintSettings *ps = static_cast<nsPrintSettings*>(aPS);
   *this = *ps;
   return NS_OK;
 }

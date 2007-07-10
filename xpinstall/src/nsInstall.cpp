@@ -852,8 +852,8 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
     {
         if ( mUninstallPackage )
         {
-            VR_UninstallCreateNode( NS_CONST_CAST(char *, NS_ConvertUTF16toUTF8(mRegistryPackageName).get()),
-                                    NS_CONST_CAST(char *, NS_ConvertUTF16toUTF8(mUIName).get()));
+            VR_UninstallCreateNode( const_cast<char *>(NS_ConvertUTF16toUTF8(mRegistryPackageName).get()),
+                                    const_cast<char *>(NS_ConvertUTF16toUTF8(mUIName).get()));
         }
 
         // Install the Component into the Version Registry.
@@ -869,9 +869,9 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
             if (mPackageFolder)
                 mPackageFolder->GetDirectoryPath(path);
 
-            VR_Install( NS_CONST_CAST(char *, NS_ConvertUTF16toUTF8(mRegistryPackageName).get()),
-                        NS_CONST_CAST(char *, path.get()),
-                        NS_CONST_CAST(char *, versionCString.get()),
+            VR_Install( const_cast<char *>(NS_ConvertUTF16toUTF8(mRegistryPackageName).get()),
+                        const_cast<char *>(path.get()),
+                        const_cast<char *>(versionCString.get()),
                         PR_TRUE );
         }
 
@@ -1020,11 +1020,11 @@ nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aS
 
     NS_ConvertUTF16toUTF8 componentCString(tempString);
 
-    if((err = VR_GetDefaultDirectory( NS_CONST_CAST(char *, componentCString.get()), sizeof(dir), dir )) != REGERR_OK)
+    if((err = VR_GetDefaultDirectory( const_cast<char *>(componentCString.get()), sizeof(dir), dir )) != REGERR_OK)
     {
         // if there's not a default directory, try to see if the component
         // // is registered as a file and then strip the filename off the path
-        if((err = VR_GetPath( NS_CONST_CAST(char *, componentCString.get()), sizeof(dir), dir )) != REGERR_OK)
+        if((err = VR_GetPath( const_cast<char *>(componentCString.get()), sizeof(dir), dir )) != REGERR_OK)
         {
           // no path, either
           *dir = '\0';
@@ -1286,7 +1286,7 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
 
         if (!pKey.IsEmpty() && !pVal.IsEmpty())
         {
-            JSString* propValJSStr = JS_NewUCStringCopyZ(cx, NS_REINTERPRET_CAST(const jschar*, pVal.get()));
+            JSString* propValJSStr = JS_NewUCStringCopyZ(cx, reinterpret_cast<const jschar*>(pVal.get()));
             jsval propValJSVal = STRING_TO_JSVAL(propValJSStr);
             NS_ConvertUTF8toUTF16 UCKey(pKey);
             JS_SetUCProperty(cx, res, (jschar*)UCKey.get(), UCKey.Length(), &propValJSVal);
@@ -1497,7 +1497,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
 
     mPackageFolder = nsnull;
     if(REGERR_OK == VR_GetDefaultDirectory(
-                        NS_CONST_CAST(char *, NS_ConvertUTF16toUTF8(mRegistryPackageName).get()),
+                        const_cast<char *>(NS_ConvertUTF16toUTF8(mRegistryPackageName).get()),
                         sizeof(szRegPackagePath), szRegPackagePath))
     {
         // found one saved in the registry

@@ -302,8 +302,8 @@ NPVariantToJSVal(NPP npp, JSContext *cx, const NPVariant *variant)
       NS_ConvertUTF8toUTF16 utf16String(s->utf8characters, s->utf8length);
 
       JSString *str =
-        ::JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*,
-                                                      utf16String.get()),
+        ::JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar*>
+                                                  (utf16String.get()),
                               utf16String.Length());
 
       if (str) {
@@ -874,7 +874,7 @@ public:
 PR_STATIC_CALLBACK(PLDHashNumber)
 JSObjWrapperHash(PLDHashTable *table, const void *key)
 {
-  const nsJSObjWrapperKey *e = NS_STATIC_CAST(const nsJSObjWrapperKey *, key);
+  const nsJSObjWrapperKey *e = static_cast<const nsJSObjWrapperKey *>(key);
 
   return (PLDHashNumber)((PRWord)e->mJSObj ^ (PRWord)e->mNpp) >> 2;
 }
@@ -884,9 +884,9 @@ JSObjWrapperHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
                            const void *key)
 {
   const nsJSObjWrapperKey *objWrapperKey =
-    NS_STATIC_CAST(const nsJSObjWrapperKey *, key);
+    static_cast<const nsJSObjWrapperKey *>(key);
   const JSObjWrapperHashEntry *e =
-    NS_STATIC_CAST(const JSObjWrapperHashEntry *, entry);
+    static_cast<const JSObjWrapperHashEntry *>(entry);
 
   return (e->mJSObjWrapper->mJSObj == objWrapperKey->mJSObj &&
           e->mJSObjWrapper->mNpp == objWrapperKey->mNpp);
@@ -952,8 +952,8 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JSObject *obj)
   nsJSObjWrapperKey key(obj, npp);
 
   JSObjWrapperHashEntry *entry =
-    NS_STATIC_CAST(JSObjWrapperHashEntry *,
-                   PL_DHashTableOperate(&sJSObjWrappers, &key, PL_DHASH_ADD));
+    static_cast<JSObjWrapperHashEntry *>
+               (PL_DHashTableOperate(&sJSObjWrappers, &key, PL_DHASH_ADD));
   if (!entry) {
     // Out of memory.
     return nsnull;
@@ -1485,8 +1485,8 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
   }
 
   NPObjWrapperHashEntry *entry =
-    NS_STATIC_CAST(NPObjWrapperHashEntry *,
-                   PL_DHashTableOperate(&sNPObjWrappers, npobj,
+    static_cast<NPObjWrapperHashEntry *>
+               (PL_DHashTableOperate(&sNPObjWrappers, npobj,
                                         PL_DHASH_ADD));
   if (!entry) {
     // Out of memory
@@ -1725,8 +1725,8 @@ LookupNPP(NPObject *npobj)
 
 
   NPObjWrapperHashEntry *entry =
-    NS_STATIC_CAST(NPObjWrapperHashEntry *,
-                   PL_DHashTableOperate(&sNPObjWrappers, npobj,
+    static_cast<NPObjWrapperHashEntry *>
+               (PL_DHashTableOperate(&sNPObjWrappers, npobj,
                                         PL_DHASH_ADD));
 
   if (PL_DHASH_ENTRY_IS_FREE(entry)) {

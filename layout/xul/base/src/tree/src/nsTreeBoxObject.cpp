@@ -136,8 +136,8 @@ nsTreeBoxObject::GetTreeBody()
   nsITreeBoxObject* innerTreeBoxObject = nsnull;
   CallQueryInterface(frame, &innerTreeBoxObject);
   NS_ENSURE_TRUE(innerTreeBoxObject &&
-    NS_STATIC_CAST(nsTreeBodyFrame*, innerTreeBoxObject)->GetTreeBoxObject() ==
-    NS_STATIC_CAST(nsITreeBoxObject*, this), nsnull);
+    static_cast<nsTreeBodyFrame*>(innerTreeBoxObject)->GetTreeBoxObject() ==
+    static_cast<nsITreeBoxObject*>(this), nsnull);
 
   mTreeBody = innerTreeBoxObject;
   return mTreeBody;

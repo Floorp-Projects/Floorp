@@ -274,21 +274,21 @@ PRBool
 gfxASurface::CheckSurfaceSize(const gfxIntSize& sz, PRInt32 limit)
 {
     if (sz.width < 0 || sz.height < 0) {
-        NS_ERROR("Surface width or height < 0!");
+        NS_WARNING("Surface width or height < 0!");
         return PR_FALSE;
     }
 
     // check to make sure we don't overflow a 32-bit
     PRInt32 tmp = sz.width * sz.height;
     if (tmp && tmp / sz.height != sz.width) {
-        NS_ERROR("Surface size too large (would overflow)!");
+        NS_WARNING("Surface size too large (would overflow)!");
         return PR_FALSE;
     }
 
     // always assume 4-byte stride
     tmp = tmp * 4;
     if (tmp && tmp / 4 != sz.width * sz.height) {
-        NS_ERROR("Surface size too large (would overflow)!");
+        NS_WARNING("Surface size too large (would overflow)!");
         return PR_FALSE;
     }
 

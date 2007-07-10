@@ -87,6 +87,7 @@ class nsAccessibleWrap: public nsAccessible
 public:
     nsAccessibleWrap(nsIDOMNode*, nsIWeakReference *aShell);
     virtual ~nsAccessibleWrap();
+    void ShutdownAtkObject();
     NS_IMETHOD Shutdown();
 
 #ifdef MAI_LOGGING
@@ -121,6 +122,8 @@ protected:
                                      AtkObject *aObject);
     nsresult FireAtkPropChangedEvent(nsIAccessibleEvent *aEvent,
                                      AtkObject *aObject);
+    nsresult FireAtkShowHideEvent(nsIAccessibleEvent *aEvent,
+                                  AtkObject *aObject, PRBool aIsAdded);
 
     AtkObject *mAtkObject;
 

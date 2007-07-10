@@ -37,7 +37,7 @@
 
 
 /*
- *  npupp.h $Revision: 3.23 $
+ *  npupp.h $Revision: 3.24 $
  *  function call mecahnics needed by platform specific glue code.
  */
 
@@ -623,6 +623,18 @@ typedef OSErr (* NP_LOADDS BP_GetSupportedMIMETypesUPP)(BPSupportedMIMETypes*, U
 #endif
 #endif
 
+#if defined(XP_UNIX)
+/* GCC 3.3 and later support the visibility attribute. */
+#if defined(__GNUC__) && \
+    ((__GNUC__ >= 4) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3))
+#define NP_VISIBILITY_DEFAULT __attribute__((visibility("default")))
+#else
+#define NP_VISIBILITY_DEFAULT
+#endif
+
+#define NP_EXPORT(__type) NP_VISIBILITY_DEFAULT __type
+#endif
+
 #if defined( _WINDOWS ) || defined (__OS2__)
 
 #ifdef __cplusplus
@@ -672,10 +684,10 @@ extern "C" {
 
 /* plugin meta member functions */
 
-char*	NP_GetMIMEDescription(void);
-NPError	NP_Initialize(NPNetscapeFuncs*, NPPluginFuncs*);
-NPError	NP_Shutdown(void);
-NPError NP_GetValue(void *future, NPPVariable aVariable, void *aValue);
+NP_EXPORT(char*)   NP_GetMIMEDescription(void);
+NP_EXPORT(NPError) NP_Initialize(NPNetscapeFuncs*, NPPluginFuncs*);
+NP_EXPORT(NPError) NP_Shutdown(void);
+NP_EXPORT(NPError) NP_GetValue(void *future, NPPVariable aVariable, void *aValue);
 
 #ifdef __cplusplus
 }

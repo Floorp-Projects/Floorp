@@ -176,10 +176,10 @@ GeckoRectToNSRect(const nsRect & inGeckoRect, NSRect & outCocoaRect)
 static inline void
 NSRectToGeckoRect(const NSRect & inCocoaRect, nsRect & outGeckoRect)
 {
-  outGeckoRect.x = NS_STATIC_CAST(nscoord, inCocoaRect.origin.x);
-  outGeckoRect.y = NS_STATIC_CAST(nscoord, inCocoaRect.origin.y);
-  outGeckoRect.width = NS_STATIC_CAST(nscoord, inCocoaRect.size.width);
-  outGeckoRect.height = NS_STATIC_CAST(nscoord, inCocoaRect.size.height);
+  outGeckoRect.x = static_cast<nscoord>(inCocoaRect.origin.x);
+  outGeckoRect.y = static_cast<nscoord>(inCocoaRect.origin.y);
+  outGeckoRect.width = static_cast<nscoord>(inCocoaRect.size.width);
+  outGeckoRect.height = static_cast<nscoord>(inCocoaRect.size.height);
 }
 
 
@@ -335,7 +335,7 @@ nsChildView::~nsChildView()
 {
   // notify the children that we're gone
   for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-    nsChildView* childView = NS_STATIC_CAST(nsChildView*, kid);
+    nsChildView* childView = static_cast<nsChildView*>(kid);
     childView->mParentWidget = nsnull;
   }
 
@@ -381,7 +381,7 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
     mParentWidget = aParent;   
   }
   else
-    mParentView = NS_REINTERPRET_CAST(NSView*,aNativeParent);
+    mParentView = reinterpret_cast<NSView*>(aNativeParent);
   
   // create our parallel NSView and hook it up to our parent. Recall
   // that NS_NATIVE_WIDGET is the NSView.
@@ -1145,7 +1145,7 @@ NS_IMETHODIMP nsChildView::InvalidateRegion(const nsIRegion *aRegion, PRBool aIs
   // FIXME rewrite to use a Cocoa region when nsIRegion isn't a QD Region
   NSRect r;
   nsRect bounds;
-  nsIRegion* region = NS_CONST_CAST(nsIRegion*, aRegion);     // ugh. this method should be const
+  nsIRegion* region = const_cast<nsIRegion*>(aRegion);     // ugh. this method should be const
   region->GetBoundingBox ( &bounds.x, &bounds.y, &bounds.width, &bounds.height );
   GeckoRectToNSRect(bounds, r);
   
@@ -1456,8 +1456,8 @@ NS_IMETHODIMP nsChildView::CalcOffset(PRInt32 &aX,PRInt32 &aY)
   aX = aY = 0;
   NSRect bounds = {{0, 0}, {0, 0}};
   bounds = [mView convertRect:bounds toView:nil];
-  aX += NS_STATIC_CAST(PRInt32, bounds.origin.x);
-  aY += NS_STATIC_CAST(PRInt32, bounds.origin.y);
+  aX += static_cast<PRInt32>(bounds.origin.x);
+  aY += static_cast<PRInt32>(bounds.origin.y);
 
   return NS_OK;
 }
@@ -1679,6 +1679,34 @@ NS_IMETHODIMP nsChildView::CancelIMEComposition()
 }
 
 
+NS_IMETHODIMP nsChildView::GetToggledKeyState(PRUint32 aKeyCode,
+                                              PRBool* aLEDState)
+{
+#ifdef DEBUG_IME
+  NSLog(@"**** GetToggledKeyState");
+#endif
+  NS_ENSURE_ARG_POINTER(aLEDState);
+  PRUint32 key;
+  switch (aKeyCode) {
+    case NS_VK_CAPS_LOCK:
+      key = alphaLock;
+      break;
+    case NS_VK_NUM_LOCK:
+      // 10.3 doesn't return the NUM_LOCK state.
+      if (nsToolkit::OSXVersion() < MAC_OS_X_VERSION_10_4_HEX)
+        return NS_ERROR_NOT_IMPLEMENTED;
+      key = kEventKeyModifierNumLockMask;
+      break;
+    // Mac doesn't support SCROLL_LOCK state.
+    default:
+      return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  PRUint32 modifierFlags = ::GetCurrentKeyModifiers();
+  *aLEDState = (modifierFlags & key) != 0;
+  return NS_OK;
+}
+
+
 GrafPtr
 nsChildView::GetChildViewQuickDrawPort()
 {
@@ -1726,8 +1754,8 @@ nsChildView::DragEvent(PRUint32 aMessage, PRInt16 aMouseGlobalX, PRInt16 aMouseG
   FlipCocoaScreenCoordinate(localPoint);
   localPoint = [[mView window] convertScreenToBase:localPoint];
   localPoint = [mView convertPoint:localPoint fromView:nil];
-  geckoEvent.refPoint.x = NS_STATIC_CAST(nscoord, localPoint.x);
-  geckoEvent.refPoint.y = NS_STATIC_CAST(nscoord, localPoint.y);
+  geckoEvent.refPoint.x = static_cast<nscoord>(localPoint.x);
+  geckoEvent.refPoint.y = static_cast<nscoord>(localPoint.y);
 
   DispatchWindowEvent(geckoEvent);
 
@@ -1866,7 +1894,7 @@ NSEvent* globalDragEvent = nil;
 // mozView method, return our gecko child view widget. Note this does not AddRef.
 - (nsIWidget*) widget
 {
-  return NS_STATIC_CAST(nsIWidget*, mGeckoChild);
+  return static_cast<nsIWidget*>(mGeckoChild);
 }
 
 
@@ -1967,6 +1995,9 @@ NSEvent* globalDragEvent = nil;
 // set the closed hand cursor and record the starting scroll positions
 - (void) startHandScroll:(NSEvent*)theEvent
 {
+  if (!mGeckoChild)
+    return;
+
   mHandScrollStartMouseLoc = [[self window] convertBaseToScreen:[theEvent locationInWindow]];
 
   nsIScrollableView* aScrollableView = [self getScrollableView]; 
@@ -1983,10 +2014,13 @@ NSEvent* globalDragEvent = nil;
 // update the scroll position based on the new mouse coordinates
 - (void) updateHandScroll:(NSEvent*)theEvent
 {
+  if (!mGeckoChild)
+    return;
+
   nsIScrollableView* aScrollableView = [self getScrollableView];
   if (!aScrollableView)
     return;
-  
+
   NSPoint newMouseLoc = [[self window] convertBaseToScreen:[theEvent locationInWindow]];
 
   PRInt32 deltaX = (PRInt32)(mHandScrollStartMouseLoc.x - newMouseLoc.x);
@@ -2015,6 +2049,9 @@ NSEvent* globalDragEvent = nil;
 // the hand scroll cursor.
 - (void) setHandScrollCursor:(NSEvent*)theEvent
 {
+  if (!mGeckoChild)
+    return;
+
   BOOL inMouseView = NO;
 
   // check to see if the user has hand scroll modifiers held down; if so, 
@@ -2539,8 +2576,11 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
 
   // At this point we are supposed to handle this event. If we were not the last view entered, then
   // we should send an exit event to the last view entered and an enter event to ourselves.  
+  if (!mGeckoChild)
+    return;
+
   if (sLastViewEntered != self) {
-    if (sLastViewEntered != nil) {
+    if (sLastViewEntered) {
       // NSLog(@"sending NS_MOUSE_EXIT event with point %f,%f\n", viewEventLocation.x, viewEventLocation.y);
       nsIWidget* lastViewEnteredWidget = [(NSView<mozView>*)sLastViewEntered widget];
       SendMouseEvent(PR_TRUE, NS_MOUSE_EXIT, lastViewEnteredWidget, nsMouseEvent::eReal, &viewEventLocation);
@@ -2581,6 +2621,9 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
 
 - (void)mouseDragged:(NSEvent*)theEvent
 {
+  if (!mGeckoChild)
+    return;
+
   // if the handscroll flag is set, steal this event
   if (mInHandScroll) {
     [self updateHandScroll:theEvent];
@@ -2624,6 +2667,9 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
         gRollupListener->Rollup();
     }
   }
+
+  if (!mGeckoChild)
+    return;
   
   // The right mouse went down, fire off a right mouse down event to gecko
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_DOWN, nsnull, nsMouseEvent::eReal);
@@ -2648,6 +2694,9 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
 
 - (void)rightMouseUp:(NSEvent *)theEvent
 {
+  if (!mGeckoChild)
+    return;
+  
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_UP, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eRightButton;
@@ -2670,6 +2719,9 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
 
 - (void)otherMouseDown:(NSEvent *)theEvent
 {
+  if (!mGeckoChild)
+    return;
+
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_DOWN, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eMiddleButton;
@@ -2681,6 +2733,9 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
 
 - (void)otherMouseUp:(NSEvent *)theEvent
 {
+  if (!mGeckoChild)
+    return;
+
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_UP, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eMiddleButton;
@@ -2692,6 +2747,9 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
 // Handle an NSScrollWheel event for a single axis only.
 -(void)scrollWheel:(NSEvent*)theEvent forAxis:(enum nsMouseScrollEvent::nsMouseScrollFlags)inAxis
 {
+  if (!mGeckoChild)
+    return;
+
   float scrollDelta;
 
   if (inAxis & nsMouseScrollEvent::kIsVertical)
@@ -2787,7 +2845,7 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
 
 -(NSMenu*)menuForEvent:(NSEvent*)theEvent
 {
-  if ([self isPluginView])
+  if (!mGeckoChild || [self isPluginView])
     return nil;
   
   [mLastMenuForEventEvent release];
@@ -2940,7 +2998,21 @@ enum
   kKeypad7KeyCode     = 0x59,
   kKeypad8KeyCode     = 0x5B,
   kKeypad9KeyCode     = 0x5C,
-  
+
+// The following key codes are not defined until Mac OS X 10.5
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4
+  kVK_ANSI_1          = 0x12,
+  kVK_ANSI_2          = 0x13,
+  kVK_ANSI_3          = 0x14,
+  kVK_ANSI_4          = 0x15,
+  kVK_ANSI_5          = 0x17,
+  kVK_ANSI_6          = 0x16,
+  kVK_ANSI_7          = 0x1A,
+  kVK_ANSI_8          = 0x1C,
+  kVK_ANSI_9          = 0x19,
+  kVK_ANSI_0          = 0x1D,
+#endif
+
   kKeypadMultiplyKeyCode  = 0x43,
   kKeypadAddKeyCode       = 0x45,
   kKeypadSubtractKeyCode  = 0x4E,
@@ -2972,7 +3044,7 @@ static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, 
   PRUint8 charCode = 0;
   if ([characters length])
     charCode = [characters characterAtIndex: 0];
-  
+
   switch (keyCode)
   {
     // modifiers. We don't get separate events for these
@@ -2983,8 +3055,8 @@ static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, 
     case kControlKeyCode:       geckoKeyCode = NS_VK_CONTROL;        break;
     case kOptionkeyCode:        geckoKeyCode = NS_VK_ALT;            break;
     case kClearKeyCode:         geckoKeyCode = NS_VK_CLEAR;          break;
-      
-      // function keys
+
+    // function keys
     case kF1KeyCode:            geckoKeyCode = NS_VK_F1;             break;
     case kF2KeyCode:            geckoKeyCode = NS_VK_F2;             break;
     case kF3KeyCode:            geckoKeyCode = NS_VK_F3;             break;
@@ -2997,14 +3069,14 @@ static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, 
     case kF10KeyCode:           geckoKeyCode = NS_VK_F10;            break;
     case kF11KeyCode:           geckoKeyCode = NS_VK_F11;            break;
     case kF12KeyCode:           geckoKeyCode = NS_VK_F12;            break;
-      // case kF13KeyCode:           geckoKeyCode = NS_VK_F13;            break;    // clash with the 3 below
-      // case kF14KeyCode:           geckoKeyCode = NS_VK_F14;            break;
-      // case kF15KeyCode:           geckoKeyCode = NS_VK_F15;            break;
+    // case kF13KeyCode:           geckoKeyCode = NS_VK_F13;            break;    // clash with the 3 below
+    // case kF14KeyCode:           geckoKeyCode = NS_VK_F14;            break;
+    // case kF15KeyCode:           geckoKeyCode = NS_VK_F15;            break;
     case kPauseKeyCode:         geckoKeyCode = NS_VK_PAUSE;          break;
     case kScrollLockKeyCode:    geckoKeyCode = NS_VK_SCROLL_LOCK;    break;
     case kPrintScreenKeyCode:   geckoKeyCode = NS_VK_PRINTSCREEN;    break;
-      
-      // keypad
+
+    // keypad
     case kKeypad0KeyCode:       geckoKeyCode = NS_VK_NUMPAD0;        break;
     case kKeypad1KeyCode:       geckoKeyCode = NS_VK_NUMPAD1;        break;
     case kKeypad2KeyCode:       geckoKeyCode = NS_VK_NUMPAD2;        break;
@@ -3015,17 +3087,17 @@ static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, 
     case kKeypad7KeyCode:       geckoKeyCode = NS_VK_NUMPAD7;        break;
     case kKeypad8KeyCode:       geckoKeyCode = NS_VK_NUMPAD8;        break;
     case kKeypad9KeyCode:       geckoKeyCode = NS_VK_NUMPAD9;        break;
-      
+
     case kKeypadMultiplyKeyCode:  geckoKeyCode = NS_VK_MULTIPLY;     break;
     case kKeypadAddKeyCode:       geckoKeyCode = NS_VK_ADD;          break;
     case kKeypadSubtractKeyCode:  geckoKeyCode = NS_VK_SUBTRACT;     break;
     case kKeypadDecimalKeyCode:   geckoKeyCode = NS_VK_DECIMAL;      break;
     case kKeypadDivideKeyCode:    geckoKeyCode = NS_VK_DIVIDE;       break;
-      
-      // these may clash with forward delete and help
+
+    // these may clash with forward delete and help
     case kInsertKeyCode:        geckoKeyCode = NS_VK_INSERT;         break;
     case kDeleteKeyCode:        geckoKeyCode = NS_VK_DELETE;         break;
-      
+
     case kBackspaceKeyCode:     geckoKeyCode = NS_VK_BACK;           break;
     case kTabKeyCode:           geckoKeyCode = NS_VK_TAB;            break;
     case kHomeKeyCode:          geckoKeyCode = NS_VK_HOME;           break;
@@ -3036,11 +3108,18 @@ static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, 
     case kRightArrowKeyCode:    geckoKeyCode = NS_VK_RIGHT;          break;
     case kUpArrowKeyCode:       geckoKeyCode = NS_VK_UP;             break;
     case kDownArrowKeyCode:     geckoKeyCode = NS_VK_DOWN;           break;
-      
+    case kVK_ANSI_1:            geckoKeyCode = NS_VK_1;              break;
+    case kVK_ANSI_2:            geckoKeyCode = NS_VK_2;              break;
+    case kVK_ANSI_3:            geckoKeyCode = NS_VK_3;              break;
+    case kVK_ANSI_4:            geckoKeyCode = NS_VK_4;              break;
+    case kVK_ANSI_5:            geckoKeyCode = NS_VK_5;              break;
+    case kVK_ANSI_6:            geckoKeyCode = NS_VK_6;              break;
+    case kVK_ANSI_7:            geckoKeyCode = NS_VK_7;              break;
+    case kVK_ANSI_8:            geckoKeyCode = NS_VK_8;              break;
+    case kVK_ANSI_9:            geckoKeyCode = NS_VK_9;              break;
+    case kVK_ANSI_0:            geckoKeyCode = NS_VK_0;              break;
+
     default:
-      if (aKeyEvent->isControl)
-        charCode += 64;
-      
       // if we haven't gotten the key code already, look at the char code
       switch (charCode)
       {
@@ -3060,18 +3139,16 @@ static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, 
         case ']':                   geckoKeyCode = NS_VK_CLOSE_BRACKET; break;
         case '\'':
         case '"':                   geckoKeyCode = NS_VK_QUOTE;         break;
-          
+
         default:
-          if (charCode >= '0' && charCode <= '9') // numerals
-            geckoKeyCode = charCode;
-          else if (charCode >= 'a' && charCode <= 'z') // lowercase
+          if (charCode >= 'a' && charCode <= 'z') // lowercase
             geckoKeyCode = toupper(charCode);
           else if (charCode >= 'A' && charCode <= 'Z') // uppercase
             geckoKeyCode = charCode;
             break;
       }
   }
-  
+
   return geckoKeyCode;
 }
 
@@ -3169,8 +3246,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
   // convert point to view coordinate system
   NSPoint localPoint = [self convertPoint:[aMouseEvent locationInWindow] fromView:nil];
-  outGeckoEvent->refPoint.x = NS_STATIC_CAST(nscoord, localPoint.x);
-  outGeckoEvent->refPoint.y = NS_STATIC_CAST(nscoord, localPoint.y);
+  outGeckoEvent->refPoint.x = static_cast<nscoord>(localPoint.x);
+  outGeckoEvent->refPoint.y = static_cast<nscoord>(localPoint.y);
 }
 
 
@@ -3211,7 +3288,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   else {
     NSString* characters = nil;
     if ([aKeyEvent type] != NSFlagsChanged)
-      characters = [aKeyEvent characters];
+      characters = [aKeyEvent charactersIgnoringModifiers];
     
     outGeckoEvent->keyCode = ConvertMacToGeckoKeyCode([aKeyEvent keyCode], outGeckoEvent, characters);
     outGeckoEvent->charCode = 0;
@@ -3228,6 +3305,9 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 #ifdef DEBUG_IME
   NSLog(@"****in sendCompositionEvent; type = %d", aEventType);
 #endif
+
+  if (!mGeckoChild)
+    return nsRect(0, 0, 0, 0);
 
   // static void init_composition_event( *aEvent, int aType)
   nsCompositionEvent event(PR_TRUE, aEventType, mGeckoChild);
@@ -3247,6 +3327,9 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   NSLog(@"****in sendTextEvent; string = '%@'", aString);
   NSLog(@" markRange = %d, %d;  selRange = %d, %d", markRange.location, markRange.length, selRange.location, selRange.length);
 #endif
+
+  if (!mGeckoChild)
+    return;
 
   nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, mGeckoChild);
   textEvent.time = PR_IntervalNow();
@@ -3272,6 +3355,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   NSLog(@"****in insertText: '%@'", insertString);
   NSLog(@" markRange = %d, %d;  selRange = %d, %d", mMarkedRange.location, mMarkedRange.length, mSelectedRange.location, mSelectedRange.length);
 #endif
+  if (!mGeckoChild)
+    return;
 
   if (![insertString isKindOfClass:[NSAttributedString class]])
     insertString = [[[NSAttributedString alloc] initWithString:insertString] autorelease];
@@ -3439,15 +3524,15 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
   NSLog(@" selectedRange = %d, %d", mSelectedRange.location, mSelectedRange.length);
 #endif
+  if (!mGeckoChild)
+    return nil;
 
-  nsReconversionEvent reconversionEvent(PR_TRUE, NS_RECONVERSION_QUERY,
-                                        mGeckoChild);
+  nsReconversionEvent reconversionEvent(PR_TRUE, NS_RECONVERSION_QUERY, mGeckoChild);
   reconversionEvent.time = PR_IntervalNow();
 
   nsresult rv = mGeckoChild->DispatchWindowEvent(reconversionEvent);
   PRUnichar* reconvstr;
-  if (NS_SUCCEEDED(rv) && (reconvstr = reconversionEvent.theReply.mReconversionString))
-  {
+  if (NS_SUCCEEDED(rv) && (reconvstr = reconversionEvent.theReply.mReconversionString)) {
     NSAttributedString* result = [[[NSAttributedString alloc] initWithString:[NSString stringWithCharacters:reconvstr length:nsCRT::strlen(reconvstr)]
                                                                   attributes:nil] autorelease];
     nsMemory::Free(reconvstr);
@@ -3539,6 +3624,9 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 // event to gecko.
 - (void)keyDown:(NSEvent*)theEvent
 {
+  if (!mGeckoChild)
+    return;
+
   mCurKeyEvent = theEvent;
 
   BOOL nonDeadKeyPress = [[theEvent characters] length] > 0;
@@ -3609,7 +3697,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 - (void)keyUp:(NSEvent*)theEvent
 {
   // if we don't have any characters we can't generate a keyUp event
-  if ([[theEvent characters] length] == 0)
+  if (!mGeckoChild || [[theEvent characters] length] == 0)
     return;
 
   // Fire a key up.
@@ -3627,8 +3715,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
 - (BOOL)performKeyEquivalent:(NSEvent*)theEvent
 {
-  // don't bother if we're in composition
-  if (nsTSMManager::IsComposing())
+  // don't bother if we don't have a gecko widget or we're in composition
+  if (!mGeckoChild || nsTSMManager::IsComposing())
     return NO;
 
   // see if the menu system will handle the event
@@ -3657,8 +3745,10 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
 - (void)flagsChanged:(NSEvent*)theEvent
 {
+  if (!mGeckoChild)
+    return;
+
   // Fire key up/down events for the modifier keys (shift, alt, ctrl, command).
-  
   if ([theEvent type] == NSFlagsChanged) {
     unsigned int modifiers =
       [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
@@ -3703,7 +3793,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 // This method is called when we are about to be focused.
 - (BOOL)becomeFirstResponder
 {
-  if (!mGeckoChild) return NO;   // we've been destroyed
+  if (!mGeckoChild)
+    return NO;
 
   nsFocusEvent event(PR_TRUE, NS_GOTFOCUS, mGeckoChild);
   mGeckoChild->DispatchWindowEvent(event);
@@ -3713,12 +3804,14 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
 
 // This method is called when are are about to lose focus.
+// We must always call through to our superclass, even when mGeckoChild is
+// nil -- otherwise the keyboard focus can end up in the wrong NSView.
 - (BOOL)resignFirstResponder
 {
-  if (!mGeckoChild) return NO;   // we've been destroyed
-
-  nsFocusEvent event(PR_TRUE, NS_LOSTFOCUS, mGeckoChild);
-  mGeckoChild->DispatchWindowEvent(event);
+  if (mGeckoChild) {
+    nsFocusEvent event(PR_TRUE, NS_LOSTFOCUS, mGeckoChild);
+    mGeckoChild->DispatchWindowEvent(event);
+  }
 
   return [super resignFirstResponder];
 }
@@ -3727,8 +3820,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 - (void)viewsWindowDidBecomeKey
 {
   if (!mGeckoChild)
-    return;   // we've been destroyed (paranoia)
-  
+    return;
+
   // check to see if the window implements the mozWindow protocol. This
   // allows embedders to avoid re-entrant calls to -makeKeyAndOrderFront,
   // which can happen because these activate/focus calls propagate out
@@ -3751,8 +3844,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 - (void)viewsWindowDidResignKey
 {
   if (!mGeckoChild)
-    return;   // we've been destroyed
-  
+    return;
+
   nsFocusEvent deactivateEvent(PR_TRUE, NS_DEACTIVATE, mGeckoChild);
   mGeckoChild->DispatchWindowEvent(deactivateEvent);
 
@@ -3761,16 +3854,18 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 }
 
 
-// If the call to removeFromSuperviewWithoutNeedingDisplay isn't delayed from
-// nsChildView::TearDownView(), the NSView hierarchy might get changed during
-// calls to [ChildView drawRect:], which leads to "beyond bounds" exceptions
-// in NSCFArray.  For more info see bmo bug 373122.  Apple's docs claim that
+// If the call to removeFromSuperview isn't delayed from nsChildView::
+// TearDownView(), the NSView hierarchy might get changed during calls to
+// [ChildView drawRect:], which leads to "beyond bounds" exceptions in
+// NSCFArray.  For more info see bmo bug 373122.  Apple's docs claim that
 // removeFromSuperviewWithoutNeedingDisplay "can be safely invoked during
 // display" (whatever "display" means).  But it's _not_ true that it can be
-// safely invoked during calls to [NSView drawRect:].
+// safely invoked during calls to [NSView drawRect:].  We use
+// removeFromSuperview here because there's no longer any danger of being
+// "invoked during display", and because doing do clears up bmo bug 384343.
 - (void)delayedTearDown
 {
-  [self removeFromSuperviewWithoutNeedingDisplay];
+  [self removeFromSuperview];
   [self release];
 }
 
@@ -3788,8 +3883,15 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 // if it wasn't.
 - (BOOL)doDragAction:(PRUint32)aMessage sender:(id)aSender
 {
-  if (!mDragService)
+  if (!mGeckoChild)
     return NO;
+
+  if (!mDragService) {
+    CallGetService(kDragServiceContractID, &mDragService);
+    NS_ASSERTION(mDragService, "Couldn't get a drag service - big problem!");
+    if (!mDragService)
+      return NO;
+  }
 
   if (aMessage == NS_DRAGDROP_ENTER)
     mDragService->StartDragSession();
@@ -3850,11 +3952,6 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
 {
-  CallGetService(kDragServiceContractID, &mDragService);
-  NS_ASSERTION(mDragService, "Couldn't get a drag service - big problem!");
-  if (!mDragService)
-    return NSDragOperationNone;
-
   // there should never be a globalDragPboard when "draggingEntered:" is
   // called, but just in case we'll take care of it here.
   [globalDragPboard release];
@@ -3872,44 +3969,46 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
 - (NSDragOperation)draggingUpdated:(id <NSDraggingInfo>)sender
 {
-  if (!mDragService)
-    return NSDragOperationNone;
-
   BOOL handled = [self doDragAction:NS_DRAGDROP_OVER sender:sender];
-
   return handled ? NSDragOperationGeneric : NSDragOperationNone;
 }
 
 
 - (void)draggingExited:(id <NSDraggingInfo>)sender
 {
-  if (!mDragService)
-    return;
-
   [self doDragAction:NS_DRAGDROP_EXIT sender:sender];
-
-  // Gecko event handling for this drag session is over. Release our
-  // cached drag service and set globalDragPboard back to nil.
-  NS_IF_RELEASE(mDragService);
-  [globalDragPboard release];
-  globalDragPboard = nil;
 }
 
 
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
-  if (!mDragService)
-    return NO;
+  return [self doDragAction:NS_DRAGDROP_DROP sender:sender];
+}
 
-  BOOL rv = [self doDragAction:NS_DRAGDROP_DROP sender:sender];
 
-  // Gecko event handling for this drag session is over. Release our
-  // cached drag service and set globalDragPboard back to nil.
-  NS_IF_RELEASE(mDragService);
+// NSDraggingSource
+- (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation
+{
+  if (!mDragService) {
+    CallGetService(kDragServiceContractID, &mDragService);
+    NS_ASSERTION(mDragService, "Couldn't get a drag service - big problem!");
+  }
+
+  if (mDragService) {
+    mDragService->EndDragSession(PR_TRUE);
+    NS_RELEASE(mDragService);
+  }
+
   [globalDragPboard release];
   globalDragPboard = nil;
+}
 
-  return rv;
+
+// NSDraggingSource
+// this is just implemented so we comply with the NSDraggingSource informal protocol
+- (unsigned int)draggingSourceOperationMaskForLocal:(BOOL)isLocal
+{
+  return UINT_MAX;
 }
 
 
@@ -3927,6 +4026,9 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 */
 - (id<mozAccessible>)accessible
 {
+  if (!mGeckoChild)
+    return nil;
+
   id<mozAccessible> nativeAccessible = nil;
   
   nsCOMPtr<nsIAccessible> accessible;

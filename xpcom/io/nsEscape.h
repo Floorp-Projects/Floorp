@@ -99,6 +99,9 @@ nsEscapeHTML2(const PRUnichar *aSourceBuffer,
 
 /**
  * NS_EscapeURL/NS_UnescapeURL constants for |flags| parameter:
+ *
+ * Note: These values are copied to nsINetUtil.idl
+ *       Any changes should be kept in sync
  */
 enum EscapeMask {
   /** url components **/

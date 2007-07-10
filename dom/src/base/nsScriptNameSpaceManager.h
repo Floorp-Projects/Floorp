@@ -83,6 +83,8 @@ struct nsGlobalNameStruct
     eTypeExternalConstructorAlias
   } mType;
 
+  PRBool mPrivilegedOnly;
+
   union {
     PRInt32 mDOMClassInfoID; // eTypeClassConstructor
     nsIID mIID; // eTypeInterface, eTypeClassProto
@@ -152,7 +154,8 @@ protected:
 
   nsresult FillHash(nsICategoryManager *aCategoryManager,
                     const char *aCategory,
-                    nsGlobalNameStruct::nametype aType);
+                    nsGlobalNameStruct::nametype aType,
+                    PRBool aPrivilegedOnly);
   nsresult FillHashWithDOMInterfaces();
   nsresult RegisterInterface(const char* aIfName,
                              const nsIID *aIfIID,

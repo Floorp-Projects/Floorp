@@ -96,7 +96,7 @@ public:
     static already_AddRefed<nsDocLoader> GetAsDocLoader(nsISupports* aSupports);
     // Needed to deal with ambiguous inheritance from nsISupports...
     static nsISupports* GetAsSupports(nsDocLoader* aDocLoader) {
-        return NS_STATIC_CAST(nsIDocumentLoader*, aDocLoader);
+        return static_cast<nsIDocumentLoader*>(aDocLoader);
     }
 
     // Add aDocLoader as a child to the docloader service.
@@ -139,11 +139,11 @@ protected:
     virtual void DestroyChildren();
 
     nsIDocumentLoader* ChildAt(PRInt32 i) {
-        return NS_STATIC_CAST(nsDocLoader*, mChildList[i]);
+        return static_cast<nsDocLoader*>(mChildList[i]);
     }
 
     nsIDocumentLoader* SafeChildAt(PRInt32 i) {
-        return NS_STATIC_CAST(nsDocLoader*, mChildList.SafeElementAt(i));
+        return static_cast<nsDocLoader*>(mChildList.SafeElementAt(i));
     }
 
     void FireOnProgressChange(nsDocLoader* aLoadInitiator,

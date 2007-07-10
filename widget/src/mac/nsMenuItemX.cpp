@@ -117,7 +117,7 @@ NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, PRBool 
   
   // register for AttributeChanged messages
   mManager = aManager;
-  nsCOMPtr<nsIChangeObserver> obs = do_QueryInterface(NS_STATIC_CAST(nsIChangeObserver*,this));
+  nsCOMPtr<nsIChangeObserver> obs = do_QueryInterface(static_cast<nsIChangeObserver*>(this));
   mManager->Register(mContent, obs);   // does not addref this
   
   mEnabled = !mContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled, nsWidgetAtoms::_true, eCaseMatters);
@@ -141,7 +141,7 @@ NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, PRBool 
     }
   }
 
-  mIcon = new nsMenuItemIcon(NS_STATIC_CAST(nsIMenuItem*, this),
+  mIcon = new nsMenuItemIcon(static_cast<nsIMenuItem*>(this),
                              mMenuParent, mContent);
 
   return NS_OK;
