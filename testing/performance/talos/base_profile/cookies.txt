@@ -1,9 +1,0 @@
-# HTTP Cookie File
-# http://www.netscape.com/newsref/std/cookie_spec.html
-# This is a generated file!  Do not edit.
-# To delete cookies, use the Cookie Manager.
-
-.google.com	TRUE	/	FALSE	2147368447	PREF	ID=a802a1fec2a6bf27:TM=1152213074:LM=1152213074:S=8UabdTMjbhLKfAzL
-.bbc.co.uk	TRUE	/	FALSE	1183010110	BBC-UID	84d49a0251f9abfe2c37601f8191c91b8361247bb0405171f202937354e485550Mozilla%2f5%2e0%20%28Windows%3b%20U%3b%20Windows%20NT%205%2e1%3b%20en%2dUS%3b%20rv%3a1%2e8%2e0%2e4%29%20Gecko%2f20060508%20Firefox%2f1%2e5%2e0%2e4
-.mozilla.com	TRUE	/	FALSE	2147385600	__utma	183859642.951804536.1151474111.1151474111.1151474111.1
-.mozilla.com	TRUE	/	FALSE	1167242111	__utmz	183859642.1151474111.1.1.utmccn=(direct)|utmcsr=(direct)|utmcmd=(none)
