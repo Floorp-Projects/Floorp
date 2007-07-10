@@ -1025,10 +1025,11 @@ nsDocShell::ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
     nsCOMPtr<nsIDocument> targetDocument(do_QueryInterface(targetDOMDocument));
     NS_ENSURE_TRUE(targetDocument, PR_FALSE);
 
+    PRBool equal;
     return
-        NS_SUCCEEDED(securityManager->
-                     CheckSameOriginPrincipal(originDocument->NodePrincipal(),
-                                              targetDocument->NodePrincipal()));
+        NS_SUCCEEDED(originDocument->NodePrincipal()->
+                       Equals(targetDocument->NodePrincipal(), &equal)) &&
+        equal;
 }
 
 NS_IMETHODIMP
@@ -6209,12 +6210,16 @@ nsDocShell::CheckLoadingPermissions()
         }
 
         // Compare origins
-        sameOrigin =
-            securityManager->CheckSameOriginPrincipal(subjPrincipal, p);
+        PRBool equal;
+        sameOrigin = subjPrincipal->Equals(p, &equal);
         if (NS_SUCCEEDED(sameOrigin)) {
-            // Same origin, permit load
+            if (equal) {
+                // Same origin, permit load
 
-            return sameOrigin;
+                return sameOrigin;
+            }
+
+            sameOrigin = NS_ERROR_DOM_PROP_ACCESS_DENIED;
         }
 
         nsCOMPtr<nsIDocShellTreeItem> tmp;
