@@ -137,7 +137,7 @@ private:
   nsStringArray mURIArray;
 };
 
-static NameSpaceManagerImpl* gNameSpaceManager = nsnull;
+static NameSpaceManagerImpl* sNameSpaceManager = nsnull;
 
 NS_IMPL_ISUPPORTS1(NameSpaceManagerImpl, nsINameSpaceManager)
 
@@ -315,18 +315,18 @@ NS_GetNameSpaceManager(nsINameSpaceManager** aInstancePtrResult)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
-  if (!gNameSpaceManager) {
+  if (!sNameSpaceManager) {
     nsCOMPtr<NameSpaceManagerImpl> manager = new NameSpaceManagerImpl();
     if (manager) {
       nsresult rv = manager->Init();
       if (NS_SUCCEEDED(rv)) {
-        manager.swap(gNameSpaceManager);
+        manager.swap(sNameSpaceManager);
       }
     }
   }
 
-  *aInstancePtrResult = gNameSpaceManager;
-  NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_OUT_OF_MEMORY);
+  *aInstancePtrResult = sNameSpaceManager;
+  NS_ENSURE_TRUE(sNameSpaceManager, NS_ERROR_OUT_OF_MEMORY);
 
   NS_ADDREF(*aInstancePtrResult);
 
@@ -336,5 +336,5 @@ NS_GetNameSpaceManager(nsINameSpaceManager** aInstancePtrResult)
 void
 NS_NameSpaceManagerShutdown()
 {
-  NS_IF_RELEASE(gNameSpaceManager);
+  NS_IF_RELEASE(sNameSpaceManager);
 }

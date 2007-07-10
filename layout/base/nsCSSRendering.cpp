@@ -52,7 +52,6 @@
 #include "nsFrameManager.h"
 #include "nsStyleContext.h"
 #include "nsGkAtoms.h"
-#include "nsIDrawingSurface.h"
 #include "nsTransform2D.h"
 #include "nsIDeviceContext.h"
 #include "nsIContent.h"
@@ -259,13 +258,6 @@ void nsCSSRendering::FillPolygon (nsIRenderingContext& aContext,
                                   PRInt32 aNumPoints,
                                   nsRect* aGap)
 {
-#ifdef DEBUG
-  nsPenMode penMode;
-  if (NS_SUCCEEDED(aContext.GetPenMode(penMode)) &&
-      penMode == nsPenMode_kInvert) {
-    NS_WARNING( "Invert mode ignored in FillPolygon" );
-  }
-#endif
 
   if (nsnull == aGap) {
     aContext.FillPolygon(aPoints, aNumPoints);
@@ -3036,35 +3028,6 @@ ComputeBackgroundAnchorPoint(const nsStyleBackground& aColor,
   aResult.y = y;
 }
 
-// Returns the root scrollable frame, which is the first child of the root
-// frame.
-static nsIScrollableFrame*
-GetRootScrollableFrame(nsPresContext* aPresContext, nsIFrame* aRootFrame)
-{
-  nsIScrollableFrame* scrollableFrame = nsnull;
-
-  if (nsGkAtoms::viewportFrame == aRootFrame->GetType()) {
-    nsIFrame* childFrame = aRootFrame->GetFirstChild(nsnull);
-
-    if (childFrame) {
-      if (nsGkAtoms::scrollFrame == childFrame->GetType()) {
-        // Use this frame, even if we are using GFX frames for the
-        // viewport, which contains another scroll frame below this
-        // frame, since the GFX scrollport frame does not implement
-        // nsIScrollableFrame.
-        CallQueryInterface(childFrame, &scrollableFrame);
-      }
-    }
-  }
-#ifdef DEBUG
-  else {
-    NS_WARNING("aRootFrame is not a viewport frame");
-  }
-#endif // DEBUG
-
-  return scrollableFrame;
-}
-
 const nsStyleBackground*
 nsCSSRendering::FindNonTransparentBackground(nsStyleContext* aContext,
                                              PRBool aStartAtParent /*= PR_FALSE*/)
@@ -3612,44 +3575,32 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // relative to the origin of aForFrame
   nsPoint anchor;
   if (NS_STYLE_BG_ATTACHMENT_FIXED == aColor.mBackgroundAttachment) {
-    // If it's a fixed background attachment, then the image is placed 
-    // relative to the viewport
-    nsIView* viewportView = nsnull;
-    nsRect viewportArea;
+    // If it's a fixed background attachment, then the image is placed
+    // relative to the viewport, which is the area of the root frame
+    // in a screen context or the page content frame in a print context.
 
     // Remember that we've drawn position-varying content in this prescontext
     aPresContext->SetRenderedPositionVaryingContent();
 
-    nsIFrame* rootFrame =
+    nsIFrame* topFrame =
       aPresContext->PresShell()->FrameManager()->GetRootFrame();
-    NS_ASSERTION(rootFrame, "no root frame");
-
+    NS_ASSERTION(topFrame, "no root frame");
     if (aPresContext->IsPaginated()) {
-      nsIFrame* page = nsLayoutUtils::GetPageFrame(aForFrame);
-      NS_ASSERTION(page, "no page");
-      rootFrame = page;
+      nsIFrame* pageContentFrame =
+        nsLayoutUtils::GetClosestFrameOfType(aForFrame, nsGkAtoms::pageContentFrame);
+      if (pageContentFrame) {
+        topFrame = pageContentFrame;
+      }
+      // else this is an embedded shell and its root frame is what we want
     }
 
-    viewportView = rootFrame->GetView();
-    NS_ASSERTION(viewportView, "no viewport view");
-    viewportArea = viewportView->GetBounds();
-    viewportArea.x = 0;
-    viewportArea.y = 0;
-
-    nsIScrollableFrame* scrollableFrame =
-      GetRootScrollableFrame(aPresContext, rootFrame);
-
-    if (scrollableFrame) {
-      nsMargin scrollbars = scrollableFrame->GetActualScrollbarSizes();
-      viewportArea.Deflate(scrollbars);
-    }
-
-    // Get the anchor point, relative to rootFrame
+    // Get the anchor point, relative to the viewport.
+    nsRect viewportArea = topFrame->GetRect();
     ComputeBackgroundAnchorPoint(aColor, viewportArea, viewportArea, tileWidth, tileHeight, anchor);
 
-    // Convert the anchor point from viewport coordinates (relative to aRootFrame) to
-    // relative to aForFrame
-    anchor -= aForFrame->GetOffsetTo(rootFrame);
+    // Convert the anchor point from viewport coordinates to aForFrame
+    // coordinates.
+    anchor -= aForFrame->GetOffsetTo(topFrame);
   } else {
     if (frameType == nsGkAtoms::canvasFrame) {
       // If the frame is the canvas, the image is placed relative to

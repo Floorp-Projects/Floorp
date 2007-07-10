@@ -1503,7 +1503,7 @@ nsresult nsProfile::IsProfileDirSalted(nsIFile *profileDir, PRBool *isSalted)
         leafName.EndReading(stringEnd);
 
         nsReadingIterator<char> stringStart = stringEnd;
-        stringStart.advance( -(NS_STATIC_CAST(PRInt32, kSaltExtensionCString_Len)) );
+        stringStart.advance( -(static_cast<PRInt32>(kSaltExtensionCString_Len)) );
 
         endsWithSalt =
             Substring(stringStart, stringEnd).Equals(kSaltExtensionCString);

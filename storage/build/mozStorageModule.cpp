@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *   Shawn Wilsher <me@shawnwilsher.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,7 +47,8 @@
 
 #include "mozStorageCID.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozStorageService, Init)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(mozStorageService,
+                                         mozStorageService::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozStorageStatementWrapper)
 
 static const nsModuleComponentInfo components[] =

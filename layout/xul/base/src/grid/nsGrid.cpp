@@ -334,6 +334,8 @@ nsGrid::FindRowsAndColumns(nsIBox** aRows, nsIBox** aColumns)
 void
 nsGrid::CountRowsColumns(nsIBox* aRowBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount)
 {
+  aRowCount = 0;
+  aComputedColumnCount = 0;
   // get the rowboxes layout manager. Then ask it to do the work for us
   if (aRowBox) {
     nsCOMPtr<nsIBoxLayout> layout;
@@ -581,8 +583,6 @@ nsGrid::GetExtraRowCount(PRBool aIsHorizontal)
 nsSize
 nsGrid::GetPrefRowSize(nsBoxLayoutState& aState, PRInt32 aRowIndex, PRBool aIsHorizontal)
 { 
-  NS_ASSERTION(aRowIndex >=0 && aRowIndex < GetRowCount(aIsHorizontal), "Row index out of range!");
-
   nsSize size(0,0);
   if (!(aRowIndex >=0 && aRowIndex < GetRowCount(aIsHorizontal)))
     return size;
@@ -596,8 +596,6 @@ nsGrid::GetPrefRowSize(nsBoxLayoutState& aState, PRInt32 aRowIndex, PRBool aIsHo
 nsSize
 nsGrid::GetMinRowSize(nsBoxLayoutState& aState, PRInt32 aRowIndex, PRBool aIsHorizontal)
 { 
-  NS_ASSERTION(aRowIndex >=0 && aRowIndex < GetRowCount(aIsHorizontal), "Row index out of range!");
-
   nsSize size(0,0);
   if (!(aRowIndex >=0 && aRowIndex < GetRowCount(aIsHorizontal)))
     return size;
@@ -611,8 +609,6 @@ nsGrid::GetMinRowSize(nsBoxLayoutState& aState, PRInt32 aRowIndex, PRBool aIsHor
 nsSize
 nsGrid::GetMaxRowSize(nsBoxLayoutState& aState, PRInt32 aRowIndex, PRBool aIsHorizontal)
 { 
-  NS_ASSERTION(aRowIndex >=0 && aRowIndex < GetRowCount(aIsHorizontal), "Row index out of range!");
-
   nsSize size(NS_INTRINSICSIZE,NS_INTRINSICSIZE);
   if (!(aRowIndex >=0 && aRowIndex < GetRowCount(aIsHorizontal)))
     return size;

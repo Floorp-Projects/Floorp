@@ -191,7 +191,7 @@ endif
 endif
 
 ifeq (,$(filter beos os2 mac photon cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
-ifdef MOZ_RDF
+ifdef MOZ_XUL
 ifdef MOZ_XPFE_COMPONENTS
 COMPONENT_LIBS += fileview
 DEFINES += -DMOZ_FILEVIEW
@@ -276,9 +276,6 @@ else # Platform-specific GFX layer
   ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
   COMPONENT_LIBS += gfx_mac
   endif
-  ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-  COMPONENT_LIBS += gfx_gtk
-  endif
   ifdef MOZ_ENABLE_PHOTON
   COMPONENT_LIBS += gfx_photon
   endif
@@ -317,6 +314,10 @@ endif
 ifdef MOZ_SPELLCHECK
 DEFINES += -DMOZ_SPELLCHECK
 COMPONENT_LIBS += spellchecker
+endif
+
+ifneq (,$(filter layout-debug,$(MOZ_EXTENSIONS)))
+COMPONENT_LIBS += gkdebug
 endif
 
 ifdef GC_LEAK_DETECTOR

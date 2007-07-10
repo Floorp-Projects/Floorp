@@ -194,7 +194,7 @@ static PRUint8* ExtractMessage(const nsACString& aLine, PRUint32* aLen)
             break;
     }
     *aLen = (length/4)*3 - numEquals;
-    return NS_REINTERPRET_CAST(PRUint8*, PL_Base64Decode(s, length, nsnull));
+    return reinterpret_cast<PRUint8*>(PL_Base64Decode(s, length, nsnull));
 }
 
 nsresult
@@ -208,7 +208,7 @@ nsAuthSambaNTLM::SpawnNTLMAuthHelper()
         "ntlm_auth",
         "--helper-protocol", "ntlmssp-client-1",
         "--use-cached-creds",
-        "--username", NS_CONST_CAST(char*, username),
+        "--username", const_cast<char*>(username),
         nsnull
     };
 
@@ -261,7 +261,7 @@ nsAuthSambaNTLM::GetNextToken(const void *inToken,
     }
 
     /* inToken must be a type 2 message. Get ntlm_auth to generate our response */
-    char* encoded = PL_Base64Encode(NS_STATIC_CAST(const char*, inToken), inTokenLen, nsnull);
+    char* encoded = PL_Base64Encode(static_cast<const char*>(inToken), inTokenLen, nsnull);
     if (!encoded)
         return NS_ERROR_OUT_OF_MEMORY;
 

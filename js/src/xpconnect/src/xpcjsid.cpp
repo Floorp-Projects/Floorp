@@ -980,7 +980,7 @@ xpc_NewIDObject(JSContext *cx, JSObject* jsobj, const nsID& aID)
     if(idString)
     {
         nsCOMPtr<nsIJSID> iid =
-            dont_AddRef(NS_STATIC_CAST(nsIJSID*, nsJSID::NewID(idString)));
+            dont_AddRef(static_cast<nsIJSID*>(nsJSID::NewID(idString)));
         PR_Free(idString);
         if(iid)
         {
@@ -989,7 +989,7 @@ xpc_NewIDObject(JSContext *cx, JSObject* jsobj, const nsID& aID)
             {
                 nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
                 nsresult rv = xpc->WrapNative(cx, jsobj,
-                                              NS_STATIC_CAST(nsISupports*,iid),
+                                              static_cast<nsISupports*>(iid),
                                               NS_GET_IID(nsIJSID),
                                               getter_AddRefs(holder));
                 if(NS_SUCCEEDED(rv) && holder)

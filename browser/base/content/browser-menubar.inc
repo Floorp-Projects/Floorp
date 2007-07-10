@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,7 +49,7 @@
                           label="&tabCmd.label;" accesskey="&tabCmd.accesskey;"/>
                 <menuitem label="&openLocationCmd.label;" accesskey="&openLocationCmd.accesskey;" key="focusURLBar" command="Browser:OpenLocation"/>
                 <menuitem label="&openFileCmd.label;" accesskey="&openFileCmd.accesskey;" key="openFileKb" command="Browser:OpenFile"/>
-                <menuitem id="menu_closeWindow" hidden="true" command="cmd_closeWindow" key="key_closeWindow" label="&closeWindow.label;"/>
+                <menuitem id="menu_closeWindow" hidden="true" command="cmd_closeWindow" key="key_closeWindow" label="&closeWindow.label;" accesskey="&closeWindow.accesskey;"/>
                 <menuitem id="menu_close" label="&closeCmd.label;" key="key_close" accesskey="&closeCmd.accesskey;" command="cmd_close"/>
                 <menuseparator/>
                 <menuitem label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" key="key_savePage" command="Browser:SavePage"/>
@@ -331,7 +332,7 @@
               <menupopup id="goPopup"
                          type="places"
                          onpopupshowing="HistoryMenu.onPopupShowing(this);"
-                         place="place:beginTime=-2592000000000&amp;beginTimeRef=1&amp;endTime=7200000000&amp;endTimeRef=2&amp;type=0&amp;sort=4&amp;maxResults=10">
+                         place="place:type=0&amp;sort=4&amp;maxResults=10">
                 <menuitem label="&backCmd.label;"
 #ifdef XP_MACOSX
                           key="goBackKb2"

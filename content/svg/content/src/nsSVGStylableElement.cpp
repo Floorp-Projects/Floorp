@@ -77,7 +77,7 @@ nsSVGStylableElement::Init()
     mClassName = new nsSVGClassValue;
     NS_ENSURE_TRUE(mClassName, NS_ERROR_OUT_OF_MEMORY);
     rv = AddMappedSVGValue(nsGkAtoms::_class,
-			   NS_STATIC_CAST(nsIDOMSVGAnimatedString*, mClassName),
+			   static_cast<nsIDOMSVGAnimatedString*>(mClassName),
 			   kNameSpaceID_None);
     NS_ENSURE_SUCCESS(rv, rv);
   }

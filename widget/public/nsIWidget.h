@@ -795,6 +795,8 @@ class nsIWidget : public nsISupports {
     /**
      * Return the widget's toolkit
      *
+     * An AddRef has NOT been done for the caller.
+     *
      * @return the toolkit this widget was created in. See nsToolkit.
      */
 

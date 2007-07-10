@@ -155,6 +155,11 @@ nsCommonWidget::InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent)
         ? PR_TRUE : PR_FALSE;
     aEvent.isMeta    = (aGdkEvent->state & GDK_MOD4_MASK)
         ? PR_TRUE : PR_FALSE;
+    // The transformations above and in gdk for the keyval are not invertible
+    // so link to the GdkEvent (which will vanish soon after return from the
+    // event callback) to give plugins access to hardware_keycode and state.
+    // (An XEvent would be nice but the GdkEvent is good enough.)
+    aEvent.nativeMsg = (void *)aGdkEvent;
 
     aEvent.time      = aGdkEvent->time;
 }

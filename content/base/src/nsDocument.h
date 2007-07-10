@@ -153,7 +153,7 @@ class nsUint32ToContentHashEntry : public PLDHashEntryHdr
       // Pathetic attempt to not die: clear out the other mValOrHash so we're
       // effectively stealing it. If toCopy is destroyed right after this,
       // we'll be OK.
-      NS_CONST_CAST(nsUint32ToContentHashEntry&, toCopy).mValOrHash = nsnull;
+      const_cast<nsUint32ToContentHashEntry&>(toCopy).mValOrHash = nsnull;
       NS_ERROR("Copying not supported. Fasten your seat belt.");
     }
     ~nsUint32ToContentHashEntry() { Destroy(); }
@@ -507,12 +507,9 @@ public:
   virtual void OnPageShow(PRBool aPersisted);
   virtual void OnPageHide(PRBool aPersisted);
   
+  virtual void MayDispatchMutationEvent(nsINode* aTarget);
   virtual void WillDispatchMutationEvent(nsINode* aTarget);
   virtual void MutationEventDispatched(nsINode* aTarget);
-  virtual PRBool MutationEventBeingDispatched()
-  {
-    return (mSubtreeModifiedDepth > 0);
-  }
 
   // nsINode
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;

@@ -347,7 +347,7 @@ nsHTMLFragmentContentSink::AddBaseTagInfo(nsIContent* aContent)
                                nsPropertyTable::SupportsDtorFunc, PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
       // circumvent nsDerivedSafe
-      NS_ADDREF(NS_STATIC_CAST(nsIURI*, mBaseHref));
+      NS_ADDREF(static_cast<nsIURI*>(mBaseHref));
     }
   }
   if (mBaseTarget) {
@@ -355,7 +355,7 @@ nsHTMLFragmentContentSink::AddBaseTagInfo(nsIContent* aContent)
                                nsPropertyTable::SupportsDtorFunc, PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
       // circumvent nsDerivedSafe
-      NS_ADDREF(NS_STATIC_CAST(nsIAtom*, mBaseTarget));
+      NS_ADDREF(static_cast<nsIAtom*>(mBaseTarget));
     }
   }
 }
@@ -893,22 +893,21 @@ nsHTMLParanoidFragmentSink::Init()
     return NS_OK;
   }
 
-  PRUint32 size = NS_ARRAY_LENGTH(kDefaultAllowedTags);
   sAllowedTags = new nsTHashtable<nsISupportsHashKey>();
   if (sAllowedTags) {
-    rv = sAllowedTags->Init(size);
-    for (PRUint32 i = 0; i < size && NS_SUCCEEDED(rv); i++) {
+    rv = sAllowedTags->Init(80);
+    for (PRUint32 i = 0; kDefaultAllowedTags[i] && NS_SUCCEEDED(rv); i++) {
       if (!sAllowedTags->PutEntry(*kDefaultAllowedTags[i])) {
         rv = NS_ERROR_OUT_OF_MEMORY;
       }
     }
   }
 
-  size = NS_ARRAY_LENGTH(kDefaultAllowedAttributes);
   sAllowedAttributes = new nsTHashtable<nsISupportsHashKey>();
   if (sAllowedAttributes && NS_SUCCEEDED(rv)) {
-    rv = sAllowedAttributes->Init(size);
-    for (PRUint32 i = 0; i < size && NS_SUCCEEDED(rv); i++) {
+    rv = sAllowedAttributes->Init(80);
+    for (PRUint32 i = 0;
+         kDefaultAllowedAttributes[i] && NS_SUCCEEDED(rv); i++) {
       if (!sAllowedAttributes->PutEntry(*kDefaultAllowedAttributes[i])) {
         rv = NS_ERROR_OUT_OF_MEMORY;
       }

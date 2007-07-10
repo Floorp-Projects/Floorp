@@ -146,11 +146,6 @@ EXPORTS	= \
 		nsXPCOMCIDInternal.h \
 		$(NULL)
 
-# pull in MoreFiles for MacOSX
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-SHARED_LIBRARY_LIBS += ../MoreFiles/$(LIB_PREFIX)macmorefiles_s.$(LIB_SUFFIX)
-endif
-
 # Force use of PIC
 FORCE_USE_PIC	= 1 
 
@@ -181,7 +176,10 @@ endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CXXFLAGS	+= $(TK_CFLAGS)
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
+EXTRA_DSO_LDOPTS += \
+  ../MoreFiles/$(LIB_PREFIX)macmorefiles_s.$(LIB_SUFFIX) \
+  $(TK_LIBS) \
+  $(NULL)
 endif
 
 ifeq ($(OS_ARCH),BeOS)

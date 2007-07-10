@@ -101,6 +101,10 @@ private:
   
   float GetMMPerPixel(nsSVGSVGElement *aCtx);
   float GetAxisLength(nsSVGSVGElement *aCtx);
+  float GetEmLength(nsSVGElement *aSVGElement)
+    { return nsSVGUtils::GetFontSize(aSVGElement); }
+  float GetExLength(nsSVGElement *aSVGElement)
+    { return nsSVGUtils::GetFontXHeight(aSVGElement); }
   float ConvertToUserUnits(float aValue, nsSVGElement *aSVGElement);
   float ConvertToUserUnits(float aValue, nsSVGSVGElement *aProvider);
   void SetBaseValue(float aValue, nsSVGElement *aSVGElement);

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *    Alex Fritze <alex@croczilla.com> (original author)
+ *    Nickolay Ponomarev <asqueella@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,118 +42,146 @@
  * loader.
  *
  * Import into a JS component using
- * 'Components.utils.import("rel:XPCOMUtils.js");'
+ * 'Components.utils.import("rel:XPCOMUtils.jsm");'
  *
+ * Exposing a JS 'class' as a component using these utility methods consists
+ * of several steps:
+ * 0. Import XPCOMUtils, as described above.
+ * 1. Declare the 'class' (or multiple classes) implementing the component(s):
+ *  function MyComponent() {
+ *    // constructor
+ *  }
+ *  MyComponent.prototype = {
+ *    // properties required for XPCOM registration:
+ *    classDescription: "unique text description",
+ *    classID:          Components.ID("{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}"),
+ *    contractID:       "@example.com/xxx;1",
+ *
+ *    // [optional] custom factory (an object implementing nsIFactory). If not
+ *    // provided, the default factory is used, which returns
+ *    // |(new MyComponent()).QueryInterface(iid)| in its createInterface().
+ *    _xpcom_factory: { ... }
+ *
+ *    // QueryInterface implementation, e.g. using the generateQI helper
+ *    QueryInterface: XPCOMUtils.generateQI(
+ *      [Components.interfaces.nsIObserver,
+ *       Components.interfaces.nsIMyInterface]),
+ *
+ *    // ...component implementation...
+ *  };
+ *
+ * 2. Create an array of component constructors (like the one
+ * created in step 1):
+ *  var components = [MyComponent];
+ *
+ * 3. Define the NSGetModule entry point:
+ *  function NSGetModule(compMgr, fileSpec) {
+ *    // components is the array created in step 2.
+ *    return XPCOMUtils.generateModule(components);
+ *  }
  */
+
 
 EXPORTED_SYMBOLS = [ "XPCOMUtils" ];
 
 debug("*** loading XPCOMUtils\n");
 
+const Ci = Components.interfaces;
+
 var XPCOMUtils = {
+  /**
+   * Generate a QueryInterface implementation. The returned function must be
+   * assigned to the 'QueryInterface' property of a JS object. When invoked on
+   * that object, it checks if the given iid is listed in the |interfaces|
+   * param, and if it is, returns |this| (the object it was called on).
+   */
+  generateQI: function(interfaces) {
+    return makeQI([i.name for each(i in interfaces)]);
+  },
 
   /**
-   * Generate a factory object (implementing nsIFactory) for the given
-   * constructor.
-   *
-   * By default, calls to the factory's createInstance method will
-   * call the method 'QueryInterface' on the newly created object. If
-   * an optional list of interfaces is provided, createInstance will
-   * not call QueryInterface on newly created objects, but instead
-   * check the requested iid against the interface list.
-   *
-   * @param ctor : A call to 'new ctor()' must return an instance of the class
-   *               served by this factory.
-   *
-   * @param interfaces : Optional list of interfaces. If this parameter is not
-   *                     given, objects created by 'ctor' must implement a
-   *                     QueryInterface method. If this parameter is given,
-   *                     objects do not need to implement QueryInterface; the
-   *                     interface list will be consulted instead.
+   * Generate the NSGetModule function (along with the module definition).
+   * See the parameters to generateModule.
    */
-  generateFactory: function(ctor, interfaces) {
-    return {
-      createInstance: function(outer, iid) {
-        if (outer) throw Components.results.NS_ERROR_NO_AGGREGATION;
-        if (!interfaces)
-          return (new ctor()).QueryInterface(iid);
-        for (var i=interfaces.length; i>=0; --i) {
-          if (iid.equals(interfaces[i])) break;
-        }
-        if (i < 0 && !iid.equals(Components.interfaces.nsISupports))
-          throw Components.results.NS_ERROR_NO_INTERFACE;
-        return (new ctor());
-      }
+  generateNSGetModule: function(componentsArray, postRegister, preUnregister) {
+    return function NSGetModule(compMgr, fileSpec) {
+      return XPCOMUtils.generateModule(componentsArray,
+                                       postRegister,
+                                       preUnregister);
     }
   },
-  
+
   /**
-   * Generate a NSGetModule function implementation.
+   * Generate a module implementation.
    *
-   * @param classArray : Array of class descriptors.
-   *                     A class descriptor is an
-   *                     object with the following members:
-   *                     {
-   *                       className  : "xxx",
-   *                       cid        : Components.ID("xxx"),
-   *                       contractID : "@mozilla/xxx;1",
-   *                       factory    : object_implementing_nsIFactory
-   *                     }
-   * @param postRegister  : optional post-registration function with
-   *                        signature 'postRegister(nsIComponentManager,
-   *                                                nsIFile,classArray)'
-   * @param preUnregister : optional pre-unregistration function with
-   *                        signature 'preUnregister(nsIComponentManager,
-   *                                                 nsIFile,classArray)'
+   * @param componentsArray  Array of component constructors. See the comment
+   *                         at the top of this file for details.
+   * @param postRegister  optional post-registration function with
+   *                      signature 'postRegister(nsIComponentManager,
+   *                                              nsIFile, componentsArray)'
+   * @param preUnregister optional pre-unregistration function with
+   *                      signature 'preUnregister(nsIComponentManager,
+   *                                               nsIFile, componentsArray)'
    */
-  generateNSGetModule: function(classArray, postRegister, preUnregister) {
-    var module = {
+  generateModule: function(componentsArray, postRegister, preUnregister) {
+    let classes = [];
+    for each (let component in componentsArray) {
+      classes.push({
+        cid:          component.prototype.classID,
+        className:    component.prototype.classDescription,
+        contractID:   component.prototype.contractID,
+        factory:      this._getFactory(component),
+      });
+    }
+
+    return { // nsIModule impl.
       getClassObject: function(compMgr, cid, iid) {
-        if (!iid.equals(Components.interfaces.nsIFactory))
+        if (!iid.equals(Ci.nsIFactory))
           throw Components.results.NS_ERROR_NO_INTERFACE;
-        for (var i=0; i<classArray.length; ++i) {
-          if (cid.equals(classArray[i].cid))
-            return classArray[i].factory;
+
+        for each (let classDesc in classes) {
+          if (classDesc.cid.equals(cid))
+            return classDesc.factory;
         }
+
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
       },
+
       registerSelf: function(compMgr, fileSpec, location, type) {
         debug("*** registering " + fileSpec.leafName + ": [ ");
-        compMgr =
-          compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
-        for (var i=0; i < classArray.length; ++i) {
-          debug(classArray[i].className + " ");
-          compMgr.registerFactoryLocation(classArray[i].cid,
-                                          classArray[i].className,
-                                          classArray[i].contractID,
+        compMgr.QueryInterface(Ci.nsIComponentRegistrar);
+        for each (let classDesc in classes) {
+          debug(classDesc.cid + " ");
+          compMgr.registerFactoryLocation(classDesc.cid,
+                                          classDesc.className,
+                                          classDesc.contractID,
                                           fileSpec,
                                           location,
                                           type);
         }
+
         if (postRegister)
-          postRegister(compMgr, fileSpec, classArray);
+          postRegister(compMgr, fileSpec, componentsArray);
         debug("]\n");
       },
+
       unregisterSelf: function(compMgr, fileSpec, location) {
         debug("*** unregistering " + fileSpec.leafName + ": [ ");
+        compMgr.QueryInterface(Ci.nsIComponentRegistrar);
         if (preUnregister)
-          preUnregister(compMgr, fileSpec, classArray);
-        compMgr =
-          compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
-        for (var i=0; i < classArray.length; ++i) {
-          debug(classArray[i].className + " ");
-          compMgr.unregisterFactoryLocation(classArray[i].cid, fileSpec);
+          preUnregister(compMgr, fileSpec, componentsArray);
+
+        for each (let classDesc in classes) {
+          debug(classDesc.className + " ");
+          compMgr.unregisterFactoryLocation(classDesc.cid, fileSpec);
         }
         debug("]\n");
       },
+
       canUnload: function(compMgr) {
         return true;
       }
     };
-
-    return function(compMgr, fileSpec) {
-      return module;
-    }
   },
 
   /**
@@ -160,6 +189,39 @@ var XPCOMUtils = {
    */
   get categoryManager() {
     return Components.classes["@mozilla.org/categorymanager;1"]
-           .getService(Components.interfaces.nsICategoryManager);
+           .getService(Ci.nsICategoryManager);
+  },
+
+  /**
+   * Returns an nsIFactory for |component|.
+   */
+  _getFactory: function(component) {
+    var factory = component.prototype._xpcom_factory;
+    if (!factory) {
+      factory = {
+        createInstance: function(outer, iid) {
+          if(outer)
+            throw CR.NS_ERROR_NO_AGGREGATION;
+          return (new component()).QueryInterface(iid);
+        }
+      }
+    }
+    return factory;
   }
 };
+
+/**
+ * Helper for XPCOMUtils.generateQI to avoid leaks - see bug 381651#c1
+ */
+function makeQI(interfaceNames) {
+  return function XPCOMUtils_QueryInterface(iid) {
+    if (iid.equals(Ci.nsISupports))
+      return this;
+    for each(let interfaceName in interfaceNames) {
+      if (Ci[interfaceName].equals(iid))
+        return this;
+    }
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  };
+}

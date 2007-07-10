@@ -51,7 +51,6 @@ EXPORTS		= \
 		nsViewsCID.h \
 		nsIViewObserver.h \
 		nsIScrollPositionListener.h \
-		nsICompositeListener.h \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

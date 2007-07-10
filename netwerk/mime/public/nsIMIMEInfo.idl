@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Dan Mosedale <dmose@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,27 +36,89 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/**
- * An nsIMIMEInfo gives a user access to mime information.
- * there is a one-to-many relationship between MIME types
- * and file extensions. This means that a MIMEInfo object
- * may have multiple file extensions associated with it.
- * However, the reverse is not true.
- *
- * MIMEInfo objects are generally retrieved from the MIME Service
- * @see nsIMIMEService
- */
-
 #include "nsISupports.idl"
 
 interface nsIURI;
 interface nsIFile;
 interface nsIUTF8StringEnumerator;
+interface nsIHandlerApp;
 
-typedef long nsMIMEInfoHandleAction;
+typedef long nsHandlerInfoAction;
 
-[scriptable, uuid(1448b42f-cf0d-466e-9a15-64e876ebe857)]
-interface nsIMIMEInfo : nsISupports {
+/**
+ * nsIHandlerInfo gives access to the information about how a given protocol
+ * scheme or MIME-type is handled.
+ */
+[scriptable, uuid(feaa5a46-45aa-4124-8e9e-bc23d517c2d4)]
+interface nsIHandlerInfo : nsISupports {
+    /**
+     * A human readable description of the handler type
+     */
+    attribute AString description;
+
+    /**
+     * The application the user has said they want associated with this content
+     * type. This is not always guaranteed to be set!!
+     */
+    attribute nsIHandlerApp preferredApplicationHandler;
+
+    /**
+     * Indicates whether a default application handler exists,
+     * i.e. whether launchWithFile with action = useSystemDefault is possible
+     * and defaultDescription will contain usable information.
+     */
+    readonly attribute boolean hasDefaultHandler;
+
+    /**
+     * A pretty name description of the associated default application. Only
+     * usable if hasDefaultHandler is true.
+     */
+    readonly attribute AString defaultDescription;
+
+    /**
+     * Launches the application with the specified file, in a way that
+     * depends on the value of preferredAction. preferredAction must be
+     * useHelperApp or useSystemDefault.
+     *
+     * @param aFile The file to launch this application with.
+     *
+     * @throw NS_ERROR_INVALID_ARG if action is not valid for this function.
+     * Other exceptions may be thrown.
+     */
+    void launchWithFile(in nsIFile aFile);
+
+    /**
+     * preferredAction is how the user specified they would like to handle
+     * this content type: save to disk, use specified helper app, use OS
+     * default handler or handle using navigator; possible value constants
+     * listed below
+     */
+    attribute nsHandlerInfoAction preferredAction;
+
+    const long saveToDisk = 0;
+    const long alwaysAsk = 1;
+    const long useHelperApp = 2;
+    const long handleInternally = 3;
+    const long useSystemDefault = 4;
+
+    /**
+     * alwaysAskBeforeHandling: if true, we should always give the user a
+     * dialog asking how to dispose of this content.
+     */
+    attribute boolean alwaysAskBeforeHandling;
+};
+
+/**
+ * nsIMIMEInfo extends nsIHandlerInfo with a bunch of information specific to
+ * MIME content-types. There is a one-to-many relationship between MIME types
+ * and file extensions. This means that a MIMEInfo object may have multiple
+ * file extensions associated with it.  However, the reverse is not true.
+ *
+ * MIMEInfo objects are generally retrieved from the MIME Service
+ * @see nsIMIMEService
+ */
+[scriptable, uuid(ba01eb13-c2fd-4652-94f8-b33c61e6d77e)]
+interface nsIMIMEInfo : nsIHandlerInfo {
     /**
      * Gives you an array of file types associated with this type.
      *
@@ -98,81 +161,62 @@ interface nsIMIMEInfo : nsISupports {
     readonly attribute ACString MIMEType;
 
     /**
-     * A human readable description of the MIME info.
-     *
-     * @return The description
-     */
-    attribute AString description;
-
-    /**
      * Mac Type and creator types
      */
     attribute PRUint32 macType;
     attribute PRUint32 macCreator;
 
     /**
-     * Returns whether or not these two MIME infos are logically
-     * equivalent maintaining the one-to-many relationship between
-     * MIME types and file extensions.
+     * Returns whether or not these two nsIMIMEInfos are logically
+     * equivalent.
      *
-     * @returns TRUE if the two are considered equal
+     * @returns PR_TRUE if the two are considered equal
      */
     boolean equals(in nsIMIMEInfo aMIMEInfo);
-
-    /**
-     * Returns a nsIFile that points to the application the user has said
-     * they want associated with this content type. This is not always
-     * guaranteed to be set!!
-     */
-    attribute nsIFile preferredApplicationHandler;
-
-    /**
-     * A pretty name description of the preferred application.
-     */
-    attribute AString applicationDescription;
-
-    /**
-     * Indicates whether a default application handler exists,
-     * i.e. whether launchWithFile with action = useSystemDefault is possible
-     * and applicationDescription will contain usable information.
-     */
-    readonly attribute boolean hasDefaultHandler;
-
-    /**
-     * A pretty name description of the associated default application. Only
-     * usable if hasDefaultHandler is true.
-     */
-    readonly attribute AString defaultDescription;
-
-    /**
-     * Launches the application with the specified file, in a way that
-     * depends on the value of preferredAction. preferredAction must be
-     * useHelperApp or useSystemDefault.
-     *
-     * @param aFile The file to launch this application with.
-     *
-     * @throw NS_ERROR_INVALID_ARG if action is not valid for this function.
-     * Other exceptions may be thrown.
-     */
-    void launchWithFile(in nsIFile aFile);
-
-    const long saveToDisk = 0;
-    const long alwaysAsk = 1;
-    const long useHelperApp = 2;
-    const long handleInternally = 3;
-    const long useSystemDefault = 4;
-
-    /**
-     * preferredAction is how the user specified they would like to handle
-     * this content type: save to disk, use specified helper app, use OS
-     * default handler or handle using navigator.
-     */
-    attribute nsMIMEInfoHandleAction preferredAction;
-
-    /**
-     * alwaysAskBeforeHandling: if true, we should always give the user a
-     * dialog asking how to dispose of this content.
-     */
-    attribute boolean alwaysAskBeforeHandling;
 };
 
+/**
+ * nsIHandlerApp represents an external application that can handle content
+ * of some sort (either a MIME-type or a protocol).  Note that for theoretical
+ * cleanliness, nsI{Local,Web}HandlerApp really ought to inherit from
+ * nsIHandlerApp.  After that's done, we should also try and make
+ * nsIWebContentHandlerInfo inherit from or possibly be replaced by
+ * nsIWebHandlerApp.
+ */
+[scriptable, uuid(08a543dc-081f-4933-b325-252cf68d6ad9)]
+interface nsIHandlerApp : nsISupports {
+
+    /**
+     * Human readable name for the handler
+     */
+    attribute AString name;
+};
+
+/**
+ * nsILocalHandlerApp is a local OS-level executable
+ */
+[scriptable, uuid(e21f3d75-9103-490e-bfb9-1bf09cc3f103)]
+interface nsILocalHandlerApp: nsISupports {
+
+    /**
+     * Pointer to the executable file used to handle content
+     */
+    attribute nsIFile executable;
+};
+
+/**
+ * nsIWebHandlerApp is a web-based handler, as speced by the WhatWG HTML5
+ * draft.  Currently, only GET-based handlers are supported.  At some point, 
+ * we probably want to work with WhatWG to spec out and implement POST-based
+ * handlers as well.
+ */
+[scriptable, uuid(065cd099-2f71-4ac8-9dab-17fc079e9647)]
+interface nsIWebHandlerApp: nsISupports {
+
+    /**
+     * Template used to construct the URI to GET.  Template is expected to have
+     * a %s in it, and the escaped URI to be handled is inserted in place of 
+     * that %s, as per the HTML5 spec.
+     */
+    attribute AUTF8String uriTemplate;
+};

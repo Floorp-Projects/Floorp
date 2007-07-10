@@ -368,10 +368,6 @@ public:
   nsresult RestorePreservedSelection(nsISelection *aSel);
   void     StopPreservingSelection();
 
-
-  /** return the string that represents text nodes in the content tree */
-  static nsresult GetTextNodeTag(nsAString& aOutString);
-
   /** 
    * SplitNode() creates a new node identical to an existing node, and split the contents between the two nodes
    * @param aExistingRightNode   the node to split.  It will become the new node's next sibling.

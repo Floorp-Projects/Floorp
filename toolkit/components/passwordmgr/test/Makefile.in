@@ -58,7 +58,6 @@ MOCHI_TESTS = \
 		test_basic_form_3pw_1.html \
 		test_bug_227640.html \
 		test_bug_242956.html \
-		test_bug_270558.html \
 		test_bug_360493_1.html \
 		test_bug_360493_2.html \
 		$(NULL)

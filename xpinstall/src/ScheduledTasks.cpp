@@ -192,7 +192,7 @@ PRInt32 ScheduleFileForDeletion(nsIFile *filename)
 
     nsCAutoString path;
     GetRegFilePath(path);
-    err = NR_RegOpen(NS_CONST_CAST(char*, path.get()), &reg);
+    err = NR_RegOpen(const_cast<char*>(path.get()), &reg);
 
     if ( err == REGERR_OK )
     {
@@ -409,7 +409,7 @@ PRInt32 ReplaceFileNowOrSchedule(nsIFile* aReplacementFile, nsIFile* aDoomedFile
 
         nsCAutoString regFilePath;
         GetRegFilePath(regFilePath);
-        if ( REGERR_OK == NR_RegOpen(NS_CONST_CAST(char*, regFilePath.get()), &reg) ) 
+        if ( REGERR_OK == NR_RegOpen(const_cast<char*>(regFilePath.get()), &reg) ) 
         {
             err = NR_RegAddKey( reg, ROOTKEY_PRIVATE, REG_REPLACE_LIST_KEY, &listkey );
             if ( err == REGERR_OK ) 

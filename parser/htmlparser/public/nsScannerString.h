@@ -107,11 +107,11 @@ class nsScannerBufferList
             const PRUnichar* DataEnd() const { return mDataEnd; }
                   PRUnichar* DataEnd()       { return mDataEnd; }
 
-            const Buffer* Next() const { return NS_STATIC_CAST(const Buffer*, next); }
-                  Buffer* Next()       { return NS_STATIC_CAST(      Buffer*, next); }
+            const Buffer* Next() const { return static_cast<const Buffer*>(next); }
+                  Buffer* Next()       { return static_cast<Buffer*>(next); }
 
-            const Buffer* Prev() const { return NS_STATIC_CAST(const Buffer*, prev); }
-                  Buffer* Prev()       { return NS_STATIC_CAST(      Buffer*, prev); }
+            const Buffer* Prev() const { return static_cast<const Buffer*>(prev); }
+                  Buffer* Prev()       { return static_cast<Buffer*>(prev); }
 
             PRUint32 DataLength() const { return mDataEnd - DataStart(); }
             void SetDataLength(PRUint32 len) { mDataEnd = DataStart() + len; }
@@ -170,11 +170,11 @@ class nsScannerBufferList
       void  SplitBuffer( const Position& );
       void  DiscardUnreferencedPrefix( Buffer* );
 
-            Buffer* Head()       { return NS_STATIC_CAST(      Buffer*, PR_LIST_HEAD(&mBuffers)); }
-      const Buffer* Head() const { return NS_STATIC_CAST(const Buffer*, PR_LIST_HEAD(&mBuffers)); }
+            Buffer* Head()       { return static_cast<Buffer*>(PR_LIST_HEAD(&mBuffers)); }
+      const Buffer* Head() const { return static_cast<const Buffer*>(PR_LIST_HEAD(&mBuffers)); }
 
-            Buffer* Tail()       { return NS_STATIC_CAST(      Buffer*, PR_LIST_TAIL(&mBuffers)); }
-      const Buffer* Tail() const { return NS_STATIC_CAST(const Buffer*, PR_LIST_TAIL(&mBuffers)); }
+            Buffer* Tail()       { return static_cast<Buffer*>(PR_LIST_TAIL(&mBuffers)); }
+      const Buffer* Tail() const { return static_cast<const Buffer*>(PR_LIST_TAIL(&mBuffers)); }
 
     private:
 
@@ -547,16 +547,16 @@ operator!=( const nsScannerIterator& lhs, const nsScannerIterator& rhs )
 
 inline
 nsScannerBufferList::Position::Position(const nsScannerIterator& aIter)
-  : mBuffer(NS_CONST_CAST(Buffer*, aIter.buffer()))
-  , mPosition(NS_CONST_CAST(PRUnichar*, aIter.get()))
+  : mBuffer(const_cast<Buffer*>(aIter.buffer()))
+  , mPosition(const_cast<PRUnichar*>(aIter.get()))
   {}
 
 inline
 nsScannerBufferList::Position&
 nsScannerBufferList::Position::operator=(const nsScannerIterator& aIter)
   {
-    mBuffer   = NS_CONST_CAST(Buffer*, aIter.buffer());
-    mPosition = NS_CONST_CAST(PRUnichar*, aIter.get());
+    mBuffer   = const_cast<Buffer*>(aIter.buffer());
+    mPosition = const_cast<PRUnichar*>(aIter.get());
     return *this;
   }
 

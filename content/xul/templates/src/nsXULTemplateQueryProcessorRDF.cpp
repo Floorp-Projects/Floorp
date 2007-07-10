@@ -91,7 +91,7 @@ BindingDependenciesTraverser(nsISupports* key,
                              void* userArg)
 {
     nsCycleCollectionTraversalCallback *cb = 
-        NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, userArg);
+        static_cast<nsCycleCollectionTraversalCallback*>(userArg);
 
     PRInt32 i, count = array->Count();
     for (i = 0; i < count; ++i) {
@@ -107,7 +107,7 @@ MemoryElementTraverser(const PRUint32& key,
                        void* userArg)
 {
     nsCycleCollectionTraversalCallback *cb = 
-        NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, userArg);
+        static_cast<nsCycleCollectionTraversalCallback*>(userArg);
 
     PRInt32 i, count = array->Count();
     for (i = 0; i < count; ++i) {
@@ -121,7 +121,7 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 RuleToBindingTraverser(nsISupports* key, RDFBindingSet* binding, void* userArg)
 {
     nsCycleCollectionTraversalCallback *cb = 
-        NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, userArg);
+        static_cast<nsCycleCollectionTraversalCallback*>(userArg);
 
     cb->NoteXPCOMChild(key);
 
@@ -384,7 +384,7 @@ nsXULTemplateQueryProcessorRDF::GenerateResults(nsISupports* aDatasource,
 
     // should be safe to cast here since the query is a
     // non-scriptable nsITemplateRDFQuery
-    nsRDFQuery* query = NS_STATIC_CAST(nsRDFQuery *, aQuery);
+    nsRDFQuery* query = static_cast<nsRDFQuery *>(aQuery);
 
     *aResults = nsnull;
 
@@ -829,7 +829,7 @@ nsXULTemplateQueryProcessorRDF::Propagate(nsIRDFResource* aSource,
     {
         ReteNodeSet::Iterator last = mRDFTests.Last();
         for (ReteNodeSet::Iterator i = mRDFTests.First(); i != last; ++i) {
-            nsRDFTestNode* rdftestnode = NS_STATIC_CAST(nsRDFTestNode*, *i);
+            nsRDFTestNode* rdftestnode = static_cast<nsRDFTestNode*>(*i);
 
             Instantiation seed;
             if (rdftestnode->CanPropagate(aSource, aProperty, aTarget, seed)) {
@@ -846,7 +846,7 @@ nsXULTemplateQueryProcessorRDF::Propagate(nsIRDFResource* aSource,
     {
         ReteNodeSet::Iterator last = livenodes.Last();
         for (ReteNodeSet::Iterator i = livenodes.First(); i != last; ++i) {
-            nsRDFTestNode* rdftestnode = NS_STATIC_CAST(nsRDFTestNode*, *i);
+            nsRDFTestNode* rdftestnode = static_cast<nsRDFTestNode*>(*i);
 
             // What happens here is we create an instantiation as if we were
             // at the found test in the rule network. For example, if the
@@ -918,7 +918,7 @@ nsXULTemplateQueryProcessorRDF::Retract(nsIRDFResource* aSource,
     // Retract any currently active rules that will no longer be matched.
     ReteNodeSet::ConstIterator lastnode = mRDFTests.Last();
     for (ReteNodeSet::ConstIterator node = mRDFTests.First(); node != lastnode; ++node) {
-        const nsRDFTestNode* rdftestnode = NS_STATIC_CAST(const nsRDFTestNode*, *node);
+        const nsRDFTestNode* rdftestnode = static_cast<const nsRDFTestNode*>(*node);
 
         rdftestnode->Retract(aSource, aProperty, aTarget);
 

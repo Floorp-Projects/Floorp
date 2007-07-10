@@ -1280,43 +1280,6 @@ nsParser::Parse(nsIURI* aURL,
   return result;
 }
 
-
-/**
- * Cause parser to parse input from given stream
- */
-NS_IMETHODIMP
-nsParser::Parse(nsIInputStream* aStream,
-                const nsACString& aMimeType,
-                void* aKey,
-                nsDTDMode aMode)
-{
-  nsresult  result = NS_ERROR_OUT_OF_MEMORY;
-
-  // Ok, time to create our tokenizer and begin the process
-  nsAutoString theUnknownFilename(NS_LITERAL_STRING("unknown"));
-
-  nsScanner* theScanner = new nsScanner(theUnknownFilename, aStream, mCharset,
-                                        mCharsetSource);
-
-  CParserContext* pc = new CParserContext(theScanner, aKey, mCommand, 0);
-  if (pc && theScanner) {
-    PushContext(*pc);
-    pc->SetMimeType(aMimeType);
-    pc->mStreamListenerState = eOnStart;
-    pc->mMultipart = PR_FALSE;
-    pc->mContextType = CParserContext::eCTStream;
-    pc->mDTDMode = aMode;
-    mParserContext->mScanner->FillBuffer();
-    result = ResumeParse();
-    pc = PopContext();
-    delete pc;
-  } else {
-    result = mInternalState = NS_ERROR_HTMLPARSER_BADCONTEXT;
-  }
-
-  return result;
-}
-
 /**
  * Call this method if all you want to do is parse 1 string full of HTML text.
  * In particular, this method should be called by the DOM when it has an HTML
@@ -1491,9 +1454,9 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
     // XXX This is extremely ugly. Maybe CNavDTD should have FlushMisplaced()?
     NS_ASSERTION(mParserContext, "Parsing didn't create a parser context?");
 
-    CNavDTD* dtd = NS_STATIC_CAST(CNavDTD*,
-                                  NS_STATIC_CAST(nsIDTD*,
-                                                 mParserContext->mDTD));
+    CNavDTD* dtd = static_cast<CNavDTD*>
+                              (static_cast<nsIDTD*>
+                                          (mParserContext->mDTD));
     NS_ASSERTION(dtd, "How did we parse anything without a dtd?");
 
     CStartToken bodyToken(NS_LITERAL_STRING("BODY"), eHTMLTag_body);
@@ -2155,7 +2118,7 @@ ParserWriteFunc(nsIInputStream* in,
                 PRUint32 *writeCount)
 {
   nsresult result;
-  ParserWriteStruct* pws = NS_STATIC_CAST(ParserWriteStruct*, closure);
+  ParserWriteStruct* pws = static_cast<ParserWriteStruct*>(closure);
   const char* buf = fromRawSegment;
   PRUint32 theNumRead = count;
 

@@ -69,9 +69,6 @@ MOZ_PKG_APPNAME = $(MOZ_APP_NAME)
 APPNAME = $(MOZ_APP_DISPLAYNAME)$(DBGTAG).app
 BUILDCONFIG_JAR = Contents/MacOS/chrome/toolkit.jar
 INSTALLER_DIR = $(MOZ_BUILD_APP)/installer
-ifeq ($(MOZ_BUILD_APP),suite) # {
-INSTALLER_DIR = xpinstall/packager
-endif # } suite
 ifeq ($(MOZ_BUILD_APP),xulrunner) # {
 INSTALLER_DIR = xulrunner/installer/mac
 BUILDCONFIG_JAR = Versions/Current/chrome/toolkit.jar

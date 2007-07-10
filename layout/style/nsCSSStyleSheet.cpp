@@ -212,7 +212,7 @@ nsMediaList::SetText(const nsAString& aMediaText)
 
   PRBool htmlMode = PR_FALSE;
   nsCOMPtr<nsIDOMStyleSheet> domSheet =
-    do_QueryInterface(NS_STATIC_CAST(nsICSSStyleSheet*, mStyleSheet));
+    do_QueryInterface(static_cast<nsICSSStyleSheet*>(mStyleSheet));
   if (domSheet) {
     nsCOMPtr<nsIDOMNode> node;
     domSheet->GetOwnerNode(getter_AddRefs(node));
@@ -242,7 +242,7 @@ nsMediaList::SetStyleSheet(nsICSSStyleSheet *aSheet)
 {
   NS_ASSERTION(aSheet == mStyleSheet || !aSheet || !mStyleSheet,
                "multiple style sheets competing for one media list");
-  mStyleSheet = NS_STATIC_CAST(nsCSSStyleSheet*, aSheet);
+  mStyleSheet = static_cast<nsCSSStyleSheet*>(aSheet);
   return NS_OK;
 }
 
@@ -512,7 +512,7 @@ CloneRuleInto(nsICSSRule* aRule, void* aArray)
   nsICSSRule* clone = nsnull;
   aRule->Clone(clone);
   if (clone) {
-    NS_STATIC_CAST(nsCOMArray<nsICSSRule>*, aArray)->AppendObject(clone);
+    static_cast<nsCOMArray<nsICSSRule>*>(aArray)->AppendObject(clone);
     NS_RELEASE(clone);
   }
   return PR_TRUE;
@@ -581,7 +581,7 @@ CreateNameSpace(nsICSSRule* aRule, void* aNameSpacePtr)
   if (nsICSSRule::NAMESPACE_RULE == type) {
     nsICSSNameSpaceRule*  nameSpaceRule = (nsICSSNameSpaceRule*)aRule;
     nsXMLNameSpaceMap *nameSpaceMap =
-      NS_STATIC_CAST(nsXMLNameSpaceMap*, aNameSpacePtr);
+      static_cast<nsXMLNameSpaceMap*>(aNameSpacePtr);
 
     nsIAtom*      prefix = nsnull;
     nsAutoString  urlSpec;
@@ -1138,7 +1138,7 @@ NS_IMETHODIMP
 nsCSSStyleSheet::GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const
 {
   // Important: If this function is ever made scriptable, we must add
-  // a security check here. See GetCSSRules below for an example.
+  // a security check here. See GetCssRules below for an example.
   aRule = mInner->mOrderedRules.SafeObjectAt(aIndex);
   if (aRule) {
     NS_ADDREF(aRule);
@@ -1223,7 +1223,7 @@ nsCSSStyleSheet::Clone(nsICSSStyleSheet* aCloneParent,
                                                    aCloneDocument,
                                                    aCloneOwningNode);
   if (clone) {
-    *aClone = NS_STATIC_CAST(nsICSSStyleSheet*, clone);
+    *aClone = static_cast<nsICSSStyleSheet*>(clone);
     NS_ADDREF(*aClone);
   }
   return NS_OK;
@@ -1286,7 +1286,7 @@ static PRBool PR_CALLBACK
 EnumClearRuleCascades(void* aProcessor, void* aData)
 {
   nsCSSRuleProcessor* processor =
-    NS_STATIC_CAST(nsCSSRuleProcessor*, aProcessor);
+    static_cast<nsCSSRuleProcessor*>(aProcessor);
   processor->ClearRuleCascades();
   return PR_TRUE;
 }
@@ -1319,6 +1319,35 @@ nsCSSStyleSheet::DidDirty()
 {
   ClearRuleCascades();
   mDirty = PR_TRUE;
+}
+
+nsresult
+nsCSSStyleSheet::SubjectSubsumesInnerPrincipal() const
+{
+  // Get the security manager and do the subsumes check
+  nsIScriptSecurityManager *securityManager =
+    nsContentUtils::GetSecurityManager();
+
+  nsCOMPtr<nsIPrincipal> subjectPrincipal;
+  securityManager->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
+
+  if (!subjectPrincipal) {
+    return NS_OK;
+  }
+
+  PRBool subsumes;
+  nsresult rv = subjectPrincipal->Subsumes(mInner->mPrincipal, &subsumes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (subsumes) {
+    return NS_OK;
+  }
+  
+  if (!nsContentUtils::IsCallerTrustedForWrite()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -1454,27 +1483,8 @@ nsCSSStyleSheet::GetCssRules(nsIDOMCSSRuleList** aCssRules)
   
   //-- Security check: Only scripts whose principal subsumes that of the
   //   style sheet can access rule collections.
-
-  // Get the security manager and do the subsumes check
-  nsIScriptSecurityManager *securityManager =
-    nsContentUtils::GetSecurityManager();
-
-  nsCOMPtr<nsIPrincipal> subjectPrincipal;
-  securityManager->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
-
-  nsresult rv = NS_OK;
-  if (subjectPrincipal) {
-    PRBool subsumes;
-    rv = subjectPrincipal->Subsumes(mInner->mPrincipal, &subsumes);
-    if (NS_SUCCEEDED(rv) && !subsumes &&
-        !nsContentUtils::IsCallerTrustedForRead()) {
-      rv = NS_ERROR_DOM_SECURITY_ERR;
-    }
-
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
+  nsresult rv = SubjectSubsumesInnerPrincipal();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // OK, security check passed, so get the rule collection
   if (nsnull == mRuleCollection) {
@@ -1502,6 +1512,11 @@ nsCSSStyleSheet::InsertRule(const nsAString& aRule,
   if (!complete) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
+
+  //-- Security check: Only scripts whose principal subsumes that of the
+  //   style sheet can modify rule collections.
+  nsresult rv = SubjectSubsumesInnerPrincipal();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (aRule.IsEmpty()) {
     // Nothing to do here
@@ -1672,6 +1687,11 @@ nsCSSStyleSheet::DeleteRule(PRUint32 aIndex)
   if (!complete) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
+
+  //-- Security check: Only scripts whose principal subsumes that of the
+  //   style sheet can modify rule collections.
+  nsresult rv = SubjectSubsumesInnerPrincipal();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // XXX TBI: handle @rule types
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, PR_TRUE);

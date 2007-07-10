@@ -83,7 +83,7 @@ public:
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey)
-    { return NS_STATIC_CAST(PRUint32, (*aKey) & PR_UINT32_MAX); }
+    { return static_cast<PRUint32>((*aKey) & PR_UINT32_MAX); }
   enum { ALLOW_MEMMOVE = PR_TRUE };
 
 private:
@@ -146,10 +146,12 @@ public:
   NS_DECL_NSINAVHISTORYRESULT
   NS_DECL_BOOKMARK_HISTORY_OBSERVER
 
-  void AddEverythingObserver(nsNavHistoryQueryResultNode* aNode);
-  void AddBookmarkObserver(nsNavHistoryFolderResultNode* aNode, PRInt64 aFolder);
-  void RemoveEverythingObserver(nsNavHistoryQueryResultNode* aNode);
-  void RemoveBookmarkObserver(nsNavHistoryFolderResultNode* aNode, PRInt64 aFolder);
+  void AddHistoryObserver(nsNavHistoryQueryResultNode* aNode);
+  void AddBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNode, PRInt64 aFolder);
+  void AddAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode);
+  void RemoveHistoryObserver(nsNavHistoryQueryResultNode* aNode);
+  void RemoveBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNode, PRInt64 aFolder);
+  void RemoveAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode);
 
   // returns the view. NOT-ADDREFED. May be NULL if there is no view
   nsINavHistoryResultViewer* GetView() const
@@ -182,11 +184,14 @@ public:
 
   // node observers
   PRBool mIsHistoryObserver;
-  PRBool mIsBookmarksObserver;
-  nsTArray<nsNavHistoryQueryResultNode*> mEverythingObservers;
+  PRBool mIsBookmarkFolderObserver;
+  PRBool mIsAllBookmarksObserver;
+
+  nsTArray<nsNavHistoryQueryResultNode*> mHistoryObservers;
+  nsTArray<nsNavHistoryQueryResultNode*> mAllBookmarksObservers;
   typedef nsTArray<nsNavHistoryFolderResultNode*> FolderObserverList;
-  nsDataHashtable<nsTrimInt64HashKey, FolderObserverList* > mBookmarkObservers;
-  FolderObserverList* BookmarkObserversForId(PRInt64 aFolderId, PRBool aCreate);
+  nsDataHashtable<nsTrimInt64HashKey, FolderObserverList* > mBookmarkFolderObservers;
+  FolderObserverList* BookmarkFolderObserversForId(PRInt64 aFolderId, PRBool aCreate);
 
   void RecursiveExpandCollapse(nsNavHistoryContainerResultNode* aContainer,
                                PRBool aExpand);
@@ -272,6 +277,13 @@ public:
 
   virtual void OnRemoving();
 
+  // Called from result's onItemChanged, see also bookmark observer declaration in
+  // nsNavHistoryFolderResultNode
+  NS_IMETHOD OnItemChanged(PRInt64 aItemId,
+                           const nsACString &aProperty,
+                           PRBool aIsAnnotationProperty,
+                           const nsACString &aValue);
+
 public:
 
   nsNavHistoryResult* GetResult();
@@ -347,19 +359,19 @@ public:
   }
   nsNavHistoryContainerResultNode* GetAsContainer() {
     NS_ASSERTION(IsContainer(), "Not a container");
-    return NS_REINTERPRET_CAST(nsNavHistoryContainerResultNode*, this);
+    return reinterpret_cast<nsNavHistoryContainerResultNode*>(this);
   }
   nsNavHistoryVisitResultNode* GetAsVisit() {
     NS_ASSERTION(IsVisit(), "Not a visit");
-    return NS_REINTERPRET_CAST(nsNavHistoryVisitResultNode*, this);
+    return reinterpret_cast<nsNavHistoryVisitResultNode*>(this);
   }
   nsNavHistoryFolderResultNode* GetAsFolder() {
     NS_ASSERTION(IsFolder(), "Not a folder");
-    return NS_REINTERPRET_CAST(nsNavHistoryFolderResultNode*, this);
+    return reinterpret_cast<nsNavHistoryFolderResultNode*>(this);
   }
   nsNavHistoryQueryResultNode* GetAsQuery() {
     NS_ASSERTION(IsQuery(), "Not a query");
-    return NS_REINTERPRET_CAST(nsNavHistoryQueryResultNode*, this);
+    return reinterpret_cast<nsNavHistoryQueryResultNode*>(this);
   }
 
   nsNavHistoryContainerResultNode* mParent;

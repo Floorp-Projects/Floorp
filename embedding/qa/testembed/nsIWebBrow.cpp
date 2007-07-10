@@ -73,7 +73,7 @@ void CNsIWebBrowser::WBAddListener(PRInt16 displayMode)
 {
 	// AddWebBrowserListener
 	nsWeakPtr weakling(
-        do_GetWeakReference(NS_STATIC_CAST(nsIContextMenuListener*, qaBrowserImpl)));
+        do_GetWeakReference(static_cast<nsIContextMenuListener*>(qaBrowserImpl)));
     rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIContextMenuListener));
 	RvTestResult(rv, "AddWebBrowserListener(). nsIContextMenuListener test", displayMode);
 	RvTestResultDlg(rv, "AddWebBrowserListener(). nsIContextMenuListener test", true);
@@ -83,7 +83,7 @@ void CNsIWebBrowser::WBRemoveListener(PRInt16 displayMode)
 {
 	// RemoveWebBrowserListener
 	nsWeakPtr weakling(
-        do_GetWeakReference(NS_STATIC_CAST(nsIContextMenuListener*, qaBrowserImpl)));
+        do_GetWeakReference(static_cast<nsIContextMenuListener*>(qaBrowserImpl)));
 
 	rv = qaWebBrowser->RemoveWebBrowserListener(weakling, NS_GET_IID(nsIContextMenuListener));
 	RvTestResult(rv, "RemoveWebBrowserListener(). nsIContextMenuListener test", displayMode);
@@ -110,7 +110,7 @@ void CNsIWebBrowser::WBSetContainerWindow(PRInt16 displayMode)
 {
 	// SetContainerWindow
 
-	rv = qaWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, qaBrowserImpl));
+	rv = qaWebBrowser->SetContainerWindow(static_cast<nsIWebBrowserChrome*>(qaBrowserImpl));
 	RvTestResult(rv, "nsIWebBrowser::SetContainerWindow() test", displayMode);
 	RvTestResultDlg(rv, "nsIWebBrowser::SetContainerWindow() test");
 }
@@ -136,7 +136,7 @@ void CNsIWebBrowser::WBSetURIContentListener(PRInt16 displayMode)
 {
 	// SetParentURIContentListener
 
-	rv = qaWebBrowser->SetParentURIContentListener(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl));
+	rv = qaWebBrowser->SetParentURIContentListener(static_cast<nsIURIContentListener*>(qaBrowserImpl));
 	RvTestResult(rv, "nsIWebBrowser::SetParentURIContentListener() test", displayMode);
 	RvTestResultDlg(rv, "nsIWebBrowser::SetParentURIContentListener() test");
 }

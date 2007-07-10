@@ -121,8 +121,6 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsILayoutHistoryState.h"
-#include "nsIScrollPositionListener.h"
-#include "nsICompositeListener.h"
 #include "nsILineIterator.h" // for ScrollContentIntoView
 #include "nsTimer.h"
 #include "nsWeakPtr.h"
@@ -191,7 +189,7 @@
 #include "nsStyleChangeList.h"
 #include "nsCSSFrameConstructor.h"
 #ifdef MOZ_XUL
-#include "nsIMenuFrame.h"
+#include "nsMenuFrame.h"
 #include "nsITreeBoxObject.h"
 #endif
 #include "nsIMenuParent.h"
@@ -671,7 +669,8 @@ FrameArena::FrameArena(PRUint32 aArenaSize)
 
 FrameArena::~FrameArena()
 {
-  NS_ASSERTION(mFrameCount == 0, "Some frame destructors were not called");
+  NS_ASSERTION(mFrameCount == 0,
+               "Some objects allocated with AllocateFrame were not freed");
  
 #if !defined(DEBUG_TRACEMALLOC_FRAMEARENA)
   // Free the arena in the pool and finish using it
@@ -888,8 +887,6 @@ public:
   virtual already_AddRefed<gfxASurface> RenderSelection(nsISelection* aSelection,
                                                         nsPoint& aPoint,
                                                         nsRect* aScreenRect);
-
-  virtual void HidePopups();
 
   //nsIViewObserver interface
 
@@ -1287,25 +1284,25 @@ nsIPresShell::GetVerifyReflowEnable()
 
     if (VERIFY_REFLOW_ON & gVerifyReflowFlags) {
       gVerifyReflowEnabled = PR_TRUE;
-    }
-    printf("Note: verifyreflow is %sabled",
-           gVerifyReflowEnabled ? "en" : "dis");
-    if (VERIFY_REFLOW_NOISY & gVerifyReflowFlags) {
-      printf(" (noisy)");
-    }
-    if (VERIFY_REFLOW_ALL & gVerifyReflowFlags) {
-      printf(" (all)");
-    }
-    if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
-      printf(" (show reflow commands)");
-    }
-    if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
-      printf(" (noisy reflow commands)");
-      if (VERIFY_REFLOW_REALLY_NOISY_RC & gVerifyReflowFlags) {
-        printf(" (REALLY noisy reflow commands)");
+
+      printf("Note: verifyreflow is enabled");
+      if (VERIFY_REFLOW_NOISY & gVerifyReflowFlags) {
+        printf(" (noisy)");
       }
+      if (VERIFY_REFLOW_ALL & gVerifyReflowFlags) {
+        printf(" (all)");
+      }
+      if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
+        printf(" (show reflow commands)");
+      }
+      if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
+        printf(" (noisy reflow commands)");
+        if (VERIFY_REFLOW_REALLY_NOISY_RC & gVerifyReflowFlags) {
+          printf(" (REALLY noisy reflow commands)");
+        }
+      }
+      printf("\n");
     }
-    printf("\n");
   }
 #endif
   return gVerifyReflowEnabled;
@@ -2458,7 +2455,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 void
 PresShell::sPaintSuppressionCallback(nsITimer *aTimer, void* aPresShell)
 {
-  PresShell* self = NS_STATIC_CAST(PresShell*, aPresShell);
+  PresShell* self = static_cast<PresShell*>(aPresShell);
   if (self)
     self->UnsuppressPainting();
 }
@@ -2541,7 +2538,7 @@ PresShell::KillResizeEventTimer()
 void
 PresShell::sResizeEventCallback(nsITimer *aTimer, void* aPresShell)
 {
-  PresShell* self = NS_STATIC_CAST(PresShell*, aPresShell);
+  PresShell* self = static_cast<PresShell*>(aPresShell);
   if (self) {
     self->FireResizeEvent();  
   }
@@ -3099,11 +3096,14 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
   }  
 #endif
 
-  // Grab |wasDirty| now so we can go ahead and update the bits on
-  // aFrame and then get |targetFrameDirty|.
+  // Grab |wasDirty| now so we can go ahead and update the bits on aFrame.
   PRBool wasDirty = NS_SUBTREE_DIRTY(aFrame);
   aFrame->AddStateBits(aBitToAdd);
-  PRBool targetFrameDirty = ((aFrame->GetStateBits() & NS_FRAME_IS_DIRTY) != 0);
+
+  // Now if aFrame is a reflow root we can cut off this reflow at it if the bit
+  // being added is NS_FRAME_HAS_DIRTY_CHILDREN.
+  PRBool targetFrameDirty = (aBitToAdd == NS_FRAME_IS_DIRTY);
+
 #define FRAME_IS_REFLOW_ROOT(_f)                   \
   ((_f->GetStateBits() & NS_FRAME_REFLOW_ROOT) &&  \
    (_f != aFrame || !targetFrameDirty))
@@ -3130,7 +3130,7 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
 
     while (stack.Count() != 0) {
       nsIFrame *f =
-        NS_STATIC_CAST(nsIFrame*, stack.FastElementAt(stack.Count() - 1));
+        static_cast<nsIFrame*>(stack.FastElementAt(stack.Count() - 1));
       stack.RemoveElementAt(stack.Count() - 1);
 
       PRInt32 childListIndex = 0;
@@ -3203,7 +3203,8 @@ PresShell::GetViewToScroll(nsLayoutUtils::Direction aDirection)
   if (focusedContent) {
     nsIFrame* startFrame = GetPrimaryFrameFor(focusedContent);
     if (startFrame) {
-      nsCOMPtr<nsIScrollableViewProvider> svp = do_QueryInterface(startFrame);
+      nsIScrollableViewProvider* svp;
+      CallQueryInterface(startFrame, &svp);
       // If this very frame provides a scroll view, start there instead of frame's
       // closest view, because the scroll view may be inside a child frame.
       // For example, this happens in the case of overflow:scroll.
@@ -4632,8 +4633,8 @@ PresShell::ComputeRepaintRegionForCopy(nsIView*      aRootView,
                                        nsRegion*     aRepaintRegion)
 {
   return nsLayoutUtils::ComputeRepaintRegionForCopy(
-      NS_STATIC_CAST(nsIFrame*, aRootView->GetClientData()),
-      NS_STATIC_CAST(nsIFrame*, aMovingView->GetClientData()),
+      static_cast<nsIFrame*>(aRootView->GetClientData()),
+      static_cast<nsIFrame*>(aMovingView->GetClientData()),
       aDelta, aCopyRect, aRepaintRegion);
 }
 
@@ -4841,7 +4842,7 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
     if (!ancestor || !ancestor->IsNodeOfType(nsINode::eCONTENT))
       return nsnull;
 
-    nsIContent* ancestorContent = NS_STATIC_CAST(nsIContent*, ancestor);
+    nsIContent* ancestorContent = static_cast<nsIContent*>(ancestor);
     ancestorFrame = GetPrimaryFrameFor(ancestorContent);
 
     // use the nearest ancestor frame that includes all continuations as the
@@ -5100,7 +5101,7 @@ PresShell::Paint(nsIView*             aView,
 
   NS_ASSERTION(!(nsnull == aView), "null view");
 
-  frame = NS_STATIC_CAST(nsIFrame*, aView->GetClientData());
+  frame = static_cast<nsIFrame*>(aView->GetClientData());
   nscolor backgroundColor;
   mViewManager->GetDefaultBackgroundColor(&backgroundColor);
   for (nsIView *view = aView; view; view = view->GetParent()) {
@@ -5289,7 +5290,7 @@ PresShell::HandleEvent(nsIView         *aView,
     return NS_OK;
   }
   
-  nsIFrame* frame = NS_STATIC_CAST(nsIFrame*, aView->GetClientData());
+  nsIFrame* frame = static_cast<nsIFrame*>(aView->GetClientData());
 
   PRBool dispatchUsingCoordinates =
       !NS_IS_KEY_EVENT(aEvent) && !NS_IS_IME_EVENT(aEvent) &&
@@ -5307,7 +5308,7 @@ PresShell::HandleEvent(nsIView         *aView,
     
     if (targetView) {
       aView = targetView;
-      frame = NS_STATIC_CAST(nsIFrame*, aView->GetClientData());
+      frame = static_cast<nsIFrame*>(aView->GetClientData());
     }
   }
 
@@ -5344,11 +5345,11 @@ PresShell::HandleEvent(nsIView         *aView,
     nsIFrame* targetFrame = nsLayoutUtils::GetFrameForPoint(frame, eventPoint);
     if (targetFrame) {
       PresShell* shell =
-          NS_STATIC_CAST(PresShell*, targetFrame->PresContext()->PresShell());
+          static_cast<PresShell*>(targetFrame->PresContext()->PresShell());
       if (shell != this) {
         // Handle the event in the correct shell.
         // Prevent deletion until we're done with event handling (bug 336582).
-        nsRefPtr<nsIPresShell> kungFuDeathGrip(shell);
+        nsCOMPtr<nsIPresShell> kungFuDeathGrip(shell);
         nsIView* subshellRootView;
         shell->GetViewManager()->GetRootView(subshellRootView);
         // We pass the subshell's root view as the view to start from. This is
@@ -5546,7 +5547,7 @@ inline PRBool
 IsSynthesizedMouseMove(nsEvent* aEvent)
 {
   return aEvent->eventStructType == NS_MOUSE_EVENT &&
-         NS_STATIC_CAST(nsMouseEvent*, aEvent)->reason != nsMouseEvent::eReal;
+         static_cast<nsMouseEvent*>(aEvent)->reason != nsMouseEvent::eReal;
 }
 
 nsresult
@@ -5556,7 +5557,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
 #ifdef ACCESSIBILITY
   if (aEvent->eventStructType == NS_ACCESSIBLE_EVENT)
   {
-    NS_STATIC_CAST(nsAccessibleEvent*, aEvent)->accessible = nsnull;
+    static_cast<nsAccessibleEvent*>(aEvent)->accessible = nsnull;
     nsCOMPtr<nsIAccessibilityService> accService = 
       do_GetService("@mozilla.org/accessibilityService;1");
     if (accService) {
@@ -5573,7 +5574,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
       // Addref this - it's not a COM Ptr
       // We'll make sure the right number of Addref's occur before
       // handing this back to the accessibility client
-      NS_STATIC_CAST(nsAccessibleEvent*, aEvent)->accessible = acc;
+      static_cast<nsAccessibleEvent*>(aEvent)->accessible = acc;
       // Ensure this is set in case a11y was activated before any
       // nsPresShells existed to observe "a11y-init-or-shutdown" topic
       gIsAccessibilityActive = PR_TRUE;
@@ -5837,18 +5838,6 @@ PresShell::Thaw()
   UnsuppressPainting();
 }
 
-void
-PresShell::HidePopups()
-{
-  nsIViewManager *vm = GetViewManager();
-  if (vm) {
-    nsIView *rootView = nsnull;
-    vm->GetRootView(rootView);
-    if (rootView)
-      HideViewIfPopup(rootView);
-  }
-}
-
 //--------------------------------------------------------
 // Start of protected and private methods on the PresShell
 //--------------------------------------------------------
@@ -6098,7 +6087,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
       do {
         // Send an incremental reflow notification to the target frame.
         PRInt32 idx = mDirtyRoots.Count() - 1;
-        nsIFrame *target = NS_STATIC_CAST(nsIFrame*, mDirtyRoots[idx]);
+        nsIFrame *target = static_cast<nsIFrame*>(mDirtyRoots[idx]);
         mDirtyRoots.RemoveElementAt(idx);
 
         if (!NS_SUBTREE_DIRTY(target)) {
@@ -6124,7 +6113,6 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
     DidDoReflow();
 
 #ifdef DEBUG
-    nsIFrame* rootFrame = FrameManager()->GetRootFrame();
     if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
       printf("\nPresShell::ProcessReflowCommands() finished: this=%p\n", (void*)this);
     }
@@ -6184,18 +6172,15 @@ ReResolveMenusAndTrees(nsIFrame *aFrame, void *aClosure)
   // sub-content, since doing so slows menus to a crawl.  That means we
   // have to special-case them on a skin switch, and ensure that the
   // popup frames just get destroyed completely.
-  nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(aFrame));
-  if (menuFrame) {
-    menuFrame->UngenerateMenu();  
-    menuFrame->OpenMenu(PR_FALSE);
-  }
+  if (aFrame && aFrame->GetType() == nsGkAtoms::menuFrame)
+    (static_cast<nsMenuFrame *>(aFrame))->CloseMenu(PR_TRUE);
   return PR_TRUE;
 }
 
 PR_STATIC_CALLBACK(PRBool)
 ReframeImageBoxes(nsIFrame *aFrame, void *aClosure)
 {
-  nsStyleChangeList *list = NS_STATIC_CAST(nsStyleChangeList*, aClosure);
+  nsStyleChangeList *list = static_cast<nsStyleChangeList*>(aClosure);
   if (aFrame->GetType() == nsGkAtoms::imageBoxFrame) {
     list->AppendChange(aFrame, aFrame->GetContent(),
                        NS_STYLE_HINT_FRAMECHANGE);
@@ -6323,27 +6308,6 @@ PresShell::EnumeratePlugins(nsIDOMDocument *aDocument,
     nsCOMPtr<nsIContent> content = do_QueryInterface(node);
     if (content)
       aCallback(this, content);
-  }
-}
-
-void
-PresShell::HideViewIfPopup(nsIView* aView)
-{
-  nsIFrame* frame = NS_STATIC_CAST(nsIFrame*, aView->GetClientData());
-  if (frame) {
-    nsIMenuParent* parent;
-    CallQueryInterface(frame, &parent);
-    if (parent) {
-      parent->HideChain();
-      // really make sure the view is hidden
-      mViewManager->SetViewVisibility(aView, nsViewVisibility_kHide);
-    }
-  }
-
-  nsIView* child = aView->GetFirstChild();
-  while (child) {
-    HideViewIfPopup(child);
-    child = child->GetNextSibling();
   }
 }
 
@@ -6514,12 +6478,12 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
 
         // verify that neither frame has a space manager,
         // or they both do and the space managers are equivalent
-        nsSpaceManager *sm1 = NS_STATIC_CAST(nsSpaceManager*,
-                         k1->GetProperty(nsGkAtoms::spaceManagerProperty));
+        nsSpaceManager *sm1 = static_cast<nsSpaceManager*>
+                                         (k1->GetProperty(nsGkAtoms::spaceManagerProperty));
 
         // look at the test frame
-        nsSpaceManager *sm2 = NS_STATIC_CAST(nsSpaceManager*,
-                         k2->GetProperty(nsGkAtoms::spaceManagerProperty));
+        nsSpaceManager *sm2 = static_cast<nsSpaceManager*>
+                                         (k2->GetProperty(nsGkAtoms::spaceManagerProperty));
 
         // now compare the space managers
         if (((nsnull == sm1) && (nsnull != sm2)) ||

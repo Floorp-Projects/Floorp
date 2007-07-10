@@ -106,7 +106,7 @@ ifdef MOZ_STORAGE
 tier_gecko_dirs += storage
 endif
 
-ifdef MOZ_XUL
+ifdef MOZ_RDF
 tier_gecko_dirs += rdf
 endif
 

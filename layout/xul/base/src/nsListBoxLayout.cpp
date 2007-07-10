@@ -61,7 +61,7 @@ nsListBoxLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, ns
 {
   nsresult rv = nsGridRowGroupLayout::GetPrefSize(aBox, aBoxLayoutState, aSize);
 
-  nsListBoxBodyFrame* frame = NS_STATIC_CAST(nsListBoxBodyFrame*, aBox);
+  nsListBoxBodyFrame* frame = static_cast<nsListBoxBodyFrame*>(aBox);
   if (frame) {
     nscoord rowheight = frame->GetRowHeightAppUnits();
     aSize.height = frame->GetRowCount() * rowheight;
@@ -87,7 +87,7 @@ nsListBoxLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsS
 {
   nsresult rv = nsGridRowGroupLayout::GetMinSize(aBox, aBoxLayoutState, aSize);
 
-  nsListBoxBodyFrame* frame = NS_STATIC_CAST(nsListBoxBodyFrame*, aBox);
+  nsListBoxBodyFrame* frame = static_cast<nsListBoxBodyFrame*>(aBox);
   if (frame) {
     nscoord rowheight = frame->GetRowHeightAppUnits();
     aSize.height = frame->GetRowCount() * rowheight;
@@ -113,7 +113,7 @@ nsListBoxLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsS
 {
   nsresult rv = nsGridRowGroupLayout::GetMaxSize(aBox, aBoxLayoutState, aSize);
 
-  nsListBoxBodyFrame* frame = NS_STATIC_CAST(nsListBoxBodyFrame*, aBox);
+  nsListBoxBodyFrame* frame = static_cast<nsListBoxBodyFrame*>(aBox);
   if (frame) {
     nscoord rowheight = frame->GetRowHeightAppUnits();
     aSize.height = frame->GetRowCount() * rowheight;
@@ -131,7 +131,7 @@ nsListBoxLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsS
 NS_IMETHODIMP
 nsListBoxLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 {
-  nsListBoxBodyFrame* frame = NS_STATIC_CAST(nsListBoxBodyFrame*, aBox);
+  nsListBoxBodyFrame* frame = static_cast<nsListBoxBodyFrame*>(aBox);
 
   // Always ensure an accurate scrollview position
   // This is an edge case that was caused by the row height
@@ -165,7 +165,7 @@ nsListBoxLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
   PRInt32 redrawStart = -1;
 
   // Get the start y position.
-  nsListBoxBodyFrame* body = NS_STATIC_CAST(nsListBoxBodyFrame*, aBox);
+  nsListBoxBodyFrame* body = static_cast<nsListBoxBodyFrame*>(aBox);
   if (!body) {
     NS_ERROR("Frame encountered that isn't a listboxbody!\n");
     return NS_ERROR_FAILURE;

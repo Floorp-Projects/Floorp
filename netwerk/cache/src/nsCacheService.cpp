@@ -1574,8 +1574,8 @@ nsCacheService::OnProfileShutdown(PRBool cleanse)
             gService->mDiskDevice->EvictEntries(nsnull);
 
         gService->mDiskDevice->Shutdown();
-        gService->mEnableDiskDevice = PR_FALSE;
     }
+    gService->mEnableDiskDevice = PR_FALSE;
 #endif // !NECKO_DISK_CACHE
 
 #ifdef NECKO_OFFLINE_CACHE
@@ -1584,8 +1584,8 @@ nsCacheService::OnProfileShutdown(PRBool cleanse)
             gService->mOfflineDevice->EvictEntries(nsnull);
 
         gService->mOfflineDevice->Shutdown();
-        gService->mEnableOfflineDevice = PR_FALSE;
     }
+    gService->mEnableOfflineDevice = PR_FALSE;
 #endif // !NECKO_OFFLINE_CACHE
 
     if (gService->mMemoryDevice) {

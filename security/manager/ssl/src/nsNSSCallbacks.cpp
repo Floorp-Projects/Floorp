@@ -199,7 +199,7 @@ SECStatus nsNSSHttpRequestSession::createFcn(SEC_HTTP_SERVER_SESSION session,
       !http_request_method || !pRequest)
     return SECFailure;
 
-  nsNSSHttpServerSession* hss = NS_STATIC_CAST(nsNSSHttpServerSession*, session);
+  nsNSSHttpServerSession* hss = static_cast<nsNSSHttpServerSession*>(session);
   if (!hss)
     return SECFailure;
 
@@ -698,7 +698,7 @@ PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   nsresult rv = NS_OK;
   PRUnichar *password = nsnull;
   PRBool value = PR_FALSE;
-  nsIInterfaceRequestor *ir = NS_STATIC_CAST(nsIInterfaceRequestor*, arg);
+  nsIInterfaceRequestor *ir = static_cast<nsIInterfaceRequestor*>(arg);
   nsCOMPtr<nsIPrompt> proxyPrompt;
 
   /* TODO: Retry should generate a different dialog message */
@@ -762,7 +762,7 @@ PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   rv = nssComponent->PIPBundleFormatStringFromName("CertPassPrompt",
                                       formatStrings, 1,
                                       promptString);
-  nsMemory::Free(NS_CONST_CAST(PRUnichar*, formatStrings[0]));
+  nsMemory::Free(const_cast<PRUnichar*>(formatStrings[0]));
 
   if (NS_FAILED(rv))
     return nsnull;
@@ -832,7 +832,7 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
                                                    formatStrings, 1,
                                                    shortDesc);
 
-    nsMemory::Free(NS_CONST_CAST(PRUnichar*, formatStrings[0]));
+    nsMemory::Free(const_cast<PRUnichar*>(formatStrings[0]));
 
     nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
     infoObject->SetSecurityState(secStatus);

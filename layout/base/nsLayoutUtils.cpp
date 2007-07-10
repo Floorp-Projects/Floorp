@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -185,10 +186,10 @@ nsLayoutUtils::GetAfterFrame(nsIFrame* aFrame)
 
 // static
 nsIFrame*
-nsLayoutUtils::GetPageFrame(nsIFrame* aFrame)
+nsLayoutUtils::GetClosestFrameOfType(nsIFrame* aFrame, nsIAtom* aFrameType)
 {
   for (nsIFrame* frame = aFrame; frame; frame = frame->GetParent()) {
-    if (frame->GetType() == nsGkAtoms::pageFrame) {
+    if (frame->GetType() == aFrameType) {
       return frame;
     }
   }
@@ -247,7 +248,7 @@ nsLayoutUtils::GetCrossDocParentFrame(nsIFrame* aFrame)
   v = v->GetParent(); // subdocumentframe's view
   if (!v)
     return nsnull;
-  return NS_STATIC_CAST(nsIFrame*, v->GetClientData());
+  return static_cast<nsIFrame*>(v->GetClientData());
 }
 
 // static
@@ -331,8 +332,8 @@ nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
   nsINode* content1Ancestor = nsnull;
   nsINode* content2Ancestor = nsnull;
   while (last1 >= 0 && last2 >= 0
-         && ((content1Ancestor = NS_STATIC_CAST(nsINode*, content1Ancestors.ElementAt(last1)))
-             == (content2Ancestor = NS_STATIC_CAST(nsINode*, content2Ancestors.ElementAt(last2))))) {
+         && ((content1Ancestor = static_cast<nsINode*>(content1Ancestors.ElementAt(last1)))
+             == (content2Ancestor = static_cast<nsINode*>(content2Ancestors.ElementAt(last2))))) {
     last1--;
     last2--;
   }
@@ -474,16 +475,16 @@ nsIFrame* nsLayoutUtils::GetLastSibling(nsIFrame* aFrame) {
 // static
 nsIView*
 nsLayoutUtils::FindSiblingViewFor(nsIView* aParentView, nsIFrame* aFrame) {
-  nsIFrame* parentViewFrame = NS_STATIC_CAST(nsIFrame*, aParentView->GetClientData());
+  nsIFrame* parentViewFrame = static_cast<nsIFrame*>(aParentView->GetClientData());
   nsIContent* parentViewContent = parentViewFrame ? parentViewFrame->GetContent() : nsnull;
   for (nsIView* insertBefore = aParentView->GetFirstChild(); insertBefore;
        insertBefore = insertBefore->GetNextSibling()) {
-    nsIFrame* f = NS_STATIC_CAST(nsIFrame*, insertBefore->GetClientData());
+    nsIFrame* f = static_cast<nsIFrame*>(insertBefore->GetClientData());
     if (!f) {
       // this view could be some anonymous view attached to a meaningful parent
       for (nsIView* searchView = insertBefore->GetParent(); searchView;
            searchView = searchView->GetParent()) {
-        f = NS_STATIC_CAST(nsIFrame*, searchView->GetClientData());
+        f = static_cast<nsIFrame*>(searchView->GetClientData());
         if (f) {
           break;
         }
@@ -591,13 +592,13 @@ nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(nsIDOMEvent* aDOMEvent, nsIFrame
 }
 
 nsPoint
-nsLayoutUtils::GetEventCoordinatesRelativeTo(nsEvent* aEvent, nsIFrame* aFrame)
+nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent, nsIFrame* aFrame)
 {
   if (!aEvent || (aEvent->eventStructType != NS_MOUSE_EVENT && 
                   aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT))
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
-  nsGUIEvent* GUIEvent = NS_STATIC_CAST(nsGUIEvent*, aEvent);
+  const nsGUIEvent* GUIEvent = static_cast<const nsGUIEvent*>(aEvent);
   if (!GUIEvent->widget)
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
@@ -607,7 +608,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(nsEvent* aEvent, nsIFrame* aFrame)
   for (nsIFrame* f = aFrame; f; f = GetCrossDocParentFrame(f)) {
 #ifdef MOZ_SVG_FOREIGNOBJECT
     if (f->IsFrameOfType(nsIFrame::eSVGForeignObject) && f->GetFirstChild(nsnull)) {
-      nsSVGForeignObjectFrame* fo = NS_STATIC_CAST(nsSVGForeignObjectFrame*, f);
+      nsSVGForeignObjectFrame* fo = static_cast<nsSVGForeignObjectFrame*>(f);
       nsIFrame* outer = nsSVGUtils::GetOuterSVGFrame(fo);
       return fo->TransformPointFromOuter(
           GetEventCoordinatesRelativeTo(aEvent, outer)) -
@@ -640,7 +641,7 @@ nsLayoutUtils::GetEventCoordinatesForNearestView(nsEvent* aEvent,
                   aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT))
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
-  nsGUIEvent* GUIEvent = NS_STATIC_CAST(nsGUIEvent*, aEvent);
+  nsGUIEvent* GUIEvent = static_cast<nsGUIEvent*>(aEvent);
   if (!GUIEvent->widget)
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
@@ -849,7 +850,7 @@ AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
     if (sublist) {
       if (item->GetType() == nsDisplayItem::TYPE_CLIP) {
         nsRect clip;
-        clip.IntersectRect(aClipRect, NS_STATIC_CAST(nsDisplayClip*, item)->GetClipRect());
+        clip.IntersectRect(aClipRect, static_cast<nsDisplayClip*>(item)->GetClipRect());
         AddItemsToRegion(aBuilder, sublist, aRect, clip, aDelta, aRegion);
       } else {
         // opacity, or a generic sublist
@@ -952,26 +953,6 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
   AddItemsToRegion(&builder, &list, aCopyRect, rect, aDelta, aRepaintRegion);
   // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
   list.DeleteAll();
-  return NS_OK;
-}
-
-nsresult
-nsLayoutUtils::CreateOffscreenContext(nsIDeviceContext* deviceContext, nsIDrawingSurface* surface,
-                                      const nsRect& aRect, nsIRenderingContext** aResult)
-{
-  nsresult            rv;
-  nsIRenderingContext *context = nsnull;
-
-  rv = deviceContext->CreateRenderingContext(surface, context);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // always initialize clipping, linux won't draw images otherwise.
-  nsRect clip(0, 0, aRect.width, aRect.height);
-  context->SetClipRect(clip, nsClipCombine_kReplace);
-
-  context->Translate(-aRect.x, -aRect.y);
-  
-  *aResult = context;
   return NS_OK;
 }
 
@@ -1167,7 +1148,7 @@ nsLayoutUtils::GetClosestCommonAncestorViaPlaceholders(nsIFrame* aFrame1,
   PRInt32 last1 = frame1Ancestors.Count() - 1;
   PRInt32 last2 = frame2Ancestors.Count() - 1;
   while (last1 >= 0 && last2 >= 0) {
-    nsIFrame* frame1 = NS_STATIC_CAST(nsIFrame*, frame1Ancestors.ElementAt(last1));
+    nsIFrame* frame1 = static_cast<nsIFrame*>(frame1Ancestors.ElementAt(last1));
     if (frame1 != frame2Ancestors.ElementAt(last2))
       break;
     lastCommonFrame = frame1;
@@ -1190,7 +1171,7 @@ nsLayoutUtils::GetNextContinuationOrSpecialSibling(nsIFrame *aFrame)
     aFrame = aFrame->GetFirstInFlow();
 
     void* value = aFrame->GetProperty(nsGkAtoms::IBSplitSpecialSibling);
-    return NS_STATIC_CAST(nsIFrame*, value);
+    return static_cast<nsIFrame*>(value);
   }
 
   return nsnull;
@@ -1375,7 +1356,7 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
 
 #ifdef DEBUG_INTRINSIC_WIDTH
   nsFrame::IndentBy(stdout, gNoiseIndent);
-  NS_STATIC_CAST(nsFrame*, aFrame)->ListTag(stdout);
+  static_cast<nsFrame*>(aFrame)->ListTag(stdout);
   printf(" %s intrinsic width for container:\n",
          aType == MIN_WIDTH ? "min" : "pref");
 #endif
@@ -1426,7 +1407,7 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
 #ifdef DEBUG_INTRINSIC_WIDTH
     --gNoiseIndent;
     nsFrame::IndentBy(stdout, gNoiseIndent);
-    NS_STATIC_CAST(nsFrame*, aFrame)->ListTag(stdout);
+    static_cast<nsFrame*>(aFrame)->ListTag(stdout);
     printf(" %s intrinsic width from frame is %d.\n",
            aType == MIN_WIDTH ? "min" : "pref", result);
 #endif
@@ -1572,7 +1553,7 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
 
 #ifdef DEBUG_INTRINSIC_WIDTH
   nsFrame::IndentBy(stdout, gNoiseIndent);
-  NS_STATIC_CAST(nsFrame*, aFrame)->ListTag(stdout);
+  static_cast<nsFrame*>(aFrame)->ListTag(stdout);
   printf(" %s intrinsic width for container is %d twips.\n",
          aType == MIN_WIDTH ? "min" : "pref", result);
 #endif
@@ -1910,7 +1891,7 @@ nsLayoutUtils::MinWidthFromInline(nsIFrame* aFrame,
   nsIFrame::InlineMinWidthData data;
   DISPLAY_MIN_WIDTH(aFrame, data.prevLines);
   aFrame->AddInlineMinWidth(aRenderingContext, &data);
-  data.Break(aRenderingContext);
+  data.ForceBreak(aRenderingContext);
   return data.prevLines;
 }
 
@@ -1921,7 +1902,7 @@ nsLayoutUtils::PrefWidthFromInline(nsIFrame* aFrame,
   nsIFrame::InlinePrefWidthData data;
   DISPLAY_PREF_WIDTH(aFrame, data.prevLines);
   aFrame->AddInlinePrefWidth(aRenderingContext, &data);
-  data.Break(aRenderingContext);
+  data.ForceBreak(aRenderingContext);
   return data.prevLines;
 }
 
@@ -1994,7 +1975,7 @@ nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
 nsLayoutUtils::GetFirstLineBaseline(const nsIFrame* aFrame, nscoord* aResult)
 {
   const nsBlockFrame* block;
-  if (NS_FAILED(NS_CONST_CAST(nsIFrame*, aFrame)->
+  if (NS_FAILED(const_cast<nsIFrame*>(aFrame)->
                   QueryInterface(kBlockFrameCID, (void**)&block))) {
     // For the first-line baseline we also have to check for a table, and if
     // so, use the baseline of its first row.
@@ -2007,8 +1988,8 @@ nsLayoutUtils::GetFirstLineBaseline(const nsIFrame* aFrame, nscoord* aResult)
     // For first-line baselines, we have to consider scroll frames.
     if (fType == nsGkAtoms::scrollFrame) {
       nsIScrollableFrame *sFrame;
-      if (NS_FAILED(CallQueryInterface(NS_CONST_CAST(nsIFrame*,
-                                         aFrame), &sFrame)) || !sFrame) {
+      if (NS_FAILED(CallQueryInterface(const_cast<nsIFrame*>
+                                                 (aFrame), &sFrame)) || !sFrame) {
         NS_NOTREACHED("not scroll frame");
       }
       nscoord kidBaseline;
@@ -2052,7 +2033,7 @@ nsLayoutUtils::GetFirstLineBaseline(const nsIFrame* aFrame, nscoord* aResult)
 nsLayoutUtils::GetLastLineBaseline(const nsIFrame* aFrame, nscoord* aResult)
 {
   const nsBlockFrame* block;
-  if (NS_FAILED(NS_CONST_CAST(nsIFrame*, aFrame)->
+  if (NS_FAILED(const_cast<nsIFrame*>(aFrame)->
                   QueryInterface(kBlockFrameCID, (void**)&block)))
     // No baseline.  (We intentionally don't descend into scroll frames.)
     return PR_FALSE;
@@ -2142,8 +2123,8 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   aRenderingContext->GetDeviceContext(*getter_AddRefs(dc));
   PRInt32 d2a = dc->AppUnitsPerDevPixel();
 
-  nsRefPtr<gfxContext> ctx = NS_STATIC_CAST(gfxContext*,
-    aRenderingContext->GetNativeGraphicData(
+  nsRefPtr<gfxContext> ctx = static_cast<gfxContext*>
+                                        (aRenderingContext->GetNativeGraphicData(
       nsIRenderingContext::NATIVE_THEBES_CONTEXT));
 
   // the dest rect is affected by the current transform; that'll be

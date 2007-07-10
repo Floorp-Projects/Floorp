@@ -301,7 +301,7 @@ public:
       NS_ASSERTION(mTokenAllocator || mAttributes.GetSize() == 0,
                    "Error: no token allocator");
       CToken* theAttrToken = 0;
-      while ((theAttrToken = NS_STATIC_CAST(CToken*, mAttributes.Pop()))) {
+      while ((theAttrToken = static_cast<CToken*>(mAttributes.Pop()))) {
         IF_FREE(theAttrToken, mTokenAllocator);
       }
     }

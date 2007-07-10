@@ -69,6 +69,7 @@
 #include "prsystem.h"
 #include "prtime.h"
 #include "prprf.h"
+#include "nsEscape.h"
 
 #include "mozIStorageService.h"
 #include "mozIStorageConnection.h"
@@ -126,6 +127,9 @@
 
 // db file name
 #define DB_FILENAME NS_LITERAL_STRING("places.sqlite")
+
+// db backup file name
+#define DB_CORRUPT_FILENAME NS_LITERAL_STRING("places.sqlite.corrupt")
 
 // Lazy adding
 
@@ -275,11 +279,22 @@ nsNavHistory::Init()
   rv = prefService->GetBranch(PREF_BRANCH_BASE, getter_AddRefs(mPrefBranch));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // init db file
+  rv = InitDBFile(PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // init db and statements
   PRBool doImport;
   rv = InitDB(&doImport);
+  if (NS_FAILED(rv)) {
+    // if unable to initialize the db, force-re-initialize it:
+    // InitDBFile will backup the old db and create a new one.
+    rv = InitDBFile(PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = InitDB(&doImport);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = InitStatements();
-  NS_ENSURE_SUCCESS(rv, rv);
+
 #ifdef IN_MEMORY_LINKS
   rv = InitMemDB();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -335,9 +350,6 @@ nsNavHistory::Init()
   mDateFormatter = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // annotation service - just ignore errors
-  //mAnnotationService = do_GetService("@mozilla.org/annotation-service;1", &rv);
-
   // prefs
   LoadPrefs();
 
@@ -386,6 +398,85 @@ nsNavHistory::Init()
   return NS_OK;
 }
 
+// nsNavHistory::BackupDBFile
+//
+//    backup a corrupted db file
+//
+nsresult
+nsNavHistory::BackupDBFile()
+{
+  // move the database file to a uniquely named backup
+  nsCOMPtr<nsIFile> profDir;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                              getter_AddRefs(profDir));
+  
+  nsCOMPtr<nsIFile> corruptBackup;
+  rv = profDir->Clone(getter_AddRefs(corruptBackup));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = corruptBackup->Append(DB_CORRUPT_FILENAME);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = corruptBackup->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return mDBFile->MoveTo(profDir, DB_CORRUPT_FILENAME);
+}
+  
+// nsNavHistory::InitDBFile
+nsresult
+nsNavHistory::InitDBFile(PRBool aForceInit)
+{
+  // get profile dir, file
+  nsCOMPtr<nsIFile> profDir;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                       getter_AddRefs(profDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = profDir->Clone(getter_AddRefs(mDBFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBFile->Append(DB_FILENAME);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // if forcing, backup and remove the old file
+  if (aForceInit) {
+    rv = BackupDBFile();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // file exists?
+  PRBool dbExists;
+  rv = mDBFile->Exists(&dbExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // open the database
+  mDBService = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBService->OpenDatabase(mDBFile, getter_AddRefs(mDBConn));
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
+    dbExists = PR_FALSE;
+  
+    // backup file
+    rv = BackupDBFile();
+    NS_ENSURE_SUCCESS(rv, rv);
+  
+    // create new db file, and try to open again
+    rv = profDir->Clone(getter_AddRefs(mDBFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBFile->Append(DB_FILENAME);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBService->OpenDatabase(mDBFile, getter_AddRefs(mDBConn));
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // if the db didn't previously exist, or was corrupted, re-import bookmarks.
+  if (!dbExists) {
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService("@mozilla.org/preferences-service;1"));
+    if (prefs) {
+      rv = prefs->SetBoolPref(PREF_BROWSER_IMPORT_BOOKMARKS, PR_TRUE);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+  
+  return NS_OK;
+}
 
 // nsNavHistory::InitDB
 //
@@ -400,62 +491,6 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   PRBool tableExists;
   *aDoImport = PR_FALSE;
 
-  // init DB
-  nsCOMPtr<nsIFile> profDir;
-  nsCOMPtr<nsIFile> dbFile;
-  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                              getter_AddRefs(profDir));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = profDir->Clone(getter_AddRefs(dbFile));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = dbFile->Append(DB_FILENAME);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // import bookmarks if places.sqlite doesn't exist
-  PRBool dbExists;
-  rv = dbFile->Exists(&dbExists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // open the database
-  mDBService = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBService->OpenDatabase(dbFile, getter_AddRefs(mDBConn));
-  if (rv == NS_ERROR_FILE_CORRUPTED) {
-    dbExists = PR_FALSE;
-    // backup the corrupted db file
-    nsAutoString corruptFileName;
-    rv = dbFile->GetLeafName(corruptFileName);
-    NS_ENSURE_SUCCESS(rv, rv);
-    corruptFileName.Append(NS_LITERAL_STRING(".corrupt"));
-
-    nsCOMPtr<nsIFile> corruptBackup;
-    rv = profDir->Clone(getter_AddRefs(corruptBackup));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = corruptBackup->Append(corruptFileName);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = corruptBackup->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = dbFile->MoveTo(nsnull, corruptFileName);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = profDir->Clone(getter_AddRefs(dbFile));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = dbFile->Append(DB_FILENAME);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBService->OpenDatabase(dbFile, getter_AddRefs(mDBConn));
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // if the db didn't previously exist, or was corrupted, re-import bookmarks.
-  if (!dbExists) {
-    nsCOMPtr<nsIPrefBranch> prefs(do_GetService("@mozilla.org/preferences-service;1"));
-    if (prefs) {
-      rv = prefs->SetBoolPref(PREF_BROWSER_IMPORT_BOOKMARKS, PR_TRUE);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
-
   // Set the database page size. This will only have any effect on empty files,
   // so must be done before anything else. If the file already exists, we'll
   // get that file's page size and this will have no effect.
@@ -464,20 +499,11 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   rv = mDBConn->ExecuteSimpleSQL(pageSizePragma);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // dummy database connection
-  rv = mDBService->OpenDatabase(dbFile, getter_AddRefs(mDummyDBConn));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
-  // Initialize the other places services' database tables. We do this before:
-  //
-  // - Starting the dummy statement, because once the dummy statement has
-  //   started we can't modify the schema. Stopping and re-starting the
-  //   dummy statement is pretty heavyweight
-  //
-  // - Creating our statements. Some of our statements depend on these external
-  //   tables, such as the bookmarks or favicon tables.
+  // Initialize the other places services' database tables. We do this before
+  // creating our statements. Some of our statements depend on these external
+  // tables, such as the bookmarks or favicon tables.
   rv = nsNavBookmarks::InitTables(mDBConn);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = nsFaviconService::InitTables(mDBConn);
@@ -495,18 +521,8 @@ nsNavHistory::InitDB(PRBool *aDoImport)
 
   // Get the places schema version, which we store in the user_version PRAGMA
   PRInt32 DBSchemaVersion;
-  {
-    nsCOMPtr<mozIStorageStatement> statement;
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("PRAGMA user_version"),
-                                  getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRBool hasResult;
-    rv = statement->ExecuteStep(&hasResult);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(hasResult, NS_ERROR_FAILURE);
-    DBSchemaVersion = statement->AsInt32(0);
-  }
+  rv = mDBConn->GetSchemaVersion(&DBSchemaVersion);
+  NS_ENSURE_SUCCESS(rv, rv);
    
   if (PLACES_SCHEMA_VERSION != DBSchemaVersion) {
     // Migration How-to:
@@ -595,8 +611,14 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   rv = mDBConn->ExecuteSimpleSQL(cacheSizePragma);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // lock the db file
+  // http://www.sqlite.org/pragma.html#pragma_locking_mode
+  rv = mDBConn->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING("PRAGMA locking_mode = EXCLUSIVE"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // moz_places
-  if (! tableExists) {
+  if (!tableExists) {
     *aDoImport = PR_TRUE;
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_places ("
         "id INTEGER PRIMARY KEY, "
@@ -656,14 +678,9 @@ nsNavHistory::InitDB(PRBool *aDoImport)
 
   // --- PUT SCHEMA-MODIFYING THINGS (like create table) ABOVE THIS LINE ---
 
-  // now that the schema has been finalized, we can initialize the dummy stmt.
-  rv = StartDummyStatement();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // This causes the database data to be preloaded up to the maximum cache size
   // set above. This dramatically speeds up some later operations. Failures
-  // here are not fatal since we can run fine without this. It must happen
-  // after the dummy statement is running for the cache to be initialized.
+  // here are not fatal since we can run fine without this.
   if (cachePages > 0) {
     rv = mDBConn->Preload();
     if (NS_FAILED(rv))
@@ -671,6 +688,10 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   }
 
   // DO NOT PUT ANY SCHEMA-MODIFYING THINGS HERE
+
+  rv = InitStatements();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -680,9 +701,7 @@ nsNavHistory::InitDB(PRBool *aDoImport)
 nsresult
 nsNavHistory::UpdateSchemaVersion()
 {
-  nsCAutoString schemaVersionPragma("PRAGMA user_version=");
-  schemaVersionPragma.AppendInt(PLACES_SCHEMA_VERSION);
-  return mDBConn->ExecuteSimpleSQL(schemaVersionPragma);
+  return mDBConn->SetSchemaVersion(PLACES_SCHEMA_VERSION);
 }
 
 // nsNavHistory::InitStatements
@@ -944,99 +963,6 @@ nsNavHistory::InitMemDB()
   return NS_OK;
 }
 #endif
-
-
-// nsNavHistory::StartDummyStatement
-//
-//    sqlite page caches are discarded when a statement is complete. This sucks
-//    for things like history queries where we do many small reads. This means
-//    that for every small transaction, we have to re-read from disk (or the OS
-//    cache) all pages associated with that transaction.
-//
-//    To get around this, we keep a different connection. This dummy connection
-//    has a statement that stays open and thus keeps its pager cache in memory.
-//    When the shared pager cache is enabled before either connection has been
-//    opened (this is done by the storage service on DB init), our main
-//    connection will get the same pager cache, which will be persisted.
-//
-//    HOWEVER, when a statement is open on a database, it is disallowed to
-//    change the schema of the database (add or modify tables or indices).
-//    We deal with this in two ways. First, for initialization, all the
-//    services that depend on the places connection are told to create their
-//    tables using static functions. This happens before StartDummyStatement
-//    is called in InitDB so that this problem doesn't happen.
-//
-//    If some service needs to change the schema for some reason after this,
-//    they can call StopDummyStatement which will terminate the statement and
-//    clear the cache. This will allow the database schema to be modified, but
-//    will have bad performance implications (because the cache will need to
-//    be re-loaded). It is also possible for some buggy function to leave a
-//    statement open that will prevent modifictation of the DB.
-
-nsresult
-nsNavHistory::StartDummyStatement()
-{
-  nsresult rv;
-  NS_ASSERTION(mDummyDBConn, "The dummy connection should have been set up by Init");
-
-  // do nothing if the dummy statement is already running
-  if (mDBDummyStatement)
-    return NS_OK;
-
-  // Make sure the dummy table exists
-  PRBool tableExists;
-  rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_dummy_table"), &tableExists);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (! tableExists) {
-    rv = mDBConn->ExecuteSimpleSQL(
-        NS_LITERAL_CSTRING("CREATE TABLE moz_dummy_table (id INTEGER PRIMARY KEY)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // This table is guaranteed to have something in it and will keep the dummy
-  // statement open. If the table is empty, it won't hold the statement open.
-  // the PRIMARY KEY value on ID means that it is unique. The OR IGNORE means
-  // that if there is already a value of 1 there, this insert will be ignored,
-  // which is what we want so as to avoid growing the table infinitely.
-  rv = mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("INSERT OR IGNORE INTO moz_dummy_table VALUES (1)"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDummyDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT id FROM moz_dummy_table LIMIT 1"),
-    getter_AddRefs(mDBDummyStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // we have to step the dummy statement so that it will hold a lock on the DB
-  PRBool dummyHasResults;
-  rv = mDBDummyStatement->ExecuteStep(&dummyHasResults);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-
-// nsNavHistory::StopDummyStatement
-//
-//    @see StartDummyStatement for how this works.
-//
-//    It is very important that if the dummy statement is ever stopped, that
-//    it is restarted as soon as possible, or else the whole browser will run
-//    without DB cache, which will slow everything down.
-
-nsresult
-nsNavHistory::StopDummyStatement()
-{
-  // do nothing if the dummy statement isn't running
-  if (! mDBDummyStatement)
-    return NS_OK;
-
-  nsresult rv = mDBDummyStatement->Reset();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mDBDummyStatement = nsnull;
-  return NS_OK;
-}
 
 
 // nsNavHistory::SaveExpandItem
@@ -1335,7 +1261,7 @@ nsNavHistory::GetNow()
 
 void nsNavHistory::expireNowTimerCallback(nsITimer* aTimer, void* aClosure)
 {
-  nsNavHistory* history = NS_STATIC_CAST(nsNavHistory*, aClosure);
+  nsNavHistory* history = static_cast<nsNavHistory*>(aClosure);
   history->mNowValid = PR_FALSE;
   history->mExpireNowTimer = nsnull;
 }
@@ -2035,7 +1961,8 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
 //    it ANDed with the all the rest of the queries.
 
 nsresult
-nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
+nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
+                              const nsCOMArray<nsNavHistoryQuery>& aQueries,
                               nsNavHistoryQueryOptions *aOptions,
                               nsCOMArray<nsNavHistoryResultNode>* aResults)
 {
@@ -2118,7 +2045,7 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
       groupBy = NS_LITERAL_CSTRING(" GROUP BY b.id");
     }
     else {
-      // XXX: implement me
+      // XXX: implement support for nsINavHistoryQueryOptions::QUERY_TYPE_UNIFIED 
       return NS_ERROR_NOT_IMPLEMENTED;
     }
   }
@@ -2254,13 +2181,13 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
         // keyword searching with grouping: need intermediate filtered results
         nsCOMArray<nsNavHistoryResultNode> filteredResults;
         FilterResultSet(toplevel, &filteredResults, aQueries[0]->SearchTerms());
-        rv = RecursiveGroup(filteredResults, groupings, groupCount,
+        rv = RecursiveGroup(aResultNode, filteredResults, groupings, groupCount,
                             aResults);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     } else {
       // group unfiltered results
-      rv = RecursiveGroup(toplevel, groupings, groupCount, aResults);
+      rv = RecursiveGroup(aResultNode, toplevel, groupings, groupCount, aResults);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -2628,12 +2555,9 @@ nsNavHistory::RemoveAllPages()
   mExpire.ClearHistory();
 
   // Compress DB. Currently commented out because compression is very slow.
-  // Deleted data will be overwritten with 0s by sqlite. Note that we have to
-  // stop the dummy statement before doing this.
+  // Deleted data will be overwritten with 0s by sqlite.
 #if 0
-  StopDummyStatement();
   nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM"));
-  StartDummyStatement();
   NS_ENSURE_SUCCESS(rv, rv);
 #endif
   return NS_OK;
@@ -3059,7 +2983,7 @@ nsNavHistory::SetURIGeckoFlags(nsIURI* aURI, PRUint32 aFlags)
 PLDHashOperator PR_CALLBACK nsNavHistory::ExpireNonrecentRedirects(
     nsCStringHashKey::KeyType aKey, RedirectInfo& aData, void* aUserArg)
 {
-  PRInt64* threshold = NS_REINTERPRET_CAST(PRInt64*, aUserArg);
+  PRInt64* threshold = reinterpret_cast<PRInt64*>(aUserArg);
   if (aData.mTimeCreated < *threshold)
     return PL_DHASH_REMOVE;
   return PL_DHASH_NEXT;
@@ -3087,7 +3011,7 @@ nsNavHistory::AddDocumentRedirect(nsIChannel *aOldChannel,
     // expire out-of-date ones
     PRInt64 threshold = PR_Now() - RECENT_EVENT_THRESHOLD;
     mRecentRedirects.Enumerate(ExpireNonrecentRedirects,
-                               NS_REINTERPRET_CAST(void*, &threshold));
+                               reinterpret_cast<void*>(&threshold));
   }
 
   RedirectInfo info;
@@ -3225,7 +3149,7 @@ nsNavHistory::AddLazyMessage(const LazyMessage& aMessage)
 void // static
 nsNavHistory::LazyTimerCallback(nsITimer* aTimer, void* aClosure)
 {
-  nsNavHistory* that = NS_STATIC_CAST(nsNavHistory*, aClosure);
+  nsNavHistory* that = static_cast<nsNavHistory*>(aClosure);
   that->mLazyTimerSet = PR_FALSE;
   that->mLazyTimerDeferments = 0;
   that->CommitLazyMessages();
@@ -3571,7 +3495,8 @@ nsNavHistory::ResultsAsList(mozIStorageStatement* statement,
 //    single level of grouping.
 
 nsresult
-nsNavHistory::RecursiveGroup(const nsCOMArray<nsNavHistoryResultNode>& aSource,
+nsNavHistory::RecursiveGroup(nsNavHistoryQueryResultNode *aResultNode,
+                             const nsCOMArray<nsNavHistoryResultNode>& aSource,
                              const PRUint16* aGroupingMode, PRUint32 aGroupCount,
                              nsCOMArray<nsNavHistoryResultNode>* aDest)
 {
@@ -3582,13 +3507,13 @@ nsNavHistory::RecursiveGroup(const nsCOMArray<nsNavHistoryResultNode>& aSource,
   nsresult rv;
   switch (aGroupingMode[0]) {
     case nsINavHistoryQueryOptions::GROUP_BY_DAY:
-      rv = GroupByDay(aSource, aDest);
+      rv = GroupByDay(aResultNode, aSource, aDest);
       break;
     case nsINavHistoryQueryOptions::GROUP_BY_HOST:
-      rv = GroupByHost(aSource, aDest, PR_FALSE);
+      rv = GroupByHost(aResultNode, aSource, aDest, PR_FALSE);
       break;
     case nsINavHistoryQueryOptions::GROUP_BY_DOMAIN:
-      rv = GroupByHost(aSource, aDest, PR_TRUE);
+      rv = GroupByHost(aResultNode, aSource, aDest, PR_TRUE);
       break;
     case nsINavHistoryQueryOptions::GROUP_BY_FOLDER:
       // not yet supported (this code path is not reached for simple bookmark
@@ -3609,7 +3534,7 @@ nsNavHistory::RecursiveGroup(const nsCOMArray<nsNavHistoryResultNode>& aSource,
         nsNavHistoryContainerResultNode* container = curNode->GetAsContainer();
         nsCOMArray<nsNavHistoryResultNode> temp(container->mChildren);
         container->mChildren.Clear();
-        rv = RecursiveGroup(temp, &aGroupingMode[1], aGroupCount - 1,
+        rv = RecursiveGroup(aResultNode, temp, &aGroupingMode[1], aGroupCount - 1,
                             &container->mChildren);
         NS_ENSURE_SUCCESS(rv, rv);
       }
@@ -3628,7 +3553,43 @@ static PRInt64
 GetAgeInDays(PRTime aNormalizedNow, PRTime aDate)
 {
   PRTime dateMidnight = NormalizeTimeRelativeToday(aDate);
-  return ((aNormalizedNow - dateMidnight) / USECS_PER_DAY);
+  // if the visit time is in the future
+  // treat as "today" see bug #385867
+  if (dateMidnight > aNormalizedNow)
+    return 0;
+  else
+    return ((aNormalizedNow - dateMidnight) / USECS_PER_DAY);
+}
+
+const PRInt64 UNDEFINED_AGE_IN_DAYS = -1;
+
+// Create a urn (like
+// urn:places-persist:place:group=0&group=1&sort=1&type=1,,%28local%20files%29)
+// to be used to persist the open state of this container in localstore.rdf
+nsresult
+CreatePlacesPersistURN(nsNavHistoryQueryResultNode *aResultNode, 
+                      PRInt64 aAgeInDays, const nsCString& aTitle, nsCString& aURN)
+{
+  nsCAutoString uri;
+  nsresult rv = aResultNode->GetUri(uri);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aURN.Assign(NS_LITERAL_CSTRING("urn:places-persist:"));
+  aURN.Append(uri);
+
+  aURN.Append(NS_LITERAL_CSTRING(","));
+  if (aAgeInDays != UNDEFINED_AGE_IN_DAYS)
+    aURN.AppendInt(aAgeInDays);
+
+  aURN.Append(NS_LITERAL_CSTRING(","));
+  if (!aTitle.IsEmpty()) {
+    nsCAutoString escapedTitle;
+    PRBool success = NS_Escape(aTitle, escapedTitle, url_XAlphas);
+    NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
+    aURN.Append(escapedTitle);
+  }
+
+  return NS_OK;
 }
 
 // XXX todo
@@ -3637,7 +3598,8 @@ GetAgeInDays(PRTime aNormalizedNow, PRTime aDate)
 // see bug #359346
 // nsNavHistory::GroupByDay
 nsresult
-nsNavHistory::GroupByDay(const nsCOMArray<nsNavHistoryResultNode>& aSource,
+nsNavHistory::GroupByDay(nsNavHistoryQueryResultNode *aResultNode,
+                         const nsCOMArray<nsNavHistoryResultNode>& aSource,
                          nsCOMArray<nsNavHistoryResultNode>* aDest)
 {
   // 8 == today, yesterday, 2 ago, 3 ago, 4 ago, 5 ago, 6 ago, older than 6
@@ -3681,8 +3643,12 @@ nsNavHistory::GroupByDay(const nsCOMArray<nsNavHistoryResultNode>& aSource,
     curDateName = dateNames[ageInDays];
 
     if (!dates[ageInDays]) {
+      nsCAutoString urn;
+      nsresult rv = CreatePlacesPersistURN(aResultNode, ageInDays, EmptyCString(), urn);
+      NS_ENSURE_SUCCESS(rv, rv);
+
       // need to create an entry for this date
-      dates[ageInDays] = new nsNavHistoryContainerResultNode(EmptyCString(), 
+      dates[ageInDays] = new nsNavHistoryContainerResultNode(urn, 
           curDateName,
           EmptyCString(),
           nsNavHistoryResultNode::RESULT_TYPE_DAY,
@@ -3719,7 +3685,8 @@ nsNavHistory::GroupByDay(const nsCOMArray<nsNavHistoryResultNode>& aSource,
 //    we would only be charged the overhead of an empty string on each node.
 
 nsresult
-nsNavHistory::GroupByHost(const nsCOMArray<nsNavHistoryResultNode>& aSource,
+nsNavHistory::GroupByHost(nsNavHistoryQueryResultNode *aResultNode,
+                          const nsCOMArray<nsNavHistoryResultNode>& aSource,
                           nsCOMArray<nsNavHistoryResultNode>* aDest,
                           PRBool aIsDomain)
 {
@@ -3758,7 +3725,11 @@ nsNavHistory::GroupByHost(const nsCOMArray<nsNavHistoryResultNode>& aSource,
       nsCAutoString title;
       TitleForDomain(curHostName, title);
 
-      curTopGroup = new nsNavHistoryContainerResultNode(EmptyCString(), title,
+      nsCAutoString urn;
+      nsresult rv = CreatePlacesPersistURN(aResultNode, UNDEFINED_AGE_IN_DAYS, title, urn);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      curTopGroup = new nsNavHistoryContainerResultNode(urn, title,
           EmptyCString(), nsNavHistoryResultNode::RESULT_TYPE_HOST, PR_TRUE,
           EmptyCString());
       if (! curTopGroup)
@@ -3766,7 +3737,8 @@ nsNavHistory::GroupByHost(const nsCOMArray<nsNavHistoryResultNode>& aSource,
 
       if (! hosts.Put(curHostName, curTopGroup))
         return NS_ERROR_OUT_OF_MEMORY;
-      nsresult rv = aDest->AppendObject(curTopGroup);
+   
+      rv = aDest->AppendObject(curTopGroup);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     if (! curTopGroup->mChildren.AppendObject(aSource[i]))
@@ -3884,7 +3856,7 @@ ExpireNonrecentEventsCallback(nsCStringHashKey::KeyType aKey,
                               PRInt64& aData,
                               void* userArg)
 {
-  PRInt64* threshold = NS_REINTERPRET_CAST(PRInt64*, userArg);
+  PRInt64* threshold = reinterpret_cast<PRInt64*>(userArg);
   if (aData < *threshold)
     return PL_DHASH_REMOVE;
   return PL_DHASH_NEXT;
@@ -3894,7 +3866,7 @@ nsNavHistory::ExpireNonrecentEvents(RecentEventHash* hashTable)
 {
   PRInt64 threshold = GetNow() - RECENT_EVENT_THRESHOLD;
   hashTable->Enumerate(ExpireNonrecentEventsCallback,
-                       NS_REINTERPRET_CAST(void*, &threshold));
+                       reinterpret_cast<void*>(&threshold));
 }
 
 
@@ -4756,6 +4728,8 @@ void GetSubstringFromNthDot(const nsCString& aInput, PRInt32 aStartingSpot,
 nsresult BindStatementURI(mozIStorageStatement* statement, PRInt32 index,
                           nsIURI* aURI)
 {
+  NS_ENSURE_ARG_POINTER(aURI);
+
   nsCAutoString utf8URISpec;
   nsresult rv = aURI->GetSpec(utf8URISpec);
   NS_ENSURE_SUCCESS(rv, rv);

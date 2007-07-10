@@ -69,17 +69,11 @@ endif
 
 ifdef MOZ_ENABLE_POSTSCRIPT
 DIRS        += psshared
-ifndef MOZ_ENABLE_CAIRO_GFX
-DIRS        += ps
-endif
 endif
 
 ifdef MOZ_ENABLE_CAIRO_GFX
 DIRS        += thebes
 else
- ifdef MOZ_ENABLE_GTK2
- DIRS        += gtk
- endif
  ifdef MOZ_ENABLE_PHOTON
  DIRS        += photon
  endif
@@ -92,7 +86,6 @@ else
 endif
 
 CPPSRCS = \
-        nsBlender.cpp \
         nsColor.cpp \
         nsColorNames.cpp \
         nsDeviceContext.cpp \
@@ -108,7 +101,7 @@ ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
 REQUIRES += uconv
 endif
 
-ifneq (,$(filter gtk2 beos windows os2,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter beos windows os2,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += imgScaler.cpp
 endif
 

@@ -194,7 +194,7 @@ int CPrintProgressDialog::DoModal( )
     m_PrintListener = new CDlgPrintListener(this); // constructor addrefs
     if (m_PrintListener) {
       // doModal will be set to false if the print job was cancelled
-      nsIWebProgressListener * wpl = NS_STATIC_CAST(nsIWebProgressListener*, m_PrintListener);
+      nsIWebProgressListener * wpl = static_cast<nsIWebProgressListener*>(m_PrintListener);
       doModal = NS_SUCCEEDED(print->Print(m_PrintSettings, wpl)) == PR_TRUE;
     }
   }

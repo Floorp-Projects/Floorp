@@ -45,7 +45,7 @@
 <!ENTITY openSelectedFileInEditor.label "Åpne i filredigerer">
 
 <!-- LOCALIZATION NOTE: DO NOT LOCALIZE "!important" since it is a CSS API -->
-<!ENTITY toggleSelectedImportant.label "Merk som !important">
+<!ENTITY toggleSelectedImportant.label "Sett/fjern !important">
 
 <!ENTITY styleRule.label "Regel">
 <!ENTITY styleRuleURI.label "Fil">

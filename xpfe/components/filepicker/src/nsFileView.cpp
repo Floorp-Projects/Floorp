@@ -872,8 +872,8 @@ nsFileView::ReverseArray(nsISupportsArray* aArray)
 PR_STATIC_CALLBACK(int)
 SortNameCallback(const void* aElement1, const void* aElement2, void* aContext)
 {
-  nsIFile* file1 = *NS_STATIC_CAST(nsIFile* const *, aElement1);
-  nsIFile* file2 = *NS_STATIC_CAST(nsIFile* const *, aElement2);
+  nsIFile* file1 = *static_cast<nsIFile* const *>(aElement1);
+  nsIFile* file2 = *static_cast<nsIFile* const *>(aElement2);
   
   nsAutoString leafName1, leafName2;
   file1->GetLeafName(leafName1);
@@ -885,8 +885,8 @@ SortNameCallback(const void* aElement1, const void* aElement2, void* aContext)
 PR_STATIC_CALLBACK(int)
 SortSizeCallback(const void* aElement1, const void* aElement2, void* aContext)
 {
-  nsIFile* file1 = *NS_STATIC_CAST(nsIFile* const *, aElement1);
-  nsIFile* file2 = *NS_STATIC_CAST(nsIFile* const *, aElement2);
+  nsIFile* file1 = *static_cast<nsIFile* const *>(aElement1);
+  nsIFile* file2 = *static_cast<nsIFile* const *>(aElement2);
 
   PRInt64 size1, size2;
   file1->GetFileSize(&size1);
@@ -901,8 +901,8 @@ SortSizeCallback(const void* aElement1, const void* aElement2, void* aContext)
 PR_STATIC_CALLBACK(int)
 SortDateCallback(const void* aElement1, const void* aElement2, void* aContext)
 {
-  nsIFile* file1 = *NS_STATIC_CAST(nsIFile* const *, aElement1);
-  nsIFile* file2 = *NS_STATIC_CAST(nsIFile* const *, aElement2);
+  nsIFile* file1 = *static_cast<nsIFile* const *>(aElement1);
+  nsIFile* file2 = *static_cast<nsIFile* const *>(aElement2);
 
   PRInt64 time1, time2;
   file1->GetLastModifiedTime(&time1);

@@ -80,8 +80,8 @@ nsSVGGenericContainerFrame::GetCanvasTM()
 {
   NS_ASSERTION(mParent, "null parent");
   
-  nsSVGContainerFrame *containerFrame = NS_STATIC_CAST(nsSVGContainerFrame*,
-                                                       mParent);
+  nsSVGContainerFrame *containerFrame = static_cast<nsSVGContainerFrame*>
+                                                   (mParent);
 
   return containerFrame->GetCanvasTM();  
 }

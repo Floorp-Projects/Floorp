@@ -110,9 +110,9 @@ NS_METHOD nsSplittableFrame::SetNextContinuation(nsIFrame* aFrame)
 
 nsIFrame* nsSplittableFrame::GetFirstContinuation() const
 {
-  nsSplittableFrame* firstContinuation = NS_CONST_CAST(nsSplittableFrame*, this);
+  nsSplittableFrame* firstContinuation = const_cast<nsSplittableFrame*>(this);
   while (firstContinuation->mPrevContinuation)  {
-    firstContinuation = NS_STATIC_CAST(nsSplittableFrame*, firstContinuation->mPrevContinuation);
+    firstContinuation = static_cast<nsSplittableFrame*>(firstContinuation->mPrevContinuation);
   }
   NS_POSTCONDITION(firstContinuation, "illegal state in continuation chain.");
   return firstContinuation;
@@ -120,9 +120,9 @@ nsIFrame* nsSplittableFrame::GetFirstContinuation() const
 
 nsIFrame* nsSplittableFrame::GetLastContinuation() const
 {
-  nsSplittableFrame* lastContinuation = NS_CONST_CAST(nsSplittableFrame*, this);
+  nsSplittableFrame* lastContinuation = const_cast<nsSplittableFrame*>(this);
   while (lastContinuation->mNextContinuation)  {
-    lastContinuation = NS_STATIC_CAST(nsSplittableFrame*, lastContinuation->mNextContinuation);
+    lastContinuation = static_cast<nsSplittableFrame*>(lastContinuation->mNextContinuation);
   }
   NS_POSTCONDITION(lastContinuation, "illegal state in continuation chain.");
   return lastContinuation;
@@ -182,9 +182,9 @@ NS_METHOD nsSplittableFrame::SetNextInFlow(nsIFrame* aFrame)
 
 nsIFrame* nsSplittableFrame::GetFirstInFlow() const
 {
-  nsSplittableFrame* firstInFlow = NS_CONST_CAST(nsSplittableFrame*, this);
+  nsSplittableFrame* firstInFlow = const_cast<nsSplittableFrame*>(this);
   while (nsIFrame *prev = firstInFlow->GetPrevInFlow())  {
-    firstInFlow = NS_STATIC_CAST(nsSplittableFrame*, prev);
+    firstInFlow = static_cast<nsSplittableFrame*>(prev);
   }
   NS_POSTCONDITION(firstInFlow, "illegal state in flow chain.");
   return firstInFlow;
@@ -192,9 +192,9 @@ nsIFrame* nsSplittableFrame::GetFirstInFlow() const
 
 nsIFrame* nsSplittableFrame::GetLastInFlow() const
 {
-  nsSplittableFrame* lastInFlow = NS_CONST_CAST(nsSplittableFrame*, this);
+  nsSplittableFrame* lastInFlow = const_cast<nsSplittableFrame*>(this);
   while (nsIFrame* next = lastInFlow->GetNextInFlow())  {
-    lastInFlow = NS_STATIC_CAST(nsSplittableFrame*, next);
+    lastInFlow = static_cast<nsSplittableFrame*>(next);
   }
   NS_POSTCONDITION(lastInFlow, "illegal state in flow chain.");
   return lastInFlow;

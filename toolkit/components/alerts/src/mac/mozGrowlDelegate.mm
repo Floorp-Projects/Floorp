@@ -174,8 +174,8 @@
   NS_ASSERTION([clickContext valueForKey: COOKIE_KEY] != nil,
                "COOKIE_KEY not found!");
 
-  nsIObserver* observer = NS_STATIC_CAST(nsIObserver*,
-    [[mDict objectForKey: [clickContext valueForKey: OBSERVER_KEY]]
+  nsIObserver* observer = static_cast<nsIObserver*>
+                                     ([[mDict objectForKey: [clickContext valueForKey: OBSERVER_KEY]]
       pointerValue]);
   [mDict removeObjectForKey: [clickContext valueForKey: OBSERVER_KEY]];
   NSString* cookie = [[clickContext valueForKey: COOKIE_KEY] objectAtIndex: 0];
@@ -198,8 +198,8 @@
   NS_ASSERTION([clickContext valueForKey: COOKIE_KEY] != nil,
                "COOKIE_KEY not found!");
 
-  nsIObserver* observer = NS_STATIC_CAST(nsIObserver*,
-    [[mDict objectForKey: [clickContext valueForKey: OBSERVER_KEY]]
+  nsIObserver* observer = static_cast<nsIObserver*>
+                                     ([[mDict objectForKey: [clickContext valueForKey: OBSERVER_KEY]]
       pointerValue]);
   [mDict removeObjectForKey: [clickContext valueForKey: OBSERVER_KEY]];
   NSString* cookie = [[clickContext valueForKey: COOKIE_KEY] objectAtIndex: 0];

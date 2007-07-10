@@ -6,5 +6,4 @@ executablepath=/work/mozilla/builds/1.8.0-test/mozilla/thunderbird-debug/dist
 userpreferences=/work/mozilla/mozilla.com/test.mozilla.com/www/prefs/test-user.js
 extensiondir=/work/mozilla/mozilla.com/test.mozilla.com/www/xpi
 profiletemplate=/work/mozilla/mozilla.com/test.mozilla.com/www/profiles/imap
-
-
+buildtype=debug

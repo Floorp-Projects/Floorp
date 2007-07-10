@@ -67,8 +67,7 @@ nsXMLElement::nsXMLElement(nsINodeInfo *aNodeInfo)
 NS_IMETHODIMP 
 nsXMLElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  NS_ENSURE_ARG_POINTER(aInstancePtr);
-  *aInstancePtr = nsnull;
+  NS_PRECONDITION(aInstancePtr, "null out param");
 
   nsresult rv = nsGenericElement::QueryInterface(aIID, aInstancePtr);
 
@@ -78,9 +77,9 @@ nsXMLElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   nsISupports *inst = nsnull;
 
   if (aIID.Equals(NS_GET_IID(nsIDOMNode))) {
-    inst = NS_STATIC_CAST(nsIDOMNode *, this);
+    inst = static_cast<nsIDOMNode *>(this);
   } else if (aIID.Equals(NS_GET_IID(nsIDOMElement))) {
-    inst = NS_STATIC_CAST(nsIDOMElement *, this);
+    inst = static_cast<nsIDOMElement *>(this);
   } else if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
     inst = NS_GetDOMClassInfoInstance(eDOMClassInfo_Element_id);
     NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);

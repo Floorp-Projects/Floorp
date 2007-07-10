@@ -43,7 +43,6 @@
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsSVGAnimatedString.h"
 #include "nsCOMPtr.h"
-#include "nsISVGSVGElement.h"
 #include "nsGkAtoms.h"
 #include "nsSVGAnimatedRect.h"
 #include "nsSVGRect.h"

@@ -106,7 +106,7 @@ nsSVGMarkerFrame::GetCanvasTM()
   NS_ASSERTION(markedTM, "null marked TM");
 
   // get element
-  nsSVGMarkerElement *element = NS_STATIC_CAST(nsSVGMarkerElement*, mContent);
+  nsSVGMarkerElement *element = static_cast<nsSVGMarkerElement*>(mContent);
 
   // scale/move marker
   nsCOMPtr<nsIDOMSVGMatrix> markerTM;
@@ -152,7 +152,7 @@ nsSVGMarkerFrame::PaintMark(nsSVGRenderState *aContext,
   gfxContext *gfx = aContext->GetGfxContext();
 
   if (GetStyleDisplay()->IsScrollableOverflow()) {
-    nsSVGMarkerElement *marker = NS_STATIC_CAST(nsSVGMarkerElement*, mContent);
+    nsSVGMarkerElement *marker = static_cast<nsSVGMarkerElement*>(mContent);
 
     nsCOMPtr<nsIDOMSVGAnimatedRect> arect;
     nsresult rv = marker->GetViewBox(getter_AddRefs(arect));
@@ -233,7 +233,7 @@ nsSVGMarkerFrame::GetType() const
 void
 nsSVGMarkerFrame::SetParentCoordCtxProvider(nsSVGSVGElement *aContext)
 {
-  nsSVGMarkerElement *marker = NS_STATIC_CAST(nsSVGMarkerElement*, mContent);
+  nsSVGMarkerElement *marker = static_cast<nsSVGMarkerElement*>(mContent);
   marker->SetParentCoordCtxProvider(aContext);
 }
 
@@ -249,7 +249,7 @@ nsSVGMarkerFrame::AutoMarkerReferencer::AutoMarkerReferencer(
   mFrame->mMarkedFrame = aMarkedFrame;
 
   nsSVGSVGElement *ctx =
-    NS_STATIC_CAST(nsSVGElement*, aMarkedFrame->GetContent())->GetCtx();
+    static_cast<nsSVGElement*>(aMarkedFrame->GetContent())->GetCtx();
   mFrame->SetParentCoordCtxProvider(ctx);
 }
 

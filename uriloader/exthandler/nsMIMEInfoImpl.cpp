@@ -43,7 +43,7 @@
 #include "nsIProcess.h"
 
 // nsISupports methods
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsMIMEInfoBase, nsIMIMEInfo)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsMIMEInfoBase, nsIMIMEInfo, nsIHandlerInfo)
 
 // nsMIMEInfoImpl methods
 nsMIMEInfoBase::nsMIMEInfoBase(const char *aMIMEType) :
@@ -226,27 +226,6 @@ nsMIMEInfoBase::SetFileExtensions(const nsACString& aExtensions)
 }
 
 NS_IMETHODIMP
-nsMIMEInfoBase::GetApplicationDescription(nsAString& aApplicationDescription)
-{
-  if (mPreferredAppDescription.IsEmpty() && mPreferredApplication) {
-    // Don't want to cache this, just in case someone resets the app
-    // without changing the description....
-    mPreferredApplication->GetLeafName(aApplicationDescription);
-  } else {
-    aApplicationDescription = mPreferredAppDescription;
-  }
-  
-  return NS_OK;
-}
- 
-NS_IMETHODIMP
-nsMIMEInfoBase::SetApplicationDescription(const nsAString& aApplicationDescription)
-{
-  mPreferredAppDescription = aApplicationDescription;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsMIMEInfoBase::GetDefaultDescription(nsAString& aDefaultDescription)
 {
   aDefaultDescription = mDefaultAppDescription;
@@ -254,7 +233,7 @@ nsMIMEInfoBase::GetDefaultDescription(nsAString& aDefaultDescription)
 }
 
 NS_IMETHODIMP
-nsMIMEInfoBase::GetPreferredApplicationHandler(nsIFile ** aPreferredAppHandler)
+nsMIMEInfoBase::GetPreferredApplicationHandler(nsIHandlerApp ** aPreferredAppHandler)
 {
   *aPreferredAppHandler = mPreferredApplication;
   NS_IF_ADDREF(*aPreferredAppHandler);
@@ -262,21 +241,21 @@ nsMIMEInfoBase::GetPreferredApplicationHandler(nsIFile ** aPreferredAppHandler)
 }
  
 NS_IMETHODIMP
-nsMIMEInfoBase::SetPreferredApplicationHandler(nsIFile * aPreferredAppHandler)
+nsMIMEInfoBase::SetPreferredApplicationHandler(nsIHandlerApp * aPreferredAppHandler)
 {
   mPreferredApplication = aPreferredAppHandler;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMIMEInfoBase::GetPreferredAction(nsMIMEInfoHandleAction * aPreferredAction)
+nsMIMEInfoBase::GetPreferredAction(nsHandlerInfoAction * aPreferredAction)
 {
   *aPreferredAction = mPreferredAction;
   return NS_OK;
 }
  
 NS_IMETHODIMP
-nsMIMEInfoBase::SetPreferredAction(nsMIMEInfoHandleAction aPreferredAction)
+nsMIMEInfoBase::SetPreferredAction(nsHandlerInfoAction aPreferredAction)
 {
   mPreferredAction = aPreferredAction;
   return NS_OK;
@@ -304,7 +283,16 @@ nsMIMEInfoBase::LaunchWithFile(nsIFile* aFile)
     if (!mPreferredApplication)
       return NS_ERROR_FILE_NOT_FOUND;
 
-    return LaunchWithIProcess(mPreferredApplication, aFile);
+    nsCOMPtr<nsILocalHandlerApp> localHandler;
+    nsresult rv;
+    localHandler = do_QueryInterface(mPreferredApplication, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+        
+    nsCOMPtr<nsIFile> executable;
+    rv = localHandler->GetExecutable(getter_AddRefs(executable));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    return LaunchWithIProcess(executable, aFile);
   }
   else if (mPreferredAction == useSystemDefault) {
     return LaunchDefaultWithFile(aFile);

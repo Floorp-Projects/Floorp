@@ -285,7 +285,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
       if (miByExt && !aMIMEType.IsEmpty()) {
         // XXX see XXX comment below
         nsIMIMEInfo* pByExt = miByExt.get();
-        nsMIMEInfoBase* byExt = NS_STATIC_CAST(nsMIMEInfoBase*, pByExt);
+        nsMIMEInfoBase* byExt = static_cast<nsMIMEInfoBase*>(pByExt);
         byExt->SetMIMEType(aMIMEType);
       }
     }
@@ -302,8 +302,8 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
       // nsDerivedSafe thingy that can't be cast to nsMIMEInfoBase*
       nsIMIMEInfo* pByType = miByType.get();
       nsIMIMEInfo* pByExt = miByExt.get();
-      nsMIMEInfoBase* byType = NS_STATIC_CAST(nsMIMEInfoBase*, pByType);
-      nsMIMEInfoBase* byExt = NS_STATIC_CAST(nsMIMEInfoBase*, pByExt);
+      nsMIMEInfoBase* byType = static_cast<nsMIMEInfoBase*>(pByType);
+      nsMIMEInfoBase* byExt = static_cast<nsMIMEInfoBase*>(pByExt);
       if (!byType || !byExt) {
         NS_ERROR("IC gave us an nsIMIMEInfo that's no nsMIMEInfoBase! Fix nsOSHelperAppService.");
         return nsnull;

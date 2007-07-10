@@ -118,7 +118,7 @@ struct ChildrenHashEntry : public PLDHashEntryHdr {
 nsRuleNode::ChildrenHashHashKey(PLDHashTable *aTable, const void *aKey)
 {
   const nsRuleNode::Key *key =
-    NS_STATIC_CAST(const nsRuleNode::Key*, aKey);
+    static_cast<const nsRuleNode::Key*>(aKey);
   // Disagreement on importance and level for the same rule is extremely
   // rare, so hash just on the rule.
   return PL_DHashVoidPtrKeyStub(aTable, key->mRule);
@@ -130,9 +130,9 @@ nsRuleNode::ChildrenHashMatchEntry(PLDHashTable *aTable,
                                    const void *aKey)
 {
   const ChildrenHashEntry *entry =
-    NS_STATIC_CAST(const ChildrenHashEntry*, aHdr);
+    static_cast<const ChildrenHashEntry*>(aHdr);
   const nsRuleNode::Key *key =
-    NS_STATIC_CAST(const nsRuleNode::Key*, aKey);
+    static_cast<const nsRuleNode::Key*>(aKey);
   return entry->mRuleNode->GetKey() == *key;
 }
 
@@ -167,7 +167,7 @@ static void EnsureBlockDisplay(PRUint8& display)
   case NS_STYLE_DISPLAY_BLOCK :
   case NS_STYLE_DISPLAY_LIST_ITEM :
     // do not muck with these at all - already blocks
-    // This is equivalent to nsStyleDisplay::IsBlockLevel.  (XXX Maybe we
+    // This is equivalent to nsStyleDisplay::IsBlockOutside.  (XXX Maybe we
     // should just call that?)
     break;
 
@@ -442,7 +442,7 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 DeleteRuleNodeChildren(PLDHashTable *table, PLDHashEntryHdr *hdr,
                        PRUint32 number, void *arg)
 {
-  ChildrenHashEntry *entry = NS_STATIC_CAST(ChildrenHashEntry*, hdr);
+  ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>(hdr);
   entry->mRuleNode->Destroy();
   return PL_DHASH_NEXT;
 }
@@ -482,8 +482,8 @@ nsRuleNode::Transition(nsIStyleRule* aRule, PRUint8 aLevel,
   }
 
   if (ChildrenAreHashed()) {
-    ChildrenHashEntry *entry = NS_STATIC_CAST(ChildrenHashEntry*,
-        PL_DHashTableOperate(ChildrenHash(), &key, PL_DHASH_ADD));
+    ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>
+                                          (PL_DHashTableOperate(ChildrenHash(), &key, PL_DHASH_ADD));
     if (!entry) {
       return nsnull;
     }
@@ -528,8 +528,8 @@ nsRuleNode::ConvertChildrenToHash()
   for (nsRuleList* curr = ChildrenList(); curr;
        curr = curr->DestroySelf(mPresContext)) {
     // This will never fail because of the initial size we gave the table.
-    ChildrenHashEntry *entry = NS_STATIC_CAST(ChildrenHashEntry*,
-        PL_DHashTableOperate(hash, curr->mRuleNode->mRule, PL_DHASH_ADD));
+    ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>
+                                          (PL_DHashTableOperate(hash, curr->mRuleNode->mRule, PL_DHASH_ADD));
     NS_ASSERTION(!entry->mRuleNode, "duplicate entries in list");
     entry->mRuleNode = curr->mRuleNode;
   }
@@ -540,7 +540,7 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 ClearStyleDataHelper(PLDHashTable *table, PLDHashEntryHdr *hdr,
                                PRUint32 number, void *arg)
 {
-  ChildrenHashEntry *entry = NS_STATIC_CAST(ChildrenHashEntry*, hdr);
+  ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>(hdr);
   entry->mRuleNode->ClearStyleData();
   return PL_DHASH_NEXT;
 }
@@ -670,7 +670,7 @@ CheckFontCallback(const nsRuleDataStruct& aData,
                   nsRuleNode::RuleDetail aResult)
 {
   const nsRuleDataFont& fontData =
-      NS_STATIC_CAST(const nsRuleDataFont&, aData);
+      static_cast<const nsRuleDataFont&>(aData);
   if (eCSSUnit_Enumerated == fontData.mFamily.GetUnit()) {
     // A special case. We treat this as a fully specified font,
     // since no other font props are legal with a system font.
@@ -730,7 +730,7 @@ CheckColorCallback(const nsRuleDataStruct& aData,
                    nsRuleNode::RuleDetail aResult)
 {
   const nsRuleDataColor& colorData =
-      NS_STATIC_CAST(const nsRuleDataColor&, aData);
+      static_cast<const nsRuleDataColor&>(aData);
 
   // currentColor values for color require inheritance
   if (colorData.mColor.GetUnit() == eCSSUnit_Integer && 
@@ -932,50 +932,50 @@ static const StructCheckData gCheckProperties[] = {
 inline const nsCSSValue&
 ValueAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
 {
-  return * NS_REINTERPRET_CAST(const nsCSSValue*,
-                     NS_REINTERPRET_CAST(const char*, &aRuleDataStruct) + aOffset);
+  return * reinterpret_cast<const nsCSSValue*>
+                           (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
 }
 
 inline const nsCSSRect*
 RectAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
 {
-  return NS_REINTERPRET_CAST(const nsCSSRect*,
-                     NS_REINTERPRET_CAST(const char*, &aRuleDataStruct) + aOffset);
+  return reinterpret_cast<const nsCSSRect*>
+                         (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
 }
 
 inline const nsCSSValuePair*
 ValuePairAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
 {
-  return NS_REINTERPRET_CAST(const nsCSSValuePair*,
-                     NS_REINTERPRET_CAST(const char*, &aRuleDataStruct) + aOffset);
+  return reinterpret_cast<const nsCSSValuePair*>
+                         (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
 }
 
 inline const nsCSSValueList*
 ValueListAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
 {
-  return * NS_REINTERPRET_CAST(const nsCSSValueList*const*,
-                     NS_REINTERPRET_CAST(const char*, &aRuleDataStruct) + aOffset);
+  return * reinterpret_cast<const nsCSSValueList*const*>
+                           (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
 }
 
 inline const nsCSSValueList**
 ValueListArrayAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
 {
-  return * NS_REINTERPRET_CAST(const nsCSSValueList**const*,
-                     NS_REINTERPRET_CAST(const char*, &aRuleDataStruct) + aOffset);
+  return * reinterpret_cast<const nsCSSValueList**const*>
+                           (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
 }
 
 inline const nsCSSCounterData*
 CounterDataAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
 {
-  return * NS_REINTERPRET_CAST(const nsCSSCounterData*const*,
-                     NS_REINTERPRET_CAST(const char*, &aRuleDataStruct) + aOffset);
+  return * reinterpret_cast<const nsCSSCounterData*const*>
+                           (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
 }
 
 inline const nsCSSQuotes*
 QuotesAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
 {
-  return * NS_REINTERPRET_CAST(const nsCSSQuotes*const*,
-                     NS_REINTERPRET_CAST(const char*, &aRuleDataStruct) + aOffset);
+  return * reinterpret_cast<const nsCSSQuotes*const*>
+                           (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
 }
 
 inline nsRuleNode::RuleDetail
@@ -1460,7 +1460,7 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
       // should be walked to find the data.
       const nsStyleStruct* parentStruct = parentContext->GetStyleData(aSID);
       aContext->AddStyleBit(bit); // makes const_cast OK.
-      aContext->SetStyle(aSID, NS_CONST_CAST(nsStyleStruct*, parentStruct));
+      aContext->SetStyle(aSID, const_cast<nsStyleStruct*>(parentStruct));
       return parentStruct;
     }
     else
@@ -1712,11 +1712,9 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
  * 'margin-left' in the cascade or the highest 'margin-start'.
  *
  * Finally, since we can compute the normal (*-left and *-right)
- * properties in a loop, this function works by assuming the computation
- * for those properties has happened as though we have not implemented
- * the logical properties (*-start and *-end).  It is the responsibility
- * of this function to replace the computed values with the values
- * computed from the logical properties when needed.
+ * properties in a loop, this function works by modifying the data we
+ * will use in that loop (which the caller must copy from the const
+ * input).
  */
 void
 nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
@@ -1724,10 +1722,8 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
                                  const nsCSSValue& aRTLSource,
                                  const nsCSSValue& aLTRLogicalValue,
                                  const nsCSSValue& aRTLLogicalValue,
-                                 const nsStyleSides& aParentRect,
-                                 nsStyleSides& aRect,
                                  PRUint8 aSide,
-                                 PRInt32 aMask,
+                                 nsCSSRect& aValueRect,
                                  PRBool& aInherited)
 {
   PRBool LTRlogical = aLTRSource.GetUnit() == eCSSUnit_Enumerated &&
@@ -1741,19 +1737,12 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
     aInherited = PR_TRUE;
     PRUint8 dir = aContext->GetStyleVisibility()->mDirection;
 
-    nsStyleCoord parentCoord;
-    nsStyleCoord coord;
-    aParentRect.Get(aSide, parentCoord);
     if (dir == NS_STYLE_DIRECTION_LTR) {
-      if (LTRlogical &&
-          SetCoord(aLTRLogicalValue, coord, parentCoord, aMask, aContext,
-                   mPresContext, aInherited))
-        aRect.Set(aSide, coord);
+      if (LTRlogical)
+        aValueRect.*(nsCSSRect::sides[aSide]) = aLTRLogicalValue;
     } else {
-      if (RTLlogical &&
-          SetCoord(aRTLLogicalValue, coord, parentCoord, aMask, aContext,
-                   mPresContext, aInherited))
-        aRect.Set(aSide, coord);
+      if (RTLlogical)
+        aValueRect.*(nsCSSRect::sides[aSide]) = aRTLLogicalValue;
     }
   }
 }
@@ -1774,7 +1763,7 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
   nsStyleContext* parentContext = aContext->GetParent();                      \
                                                                               \
   const nsRuleData##rdtype_& rdata_ =                                         \
-    NS_STATIC_CAST(const nsRuleData##rdtype_&, aData);                        \
+    static_cast<const nsRuleData##rdtype_&>(aData);                        \
   nsStyle##type_* data_ = nsnull;                                             \
   const nsStyle##type_* parentdata_ = nsnull;                                 \
   PRBool inherited = aInherited;                                              \
@@ -1785,7 +1774,7 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
     /* We only need to compute the delta between this computed data and */    \
     /* our computed data. */                                                  \
     data_ = new (mPresContext)                                                \
-            nsStyle##type_(*NS_STATIC_CAST(nsStyle##type_*, aStartStruct));   \
+            nsStyle##type_(*static_cast<nsStyle##type_*>(aStartStruct));   \
   else {                                                                      \
     /* XXXldb What about eRuleFullInherited?  Which path is faster? */        \
     if (aRuleDetail != eRuleFullMixed && aRuleDetail != eRuleFullReset) {     \
@@ -1822,13 +1811,13 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
   nsStyleContext* parentContext = aContext->GetParent();                      \
                                                                               \
   const nsRuleData##rdtype_& rdata_ =                                         \
-    NS_STATIC_CAST(const nsRuleData##rdtype_&, aData);                        \
+    static_cast<const nsRuleData##rdtype_&>(aData);                        \
   nsStyle##type_* data_;                                                      \
   if (aStartStruct)                                                           \
     /* We only need to compute the delta between this computed data and */    \
     /* our computed data. */                                                  \
     data_ = new (mPresContext)                                                \
-            nsStyle##type_(*NS_STATIC_CAST(nsStyle##type_*, aStartStruct));   \
+            nsStyle##type_(*static_cast<nsStyle##type_*>(aStartStruct));   \
   else                                                                        \
     data_ = new (mPresContext) nsStyle##type_ ctorargs_;                      \
                                                                               \
@@ -2271,7 +2260,7 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
 static PRBool ExtractGeneric(const nsString& aFamily, PRBool aGeneric,
                              void *aData)
 {
-  nsAutoString *data = NS_STATIC_CAST(nsAutoString*, aData);
+  nsAutoString *data = static_cast<nsAutoString*>(aData);
 
   if (aGeneric) {
     *data = aFamily;
@@ -2922,8 +2911,7 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
         displayValue != NS_STYLE_DISPLAY_INLINE &&
         displayValue != NS_STYLE_DISPLAY_INLINE_BLOCK) {
       inherited = PR_TRUE;
-      // XXX IsBlockInside?  (except for the marker bit)
-      if (parentDisplay->IsBlockLevel() ||
+      if (parentDisplay->IsBlockOutside() ||
           parentDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE_BLOCK ||
           parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL ||
           parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION) {
@@ -3263,27 +3251,25 @@ nsRuleNode::ComputeMarginData(nsStyleStruct* aStartStruct,
   // margin: length, percent, auto, inherit
   nsStyleCoord  coord;
   nsStyleCoord  parentCoord;
+  nsCSSRect ourMargin(marginData.mMargin);
+  AdjustLogicalBoxProp(aContext,
+                       marginData.mMarginLeftLTRSource,
+                       marginData.mMarginLeftRTLSource,
+                       marginData.mMarginStart, marginData.mMarginEnd,
+                       NS_SIDE_LEFT, ourMargin, inherited);
+  AdjustLogicalBoxProp(aContext,
+                       marginData.mMarginRightLTRSource,
+                       marginData.mMarginRightRTLSource,
+                       marginData.mMarginEnd, marginData.mMarginStart,
+                       NS_SIDE_RIGHT, ourMargin, inherited);
   NS_FOR_CSS_SIDES(side) {
     parentMargin->mMargin.Get(side, parentCoord);
-    if (SetCoord(marginData.mMargin.*(nsCSSRect::sides[side]),
+    if (SetCoord(ourMargin.*(nsCSSRect::sides[side]),
                  coord, parentCoord, SETCOORD_LPAH,
                  aContext, mPresContext, inherited)) {
       margin->mMargin.Set(side, coord);
     }
   }
-
-  AdjustLogicalBoxProp(aContext,
-                       marginData.mMarginLeftLTRSource,
-                       marginData.mMarginLeftRTLSource,
-                       marginData.mMarginStart, marginData.mMarginEnd,
-                       parentMargin->mMargin, margin->mMargin,
-                       NS_SIDE_LEFT, SETCOORD_LPAH, inherited);
-  AdjustLogicalBoxProp(aContext,
-                       marginData.mMarginRightLTRSource,
-                       marginData.mMarginRightRTLSource,
-                       marginData.mMarginEnd, marginData.mMarginStart,
-                       parentMargin->mMargin, margin->mMargin,
-                       NS_SIDE_RIGHT, SETCOORD_LPAH, inherited);
 
   margin->RecalcData();
   COMPUTE_END_RESET(Margin, margin)
@@ -3302,9 +3288,22 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
   // border-width, border-*-width: length, enum, inherit
   nsStyleCoord  coord;
   nsStyleCoord  parentCoord;
+  nsCSSRect ourBorderWidth(marginData.mBorderWidth);
+  AdjustLogicalBoxProp(aContext,
+                       marginData.mBorderLeftWidthLTRSource,
+                       marginData.mBorderLeftWidthRTLSource,
+                       marginData.mBorderStartWidth,
+                       marginData.mBorderEndWidth,
+                       NS_SIDE_LEFT, ourBorderWidth, inherited);
+  AdjustLogicalBoxProp(aContext,
+                       marginData.mBorderRightWidthLTRSource,
+                       marginData.mBorderRightWidthRTLSource,
+                       marginData.mBorderEndWidth,
+                       marginData.mBorderStartWidth,
+                       NS_SIDE_RIGHT, ourBorderWidth, inherited);
   { // scope for compilers with broken |for| loop scoping
     NS_FOR_CSS_SIDES(side) {
-      const nsCSSValue &value = marginData.mBorderWidth.*(nsCSSRect::sides[side]);
+      const nsCSSValue &value = ourBorderWidth.*(nsCSSRect::sides[side]);
       NS_ASSERTION(eCSSUnit_Percent != value.GetUnit(),
                    "Percentage borders not implemented yet "
                    "If implementing, make sure to fix all consumers of "
@@ -3345,7 +3344,17 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
   }
 
   // border-style, border-*-style: enum, none, inherit
-  const nsCSSRect& ourStyle = marginData.mBorderStyle;
+  nsCSSRect ourStyle(marginData.mBorderStyle);
+  AdjustLogicalBoxProp(aContext,
+                       marginData.mBorderLeftStyleLTRSource,
+                       marginData.mBorderLeftStyleRTLSource,
+                       marginData.mBorderStartStyle, marginData.mBorderEndStyle,
+                       NS_SIDE_LEFT, ourStyle, inherited);
+  AdjustLogicalBoxProp(aContext,
+                       marginData.mBorderRightStyleLTRSource,
+                       marginData.mBorderRightStyleRTLSource,
+                       marginData.mBorderEndStyle, marginData.mBorderStartStyle,
+                       NS_SIDE_RIGHT, ourStyle, inherited);
   { // scope for compilers with broken |for| loop scoping
     NS_FOR_CSS_SIDES(side) {
       const nsCSSValue &value = ourStyle.*(nsCSSRect::sides[side]);
@@ -3389,10 +3398,19 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
   }
 
   // border-color, border-*-color: color, string, enum, inherit
-  const nsCSSRect& ourBorderColor = marginData.mBorderColor;
+  nsCSSRect ourBorderColor(marginData.mBorderColor);
   PRBool transparent;
   PRBool foreground;
-
+  AdjustLogicalBoxProp(aContext,
+                       marginData.mBorderLeftColorLTRSource,
+                       marginData.mBorderLeftColorRTLSource,
+                       marginData.mBorderStartColor, marginData.mBorderEndColor,
+                       NS_SIDE_LEFT, ourBorderColor, inherited);
+  AdjustLogicalBoxProp(aContext,
+                       marginData.mBorderRightColorLTRSource,
+                       marginData.mBorderRightColorRTLSource,
+                       marginData.mBorderEndColor, marginData.mBorderStartColor,
+                       NS_SIDE_RIGHT, ourBorderColor, inherited);
   { // scope for compilers with broken |for| loop scoping
     NS_FOR_CSS_SIDES(side) {
       const nsCSSValue &value = ourBorderColor.*(nsCSSRect::sides[side]);
@@ -3467,27 +3485,25 @@ nsRuleNode::ComputePaddingData(nsStyleStruct* aStartStruct,
   // padding: length, percent, inherit
   nsStyleCoord  coord;
   nsStyleCoord  parentCoord;
+  nsCSSRect ourPadding(marginData.mPadding);
+  AdjustLogicalBoxProp(aContext,
+                       marginData.mPaddingLeftLTRSource,
+                       marginData.mPaddingLeftRTLSource,
+                       marginData.mPaddingStart, marginData.mPaddingEnd,
+                       NS_SIDE_LEFT, ourPadding, inherited);
+  AdjustLogicalBoxProp(aContext,
+                       marginData.mPaddingRightLTRSource,
+                       marginData.mPaddingRightRTLSource,
+                       marginData.mPaddingEnd, marginData.mPaddingStart,
+                       NS_SIDE_RIGHT, ourPadding, inherited);
   NS_FOR_CSS_SIDES(side) {
     parentPadding->mPadding.Get(side, parentCoord);
-    if (SetCoord(marginData.mPadding.*(nsCSSRect::sides[side]),
+    if (SetCoord(ourPadding.*(nsCSSRect::sides[side]),
                  coord, parentCoord, SETCOORD_LPH,
                  aContext, mPresContext, inherited)) {
       padding->mPadding.Set(side, coord);
     }
   }
-
-  AdjustLogicalBoxProp(aContext,
-                       marginData.mPaddingLeftLTRSource,
-                       marginData.mPaddingLeftRTLSource,
-                       marginData.mPaddingStart, marginData.mPaddingEnd,
-                       parentPadding->mPadding, padding->mPadding,
-                       NS_SIDE_LEFT, SETCOORD_LPH, inherited);
-  AdjustLogicalBoxProp(aContext,
-                       marginData.mPaddingRightLTRSource,
-                       marginData.mPaddingRightRTLSource,
-                       marginData.mPaddingEnd, marginData.mPaddingStart,
-                       parentPadding->mPadding, padding->mPadding,
-                       NS_SIDE_RIGHT, SETCOORD_LPH, inherited);
 
   padding->RecalcData();
   COMPUTE_END_RESET(Padding, padding)
@@ -4628,14 +4644,14 @@ nsRuleNode::GetStyle##name_(nsStyleContext* aContext, PRBool aComputeData)    \
     return nsnull;                                                            \
                                                                               \
   data =                                                                      \
-    NS_STATIC_CAST(const nsStyle##name_ *, Get##name_##Data(aContext));       \
+    static_cast<const nsStyle##name_ *>(Get##name_##Data(aContext));       \
                                                                               \
   if (NS_LIKELY(data != nsnull))                                              \
     return data;                                                              \
                                                                               \
   NS_NOTREACHED("could not create style struct");                             \
   return                                                                      \
-    NS_STATIC_CAST(const nsStyle##name_ *,                                    \
+    static_cast<const nsStyle##name_ *>(\
                    mPresContext->PresShell()->StyleSet()->                    \
                      DefaultStyleData()->GetStyleData(eStyleStruct_##name_)); \
 }
@@ -4655,7 +4671,7 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 SweepRuleNodeChildren(PLDHashTable *table, PLDHashEntryHdr *hdr,
                       PRUint32 number, void *arg)
 {
-  ChildrenHashEntry *entry = NS_STATIC_CAST(ChildrenHashEntry*, hdr);
+  ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>(hdr);
   if (entry->mRuleNode->Sweep())
     return PL_DHASH_REMOVE; // implies NEXT, unless |ed with STOP
   return PL_DHASH_NEXT;

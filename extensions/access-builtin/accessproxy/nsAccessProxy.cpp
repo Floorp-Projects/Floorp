@@ -189,7 +189,7 @@ NS_IMETHODIMP nsAccessProxy::Observe(nsISupports *aSubject, const char *aTopic, 
     nsCOMPtr<nsIWebProgress> progress(do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID));
     rv = NS_ERROR_FAILURE;
     if (progress) {
-      rv = progress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*,this),
+      rv = progress->AddProgressListener(static_cast<nsIWebProgressListener*>(this),
                                          nsIWebProgress::NOTIFY_STATE_DOCUMENT);
       if (NS_SUCCEEDED(rv))
         AddRef();

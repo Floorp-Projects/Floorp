@@ -355,5 +355,15 @@ function run_test() {
   do_check_eq(annosvc.getItemsWithAnnotation(int32Key, { }).length, 0);
   do_check_eq(annosvc.getPagesWithAnnotation(int32Key, { }).length, 0);
 
+  // Setting item annotations on invalid item ids should throw
+  var invalidIds = [-1, 0, 37643];
+  for each (var id in invalidIds) {
+    try {
+      annosvc.setItemAnnotationString(id, "foo", "bar", 0, 0);
+      do_throw("setItemAnnotation* should throw for invalid item id: " + id)
+    }
+    catch(ex) { }
+  }
+
   annosvc.removeObserver(annoObserver);
 }

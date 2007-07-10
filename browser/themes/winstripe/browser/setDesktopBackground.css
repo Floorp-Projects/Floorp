@@ -1,5 +1,12 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+#monitor {
+  margin: 12px 11px 32px;
+  width: 153px;
+  height: 114px;
+  overflow: hidden;
+}
+
 #monitorImage {
   list-style-image: url("chrome://browser/skin/monitor.png");
 }

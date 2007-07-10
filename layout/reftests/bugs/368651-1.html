@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<script>
+function boom()
+{
+  var td = document.createElementNS("http://www.w3.org/1999/xhtml", "td");
+  td.appendChild(document.createTextNode("b"));
+  document.getElementById("tbody").appendChild(td);
+}
+</script>
+</head>
+
+<body>
+
+<table border>
+  <tbody id="tbody">
+    <tr>
+      <td rowspan="0">a</td>
+    </tr>
+    <tr>
+    </tr>
+  </tbody>
+</table>
+
+<script>
+  // Flush layout
+  document.body.offsetWidth;
+
+  boom();
+</script>
+
+</body>
+</html>

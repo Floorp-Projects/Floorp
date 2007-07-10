@@ -50,7 +50,7 @@ interface nsIFile;
  *   3) Support for uniquely identifying cached data in cases when the URL
  *      is insufficient (e.g., HTTP form submission).
  */
-[scriptable, uuid(855bcc4d-0987-45b6-b138-3bf0bf407703)]
+[scriptable, uuid(afafb719-bdf5-49c8-a4a9-db39ec331c9b)]
 interface nsICachingChannel : nsISupports
 {
     /**
@@ -124,6 +124,12 @@ interface nsICachingChannel : nsISupports
      */
 
     /**
+     * This load flag causes the offline cache to be checked when fetching
+     * a request.  It will be set automatically if the browser is offline.
+     */
+    const unsigned long LOAD_CHECK_OFFLINE_CACHE = 1 << 27;
+
+    /**
      * This load flag causes the local cache to be skipped when fetching a
      * request.  Unlike LOAD_BYPASS_CACHE, it does not force an end-to-end load
      * (i.e., it does not affect proxy caches).
@@ -139,7 +145,8 @@ interface nsICachingChannel : nsISupports
     /**
      * This load flag inhibits fetching from the net if the data in the cache
      * has been evicted.  An error of NS_ERROR_DOCUMENT_NOT_CACHED will be sent
-     * to the listener's onStopRequest in this case.
+     * to the listener's onStopRequest in this case.  This flag is set
+     * automatically when the application is offline.
      */
     const unsigned long LOAD_ONLY_FROM_CACHE = 1 << 30;
 

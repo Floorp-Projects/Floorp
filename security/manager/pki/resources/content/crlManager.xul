@@ -51,7 +51,7 @@
 <dialog id="crlviewer"
         title="&validation.crlmanager.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        style="width: 30em;"
+        style="width: 65ch;"
         onload="onLoad();"
         buttons="accept"
         buttonlabelaccept="&certmgr.close.label;"
@@ -61,7 +61,7 @@
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://pippki/content/crlManager.js"/>
 
-  <description value="&validation.crlmanager.label;"/>
+  <description value="&validation.crlmanager.description;"/>
   <separator class="thin"/>
   <tree id="crltree" style="height: 10em;"
    onselect="EnableCrlActions()" flex="1">

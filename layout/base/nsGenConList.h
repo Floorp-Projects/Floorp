@@ -95,10 +95,10 @@ public:
   ~nsGenConList() { Clear(); }
   void Clear();
   static nsGenConNode* Next(nsGenConNode* aNode) {
-    return NS_STATIC_CAST(nsGenConNode*, PR_NEXT_LINK(aNode));
+    return static_cast<nsGenConNode*>(PR_NEXT_LINK(aNode));
   }
   static nsGenConNode* Prev(nsGenConNode* aNode) {
-    return NS_STATIC_CAST(nsGenConNode*, PR_PREV_LINK(aNode));
+    return static_cast<nsGenConNode*>(PR_PREV_LINK(aNode));
   }
   void Insert(nsGenConNode* aNode);
   // returns whether any nodes have been destroyed

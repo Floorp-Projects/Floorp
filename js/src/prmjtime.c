@@ -100,7 +100,7 @@ PRMJ_LocalGMTDifference()
     ltime.tm_gmtoff = 0;
     return timelocal(&ltime) - (24 * 3600);
 #else
-    return mktime(&ltime) - (24L * 3600L);
+    return (JSInt32)mktime(&ltime) - (24L * 3600L);
 #endif
 }
 

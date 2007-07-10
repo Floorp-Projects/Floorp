@@ -155,7 +155,7 @@ nsSVGImageFrame::~nsSVGImageFrame()
     if (imageLoader) {
       imageLoader->RemoveObserver(mListener);
     }
-    NS_REINTERPRET_CAST(nsSVGImageListener*, mListener.get())->SetFrame(nsnull);
+    reinterpret_cast<nsSVGImageListener*>(mListener.get())->SetFrame(nsnull);
   }
   mListener = nsnull;
 }
@@ -215,7 +215,7 @@ nsSVGImageFrame::GetImageTransform()
   GetCanvasTM(getter_AddRefs(ctm));
 
   float x, y, width, height;
-  nsSVGElement *element = NS_STATIC_CAST(nsSVGElement*, mContent);
+  nsSVGElement *element = static_cast<nsSVGElement*>(mContent);
   element->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
 
   PRInt32 nativeWidth, nativeHeight;
@@ -270,7 +270,7 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
 
     nsThebesImage *thebesImage = nsnull;
     if (img)
-      thebesImage = NS_STATIC_CAST(nsThebesImage*, img.get());
+      thebesImage = static_cast<nsThebesImage*>(img.get());
 
     if (thebesImage)
       thebesSurface = thebesImage->ThebesSurface();
@@ -287,7 +287,7 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
 
       if (ctm) {
         float x, y, width, height;
-        nsSVGElement *element = NS_STATIC_CAST(nsSVGElement*, mContent);
+        nsSVGElement *element = static_cast<nsSVGElement*>(mContent);
         element->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
 
         nsSVGUtils::SetClipRect(gfx, ctm, x, y, width, height);

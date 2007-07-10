@@ -70,7 +70,7 @@ NS_IMETHODIMP nsDocShellEnumerator::GetNext(nsISupports **outCurItem)
   
   if (mCurIndex >= 0 && mCurIndex < mItemArray->Count())
   {
-    nsIDocShellTreeItem* thisItem = NS_REINTERPRET_CAST(nsIDocShellTreeItem*, mItemArray->ElementAt(mCurIndex));
+    nsIDocShellTreeItem* thisItem = reinterpret_cast<nsIDocShellTreeItem*>(mItemArray->ElementAt(mCurIndex));
     rv = thisItem->QueryInterface(NS_GET_IID(nsISupports), (void **)outCurItem);
     if (NS_FAILED(rv)) return rv;
   }

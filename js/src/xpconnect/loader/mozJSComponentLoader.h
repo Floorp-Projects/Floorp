@@ -54,6 +54,7 @@
 #include "nsIObserver.h"
 #include "xpcIJSModuleLoader.h"
 #include "nsClassHashtable.h"
+#include "nsDataHashtable.h"
 #ifndef XPCONNECT_STANDALONE
 #include "nsIPrincipal.h"
 #endif
@@ -122,7 +123,6 @@ class mozJSComponentLoader : public nsIModuleLoader,
     void CloseFastLoad();
     nsresult ReportOnCaller(nsIXPCNativeCallContext *cc,
                             const char *format, ...);
-                                 
 
     nsCOMPtr<nsIComponentManager> mCompMgr;
     nsCOMPtr<nsIJSRuntimeService> mRuntimeService;
@@ -167,6 +167,7 @@ class mozJSComponentLoader : public nsIModuleLoader,
 
     nsClassHashtable<nsHashableHashKey, ModuleEntry> mModules;
     nsClassHashtable<nsHashableHashKey, ModuleEntry> mImports;
+    nsDataHashtable<nsHashableHashKey, ModuleEntry*> mInProgressImports;
 
     PRBool mInitialized;
 };

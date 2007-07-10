@@ -569,8 +569,8 @@ nsApplicationAccessibleWrap::GetNativeInterface(void **aOutAccessible)
 
     if (!mAtkObject) {
         mAtkObject =
-            NS_REINTERPRET_CAST(AtkObject *,
-                                g_object_new(MAI_TYPE_ATK_OBJECT, NULL));
+            reinterpret_cast<AtkObject *>
+                            (g_object_new(MAI_TYPE_ATK_OBJECT, NULL));
         NS_ENSURE_TRUE(mAtkObject, NS_ERROR_OUT_OF_MEMORY);
 
         atk_object_initialize(mAtkObject, this);

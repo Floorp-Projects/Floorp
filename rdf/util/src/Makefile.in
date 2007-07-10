@@ -42,13 +42,19 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# This makefile builds the rdfutil_external_s library which should be 
+# used by frozen (dependent) linkage components. The internal-linkage code should use
+# rdfutil_s which is built in the internal/ subdirectory. 
+
+DIRS = internal
+
 include $(srcdir)/objs.mk
 
 EXTRA_DEPS += $(srcdir)/objs.mk
 
 MODULE		= rdfutil
-LIBRARY_NAME	= rdfutil_s
-MOZILLA_INTERNAL_API = 1
+LIBRARY_NAME	= rdfutil_external_s
+DIST_INSTALL = 1
 
 REQUIRES	= xpcom \
 		  string \

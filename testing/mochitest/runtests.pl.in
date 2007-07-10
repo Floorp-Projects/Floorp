@@ -123,15 +123,17 @@ my $unixish = (!($is_win32) && !($is_mac));
 
 sub main {
   my ($close_when_done, $appoverride, $log_path, $autorun,
-      $console_level, $file_level, $help, $do_chrome, $test_path); 
+      $console_level, $file_level, $help, $do_chrome, $test_path,
+      $do_browser_chrome);
   GetOptions("close-when-done!"=> \$close_when_done,
              "appname:s"=> \$appoverride,
              "log-file:s" => \$log_path,
              "autorun!" => \$autorun,
              "console-level:s" => \$console_level,
              "file-level:s" => \$file_level,
-	     "chrome!" => \$do_chrome,
-	     "test-path:s" => \$test_path,
+             "chrome!" => \$do_chrome,
+             "test-path:s" => \$test_path,
+             "browser-chrome!" => \$do_browser_chrome,
              "help!" => \$help);
 
   # if the switches include --help, exit and print directions
@@ -152,42 +154,54 @@ sub main {
     die $error_message;
   }
 
-  my $manifest = initializeProfile($app);
-  my $serverPid = startServer($close_when_done);
-
-  # If we're lucky, the server has fully started by now, and all paths are
-  # ready, etc.  However, xpcshell cold start times suck, at least for debug
-  # builds.  We'll try to connect to the server for 30 seconds or until we
-  # succeed, whichever is first.  If we succeed, then we continue with
-  # execution.  If we fail, we try to kill the server and exit with an error.
-  wait_for_server_startup($serverPid, SERVER_STARTUP_TIMEOUT);
+  my $manifest = initializeProfile($app, $do_browser_chrome);
+  my $serverPid;
+  if (!$do_browser_chrome) {
+    $serverPid = startServer($close_when_done);
+  
+    # If we're lucky, the server has fully started by now, and all paths are
+    # ready, etc.  However, xpcshell cold start times suck, at least for debug
+    # builds.  We'll try to connect to the server for 30 seconds or until we
+    # succeed, whichever is first.  If we succeed, then we continue with
+    # execution.  If we fail, we try to kill the server and exit with an error.
+    wait_for_server_startup($serverPid, SERVER_STARTUP_TIMEOUT);
+  }
 
   my $url;
   if ($do_chrome) {
    $url = CHROMETESTS_URL . ($test_path ? $test_path : "") . "?";
+  } elsif ($do_browser_chrome) {
+   # Tests will run from an overlay, no need to load any URL
+   $url = "about:blank";
   } else {
    $url = TESTS_URL . ($test_path ? $test_path : "") . "?";
   }
 
-  if ($autorun) {
-    $url .= "&autorun=1";
-  }
-  if ($close_when_done) {
-    $url .= "&closeWhenDone=1";
-  }
-  if ($log_path) {
-    $url .= "&logFile=$log_path";
-  }
-  if ($file_level) {
-    $url .= "&fileLevel=$file_level";
-  }
-  if ($console_level) {
-    $url .= "&consoleLevel=$console_level";
+  if ($do_browser_chrome) {
+    generate_test_config($autorun, $close_when_done, $log_path);
+  } else {
+    if ($autorun) {
+      $url .= "&autorun=1";
+    }
+    if ($close_when_done) {
+      $url .= "&closeWhenDone=1";
+    }
+    if ($log_path) {
+      $url .= "&logFile=$log_path";
+    }
+    if ($file_level) {
+      $url .= "&fileLevel=$file_level";
+    }
+    if ($console_level) {
+      $url .= "&consoleLevel=$console_level";
+    }
   }
   
   my $test_start = runTests($url);
 
-  shutdownServer($serverPid);
+  if (!$do_browser_chrome) {
+    shutdownServer($serverPid);
+  }
 
   # print test run times
   my $test_finish = localtime();
@@ -208,11 +222,13 @@ sub usage_and_exit {
   print "Usage instructons for runtests.pl.\n";
   print "If --log-file is specified, --file-level must be specified as well.\n";
   print "If --chrome is specified, chrome tests will be run instead of web content tests";
+  print "If --browser-chrome is specified, browser-chrome tests will be run instead of web content tests";
   print "\n\n";
   print "Syntax:\n";
   print "  runtests.pl \\\n";
   print "   [--autorun] \\\n";
   print "   [--chrome] \\\n";
+  print "   [--browser-chrome] \\\n";
   print "   [--close-when-done] \\\n";
   print "   [--appname=/path/to/app] \\\n";
   print "   [--log-file=/path/to/logfile] \\\n";
@@ -318,8 +334,29 @@ sub startServer {
  # TEST SETUP #
  ##############
 
+sub generate_test_config {
+  my ($autorun, $close_when_done, $log_path) = @_;
+  $autorun = $autorun || 0;
+  $close_when_done = $close_when_done || 0;
+  $log_path = $log_path || "";
+  $log_path =~ s/\\/\\\\/;
+
+  my $config_content = <<CONFIGEND;
+({
+  autoRun: $autorun,
+  closeWhenDone: $close_when_done,
+  logPath: "$log_path"
+})
+CONFIGEND
+
+  open(CONFIGOUTFILE, ">$profile_dir/testConfig.js") ||
+    die("Could not open testConfig.js file $!");
+  print CONFIGOUTFILE ($config_content);
+  close(CONFIGOUTFILE);
+}
+
 sub initializeProfile {
-  my ($app_path) = @_;
+  my ($app_path, $do_browser_tests) = @_;
   my $pref_content = <<PREFEND;
 user_pref("browser.dom.window.dump.enabled", true);
 user_pref("capability.principal.codebase.p1.granted", "UniversalXPConnect UniversalBrowserRead UniversalBrowserWrite UniversalPreferencesRead UniversalPreferencesWrite UniversalFileRead");
@@ -378,7 +415,10 @@ CHROMEEND
   my $manifest = $directories . "chrome/mochikit.manifest";
   open(MANIFEST, ">$manifest") ||
     die("Could not open manifest file $!");
-  print MANIFEST ("content mochikit $chrometest_dir");
+  print MANIFEST ("content mochikit $chrometest_dir\n");
+  if ($do_browser_tests) {
+    print MANIFEST ("overlay chrome://browser/content/browser.xul chrome://mochikit/content/browser-test-overlay.xul\n");
+  }
   close(MANIFEST);
 
   return $manifest;

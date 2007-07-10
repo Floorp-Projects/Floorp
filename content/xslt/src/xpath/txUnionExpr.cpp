@@ -75,8 +75,8 @@ UnionExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         }
 
         nsRefPtr<txNodeSet> resultSet, ownedSet;
-        resultSet = NS_STATIC_CAST(txNodeSet*,
-                                   NS_STATIC_CAST(txAExprResult*, exprResult));
+        resultSet = static_cast<txNodeSet*>
+                               (static_cast<txAExprResult*>(exprResult));
         exprResult = nsnull;
         rv = aContext->recycler()->
             getNonSharedNodeSet(resultSet, getter_AddRefs(ownedSet));

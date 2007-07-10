@@ -90,8 +90,8 @@ center {
 blockquote[type=cite] {
   display: block;
   margin: 1em 0px;
-  padding-left: 1em;
-  border-left: solid;
+  -moz-padding-start: 1em;
+  -moz-border-start: solid;
   border-color: blue;
   border-width: thin;
 }

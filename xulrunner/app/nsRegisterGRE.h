@@ -39,6 +39,7 @@
 #define nsRegisterGRE_h__
 
 #include "nscore.h"
+#include "nsStringAPI.h"
 class nsIFile;
 struct GREProperty;
 
@@ -47,9 +48,11 @@ struct GREProperty;
  */
 NS_HIDDEN_(PRBool)
 RegisterXULRunner(PRBool aRegisterGlobally, nsIFile* aLocation,
-                  const GREProperty *aProperties, PRUint32 aPropertiesLen);
+                  const GREProperty *aProperties, PRUint32 aPropertiesLen,
+                  const char *aGREMilestone);
 
 NS_HIDDEN_(void)
-UnregisterXULRunner(PRBool aUnregisterGlobally, nsIFile* aLocation);
+UnregisterXULRunner(PRBool aUnregisterGlobally, nsIFile* aLocation,
+                    const char *aGREMilestone);
 
 #endif // nsRegisterGRE_h__

@@ -160,7 +160,7 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
     return NS_ERROR_FAILURE;
   }
 
-  nsDataObj * dObj = NS_STATIC_CAST(nsDataObj *, aDataObj);
+  nsDataObj * dObj = static_cast<nsDataObj *>(aDataObj);
 
   // Now give the Transferable to the DataObject 
   // for getting the data out of it
@@ -297,7 +297,7 @@ nsresult nsClipboard::GetGlobalData(HGLOBAL aHGBL, void ** aData, PRUint32 * aLe
   if (aHGBL != NULL) {
     LPSTR lpStr = (LPSTR) GlobalLock(aHGBL);
     DWORD allocSize = GlobalSize(aHGBL);
-    char* data = NS_STATIC_CAST(char*, nsMemory::Alloc(allocSize + sizeof(PRUnichar)));
+    char* data = static_cast<char*>(nsMemory::Alloc(allocSize + sizeof(PRUnichar)));
     if ( data ) {    
       memcpy ( data, lpStr, allocSize );
       data[allocSize] = data[allocSize + 1] = '\0';     // null terminate for safety
@@ -451,7 +451,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                 // (on 98, these are not the same) so we can't use that.
                 PRUint32 allocLen = 0;
                 if ( NS_SUCCEEDED(GetGlobalData(stm.hGlobal, aData, &allocLen)) ) {
-                  *aLen = strlen ( NS_REINTERPRET_CAST(char*, *aData) );
+                  *aLen = strlen ( reinterpret_cast<char*>(*aData) );
                   result = NS_OK;
                 }
               } break;
@@ -466,7 +466,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                 // (on 98, these are not the same) so we can't use that.
                 PRUint32 allocLen = 0;
                 if ( NS_SUCCEEDED(GetGlobalData(stm.hGlobal, aData, &allocLen)) ) {
-                  *aLen = nsCRT::strlen(NS_REINTERPRET_CAST(PRUnichar*, *aData)) * 2;
+                  *aLen = nsCRT::strlen(reinterpret_cast<PRUnichar*>(*aData)) * 2;
                   result = NS_OK;
                 }
               } break;
@@ -503,7 +503,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                 NS_ASSERTION ( aIndex < numFiles, "Asked for a file index out of range of list" );
                 if (numFiles > 0) {
                   UINT fileNameLen = ::DragQueryFileW(dropFiles, aIndex, nsnull, 0);
-                  PRUnichar* buffer = NS_REINTERPRET_CAST(PRUnichar*, nsMemory::Alloc((fileNameLen + 1) * sizeof(PRUnichar)));
+                  PRUnichar* buffer = reinterpret_cast<PRUnichar*>(nsMemory::Alloc((fileNameLen + 1) * sizeof(PRUnichar)));
                   if ( buffer ) {
                     ::DragQueryFileW(dropFiles, aIndex, buffer, fileNameLen + 1);
                     *aData = buffer;
@@ -546,7 +546,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                     *aLen = allocLen;
                   }
                   else
-                    *aLen = nsCRT::strlen(NS_REINTERPRET_CAST(PRUnichar*, *aData)) * sizeof(PRUnichar);
+                    *aLen = nsCRT::strlen(reinterpret_cast<PRUnichar*>(*aData)) * sizeof(PRUnichar);
                   result = NS_OK;
                 }
               }
@@ -633,7 +633,7 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
         nsCOMPtr<nsISupports> genericDataWrapper;
           if ( strcmp(flavorStr, kFileMime) == 0 ) {
             // we have a file path in |data|. Create an nsLocalFile object.
-            nsDependentString filepath(NS_REINTERPRET_CAST(PRUnichar*, data));
+            nsDependentString filepath(reinterpret_cast<PRUnichar*>(data));
             nsCOMPtr<nsILocalFile> file;
             if ( NS_SUCCEEDED(NS_NewLocalFile(filepath, PR_FALSE, getter_AddRefs(file))) )
               genericDataWrapper = do_QueryInterface(file);
@@ -653,14 +653,14 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
           nsMemory::Free(data);
         }
         else if ( strcmp(flavorStr, kJPEGImageMime) == 0) {
-          nsIInputStream * imageStream = NS_REINTERPRET_CAST(nsIInputStream*, data);
+          nsIInputStream * imageStream = reinterpret_cast<nsIInputStream*>(data);
           genericDataWrapper = do_QueryInterface(imageStream);
           NS_IF_RELEASE(imageStream);
         }
         else {
           // we probably have some form of text. The DOM only wants LF, so convert from Win32 line 
           // endings to DOM line endings.
-          PRInt32 signedLen = NS_STATIC_CAST(PRInt32, dataLen);
+          PRInt32 signedLen = static_cast<PRInt32>(dataLen);
           nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks ( flavorStr, &data, &signedLen );
           dataLen = signedLen;
 
@@ -728,7 +728,7 @@ nsClipboard :: FindUnicodeFromPlainText ( IDataObject* inDataObject, UINT inInde
   // try again with text/plain. If that is present, convert it to unicode.
   nsresult loadResult = GetNativeDataOffClipboard(inDataObject, inIndex, GetFormat(kTextMime), outData, outDataLen);
   if ( NS_SUCCEEDED(loadResult) && *outData ) {
-    const char* castedText = NS_REINTERPRET_CAST(char*, *outData);          
+    const char* castedText = reinterpret_cast<char*>(*outData);          
     PRUnichar* convertedText = nsnull;
     PRInt32 convertedTextLen = 0;
     nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode ( castedText, *outDataLen, 
@@ -763,7 +763,7 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
   nsresult loadResult = GetNativeDataOffClipboard(inDataObject, inIndex, GetFormat(kFileMime), outData, outDataLen);
   if ( NS_SUCCEEDED(loadResult) && *outData ) {
     // we have a file path in |data|. Is it an internet shortcut or a normal file?
-    const nsDependentString filepath(NS_STATIC_CAST(PRUnichar*, *outData));
+    const nsDependentString filepath(static_cast<PRUnichar*>(*outData));
     nsCOMPtr<nsILocalFile> file;
     nsresult rv = NS_NewLocalFile(filepath, PR_TRUE, getter_AddRefs(file));
     if (NS_FAILED(rv))
@@ -776,7 +776,7 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
         // convert it to unicode and pass it out
         nsMemory::Free(*outData);
         *outData = UTF8ToNewUnicode(url);
-        *outDataLen = nsCRT::strlen(NS_STATIC_CAST(PRUnichar*, *outData)) * sizeof(PRUnichar);
+        *outDataLen = nsCRT::strlen(static_cast<PRUnichar*>(*outData)) * sizeof(PRUnichar);
 
         dataFound = PR_TRUE;
       }
@@ -789,7 +789,7 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
       // convert it to unicode and pass it out
       nsMemory::Free(*outData);
       *outData = UTF8ToNewUnicode(urlSpec);
-      *outDataLen = nsCRT::strlen(NS_STATIC_CAST(PRUnichar*, *outData)) * sizeof(PRUnichar);
+      *outDataLen = nsCRT::strlen(static_cast<PRUnichar*>(*outData)) * sizeof(PRUnichar);
       dataFound = PR_TRUE;
     } // else regular file
   }

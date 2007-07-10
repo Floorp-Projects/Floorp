@@ -55,7 +55,7 @@ nsScreenCocoa*
 nsScreenManagerCocoa::ScreenForCocoaScreen (NSScreen *screen)
 {
     for (PRInt32 i = 0; i < mScreenList.Count(); i++) {
-        nsScreenCocoa* sc = NS_STATIC_CAST(nsScreenCocoa*, mScreenList.ObjectAt(i));
+        nsScreenCocoa* sc = static_cast<nsScreenCocoa*>(mScreenList.ObjectAt(i));
 
         if (sc->CocoaScreen() == screen) {
             // doesn't addref

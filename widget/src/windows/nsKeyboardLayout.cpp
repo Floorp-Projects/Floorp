@@ -521,8 +521,8 @@ inline PRInt32 KeyboardLayout::GetKeyIndex (PRUint8 aVirtualKey)
 
 int PR_CALLBACK KeyboardLayout::CompareDeadKeyEntries (const void* aArg1, const void* aArg2, void*)
 {
-  const DeadKeyEntry* arg1 = NS_STATIC_CAST (const DeadKeyEntry*, aArg1);
-  const DeadKeyEntry* arg2 = NS_STATIC_CAST (const DeadKeyEntry*, aArg2);
+  const DeadKeyEntry* arg1 = static_cast<const DeadKeyEntry*>(aArg1);
+  const DeadKeyEntry* arg2 = static_cast<const DeadKeyEntry*>(aArg2);
 
   return arg1->BaseChar - arg2->BaseChar;
 }
@@ -534,10 +534,10 @@ const DeadKeyTable* KeyboardLayout::AddDeadKeyTable (const DeadKeyEntry* aDeadKe
   const size_t bytes = offsetof (DeadKeyTableListEntry, data) + DeadKeyTable::SizeInBytes (aEntries);
   PRUint8* p = new PRUint8 [bytes];
 
-  mDeadKeyTableListHead = NS_REINTERPRET_CAST (DeadKeyTableListEntry*, p);
+  mDeadKeyTableListHead = reinterpret_cast<DeadKeyTableListEntry*>(p);
   mDeadKeyTableListHead->next = next;
 
-  DeadKeyTable* dkt = NS_REINTERPRET_CAST (DeadKeyTable*, mDeadKeyTableListHead->data);
+  DeadKeyTable* dkt = reinterpret_cast<DeadKeyTable*>(mDeadKeyTableListHead->data);
   
   dkt->Init (aDeadKeyArray, aEntries);
 
@@ -548,7 +548,7 @@ void KeyboardLayout::ReleaseDeadKeyTables ()
 {
   while (mDeadKeyTableListHead)
   {
-    PRUint8* p = NS_REINTERPRET_CAST (PRUint8*, mDeadKeyTableListHead);
+    PRUint8* p = reinterpret_cast<PRUint8*>(mDeadKeyTableListHead);
     mDeadKeyTableListHead = mDeadKeyTableListHead->next;
 
     delete [] p;

@@ -329,8 +329,8 @@ xptiInterfaceEntry::GetMethodInfo(uint16 index, const nsXPTMethodInfo** info)
     }
 
     // else...
-    *info = NS_REINTERPRET_CAST(nsXPTMethodInfo*,
-                                &mInterface->mDescriptor->
+    *info = reinterpret_cast<nsXPTMethodInfo*>
+                            (&mInterface->mDescriptor->
                                     method_descriptors[index - 
                                         mInterface->mMethodBaseIndex]);
     return NS_OK;
@@ -347,8 +347,8 @@ xptiInterfaceEntry::GetMethodInfoForName(const char* methodName, uint16 *index,
     for(uint16 i = 0; i < mInterface->mDescriptor->num_methods; ++i)
     {
         const nsXPTMethodInfo* info;
-        info = NS_REINTERPRET_CAST(nsXPTMethodInfo*,
-                                   &mInterface->mDescriptor->
+        info = reinterpret_cast<nsXPTMethodInfo*>
+                               (&mInterface->mDescriptor->
                                         method_descriptors[i]);
         if (PL_strcmp(methodName, info->GetName()) == 0) {
             *index = i + mInterface->mMethodBaseIndex;
@@ -386,8 +386,8 @@ xptiInterfaceEntry::GetConstant(uint16 index, const nsXPTConstant** constant)
 
     // else...
     *constant =
-        NS_REINTERPRET_CAST(nsXPTConstant*,
-                            &mInterface->mDescriptor->
+        reinterpret_cast<nsXPTConstant*>
+                        (&mInterface->mDescriptor->
                                 const_descriptors[index -
                                     mInterface->mConstantBaseIndex]);
     return NS_OK;
@@ -455,7 +455,7 @@ xptiInterfaceEntry::GetInfoForParam(uint16 methodIndex,
     if(NS_FAILED(rv))
         return rv;
 
-    *info = NS_STATIC_CAST(nsIInterfaceInfo*, theInfo);
+    *info = static_cast<nsIInterfaceInfo*>(theInfo);
     return NS_OK;
 }
 

@@ -208,7 +208,7 @@ PRBool nsImageMac::GetIsImageComplete() {
 
 void DataProviderReleaseFunc(void *info, const void *data, size_t size)
 {
-  PR_Free(NS_CONST_CAST(void*, data));
+  PR_Free(const_cast<void*>(data));
 }
 
 
@@ -398,7 +398,7 @@ NS_IMETHODIMP
 nsImageMac::DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY,
                         PRInt32 aDWidth, PRInt32 aDHeight)
 {
-  nsImageMac* dest = NS_STATIC_CAST(nsImageMac*, aDstImage);
+  nsImageMac* dest = static_cast<nsImageMac*>(aDstImage);
 
   nsresult rv = EnsureCachedImage();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -680,7 +680,7 @@ PRBool nsImageMac::RenderingToPrinter(nsIRenderingContext &aContext)
   nsCOMPtr<nsIDeviceContext> dc;                   // (this screams for a private interface, sigh!)
   aContext.GetDeviceContext(*getter_AddRefs(dc));
   // a weird and wonderful world of scanky casts and oddly-named intefaces.
-  nsDeviceContextMac* theDevContext = NS_REINTERPRET_CAST(nsDeviceContextMac*, dc.get());
+  nsDeviceContextMac* theDevContext = reinterpret_cast<nsDeviceContextMac*>(dc.get());
   return theDevContext && theDevContext->IsPrinter();
 }
 

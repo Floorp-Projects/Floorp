@@ -58,7 +58,7 @@ class nsPlacesImportExportService : public nsIPlacesImportExportService,
       NS_ENSURE_STATE(mLivemarkService);
       NS_ENSURE_STATE(mMicrosummaryService);
       return NS_OK;
-    };
+    }
 };
 
 #endif // nsPlacesImportExportService_h__

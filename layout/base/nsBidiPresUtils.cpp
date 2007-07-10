@@ -475,7 +475,7 @@ PRBool IsBidiLeaf(nsIFrame* aFrame) {
   // always of type eBidiInlineContainer, even if it's floating.
   return !kid
     || !aFrame->IsFrameOfType(nsIFrame::eBidiInlineContainer)
-    || aFrame->GetStyleDisplay()->IsBlockLevel();
+    || aFrame->GetStyleDisplay()->IsBlockOutside();
 }
 
 nsresult
@@ -1225,7 +1225,7 @@ nsBidiPresUtils::StripBidiControlCharacters(PRUnichar* aText,
   for (PRInt32 i = 0; i < aTextLength; i++) {
     // XXX: This silently ignores surrogate characters.
     //      As of Unicode 4.0, all Bidi control characters are within the BMP.
-    if (mBidiEngine->IsBidiControl((PRUint32)aText[i])) {
+    if (IsBidiControl((PRUint32)aText[i])) {
       ++stripLen;
     }
     else {

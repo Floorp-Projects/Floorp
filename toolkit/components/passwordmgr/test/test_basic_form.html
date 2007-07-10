@@ -12,28 +12,11 @@ Login Manager test: simple form fill
 <p id="display"></p>
 
 <div id="content" style="display: none">
-  <form action="formtest.js" method="get">
+
+  <form id="form1" action="formtest.js">
     <p>This is form 1.</p>
-    <input  type="text"       name="uname1" value="">
-    <input  type="password"   name="pword1" value="">
-
-    <button type="submit">Submit</button>
-    <button type="reset"> Reset </button>
-  </form>
-
-  <form action="formtest.js" method="get">
-    <p>This is form 2.</p>
-    <input  type="text"       name="uname2" value="">
-    <input  type="password"   name="pword2" value="">
-
-    <button type="submit">Submit</button>
-    <button type="reset"> Reset </button>
-  </form>
-
-  <form action="formtest.js" method="get">
-    <p>This is form 3.</p>
-    <input  type="text"       name="uname3" value="">
-    <input  type="password"   name="pword3" value="">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
 
     <button type="submit">Submit</button>
     <button type="reset"> Reset </button>
@@ -49,17 +32,8 @@ Login Manager test: simple form fill
 // Make sure that all forms in a document are processed.
 
 function startTest() {
-  // Check form 1
-  is($_("uname1").value, "testuser1", "Checking for filled username1");
-  is($_("pword1").value, "testpass1", "Checking for filled password1");
-
-  // Check form 2
-  is($_("uname2").value, "testuser2", "Checking for filled username2");
-  is($_("pword2").value, "testpass2", "Checking for filled password2");
-
-  // Check form 3
-  is($_("uname3").value, "testuser3", "Checking for filled username3");
-  is($_("pword3").value, "testpass3", "Checking for filled password3");
+  is($_(1, "uname").value, "testuser", "Checking for filled username");
+  is($_(1, "pword").value, "testpass", "Checking for filled password");
 
   SimpleTest.finish();
 }

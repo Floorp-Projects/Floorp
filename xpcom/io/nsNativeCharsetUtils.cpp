@@ -1068,7 +1068,7 @@ NS_CopyUnicodeToNative(const nsAString &input, nsACString &output)
 
     nsAString::const_iterator iter;
     input.BeginReading(iter);
-    UniChar* inputStr = (UniChar*) NS_CONST_CAST(PRUnichar*, iter.get());
+    UniChar* inputStr = (UniChar*) const_cast<PRUnichar*>(iter.get());
 
     // maximum length of unicode string of length x converted to native
     // codepage is x*2

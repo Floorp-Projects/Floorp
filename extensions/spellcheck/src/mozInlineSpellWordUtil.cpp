@@ -536,7 +536,7 @@ static void
 CheckLeavingBreakElement(nsIDOMNode* aNode, void* aClosure)
 {
   CheckLeavingBreakElementClosure* cl =
-    NS_STATIC_CAST(CheckLeavingBreakElementClosure*, aClosure);
+    static_cast<CheckLeavingBreakElementClosure*>(aClosure);
   if (!cl->mLeftBreakElement && IsBreakElement(cl->mDocView, aNode)) {
     cl->mLeftBreakElement = PR_TRUE;
   }

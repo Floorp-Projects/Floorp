@@ -366,7 +366,7 @@ nsresult
 nsDOMAttribute::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
   nsAutoString value;
-  NS_CONST_CAST(nsDOMAttribute*, this)->GetValue(value);
+  const_cast<nsDOMAttribute*>(this)->GetValue(value);
 
   *aResult = new nsDOMAttribute(nsnull, aNodeInfo, value);
   if (!*aResult) {
@@ -469,7 +469,7 @@ nsDOMAttribute::IsSupported(const nsAString& aFeature,
                             const nsAString& aVersion,
                             PRBool* aReturn)
 {
-  return nsGenericElement::InternalIsSupported(NS_STATIC_CAST(nsIDOMAttr*, this), 
+  return nsGenericElement::InternalIsSupported(static_cast<nsIDOMAttr*>(this), 
                                                aFeature, aVersion, aReturn);
 }
 
@@ -503,7 +503,7 @@ nsDOMAttribute::IsSameNode(nsIDOMNode* aOther,
 {
   NS_ASSERTION(aReturn, "IsSameNode() called with aReturn == nsnull!");
   
-  *aReturn = SameCOMIdentity(NS_STATIC_CAST(nsIDOMNode*, this), aOther);
+  *aReturn = SameCOMIdentity(static_cast<nsIDOMNode*>(this), aOther);
 
   return NS_OK;
 }
@@ -572,7 +572,7 @@ nsDOMAttribute::GetFeature(const nsAString& aFeature,
                            const nsAString& aVersion,
                            nsISupports** aReturn)
 {
-  return nsGenericElement::InternalGetFeature(NS_STATIC_CAST(nsIDOMAttr*, this), 
+  return nsGenericElement::InternalGetFeature(static_cast<nsIDOMAttr*>(this), 
                                               aFeature, aVersion, aReturn);
 }
 
@@ -768,7 +768,7 @@ nsDOMAttribute::EnsureChildState(PRBool aSetText, PRBool &aHasChild) const
 {
   aHasChild = PR_FALSE;
 
-  nsDOMAttribute* mutableThis = NS_CONST_CAST(nsDOMAttribute*, this);
+  nsDOMAttribute* mutableThis = const_cast<nsDOMAttribute*>(this);
 
   nsAutoString value;
   mutableThis->GetValue(value);

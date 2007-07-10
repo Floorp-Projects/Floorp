@@ -131,8 +131,7 @@ public:
                                     const Parameters *aParams, PRUint32 aFlags);
 
     gfxPangoFont *GetFontAt(PRInt32 i) {
-        return NS_STATIC_CAST(gfxPangoFont*, 
-                              NS_STATIC_CAST(gfxFont*, mFonts[i]));
+        return static_cast<gfxPangoFont*>(static_cast<gfxFont*>(mFonts[i]));
     }
 
 protected:

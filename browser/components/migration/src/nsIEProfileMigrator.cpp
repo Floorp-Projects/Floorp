@@ -196,7 +196,7 @@ TranslateDWORDtoPRInt32(nsIWindowsRegKey *aRegKey,
   PRInt32 prefIntValue = 0;
 
   if (NS_SUCCEEDED(aRegKey->ReadIntValue(aRegValueName, 
-                   NS_REINTERPRET_CAST(PRUint32 *, &prefIntValue))))
+                   reinterpret_cast<PRUint32 *>(&prefIntValue))))
     aPrefs->SetIntPref(aPrefKeyName, prefIntValue);
 }
 
@@ -1843,8 +1843,9 @@ nsIEProfileMigrator::CopyCookiesFromBuffer(char *aBuffer,
                                 stringPath,
                                 stringName,
                                 nsDependentCString(value),
-                                flagsValue & 0x1,
-                                PR_FALSE,
+                                flagsValue & 0x1, // isSecure
+                                PR_FALSE, // isHttpOnly
+                                PR_FALSE, // isSession
                                 PRInt64(expirationDate));
     if (NS_FAILED(onerv)) {
       rv = onerv;

@@ -67,19 +67,19 @@ static void* PR_CALLBACK AllocTable(void* aPool, PRSize aSize)
 
 static void PR_CALLBACK FreeTable(void* aPool, void* aItem)
 {
-    delete[] NS_STATIC_CAST(char*, aItem);
+    delete[] static_cast<char*>(aItem);
 }
 
 static PLHashEntry* PR_CALLBACK AllocEntry(void* aPool, const void* aKey)
 {
-    nsFixedSizeAllocator* pool = NS_STATIC_CAST(nsFixedSizeAllocator*, aPool);
-    PLHashEntry* entry = NS_STATIC_CAST(PLHashEntry*, pool->Alloc(sizeof(PLHashEntry)));
+    nsFixedSizeAllocator* pool = static_cast<nsFixedSizeAllocator*>(aPool);
+    PLHashEntry* entry = static_cast<PLHashEntry*>(pool->Alloc(sizeof(PLHashEntry)));
     return entry;
 }
 
 static void PR_CALLBACK FreeEntry(void* aPool, PLHashEntry* aEntry, PRUintn aFlag) 
 {
-    nsFixedSizeAllocator* pool = NS_STATIC_CAST(nsFixedSizeAllocator*, aPool);
+    nsFixedSizeAllocator* pool = static_cast<nsFixedSizeAllocator*>(aPool);
     if (aFlag == HT_FREE_ENTRY)
         pool->Free(aEntry, sizeof(PLHashEntry));
 }
@@ -142,15 +142,15 @@ nsElementMap::~nsElementMap()
 PRIntn
 nsElementMap::ReleaseContentList(PLHashEntry* aHashEntry, PRIntn aIndex, void* aClosure)
 {
-    nsElementMap* self = NS_STATIC_CAST(nsElementMap*, aClosure);
+    nsElementMap* self = static_cast<nsElementMap*>(aClosure);
 
     PRUnichar* id =
-        NS_REINTERPRET_CAST(PRUnichar*, NS_CONST_CAST(void*, aHashEntry->key));
+        reinterpret_cast<PRUnichar*>(const_cast<void*>(aHashEntry->key));
 
     nsMemory::Free(id);
         
     ContentListItem* head =
-        NS_REINTERPRET_CAST(ContentListItem*, aHashEntry->value);
+        reinterpret_cast<ContentListItem*>(aHashEntry->value);
 
     while (head) {
         ContentListItem* doomed = head;
@@ -173,7 +173,7 @@ nsElementMap::Add(const nsAString& aID, nsIContent* aContent)
     const PRUnichar *id = flatID.get();
 
     ContentListItem* head =
-        NS_STATIC_CAST(ContentListItem*, PL_HashTableLookup(mMap, id));
+        static_cast<ContentListItem*>(PL_HashTableLookup(mMap, id));
 
     if (! head) {
         head = ContentListItem::Create(mPool, aContent);
@@ -282,7 +282,7 @@ nsElementMap::Remove(const nsAString& aID, nsIContent* aContent)
     if (!hep || !*hep)
         return NS_OK;
 
-    ContentListItem* head = NS_REINTERPRET_CAST(ContentListItem*, (*hep)->value);
+    ContentListItem* head = reinterpret_cast<ContentListItem*>((*hep)->value);
 
     if (head->mContent.get() == aContent) {
         ContentListItem* next = head->mNext;
@@ -291,7 +291,7 @@ nsElementMap::Remove(const nsAString& aID, nsIContent* aContent)
         }
         else {
             // It was the last reference in the table
-            PRUnichar* key = NS_REINTERPRET_CAST(PRUnichar*, NS_CONST_CAST(void*, (*hep)->key));
+            PRUnichar* key = reinterpret_cast<PRUnichar*>(const_cast<void*>((*hep)->key));
             PL_HashTableRawRemove(mMap, hep, *hep);
             nsMemory::Free(key);
         }
@@ -324,7 +324,7 @@ nsElementMap::Find(const nsAString& aID, nsCOMArray<nsIContent>& aResults)
 
     aResults.Clear();
     ContentListItem* item =
-        NS_REINTERPRET_CAST(ContentListItem*, PL_HashTableLookup(mMap, (const PRUnichar *)PromiseFlatString(aID).get()));
+        reinterpret_cast<ContentListItem*>(PL_HashTableLookup(mMap, (const PRUnichar *)PromiseFlatString(aID).get()));
 
     while (item) {
         aResults.AppendObject(item->mContent);
@@ -342,7 +342,7 @@ nsElementMap::FindFirst(const nsAString& aID, nsIContent** aResult)
         return NS_ERROR_NOT_INITIALIZED;
 
     ContentListItem* item =
-        NS_REINTERPRET_CAST(ContentListItem*, PL_HashTableLookup(mMap, (const PRUnichar *)PromiseFlatString(aID).get()));
+        reinterpret_cast<ContentListItem*>(PL_HashTableLookup(mMap, (const PRUnichar *)PromiseFlatString(aID).get()));
 
     if (item) {
         *aResult = item->mContent;
@@ -371,14 +371,14 @@ nsElementMap::EnumerateImpl(PLHashEntry* aHashEntry, PRIntn aIndex, void* aClosu
     // hashtable. It will in turn call the enumerator that the user
     // has passed in via Enumerate() once for each element that's been
     // mapped to this ID.
-    EnumerateClosure* closure = NS_REINTERPRET_CAST(EnumerateClosure*, aClosure);
+    EnumerateClosure* closure = reinterpret_cast<EnumerateClosure*>(aClosure);
 
     const PRUnichar* id =
-        NS_REINTERPRET_CAST(const PRUnichar*, aHashEntry->key);
+        reinterpret_cast<const PRUnichar*>(aHashEntry->key);
 
     // 'link' holds a pointer to the previous element's link field.
     ContentListItem** link = 
-        NS_REINTERPRET_CAST(ContentListItem**, &aHashEntry->value);
+        reinterpret_cast<ContentListItem**>(&aHashEntry->value);
 
     ContentListItem* item = *link;
 
@@ -393,10 +393,10 @@ nsElementMap::EnumerateImpl(PLHashEntry* aHashEntry, PRIntn aIndex, void* aClosu
             *link = item;
             ContentListItem::Destroy(closure->mSelf->mPool, current);
 
-            if ((! *link) && (link == NS_REINTERPRET_CAST(ContentListItem**, &aHashEntry->value))) {
+            if ((! *link) && (link == reinterpret_cast<ContentListItem**>(&aHashEntry->value))) {
                 // It's the last content node that was mapped to this
                 // ID. Unhash it.
-                PRUnichar* key = NS_CONST_CAST(PRUnichar*, id);
+                PRUnichar* key = const_cast<PRUnichar*>(id);
                 nsMemory::Free(key);
                 return HT_ENUMERATE_REMOVE;
             }
@@ -414,7 +414,7 @@ PLHashNumber
 nsElementMap::Hash(const void* aKey)
 {
     PLHashNumber result = 0;
-    const PRUnichar* s = NS_REINTERPRET_CAST(const PRUnichar*, aKey);
+    const PRUnichar* s = reinterpret_cast<const PRUnichar*>(aKey);
     while (*s != nsnull) {
         result = (result >> 28) ^ (result << 4) ^ *s;
         ++s;
@@ -426,6 +426,6 @@ nsElementMap::Hash(const void* aKey)
 PRIntn
 nsElementMap::Compare(const void* aLeft, const void* aRight)
 {
-    return 0 == nsCRT::strcmp(NS_REINTERPRET_CAST(const PRUnichar*, aLeft),
-                              NS_REINTERPRET_CAST(const PRUnichar*, aRight));
+    return 0 == nsCRT::strcmp(reinterpret_cast<const PRUnichar*>(aLeft),
+                              reinterpret_cast<const PRUnichar*>(aRight));
 }

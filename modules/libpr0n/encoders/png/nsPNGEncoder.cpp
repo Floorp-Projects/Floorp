@@ -476,7 +476,7 @@ NS_IMETHODIMP nsPNGEncoder::ReadSegments(nsWriteSegmentFun aWriter,
   if (aCount > maxCount)
     aCount = maxCount;
   nsresult rv = aWriter(this, aClosure,
-                        NS_REINTERPRET_CAST(const char*, mImageBuffer),
+                        reinterpret_cast<const char*>(mImageBuffer),
                         0, aCount, _retval);
   if (NS_SUCCEEDED(rv)) {
     NS_ASSERTION(*_retval <= aCount, "bad write count");
@@ -560,7 +560,7 @@ nsPNGEncoder::ErrorCallback(png_structp png_ptr, png_const_charp warning_msg)
 void // static
 nsPNGEncoder::WriteCallback(png_structp png, png_bytep data, png_size_t size)
 {
-  nsPNGEncoder* that = NS_STATIC_CAST(nsPNGEncoder*, png_get_io_ptr(png));
+  nsPNGEncoder* that = static_cast<nsPNGEncoder*>(png_get_io_ptr(png));
   if (! that->mImageBuffer)
     return;
 

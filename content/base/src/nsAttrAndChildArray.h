@@ -85,7 +85,7 @@ public:
   nsIContent* ChildAt(PRUint32 aPos) const
   {
     NS_ASSERTION(aPos < ChildCount(), "out-of-bounds access in nsAttrAndChildArray");
-    return NS_REINTERPRET_CAST(nsIContent*, mImpl->mBuffer[AttrSlotsSize() + aPos]);
+    return reinterpret_cast<nsIContent*>(mImpl->mBuffer[AttrSlotsSize() + aPos]);
   }
   nsIContent* GetSafeChildAt(PRUint32 aPos) const;
   nsresult AppendChild(nsIContent* aChild)

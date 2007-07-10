@@ -660,7 +660,7 @@ nsFtpState::S_user() {
     } else {
         if (mUsername.IsEmpty()) {
             nsCOMPtr<nsIAuthPrompt2> prompter;
-            NS_QueryAuthPrompt2(NS_STATIC_CAST(nsIChannel*, mChannel),
+            NS_QueryAuthPrompt2(static_cast<nsIChannel*>(mChannel),
                                 getter_AddRefs(prompter));
             if (!prompter)
                 return NS_ERROR_NOT_INITIALIZED;
@@ -750,7 +750,7 @@ nsFtpState::S_pass() {
     } else {
         if (mPassword.IsEmpty() || mRetryPass) {
             nsCOMPtr<nsIAuthPrompt2> prompter;
-            NS_QueryAuthPrompt2(NS_STATIC_CAST(nsIChannel*, mChannel),
+            NS_QueryAuthPrompt2(static_cast<nsIChannel*>(mChannel),
                                 getter_AddRefs(prompter));
             if (!prompter)
                 return NS_ERROR_NOT_INITIALIZED;
@@ -1661,6 +1661,13 @@ nsFtpState::Connect()
 {
     mState = FTP_COMMAND_CONNECT;
     mNextState = FTP_S_USER;
+
+    if (mChannel->HasLoadFlag(nsIChannel::LOAD_NO_NETWORK_IO)){
+        mInternalError = NS_ERROR_NEEDS_NETWORK;
+        mState = FTP_ERROR;
+        CloseWithStatus(mInternalError);
+        return;
+    }
 
     nsresult rv = Process();
 

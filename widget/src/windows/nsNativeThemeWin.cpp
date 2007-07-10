@@ -55,7 +55,6 @@
 #include "nsILookAndFeel.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIMenuFrame.h"
-#include "nsIMenuParent.h"
 #include "nsWidgetAtoms.h"
 #include <malloc.h>
 
@@ -228,6 +227,8 @@ nsNativeThemeWin::nsNativeThemeWin() {
     getThemeSysFont = (GetThemeSysFontPtr)GetProcAddress(mThemeDLL, "GetThemeSysFont");
     getThemeColor = (GetThemeColorPtr)GetProcAddress(mThemeDLL, "GetThemeColor");
   }
+  mOsVersion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+  GetVersionEx(&mOsVersion);
 
   UpdateConfig();
 
@@ -787,8 +788,8 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       nsIContent* content = aFrame->GetContent();
 
       nsIFrame* parentFrame = aFrame->GetParent();
-      nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(parentFrame));
-      if (menuFrame || (content && content->IsNodeOfType(nsINode::eHTML)) )
+      if (parentFrame->GetType() == nsWidgetAtoms::menuFrame ||
+          (content && content->IsNodeOfType(nsINode::eHTML)))
          // XUL menu lists and HTML selects get state from parent         
          aFrame = parentFrame;
 
@@ -824,6 +825,14 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   if (!theme)
     return ClassicDrawWidgetBackground(aContext, aFrame, aWidgetType, aRect, aClipRect); 
 
+#ifndef WINCE
+  if (aWidgetType == NS_THEME_TOOLTIP && mOsVersion.dwMajorVersion < 6) {
+    // BUG #161600: When rendering a non-classic tooltip, check
+    // for Windows prior to Vista, and if so, force a classic rendering
+    return ClassicDrawWidgetBackground(aContext, aFrame, aWidgetType, aRect, aClipRect);
+  }
+#endif
+
   if (!drawThemeBG)
     return NS_ERROR_FAILURE;    
 
@@ -834,20 +843,14 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
 
   nsCOMPtr<nsIDeviceContext> dc;
   aContext->GetDeviceContext(*getter_AddRefs(dc));
-  PRInt32 p2a = dc->AppUnitsPerDevPixel();
+  gfxFloat p2a = gfxFloat(dc->AppUnitsPerDevPixel());
   RECT widgetRect;
   RECT clipRect;
-  gfxRect tr, cr;
+  gfxRect tr(aRect.x, aRect.y, aRect.width, aRect.height),
+          cr(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
 
-  tr.pos.x = NSAppUnitsToIntPixels(aRect.x, p2a);
-  tr.pos.y = NSAppUnitsToIntPixels(aRect.y, p2a);
-  tr.size.width  = NSAppUnitsToIntPixels(aRect.width, p2a);
-  tr.size.height = NSAppUnitsToIntPixels(aRect.height, p2a);
-
-  cr.pos.x = NSAppUnitsToIntPixels(aClipRect.x, p2a);
-  cr.pos.y = NSAppUnitsToIntPixels(aClipRect.y, p2a);
-  cr.size.width  = NSAppUnitsToIntPixels(aClipRect.width, p2a);
-  cr.size.height = NSAppUnitsToIntPixels(aClipRect.height, p2a);
+  tr.ScaleInverse(p2a);
+  cr.ScaleInverse(p2a);
 
   nsRefPtr<gfxContext> ctx = (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
 
@@ -1417,9 +1420,7 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsIDeviceContext* aContext,
       if (menuFrame) {
         // If this is a real menu item, we should check if it is part of the
         // main menu bar or not, as this affects rendering.
-        nsIMenuParent *menuParent = menuFrame->GetMenuParent();
-        if (menuParent)
-          menuParent->IsMenuBar(isTopLevel);
+        isTopLevel = menuFrame->IsOnMenuBar();
       }
 
       // These values are obtained from visual inspection of equivelant
@@ -1639,11 +1640,9 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
         // If this is a real menu item, we should check if it is part of the
         // main menu bar or not, and if it is a container, as these affect
         // rendering.
-        nsIMenuParent *menuParent = menuFrame->GetMenuParent();
-        if (menuParent)
-          menuParent->IsMenuBar(isTopLevel);
-        menuFrame->MenuIsOpen(isOpen);
-        menuFrame->MenuIsContainer(isContainer);
+        isTopLevel = menuFrame->IsOnMenuBar();
+        isOpen = menuFrame->IsOpen();
+        isContainer = menuFrame->IsMenu();
       }
 
       if (IsDisabled(aFrame))
@@ -1710,8 +1709,8 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       
       nsIContent* content = aFrame->GetContent();
       nsIFrame* parentFrame = aFrame->GetParent();
-      nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(parentFrame));
-      if (menuFrame || (content && content->IsNodeOfType(nsINode::eHTML)) )
+      if (parentFrame->GetType() == nsWidgetAtoms::menuFrame ||
+          (content && content->IsNodeOfType(nsINode::eHTML)))
          // XUL menu lists and HTML selects get state from parent         
          aFrame = parentFrame;
          // XXX the button really shouldn't depress when clicking the 
@@ -1979,19 +1978,13 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
 
   nsCOMPtr<nsIDeviceContext> dc;
   aContext->GetDeviceContext(*getter_AddRefs(dc));
-  PRInt32 p2a = dc->AppUnitsPerDevPixel();
+  gfxFloat p2a = gfxFloat(dc->AppUnitsPerDevPixel());
   RECT widgetRect;
-  gfxRect tr, cr;
+  gfxRect tr(aRect.x, aRect.y, aRect.width, aRect.height),
+          cr(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
 
-  tr.pos.x = NSAppUnitsToIntPixels(aRect.x, p2a);
-  tr.pos.y = NSAppUnitsToIntPixels(aRect.y, p2a);
-  tr.size.width  = NSAppUnitsToIntPixels(aRect.width, p2a);
-  tr.size.height = NSAppUnitsToIntPixels(aRect.height, p2a);
-
-  cr.pos.x = NSAppUnitsToIntPixels(aClipRect.x, p2a);
-  cr.pos.y = NSAppUnitsToIntPixels(aClipRect.y, p2a);
-  cr.size.width  = NSAppUnitsToIntPixels(aClipRect.width, p2a);
-  cr.size.height = NSAppUnitsToIntPixels(aClipRect.height, p2a);
+  tr.ScaleInverse(p2a);
+  cr.ScaleInverse(p2a);
 
   nsRefPtr<gfxContext> ctx = (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
 
@@ -2081,12 +2074,9 @@ RENDER_AGAIN:
     }
     // Draw ToolTip background
     case NS_THEME_TOOLTIP:
-      HBRUSH brush;
-      brush = ::GetSysColorBrush(COLOR_3DDKSHADOW);
-      if (brush)
-        ::FrameRect(hdc, &widgetRect, brush);
+      ::FrameRect(hdc, &widgetRect, ::GetSysColorBrush(COLOR_WINDOWFRAME));
       InflateRect(&widgetRect, -1, -1);
-      ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_INFOBK+1));
+      ::FillRect(hdc, &widgetRect, ::GetSysColorBrush(COLOR_INFOBK));
 
       break;
     // Draw 3D face background controls

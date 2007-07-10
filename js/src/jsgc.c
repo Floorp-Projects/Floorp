@@ -69,6 +69,7 @@
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
+#include "jsparse.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
@@ -940,7 +941,7 @@ js_gcroot_mapper(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
     GCRootMapArgs *args = (GCRootMapArgs *) arg;
     JSGCRootHashEntry *rhe = (JSGCRootHashEntry *)hdr;
     intN mapflags;
-    JSDHashOperator op;
+    int op;
 
     mapflags = args->map(rhe->root, rhe->name, args->data);
 
@@ -956,7 +957,7 @@ js_gcroot_mapper(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
         op |= JS_DHASH_REMOVE;
 #endif
 
-    return op;
+    return (JSDHashOperator) op;
 }
 
 uint32
@@ -989,7 +990,7 @@ js_RegisterCloseableIterator(JSContext *cx, JSObject *obj)
 }
 
 static void
-CloseIteratorStates(JSContext *cx)
+CloseNativeIterators(JSContext *cx)
 {
     JSRuntime *rt;
     size_t count, newCount, i;
@@ -1004,7 +1005,7 @@ CloseIteratorStates(JSContext *cx)
     for (i = 0; i != count; ++i) {
         obj = (JSObject *)array[i];
         if (js_IsAboutToBeFinalized(cx, obj))
-            js_CloseIteratorState(cx, obj);
+            js_CloseNativeIterator(cx, obj);
         else
             array[newCount++] = obj;
     }
@@ -1321,7 +1322,7 @@ js_RunCloseHooks(JSContext *cx)
             METER(deferCount++);
             continue;
         }
-        ok = js_CloseGeneratorObject(cx, gen);
+        ok = js_CloseGenerator(cx, gen->obj);
 
         /*
          * Unlink the generator after closing it to make sure it always stays
@@ -1567,7 +1568,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
                 lastptr = &tmpthing->next;
                 METER(++nfree);
             }
-            arenaList->lastLimit = offset;
+            arenaList->lastLimit = (uint16)offset;
             *lastptr = NULL;
             METER(arenaList->stats.freelen += nfree);
 #endif
@@ -1741,7 +1742,7 @@ js_LockGCThingRT(JSRuntime *rt, void *thing)
             goto done;
         }
         if (!lhe->thing) {
-            lhe->thing = thing;
+            lhe->thing = (JSGCThing *) thing;
             lhe->count = deep ? 1 : 2;
         } else {
             JS_ASSERT(lhe->count >= 1);
@@ -2033,7 +2034,7 @@ ScanDelayedChildren(JSTracer *trc)
                  * XXX: inline js_GetGCThingFlags() to use already available
                  * pi.
                  */
-                thing = (void *)((jsuword)pi + thingOffset);
+                thing = (JSGCThing *)((jsuword)pi + thingOffset);
                 flagp = js_GetGCThingFlags(thing);
                 if (thingsPerUnscannedChunk != 1) {
                     /*
@@ -2093,7 +2094,6 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
     JSRuntime *rt;
     JSAtom *atom;
     uint8 *flagp;
-    jsval v;
 
     JS_ASSERT(thing);
     JS_ASSERT(JS_IS_VALID_TRACE_KIND(kind));
@@ -2113,11 +2113,19 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
         atom = (JSAtom *)thing;
 
         /*
-         * Workaround gcThingCallback deficiency of only being able to handle
-         * GC things, not atoms. For that we must call the callback on all GC
-         * things refrenced by atoms. For unmarked atoms it is done during the
-         * tracing of things the atom refer to, but for already marked atoms
-         * we have to call the callback explicitly.
+         * Here we should workaround gcThingCallback deficiency of being able
+         * to handle only GC things, not atoms. Because of this we must call
+         * the callback on all GC things referenced by atoms. For unmarked
+         * atoms we call when tracing things reached directly from each such
+         * atom, but for already-marked atoms we have to call the callback
+         * explicitly.
+         *
+         * We do not do it currently for compatibility with XPCOM cycle
+         * collector which ignores JSString * and jsdouble * GC things that
+         * the atom can refer to.
+         *
+         * FIXME bug 386265 will remove the need to trace atoms and bug 379718
+         * may remove gcThingCallback altogether.
          */
         if (!(atom->flags & ATOM_MARK)) {
             atom->flags |= ATOM_MARK;
@@ -2127,18 +2135,6 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
              * JS_TraceChildren.
              */
             js_TraceAtom(trc, (JSAtom *)thing);
-        } else if (rt->gcThingCallback) {
-            v = ATOM_KEY(atom);
-
-            /*
-             * For compatibility with the current implementation call the
-             * callback only for objects, not when JSVAL_IS_GCTHING(v).
-             */
-            if (JSVAL_IS_OBJECT(v) && v != JSVAL_NULL) {
-                thing = JSVAL_TO_GCTHING(v);
-                flagp = js_GetGCThingFlags(thing);
-                rt->gcThingCallback(thing, *flagp, rt->gcThingCallbackClosure);
-            }
         }
         goto out;
     }
@@ -2488,6 +2484,9 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
           case JSTVU_WEAK_ROOTS:
             TraceWeakRoots(trc, tvr->u.weakRoots);
             break;
+          case JSTVU_PARSE_CONTEXT:
+            js_TraceParseContext(trc, tvr->u.parseContext);
+            break;
           default:
             JS_ASSERT(tvr->count >= 0);
             TRACE_JSVALS(trc, tvr->count, tvr->u.array, "tvr->u.array");
@@ -2778,7 +2777,7 @@ restart:
     rt->gcMarkingTracer = NULL;
 
     /* Finalize iterator states before the objects they iterate over. */
-    CloseIteratorStates(cx);
+    CloseNativeIterators(cx);
 
 #ifdef DUMP_CALL_TABLE
     /*

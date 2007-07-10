@@ -106,7 +106,7 @@ public:
 
         virtual PRBool Equals(const MemoryElement& aElement) const {
             if (aElement.Type() == Type()) {
-                const Element& element = NS_STATIC_CAST(const Element&, aElement);
+                const Element& element = static_cast<const Element&>(aElement);
                 return mContainer == element.mContainer && mMember == element.mMember;
             }
             return PR_FALSE; }

@@ -136,8 +136,7 @@ protected:
   // being closed
   virtual nsresult CloseElement(nsIContent* aContent);
 
-  virtual nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
-                             PRBool* aDidFlush=nsnull);
+  virtual nsresult FlushText();
 
   nsresult AddContentAsLeaf(nsIContent *aContent);
 

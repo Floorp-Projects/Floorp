@@ -148,7 +148,7 @@ nsFontListEnumerator::GetNext(nsISupports **aFont)
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(fontNameWrapper, NS_ERROR_OUT_OF_MEMORY);
   fontNameWrapper->SetData(nsDependentString(fontName));
-  *aFont = NS_STATIC_CAST(nsISupports*, fontNameWrapper);
+  *aFont = static_cast<nsISupports*>(fontNameWrapper);
   NS_ADDREF(*aFont);
   return NS_OK;
 }
@@ -167,7 +167,7 @@ nsFontList::AvailableFonts(const PRUnichar *aLangGroup,
   nsresult rv = fontListEnum->Init(aLangGroup, aFontType);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aFontEnumerator = NS_STATIC_CAST(nsISimpleEnumerator*, fontListEnum);
+  *aFontEnumerator = static_cast<nsISimpleEnumerator*>(fontListEnum);
   NS_ADDREF(*aFontEnumerator);
   return NS_OK;
 }

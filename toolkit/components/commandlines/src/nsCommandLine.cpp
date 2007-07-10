@@ -139,8 +139,8 @@ nsCommandLine::FindFlag(const nsAString& aFlag, PRBool aCaseSensitive, PRInt32 *
   nsDefaultStringComparator caseCmp;
   nsCaseInsensitiveStringComparator caseICmp;
   nsStringComparator& c = aCaseSensitive ?
-    NS_STATIC_CAST(nsStringComparator&, caseCmp) :
-    NS_STATIC_CAST(nsStringComparator&, caseICmp);
+    static_cast<nsStringComparator&>(caseCmp) :
+    static_cast<nsStringComparator&>(caseICmp);
 
   for (f = 0; f < mArgs.Count(); ++f) {
     const nsString &arg = *mArgs[f];
@@ -608,7 +608,7 @@ EnumHelp(nsICommandLineHandler* aHandler, nsICommandLine* aThis, void* aClosure)
     NS_ASSERTION(text.Length() == 0 || text.Last() == '\n',
                  "Help text from command line handlers should end in a newline.");
 
-    nsACString* totalText = NS_REINTERPRET_CAST(nsACString*, aClosure);
+    nsACString* totalText = reinterpret_cast<nsACString*>(aClosure);
     totalText->Append(text);
   }
 

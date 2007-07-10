@@ -342,7 +342,7 @@ txParamArrayHolder::~txParamArrayHolder()
     for (i = 0; i < mCount; ++i) {
         nsXPTCVariant &variant = mArray[i];
         if (variant.IsValInterface()) {
-            NS_STATIC_CAST(nsISupports*, variant.val.p)->Release();
+            static_cast<nsISupports*>(variant.val.p)->Release();
         }
         else if (variant.IsValDOMString()) {
             delete (nsAString*)variant.val.p;
@@ -532,8 +532,8 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
     switch (returnType) {
         case NODESET:
         {
-            txINodeSet *nodeSet = NS_STATIC_CAST(txINodeSet*,
-                                                 returnParam.val.p);
+            txINodeSet *nodeSet = static_cast<txINodeSet*>
+                                             (returnParam.val.p);
 
             NS_ADDREF(*aResult = nodeSet->GetTxNodeSet());
 
@@ -552,8 +552,8 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
         }
         case STRING:
         {
-            nsString *returned = NS_STATIC_CAST(nsString*,
-                                                returnParam.val.p);
+            nsString *returned = static_cast<nsString*>
+                                            (returnParam.val.p);
             return aContext->recycler()->getStringResult(*returned, aResult);
         }
         default:

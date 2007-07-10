@@ -91,7 +91,7 @@ CommonConstructor(JSContext *cx, int name, JSObject *obj, uintN argc,
     }
 
     jschar * className = JS_GetStringChars(str);
-    CComBSTR bstrClassName(len, NS_REINTERPRET_CAST(const WCHAR *, className));
+    CComBSTR bstrClassName(len, reinterpret_cast<const WCHAR *>(className));
     if(!bstrClassName)
     {
         XPCThrower::Throw(NS_ERROR_XPC_COM_INVALID_CLASS_ID, ccx);
@@ -109,7 +109,7 @@ CommonConstructor(JSContext *cx, int name, JSObject *obj, uintN argc,
     // Get a wrapper for our object
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     nsresult nsrv = ccx.GetXPConnect()->WrapNative(
-        ccx, ccx.GetOperandJSObject(), NS_REINTERPRET_CAST(nsISupports*, pDispatch.p),
+        ccx, ccx.GetOperandJSObject(), reinterpret_cast<nsISupports*>(pDispatch.p),
         NSID_IDISPATCH, getter_AddRefs(holder));
     if(NS_FAILED(nsrv))
     {
@@ -169,7 +169,7 @@ ActiveXSupports(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
     PRUint32 len;
     jschar * className = xpc_JSString2String(ccx, argv[0], &len);
-    CComBSTR bstrClassName(len, NS_REINTERPRET_CAST(const WCHAR *, className));
+    CComBSTR bstrClassName(len, reinterpret_cast<const WCHAR *>(className));
     if(!className)
     {
         XPCThrower::Throw(NS_ERROR_XPC_COM_INVALID_CLASS_ID, ccx);

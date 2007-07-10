@@ -125,7 +125,7 @@ nsXPathResult::GetSingleNodeValue(nsIDOMNode **aSingleNodeValue)
         return NS_ERROR_DOM_TYPE_ERR;
     }
 
-    txNodeSet *nodeSet = NS_STATIC_CAST(txNodeSet*, mResult.get());
+    txNodeSet *nodeSet = static_cast<txNodeSet*>(mResult.get());
     if (nodeSet->size() > 0) {
         return txXPathNativeNode::getNode(nodeSet->get(0), aSingleNodeValue);
     }
@@ -150,7 +150,7 @@ nsXPathResult::GetSnapshotLength(PRUint32 *aSnapshotLength)
         return NS_ERROR_DOM_TYPE_ERR;
     }
 
-    txNodeSet *nodeSet = NS_STATIC_CAST(txNodeSet*, mResult.get());
+    txNodeSet *nodeSet = static_cast<txNodeSet*>(mResult.get());
     *aSnapshotLength = (PRUint32)nodeSet->size();
 
     return NS_OK;
@@ -171,7 +171,7 @@ nsXPathResult::IterateNext(nsIDOMNode **aResult)
         return NS_ERROR_DOM_INVALID_STATE_ERR;
     }
 
-    txNodeSet *nodeSet = NS_STATIC_CAST(txNodeSet*, mResult.get());
+    txNodeSet *nodeSet = static_cast<txNodeSet*>(mResult.get());
     if (mCurrentPos < (PRUint32)nodeSet->size()) {
         return txXPathNativeNode::getNode(nodeSet->get(mCurrentPos++),
                                           aResult);
@@ -189,7 +189,7 @@ nsXPathResult::SnapshotItem(PRUint32 aIndex, nsIDOMNode **aResult)
         return NS_ERROR_DOM_TYPE_ERR;
     }
 
-    txNodeSet *nodeSet = NS_STATIC_CAST(txNodeSet*, mResult.get());
+    txNodeSet *nodeSet = static_cast<txNodeSet*>(mResult.get());
     if (aIndex < (PRUint32)nodeSet->size()) {
         return txXPathNativeNode::getNode(nodeSet->get(aIndex), aResult);
     }
@@ -274,7 +274,7 @@ nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType)
 
     mInvalidIteratorState = PR_FALSE;
 
-    txNodeSet* nodeSet = NS_STATIC_CAST(txNodeSet*, aExprResult);
+    txNodeSet* nodeSet = static_cast<txNodeSet*>(aExprResult);
     nsCOMPtr<nsIDOMNode> node;
     if (nodeSet->size() > 0) {
         nsresult rv = txXPathNativeNode::getNode(nodeSet->get(0),
@@ -360,8 +360,8 @@ txResultHolder::set(txAExprResult *aResult)
 
     if (mResult && mResult->getResultType() == txAExprResult::NODESET) {
         txNodeSet *nodeSet =
-            NS_STATIC_CAST(txNodeSet*,
-                           NS_STATIC_CAST(txAExprResult*, mResult));
+            static_cast<txNodeSet*>
+                       (static_cast<txAExprResult*>(mResult));
         PRInt32 i, count = nodeSet->size();
         for (i = 0; i < count; ++i) {
             txXPathNativeNode::addRef(nodeSet->get(i));
@@ -374,8 +374,8 @@ txResultHolder::releaseNodeSet()
 {
     if (mResult && mResult->getResultType() == txAExprResult::NODESET) {
         txNodeSet *nodeSet =
-            NS_STATIC_CAST(txNodeSet*,
-                           NS_STATIC_CAST(txAExprResult*, mResult));
+            static_cast<txNodeSet*>
+                       (static_cast<txAExprResult*>(mResult));
         PRInt32 i, count = nodeSet->size();
         for (i = 0; i < count; ++i) {
             txXPathNativeNode::release(nodeSet->get(i));

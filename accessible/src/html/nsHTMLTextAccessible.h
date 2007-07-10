@@ -49,7 +49,7 @@ class nsIWeakReference;
 class nsHTMLTextAccessible : public nsTextAccessibleWrap
 {
 public:
-  nsHTMLTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell, nsIFrame *aFrame);
+  nsHTMLTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   
   // nsIAccessible
   NS_IMETHOD GetName(nsAString& _retval);
@@ -91,7 +91,7 @@ class nsHTMLListBulletAccessible : public nsLeafAccessible
 {
 public:
   nsHTMLListBulletAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell,
-                             nsIFrame *aFrame, const nsAString& aBulletText);
+                             const nsAString& aBulletText);
 
   // nsIAccessNode
   NS_IMETHOD GetUniqueID(void **aUniqueID);
@@ -137,7 +137,7 @@ class nsHTMLLIAccessible : public nsLinkableAccessible
 {
 public:
   nsHTMLLIAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell, 
-                     nsIFrame *aBulletFrame, const nsAString& aBulletText);
+                     const nsAString& aBulletText);
   NS_IMETHOD Shutdown();
   NS_IMETHOD GetRole(PRUint32 *aRole) { *aRole = nsIAccessibleRole::ROLE_LISTITEM; return NS_OK; }
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);

@@ -104,7 +104,7 @@ mozStorageStatement::Initialize(mozIStorageConnection *aDBConnection, const nsAC
     sqlite3 *db = nsnull;
     // XXX - need to implement a private iid to QI for here, to make sure
     // we have a real mozStorageConnection
-    mozStorageConnection *msc = NS_STATIC_CAST(mozStorageConnection*, aDBConnection);
+    mozStorageConnection *msc = static_cast<mozStorageConnection*>(aDBConnection);
     db = msc->GetNativeConnection();
     NS_ENSURE_TRUE(db != nsnull, NS_ERROR_NULL_POINTER);
 
@@ -142,10 +142,8 @@ mozStorageStatement::Initialize(mozIStorageConnection *aDBConnection, const nsAC
 
     for (unsigned int i = 0; i < mResultColumnCount; i++) {
         const void *name = sqlite3_column_name16 (mDBStatement, i);
-        if (name != nsnull)
-            mColumnNames.AppendString(nsDependentString(NS_STATIC_CAST(const PRUnichar*, name)));
-        else
-            mColumnNames.AppendString(EmptyString());
+        mColumnNames.AppendString(
+            nsDependentString(static_cast<const PRUnichar*>(name)));
     }
 
     // doing a sqlite3_prepare sets up the execution engine
@@ -222,18 +220,41 @@ mozStorageStatement::GetParameterIndexes(const nsACString &aParameterName, PRUin
     NS_ENSURE_ARG_POINTER(aCount);
     NS_ENSURE_ARG_POINTER(aIndexes);
 
-    int *indexes, count;
-    count = sqlite3_bind_parameter_indexes(mDBStatement, nsPromiseFlatCString(aParameterName).get(), &indexes);
-    if (count) {
-        *aIndexes = (PRUint32*) nsMemory::Alloc(sizeof(PRUint32) * count);
-        for (int i = 0; i < count; i++)
-            (*aIndexes)[i] = indexes[i];
-        sqlite3_free_parameter_indexes(indexes);
-        *aCount = count;
-    } else {
+    nsCAutoString name(":");
+    name.Append(aParameterName);
+
+    if (sqlite3_bind_parameter_index(mDBStatement, name.get()) == 0) {
+        // Named parameter not found
         *aCount = 0;
         *aIndexes = nsnull;
+        return NS_OK;
     }
+    
+    int count = sqlite3_bind_parameter_count(mDBStatement);
+    int *idxs = new int[count];
+    if (!idxs)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    int size = 0;
+    for (int i = 0; i < count; i++) {
+        // sqlite indices start at 1
+        const char *pName = sqlite3_bind_parameter_name(mDBStatement, i + 1);
+        if (name.Equals(pName))
+            idxs[size++] = i;
+    }
+
+    *aCount = size;
+    *aIndexes = (PRUint32*) NS_Alloc(sizeof(PRUint32) * size);
+    if (!aIndexes) {
+        delete[] idxs;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    for (int i = 0; i < size; i++)
+        (*aIndexes)[i] = idxs[i];
+
+    delete[] idxs;
+
     return NS_OK;
 }
 
@@ -629,7 +650,7 @@ mozStorageStatement::GetString(PRUint32 aIndex, nsAString & _retval)
     } else {
         int slen = sqlite3_column_bytes16 (mDBStatement, aIndex);
         const void *text = sqlite3_column_text16 (mDBStatement, aIndex);
-        const PRUnichar *wstr = NS_STATIC_CAST(const PRUnichar *, text);
+        const PRUnichar *wstr = static_cast<const PRUnichar *>(text);
         _retval.Assign (wstr, slen/2);
     }
     return NS_OK;

@@ -144,7 +144,8 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
     }
     else {
       if (nsnull != aParent) {
-        mToolkit = (nsIToolkit*)(aParent->GetToolkit()); // the call AddRef's, we don't have to
+        mToolkit = aParent->GetToolkit();
+        NS_IF_ADDREF(mToolkit);
       }
       // it's some top level window with no toolkit passed in.
       // Create a default toolkit with the current thread
@@ -344,7 +345,7 @@ NS_IMETHODIMP nsBaseWidget::SetZIndex(PRInt32 aZIndex)
   mZIndex = aZIndex;
 
   // reorder this child in its parent's list.
-  nsBaseWidget* parent = NS_STATIC_CAST(nsBaseWidget*, GetParent());
+  nsBaseWidget* parent = static_cast<nsBaseWidget*>(GetParent());
   if (parent) {
     parent->RemoveChild(this);
     // Scope sib outside the for loop so we can check it afterward
@@ -641,7 +642,6 @@ nsIRenderingContext* nsBaseWidget::GetRenderingContext()
 //-------------------------------------------------------------------------
 nsIToolkit* nsBaseWidget::GetToolkit()
 {
-  NS_IF_ADDREF(mToolkit);
   return mToolkit;
 }
 

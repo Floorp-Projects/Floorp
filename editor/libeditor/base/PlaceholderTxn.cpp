@@ -133,8 +133,8 @@ NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMe
   // we are absorbing all txn's if mAbsorb is lit.
   if (mAbsorb)
   { 
-    IMETextTxn*  otherTxn = nsnull;
-    if (NS_SUCCEEDED(aTransaction->QueryInterface(IMETextTxn::GetCID(),(void**)&otherTxn)) && otherTxn)
+    nsRefPtr<IMETextTxn> otherTxn;
+    if (NS_SUCCEEDED(aTransaction->QueryInterface(IMETextTxn::GetCID(), getter_AddRefs(otherTxn))) && otherTxn)
     {
       // special handling for IMETextTxn's: they need to merge with any previous
       // IMETextTxn in this placeholder, if possible.
@@ -157,7 +157,6 @@ NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMe
           AppendChild(editTxn);
         }
       }
-      NS_IF_RELEASE(otherTxn);
     }
     else if (!plcTxn)  // see bug 171243: just drop incoming placeholders on the floor.
     {                  // their children will be swallowed by this preexisting one.

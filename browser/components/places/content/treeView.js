@@ -734,6 +734,9 @@ PlacesTreeView.prototype = {
     if (!this._tree || !this._result)
       return;
 
+    // depending on the sort mode, certain commands may be disabled
+    window.updateCommands("sort");
+
     var columns = this._tree.columns;
 
     // clear old sorting indicator
@@ -834,8 +837,8 @@ PlacesTreeView.prototype = {
 
   _getResourceForNode : function PTV_getResourceForNode(aNode)
   {
-    // XXXndeakin bug 380735, need to support day/host containers as well
     var uri = aNode.uri;
+    NS_ASSERT(uri, "if there is no uri, we can't persist the open state");
     return uri ? PlacesUtils.RDF.GetResource(uri) : null;
   },
 

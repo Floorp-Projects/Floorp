@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *   Lev Serebryakov <lev@serebryakov.spb.ru>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,21 +42,32 @@
 interface mozIStorageConnection;
 interface mozIStorageValueArray;
 interface nsIArray;
+interface nsIVariant;
 
 /**
  * mozIStorageFunction is to be implemented by storage consumers that
- * wish to define custom storage functions, through
- * mozIStorageConnection's createFunction method.
+ * wish to receive callbacks during the request execution.
+ *
+ * SQL can apply functions to values from tables. Examples of
+ * such functions are MIN(a1,a2) or SQRT(num). Many functions are
+ * implemented in SQL engine.
+ *
+ * This interface allows consumers to implement their own,
+ * problem-specific functions.
+ * These functions can be called from triggers, too.
+ *
  */
-[scriptable, uuid(898d4189-7012-4ae9-a2af-435491cfa114)]
+[scriptable, uuid(9ff02465-21cb-49f3-b975-7d5b38ceec73)]
 interface mozIStorageFunction : nsISupports {
   /**
    * onFunctionCall is called when execution of a custom
-   * function should occur.  There are no return values.
+   * function should occur.
    * 
    * @param aNumArguments         The number of arguments
    * @param aFunctionArguments    The arguments passed in to the function
+   *
+   * @returns any value as Variant type.
    */
 
-  void onFunctionCall(in mozIStorageValueArray aFunctionArguments);
+  nsIVariant onFunctionCall(in mozIStorageValueArray aFunctionArguments);
 };

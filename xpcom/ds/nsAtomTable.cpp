@@ -245,7 +245,7 @@ struct AtomTableEntry : public PLDHashEntryHdr {
 PR_STATIC_CALLBACK(PLDHashNumber)
 AtomTableGetHash(PLDHashTable *table, const void *key)
 {
-  const AtomTableEntry *e = NS_STATIC_CAST(const AtomTableEntry*, key);
+  const AtomTableEntry *e = static_cast<const AtomTableEntry*>(key);
 
   if (e->IsUTF16String()) {
     return nsCRT::HashCodeAsUTF8(e->getUTF16String());
@@ -261,8 +261,8 @@ PR_STATIC_CALLBACK(PRBool)
 AtomTableMatchKey(PLDHashTable *table, const PLDHashEntryHdr *entry,
                   const void *key)
 {
-  const AtomTableEntry *he = NS_STATIC_CAST(const AtomTableEntry*, entry);
-  const AtomTableEntry *strKey = NS_STATIC_CAST(const AtomTableEntry*, key);
+  const AtomTableEntry *he = static_cast<const AtomTableEntry*>(entry);
+  const AtomTableEntry *strKey = static_cast<const AtomTableEntry*>(key);
 
   const char *atomString = he->getAtomString();
 
@@ -282,7 +282,7 @@ AtomTableMatchKey(PLDHashTable *table, const PLDHashEntryHdr *entry,
 PR_STATIC_CALLBACK(void)
 AtomTableClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
-  AtomTableEntry *he = NS_STATIC_CAST(AtomTableEntry*, entry);
+  AtomTableEntry *he = static_cast<AtomTableEntry*>(entry);
   
   if (!he->IsStaticAtom()) {
     AtomImpl *atom = he->GetAtomImpl();
@@ -295,7 +295,7 @@ AtomTableClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
     if (atom->IsPermanent()) {
       he->keyHash = 0;
 
-      delete NS_STATIC_CAST(PermanentAtomImpl*, atom);
+      delete static_cast<PermanentAtomImpl*>(atom);
     }
   }
   else {
@@ -323,14 +323,14 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 DumpAtomLeaks(PLDHashTable *table, PLDHashEntryHdr *he,
               PRUint32 index, void *arg)
 {
-  AtomTableEntry *entry = NS_STATIC_CAST(AtomTableEntry*, he);
+  AtomTableEntry *entry = static_cast<AtomTableEntry*>(he);
   
   if (entry->IsStaticAtom())
     return PL_DHASH_NEXT;
   
   AtomImpl* atom = entry->GetAtomImpl();
   if (!atom->IsPermanent()) {
-    ++*NS_STATIC_CAST(PRUint32*, arg);
+    ++*static_cast<PRUint32*>(arg);
     const char *str;
     atom->GetUTF8String(&str);
     fputs(str, stdout);
@@ -448,7 +448,7 @@ void* AtomImpl::operator new ( size_t size, const nsACString& aString ) CPP_THRO
         http://lxr.mozilla.org/seamonkey/source/xpcom/ds/nsSharedString.h#174
      */
   size += aString.Length() * sizeof(char);
-  AtomImpl* ii = NS_STATIC_CAST(AtomImpl*, ::operator new(size));
+  AtomImpl* ii = static_cast<AtomImpl*>(::operator new(size));
   NS_ENSURE_TRUE(ii, nsnull);
 
   char* toBegin = &ii->mString[0];
@@ -592,8 +592,8 @@ GetAtomHashEntry(const char* aString)
   }
 
   AtomTableEntry key(aString);
-  return NS_STATIC_CAST(AtomTableEntry*,
-                        PL_DHashTableOperate(&gAtomTable, &key, PL_DHASH_ADD));
+  return static_cast<AtomTableEntry*>
+                    (PL_DHashTableOperate(&gAtomTable, &key, PL_DHASH_ADD));
 }
 
 static inline AtomTableEntry*
@@ -607,8 +607,8 @@ GetAtomHashEntry(const PRUnichar* aString)
   }
 
   AtomTableEntry key(aString);
-  return NS_STATIC_CAST(AtomTableEntry*,
-                        PL_DHashTableOperate(&gAtomTable, &key, PL_DHASH_ADD));
+  return static_cast<AtomTableEntry*>
+                    (PL_DHashTableOperate(&gAtomTable, &key, PL_DHASH_ADD));
 }
 
 NS_COM nsresult

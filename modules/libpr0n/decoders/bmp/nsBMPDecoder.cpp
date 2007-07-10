@@ -119,7 +119,7 @@ NS_IMETHODIMP nsBMPDecoder::Flush()
 NS_METHOD nsBMPDecoder::ReadSegCb(nsIInputStream* aIn, void* aClosure,
                              const char* aFromRawSegment, PRUint32 aToOffset,
                              PRUint32 aCount, PRUint32 *aWriteCount) {
-    nsBMPDecoder *decoder = NS_REINTERPRET_CAST(nsBMPDecoder*, aClosure);
+    nsBMPDecoder *decoder = reinterpret_cast<nsBMPDecoder*>(aClosure);
     *aWriteCount = aCount;
     return decoder->ProcessData(aFromRawSegment, aCount);
 }

@@ -69,12 +69,12 @@ myexit()
     myexit_status=$1
 
     case $0 in
-	*bash*)
+        *bash*)
 	  # prevent "sourced" script calls from 
           # exiting the current shell.
-	    break 99;;
-	*)
-	    exit $myexit_status;;
+            break 99;;
+        *)
+            exit $myexit_status;;
     esac
 }
 
@@ -85,82 +85,68 @@ for step in step1; do # dummy loop for handling exits
     while getopts $options optname ; 
       do 
       case $optname in
-	  p) product=$OPTARG;;
-	  b) branch=$OPTARG;;
-	  T) buildtype=$OPTARG;;
-	  e) extra=$OPTARG;;
+          p) product=$OPTARG;;
+          b) branch=$OPTARG;;
+          T) buildtype=$OPTARG;;
+          e) extra=$OPTARG;;
       esac
     done
 
 # echo product=$product, branch=$branch, buildtype=$buildtype, extra=$extra
 
     if [[ -z "$product" || -z "$branch" || -z "$buildtype" ]]; then
-	echo -n "missing"
-	if [[ -z "$product" ]]; then
-	    echo -n " -p product"
-	fi
-	if [[ -z "$branch" ]]; then
-	    echo -n " -b branch"
-	fi
-	if [[ -z "$buildtype" ]]; then
-	    echo -n " -T buildtype"
-	fi
-	usage
-	myexit 2
+        echo -n "missing"
+        if [[ -z "$product" ]]; then
+            echo -n " -p product"
+        fi
+        if [[ -z "$branch" ]]; then
+            echo -n " -b branch"
+        fi
+        if [[ -z "$buildtype" ]]; then
+            echo -n " -T buildtype"
+        fi
+        usage
+        myexit 2
     fi
 
     if [[ $branch == "1.8.0" ]]; then
-	export BRANCH_CO_FLAGS="-r MOZILLA_1_8_0_BRANCH"
+        export BRANCH_CO_FLAGS="-r MOZILLA_1_8_0_BRANCH"
     elif [[ $branch == "1.8.1" ]]; then
-	export BRANCH_CO_FLAGS="-r MOZILLA_1_8_BRANCH"
+        export BRANCH_CO_FLAGS="-r MOZILLA_1_8_BRANCH"
     elif [[ $branch == "1.9.0" ]]; then
-	export BRANCH_CO_FLAGS="";
+        export BRANCH_CO_FLAGS="";
     else
-	echo "Unknown branch: $branch"
-	myexit 2
+        echo "Unknown branch: $branch"
+        myexit 2
     fi
 
     if [[ -n "$WINDIR" ]] ; then
-	OSID=win32
+        OSID=win32
 #	app=bin
-	export platform=i686
+        export platform=i686
 
-	if echo $branch | egrep -q '^1\.8'; then
-	    export MOZ_TOOLS="/work/mozilla/moztools"
-	    source /work/mozilla/mozilla.com/test.mozilla.com/www/bin/set-msvc6-env.sh
-	else
-	    export MOZ_TOOLS="/work/mozilla/moztools-static"
-	    source /work/mozilla/mozilla.com/test.mozilla.com/www/bin/set-msvc8-env.sh
-	fi
+        if echo $branch | egrep -q '^1\.8'; then
+            export MOZ_TOOLS="/work/mozilla/moztools"
+            source /work/mozilla/mozilla.com/test.mozilla.com/www/bin/set-msvc6-env.sh
+        else
+            export MOZ_TOOLS="/work/mozilla/moztools-static"
+            source /work/mozilla/mozilla.com/test.mozilla.com/www/bin/set-msvc8-env.sh
+        fi
 
-	echo moztools Location: $MOZ_TOOLS
+        echo moztools Location: $MOZ_TOOLS
 
     elif uname | grep -iq darwin ; then
-	OSID=mac
-	export platform=`uname -p`
-#	if [[ "$product" == "firefox" ]]; then
-#	    app=Firefox
-#	elif [[ "$product" == "thunderbird" ]]; then
-#	    app=Thunderbird
-#	else
-#	    echo "Unsupported product: $product"
-#	    myexit 2
-#	fi
-#	if [[ "$buildtype" == "debug" ]]; then
-#	    app="${app}Debug"
-#	fi
-#	app="${app}.app"
-#	export APPBIN="$app/Content/MacOS"
+        OSID=mac
+        export platform=`uname -p`
     else
-	OSID=linux
-#	export APPBIN=bin
-	export platform=i686
+        OSID=linux
+        export platform=i686
     fi
 
     if [[ -z $extra ]]; then
-	export TREE="$BUILDDIR/$branch"
+        export TREE="$BUILDDIR/$branch"
     else
-	export TREE="$BUILDDIR/$branch-$extra"
+        export TREE="$BUILDDIR/$branch-$extra"
 
 	#
 	# extras can't be placed in mozconfigs since not all parts
@@ -169,54 +155,56 @@ for step in step1; do # dummy loop for handling exits
 	# requiring separate source trees
 	#
 
-	if [[ "$extra" == "too-much-gc" ]]; then
-	    export XCFLAGS="-DWAY_TOO_MUCH_GC=1"
-	    export CFLAGS="-DWAY_TOO_MUCH_GC=1"
-	    export CXXFLAGS="-DWAY_TOO_MUCH_GC=1"
-	elif [[ "$extra" == "gcov" ]]; then
+        if [[ "$extra" == "too-much-gc" ]]; then
+            export XCFLAGS="-DWAY_TOO_MUCH_GC=1"
+            export CFLAGS="-DWAY_TOO_MUCH_GC=1"
+            export CXXFLAGS="-DWAY_TOO_MUCH_GC=1"
+        elif [[ "$extra" == "gcov" ]]; then
 
-	    if [[ "$OSID" == "win32" ]]; then
-		echo "win32 does not support gcov"
-		myexit 2
-	    fi
-	    export CFLAGS="--coverage"
-	    export CXXFLAGS="--coverage"
-	    export XCFLAGS="--coverage"
-	    export OS_CFLAGS="--coverage"
-	    export LDFLAGS="--coverage"
-	    export XLDOPTS="--coverage"	
-	fi
+            if [[ "$OSID" == "win32" ]]; then
+                echo "win32 does not support gcov"
+                myexit 2
+            fi
+            export CFLAGS="--coverage"
+            export CXXFLAGS="--coverage"
+            export XCFLAGS="--coverage"
+            export OS_CFLAGS="--coverage"
+            export LDFLAGS="--coverage"
+            export XLDOPTS="--coverage"	
+        fi
     fi
 
     if [[ ! -d $TREE ]]; then
-	echo "Build directory $TREE does not exist"
-	myexit 2
+        echo "Build directory $TREE does not exist"
+        myexit 2
     fi
 
     # here project refers to either browser or mail
     # and is used to find mozilla/(browser|mail)/config/mozconfig
     if [[ $product == "firefox" ]]; then
-	project=browser
-	export MOZCONFIG="$TREE/mozconfig-firefox-$OSID-$platform-$buildtype"
+        project=browser
+        export MOZCONFIG="$TREE/mozconfig-firefox-$OSID-$platform-$buildtype"
     elif [[ $product == "thunderbird" ]]; then
-	project=mail
-	export MOZCONFIG="$TREE/mozconfig-thunderbird-$OSID-$platform-$buildtype"
+        project=mail
+        export MOZCONFIG="$TREE/mozconfig-thunderbird-$OSID-$platform-$buildtype"
     else
-	echo "Assuming project=browser for product: $product"
-	project=browser
-	export MOZCONFIG="$TREE/mozconfig-firefox-$OSID-$platform-$buildtype"
+        echo "Assuming project=browser for product: $product"
+        project=browser
+        export MOZCONFIG="$TREE/mozconfig-firefox-$OSID-$platform-$buildtype"
     fi
 
     # js shell builds
     if [[ $buildtype == "debug" ]]; then
-	unset BUILD_OPT
+        unset BUILD_OPT
     else
-	export BUILD_OPT=1
+        export BUILD_OPT=1
     fi
 
-    if [[ $OSID == "mac" ]]; then
-	export JS_EDITLINE=1 # required for mac
-    fi
+    case "$OSID" in
+        mac)
+            export JS_EDITLINE=1 # required for mac
+            ;;
+    esac
     # end js shell builds
 
     set | sed 's/^/environment: /'
