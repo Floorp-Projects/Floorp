@@ -932,6 +932,18 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   else
     newDefaultJSOptions &= ~JSOPTION_STRICT;
 
+#ifdef DEBUG
+  // In debug builds, warnings are always enabled in chrome context
+  // Note this callback is also called from context's InitClasses thus we don't
+  // need to enable this directly from InitContext
+  if ((newDefaultJSOptions & JSOPTION_STRICT) == 0) {
+    nsIScriptGlobalObject *global = context->GetGlobalObject();
+    nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(global));
+    if (chromeWindow)
+      newDefaultJSOptions |= JSOPTION_STRICT;
+  }
+#endif
+
   PRBool werror = nsContentUtils::GetBoolPref(js_werror_option_str);
   if (werror)
     newDefaultJSOptions |= JSOPTION_WERROR;
@@ -963,11 +975,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
 
   mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS
                     | JSOPTION_NATIVE_BRANCH_CALLBACK
-                    | JSOPTION_ANONFUNFIX
-#ifdef DEBUG
-                    | JSOPTION_STRICT   // lint catching for development
-#endif
-    ;
+                    | JSOPTION_ANONFUNFIX;
 
   // Let xpconnect resync its JSContext tracker. We do this before creating
   // a new JSContext just in case the heap manager recycles the JSContext
@@ -985,7 +993,6 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
     nsContentUtils::RegisterPrefCallback(js_options_dot_str,
                                          JSOptionChangedCallback,
                                          this);
-    JSOptionChangedCallback(js_options_dot_str, this);
 
     ::JS_SetBranchCallback(mContext, DOMBranchCallback);
 
@@ -3044,6 +3051,8 @@ nsJSContext::InitClasses(void *aGlobalObj)
   ::JS_DefineFunctions(mContext, globalObj, JProfFunctions);
 #endif
 
+  JSOptionChangedCallback(js_options_dot_str, this);
+    
   return rv;
 }
 
