@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
+ * vim: set ts=8 sw=4 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -109,7 +109,6 @@
 #include "nsIProperty.h"
 #include "nsSupportsArray.h"
 #include "nsTArray.h"
-#include "prclist.h"
 
 #include "nsIXPCScriptNotify.h"  // used to notify: ScriptEvaluated
 
@@ -696,14 +695,12 @@ private:
 public:
 #endif
 
-    // For use by XPCWrappedNativeScope.
-    JSContext2XPCContextMap*  GetContextMap() const {return mContextMap;}
-
 private:
     XPCJSRuntime(); // no implementation
     XPCJSRuntime(nsXPConnect* aXPConnect,
                  nsIJSRuntimeService* aJSRuntimeService);
 
+    JSContext2XPCContextMap*  GetContextMap() const {return mContextMap;}
     JSBool GenerateStringIDs(JSContext* cx);
     void PurgeXPCContextList();
 
@@ -834,8 +831,6 @@ public:
         }
 
     void DebugDump(PRInt16 depth);
-    void AddScope(PRCList *scope) { PR_INSERT_AFTER(scope, &mScopes); }
-    void RemoveScope(PRCList *scope) { PR_REMOVE_LINK(scope); }
 
     ~XPCContext();
 
@@ -853,9 +848,6 @@ private:
     LangType mCallingLangType;
     PRUint16 mSecurityManagerFlags;
     JSPackedBool mMarked;
-
-    // A linked list of scopes to notify when we are destroyed.
-    PRCList mScopes;
 };
 
 /***************************************************************************/
@@ -1096,7 +1088,7 @@ xpc_TraceForValidWrapper(JSTracer *trc, XPCWrappedNative* wrapper);
 /***************************************************************************/
 // XPCWrappedNativeScope is one-to-one with a JS global object.
 
-class XPCWrappedNativeScope : public PRCList
+class XPCWrappedNativeScope
 {
 public:
 
@@ -1182,9 +1174,6 @@ public:
 
     void Traverse(nsCycleCollectionTraversalCallback &cb);
 
-    XPCContext *GetContext() { return mContext; }
-    void SetContext(XPCContext *xpcc) { mContext = nsnull; }
-
 #ifndef XPCONNECT_STANDALONE
     /**
      * Fills the hash mapping global object to principal.
@@ -1216,7 +1205,6 @@ private:
     JSObject*                        mGlobalJSObject;
     JSObject*                        mPrototypeJSObject;
     JSObject*                        mPrototypeJSFunction;
-    XPCContext*                      mContext;
 
 #ifndef XPCONNECT_STANDALONE
     // The script object principal instance corresponding to our current global

@@ -500,17 +500,6 @@ nsXPCWrappedJSClass::IsWrappedJS(nsISupports* aPtr)
            result == WrappedJSIdentity::GetSingleton();
 }
 
-static JSContext *
-GetContextFromObject(JSObject *obj)
-{
-    // In order to get a context, we need a context.
-    XPCCallContext ccx(NATIVE_CALLER);
-    XPCWrappedNativeScope* scope =
-        XPCWrappedNativeScope::FindInJSObjectScope(ccx, obj);
-    XPCContext *xpcc = scope->GetContext();
-    return xpcc ? xpcc->GetJSContext() : nsnull;
-}
-
 NS_IMETHODIMP
 nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
                                              REFNSIID aIID,
@@ -555,9 +544,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         return NS_OK;
     }
 
-
-    JSContext *context = GetContextFromObject(self->GetJSObject());
-    XPCCallContext ccx(NATIVE_CALLER, context);
+    XPCCallContext ccx(NATIVE_CALLER);
     if(!ccx.IsValid())
     {
         *aInstancePtr = nsnull;
@@ -1061,8 +1048,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     // the whole nsIXPCFunctionThisTranslator bit.  That code uses ccx to
     // convert natives to JSObjects, but we do NOT plan to pass those JSObjects
     // to our real callee.
-    JSContext *context = GetContextFromObject(wrapper->GetJSObject());
-    XPCCallContext ccx(NATIVE_CALLER, context);
+    XPCCallContext ccx(NATIVE_CALLER);
     if(ccx.IsValid())
     {
         xpcc = ccx.GetXPCContext();
