@@ -339,9 +339,9 @@ NS_ScriptErrorReporter(JSContext *cx,
             nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(win));
             nsIPrincipal *p = sop->GetPrincipal();
 
-            PRBool sameOrigin = report ? PR_FALSE : PR_TRUE;
+            PRBool sameOrigin = !(report && report->filename);
 
-            if (p && report) {
+            if (p && !sameOrigin) {
               nsCOMPtr<nsIURI> errorURI;
               NS_NewURI(getter_AddRefs(errorURI), report->filename);
 
