@@ -544,11 +544,12 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
     if (foundMenu && (aLastPopup || aIsMenu == foundMenu->IsMenu())) {
       PRBool ismenu = foundMenu->IsMenu();
       nsCOMPtr<nsIContent> popupToHide = item->Content();
+      nsMenuChainItem* parent = item->GetParent();
       item->Detach(&mCurrentMenu);
 
       nsCOMPtr<nsIContent> nextPopup;
-      if (item->GetParent() && popupToHide != aLastPopup)
-        nextPopup = item->GetParent()->Content();
+      if (parent && popupToHide != aLastPopup)
+        nextPopup = parent->Content();
 
       nsPresContext* presContext = item->Frame()->PresContext();
 
