@@ -628,14 +628,11 @@ CheckSameOrigin(nsINode* aNode1, nsINode* aNode2)
   NS_PRECONDITION(aNode1, "Null node?");
   NS_PRECONDITION(aNode2, "Null node?");
 
-  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  if (!secMan) {
-    return PR_FALSE;
-  }
-
+  PRBool equal;
   return
-    NS_SUCCEEDED(secMan->CheckSameOriginPrincipal(aNode1->NodePrincipal(),
-                                                  aNode2->NodePrincipal()));
+    NS_SUCCEEDED(aNode1->NodePrincipal()->
+                   Equals(aNode2->NodePrincipal(), &equal)) &&
+    equal;
 }
 
 PRBool
@@ -2146,9 +2143,10 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
     // If callerPrincipal doesn't match our principal. make sure that
     // SetNewDocument gives us a new inner window and clears our scope.
+    PRBool samePrincipal;
     if (!callerPrincipal ||
-        NS_FAILED(nsContentUtils::GetSecurityManager()->
-          CheckSameOriginPrincipal(callerPrincipal, NodePrincipal()))) {
+        NS_FAILED(callerPrincipal->Equals(NodePrincipal(), &samePrincipal)) ||
+        !samePrincipal) {
       SetIsInitialDocument(PR_FALSE);
     }      
 
@@ -4018,8 +4016,11 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
     rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
     NS_ENSURE_SUCCESS(rv, rv);
     if (subject) {
-      rv = secMan->CheckSameOriginPrincipal(subject, NodePrincipal());
+      PRBool subsumes;
+      rv = subject->Subsumes(NodePrincipal(), &subsumes);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      NS_ENSURE_TRUE(subsumes, NS_ERROR_DOM_PROP_ACCESS_DENIED);
     }
   }
 

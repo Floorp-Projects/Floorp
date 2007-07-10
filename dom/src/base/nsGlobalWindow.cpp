@@ -992,10 +992,10 @@ nsGlobalWindow::WouldReuseInnerWindow(nsIDocument *aNewDocument)
     return PR_TRUE;
   }
 
-  if (nsContentUtils::GetSecurityManager() &&
-      NS_SUCCEEDED(nsContentUtils::GetSecurityManager()->
-        CheckSameOriginPrincipal(mDoc->NodePrincipal(),
-                                 aNewDocument->NodePrincipal()))) {
+  PRBool equal;
+  if (NS_SUCCEEDED(mDoc->NodePrincipal()->Equals(aNewDocument->NodePrincipal(),
+                                                 &equal)) &&
+      equal) {
     // The origin is the same.
     return PR_TRUE;
   }
@@ -1329,10 +1329,10 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   // the existing inner window or the new document is from the same
   // origin as the old document.
   if (!reUseInnerWindow && mNavigator && oldPrincipal) {
-    rv = nsContentUtils::GetSecurityManager()->
-      CheckSameOriginPrincipal(oldPrincipal, aDocument->NodePrincipal());
+    PRBool equal;
+    rv = oldPrincipal->Equals(aDocument->NodePrincipal(), &equal);
 
-    if (NS_FAILED(rv)) {
+    if (NS_FAILED(rv) || !equal) {
       // Different origins.  Release the navigator object so it gets
       // recreated for the new document.  The plugins or mime types
       // arrays may have changed. See bug 150087.
@@ -6566,9 +6566,9 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
   timeout->mScriptHandler = aHandler;
 
   // Get principal of currently executing code, save for execution of timeout.
-  // If either our principals subsume the subject principal, or we're from the
-  // same origin, then use the subject principal. Otherwise, use our principal
-  // to avoid running script in elevated principals.
+  // If our principals subsume the subject principal then use the subject
+  // principal. Otherwise, use our principal to avoid running script in
+  // elevated principals.
 
   nsCOMPtr<nsIPrincipal> subjectPrincipal;
   nsresult rv;
@@ -6583,8 +6583,10 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
   PRBool subsumes = PR_FALSE;
   nsCOMPtr<nsIPrincipal> ourPrincipal = GetPrincipal();
 
-  // Note the direction of this test: We don't allow chrome setTimeouts on
-  // content windows, but we do allow content setTimeouts on chrome windows.
+  // Note the direction of this test: We don't allow setTimeouts running with
+  // chrome privileges on content windows, but we do allow setTimeouts running
+  // with content privileges on chrome windows (where they can't do very much,
+  // of course).
   rv = ourPrincipal->Subsumes(subjectPrincipal, &subsumes);
   if (NS_FAILED(rv)) {
     timeout->Release();
@@ -6595,13 +6597,7 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
   if (subsumes) {
     timeout->mPrincipal = subjectPrincipal;
   } else {
-    // Subsumes does a very strict equality test. Allow sites of the same origin
-    // to set timeouts on each other.
-
-    rv = nsContentUtils::GetSecurityManager()->
-      CheckSameOriginPrincipal(subjectPrincipal, ourPrincipal);
-    timeout->mPrincipal = NS_SUCCEEDED(rv) ? subjectPrincipal : ourPrincipal;
-    rv = NS_OK;
+    timeout->mPrincipal = ourPrincipal;
   }
 
   PRTime delta = (PRTime)realInterval * PR_USEC_PER_MSEC;
