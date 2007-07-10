@@ -60,49 +60,60 @@ class nsChildContentList;
 class nsNodeWeakReference;
 class nsNodeSupportsWeakRefTearoff;
 
-// This bit will be set if the node doesn't have nsSlots
-#define NODE_DOESNT_HAVE_SLOTS       0x00000001U
+enum {
+  // This bit will be set if the node doesn't have nsSlots
+  NODE_DOESNT_HAVE_SLOTS =       0x00000001U,
 
-// This bit will be set if the node has a listener manager in the listener
-// manager hash
-#define NODE_HAS_LISTENERMANAGER     0x00000002U
+  // This bit will be set if the node has a listener manager in the listener
+  // manager hash
+  NODE_HAS_LISTENERMANAGER =     0x00000002U,
 
-// Whether this node has had any properties set on it
-#define NODE_HAS_PROPERTIES          0x00000004U
+  // Whether this node has had any properties set on it
+  NODE_HAS_PROPERTIES =          0x00000004U,
 
-// Whether this node is anonymous
-// NOTE: Should only be used on nsIContent nodes
-#define NODE_IS_ANONYMOUS            0x00000008U
+  // Whether this node is anonymous
+  // NOTE: Should only be used on nsIContent nodes
+  NODE_IS_ANONYMOUS =            0x00000008U,
 
-// Whether this node is anonymous for events
-// NOTE: Should only be used on nsIContent nodes
-#define NODE_IS_ANONYMOUS_FOR_EVENTS 0x00000010U
+  // Whether this node is anonymous for events
+  // NOTE: Should only be used on nsIContent nodes
+  NODE_IS_ANONYMOUS_FOR_EVENTS = 0x00000010U,
 
-// Whether this node may have a frame
-// NOTE: Should only be used on nsIContent nodes
-#define NODE_MAY_HAVE_FRAME          0x00000020U
+  // Whether this node may have a frame
+  // NOTE: Should only be used on nsIContent nodes
+  NODE_MAY_HAVE_FRAME =          0x00000020U,
 
-// Forces the XBL code to treat this node as if it were
-// in the document and therefore should get bindings attached.
-#define NODE_FORCE_XBL_BINDINGS      0x00000040U
+  // Forces the XBL code to treat this node as if it were
+  // in the document and therefore should get bindings attached.
+  NODE_FORCE_XBL_BINDINGS =      0x00000040U,
 
-// Whether a binding manager may have a pointer to this
-#define NODE_MAY_BE_IN_BINDING_MNGR  0x00000080U
+  // Whether a binding manager may have a pointer to this
+  NODE_MAY_BE_IN_BINDING_MNGR =  0x00000080U,
 
-#define NODE_IS_EDITABLE             0x00000100U
+  NODE_IS_EDITABLE =             0x00000100U,
 
-// Four bits for the script-type ID
-#define NODE_SCRIPT_TYPE_OFFSET                9
+  // Four bits for the script-type ID
+  NODE_SCRIPT_TYPE_OFFSET =                9,
 
-// Remaining bits are node type specific.
-#define NODE_TYPE_SPECIFIC_BITS_OFFSET       0x0d
+  NODE_SCRIPT_TYPE_SIZE =                  4,
 
-// Useful macro for getting a node given an nsIContent and an nsIDocument
-// Returns the first argument cast to nsINode if it is non-null, otherwise
-// returns the second (which may be null)
-#define NODE_FROM(content_, document_)                  \
-  ((content_) ? static_cast<nsINode*>((content_)) :  \
-                static_cast<nsINode*>((document_)))
+  // Remaining bits are node type specific.
+  NODE_TYPE_SPECIFIC_BITS_OFFSET =
+    NODE_SCRIPT_TYPE_OFFSET + NODE_SCRIPT_TYPE_SIZE
+};
+
+// Useful inline function for getting a node given an nsIContent and an
+// nsIDocument.  Returns the first argument cast to nsINode if it is non-null,
+// otherwise returns the second (which may be null).  We use type variables
+// instead of nsIContent* and nsIDocument* because the actual types must be
+// known for the cast to work.
+template<class C, class D>
+inline nsINode* NODE_FROM(C& aContent, D& aDocument)
+{
+  if (aContent)
+    return static_cast<nsINode*>(aContent);
+  return static_cast<nsINode*>(aDocument);
+}
 
 
 // IID for the nsINode interface
