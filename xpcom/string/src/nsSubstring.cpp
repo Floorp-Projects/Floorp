@@ -247,7 +247,7 @@ nsStringBuffer*
 nsStringBuffer::FromString(const nsAString& str)
   {
     const nsAStringAccessor* accessor =
-        NS_STATIC_CAST(const nsAStringAccessor*, &str);
+        static_cast<const nsAStringAccessor*>(&str);
 
 #ifdef MOZ_V1_STRING_ABI
     if (accessor->vtable() != nsObsoleteAString::sCanonicalVTable)
@@ -263,7 +263,7 @@ nsStringBuffer*
 nsStringBuffer::FromString(const nsACString& str)
   {
     const nsACStringAccessor* accessor =
-        NS_STATIC_CAST(const nsACStringAccessor*, &str);
+        static_cast<const nsACStringAccessor*>(&str);
 
 #ifdef MOZ_V1_STRING_ABI
     if (accessor->vtable() != nsObsoleteACString::sCanonicalVTable)
@@ -278,9 +278,9 @@ nsStringBuffer::FromString(const nsACString& str)
 void
 nsStringBuffer::ToString(PRUint32 len, nsAString &str)
   {
-    PRUnichar* data = NS_STATIC_CAST(PRUnichar*, Data());
+    PRUnichar* data = static_cast<PRUnichar*>(Data());
 
-    nsAStringAccessor* accessor = NS_STATIC_CAST(nsAStringAccessor*, &str);
+    nsAStringAccessor* accessor = static_cast<nsAStringAccessor*>(&str);
 #ifdef MOZ_V1_STRING_ABI
     if (accessor->vtable() != nsObsoleteAString::sCanonicalVTable)
       {
@@ -301,9 +301,9 @@ nsStringBuffer::ToString(PRUint32 len, nsAString &str)
 void
 nsStringBuffer::ToString(PRUint32 len, nsACString &str)
   {
-    char* data = NS_STATIC_CAST(char*, Data());
+    char* data = static_cast<char*>(Data());
 
-    nsACStringAccessor* accessor = NS_STATIC_CAST(nsACStringAccessor*, &str);
+    nsACStringAccessor* accessor = static_cast<nsACStringAccessor*>(&str);
 #ifdef MOZ_V1_STRING_ABI
     if (accessor->vtable() != nsObsoleteACString::sCanonicalVTable)
       {

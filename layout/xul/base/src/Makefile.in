@@ -119,14 +119,13 @@ CPPSRCS		+= \
 		nsMenuFrame.cpp \
 		nsMenuBarFrame.cpp \
 		nsMenuBarListener.cpp \
-		nsMenuListener.cpp \
-		nsMenuDismissalListener.cpp \
 		nsPopupSetFrame.cpp \
 		nsTitleBarFrame.cpp \
 		nsResizerFrame.cpp \
 		nsListBoxBodyFrame.cpp \
 		nsListItemFrame.cpp \
 		nsListBoxLayout.cpp \
+		nsXULPopupManager.cpp \
 		$(NULL)
 
 endif

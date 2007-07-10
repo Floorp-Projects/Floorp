@@ -54,6 +54,7 @@ public:
   nsDOMUIEvent(nsPresContext* aPresContext, nsGUIEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMUIEvent, nsDOMEvent)
 
   // nsIDOMUIEvent Interface
   NS_DECL_NSIDOMUIEVENT

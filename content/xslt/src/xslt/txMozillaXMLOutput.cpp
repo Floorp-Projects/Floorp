@@ -315,9 +315,9 @@ txMozillaXMLOutput::endElement()
     NS_ENSURE_TRUE(mCurrentNode->IsNodeOfType(nsINode::eELEMENT),
                    NS_ERROR_UNEXPECTED);
 
-    nsIContent* element = NS_STATIC_CAST(nsIContent*,
-                                         NS_STATIC_CAST(nsINode*,
-                                                        mCurrentNode));
+    nsIContent* element = static_cast<nsIContent*>
+                                     (static_cast<nsINode*>
+                                                 (mCurrentNode));
 
     // Handle html-elements
     if (!mNoFixup) {
@@ -386,7 +386,7 @@ txMozillaXMLOutput::endElement()
     mCurrentNode = parent;
 
     mTableState =
-        NS_STATIC_CAST(TableState, NS_PTR_TO_INT32(mTableStateStack.pop()));
+        static_cast<TableState>(NS_PTR_TO_INT32(mTableStateStack.pop()));
 
     return NS_OK;
 }
@@ -779,8 +779,8 @@ txMozillaXMLOutput::endHTMLElement(nsIContent* aElement)
 
         mCurrentNode = mCurrentNodeStack.SafeObjectAt(last);
         mCurrentNodeStack.RemoveObjectAt(last);
-        mTableState = NS_STATIC_CAST(TableState,
-                                     NS_PTR_TO_INT32(mTableStateStack.pop()));
+        mTableState = static_cast<TableState>
+                                 (NS_PTR_TO_INT32(mTableStateStack.pop()));
 
         return NS_OK;
     }

@@ -396,7 +396,7 @@ typedef PRUint32 nsrefcnt;
 #define __PRUNICHAR__
   /* For now, don't use wchar_t on Unix because it breaks the Netscape
    * commercial build.  When this is fixed there will be no need for the
-   * |NS_REINTERPRET_CAST| in nsLiteralString.h either.
+   * |reinterpret_cast| in nsLiteralString.h either.
    */
   #if defined(HAVE_CPP_2BYTE_WCHAR_T) && defined(NS_WIN32)
     typedef wchar_t PRUnichar;

@@ -187,8 +187,7 @@ XPCThrower::Verbosify(XPCCallContext& ccx,
         if(ccx.GetIDispatchMember())
         {
             XPCDispInterface::Member * member = 
-                NS_REINTERPRET_CAST(XPCDispInterface::Member*, 
-                                    ccx.GetIDispatchMember());
+                reinterpret_cast<XPCDispInterface::Member*>(ccx.GetIDispatchMember());
             if(member && JSVAL_IS_STRING(member->GetName()))
             {
                 name = JS_GetStringBytes(JSVAL_TO_STRING(member->GetName()));
@@ -305,13 +304,13 @@ XPCThrower::ThrowCOMError(JSContext* cx, unsigned long COMErrorCode,
     msg = format;
     if(exception)
     {
-        msg += NS_STATIC_CAST(const char *,
-                              _bstr_t(exception->bstrSource, false));
+        msg += static_cast<const char *>
+                          (_bstr_t(exception->bstrSource, false));
         msg += " : ";
-        msg.AppendInt(NS_STATIC_CAST(PRUint32, COMErrorCode));
+        msg.AppendInt(static_cast<PRUint32>(COMErrorCode));
         msg += " - ";
-        msg += NS_STATIC_CAST(const char *,
-                              _bstr_t(exception->bstrDescription, false));
+        msg += static_cast<const char *>
+                          (_bstr_t(exception->bstrDescription, false));
     }
     else
     {
@@ -324,23 +323,23 @@ XPCThrower::ThrowCOMError(JSContext* cx, unsigned long COMErrorCode,
             if(SUCCEEDED(pError->GetSource(&bstrSource)) && bstrSource)
             {
                 _bstr_t src(bstrSource, false);
-                msg += NS_STATIC_CAST(const char *,src);
+                msg += static_cast<const char *>(src);
                 msg += " : ";
             }
-            msg.AppendInt(NS_STATIC_CAST(PRUint32, COMErrorCode), 16);
+            msg.AppendInt(static_cast<PRUint32>(COMErrorCode), 16);
             BSTR bstrDesc = NULL;
             if(SUCCEEDED(pError->GetDescription(&bstrDesc)) && bstrDesc)
             {
                 msg += " - ";
                 _bstr_t desc(bstrDesc, false);
-                msg += NS_STATIC_CAST(const char *,desc);
+                msg += static_cast<const char *>(desc);
             }
         }
         else
         {
             // No error object, so just report the result
             msg += "COM Error Result = ";
-            msg.AppendInt(NS_STATIC_CAST(PRUint32, COMErrorCode), 16);
+            msg.AppendInt(static_cast<PRUint32>(COMErrorCode), 16);
         }
     }
     

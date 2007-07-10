@@ -62,7 +62,7 @@ inline nscoord NSToCoordCeil(float aValue)
 
 inline nscoord NSToCoordRound(float aValue)
 {
-  return nscoord(NS_roundf(aValue));
+  return nscoord(NS_floorf(aValue + 0.5f));
 }
 
 /*

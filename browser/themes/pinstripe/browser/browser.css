@@ -24,6 +24,7 @@
  *   Pierre Chanial (chanial@noos.fr)
  *   Kevin Gerich (webmail@kmgerich.com)
  *   Pamela Greene (pamg.bugs@gmail.com)
+ *   Dao Gottwald (dao@design-noir.de)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,10 +44,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
-
-#toolbar-menubar {
-	display: none;
-}
 
 #main-window {
 	-moz-appearance: none;
@@ -867,6 +864,55 @@ toolbar[iconsize="small"] #paste-button:hover:active {
   min-width: 7em;
   padding: 0px;
   font: icon !important;
+}
+
+.textbox-presentation-box ,
+.textbox-presentation-box > * ,
+.textbox-presentation > * ,
+.textbox-presentation-prePath > * {
+  margin: 0;
+  padding: 0;
+  cursor: text;
+}
+
+.textbox-overflow-ellipsis {
+  -moz-margin-start: .3em;
+}
+
+.textbox-presentation-box {
+  -moz-box-align: center;
+  margin: 0 3px;
+  /*XXX Gecko 1.9 quirk*/
+  -moz-padding-start: 1px;
+}
+
+#urlbar[protocolhidden="true"] .textbox-presentation-prePath > .textbox-presentation-slash ,
+#urlbar[protocolhidden="true"] .textbox-presentation-prePath > .textbox-presentation-subdomain {
+  -moz-box-flex: 1;
+  text-align: right;
+}
+
+#urlbar[chromedir="rtl"][protocolhidden="true"] .textbox-presentation-prePath > .textbox-presentation-slash ,
+#urlbar[chromedir="rtl"][protocolhidden="true"] .textbox-presentation-prePath > .textbox-presentation-subdomain {
+  text-align: left;
+}
+
+.textbox-presentation {
+  color: graytext;
+}
+
+.textbox-presentation-domain {
+  color: -moz-fieldtext;
+}
+
+#urlbar[level="high"] .textbox-presentation ,
+#urlbar[level="low"] .textbox-presentation {
+  color: rgb(150, 150, 130);
+}
+
+#urlbar[level="low"] .textbox-presentation-domain ,
+#urlbar[level="high"] .textbox-presentation-domain {
+  color: black;
 }
 
 #urlbar[level="high"] > .autocomplete-textbox-container,

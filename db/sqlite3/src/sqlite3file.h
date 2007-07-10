@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Brett Wilson <brettw@gmail.com> (original author)
+ *   Shawn Wilsher <me@shawnwilsher.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -100,6 +101,7 @@ struct IoMethod {
   int (*xUnlock)(OsFile*, int);
   int (*xLockState)(OsFile *id);
   int (*xCheckReservedLock)(OsFile *id);
+  int (*xSectorSize)(OsFile *id);
 };
 
 /* FROM os.h
@@ -148,6 +150,10 @@ struct sqlite3OsVtbl {
   void *(*xRealloc)(void *, int);
   void (*xFree)(void *);
   int (*xAllocationSize)(void *);
+
+  void *(*xDlopen)(const char*);
+  void *(*xDlsym)(void*, const char*);
+  int (*xDlclose)(void*);
 };
 
 /* FROM os.h
@@ -185,7 +191,10 @@ struct sqlite3OsVtbl {
     sqlite3OsMalloc,
     sqlite3OsRealloc,
     sqlite3OsFree,
-    sqlite3OsAllocationSize
+    sqlite3OsAllocationSize,
+    IF_DLOPEN( sqlite3OsDlopen ),
+    IF_DLOPEN( sqlite3OsDlsym ),
+    IF_DLOPEN( sqlite3OsDlclose ),
   };
 #else
   /*
@@ -193,12 +202,5 @@ struct sqlite3OsVtbl {
   */
   extern struct sqlite3OsVtbl sqlite3Os;
 #endif /* _SQLITE_OS_C_ */
-
-
-/* FROM os.h
-** ---------
-** This additional API routine is available with redefinable I/O
-*/
-struct sqlite3OsVtbl *sqlite3_os_switch(void);
 
 } // extern "C"

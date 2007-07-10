@@ -155,7 +155,7 @@ SafeFinalize(JSContext* cx, JSObject* obj)
 {
 #ifndef XPCONNECT_STANDALONE
     nsIScriptObjectPrincipal* sop =
-        NS_STATIC_CAST(nsIScriptObjectPrincipal*, JS_GetPrivate(cx, obj));
+        static_cast<nsIScriptObjectPrincipal*>(JS_GetPrivate(cx, obj));
     NS_IF_RELEASE(sop);
 #endif
 }
@@ -199,7 +199,7 @@ XPCJSContextStack::GetSafeJSContext(JSContext * *aSafeJSContext)
         XPCJSRuntime* xpcrt;
 
         nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-        nsCOMPtr<nsIXPConnect> xpcholder(NS_STATIC_CAST(nsIXPConnect*, xpc));
+        nsCOMPtr<nsIXPConnect> xpcholder(static_cast<nsIXPConnect*>(xpc));
 
         if(xpc && (xpcrt = xpc->GetRuntime()) && (rt = xpcrt->GetJSRuntime()))
         {
@@ -448,6 +448,8 @@ GetThreadStackLimit()
   return stackLimit;
 }
 
+MOZ_DECL_CTOR_COUNTER(xpcPerThreadData)
+
 XPCPerThreadData::XPCPerThreadData()
     :   mJSContextStack(new XPCJSContextStack()),
         mNextThread(nsnull),
@@ -465,6 +467,7 @@ XPCPerThreadData::XPCPerThreadData()
       , mWrappedNativeThreadsafetyReportDepth(0)
 #endif
 {
+    MOZ_COUNT_CTOR(xpcPerThreadData);
     if(gLock)
     {
         nsAutoLock lock(gLock);
@@ -489,6 +492,8 @@ XPCPerThreadData::Cleanup()
 
 XPCPerThreadData::~XPCPerThreadData()
 {
+    MOZ_COUNT_DTOR(xpcPerThreadData);
+
     Cleanup();
 
     // Unlink 'this' from the list of threads.
@@ -662,7 +667,7 @@ nsXPCJSContextStackIterator::Reset(nsIJSContextStack *aStack)
 {
     // XXX This is pretty ugly.
     nsXPCThreadJSContextStackImpl *impl =
-        NS_STATIC_CAST(nsXPCThreadJSContextStackImpl*, aStack);
+        static_cast<nsXPCThreadJSContextStackImpl*>(aStack);
     XPCJSContextStack *stack = impl->GetStackForCurrentThread();
     if(!stack)
         return NS_ERROR_FAILURE;

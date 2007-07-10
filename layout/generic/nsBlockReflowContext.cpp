@@ -122,8 +122,8 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
     // for example, if A contains B and A->nextinflow contains
     // B->nextinflow, we'll traverse B->nextinflow twice. But this is
     // OK because our traversal is idempotent.
-    for (nsBlockFrame* block = NS_STATIC_CAST(nsBlockFrame*, frame);
-         block; block = NS_STATIC_CAST(nsBlockFrame*, block->GetNextInFlow())) {
+    for (nsBlockFrame* block = static_cast<nsBlockFrame*>(frame);
+         block; block = static_cast<nsBlockFrame*>(block->GetNextInFlow())) {
       for (PRBool overflowLines = PR_FALSE; overflowLines <= PR_TRUE; ++overflowLines) {
         nsBlockFrame::line_iterator line;
         nsBlockFrame::line_iterator line_end;
@@ -200,7 +200,7 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
                 aMargin->Include(innerReflowState.mComputedMargin.bottom);
             }
             if (outerReflowState != &aRS) {
-              delete NS_CONST_CAST(nsHTMLReflowState*, outerReflowState);
+              delete const_cast<nsHTMLReflowState*>(outerReflowState);
             }
           }
           if (!isEmpty) {
@@ -240,7 +240,7 @@ static void
 nsPointDtor(void *aFrame, nsIAtom *aPropertyName,
             void *aPropertyValue, void *aDtorData)
 {
-  nsPoint *point = NS_STATIC_CAST(nsPoint*, aPropertyValue);
+  nsPoint *point = static_cast<nsPoint*>(aPropertyValue);
   delete point;
 }
 
@@ -264,8 +264,8 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   if (NS_STYLE_POSITION_RELATIVE == display->mPosition) {
     nsPropertyTable *propTable = mPresContext->PropertyTable();
 
-    nsPoint *offsets = NS_STATIC_CAST(nsPoint*,
-        propTable->GetProperty(mFrame, nsGkAtoms::computedOffsetProperty));
+    nsPoint *offsets = static_cast<nsPoint*>
+                                  (propTable->GetProperty(mFrame, nsGkAtoms::computedOffsetProperty));
 
     if (offsets)
       offsets->MoveTo(aComputedOffsets.left, aComputedOffsets.top);
@@ -409,7 +409,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
         // Floats will eventually be removed via nsBlockFrame::RemoveFloat
         // which detaches the placeholder from the float.
 /* XXX promote DeleteChildsNextInFlow to nsIFrame to elminate this cast */
-        NS_STATIC_CAST(nsHTMLContainerFrame*, kidNextInFlow->GetParent())
+        static_cast<nsHTMLContainerFrame*>(kidNextInFlow->GetParent())
           ->DeleteNextInFlowChild(mPresContext, kidNextInFlow);
       }
     }

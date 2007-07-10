@@ -258,8 +258,8 @@ nsUint32ToContentHashEntryVisitorCallback(nsISupportsHashKey* aEntry,
                                           void* aClosure)
 {
   nsUint32ToContentHashEntry::Visitor* visitor =
-    NS_STATIC_CAST(nsUint32ToContentHashEntry::Visitor*, aClosure);
-  visitor->Visit(NS_STATIC_CAST(nsIContent*, aEntry->GetKey()));
+    static_cast<nsUint32ToContentHashEntry::Visitor*>(aClosure);
+  visitor->Visit(static_cast<nsIContent*>(aEntry->GetKey()));
   return PL_DHASH_NEXT;
 }
 
@@ -673,7 +673,7 @@ nsDOMImplementation::HasFeature(const nsAString& aFeature,
                                 PRBool* aReturn)
 {
   return nsGenericElement::InternalIsSupported(
-           NS_STATIC_CAST(nsIDOMDOMImplementation*, this),
+           static_cast<nsIDOMDOMImplementation*>(this),
            aFeature, aVersion, aReturn);
 }
 
@@ -786,7 +786,7 @@ nsDocument::~nsDocument()
 #endif
 
 #ifdef DEBUG
-  nsCycleCollector_DEBUG_wasFreed(NS_STATIC_CAST(nsIDocument*, this));
+  nsCycleCollector_DEBUG_wasFreed(static_cast<nsIDocument*>(this));
 #endif
 
   mInDestructor = PR_TRUE;
@@ -913,7 +913,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDocument)
       nsresult rv;
       mXPathEvaluatorTearoff =
         do_CreateInstance(NS_XPATH_EVALUATOR_CONTRACTID,
-                          NS_STATIC_CAST(nsIDocument *, this), &rv);
+                          static_cast<nsIDocument *>(this), &rv);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -933,9 +933,9 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 SubDocTraverser(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
                 void *arg)
 {
-  SubDocMapEntry *entry = NS_STATIC_CAST(SubDocMapEntry*, hdr);
+  SubDocMapEntry *entry = static_cast<SubDocMapEntry*>(hdr);
   nsCycleCollectionTraversalCallback *cb = 
-    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, arg);
+    static_cast<nsCycleCollectionTraversalCallback*>(arg);
 
   cb->NoteXPCOMChild(entry->mKey);
   cb->NoteXPCOMChild(entry->mSubDocument);
@@ -946,16 +946,16 @@ SubDocTraverser(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
 PR_STATIC_CALLBACK(PRIntn)
 RadioGroupsTraverser(nsHashKey *aKey, void *aData, void* aClosure)
 {
-  nsRadioGroupStruct *entry = NS_STATIC_CAST(nsRadioGroupStruct*, aData);
+  nsRadioGroupStruct *entry = static_cast<nsRadioGroupStruct*>(aData);
   nsCycleCollectionTraversalCallback *cb = 
-    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aClosure);
+    static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
 
   cb->NoteXPCOMChild(entry->mSelectedRadioButton);
 
   nsSmallVoidArray &radioButtons = entry->mRadioButtons;
   PRUint32 i, count = radioButtons.Count();
   for (i = 0; i < count; ++i) {
-    cb->NoteXPCOMChild(NS_STATIC_CAST(nsIFormControl*, radioButtons[i]));
+    cb->NoteXPCOMChild(static_cast<nsIFormControl*>(radioButtons[i]));
   }
   
 
@@ -966,7 +966,7 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 BoxObjectTraverser(nsISupports* key, nsPIBoxObject* boxObject, void* userArg)
 {
   nsCycleCollectionTraversalCallback *cb = 
-    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, userArg);
+    static_cast<nsCycleCollectionTraversalCallback*>(userArg);
  
   cb->NoteXPCOMChild(key);
   cb->NoteXPCOMChild(boxObject);
@@ -988,7 +988,7 @@ PLDHashOperator PR_CALLBACK
 LinkMapTraverser(nsUint32ToContentHashEntry* aEntry, void* userArg)
 {
   LinkMapTraversalVisitor visitor;
-  visitor.mCb = NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, userArg);
+  visitor.mCb = static_cast<nsCycleCollectionTraversalCallback*>(userArg);
   aEntry->VisitContent(&visitor);
   return PL_DHASH_NEXT;
 }
@@ -1622,7 +1622,7 @@ nsDocument::GetActiveElement(nsIDOMElement **aElement)
 
   // No focused element anywhere in this document.  Try to get the BODY.
   nsCOMPtr<nsIDOMHTMLDocument> htmlDoc =
-    do_QueryInterface(NS_STATIC_CAST(nsIDocument*, this));
+    do_QueryInterface(static_cast<nsIDocument*>(this));
   if (htmlDoc) {
     nsCOMPtr<nsIDOMHTMLElement> bodyElement;
     htmlDoc->GetBody(getter_AddRefs(bodyElement));
@@ -1694,7 +1694,7 @@ nsDocument::MatchClassNames(nsIContent* aContent,
   }
   
   // need to match *all* of the classes
-  nsCOMArray<nsIAtom>* classes = NS_STATIC_CAST(nsCOMArray<nsIAtom>*, aData);
+  nsCOMArray<nsIAtom>* classes = static_cast<nsCOMArray<nsIAtom>*>(aData);
   PRInt32 length = classes->Count();
   PRInt32 i;
   for (i = 0; i < length; ++i) {
@@ -1710,7 +1710,7 @@ nsDocument::MatchClassNames(nsIContent* aContent,
 void
 nsDocument::DestroyClassNameArray(void* aData)
 {
-  nsCOMArray<nsIAtom>* classes = NS_STATIC_CAST(nsCOMArray<nsIAtom>*, aData);
+  nsCOMArray<nsIAtom>* classes = static_cast<nsCOMArray<nsIAtom>*>(aData);
   delete classes;
 }
 
@@ -1765,9 +1765,9 @@ nsDocument::SetDocumentCharacterSet(const nsACString& aCharSetID)
 
     for (PRInt32 i = 0; i < n; i++) {
       nsIObserver* observer =
-        NS_STATIC_CAST(nsIObserver *, mCharSetObservers.ElementAt(i));
+        static_cast<nsIObserver *>(mCharSetObservers.ElementAt(i));
 
-      observer->Observe(NS_STATIC_CAST(nsIDocument *, this), "charset",
+      observer->Observe(static_cast<nsIDocument *>(this), "charset",
                         NS_ConvertASCIItoUTF16(aCharSetID).get());
     }
   }
@@ -1979,7 +1979,7 @@ nsDocument::GetPrimaryShell() const
 PR_STATIC_CALLBACK(void)
 SubDocClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
-  SubDocMapEntry *e = NS_STATIC_CAST(SubDocMapEntry *, entry);
+  SubDocMapEntry *e = static_cast<SubDocMapEntry *>(entry);
 
   NS_RELEASE(e->mKey);
   NS_IF_RELEASE(e->mSubDocument);
@@ -1989,11 +1989,11 @@ PR_STATIC_CALLBACK(PRBool)
 SubDocInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
 {
   SubDocMapEntry *e =
-    NS_CONST_CAST(SubDocMapEntry *,
-                  NS_STATIC_CAST(const SubDocMapEntry *, entry));
+    const_cast<SubDocMapEntry *>
+              (static_cast<const SubDocMapEntry *>(entry));
 
-  e->mKey = NS_CONST_CAST(nsIContent *,
-                          NS_STATIC_CAST(const nsIContent *, key));
+  e->mKey = const_cast<nsIContent *>
+                      (static_cast<const nsIContent *>(key));
   NS_ADDREF(e->mKey);
 
   e->mSubDocument = nsnull;
@@ -2010,8 +2010,8 @@ nsDocument::SetSubDocumentFor(nsIContent *aContent, nsIDocument* aSubDoc)
 
     if (mSubDocuments) {
       SubDocMapEntry *entry =
-        NS_STATIC_CAST(SubDocMapEntry*,
-                       PL_DHashTableOperate(mSubDocuments, aContent,
+        static_cast<SubDocMapEntry*>
+                   (PL_DHashTableOperate(mSubDocuments, aContent,
                                             PL_DHASH_LOOKUP));
 
       if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
@@ -2045,8 +2045,8 @@ nsDocument::SetSubDocumentFor(nsIContent *aContent, nsIDocument* aSubDoc)
 
     // Add a mapping to the hash table
     SubDocMapEntry *entry =
-      NS_STATIC_CAST(SubDocMapEntry*,
-                     PL_DHashTableOperate(mSubDocuments, aContent,
+      static_cast<SubDocMapEntry*>
+                 (PL_DHashTableOperate(mSubDocuments, aContent,
                                           PL_DHASH_ADD));
 
     if (!entry) {
@@ -2074,8 +2074,8 @@ nsDocument::GetSubDocumentFor(nsIContent *aContent) const
 {
   if (mSubDocuments) {
     SubDocMapEntry *entry =
-      NS_STATIC_CAST(SubDocMapEntry*,
-                     PL_DHashTableOperate(mSubDocuments, aContent,
+      static_cast<SubDocMapEntry*>
+                 (PL_DHashTableOperate(mSubDocuments, aContent,
                                           PL_DHASH_LOOKUP));
 
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
@@ -2090,8 +2090,8 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 FindContentEnumerator(PLDHashTable *table, PLDHashEntryHdr *hdr,
                       PRUint32 number, void *arg)
 {
-  SubDocMapEntry *entry = NS_STATIC_CAST(SubDocMapEntry*, hdr);
-  FindContentData *data = NS_STATIC_CAST(FindContentData*, arg);
+  SubDocMapEntry *entry = static_cast<SubDocMapEntry*>(hdr);
+  FindContentData *data = static_cast<FindContentData*>(arg);
 
   if (entry->mSubDocument == data->mSubDocument) {
     data->mResult = entry->mKey;
@@ -2683,7 +2683,7 @@ nsDocument::DispatchContentLoadedEvents()
   // Fire a DOM event notifying listeners that this document has been
   // loaded (excluding images and other loads initiated by this
   // document).
-  nsContentUtils::DispatchTrustedEvent(this, NS_STATIC_CAST(nsIDocument*, this),
+  nsContentUtils::DispatchTrustedEvent(this, static_cast<nsIDocument*>(this),
                                        NS_LITERAL_STRING("DOMContentLoaded"),
                                        PR_TRUE, PR_TRUE);
 
@@ -3436,7 +3436,7 @@ nsDocument::LoadBindingDocument(const nsAString& aURI)
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aURI,
                           mCharacterSet.get(),
-                          NS_STATIC_CAST(nsIDocument *, this)->GetBaseURI());
+                          static_cast<nsIDocument *>(this)->GetBaseURI());
   NS_ENSURE_SUCCESS(rv, rv);
 
   mBindingManager->LoadBindingDocument(this, uri);
@@ -3636,7 +3636,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
   mDocumentTitle.Assign(aTitle);
 
   // Fire a DOM event for the title change.
-  nsContentUtils::DispatchTrustedEvent(this, NS_STATIC_CAST(nsIDocument*, this),
+  nsContentUtils::DispatchTrustedEvent(this, static_cast<nsIDocument*>(this),
                                        NS_LITERAL_STRING("DOMTitleChanged"),
                                        PR_TRUE, PR_TRUE);
 
@@ -3682,6 +3682,7 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
       contractID += "-menu";
     else if (tag == nsGkAtoms::popup ||
              tag == nsGkAtoms::menupopup ||
+             tag == nsGkAtoms::panel ||
              tag == nsGkAtoms::tooltip)
       contractID += "-popup";
     else if (tag == nsGkAtoms::tree)
@@ -4017,7 +4018,7 @@ NS_IMETHODIMP
 nsDocument::IsSupported(const nsAString& aFeature, const nsAString& aVersion,
                         PRBool* aReturn)
 {
-  return nsGenericElement::InternalIsSupported(NS_STATIC_CAST(nsIDOMDocument*, this),
+  return nsGenericElement::InternalIsSupported(static_cast<nsIDOMDocument*>(this),
                                                aFeature, aVersion, aReturn);
 }
 
@@ -4130,7 +4131,7 @@ nsDocument::GetFeature(const nsAString& aFeature,
                        const nsAString& aVersion,
                        nsISupports** aReturn)
 {
-  return nsGenericElement::InternalGetFeature(NS_STATIC_CAST(nsIDOMDocument*, this),
+  return nsGenericElement::InternalGetFeature(static_cast<nsIDOMDocument*>(this),
                                               aFeature, aVersion, aReturn);
 }
 
@@ -4273,7 +4274,7 @@ PLDHashOperator PR_CALLBACK
 BlastFunc(nsAttrHashKey::KeyType aKey, nsIDOMNode *aData, void* aUserArg)
 {
   nsCOMPtr<nsIAttribute> *attr =
-    NS_STATIC_CAST(nsCOMPtr<nsIAttribute>*, aUserArg);
+    static_cast<nsCOMPtr<nsIAttribute>*>(aUserArg);
 
   *attr = do_QueryInterface(aData);
 
@@ -4288,7 +4289,7 @@ BlastSubtreeToPieces(nsINode *aNode)
 {
   PRUint32 i, count;
   if (aNode->IsNodeOfType(nsINode::eELEMENT)) {
-    nsGenericElement *element = NS_STATIC_CAST(nsGenericElement*, aNode);
+    nsGenericElement *element = static_cast<nsGenericElement*>(aNode);
     const nsDOMAttributeMap *map = element->GetAttributeMap();
     if (map) {
       nsCOMPtr<nsIAttribute> attr;
@@ -4522,7 +4523,7 @@ nsDocument::GetListenerManager(PRBool aCreateIfNotFound,
   nsresult rv = NS_NewEventListenerManager(getter_AddRefs(mListenerManager));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mListenerManager->SetListenerTarget(NS_STATIC_CAST(nsIDocument *,this));
+  mListenerManager->SetListenerTarget(static_cast<nsIDocument *>(this));
 
   *aInstancePtrResult = mListenerManager;
   NS_ADDREF(*aInstancePtrResult);
@@ -4569,7 +4570,7 @@ nsDocument::DispatchDOMEvent(nsEvent* aEvent,
                              nsPresContext* aPresContext,
                              nsEventStatus* aEventStatus)
 {
-  return nsEventDispatcher::DispatchDOMEvent(NS_STATIC_CAST(nsINode*, this),
+  return nsEventDispatcher::DispatchDOMEvent(static_cast<nsINode*>(this),
                                              aEvent, aDOMEvent,
                                              aPresContext, aEventStatus);
 }
@@ -4631,7 +4632,7 @@ nsDocument::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv =
-    nsEventDispatcher::DispatchDOMEvent(NS_STATIC_CAST(nsINode*, this),
+    nsEventDispatcher::DispatchDOMEvent(static_cast<nsINode*>(this),
                                         nsnull, aEvent, context, &status);
 
   *_retval = (status != nsEventStatus_eConsumeNoDefault);
@@ -4930,7 +4931,7 @@ nsDocument::GetRadioGroup(const nsAString& aName,
      ToLowerCase(tmKey); //should case-insensitive.
   nsStringKey key(tmKey);
   nsRadioGroupStruct *radioGroup =
-    NS_STATIC_CAST(nsRadioGroupStruct *, mRadioGroups.Get(&key));
+    static_cast<nsRadioGroupStruct *>(mRadioGroups.Get(&key));
 
   if (!radioGroup) {
     radioGroup = new nsRadioGroupStruct();
@@ -5044,8 +5045,7 @@ nsDocument::GetNextRadioButton(const nsAString& aName,
     else if (++index >= numRadios) {
       index = 0;
     }
-    radio = do_QueryInterface(NS_STATIC_CAST(nsIFormControl*, 
-                              radioGroup->mRadioButtons.ElementAt(index)));
+    radio = do_QueryInterface(static_cast<nsIFormControl*>(radioGroup->mRadioButtons.ElementAt(index)));
     NS_ASSERTION(radio, "mRadioButtons holding a non-radio button");
     radio->GetDisabled(&disabled);
   } while (disabled && radio != currentRadio);
@@ -5096,8 +5096,8 @@ nsDocument::WalkRadioGroup(const nsAString& aName,
 
   PRBool stop = PR_FALSE;
   for (int i = 0; i < radioGroup->mRadioButtons.Count(); i++) {
-    aVisitor->Visit(NS_STATIC_CAST(nsIFormControl *,
-                                   radioGroup->mRadioButtons.ElementAt(i)),
+    aVisitor->Visit(static_cast<nsIFormControl *>
+                               (radioGroup->mRadioButtons.ElementAt(i)),
                     &stop);
     if (stop) {
       return NS_OK;
@@ -5244,8 +5244,8 @@ PRBool
 nsDocument::IsSafeToFlush() const
 {
   PRBool isSafeToFlush = PR_TRUE;
-  nsPresShellIterator iter(NS_CONST_CAST(nsIDocument*,
-                           NS_STATIC_CAST(const nsIDocument*, this)));
+  nsPresShellIterator iter(const_cast<nsIDocument*>
+                                     (static_cast<const nsIDocument*>(this)));
   nsCOMPtr<nsIPresShell> shell;
   while ((shell = iter.GetNextShell()) && isSafeToFlush) {
     shell->IsSafeToFlush(isSafeToFlush);
@@ -5337,8 +5337,8 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 SubDocHashEnum(PLDHashTable *table, PLDHashEntryHdr *hdr,
                PRUint32 number, void *arg)
 {
-  SubDocMapEntry *entry = NS_STATIC_CAST(SubDocMapEntry*, hdr);
-  SubDocEnumArgs *args = NS_STATIC_CAST(SubDocEnumArgs*, arg);
+  SubDocMapEntry *entry = static_cast<SubDocMapEntry*>(hdr);
+  SubDocEnumArgs *args = static_cast<SubDocEnumArgs*>(arg);
 
   nsIDocument *subdoc = entry->mSubDocument;
   PRBool next = subdoc ? args->callback(subdoc, args->data) : PR_TRUE;
@@ -5359,8 +5359,8 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 CanCacheSubDocument(PLDHashTable *table, PLDHashEntryHdr *hdr,
                     PRUint32 number, void *arg)
 {
-  SubDocMapEntry *entry = NS_STATIC_CAST(SubDocMapEntry*, hdr);
-  PRBool *canCacheArg = NS_STATIC_CAST(PRBool*, arg);
+  SubDocMapEntry *entry = static_cast<SubDocMapEntry*>(hdr);
+  PRBool *canCacheArg = static_cast<PRBool*>(arg);
 
   nsIDocument *subdoc = entry->mSubDocument;
 
@@ -5564,7 +5564,7 @@ nsDocument::CheckAncestryAndGetFrame(nsIDocument* aDocument) const
 {
   nsIDocument* parentDoc;
   for (parentDoc = aDocument->GetParentDocument();
-       parentDoc != NS_STATIC_CAST(const nsIDocument* const, this);
+       parentDoc != static_cast<const nsIDocument* const>(this);
        parentDoc = parentDoc->GetParentDocument()) {
     if (!parentDoc) {
       return nsnull;
@@ -5602,7 +5602,7 @@ nsDocument::DispatchEventToWindow(nsEvent *aEvent)
   if (!window)
     return;
 
-  aEvent->target = NS_STATIC_CAST(nsIDocument*, this);
+  aEvent->target = static_cast<nsIDocument*>(this);
   nsEventDispatcher::Dispatch(window, nsnull, aEvent);
 }
 
@@ -5662,6 +5662,14 @@ nsDocument::OnPageHide(PRBool aPersisted)
 }
 
 void
+nsDocument::MayDispatchMutationEvent(nsINode* aTarget)
+{
+  if (mSubtreeModifiedDepth > 0) {
+    mSubtreeModifiedTargets.AppendObject(aTarget);
+  }
+}
+
+void
 nsDocument::WillDispatchMutationEvent(nsINode* aTarget)
 {
   NS_ASSERTION(mSubtreeModifiedDepth != 0 ||
@@ -5669,7 +5677,12 @@ nsDocument::WillDispatchMutationEvent(nsINode* aTarget)
                "mSubtreeModifiedTargets not cleared after dispatching?");
   ++mSubtreeModifiedDepth;
   if (aTarget) {
-    mSubtreeModifiedTargets.AppendObject(aTarget);
+    // MayDispatchMutationEvent is often called just before this method,
+    // so it has already appended the node to mSubtreeModifiedTargets.
+    PRInt32 count = mSubtreeModifiedTargets.Count();
+    if (!count || mSubtreeModifiedTargets[count - 1] != aTarget) {
+      mSubtreeModifiedTargets.AppendObject(aTarget);
+    }
   }
 }
 

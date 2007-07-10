@@ -102,10 +102,10 @@ class gfxContext;
 typedef short SelectionType;
 typedef PRUint32 nsFrameState;
 
-// 9562bb2b-990c-4875-aafd-bd46fc9a4fc1
+// D93B931B-D5EF-4D3C-AB99-444176963464
 #define NS_IPRESSHELL_IID \
-{ 0x9562bb2b, 0x990c, 0x4875, \
-  { 0xaa, 0xfd, 0xbd, 0x46, 0xfc, 0x9a, 0x4f, 0xc1 } }
+{ 0xd93b931b, 0xd5ef, 0x4d3c, \
+  { 0xab, 0x99, 0x44, 0x41, 0x76, 0x96, 0x34, 0x64 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -205,8 +205,8 @@ public:
   }
 
   nsFrameManager* FrameManager() const {
-    return NS_REINTERPRET_CAST(nsFrameManager*,
-      &NS_CONST_CAST(nsIPresShell*, this)->mFrameManager);
+    return reinterpret_cast<nsFrameManager*>
+                           (&const_cast<nsIPresShell*>(this)->mFrameManager);
   }
 
 #endif
@@ -724,8 +724,6 @@ public:
   virtual already_AddRefed<gfxASurface> RenderSelection(nsISelection* aSelection,
                                                         nsPoint& aPoint,
                                                         nsRect* aScreenRect) = 0;
-
-  virtual void HidePopups() = 0;
 
   void AddWeakFrame(nsWeakFrame* aWeakFrame);
   void RemoveWeakFrame(nsWeakFrame* aWeakFrame);

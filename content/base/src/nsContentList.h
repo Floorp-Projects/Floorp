@@ -240,7 +240,7 @@ public:
   NS_HIDDEN_(nsIContent*) NamedItem(const nsAString& aName, PRBool aDoFlush);
 
   nsContentListKey* GetKey() {
-    return NS_STATIC_CAST(nsContentListKey*, this);
+    return static_cast<nsContentListKey*>(this);
   }
   
 

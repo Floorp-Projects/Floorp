@@ -67,6 +67,9 @@ gfxXlibNativeRenderer::Draw(Display* dpy, gfxContext* ctx, int width, int height
 {
     NativeRenderingClosure closure = { this, NS_OK };
     cairo_xlib_drawing_result_t result;
+    // Make sure result.surface is null to start with; we rely on it
+    // being non-null meaning that a surface actually got allocated.
+    result.surface = NULL;
   
     if (output) {
         output->mSurface = NULL;
@@ -98,6 +101,7 @@ gfxXlibNativeRenderer::Draw(Display* dpy, gfxContext* ctx, int width, int height
                          output ? &result : NULL);
     if (NS_FAILED(closure.mRV)) {
         if (result.surface) {
+            NS_ASSERTION(output, "How did that happen?");
             cairo_surface_destroy (result.surface);
         }
         return closure.mRV;

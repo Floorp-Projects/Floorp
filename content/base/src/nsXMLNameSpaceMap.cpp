@@ -86,8 +86,8 @@ nsXMLNameSpaceMap::AddPrefix(nsIAtom *aPrefix, PRInt32 aNameSpaceID)
   nsNameSpaceEntry *foundEntry = nsnull;
 
   for (PRInt32 i = 0; i < count; ++i) {
-    nsNameSpaceEntry *entry = NS_STATIC_CAST(nsNameSpaceEntry*,
-                                             mNameSpaces.FastElementAt(i));
+    nsNameSpaceEntry *entry = static_cast<nsNameSpaceEntry*>
+                                         (mNameSpaces.FastElementAt(i));
 
     NS_ASSERTION(entry, "null entry in namespace map!");
 
@@ -129,8 +129,8 @@ nsXMLNameSpaceMap::RemovePrefix(nsIAtom *aPrefix)
   PRInt32 count = mNameSpaces.Count();
 
   for (PRInt32 i = 0; i < count; ++i) {
-    nsNameSpaceEntry *entry = NS_STATIC_CAST(nsNameSpaceEntry*,
-                                             mNameSpaces.FastElementAt(i));
+    nsNameSpaceEntry *entry = static_cast<nsNameSpaceEntry*>
+                                         (mNameSpaces.FastElementAt(i));
 
     NS_ASSERTION(entry, "null entry in namespace map!");
 
@@ -147,8 +147,8 @@ nsXMLNameSpaceMap::FindNameSpaceID(nsIAtom *aPrefix) const
   PRInt32 count = mNameSpaces.Count();
 
   for (PRInt32 i = 0; i < count; ++i) {
-    nsNameSpaceEntry *entry = NS_STATIC_CAST(nsNameSpaceEntry*,
-                                             mNameSpaces.FastElementAt(i));
+    nsNameSpaceEntry *entry = static_cast<nsNameSpaceEntry*>
+                                         (mNameSpaces.FastElementAt(i));
 
     NS_ASSERTION(entry, "null entry in namespace map!");
 
@@ -169,8 +169,8 @@ nsXMLNameSpaceMap::FindPrefix(PRInt32 aNameSpaceID) const
   PRInt32 count = mNameSpaces.Count();
 
   for (PRInt32 i = 0; i < count; ++i) {
-    nsNameSpaceEntry *entry = NS_STATIC_CAST(nsNameSpaceEntry*,
-                                             mNameSpaces.FastElementAt(i));
+    nsNameSpaceEntry *entry = static_cast<nsNameSpaceEntry*>
+                                         (mNameSpaces.FastElementAt(i));
 
     NS_ASSERTION(entry, "null entry in namespace map!");
 
@@ -184,7 +184,7 @@ nsXMLNameSpaceMap::FindPrefix(PRInt32 aNameSpaceID) const
 
 PR_STATIC_CALLBACK(PRBool) DeleteEntry(void *aElement, void *aData)
 {
-  delete NS_STATIC_CAST(nsNameSpaceEntry*, aElement);
+  delete static_cast<nsNameSpaceEntry*>(aElement);
   return PR_TRUE;
 }
 

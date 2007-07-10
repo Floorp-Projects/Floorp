@@ -1324,7 +1324,7 @@ nsLocalFile::GetVersionInfoField(const char* aField, nsAString& _retval)
 
     // Cast away const-ness here because WinAPI functions don't understand it, 
     // the path is used for [in] parameters only however so it's safe. 
-    WCHAR *path = NS_CONST_CAST(WCHAR*, mFollowSymlinks ? mResolvedPath.get() 
+    WCHAR *path = const_cast<WCHAR*>(mFollowSymlinks ? mResolvedPath.get() 
                                                         : mWorkingPath.get());
 
     DWORD dummy;
@@ -1360,7 +1360,7 @@ nsLocalFile::GetVersionInfoField(const char* aField, nsAString& _retval)
                 queryResult = ::VerQueryValueW(ver, subBlock, &value, &size);
                 if (queryResult && value)
                 {
-                    _retval.Assign(NS_STATIC_CAST(PRUnichar*, value));
+                    _retval.Assign(static_cast<PRUnichar*>(value));
                     if (!_retval.IsEmpty()) 
                     {
                         rv = NS_OK;
@@ -2929,7 +2929,8 @@ nsLocalFile::EnsureShortPath()
     WCHAR thisshort[MAX_PATH];
     DWORD thisr = ::GetShortPathNameW(mWorkingPath.get(), thisshort,
                                       sizeof(thisshort));
-    if (thisr < sizeof(thisshort))
+    // If an error occured (thisr == 0) thisshort is uninitialized memory!
+    if (thisr != 0 && thisr < sizeof(thisshort))
         mShortWorkingPath.Assign(thisshort);
     else
         mShortWorkingPath.Assign(mWorkingPath);

@@ -1,2 +1,0 @@
-<!ENTITY junkImgs.title "Find Unused Images in Current Theme...">
-<!ENTITY junkImgsDescription "In order for this search to work effectively, you must be inspecting a document which loads EVERY CSS file in the current theme.  Then, point to a location on disk where the root of the current theme can be found.">

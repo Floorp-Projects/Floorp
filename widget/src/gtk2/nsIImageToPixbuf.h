@@ -48,9 +48,7 @@ class nsIImage;
 typedef struct _GdkPixbuf GdkPixbuf;
 
 /**
- * An interface that allows converting an nsIImage to a GdkPixbuf*. It is
- * similar to nsIGdkPixbufImage but more general, as it doesn't require the
- * image to implement nsIGdkPixbufImage.
+ * An interface that allows converting an nsIImage to a GdkPixbuf*.
  */
 class nsIImageToPixbuf : public nsISupports {
     public:

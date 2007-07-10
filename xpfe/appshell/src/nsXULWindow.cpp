@@ -156,7 +156,7 @@ NS_INTERFACE_MAP_BEGIN(nsXULWindow)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   if (aIID.Equals(NS_GET_IID(nsXULWindow)))
-    foundInterface = NS_REINTERPRET_CAST(nsISupports*, this);
+    foundInterface = reinterpret_cast<nsISupports*>(this);
   else
 NS_INTERFACE_MAP_END
 
@@ -393,7 +393,7 @@ NS_IMETHODIMP nsXULWindow::ShowModal()
   nsCOMPtr<nsIAppShellService> appShellService(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
   if (appShellService)
       appShellService->TopLevelWindowIsModal(
-                         NS_STATIC_CAST(nsIXULWindow*, this), PR_TRUE);
+                         static_cast<nsIXULWindow*>(this), PR_TRUE);
 
   nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
   if (stack && NS_SUCCEEDED(stack->Push(nsnull))) {
@@ -411,7 +411,7 @@ NS_IMETHODIMP nsXULWindow::ShowModal()
   window->SetModal(PR_FALSE);
   if (appShellService)
       appShellService->TopLevelWindowIsModal(
-                         NS_STATIC_CAST(nsIXULWindow*, this), PR_FALSE);
+                         static_cast<nsIXULWindow*>(this), PR_FALSE);
   /*   Note there's no EnableParent(PR_TRUE) here to match the PR_FALSE one
      above. That's done in ExitModalLoop. It's important that the parent
      be re-enabled before this window is made invisible; to do otherwise
@@ -454,7 +454,7 @@ NS_IMETHODIMP nsXULWindow::Destroy()
   nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
   NS_ASSERTION(appShell, "Couldn't get appShell... xpcom shutdown?");
   if (appShell)
-    appShell->UnregisterTopLevelWindow(NS_STATIC_CAST(nsIXULWindow*, this));
+    appShell->UnregisterTopLevelWindow(static_cast<nsIXULWindow*>(this));
 
   nsCOMPtr<nsIXULWindow> parentWindow(do_QueryReferent(mParentWindow));
   if (parentWindow)
@@ -512,7 +512,7 @@ NS_IMETHODIMP nsXULWindow::Destroy()
   count = mContentShells.Count();
   for (PRInt32 i = 0; i < count; i++) {
     nsContentShellInfo* shellInfo =
-        NS_STATIC_CAST(nsContentShellInfo *, mContentShells.ElementAt(i));
+        static_cast<nsContentShellInfo *>(mContentShells.ElementAt(i));
     delete shellInfo;
   }
   mContentShells.Clear();
@@ -767,7 +767,7 @@ NS_IMETHODIMP nsXULWindow::SetVisibility(PRBool aVisibility)
 
   nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
   if (windowMediator)
-     windowMediator->UpdateWindowTimeStamp(NS_STATIC_CAST(nsIXULWindow*, this));
+     windowMediator->UpdateWindowTimeStamp(static_cast<nsIXULWindow*>(this));
 
   // notify observers so that we can hide the splash screen if possible
   nsCOMPtr<nsIObserverService> obssvc
@@ -863,7 +863,7 @@ NS_IMETHODIMP nsXULWindow::SetTitle(const PRUnichar* aTitle)
   if(!windowMediator)
     return NS_OK;
 
-  windowMediator->UpdateWindowTitle(NS_STATIC_CAST(nsIXULWindow*, this), aTitle);
+  windowMediator->UpdateWindowTitle(static_cast<nsIXULWindow*>(this), aTitle);
 
   return NS_OK;
 }
@@ -1794,9 +1794,9 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
   newWindow->SetChromeFlags(aChromeFlags);
 
   // Specify that we want the window to remain locked until the chrome has loaded.
-  nsXULWindow *xulWin = NS_STATIC_CAST(nsXULWindow*,
-                                      NS_STATIC_CAST(nsIXULWindow*,
-                                                     newWindow));
+  nsXULWindow *xulWin = static_cast<nsXULWindow*>
+                                   (static_cast<nsIXULWindow*>
+                                               (newWindow));
 
   xulWin->LockUntilChromeLoad();
 
@@ -1895,7 +1895,7 @@ PRBool nsXULWindow::ConstrainToZLevel(
         *aPlacement = nsWindowZRelative;
 
       if (aImmediate) {
-        nsCOMPtr<nsIBaseWindow> ourBase = do_QueryInterface(NS_STATIC_CAST(nsIXULWindow *,this));
+        nsCOMPtr<nsIBaseWindow> ourBase = do_QueryInterface(static_cast<nsIXULWindow *>(this));
         if (ourBase) {
           nsCOMPtr<nsIWidget> ourWidget;
           ourBase->GetMainWidget(getter_AddRefs(ourWidget));
@@ -1915,7 +1915,7 @@ PRBool nsXULWindow::ConstrainToZLevel(
       void *data;
       (*aActualBelow)->GetClientData(data);
       if (data) {
-        windowAbove = NS_REINTERPRET_CAST(nsWebShellWindow*, data);
+        windowAbove = reinterpret_cast<nsWebShellWindow*>(data);
       }
     }
 

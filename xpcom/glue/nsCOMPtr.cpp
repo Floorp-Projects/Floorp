@@ -95,7 +95,7 @@ nsCOMPtr_base::assign_from_qi( const nsQueryInterface qi, const nsIID& iid )
     void* newRawPtr;
     if ( NS_FAILED( qi(iid, &newRawPtr) ) )
       newRawPtr = 0;
-    assign_assuming_AddRef(NS_STATIC_CAST(nsISupports*, newRawPtr));
+    assign_assuming_AddRef(static_cast<nsISupports*>(newRawPtr));
   }
 
 void
@@ -104,7 +104,7 @@ nsCOMPtr_base::assign_from_qi_with_error( const nsQueryInterfaceWithError& qi, c
     void* newRawPtr;
     if ( NS_FAILED( qi(iid, &newRawPtr) ) )
       newRawPtr = 0;
-    assign_assuming_AddRef(NS_STATIC_CAST(nsISupports*, newRawPtr));
+    assign_assuming_AddRef(static_cast<nsISupports*>(newRawPtr));
   }
 
 void
@@ -113,7 +113,7 @@ nsCOMPtr_base::assign_from_gs_cid( const nsGetServiceByCID gs, const nsIID& iid 
     void* newRawPtr;
     if ( NS_FAILED( gs(iid, &newRawPtr) ) )
       newRawPtr = 0;
-    assign_assuming_AddRef(NS_STATIC_CAST(nsISupports*, newRawPtr));
+    assign_assuming_AddRef(static_cast<nsISupports*>(newRawPtr));
   }
 
 void
@@ -122,7 +122,7 @@ nsCOMPtr_base::assign_from_gs_cid_with_error( const nsGetServiceByCIDWithError& 
     void* newRawPtr;
     if ( NS_FAILED( gs(iid, &newRawPtr) ) )
       newRawPtr = 0;
-    assign_assuming_AddRef(NS_STATIC_CAST(nsISupports*, newRawPtr));
+    assign_assuming_AddRef(static_cast<nsISupports*>(newRawPtr));
   }
 
 void
@@ -131,7 +131,7 @@ nsCOMPtr_base::assign_from_gs_contractid( const nsGetServiceByContractID gs, con
     void* newRawPtr;
     if ( NS_FAILED( gs(iid, &newRawPtr) ) )
       newRawPtr = 0;
-    assign_assuming_AddRef(NS_STATIC_CAST(nsISupports*, newRawPtr));
+    assign_assuming_AddRef(static_cast<nsISupports*>(newRawPtr));
   }
 
 void
@@ -140,7 +140,7 @@ nsCOMPtr_base::assign_from_gs_contractid_with_error( const nsGetServiceByContrac
     void* newRawPtr;
     if ( NS_FAILED( gs(iid, &newRawPtr) ) )
       newRawPtr = 0;
-    assign_assuming_AddRef(NS_STATIC_CAST(nsISupports*, newRawPtr));
+    assign_assuming_AddRef(static_cast<nsISupports*>(newRawPtr));
   }
 
 void
@@ -149,12 +149,12 @@ nsCOMPtr_base::assign_from_helper( const nsCOMPtr_helper& helper, const nsIID& i
     void* newRawPtr;
     if ( NS_FAILED( helper(iid, &newRawPtr) ) )
       newRawPtr = 0;
-    assign_assuming_AddRef(NS_STATIC_CAST(nsISupports*, newRawPtr));
+    assign_assuming_AddRef(static_cast<nsISupports*>(newRawPtr));
   }
 
 void**
 nsCOMPtr_base::begin_assignment()
   {
     assign_assuming_AddRef(0);
-    return NS_REINTERPRET_CAST(void**, &mRawPtr);
+    return reinterpret_cast<void**>(&mRawPtr);
   }

@@ -2278,7 +2278,7 @@ dnl the qsort routine under solaris is faulty
        MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -h $@ -o $@'
        MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_FLAGS) -G -z muldefs -h $@ -o $@'
        MKSHLIB_FORCE_ALL='-z allextract'
-       MKSHLIB_UNFORCE_ALL=''
+       MKSHLIB_UNFORCE_ALL='-z defaultextract'
        DSO_LDOPTS='-G -z muldefs'
        AR_LIST="$AR t"
        AR_EXTRACT="$AR x"
@@ -2695,8 +2695,8 @@ EOF
 EOF
                       ac_cv_visibility_pragma=no
                       if ${CC-cc} -Werror -S conftest.c -o conftest.s >/dev/null 2>&1; then
-                        if egrep '\.(hidden|extern_private).*foo_hidden' conftest.s >/dev/null; then
-                          if ! egrep '\.(hidden|extern_private).*foo_default' conftest.s > /dev/null; then
+                        if egrep '\.(hidden|private_extern).*foo_hidden' conftest.s >/dev/null; then
+                          if ! egrep '\.(hidden|private_extern).*foo_default' conftest.s > /dev/null; then
                             ac_cv_visibility_pragma=yes
                           fi
                         fi
@@ -2719,7 +2719,7 @@ EOF
                        if ! ${CXX-g++} ${CXXFLAGS} ${DSO_PIC_CFLAGS} ${DSO_LDOPTS} -S -o conftest.S conftest.c > /dev/null 2>&1 ; then
                          ac_cv_have_visibility_class_bug=yes
                        else
-                         if test `grep -c "@PLT" conftest.S` = 0; then
+                         if test `egrep -c '@PLT|\\$stub' conftest.S` = 0; then
                            ac_cv_have_visibility_class_bug=yes
                          fi
                        fi
@@ -3832,7 +3832,17 @@ if test -n "$_USE_SYSTEM_NSPR"; then
     AM_PATH_NSPR(4.0.0, [MOZ_NATIVE_NSPR=1], [MOZ_NATIVE_NSPR=])
 fi
 
-if test -z "$MOZ_NATIVE_NSPR"; then
+if test -n "$MOZ_NATIVE_NSPR"; then
+    _SAVE_CFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS $NSPR_CFLAGS"
+    AC_TRY_COMPILE([#include "prlog.h"],
+                [#ifndef PR_STATIC_ASSERT
+                 #error PR_STATIC_ASSERT not defined
+                 #endif],
+                [MOZ_NATIVE_NSPR=1],
+                AC_MSG_ERROR([system NSPR does not support PR_STATIC_ASSERT]))
+    CFLAGS=$_SAVE_CFLAGS
+else
     NSPR_CFLAGS='`$(DEPTH)/nsprpub/config/nspr-config --prefix=$(LIBXUL_DIST) --includedir=$(LIBXUL_DIST)/include/nspr --cflags`'
     # explicitly set libs for Visual Age C++ for OS/2
     if test "$OS_ARCH" = "OS2" -a "$VACPP" = "yes"; then
@@ -3990,9 +4000,11 @@ if test -z "$PNG_DIR" -o "$PNG_DIR" = no; then
 else
     _SAVE_PNG_LIBS=$PNG_LIBS
     AC_CHECK_LIB(png, png_get_valid, [SYSTEM_PNG=1 PNG_LIBS="-lpng $PNG_LIBS"],
-                 SYSTEM_PNG=, $PNG_LIBS)
+                 AC_MSG_ERROR([--with-system-png requested but no working libpng found]), 
+                 $PNG_LIBS)
     AC_CHECK_LIB(png, png_get_acTL, ,
-                 [SYSTEM_PNG= PNG_LIBS=$_SAVE_PNG_LIBS], $_SAVE_PNG_LIBS)
+                 AC_MSG_ERROR([--with-system-png won't work because the system's libpng doesn't have APNG support]),
+                 $_SAVE_PNG_LIBS)
 fi
 if test "$SYSTEM_PNG" = 1; then
     LIBS="$PNG_LIBS $LIBS"
@@ -4006,7 +4018,7 @@ if test "$SYSTEM_PNG" = 1; then
                      #error "Insufficient libpng version."
                      #endif ],
                    SYSTEM_PNG=1,
-                   [SYSTEM_PNG= PNG_CFLAGS= PNG_LIBS=]) 
+                   AC_MSG_ERROR([--with-system-png requested but no working libpng found]))
 fi
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
@@ -5303,8 +5315,10 @@ dnl ========================================================
 dnl = Airbag crash reporting (on by default on supported platforms)
 dnl ========================================================
 
-if test "$OS_ARCH" = "WINNT" -a -z "$GNU_CC" \
-  || test "$OS_ARCH" = "Darwin"; then
+if (test "$OS_ARCH" = "WINNT" -a -z "$GNU_CC" \
+    || test "$OS_ARCH" = "Darwin" \
+    || test "$OS_ARCH" = "Linux") \
+   && test -z "$HAVE_64BIT_OS"; then
    MOZ_AIRBAG=1
 fi
 
@@ -5315,7 +5329,32 @@ MOZ_ARG_DISABLE_BOOL(airbag,
 
 if test -n "$MOZ_AIRBAG"; then
    AC_DEFINE(MOZ_AIRBAG)
+
+  if test "$OS_ARCH" = "Linux"; then
+    PKG_CHECK_MODULES(MOZ_LIBCURL, libcurl, _CURL_FOUND=1, _CURL_FOUND=)
+    if test -z "$_CURL_FOUND"; then
+       AC_PATH_PROGS(CURL_CONFIG, $CURL_CONFIG curl-config)
+       if test -n "$CURL_CONFIG"; then
+          AC_MSG_CHECKING(MOZ_LIBCURL_CFLAGS)
+          MOZ_LIBCURL_CFLAGS=`${CURL_CONFIG} --cflags`
+          AC_MSG_RESULT($MOZ_LIBCURL_CFLAGS)
+
+          AC_MSG_CHECKING(MOZ_LIBCURL_LIBS)
+          MOZ_LIBCURL_LIBS=`${CURL_CONFIG} --libs`
+          AC_MSG_RESULT($MOZ_LIBCURL_LIBS)
+
+          _CURL_FOUND=1
+       fi
+    fi
+
+    if test -z "$_CURL_FOUND" && test -z "$SKIP_LIBRARY_CHECKS"; then
+        AC_MSG_ERROR([Couldn't find libcurl, which is required for the crash reporter.  Use --disable-airbag to disable the crash reporter.])
+    fi
+  fi
 fi
+
+AC_SUBST(MOZ_LIBCURL_CFLAGS)
+AC_SUBST(MOZ_LIBCURL_LIBS)
 
 dnl ========================================================
 dnl = Build mochitest JS/DOM tests (on by default)
@@ -5429,6 +5468,15 @@ fi
 
 dnl Remove dupes
 MOZ_EXTENSIONS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_EXTENSIONS}`
+
+dnl Ensure every extension exists, to avoid mostly-inscrutable error messages
+dnl when trying to build a non-existent extension.
+for extension in $MOZ_EXTENSIONS; do
+    if test ! -d "${srcdir}/extensions/${extension}"; then
+        AC_MSG_ERROR([Unrecognized extension provided to --enable-extensions: ${extension}.])
+    fi
+done
+
 
 dnl ========================================================
 dnl Image decoders
@@ -5752,7 +5800,7 @@ dnl ========================================================
 dnl = Enable places bookmarks (use places for bookmarks)
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(places-bookmarks,
-[  --enable-places_bookmarks        Enable 'places' for bookmarks backend],
+[  --enable-places-bookmarks        Enable 'places' for bookmarks backend],
     MOZ_PLACES_BOOKMARKS=1,
     MOZ_PLACES_BOOKMARKS= )
 if test -n "$MOZ_PLACES_BOOKMARKS"; then
@@ -6645,6 +6693,11 @@ MOZ_ARG_ENABLE_BOOL(static,
 [  --enable-static         Enable building of internal static libs],
     BUILD_STATIC_LIBS=1,
     BUILD_STATIC_LIBS=)
+
+dnl Disable libxul in debug builds.
+if test -n "$MOZ_DEBUG"; then
+   MOZ_ENABLE_LIBXUL=
+fi
 
 MOZ_ARG_ENABLE_BOOL(libxul,
 [  --enable-libxul         Enable building of libxul],

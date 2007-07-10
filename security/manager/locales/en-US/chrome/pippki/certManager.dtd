@@ -57,6 +57,7 @@
 <!ENTITY certmgr.detail.prettyprint_tab.title "Details">
 <!ENTITY certmgr.detail.prettyprint_tab.accesskey "D">
 
+<!ENTITY certmgr.pending.label                "Currently verifying certificate...">
 <!ENTITY certmgr.subjectinfo.label            "Issued To">
 <!ENTITY certmgr.issuerinfo.label             "Issued By">
 <!ENTITY certmgr.validity.label               "Validity" >

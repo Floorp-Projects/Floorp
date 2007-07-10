@@ -652,7 +652,7 @@ nsXMLHttpRequest::ConvertBodyToText(nsAString& aOutBuffer)
     return rv;
 
   PRUnichar * outBuffer =
-    NS_STATIC_CAST(PRUnichar*, nsMemory::Alloc((outBufferLength + 1) *
+    static_cast<PRUnichar*>(nsMemory::Alloc((outBufferLength + 1) *
                                                sizeof(PRUnichar)));
   if (!outBuffer) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -998,8 +998,10 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
   NS_ENSURE_ARG(!method.IsEmpty());
   NS_ENSURE_ARG(!url.IsEmpty());
 
-  // Disallow HTTP/1.1 TRACE method (see bug 302489).
-  if (method.LowerCaseEqualsASCII("trace")) {
+  // Disallow HTTP/1.1 TRACE method (see bug 302489)
+  // and MS IIS equivalent TRACK (see bug 381264)
+  if (method.LowerCaseEqualsASCII("trace") ||
+      method.LowerCaseEqualsASCII("track")) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -1044,7 +1046,7 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
   // Still need to consider the case that doc is nsnull however.
   nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
   PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
-  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OTHER,
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_XMLHTTPREQUEST,
                                  uri,
                                  (doc ? doc->GetDocumentURI() : nsnull),
                                  doc,
@@ -1168,8 +1170,8 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
         JSString* userStr = ::JS_ValueToString(cx, argv[3]);
 
         if (userStr) {
-          user.Assign(NS_REINTERPRET_CAST(PRUnichar *,
-                                          ::JS_GetStringChars(userStr)),
+          user.Assign(reinterpret_cast<PRUnichar *>
+                                      (::JS_GetStringChars(userStr)),
                       ::JS_GetStringLength(userStr));
         }
 
@@ -1177,8 +1179,8 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
           JSString* passwdStr = JS_ValueToString(cx, argv[4]);
 
           if (passwdStr) {
-            password.Assign(NS_REINTERPRET_CAST(PRUnichar *,
-                                                ::JS_GetStringChars(passwdStr)),
+            password.Assign(reinterpret_cast<PRUnichar *>
+                                            (::JS_GetStringChars(passwdStr)),
                             ::JS_GetStringLength(passwdStr));
           }
         }
@@ -1200,7 +1202,7 @@ nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
                                    PRUint32 count,
                                    PRUint32 *writeCount)
 {
-  nsXMLHttpRequest* xmlHttpRequest = NS_STATIC_CAST(nsXMLHttpRequest*, closure);
+  nsXMLHttpRequest* xmlHttpRequest = static_cast<nsXMLHttpRequest*>(closure);
   if (!xmlHttpRequest || !writeCount) {
     NS_WARNING("XMLHttpRequest cannot read from stream: no closure or writeCount");
     return NS_ERROR_FAILURE;
@@ -1275,28 +1277,19 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
   NS_ENSURE_TRUE(channel, NS_ERROR_UNEXPECTED);
 
+  mChannel->SetOwner(mPrincipal);
+
   mReadRequest = request;
   mContext = ctxt;
   mState |= XML_HTTP_REQUEST_PARSEBODY;
   ChangeState(XML_HTTP_REQUEST_LOADED);
 
-  // XXXbz this is probably all wrong when not called from JS... and possibly
-  // even then! Fixing that requires giving XMLHttpRequest some principals
-  // when inited.  Until then, cases when we don't actually parse the
-  // document will give our mDocument he wrong principal.  I'm just not sure
-  // how wrong it can get...  Shouldn't be too bad as long as mScriptContext
-  // is sane, I guess.
-  nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
   nsIURI* uri = GetBaseURI();
-  nsIPrincipal* principal = nsnull;
-  if (doc) {
-    principal = doc->NodePrincipal();
-  }
 
   // Create an empty document from it 
   const nsAString& emptyStr = EmptyString();
   nsresult rv = nsContentUtils::CreateDocument(emptyStr, emptyStr, nsnull, uri,
-                                               uri, principal,
+                                               uri, mPrincipal,
                                                getter_AddRefs(mDocument));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1307,13 +1300,13 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   nsCOMPtr<nsPIDOMEventTarget> target(do_QueryInterface(mDocument));
   if (target) {
     nsWeakPtr requestWeak =
-      do_GetWeakReference(NS_STATIC_CAST(nsIXMLHttpRequest*, this));
+      do_GetWeakReference(static_cast<nsIXMLHttpRequest*>(this));
     nsCOMPtr<nsIDOMEventListener> proxy = new nsLoadListenerProxy(requestWeak);
     if (!proxy) return NS_ERROR_OUT_OF_MEMORY;
 
     // This will addref the proxy
-    rv = target->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMEventListener*,
-                                                      proxy),
+    rv = target->AddEventListenerByIID(static_cast<nsIDOMEventListener*>
+                                                  (proxy),
                                        NS_GET_IID(nsIDOMLoadListener));
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   }
@@ -1520,6 +1513,18 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   //     if there are no event listeners set and we are doing
   //     an asynchronous call.
 
+  nsCOMPtr<nsIDocument> doc =
+    do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
+  if (doc) {
+    mPrincipal = doc->NodePrincipal();
+  }
+  else {
+    nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+    if (secMan) {
+      secMan->GetSubjectPrincipal(getter_AddRefs(mPrincipal));
+    }
+  }
+
   // Ignore argument if method is GET, there is no point in trying to
   // upload anything
   nsCAutoString method;
@@ -1528,18 +1533,11 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   if (httpChannel) {
     httpChannel->GetRequestMethod(method); // If GET, method name will be uppercase
 
-    nsCOMPtr<nsIDocument> doc =
-      do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
+    if (mPrincipal) {
+      nsCOMPtr<nsIURI> codebase;
+      mPrincipal->GetURI(getter_AddRefs(codebase));
 
-    if (doc) {
-      nsIPrincipal *principal = doc->NodePrincipal();
-
-      if (principal) {
-        nsCOMPtr<nsIURI> codebase;
-        principal->GetURI(getter_AddRefs(codebase));
-
-        httpChannel->SetReferrer(codebase);
-      }
+      httpChannel->SetReferrer(codebase);
     }
   }
 
@@ -1601,6 +1599,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
             nsCOMPtr<nsIInputStream> stream(do_QueryInterface(supports));
             if (stream) {
               postDataStream = stream;
+              charset.Truncate();
             }
           }
         }
@@ -1650,8 +1649,18 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
         contentType = NS_LITERAL_CSTRING("application/xml");
       }
 
-      contentType.AppendLiteral(";charset=");
-      contentType.Append(charset);
+      // We don't want to set a charset for streams.
+      if (!charset.IsEmpty()) {
+        nsCAutoString actualType, dummy;
+        rv = NS_ParseContentType(contentType, actualType, dummy);
+        if (NS_FAILED(rv)) {
+          actualType.AssignLiteral("application/xml");
+        }
+
+        contentType.Assign(actualType);
+        contentType.AppendLiteral(";charset=");
+        contentType.Append(charset);
+      }
 
       rv = uploadChannel->SetUploadStream(postDataStream, contentType, -1);
       // Reset the method to its original value
@@ -2091,12 +2100,12 @@ nsXMLHttpRequest::GetInterface(const nsIID & aIID, void **aResult)
   // need to see these notifications for proper functioning.
   if (aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
     mChannelEventSink = do_GetInterface(mNotificationCallbacks);
-    *aResult = NS_STATIC_CAST(nsIChannelEventSink*, this);
+    *aResult = static_cast<nsIChannelEventSink*>(this);
     NS_ADDREF_THIS();
     return NS_OK;
   } else if (aIID.Equals(NS_GET_IID(nsIProgressEventSink))) {
     mProgressEventSink = do_GetInterface(mNotificationCallbacks);
-    *aResult = NS_STATIC_CAST(nsIProgressEventSink*, this);
+    *aResult = static_cast<nsIProgressEventSink*>(this);
     NS_ADDREF_THIS();
     return NS_OK;
   }

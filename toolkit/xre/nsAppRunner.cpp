@@ -46,7 +46,6 @@
 
 #include "nsAppRunner.h"
 #include "nsUpdateDriver.h"
-#include "nsBuildID.h"
 
 #ifdef XP_MACOSX
 #include "MacLaunchHelper.h"
@@ -112,6 +111,7 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsEmbedCID.h"
 #include "nsNetUtil.h"
+#include "nsReadableUtils.h"
 #include "nsStaticComponents.h"
 #include "nsXPCOM.h"
 #include "nsXPIDLString.h"
@@ -265,6 +265,9 @@ extern "C" {
 int    gArgc;
 char **gArgv;
 
+static char gToolkitVersion[20];
+static char gToolkitBuildID[40];
+
 static int    gRestartArgc;
 static char **gRestartArgv;
 
@@ -273,17 +276,33 @@ static char **gRestartArgv;
 #include "nsGTKToolkit.h"
 #endif
 
+// Save the given word to the specified environment variable.
+static void
+SaveWordToEnv(const char *name, const nsACString & word)
+{
+  char *expr = PR_smprintf("%s=%s", name, PromiseFlatCString(word).get());
+  if (expr)
+    PR_SetEnv(expr);
+  // We intentionally leak |expr| here since it is required by PR_SetEnv.
+}
+
 // Save the path of the given file to the specified environment variable.
 static void
 SaveFileToEnv(const char *name, nsIFile *file)
 {
   nsCAutoString path;
   file->GetNativePath(path);
+  SaveWordToEnv(name, path);
+}
 
-  char *expr = PR_smprintf("%s=%s", name, path.get());
-  if (expr)
-    PR_SetEnv(expr);
-  // We intentionally leak |expr| here since it is required by PR_SetEnv.
+// Save the path of the given word to the specified environment variable
+// provided the environment variable does not have a value.
+static void
+SaveWordToEnvIfUnset(const char *name, const nsACString & word)
+{
+  const char *val = PR_GetEnv(name);
+  if (!(val && *val))
+    SaveWordToEnv(name, word);
 }
 
 // Save the path of the given file to the specified environment variable
@@ -573,7 +592,7 @@ nsXULAppInfo::GetVersion(nsACString& aResult)
 NS_IMETHODIMP
 nsXULAppInfo::GetPlatformVersion(nsACString& aResult)
 {
-  aResult.AssignLiteral(TOOLKIT_EM_VERSION);
+  aResult.AssignLiteral(gToolkitVersion);
 
   return NS_OK;
 }
@@ -589,7 +608,7 @@ nsXULAppInfo::GetAppBuildID(nsACString& aResult)
 NS_IMETHODIMP
 nsXULAppInfo::GetPlatformBuildID(nsACString& aResult)
 {
-  aResult.Assign(NS_STRINGIFY(BUILD_ID));
+  aResult.Assign(gToolkitBuildID);
 
   return NS_OK;
 }
@@ -734,7 +753,7 @@ static NS_METHOD AppInfoConstructor(nsISupports* aOuter,
 {
   NS_ENSURE_NO_AGGREGATION(aOuter);
 
-  return NS_CONST_CAST(nsXULAppInfo*, &kAppInfo)->
+  return const_cast<nsXULAppInfo*>(&kAppInfo)->
     QueryInterface(aIID, aResult);
 }
 
@@ -1540,6 +1559,8 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
   nsresult rv;
 
   nsCOMPtr<nsILocalFile> profD, profLD;
+  PRUnichar* profileNamePtr;
+  nsCAutoString profileName;
 
   {
     ScopedXPCOMStartup xpcom;
@@ -1600,12 +1621,19 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
       rv = lock->GetLocalDirectory(getter_AddRefs(profLD));
       NS_ENSURE_SUCCESS(rv, rv);
 
+      rv = ioParamBlock->GetString(0, &profileNamePtr);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      CopyUTF16toUTF8(profileNamePtr, profileName);
+      NS_Free(profileNamePtr);
+
       lock->Unlock();
     }
   }
 
   SaveFileToEnv("XRE_PROFILE_PATH", profD);
   SaveFileToEnv("XRE_PROFILE_LOCAL_PATH", profLD);
+  SaveWordToEnv("XRE_PROFILE_NAME", profileName);
 
   PRBool offline = PR_FALSE;
   aProfileSvc->GetStartOffline(&offline);
@@ -1661,7 +1689,7 @@ static PRBool gDoMigration = PR_FALSE;
 
 static nsresult
 SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
-              PRBool* aStartOffline)
+              PRBool* aStartOffline, nsACString* aProfileName)
 {
   nsresult rv;
   ArgResult ar;
@@ -1689,6 +1717,11 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     } else {
       localDir = lf;
     }
+
+    arg = PR_GetEnv("XRE_PROFILE_NAME");
+    if (arg && *arg && aProfileName)
+      aProfileName->Assign(nsDependentCString(arg));
+
 
     // Clear out flags that we handled (or should have handled!) last startup.
     const char *dummy;
@@ -1800,8 +1833,11 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIProfileUnlocker> unlocker;
       rv = profile->Lock(nsnull, aResult);
-      if (NS_SUCCEEDED(rv))
+      if (NS_SUCCEEDED(rv)) {
+        if (aProfileName)
+          aProfileName->Assign(nsDependentCString(arg));
         return NS_OK;
+      }
 
       nsCOMPtr<nsILocalFile> profileDir;
       rv = profile->GetRootDir(getter_AddRefs(profileDir));
@@ -1834,8 +1870,11 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     if (NS_SUCCEEDED(rv)) {
       profileSvc->Flush();
       rv = profile->Lock(nsnull, aResult);
-      if (NS_SUCCEEDED(rv))
+      if (NS_SUCCEEDED(rv)) {
+        if (aProfileName)
+          aProfileName->Assign(NS_LITERAL_CSTRING("default"));
         return NS_OK;
+      }
     }
   }
 
@@ -1850,8 +1889,15 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     if (profile) {
       nsCOMPtr<nsIProfileUnlocker> unlocker;
       rv = profile->Lock(getter_AddRefs(unlocker), aResult);
-      if (NS_SUCCEEDED(rv))
+      if (NS_SUCCEEDED(rv)) {
+        // Try to grab the profile name.
+        if (aProfileName) {
+          rv = profile->GetName(*aProfileName);
+          if (NS_FAILED(rv))
+            aProfileName->Truncate(0);
+        }
         return NS_OK;
+      }
 
       nsCOMPtr<nsILocalFile> profileDir;
       rv = profile->GetRootDir(getter_AddRefs(profileDir));
@@ -1936,7 +1982,7 @@ static void BuildVersion(nsCString &aBuf)
   aBuf.Append('_');
   aBuf.Append(gAppData->buildID);
   aBuf.Append('/');
-  aBuf.AppendLiteral(GRE_BUILD_ID);
+  aBuf.Append(gToolkitBuildID);
 }
 
 static void
@@ -2150,7 +2196,7 @@ static nsGTKToolkit* GetGTKToolkit()
   nsIToolkit* toolkit = widget->GetToolkit();
   if (!toolkit)
     return nsnull;
-  return NS_STATIC_CAST(nsGTKToolkit*, toolkit);
+  return static_cast<nsGTKToolkit*>(toolkit);
 }
 
 #endif
@@ -2261,27 +2307,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     return 1;
   }
 
-  if (appData.size > offsetof(nsXREAppData, minVersion)) {
-    if (!appData.minVersion) {
-      Output(PR_TRUE, "Error: Gecko:MinVersion not specified in application.ini\n");
-      return 1;
-    }
-
-    if (!appData.maxVersion) {
-      // If no maxVersion is specified, we assume the app is only compatible
-      // with the initial preview release. Do not increment this number ever!
-      SetAllocatedString(appData.maxVersion, "1.*");
-    }
-
-    if (NS_CompareVersions(appData.minVersion, TOOLKIT_EM_VERSION) > 0 ||
-        NS_CompareVersions(appData.maxVersion, TOOLKIT_EM_VERSION) < 0) {
-      Output(PR_TRUE, "Error: Platform version " TOOLKIT_EM_VERSION " is not compatible with\n"
-             "minVersion >= %s\nmaxVersion <= %s\n",
-             appData.minVersion, appData.maxVersion);
-      return 1;
-    }
-  }
-
   ScopedLogging log;
 
   if (!appData.xreDirectory) {
@@ -2298,6 +2323,54 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     rv = CallQueryInterface(greDir, &appData.xreDirectory);
     if (NS_FAILED(rv))
       return 2;
+  }
+
+  nsCOMPtr<nsIFile> iniFile;
+  rv = appData.xreDirectory->Clone(getter_AddRefs(iniFile));
+  if (NS_FAILED(rv))
+    return 2;
+
+  iniFile->AppendNative(NS_LITERAL_CSTRING("platform.ini"));
+
+  nsCOMPtr<nsILocalFile> localIniFile = do_QueryInterface(iniFile);
+  if (!localIniFile)
+    return 2;
+
+  nsINIParser parser;
+  rv = parser.Init(localIniFile);
+  if (NS_SUCCEEDED(rv)) {
+    rv = parser.GetString("Build", "Milestone",
+                          gToolkitVersion, sizeof(gToolkitVersion));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get toolkit version");
+
+    rv = parser.GetString("Build", "BuildID",
+                          gToolkitBuildID, sizeof(gToolkitBuildID));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get toolkit buildid");
+  }
+  else {
+    NS_ERROR("Couldn't parse platform.ini!");
+  }
+
+  if (appData.size > offsetof(nsXREAppData, minVersion)) {
+    if (!appData.minVersion) {
+      Output(PR_TRUE, "Error: Gecko:MinVersion not specified in application.ini\n");
+      return 1;
+    }
+
+    if (!appData.maxVersion) {
+      // If no maxVersion is specified, we assume the app is only compatible
+      // with the initial preview release. Do not increment this number ever!
+      SetAllocatedString(appData.maxVersion, "1.*");
+    }
+
+    if (NS_CompareVersions(appData.minVersion, gToolkitVersion) > 0 ||
+        NS_CompareVersions(appData.maxVersion, gToolkitVersion) < 0) {
+      Output(PR_TRUE, "Error: Platform version '%s' is not compatible with\n"
+             "minVersion >= %s\nmaxVersion <= %s\n",
+             gToolkitVersion,
+             appData.minVersion, appData.maxVersion);
+      return 1;
+    }
   }
 
 #ifdef MOZ_AIRBAG
@@ -2436,6 +2509,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
 #if defined(MOZ_WIDGET_GTK2)
+    g_thread_init(NULL);
     // setup for private colormap.  Ideally we'd like to do this
     // in nsAppShell::Create, but we need to get in before gtk
     // has been initialized to make sure everything is running
@@ -2547,8 +2621,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
     nsCOMPtr<nsIProfileLock> profileLock;
     PRBool startOffline = PR_FALSE;
+    nsCAutoString profileName;
 
-    rv = SelectProfile(getter_AddRefs(profileLock), nativeApp, &startOffline);
+    rv = SelectProfile(getter_AddRefs(profileLock), nativeApp, &startOffline,
+                       &profileName);
     if (rv == NS_ERROR_LAUNCHED_CHILD_PROCESS ||
         rv == NS_ERROR_ABORT) return 0;
     if (NS_FAILED(rv)) return 1;
@@ -2763,6 +2839,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           // during the relaunch process now that we know we won't be relaunching.
           PR_SetEnv("XRE_PROFILE_PATH=");
           PR_SetEnv("XRE_PROFILE_LOCAL_PATH=");
+          PR_SetEnv("XRE_PROFILE_NAME=");
           PR_SetEnv("XRE_START_OFFLINE=");
           PR_SetEnv("XRE_IMPORT_PROFILES=");
           PR_SetEnv("NO_EM_RESTART=");
@@ -2799,7 +2876,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           nsCOMPtr<nsIRemoteService> remoteService;
           remoteService = do_GetService("@mozilla.org/toolkit/remote-service;1");
           if (remoteService)
-            remoteService->Startup(gAppData->name, nsnull);
+            remoteService->Startup(gAppData->name,
+                                   PromiseFlatCString(profileName).get());
 #endif /* MOZ_ENABLE_XREMOTE */
 
           // enable win32 DDE responses and Mac appleevents responses
@@ -2870,6 +2948,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       // Ensure that these environment variables are set:
       SaveFileToEnvIfUnset("XRE_PROFILE_PATH", profD);
       SaveFileToEnvIfUnset("XRE_PROFILE_LOCAL_PATH", profLD);
+      SaveWordToEnvIfUnset("XRE_PROFILE_NAME", profileName);
 
 #ifdef XP_MACOSX
       if (gBinaryPath) {

@@ -238,6 +238,11 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  virtual void UpdateEditableState()
+  {
+    return UpdateEditableFormControlState();
+  }
+
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLInputElement,
                                                      nsGenericHTMLFormElement)
 
@@ -424,7 +429,7 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
         // the clone.
         // XXX GetValue should be const
         nsAutoString value;
-        NS_CONST_CAST(nsHTMLInputElement*, this)->GetValue(value);
+        const_cast<nsHTMLInputElement*>(this)->GetValue(value);
         // SetValueInternal handles setting the VALUE_CHANGED bit for us
         it->SetValueInternal(value, nsnull);
       }
@@ -441,7 +446,7 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
         // checked state on the clone.
         // XXX GetChecked should be const
         PRBool checked;
-        NS_CONST_CAST(nsHTMLInputElement*, this)->GetChecked(&checked);
+        const_cast<nsHTMLInputElement*>(this)->GetChecked(&checked);
         it->DoSetChecked(checked, PR_FALSE);
       }
       break;
@@ -599,6 +604,21 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                        NS_EVENT_STATE_USERDISABLED |
                                        NS_EVENT_STATE_SUPPRESSED |
                                        NS_EVENT_STATE_LOADING);
+      }
+    }
+
+    // If readonly is changed for text and password we need to handle
+    // :read-only / :read-write
+    if (aNotify && aName == nsGkAtoms::readonly &&
+        (mType == NS_FORM_INPUT_TEXT || mType == NS_FORM_INPUT_PASSWORD)) {
+      UpdateEditableState();
+
+      nsIDocument* document = GetCurrentDoc();
+      if (document) {
+        mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, PR_TRUE);
+        document->ContentStatesChanged(this, nsnull,
+                                       NS_EVENT_STATE_MOZ_READONLY |
+                                       NS_EVENT_STATE_MOZ_READWRITE);
       }
     }
   }
@@ -999,9 +1019,8 @@ nsHTMLInputElement::RadioSetChecked(PRBool aNotify)
   if (currentlySelected) {
     // Pass PR_TRUE for the aNotify parameter since the currently selected
     // button is already in the document.
-    rv = NS_STATIC_CAST(nsHTMLInputElement*,
-                        NS_STATIC_CAST(nsIDOMHTMLInputElement*, currentlySelected)
-         )->SetCheckedInternal(PR_FALSE, PR_TRUE);
+    rv = static_cast<nsHTMLInputElement*>
+                    (static_cast<nsIDOMHTMLInputElement*>(currentlySelected))->SetCheckedInternal(PR_FALSE, PR_TRUE);
   }
 
   //
@@ -1124,7 +1143,7 @@ nsHTMLInputElement::FireOnChange()
   nsEventStatus status = nsEventStatus_eIgnore;
   nsEvent event(PR_TRUE, NS_FORM_CHANGE);
   nsCOMPtr<nsPresContext> presContext = GetPresContext();
-  nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this), presContext,
+  nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext,
                               &event, nsnull, &status);
 }
 
@@ -1231,7 +1250,7 @@ nsHTMLInputElement::Select()
       nsEvent event(nsContentUtils::IsCallerChrome(), NS_FORM_SELECTED);
 
       SET_BOOLBIT(mBitField, BF_HANDLING_SELECT_EVENT, PR_TRUE);
-      nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this),
+      nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
                                   presContext, &event, nsnull, &status);
       SET_BOOLBIT(mBitField, BF_HANDLING_SELECT_EVENT, PR_FALSE);
     }
@@ -1325,7 +1344,7 @@ nsHTMLInputElement::Click()
 
         SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_TRUE);
 
-        nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this), context,
+        nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), context,
                                     &event, nsnull, &status);
 
         SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_FALSE);
@@ -1455,13 +1474,13 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   if ((mType == NS_FORM_INPUT_TEXT || mType == NS_FORM_INPUT_PASSWORD) &&
       aVisitor.mEvent->message == NS_MOUSE_CLICK &&
       aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
-      NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+      static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
         nsMouseEvent::eMiddleButton) {
     aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_NO_CONTENT_DISPATCH;
   }
 
   // We must cache type because mType may change during JS event (bug 2369)
-  aVisitor.mItemFlags |= NS_STATIC_CAST(PRUint8, mType);
+  aVisitor.mItemFlags |= static_cast<PRUint8>(mType);
 
   // Fire onchange (if necessary), before we do the blur, bug 357684.
   if (aVisitor.mEvent->message == NS_BLUR_CONTENT) {
@@ -1586,7 +1605,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           // this parent file control -- leave focus on the child.
           nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
           if (formControlFrame && ShouldFocus(this) &&
-              aVisitor.mEvent->originalTarget == NS_STATIC_CAST(nsINode*, this))
+              aVisitor.mEvent->originalTarget == static_cast<nsINode*>(this))
             formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
         }
         break; // NS_FOCUS_CONTENT
@@ -1623,7 +1642,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                                    NS_MOUSE_CLICK, nsnull, nsMouseEvent::eReal);
                 nsEventStatus status = nsEventStatus_eIgnore;
 
-                nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this),
+                nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
                                             aVisitor.mPresContext, &event,
                                             nsnull, &status);
               } // case
@@ -1729,9 +1748,9 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           // cancel all of these events for buttons
           //XXXsmaug Why?
           if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
-              (NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+              (static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
                  nsMouseEvent::eMiddleButton ||
-               NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+               static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
                  nsMouseEvent::eRightButton)) {
             if (mType == NS_FORM_INPUT_BUTTON ||
                 mType == NS_FORM_INPUT_RESET ||
@@ -2291,7 +2310,7 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
     nsAutoString yVal;
 
     nsIntPoint* lastClickedPoint =
-      NS_STATIC_CAST(nsIntPoint*, GetProperty(nsGkAtoms::imageClickedPoint));
+      static_cast<nsIntPoint*>(GetProperty(nsGkAtoms::imageClickedPoint));
     if (lastClickedPoint) {
       // Convert the values to strings for submission
       xVal.AppendInt(lastClickedPoint->x);
@@ -2577,7 +2596,7 @@ nsHTMLInputElement::IntrinsicState() const
     // The call is to an interface function, which makes it non-const, so we
     // use a nasty hack :(
     PRBool defaultState = PR_FALSE;
-    NS_CONST_CAST(nsHTMLInputElement*, this)->GetDefaultChecked(&defaultState);
+    const_cast<nsHTMLInputElement*>(this)->GetDefaultChecked(&defaultState);
     if (defaultState) {
       state |= NS_EVENT_STATE_DEFAULT;
     }
@@ -2705,7 +2724,7 @@ nsHTMLInputElement::AddedToRadioGroup(PRBool aNotify)
   if (container) {
     nsAutoString name;
     if (GetNameIfExists(name)) {
-      container->AddToRadioGroup(name, NS_STATIC_CAST(nsIFormControl*, this));
+      container->AddToRadioGroup(name, static_cast<nsIFormControl*>(this));
     }
   }
 
@@ -2760,7 +2779,7 @@ nsHTMLInputElement::WillRemoveFromRadioGroup()
       gotName = PR_TRUE;
     }
     container->RemoveFromRadioGroup(name,
-                                    NS_STATIC_CAST(nsIFormControl*, this));
+                                    static_cast<nsIFormControl*>(this));
   }
 
   return NS_OK;

@@ -88,7 +88,6 @@ NS_INTERFACE_MAP_BEGIN(nsSVGSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFitToViewBox)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGLocatable)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGZoomAndPan)
-  NS_INTERFACE_MAP_ENTRY(nsISVGSVGElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGSVGElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGSVGElementBase)
 
@@ -572,7 +571,7 @@ nsSVGSVGElement::CreateSVGNumber(nsIDOMSVGNumber **_retval)
 NS_IMETHODIMP
 nsSVGSVGElement::CreateSVGLength(nsIDOMSVGLength **_retval)
 {
-  return NS_NewSVGLength(NS_REINTERPRET_CAST(nsISVGLength**, _retval));
+  return NS_NewSVGLength(reinterpret_cast<nsISVGLength**>(_retval));
 }
 
 /* nsIDOMSVGAngle createSVGAngle (); */
@@ -690,7 +689,7 @@ nsSVGSVGElement::GetBBox(nsIDOMSVGRect **_retval)
 
   if (frame) {
     nsISVGChildFrame* svgframe;
-    frame->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&svgframe);
+    CallQueryInterface(frame, &svgframe);
     if (svgframe) {
       svgframe->SetMatrixPropagation(PR_FALSE);
       svgframe->NotifyCanvasTMChanged(PR_TRUE);
@@ -745,7 +744,7 @@ nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix **_retval)
       break;
     }
 
-    nsSVGSVGElement *viewportElement = QI_TO_NSSVGSVGELEMENT(ancestor);
+    nsSVGSVGElement *viewportElement = QI_AND_CAST_TO_NSSVGSVGELEMENT(ancestor);
     if (viewportElement) {
       rv = viewportElement->GetViewboxToViewportTransform(getter_AddRefs(ancestorCTM));
       if (NS_FAILED(rv)) return rv;
@@ -770,7 +769,7 @@ nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix **_retval)
     // we didn't find an SVG ancestor
     float s=1, x=0, y=0;
     if (ownerDoc &&
-        ownerDoc->GetRootContent() == NS_STATIC_CAST(nsIContent*, this)) {
+        ownerDoc->GetRootContent() == static_cast<nsIContent*>(this)) {
       // we're the root element. get our currentScale and currentTranslate vals
       mCurrentScale->GetValue(&s);
       mCurrentTranslate->GetX(&x);
@@ -790,10 +789,10 @@ nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix **_retval)
     if (ancestorCount == 0) {
       // our immediate parent is an SVG element. get our 'x' and 'y' attribs.
       // cast to nsSVGElement so we get our ancestor coord context.
-      x = mLengthAttributes[X].GetAnimValue(NS_STATIC_CAST(nsSVGElement*,
-                                                           this));
-      y = mLengthAttributes[Y].GetAnimValue(NS_STATIC_CAST(nsSVGElement*,
-                                                           this));
+      x = mLengthAttributes[X].GetAnimValue(static_cast<nsSVGElement*>
+                                                       (this));
+      y = mLengthAttributes[Y].GetAnimValue(static_cast<nsSVGElement*>
+                                                       (this));
     }
     else {
       // We have an SVG ancestor, but with non-SVG content between us
@@ -880,7 +879,7 @@ nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
     // we didn't find an SVG ancestor
     float s=1, x=0, y=0;
     if (ownerDoc &&
-        ownerDoc->GetRootContent() == NS_STATIC_CAST(nsIContent*, this)) {
+        ownerDoc->GetRootContent() == static_cast<nsIContent*>(this)) {
       // we're the root element. get our currentScale and currentTranslate vals
       mCurrentScale->GetValue(&s);
       mCurrentTranslate->GetX(&x);
@@ -900,10 +899,10 @@ nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
     if (ancestorCount == 0) {
       // our immediate parent is an SVG element. get our 'x' and 'y' attribs
       // cast to nsSVGElement so we get our ancestor coord context.
-      x = mLengthAttributes[X].GetAnimValue(NS_STATIC_CAST(nsSVGElement*,
-                                                           this));
-      y = mLengthAttributes[Y].GetAnimValue(NS_STATIC_CAST(nsSVGElement*,
-                                                           this));
+      x = mLengthAttributes[X].GetAnimValue(static_cast<nsSVGElement*>
+                                                       (this));
+      y = mLengthAttributes[Y].GetAnimValue(static_cast<nsSVGElement*>
+                                                       (this));
     }
     else {
       // We have an SVG ancestor, but with non-SVG content between us
@@ -980,7 +979,7 @@ nsSVGSVGElement::SetZoomAndPan(PRUint16 aZoomAndPan)
 }
 
 //----------------------------------------------------------------------
-// nsISVGSVGElement methods:
+// helper methods for implementing SVGZoomEvent:
 
 NS_IMETHODIMP
 nsSVGSVGElement::GetCurrentScaleNumber(nsIDOMSVGNumber **aResult)
@@ -1014,7 +1013,7 @@ nsSVGSVGElement::SetCurrentScaleTranslate(float s, float x, float y)
     nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
     NS_ASSERTION(presShell, "no presShell");
     if (presShell &&
-        doc->GetRootContent() == NS_STATIC_CAST(nsIContent*, this)) {
+        doc->GetRootContent() == static_cast<nsIContent*>(this)) {
       nsEventStatus status = nsEventStatus_eIgnore;
       nsGUIEvent event(PR_TRUE, NS_SVG_ZOOM, 0);
       event.eventStructType = NS_SVGZOOM_EVENT;
@@ -1039,7 +1038,7 @@ nsSVGSVGElement::SetCurrentTranslate(float x, float y)
     nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
     NS_ASSERTION(presShell, "no presShell");
     if (presShell &&
-        doc->GetRootContent() == NS_STATIC_CAST(nsIContent*, this)) {
+        doc->GetRootContent() == static_cast<nsIContent*>(this)) {
       nsEventStatus status = nsEventStatus_eIgnore;
       nsEvent event(PR_TRUE, NS_SVG_SCROLL);
       event.eventStructType = NS_SVG_EVENT;
@@ -1177,7 +1176,7 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable,
   nsCOMPtr<nsIDOMSVGNumber> n = do_QueryInterface(observable);
   if (n && n==mCurrentScale) {
     if (mDispatchEvent &&
-        doc->GetRootContent() == NS_STATIC_CAST(nsIContent*, this)) {
+        doc->GetRootContent() == static_cast<nsIContent*>(this)) {
       nsEventStatus status = nsEventStatus_eIgnore;
       nsGUIEvent event(PR_TRUE, NS_SVG_ZOOM, 0);
       event.eventStructType = NS_SVGZOOM_EVENT;
@@ -1191,7 +1190,7 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable,
     nsCOMPtr<nsIDOMSVGPoint> p = do_QueryInterface(observable);
     if (p && p==mCurrentTranslate) {
       if (mDispatchEvent &&
-          doc->GetRootContent() == NS_STATIC_CAST(nsIContent*, this)) {
+          doc->GetRootContent() == static_cast<nsIContent*>(this)) {
         nsEventStatus status = nsEventStatus_eIgnore;
         nsEvent event(PR_TRUE, NS_SVG_SCROLL);
         event.eventStructType = NS_SVG_EVENT;
@@ -1370,7 +1369,8 @@ nsSVGSVGElement::SetCoordCtxRect(nsIDOMSVGRect* aCtxRect)
 }
 
 already_AddRefed<nsIDOMSVGRect>
-nsSVGSVGElement::GetCtxRect() {
+nsSVGSVGElement::GetCtxRect()
+{
   nsCOMPtr<nsIDOMSVGRect> vb;
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
     mViewBox->GetAnimVal(getter_AddRefs(vb));
@@ -1393,7 +1393,8 @@ nsSVGSVGElement::GetCtxRect() {
 }
 
 float
-nsSVGSVGElement::GetLength(PRUint8 aCtxType) {
+nsSVGSVGElement::GetLength(PRUint8 aCtxType)
+{
   float h, w;
 
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {

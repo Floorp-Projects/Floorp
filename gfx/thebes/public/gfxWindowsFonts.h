@@ -305,13 +305,14 @@ public:
 
     FontEntry(const nsAString& aName, PRUint16 aFontType) : 
         mName(aName), mFontType(aFontType), mDefaultWeight(0),
-        mUnicodeFont(PR_FALSE), mCharset(0), mUnicodeRanges(0)
+        mUnicodeFont(PR_FALSE), mSymbolFont(PR_FALSE),
+        mCharset(0), mUnicodeRanges(0)
     {
     }
 
     PRBool IsCrappyFont() const {
         /* return if it is a bitmap, old school font or not a unicode font */
-        return (!mUnicodeFont || mFontType == 0 || mFontType == 1);
+        return (!mUnicodeFont || mSymbolFont || mFontType != TRUETYPE_FONTTYPE);
     }
 
     PRBool MatchesGenericFamily(const nsACString& aGeneric) const {
@@ -428,6 +429,7 @@ public:
     PRUint8 mFamily;
     PRUint8 mPitch;
     PRPackedBool mUnicodeFont;
+    PRPackedBool mSymbolFont;
 
     std::bitset<256> mCharset;
     std::bitset<128> mUnicodeRanges;

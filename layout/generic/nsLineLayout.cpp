@@ -408,7 +408,7 @@ nsLineLayout::NewPerSpanData(PerSpanData** aResult)
     if (nsnull == mem) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    psd = NS_REINTERPRET_CAST(PerSpanData*, mem);
+    psd = reinterpret_cast<PerSpanData*>(mem);
   }
   else {
     mSpanFreeList = psd->mNextFreeSpan;
@@ -656,7 +656,7 @@ nsLineLayout::NewPerFrameData(PerFrameData** aResult)
     if (nsnull == mem) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    pfd = NS_REINTERPRET_CAST(PerFrameData*, mem);
+    pfd = reinterpret_cast<PerFrameData*>(mem);
   }
   else {
     mFrameFreeList = pfd->mNext;
@@ -915,7 +915,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       pfd->SetFlag(PFD_SKIPWHENTRIMMINGWHITESPACE, PR_TRUE);
       nsIFrame* outOfFlowFrame = nsLayoutUtils::GetFloatFromPlaceholder(aFrame);
       if (outOfFlowFrame) {
-        nsPlaceholderFrame* placeholder = NS_STATIC_CAST(nsPlaceholderFrame*, aFrame);
+        nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(aFrame);
         // XXXldb What is this test supposed to be?
         if (!NS_SUBTREE_DIRTY(aFrame)) {
           // incremental reflow of child
@@ -923,9 +923,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         }
         else {
           placedFloat = AddFloat(placeholder, aReflowStatus);
-        }
-        if (!placedFloat) {
-          aReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
         }
         if (outOfFlowFrame->GetType() == nsGkAtoms::letterFrame) {
           SetFlag(LL_FIRSTLETTERSTYLEOK, PR_FALSE);
@@ -1028,8 +1025,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         // Remove all of the childs next-in-flows. Make sure that we ask
         // the right parent to do the removal (it's possible that the
         // parent is not this because we are executing pullup code)
-        nsHTMLContainerFrame* parent = NS_STATIC_CAST(nsHTMLContainerFrame*,
-                                                      kidNextInFlow->GetParent());
+        nsHTMLContainerFrame* parent = static_cast<nsHTMLContainerFrame*>
+                                                  (kidNextInFlow->GetParent());
         parent->DeleteNextInFlowChild(mPresContext, kidNextInFlow);
       }
     }
@@ -1404,7 +1401,7 @@ void
 nsLineLayout::DumpPerSpanData(PerSpanData* psd, PRInt32 aIndent)
 {
   nsFrame::IndentBy(stdout, aIndent);
-  printf("%p: left=%d x=%d right=%d\n", NS_STATIC_CAST(void*, psd),
+  printf("%p: left=%d x=%d right=%d\n", static_cast<void*>(psd),
          psd->mLeftEdge, psd->mX, psd->mRightEdge);
   PerFrameData* pfd = psd->mFirstFrame;
   while (nsnull != pfd) {
@@ -2709,25 +2706,4 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
     frame->FinishAndStoreOverflow(&combinedAreaResult, frame->GetSize());
   }
   aCombinedArea = combinedAreaResult;
-}
-
-PRBool
-nsLineLayout::TreatFrameAsBlock(nsIFrame* aFrame)
-{
-  const nsStyleDisplay* display = aFrame->GetStyleDisplay();
-  if (NS_STYLE_POSITION_ABSOLUTE == display->mPosition) {
-    return PR_FALSE;
-  }
-  if (NS_STYLE_FLOAT_NONE != display->mFloats) {
-    return PR_FALSE;
-  }
-  switch (display->mDisplay) {
-  case NS_STYLE_DISPLAY_BLOCK:
-  case NS_STYLE_DISPLAY_LIST_ITEM:
-  case NS_STYLE_DISPLAY_RUN_IN:
-  case NS_STYLE_DISPLAY_COMPACT:
-  case NS_STYLE_DISPLAY_TABLE:
-    return PR_TRUE;
-  }
-  return PR_FALSE;
 }

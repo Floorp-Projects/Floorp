@@ -204,12 +204,12 @@ nsRect& nsRect::ScaleRoundIn(float aScale)
   return *this;
 }
 
-nsRect& nsRect::ScaleRoundPreservingCenters(float aScale)
+nsRect& nsRect::ScaleRoundPreservingCentersInverse(float aScale)
 {
-  nscoord right = NSToCoordRound(float(XMost()) * aScale);
-  nscoord bottom = NSToCoordRound(float(YMost()) * aScale);
-  x = NSToCoordRound(float(x) * aScale);
-  y = NSToCoordRound(float(y) * aScale);
+  nscoord right = NSToCoordRound(float(XMost()) / aScale);
+  nscoord bottom = NSToCoordRound(float(YMost()) / aScale);
+  x = NSToCoordRound(float(x) / aScale);
+  y = NSToCoordRound(float(y) / aScale);
   width = (right - x);
   height = (bottom - y);
   return *this;

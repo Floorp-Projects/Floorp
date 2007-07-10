@@ -121,7 +121,7 @@ NS_IMETHODIMP nsXBMDecoder::Flush()
 NS_METHOD nsXBMDecoder::ReadSegCb(nsIInputStream* aIn, void* aClosure,
                              const char* aFromRawSegment, PRUint32 aToOffset,
                              PRUint32 aCount, PRUint32 *aWriteCount) {
-    nsXBMDecoder *decoder = NS_REINTERPRET_CAST(nsXBMDecoder*, aClosure);
+    nsXBMDecoder *decoder = reinterpret_cast<nsXBMDecoder*>(aClosure);
     *aWriteCount = aCount;
     return decoder->ProcessData(aFromRawSegment, aCount);
 }

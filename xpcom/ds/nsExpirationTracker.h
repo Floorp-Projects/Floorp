@@ -271,7 +271,7 @@ template <class T, PRUint32 K> class nsExpirationTracker {
     PRPackedBool       mInAgeOneGeneration;
 
     static void TimerCallback(nsITimer* aTimer, void* aThis) {
-      nsExpirationTracker* tracker = NS_STATIC_CAST(nsExpirationTracker*, aThis);
+      nsExpirationTracker* tracker = static_cast<nsExpirationTracker*>(aThis);
       tracker->AgeOneGeneration();
       // Cancel the timer if we have no objects to track
       PRUint32 i;

@@ -135,7 +135,7 @@ sub RunShellCommand {
         my $childErr = new IO::Handle();
 
         alarm($timeout);
-        $childStartedTime = localtime();
+        $childStartedTime = time();
 
         $childPid = open3($childIn, $childOut, $childErr, @execCommand);
         $childIn->close();
@@ -211,7 +211,7 @@ sub RunShellCommand {
 
             if (!$childReaped && (waitpid($childPid, WNOHANG) > 0)) {
                 alarm(0);
-                $childEndedTime = localtime();
+                $childEndedTime = time();
                 $exitValue = WEXITSTATUS($?);
                 $signalNum = WIFSIGNALED($?) && WTERMSIG($?);
                 $dumpedCore = WIFSIGNALED($?) && ($? & 128);

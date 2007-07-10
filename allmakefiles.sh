@@ -155,8 +155,6 @@ gfx/idl/Makefile
 gfx/public/Makefile
 gfx/src/Makefile
 gfx/src/beos/Makefile
-gfx/src/gtk/Makefile
-gfx/src/ps/Makefile
 gfx/src/psshared/Makefile
 gfx/src/photon/Makefile
 gfx/src/mac/Makefile
@@ -500,6 +498,7 @@ rdf/base/src/Makefile
 rdf/util/Makefile
 rdf/util/public/Makefile
 rdf/util/src/Makefile
+rdf/util/src/internal/Makefile
 rdf/build/Makefile
 rdf/datasource/Makefile
 rdf/datasource/public/Makefile
@@ -640,10 +639,6 @@ MAKEFILES_string="$MAKEFILES_xpcom"
 
 MAKEFILES_xpinstall="
 xpinstall/Makefile
-xpinstall/packager/Makefile
-xpinstall/packager/unix/Makefile
-xpinstall/packager/windows/Makefile
-xpinstall/packager/os2/Makefile
 xpinstall/public/Makefile
 xpinstall/res/Makefile
 xpinstall/src/Makefile

@@ -346,7 +346,7 @@ nsHttpTransaction::OnTransportStatus(nsresult status, PRUint64 progress)
         mActivityDistributor->ObserveActivity(
             mChannel,
             NS_HTTP_ACTIVITY_TYPE_SOCKET_TRANSPORT,
-            NS_STATIC_CAST(PRUint32, status),
+            static_cast<PRUint32>(status),
             LL_ZERO,
             progress,
             EmptyCString());
@@ -533,7 +533,7 @@ nsHttpTransaction::Close(nsresult reason)
                 NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
                 NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_COMPLETE,
                 LL_ZERO,
-                NS_STATIC_CAST(PRUint64, mContentRead.mValue),
+                static_cast<PRUint64>(mContentRead.mValue),
                 EmptyCString());
 
         // report that this transaction is closing
@@ -757,7 +757,7 @@ nsHttpTransaction::ParseHead(char *buf,
     }
     // otherwise we can assume that we don't have a HTTP/0.9 response.
 
-    while ((eol = NS_STATIC_CAST(char *, memchr(buf, '\n', count - *countRead))) != nsnull) {
+    while ((eol = static_cast<char *>(memchr(buf, '\n', count - *countRead))) != nsnull) {
         // found line in range [buf:eol]
         len = eol - buf + 1;
 
@@ -950,7 +950,7 @@ nsHttpTransaction::HandleContent(char *buf,
                 NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
                 NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_COMPLETE,
                 LL_ZERO,
-                NS_STATIC_CAST(PRUint64, mContentRead.mValue),
+                static_cast<PRUint64>(mContentRead.mValue),
                 EmptyCString());
     }
 

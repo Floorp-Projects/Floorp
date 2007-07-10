@@ -377,18 +377,15 @@
 
               // cf. listbox constructor:
               // select items according to their attributes
-              var els = this.getElementsByAttribute("selected", "true");
-              for (i = 0; i < els.length; i++)
-                this.selectedItems.push(els[i]);
+              var children = this.children;
+              for (var i = 0; i < children.length; ++i) {
+                if (children[i].getAttribute("selected") == "true")
+                  this.selectedItems.push(children[i]);
+              }
             }
 
             if (this.selType != "multiple" && this.selectedCount == 0)
               this.selectedItem = this.currentItem;
-
-            // XXX hack for the Downloads manager (better to focus the list than
-            // the individual items - these usually aren't tabbable anyway, and
-            // we need the keyboard focus for navigation), see bug 363271:
-            this.focus();
           ]]>
         </body>
       </method>
@@ -460,32 +457,6 @@
     </implementation>
 
     <handlers>
-      <!-- handle keyboard navigation also when a child element has got the focus -->
-      <handler event="keypress" keycode="VK_UP"
-               modifiers="control shift any"
-               action="this.moveByOffset(-1, !event.ctrlKey, event.shiftKey);"
-               preventdefault="true"/>
-      <handler event="keypress" keycode="VK_DOWN"
-               modifiers="control shift any"
-               action="this.moveByOffset(1, !event.ctrlKey, event.shiftKey);"
-               preventdefault="true"/>
-      <handler event="keypress" keycode="VK_HOME"
-               modifiers="control shift any"
-               action="this.moveByOffset(-this.currentIndex, !event.ctrlKey, event.shiftKey);"
-               preventdefault="true"/>
-      <handler event="keypress" keycode="VK_END"
-               modifiers="control shift any"
-               action="this.moveByOffset(this.getRowCount(), !event.ctrlKey, event.shiftKey);"
-               preventdefault="true"/>
-      <handler event="keypress" keycode="VK_PAGE_UP"
-               modifiers="control shift any"
-               action="this.moveByOffset(this.scrollOnePage(-1), !event.ctrlKey, event.shiftKey);"
-               preventdefault="true"/>
-      <handler event="keypress" keycode="VK_PAGE_DOWN"
-               modifiers="control shift any"
-               action="this.moveByOffset(this.scrollOnePage(1), !event.ctrlKey, event.shiftKey);"
-               preventdefault="true"/>
-
       <handler event="click">
         <![CDATA[
           // clicking into nothing should unselect
@@ -557,6 +528,25 @@
             return labelText;
           ]]>
         </getter>
+      </property>
+
+      <property name="searchLabel">
+        <getter>
+          <![CDATA[
+            return this.hasAttribute("searchlabel") ?
+                   this.getAttribute("searchlabel") : this.label;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            if (val !== null)
+              this.setAttribute("searchlabel", val);
+            else
+              // fall back to the label property (default value)
+              this.removeAttribute("searchlabel");
+            return val;
+          ]]>
+        </setter>
       </property>
     </implementation>
 

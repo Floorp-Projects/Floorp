@@ -106,16 +106,16 @@ STDMETHODIMP nsAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
   *ppv = NULL;
 
   if (IID_IUnknown == iid || IID_IDispatch == iid || IID_IAccessible == iid)
-    *ppv = NS_STATIC_CAST(IAccessible*, this);
+    *ppv = static_cast<IAccessible*>(this);
   else if (IID_IEnumVARIANT == iid && !gIsEnumVariantSupportDisabled) {
     long numChildren;
     get_accChildCount(&numChildren);
     if (numChildren > 0)  // Don't support this interface for leaf elements
-      *ppv = NS_STATIC_CAST(IEnumVARIANT*, this);
+      *ppv = static_cast<IEnumVARIANT*>(this);
   } else if (IID_IServiceProvider == iid)
-    *ppv = NS_STATIC_CAST(IServiceProvider*, this);
+    *ppv = static_cast<IServiceProvider*>(this);
   else if (IID_IAccessible2 == iid)
-    *ppv = NS_STATIC_CAST(IAccessible2*, this);
+    *ppv = static_cast<IAccessible2*>(this);
 
   if (NULL == *ppv) {
     HRESULT hr = CAccessibleComponent::QueryInterface(iid, ppv);
@@ -138,7 +138,7 @@ STDMETHODIMP nsAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
   if (NULL == *ppv)
     return nsAccessNodeWrap::QueryInterface(iid, ppv);
 
-  (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
+  (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
   return S_OK;
 }
 
@@ -260,7 +260,7 @@ STDMETHODIMP nsAccessibleWrap::get_accChild(
     return E_FAIL;
 
   if (varChild.lVal == CHILDID_SELF) {
-    *ppdispChild = NS_STATIC_CAST(IDispatch*, this);
+    *ppdispChild = static_cast<IDispatch*>(this);
     AddRef();
     return S_OK;
   }
@@ -440,6 +440,17 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
   if (msaaRole == ROLE_SYSTEM_PUSHBUTTON && (State(xpAccessible) & nsIAccessibleStates::STATE_HASPOPUP)) {
     msaaRole = ROLE_SYSTEM_BUTTONMENU;
   }
+  
+  // Special case, if there is a ROLE_ROW inside of a ROLE_TREE_TABLE, then call the MSAA role
+  // a ROLE_OUTLINEITEM for consistency and compatibility.
+  // We need this because ARIA has a role of "row" for both grid and treegrid
+  if (xpRole == nsIAccessibleRole::ROLE_ROW) {
+    nsCOMPtr<nsIAccessible> parent = GetParent();
+    if (parent && Role(parent) == nsIAccessibleRole::ROLE_TREE_TABLE) {
+      msaaRole = ROLE_SYSTEM_OUTLINEITEM;
+    }
+  }
+  
   // -- Try enumerated role
   if (msaaRole != USE_ROLE_STRING) {
     pvarRole->vt = VT_I4;
@@ -717,7 +728,7 @@ STDMETHODIMP nsAccessibleWrap::get_accSelection(VARIANT __RPC_FAR *pvarChildren)
   pvarChildren->vt = VT_EMPTY;
 
   nsCOMPtr<nsIAccessibleSelectable> 
-    select(do_QueryInterface(NS_STATIC_CAST(nsIAccessible*, this)));
+    select(do_QueryInterface(static_cast<nsIAccessible*>(this)));
 
   if (select) {  // do we have an nsIAccessibleSelectable?
     // we have an accessible that can have children selected
@@ -948,7 +959,7 @@ STDMETHODIMP nsAccessibleWrap::accHitTest(
   // if we got a child
   if (xpAccessible) {
     // if the child is us
-    if (xpAccessible == NS_STATIC_CAST(nsIAccessible*, this)) {
+    if (xpAccessible == static_cast<nsIAccessible*>(this)) {
       pvarChild->vt = VT_I4;
       pvarChild->lVal = CHILDID_SELF;
     } else { // its not create an Accessible for it.
@@ -1050,7 +1061,7 @@ nsAccessibleWrap::Next(ULONG aNumElementsRequested, VARIANT FAR* pvar, ULONG FAR
   for (long childIndex = 0; pvar[*aNumElementsFetched].vt == VT_DISPATCH; ++childIndex) {
     PRBool wasAccessibleFetched = PR_FALSE;
     nsAccessibleWrap *msaaAccessible =
-      NS_STATIC_CAST(nsAccessibleWrap*, pvar[*aNumElementsFetched].pdispVal);
+      static_cast<nsAccessibleWrap*>(pvar[*aNumElementsFetched].pdispVal);
     if (!msaaAccessible)
       break;
     if (childIndex >= mEnumVARIANTPosition) {
@@ -1063,14 +1074,14 @@ nsAccessibleWrap::Next(ULONG aNumElementsRequested, VARIANT FAR* pvar, ULONG FAR
       msaaAccessible->nsAccessNode::Release(); // this accessible will not be received by the caller
   }
 
-  mEnumVARIANTPosition += NS_STATIC_CAST(PRUint16, *aNumElementsFetched);
+  mEnumVARIANTPosition += static_cast<PRUint16>(*aNumElementsFetched);
   return NOERROR;
 }
 
 STDMETHODIMP
 nsAccessibleWrap::Skip(ULONG aNumElements)
 {
-  mEnumVARIANTPosition += NS_STATIC_CAST(PRUint16, aNumElements);
+  mEnumVARIANTPosition += static_cast<PRUint16>(aNumElements);
 
   PRInt32 numChildren;
   GetChildCount(&numChildren);
@@ -1122,7 +1133,7 @@ nsAccessibleWrap::get_relation(long aRelationIndex,
   if (NS_FAILED(rv))
     return E_FAIL;
 
-  *aRelation = NS_STATIC_CAST(IAccessibleRelation*, instancePtr);
+  *aRelation = static_cast<IAccessibleRelation*>(instancePtr);
   return S_OK;
 }
 
@@ -1157,7 +1168,7 @@ nsAccessibleWrap::get_relations(long aMaxRelations,
     if (NS_FAILED(rv))
       break;
 
-    aRelation[index] = NS_STATIC_CAST(IAccessibleRelation*, instancePtr);
+    aRelation[index] = static_cast<IAccessibleRelation*>(instancePtr);
   }
 
   if (NS_FAILED(rv)) {
@@ -1315,7 +1326,7 @@ nsAccessibleWrap::get_uniqueID(long *uniqueID)
 {
   void *id;
   if (NS_SUCCEEDED(GetUniqueID(&id))) {
-    *uniqueID = NS_REINTERPRET_POINTER_CAST(long, id);
+    *uniqueID = reinterpret_cast<long>(id);
     return S_OK;
   }
   return E_FAIL;
@@ -1326,7 +1337,7 @@ nsAccessibleWrap::get_windowHandle(HWND *windowHandle)
 {
   void **handle = nsnull;
   if (NS_SUCCEEDED(GetOwnerWindow(handle))) {
-    *windowHandle = NS_REINTERPRET_POINTER_CAST(HWND, *handle);
+    *windowHandle = reinterpret_cast<HWND>(*handle);
     return S_OK;
   }
   return E_FAIL;
@@ -1423,7 +1434,7 @@ nsAccessibleWrap::Clone(IEnumVARIANT FAR* FAR* ppenum)
   if (!accessibleWrap)
     return E_FAIL;
 
-  IAccessible *msaaAccessible = NS_STATIC_CAST(IAccessible*, accessibleWrap);
+  IAccessible *msaaAccessible = static_cast<IAccessible*>(accessibleWrap);
   msaaAccessible->AddRef();
   QueryInterface(IID_IEnumVARIANT, (void**)ppenum);
   if (*ppenum)
@@ -1468,7 +1479,7 @@ STDMETHODIMP nsAccessibleWrap::Invoke(DISPID dispIdMember, REFIID riid,
 
 NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
 {
-  *aOutAccessible = NS_STATIC_CAST(IAccessible*, this);
+  *aOutAccessible = static_cast<IAccessible*>(this);
   NS_ADDREF_THIS();
   return NS_OK;
 }
@@ -1529,42 +1540,9 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
   } else {
     newAccessible = accessible;
   }
-  
-  HWND hWnd = 0;
-  nsCOMPtr<nsPIAccessNode> privateAccessNode =
-    do_QueryInterface(newAccessible);
-  if (privateAccessNode) {
-    nsIFrame *frame = privateAccessNode->GetFrame();
-    if (frame) {
-      nsIWidget *window = frame->GetWindow();
-      PRBool isVisible;
-      window->IsVisible(isVisible);
-      if (isVisible) {
-        // Short explanation:
-        // If HWND for frame is inside a hidden window, fire the event on the 
-        // containing document's visible window.
-        //
-        // Long explanation:
-        // This is really just to fix combo boxes with JAWS. Window-Eyes already worked with
-        // combo boxes because they use the value change event in the closed combo box
-        // case. JAWS will only pay attention to the focus events on the list items.
-        // The JAWS developers haven't fixed that, so we'll use the focus events to make JAWS work.
-        // However, JAWS is ignoring events on a hidden window. So, in order to fix the bug where
-        // JAWS doesn't echo the current option as it changes in a closed combo box, we need to use an
-        // ensure that we never fire an event with an HWND for a hidden window.
-        hWnd = (HWND)frame->GetWindow()->GetNativeData(NS_NATIVE_WINDOW);
-      }
-    }
-  }
 
-  if (!hWnd) {
-    void* handle = nsnull;
-    nsCOMPtr<nsIAccessibleDocument> accessibleDoc;
-    accessNode->GetAccessibleDocument(getter_AddRefs(accessibleDoc));
-    NS_ENSURE_STATE(accessibleDoc);
-    accessibleDoc->GetWindowHandle(&handle);
-    hWnd = (HWND)handle;
-  }
+  HWND hWnd = GetHWNDFor(accessible);
+  NS_ENSURE_TRUE(hWnd, NS_ERROR_FAILURE);
 
   // Gecko uses two windows for every scrollable area. One window contains
   // scrollbars and the child window contains only the client area.
@@ -1598,6 +1576,54 @@ PRInt32 nsAccessibleWrap::GetChildIDFor(nsIAccessible* aAccessible)
   return - NS_PTR_TO_INT32(uniqueID);
 }
 
+HWND
+nsAccessibleWrap::GetHWNDFor(nsIAccessible *aAccessible)
+{
+  nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aAccessible));
+  nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(accessNode));
+  if (!privateAccessNode)
+    return 0;
+
+  HWND hWnd = 0;
+
+  nsIFrame *frame = privateAccessNode->GetFrame();
+  if (frame) {
+    nsIWidget *window = frame->GetWindow();
+    PRBool isVisible;
+    window->IsVisible(isVisible);
+    if (isVisible) {
+      // Short explanation:
+      // If HWND for frame is inside a hidden window, fire the event on the
+      // containing document's visible window.
+      //
+      // Long explanation:
+      // This is really just to fix combo boxes with JAWS. Window-Eyes already
+      // worked with combo boxes because they use the value change event in
+      // the closed combo box case. JAWS will only pay attention to the focus
+      // events on the list items. The JAWS developers haven't fixed that, so
+      // we'll use the focus events to make JAWS work. However, JAWS is
+      // ignoring events on a hidden window. So, in order to fix the bug where
+      // JAWS doesn't echo the current option as it changes in a closed
+      // combo box, we need to use an ensure that we never fire an event with
+      // an HWND for a hidden window.
+      hWnd = (HWND)frame->GetWindow()->GetNativeData(NS_NATIVE_WINDOW);
+    }
+  }
+
+  if (!hWnd) {
+    void* handle = nsnull;
+    nsCOMPtr<nsIAccessibleDocument> accessibleDoc;
+    accessNode->GetAccessibleDocument(getter_AddRefs(accessibleDoc));
+    if (!accessibleDoc)
+      return 0;
+
+    accessibleDoc->GetWindowHandle(&handle);
+    hWnd = (HWND)handle;
+  }
+
+  return hWnd;
+}
+
 IDispatch *nsAccessibleWrap::NativeAccessible(nsIAccessible *aXPAccessible)
 {
   if (!aXPAccessible) {
@@ -1611,7 +1637,7 @@ IDispatch *nsAccessibleWrap::NativeAccessible(nsIAccessible *aXPAccessible)
     accObject->GetHwnd(&hwnd);
     if (hwnd) {
       IDispatch *retval = nsnull;
-      AccessibleObjectFromWindow(NS_REINTERPRET_CAST(HWND, hwnd),
+      AccessibleObjectFromWindow(reinterpret_cast<HWND>(hwnd),
         OBJID_WINDOW, IID_IAccessible, (void **) &retval);
       return retval;
     }
@@ -1620,7 +1646,7 @@ IDispatch *nsAccessibleWrap::NativeAccessible(nsIAccessible *aXPAccessible)
   IAccessible *msaaAccessible;
   aXPAccessible->GetNativeInterface((void**)&msaaAccessible);
 
-  return NS_STATIC_CAST(IDispatch*, msaaAccessible);
+  return static_cast<IDispatch*>(msaaAccessible);
 }
 
 
@@ -1632,7 +1658,7 @@ void nsAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild, nsIAccessibl
 
   // if its us real easy - this seems to always be the case
   if (aVarChild.lVal == CHILDID_SELF) {
-    *aXPAccessible = NS_STATIC_CAST(nsIAccessible*, this);
+    *aXPAccessible = static_cast<nsIAccessible*>(this);
   }
   else if (MustPrune(this)) {
     return;

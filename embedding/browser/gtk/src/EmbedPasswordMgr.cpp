@@ -551,7 +551,7 @@ EmbedPasswordMgr::BuildArrayEnumerator(const nsACString& aKey,
                                        SignonHashEntry* aEntry,
                                        void* aUserData)
 {
-  nsIMutableArray* array = NS_STATIC_CAST(nsIMutableArray*, aUserData);
+  nsIMutableArray* array = static_cast<nsIMutableArray*>(aUserData);
   for (SignonDataEntry* e = aEntry->head; e; e = e->next)
     array->AppendElement(new PasswordEntry(aKey, e), PR_FALSE);
   return PL_DHASH_NEXT;
@@ -573,7 +573,7 @@ EmbedPasswordMgr::BuildRejectArrayEnumerator(const nsACString& aKey,
                                              PRInt32 aEntry,
                                              void* aUserData)
 {
-  nsIMutableArray* array = NS_STATIC_CAST(nsIMutableArray*, aUserData);
+  nsIMutableArray* array = static_cast<nsIMutableArray*>(aUserData);
   nsCOMPtr<nsIPassword> passwordEntry = new PasswordEntry(aKey, nsnull);
   //  if (!passwordEntry) {
   //    // XXX handle oom
@@ -622,7 +622,7 @@ EmbedPasswordMgr::FindEntryEnumerator(const nsACString& aKey,
                                       SignonHashEntry* aEntry,
                                       void* aUserData)
 {
-  findEntryContext* context = NS_STATIC_CAST(findEntryContext*, aUserData);
+  findEntryContext* context = static_cast<findEntryContext*>(aUserData);
   EmbedPasswordMgr* manager = context->manager;
   nsresult rv;
   SignonDataEntry* entry = nsnull;
@@ -1038,7 +1038,7 @@ done:
   nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(domDoc);
   targ->AddEventListener(
       NS_LITERAL_STRING("unload"),
-      NS_STATIC_CAST(nsIDOMLoadListener*, this),
+      static_cast<nsIDOMLoadListener*>(this),
       PR_FALSE);
   return NS_OK;
 }
@@ -1405,7 +1405,7 @@ EmbedPasswordMgr::GetPrompt(nsIDOMWindow* aParent,
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(wrapper);
-  *_retval = NS_STATIC_CAST(nsIAuthPrompt2*, wrapper);
+  *_retval = static_cast<nsIAuthPrompt2*>(wrapper);
   return NS_OK;
 }
 
@@ -1428,7 +1428,7 @@ EmbedPasswordMgr::RemoveForDOMDocumentEnumerator(nsISupports* aKey,
                                                  PRInt32& aEntry,
                                                  void* aUserData)
 {
-  nsIDOMDocument* domDoc = NS_STATIC_CAST(nsIDOMDocument*, aUserData);
+  nsIDOMDocument* domDoc = static_cast<nsIDOMDocument*>(aUserData);
   nsCOMPtr<nsIDOMHTMLInputElement> element = do_QueryInterface(aKey);
   nsCOMPtr<nsIDOMDocument> elementDoc;
   element->GetOwnerDocument(getter_AddRefs(elementDoc));
@@ -1465,7 +1465,7 @@ EmbedPasswordMgr::WriteRejectEntryEnumerator(const nsACString& aKey,
                                              PRInt32 aEntry,
                                              void* aUserData)
 {
-  nsIOutputStream* stream = NS_STATIC_CAST(nsIOutputStream*, aUserData);
+  nsIOutputStream* stream = static_cast<nsIOutputStream*>(aUserData);
   PRUint32 bytesWritten;
   nsCAutoString buffer(aKey);
   buffer.Append(NS_LINEBREAK);
@@ -1478,7 +1478,7 @@ EmbedPasswordMgr::WriteSignonEntryEnumerator(const nsACString& aKey,
                                              SignonHashEntry* aEntry,
                                              void* aUserData)
 {
-  nsIOutputStream* stream = NS_STATIC_CAST(nsIOutputStream*, aUserData);
+  nsIOutputStream* stream = static_cast<nsIOutputStream*>(aUserData);
   PRUint32 bytesWritten;
   nsCAutoString buffer(aKey);
   buffer.Append(NS_LINEBREAK);
@@ -1662,7 +1662,7 @@ EmbedPasswordMgr::FindPasswordEntryInternal(const SignonDataEntry* aEntry,
       break;
   }
   if (entry) {
-    *aResult = NS_CONST_CAST(SignonDataEntry*, entry);
+    *aResult = const_cast<SignonDataEntry*>(entry);
     return NS_OK;
   }
   *aResult = nsnull;
@@ -1728,7 +1728,7 @@ void
 EmbedPasswordMgr::AttachToInput(nsIDOMHTMLInputElement* aElement)
 {
   nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(aElement);
-  nsIDOMEventListener* listener = NS_STATIC_CAST(nsIDOMFocusListener*, this);
+  nsIDOMEventListener* listener = static_cast<nsIDOMFocusListener*>(this);
   targ->AddEventListener(NS_LITERAL_STRING("blur"), listener, PR_FALSE);
   targ->AddEventListener(NS_LITERAL_STRING("DOMAutoComplete"), listener, PR_FALSE);
   mAutoCompleteInputs.Put(aElement, 1);

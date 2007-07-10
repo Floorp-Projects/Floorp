@@ -304,8 +304,8 @@ nsFrameList::GetLength() const
 static int PR_CALLBACK CompareByContentOrder(const void* aF1, const void* aF2,
                                              void* aDummy)
 {
-  const nsIFrame* f1 = NS_STATIC_CAST(const nsIFrame*, aF1);
-  const nsIFrame* f2 = NS_STATIC_CAST(const nsIFrame*, aF2);
+  const nsIFrame* f1 = static_cast<const nsIFrame*>(aF1);
+  const nsIFrame* f2 = static_cast<const nsIFrame*>(aF2);
   if (f1->GetContent() != f2->GetContent()) {
     return nsLayoutUtils::CompareTreePosition(f1->GetContent(), f2->GetContent());
   }
@@ -344,9 +344,9 @@ nsFrameList::SortByContentOrder()
     array.AppendElement(f);
   }
   array.Sort(CompareByContentOrder, nsnull);
-  f = mFirstChild = NS_STATIC_CAST(nsIFrame*, array.FastElementAt(0));
+  f = mFirstChild = static_cast<nsIFrame*>(array.FastElementAt(0));
   for (PRInt32 i = 1; i < array.Count(); ++i) {
-    nsIFrame* ff = NS_STATIC_CAST(nsIFrame*, array.FastElementAt(i));
+    nsIFrame* ff = static_cast<nsIFrame*>(array.FastElementAt(i));
     f->SetNextSibling(ff);
     f = ff;
   }

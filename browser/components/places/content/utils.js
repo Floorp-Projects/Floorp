@@ -1318,7 +1318,7 @@ var PlacesUtils = {
   getDescriptionFromDocument: function PU_getDescriptionFromDocument(doc) {
     var metaElements = doc.getElementsByTagName("META");
     for (var i = 0; i < metaElements.length; ++i) {
-      if (metaElements[i].localName.toLowerCase() == "description" ||
+      if (metaElements[i].name.toLowerCase() == "description" ||
           metaElements[i].httpEquiv.toLowerCase() == "description") {
         return metaElements[i].content;
       }

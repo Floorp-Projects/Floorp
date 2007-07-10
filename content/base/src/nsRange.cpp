@@ -388,13 +388,11 @@ nsRange::ComparePoint(nsIDOMNode* aParent, PRInt32 aOffset, PRInt16* aResult)
  * Private helper routines
  ******************************************************/
 
-static nsINode* IsValidBoundary(nsINode* aNode);
-
 // Get the length of aNode
 static PRInt32 GetNodeLength(nsINode *aNode)
 {
   if(aNode->IsNodeOfType(nsINode::eDATA_NODE)) {
-    return NS_STATIC_CAST(nsIContent*, aNode)->TextLength();
+    return static_cast<nsIContent*>(aNode)->TextLength();
   }
 
   return aNode->GetChildCount();
@@ -423,9 +421,9 @@ nsRange::DoSetRange(nsINode* aStartN, PRInt32 aStartOffset,
                   (aStartN->IsNodeOfType(nsINode::eCONTENT) &&
                    aEndN->IsNodeOfType(nsINode::eCONTENT) &&
                    aRoot ==
-                    NS_STATIC_CAST(nsIContent*, aStartN)->GetBindingParent() &&
+                    static_cast<nsIContent*>(aStartN)->GetBindingParent() &&
                    aRoot ==
-                    NS_STATIC_CAST(nsIContent*, aEndN)->GetBindingParent()) ||
+                    static_cast<nsIContent*>(aEndN)->GetBindingParent()) ||
                   (!aRoot->GetNodeParent() &&
                    (aRoot->IsNodeOfType(nsINode::eDOCUMENT) ||
                     aRoot->IsNodeOfType(nsINode::eATTRIBUTE) ||
@@ -551,24 +549,25 @@ nsresult nsRange::GetCommonAncestorContainer(nsIDOMNode** aCommonParent)
   return NS_ERROR_NOT_INITIALIZED;
 }
 
-static nsINode*
-IsValidBoundary(nsINode* aNode)
+nsINode* nsRange::IsValidBoundary(nsINode* aNode)
 {
   if (!aNode) {
     return nsnull;
   }
 
   if (aNode->IsNodeOfType(nsINode::eCONTENT)) {
-    nsIContent* content = NS_STATIC_CAST(nsIContent*, aNode);
+    nsIContent* content = static_cast<nsIContent*>(aNode);
     if (content->Tag() == nsGkAtoms::documentTypeNodeName) {
       return nsnull;
     }
 
-    // If the node has a binding parent, that should be the root.
-    // XXXbz maybe only for native anonymous content?
-    nsINode* root = content->GetBindingParent();
-    if (root) {
-      return root;
+    if (!mMaySpanAnonymousSubtrees) {
+      // If the node has a binding parent, that should be the root.
+      // XXXbz maybe only for native anonymous content?
+      nsINode* root = content->GetBindingParent();
+      if (root) {
+        return root;
+      }
     }
   }
 
@@ -1546,6 +1545,8 @@ nsresult nsRange::CloneRange(nsIDOMRange** aReturn)
 
   NS_ADDREF(*aReturn = range);
   
+  range->SetMaySpanAnonymousSubtrees(mMaySpanAnonymousSubtrees);
+
   range->DoSetRange(mStartParent, mStartOffset, mEndParent, mEndOffset, mRoot);
 
   return NS_OK;

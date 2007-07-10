@@ -272,7 +272,7 @@ tabbrowser > tabbox > tabpanels {
   margin-top: 4px;
 }
 
-.scrollbutton-rel-box > .scrollbutton-down-box {
+.tabbrowser-arrowscrollbox > stack > .scrollbutton-down-box {
   margin: 2px 0px 3px 0px;
   width: 18px;
   height: 18px;
@@ -281,7 +281,7 @@ tabbrowser > tabbox > tabpanels {
   opacity: 0.65;
 }
 
-.scrollbutton-rel-box > .scrollbutton-down-box-animate {
+.tabbrowser-arrowscrollbox > stack > .scrollbutton-down-box-animate {
   margin: 2px 0px 3px 0px;
   width: 18px;
   height: 18px;
@@ -290,7 +290,7 @@ tabbrowser > tabbox > tabpanels {
   opacity: 0.0;
 }
 
-.scrollbutton-rel-box > .scrollbutton-down {
+.tabbrowser-arrowscrollbox > stack > .scrollbutton-down {
   margin: 2px 0px 3px 0px;
   width: 18px;
   height: 18px;
@@ -301,21 +301,21 @@ tabbrowser > tabbox > tabpanels {
   -moz-image-region: rect(0, 11px, 14px, 0);
 }
 
-.scrollbutton-rel-box > .scrollbutton-down[disabled="true"] {
+.tabbrowser-arrowscrollbox > stack > .scrollbutton-down[disabled="true"] {
   -moz-image-region: rect(0, 33px, 14px, 22px);
 }
 
-.scrollbutton-rel-box > .scrollbutton-down:not([disabled="true"]):hover {
+.tabbrowser-arrowscrollbox > stack > .scrollbutton-down:not([disabled="true"]):hover {
   background-image: url("chrome://global/skin/tab-arrow-end-bkgnd.png") !important;
   background-repeat: no-repeat;
   -moz-image-region: rect(0, 22px, 14px, 11px);
 }
 
-.scrollbutton-rel-box > .scrollbutton-down:not([disabled="true"]):hover:active {
+.tabbrowser-arrowscrollbox > stack > .scrollbutton-down:not([disabled="true"]):hover:active {
   -moz-image-region: rect(0, 44px, 14px, 33px);
 }
 
-.scrollbutton-rel-box > .scrollbutton-down > .toolbarbutton-icon {
+.tabbrowser-arrowscrollbox > stack > .scrollbutton-down > .toolbarbutton-icon {
   margin-top: 4px;
   -moz-margin-start: 1px;
 }

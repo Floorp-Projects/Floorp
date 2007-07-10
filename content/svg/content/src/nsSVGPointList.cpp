@@ -277,7 +277,7 @@ NS_IMETHODIMP nsSVGPointList::Initialize(nsIDOMSVGPoint *newItem,
 /* nsIDOMSVGPoint getItem (in unsigned long index); */
 NS_IMETHODIMP nsSVGPointList::GetItem(PRUint32 index, nsIDOMSVGPoint **_retval)
 {
-  if (index >= NS_STATIC_CAST(PRUint32, mPoints.Count())) {
+  if (index >= static_cast<PRUint32>(mPoints.Count())) {
     *_retval = nsnull;
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
@@ -316,7 +316,7 @@ NS_IMETHODIMP nsSVGPointList::ReplaceItem(nsIDOMSVGPoint *newItem,
 /* nsIDOMSVGPoint removeItem (in unsigned long index); */
 NS_IMETHODIMP nsSVGPointList::RemoveItem(PRUint32 index, nsIDOMSVGPoint **_retval)
 {
-  if (index >= NS_STATIC_CAST(PRUint32, mPoints.Count())) {
+  if (index >= static_cast<PRUint32>(mPoints.Count())) {
     *_retval = nsnull;
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }

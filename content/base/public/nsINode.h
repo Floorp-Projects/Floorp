@@ -89,24 +89,26 @@ class nsNodeSupportsWeakRefTearoff;
 // Whether a binding manager may have a pointer to this
 #define NODE_MAY_BE_IN_BINDING_MNGR  0x00000080U
 
+#define NODE_IS_EDITABLE             0x00000100U
+
 // Four bits for the script-type ID
-#define NODE_SCRIPT_TYPE_OFFSET                8
+#define NODE_SCRIPT_TYPE_OFFSET                9
 
 // Remaining bits are node type specific.
-#define NODE_TYPE_SPECIFIC_BITS_OFFSET       0x0c
+#define NODE_TYPE_SPECIFIC_BITS_OFFSET       0x0d
 
 // Useful macro for getting a node given an nsIContent and an nsIDocument
 // Returns the first argument cast to nsINode if it is non-null, otherwise
 // returns the second (which may be null)
 #define NODE_FROM(content_, document_)                  \
-  ((content_) ? NS_STATIC_CAST(nsINode*, (content_)) :  \
-                NS_STATIC_CAST(nsINode*, (document_)))
+  ((content_) ? static_cast<nsINode*>((content_)) :  \
+                static_cast<nsINode*>((document_)))
 
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x22ab1440, 0xa6ee, 0x4da7, \
-  { 0xbc, 0x3b, 0x94, 0x2e, 0x56, 0x0d, 0xdc, 0xe0 } }
+{ 0xd3e63f80, 0x9e98, 0x47d7, \
+  { 0xac, 0x8d, 0xad, 0x6f, 0x20, 0x6c, 0xe7, 0xc6 } }
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsINode_base : public nsPIDOMEventTarget {
@@ -458,8 +460,8 @@ public:
   nsIContent* GetParent() const
   {
     return NS_LIKELY(mParentPtrBits & PARENT_BIT_PARENT_IS_CONTENT) ?
-           NS_REINTERPRET_CAST(nsIContent*,
-                               mParentPtrBits & ~kParentBitMask) :
+           reinterpret_cast<nsIContent*>
+                           (mParentPtrBits & ~kParentBitMask) :
            nsnull;
   }
 
@@ -470,7 +472,7 @@ public:
    */
   nsINode* GetNodeParent() const
   {
-    return NS_REINTERPRET_CAST(nsINode*, mParentPtrBits & ~kParentBitMask);
+    return reinterpret_cast<nsINode*>(mParentPtrBits & ~kParentBitMask);
   }
 
   /**
@@ -596,6 +598,16 @@ public:
     *flags &= ~aFlagsToUnset;
   }
 
+  void SetEditableFlag(PRBool aEditable)
+  {
+    if (aEditable) {
+      SetFlags(NODE_IS_EDITABLE);
+    }
+    else {
+      UnsetFlags(NODE_IS_EDITABLE);
+    }
+  }
+
 protected:
 
   // Override this function to create a custom slots class.
@@ -609,7 +621,7 @@ protected:
   nsSlots* FlagsAsSlots() const
   {
     NS_ASSERTION(HasSlots(), "check HasSlots first");
-    return NS_REINTERPRET_CAST(nsSlots*, mFlagsOrSlots);
+    return reinterpret_cast<nsSlots*>(mFlagsOrSlots);
   }
 
   nsSlots* GetExistingSlots() const
@@ -625,7 +637,7 @@ protected:
 
     nsSlots* slots = CreateSlots();
     if (slots) {
-      mFlagsOrSlots = NS_REINTERPRET_CAST(PtrBits, slots);
+      mFlagsOrSlots = reinterpret_cast<PtrBits>(slots);
     }
 
     return slots;

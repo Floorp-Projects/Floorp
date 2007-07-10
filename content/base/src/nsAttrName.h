@@ -62,7 +62,7 @@ public:
   }
 
   explicit nsAttrName(nsIAtom* aAtom)
-    : mBits(NS_REINTERPRET_CAST(PtrBits, aAtom))
+    : mBits(reinterpret_cast<PtrBits>(aAtom))
   {
     NS_ASSERTION(aAtom, "null atom-name in nsAttrName");
     NS_ADDREF(aAtom);
@@ -72,11 +72,11 @@ public:
   {
     NS_ASSERTION(aNodeInfo, "null nodeinfo-name in nsAttrName");
     if (aNodeInfo->NamespaceEquals(kNameSpaceID_None)) {
-      mBits = NS_REINTERPRET_CAST(PtrBits, aNodeInfo->NameAtom());
+      mBits = reinterpret_cast<PtrBits>(aNodeInfo->NameAtom());
       NS_ADDREF(aNodeInfo->NameAtom());
     }
     else {
-      mBits = NS_REINTERPRET_CAST(PtrBits, aNodeInfo) |
+      mBits = reinterpret_cast<PtrBits>(aNodeInfo) |
               NS_ATTRNAME_NODEINFO_BIT;
       NS_ADDREF(aNodeInfo);
     }
@@ -93,11 +93,11 @@ public:
 
     ReleaseInternalName();
     if (aNodeInfo->NamespaceEquals(kNameSpaceID_None)) {
-      mBits = NS_REINTERPRET_CAST(PtrBits, aNodeInfo->NameAtom());
+      mBits = reinterpret_cast<PtrBits>(aNodeInfo->NameAtom());
       NS_ADDREF(aNodeInfo->NameAtom());
     }
     else {
-      mBits = NS_REINTERPRET_CAST(PtrBits, aNodeInfo) |
+      mBits = reinterpret_cast<PtrBits>(aNodeInfo) |
               NS_ATTRNAME_NODEINFO_BIT;
       NS_ADDREF(aNodeInfo);
     }
@@ -108,7 +108,7 @@ public:
     NS_ASSERTION(aAtom, "null atom-name in nsAttrName");
 
     ReleaseInternalName();
-    mBits = NS_REINTERPRET_CAST(PtrBits, aAtom);
+    mBits = reinterpret_cast<PtrBits>(aAtom);
     NS_ADDREF(aAtom);
   }
 
@@ -120,13 +120,13 @@ public:
   nsINodeInfo* NodeInfo() const
   {
     NS_ASSERTION(!IsAtom(), "getting nodeinfo-value of atom-name");
-    return NS_REINTERPRET_CAST(nsINodeInfo*, mBits & ~NS_ATTRNAME_NODEINFO_BIT);
+    return reinterpret_cast<nsINodeInfo*>(mBits & ~NS_ATTRNAME_NODEINFO_BIT);
   }
 
   nsIAtom* Atom() const
   {
     NS_ASSERTION(IsAtom(), "getting atom-value of nodeinfo-name");
-    return NS_REINTERPRET_CAST(nsIAtom*, mBits);
+    return reinterpret_cast<nsIAtom*>(mBits);
   }
 
   PRBool Equals(const nsAttrName& aOther) const
@@ -137,7 +137,7 @@ public:
   // Faster comparison in the case we know the namespace is null
   PRBool Equals(nsIAtom* aAtom) const
   {
-    return NS_REINTERPRET_CAST(PtrBits, aAtom) == mBits;
+    return reinterpret_cast<PtrBits>(aAtom) == mBits;
   }
 
   PRBool Equals(nsIAtom* aLocalName, PRInt32 aNamespaceID) const
@@ -211,7 +211,7 @@ public:
 
   PRBool IsSmaller(nsIAtom* aOther) const
   {
-    return mBits < NS_REINTERPRET_CAST(PtrBits, aOther);
+    return mBits < reinterpret_cast<PtrBits>(aOther);
   }
 
 private:
@@ -220,8 +220,8 @@ private:
   {
     // Since both nsINodeInfo and nsIAtom inherit nsISupports as its first
     // interface we can safely assume that it's first in the vtable
-    nsISupports* name = NS_REINTERPRET_CAST(nsISupports *,
-      mBits & ~NS_ATTRNAME_NODEINFO_BIT);
+    nsISupports* name = reinterpret_cast<nsISupports *>
+                                        (mBits & ~NS_ATTRNAME_NODEINFO_BIT);
 
     NS_ADDREF(name);
   }
@@ -230,8 +230,8 @@ private:
   {
     // Since both nsINodeInfo and nsIAtom inherit nsISupports as its first
     // interface we can safely assume that it's first in the vtable
-    nsISupports* name = NS_REINTERPRET_CAST(nsISupports *,
-      mBits & ~NS_ATTRNAME_NODEINFO_BIT);
+    nsISupports* name = reinterpret_cast<nsISupports *>
+                                        (mBits & ~NS_ATTRNAME_NODEINFO_BIT);
 
     NS_RELEASE(name);
   }

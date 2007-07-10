@@ -2433,7 +2433,7 @@ PRInt32 nsRenderingContextWin::GetMaxStringLength()
 {
   if (!mFontMetrics)
     return 1;
-  return NS_STATIC_CAST(nsFontMetricsWin*, mFontMetrics)->GetMaxStringLength();
+  return static_cast<nsFontMetricsWin*>(mFontMetrics)->GetMaxStringLength();
 }
 
 NS_IMETHODIMP nsRenderingContextWin :: CopyOffScreenBits(nsIDrawingSurface* aSrcSurf,

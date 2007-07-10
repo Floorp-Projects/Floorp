@@ -45,9 +45,14 @@ class  nsTableFrame;
 class  nsTableCellFrame;
 struct nsTableCellReflowState;
 
-#define NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT 0x40000000
 // This is also used on rows, from nsTableRowGroupFrame.h
 // #define NS_REPEATED_ROW_OR_ROWGROUP      0x10000000
+
+// Indicates whether this row has any cells that have
+// non-auto-height and rowspan=1
+#define NS_ROW_HAS_CELL_WITH_STYLE_HEIGHT   0x20000000
+
+#define NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT 0x40000000
 
 /**
  * nsTableRowFrame is the frame that maps table rows 
@@ -302,6 +307,14 @@ private:
   BCPixelSize mRightContBorderWidth;
   BCPixelSize mTopContBorderWidth;
   BCPixelSize mLeftContBorderWidth;
+
+  /**
+   * Sets the NS_ROW_HAS_CELL_WITH_STYLE_HEIGHT bit to indicate whether
+   * this row has any cells that have non-auto-height.  (Row-spanning
+   * cells are ignored.)
+   */
+  void InitHasCellWithStyleHeight(nsTableFrame* aTableFrame);
+
 };
 
 inline PRInt32 nsTableRowFrame::GetRowIndex() const

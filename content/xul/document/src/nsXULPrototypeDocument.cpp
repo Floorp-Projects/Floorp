@@ -381,7 +381,7 @@ GetNodeInfos(nsXULPrototypeElement* aPrototype,
     for (i = 0; i < aPrototype->mNumChildren; ++i) {
         nsXULPrototypeNode* child = aPrototype->mChildren[i];
         if (child->mType == nsXULPrototypeNode::eType_Element) {
-            rv = GetNodeInfos(NS_STATIC_CAST(nsXULPrototypeElement*, child),
+            rv = GetNodeInfos(static_cast<nsXULPrototypeElement*>(child),
                               aArray);
             NS_ENSURE_SUCCESS(rv, rv);
         }

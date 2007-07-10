@@ -445,8 +445,8 @@ nsFastLoadService::GetFastLoadReferent(nsISupports* *aPtrAddr)
         return NS_OK;
 
     nsFastLoadPtrEntry* entry =
-        NS_STATIC_CAST(nsFastLoadPtrEntry*,
-                       PL_DHashTableOperate(mFastLoadPtrMap, aPtrAddr,
+        static_cast<nsFastLoadPtrEntry*>
+                   (PL_DHashTableOperate(mFastLoadPtrMap, aPtrAddr,
                                             PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_FREE(entry))
         return NS_OK;
@@ -511,8 +511,8 @@ nsFastLoadService::ReadFastLoadPtr(nsIObjectInputStream* aInputStream,
     }
 
     nsFastLoadPtrEntry* entry =
-        NS_STATIC_CAST(nsFastLoadPtrEntry*,
-                       PL_DHashTableOperate(mFastLoadPtrMap, aPtrAddr,
+        static_cast<nsFastLoadPtrEntry*>
+                   (PL_DHashTableOperate(mFastLoadPtrMap, aPtrAddr,
                                             PL_DHASH_ADD));
     NS_ASSERTION(entry->mPtrAddr == nsnull, "duplicate nsFastLoadPtr?!");
 

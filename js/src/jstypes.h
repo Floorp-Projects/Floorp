@@ -188,7 +188,14 @@
 **      behave syntactically more like functions when called.
 ***********************************************************************/
 #define JS_BEGIN_MACRO  do {
-#define JS_END_MACRO    } while (0)
+
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+# define JS_END_MACRO                                                         \
+    } __pragma(warning(push)) __pragma(warning(disable:4127))                 \
+    while (0) __pragma(warning(pop))
+#else
+# define JS_END_MACRO   } while (0)
+#endif
 
 /***********************************************************************
 ** MACROS:      JS_BEGIN_EXTERN_C

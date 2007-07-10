@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Scott MacGregor <mscott@netscape.com>
+ *   Dan Mosedale <dmose@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -66,6 +67,13 @@ nsIExternalHelperAppService
 /* 9fa83ce7-d0ab-4ed3-938e-afafee435670 */
 #define NS_BLOCKEDEXTERNALPROTOCOLHANDLER_CID	\
 { 0x9fa83ce7, 0xd0ab, 0x4ed3, {0x93, 0x8e, 0xaf, 0xaf, 0xee, 0x43, 0x56, 0x70 } }
+
+/* bc0017e3-2438-47be-a567-41db58f17627 */
+#define NS_LOCALHANDLERAPP_CID \
+{ 0xbc0017e3, 0x2438, 0x47be, {0xa5, 0x67, 0x41, 0xdb, 0x58, 0xf1, 0x76, 0x27 } }
+
+#define NS_LOCALHANDLERAPP_CONTRACTID \
+"@mozilla.org/uriloader/local-handler-app;1"
 
 %}
 

@@ -7,6 +7,7 @@
 <!ENTITY profileCreationExplanation_3.text  "If you are the only person using this copy of &brandShortName;, you must have at least one profile. If you would like, you can create multiple profiles for yourself to store different sets of settings and preferences. For example, you may want to have separate profiles for business and personal use.">
 <!ENTITY profileCreationExplanation_4.text  "To begin creating your profile, click Next.">
 <!ENTITY profileCreationExplanation_4Mac.text  "To begin creating your profile, click Continue.">
+<!ENTITY profileCreationExplanation_4Gnome.text  "To begin creating your profile, click Next.">
 
 <!-- Second wizard page -->
 <!ENTITY profileCreationIntro.text      "If you create several profiles you can tell them apart by the profile names. You may use the name provided here or use one of your own.">

@@ -41,6 +41,7 @@
 #   Michael Ventnor <m.ventnor@gmail.com>
 #   Simon Bünzli <zeniko@gmail.com>
 #   Johnathan Nightingale <johnath@mozilla.com>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -100,7 +101,6 @@ var gNavigatorBundle = null;
 var gIsLoadingBlank = false;
 var gLastValidURLStr = "";
 var gLastValidURL = null;
-var gClickSelectsAll = false;
 var gMustLoadSidebar = false;
 var gProgressMeterPanel = null;
 var gProgressCollapseTimer = null;
@@ -116,7 +116,6 @@ var gChromeState = null; // chrome state before we went into print preview
 
 var gSanitizeListener = null;
 
-var gURLBarAutoFillPrefListener = null;
 var gAutoHideTabbarPrefListener = null;
 var gBookmarkAllTabsHandler = null;
 
@@ -1015,8 +1014,10 @@ function delayedStartup()
       goButtonStack.setAttribute("hidden", "true");
   }
 
-  if (gURLBar)
+  if (gURLBar) {
+    gURLBar.addEventListener("dragover", URLBarOnDragOver, true);
     gURLBar.addEventListener("dragdrop", URLBarOnDrop, true);
+  }
 
   gBrowser.addEventListener("pageshow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
 
@@ -1073,11 +1074,6 @@ function delayedStartup()
   // Set up Sanitize Item
   gSanitizeListener = new SanitizeListener();
 
-  // Enable/Disable URL Bar Auto Fill
-  gURLBarAutoFillPrefListener = new URLBarAutoFillPrefListener();
-  gPrefService.addObserver(gURLBarAutoFillPrefListener.domain,
-                           gURLBarAutoFillPrefListener, false);
-
   // Enable/Disable auto-hide tabbar
   gAutoHideTabbarPrefListener = new AutoHideTabbarPrefListener();
   gPrefService.addObserver(gAutoHideTabbarPrefListener.domain,
@@ -1085,10 +1081,6 @@ function delayedStartup()
 
   gPrefService.addObserver(gHomeButton.prefDomain, gHomeButton, false);
   gHomeButton.updateTooltip();
-
-  gClickSelectsAll = gPrefService.getBoolPref("browser.urlbar.clickSelectsAll");
-  if (gURLBar)
-    gURLBar.clickSelectsAll = gClickSelectsAll;
 
 #ifdef HAVE_SHELL_SERVICE
   // Perform default browser checking (after window opens).
@@ -1146,6 +1138,17 @@ function delayedStartup()
   // to create its singleton, whose constructor initializes the service.
   Cc["@mozilla.org/microsummary/service;1"].getService(Ci.nsIMicrosummaryService);
 
+  // Initialize the content pref event sink and the text zoom setting.
+  // We do this before the session restore service gets initialized so we can
+  // apply text zoom settings to tabs restored by the session restore service.
+  try {
+    ContentPrefSink.init();
+    TextZoom.init();
+  }
+  catch(ex) {
+    Components.utils.reportError(ex);
+  }
+
   // initialize the session-restore service (in case it's not already running)
   if (document.documentElement.getAttribute("windowtype") == "navigator:browser") {
     try {
@@ -1170,6 +1173,14 @@ function delayedStartup()
 
 function BrowserShutdown()
 {
+  try {
+    TextZoom.destroy();
+    ContentPrefSink.destroy();
+  }
+  catch(ex) {
+    Components.utils.reportError(ex);
+  }
+
   var os = Components.classes["@mozilla.org/observer-service;1"]
     .getService(Components.interfaces.nsIObserverService);
   os.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
@@ -1199,8 +1210,6 @@ function BrowserShutdown()
 #endif
 
   try {
-    gPrefService.removeObserver(gURLBarAutoFillPrefListener.domain,
-                                gURLBarAutoFillPrefListener);
     gPrefService.removeObserver(gAutoHideTabbarPrefListener.domain,
                                 gAutoHideTabbarPrefListener);
     gPrefService.removeObserver(gHomeButton.prefDomain, gHomeButton);
@@ -1305,41 +1314,6 @@ function nonBrowserWindowDelayedStartup()
   gSanitizeListener = new SanitizeListener();
 }
 #endif
-
-function URLBarAutoFillPrefListener()
-{
-  this.toggleAutoFillInURLBar();
-}
-
-URLBarAutoFillPrefListener.prototype =
-{
-  domain: "browser.urlbar.autoFill",
-  observe: function (aSubject, aTopic, aPrefName)
-  {
-    if (aTopic != "nsPref:changed" || aPrefName != this.domain)
-      return;
-
-    this.toggleAutoFillInURLBar();
-  },
-
-  toggleAutoFillInURLBar: function ()
-  {
-    if (!gURLBar)
-      return;
-
-    var prefValue = false;
-    try {
-      prefValue = gPrefService.getBoolPref(this.domain);
-    }
-    catch (e) {
-    }
-
-    if (prefValue)
-      gURLBar.setAttribute("completedefaultindex", "true");
-    else
-      gURLBar.removeAttribute("completedefaultindex");
-  }
-}
 
 function AutoHideTabbarPrefListener()
 {
@@ -1983,114 +1957,88 @@ function BrowserLoadURL(aTriggeringEvent, aPostData) {
   focusElement(content);
 }
 
-function getShortcutOrURI(aURL, aPostDataRef)
-{
-  // rjc: added support for URL shortcuts (3/30/1999)
+function getShortcutOrURI(aURL, aPostDataRef) {
+  var shortcutURL = null;
+  var keyword = aURL;
+  var param = "";
+  var searchService = Cc["@mozilla.org/browser/search-service;1"].
+                      getService(Ci.nsIBrowserSearchService);
+
+  var offset = aURL.indexOf(" ");
+  if (offset > 0) {
+    keyword = aURL.substr(0, offset);
+    param = aURL.substr(offset + 1);
+  }
+
+  var engine = searchService.getEngineByAlias(keyword);
+  if (engine)
+    return engine.getSubmission(param, null).uri.spec;
+
   try {
-    var shortcutURL = null;
 #ifdef MOZ_PLACES_BOOKMARKS
-    var shortcutURI = PlacesUtils.bookmarks.getURIForKeyword(aURL);
-    if (shortcutURI) {
-      shortcutURL = shortcutURI.spec;
-      // get POST data
-      var postData = PlacesUtils.getPostDataForURI(shortcutURI);
-      aPostDataRef.value = postData;
-    }
+    var shortcutURI = PlacesUtils.bookmarks.getURIForKeyword(keyword);
+    shortcutURL = shortcutURI.spec;
+    aPostDataRef.value = PlacesUtils.getPostDataForURI(shortcutURI);
 #else
-    shortcutURL = BMSVC.resolveKeyword(aURL, aPostDataRef);
+    shortcutURL = BMSVC.resolveKeyword(keyword, aPostDataRef);
 #endif
-    if (!shortcutURL) {
-      // rjc: add support for string substitution with shortcuts (4/4/2000)
-      //      (see bug # 29871 for details)
-      var aOffset = aURL.indexOf(" ");
-      if (aOffset > 0) {
-        var cmd = aURL.substr(0, aOffset);
-        var text = aURL.substr(aOffset+1);
-#ifdef MOZ_PLACES_BOOKMARKS
-        shortcutURI = PlacesUtils.bookmarks.getURIForKeyword(cmd);
-        if (shortcutURI)
-          shortcutURL = shortcutURI.spec;
-#else
-        shortcutURL = BMSVC.resolveKeyword(cmd, aPostDataRef);
-#endif
-        if (shortcutURL && text) {
-          var encodedText = null; 
-          var charset = "";
-          const re = /^(.*)\&mozcharset=([a-zA-Z][_\-a-zA-Z0-9]+)\s*$/; 
-          var matches = shortcutURL.match(re);
-          if (matches) {
-             shortcutURL = matches[1];
-             charset = matches[2];
-          }
+  } catch(ex) {}
+
+  if (!shortcutURL)
+    return aURL;
+
+  var postData = "";
+  if (aPostDataRef && aPostDataRef.value)
+    postData = unescape(aPostDataRef.value);
+
+  if (/%s/i.test(shortcutURL) || /%s/i.test(postData)) {
+    var charset = "";
+    const re = /^(.*)\&mozcharset=([a-zA-Z][_\-a-zA-Z0-9]+)\s*$/;
+    var matches = shortcutURL.match(re);
+    if (matches)
+      [, shortcutURL, charset] = matches;
+    else {
+      try {
+        //XXX Bug 317472 will add lastCharset support to places.
 #ifndef MOZ_PLACES_BOOKMARKS
-          // FIXME: Bug #317472, we don't have last charset in places yet.
-          else if (/%s/.test(shortcutURL) || 
-                   (aPostDataRef && /%s/.test(aPostDataRef.value))) {
-            try {
-              charset = BMSVC.getLastCharset(shortcutURL);
-            } catch (ex) {
-            }
-          }
+        charset = BMSVC.getLastCharset(shortcutURL);
 #endif
-
-          if (charset)
-            encodedText = escape(convertFromUnicode(charset, text)); 
-          else  // default case: charset=UTF-8
-            encodedText = encodeURIComponent(text);
-
-          if (aPostDataRef && aPostDataRef.value) {
-            // XXXben - currently we only support "application/x-www-form-urlencoded"
-            //          enctypes.
-            aPostDataRef.value = unescape(aPostDataRef.value);
-            if (aPostDataRef.value.match(/%[sS]/)) {
-              aPostDataRef.value = getPostDataStream(aPostDataRef.value,
-                                                     text, encodedText,
-                                                     "application/x-www-form-urlencoded");
-            }
-            else {
-              shortcutURL = null;
-              aPostDataRef.value = null;
-            }
-          }
-          else {
-            if (/%[sS]/.test(shortcutURL))
-              shortcutURL = shortcutURL.replace(/%s/g, encodedText)
-                                       .replace(/%S/g, text);
-            else 
-              shortcutURL = null;
-          }
-        }
+      } catch (ex) {
+        Components.utils.reportError(ex);
       }
     }
 
-    if (shortcutURL)
-      aURL = shortcutURL;
+    var encodedParam = "";
+    if (charset)
+      encodedParam = escape(converFromUnicode(charset, param));
+    else // Default charset is UTF-8
+      encodedParam = encodeURIComponent(param);
 
-  } catch (ex) {
+    shortcutURL = shortcutURL.replace(/%s/g, encodedParam).replace(/%S/g, param);
+
+    if (/%s/i.test(postData)) // POST keyword
+      aPostDataRef.value = getPostDataStream(postData, param, encodedParam,
+                                             "application/x-www-form-urlencoded");
   }
-  return aURL;
+  else
+    aPostDataRef.value = null;
+
+  return shortcutURL;
 }
-
-function getPostDataStream(aStringData, aKeyword, aEncKeyword, aType)
-{
-  var dataStream = Components.classes["@mozilla.org/io/string-input-stream;1"]
-                            .createInstance(Components.interfaces.nsIStringInputStream);
+ 
+function getPostDataStream(aStringData, aKeyword, aEncKeyword, aType) {
+  var dataStream = Cc["@mozilla.org/io/string-input-stream;1"].
+                   createInstance(Ci.nsIStringInputStream);
   aStringData = aStringData.replace(/%s/g, aEncKeyword).replace(/%S/g, aKeyword);
-#ifdef MOZILLA_1_8_BRANCH
-# bug 318193
-  dataStream.setData(aStringData, aStringData.length);
-#else
   dataStream.data = aStringData;
-#endif
-
-  var mimeStream = Components.classes["@mozilla.org/network/mime-input-stream;1"]
-                              .createInstance(Components.interfaces.nsIMIMEInputStream);
+ 
+  var mimeStream = Cc["@mozilla.org/network/mime-input-stream;1"].
+                   createInstance(Ci.nsIMIMEInputStream);
   mimeStream.addHeader("Content-Type", aType);
   mimeStream.addContentLength = true;
   mimeStream.setData(dataStream);
-  return mimeStream.QueryInterface(Components.interfaces.nsIInputStream);
+  return mimeStream.QueryInterface(Ci.nsIInputStream);
 }
-
 
 function readFromClipboard()
 {
@@ -2449,12 +2397,21 @@ function PageProxyClickHandler(aEvent)
   return true;
 }
 
+function URLBarOnDragOver(evt)
+{
+  nsDragAndDrop.dragOver(evt, urlbarObserver);
+}
+
 function URLBarOnDrop(evt)
 {
   nsDragAndDrop.drop(evt, urlbarObserver);
 }
 
 var urlbarObserver = {
+  onDragOver: function ()
+    {
+      return true;
+    },
   onDrop: function (aEvent, aXferData, aDragSession)
     {
       var url = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
@@ -2668,12 +2625,6 @@ function FillInHTMLTooltip(tipElement)
       
       label.textContent = t;
       
-      //// XXX Work around reflow bugs (bug 357337 / bug 228673)
-      tipNode.width = "";
-      tipNode.height = "";
-      tipNode.width = label.boxObject.width;
-      tipNode.height = label.boxObject.height;
-
       retVal = true;
     }
   }
@@ -3352,8 +3303,6 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
   // Update global UI elements that may have been added or removed
   if (aToolboxChanged) {
     gURLBar = document.getElementById("urlbar");
-    if (gURLBar)
-      gURLBar.clickSelectsAll = gClickSelectsAll;
     gProxyButton = document.getElementById("page-proxy-button");
     gProxyFavIcon = document.getElementById("page-proxy-favicon");
     gProxyDeck = document.getElementById("page-proxy-deck");
@@ -4491,19 +4440,19 @@ function asyncOpenWebPanel(event)
          // This is the Opera convention for a special link that - when clicked - allows
          // you to add a sidebar panel.  We support the Opera convention here.  The link's
          // title attribute contains the title that should be used for the sidebar panel.
+#ifndef MOZ_PLACES_BOOKMARKS
          var dialogArgs = {
            name: wrapper.getAttribute("title"),
            url: wrapper.href,
            bWebPanel: true
          }
-#ifndef MOZ_PLACES_BOOKMARKS
          openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
                     BROWSER_ADD_BM_FEATURES, dialogArgs);
          event.preventDefault();
 #else
-         PlacesUtils.showAddBookmarkUI(makeURI(wrapper.href),
-                                       wrapper.getAttribute("title"),
-                                       null, true, true);
+         PlacesUtils.showMinimalAddBookmarkUI(makeURI(wrapper.href),
+                                              wrapper.getAttribute("title"),
+                                              null, null, true, true);
          event.preventDefault();
 #endif
          return false;
@@ -5593,38 +5542,10 @@ var FeedHandler = {
     // along all events.  It should give us the browser for the tab, as well as
     // the actual event.
 
-    var erel = event.target.rel;
-    var etype = event.target.type;
-    var etitle = event.target.title;
-    const rssTitleRegex = /(^|\s)rss($|\s)/i;
-    var rels = {};
+    var feed = recognizeFeedFromLink(event.target,
+      event.target.ownerDocument.nodePrincipal);
 
-    if (erel) {
-      for each (var relValue in erel.split(/\s+/))
-        rels[relValue] = true;
-    }
-    var isFeed = rels.feed;
-
-    if (!isFeed &&
-        (!rels.alternate || rels.stylesheet || !etype))
-      return;
-
-    if (!isFeed) {
-      // Use type value
-      etype = etype.replace(/^\s+/, "");
-      etype = etype.replace(/\s+$/, "");
-      etype = etype.replace(/\s*;.*/, "");
-      etype = etype.toLowerCase();
-      isFeed = (etype == "application/rss+xml" ||
-                etype == "application/atom+xml");
-      if (!isFeed) {
-        // really slimy: general XML types with magic letters in the title
-        isFeed = ((etype == "text/xml" || etype == "application/xml" ||
-                   etype == "application/rdf+xml") && rssTitleRegex.test(etitle));
-      }
-    }
-
-    if (isFeed) {
+    if (feed) {
       const targetDoc = event.target.ownerDocument;
 
       // find which tab this is for, and set the attribute on the browser
@@ -5637,21 +5558,8 @@ var FeedHandler = {
       var feeds = [];
       if (browserForLink.feeds != null)
         feeds = browserForLink.feeds;
-      var wrapper = event.target;
 
-      try { 
-        urlSecurityCheck(wrapper.href,
-                         gBrowser.contentPrincipal,
-                         Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
-      }
-      catch (ex) {
-        dump(ex.message);
-        return; // doesn't pass security check
-      }
-
-      feeds.push({ href: wrapper.href,
-                   type: etype,
-                   title: wrapper.title});
+      feeds.push(feed);
       browserForLink.feeds = feeds;
       if (browserForLink == gBrowser || browserForLink == gBrowser.mCurrentBrowser) {
         var feedButton = document.getElementById("feed-button");
@@ -5668,6 +5576,9 @@ var FeedHandler = {
 #ifdef MOZ_PLACES
 #include browser-places.js
 #endif
+
+#include browser-contentPrefSink.js
+#include browser-textZoom.js
 
 /**
  * This object is for augmenting tabs

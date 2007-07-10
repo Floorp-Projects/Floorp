@@ -245,13 +245,34 @@
           if (this._radioChildren)
             return this._radioChildren;
 
-          // Don't store the collected child nodes immediately,
-          // collecting the child nodes could trigger constructors
-          // which would blow away our list.
           var radioChildren = [];
-          var iterator = this.ownerDocument.createTreeWalker(this, NodeFilter.SHOW_ELEMENT, this._filterRadioGroup, true);
-          while (iterator.nextNode())
-            radioChildren.push(iterator.currentNode);
+          var doc = this.ownerDocument;
+
+          if (this.hasChildNodes()) {
+            // Don't store the collected child nodes immediately,
+            // collecting the child nodes could trigger constructors
+            // which would blow away our list.
+
+            const nsIDOMNodeFilter = Components.interfaces.nsIDOMNodeFilter;
+            var iterator = doc.createTreeWalker(this,
+                                                nsIDOMNodeFilter.SHOW_ELEMENT,
+                                                this._filterRadioGroup,
+                                                true);
+            while (iterator.nextNode())
+              radioChildren.push(iterator.currentNode);
+            return this._radioChildren = radioChildren;
+          }
+
+          // We don't have child nodes.
+          const XUL_NS = "http://www.mozilla.org/keymaster/"
+                       + "gatekeeper/there.is.only.xul";
+          var elems = doc.getElementsByAttribute("group", this.id);
+          for (var i = 0; i < elems.length; i++) {
+            if ((elems[i].namespaceURI == XUL_NS) &&
+                (elems[i].localName == "radio")) {
+              radioChildren.push(elems[i]);
+            }
+          }
           return this._radioChildren = radioChildren;
         ]]>
         </body>
@@ -460,13 +481,29 @@
       <property name="control" readonly="true">
         <getter>
         <![CDATA[
+          const XUL_NS = "http://www.mozilla.org/keymaster/"
+                       + "gatekeeper/there.is.only.xul";
           var parent = this.parentNode;
           while (parent) {
-            if (parent.localName == "radiogroup")
+            if ((parent.namespaceURI == XUL_NS) &&
+                (parent.localName == "radiogroup")) {
               return parent;
+            }
             parent = parent.parentNode;
           }
-          return null;
+
+          var group = this.getAttribute("group");
+          if (!group) {
+            return null;
+          }
+
+          parent = this.ownerDocument.getElementById(group);
+          if (!parent ||
+              (parent.namespaceURI != XUL_NS) ||
+              (parent.localName != "radiogroup")) {
+            parent = null;
+          }
+          return parent;
         ]]>
         </getter>
       </property>

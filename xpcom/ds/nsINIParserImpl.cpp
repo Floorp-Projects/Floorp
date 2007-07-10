@@ -103,7 +103,7 @@ NS_IMPL_ISUPPORTS1(nsINIParserImpl,
 static PRBool
 SectionCB(const char* aSection, void *aClosure)
 {
-  nsCStringArray *strings = NS_STATIC_CAST(nsCStringArray*, aClosure);
+  nsCStringArray *strings = static_cast<nsCStringArray*>(aClosure);
 
   strings->AppendCString(nsDependentCString(aSection));
   return PR_TRUE;
@@ -129,7 +129,7 @@ nsINIParserImpl::GetSections(nsIUTF8StringEnumerator* *aResult)
 static PRBool
 KeyCB(const char* aKey, const char *aValue, void *aClosure)
 {
-  nsCStringArray *strings = NS_STATIC_CAST(nsCStringArray*, aClosure);
+  nsCStringArray *strings = static_cast<nsCStringArray*>(aClosure);
 
   strings->AppendCString(nsDependentCString(aKey));
   return PR_TRUE;

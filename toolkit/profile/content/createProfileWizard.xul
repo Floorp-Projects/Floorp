@@ -27,10 +27,14 @@
     <description>&profileCreationExplanation_2.text;</description>
     <description>&profileCreationExplanation_3.text;</description>
     <spacer flex="1"/>
-#ifndef XP_MACOSX
-    <description>&profileCreationExplanation_4.text;</description>
-#else
+#ifdef XP_MACOSX
     <description>&profileCreationExplanation_4Mac.text;</description>
+#else
+#ifdef XP_UNIX
+    <description>&profileCreationExplanation_4Gnome.text;</description>
+#else
+    <description>&profileCreationExplanation_4.text;</description>
+#endif
 #endif
   </wizardpage>
 

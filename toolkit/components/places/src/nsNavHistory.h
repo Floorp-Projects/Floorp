@@ -189,10 +189,6 @@ public:
   }
 #endif
 
-  // see comment above StartDummyStatement
-  nsresult StartDummyStatement();
-  nsresult StopDummyStatement();
-
   /**
    * These functions return non-owning references to the locale-specific
    * objects for places components. Guaranteed to return non-NULL.
@@ -247,7 +243,8 @@ public:
 
   // this actually executes a query and gives you results, it is used by
   // nsNavHistoryQueryResultNode
-  nsresult GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
+  nsresult GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
+                           const nsCOMArray<nsNavHistoryQuery>& aQueries,
                            nsNavHistoryQueryOptions *aOptions,
                            nsCOMArray<nsNavHistoryResultNode>* aResults);
 
@@ -299,7 +296,8 @@ public:
   static void DomainNameFromHostName(const nsCString& aHostName,
                                      nsACString& aDomainName);
   static PRTime NormalizeTime(PRUint32 aRelative, PRTime aOffset);
-  nsresult RecursiveGroup(const nsCOMArray<nsNavHistoryResultNode>& aSource,
+  nsresult RecursiveGroup(nsNavHistoryQueryResultNode *aResultNode,
+                          const nsCOMArray<nsNavHistoryResultNode>& aSource,
                           const PRUint16* aGroupingMode, PRUint32 aGroupCount,
                           nsCOMArray<nsNavHistoryResultNode>* aDest);
 
@@ -353,6 +351,7 @@ protected:
   //
   nsCOMPtr<mozIStorageService> mDBService;
   nsCOMPtr<mozIStorageConnection> mDBConn;
+  nsCOMPtr<nsIFile> mDBFile;
 
   nsCOMPtr<mozIStorageStatement> mDBGetURLPageInfo;   // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBGetURLPageInfoFull; // kGetInfoIndex_* results
@@ -376,6 +375,8 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBUrlToUrlResult; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBBookmarkToUrlResult; // kGetInfoIndex_* results
 
+  nsresult InitDBFile(PRBool aForceInit);
+  nsresult BackupDBFile();
   nsresult InitDB(PRBool *aDoImport);
   nsresult InitStatements();
   nsresult ForceMigrateBookmarksDB(mozIStorageConnection *aDBConn);
@@ -389,10 +390,6 @@ protected:
 
   nsresult InitMemDB();
 #endif
-
-  // this statement is kept open to persist the cache, see InitDB
-  nsCOMPtr<mozIStorageConnection> mDummyDBConn;
-  nsCOMPtr<mozIStorageStatement> mDBDummyStatement;
 
   nsresult AddURIInternal(nsIURI* aURI, PRTime aTime, PRBool aRedirect,
                           PRBool aToplevel, nsIURI* aReferrer);
@@ -499,10 +496,12 @@ protected:
   nsresult SetPageTitleInternal(nsIURI* aURI, PRBool aIsUserTitle,
                                 const nsAString& aTitle);
 
-  nsresult GroupByDay(const nsCOMArray<nsNavHistoryResultNode>& aSource,
-                       nsCOMArray<nsNavHistoryResultNode>* aDest);
+  nsresult GroupByDay(nsNavHistoryQueryResultNode *aResultNode,
+                      const nsCOMArray<nsNavHistoryResultNode>& aSource,
+                      nsCOMArray<nsNavHistoryResultNode>* aDest);
 
-  nsresult GroupByHost(const nsCOMArray<nsNavHistoryResultNode>& aSource,
+  nsresult GroupByHost(nsNavHistoryQueryResultNode *aResultNode,
+                       const nsCOMArray<nsNavHistoryResultNode>& aSource,
                        nsCOMArray<nsNavHistoryResultNode>* aDest,
                        PRBool aIsDomain);
 

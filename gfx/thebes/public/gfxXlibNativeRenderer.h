@@ -80,10 +80,10 @@ public:
         DRAW_SUPPORTS_CLIP_LIST = 0x08,
         // If set, then the visual passed in can be any visual, otherwise the
         // visual passed in must be the default visual for dpy's default screen
-        DRAW_SUPPORTS_NONDEFAULT_VISUAL = 0x08,
+        DRAW_SUPPORTS_NONDEFAULT_VISUAL = 0x10,
         // If set, then the display 'dpy' in the callback can be different from
         // the display passed to 'Draw'
-        DRAW_SUPPORTS_ALTERNATE_DISPLAY = 0x10
+        DRAW_SUPPORTS_ALTERNATE_DISPLAY = 0x20
     };
 
     struct DrawOutput {

@@ -55,8 +55,8 @@
 
 nsDOMUIEvent::nsDOMUIEvent(nsPresContext* aPresContext, nsGUIEvent* aEvent)
   : nsDOMEvent(aPresContext, aEvent ?
-               NS_STATIC_CAST(nsEvent *, aEvent) :
-               NS_STATIC_CAST(nsEvent *, new nsUIEvent(PR_FALSE, 0, 0)))
+               static_cast<nsEvent *>(aEvent) :
+               static_cast<nsEvent *>(new nsUIEvent(PR_FALSE, 0, 0)))
   , mClientPoint(0,0)
 {
   if (aEvent) {
@@ -73,14 +73,14 @@ nsDOMUIEvent::nsDOMUIEvent(nsPresContext* aPresContext, nsGUIEvent* aEvent)
   {
     case NS_UI_EVENT:
     {
-      nsUIEvent *event = NS_STATIC_CAST(nsUIEvent*, mEvent);
+      nsUIEvent *event = static_cast<nsUIEvent*>(mEvent);
       mDetail = event->detail;
       break;
     }
 
     case NS_SCROLLPORT_EVENT:
     {
-      nsScrollPortEvent* scrollEvent = NS_STATIC_CAST(nsScrollPortEvent*, mEvent);
+      nsScrollPortEvent* scrollEvent = static_cast<nsScrollPortEvent*>(mEvent);
       mDetail = (PRInt32)scrollEvent->orient;
       break;
     }
@@ -103,10 +103,20 @@ nsDOMUIEvent::nsDOMUIEvent(nsPresContext* aPresContext, nsGUIEvent* aEvent)
   }
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMUIEvent)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMUIEvent, nsDOMEvent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mView)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMUIEvent, nsDOMEvent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mView)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_ADDREF_INHERITED(nsDOMUIEvent, nsDOMEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMUIEvent, nsDOMEvent)
 
-NS_INTERFACE_MAP_BEGIN(nsDOMUIEvent)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMUIEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMUIEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSUIEvent)
   NS_INTERFACE_MAP_ENTRY(nsIPrivateCompositionEvent)
@@ -434,7 +444,7 @@ NS_METHOD nsDOMUIEvent::GetCompositionReply(nsTextEventReply** aReply)
      (mEvent->message == NS_COMPOSITION_START) ||
      (mEvent->message == NS_COMPOSITION_QUERY))
   {
-    *aReply = &(NS_STATIC_CAST(nsCompositionEvent*, mEvent)->theReply);
+    *aReply = &(static_cast<nsCompositionEvent*>(mEvent)->theReply);
     return NS_OK;
   }
   *aReply = nsnull;
@@ -446,7 +456,7 @@ nsDOMUIEvent::GetReconversionReply(nsReconversionEventReply** aReply)
 {
   if (mEvent->eventStructType == NS_RECONVERSION_EVENT)
   {
-    *aReply = &(NS_STATIC_CAST(nsReconversionEvent*, mEvent)->theReply);
+    *aReply = &(static_cast<nsReconversionEvent*>(mEvent)->theReply);
     return NS_OK;
   }
   *aReply = nsnull;
@@ -458,7 +468,7 @@ nsDOMUIEvent::GetQueryCaretRectReply(nsQueryCaretRectEventReply** aReply)
 {
   if (mEvent->eventStructType == NS_QUERYCARETRECT_EVENT)
   {
-    *aReply = &(NS_STATIC_CAST(nsQueryCaretRectEvent*, mEvent)->theReply);
+    *aReply = &(static_cast<nsQueryCaretRectEvent*>(mEvent)->theReply);
     return NS_OK;
   }
   *aReply = nsnull;

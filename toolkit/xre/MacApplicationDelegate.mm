@@ -54,6 +54,9 @@
 #include "nsComponentManagerUtils.h"
 #include "nsCommandLineServiceMac.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIAppStartup.h"
+#include "nsIObserverService.h"
+#include "nsISupportsPrimitives.h"
 
 @interface MacApplicationDelegate : NSObject
 {
@@ -248,7 +251,37 @@ static NSWindow* GetCocoaWindowForXULWindow(nsISupports *aXULWindow)
 // The open contents Apple Event 'ocon' (new in 10.4) does not have a delegate method
 // associated with it; it would need Carbon event code to handle.
 
-// Quitting is handled specially, don't define applicationShouldTerminate: .
+// If we don't handle applicationShouldTerminate:, a call to [NSApp terminate:]
+// (from the browser or from the OS) can result in an unclean shutdown.
+- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
+{
+  nsCOMPtr<nsIObserverService> obsServ =
+           do_GetService("@mozilla.org/observer-service;1");
+  if (!obsServ)
+    return NSTerminateNow;
+
+  nsCOMPtr<nsISupportsPRBool> cancelQuit =
+           do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID);
+  if (!cancelQuit)
+    return NSTerminateNow;
+
+  cancelQuit->SetData(PR_FALSE);
+  obsServ->NotifyObservers(cancelQuit, "quit-application-requested", nsnull);
+
+  PRBool abortQuit;
+  cancelQuit->GetData(&abortQuit);
+  if (abortQuit)
+    return NSTerminateCancel;
+
+  obsServ->NotifyObservers(nsnull, "quit-application-granted", nsnull);
+
+  nsCOMPtr<nsIAppStartup> appService =
+           do_GetService("@mozilla.org/toolkit/app-startup;1");
+  if (appService)
+    appService->Quit(nsIAppStartup::eForceQuit);
+
+  return NSTerminateNow;
+}
 
 @end
 

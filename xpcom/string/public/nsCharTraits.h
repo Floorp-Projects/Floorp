@@ -170,7 +170,7 @@ struct nsCharTraits<PRUnichar>
     int_type
     to_int_type( char_type c )
       {
-        return int_type( NS_STATIC_CAST(unsigned_char_type, c) );
+        return int_type( static_cast<unsigned_char_type>(c) );
       }
 
     static
@@ -204,14 +204,14 @@ struct nsCharTraits<PRUnichar>
     char_type*
     move( char_type* s1, const char_type* s2, size_t n )
       {
-        return NS_STATIC_CAST(char_type*, memmove(s1, s2, n * sizeof(char_type)));
+        return static_cast<char_type*>(memmove(s1, s2, n * sizeof(char_type)));
       }
 
     static
     char_type*
     copy( char_type* s1, const char_type* s2, size_t n )
       {
-        return NS_STATIC_CAST(char_type*, memcpy(s1, s2, n * sizeof(char_type)));
+        return static_cast<char_type*>(memcpy(s1, s2, n * sizeof(char_type)));
       }
 
     static
@@ -230,7 +230,7 @@ struct nsCharTraits<PRUnichar>
     assign( char_type* s, size_t n, char_type c )
       {
 #ifdef USE_CPP_WCHAR_FUNCS
-        return NS_STATIC_CAST(char_type*, wmemset(s, to_int_type(c), n));
+        return static_cast<char_type*>(wmemset(s, to_int_type(c), n));
 #else
         char_type* result = s;
         while ( n-- )
@@ -377,7 +377,7 @@ struct nsCharTraits<PRUnichar>
     find( const char_type* s, size_t n, char_type c )
       {
 #ifdef USE_CPP_WCHAR_FUNCS
-        return NS_REINTERPRET_CAST(const char_type*, wmemchr(s, to_int_type(c), n));
+        return reinterpret_cast<const char_type*>(wmemchr(s, to_int_type(c), n));
 #else
         while ( n-- )
           {
@@ -451,7 +451,7 @@ struct nsCharTraits<char>
     int_type
     to_int_type( char_type c )
       {
-        return int_type( NS_STATIC_CAST(unsigned_char_type, c) );
+        return int_type( static_cast<unsigned_char_type>(c) );
       }
 
     static
@@ -485,14 +485,14 @@ struct nsCharTraits<char>
     char_type*
     move( char_type* s1, const char_type* s2, size_t n )
       {
-        return NS_STATIC_CAST(char_type*, memmove(s1, s2, n * sizeof(char_type)));
+        return static_cast<char_type*>(memmove(s1, s2, n * sizeof(char_type)));
       }
 
     static
     char_type*
     copy( char_type* s1, const char_type* s2, size_t n )
       {
-        return NS_STATIC_CAST(char_type*, memcpy(s1, s2, n * sizeof(char_type)));
+        return static_cast<char_type*>(memcpy(s1, s2, n * sizeof(char_type)));
       }
 
     static
@@ -506,7 +506,7 @@ struct nsCharTraits<char>
     char_type*
     assign( char_type* s, size_t n, char_type c )
       {
-        return NS_STATIC_CAST(char_type*, memset(s, to_int_type(c), n));
+        return static_cast<char_type*>(memset(s, to_int_type(c), n));
       }
 
     static
@@ -615,7 +615,7 @@ struct nsCharTraits<char>
     const char_type*
     find( const char_type* s, size_t n, char_type c )
       {
-        return NS_REINTERPRET_CAST(const char_type*, memchr(s, to_int_type(c), n));
+        return reinterpret_cast<const char_type*>(memchr(s, to_int_type(c), n));
       }
 
 #if 0

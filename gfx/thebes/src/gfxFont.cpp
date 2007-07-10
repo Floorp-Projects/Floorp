@@ -57,6 +57,15 @@
 
 gfxFontCache *gfxFontCache::gGlobalCache = nsnull;
 
+#ifdef DEBUG_roc
+#define DEBUG_TEXT_RUN_STORAGE_METRICS
+#endif
+
+#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
+static PRUint32 gTextRunStorageHighWaterMark = 0;
+static PRUint32 gTextRunStorage = 0;
+#endif
+
 nsresult
 gfxFontCache::Init()
 {
@@ -70,6 +79,10 @@ gfxFontCache::Shutdown()
 {
     delete gGlobalCache;
     gGlobalCache = nsnull;
+
+#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
+    printf("Textrun storage high water mark=%d\n", gTextRunStorageHighWaterMark);
+#endif
 }
 
 PRBool
@@ -610,6 +623,26 @@ gfxTextRun::GlyphRunIterator::NextRun()  {
     return PR_TRUE;
 }
 
+#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
+static void
+AccountStorageForTextRun(gfxTextRun *aTextRun, PRInt32 aSign)
+{
+    // Ignores detailed glyphs... we don't know when those have been constructed
+    // Also ignores gfxSkipChars dynamic storage (which won't be anything
+    // for preformatted text)
+    // Also ignores GlyphRun array, again because it hasn't been constructed
+    // by the time this gets called. If there's only one glyphrun that's stored
+    // directly in the textrun anyway so no additional overhead.
+    PRInt32 bytesPerChar = sizeof(gfxTextRun::CompressedGlyph);
+    if (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_IS_PERSISTENT) {
+      bytesPerChar += (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_IS_8BIT) ? 1 : 2;
+    }
+    PRInt32 bytes = sizeof(gfxTextRun) + aTextRun->GetLength()*bytesPerChar;
+    gTextRunStorage += bytes*aSign;
+    gTextRunStorageHighWaterMark = PR_MAX(gTextRunStorageHighWaterMark, gTextRunStorage);
+}
+#endif
+
 gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void *aText,
                        PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags)
   : mUserData(aParams->mUserData),
@@ -629,7 +662,7 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void 
         }
     }
     if (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) {
-        mText.mSingle = NS_STATIC_CAST(const PRUint8 *, aText);
+        mText.mSingle = static_cast<const PRUint8 *>(aText);
         if (!(mFlags & gfxTextRunFactory::TEXT_IS_PERSISTENT)) {
             PRUint8 *newText = new PRUint8[aLength];
             if (!newText) {
@@ -641,7 +674,7 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void 
             mText.mSingle = newText;    
         }
     } else {
-        mText.mDouble = NS_STATIC_CAST(const PRUnichar *, aText);
+        mText.mDouble = static_cast<const PRUnichar *>(aText);
         if (!(mFlags & gfxTextRunFactory::TEXT_IS_PERSISTENT)) {
             PRUnichar *newText = new PRUnichar[aLength];
             if (!newText) {
@@ -653,10 +686,16 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void 
             mText.mDouble = newText;    
         }
     }
+#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
+    AccountStorageForTextRun(this, 1);
+#endif
 }
 
 gfxTextRun::~gfxTextRun()
 {
+#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
+    AccountStorageForTextRun(this, -1);
+#endif
     if (!(mFlags & gfxTextRunFactory::TEXT_IS_PERSISTENT)) {
         if (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) {
             delete[] mText.mSingle;
@@ -686,7 +725,8 @@ gfxTextRun::Clone(const gfxTextRunFactory::Parameters *aParams, const void *aTex
 
 PRBool
 gfxTextRun::SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
-                                   PRPackedBool *aBreakBefore)
+                                   PRPackedBool *aBreakBefore,
+                                   gfxContext *aRefContext)
 {
     NS_ASSERTION(aStart + aLength <= mCharacterCount, "Overflow");
 
@@ -1327,12 +1367,14 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
     // 2) some of the text fit up to a break opportunity (width > aWidth && lastBreak >= 0)
     // 3) none of the text fits before a break opportunity (width > aWidth && lastBreak < 0)
     PRUint32 charsFit;
+    PRBool usedHyphenation = PR_FALSE;
     if (width - trimmableAdvance <= aWidth) {
         charsFit = aMaxLength;
     } else if (lastBreak >= 0) {
         charsFit = lastBreak - aStart;
         trimmableChars = lastBreakTrimmableChars;
         trimmableAdvance = lastBreakTrimmableAdvance;
+        usedHyphenation = lastBreakUsedHyphenation;
     } else {
         charsFit = aMaxLength;
     }
@@ -1344,7 +1386,7 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
         *aTrimWhitespace = trimmableAdvance;
     }
     if (aUsedHyphenation) {
-        *aUsedHyphenation = lastBreakUsedHyphenation;
+        *aUsedHyphenation = usedHyphenation;
     }
     if (aLastBreak && charsFit == aMaxLength) {
         if (lastBreak < 0) {
@@ -1416,7 +1458,8 @@ gfxTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
 PRBool
 gfxTextRun::SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
                           PRBool aLineBreakBefore, PRBool aLineBreakAfter,
-                          gfxFloat *aAdvanceWidthDelta)
+                          gfxFloat *aAdvanceWidthDelta,
+                          gfxContext *aRefContext)
 {
     // Do nothing because our shaping does not currently take linebreaks into
     // account. There is no change in advance width.

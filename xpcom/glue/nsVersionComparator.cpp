@@ -79,7 +79,7 @@ ParseVP(char *part, VersionPart &result)
     result.strB = "";
   }
   else {
-    result.numA = strtol(part, NS_CONST_CAST(char**, &result.strB), 10);
+    result.numA = strtol(part, const_cast<char**>(&result.strB), 10);
   }
 
   if (!*result.strB) {

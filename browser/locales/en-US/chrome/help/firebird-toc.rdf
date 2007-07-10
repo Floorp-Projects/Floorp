@@ -43,7 +43,7 @@
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="using-firebird-navigating-web-pages" nc:name="Navigating Web Pages" nc:link="using_firebird.xhtml#navigating_web_pages"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-firebird-searching" nc:name="Searching" nc:link="using_firebird.xhtml#searching"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="using-firebird-copying-saving-and-printing-pages" nc:name="Copying, Saving, and Printing Pages" nc:link="using_firebird.xhtml#copying_saving_and_printng_pages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="using-firebird-copying-saving-and-printing-pages" nc:name="Copying, Saving, and Printing Pages" nc:link="using_firebird.xhtml#copying_saving_and_printing_pages"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-firebird-improving-speed-and-efficiency" nc:name="Improving Speed and Efficiency" nc:link="using_firebird.xhtml#improving_speed_and_efficiency"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>

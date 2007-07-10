@@ -46,100 +46,46 @@
   */
 class THEBES_API gfxTextRunWordCache {
 public:
-    gfxTextRunWordCache() {
-        mCache.Init(100);
-    }
-    ~gfxTextRunWordCache() {
-        NS_ASSERTION(mCache.Count() == 0, "Textrun cache not empty!");
-    }
+    enum { TEXT_IN_CACHE = 0x10000000 };
 
     /**
      * Create a textrun using cached words.
+     * Invalid characters (see gfxFontGroup::IsInvalidChar) will be automatically
+     * treated as invisible missing.
      * @param aFlags the flags TEXT_IS_ASCII and TEXT_HAS_SURROGATES must be set
-     * by the caller, if applicable
-     * @param aIsInCache if true is returned, then RemoveTextRun must be called
-     * before the textrun changes or dies.
+     * by the caller, if applicable; TEXT_IN_CACHE is added if we
+     * have a reference to the textrun in the cache and RemoveTextRun must
+     * be called when the textrun dies.
      */
-    gfxTextRun *MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
-                            gfxFontGroup *aFontGroup,
-                            const gfxFontGroup::Parameters *aParams,
-                            PRUint32 aFlags, PRBool *aIsInCache);
+    static gfxTextRun *MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
+                                   gfxFontGroup *aFontGroup,
+                                   const gfxFontGroup::Parameters *aParams,
+                                   PRUint32 aFlags);
     /**
-     * Create a textrun using cached words
-     * @param aFlags the flag TEXT_IS_ASCII must be set by the caller,
-     * if applicable
-     * @param aIsInCache if true is returned, then RemoveTextRun must be called
-     * before the textrun changes or dies.
+     * Create a textrun using cached words.
+     * Invalid characters (see gfxFontGroup::IsInvalidChar) will be automatically
+     * treated as invisible missing.
+     * @param aFlags the flags TEXT_IS_ASCII and TEXT_HAS_SURROGATES must be set
+     * by the caller, if applicable; TEXT_IN_CACHE is added if we
+     * have a reference to the textrun in the cache and RemoveTextRun must
+     * be called when the textrun dies.
      */
-    gfxTextRun *MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
-                            gfxFontGroup *aFontGroup,
-                            const gfxFontGroup::Parameters *aParams,
-                            PRUint32 aFlags, PRBool *aIsInCache);
+    static gfxTextRun *MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
+                                   gfxFontGroup *aFontGroup,
+                                   const gfxFontGroup::Parameters *aParams,
+                                   PRUint32 aFlags);
 
     /**
      * Remove a textrun from the cache. This must be called before aTextRun
      * is deleted! The text in the textrun must still be valid.
      */
-    void RemoveTextRun(gfxTextRun *aTextRun);
+    static void RemoveTextRun(gfxTextRun *aTextRun);
 
 protected:
-    struct THEBES_API CacheHashKey {
-        void        *mFontOrGroup;
-        const void  *mString;
-        PRUint32     mLength;
-        PRUint32     mAppUnitsPerDevUnit;
-        PRUint32     mStringHash;
-        PRPackedBool mIsDoubleByteText;
-    };
+    friend class gfxPlatform;
 
-    class THEBES_API CacheHashEntry : public PLDHashEntryHdr {
-    public:
-        typedef const CacheHashKey &KeyType;
-        typedef const CacheHashKey *KeyTypePointer;
-
-        // When constructing a new entry in the hashtable, the caller of Put()
-        // will fill us in.
-        CacheHashEntry(KeyTypePointer aKey) : mTextRun(nsnull), mWordOffset(0),
-            mHashedByFont(PR_FALSE) { }
-        CacheHashEntry(const CacheHashEntry& toCopy) { NS_ERROR("Should not be called"); }
-        ~CacheHashEntry() { }
-
-        PRBool KeyEquals(const KeyTypePointer aKey) const;
-        static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
-        static PLDHashNumber HashKey(const KeyTypePointer aKey);
-        enum { ALLOW_MEMMOVE = PR_TRUE };
-
-        gfxTextRun *mTextRun;
-        // The offset of the start of the word in the textrun. The length of
-        // the word is not stored here because we can figure it out by
-        // looking at the textrun's text.
-        PRUint32    mWordOffset:31;
-        // This is set to true when the cache entry was hashed by the first
-        // font in mTextRun's fontgroup; it's false when the cache entry
-        // was hashed by the fontgroup itself.
-        PRUint32    mHashedByFont:1;
-    };
-    
-    // Used to track words that should be copied from one textrun to
-    // another during the textrun construction process
-    struct DeferredWord {
-        gfxTextRun *mSourceTextRun;
-        PRUint32    mSourceOffset;
-        PRUint32    mDestOffset;
-        PRUint32    mLength;
-        PRUint32    mHash;
-    };
-    
-    PRBool LookupWord(gfxTextRun *aTextRun, gfxFont *aFirstFont,
-                      PRUint32 aStart, PRUint32 aEnd, PRUint32 aHash,
-                      nsTArray<DeferredWord>* aDeferredWords);
-    void FinishTextRun(gfxTextRun *aTextRun, gfxTextRun *aNewRun,
-                       const nsTArray<DeferredWord>& aDeferredWords,
-                       PRBool aSuccessful);
-    void RemoveWord(gfxTextRun *aTextRun, PRUint32 aStart,
-                    PRUint32 aEnd, PRUint32 aHash);    
-
-    nsTHashtable<CacheHashEntry> mCache;
+    static nsresult Init();
+    static void Shutdown();
 };
 
 #endif /* GFX_TEXT_RUN_WORD_CACHE_H */

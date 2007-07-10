@@ -332,7 +332,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
       return rv;
 
     *_retval = relativePref;
-    NS_ADDREF(NS_STATIC_CAST(nsIRelativeFilePref*, *_retval));
+    NS_ADDREF(static_cast<nsIRelativeFilePref*>(*_retval));
     return NS_OK;
   }
 
@@ -745,7 +745,7 @@ PR_STATIC_CALLBACK(nsresult) NotifyObserver(const char *newpref, void *data)
     observer = pData->pObserver;
   }
 
-  observer->Observe(NS_STATIC_CAST(nsIPrefBranch *, pData->pBranch),
+  observer->Observe(static_cast<nsIPrefBranch *>(pData->pBranch),
                     NS_PREFBRANCH_PREFCHANGE_TOPIC_ID,
                     NS_ConvertASCIItoUTF16(suffix).get());
   return NS_OK;
@@ -869,8 +869,8 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 pref_enumChild(PLDHashTable *table, PLDHashEntryHdr *heh,
                PRUint32 i, void *arg)
 {
-  PrefHashEntry *he = NS_STATIC_CAST(PrefHashEntry*, heh);
-  EnumerateData *d = NS_REINTERPRET_CAST(EnumerateData *, arg);
+  PrefHashEntry *he = static_cast<PrefHashEntry*>(heh);
+  EnumerateData *d = reinterpret_cast<EnumerateData *>(arg);
   if (PL_strncmp(he->key, d->parent, PL_strlen(d->parent)) == 0) {
     d->pref_list->AppendElement((void*)he->key);
   }

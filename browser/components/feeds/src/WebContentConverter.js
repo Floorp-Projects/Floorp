@@ -723,11 +723,14 @@ var WebContentConverterRegistrar = {
     switch (topic) {
     case "app-startup":
       os.addObserver(this, "profile-after-change", false);
+      os.addObserver(this, "xpcom-shutdown", false);
       break;
     case "profile-after-change":
       os.removeObserver(this, "profile-after-change");
       this._init();
-      break;      
+      break;
+    case "xpcom-shutdown":
+      this.classID = null;
     }
   },
   

@@ -13,8 +13,6 @@
 <!ENTITY  noupdatesfound.intro            "There are no new updates available. &brandShortName; may check 
                                            periodically for new updates.">
 
-<!ENTITY  updatesfound.title              "Update Available">
-
 <!ENTITY  incompatibleChecking.label      "Checking if this update will cause problems with your extensions and/or themes...">
 <!ENTITY  clickHere.label                 "View more information about this update">
 
@@ -26,9 +24,6 @@
 <!ENTITY  upgrade.evangelism              "It is strongly recommended that you upgrade &brandShortName; 
                                            as soon as possible.">
 
-<!ENTITY  license.title                   "License Agreement">
-<!ENTITY  license.intro                   "To install this update you must agree to this license agreement. 
-                                           Please read it carefully:">
 <!ENTITY  license.instructions            "If you agree to the terms of this agreement, click I Agree 
                                            below to continue installing this update.">
 

@@ -60,7 +60,6 @@ imgContainer::imgContainer() :
   mLoopCount(-1),
   mObserver(nsnull)
 {
-  mProperties = do_CreateInstance("@mozilla.org/properties;1");
 }
 
 //******************************************************************************
@@ -158,7 +157,7 @@ NS_IMETHODIMP imgContainer::GetNumFrames(PRUint32 *aNumFrames)
 /* gfxIImageFrame getFrameAt (in unsigned long index); */
 NS_IMETHODIMP imgContainer::GetFrameAt(PRUint32 index, gfxIImageFrame **_retval)
 {
-  NS_ENSURE_ARG(index < NS_STATIC_CAST(PRUint32, mFrames.Count()));
+  NS_ENSURE_ARG(index < static_cast<PRUint32>(mFrames.Count()));
   
   NS_ASSERTION(_retval, "imgContainer::GetFrameAt; Invalid Arg");
   if (!_retval)
@@ -328,7 +327,7 @@ NS_IMETHODIMP imgContainer::StartAnimation()
     
     // The only way animating becomes true is if the timer is created
     mAnim->animating = PR_TRUE;
-    mAnim->timer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*, this),
+    mAnim->timer->InitWithCallback(static_cast<nsITimerCallback*>(this),
                                    timeout, nsITimer::TYPE_REPEATING_SLACK);
   }
   
@@ -826,4 +825,48 @@ PRBool imgContainer::CopyFrameImage(gfxIImageFrame *aSrcFrame,
   img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
 
   return PR_TRUE;
+}
+
+/********* Methods to implement lazy allocation of nsIProperties object *************/
+NS_IMETHODIMP imgContainer::Get(const char *prop, const nsIID & iid, void * *result)
+{
+  if (!mProperties)
+    return NS_ERROR_FAILURE;
+  return mProperties->Get(prop, iid, result);
+}
+
+NS_IMETHODIMP imgContainer::Set(const char *prop, nsISupports *value)
+{
+  if (!mProperties)
+    mProperties = do_CreateInstance("@mozilla.org/properties;1");
+  if (!mProperties)
+    return NS_ERROR_OUT_OF_MEMORY;
+  return mProperties->Set(prop, value);
+}
+
+NS_IMETHODIMP imgContainer::Has(const char *prop, PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  if (!mProperties) {
+    *_retval = PR_FALSE;
+    return NS_OK;
+  }
+  return mProperties->Has(prop, _retval);
+}
+
+NS_IMETHODIMP imgContainer::Undefine(const char *prop)
+{
+  if (!mProperties)
+    return NS_ERROR_FAILURE;
+  return mProperties->Undefine(prop);
+}
+
+NS_IMETHODIMP imgContainer::GetKeys(PRUint32 *count, char ***keys)
+{
+  if (!mProperties) {
+    *count = 0;
+    *keys = nsnull;
+    return NS_OK;
+  }
+  return mProperties->GetKeys(count, keys);
 }

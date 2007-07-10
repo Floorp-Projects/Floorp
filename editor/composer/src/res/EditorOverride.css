@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+*|* {
+  -moz-user-modify: read-write;
+}
+
 /* Styles to alter look of things in the Editor content window 
  *  that should NOT be removed when we display in completely WYSIWYG 
  *  "Browser Preview" mode.

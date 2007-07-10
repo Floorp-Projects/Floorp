@@ -46,7 +46,6 @@
 const kObserverServiceProgID = "@mozilla.org/observer-service;1";
 const kDlmgrContractID = "@mozilla.org/download-manager;1";
 const nsIDownloadManager = Components.interfaces.nsIDownloadManager;
-const nsIXPInstallManagerUI = Components.interfaces.nsIXPInstallManagerUI;
 const PREF_BDM_CLOSEWHENDONE = "browser.download.manager.closeWhenDone";
 const PREF_BDM_ALERTONEXEOPEN = "browser.download.manager.alertOnEXEOpen";
 const PREF_BDM_RETENTION = "browser.download.manager.retention";
@@ -62,14 +61,6 @@ var gDownloadListener = null;
 var gDownloadsView    = null;
 var gUserInterfered   = false;
 var gActiveDownloads  = [];
-
-// This variable exists because for XPInstalls, we don't want to close the 
-// download manager until the XPInstallManager sends the DIALOG_CLOSE status
-// message. Setting this variable to false when the downloads window is 
-// opened by the xpinstall manager prevents the window from being closed after
-// each download completes (because xpinstall downloads are done sequentially, 
-// not concurrently) 
-var gCanAutoClose   = true;
 
 // If the user has interacted with the window in a significant way, we should
 // not auto-close the window. Tough UI decisions about what is "significant."
@@ -154,13 +145,8 @@ function autoRemoveAndClose(aDownload)
   var pref = Components.classes["@mozilla.org/preferences-service;1"]
                        .getService(Components.interfaces.nsIPrefBranch);
 
-  var autoRemove = false;
-  try {
-    // this can throw, since it doesn't exist
-    autoRemove = pref.getBoolPref(PREF_BDM_RETENTION);
-  } catch (e) { }
-  if (dl && autoRemove) {
-    // The download manager backed removes this, but we have to update the UI!
+  if (aDownload && (pref.getIntPref(PREF_BDM_RETENTION) == 0)) {
+    // The download manager backend removes this, but we have to update the UI!
     var dl = getDownload(aDownload.id);
     dl.parentNode.removeChild(dl);
   }
@@ -173,9 +159,13 @@ function autoRemoveAndClose(aDownload)
     var autoClose = pref.getBoolPref(PREF_BDM_CLOSEWHENDONE);
     if (autoClose && (!window.opener ||
                       window.opener.location.href == window.location.href) &&
-        gCanAutoClose && !gUserInteracted)
+        !gUserInteracted) {
       gCloseDownloadManager();
+      return true;
+    }
   }
+  
+  return false;
 }
 
 // This function can be overwritten by extensions that wish to place the Download Window in
@@ -224,21 +214,6 @@ var gDownloadObserver = {
       // switch view to it
       gDownloadsView.selectedIndex = 0;
       break;
-    case "xpinstall-download-started":
-      var windowArgs = aSubject.QueryInterface(Components.interfaces.nsISupportsArray);
-      var params = windowArgs.QueryElementAt(0, Components.interfaces.nsISupportsInterfacePointer);
-      params = params.data.QueryInterface(Components.interfaces.nsIDialogParamBlock);
-      var installObserver = windowArgs.QueryElementAt(1, Components.interfaces.nsISupportsInterfacePointer);
-      installObserver = installObserver.data.QueryInterface(Components.interfaces.nsIObserver);
-      XPInstallDownloadManager.addDownloads(params, installObserver);
-      break;  
-    case "xpinstall-dialog-close":
-      if ("gDownloadManager" in window) {
-        var mgr = gDownloadManager.QueryInterface(Components.interfaces.nsIXPInstallManagerUI);
-        gCanAutoClose = mgr.hasActiveXPIOperations;
-        autoRemoveAndClose();
-      }
-      break;          
     }
   }
 };
@@ -458,6 +433,12 @@ function onUpdateProgress()
     // Update progress
     getDownload(dl.id).setAttribute("progress", dl.percentComplete);
 
+    // Fire DOM event so that accessible value change events occur
+    var progressmeter = document.getAnonymousElementByAttribute(getDownload(dl.id), "anonid", "progressmeter");
+    var event = document.createEvent('Events');
+    event.initEvent('ValueChange', true, true);
+    progressmeter.dispatchEvent(event);
+
     // gActiveDownloads is screwed so it's possible 
     // to have more files than we're really downloading.
     // The good news is that those files have size==0.
@@ -551,27 +532,14 @@ function Startup()
   observerService.addObserver(gDownloadObserver, "dl-cancel", false);
   observerService.addObserver(gDownloadObserver, "dl-failed", false);  
   observerService.addObserver(gDownloadObserver, "dl-start",  false);  
-  observerService.addObserver(gDownloadObserver, "xpinstall-download-started", false);  
-  observerService.addObserver(gDownloadObserver, "xpinstall-dialog-close",     false);
   
-  // Now look and see if we're being opened by XPInstall
-  if ("arguments" in window) {
-    try {
-      var params = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
-      var installObserver = window.arguments[1].QueryInterface(Components.interfaces.nsIObserver);
-      XPInstallDownloadManager.addDownloads(params, installObserver);
-      var mgr = gDownloadManager.QueryInterface(Components.interfaces.nsIXPInstallManagerUI);
-      gCanAutoClose = mgr.hasActiveXPIOperations;
-    }
-    catch (e) { }
-  }
-
   // This is for the "Clean Up" button, which requires there to be
   // non-active downloads before it can be enabled. 
   gDownloadsView.controllers.appendController(gDownloadViewController);
 
   // downloads can finish before Startup() does, so check if the window should close
-  autoRemoveAndClose();
+  if (!autoRemoveAndClose())
+    gDownloadsView.focus();
 }
 
 function Shutdown() 
@@ -588,68 +556,6 @@ function Shutdown()
   observerService.removeObserver(gDownloadObserver, "dl-cancel");
   observerService.removeObserver(gDownloadObserver, "dl-failed");  
   observerService.removeObserver(gDownloadObserver, "dl-start");  
-  observerService.removeObserver(gDownloadObserver, "xpinstall-download-started");  
-  observerService.removeObserver(gDownloadObserver, "xpinstall-dialog-close");
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// XPInstall
-
-var XPInstallDownloadManager = {
-  addDownloads: function (aParams, aObserver)
-  {
-    var numXPInstallItems = aParams.GetInt(1);
-    
-    var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
-    var tempDir = fileLocator.get("TmpD", Components.interfaces.nsIFile);
-
-    var mimeService = Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"].getService(Components.interfaces.nsIMIMEService);
-
-    var IOService = Components.classes["@mozilla.org/network/io-service;1"]
-                              .getService(Components.interfaces.nsIIOService);
-
-    var xpinstallManager = gDownloadManager.QueryInterface(Components.interfaces.nsIXPInstallManagerUI);
-
-    var xpiString = "";
-
-    for (var i = 0; i < numXPInstallItems;) {
-      // Pretty Name
-      var displayName = aParams.GetString(i++);
-      
-      // URI
-      var uri = IOService.newURI(aParams.GetString(i++), null, null);
-
-      var iconURL = aParams.GetString(i++);
-      
-      // Local File Target
-      var url = uri.QueryInterface(Components.interfaces.nsIURL);
-      var localTarget = tempDir.clone();
-      localTarget.append(url.fileName);
-      
-      xpiString += localTarget.path + ",";
-      
-      // MIME Info
-      var mimeInfo = null;
-      try {
-        mimeInfo = mimeService.getFromTypeAndExtension(null, url.fileExtension);
-      }
-      catch (e) { }
-      
-      if (!iconURL) 
-        iconURL = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
-      
-      var targetUrl = makeFileURI(localTarget);
-      var download = gDownloadManager.addDownload(Components.interfaces.nsIXPInstallManagerUI.DOWNLOAD_TYPE_INSTALL, 
-                                                  uri, targetUrl, displayName, iconURL, mimeInfo, 0, null);
-      
-      // Advance the enumerator
-      var certName = aParams.GetString(i++);
-    }
-
-    var observerService = Components.classes[kObserverServiceProgID]
-                                    .getService(Components.interfaces.nsIObserverService);
-    observerService.notifyObservers(xpinstallManager.xpiProgress, "xpinstall-progress", "open");  
-  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -745,9 +651,7 @@ var gDownloadViewController = {
 
         if (state != nsIDownloadManager.DOWNLOAD_NOTSTARTED &&
             state != nsIDownloadManager.DOWNLOAD_DOWNLOADING &&
-            state != nsIDownloadManager.DOWNLOAD_PAUSED &&
-            state != nsIXPInstallManagerUI.INSTALL_DOWNLOADING &&
-            state != nsIXPInstallManagerUI.INSTALL_INSTALLING)
+            state != nsIDownloadManager.DOWNLOAD_PAUSED)
           gDownloadsView.removeChild(gDownloadsView.children[i]);
       }
 

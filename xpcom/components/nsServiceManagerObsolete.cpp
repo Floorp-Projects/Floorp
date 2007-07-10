@@ -55,8 +55,7 @@ nsServiceManager::GetGlobalServiceManager(nsIServiceManager* *result)
         
     // this method does not addref for historical reasons.
     // we return the nsIServiceManagerObsolete interface via a cast.
-    *result =  (nsIServiceManager*) NS_STATIC_CAST(nsIServiceManagerObsolete*, 
-                                                   nsComponentManagerImpl::gComponentManager);
+    *result =  (nsIServiceManager*) static_cast<nsIServiceManagerObsolete*>(nsComponentManagerImpl::gComponentManager);
     return NS_OK;
 }
 

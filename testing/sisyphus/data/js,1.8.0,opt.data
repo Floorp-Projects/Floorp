@@ -2,5 +2,3 @@ product=js
 branch=1.8.0
 sourcepath=/work/mozilla/builds/1.8.0/mozilla/js/src
 buildtype=opt
-
-

@@ -197,3 +197,31 @@ Note that in layout tests it is often enough to trigger layout using
 
 When possible, you should use this technique instead of making your
 test async.
+
+Printing Tests
+==============
+Now that the patch for bug 374050 has landed
+(https://bugzilla.mozilla.org/show_bug.cgi?id=374050), it is possible to
+create reftests that run in a paginated context.
+
+The page size used is 5in wide and 3in tall (with the default half-inch
+margins).  This is to allow tests to have less text and to make the
+entire test fit on the screen.
+
+There is a layout/reftests/printing directory for printing reftests; however,
+there is nothing special about this directory.  You can put printing reftests
+anywhere that is appropriate.
+
+The suggested first lines for any printing test is
+<!DOCTYPE html><html class="reftest-print">
+<style>html{font-size:12pt}</style>
+
+The reftest-print class on the root element triggers the reftest to
+switch into page mode on load. Fixing the font size is suggested,
+although not required, because the pages are a fixed size in inches.
+
+The underlying layout support for this mode isn't really complete; it
+doesn't use exactly the same codepath as real print preview/print. In
+particular, scripting and frames are likely to cause problems; it is untested,
+theough.  That said, it should be sufficient for testing layout issues related
+to pagination.

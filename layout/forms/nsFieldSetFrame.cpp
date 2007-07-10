@@ -202,7 +202,7 @@ void
 nsDisplayFieldSetBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  NS_STATIC_CAST(nsFieldSetFrame*, mFrame)->
+  static_cast<nsFieldSetFrame*>(mFrame)->
     PaintBorderBackground(*aCtx, aBuilder->ToReferenceFrame(mFrame), aDirtyRect);
 }
 
@@ -708,7 +708,7 @@ NS_IMETHODIMP nsFieldSetFrame::GetAccessible(nsIAccessible** aAccessible)
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    return accService->CreateHTMLGroupboxAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+    return accService->CreateHTMLGroupboxAccessible(static_cast<nsIFrame*>(this), aAccessible);
   }
 
   return NS_ERROR_FAILURE;

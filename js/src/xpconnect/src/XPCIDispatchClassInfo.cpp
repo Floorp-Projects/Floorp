@@ -65,10 +65,10 @@ NS_IMETHODIMP
 XPCIDispatchClassInfo::GetInterfaces(PRUint32 *count, nsIID * **array)
 {
     *count = 0;
-    *array = NS_STATIC_CAST(nsIID**, nsMemory::Alloc(sizeof(nsIID*)));
+    *array = static_cast<nsIID**>(nsMemory::Alloc(sizeof(nsIID*)));
     NS_ENSURE_TRUE(*array, NS_ERROR_OUT_OF_MEMORY);
 
-    **array = NS_STATIC_CAST(nsIID *, nsMemory::Clone(&NSID_IDISPATCH,
+    **array = static_cast<nsIID *>(nsMemory::Clone(&NSID_IDISPATCH,
                                                       sizeof(NSID_IDISPATCH)));
     if(!**array)
     {

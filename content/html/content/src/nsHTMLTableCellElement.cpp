@@ -181,7 +181,7 @@ nsHTMLTableCellElement::GetCellIndex(PRInt32* aCellIndex)
     nsCOMPtr<nsIDOMNode> node;
     cells->Item(i, getter_AddRefs(node));
 
-    if (node.get() == NS_STATIC_CAST(nsIDOMNode *, this)) {
+    if (node.get() == static_cast<nsIDOMNode *>(this)) {
       *aCellIndex = i;
       found = PR_TRUE;
     }

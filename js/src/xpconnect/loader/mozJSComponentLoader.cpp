@@ -146,11 +146,11 @@ mozJSLoaderErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
 
         PRUint32 column = rep->uctokenptr - rep->uclinebuf;
 
-        rv = errorObject->Init(NS_REINTERPRET_CAST(const PRUnichar*,
-                                                   rep->ucmessage),
+        rv = errorObject->Init(reinterpret_cast<const PRUnichar*>
+                                               (rep->ucmessage),
                                fileUni.get(),
-                               NS_REINTERPRET_CAST(const PRUnichar*,
-                                                   rep->uclinebuf),
+                               reinterpret_cast<const PRUnichar*>
+                                               (rep->uclinebuf),
                                rep->lineno, column, rep->flags,
                                "component javascript");
         if (NS_SUCCEEDED(rv)) {
@@ -391,7 +391,7 @@ ReadScriptFromStream(JSContext *cx, nsIObjectInputStream *stream,
         // doesn't get passed to ::JS_free by ::JS_XDRDestroy.
 
         uint32 length;
-        data = NS_STATIC_CAST(char*, JS_XDRMemGetData(xdr, &length));
+        data = static_cast<char*>(JS_XDRMemGetData(xdr, &length));
         if (data) {
             JS_XDRMemSetData(xdr, nsnull, 0);
         }
@@ -435,8 +435,8 @@ WriteScriptToStream(JSContext *cx, JSScript *script,
         // one last buffer of data to write to aStream.
 
         uint32 size;
-        const char* data = NS_REINTERPRET_CAST(const char*,
-                                               JS_XDRMemGetData(xdr, &size));
+        const char* data = reinterpret_cast<const char*>
+                                           (JS_XDRMemGetData(xdr, &size));
         NS_ASSERTION(data, "no decoded JSXDRState data!");
 
         rv = stream->Write32(size);
@@ -529,6 +529,8 @@ mozJSComponentLoader::ReallyInit()
     if (!mModules.Init(32))
         return NS_ERROR_OUT_OF_MEMORY;
     if (!mImports.Init(32))
+        return NS_ERROR_OUT_OF_MEMORY;
+    if (!mInProgressImports.Init(32))
         return NS_ERROR_OUT_OF_MEMORY;
 
     // Set up our fastload file
@@ -795,7 +797,7 @@ FastLoadStateHolder::pop()
 void
 mozJSComponentLoader::CloseFastLoad(nsITimer *timer, void *closure)
 {
-    NS_STATIC_CAST(mozJSComponentLoader*, closure)->CloseFastLoad();
+    static_cast<mozJSComponentLoader*>(closure)->CloseFastLoad();
 }
 
 void
@@ -1179,7 +1181,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
         PRUint32 fileSize32;
         LL_L2UI(fileSize32, fileSize);
 
-        char *buf = NS_STATIC_CAST(char*, PR_MemMap(map, 0, fileSize32));
+        char *buf = static_cast<char*>(PR_MemMap(map, 0, fileSize32));
         if (!buf) {
             NS_WARNING("Failed to map file");
             return NS_ERROR_FAILURE;
@@ -1251,11 +1253,16 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
     // Restore the old state of the fastload service.
     flState.pop();
 
+    // Assign aGlobal here so that it's available to recursive imports.
+    // See bug 384168.
+    *aGlobal = global;
+
     jsval retval;
     if (!JS_ExecuteScript(cx, global, script, &retval)) {
 #ifdef DEBUG_shaver_off
         fprintf(stderr, "mJCL: failed to execute %s\n", nativePath.get());
 #endif
+        *aGlobal = nsnull;
         return NS_ERROR_FAILURE;
     }
 
@@ -1263,10 +1270,11 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
     nsCAutoString path;
     aComponent->GetNativePath(path);
     *aLocation = ToNewCString(path);
-    if (!*aLocation)
+    if (!*aLocation) {
+        *aGlobal = nsnull;
         return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-    *aGlobal = global;
     JS_AddNamedRoot(cx, aGlobal, *aLocation);
     return NS_OK;
 }
@@ -1276,15 +1284,15 @@ mozJSComponentLoader::UnloadModules()
 {
     mInitialized = PR_FALSE;
 
-    mModules.Clear();
+    mInProgressImports.Clear();
     mImports.Clear();
+    mModules.Clear();
 
     // Destroying our context will force a GC.
     JS_DestroyContext(mContext);
     mContext = nsnull;
 
     mRuntimeService = nsnull;
-
 #ifdef DEBUG_shaver_off
     fprintf(stderr, "mJCL: UnloadAll(%d)\n", aWhen);
 #endif
@@ -1422,18 +1430,21 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
 
     ModuleEntry* mod;
     nsAutoPtr<ModuleEntry> newEntry;
-    if (!mImports.Get(lfhash, &mod)) {
+    if (!mImports.Get(lfhash, &mod) && !mInProgressImports.Get(lfhash, &mod)) {
         newEntry = new ModuleEntry;
-        if (!newEntry)
+        if (!newEntry || !mInProgressImports.Put(lfhash, newEntry))
             return NS_ERROR_OUT_OF_MEMORY;
-        
+
         rv = GlobalForLocation(componentFile, &newEntry->global,
                                &newEntry->location);
+
+        mInProgressImports.Remove(lfhash);
+
         if (NS_FAILED(rv)) {
             *_retval = nsnull;
             return NS_ERROR_FILE_NOT_FOUND;
         }
-        
+
         mod = newEntry;
     }
 
@@ -1463,7 +1474,11 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
             return ReportOnCaller(cc, ERROR_GETTING_ARRAY_LENGTH,
                                   PromiseFlatCString(aLocation).get());
         }
-    
+
+#ifdef DEBUG
+        nsCAutoString logBuffer;
+#endif
+
         for (jsuint i = 0; i < symbolCount; ++i) {
             jsval val;
             JSString *symbolName;
@@ -1490,11 +1505,13 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
             }
 #ifdef DEBUG
             if (i == 0) {
-                printf("Installing symbols [ ");
+                logBuffer.AssignLiteral("Installing symbols [ ");
             }
-            printf("%s ", JS_GetStringBytes(symbolName));
+            logBuffer.Append(JS_GetStringBytes(symbolName));
+            logBuffer.AppendLiteral(" ");
             if (i == symbolCount - 1) {
-                printf("] from %s\n", PromiseFlatCString(aLocation).get());
+                LOG(("%s] from %s\n", PromiseFlatCString(logBuffer).get(),
+                                      PromiseFlatCString(aLocation).get()));
             }
 #endif
         }

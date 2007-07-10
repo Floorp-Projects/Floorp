@@ -868,7 +868,10 @@ void nsWindow::DoCreate( HWND hwndP, nsWindow *aParent,
          NS_ADDREF(mToolkit);
       }
       else if( aParent)
+      {
          mToolkit = aParent->GetToolkit();
+         NS_IF_ADDREF(mToolkit);
+      }
       else
       {
          // it's some top level window with no toolkit passed in.
@@ -2013,7 +2016,7 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData, PRUint32 aWidth,
 
   // create a bitmap from the image data
   HBITMAP hBmp = GpiCreateBitmap(hps, &bi.head, CBM_INIT,
-                 NS_REINTERPRET_CAST(BYTE*, aImageData),
+                 reinterpret_cast<BYTE*>(aImageData),
                  (BITMAPINFO2*)&bi);
 
   // free the hps, then return the bitmap

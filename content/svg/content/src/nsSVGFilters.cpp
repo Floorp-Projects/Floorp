@@ -60,6 +60,8 @@
 #include "nsIFrame.h"
 #include "nsSVGAnimatedInteger.h"
 #include "gfxContext.h"
+#include "nsSVGAnimatedBoolean.h"
+#include "nsSVGLengthList.h"
 
 nsSVGElement::LengthInfo nsSVGFE::sLengthInfo[4] =
 {
@@ -115,7 +117,7 @@ nsSVGFE::ScanDualValueAttribute(const nsAString& aValue, nsIAtom* aAttribute,
   NS_ConvertUTF16toUTF8 value(aValue);
   value.CompressWhitespace(PR_FALSE, PR_TRUE);
   const char *str = value.get();
-  x = NS_STATIC_CAST(float, PR_strtod(str, &rest));
+  x = static_cast<float>(PR_strtod(str, &rest));
   if (str == rest) {
     //first value was illformed
     parseError = PR_TRUE;
@@ -124,7 +126,7 @@ nsSVGFE::ScanDualValueAttribute(const nsAString& aValue, nsIAtom* aAttribute,
       //second value was not supplied
       y = x;
     } else {
-      y = NS_STATIC_CAST(float, PR_strtod(rest, &rest));
+      y = static_cast<float>(PR_strtod(rest, &rest));
       if (*rest != '\0') {
         //second value was illformed or there was trailing content
         parseError = PR_TRUE;
@@ -248,22 +250,30 @@ public:
   nsresult AcquireTargetImage(nsIDOMSVGAnimatedString* aResult,
                               PRUint8** aTargetData,
                               gfxImageSurface** aSurface = 0);
-  const nsRect& GetRect() {
+  const nsRect& GetRect() const {
     return mRect;
   }
 
   /*
    * Returns total length of data buffer in bytes
    */
-  PRUint32 GetDataLength() {
+  PRUint32 GetDataLength() const {
     return mStride * mHeight;
   }
 
   /*
    * Returns the total number of bytes per row of image data
    */
-  PRInt32 GetDataStride() {
+  PRInt32 GetDataStride() const {
     return mStride;
+  }
+
+  PRInt32 GetWidth() const {
+    return mWidth;
+  }
+
+  PRInt32 GetHeight() const {
+    return mHeight;
   }
 
   /*
@@ -649,8 +659,8 @@ nsSVGFEGaussianBlurElement::GaussianBlur(PRUint8 *aInput, PRUint8 *aOutput,
   dX = (PRUint32) floor(aStdX * 3*sqrt(2*M_PI)/4 + 0.5);
   dY = (PRUint32) floor(aStdY * 3*sqrt(2*M_PI)/4 + 0.5);
 
-  PRUint8 *tmp = NS_STATIC_CAST(PRUint8*,
-                                calloc(aFilterResource->GetDataLength(), 1));
+  PRUint8 *tmp = static_cast<PRUint8*>
+                            (calloc(aFilterResource->GetDataLength(), 1));
   nsRect rect = aFilterResource->GetRect();
   PRUint32 stride = aFilterResource->GetDataStride();
 
@@ -971,7 +981,7 @@ nsSVGFEBlendElement::Filter(nsSVGFilterInstance *instance)
             break;
         }
         val = PR_MIN(val / 255, 255);
-        targetData[targIndex + i] =  NS_STATIC_CAST(PRUint8, val);
+        targetData[targIndex + i] =  static_cast<PRUint8>(val);
       }
       PRUint32 alpha = 255 * 255 - (255 - qa) * (255 - qb);
       FAST_DIVIDE_BY_255(targetData[targIndex + GFX_ARGB32_OFFSET_A], alpha);
@@ -1255,8 +1265,8 @@ nsSVGFEColorMatrixElement::Filter(nsSVGFilterInstance *instance)
     list->GetItem(0, getter_AddRefs(number));
     number->GetValue(&hueRotateValue);
 
-    c = NS_STATIC_CAST(float, cos(hueRotateValue * M_PI / 180));
-    s = NS_STATIC_CAST(float, sin(hueRotateValue * M_PI / 180));
+    c = static_cast<float>(cos(hueRotateValue * M_PI / 180));
+    s = static_cast<float>(sin(hueRotateValue * M_PI / 180));
 
     memcpy(colorMatrix, identityMatrix, sizeof(colorMatrix));
 
@@ -1298,13 +1308,13 @@ nsSVGFEColorMatrixElement::Filter(nsSVGFilterInstance *instance)
         col[i] = PR_MIN(PR_MAX(0, col[i]), 255);
       }
       targetData[targIndex + GFX_ARGB32_OFFSET_R] =
-        NS_STATIC_CAST(PRUint8, col[0]);
+        static_cast<PRUint8>(col[0]);
       targetData[targIndex + GFX_ARGB32_OFFSET_G] =
-        NS_STATIC_CAST(PRUint8, col[1]);
+        static_cast<PRUint8>(col[1]);
       targetData[targIndex + GFX_ARGB32_OFFSET_B] =
-        NS_STATIC_CAST(PRUint8, col[2]);
+        static_cast<PRUint8>(col[2]);
       targetData[targIndex + GFX_ARGB32_OFFSET_A] =
-        NS_STATIC_CAST(PRUint8, col[3]);
+        static_cast<PRUint8>(col[3]);
     }
   }
   return NS_OK;
@@ -1564,7 +1574,7 @@ nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance)
           PRUint8 i1 = sourceData[targIndex + i];
           float result = k1Scaled*i1*i2 + k2*i1 + k3*i2 + k4Scaled;
           targetData[targIndex + i] =
-                       NS_STATIC_CAST(PRUint8, PR_MIN(PR_MAX(0, result), 255));
+                       static_cast<PRUint8>(PR_MIN(PR_MAX(0, result), 255));
         }
       }
     }
@@ -1836,7 +1846,8 @@ nsSVGComponentTransferFunctionElement::nsSVGComponentTransferFunctionElement(nsI
 nsresult
 nsSVGComponentTransferFunctionElement::Init()
 {
-  nsresult rv;
+  nsresult rv = nsSVGComponentTransferFunctionElementBase::Init();
+  NS_ENSURE_SUCCESS(rv,rv);
 
   // enumeration mappings
   static struct nsSVGEnumMapping gComponentTransferTypes[] = {
@@ -3593,6 +3604,590 @@ nsSVGFEMorphologyElement::Filter(nsSVGFilterInstance *instance)
     }
   }
   return NS_OK;
+}
+
+//---------------------Convolve Matrix------------------------
+
+typedef nsSVGFE nsSVGFEConvolveMatrixElementBase;
+
+class nsSVGFEConvolveMatrixElement : public nsSVGFEConvolveMatrixElementBase,
+                                     public nsIDOMSVGFEConvolveMatrixElement,
+                                     public nsISVGFilter
+{
+protected:
+  friend nsresult NS_NewSVGFEConvolveMatrixElement(nsIContent **aResult,
+                                                nsINodeInfo *aNodeInfo);
+  nsSVGFEConvolveMatrixElement(nsINodeInfo* aNodeInfo);
+  nsresult Init();
+
+public:
+  // interfaces:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // FE Base
+  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEConvolveMatrixElementBase::)
+
+  // nsISVGFilter
+  NS_IMETHOD Filter(nsSVGFilterInstance *instance);
+  NS_IMETHOD GetRequirements(PRUint32 *aRequirements);
+
+  // Color Matrix
+  NS_DECL_NSIDOMSVGFECONVOLVEMATRIXELEMENT
+
+  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEConvolveMatrixElementBase::)
+
+  NS_FORWARD_NSIDOMNODE(nsSVGFEConvolveMatrixElementBase::)
+  NS_FORWARD_NSIDOMELEMENT(nsSVGFEConvolveMatrixElementBase::)
+
+  virtual PRBool ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+protected:
+  virtual NumberAttributesInfo GetNumberInfo();
+
+  enum { DIVISOR, BIAS, KERNEL_UNIT_LENGTH_X, KERNEL_UNIT_LENGTH_Y };
+  nsSVGNumber2 mNumberAttributes[4];
+  static NumberInfo sNumberInfo[4];
+
+  nsCOMPtr<nsIDOMSVGAnimatedInteger> mOrderX;
+  nsCOMPtr<nsIDOMSVGAnimatedInteger> mOrderY;
+  nsCOMPtr<nsIDOMSVGAnimatedInteger> mTargetX;
+  nsCOMPtr<nsIDOMSVGAnimatedInteger> mTargetY;
+  nsCOMPtr<nsIDOMSVGAnimatedNumberList>  mKernelMatrix;
+  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mEdgeMode;
+  nsCOMPtr<nsIDOMSVGAnimatedBoolean> mPreserveAlpha;
+
+  nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
+};
+
+nsSVGElement::NumberInfo nsSVGFEConvolveMatrixElement::sNumberInfo[4] =
+{
+  { &nsGkAtoms::divisor, 1 },
+  { &nsGkAtoms::bias, 0 },
+  { &nsGkAtoms::kernelUnitLength, 0 },
+  { &nsGkAtoms::kernelUnitLength, 0 }
+};
+
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEConvolveMatrix)
+
+//----------------------------------------------------------------------
+// nsISupports methods
+
+NS_IMPL_ADDREF_INHERITED(nsSVGFEConvolveMatrixElement,nsSVGFEConvolveMatrixElementBase)
+NS_IMPL_RELEASE_INHERITED(nsSVGFEConvolveMatrixElement,nsSVGFEConvolveMatrixElementBase)
+
+NS_INTERFACE_MAP_BEGIN(nsSVGFEConvolveMatrixElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFEConvolveMatrixElement)
+  NS_INTERFACE_MAP_ENTRY(nsISVGFilter)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEConvolveMatrixElement)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGFEConvolveMatrixElementBase)
+
+//----------------------------------------------------------------------
+// Implementation
+
+nsSVGFEConvolveMatrixElement::nsSVGFEConvolveMatrixElement(nsINodeInfo *aNodeInfo)
+  : nsSVGFEConvolveMatrixElementBase(aNodeInfo)
+{
+}
+
+nsresult
+nsSVGFEConvolveMatrixElement::Init()
+{
+  nsresult rv = nsSVGFEConvolveMatrixElementBase::Init();
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  static struct nsSVGEnumMapping gEdgeModes[] = {
+    {&nsGkAtoms::duplicate, nsSVGFEConvolveMatrixElement::SVG_EDGEMODE_DUPLICATE},
+    {&nsGkAtoms::wrap, nsSVGFEConvolveMatrixElement::SVG_EDGEMODE_WRAP},
+    {&nsGkAtoms::none, nsSVGFEConvolveMatrixElement::SVG_EDGEMODE_NONE},
+    {nsnull, 0}
+  };
+
+  // Create mapped properties:
+  // DOM property: edgeMode, #IMPLIED attrib: edgeMode
+  {
+    nsCOMPtr<nsISVGEnum> edgeMode;
+    rv = NS_NewSVGEnum(getter_AddRefs(edgeMode),
+                       nsSVGFEConvolveMatrixElement::SVG_EDGEMODE_DUPLICATE,
+                       gEdgeModes);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mEdgeMode), edgeMode);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsGkAtoms::edgeMode, mEdgeMode);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  // DOM property: kernelMarix, #IMPLIED attrib: kernelMatrix
+  {
+    nsCOMPtr<nsIDOMSVGNumberList> values;
+    rv = NS_NewSVGNumberList(getter_AddRefs(values));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = NS_NewSVGAnimatedNumberList(getter_AddRefs(mKernelMatrix), values);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsGkAtoms::kernelMatrix, mKernelMatrix);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  {
+    rv = NS_NewSVGAnimatedInteger(getter_AddRefs(mOrderX), 0);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = NS_NewSVGAnimatedInteger(getter_AddRefs(mOrderY), 0);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  // DOM property: targetX , #IMPLIED attrib: targetX
+  {
+    rv = NS_NewSVGAnimatedInteger(getter_AddRefs(mTargetX), 0);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsGkAtoms::targetX, mTargetX);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  // DOM property: targetY , #IMPLIED attrib: targetY
+  {
+    rv = NS_NewSVGAnimatedInteger(getter_AddRefs(mTargetY), 0);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsGkAtoms::targetY, mTargetY);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  // DOM property: targetY , #IMPLIED attrib: targetY
+  {
+    rv = NS_NewSVGAnimatedBoolean(getter_AddRefs(mPreserveAlpha), PR_FALSE);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsGkAtoms::preserveAlpha, mPreserveAlpha);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  // DOM property: in1 , #IMPLIED attrib: in
+  {
+    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  return rv;
+}
+
+//----------------------------------------------------------------------
+// nsIDOMNode methods
+
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEConvolveMatrixElement)
+
+//----------------------------------------------------------------------
+// nsSVGFEConvolveMatrixElement methods
+
+NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
+{
+  *aIn = mIn1;
+  NS_IF_ADDREF(*aIn);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetOrderX(nsIDOMSVGAnimatedInteger * *aOrderX)
+{
+  *aOrderX = mOrderX;
+  NS_IF_ADDREF(*aOrderX);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetOrderY(nsIDOMSVGAnimatedInteger * *aOrderY)
+{
+  *aOrderY = mOrderY;
+  NS_IF_ADDREF(*aOrderY);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetKernelMatrix(nsIDOMSVGAnimatedNumberList * *aKernelMatrix)
+{
+  *aKernelMatrix = mKernelMatrix;
+  NS_IF_ADDREF(*aKernelMatrix);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetTargetX(nsIDOMSVGAnimatedInteger * *aTargetX)
+{
+  *aTargetX = mTargetX;
+  NS_IF_ADDREF(*aTargetX);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetTargetY(nsIDOMSVGAnimatedInteger * *aTargetY)
+{
+  *aTargetY = mTargetY;
+  NS_IF_ADDREF(*aTargetY);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetEdgeMode(nsIDOMSVGAnimatedEnumeration * *aEdgeMode)
+{
+  *aEdgeMode = mEdgeMode;
+  NS_IF_ADDREF(*aEdgeMode);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetPreserveAlpha(nsIDOMSVGAnimatedBoolean * *aPreserveAlpha)
+{
+  *aPreserveAlpha = mPreserveAlpha;
+  NS_IF_ADDREF(*aPreserveAlpha);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGFEConvolveMatrixElement::GetDivisor(nsIDOMSVGAnimatedNumber **aDivisor)
+{
+  return mNumberAttributes[DIVISOR].ToDOMAnimatedNumber(aDivisor, this);
+}
+
+NS_IMETHODIMP
+nsSVGFEConvolveMatrixElement::GetBias(nsIDOMSVGAnimatedNumber **aBias)
+{
+  return mNumberAttributes[BIAS].ToDOMAnimatedNumber(aBias, this);
+}
+
+NS_IMETHODIMP
+nsSVGFEConvolveMatrixElement::GetKernelUnitLengthX(nsIDOMSVGAnimatedNumber **aKernelX)
+{
+  return mNumberAttributes[KERNEL_UNIT_LENGTH_X].ToDOMAnimatedNumber(aKernelX,
+                                                                     this);
+}
+
+NS_IMETHODIMP
+nsSVGFEConvolveMatrixElement::GetKernelUnitLengthY(nsIDOMSVGAnimatedNumber **aKernelY)
+{
+  return mNumberAttributes[KERNEL_UNIT_LENGTH_Y].ToDOMAnimatedNumber(aKernelY,
+                                                                     this);
+}
+
+NS_IMETHODIMP
+nsSVGFEConvolveMatrixElement::GetRequirements(PRUint32 *aRequirements)
+{
+  *aRequirements = CheckStandardNames(mIn1);
+  return NS_OK;
+}
+
+PRBool
+nsSVGFEConvolveMatrixElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                             const nsAString& aValue,
+                                             nsAttrValue& aResult)
+{
+  if (aName == nsGkAtoms::order && aNameSpaceID == kNameSpaceID_None) {
+    PRInt32 x = 0, y = 0;
+    char *rest;
+    PRBool parseError = PR_FALSE;
+
+    NS_ConvertUTF16toUTF8 value(aValue);
+    value.CompressWhitespace(PR_FALSE, PR_TRUE);
+    const char *str = value.get();
+    x = strtol(str, &rest, 10);
+    if (str == rest) {
+      //first value was illformed
+      parseError = PR_TRUE;
+    } else {
+      if (*rest == '\0') {
+        //second value was not supplied
+        y = x;
+      } else {
+        y = strtol(rest, &rest, 10);
+        if (*rest != '\0') {
+          //second value was illformed or there was trailing content
+          parseError = PR_TRUE;
+        }
+      }
+    }
+
+    mOrderX->SetBaseVal(x);
+    mOrderY->SetBaseVal(y);
+
+    if (parseError) {
+      ReportAttributeParseFailure(GetOwnerDoc(), aName, aValue);
+      return PR_FALSE;
+    }
+    aResult.SetTo(aValue);
+    return PR_TRUE;
+  }
+
+  if (aName == nsGkAtoms::kernelUnitLength && aNameSpaceID == kNameSpaceID_None) {
+    return ScanDualValueAttribute(aValue, nsGkAtoms::kernelUnitLength,
+                                  &mNumberAttributes[KERNEL_UNIT_LENGTH_X],
+                                  &mNumberAttributes[KERNEL_UNIT_LENGTH_Y],
+                                  &sNumberInfo[KERNEL_UNIT_LENGTH_X],
+                                  &sNumberInfo[KERNEL_UNIT_LENGTH_Y],
+                                  aResult);
+  }
+
+  return nsSVGFEConvolveMatrixElementBase::ParseAttribute(aNameSpaceID, aName,
+                                                          aValue, aResult);
+}
+
+#define BOUND(val, min, max) \
+  PR_MIN(PR_MAX(val, min), max)
+
+#define WRAP(val, min, max) \
+  (val < 0 ? (val + val % max) : val % max)
+
+static void
+ConvolvePixel(const PRUint8 *aSourceData,
+              PRUint8 *aTargetData,
+              PRInt32 aWidth, PRInt32 aHeight,
+              PRInt32 aStride,
+              PRInt32 aX, PRInt32 aY,
+              PRUint16 aEdgeMode,
+              const float *aKernel,
+              float aDivisor, float aBias,
+              PRBool aPreserveAlpha,
+              PRInt32 aOrderX, PRInt32 aOrderY,
+              PRInt32 aTargetX, PRInt32 aTargetY)
+{
+  float sum[4] = {0, 0, 0, 0};
+  aBias *= 255;
+  PRInt32 offsets[4] = {GFX_ARGB32_OFFSET_R,
+                        GFX_ARGB32_OFFSET_G,
+                        GFX_ARGB32_OFFSET_B,
+                        GFX_ARGB32_OFFSET_A } ;
+  PRInt32 channels = aPreserveAlpha ? 3 : 4;
+
+  for (PRInt32 y = 0; y < aOrderY; y++) {
+    PRInt32 sampleY = aY + y - aTargetY;
+    PRBool overscanY = sampleY < 0 || sampleY >= aHeight;
+    for (PRInt32 x = 0; x < aOrderX; x++) {
+      PRInt32 sampleX = aX + x - aTargetX;
+      PRBool overscanX = sampleX < 0 || sampleX >= aWidth;
+      for (PRInt32 i = 0; i < channels; i++) {
+        if (overscanY || overscanX) {
+          switch (aEdgeMode) {
+            case nsSVGFEConvolveMatrixElement::SVG_EDGEMODE_DUPLICATE:
+              sum[i] +=
+                aSourceData[BOUND(sampleY, 0, aHeight - 1) * aStride +
+                            BOUND(sampleX, 0, aWidth - 1) * 4 + offsets[i]] *
+                aKernel[aOrderX * y + x];
+              break;
+            case nsSVGFEConvolveMatrixElement::SVG_EDGEMODE_WRAP:
+              sum[i] +=
+                aSourceData[WRAP(sampleY, 0, aHeight) * aStride +
+                            WRAP(sampleX, 0, aWidth) * 4 + offsets[i]] *
+                aKernel[aOrderX * y + x];
+              break;
+            default:
+              break;
+          }
+        } else {
+          sum[i] +=
+            aSourceData[sampleY * aStride + 4 * sampleX + offsets[i]] *
+            aKernel[aOrderX * y + x];
+        }
+      }
+    }
+  }
+  for (PRInt32 i = 0; i < channels; i++) {
+    aTargetData[aY * aStride + 4 * aX + offsets[i]] =
+      BOUND(static_cast<PRInt32>(sum[i] / aDivisor + aBias * 255), 0, 255);
+  }
+  if (aPreserveAlpha) {
+    aTargetData[aY * aStride + 4 * aX + GFX_ARGB32_OFFSET_A] =
+      aSourceData[aY * aStride + 4 * aX + GFX_ARGB32_OFFSET_A];
+  }
+}
+
+NS_IMETHODIMP
+nsSVGFEConvolveMatrixElement::Filter(nsSVGFilterInstance *instance)
+{
+  PRBool preserveAlpha;
+  mPreserveAlpha->GetAnimVal(&preserveAlpha);
+
+  nsCOMPtr<nsIDOMSVGNumberList> list;
+  mKernelMatrix->GetAnimVal(getter_AddRefs(list));
+  PRUint32 num = 0;
+  if (list) {
+    list->GetNumberOfItems(&num);
+  }
+
+  PRInt32 orderX, orderY;
+  mOrderX->GetAnimVal(&orderX);
+  mOrderY->GetAnimVal(&orderY);
+  if (orderX <= 0 || orderY <= 0 ||
+      static_cast<PRUint32>(orderX * orderY) != num) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRInt32 targetX, targetY;
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::targetX)) {
+    mTargetX->GetAnimVal(&targetX);
+    if (targetX < 0 || targetX >= orderX)
+      return NS_ERROR_FAILURE;
+  } else {
+    targetX = orderX / 2;
+  }
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::targetY)) {
+    mTargetY->GetAnimVal(&targetY);
+    if (targetY < 0 || targetY >= orderY)
+      return NS_ERROR_FAILURE;
+  } else {
+    targetY = orderY / 2;
+  }
+
+  if (orderX > NS_SVG_OFFSCREEN_MAX_DIMENSION ||
+      orderY > NS_SVG_OFFSCREEN_MAX_DIMENSION)
+    return NS_ERROR_FAILURE;
+  nsAutoPtr<float> kernel(new float[orderX * orderY]);
+  if (!kernel)
+    return NS_ERROR_FAILURE;
+  for (PRUint32 i = 0; i < num; i++) {
+    nsCOMPtr<nsIDOMSVGNumber> number;
+    list->GetItem(i, getter_AddRefs(number));
+    // svg specification flips the kernel from what one might expect
+    number->GetValue(&kernel[num - 1 - i]);
+  }
+
+  float divisor;
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::divisor)) {
+    divisor = mNumberAttributes[DIVISOR].GetAnimValue();
+    if (divisor == 0)
+      return NS_ERROR_FAILURE;
+  } else {
+    divisor = kernel[0];
+    for (PRUint32 i = 1; i < num; i++)
+      divisor += kernel[i];
+    if (divisor == 0)
+      divisor = 1;
+  }
+
+  nsSVGFilterResource
+    fr(instance, GetColorModel(preserveAlpha
+                               ? nsSVGFilterInstance::ColorModel::UNPREMULTIPLIED
+                               : nsSVGFilterInstance::ColorModel::PREMULTIPLIED));
+
+  nsresult rv;
+  PRUint8 *sourceData, *targetData;
+  nsRefPtr<gfxImageSurface> sourceSurface, targetSurface;
+  rv = fr.AcquireSourceImage(mIn1, this, &sourceData,
+                             getter_AddRefs(sourceSurface));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = fr.AcquireTargetImage(mResult, &targetData,
+                             getter_AddRefs(targetSurface));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<gfxImageSurface> scaledSource, scaledTarget;
+  PRBool rescaling = PR_FALSE;
+  float kernelX, kernelY;
+  gfxIntSize scaledSize;
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::kernelUnitLength)) {
+    rescaling = PR_TRUE;
+    nsSVGLength2 val;
+    val.Init(nsSVGUtils::X, 0xff,
+             mNumberAttributes[KERNEL_UNIT_LENGTH_X].GetAnimValue(),
+             nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
+    kernelX = instance->GetPrimitiveLength(&val);
+    val.Init(nsSVGUtils::Y, 0xff,
+             mNumberAttributes[KERNEL_UNIT_LENGTH_Y].GetAnimValue(),
+             nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
+    kernelY = instance->GetPrimitiveLength(&val);
+#ifdef DEBUG_tor
+    fprintf(stderr, "convolve kernelX/Y %f %f\n", kernelX, kernelY);
+#endif
+    if (kernelX <= 0 || kernelY <= 0)
+      return NS_ERROR_FAILURE;
+
+    PRBool overflow = PR_FALSE;
+    scaledSize =
+      nsSVGUtils::ConvertToSurfaceSize(gfxSize(fr.GetWidth() / kernelX,
+                                               fr.GetHeight() / kernelY),
+                                       &overflow);
+    // If the requested size based on the kernel unit is too big, we
+    // need to bail because the effect is pixel size dependent.  Also
+    // need to check if we ended up with a negative size (arithmetic
+    // overflow) or zero size (large kernel unit)
+    if (overflow || scaledSize.width <= 0 || scaledSize.height <= 0)
+      return NS_ERROR_FAILURE;
+
+#ifdef DEBUG_tor
+    fprintf(stderr, "scaled size %d %d\n", scaledSize.width, scaledSize.height);
+#endif
+    scaledSource = new gfxImageSurface(scaledSize,
+                                       gfxASurface::ImageFormatARGB32);
+    scaledTarget = new gfxImageSurface(scaledSize,
+                                       gfxASurface::ImageFormatARGB32);
+    if (!scaledSource || !scaledSource->Data() ||
+        !scaledTarget || !scaledTarget->Data())
+      return NS_ERROR_FAILURE;
+
+    gfxContext ctx(scaledSource);
+    ctx.SetOperator(gfxContext::OPERATOR_SOURCE);
+    ctx.Scale(double(scaledSize.width) / fr.GetWidth(),
+              double(scaledSize.height) / fr.GetHeight());
+    ctx.SetSource(sourceSurface);
+    ctx.Paint();
+  }
+
+  nsRect rect = fr.GetRect();
+
+#ifdef DEBUG_tor
+  fprintf(stderr, "FILTER CONVOLVE MATRIX rect: %d,%d  %dx%d\n",
+          rect.x, rect.y, rect.width, rect.height);
+#endif
+
+  PRUint16 edgeMode;
+  mEdgeMode->GetAnimVal(&edgeMode);
+
+  float bias = 0;
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::bias)) {
+    bias = mNumberAttributes[BIAS].GetAnimValue();
+  }
+
+  PRInt32 stride, width, height;
+  if (rescaling) {
+    rect.x = rect.x * scaledSize.width / fr.GetWidth();
+    rect.y = rect.y * scaledSize.height / fr.GetHeight();
+    rect.width = rect.width * scaledSize.width / fr.GetWidth();
+    rect.height = rect.height * scaledSize.height / fr.GetHeight();
+    sourceData = scaledSource->Data();
+    targetData = scaledTarget->Data();
+    stride = scaledSource->Stride();
+    width = scaledSize.width;
+    height = scaledSize.height;
+  } else {
+    stride = fr.GetDataStride();
+    width = fr.GetWidth();
+    height = fr.GetHeight();
+  }
+
+  for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
+    for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
+      ConvolvePixel(sourceData, targetData,
+                    width, height, stride,
+                    x, y,
+                    edgeMode, kernel, divisor, bias, preserveAlpha,
+                    orderX, orderY, targetX, targetY);
+    }
+  }
+
+  if (rescaling) {
+    gfxContext ctx(targetSurface);
+    ctx.SetOperator(gfxContext::OPERATOR_SOURCE);
+    ctx.Scale(double(fr.GetWidth()) / scaledSize.width,
+              double(fr.GetHeight()) /scaledSize.height);
+    ctx.SetSource(scaledTarget);
+    ctx.Paint();
+  }
+
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::NumberAttributesInfo
+nsSVGFEConvolveMatrixElement::GetNumberInfo()
+{
+  return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
+                              NS_ARRAY_LENGTH(sNumberInfo));
 }
 
 //---------------------UnimplementedMOZ------------------------

@@ -255,7 +255,7 @@ PLDHashOperator
 nsINIParser::GetSectionsCB(const char *aKey, INIValue *aData,
                            void *aClosure)
 {
-    GSClosureStruct *cs = NS_REINTERPRET_CAST(GSClosureStruct*, aClosure);
+    GSClosureStruct *cs = reinterpret_cast<GSClosureStruct*>(aClosure);
 
     return cs->usercb(aKey, cs->userclosure) ? PL_DHASH_NEXT : PL_DHASH_STOP;
 }

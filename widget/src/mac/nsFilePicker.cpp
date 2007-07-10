@@ -226,7 +226,7 @@ void nsFilePicker::HandleShowPopupMenuSelect(NavCBRecPtr callBackParms)
 //
 pascal void nsFilePicker::FileDialogEventHandlerProc(NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData callbackUD)
 {
-  nsFilePicker* self = NS_REINTERPRET_CAST(nsFilePicker*, callbackUD);
+  nsFilePicker* self = reinterpret_cast<nsFilePicker*>(callbackUD);
   switch (msg)
   {
     case kNavCBEvent:
@@ -341,10 +341,10 @@ nsFilePicker::FileDialogFilterProc(AEDesc* theItem, void* theInfo,
                                         NavCallBackUserData callbackUD, NavFilterModes filterMode)
 {
   Boolean shouldDisplay = true;
-  nsFilePicker* self = NS_REINTERPRET_CAST(nsFilePicker*, callbackUD);
+  nsFilePicker* self = reinterpret_cast<nsFilePicker*>(callbackUD);
   if ( self && !self->mAllFilesDisplayed ) {
     if ( theItem->descriptorType == typeFSS ) {
-      NavFileOrFolderInfo* info = NS_REINTERPRET_CAST ( NavFileOrFolderInfo*, theInfo );
+      NavFileOrFolderInfo* info = reinterpret_cast<NavFileOrFolderInfo*>(theInfo);
       if ( !info->isFolder ) {
         // check it against our list. If that fails, check the extension directly
         if ( ! self->IsTypeInFilterList(info->fileAndFolder.fileInfo.finderInfo.fdType) ) {
@@ -752,7 +752,7 @@ nsFilePicker::MapFilterToFileTypes ( )
               {
                 bool addToList = true;
                 OSType tempOSType;
-                icEntry->GetMacType(NS_REINTERPRET_CAST(PRUint32*, (&tempOSType)));
+                icEntry->GetMacType(reinterpret_cast<PRUint32*>((&tempOSType)));
                 for (PRUint32 typeIndex = 0; typeIndex < typesInThisFilter; typeIndex++)
                 {
                   if (mTypeLists[loop1]->osType[typeIndex] == tempOSType)
@@ -783,7 +783,7 @@ nsFilePicker::MapFilterToFileTypes ( )
         // Set how many OSTypes we actually found
         mTypeLists[loop1]->osTypeCount = typesInThisFilter;
         
-        nsMemory::Free ( NS_REINTERPRET_CAST(void*, filter) );
+        nsMemory::Free ( reinterpret_cast<void*>(filter) );
       }
     }
   }

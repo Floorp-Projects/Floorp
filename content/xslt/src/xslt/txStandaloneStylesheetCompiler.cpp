@@ -117,7 +117,7 @@ TX_CompileStylesheetPath(const txParsedURL& aURL, txStylesheet** aResult)
  */
 
 // shortcut macro for redirection into txDriver method calls
-#define TX_DRIVER(_userData) NS_STATIC_CAST(txDriver*, _userData)
+#define TX_DRIVER(_userData) static_cast<txDriver*>(_userData)
 
 PR_STATIC_CALLBACK(void)
 startElement(void *aUserData, const XML_Char *aName, const XML_Char **aAtts)
@@ -243,8 +243,8 @@ txDriver::StartElement(const XML_Char *aName, const XML_Char **aAtts)
     }
     PRInt32 idOffset = XML_GetIdAttributeIndex(mExpatParser);
     nsresult rv =
-        mCompiler->startElement(NS_STATIC_CAST(const PRUnichar*, aName), 
-                                NS_STATIC_CAST(const PRUnichar**, aAtts),
+        mCompiler->startElement(static_cast<const PRUnichar*>(aName), 
+                                static_cast<const PRUnichar**>(aAtts),
                                 attcount/2, idOffset);
     if (NS_FAILED(rv)) {
         PR_LOG(txLog::xslt, PR_LOG_ALWAYS, 
@@ -266,7 +266,7 @@ txDriver::EndElement(const XML_Char* aName)
 void
 txDriver::CharacterData(const XML_Char* aChars, int aLength)
 {
-    const PRUnichar* pChars = NS_STATIC_CAST(const PRUnichar*, aChars);
+    const PRUnichar* pChars = static_cast<const PRUnichar*>(aChars);
     // ignore rv, as this expat handler returns void
     nsresult rv = mCompiler->characters(Substring(pChars, pChars + aLength));
     if (NS_FAILED(rv)) {

@@ -166,9 +166,16 @@ interface nsIInstallLocation : nsISupports
  * XXXben - Some of this stuff should go into a management-ey interface, 
  *          some into an app-startup-ey interface.
  */
-[scriptable, uuid(a3f5396c-a6e8-414a-8fbc-c8d831746328)]
+[scriptable, uuid(c2aef3c3-8ce1-4470-94e4-1167e5ca8928)]
 interface nsIExtensionManager : nsISupports
 {
+  /**
+   * Constants representing types of update checks.
+   */
+  const unsigned long UPDATE_CHECK_NEWVERSION    = 0;
+  const unsigned long UPDATE_CHECK_COMPATIBILITY = 1;
+  const unsigned long UPDATE_SYNC_COMPATIBILITY  = 2;
+  
   /**
    * Starts the Extension Manager, checking for item changes, additions and
    * removals, and finishing pending operations.
@@ -251,20 +258,22 @@ interface nsIExtensionManager : nsISupports
    *          An array of nsIUpdateItems to check for updates for.
    * @param   itemCount
    *          The length of |items|
-   * @param   versionUpdateOnly
-   *          false if this check should find the newest versions available,
-   *          true if it should only find newer target application compatibility
-   *          information for the currently installed version.
-   *          2 if this check should only find target application compatibility
-   *          information for the currently installed version and synchronize
-   *          the values.
+   * @param   updateCheckType
+   *          UPDATE_CHECK_NEWVERSION if this check should find the newest
+   *          versions available,
+   *          UPDATE_CHECK_COMPATIBILITY if it should only find newer target
+   *          application compatibility information for the currently
+   *          installed version.
+   *          UPDATE_SYNC_COMPATIBILITY if this check should only find target
+   *          application compatibility information for the currently
+   *          installed version and synchronize the values.
    * @param   listener
    *          An nsIAddonUpdateCheckListener object which will be notified during
    *          the update check process. 
    */
    void update([array, size_is(itemCount)] in nsIUpdateItem items,
                in unsigned long itemCount, 
-               in unsigned long versionUpdateOnly,
+               in unsigned long updateCheckType,
                in nsIAddonUpdateCheckListener listener);
 
   /**
@@ -365,16 +374,7 @@ interface nsIExtensionManager : nsISupports
    *          The ID of an item to move an item to.
    */
   void moveToIndexOf(in AString movingID, in AString destinationID);
-};
 
-/**
- * A temporary interface to allow adding new methods without changing existing
- * interfaces for Gecko 1.8.1. After the 1.8.1 release this interface should
- * not be used.
- */
-[scriptable, uuid(0fd5caa9-1ffc-42b1-aea1-3fbe73116070)]
-interface nsIExtensionManager_MOZILLA_1_8_BRANCH : nsIExtensionManager
-{
   /**
    * Cancels a pending uninstall of an item
    * @param   id

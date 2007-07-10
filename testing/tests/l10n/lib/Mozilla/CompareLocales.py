@@ -88,8 +88,10 @@ class FileCollector:
       return self
     def __nextDir(self):
       self.__t = self.__w.next()
-      cvs  = self.__t[1].index("CVS")
-      del self.__t[1][cvs]
+      try:
+        self.__t[1].remove("CVS")
+      except ValueError:
+        pass
       self.__t[1].sort()
       self.__t[2].sort()
       self.__i = self.__t[2].__iter__()
@@ -182,6 +184,7 @@ def compare(testLocales=[]):
   result = {}
   c = CompareCollector()
   collectFiles(c)
+  key = re.compile('[kK]ey')
   for fl, locales in c.cl.iteritems():
     (mod,path) = fl
     try:
@@ -193,7 +196,8 @@ def compare(testLocales=[]):
     enMap = parser.mapping()
     for loc in locales:
       if not result.has_key(loc):
-        result[loc] = {'missing':[],'changed':0,'unchanged':0,'obsolete':[]}
+        result[loc] = {'missing':[],'obsolete':[],
+                       'changed':0,'unchanged':0,'keys':0}
       enTmp = dict(enMap)
       parser.read(Paths.get_path(mod, loc, path))
       for k,v in parser:
@@ -206,10 +210,15 @@ def compare(testLocales=[]):
           continue
         enVal = enTmp[k]
         del enTmp[k]
-        if enVal == v:
-          result[loc]['unchanged'] +=1
+        if key.search(k):
+          result[loc]['keys'] += 1
         else:
-          result[loc]['changed'] +=1
+          if enVal == v:
+            result[loc]['unchanged'] +=1
+            logging.info('%s in %s unchanged' %
+                         (k, Paths.get_path(mod, loc, path)))
+          else:
+            result[loc]['changed'] +=1
       result[loc]['missing'].extend(filter(__dont_ignore, [(mod,path,k) for k in enTmp.keys()]))
   for loc,dics in c.files.iteritems():
     if not result.has_key(loc):

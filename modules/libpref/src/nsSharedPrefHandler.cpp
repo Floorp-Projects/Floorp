@@ -211,7 +211,7 @@ PRBool nsSharedPrefHandler::IsPrefShared(const char* prefName)
     return PR_TRUE;
     
   // returns PR_TRUE if we reached the end without finding it.
-  return mExceptionList.EnumerateForwards(enumFind, NS_CONST_CAST(char*, prefName));
+  return mExceptionList.EnumerateForwards(enumFind, const_cast<char*>(prefName));
 }
 
 //*****************************************************************************
@@ -365,8 +365,8 @@ NS_IMETHODIMP nsSharedPrefHandler::OnFlushReply(PRUint32 aQueueID, PRUint32 aSta
 
 static PRBool PR_CALLBACK enumFind(void* aElement, void *aData)
 {
-  char *elemStr = NS_STATIC_CAST(char*, aElement);
-  char *searchStr = NS_STATIC_CAST(char*, aData);
+  char *elemStr = static_cast<char*>(aElement);
+  char *searchStr = static_cast<char*>(aData);
   // return PR_FALSE for a match and to stop search
   return (strncmp(elemStr, searchStr, strlen(elemStr)) != 0);
 }

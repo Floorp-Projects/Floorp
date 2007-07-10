@@ -2170,7 +2170,7 @@ getNSSCertNicknamesFromCertList(CERTCertList *certList)
   NS_ConvertUTF16toUTF8 aUtf8NotYetValidString(notYetValidStringLeadingSpace);
 
   return CERT_NicknameStringsFromCertList(certList,
-                                          NS_CONST_CAST(char*, aUtf8ExpiredString.get()),
-                                          NS_CONST_CAST(char*, aUtf8NotYetValidString.get()));
+                                          const_cast<char*>(aUtf8ExpiredString.get()),
+                                          const_cast<char*>(aUtf8NotYetValidString.get()));
   
 }

@@ -216,6 +216,47 @@ ThrowException(nsresult ex, JSContext *cx)
   return JS_FALSE;
 }
 
+static inline
+JSBool
+EnsureLegalActivity(JSContext *cx, JSObject *obj)
+{
+  jsval flags;
+
+  ::JS_GetReservedSlot(cx, obj, 0, &flags);
+  if (HAS_FLAGS(flags, FLAG_EXPLICIT)) {
+    // Can't make any assertions about the owner of this wrapper.
+    return JS_TRUE;
+  }
+
+  JSStackFrame *frame = nsnull;
+  uint32 fileFlags = JS_GetTopScriptFilenameFlags(cx, NULL);
+  if (!JS_FrameIterator(cx, &frame) ||
+      fileFlags == JSFILENAME_NULL ||
+      (fileFlags & JSFILENAME_SYSTEM)) {
+    // We expect implicit native wrappers in system files.
+    return JS_TRUE;
+  }
+
+  XPCCallContext ccx(JS_CALLER, cx);
+  nsIXPCSecurityManager *sm = ccx.GetXPCContext()->
+    GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_CALL_METHOD);
+  nsCOMPtr<nsIScriptSecurityManager> ssm(do_QueryInterface(sm));
+
+  // A last ditch effort to allow access: if the subject principal is
+  // the system principal, then some XPCNativeWrapper-using code has
+  // passed one into other code. If that other code is chrome, then
+  // allow access.
+  PRBool isSystem;
+  nsresult rv = ssm->SubjectPrincipalIsSystem(&isSystem);
+  if (NS_SUCCEEDED(rv) && isSystem) {
+    return JS_TRUE;
+  }
+
+  // Otherwise, we're looking at a non-system file with a handle on an
+  // implicit wrapper. This is a bug! Deny access.
+  return ThrowException(NS_ERROR_XPC_SECURITY_MANAGER_VETO, cx);
+}
+
 static JSBool
 WrapFunction(JSContext* cx, JSObject* funobj, jsval *rval)
 {
@@ -265,12 +306,17 @@ XPC_NW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   // Note: no need to protect *vp from GC here, since it's already in the slot
   // on |obj|.
-  return RewrapIfDeepWrapper(cx, obj, *vp, vp);
+  return EnsureLegalActivity(cx, obj) &&
+         RewrapIfDeepWrapper(cx, obj, *vp, vp);
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
+  if (!EnsureLegalActivity(cx, obj)) {
+    return JS_FALSE;
+  }
+
   XPC_NW_BYPASS_BASE(cx, obj,
     // We're being notified of a delete operation on id in this
     // XPCNativeWrapper, so forward to the right high-level hook,
@@ -412,6 +458,10 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     if (!obj) {
       return ThrowException(NS_ERROR_UNEXPECTED, cx);
     }
+  }
+
+  if (!EnsureLegalActivity(cx, obj)) {
+    return JS_FALSE;
   }
 
   XPCWrappedNative *wrappedNative =
@@ -623,6 +673,10 @@ XPC_NW_Enumerate(JSContext *cx, JSObject *obj)
   // JS_Enumerate API.  Then reflect properties named by the enumerated
   // identifiers from the wrapped native to the native wrapper.
 
+  if (!EnsureLegalActivity(cx, obj)) {
+    return JS_FALSE;
+  }
+
   XPCWrappedNative *wn = XPCNativeWrapper::GetWrappedNative(cx, obj);
   if (!wn) {
     return JS_TRUE;
@@ -660,8 +714,8 @@ JSBool MaybePreserveWrapper(JSContext* cx, XPCWrappedNative *wn, uintN flags)
   if ((flags & JSRESOLVE_ASSIGNING) &&
       (::JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS)) {
     nsCOMPtr<nsIXPCScriptNotify> scriptNotify = 
-      do_QueryInterface(NS_STATIC_CAST(nsISupports*,
-                                       JS_GetContextPrivate(cx)));
+      do_QueryInterface(static_cast<nsISupports*>
+                                   (JS_GetContextPrivate(cx)));
     if (scriptNotify) {
       return NS_SUCCEEDED(scriptNotify->PreserveWrapper(wn));
     }
@@ -680,6 +734,10 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   if (id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_WRAPPED_JSOBJECT) ||
       id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
     return JS_TRUE;
+  }
+
+  if (!EnsureLegalActivity(cx, obj)) {
+    return JS_FALSE;
   }
 
   // We can't use XPC_NW_BYPASS here, because we need to do a full
@@ -893,8 +951,11 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
-  XPC_NW_BYPASS(cx, obj, convert, (cx, obj, type, vp));
+  if (!EnsureLegalActivity(cx, obj)) {
+    return JS_FALSE;
+  }
 
+  XPC_NW_BYPASS(cx, obj, convert, (cx, obj, type, vp));
   return JS_TRUE;
 }
 
@@ -1256,6 +1317,10 @@ XPC_NW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
   }
 
+  if (!EnsureLegalActivity(cx, obj)) {
+    return JS_FALSE;
+  }
+
   // Check whether toString was overridden in any object along
   // the wrapped native's object's prototype chain.
   XPCJSRuntime *rt = nsXPConnect::GetRuntime();
@@ -1275,8 +1340,8 @@ XPC_NW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     // toString() called on XPCNativeWrapper.prototype
     NS_NAMED_LITERAL_STRING(protoString, "[object XPCNativeWrapper]");
     JSString *str =
-      ::JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*,
-                                                    protoString.get()),
+      ::JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar*>
+                                                (protoString.get()),
                             protoString.Length());
     NS_ENSURE_TRUE(str, JS_FALSE);
     *rval = STRING_TO_JSVAL(str);
@@ -1350,8 +1415,8 @@ XPC_NW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     resultString.Append(']');
 
-    str = ::JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar *,
-                                                        resultString.get()),
+    str = ::JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar *>
+                                                    (resultString.get()),
                                 resultString.Length());
   }
 

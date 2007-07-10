@@ -221,7 +221,7 @@ nsHTMLCanvasFrame::PaintCanvas(nsIRenderingContext& aRenderingContext,
 static void PaintCanvas(nsIFrame* aFrame, nsIRenderingContext* aCtx,
                         const nsRect& aDirtyRect, nsPoint aPt)
 {
-  NS_STATIC_CAST(nsHTMLCanvasFrame*, aFrame)->PaintCanvas(*aCtx, aDirtyRect, aPt);
+  static_cast<nsHTMLCanvasFrame*>(aFrame)->PaintCanvas(*aCtx, aDirtyRect, aPt);
 }
 
 NS_IMETHODIMP

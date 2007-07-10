@@ -245,7 +245,7 @@ nsImageToClipboard::CreateFromImage ( nsIImage* inImage, HANDLE* outBitmap )
 
   inImage->LockImagePixels ( PR_FALSE );
   if ( inImage->GetBits() ) {
-    BITMAPINFOHEADER* imageHeader = NS_REINTERPRET_CAST(BITMAPINFOHEADER*, inImage->GetBitInfo());
+    BITMAPINFOHEADER* imageHeader = reinterpret_cast<BITMAPINFOHEADER*>(inImage->GetBitInfo());
     NS_ASSERTION ( imageHeader, "Can't get header for image" );
     if ( !imageHeader )
       return NS_ERROR_FAILURE;

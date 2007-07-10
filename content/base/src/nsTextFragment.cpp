@@ -130,8 +130,8 @@ nsTextFragment::operator=(const nsTextFragment& aOther)
       m1b = aOther.m1b; // This will work even if aOther is using m2b
     }
     else {
-      m2b = NS_STATIC_CAST(PRUnichar*,
-        nsMemory::Clone(aOther.m2b, aOther.mState.mLength *
+      m2b = static_cast<PRUnichar*>
+                       (nsMemory::Clone(aOther.m2b, aOther.mState.mLength *
                                     (aOther.mState.mIs2b ? sizeof(PRUnichar) : sizeof(char))));
     }
 
@@ -358,7 +358,7 @@ nsTextFragment::Append(const PRUnichar* aBuffer, PRUint32 aLength)
   // The new and the old data is all 1-byte
   char* buff;
   if (mState.mInHeap) {
-    buff = (char*)nsMemory::Realloc(NS_CONST_CAST(char*, m1b),
+    buff = (char*)nsMemory::Realloc(const_cast<char*>(m1b),
                                     (mState.mLength + aLength) * sizeof(char));
     if (!buff) {
       return;

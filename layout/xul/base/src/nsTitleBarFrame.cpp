@@ -111,7 +111,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
 
    case NS_MOUSE_BUTTON_DOWN:  {
        if (aEvent->eventStructType == NS_MOUSE_EVENT &&
-           NS_STATIC_CAST(nsMouseEvent*, aEvent)->button ==
+           static_cast<nsMouseEvent*>(aEvent)->button ==
              nsMouseEvent::eLeftButton)
        {
          // titlebar has no effect in non-chrome shells
@@ -141,7 +141,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
 
    case NS_MOUSE_BUTTON_UP: {
        if(mTrackingMouseMove && aEvent->eventStructType == NS_MOUSE_EVENT &&
-          NS_STATIC_CAST(nsMouseEvent*, aEvent)->button ==
+          static_cast<nsMouseEvent*>(aEvent)->button ==
             nsMouseEvent::eLeftButton)
        {
          // we're done tracking.
@@ -169,7 +169,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
          // move the widget associated with the window
          if (parent) {
            nsCOMPtr<nsIWidget> widget;
-           (NS_STATIC_CAST(nsMenuPopupFrame*, parent))->
+           (static_cast<nsMenuPopupFrame*>(parent))->
              GetWidget(getter_AddRefs(widget));
            nsRect bounds;
            widget->GetScreenBounds(bounds);

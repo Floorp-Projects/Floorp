@@ -44,6 +44,8 @@
 #include "nsIComponentManager.idl"
 #include "nsIScriptableInterfaces.idl"
 
+interface xpcIJSWeakReference;
+
 /**
 * interface of Components.classes
 * (interesting stuff only reflected into JavaScript)
@@ -121,7 +123,7 @@ interface nsIXPCComponents_utils_Sandbox : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(5f4fc051-6b1d-4b5e-b4fe-f5096717630b)]
+[scriptable, uuid(da2267f2-d4cc-448f-9d70-1c7fe134d2fe)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -201,6 +203,20 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     void /* JSObject */ import(in AUTF8String registryLocation
                                /*, [optional] in JSObject targetObj */);
+
+    /*
+     * To be called from JS only.
+     *
+     * Return a weak reference for the given JS object.
+     */
+    xpcIJSWeakReference getWeakReference(/* in JSObject obj */);
+
+    /*
+     * To be called from JS only.
+     *
+     * Force an immediate garbage collection cycle.
+     */
+    void forceGC();
 };
 
 /**

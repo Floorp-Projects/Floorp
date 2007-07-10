@@ -210,7 +210,7 @@ nsImageBoxFrame::Destroy()
     mImageRequest->Cancel(NS_ERROR_FAILURE);
 
   if (mListener)
-    NS_REINTERPRET_CAST(nsImageBoxListener*, mListener.get())->SetFrame(nsnull); // set the frame to null so we don't send messages to a dead object.
+    reinterpret_cast<nsImageBoxListener*>(mListener.get())->SetFrame(nsnull); // set the frame to null so we don't send messages to a dead object.
 
   nsLeafBoxFrame::Destroy();
 }
@@ -265,9 +265,10 @@ nsImageBoxFrame::UpdateImage()
                                               doc,
                                               baseURI);
 
-    if (uri && nsContentUtils::CanLoadImage(uri, mContent, doc)) {
-      nsContentUtils::LoadImage(uri, doc, doc->GetDocumentURI(),
-                                mListener, mLoadFlags,
+    if (uri && nsContentUtils::CanLoadImage(uri, mContent, doc,
+                                            mContent->NodePrincipal())) {
+      nsContentUtils::LoadImage(uri, doc, mContent->NodePrincipal(),
+                                doc->GetDocumentURI(), mListener, mLoadFlags,
                                 getter_AddRefs(mImageRequest));
     }
   } else {
@@ -330,7 +331,7 @@ public:
 void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  NS_STATIC_CAST(nsImageBoxFrame*, mFrame)->
+  static_cast<nsImageBoxFrame*>(mFrame)->
     PaintImage(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
 }
 

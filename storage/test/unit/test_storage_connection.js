@@ -37,6 +37,8 @@
 
 // This file tests the functions of mozIStorageConnection
 
+const BACKUP_FILE_NAME = "test_storage.sqlite.backup";
+
 function test_connectionReady()
 {
   // there doesn't seem to be a way for the connection to not be ready
@@ -142,13 +144,84 @@ function test_rollbackTransaction_no_transaction()
   }
 }
 
+function test_get_schemaVersion_not_set()
+{
+  do_check_eq(0, getOpenedDatabase().schemaVersion);
+}
+
+function test_set_schemaVersion()
+{
+  var msc = getOpenedDatabase();
+  const version = 1;
+  msc.schemaVersion = version;
+  do_check_eq(version, msc.schemaVersion);
+}
+
+function test_set_schemaVersion_same()
+{
+  var msc = getOpenedDatabase();
+  const version = 1;
+  msc.schemaVersion = version; // should still work ok
+  do_check_eq(version, msc.schemaVersion);
+}
+
+function test_set_schemaVersion_negative()
+{
+  var msc = getOpenedDatabase();
+  const version = -1;
+  msc.schemaVersion = version;
+  do_check_eq(version, msc.schemaVersion);
+}
+
+function test_backup_not_new_filename()
+{
+  var msc = getOpenedDatabase();
+  const fname = getTestDB().leafName;
+
+  var backup = msc.backupDB(fname);
+  do_check_neq(fname, backup.leafName);
+
+  backup.remove(false);
+}
+
+function test_backup_new_filename()
+{
+  var msc = getOpenedDatabase();
+
+  var backup = msc.backupDB(BACKUP_FILE_NAME);
+  do_check_eq(BACKUP_FILE_NAME, backup.leafName);
+  
+  backup.remove(false);
+}
+
+function test_backup_new_folder()
+{
+  var msc = getOpenedDatabase();
+  var parentDir = getTestDB().parent;
+  parentDir.append("test_storage_temp");
+  if (parentDir.exists())
+    parentDir.remove(true);
+  parentDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+  do_check_true(parentDir.exists());
+
+  var backup = msc.backupDB(BACKUP_FILE_NAME, parentDir);
+  do_check_eq(BACKUP_FILE_NAME, backup.leafName);
+  do_check_true(parentDir.equals(backup.parent));
+
+  parentDir.remove(true);
+}
+
 var tests = [test_connectionReady, test_databaseFile,
              test_tableExists_not_created, test_indexExists_not_created,
              test_createTable_not_created, test_indexExists_created,
              test_createTable_already_created, test_lastInsertRowID,
              test_transactionInProgress_no, test_transactionInProgress_yes,
              test_commitTransaction_no_transaction,
-             test_rollbackTransaction_no_transaction];
+             test_rollbackTransaction_no_transaction,
+             test_get_schemaVersion_not_set, test_set_schemaVersion,
+             test_set_schemaVersion_same, test_set_schemaVersion_negative,
+             test_backup_not_new_filename, test_backup_new_filename,
+             test_backup_new_folder];
 
 function run_test()
 {

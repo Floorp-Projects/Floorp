@@ -74,7 +74,7 @@ interface nsIChannel;
  *          to set the cookie.
  * data   : none.
  */
-[scriptable, uuid(011C3190-1434-11d6-A618-0010A401EB10)]
+[scriptable, uuid(2aaa897a-293c-4d2b-a657-8c9b7136996d)]
 interface nsICookieService : nsISupports
 {
   /*
@@ -154,11 +154,4 @@ interface nsICookieService : nsISupports
    *        ensure that the cookie privacy preferences are honored.
    */
   void setCookieStringFromHttp(in nsIURI aURI, in nsIURI aFirstURI, in nsIPrompt aPrompt, in string aCookie, in string aServerTime, in nsIChannel aChannel);
-
-  /**
-   * This attribute really doesn't belong on this interface.  CVS blame will
-   * tell you why it is here.  It remains until we can find a better home for
-   * it.  Read the source if you want to know what it does :-(
-   */
-  readonly attribute boolean cookieIconIsVisible;
 };

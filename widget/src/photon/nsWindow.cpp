@@ -166,7 +166,7 @@ void nsWindow::DestroyNativeChildren(void)
   for(PtWidget_t *w=PtWidgetChildFront( mWidget ); w; w=PtWidgetBrotherBehind( w )) 
   {
 	  if( w->flags & Pt_DESTROYED ) continue;
-	  nsWindow *childWindow = NS_STATIC_CAST(nsWindow *, GetInstance(w) );
+	  nsWindow *childWindow = static_cast<nsWindow *>(GetInstance(w));
 		if( childWindow && !childWindow->mIsDestroying) childWindow->Destroy();
   }
 }
@@ -726,7 +726,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 			if( pev.renderingContext ) {
 				nsIRegion *ClipRegion = pWin->GetRegion( );
 				ClipRegion->SetTo( nsDmg.x, nsDmg.y, nsDmg.width, nsDmg.height );
-				pev.renderingContext->SetClipRegion( NS_STATIC_CAST(const nsIRegion &, *(ClipRegion)), nsClipCombine_kReplace );
+				pev.renderingContext->SetClipRegion( static_cast<const nsIRegion &>(*(ClipRegion)), nsClipCombine_kReplace );
 
 				NS_RELEASE( ClipRegion );
 				

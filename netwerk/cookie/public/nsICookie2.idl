@@ -44,7 +44,7 @@
  * access of cookie objects
  */
 
-[scriptable, uuid(1f5b06e1-8d52-46a0-a26d-762bd6a1Cf75)]
+[scriptable, uuid(736619fe-8d09-4e59-8223-32f176c22977)]
 
 interface nsICookie2 : nsICookie
 {
@@ -76,7 +76,7 @@ interface nsICookie2 : nsICookie
     /**
      * true if the cookie is an http only cookie
      */
-    readonly attribute boolean httpOnly;
+    readonly attribute boolean isHttpOnly;
 
 
 };

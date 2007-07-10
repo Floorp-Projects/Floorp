@@ -72,7 +72,5 @@ void nsAccessNodeWrap::InitAccessibility()
 void nsAccessNodeWrap::ShutdownAccessibility()
 {
   nsAccessNode::ShutdownXPAccessibility();
-
-  // Shutdown accessibility for ATK
-  nsApplicationAccessibleWrap::Unload();
 }
+

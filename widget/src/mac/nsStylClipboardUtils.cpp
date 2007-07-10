@@ -46,8 +46,7 @@ nsresult CreateStylFromScriptRuns(ScriptCodeRun *scriptCodeRuns,
                                   PRInt32 *stylLen)
 {
   PRInt32 scrpRecLen = sizeof(short) + sizeof(ScrpSTElement) * scriptRunOutLen;
-  StScrpRec *scrpRec = NS_REINTERPRET_CAST(StScrpRec*, 
-                                           nsMemory::Alloc(scrpRecLen));
+  StScrpRec *scrpRec = reinterpret_cast<StScrpRec*>(nsMemory::Alloc(scrpRecLen));
   NS_ENSURE_TRUE(scrpRec, NS_ERROR_OUT_OF_MEMORY);
   
   OSErr err = noErr;    
@@ -109,7 +108,7 @@ nsresult CreateStylFromScriptRuns(ScriptCodeRun *scriptCodeRuns,
     return NS_ERROR_FAILURE;
   }
 
-  *stylData = NS_REINTERPRET_CAST(char*, scrpRec);
+  *stylData = reinterpret_cast<char*>(scrpRec);
   *stylLen = scrpRecLen;
          
   return NS_OK;

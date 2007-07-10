@@ -39,10 +39,9 @@
 #ifndef NSSVGFOREIGNOBJECTFRAME_H__
 #define NSSVGFOREIGNOBJECTFRAME_H__
 
-#include "nsBlockFrame.h"
+#include "nsContainerFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsIDOMSVGMatrix.h"
-#include "nsIDOMSVGLength.h"
 #include "nsRegion.h"
 #include "nsIPresShell.h"
 
@@ -140,11 +139,12 @@ protected:
   void DoReflow();
   void RequestReflow(nsIPresShell::IntrinsicDirty aType);
   void UpdateGraphic();
-  // Get the bounding box relative to the outer SVG element, in user units
-  void GetBBoxInternal(float* aX, float *aY, float* aWidth, float *aHeight);
   already_AddRefed<nsIDOMSVGMatrix> GetTMIncludingOffset();
   nsresult TransformPointFromOuterPx(float aX, float aY, nsPoint* aOut);
   void FlushDirtyRegion();
+
+  // If width or height is less than or equal to zero we must disable rendering
+  PRBool IsDisabled() const { return mRect.width <= 0 || mRect.height <= 0; }
 
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
   nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;

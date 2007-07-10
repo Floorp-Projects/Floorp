@@ -100,8 +100,8 @@ AutoScriptEvaluate::~AutoScriptEvaluate()
     if (JS_GetOptions(mJSContext) & JSOPTION_PRIVATE_IS_NSISUPPORTS)
     {
         nsCOMPtr<nsIXPCScriptNotify> scriptNotify = 
-            do_QueryInterface(NS_STATIC_CAST(nsISupports*,
-                                             JS_GetContextPrivate(mJSContext)));
+            do_QueryInterface(static_cast<nsISupports*>
+                                         (JS_GetContextPrivate(mJSContext)));
         if(scriptNotify)
             scriptNotify->ScriptExecuted();
     }
@@ -508,7 +508,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     if(aIID.Equals(NS_GET_IID(nsIXPConnectJSObjectHolder)))
     {
         NS_ADDREF(self);
-        *aInstancePtr = (void*) NS_STATIC_CAST(nsIXPConnectJSObjectHolder*,self);
+        *aInstancePtr = (void*) static_cast<nsIXPConnectJSObjectHolder*>(self);
         return NS_OK;
     }
 
@@ -540,7 +540,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         }
 
         NS_ADDREF(root);
-        *aInstancePtr = (void*) NS_STATIC_CAST(nsIPropertyBag*,root);
+        *aInstancePtr = (void*) static_cast<nsIPropertyBag*>(root);
         return NS_OK;
     }
 
@@ -567,7 +567,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         }
 
         NS_ADDREF(root);
-        *aInstancePtr = (void*) NS_STATIC_CAST(nsISupportsWeakReference*,root);
+        *aInstancePtr = (void*) static_cast<nsISupportsWeakReference*>(root);
         return NS_OK;
     }
 
@@ -592,6 +592,44 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     }
 
     // else we do the more expensive stuff...
+
+#ifndef XPCONNECT_STANDALONE
+    // Before calling out, ensure that we're not about to claim to implement
+    // nsISecurityCheckedComponent for an untrusted object. Doing so causes
+    // problems. See bug 352882.
+
+    if(aIID.Equals(NS_GET_IID(nsISecurityCheckedComponent)))
+    {
+        // XXX This code checks to see if the given object has chrome (also
+        // known as system) principals. It really wants to do a
+        // UniversalXPConnect type check.
+
+        nsXPConnect *xpc = nsXPConnect::GetXPConnect();
+        nsCOMPtr<nsIScriptSecurityManager> secMan =
+            do_QueryInterface(xpc->GetDefaultSecurityManager());
+        if(!secMan)
+        {
+            *aInstancePtr = nsnull;
+            return NS_NOINTERFACE;
+        }
+        nsCOMPtr<nsIPrincipal> objPrin;
+        nsresult rv = secMan->GetObjectPrincipal(ccx, self->GetJSObject(),
+                                                 getter_AddRefs(objPrin));
+        if(NS_SUCCEEDED(rv))
+        {
+            nsCOMPtr<nsIPrincipal> systemPrin;
+            rv = secMan->GetSystemPrincipal(getter_AddRefs(systemPrin));
+            if(systemPrin != objPrin)
+                rv = NS_NOINTERFACE;
+        }
+
+        if(NS_FAILED(rv))
+        {
+            *aInstancePtr = nsnull;
+            return rv;
+        }
+    }
+#endif
 
     // check if the JSObject claims to implement this interface
     JSObject* jsobj = CallQueryInterfaceOnJSObject(ccx, self->GetJSObject(),
@@ -1139,8 +1177,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                             {
                                 if(!newWrapperIID)
                                     newWrapperIID =
-                                        NS_CONST_CAST(nsIID*,
-                                                      &NS_GET_IID(nsISupports));
+                                        const_cast<nsIID*>
+                                                  (&NS_GET_IID(nsISupports));
                                 nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
                                 JSBool ok =
                                   XPCConvert::NativeInterface2JSObject(ccx,

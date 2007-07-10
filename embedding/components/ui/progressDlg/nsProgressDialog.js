@@ -445,8 +445,11 @@ nsProgressDialog.prototype = {
             this.setValue( "sourceLabel", this.getString( "openingSource" ) );
 
             // Target is the "preferred" application.  Hide if empty.
-            if ( this.MIMEInfo && this.MIMEInfo.preferredApplicationHandler ) {
-                var appName = this.MIMEInfo.preferredApplicationHandler.leafName;
+            if ( this.MIMEInfo && 
+                 this.MIMEInfo.preferredApplicationHandler &&
+                 this.MIMEInfo.preferredApplicationHandler.executable ) {
+                var appName = 
+                  this.MIMEInfo.preferredApplicationHandler.executable.leafName;
                 if ( appName == null || appName.length == 0 ) {
                     this.hide( "targetRow" );
                 } else {

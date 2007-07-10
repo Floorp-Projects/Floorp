@@ -65,7 +65,7 @@ nsJVMConfigManagerUnix::nsJVMConfigManagerUnix()
 PR_STATIC_CALLBACK(PRBool)
 FreeJVMConfig(nsHashKey *aKey, void *aData, void* aClosure)
 {
-    nsJVMConfig* config = NS_STATIC_CAST(nsJVMConfig *, aData);
+    nsJVMConfig* config = static_cast<nsJVMConfig *>(aData);
 
     NS_IF_RELEASE(config);
 
@@ -75,8 +75,8 @@ FreeJVMConfig(nsHashKey *aKey, void *aData, void* aClosure)
 PR_STATIC_CALLBACK(PRBool)
 AppendJVMConfig(nsHashKey *aKey, void *aData, void* aClosure)
 {
-    nsJVMConfig* config = NS_STATIC_CAST(nsJVMConfig *, aData);
-    nsIMutableArray *array = NS_STATIC_CAST(nsIMutableArray *, aClosure);
+    nsJVMConfig* config = static_cast<nsJVMConfig *>(aData);
+    nsIMutableArray *array = static_cast<nsIMutableArray *>(aClosure);
     NS_ENSURE_TRUE(config && array, PR_FALSE);
 
     array->AppendElement(config, PR_FALSE);
@@ -110,8 +110,8 @@ nsJVMConfigManagerUnix::GetJVMConfigList(nsIArray **_retval)
 
     if (mJVMConfigList.Count() > 0) {
         mJVMConfigList.Enumerate(AppendJVMConfig,
-                                 NS_STATIC_CAST(void *, array));
-        *_retval = NS_STATIC_CAST(nsIArray *, array);
+                                 static_cast<void *>(array));
+        *_retval = static_cast<nsIArray *>(array);
         NS_IF_ADDREF(*_retval);
     } else
         *_retval = nsnull;
@@ -337,15 +337,15 @@ nsJVMConfigManagerUnix::ParseLine(nsAString& aLine)
     // will contain only one java installation.
     // This could make sure we don't duplicate the config info in the list
     nsStringKey key(pathStr);
-    nsJVMConfig* config = NS_STATIC_CAST(nsJVMConfig *,
-                                         mJVMConfigList.Get(&key));
+    nsJVMConfig* config = static_cast<nsJVMConfig *>
+                                     (mJVMConfigList.Get(&key));
 
     // Only create it and add the config to list if it doesn't exist.
     if (!config) {
         config = new nsJVMConfig(version, type, os, arch, path,
                                  mozPluginPath, description);
         NS_ENSURE_TRUE(config, NS_ERROR_OUT_OF_MEMORY);
-        mJVMConfigList.Put(&key, NS_STATIC_CAST(void *, config));
+        mJVMConfigList.Put(&key, static_cast<void *>(config));
         NS_ADDREF(config);
     }
     
@@ -611,13 +611,13 @@ nsJVMConfigManagerUnix::AddDirectory(nsAString& aHomeDirName)
     path->GetLeafName(version);
 
     nsStringKey key(aHomeDirName);
-    nsJVMConfig* config = NS_STATIC_CAST(nsJVMConfig *,
-                                         mJVMConfigList.Get(&key));
+    nsJVMConfig* config = static_cast<nsJVMConfig *>
+                                     (mJVMConfigList.Get(&key));
     if (!config) {
         config = new nsJVMConfig(version, type, EmptyString(), arch, path,
                                  mozPluginPath, EmptyString());
         NS_ENSURE_TRUE(config, NS_ERROR_OUT_OF_MEMORY);
-        mJVMConfigList.Put(&key, NS_STATIC_CAST(void *, config));
+        mJVMConfigList.Put(&key, static_cast<void *>(config));
         NS_ADDREF(config);
     }
 

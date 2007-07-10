@@ -114,8 +114,6 @@
 #define USE_NATIVE_MENUS
 #endif
 
-#include "nsIPopupSetFrame.h"
-
 /* Define Class IDs */
 static NS_DEFINE_CID(kWindowCID,           NS_WINDOW_CID);
 
@@ -297,7 +295,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
 
     aEvent->widget->GetClientData(data);
     if (data != nsnull) {
-      eventWindow = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
+      eventWindow = reinterpret_cast<nsWebShellWindow *>(data);
       docShell = eventWindow->mDocShell;
     }
   }
@@ -353,6 +351,21 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         // the state and pass the event on to the OS. The day is coming
         // when we'll handle the event here, and the return result will
         // then need to be different.
+#ifdef XP_WIN
+        // This is a nasty hack to get around the fact that win32 sends the kill focus
+        // event in a different sequence than the deactivate depending on if you're
+        // minimizing the window vs. just clicking in a different window to cause
+        // the deactivation. Bug #82534
+        if(modeEvent->mSizeMode == nsSizeMode_Minimized) {
+          nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_GetInterface(docShell);
+          if(privateDOMWindow) {
+            nsIFocusController *focusController =
+              privateDOMWindow->GetRootFocusController();
+            if (focusController)
+              focusController->RewindFocusState();
+          }
+        }
+#endif
         break;
       }
       case NS_OS_TOOLBAR: {
@@ -536,7 +549,7 @@ nsWebShellWindow::SetPersistenceTimer(PRUint32 aDirtyFlags)
 void
 nsWebShellWindow::FirePersistenceTimer(nsITimer *aTimer, void *aClosure)
 {
-  nsWebShellWindow *win = NS_STATIC_CAST(nsWebShellWindow *, aClosure);
+  nsWebShellWindow *win = static_cast<nsWebShellWindow *>(aClosure);
   if (!win->mSPTimerLock)
     return;
   PR_Lock(win->mSPTimerLock);

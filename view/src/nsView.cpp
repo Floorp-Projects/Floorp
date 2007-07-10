@@ -96,7 +96,7 @@ NS_IMETHODIMP ViewWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   *aInstancePtr = nsnull;
   
   if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = NS_STATIC_CAST(nsISupports*, this);
+    *aInstancePtr = static_cast<nsISupports*>(this);
   }
   else if (aIID.Equals(NS_GET_IID(ViewWrapper))) {
     *aInstancePtr = this;
@@ -182,7 +182,6 @@ nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
   // SetViewContentTransparency.
   mVFlags = 0;
   mViewManager = aViewManager;
-  mChildRemoved = PR_FALSE;
   mDirtyRegion = nsnull;
 }
 
@@ -243,12 +242,6 @@ nsView::~nsView()
     mParent->RemoveChild(this);
   }
 
-  if (mZParent)
-  {
-    mZParent->RemoveReparentedView();
-    mZParent->Destroy();
-  }
-
   // Destroy and release the widget
   if (mWindow)
   {
@@ -261,7 +254,6 @@ nsView::~nsView()
     NS_RELEASE(mWindow);
   }
   delete mDirtyRegion;
-  delete mClipRect;
 }
 
 nsresult nsView::QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -366,7 +358,7 @@ nsRect nsView::CalcWidgetBounds(nsWindowType aType)
   }
 
   nsRect newBounds(viewBounds);
-  newBounds.ScaleRoundPreservingCenters(1.0f / p2a);
+  newBounds.ScaleRoundPreservingCentersInverse(p2a);
 
   nsPoint roundedOffset(NSIntPixelsToAppUnits(newBounds.x, p2a),
                         NSIntPixelsToAppUnits(newBounds.y, p2a));
@@ -553,7 +545,6 @@ void nsView::RemoveChild(nsView *child)
         break;
       }
       prevKid = kid;
-      mChildRemoved = PR_TRUE;
 	    kid = kid->GetNextSibling();
     }
     NS_ASSERTION(found, "tried to remove non child");
@@ -618,7 +609,7 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
     NS_RELEASE(mWindow);
   }
 
-  nsView* v = NS_STATIC_CAST(nsView*, this);
+  nsView* v = static_cast<nsView*>(this);
 
   nsRect trect = v->CalcWidgetBounds(aWidgetInitData
                                      ? aWidgetInitData->mWindowType
@@ -702,31 +693,6 @@ void nsView::SetZIndex(PRBool aAuto, PRInt32 aZIndex, PRBool aTopMost)
   }
 }
 
-NS_IMETHODIMP nsView::SetWidget(nsIWidget *aWidget)
-{
-  ViewWrapper* wrapper = new ViewWrapper(this);
-  if (!wrapper)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(wrapper); // Will be released in ~nsView or upon setting a new widget
-
-  // Destroy any old wrappers if there are any
-  ViewWrapper* oldWrapper = GetWrapperFor(aWidget);
-  NS_IF_RELEASE(oldWrapper);
-  NS_IF_RELEASE(mWindow);
-
-  mWindow = aWidget;
-
-  if (nsnull != mWindow)
-  {
-    NS_ADDREF(mWindow);
-    mWindow->SetClientData(wrapper);
-  }
-
-  UpdateNativeWidgetZIndexes(this, FindNonAutoZIndex(this));
-
-  return NS_OK;
-}
-
 //
 // internal window creation functions
 //
@@ -779,14 +745,7 @@ void nsIView::List(FILE* out, PRInt32 aIndent) const
   nsRect brect = GetBounds();
   fprintf(out, "{%d,%d,%d,%d}",
           brect.x, brect.y, brect.width, brect.height);
-  const nsView* v = NS_STATIC_CAST(const nsView*, this);
-  if (v->IsZPlaceholderView()) {
-    fprintf(out, " z-placeholder(%p)",
-            (void*)NS_STATIC_CAST(const nsZPlaceholderView*, this)->GetReparentedView());
-  }
-  if (v->GetZParent()) {
-    fprintf(out, " zparent=%p", (void*)v->GetZParent());
-  }
+  const nsView* v = static_cast<const nsView*>(this);
   fprintf(out, " z=%d vis=%d clientData=%p <\n",
           mZIndex, mVis, mClientData);
   for (nsView* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
@@ -842,7 +801,7 @@ nsIWidget* nsIView::GetNearestWidget(nsPoint* aOffset) const
 {
   nsPoint pt(0, 0);
   const nsView* v;
-  for (v = NS_STATIC_CAST(const nsView*, this);
+  for (v = static_cast<const nsView*>(this);
        v && !v->HasWidget(); v = v->GetParent()) {
     pt += v->GetPosition();
   }
@@ -850,7 +809,7 @@ nsIWidget* nsIView::GetNearestWidget(nsPoint* aOffset) const
     if (aOffset) {
       *aOffset = pt;
     }
-    return NS_STATIC_CAST(const nsView*, this)->GetViewManager()->GetWidget();
+    return static_cast<const nsView*>(this)->GetViewManager()->GetWidget();
   }
 
   // pt is now the offset from v's origin to this's origin
@@ -858,7 +817,7 @@ nsIWidget* nsIView::GetNearestWidget(nsPoint* aOffset) const
   // not coincide with v's origin
   if (aOffset) {
     nsRect vBounds = v->GetBounds();
-    *aOffset = pt + v->GetPosition() -  nsPoint(vBounds.x, vBounds.y) -
+    *aOffset = pt + v->GetPosition() -  nsPoint(vBounds.x, vBounds.y) +
                v->ViewToWidgetOffset();
   }
   return v->GetWidget();

@@ -70,7 +70,7 @@ ArenaStrdup(const nsAFlatString& aString, PLArenaPool* aArena)
   if (mem) {
     memcpy(mem, aString.get(), len);
   }
-  return NS_STATIC_CAST(PRUnichar*, mem);
+  return static_cast<PRUnichar*>(mem);
 }
 
 static char*
@@ -83,7 +83,7 @@ ArenaStrdup(const nsAFlatCString& aString, PLArenaPool* aArena)
   NS_ASSERTION(mem, "Couldn't allocate space!\n");
   if (mem)
     memcpy(mem, aString.get(), len);
-  return NS_STATIC_CAST(char*, mem);
+  return static_cast<char*>(mem);
 }
 
 static const struct PLDHashTableOps property_HashTableOps = {
@@ -100,7 +100,7 @@ static const struct PLDHashTableOps property_HashTableOps = {
 nsPersistentProperties::nsPersistentProperties()
 : mIn(nsnull)
 {
-  mSubclass = NS_STATIC_CAST(nsIPersistentProperties*, this);
+  mSubclass = static_cast<nsIPersistentProperties*>(this);
   mTable.ops = nsnull;
   PL_INIT_ARENA_POOL(&mArena, "PersistentPropertyArena", 2048);
 }
@@ -291,8 +291,8 @@ nsPersistentProperties::SetStringProperty(const nsACString& aKey,
 
   const nsAFlatCString&  flatKey = PromiseFlatCString(aKey);
   PropertyTableEntry *entry =
-    NS_STATIC_CAST(PropertyTableEntry*,
-                   PL_DHashTableOperate(&mTable, flatKey.get(), PL_DHASH_ADD));
+    static_cast<PropertyTableEntry*>
+               (PL_DHashTableOperate(&mTable, flatKey.get(), PL_DHASH_ADD));
 
   if (entry->mKey) {
     aOldValue = entry->mValue;
@@ -330,8 +330,8 @@ nsPersistentProperties::GetStringProperty(const nsACString& aKey,
   const nsAFlatCString&  flatKey = PromiseFlatCString(aKey);
 
   PropertyTableEntry *entry =
-    NS_STATIC_CAST(PropertyTableEntry*,
-                   PL_DHashTableOperate(&mTable, flatKey.get(), PL_DHASH_LOOKUP));
+    static_cast<PropertyTableEntry*>
+               (PL_DHashTableOperate(&mTable, flatKey.get(), PL_DHASH_LOOKUP));
 
   if (PL_DHASH_ENTRY_IS_FREE(entry))
     return NS_ERROR_FAILURE;
@@ -346,7 +346,7 @@ AddElemToArray(PLDHashTable* table, PLDHashEntryHdr *hdr,
 {
   nsISupportsArray  *propArray = (nsISupportsArray *) arg;
   PropertyTableEntry* entry =
-    NS_STATIC_CAST(PropertyTableEntry*, hdr);
+    static_cast<PropertyTableEntry*>(hdr);
 
   nsPropertyElement *element =
     new nsPropertyElement(nsDependentCString(entry->mKey),

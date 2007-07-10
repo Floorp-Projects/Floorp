@@ -238,7 +238,7 @@ public:
     void* PropertyAt(nsCSSProperty aProperty) {
         const PropertyOffsetInfo& offsets =
             nsCSSExpandedDataBlock::kOffsetTable[aProperty];
-        return NS_REINTERPRET_CAST(void*, NS_REINTERPRET_CAST(char*, this) +
+        return reinterpret_cast<void*>(reinterpret_cast<char*>(this) +
                                           offsets.block_offset);
     }
 
@@ -253,11 +253,11 @@ public:
             nsCSSExpandedDataBlock::kOffsetTable[aProperty];
         NS_ASSERTION(offsets.ruledata_struct_offset != size_t(-1),
                      "property should not use CSS_PROP_BACKENDONLY");
-        char* cssstruct = *NS_REINTERPRET_CAST(char**,
-                              NS_REINTERPRET_CAST(char*, aRuleData) +
+        char* cssstruct = *reinterpret_cast<char**>
+                                           (reinterpret_cast<char*>(aRuleData) +
                               offsets.ruledata_struct_offset);
-        return NS_REINTERPRET_CAST(void*,
-                                   cssstruct + offsets.ruledata_member_offset);
+        return reinterpret_cast<void*>
+                               (cssstruct + offsets.ruledata_member_offset);
     }
 
     void AssertInSetRange(nsCSSProperty aProperty) {

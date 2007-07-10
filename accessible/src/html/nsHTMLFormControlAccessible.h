@@ -124,14 +124,23 @@ protected:
   nsCOMPtr<nsIEditor> mEditor;
 };
 
-class nsHTMLGroupboxAccessible : public nsAccessibleWrap
+class nsHTMLGroupboxAccessible : public nsHyperTextAccessibleWrap
 {
 public:
   nsHTMLGroupboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetRole(PRUint32 *_retval); 
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
-  NS_IMETHOD GetName(nsAString& _retval);
-  void CacheChildren();
+  NS_IMETHOD GetRole(PRUint32 *aRole); 
+  NS_IMETHOD GetName(nsAString& aName);
+  NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated);
+protected:
+  nsIContent* GetLegend();
+};
+
+class nsHTMLLegendAccessible : public nsHyperTextAccessibleWrap
+{
+public:
+  nsHTMLLegendAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated);
+  NS_IMETHOD GetRole(PRUint32 *aRole) { *aRole = nsIAccessibleRole::ROLE_LABEL; return NS_OK; }
 };
 
 #endif  

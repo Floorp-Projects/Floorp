@@ -811,7 +811,7 @@ class nsCOMPtr
 #endif
           NSCAP_LOG_ASSIGNMENT(this, temp);
           NSCAP_LOG_RELEASE(this, mRawPtr);
-          rhs = NS_REINTERPRET_CAST(T*, mRawPtr);
+          rhs = reinterpret_cast<T*>(mRawPtr);
           mRawPtr = temp;
           NSCAP_ASSERT_NO_QUERY_NEEDED();
         }
@@ -826,7 +826,7 @@ class nsCOMPtr
              Use |get()| to resolve ambiguity or to get a castable pointer.
           */
         {
-          return NS_REINTERPRET_CAST(T*, mRawPtr);
+          return reinterpret_cast<T*>(mRawPtr);
         }
 
       operator nsDerivedSafe<T>*() const
@@ -856,7 +856,7 @@ class nsCOMPtr
           // This is not intended to be used by clients.  See |address_of|
           // below.
         {
-          return NS_CONST_CAST(nsCOMPtr<T>*, this);
+          return const_cast<nsCOMPtr<T>*>(this);
         }
 
 #else // CANT_RESOLVE_CPP_CONST_AMBIGUITY
@@ -896,10 +896,10 @@ class nsCOMPtr
       StartAssignment()
         {
 #ifndef NSCAP_FEATURE_INLINE_STARTASSIGNMENT
-          return NS_REINTERPRET_CAST(T**, begin_assignment());
+          return reinterpret_cast<T**>(begin_assignment());
 #else
           assign_assuming_AddRef(0);
-          return NS_REINTERPRET_CAST(T**, &mRawPtr);
+          return reinterpret_cast<T**>(&mRawPtr);
 #endif
         }
 
@@ -907,7 +907,7 @@ class nsCOMPtr
       nsDerivedSafe<T>*
       get_DerivedSafe() const
         {
-          return NS_REINTERPRET_CAST(nsDerivedSafe<T>*, mRawPtr);
+          return reinterpret_cast<nsDerivedSafe<T>*>(mRawPtr);
         }
 
   };
@@ -1139,7 +1139,7 @@ class nsCOMPtr<nsISupports>
              Use |get()| to resolve ambiguity or to get a castable pointer.
           */
         {
-          return NS_REINTERPRET_CAST(nsISupports*, mRawPtr);
+          return reinterpret_cast<nsISupports*>(mRawPtr);
         }
 
       operator nsDerivedSafe<nsISupports>*() const
@@ -1169,7 +1169,7 @@ class nsCOMPtr<nsISupports>
           // This is not intended to be used by clients.  See |address_of|
           // below.
         {
-          return NS_CONST_CAST(nsCOMPtr<nsISupports>*, this);
+          return const_cast<nsCOMPtr<nsISupports>*>(this);
         }
 
 #else // CANT_RESOLVE_CPP_CONST_AMBIGUITY
@@ -1210,10 +1210,10 @@ class nsCOMPtr<nsISupports>
       StartAssignment()
         {
 #ifndef NSCAP_FEATURE_INLINE_STARTASSIGNMENT
-          return NS_REINTERPRET_CAST(nsISupports**, begin_assignment());
+          return reinterpret_cast<nsISupports**>(begin_assignment());
 #else
           assign_assuming_AddRef(0);
-          return NS_REINTERPRET_CAST(nsISupports**, &mRawPtr);
+          return reinterpret_cast<nsISupports**>(&mRawPtr);
 #endif
         }
 
@@ -1221,7 +1221,7 @@ class nsCOMPtr<nsISupports>
       nsDerivedSafe<nsISupports>*
       get_DerivedSafe() const
         {
-          return NS_REINTERPRET_CAST(nsDerivedSafe<nsISupports>*, mRawPtr);
+          return reinterpret_cast<nsDerivedSafe<nsISupports>*>(mRawPtr);
         }
 
   };
@@ -1233,7 +1233,7 @@ nsCOMPtr<T>::assign_with_AddRef( nsISupports* rawPtr )
   {
     if ( rawPtr )
       NSCAP_ADDREF(this, rawPtr);
-    assign_assuming_AddRef(NS_REINTERPRET_CAST(T*, rawPtr));
+    assign_assuming_AddRef(reinterpret_cast<T*>(rawPtr));
   }
 
 template <class T>
@@ -1243,7 +1243,7 @@ nsCOMPtr<T>::assign_from_qi( const nsQueryInterface qi, const nsIID& aIID )
     void* newRawPtr;
     if ( NS_FAILED( qi(aIID, &newRawPtr) ) )
       newRawPtr = 0;
-    assign_assuming_AddRef(NS_STATIC_CAST(T*, newRawPtr));
+    assign_assuming_AddRef(static_cast<T*>(newRawPtr));
   }
 
 template <class T>
@@ -1253,7 +1253,7 @@ nsCOMPtr<T>::assign_from_qi_with_error( const nsQueryInterfaceWithError& qi, con
     void* newRawPtr;
     if ( NS_FAILED( qi(aIID, &newRawPtr) ) )
       newRawPtr = 0;
-    assign_assuming_AddRef(NS_STATIC_CAST(T*, newRawPtr));
+    assign_assuming_AddRef(static_cast<T*>(newRawPtr));
   }
 
 template <class T>
@@ -1263,7 +1263,7 @@ nsCOMPtr<T>::assign_from_gs_cid( const nsGetServiceByCID gs, const nsIID& aIID )
     void* newRawPtr;
     if ( NS_FAILED( gs(aIID, &newRawPtr) ) )
       newRawPtr = 0;
-    assign_assuming_AddRef(NS_STATIC_CAST(T*, newRawPtr));
+    assign_assuming_AddRef(static_cast<T*>(newRawPtr));
   }
 
 template <class T>
@@ -1273,7 +1273,7 @@ nsCOMPtr<T>::assign_from_gs_cid_with_error( const nsGetServiceByCIDWithError& gs
     void* newRawPtr;
     if ( NS_FAILED( gs(aIID, &newRawPtr) ) )
       newRawPtr = 0;
-    assign_assuming_AddRef(NS_STATIC_CAST(T*, newRawPtr));
+    assign_assuming_AddRef(static_cast<T*>(newRawPtr));
   }
 
 template <class T>
@@ -1283,7 +1283,7 @@ nsCOMPtr<T>::assign_from_gs_contractid( const nsGetServiceByContractID gs, const
     void* newRawPtr;
     if ( NS_FAILED( gs(aIID, &newRawPtr) ) )
       newRawPtr = 0;
-    assign_assuming_AddRef(NS_STATIC_CAST(T*, newRawPtr));
+    assign_assuming_AddRef(static_cast<T*>(newRawPtr));
   }
 
 template <class T>
@@ -1293,7 +1293,7 @@ nsCOMPtr<T>::assign_from_gs_contractid_with_error( const nsGetServiceByContractI
     void* newRawPtr;
     if ( NS_FAILED( gs(aIID, &newRawPtr) ) )
       newRawPtr = 0;
-    assign_assuming_AddRef(NS_STATIC_CAST(T*, newRawPtr));
+    assign_assuming_AddRef(static_cast<T*>(newRawPtr));
   }
 
 template <class T>
@@ -1303,7 +1303,7 @@ nsCOMPtr<T>::assign_from_helper( const nsCOMPtr_helper& helper, const nsIID& aII
     void* newRawPtr;
     if ( NS_FAILED( helper(aIID, &newRawPtr) ) )
       newRawPtr = 0;
-    assign_assuming_AddRef(NS_STATIC_CAST(T*, newRawPtr));
+    assign_assuming_AddRef(static_cast<T*>(newRawPtr));
   }
 
 template <class T>
@@ -1381,7 +1381,7 @@ class nsGetterAddRefs
      ~nsGetterAddRefs()
         {
 #ifdef NSCAP_LOG_EXTERNAL_ASSIGNMENT
-          NSCAP_LOG_ASSIGNMENT(NS_REINTERPRET_CAST(void *, address_of(mTargetSmartPtr)), mTargetSmartPtr.get());
+          NSCAP_LOG_ASSIGNMENT(reinterpret_cast<void *>(address_of(mTargetSmartPtr)), mTargetSmartPtr.get());
 #endif
 
 #ifdef NSCAP_FEATURE_TEST_DONTQUERY_CASES
@@ -1392,12 +1392,12 @@ class nsGetterAddRefs
 
       operator void**()
         {
-          return NS_REINTERPRET_CAST(void**, mTargetSmartPtr.StartAssignment());
+          return reinterpret_cast<void**>(mTargetSmartPtr.StartAssignment());
         }
 
       operator nsISupports**()
         {
-          return NS_REINTERPRET_CAST(nsISupports**, mTargetSmartPtr.StartAssignment());
+          return reinterpret_cast<nsISupports**>(mTargetSmartPtr.StartAssignment());
         }
 
       operator T**()
@@ -1430,13 +1430,13 @@ class nsGetterAddRefs<nsISupports>
 #ifdef NSCAP_LOG_EXTERNAL_ASSIGNMENT
      ~nsGetterAddRefs()
         {
-          NSCAP_LOG_ASSIGNMENT(NS_REINTERPRET_CAST(void *, address_of(mTargetSmartPtr)), mTargetSmartPtr.get());
+          NSCAP_LOG_ASSIGNMENT(reinterpret_cast<void *>(address_of(mTargetSmartPtr)), mTargetSmartPtr.get());
         }
 #endif
 
       operator void**()
         {
-          return NS_REINTERPRET_CAST(void**, mTargetSmartPtr.StartAssignment());
+          return reinterpret_cast<void**>(mTargetSmartPtr.StartAssignment());
         }
 
       operator nsISupports**()
@@ -1476,7 +1476,7 @@ inline
 NSCAP_BOOL
 operator==( const nsCOMPtr<T>& lhs, const nsCOMPtr<U>& rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) == NS_STATIC_CAST(const U*, rhs.get());
+    return static_cast<const T*>(lhs.get()) == static_cast<const U*>(rhs.get());
   }
 
 
@@ -1485,7 +1485,7 @@ inline
 NSCAP_BOOL
 operator!=( const nsCOMPtr<T>& lhs, const nsCOMPtr<U>& rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) != NS_STATIC_CAST(const U*, rhs.get());
+    return static_cast<const T*>(lhs.get()) != static_cast<const U*>(rhs.get());
   }
 
 
@@ -1496,7 +1496,7 @@ inline
 NSCAP_BOOL
 operator==( const nsCOMPtr<T>& lhs, const U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) == rhs;
+    return static_cast<const T*>(lhs.get()) == rhs;
   }
 
 template <class T, class U>
@@ -1504,7 +1504,7 @@ inline
 NSCAP_BOOL
 operator==( const U* lhs, const nsCOMPtr<T>& rhs )
   {
-    return lhs == NS_STATIC_CAST(const T*, rhs.get());
+    return lhs == static_cast<const T*>(rhs.get());
   }
 
 template <class T, class U>
@@ -1512,7 +1512,7 @@ inline
 NSCAP_BOOL
 operator!=( const nsCOMPtr<T>& lhs, const U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) != rhs;
+    return static_cast<const T*>(lhs.get()) != rhs;
   }
 
 template <class T, class U>
@@ -1520,7 +1520,7 @@ inline
 NSCAP_BOOL
 operator!=( const U* lhs, const nsCOMPtr<T>& rhs )
   {
-    return lhs != NS_STATIC_CAST(const T*, rhs.get());
+    return lhs != static_cast<const T*>(rhs.get());
   }
 
   // To avoid ambiguities caused by the presence of builtin |operator==|s
@@ -1545,7 +1545,7 @@ inline
 NSCAP_BOOL
 operator==( const nsCOMPtr<T>& lhs, U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) == NS_CONST_CAST(const U*, rhs);
+    return static_cast<const T*>(lhs.get()) == const_cast<const U*>(rhs);
   }
 
 template <class T, class U>
@@ -1553,7 +1553,7 @@ inline
 NSCAP_BOOL
 operator==( U* lhs, const nsCOMPtr<T>& rhs )
   {
-    return NS_CONST_CAST(const U*, lhs) == NS_STATIC_CAST(const T*, rhs.get());
+    return const_cast<const U*>(lhs) == static_cast<const T*>(rhs.get());
   }
 
 template <class T, class U>
@@ -1561,7 +1561,7 @@ inline
 NSCAP_BOOL
 operator!=( const nsCOMPtr<T>& lhs, U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) != NS_CONST_CAST(const U*, rhs);
+    return static_cast<const T*>(lhs.get()) != const_cast<const U*>(rhs);
   }
 
 template <class T, class U>
@@ -1569,7 +1569,7 @@ inline
 NSCAP_BOOL
 operator!=( U* lhs, const nsCOMPtr<T>& rhs )
   {
-    return NS_CONST_CAST(const U*, lhs) != NS_STATIC_CAST(const T*, rhs.get());
+    return const_cast<const U*>(lhs) != static_cast<const T*>(rhs.get());
   }
 #endif
 
@@ -1585,7 +1585,7 @@ NSCAP_BOOL
 operator==( const nsCOMPtr<T>& lhs, NSCAP_Zero* rhs )
     // specifically to allow |smartPtr == 0|
   {
-    return NS_STATIC_CAST(const void*, lhs.get()) == NS_REINTERPRET_CAST(const void*, rhs);
+    return static_cast<const void*>(lhs.get()) == reinterpret_cast<const void*>(rhs);
   }
 
 template <class T>
@@ -1594,7 +1594,7 @@ NSCAP_BOOL
 operator==( NSCAP_Zero* lhs, const nsCOMPtr<T>& rhs )
     // specifically to allow |0 == smartPtr|
   {
-    return NS_REINTERPRET_CAST(const void*, lhs) == NS_STATIC_CAST(const void*, rhs.get());
+    return reinterpret_cast<const void*>(lhs) == static_cast<const void*>(rhs.get());
   }
 
 template <class T>
@@ -1603,7 +1603,7 @@ NSCAP_BOOL
 operator!=( const nsCOMPtr<T>& lhs, NSCAP_Zero* rhs )
     // specifically to allow |smartPtr != 0|
   {
-    return NS_STATIC_CAST(const void*, lhs.get()) != NS_REINTERPRET_CAST(const void*, rhs);
+    return static_cast<const void*>(lhs.get()) != reinterpret_cast<const void*>(rhs);
   }
 
 template <class T>
@@ -1612,7 +1612,7 @@ NSCAP_BOOL
 operator!=( NSCAP_Zero* lhs, const nsCOMPtr<T>& rhs )
     // specifically to allow |0 != smartPtr|
   {
-    return NS_REINTERPRET_CAST(const void*, lhs) != NS_STATIC_CAST(const void*, rhs.get());
+    return reinterpret_cast<const void*>(lhs) != static_cast<const void*>(rhs.get());
   }
 
 
@@ -1627,7 +1627,7 @@ NSCAP_BOOL
 operator==( const nsCOMPtr<T>& lhs, int rhs )
     // specifically to allow |smartPtr == 0|
   {
-    return NS_STATIC_CAST(const void*, lhs.get()) == NS_REINTERPRET_CAST(const void*, rhs);
+    return static_cast<const void*>(lhs.get()) == reinterpret_cast<const void*>(rhs);
   }
 
 template <class T>
@@ -1636,7 +1636,7 @@ NSCAP_BOOL
 operator==( int lhs, const nsCOMPtr<T>& rhs )
     // specifically to allow |0 == smartPtr|
   {
-    return NS_REINTERPRET_CAST(const void*, lhs) == NS_STATIC_CAST(const void*, rhs.get());
+    return reinterpret_cast<const void*>(lhs) == static_cast<const void*>(rhs.get());
   }
 
 #endif // !defined(HAVE_CPP_TROUBLE_COMPARING_TO_ZERO)

@@ -158,6 +158,7 @@ protected:
   already_AddRefed<nsIHttpChannel> GetCurrentHttpChannel();
 
   nsCOMPtr<nsISupports> mContext;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIRequest> mReadRequest;
   nsCOMPtr<nsIDOMDocument> mDocument;

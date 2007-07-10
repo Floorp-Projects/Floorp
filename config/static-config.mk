@@ -93,8 +93,8 @@ endif
 endif
 endif
 
-ifneq  (,$(MOZ_ENABLE_GTK2))
-STATIC_EXTRA_LIBS	+= $(XLDFLAGS) $(XT_LIBS)
+ifdef MOZ_ENABLE_GTK2
+STATIC_EXTRA_LIBS	+= $(XLDFLAGS) $(XT_LIBS) -lgthread-2.0
 endif
 
 ifdef MOZ_ENABLE_XFT
@@ -103,6 +103,10 @@ endif
 
 ifdef MOZ_ENABLE_PANGO
 STATIC_EXTRA_LIBS	+= $(MOZ_PANGO_LIBS)
+endif
+
+ifdef MOZ_ENABLE_STARTUP_NOTIFICATION
+STATIC_EXTRA_LIBS	+= $(MOZ_STARTUP_NOTIFICATION_LIBS)
 endif
 
 # Component Makefile always brings in this.

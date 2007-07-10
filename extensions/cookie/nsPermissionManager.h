@@ -122,8 +122,8 @@ public:
   PRBool PermissionsAreEmpty() const
   {
     // Cast to PRUint32, to make this faster. Only 2 checks instead of 8
-    return (*NS_REINTERPRET_CAST(const PRUint32*, &mPermissions[0])==0 && 
-            *NS_REINTERPRET_CAST(const PRUint32*, &mPermissions[4])==0 );
+    return (*reinterpret_cast<const PRUint32*>(&mPermissions[0])==0 && 
+            *reinterpret_cast<const PRUint32*>(&mPermissions[4])==0 );
   }
 
 private:

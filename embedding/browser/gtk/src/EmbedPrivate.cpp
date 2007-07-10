@@ -191,8 +191,8 @@ EmbedCommon::GetAnyLiveWidget()
   //FIXME need to choose right window
   GtkMozEmbed *ret = nsnull;
   for (int i = 0; i < count; i++) {
-    EmbedPrivate *tmpPrivate = NS_STATIC_CAST(EmbedPrivate *,
-                                              EmbedPrivate::sWindowList->ElementAt(i));
+    EmbedPrivate *tmpPrivate = static_cast<EmbedPrivate *>
+                                          (EmbedPrivate::sWindowList->ElementAt(i));
     ret = tmpPrivate->mOwningWidget;
   }
   return ret;
@@ -432,15 +432,15 @@ EmbedPrivate::Init(GtkMozEmbed *aOwningWidget)
   // initialize it.  It is assumed that this window will be destroyed
   // when we go out of scope.
   mWindow = new EmbedWindow();
-  mWindowGuard = NS_STATIC_CAST(nsIWebBrowserChrome *, mWindow);
+  mWindowGuard = static_cast<nsIWebBrowserChrome *>(mWindow);
   mWindow->Init(this);
 
   // Create our progress listener object, make an owning reference,
   // and initialize it.  It is assumed that this progress listener
   // will be destroyed when we go out of scope.
   mProgress = new EmbedProgress();
-  mProgressGuard = NS_STATIC_CAST(nsIWebProgressListener *,
-               mProgress);
+  mProgressGuard = static_cast<nsIWebProgressListener *>
+                              (mProgress);
   mProgress->Init(this);
 
   // Create our content listener object, initialize it and attach it.
@@ -468,7 +468,7 @@ EmbedPrivate::Init(GtkMozEmbed *aOwningWidget)
     // create our local object
     EmbedWindowCreator *creator = new EmbedWindowCreator(&mOpenBlock);
     nsCOMPtr<nsIWindowCreator> windowCreator;
-    windowCreator = NS_STATIC_CAST(nsIWindowCreator *, creator);
+    windowCreator = static_cast<nsIWindowCreator *>(creator);
 
     // Attach it via the watcher service
     nsCOMPtr<nsIWindowWatcher> watcher = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
@@ -531,14 +531,14 @@ EmbedPrivate::Realize(PRBool *aAlreadyRealized)
   mWindow->mBaseWindow->GetMainWidget(getter_AddRefs(mozWidget));
   // get the native drawing area
   GdkWindow *tmp_window =
-    NS_STATIC_CAST(GdkWindow *,
-      mozWidget->GetNativeData(NS_NATIVE_WINDOW));
+    static_cast<GdkWindow *>
+               (mozWidget->GetNativeData(NS_NATIVE_WINDOW));
   // and, thanks to superwin we actually need the parent of that.
   tmp_window = gdk_window_get_parent(tmp_window);
   // save the widget ID - it should be the mozarea of the window.
   gpointer data = nsnull;
   gdk_window_get_user_data(tmp_window, &data);
-  mMozWindowWidget = NS_STATIC_CAST(GtkWidget *, data);
+  mMozWindowWidget = static_cast<GtkWidget *>(data);
 
   // Apply the current chrome mask
   ApplyChromeMask();
@@ -789,8 +789,8 @@ EmbedPrivate::PushStartup(void)
       return;
 
     rv = XRE_InitEmbedding(greDir, binDir,
-                           NS_CONST_CAST(GTKEmbedDirectoryProvider*,
-                                         &kDirectoryProvider),
+                           const_cast<GTKEmbedDirectoryProvider*>
+                                     (&kDirectoryProvider),
                            nsnull, nsnull);
     if (NS_FAILED(rv))
       return;
@@ -972,10 +972,10 @@ EmbedPrivate::FindPrivateForBrowser(nsIWebBrowserChrome *aBrowser)
   // creating a new window) so it's OK to walk the list of open
   // windows.
   for (int i = 0; i < count; i++) {
-    EmbedPrivate *tmpPrivate = NS_STATIC_CAST(EmbedPrivate *, sWindowList->ElementAt(i));
+    EmbedPrivate *tmpPrivate = static_cast<EmbedPrivate *>(sWindowList->ElementAt(i));
     // get the browser object for that window
     nsIWebBrowserChrome *chrome =
-      NS_STATIC_CAST(nsIWebBrowserChrome *, tmpPrivate->mWindow);
+      static_cast<nsIWebBrowserChrome *>(tmpPrivate->mWindow);
     if (chrome == aBrowser)
       return tmpPrivate;
   }
@@ -1046,7 +1046,7 @@ EmbedPrivate::ContentFinishedLoading(void)
 
       GList *ptr = list_full;
       while(ptr) {
-        GtkMozLogin * login = NS_STATIC_CAST(GtkMozLogin*, ptr->data);
+        GtkMozLogin * login = static_cast<GtkMozLogin*>(ptr->data);
         if (login && login->user) {
           users_list = g_list_append(users_list, NS_strdup(login->user));
           NS_Free((void*)login->user);
@@ -1139,8 +1139,8 @@ EmbedPrivate::AttachListeners(void)
     return;
 
   nsIDOMEventListener *eventListener =
-    NS_STATIC_CAST(nsIDOMEventListener *,
-       NS_STATIC_CAST(nsIDOMKeyListener *, mEventListener));
+    static_cast<nsIDOMEventListener *>
+               (static_cast<nsIDOMKeyListener *>(mEventListener));
 
   // add the key listener
   nsresult rv;
@@ -1200,8 +1200,8 @@ EmbedPrivate::DetachListeners(void)
     return;
 
   nsIDOMEventListener *eventListener =
-    NS_STATIC_CAST(nsIDOMEventListener *,
-       NS_STATIC_CAST(nsIDOMKeyListener *, mEventListener));
+    static_cast<nsIDOMEventListener *>
+               (static_cast<nsIDOMKeyListener *>(mEventListener));
 
   nsresult rv;
   rv = mEventTarget->RemoveEventListenerByIID(

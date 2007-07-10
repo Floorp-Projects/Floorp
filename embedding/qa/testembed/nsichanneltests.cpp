@@ -353,7 +353,7 @@ void CnsIChannelTests::OpenTest(nsIChannel *theChannel, PRInt16 displayMode)
 
 void CnsIChannelTests::AsyncOpenTest(nsIChannel *theChannel, PRInt16 displayMode)
 {
-	nsCOMPtr<nsIStreamListener> listener(NS_STATIC_CAST(nsIStreamListener*, qaBrowserImpl));
+	nsCOMPtr<nsIStreamListener> listener(static_cast<nsIStreamListener*>(qaBrowserImpl));
 	nsCOMPtr<nsIWeakReference> thisListener(do_GetWeakReference(listener));
 	qaWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsIStreamListener));
 	if (!theChannel)
