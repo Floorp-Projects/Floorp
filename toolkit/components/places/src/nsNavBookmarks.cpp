@@ -939,6 +939,9 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder, nsIURI *aItem, PRInt32 aIndex,
   NS_ENSURE_SUCCESS(rv, rv);
   *aNewBookmarkId = rowId;
 
+  rv = SetItemLastModified(aFolder, PR_Now());
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -992,6 +995,9 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
     rv = AdjustIndices(folderId, childIndex + 1, PR_INT32_MAX, -1);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  rv = SetItemLastModified(folderId, PR_Now());
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1076,7 +1082,10 @@ nsNavBookmarks::CreateFolderWithID(PRInt64 aFolder, PRInt64 aParent,
   PRInt64 id;
   rv = dbConn->GetLastInsertRowID(&id);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
+  rv = SetItemLastModified(aParent, PR_Now());
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1167,6 +1176,9 @@ nsNavBookmarks::InsertSeparator(PRInt64 aParent, PRInt32 aIndex,
   rv = dbConn->GetLastInsertRowID(&rowId);
   NS_ENSURE_SUCCESS(rv, rv);
   *aNewItemId = rowId;
+
+  rv = SetItemLastModified(aParent, PR_Now());
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1302,6 +1314,9 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = AdjustIndices(parent, index + 1, PR_INT32_MAX, -1);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = SetItemLastModified(parent, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
@@ -1530,6 +1545,12 @@ nsNavBookmarks::MoveItem(PRInt64 aItemId, PRInt64 aNewParent, PRInt32 aIndex)
   rv = dbConn->ExecuteSimpleSQL(buffer);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  PRTime now = PR_Now();
+  rv = SetItemLastModified(oldParent, now);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetItemLastModified(aNewParent, now);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1695,10 +1716,10 @@ nsNavBookmarks::SetItemTitle(PRInt64 aItemId, const nsAString &aTitle)
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = transaction.Commit();
+  rv = SetItemLastModified(aItemId, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = SetItemLastModified(aItemId, PR_Now());
+  rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
   ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
@@ -2066,14 +2087,14 @@ nsNavBookmarks::ChangeBookmarkURI(PRInt64 aBookmarkId, nsIURI *aNewURI)
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = SetItemLastModified(aBookmarkId, PR_Now());
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString spec;
   rv = aNewURI->GetSpec(spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = SetItemLastModified(aBookmarkId, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Pass the new URI to OnItemChanged.
@@ -2271,10 +2292,11 @@ nsNavBookmarks::SetKeywordForBookmark(PRInt64 aBookmarkId, const nsAString& aKey
   NS_ENSURE_SUCCESS(rv, rv);
   rv = updateKeywordStmnt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
-  transaction.Commit();
-    
+
   rv = SetItemLastModified(aBookmarkId, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
+
+  transaction.Commit();
 
   // Pass the new keyword to OnItemChanged.
   ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
