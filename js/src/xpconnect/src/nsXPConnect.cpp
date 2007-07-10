@@ -50,12 +50,8 @@
 #include "jsfun.h"
 #include "jsobj.h"
 #include "jsscript.h"
-#include "nsThreadUtilsInternal.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsXPConnect,
-                              nsIXPConnect,
-                              nsISupportsWeakReference,
-                              nsIThreadObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPConnect,nsIXPConnect,nsISupportsWeakReference)
 
 nsXPConnect* nsXPConnect::gSelf = nsnull;
 JSBool       nsXPConnect::gOnceAliveNowDead = JS_FALSE;
@@ -290,10 +286,6 @@ nsXPConnect::GetXPConnect()
             // Initial extra ref to keep the singleton alive
             // balanced by explicit call to ReleaseXPConnectSingleton()
             NS_ADDREF(gSelf);
-            if (NS_FAILED(NS_SetGlobalThreadObserver(gSelf))) {
-                NS_RELEASE(gSelf);
-                // Fall through to returning null
-            }
         }
     }
     return gSelf;
@@ -315,7 +307,6 @@ nsXPConnect::ReleaseXPConnectSingleton()
     nsXPConnect* xpc = gSelf;
     if(xpc)
     {
-        NS_SetGlobalThreadObserver(nsnull);
 
 #ifdef XPC_TOOLS_SUPPORT
         if(xpc->mProfiler)
@@ -2021,31 +2012,6 @@ nsXPConnect::FlagSystemFilenamePrefix(const char *aFilenamePrefix)
     if(!JS_FlagScriptFilenamePrefix(rt, aFilenamePrefix, JSFILENAME_SYSTEM))
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPConnect::OnProcessNextEvent(nsIThreadInternal *aThread, PRBool aMayWait,
-                                PRUint32 aRecursionDepth)
-{
-    // Push a null JSContext so that we don't see any script during
-    // event processing.
-    NS_ENSURE_STATE(mContextStack);
-    return mContextStack->Push(nsnull);
-}
-
-NS_IMETHODIMP
-nsXPConnect::AfterProcessNextEvent(nsIThreadInternal *aThread,
-                                   PRUint32 aRecursionDepth)
-{
-    NS_ENSURE_STATE(mContextStack);
-    return mContextStack->Pop(nsnull);
-}
-
-NS_IMETHODIMP
-nsXPConnect::OnDispatchedEvent(nsIThreadInternal* aThread)
-{
-    NS_NOTREACHED("Why tell us?");
-    return NS_ERROR_UNEXPECTED;
 }
 
 #ifdef DEBUG
