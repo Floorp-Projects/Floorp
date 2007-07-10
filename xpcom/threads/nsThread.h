@@ -72,9 +72,6 @@ public:
   // nsIThreadManager::NewThread.
   PRBool ShutdownRequired() { return mShutdownRequired; }
 
-  // The global thread observer
-  static nsIThreadObserver* sGlobalObserver;
-
 private:
   friend class nsThreadShutdownEvent;
 
