@@ -2075,13 +2075,13 @@ PlacesEditItemDescriptionTransaction.prototype = {
 
     if (annos.itemHasAnnotation(this.id, this.DESCRIPTION_ANNO)) {
       this._oldDescription =
-        annos.getItemAnnotationString(this.id, this.DESCRIPTION_ANNO);
+        annos.getItemAnnotation(this.id, this.DESCRIPTION_ANNO);
     }
 
     if (this._newDescription) {
-      annos.setItemAnnotationString(this.id, this.DESCRIPTION_ANNO,
-                                    this._newDescription, 0,
-                                    this.nsIAnnotationService.EXPIRE_NEVER);
+      annos.setItemAnnotation(this.id, this.DESCRIPTION_ANNO,
+                              this._newDescription, 0,
+                              this.nsIAnnotationService.EXPIRE_NEVER);
     }
     else if (this._oldDescription)
       annos.removeItemAnnotation(this.id, this.DESCRIPTION_ANNO);
@@ -2091,9 +2091,9 @@ PlacesEditItemDescriptionTransaction.prototype = {
     const annos = this.utils.annotations;
 
     if (this._oldDescription) {
-      annos.setItemAnnotationString(this.id, this.DESCRIPTION_ANNO,
-                                    this._oldDescription, 0,
-                                    this.nsIAnnotationService.EXPIRE_NEVER);
+      annos.setItemAnnotation(this.id, this.DESCRIPTION_ANNO,
+                              this._oldDescription, 0,
+                              this.nsIAnnotationService.EXPIRE_NEVER);
     }
     else if (annos.itemHasAnnotation(this.id, this.DESCRIPTION_ANNO))
       annos.removeItemAnnotation(this.id, this.DESCRIPTION_ANNO);

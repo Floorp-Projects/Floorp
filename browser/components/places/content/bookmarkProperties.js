@@ -315,8 +315,8 @@ var BookmarkPropertiesPanel = {
       // XXXmano: unify the two id fields
       var itemId = dialogInfo.type == "bookmark" ? this._bookmarkId : this._folderId;
       if (annos.itemHasAnnotation(itemId, DESCRIPTION_ANNO)) {
-        this._itemDescription = annos.getItemAnnotationString(itemId,
-                                                              DESCRIPTION_ANNO);
+        this._itemDescription = annos.getItemAnnotation(itemId,
+                                                        DESCRIPTION_ANNO);
       }
     }
   },
@@ -412,7 +412,7 @@ var BookmarkPropertiesPanel = {
      */
     var folders = [];
     for (var i=0; i < folderIds.length; i++) {
-      var lastUsed = annos.getItemAnnotationInt64(folderIds[i], LAST_USED_ANNO);
+      var lastUsed = annos.getItemAnnotation(folderIds[i], LAST_USED_ANNO);
       folders.push({ folderId: folderIds[i], lastUsed: lastUsed });
     }
     folders.sort(function(a, b) {
@@ -1118,9 +1118,9 @@ var BookmarkPropertiesPanel = {
     // We'll figure out when/if to expire the annotation if it turns out
     // we keep this recently-used-folders implementation
     PlacesUtils.annotations
-               .setItemAnnotationInt64(aFolderId, LAST_USED_ANNO,
-                                       new Date().getTime(), 0,
-                                       Ci.nsIAnnotationService.EXPIRE_NEVER);
+               .setItemAnnotation(aFolderId, LAST_USED_ANNO,
+                                  new Date().getTime(), 0,
+                                  Ci.nsIAnnotationService.EXPIRE_NEVER);
   },
 
   newFolder: function BPP_newFolder() {

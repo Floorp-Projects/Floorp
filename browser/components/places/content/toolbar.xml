@@ -168,7 +168,7 @@
             // service provides no mechanism for doing so.
             for (var i = 0; i < bookmarks.length; i++) {
               this.__generatedTitles[bookmarks[i]] =
-                annotations.getItemAnnotationString(bookmarks[i], "bookmarks/generatedTitle");
+                annotations.getItemAnnotation(bookmarks[i], "bookmarks/generatedTitle");
             }
           }
           
@@ -252,7 +252,7 @@
               var siteURIString;
               try {
                 siteURIString = 
-                  PlacesUtils.annotations.getItemAnnotationString(folder, "livemark/siteURI");
+                  PlacesUtils.annotations.getItemAnnotation(folder, "livemark/siteURI");
               }
               catch (ex) {}
               // end duplication
@@ -913,7 +913,7 @@
           NS_ASSERT(aAnnoName == "bookmarks/generatedTitle",
                     "annotation " + aAnnoName + ", is not 'bookmarks/generatedTitle'");
           var newTitle =
-            PlacesUtils.annotations.getItemAnnotationString(aItemId, aAnnoName);
+            PlacesUtils.annotations.getItemAnnotation(aItemId, aAnnoName);
           this._self._generatedTitles[aItemId] = newTitle;
           this._doRebuild();
         },
