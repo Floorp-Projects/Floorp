@@ -467,7 +467,8 @@ nsThread::ProcessNextEvent(PRBool mayWait, PRBool *result)
 
   NS_ENSURE_STATE(PR_GetCurrentThread() == mThread);
 
-  if (sGlobalObserver) 
+  PRBool notifyGlobalObserver = (sGlobalObserver != nsnull);
+  if (notifyGlobalObserver) 
     sGlobalObserver->OnProcessNextEvent(this, mayWait && !ShuttingDown(),
                                         mRunningEvent);
 
@@ -496,7 +497,7 @@ nsThread::ProcessNextEvent(PRBool mayWait, PRBool *result)
   if (obs)
     obs->AfterProcessNextEvent(this, mRunningEvent);
 
-  if (sGlobalObserver)
+  if (notifyGlobalObserver && sGlobalObserver)
     sGlobalObserver->AfterProcessNextEvent(this, mRunningEvent);
 
   return rv;
