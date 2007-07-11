@@ -389,12 +389,13 @@ nsresult
 nsXULTooltipListener::ShowTooltip()
 {
   // get the tooltip content designated for the target node 
-  GetTooltipFor(mSourceNode, getter_AddRefs(mCurrentTooltip));
-  if (!mCurrentTooltip || mSourceNode == mCurrentTooltip)
+  nsCOMPtr<nsIContent> tooltipNode;
+  GetTooltipFor(mSourceNode, getter_AddRefs(tooltipNode));
+  if (!tooltipNode || mSourceNode == tooltipNode)
     return NS_ERROR_FAILURE; // the target node doesn't need a tooltip
 
   // set the node in the document that triggered the tooltip and show it
-  nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(mCurrentTooltip->GetDocument()));
+  nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(tooltipNode->GetDocument()));
   if (xulDoc) {
     // Make sure the target node is still attached to some document. 
     // It might have been deleted.
@@ -407,8 +408,11 @@ nsXULTooltipListener::ShowTooltip()
 #endif
 
       xulDoc->SetTooltipNode(mTargetNode);
+      mCurrentTooltip = tooltipNode;
       LaunchTooltip();
       mTargetNode = nsnull;
+      if (!mCurrentTooltip)
+        return NS_OK;
 
       // at this point, |mCurrentTooltip| holds the content node of
       // the tooltip. If there is an attribute on the popup telling us
@@ -506,8 +510,12 @@ nsXULTooltipListener::LaunchTooltip()
 #endif
 
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  if (pm)
+  if (pm) {
     pm->ShowPopupAtScreen(mCurrentTooltip, mMouseClientX, mMouseClientY, PR_FALSE);
+    // Clear the current tooltip if the popup was not opened successfully.
+    if (!pm->IsPopupOpen(mCurrentTooltip))
+      mCurrentTooltip = nsnull;
+  }
 }
 
 nsresult
