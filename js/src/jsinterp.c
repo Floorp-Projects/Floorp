@@ -1305,6 +1305,10 @@ have_fun:
         /* If native, use caller varobj and scopeChain for eval. */
         frame.varobj = fp->varobj;
         frame.scopeChain = fp->scopeChain;
+
+        /* But ensure that we have a scope chain. */
+        if (!frame.scopeChain)
+            frame.scopeChain = parent;
         ok = native(cx, frame.thisp, argc, frame.argv, &frame.rval);
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
 #ifdef DEBUG_NOT_THROWING
