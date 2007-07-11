@@ -689,15 +689,34 @@ class nsLineList_iterator {
 
     // Passing by value rather than by reference and reference to const
     // to keep AIX happy.
-    // XXX Should add assertions that |mListLink| is the same for both.
     PRBool operator==(const iterator_self_type aOther) const
-        { return mCurrent == aOther.mCurrent; }
+    {
+#ifdef NS_LINELIST_DEBUG_PASS_END
+      NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
+#endif
+      return mCurrent == aOther.mCurrent;
+    }
     PRBool operator!=(const iterator_self_type aOther) const
-        { return mCurrent != aOther.mCurrent; }
+    {
+#ifdef NS_LINELIST_DEBUG_PASS_END
+      NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
+#endif
+      return mCurrent != aOther.mCurrent;
+    }
     PRBool operator==(const iterator_self_type aOther)
-        { return mCurrent == aOther.mCurrent; }
+    {
+#ifdef NS_LINELIST_DEBUG_PASS_END
+      NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
+#endif
+      return mCurrent == aOther.mCurrent;
+    }
     PRBool operator!=(const iterator_self_type aOther)
-        { return mCurrent != aOther.mCurrent; }
+    {
+#ifdef NS_LINELIST_DEBUG_PASS_END
+      NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
+#endif
+      return mCurrent != aOther.mCurrent;
+    }
 
   private:
     link_type *mCurrent;
