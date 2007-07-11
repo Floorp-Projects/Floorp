@@ -300,10 +300,10 @@ _class::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr)        \
                          (void *p,                                          \
                           nsCycleCollectionTraversalCallback &cb)           \
   {                                                                         \
-    nsISupports *s = static_cast<nsISupports*>(p);                       \
+    nsISupports *s = static_cast<nsISupports*>(p);                          \
     NS_ASSERTION(CheckForRightISupports(s),                                 \
                  "not the nsISupports pointer we expect");                  \
-    _class *tmp = static_cast<_class*>(Downcast(s));                     \
+    _class *tmp = static_cast<_class*>(Downcast(s));                        \
     if (!tmp->IsPartOfAggregated())                                         \
         NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class)
 

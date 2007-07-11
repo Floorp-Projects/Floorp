@@ -184,7 +184,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCOMCycleCollectionParticipant,
   NS_IMETHODIMP                                                                \
   NS_CYCLE_COLLECTION_CLASSNAME(_class)::Unlink(void *p)                       \
   {                                                                            \
-    nsISupports *s = static_cast<nsISupports*>(p);                          \
+    nsISupports *s = static_cast<nsISupports*>(p);                             \
     NS_ASSERTION(CheckForRightISupports(s),                                    \
                  "not the nsISupports pointer we expect");                     \
     _class *tmp = Downcast(s);
@@ -193,10 +193,10 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCOMCycleCollectionParticipant,
   NS_IMETHODIMP                                                                \
   NS_CYCLE_COLLECTION_CLASSNAME(_class)::Unlink(void *p)                       \
   {                                                                            \
-    nsISupports *s = static_cast<nsISupports*>(p);                          \
+    nsISupports *s = static_cast<nsISupports*>(p);                             \
     NS_ASSERTION(CheckForRightISupports(s),                                    \
                  "not the nsISupports pointer we expect");                     \
-    _class *tmp = static_cast<_class*>(Downcast(s));                        \
+    _class *tmp = static_cast<_class*>(Downcast(s));                           \
     NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::Unlink(s);
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(_class)                   \
@@ -222,7 +222,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCOMCycleCollectionParticipant,
   NS_IMETHODIMP                                                                \
   NS_CYCLE_COLLECTION_CLASSNAME(_class)::Unlink(void *p)                       \
   {                                                                            \
-    NS_ASSERTION(CheckForRightISupports(static_cast<nsISupports*>(p)),      \
+    NS_ASSERTION(CheckForRightISupports(static_cast<nsISupports*>(p)),         \
                  "not the nsISupports pointer we expect");                     \
     return NS_OK;                                                              \
   }
@@ -253,7 +253,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCOMCycleCollectionParticipant,
                          (void *p,                                             \
                           nsCycleCollectionTraversalCallback &cb)              \
   {                                                                            \
-    nsISupports *s = static_cast<nsISupports*>(p);                          \
+    nsISupports *s = static_cast<nsISupports*>(p);                             \
     NS_ASSERTION(CheckForRightISupports(s),                                    \
                  "not the nsISupports pointer we expect");                     \
     _class *tmp = Downcast(s);                                                 \
@@ -265,10 +265,10 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCOMCycleCollectionParticipant,
                          (void *p,                                             \
                           nsCycleCollectionTraversalCallback &cb)              \
   {                                                                            \
-    nsISupports *s = static_cast<nsISupports*>(p);                          \
+    nsISupports *s = static_cast<nsISupports*>(p);                             \
     NS_ASSERTION(CheckForRightISupports(s),                                    \
                  "not the nsISupports pointer we expect");                     \
-    _class *tmp = static_cast<_class*>(Downcast(s));                        \
+    _class *tmp = static_cast<_class*>(Downcast(s));                           \
     NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::Traverse(s, cb);
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(_class)                 \
@@ -277,7 +277,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCOMCycleCollectionParticipant,
                          (void *p,                                             \
                           nsCycleCollectionTraversalCallback &cb)              \
   {                                                                            \
-    _class *tmp = static_cast<_class*>(p);                                  \
+    _class *tmp = static_cast<_class*>(p);                                     \
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(_field)                       \
@@ -336,7 +336,7 @@ public:                                                                        \
   }                                                                            \
   static _class* Downcast(nsISupports* s)                                      \
   {                                                                            \
-    return static_cast<_class*>(static_cast<_base*>(s));                 \
+    return static_cast<_class*>(static_cast<_base*>(s));                       \
   }                                                                            \
   static nsISupports* Upcast(_class *p)                                        \
   {                                                                            \
@@ -357,7 +357,7 @@ public:                                                                        \
                       nsCycleCollectionTraversalCallback &cb);                 \
   static _class* Downcast(nsISupports* s)                                      \
   {                                                                            \
-    return static_cast<_class*>(static_cast<_base_class*>(\
+    return static_cast<_class*>(static_cast<_base_class*>(                     \
       NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::Downcast(s)));               \
   }                                                                            \
 };
@@ -372,7 +372,7 @@ public:                                                                        \
                       nsCycleCollectionTraversalCallback &cb);                 \
   static _class* Downcast(nsISupports* s)                                      \
   {                                                                            \
-    return static_cast<_class*>(static_cast<_base_class*>(\
+    return static_cast<_class*>(static_cast<_base_class*>(                     \
       NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::Downcast(s)));               \
   }                                                                            \
 };
@@ -419,7 +419,7 @@ public:                                                                        \
   NS_IMETHODIMP                                                                \
   NS_CYCLE_COLLECTION_CLASSNAME(_class)::Root(void *p)                         \
   {                                                                            \
-    _class *tmp = static_cast<_class*>(p);                                  \
+    _class *tmp = static_cast<_class*>(p);                                     \
     tmp->_root_function();                                                     \
     return NS_OK;                                                              \
   }
@@ -428,7 +428,7 @@ public:                                                                        \
   NS_IMETHODIMP                                                                \
   NS_CYCLE_COLLECTION_CLASSNAME(_class)::Unroot(void *p)                       \
   {                                                                            \
-    _class *tmp = static_cast<_class*>(p);                                  \
+    _class *tmp = static_cast<_class*>(p);                                     \
     tmp->_unroot_function();                                                   \
     return NS_OK;                                                              \
   }

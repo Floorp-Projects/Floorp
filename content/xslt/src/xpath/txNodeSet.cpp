@@ -48,12 +48,12 @@
 #ifdef NS_BUILD_REFCNT_LOGGING
 #define LOG_CHUNK_MOVE(_start, _new_start, _count)            \
 {                                                             \
-    txXPathNode *start = const_cast<txXPathNode*>(_start); \
+    txXPathNode *start = const_cast<txXPathNode*>(_start);    \
     while (start < _start + _count) {                         \
         NS_LogDtor(start, "txXPathNode", sizeof(*start));     \
         ++start;                                              \
     }                                                         \
-    start = const_cast<txXPathNode*>(_new_start);          \
+    start = const_cast<txXPathNode*>(_new_start);             \
     while (start < _new_start + _count) {                     \
         NS_LogCtor(start, "txXPathNode", sizeof(*start));     \
         ++start;                                              \

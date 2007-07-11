@@ -42,7 +42,7 @@
   // convert fragment to |const string_base_type&|
 #define TO_SUBSTRING(_v)                                        \
     ( (ptrdiff_t(_v) & 0x1)                                     \
-        ? reinterpret_cast<const abstract_string_type*>(\
+        ? reinterpret_cast<const abstract_string_type*>(        \
             ((unsigned long)_v & ~0x1))->ToSubstring()          \
         : *reinterpret_cast<const substring_type*>((_v)) )
 #endif
