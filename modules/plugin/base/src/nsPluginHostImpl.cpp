@@ -6355,6 +6355,7 @@ NS_IMETHODIMP nsPluginHostImpl::Observe(nsISupports *aSubject,
 {
   if (!nsCRT::strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic))
   {
+    OnShutdown();
     Destroy();
     UnloadUnusedLibraries();
     sInst->Release();
