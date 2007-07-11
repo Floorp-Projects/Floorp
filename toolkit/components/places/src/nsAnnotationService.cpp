@@ -324,6 +324,150 @@ nsAnnotationService::SetAnnotationStringInternal(PRInt64 aFkId,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsAnnotationService::SetPageAnnotation(nsIURI* aURI,
+                                       const nsACString& aName,
+                                       nsIVariant* aValue,
+                                       PRInt32 aFlags,
+                                       PRUint16 aExpiration)
+{
+  NS_ENSURE_ARG(aValue);
+
+  PRUint16 dataType;
+  nsresult rv = aValue->GetDataType(&dataType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  switch (dataType) {
+    case nsIDataType::VTYPE_INT8:
+    case nsIDataType::VTYPE_UINT8:
+    case nsIDataType::VTYPE_INT16:
+    case nsIDataType::VTYPE_UINT16:
+    case nsIDataType::VTYPE_INT32:
+    case nsIDataType::VTYPE_UINT32:
+    case nsIDataType::VTYPE_BOOL: {
+      PRInt32 valueInt;
+      rv = aValue->GetAsInt32(&valueInt);
+      if (NS_SUCCEEDED(rv)) {  // fall through PRInt64 case otherwise
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = SetPageAnnotationInt32(aURI, aName, valueInt, aFlags, aExpiration);
+        NS_ENSURE_SUCCESS(rv, rv);
+        return NS_OK;
+      }
+    }
+    case nsIDataType::VTYPE_INT64:
+    case nsIDataType::VTYPE_UINT64: {
+      PRInt64 valueLong;
+      rv = aValue->GetAsInt64(&valueLong);
+      if (NS_SUCCEEDED(rv)) {  // fall through double case otherwise
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = SetPageAnnotationInt64(aURI, aName, valueLong, aFlags, aExpiration);
+        NS_ENSURE_SUCCESS(rv, rv);
+        return NS_OK;
+      }
+    }
+    case nsIDataType::VTYPE_FLOAT:
+    case nsIDataType::VTYPE_DOUBLE: {
+      double valueDouble;
+      rv = aValue->GetAsDouble(&valueDouble);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = SetPageAnnotationDouble(aURI, aName, valueDouble, aFlags, aExpiration);
+      NS_ENSURE_SUCCESS(rv, rv);
+      return NS_OK;
+    }
+    case nsIDataType::VTYPE_CHAR:
+    case nsIDataType::VTYPE_WCHAR:
+    case nsIDataType::VTYPE_DOMSTRING:
+    case nsIDataType::VTYPE_CHAR_STR:
+    case nsIDataType::VTYPE_WCHAR_STR:
+    case nsIDataType::VTYPE_STRING_SIZE_IS:
+    case nsIDataType::VTYPE_WSTRING_SIZE_IS:
+    case nsIDataType::VTYPE_UTF8STRING:
+    case nsIDataType::VTYPE_CSTRING:
+    case nsIDataType::VTYPE_ASTRING: {
+      nsAutoString stringValue;
+      rv = aValue->GetAsAString(stringValue);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = SetPageAnnotationString(aURI, aName, stringValue, aFlags, aExpiration);
+      NS_ENSURE_SUCCESS(rv, rv);
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsAnnotationService::SetItemAnnotation(PRInt64 aItemId,
+                                       const nsACString& aName,
+                                       nsIVariant* aValue,
+                                       PRInt32 aFlags,
+                                       PRUint16 aExpiration)
+{
+  NS_ENSURE_ARG(aValue);
+
+  PRUint16 dataType;
+  nsresult rv = aValue->GetDataType(&dataType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  switch (dataType) {
+    case nsIDataType::VTYPE_INT8:
+    case nsIDataType::VTYPE_UINT8:
+    case nsIDataType::VTYPE_INT16:
+    case nsIDataType::VTYPE_UINT16:
+    case nsIDataType::VTYPE_INT32:
+    case nsIDataType::VTYPE_UINT32:
+    case nsIDataType::VTYPE_BOOL: {
+      PRInt32 valueInt;
+      rv = aValue->GetAsInt32(&valueInt);
+      if (NS_SUCCEEDED(rv)) {  // fall through PRInt64 case otherwise
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = SetItemAnnotationInt32(aItemId, aName, valueInt, aFlags, aExpiration);
+        NS_ENSURE_SUCCESS(rv, rv);
+        return NS_OK;
+      }
+    }
+    case nsIDataType::VTYPE_INT64:
+    case nsIDataType::VTYPE_UINT64: {
+      PRInt64 valueLong;
+      rv = aValue->GetAsInt64(&valueLong);
+      if (NS_SUCCEEDED(rv)) {  // fall through double case otherwise
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = SetItemAnnotationInt64(aItemId, aName, valueLong, aFlags, aExpiration);
+        NS_ENSURE_SUCCESS(rv, rv);
+        return NS_OK;
+      }
+    }
+    case nsIDataType::VTYPE_FLOAT:
+    case nsIDataType::VTYPE_DOUBLE: {
+      double valueDouble;
+      rv = aValue->GetAsDouble(&valueDouble);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = SetItemAnnotationDouble(aItemId, aName, valueDouble, aFlags, aExpiration);
+      NS_ENSURE_SUCCESS(rv, rv);
+      return NS_OK;
+    }
+    case nsIDataType::VTYPE_CHAR:
+    case nsIDataType::VTYPE_WCHAR:
+    case nsIDataType::VTYPE_DOMSTRING:
+    case nsIDataType::VTYPE_CHAR_STR:
+    case nsIDataType::VTYPE_WCHAR_STR:
+    case nsIDataType::VTYPE_STRING_SIZE_IS:
+    case nsIDataType::VTYPE_WSTRING_SIZE_IS:
+    case nsIDataType::VTYPE_UTF8STRING:
+    case nsIDataType::VTYPE_CSTRING:
+    case nsIDataType::VTYPE_ASTRING: {
+      nsAutoString stringValue;
+      rv = aValue->GetAsAString(stringValue);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = SetItemAnnotationString(aItemId, aName, stringValue, aFlags, aExpiration);
+      NS_ENSURE_SUCCESS(rv, rv);
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 // nsAnnotationService::SetPageAnnotationString
 
 NS_IMETHODIMP
@@ -704,6 +848,92 @@ nsAnnotationService::GetItemAnnotationString(PRInt64 aItemId,
 }
 
 
+NS_IMETHODIMP
+nsAnnotationService::GetPageAnnotation(nsIURI* aURI,
+                                       const nsACString& aName,
+                                       nsIVariant** _retval)
+{
+  *_retval = nsnull;
+  nsresult rv = StartGetAnnotationFromURI(aURI, aName);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIWritableVariant> value = new nsVariant();
+  PRInt32 type = mDBGetAnnotationFromURI->AsInt32(kAnnoIndex_Type);
+  switch (type) {
+    case nsIAnnotationService::TYPE_INT32:
+    case nsIAnnotationService::TYPE_INT64:
+    case nsIAnnotationService::TYPE_DOUBLE: {
+      rv = value->SetAsDouble(mDBGetAnnotationFromURI->AsDouble(kAnnoIndex_Content));
+      break;
+    }
+    case nsIAnnotationService::TYPE_STRING: {
+      nsAutoString valueString;
+      rv = mDBGetAnnotationFromURI->GetString(kAnnoIndex_Content, valueString);
+      if (NS_SUCCEEDED(rv))
+        rv = value->SetAsAString(valueString);
+      break;
+    }
+    case nsIAnnotationService::TYPE_BINARY: {
+      rv = NS_ERROR_INVALID_ARG;
+      break;
+    }
+    default: {
+      rv = NS_ERROR_UNEXPECTED;
+      break;
+    }
+  }
+
+  if (NS_SUCCEEDED(rv))
+    NS_ADDREF(*_retval = value);
+
+  mDBGetAnnotationFromURI->Reset();
+  return rv;
+}
+
+NS_IMETHODIMP
+nsAnnotationService::GetItemAnnotation(PRInt64 aItemId,
+                                       const nsACString& aName,
+                                       nsIVariant** _retval)
+{
+  *_retval = nsnull;
+  nsresult rv = StartGetAnnotationFromItemId(aItemId, aName);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIWritableVariant> value = new nsVariant();
+  PRInt32 type = mDBGetAnnotationFromItemId->AsInt32(kAnnoIndex_Type);
+  switch (type) {
+    case nsIAnnotationService::TYPE_INT32:
+    case nsIAnnotationService::TYPE_INT64:
+    case nsIAnnotationService::TYPE_DOUBLE: {
+      rv = value->SetAsDouble(mDBGetAnnotationFromItemId->AsDouble(kAnnoIndex_Content));
+      break;
+    }
+    case nsIAnnotationService::TYPE_STRING: {
+      nsAutoString valueString;
+      rv = mDBGetAnnotationFromItemId->GetString(kAnnoIndex_Content, valueString);
+      if (NS_SUCCEEDED(rv))
+        rv = value->SetAsAString(valueString);
+      break;
+    }
+    case nsIAnnotationService::TYPE_BINARY: {
+      rv = NS_ERROR_INVALID_ARG;
+      break;
+    }
+    default: {
+      rv = NS_ERROR_UNEXPECTED;
+      break;
+    }
+  }
+
+  if (NS_SUCCEEDED(rv))
+    NS_ADDREF(*_retval = value);
+
+  mDBGetAnnotationFromItemId->Reset();
+  return rv;
+}
+
 // nsAnnotationService::GetPageAnnotationInt32
 
 NS_IMETHODIMP
@@ -1083,7 +1313,7 @@ nsAnnotationService::GetPageAnnotationNames(nsIURI* aURI, PRUint32* aCount,
   NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
 
   for (PRUint32 i = 0; i < names.Length(); i ++) {
-    nsCOMPtr<nsIWritableVariant> var = new nsVariant;
+    nsCOMPtr<nsIWritableVariant> var = new nsVariant();
     if (! var) {
       // need to release all the variants we've already created
       for (PRUint32 j = 0; j < i; j ++)
@@ -1149,7 +1379,7 @@ nsAnnotationService::GetItemAnnotationNames(PRInt64 aItemId, PRUint32* aCount,
   NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
 
   for (PRUint32 i = 0; i < names.Length(); i ++) {
-    nsCOMPtr<nsIWritableVariant> var = new nsVariant;
+    nsCOMPtr<nsIWritableVariant> var = new nsVariant();
     if (! var) {
       // need to release all the variants we've already created
       for (PRUint32 j = 0; j < i; j ++)

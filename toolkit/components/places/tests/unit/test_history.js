@@ -138,8 +138,8 @@ function run_test() {
   // test annotation-based queries
   var annos = Cc["@mozilla.org/browser/annotation-service;1"].
               getService(Ci.nsIAnnotationService);
-  annos.setPageAnnotationInt32(uri("http://mozilla.com/"), "testAnno", 0, 0,
-                               Ci.nsIAnnotationService.EXPIRE_NEVER);
+  annos.setPageAnnotation(uri("http://mozilla.com/"), "testAnno", 0, 0,
+                          Ci.nsIAnnotationService.EXPIRE_NEVER);
   query.annotation = "testAnno";
   result = histsvc.executeQuery(query, options);
   result.root.containerOpen = true;

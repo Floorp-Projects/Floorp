@@ -725,43 +725,15 @@ MicrosummaryService.prototype = {
   },
 
   _getField: function MSS__getField(aBookmarkId, aFieldName) {
-    var fieldValue;
-
-    switch(aFieldName) {
-    case FIELD_MICSUM_EXPIRATION:
-      fieldValue = this._ans.getItemAnnotationInt64(aBookmarkId, aFieldName);
-      break;
-    case FIELD_MICSUM_GEN_URI:
-    case FIELD_GENERATED_TITLE:
-    case FIELD_CONTENT_TYPE:
-    default:
-      fieldValue = this._ans.getItemAnnotationString(aBookmarkId, aFieldName);
-      break;
-    }
-    
-    return fieldValue;
+    return this._ans.getItemAnnotation(aBookmarkId, aFieldName);
   },
 
   _setField: function MSS__setField(aBookmarkId, aFieldName, aFieldValue) {
-    switch(aFieldName) {
-    case FIELD_MICSUM_EXPIRATION:
-      this._ans.setItemAnnotationInt64(aBookmarkId,
-                                       aFieldName,
-                                       aFieldValue,
-                                       0,
-                                       this._ans.EXPIRE_NEVER);
-      break;
-    case FIELD_MICSUM_GEN_URI:
-    case FIELD_GENERATED_TITLE:
-    case FIELD_CONTENT_TYPE:
-    default:
-      this._ans.setItemAnnotationString(aBookmarkId,
-                                        aFieldName,
-                                        aFieldValue,
-                                        0,
-                                        this._ans.EXPIRE_NEVER);
-      break;
-    }
+    this._ans.setItemAnnotation(aBookmarkId,
+                                aFieldName,
+                                aFieldValue,
+                                0,
+                                this._ans.EXPIRE_NEVER);
   },
 
   _clearField: function MSS__clearField(aBookmarkId, aFieldName) {
