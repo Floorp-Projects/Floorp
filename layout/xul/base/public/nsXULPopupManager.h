@@ -460,6 +460,11 @@ public:
   void ExecuteMenu(nsIContent* aMenu, nsEvent* aEvent);
 
   /**
+   * Return true if the popup for the supplied content node is open.
+   */
+  PRBool IsPopupOpen(nsIContent* aPopup);
+
+  /**
    * Return true if the popup for the supplied menu parent is open.
    */
   PRBool IsPopupOpenForMenuParent(nsIMenuParent* aMenuParent);
