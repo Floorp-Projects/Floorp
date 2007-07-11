@@ -78,10 +78,12 @@
               commandupdater="true"
               oncommandupdate="gDownloadViewController.onCommandUpdate();">
     <command id="cmd_cleanUp" oncommand="gDownloadViewController.doCommand('cmd_cleanUp');"/>
+    <command id="cmd_remove"  oncommand="gDownloadViewController.doCommand('cmd_remove');"/>
   </commandset>
     
   <keyset id="downloadKeys">
     <key id="key_cleanUp" keycode="VK_DELETE" command="cmd_cleanUp" modifiers="accel,shift"/>
+    <key id="key_remove"  keycode="VK_DELETE" command="cmd_remove"/>
     <key id="key_close"   key="&cmd.close.commandKey;"  oncommand="closeWindow(true);"    modifiers="accel"/>
 #ifdef XP_GNOME
     <key id="key_close2"  key="&cmd.close2Unix.commandKey;" oncommand="closeWindow(true);" modifiers="accel"/>
