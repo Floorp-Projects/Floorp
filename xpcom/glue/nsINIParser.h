@@ -43,6 +43,10 @@
 #ifndef nsINIParser_h__
 #define nsINIParser_h__
 
+#ifdef MOZILLA_INTERNAL_API
+#define nsINIParser nsINIParser_internal
+#endif
+
 #include "nscore.h"
 #include "nsClassHashtable.h"
 #include "nsAutoPtr.h"
