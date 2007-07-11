@@ -3626,6 +3626,10 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     }
   }
 
+  if (aNotify) {
+    nsNodeUtils::AttributeChanged(this, aNamespaceID, aName, modType);
+  }
+  
   if (aFireMutation) {
     nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
 
@@ -3651,10 +3655,6 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     nsEventDispatcher::Dispatch(this, nsnull, &mutation);
   }
 
-  if (aNotify) {
-    nsNodeUtils::AttributeChanged(this, aNamespaceID, aName, modType);
-  }
-  
   if (aNamespaceID == kNameSpaceID_XMLEvents && 
       aName == nsGkAtoms::event && mNodeInfo->GetDocument()) {
     mNodeInfo->GetDocument()->AddXMLEventsContent(this);
