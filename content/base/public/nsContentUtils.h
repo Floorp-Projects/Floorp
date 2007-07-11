@@ -1205,7 +1205,7 @@ private:
 
 #define NS_INTERFACE_MAP_ENTRY_TEAROFF(_interface, _allocator)                \
   if (aIID.Equals(NS_GET_IID(_interface))) {                                  \
-    foundInterface = static_cast<_interface *>(_allocator);                \
+    foundInterface = static_cast<_interface *>(_allocator);                   \
     if (!foundInterface) {                                                    \
       *aInstancePtr = nsnull;                                                 \
       return NS_ERROR_OUT_OF_MEMORY;                                          \

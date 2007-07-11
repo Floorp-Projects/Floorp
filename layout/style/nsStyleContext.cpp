@@ -268,7 +268,7 @@ nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
 #define UNIQUE_CASE(c_)                                                       \
   case eStyleStruct_##c_:                                                     \
     result = new (presContext) nsStyle##c_(                                   \
-      * static_cast<const nsStyle##c_ *>(current));                        \
+      * static_cast<const nsStyle##c_ *>(current));                           \
     break;
 
   UNIQUE_CASE(Display)
@@ -437,7 +437,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
     NS_ASSERTION(NS_IsHintSubset(nsStyle##struct_::MaxDifference(), maxHint), \
                  "Struct placed in the wrong maxHint section");               \
     const nsStyle##struct_* this##struct_ =                                   \
-        static_cast<const nsStyle##struct_*>(\
+        static_cast<const nsStyle##struct_*>(                                 \
                        PeekStyleData(eStyleStruct_##struct_));                \
     if (this##struct_) {                                                      \
       const nsStyle##struct_* other##struct_ = aOther->GetStyle##struct_();   \

@@ -173,23 +173,23 @@ public:
 
 #define LOG_SCOPE(l, s) \
   LogScope LOG_SCOPE_TMP_VAR ##__LINE__ (l,                            \
-                                         static_cast<void *>(this), \
+                                         static_cast<void *>(this),    \
                                          NS_LITERAL_CSTRING(s))
 
 #define LOG_SCOPE_WITH_PARAM(l, s, pn, pv) \
   LogScope LOG_SCOPE_TMP_VAR ##__LINE__ (l,                            \
-                                         static_cast<void *>(this), \
+                                         static_cast<void *>(this),    \
                                          NS_LITERAL_CSTRING(s),        \
                                          NS_LITERAL_CSTRING(pn), pv)
 
 #define LOG_FUNC(l, s)                  \
   LogFunc(l,                            \
-          static_cast<void *>(this), \
+          static_cast<void *>(this),    \
           NS_LITERAL_CSTRING(s))
 
 #define LOG_FUNC_WITH_PARAM(l, s, pn, pv) \
   LogFunc(l,                              \
-          static_cast<void *>(this),   \
+          static_cast<void *>(this),      \
           NS_LITERAL_CSTRING(s),          \
           NS_LITERAL_CSTRING(pn), pv)
 
@@ -208,7 +208,7 @@ public:
 
 #define LOG_MSG(l, s, m)                   \
   LogMessage(l,                            \
-             static_cast<void *>(this), \
+             static_cast<void *>(this),    \
              NS_LITERAL_CSTRING(s),        \
              NS_LITERAL_CSTRING(m))
 
