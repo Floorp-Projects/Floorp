@@ -650,8 +650,17 @@ BookmarkContentSink::HandleContainerEnd()
   BookmarkImportFrame& frame = CurFrame();
   if (frame.mContainerNesting > 0)
     frame.mContainerNesting --;
-  if (mFrames.Length() > 1 && frame.mContainerNesting == 0)
+  if (mFrames.Length() > 1 && frame.mContainerNesting == 0) {
+    // we also need to re-set the imported last-modified date here. Otherwise
+    // the addition of items will override the imported field.
+    BookmarkImportFrame& prevFrame = PreviousFrame();
+    if (prevFrame.mPreviousLastModifiedDate > 0) {
+      nsresult rv = mBookmarksService->SetItemLastModified(frame.mContainerID,
+                                                           prevFrame.mPreviousLastModifiedDate);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "SetItemLastModified failed");
+    }
     PopFrame();
+  }
 }
 
 
