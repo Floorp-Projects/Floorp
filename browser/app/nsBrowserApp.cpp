@@ -57,7 +57,7 @@ static void Output(const char *fmt, ... )
 #if defined(XP_WIN) && !MOZ_WINCONSOLE
   char msg[2048];
 
-  vsnprintf(msg, sizeof(msg), fmt, ap);
+  _vsnprintf(msg, sizeof(msg), fmt, ap);
 
   MessageBox(NULL, msg, "XULRunner", MB_OK | MB_ICONERROR);
 #else
