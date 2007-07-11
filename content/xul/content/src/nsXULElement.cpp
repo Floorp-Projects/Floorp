@@ -1297,6 +1297,18 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
         }
     }
 
+    if (doc) {
+        nsXBLBinding *binding = doc->BindingManager()->GetBinding(this);
+        if (binding)
+            binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE, aNotify);
+
+    }
+
+    if (aNotify) {
+        nsNodeUtils::AttributeChanged(this, aNameSpaceID, aName,
+                                      nsIDOMMutationEvent::REMOVAL);
+    }
+
     if (hasMutationListeners) {
         nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
 
@@ -1310,18 +1322,6 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
         mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
         nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
                                     nsnull, &mutation);
-    }
-
-    if (doc) {
-        nsXBLBinding *binding = doc->BindingManager()->GetBinding(this);
-        if (binding)
-            binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE, aNotify);
-
-    }
-
-    if (aNotify) {
-        nsNodeUtils::AttributeChanged(this, aNameSpaceID, aName,
-                                      nsIDOMMutationEvent::REMOVAL);
     }
 
     return NS_OK;
