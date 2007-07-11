@@ -21,6 +21,7 @@
    -
    - Contributor(s):
    - Vasiliy Potapenko <vasiliy.potapenko@gmail.com>
+   - Marek Stępień <marcoos@aviary.pl> (Polish localization)
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,9 +37,9 @@
    -
 #endif
    - ***** END LICENSE BLOCK ***** -->
-<!ENTITY descRole.label "Role:">
-<!ENTITY descName.label "Name:">
-<!ENTITY descDescription.label "Description:">
-<!ENTITY descValue.label "Value:">
-<!ENTITY descState.label "State:">
-<!ENTITY descActionName.label "Action Name:">
+<!ENTITY descRole.label "Rola:">
+<!ENTITY descName.label "Nazwa:">
+<!ENTITY descDescription.label "Opis:">
+<!ENTITY descValue.label "Wartość:">
+<!ENTITY descState.label "Stan:">
+<!ENTITY descActionName.label "Nazwa czynności:">
