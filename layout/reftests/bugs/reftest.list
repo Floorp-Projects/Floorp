@@ -100,6 +100,8 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 28811-2a.html 28811-2-ref.html # bug 38
 == 306660-1.html 306660-1-ref.html
 == 306660-2.html 306660-2-ref.html
 == 306660-3.html 306660-3-ref.html
+== 311822-1.html 311822-1-ref-a.html
+== 311822-1.html 311822-1-ref-b.html
 == 315620-1a.html 315620-1-ref.html
 != 315620-1b.html 315620-1-ref.html
 == 315620-2a.xhtml 315620-2-ref.xhtml
