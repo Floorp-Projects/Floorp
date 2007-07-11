@@ -1043,6 +1043,16 @@ nsXULPopupManager::KillMenuTimer()
   mTimerMenu = nsnull;
 }
 
+void
+nsXULPopupManager::CancelMenuTimer(nsIMenuParent* aMenuParent)
+{
+  if (mCloseTimer && mTimerMenu == aMenuParent) {
+    mCloseTimer->Cancel();
+    mCloseTimer = nsnull;
+    mTimerMenu = nsnull;
+  }
+}
+
 PRBool
 nsXULPopupManager::HandleShortcutNavigation(nsIDOMKeyEvent* aKeyEvent)
 {
