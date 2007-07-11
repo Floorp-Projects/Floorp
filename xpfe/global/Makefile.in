@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= resources
 
-CHROME_DEPS	= build.dtd buildconfig.html
+CHROME_DEPS	= buildconfig.html
 
 include $(topsrcdir)/config/rules.mk
 
@@ -59,12 +59,6 @@ else
 CHROME_PLATFORM = unix
 endif
 endif
-
-GARBAGE		+= build.dtd
-
-build.dtd: build.dtd.in $(DEPTH)/config/build_number
-	@$(RM) -f $@
-	$(PERL) -I$(topsrcdir)/config $(topsrcdir)/config/aboutime.pl $@ $(DEPTH)/config/build_number $(srcdir)/build.dtd.in
 
 libs realchrome::
 	@$(REGCHROME) locale en-US/global-platform/$(CHROME_PLATFORM) en-US.jar
