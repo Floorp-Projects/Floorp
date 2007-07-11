@@ -106,9 +106,9 @@ function test_handler_abort()
     while(stmt.executeStep());
     do_throw("We shouldn't get here!");
   } catch (e) {
-    do_check_eq(Cr.NS_ERROR_FAILURE, e.result);
+    do_check_eq(Cr.NS_ERROR_ABORT, e.result);
     // Magic value: callback abort
-    do_check_eq(msc.lastError, 4);
+    //do_check_eq(msc.lastError, 4); XXX see Bug 387609
   }
 }
 
