@@ -681,8 +681,13 @@ main(PRInt32 argc, char *argv[])
       SetACookie(cookieService, "http://httponly.test/", nsnull, "test=not-httponly", nsnull);
       GetACookieNoHttp(cookieService, "http://httponly.test/", getter_Copies(cookie));
       rv[7] = CheckResult(cookie.get(), MUST_EQUAL, "test=not-httponly");
+      // scripts should not be able to set httponly cookies by replacing an existing non-httponly cookie
+      SetACookie(cookieService, "http://httponly.test/", nsnull, "test=not-httponly", nsnull);
+      SetACookieNoHttp(cookieService, "http://httponly.test/", "test=httponly; httponly");
+      GetACookieNoHttp(cookieService, "http://httponly.test/", getter_Copies(cookie));
+      rv[8] = CheckResult(cookie.get(), MUST_EQUAL, "test=not-httponly");
 
-      allTestsPassed = PrintResult(rv, 8) && allTestsPassed;
+      allTestsPassed = PrintResult(rv, 9) && allTestsPassed;
 
 
       // *** nsICookieManager{2} interface tests
