@@ -711,6 +711,26 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
 }
 
 PRBool
+nsXULPopupManager::IsPopupOpen(nsIContent* aPopup)
+{
+  nsMenuChainItem* item = mCurrentMenu;
+  while (item) {
+    if (item->Content() == aPopup)
+      return PR_TRUE;
+    item = item->GetParent();
+  }
+
+  item = mPanels;
+  while (item) {
+    if (item->Content() == aPopup)
+      return PR_TRUE;
+    item = item->GetParent();
+  }
+
+  return PR_FALSE;
+}
+
+PRBool
 nsXULPopupManager::IsPopupOpenForMenuParent(nsIMenuParent* aMenuParent)
 {
   nsMenuChainItem* item = mCurrentMenu;
@@ -769,19 +789,8 @@ nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup)
   }
 
   // next, check if the popup is already open
-  nsMenuChainItem* item = mCurrentMenu;
-  while (item) {
-    if (item->Frame() == aPopup)
-      return PR_FALSE;
-    item = item->GetParent();
-  }
-
-  item = mPanels;
-  while (item) {
-    if (item->Frame() == aPopup)
-      return PR_FALSE;
-    item = item->GetParent();
-  }
+  if (IsPopupOpen(aPopup->GetContent()))
+    return PR_FALSE;
 
   // cannot open a popup that is a submenu of a menupopup that isn't open.
   nsIFrame* parent = aPopup->GetParent();
