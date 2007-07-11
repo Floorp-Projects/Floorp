@@ -618,12 +618,12 @@ nsPrincipal::GetHashValue(PRUint32* aValue)
 
   // If there is a certificate, it takes precendence over the codebase.
   if (mCert) {
-    *aValue = nsCRT::HashCode(mCert->fingerprint.get(), nsnull);
+    *aValue = nsCRT::HashCode(mCert->fingerprint.get());
   }
   else {
     nsCAutoString str;
     mCodebase->GetSpec(str);
-    *aValue = nsCRT::HashCode(str.get(), nsnull);
+    *aValue = nsCRT::HashCode(str.get());
   }
 
   return NS_OK;
