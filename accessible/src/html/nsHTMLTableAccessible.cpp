@@ -307,6 +307,135 @@ nsHTMLTableAccessible::GetRowHeader(nsIAccessibleTable **aRowHeader)
 }
 
 NS_IMETHODIMP
+nsHTMLTableAccessible::GetSelectedCellsCount(PRUint32* aCount)
+{
+  NS_ENSURE_ARG_POINTER(aCount);
+  *aCount = 0;
+
+  PRInt32 rowsCount = 0;
+  nsresult rv = GetRows(&rowsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 columnsCount = 0;
+  rv = GetColumns(&columnsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 rowIndex;
+  for (rowIndex = 0; rowIndex < rowsCount; rowIndex++) {
+    PRInt32 columnIndex;
+    for (columnIndex = 0; columnIndex < columnsCount; columnIndex++) {
+      PRBool state = PR_FALSE;
+      rv = IsCellSelected(rowIndex, columnIndex, &state);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (state)
+        (*aCount)++;
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLTableAccessible::GetSelectedColumnsCount(PRUint32* aCount)
+{
+  NS_ENSURE_ARG_POINTER(aCount);
+  *aCount = 0;
+
+  PRInt32 count = 0;
+  nsresult rv = GetColumns(&count);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 index;
+  for (index = 0; index < count; index++) {
+    PRBool state = PR_FALSE;
+    rv = IsColumnSelected(index, &state);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (state)
+      (*aCount)++;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLTableAccessible::GetSelectedRowsCount(PRUint32* aCount)
+{
+  NS_ENSURE_ARG_POINTER(aCount);
+  *aCount = 0;
+
+  PRInt32 count = 0;
+  nsresult rv = GetRows(&count);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 index;
+  for (index = 0; index < count; index++) {
+    PRBool state = PR_FALSE;
+    rv = IsRowSelected(index, &state);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (state)
+      (*aCount)++;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLTableAccessible::GetSelectedCells(PRUint32 *aNumCells,
+                                        PRInt32 **aCells)
+{
+  NS_ENSURE_ARG_POINTER(aNumCells);
+  *aNumCells = 0;
+  NS_ENSURE_ARG_POINTER(aCells);
+  *aCells = nsnull;
+
+  PRInt32 rowsCount = 0;
+  nsresult rv = GetRows(&rowsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 columnsCount = 0;
+  rv = GetColumns(&columnsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 cellsCount = columnsCount * rowsCount;
+  nsAutoArrayPtr<PRBool> states(new PRBool[cellsCount]);
+  NS_ENSURE_TRUE(states, NS_ERROR_OUT_OF_MEMORY);
+
+  PRInt32 rowIndex, index;
+  for (rowIndex = 0, index = 0; rowIndex < rowsCount; rowIndex++) {
+    PRInt32 columnIndex;
+    for (columnIndex = 0; columnIndex < columnsCount; columnIndex++, index++) {
+      rv = IsCellSelected(rowIndex, columnIndex, &states[index]);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (states[index])
+        (*aNumCells)++;
+    }
+  }
+
+  PRInt32 *cellsArray =
+    (PRInt32 *)nsMemory::Alloc((*aNumCells) * sizeof(PRInt32));
+  NS_ENSURE_TRUE(cellsArray, NS_ERROR_OUT_OF_MEMORY);
+
+  PRInt32 curr = 0;
+  for (rowIndex = 0, index = 0; rowIndex < rowsCount; rowIndex++) {
+    PRInt32 columnIndex;
+    for (columnIndex = 0; columnIndex < columnsCount; columnIndex++, index++) {
+      if (states[index]) {
+        PRInt32 cellIndex = -1;
+        GetIndexAt(rowIndex, columnIndex, &cellIndex);
+        cellsArray[curr++] = cellIndex;
+      }
+    }
+  }
+
+  *aCells = cellsArray;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTMLTableAccessible::GetSelectedColumns(PRUint32 *aNumColumns,
                                           PRInt32 **aColumns)
 {
