@@ -83,6 +83,7 @@ CSRCS		= \
 
 CPPSRCS		= \
 		$(XPCOM_GLUE_SRC_LCPPSRCS)   \
+		nsStringAPI.cpp              \
 		nsXPCOMGlue.cpp              \
 		$(LINKSRC)                   \
 		$(NULL)
@@ -119,7 +120,7 @@ OS_COMPILE_CFLAGS += -Zl
 DEFINES += -D_USE_ANSI_CPP
 endif
 
-export:: $(XPCOM_GLUE_SRC_CSRCS) $(XPCOM_GLUE_SRC_CPPSRCS)
+export:: $(XPCOM_GLUE_SRC_CSRCS) $(XPCOM_GLUE_SRC_CPPSRCS) $(topsrcdir)/xpcom/glue/nsStringAPI.cpp
 	$(INSTALL) $^ .
 
 DEFINES		+= -DXPCOM_GLUE
