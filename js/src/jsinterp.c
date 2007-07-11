@@ -4126,6 +4126,18 @@ interrupt:
             PUSH_OPND(rval);
           END_CASE(JSOP_UINT24)
 
+          BEGIN_CASE(JSOP_INT8)
+            i = GET_INT8(pc);
+            rval = INT_TO_JSVAL(i);
+            PUSH_OPND(rval);
+          END_CASE(JSOP_INT8)
+
+          BEGIN_CASE(JSOP_INT32)
+            i = GET_INT32(pc);
+            rval = INT_TO_JSVAL(i);
+            PUSH_OPND(rval);
+          END_CASE(JSOP_INT32)
+
           BEGIN_CASE(JSOP_INDEXBASE)
             /*
              * Here atoms can exceed script->atomMap.length as we use atoms
@@ -4145,11 +4157,11 @@ interrupt:
             atoms = script->atomMap.vector;
           END_CASE(JSOP_RESETBASE)
 
-          BEGIN_CASE(JSOP_NUMBER)
+          BEGIN_CASE(JSOP_DOUBLE)
           BEGIN_CASE(JSOP_STRING)
             LOAD_ATOM(0);
             PUSH_OPND(ATOM_KEY(atom));
-          END_CASE(JSOP_NUMBER)
+          END_CASE(JSOP_DOUBLE)
 
           BEGIN_CASE(JSOP_OBJECT)
             LOAD_OBJECT(0);
