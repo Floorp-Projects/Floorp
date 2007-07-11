@@ -2405,9 +2405,7 @@ CSSParserImpl::ParseAttributeSelector(PRInt32&       aDataMask,
           // the attribute selector is for a non-namespaced attribute,
           // then check to see if it's one of the known attributes whose
           // VALUE is case-insensitive.
-          if (!mCaseSensitive &&
-              (nameSpaceID == kNameSpaceID_None ||
-               nameSpaceID == kNameSpaceID_XHTML)) {
+          if (!mCaseSensitive && nameSpaceID == kNameSpaceID_None) {
             static const char* caseInsensitiveHTMLAttribute[] = {
               // list based on http://www.w3.org/TR/html4/
               "lang", 
