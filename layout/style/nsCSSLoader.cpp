@@ -214,7 +214,8 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader,
                              nsICSSStyleSheet* aSheet,
                              PRBool aSyncLoad,
                              PRBool aAllowUnsafeRules,
-                             nsICSSLoaderObserver* aObserver)
+                             nsICSSLoaderObserver* aObserver,
+                             nsIPrincipal* aLoaderPrincipal)
   : mLoader(aLoader),
     mURI(aURI),
     mLineNumber(1),
@@ -231,7 +232,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader,
     mAllowUnsafeRules(aAllowUnsafeRules),
     mOwningElement(nsnull),
     mObserver(aObserver),
-    mLoaderPrincipal(nsnull)
+    mLoaderPrincipal(aLoaderPrincipal)
 {
 
   NS_PRECONDITION(mLoader, "Must have a loader!");
@@ -933,36 +934,42 @@ CSSLoaderImpl::CheckLoadAllowed(nsIURI* aSourceURI,
                                 nsISupports* aContext)
 {
   LOG(("CSSLoaderImpl::CheckLoadAllowed"));
+
+  nsresult rv;
   
-  // Check with the security manager
-  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
-  nsresult rv =
-    secMan->CheckLoadURIWithPrincipal(aSourcePrincipal, aTargetURI,
-                                      nsIScriptSecurityManager::ALLOW_CHROME);
-  if (NS_FAILED(rv)) { // failure is normal here; don't warn
-    return rv;
+  if (aSourcePrincipal) {
+    // Check with the security manager
+    nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+    rv =
+      secMan->CheckLoadURIWithPrincipal(aSourcePrincipal, aTargetURI,
+                                        nsIScriptSecurityManager::ALLOW_CHROME);
+    if (NS_FAILED(rv)) { // failure is normal here; don't warn
+      return rv;
+    }
   }
 
   LOG(("  Passed security check"));
 
-  // Check with content policy
+  if (aSourceURI) {
+    // Check with content policy
 
-  PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
-  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
-                                 aTargetURI,
-                                 aSourceURI,
-                                 aContext,
-                                 NS_LITERAL_CSTRING("text/css"),
-                                 nsnull,                        //extra param
-                                 &shouldLoad,
-                                 nsContentUtils::GetContentPolicy());
+    PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
+                                   aTargetURI,
+                                   aSourceURI,
+                                   aContext,
+                                   NS_LITERAL_CSTRING("text/css"),
+                                   nsnull,                     //extra param
+                                   &shouldLoad,
+                                   nsContentUtils::GetContentPolicy());
 
-  if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
-    LOG(("  Load blocked by content policy"));
-    return NS_ERROR_CONTENT_BLOCKED;
+    if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
+      LOG(("  Load blocked by content policy"));
+      return NS_ERROR_CONTENT_BLOCKED;
+    }
   }
 
-  return rv;
+  return NS_OK;
 }
 
 /**
@@ -1976,28 +1983,39 @@ CSSLoaderImpl::LoadSheetSync(nsIURI* aURL, PRBool aAllowUnsafeRules,
                              nsICSSStyleSheet** aSheet)
 {
   LOG(("CSSLoaderImpl::LoadSheetSync"));
-  return InternalLoadNonDocumentSheet(aURL, aAllowUnsafeRules, aSheet, nsnull);
+  return InternalLoadNonDocumentSheet(aURL, aAllowUnsafeRules, nsnull,
+                                      nsnull, aSheet, nsnull);
 }
 
 NS_IMETHODIMP
-CSSLoaderImpl::LoadSheet(nsIURI* aURL, nsICSSLoaderObserver* aObserver,
+CSSLoaderImpl::LoadSheet(nsIURI* aURL,
+                         nsIURI* aOriginURI,
+                         nsIPrincipal* aOriginPrincipal,
+                         nsICSSLoaderObserver* aObserver,
                          nsICSSStyleSheet** aSheet)
 {
   LOG(("CSSLoaderImpl::LoadSheet(aURL, aObserver, aSheet) api call"));
   NS_PRECONDITION(aSheet, "aSheet is null");
-  return InternalLoadNonDocumentSheet(aURL, PR_FALSE, aSheet, aObserver);
+  return InternalLoadNonDocumentSheet(aURL, PR_FALSE, aOriginURI,
+                                      aOriginPrincipal, aSheet, aObserver);
 }
 
 NS_IMETHODIMP
-CSSLoaderImpl::LoadSheet(nsIURI* aURL, nsICSSLoaderObserver* aObserver)
+CSSLoaderImpl::LoadSheet(nsIURI* aURL,
+                         nsIURI* aOriginURI,
+                         nsIPrincipal* aOriginPrincipal,
+                         nsICSSLoaderObserver* aObserver)
 {
   LOG(("CSSLoaderImpl::LoadSheet(aURL, aObserver) api call"));
-  return InternalLoadNonDocumentSheet(aURL, PR_FALSE, nsnull, aObserver);
+  return InternalLoadNonDocumentSheet(aURL, PR_FALSE, aOriginURI,
+                                      aOriginPrincipal, nsnull, aObserver);
 }
 
 nsresult
 CSSLoaderImpl::InternalLoadNonDocumentSheet(nsIURI* aURL, 
                                             PRBool aAllowUnsafeRules,
+                                            nsIURI* aOriginURI,
+                                            nsIPrincipal* aOriginPrincipal,
                                             nsICSSStyleSheet** aSheet,
                                             nsICSSLoaderObserver* aObserver)
 {
@@ -2016,12 +2034,17 @@ CSSLoaderImpl::InternalLoadNonDocumentSheet(nsIURI* aURL,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  nsresult rv = CheckLoadAllowed(aOriginURI, aOriginPrincipal, aURL, mDocument);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   StyleSheetState state;
   nsCOMPtr<nsICSSStyleSheet> sheet;
   PRBool syncLoad = (aObserver == nsnull);
   
-  nsresult rv = CreateSheet(aURL, nsnull, nsnull, syncLoad, state,
-                            getter_AddRefs(sheet));
+  rv = CreateSheet(aURL, nsnull, nsnull, syncLoad, state,
+                   getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
   const nsSubstring& empty = EmptyString();
@@ -2040,7 +2063,8 @@ CSSLoaderImpl::InternalLoadNonDocumentSheet(nsIURI* aURL,
   }
 
   SheetLoadData* data =
-    new SheetLoadData(this, aURL, sheet, syncLoad, aAllowUnsafeRules, aObserver);
+    new SheetLoadData(this, aURL, sheet, syncLoad, aAllowUnsafeRules,
+                      aObserver, aOriginPrincipal);
 
   if (!data) {
     sheet->SetComplete();
