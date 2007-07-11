@@ -132,6 +132,14 @@ public:
   NS_IMETHOD GetRole(PRUint32 *aRole);
 };
 
+class nsXULToolbarButtonAccessible : public nsXULButtonAccessible
+{
+public:
+  nsXULToolbarButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
+  static PRBool IsSeparator(nsIAccessible *aAccessible);
+};
+
 class nsXULToolbarAccessible : public nsAccessibleWrap
 {
 public:

@@ -99,6 +99,7 @@ interface nsIAccessibleProvider : nsISupports
   const long XULToolbar          = 0x00001029;
   const long XULToolbarSeparator = 0x00001030;
   const long XULTooltip          = 0x00001031;
+  const long XULToolbarButton    = 0x00001032;
 
 
   /**
