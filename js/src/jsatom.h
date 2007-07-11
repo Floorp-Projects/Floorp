@@ -66,7 +66,6 @@ struct JSAtom {
     JSHashEntry         entry;          /* key is jsval or unhidden atom
                                            if ATOM_HIDDEN */
     uint32              flags;          /* pinned, interned, and mark flags */
-    jsatomid            number;         /* atom serial number and hash code */
 };
 
 #define ATOM_KEY(atom)            ((jsval)(atom)->entry.key)
@@ -78,6 +77,18 @@ struct JSAtom {
 #define ATOM_TO_STRING(atom)      JSVAL_TO_STRING(ATOM_KEY(atom))
 #define ATOM_IS_BOOLEAN(atom)     JSVAL_IS_BOOLEAN(ATOM_KEY(atom))
 #define ATOM_TO_BOOLEAN(atom)     JSVAL_TO_BOOLEAN(ATOM_KEY(atom))
+
+JS_STATIC_ASSERT(sizeof(JSHashNumber) == 4);
+JS_STATIC_ASSERT(sizeof(JSAtom *) == JS_BYTES_PER_WORD);
+
+#if JS_BYTES_PER_WORD == 4
+# define ATOM_HASH(atom)          ((JSHashNumber)(atom) >> 2)
+#elif JS_BYTES_PER_WORD == 8
+# define ATOM_HASH(atom)          (((JSHashNumber)(atom) >> 3) ^              \
+                                   (JSHashNumber)((jsuword)(atom) >> 32))
+#else
+# error "Unsupported configuration"
+#endif
 
 /*
  * Return a printable, lossless char[] representation of a string-type atom.
@@ -119,7 +130,8 @@ struct JSAtomList {
 #define ATOM_LIST_LOOKUP(_ale,_hep,_al,_atom)                                 \
     JS_BEGIN_MACRO                                                            \
         if ((_al)->table) {                                                   \
-            _hep = JS_HashTableRawLookup((_al)->table, _atom->number, _atom); \
+            _hep = JS_HashTableRawLookup((_al)->table, ATOM_HASH(_atom),      \
+                                         _atom);                              \
             _ale = *_hep ? (JSAtomListElement *) *_hep : NULL;                \
         } else {                                                              \
             JSHashEntry **_alep = &(_al)->list;                               \
@@ -145,7 +157,6 @@ struct JSAtomMap {
 struct JSAtomState {
     JSRuntime           *runtime;       /* runtime that owns us */
     JSHashTable         *table;         /* hash table containing all atoms */
-    jsatomid            number;         /* one beyond greatest atom number */
     jsatomid            liveAtoms;      /* number of live atoms after last GC */
 
     /* The rt->emptyString atom, see jsstr.c's js_InitRuntimeStringState. */
@@ -365,29 +376,15 @@ extern void
 js_UnpinPinnedAtoms(JSAtomState *state);
 
 /*
- * Find or create the atom for a Boolean value.  If we create a new atom, give
- * it the type indicated in flags.  Return 0 on failure to allocate memory.
+ * Find or create the atom for a double value. Return null on failure to
+ * allocate memory.
  */
 extern JSAtom *
-js_AtomizeBoolean(JSContext *cx, JSBool b, uintN flags);
+js_AtomizeDouble(JSContext *cx, jsdouble d);
 
 /*
- * Find or create the atom for an integer value.  If we create a new atom, give
- * it the type indicated in flags.  Return 0 on failure to allocate memory.
- */
-extern JSAtom *
-js_AtomizeInt(JSContext *cx, jsint i, uintN flags);
-
-/*
- * Find or create the atom for a double value.  If we create a new atom, give
- * it the type indicated in flags.  Return 0 on failure to allocate memory.
- */
-extern JSAtom *
-js_AtomizeDouble(JSContext *cx, jsdouble d, uintN flags);
-
-/*
- * Find or create the atom for a string.  If we create a new atom, give it the
- * type indicated in flags.  Return 0 on failure to allocate memory.
+ * Find or create the atom for a string. Return null on failure to allocate
+ * memory.
  */
 extern JSAtom *
 js_AtomizeString(JSContext *cx, JSString *str, uintN flags);
@@ -409,7 +406,7 @@ js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length);
  * This variant handles all primitive values.
  */
 extern JSAtom *
-js_AtomizePrimitiveValue(JSContext *cx, jsval value, uintN flags);
+js_AtomizePrimitiveValue(JSContext *cx, jsval v);
 
 /*
  * Convert v to an atomized string.

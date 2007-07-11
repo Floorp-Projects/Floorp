@@ -219,6 +219,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
     JSObject *obj;
     jsval v;
     const char *bytes;
+    jsint i;
 
     op = (JSOp)*pc;
     if (op >= JSOP_LIMIT) {
@@ -274,8 +275,8 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
 
       case JOF_UINT16:
       case JOF_LOCAL:
-        fprintf(fp, " %u", GET_UINT16(pc));
-        break;
+        i = (jsint)GET_UINT16(pc);
+        goto print_int;
 
       case JOF_2BYTE:
         fprintf(fp, " %u", (uintN)pc[1]);
@@ -363,7 +364,19 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
 
       case JOF_UINT24:
         JS_ASSERT(op == JSOP_UINT24);
-        fprintf(fp, " %u", GET_UINT24(pc));
+        i = (jsint)GET_UINT24(pc);
+        goto print_int;
+
+      case JOF_INT8:
+        JS_ASSERT(op == JSOP_INT8);
+        i = GET_INT8(pc);
+        goto print_int;
+
+      case JOF_INT32:
+        JS_ASSERT(op == JSOP_INT32);
+        i = GET_INT32(pc);
+      print_int:
+        fprintf(fp, " %d", i);
         break;
 
       default: {
@@ -1475,8 +1488,10 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
           case JSOP_ONE:    d = i = 1; goto do_getelem;
           case JSOP_UINT16: d = i = GET_UINT16(pc); goto do_getelem;
           case JSOP_UINT24: d = i = GET_UINT24(pc); goto do_getelem;
+          case JSOP_INT8:   d = i = GET_INT8(pc);   goto do_getelem;
+          case JSOP_INT32:  d = i = GET_INT32(pc);  goto do_getelem;
 
-          case JSOP_NUMBER:
+          case JSOP_DOUBLE:
             GET_ATOM_FROM_BYTECODE(jp->script, pc, 0, atom);
             d = *ATOM_TO_DOUBLE(atom);
             LOCAL_ASSERT(JSDOUBLE_IS_FINITE(d) && !JSDOUBLE_IS_NEGZERO(d));
@@ -3772,15 +3787,22 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_UINT24:
                 i = (jsint) GET_UINT24(pc);
+                goto do_sprint_int;
+
+              case JSOP_INT8:
+                i = GET_INT8(pc);
+                goto do_sprint_int;
+
+              case JSOP_INT32:
+                i = GET_INT32(pc);
               do_sprint_int:
-                todo = Sprint(&ss->sprinter, "%u", (unsigned) i);
+                todo = Sprint(&ss->sprinter, "%d", i);
                 break;
 
-              BEGIN_LITOPX_CASE(JSOP_NUMBER, 0)
+              BEGIN_LITOPX_CASE(JSOP_DOUBLE, 0)
                 val = ATOM_KEY(atom);
-                todo = JSVAL_IS_INT(val)
-                       ? Sprint(&ss->sprinter, "%ld", (long) JSVAL_TO_INT(val))
-                       : SprintDoubleValue(&ss->sprinter, val, &saveop);
+                JS_ASSERT(JSVAL_IS_DOUBLE(val));
+                todo = SprintDoubleValue(&ss->sprinter, val, &saveop);
               END_LITOPX_CASE
 
               BEGIN_LITOPX_CASE(JSOP_STRING, 0)
