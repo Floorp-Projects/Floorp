@@ -39,6 +39,7 @@
 
 #include "nsICategoryManager.h"
 #include "nsICommandLineHandler.h"
+#include "nsICommandLineValidator.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIDOMWindow.h"
 #include "nsIFile.h"
@@ -86,12 +87,16 @@ public:
 protected:
   ~nsCommandLine() { }
 
-  typedef nsresult (*EnumerateCallback)(nsICommandLineHandler* aHandler,
+  typedef nsresult (*EnumerateHandlersCallback)(nsICommandLineHandler* aHandler,
+					nsICommandLine* aThis,
+					void *aClosure);
+  typedef nsresult (*EnumerateValidatorsCallback)(nsICommandLineValidator* aValidator,
 					nsICommandLine* aThis,
 					void *aClosure);
 
   void appendArg(const char* arg);
-  nsresult EnumerateHandlers(EnumerateCallback aCallback, void *aClosure);
+  nsresult EnumerateHandlers(EnumerateHandlersCallback aCallback, void *aClosure);
+  nsresult EnumerateValidators(EnumerateValidatorsCallback aCallback, void *aClosure);
 
   nsStringArray     mArgs;
   PRUint32          mState;
@@ -537,7 +542,7 @@ nsCommandLine::Init(PRInt32 argc, char** argv, nsIFile* aWorkingDir,
 }
 
 nsresult
-nsCommandLine::EnumerateHandlers(EnumerateCallback aCallback, void *aClosure)
+nsCommandLine::EnumerateHandlers(EnumerateHandlersCallback aCallback, void *aClosure)
 {
   nsresult rv;
 
@@ -579,6 +584,55 @@ nsCommandLine::EnumerateHandlers(EnumerateCallback aCallback, void *aClosure)
   return rv;
 }
 
+nsresult
+nsCommandLine::EnumerateValidators(EnumerateValidatorsCallback aCallback, void *aClosure)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsICategoryManager> catman
+    (do_GetService(NS_CATEGORYMANAGER_CONTRACTID));
+  NS_ENSURE_TRUE(catman, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsISimpleEnumerator> entenum;
+  rv = catman->EnumerateCategory("command-line-validator",
+                                 getter_AddRefs(entenum));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIUTF8StringEnumerator> strenum (do_QueryInterface(entenum));
+  NS_ENSURE_TRUE(strenum, NS_ERROR_UNEXPECTED);
+
+  nsCAutoString entry;
+  PRBool hasMore;
+  while (NS_SUCCEEDED(strenum->HasMore(&hasMore)) && hasMore) {
+    strenum->GetNext(entry);
+
+    nsXPIDLCString contractID;
+    rv = catman->GetCategoryEntry("command-line-validator",
+				  entry.get(),
+				  getter_Copies(contractID));
+    if (!contractID)
+      continue;
+
+    nsCOMPtr<nsICommandLineValidator> clv(do_GetService(contractID.get()));
+    if (!clv)
+      continue;
+
+    rv = (aCallback)(clv, this, aClosure);
+    if (rv == NS_ERROR_ABORT)
+      break;
+
+    rv = NS_OK;
+  }
+
+  return rv;
+}
+
+static nsresult
+EnumValidate(nsICommandLineValidator* aValidator, nsICommandLine* aThis, void*)
+{
+  return aValidator->Validate(aThis);
+}  
+
 static nsresult
 EnumRun(nsICommandLineHandler* aHandler, nsICommandLine* aThis, void*)
 {
@@ -589,6 +643,10 @@ NS_IMETHODIMP
 nsCommandLine::Run()
 {
   nsresult rv;
+
+  rv = EnumerateValidators(EnumValidate, nsnull);
+  if (rv == NS_ERROR_ABORT)
+    return rv;
 
   rv = EnumerateHandlers(EnumRun, nsnull);
   if (rv == NS_ERROR_ABORT)
