@@ -37,7 +37,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.45 $
+ *  npapi.h $Revision: 3.46 $
  *  Netscape client plug-in API spec
  */
 
@@ -120,7 +120,7 @@
 /*----------------------------------------------------------------------*/
 
 #define NP_VERSION_MAJOR 0
-#define NP_VERSION_MINOR 18
+#define NP_VERSION_MINOR 19
 
 
 /* The OS/2 version of Netscape uses RC_DATA to define the
@@ -639,18 +639,19 @@ enum NPEventType {
 /*
  * Version feature information
  */
-#define NPVERS_HAS_STREAMOUTPUT           8
-#define NPVERS_HAS_NOTIFICATION           9
-#define NPVERS_HAS_LIVECONNECT            9
-#define NPVERS_WIN16_HAS_LIVECONNECT      9
-#define NPVERS_68K_HAS_LIVECONNECT        11
-#define NPVERS_HAS_WINDOWLESS             11
-#define NPVERS_HAS_XPCONNECT_SCRIPTING    13
-#define NPVERS_HAS_NPRUNTIME_SCRIPTING    14
-#define NPVERS_HAS_FORM_VALUES            15
-#define NPVERS_HAS_POPUPS_ENABLED_STATE   16
-#define NPVERS_HAS_RESPONSE_HEADERS       17
-#define NPVERS_HAS_NPOBJECT_ENUM          18
+#define NPVERS_HAS_STREAMOUTPUT             8
+#define NPVERS_HAS_NOTIFICATION             9
+#define NPVERS_HAS_LIVECONNECT              9
+#define NPVERS_WIN16_HAS_LIVECONNECT        9
+#define NPVERS_68K_HAS_LIVECONNECT          11
+#define NPVERS_HAS_WINDOWLESS               11
+#define NPVERS_HAS_XPCONNECT_SCRIPTING      13
+#define NPVERS_HAS_NPRUNTIME_SCRIPTING      14
+#define NPVERS_HAS_FORM_VALUES              15
+#define NPVERS_HAS_POPUPS_ENABLED_STATE     16
+#define NPVERS_HAS_RESPONSE_HEADERS         17
+#define NPVERS_HAS_NPOBJECT_ENUM            18
+#define NPVERS_HAS_PLUGIN_THREAD_ASYNC_CALL 19
 
 /*----------------------------------------------------------------------*/
 /*                        Function Prototypes                           */
@@ -743,6 +744,9 @@ void    NP_LOADDS NPN_InvalidateRegion(NPP instance, NPRegion invalidRegion);
 void    NP_LOADDS NPN_ForceRedraw(NPP instance);
 void    NP_LOADDS NPN_PushPopupsEnabledState(NPP instance, NPBool enabled);
 void    NP_LOADDS NPN_PopPopupsEnabledState(NPP instance);
+void    NP_LOADDS NPN_PluginThreadAsyncCall(NPP instance,
+                                            void (*func) (void *),
+                                            void *userData);
 
 #ifdef __cplusplus
 }  /* end extern "C" */

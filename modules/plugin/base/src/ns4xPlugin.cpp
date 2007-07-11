@@ -40,10 +40,13 @@
 
 #include "prtypes.h"
 #include "prmem.h"
+#include "prclist.h"
+#include "nsAutoLock.h"
 #include "ns4xPlugin.h"
 #include "ns4xPluginInstance.h"
 #include "ns4xPluginStreamListener.h"
 #include "nsIServiceManager.h"
+#include "nsThreadUtils.h"
 
 #include "nsIMemory.h"
 #include "nsIPluginStreamListener.h"
@@ -81,6 +84,9 @@
 #endif
 
 #include "nsJSNPRuntime.h"
+
+static PRLock *sPluginThreadAsyncCallLock = nsnull;
+static PRCList sPendingAsyncCalls = PR_INIT_STATIC_CLIST(&sPendingAsyncCalls);
 
 // POST/GET stream type
 enum eNPPStreamTypeInternal {
@@ -159,6 +165,9 @@ PR_BEGIN_EXTERN_C
 
   static void NP_CALLBACK
   _poppopupsenabledstate(NPP npp);
+
+  static void NP_CALLBACK
+  _pluginthreadasynccall(NPP instance, void (*func)(void *), void *userData);
 
   static const char* NP_CALLBACK
   _useragent(NPP npp);
@@ -374,6 +383,14 @@ ns4xPlugin::CheckClassInitialized(void)
 
   CALLBACKS.poppopupsenabledstate =
     NewNPN_PopPopupsEnabledStateProc(FP2TV(_poppopupsenabledstate));
+
+  CALLBACKS.pluginthreadasynccall =
+    NewNPN_PluginThreadAsyncCallProc(FP2TV(_pluginthreadasynccall));
+
+  if (!sPluginThreadAsyncCallLock) {
+    sPluginThreadAsyncCallLock =
+      nsAutoLock::NewLock("sPluginThreadAsyncCallLock");
+  }
 
   initialized = TRUE;
 
@@ -2183,6 +2200,153 @@ _poppopupsenabledstate(NPP npp)
     return;
 
   inst->PopPopupsEnabledState();
+}
+
+class nsPluginThreadRunnable : public nsRunnable,
+                               public PRCList
+{
+public:
+  nsPluginThreadRunnable(NPP instance, void (*func)(void *), void *userData);
+  virtual ~nsPluginThreadRunnable();
+
+  NS_IMETHOD Run();
+
+  PRBool IsForInstance(NPP instance)
+  {
+    return (mInstance == instance);
+  }
+
+  void Invalidate()
+  {
+    mFunc = nsnull;
+  }
+
+  PRBool IsValid()
+  {
+    return (mFunc != nsnull);
+  }
+
+private:  
+  NPP mInstance;
+  void (*mFunc)(void *);
+  void *mUserData;
+};
+
+nsPluginThreadRunnable::nsPluginThreadRunnable(NPP instance,
+                                               void (*func)(void *),
+                                               void *userData)
+  : mInstance(instance), mFunc(func), mUserData(userData)
+{
+  if (!sPluginThreadAsyncCallLock) {
+    // Failed to create lock, not much we can do here then...
+    mFunc = nsnull;
+
+    return;
+  }
+
+  PR_INIT_CLIST(this);
+
+  {
+    nsAutoLock lock(sPluginThreadAsyncCallLock);
+
+    ns4xPluginInstance *inst = (ns4xPluginInstance *)instance->ndata;
+    if (!inst || !inst->IsStarted()) {
+      // The plugin was stopped, ignore this async call.
+      mFunc = nsnull;
+
+      return;
+    }
+
+    PR_APPEND_LINK(this, &sPendingAsyncCalls);
+  }
+}
+
+nsPluginThreadRunnable::~nsPluginThreadRunnable()
+{
+  if (!sPluginThreadAsyncCallLock) {
+    return;
+  }
+
+  {
+    nsAutoLock lock(sPluginThreadAsyncCallLock);
+
+    PR_REMOVE_LINK(this);
+  }
+}
+
+NS_IMETHODIMP
+nsPluginThreadRunnable::Run()
+{
+  if (mFunc) {
+    NS_TRY_SAFE_CALL_VOID(mFunc(mUserData), nsnull, nsnull);
+  }
+
+  return NS_OK;
+}
+
+void NP_CALLBACK
+_pluginthreadasynccall(NPP instance, void (*func)(void *), void *userData)
+{
+  nsRefPtr<nsPluginThreadRunnable> evt =
+    new nsPluginThreadRunnable(instance, func, userData);
+
+  if (evt && evt->IsValid()) {
+    NS_DispatchToMainThread(evt);
+  }
+}
+
+void
+OnPluginDestroy(NPP instance)
+{
+  if (!sPluginThreadAsyncCallLock) {
+    return;
+  }
+
+  {
+    nsAutoLock lock(sPluginThreadAsyncCallLock);
+
+    if (PR_CLIST_IS_EMPTY(&sPendingAsyncCalls)) {
+      return;
+    }
+
+    nsPluginThreadRunnable *r =
+      (nsPluginThreadRunnable *)PR_LIST_HEAD(&sPendingAsyncCalls);
+
+    do {
+      if (r->IsForInstance(instance)) {
+        r->Invalidate();
+      }
+
+      r = (nsPluginThreadRunnable *)PR_NEXT_LINK(r);
+    } while (r != &sPendingAsyncCalls);
+  }
+}
+
+void
+OnShutdown()
+{
+  NS_ASSERTION(PR_CLIST_IS_EMPTY(&sPendingAsyncCalls),
+               "Pending async plugin call list not cleaned up!");
+
+  if (sPluginThreadAsyncCallLock) {
+    nsAutoLock::DestroyLock(sPluginThreadAsyncCallLock);
+  }
+}
+
+void
+EnterAsyncPluginThreadCallLock()
+{
+  if (sPluginThreadAsyncCallLock) {
+    PR_Lock(sPluginThreadAsyncCallLock);
+  }
+}
+
+void
+ExitAsyncPluginThreadCallLock()
+{
+  if (sPluginThreadAsyncCallLock) {
+    PR_Unlock(sPluginThreadAsyncCallLock);
+  }
 }
 
 NPP NPPStack::sCurrentNPP = nsnull;
