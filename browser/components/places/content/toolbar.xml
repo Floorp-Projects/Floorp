@@ -64,26 +64,26 @@
           <xul:hbox class="bookmarks-toolbar-items places-toolbar-items" flex="1">
             <children/>
           </xul:hbox>
-          <xul:hbox mousethrough="always"
-                    flex="1"
-                    pack="end">
-            <xul:toolbarbutton type="menu"
-                               class="chevron"
-                               mousethrough="never"
-                               collapsed="true">
-              <xul:menupopup type="places"
-                             anonid="chevronPopup"
-#ifndef XP_MACOSX
-                             context="placesContext"
-#endif
-               />
-            </xul:toolbarbutton>
-          </xul:hbox>
           <xul:toolbarbutton class="bookmark-item bookmarks-toolbar-customize"
                              mousethrough="never"
                              label="&bookmarksToolbarItem.label;"/>
         </xul:hbox>
       </xul:vbox>
+      <xul:hbox mousethrough="always"
+                flex="1"
+                pack="end">
+        <xul:toolbarbutton type="menu"
+                           class="chevron"
+                           mousethrough="never"
+                           collapsed="true">
+          <xul:menupopup type="places"
+                         anonid="chevronPopup"
+#ifndef XP_MACOSX
+                         context="placesContext"
+#endif
+          />
+        </xul:toolbarbutton>
+      </xul:hbox>
     </content>
     
     <implementation>
@@ -1082,7 +1082,7 @@
         if (event.target.localName == "toolbarbutton" ||
             event.target.localName == "toolbarseparator")
           this._selection = event.target.node;
-        else 
+        else
           this._selection = this.getResult().root;
       ]]></handler>
       <handler event="draggesture"><![CDATA[
