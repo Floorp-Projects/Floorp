@@ -69,6 +69,7 @@ CPPSRCS		= \
 EXPORTS		= \
 		nsProcess.h \
 		nsEventQueue.h \
+		nsThreadUtilsInternal.h \
 		$(NULL)
 
 XPIDLSRCS	= \
