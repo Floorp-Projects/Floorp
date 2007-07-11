@@ -831,7 +831,8 @@ nsUrlClassifierDBService::Init()
   if (!observerService)
     return NS_ERROR_FAILURE;
 
-  observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+  observerService->AddObserver(this, "profile-before-change", PR_FALSE);
+  observerService->AddObserver(this, "xpcom-shutdown-threads", PR_FALSE);
 
   return NS_OK;
 }
@@ -990,10 +991,12 @@ NS_IMETHODIMP
 nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
                                   const PRUnichar *aData)
 {
-  if (nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
-    LOG(("shutting down db service\n"));
-    Shutdown();
-  }
+  NS_ASSERTION(strcmp(aTopic, "profile-before-change") == 0 ||
+               strcmp(aTopic, "xpcom-shutdown-threads") == 0,
+               "Unexpected observer topic");
+
+  Shutdown();
+
   return NS_OK;
 }
 
@@ -1001,6 +1004,8 @@ nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
 nsresult
 nsUrlClassifierDBService::Shutdown()
 {
+  LOG(("shutting down db service\n"));
+
   if (!gDbBackgroundThread)
     return NS_OK;
 
