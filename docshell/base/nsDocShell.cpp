@@ -5230,6 +5230,12 @@ nsDocShell::BeginRestore(nsIContentViewer *aContentViewer, PRBool aTop)
     }
 
     if (!aTop) {
+        // This point corresponds to us having gotten OnStartRequest or
+        // STATE_START, so do the same thing that CreateContentViewer does at
+        // this point to ensure that unload/pagehide events for this document
+        // will fire when it's unloaded again.
+        mFiredUnloadEvent = PR_FALSE;
+        
         // For non-top frames, there is no notion of making sure that the
         // previous document is in the domwindow when STATE_START notifications
         // happen.  We can just call BeginRestore for all of the child shells
@@ -6292,6 +6298,10 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                          nsIDocShell** aDocShell,
                          nsIRequest** aRequest)
 {
+    if (mFiredUnloadEvent) {
+      return NS_OK; // JS may not handle returning of an error code
+    }
+
     nsresult rv = NS_OK;
 
 #ifdef PR_LOGGING
