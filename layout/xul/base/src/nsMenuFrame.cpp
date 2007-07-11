@@ -583,6 +583,40 @@ NS_IMETHODIMP
 nsMenuFrame::SelectMenu(PRBool aActivateFlag)
 {
   if (mContent) {
+    // When a menu opens a submenu, the mouse will often be moved onto a
+    // sibling before moving onto an item within the submenu, causing the
+    // parent to become deselected. We need to ensure that the parent menu
+    // is reselected when an item in the submenu is selected, so navigate up
+    // from the item to its popup, and then to the popup above that.
+    if (aActivateFlag) {
+      nsIFrame* parent = GetParent();
+      while (parent) {
+        if (parent->GetType() == nsGkAtoms::menuPopupFrame) {
+          // a menu is always the direct parent of a menupopup
+          parent = parent->GetParent();
+          if (parent && parent->GetType() == nsGkAtoms::menuFrame) {
+            // a popup however is not necessarily the direct parent of a menu
+            nsIFrame* popupParent = parent->GetParent();
+            while (popupParent) {
+              if (popupParent->GetType() == nsGkAtoms::menuPopupFrame) {
+                nsMenuPopupFrame* popup = static_cast<nsMenuPopupFrame *>(popupParent);
+                popup->SetCurrentMenuItem(static_cast<nsMenuFrame *>(parent));
+                break;
+              }
+              popupParent = popupParent->GetParent();
+            }
+          }
+          break;
+        }
+        parent = parent->GetParent();
+      }
+    }
+
+    // cancel the close timer if selecting a menu within the popup to be closed
+    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+    if (pm)
+      pm->CancelMenuTimer(mMenuParent);
+
     nsCOMPtr<nsIRunnable> event =
       new nsMenuActivateEvent(mContent, PresContext(), aActivateFlag);
     NS_DispatchToCurrentThread(event);
