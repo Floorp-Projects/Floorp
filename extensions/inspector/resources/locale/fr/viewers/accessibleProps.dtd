@@ -36,9 +36,9 @@
    -
 #endif
    - ***** END LICENSE BLOCK ***** -->
-<!ENTITY descRole.label "Role:">
-<!ENTITY descName.label "Name:">
-<!ENTITY descDescription.label "Description:">
-<!ENTITY descValue.label "Value:">
-<!ENTITY descState.label "State:">
-<!ENTITY descActionName.label "Action Name:">
+<!ENTITY descRole.label "Rôle :">
+<!ENTITY descName.label "Nom :">
+<!ENTITY descDescription.label "Description :">
+<!ENTITY descValue.label "Valeur :">
+<!ENTITY descState.label "État :">
+<!ENTITY descActionName.label "Nom de l'action :">
