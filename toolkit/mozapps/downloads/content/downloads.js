@@ -639,7 +639,7 @@ var gDownloadViewController = {
       return false;
     
     switch (aCommand) {
-    case "cmd_cleanup":
+    case "cmd_cleanUp":
       return gDownloadManager.canCleanUp;
     case "cmd_remove":
       return gDownloadsView.selectedItem != null;
@@ -669,7 +669,7 @@ var gDownloadViewController = {
   },
   
   commands: {
-    cmd_cleanup: function() {
+    cmd_cleanUp: function() {
       gDownloadManager.cleanUp();
 
       // Update UI
