@@ -79,6 +79,8 @@
          oncommand="gExtensionsViewController.doCommand('cmd_about');"/>
     <key id="key_options" key="&cmd.options.commandKey;"  modifiers="accel" command="cmd_options"
          oncommand="gExtensionsViewController.doCommand('cmd_options');"/>
+    <key id="key_uninstall" keycode="VK_DELETE"                             command="cmd_uninstall"
+         oncommand="gExtensionsViewController.doCommand('cmd_uninstall');"/>
   </keyset>
 
   <commandset id="extensionsCommands"
