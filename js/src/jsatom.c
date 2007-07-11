@@ -155,10 +155,7 @@ const char js_ExecutionContext_str[] = "ExecutionContext";
 const char js_current_str[]          = "current";
 #endif
 
-#define HASH_OBJECT(o)  (JS_PTR_TO_UINT32(o) >> JSVAL_TAGBITS)
-#define HASH_INT(i)     ((JSHashNumber)(i))
 #define HASH_DOUBLE(dp) ((JSDOUBLE_HI32(*dp) ^ JSDOUBLE_LO32(*dp)))
-#define HASH_BOOLEAN(b) ((JSHashNumber)(b))
 
 JS_STATIC_DLL_CALLBACK(JSHashNumber)
 js_hash_atom_key(const void *key)
@@ -166,20 +163,15 @@ js_hash_atom_key(const void *key)
     jsval v;
     jsdouble *dp;
 
-    /* Order JSVAL_IS_* tests by likelihood of success. */
     v = (jsval)key;
     if (JSVAL_IS_STRING(v))
         return js_HashString(JSVAL_TO_STRING(v));
-    if (JSVAL_IS_INT(v))
-        return HASH_INT(JSVAL_TO_INT(v));
     if (JSVAL_IS_DOUBLE(v)) {
         dp = JSVAL_TO_DOUBLE(v);
         return HASH_DOUBLE(dp);
     }
-    if (JSVAL_IS_OBJECT(v))
-        return HASH_OBJECT(JSVAL_TO_OBJECT(v));
-    if (JSVAL_IS_BOOLEAN(v))
-        return HASH_BOOLEAN(JSVAL_TO_BOOLEAN(v));
+    JS_ASSERT(JSVAL_IS_INT(v) || v == JSVAL_TRUE || v == JSVAL_FALSE ||
+              v == JSVAL_NULL || v == JSVAL_VOID);
     return (JSHashNumber)v;
 }
 
@@ -228,8 +220,10 @@ js_free_table_space(void *priv, void *item)
 JS_STATIC_DLL_CALLBACK(JSHashEntry *)
 js_alloc_atom(void *priv, const void *key)
 {
-    JSAtomState *state = (JSAtomState *) priv;
     JSAtom *atom;
+#ifdef JS_THREADSAFE
+    JSAtomState *state = (JSAtomState *) priv;
+#endif
 
     atom = (JSAtom *) malloc(sizeof(JSAtom));
     if (!atom)
@@ -240,7 +234,6 @@ js_alloc_atom(void *priv, const void *key)
     atom->entry.key = key;
     atom->entry.value = NULL;
     atom->flags = 0;
-    atom->number = state->number++;
     return &atom->entry;
 }
 
@@ -502,7 +495,7 @@ js_UnpinPinnedAtoms(JSAtomState *state)
 }
 
 static JSAtom *
-js_AtomizeHashedKey(JSContext *cx, jsval key, JSHashNumber keyHash, uintN flags)
+js_AtomizeHashedKey(JSContext *cx, jsval key, JSHashNumber keyHash)
 {
     JSAtomState *state;
     JSHashTable *table;
@@ -523,33 +516,10 @@ js_AtomizeHashedKey(JSContext *cx, jsval key, JSHashNumber keyHash, uintN flags)
     }
 
     atom = (JSAtom *)he;
-    atom->flags |= flags;
     cx->weakRoots.lastAtom = atom;
 out:
     JS_UNLOCK(&state->lock,cx);
     return atom;
-}
-
-JSAtom *
-js_AtomizeBoolean(JSContext *cx, JSBool b, uintN flags)
-{
-    jsval key;
-    JSHashNumber keyHash;
-
-    key = BOOLEAN_TO_JSVAL(b);
-    keyHash = HASH_BOOLEAN(b);
-    return js_AtomizeHashedKey(cx, key, keyHash, flags);
-}
-
-JSAtom *
-js_AtomizeInt(JSContext *cx, jsint i, uintN flags)
-{
-    jsval key;
-    JSHashNumber keyHash;
-
-    key = INT_TO_JSVAL(i);
-    keyHash = HASH_INT(i);
-    return js_AtomizeHashedKey(cx, key, keyHash, flags);
 }
 
 /* Worst-case alignment grain and aligning macro for 2x-sized buffer. */
@@ -557,7 +527,7 @@ js_AtomizeInt(JSContext *cx, jsint i, uintN flags)
 #define ALIGN(b,t)      ((t*) &(b)[ALIGNMENT(t) - (jsuword)(b) % ALIGNMENT(t)])
 
 JSAtom *
-js_AtomizeDouble(JSContext *cx, jsdouble d, uintN flags)
+js_AtomizeDouble(JSContext *cx, jsdouble d)
 {
     jsdouble *dp;
     JSHashNumber keyHash;
@@ -602,7 +572,6 @@ js_AtomizeDouble(JSContext *cx, jsdouble d, uintN flags)
     }
 
     atom = (JSAtom *)he;
-    atom->flags |= flags;
     cx->weakRoots.lastAtom = atom;
 out:
     JS_UNLOCK(&state->lock,cx);
@@ -760,18 +729,15 @@ js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length)
 }
 
 JSAtom *
-js_AtomizePrimitiveValue(JSContext *cx, jsval value, uintN flags)
+js_AtomizePrimitiveValue(JSContext *cx, jsval v)
 {
-    if (JSVAL_IS_STRING(value))
-        return js_AtomizeString(cx, JSVAL_TO_STRING(value), flags);
-    if (JSVAL_IS_INT(value))
-        return js_AtomizeInt(cx, JSVAL_TO_INT(value), flags);
-    if (JSVAL_IS_DOUBLE(value))
-        return js_AtomizeDouble(cx, *JSVAL_TO_DOUBLE(value), flags);
-    if (JSVAL_IS_BOOLEAN(value))
-        return js_AtomizeBoolean(cx, JSVAL_TO_BOOLEAN(value), flags);
-    JS_ASSERT(value == JSVAL_NULL || value == JSVAL_VOID);
-    return js_AtomizeHashedKey(cx, value, (JSHashNumber)value, flags);
+    if (JSVAL_IS_STRING(v))
+        return js_AtomizeString(cx, JSVAL_TO_STRING(v), 0);
+    if (JSVAL_IS_DOUBLE(v))
+        return js_AtomizeDouble(cx, *JSVAL_TO_DOUBLE(v));
+    JS_ASSERT(JSVAL_IS_INT(v) || v == JSVAL_TRUE || v == JSVAL_FALSE ||
+              v == JSVAL_NULL || v == JSVAL_VOID);
+    return js_AtomizeHashedKey(cx, v, (JSHashNumber)v);
 }
 
 JSAtom *
@@ -789,7 +755,7 @@ JS_STATIC_DLL_CALLBACK(JSHashNumber)
 js_hash_atom_ptr(const void *key)
 {
     const JSAtom *atom = (const JSAtom *) key;
-    return atom->number;
+    return ATOM_HASH(atom);
 }
 
 JS_STATIC_DLL_CALLBACK(void *)
@@ -870,7 +836,7 @@ js_IndexAtom(JSContext *cx, JSAtom *atom, JSAtomList *al)
                 /* Insert each ale on al->list into the new hash table. */
                 for (ale2 = (JSAtomListElement *)al->list; ale2; ale2 = next) {
                     next = ALE_NEXT(ale2);
-                    ale2->entry.keyHash = ALE_ATOM(ale2)->number;
+                    ale2->entry.keyHash = ATOM_HASH(ALE_ATOM(ale2));
                     hep = JS_HashTableRawLookup(al->table, ale2->entry.keyHash,
                                                 ale2->entry.key);
                     ale2->entry.next = *hep;
@@ -879,12 +845,13 @@ js_IndexAtom(JSContext *cx, JSAtom *atom, JSAtomList *al)
                 al->list = NULL;
 
                 /* Set hep for insertion of atom's ale, immediately below. */
-                hep = JS_HashTableRawLookup(al->table, atom->number, atom);
+                hep = JS_HashTableRawLookup(al->table, ATOM_HASH(atom), atom);
             }
 
             /* Finally, add an entry for atom into the hash bucket at hep. */
             ale = (JSAtomListElement *)
-                  JS_HashTableRawAdd(al->table, hep, atom->number, atom, NULL);
+                  JS_HashTableRawAdd(al->table, hep, ATOM_HASH(atom), atom,
+                                     NULL);
             if (!ale)
                 return NULL;
         }

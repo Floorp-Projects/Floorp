@@ -90,7 +90,10 @@ typedef enum JSOpLength {
 #define JOF_OBJECT        15      /* unsigned 16-bit object pool index */
 #define JOF_INDEXOBJECT   16      /* uint16 slot index + object pool index */
 #define JOF_REGEXP        17      /* unsigned 16-bit regexp pool index */
+#define JOF_INT8          18      /* int8 immediate operand */
+#define JOF_INT32         19      /* int32 immediate operand */
 #define JOF_TYPEMASK      0x001f  /* mask for above immediate types */
+
 #define JOF_NAME          (1U<<5) /* name operation */
 #define JOF_PROP          (2U<<5) /* obj.prop operation */
 #define JOF_ELEM          (3U<<5) /* obj[index] operation */
@@ -208,6 +211,17 @@ typedef enum JSOpLength {
 #define SET_UINT24(pc,i)        ((pc)[1] = UINT24_HI(i),                      \
                                  (pc)[2] = UINT24_MID(i),                     \
                                  (pc)[3] = UINT24_LO(i))
+
+#define GET_INT8(pc)            ((jsint)(int8)(pc)[1])
+
+#define GET_INT32(pc)           ((jsint)(((uint32)((pc)[1]) << 24) |          \
+                                         ((uint32)((pc)[2]) << 16) |          \
+                                         ((uint32)((pc)[3]) << 8)  |          \
+                                         (uint32)(pc)[4]))
+#define SET_INT32(pc,i)         ((pc)[1] = (jsbytecode)((uint32)(i) >> 24),   \
+                                 (pc)[2] = (jsbytecode)((uint32)(i) >> 16),   \
+                                 (pc)[3] = (jsbytecode)((uint32)(i) >> 8),    \
+                                 (pc)[4] = (jsbytecode)(uint32)(i))
 
 /* Index limit is determined by SN_3BYTE_OFFSET_FLAG, see jsemit.h. */
 #define INDEX_LIMIT_LOG2        23
