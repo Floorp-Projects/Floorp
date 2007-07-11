@@ -616,7 +616,7 @@ public:
 #else
   #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                      \
     const nsStyle##name_ * GetStyle##name_ () const {                         \
-      return static_cast<const nsStyle##name_*>(\
+      return static_cast<const nsStyle##name_*>(                              \
                             GetStyleDataExternal(eStyleStruct_##name_));      \
     }
 #endif
