@@ -118,8 +118,8 @@ inline nsINode* NODE_FROM(C& aContent, D& aDocument)
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0xd3e63f80, 0x9e98, 0x47d7, \
-  { 0xac, 0x8d, 0xad, 0x6f, 0x20, 0x6c, 0xe7, 0xc6 } }
+{ 0x8cef8b4e, 0x4b7f, 0x4f86, \
+  { 0xba, 0x64, 0x75, 0xdf, 0xed, 0x0d, 0xa2, 0x3e } }
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsINode_base : public nsPIDOMEventTarget {
@@ -619,6 +619,15 @@ public:
     }
   }
 
+  PRBool IsEditable() const
+  {
+#ifdef _IMPL_NS_LAYOUT
+    return IsEditableInternal();
+#else
+    return IsEditableExternal();
+#endif
+  }
+
 protected:
 
   // Override this function to create a custom slots class.
@@ -652,6 +661,12 @@ protected:
     }
 
     return slots;
+  }
+
+  PRBool IsEditableInternal() const;
+  virtual PRBool IsEditableExternal() const
+  {
+    return IsEditableInternal();
   }
 
   nsCOMPtr<nsINodeInfo> mNodeInfo;
