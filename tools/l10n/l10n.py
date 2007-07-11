@@ -127,7 +127,8 @@ def createLocalization(source, dest, apps, exceptions = {}):
         if ignore and ignore.search(f):
           # ignoring some files
           continue
-        copy2(os.path.join(basepath, root, f), l10npath)
+        if not os.path.exists(os.path.join(l10npath,f)):
+          copy2(os.path.join(basepath, root, f), l10npath)
 
 if __name__ == '__main__':
   p = OptionParser()
