@@ -91,6 +91,6 @@ endif
 FORCE_STATIC_LIB = 1
 FORCE_USE_PIC = 1
 
-LOCAL_INCLUDES  += -I$(srcdir)
+LOCAL_INCLUDES  += -I$(srcdir) -I$(srcdir)/../../cairo/src
 
 include $(topsrcdir)/config/rules.mk
