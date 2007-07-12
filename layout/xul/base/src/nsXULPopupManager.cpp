@@ -127,8 +127,7 @@ nsXULPopupManager::Init()
 void
 nsXULPopupManager::Shutdown()
 {
-  NS_RELEASE(sInstance);
-  sInstance = nsnull;
+  NS_IF_RELEASE(sInstance);
 }
 
 nsXULPopupManager*
