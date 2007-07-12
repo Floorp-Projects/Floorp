@@ -1307,7 +1307,7 @@ var PlacesUtils = {
   setPostDataForURI: function PU_setPostDataForURI(aURI, aPostData) {
     const annos = this.annotations;
     if (aPostData)
-      annos.setPageAnnotationString(aURI, POST_DATA_ANNO, aPostData, 0, 0);
+      annos.setPageAnnotation(aURI, POST_DATA_ANNO, aPostData, 0, 0);
     else if (annos.pageHasAnnotation(aURI, POST_DATA_ANNO))
       annos.removePageAnnotation(aURI, POST_DATA_ANNO);
   },
@@ -1320,7 +1320,7 @@ var PlacesUtils = {
   getPostDataForURI: function PU_getPostDataForURI(aURI) {
     const annos = this.annotations;
     if (annos.pageHasAnnotation(aURI, POST_DATA_ANNO))
-      return annos.getPageAnnotationString(aURI, POST_DATA_ANNO);
+      return annos.getPageAnnotation(aURI, POST_DATA_ANNO);
 
     return null;
   }
