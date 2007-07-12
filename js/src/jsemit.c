@@ -1303,7 +1303,7 @@ EmitBackPatchOp(JSContext *cx, JSCodeGenerator *cg, JSOp op, ptrdiff_t *lastp)
  */
 #define EMIT_UINT16_IMM_OP(op, i)                                             \
     JS_BEGIN_MACRO                                                            \
-        if (js_Emit3(cx, cg, (JSOp)(op), UINT16_HI(i), UINT16_LO(i)) < 0)     \
+        if (js_Emit3(cx, cg, op, UINT16_HI(i), UINT16_LO(i)) < 0)             \
             return JS_FALSE;                                                  \
     JS_END_MACRO
 
@@ -1720,7 +1720,7 @@ EmitBigIndexPrefix(JSContext *cx, JSCodeGenerator *cg, uintN index)
         return JSOP_NOP;
     indexBase = index >> 16;
     if (indexBase <= JSOP_INDEXBASE3 - JSOP_INDEXBASE1 + 1) {
-        if (js_Emit1(cx, cg, JSOP_INDEXBASE1 + indexBase - 1) < 0)
+        if (js_Emit1(cx, cg, (JSOp)(JSOP_INDEXBASE1 + indexBase - 1)) < 0)
             return JSOP_FALSE;
         return JSOP_RESETBASE0;
     }
@@ -1755,7 +1755,7 @@ EmitIndexOp(JSContext *cx, JSOp op, uintN index, JSCodeGenerator *cg)
     if (bigSuffix == JSOP_FALSE)
         return JS_FALSE;
     EMIT_UINT16_IMM_OP(op, index);
-    return bigSuffix == JSOP_NOP || js_Emit1(cx, cg, (JSOp)bigSuffix) >= 0;
+    return bigSuffix == JSOP_NOP || js_Emit1(cx, cg, bigSuffix) >= 0;
 }
 
 /*
@@ -3404,7 +3404,7 @@ EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
           case JSOP_SETVAR:
           case JSOP_SETGVAR:
             slot = (jsuint) pn->pn_slot;
-            EMIT_UINT16_IMM_OP(pn->pn_op, slot);
+            EMIT_UINT16_IMM_OP(PN_OP(pn), slot);
             if (js_Emit1(cx, cg, JSOP_POP) < 0)
                 return JS_FALSE;
             break;
@@ -5487,10 +5487,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
           case TOK_NAME:
             if (pn2->pn_slot < 0 || !(pn2->pn_attrs & JSPROP_READONLY)) {
                 if (pn2->pn_slot >= 0) {
-                    EMIT_UINT16_IMM_OP(pn2->pn_op, atomIndex);
+                    EMIT_UINT16_IMM_OP(PN_OP(pn2), atomIndex);
                 } else {
           case TOK_DOT:
-                    EMIT_INDEX_OP(pn2->pn_op, atomIndex);
+                    EMIT_INDEX_OP(PN_OP(pn2), atomIndex);
                 }
             }
             break;
@@ -6060,7 +6060,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          */
         if (!js_EmitTree(cx, cg, pn->pn_kid))
             return JS_FALSE;
-        EMIT_UINT16_IMM_OP(pn->pn_op, cg->arrayCompSlot);
+        EMIT_UINT16_IMM_OP(PN_OP(pn), cg->arrayCompSlot);
         break;
 #endif
 
@@ -6268,12 +6268,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * avoid all this RegExp object cloning business.
              */
             JS_ASSERT(!(cx->fp->flags & (JSFRAME_EVAL | JSFRAME_COMPILE_N_GO)));
-            ok = EmitIndexOp(cx, pn->pn_op,
+            ok = EmitIndexOp(cx, PN_OP(pn),
                              IndexParsedObject(pn->pn_pob, &cg->regexpList),
                              cg);
         } else {
             JS_ASSERT(pn->pn_op == JSOP_OBJECT);
-            ok = EmitObjectOp(cx, pn->pn_pob, pn->pn_op, cg);
+            ok = EmitObjectOp(cx, pn->pn_pob, PN_OP(pn), cg);
         }
         break;
 
