@@ -217,10 +217,8 @@ var PlacesOrganizer = {
     var findCommand = document.getElementById("OrganizerCommand_find:current");
     var findLabel = PlacesUtils.getFormattedString("findInPrefix", [node.title]);
     findCommand.setAttribute("label", findLabel);
-    if (PlacesSearchBox.filterCollection == "collection") {
+    if (PlacesSearchBox.filterCollection == "collection")
       PlacesSearchBox.updateCollectionTitle(node.title);
-      PlacesSearchBox.syncGrayText();
-    }
   },
 
   /**
@@ -410,6 +408,8 @@ var PlacesSearchBox = {
     }
     else
       this.searchFilter.grayText = PlacesUtils.getString("searchByDefault");
+
+    this.syncGrayText();
   },
 
   /**
