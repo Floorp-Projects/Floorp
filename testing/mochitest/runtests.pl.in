@@ -359,55 +359,15 @@ sub initializeProfile {
   my ($app_path, $do_browser_tests) = @_;
   my $pref_content = <<PREFEND;
 user_pref("browser.dom.window.dump.enabled", true);
+user_pref("capability.principal.codebase.p1.granted", "UniversalXPConnect UniversalBrowserRead UniversalBrowserWrite UniversalPreferencesRead UniversalPreferencesWrite UniversalFileRead");
+user_pref("capability.principal.codebase.p1.id", "http://localhost:8888");
+user_pref("capability.principal.codebase.p1.subjectName", "");
 user_pref("dom.disable_open_during_load", false);
 user_pref("dom.max_script_run_time", 0); // no slow script dialogs
 user_pref("signed.applets.codebase_principal_support", true);
 user_pref("security.warn_submit_insecure", false);
 user_pref("browser.shell.checkDefaultBrowser", false);
 PREFEND
-
-  #
-  # Since some tests require cross-domain support in Mochitest, across ports,
-  # domains, subdomains, etc. we have a proxying hack in cross-domain.js which
-  # maps a bunch of servers onto localhost:8888.  We have to grant them the same
-  # privileges as localhost:8888 here, since the browser only knows them as the
-  # URLs they're pretending to be.  See cross-domain.js for the other copy of
-  # this list.
-  #
-  # KEEP THESE TWO LISTS IN SYNC!
-  #
-  my @servers = ("http://localhost:8888",
-                 "http://example.org:80",
-                 "http://test1.example.org:80",
-                 "http://test2.example.org:80",
-                 "http://sub1.test1.example.org:80",
-                 "http://sub1.test2.example.org:80",
-                 "http://sub2.test1.example.org:80",
-                 "http://sub2.test2.example.org:80",
-                 "http://example.org:8000",
-                 "http://test1.example.org:8000",
-                 "http://test2.example.org:8000",
-                 "http://sub1.test1.example.org:8000",
-                 "http://sub1.test2.example.org:8000",
-                 "http://sub2.test1.example.org:8000",
-                 "http://sub2.test2.example.org:8000",
-                 "http://example.com:80",
-                 "http://test1.example.com:80",
-                 "http://test2.example.com:80",
-                 "http://sub1.test1.example.com:80",
-                 "http://sub1.test2.example.com:80",
-                 "http://sub2.test1.example.com:80",
-                 "http://sub2.test2.example.com:80");
-  my $i = 1;
-  my $server;
-  foreach $server (@servers) {
-    $pref_content .= <<SERVERPREFEND;
-user_pref("capability.principal.codebase.p$i.granted", "UniversalXPConnect UniversalBrowserRead UniversalBrowserWrite UniversalPreferencesRead UniversalPreferencesWrite UniversalFileRead");
-user_pref("capability.principal.codebase.p$i.id", "$server");
-user_pref("capability.principal.codebase.p$i.subjectName", "");
-SERVERPREFEND
-    $i++;
-  }
 
   my $chrome_content = <<CHROMEEND;
 \@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
