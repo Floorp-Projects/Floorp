@@ -139,7 +139,7 @@ PlacesController.prototype = {
         return false;
 
       if (this._view.hasSingleSelection && PlacesUtils.nodeIsFolder(node)) {
-        var contents = PlacesUtils.getFolderContents(node.itemId, false, false);
+        var contents = PlacesUtils.getFolderContents(node.itemId, false, false).root;
         for (var i = 0; i < contents.childCount; ++i) {
           var child = contents.getChild(i);
           if (PlacesUtils.nodeIsURI(child))
@@ -894,7 +894,7 @@ PlacesController.prototype = {
       // Open each uri in the folder in a tab.
       var index = firstIndex;
       var urlsToOpen = [];
-      var contents = PlacesUtils.getFolderContents(node.itemId, false, false);
+      var contents = PlacesUtils.getFolderContents(node.itemId, false, false).root;
       for (var i = 0; i < contents.childCount; ++i) {
         var child = contents.getChild(i);
         if (PlacesUtils.nodeIsURI(child))
@@ -1874,7 +1874,7 @@ PlacesRemoveFolderTransaction.prototype = {
    */
   _saveFolderContents: function PRFT__saveFolderContents() {
     this._transactions = [];
-    var contents = this.utils.getFolderContents(this._id, false, false);
+    var contents = this.utils.getFolderContents(this._id, false, false).root;
     var ios = Cc["@mozilla.org/network/io-service;1"].
               getService(Ci.nsIIOService);  
     for (var i = 0; i < contents.childCount; ++i) {
@@ -2235,7 +2235,7 @@ PlacesSortFolderByNameTransaction.prototype = {
   doTransaction: function PSSFBN_doTransaction() {
     this._oldOrder = [];
 
-    var contents = this.utils.getFolderContents(this._folderId, false, false);
+    var contents = this.utils.getFolderContents(this._folderId, false, false).root;
     var count = contents.childCount;
 
     // sort between separators
