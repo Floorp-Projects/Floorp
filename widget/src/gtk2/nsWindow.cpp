@@ -1631,6 +1631,9 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     GdkRectangle *rects;
     gint nrects;
     gdk_region_get_rectangles(aEvent->region, &rects, &nrects);
+    if (NS_UNLIKELY(!rects)) // OOM
+        return FALSE;
+
     LOGDRAW(("sending expose event [%p] %p 0x%lx (rects follow):\n",
              (void *)this, (void *)aEvent->window,
              GDK_WINDOW_XWINDOW(aEvent->window)));
@@ -1643,6 +1646,10 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     }
 
     nsCOMPtr<nsIRenderingContext> rc = getter_AddRefs(GetRenderingContext());
+    if (NS_UNLIKELY(!rc)) {
+        g_free(rects);
+        return FALSE;
+    }
 
     PRBool translucent;
     GetWindowTranslucency(translucent);
@@ -1747,16 +1754,20 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
                 nsRefPtr<gfxImageSurface> img =
                     new gfxImageSurface(gfxIntSize(boundsRect.width, boundsRect.height),
                                         gfxImageSurface::ImageFormatA8);
-                img->SetDeviceOffset(gfxPoint(-boundsRect.x, -boundsRect.y));
+                if (img && !img->CairoStatus()) {
+                    img->SetDeviceOffset(gfxPoint(-boundsRect.x, -boundsRect.y));
             
-                nsRefPtr<gfxContext> imgCtx = new gfxContext(img);
-                imgCtx->SetPattern(pattern);
-                imgCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-                imgCtx->Paint();
-        
-                UpdateTranslucentWindowAlphaInternal(nsRect(boundsRect.x, boundsRect.y,
-                                                            boundsRect.width, boundsRect.height),
-                                                     img->Data(), img->Stride());
+                    nsRefPtr<gfxContext> imgCtx = new gfxContext(img);
+                    if (imgCtx) {
+                        imgCtx->SetPattern(pattern);
+                        imgCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
+                        imgCtx->Paint();
+                    }
+
+                    UpdateTranslucentWindowAlphaInternal(nsRect(boundsRect.x, boundsRect.y,
+                                                                boundsRect.width, boundsRect.height),
+                                                         img->Data(), img->Stride());
+                }
             } else {
 #ifdef MOZ_ENABLE_GLITZ
                 ctx->PopGroupToSource();
@@ -5829,7 +5840,12 @@ nsWindow::GetThebesSurface()
                  GDK_WINDOW_XWINDOW(d),
                  GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(d)),
                  gfxIntSize(width, height));
-            gfxPlatformGtk::GetPlatform()->SetSurfaceGdkWindow(mThebesSurface, GDK_WINDOW(d));
+            if (mThebesSurface && !mThebesSurface->CairoStatus()) {
+                gfxPlatformGtk::GetPlatform()->SetSurfaceGdkWindow(mThebesSurface, GDK_WINDOW(d));
+            }
+            else {
+                mThebesSurface = nsnull;
+            }
         } else {
 #ifdef MOZ_ENABLE_GLITZ
             glitz_surface_t *gsurf;

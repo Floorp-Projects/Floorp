@@ -613,7 +613,9 @@ nsIRenderingContext* nsBaseWidget::GetRenderingContext()
   rv = mContext->CreateRenderingContextInstance(*getter_AddRefs(renderingCtx));
   if (NS_SUCCEEDED(rv)) {
 #if defined(MOZ_CAIRO_GFX)
-    rv = renderingCtx->Init(mContext, GetThebesSurface());
+    gfxASurface* surface = GetThebesSurface();
+    NS_ENSURE_TRUE(surface, nsnull);
+    rv = renderingCtx->Init(mContext, surface);
 #else
     rv = renderingCtx->Init(mContext, this);
 #endif
