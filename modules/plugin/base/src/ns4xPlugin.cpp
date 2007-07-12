@@ -166,8 +166,10 @@ PR_BEGIN_EXTERN_C
   static void NP_CALLBACK
   _poppopupsenabledstate(NPP npp);
 
+  typedef void(*PluginThreadCallback)(void *);
   static void NP_CALLBACK
-  _pluginthreadasynccall(NPP instance, void (*func)(void *), void *userData);
+  _pluginthreadasynccall(NPP instance, PluginThreadCallback func,
+                         void *userData);
 
   static const char* NP_CALLBACK
   _useragent(NPP npp);
@@ -2206,7 +2208,8 @@ class nsPluginThreadRunnable : public nsRunnable,
                                public PRCList
 {
 public:
-  nsPluginThreadRunnable(NPP instance, void (*func)(void *), void *userData);
+  nsPluginThreadRunnable(NPP instance, PluginThreadCallback func,
+                         void *userData);
   virtual ~nsPluginThreadRunnable();
 
   NS_IMETHOD Run();
@@ -2228,12 +2231,12 @@ public:
 
 private:  
   NPP mInstance;
-  void (*mFunc)(void *);
+  PluginThreadCallback mFunc;
   void *mUserData;
 };
 
 nsPluginThreadRunnable::nsPluginThreadRunnable(NPP instance,
-                                               void (*func)(void *),
+                                               PluginThreadCallback func,
                                                void *userData)
   : mInstance(instance), mFunc(func), mUserData(userData)
 {
@@ -2285,7 +2288,7 @@ nsPluginThreadRunnable::Run()
 }
 
 void NP_CALLBACK
-_pluginthreadasynccall(NPP instance, void (*func)(void *), void *userData)
+_pluginthreadasynccall(NPP instance, PluginThreadCallback func, void *userData)
 {
   nsRefPtr<nsPluginThreadRunnable> evt =
     new nsPluginThreadRunnable(instance, func, userData);
