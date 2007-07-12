@@ -70,13 +70,12 @@ Tester.prototype = {
     try {
       this.currentTest.scope.test();
     } catch (ex) {
-      this.currentTest.exception = ex;
+      this.currentTest.tests.push(new testResult(false, "Exception thrown", ex, false));
     }
 
-    // If the test ran synchronously, set the result and move to the next test,
+    // If the test ran synchronously, move to the next test,
     // otherwise start a poller to monitor it's progress.
     if (this.currentTest.scope.done) {
-      this.currentTest.result = this.currentTest.scope.result;
       this.execTest();
     } else {
       var self = this;
@@ -90,9 +89,13 @@ function testResult(aCondition, aName, aDiag, aIsTodo) {
   aName = aName || "";
 
   this.pass = !!aCondition;
-  if (this.pass)
-    this.msg = "\tPASS - " + aName;
-  else {
+  this.todo = aIsTodo;
+  if (this.pass) {
+    if (aIsTodo)
+      this.msg = "\tTODO PASS - " + aName;
+    else
+      this.msg = "\tPASS - " + aName;
+  } else {
     this.msg = "\tFAIL - ";
     if (aIsTodo)
       this.msg += "TODO Worked? - ";
@@ -158,14 +161,11 @@ resultPoller.prototype = {
       self.loopCount++;
   
       if (self.loopCount > MAX_LOOP_COUNT) {
-        self.test.timedOut = true;
+        self.test.tests.push(new testResult(false, "Timed out", "", false));
         self.test.scope.done = true;
       }
 
       if (self.test.scope.done) {
-        // Set the result
-        self.test.result = self.test.scope.result;
-
         clearInterval(self.interval);
 
         // Notify the callback
