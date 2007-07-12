@@ -38,7 +38,7 @@
 var gTestfile = 'regress-350809.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 350809;
-var summary = 'Assertion if yield in xml filtering predicate';
+var summary = 'Do not assertion: if yield in xml filtering predicate';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
