@@ -470,6 +470,15 @@ SetRestartArgs(int argc, char **argv)
 
   PR_SetEnv(env);
 
+  // make sure we save the info in XUL_APP_FILE for the reporter
+  const char *appfile = PR_GetEnv("XUL_APP_FILE");
+  if (appfile && *appfile) {
+    envVar = "MOZ_CRASHREPORTER_RESTART_XUL_APP_FILE=";
+    envVar += appfile;
+    env = ToNewCString(envVar);
+    PR_SetEnv(env);
+  }
+
   return NS_OK;
 }
 } // namespace CrashReporter
