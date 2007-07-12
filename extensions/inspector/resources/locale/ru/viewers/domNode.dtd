@@ -21,6 +21,7 @@
    -
    - Contributor(s):
    -   Shawn Wilsher <me@shawnwilsher.com>
+   -   Alexander L. Slovesnik <unghost@mozilla-russia.org> (Russian translation)
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,6 +38,7 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 <!ENTITY nodeName.label "Имя узла:">
+<!ENTITY localName.label "Локальное имя:">
 <!ENTITY namespaceURI.label "URI пространства имен:">
 <!ENTITY nodeType.label "Тип узла:">
 <!ENTITY nodeValue.label "Значение узла:">

@@ -15,11 +15,12 @@
    - The Original Code is DOM Inspector.
    -
    - The Initial Developer of the Original Code is
-   - Netscape Communications Corporation.
-   - Portions created by the Initial Developer are Copyright (C) 2003
+   - Vasiliy Potapenko
+   - Portions created by the Initial Developer are Copyright (C) 2007
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
+   - Vasiliy Potapenko <vasiliy.potapenko@gmail.com>
    -   Alexander L. Slovesnik <unghost@mozilla-russia.org> (Russian translation)
    -
    - Alternatively, the contents of this file may be used under the terms of
@@ -36,8 +37,9 @@
    -
 #endif
    - ***** END LICENSE BLOCK ***** -->
-<!ENTITY boxPosition.label "Расположение">
-<!ENTITY boxDimension.label "Размеры">
-<!ENTITY boxMargin.label "Поле">
-<!ENTITY boxBorder.label "Граница">
-<!ENTITY boxPadding.label "Отступ">
+<!ENTITY descRole.label "Роль:">
+<!ENTITY descName.label "Имя:">
+<!ENTITY descDescription.label "Описание:">
+<!ENTITY descValue.label "Значение:">
+<!ENTITY descState.label "Состояние:">
+<!ENTITY descActionName.label "Имя действия:">
