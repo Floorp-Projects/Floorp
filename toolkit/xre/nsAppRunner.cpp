@@ -2995,9 +2995,11 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
         }
       }
-
-      profileLock->Unlock();
     }
+
+    // unlock the profile after ScopedXPCOMStartup object (xpcom) 
+    // has gone out of scope.  see bug #386739 for more details
+    profileLock->Unlock();
 
     // Restart the app after XPCOM has been shut down cleanly. 
     if (needsRestart) {
