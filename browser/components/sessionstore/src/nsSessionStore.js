@@ -351,6 +351,8 @@ SessionStoreService.prototype = {
   handleEvent: function sss_handleEvent(aEvent) {
     switch (aEvent.type) {
       case "load":
+        this.onTabLoad(aEvent.currentTarget.ownerDocument.defaultView, aEvent.currentTarget, aEvent);
+        break;
       case "pageshow":
         this.onTabLoad(aEvent.currentTarget.ownerDocument.defaultView, aEvent.currentTarget, aEvent);
         break;
@@ -580,9 +582,6 @@ SessionStoreService.prototype = {
     delete aPanel.__SS_data;
     delete aPanel.__SS_text;
     this.saveStateDelayed(aWindow);
-    
-    // attempt to update the current URL we send in a crash report
-    this._updateCrashReportURL(aWindow);
   },
 
   /**
@@ -612,9 +611,6 @@ SessionStoreService.prototype = {
     if (this._loadState == STATE_RUNNING) {
       this._windows[aWindow.__SSi].selected = aPanels.selectedIndex;
       this.saveStateDelayed(aWindow);
-
-      // attempt to update the current URL we send in a crash report
-      this._updateCrashReportURL(aWindow);
     }
   },
 
@@ -1873,26 +1869,11 @@ SessionStoreService.prototype = {
    * @param string
    * @returns nsIURI
    */
-  _getURIFromString: function sss_getURIFromString(aString) {
-    var ioService = Cc["@mozilla.org/network/io-service;1"].
-                    getService(Ci.nsIIOService);
-    return ioService.newURI(aString, null, null);
-  },
-
-  /**
-   * Annotate a breakpad crash report with the currently selected tab's URL.
-   */
-  _updateCrashReportURL: function sss_updateCrashReportURL(aWindow) {
-     var currentUrl = aWindow.getBrowser().currentURI.spec;
-     try {
-       var cr = Cc["@mozilla.org/xre/app-info;1"].
-                getService(Ci.nsICrashReporter);
-       cr.annotateCrashReport("URL", currentUrl);
-     }
-     catch (ex) {
-       // if breakpad isn't built, we can't annotate the report
-     }
-  },
+   _getURIFromString: function sss_getURIFromString(aString) {
+     var ioService = Cc["@mozilla.org/network/io-service;1"].
+                     getService(Ci.nsIIOService);
+     return ioService.newURI(aString, null, null);
+   },
 
   /**
    * safe eval'ing
