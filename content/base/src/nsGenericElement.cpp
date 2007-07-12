@@ -3564,8 +3564,16 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
 
   nsIDocument* document = GetCurrentDoc();
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
-  if (aNotify && document) {
-    document->AttributeWillChange(this, aNamespaceID, aName);
+
+  // When notifying, make sure to keep track of states whose value
+  // depends solely on the value of an attribute.
+  PRUint32 stateMask;
+  if (aNotify) {
+    stateMask = PRUint32(IntrinsicState());
+    
+    if (document) {
+      document->AttributeWillChange(this, aNamespaceID, aName);
+    }
   }
 
   if (aNamespaceID == kNameSpaceID_None) {
@@ -3596,7 +3604,13 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
   }
 
   if (aNotify) {
-    nsNodeUtils::AttributeChanged(this, aNamespaceID, aName, modType);
+    stateMask = stateMask ^ PRUint32(IntrinsicState());
+    if (stateMask && document) {
+      MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, aNotify);
+      document->ContentStatesChanged(this, nsnull, stateMask);
+    }
+    nsNodeUtils::AttributeChanged(this, aNamespaceID, aName, modType,
+                                  stateMask);
   }
   
   if (aFireMutation) {
@@ -3795,6 +3809,13 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
   }
 
+  // When notifying, make sure to keep track of states whose value
+  // depends solely on the value of an attribute.
+  PRUint32 stateMask;
+  if (aNotify) {
+    stateMask = PRUint32(IntrinsicState());
+  }    
+
   PRBool hasMutationListeners = aNotify &&
     nsContentUtils::HasMutationListeners(this,
                                          NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
@@ -3827,8 +3848,14 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   }
 
   if (aNotify) {
+    stateMask = stateMask ^ PRUint32(IntrinsicState());
+    if (stateMask && document) {
+      MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, aNotify);
+      document->ContentStatesChanged(this, nsnull, stateMask);
+    }
     nsNodeUtils::AttributeChanged(this, aNameSpaceID, aName,
-                                  nsIDOMMutationEvent::REMOVAL);
+                                  nsIDOMMutationEvent::REMOVAL,
+                                  stateMask);
   }
 
   if (hasMutationListeners) {

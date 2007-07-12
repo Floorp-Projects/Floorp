@@ -2904,6 +2904,9 @@ nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
 
     if (mForm && aName == nsGkAtoms::type) {
+      nsIDocument* doc = GetCurrentDoc();
+      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, aNotify);
+      
       GetAttr(kNameSpaceID_None, nsGkAtoms::name, tmp);
 
       if (!tmp.IsEmpty()) {
@@ -2917,6 +2920,14 @@ nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       }
 
       mForm->RemoveElement(this, aNotify);
+
+      // Removing the element from the form can make it not be the default
+      // control anymore.  Go ahead and notify on that change, though we might
+      // end up readding and becoming the default control again in
+      // AfterSetAttr.
+      if (doc && aNotify) {
+        doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_DEFAULT);
+      }
     }
   }
 
@@ -2958,21 +2969,12 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
       mForm->AddElement(this, aNotify);
 
+      // Adding the element to the form can make it be the default control .
+      // Go ahead and notify on that change.
       // Note: no need to notify on CanBeDisabled(), since type attr
       // changes can't affect that.
       if (doc && aNotify) {
         doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_DEFAULT);
-      }
-    }
-
-    // And notify on content state changes, if any
-    
-    if (aNotify && aName == nsGkAtoms::disabled && CanBeDisabled()) {
-      nsIDocument* document = GetCurrentDoc();
-      if (document) {
-        mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, PR_TRUE);
-        document->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_DISABLED |
-                                       NS_EVENT_STATE_ENABLED);
       }
     }
   }

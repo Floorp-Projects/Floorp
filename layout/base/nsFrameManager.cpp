@@ -1446,12 +1446,14 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
 nsReStyleHint
 nsFrameManager::HasAttributeDependentStyle(nsIContent *aContent,
                                            nsIAtom *aAttribute,
-                                           PRInt32 aModType)
+                                           PRInt32 aModType,
+                                           PRUint32 aStateMask)
 {
   nsReStyleHint hint = mStyleSet->HasAttributeDependentStyle(GetPresContext(),
                                                              aContent,
                                                              aAttribute,
-                                                             aModType);
+                                                             aModType,
+                                                             aStateMask);
 
   if (aAttribute == nsGkAtoms::style) {
     // Perhaps should check that it's XUL, SVG, (or HTML) namespace, but

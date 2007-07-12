@@ -101,12 +101,15 @@ public:
    * @param aModType     Whether or not the attribute was added, changed, or
    *                     removed. The constants are defined in
    *                     nsIDOMMutationEvent.h.
+   * @param aStateMask If this attribute change caused content state changes,
+   *                   the bits that changed.  Might be 0 if no bits changed.
    */
   virtual void AttributeChanged(nsIDocument* aDocument,
                                 nsIContent*  aContent,
                                 PRInt32      aNameSpaceID,
                                 nsIAtom*     aAttribute,
-                                PRInt32      aModType) = 0;
+                                PRInt32      aModType,
+                                PRUint32     aStateMask) = 0;
 
   /**
    * Notification that one or more content nodes have been appended to the
@@ -201,7 +204,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIMutationObserver, NS_IMUTATION_OBSERVER_IID)
                                   nsIContent* aContent,                      \
                                   PRInt32 aNameSpaceID,                      \
                                   nsIAtom* aAttribute,                       \
-                                  PRInt32 aModType);
+                                  PRInt32 aModType,                          \
+                                  PRUint32 aStateMask);
 
 #define NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED                          \
     virtual void ContentAppended(nsIDocument* aDocument,                     \
@@ -253,7 +257,8 @@ _class::AttributeChanged(nsIDocument* aDocument,                          \
                          nsIContent* aContent,                            \
                          PRInt32 aNameSpaceID,                            \
                          nsIAtom* aAttribute,                             \
-                         PRInt32 aModType)                                \
+                         PRInt32 aModType,                                \
+                         PRUint32 aStateMask)                             \
 {                                                                         \
 }                                                                         \
 void                                                                      \
