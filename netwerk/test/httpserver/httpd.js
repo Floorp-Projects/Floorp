@@ -52,7 +52,7 @@ const Cr = Components.results;
 const CC = Components.Constructor;
 
 /** True if debugging output is enabled, false otherwise. */
-var DEBUG = false; // non-const *only* so tweakable in server tests
+var DEBUG = true; // non-const *only* so tweakable in server tests
 
 /**
  * Asserts that the given condition holds.  If it doesn't, the given message is
