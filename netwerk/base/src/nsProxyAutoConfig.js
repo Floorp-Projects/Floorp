@@ -78,12 +78,17 @@ nsProxyAutoConfig.prototype = {
         Components.utils.evalInSandbox(pacUtils, this._sandBox);
 
         // add predefined functions to pac
-        Components.utils.importIntoSandbox(this._sandBox, myIpAddress);
-        Components.utils.importIntoSandbox(this._sandBox, dnsResolve);
-        Components.utils.importIntoSandbox(this._sandBox, proxyAlert, "alert");
+        this._sandBox.importFunction(myIpAddress);
+        this._sandBox.importFunction(dnsResolve);
+        this._sandBox.importFunction(proxyAlert, "alert");
 
         // evaluate loaded js file
         Components.utils.evalInSandbox(pacText, this._sandBox);
+
+        // We can no longer trust this._sandBox. Touching it directly can
+        // cause all sorts of pain, so wrap it in an XPCSafeJSObjectWrapper
+        // and do all of our work through there.
+        this._sandBox = new XPCSafeJSObjectWrapper(this._sandBox);
     },
 
     getProxyForURI: function(testURI, testHost) {
@@ -97,6 +102,10 @@ nsProxyAutoConfig.prototype = {
 }
 
 function proxyAlert(msg) {
+    // Ensure that we have a string.
+    if (typeof msg != "string")
+        msg = new XPCSafeJSObjectWrapper(msg).toString();
+
     try {
         // It would appear that the console service is threadsafe.
         var cns = Components.classes["@mozilla.org/consoleservice;1"]
@@ -118,6 +127,9 @@ function myIpAddress() {
 
 // wrapper for resolving hostnames called by PAC file
 function dnsResolve(host) {
+    if (typeof host != "string")
+        host = new XPCSafeJSObjectWrapper(host).toString();
+
     try {
         return dns.resolve(host, 0).getNextAddrAsString();
     } catch (e) {
