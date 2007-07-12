@@ -23,6 +23,7 @@
  *   Paul Ashford <arougthopher@lizardland.net>
  *   Sergei Dolgov <sergei_d@fi.tartu.ee>
  *   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -2571,6 +2572,10 @@ nsresult nsWindow::OnPaint(BRegion *breg)
 	}	
 
 	nsIRenderingContext* rc = GetRenderingContext();
+	if (NS_UNLIKELY(!rc)) {
+		return NS_ERROR_FAILURE;
+	}
+
 	// Double buffering for cairo builds is done here
 #ifdef MOZ_CAIRO_GFX
 	nsRefPtr<gfxContext> ctx =
