@@ -436,7 +436,7 @@ nsFrameIterator::GetLastChild(nsIFrame* aFrame)
     result = nsPlaceholderFrame::GetRealFrameFor(result);
     
     if (result && IsPopupFrame(result))
-      result = GetNextSibling(result);
+      result = GetPrevSibling(result);
   }
   return result;
 }
