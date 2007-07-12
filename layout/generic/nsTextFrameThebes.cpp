@@ -4864,7 +4864,8 @@ nsTextFrame::GetOffsets(PRInt32 &start, PRInt32 &end) const
 static PRBool
 FindFirstLetterRange(const nsTextFragment* aFrag,
                      gfxTextRun* aTextRun,
-                     PRInt32 aOffset, PRInt32* aLength)
+                     PRInt32 aOffset, const gfxSkipCharsIterator& aIter,
+                     PRInt32* aLength)
 {
   // Find first non-whitespace, non-punctuation cluster, and stop after it
   PRInt32 i;
@@ -4878,12 +4879,16 @@ FindFirstLetterRange(const nsTextFragment* aFrag,
   if (i == length)
     return PR_FALSE;
 
-  // Advance to the end of the cluster (when i+1 starts a new cluster)
-  while (i + 1 < length) {
-    if (aTextRun->IsClusterStart(aOffset + i + 1))
+  // Advance to the end of the cluster
+  gfxSkipCharsIterator iter(aIter);
+  PRInt32 nextClusterStart;
+  for (nextClusterStart = i + 1; nextClusterStart < length; ++nextClusterStart) {
+    iter.SetOriginalOffset(nextClusterStart);
+    if (iter.IsOriginalCharSkipped() ||
+        aTextRun->IsClusterStart(iter.GetSkippedOffset()))
       break;
   }
-  *aLength = i + 1;
+  *aLength = nextClusterStart;
   return PR_TRUE;
 }
 
@@ -5303,7 +5308,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   PRBool completedFirstLetter = PR_FALSE;
   if (lineLayout.GetFirstLetterStyleOK()) {
     AddStateBits(TEXT_FIRST_LETTER);
-    completedFirstLetter = FindFirstLetterRange(frag, mTextRun, offset, &length);
+    completedFirstLetter = FindFirstLetterRange(frag, mTextRun, offset, iter, &length);
   }
 
   /////////////////////////////////////////////////////////////////////
