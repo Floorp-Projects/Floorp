@@ -228,32 +228,11 @@ EnsureLegalActivity(JSContext *cx, JSObject *obj)
     return JS_TRUE;
   }
 
-  // Search for the first scripted frame, like JS_GetTopScriptFilenameFlags.
   JSStackFrame *frame = nsnull;
-  while (JS_FrameIterator(cx, &frame) && !JS_GetFrameScript(cx, frame)) {
-    continue;
-  }
-
-  if (!frame) {
-    // Don't know anything about the caller -- allow access.
-    // XXX Revisit this after bug 344495's patch is checked in.
-    return JS_TRUE;
-  }
-
-  // We can't trust the filename of a cloned function -- in that case
-  // we need to fall back to checking principals.
-  JSBool isClone = JS_FALSE;
-  JSFunction *fun = JS_GetFrameFunction(cx, frame);
-  if (fun) {
-    JSObject *funobj = JS_GetFrameFunctionObject(cx, frame);
-    if (funobj != JS_GetFunctionObject(fun)) {
-      isClone = JS_TRUE;
-    }
-  }
-
-  uint32 fileFlags = JS_GetScriptFilenameFlags(JS_GetFrameScript(cx, frame));
-  NS_ASSERTION(fileFlags != JSFILENAME_NULL, "Invalid flags for a filename");
-  if (!isClone && (fileFlags & JSFILENAME_SYSTEM)) {
+  uint32 fileFlags = JS_GetTopScriptFilenameFlags(cx, NULL);
+  if (!JS_FrameIterator(cx, &frame) ||
+      fileFlags == JSFILENAME_NULL ||
+      (fileFlags & JSFILENAME_SYSTEM)) {
     // We expect implicit native wrappers in system files.
     return JS_TRUE;
   }
