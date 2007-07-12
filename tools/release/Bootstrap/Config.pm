@@ -9,7 +9,7 @@ use strict;
 use POSIX "uname";
 use File::Copy qw(move);
 
-use Bootstrap::Util qw(GetLocaleManifest);
+use Bootstrap::Util qw(GetLocaleManifest CvsCatfile);
 
 # shared static config
 my %config;
@@ -130,6 +130,40 @@ sub GetLocaleInfo {
     }
 
     return $this->Get(var => 'localeInfo');
+}
+
+##
+# GetFtpCandidateDir - construct the FTP path for pushing builds & updates to
+# returns scalar
+#
+# mandatory argument:
+#    bitsUnsigned - boolean - 1 for unsigned, 0 for signed
+#      adds "unsigned/" prefix for windows and version >= 2.0
+##
+
+sub GetFtpCandidateDir {
+    my $this = shift;
+    my %args = @_;
+
+    if (! defined($args{'bitsUnsigned'})) {
+      die "ASSERT: Bootstep::Config::GetFtpCandidateDir(): bitsUnsigned is a required argument";
+    }
+    my $bitsUnsigned = $args{'bitsUnsigned'};
+
+    my $product = $config{'product'};
+    my $version = $config{'version'};
+    my $rc = $config{'rc'};
+
+    my $candidateDir = CvsCatfile('/home', 'ftp', 'pub', $product, 'nightly',
+                            $version . '-candidates', 'rc' . $rc ) . '/';
+
+    my $osFileMatch = $this->SystemInfo(var => 'osname');
+
+    if ($bitsUnsigned && ($osFileMatch eq 'win32')  && ($version ge '2.0')) {
+        $candidateDir .= 'unsigned/';
+    }
+
+    return $candidateDir;  
 }
 
 ##
