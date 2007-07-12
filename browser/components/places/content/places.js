@@ -318,8 +318,8 @@ var PlacesOrganizer = {
     var selectedNode = aView.selectedNode;
     if (selectedNode) {
       if (PlacesUtils.nodeIsFolder(selectedNode)) {
-        var childsCount =
-          PlacesUtils.getFolderContents(selectedNode.itemId).childCount;
+        var childsCount = 
+          PlacesUtils.getFolderContents(selectedNode.itemId).root.childCount;
         statusText = PlacesUtils.getFormattedString("status_foldercount",
                                                     [childsCount]);
       }
