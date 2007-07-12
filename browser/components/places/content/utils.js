@@ -709,7 +709,7 @@ var PlacesUtils = {
   },
 
   /**
-   * Generates a HistoryResultNode for the contents of a folder.
+   * Generates a nsINavHistoryResult for the contents of a folder.
    * @param   folderId
    *          The folder to open
    * @param   [optional] excludeItems
@@ -719,8 +719,8 @@ var PlacesUtils = {
    *          True to make query items expand as new containers. For managing,
    *          you want this to be false, for menus and such, you want this to
    *          be true.
-   * @returns A HistoryContainerResultNode containing the contents of the
-   *          folder. This container is guaranteed to be open.
+   * @returns A nsINavHistoryResult containing the contents of the
+   *          folder. The result.root is guaranteed to be open.
    */
   getFolderContents:
   function PU_getFolderContents(aFolderId, aExcludeItems, aExpandQueries) {
@@ -733,7 +733,8 @@ var PlacesUtils = {
 
     var result = this.history.executeQuery(query, options);
     result.root.containerOpen = true;
-    return asContainer(result.root);
+    asContainer(result.root);
+    return result;
   },
 
   /**
