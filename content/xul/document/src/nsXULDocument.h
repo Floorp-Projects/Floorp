@@ -658,11 +658,13 @@ protected:
 
     class ParserObserver : public nsIRequestObserver {
     protected:
-        nsXULDocument* mDocument;
+        nsRefPtr<nsXULDocument> mDocument;
+        nsRefPtr<nsXULPrototypeDocument> mPrototype;
         virtual ~ParserObserver();
 
     public:
-        ParserObserver(nsXULDocument* aDocument);
+        ParserObserver(nsXULDocument* aDocument,
+                       nsXULPrototypeDocument* aPrototype);
 
         NS_DECL_ISUPPORTS
         NS_DECL_NSIREQUESTOBSERVER

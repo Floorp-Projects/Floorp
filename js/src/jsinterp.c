@@ -1305,6 +1305,10 @@ have_fun:
         /* If native, use caller varobj and scopeChain for eval. */
         frame.varobj = fp->varobj;
         frame.scopeChain = fp->scopeChain;
+
+        /* But ensure that we have a scope chain. */
+        if (!frame.scopeChain)
+            frame.scopeChain = parent;
         ok = native(cx, frame.thisp, argc, frame.argv, &frame.rval);
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
 #ifdef DEBUG_NOT_THROWING
@@ -4122,6 +4126,18 @@ interrupt:
             PUSH_OPND(rval);
           END_CASE(JSOP_UINT24)
 
+          BEGIN_CASE(JSOP_INT8)
+            i = GET_INT8(pc);
+            rval = INT_TO_JSVAL(i);
+            PUSH_OPND(rval);
+          END_CASE(JSOP_INT8)
+
+          BEGIN_CASE(JSOP_INT32)
+            i = GET_INT32(pc);
+            rval = INT_TO_JSVAL(i);
+            PUSH_OPND(rval);
+          END_CASE(JSOP_INT32)
+
           BEGIN_CASE(JSOP_INDEXBASE)
             /*
              * Here atoms can exceed script->atomMap.length as we use atoms
@@ -4141,11 +4157,11 @@ interrupt:
             atoms = script->atomMap.vector;
           END_CASE(JSOP_RESETBASE)
 
-          BEGIN_CASE(JSOP_NUMBER)
+          BEGIN_CASE(JSOP_DOUBLE)
           BEGIN_CASE(JSOP_STRING)
             LOAD_ATOM(0);
             PUSH_OPND(ATOM_KEY(atom));
-          END_CASE(JSOP_NUMBER)
+          END_CASE(JSOP_DOUBLE)
 
           BEGIN_CASE(JSOP_OBJECT)
             LOAD_OBJECT(0);
@@ -5168,7 +5184,8 @@ interrupt:
             JS_ASSERT(sp - fp->spbase >= 1);
             lval = FETCH_OPND(-1);
             JS_ASSERT(JSVAL_IS_OBJECT(lval));
-            cx->weakRoots.newborn[GCX_OBJECT] = JSVAL_TO_GCTHING(lval);
+            cx->weakRoots.newborn[GCX_OBJECT] =
+                (JSGCThing *)JSVAL_TO_GCTHING(lval);
           END_CASE(JSOP_ENDINIT)
 
           BEGIN_CASE(JSOP_INITPROP)

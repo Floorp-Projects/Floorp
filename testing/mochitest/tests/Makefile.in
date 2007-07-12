@@ -44,6 +44,7 @@ relativesrcdir  = testing/mochitest/tests
 include $(DEPTH)/config/autoconf.mk
 
 DIRS =	 SimpleTest \
+	 browser \
 	 $(NULL)
 
 include $(topsrcdir)/config/rules.mk

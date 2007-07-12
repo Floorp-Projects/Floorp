@@ -129,6 +129,31 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::GetRowHeader(nsIAccessibleTable **aRowHea
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsXULTreeAccessibleWrap::GetSelectedCellsCount(PRUint32* aCount)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULTreeAccessibleWrap::GetSelectedColumnsCount(PRUint32* aCount)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULTreeAccessibleWrap::GetSelectedRowsCount(PRUint32* aCount)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULTreeAccessibleWrap::GetSelectedCells(PRUint32 *aNumCells,
+                                          PRInt32 **aCells)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsXULTreeAccessibleWrap::GetSelectedColumns(PRUint32 *aNumColumns, PRInt32 **aColumns)
 {
   // If all the row has been selected, then all the columns are selected.
@@ -449,6 +474,31 @@ NS_IMETHODIMP nsXULTreeColumnsAccessibleWrap::GetRows(PRInt32 *aRows)
 NS_IMETHODIMP nsXULTreeColumnsAccessibleWrap::GetRowHeader(nsIAccessibleTable * *aRowHeader)
 {
   // Row header not supported.
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULTreeColumnsAccessibleWrap::GetSelectedCellsCount(PRUint32* aCount)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULTreeColumnsAccessibleWrap::GetSelectedColumnsCount(PRUint32* aCount)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULTreeColumnsAccessibleWrap::GetSelectedRowsCount(PRUint32* aCount)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULTreeColumnsAccessibleWrap::GetSelectedCells(PRUint32 *aNumCells,
+                                                 PRInt32 **aCells)
+{
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

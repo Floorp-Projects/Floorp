@@ -709,7 +709,7 @@ var PlacesUtils = {
   },
 
   /**
-   * Generates a HistoryResultNode for the contents of a folder.
+   * Generates a nsINavHistoryResult for the contents of a folder.
    * @param   folderId
    *          The folder to open
    * @param   [optional] excludeItems
@@ -719,8 +719,8 @@ var PlacesUtils = {
    *          True to make query items expand as new containers. For managing,
    *          you want this to be false, for menus and such, you want this to
    *          be true.
-   * @returns A HistoryContainerResultNode containing the contents of the
-   *          folder. This container is guaranteed to be open.
+   * @returns A nsINavHistoryResult containing the contents of the
+   *          folder. The result.root is guaranteed to be open.
    */
   getFolderContents:
   function PU_getFolderContents(aFolderId, aExcludeItems, aExpandQueries) {
@@ -733,7 +733,8 @@ var PlacesUtils = {
 
     var result = this.history.executeQuery(query, options);
     result.root.containerOpen = true;
-    return asContainer(result.root);
+    asContainer(result.root);
+    return result;
   },
 
   /**
@@ -1143,25 +1144,14 @@ var PlacesUtils = {
     for (var i = 0; i < annoNames.length; i++) {
       var flags = {}, exp = {}, mimeType = {}, storageType = {};
       annosvc.getPageAnnotationInfo(aURI, annoNames[i], flags, exp, mimeType, storageType);
-      switch (storageType.value) {
-        case annosvc.TYPE_INT32:
-          val = annosvc.getPageAnnotationInt32(aURI, annoNames[i]);
-          break;
-        case annosvc.TYPE_INT64:
-          val = annosvc.getPageAnnotationInt64(aURI, annoNames[i]);
-          break;
-        case annosvc.TYPE_DOUBLE:
-          val = annosvc.getPageAnnotationDouble(aURI, annoNames[i]);
-          break;
-        case annosvc.TYPE_STRING:
-          val = annosvc.getPageAnnotationString(aURI, annoNames[i]);
-          break;
-        case annosvc.TYPE_BINARY:
-          var data = {}, length = {}, mimeType = {};
-          annosvc.getPageAnnotationBinary(aURI, annoNames[i], data, length, mimeType);
-          val = data.value;
-          break;
+      if (storageType.value == annosvc.TYPE_BINARY) {
+        var data = {}, length = {}, mimeType = {};
+        annosvc.getPageAnnotationBinary(aURI, annoNames[i], data, length, mimeType);
+        val = data.value;
       }
+      else
+        val = annosvc.getPageAnnotation(aURI, annoNames[i]);
+
       annos.push({name: annoNames[i],
                   flags: flags.value,
                   expires: exp.value,
@@ -1173,7 +1163,7 @@ var PlacesUtils = {
   },
 
   /**
-   * Fetch all annotations for a URI, including all properties of each
+   * Fetch all annotations for an item, including all properties of each
    * annotation which would be required to recreate it.
    * @param aItemId
    *        The identifier of the itme for which annotations are to be
@@ -1187,27 +1177,15 @@ var PlacesUtils = {
     var annoNames = annosvc.getItemAnnotationNames(aItemId, {});
     for (var i = 0; i < annoNames.length; i++) {
       var flags = {}, exp = {}, mimeType = {}, storageType = {};
-      annosvc.getItemAnnotationInfo(aItemId, annoNames[i], flags, exp,
-                                    mimeType, storageType);
-      switch (storageType.value) {
-        case annosvc.TYPE_INT32:
-          val = annosvc.getItemAnnotationInt32(aItemId, annoNames[i]);
-          break;
-        case annosvc.TYPE_INT64:
-          val = annosvc.getItemAnnotationInt64(aItemId, annoNames[i]);
-          break;
-        case annosvc.TYPE_DOUBLE:
-          val = annosvc.getItemAnnotationDouble(aItemId, annoNames[i]);
-          break;
-        case annosvc.TYPE_STRING:
-          val = annosvc.getItemAnnotationString(aItemId, annoNames[i]);
-          break;
-        case annosvc.TYPE_BINARY:
-          var data = {}, length = {}, mimeType = {};
-          annosvc.getItemAnnotationBinary(aItemId, annoNames[i], data, length, mimeType);
-          val = data.value;
-          break;
+      annosvc.getItemAnnotationInfo(aItemId, annoNames[i], flags, exp, mimeType, storageType);
+      if (storageType.value == annosvc.TYPE_BINARY) {
+        var data = {}, length = {}, mimeType = {};
+        annosvc.geItemAnnotationBinary(aItemId, annoNames[i], data, length, mimeType);
+        val = data.value;
       }
+      else
+        val = annosvc.getItemAnnotation(aItemId, annoNames[i]);
+
       annos.push({name: annoNames[i],
                   flags: flags.value,
                   expires: exp.value,
@@ -1230,34 +1208,20 @@ var PlacesUtils = {
   setAnnotationsForURI: function PU_setAnnotationsForURI(aURI, aAnnos) {
     var annosvc = this.annotations;
     aAnnos.forEach(function(anno) {
-      switch (anno.type) {
-        case annosvc.TYPE_INT32:
-          annosvc.setPageAnnotationInt32(aURI, anno.name, anno.value,
-                                         anno.flags, anno.expires);
-          break;
-        case annosvc.TYPE_INT64:
-          annosvc.setPageAnnotationInt64(aURI, anno.name, anno.value,
-                                         anno.flags, anno.expires);
-          break;
-        case annosvc.TYPE_DOUBLE:
-          annosvc.setPageAnnotationDouble(aURI, anno.name, anno.value,
-                                          anno.flags, anno.expires);
-          break;
-        case annosvc.TYPE_STRING:
-          annosvc.setPageAnnotationString(aURI, anno.name, anno.value,
-                                          anno.flags, anno.expires);
-          break;
-        case annosvc.TYPE_BINARY:
-          annosvc.setPageAnnotationBinary(aURI, anno.name, anno.value,
-                                          anno.value.length, anno.mimeType,
-                                          anno.flags, anno.expires);
-          break;
+      if (anno.type == annosvc.TYPE_BINARY) {
+        annosvc.setPageAnnotationBinary(aURI, anno.name, anno.value,
+                                        anno.value.length, anno.mimeType,
+                                        anno.flags, anno.expires);
+      }
+      else {
+        annosvc.setPageAnnotation(aURI, anno.name, anno.value,
+                                  anno.flags, anno.expires);
       }
     });
   },
 
   /**
-   * Annotate a URI with a batch of annotations.
+   * Annotate an item with a batch of annotations.
    * @param aItemId
    *        The identifier of the item for which annotations are to be set
    * @param aAnnotations
@@ -1268,28 +1232,14 @@ var PlacesUtils = {
   setAnnotationsForItem: function PU_setAnnotationsForItem(aItemId, aAnnos) {
     var annosvc = this.annotations;
     aAnnos.forEach(function(anno) {
-      switch (anno.type) {
-        case annosvc.TYPE_INT32:
-          annosvc.setItemAnnotationInt32(aItemId, anno.name, anno.value,
-                                         anno.flags, anno.expires);
-          break;
-        case annosvc.TYPE_INT64:
-          annosvc.setItemAnnotationInt64(aItemId, anno.name, anno.value,
-                                         anno.flags, anno.expires);
-          break;
-        case annosvc.TYPE_DOUBLE:
-          annosvc.setItemAnnotationDouble(aItemId, anno.name, anno.value,
-                                          anno.flags, anno.expires);
-          break;
-        case annosvc.TYPE_STRING:
-          annosvc.setItemAnnotationString(aItemId, anno.name, anno.value,
-                                          anno.flags, anno.expires);
-          break;
-        case annosvc.TYPE_BINARY:
-          annosvc.setItemAnnotationBinary(aItemId, anno.name, anno.value,
-                                          anno.value.length, anno.mimeType,
-                                          anno.flags, anno.expires);
-          break;
+      if (anno.type == annosvc.TYPE_BINARY) {
+        annosvc.setItemAnnotationBinary(aItemId, anno.name, anno.value,
+                                        anno.value.length, anno.mimeType,
+                                        anno.flags, anno.expires);
+      }
+      else {
+        annosvc.setItemAnnotation(aItemId, anno.name, anno.value,
+                                  anno.flags, anno.expires);
       }
     });
   },
@@ -1357,7 +1307,7 @@ var PlacesUtils = {
   setPostDataForURI: function PU_setPostDataForURI(aURI, aPostData) {
     const annos = this.annotations;
     if (aPostData)
-      annos.setPageAnnotationString(aURI, POST_DATA_ANNO, aPostData, 0, 0);
+      annos.setPageAnnotation(aURI, POST_DATA_ANNO, aPostData, 0, 0);
     else if (annos.pageHasAnnotation(aURI, POST_DATA_ANNO))
       annos.removePageAnnotation(aURI, POST_DATA_ANNO);
   },
@@ -1370,7 +1320,7 @@ var PlacesUtils = {
   getPostDataForURI: function PU_getPostDataForURI(aURI) {
     const annos = this.annotations;
     if (annos.pageHasAnnotation(aURI, POST_DATA_ANNO))
-      return annos.getPageAnnotationString(aURI, POST_DATA_ANNO);
+      return annos.getPageAnnotation(aURI, POST_DATA_ANNO);
 
     return null;
   }

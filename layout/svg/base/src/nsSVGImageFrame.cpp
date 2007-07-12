@@ -249,6 +249,12 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;
 
+  float x, y, width, height;
+  nsSVGElement *element = static_cast<nsSVGElement*>(mContent);
+  element->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
+  if (width <= 0 || height <= 0)
+    return NS_OK;
+
   if (!mImageContainer) {
     nsCOMPtr<imgIRequest> currentRequest;
     nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
@@ -286,10 +292,6 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
       GetCanvasTM(getter_AddRefs(ctm));
 
       if (ctm) {
-        float x, y, width, height;
-        nsSVGElement *element = static_cast<nsSVGElement*>(mContent);
-        element->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
-
         nsSVGUtils::SetClipRect(gfx, ctm, x, y, width, height);
       }
     }

@@ -91,7 +91,7 @@ STDMETHODIMP _class::QueryInterface(REFIID aIID, void** aInstancePtr)         \
 
 #define NS_IMPL_COM_QUERY_BODY(_interface)                                    \
   if(IsEqualIID(aIID, __uuidof(_interface)) )                                 \
-    foundInterface = static_cast<_interface*>(this);                       \
+    foundInterface = static_cast<_interface*>(this);                          \
   else
 
 #define NS_IMPL_COM_QUERY_TAIL_GUTS                                           \

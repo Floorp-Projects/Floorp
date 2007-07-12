@@ -139,13 +139,12 @@ sub PerformStep {
         my $conf = new Bootstrap::Config();
         my $from = $conf->Get(var => 'from');
         my $to = $conf->Get(var => 'to');
-        my $cc = $conf->Get(var => 'cc');
+        my @ccList = $conf->Exists(var => 'cc') ? split(/[,\s]+/, 
+          $conf->Get(var => 'cc')) : ();
         my $blat = $conf->Get(var => 'blat');
         my $sendmail = $conf->Get(var => 'sendmail');
         my $hostname = $conf->SystemInfo(var => 'hostname');
 
-        my @ccList = split(', ', $cc);
- 
         eval {
             Email(
               blat => $blat,

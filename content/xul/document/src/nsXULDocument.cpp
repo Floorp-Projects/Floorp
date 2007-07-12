@@ -199,8 +199,8 @@ struct BroadcastListener {
 
 nsXULDocument::nsXULDocument(void)
     : nsXMLDocument("application/vnd.mozilla.xul+xml"),
-      mResolutionPhase(nsForwardReference::eStart),
-      mState(eState_Master)
+      mState(eState_Master),
+      mResolutionPhase(nsForwardReference::eStart)
 {
 
     // NOTE! nsDocument::operator new() zeroes out all members, so don't
@@ -2594,9 +2594,6 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic,
     *aShouldReturn = PR_FALSE;
     *aFailureFromContent = PR_FALSE;
 
-    nsCOMPtr<nsIScriptSecurityManager> secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
         nsCAutoString urlspec;
@@ -2609,6 +2606,9 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic,
 
     if (aIsDynamic)
         mResolutionPhase = nsForwardReference::eStart;
+
+    nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+    NS_ENSURE_TRUE(secMan, NS_ERROR_NOT_AVAILABLE);
 
     // Chrome documents are allowed to load overlays from anywhere.
     // Also, any document may load a chrome:// overlay.
@@ -2675,10 +2675,9 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic,
         // Not there. Initiate a load.
         PR_LOG(gXULLog, PR_LOG_DEBUG, ("xul: overlay was not cached"));
 
-        // No one ever uses overlay principals for anything, so it's OK to give
-        // them the null principal.  Too bad this code insists on the sort of
-        // syncloading that can't provide us the right principal from the
-        // channel...
+        // We'll set the right principal on the proto doc when we get
+        // OnStartRequest from the parser, so just pass in a null principal for
+        // now.
         nsCOMPtr<nsIParser> parser;
         rv = PrepareToLoadPrototype(aURI, "view", nsnull, getter_AddRefs(parser));
         if (NS_FAILED(rv)) return rv;
@@ -2695,7 +2694,8 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic,
         // Add an observer to the parser; this'll get called when
         // Necko fires its On[Start|Stop]Request() notifications,
         // and will let us recover from a missing overlay.
-        ParserObserver* parserObserver = new ParserObserver(this);
+        ParserObserver* parserObserver =
+            new ParserObserver(this, mCurrentPrototype);
         if (! parserObserver)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -3699,7 +3699,9 @@ nsXULDocument::AddPrototypeSheets()
         nsCOMPtr<nsIURI> uri = sheets[i];
 
         nsCOMPtr<nsICSSStyleSheet> incompleteSheet;
-        rv = CSSLoader()->LoadSheet(uri, this, getter_AddRefs(incompleteSheet));
+        rv = CSSLoader()->LoadSheet(uri, mCurrentPrototype->GetURI(),
+                                    mCurrentPrototype->DocumentPrincipal(),
+                                    this, getter_AddRefs(incompleteSheet));
 
         // XXXldb We need to prevent bogus sheets from being held in the
         // prototype's list, but until then, don't propagate the failure
@@ -4332,15 +4334,14 @@ nsXULDocument::CachedChromeStreamListener::OnDataAvailable(nsIRequest *request,
 // ParserObserver
 //
 
-nsXULDocument::ParserObserver::ParserObserver(nsXULDocument* aDocument)
-    : mDocument(aDocument)
+nsXULDocument::ParserObserver::ParserObserver(nsXULDocument* aDocument,
+                                              nsXULPrototypeDocument* aPrototype)
+    : mDocument(aDocument), mPrototype(aPrototype)
 {
-    NS_ADDREF(mDocument);
 }
 
 nsXULDocument::ParserObserver::~ParserObserver()
 {
-    NS_IF_RELEASE(mDocument);
 }
 
 NS_IMPL_ISUPPORTS1(nsXULDocument::ParserObserver, nsIRequestObserver)
@@ -4349,6 +4350,22 @@ NS_IMETHODIMP
 nsXULDocument::ParserObserver::OnStartRequest(nsIRequest *request,
                                               nsISupports* aContext)
 {
+    // Guard against buggy channels calling OnStartRequest multiple times.
+    if (mPrototype) {
+        nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+        nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+        if (channel && secMan) {
+            nsCOMPtr<nsIPrincipal> principal;
+            secMan->GetChannelPrincipal(channel, getter_AddRefs(principal));
+
+            // Failure there is ok -- it'll just set a (safe) null principal
+            mPrototype->SetDocumentPrincipal(principal);            
+        }
+
+        // Make sure to avoid cycles
+        mPrototype = nsnull;
+    }
+        
     return NS_OK;
 }
 
@@ -4377,7 +4394,7 @@ nsXULDocument::ParserObserver::OnStopRequest(nsIRequest *request,
     // Drop the reference to the document to break cycle between the
     // document, the parser, the content sink, and the parser
     // observer.
-    NS_RELEASE(mDocument);
+    mDocument = nsnull;
 
     return rv;
 }

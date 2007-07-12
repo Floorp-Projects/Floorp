@@ -291,6 +291,20 @@ nsINode::RemoveMutationObserver(nsIMutationObserver* aMutationObserver)
   }
 }
 
+PRBool
+nsINode::IsEditableInternal() const
+{
+  if (HasFlag(NODE_IS_EDITABLE)) {
+    // The node is in an editable contentEditable subtree.
+    return PR_TRUE;
+  }
+
+  nsIDocument *doc = GetCurrentDoc();
+
+  // Check if the node is in a document and the document is in designMode.
+  return doc && doc->HasFlag(NODE_IS_EDITABLE);
+}
+
 //----------------------------------------------------------------------
 
 void
@@ -308,15 +322,8 @@ nsIContent::SetNativeAnonymous(PRBool aAnonymous)
 PRInt32
 nsIContent::IntrinsicState() const
 {
-  PRBool editable = HasFlag(NODE_IS_EDITABLE);
-  if (!editable) {
-    nsIDocument *doc = GetCurrentDoc();
-    if (doc) {
-      editable = doc->HasFlag(NODE_IS_EDITABLE);
-    }
-  }
-
-  return editable ? NS_EVENT_STATE_MOZ_READWRITE : NS_EVENT_STATE_MOZ_READONLY;
+  return IsEditable() ? NS_EVENT_STATE_MOZ_READWRITE :
+                        NS_EVENT_STATE_MOZ_READONLY;
 }
 
 void
@@ -3415,44 +3422,6 @@ nsGenericElement::LeaveLink(nsPresContext* aPresContext)
 }
 
 nsresult
-nsGenericElement::TriggerLink(nsPresContext* aPresContext,
-                              nsIURI* aLinkURI,
-                              const nsAFlatString& aTargetSpec,
-                              PRBool aClick,
-                              PRBool aIsUserTriggered)
-{
-  NS_PRECONDITION(aLinkURI, "No link URI");
-  nsresult rv = NS_OK;
-
-  nsILinkHandler *handler = aPresContext->GetLinkHandler();
-  if (!handler) return NS_OK;
-
-  if (aClick) {
-    nsresult proceed = NS_OK;
-    // Check that this page is allowed to load this URI.
-    nsCOMPtr<nsIScriptSecurityManager> securityManager = 
-             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      PRUint32 flag =
-        aIsUserTriggered ?
-        (PRUint32) nsIScriptSecurityManager::STANDARD :
-        (PRUint32) nsIScriptSecurityManager::LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT;
-      proceed =
-        securityManager->CheckLoadURIWithPrincipal(NodePrincipal(), aLinkURI,
-                                                   flag);
-    }
-
-    // Only pass off the click event if the script security manager
-    // says it's ok.
-    if (NS_SUCCEEDED(proceed))
-      handler->OnLinkClick(this, aLinkURI, aTargetSpec.get());
-  } else {
-    handler->OnOverLink(this, aLinkURI, aTargetSpec.get());
-  }
-  return rv;
-}
-
-nsresult
 nsGenericElement::AddScriptEventListener(nsIAtom* aEventName,
                                          const nsAString& aValue,
                                          PRBool aDefer)
@@ -3626,6 +3595,10 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     }
   }
 
+  if (aNotify) {
+    nsNodeUtils::AttributeChanged(this, aNamespaceID, aName, modType);
+  }
+  
   if (aFireMutation) {
     nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
 
@@ -3651,10 +3624,6 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     nsEventDispatcher::Dispatch(this, nsnull, &mutation);
   }
 
-  if (aNotify) {
-    nsNodeUtils::AttributeChanged(this, aNamespaceID, aName, modType);
-  }
-  
   if (aNamespaceID == kNameSpaceID_XMLEvents && 
       aName == nsGkAtoms::event && mNodeInfo->GetDocument()) {
     mNodeInfo->GetDocument()->AddXMLEventsContent(this);
@@ -4165,7 +4134,8 @@ nsGenericElement::PreHandleEventForLinks(nsEventChainPreVisitor& aVisitor)
     {
       nsAutoString target;
       GetLinkTarget(target);
-      rv = TriggerLink(aVisitor.mPresContext, absURI, target, PR_FALSE, PR_TRUE);
+      nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,
+                                  PR_FALSE, PR_TRUE);
     }
     break;
 
@@ -4269,7 +4239,8 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
     {
       nsAutoString target;
       GetLinkTarget(target);
-      rv = TriggerLink(aVisitor.mPresContext, absURI, target, PR_TRUE, PR_TRUE);
+      nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,
+                                  PR_TRUE, PR_TRUE);
     }
     break;
 

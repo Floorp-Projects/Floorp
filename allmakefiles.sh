@@ -692,7 +692,6 @@ xpfe/components/related/Makefile
 xpfe/components/related/src/Makefile
 xpfe/components/related/public/Makefile
 xpfe/components/search/Makefile
-xpfe/components/search/datasets/Makefile
 xpfe/components/search/public/Makefile
 xpfe/components/search/src/Makefile
 xpfe/components/sidebar/Makefile

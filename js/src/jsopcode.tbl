@@ -79,12 +79,12 @@
  * 13           +, -, etc.              JSOP_ADD, JSOP_SUB, etc.
  * 14           *, /, %                 JSOP_MUL, JSOP_DIV, JSOP_MOD
  * 15           !, ~, etc.              JSOP_NOT, JSOP_BITNOT, etc.
- * 16           3.14, 0, etc.           JSOP_NUMBER, JSOP_ZERO, etc.
+ * 16           3.14, 0, etc.           JSOP_DOUBLE, JSOP_ZERO, etc.
  * 17           delete, new             JSOP_DEL*, JSOP_NEW
  * 18           x.y, f(), etc.          JSOP_GETPROP, JSOP_CALL, etc.
  * 19           x, null, etc.           JSOP_NAME, JSOP_NULL, etc.
  *
- * The push-numeric-constant operators, JSOP_ZERO, JSOP_NUMBER, etc., have
+ * The push-numeric-constant operators, JSOP_ZERO, JSOP_DOUBLE, etc., have
  * lower precedence than the member operators emitted for the . operator, to
  * cause the decompiler to parenthesize the . left operand, e.g. (0).foo.
  * Otherwise the . could be taken as a decimal point.  We use the same level
@@ -163,7 +163,7 @@ OPDEF(JSOP_SETELEM,   56, "setelem",    NULL,         1,  3,  1,  3,  JOF_BYTE |
 OPDEF(JSOP_CALLNAME,  57, "callname",   NULL,         3,  0,  2, 19,  JOF_CONST|JOF_NAME|JOF_CALLOP)
 OPDEF(JSOP_CALL,      58, "call",       NULL,         3, -1,  1, 18,  JOF_UINT16|JOF_INVOKE)
 OPDEF(JSOP_NAME,      59, "name",       NULL,         3,  0,  1, 19,  JOF_CONST|JOF_NAME)
-OPDEF(JSOP_NUMBER,    60, "number",     NULL,         3,  0,  1, 16,  JOF_CONST)
+OPDEF(JSOP_DOUBLE,    60, "double",     NULL,         3,  0,  1, 16,  JOF_CONST)
 OPDEF(JSOP_STRING,    61, "string",     NULL,         3,  0,  1, 19,  JOF_CONST)
 OPDEF(JSOP_ZERO,      62, "zero",       "0",          1,  0,  1, 16,  JOF_BYTE)
 OPDEF(JSOP_ONE,       63, "one",        "1",          1,  0,  1, 16,  JOF_BYTE)
@@ -503,3 +503,9 @@ OPDEF(JSOP_CALLGVAR,      223, "callgvar",     NULL,  3,  0,  2, 19,  JOF_CONST|
 OPDEF(JSOP_CALLVAR,       224, "callvar",      NULL,  3,  0,  2, 19,  JOF_QVAR |JOF_NAME|JOF_CALLOP)
 OPDEF(JSOP_CALLARG,       225, "callarg",      NULL,  3,  0,  2, 19,  JOF_QARG |JOF_NAME|JOF_CALLOP)
 OPDEF(JSOP_CALLLOCAL,     226, "calllocal",    NULL,  3,  0,  2, 19,  JOF_LOCAL|JOF_NAME|JOF_CALLOP)
+
+/*
+ * Opcodes to hold 8-bit and 32-bit immediate integer operands.
+ */
+OPDEF(JSOP_INT8,          227, "int8",         NULL,  2,  0,  1, 16,  JOF_INT8)
+OPDEF(JSOP_INT32,         228, "int32",        NULL,  5,  0,  1, 16,  JOF_INT32)

@@ -1277,8 +1277,7 @@ DumpAtom(JSHashEntry *he, int i, void *arg)
     FILE *fp = args->fp;
     JSAtom *atom = (JSAtom *)he;
 
-    fprintf(fp, "%3d %08x %5lu ",
-            i, (uintN)he->keyHash, (unsigned long)atom->number);
+    fprintf(fp, "%3d %08x ", i, (uintN)he->keyHash);
     if (ATOM_IS_STRING(atom))
         fprintf(fp, "\"%s\"\n", js_AtomToPrintableString(args->cx, atom));
     else if (ATOM_IS_INT(atom))

@@ -43,7 +43,7 @@
 
 interface nsIAccessible;
 
-[scriptable, uuid(dc13d184-a6df-45a1-92f0-5476fdaebc5a)]
+[scriptable, uuid(dcc1e5c3-966e-45b2-b30a-839d35432b24)]
 interface nsIAccessibleTable : nsISupports
 {
   readonly attribute nsIAccessible       caption;
@@ -64,12 +64,32 @@ interface nsIAccessibleTable : nsISupports
    */
   nsIAccessible cellRefAt(in long row, in long column);
 
-    /**
-      * get an index
-      */
-  long getIndexAt (in long row, in long column);
-  long getColumnAtIndex (in long index);
-  long getRowAtIndex (in long index);
+  /**
+   * Translates the given row and column indices into the corresponding cell
+   * index.
+   *
+   * @param row - index of the row of the table for which to return the cell
+   *              index.
+   * @param column - index of the column of the table for which to return
+   *                 the cell index.
+   */
+  long getIndexAt(in long row, in long column);
+
+  /**
+   * Translates the given child index into the corresponding column index.
+   *
+   * @param index - index of the child of the table for which to return
+   *                the column index.
+   */
+  long getColumnAtIndex(in long index);
+
+  /**
+   * Translates the given child index into the corresponding row index.
+   *
+   * @param index - index of the child of the table for which to return
+   *                the row index.
+   */
+  long getRowAtIndex(in long index);
 
   /**
    * Returns the number of columns occupied by the accessible object
@@ -135,6 +155,30 @@ interface nsIAccessibleTable : nsISupports
    *                 is selected.
    */
   boolean isCellSelected(in long row, in long column);
+
+  /**
+   * Returns the total number of selected cells.
+   */
+  readonly attribute unsigned long selectedCellsCount;
+
+  /**
+   * Returns the total number of selected columns.
+   */
+  readonly attribute unsigned long selectedColumnsCount;
+
+  /**
+   * Returns the total number of selected rows.
+   */
+  readonly attribute unsigned long selectedRowsCount;
+
+  /**
+   * Returns a list of cells indexes currently selected.
+   *
+   * @param cellsSize - length of array
+   * @param cells - array of indexes of selected cells
+   */
+  void getSelectedCells(out unsigned long cellsSize,
+                        [retval, array, size_is(cellsSize)] out long cells);
 
   /**
    * Returns a list of column indexes currently selected.

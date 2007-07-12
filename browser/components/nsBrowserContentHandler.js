@@ -61,6 +61,7 @@ const nsIWindowWatcher       = Components.interfaces.nsIWindowWatcher;
 const nsICategoryManager     = Components.interfaces.nsICategoryManager;
 const nsIWebNavigationInfo   = Components.interfaces.nsIWebNavigationInfo;
 const nsIBrowserSearchService = Components.interfaces.nsIBrowserSearchService;
+const nsICommandLineValidator = Components.interfaces.nsICommandLineValidator;
 
 const NS_BINDING_ABORTED = 0x804b0002;
 const NS_ERROR_WONT_HANDLE_CONTENT = 0x805d0001;
@@ -301,6 +302,7 @@ var nsBrowserContentHandler = {
         !iid.equals(nsICommandLineHandler) &&
         !iid.equals(nsIBrowserHandler) &&
         !iid.equals(nsIContentHandler) &&
+        !iid.equals(nsICommandLineValidator) &&
         !iid.equals(nsIFactory))
       throw Components.results.NS_ERROR_NO_INTERFACE;
 
@@ -604,6 +606,21 @@ var nsBrowserContentHandler = {
     request.cancel(NS_BINDING_ABORTED);
   },
 
+  /* nsICommandLineValidator */
+  validate : function bch_validate(cmdLine) {
+    // Other handlers may use osint so only handle the osint flag if the url
+    // flag is also present and the command line is valid.
+    var osintFlagIdx = cmdLine.findFlag("osint", false);
+    var urlFlagIdx = cmdLine.findFlag("url", false);
+    if (urlFlagIdx > -1 && (osintFlagIdx > -1 ||
+        cmdLine.state == nsICommandLine.STATE_REMOTE_EXPLICIT)) {
+      var urlParam = cmdLine.getArgument(urlFlagIdx + 1);
+      if (cmdLine.length != urlFlagIdx + 2 || /firefoxurl:/.test(urlParam))
+        throw NS_ERROR_ABORT;
+      cmdLine.handleFlag("osint", false)
+    }
+  },
+
   /* nsIFactory */
   createInstance: function bch_CI(outer, iid) {
     if (outer != null)
@@ -866,6 +883,9 @@ var Module = {
     catMan.addCategoryEntry("command-line-handler",
                             "x-default",
                             dch_contractID, true, true);
+    catMan.addCategoryEntry("command-line-validator",
+                            "b-browser",
+                            bch_contractID, true, true);
   },
     
   unregisterSelf : function mod_unregself(compMgr, location, type) {
@@ -880,6 +900,8 @@ var Module = {
                                "m-browser", true);
     catMan.deleteCategoryEntry("command-line-handler",
                                "x-default", true);
+    catMan.deleteCategoryEntry("command-line-validator",
+                               "b-browser", true);
   },
 
   canUnload: function(compMgr) {

@@ -66,6 +66,7 @@ CSRCS		= \
 CPPSRCS		= \
 		$(XPCOM_GLUE_SRC_LCPPSRCS) \
 		$(XPCOM_GLUENS_SRC_LCPPSRCS) \
+		nsStringAPI.cpp \
 		$(NULL)
 
 SDK_HEADERS = \

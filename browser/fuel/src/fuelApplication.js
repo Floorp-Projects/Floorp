@@ -776,43 +776,11 @@ Annotations.prototype = {
   },
   
   get : function(aName) {
-    var value = null;
-    var type = Utilities.annotations.getItemAnnotationType(this._id, aName);
-    switch (type) {
-      case Ci.nsIAnnotationService.TYPE_INT32:
-        value = Utilities.annotations.getItemAnnotationInt32(this._id, aName);
-        break;
-      case Ci.nsIAnnotationService.TYPE_INT64:
-        value = Utilities.annotations.getItemAnnotationInt64(this._id, aName);
-        break;
-      case Ci.nsIAnnotationService.TYPE_DOUBLE:
-        value = Utilities.annotations.getItemAnnotationDouble(this._id, aName);
-        break;
-      case Ci.nsIAnnotationService.TYPE_STRING:
-        value = Utilities.annotations.getItemAnnotationString(this._id, aName);
-        break;
-      default:
-        throw("Unknown annotation type specified.");
-    }
-    return value;
+    return Utilities.annotations.getItemAnnotation(this._id, aName);
   },
   
   set : function(aName, aValue, aExpiration) {
-    var type = aValue != null ? aValue.constructor.name : "";
-    
-    switch (type) {
-      case "String":
-        Utilities.annotations.setItemAnnotationString(this._id, aName, aValue, 0, aExpiration);
-        break;
-      case "Boolean":
-        Utilities.annotations.setItemAnnotationInt32(this._id, aName, aValue, 0, aExpiration);
-        break;
-      case "Number":
-        Utilities.annotations.setItemAnnotationDouble(this._id, aName, aValue, 0, aExpiration);
-        break;
-      default:
-        throw("Unknown annotation value specified.");
-    }
+    Utilities.annotations.setItemAnnotation(this._id, aName, aValue, 0, aExpiration);
   },
     
   remove : function(aName) {

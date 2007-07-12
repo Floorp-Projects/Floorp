@@ -101,11 +101,7 @@
            onpopupshowing="return BrowserForwardMenu(event);"
            oncommand="gotoHistoryIndex(event);"
            onclick="checkForMiddleClick(this, event);"/>
-    <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);">
-      <hbox>
-        <label flex="1" class="htmltooltip-label"/>
-      </hbox>
-    </tooltip>
+    <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
     <panel type="autocomplete" chromedir="&locale.dir;" id="PopupAutoComplete"/>
 

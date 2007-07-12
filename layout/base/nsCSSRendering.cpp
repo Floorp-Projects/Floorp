@@ -3894,7 +3894,7 @@ nsCSSRendering::PaintRoundedBackground(nsPresContext* aPresContext,
     aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
 
   // needed for our border thickness
-  nscoord appUnitsPerPixel = nsPresContext::AppUnitsPerCSSPixel();
+  nscoord appUnitsPerPixel = aPresContext->AppUnitsPerDevPixel();
 
   nscolor color = aColor.mBackgroundColor;
   if (!aCanPaintNonWhite) {

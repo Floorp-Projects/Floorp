@@ -773,7 +773,7 @@ nsWebShell::OnLinkClick(nsIContent* aContent,
     return NS_OK;
   }
 
-  if (aContent->HasFlag(NODE_IS_EDITABLE)) {
+  if (aContent->IsEditable()) {
     return NS_OK;
   }
 
@@ -804,7 +804,7 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
     return NS_OK;
   }
 
-  if (aContent->HasFlag(NODE_IS_EDITABLE)) {
+  if (aContent->IsEditable()) {
     return NS_OK;
   }
 
@@ -903,7 +903,7 @@ nsWebShell::OnOverLink(nsIContent* aContent,
                        nsIURI* aURI,
                        const PRUnichar* aTargetSpec)
 {
-  if (aContent->HasFlag(NODE_IS_EDITABLE)) {
+  if (aContent->IsEditable()) {
     return NS_OK;
   }
 

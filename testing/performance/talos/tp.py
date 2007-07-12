@@ -49,6 +49,7 @@
 __author__ = 'annie.sullivan@gmail.com (Annie Sullivan)'
 
 
+import platform
 import os
 import re
 import shutil
@@ -60,9 +61,9 @@ import ffprofile
 import ffinfo
 import config
 
-if config.OS == "linux":
+if platform.system() == "Linux":
     from tp_linux import *
-elif config.OS == "win32":
+elif platform.system() == "Windows":
     from tp_win32 import *
 
 

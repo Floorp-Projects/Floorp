@@ -436,8 +436,13 @@
       <!-- nsIPlacesView -->
       <property name="insertionPoint">
         <getter><![CDATA[
-          var orientation = NHRVO.DROP_AFTER;
+          // there is no insertion point for history queries
+          // so bail out now and save a lot of work when updating commands
+          var options = asQuery(this.getResult().root).queryOptions;
+          if (options.queryType == options.QUERY_TYPE_HISTORY)
+            return null;
 
+          var orientation = NHRVO.DROP_AFTER;
           // If there is no selection, insert at the end of the container. 
           if (!this.hasSelection) {
             var index = this.view.rowCount - 1;
@@ -468,7 +473,7 @@
           // selections - if the last element within a multi-selection is an
           // open folder, insert _adajacent_ to the selection.
           //
-          // If the sole selection is the bookmarks toolbar folder, we nsert
+          // If the sole selection is the bookmarks toolbar folder, we insert
           // into it even if it is not opened
           if (this.hasSingleSelection && resultView.isContainer(max.value) &&
               (resultView.isContainerOpen(max.value) ||

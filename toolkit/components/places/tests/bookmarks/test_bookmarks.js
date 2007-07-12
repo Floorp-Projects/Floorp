@@ -559,7 +559,7 @@ function run_test() {
 
   // check if setting an item annotation triggers onItemChanged
   observer._itemChangedId = -1;
-  annosvc.setItemAnnotationString(newId3, "test-annotation", "foo", 0, 0);
+  annosvc.setItemAnnotation(newId3, "test-annotation", "foo", 0, 0);
   do_check_eq(observer._itemChangedId, newId3);
   do_check_eq(observer._itemChangedProperty, "test-annotation");
   do_check_true(observer._itemChanged_isAnnotationProperty);

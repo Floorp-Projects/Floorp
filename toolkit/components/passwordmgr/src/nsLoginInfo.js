@@ -49,6 +49,12 @@ nsLoginInfo.prototype = {
     classID : Components.ID("{0f2f347c-1e4f-40cc-8efd-792dea70a85e}"),
     QueryInterface: XPCOMUtils.generateQI([Ci.nsILoginInfo]), 
 
+    // Allow storage-Legacy.js to get at the JS object so it can
+    // slap on a few extra properties for internal use.
+    get wrappedJSObject() {
+        return this;
+    },
+
     hostname      : null,
     formSubmitURL : null,
     httpRealm     : null,

@@ -102,14 +102,18 @@
 
     function browserTestFile(aTestFile) {
       this.path = aTestFile;
-      this.exception = null;
-      this.timedOut = false;
       this.tests = [];
       this.scope = null;
     }
     browserTestFile.prototype = {
-      get allPassed() {
-        return !this.tests.some(function (t) !t.pass);
+      get passCount() {
+        return this.tests.filter(function (t) !t.todo && t.pass).length;
+      },
+      get todoCount() {
+        return this.tests.filter(function (t) t.todo && t.pass).length;
+      },
+      get failCount() {
+        return this.tests.filter(function (t) !t.pass).length;
       },
       get log() {
         return this.tests.map(function (t) t.msg).join("\n");
@@ -154,16 +158,23 @@
     }
 
     function getLogFromTests(aTests) {
-      return aTests.map(function (f) {
-                          var output = f.path + "\n";
-                          if (f.log)
-                            output += f.log + "\n";
-                          if (f.exception)
-                            output += "\tFAIL - Exception thrown: " + f.exception + "\n";
-                          if (f.timedOut)
-                            output += "\tFAIL - Timed out\n";
-                          return output;
-                        }).join("");
+      if (!aTests.length)
+        return "PASS - No tests to run";
+
+      var log = aTests.map(function (f) {
+                             var output = f.path + "\n";
+                             if (f.log)
+                               output += f.log + "\n";
+                             return output;
+                           }).join("");
+      log += "\nBrowser Chrome Test Summary\n";
+      function sum(a, b){ return a + b; }
+      var passCount = aTests.map(function (f) f.passCount).reduce(sum);
+      var failCount = aTests.map(function (f) f.failCount).reduce(sum);
+      var todoCount = aTests.map(function (f) f.todoCount).reduce(sum);
+      log += "\tPass: " + passCount + "\n\tFail: " + failCount + "\n\tTodo: " + todoCount + "\n";
+
+      return log;
     }
 
     function testsFinished(aTests) {

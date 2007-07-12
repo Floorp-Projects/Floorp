@@ -122,7 +122,7 @@ nsXPCComponents_Interfaces::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \
@@ -467,7 +467,7 @@ nsXPCComponents_InterfacesByID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \
@@ -798,7 +798,7 @@ nsXPCComponents_Classes::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \
@@ -1053,7 +1053,7 @@ nsXPCComponents_ClassesByID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \
@@ -1327,7 +1327,7 @@ nsXPCComponents_Results::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \
@@ -1559,7 +1559,7 @@ nsXPCComponents_ID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \
@@ -1786,7 +1786,7 @@ nsXPCComponents_Exception::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \
@@ -2079,7 +2079,7 @@ nsXPCConstructor::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \
@@ -2344,7 +2344,7 @@ nsXPCComponents_Constructor::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \
@@ -3008,6 +3008,15 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 SandboxFunForwarder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                     jsval *rval)
 {
+    // Iterate through the arguments, converting them to safe JSObject
+    // wrappers, if necessary.
+    for (uintN i = 0; i < argc; ++i) {
+        if (!JSVAL_IS_PRIMITIVE(argv[i]) &&
+            !XPC_SJOW_Construct(cx, nsnull, 1, &argv[i], &argv[i])) {
+            return JS_FALSE;
+        }
+    }
+
     jsval v;
     if (!JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(argv[-2]), 0, &v) ||
         !JS_CallFunctionValue(cx, obj, v, argc, argv, rval)) {
@@ -3016,75 +3025,9 @@ SandboxFunForwarder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if (JSVAL_IS_PRIMITIVE(*rval))
         return JS_TRUE; // nothing more to do.
-    
+
     XPCThrower::Throw(NS_ERROR_NOT_IMPLEMENTED, cx);
     return JS_FALSE;
-}
-
-JS_STATIC_DLL_CALLBACK(JSBool)
-SandboxImport(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-              jsval *rval)
-{
-    if (argc < 1) {
-        XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
-        return JS_FALSE;
-    }
-    
-    JSFunction *fun = JS_ValueToFunction(cx, argv[0]);
-    if (!fun) {
-        XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
-        return JS_FALSE;
-    }
-
-    JSString *funname;
-    if (argc > 1) {
-        // Use the second parameter as the function name.
-        funname = JS_ValueToString(cx, argv[1]);
-        if (!funname)
-            return JS_FALSE;
-        argv[1] = STRING_TO_JSVAL(funname);
-    } else {
-        // Use the actual function name as the name.
-        funname = JS_GetFunctionId(fun);
-        if (!funname) {
-            XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
-            return JS_FALSE;
-        }
-    }
-
-    nsresult rv = NS_ERROR_FAILURE;
-    JSObject *oldfunobj = JS_GetFunctionObject(fun);
-    nsXPConnect *xpc = nsXPConnect::GetXPConnect();
-
-    if (xpc && oldfunobj) {
-        nsIXPCSecurityManager *secman = xpc->GetDefaultSecurityManager();
-        if (secman) {
-            rv = secman->CanAccess(nsIXPCSecurityManager::ACCESS_CALL_METHOD,
-                                   nsnull, cx, oldfunobj, nsnull, nsnull,
-                                   STRING_TO_JSVAL(funname), nsnull);
-        }
-    }
-
-    if (NS_FAILED(rv)) {
-        if (rv == NS_ERROR_FAILURE)
-            XPCThrower::Throw(NS_ERROR_XPC_SECURITY_MANAGER_VETO, cx);
-        return JS_FALSE;
-    }
-
-    JSFunction *newfun = JS_DefineUCFunction(cx, obj,
-            JS_GetStringChars(funname), JS_GetStringLength(funname),
-            SandboxFunForwarder, JS_GetFunctionArity(fun), 0);
-
-    if (!newfun)
-        return JS_FALSE;
-
-    JSObject *newfunobj = JS_GetFunctionObject(newfun);
-    if (!newfunobj)
-        return JS_FALSE;
-
-    // Functions come with two extra reserved slots on them. Use the 0-th slot
-    // to communicate the wrapped function to our forwarder.
-    return JS_SetReservedSlot(cx, newfunobj, 0, argv[0]);
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
@@ -3119,9 +3062,91 @@ static JSClass SandboxClass = {
 static JSFunctionSpec SandboxFunctions[] = {
     {"dump",    SandboxDump,    1,0,0},
     {"debug",   SandboxDebug,   1,0,0},
-    {"importFunction", SandboxImport, 1,0,0},
     {nsnull,nsnull,0,0,0}
 };
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::ImportIntoSandbox()
+{
+    XPCPerThreadData *tls = XPCPerThreadData::GetData();
+    if (!tls) {
+        return NS_ERROR_FAILURE;
+    }
+
+    XPCCallContext *cc = tls->GetCallContext();
+    if (!cc || !cc->IsValid() || cc->GetCallerLanguage() != JS_CALLER) {
+        NS_ERROR("Don't use importIntoSandbox from native code");
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    JSContext *cx = cc->GetJSContext();
+
+    // get place for return value
+    jsval *rval = cc->GetRetVal();
+    if (!rval) {
+        return NS_ERROR_FAILURE;
+    }
+
+    // get argc and argv and verify arg count
+    PRUint32 argc = cc->GetArgc();
+    jsval *argv = cc->GetArgv();
+    if (argc < 2) {
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    // The first argument is the sandbox object. It is required.
+    if (JSVAL_IS_PRIMITIVE(argv[0])) {
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    JSObject *sandbox = XPC_SJOW_GetUnsafeObject(cx, JSVAL_TO_OBJECT(argv[0]));
+    if (!sandbox || JS_GET_CLASS(cx, sandbox) != &SandboxClass) {
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    // The second argument is the function.
+    JSFunction *fun = JS_ValueToFunction(cx, argv[1]);
+    if (!fun) {
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    JSString *funname;
+    if (argc > 2) {
+        // Use the third parameter as the function name.
+        funname = JS_ValueToString(cx, argv[2]);
+        if (!funname) {
+            cc->SetExceptionWasThrown(PR_TRUE);
+            return NS_OK;
+        }
+        argv[2] = STRING_TO_JSVAL(funname);
+    } else {
+        // Use the actual function name as the name.
+        funname = JS_GetFunctionId(fun);
+        if (!funname) {
+            return NS_ERROR_INVALID_ARG;
+        }
+    }
+
+    JSFunction *newfun = JS_DefineUCFunction(cx, sandbox,
+            JS_GetStringChars(funname), JS_GetStringLength(funname),
+            SandboxFunForwarder, JS_GetFunctionArity(fun), 0);
+
+    if (!newfun) {
+        cc->SetExceptionWasThrown(PR_TRUE);
+        return NS_OK;
+    }
+
+    JSObject *newfunobj = JS_GetFunctionObject(newfun);
+    if (!newfunobj) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Functions come with two extra reserved slots on them. Use the 0-th slot
+    // to communicate the wrapped function to our forwarder.
+    return JS_SetReservedSlot(cx, newfunobj, 0, argv[1])
+           ? NS_OK
+           : NS_ERROR_FAILURE;
+}
 
 #endif /* !XPCONNECT_STANDALONE */
 
@@ -3215,9 +3240,11 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop)
     if (NS_FAILED(rv))
         return NS_ERROR_XPC_UNEXPECTED;
 
-    if (vp)
+    if (vp) {
         *vp = OBJECT_TO_JSVAL(sandbox);
-
+        if (!XPC_SJOW_Construct(cx, nsnull, 1, vp, vp))
+            return NS_ERROR_FAILURE;
+    }
     return NS_OK;
 }
 #endif /* !XPCONNECT_STANDALONE */
@@ -3478,7 +3505,9 @@ nsresult
 xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                   const char *filename, PRInt32 lineNo, jsval *rval)
 {
-    if (JS_GetClass(cx, sandbox) != &SandboxClass)
+    // |sandbox| will be an XPCSafeJSObjectWrapper.
+    sandbox = XPC_SJOW_GetUnsafeObject(cx, sandbox);
+    if (!sandbox || JS_GetClass(cx, sandbox) != &SandboxClass)
         return NS_ERROR_INVALID_ARG;
 
     nsIScriptObjectPrincipal *sop =
@@ -3532,7 +3561,12 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
             AutoJSSuspendRequestWithNoCallContext sus(sandcx->GetJSContext());
             AutoJSRequestWithNoCallContext cxreq(cx);
 
-            JS_SetPendingException(cx, exn);
+            // Wrap the exception in a safe JSObject wrapper if the sandbox had
+            // been wrapped, to prevent evil exceptions from leaking out.
+            if (JSVAL_IS_PRIMITIVE(exn) ||
+                XPC_SJOW_Construct(cx, nsnull, 1, &exn, &exn)) {
+                JS_SetPendingException(cx, exn);
+            }
         } else {
             rv = NS_ERROR_OUT_OF_MEMORY;
         }
@@ -3543,6 +3577,14 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
     }
 
     JSPRINCIPALS_DROP(cx, jsPrincipals);
+
+    // Wrap the return value in an XPCSafeJSObjectWrapper if the
+    // sandbox was originally wrapped.
+    if (NS_SUCCEEDED(rv) &&
+        !JSVAL_IS_PRIMITIVE(*rval) &&
+        !XPC_SJOW_Construct(cx, nsnull, 1, rval, rval)) {
+        rv = NS_ERROR_FAILURE;
+    }
 
     return rv;
 }
@@ -3678,7 +3720,7 @@ nsXPCComponents::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \

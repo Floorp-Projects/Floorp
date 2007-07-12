@@ -2608,12 +2608,11 @@ function FillInHTMLTooltip(tipElement)
     tipElement = tipElement.parentNode;
   }
 
-  var tipNode = document.getElementById("aHTMLTooltip").firstChild;
-  var label = tipNode.firstChild;
-
+  var tipNode = document.getElementById("aHTMLTooltip");
+  tipNode.style.direction = direction;
+  
   for each (var t in [titleText, XLinkTitleText]) {
     if (t && /\S/.test(t)) {
-      tipNode.style.direction = direction;
 
       // Per HTML 4.01 6.2 (CDATA section), literal CRs and tabs should be
       // replaced with spaces, and LFs should be removed entirely.
@@ -2622,9 +2621,8 @@ function FillInHTMLTooltip(tipElement)
       // distinguish that from a literal character in the source by this point.
       t = t.replace(/[\r\t]/g, ' ');
       t = t.replace(/\n/g, '');
-      
-      label.textContent = t;
-      
+
+      tipNode.setAttribute("label", t);
       retVal = true;
     }
   }

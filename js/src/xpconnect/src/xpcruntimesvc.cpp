@@ -100,7 +100,7 @@ BackstagePass::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \

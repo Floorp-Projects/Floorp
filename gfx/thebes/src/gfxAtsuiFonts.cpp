@@ -102,8 +102,7 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
     ATSUAttributeTag styleTags[] = {
         kATSUFontTag,
         kATSUSizeTag,
-        kATSUFontMatrixTag,
-        kATSUKerningInhibitFactorTag
+        kATSUFontMatrixTag
     };
 
     ByteCount styleArgSizes[] = {
@@ -123,14 +122,11 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
     ATSUFontID fid = aFontID;
     // make the font render right-side up
     CGAffineTransform transform = CGAffineTransformMakeScale(1, -1);
-    // we can't do kerning until layout draws what it measures, instead of splitting things up
-    Fract inhibitKerningFactor = FloatToFract(1.0);
 
     ATSUAttributeValuePtr styleArgs[] = {
         &fid,
         &fSize,
         &transform,
-        &inhibitKerningFactor
     };
 
     if (mATSUStyle)

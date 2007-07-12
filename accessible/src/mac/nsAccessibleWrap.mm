@@ -154,6 +154,7 @@ nsAccessibleWrap::Shutdown ()
   return nsAccessible::Shutdown();
 }
 
+NS_IMETHODIMP
 nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
 {
   NS_ENSURE_ARG_POINTER(aEvent);
