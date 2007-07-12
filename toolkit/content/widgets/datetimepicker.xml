@@ -1231,7 +1231,7 @@
       <xul:dropmarker class="datepicker-dropmarker"/>
       <xul:menupopup>
         <xul:datepicker anonid="grid" type="grid" class="datepicker-popupgrid"
-                        xbl:inherits="disabled,readonly"/>
+                        xbl:inherits="disabled,readonly,firstdayofweek"/>
       </xul:menupopup>
     </content>
     <implementation>
