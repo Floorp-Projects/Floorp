@@ -192,7 +192,8 @@ public:
   // Determine whether an attribute affects style
   NS_HIDDEN_(nsReStyleHint) HasAttributeDependentStyle(nsIContent *aContent,
                                                        nsIAtom *aAttribute,
-                                                       PRInt32 aModType);
+                                                       PRInt32 aModType,
+                                                       PRUint32 aStateMask);
 
   /*
    * Capture/restore frame state for the frame subtree rooted at aFrame.

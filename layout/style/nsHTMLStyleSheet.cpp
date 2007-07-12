@@ -533,6 +533,10 @@ NS_IMETHODIMP
 nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
                                              nsReStyleHint* aResult)
 {
+  // Note: no need to worry about whether some states changed with this
+  // attribute here, because we handle that under HasStateDependentStyle() as
+  // needed.
+
   // Result is true for |href| changes on HTML links if we have link rules.
   nsIContent *content = aData->mContent;
   if (aData->mAttribute == nsGkAtoms::href &&

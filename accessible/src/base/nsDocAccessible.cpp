@@ -918,7 +918,7 @@ NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsDocAccessible)
 void
 nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
                                   PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                                  PRInt32 aModType)
+                                  PRInt32 aModType, PRUint32 aStateMask)
 {
   // Fire accessible event after short timer, because we need to wait for
   // DOM attribute & resulting layout to actually change. Otherwise,
@@ -958,6 +958,7 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
     // set for XUL, HTML or ARIA namespace.
     // Checking the namespace would not seem to gain us anything, because
     // disabled really is going to mean the same thing in any namespace.
+    // XXXbz wouldn't it make more sense to observe the disabled state bit?
     nsCOMPtr<nsIAccessibleStateChangeEvent> enabledChangeEvent =
       new nsAccStateChangeEvent(targetNode,
                                 nsIAccessibleStates::EXT_STATE_ENABLED,

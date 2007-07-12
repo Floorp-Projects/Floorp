@@ -941,22 +941,10 @@ public:
   virtual void EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);
   virtual void BeginLoad(nsIDocument* aDocument);
   virtual void EndLoad(nsIDocument* aDocument);
-  virtual void CharacterDataChanged(nsIDocument* aDocument,
-                                    nsIContent* aContent,
-                                    CharacterDataChangeInfo* aInfo);
   virtual void ContentStatesChanged(nsIDocument* aDocument,
                                     nsIContent* aContent1,
                                     nsIContent* aContent2,
                                     PRInt32 aStateMask);
-  virtual void AttributeChanged(nsIDocument* aDocument, nsIContent* aContent,
-                                PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                                PRInt32 aModType);
-  virtual void ContentAppended(nsIDocument* aDocument, nsIContent* aContainer,
-                               PRInt32 aNewIndexInContainer);
-  virtual void ContentInserted(nsIDocument* aDocument, nsIContent* aContainer,
-                               nsIContent* aChild, PRInt32 aIndexInContainer);
-  virtual void ContentRemoved(nsIDocument* aDocument, nsIContent* aContainer,
-                              nsIContent* aChild, PRInt32 aIndexInContainer);
   virtual void StyleSheetAdded(nsIDocument* aDocument,
                                nsIStyleSheet* aStyleSheet,
                                PRBool aDocumentSheet);
@@ -976,6 +964,13 @@ public:
   virtual void StyleRuleRemoved(nsIDocument* aDocument,
                                 nsIStyleSheet* aStyleSheet,
                                 nsIStyleRule* aStyleRule);
+
+  // nsIMutationObserver
+  NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   NS_DECL_NSIOBSERVER
 
@@ -4381,10 +4376,12 @@ PresShell::ContentStatesChanged(nsIDocument* aDocument,
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentStatesChanged");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
 
-  WillCauseReflow();
-  mFrameConstructor->ContentStatesChanged(aContent1, aContent2, aStateMask);
-  VERIFY_STYLE_TREE;
-  DidCauseReflow();
+  if (mDidInitialReflow) {
+    WillCauseReflow();
+    mFrameConstructor->ContentStatesChanged(aContent1, aContent2, aStateMask);
+    VERIFY_STYLE_TREE;
+    DidCauseReflow();
+  }
 }
 
 
@@ -4393,7 +4390,8 @@ PresShell::AttributeChanged(nsIDocument* aDocument,
                             nsIContent*  aContent,
                             PRInt32      aNameSpaceID,
                             nsIAtom*     aAttribute,
-                            PRInt32      aModType)
+                            PRInt32      aModType,
+                            PRUint32     aStateMask)
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected AttributeChanged");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
@@ -4404,7 +4402,7 @@ PresShell::AttributeChanged(nsIDocument* aDocument,
   if (mDidInitialReflow) {
     WillCauseReflow();
     mFrameConstructor->AttributeChanged(aContent, aNameSpaceID,
-                                        aAttribute, aModType);
+                                        aAttribute, aModType, aStateMask);
     VERIFY_STYLE_TREE;
     DidCauseReflow();
   }

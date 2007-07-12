@@ -10055,7 +10055,8 @@ nsresult
 nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
                                         PRInt32 aNameSpaceID,
                                         nsIAtom* aAttribute,
-                                        PRInt32 aModType)
+                                        PRInt32 aModType,
+                                        PRUint32 aStateMask)
 {
   nsresult  result = NS_OK;
 
@@ -10135,7 +10136,8 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
   nsFrameManager *frameManager = shell->FrameManager();
   nsReStyleHint rshint = frameManager->HasAttributeDependentStyle(aContent,
                                                                   aAttribute,
-                                                                  aModType);
+                                                                  aModType,
+                                                                  aStateMask);
 
   PostRestyleEvent(aContent, rshint, hint);
 
