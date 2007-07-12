@@ -83,6 +83,8 @@ public:
 
   nsresult Init();
 
+  static nsDownloadManager *GetSingleton();
+
   virtual ~nsDownloadManager();
 
 protected:
@@ -94,7 +96,7 @@ protected:
   nsresult CreateTable();
   nsresult ImportDownloadHistory();
   nsresult GetDownloadFromDB(PRUint32 aID, nsDownload **retVal);
-  
+
   inline nsresult AddToCurrentDownloads(nsDownload *aDl)
   {
     if (!mCurrentDownloads.AppendObject(aDl))
@@ -186,6 +188,8 @@ private:
   nsCOMArray<nsDownload> mCurrentDownloads;
   nsCOMPtr<nsIObserverService> mObserverService;
   nsCOMPtr<mozIStorageStatement> mUpdateDownloadStatement;
+
+  static nsDownloadManager *gDownloadManagerService;
 
   friend class nsDownload;
 };
