@@ -312,7 +312,7 @@ function linksToListItems(links)
     if ((bug_title == null) || (bug_num == null)) {
       response += LI({class: classVal}, A({href: link}, link), children);
     } else {
-      var bug_url = "http://bugzilla.mozilla.org/show_bug.cgi?id="+bug_num;
+      var bug_url = "https://bugzilla.mozilla.org/show_bug.cgi?id="+bug_num;
       response += LI({class: classVal}, A({href: link}, link), " - ", A({href: bug_url}, "Bug "+bug_num), children);
     }
 
@@ -407,6 +407,8 @@ function testListing(metadata, response)
                  src: "/tests/SimpleTest/TestRunner.js"}),
         SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/MozillaFileLogger.js"}),
+        SCRIPT({type: "text/javascript",
+                 src: "/tests/SimpleTest/cross-domain.js"}),
         SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/quit.js"}),
         SCRIPT({type: "text/javascript",
