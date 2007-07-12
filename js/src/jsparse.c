@@ -2088,7 +2088,7 @@ HashFindPropValKey(JSDHashTable *table, const void *key)
     return (pnkey->pn_type == TOK_NUMBER)
            ? (JSDHashNumber) (JSDOUBLE_HI32(pnkey->pn_dval) ^
                               JSDOUBLE_LO32(pnkey->pn_dval))
-           : (JSDHashNumber) pnkey->pn_atom->number;
+           : ATOM_HASH(pnkey->pn_atom);
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
@@ -6100,7 +6100,7 @@ FoldType(JSContext *cx, JSParseNode *pn, JSTokenType type)
                     return JS_FALSE;
                 pn->pn_dval = d;
                 pn->pn_type = TOK_NUMBER;
-                pn->pn_op = JSOP_NUMBER;
+                pn->pn_op = JSOP_DOUBLE;
             }
             break;
 
@@ -6211,7 +6211,7 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, JSParseNode *pn1, JSParseNode *pn2,
     if (pn2 != pn)
         RecycleTree(pn2, tc);
     pn->pn_type = TOK_NUMBER;
-    pn->pn_op = JSOP_NUMBER;
+    pn->pn_op = JSOP_DOUBLE;
     pn->pn_arity = PN_NULLARY;
     pn->pn_dval = d;
     return JS_TRUE;
@@ -6795,7 +6795,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
                 return JS_TRUE;
             }
             pn->pn_type = TOK_NUMBER;
-            pn->pn_op = JSOP_NUMBER;
+            pn->pn_op = JSOP_DOUBLE;
             pn->pn_arity = PN_NULLARY;
             pn->pn_dval = d;
             RecycleTree(pn1, tc);

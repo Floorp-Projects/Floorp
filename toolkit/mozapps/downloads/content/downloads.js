@@ -629,19 +629,47 @@ var gDownloadDNDObserver =
 var gDownloadViewController = {
   supportsCommand: function (aCommand)
   {
-    return aCommand == "cmd_cleanUp";
+    var commandNode = document.getElementById(aCommand);
+    return commandNode && commandNode.parentNode == document.getElementById("downloadsCommands");
   },
   
   isCommandEnabled: function (aCommand)
   {
-    if (aCommand == "cmd_cleanUp") 
+    if (!window.gDownloadsView)
+      return false;
+    
+    switch (aCommand) {
+    case "cmd_cleanUp":
       return gDownloadManager.canCleanUp;
+    case "cmd_remove":
+      return gDownloadsView.selectedItem != null;
+    }
     return false;
   },
   
   doCommand: function (aCommand)
   {
-    if (aCommand == "cmd_cleanUp" && this.isCommandEnabled(aCommand)) {
+    if (this.isCommandEnabled(aCommand))
+      this.commands[aCommand](gDownloadsView.selectedItem);
+  },  
+  
+  onCommandUpdate: function ()
+  {
+    var downloadsCommands = document.getElementById("downloadsCommands");
+    for (var i = 0; i < downloadsCommands.childNodes.length; ++i)
+      this.updateCommand(downloadsCommands.childNodes[i]);
+  },
+  
+  updateCommand: function (command) 
+  {
+    if (this.isCommandEnabled(command.id))
+      command.removeAttribute("disabled");
+    else
+      command.setAttribute("disabled", "true");
+  },
+  
+  commands: {
+    cmd_cleanUp: function() {
       gDownloadManager.cleanUp();
 
       // Update UI
@@ -655,15 +683,12 @@ var gDownloadViewController = {
           gDownloadsView.removeChild(gDownloadsView.children[i]);
       }
 
-      this.onCommandUpdate();
+      gDownloadViewController.onCommandUpdate();
+    },
+    
+    cmd_remove: function(aSelectedItem) {
+      fireEventForElement(aSelectedItem, 'remove');
     }
-  },  
-  
-  onCommandUpdate: function ()
-  {
-    var command = "cmd_cleanUp";
-    var enabled = this.isCommandEnabled(command);
-    goSetCommandEnabled(command, enabled);
   }
 };
 

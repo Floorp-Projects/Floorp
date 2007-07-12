@@ -971,6 +971,14 @@ var gCSSProperties = {
 		domProp: "lineHeight",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
+		/*
+		 * Inheritance tests require consistent font size, since
+		 * getComputedStyle (which uses the CSS2 computed value, or
+		 * CSS2.1 used value) doesn't match what the CSS2.1 computed
+		 * value is.  And they even require consistent font metrics for
+		 * computation of 'normal'.
+		 */
+		prerequisites: { "font-size": "19px", "font-size-adjust": "none", "font-family": "serif", "font-weight": "normal", "font-style": "normal" },
 		initial_values: [ "normal" ],
 		other_values: [ "1.0", "1", "1em", "27px" ],
 		invalid_values: []

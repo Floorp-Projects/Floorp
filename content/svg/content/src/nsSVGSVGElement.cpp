@@ -97,8 +97,14 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGSVGElementBase)
 nsSVGSVGElement::nsSVGSVGElement(nsINodeInfo* aNodeInfo)
   : nsSVGSVGElementBase(aNodeInfo),
     mCoordCtx(nsnull),
+    mViewportWidth(0),
+    mViewportHeight(0),
     mCoordCtxMmPerPx(0),
-    mRedrawSuspendCount(0)
+    mPreviousTranslate_x(0),
+    mPreviousTranslate_y(0),
+    mPreviousScale(0),
+    mRedrawSuspendCount(0),
+    mDispatchEvent(PR_FALSE)
 {
 }
 

@@ -204,15 +204,15 @@
            <groupbox id="cacheGroup">
              <caption label="&cache.label;"/>
 
-             <hbox id="cacheSizeBox" align="center">
-               <label control="cacheSize"
+             <hbox align="center">
+               <label id="useCacheBefore"
                       accesskey="&useCacheBefore.accesskey;">&useCacheBefore.label;</label>
                <textbox id="cacheSize" size="2"
                         preference="browser.cache.disk.capacity"
                         onsyncfrompreference="return gAdvancedPane.readCacheSize();"
                         onsynctopreference="return gAdvancedPane.writeCacheSize();"
-                        aaa:labelledby="cacheSizeBox"/>
-               <label flex="1">&useCacheAfter.label;</label>
+                        aaa:labelledby="useCacheBefore cacheSize useCacheAfter"/>
+               <label id="useCacheAfter" flex="1">&useCacheAfter.label;</label>
                <button id="clearCacheButton" icon="clear"
                        label="&clearDataNow.label2;"
                        oncommand="gAdvancedPane.clearCache();"/>

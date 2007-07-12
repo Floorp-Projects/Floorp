@@ -123,7 +123,7 @@ interface nsIXPCComponents_utils_Sandbox : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(da2267f2-d4cc-448f-9d70-1c7fe134d2fe)]
+[scriptable, uuid(5ab4708a-ee92-4ab2-a230-9e638d04d3b0)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -170,6 +170,17 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     void evalInSandbox(in AString source/*, obj */);
 
+    /*
+     * importIntoSandbox must be called only from JavaScript.
+     *
+     * importIntoSandbox imports a function into a sandbox so that it
+     * appears that the function was originally declared in the sandbox.
+     * The imported function can then do privileged things (e.g. use
+     * Components.classes) and return the result (which must be a
+     * primitive value) to the caller.
+     */
+    void importIntoSandbox(/* JSObject *aSandbox, JSObject *aFunction,
+                              [string aName]*/);
 
     /*
      * import is designed to be called from JavaScript only.

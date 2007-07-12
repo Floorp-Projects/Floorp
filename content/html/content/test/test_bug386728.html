@@ -30,8 +30,8 @@ function testContentEditable() {
   frame.style.display = 'block';
   var frameContent = frame.contentDocument.adoptNode(document.getElementById("frameContent"));
   frame.contentDocument.body.appendChild(frameContent);
-  frame.contentDocument.contentEditable = "true";
-  frame.contentDocument.contentEditable = "false";
+  frame.contentDocument.getElementById("edit").contentEditable = "true";
+  frame.contentDocument.getElementById("edit").contentEditable = "false";
   frame.contentDocument.getElementById("button_on").click();
   is(frame.contentDocument.getElementById("edit").contentEditable, "true");
 }

@@ -253,6 +253,17 @@ PeekException();
 void
 PopException();
 
+void
+OnPluginDestroy(NPP instance);
+
+void
+OnShutdown();
+
+void
+EnterAsyncPluginThreadCallLock();
+void
+ExitAsyncPluginThreadCallLock();
+
 class NPPStack
 {
 public:

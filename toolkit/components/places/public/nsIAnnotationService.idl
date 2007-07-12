@@ -60,7 +60,7 @@ interface nsIAnnotationObserver : nsISupports
     void onItemAnnotationRemoved(in long long aItemId, in AUTF8String aName);
 };
 
-[scriptable, uuid(1e2f77a8-7923-4c3d-9100-965687740acd)]
+[scriptable, uuid(db773ab7-38c9-4e30-9010-9bd620ceedfb)]
 interface nsIAnnotationService : nsISupports
 {
     /**
@@ -114,8 +114,9 @@ interface nsIAnnotationService : nsISupports
      * aExpiration is one of EXPIRE_* above. aFlags should be 0 for now, some
      * flags will be defined in the future.
      *
-     * NOTE: ALL ANNOTATIONS WILL GET DELETED WHEN THE PAGE IS REMOVED FROM
-     * HISTORY, regardless of expiration date. This means that if you create an
+     * NOTE (NOTE: NOT YET IMPLEMENTED, see bug 319455),: ALL ANNOTATIONS WILL
+     * GET DELETED WHEN THE PAGE IS REMOVED FROM HISTORY,
+     * regardless of expiration date. This means that if you create an
      * annotation on a random unvisited URI, it will get deleted when the
      * browser shuts down.  Otherwise, things can exist in history as
      * annotations but the user has no way of knowing it, potentially violating
@@ -127,46 +128,57 @@ interface nsIAnnotationService : nsISupports
      * The annotation "favicon" is special. favicons are stored in the favicon
      * service, but are special cased in the protocol handler so they look like
      * annotations. Do not set favicons using this service, it will not work.
+     *
+     * Binary annotations should be set using
+     * setItemAnnotationBinary/setPageAnnotationBinary. For other types, only
+     * C++ consumers may use the type-specific methods.
      */
-    void setPageAnnotationString(in nsIURI aURI, in AUTF8String aName,
+    void setPageAnnotation(in nsIURI aURI, in AUTF8String aName,
+                           in nsIVariant aValue, in long aFlags,
+                           in unsigned short aExpiration);
+    void setItemAnnotation(in long long aItemId, in AUTF8String aName,
+                           in nsIVariant aValue, in long aFlags,
+                           in unsigned short aExpiration);
+
+    [noscript] void setPageAnnotationString(in nsIURI aURI, in AUTF8String aName,
                                 in AString aValue, in long aFlags,
                                 in unsigned short aExpiration);
-    void setItemAnnotationString(in long long aItemId, in AUTF8String aName,
-                                 in AString aValue, in long aFlags,
-                                 in unsigned short aExpiration);
+    [noscript] void setItemAnnotationString(in long long aItemId, in AUTF8String aName,
+                                            in AString aValue, in long aFlags,
+                                            in unsigned short aExpiration);
 
     /**
      * Sets an annotation just like setAnnotationString, but takes an Int32 as
      * input.
      */
-    void setPageAnnotationInt32(in nsIURI aURI, in AUTF8String aName,
-                                in long aValue, in long aFlags,
-                                in unsigned short aExpiration);
-    void setItemAnnotationInt32(in long long aItemId, in AUTF8String aName,
-                                in long aValue, in long aFlags,
-                                in unsigned short aExpiration);
+    [noscript] void setPageAnnotationInt32(in nsIURI aURI, in AUTF8String aName,
+                                           in long aValue, in long aFlags,
+                                           in unsigned short aExpiration);
+    [noscript] void setItemAnnotationInt32(in long long aItemId, in AUTF8String aName,
+                                           in long aValue, in long aFlags,
+                                           in unsigned short aExpiration);
 
     /**
      * Sets an annotation just like setAnnotationString, but takes an Int64 as
      * input.
      */
-    void setPageAnnotationInt64(in nsIURI aURI, in AUTF8String aName,
-                                in long long aValue, in long aFlags,
-                                in unsigned short aExpiration);
-    void setItemAnnotationInt64(in long long aItemId, in AUTF8String aName,
-                                in long long aValue, in long aFlags,
-                                in unsigned short aExpiration);
+    [noscript] void setPageAnnotationInt64(in nsIURI aURI, in AUTF8String aName,
+                                           in long long aValue, in long aFlags,
+                                           in unsigned short aExpiration);
+    [noscript] void setItemAnnotationInt64(in long long aItemId, in AUTF8String aName,
+                                           in long long aValue, in long aFlags,
+                                           in unsigned short aExpiration);
 
     /**
      * Sets an annotation just like setAnnotationString, but takes a double as
      * input.
      */
-    void setPageAnnotationDouble(in nsIURI aURI, in AUTF8String aName,
-                                 in double aValue, in long aFlags,
-                                 in unsigned short aExpiration);
-    void setItemAnnotationDouble(in long long aItemId, in AUTF8String aName,
-                                 in double aValue, in long aFlags,
-                                 in unsigned short aExpiration);
+    [noscript] void setPageAnnotationDouble(in nsIURI aURI, in AUTF8String aName,
+                                            in double aValue, in long aFlags,
+                                            in unsigned short aExpiration);
+    [noscript] void setItemAnnotationDouble(in long long aItemId, in AUTF8String aName,
+                                            in double aValue, in long aFlags,
+                                            in unsigned short aExpiration);
     /*
      * Sets an annotation just like setAnnotationString, but takes binary data
      * as input. You MUST supply a valid MIME type.
@@ -185,51 +197,49 @@ interface nsIAnnotationService : nsISupports
                                  in unsigned short aExpiration);
 
     /**
-     * Retrieves the string value of a given annotation. Throws an error if the
-     * annotation does not exist. If the annotation was set as a different
-     * type than you are retrieving it as, the value will be converted as best
-     * as we can. You aren't always guaranteed a good conversion, however,
-     * and errors will not be thrown in this case. (For example, doubles will
-     * lose precision when stringified.)
+     * Retrieves the value of a given annotation. Throws an error if the
+     * annotation does not exist. Throws for binary annotations, for which
+     * getPageAnnotationBinary/getItemAnnotationBinary should be used. C++
+     * consumers may use the type-specific methods.
+     *
+     * The type-specific methods throw if the given annotation is set in
+     * a different type.
      */
-    AString getPageAnnotationString(in nsIURI aURI, in AUTF8String aName);
-    AString getItemAnnotationString(in long long aItemId, in AUTF8String aName);
+    nsIVariant getPageAnnotation(in nsIURI aURI, in AUTF8String aName);
+    nsIVariant getItemAnnotation(in long long aItemId, in AUTF8String aName);
 
     /**
-     * Same as getAnnotationString but for ints. If the value doesn't look like
-     * an int, returns 0. (this is current sqlite behavior when asking for an
-     * int when there is not one, it will possibly change in the future if we
-     * start caching stuff).
+     * @see getPageAnnotation
      */
-    long getPageAnnotationInt32(in nsIURI aURI, in AUTF8String aName);
-    long getItemAnnotationInt32(in long long aItemId, in AUTF8String aName);
+    [noscript] AString getPageAnnotationString(in nsIURI aURI, in AUTF8String aName);
+    [noscript] AString getItemAnnotationString(in long long aItemId, in AUTF8String aName);
 
     /**
-     * Same as getAnnotationString for Int64s. If the value doesn't look like
-     * an int, returns 0. (this is current sqlite behavior when asking for an
-     * int when there is not one, it will possibly change in the future if we
-     * start caching stuff).
+     * @see getPageAnnotation
      */
-    long long getPageAnnotationInt64(in nsIURI aURI, in AUTF8String aName);
-    long long getItemAnnotationInt64(in long long aItemId, in AUTF8String aName);
+    [noscript] long getPageAnnotationInt32(in nsIURI aURI, in AUTF8String aName);
+    [noscript] long getItemAnnotationInt32(in long long aItemId, in AUTF8String aName);
 
     /**
-     * Same as getAnnotationString but returns a double-precision float. If the
-     * value doesn't look like an float, returns 0. (this is current sqlite
-     * behavior when asking for an number when there is not one, it will
-     * possibly change in the future if we start caching stuff).
+     * @see getPageAnnotation
      */
-    double getPageAnnotationDouble(in nsIURI aURI, in AUTF8String aName);
-    double getItemAnnotationDouble(in long long aItemId, in AUTF8String aName);
+    [noscript] long long getPageAnnotationInt64(in nsIURI aURI, in AUTF8String aName);
+    [noscript] long long getItemAnnotationInt64(in long long aItemId, in AUTF8String aName);
 
     /**
-     * Same as getAnnotationString but for binary data. This also returns the
+     * @see getPageAnnotation
+     */
+    [noscript] double getPageAnnotationDouble(in nsIURI aURI, in AUTF8String aName);
+    [noscript] double getItemAnnotationDouble(in long long aItemId, in AUTF8String aName);
+
+    /**
+     * @see getPageAnnotation. This also returns the
      * MIME type.
      */
     void getPageAnnotationBinary(in nsIURI aURI, in AUTF8String aName,
-                             [array,size_is(aDataLen)] out octet aData,
-                             out unsigned long aDataLen,
-                             out AUTF8String aMimeType);
+                                 [array,size_is(aDataLen)] out octet aData,
+                                 out unsigned long aDataLen,
+                                 out AUTF8String aMimeType);
     void getItemAnnotationBinary(in long long aItemId, in AUTF8String aName,
                                  [array,size_is(aDataLen)] out octet aData,
                                  out unsigned long aDataLen,
@@ -246,10 +256,12 @@ interface nsIAnnotationService : nsISupports
      *   annotator.getAnnotationInfo(myURI, "foo", flags, exp, mimeType);
      *   // now you can use 'exp.value' and 'flags.value'
      */
-    void getPageAnnotationInfo(in nsIURI aURI, in AUTF8String aName,
-                           out PRInt32 aFlags, out unsigned short aExpiration,
-                           out AUTF8String aMimeType,
-                           out unsigned short aType);
+    void getPageAnnotationInfo(in nsIURI aURI,
+                               in AUTF8String aName,
+                               out PRInt32 aFlags,
+                               out unsigned short aExpiration,
+                               out AUTF8String aMimeType,
+                               out unsigned short aType);
     void getItemAnnotationInfo(in long long aItemId, in AUTF8String aName,
                                out long aFlags, out unsigned short aExpiration,
                                out AUTF8String aMimeType,

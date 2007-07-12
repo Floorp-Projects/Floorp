@@ -554,26 +554,6 @@ public:
                                   PRBool aDefer = PR_TRUE);
 
   /**
-   * Trigger a link with uri aLinkURI.  If aClick is false, this triggers a
-   * mouseover on the link, otherwise it triggers a load, after doing a
-   * security check.  The node principal of |this| is used for the security
-   * check.
-   *
-   * @param aPresContext the pres context.
-   * @param aLinkURI the URI of the link
-   * @param aTargetSpec the target (like target=, may be empty)
-   * @param aClick whether this was a click or not (if false, it assumes you
-   *        just hovered over the link)
-   * @param aIsUserTriggered whether the user triggered the link.
-   *        This would be false for loads from auto XLinks or from the
-   *        click() method if we ever implement it.
-   */
-  nsresult TriggerLink(nsPresContext* aPresContext,
-                       nsIURI* aLinkURI,
-                       const nsAFlatString& aTargetSpec,
-                       PRBool aClick,
-                       PRBool aIsUserTriggered);
-  /**
    * Do whatever needs to be done when the mouse leaves a link
    */
   nsresult LeaveLink(nsPresContext* aPresContext);

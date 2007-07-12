@@ -1356,13 +1356,6 @@ PRBool nsChildView::DispatchWindowEvent(nsGUIEvent &event)
 }
 
 
-PRBool nsChildView::DispatchWindowEvent(nsGUIEvent &event,nsEventStatus &aStatus)
-{
-  DispatchEvent(&event, aStatus);
-  return ConvertStatus(aStatus);
-}
-
-
 // Deal with all sort of mouse event
 PRBool nsChildView::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
@@ -3796,7 +3789,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   if (!mGeckoChild)
     return NO;
 
-  nsFocusEvent event(PR_TRUE, NS_GOTFOCUS, mGeckoChild);
+  nsGUIEvent event(PR_TRUE, NS_GOTFOCUS, mGeckoChild);
   mGeckoChild->DispatchWindowEvent(event);
 
   return [super becomeFirstResponder];
@@ -3809,7 +3802,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 - (BOOL)resignFirstResponder
 {
   if (mGeckoChild) {
-    nsFocusEvent event(PR_TRUE, NS_LOSTFOCUS, mGeckoChild);
+    nsGUIEvent event(PR_TRUE, NS_LOSTFOCUS, mGeckoChild);
     mGeckoChild->DispatchWindowEvent(event);
   }
 
@@ -3830,10 +3823,10 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   if (isMozWindow)
     [[self window] setSuppressMakeKeyFront:YES];
 
-  nsFocusEvent focusEvent(PR_TRUE, NS_GOTFOCUS, mGeckoChild);
+  nsGUIEvent focusEvent(PR_TRUE, NS_GOTFOCUS, mGeckoChild);
   mGeckoChild->DispatchWindowEvent(focusEvent);
 
-  nsFocusEvent activateEvent(PR_TRUE, NS_ACTIVATE, mGeckoChild);
+  nsGUIEvent activateEvent(PR_TRUE, NS_ACTIVATE, mGeckoChild);
   mGeckoChild->DispatchWindowEvent(activateEvent);
 
   if (isMozWindow)
@@ -3846,10 +3839,10 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   if (!mGeckoChild)
     return;
 
-  nsFocusEvent deactivateEvent(PR_TRUE, NS_DEACTIVATE, mGeckoChild);
+  nsGUIEvent deactivateEvent(PR_TRUE, NS_DEACTIVATE, mGeckoChild);
   mGeckoChild->DispatchWindowEvent(deactivateEvent);
 
-  nsFocusEvent unfocusEvent(PR_TRUE, NS_LOSTFOCUS, mGeckoChild);
+  nsGUIEvent unfocusEvent(PR_TRUE, NS_LOSTFOCUS, mGeckoChild);
   mGeckoChild->DispatchWindowEvent(unfocusEvent);
 }
 

@@ -386,13 +386,16 @@ static void RemoveArg(char **argv)
  * --arg (or /arg on win32/OS2).
  *
  * @param aArg the parameter to check. Must be lowercase.
+ * @param aCheckOSInt if true returns ARG_BAD if the osint argument is present
+ *        when aArg is also present.
  * @param if non-null, the -arg <data> will be stored in this pointer. This is *not*
  *        allocated, but rather a pointer to the argv data.
  */
 static ArgResult
-CheckArg(const char* aArg, const char **aParam = nsnull)
+CheckArg(const char* aArg, PRBool aCheckOSInt = PR_FALSE, const char **aParam = nsnull)
 {
   char **curarg = gArgv + 1; // skip argv[0]
+  ArgResult ar = ARG_NONE;
 
   while (*curarg) {
     char *arg = curarg[0];
@@ -409,7 +412,8 @@ CheckArg(const char* aArg, const char **aParam = nsnull)
       if (strimatch(aArg, arg)) {
         RemoveArg(curarg);
         if (!aParam) {
-          return ARG_FOUND;
+          ar = ARG_FOUND;
+          break;
         }
 
         if (*curarg) {
@@ -422,7 +426,8 @@ CheckArg(const char* aArg, const char **aParam = nsnull)
 
           *aParam = *curarg;
           RemoveArg(curarg);
-          return ARG_FOUND;
+          ar = ARG_FOUND;
+          break;
         }
         return ARG_BAD;
       }
@@ -431,7 +436,15 @@ CheckArg(const char* aArg, const char **aParam = nsnull)
     ++curarg;
   }
 
-  return ARG_NONE;
+  if (aCheckOSInt && ar == ARG_FOUND) {
+    ArgResult arOSInt = CheckArg("osint");
+    if (arOSInt == ARG_FOUND) {
+      ar = ARG_BAD;
+      PR_fprintf(PR_STDERR, "Error: argument -osint is invalid\n");
+    }
+  }
+
+  return ar;
 }
 
 #if defined(XP_WIN)
@@ -1163,14 +1176,14 @@ HandleRemoteArgument(const char* remote, const char* aDesktopStartupID)
   ToLowerCase(program);
   const char *username = getenv("LOGNAME");
 
-  ar = CheckArg("p", &profile);
+  ar = CheckArg("p", PR_FALSE, &profile);
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument -p requires a profile name\n");
     return 1;
   }
 
   const char *temp = nsnull;
-  ar = CheckArg("a", &temp);
+  ar = CheckArg("a", PR_FALSE, &temp);
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument -a requires an application name\n");
     return 1;
@@ -1178,7 +1191,7 @@ HandleRemoteArgument(const char* remote, const char* aDesktopStartupID)
     program.Assign(temp);
   }
 
-  ar = CheckArg("u", &username);
+  ar = CheckArg("u", PR_FALSE, &username);
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument -u requires a username\n");
     return 1;
@@ -1221,7 +1234,7 @@ RemoteCommandLine(const char* aDesktopStartupID)
   const char *username = getenv("LOGNAME");
 
   const char *temp = nsnull;
-  ar = CheckArg("a", &temp);
+  ar = CheckArg("a", PR_TRUE, &temp);
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument -a requires an application name\n");
     return PR_FALSE;
@@ -1229,7 +1242,7 @@ RemoteCommandLine(const char* aDesktopStartupID)
     program.Assign(temp);
   }
 
-  ar = CheckArg("u", &username);
+  ar = CheckArg("u", PR_TRUE, &username);
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument -u requires a username\n");
     return PR_FALSE;
@@ -1697,9 +1710,16 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
   *aResult = nsnull;
   *aStartOffline = PR_FALSE;
 
+  ar = CheckArg("offline", PR_TRUE);
+  if (ar == ARG_BAD) {
+    PR_fprintf(PR_STDERR, "Error: argument -offline is invalid when argument -osint is specified\n");
+    return NS_ERROR_FAILURE;
+  }
+
   arg = PR_GetEnv("XRE_START_OFFLINE");
-  if ((arg && *arg) || CheckArg("offline"))
+  if ((arg && *arg) || ar)
     *aStartOffline = PR_TRUE;
+
 
   arg = PR_GetEnv("XRE_PROFILE_PATH");
   if (arg && *arg) {
@@ -1725,17 +1745,22 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
 
     // Clear out flags that we handled (or should have handled!) last startup.
     const char *dummy;
-    CheckArg("p", &dummy);
-    CheckArg("profile", &dummy);
+    CheckArg("p", PR_FALSE, &dummy);
+    CheckArg("profile", PR_FALSE, &dummy);
     CheckArg("profilemanager");
 
     return NS_LockProfilePath(lf, localDir, nsnull, aResult);
   }
 
-  if (CheckArg("migration"))
+  ar = CheckArg("migration", PR_TRUE);
+  if (ar == ARG_BAD) {
+    PR_fprintf(PR_STDERR, "Error: argument -migration is invalid when argument -osint is specified\n");
+    return NS_ERROR_FAILURE;
+  } else if (ar == ARG_FOUND) {
     gDoMigration = PR_TRUE;
+  }
 
-  ar = CheckArg("profile", &arg);
+  ar = CheckArg("profile", PR_TRUE, &arg);
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument -profile requires a path\n");
     return NS_ERROR_FAILURE;
@@ -1760,7 +1785,7 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
   rv = NS_NewToolkitProfileService(getter_AddRefs(profileSvc));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  ar = CheckArg("createprofile", &arg);
+  ar = CheckArg("createprofile", PR_TRUE, &arg);
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument -createprofile requires a profile name\n");
     return NS_ERROR_FAILURE;
@@ -1822,11 +1847,21 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     }
   }
 
-  ar = CheckArg("p", &arg);
+  ar = CheckArg("p", PR_FALSE, &arg);
   if (ar == ARG_BAD) {
+    ar = CheckArg("osint");
+    if (ar == ARG_FOUND) {
+      PR_fprintf(PR_STDERR, "Error: argument -p is invalid when argument -osint is specified\n");
+      return NS_ERROR_FAILURE;
+    }
     return ShowProfileManager(profileSvc, aNative);
   }
   if (ar) {
+    ar = CheckArg("osint");
+    if (ar == ARG_FOUND) {
+      PR_fprintf(PR_STDERR, "Error: argument -p is invalid when argument -osint is specified\n");
+      return NS_ERROR_FAILURE;
+    }
     nsCOMPtr<nsIToolkitProfile> profile;
     rv = profileSvc->GetProfileByName(nsDependentCString(arg),
                                       getter_AddRefs(profile));
@@ -1854,7 +1889,11 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     return ShowProfileManager(profileSvc, aNative);
   }
 
-  if (CheckArg("profilemanager")) {
+  ar = CheckArg("profilemanager", PR_TRUE);
+  if (ar == ARG_BAD) {
+    PR_fprintf(PR_STDERR, "Error: argument -profilemanager is invalid when argument -osint is specified\n");
+    return NS_ERROR_FAILURE;
+  } else if (ar == ARG_FOUND) {
     return ShowProfileManager(profileSvc, aNative);
   }
 
@@ -2219,6 +2258,7 @@ int
 XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 {
   nsresult rv;
+  ArgResult ar;
   NS_TIMELINE_MARK("enter main");
 
 #ifdef DEBUG
@@ -2448,17 +2488,28 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   ScopedFPHandler handler;
 #endif /* XP_OS2 */
 
-#ifdef XP_MACOSX
-  if (CheckArg("safe-mode") || GetCurrentKeyModifiers() & optionKey)
-#else
-  if (CheckArg("safe-mode"))
-#endif
+  ar = CheckArg("safe-mode", PR_TRUE);
+  if (ar == ARG_BAD) {
+    PR_fprintf(PR_STDERR, "Error: argument -safe-mode is invalid when argument -osint is specified\n");
+    return 1;
+  } else if (ar == ARG_FOUND) {
     gSafeMode = PR_TRUE;
+  }
+
+#ifdef XP_MACOSX
+  if (GetCurrentKeyModifiers() & optionKey)
+    gSafeMode = PR_TRUE;
+#endif
 
   // Handle -no-remote command line argument. Setup the environment to
   // better accommodate other components and various restart scenarios.
-  if (CheckArg("no-remote"))
+  ar = CheckArg("no-remote", PR_TRUE);
+  if (ar == ARG_BAD) {
+    PR_fprintf(PR_STDERR, "Error: argument -a requires an application name\n");
+    return 1;
+  } else if (ar == ARG_FOUND) {
     PR_SetEnv("MOZ_NO_REMOTE=1");
+  }
 
   // Handle -help and -version command line arguments.
   // They should return quickly, so we deal with them here.
@@ -2483,7 +2534,11 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       return 1;
 
     // Check for -register, which registers chrome and then exits immediately.
-    if (CheckArg("register")) {
+    ar = CheckArg("register", PR_TRUE);
+    if (ar == ARG_BAD) {
+      PR_fprintf(PR_STDERR, "Error: argument -register is invalid when argument -osint is specified\n");
+      return 1;
+    } else if (ar == ARG_FOUND) {
       ScopedXPCOMStartup xpcom;
       rv = xpcom.Initialize();
       NS_ENSURE_SUCCESS(rv, 1);
@@ -2584,7 +2639,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     // handle -remote now that xpcom is fired up
 
     const char* xremotearg;
-    ArgResult ar = CheckArg("remote", &xremotearg);
+    ar = CheckArg("remote", PR_TRUE, &xremotearg);
     if (ar == ARG_BAD) {
       PR_fprintf(PR_STDERR, "Error: -remote requires an argument\n");
       return 1;
@@ -2804,7 +2859,21 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           nsCOMPtr<nsIExtensionManager> em(do_GetService("@mozilla.org/extensions/manager;1"));
           NS_ENSURE_TRUE(em, 1);
 
-          if (CheckArg("install-global-extension") || CheckArg("install-global-theme")) {
+          ar = CheckArg("install-global-extension", PR_TRUE);
+          if (ar == ARG_BAD) {
+            PR_fprintf(PR_STDERR, "Error: argument -install-global-extension is invalid when argument -osint is specified\n");
+            return 1;
+          } else if (ar == ARG_FOUND) {
+            // Do the required processing and then shut down.
+            em->HandleCommandLineArgs(cmdLine);
+            return 0;
+          }
+
+          ar = CheckArg("install-global-theme", PR_TRUE);
+          if (ar == ARG_BAD) {
+            PR_fprintf(PR_STDERR, "Error: argument -install-global-theme is invalid when argument -osint is specified\n");
+            return 1;
+          } else if (ar == ARG_FOUND) {
             // Do the required processing and then shut down.
             em->HandleCommandLineArgs(cmdLine);
             return 0;
@@ -2926,9 +2995,11 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
         }
       }
-
-      profileLock->Unlock();
     }
+
+    // unlock the profile after ScopedXPCOMStartup object (xpcom) 
+    // has gone out of scope.  see bug #386739 for more details
+    profileLock->Unlock();
 
     // Restart the app after XPCOM has been shut down cleanly. 
     if (needsRestart) {

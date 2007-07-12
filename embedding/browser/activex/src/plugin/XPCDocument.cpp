@@ -1842,6 +1842,8 @@ END_COM_MAP()
 
                         nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMElement));
 
+                        // XXX Not checking whether content is editable,
+                        //     should we?
                         lh->OnLinkClick(content, uri,
                                         szTargetFrame ? szTargetFrame : mUseTarget);
                     }

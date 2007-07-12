@@ -52,7 +52,7 @@
 #define NS_IMPL_QUERY_CLASSINFO(_class)                                       \
   if ( aIID.Equals(NS_GET_IID(nsIClassInfo)) ) {                              \
     extern nsIClassInfo *NS_CLASSINFO_NAME(_class);                           \
-    foundInterface = static_cast<nsIClassInfo*>(NS_CLASSINFO_NAME(_class));\
+    foundInterface = static_cast<nsIClassInfo*>(NS_CLASSINFO_NAME(_class));   \
   } else
 
 #define NS_CLASSINFO_HELPER_BEGIN(_class, _c)                                 \

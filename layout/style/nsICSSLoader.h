@@ -55,12 +55,13 @@ class nsIUnicharInputStream;
 class nsICSSLoaderObserver;
 class nsMediaList;
 class nsICSSImportRule;
+class nsIPrincipal;
 
 // IID for the nsICSSLoader interface
-// 5da3a869-270c-4f10-97d1-99eaa150eb4e
+// eed4ac28-0add-43a7-84bf-fb53109ae40c
 #define NS_ICSS_LOADER_IID     \
-{ 0x5da3a869, 0x270c, 0x4f10, \
- { 0x97, 0xd1, 0x99, 0xea, 0xa1, 0x50, 0xeb, 0x4e } }
+{ 0xeed4ac28, 0x0add, 0x43a7, \
+ { 0x84, 0xbf, 0xfb, 0x53, 0x10, 0x9a, 0xe4, 0x0c } }
 
 typedef void (*nsCSSLoaderCallbackFunc)(nsICSSStyleSheet* aSheet, void *aData, PRBool aDidNotify);
 
@@ -202,19 +203,31 @@ public:
    * sheets not associated with a document.
    *
    * @param aURL the URL of the sheet to load
+   * @param aOriginURI the URI the load originated from, for content policy
+   *                   checks.  This can be null to indicate that these checks
+   *                   should be skipped.
+   * @param aOriginPrincipal the principal to use for security checks.  This
+   *                         can be null to indicate that these checks should
+   *                         be skipped.
    * @param aObserver the observer to notify when the load completes.
    *                  Must not be null.
    * @param [out] aSheet the sheet to load. Note that the sheet may well
    *              not be loaded by the time this method returns.
    */
-  NS_IMETHOD LoadSheet(nsIURI* aURL, nsICSSLoaderObserver* aObserver,
+  NS_IMETHOD LoadSheet(nsIURI* aURL,
+                       nsIURI* aOriginURI,
+                       nsIPrincipal* aOriginPrincipal,
+                       nsICSSLoaderObserver* aObserver,
                        nsICSSStyleSheet** aSheet) = 0;
 
   /**
    * Same as above, to be used when the caller doesn't care about the
    * not-yet-loaded sheet.
    */
-  NS_IMETHOD LoadSheet(nsIURI* aURL, nsICSSLoaderObserver* aObserver) = 0;
+  NS_IMETHOD LoadSheet(nsIURI* aURL,
+                       nsIURI* aOriginURI,
+                       nsIPrincipal* aOriginPrincipal,
+                       nsICSSLoaderObserver* aObserver) = 0;
 
   /**
    * Stop loading all sheets.  All nsICSSLoaderObservers involved will be

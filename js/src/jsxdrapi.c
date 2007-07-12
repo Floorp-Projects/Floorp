@@ -630,11 +630,11 @@ js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
     if (type == JSVAL_DOUBLE) {
         if (!XDRDoubleValue(xdr, &d))
             return JS_FALSE;
-        atom = js_AtomizeDouble(xdr->cx, d, 0);
+        atom = js_AtomizeDouble(xdr->cx, d);
     } else {
         if (!XDRValueBody(xdr, type, &v))
             return JS_FALSE;
-        atom = js_AtomizePrimitiveValue(xdr->cx, v, 0);
+        atom = js_AtomizePrimitiveValue(xdr->cx, v);
     }
 
     if (!atom)

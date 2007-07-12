@@ -99,7 +99,8 @@ var gFChild = document.getElementById("fchild");
 var gStyleSheet = document.getElementById("stylesheet").sheet;
 var gChildRule1 = gStyleSheet.cssRules[gStyleSheet.insertRule("#nchild, #fchild {}", gStyleSheet.cssRules.length)];
 var gChildRule2 = gStyleSheet.cssRules[gStyleSheet.insertRule("#nchild, #fchild {}", gStyleSheet.cssRules.length)];
-var gChildRuleTop = gStyleSheet.cssRules[gStyleSheet.insertRule("#nchild, #fchild {}", gStyleSheet.cssRules.length)];
+var gChildRule3 = gStyleSheet.cssRules[gStyleSheet.insertRule("#nchild.allother, #fchild.allother {}", gStyleSheet.cssRules.length)];
+var gChildRuleTop = gStyleSheet.cssRules[gStyleSheet.insertRule("#nchild, #nchild.allother, #fchild, #fchild.allother {}", gStyleSheet.cssRules.length)];
 var gParentRuleTop = gStyleSheet.cssRules[gStyleSheet.insertRule("#nparent, #fparent {}", gStyleSheet.cssRules.length)];
 
 // Get the computed value for a property.  For shorthands, return the
@@ -148,7 +149,9 @@ function test_property(property)
           other_computed_f, initial_computed_f,
           "should be testing with values that compute to different things " +
           "for '" + property + "'");
-    gChildRule2.style.setProperty(property, "inherit", "");
+    gChildRule3.style.setProperty(property, "inherit", "");
+    gFChild.className="allother";
+    gNChild.className="allother";
     var inherit_initial_computed_n = get_computed_value(gNChild, property);
     var inherit_initial_computed_f = get_computed_value(gFChild, property);
     (xfail_inherit(property, true) ? todo_is : is)(
@@ -162,17 +165,21 @@ function test_property(property)
     gParentRuleTop.style.setProperty(property, info.other_values[0], "");
     var inherit_other_computed_n = get_computed_value(gNChild, property);
     var inherit_other_computed_f = get_computed_value(gFChild, property);
-    (xfail_inherit(property, false) ? todo_is : is)(
+    var xfail_inherit_other = xfail_inherit(property, false) ||
+                              property == "font-family"; /* bug 385699 */
+    (xfail_inherit_other ? todo_is : is)(
        inherit_other_computed_n, other_computed_n,
        "inherit should cause inheritance of other value for '" +
        property + "'");
-    (xfail_inherit(property, false) ? todo_is : is)(
+    (xfail_inherit_other ? todo_is : is)(
        inherit_other_computed_f, other_computed_f,
        "inherit should cause inheritance of other value for '" +
        property + "'");
     gParentRuleTop.style.removeProperty(property);
     gChildRule1.style.removeProperty(property);
-    gChildRule2.style.removeProperty(property);
+    gChildRule3.style.setProperty(property, info.other_values[0], "");
+    gFChild.className="";
+    gNChild.className="";
   } else {
     gParentRuleTop.style.setProperty(property, info.other_values[0], "");
     var initial_computed_n = get_computed_value(gNChild, property);
@@ -222,6 +229,11 @@ function test_property(property)
       gChildRuleTop.style.removeProperty(prereq);
     }
   }
+}
+
+for (var prop in gCSSProperties) {
+  var info = gCSSProperties[prop];
+  gChildRule3.style.setProperty(prop, info.other_values[0], "");
 }
 
 for (var prop in gCSSProperties)

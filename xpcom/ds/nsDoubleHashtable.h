@@ -211,13 +211,13 @@ PR_STATIC_CALLBACK(PRBool)                                                    \
 ENTRY_CLASS##MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,    \
                         const void *key)                                      \
 {                                                                             \
-  const ENTRY_CLASS* e = static_cast<const ENTRY_CLASS*>(entry);           \
+  const ENTRY_CLASS* e = static_cast<const ENTRY_CLASS*>(entry);              \
   return e->MatchEntry(key);                                                  \
 }                                                                             \
 PR_STATIC_CALLBACK(void)                                                      \
 ENTRY_CLASS##ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)          \
 {                                                                             \
-  ENTRY_CLASS* e = static_cast<ENTRY_CLASS *>(entry);                      \
+  ENTRY_CLASS* e = static_cast<ENTRY_CLASS *>(entry);                         \
   e->~ENTRY_CLASS();                                                          \
 }                                                                             \
 PR_STATIC_CALLBACK(PRBool)                                                    \
@@ -353,13 +353,13 @@ nsresult CLASSNAME::Init(PRUint32 aNumInitialEntries) {                       \
   return NS_OK;                                                               \
 }                                                                             \
 ENTRY_CLASS* CLASSNAME::GetEntry(const KEY_TYPE aKey) {                       \
-  ENTRY_CLASS* e = static_cast<ENTRY_CLASS*>(\
+  ENTRY_CLASS* e = static_cast<ENTRY_CLASS*>(                                 \
                                   PL_DHashTableOperate(&mHashTable, &aKey,    \
                                                        PL_DHASH_LOOKUP));     \
   return PL_DHASH_ENTRY_IS_BUSY(e) ? e : nsnull;                              \
 }                                                                             \
 ENTRY_CLASS* CLASSNAME::AddEntry(const KEY_TYPE aKey) {                       \
-  return static_cast<ENTRY_CLASS*>(\
+  return static_cast<ENTRY_CLASS*>(                                           \
                         PL_DHashTableOperate(&mHashTable, &aKey,              \
                                              PL_DHASH_ADD));                  \
 }                                                                             \

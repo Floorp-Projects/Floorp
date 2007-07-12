@@ -183,6 +183,7 @@ protected:
                                PRBool aInterruptable);
 
   nsIContent*      mDocElement;
+  nsCOMPtr<nsIContent> mCurrentHead;  // When set, we're in an XHTML <haed>
   PRUnichar*       mText;
 
   XMLContentSinkState mState;

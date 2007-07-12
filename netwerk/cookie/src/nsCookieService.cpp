@@ -1307,6 +1307,12 @@ nsCookieService::AddInternal(nsCookie   *aCookie,
                              const char *aCookieHeader,
                              PRBool      aFromHttp)
 {
+  // if the new cookie is httponly, make sure we're not coming from script
+  if (!aFromHttp && aCookie->IsHttpOnly()) {
+    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "cookie is httponly; coming from script");
+    return;
+  }
+
   // start a transaction on the storage db, to optimize deletions/insertions.
   // transaction will automically commit on completion. if we already have a
   // transaction (e.g. from SetCookie*()), this will have no effect. 
@@ -1339,12 +1345,6 @@ nsCookieService::AddInternal(nsCookie   *aCookie,
     // check if cookie has already expired
     if (aCookie->Expiry() <= aCurrentTime) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "cookie has already expired");
-      return;
-    }
-
-    // if the new cookie is httponly, make sure we're not coming from script
-    if (!aFromHttp && aCookie->IsHttpOnly()) {
-      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "cookie is httponly; coming from script");
       return;
     }
 

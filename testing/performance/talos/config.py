@@ -42,8 +42,6 @@
 __author__ = 'annie.sullivan@gmail.com (Annie Sullivan)'
 
 
-OS = r'win32'
-
 BROWSER_HEIGHT = 768
 BROWSER_WIDTH = 1024
 

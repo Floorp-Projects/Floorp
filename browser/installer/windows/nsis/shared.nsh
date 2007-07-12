@@ -136,7 +136,7 @@
   GetFullPathName $8 "$INSTDIR\${FileMainEXE}"
 
   StrCpy $0 "SOFTWARE\Classes"
-  StrCpy $2 "$\"$8$\" -url $\"%1$\" -requestPending"
+  StrCpy $2 "$\"$8$\" -requestPending -osint -url $\"%1$\""
 
   ; Associate the file handlers with FirefoxHTML
   WriteRegStr SHCTX "$0\.htm"   "" "FirefoxHTML"
@@ -364,7 +364,7 @@
 
   ; Store the command to open the app with an url in a register for easy access.
   GetFullPathName $8 "$INSTDIR\${FileMainEXE}"
-  StrCpy $1 "$\"$8$\" -url $\"%1$\" -requestPending"
+  StrCpy $1 "$\"$8$\" -requestPending -osint -url $\"%1$\""
 
   ; Always set the file and protocol handlers since they may specify a
   ; different path and the path is used by Vista when setting associations.
