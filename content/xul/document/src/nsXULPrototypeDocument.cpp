@@ -541,6 +541,11 @@ nsXULPrototypeDocument::DocumentPrincipal()
     return mNodeInfoManager->DocumentPrincipal();
 }
 
+void
+nsXULPrototypeDocument::SetDocumentPrincipal(nsIPrincipal* aPrincipal)
+{
+    mNodeInfoManager->SetDocumentPrincipal(aPrincipal);
+}
 
 nsNodeInfoManager*
 nsXULPrototypeDocument::GetNodeInfoManager()

@@ -70,6 +70,7 @@ static PyObject *PyGetInterfaces(PyObject *self, PyObject *args)
 	nsIID** iidArray = nsnull;
 	PRUint32 iidCount = 0;
 	nsresult r;
+	PRUint32 i;
 	Py_BEGIN_ALLOW_THREADS;
 	r = pI->GetInterfaces(&iidCount, &iidArray);
 	Py_END_ALLOW_THREADS;
@@ -78,9 +79,11 @@ static PyObject *PyGetInterfaces(PyObject *self, PyObject *args)
 
 	PyObject *ret = PyTuple_New(iidCount);
 	if (ret==NULL)
-		return NULL;
-	for (PRUint32 i=0;i<iidCount;i++)
+		goto done;
+	for (i=0;i<iidCount;i++)
 		PyTuple_SET_ITEM( ret, i, Py_nsIID::PyObjectFromIID(*(iidArray[i])) );
+done:
+	NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(iidCount, iidArray);
 	return ret;
 }
 

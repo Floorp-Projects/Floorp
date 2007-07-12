@@ -969,14 +969,16 @@ NS_NewEditorCompositionListener(nsIDOMEventListener** aInstancePtrResult, nsIEdi
 
 nsresult 
 NS_NewEditorFocusListener(nsIDOMEventListener ** aInstancePtrResult, 
-                          nsIEditor *aEditor)
+                          nsIEditor *aEditor,
+                          nsIPresShell *aPresShell)
 {
-  nsTextEditorFocusListener* it = new nsTextEditorFocusListener();
-  if (nsnull == it) {
+  nsTextEditorFocusListener* it =
+    new nsTextEditorFocusListener(aEditor, aPresShell);
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  it->SetEditor(aEditor);
-  return it->QueryInterface(NS_GET_IID(nsIDOMEventListener), (void **) aInstancePtrResult);
+
+  return CallQueryInterface(it, aInstancePtrResult);
 }
 
 
@@ -988,7 +990,10 @@ NS_NewEditorFocusListener(nsIDOMEventListener ** aInstancePtrResult,
 NS_IMPL_ISUPPORTS2(nsTextEditorFocusListener, nsIDOMEventListener, nsIDOMFocusListener)
 
 
-nsTextEditorFocusListener::nsTextEditorFocusListener() 
+nsTextEditorFocusListener::nsTextEditorFocusListener(nsIEditor *aEditor,
+                                                     nsIPresShell *aShell) 
+  : mEditor(aEditor),
+    mPresShell(do_GetWeakReference(aShell))
 {
 }
 
@@ -1034,26 +1039,53 @@ IsTargetFocused(nsIDOMEventTarget* aTarget)
   return (focusedContent == content);
 }
 
-static nsIContent*
-FindEditableRoot(nsIContent *aContent)
+static already_AddRefed<nsIContent>
+FindSelectionRoot(nsIEditor *aEditor, nsIContent *aContent)
 {
+  PRUint32 flags;
+  aEditor->GetFlags(&flags);
+
   nsIDocument *document = aContent->GetCurrentDoc();
   if (!document) {
     return nsnull;
   }
 
+  nsIContent *root;
   if (document->HasFlag(NODE_IS_EDITABLE)) {
-    return document->GetRootContent();
+    NS_IF_ADDREF(root = document->GetRootContent());
+
+    return root;
+  }
+
+  if (flags & nsIPlaintextEditor::eEditorReadonlyMask) {
+    // We still want to allow selection in a readonly editor.
+    nsCOMPtr<nsIDOMElement> rootElement;
+    aEditor->GetRootElement(getter_AddRefs(rootElement));
+
+    CallQueryInterface(rootElement, &root);
+
+    if (!root) {
+      nsIDocument *document = aContent->GetCurrentDoc();
+      if (document) {
+        NS_IF_ADDREF(root = document->GetRootContent());
+      }
+    }
+
+    return root;
   }
 
   if (!aContent->HasFlag(NODE_IS_EDITABLE)) {
     return nsnull;
   }
 
+  // For non-readonly editors we want to find the root of the editable subtree
+  // containing aContent.
   nsIContent *parent, *content = aContent;
   while ((parent = content->GetParent()) && parent->HasFlag(NODE_IS_EDITABLE)) {
     content = parent;
   }
+
+  NS_IF_ADDREF(content);
 
   return content;
 }
@@ -1085,17 +1117,18 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
     { // only enable caret and selection if the editor is not disabled
       nsCOMPtr<nsIContent> content = do_QueryInterface(target);
 
-      nsIContent *editableRoot = content ? FindEditableRoot(content) : nsnull;
+      nsCOMPtr<nsIContent> editableRoot =
+        content ? FindSelectionRoot(mEditor, content) : nsnull;
 
       nsCOMPtr<nsISelectionController> selCon;
       mEditor->GetSelectionController(getter_AddRefs(selCon));
-      nsCOMPtr<nsIPresShell> presShell = do_QueryInterface(selCon);
       if (selCon && editableRoot)
       {
         nsCOMPtr<nsISelection> selection;
         selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
                              getter_AddRefs(selection));
 
+        nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
         if (presShell && selection) {
           nsCOMPtr<nsICaret> caret;
           presShell->GetCaret(getter_AddRefs(caret));

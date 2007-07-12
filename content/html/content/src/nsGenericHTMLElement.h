@@ -1103,7 +1103,7 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
     if (NS_SUCCEEDED(rv))                                                     \
       return rv;                                                              \
                                                                               \
-    rv = DOMQueryInterface(static_cast<_base_if *>(this), aIID,            \
+    rv = DOMQueryInterface(static_cast<_base_if *>(this), aIID,               \
                            aInstancePtr);                                     \
                                                                               \
     if (NS_SUCCEEDED(rv))                                                     \
@@ -1134,7 +1134,7 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
     if (NS_SUCCEEDED(rv))                                                     \
       return rv;                                                              \
                                                                               \
-    rv = DOMQueryInterface(static_cast<_base_if *>(this), aIID,            \
+    rv = DOMQueryInterface(static_cast<_base_if *>(this), aIID,               \
                            aInstancePtr);                                     \
                                                                               \
     if (NS_SUCCEEDED(rv))                                                     \

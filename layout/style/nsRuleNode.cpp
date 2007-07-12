@@ -1763,7 +1763,7 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
   nsStyleContext* parentContext = aContext->GetParent();                      \
                                                                               \
   const nsRuleData##rdtype_& rdata_ =                                         \
-    static_cast<const nsRuleData##rdtype_&>(aData);                        \
+    static_cast<const nsRuleData##rdtype_&>(aData);                           \
   nsStyle##type_* data_ = nsnull;                                             \
   const nsStyle##type_* parentdata_ = nsnull;                                 \
   PRBool inherited = aInherited;                                              \
@@ -1774,7 +1774,7 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
     /* We only need to compute the delta between this computed data and */    \
     /* our computed data. */                                                  \
     data_ = new (mPresContext)                                                \
-            nsStyle##type_(*static_cast<nsStyle##type_*>(aStartStruct));   \
+            nsStyle##type_(*static_cast<nsStyle##type_*>(aStartStruct));      \
   else {                                                                      \
     /* XXXldb What about eRuleFullInherited?  Which path is faster? */        \
     if (aRuleDetail != eRuleFullMixed && aRuleDetail != eRuleFullReset) {     \
@@ -1811,13 +1811,13 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
   nsStyleContext* parentContext = aContext->GetParent();                      \
                                                                               \
   const nsRuleData##rdtype_& rdata_ =                                         \
-    static_cast<const nsRuleData##rdtype_&>(aData);                        \
+    static_cast<const nsRuleData##rdtype_&>(aData);                           \
   nsStyle##type_* data_;                                                      \
   if (aStartStruct)                                                           \
     /* We only need to compute the delta between this computed data and */    \
     /* our computed data. */                                                  \
     data_ = new (mPresContext)                                                \
-            nsStyle##type_(*static_cast<nsStyle##type_*>(aStartStruct));   \
+            nsStyle##type_(*static_cast<nsStyle##type_*>(aStartStruct));      \
   else                                                                        \
     data_ = new (mPresContext) nsStyle##type_ ctorargs_;                      \
                                                                               \
@@ -4644,14 +4644,14 @@ nsRuleNode::GetStyle##name_(nsStyleContext* aContext, PRBool aComputeData)    \
     return nsnull;                                                            \
                                                                               \
   data =                                                                      \
-    static_cast<const nsStyle##name_ *>(Get##name_##Data(aContext));       \
+    static_cast<const nsStyle##name_ *>(Get##name_##Data(aContext));          \
                                                                               \
   if (NS_LIKELY(data != nsnull))                                              \
     return data;                                                              \
                                                                               \
   NS_NOTREACHED("could not create style struct");                             \
   return                                                                      \
-    static_cast<const nsStyle##name_ *>(\
+    static_cast<const nsStyle##name_ *>(                                      \
                    mPresContext->PresShell()->StyleSet()->                    \
                      DefaultStyleData()->GetStyleData(eStyleStruct_##name_)); \
 }

@@ -1303,7 +1303,7 @@ EmitBackPatchOp(JSContext *cx, JSCodeGenerator *cg, JSOp op, ptrdiff_t *lastp)
  */
 #define EMIT_UINT16_IMM_OP(op, i)                                             \
     JS_BEGIN_MACRO                                                            \
-        if (js_Emit3(cx, cg, (JSOp)(op), UINT16_HI(i), UINT16_LO(i)) < 0)     \
+        if (js_Emit3(cx, cg, op, UINT16_HI(i), UINT16_LO(i)) < 0)             \
             return JS_FALSE;                                                  \
     JS_END_MACRO
 
@@ -1527,20 +1527,29 @@ js_DefineCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
     jsdouble dval;
     jsint ival;
     JSAtom *valueAtom;
+    jsval v;
     JSAtomListElement *ale;
 
     /* XXX just do numbers for now */
     if (pn->pn_type == TOK_NUMBER) {
         dval = pn->pn_dval;
-        valueAtom = (JSDOUBLE_IS_INT(dval, ival) && INT_FITS_IN_JSVAL(ival))
-                    ? js_AtomizeInt(cx, ival, 0)
-                    : js_AtomizeDouble(cx, dval, 0);
-        if (!valueAtom)
-            return JS_FALSE;
+        if (JSDOUBLE_IS_INT(dval, ival) && INT_FITS_IN_JSVAL(ival)) {
+            v = INT_TO_JSVAL(ival);
+        } else {
+            /*
+             * We atomize double to root a jsdouble instance that we wrap as
+             * jsval and store in cg->constList. This works because atoms are
+             * protected from GC during compilation.
+             */
+            valueAtom = js_AtomizeDouble(cx, dval);
+            if (!valueAtom)
+                return JS_FALSE;
+            v = ATOM_KEY(valueAtom);
+        }
         ale = js_IndexAtom(cx, atom, &cg->constList);
         if (!ale)
             return JS_FALSE;
-        ale->entry.value = (void *)ATOM_KEY(valueAtom);
+        ale->entry.value = (void *)v;
     }
     return JS_TRUE;
 }
@@ -1711,7 +1720,7 @@ EmitBigIndexPrefix(JSContext *cx, JSCodeGenerator *cg, uintN index)
         return JSOP_NOP;
     indexBase = index >> 16;
     if (indexBase <= JSOP_INDEXBASE3 - JSOP_INDEXBASE1 + 1) {
-        if (js_Emit1(cx, cg, JSOP_INDEXBASE1 + indexBase - 1) < 0)
+        if (js_Emit1(cx, cg, (JSOp)(JSOP_INDEXBASE1 + indexBase - 1)) < 0)
             return JSOP_FALSE;
         return JSOP_RESETBASE0;
     }
@@ -1746,7 +1755,7 @@ EmitIndexOp(JSContext *cx, JSOp op, uintN index, JSCodeGenerator *cg)
     if (bigSuffix == JSOP_FALSE)
         return JS_FALSE;
     EMIT_UINT16_IMM_OP(op, index);
-    return bigSuffix == JSOP_NOP || js_Emit1(cx, cg, (JSOp)bigSuffix) >= 0;
+    return bigSuffix == JSOP_NOP || js_Emit1(cx, cg, bigSuffix) >= 0;
 }
 
 /*
@@ -2578,7 +2587,7 @@ static JSBool
 EmitNumberOp(JSContext *cx, jsdouble dval, JSCodeGenerator *cg)
 {
     jsint ival;
-    jsatomid atomIndex;
+    uint32 u;
     ptrdiff_t off;
     jsbytecode *pc;
     JSAtom *atom;
@@ -2589,33 +2598,36 @@ EmitNumberOp(JSContext *cx, jsdouble dval, JSCodeGenerator *cg)
             return js_Emit1(cx, cg, JSOP_ZERO) >= 0;
         if (ival == 1)
             return js_Emit1(cx, cg, JSOP_ONE) >= 0;
+        if ((jsint)(int8)ival == ival)
+            return js_Emit2(cx, cg, JSOP_INT8, (jsbytecode)(int8)ival) >= 0;
 
-        atomIndex = (jsatomid)ival;
-        if (atomIndex < JS_BIT(16)) {
-            EMIT_UINT16_IMM_OP(JSOP_UINT16, atomIndex);
-            return JS_TRUE;
-        }
-
-        if (atomIndex < JS_BIT(24)) {
+        u = (uint32)ival;
+        if (u < JS_BIT(16)) {
+            EMIT_UINT16_IMM_OP(JSOP_UINT16, u);
+        } else if (u < JS_BIT(24)) {
             off = js_EmitN(cx, cg, JSOP_UINT24, 3);
             if (off < 0)
                 return JS_FALSE;
             pc = CG_CODE(cg, off);
-            SET_UINT24(pc, atomIndex);
-            return JS_TRUE;
+            SET_UINT24(pc, u);
+        } else {
+            off = js_EmitN(cx, cg, JSOP_INT32, 4);
+            if (off < 0)
+                return JS_FALSE;
+            pc = CG_CODE(cg, off);
+            SET_INT32(pc, ival);
         }
-
-        atom = js_AtomizeInt(cx, ival, 0);
-    } else {
-        atom = js_AtomizeDouble(cx, dval, 0);
+        return JS_TRUE;
     }
+
+    atom = js_AtomizeDouble(cx, dval);
     if (!atom)
         return JS_FALSE;
 
     ale = js_IndexAtom(cx, atom, &cg->atomList);
     if (!ale)
         return JS_FALSE;
-    return EmitIndexOp(cx, JSOP_NUMBER, ALE_INDEX(ale), cg);
+    return EmitIndexOp(cx, JSOP_DOUBLE, ALE_INDEX(ale), cg);
 }
 
 static JSBool
@@ -2759,7 +2771,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 if (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i)) {
                     pn3->pn_val = INT_TO_JSVAL(i);
                 } else {
-                    atom = js_AtomizeDouble(cx, d, 0);
+                    atom = js_AtomizeDouble(cx, d);
                     if (!atom) {
                         ok = JS_FALSE;
                         goto release;
@@ -3134,7 +3146,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
         for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
             if (pn3->pn_type == TOK_DEFAULT)
                 continue;
-            atom = js_AtomizePrimitiveValue(cx, pn3->pn_val, 0);
+            atom = js_AtomizePrimitiveValue(cx, pn3->pn_val);
             if (!atom)
                 goto bad;
             ale = js_IndexAtom(cx, atom, &cg->atomList);
@@ -3392,7 +3404,7 @@ EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
           case JSOP_SETVAR:
           case JSOP_SETGVAR:
             slot = (jsuint) pn->pn_slot;
-            EMIT_UINT16_IMM_OP(pn->pn_op, slot);
+            EMIT_UINT16_IMM_OP(PN_OP(pn), slot);
             if (js_Emit1(cx, cg, JSOP_POP) < 0)
                 return JS_FALSE;
             break;
@@ -5475,10 +5487,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
           case TOK_NAME:
             if (pn2->pn_slot < 0 || !(pn2->pn_attrs & JSPROP_READONLY)) {
                 if (pn2->pn_slot >= 0) {
-                    EMIT_UINT16_IMM_OP(pn2->pn_op, atomIndex);
+                    EMIT_UINT16_IMM_OP(PN_OP(pn2), atomIndex);
                 } else {
           case TOK_DOT:
-                    EMIT_INDEX_OP(pn2->pn_op, atomIndex);
+                    EMIT_INDEX_OP(PN_OP(pn2), atomIndex);
                 }
             }
             break;
@@ -6048,7 +6060,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          */
         if (!js_EmitTree(cx, cg, pn->pn_kid))
             return JS_FALSE;
-        EMIT_UINT16_IMM_OP(pn->pn_op, cg->arrayCompSlot);
+        EMIT_UINT16_IMM_OP(PN_OP(pn), cg->arrayCompSlot);
         break;
 #endif
 
@@ -6256,12 +6268,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * avoid all this RegExp object cloning business.
              */
             JS_ASSERT(!(cx->fp->flags & (JSFRAME_EVAL | JSFRAME_COMPILE_N_GO)));
-            ok = EmitIndexOp(cx, pn->pn_op,
+            ok = EmitIndexOp(cx, PN_OP(pn),
                              IndexParsedObject(pn->pn_pob, &cg->regexpList),
                              cg);
         } else {
             JS_ASSERT(pn->pn_op == JSOP_OBJECT);
-            ok = EmitObjectOp(cx, pn->pn_pob, pn->pn_op, cg);
+            ok = EmitObjectOp(cx, pn->pn_pob, PN_OP(pn), cg);
         }
         break;
 

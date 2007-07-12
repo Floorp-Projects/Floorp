@@ -151,7 +151,7 @@ OpenKeyForWriting(HKEY aStartKey, const char* aKeyName, HKEY* aKey,
 //
 //   HKCU\SOFTWARE\Classes\FirefoxHTML\
 //     DefaultIcon                      (default)         REG_SZ     <apppath>,1
-//     shell\open\command               (default)         REG_SZ     <apppath> -url "%1" -requestPending
+//     shell\open\command               (default)         REG_SZ     <apppath> -requestPending -osint -url "%1"
 //     shell\open\ddeexec               (default)         REG_SZ     "%1",,0,0,,,,
 //     shell\open\ddeexec               NoActivateHandler REG_SZ
 //                       \Application   (default)         REG_SZ     Firefox
@@ -163,7 +163,7 @@ OpenKeyForWriting(HKEY aStartKey, const char* aKeyName, HKEY* aKey,
 //                                      EditFlags         REG_DWORD  2
 //                                      FriendlyTypeName  REG_SZ     <appname> URL
 //     DefaultIcon                      (default)         REG_SZ     <apppath>,1
-//     shell\open\command               (default)         REG_SZ     <apppath> -url "%1" -requestPending
+//     shell\open\command               (default)         REG_SZ     <apppath> -requestPending -osint -url "%1"
 //     shell\open\ddeexec               (default)         REG_SZ     "%1",,0,0,,,,
 //     shell\open\ddeexec               NoActivateHandler REG_SZ
 //                       \Application   (default)         REG_SZ     Firefox
@@ -177,7 +177,7 @@ OpenKeyForWriting(HKEY aStartKey, const char* aKeyName, HKEY* aKey,
 //
 //   HKCU\SOFTWARE\Classes\<protocol>\
 //     DefaultIcon                      (default)         REG_SZ     <apppath>,1
-//     shell\open\command               (default)         REG_SZ     <apppath> -url "%1" -requestPending
+//     shell\open\command               (default)         REG_SZ     <apppath> -requestPending -osint -url "%1"
 //     shell\open\ddeexec               (default)         REG_SZ     "%1",,0,0,,,,
 //     shell\open\ddeexec               NoActivateHandler REG_SZ
 //                       \Application   (default)         REG_SZ     Firefox
@@ -232,7 +232,7 @@ typedef struct {
 #define CLS_HTML "FirefoxHTML"
 #define CLS_URL "FirefoxURL"
 #define VAL_FILE_ICON "%APPPATH%,1"
-#define VAL_OPEN "\"%APPPATH%\" -url \"%1\" -requestPending"
+#define VAL_OPEN "\"%APPPATH%\" -requestPending -osint -url \"%1\""
 
 #define MAKE_KEY_NAME1(PREFIX, MID) \
   PREFIX MID

@@ -2399,66 +2399,67 @@ CSSParserImpl::ParseAttributeSelector(PRInt32&       aDataMask,
           return eSelectorParsingStatus_Error;
         }
         if (mToken.IsSymbol(']')) {
-          PRBool isCaseSensitive = mCaseSensitive;
-          if (nameSpaceID == kNameSpaceID_None ||
-              nameSpaceID == kNameSpaceID_XHTML) {
-            static const char* caseSensitiveHTMLAttribute[] = {
+          PRBool isCaseSensitive = PR_TRUE;
+
+          // If we're parsing a style sheet for an HTML document, and
+          // the attribute selector is for a non-namespaced attribute,
+          // then check to see if it's one of the known attributes whose
+          // VALUE is case-insensitive.
+          if (!mCaseSensitive && nameSpaceID == kNameSpaceID_None) {
+            static const char* caseInsensitiveHTMLAttribute[] = {
               // list based on http://www.w3.org/TR/html4/
-              "abbr",
-              "action",
-              "alt",
-              "archive",
-              "background",
-              "cite",
-              "class",
-              "classid",
-              "code",
-              "codebase",
-              "content",
-              "data",
-              "datetime",
-              "for",
-              "headers",
-              "href",
-              "id",
-              "label",
-              "longdesc",
-              "name",
-              "object",
-              "onblur",
-              "onchange",
-              "ondblclick",
-              "onfocus",
-              "onkeydown",
-              "onkeypress",
-              "onkeyup",
-              "onload",
-              "onmousedown",
-              "onmousemove",
-              "onmouseout",
-              "onmouseup",
-              "onoffline",
-              "ononline",
-              "onreset",
-              "onselect",
-              "onsubmit",
-              "onunload",
-              "profile",
-              "prompt",
-              "scheme",
-              "src",
-              "standby",
-              "summary",
-              "title",
-              "usemap",
-              "value",
+              "lang", 
+              "dir", 
+              "http-equiv", 
+              "text", 
+              "link", 
+              "vlink", 
+              "alink", 
+              "compact", 
+              "align", 
+              "frame", 
+              "rules",
+              "valign", 
+              "scope", 
+              "axis", 
+              "nowrap", 
+              "hreflang", 
+              "rel", 
+              "rev", 
+              "charset", 
+              "codetype", 
+              "declare",
+              "valuetype", 
+              "shape", 
+              "nohref", 
+              "media", 
+              "bgcolor", 
+              "clear", 
+              "color", 
+              "face", 
+              "noshade",
+              "noresize", 
+              "scrolling", 
+              "target", 
+              "method", 
+              "enctype", 
+              "accept-charset", 
+              "accept", 
+              "checked",
+              "multiple", 
+              "selected", 
+              "disabled", 
+              "readonly", 
+              "language", 
+              "defer", 
+              "type",
               nsnull
             };
             short i = 0;
             const char* htmlAttr;
-            while ((htmlAttr = caseSensitiveHTMLAttribute[i++])) {
+            while ((htmlAttr = caseInsensitiveHTMLAttribute[i++])) {
               if (attr.EqualsIgnoreCase(htmlAttr)) {
-                isCaseSensitive = PR_TRUE;
+                isCaseSensitive = PR_FALSE;
                 break;
               }
             }

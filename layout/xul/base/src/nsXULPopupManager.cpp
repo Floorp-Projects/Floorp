@@ -127,8 +127,7 @@ nsXULPopupManager::Init()
 void
 nsXULPopupManager::Shutdown()
 {
-  NS_RELEASE(sInstance);
-  sInstance = nsnull;
+  NS_IF_RELEASE(sInstance);
 }
 
 nsXULPopupManager*
@@ -544,11 +543,12 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
     if (foundMenu && (aLastPopup || aIsMenu == foundMenu->IsMenu())) {
       PRBool ismenu = foundMenu->IsMenu();
       nsCOMPtr<nsIContent> popupToHide = item->Content();
+      nsMenuChainItem* parent = item->GetParent();
       item->Detach(&mCurrentMenu);
 
       nsCOMPtr<nsIContent> nextPopup;
-      if (item->GetParent() && popupToHide != aLastPopup)
-        nextPopup = item->GetParent()->Content();
+      if (parent && popupToHide != aLastPopup)
+        nextPopup = parent->Content();
 
       nsPresContext* presContext = item->Frame()->PresContext();
 
@@ -710,6 +710,26 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
 }
 
 PRBool
+nsXULPopupManager::IsPopupOpen(nsIContent* aPopup)
+{
+  nsMenuChainItem* item = mCurrentMenu;
+  while (item) {
+    if (item->Content() == aPopup)
+      return PR_TRUE;
+    item = item->GetParent();
+  }
+
+  item = mPanels;
+  while (item) {
+    if (item->Content() == aPopup)
+      return PR_TRUE;
+    item = item->GetParent();
+  }
+
+  return PR_FALSE;
+}
+
+PRBool
 nsXULPopupManager::IsPopupOpenForMenuParent(nsIMenuParent* aMenuParent)
 {
   nsMenuChainItem* item = mCurrentMenu;
@@ -768,19 +788,8 @@ nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup)
   }
 
   // next, check if the popup is already open
-  nsMenuChainItem* item = mCurrentMenu;
-  while (item) {
-    if (item->Frame() == aPopup)
-      return PR_FALSE;
-    item = item->GetParent();
-  }
-
-  item = mPanels;
-  while (item) {
-    if (item->Frame() == aPopup)
-      return PR_FALSE;
-    item = item->GetParent();
-  }
+  if (IsPopupOpen(aPopup->GetContent()))
+    return PR_FALSE;
 
   // cannot open a popup that is a submenu of a menupopup that isn't open.
   nsIFrame* parent = aPopup->GetParent();
@@ -1040,6 +1049,16 @@ nsXULPopupManager::KillMenuTimer()
   }
 
   mTimerMenu = nsnull;
+}
+
+void
+nsXULPopupManager::CancelMenuTimer(nsIMenuParent* aMenuParent)
+{
+  if (mCloseTimer && mTimerMenu == aMenuParent) {
+    mCloseTimer->Cancel();
+    mCloseTimer = nsnull;
+    mTimerMenu = nsnull;
+  }
 }
 
 PRBool

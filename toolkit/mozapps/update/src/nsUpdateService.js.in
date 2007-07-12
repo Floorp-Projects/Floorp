@@ -268,7 +268,7 @@ function getFile(key, pathArray) {
 }
 
 /**
- * Gets the file at the speciifed hierarchy under the update root directory.
+ * Gets the file at the specified hierarchy under the update root directory.
  * @param   pathArray
  *          An array of path components to locate beneath the directory 
  *          specified by |key|. The last item in this array must be the
@@ -1474,6 +1474,7 @@ UpdateService.prototype = {
   get canUpdate() {
     try {
       var appDirFile = getUpdateFile([FILE_PERMS_TEST]);
+      LOG("UpdateService", "canUpdate?  testing " + appDirFile.path);
       if (!appDirFile.exists()) {
         appDirFile.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
         appDirFile.remove(false);
@@ -1481,12 +1482,45 @@ UpdateService.prototype = {
       var updateDir = getUpdatesDir();
       var upDirFile = updateDir.clone();
       upDirFile.append(FILE_PERMS_TEST);
+      LOG("UpdateService", "canUpdate?  testing " + upDirFile.path);
       if (!upDirFile.exists()) {
         upDirFile.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
         upDirFile.remove(false);
       }
+#ifdef XP_WIN
+      var sysInfo = 
+        Components.classes["@mozilla.org/system-info;1"]
+                  .getService(Components.interfaces.nsIPropertyBag2);
+  
+      // On Windows, we no longer store the update under the app dir
+      // if the app dir is under C:\Program Files. 
+      //
+      // If we are on Windows, but not Vista, we need to check that
+      // we can create and remove files from the actual app directory
+      // (like C:\Program Files\Mozilla Firefox).  If we can't,
+      // because this user is not an adminstrator, for example
+      // canUpdate() should return false (like it used to).
+      // 
+      // For Vista, don't perform this check because non-admin users
+      // can update firefox (by granting the updater access via the 
+      // UAC prompt)
+      var windowsVersion = sysInfo.getProperty("version");
+      LOG("UpdateService", "canUpdate?  version = " + windowsVersion);
+      // Example windowsVersion:  Windows XP == 5.1
+      if (parseFloat(windowsVersion) < 6) {
+        var actualAppDir = getDir(KEY_APPDIR, []);
+        var actualAppDirFile = actualAppDir.clone();
+        actualAppDirFile.append(FILE_PERMS_TEST);
+        LOG("UpdateService", "canUpdate?  testing " + actualAppDirFile.path);
+        if (!actualAppDirFile.exists()) {
+          actualAppDirFile.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+          actualAppDirFile.remove(false);
+        }
+      }
+#endif
     }
     catch (e) {
+       LOG("UpdateService", "can't update, no privileges: " + e);
       // No write privileges to install directory
       return false;
     }
@@ -1494,17 +1528,24 @@ UpdateService.prototype = {
     // OFF - this is not just a user setting, so disable the manual
     // UI too.
     var enabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true);
-    if (!enabled && gPref.prefIsLocked(PREF_APP_UPDATE_ENABLED))
+    if (!enabled && gPref.prefIsLocked(PREF_APP_UPDATE_ENABLED)) {
+      LOG("UpdateService", "can't update, disabled by pref");
       return false;
+    }
 
     // If we don't know the binary platform we're updating, we can't update.
-    if (!gABI)
+    if (!gABI) {
+      LOG("UpdateService", "can't update, unknown ABI");
       return false;
+    }
 
     // If we don't know the OS version we're updating, we can't update.
-    if (!gOSVersion)
+    if (!gOSVersion) {
+      LOG("UpdateService", "can't update, unknown OS version");
       return false;
+    }
 
+    LOG("UpdateService", "can update");
     return true;
   },
   

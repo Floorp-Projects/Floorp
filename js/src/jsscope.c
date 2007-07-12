@@ -229,13 +229,22 @@ JS_FRIEND_DATA(JSScopeStats) js_scope_stats;
 # define METER(x)       /* nothing */
 #endif
 
+JS_STATIC_ASSERT(sizeof(JSHashNumber) == 4);
+JS_STATIC_ASSERT(sizeof(jsid) == JS_BYTES_PER_WORD);
+
+#if JS_BYTES_PER_WORD == 4
+# define HASH_ID(id) ((JSHashNumber)(id))
+#elif JS_BYTES_PER_WORD == 8
+# define HASH_ID(id) ((JSHashNumber)(id) ^ (JSHashNumber)((id) >> 32))
+#else
+# error "Unsupported configuration"
+#endif
+
 /*
  * Double hashing needs the second hash code to be relatively prime to table
  * size, so we simply make hash2 odd.  The inputs to multiplicative hash are
- * the golden ratio, expressed as a fixed-point 32 bit fraction, and the int
- * property index or named property's atom number (observe that most objects
- * have either no indexed properties, or almost all indexed and a few names,
- * so collisions between index and atom number are unlikely).
+ * the golden ratio, expressed as a fixed-point 32 bit fraction, and the id
+ * itself.
  */
 #define SCOPE_HASH0(id)                 (HASH_ID(id) * JS_GOLDEN_RATIO)
 #define SCOPE_HASH1(hash0,shift)        ((hash0) >> (shift))

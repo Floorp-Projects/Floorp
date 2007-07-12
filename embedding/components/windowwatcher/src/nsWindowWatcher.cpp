@@ -277,6 +277,7 @@ public:
 protected:
   nsCOMPtr<nsIThreadJSContextStack>  mService;
   JSContext                         *mContext;
+  nsCOMPtr<nsIScriptContext>         mContextKungFuDeathGrip;
 };
 
 JSContextAutoPopper::JSContextAutoPopper() : mContext(nsnull)
@@ -309,6 +310,7 @@ nsresult JSContextAutoPopper::Push(JSContext *cx)
     // Save cx in mContext to indicate need to pop.
     if (cx && NS_SUCCEEDED(mService->Push(cx))) {
       mContext = cx;
+      mContextKungFuDeathGrip = nsWWJSUtils::GetDynamicScriptContext(cx);
     }
   }
   return mContext ? NS_OK : NS_ERROR_FAILURE;

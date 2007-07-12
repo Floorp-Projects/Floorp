@@ -1642,6 +1642,9 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
     case nsIAccessibleProvider::XULTooltip:
       *aAccessible = new nsXULTooltipAccessible(aNode, weakShell);
       break;
+    case nsIAccessibleProvider::XULToolbarButton:
+      *aAccessible = new nsXULToolbarButtonAccessible(aNode, weakShell);
+      break;
 #endif // MOZ_XUL
 
 #ifndef DISABLE_XFORMS_HOOKS

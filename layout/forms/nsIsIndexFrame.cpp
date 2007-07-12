@@ -325,6 +325,10 @@ nsIsIndexFrame::OnSubmit(nsPresContext* aPresContext)
     return NS_ERROR_UNEXPECTED;
   }
 
+  if (mContent->IsEditable()) {
+    return NS_OK;
+  }
+
   nsresult result = NS_OK;
 
   // Begin ProcessAsURLEncoded

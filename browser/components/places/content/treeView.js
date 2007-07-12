@@ -1043,7 +1043,7 @@ PlacesTreeView.prototype = {
       case this.COLUMN_TYPE_DESCRIPTION:
         const annos = PlacesUtils.annotations;
         if (annos.itemHasAnnotation(node.itemId, DESCRIPTION_ANNO))
-          return annos.getItemAnnotationString(node.itemId, DESCRIPTION_ANNO)
+          return annos.getItemAnnotation(node.itemId, DESCRIPTION_ANNO)
         return "";
       case this.COLUMN_TYPE_DATEADDED:
         if (node.dateAdded)

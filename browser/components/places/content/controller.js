@@ -139,7 +139,7 @@ PlacesController.prototype = {
         return false;
 
       if (this._view.hasSingleSelection && PlacesUtils.nodeIsFolder(node)) {
-        var contents = PlacesUtils.getFolderContents(node.itemId, false, false);
+        var contents = PlacesUtils.getFolderContents(node.itemId, false, false).root;
         for (var i = 0; i < contents.childCount; ++i) {
           var child = contents.getChild(i);
           if (PlacesUtils.nodeIsURI(child))
@@ -894,7 +894,7 @@ PlacesController.prototype = {
       // Open each uri in the folder in a tab.
       var index = firstIndex;
       var urlsToOpen = [];
-      var contents = PlacesUtils.getFolderContents(node.itemId, false, false);
+      var contents = PlacesUtils.getFolderContents(node.itemId, false, false).root;
       for (var i = 0; i < contents.childCount; ++i) {
         var child = contents.getChild(i);
         if (PlacesUtils.nodeIsURI(child))
@@ -1874,7 +1874,7 @@ PlacesRemoveFolderTransaction.prototype = {
    */
   _saveFolderContents: function PRFT__saveFolderContents() {
     this._transactions = [];
-    var contents = this.utils.getFolderContents(this._id, false, false);
+    var contents = this.utils.getFolderContents(this._id, false, false).root;
     var ios = Cc["@mozilla.org/network/io-service;1"].
               getService(Ci.nsIIOService);  
     for (var i = 0; i < contents.childCount; ++i) {
@@ -2075,13 +2075,13 @@ PlacesEditItemDescriptionTransaction.prototype = {
 
     if (annos.itemHasAnnotation(this.id, this.DESCRIPTION_ANNO)) {
       this._oldDescription =
-        annos.getItemAnnotationString(this.id, this.DESCRIPTION_ANNO);
+        annos.getItemAnnotation(this.id, this.DESCRIPTION_ANNO);
     }
 
     if (this._newDescription) {
-      annos.setItemAnnotationString(this.id, this.DESCRIPTION_ANNO,
-                                    this._newDescription, 0,
-                                    this.nsIAnnotationService.EXPIRE_NEVER);
+      annos.setItemAnnotation(this.id, this.DESCRIPTION_ANNO,
+                              this._newDescription, 0,
+                              this.nsIAnnotationService.EXPIRE_NEVER);
     }
     else if (this._oldDescription)
       annos.removeItemAnnotation(this.id, this.DESCRIPTION_ANNO);
@@ -2091,9 +2091,9 @@ PlacesEditItemDescriptionTransaction.prototype = {
     const annos = this.utils.annotations;
 
     if (this._oldDescription) {
-      annos.setItemAnnotationString(this.id, this.DESCRIPTION_ANNO,
-                                    this._oldDescription, 0,
-                                    this.nsIAnnotationService.EXPIRE_NEVER);
+      annos.setItemAnnotation(this.id, this.DESCRIPTION_ANNO,
+                              this._oldDescription, 0,
+                              this.nsIAnnotationService.EXPIRE_NEVER);
     }
     else if (annos.itemHasAnnotation(this.id, this.DESCRIPTION_ANNO))
       annos.removeItemAnnotation(this.id, this.DESCRIPTION_ANNO);
@@ -2235,7 +2235,7 @@ PlacesSortFolderByNameTransaction.prototype = {
   doTransaction: function PSSFBN_doTransaction() {
     this._oldOrder = [];
 
-    var contents = this.utils.getFolderContents(this._folderId, false, false);
+    var contents = this.utils.getFolderContents(this._folderId, false, false).root;
     var count = contents.childCount;
 
     // sort between separators

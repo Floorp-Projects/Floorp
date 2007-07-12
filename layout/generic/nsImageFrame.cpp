@@ -1339,43 +1339,6 @@ nsImageFrame::GetImageMap(nsPresContext* aPresContext)
   return mImageMap;
 }
 
-void
-nsImageFrame::TriggerLink(nsPresContext* aPresContext,
-                          nsIURI* aURI,
-                          const nsString& aTargetSpec,
-                          nsINode* aTriggerNode,
-                          PRBool aClick)
-{
-  NS_PRECONDITION(aTriggerNode, "Must have triggering node");
-  
-  // We get here with server side image map
-  nsILinkHandler *handler = aPresContext->GetLinkHandler();
-  if (handler) {
-    if (aClick) {
-      // Check that the triggering node is allowed to load this URI.
-      // Almost a copy of the similarly named method in nsGenericElement
-      nsresult rv;
-      nsCOMPtr<nsIScriptSecurityManager> securityManager = 
-               do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-
-      if (NS_FAILED(rv))
-        return;
-
-      rv = securityManager->
-        CheckLoadURIWithPrincipal(aTriggerNode->NodePrincipal(), aURI,
-                                  nsIScriptSecurityManager::STANDARD);
-
-      // Only pass off the click event if the script security manager
-      // says it's ok.
-      if (NS_SUCCEEDED(rv))
-        handler->OnLinkClick(mContent, aURI, aTargetSpec.get());
-    }
-    else {
-      handler->OnOverLink(mContent, aURI, aTargetSpec.get());
-    }
-  }
-}
-
 PRBool
 nsImageFrame::IsServerImageMap()
 {
@@ -1404,7 +1367,7 @@ nsImageFrame::TranslateEventCoords(const nsPoint& aPoint,
 
 PRBool
 nsImageFrame::GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
-                                         nsINode** aNode)
+                                         nsIContent** aNode)
 {
   PRBool status = PR_FALSE;
   aTarget.Truncate();
@@ -1493,7 +1456,7 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
         // element to provide the basis for the destination url.
         nsCOMPtr<nsIURI> uri;
         nsAutoString target;
-        nsCOMPtr<nsINode> anchorNode;
+        nsCOMPtr<nsIContent> anchorNode;
         if (GetAnchorHREFTargetAndNode(getter_AddRefs(uri), target,
                                        getter_AddRefs(anchorNode))) {
           // XXX if the mouse is over/clicked in the border/padding area
@@ -1513,7 +1476,8 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
             *aEventStatus = nsEventStatus_eConsumeDoDefault; 
             clicked = PR_TRUE;
           }
-          TriggerLink(aPresContext, uri, target, anchorNode, clicked);
+          nsContentUtils::TriggerLink(anchorNode, aPresContext, uri, target,
+                                      clicked, PR_TRUE);
         }
       }
     }

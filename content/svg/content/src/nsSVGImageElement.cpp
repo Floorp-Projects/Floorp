@@ -359,7 +359,7 @@ nsSVGImageElement::ConstructPath(gfxContext *aCtx)
 
   GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
 
-  if (width == 0 || height == 0)
+  if (width <= 0 || height <= 0)
     return;
 
   aCtx->Rectangle(gfxRect(x, y, width, height));

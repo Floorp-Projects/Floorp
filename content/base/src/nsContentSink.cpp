@@ -269,14 +269,20 @@ nsContentSink::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
     NS_ASSERTION(mPendingSheetCount > 0, "How'd that happen?");
     --mPendingSheetCount;
 
-    if (mPendingSheetCount == 0 && mDeferredLayoutStart) {
-      // We might not have really started layout, since this sheet was still
-      // loading.  Do it now.  Probably doesn't matter whether we do this
-      // before or after we unblock scripts, but before feels saner.  Note that
-      // if mDeferredLayoutStart is true, that means any subclass StartLayout()
-      // stuff that needs to happen has already happened, so we don't need to
-      // worry about it.
-      StartLayout(PR_FALSE);
+    if (mPendingSheetCount == 0 &&
+        (mDeferredLayoutStart || mDeferredFlushTags)) {
+      if (mDeferredFlushTags) {
+        FlushTags();
+      }
+      if (mDeferredLayoutStart) {
+        // We might not have really started layout, since this sheet was still
+        // loading.  Do it now.  Probably doesn't matter whether we do this
+        // before or after we unblock scripts, but before feels saner.  Note
+        // that if mDeferredLayoutStart is true, that means any subclass
+        // StartLayout() stuff that needs to happen has already happened, so we
+        // don't need to worry about it.
+        StartLayout(PR_FALSE);
+      }
 
       // Go ahead and try to scroll to our ref if we have one
       TryToScrollToRef();
@@ -1019,7 +1025,7 @@ nsContentSink::StartLayout(PRBool aIgnorePendingSheets)
   
   mDeferredLayoutStart = PR_TRUE;
 
-  if (!aIgnorePendingSheets && mPendingSheetCount > 0) {
+  if (!aIgnorePendingSheets && WaitForPendingSheets()) {
     // Bail out; we'll start layout when the sheets load
     return;
   }
@@ -1172,11 +1178,16 @@ nsContentSink::Notify(nsITimer *timer)
   }
 #endif
 
-  FlushTags();
+  if (WaitForPendingSheets()) {
+    mDeferredFlushTags = PR_TRUE;
+  } else {
+    FlushTags();
 
-  // Now try and scroll to the reference
-  // XXX Should we scroll unconditionally for history loads??
-  TryToScrollToRef();
+    // Now try and scroll to the reference
+    // XXX Should we scroll unconditionally for history loads??
+    TryToScrollToRef();
+  }
+
   mNotificationTimer = nsnull;
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Notify()\n"));
   MOZ_TIMER_STOP(mWatch);
@@ -1188,6 +1199,11 @@ nsContentSink::IsTimeToNotify()
 {
   if (!mNotifyOnTimer || !mLayoutStarted || !mBackoffCount ||
       mInMonolithicContainer) {
+    return PR_FALSE;
+  }
+
+  if (WaitForPendingSheets()) {
+    mDeferredFlushTags = PR_TRUE;
     return PR_FALSE;
   }
 
@@ -1213,7 +1229,9 @@ nsContentSink::WillInterruptImpl()
   SINK_TRACE(gContentSinkLogModuleInfo, SINK_TRACE_CALLS,
              ("nsContentSink::WillInterrupt: this=%p", this));
 #ifndef SINK_NO_INCREMENTAL
-  if (mNotifyOnTimer && mLayoutStarted) {
+  if (WaitForPendingSheets()) {
+    mDeferredFlushTags = PR_TRUE;
+  } else if (mNotifyOnTimer && mLayoutStarted) {
     if (mBackoffCount && !mInMonolithicContainer) {
       PRInt64 now = PR_Now();
       PRInt64 interval = GetNotificationInterval();

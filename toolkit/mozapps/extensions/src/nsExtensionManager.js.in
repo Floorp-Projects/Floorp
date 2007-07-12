@@ -6529,8 +6529,8 @@ RDFItemUpdater.prototype = {
           aUpdateData.version = version;
           aUpdateData.updateLink = this._getPropertyFromResource(aDataSource, targetApp, "updateLink", aLocalItem);
           aUpdateData.updateHash = this._getPropertyFromResource(aDataSource, targetApp, "updateHash", aLocalItem);
-          aUpdateData.minVersion = maxAppVersion;
-          aUpdateData.maxVersion = minAppVersion;
+          aUpdateData.minVersion = minAppVersion;
+          aUpdateData.maxVersion = maxAppVersion;
         }
       }
     }

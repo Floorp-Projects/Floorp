@@ -1340,6 +1340,7 @@ SinkContext::AddText(const nsAString& aText)
 nsresult
 SinkContext::FlushTags()
 {
+  mSink->mDeferredFlushTags = PR_FALSE;
   PRBool oldBeganUpdate = mSink->mBeganUpdate;
   PRUint32 oldUpdates = mSink->mUpdatesInNotification;
 

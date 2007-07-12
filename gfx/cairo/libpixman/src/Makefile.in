@@ -84,7 +84,7 @@ endif
 
 EXPORTS		= pixman.h pixman-remap.h
 
-LOCAL_INCLUDES	= -I$(srcdir)
+LOCAL_INCLUDES	+= -I$(srcdir) -I$(srcdir)/../../cairo/src
 
 FORCE_STATIC_LIB = 1
 # This library is used by other shared libs in a static build

@@ -139,6 +139,7 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
       // Kick off the load of the stylesheet.
 
       // Always load chrome synchronously
+      // XXXbz should that still do a content policy check?
       PRBool chrome;
       nsresult rv;
       if (NS_SUCCEEDED(url->SchemeIs("chrome", &chrome)) && chrome)
@@ -154,7 +155,7 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
       }
       else
       {
-        rv = cssLoader->LoadSheet(url, this);
+        rv = cssLoader->LoadSheet(url, docURL, doc->NodePrincipal(), this);
         if (NS_SUCCEEDED(rv))
           ++mPendingSheets;
       }

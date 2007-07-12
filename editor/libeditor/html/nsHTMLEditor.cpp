@@ -3552,7 +3552,7 @@ nsHTMLEditor::ReplaceStyleSheet(const nsAString& aURL)
   rv = NS_NewURI(getter_AddRefs(uaURI), aURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = cssLoader->LoadSheet(uaURI, this);
+  rv = cssLoader->LoadSheet(uaURI, nsnull, nsnull, this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

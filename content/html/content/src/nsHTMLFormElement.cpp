@@ -981,7 +981,7 @@ nsHTMLFormElement::SubmitSubmission(nsIFormSubmission* aFormSubmission)
   nsIDocument* doc = GetCurrentDoc();
   nsCOMPtr<nsISupports> container = doc ? doc->GetContainer() : nsnull;
   nsCOMPtr<nsILinkHandler> linkHandler(do_QueryInterface(container));
-  if (!linkHandler) {
+  if (!linkHandler || IsEditable()) {
     mIsSubmitting = PR_FALSE;
     return NS_OK;
   }

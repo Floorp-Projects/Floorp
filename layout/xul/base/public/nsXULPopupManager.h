@@ -460,6 +460,11 @@ public:
   void ExecuteMenu(nsIContent* aMenu, nsEvent* aEvent);
 
   /**
+   * Return true if the popup for the supplied content node is open.
+   */
+  PRBool IsPopupOpen(nsIContent* aPopup);
+
+  /**
    * Return true if the popup for the supplied menu parent is open.
    */
   PRBool IsPopupOpenForMenuParent(nsIMenuParent* aMenuParent);
@@ -499,6 +504,16 @@ public:
    * is closed asynchronously.
    */
   void KillMenuTimer();
+
+  /**
+   * Cancel the timer which closes menus after delay, but only if the menu to
+   * close is aMenuParent. When a submenu is opened, the user might move the
+   * mouse over a sibling menuitem which would normally close the menu. This
+   * menu is closed via a timer. However, if the user moves the mouse over the
+   * submenu before the timer fires, we should instead cancel the timer. This
+   * ensures that the user can move the mouse diagonally over a menu.
+   */
+  void CancelMenuTimer(nsIMenuParent* aMenuParent);
 
   /**
    * Handles navigation for menu accelkeys. Returns true if the key has

@@ -1135,7 +1135,7 @@ NS_IMETHODIMP nsHyperTextAccessible::PasteText(PRInt32 aPosition)
 }
 
 NS_IMETHODIMP
-nsHyperTextAccessible::GetEditor(nsIEditor **aEditor)
+nsHyperTextAccessible::GetAssociatedEditor(nsIEditor **aEditor)
 {
   NS_ENSURE_ARG_POINTER(aEditor);
 

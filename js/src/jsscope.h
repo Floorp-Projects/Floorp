@@ -351,9 +351,6 @@ js_DestroyScope(JSContext *cx, JSScope *scope);
 #define ID_TO_VALUE(id) (JSID_IS_ATOM(id) ? ATOM_JSID_TO_JSVAL(id) :          \
                          JSID_IS_OBJECT(id) ? OBJECT_JSID_TO_JSVAL(id) :      \
                          (jsval)(id))
-#define HASH_ID(id)     (JSID_IS_ATOM(id) ? JSID_TO_ATOM(id)->number :        \
-                         JSID_IS_OBJECT(id) ? (jsatomid) JSID_CLRTAG(id) :    \
-                         (jsatomid) JSID_TO_INT(id))
 
 extern JS_FRIEND_API(JSScopeProperty **)
 js_SearchScope(JSScope *scope, jsid id, JSBool adding);

@@ -77,6 +77,8 @@ ConvertResultCode(int srv)
             return NS_ERROR_OUT_OF_MEMORY;
         case SQLITE_MISUSE:
             return NS_ERROR_UNEXPECTED;
+        case SQLITE_ABORT:
+            return NS_ERROR_ABORT;
     }
 
     // generic error

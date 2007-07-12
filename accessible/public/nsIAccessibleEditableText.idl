@@ -43,7 +43,7 @@
 
 interface nsIEditor;
 
-[scriptable, uuid(1e9884d3-4017-4032-a121-e0185d166db5)]
+[scriptable, uuid(52837507-202d-4e72-a482-5f068a1fd720)]
 interface nsIAccessibleEditableText : nsISupports
 {
   /**
@@ -105,9 +105,9 @@ interface nsIAccessibleEditableText : nsISupports
   void pasteText (in long position);
 
   /**
-   * Returns an editor.
+   * Returns an editor associated with the accessible.
    */
-  [noscript] readonly attribute nsIEditor editor;
+  [noscript] readonly attribute nsIEditor associatedEditor;
 };
 
 /*
