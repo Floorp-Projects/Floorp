@@ -52,7 +52,6 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLOptionElement.h"
-#include "nsIDOMChromeWindow.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
@@ -76,7 +75,6 @@
 #include "nsScriptNameSpaceManager.h"
 #include "nsThreadUtils.h"
 #include "nsITimer.h"
-#include "nsDOMClassInfo.h"
 #include "nsIAtom.h"
 #include "nsContentUtils.h"
 #include "jscntxt.h"
@@ -273,10 +271,6 @@ NS_ScriptErrorReporter(JSContext *cx,
                        const char *message,
                        JSErrorReport *report)
 {
-  NS_ASSERTION(message || report,
-               "Must have a message or a report; otherwise what are we "
-               "reporting?");
-  
   // XXX this means we are not going to get error reports on non DOM contexts
   nsIScriptContext *context = nsJSUtils::GetDynamicScriptContext(cx);
 
@@ -293,15 +287,12 @@ NS_ScriptErrorReporter(JSContext *cx,
       nsAutoString fileName, msg;
       NS_NAMED_LITERAL_STRING(xoriginMsg, "Script error.");
 
-      if (report) {
-        fileName.AssignWithConversion(report->filename);
+      fileName.AssignWithConversion(report->filename);
 
-        const PRUnichar *m = reinterpret_cast<const PRUnichar*>
+      const PRUnichar *m = reinterpret_cast<const PRUnichar*>
                                              (report->ucmessage);
-
-        if (m) {
-          msg.Assign(m);
-        }
+      if (m) {
+        msg.Assign(m);
       }
 
       if (msg.IsEmpty() && message) {
@@ -322,9 +313,8 @@ NS_ScriptErrorReporter(JSContext *cx,
         nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(globalObject));
         nsIDocShell *docShell = win ? win->GetDocShell() : nsnull;
         if (docShell &&
-            (!report ||
-             (report->errorNumber != JSMSG_OUT_OF_MEMORY &&
-              !JSREPORT_IS_WARNING(report->flags)))) {
+            (report->errorNumber != JSMSG_OUT_OF_MEMORY &&
+              !JSREPORT_IS_WARNING(report->flags))) {
           static PRInt32 errorDepth; // Recursion prevention
           ++errorDepth;
 
@@ -339,7 +329,7 @@ NS_ScriptErrorReporter(JSContext *cx,
             nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(win));
             nsIPrincipal *p = sop->GetPrincipal();
 
-            PRBool sameOrigin = !(report && report->filename);
+            PRBool sameOrigin = (report->filename == nsnull);
 
             if (p && !sameOrigin) {
               nsCOMPtr<nsIURI> errorURI;
@@ -361,7 +351,7 @@ NS_ScriptErrorReporter(JSContext *cx,
 
             if (sameOrigin) {
               errorevent.errorMsg = msg.get();
-              errorevent.lineNr = report ? report->lineno : 0;
+              errorevent.lineNr = report->lineno;
             } else {
               errorevent.errorMsg = xoriginMsg.get();
               errorevent.lineNr = 0;
@@ -398,18 +388,13 @@ NS_ScriptErrorReporter(JSContext *cx,
             ? "chrome javascript"
             : "content javascript";
 
-          if (report) {
-            PRUint32 column = report->uctokenptr - report->uclinebuf;
+          PRUint32 column = report->uctokenptr - report->uclinebuf;
 
-            rv = errorObject->Init(msg.get(), fileName.get(),
-                                   reinterpret_cast<const PRUnichar*>
-                                                   (report->uclinebuf),
-                                   report->lineno, column, report->flags,
-                                   category);
-          } else if (message) {
-            rv = errorObject->Init(msg.get(), nsnull, nsnull, 0, 0, 0,
-                                   category);
-          }
+          rv = errorObject->Init(msg.get(), fileName.get(),
+                                 reinterpret_cast<const PRUnichar*>
+                                                 (report->uclinebuf),
+                                 report->lineno, column, report->flags,
+                                 category);
 
           if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsIConsoleService> consoleService =
@@ -428,49 +413,42 @@ NS_ScriptErrorReporter(JSContext *cx,
   // mozilla with -console.
   nsCAutoString error;
   error.Assign("JavaScript ");
-  if (!report) {
-    error.Append("[no report]: ");
-    error.Append(message);
+  if (JSREPORT_IS_STRICT(report->flags))
+    error.Append("strict ");
+  if (JSREPORT_IS_WARNING(report->flags))
+    error.Append("warning: ");
+  else
+    error.Append("error: ");
+  error.Append(report->filename);
+  error.Append(", line ");
+  error.AppendInt(report->lineno, 10);
+  error.Append(": ");
+  if (report->ucmessage) {
+    AppendUTF16toUTF8(reinterpret_cast<const PRUnichar*>(report->ucmessage),
+                      error);
   } else {
-    if (JSREPORT_IS_STRICT(report->flags))
-      error.Append("strict ");
-    if (JSREPORT_IS_WARNING(report->flags))
-      error.Append("warning: ");
-    else
-      error.Append("error: ");
-    error.Append(report->filename);
-    error.Append(", line ");
-    error.AppendInt(report->lineno, 10);
-    error.Append(": ");
-    if (report->ucmessage) {
-      AppendUTF16toUTF8(reinterpret_cast<const PRUnichar*>(report->ucmessage),
-                        error);
-    } else {
-      error.Append(message);
-    }
-    if (status != nsEventStatus_eIgnore && !JSREPORT_IS_WARNING(report->flags))
-      error.Append(" Error was suppressed by event handler\n");
+    error.Append(message);
   }
+  if (status != nsEventStatus_eIgnore && !JSREPORT_IS_WARNING(report->flags))
+    error.Append(" Error was suppressed by event handler\n");
   fprintf(stderr, "%s\n", error.get());
   fflush(stderr);
 #endif
 
 #ifdef PR_LOGGING
-  if (report) {
-    if (!gJSDiagnostics)
-      gJSDiagnostics = PR_NewLogModule("JSDiagnostics");
+  if (!gJSDiagnostics)
+    gJSDiagnostics = PR_NewLogModule("JSDiagnostics");
 
-    if (gJSDiagnostics) {
-      PR_LOG(gJSDiagnostics,
-             JSREPORT_IS_WARNING(report->flags) ? PR_LOG_WARNING : PR_LOG_ERROR,
-             ("file %s, line %u: %s\n%s%s",
-              report->filename, report->lineno, message,
-              report->linebuf ? report->linebuf : "",
-              (report->linebuf &&
-               report->linebuf[strlen(report->linebuf)-1] != '\n')
-              ? "\n"
-              : ""));
-    }
+  if (gJSDiagnostics) {
+    PR_LOG(gJSDiagnostics,
+           JSREPORT_IS_WARNING(report->flags) ? PR_LOG_WARNING : PR_LOG_ERROR,
+           ("file %s, line %u: %s\n%s%s",
+            report->filename, report->lineno, message,
+            report->linebuf ? report->linebuf : "",
+            (report->linebuf &&
+             report->linebuf[strlen(report->linebuf)-1] != '\n')
+            ? "\n"
+            : ""));
   }
 #endif
 }
