@@ -530,8 +530,45 @@ CAccessibleTable::get_rowColumnExtentsAtIndex(long aIndex, long *aRow,
   *aColumn = 0;
   *aRowExtents = 0;
   *aColumnExtents = 0;
+  *aIsSelected = false;
 
-  return E_NOTIMPL;
+  nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryInterface(this));
+  NS_ASSERTION(tableAcc, CANT_QUERY_ASSERTION_MSG);
+  if (!tableAcc)
+    return E_FAIL;
+
+  PRInt32 row = -1;
+  nsresult rv = tableAcc->GetRowAtIndex(aIndex, &row);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  PRInt32 column = -1;
+  rv = tableAcc->GetColumnAtIndex(aIndex, &column);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  PRInt32 rowExtents = 0;
+  rv = tableAcc->GetRowExtentAt(row, column, &rowExtents);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  PRInt32 columnExtents = 0;
+  rv = tableAcc->GetColumnExtentAt(row, column, &columnExtents);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  PRBool isSelected = PR_FALSE;
+  rv = tableAcc->IsCellSelected(row, column, &isSelected);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  *aRow = row;
+  *aColumn = column;
+  *aRowExtents = rowExtents;
+  *aColumnExtents = columnExtents;
+  *aIsSelected = isSelected;
+
+  return S_OK;
 }
 
 STDMETHODIMP
