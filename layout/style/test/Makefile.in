@@ -79,6 +79,7 @@ _TEST_FILES =	test_bug74880.html \
 		test_bug379741.html \
 		test_bug383075.html \
 		test_bug387615.html \
+		test_compute_data_with_start_struct.html \
 		test_dont_use_document_colors.html \
 		test_inherit_storage.html \
 		test_inherit_computation.html \
