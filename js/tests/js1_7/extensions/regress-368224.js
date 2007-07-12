@@ -38,7 +38,7 @@
 var gTestfile = 'regress-368224.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 368224;
-var summary = 'Assertion: pnprop->pn_type == TOK_COLON';
+var summary = 'Do not assert: pnprop->pn_type == TOK_COLON';
 var actual = '';
 var expect = '';
 
