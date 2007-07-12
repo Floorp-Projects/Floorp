@@ -153,7 +153,7 @@ if [[ -z "$LIBRARYSH" ]]; then
         # cvs builds on mac os x.
             get_executable_name="$get_executable_product${EXE_EXT}"
             case "$OSID" in
-                mac*)
+                mac)
                     get_executable_filter="Contents/MacOS/$get_executable_product"
                     if [[ "$get_executable_product" == "thunderbird" ]]; then
                         get_executable_name="$get_executable_product-bin"
@@ -199,7 +199,7 @@ if [[ -z "$LIBRARYSH" ]]; then
         OSID=linux
         EXE_EXT=
     elif echo $OSTYPE | grep -iq darwin; then
-        OSID=mac`uname -p`
+        OSID=mac
         EXE_EXT=
     else
         error "Unknown OS $OSTYPE"

@@ -89,7 +89,12 @@ try:
 	signal.alarm(0) # Cancel the alarm
 	stoptime = time.time()
 	elapsedtime = stoptime - starttime
-	if os.WIFEXITED(status):
+	# it appears that linux at least will on "occasion" return a status
+	# when the process was terminated by a signal, so test signal first.
+	if os.WIFSIGNALED(status):
+	    print "%s EXIT STATUS: CRASHED signal %d (%f seconds)" % (prefix, os.WTERMSIG(status), elapsedtime)
+	    sys.exit(exitSignal)
+	elif os.WIFEXITED(status):
 	    rc = os.WEXITSTATUS(status)
 	    msg = ''
 	    if rc == 0:
@@ -103,9 +108,6 @@ try:
 
 	    print "%s EXIT STATUS: %s (%f seconds)" % (prefix, msg, elapsedtime)
 	    sys.exit(rc)
-	elif os.WIFSIGNALED(status):
-	    print "%s EXIT STATUS: CRASHED signal %d (%f seconds)" % (prefix, os.WTERMSIG(status), elapsedtime)
-	    sys.exit(exitSignal)
 	else:
 	    print "%s EXIT STATUS: NONE (%f seconds)" % (prefix, elapsedtime)
 	    sys.exit(0)
