@@ -83,7 +83,8 @@ nsSVGMutationObserver::AttributeChanged(nsIDocument *aDocument,
                                         nsIContent *aContent,
                                         PRInt32 aNameSpaceID,
                                         nsIAtom *aAttribute,
-                                        PRInt32 aModType)
+                                        PRInt32 aModType,
+                                        PRUint32 aStateMask)
 {
   if (aNameSpaceID != kNameSpaceID_XML || aAttribute != nsGkAtoms::space) {
     return;

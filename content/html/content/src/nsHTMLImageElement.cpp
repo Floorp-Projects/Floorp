@@ -489,7 +489,10 @@ nsHTMLImageElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     nsCOMPtr<imgIRequest> oldCurrentRequest = mCurrentRequest;
 
     // Force image loading here, so that we'll try to load the image from
-    // network if it's set to be not cacheable...
+    // network if it's set to be not cacheable...  If we change things so that
+    // the state gets in nsGenericElement's attr-setting happen around this
+    // LoadImage call, we could start passing PR_FALSE instead of aNotify
+    // here.
     LoadImage(aValue, PR_TRUE, aNotify);
 
     if (mCurrentRequest && !mPendingRequest &&

@@ -894,8 +894,10 @@ nsStyleSet::HasStateDependentStyle(nsPresContext* aPresContext,
 
 struct AttributeData : public AttributeRuleProcessorData {
   AttributeData(nsPresContext* aPresContext,
-                nsIContent* aContent, nsIAtom* aAttribute, PRInt32 aModType)
-    : AttributeRuleProcessorData(aPresContext, aContent, aAttribute, aModType),
+                nsIContent* aContent, nsIAtom* aAttribute, PRInt32 aModType,
+                PRUint32 aStateMask)
+    : AttributeRuleProcessorData(aPresContext, aContent, aAttribute, aModType,
+                                 aStateMask),
       mHint(nsReStyleHint(0))
   {}
   nsReStyleHint   mHint;
@@ -914,9 +916,10 @@ SheetHasAttributeStyle(nsIStyleRuleProcessor* aProcessor, void *aData)
 // Test if style is dependent on content state
 nsReStyleHint
 nsStyleSet::HasAttributeDependentStyle(nsPresContext* aPresContext,
-                                       nsIContent*     aContent,
-                                       nsIAtom*        aAttribute,
-                                       PRInt32         aModType)
+                                       nsIContent*    aContent,
+                                       nsIAtom*       aAttribute,
+                                       PRInt32        aModType,
+                                       PRUint32       aStateMask)
 {
   nsReStyleHint result = nsReStyleHint(0);
 
@@ -928,7 +931,8 @@ nsStyleSet::HasAttributeDependentStyle(nsPresContext* aPresContext,
        mRuleProcessors[eDocSheet]          ||
        mRuleProcessors[eStyleAttrSheet]    ||
        mRuleProcessors[eOverrideSheet])) {
-    AttributeData data(aPresContext, aContent, aAttribute, aModType);
+    AttributeData data(aPresContext, aContent, aAttribute, aModType,
+                       aStateMask);
     WalkRuleProcessors(SheetHasAttributeStyle, &data);
     result = data.mHint;
   }

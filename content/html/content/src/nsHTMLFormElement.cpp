@@ -1353,7 +1353,7 @@ nsHTMLFormElement::ResetDefaultSubmitElement(PRBool aNotify,
   mDefaultSubmitElement = FindDefaultSubmit(aPrevDefaultInElements,
                                             aPrevDefaultIndex);
 
-  // Inform about change.  Note that we dont' notify on the old default submit
+  // Inform about change.  Note that we don't notify on the old default submit
   // (which is being removed) because it's either being removed from the DOM or
   // changing attributes in a way that makes it responsible for sending its own
   // notifications.
