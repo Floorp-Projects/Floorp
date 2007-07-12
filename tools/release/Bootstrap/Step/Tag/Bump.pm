@@ -89,36 +89,52 @@ sub Execute {
 
         my $bumpVersion = undef;
         my $preVersion = undef;
-        my $search = undef;
-        my $replace = undef;
+        my %searchReplace = ();
 
+        # Order or searching for these values is not preserved, so make
+        # sure that the order replacement happens does not matter.
         if ($fileName eq 'client.mk') {
-            $search = '^MOZ_CO_TAG\s+=\s+' . $branchTag . '$';
-            $replace = 'MOZ_CO_TAG           = ' . $releaseTag;
+            %searchReplace = (
+             '^MOZ_CO_TAG\s+=\s+' . $branchTag . '$' =>
+              'MOZ_CO_TAG           = ' . $releaseTag,
+             '^NSPR_CO_TAG\s+=\s+\w*' => 
+              'NSPR_CO_TAG          = ' . $releaseTag,
+             '^NSS_CO_TAG\s+=\s+\w*' =>
+              'NSS_CO_TAG           = ' . $releaseTag,
+             '^LOCALES_CO_TAG\s+=\s+' . $branchTag . '$' =>
+              'LOCALES_CO_TAG       = ' . $releaseTag,
+             '^LDAPCSDK_CO_TAG\s+=\s+' . $branchTag . '$' =>
+              'LDAPCSDK_CO_TAG      = ' . $releaseTag);
         } elsif ($fileName eq $moduleVer) {
             $preVersion = $version . 'pre';
-            $search = '^WIN32_MODULE_PRODUCTVERSION_STRING=' . $preVersion . '$';
-            $replace = 'WIN32_MODULE_PRODUCTVERSION_STRING=' . $version;
+            %searchReplace = ('^WIN32_MODULE_PRODUCTVERSION_STRING=' . 
+             $preVersion . '$' => 'WIN32_MODULE_PRODUCTVERSION_STRING=' . 
+             $version);
         } elsif ($fileName eq $versionTxt) {
             $preVersion = $version . 'pre';
-            $search = '^' . $preVersion . '$';
-            $replace = $version;
+            %searchReplace = ('^' . $preVersion . '$' => $version);
         } elsif ($fileName eq $milestoneTxt) {
             $preVersion = $milestone . 'pre';
-            $search = '^' . $preVersion . '$';
-            $replace = $milestone;
+            %searchReplace = ('^' . $preVersion . '$' => $milestone);
         } else {
             die("ASSERT: do not know how to bump file $fileName");
+        }
+
+        if (scalar(keys(%searchReplace)) <= 0) {
+            die("ASSERT: no search/replace to perform");
         }
         
         open(INFILE,  "< $file") or die("Could not open $file: $!");
         open(OUTFILE, "> $file.tmp") or die("Could not open $file.tmp: $!");
         while(<INFILE>) {
-            if($_ =~ /$search/) {
-                $this->Log(msg => "$search found");
-                $found = 1;
-                $_ =~ s/$search/$replace/;
-                $this->Log(msg => "$search replaced with $replace");
+            foreach my $search (keys(%searchReplace)) {
+                my $replace = $searchReplace{$search};
+                if($_ =~ /$search/) {
+                    $this->Log(msg => "$search found");
+                    $found = 1;
+                    $_ =~ s/$search/$replace/;
+                    $this->Log(msg => "$search replaced with $replace");
+                }
             }
 
             print OUTFILE $_;
@@ -126,7 +142,8 @@ sub Execute {
         close INFILE or die("Could not close $file: $!");
         close OUTFILE or die("Coule not close $file.tmp: $!");
         if (not $found) {
-            die("No " . $search . " found in file $file: $!");
+            die("None of " . join(keys(%searchReplace)) . 
+             " found in file $file: $!");
         }
 
         if (not move("$file.tmp",
