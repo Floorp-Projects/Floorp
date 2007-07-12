@@ -2454,8 +2454,10 @@ RequestMetadata.prototype =
     // - handles POSTs by displaying the URL and throwing away the request
     //   entity
     // - need to support RFC 2047-encoded non-US-ASCII characters
-    // - support absolute URLs (requires telling the server its hostname, beyond
-    //   just localhost:port and 127.0.0.1:port)
+    // - really support absolute URLs (requires telling the server its hostname,
+    //   beyond just localhost:port and 127.0.0.1:port), not just pretend we
+    //   serve every request that's given to us regardless of the server
+    //   hostname and port
     // - etc.
 
     // read the input line by line; the first line either tells us the requested
@@ -2548,11 +2550,23 @@ RequestMetadata.prototype =
 
     var fullPath = request[1];
 
-    // XXX we don't support absolute URIs yet -- a MUST for HTTP/1.1
     if (fullPath.charAt(0) != "/")
     {
-      this.errorCode = 400;
-      return;
+      // XXX we don't support absolute URIs yet -- a MUST for HTTP/1.1;
+      //     for now just get the path and use that, ignoring hostport
+      try
+      {
+        var uri = Cc["@mozilla.org/network/io-service;1"]
+                    .getService(Ci.nsIIOService)
+                    .newURI(fullPath, null, null);
+        fullPath = uri.path;
+      }
+      catch (e) { /* invalid URI */ }
+      if (fullPath.charAt(0) != "/")
+      {
+        this.errorCode = 400;
+        return;
+      }
     }
 
     var splitter = fullPath.indexOf("?");
