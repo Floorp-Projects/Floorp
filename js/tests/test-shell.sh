@@ -5,6 +5,8 @@ TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
 TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
 source ${TEST_BIN}/library.sh
 
+TEST_JSDIR=${TEST_JSDIR:-$TEST_DIR/tests/mozilla.org/js}
+
 TEST_JSSHELL_TIMEOUT=${TEST_JSSHELL_TIMEOUT:-240}
 
 #
@@ -50,6 +52,8 @@ if [[ -z "$branch" || -z "$sourcepath" || -z "$buildtype" ]]; then
     usage
 fi
 
+pushd $TEST_JSDIR
+
 . config.sh
 
 executable="$sourcepath/$JS_OBJDIR/js$EXE_EXT"
@@ -66,7 +70,9 @@ case "$branch" in
         ;;
 esac
 
-TEST_HTML_LOG="${TEST_DIR}/results/mozilla.org/js/${TEST_DATE},js,$branch,$buildtype,$OSID,${MACHINE},$TEST_ID-shell.html"
+TEST_HTML_LOG="${TEST_DIR}/results/mozilla.org/js/${TEST_DATE},js,$branch,$buildtype,$OSID,${TEST_MACHINE},$TEST_SUITE-shell.html"
+
+make
 
 time perl jsDriver.pl \
     -l $included \
@@ -78,3 +84,4 @@ time perl jsDriver.pl \
 	-f $TEST_HTML_LOG \
     -Q
 
+popd

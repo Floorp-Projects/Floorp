@@ -39,7 +39,7 @@
 gTestfile = 'regress-372564.js';
 
 var BUGNUMBER = 372564;
-var summary = 'Assertion failure: op == JSOP_ADD';
+var summary = 'Do not assert: op == JSOP_ADD';
 var actual = 'No Crash';
 var expect = 'No Crash';
 

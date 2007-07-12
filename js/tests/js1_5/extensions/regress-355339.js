@@ -38,7 +38,7 @@
 var gTestfile = 'regress-355339.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 355339;
-var summary = 'Assertion: sprop->setter != js_watch_set';
+var summary = 'Do not assert: sprop->setter != js_watch_set';
 var actual = '';
 var expect = '';
 
