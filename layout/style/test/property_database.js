@@ -547,6 +547,7 @@ var gCSSProperties = {
 		domProp: "borderBottomColor",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "color": "black" },
 		initial_values: [ "currentColor" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
 		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
@@ -599,6 +600,7 @@ var gCSSProperties = {
 		domProp: "borderLeftColor",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		prerequisites: { "color": "black" },
 		initial_values: [ "currentColor" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
 		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
@@ -634,6 +636,7 @@ var gCSSProperties = {
 		domProp: "borderRightColor",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		prerequisites: { "color": "black" },
 		initial_values: [ "currentColor" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
 		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
@@ -687,6 +690,7 @@ var gCSSProperties = {
 		domProp: "borderTopColor",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "color": "black" },
 		initial_values: [ "currentColor" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
 		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
@@ -837,6 +841,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "inline" ],
 		/* XXX none will really mess with other properties */
+		prerequisites: { "float": "none", "position": "static" },
 		other_values: [ "block", "list-item", "inline-block", "table", "inline-table", "table-row-group", "table-header-group", "table-footer-group", "table-row", "table-column-group", "table-column", "table-cell", "table-caption", "none" ],
 		invalid_values: []
 	},
@@ -1153,6 +1158,7 @@ var gCSSProperties = {
 		domProp: "outlineColor",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "color": "black" },
 		initial_values: [ "currentColor" ], // XXX should be invert
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
 		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
@@ -1187,7 +1193,7 @@ var gCSSProperties = {
 		domProp: "overflow",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-		// XXX requires display:block
+		prerequisites: { "display": "block" },
 		subproperties: [ "overflow-x", "overflow-y" ],
 		initial_values: [ "visible" ],
 		other_values: [ "auto", "scroll", "hidden" ],
@@ -1197,7 +1203,7 @@ var gCSSProperties = {
 		domProp: "overflowX",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		// XXX requires display:block
+		prerequisites: { "display": "block", "overflow-y": "visible" },
 		initial_values: [ "visible" ],
 		other_values: [ "auto", "scroll", "hidden" ],
 		invalid_values: []
@@ -1206,7 +1212,7 @@ var gCSSProperties = {
 		domProp: "overflowY",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		// XXX requires display:block
+		prerequisites: { "display": "block", "overflow-x": "visible" },
 		initial_values: [ "visible" ],
 		other_values: [ "auto", "scroll", "hidden" ],
 		invalid_values: []
