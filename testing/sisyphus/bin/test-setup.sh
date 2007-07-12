@@ -204,7 +204,7 @@ if [[ -n "$buildcommands" ]]; then
     fi
 
     case "$OSID" in
-        mac*)
+        mac)
             if [[ "$product" == "firefox" ]]; then
                 App=Firefox
             elif [[ "$product" == "thunderbird" ]]; then

@@ -52,7 +52,7 @@ case $product in
 	fi
 
 	case "$OSID" in
-	    mac*) 
+	    mac) 
 		if [[ "$buildtype" == "debug" ]]; then
 		    if [[ "$product" == "firefox" ]]; then
 			executablepath=$product-$buildtype/dist/FirefoxDebug.app/Contents/MacOS

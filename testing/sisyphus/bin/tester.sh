@@ -78,8 +78,8 @@ while getopts $options optname ;
       t) 
           testscript="$OPTARG"
           if echo $testscript | grep -iq ' ' ; then
-              testargs=`echo $testscript | sed 's|\([^ ]*\) \+\(.*\)|\2|'`
-              testscript=`echo $testscript | sed 's|\( .*\)||'`
+              testargs=`echo $testscript   | sed 's|^\([^ ]*\)[ ]*\(.*\)|\2|'`
+              testscript=`echo $testscript | sed 's|^\([^ ]*\)[ ]*.*|\1|'`
           fi
           ;;
   esac
