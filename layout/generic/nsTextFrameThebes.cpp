@@ -1285,7 +1285,7 @@ static nscoord StyleToCoord(const nsStyleCoord& aCoord)
 }
 
 static PRBool
-ShouldDisableLigatures(const nsStyleText* aTextStyle)
+ShouldDisableOptionalLigatures(const nsStyleText* aTextStyle)
 {
   return StyleToCoord(aTextStyle->mLetterSpacing) != 0;
 }
@@ -1322,7 +1322,7 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
     return PR_TRUE;
   return sc1->GetStyleFont()->mFont.BaseEquals(sc2->GetStyleFont()->mFont) &&
     sc1->GetStyleVisibility()->mLangGroup == sc2->GetStyleVisibility()->mLangGroup &&
-    ShouldDisableLigatures(textStyle1) == ShouldDisableLigatures(sc2->GetStyleText());
+    ShouldDisableOptionalLigatures(textStyle1) == ShouldDisableOptionalLigatures(sc2->GetStyleText());
 }
 
 void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
@@ -1708,8 +1708,8 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   if (mTrimNextRunLeadingWhitespace) {
     textFlags |= nsTextFrameUtils::TEXT_TRAILING_WHITESPACE;
   }
-  if (ShouldDisableLigatures(firstFrame->GetStyleText())) {
-    textFlags |= gfxTextRunFactory::TEXT_DISABLE_LIGATURES;
+  if (ShouldDisableOptionalLigatures(firstFrame->GetStyleText())) {
+    textFlags |= gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES;
   }
  
   gfxSkipChars skipChars;
