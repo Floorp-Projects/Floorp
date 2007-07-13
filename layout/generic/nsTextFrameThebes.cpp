@@ -4749,29 +4749,18 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, PRInt32 aPosition,
   mFrag = aTextFrame->GetContent()->GetText();
   mTrimmed = aTextFrame->GetTrimmedOffsets(mFrag, PR_TRUE);
 
-  if (!mWordBreaks.AppendElements(aTextFrame->GetContentLength())) {
+  PRInt32 textLen = aTextFrame->GetContentLength();
+  if (!mWordBreaks.AppendElements(textLen)) {
     mDirection = 0; // signal failure
     return;
   }
+  memset(mWordBreaks.Elements(), PR_FALSE, textLen);
   nsAutoString text;
-  PRInt32 textLen = aTextFrame->GetContentLength();
   mFrag->AppendTo(text, aTextFrame->GetContentOffset(), textLen);
   nsIWordBreaker* wordBreaker = nsContentUtils::WordBreaker();
   PRInt32 i = 0;
-  if (i < textLen) {
-    mWordBreaks[i] = PR_FALSE;
-  }
-  while (i < textLen) {
-    PRInt32 nextWord = wordBreaker->NextWord(text.get(), textLen, i);
-    if (nextWord < 0) {
-      if (i + 1 < textLen) {
-        memset(&mWordBreaks[i + 1], textLen - i - 1, PR_FALSE);
-      }
-      break;
-    }
-    i = nextWord;
+  while ((i = wordBreaker->NextWord(text.get(), textLen, i)) >= 0)
     mWordBreaks[i] = PR_TRUE;
-  }
 }
 
 PRBool
