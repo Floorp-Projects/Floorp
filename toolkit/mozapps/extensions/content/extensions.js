@@ -605,6 +605,11 @@ function Startup()
     catch (e) {
       if (window.arguments[0] == "updates-only") {
         gUpdatesOnly = true;
+#ifdef MOZ_PHOENIX
+        // If we are a browser when updating on startup don't display context
+        // menuitems that can open a browser window.
+        gUpdateContextMenus = gUpdateContextMenusNoBrowser;
+#endif
         document.getElementById("viewGroup").hidden = true;
         document.getElementById("extensionsView").setAttribute("norestart", "");
         showView("updates");
@@ -1023,8 +1028,10 @@ var gAddonContextMenus = ["menuitem_useTheme", "menuitem_options", "menuitem_hom
                           "menuitem_cancelUninstall", "menuitem_checkUpdate",
                           "menuitem_enable", "menuitem_disable"];
 var gUpdateContextMenus = ["menuitem_homepage", "menuitem_about", "menuseparator_1",
-                           "menuitem_installUpdate", "menuitem_includeUpdate"]
-var gInstallContextMenus = ["menuitem_homepage", "menuitem_about"]
+                           "menuitem_installUpdate", "menuitem_includeUpdate"];
+// For browsers don't display context menuitems that can open a browser window.
+var gUpdateContextMenusNoBrowser = ["menuitem_installUpdate", "menuitem_includeUpdate"];
+var gInstallContextMenus = ["menuitem_homepage", "menuitem_about"];
 
 function buildContextMenu(aEvent)
 {
