@@ -122,7 +122,7 @@ SessionStoreService.prototype = {
   _loadState: STATE_STOPPED,
 
   // minimal interval between two save operations (in milliseconds)
-  _interval: 1000,
+  _interval: 10000,
 
   // when crash recovery is disabled, session data is not written to disk
   _resume_from_crash: true,
@@ -326,7 +326,7 @@ SessionStoreService.prototype = {
         this.saveStateDelayed(null, -1);
         break;
       case "sessionstore.resume_from_crash":
-        this._resume_from_crash = this._getPref("sessionstore.resume_from_crash", this._resume_from_crash);
+        this._resume_from_crash = this._prefBranch.getBoolPref("sessionstore.resume_from_crash");
         // either create the file with crash recovery information or remove it
         // (when _loadState is not STATE_RUNNING, that file is used for session resuming instead)
         if (this._resume_from_crash)
@@ -897,7 +897,7 @@ SessionStoreService.prototype = {
    */
   _saveTextData: function sss_saveTextData(aPanel, aTextarea) {
     var id = aTextarea.id ? "#" + aTextarea.id :
-                                  aTextarea.name;
+                            aTextarea.name;
     if (!id
       || !(aTextarea instanceof Ci.nsIDOMHTMLTextAreaElement 
       || aTextarea instanceof Ci.nsIDOMHTMLInputElement)) {
@@ -1626,9 +1626,7 @@ SessionStoreService.prototype = {
       var url = stmt.getUTF8String(0);
       
       var savedTo = stmt.getUTF8String(1);
-      var savedToURI = Cc["@mozilla.org/network/io-service;1"].
-                       getService(Ci.nsIIOService).
-                       newURI(savedTo, null, null);
+      var savedToURI = ioService.newURI(savedTo, null, null);
       savedTo = savedToURI.path;
    
       var dl = { id: stmt.getInt64(2), url: url, savedTo: savedTo };
