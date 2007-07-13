@@ -958,7 +958,8 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
     // set for XUL, HTML or ARIA namespace.
     // Checking the namespace would not seem to gain us anything, because
     // disabled really is going to mean the same thing in any namespace.
-    // XXXbz wouldn't it make more sense to observe the disabled state bit?
+    // We use the attribute instead of the disabled state bit because
+    // ARIA's aaa:disabled does not affect the disabled state bit
     nsCOMPtr<nsIAccessibleStateChangeEvent> enabledChangeEvent =
       new nsAccStateChangeEvent(targetNode,
                                 nsIAccessibleStates::EXT_STATE_ENABLED,
@@ -1270,6 +1271,11 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
         nsCOMPtr<nsIAccessibleText> accessibleText = do_QueryInterface(accessible);
         PRInt32 caretOffset;
         if (accessibleText && NS_SUCCEEDED(accessibleText->GetCaretOffset(&caretOffset))) {
+#ifdef DEBUG
+          PRUnichar chAtOffset;
+          accessibleText->GetCharacterAtOffset(caretOffset, &chAtOffset);
+          printf("\nCaret moved to %d with char %c", caretOffset, chAtOffset);
+#endif
           nsCOMPtr<nsIAccessibleCaretMoveEvent> caretMoveEvent =
             new nsAccCaretMoveEvent(accessible, caretOffset);
           NS_ENSURE_TRUE(caretMoveEvent, NS_ERROR_OUT_OF_MEMORY);
