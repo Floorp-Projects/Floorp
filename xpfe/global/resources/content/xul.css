@@ -669,10 +669,6 @@ textbox[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-history-popup");
 }
 
-.autocomplete-tree {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-tree");
-}
-
 .autocomplete-treebody {
   -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-treebody");
 }
