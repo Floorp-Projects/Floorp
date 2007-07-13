@@ -3316,8 +3316,12 @@ nsGenericHTMLElement::IsFocusable(PRInt32 *aTabIndex)
 
   PRBool disabled;
   if (IsEditableRoot()) {
+    // Ignore the disabled attribute in editable contentEditable/designMode
+    // roots.
     disabled = PR_FALSE;
     if (!HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)) {
+      // The default value for tabindex should be 0 for editable
+      // contentEditable roots.
       tabIndex = 0;
     }
   }
@@ -3951,37 +3955,13 @@ nsGenericHTMLElement::IsEditableRoot() const
     return this == document->GetRootContent();
   }
 
-  if (!HasFlag(NODE_IS_EDITABLE)) {
+  if (GetContentEditableValue() != eTrue) {
     return PR_FALSE;
   }
 
   nsIContent *parent = GetParent();
 
   return !parent || !parent->HasFlag(NODE_IS_EDITABLE);
-}
-
-nsIContent*
-nsGenericHTMLElement::FindEditableRoot()
-{
-  nsIDocument *document = GetCurrentDoc();
-  if (!document) {
-    return nsnull;
-  }
-
-  if (document->HasFlag(NODE_IS_EDITABLE)) {
-    return document->GetRootContent();
-  }
-
-  if (!HasFlag(NODE_IS_EDITABLE)) {
-    return nsnull;
-  }
-
-  nsIContent *parent, *content = this;
-  while ((parent = content->GetParent()) && parent->HasFlag(NODE_IS_EDITABLE)) {
-    content = parent;
-  }
-
-  return content;
 }
 
 static void
