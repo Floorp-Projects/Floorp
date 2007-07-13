@@ -37,7 +37,6 @@
 #include "nsSVGPathGeometryFrame.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsIDOMSVGAnimPresAspRatio.h"
-#include "nsIDOMSVGPresAspectRatio.h"
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
 #include "nsStubImageDecoderObserver.h"
@@ -77,16 +76,15 @@ private:
 
 class nsSVGImageFrame : public nsSVGPathGeometryFrame
 {
-protected:
   friend nsIFrame*
   NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
+protected:
+  nsSVGImageFrame(nsStyleContext* aContext) : nsSVGPathGeometryFrame(aContext) {}
   virtual ~nsSVGImageFrame();
   NS_IMETHOD InitSVG();
 
 public:
-  nsSVGImageFrame(nsStyleContext* aContext) : nsSVGPathGeometryFrame(aContext) {}
-
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect);
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
@@ -121,8 +119,6 @@ public:
 private:
   already_AddRefed<nsIDOMSVGMatrix> GetImageTransform();
 
-  nsCOMPtr<nsIDOMSVGPreserveAspectRatio> mPreserveAspectRatio;
-
   nsCOMPtr<imgIDecoderObserver> mListener;
 
   nsCOMPtr<imgIContainer> mImageContainer;
@@ -138,9 +134,7 @@ NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleConte
 {
   nsCOMPtr<nsIDOMSVGImageElement> Rect = do_QueryInterface(aContent);
   if (!Rect) {
-#ifdef DEBUG
-    printf("warning: trying to construct an SVGImageFrame for a content element that doesn't support the right interfaces\n");
-#endif
+    NS_ERROR("Can't create frame! Content is not an SVG image!");
     return nsnull;
   }
 
@@ -168,14 +162,6 @@ nsSVGImageFrame::InitSVG()
   
   nsCOMPtr<nsIDOMSVGImageElement> Rect = do_QueryInterface(mContent);
   NS_ASSERTION(Rect,"wrong content element");
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> ratio;
-    Rect->GetPreserveAspectRatio(getter_AddRefs(ratio));
-    ratio->GetAnimVal(getter_AddRefs(mPreserveAspectRatio));
-    NS_ASSERTION(mPreserveAspectRatio, "no preserveAspectRatio");
-    if (!mPreserveAspectRatio) return NS_ERROR_FAILURE;
-  }
 
   mListener = new nsSVGImageListener(this);
   if (!mListener) return NS_ERROR_OUT_OF_MEMORY;
