@@ -2048,6 +2048,20 @@ nsContentUtils::SplitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
 }
 
 // static
+nsPresContext*
+nsContentUtils::GetContextForContent(nsIContent* aContent)
+{
+  nsIDocument* doc = aContent->GetCurrentDoc();
+  if (doc) {
+    nsIPresShell *presShell = doc->GetPrimaryShell();
+    if (presShell) {
+      return presShell->GetPresContext();
+    }
+  }
+  return nsnull;
+}
+
+// static
 PRBool
 nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
                              nsIDocument* aLoadingDocument,

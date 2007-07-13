@@ -526,6 +526,15 @@ public:
                                 nsIAtom* aName);
 
   /**
+   * Method that gets the primary presContext for the node.
+   * 
+   * @param aContent The content node.
+   * @return the presContext, or nsnull if the content is not in a document
+   *         (if GetCurrentDoc returns nsnull)
+   */
+  static nsPresContext* GetContextForContent(nsIContent* aContent);
+
+  /**
    * Method to do security and content policy checks on the image URI
    *
    * @param aURI uri of the image to be loaded
