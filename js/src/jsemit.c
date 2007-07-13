@@ -3187,8 +3187,12 @@ JSBool
 js_EmitFunctionBytecode(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
 {
     if (cg->treeContext.flags & TCF_FUN_IS_GENERATOR) {
+        /* JSOP_GENERATOR must be the first instruction. */
+        CG_SWITCH_TO_PROLOG(cg);
+        JS_ASSERT(CG_NEXT(cg) == CG_BASE(cg));
         if (js_Emit1(cx, cg, JSOP_GENERATOR) < 0)
             return JS_FALSE;
+        CG_SWITCH_TO_MAIN(cg);
     }
 
     return js_EmitTree(cx, cg, body) &&
@@ -6782,7 +6786,7 @@ js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg, jssrcnote *notes)
          */
         offset = CG_PROLOG_OFFSET(cg) - cg->prolog.lastNoteOffset;
         JS_ASSERT(offset >= 0);
-        if (offset > 0) {
+        if (offset > 0 && cg->main.noteCount != 0) {
             /* NB: Use as much of the first main note's delta as we can. */
             sn = cg->main.notes;
             delta = SN_IS_XDELTA(sn)

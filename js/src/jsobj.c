@@ -863,7 +863,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         }
         *rval = STRING_TO_JSVAL(idstr);         /* local root */
         idIsLexicalIdentifier = js_IsIdentifier(idstr);
-        needOldStyleGetterSetter = 
+        needOldStyleGetterSetter =
             !idIsLexicalIdentifier ||
             js_CheckKeyword(JSSTRING_CHARS(idstr),
                             JSSTRING_LENGTH(idstr)) != TOK_EOF;
@@ -1287,7 +1287,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JS_ASSERT(!caller || caller->pc);
     indirectCall = (caller && *caller->pc != JSOP_EVAL);
 
-    /* 
+    /*
      * Ban all indirect uses of eval (global.foo = eval; global.foo(...)) and
      * calls that attempt to use a non-global object as the "with" object in
      * the former indirect case.
@@ -1970,17 +1970,22 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSObject *parent,
 JSBool
 js_PutBlockObject(JSContext *cx, JSObject *obj)
 {
+    JSStackFrame *fp;
+    uintN depth, slot;
     JSScopeProperty *sprop;
-    jsval v;
 
+    fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
+    JS_ASSERT(fp);
+    depth = OBJ_BLOCK_DEPTH(cx, obj);
     for (sprop = OBJ_SCOPE(obj)->lastProp; sprop; sprop = sprop->parent) {
         if (sprop->getter != js_BlockClass.getProperty)
             continue;
         if (!(sprop->flags & SPROP_HAS_SHORTID))
             continue;
-        if (!sprop->getter(cx, obj, INT_TO_JSVAL(sprop->shortid), &v) ||
-            !js_DefineNativeProperty(cx, obj, sprop->id,
-                                     v, NULL, NULL,
+        slot = depth + (uintN)sprop->shortid;
+        JS_ASSERT(slot < fp->script->depth);
+        if (!js_DefineNativeProperty(cx, obj, sprop->id,
+                                     fp->spbase[slot], NULL, NULL,
                                      JSPROP_ENUMERATE | JSPROP_PERMANENT,
                                      SPROP_HAS_SHORTID, sprop->shortid,
                                      NULL)) {
@@ -2806,7 +2811,7 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp)
         return JS_FALSE;
     }
 
-    /* ReallocSlots or js_FreeSlot should set the free slots to void. */   
+    /* ReallocSlots or js_FreeSlot should set the free slots to void. */
     JS_ASSERT(STOBJ_GET_SLOT(obj, map->freeslot) == JSVAL_VOID);
     *slotp = map->freeslot++;
     return JS_TRUE;
