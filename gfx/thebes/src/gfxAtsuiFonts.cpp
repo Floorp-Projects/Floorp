@@ -936,10 +936,9 @@ AddGlyphRun(gfxTextRun *aRun, gfxAtsuiFont *aFont, PRUint32 aOffset)
 }
 
 static void
-DisableLigaturesInStyle(ATSUStyle aStyle)
+DisableOptionalLigaturesInStyle(ATSUStyle aStyle)
 {
-    static ATSUFontFeatureType selectors[9] = {
-        kRequiredLigaturesOffSelector,
+    static ATSUFontFeatureType selectors[] = {
         kCommonLigaturesOffSelector,
         kRareLigaturesOffSelector,
         kLogosOffSelector,
@@ -950,7 +949,6 @@ DisableLigaturesInStyle(ATSUStyle aStyle)
         kSymbolLigaturesOffSelector
     };
     static ATSUFontFeatureType types[NS_ARRAY_LENGTH(selectors)] = {
-        kLigaturesType,
         kLigaturesType,
         kLigaturesType,
         kLigaturesType,
@@ -1027,11 +1025,11 @@ gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
     printf("%p(%s) TEXTRUN \"%s\" ENDTEXTRUN\n", this, families.get(), str.get());
 #endif
 
-    if (aRun->GetFlags() & TEXT_DISABLE_LIGATURES) {
+    if (aRun->GetFlags() & TEXT_DISABLE_OPTIONAL_LIGATURES) {
         status = ATSUCreateAndCopyStyle(mainStyle, &mainStyle);
         if (status == noErr) {
             stylesToDispose.AppendElement(mainStyle);
-            DisableLigaturesInStyle(mainStyle);
+            DisableOptionalLigaturesInStyle(mainStyle);
         }
     }
 
