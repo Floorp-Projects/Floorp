@@ -844,7 +844,7 @@ class JSAutoTempValueRooter
  * success.
  */
 extern JSBool
-js_InitThreadPrivateIndex(void *ptr);
+js_InitThreadPrivateIndex(void (JS_DLL_CALLBACK *ptr)(void *));
 
 /*
  * Common subroutine of JS_SetVersion and js_SetVersion, to update per-context
