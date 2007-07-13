@@ -5,6 +5,8 @@ TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
 TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
 source ${TEST_BIN}/library.sh
 
+TEST_JSDIR=${TEST_JSDIR:-$TEST_DIR/tests/mozilla.org/js}
+
 #
 # options processing
 #
@@ -47,8 +49,8 @@ for data in $datafiles; do
 done
 
 case "$product" in
-    firefox) testscript=./test-browser.sh;;
-    js) testscript=./test-shell.sh;;
+    firefox) testscript=$TEST_JSDIR/test-browser.sh;;
+    js) testscript=$TEST_JSDIR/test-shell.sh;;
     *) echo "unknown product [$product]"
         exit 2
         ;;

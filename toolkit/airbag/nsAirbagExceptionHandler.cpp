@@ -313,7 +313,11 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
                      nsnull,
                      MinidumpCallback,
                      nsnull,
+#if defined(XP_WIN32)
+                     google_breakpad::ExceptionHandler::HANDLER_ALL);
+#else
                      true);
+#endif
 
   if (!gExceptionHandler)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -469,6 +473,15 @@ SetRestartArgs(int argc, char **argv)
     return NS_ERROR_OUT_OF_MEMORY;
 
   PR_SetEnv(env);
+
+  // make sure we save the info in XUL_APP_FILE for the reporter
+  const char *appfile = PR_GetEnv("XUL_APP_FILE");
+  if (appfile && *appfile) {
+    envVar = "MOZ_CRASHREPORTER_RESTART_XUL_APP_FILE=";
+    envVar += appfile;
+    env = ToNewCString(envVar);
+    PR_SetEnv(env);
+  }
 
   return NS_OK;
 }

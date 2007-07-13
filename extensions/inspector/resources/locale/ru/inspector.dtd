@@ -13,6 +13,8 @@
 <!ENTITY mnInspectChromeDocument.accesskey "к">
 <!ENTITY cmdShowOpenURLDialog.label "Исследовать URL…">
 <!ENTITY cmdShowOpenURLDialog.accesskey "с">
+<!ENTITY cmdSave.label "Сохранить DOM как…">
+<!ENTITY cmdSave.accesskey "х">
 <!ENTITY cmdClose.label "Закрыть">
 <!ENTITY cmdClose.accesskey "З">
 <!ENTITY cmdExit.label "Выход">
@@ -33,21 +35,11 @@
 <!ENTITY cmdDelete.accesskey "У">
 <!ENTITY mnSearch.label "Поиск">
 <!ENTITY mnSearch.accesskey "П">
-<!ENTITY mnSearchPlugins.label "Расширения">
-<!ENTITY mnSearchPlugins.accesskey "Р">
-<!ENTITY cmdRunSearch.label "Выполнить…">
-<!ENTITY cmdRunSearch.accesskey "В">
 <!ENTITY mnView.label "Вид">
 <!ENTITY mnView.accesskey "В">
 <!ENTITY cmdToggleBrowser.label "Браузер">
 <!ENTITY cmdToggleSearch.label "Результаты поиска">
-<!ENTITY cmdViewSearchItem.label "Просмотр…">
-<!ENTITY cmdEditSearchItem.label "Изменить…">
-<!ENTITY cmdCopySearchItemLine.label "Копировать строку">
-<!ENTITY cmdCopySearchItemAll.label "Копировать всё">
-<!ENTITY cmdSaveSearchItemText.label "Сохранить…">
-<!ENTITY cmdClearSearch.label "Очистить">
-<!ENTITY cmdHideSearchItems.label "Скрыть">
 <!ENTITY browserPanel.label "Браузер">
 <!ENTITY inspectNewWindow.label "Исследовать в новом окне">
+<!ENTITY saveCmd.key "S">
 <!ENTITY closeCmd.key "W">

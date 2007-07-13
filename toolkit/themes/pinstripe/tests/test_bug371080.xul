@@ -32,7 +32,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=371080
 SimpleTest.waitForExplicitFinish();
 
 function checkButtonDimensions() {
- try {
   is($("button1").boxObject.width, 79, "mac button width");
   is($("button1").boxObject.height, 22, "mac button height");
 }

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -37,30 +38,14 @@
 
 #include "nsScriptElement.h"
 #include "nsIContent.h"
-#include "nsIPresShell.h"
-#include "nsIDocument.h"
+#include "nsContentUtils.h"
 #include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsPresContext.h"
 #include "nsScriptLoader.h"
-#include "nsGkAtoms.h"
 #include "nsIParser.h"
 #include "nsAutoPtr.h"
 #include "nsGkAtoms.h"
-
-static nsPresContext*
-GetContextForContent(nsIContent* aContent)
-{
-  nsIDocument* doc = aContent->GetCurrentDoc();
-  if (doc) {
-    nsIPresShell *presShell = doc->GetPrimaryShell();
-    if (presShell) {
-      return presShell->GetPresContext();
-    }
-  }
-  
-  return nsnull;
-}
 
 NS_IMETHODIMP
 nsScriptElement::ScriptAvailable(nsresult aResult,
@@ -73,7 +58,8 @@ nsScriptElement::ScriptAvailable(nsresult aResult,
     nsCOMPtr<nsIContent> cont =
       do_QueryInterface((nsIScriptElement*) this);
 
-    nsCOMPtr<nsPresContext> presContext = GetContextForContent(cont);
+    nsCOMPtr<nsPresContext> presContext =
+      nsContentUtils::GetContextForContent(cont);
 
     nsEventStatus status = nsEventStatus_eIgnore;
     nsScriptErrorEvent event(PR_TRUE, NS_LOAD_ERROR);
@@ -105,7 +91,8 @@ nsScriptElement::ScriptEvaluated(nsresult aResult,
     nsCOMPtr<nsIContent> cont =
       do_QueryInterface((nsIScriptElement*) this);
 
-    nsCOMPtr<nsPresContext> presContext = GetContextForContent(cont);
+    nsCOMPtr<nsPresContext> presContext =
+      nsContentUtils::GetContextForContent(cont);
 
     nsEventStatus status = nsEventStatus_eIgnore;
     PRUint32 type = NS_SUCCEEDED(aResult) ? NS_LOAD : NS_LOAD_ERROR;
@@ -134,7 +121,8 @@ nsScriptElement::AttributeChanged(nsIDocument* aDocument,
                                   nsIContent* aContent,
                                   PRInt32 aNameSpaceID,
                                   nsIAtom* aAttribute,
-                                  PRInt32 aModType)
+                                  PRInt32 aModType,
+                                  PRUint32 aStateMask)
 {
   MaybeProcessScript();
 }

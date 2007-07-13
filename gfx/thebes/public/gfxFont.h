@@ -468,7 +468,8 @@ public:
          */
         TEXT_ENABLE_HYPHEN_BREAKS    = 0x0040,
         /**
-         * When set, the text has no characters above 255.
+         * When set, the text has no characters above 255 and it is stored
+         * in the textrun in 8-bit format.
          */
         TEXT_IS_8BIT                 = 0x0080,
         /**
@@ -485,9 +486,10 @@ public:
          */
         TEXT_NEED_BOUNDING_BOX       = 0x0200,
         /**
-         * When set, ligatures are disabled.
+         * When set, optional ligatures are disabled. Ligatures that are
+         * required for legible text should still be enabled.
          */
-        TEXT_DISABLE_LIGATURES       = 0x0400
+        TEXT_DISABLE_OPTIONAL_LIGATURES = 0x0400
     };
 
     /**

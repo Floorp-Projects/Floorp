@@ -1388,7 +1388,8 @@ nsHTMLDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
 void
 nsHTMLDocument::AttributeChanged(nsIDocument* aDocument,
                                  nsIContent* aContent, PRInt32 aNameSpaceID,
-                                 nsIAtom* aAttribute, PRInt32 aModType)
+                                 nsIAtom* aAttribute, PRInt32 aModType,
+                                 PRUint32 aStateMask)
 {
   NS_ASSERTION(aDocument == this, "unexpected doc");
 

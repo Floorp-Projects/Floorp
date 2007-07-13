@@ -76,6 +76,13 @@
 #error JS_INITIAL_NSLOTS must be greater than JSSLOT_ITER_FLAGS.
 #endif
 
+#if JS_HAS_GENERATORS
+
+static JSBool
+CloseGenerator(JSContext *cx, JSObject *genobj);
+
+#endif
+
 /*
  * Shared code to close iterator's state either through an explicit call or
  * when GC detects that the iterator is no longer reachable.
@@ -429,7 +436,7 @@ js_CloseIterator(JSContext *cx, jsval v)
     }
 #if JS_HAS_GENERATORS
     else if (clasp == &js_GeneratorClass) {
-        if (!js_CloseGenerator(cx, obj))
+        if (!CloseGenerator(cx, obj))
             return JS_FALSE;
     }
 #endif
@@ -795,12 +802,6 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
         JS_free(cx, gen);
         goto bad;
     }
-
-    /*
-     * Register with GC to ensure that suspended finally blocks will be
-     * executed.
-     */
-    js_RegisterGenerator(cx, gen);
     return obj;
 
   bad:
@@ -904,12 +905,8 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
     return JS_FALSE;
 }
 
-/*
- * Execute gen's close hook after the GC detects that the object has become
- * unreachable.
- */
-JSBool
-js_CloseGenerator(JSContext *cx, JSObject *obj)
+static JSBool
+CloseGenerator(JSContext *cx, JSObject *obj)
 {
     JSGenerator *gen;
 

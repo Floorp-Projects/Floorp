@@ -88,8 +88,6 @@ static PRBool gStoppingDownloads = PR_FALSE;
 
 static const PRInt64 gUpdateInterval = 400 * PR_USEC_PER_MSEC;
 
-static PRInt32 gRefCnt = 0;
-
 #define DM_SCHEMA_VERSION      1
 #define DM_DB_NAME             NS_LITERAL_STRING("downloads.sqlite")
 #define DM_DB_CORRUPT_FILENAME NS_LITERAL_STRING("downloads.sqlite.corrupt")
@@ -99,21 +97,29 @@ static PRInt32 gRefCnt = 0;
 
 NS_IMPL_ISUPPORTS2(nsDownloadManager, nsIDownloadManager, nsIObserver)
 
+nsDownloadManager *nsDownloadManager::gDownloadManagerService = nsnull;
+
+nsDownloadManager *
+nsDownloadManager::GetSingleton()
+{
+  if (gDownloadManagerService) {
+    NS_ADDREF(gDownloadManagerService);
+    return gDownloadManagerService;
+  }
+
+  gDownloadManagerService = new nsDownloadManager();
+  if (gDownloadManagerService) {
+    NS_ADDREF(gDownloadManagerService);
+    if (NS_FAILED(gDownloadManagerService->Init()))
+      NS_RELEASE(gDownloadManagerService);
+  }
+
+  return gDownloadManagerService;
+}
+
 nsDownloadManager::~nsDownloadManager()
 {
-  if (--gRefCnt != 0)
-    // Either somebody tried to use |CreateInstance| instead of
-    // |GetService| or |Init| failed very early, so there's nothing to
-    // do here.
-    return;
-
-#if 0
-  // Temporary fix for orange regression from bug 328159 until I
-  // understand new protocol following bug 326491.  See bug 315421.
-  mObserverService->RemoveObserver(this, "quit-application");
-  mObserverService->RemoveObserver(this, "quit-application-requested");
-  mObserverService->RemoveObserver(this, "offline-requested");
-#endif
+  gDownloadManagerService = nsnull;
 }
 
 nsresult
@@ -467,11 +473,6 @@ nsDownloadManager::AddDownloadToDB(const nsAString &aName,
 nsresult
 nsDownloadManager::Init()
 {
-  if (gRefCnt++ != 0) {
-    NS_NOTREACHED("download manager should be used as a service");
-    return NS_ERROR_UNEXPECTED; // This will make the |CreateInstance| fail.
-  }
-
   nsresult rv;
   mObserverService = do_GetService("@mozilla.org/observer-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);

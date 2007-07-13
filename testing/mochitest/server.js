@@ -42,9 +42,7 @@
 // sucks.
 
 const SERVER_PORT = 8888;
-const SERVER_PORT_OTHER_DOMAIN = 8889;
 var server; // for use in the shutdown handler, if necessary
-var otherDomainServer; // for use in the shutdown handler, if necessary
 
 //
 // HTML GENERATION
@@ -138,17 +136,13 @@ function runServer()
   serverBasePath.append("mochitest");
   server = new nsHttpServer();
   server.registerDirectory("/", serverBasePath);
-  otherDomainServer = new nsHttpServer();
-  otherDomainServer.registerDirectory("/", serverBasePath);
 
   if (environment["CLOSE_WHEN_DONE"])
     server.registerPathHandler("/server/shutdown", serverShutdown);
 
   server.setIndexHandler(defaultDirHandler);
   server.start(SERVER_PORT);
-  otherDomainServer.setIndexHandler(defaultDirHandler);
-  otherDomainServer.start(SERVER_PORT_OTHER_DOMAIN);
-  
+
   // touch a file in the profile directory to indicate we're alive
   var foStream = Cc["@mozilla.org/network/file-output-stream;1"]
                    .createInstance(Ci.nsIFileOutputStream);
@@ -312,7 +306,7 @@ function linksToListItems(links)
     if ((bug_title == null) || (bug_num == null)) {
       response += LI({class: classVal}, A({href: link}, link), children);
     } else {
-      var bug_url = "http://bugzilla.mozilla.org/show_bug.cgi?id="+bug_num;
+      var bug_url = "https://bugzilla.mozilla.org/show_bug.cgi?id="+bug_num;
       response += LI({class: classVal}, A({href: link}, link), " - ", A({href: bug_url}, "Bug "+bug_num), children);
     }
 
@@ -407,6 +401,8 @@ function testListing(metadata, response)
                  src: "/tests/SimpleTest/TestRunner.js"}),
         SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/MozillaFileLogger.js"}),
+        SCRIPT({type: "text/javascript",
+                 src: "/tests/SimpleTest/cross-domain.js"}),
         SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/quit.js"}),
         SCRIPT({type: "text/javascript",

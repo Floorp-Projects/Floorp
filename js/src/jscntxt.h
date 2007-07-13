@@ -113,11 +113,6 @@ struct JSThread {
      */
     uint32              gcMallocBytes;
 
-#if JS_HAS_GENERATORS
-    /* Flag indicating that the current thread is executing close hooks. */
-    JSBool              gcRunningCloseHooks;
-#endif
-
     /*
      * Store the GSN cache in struct JSThread, not struct JSContext, both to
      * save space and to simplify cleanup in js_GC.  Any embedding (Firefox
@@ -217,11 +212,6 @@ struct JSRuntime {
      * before finalizing the iterable object.
      */
     JSPtrTable          gcIteratorTable;
-
-#if JS_HAS_GENERATORS
-    /* Runtime state to support close hooks. */
-    JSGCCloseState      gcCloseState;
-#endif
 
 #ifdef JS_GCMETER
     JSGCStats           gcStats;
@@ -844,7 +834,7 @@ class JSAutoTempValueRooter
  * success.
  */
 extern JSBool
-js_InitThreadPrivateIndex(void *ptr);
+js_InitThreadPrivateIndex(void (JS_DLL_CALLBACK *ptr)(void *));
 
 /*
  * Common subroutine of JS_SetVersion and js_SetVersion, to update per-context
@@ -1033,9 +1023,8 @@ JS_STATIC_ASSERT((JSOW_BRANCH_CALLBACK & (JSOW_BRANCH_CALLBACK - 1)) == 0);
 
 /*
  * Update the operation counter and call the branch callback when it reaches
- * JSOW_BRANCH_CALLBACK limit. This macro can run the full GC and arbitrary
- * scripts via generator close hooks. Return true if it is OK to continue and
- * false otherwise.
+ * JSOW_BRANCH_CALLBACK limit. This macro can run the full GC. Return true if
+ * it is OK to continue and false otherwise.
  */
 #define JS_CHECK_OPERATION_LIMIT(cx, weight)                                  \
     (JS_COUNT_OPERATION(cx, weight),                                          \

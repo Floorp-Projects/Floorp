@@ -7101,6 +7101,14 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     return NS_OK;
   }
   
+  // Are we another child of a switch which already has a child
+  if (aParentFrame && 
+      aParentFrame->GetType() == nsGkAtoms::svgSwitch &&
+      aParentFrame->GetFirstChild(nsnull)) {
+    *aHaltProcessing = PR_TRUE;
+    return NS_OK;
+  }
+
   // See if this element supports conditionals & if it does,
   // handle it
   if (((aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::requiredFeatures) ||
@@ -10055,7 +10063,8 @@ nsresult
 nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
                                         PRInt32 aNameSpaceID,
                                         nsIAtom* aAttribute,
-                                        PRInt32 aModType)
+                                        PRInt32 aModType,
+                                        PRUint32 aStateMask)
 {
   nsresult  result = NS_OK;
 
@@ -10135,7 +10144,8 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
   nsFrameManager *frameManager = shell->FrameManager();
   nsReStyleHint rshint = frameManager->HasAttributeDependentStyle(aContent,
                                                                   aAttribute,
-                                                                  aModType);
+                                                                  aModType,
+                                                                  aStateMask);
 
   PostRestyleEvent(aContent, rshint, hint);
 

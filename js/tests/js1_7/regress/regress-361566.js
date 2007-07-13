@@ -38,7 +38,7 @@
 var gTestfile = 'regress-361566.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 361566;
-var summary = 'Assertion: !fp->blockChain || OBJ_GET_PARENT(cx, obj) == fp->blockChain';
+var summary = 'Do not assert: !fp->blockChain || OBJ_GET_PARENT(cx, obj) == fp->blockChain';
 var actual = '';
 var expect = '';
 

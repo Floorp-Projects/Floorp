@@ -1751,7 +1751,7 @@ PR_STATIC_CALLBACK(PRBool) AttributeEnumFunc(void* aSelector, void* aData)
   // bother calling SelectorMatches, since even if it returns false
   // enumData->change won't change.
   if ((possibleChange & ~(enumData->change)) &&
-      SelectorMatches(*data, selector, 0, data->mAttribute) &&
+      SelectorMatches(*data, selector, data->mStateMask, data->mAttribute) &&
       SelectorMatchesTree(*data, selector->mNext)) {
     enumData->change = nsReStyleHint(enumData->change | possibleChange);
   }

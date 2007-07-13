@@ -38,7 +38,7 @@
 var gTestfile = 'regress-351794.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 351794;
-var summary = 'Assertion: CG_NOTE_COUNT(cg) == 0 || ' +
+var summary = 'Do not assert: CG_NOTE_COUNT(cg) == 0 || ' +
   'CG_LAST_NOTE_OFFSET(cg) != CG_OFFSET(cg)';
 var actual = 'No Crash';
 var expect = 'No Crash';

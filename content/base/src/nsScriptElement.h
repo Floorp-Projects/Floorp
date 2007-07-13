@@ -54,21 +54,10 @@ public:
   NS_DECL_NSISCRIPTLOADEROBSERVER
 
   // nsIMutationObserver
-  virtual void CharacterDataChanged(nsIDocument* aDocument,
-                                    nsIContent* aContent,
-                                    CharacterDataChangeInfo* aInfo);
-  virtual void AttributeChanged(nsIDocument* aDocument,
-                                nsIContent* aContent,
-                                PRInt32 aNameSpaceID,
-                                nsIAtom* aAttribute,
-                                PRInt32 aModType);
-  virtual void ContentAppended(nsIDocument* aDocument,
-                               nsIContent* aContainer,
-                               PRInt32 aNewIndexInContainer);
-  virtual void ContentInserted(nsIDocument* aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aChild,
-                               PRInt32 aIndexInContainer);
+  NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
 
 protected:
   // Internal methods
