@@ -355,8 +355,6 @@ SessionStoreService.prototype = {
         this.onTabLoad(aEvent.currentTarget.ownerDocument.defaultView, aEvent.currentTarget, aEvent);
         break;
       case "input":
-        this.onTabInput(aEvent.currentTarget.ownerDocument.defaultView, aEvent.currentTarget, aEvent);
-        break;
       case "DOMAutoComplete":
         this.onTabInput(aEvent.currentTarget.ownerDocument.defaultView, aEvent.currentTarget, aEvent);
         break;
@@ -1883,15 +1881,17 @@ SessionStoreService.prototype = {
    * Annotate a breakpad crash report with the currently selected tab's URL.
    */
   _updateCrashReportURL: function sss_updateCrashReportURL(aWindow) {
-     var currentUrl = aWindow.getBrowser().currentURI.spec;
-     try {
-       var cr = Cc["@mozilla.org/xre/app-info;1"].
-                getService(Ci.nsICrashReporter);
-       cr.annotateCrashReport("URL", currentUrl);
-     }
-     catch (ex) {
-       // if breakpad isn't built, we can't annotate the report
-     }
+    if (!Ci.nsICrashReporter) {
+      // if breakpad isn't built, don't bother next time at all
+      this._updateCrashReportURL = function(aWindow) {};
+      return;
+    }
+    try {
+      var currentUrl = aWindow.getBrowser().currentURI.spec;
+      var cr = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsICrashReporter);
+      cr.annotateCrashReport("URL", currentUrl);
+    }
+    catch (ex) { debug(ex); }
   },
 
   /**
