@@ -388,11 +388,6 @@ private:
   static gfxASurface *mThebesComputationalSurface;
 
   /*
-   * Get an nsPresContext from an nsIContent
-   */
-  static nsPresContext* GetContextForContent(nsIContent* aContent);
-
-  /*
    * Get an nsStyleFont from an nsIContent
    */
   static const nsStyleFont* GetStyleFontForContent(nsIContent *aContent);
