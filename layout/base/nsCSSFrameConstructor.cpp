@@ -7101,6 +7101,14 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     return NS_OK;
   }
   
+  // Are we another child of a switch which already has a child
+  if (aParentFrame && 
+      aParentFrame->GetType() == nsGkAtoms::svgSwitch &&
+      aParentFrame->GetFirstChild(nsnull)) {
+    *aHaltProcessing = PR_TRUE;
+    return NS_OK;
+  }
+
   // See if this element supports conditionals & if it does,
   // handle it
   if (((aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::requiredFeatures) ||
