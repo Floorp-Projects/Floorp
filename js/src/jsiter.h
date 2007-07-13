@@ -105,9 +105,6 @@ struct JSGenerator {
 extern JSObject *
 js_NewGenerator(JSContext *cx, JSStackFrame *fp);
 
-extern JSBool
-js_CloseGenerator(JSContext *cx, JSObject *obj);
-
 #endif
 
 extern JSClass          js_GeneratorClass;

@@ -122,7 +122,7 @@ SessionStoreService.prototype = {
   _loadState: STATE_STOPPED,
 
   // minimal interval between two save operations (in milliseconds)
-  _interval: 1000,
+  _interval: 10000,
 
   // when crash recovery is disabled, session data is not written to disk
   _resume_from_crash: true,
@@ -326,7 +326,7 @@ SessionStoreService.prototype = {
         this.saveStateDelayed(null, -1);
         break;
       case "sessionstore.resume_from_crash":
-        this._resume_from_crash = this._getPref("sessionstore.resume_from_crash", this._resume_from_crash);
+        this._resume_from_crash = this._prefBranch.getBoolPref("sessionstore.resume_from_crash");
         // either create the file with crash recovery information or remove it
         // (when _loadState is not STATE_RUNNING, that file is used for session resuming instead)
         if (this._resume_from_crash)
@@ -355,8 +355,6 @@ SessionStoreService.prototype = {
         this.onTabLoad(aEvent.currentTarget.ownerDocument.defaultView, aEvent.currentTarget, aEvent);
         break;
       case "input":
-        this.onTabInput(aEvent.currentTarget.ownerDocument.defaultView, aEvent.currentTarget, aEvent);
-        break;
       case "DOMAutoComplete":
         this.onTabInput(aEvent.currentTarget.ownerDocument.defaultView, aEvent.currentTarget, aEvent);
         break;
@@ -899,7 +897,7 @@ SessionStoreService.prototype = {
    */
   _saveTextData: function sss_saveTextData(aPanel, aTextarea) {
     var id = aTextarea.id ? "#" + aTextarea.id :
-                                  aTextarea.name;
+                            aTextarea.name;
     if (!id
       || !(aTextarea instanceof Ci.nsIDOMHTMLTextAreaElement 
       || aTextarea instanceof Ci.nsIDOMHTMLInputElement)) {
@@ -1628,9 +1626,7 @@ SessionStoreService.prototype = {
       var url = stmt.getUTF8String(0);
       
       var savedTo = stmt.getUTF8String(1);
-      var savedToURI = Cc["@mozilla.org/network/io-service;1"].
-                       getService(Ci.nsIIOService).
-                       newURI(savedTo, null, null);
+      var savedToURI = ioService.newURI(savedTo, null, null);
       savedTo = savedToURI.path;
    
       var dl = { id: stmt.getInt64(2), url: url, savedTo: savedTo };
@@ -1883,15 +1879,17 @@ SessionStoreService.prototype = {
    * Annotate a breakpad crash report with the currently selected tab's URL.
    */
   _updateCrashReportURL: function sss_updateCrashReportURL(aWindow) {
-     var currentUrl = aWindow.getBrowser().currentURI.spec;
-     try {
-       var cr = Cc["@mozilla.org/xre/app-info;1"].
-                getService(Ci.nsICrashReporter);
-       cr.annotateCrashReport("URL", currentUrl);
-     }
-     catch (ex) {
-       // if breakpad isn't built, we can't annotate the report
-     }
+    if (!Ci.nsICrashReporter) {
+      // if breakpad isn't built, don't bother next time at all
+      this._updateCrashReportURL = function(aWindow) {};
+      return;
+    }
+    try {
+      var currentUrl = aWindow.getBrowser().currentURI.spec;
+      var cr = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsICrashReporter);
+      cr.annotateCrashReport("URL", currentUrl);
+    }
+    catch (ex) { debug(ex); }
   },
 
   /**

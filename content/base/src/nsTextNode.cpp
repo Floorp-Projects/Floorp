@@ -109,11 +109,7 @@ public:
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
 
-  virtual void AttributeChanged(nsIDocument* aDocument,
-                                nsIContent* aContent,
-                                PRInt32 aNameSpaceID,
-                                nsIAtom* aAttribute,
-                                PRInt32 aModType);
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
   virtual nsGenericDOMDataNode *CloneDataNode(nsINodeInfo *aNodeInfo,
                                               PRBool aCloneText) const
@@ -336,7 +332,8 @@ nsAttributeTextNode::AttributeChanged(nsIDocument* aDocument,
                                       nsIContent* aContent,
                                       PRInt32 aNameSpaceID,
                                       nsIAtom* aAttribute,
-                                      PRInt32 aModType)
+                                      PRInt32 aModType,
+                                      PRUint32 aStateMask)
 {
   if (aNameSpaceID == mNameSpaceID && aAttribute == mAttrName &&
       aContent == GetNodeParent()) {

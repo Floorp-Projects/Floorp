@@ -322,6 +322,7 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
       return mTabTheme;
     }
     case NS_THEME_SCROLLBAR:
+    case NS_THEME_SCROLLBAR_SMALL:
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
     case NS_THEME_SCROLLBAR_BUTTON_UP:
@@ -683,7 +684,8 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
     }
     case NS_THEME_TOOLBOX:
     case NS_THEME_STATUSBAR:
-    case NS_THEME_SCROLLBAR: {
+    case NS_THEME_SCROLLBAR:
+    case NS_THEME_SCROLLBAR_SMALL: {
       aPart = aState = 0;
       return NS_OK; // These have no part or state.
     }

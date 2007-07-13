@@ -38,7 +38,7 @@
 var gTestfile = 'regress-375715-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 375715;
-var summary = 'Assertion failure: (c2 <= cs->length) && (c1 <= c2)';
+var summary = 'Do not assert: (c2 <= cs->length) && (c1 <= c2)';
 var actual = '';
 var expect = '';
 

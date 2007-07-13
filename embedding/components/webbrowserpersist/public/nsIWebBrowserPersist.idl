@@ -94,6 +94,11 @@ interface nsIWebBrowserPersist : nsICancelable
    * decompress it.
    */
   const unsigned long PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION = 16384;
+  /**
+   * Append the downloaded data to the target file.
+   * This can only be used when persisting to a local file.
+   */
+  const unsigned long PERSIST_FLAGS_APPEND_TO_FILE = 32768;
 
 
   /**

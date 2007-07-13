@@ -2272,7 +2272,10 @@ nsWebBrowserPersist::MakeOutputStreamFromFile(
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     // XXX brade:  get the right flags here!
-    rv = fileOutputStream->Init(aFile, -1, -1, 0);
+    PRInt32 ioFlags = -1;
+    if (mPersistFlags & nsIWebBrowserPersist::PERSIST_FLAGS_APPEND_TO_FILE)
+      ioFlags = PR_APPEND | PR_CREATE_FILE | PR_WRONLY; 
+    rv = fileOutputStream->Init(aFile, ioFlags, -1, 0);
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ENSURE_SUCCESS(CallQueryInterface(fileOutputStream, aOutputStream), NS_ERROR_FAILURE);

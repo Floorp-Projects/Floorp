@@ -138,41 +138,6 @@ typedef struct JSPtrTable {
 extern JSBool
 js_RegisterCloseableIterator(JSContext *cx, JSObject *obj);
 
-#if JS_HAS_GENERATORS
-
-/*
- * Runtime state to support generators' close hooks.
- */
-typedef struct JSGCCloseState {
-    /*
-     * Singly linked list of generators that are reachable from GC roots or
-     * were created after the last GC.
-     */
-    JSGenerator         *reachableList;
-
-    /*
-     * Head of the queue of generators that have already become unreachable but
-     * whose close hooks are not yet run.
-     */
-    JSGenerator         *todoQueue;
-
-#ifndef JS_THREADSAFE
-    /*
-     * Flag indicating that the current thread is excuting a close hook for
-     * single thread case.
-     */
-    JSBool              runningCloseHook;
-#endif
-} JSGCCloseState;
-
-extern void
-js_RegisterGenerator(JSContext *cx, JSGenerator *gen);
-
-extern JSBool
-js_RunCloseHooks(JSContext *cx);
-
-#endif
-
 /*
  * The private JSGCThing struct, which describes a gcFreeList element.
  */

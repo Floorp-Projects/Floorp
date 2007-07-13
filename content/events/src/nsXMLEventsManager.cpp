@@ -356,7 +356,8 @@ nsXMLEventsManager::AttributeChanged(nsIDocument* aDocument,
                                      nsIContent* aContent,
                                      PRInt32 aNameSpaceID,
                                      nsIAtom* aAttribute,
-                                     PRInt32 aModType)
+                                     PRInt32 aModType,
+                                     PRUint32 aStateMask)
 {
   if (aNameSpaceID == kNameSpaceID_XMLEvents &&
       (aAttribute == nsGkAtoms::event ||

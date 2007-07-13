@@ -42,6 +42,7 @@
 #include "nsSVGAngle.h"
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
+#include "nsContentUtils.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
 #include "nsSVGAnimatedRect.h"
@@ -271,18 +272,11 @@ nsSVGSVGElement::GetPixelUnitToMillimeterX(float *aPixelUnitToMillimeterX)
 {
   // to correctly determine this, the caller would need to pass in the
   // right PresContext...
-
-  *aPixelUnitToMillimeterX = 0.28f; // 90dpi
-
-  nsIDocument* doc = GetCurrentDoc();
-  if (!doc) return NS_OK;
-  // Get Presentation shell 0
-  nsIPresShell *presShell = doc->GetPrimaryShell();
-  if (!presShell) return NS_OK;
-  
-  // Get the Presentation Context from the Shell
-  nsPresContext *context = presShell->GetPresContext();
-  if (!context) return NS_OK;
+  nsPresContext *context = nsContentUtils::GetContextForContent(this);
+  if (!context) {
+    *aPixelUnitToMillimeterX = 0.28f; // 90dpi
+    return NS_OK;
+  }
 
   *aPixelUnitToMillimeterX = 25.4f / nsPresContext::AppUnitsToIntCSSPixels(context->AppUnitsPerInch());
   return NS_OK;
@@ -301,18 +295,11 @@ nsSVGSVGElement::GetScreenPixelToMillimeterX(float *aScreenPixelToMillimeterX)
 {
   // to correctly determine this, the caller would need to pass in the
   // right PresContext...
-
-  *aScreenPixelToMillimeterX = 0.28f; // 90dpi
-
-  nsIDocument* doc = GetCurrentDoc();
-  if (!doc) return NS_OK;
-    // Get Presentation shell 0
-  nsIPresShell *presShell = doc->GetPrimaryShell();
-  if (!presShell) return NS_OK;
-  
-  // Get the Presentation Context from the Shell
-  nsPresContext *context = presShell->GetPresContext();
-  if (!context) return NS_OK;
+  nsPresContext *context = nsContentUtils::GetContextForContent(this);
+  if (!context) {
+    *aScreenPixelToMillimeterX = 0.28f; // 90dpi
+    return NS_OK;
+  }
 
   *aScreenPixelToMillimeterX = 25.4f / context->AppUnitsToDevPixels(context->AppUnitsPerInch());
   return NS_OK;

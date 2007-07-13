@@ -525,28 +525,17 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     //
     // Checked must be set no matter what type of control it is, since
     // GetChecked() must reflect the new value
-    if (aName == nsGkAtoms::checked) {
-      if (aNotify &&
-          (mType == NS_FORM_INPUT_RADIO || mType == NS_FORM_INPUT_CHECKBOX)) {
-        // the checked attribute being changed, no matter the current checked
-        // state, influences the :default state, so notify about changes
-        nsIDocument* document = GetCurrentDoc();
-        if (document) {
-          MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, aNotify);
-          document->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_DEFAULT);
-        }
-      }
-      if (!GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED)) {
-        // Delay setting checked if the parser is creating this element (wait
-        // until everything is set)
-        if (GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
-          SET_BOOLBIT(mBitField, BF_SHOULD_INIT_CHECKED, PR_TRUE);
-        } else {
-          PRBool defaultChecked;
-          GetDefaultChecked(&defaultChecked);
-          DoSetChecked(defaultChecked);
-          SetCheckedChanged(PR_FALSE);
-        }
+    if (aName == nsGkAtoms::checked &&
+        !GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED)) {
+      // Delay setting checked if the parser is creating this element (wait
+      // until everything is set)
+      if (GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
+        SET_BOOLBIT(mBitField, BF_SHOULD_INIT_CHECKED, PR_TRUE);
+      } else {
+        PRBool defaultChecked;
+        GetDefaultChecked(&defaultChecked);
+        DoSetChecked(defaultChecked);
+        SetCheckedChanged(PR_FALSE);
       }
     }
 
@@ -596,7 +585,9 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         // on them all now, just in case.  Note that we can't rely on the
         // notifications LoadImage or CancelImageRequests might have sent,
         // because those didn't include all the possibly-changed states in the
-        // mask.
+        // mask.  We have to do this here because we just updated mType, so the
+        // code in nsGenericElement::SetAttrAndNotify didn't see the new
+        // states.
         document->ContentStatesChanged(this, nsnull,
                                        NS_EVENT_STATE_CHECKED |
                                        NS_EVENT_STATE_DEFAULT |

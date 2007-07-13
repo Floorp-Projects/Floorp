@@ -287,7 +287,7 @@ nsHTMLFramesetFrame::FrameResizePrefCallback(const char* aPref, void* aClosure)
     nsNodeUtils::AttributeChanged(frame->GetContent(),
                                   kNameSpaceID_None,
                                   nsGkAtoms::frameborder,
-                                  nsIDOMMutationEvent::MODIFICATION);
+                                  nsIDOMMutationEvent::MODIFICATION, 0);
   }
 
   return 0;

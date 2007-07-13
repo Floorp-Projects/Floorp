@@ -131,7 +131,8 @@ nsSVGPropertyBase::AttributeChanged(nsIDocument *aDocument,
                                     nsIContent *aContent,
                                     PRInt32 aNameSpaceID,
                                     nsIAtom *aAttribute,
-                                    PRInt32 aModType)
+                                    PRInt32 aModType,
+                                    PRUint32 aStateMask)
 {
   DoUpdate();
 }
@@ -468,20 +469,6 @@ NS_SVGEnabled()
   return gSVGEnabled;
 }
 
-nsPresContext*
-nsSVGUtils::GetContextForContent(nsIContent* aContent)
-{
-  nsIDocument* doc = aContent->GetCurrentDoc();
-
-  if (doc) {
-    nsIPresShell *presShell = doc->GetPrimaryShell();
-    if (presShell) {
-      return presShell->GetPresContext();
-    }
-  }
-  return nsnull;
-}
-
 const nsStyleFont*
 nsSVGUtils::GetStyleFontForContent(nsIContent* aContent)
 {
@@ -505,7 +492,7 @@ nsSVGUtils::GetFontSize(nsIContent *aContent)
     return 1.0f;
   }
 
-  nsPresContext *presContext = GetContextForContent(aContent);
+  nsPresContext *presContext = nsContentUtils::GetContextForContent(aContent);
   if (!presContext) {
     NS_WARNING("no context in GetFontSize()");
     return 1.0f;
@@ -529,7 +516,7 @@ nsSVGUtils::GetFontXHeight(nsIContent *aContent)
     return 1.0f;
   }
 
-  nsPresContext *presContext = GetContextForContent(aContent);
+  nsPresContext *presContext = nsContentUtils::GetContextForContent(aContent);
   if (!presContext) {
     NS_WARNING("no context in GetFontXHeight()");
     return 1.0f;
