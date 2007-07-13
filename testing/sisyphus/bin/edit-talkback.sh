@@ -148,7 +148,7 @@ if [[ $talkback -eq 1 ]]; then
             buildid=`dos2unix < master.ini | grep '^BuildID = "' | sed 's@BuildID = "\([^"]*\)"@\1@'`
             talkbackdir="$HOME/.fullcircle"
             ;;
-        mac* )
+        mac)
             # hack around Mac's use of spaces in directory names
             vendorid=`grep '^VendorID = "' master.ini | sed 's@VendorID = "\([^"]*\)"@\1@'`
             productid=`grep '^ProductID = "' master.ini | sed 's@ProductID = "\([^"]*\)"@\1@'`
@@ -172,7 +172,7 @@ if [[ $talkback -eq 1 ]]; then
         win32)
             talkbackinidir="$talkbackdir/$vendorid/$productid/$platformid/$buildid"
             ;;
-        linux | mac* )
+        linux | mac )
             talkbackinidir="$talkbackdir/$vendorid$productid$platformid$buildid"
             ;;
     esac
@@ -192,7 +192,7 @@ if [[ $talkback -eq 1 ]]; then
         linux )
             sed -i.bak "s@URLEditControl .*@URLEditControl = \"mozqa:$talkbackid\"@" Talkback.ini
             ;;
-        mac* )
+        mac )
             sed -i.bak "s@URLEditControl .*@URLEditControl = \"mozqa:$talkbackid\"@" Talkback.ini
             ;;
         *)

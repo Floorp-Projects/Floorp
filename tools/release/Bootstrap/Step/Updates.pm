@@ -3,11 +3,16 @@
 # snippets.
 # 
 package Bootstrap::Step::Updates;
+
 use Bootstrap::Step;
 use Bootstrap::Config;
 use Bootstrap::Util qw(CvsCatfile);
+
 use File::Find qw(find);
+use POSIX qw(strftime);
+
 use MozBuild::Util qw(MkdirWithPath);
+
 @ISA = ("Bootstrap::Step");
 
 sub Execute {
@@ -94,11 +99,27 @@ sub Execute {
     );
     
     ### quick verification
-    # ensure that there are only test channels
-    my $testDir = catfile($versionedUpdateDir, 'patcher', 'temp', $product,  
-                          $oldVersion . '-' . $version, 'aus2.test');
+    my $fullUpdateDir = catfile($versionedUpdateDir, 'patcher', 'temp', 
+                          $product, $oldVersion . '-' . $version);
+    $snippetErrors = undef;   # evil (??) global to get results from callbacks
+    
+    # ensure that there are only test channels in aus2.test dir
+    File::Find::find(\&TestAusCallback, catfile($fullUpdateDir,"aus2.test"));
 
-    File::Find::find(\&TestAusCallback, $testDir);
+    # ensure that there are only beta channels in beta dir (if that exists)
+    if (-d catfile($fullUpdateDir, "aus2.beta")) {
+      File::Find::find(\&BetaAusCallback, catfile($fullUpdateDir,"aus2.beta"));
+      File::Find::find(\&ReleaseAusCallback, catfile($fullUpdateDir,"aus2"));
+    } 
+    # otherwise allow beta and release in aus2 dir
+    else {
+      File::Find::find(\&ReleaseBetaAusCallback, catfile($fullUpdateDir,"aus2"));
+    }    
+
+    if ($snippetErrors) {
+        $snippetErrors =~ s!$fullUpdateDir/!!g;
+	die("Execute: Snippets failed location checks: $snippetErrors\n");
+    }
 }
 
 sub Verify {
@@ -146,12 +167,98 @@ sub Verify {
     );
 }
 
+# locate snippets for which the channel doesn't end in test
 sub TestAusCallback { 
     my $dir = $File::Find::name;
-    if (($dir =~ /beta/) or ($dir =~ /release/)) {
-        if (not $dir =~ /test/) { 
-            die("Non-test directory found in $testDir/aus2.test: $dir");
-        }
+    if ( ($dir =~ /\.txt/) and 
+         (not $dir =~ /\/\w*test\/(partial|complete)\.txt$/)) {
+           $snippetErrors .= "\nNon-test: $dir";
+    }
+}
+
+# locate snippets for which the channel isn't beta
+sub BetaAusCallback { 
+    my $dir = $File::Find::name;
+    if ( ($dir =~ /\.txt/) and 
+         (not $dir =~ /\/beta\/(partial|complete)\.txt$/)) {
+           $snippetErrors .= "\nNon-beta: $dir";
+    }
+}
+
+# locate snippets for which the channel isn't release
+sub ReleaseAusCallback { 
+    my $dir = $File::Find::name;
+    if ( ($dir =~ /\.txt/) and 
+         (not $dir =~ /\/release\/(partial|complete)\.txt$/)) {
+           $snippetErrors .= "\nNon-release: $dir";
+    }
+}
+
+# locate snippets for which the channel isn't release or beta
+sub ReleaseBetaAusCallback { 
+    my $dir = $File::Find::name;
+    if ( ($dir =~ /\.txt/) and 
+         (not $dir =~ /\/(release|beta)\/(partial|complete)\.txt$/)) {
+           $snippetErrors .= "\nNon-release: $dir";
+    }
+}
+
+sub Push {
+    my $this = shift;
+
+    my $config = new Bootstrap::Config();
+    my $logDir = $config->Get(var => 'logDir');
+    my $product = $config->Get(var => 'product');
+    my $version = $config->Get(var => 'version');
+    my $rc = $config->Get(var => 'rc');
+    my $oldVersion = $config->Get(var => 'oldVersion');
+    my $sshUser = $config->Get(var => 'sshUser');
+    my $sshServer = $config->Get(var => 'sshServer');
+    my $ausUser = $config->Get(var => 'ausUser');
+    my $ausServer = $config->Get(var => 'ausServer');
+    my $updateDir = $config->Get(var => 'updateDir');
+
+    my $pushLog = catfile($logDir, 'updates_push.log');
+    my $fullUpdateDir = catfile($updateDir, $product . '-' . $version,
+                                 'patcher', 'temp', $product, 
+                                  $oldVersion . '-' . $version);
+    my $candidateDir = $config->GetFtpCandidateDir(bitsUnsigned => 0);
+
+    # push partial mar files up to ftp server
+    $this->Shell(
+     cmd => 'rsync',
+     cmdArgs => ['-av', '-e', 'ssh',
+                 '--include=*partial.mar', 
+                 '--exclude=*',
+                 catfile('ftp', $product, 'nightly', $version . '-candidates', 
+                          'rc' . $rc) . '/',
+                 $sshUser . '@' . $sshServer . ':' . $candidateDir],
+     dir => $fullUpdateDir,
+     logFile => $pushLog,
+   );
+
+    # push update snippets to AUS server
+    my $targetPrefix =  CvsCatfile('/opt','aus2','snippets','staging',
+                          strftime("%Y%m%d", localtime) . '-' . 
+                          ucfirst($product) . '-' . $version);
+    $config->Set(var => 'ausDeliveryDir', value => $targetPrefix);
+
+    my @snippetDirs = glob(catfile($fullUpdateDir, "aus2*"));
+
+    foreach $dir (@snippetDirs) {
+      my $targetDir = $targetPrefix;
+      if ($dir =~ /aus2\.(.*)$/) {
+        $targetDir .= '-' . $1;
+      }
+
+      $this->Shell(
+        cmd => 'rsync',
+        cmdArgs => ['-av', 
+                    '-e', 'ssh -i ' . catfile($ENV{'HOME'},'.ssh','aus'),
+                    $dir . '/', 
+                    $ausUser . '@' . $ausServer . ':' . $targetDir],
+        logFile => $pushLog,
+      );
     }
 }
 
@@ -161,10 +268,11 @@ sub Announce {
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
     my $version = $config->Get(var => 'version');
+    my $ausDeliveryDir = $config->Get(var => 'ausDeliveryDir');
 
     $this->SendAnnouncement(
       subject => "$product $version update step finished",
-      message => "$product $version updates are ready to be deployed to AUS and the candidates dir.",
+      message => "$product $version updates finished. Partial mars were copied to the candidates dir, and the snippets to AUS in $ausDeliveryDir*.",
     );
 }
 

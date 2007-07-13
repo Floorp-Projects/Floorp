@@ -1285,7 +1285,7 @@ static nscoord StyleToCoord(const nsStyleCoord& aCoord)
 }
 
 static PRBool
-ShouldDisableLigatures(const nsStyleText* aTextStyle)
+ShouldDisableOptionalLigatures(const nsStyleText* aTextStyle)
 {
   return StyleToCoord(aTextStyle->mLetterSpacing) != 0;
 }
@@ -1322,7 +1322,7 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
     return PR_TRUE;
   return sc1->GetStyleFont()->mFont.BaseEquals(sc2->GetStyleFont()->mFont) &&
     sc1->GetStyleVisibility()->mLangGroup == sc2->GetStyleVisibility()->mLangGroup &&
-    ShouldDisableLigatures(textStyle1) == ShouldDisableLigatures(sc2->GetStyleText());
+    ShouldDisableOptionalLigatures(textStyle1) == ShouldDisableOptionalLigatures(sc2->GetStyleText());
 }
 
 void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
@@ -1708,8 +1708,8 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   if (mTrimNextRunLeadingWhitespace) {
     textFlags |= nsTextFrameUtils::TEXT_TRAILING_WHITESPACE;
   }
-  if (ShouldDisableLigatures(firstFrame->GetStyleText())) {
-    textFlags |= gfxTextRunFactory::TEXT_DISABLE_LIGATURES;
+  if (ShouldDisableOptionalLigatures(firstFrame->GetStyleText())) {
+    textFlags |= gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES;
   }
  
   gfxSkipChars skipChars;
@@ -4749,29 +4749,18 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, PRInt32 aPosition,
   mFrag = aTextFrame->GetContent()->GetText();
   mTrimmed = aTextFrame->GetTrimmedOffsets(mFrag, PR_TRUE);
 
-  if (!mWordBreaks.AppendElements(aTextFrame->GetContentLength())) {
+  PRInt32 textLen = aTextFrame->GetContentLength();
+  if (!mWordBreaks.AppendElements(textLen)) {
     mDirection = 0; // signal failure
     return;
   }
+  memset(mWordBreaks.Elements(), PR_FALSE, textLen);
   nsAutoString text;
-  PRInt32 textLen = aTextFrame->GetContentLength();
   mFrag->AppendTo(text, aTextFrame->GetContentOffset(), textLen);
   nsIWordBreaker* wordBreaker = nsContentUtils::WordBreaker();
   PRInt32 i = 0;
-  if (i < textLen) {
-    mWordBreaks[i] = PR_FALSE;
-  }
-  while (i < textLen) {
-    PRInt32 nextWord = wordBreaker->NextWord(text.get(), textLen, i);
-    if (nextWord < 0) {
-      if (i + 1 < textLen) {
-        memset(&mWordBreaks[i + 1], textLen - i - 1, PR_FALSE);
-      }
-      break;
-    }
-    i = nextWord;
+  while ((i = wordBreaker->NextWord(text.get(), textLen, i)) >= 0)
     mWordBreaks[i] = PR_TRUE;
-  }
 }
 
 PRBool
@@ -4864,7 +4853,8 @@ nsTextFrame::GetOffsets(PRInt32 &start, PRInt32 &end) const
 static PRBool
 FindFirstLetterRange(const nsTextFragment* aFrag,
                      gfxTextRun* aTextRun,
-                     PRInt32 aOffset, PRInt32* aLength)
+                     PRInt32 aOffset, const gfxSkipCharsIterator& aIter,
+                     PRInt32* aLength)
 {
   // Find first non-whitespace, non-punctuation cluster, and stop after it
   PRInt32 i;
@@ -4878,12 +4868,16 @@ FindFirstLetterRange(const nsTextFragment* aFrag,
   if (i == length)
     return PR_FALSE;
 
-  // Advance to the end of the cluster (when i+1 starts a new cluster)
-  while (i + 1 < length) {
-    if (aTextRun->IsClusterStart(aOffset + i + 1))
+  // Advance to the end of the cluster
+  gfxSkipCharsIterator iter(aIter);
+  PRInt32 nextClusterStart;
+  for (nextClusterStart = i + 1; nextClusterStart < length; ++nextClusterStart) {
+    iter.SetOriginalOffset(nextClusterStart);
+    if (iter.IsOriginalCharSkipped() ||
+        aTextRun->IsClusterStart(iter.GetSkippedOffset()))
       break;
   }
-  *aLength = i + 1;
+  *aLength = nextClusterStart;
   return PR_TRUE;
 }
 
@@ -5303,7 +5297,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   PRBool completedFirstLetter = PR_FALSE;
   if (lineLayout.GetFirstLetterStyleOK()) {
     AddStateBits(TEXT_FIRST_LETTER);
-    completedFirstLetter = FindFirstLetterRange(frag, mTextRun, offset, &length);
+    completedFirstLetter = FindFirstLetterRange(frag, mTextRun, offset, iter, &length);
   }
 
   /////////////////////////////////////////////////////////////////////

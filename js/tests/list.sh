@@ -32,6 +32,9 @@ find $dirs \
 	  1.5) version=";version=1.5";;
 	  1.6) version=";version=1.6";;
 	  1.7) version=";version=1.7";;
+	  1.8) version=";version=1.8";;
+	  1.9) version=";version=1.9";;
+	  2.0) version=";version=2.0";;
       esac
       
       echo "http://${TEST_HTTP}/tests/mozilla.org/$jsdir/js-test-driver-standards.html?test=$jsfile;language=type;text/javascript$version"

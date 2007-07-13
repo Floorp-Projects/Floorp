@@ -38,7 +38,7 @@
 var gTestfile = 'regress-356693.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 356693;
-var summary = 'Assertion failure: pn2->pn_op == JSOP_SETCALL';
+var summary = 'Do not assert: pn2->pn_op == JSOP_SETCALL';
 var actual = '';
 var expect = '';
 

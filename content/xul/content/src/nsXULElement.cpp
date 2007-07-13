@@ -1232,8 +1232,16 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
 
     nsIDocument* doc = GetCurrentDoc();
     mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
-    if (aNotify && doc) {
-        doc->AttributeWillChange(this, aNameSpaceID, aName);
+
+    // When notifying, make sure to keep track of states whose value
+    // depends solely on the value of an attribute.
+    PRUint32 stateMask;
+    if (aNotify) {
+        stateMask = PRUint32(IntrinsicState());
+
+        if (doc) {
+            doc->AttributeWillChange(this, aNameSpaceID, aName);
+        }
     }
 
     PRBool hasMutationListeners = aNotify &&
@@ -1305,8 +1313,14 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
     }
 
     if (aNotify) {
+        stateMask = stateMask ^ PRUint32(IntrinsicState());
+        if (stateMask && doc) {
+            MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, aNotify);
+            doc->ContentStatesChanged(this, nsnull, stateMask);
+        }
         nsNodeUtils::AttributeChanged(this, aNameSpaceID, aName,
-                                      nsIDOMMutationEvent::REMOVAL);
+                                      nsIDOMMutationEvent::REMOVAL,
+                                      stateMask);
     }
 
     if (hasMutationListeners) {

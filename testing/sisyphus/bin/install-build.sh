@@ -127,7 +127,7 @@ else
             fi
             ;; 
 
-        mac*)
+        mac)
         # answer license prompt
             result=`${TEST_BIN}/hdiutil-expect.ex $filename`
         # now get the volume data

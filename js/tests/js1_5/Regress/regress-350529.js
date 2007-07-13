@@ -38,7 +38,7 @@
 var gTestfile = 'regress-350529.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 350529;
-var summary = "x--' causes Assertion ";
+var summary = "Do not assert: x--'";
 var actual = 'No Crash';
 var expect = 'No Crash';
 

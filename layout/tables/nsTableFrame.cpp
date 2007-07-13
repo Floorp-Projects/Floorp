@@ -3085,9 +3085,14 @@ nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState, nsHTMLRef
   nsMargin borderPadding = GetChildAreaOffset(&aReflowState);
 
   // get the natural height based on the last child's (row group or scroll frame) rect
-  RowGroupArray rowGroups;
-  OrderRowGroups(rowGroups);
-  if (rowGroups.Length() == 0) {
+  FrameArray rowGroups;
+  PRUint32 numRowGroups;
+  {
+    // Scope for the dummies so we don't use them by accident
+    nsTableRowGroupFrame *dummy1, *dummy2;
+    numRowGroups = OrderRowGroups(rowGroups, &dummy1, &dummy2);
+  }
+  if (numRowGroups == 0) {
     // tables can be used as rectangular items without content
     nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aReflowState);
     if ((NS_UNCONSTRAINEDSIZE != tableSpecifiedHeight) &&
@@ -3105,7 +3110,7 @@ nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState, nsHTMLRef
   nscoord desiredHeight = borderPadding.top + borderPadding.bottom;
   if (rowCount > 0 && colCount > 0) {
     desiredHeight += cellSpacingY;
-    for (PRUint32 rgX = 0; rgX < rowGroups.Length(); rgX++) {
+    for (PRUint32 rgX = 0; rgX < numRowGroups; rgX++) {
       desiredHeight += rowGroups[rgX]->GetSize().height + cellSpacingY;
     }
   }

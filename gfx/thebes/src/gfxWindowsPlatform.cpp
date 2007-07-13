@@ -202,16 +202,14 @@ ReadCMAPTableFormat12(PRUint8 *aBuf, PRInt32 aLength, FontEntry *aFontEntry)
     for (PRUint32 i = 0; i < numGroups; i++, groups += SizeOfGroup) {
         const PRUint32 startCharCode = ReadLongAt(groups, GroupOffsetStartCode);
         const PRUint32 endCharCode = ReadLongAt(groups, GroupOffsetEndCode);
-        for (PRUint32 c = startCharCode; c <= endCharCode; ++c) {
-            // XXX we should use a range setting functions on gfxSparseBitset
-            // which could be a lot faster
-            aFontEntry->mCharacterMap.set(c);
+        aFontEntry->mCharacterMap.SetRange(startCharCode, endCharCode);
 #ifdef UPDATE_RANGES
+        for (PRUint32 c = startCharCode; c <= endCharCode; ++c) {
             PRUint16 b = CharRangeBit(c);
             if (b != NO_RANGE_FOUND)
                 aFontEntry->mUnicodeRanges.set(b, true);
-#endif
         }
+#endif
     }
 
     return NS_OK;
@@ -247,14 +245,14 @@ ReadCMAPTableFormat4(PRUint8 *aBuf, PRInt32 aLength, FontEntry *aFontEntry)
         const PRUint16 startCount = ReadShortAt16(startCounts, i);
         const PRUint16 idRangeOffset = ReadShortAt16(idRangeOffsets, i);
         if (idRangeOffset == 0) {
-            for (PRUint32 c = startCount; c <= endCount; c++) {
-                aFontEntry->mCharacterMap.set(c);
+            aFontEntry->mCharacterMap.SetRange(startCount, endCount);
 #ifdef UPDATE_RANGES
+            for (PRUint32 c = startCount; c <= endCount; c++) {
                 PRUint16 b = CharRangeBit(c);
                 if (b != NO_RANGE_FOUND)
                     aFontEntry->mUnicodeRanges.set(b, true);
-#endif
             }
+#endif
         } else {
             const PRUint16 idDelta = ReadShortAt16(idDeltas, i);
             for (PRUint32 c = startCount; c <= endCount; ++c) {

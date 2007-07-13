@@ -1636,9 +1636,20 @@ NS_METHOD nsWindow::Destroy()
 NS_IMETHODIMP nsWindow::SetParent(nsIWidget *aNewParent)
 {
   if (aNewParent) {
+    nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
+
+    nsIWidget* parent = GetParent();
+    if (parent) {
+      parent->RemoveChild(this);
+    }
+
     HWND newParent = (HWND)aNewParent->GetNativeData(NS_NATIVE_WINDOW);
     NS_ASSERTION(newParent, "Parent widget has a null native window handle");
-    ::SetParent(mWnd, newParent);
+    if (newParent && mWnd) {
+      ::SetParent(mWnd, newParent);
+    }
+
+    aNewParent->AddChild(this);
 
     return NS_OK;
   }

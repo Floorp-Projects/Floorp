@@ -1261,30 +1261,6 @@
           mSelection: null,
           mResults: [],
           mRowCount: 0,
-          mSelectedIndex: -1,
-          
-          get treeBoxObject()
-          {
-            return this.mTree;
-          },
-          
-          set selectedIndex(aRow)
-          {
-            if (this.mSelection) {
-              this.mSelectedIndex = aRow;
-              this.mSelection.select(aRow);
-              if (aRow >= 0) {
-                this.mSelection.currentIndex = -1;
-                this.mTree.ensureRowIsVisible(aRow);
-              }
-            }
-            return aRow;
-          },
-          
-          get selectedIndex()
-          {
-            return this.mSelectedIndex;
-          },
           
           clearResults: function()
           {
@@ -1316,6 +1292,10 @@
               return svc.getAtom(aVal);
             } catch(ex) { }
             return null; // XXX equivalent to falling off the end?
+          },
+
+          handleEnter: function() {
+            this.mTextbox.onResultClick();
           },
 
           //////////////////////////////////////////////////////////
@@ -1452,32 +1432,19 @@
         document.getAnonymousElementByAttribute(this, "anonid", "treebody");
       </field>
 
-      <property name="view" onget="return this.mView;">
-        <setter><![CDATA[
-          this.mView = val;
-          var bx = this.tree.boxObject;
-          bx = bx.QueryInterface(Components.interfaces.nsITreeBoxObject);
-          bx.view = val;
-        ]]></setter>
-      </property>
+      <field name="view">
+        null
+      </field>
 
      <property name="pageCount"
                onget="return this.tree.treeBoxObject.getPageLength();"/>
-
-     <property name="selectedIndex"
-               onget="return this.textbox.view.selectedIndex"
-               onset="this.textbox.view.selectedIndex = val; return val;"/>
 
      <field name="mLastRows">0</field>
 
       <method name="initialize">
         <body><![CDATA[
-        this.tree.__AUTOCOMPLETE_BOX__ = this.textbox;
-        this.treebody.__AUTOCOMPLETE_BOX__ = this.textbox;
-
-        this._selectedIndex = -1;
-
         this.showCommentColumn = this.textbox.showCommentColumn;
+        this.tree.view = this.textbox.view;
         this.view = this.textbox.view;
         ]]></body>
       </method>
@@ -1490,8 +1457,8 @@
         <body><![CDATA[
           // detect the desired height of the tree
           var bx = this.tree.treeBoxObject;
-          var view = this.textbox.view;
-          var rows = this.textbox.maxRows;
+          var view = this.view;
+          var rows = this.textbox ? this.textbox.maxRows : 6;
           if (!view.rowCount || (rows && view.rowCount < rows))
             rows = view.rowCount;
           
@@ -1512,7 +1479,7 @@
         <parameter name="aPage"/>
         <body><![CDATA[
           try {
-            return this.selectedIndex = this.getNextIndex(aReverse, aPage, this.selectedIndex, this.textbox.view.rowCount - 1);
+            return this.selectedIndex = this.getNextIndex(aReverse, aPage, this.selectedIndex, this.view.rowCount - 1);
           } catch (ex) {
             // do nothing - occasionally timer-related js errors happen here
             // e.g. "this.selectedIndex has no properties", when you type fast and hit a
@@ -1552,6 +1519,26 @@
            of the textbox to a different value if it wants to. -->
       <property name="overrideValue" readonly="true" onget="return null;"/>
 
+      <property name="selectedIndex">
+        <getter>
+          if (!this.view || !this.view.selection || !this.view.selection.count)
+            return -1;
+          var start = {}, end = {};
+          this.view.selection.getRangeAt(0, start, end);
+          return start.value;
+        </getter>
+        <setter><![CDATA[
+          if (this.view && this.view.selection) {
+            this.view.selection.select(val);
+            if (val >= 0) {
+              this.view.selection.currentIndex = -1;
+              this.tree.treeBoxObject.ensureRowIsVisible(val);
+            }
+          }
+          return val;
+        ]]></setter>
+      </property>
+
     </implementation>
 
     <handlers>
@@ -1568,17 +1555,9 @@
     </handlers>
   </binding>
 
-  <binding id="autocomplete-tree" extends="chrome://global/content/bindings/tree.xml#tree">
-    <implementation>
-      <property name="textbox"
-                onget="return this.__AUTOCOMPLETE_BOX__;"/>
-    </implementation>
-  </binding>
-
   <binding id="autocomplete-treebody">
     <implementation>
-      <property name="textbox"
-                onget="return this.__AUTOCOMPLETE_BOX__;"/>
+      <field name="resultsPopup">document.getBindingParent(this);</field>
 
       <field name="mLastMoveTime">Date.now()</field>
 
@@ -1589,26 +1568,27 @@
            // popup!
            var x = aEvent.screenX - document.documentElement.boxObject.screenX;
            var y = aEvent.screenY - document.documentElement.boxObject.screenY;
-           return this.textbox.view.treeBoxObject.getRowAt(x, y);
+           return this.parentNode.treeBoxObject.getRowAt(x, y);
         ]]></body>
       </method>
     </implementation>
     
     <handlers>
-      <handler event="mouseout" action="this.textbox.view.selectedIndex = -1;"/>
+      <handler event="mouseout" action="this.resultsPopup.selectedIndex = -1;"/>
+
       <handler event="mouseup"><![CDATA[
         var rc = this.getHoverRow(event);
         if (rc != -1) {
-          this.textbox.view.selectedIndex = rc;
-          this.textbox.onResultClick();
+          this.resultsPopup.selectedIndex = rc;
+          this.resultsPopup.view.handleEnter();
         }
       ]]></handler>
 
       <handler event="mousemove"><![CDATA[
         if (Date.now() - this.mLastMoveTime > 30) {
           var rc = this.getHoverRow(event);
-          if (rc != -1 && rc != this.textbox.view.selectedIndex) 
-            this.textbox.view.selectedIndex = rc;
+          if (rc != -1 && rc != this.resultsPopup.selectedIndex) 
+            this.resultsPopup.selectedIndex = rc;
           this.mLastMoveTime = Date.now();
         }
       ]]></handler>

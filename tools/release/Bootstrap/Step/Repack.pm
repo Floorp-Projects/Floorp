@@ -160,6 +160,58 @@ sub Verify {
       logFile => catfile($logDir, 'repack_metadiff-l10n_verification.log'),
     );
 }
+
+sub Push {
+    my $this = shift;
+
+    my $config = new Bootstrap::Config();
+    my $productTag = $config->Get(var => 'productTag');
+    my $rc = $config->Get(var => 'rc');
+    my $logDir = $config->Get(var => 'logDir');  
+    my $sshUser = $config->Get(var => 'sshUser');
+    my $sshServer = $config->Get(var => 'sshServer');
+
+    my $rcTag = $productTag . '_RC' . $rc;
+    my $buildLog = catfile($logDir, 'repack_' . $rcTag . '-build-l10n.log');
+    my $pushLog  = catfile($logDir, 'repack_' . $rcTag . '-push-l10n.log');
+    
+    my $logParser = new MozBuild::TinderLogParse(
+        logFile => $buildLog,
+    );
+    my $pushDir = $logParser->GetPushDir();
+    if (! defined($pushDir)) {
+        die("No pushDir found in $buildLog");
+    }
+    $pushDir =~ s!^http://ftp.mozilla.org/pub/mozilla.org!/home/ftp/pub!;
+
+    my $candidateDir = $config->GetFtpCandidateDir(bitsUnsigned => 1);
+
+    my $osFileMatch = $config->SystemInfo(var => 'osname');
+    if ($osFileMatch eq 'win32')  {
+      $osFileMatch = 'win';
+    } elsif ($osFileMatch eq 'macosx') {
+      $osFileMatch = 'mac';
+    }
+
+    $this->Shell(
+      cmd => 'ssh',
+      cmdArgs => ['-2', '-l', $sshUser, $sshServer,
+                  'mkdir -p ' . $candidateDir],
+      logFile => $pushLog,
+    );
+
+    $this->Shell(
+      cmd => 'ssh',
+      cmdArgs => ['-2', '-l', $sshUser, $sshServer,
+                  'rsync', '-av',
+                  '--include=*' . $osFileMatch . '*',
+                  '--include=*.xpi',
+                  '--exclude=*', 
+                  $pushDir, $candidateDir],
+      logFile => $pushLog,
+    );
+}
+
 sub Announce {
     my $this = shift;
 
@@ -185,7 +237,7 @@ sub Announce {
 
     $this->SendAnnouncement(
       subject => "$product $version l10n repack step finished",
-      message => "$product $version l10n builds are ready to be copied to the candidates directory.\nPush Dir is $pushDir",
+      message => "$product $version l10n builds were copied to the candidates directory.\nPush Dir was $pushDir",
     );
 }
 
