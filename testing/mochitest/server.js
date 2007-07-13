@@ -148,7 +148,7 @@ function runServer()
   server.start(SERVER_PORT);
   otherDomainServer.setIndexHandler(defaultDirHandler);
   otherDomainServer.start(SERVER_PORT_OTHER_DOMAIN);
-  
+
   // touch a file in the profile directory to indicate we're alive
   var foStream = Cc["@mozilla.org/network/file-output-stream;1"]
                    .createInstance(Ci.nsIFileOutputStream);
@@ -407,8 +407,10 @@ function testListing(metadata, response)
                  src: "/tests/SimpleTest/TestRunner.js"}),
         SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/MozillaFileLogger.js"}),
+/*
         SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/cross-domain.js"}),
+ */
         SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/quit.js"}),
         SCRIPT({type: "text/javascript",
