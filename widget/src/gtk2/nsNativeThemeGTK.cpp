@@ -960,6 +960,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_SPINNER_UP_BUTTON:
   case NS_THEME_SPINNER_DOWN_BUTTON:
     // case NS_THEME_SCROLLBAR:  (n/a for gtk)
+    // case NS_THEME_SCROLLBAR_SMALL: (n/a for gtk)
   case NS_THEME_SCROLLBAR_BUTTON_UP:
   case NS_THEME_SCROLLBAR_BUTTON_DOWN:
   case NS_THEME_SCROLLBAR_BUTTON_LEFT:
