@@ -201,10 +201,17 @@ ifndef GNU_CC
 #
 # Changes to the PDBFILE naming scheme should also be reflected in HOST_PDBFILE
 # 
+ifdef LIBRARY_NAME
+PDBFILE=$(LIBRARY_NAME).pdb
+ifdef MOZ_DEBUG
+CODFILE=$(LIBRARY_NAME).cod
+endif
+else
 PDBFILE=$(basename $(@F)).pdb
 ifdef MOZ_DEBUG
 CODFILE=$(basename $(@F)).cod
 endif
+endif # LIBRARY_NAME
 
 ifdef MOZ_MAPINFO
 ifdef LIBRARY_NAME
