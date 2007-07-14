@@ -1086,16 +1086,6 @@ nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     }
   }
 
-  if (!(state & nsIAccessibleStates::STATE_UNAVAILABLE)) {  // If not disabled
-    *aExtraState |= nsIAccessibleStates::EXT_STATE_ENABLED |
-                    nsIAccessibleStates::EXT_STATE_SENSITIVE;
-  }
-
-  if (state & (nsIAccessibleStates::STATE_COLLAPSED |
-               nsIAccessibleStates::STATE_EXPANDED)) {
-    *aExtraState |= nsIAccessibleStates::EXT_STATE_EXPANDABLE;
-  }
-
   return NS_OK;
 }
 
@@ -2251,6 +2241,19 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
 
   nsresult rv = GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set additional states which presence depends on another states.
+  if (aExtraState) {
+    if (!(*aState & nsIAccessibleStates::STATE_UNAVAILABLE)) {
+      *aExtraState |= nsIAccessibleStates::EXT_STATE_ENABLED |
+                      nsIAccessibleStates::EXT_STATE_SENSITIVE;
+    }
+
+    if (*aState & (nsIAccessibleStates::STATE_COLLAPSED |
+                   nsIAccessibleStates::STATE_EXPANDED)) {
+      *aExtraState |= nsIAccessibleStates::EXT_STATE_EXPANDABLE;
+    }
+  }
 
   // Apply ARIA states to be sure accessible states will be overriden.
   return GetARIAState(aState);
