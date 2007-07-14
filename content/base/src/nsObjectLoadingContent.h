@@ -256,7 +256,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * Fires the "Plugin not found" event. This function doesn't do any checks
      * whether it should be fired, the caller should do that.
      */
-    static void FirePluginNotFound(nsIContent* thisContent);
+    static void FirePluginError(nsIContent* thisContent, PRBool blocklisted);
 
     ObjectType GetTypeOfContent(const nsCString& aMIMEType);
 
@@ -300,6 +300,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
       ePluginUnsupported,  // The plugin is not supported (not installed, say)
       ePluginDisabled,     // The plugin has been explicitly disabled by the
                            // user.
+      ePluginBlocklisted,  // The plugin is blocklisted and disabled
       ePluginOtherState    // Something else (e.g. not a plugin at all as far
                            // as we can tell).
     };
