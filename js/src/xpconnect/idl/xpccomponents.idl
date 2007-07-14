@@ -183,11 +183,7 @@ interface nsIXPCComponents_Utils : nsISupports
      * targetObj, or, if 'targetObj' is not specified, on the caller's
      * global object.
      *
-     * @param registryLocation the string identifying the location of the
-     *        module to import. For the format of the string, see
-     *        nsIComponentManagerObsolete.registryLocationForSpec.
-     *        Note that the format of this parameter is expected to change
-     *        (see bug 380970).
+     * @param resourceURI A resource:// URI string to load the module from.
      * @param targetObj  the object to install the exported properties on.
      *        If this parameter is null or is a primitive value, this
      *        method throws an exception.
