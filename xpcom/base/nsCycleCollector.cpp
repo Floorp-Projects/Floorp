@@ -2413,7 +2413,11 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                     if (pi->mColor == white) {
                         printf("nsCycleCollector: %s %p in component %d\n"
                                "  was not collected due to missing call to "
-                               "suspect or failure to unlink\n",
+                               "suspect, failure to unlink,\n"
+                               "  or deficiency in traverse that causes "
+                               "cycles referenced only from other\n"
+                               "  cycles to require multiple rounds of cycle "
+                               "collection\n",
                                pi->mName, pi->mPointer, pi->mSCCIndex);
                     }
                 }
