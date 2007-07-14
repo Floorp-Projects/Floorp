@@ -3608,99 +3608,6 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
   return rv;
 }
 
-/*
- * Helper (per-continuation) for ScrollContentIntoView.
- *
- * @param aFrame [in] Frame whose bounds should be unioned
- * @param aVPercent [in] same as for ScrollContentIntoView
- * @param aRect [inout] rect into which its bounds should be unioned
- * @param aClosestScrolledView [inout] the view to which aRect is relative.
- *   If null, should be filled in appropriately.  If non-null, the function
- *   will no-op if the closest scrolling view doesn't match.
- */
-static void
-UnionRectForClosestScrolledView(nsIFrame* aFrame,
-                                PRIntn aVPercent,
-                                nsRect& aRect,
-                                nsIView*& aClosestScrolledView)
-{
-  nsRect  frameBounds = aFrame->GetRect();
-  nsPoint offset;
-  nsIView* closestView;
-  aFrame->GetOffsetFromView(offset, &closestView);
-  frameBounds.MoveTo(offset);
-
-  // If this is an inline frame and either the bounds height is 0 (quirks
-  // layout model) or aVPercent is not NS_PRESSHELL_SCROLL_ANYWHERE, we need to
-  // change the top of the bounds to include the whole line.
-  if (frameBounds.height == 0 || aVPercent != NS_PRESSHELL_SCROLL_ANYWHERE) {
-    nsIAtom* frameType = NULL;
-    nsIFrame *prevFrame = aFrame;
-    nsIFrame *f = aFrame;
-
-    while (f &&
-           (frameType = f->GetType()) == nsGkAtoms::inlineFrame) {
-      prevFrame = f;
-      f = prevFrame->GetParent();
-    }
-
-    if (f != aFrame &&
-        f &&
-        frameType == nsGkAtoms::blockFrame) {
-      // find the line containing aFrame and increase the top of |offset|.
-      nsCOMPtr<nsILineIterator> lines(do_QueryInterface(f));
-
-      if (lines) {
-        PRInt32 index = -1;
-        lines->FindLineContaining(prevFrame, &index);
-        if (index >= 0) {
-          nsIFrame *trash1;
-          PRInt32 trash2;
-          nsRect lineBounds;
-          PRUint32 trash3;
-
-          if (NS_SUCCEEDED(lines->GetLine(index, &trash1, &trash2,
-                                          lineBounds, &trash3))) {
-            nsPoint blockOffset;
-            nsIView* blockView;
-            f->GetOffsetFromView(blockOffset, &blockView);
-
-            if (blockView == closestView) {
-              // XXX If views not equal, this is hard.  Do we want to bother?
-              nscoord newoffset = lineBounds.y + blockOffset.y;
-
-              if (newoffset < frameBounds.y)
-                frameBounds.y = newoffset;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  NS_ASSERTION(closestView && !closestView->ToScrollableView(),
-               "What happened to the scrolled view?  "
-               "The frame should not be directly in the scrolling view!");
-  
-  // Walk up the view hierarchy.  Make sure to add the view's position
-  // _after_ we get the parent and see whether it's scrollable.  We want to
-  // make sure to get the scrolled view's position after it has been scrolled.
-  while (closestView) {
-    nsIView* parent = closestView->GetParent();
-    if (parent && parent->ToScrollableView())
-      break;
-    frameBounds += closestView->GetPosition();
-    closestView = parent;
-  }
-
-  if (!aClosestScrolledView)
-    aClosestScrolledView = closestView;
-
-  if (aClosestScrolledView == closestView) {
-    aRect.UnionRect(aRect, frameBounds);
-  }
-}
-
 /**
  * This function takes a scrolling view, a rect, and a scroll position and
  * attempts to scroll that rect to that position in that view.  The rect
@@ -3847,12 +3754,64 @@ PresShell::ScrollContentIntoView(nsIContent* aContent,
   // Step 2: Walk the views that are parents of the frame and scroll them
   //         appropriately.
   
-  nsIView *closestView = nsnull;
-  nsRect frameBounds;
-  do {
-    UnionRectForClosestScrolledView(frame, aVPercent, frameBounds, closestView);
-  } while ((frame = frame->GetNextContinuation()));
+  nsRect  frameBounds = frame->GetRect();
+  nsPoint offset;
+  nsIView* closestView;
+  frame->GetOffsetFromView(offset, &closestView);
+  frameBounds.MoveTo(offset);
 
+  // If this is an inline frame and either the bounds height is 0 (quirks
+  // layout model) or aVPercent is not NS_PRESSHELL_SCROLL_ANYWHERE, we need to
+  // change the top of the bounds to include the whole line.
+  if (frameBounds.height == 0 || aVPercent != NS_PRESSHELL_SCROLL_ANYWHERE) {
+    nsIAtom* frameType = NULL;
+    nsIFrame *prevFrame = frame;
+    nsIFrame *f = frame;
+
+    while (f &&
+           (frameType = f->GetType()) == nsGkAtoms::inlineFrame) {
+      prevFrame = f;
+      f = prevFrame->GetParent();
+    }
+
+    if (f != frame &&
+        f &&
+        frameType == nsGkAtoms::blockFrame) {
+      // find the line containing aFrame and increase the top of |offset|.
+      nsCOMPtr<nsILineIterator> lines(do_QueryInterface(f));
+
+      if (lines) {
+        PRInt32 index = -1;
+        lines->FindLineContaining(prevFrame, &index);
+        if (index >= 0) {
+          nsIFrame *trash1;
+          PRInt32 trash2;
+          nsRect lineBounds;
+          PRUint32 trash3;
+
+          if (NS_SUCCEEDED(lines->GetLine(index, &trash1, &trash2,
+                                          lineBounds, &trash3))) {
+            nsPoint blockOffset;
+            nsIView* blockView;
+            f->GetOffsetFromView(blockOffset, &blockView);
+
+            if (blockView == closestView) {
+              // XXX If views not equal, this is hard.  Do we want to bother?
+              nscoord newoffset = lineBounds.y + blockOffset.y;
+
+              if (newoffset < frameBounds.y)
+                frameBounds.y = newoffset;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  NS_ASSERTION(closestView && !closestView->ToScrollableView(),
+               "What happened to the scrolled view?  "
+               "The frame should not be directly in the scrolling view!");
+  
   // Walk up the view hierarchy.  Make sure to add the view's position
   // _after_ we get the parent and see whether it's scrollable.  We want to
   // make sure to get the scrolled view's position after it has been scrolled.
