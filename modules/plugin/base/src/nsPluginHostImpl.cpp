@@ -531,7 +531,9 @@ PRBool nsActivePluginList::remove(nsActivePlugin * plugin)
 // This method terminates all running instances of plugins and collects their
 // documents to be returned through an array. This method is used
 // when we are shutting down or when a plugins.refresh(1) happens.
-void nsActivePluginList::stopRunning(nsISupportsArray* aReloadDocs)
+// If aPluginTag is given, then only that plugin is terminated
+void nsActivePluginList::stopRunning(nsISupportsArray* aReloadDocs,
+                                     nsPluginTag* aPluginTag)
 {
   if(mFirst == nsnull)
     return;
@@ -540,7 +542,8 @@ void nsActivePluginList::stopRunning(nsISupportsArray* aReloadDocs)
 
   for(nsActivePlugin * p = mFirst; p != nsnull; p = p->mNext)
   {
-    if(!p->mStopped && p->mInstance)
+    if(!p->mStopped && p->mInstance &&
+       (!aPluginTag || aPluginTag == p->mPluginTag))
     {
       // then determine if the plugin wants Destroy to be called after
       // Set Window.  This is for bug 50547.
@@ -989,13 +992,36 @@ nsPluginTag::SetDisabled(PRBool aDisabled)
   if (HasFlag(NS_PLUGIN_FLAG_ENABLED) == !aDisabled)
     return NS_OK;
 
-  /* TODO: stop plugin if it's currently running */
   if (aDisabled)
     UnMark(NS_PLUGIN_FLAG_ENABLED);
   else
     Mark(NS_PLUGIN_FLAG_ENABLED);
 
-  mPluginHost->UpdatePluginInfo();
+  mPluginHost->UpdatePluginInfo(this);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPluginTag::GetBlocklisted(PRBool* aBlocklisted)
+{
+  *aBlocklisted = HasFlag(NS_PLUGIN_FLAG_BLOCKLISTED);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPluginTag::SetBlocklisted(PRBool aBlocklisted)
+{
+  if (HasFlag(NS_PLUGIN_FLAG_BLOCKLISTED) == aBlocklisted)
+    return NS_OK;
+
+  if (aBlocklisted) {
+    Mark(NS_PLUGIN_FLAG_BLOCKLISTED);
+    if (HasFlag(NS_PLUGIN_FLAG_ENABLED))
+      UnMark(NS_PLUGIN_FLAG_ENABLED);
+  } else
+    UnMark(NS_PLUGIN_FLAG_BLOCKLISTED);
+
+  mPluginHost->UpdatePluginInfo(nsnull);
   return NS_OK;
 }
 
@@ -2753,7 +2779,7 @@ nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
 
     // Then stop any running plugin instances but hold on to the documents in the array
     // We are going to need to restart the instances in these documents later
-    mActivePluginList.stopRunning(instsToReload);
+    mActivePluginList.stopRunning(instsToReload, nsnull);
   }
 
   // clean active plugin list
@@ -3250,7 +3276,7 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
 
   // we should call nsIPluginInstance::Stop and nsIPluginInstance::SetWindow
   // for those plugins who want it
-  mActivePluginList.stopRunning(nsnull);
+  mActivePluginList.stopRunning(nsnull, nsnull);
 
   // at this point nsIPlugin::Shutdown calls will be performed if needed
   mActivePluginList.shut();
@@ -4107,12 +4133,6 @@ nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType,
 NS_IMETHODIMP
 nsPluginHostImpl::IsPluginEnabledForType(const char* aMimeType)
 {
-  if (!mJavaEnabled && IsJavaMIMEType(aMimeType)) {
-    // Return DISABLED whether we have a java plugin or not -- if it's
-    // disabled, it's disabled.
-    return NS_ERROR_PLUGIN_DISABLED;
-  }
-
   // Pass PR_FALSE as the second arg so we can return NS_ERROR_PLUGIN_DISABLED
   // for disabled plug-ins.
   nsPluginTag *plugin = FindPluginForType(aMimeType, PR_FALSE);
@@ -4120,8 +4140,17 @@ nsPluginHostImpl::IsPluginEnabledForType(const char* aMimeType)
     return NS_ERROR_FAILURE;
   }
 
-  if (!plugin->HasFlag(NS_PLUGIN_FLAG_ENABLED)) {
+  if (!mJavaEnabled && IsJavaMIMEType(aMimeType)) {
+    // Return DISABLED whether we have a java plugin or not -- if it's
+    // disabled, it's disabled.
     return NS_ERROR_PLUGIN_DISABLED;
+  }
+
+  if (!plugin->HasFlag(NS_PLUGIN_FLAG_ENABLED)) {
+    if (plugin->HasFlag(NS_PLUGIN_FLAG_BLOCKLISTED))
+      return NS_ERROR_PLUGIN_BLOCKLISTED;
+    else
+      return NS_ERROR_PLUGIN_DISABLED;
   }
 
   return NS_OK;
@@ -5035,12 +5064,13 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
     RemoveCachedPluginsInfo(NS_ConvertUTF16toUTF8(pfd->mFilename).get(),
                             getter_AddRefs(pluginTag));
 
-    PRBool pluginEnabled = PR_TRUE;
+    PRUint32 oldFlags = NS_PLUGIN_FLAG_ENABLED;
     if (pluginTag) {
       // If plugin changed, delete cachedPluginTag and don't use cache
       if (LL_NE(fileModTime, pluginTag->mLastModifiedTime)) {
         // Plugins has changed. Don't use cached plugin info.
-        pluginEnabled = pluginTag->HasFlag(NS_PLUGIN_FLAG_ENABLED);
+        oldFlags = pluginTag->Flags() &
+                   (NS_PLUGIN_FLAG_ENABLED | NS_PLUGIN_FLAG_BLOCKLISTED);
         pluginTag = nsnull;
 
         // plugin file changed, flag this fact
@@ -5117,8 +5147,12 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
 
       pluginTag->mLibrary = pluginLibrary;
       pluginTag->mLastModifiedTime = fileModTime;
-      if (!pluginEnabled || (IsJavaPluginTag(pluginTag) && !mJavaEnabled))
+      if (!(oldFlags & NS_PLUGIN_FLAG_ENABLED) ||
+          (IsJavaPluginTag(pluginTag) && !mJavaEnabled))
         pluginTag->UnMark(NS_PLUGIN_FLAG_ENABLED);
+
+      if (oldFlags & NS_PLUGIN_FLAG_BLOCKLISTED)
+        pluginTag->Mark(NS_PLUGIN_FLAG_BLOCKLISTED);
 
       // if this is unwanted plugin we are checkin for, or this is a duplicate plugin,
       // add it to our cache info list so we can cache the unwantedness of this plugin
@@ -5223,6 +5257,11 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 
     if (iim)
       iim->AutoRegisterInterfaces();
+
+    nsCOMPtr<nsIObserverService>
+      obsService(do_GetService("@mozilla.org/observer-service;1"));
+    if (obsService)
+      obsService->NotifyObservers(nsnull, "plugins-list-updated", nsnull);
   }
 
   return NS_OK;
@@ -5284,7 +5323,7 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
     // if we are just looking for possible changes,
     // no need to proceed if changes are detected
     if (!aCreatePluginList && *aPluginsChanged) {
-      ClearCachedPluginInfoList();
+      mCachedPlugins = nsnull;
       return NS_OK;
     }
   }
@@ -5311,7 +5350,7 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
       // if we are just looking for possible changes,
       // no need to proceed if changes are detected
       if (!aCreatePluginList && *aPluginsChanged) {
-        ClearCachedPluginInfoList();
+        mCachedPlugins = nsnull;
         return NS_OK;
       }
     }
@@ -5359,7 +5398,7 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
       // if we are just looking for possible changes,
       // no need to proceed if changes are detected
       if (!aCreatePluginList && *aPluginsChanged) {
-        ClearCachedPluginInfoList();
+        mCachedPlugins = nsnull;
         return NS_OK;
       }
     }
@@ -5387,7 +5426,7 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
 
   // if we are not creating the list, there is no need to proceed
   if (!aCreatePluginList) {
-    ClearCachedPluginInfoList();
+    mCachedPlugins = nsnull;
     return NS_OK;
   }
 
@@ -5397,7 +5436,7 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
     WritePluginInfo();
 
   // No more need for cached plugins. Clear it up.
-  ClearCachedPluginInfoList();
+  mCachedPlugins = nsnull;
 
   /*
    * XXX Big time hack alert!!!!
@@ -5425,11 +5464,6 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
   return NS_OK;
 }
 
-void nsPluginHostImpl::ClearCachedPluginInfoList()
-{
-  mCachedPlugins = nsnull;
-}
-
 ////////////////////////////////////////////////////////////////////////
 nsresult
 nsPluginHostImpl::LoadXPCOMPlugins(nsIComponentManager* aComponentManager)
@@ -5449,11 +5483,28 @@ nsPluginHostImpl::LoadXPCOMPlugins(nsIComponentManager* aComponentManager)
 }
 
 nsresult
-nsPluginHostImpl::UpdatePluginInfo()
+nsPluginHostImpl::UpdatePluginInfo(nsPluginTag* aPluginTag)
 {
   ReadPluginInfo();
   WritePluginInfo();
-  ClearCachedPluginInfoList();
+  mCachedPlugins = nsnull;
+
+  if (!aPluginTag || aPluginTag->HasFlag(NS_PLUGIN_FLAG_ENABLED))
+    return NS_OK;
+
+  nsCOMPtr<nsISupportsArray> instsToReload;
+  NS_NewISupportsArray(getter_AddRefs(instsToReload));
+  mActivePluginList.stopRunning(instsToReload, aPluginTag);
+  mActivePluginList.removeAllStopped();
+  
+  PRUint32 c;
+  if (instsToReload &&
+      NS_SUCCEEDED(instsToReload->Count(&c)) &&
+      c > 0) {
+    nsCOMPtr<nsIRunnable> ev = new nsPluginDocReframeEvent(instsToReload);
+    if (ev)
+      NS_DispatchToCurrentThread(ev);
+  }
 
   return NS_OK;
 }
@@ -6378,18 +6429,9 @@ NS_IMETHODIMP nsPluginHostImpl::Observe(nsISupports *aSubject,
       // disabled so at least FindPluginForType/Extension doesn't return
       // anything.
       for (nsPluginTag* cur = mPlugins; cur; cur = cur->mNext) {
-        if (IsJavaPluginTag(cur)) {
-          if (mJavaEnabled) {
-            cur->Mark(NS_PLUGIN_FLAG_ENABLED);
-          } else {
-            cur->UnMark(NS_PLUGIN_FLAG_ENABLED);
-          }
-        }
+        if (IsJavaPluginTag(cur))
+          cur->SetDisabled(!mJavaEnabled);
       }            
-      
-      // Pass PR_TRUE for reloadPages because otherwise if there is a java
-      // plugin running somewhere it won't get turned off
-      return ReloadPlugins(PR_TRUE);
     }
   }
   return NS_OK;
