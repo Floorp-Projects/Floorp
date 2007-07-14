@@ -132,7 +132,7 @@ mAccessNodeCache(nsnull)
   if (mTree)
     mTree->GetView(getter_AddRefs(mTreeView));
   NS_ASSERTION(mTree && mTreeView, "Can't get mTree or mTreeView!\n");
-  mAccessNodeCache = new nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode>;
+  mAccessNodeCache = new nsAccessNodeHashtable;
   mAccessNodeCache->Init(kDefaultTreeCacheSize);
 }
 
