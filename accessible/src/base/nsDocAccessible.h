@@ -135,7 +135,7 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
      */
     void ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute);
 
-    nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> mAccessNodeCache;
+    nsAccessNodeHashtable mAccessNodeCache;
     void *mWnd;
     nsCOMPtr<nsIDocument> mDocument;
     nsCOMPtr<nsITimer> mScrollWatchTimer;

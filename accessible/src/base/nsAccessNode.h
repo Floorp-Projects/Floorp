@@ -69,30 +69,8 @@ class nsApplicationAccessibleWrap;
 #define ACCESSIBLE_BUNDLE_URL "chrome://global-platform/locale/accessible.properties"
 #define PLATFORM_KEYS_BUNDLE_URL "chrome://global-platform/locale/platformKeys.properties"
 
-/* hashkey wrapper using void* KeyType
- *
- * @see nsTHashtable::EntryType for specification
- */
-class nsVoidHashKey : public PLDHashEntryHdr
-{
-public:
-  typedef const void* KeyType;
-  typedef const void* KeyTypePointer;
-  
-  nsVoidHashKey(KeyTypePointer aKey) : mValue(aKey) { }
-  nsVoidHashKey(const nsVoidHashKey& toCopy) : mValue(toCopy.mValue) { }
-  ~nsVoidHashKey() { }
-
-  KeyType GetKey() const { return mValue; }
-  PRBool KeyEquals(KeyTypePointer aKey) const { return aKey == mValue; }
-
-  static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey) { return NS_PTR_TO_INT32(aKey) >> 2; }
-  enum { ALLOW_MEMMOVE = PR_TRUE };
-
-private:
-  const void* mValue;
-};
+typedef nsInterfaceHashtable<nsVoidPtrHashKey, nsIAccessNode>
+        nsAccessNodeHashtable;
 
 class nsAccessNode: public nsIAccessNode, public nsPIAccessNode
 {
@@ -113,11 +91,11 @@ class nsAccessNode: public nsIAccessNode, public nsPIAccessNode
     static already_AddRefed<nsApplicationAccessibleWrap> GetApplicationAccessible();
 
     // Static methods for handling per-document cache
-    static void PutCacheEntry(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode>& aCache, 
+    static void PutCacheEntry(nsAccessNodeHashtable& aCache,
                               void* aUniqueID, nsIAccessNode *aAccessNode);
-    static void GetCacheEntry(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode>& aCache, void* aUniqueID, 
-                              nsIAccessNode **aAccessNode);
-    static void ClearCache(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode>& aCache);
+    static void GetCacheEntry(nsAccessNodeHashtable& aCache,
+                              void* aUniqueID, nsIAccessNode **aAccessNode);
+    static void ClearCache(nsAccessNodeHashtable& aCache);
 
     static PLDHashOperator PR_CALLBACK ClearCacheEntry(const void* aKey, nsCOMPtr<nsIAccessNode>& aAccessNode, void* aUserArg);
 
@@ -184,7 +162,7 @@ protected:
     static PRBool gIsCacheDisabled;
     static PRBool gIsFormFillEnabled;
 
-    static nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> gGlobalDocAccessibleCache;
+    static nsAccessNodeHashtable gGlobalDocAccessibleCache;
 
 private:
   static nsIAccessibilityService *sAccService;
