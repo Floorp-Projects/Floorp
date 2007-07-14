@@ -42,7 +42,7 @@
  * loader.
  *
  * Import into a JS component using
- * 'Components.utils.import("rel:XPCOMUtils.jsm");'
+ * 'Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");'
  *
  * Exposing a JS 'class' as a component using these utility methods consists
  * of several steps:
