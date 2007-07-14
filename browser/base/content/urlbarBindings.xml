@@ -58,20 +58,20 @@
                         flex="1" allowevents="true"
                         xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction"/>
           </xul:hbox>
-          <xul:hbox anonid="presentation-box" class="textbox-presentation-box" flex="1"
+          <xul:hbox anonid="presentation-box" class="formatted-url" flex="1"
                     onmousedown="focus();" hidden="true">
-            <xul:scrollbox anonid="presentation" class="textbox-presentation" flex="1"
+            <xul:scrollbox anonid="presentation" class="formatted-url-contents" flex="1"
                            onoverflow="_contentIsCropped = true;"
                            onunderflow="_contentIsCropped = false;">
-              <xul:hbox anonid="prePath" class="textbox-presentation-prePath">
-                <xul:label anonid="protocol" class="textbox-presentation-protocol"/>
-                <xul:label anonid="subdomain" class="textbox-presentation-subdomain"/>
-                <xul:label anonid="domain" class="textbox-presentation-domain"/>
-                <xul:label anonid="port" class="textbox-presentation-port"/>
+              <xul:hbox anonid="prePath" class="formatted-url-prePath">
+                <xul:label anonid="protocol" class="formatted-url-protocol"/>
+                <xul:label anonid="subdomain" class="formatted-url-subdomain"/>
+                <xul:label anonid="domain" class="formatted-url-domain"/>
+                <xul:label anonid="port" class="formatted-url-port"/>
               </xul:hbox>
-              <xul:label anonid="path" class="textbox-presentation-path"/>
+              <xul:label anonid="path" class="formatted-url-path"/>
             </xul:scrollbox>
-            <xul:label anonid="overflow-ellipsis" class="textbox-overflow-ellipsis"
+            <xul:label anonid="overflow-ellipsis" class="formatted-url-ellipsis"
                        value="&#8230;" hidden="true"/>
           </xul:hbox>
         </xul:stack>
