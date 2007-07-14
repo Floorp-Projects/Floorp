@@ -47,12 +47,13 @@
 menupopup,
 popup,
 panel {
-  border: 2px solid transparent;
-  -moz-border-top-colors   : ThreeDLightShadow ThreeDHighlight;
-  -moz-border-left-colors  : ThreeDLightShadow ThreeDHighlight;
-  -moz-border-right-colors : ThreeDDarkShadow  ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow  ThreeDShadow;
-  padding: 1px;
+  -moz-appearance: menupopup;
+  border: 3px solid transparent;
+  -moz-border-top-colors   : ThreeDLightShadow ThreeDHighlight ThreeDFace;
+  -moz-border-left-colors  : ThreeDLightShadow ThreeDHighlight ThreeDFace;
+  -moz-border-right-colors : ThreeDDarkShadow  ThreeDShadow    ThreeDFace;
+  -moz-border-bottom-colors: ThreeDDarkShadow  ThreeDShadow    ThreeDFace;
+  padding: 0px;
   min-width: 1px;
   background: Menu;
 }

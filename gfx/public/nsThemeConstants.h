@@ -210,3 +210,9 @@
 #define NS_THEME_MENUITEM                                  212
 #define NS_THEME_CHECKMENUITEM                             213
 #define NS_THEME_RADIOMENUITEM                             214
+
+// menu checkbox/radio appearances
+#define NS_THEME_MENUCHECKBOX                              215
+#define NS_THEME_MENURADIO                                 216
+#define NS_THEME_MENUSEPARATOR                             217
+#define NS_THEME_MENUARROW                                 218
