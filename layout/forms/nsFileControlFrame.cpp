@@ -332,13 +332,12 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
       // and not fire onchange when it should.
       PRBool oldState = mTextFrame->GetFireChangeEventState();
       mTextFrame->SetFireChangeEventState(PR_TRUE);
-      mTextFrame->SetFormProperty(nsGkAtoms::value, unicodePath);
-      mTextFrame->SetFireChangeEventState(oldState);
       nsCOMPtr<nsIFileControlElement> fileControl = do_QueryInterface(mContent);
       if (fileControl) {
         fileControl->SetFileName(unicodePath);
       }
       
+      mTextFrame->SetFireChangeEventState(oldState);
       // May need to fire an onchange here
       mTextFrame->CheckFireOnChange();
       return NS_OK;

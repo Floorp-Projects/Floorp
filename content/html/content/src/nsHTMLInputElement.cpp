@@ -804,6 +804,14 @@ nsHTMLInputElement::SetFileName(const nsAString& aValue)
   // No big deal if |new| fails, we simply won't submit the file
   mFileName = aValue.IsEmpty() ? nsnull : new nsString(aValue);
 
+  // No need to flush here, if there's no frame at this point we
+  // don't need to force creation of one just to tell it about this
+  // new value.  We just want the display to update as needed.
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
+  if (formControlFrame) {
+    formControlFrame->SetFormProperty(nsGkAtoms::value, aValue);
+  }
+  
   SetValueChanged(PR_TRUE);
 }
 
