@@ -868,7 +868,7 @@ CNavDTD::HandleDefaultStartToken(CToken* aToken, eHTMLTags aChildTag,
   if (mParserCommand != eViewFragment) {
     PRBool  theChildAgrees = PR_TRUE;
     PRInt32 theIndex = mBodyContext->GetCount();
-    PRBool  theParentContains = -1;
+    PRBool  theParentContains = PR_FALSE;
 
     do {
       eHTMLTags theParentTag = mBodyContext->TagAt(--theIndex);
@@ -1636,7 +1636,7 @@ CNavDTD::HandleEndToken(CToken* aToken)
               // break in such cases. So, let's simulate that effect for
               // compatibility.
               // Ex. <html><body>Hello</P>There</body></html>
-              PRBool theParentContains = -1;
+              PRInt32 theParentContains = -1;
               if (!CanOmit(theParentTag, theChildTag, theParentContains)) {
                 CToken* theStartToken =
                   mTokenAllocator->CreateTokenOfType(eToken_start, theChildTag);
@@ -1836,7 +1836,7 @@ CNavDTD::HandleEntityToken(CToken* aToken)
   nsCParserNode* theNode = mNodeAllocator.CreateNode(aToken, mTokenAllocator);
   NS_ENSURE_TRUE(theNode, NS_ERROR_OUT_OF_MEMORY);
 
-  PRBool theParentContains = -1;
+  PRInt32 theParentContains = -1;
   if (CanOmit(theParentTag, eHTMLTag_entity, theParentContains)) {
     eHTMLTags theCurrTag = (eHTMLTags)aToken->GetTypeID();
     HandleOmittedTag(aToken, theCurrTag, theParentTag, theNode);
@@ -2113,7 +2113,7 @@ CNavDTD::IsInlineElement(PRInt32 aTagID, PRInt32 aParentID) const
  */
 PRBool
 CNavDTD::CanPropagate(eHTMLTags aParent, eHTMLTags aChild,
-                      PRBool aParentContains)
+                      PRInt32 aParentContains)
 {
   PRBool result = PR_FALSE;
   if (aParentContains == -1) {
@@ -2161,7 +2161,7 @@ CNavDTD::CanPropagate(eHTMLTags aParent, eHTMLTags aChild,
  *  @return  PR_TRUE if given tag can contain other tags
  */
 PRBool
-CNavDTD::CanOmit(eHTMLTags aParent, eHTMLTags aChild, PRBool& aParentContains)
+CNavDTD::CanOmit(eHTMLTags aParent, eHTMLTags aChild, PRInt32& aParentContains)
 {
   eHTMLTags theAncestor = gHTMLElements[aChild].mExcludingAncestor;
   if (eHTMLTag_unknown != theAncestor && HasOpenContainer(theAncestor)) {
