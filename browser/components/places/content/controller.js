@@ -1887,8 +1887,10 @@ PlacesRemoveFolderTransaction.prototype = {
   },
 
   doTransaction: function PRFT_doTransaction() {
-    var title = this.bookmarks.getItemTitle(this._id);
-    this.LOG("Remove Folder: " + title);
+    this._title = this.bookmarks.getItemTitle(this._id);
+    this._annotations = this.utils.getAnnotationsForItem(this._id);
+    
+    this.LOG("Remove Folder: " + this._title);
 
     this._saveFolderContents();
 
@@ -1903,8 +1905,11 @@ PlacesRemoveFolderTransaction.prototype = {
   undoTransaction: function PRFT_undoTransaction() {
     this._removeTxn.undoTransaction();
     
-    var title = this.bookmarks.getItemTitle(this._id);
-    this.LOG("UNRemove Folder: " + title);
+    this.LOG("UNRemove Folder: " + this._title);
+    
+    // Repopulate annotations
+    if (this._annotations && this._annotations.length > 0)
+      this.utils.setAnnotationsForItem(this._id, this._annotations);
     
     // Create children forwards to preserve parent-child relationships.
     for (var i = 0; i < this._transactions.length; ++i)
