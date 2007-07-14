@@ -114,8 +114,7 @@ PlacesController.prototype = {
     case "cmd_copy":
       return this._view.hasSelection;
     case "cmd_paste":
-      return this._canInsert() && 
-             this._hasClipboardData() && this._canPaste();
+      return this._canInsert() && this._canPaste();
     case "cmd_selectAll":
       if (this._view.selType != "single") {
         var result = this._view.getResult();
@@ -376,31 +375,6 @@ PlacesController.prototype = {
   },
 
   /**
-   * Determines whether or not the clipboard contains data that the active
-   * view can support in a paste operation. 
-   * @returns true if the clipboard contains data compatible with the active
-   *          view, false otherwise. 
-   */
-  _hasClipboardData: function PC__hasClipboardData() {
-    var types = this._view.peerDropTypes;
-    var flavors = 
-        Cc["@mozilla.org/supports-array;1"].
-        createInstance(Ci.nsISupportsArray);
-    for (var i = 0; i < types.length; ++i) {
-      var cstring = 
-          Cc["@mozilla.org/supports-cstring;1"].
-          createInstance(Ci.nsISupportsCString);
-      cstring.data = types[i];
-      flavors.AppendElement(cstring);
-    }
-
-    var clipboard = 
-        Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
-    return clipboard.hasDataMatchingFlavors(flavors, 
-                                            Ci.nsIClipboard.kGlobalClipboard);
-  },
-
-  /**
    * Determines whether or not nodes can be inserted relative to the selection.
    */
   _canInsert: function PC__canInsert() {
@@ -426,22 +400,41 @@ PlacesController.prototype = {
    * Looks at the data on the clipboard to see if it is paste-able. 
    * Paste-able data is:
    *   - in a format that the view can receive
-   *   - not a set of URIs that is entirely already present in the view, 
-   *     since we can only have one instance of a URI per container. 
    * @returns true if the data is paste-able, false if the clipboard data
    *          cannot be pasted
    */
   _canPaste: function PC__canPaste() {
+    var types = this._view.peerDropTypes;
+    var flavors = 
+        Cc["@mozilla.org/supports-array;1"].
+        createInstance(Ci.nsISupportsArray);
+    for (var i = 0; i < types.length; ++i) {
+      var cstring = 
+          Cc["@mozilla.org/supports-cstring;1"].
+          createInstance(Ci.nsISupportsCString);
+      cstring.data = types[i];
+      flavors.AppendElement(cstring);
+    }
+
+    var clipboard = 
+        Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
+    var hasClipboardData = clipboard.hasDataMatchingFlavors(flavors, 
+                                            Ci.nsIClipboard.kGlobalClipboard);
+    if (!hasClipboardData)
+      return false;
+
+    // XXX todo
+    // see bug #387007 for an idea on how to make this more efficient
+    // right now, we are pulling data off the clipboard and using
+    // unwrapNodes() to verify it.
+
     var xferable = 
         Cc["@mozilla.org/widget/transferable;1"].
         createInstance(Ci.nsITransferable);
-    xferable.addDataFlavor(PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER);
-    xferable.addDataFlavor(PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR);
-    xferable.addDataFlavor(PlacesUtils.TYPE_X_MOZ_PLACE);
-    xferable.addDataFlavor(PlacesUtils.TYPE_X_MOZ_URL);
 
-    var clipboard = Cc["@mozilla.org/widget/clipboard;1"].
-                    getService(Ci.nsIClipboard);
+    for (var j = 0; j < types.length; ++j) {
+      xferable.addDataFlavor(types[j]);
+    }
     clipboard.getData(xferable, Ci.nsIClipboard.kGlobalClipboard);
 
     try {
@@ -452,14 +445,12 @@ PlacesController.prototype = {
       if (this._view.peerDropTypes.indexOf(type.value) == -1)
         return false;
 
-      // unwrapNodes will throw if the data blob is malformed. 
-      var nodes = PlacesUtils.unwrapNodes(data, type.value);
-
-      var ip = this._view.insertionPoint;
-      return ip != null;
+      // unwrapNodes() will throw if the data blob is malformed. 
+      var unwrappedNodes = PlacesUtils.unwrapNodes(data, type.value);
+      return this._view.insertionPoint != null;
     }
     catch (e) {
-      // Unwrap nodes failed, possibly because a field that should have 
+      // unwrapeNodes() failed, possibly because a field that should have 
       // contained a URI did not actually contain something that is 
       // parse-able as a URI. 
       return false;
@@ -1039,19 +1030,16 @@ PlacesController.prototype = {
 
 
   /**
-   * Creates a set of transactions for the removal of a range of items. A range is 
-   * an array of adjacent nodes in a view.
-   * @param   range
-   *          An array of nodes to remove. Should all be adjacent. 
-   * @param   transactions
-   *          An array of transactions.
+   * Walk the list of folders we're removing in this delete operation, and
+   * see if the selected node specified is already implicitly being removed 
+   * because it is a child of that folder. 
+   * @param   node
+   *          Node to check for containment. 
+   * @param   pastFolders
+   *          List of folders the calling function has already traversed
+   * @returns true if the node should be skipped, false otherwise. 
    */
-  _removeRange: function PC__removeRange(range, transactions) {
-    NS_ASSERT(transactions instanceof Array, "Must pass a transactions array");
-    var index = PlacesUtils.getIndexOfNode(range[0]);
-
-    var removedFolders = [];
-
+  _shouldSkipNode: function PC_shouldSkipNode(node, pastFolders) {
     /**
      * Determines if a node is contained by another node within a resultset. 
      * @param   node
@@ -1069,26 +1057,31 @@ PlacesController.prototype = {
       }
       return false;
     }
-
-    /**
-     * Walk the list of folders we're removing in this delete operation, and
-     * see if the selected node specified is already implicitly being removed 
-     * because it is a child of that folder. 
-     * @param   node
-     *          Node to check for containment. 
-     * @returns true if the node should be skipped, false otherwise. 
-     */
-    function shouldSkipNode(node) {
-      for (var j = 0; j < removedFolders.length; ++j) {
-        if (isContainedBy(node, removedFolders[j]))
+  
+      for (var j = 0; j < pastFolders.length; ++j) {
+        if (isContainedBy(node, pastFolders[j]))
           return true;
       }
-      return false;          
-    }
+      return false;
+  },
+
+  /**
+   * Creates a set of transactions for the removal of a range of items. 
+   * A range is an array of adjacent nodes in a view.
+   * @param   range
+   *          An array of nodes to remove. Should all be adjacent. 
+   * @param   transactions
+   *          An array of transactions.
+   */
+  _removeRange: function PC__removeRange(range, transactions) {
+    NS_ASSERT(transactions instanceof Array, "Must pass a transactions array");
+    var index = PlacesUtils.getIndexOfNode(range[0]);
+
+    var removedFolders = [];
 
     for (var i = 0; i < range.length; ++i) {
       var node = range[i];
-      if (shouldSkipNode(node))
+      if (this._shouldSkipNode(node, removedFolders))
         continue;
 
       if (PlacesUtils.nodeIsFolder(node)) {
@@ -1247,35 +1240,36 @@ PlacesController.prototype = {
         Cc["@mozilla.org/widget/transferable;1"].
         createInstance(Ci.nsITransferable);
     var foundFolder = false, foundLink = false;
-    var pcString = psString = placeString = mozURLString = htmlString = unicodeString = "";
+    var copiedFolders = [];
+    var placeString = mozURLString = htmlString = unicodeString = "";
+    
     for (var i = 0; i < nodes.length; ++i) {
       var node = nodes[i];
+      if (this._shouldSkipNode(node, copiedFolders))
+        continue;
+      if (PlacesUtils.nodeIsFolder(node))
+        copiedFolders.push(node);
+        
       function generateChunk(type, overrideURI) {
-        var suffix = i < (nodes.length - 1) ? NEWLINE : "";
-        return PlacesUtils.wrapNode(node, type, overrideURI) + suffix;
+        var suffix = i < (nodes.length - 1) ? "\n" : "";
+        var uri = overrideURI;
+        
+        if (PlacesUtils.nodeIsLivemarkContainer(node))
+          uri = PlacesUtils.livemarks.getFeedURI(node.itemId).spec
+          
+        mozURLString += (PlacesUtils.wrapNode(node, PlacesUtils.TYPE_X_MOZ_URL,
+                                               uri) + suffix);
+        unicodeString += (PlacesUtils.wrapNode(node, PlacesUtils.TYPE_UNICODE,
+                                               uri) + suffix);
+        htmlString += (PlacesUtils.wrapNode(node, PlacesUtils.TYPE_HTML,
+                                               uri) + suffix);
+        
+        var placeSuffix = i < (nodes.length - 1) ? "," : "";
+        return PlacesUtils.wrapNode(node, type, overrideURI) + placeSuffix;
       }
 
-      function generateURIChunks(overrideURI) {
-        mozURLString += generateChunk(PlacesUtils.TYPE_X_MOZ_URL, overrideURI);
-        htmlString += generateChunk(PlacesUtils.TYPE_HTML, overrideURI);
-        unicodeString += generateChunk(PlacesUtils.TYPE_UNICODE, overrideURI);
-      }
-
-      if (PlacesUtils.nodeIsFolder(node) || PlacesUtils.nodeIsQuery(node)) {
-        pcString += generateChunk(PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER);
-
-        // Also copy the feed URI for live-bookmark folders
-        if (PlacesUtils.nodeIsLivemarkContainer(node)) {
-          var uri = PlacesUtils.livemarks.getFeedURI(node.itemId);
-          generateURIChunks(uri.spec);
-        }
-      }
-      else if (PlacesUtils.nodeIsSeparator(node))
-        psString += generateChunk(PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR);
-      else {
+        // all items wrapped as TYPE_X_MOZ_PLACE
         placeString += generateChunk(PlacesUtils.TYPE_X_MOZ_PLACE);
-        generateURIChunks();
-      }
     }
 
     function addData(type, data) {
@@ -1283,11 +1277,7 @@ PlacesController.prototype = {
       xferable.setTransferData(type, PlacesUtils._wrapString(data), data.length * 2);
     }
     // This order is _important_! It controls how this and other applications 
-    // select data to be inserted based on type. 
-    if (pcString)
-      addData(PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER, pcString);
-    if (psString)
-      addData(PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR, psString);
+    // select data to be inserted based on type.
     if (placeString)
       addData(PlacesUtils.TYPE_X_MOZ_PLACE, placeString);
     if (mozURLString)
@@ -1297,8 +1287,7 @@ PlacesController.prototype = {
     if (htmlString)
       addData(PlacesUtils.TYPE_HTML, htmlString);
 
-    if (pcString || psString || placeString || unicodeString || htmlString || 
-        mozURLString) {
+    if (placeString || unicodeString || htmlString || mozURLString) {
       var clipboard = 
           Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
       clipboard.setData(xferable, null, Ci.nsIClipboard.kGlobalClipboard);
@@ -1363,9 +1352,14 @@ PlacesController.prototype = {
         data = data.value.QueryInterface(Ci.nsISupportsString).data;
         var items = PlacesUtils.unwrapNodes(data, type.value);
         var transactions = [];
+        var index = ip.index;
         for (var i = 0; i < items.length; ++i) {
+          // adjusted to make sure that items are given the correct index -
+          // transactions insert differently if index == -1
+          if (ip.index > -1)
+            index = ip.index + i;
           transactions.push(PlacesUtils.makeTransaction(items[i], type.value, 
-                                                        ip.itemId, ip.index,
+                                                        ip.itemId, index,
                                                         true));
         }
         return transactions;
@@ -1382,12 +1376,9 @@ PlacesController.prototype = {
 
     // Get transactions to paste any folders, separators or links that might
     // be on the clipboard, aggregate them and execute them. 
-    var transactions = 
-        [].concat(getTransactions([PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER]),
-                  getTransactions([PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR]),
-                  getTransactions([PlacesUtils.TYPE_X_MOZ_PLACE,
-                                   PlacesUtils.TYPE_X_MOZ_URL, 
-                                   PlacesUtils.TYPE_UNICODE]));
+    var transactions = getTransactions([PlacesUtils.TYPE_X_MOZ_PLACE,
+                                        PlacesUtils.TYPE_X_MOZ_URL, 
+                                        PlacesUtils.TYPE_UNICODE]);
     var txn = new PlacesAggregateTransaction("Paste", transactions);
     PlacesUtils.tm.doTransaction(txn);
   }
@@ -1612,7 +1603,7 @@ PlacesAggregateTransaction.prototype = {
   },
 
   commit: function PAT_commit(aUndo) {
-    for (var i = this._transactions.length - 1; i >= 0; --i) {
+    for (var i = 0; i < this._transactions.length; ++i) {
       var txn = this._transactions[i];
       if (this.container > -1) 
         txn.container = this.container;
