@@ -908,7 +908,6 @@ if test -n "$CROSS_COMPILE"; then
     OS_TARGET="${target_os}"
     OS_ARCH=`echo $target_os | sed -e 's|/|_|g'`
     OS_RELEASE=
-    OS_TEST="${target_cpu}"
     case "${target_os}" in
         linux*)       OS_ARCH=Linux OS_TARGET=Linux ;;
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
@@ -920,8 +919,12 @@ else
     OS_TARGET=`uname -s`
     OS_ARCH=`uname -s | sed -e 's|/|_|g'`
     OS_RELEASE=`uname -r`
-    OS_TEST=`uname -m`
 fi
+
+# Before this used `uname -m` when not cross compiling
+# but that breaks when you have a 64 bit kernel with a 32 bit userland.
+OS_TEST="${target_cpu}"
+
 _COMPILER_PREFIX=
 
 HOST_OS_ARCH=`echo $host_os | sed -e 's|/|_|g'`
