@@ -38,10 +38,6 @@
 #
 # ***** END LICENSE BLOCK *****
 */
-prefwindow {
-  padding: 0 !important;
-}
-
 .prefWindow-dlgbuttons {
   margin: 0 12px 8px 12px;
 }
@@ -53,10 +49,6 @@ prefwindow {
 .windowDialog {
   padding: 12px;
   font: -moz-dialog;
-}
-
-prefpane {
-  padding: 12px 12px 0 12px;
 }
 
 .paneSelector {
