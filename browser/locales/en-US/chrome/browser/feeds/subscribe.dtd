@@ -14,7 +14,3 @@
   "Subscribe to this feed using ">
 <!ENTITY feedLiveBookmarks
   "Live Bookmarks">
-<!ENTITY error.title
-  "Error Processing Feed">
-<!ENTITY error.message
-  "There was an error processing this feed. It's our fault. :-( You can still subscribe to the feed if you know what it is. For reference, the error was:">
