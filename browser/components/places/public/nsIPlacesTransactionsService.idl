@@ -1,0 +1,323 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Places.
+ *
+ * The Initial Developer of the Original Code is Mozilla Corporation
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2007
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Sungjoon Steve Won <stevewon@gmail.com> (Original Author)
+ *   Asaf Romano <mano@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIVariant;
+interface nsIURI;
+interface nsIInputStream;
+interface nsIMicrosummary;
+interface nsITransactionManager;
+interface nsITransaction;
+
+/**
+ * nsIPlacesTransactionService is a service designed to handle
+ * nsITransactions that correspond to changes in Places. It is here as a
+ * service so that we can keep the transactions around without holding onto
+ * the global scope of a js window.
+ */
+
+[scriptable, uuid(224f6833-762b-43ba-8911-020b589b2da3)]
+interface nsIPlacesTransactionsService : nsISupports
+{
+  /**
+   * Performs a transaction.
+   *
+   * @param aTransaction
+   *        a transaction object for a transaction
+   */
+  void commitTransaction(in nsITransaction aTransaction);
+
+  /**
+   * Transaction for performing several Places Transactions in a single batch. 
+   * 
+   * @param aName
+   *        title of the aggregate transactions
+   * @param aTransactions
+   *        an array of transactions to perform
+   * @returns nsITransaction object
+   */
+  nsITransaction aggregateTransactions(in AString aName,
+                                       in nsIVariant aTransactions);
+
+  /**
+   * Transaction for creating a new folder item.
+   *
+   * @param aName
+   *        the name of the new folder
+   * @param aContainer
+   *        the identifier of the folder in which the new folder should be
+   *        added.
+   * @param [optional] aIndex
+   *        the index of the item in aContainer, pass -1 or nothing to create
+   *        the item at the end of aContainer.
+   * @param [optional] aAnnotations
+   *        the annotations to set for the new folder.
+   * @param [optional] aChildItemsTransactions
+   *        array of transactions for items to be created under the new folder.
+   * @returns nsITransaction object
+   */
+  nsITransaction createFolder(in AString aName, in long long aContainer,
+                              [optional] in long long aIndex,
+                              [optional] in nsIVariant aAnnotations,
+                              [optional] in nsIVariant aChildItemsTransactions);
+
+  /**
+   * Transaction for creating a new bookmark item
+   *
+   * @param aURI
+   *        the uri of the new bookmark (nsIURI)
+   * @param aContainer
+   *        the identifier of the folder in which the bookmark should be added.
+   * @param [optional] aIndex
+   *        the index of the item in aContainer, pass -1 or nothing to create
+   *        the item at the end of aContainer.
+   * @param [optional] aTitle
+   *        the title of the new bookmark.
+   * @param [optional] aKeyword
+   *        the keyword of the new bookmark.
+   * @param [optional] aAnnotations
+   *        the annotations to set for the new bookmark.
+   * @param [optional] aChildTransactions
+   *        child transactions to commit after creating the bookmark. Prefer
+   *        using any of the arguments above if possible. In general, a child
+   *        transations should be used only if the change it does has to be
+   *        reverted manually when removing the bookmark item.
+   *        a child transaction must support setting its bookmark-item
+   *        identifier via an "id" js setter.
+   * @returns nsITransaction object
+   */
+  nsITransaction createItem(in nsIURI aURI, in long long aContainer,
+                            [optional] in long long aIndex,
+                            [optional] in AString aTitle,
+                            [optional] in AString aKeyword,
+                            [optional] in nsIVariant aAnnotations,
+                            [optional] in nsIVariant aChildTransactions);
+
+  /**
+   * Transaction for creating a new separator item
+   *
+   * @param aContainer
+   *        the identifier of the folder in which the separator should be
+   *        added.
+   * @param [optional] aIndex
+   *        the index of the item in aContainer, pass -1 or nothing to create
+   *        the separator at the end of aContainer.
+   * @returns nsITransaction object
+   */
+  nsITransaction createSeparator(in long long aContainer,
+                                 [optional] in long long aIndex);
+
+  /**
+   * Transaction for creating a new live-bookmark item.
+   *
+   * @see nsILivemarksService::createLivemark for documentation regarding the
+   * first three arguments.
+   *
+   * @param aContainer
+   *        the identifier of the folder in which the live-bookmark should be
+   *        added.
+   * @param [optional]  aIndex
+   *        the index of the item in aContainer, pass -1 or nothing to create
+   *        the item at the end of aContainer.
+   * @param [optional] aAnnotations
+   *        the annotations to set for the new live-bookmark.
+   * @returns nsITransaction object
+   */
+  nsITransaction createLivemark(in nsIURI aFeedURI,
+                                in nsIURI aSiteURI,
+                                in AString aName,
+                                in long long aContainer,
+                                [optional] in long long aIndex,
+                                [optional] in nsIVariant aAnnotations);
+
+  /**
+   * Transaction for moving an Item.
+   *
+   * @param aItemId
+   *        the id of the item to move
+   * @param aNewContainer
+   *        id of the new container to move to
+   * @param aNewIndex
+   *        index of the new position to move to
+   * @returns nsITransaction object
+   */
+  nsITransaction moveItem(in long long aItemId,
+                          in long long aNewContainer,
+                          in long long aNewIndex);
+
+  /**
+   * Transaction for removing an Item
+   *
+   * @param aItemId
+   *        id of the item to remove
+   * @returns nsITransaction object
+   */
+  nsITransaction removeItem(in long long aItemId);
+
+  /**
+   * Transaction for editting a bookmark's title.
+   *
+   * @param id
+   *        id of the item to edit
+   * @param newTitle
+   *        new title for the item to edit
+   * @returns nsITransaction object
+   */
+  nsITransaction editItemTitle(in long long id, in AString newTitle);
+
+  /**
+   * Transaction for editting a bookmark's uri.
+   *
+   * @param aBookmarkId
+   *        id of the bookmark to edit
+   * @param aNewURI
+   *        new uri for the bookmark
+   * @returns nsITransaction object
+   */
+  nsITransaction editBookmarkURI(in long long aBookmarkId, in nsIURI aNewURI);
+
+  /**
+   * Transaction for setting/unsetting Load-in-sidebar annotation
+   *
+   * @param aBookmarkId
+   *        id of the selected bookmark
+   * @param aLoadInSidebar
+   *        boolean value
+   * @returns nsITransaction object
+   */
+  nsITransaction setLoadInSidebar(in long long aBookmarkId,
+                                  in boolean aLoadInSidebar);
+
+  /**
+   * Transaction for editting a the description of a bookmark or a folder
+   * 
+   * @param aItemId
+   *        id of the item to edit
+   * @param aDescription
+   *        new description
+   * @returns nsITransaction object
+   */
+  nsITransaction editItemDescription(in long long aItemId,
+                                     in AString aDescription);
+
+  /**
+   * Transaction for editting a bookmark's keyword.
+   *
+   * @param id
+   *        id of the bookmark to edit
+   * @param newKeyword
+   *        new keyword for the bookmark
+   * @returns nsITransaction object
+   */
+  nsITransaction editBookmarkKeyword(in long long id,
+                                           in AString newKeyword);
+
+  /**
+   * Transaction for editting the post data associated with a URI
+   *
+   * @param aURI
+   *        uri to edit
+   * @param aPostData
+   *        post data
+   * @returns nsITransaction object
+   */
+  nsITransaction editURIPostData(in nsIURI aURI,
+                                 in nsIInputStream aPostData);
+
+  /**
+   * Transaction for editting a live bookmark's site URI.
+   *
+   * @param aFolderId
+   *        id of the livemark
+   * @param aURI
+   *        new site uri
+   * @returns nsITransaction object
+   */
+  nsITransaction editLivemarkSiteURI(in long long aFolderId, in nsIURI aURI);
+
+  /**
+   * Transaction for editting a live bookmark's feed URI.
+   *
+   * @param folderId
+   *        id of the livemark
+   * @param uri
+   *        new feed uri
+   * @returns nsITransaction object
+   */
+  nsITransaction editLivemarkFeedURI(in long long folderId, in nsIURI uri);
+
+  /**
+   * Transaction for editting a bookmark's microsummary.
+   *
+   * @param aItemId
+   *        id of the bookmark to edit
+   * @param aNewMicrosummary
+   *        new microsummary for the bookmark
+   * @returns nsITransaction object
+   */
+  nsITransaction editBookmarkMicrosummary(in long long aItemId,
+                                          in nsIMicrosummary aNewMicrosummary);
+
+  /**
+   * Transaction for sorting a folder by name
+   *
+   * @param aFolderId
+   *        id of the folder to sort
+   * @oaram aFolderIndex
+   *        index of the folder to sort
+   * @returns nsITransaction object
+   */
+  nsITransaction sortFolderByName(in long long aFolderId,
+                                  in long long aFolderIndex);
+
+  /**
+   * Transaction for set the bookmarks toolbar folder.
+   *
+   * @param aFolderId
+   *        id of the folder to set as toolbar folder
+   * @returns nsITransaction object
+   */
+  nsITransaction setBookmarksToolbar(in long long aFolderId);
+
+  /**
+   * A reference to the transaction manager
+   */
+  readonly attribute nsITransactionManager transactionManager;
+};
