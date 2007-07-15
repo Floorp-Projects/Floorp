@@ -98,6 +98,16 @@
   [super dealloc];
 }
 
+- (void) addNotificationNames:(NSArray*)aNames
+{
+  [mNames addObjectsFromArray: aNames];
+}
+
+- (void) addEnabledNotifications:(NSArray*)aEnabled
+{
+  [mEnabled addObjectsFromArray: aEnabled];
+}
+
 + (void) notifyWithName:(const nsAString&)aName
                   title:(const nsAString&)aTitle
             description:(const nsAString&)aText
