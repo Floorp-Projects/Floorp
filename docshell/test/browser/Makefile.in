@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -35,23 +34,18 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir  = docshell/test
-
-DIRS += chrome \
-	browser \
-	$(NULL)
+relativesrcdir	= docshell/test/browser 
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = \
-		test_bug344861.html \
-		test_bug387979.html \
+_BROWSER_TEST_FILES =	\
+		browser_bug349769.js \
 		$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+libs:: $(_BROWSER_TEST_FILES)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
