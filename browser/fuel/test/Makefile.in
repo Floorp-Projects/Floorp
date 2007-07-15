@@ -47,7 +47,6 @@ include $(topsrcdir)/config/rules.mk
 _BROWSER_FILES =browser_Application.js \
 		browser_ApplicationPrefs.js \
 		browser_ApplicationStorage.js \
-		browser_Extensions.js \
 		browser_Browser.js \
 		browser_Bookmarks.js \
 		ContentA.html \
