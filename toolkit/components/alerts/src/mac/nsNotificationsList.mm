@@ -14,11 +14,12 @@
  * The Original Code is Growl implementation of nsIAlertsService.
  *
  * The Initial Developer of the Original Code is
- *   Shawn Wilsher <me@shawnwilsher.com>.
+ * Mozilla Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2006-2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,31 +35,57 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAlertsImageLoadListener_h_
-#define nsAlertsImageLoadListener_h_
-
-#import "mozGrowlDelegate.h"
-
-#include "nsIStreamLoader.h"
+#include "nsNotificationsList.h"
 #include "nsStringAPI.h"
 
-class nsAlertsImageLoadListener : public nsIStreamLoaderObserver
+NS_IMPL_ADDREF(nsNotificationsList)
+NS_IMPL_RELEASE(nsNotificationsList)
+
+NS_INTERFACE_MAP_BEGIN(nsNotificationsList)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsINotificationsList)
+  NS_INTERFACE_MAP_ENTRY(nsINotificationsList)
+NS_INTERFACE_MAP_END
+
+nsNotificationsList::nsNotificationsList()
 {
-public:
-  nsAlertsImageLoadListener(const nsAString &aName,
-                            const nsAString& aAlertTitle,
-                            const nsAString& aAlertText,
-                            const nsAString& aAlertCookie,
-                            PRUint32 aAlertListenerKey);
+  mNames   = [[NSMutableArray alloc] init];
+  mEnabled = [[NSMutableArray alloc] init];
+}
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMLOADEROBSERVER
-private:
-  nsString mName;
-  nsString mAlertTitle;
-  nsString mAlertText;
-  nsString mAlertCookie;
-  PRUint32 mAlertListenerKey;
-};
+nsNotificationsList::~nsNotificationsList()
+{
+  [mNames release];
+  [mEnabled release];
+}
 
-#endif // nsAlertsImageLoadListener_h_
+NS_IMETHODIMP
+nsNotificationsList::AddNotification(const nsAString &aName, PRBool aEnabled)
+{
+  NSString *name = [NSString stringWithCharacters: aName.BeginReading()
+                                           length: aName.Length()];
+
+  [mNames addObject: name];
+
+  if (aEnabled)
+    [mEnabled addObject: name];
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNotificationsList::IsNotification(const nsAString &aName, PRBool *retVal)
+{
+  NSString *name = [NSString stringWithCharacters: aName.BeginReading()
+                                           length: aName.Length()];
+
+  *retVal = [mNames containsObject: name] ? PR_TRUE : PR_FALSE;
+  return NS_OK;
+}
+
+void
+nsNotificationsList::informController(mozGrowlDelegate *aController)
+{
+  [aController addNotificationNames: mNames];
+  [aController addEnabledNotifications: mEnabled];
+}
+

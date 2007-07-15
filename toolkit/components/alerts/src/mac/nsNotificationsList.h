@@ -14,11 +14,12 @@
  * The Original Code is Growl implementation of nsIAlertsService.
  *
  * The Initial Developer of the Original Code is
- *   Shawn Wilsher <me@shawnwilsher.com>.
+ * Mozilla Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2006-2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,31 +35,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAlertsImageLoadListener_h_
-#define nsAlertsImageLoadListener_h_
+#ifndef nsNotificationsList_h_
+#define nsNotificationsList_h_
 
+#include "nsINotificationsList.h"
 #import "mozGrowlDelegate.h"
 
-#include "nsIStreamLoader.h"
-#include "nsStringAPI.h"
-
-class nsAlertsImageLoadListener : public nsIStreamLoaderObserver
+class nsNotificationsList : public nsINotificationsList
 {
 public:
-  nsAlertsImageLoadListener(const nsAString &aName,
-                            const nsAString& aAlertTitle,
-                            const nsAString& aAlertText,
-                            const nsAString& aAlertCookie,
-                            PRUint32 aAlertListenerKey);
-
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMLOADEROBSERVER
+  NS_DECL_NSINOTIFICATIONSLIST
+
+  nsNotificationsList();
+
+  void informController(mozGrowlDelegate *aCont);
 private:
-  nsString mName;
-  nsString mAlertTitle;
-  nsString mAlertText;
-  nsString mAlertCookie;
-  PRUint32 mAlertListenerKey;
+  virtual ~nsNotificationsList();
+
+  NSMutableArray *mNames;
+  NSMutableArray *mEnabled;
 };
 
-#endif // nsAlertsImageLoadListener_h_
+#endif // nsNotificationsList_h_
