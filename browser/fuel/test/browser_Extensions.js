@@ -27,9 +27,6 @@ function test() {
   // test the value of the preference root
   is(Application.extensions.all[0].prefs.root, "extensions.inspector@mozilla.org.", "Check an extension preference root");
   
-  // Reset the install event preference, so that we can test it again later
-  inspector.prefs.get("install-event-fired").reset();
-  
   // Make sure the we are given the same extension (cached) so things like .storage work right
   inspector.storage.set("test", "simple check");
   ok(inspector.storage.has("test"), "Checking that extension storage worked");
@@ -60,6 +57,9 @@ function test() {
 
   extmgr.cancelUninstallItem(testdata.inspectorid);
   is(gLastEvent, "cancel", "Checking that cancel event is fired");
+  
+  // Reset the install event preference, so that we can test it again later [do this last in test]
+  inspector.prefs.get("install-event-fired").reset();
 }
 
 function onGenericEvent(event) {
