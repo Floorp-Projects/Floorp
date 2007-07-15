@@ -191,6 +191,19 @@ NS_IMETHODIMP nsPrintSettings::SetPrintInColor(PRBool aPrintInColor)
   return NS_OK;
 }
 
+/* attribute short paperSize; */
+NS_IMETHODIMP nsPrintSettings::GetPaperSize(PRInt32 *aPaperSize)
+{
+  //NS_ENSURE_ARG_POINTER(aPaperSize);
+  *aPaperSize = mPaperSize;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintSettings::SetPaperSize(PRInt32 aPaperSize)
+{
+  mPaperSize = aPaperSize;
+  return NS_OK;
+}
+
 /* attribute short orientation; */
 NS_IMETHODIMP nsPrintSettings::GetOrientation(PRInt32 *aOrientation)
 {
@@ -986,6 +999,7 @@ nsPrintSettings& nsPrintSettings::operator=(const nsPrintSettings& rhs)
   mPaperSizeUnit       = rhs.mPaperSizeUnit;
   mPrintReversed       = rhs.mPrintReversed;
   mPrintInColor        = rhs.mPrintInColor;
+  mPaperSize           = rhs.mPaperSize;
   mOrientation         = rhs.mOrientation;
   mPrintCommand        = rhs.mPrintCommand;
   mNumCopies           = rhs.mNumCopies;

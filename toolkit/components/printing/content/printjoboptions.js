@@ -201,6 +201,7 @@ function createPaperArrayFromDefaults()
     obj.width  = paperWidths[i];
     obj.height = paperHeights[i];
     obj.inches = paperInches[i];
+    obj.paperSize = paperEnums[i]; // deprecated
     
     /* Calculate the width/height in millimeters */
     if (paperInches[i]) {
@@ -237,6 +238,7 @@ function createPaperArrayFromPrinterFeatures()
     obj.width_mm  = gPrefs.getIntPref("print.tmp.printerfeatures."  + printername + ".paper." + i + ".width_mm");
     obj.height_mm = gPrefs.getIntPref("print.tmp.printerfeatures."  + printername + ".paper." + i + ".height_mm");
     obj.inches    = gPrefs.getBoolPref("print.tmp.printerfeatures." + printername + ".paper." + i + ".is_inch");
+    obj.paperSize = 666; // deprecated
     
     /* Calculate the width/height in paper's native units (either inches or millimeters) */
     if (obj.inches) {
@@ -907,6 +909,7 @@ function onAccept()
     print_resolution_name  = gResolutionArray[resolutionSelectedInx].name;
     print_colorspace       = gColorspaceArray[colorspaceSelectedInx].name;
 
+    gPrintSettings.paperSize       = gPaperArray[paperSelectedInx].paperSize; // deprecated
     gPrintSettings.paperSizeType   = print_paper_type;
     gPrintSettings.paperSizeUnit   = print_paper_unit;
     gPrintSettings.paperWidth      = print_paper_width;
@@ -941,6 +944,7 @@ function onAccept()
 
     if (doDebug) {
       dump("onAccept******************************\n");
+      dump("paperSize        "+gPrintSettings.paperSize+" (deprecated)\n");
       dump("paperSizeType    "+print_paper_type+" (should be 1)\n");
       dump("paperSizeUnit    "+print_paper_unit+"\n");
       dump("paperWidth       "+print_paper_width+"\n");
