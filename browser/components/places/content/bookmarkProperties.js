@@ -710,7 +710,7 @@ var BookmarkPropertiesPanel = {
    */
   _getEditTitleTransaction:
   function BPP__getEditTitleTransaction(aItemId, aNewTitle) {
-    return new PlacesEditItemTitleTransaction(aItemId, aNewTitle);
+    return PlacesUtils.ptm.editItemTitle(aItemId, aNewTitle);
   },
 
   /**
@@ -806,13 +806,13 @@ var BookmarkPropertiesPanel = {
       // location
       var url = PlacesUtils._uri(this._element("editURLBar").value);
       if (!this._bookmarkURI.equals(url))
-        transactions.push(new PlacesEditBookmarkURITransaction(itemId, url));
+        transactions.push(PlacesUtils.ptm.editBookmarkURI(itemId, url));
 
       // keyword transactions
       var newKeyword = this._element("keywordTextfield").value;
       if (newKeyword != this._bookmarkKeyword) {
-        transactions.push(
-          new PlacesEditBookmarkKeywordTransaction(itemId, newKeyword));
+        transactions.push(PlacesUtils.ptm.
+                          editBookmarkKeyword(itemId, newKeyword));
       }
 
       // microsummaries
@@ -828,15 +828,14 @@ var BookmarkPropertiesPanel = {
           (newMicrosummary != null &&
            !this._mss.isMicrosummary(itemId, newMicrosummary))) {
         transactions.push(
-          new PlacesEditBookmarkMicrosummaryTransaction(itemId,
-                                                        newMicrosummary));
+          PlacesUtils.ptm.editBookmarkMicrosummary(itemId, newMicrosummary));
       }
 
       // load in sidebar
       var loadInSidebarChecked = this._element("loadInSidebarCheckbox").checked;
       if (loadInSidebarChecked != this._loadBookmarkInSidebar) {
         transactions.push(
-          new PlacesSetLoadInSidebarTransaction(itemId, loadInSidebarChecked));
+          PlacesUtils.ptm.setLoadInSidebar(itemId, loadInSidebarChecked));
       }
     }
     else if (this._itemType == LIVEMARK_CONTAINER) {
@@ -844,7 +843,7 @@ var BookmarkPropertiesPanel = {
       var feedURI = PlacesUtils._uri(feedURIString);
       if (!this._feedURI.equals(feedURI)) {
         transactions.push(
-          new PlacesEditLivemarkFeedURITransaction(this._folderId, feedURI));
+          PlacesUtils.ptm.editLivemarkFeedURI(this._folderId, feedURI));
       }
 
       // Site Location is empty, we can set its URI to null
@@ -856,7 +855,7 @@ var BookmarkPropertiesPanel = {
       if ((!newSiteURI && this._siteURI)  ||
           (newSiteURI && (!this._siteURI || !this._siteURI.equals(newSiteURI)))) {
         transactions.push(
-          new PlacesEditLivemarkSiteURITransaction(this._folderId, newSiteURI));
+          PlacesUtils.ptm.editLivemarkSiteURI(this._folderId, newSiteURI));
       }
     }
 
@@ -865,7 +864,7 @@ var BookmarkPropertiesPanel = {
     if (transactions.length > 0) {
       window.arguments[0].performed = true;
       var aggregate =
-        new PlacesAggregateTransaction(this._getDialogTitle(), transactions);
+        PlacesUtils.ptm.aggregateTransactions(this._getDialogTitle(), transactions);
       this._tm.doTransaction(aggregate);
     }
   },
@@ -911,20 +910,20 @@ var BookmarkPropertiesPanel = {
     var microsummary = this._element("namePicker").selectedItem.microsummary;
     if (microsummary) {
       childTransactions.push(
-        new PlacesEditBookmarkMicrosummaryTransaction(-1, microsummary));
+        PlacesUtils.ptm.editBookmarkMicrosummary(-1, microsummary));
     }
 
-    var transactions = [new PlacesCreateItemTransaction(uri, aContainer, aIndex,
-                                                        title, keyword,
-                                                        annotations,
-                                                        childTransactions)];
+    var transactions = [PlacesUtils.ptm.createItem(uri, aContainer, aIndex,
+                                                   title, keyword,
+                                                   annotations,
+                                                   childTransactions)];
 
     if (this._postData) {
-      transactions.push(new PlacesEditURIPostDataTransaction(uri,
-                                                             this._postData));
+      transactions.push(
+        PlacesUtils.ptm.editURIPostData(uri, this._postData));
     }
-    return new PlacesAggregateTransaction(this._getDialogTitle(),
-                                          transactions);
+
+    return PlacesUtils.ptm.aggregateTransactions(this._getDialogTitle(), transactions);
   },
 
   /**
@@ -936,7 +935,7 @@ var BookmarkPropertiesPanel = {
     for (var i = 0; i < this._URIList.length; ++i) {
       var uri = this._URIList[i];
       var title = this._getURITitleFromHistory(uri);
-      transactions.push(new PlacesCreateItemTransaction(uri, -1, -1, title));
+      transactions.push(PlacesUtils.ptm.createItem(uri, -1, -1, title));
     }
     return transactions; 
   },
@@ -956,9 +955,8 @@ var BookmarkPropertiesPanel = {
     if (description)
       annotations.push(this._getDescriptionAnnotation(description));
 
-    return new PlacesCreateFolderTransaction(folderName, aContainer, aIndex,
-                                             annotations,
-                                             childItemsTransactions);
+    return PlacesUtils.ptm.createFolder(folderName, aContainer, aIndex,
+                                        annotations, childItemsTransactions);
   },
 
   /**
@@ -976,9 +974,8 @@ var BookmarkPropertiesPanel = {
       siteURI = PlacesUtils._uri(siteURIString);
 
     var name = this._element("namePicker").value;
-    return new PlacesCreateLivemarkTransaction(feedURI, siteURI,
-                                                name, aContainer, 
-                                                aIndex);
+    return PlacesUtils.ptm.createLivemark(feedURI, siteURI, name,
+                                          aContainer, aIndex);
   },
 
   /**

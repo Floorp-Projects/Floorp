@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Asaf Romano <mano@mozilla.com>
+ *   Sungjoon Steve Won <stevewon@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -72,11 +73,11 @@ var gMoveBookmarksDialog = {
         continue;
 
       transactions.push(new
-        PlacesMoveItemTransaction(this._nodes[i].itemId, selectedFolderID, -1));
+        PlacesUtils.txn.moveItem(this._nodes[i].itemId, selectedFolderId, -1));
     }
 
     if (transactions.length != 0) {
-      var txn = new PlacesAggregateTransaction("Move Items", transactions);
+      var txn = PlacesUtils.ptm.aggregateTransactions("Move Items", transactions);
       this._tm.doTransaction(txn);
     }
   },
