@@ -8,7 +8,7 @@ html {
   font: 3mm tahoma,arial,helvetica,sans-serif;
 }
 
-#feedBody, #feedError {
+#feedBody {
   border: 1px solid THreeDShadow;
   padding: 3em;
   -moz-padding-start: 30px;
