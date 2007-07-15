@@ -298,19 +298,6 @@ ReadManifestIntoMemory(xptiInterfaceInfoManager* aMgr,
     if(!aMgr->GetCloneOfManifestLocation(getter_AddRefs(aFile)) || !aFile)
         return nsnull;
 
-#ifdef DEBUG
-    {
-        static PRBool shown = PR_FALSE;
-        
-        nsCAutoString path;
-        if(!shown && NS_SUCCEEDED(aFile->GetNativePath(path)) && !path.IsEmpty())
-        {
-            printf("Type Manifest File: %s\n", path.get());
-            shown = PR_TRUE;        
-        } 
-    }            
-#endif
-
     if(NS_FAILED(aFile->GetFileSize(&fileSize)) || !(flen = nsInt64(fileSize)))
         return nsnull;
 
