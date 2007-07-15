@@ -1348,11 +1348,11 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
         jsval *argv = nsnull;
         rv = cc->GetArgvPtr(&argv);
         NS_ENSURE_SUCCESS(rv, rv);
-        if (JSVAL_IS_PRIMITIVE(argv[1]) ||
-            !JS_ValueToObject(cx, argv[1], &targetObject)) {
+        if (!JSVAL_IS_OBJECT(argv[1])) {
             return ReportOnCaller(cc, ERROR_SCOPE_OBJ,
                                   PromiseFlatCString(registryLocation).get());
         }
+        targetObject = JSVAL_TO_OBJECT(argv[1]);
     } else {
         // Our targetObject is the caller's global object. Find it by
         // walking the calling object's parent chain.
