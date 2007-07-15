@@ -1145,8 +1145,12 @@ nsChromeRegistry::CheckForNewChrome()
 
     linstalled->SetNativeLeafName(NS_LITERAL_CSTRING("installed-chrome.txt"));
 
+    rv = linstalled->Exists(&exists);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // process installed-chrome.txt into app-chrome.manifest
-    ProcessNewChromeFile(linstalled, manifestURI);
+    if (exists)
+      ProcessNewChromeFile(linstalled, manifestURI);
   }
 
   nsCOMPtr<nsIProperties> dirSvc (do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
