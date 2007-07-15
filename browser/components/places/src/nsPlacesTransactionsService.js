@@ -36,23 +36,18 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-const Cu = Components.utils;
+
 const loadInSidebarAnno = "bookmarkProperties/loadInSidebar";
 const descriptionAnno = "bookmarkProperties/description";
-const CLASS_ID = Components.ID("bec866cc-9dd0-42a0-a196-6fdaa16021c4");
+const CLASS_ID = Components.ID("c0844a84-5a12-4808-80a8-809cb002bb4f");
 const CONTRACT_ID = "@mozilla.org/browser/placesTransactionsService;1";
 
-var toolbarFolder = null;
 var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"].
              getService(Components.interfaces.mozIJSSubScriptLoader);
 loader.loadSubScript("chrome://global/content/debug.js");
 loader.loadSubScript("chrome://browser/content/places/utils.js");
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-function LOG(str) {
-  dump("*** " + str + "\n");
-};
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // The minimum amount of transactions we should tell our observers to begin
 // batching (rather than letting them do incremental drawing).
@@ -165,6 +160,12 @@ function placesBaseTransaction() {
 }
 
 placesBaseTransaction.prototype = {
+  // for child-transactions
+  get wrappedJSObject() {
+    return this;
+  },
+
+  // nsITransaction
   redoTransaction: function PIT_redoTransaction() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
@@ -177,17 +178,8 @@ placesBaseTransaction.prototype = {
     return false;
   },
 
-  _ifaces: [Ci.nsITransaction, Ci.nsIClassInfo, Ci.nsISupports],
-
-  // nsIClassInfo, allows setting expando properties on transactions
-  flags: Ci.nsIClassInfo.DOM_OBJECT,
-  classDescription: "Places Transaction",
-  getInterface: function(aCount) {
-    aCount.value = this._ifaces.length;
-    return this._ifaces;
-  },
-
-  QueryInterface: XPCOMUtils.generateQI(this._ifaces),
+  // nsISupports
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITransaction, Ci.nsIClassInfo, Ci.nsISupports]),
 };
 
 function placesAggregateTransactions(name, transactions) {
@@ -229,10 +221,10 @@ placesAggregateTransactions.prototype = {
   },
 
   commit: function PAT_commit(aUndo) {
-    for (var i = this._transactions.length - 1; i >= 0; --i) {
+    for (var i=0; i < this._transactions.length; ++i) {
       var txn = this._transactions[i];
       if (this.container > -1) 
-        txn.container = this.container;
+        txn.wrappedJSObject.container = this.container;
       if (aUndo)
         txn.undoTransaction();
       else
@@ -263,12 +255,12 @@ placesCreateFolderTransactions.prototype = {
   doTransaction: function PCFT_doTransaction() {
     this._id = PlacesUtils.bookmarks.createFolder(this._container, 
                                                   this._name, this._index);
-    if ((this._annotations != null) && (this._annotations.length > 0))
+    if (this._annotations && this._annotations.length > 0)
       PlacesUtils.setAnnotationsForItem(this.id, this._annotations);
 
     for (var i = 0; i < this._childItemsTransactions.length; ++i) {
       var txn = this._childItemsTransactions[i];
-      txn.container = this._id;
+      txn.wrappedJSObject.container = this._id;
       txn.doTransaction();
     }
   },
@@ -312,7 +304,7 @@ placesCreateItemTransactions.prototype = {
 
     for (var i = 0; i < this._childTransactions.length; ++i) {
       var txn = this._childTransactions[i];
-      txn.id = this._id;
+      txn.wrappedJSObject.id = this._id;
       txn.doTransaction();
     }
   },
@@ -371,7 +363,7 @@ placesCreateLivemarkTransactions.prototype = {
     this._id = PlacesUtils.livemarks.createLivemark(this._container, this._name,
                                                     this._siteURI, this._feedURI,
                                                     this._index);
-    if (this._annotations)
+    if (this._annotations && this._annotations.length > 0)
       PlacesUtils.setAnnotationsForItem(this._id, this._annotations);
   },
 
@@ -456,7 +448,8 @@ placesRemoveItemTransaction.prototype = {
     else // TYPE_SEPARATOR
       PlacesUtils.bookmarks.insertSeparator(this._oldContainer, this._oldIndex);
 
-    PlacesUtils.setAnnotationsForItem(this._id, this._annotations);
+    if (this._annotations.length > 0)
+      PlacesUtils.setAnnotationsForItem(this._id, this._annotations);
   },
 
   /**
@@ -465,7 +458,8 @@ placesRemoveItemTransaction.prototype = {
   */
   _saveFolderContents: function PRIT__saveFolderContents() {
     this._transactions = [];
-    var contents = PlacesUtils.getFolderContents(this._id, false, false).root;
+    var contents =
+      PlacesUtils.getFolderContents(this._id, false, false).root;
     for (var i = 0; i < contents.childCount; ++i) {
       this._transactions
           .push(new placesRemoveItemTransaction(contents.getChild(i).itemId));
