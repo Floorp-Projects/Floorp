@@ -522,3 +522,4 @@ extensions/talkback@mozilla.org/components/master.ini
 extensions/talkback@mozilla.org/components/talkback.so
 #endif
 #endif
+components/airbag.xpt

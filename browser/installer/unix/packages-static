@@ -79,6 +79,7 @@ bin/components/content_xslt.xpt
 bin/components/content_xtf.xpt
 bin/components/contentprefs.xpt
 bin/components/cookie.xpt
+bin/components/crashreporter.xpt
 bin/components/directory.xpt
 bin/components/docshell.xpt
 bin/components/dom.xpt

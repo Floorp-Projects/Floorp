@@ -86,7 +86,7 @@ REQUIRES += tracemalloc
 endif
 
 ifdef MOZ_AIRBAG
-REQUIRES += airbag
+REQUIRES += crashreporter
 endif
 
 FORCE_STATIC_LIB = 1
