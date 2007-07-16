@@ -864,6 +864,7 @@ gfxPangoFontGroup::InitTextRun(gfxTextRun *aTextRun, const gchar *aUTF8Text,
     CreateGlyphRunsXft(aTextRun, aUTF8Text + aUTF8HeaderLength, aUTF8Length - aUTF8HeaderLength);
 #else
 #if defined(ENABLE_XFT_FAST_PATH_8BIT)
+    // We need to always use Pango for RTL text, in case glyph mirroring is required
     if (aTake8BitPath && !aTextRun->IsRightToLeft()) {
         CreateGlyphRunsXft(aTextRun, aUTF8Text + aUTF8HeaderLength, aUTF8Length - aUTF8HeaderLength);
         return;
