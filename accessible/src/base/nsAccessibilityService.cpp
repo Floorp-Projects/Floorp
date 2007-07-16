@@ -1009,26 +1009,38 @@ nsAccessibilityService::GetStringStates(PRUint32 aStates, PRUint32 aExtraStates,
     stringStates->Add(NS_LITERAL_STRING("checkable"));
 
   //extraStates
+  if (aExtraStates & nsIAccessibleStates::EXT_STATE_SUPPORTS_AUTOCOMPLETION)
+    stringStates->Add(NS_LITERAL_STRING("autocompletion"));
+  if (aExtraStates & nsIAccessibleStates::EXT_STATE_DEFUNCT)
+    stringStates->Add(NS_LITERAL_STRING("defunct"));
   if (aExtraStates & nsIAccessibleStates::EXT_STATE_SELECTABLE_TEXT)
     stringStates->Add(NS_LITERAL_STRING("selectable text"));
   if (aExtraStates & nsIAccessibleStates::EXT_STATE_EDITABLE)
     stringStates->Add(NS_LITERAL_STRING("editable"));
   if (aExtraStates & nsIAccessibleStates::EXT_STATE_ACTIVE)
     stringStates->Add(NS_LITERAL_STRING("active"));
-  if (aExtraStates & nsIAccessibleStates::EXT_STATE_EXPANDABLE)
-    stringStates->Add(NS_LITERAL_STRING("expandable"));
   if (aExtraStates & nsIAccessibleStates::EXT_STATE_MODAL)
     stringStates->Add(NS_LITERAL_STRING("modal"));
   if (aExtraStates & nsIAccessibleStates::EXT_STATE_MULTI_LINE)
     stringStates->Add(NS_LITERAL_STRING("multi line"));
-  if (aExtraStates & nsIAccessibleStates::EXT_STATE_SENSITIVE)
-    stringStates->Add(NS_LITERAL_STRING("sensitive"));
+  if (aExtraStates & nsIAccessibleStates::EXT_STATE_HORIZONTAL)
+    stringStates->Add(NS_LITERAL_STRING("horizontal"));
+  if (aExtraStates & nsIAccessibleStates::EXT_STATE_OPAQUE)
+    stringStates->Add(NS_LITERAL_STRING("opaque"));
   if (aExtraStates & nsIAccessibleStates::EXT_STATE_SINGLE_LINE)
     stringStates->Add(NS_LITERAL_STRING("single line"));
   if (aExtraStates & nsIAccessibleStates::EXT_STATE_TRANSIENT)
     stringStates->Add(NS_LITERAL_STRING("transient"));
   if (aExtraStates & nsIAccessibleStates::EXT_STATE_VERTICAL)
     stringStates->Add(NS_LITERAL_STRING("vertical"));
+  if (aExtraStates & nsIAccessibleStates::EXT_STATE_STALE)
+    stringStates->Add(NS_LITERAL_STRING("stale"));
+  if (aExtraStates & nsIAccessibleStates::EXT_STATE_ENABLED)
+    stringStates->Add(NS_LITERAL_STRING("enabled"));
+  if (aExtraStates & nsIAccessibleStates::EXT_STATE_SENSITIVE)
+    stringStates->Add(NS_LITERAL_STRING("sensitive"));
+  if (aExtraStates & nsIAccessibleStates::EXT_STATE_EXPANDABLE)
+    stringStates->Add(NS_LITERAL_STRING("expandable"));
 
   //unknown states
   PRUint32 stringStatesLength = 0;
