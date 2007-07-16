@@ -202,7 +202,7 @@ bin\components\WebContentConverter.js
 bin\components\nsBrowserContentHandler.js
 bin\components\nsBrowserGlue.js
 bin\components\nsSetDefaultBrowser.js
-bin\components\nsCloseAllWindows.js
+bin\components\nsTryToClose.js
 bin\components\nsDictionary.js
 bin\components\nsHelperAppDlg.js
 bin\components\nsProxyAutoConfig.js
