@@ -63,14 +63,14 @@ Tester.prototype = {
 
     var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                        getService(Ci.mozIJSSubScriptLoader);
-    scriptLoader.loadSubScript(this.currentTest.path, this.currentTest.scope);
-
-    // Run the test
-    var exception = null;
     try {
+      scriptLoader.loadSubScript(this.currentTest.path, this.currentTest.scope);
+
+      // Run the test
       this.currentTest.scope.test();
     } catch (ex) {
       this.currentTest.tests.push(new testResult(false, "Exception thrown", ex, false));
+      this.currentTest.scope.done = true;
     }
 
     // If the test ran synchronously, move to the next test,
