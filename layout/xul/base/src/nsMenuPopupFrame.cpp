@@ -512,7 +512,6 @@ nsMenuPopupFrame::ShowPopup(PRBool aIsContextMenu, PRBool aSelectFirstItem)
       (static_cast<nsMenuFrame*>(parent))->PopupOpened();
       if (!weakFrame.IsAlive())
         return PR_FALSE;
-      PresContext()->RootPresContext()->NotifyAddedActivePopupToTop(this);
     }
 
     // the frames for the child menus have not been created yet, so tell the
@@ -568,7 +567,6 @@ nsMenuPopupFrame::HidePopup(PRBool aDeselectMenu)
   nsIFrame* parent = GetParent();
   if (parent && parent->GetType() == nsGkAtoms::menuFrame) {
     (static_cast<nsMenuFrame*>(parent))->PopupClosed(aDeselectMenu);
-    PresContext()->RootPresContext()->NotifyRemovedActivePopup(this);
   }
 }
 
@@ -1630,11 +1628,6 @@ nsMenuPopupFrame::Destroy()
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm)
     pm->PopupDestroyed(this);
-
-  nsPresContext* rootPresContext = PresContext()->RootPresContext();
-  if (rootPresContext->ContainsActivePopup(this)) {
-    rootPresContext->NotifyRemovedActivePopup(this);
-  }
 
   nsBoxFrame::Destroy();
 }

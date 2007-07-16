@@ -5381,16 +5381,20 @@ PresShell::HandleEvent(nsIView         *aView,
     // list.
     if (framePresContext == rootPresContext &&
         frame == FrameManager()->GetRootFrame()) {
-      const nsTArray<nsIFrame*>& popups = rootPresContext->GetActivePopups();
-      PRInt32 i;
-      // Search from top to bottom
-      for (i = popups.Length() - 1; i >= 0; i--) {
-        nsIFrame* popup = popups[i];
-        if (popup->GetOverflowRect().Contains(
-                nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, popup))) {
-          // The event should target the popup
-          frame = popup;
-          break;
+
+      nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+      if (pm) {
+        nsTArray<nsIFrame*> popups = pm->GetOpenPopups();
+        PRInt32 i;
+        // Search from top to bottom
+        for (i = 0; i < popups.Length(); i++) {
+          nsIFrame* popup = popups[i];
+          if (popup->GetOverflowRect().Contains(
+              nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, popup))) {
+            // The event should target the popup
+            frame = popup;
+            break;
+          }
         }
       }
     }
