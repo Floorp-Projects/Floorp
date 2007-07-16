@@ -546,8 +546,10 @@ args_or_call_trace(JSTracer *trc, JSObject *obj)
     JSStackFrame *fp;
 
     fp = (JSStackFrame *) JS_GetPrivate(trc->context, obj);
-    if (fp && (fp->flags & JSFRAME_GENERATOR))
-        js_TraceGenerator(trc, FRAME_TO_GENERATOR(fp));
+    if (fp && (fp->flags & JSFRAME_GENERATOR)) {
+        JS_CALL_OBJECT_TRACER(trc, FRAME_TO_GENERATOR(fp)->obj,
+                              "FRAME_TO_GENERATOR(fp)->obj");
+    }
 }
 #else
 # define args_or_call_trace NULL
