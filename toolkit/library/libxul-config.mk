@@ -21,6 +21,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Shawn Wilsher <me@shawnwilsher.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -201,6 +202,7 @@ endif
 
 ifdef MOZ_STORAGE
 COMPONENT_LIBS += storagecomps
+EXTRA_DSO_LIBS += sqlite3
 endif
 
 ifdef MOZ_PLACES

@@ -45,9 +45,16 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE           = sqlite3
-LIBRARY_NAME     = sqlite3_s
-MODULE_NAME      = sqlite3
-FORCE_STATIC_LIB = 1
+LIBRARY_NAME     = sqlite3
+FORCE_SHARED_LIB = 1
+VISIBILITY_FLAGS =
+
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
+ifndef GNU_CC
+MAPFILE = $(LIBRARY_NAME).map
+DEFFILE = $(win_srcdir)/sqlite.def
+endif
+endif
 
 ifdef GNU_CC
 MODULE_OPTIMIZE_FLAGS = -O3
@@ -77,15 +84,7 @@ DEFINES += -DOS2_HIGH_MEMORY
 endif
 endif
 
-ifdef ENABLE_TESTS
-##LIBS = $(DIST)/lib/$(LIB_PREFIX)sqlite3_s.$(LIB_SUFFIX)
-##SIMPLE_PROGRAMS = sqlite-shell
-endif
-
 include $(topsrcdir)/config/rules.mk
-
-sqlite-shell.$(OBJ_SUFFIX): shell.c
-	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(_VPATH_SRCS)
 
 # next line allows use of MOZ_OBJDIR in .mozconfig with older gcc on BeOS, maybe others
 LOCAL_INCLUDES += -I$(srcdir)
