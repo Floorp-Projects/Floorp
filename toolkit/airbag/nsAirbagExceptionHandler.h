@@ -49,6 +49,7 @@ nsresult SetMinidumpPath(const nsAString& aPath);
 nsresult UnsetExceptionHandler();
 nsresult AnnotateCrashReport(const nsACString &key, const nsACString &data);
 nsresult SetRestartArgs(int argc, char **argv);
+nsresult SetupExtraData(nsILocalFile* aAppDataDirectory);
 }
 
 #endif /* nsAirbagExceptionHandler_h__ */
