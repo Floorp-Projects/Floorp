@@ -670,29 +670,23 @@ generator_finalize(JSContext *cx, JSObject *obj)
     }
 }
 
-void
-js_TraceGenerator(JSTracer *trc, JSGenerator *gen)
-{
-    /*
-     * We must trace argv[-2], as js_TraceStackFrame will not. Note that
-     * js_TraceStackFrame will trace thisp (argv[-1]) and actual arguments,
-     * plus any missing formals and local GC roots.
-     */
-    JS_ASSERT(!JSVAL_IS_PRIMITIVE(gen->frame.argv[-2]));
-    JS_CALL_OBJECT_TRACER(trc, JSVAL_TO_OBJECT(gen->frame.argv[-2]),
-                          "generator");
-    js_TraceStackFrame(trc, &gen->frame);
-}
-
-
 static void
 generator_trace(JSTracer *trc, JSObject *obj)
 {
     JSGenerator *gen;
 
     gen = (JSGenerator *) JS_GetPrivate(trc->context, obj);
-    if (gen)
-        js_TraceGenerator(trc, gen);
+    if (gen) {
+        /*
+         * We must trace argv[-2], as js_TraceStackFrame will not.  Note
+         * that js_TraceStackFrame will trace thisp (argv[-1]) and actual
+         * arguments, plus any missing formals and local GC roots.
+         */
+        JS_ASSERT(!JSVAL_IS_PRIMITIVE(gen->frame.argv[-2]));
+        JS_CALL_OBJECT_TRACER(trc, JSVAL_TO_OBJECT(gen->frame.argv[-2]),
+                              "generator");
+        js_TraceStackFrame(trc, &gen->frame);
+    }
 }
 
 JSClass js_GeneratorClass = {
@@ -738,6 +732,8 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
           JS_malloc(cx, sizeof(JSGenerator) + (nslots - 1) * sizeof(jsval));
     if (!gen)
         goto bad;
+
+    gen->obj = obj;
 
     /* Steal away objects reflecting fp and point them at gen->frame. */
     gen->frame.callobj = fp->callobj;

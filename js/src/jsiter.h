@@ -91,6 +91,8 @@ typedef enum JSGeneratorState {
 } JSGeneratorState;
 
 struct JSGenerator {
+    JSGenerator         *next;
+    JSObject            *obj;
     JSGeneratorState    state;
     JSStackFrame        frame;
     JSArena             arena;
@@ -102,9 +104,6 @@ struct JSGenerator {
 
 extern JSObject *
 js_NewGenerator(JSContext *cx, JSStackFrame *fp);
-
-extern void
-js_TraceGenerator(JSTracer *trc, JSGenerator *gen);
 
 #endif
 
