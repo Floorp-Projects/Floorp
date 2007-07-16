@@ -78,7 +78,7 @@ extern JSInt64
 PRMJ_Now(void);
 
 /* Release the resources associated with PRMJ_Now; don't call PRMJ_Now again */
-#ifdef JS_THREADSAFE
+#if defined(JS_THREADSAFE) && defined(XP_WIN)
 extern void
 PRMJ_NowShutdown(void);
 #else
