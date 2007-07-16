@@ -920,10 +920,9 @@ nsPrintSettings::GetMarginInTwips(nsMargin& aMargin)
 
 /** ---------------------------------------------------
  *  See documentation in nsPrintOptionsImpl.h
- *	@update 6/21/00 dwc
  */
 NS_IMETHODIMP 
-nsPrintSettings::GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight)
+nsPrintSettings::GetEffectivePageSize(double *aWidth, double *aHeight)
 {
   if (mPaperSizeUnit == kPaperSizeInches) {
     *aWidth  = NS_INCHES_TO_TWIPS(float(mPaperWidth));
@@ -931,6 +930,11 @@ nsPrintSettings::GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight)
   } else {
     *aWidth  = NS_MILLIMETERS_TO_TWIPS(float(mPaperWidth));
     *aHeight = NS_MILLIMETERS_TO_TWIPS(float(mPaperHeight));
+  }
+  if (kLandscapeOrientation == mOrientation) {
+    double temp = *aWidth;
+    *aWidth = *aHeight;
+    *aHeight = temp;
   }
   return NS_OK;
 }
