@@ -169,7 +169,6 @@ function saveDocument(aDocument, aSkipPrompt)
                aDocument.contentType, false, null, null, aSkipPrompt);
 }
 
-
 function DownloadListener(win, transfer) {
   function makeClosure(name) {
     return function() {
