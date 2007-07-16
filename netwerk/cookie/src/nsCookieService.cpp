@@ -446,34 +446,22 @@ nsCookieService::InitDB()
   } else {
     // table already exists; check the schema version before reading
     PRInt32 dbSchemaVersion;
-    {
-      // scope the statement, so the write lock is released when finished
-      nsCOMPtr<mozIStorageStatement> stmt;
-      rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("PRAGMA user_version"),
-                                    getter_AddRefs(stmt));
+    rv = mDBConn->GetSchemaVersion(&dbSchemaVersion);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    if (dbSchemaVersion == 0) {
+      NS_WARNING("couldn't get schema version!");
+        
+      // the table may be usable; someone might've just clobbered the schema
+      // version. we can treat this case like a downgrade using the codepath
+      // below, by verifying the columns we care about are all there. for now,
+      // re-set the schema version in the db, in case the checks succeed (if
+      // they don't, we're dropping the table anyway).
+      rv = mDBConn->SetSchemaVersion(COOKIES_SCHEMA_VERSION);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      PRBool hasResult;
-      rv = stmt->ExecuteStep(&hasResult);
-      if (NS_SUCCEEDED(rv) && hasResult) {
-        dbSchemaVersion = stmt->AsInt32(0);
-      } else {
-        NS_WARNING("couldn't get schema version!");
-        stmt = nsnull;
-        
-        // the table may be usable; someone might've just clobbered the schema
-        // version. we can treat this case like a downgrade using the codepath
-        // below, by verifying the columns we care about are all there. for now,
-        // re-set the schema version in the db, in case the checks succeed (if
-        // they don't, we're dropping the table anyway).
-        nsCAutoString stmtString(NS_LITERAL_CSTRING("PRAGMA user_version="));
-        stmtString.AppendInt(COOKIES_SCHEMA_VERSION);
-        rv = mDBConn->ExecuteSimpleSQL(stmtString);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        // set this to a large number, to force the downgrade codepath
-        dbSchemaVersion = PR_INT32_MAX;
-      }
+      // set this to a large number, to force the downgrade codepath
+      dbSchemaVersion = PR_INT32_MAX;
     }
 
     if (dbSchemaVersion != COOKIES_SCHEMA_VERSION) {
@@ -542,9 +530,7 @@ nsresult
 nsCookieService::CreateTable()
 {
   // set the schema version, before creating the table
-  nsCAutoString stmtString(NS_LITERAL_CSTRING("PRAGMA user_version="));
-  stmtString.AppendInt(COOKIES_SCHEMA_VERSION);
-  nsresult rv = mDBConn->ExecuteSimpleSQL(stmtString);
+  nsresult rv = mDBConn->SetSchemaVersion(COOKIES_SCHEMA_VERSION);
   if (NS_FAILED(rv)) return rv;
 
   // create the table
