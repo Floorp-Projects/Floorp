@@ -81,7 +81,6 @@
 #include "nsIDeviceContextSpec.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
-#include "nsView.h" // For nsView::GetViewFor
 
 #include "nsIPageSequenceFrame.h"
 #include "nsIURL.h"
@@ -846,9 +845,9 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
         // (this won't break anyone, since page layout mode was never really
         // usable)
 #endif
-        PRInt32 pageWidth = 0, pageHeight = 0;
-        mPresContext->GetPrintSettings()->GetPageSizeInTwips(&pageWidth,
-                                                             &pageHeight);
+        double pageWidth = 0, pageHeight = 0;
+        mPresContext->GetPrintSettings()->GetEffectivePageSize(&pageWidth,
+                                                               &pageHeight);
         mPresContext->SetPageSize(
           nsSize(mPresContext->TwipsToAppUnits(pageWidth),
                  mPresContext->TwipsToAppUnits(pageHeight)));
@@ -2166,7 +2165,7 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
 
   // Create a child window of the parent that is our "root view/window"
   // if aParentWidget has a view, we'll hook our view manager up to its view tree
-  nsIView* containerView = nsView::GetViewFor(aParentWidget);
+  nsIView* containerView = nsIView::GetViewFor(aParentWidget);
 
   if (containerView) {
     // see if the containerView has already been hooked into a foreign view manager hierarchy
