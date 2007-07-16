@@ -47,6 +47,7 @@
 #include "nsIMenuRollup.h"
 #include "nsIDOMKeyListener.h"
 #include "nsCOMPtr.h"
+#include "nsTArray.h"
 #include "nsITimer.h"
 #include "nsThreadUtils.h"
 
@@ -468,6 +469,12 @@ public:
    * Return true if the popup for the supplied menu parent is open.
    */
   PRBool IsPopupOpenForMenuParent(nsIMenuParent* aMenuParent);
+
+  /**
+   * Return an array of all the open popup frames for menus, in order from
+   * top to bottom.
+   */
+  nsTArray<nsIFrame *> GetOpenPopups();
 
   /**
    * Return false if a popup may not be opened. This will return false if the
