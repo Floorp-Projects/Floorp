@@ -206,7 +206,7 @@ bin/components/nsLoginManager.js
 bin/components/nsLoginManagerPrompter.js
 bin/components/storage-Legacy.js
 bin/components/jsconsole-clhandler.js
-bin/components/nsCloseAllWindows.js
+bin/components/nsTryToClose.js
 bin/components/nsDictionary.js
 bin/components/nsFilePicker.js
 bin/components/nsHelperAppDlg.js
