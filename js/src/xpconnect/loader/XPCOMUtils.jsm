@@ -84,8 +84,6 @@
 
 EXPORTED_SYMBOLS = [ "XPCOMUtils" ];
 
-debug("*** loading XPCOMUtils\n");
-
 const Ci = Components.interfaces;
 
 var XPCOMUtils = {
@@ -148,10 +146,11 @@ var XPCOMUtils = {
       },
 
       registerSelf: function(compMgr, fileSpec, location, type) {
+        var componentCount = 0;
         debug("*** registering " + fileSpec.leafName + ": [ ");
         compMgr.QueryInterface(Ci.nsIComponentRegistrar);
         for each (let classDesc in classes) {
-          debug(classDesc.cid + " ");
+          debug((componentCount++ ? ", " : "") + classDesc.className);
           compMgr.registerFactoryLocation(classDesc.cid,
                                           classDesc.className,
                                           classDesc.contractID,
@@ -162,20 +161,21 @@ var XPCOMUtils = {
 
         if (postRegister)
           postRegister(compMgr, fileSpec, componentsArray);
-        debug("]\n");
+        debug(" ]\n");
       },
 
       unregisterSelf: function(compMgr, fileSpec, location) {
+        var componentCount = 0;
         debug("*** unregistering " + fileSpec.leafName + ": [ ");
         compMgr.QueryInterface(Ci.nsIComponentRegistrar);
         if (preUnregister)
           preUnregister(compMgr, fileSpec, componentsArray);
 
         for each (let classDesc in classes) {
-          debug(classDesc.className + " ");
+          debug((componentCount++ ? ", " : "") + classDesc.className);
           compMgr.unregisterFactoryLocation(classDesc.cid, fileSpec);
         }
-        debug("]\n");
+        debug(" ]\n");
       },
 
       canUnload: function(compMgr) {
