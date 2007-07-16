@@ -157,12 +157,17 @@ NS_IMETHODIMP imgContainer::GetNumFrames(PRUint32 *aNumFrames)
 /* gfxIImageFrame getFrameAt (in unsigned long index); */
 NS_IMETHODIMP imgContainer::GetFrameAt(PRUint32 index, gfxIImageFrame **_retval)
 {
-  NS_ENSURE_ARG(index < static_cast<PRUint32>(mFrames.Count()));
-  
   NS_ASSERTION(_retval, "imgContainer::GetFrameAt; Invalid Arg");
   if (!_retval)
     return NS_ERROR_INVALID_POINTER;
 
+  if (!mFrames.Count()) {
+    *_retval = nsnull;
+    return NS_OK;
+  }
+
+  NS_ENSURE_ARG(index < static_cast<PRUint32>(mFrames.Count()));
+  
   if (!(*_retval = mFrames[index]))
     return NS_ERROR_FAILURE;
 
