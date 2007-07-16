@@ -805,6 +805,7 @@ JS_ShutDown(void)
 #ifdef JS_THREADSAFE
     js_CleanupLocks();
 #endif
+    PRMJ_NowShutdown();
 }
 
 JS_PUBLIC_API(void *)
