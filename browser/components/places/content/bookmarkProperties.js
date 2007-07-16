@@ -798,8 +798,9 @@ var BookmarkPropertiesPanel = {
     // description
     var description = this._element("descriptionTextfield").value;
     if (description != this._itemDescription) {
-      transactions.push(new PlacesEditItemDescriptionTransaction(
-        itemId, description, this._itemType != BOOKMARK_ITEM));
+      transactions.push(PlacesUtils.ptm.
+                        editItemDescription(itemId, description,
+                        this._itemType != BOOKMARK_ITEM));
     }
 
     if (this._itemType == BOOKMARK_ITEM) {
