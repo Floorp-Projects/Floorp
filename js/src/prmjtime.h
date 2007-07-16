@@ -77,6 +77,14 @@ struct PRMJTime {
 extern JSInt64
 PRMJ_Now(void);
 
+/* Release the resources associated with PRMJ_Now; don't call PRMJ_Now again */
+#ifdef JS_THREADSAFE
+extern void
+PRMJ_NowShutdown(void);
+#else
+#define PRMJ_NowShutdown()
+#endif
+
 /* get the difference between this time zone and  gmt timezone in seconds */
 extern JSInt32
 PRMJ_LocalGMTDifference(void);
