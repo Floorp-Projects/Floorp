@@ -44,6 +44,7 @@
 #include "nsICookie2.h"
 #include <stdio.h>
 #include "plstr.h"
+#include "prprf.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
 #include "nsStringAPI.h"
@@ -778,6 +779,60 @@ main(PRInt32 argc, char *argv[])
                !more;
 
       allTestsPassed = PrintResult(rv, 16) && allTestsPassed;
+
+
+      // *** eviction and creation ordering tests
+      printf("*** Beginning eviction and creation ordering tests...\n");
+
+      // test that cookies are
+      // a) returned by order of creation time (oldest first, newest last)
+      // b) evicted by order of creation time, if the limit on cookies per host (50) is reached
+      nsCAutoString name;
+      nsCAutoString expected;
+      for (PRInt32 i = 0; i < 60; ++i) {
+        name = NS_LITERAL_CSTRING("test");
+        name.AppendInt(i);
+        name += NS_LITERAL_CSTRING("=creation");
+        SetACookie(cookieService, "http://creation.ordering.tests/", nsnull, name.get(), nsnull);
+
+        if (i >= 10) {
+          expected += name;
+          if (i < 59)
+            expected += NS_LITERAL_CSTRING("; ");
+        }
+      }
+      GetACookie(cookieService, "http://creation.ordering.tests/", nsnull, getter_Copies(cookie));
+      rv[0] = CheckResult(cookie.get(), MUST_EQUAL, expected.get());
+
+      // test that cookies are evicted by order of creation time, if the limit on total cookies
+      // (1000) is reached
+      nsCAutoString host;
+      for (PRInt32 i = 0; i < 1010; ++i) {
+        host = NS_LITERAL_CSTRING("http://eviction.");
+        host.AppendInt(i);
+        host += NS_LITERAL_CSTRING(".tests/");
+        SetACookie(cookieService, host.get(), nsnull, "test=eviction", nsnull);
+      }
+      rv[1] = NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator)));
+      i = 0;
+      rv[2] = PR_FALSE; // init to failure in case we break from the while loop
+      while (NS_SUCCEEDED(enumerator->HasMoreElements(&more)) && more) {
+        nsCOMPtr<nsISupports> cookie;
+        if (NS_FAILED(enumerator->GetNext(getter_AddRefs(cookie)))) break;
+        ++i;
+        
+        // keep tabs on the third cookie, so we can check it later
+        nsCOMPtr<nsICookie2> cookie2(do_QueryInterface(cookie));
+        if (!cookie2) break;
+        nsCAutoString domain;
+        cookie2->GetRawHost(domain);
+        PRInt32 hostNumber;
+        PRInt32 numInts = PR_sscanf(domain.get(), "eviction.%ld.tests", &hostNumber);
+        if (numInts != 1 || hostNumber < 10) break;
+      }
+      rv[2] = i == 1000;
+
+      allTestsPassed = PrintResult(rv, 3) && allTestsPassed;
 
 
       // XXX the following are placeholders: add these tests please!
