@@ -42,7 +42,6 @@
 #include "nsAccessibilityUtils.h"
 #include "nsCURILoader.h"
 #include "nsDocAccessible.h"
-#include "nsHTMLAreaAccessible.h"
 #include "nsHTMLImageAccessibleWrap.h"
 #include "nsHTMLLinkAccessible.h"
 #include "nsHTMLSelectAccessible.h"
@@ -405,19 +404,6 @@ nsAccessibilityService::CreateHTML4ButtonAccessible(nsISupports *aFrame, nsIAcce
     return rv;
 
   *_retval = new nsHTML4ButtonAccessible(node, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibilityService::CreateHTMLAreaAccessible(nsIWeakReference *aShell, nsIDOMNode *aDOMNode, nsIAccessible *aParent, 
-                                                               nsIAccessible **_retval)
-{
-  *_retval = new nsHTMLAreaAccessible(aDOMNode, aParent, aShell);
-
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
