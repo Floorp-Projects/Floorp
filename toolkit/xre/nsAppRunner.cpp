@@ -2437,6 +2437,16 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("BuildID"),
                                      nsDependentCString(appData.buildID));
     CrashReporter::SetRestartArgs(argc, argv);
+
+    // annotate other data (user id etc)
+    nsXREDirProvider dirProvider;
+    nsCOMPtr<nsILocalFile> userAppDataDir;
+    rv = dirProvider.Initialize(gAppData->directory, gAppData->xreDirectory);
+    if (NS_SUCCEEDED(rv) &&
+        NS_SUCCEEDED(dirProvider.GetUserAppDataDirectory(
+                                 getter_AddRefs(userAppDataDir)))) {
+      CrashReporter::SetupExtraData(userAppDataDir);
+    }
   }
 #endif
 
