@@ -3614,6 +3614,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
  * @param aFrame [in] Frame whose bounds should be unioned
  * @param aVPercent [in] same as for ScrollContentIntoView
  * @param aRect [inout] rect into which its bounds should be unioned
+ * @param aHaveRect [inout] whether aRect contains data yet
  * @param aClosestScrolledView [inout] the view to which aRect is relative.
  *   If null, should be filled in appropriately.  If non-null, the function
  *   will no-op if the closest scrolling view doesn't match.
@@ -3622,6 +3623,7 @@ static void
 UnionRectForClosestScrolledView(nsIFrame* aFrame,
                                 PRIntn aVPercent,
                                 nsRect& aRect,
+                                PRBool& aHaveRect,
                                 nsIView*& aClosestScrolledView)
 {
   nsRect  frameBounds = aFrame->GetRect();
@@ -3697,7 +3699,19 @@ UnionRectForClosestScrolledView(nsIFrame* aFrame,
     aClosestScrolledView = closestView;
 
   if (aClosestScrolledView == closestView) {
-    aRect.UnionRect(aRect, frameBounds);
+    if (aHaveRect) {
+      // We can't use nsRect::UnionRect since it drops empty rects on
+      // the floor, and we need to include them.  (Thus we need
+      // aHaveRect to know when to drop the initial value on the floor.)
+      nscoord x = PR_MIN(aRect.x, frameBounds.x),
+              y = PR_MIN(aRect.y, frameBounds.y),
+          xmost = PR_MAX(aRect.XMost(), frameBounds.XMost()),
+          ymost = PR_MAX(aRect.YMost(), frameBounds.YMost());
+      aRect.SetRect(x, y, xmost - x, ymost - y);
+    } else {
+      aHaveRect = PR_TRUE;
+      aRect = frameBounds;
+    }
   }
 }
 
@@ -3849,8 +3863,10 @@ PresShell::ScrollContentIntoView(nsIContent* aContent,
   
   nsIView *closestView = nsnull;
   nsRect frameBounds;
+  PRBool haveRect = PR_FALSE;
   do {
-    UnionRectForClosestScrolledView(frame, aVPercent, frameBounds, closestView);
+    UnionRectForClosestScrolledView(frame, aVPercent, frameBounds, haveRect,
+                                    closestView);
   } while ((frame = frame->GetNextContinuation()));
 
   // Walk up the view hierarchy.  Make sure to add the view's position
