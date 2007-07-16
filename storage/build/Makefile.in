@@ -21,7 +21,6 @@
 #
 # Contributor(s):
 #   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
-#   Shawn Wilsher <me@shawnwilsher.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -70,10 +69,9 @@ LOCAL_INCLUDES = \
 
 SHARED_LIBRARY_LIBS = \
 	../src/$(LIB_PREFIX)storage_s.$(LIB_SUFFIX) \
+	$(DEPTH)/db/sqlite3/src/$(LIB_PREFIX)sqlite3_s.$(LIB_SUFFIX) \
 	$(NULL)
-
-EXTRA_DSO_LIBS += sqlite3
-
+ 
 EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \
 	$(EXTRA_DSO_LIBS) \
