@@ -179,7 +179,7 @@ placesBaseTransaction.prototype = {
   },
 
   // nsISupports
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITransaction, Ci.nsIClassInfo, Ci.nsISupports]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITransaction, Ci.nsISupports]),
 };
 
 function placesAggregateTransactions(name, transactions) {
