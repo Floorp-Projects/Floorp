@@ -1034,7 +1034,8 @@ SetGlyphsForCharacterGroup(const PangoGlyphInfo *aGlyphs, PRUint32 aGlyphCount,
         PRUint32 i;
         for (i = 0; i < aGlyphCount; ++i) {
             gfxTextRun::DetailedGlyph *details = &detailedGlyphs[i];
-            const PangoGlyphInfo &glyph = aGlyphs[i];
+            PRUint32 j = (aTextRun->IsRightToLeft()) ? aGlyphCount - 1 - i : i; 
+            const PangoGlyphInfo &glyph = aGlyphs[j];
             details->mIsLastGlyph = i == aGlyphCount - 1;
             details->mGlyphID = glyph.glyph;
             NS_ASSERTION(details->mGlyphID == glyph.glyph,
