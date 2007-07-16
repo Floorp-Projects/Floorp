@@ -746,6 +746,20 @@ nsXULPopupManager::IsPopupOpenForMenuParent(nsIMenuParent* aMenuParent)
   return PR_FALSE;
 }
 
+nsTArray<nsIFrame *>
+nsXULPopupManager::GetOpenPopups()
+{
+  nsTArray<nsIFrame *> popups;
+
+  nsMenuChainItem* item = mCurrentMenu;
+  while (item) {
+    popups.AppendElement(item->Frame());
+    item = item->GetParent();
+  }
+
+  return popups;
+}
+
 PRBool
 nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup)
 {
