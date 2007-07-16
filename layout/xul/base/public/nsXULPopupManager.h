@@ -120,28 +120,16 @@ enum nsNavigationDirection {
 /**
  * DirectionFromKeyCode_lr_tb: an array that maps keycodes to values of
  * nsNavigationDirection for left-to-right and top-to-bottom flow orientation
+ * This is defined in nsXULPopupManager.cpp.
  */
-static nsNavigationDirection DirectionFromKeyCode_lr_tb [6] = {
-  eNavigationDirection_Last,   // NS_VK_END
-  eNavigationDirection_First,  // NS_VK_HOME
-  eNavigationDirection_Start,  // NS_VK_LEFT
-  eNavigationDirection_Before, // NS_VK_UP
-  eNavigationDirection_End,    // NS_VK_RIGHT
-  eNavigationDirection_After   // NS_VK_DOWN
-};
+extern nsNavigationDirection DirectionFromKeyCode_lr_tb [6];
 
 /**
  * DirectionFromKeyCode_rl_tb: an array that maps keycodes to values of
  * nsNavigationDirection for right-to-left and top-to-bottom flow orientation
+ * This is defined in nsXULPopupManager.cpp.
  */
-static nsNavigationDirection DirectionFromKeyCode_rl_tb [6] = {
-  eNavigationDirection_Last,   // NS_VK_END
-  eNavigationDirection_First,  // NS_VK_HOME
-  eNavigationDirection_End,    // NS_VK_LEFT
-  eNavigationDirection_Before, // NS_VK_UP
-  eNavigationDirection_Start,  // NS_VK_RIGHT
-  eNavigationDirection_After   // NS_VK_DOWN
-};
+extern nsNavigationDirection DirectionFromKeyCode_rl_tb [6];
 
 #define NS_DIRECTION_FROM_KEY_CODE(frame, direction, keycode)    \
   NS_ASSERTION(NS_VK_HOME == NS_VK_END + 1, "Broken ordering");  \
