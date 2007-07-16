@@ -153,7 +153,7 @@ ListFloats(FILE* out, PRInt32 aIndent, const nsFloatCacheList& aFloats)
           fputs(NS_LossyConvertUTF16toASCII(frameName).get(), out);
         }
       }
-      fprintf(out, " %s region={%d,%d,%d,%d}",
+      fprintf(out, " region={%d,%d,%d,%d}",
               fc->mRegion.x, fc->mRegion.y,
               fc->mRegion.width, fc->mRegion.height);
 
