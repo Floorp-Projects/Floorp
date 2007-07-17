@@ -76,6 +76,11 @@ CPPSRCS += dlldeps-zlib.cpp
 DEFINES += -DZLIB_INTERNAL
 endif
 
+ifdef MOZ_ENABLE_LIBXUL
+RESFILE = xulrunos2.res
+RCFLAGS += -i $(topsrcdir)/widget/src/os2
+endif
+
 LOCAL_INCLUDES += -I$(topsrcdir)/widget/src/os2
 endif
 
