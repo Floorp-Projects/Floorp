@@ -95,12 +95,8 @@ const FW_CONTRACTID = "@mozilla.org/browser/feeds/result-writer;1";
 const TITLE_ID = "feedTitleText";
 const SUBTITLE_ID = "feedSubtitleText";
 
-#ifdef MOZ_PLACES
 const NH_CONTRACTID = "@mozilla.org/browser/nav-history-service;1";
 const FAV_CONTRACTID = "@mozilla.org/browser/favicon-service;1";
-#else
-const ICON_DATAURL_PREFIX = "data:image/x-icon;base64,";
-#endif
 
 function FeedWriter() {
 }
@@ -153,7 +149,6 @@ FeedWriter.prototype = {
     }
   },
 
-#ifdef MOZ_PLACES
   __faviconService: null,
   get _faviconService() {
     if (!this.__faviconService) {
@@ -163,7 +158,6 @@ FeedWriter.prototype = {
 
     return this.__faviconService;
   },
-#endif
 
   __bundle: null,
   get _bundle() {
@@ -713,10 +707,8 @@ FeedWriter.prototype = {
     handlersMenuPopup.appendChild(this._document.createElementNS(XUL_NS,
                                   "menuseparator"));
 
-#ifdef MOZ_PLACES
     var historySvc = Cc[NH_CONTRACTID].getService(Ci.nsINavHistoryService);
     historySvc.addObserver(this, false);
-#endif
 
     // List of web handlers
     var wccr = 
@@ -735,17 +727,12 @@ FeedWriter.prototype = {
         // For privacy reasons we cannot set the image attribute directly
         // to the icon url, see Bug 358878
         var uri = makeURI(handlers[i].uri);
-#ifdef MOZ_PLACES
         if (!this._setFaviconForWebReader(uri, menuItem)) {
           if (uri && /^https?/.test(uri.scheme)) {
             var iconURL = makeURI(uri.prePath + "/favicon.ico");
             this._faviconService.setAndLoadFaviconForPage(uri, iconURL, true);
           }
         }
-#else
-        if (uri && /^https?/.test(uri.scheme))
-          new iconDataURIGenerator(uri.prePath + "/favicon.ico", menuItem);
-#endif
       }
     }
 
@@ -871,10 +858,8 @@ FeedWriter.prototype = {
     prefs.removeObserver(PREF_SELECTED_APP, this);
     this._removeFeedFromCache();
 
-#ifdef MOZ_PLACES
     var historySvc = Cc[NH_CONTRACTID].getService(Ci.nsINavHistoryService);
     historySvc.removeObserver(this);
-#endif
   },
 
   _removeFeedFromCache: function FW__removeFeedFromCache() {
@@ -991,7 +976,6 @@ FeedWriter.prototype = {
     } 
   },
 
-#ifdef MOZ_PLACES
   /**
    * Sets the icon for the given web-reader item in the readers menu
    * if the favicon-service has the necessary icon stored.
@@ -1051,7 +1035,6 @@ FeedWriter.prototype = {
    onDeleteURI: function() { },
    onClearHistory: function() { },
    onPageExpired: function() { },
-#endif
 
   /**
    * See nsIClassInfo
@@ -1076,121 +1059,12 @@ FeedWriter.prototype = {
         iid.equals(Ci.nsIClassInfo) ||
         iid.equals(Ci.nsIDOMEventListener) ||
         iid.equals(Ci.nsIObserver) ||
-#ifdef MOZ_PLACES
         iid.equals(Ci.nsINavHistoryObserver) ||
-#endif
         iid.equals(Ci.nsISupports))
       return this;
     throw Cr.NS_ERROR_NO_INTERFACE;
   }
 };
-
-#ifndef MOZ_PLACES
-function iconDataURIGenerator(aURISpec, aElement) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
-  var chan = ios.newChannelFromURI(makeURI(aURISpec));
-  chan.notificationCallbacks = this;
-  chan.asyncOpen(this, null);
-
-  this._channel = chan;
-  this._bytes = [];
-  this._element = aElement;
-}
-iconDataURIGenerator.prototype = {
-  _channel: null,
-  _countRead: 0,
-  _stream: null,
-
-  QueryInterface: function FW_IDUG_loadQI(aIID) {
-    if (aIID.equals(Ci.nsISupports)           ||
-        aIID.equals(Ci.nsIRequestObserver)    ||
-        aIID.equals(Ci.nsIStreamListener)     ||
-        aIID.equals(Ci.nsIChannelEventSink)   ||
-        aIID.equals(Ci.nsIInterfaceRequestor) ||
-        aIID.equals(Ci.nsIBadCertListener)    ||
-        // See bug 358878 comment 11
-        aIID.equals(Ci.nsIPrompt)             ||
-        // See FIXME comment below
-        aIID.equals(Ci.nsIHttpEventSink)      ||
-        aIID.equals(Ci.nsIProgressEventSink)  ||
-        false)
-      return this;
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-
-  // nsIRequestObserver
-  onStartRequest: function FW_IDUG_loadStartR(aRequest, aContext) {
-    this._stream = Cc["@mozilla.org/binaryinputstream;1"].
-                   createInstance(Ci.nsIBinaryInputStream);
-  },
-
-  onStopRequest: function FW_IDUG_loadStopR(aRequest, aContext, aStatusCode) {
-    var requestFailed = !Components.isSuccessCode(aStatusCode);
-    if (!requestFailed && (aRequest instanceof Ci.nsIHttpChannel))
-      requestFailed = !aRequest.requestSucceeded;
-
-    if (!requestFailed && this._countRead != 0) {
-      var str = String.fromCharCode.apply(null, this._bytes);
-      try {
-        var dataURI = ICON_DATAURL_PREFIX + btoa(str);
-        this._element.setAttribute("image", dataURI);
-      }
-      catch(ex) {}
-    }
-    this._channel = null;
-    this._element  = null;
-  },
-
-  // nsIStreamListener
-  onDataAvailable: function FW_IDUG_loadDAvailable(aRequest, aContext,
-                                                   aInputStream, aOffset,
-                                                   aCount) {
-    this._stream.setInputStream(aInputStream);
-
-    // Get a byte array of the data
-    this._bytes = this._bytes.concat(this._stream.readByteArray(aCount));
-    this._countRead += aCount;
-  },
-
-  // nsIChannelEventSink
-  onChannelRedirect: function FW_IDUG_loadCRedirect(aOldChannel, aNewChannel,
-                                                    aFlags) {
-    this._channel = aNewChannel;
-  },
-
-  // nsIInterfaceRequestor
-  getInterface: function FW_IDUG_load_GI(aIID) {
-    return this.QueryInterface(aIID);
-  },
-
-  // nsIBadCertListener
-  confirmUnknownIssuer: function FW_IDUG_load_CUI(aSocketInfo, aCert,
-                                                  aCertAddType) {
-    return false;
-  },
-
-  confirmMismatchDomain: function FW_IDUG_load_CMD(aSocketInfo, aTargetURL,
-                                                   aCert) {
-    return false;
-  },
-
-  confirmCertExpired: function FW_IDUG_load_CCE(aSocketInfo, aCert) {
-    return false;
-  },
-
-  notifyCrlNextupdate: function FW_IDUG_load_NCN(aSocketInfo, aTargetURL, aCert) {
-  },
-
-  // FIXME: bug 253127
-  // nsIHttpEventSink
-  onRedirect: function (aChannel, aNewChannel) { },
-  // nsIProgressEventSink
-  onProgress: function (aRequest, aContext, aProgress, aProgressMax) { },
-  onStatus: function (aRequest, aContext, aStatus, aStatusArg) { }
-};
-#endif
 
 var Module = {
   QueryInterface: function M_QueryInterface(iid) {

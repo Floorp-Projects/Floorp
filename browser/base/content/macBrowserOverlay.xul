@@ -40,16 +40,12 @@
 #
 # ***** END LICENSE BLOCK *****
 
-#ifdef MOZ_PLACES
-<?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
-#endif
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
-#ifdef MOZ_PLACES
 <?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
-#endif
 
 # All DTD information is stored in a separate file so that it can be shared by
 # hiddenWindow.xul.
@@ -71,11 +67,6 @@
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the 
 # browser-sets.inc file for sharing with hiddenWindow.xul.
 #include browser-sets.inc
-
-#ifndef MOZ_PLACES
-# The hacky hidden tree used by the Go menu to build items.
-#include browser-gotreehack.inc
-#endif
 
 # The entire main menubar is placed into browser-menubar.inc, so that it can be shared by 
 # hiddenWindow.xul.

@@ -65,16 +65,9 @@ REQUIRES	= \
 		  dom \
 		  docshell \
 		  xulapp \
+      places \
+      browserplaces \
 		  $(NULL)
-
-ifdef MOZ_PLACES
-REQUIRES += places
-endif
-ifndef MOZ_PLACES_BOOKMARKS
-REQUIRES += bookmarks
-else
-REQUIRES += browserplaces 
-endif
 
 CPPSRCS  = nsProfileMigrator.cpp \
            nsBrowserProfileMigratorUtils.cpp \

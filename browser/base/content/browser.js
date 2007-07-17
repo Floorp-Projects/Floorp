@@ -60,14 +60,6 @@
 const kXULNS =
     "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-#ifndef MOZ_PLACES
-# For Places-enabled builds, this is in
-# chrome://browser/content/places/controller.js
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-var Cr = Components.results;
-#endif
-
 const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 
 const MAX_HISTORY_MENU_ITEMS = 15;
@@ -148,13 +140,6 @@ function pageShowEventHandlers(event)
   } else {
     targetBrowser = gBrowser.mCurrentBrowser;
   }
-
-#ifndef MOZ_PLACES_BOOKMARKS
-  // update the last visited date
-  if (targetBrowser.currentURI.spec)
-    BMSVC.updateLastVisitedDate(targetBrowser.currentURI.spec,
-                                targetBrowser.contentDocument.characterSet);
-#endif
 }
 
 /**
@@ -298,14 +283,8 @@ function BookmarkThisTab()
   if (tab.localName != "tab")
     tab = getBrowser().mCurrentTab;
 
-#ifdef MOZ_PLACES_BOOKMARKS
-  PlacesCommandHook.bookmarkPage(tab.linkedBrowser);
-#else
-  addBookmarkAs(tab.linkedBrowser, false);
-#endif
+  PlacesCommandHook.bookmarkPage(tab.linkedBrowser)
 }
-
-#ifdef MOZ_PLACES_BOOKMARKS
 
 /**
  * Global bookmarks observer for browser-window specific stuff
@@ -353,7 +332,6 @@ function initBookmarksToolbar() {
   bt.place =
     PlacesUtils.getQueryStringForFolder(PlacesUtils.bookmarks.toolbarFolder);
 }
-#endif
 
 const gSessionHistoryObserver = {
   observe: function(subject, topic, data)
@@ -1035,27 +1013,10 @@ function delayedStartup()
   // add bookmark options to context menu for tabs
   addBookmarkMenuitems();
 
-#ifndef MOZ_PLACES_BOOKMARKS
-  initServices();
-  initBMService();
-  // now load bookmarks
-  BMSVC.readBookmarks();
-  var bt = document.getElementById("bookmarks-ptf");
-  if (bt) {
-    var btf = BMSVC.getBookmarksToolbarFolder().Value;
-    bt.ref = btf;
-    document.getElementById("bookmarks-chevron").ref = btf;
-    bt.database.AddObserver(BookmarksToolbarRDFObserver);
-  }
-  window.addEventListener("resize", BookmarksToolbar.resizeFunc, false);
-  document.getElementById("PersonalToolbar")
-          .controllers.appendController(BookmarksMenuController);
-#else
   PlacesMenuDNDController.init();
 
   initBookmarksToolbar();
   PlacesUtils.bookmarks.addObserver(gBookmarksObserver, false);
-#endif
 
   // called when we go into full screen, even if it is
   // initiated by a web page script
@@ -1191,23 +1152,7 @@ function BrowserShutdown()
   } catch (ex) {
   }
 
-#ifdef MOZ_PLACES_BOOKMARKS
   PlacesUtils.bookmarks.removeObserver(gBookmarksObserver);
-#else
-  try {
-    document.getElementById("PersonalToolbar")
-            .controllers.removeController(BookmarksMenuController);
-  } catch (ex) {
-  }
-
-  var bt = document.getElementById("bookmarks-ptf");
-  if (bt) {
-    try {
-      bt.database.RemoveObserver(BookmarksToolbarRDFObserver);
-    } catch (ex) {
-    }
-  }
-#endif
 
   try {
     gPrefService.removeObserver(gAutoHideTabbarPrefListener.domain,
@@ -1300,12 +1245,6 @@ function nonBrowserWindowStartup()
 
 function nonBrowserWindowDelayedStartup()
 {
-  // loads the services
-#ifndef MOZ_PLACES_BOOKMARKS
-  initServices();
-  initBMService();
-#endif
-
   // init global pref service
   gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
                            .getService(Components.interfaces.nsIPrefBranch2);
@@ -1627,181 +1566,6 @@ function loadOneOrMoreURIs(aURIString)
   }
 }
 
-#ifndef MOZ_PLACES
-function constructGoMenuItem(goMenu, beforeItem, url, title)
-{
-  var menuitem = document.createElementNS(kXULNS, "menuitem");
-  menuitem.setAttribute("statustext", url);
-  menuitem.setAttribute("label", title);
-  goMenu.insertBefore(menuitem, beforeItem);
-  return menuitem;
-}
-
-function onGoMenuHidden(aEvent)
-{
-  if (aEvent.target == aEvent.currentTarget)
-    setTimeout(destroyGoMenuItems, 0, document.getElementById('goPopup'));
-}
-
-function destroyGoMenuItems(goMenu) {
-  var startSeparator = document.getElementById("startHistorySeparator");
-  var endSeparator = document.getElementById("endHistorySeparator");
-  endSeparator.hidden = true;
-
-  // Destroy the items.
-  var destroy = false;
-  for (var i = 0; i < goMenu.childNodes.length; i++) {
-    var item = goMenu.childNodes[i];
-    if (item == endSeparator)
-      break;
-
-    if (destroy) {
-      i--;
-      goMenu.removeChild(item);
-    }
-
-    if (item == startSeparator)
-      destroy = true;
-  }
-}
-
-function updateGoMenu(aEvent, goMenu)
-{
-  if (aEvent.target != aEvent.currentTarget)
-    return;
-
-  // In case the timer didn't fire.
-  destroyGoMenuItems(goMenu);
-
-  // enable/disable RCT sub menu
-  // do this here, before the early return
-  HistoryMenu.toggleRecentlyClosedTabs();
-
-  var history = document.getElementById("hiddenHistoryTree");
-
-  if (history.hidden) {
-    history.hidden = false;
-    var globalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
-                                  .getService(Components.interfaces.nsIRDFDataSource);
-    history.database.AddDataSource(globalHistory);
-  }
-
-  if (!history.ref)
-    history.ref = "NC:HistoryRoot";
-
-  var count = history.view.rowCount;
-  if (count > 10)
-    count = 10;
-
-  if (count == 0)
-    return;
-
-  const NC_NS     = "http://home.netscape.com/NC-rdf#";
-
-  if (!gRDF)
-     gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                      .getService(Components.interfaces.nsIRDFService);
-
-  var builder = history.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
-
-  var beforeItem = document.getElementById("endHistorySeparator");
-
-  var nameResource = gRDF.GetResource(NC_NS + "Name");
-
-  var endSep = beforeItem;
-  var showSep = false;
-
-  for (var i = count-1; i >= 0; i--) {
-    var res = builder.getResourceAtIndex(i);
-    var url = res.Value;
-    var titleRes = history.database.GetTarget(res, nameResource, true);
-    if (!titleRes)
-      continue;
-
-    showSep = true;
-    var titleLiteral = titleRes.QueryInterface(Components.interfaces.nsIRDFLiteral);
-    beforeItem = constructGoMenuItem(goMenu, beforeItem, url, titleLiteral.Value);
-  }
-
-  if (showSep)
-    endSep.hidden = false;
-}
-#endif
- 
-#ifndef MOZ_PLACES_BOOKMARKS
-function addBookmarkAs(aBrowser, aBookmarkAllTabs, aIsWebPanel)
-{
-  const browsers = aBrowser.browsers;
-
-  // we only disable the menu item on onpopupshowing; if we get
-  // here via keyboard shortcut, we need to pretend like
-  // nothing happened if we have no tabs
-  if ((!browsers || browsers.length == 1) && aBookmarkAllTabs)
-    return;
-
-  if (browsers && browsers.length > 1)
-    addBookmarkForTabBrowser(aBrowser, aBookmarkAllTabs);
-  else
-    addBookmarkForBrowser(aBrowser.webNavigation, aIsWebPanel);
-}
-
-function addBookmarkForTabBrowser(aTabBrowser, aBookmarkAllTabs, aSelect)
-{
-  var tabsInfo = [];
-  var currentTabInfo = { name: "", url: "", charset: null };
-
-  const activeBrowser = aTabBrowser.selectedBrowser;
-  const browsers = aTabBrowser.browsers;
-  for (var i = 0; i < browsers.length; ++i) {
-    var webNav = browsers[i].webNavigation;
-    var url = webNav.currentURI.spec;
-    var name = "";
-    var charSet, description;
-    try {
-      var doc = webNav.document;
-      name = doc.title || url;
-      charSet = doc.characterSet;
-      description = BookmarksUtils.getDescriptionFromDocument(doc);
-    } catch (e) {
-      name = url;
-    }
-    tabsInfo[i] = { name: name, url: url, charset: charSet, description: description };
-    if (browsers[i] == activeBrowser)
-      currentTabInfo = tabsInfo[i];
-  }
-  var dialogArgs = currentTabInfo;
-  if (aBookmarkAllTabs) {
-    dialogArgs = { name: gNavigatorBundle.getString("bookmarkAllTabsDefault") };
-    dialogArgs.bBookmarkAllTabs = true;
-  }
-
-  dialogArgs.objGroup = tabsInfo;
-  openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-             BROWSER_ADD_BM_FEATURES, dialogArgs);
-}
-
-function addBookmarkForBrowser(aDocShell, aIsWebPanel)
-{
-  // Bug 52536: We obtain the URL and title from the nsIWebNavigation
-  // associated with a <browser/> rather than from a DOMWindow.
-  // This is because when a full page plugin is loaded, there is
-  // no DOMWindow (?) but information about the loaded document
-  // may still be obtained from the webNavigation.
-  var url = aDocShell.currentURI.spec;
-  var title, charSet = null;
-  var description;
-  try {
-    title = aDocShell.document.title || url;
-    charSet = aDocShell.document.characterSet;
-    description = BookmarksUtils.getDescriptionFromDocument(aDocShell.document);
-  }
-  catch (e) {
-    title = url;
-  }
-  BookmarksUtils.addBookmark(url, title, charSet, aIsWebPanel, description);
-}
-#endif
-
 function openLocation()
 {
   if (gURLBar && isElementVisible(gURLBar)) {
@@ -1975,13 +1739,9 @@ function getShortcutOrURI(aURL, aPostDataRef) {
     return engine.getSubmission(param, null).uri.spec;
 
   try {
-#ifdef MOZ_PLACES_BOOKMARKS
     var shortcutURI = PlacesUtils.bookmarks.getURIForKeyword(keyword);
     shortcutURL = shortcutURI.spec;
     aPostDataRef.value = PlacesUtils.getPostDataForURI(shortcutURI);
-#else
-    shortcutURL = BMSVC.resolveKeyword(keyword, aPostDataRef);
-#endif
   } catch(ex) {}
 
   if (!shortcutURL)
@@ -1998,14 +1758,7 @@ function getShortcutOrURI(aURL, aPostDataRef) {
     if (matches)
       [, shortcutURL, charset] = matches;
     else {
-      try {
-        //XXX Bug 317472 will add lastCharset support to places.
-#ifndef MOZ_PLACES_BOOKMARKS
-        charset = BMSVC.getLastCharset(shortcutURL);
-#endif
-      } catch (ex) {
-        Components.utils.reportError(ex);
-      }
+      //XXX Bug 317472 will add lastCharset support to places.
     }
 
     var encodedParam = "";
@@ -2716,18 +2469,8 @@ var bookmarksButtonObserver = {
   {
     var split = aXferData.data.split("\n");
     var url = split[0];
-    if (url != aXferData.data) {  //do nothing if it's not a valid URL
-#ifndef MOZ_PLACES_BOOKMARKS
-      var dialogArgs = {
-        name: split[1],
-        url: url
-      }
-      openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-                 BROWSER_ADD_BM_FEATURES, dialogArgs);
-#else
+    if (url != aXferData.data)  // do nothing if it's not a valid URL
       PlacesUtils.showMinimalAddBookmarkUI(makeURI(url), split[1]);
-#endif
-    }
   },
 
   onDragOver: function (aEvent, aFlavour, aDragSession)
@@ -3337,31 +3080,7 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
     SetClickAndHoldHandlers();
 #endif
 
-#ifdef MOZ_PLACES_BOOKMARKS
   initBookmarksToolbar();
-#else
-  // fix up the personal toolbar folder
-  var bt = document.getElementById("bookmarks-ptf");
-  if (bt) {
-    var btf = BMSVC.getBookmarksToolbarFolder().Value;
-    var btchevron = document.getElementById("bookmarks-chevron");
-    bt.ref = btf;
-    btchevron.ref = btf;
-    // no uniqueness is guaranteed, so we have to remove first
-    try {
-      bt.database.RemoveObserver(BookmarksToolbarRDFObserver);
-    } catch (ex) {
-      // ignore
-    }
-    bt.database.AddObserver(BookmarksToolbarRDFObserver);
-    bt.builder.rebuild();
-    btchevron.builder.rebuild();
-
-    // fake a resize; this function takes care of flowing bookmarks
-    // from the bar to the overflow item
-    BookmarksToolbar.resizeFunc(null);
-  }
-#endif
 
 #ifndef TOOLBAR_CUSTOMIZATION_SHEET
   // XXX Shouldn't have to do this, but I do
@@ -3565,7 +3284,6 @@ nsBrowserStatusHandler.prototype =
       PageProxySetIcon(aBrowser.mIconURL);
     }
 
-#ifdef MOZ_PLACES_BOOKMARKS
     // Save this favicon in the favicon service
     if (aBrowser.mIconURL) {
       var faviconService = Components.classes["@mozilla.org/browser/favicon-service;1"]
@@ -3574,7 +3292,6 @@ nsBrowserStatusHandler.prototype =
         .getService(Components.interfaces.nsIIOService).newURI(aBrowser.mIconURL, null, null);
       faviconService.setAndLoadFaviconForPage(aBrowser.currentURI, uri, false);
     }
-#endif
   },
 
   onProgressChange : function (aWebProgress, aRequest,
@@ -3638,10 +3355,6 @@ nsBrowserStatusHandler.prototype =
           var browser = gBrowser.mCurrentBrowser;
           if (!gBrowser.mTabbedMode && !browser.mIconURL)
             gBrowser.useDefaultIcon(gBrowser.mCurrentTab);
-#ifndef MOZ_PLACES_BOOKMARKS
-          if (browser.mIconURL)
-            BookmarksUtils.loadFavIcon(browser.currentURI.spec, browser.mIconURL);
-#endif
         }
       }
 
@@ -4438,21 +4151,10 @@ function asyncOpenWebPanel(event)
          // This is the Opera convention for a special link that - when clicked - allows
          // you to add a sidebar panel.  We support the Opera convention here.  The link's
          // title attribute contains the title that should be used for the sidebar panel.
-#ifndef MOZ_PLACES_BOOKMARKS
-         var dialogArgs = {
-           name: wrapper.getAttribute("title"),
-           url: wrapper.href,
-           bWebPanel: true
-         }
-         openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-                    BROWSER_ADD_BM_FEATURES, dialogArgs);
-         event.preventDefault();
-#else
          PlacesUtils.showMinimalAddBookmarkUI(makeURI(wrapper.href),
                                               wrapper.getAttribute("title"),
                                               null, null, true, true);
          event.preventDefault();
-#endif
          return false;
        }
        else if (target == "_search") {
@@ -5162,24 +4864,9 @@ function AddKeywordForSearchField()
   else
     spec += "?" + formData.join("&");
 
-#ifndef MOZ_PLACES_BOOKMARKS
-  var dialogArgs = {
-    name: "",
-    url: spec,
-    charset: node.ownerDocument.characterSet,
-    bWebPanel: false,
-    keyword: "",
-    bNeedKeyword: true,
-    postData: postData,
-    description: BookmarksUtils.getDescriptionFromDocument(node.ownerDocument)
-  }
-  openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-             BROWSER_ADD_BM_FEATURES, dialogArgs);
-#else
   var description = PlacesUtils.getDescriptionFromDocument(node.ownerDocument);
   PlacesUtils.showMinimalAddBookmarkUI(makeURI(spec), "", description, null,
                                        null, null, "", postData);
-#endif
 }
 
 function SwitchDocumentDirection(aWindow) {
@@ -5447,28 +5134,6 @@ var FeedHandler = {
       href = "feed:" + href;
     this.loadFeed(href, event);
   },
-    
-#ifndef MOZ_PLACES_BOOKMARKS
-  /**
-   * Adds a Live Bookmark to a feed
-   * @param     url
-   *            The URL of the feed being bookmarked
-   * @title     title
-   *            The title of the feed. Optional.
-   * @subtitle  subtitle
-   *            A short description of the feed. Optional.
-   */
-  addLiveBookmark: function(url, feedTitle, feedSubtitle) {
-    var doc = gBrowser.selectedBrowser.contentDocument;
-    var title = (arguments.length > 1) ? feedTitle : doc.title;
-    var description;
-    if (arguments.length > 2)
-      description = feedSubtitle;
-    else
-      description = BookmarksUtils.getDescriptionFromDocument(doc);
-    BookmarksUtils.addLivemark(doc.baseURI, url, title, description);
-  },
-#endif
 
   loadFeed: function(href, event) {
     var feeds = gBrowser.selectedBrowser.feeds;
@@ -5571,9 +5236,7 @@ var FeedHandler = {
   }
 };
 
-#ifdef MOZ_PLACES
 #include browser-places.js
-#endif
 
 #include browser-contentPrefSink.js
 #include browser-textZoom.js
@@ -5630,13 +5293,6 @@ var AugmentTabs = {
     }
   }
 };
-
-/**
-* History menu initialization
-*/
-#ifndef MOZ_PLACES
-var HistoryMenu = {};
-#endif
 
 HistoryMenu.toggleRecentlyClosedTabs = function PHM_toggleRecentlyClosedTabs() {
   // enable/disable the Recently Closed Tabs sub menu
@@ -5751,9 +5407,8 @@ function formatURL(aFormat, aIsPref) {
 }
 
 /**
- * This object encapsulates both legacy and places-based implementations
- * of the bookmark-all-tabs command. It also takes care of updating the command
- * enabled-state when tabs are created or removed.
+ * This also takes care of updating the command enabled-state when tabs are
+ * created or removed.
  */
 function BookmarkAllTabsHandler() {
   this._command = document.getElementById("Browser:BookmarkAllTabs");
@@ -5785,11 +5440,7 @@ BookmarkAllTabsHandler.prototype = {
   },
 
   doCommand: function BATH_doCommand() {
-#ifdef MOZ_PLACES_BOOKMARKS
     PlacesCommandHook.bookmarkCurrentPages();
-#else
-    addBookmarkAs(gBrowser, true);
-#endif
   },
 
   // nsIDOMEventListener

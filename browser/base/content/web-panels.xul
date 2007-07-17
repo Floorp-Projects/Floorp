@@ -40,9 +40,7 @@
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
-#ifdef MOZ_PLACES
 <?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
-#endif
 
 <!DOCTYPE page [
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
@@ -55,21 +53,11 @@
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="load()" onunload="unload()">
-# These are loaded by placesOverlay in places-enabled builds
-#ifndef MOZ_PLACES
-  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
-#endif
   <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://global/content/inlineSpellCheckUI.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/nsContextMenu.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/web-panels.js"/>
-#ifndef MOZ_PLACES_BOOKMARKS
-  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksMenu.js"/>
-#endif
 
   <stringbundleset id="stringbundleset"> 
     <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>

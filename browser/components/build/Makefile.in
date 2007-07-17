@@ -42,10 +42,6 @@ EXPORTS = nsBrowserCompsCID.h
 CPPSRCS = nsModule.cpp \
           $(NULL)
 
-ifndef MOZ_PLACES_BOOKMARKS
-REQUIRES += bookmarks
-endif
-
 ifeq ($(OS_ARCH),WINNT)
 DEFINES += -DPSTOREC_DLL=\"$(subst \,\\,$(WINDIR))\\system32\\pstorec.dll\"
 
@@ -56,13 +52,8 @@ LOCAL_INCLUDES = \
 	-I$(srcdir)/../migration/src \
 	-I$(srcdir)/../shell/src \
 	-I$(srcdir)/../feeds/src \
+	-I$(srcdir)/../places/src \
 	$(NULL)
-
-ifndef MOZ_PLACES_BOOKMARKS
-LOCAL_INCLUDES += -I$(srcdir)/../bookmarks/src
-else
-LOCAL_INCLUDES += -I$(srcdir)/../places/src
-endif
 
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,version)
@@ -71,20 +62,11 @@ endif
 SHARED_LIBRARY_LIBS = \
 	../migration/src/$(LIB_PREFIX)migration_s.$(LIB_SUFFIX) \
 	../feeds/src/$(LIB_PREFIX)browser_feeds_s.$(LIB_SUFFIX) \
+  ../places/src/$(LIB_PREFIX)browserplaces_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 ifneq (,$(filter windows mac cocoa gtk2, $(MOZ_WIDGET_TOOLKIT)))
 SHARED_LIBRARY_LIBS += ../shell/src/$(LIB_PREFIX)shellservice_s.$(LIB_SUFFIX) \
-	$(NULL)
-endif
-
-ifndef MOZ_PLACES_BOOKMARKS
-SHARED_LIBRARY_LIBS += \
-	../bookmarks/src/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
-	$(NULL)
-else
-SHARED_LIBRARY_LIBS += \
-	../places/src/$(LIB_PREFIX)browserplaces_s.$(LIB_SUFFIX) \
 	$(NULL)
 endif
 
