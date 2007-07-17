@@ -2548,7 +2548,11 @@ nsresult nsExternalAppHandler::OpenWithApplication()
   // if a stop request was already issued then proceed with launching the application.
   if (mStopRequestIssued)
   {
-    rv = mMimeInfo->LaunchWithFile(mFinalFileDestination);
+    nsCOMPtr<nsIURI> fileUri;
+    rv = NS_NewFileURI(getter_AddRefs(fileUri), mFinalFileDestination);
+    if (NS_SUCCEEDED(rv)) {
+      rv = mMimeInfo->LaunchWithURI(fileUri);        
+    }
     if (NS_FAILED(rv))
     {
       // Send error notification.
@@ -2619,7 +2623,7 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
 
     if (NS_SUCCEEDED(rv))
     {
-      rv = mMimeInfo->LaunchWithFile(file);
+      rv = mMimeInfo->LaunchWithURI(fileUrl);
       if (NS_SUCCEEDED(rv))
         return NS_OK;
     }
