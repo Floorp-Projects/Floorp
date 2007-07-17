@@ -50,6 +50,43 @@ class nsCocoaWindow;
 class nsChildView;
 
 
+@interface NSApplication (Undocumented)
+
+// It's sometimes necessary to explicitly remove a window from the "window
+// cache" in order to deactivate it.  The "window cache" is an undocumented
+// subsystem, all of whose methods are included in the NSWindowCache category
+// of the NSApplication class (in header files generated using class-dump).
+- (void)_removeWindowFromCache:(NSWindow *)aWindow;
+
+@end
+
+
+@interface NSWindow (Undocumented)
+
+// If a window has been explicitly removed from the "window cache" (to
+// deactivate it), it's sometimes necessary to "reset" it to reactivate it
+// (and put it back in the "window cache").  One way to do this, which Apple
+// often uses, is to set the "window number" to '-1' and then back to its
+// original value.
+- (void)_setWindowNumber:(int)aNumber;
+
+@end
+
+
+@interface PopupWindow : NSWindow
+{
+@private
+  BOOL mIsContextMenu;
+}
+
+- (id)initWithContentRect:(NSRect)contentRect styleMask:(unsigned int)styleMask
+      backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation;
+- (BOOL)isContextMenu;
+- (void)setIsContextMenu:(BOOL)flag;
+
+@end
+
+
 @interface WindowDelegate : NSObject
 {
   nsCocoaWindow* mGeckoWindow; // [WEAK] (we are owned by the window)

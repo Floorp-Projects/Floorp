@@ -52,6 +52,8 @@
 #import <IOKit/pwr_mgt/IOPMLib.h>
 #import <IOKit/IOMessage.h>
 
+#include "nsCocoaUtils.h"
+
 #include "nsWidgetAtoms.h"
 #include "nsIRollupListener.h"
 #include "nsIWidget.h"
@@ -73,6 +75,9 @@ static PRUintn gToolkitTLSIndex = 0;
 nsToolkit::nsToolkit()
 : mInited(false)
 , mSleepWakeNotificationRLS(nsnull)
+, mEventMonitorHandler(nsnull)
+, mEventTapPort(nsnull)
+, mEventTapRLS(nsnull)
 {
 }
 
@@ -80,6 +85,7 @@ nsToolkit::nsToolkit()
 nsToolkit::~nsToolkit()
 {
   RemoveSleepWakeNotifcations();
+  UnregisterAllProcessMouseEventHandlers();
   // Remove the TLS reference to the toolkit...
   PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
 }
@@ -181,23 +187,131 @@ nsToolkit::RemoveSleepWakeNotifcations()
 }
 
 
-static OSStatus AllAppMouseEventHandler(EventHandlerCallRef aCaller, EventRef aEvent, void* aRefcon)
+// We shouldn't do anything here.  See RegisterForAllProcessMouseEvents() for
+// the reason why.
+static OSStatus EventMonitorHandler(EventHandlerCallRef aCaller, EventRef aEvent, void* aRefcon)
 {
-  if (![NSApp isActive]) {
-    if (gRollupListener != nsnull && gRollupWidget != nsnull)
-      gRollupListener->Rollup();
-  }
+  return eventNotHandledErr;
+}
 
-  return noErr;
+// Converts aPoint from the CoreGraphics "global display coordinate" system
+// (which includes all displays/screens and has a top-left origin) to its
+// (presumed) Cocoa counterpart (assumed to be the same as the "screen
+// coordinates" system), which has a bottom-left origin.
+static NSPoint ConvertCGGlobalToCocoaScreen(CGPoint aPoint)
+{
+  NSPoint cocoaPoint;
+  cocoaPoint.x = aPoint.x;
+  cocoaPoint.y = CocoaScreenCoordsHeight() - aPoint.y;
+  return cocoaPoint;
+}
+
+
+// Since our event tap is "listen only", events arrive here a little after
+// they've already been processed.
+static CGEventRef EventTapCallback(CGEventTapProxy proxy, CGEventType type, CGEventRef event, void *refcon)
+{
+  if ((type == kCGEventTapDisabledByUserInput) ||
+      (type == kCGEventTapDisabledByTimeout))
+    return event;
+  if (!gRollupWidget || !gRollupListener || [NSApp isActive])
+    return event;
+  // Don't bother with rightMouseDown events here -- because of the delay,
+  // we'll end up closing browser context menus that we just opened.  Since
+  // these events usually raise a context menu, we'll handle them by hooking
+  // the @"com.apple.HIToolbox.beginMenuTrackingNotification" distributed
+  // notification (in nsAppShell.mm's AppShellDelegate).
+  if (type == kCGEventRightMouseDown)
+    return event;
+  NSWindow *ctxMenuWindow = (NSWindow*) gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+  if (!ctxMenuWindow)
+    return event;
+  NSPoint screenLocation = ConvertCGGlobalToCocoaScreen(CGEventGetLocation(event));
+  // Don't roll up the rollup widget if our mouseDown happens over it (doing
+  // so would break the corresponding context menu).
+  if (NSPointInRect(screenLocation, [ctxMenuWindow frame]))
+    return event;
+  gRollupListener->Rollup();
+  return event;
+}
+
+
+// Cocoa Firefox's use of custom context menus requires that we explicitly
+// handle mouse events from other processes that the OS handles
+// "automatically" for native context menus -- mouseMoved events so that
+// right-click context menus work properly when our browser doesn't have the
+// focus (bmo bug 368077), and mouseDown events so that our browser can
+// dismiss a context menu when a mouseDown happens in another process (bmo
+// bug 339945).
+void
+nsToolkit::RegisterForAllProcessMouseEvents()
+{
+  if (!mEventMonitorHandler) {
+    // Installing a handler for particular Carbon events causes the OS to post
+    // equivalent Cocoa events to the browser's event stream (the one that
+    // passes through [NSApp sendEvent:]).  For this reason installing a
+    // handler for kEventMouseMoved fixes bmo bug 368077, even though our
+    // handler does nothing on mouse-moved events.  (Actually it's more
+    // accurate to say that the OS (working in a different process) sends
+    // events to the window server, from which the OS (acting in the browser's
+    // process on its behalf) grabs them and turns them into both Carbon
+    // events (which get fed to our handler) and Cocoa events (which get fed
+    // to [NSApp sendEvent:]).)
+    EventTypeSpec kEvents[] = {{kEventClassMouse, kEventMouseMoved}};
+    InstallEventHandler(GetEventMonitorTarget(), EventMonitorHandler,
+                        GetEventTypeCount(kEvents), kEvents, 0,
+                        &mEventMonitorHandler);
+  }
+  if (!mEventTapRLS) {
+    // Using an event tap for mouseDown events (instead of installing a
+    // handler for them on the EventMonitor target) works around an Apple
+    // bug that causes OS menus (like the Clock menu) not to work properly
+    // on OS X 10.4.X and below (bmo bug 381448).
+    // We install our event tap "listen only" to get around yet another Apple
+    // bug -- when we install it as an event filter on any kind of mouseDown
+    // event, that kind of event stops working in the main menu, and usually
+    // mouse event processing stops working in all apps in the current login
+    // session (so the entire OS appears to be hung)!  The downside of
+    // installing listen-only is that events arrive at our handler slightly
+    // after they've already been processed.
+    mEventTapPort = CGEventTapCreate(kCGSessionEventTap,
+                                     kCGHeadInsertEventTap,
+                                     kCGEventTapOptionListenOnly,
+                                     CGEventMaskBit(kCGEventLeftMouseDown)
+                                       | CGEventMaskBit(kCGEventRightMouseDown)
+                                       | CGEventMaskBit(kCGEventOtherMouseDown),
+                                     EventTapCallback,
+                                     nsnull);
+    if (!mEventTapPort)
+      return;
+    mEventTapRLS = CFMachPortCreateRunLoopSource(nsnull, mEventTapPort, 0);
+    if (!mEventTapRLS) {
+      CFRelease(mEventTapPort);
+      mEventTapPort = nsnull;
+      return;
+    }
+    CFRunLoopAddSource(CFRunLoopGetCurrent(), mEventTapRLS, kCFRunLoopDefaultMode);
+  }
 }
 
 
 void
-nsToolkit::RegisterForAllProcessMouseEvents()
+nsToolkit::UnregisterAllProcessMouseEventHandlers()
 {
-  EventTypeSpec kEvents[] = {{kEventClassMouse, kEventMouseDown}};
-
-  InstallEventHandler(GetEventMonitorTarget(), AllAppMouseEventHandler, GetEventTypeCount(kEvents), kEvents, 0, NULL);
+  if (mEventMonitorHandler) {
+    RemoveEventHandler(mEventMonitorHandler);
+    mEventMonitorHandler = nsnull;
+  }
+  if (mEventTapRLS) {
+    CFRunLoopRemoveSource(CFRunLoopGetCurrent(), mEventTapRLS,
+                          kCFRunLoopDefaultMode);
+    CFRelease(mEventTapRLS);
+    mEventTapRLS = nsnull;
+  }
+  if (mEventTapPort) {
+    CFRelease(mEventTapPort);
+    mEventTapPort = nsnull;
+  }
 }
 
 
