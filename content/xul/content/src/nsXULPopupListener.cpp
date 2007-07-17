@@ -463,7 +463,7 @@ nsXULPopupListener::LaunchPopup(nsIDOMEvent* aEvent, nsIContent* aTargetContent)
 
   // XXXndeakin this is temporary. It is needed to grab the mouse location details
   //            used by the spellchecking popup. See bug 383930.
-  pm->SetMouseLocation(aEvent);
+  pm->SetMouseLocation(aEvent, popup);
 
   // if the popup has an anchoring attribute, anchor it to the element,
   // otherwise just open it at the screen position where the mouse was clicked.
