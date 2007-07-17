@@ -744,10 +744,6 @@ LoginManager.prototype = {
                              usernameField.value, "",
                              usernameField.name,  "");
 
-            // TODO: random note: devmo has conflicting info on Array.some()...
-            // One page says it runs on *every* element, another
-            // says it stops at the first match.
-
             var logins = pwmgr.findLogins({}, hostname, formSubmitURL, null);
             var existingLogin;
             var found = logins.some(function(l) {
