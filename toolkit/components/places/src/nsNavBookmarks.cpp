@@ -377,14 +377,12 @@ nsNavBookmarks::InitRoots()
   rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("tags"), &mTagRoot, mRoot, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef MOZ_PLACES_BOOKMARKS
   if (importDefaults) {
     // when there is no places root, we should define the hierarchy by
     // importing the default one.
     rv = InitDefaults();
     NS_ENSURE_SUCCESS(rv, rv);
   }
-#endif
 
   // migration for bug 382094 - remove for A6
   PRInt64 parent;

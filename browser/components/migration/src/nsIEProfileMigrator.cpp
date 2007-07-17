@@ -85,12 +85,8 @@
 #include "nsIRDFService.h"
 #include "nsIRDFContainer.h"
 #include "nsIURL.h"
-#ifdef MOZ_PLACES_BOOKMARKS
 #include "nsINavBookmarksService.h"
 #include "nsBrowserCompsCID.h"
-#else
-#include "nsIBookmarksService.h"
-#endif
 #include "nsIStringBundle.h"
 #include "nsNetUtil.h"
 #include "nsToolkitCompsCID.h"
@@ -1165,30 +1161,15 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
   // a folder called "Imported IE Favorites" and place all the Bookmarks there. 
   nsresult rv;
 
-#ifdef MOZ_PLACES_BOOKMARKS
   nsCOMPtr<nsINavBookmarksService> bms(do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
   PRInt64 root;
   rv = bms->GetBookmarksRoot(&root);
   NS_ENSURE_SUCCESS(rv, rv);
-#else
-  nsCOMPtr<nsIRDFService> rdf(do_GetService("@mozilla.org/rdf/rdf-service;1"));
-  nsCOMPtr<nsIRDFResource> root;
-  rdf->GetResource(NS_LITERAL_CSTRING("NC:BookmarksRoot"), getter_AddRefs(root));
-
-  nsCOMPtr<nsIBookmarksService> bms(do_GetService("@mozilla.org/browser/bookmarks-service;1"));
-  NS_ENSURE_TRUE(bms, NS_ERROR_FAILURE);
-  PRBool dummy;
-  bms->ReadBookmarks(&dummy);
-#endif
 
   nsAutoString personalToolbarFolderName;
 
-#ifdef MOZ_PLACES_BOOKMARKS
   PRInt64 folder;
-#else
-  nsCOMPtr<nsIRDFResource> folder;
-#endif
   if (!aReplace) {
     nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -1205,11 +1186,7 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
     bundle->FormatStringFromName(NS_LITERAL_STRING("importedBookmarksFolder").get(),
                                  sourceNameStrings, 1, getter_Copies(importedIEFavsTitle));
 
-#ifdef MOZ_PLACES_BOOKMARKS
     bms->CreateFolder(root, importedIEFavsTitle, -1, &folder);
-#else
-    bms->CreateFolderInContainer(importedIEFavsTitle.get(), root, -1, getter_AddRefs(folder));
-#endif
   }
   else {
     // Locate the Links toolbar folder, we want to replace the Personal Toolbar content with 
@@ -1245,7 +1222,6 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
     rv = ParseFavoritesFolder(favoritesDirectory, folder, bms, personalToolbarFolderName, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
-#ifdef MOZ_PLACES_BOOKMARKS
     // after importing the favorites, 
     // we need to set this pref so that on startup
     // we don't blow away what we just imported
@@ -1253,18 +1229,13 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
     NS_ENSURE_TRUE(pref, NS_ERROR_FAILURE);
     rv = pref->SetBoolPref("browser.places.importBookmarksHTML", PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
-#endif
   }
 
   return CopySmartKeywords(root);
 }
 
 nsresult
-#ifdef MOZ_PLACES_BOOKMARKS
 nsIEProfileMigrator::CopySmartKeywords(PRInt64 aParentFolder)
-#else
-nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
-#endif
 { 
   nsCOMPtr<nsIWindowsRegKey> regKey = 
     do_CreateInstance("@mozilla.org/windows-registry-key;1");
@@ -1274,15 +1245,10 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
       NS_SUCCEEDED(regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
                                 searchUrlKey, nsIWindowsRegKey::ACCESS_READ))) {
 
-#ifdef MOZ_PLACES_BOOKMARKS
     nsresult rv;
     nsCOMPtr<nsINavBookmarksService> bms(do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
     PRInt64 keywordsFolder = 0;
-#else
-    nsCOMPtr<nsIBookmarksService> bms(do_GetService("@mozilla.org/browser/bookmarks-service;1"));
-    nsCOMPtr<nsIRDFResource> keywordsFolder, bookmark;
-#endif
 
     nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
     
@@ -1305,12 +1271,7 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
         nsString importedIESearchUrlsTitle;
         bundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchURLsFolder").get(),
                                     sourceNameStrings, 1, getter_Copies(importedIESearchUrlsTitle));
-#ifdef MOZ_PLACES_BOOKMARKS
         bms->CreateFolder(aParentFolder, importedIESearchUrlsTitle, -1, &keywordsFolder);
-#else
-        bms->CreateFolderInContainer(importedIESearchUrlsTitle.get(), aParentFolder, -1, 
-                                     getter_AddRefs(keywordsFolder));
-#endif
       }
 
       nsCOMPtr<nsIWindowsRegKey> childKey; 
@@ -1326,37 +1287,10 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
             childKey->Close();
             continue;
           }
-#ifdef MOZ_PLACES_BOOKMARKS
           PRInt64 id;
           bms->InsertBookmark(keywordsFolder, uri,
                               nsINavBookmarksService::DEFAULT_INDEX, keyName,
                               &id);
-#else
-          nsCAutoString hostCStr;
-          uri->GetHost(hostCStr);
-          NS_ConvertUTF8toUTF16 host(hostCStr); 
-
-          const PRUnichar* nameStrings[] = { host.get() };
-          nsString keywordName;
-          nsresult rv = bundle->FormatStringFromName(
-                        NS_LITERAL_STRING("importedSearchURLsTitle").get(),
-                        nameStrings, 1, getter_Copies(keywordName));
-
-          const PRUnichar* descStrings[] = { keyName.get(), host.get() };
-          nsString keywordDesc;
-          rv = bundle->FormatStringFromName(
-                       NS_LITERAL_STRING("importedSearchUrlDesc").get(),
-                       descStrings, 2, getter_Copies(keywordDesc));
-          bms->CreateBookmarkInContainer(keywordName.get(), 
-                                         url.get(),
-                                         keyName.get(), 
-                                         keywordDesc.get(), 
-                                         nsnull,
-                                         nsnull, 
-                                         keywordsFolder, 
-                                         -1, 
-                                         getter_AddRefs(bookmark));
-#endif
         }
         childKey->Close();
       }
@@ -1399,13 +1333,8 @@ nsIEProfileMigrator::ResolveShortcut(const nsString &aFileName, char** aOutURL)
 
 nsresult
 nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory, 
-#ifdef MOZ_PLACES_BOOKMARKS
                                           PRInt64 aParentFolder,
                                           nsINavBookmarksService* aBookmarksService,
-#else
-                                          nsIRDFResource* aParentResource,
-                                          nsIBookmarksService* aBookmarksService,
-#endif 
                                           const nsAString& aPersonalToolbarFolderName,
                                           PRBool aIsAtRootLevel)
 {
@@ -1466,7 +1395,6 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
                          CaseInsensitiveCompare))
         bookmarkName.SetLength(lnkExtStart);
 
-#ifdef MOZ_PLACES_BOOKMARKS
       nsCOMPtr<nsIURI> bookmarkURI;
       rv = NS_NewFileURI(getter_AddRefs(bookmarkURI), localFile);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -1475,78 +1403,21 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
                                              nsINavBookmarksService::DEFAULT_INDEX,
                                              bookmarkName, &id);
       NS_ENSURE_SUCCESS(rv, rv);
-#else
-      nsCAutoString spec;
-      nsCOMPtr<nsIFile> filePath(localFile);
-      // Get the file url format (file:///...) of the native file path.
-      rv = NS_GetURLSpecFromFile(filePath, spec);
-      if (NS_FAILED(rv)) continue;
-
-      nsCOMPtr<nsIRDFResource> bookmark;
-      // Here it's assumed that NS_GetURLSpecFromFile returns spec in UTF-8.
-      // It is very likely to be ASCII (with everything escaped beyond file://),
-      // but we don't lose much assuming that it's UTF-8. This is not perf.
-      // critical.
-      aBookmarksService->CreateBookmarkInContainer(bookmarkName.get(), 
-                                                   NS_ConvertUTF8toUTF16(spec).get(), 
-                                                   nsnull,
-                                                   nsnull, 
-                                                   nsnull, 
-                                                   nsnull, 
-                                                   aParentResource, 
-                                                   -1, 
-                                                   getter_AddRefs(bookmark));
-#endif
       if (NS_FAILED(rv)) continue;
     }
     else if (isDir) {
-#ifdef MOZ_PLACES_BOOKMARKS
       PRInt64 folder;
-#else
-      nsCOMPtr<nsIRDFResource> folder;
-#endif
       if (bookmarkName.Equals(aPersonalToolbarFolderName)) {
-#ifdef MOZ_PLACES_BOOKMARKS
         aBookmarksService->GetToolbarFolder(&folder);
         // If we're here, it means the user's doing a _replace_ import which means
         // clear out the content of this folder, and replace it with the new content
         aBookmarksService->RemoveFolderChildren(folder);
-#else
-        aBookmarksService->GetBookmarksToolbarFolder(getter_AddRefs(folder));
-        
-        // If we're here, it means the user's doing a _replace_ import which means
-        // clear out the content of this folder, and replace it with the new content
-        nsCOMPtr<nsIRDFContainer> ctr(do_CreateInstance("@mozilla.org/rdf/container;1"));
-        nsCOMPtr<nsIRDFDataSource> bmds(do_QueryInterface(aBookmarksService));
-        ctr->Init(bmds, folder);
-
-        nsCOMPtr<nsISimpleEnumerator> e;
-        ctr->GetElements(getter_AddRefs(e));
-
-        PRBool hasMore;
-        e->HasMoreElements(&hasMore);
-        while (hasMore) {
-          nsCOMPtr<nsIRDFResource> b;
-          e->GetNext(getter_AddRefs(b));
-
-          ctr->RemoveElement(b, PR_FALSE);
-
-          e->HasMoreElements(&hasMore);
-        }
-#endif
       }
       else {
-#ifdef MOZ_PLACES_BOOKMARKS
         rv = aBookmarksService->CreateFolder(aParentFolder,
                                              bookmarkName,
                                              nsINavBookmarksService::DEFAULT_INDEX,
                                              &folder);
-#else
-        rv = aBookmarksService->CreateFolderInContainer(bookmarkName.get(), 
-                                                        aParentResource, 
-                                                        -1, 
-                                                        getter_AddRefs(folder));
-#endif
         if (NS_FAILED(rv)) continue;
       }
 
@@ -1570,7 +1441,6 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
       nsCString resolvedURL;
       ResolveShortcut(path, getter_Copies(resolvedURL));
 
-#ifdef MOZ_PLACES_BOOKMARKS
       nsCOMPtr<nsIURI> resolvedURI;
       rv = NS_NewURI(getter_AddRefs(resolvedURI), resolvedURL);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -1578,24 +1448,6 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
       rv = aBookmarksService->InsertBookmark(aParentFolder, resolvedURI,
                                              nsINavBookmarksService::DEFAULT_INDEX,
                                              name, &id);
-      if (NS_FAILED(rv)) continue;
-#else
-      nsCOMPtr<nsIRDFResource> bookmark;
-      // As far as I can tell reading the MSDN API document,
-      // IUniformResourceLocator::GetURL (used by ResolveShortcut) returns a 
-      // URL in ASCII (with non-ASCII characters escaped) and it doesn't yet
-      // support IDN (i18n) hostname. However, it may in the future so that
-      // using UTF8toUTF16 wouldn't be a bad idea.
-      rv = aBookmarksService->CreateBookmarkInContainer(name.get(), 
-                                                        NS_ConvertUTF8toUTF16(resolvedURL).get(), 
-                                                        nsnull, 
-                                                        nsnull, 
-                                                        nsnull, 
-                                                        nsnull, 
-                                                        aParentResource, 
-                                                        -1, 
-                                                        getter_AddRefs(bookmark));
-#endif
       if (NS_FAILED(rv)) continue;
     }
   }

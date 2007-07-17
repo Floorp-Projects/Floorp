@@ -289,7 +289,6 @@ BrowserGlue.prototype = {
    * - imports the bookmarks html file if bookmarks datastore is empty
    */
   _initPlaces: function bg__initPlaces() {
-#ifdef MOZ_PLACES_BOOKMARKS
     // we need to instantiate the history service before we check the 
     // the browser.places.importBookmarksHTML pref, as 
     // nsNavHistory::ForceMigrateBookmarksDB() will set that pref
@@ -338,7 +337,6 @@ BrowserGlue.prototype = {
         }
       }
     }
-#endif
   },
 
   /**
@@ -346,13 +344,11 @@ BrowserGlue.prototype = {
    * - back up and archive bookmarks
    */
   _shutdownPlaces: function bg__shutdownPlaces() {
-#ifdef MOZ_PLACES_BOOKMARKS
     // backup bookmarks to bookmarks.html
     var importer =
       Cc["@mozilla.org/browser/places/import-export-service;1"].
       getService(Ci.nsIPlacesImportExportService);
     importer.backupBookmarksFile();
-#endif
   },
   
   // ------------------------------

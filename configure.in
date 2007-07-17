@@ -5816,17 +5816,10 @@ if test -n "$MOZ_PLACES"; then
     AC_DEFINE(MOZ_PLACES)
     MOZ_MORK=
     MOZ_MORKREADER=1
-fi
-
-dnl ========================================================
-dnl = Enable places bookmarks (use places for bookmarks)
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(places-bookmarks,
-[  --enable-places-bookmarks        Enable 'places' for bookmarks backend],
-    MOZ_PLACES_BOOKMARKS=1,
-    MOZ_PLACES_BOOKMARKS= )
-if test -n "$MOZ_PLACES_BOOKMARKS"; then
-    AC_DEFINE(MOZ_PLACES_BOOKMARKS)
+else
+  if test "$MOZ_BUILD_APP" = "browser"; then
+    AC_MSG_ERROR([Cannot build Firefox with --disable-places.])
+  fi
 fi
 
 dnl ========================================================

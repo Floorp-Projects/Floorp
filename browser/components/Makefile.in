@@ -65,17 +65,8 @@ DIRS = \
 	shell \
 	sidebar \
 	feeds \
+	places \
 	$(NULL)
-
-ifdef MOZ_PLACES
-DIRS += places
-else
-DIRS += history
-endif
-
-ifndef MOZ_PLACES_BOOKMARKS
-DIRS +=  bookmarks
-endif
 
 ifdef MOZ_SAFE_BROWSING
 DIRS += safebrowsing

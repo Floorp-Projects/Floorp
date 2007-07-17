@@ -157,7 +157,6 @@ PlacesController.prototype = {
         }
       }
       return false;
-#ifdef MOZ_PLACES_BOOKMARKS
     case "placesCmd_new:folder":
     case "placesCmd_new:livemark":
       return this._canInsert() &&
@@ -229,7 +228,6 @@ PlacesController.prototype = {
         }
       }
       return false;
-#endif
     default:
       return false;
     }
@@ -290,7 +288,6 @@ PlacesController.prototype = {
     case "placesCmd_open:tabs":
       this.openLinksInTabs();
       break;
-#ifdef MOZ_PLACES_BOOKMARKS
     case "placesCmd_new:folder":
       this.newItem("folder");
       break;
@@ -321,7 +318,6 @@ PlacesController.prototype = {
     case "placesCmd_setAsBookmarksToolbarFolder":
       this.setBookmarksToolbarFolder();
       break;
-#endif
     }
   },
 
@@ -1504,7 +1500,6 @@ function goUpdatePlacesCommands() {
   goUpdateCommand("placesCmd_open:window");
   goUpdateCommand("placesCmd_open:tab");
   goUpdateCommand("placesCmd_open:tabs");
-#ifdef MOZ_PLACES_BOOKMARKS
   goUpdateCommand("placesCmd_new:folder");
   goUpdateCommand("placesCmd_new:bookmark");
   goUpdateCommand("placesCmd_new:livemark");
@@ -1515,5 +1510,4 @@ function goUpdatePlacesCommands() {
   goUpdateCommand("placesCmd_reload");
   goUpdateCommand("placesCmd_reloadMicrosummary");
   goUpdateCommand("placesCmd_sortBy:name");
-#endif
 }

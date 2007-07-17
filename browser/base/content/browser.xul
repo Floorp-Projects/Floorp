@@ -44,10 +44,7 @@
 # ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
-
-#ifdef MOZ_PLACES
 <?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
-#endif
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
 
@@ -55,9 +52,7 @@
 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
-#ifdef MOZ_PLACES
 <?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
-#endif
 
 # All DTD information is stored in a separate file so that it can be shared by
 # hiddenWindow.xul.
@@ -134,27 +129,9 @@
     </tooltip>
   </popupset>
 
-#ifndef MOZ_PLACES
-# The hacky hidden tree used by the Go menu to build items.
-#include browser-gotreehack.inc
-#endif
-
-#ifndef MOZ_PLACES_BOOKMARKS
-  <!-- bookmarks context menu -->
-  <popupset>
-    <menupopup id="bookmarks-context-menu" 
-               onpopupshowing="return BookmarksMenu.createContextMenu(event);"
-               onpopuphidden ="BookmarksMenu.destroyContextMenu(event);"/>
-  </popupset>
-#endif
-
   <!-- bookmarks toolbar tooltip -->
   <tooltip id="btTooltip" noautohide="true"
-#ifdef MOZ_PLACES_BOOKMARKS
            onpopupshowing="return BookmarksEventHandler.fillInBTTooltip(document.tooltipNode)">
-#else
-           onpopupshowing="return BookmarksToolbar.fillInBTTooltip(document.tooltipNode)">
-#endif
     <vbox id="btTooltipTextBox" flex="1">  
       <label id="btTitleText" />
       <label id="btUrlText" />
@@ -323,7 +300,6 @@
         <button id="navigator-throbber" disabled="true"/>
       </toolbaritem>
 
-#ifdef MOZ_PLACES_BOOKMARKS
       <toolbaritem flex="1" id="personal-bookmarks" title="&bookmarksItem.title;">
          <hbox id="bookmarksBarContent" flex="1" type="places"
                context="placesContext" asyncinit="true" 
@@ -333,56 +309,6 @@
                ondragexit="PlacesMenuDNDController.onDragExit(event);"
                tooltip="btTooltip"/>
       </toolbaritem>
-#else
-      <toolbaritem id="personal-bookmarks" title="&bookmarksItem.title;" flex="1"
-                   class="chromeclass-directories">
-        <stack id="bookmarks-stack" flex="1" style="min-width:0px; width:0px; overflow: hidden;"
-               onpopupshowing="BookmarksToolbar.setOpenedMenu(event);"
-               onpopuphidden="BookmarksToolbar.unsetOpenedMenu(event);">
-          <hbox id="bookmarks-ptf" class="bookmarks-toolbar-items" contextmenu="bookmarks-context-menu"
-                flex="1" style="min-width:0px; width:0px;padding-left: 3px;" 
-                datasources="rdf:bookmarks rdf:files"
-                template="bookmarks-template" flags="dont-test-empty"
-                infer="forward-proxy"
-                rdf:type="http://home.netscape.com/NC-rdf#Folder"
-                onpopupshowing="BookmarksMenu.onShowMenu(event.target)"
-                onpopuphidden="BookmarksMenu.onHideMenu(event.target)"
-                oncommand="BookmarksMenu.loadBookmark(event, event.target, this.database)"
-                onclick="BookmarksMenu.loadBookmarkMiddleClick(event, this.database)"
-                ondraggesture="nsDragAndDrop.startDrag(event, BookmarksMenuDNDObserver)"
-                ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDNDObserver); event.stopPropagation()"
-                ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.stopPropagation()"
-                ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDNDObserver); event.stopPropagation()"
-                ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDNDObserver); event.stopPropagation()">
-          </hbox>
-          <hbox class="bookmarks-toolbar-overflow-items" mousethrough="always">
-            <hbox mousethrough="always" id="overflow-padder"/>
-              <toolbarbutton id="bookmarks-chevron" type="menu" class="chevron"
-                             chromedir="&locale.dir;"
-                             mousethrough="never" collapsed="true" 
-                             datasources="rdf:bookmarks rdf:files"
-                             template="bookmarks-template" flags="dont-test-empty"
-                             onpopupshowing="BookmarksMenu.onShowMenu(event.target)"
-                             onpopuphidden="BookmarksMenu.onHideMenu(event.target)"
-                             oncommand="BookmarksMenu.loadBookmark(event, event.target, this.database)"
-                             onclick="BookmarksMenu.loadBookmarkMiddleClick(event, this.database)"
-                             ondraggesture="nsDragAndDrop.startDrag(event, BookmarksMenuDNDObserver)"
-                             ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDNDObserver); event.stopPropagation()"
-                             ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.stopPropagation()"
-                             ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDNDObserver); event.stopPropagation()"
-                             ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDNDObserver); event.stopPropagation()">
-                <menupopup onpopupshowing="if (event.target == this) BookmarksToolbar.updateOverflowMenu(this);"
-#ifndef XP_MACOSX
-                           contextmenu="bookmarks-context-menu"
-#endif
-                           />
-              </toolbarbutton>
-            </hbox>
-            <toolbarbutton class="bookmark-item bookmarks-toolbar-customize" mousethrough="never"
-                           label="&bookmarksToolbarItem.label;"/>
-          </stack>
-        </toolbaritem>
-#endif
 
         <toolbarbutton id="downloads-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        observes="Tools:Downloads"
@@ -467,19 +393,12 @@
  
     <toolbarset id="customToolbars" context="toolbar-context-menu"/>
 
-#ifdef MOZ_PLACES_BOOKMARKS
     <toolbar id="PersonalToolbar" mode="icons"  iconsize="small" 
              class="chromeclass-directories"
              context="toolbar-context-menu" 
              defaultset="bookmarksBarShowPlaces,personal-bookmarks"
              toolbarname="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;"
              customizable="true"/>
-#else
-    <toolbar id="PersonalToolbar" class="chromeclass-directories" iconsize="small"
-             customizable="true" defaultset="personal-bookmarks" mode="icons"
-             toolbarname="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;"
-             context="toolbar-context-menu"/>
-#endif
   </toolbox>
   
   <stack id="browser-stack" flex="1">

@@ -52,23 +52,6 @@
 
   <commandset id="mainCommandSet">
     <command id="cmd_newNavigator"                 oncommand="OpenBrowserWindow()"/>
-#ifndef MOZ_PLACES_BOOKMARKS
-    <command id="cmd_bm_open"                      oncommand="goDoCommand('cmd_bm_open');"/>
-    <command id="cmd_bm_openinnewwindow"           oncommand="goDoCommand('cmd_bm_openinnewwindow');"/>
-    <command id="cmd_bm_openinnewtab"              oncommand="goDoCommand('cmd_bm_openinnewtab');"/>
-    <command id="cmd_bm_openfolder"                oncommand="goDoCommand('cmd_bm_openfolder');"/>
-    <command id="cmd_bm_managefolder"              oncommand="goDoCommand('cmd_bm_managefolder');"/>
-    <command id="cmd_bm_newfolder"                 oncommand="goDoCommand('cmd_bm_newfolder');"/>
-    <command id="cmd_bm_newbookmark"               oncommand="goDoCommand('cmd_bm_newbookmark');"/>
-    <command id="cmd_bm_newseparator"              oncommand="goDoCommand('cmd_bm_newseparator');"/>
-    <command id="cmd_bm_properties"                oncommand="goDoCommand('cmd_bm_properties');"/>
-    <command id="cmd_bm_refreshlivemark"           oncommand="goDoCommand('cmd_bm_refreshlivemark');"/>
-    <command id="cmd_bm_refreshmicrosummary"       oncommand="goDoCommand('cmd_bm_refreshmicrosummary');"/>
-    <command id="cmd_bm_rename"                    oncommand="goDoCommand('cmd_bm_rename');"/>
-    <command id="cmd_bm_moveBookmark"              oncommand="goDoCommand('cmd_bm_moveBookmark');"/>
-    <command id="cmd_bm_sortbyname"                oncommand="goDoCommand('cmd_bm_sortbyname');"/>
-#endif
-
     <command id="cmd_handleBackspace" oncommand="BrowserHandleBackspace();" />
     <command id="cmd_handleShiftBackspace" oncommand="BrowserHandleShiftBackspace();" />
 
@@ -103,12 +86,8 @@
     <command id="cmd_findPrevious"
              oncommand="gFindBar.onFindAgainCommand(true);"
              observes="isImage"/>
-#ifdef MOZ_PLACES_BOOKMARKS
     <command id="Browser:AddBookmarkAs" 
              oncommand="PlacesCommandHook.bookmarkCurrentPage();"/>
-#else
-    <command id="Browser:AddBookmarkAs" oncommand="addBookmarkAs(document.getElementById('content'), false);"/>
-#endif
     <!-- The command is disabled for the hidden window. Otherwise its enabled
          state is handled by the BookmarkAllTabsHandler object. -->
     <command id="Browser:BookmarkAllTabs"
@@ -135,14 +114,10 @@
     <command id="History:UndoCloseTab" oncommand="undoCloseTab();"/>
   </commandset>
 
-#ifdef MOZ_PLACES
   <commandset id="placesCommands">
-#ifdef MOZ_PLACES_BOOKMARKS
     <command id="Browser:ShowBookmarks" 
              oncommand="PlacesCommandHook.showPlacesOrganizer(ORGANIZER_ROOT_BOOKMARKS);"/>           
-#endif
   </commandset>
-#endif
 
   <broadcasterset id="mainBroadcasterSet">
     <broadcaster id="viewBookmarksSidebar" autoCheck="false" label="&bookmarksButton.label;"

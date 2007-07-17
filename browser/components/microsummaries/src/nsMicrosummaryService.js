@@ -56,23 +56,10 @@ const CHECK_INTERVAL = 15 * 1000; // 15 seconds
 const MICSUM_NS = new Namespace("http://www.mozilla.org/microsummaries/0.1");
 const XSLT_NS = new Namespace("http://www.w3.org/1999/XSL/Transform");
 
-#ifdef MOZ_PLACES_BOOKMARKS
 const FIELD_MICSUM_GEN_URI    = "microsummary/generatorURI";
 const FIELD_MICSUM_EXPIRATION = "microsummary/expiration";
 const FIELD_GENERATED_TITLE   = "bookmarks/generatedTitle";
 const FIELD_CONTENT_TYPE      = "bookmarks/contentType";
-#else
-const NC_NS                   = "http://home.netscape.com/NC-rdf#";
-const RDF_NS                  = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-const FIELD_RDF_TYPE          = RDF_NS + "type";
-const VALUE_MICSUM_BOOKMARK   = NC_NS + "MicsumBookmark";
-const VALUE_NORMAL_BOOKMARK   = NC_NS + "Bookmark";
-const FIELD_MICSUM_GEN_URI    = NC_NS + "MicsumGenURI";
-const FIELD_MICSUM_EXPIRATION = NC_NS + "MicsumExpiration";
-const FIELD_GENERATED_TITLE   = NC_NS + "GeneratedTitle";
-const FIELD_CONTENT_TYPE      = NC_NS + "ContentType";
-const FIELD_BOOKMARK_URL      = NC_NS + "URL";
-#endif
 
 const MAX_SUMMARY_LENGTH = 4096;
 
@@ -81,8 +68,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 function MicrosummaryService() { this._init() }
 
 MicrosummaryService.prototype = {
-
-#ifdef MOZ_PLACES_BOOKMARKS
   // Bookmarks Service
   __bms: null,
   get _bms() {
@@ -100,32 +85,6 @@ MicrosummaryService.prototype = {
                    getService(Ci.nsIAnnotationService);
     return this.__ans;
   },
-#else
-  // RDF Service
-  __rdf: null,
-  get _rdf() {
-    if (!this.__rdf)
-      this.__rdf = Cc["@mozilla.org/rdf/rdf-service;1"].
-                   getService(Ci.nsIRDFService);
-    return this.__rdf;
-  },
-
-  // Bookmarks Data Source
-  __bmds: null,
-  get _bmds() {
-    if (!this.__bmds)
-      this.__bmds = this._rdf.GetDataSource("rdf:bookmarks");
-    return this.__bmds;
-  },
-
-  // Old Bookmarks Service
-  __bms: null,
-  get _bms() {
-    if (!this.__bms)
-      this.__bms = this._bmds.QueryInterface(Ci.nsIBookmarksService);
-    return this.__bms;
-  },
-#endif
  
   // IO Service
   __ios: null,
@@ -154,28 +113,6 @@ MicrosummaryService.prototype = {
   _uri: function MSS__uri(spec) {
     return this._ios.newURI(spec, null, null);
   },
-
-#ifndef MOZ_PLACES_BOOKMARKS
-  /**
-   * Make an RDF resource from a URI spec.
-   * @param   uriSpec
-   *          The URI spec to convert into a resource.
-   * @returns An nsIRDFResource object.
-   */
-  _resource: function MSS__resource(uriSpec) {
-    return this._rdf.GetResource(uriSpec);
-  },
-
-  /**
-   * Make an RDF literal from a string.
-   * @param   str
-   *          The string from which to construct the literal.
-   * @returns An nsIRDFLiteral object
-   */
-  _literal: function MSS__literal(str) {
-    return this._rdf.GetLiteral(str);
-  },
-#endif
 
   // Directory Locator
   __dirs: null,
@@ -298,11 +235,7 @@ MicrosummaryService.prototype = {
       oldValue = this._getField(bookmarkID, FIELD_GENERATED_TITLE);
 
     // A string identifying the bookmark to use when logging the update.
-#ifdef MOZ_PLACES_BOOKMARKS
     var bookmarkIdentity = bookmarkID;
-#else
-    var bookmarkIdentity = bookmarkID.Value + " (" + microsummary.pageURI.spec + ")";
-#endif
 
     if (oldValue == null || oldValue != microsummary.content) {
       this._setField(bookmarkID, FIELD_GENERATED_TITLE, microsummary.content);
@@ -621,11 +554,7 @@ MicrosummaryService.prototype = {
 
         // If this is the current microsummary for this bookmark, load the content
         // from the datastore so it shows up immediately in microsummary picking UI.
-#ifdef MOZ_PLACES_BOOKMARKS
         if (bookmarkID != -1 && this.isMicrosummary(bookmarkID, microsummary))
-#else
-        if (bookmarkID && this.isMicrosummary(bookmarkID, microsummary))
-#endif
           microsummary._content = this._getField(bookmarkID, FIELD_GENERATED_TITLE);
 
         microsummaries.AppendElement(microsummary);
@@ -634,11 +563,7 @@ MicrosummaryService.prototype = {
 
     // If a bookmark identifier has been provided, list its microsummary
     // synchronously, if any.
-#ifdef MOZ_PLACES_BOOKMARKS
     if (bookmarkID != -1 && this.hasMicrosummary(bookmarkID)) {
-#else
-    if (bookmarkID && this.hasMicrosummary(bookmarkID)) {
-#endif
       var currentMicrosummary = this.getMicrosummary(bookmarkID);
       if (!microsummaries.hasItemForMicrosummary(currentMicrosummary))
         microsummaries.AppendElement(currentMicrosummary);
@@ -699,7 +624,6 @@ MicrosummaryService.prototype = {
     }
   },
 
-#ifdef MOZ_PLACES_BOOKMARKS
   /**
    * Get the set of bookmarks with microsummaries.
    *
@@ -748,129 +672,8 @@ MicrosummaryService.prototype = {
     return this._bms.getBookmarkURI(aBookmarkId);
   },
 
-#else
   /**
    * Get the set of bookmarks with microsummaries.
-   *
-   * This is the internal version of this method, which is not accessible
-   * via XPCOM but is more performant; inside this component, use this version.
-   * Outside the component, use getBookmarks (no underscore prefix) instead.
-   *
-   * @returns an array of bookmark IDs
-   *
-   */
-  _getBookmarks: function MSS__getBookmarks() {
-    var bookmarks = [];
-
-    var resources = this._bmds.GetSources(this._resource(FIELD_RDF_TYPE),
-                                          this._resource(VALUE_MICSUM_BOOKMARK),
-                                          true);
-    while (resources.hasMoreElements()) {
-      var resource = resources.getNext().QueryInterface(Ci.nsIRDFResource);
-
-      // When a bookmark gets deleted or cut, most of its arcs get removed
-      // from the data source, but a few of them remain, in particular its RDF
-      // type arc.  So just because this resource has a MicsumBookmark type,
-      // that doesn't mean it's a real bookmark!  We need to check.
-      if (!this._bms.isBookmarkedResource(resource))
-        continue;
-
-      bookmarks.push(resource);
-    }
-
-    return bookmarks;
-  },
-
-  _getField: function MSS__getField(bookmarkID, fieldName) {
-    var bookmarkResource = bookmarkID.QueryInterface(Ci.nsIRDFResource);
-    var fieldValue;
-
-    var node = this._bmds.GetTarget(bookmarkResource,
-                                    this._resource(fieldName),
-                                    true);
-    if (node) {
-      if (fieldName == FIELD_RDF_TYPE)
-        fieldValue = node.QueryInterface(Ci.nsIRDFResource).Value;
-      else
-        fieldValue = node.QueryInterface(Ci.nsIRDFLiteral).Value;
-    }
-    else
-      fieldValue = null;
-
-    return fieldValue;
-  },
-
-  _setField: function MSS__setField(bookmarkID, fieldName, fieldValue) {
-    var bookmarkResource = bookmarkID.QueryInterface(Ci.nsIRDFResource);
-
-    if (this._hasField(bookmarkID, fieldName)) {
-      var oldValue = this._getField(bookmarkID, fieldName);
-      this._bmds.Change(bookmarkResource,
-                        this._resource(fieldName),
-                        this._literal(oldValue),
-                        this._literal(fieldValue));
-    }
-    else {
-      this._bmds.Assert(bookmarkResource,
-                        this._resource(fieldName),
-                        this._literal(fieldValue),
-                        true);
-    }
-  },
-
-  _clearField: function MSS__clearField(bookmarkID, fieldName) {
-    var bookmarkResource = bookmarkID.QueryInterface(Ci.nsIRDFResource);
-
-    var node = this._bmds.GetTarget(bookmarkResource,
-                                    this._resource(fieldName),
-                                    true);
-    if (node) {
-      this._bmds.Unassert(bookmarkResource,
-                          this._resource(fieldName),
-                          node);
-    }
-  },
-
-  _hasField: function MSS__hasField(bookmarkID, fieldName) {
-    var bookmarkResource = bookmarkID.QueryInterface(Ci.nsIRDFResource);
-
-    var node = this._bmds.GetTarget(bookmarkResource,
-                                    this._resource(fieldName),
-                                    true);
-    return node ? true : false;
-  },
-
-  /**
-   * Get the URI of the page to which a given bookmark refers.
-   *
-   * @param   bookmarkResource
-   *          an nsIResource uniquely identifying the bookmark
-   *
-   * @returns an nsIURI object representing the bookmark's page,
-   *          or null if the bookmark doesn't exist
-   *
-   */
-  _getPageForBookmark: function MSS__getPageForBookmark(bookmarkID) {
-    var bookmarkResource = bookmarkID.QueryInterface(Ci.nsIRDFResource);
-
-    var node = this._bmds.GetTarget(bookmarkResource,
-                                    this._resource(NC_NS + "URL"),
-                                    true);
-
-    if (!node)
-      return null;
-
-    var pageSpec = node.QueryInterface(Ci.nsIRDFLiteral).Value;
-    var pageURI = this._uri(pageSpec);
-    return pageURI;
-  },
-#endif
-
-  /**
-   * Get the set of bookmarks with microsummaries.
-   *
-   * Bookmark IDs are nsIRDFResource objects on builds with old RDF-based
-   * bookmarks and nsIURI objects on builds with new Places-based bookmarks.
    *
    * This is the external version of this method and is accessible via XPCOM.
    * Use it outside this component. Inside the component, use _getBookmarks
@@ -932,32 +735,6 @@ MicrosummaryService.prototype = {
    *
    */
   setMicrosummary: function MSS_setMicrosummary(bookmarkID, microsummary) {
-#ifndef MOZ_PLACES_BOOKMARKS
-    // Make sure that the bookmark is of type MicsumBookmark
-    // because that's what the template rules are matching
-    if (this._getField(bookmarkID, FIELD_RDF_TYPE) != VALUE_MICSUM_BOOKMARK) {
-      // Force the bookmark trees to rebuild, since they don't seem
-      // to be rebuilding on their own (bug 348928).
-      this._bmds.beginUpdateBatch();
-
-      var bookmarkResource = bookmarkID.QueryInterface(Ci.nsIRDFResource);
-      if (this._hasField(bookmarkID, FIELD_RDF_TYPE)) {
-        var oldValue = this._getField(bookmarkID, FIELD_RDF_TYPE);
-        this._bmds.Change(bookmarkResource,
-                          this._resource(FIELD_RDF_TYPE),
-                          this._resource(oldValue),
-                          this._resource(VALUE_MICSUM_BOOKMARK));
-      }
-      else {
-        this._bmds.Assert(bookmarkResource,
-                          this._resource(FIELD_RDF_TYPE),
-                          this._resource(VALUE_MICSUM_BOOKMARK),
-                          true);
-      }
-
-      this._bmds.endUpdateBatch();
-    }
-#endif
     this._setField(bookmarkID, FIELD_MICSUM_GEN_URI, microsummary.generator.uri.spec);
 
     if (microsummary.content) {
@@ -981,23 +758,6 @@ MicrosummaryService.prototype = {
    *
    */
   removeMicrosummary: function MSS_removeMicrosummary(bookmarkID) {
-#ifndef MOZ_PLACES_BOOKMARKS
-    // Set the bookmark's RDF type back to the normal bookmark type
-    if (this._getField(bookmarkID, FIELD_RDF_TYPE) == VALUE_MICSUM_BOOKMARK) {
-      // Force the bookmark trees to rebuild, since they don't seem
-      // to be rebuilding on their own (bug 348928).
-      this._bmds.beginUpdateBatch();
-
-      var bookmarkResource = bookmarkID.QueryInterface(Ci.nsIRDFResource);
-      this._bmds.Change(bookmarkResource,
-                        this._resource(FIELD_RDF_TYPE),
-                        this._resource(VALUE_MICSUM_BOOKMARK),
-                        this._resource(VALUE_NORMAL_BOOKMARK));
-
-      this._bmds.endUpdateBatch();
-    }
-#endif
-
     var fields = [FIELD_MICSUM_GEN_URI,
                   FIELD_MICSUM_EXPIRATION,
                   FIELD_GENERATED_TITLE,

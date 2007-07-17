@@ -1116,7 +1116,6 @@ nsContextMenu.prototype = {
     openUILinkIn(uri, where);
   },
 
-#ifdef MOZ_PLACES_BOOKMARKS
   bookmarkThisPage: function CM_bookmarkThisPage() {
     PlacesCommandHook.bookmarkPage(this.browser);
   },
@@ -1131,25 +1130,6 @@ nsContextMenu.prototype = {
     var description = PlacesUtils.getDescriptionFromDocument(doc);
     PlacesUtils.showAddBookmarkUI(uri, doc.title, description);
   },
-#else
-  bookmarkThisPage: function CM_bookmarkThisPage() {
-    addBookmarkAs(this.browser);
-  },
-
-  bookmarkLink: function CM_bookmarkLink() {
-    BookmarksUtils.addBookmark(this.linkURL, this.linkText());
-  },
-
-  addBookmarkForFrame: function CM_addBookmarkForFrame() {
-    var doc = this.target.ownerDocument;
-    var uri = doc.location.href;
-    var title = doc.title;
-    var description = BookmarksUtils.getDescriptionFromDocument(doc);
-    if (!title)
-      title = uri;
-    BookmarksUtils.addBookmark(uri, title, doc.charset, description);
-  },
-#endif
 
   savePageAs: function CM_savePageAs() {
     saveDocument(this.browser.contentDocument);
