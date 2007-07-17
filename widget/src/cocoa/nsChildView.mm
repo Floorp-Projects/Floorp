@@ -42,6 +42,7 @@
 #include <unistd.h>
  
 #include "nsChildView.h"
+#include "nsCocoaWindow.h"
 
 #include "nsCOMPtr.h"
 #include "nsToolkit.h"
@@ -142,6 +143,12 @@ enum {
 
 - (void)processPendingRedraws;
 
+- (BOOL)maybeRerouteMouseEventToRollupWidget:(NSEvent *)anEvent;
+
++ (BOOL)mouseEventIsOverRollupWidget:(NSEvent *)anEvent;
+
+- (void)maybeInitContextMenuTracking;
+
 #if USE_CLICK_HOLD_CONTEXTMENU
  // called on a timer two seconds after a mouse down to see if we should display
  // a context menu (click-hold)
@@ -203,7 +210,7 @@ ConvertGeckoRectToMacRect(const nsRect& aRect, Rect& outMacRect)
 static inline void
 FlipCocoaScreenCoordinate (NSPoint &inPoint)
 {  
-  inPoint.y = HighestPointOnAnyScreen() - inPoint.y;
+  inPoint.y = CocoaScreenCoordsHeight() - inPoint.y;
 }
   
 
@@ -2385,6 +2392,119 @@ NSEvent* globalDragEvent = nil;
 #endif
 
 
+// If gRollupWidget exists, mouse events (except for mouseDown events) that
+// happen over it should be rerouted to it if they've been sent elsewhere.
+// Returns 'true' if the event was rerouted, 'false' otherwise.  This is
+// needed when the user tries to navigate a context menu while keeping the
+// mouse-button down (left or right mouse button) -- the OS thinks this is a
+// dragging operation, so it sends events (mouseMoved and mouseUp) to the
+// window where the dragging operation started (the parent of the context
+// menu window).  It's also needed to work around a bizarre Apple bug -- if
+// (while a context menu is open) you move the mouse over another app's window
+// and then back over the context menu, mouseMoved events will be sent to the
+// window underneath the context menu.
+- (BOOL)maybeRerouteMouseEventToRollupWidget:(NSEvent *)anEvent
+{
+  if (!gRollupWidget)
+    return PR_FALSE;
+
+  // Return PR_FALSE if we can't get ctxMenuWindow or if our window is already
+  // a context menu.
+  NSWindow *ctxMenuWindow = (NSWindow*) gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+  if (!ctxMenuWindow || (mWindow == ctxMenuWindow))
+    return PR_FALSE;
+
+  NSPoint windowEventLocation = [anEvent locationInWindow];
+  NSPoint screenEventLocation = [mWindow convertBaseToScreen:windowEventLocation];
+  if (!NSPointInRect(screenEventLocation, [ctxMenuWindow frame]))
+    return PR_FALSE;
+
+  NSEventType type = [anEvent type];
+  NSPoint locationInCtxMenuWindow = [ctxMenuWindow convertScreenToBase:screenEventLocation];
+  NSEvent *newEvent = nil;
+
+  // If anEvent is a mouseUp event, send an extra mouseDown event before
+  // sending a mouseUp event -- this is needed to support selection by
+  // dragging the mouse to a menu item and then releasing it.  We retain
+  // ctxMenuWindow in case it gets destroyed as a result of the extra
+  // mouseDown (and release it below).
+  if ((type == NSLeftMouseUp) || (type == NSRightMouseUp)) {
+    [ctxMenuWindow retain];
+    NSEventType extraEventType;
+    switch (type) {
+      case NSLeftMouseUp:
+        extraEventType = NSLeftMouseDown;
+        break;
+      case NSRightMouseUp:
+        extraEventType = NSRightMouseDown;
+        break;
+      default:
+        extraEventType = (NSEventType) 0;
+        break;
+    }
+    newEvent = [NSEvent mouseEventWithType:extraEventType
+                                  location:locationInCtxMenuWindow
+                             modifierFlags:[anEvent modifierFlags]
+                                 timestamp:GetCurrentEventTime()
+                              windowNumber:[ctxMenuWindow windowNumber]
+                                   context:nil
+                               eventNumber:0
+                                clickCount:1
+                                  pressure:0.0];
+    [ctxMenuWindow sendEvent:newEvent];
+  }
+
+  newEvent = [NSEvent mouseEventWithType:type
+                                location:locationInCtxMenuWindow
+                           modifierFlags:[anEvent modifierFlags]
+                               timestamp:GetCurrentEventTime()
+                            windowNumber:[ctxMenuWindow windowNumber]
+                                 context:nil
+                             eventNumber:0
+                              clickCount:1
+                                pressure:0.0];
+  [ctxMenuWindow sendEvent:newEvent];
+
+  if ((type == NSLeftMouseUp) || (type == NSRightMouseUp))
+    [ctxMenuWindow release];
+
+  return PR_TRUE;
+}
+
+
++ (BOOL)mouseEventIsOverRollupWidget:(NSEvent *)anEvent
+{
+  if (!gRollupWidget)
+    return PR_FALSE;
+  NSWindow *ctxMenuWindow = (NSWindow*) gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+  if (!ctxMenuWindow)
+    return PR_FALSE;
+  NSPoint windowEventLocation = [anEvent locationInWindow];
+  NSPoint screenEventLocation = [[anEvent window] convertBaseToScreen:windowEventLocation];
+  return NSPointInRect(screenEventLocation, [ctxMenuWindow frame]);
+}
+
+
+// If we've just created a non-native context menu, we need to mark it as
+// such and let the OS (and other programs) know when it opens and closes
+// (this is how the OS knows to close other programs' context menus when
+// ours open).  We send the initial notification here, but others are sent
+// in nsCocoaWindow::Show().
+- (void)maybeInitContextMenuTracking
+{
+  if (!gRollupWidget)
+    return;
+  NSWindow *ctxMenuWindow = (NSWindow*)
+    gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+  if (!ctxMenuWindow || ![ctxMenuWindow isKindOfClass:[PopupWindow class]])
+    return;
+  [[NSDistributedNotificationCenter defaultCenter]
+    postNotificationName:@"com.apple.HIToolbox.beginMenuTrackingNotification"
+                  object:@"org.mozilla.gecko.PopupWindow"];
+  [(PopupWindow*) ctxMenuWindow setIsContextMenu:YES];
+}
+
+
 - (void)mouseDown:(NSEvent *)theEvent
 {
   // Make sure this view is not in the rollup widget. The fastest way to do this
@@ -2452,6 +2572,8 @@ NSEvent* globalDragEvent = nil;
     geckoCMEvent.nativeMsg = &macEvent;
     geckoCMEvent.isControl = ((modifierFlags & NSControlKeyMask) != 0);
     mGeckoChild->DispatchMouseEvent(geckoCMEvent);
+    // Initialize menu tracking if using custom context menus.
+    [self maybeInitContextMenuTracking];
   }
 
   // XXX maybe call markedTextSelectionChanged:client: here?
@@ -2465,6 +2587,9 @@ NSEvent* globalDragEvent = nil;
     [self stopHandScroll:theEvent];
     return;
   }
+
+  if ([self maybeRerouteMouseEventToRollupWidget:theEvent])
+    return;
 
   if (!mGeckoChild)
     return;
@@ -2510,8 +2635,30 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
   NSPoint screenEventLocation = [mWindow convertBaseToScreen:windowEventLocation];
   NSPoint viewEventLocation = [self convertPoint:windowEventLocation fromView:nil];
 
-  // if this is a popup window and the event is not over it, then we may want to send
-  // the event to another window
+  // Installing a mouseMoved handler on the EventMonitor target (in
+  // nsToolkit::RegisterForAllProcessMouseEvents()) means that some of the
+  // events received here come from other processes.  For this reason we need
+  // to avoid processing them unless they're over a context menu -- otherwise
+  // tooltips and other mouse-hover effects will "work" even when our app
+  // doesn't have the focus.
+  if (![NSApp isActive] && ![ChildView mouseEventIsOverRollupWidget:theEvent]) {
+    if (sLastViewEntered) {
+      nsIWidget* lastViewEnteredWidget = [(NSView<mozView>*)sLastViewEntered widget];
+      SendMouseEvent(PR_TRUE, NS_MOUSE_EXIT, lastViewEnteredWidget, nsMouseEvent::eReal, &viewEventLocation);
+      sLastViewEntered = nil;
+    }
+    return;
+  }
+
+  if ([self maybeRerouteMouseEventToRollupWidget:theEvent])
+    return;
+
+  // If this is a popup window and the event is not over it, then we may want
+  // to send the event to another window.  (Even with bmo bug 378645 fixed
+  // ("popup windows still receive native mouse move events after being
+  // closed"), the following is still needed to deal with mouseMoved events
+  // that happen over other objects while a context menu is up (and has the
+  // focus).)
   if ([mWindow level] == NSPopUpMenuWindowLevel &&
       !NSPointInRect(screenEventLocation, [mWindow frame])) {
     NSWindow* otherWindowForEvent = nil;
@@ -2628,6 +2775,9 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
 
 - (void)mouseDragged:(NSEvent*)theEvent
 {
+  if ([self maybeRerouteMouseEventToRollupWidget:theEvent])
+    return;
+
   if (!mGeckoChild)
     return;
 
@@ -2701,6 +2851,9 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
 
 - (void)rightMouseUp:(NSEvent *)theEvent
 {
+  if ([self maybeRerouteMouseEventToRollupWidget:theEvent])
+    return;
+
   if (!mGeckoChild)
     return;
   
@@ -2724,8 +2877,36 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
 }
 
 
+- (void)rightMouseDragged:(NSEvent*)theEvent
+{
+  if ([self maybeRerouteMouseEventToRollupWidget:theEvent])
+    return;
+
+  if (!mGeckoChild)
+    return;
+
+  nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
+  [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
+  geckoEvent.button = nsMouseEvent::eRightButton;
+
+  // send event into Gecko by going directly to the
+  // the widget.
+  mGeckoChild->DispatchMouseEvent(geckoEvent);
+}
+
+
 - (void)otherMouseDown:(NSEvent *)theEvent
 {
+  // If our view isn't the rollup widget, roll up any context menu that may
+  // currently be open -- otherwise a disfunctional context menu will appear
+  // alongside the autoscroll popup (if autoscroll is enabled).
+  if (gRollupWidget && gRollupListener) {
+    NSWindow *ourNativeWindow = [self nativeWindow];
+    NSWindow *rollupNativeWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+    if (ourNativeWindow != rollupNativeWindow)
+      gRollupListener->Rollup();
+  }
+
   if (!mGeckoChild)
     return;
 
@@ -2747,6 +2928,21 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eMiddleButton;
 
+  mGeckoChild->DispatchMouseEvent(geckoEvent);
+}
+
+
+- (void)otherMouseDragged:(NSEvent*)theEvent
+{
+  if (!mGeckoChild)
+    return;
+
+  nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
+  [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
+  geckoEvent.button = nsMouseEvent::eMiddleButton;
+
+  // send event into Gecko by going directly to the
+  // the widget.
   mGeckoChild->DispatchMouseEvent(geckoEvent);
 }
 
@@ -2863,6 +3059,9 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eRightButton;
   mGeckoChild->DispatchMouseEvent(geckoEvent);
+
+  // Initialize menu tracking if using custom context menus.
+  [self maybeInitContextMenuTracking];
   
   // Go up our view chain to fetch the correct menu to return.
   return [self contextMenu];

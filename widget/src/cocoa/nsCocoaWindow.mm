@@ -307,12 +307,17 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     // NSLog(@"Top-level window being created at Cocoa rect: %f, %f, %f, %f\n",
     //       rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
 
-    // Create the window. If we're a top level window, we want to be able to
-    // have the toolbar pill button, so use the special ToolbarWindow class.
-    Class windowClass = (mWindowType == eWindowType_toplevel) 
-                        ? [ToolbarWindow class] : [NSWindow class];
+    // Create the window
+    Class windowClass = [NSWindow class];
+    // If we're a top level window, we want to be able to have the toolbar
+    // pill button, so use the special ToolbarWindow class.
+    if (mWindowType == eWindowType_toplevel)
+      windowClass = [ToolbarWindow class];
+    // If we're a popup window we need to use the PopupWindow class.
+    else if (mWindowType == eWindowType_popup)
+      windowClass = [PopupWindow class];
     mWindow = [[windowClass alloc] initWithContentRect:rect styleMask:features 
-                                backing:NSBackingStoreBuffered defer:NO];
+                                   backing:NSBackingStoreBuffered defer:NO];
     
     if (mWindowType == eWindowType_popup) {
       [mWindow setAlphaValue:0.95];
@@ -486,9 +491,27 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
     }
     else if (mWindowType == eWindowType_popup) {
       mVisible = PR_TRUE;
+      // If a popup window is shown after being hidden, it needs to be "reset"
+      // for it to receive any mouse events aside from mouse-moved events
+      // (because it was removed from the "window cache" when it was hidden
+      // -- see below).  Setting the window number to -1 and then back to its
+      // original value seems to accomplish this.  The idea was "borrowed"
+      // from the Java Embedding Plugin.
+      int windowNumber = [mWindow windowNumber];
+      [mWindow _setWindowNumber:-1];
+      [mWindow _setWindowNumber:windowNumber];
       [mWindow setAcceptsMouseMovedEvents:YES];
       [mWindow orderFront:nil];
       SendSetZLevelEvent();
+      // If our popup window is a non-native context menu, tell the OS (and
+      // other programs) that a menu has opened.  This is how the OS knows to
+      // close other programs' context menus when ours open.
+      if ([mWindow isKindOfClass:[PopupWindow class]] &&
+          [(PopupWindow*) mWindow isContextMenu]) {
+        [[NSDistributedNotificationCenter defaultCenter]
+          postNotificationName:@"com.apple.HIToolbox.beginMenuTrackingNotification"
+                        object:@"org.mozilla.gecko.PopupWindow"];
+      }
     }
     else {
       mVisible = PR_TRUE;
@@ -556,11 +579,29 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
     }
     else {
       [mWindow orderOut:nil];
-      
+      // Unless it's explicitly removed from NSApp's "window cache", a popup
+      // window will keep receiving mouse-moved events even after it's been
+      // "ordered out" (instead of the browser window that was underneath it,
+      // until you click on that window).  This is bmo bug 378645, but it's
+      // surely an Apple bug.  The "window cache" is an undocumented subsystem,
+      // all of whose methods are included in the NSWindowCache category of
+      // the NSApplication class (in header files generated using class-dump).
+      // This workaround was "borrowed" from the Java Embedding Plugin (which
+      // uses it for a different purpose).
+      if (mWindowType == eWindowType_popup)
+        [NSApp _removeWindowFromCache:mWindow];
       // it's very important to turn off mouse moved events when hiding a window, otherwise
       // the windows' tracking rects will interfere with each other. (bug 356528)
       [mWindow setAcceptsMouseMovedEvents:NO];
       mVisible = PR_FALSE;
+      // If our popup window is a non-native context menu, tell the OS (and
+      // other programs) that a menu has closed.
+      if ([mWindow isKindOfClass:[PopupWindow class]] &&
+          [(PopupWindow*) mWindow isContextMenu]) {
+        [[NSDistributedNotificationCenter defaultCenter]
+          postNotificationName:@"com.apple.HIToolbox.endMenuTrackingNotification"
+                        object:@"org.mozilla.gecko.PopupWindow"];
+      }
     }
   }
   
@@ -644,7 +685,7 @@ NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
     
     // the point we have is in Gecko coordinates (origin top-left). Convert
     // it to Cocoa ones (origin bottom-left).
-    NSPoint coord = {aX, HighestPointOnAnyScreen() - aY};
+    NSPoint coord = {aX, CocoaScreenCoordsHeight() - aY};
 
     //printf("final coords %f %f\n", coord.x, coord.y);
     //printf("- window coords before %f %f\n", [mWindow frame].origin.x, [mWindow frame].origin.y);
@@ -1267,6 +1308,137 @@ NS_IMETHODIMP nsCocoaWindow::GetAnimatedResize(PRUint16* aAnimation)
   nsGUIEvent guiEvent(PR_TRUE, NS_OS_TOOLBAR, geckoWindow);
   guiEvent.time = PR_IntervalNow();
   geckoWindow->DispatchEvent(&guiEvent, status);
+}
+
+@end
+
+@implementation PopupWindow
+
+// The OS treats our custom popup windows very strangely -- many mouse events
+// sent to them never reach their target NSView objects.  (That these windows
+// are borderless and of level NSPopUpMenuWindowLevel may have something to do
+// with it.)  The best solution is to pre-empt the OS, as follows.  (All
+// events for a given NSWindow object go through its sendEvent: method.)
+- (void)sendEvent:(NSEvent *)anEvent
+{
+  NSView *target = nil, *contentView = nil;
+  NSWindow *window = [anEvent window];
+  NSEventType type = [anEvent type];
+  if (window) {
+    switch (type) {
+      case NSScrollWheel:
+      case NSLeftMouseDown:
+      case NSLeftMouseUp:
+      case NSRightMouseDown:
+      case NSRightMouseUp:
+      case NSOtherMouseDown:
+      case NSOtherMouseUp:
+      case NSMouseMoved:
+      case NSLeftMouseDragged:
+      case NSRightMouseDragged:
+      case NSOtherMouseDragged:
+        if ((contentView = [window contentView]) != nil) {
+          target = [contentView hitTest:[contentView convertPoint:
+                                        [anEvent locationInWindow] fromView:nil]];
+        }
+        break;
+      default:
+        break;
+    }
+  }
+  if (target) {
+    switch (type) {
+      case NSScrollWheel:
+        [target scrollWheel:anEvent];
+        break;
+      case NSLeftMouseDown:
+        [target mouseDown:anEvent];
+        // If we're in a context menu we don't want the OS to send the coming
+        // leftMouseUp event to NSApp via the window server, but we do want
+        // our ChildView to receive a leftMouseUp event (and to send a Gecko
+        // NS_MOUSE_BUTTON_UP event to the corresponding nsChildView object).
+        // If our NSApp isn't active (i.e. if we're in a context menu raised
+        // by a rightMouseDown event) when it receives the coming leftMouseUp
+        // via the window server, our browser will (in effect) become partially
+        // activated, which has strange side effects:  For example, if another
+        // app's window had the focus, that window will lose the focus and the
+        // other app's main menu will be completely disabled (though it will
+        // continue to be displayed).
+        // A side effect of not allowing the coming leftMouseUp event to be
+        // sent to NSApp via the window server is that our custom context
+        // menus will roll up whenever the user left-clicks on them, whether
+        // or not the left-click hit an active menu item.  This is how native
+        // context menus behave, but wasn't how our custom context menus
+        // behaved previously (on the trunk or e.g. in Firefox 2.0.0.4).
+        // If our ChildView's corresponding nsChildView object doesn't
+        // dispatch an NS_MOUSE_BUTTON_UP event, none of our active menu items
+        // will "work" on a leftMouseDown.
+        if (mIsContextMenu) {
+          NSEvent *newEvent = [NSEvent mouseEventWithType:NSLeftMouseUp
+                                                 location:[anEvent locationInWindow]
+                                            modifierFlags:[anEvent modifierFlags]
+                                                timestamp:GetCurrentEventTime()
+                                             windowNumber:[[anEvent window] windowNumber]
+                                                  context:nil
+                                              eventNumber:0
+                                               clickCount:1
+                                                 pressure:0.0];
+          [target mouseUp:newEvent];
+          RollUpPopups();
+        }
+        break;
+      case NSLeftMouseUp:
+        [target mouseUp:anEvent];
+        break;
+      case NSRightMouseDown:
+        [target rightMouseDown:anEvent];
+        break;
+      case NSRightMouseUp:
+        [target rightMouseUp:anEvent];
+        break;
+      case NSOtherMouseDown:
+        [target otherMouseDown:anEvent];
+        break;
+      case NSOtherMouseUp:
+        [target otherMouseUp:anEvent];
+        break;
+      case NSMouseMoved:
+        [target mouseMoved:anEvent];
+        break;
+      case NSLeftMouseDragged:
+        [target mouseDragged:anEvent];
+        break;
+      case NSRightMouseDragged:
+        [target rightMouseDragged:anEvent];
+        break;
+      case NSOtherMouseDragged:
+        [target otherMouseDragged:anEvent];
+        break;
+      default:
+        [super sendEvent:anEvent];
+        break;
+    }
+  } else {
+    [super sendEvent:anEvent];
+  }
+}
+
+- (id)initWithContentRect:(NSRect)contentRect styleMask:(unsigned int)styleMask
+      backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation
+{
+  mIsContextMenu = false;
+  return [super initWithContentRect:contentRect styleMask:styleMask
+          backing:bufferingType defer:deferCreation];
+}
+
+- (BOOL)isContextMenu
+{
+  return mIsContextMenu;
+}
+
+- (void)setIsContextMenu:(BOOL)flag
+{
+  mIsContextMenu = flag;
 }
 
 @end

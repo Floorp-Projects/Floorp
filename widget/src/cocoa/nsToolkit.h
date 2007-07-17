@@ -41,6 +41,7 @@
 
 #include "nsIToolkit.h"
 
+#import <Carbon/Carbon.h>
 #import <IOKit/IOKitLib.h>
 
 /**
@@ -96,6 +97,7 @@ protected:
   void               RemoveSleepWakeNotifcations();
 
   void               RegisterForAllProcessMouseEvents();
+  void               UnregisterAllProcessMouseEventHandlers();
 
 protected:
 
@@ -103,6 +105,10 @@ protected:
 
   CFRunLoopSourceRef mSleepWakeNotificationRLS;
   io_object_t        mPowerNotifier;
+
+  EventHandlerRef    mEventMonitorHandler;
+  CFMachPortRef      mEventTapPort;
+  CFRunLoopSourceRef mEventTapRLS;
 };
 
 extern nsToolkit* NS_CreateToolkitInstance();
