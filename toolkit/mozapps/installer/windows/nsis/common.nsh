@@ -1990,3 +1990,86 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
  !endif
 !macroend
 
+/**
+ * If present removes the VirtualStore directory for this installation. Uses the
+ * program files directory path and the current install location to determine
+ * the sub-directory in the VirtualStore directory.
+*/
+!macro CleanVirtualStore
+  !ifndef ${_MOZFUNC_UN}CleanVirtualStore
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}CleanVirtualStore "!insertmacro ${_MOZFUNC_UN}CleanVirtualStoreCall"
+
+    Function ${_MOZFUNC_UN}CleanVirtualStore
+      Push $R9
+      Push $R8
+      Push $R7
+
+      StrLen $R9 "$INSTDIR"
+
+      ; Get the installation's directory name including the preceding slash
+      start:
+      IntOp $R8 $R8 - 1
+      IntCmp $R8 -$R9 end end 0
+      StrCpy $R7 "$INSTDIR" 1 $R8
+      StrCmp $R7 "\" 0 start
+
+      StrCpy $R9 "$INSTDIR" "" $R8
+
+      ClearErrors
+      GetFullPathName $R8 "$PROGRAMFILES$R9"
+      IfErrors end
+      GetFullPathName $R7 "$INSTDIR"
+
+      ; Compare the installation's directory path with the path created by
+      ; concatenating the installation's directory name and the path to the
+      ; program files directory.
+      StrCmp "$R7" "$R8" 0 end
+
+      StrCpy $R8 "$PROGRAMFILES" "" 2 ; Remove the drive letter and colon
+      StrCpy $R7 "$PROFILE\AppData\Local\VirtualStore$R8$R9"
+
+      IfFileExists "$R7" 0 end
+      RmDir /r "$R7"
+
+      end:
+      ClearErrors
+
+      Pop $R7
+      Pop $R8
+      Pop $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro CleanVirtualStoreCall
+ !verbose push
+ !verbose ${_MOZFUNC_VERBOSE}
+ Call CleanVirtualStore
+ !verbose pop
+!macroend
+
+!macro un.CleanVirtualStoreCall
+ !verbose push
+ !verbose ${_MOZFUNC_VERBOSE}
+ Call un.CleanVirtualStore
+ !verbose pop
+!macroend
+
+!macro un.CleanVirtualStore
+ !ifndef un.CleanVirtualStore
+   !verbose push
+   !verbose ${_MOZFUNC_VERBOSE}
+   !undef _MOZFUNC_UN
+   !define _MOZFUNC_UN "un."
+
+   !insertmacro CleanVirtualStore
+
+   !undef _MOZFUNC_UN
+   !define _MOZFUNC_UN
+   !verbose pop
+ !endif
+!macroend
