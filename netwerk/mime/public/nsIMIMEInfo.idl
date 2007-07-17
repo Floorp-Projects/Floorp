@@ -49,7 +49,7 @@ typedef long nsHandlerInfoAction;
  * nsIHandlerInfo gives access to the information about how a given protocol
  * scheme or MIME-type is handled.
  */
-[scriptable, uuid(feaa5a46-45aa-4124-8e9e-bc23d517c2d4)]
+[scriptable, uuid(2ec1216d-59e7-424c-aa1e-70aa3c897520)]
 interface nsIHandlerInfo : nsISupports {
     /**
      * A human readable description of the handler type
@@ -76,16 +76,17 @@ interface nsIHandlerInfo : nsISupports {
     readonly attribute AString defaultDescription;
 
     /**
-     * Launches the application with the specified file, in a way that
+     * Launches the application with the specified URI, in a way that
      * depends on the value of preferredAction. preferredAction must be
      * useHelperApp or useSystemDefault.
      *
-     * @param aFile The file to launch this application with.
+     * @param aURI The URI to launch this application with; this may or may
+     *              not be a local file.
      *
      * @throw NS_ERROR_INVALID_ARG if action is not valid for this function.
      * Other exceptions may be thrown.
      */
-    void launchWithFile(in nsIFile aFile);
+    void launchWithURI(in nsIURI aURI);
 
     /**
      * preferredAction is how the user specified they would like to handle

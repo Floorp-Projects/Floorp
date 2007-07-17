@@ -63,13 +63,17 @@ nsMIMEInfoOS2::~nsMIMEInfoOS2()
 {
 }
 
-NS_IMETHODIMP nsMIMEInfoOS2::LaunchWithFile(nsIFile* aFile)
+NS_IMETHODIMP nsMIMEInfoOS2::LaunchWithURI(nsIFile* aURI)
 {
   nsresult rv = NS_OK;
 
-  nsCAutoString path;
-  aFile->GetNativePath(path);
+  nsCOMPtr<nsILocalFile> docToLoad;
+  rv = GetLocalFileFromURI(aURI, getter_AddRefs(docToLoad));
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCAutoString path;
+  docToLoad->GetNativePath(path);
+  
   nsCOMPtr<nsIFile> application;
   if (mPreferredAction == useHelperApp) {
     nsCOMPtr<nsILocalHandlerApp> localHandlerApp =
@@ -108,7 +112,7 @@ NS_IMETHODIMP nsMIMEInfoOS2::LaunchWithFile(nsIFile* aFile)
     if (helperAppService)
     {
       nsCAutoString leafName; 
-      aFile->GetNativeLeafName(leafName);
+      docToLoad->GetNativeLeafName(leafName);
       const char* lastDot = strrchr(leafName.get(), '.');
       char suffix[CCHMAXPATH + 1] = "";
       if (lastDot)
@@ -130,10 +134,10 @@ NS_IMETHODIMP nsMIMEInfoOS2::LaunchWithFile(nsIFile* aFile)
             saltedTempLeafName.Append(table[(rand()%TABLE_SIZE)]);
           }
           AppendASCIItoUTF16(suffix, saltedTempLeafName);
-          rv = aFile->MoveTo(nsnull, saltedTempLeafName);
+          rv = docToLoad->MoveTo(nsnull, saltedTempLeafName);
       } while (NS_FAILED(rv));
-      helperAppService->DeleteTemporaryFileOnExit(aFile);
-      aFile->GetNativePath(path);
+      helperAppService->DeleteTemporaryFileOnExit(docToLoad);
+      docToLoad->GetNativePath(path);
     }
   } else {
     path.Insert('\"', 0);

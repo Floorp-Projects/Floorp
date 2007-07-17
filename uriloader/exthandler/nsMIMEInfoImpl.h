@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et: */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -85,7 +85,7 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     NS_IMETHOD GetPreferredApplicationHandler(nsIHandlerApp * *aPreferredApplicationHandler);
     NS_IMETHOD SetPreferredApplicationHandler(nsIHandlerApp * aPreferredApplicationHandler);
     NS_IMETHOD GetDefaultDescription(nsAString & aDefaultDescription);
-    NS_IMETHOD LaunchWithFile(nsIFile *aFile);
+    NS_IMETHOD LaunchWithURI(nsIURI *aURI);
     NS_IMETHOD GetPreferredAction(nsHandlerInfoAction *aPreferredAction);
     NS_IMETHOD SetPreferredAction(nsHandlerInfoAction aPreferredAction);
     NS_IMETHOD GetAlwaysAskBeforeHandling(PRBool *aAlwaysAskBeforeHandling);
@@ -137,6 +137,23 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
      */
     static NS_HIDDEN_(nsresult) LaunchWithIProcess(nsIFile* aApp, nsIFile* aFile);
 
+    /**
+     * Used to launch a web-based handler with this URI.
+     * 
+     * @param aURI  The URI to launch with.
+     */
+    static NS_HIDDEN_(nsresult) LaunchWithWebHandler(nsIWebHandlerApp *aApp, 
+                                                     nsIURI *aURI);
+
+    /**
+     * Given a file: nsIURI, return the associated nsILocalFile
+     *
+     * @param  aURI      the file: URI in question
+     * @param  aFile     the associated nsILocalFile (out param)
+     */
+    static NS_HIDDEN_(nsresult) GetLocalFileFromURI(nsIURI *aURI,
+                                                    nsILocalFile **aFile);
+
     // member variables
     nsCStringArray         mExtensions; ///< array of file extensions associated w/ this MIME obj
     nsString               mDescription; ///< human readable description
@@ -154,8 +171,9 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
  * This is a complete implementation of nsIMIMEInfo, and contains all necessary
  * methods. However, depending on your platform you may want to use a different
  * way of launching applications. This class stores the default application in a
- * member variable and provides a function for setting it. Launching is done
- * using nsIProcess, native path of the file to open as first argument.
+ * member variable and provides a function for setting it. For local
+ * applications, launching is done using nsIProcess, native path of the file to
+ * open as first argument.
  */
 class nsMIMEInfoImpl : public nsMIMEInfoBase {
   public:
