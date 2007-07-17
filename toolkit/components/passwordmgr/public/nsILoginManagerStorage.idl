@@ -139,7 +139,7 @@ interface nsILoginManagerStorage : nsISupports {
      *        pathname. For example: "https://www.site.com".
      *
      * NOTE: This can be called from JS as:
-     *       var logins = pwmgr.getDisabledAllLogins({});
+     *       var logins = pwmgr.getAllDisabledHosts({});
      */
     void getAllDisabledHosts(out unsigned long count,
                       [retval, array, size_is(count)] out wstring hostnames);
