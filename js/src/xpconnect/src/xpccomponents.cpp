@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=80:
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -3459,7 +3459,8 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
         }
     }
 
-    rv = xpc_EvalInSandbox(cx, sandbox, source, filename.get(), lineNo, rval);
+    rv = xpc_EvalInSandbox(cx, sandbox, source, filename.get(), lineNo,
+                           PR_FALSE, rval);
 
     if (NS_SUCCEEDED(rv)) {
         if (JS_IsExceptionPending(cx)) {
@@ -3476,7 +3477,8 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
 #ifndef XPCONNECT_STANDALONE
 nsresult
 xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
-                  const char *filename, PRInt32 lineNo, jsval *rval)
+                  const char *filename, PRInt32 lineNo,
+                  PRBool returnStringOnly, jsval *rval)
 {
     if (JS_GetClass(cx, sandbox) != &SandboxClass)
         return NS_ERROR_INVALID_ARG;
@@ -3521,21 +3523,54 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
     nsresult rv = NS_OK;
 
     AutoJSRequestWithNoCallContext req(sandcx->GetJSContext());
+    JSString *str = nsnull;
     if (!JS_EvaluateUCScriptForPrincipals(sandcx->GetJSContext(), sandbox,
                                           jsPrincipals,
                                           reinterpret_cast<const jschar *>
                                                           (PromiseFlatString(source).get()),
                                           source.Length(), filename, lineNo,
-                                          rval)) {
+                                          rval) ||
+        (returnStringOnly &&
+         !JSVAL_IS_VOID(*rval) &&
+         !(str = JS_ValueToString(sandcx->GetJSContext(), *rval)))) {
         jsval exn;
         if (JS_GetPendingException(sandcx->GetJSContext(), &exn)) {
-            AutoJSSuspendRequestWithNoCallContext sus(sandcx->GetJSContext());
-            AutoJSRequestWithNoCallContext cxreq(cx);
+            // Stash the exception in |cx| so we can execute code on
+            // sandcx without a pending exception.
+            {
+                AutoJSSuspendRequestWithNoCallContext sus(sandcx->GetJSContext());
+                AutoJSRequestWithNoCallContext cxreq(cx);
 
-            JS_SetPendingException(cx, exn);
+                JS_SetPendingException(cx, exn);
+            }
+
+            JS_ClearPendingException(sandcx->GetJSContext());
+            if (returnStringOnly) {
+                // The caller asked for strings only, convert the
+                // exception into a string.
+                str = JS_ValueToString(sandcx->GetJSContext(), exn);
+
+                AutoJSSuspendRequestWithNoCallContext sus(sandcx->GetJSContext());
+                AutoJSRequestWithNoCallContext cxreq(cx);
+                if (str) {
+                    // We converted the exception to a string. Use that
+                    // as the value exception.
+                    JS_SetPendingException(cx, STRING_TO_JSVAL(str));
+                } else {
+                    JS_ClearPendingException(cx);
+                    rv = NS_ERROR_FAILURE;
+                }
+            }
+
+            // Clear str so we don't confuse callers.
+            str = nsnull;
         } else {
             rv = NS_ERROR_OUT_OF_MEMORY;
         }
+    }
+
+    if (str) {
+        *rval = STRING_TO_JSVAL(str);
     }
 
     if (stack) {

@@ -297,36 +297,23 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         }
         if (NS_FAILED(rv)) {
             return rv;
-        }    
+        }
 
         rv = xpc->EvalInSandboxObject(NS_ConvertUTF8toUTF16(script), cx,
-                                      sandbox, &rval);
+                                      sandbox, PR_TRUE, &rval);
 
         // Propagate and report exceptions that happened in the
         // sandbox.
         if (JS_IsExceptionPending(cx)) {
             JS_ReportPendingException(cx);
+            isUndefined = PR_TRUE;
+        } else {
+            isUndefined = rval == JSVAL_VOID;
         }
 
-        isUndefined = rval == JSVAL_VOID;
-
         if (!isUndefined && NS_SUCCEEDED(rv)) {
-            JSAutoRequest ar(cx);
-
-            JSString *str = JS_ValueToString(cx, rval);
-            if (!str) {
-                // Report any pending exceptions.
-                if (JS_IsExceptionPending(cx)) {
-                    JS_ReportPendingException(cx);
-                }
-
-                // We don't know why this failed, so just use a
-                // generic error code. It'll be translated to a
-                // different one below anyways.
-                rv = NS_ERROR_FAILURE;
-            } else {
-                result = nsDependentJSString(str);
-            }
+            NS_ASSERTION(JSVAL_IS_STRING(rval), "evalInSandbox is broken");
+            result = nsDependentJSString(JSVAL_TO_STRING(rval));
         }
 
         stack->Pop(nsnull);
