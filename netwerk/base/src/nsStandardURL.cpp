@@ -1511,13 +1511,16 @@ nsStandardURL::SetPort(PRInt32 port)
         buf.Assign(':');
         buf.AppendInt(port);
         mSpec.Insert(buf, mHost.mPos + mHost.mLen);
+        mAuthority.mLen += buf.Length();
         ShiftFromPath(buf.Length());
     }
-    else if (port == -1) {
+    else if (port == -1 || port == mDefaultPort) {
         // need to remove the port number from the URL spec
         PRUint32 start = mHost.mPos + mHost.mLen;
-        mSpec.Cut(start, mPath.mPos - start);
-        ShiftFromPath(start - mPath.mPos);
+        PRUint32 lengthToCut = mPath.mPos - start;
+        mSpec.Cut(start, lengthToCut);
+        mAuthority.mLen -= lengthToCut;
+        ShiftFromPath(-lengthToCut);
     }
     else {
         // need to replace the existing port
@@ -1526,8 +1529,10 @@ nsStandardURL::SetPort(PRInt32 port)
         PRUint32 start = mHost.mPos + mHost.mLen + 1;
         PRUint32 length = mPath.mPos - start;
         mSpec.Replace(start, length, buf);
-        if (buf.Length() != length)
+        if (buf.Length() != length) {
+            mAuthority.mLen += buf.Length() - length;
             ShiftFromPath(buf.Length() - length);
+        }
     }
 
     mPort = port;
