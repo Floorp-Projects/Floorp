@@ -142,6 +142,10 @@ LDFLAGS += \
 	-NODEFAULTLIB:LIBC \
 	$(NULL)
 
+ifneq (,$(filter-out 1700 1710,$(_MSC_VER)))
+LDFLAGS += -SAFESEH:NO
+endif
+
 ifdef STATIC_LIBIDL
 LDFLAGS += -NODEFAULTLIB:MSVCRT
 endif
