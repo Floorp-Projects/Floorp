@@ -58,6 +58,8 @@
 #include "nsIViewManager.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIServiceManager.h"
+#include "nsILocalFile.h"
+#include "nsILocalFileMac.h"
 #include "nsGfxCIID.h"
 
 #include "nsDragService.h"
@@ -71,6 +73,10 @@
 #undef DEBUG_IME
 #undef DEBUG_UPDATE
 #undef INVALIDATE_DEBUGGING  // flash areas as they are invalidated
+
+#ifdef PR_LOGGING
+PRLogModuleInfo* sCocoaLog = nsnull;
+#endif
 
 extern "C" {
   CG_EXTERN void CGContextResetCTM(CGContextRef);
@@ -328,6 +334,12 @@ nsChildView::nsChildView() : nsBaseWidget()
 {
   SetBackgroundColor(NS_RGB(255, 255, 255));
   SetForegroundColor(NS_RGB(0, 0, 0));
+
+#ifdef PR_LOGGING
+  if (!sCocoaLog)
+    sCocoaLog = PR_NewLogModule("nsCocoaWidgets");
+#endif
+
 }
 
 
@@ -1854,9 +1866,11 @@ NSEvent* globalDragEvent = nil;
   }
   
   // register for things we'll take from other applications
+  PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("ChildView initWithFrame: registering drag types\n"));
   [self registerForDraggedTypes:[NSArray arrayWithObjects:NSFilenamesPboardType,
                                                           NSStringPboardType,
                                                           NSURLPboardType,
+                                                          NSFilesPromisePboardType,
                                                           kWildcardPboardType,
                                                           nil]];
 
@@ -3879,6 +3893,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   if (!mGeckoChild)
     return NO;
 
+  PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("ChildView doDragAction: entered\n"));
+
   if (!mDragService) {
     CallGetService(kDragServiceContractID, &mDragService);
     NS_ASSERTION(mDragService, "Couldn't get a drag service - big problem!");
@@ -3945,6 +3961,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
 {
+  PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("ChildView draggingEntered: entered\n"));
+  
   // there should never be a globalDragPboard when "draggingEntered:" is
   // called, but just in case we'll take care of it here.
   [globalDragPboard release];
@@ -3962,6 +3980,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
 - (NSDragOperation)draggingUpdated:(id <NSDraggingInfo>)sender
 {
+  PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("ChildView draggingUpdated: entered\n"));
+
   BOOL handled = [self doDragAction:NS_DRAGDROP_OVER sender:sender];
   return handled ? NSDragOperationGeneric : NSDragOperationNone;
 }
@@ -3969,6 +3989,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
 - (void)draggingExited:(id <NSDraggingInfo>)sender
 {
+  PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("ChildView draggingExited: entered\n"));
+
   [self doDragAction:NS_DRAGDROP_EXIT sender:sender];
 }
 
@@ -4004,6 +4026,63 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   return UINT_MAX;
 }
 
+// This method is a callback typically invoked in response to a drag ending on the desktop
+// or a Findow folder window; the argument passed is a path to the drop location, to be used
+// in constructing a complete pathname for the file(s) we want to create as a result of
+// the drag.
+- (NSArray *)namesOfPromisedFilesDroppedAtDestination:(id <NSDraggingInfo>)dropDestination
+{
+  nsresult rv;
+
+  PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("ChildView namesOfPromisedFilesDroppedAtDestination: entering callback for promised files\n"));
+
+  nsCOMPtr<nsILocalFile> targFile;
+  NS_NewLocalFile(EmptyString(), PR_TRUE, getter_AddRefs(targFile));
+  nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(targFile);
+  if (!macLocalFile) {
+    NS_ERROR("No Mac local file");
+    return nil;
+  }
+
+  if (!NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)dropDestination))) {
+    NS_ERROR("failed InitWithCFURL");
+    return nil;
+  }
+
+  extern nsISupportsArray *draggedTransferables;
+
+  PRUint32 transferableCount;
+  rv = draggedTransferables->Count(&transferableCount);
+  if (NS_FAILED(rv))
+    return nil;
+
+  for (PRUint32 i = 0; i < transferableCount; i++) {
+    nsCOMPtr<nsISupports> genericItem;
+    draggedTransferables->GetElementAt(i, getter_AddRefs(genericItem));
+    nsCOMPtr<nsITransferable> item(do_QueryInterface(genericItem));
+    if (!item) {
+      NS_ERROR("no transferable");
+      return nil;
+    }
+
+    item->SetTransferData(kFilePromiseDirectoryMime, macLocalFile, sizeof(nsILocalFile*));
+    
+    // now request the kFilePromiseMime data, which will invoke the data provider
+    // If successful, the returned data is a reference to the resulting file.
+    nsCOMPtr<nsISupports> fileDataPrimitive;
+    PRUint32 dataSize = 0;
+    item->GetTransferData(kFilePromiseMime, getter_AddRefs(fileDataPrimitive), &dataSize);
+  }
+  
+  NSPasteboard* generalPboard = [NSPasteboard pasteboardWithName:NSDragPboard];
+  NSData* data = [generalPboard dataForType:@"application/x-moz-file-promise-dest-filename"];
+  NSString* name = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+  NSArray* rslt = [NSArray arrayWithObject:name];
+
+  [name release];
+
+  return rslt;
+}
 
 #pragma mark -
 
