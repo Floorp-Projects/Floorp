@@ -69,6 +69,10 @@ extern NSPasteboard* globalDragPboard;
 extern NSView* globalDragView;
 extern NSEvent* globalDragEvent;
 
+// This global makes the transferable array available to Cocoa's promised
+// file destination callback.
+nsISupportsArray *draggedTransferables;
+
 NSString* const kWildcardPboardType = @"MozillaWildcard";
 
 NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
@@ -262,12 +266,23 @@ nsDragService::InvokeDragSession(nsIDOMNode* aDOMNode, nsISupportsArray* aTransf
   point = [[globalDragView window] convertScreenToBase: point];
   NSPoint localPoint = [globalDragView convertPoint:point fromView:nil];
  
+  // Save the transferables away in case a promised file callback is invoked.
+  draggedTransferables = aTransferableArray;
+
   nsBaseDragService::StartDragSession();
+
+  // It is possible to specify what file types we will create, but the Finder doesn't
+  // care; it is happy to store any type of file it is handed. So use an empty string
+  // for type.
+  NSPasteboard* workingPBoard = [NSPasteboard pasteboardWithName:NSDragPboard];
+  NSArray* fileTypeList = [NSArray arrayWithObject:@""];
+  [workingPBoard setPropertyList:fileTypeList forType:NSFilesPromisePboardType];
+
   [globalDragView dragImage:image
                          at:localPoint
                      offset:NSMakeSize(0,0)
                       event:globalDragEvent
-                 pasteboard:[NSPasteboard pasteboardWithName:NSDragPboard]
+                 pasteboard:workingPBoard
                      source:globalDragView
                   slideBack:YES];
 
@@ -331,7 +346,7 @@ nsDragService::GetData(nsITransferable* aTransferable, PRUint32 aItemIndex)
     nsXPIDLCString flavorStr;
     currentFlavor->ToString(getter_Copies(flavorStr));
 
-    // printf("looking for clipboard data of type %s\n", flavorStr.get());
+    PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("nsDragService::GetData: looking for clipboard data of type %s\n", flavorStr.get()));
 
     if (flavorStr.EqualsLiteral(kFileMime)) {
       NSArray* pFiles = [globalDragPboard propertyListForType:NSFilenamesPboardType];
