@@ -45,8 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= test_browser_places
 
-ifdef MOZ_PLACES_BOOKMARKS
 XPCSHELL_TESTS = unit
-endif
 
 include $(topsrcdir)/config/rules.mk

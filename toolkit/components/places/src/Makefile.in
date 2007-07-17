@@ -101,10 +101,8 @@ EXTRA_DSO_LDOPTS += \
 
 LOCAL_INCLUDES += -I$(srcdir)/../../build
 
-ifdef MOZ_PLACES_BOOKMARKS
 EXTRA_PP_COMPONENTS = nsLivemarkService.js \
                       nsTaggingService.js \
                       $(NULL)
-endif
 
 include $(topsrcdir)/config/rules.mk

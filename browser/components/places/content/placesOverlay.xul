@@ -73,7 +73,6 @@
              oncommand="goDoCommand('placesCmd_open:tab');"/>
     <command id="placesCmd_open:tabs"
              oncommand="goDoCommand('placesCmd_open:tabs');"/>
-#ifdef MOZ_PLACES_BOOKMARKS
     <command id="placesCmd_new:bookmark"
              oncommand="goDoCommand('placesCmd_new:bookmark');"/>
     <command id="placesCmd_new:livemark"
@@ -97,7 +96,6 @@
              oncommand="goDoCommand('placesCmd_moveBookmarks');"/>
     <command id="placesCmd_setAsBookmarksToolbarFolder"
              oncommand="goDoCommand('placesCmd_setAsBookmarksToolbarFolder');"/>
-#endif
   </commandset>
 
   <popup id="placesContext"

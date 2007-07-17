@@ -105,12 +105,8 @@ function historyAddBookmarks()
   var node = gHistoryTree.selectedURINode;
   if (!node) 
     return;
-  
-#ifdef MOZ_PLACES_BOOKMARKS
+
   PlacesUtils.showMinimalAddBookmarkUI(PlacesUtils._uri(node.uri), node.title);
-#else
-  BookmarksUtils.addBookmark(node.uri, node.title, undefined);
-#endif
 }
 
 function SetSortingAndGrouping(aOptions) 

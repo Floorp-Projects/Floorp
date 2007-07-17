@@ -32,14 +32,9 @@ classic.jar:
   skin/classic/browser/feeds/feedIcon16.png                 (feeds/feedIcon16.png)
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/monitor.png
-#ifdef MOZ_PLACES
   skin/classic/browser/places/places.css                    (places/places.css)
   skin/classic/browser/places/query.png                     (places/query.png)
   skin/classic/browser/places/livemarkItem.png              (places/livemarkItem.png)
-#else
-  skin/classic/browser/bookmarks/bookmark-item.png          (bookmarks/bookmark-item.png)
-#endif
-#ifdef MOZ_PLACES_BOOKMARKS
   skin/classic/browser/places/bookmarksMenu.png             (places/bookmarksMenu.png)
   skin/classic/browser/places/bookmarksToolbar.png          (places/bookmarksToolbar.png)
   skin/classic/browser/places/toolbarDropMarker.png         (places/toolbarDropMarker.png)
@@ -54,22 +49,6 @@ classic.jar:
   skin/classic/browser/places/expander-closed.png           (bookmarks/expander-closed.png)
   skin/classic/browser/places/expander-open-active.png      (bookmarks/expander-open-active.png)
   skin/classic/browser/places/expander-open.png             (bookmarks/expander-open.png)
-#else
-  skin/classic/browser/bookmarks/addBookmark.css            (bookmarks/addBookmark.css)
-  skin/classic/browser/bookmarks/bookmarksProperties.css    (bookmarks/bookmarksProperties.css)
-  skin/classic/browser/bookmarks/bookmark-folder.png        (bookmarks/bookmark-folder.png)
-  skin/classic/browser/bookmarks/Bookmarks-toolbar.png      (bookmarks/Bookmarks-toolbar.png)
-  skin/classic/browser/bookmarks/bookmarksManager.css       (bookmarks/bookmarksManager.css)
-  skin/classic/browser/bookmarks/expander-closed-active.png (bookmarks/expander-closed-active.png)
-  skin/classic/browser/bookmarks/expander-closed.png        (bookmarks/expander-closed.png)
-  skin/classic/browser/bookmarks/expander-open-active.png   (bookmarks/expander-open-active.png)
-  skin/classic/browser/bookmarks/expander-open.png          (bookmarks/expander-open.png)
-  skin/classic/browser/bookmarks/livemark-folder-hover.png  (bookmarks/livemark-folder-hover.png)
-  skin/classic/browser/bookmarks/livemark-folder.png        (bookmarks/livemark-folder.png)
-  skin/classic/browser/bookmarks/livemark-item.png          (bookmarks/livemark-item.png)
-  skin/classic/browser/bookmarks/folderarrow-hover.png      (bookmarks/folderarrow-hover.png)
-  skin/classic/browser/bookmarks/folderarrow.png            (bookmarks/folderarrow.png)
-#endif
 #ifdef MOZ_SAFE_BROWSING
   skin/classic/browser/safebrowsing/browser-protection.css  (safebrowsing/browser-protection.css)
   skin/classic/browser/safebrowsing/close16x16.png          (safebrowsing/close16x16.png)

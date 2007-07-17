@@ -37,14 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBrowserProfileMigratorUtils.h"
-#ifdef MOZ_PLACES_BOOKMARKS
 #include "nsINavBookmarksService.h"
 #include "nsBrowserCompsCID.h"
 #include "nsToolkitCompsCID.h"
 #include "nsIPlacesImportExportService.h"
-#else
-#include "nsIBookmarksService.h"
-#endif
 #include "nsIFile.h"
 #include "nsIInputStream.h"
 #include "nsILineInputStream.h"
@@ -225,41 +221,6 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
 {
   nsresult rv;
 
-#ifndef MOZ_PLACES_BOOKMARKS
-  nsCOMPtr<nsIBookmarksService> bms = 
-    do_GetService("@mozilla.org/browser/bookmarks-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsISupportsArray> params =
-    do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIRDFService> rdfs =
-    do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIRDFResource> prop;
-  rv = rdfs->GetResource(NC_URI(URL), getter_AddRefs(prop));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIRDFLiteral> url;
-  nsAutoString path;
-  aBookmarksFile->GetPath(path);
-  rdfs->GetLiteral(path.get(), getter_AddRefs(url));
-
-  params->AppendElement(prop);
-  params->AppendElement(url);
-  
-  nsCOMPtr<nsIRDFResource> importCmd;
-  rv = rdfs->GetResource(NC_URI(command?cmd=import), getter_AddRefs(importCmd));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIRDFResource> root;
-  rv = rdfs->GetResource(NS_LITERAL_CSTRING("NC:BookmarksRoot"),
-                         getter_AddRefs(root));
-  NS_ENSURE_SUCCESS(rv, rv);
-#endif // MOZ_PLACES_BOOKMARKS
-
   // Look for the localized name of the bookmarks toolbar
   nsCOMPtr<nsIStringBundleService> bundleService =
     do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
@@ -278,7 +239,6 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
                                sourceNameStrings, 1, 
                                getter_Copies(importedBookmarksTitle));
 
-#ifdef MOZ_PLACES_BOOKMARKS
   // Get the bookmarks service
   nsCOMPtr<nsINavBookmarksService> bms =
     do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv);
@@ -298,28 +258,5 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
   NS_ENSURE_TRUE(localFile, NS_ERROR_FAILURE);
   nsCOMPtr<nsIPlacesImportExportService> importer = do_GetService(NS_PLACESIMPORTEXPORTSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = importer->ImportHTMLFromFileToFolder(localFile, folder, PR_FALSE);
-#else
-  nsCOMPtr<nsIRDFResource> folder;
-  bms->CreateFolderInContainer(importedBookmarksTitle.get(), root, -1,
-                               getter_AddRefs(folder));
-
-  nsCOMPtr<nsIRDFResource> folderProp;
-  rv = rdfs->GetResource(NC_URI(Folder), getter_AddRefs(folderProp));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  params->AppendElement(folderProp);
-  params->AppendElement(folder);
-
-  nsCOMPtr<nsISupportsArray> sources =
-    do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  sources->AppendElement(folder);
-
-  nsCOMPtr<nsIRDFDataSource> ds = do_QueryInterface(bms, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = ds->DoCommand(sources, importCmd, params);
-#endif
-  return rv;
+  return importer->ImportHTMLFromFileToFolder(localFile, folder, PR_FALSE);
 }

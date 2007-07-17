@@ -175,17 +175,10 @@ var gEngineManagerDialog = {
           eduplicate = true;
       } else {
         try {
-#ifdef MOZ_PLACES_BOOKMARKS
           var bmserv = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
                        getService(Ci.nsINavBookmarksService);
           if (bmserv.getURIForKeyword(alias.value))
             bduplicate = true;
-#else
-          var bmserv = Cc["@mozilla.org/browser/bookmarks-service;1"].
-                       getService(Ci.nsIBookmarksService);
-          if (bmserv.resolveKeyword(alias.value, {}))
-            bduplicate = true;
-#endif
         } catch(ex) {}
 
         // Check for duplicates in changes we haven't committed yet

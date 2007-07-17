@@ -155,34 +155,6 @@ toolbarbutton.bookmark-item .toolbarbutton-text {
   padding-top: 1px;
 }
 
-%ifndef MOZ_PLACES_BOOKMARKS
-.bookmark-item > .toolbarbutton-menu-dropmarker {
-  list-style-image: url("chrome://browser/skin/bookmarks/folderarrow.png");
-  height: 16px !important;
-  padding: 5px 5px 4px 3px;
-}
-
-.bookmark-item:hover > .toolbarbutton-menu-dropmarker, .bookmark-item[open] > .toolbarbutton-menu-dropmarker  {
-  list-style-image: url("chrome://browser/skin/bookmarks/folderarrow-hover.png");
-}
-
-.bookmark-item[livemark] > .toolbarbutton-menu-dropmarker {
-  list-style-image: url("chrome://browser/skin/bookmarks/livemark-folder.png");
-  padding: 4px 4px 3px 2px;
-}
-
-.bookmark-item[livemark]:hover > .toolbarbutton-menu-dropmarker, .bookmark-item[livemark][open] > .toolbarbutton-menu-dropmarker {
-  list-style-image: url("chrome://browser/skin/bookmarks/livemark-folder-hover.png");
-}
-
-.bookmark-item[livemark] {
-  list-style-image: url("chrome://browser/skin/page-livemarks.png");
-}
-
-.bookmark-item[livemark] .menuitem-iconic {
-  list-style-image: url("chrome://browser/skin/bookmarks/livemark-item.png");
-}
-%else
 .bookmark-item > .toolbarbutton-menu-dropmarker {
   list-style-image: url("chrome://browser/skin/places/folderDropArrow.png");
   height: 16px !important;
@@ -214,7 +186,6 @@ toolbarbutton.bookmark-item .toolbarbutton-text {
 .bookmark-item menuitem[siteURI] {
   list-style-image: none;
 }
-%endif
 
 .toolbarpaletteitem-box[type="bookmarks-toolbar"][place="palette"] {
   background: url("chrome://browser/skin/bookmarks/Toolbar-bookmarks.png") no-repeat;
@@ -237,11 +208,9 @@ toolbarpaletteitem[place="toolbar"] .bookmarks-toolbar-items {
   visibility: hidden;
 }
 
-%ifdef MOZ_PLACES_BOOKMARKS
 toolbarpaletteitem[place="toolbar"] .places-toolbar-items {
   display: none;
 }
-%endif
 
 /* ----- BOOKMARK MENUS ----- */	
 
@@ -1001,11 +970,7 @@ toolbar[iconsize="small"] #paste-button:hover:active {
 }
 
 #page-proxy-button {
-%ifdef MOZ_PLACES
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
-%else
-  list-style-image: url("chrome://browser/skin/bookmarks/bookmark-item.png");
-%endif
 }
 
 #page-proxy-button[pageproxystate="invalid"] {
@@ -1235,11 +1200,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .bookmark-item {
-%ifdef MOZ_PLACES
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
-%else
-  list-style-image: url("chrome://browser/skin/bookmarks/bookmark-item.png");
-%endif
 }
 
 .openintabs-menuitem {
@@ -1275,7 +1236,6 @@ tabpanels.plain {
 	background-color: #fff !important;
 }
 
-%ifdef MOZ_PLACES_BOOKMARKS
 /* Personal toolbar */
 .toolbar-drop-indicator {
   height: 16px;
@@ -1317,7 +1277,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 .bookmark-item[dragover-bottom="true"] {
   -moz-border-bottom-colors: #000000;
 }
-%endif
 
 #CustomizeToolbarSheet > #main-box {
   border-top: none !important;
