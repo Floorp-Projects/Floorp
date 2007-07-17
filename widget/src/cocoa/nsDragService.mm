@@ -71,7 +71,7 @@ extern NSEvent* globalDragEvent;
 
 // This global makes the transferable array available to Cocoa's promised
 // file destination callback.
-nsISupportsArray *draggedTransferables;
+nsISupportsArray *gDraggedTransferables = nsnull;
 
 NSString* const kWildcardPboardType = @"MozillaWildcard";
 
@@ -267,7 +267,7 @@ nsDragService::InvokeDragSession(nsIDOMNode* aDOMNode, nsISupportsArray* aTransf
   NSPoint localPoint = [globalDragView convertPoint:point fromView:nil];
  
   // Save the transferables away in case a promised file callback is invoked.
-  draggedTransferables = aTransferableArray;
+  gDraggedTransferables = aTransferableArray;
 
   nsBaseDragService::StartDragSession();
 

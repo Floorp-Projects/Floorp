@@ -85,6 +85,8 @@ extern "C" {
   CG_EXTERN void CGContextResetClip(CGContextRef);
 }
 
+extern nsISupportsArray *gDraggedTransferables;
+
 PRBool nsTSMManager::sIsIMEEnabled = PR_TRUE;
 PRBool nsTSMManager::sIsRomanKeyboardsOnly = PR_FALSE;
 NSView<mozView>* nsTSMManager::sComposingView = nsnull;
@@ -4203,6 +4205,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 // NSDraggingSource
 - (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation
 {
+  gDraggedTransferables = nsnull;
+
   if (!mDragService) {
     CallGetService(kDragServiceContractID, &mDragService);
     NS_ASSERTION(mDragService, "Couldn't get a drag service - big problem!");
@@ -4248,16 +4252,17 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     return nil;
   }
 
-  extern nsISupportsArray *draggedTransferables;
+  if (!gDraggedTransferables)
+    return nil;
 
   PRUint32 transferableCount;
-  rv = draggedTransferables->Count(&transferableCount);
+  rv = gDraggedTransferables->Count(&transferableCount);
   if (NS_FAILED(rv))
     return nil;
 
   for (PRUint32 i = 0; i < transferableCount; i++) {
     nsCOMPtr<nsISupports> genericItem;
-    draggedTransferables->GetElementAt(i, getter_AddRefs(genericItem));
+    gDraggedTransferables->GetElementAt(i, getter_AddRefs(genericItem));
     nsCOMPtr<nsITransferable> item(do_QueryInterface(genericItem));
     if (!item) {
       NS_ERROR("no transferable");
