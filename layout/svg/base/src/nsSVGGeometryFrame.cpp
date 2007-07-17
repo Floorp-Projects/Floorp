@@ -50,11 +50,7 @@ NS_INTERFACE_MAP_BEGIN(nsSVGGeometryFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGGeometryFrameBase)
 
 //----------------------------------------------------------------------
-
-nsSVGGeometryFrame::nsSVGGeometryFrame(nsStyleContext* aContext)
-  : nsSVGGeometryFrameBase(aContext)
-{
-}
+// nsIFrame methods
 
 void
 nsSVGGeometryFrame::Destroy()
@@ -62,48 +58,6 @@ nsSVGGeometryFrame::Destroy()
   // Remove the properties before the frame goes away, since we need it for QI
   RemovePaintServerProperties();
   nsSVGGeometryFrameBase::Destroy();
-}
-
-void
-nsSVGGeometryFrame::RemovePaintServerProperties()
-{
-  DeleteProperty(nsGkAtoms::fill);
-  DeleteProperty(nsGkAtoms::stroke);
-  RemoveStateBits(NS_STATE_SVG_PSERVER_MASK);
-}
-
-nsSVGPaintServerFrame *
-nsSVGGeometryFrame::GetPaintServer(const nsStyleSVGPaint *aPaint)
-{
-  if (aPaint->mType != eStyleSVGPaintType_Server)
-    return nsnull;
-
-  nsIURI *uri;
-  uri = aPaint->mPaint.mPaintServer;
-  if (!uri)
-    return nsnull;
-
-  nsIFrame *result;
-  if (NS_FAILED(nsSVGUtils::GetReferencedFrame(&result, uri, mContent,
-                                               PresContext()->PresShell())))
-    return nsnull;
-
-  nsIAtom *type = result->GetType();
-  if (type != nsGkAtoms::svgLinearGradientFrame &&
-      type != nsGkAtoms::svgRadialGradientFrame &&
-      type != nsGkAtoms::svgPatternFrame)
-    return nsnull;
-
-  // Loop check for pattern
-  if (type == nsGkAtoms::svgPatternFrame &&
-      nsContentUtils::ContentIsDescendantOf(mContent, result->GetContent()))
-    return nsnull;
-
-  nsSVGPaintServerFrame *server =
-    static_cast<nsSVGPaintServerFrame*>(result);
-
-  server->AddObserver(this);
-  return server;
 }
 
 NS_IMETHODIMP
@@ -141,6 +95,9 @@ nsSVGGeometryFrame::DidSetStyleContext()
 
   return NS_OK;
 }
+
+//----------------------------------------------------------------------
+// nsISVGValueObserver methods:
 
 NS_IMETHODIMP
 nsSVGGeometryFrame::WillModifySVGObservable(nsISVGValue* observable,
@@ -189,6 +146,48 @@ nsSVGGeometryFrame::DidModifySVGObservable(nsISVGValue* observable,
 
 
 //----------------------------------------------------------------------
+
+void
+nsSVGGeometryFrame::RemovePaintServerProperties()
+{
+  DeleteProperty(nsGkAtoms::fill);
+  DeleteProperty(nsGkAtoms::stroke);
+  RemoveStateBits(NS_STATE_SVG_PSERVER_MASK);
+}
+
+nsSVGPaintServerFrame *
+nsSVGGeometryFrame::GetPaintServer(const nsStyleSVGPaint *aPaint)
+{
+  if (aPaint->mType != eStyleSVGPaintType_Server)
+    return nsnull;
+
+  nsIURI *uri;
+  uri = aPaint->mPaint.mPaintServer;
+  if (!uri)
+    return nsnull;
+
+  nsIFrame *result;
+  if (NS_FAILED(nsSVGUtils::GetReferencedFrame(&result, uri, mContent,
+                                               PresContext()->PresShell())))
+    return nsnull;
+
+  nsIAtom *type = result->GetType();
+  if (type != nsGkAtoms::svgLinearGradientFrame &&
+      type != nsGkAtoms::svgRadialGradientFrame &&
+      type != nsGkAtoms::svgPatternFrame)
+    return nsnull;
+
+  // Loop check for pattern
+  if (type == nsGkAtoms::svgPatternFrame &&
+      nsContentUtils::ContentIsDescendantOf(mContent, result->GetContent()))
+    return nsnull;
+
+  nsSVGPaintServerFrame *server =
+    static_cast<nsSVGPaintServerFrame*>(result);
+
+  server->AddObserver(this);
+  return server;
+}
 
 float
 nsSVGGeometryFrame::GetStrokeWidth()
