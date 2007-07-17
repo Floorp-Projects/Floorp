@@ -468,14 +468,14 @@ nsresult
 nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
 {
   mDepthTooGreat = PR_FALSE;
-  
-  NS_PRECONDITION(mDocShell, "Must have docshell here");
-  
+  nsresult rv = EnsureDocShell();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(mDocShell);
   NS_ASSERTION(treeItem, "docshell must be a treeitem!");
   
   PRInt32 ourType;
-  nsresult rv = treeItem->GetItemType(&ourType);
+  rv = treeItem->GetItemType(&ourType);
   if (NS_SUCCEEDED(rv) && ourType != nsIDocShellTreeItem::typeContent) {
     // No need to do recursion-protection here XXXbz why not??  Do we really
     // trust people not to screw up with non-content docshells?
