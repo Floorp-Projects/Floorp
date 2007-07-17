@@ -375,6 +375,14 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
         }
       }
 
+      nsCOMPtr<nsIURI> uri;
+      chan->GetURI(getter_AddRefs(uri));
+      rv = mFrameLoader->CheckForRecursiveLoad(uri);
+      if (NS_FAILED(rv)) {
+        Fallback(PR_FALSE);
+        return rv;
+      }
+
       if (mType != newType) {
         // XXX We must call this before getting the docshell to work around
         // bug 300540; when that's fixed, this if statement can be removed.
