@@ -1689,7 +1689,7 @@ nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
 NS_IMETHODIMP
 nsXPConnect::EvalInSandboxObject(const nsAString& source, JSContext *cx,
                                  nsIXPConnectJSObjectHolder *sandbox,
-                                 jsval *rval)
+                                 PRBool returnStringOnly, jsval *rval)
 {
 #ifdef XPCONNECT_STANDALONE
     return NS_ERROR_NOT_AVAILABLE;
@@ -1702,7 +1702,8 @@ nsXPConnect::EvalInSandboxObject(const nsAString& source, JSContext *cx,
     NS_ENSURE_SUCCESS(rv, rv);
 
     return xpc_EvalInSandbox(cx, obj, source,
-                             NS_ConvertUTF16toUTF8(source).get(), 1, rval);
+                             NS_ConvertUTF16toUTF8(source).get(), 1,
+                             returnStringOnly, rval);
 #endif /* XPCONNECT_STANDALONE */
 }
 
