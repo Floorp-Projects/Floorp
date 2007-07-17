@@ -3072,7 +3072,7 @@ dnl Check for MacOS deployment target version
 dnl ========================================================
 
 MOZ_ARG_ENABLE_STRING(macos-target,
-                      [  --enable-macos-target=VER (default=10.3/ppc, 10.4/x86)
+                      [  --enable-macos-target=VER (default=10.4)
                           Set the minimum MacOS version needed at runtime],
                       [_MACOSX_DEPLOYMENT_TARGET=$enableval])
 
@@ -3085,17 +3085,7 @@ case "$target" in
         dnl No value specified on the command line or in the environment,
         dnl use the lesser of the application's minimum or the architecture's
         dnl minimum.
-        case "${target_cpu}" in
-            powerpc*)
-                dnl Architecture minimum 10.3
-                dnl export MACOSX_DEPLOYMENT_TARGET=10.3
-                export MACOSX_DEPLOYMENT_TARGET=10.2
-                ;;
-            i*86*)
-                dnl Architecture minimum 10.4
-                export MACOSX_DEPLOYMENT_TARGET=10.4
-                ;;
-        esac
+        export MACOSX_DEPLOYMENT_TARGET=10.4
     fi
     ;;
 esac
