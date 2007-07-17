@@ -680,9 +680,7 @@ darwin*)
         if test "$GCC_BUILD" = "4061" ; then
             AC_MSG_ERROR([You are attempting to use Apple gcc 4.0 build 4061.
 This compiler was supplied with Xcode 2.0, and contains bugs that prevent it
-from building Mozilla.
-Either upgrade to Xcode 2.1 or later, or switch the system's default compiler
-to gcc 3.3 by running \"sudo gcc_select 3.3\".])
+from building Mozilla. Upgrade to Xcode 2.1 or later.])
         fi
     fi
 
