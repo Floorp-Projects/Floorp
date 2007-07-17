@@ -227,7 +227,7 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
   // paint the target geometry
   nsRefPtr<gfxImageSurface> tmpSurface =
     new gfxImageSurface(filterRes, gfxASurface::ImageFormatARGB32);
-  if (!tmpSurface || !tmpSurface->Data()) {
+  if (!tmpSurface || tmpSurface->CairoStatus()) {
     FilterFailCleanup(aContext, aTarget);
     return NS_OK;
   }
@@ -255,7 +255,7 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
     nsRefPtr<gfxImageSurface> alpha =
       new gfxImageSurface(filterRes, gfxASurface::ImageFormatARGB32);
 
-    if (!alpha || !alpha->Data()) {
+    if (!alpha || alpha->CairoStatus()) {
       FilterFailCleanup(aContext, aTarget);
       return NS_OK;
     }
@@ -518,7 +518,7 @@ nsSVGFilterInstance::GetImage()
     new gfxImageSurface(gfxIntSize(mFilterResX, mFilterResY),
                         gfxASurface::ImageFormatARGB32);
 
-  if (!(surface && surface->Data())) {
+  if (!surface || surface->CairoStatus()) {
     return nsnull;
   }
 

@@ -4114,8 +4114,8 @@ nsSVGFEConvolveMatrixElement::Filter(nsSVGFilterInstance *instance)
                                        gfxASurface::ImageFormatARGB32);
     scaledTarget = new gfxImageSurface(scaledSize,
                                        gfxASurface::ImageFormatARGB32);
-    if (!scaledSource || !scaledSource->Data() ||
-        !scaledTarget || !scaledTarget->Data())
+    if (!scaledSource || scaledSource->CairoStatus() ||
+        !scaledTarget || scaledTarget->CairoStatus())
       return NS_ERROR_FAILURE;
 
     gfxContext ctx(scaledSource);

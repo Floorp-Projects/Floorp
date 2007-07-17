@@ -203,7 +203,7 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
 
   nsRefPtr<gfxImageSurface> image =
     new gfxImageSurface(surfaceSize, gfxASurface::ImageFormatARGB32);
-  if (!image || !image->Data())
+  if (!image || image->CairoStatus())
     return nsnull;
 
   gfxContext transferCtx(image);
@@ -211,17 +211,15 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
   transferCtx.SetSource(surface, -clipExtents.pos);
   transferCtx.Paint();
 
-  PRUint32 width  = surfaceSize.width;
-  PRUint32 height = surfaceSize.height;
   PRUint8 *data   = image->Data();
   PRInt32  stride = image->Stride();
 
-  nsRect rect(0, 0, width, height);
+  nsRect rect(0, 0, surfaceSize.width, surfaceSize.height);
   nsSVGUtils::UnPremultiplyImageDataAlpha(data, stride, rect);
   nsSVGUtils::ConvertImageDataToLinearRGB(data, stride, rect);
 
-  for (PRUint32 y = 0; y < height; y++)
-    for (PRUint32 x = 0; x < width; x++) {
+  for (PRUint32 y = 0; y < surfaceSize.height; y++)
+    for (PRUint32 x = 0; x < surfaceSize.width; x++) {
       PRUint8 *pixel = data + stride * y + 4 * x;
 
       /* linearRGB -> intensity */
