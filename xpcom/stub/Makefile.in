@@ -61,8 +61,10 @@ LOCAL_INCLUDES	= -I$(srcdir)/../build
 
 CPPSRCS		= nsXPComStub.cpp
 
+ifndef MOZ_ENABLE_LIBXUL
 ifeq ($(OS_TARGET),OS2)
 CPPSRCS         += nsOS2VACLegacy.cpp
+endif
 endif
 
 # If we have an import library, then copy that to the SDK.  Otherwise,
