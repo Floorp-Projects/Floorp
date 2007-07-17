@@ -1353,12 +1353,6 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
       break;
   }
 
-  // Whenever there is a maximum number of results, we must requery. This
-  // is because we can't generally know if any given addition/change causes
-  // the item to be in the top N items in the database.
-  if (aOptions->MaxResults() > 0)
-    return QUERYUPDATE_COMPLEX;
-
   PRBool nonTimeBasedItems = PR_FALSE;
   for (i = 0; i < aQueries.Count(); i ++) {
     nsNavHistoryQuery* query = aQueries[i];
@@ -1373,6 +1367,13 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
         query->Uri() != nsnull)
       nonTimeBasedItems = PR_TRUE;
   }
+
+  // Whenever there is a maximum number of results, 
+  // and we are not a bookmark query we must requery. This
+  // is because we can't generally know if any given addition/change causes
+  // the item to be in the top N items in the database.
+  if (aOptions->MaxResults() > 0)
+    return QUERYUPDATE_COMPLEX;
 
   if (aQueries.Count() == 1 && ! nonTimeBasedItems)
     return QUERYUPDATE_TIME;
@@ -2122,6 +2123,22 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
       break;
     case nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_DESCENDING:
       queryString += NS_LITERAL_CSTRING(" ORDER BY 5 DESC"); // h.visit_count
+      break;
+    case nsINavHistoryQueryOptions::SORT_BY_DATEADDED_ASCENDING:
+      if (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS)
+        queryString += NS_LITERAL_CSTRING(" ORDER BY 10 ASC"); // dateAdded
+      break;
+    case nsINavHistoryQueryOptions::SORT_BY_DATEADDED_DESCENDING:
+      if (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS)
+        queryString += NS_LITERAL_CSTRING(" ORDER BY 10 DESC"); // dateAdded
+      break;
+    case nsINavHistoryQueryOptions::SORT_BY_LASTMODIFIED_ASCENDING:
+      if (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS)
+        queryString += NS_LITERAL_CSTRING(" ORDER BY 11 ASC"); // b.lastModified
+      break;
+    case nsINavHistoryQueryOptions::SORT_BY_LASTMODIFIED_DESCENDING:
+      if (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS)
+        queryString += NS_LITERAL_CSTRING(" ORDER BY 11 DESC"); // b.lastModified
       break;
     default:
       NS_NOTREACHED("Invalid sorting mode");
