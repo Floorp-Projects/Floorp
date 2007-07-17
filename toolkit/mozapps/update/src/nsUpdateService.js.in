@@ -488,8 +488,11 @@ function getPref(func, preference, defaultValue) {
  */
 function getLocale() {
   try {
-    return gPref.getComplexValue(PREF_GENERAL_USERAGENT_LOCALE,
-                                 nsIPrefLocalizedString).data;
+      // Get the default branch
+      var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+          .getService(Components.interfaces.nsIPrefService);
+      var defaultPrefs = prefs.getDefaultBranch(null);
+      return defaultPrefs.getCharPref(PREF_GENERAL_USERAGENT_LOCALE);
   } catch (e) {}
 
   return gPref.getCharPref(PREF_GENERAL_USERAGENT_LOCALE);
