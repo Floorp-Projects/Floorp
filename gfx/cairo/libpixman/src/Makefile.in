@@ -51,6 +51,17 @@ ifndef MOZ_ENABLE_LIBXUL
 VISIBILITY_FLAGS =
 endif
 
+ifdef GNU_CC
+MODULE_OPTIMIZE_FLAGS = -O2
+else
+ifeq ($(OS_ARCH),SunOS)
+MODULE_OPTIMIZE_FLAGS = -fast
+endif
+ifeq ($(OS_ARCH),WINNT)
+MODULE_OPTIMIZE_FLAGS = -O2
+endif
+endif
+
 CSRCS	= \
 	fbcompose.c \
 	fbedge.c \
