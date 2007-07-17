@@ -15,7 +15,7 @@
 
     <content sizetopopup="pref">
       <xul:hbox class="autocomplete-textbox-container" flex="1" align="center">
-        <children includes="image|deck">
+        <children includes="image|deck|stack">
           <xul:image class="autocomplete-icon" allowevents="true"/>
         </children>
 
@@ -24,8 +24,9 @@
                       flex="1" allowevents="true"
                       xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction"/>
         </xul:hbox>
+        <children includes="hbox"/>
       </xul:hbox>
-                          
+
       <xul:dropmarker class="autocomplete-history-dropmarker" allowevents="true"
                       xbl:inherits="open,hidden=disablehistory" anonid="historydropmarker"/>
 
