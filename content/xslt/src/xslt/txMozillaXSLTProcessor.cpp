@@ -66,6 +66,7 @@
 #include "jsapi.h"
 #include "txExprParser.h"
 #include "nsIErrorService.h"
+#include "nsIScriptSecurityManager.h"
 
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 
@@ -303,6 +304,7 @@ NS_INTERFACE_MAP_BEGIN(txMozillaXSLTProcessor)
     NS_INTERFACE_MAP_ENTRY(nsIXSLTProcessorPrivate)
     NS_INTERFACE_MAP_ENTRY(nsIDocumentTransformer)
     NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
+    NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXSLTProcessor)
     NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XSLTProcessor)
 NS_INTERFACE_MAP_END
@@ -344,7 +346,7 @@ txMozillaXSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
                    type == nsIDOMNode::DOCUMENT_NODE,
                    NS_ERROR_INVALID_ARG);
 
-    nsresult rv = TX_CompileStylesheet(aStyleDOM, this,
+    nsresult rv = TX_CompileStylesheet(aStyleDOM, this, mPrincipal,
                                        getter_AddRefs(mStylesheet));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -598,7 +600,7 @@ txMozillaXSLTProcessor::ImportStylesheet(nsIDOMNode *aStyle)
                    type == nsIDOMNode::DOCUMENT_NODE,
                    NS_ERROR_INVALID_ARG);
 
-    nsresult rv = TX_CompileStylesheet(aStyle, this,
+    nsresult rv = TX_CompileStylesheet(aStyle, this, mPrincipal,
                                        getter_AddRefs(mStylesheet));
     // XXX set up exception context, bug 204658
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1021,10 +1023,9 @@ txMozillaXSLTProcessor::GetFlags(PRUint32* aFlags)
 }
 
 NS_IMETHODIMP
-txMozillaXSLTProcessor::LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup,
-                                       nsIPrincipal* aCallerPrincipal)
+txMozillaXSLTProcessor::LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup)
 {
-    nsresult rv = TX_LoadSheet(aUri, this, aLoadGroup, aCallerPrincipal);
+    nsresult rv = TX_LoadSheet(aUri, this, aLoadGroup, mPrincipal);
     if (NS_FAILED(rv) && mObserver) {
         // This is most likely a network or security error, just
         // use the uri as context.
@@ -1184,7 +1185,8 @@ txMozillaXSLTProcessor::ensureStylesheet()
     if (!style) {
         style = do_QueryInterface(mStylesheetDocument);
     }
-    return TX_CompileStylesheet(style, this, getter_AddRefs(mStylesheet));
+    return TX_CompileStylesheet(style, this, mPrincipal,
+                                getter_AddRefs(mStylesheet));
 }
 
 void
@@ -1244,9 +1246,32 @@ txMozillaXSLTProcessor::ContentRemoved(nsIDocument* aDocument,
     mStylesheet = nsnull;
 }
 
+NS_IMETHODIMP
+txMozillaXSLTProcessor::Initialize(JSContext* cx, JSObject* obj,
+                                   PRUint32 argc, jsval* argv)
+{
+    nsCOMPtr<nsIPrincipal> prin;
+    nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+    NS_ENSURE_TRUE(secMan, NS_ERROR_UNEXPECTED);
+
+    secMan->GetSubjectPrincipal(getter_AddRefs(prin));
+    NS_ENSURE_TRUE(prin, NS_ERROR_UNEXPECTED);
+
+    return Init(prin);
+}
+
+NS_IMETHODIMP
+txMozillaXSLTProcessor::Init(nsIPrincipal* aPrincipal)
+{
+    NS_ENSURE_ARG_POINTER(aPrincipal);
+    mPrincipal = aPrincipal;
+
+    return NS_OK;
+}
+
 /* static*/
 nsresult
-txMozillaXSLTProcessor::Init()
+txMozillaXSLTProcessor::Startup()
 {
     if (!txXSLTProcessor::init()) {
         return NS_ERROR_OUT_OF_MEMORY;

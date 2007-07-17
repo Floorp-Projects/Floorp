@@ -50,7 +50,6 @@
 #include "nsNetUtil.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIContent.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -705,6 +704,7 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
     return NS_OK;
   }
 
+  mXSLTProcessor->Init(mDocument->NodePrincipal());
   mXSLTProcessor->SetTransformObserver(this);
 
   nsCOMPtr<nsILoadGroup> loadGroup = mDocument->GetDocumentLoadGroup();
@@ -713,8 +713,7 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
     return NS_ERROR_FAILURE;
   }
 
-  return mXSLTProcessor->LoadStyleSheet(aUrl, loadGroup,
-                                        mDocument->NodePrincipal());
+  return mXSLTProcessor->LoadStyleSheet(aUrl, loadGroup);
 }
 
 nsresult
