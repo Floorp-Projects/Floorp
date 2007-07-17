@@ -45,6 +45,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMNSUIEvent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsLayoutUtils.h"
@@ -236,13 +237,40 @@ nsXULPopupManager::GetMouseLocation(nsIDOMNode** aNode, PRInt32* aOffset)
 }
 
 void
-nsXULPopupManager::SetMouseLocation(nsIDOMEvent* aEvent)
+nsXULPopupManager::SetMouseLocation(nsIDOMEvent* aEvent, nsIContent* aPopup)
 {
+  mCachedMousePoint = nsPoint(0, 0);
+
   nsCOMPtr<nsIDOMNSUIEvent> uiEvent = do_QueryInterface(aEvent);
-  NS_ASSERTION(uiEvent, "Expected an nsIDOMNSUIEvent");
+  NS_ASSERTION(!aEvent || uiEvent, "Expected an nsIDOMNSUIEvent");
   if (uiEvent) {
     uiEvent->GetRangeParent(getter_AddRefs(mRangeParent));
     uiEvent->GetRangeOffset(&mRangeOffset);
+
+    // get the event coordinates relative to the root frame of the document
+    // containing the popup.
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aEvent));
+    if (privateEvent) {
+      NS_ASSERTION(aPopup, "Expected a popup node");
+      nsEvent* event;
+      nsresult rv = privateEvent->GetInternalNSEvent(&event);
+      if (NS_SUCCEEDED(rv) && event) {
+        nsIDocument* doc = aPopup->GetCurrentDoc();
+        if (doc) {
+          nsIPresShell* presShell = doc->GetPrimaryShell();
+          if (presShell) {
+            nsPresContext* presContext = presShell->GetPresContext();
+            nsIFrame* rootFrame = presShell->GetRootFrame();
+            if (rootFrame && presContext) {
+              nsPoint pnt =
+                nsLayoutUtils::GetEventCoordinatesRelativeTo(event, rootFrame);
+              mCachedMousePoint = nsPoint(presContext->AppUnitsToDevPixels(pnt.x),
+                                          presContext->AppUnitsToDevPixels(pnt.y));
+            }
+          }
+        }
+      }
+    }
   }
   else {
     mRangeParent = nsnull;
@@ -293,6 +321,7 @@ nsXULPopupManager::ShowMenu(nsIContent *aMenu,
   popupFrame->InitializePopup(aMenu, position, 0, 0, PR_TRUE);
 
   if (aAsynchronous) {
+    SetMouseLocation(nsnull, nsnull);
     nsCOMPtr<nsIRunnable> event =
       new nsXULPopupShowingEvent(popupFrame->GetContent(), aMenu,
                                  parentIsContextMenu, aSelectFirstItem);
@@ -539,7 +568,7 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
 
   // send the popuphidden event synchronously. This event has no default behaviour.
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsEvent event(PR_TRUE, NS_XUL_POPUP_HIDDEN);
+  nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_HIDDEN, nsnull, nsMouseEvent::eReal);
   nsEventDispatcher::Dispatch(aPopup, aPopupFrame->PresContext(),
                               &event, nsnull, &status);
 
@@ -678,8 +707,13 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
   //   is where those details would be retrieved. This removes the need for
   //   all the globals people keep adding to nsIDOMXULDocument.
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsEvent event(PR_TRUE, NS_XUL_POPUP_SHOWING);
+  nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_SHOWING, nsnull, nsMouseEvent::eReal);
+  nsPoint pnt;
+  event.widget = presShell->GetRootFrame()->
+                            GetClosestView()->GetNearestWidget(&pnt);
+  event.refPoint = mCachedMousePoint;
   nsEventDispatcher::Dispatch(aPopup, aPresContext, &event, nsnull, &status);
+  mCachedMousePoint = nsPoint(0, 0);
 
   // it is common to append content to the menu during the popupshowing event.
   // Flush the notifications so that the frames are up to date before showing
@@ -712,7 +746,7 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
   nsCOMPtr<nsIPresShell> presShell = aPresContext->PresShell();
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsEvent event(PR_TRUE, NS_XUL_POPUP_HIDING);
+  nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_HIDING, nsnull, nsMouseEvent::eReal);
   nsEventDispatcher::Dispatch(aPopup, aPresContext, &event, nsnull, &status);
 
   // get frame again in case it went away
