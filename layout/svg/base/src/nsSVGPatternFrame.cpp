@@ -183,7 +183,8 @@ nsSVGPatternFrame::GetType() const
 // matrix, which depends on our units parameters
 // and X, Y, Width, and Height
 already_AddRefed<nsIDOMSVGMatrix> 
-nsSVGPatternFrame::GetCanvasTM() {
+nsSVGPatternFrame::GetCanvasTM()
+{
   nsIDOMSVGMatrix *rCTM;
   
   if (mCTM) {
@@ -316,7 +317,7 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
   nsRefPtr<gfxASurface> tmpSurface =
     gfxPlatform::GetPlatform()->CreateOffscreenSurface(surfaceSize,
                                                        gfxASurface::ImageFormatARGB32);
-  if (!tmpSurface)
+  if (!tmpSurface || tmpSurface->CairoStatus())
     return NS_ERROR_FAILURE;
 
   gfxContext tmpContext(tmpSurface);
