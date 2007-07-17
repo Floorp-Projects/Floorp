@@ -197,14 +197,6 @@ MOZ_ARG_ENABLE_BOOL(compile-environment,
     COMPILE_ENVIRONMENT=1,
     COMPILE_ENVIRONMENT= )
 
-AC_PATH_PROGS(NSINSTALL_BIN, nsinstall )
-if test -z "$COMPILE_ENVIRONMENT"; then
-if test -z "$NSINSTALL_BIN" || test "$NSINSTALL_BIN" = ":"; then
-    AC_MSG_ERROR([nsinstall not found in \$PATH])
-fi
-fi
-AC_SUBST(NSINSTALL_BIN)
-
 dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
@@ -640,6 +632,14 @@ if test -z "$PYTHON"; then
     AC_MSG_ERROR([python was not found in \$PATH])
 fi
 echo PYTHON="$PYTHON"
+
+AC_PATH_PROGS(NSINSTALL_BIN, nsinstall )
+if test -z "$COMPILE_ENVIRONMENT"; then
+if test -z "$NSINSTALL_BIN" || test "$NSINSTALL_BIN" = ":"; then
+    NSINSTALL_BIN='$(PYTHON) $(topsrcdir)/config/nsinstall.py'
+fi
+fi
+AC_SUBST(NSINSTALL_BIN)
 
 AC_PATH_PROG(DOXYGEN, doxygen, :)
 AC_PATH_PROG(WHOAMI, whoami, :)
