@@ -154,7 +154,6 @@
   ${AddHandlerValues} "$0\FirefoxHTML" "$2" "$8,1" "${AppRegName} Document" "" "true"
 
   ${AddHandlerValues} "$0\FirefoxURL" "$2" "$8,1" "${AppRegName} URL" "true" "true"
-  ${AddHandlerValues} "$0\gopher" "$2" "$8,1" "URL:Gopher Protocol" "true" "true"
 
   ; An empty string is used for the 4th & 5th params because the following
   ; protocol handlers already have a display name and additional keys required
@@ -207,9 +206,21 @@
   WriteRegStr HKLM "$0\Capabilities\StartMenu" "StartMenuInternet" "$R9"
 
   WriteRegStr HKLM "$0\Capabilities\URLAssociations" "ftp"    "FirefoxURL"
-  WriteRegStr HKLM "$0\Capabilities\URLAssociations" "gopher" "FirefoxURL"
   WriteRegStr HKLM "$0\Capabilities\URLAssociations" "http"   "FirefoxURL"
   WriteRegStr HKLM "$0\Capabilities\URLAssociations" "https"  "FirefoxURL"
+
+  ; Delete gopher from Capabilities\URLAssociations if it is present.
+  ClearErrors
+  ReadRegStr $2 HKLM "$0\Capabilities\URLAssociations" "gopher"
+  ${Unless} ${Errors}
+    DeleteRegValue HKLM "$0\Capabilities\URLAssociations" "gopher"
+  ${EndUnless}
+
+  ; Delete gopher from the user's UrlAssociations if it points to FirefoxURL.
+  ReadRegStr $2 HKCU "Software\Microsoft\Windows\Shell\Associations\UrlAssociations\gopher\UserChoice" "Progid"
+  ${If} $2 == "FirefoxURL"
+    DeleteRegKey HKCU "Software\Microsoft\Windows\Shell\Associations\UrlAssociations\gopher"
+  ${EndIf}
 
   ; Vista Registered Application
   WriteRegStr HKLM "Software\RegisteredApplications" "${AppRegName}" "$0\Capabilities"
@@ -366,6 +377,15 @@
     DeleteRegKey SHCTX "$0\chrome"
   ${EndUnless}
 
+  ; Remove support for launching gopher urls from the shell during install or
+  ; update if the DefaultIcon is from firefox.exe.
+  ReadRegStr $2 SHCTX "$0\gopher\DefaultIcon" ""
+  ClearErrors
+  ${WordFind} "$2" "${FileMainEXE}" "E+1{" $R1
+  ${Unless} ${Errors}
+    DeleteRegKey SHCTX "$0\gopher"
+  ${EndUnless}
+
   ; Store the command to open the app with an url in a register for easy access.
   GetFullPathName $8 "$INSTDIR\${FileMainEXE}"
   StrCpy $1 "$\"$8$\" -requestPending -osint -url $\"%1$\""
@@ -399,17 +419,12 @@
     ${AddHandlerValues} "$0\ftp" "$1" "$8,1" "" "" "true"
   ${EndUnless}
 
-  ; Only set the gopher key if it doesn't already exist with a default value
-  ReadRegStr $2 SHCTX "$0\gopher" ""
-  ${If} $2 == ""
-    ${AddHandlerValues} "$0\gopher" "$1" "$8,1" "URL:Gopher Protocol" "true" "true"
-  ${Else}
-    ReadRegStr $2 SHCTX "$0\gopher\shell\open\command" ""
-    ClearErrors
-    ${WordFind} "$2" "${FileMainEXE}" "E+1{" $R1
-    ${Unless} ${Errors}
-      ${AddHandlerValues} "$0\gopher" "$1" "$8,1" "URL:Gopher Protocol" "true" "true"
-    ${EndUnless}
-  ${EndIf}
+  ; Remove the gopher key if the DefaultIcon is from firefox.exe.
+  ReadRegStr $2 SHCTX "$0\gopher\DefaultIcon" ""
+  ClearErrors
+  ${WordFind} "$2" "${FileMainEXE}" "E+1{" $R1
+  ${Unless} ${Errors}
+    DeleteRegKey SHCTX "$0\gopher"
+  ${EndUnless}
 !macroend
 !define FixClassKeys "!insertmacro FixClassKeys"

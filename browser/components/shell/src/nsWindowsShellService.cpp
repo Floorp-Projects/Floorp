@@ -172,7 +172,7 @@ OpenKeyForWriting(HKEY aStartKey, const char* aKeyName, HKEY* aKey,
 // - Protocol Mappings
 //   -----------------
 //   The following protocols:
-//    HTTP, HTTPS, FTP, GOPHER
+//    HTTP, HTTPS, FTP
 //   are mapped like so:
 //
 //   HKCU\SOFTWARE\Classes\<protocol>\
@@ -273,8 +273,6 @@ static SETTING gSettings[] = {
   { MAKE_KEY_NAME2(CLS, "HTTPS", SOP),  "", VAL_OPEN, APP_PATH_SUBSTITUTION },
   { MAKE_KEY_NAME2(CLS, "FTP", DI),     "", VAL_FILE_ICON, APP_PATH_SUBSTITUTION | NON_ESSENTIAL },
   { MAKE_KEY_NAME2(CLS, "FTP", SOP),    "", VAL_OPEN, APP_PATH_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(CLS, "GOPHER", DI),  "", VAL_FILE_ICON, APP_PATH_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(CLS, "GOPHER", SOP), "", VAL_OPEN, APP_PATH_SUBSTITUTION | NON_ESSENTIAL },
 
   // DDE settings
   { MAKE_KEY_NAME2(CLS, CLS_HTML, DDE), "", DDE_COMMAND, NO_SUBSTITUTION | NON_ESSENTIAL },
@@ -292,9 +290,6 @@ static SETTING gSettings[] = {
   { MAKE_KEY_NAME2(CLS, "FTP", DDE), "", DDE_COMMAND, NO_SUBSTITUTION | NON_ESSENTIAL },
   { MAKE_KEY_NAME3(CLS, "FTP", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION | NON_ESSENTIAL },
   { MAKE_KEY_NAME3(CLS, "FTP", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(CLS, "GOPHER", DDE), "", DDE_COMMAND, NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME3(CLS, "GOPHER", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME3(CLS, "GOPHER", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION | NON_ESSENTIAL },
 
   // Windows XP Start Menu
   { MAKE_KEY_NAME2(SMI, "%APPEXE%", DI),  
@@ -548,8 +543,6 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\https\\DefaultIcon");
   (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\ftp\\shell\\open");
   (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\ftp\\DefaultIcon");
-  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\gopher\\shell\\open");
-  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\gopher\\DefaultIcon");
   (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\FirefoxURL");
   (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\FirefoxHTML");
 
