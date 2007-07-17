@@ -4717,9 +4717,9 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
       // need to get the plugin factory from this plugin.
       nsFactoryProc nsGetFactory = nsnull;
 #ifdef XP_OS2
-      nsGetFactory = (nsFactoryProc) PR_FindSymbol(pluginTag->mLibrary, "_NSGetFactory");
+      nsGetFactory = (nsFactoryProc) PR_FindFunctionSymbol(pluginTag->mLibrary, "_NSGetFactory");
 #else
-      nsGetFactory = (nsFactoryProc) PR_FindSymbol(pluginTag->mLibrary, "NSGetFactory");
+      nsGetFactory = (nsFactoryProc) PR_FindFunctionSymbol(pluginTag->mLibrary, "NSGetFactory");
 #endif
       if(nsGetFactory != nsnull && IsCompatibleExecutable(pluginTag->mFullPath))
       {
@@ -4939,7 +4939,7 @@ static nsresult FixUpPluginInfo(nsPluginInfo &aInfo, nsPluginFile &aPluginFile)
     if (NS_FAILED(aPluginFile.LoadPlugin(library)) || !library)
       return NS_ERROR_FAILURE;
 
-    NP_GETMIMEDESCRIPTION pf = (NP_GETMIMEDESCRIPTION)PR_FindSymbol(library, "NP_GetMIMEDescription");
+    NP_GETMIMEDESCRIPTION pf = (NP_GETMIMEDESCRIPTION)PR_FindFunctionSymbol(library, "NP_GetMIMEDescription");
 
     if (pf) {
       // if we found it, this is the default plugin, return
