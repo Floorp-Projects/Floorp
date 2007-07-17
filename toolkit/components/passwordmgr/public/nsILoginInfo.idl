@@ -118,25 +118,25 @@ interface nsILoginInfo : nsISupports {
               in AString aUsernameField, in AString aPasswordField);
 
     /**
-    * Test for equality with another nsILoginInfo object.
-    *
-    * @param aLoginInfo
-    *        The other object to test.
-    *
-    * NOTE: The formSubmitURL field is not strictly checked. A blank (but
-    *       not NULL) value will match any value (except null) in the other
-    *       object's formSubmitURL field. The blank value indicates the login
-    *       was stored before bug 360493 was fixed.
-    */
+     * Test for equality with another nsILoginInfo object.
+     *
+     * @param aLoginInfo
+     *        The other object to test.
+     *
+     * NOTE: The formSubmitURL field is not strictly checked. A blank (but
+     *       not NULL) value will match any value (except null) in the other
+     *       object's formSubmitURL field. The blank value indicates the login
+     *       was stored before bug 360493 was fixed.
+     */
     boolean equals(in nsILoginInfo aLoginInfo);
 
     /**
-    * Test for equality with another nsILoginInfo object, with the
-    * password fields ignored.
-    *
-    * @param aLoginInfo
-    *        The other object to test.
-    */
+     * Test for equality with another nsILoginInfo object, with the
+     * password fields ignored.
+     *
+     * @param aLoginInfo
+     *        The other object to test.
+     */
     boolean equalsIgnorePassword(in nsILoginInfo aLoginInfo);
 };
 
