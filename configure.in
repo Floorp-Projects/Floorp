@@ -1860,6 +1860,9 @@ case "$target" in
         LIBXUL_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib'
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         MOZ_XPCOM_OBSOLETE_LIBS='$(LIBXUL_DIST)/lib/xpcom_compat.lib'
+        if test $_MSC_VER -ge 1400; then
+            LDFLAGS="$LDFLAGS -NXCOMPAT -SAFESEH"
+        fi
     fi
     MOZ_JPEG_LIBS='$(call EXPAND_LIBNAME_PATH,jpeg$(MOZ_BITS)$(VERSION_NUMBER),$(DEPTH)/jpeg)'
     MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,png,$(DEPTH)/modules/libimg/png)'
