@@ -172,6 +172,33 @@ ToDeviceUnits(double aAppUnits, double aDevUnitsPerAppUnit)
     return aAppUnits*aDevUnitsPerAppUnit;
 }
 
+struct GlyphBuffer {
+#define GLYPH_BUFFER_SIZE (2048/sizeof(cairo_glyph_t))
+    cairo_glyph_t mGlyphBuffer[GLYPH_BUFFER_SIZE];
+    unsigned int mNumGlyphs;
+
+    GlyphBuffer()
+        : mNumGlyphs(0) { }
+
+    cairo_glyph_t *AppendGlyph() {
+        return &mGlyphBuffer[mNumGlyphs++];
+    }
+
+    void Flush(cairo_t *cr, PRBool drawToPath, PRBool finish = PR_FALSE) {
+        if (!finish && mNumGlyphs != GLYPH_BUFFER_SIZE)
+            return;
+
+        if (drawToPath)
+            cairo_glyph_path(cr, mGlyphBuffer, mNumGlyphs);
+        else
+            cairo_show_glyphs(cr, mGlyphBuffer, mNumGlyphs);
+
+        mNumGlyphs = 0;
+    }
+#undef GLYPH_BUFFER_SIZE
+};
+
+
 void
 gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
               gfxContext *aContext, PRBool aDrawToPath, gfxPoint *aPt,
@@ -185,21 +212,24 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
     const double devUnitsPerAppUnit = 1.0/double(appUnitsPerDevUnit);
     PRBool isRTL = aTextRun->IsRightToLeft();
     double direction = aTextRun->GetDirection();
-    nsAutoTArray<cairo_glyph_t,200> glyphBuffer;
     PRUint32 i;
     // Current position in appunits
     double x = aPt->x;
     double y = aPt->y;
 
+    cairo_t *cr = aContext->GetCairo();
+    SetupCairoFont(cr);
+
+    GlyphBuffer glyphs;
+    cairo_glyph_t *glyph;
+    
     if (aSpacing) {
         x += direction*aSpacing[0].mBefore;
     }
     for (i = aStart; i < aEnd; ++i) {
         const gfxTextRun::CompressedGlyph *glyphData = &charGlyphs[i];
         if (glyphData->IsSimpleGlyph()) {
-            cairo_glyph_t *glyph = glyphBuffer.AppendElement();
-            if (!glyph)
-                return;
+            glyph = glyphs.AppendGlyph();
             glyph->index = glyphData->GetSimpleGlyph();
             double advance = glyphData->GetSimpleAdvance();
             // Perhaps we should put a scale in the cairo context instead of
@@ -215,12 +245,11 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
             } else {
                 x += advance;
             }
+            glyphs.Flush(cr, aDrawToPath);
         } else if (glyphData->IsComplexCluster()) {
             const gfxTextRun::DetailedGlyph *details = aTextRun->GetDetailedGlyphs(i);
             for (;;) {
-                cairo_glyph_t *glyph = glyphBuffer.AppendElement();
-                if (!glyph)
-                    return;
+                glyph = glyphs.AppendGlyph();
                 glyph->index = details->mGlyphID;
                 glyph->x = ToDeviceUnits(x + details->mXOffset, devUnitsPerAppUnit);
                 glyph->y = ToDeviceUnits(y + details->mYOffset, devUnitsPerAppUnit);
@@ -232,6 +261,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
                 if (details->mIsLastGlyph)
                     break;
                 ++details;
+                glyphs.Flush(cr, aDrawToPath);
             }
         } else if (glyphData->IsMissing()) {
             const gfxTextRun::DetailedGlyph *details = aTextRun->GetDetailedGlyphs(i);
@@ -261,20 +291,19 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
         }
     }
 
-    *aPt = gfxPoint(x, y);
-
-    cairo_t *cr = aContext->GetCairo();
-    SetupCairoFont(cr);
-    if (aDrawToPath) {
-        cairo_glyph_path(cr, glyphBuffer.Elements(), glyphBuffer.Length());
-    } else {
-        cairo_show_glyphs(cr, glyphBuffer.Elements(), glyphBuffer.Length());
-    }
-
     if (gfxFontTestStore::CurrentStore()) {
+        /* This assumes that the tests won't have anything that results
+         * in more than GLYPH_BUFFER_SIZE glyphs.  Do this before we
+         * flush, since that'll blow away the num_glyphs.
+         */
         gfxFontTestStore::CurrentStore()->AddItem(GetUniqueName(),
-                                                  glyphBuffer.Elements(), glyphBuffer.Length());
+                                                  glyphs.mGlyphBuffer, glyphs.mNumGlyphs);
     }
+
+    // draw any remaining glyphs
+    glyphs.Flush(cr, aDrawToPath, PR_TRUE);
+
+    *aPt = gfxPoint(x, y);
 }
 
 gfxFont::RunMetrics
