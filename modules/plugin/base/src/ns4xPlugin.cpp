@@ -579,7 +579,7 @@ ns4xPlugin::CreatePlugin(nsIServiceManagerObsolete* aServiceMgr,
   callbacks.size = sizeof(callbacks);
 
   NP_PLUGINSHUTDOWN pfnShutdown =
-    (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
+    (NP_PLUGINSHUTDOWN)PR_FindFunctionSymbol(aLibrary, "NP_Shutdown");
 
   // create the new plugin handler
   *aResult = plptr =
@@ -599,7 +599,7 @@ ns4xPlugin::CreatePlugin(nsIServiceManagerObsolete* aServiceMgr,
   plptr->Initialize();
 
   NP_PLUGINUNIXINIT pfnInitialize =
-    (NP_PLUGINUNIXINIT)PR_FindSymbol(aLibrary, "NP_Initialize");
+    (NP_PLUGINUNIXINIT)PR_FindFunctionSymbol(aLibrary, "NP_Initialize");
 
   if (pfnInitialize == NULL)
     return NS_ERROR_UNEXPECTED; // XXX Right error?
@@ -898,7 +898,7 @@ nsresult
 ns4xPlugin::GetMIMEDescription(const char* *resultingDesc)
 {
   const char* (*npGetMIMEDescription)() =
-    (const char* (*)()) PR_FindSymbol(fLibrary, "NP_GetMIMEDescription");
+    (const char* (*)()) PR_FindFunctionSymbol(fLibrary, "NP_GetMIMEDescription");
 
   *resultingDesc = npGetMIMEDescription ? npGetMIMEDescription() : "";
 
@@ -918,7 +918,7 @@ ns4xPlugin::GetValue(nsPluginVariable variable, void *value)
   ("ns4xPlugin::GetValue called: this=%p, variable=%d\n", this, variable));
 
   NPError (*npGetValue)(void*, nsPluginVariable, void*) =
-    (NPError (*)(void*, nsPluginVariable, void*)) PR_FindSymbol(fLibrary,
+    (NPError (*)(void*, nsPluginVariable, void*)) PR_FindFunctionSymbol(fLibrary,
                                                                 "NP_GetValue");
 
   if (npGetValue && NPERR_NO_ERROR == npGetValue(nsnull, variable, value)) {
