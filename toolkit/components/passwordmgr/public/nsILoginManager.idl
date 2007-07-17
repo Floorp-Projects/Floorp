@@ -47,146 +47,146 @@ interface nsIDOMHTMLInputElement;
 interface nsILoginManager : nsISupports {
 
     /**
-    * Store a new login in the login manager.
-    *
-    * @param aLogin
-    *        The login to be added.
-    */
+     * Store a new login in the login manager.
+     *
+     * @param aLogin
+     *        The login to be added.
+     */
     void addLogin(in nsILoginInfo aLogin);
 
 
     /**
-    * Remove a login from the login manager.
-    *
-    * @param aLogin
-    *        The login to be removed.
-    */
+     * Remove a login from the login manager.
+     *
+     * @param aLogin
+     *        The login to be removed.
+     */
     void removeLogin(in nsILoginInfo aLogin);
 
 
     /**
-    * Modify an existing login in the login manager.
-    *
-    * @param aLogin
-    *        The login to be modified.
-    */
+     * Modify an existing login in the login manager.
+     *
+     * @param aLogin
+     *        The login to be modified.
+     */
     void modifyLogin(in nsILoginInfo oldLogin, in nsILoginInfo newLogin);
 
 
     /**
-    * Remove all logins known to login manager.
-    *
-    * The browser sanitization feature allows the user to clear any stored
-    * passwords. This interface allows that to be done without getting each
-    * login first (which might require knowing the master password).
-    *
-    */
+     * Remove all logins known to login manager.
+     *
+     * The browser sanitization feature allows the user to clear any stored
+     * passwords. This interface allows that to be done without getting each
+     * login first (which might require knowing the master password).
+     *
+     */
     void removeAllLogins();
 
 
     /**
-    * Fetch all logins in the login manager. An array is always returned;
-    * if there are no logins the array is empty.
-    *
-    * @param count
-    *        The number of elements in the array. JS callers can simply use
-    *        the array's .length property, and supply an dummy object for
-    *        this out param. For example: |getAllLogins({})|
-    * @param logins
-    *        An array of nsILoginInfo objects. 
-    *
-    * NOTE: This can be called from JS as:
-    *       var logins = pwmgr.getAllLogins({});
-    *       (|logins| is an array).
-    */
+     * Fetch all logins in the login manager. An array is always returned;
+     * if there are no logins the array is empty.
+     *
+     * @param count
+     *        The number of elements in the array. JS callers can simply use
+     *        the array's .length property, and supply an dummy object for
+     *        this out param. For example: |getAllLogins({})|
+     * @param logins
+     *        An array of nsILoginInfo objects. 
+     *
+     * NOTE: This can be called from JS as:
+     *       var logins = pwmgr.getAllLogins({});
+     *       (|logins| is an array).
+     */
     void getAllLogins(out unsigned long count,
                       [retval, array, size_is(count)] out nsILoginInfo logins);
 
     
     /**
-    * Obtain a list of all hosts for which password saving is disabled.
-    *
-    * @param count
-    *        The number of elements in the array. JS callers can simply use
-    *        the array's .length property, and supply an dummy object for
-    *        this out param. For example: |getAllDisabledHosts({})|
-    * @param hostnames
-    *        An array of hostname strings, in origin URL format without a
-    *        pathname. For example: "https://www.site.com".
-    *
-    * NOTE: This can be called from JS as:
-    *       var logins = pwmgr.getDisabledAllLogins({});
-    */
+     * Obtain a list of all hosts for which password saving is disabled.
+     *
+     * @param count
+     *        The number of elements in the array. JS callers can simply use
+     *        the array's .length property, and supply an dummy object for
+     *        this out param. For example: |getAllDisabledHosts({})|
+     * @param hostnames
+     *        An array of hostname strings, in origin URL format without a
+     *        pathname. For example: "https://www.site.com".
+     *
+     * NOTE: This can be called from JS as:
+     *       var logins = pwmgr.getDisabledAllLogins({});
+     */
     void getAllDisabledHosts(out unsigned long count,
                       [retval, array, size_is(count)] out wstring hostnames);
 
 
     /**
-    * Check to see if saving logins has been disabled for a host.
-    *
-    * @param aHost
-    *        The hostname to check. This argument should be in the origin
-    *        URL format, without a pathname. For example: "http://foo.com".
-    */
+     * Check to see if saving logins has been disabled for a host.
+     *
+     * @param aHost
+     *        The hostname to check. This argument should be in the origin
+     *        URL format, without a pathname. For example: "http://foo.com".
+     */
     boolean getLoginSavingEnabled(in AString aHost);
 
 
     /**
-    * Disable (or enable) storing logins for the specified host. When
-    * disabled, the login manager will not prompt to store logins for
-    * that host. Existing logins are not affected.
-    *
-    * @param aHost
-    *        The hostname to set. This argument should be in the origin
-    *        URL format, without a pathname. For example: "http://foo.com".
-    * @param isEnabled
-    *        Specify if saving logins should be enabled (true) or
-    *        disabled (false)
-    */
+     * Disable (or enable) storing logins for the specified host. When
+     * disabled, the login manager will not prompt to store logins for
+     * that host. Existing logins are not affected.
+     *
+     * @param aHost
+     *        The hostname to set. This argument should be in the origin
+     *        URL format, without a pathname. For example: "http://foo.com".
+     * @param isEnabled
+     *        Specify if saving logins should be enabled (true) or
+     *        disabled (false)
+     */
     void setLoginSavingEnabled(in AString aHost, in boolean isEnabled);
 
 
     /**
-    * Search for logins matching the specified criteria. Called when looking
-    * for logins that might be applicable to a form or authentication request.
-    *
-    * @param count
-    *        The number of elements in the array. JS callers can simply use
-    *        the array's .length property, and supply an dummy object for
-    *        this out param. For example: |findLogins({}, hostname, ...)|
-    * @param aHostname
-    *        The hostname to restict searches to. When looking for form
-    *        logins, this argument should be in origin URL format, without
-    *        a pathname. For example: "http://www.site.com". For protocol
-    *        logins (http//ftp), it should be the hostname with a port
-    *        appended. For example: "www.bar.com:443".
-    * @param aActionURL
-    *        For form logins, this argument should be the URL to which the
-    *        form will be submitted. For protocol logins, specify null.
-    * @param aHttpRealm
-    *        For protocol logins, this argument should be the HTTP Realm
-    *        for which the login applies. This is obtained from the
-    *        WWW-Authenticate header. See RFC2617. For form logins,
-    *        specify null.
-    * @param logins
-    *        An array of nsILoginInfo objects. 
-    *
-    * NOTE: This can be called from JS as:
-    *       var logins = pwmgr.findLogins({}, hostname, ...);
-    *
-    */
+     * Search for logins matching the specified criteria. Called when looking
+     * for logins that might be applicable to a form or authentication request.
+     *
+     * @param count
+     *        The number of elements in the array. JS callers can simply use
+     *        the array's .length property, and supply an dummy object for
+     *        this out param. For example: |findLogins({}, hostname, ...)|
+     * @param aHostname
+     *        The hostname to restict searches to. When looking for form
+     *        logins, this argument should be in origin URL format, without
+     *        a pathname. For example: "http://www.site.com". For protocol
+     *        logins (http//ftp), it should be the hostname with a port
+     *        appended. For example: "www.bar.com:443".
+     * @param aActionURL
+     *        For form logins, this argument should be the URL to which the
+     *        form will be submitted. For protocol logins, specify null.
+     * @param aHttpRealm
+     *        For protocol logins, this argument should be the HTTP Realm
+     *        for which the login applies. This is obtained from the
+     *        WWW-Authenticate header. See RFC2617. For form logins,
+     *        specify null.
+     * @param logins
+     *        An array of nsILoginInfo objects. 
+     *
+     * NOTE: This can be called from JS as:
+     *       var logins = pwmgr.findLogins({}, hostname, ...);
+     *
+     */
     void findLogins(out unsigned long count, in AString aHostname,
                     in AString aActionURL,   in AString aHttpRealm,
                     [retval, array, size_is(count)] out nsILoginInfo logins);
 
 
     /**
-    * Generate results for a userfield autocomplete menu.
-    *
-    * NOTE: This interface is provided for use only by the FormFillController,
-    *       which calls it directly. This isn't really ideal, it should
-    *       probably be callback registered through the FFC.
-    */
+     * Generate results for a userfield autocomplete menu.
+     *
+     * NOTE: This interface is provided for use only by the FormFillController,
+     *       which calls it directly. This isn't really ideal, it should
+     *       probably be callback registered through the FFC.
+     */
     nsIAutoCompleteResult autoCompleteSearch(in AString aSearchString,
                                     in nsIAutoCompleteResult aPreviousResult,
                                     in nsIDOMHTMLInputElement aElement);
