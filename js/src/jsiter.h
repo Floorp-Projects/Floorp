@@ -91,7 +91,6 @@ typedef enum JSGeneratorState {
 } JSGeneratorState;
 
 struct JSGenerator {
-    JSGenerator         *next;
     JSObject            *obj;
     JSGeneratorState    state;
     JSStackFrame        frame;
