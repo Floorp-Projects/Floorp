@@ -213,7 +213,10 @@ PRBool nsClipboard::GetClipboardDataByID(ULONG ulFormatID, const char *aFlavor)
 
   nsCOMPtr<nsISupports> genericDataWrapper;
   nsPrimitiveHelpers::CreatePrimitiveForData( aFlavor, pDataMem, NumOfBytes, getter_AddRefs(genericDataWrapper) );
-  nsresult errCode = mTransferable->SetTransferData( aFlavor, genericDataWrapper, NumOfBytes );
+#ifdef DEBUG
+  nsresult errCode =
+#endif
+  mTransferable->SetTransferData( aFlavor, genericDataWrapper, NumOfBytes );
 #ifdef DEBUG
   if (errCode != NS_OK)
     printf( "nsClipboard:: Error setting data into transferable\n" );
@@ -234,7 +237,10 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
 
   // Get the data from the transferable
   nsCOMPtr<nsISupports> genericDataWrapper;
-  nsresult errCode = mTransferable->GetTransferData( aFlavor, getter_AddRefs(genericDataWrapper), &NumOfBytes );
+#ifdef DEBUG
+  nsresult errCode =
+#endif
+  mTransferable->GetTransferData( aFlavor, getter_AddRefs(genericDataWrapper), &NumOfBytes );
 #ifdef DEBUG
   if (NS_FAILED(errCode)) printf( "nsClipboard:: Error getting data from transferable\n" );
 #endif
@@ -260,12 +266,13 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
         memcpy( pByteMem, pMozData, NumOfBytes );       // Copy text string
         pByteMem[NumOfBytes] = '\0';                    // Append terminator
 
-        // Don't copy text larger than 64K to the clipboard
-        if (strlen(pByteMem) <= 0xFFFF) {
-          WinSetClipbrdData( 0, reinterpret_cast<ULONG>(pByteMem), ulFormatID, CFI_POINTER );
-        } else {
+        // With Warp4 copying more than 64K to the clipboard works well, but
+        // legacy apps cannot always handle it. So output an alarm to alert the
+        // user that there might be a problem.
+        if (strlen(pByteMem) > 0xFFFF) {
           WinAlarm(HWND_DESKTOP, WA_ERROR);
         }
+        WinSetClipbrdData(0, reinterpret_cast<ULONG>(pByteMem), ulFormatID, CFI_POINTER);
       }
     }
     else                           // All other text/.. flavors are in unicode
@@ -315,13 +322,13 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
           WideCharToMultiByte(0, static_cast<PRUnichar*>(pMozData),
                               NumOfBytes, buffer, bufLength);
           memcpy(pByteMem, buffer.get(), NumOfBytes);
-          // Don't copy text larger than 64K to the clipboard
-          if (strlen(pByteMem) <= 0xFFFF) {
-            WinSetClipbrdData(0, reinterpret_cast<ULONG>(pByteMem), CF_TEXT,
-                              CFI_POINTER);
-          } else {
+          // With Warp4 copying more than 64K to the clipboard works well, but
+          // legacy apps cannot always handle it. So output an alarm to alert the
+          // user that there might be a problem.
+          if (strlen(pByteMem) > 0xFFFF) {
             WinAlarm(HWND_DESKTOP, WA_ERROR);
           }
+          WinSetClipbrdData(0, reinterpret_cast<ULONG>(pByteMem), CF_TEXT, CFI_POINTER);
         }
       }
     }
