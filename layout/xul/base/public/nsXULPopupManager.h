@@ -46,6 +46,7 @@
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
 #include "nsIDOMKeyListener.h"
+#include "nsPoint.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsITimer.h"
@@ -359,8 +360,9 @@ public:
   // This is used by the implementation of nsIDOMXULDocument::GetPopupRangeParent
   // and nsIDOMXULDocument::GetPopupRangeOffset.
   void GetMouseLocation(nsIDOMNode** aNode, PRInt32* aOffset);
-  // set the mouse event that was used to activate the next popup to be opened.
-  void SetMouseLocation(nsIDOMEvent* aEvent);
+  // set the mouse event that was used to activate the next popup, specified by
+  // aPopup, to be opened.
+  void SetMouseLocation(nsIDOMEvent* aEvent, nsIContent* aPopup);
 
   /**
    * Open a <menu> given its content node. If aSelectFirstItem is
@@ -626,6 +628,7 @@ protected:
   // range parent and offset set in SetMouseLocation
   nsCOMPtr<nsIDOMNode> mRangeParent;
   PRInt32 mRangeOffset;
+  nsPoint mCachedMousePoint;
 
   // set to the currently active menu bar, if any
   nsMenuBarFrame* mActiveMenuBar;
