@@ -47,7 +47,7 @@
 
 #include "nsImageLoadingContent.h"
 #include "nsIStreamListener.h"
-#include "nsIFrameLoader.h"
+#include "nsFrameLoader.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIChannelEventSink.h"
 #include "nsIObjectLoadingContent.h"
@@ -334,7 +334,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     /**
      * Frame loader, for content documents we load.
      */
-    nsCOMPtr<nsIFrameLoader>    mFrameLoader;
+    nsRefPtr<nsFrameLoader>     mFrameLoader;
 
     /**
      * A pending nsAsyncInstantiateEvent (may be null).  This is a weak ref.
