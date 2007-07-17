@@ -2445,7 +2445,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     if (NS_SUCCEEDED(rv) &&
         NS_SUCCEEDED(dirProvider.GetUserAppDataDirectory(
                                  getter_AddRefs(userAppDataDir)))) {
-      CrashReporter::SetupExtraData(userAppDataDir);
+      CrashReporter::SetupExtraData(userAppDataDir,
+                                    nsDependentCString(appData.buildID));
     }
   }
 #endif
