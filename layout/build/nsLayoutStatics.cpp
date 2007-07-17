@@ -201,7 +201,7 @@ nsLayoutStatics::Initialize()
 #endif
   nsDOMAttribute::Initialize();
 
-  rv = txMozillaXSLTProcessor::Init();
+  rv = txMozillaXSLTProcessor::Startup();
   if (NS_FAILED(rv)) {
     NS_ERROR("Could not initialize txMozillaXSLTProcessor");
     return rv;
