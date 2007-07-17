@@ -47,6 +47,12 @@
 #include "nsIFile.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsString.h"
+#include "nsIRollupListener.h"
+#include "nsIWidget.h"
+
+// defined in nsChildView.mm
+extern nsIRollupListener * gRollupListener;
+extern nsIWidget         * gRollupWidget;
 
 // AppShellDelegate
 //
@@ -66,6 +72,7 @@
 - (void)runAppShell;
 - (nsresult)rvFromRun;
 - (void)applicationWillTerminate:(NSNotification*)aNotification;
+- (void)beginMenuTracking:(NSNotification*)aNotification;
 @end
 
 // nsAppShell implementation
@@ -412,6 +419,10 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
                                              selector:@selector(applicationWillTerminate:)
                                                  name:NSApplicationWillTerminateNotification
                                                object:NSApp];
+    [[NSDistributedNotificationCenter defaultCenter] addObserver:self
+                                                        selector:@selector(beginMenuTracking:)
+                                                            name:@"com.apple.HIToolbox.beginMenuTrackingNotification"
+                                                          object:nil];
   }
 
   return self;
@@ -420,6 +431,7 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
 - (void)dealloc
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [[NSDistributedNotificationCenter defaultCenter] removeObserver:self];
   [super dealloc];
 }
 
@@ -464,4 +476,19 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
 {
   mAppShell->WillTerminate();
 }
+
+// beginMenuTracking
+//
+// Roll up our context menu (if any) when some other app (or the OS) opens
+// any sort of menu.  But make sure we don't do this for notifications we
+// send ourselves (whose 'sender' will be @"org.mozilla.gecko.PopupWindow").
+- (void)beginMenuTracking:(NSNotification*)aNotification
+{
+  NSString *sender = [aNotification object];
+  if (!sender || ![sender isEqualToString:@"org.mozilla.gecko.PopupWindow"]) {
+    if (gRollupListener && gRollupWidget)
+      gRollupListener->Rollup();
+  }
+}
+
 @end
