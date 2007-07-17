@@ -8,4 +8,4 @@ fails-if(MOZ_WIDGET_TOOLKIT!="windows") == bidi-004.html bidi-004-ref.html # Bug
 fails-if(MOZ_WIDGET_TOOLKIT!="windows") == bidi-004-j.html bidi-004-ref.html
 skip == bidi-005.html bidi-005-ref.html # depends on bug 376532
 == 386339.html 386339-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 387653.html 387653-ref.html # Bug 386753
+fails-if(MOZ_WIDGET_TOOLKIT!="gtk2") == 387653.html 387653-ref.html # Linux-specific bug
