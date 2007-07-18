@@ -92,7 +92,7 @@ endif
 
 # Prevent floating point errors caused by VC++ optimizations
 ifeq ($(OS_ARCH),WINNT)
-_MSC_VER = $(shell $(CC) 2>&1 | sed -n 's/.*Compiler Version \([0-9]*\)\.\([0-9]*\).*/\1\2/p')
+_MSC_VER = $(shell $(CXX) 2>&1 | sed -n 's/.*Compiler Version \([0-9]*\)\.\([0-9]*\).*/\1\2/p')
 ifeq (,$(filter-out 1200 1300 1310,$(_MSC_VER)))
 CFLAGS += -Op
 else
@@ -198,42 +198,42 @@ OTHER_HFILES += $(OBJDIR)/jsautokw.h
 
 HFILES = $(JS_HFILES) $(API_HFILES) $(OTHER_HFILES)
 
-JS_CFILES =		\
-	jsapi.c		\
-	jsarena.c	\
-	jsarray.c	\
-	jsatom.c	\
-	jsbool.c	\
-	jscntxt.c	\
-	jsdate.c	\
-	jsdbgapi.c	\
-	jsdhash.c	\
-	jsdtoa.c	\
-	jsemit.c	\
-	jsexn.c		\
-	jsfun.c		\
-	jsgc.c		\
-	jshash.c	\
-	jsinterp.c	\
-	jsiter.c	\
-	jslock.c	\
-	jslog2.c	\
-	jslong.c	\
-	jsmath.c	\
-	jsnum.c		\
-	jsobj.c		\
-	jsopcode.c      \
-	jsparse.c	\
-	jsprf.c		\
-	jsregexp.c	\
-	jsscan.c	\
-	jsscope.c	\
-	jsscript.c	\
-	jsstr.c		\
-	jsutil.c        \
-	jsxdrapi.c	\
-	jsxml.c		\
-	prmjtime.c	\
+JS_CPPFILES =		\
+	jsapi.cpp	\
+	jsarena.cpp	\
+	jsarray.cpp	\
+	jsatom.cpp	\
+	jsbool.cpp	\
+	jscntxt.cpp	\
+	jsdate.cpp	\
+	jsdbgapi.cpp	\
+	jsdhash.cpp	\
+	jsdtoa.cpp	\
+	jsemit.cpp	\
+	jsexn.cpp	\
+	jsfun.cpp	\
+	jsgc.cpp	\
+	jshash.cpp	\
+	jsinterp.cpp	\
+	jsiter.cpp	\
+	jslock.cpp	\
+	jslog2.cpp	\
+	jslong.cpp	\
+	jsmath.cpp	\
+	jsnum.cpp	\
+	jsobj.cpp	\
+	jsopcode.cpp	\
+	jsparse.cpp	\
+	jsprf.cpp	\
+	jsregexp.cpp	\
+	jsscan.cpp	\
+	jsscope.cpp	\
+	jsscript.cpp	\
+	jsstr.cpp	\
+	jsutil.cpp	\
+	jsxdrapi.cpp	\
+	jsxml.cpp	\
+	prmjtime.cpp	\
 	$(NULL)
 
 ifdef JS_LIVECONNECT
@@ -241,13 +241,13 @@ DIRS      += liveconnect
 endif
 
 ifdef JS_HAS_FILE_OBJECT
-JS_CFILES += jsfile.c
+JS_CPPFILES += jsfile.cpp
 JS_HFILES += jsfile.h
 endif
 
-LIB_CFILES  = $(JS_CFILES)
+LIB_CPPFILES  = $(JS_CPPFILES)
 LIB_ASFILES := $(wildcard *_$(OS_ARCH).s)
-PROG_CFILES = js.c
+PROG_CPPFILES = js.cpp
 
 ifdef USE_MSVC
 LIBRARY = $(OBJDIR)/js32.lib
@@ -276,28 +276,28 @@ GARBAGE += $(OBJDIR)/jskwgen.$(OBJ_SUFFIX)
 
 $(OBJDIR)/jsscan.$(OBJ_SUFFIX): $(OBJDIR)/jsautokw.h jskeyword.tbl
 
-$(OBJDIR)/jskwgen.$(OBJ_SUFFIX): jskwgen.c jskeyword.tbl
+$(OBJDIR)/jskwgen.$(OBJ_SUFFIX): jskwgen.cpp jskeyword.tbl
 
 $(OBJDIR)/jsautokw.h: $(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX) jskeyword.tbl
 	$(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX) $@
 
 ifdef USE_MSVC
 
-$(OBJDIR)/jskwgen.obj: jskwgen.c jskeyword.tbl
+$(OBJDIR)/jskwgen.obj: jskwgen.cpp jskeyword.tbl
 	@$(MAKE_OBJDIR)
-	$(CC) -Fo$(OBJDIR)/ -c $(CFLAGS) $<
+	$(CXX) -Fo$(OBJDIR)/ -c $(CFLAGS) $<
 
 $(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX): $(OBJDIR)/jskwgen.$(OBJ_SUFFIX)
 	link.exe -out:"$@" $(EXE_LINK_FLAGS) $^
 
 else
 
-$(OBJDIR)/jskwgen.o: jskwgen.c jskeyword.tbl
+$(OBJDIR)/jskwgen.o: jskwgen.cpp jskeyword.tbl
 	@$(MAKE_OBJDIR)
-	$(CC) -o $@ -c $(CFLAGS) $<
+	$(CXX) -o $@ -c $(CFLAGS) $<
 
 $(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX): $(OBJDIR)/jskwgen.$(OBJ_SUFFIX)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^
+	$(CXX) -o $@ $(CFLAGS) $(LDFLAGS) $^
 
 endif
 
@@ -310,24 +310,24 @@ $(PROGRAM): $(PROG_OBJS) $(LIBRARY)
 	link.exe -out:"$@" $(EXE_LINK_FLAGS) $^
 else
 $(PROGRAM): $(PROG_OBJS) $(LIBRARY)
-	$(CC) -o $@ $(CFLAGS) $(PROG_OBJS) $(LIBRARY) $(LDFLAGS) $(OTHER_LIBS) \
+	$(CXX) -o $@ $(CFLAGS) $(PROG_OBJS) $(LIBRARY) $(LDFLAGS) $(OTHER_LIBS) \
 	    $(PROG_LIBS)
 endif
 
 $(PROGRAM).pure: $(PROG_OBJS) $(LIBRARY)
 	purify $(PUREFLAGS) \
-	    $(CC) -o $@ $(PURE_OS_CFLAGS) $(PROG_OBJS) $(LIBRARY) $(LDFLAGS) \
+	    $(CXX) -o $@ $(PURE_OS_CFLAGS) $(PROG_OBJS) $(LIBRARY) $(LDFLAGS) \
 		$(OTHER_LIBS) $(PROG_LIBS)
 
 ifndef PREBUILT_CPUCFG
-$(HFILES) $(CFILES): $(OBJDIR)/jsautocfg.h
+$(HFILES) $(CPPFILES): $(OBJDIR)/jsautocfg.h
 
 $(OBJDIR)/jsautocfg.h: $(OBJDIR)/jscpucfg
 	rm -f $@
 	$(OBJDIR)/jscpucfg > $@
 
 $(OBJDIR)/jscpucfg: $(OBJDIR)/jscpucfg.o
-	$(CC) -o $@ $(OBJDIR)/jscpucfg.o
+	$(CXX) -o $@ $(OBJDIR)/jscpucfg.o
 
 # Add to TARGETS for clobber rule
 TARGETS += $(OBJDIR)/jsautocfg.h $(OBJDIR)/jscpucfg \
@@ -337,7 +337,7 @@ endif
 #
 # Hardwire dependencies on jsopcode.tbl
 #
-jsopcode.h jsopcode.c: jsopcode.tbl
+jsopcode.h jsopcode.cpp: jsopcode.tbl
 
 -include $(DEPENDENCIES)
 
@@ -345,5 +345,5 @@ TARNAME = jsref.tar
 TARFILES = files `cat files`
 
 SUFFIXES: .i
-%.i: %.c
-	$(CC) -C -E $(CFLAGS) $< > $*.i
+%.i: %.cpp
+	$(CXX) -C -E $(CFLAGS) $< > $*.i
