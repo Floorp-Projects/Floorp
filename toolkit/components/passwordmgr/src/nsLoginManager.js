@@ -38,19 +38,19 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 function LoginManager() {
     this.init();
 }
 
 LoginManager.prototype = {
 
-    QueryInterface : function (iid) {
-        const interfaces = [Ci.nsILoginManager,
-                            Ci.nsISupports, Ci.nsISupportsWeakReference];
-        if (!interfaces.some( function(v) { return iid.equals(v) } ))
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-        return this;
-    },
+    classDescription: "LoginManager",
+    contractID: "@mozilla.org/login-manager;1",
+    classID: Components.ID("{cb9e0de8-3598-4ed7-857b-827f011ad5d8}"),
+    QueryInterface : XPCOMUtils.generateQI([Ci.nsILoginManager,
+                                            Ci.nsISupportsWeakReference]),
 
 
     /* ---------- private memebers ---------- */
@@ -184,6 +184,7 @@ LoginManager.prototype = {
         var observerService = Cc["@mozilla.org/observer-service;1"]
                                 .getService(Ci.nsIObserverService);
         observerService.addObserver(this._observer, "earlyformsubmit", false);
+        observerService.addObserver(this._observer, "xpcom-shutdown", false);
 
         // WebProgressListener for getting notification of new doc loads.
         var progress = Cc["@mozilla.org/docloaderservice;1"]
@@ -220,13 +221,9 @@ LoginManager.prototype = {
     _observer : {
         _pwmgr : null,
 
-        QueryInterface : function (iid) {
-            const interfaces = [Ci.nsIObserver, Ci.nsIFormSubmitObserver,
-                                Ci.nsISupports, Ci.nsISupportsWeakReference];
-            if (!interfaces.some( function(v) { return iid.equals(v) } ))
-                throw Components.results.NS_ERROR_NO_INTERFACE;
-            return this;
-        },
+        QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver, 
+                                                Ci.nsIFormSubmitObserver,
+                                                Ci.nsISupportsWeakReference]),
 
 
         // nsFormSubmitObserver
@@ -261,6 +258,13 @@ LoginManager.prototype = {
                 } else {
                     this._pwmgr.log("Oops! Pref not handled, change ignored.");
                 }
+            } else if (topic == "xpcom-shutdown") {
+                for (let i in this._pwmgr) {
+                  try {
+                    this._pwmgr[i] = null;
+                  } catch(ex) {}
+                }
+                this._pwmgr = null;
             } else {
                 this._pwmgr.log("Oops! Unexpected notification: " + topic);
             }
@@ -279,13 +283,8 @@ LoginManager.prototype = {
         _pwmgr : null,
         _domEventListener : null,
 
-        QueryInterface : function (iid) {
-            const interfaces = [Ci.nsIWebProgressListener,
-                                Ci.nsISupports, Ci.nsISupportsWeakReference];
-            if (!interfaces.some( function(v) { return iid.equals(v) } ))
-                throw Components.results.NS_ERROR_NO_INTERFACE;
-            return this;
-        },
+        QueryInterface : XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
+                                                Ci.nsISupportsWeakReference]),
 
 
         onStateChange : function (aWebProgress, aRequest,
@@ -339,13 +338,8 @@ LoginManager.prototype = {
     _domEventListener : {
         _pwmgr : null,
 
-        QueryInterface : function (iid) {
-            const interfaces = [Ci.nsIDOMEventListener,
-                                Ci.nsISupports, Ci.nsISupportsWeakReference];
-            if (!interfaces.some( function(v) { return iid.equals(v) } ))
-                throw Components.results.NS_ERROR_NO_INTERFACE;
-            return this;
-        },
+        QueryInterface : XPCOMUtils.generateQI([Ci.nsIDOMEventListener,
+                                                Ci.nsISupportsWeakReference]),
 
 
         handleEvent : function (event) {
@@ -448,13 +442,13 @@ LoginManager.prototype = {
 
 
     /*
-     * clearAllLogins
+     * removeAllLogins
      *
-     * Clears all stored logins.
+     * Remove all stored logins.
      */
-    clearAllLogins : function () {
-        this.log("Clearing all logins");
-        this._storage.clearAllLogins();
+    removeAllLogins : function () {
+        this.log("Removing all logins");
+        this._storage.removeAllLogins();
     },
 
     /*
@@ -597,6 +591,12 @@ LoginManager.prototype = {
 
     /*
      * _getPasswordFields
+     *
+     * Returns an array of password field elements for the specified form.
+     * If no pw fields are found, or if more than 3 are found, then null
+     * is returned.
+     *
+     * skipEmptyFields can be set to ignore password fields with no value.
      */
     _getPasswordFields : function (form, skipEmptyFields) {
         // Locate the password fields in the form.
@@ -623,6 +623,98 @@ LoginManager.prototype = {
 
 
     /*
+     * _getFormFields
+     *
+     * Returns the username and password fields found in the form.
+     * Can handle complex forms by trying to figure out what the
+     * relevant fields are.
+     *
+     * Returns: [usernameField, newPasswordField, oldPasswordField]
+     *
+     * usernameField may be null.
+     * newPasswordField will always be non-null.
+     * oldPasswordField may be null. If null, newPasswordField is just
+     * "theLoginField". If not null, the form is apparently a
+     * change-password field, with oldPasswordField containing the password
+     * that is being changed.
+     */
+    _getFormFields : function (form, isSubmission) {
+        // Locate the password field(s) in the form. Up to 3 supported.
+        // If there's no password field, there's nothing for us to do.
+        var pwFields = this._getPasswordFields(form, isSubmission);
+        if (!pwFields) {
+            this.log("(form ignored -- either 0 or >3 pw fields.)");
+            return [null, null, null];
+        }
+
+
+        // Locate the username field in the form by serarching backwards
+        // from the first passwordfield, assume the first text field is the
+        // username. We might not find a username field if the user is
+        // already logged in to the site. 
+        for (var i = pwFields[0].index - 1; i >= 0; i--) {
+            if (form.elements[i].type == "text") {
+                var usernameField = form.elements[i];
+                break;
+            }
+        }
+
+        if (!usernameField)
+            this.log("(form -- no username field found)");
+
+
+        // If we're not submitting a form (it's a page load), there are no
+        // password field values for us to use for identifying fields. So,
+        // just assume the first password field is the one to be filled in.
+        if (!isSubmission || pwFields.length == 1)
+            return [usernameField, pwFields[0].element, null];
+
+
+        // Try to figure out WTF is in the form based on the password values.
+        var oldPasswordField, newPasswordField;
+        var pw1 = pwFields[0].element.value;
+        var pw2 = pwFields[1].element.value;
+        var pw3 = (pwFields[2] ? pwFields[2].element.value : null);
+
+        if (pwFields.length == 3) {
+            // Look for two identical passwords, that's the new password
+
+            if (pw1 == pw2 && pw2 == pw3) {
+                // All 3 passwords the same? Weird! Treat as if 1 pw field.
+                newPasswordField = pwFields[0].element;
+                oldPasswordField = null;
+            } else if (pw1 == pw2) {
+                newPasswordField = pwFields[0].element;
+                oldPasswordField = pwFields[2].element;
+            } else if (pw2 == pw3) {
+                oldPasswordField = pwFields[0].element;
+                newPasswordField = pwFields[2].element;
+            } else  if (pw1 == pw3) {
+                // A bit odd, but could make sense with the right page layout.
+                newPasswordField = pwFields[0].element;
+                oldPasswordField = pwFields[1].element;
+            } else {
+                // We can't tell which of the 3 passwords should be saved.
+                this.log("(form ignored -- all 3 pw fields differ)");
+                return [null, null, null];
+            }
+        } else { // pwFields.length == 2
+            if (pw1 == pw2) {
+                // Treat as if 1 pw field
+                newPasswordField = pwFields[0].element;
+                oldPasswordField = null;
+            } else {
+                // Just assume that the 2nd password is the new password
+                oldPasswordField = pwFields[0].element;
+                newPasswordField = pwFields[1].element;
+            }
+        }
+
+        return [usernameField, newPasswordField, oldPasswordField];
+    },
+
+
+    /*
      * _onFormSubmit
      *
      * Called by the our observer when notified of a form submission.
@@ -644,30 +736,13 @@ LoginManager.prototype = {
         };
 
         // local helper function
-        function getUsernameField (passwordFieldIndex) {
-            var usernameField = null;
+        function findExistingLogin(pwmgr, hostname,
+                                   formSubmitURL, usernameField) {
 
-            // Search backwards to first text field (assume it's the username)
-            for (var i = passwordFieldIndex - 1; i >= 0; i--) {
-                if (form.elements[i].type == "text") {
-                    usernameField = form.elements[i];
-                    break;
-                }
-            }
-
-            return usernameField;
-        };
-
-        // local helper function
-        function findExistingLogin(pwmgr) {
             var searchLogin = new pwmgr._nsLoginInfo();
             searchLogin.init(hostname, formSubmitURL, null,
                              usernameField.value, "",
                              usernameField.name,  "");
-
-            // TODO: random note: devmo has conflicting info on Array.some()...
-            // One page says it runs on *every* element, another
-            // says it stops at the first match.
 
             var logins = pwmgr.findLogins({}, hostname, formSubmitURL, null);
             var existingLogin;
@@ -697,72 +772,24 @@ LoginManager.prototype = {
             return;
         }
 
-        // Locate the password field(s) in the form. Up to 3 supported.
-        var pwFields = this._getPasswordFields(form, true);
-        if (!pwFields) {
-            this.log("(form submission ignored -- found " + pwFields.length +
-                     " fields, can only handle 1-3.)");
-            return;
-        }
 
-        // Locate the username field in the form. We might not find a
-        // username field if the user is already logged in to the site. 
-        var usernameField = getUsernameField(pwFields[0].index);
-        if (!usernameField) {
-            this.log("(form submission -- no username field found)");
-        }
+        // Get the appropriate fields from the form.
+        var [usernameField, newPasswordField, oldPasswordField] =
+            this._getFormFields(form, true);
 
+        // Need at least 1 valid password field to do anything.
+        if (newPasswordField == null)
+                return;
 
         // Check for autocomplete=off attribute. We don't use it to prevent
         // autofilling (for existing logins), but won't save logins when it's
         // present.
         if (autocompleteDisabled(form) ||
             autocompleteDisabled(usernameField) ||
-            autocompleteDisabled(pwFields[0].element) ||
-            (pwFields[1] && autocompleteDisabled(pwFields[1].element)) ||
-            (pwFields[2] && autocompleteDisabled(pwFields[2].element))) {
+            autocompleteDisabled(newPasswordField) ||
+            autocompleteDisabled(oldPasswordField)) {
                 this.log("(form submission ignored -- autocomplete=off found)");
                 return;
-        }
-
-
-        // Try to figure out WTF is in the form based on the password values
-        var pw1 = pwFields[0].element.value;
-        var pw2 = (pwFields[1] ? pwFields[1].element.value : null);
-        var pw3 = (pwFields[2] ? pwFields[2].element.value : null);
-        // By default, assume a 1-password case
-        var oldPasswordField = null, newPasswordField = pwFields[0].element;
-
-        if (pwFields.length == 3) {
-            // Look for two identical passwords, that's the new password
-
-            if (pw1 == pw2 && pw2 == pw3) {
-                // All 3 passwords the same? Weird! Treat as if 1 pw field.
-                pwFields.length = 1;
-            } else if (pw1 == pw2) {
-                newPasswordField = pwFields[0].element;
-                oldPasswordField = pwFields[2].element;
-            } else if (pw2 == pw3) {
-                oldPasswordField = pwFields[0].element;
-                newPasswordField = pwFields[2].element;
-            } else  if (pw1 == pw3) {
-                // A bit odd, but could make sense with the right page layout.
-                newPasswordField = pwFields[0].element;
-                oldPasswordField = pwFields[1].element;
-            } else {
-                // We can't tell which of the 3 passwords should be saved.
-                this.log("(form submission ignored -- all 3 pw fields differ)");
-                return;
-            }
-        } else if (pwFields.length == 2) {
-            if (pw1 == pw2) {
-                // Treat as if 1 pw field
-                pwFields.length = 1;
-            } else {
-                // Just assume that the 2nd password is the new password
-                oldPasswordField = pwFields[0].element;
-                newPasswordField = pwFields[1].element;
-            }
         }
 
 
@@ -773,19 +800,13 @@ LoginManager.prototype = {
                     (usernameField ? usernameField.name  : null),
                     newPasswordField.name);
 
-        // If we didn't find a username field, allow the user to select
-        // from a list of applicable logins to update.
-        if (!usernameField) {
-            // Without an oldPasswordField, we can't know for sure if
-            // the user is creating an account or changing a password.
-            if (!oldPasswordField) {
-                this.log("(form submission ignored -- couldn't find a " +
-                         "username, and no oldPasswordField found.");
-                return;
-            }
+        // If we didn't find a username field, but seem to be changing a
+        // password, allow the user to select from a list of applicable
+        // logins to update the password for.
+        if (!usernameField && oldPasswordField) {
 
             var ok, username;
-            var logins = pwmgr.findLogins({}, hostname, formSubmitURL, null);
+            var logins = this.findLogins({}, hostname, formSubmitURL, null);
 
             // XXX we could be smarter here: look for a login matching the
             // old password value. If there's only one, update it. If there's
@@ -793,18 +814,21 @@ LoginManager.prototype = {
             // login for the pwchange is in pwmgr, but with an outdated
             // password. and the user has another login, with the same
             // password as the form login's old password.) ugh.
+            // XXX if you're changing a password, and there's no username
+            // in the form, then you can't add the login. Will need to change
+            // prompting to allow this.
 
             if (logins.length == 0) {
                 this.log("(no logins for this host -- pwchange ignored)");
                 return;
             } else if (logins.length == 1) {
                 username = logins[0].username;
-                ok = _promptToChangePassword(win, username)
+                ok = this._promptToChangePassword(win, username)
             } else {
                 var usernames = [];
                 logins.forEach(function(l) { usernames.push(l.username); });
 
-                [ok, username] = _promptToChangePasswordWithUsername(
+                [ok, username] = this._promptToChangePasswordWithUsernames(
                                                                 win, usernames);
             }
 
@@ -829,15 +853,23 @@ LoginManager.prototype = {
             return;
         }
 
+        if (!usernameField && !oldPasswordField) {
+            this.log("XXX not handled yet");
+            return;
+        }
 
-        // Look for an existing login that matches the form data (other
-        // than the password, which might be different)
-        existingLogin = findExistingLogin(this);
+        // We have a username. Look for an existing login that matches the
+        // form data (other than the password, which might be different)
+        existingLogin = findExistingLogin(this, hostname, formSubmitURL,
+                                          usernameField);
         if (existingLogin) {
+            this.log("Found an existing login matching this form submission");
+
             // Change password if needed
-            this.log("Updating password for existing login.");
-            if (existingLogin.password != newPasswordField.value)
+            if (existingLogin.password != formLogin.password) {
+                this.log("...Updating password for existing login.");
                 this.modifyLogin(existingLogin, formLogin);
+            }
 
             return;
         }
@@ -895,212 +927,95 @@ LoginManager.prototype = {
     /*
      * _fillDocument
      *
-     * Called when a page has loaded. Checks the document for forms,
-     * and for each form checks to see if it can be filled out with a
-     * stored login.
+     * Called when a page has loaded. For each form in the document,
+     * we check to see if it can be filled with a stored login.
      */
-    _fillDocument : function (doc)  {
-
-        function getElementByName (elements, name) {
-            for (var i = 0; i < elements.length; i++) {
-                var element = elements[i];
-                if (element.name && element.name == name)
-                    return element;
-            }
-            return null;
-        };
-
-        /*
-         * Bug 380222...
-         *
-         * CRIKEY! The original C++ code eeds a cleanup. This function is
-         * just a straight conversion to JS, with some changes for interacting
-         * with other parts of pwmgr that have been updated.
-         */
-
+    _fillDocument : function (doc) {
         var forms = doc.forms;
         if (!forms || forms.length == 0)
             return; 
 
         var formOrigin = this._getPasswordOrigin(doc.documentURI);
-        var prefillForm = this._prefBranch.getBoolPref("autofillForms");
+        var autofillForm = this._prefBranch.getBoolPref("autofillForms");
 
         this.log("fillDocument found " + forms.length +
                  " forms on " + doc.documentURI);
 
-        // We can auto-prefill the username and password if there is only
-        // one stored login that matches the username and password field names
-        // on the form in question.  Note that we only need to worry about a
-        // single login per form.
+        var previousActionOrigin = null;
 
         for (var i = 0; i < forms.length; i++) {
             var form = forms[i];
-
-            var firstMatch = null;
-            var attachedToInput = false;
-            var prefilledUser = false;
-            var userField, passField;
-            // Note: C++ code only had |temp| and reused it.
-            var tempUserField = null, tempPassField = null;
-
-
             var actionOrigin = this._getActionOrigin(form);
 
-            var logins = this.findLogins({}, formOrigin, actionOrigin, null);
+            // Heuristically determine what the user/pass fields are
+            // We do this before checking to see if logins are stored,
+            // so that the user isn't prompted for a master password
+            // without need.
+            var [usernameField, passwordField, ignored] =
+                this._getFormFields(form, false);
 
-            this.log("form[" + i + "]: found " + logins.length +
-                     " matching logins.");
+            // Need a valid password field to do anything.
+            if (passwordField == null)
+                continue;
 
-            for (var j = 0; j < logins.length; j++) {
-                var login = logins[j];
 
-                if (login.usernameField != "") {
-                    var foundNode = getElementByName(form.elements,
-                                                     login.usernameField);
-                    var tempUserField = foundNode;
-                }
+            // Only the actionOrigin might be changing, so if it's the same
+            // as the last form on the page we can reuse the same logins.
+            if (actionOrigin != previousActionOrigin) {
+                var logins =
+                    this.findLogins({}, formOrigin, actionOrigin, null);
 
-                var oldUserValue;
-                var userFieldFound = false;
+                this.log("form[" + i + "]: got " + logins.length + " logins.");
 
-                if (tempUserField) {
-                    if (tempUserField.type != "text")
-                        continue;
-
-                    oldUserValue = tempUserField.value;
-                    userField = tempUserField;
-                    userFieldFound = true;
-                } else if (login.passwordField == "") {
-                    // Happens sometimes when we import passwords from IE since
-                    // their form name match is case insensitive. In this case,
-                    // we'll just have to do a case insensitive search for the
-                    // userField and hope we get something.
-
-                    // loop over each form element
-                    for (var k = 0; i < form.elements.length; k++) {
-                        // |inputField| is |formControl| in C++
-                        var inputField = form.elements[k];
-
-                        if (inputField.type != "text")
-                            continue;
-
-                        if (login.usernameField.toLowerCase() ==
-                            inputField.name.toLowerCase())
-                        {
-                            oldUserValue = inputField.value;
-                            userField = inputField;
-                            foundNode = inputField;
-                            login.usernameField = inputField.name;
-                            //TODO write modified login to disk
-                            userFieldFound = true;
-                            break;
-                        }
-                    }
-                }
-
-                // Bail out if we should be seeing a userField but we're not
-                this.log(".... found userField? " + userFieldFound);
-                if (!userFieldFound && login.usernameField != "")
-                    continue;
-
-                if (login.passwordField != "") {
-                    foundNode = getElementByName(form.elements,
-                                                 login.passwordField);
-                    if (foundNode && foundNode.type != "password")
-                        foundNode = null;
-
-                    tempPassField = foundNode;
-                } else if (userField) {
-                    // No password field name was supplied,
-                    // try to locate one in the form, but only if we have
-                    // a username field.
-
-                    for (var index = 0; index < form.elements.length; index++) {
-                        if (form.elements[index].isSameNode(foundNode))
-                            break;
-                    }
-
-                    if (index >= 0) {
-                        // Search forwards
-                        for (var l = index + 1; l < form.elements.length; l++) {
-                            var e = form.elements[l];
-                            if (e.type == "password")
-                                foundNode = tempPassField = e;
-                        }
-                    }
-
-                    if (!tempPassField && index != 0) {
-                        // Search backwards
-                        for (l = index - 1; l >= 0; l--) {
-                            var e = form.elements[l];
-                            if (e.type == "password")
-                                foundNode = tempPassField = e;
-                        }
-                    }
-                }
-
-                this.log(".... found passField? " +
-                            (tempPassField ? true : false));
-                if (!tempPassField)
-                    continue;
-
-                oldPassValue = tempPassField.value;
-                passField = tempPassField;
-                if (login.passwordField == "")
-                    login.passwordField = passField.name;
-
-                if (oldUserValue != "" && prefillForm) {
-                    // The page has prefilled a username.
-                    // If it matches any of our saved usernames, prefill
-                    // the password for that username.  If there are
-                    // multiple saved usernames, we will also attach the
-                    // autocomplete listener.
-
-                    prefilledUser = true;
-                    if (login.username == oldUserValue)
-                        passField.value = login.password;
-                }
-
-                if (firstMatch && userField && !attachedToInput) {
-                    // We found more than one possible signon for this form...
-                    // Listen for blur and autocomplete events on the username
-                    // field so we can attempt to prefill the password after
-                    // the user has entered/selected the username.
-
-                    this.log(".... found multiple matching logins, " +
-                             "attaching autocomplete stuff");
-                    this._attachToInput(userField);
-                    attachedToInput = true;
-                } else {
-                    firstMatch = login;
-                }
+                previousActionOrigin = actionOrigin;
+            } else {
+                this.log("form[" + i + "]: using logins from last form.");
             }
 
-            // If we found more than one match, attachedToInput will be true.
-            // But if we found just one, we need to attach the autocomplete
-            // listener, and fill in the username and password (if the HTML
-            // didn't prefill the username.
 
-            if (firstMatch && !attachedToInput) {
-                if (userField)
-                    this._attachToInput(userField);
+            // Nothing to do if we have no matching logins available.
+            if (logins.length == 0)
+                continue;
 
-                if (!prefilledUser && prefillForm) {
-                        if (userField)
-                            userField.value = firstMatch.username;
 
-                        passField.value = firstMatch.password;
+            // Attach autocomplete stuff to the username field, if we have
+            // one. This is normally used to select from multiple accounts,
+            // but even with one account we should refill if the user edits.
+            // XXX should be able to pass in |logins| to init attachment
+            if (usernameField)
+                this._attachToInput(usernameField);
+
+            if (autofillForm) {
+
+                // If username was specified in the form, only fill in the
+                // password if we find a matching login.
+                if (usernameField && usernameField.value) {
+                    var username = usernameField.value;
+
+                    var foundLogin;
+                    var found = logins.some(function(l) {
+                                                foundLogin = l;
+                                                return (l.username == username);
+                                            });
+                    if (found)
+                        passwordField.value = foundLogin.password;
+
+                } else if (logins.length == 1) {
+                    if (usernameField)
+                        usernameField.value = logins[0].username;
+                    passwordField.value = logins[0].password;
                 }
             }
-
-            // We're done with this form, loop to the next one...
-        }
+        } // foreach form
     },
 
 
     /*
      * _attachToInput
      *
+     * Hooks up autocomplete support to a username field, to allow
+     * a user editing the field to select an existing login and have
+     * the password field filled in.
      */
     _attachToInput : function (element) {
         this.log("attaching autocomplete stuff");
@@ -1230,8 +1145,8 @@ LoginManager.prototype = {
      * fields.
      *
      * Return values:
-     *   0 - Update the stored password
-     *   1 - Do not update the stored password
+     *   true  - Update the stored password
+     *   false - Do not update the stored password
      */
     _promptToChangePassword : function (aWindow, username) {
         const buttonFlags = Ci.nsIPrompt.STD_YES_NO_BUTTONS;
@@ -1241,11 +1156,12 @@ LoginManager.prototype = {
         var dialogTitle = this._getLocalizedString(
                                     "passwordChangeTitle");
 
+        // returns 0 for yes, 1 for no.
         var result = this._promptService.confirmEx(aWindow,
                                 dialogTitle, dialogText, buttonFlags,
                                 null, null, null,
                                 null, {});
-        return result;
+        return !result;
     },
 
 
@@ -1258,10 +1174,10 @@ LoginManager.prototype = {
      *
      * Returns multiple paramaters:
      * [0] - User's respone to the dialog
-     *   0 = Update the stored password
-     *   1 = Do not update the stored password
+     *   true  = Update the stored password
+     *   false = Do not update the stored password
      * [1] - The username selected
-     *   (null if [0] is 1)
+     *   (null if [0] is false)
      *  
      */
     _promptToChangePasswordWithUsernames : function (aWindow, usernames) {
@@ -1269,16 +1185,18 @@ LoginManager.prototype = {
 
         var dialogText  = this._getLocalizedString("userSelectText");
         var dialogTitle = this._getLocalizedString("passwordChangeTitle");
-        var selectedUser = { value: null };
+        var selectedUser = null, selectedIndex = { value: null };
 
         // If user selects ok, outparam.value is set to the index
         // of the selected username.
-        var result = this._promptService.select(aWindow,
+        var ok = this._promptService.select(aWindow,
                                 dialogTitle, dialogText,
                                 usernames.length, usernames,
-                                selectedUser);
+                                selectedIndex);
+        if (ok)
+            selectedUser = usernames[selectedIndex.value];
 
-        return [result, selectedUser.value];
+        return [ok, selectedUser];
     },
 
 
@@ -1334,13 +1252,8 @@ function UserAutoCompleteResult (aSearchString, matchingLogins) {
 }
 
 UserAutoCompleteResult.prototype = {
-    QueryInterface : function (iid) {
-        const interfaces = [Ci.nsIAutoCompleteResult,
-                            Ci.nsISupports, Ci.nsISupportsWeakReference];
-        if (!interfaces.some( function(v) { return iid.equals(v) } ))
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-        return this;
-    },
+    QueryInterface : XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult,
+                                            Ci.nsISupportsWeakReference]),
 
     // private
     logins : null,
@@ -1384,60 +1297,7 @@ UserAutoCompleteResult.prototype = {
     },
 };
 
-
-
-
-// Boilerplate code for component registration...
-var gModule = {
-    registerSelf: function (componentManager, fileSpec, location, type) {
-        componentManager = componentManager.QueryInterface(
-                                                Ci.nsIComponentRegistrar);
-        for each (var obj in this._objects)
-            componentManager.registerFactoryLocation(obj.CID,
-                    obj.className, obj.contractID,
-                    fileSpec, location, type);
-    },
-
-    unregisterSelf: function (componentManager, location, type) {
-        for each (var obj in this._objects)
-            componentManager.unregisterFactoryLocation(obj.CID, location);
-    },
-
-    getClassObject: function (componentManager, cid, iid) {
-        if (!iid.equals(Ci.nsIFactory))
-            throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-
-        for (var key in this._objects) {
-            if (cid.equals(this._objects[key].CID))
-                return this._objects[key].factory;
-        }
-
-        throw Components.results.NS_ERROR_NO_INTERFACE;
-    },
-
-    _objects: {
-        service: {
-            CID : Components.ID("{cb9e0de8-3598-4ed7-857b-827f011ad5d8}"),
-            contractID : "@mozilla.org/login-manager;1",
-            className  : "LoginManager",
-            factory    : LoginManagerFactory = {
-                createInstance: function (aOuter, aIID) {
-                    if (aOuter != null)
-                        throw Components.results.NS_ERROR_NO_AGGREGATION;
-        
-                    var svc = new LoginManager();
-
-                    return svc.QueryInterface(aIID);
-                }
-            }
-        }
-    },
-
-    canUnload: function (componentManager) {
-        return true;
-    }
-};
-
+var component = [LoginManager];
 function NSGetModule (compMgr, fileSpec) {
-    return gModule;
+    return XPCOMUtils.generateModule(component);
 }

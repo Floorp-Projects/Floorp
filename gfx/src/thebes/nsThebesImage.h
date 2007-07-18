@@ -75,11 +75,6 @@ public:
     NS_IMETHOD Draw(nsIRenderingContext &aContext,
                     const gfxRect &aSourceRect,
                     const gfxRect &aDestRect);
-    NS_IMETHOD DrawTile(nsIRenderingContext &aContext,
-                        nsIDrawingSurface *aSurface,
-                        PRInt32 aSXOffset, PRInt32 aSYOffset,
-                        PRInt32 aPadX, PRInt32 aPadY,
-                        const nsRect &aTileRect);
     NS_IMETHOD DrawToImage(nsIImage* aDstImage,
                            PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
 

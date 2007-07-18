@@ -695,7 +695,15 @@
                 // Clear focus outline before we draw on top of it.
                 // Only blur the focused element if it isn't a tab, 
                 // to avoid breaking keyboard tab navigation
-                this.mCurrentBrowser.focusedElement.blur();
+                var elem = this.mCurrentBrowser.focusedElement;
+                if (elem instanceof HTMLElement || elem instanceof XULElement) {
+                  elem.blur();
+                }
+                else {
+                  var content = elem.ownerDocument.defaultView;
+                  if (content instanceof Components.interfaces.nsIInterfaceRequestor)
+                    content.getInterface(Components.interfaces.nsIDOMWindowUtils).focus(null);
+                }
               }
               this.mCurrentBrowser.setAttribute("type", "content-targetable");
             }
@@ -801,7 +809,16 @@
                         .getService(Components.interfaces.nsIWindowWatcher);
             if (ww.activeWindow == window) {
               cmdDispatcher.suppressFocusScroll = true;
-              whatToFocus.focus();
+              if (whatToFocus instanceof HTMLElement ||
+                  whatToFocus instanceof XULElement ||
+                  whatToFocus instanceof Window) {
+                whatToFocus.focus();
+              }
+              else if (whatToFocus instanceof Node) {
+                var content = window.content;
+                if (content instanceof Components.interfaces.nsIInterfaceRequestor)
+                  content.getInterface(Components.interfaces.nsIDOMWindowUtils).focus(whatToFocus);
+              }
               cmdDispatcher.suppressFocusScroll = false;
             }
             else {
@@ -1742,128 +1759,127 @@
         <parameter name="aDragSession"/>
         <body>
           <![CDATA[
-            if (aDragSession.sourceNode) {
-              var tabStrip = this.mTabContainer.mTabstrip;
+            var tabStrip = this.mTabContainer.mTabstrip;
 
-              // autoscroll the tab strip if we drag over the scroll
-              // buttons, even if we aren't dragging a tab, but then
-              // return to avoid drawing the drop indicator
-              var pixelsToScroll = 0;
+            // autoscroll the tab strip if we drag over the scroll
+            // buttons, even if we aren't dragging a tab, but then
+            // return to avoid drawing the drop indicator
+            var pixelsToScroll = 0;
 
-              var targetAnonid = aEvent.originalTarget.getAttribute("anonid");
-              if (targetAnonid == "scrollbutton-up") {
-                pixelsToScroll = tabStrip.scrollIncrement * -1;
-                tabStrip.scrollByPixels(pixelsToScroll);
-              }
-              else if (targetAnonid == "scrollbutton-down" || 
-                       (targetAnonid == "alltabs-button" && 
-                        this.mTabContainer.getAttribute("overflow") == "true")) {
-                pixelsToScroll = tabStrip.scrollIncrement;
-                tabStrip.scrollByPixels(pixelsToScroll);
-              }
+            var targetAnonid = aEvent.originalTarget.getAttribute("anonid");
+            if (targetAnonid == "scrollbutton-up") {
+              pixelsToScroll = tabStrip.scrollIncrement * -1;
+              tabStrip.scrollByPixels(pixelsToScroll);
+            }
+            else if (targetAnonid == "scrollbutton-down" || 
+                     (targetAnonid == "alltabs-button" && 
+                      this.mTabContainer.getAttribute("overflow") == "true")) {
+              pixelsToScroll = tabStrip.scrollIncrement;
+              tabStrip.scrollByPixels(pixelsToScroll);
+            }
 
-              var isTabDrag = (aDragSession.sourceNode.parentNode == this.mTabContainer);
-              if (!isTabDrag && aEvent.target.localName == "tab") {
-                if (!this.mDragTime) 
-                  this.mDragTime = Date.now();
-                if (Date.now() >= this.mDragTime + this.mDragOverDelay)
-                  this.mTabContainer.selectedItem = aEvent.target;
-                return;
-              }
+            var isTabDrag = (aDragSession.sourceNode && 
+                             aDragSession.sourceNode.parentNode == this.mTabContainer);
+            if (!isTabDrag && aEvent.target.localName == "tab") {
+              if (!this.mDragTime) 
+                this.mDragTime = Date.now();
+              if (Date.now() >= this.mDragTime + this.mDragOverDelay)
+                this.mTabContainer.selectedItem = aEvent.target;
+              return;
+            }
 
-              var newIndex = this.getNewIndex(aEvent);
+            var newIndex = this.getNewIndex(aEvent);
 
-              var ib = this.mTabDropIndicatorBar;
-              var ind = ib.firstChild;
-              ib.setAttribute('dragging',
-                 aDragSession.canDrop ? 'true' : 'false');
+            var ib = this.mTabDropIndicatorBar;
+            var ind = ib.firstChild;
+            ib.setAttribute('dragging',
+               aDragSession.canDrop ? 'true' : 'false');
 
-              var tabStripBoxObject = tabStrip.scrollBoxObject;
-              var halfIndWidth = Math.floor((ind.boxObject.width + 1) / 2);
-              if (window.getComputedStyle(this.parentNode, null)
-                        .direction == "ltr") {
-                var newMarginLeft;
-                var minMarginLeft = tabStripBoxObject.x - halfIndWidth -
-                                    ib.boxObject.x;
-                // make sure we don't place the tab drop indicator past the
-                // edge, or the containing box will flex and stretch
-                // the tab drop indicator bar, which will flex the url bar.  
-                // XXX todo
-                // just use first value if you can figure out how to get
-                // the tab drop indicator to crop instead of flex and stretch
-                // the tab drop indicator bar.
-                var maxMarginLeft = Math.min(
-                  (minMarginLeft + tabStripBoxObject.width), 
-                  (ib.boxObject.x + ib.boxObject.width - ind.boxObject.width));
+            var tabStripBoxObject = tabStrip.scrollBoxObject;
+            var halfIndWidth = Math.floor((ind.boxObject.width + 1) / 2);
+            if (window.getComputedStyle(this.parentNode, null)
+                      .direction == "ltr") {
+              var newMarginLeft;
+              var minMarginLeft = tabStripBoxObject.x - halfIndWidth -
+                                  ib.boxObject.x;
+              // make sure we don't place the tab drop indicator past the
+              // edge, or the containing box will flex and stretch
+              // the tab drop indicator bar, which will flex the url bar.  
+              // XXX todo
+              // just use first value if you can figure out how to get
+              // the tab drop indicator to crop instead of flex and stretch
+              // the tab drop indicator bar.
+              var maxMarginLeft = Math.min(
+                (minMarginLeft + tabStripBoxObject.width), 
+                (ib.boxObject.x + ib.boxObject.width - ind.boxObject.width));
 
-                // if we are scrolling, put the drop indicator at the edge
-                // so that it doesn't jump while scrolling
-                if (pixelsToScroll > 0)
-                  newMarginLeft = maxMarginLeft;
-                else if (pixelsToScroll < 0)
-                  newMarginLeft = minMarginLeft;
-                else {
-                if (newIndex == this.mTabs.length) {
-                    newMarginLeft = this.mTabs[newIndex-1].boxObject.screenX +
-                                    this.mTabs[newIndex-1].boxObject.width - 
-                                    this.boxObject.screenX - halfIndWidth;
-                } else {
-                    newMarginLeft = this.mTabs[newIndex].boxObject.screenX - 
-                                    this.boxObject.screenX - halfIndWidth;
-                }
-
-                  // ensure we never place the drop indicator beyond
-                  // our limits
-                  if (newMarginLeft < minMarginLeft)
-                    newMarginLeft = minMarginLeft;
-                  else if (newMarginLeft > maxMarginLeft)
-                    newMarginLeft = maxMarginLeft;
-                }
-                ind.style.marginLeft = newMarginLeft + 'px';
+              // if we are scrolling, put the drop indicator at the edge
+              // so that it doesn't jump while scrolling
+              if (pixelsToScroll > 0)
+                newMarginLeft = maxMarginLeft;
+              else if (pixelsToScroll < 0)
+                newMarginLeft = minMarginLeft;
+              else {
+              if (newIndex == this.mTabs.length) {
+                  newMarginLeft = this.mTabs[newIndex-1].boxObject.screenX +
+                                  this.mTabs[newIndex-1].boxObject.width - 
+                                  this.boxObject.screenX - halfIndWidth;
               } else {
-                var newMarginRight;
-                var minMarginRight = tabStripBoxObject.x - halfIndWidth -
-                                     ib.boxObject.x;
-                // make sure we don't place the tab drop indicator past the
-                // edge, or the containing box will flex and stretch
-                // the tab drop indicator bar, which will flex the url bar.  
-                // XXX todo
-                // just use first value if you can figure out how to get
-                // the tab drop indicator to crop instead of flex and stretch
-                // the tab drop indicator bar.
-                var maxMarginRight = Math.min(
-                  (minMarginRight + tabStripBoxObject.width), 
-                  (ib.boxObject.x + ib.boxObject.width - ind.boxObject.width));
-
-                // if we are scrolling, put the drop indicator at the edge
-                // so that it doesn't jump while scrolling
-                if (pixelsToScroll > 0)
-                  newMarginRight = maxMarginRight;
-                else if (pixelsToScroll < 0)
-                  newMarginRight = minMarginRight;
-                else {
-                if (newIndex == this.mTabs.length) {
-                    newMarginRight = this.boxObject.width + 
-                                     this.boxObject.screenX -
-                                     this.mTabs[newIndex-1].boxObject.screenX -
-                                     halfIndWidth;
-                } else {
-                    newMarginRight = this.boxObject.width + 
-                                     this.boxObject.screenX -
-                                     this.mTabs[newIndex].boxObject.screenX -
-                                     this.mTabs[newIndex].boxObject.width -
-                                     halfIndWidth;
-                  }
-
-                  // ensure we never place the drop indicator beyond
-                  // our limits
-                  if (newMarginRight < minMarginRight)
-                    newMarginRight = minMarginRight;
-                  else if (newMarginRight > maxMarginRight)
-                    newMarginRight = maxMarginRight;
-                }
-                ind.style.marginRight = newMarginRight + 'px';
+                  newMarginLeft = this.mTabs[newIndex].boxObject.screenX - 
+                                  this.boxObject.screenX - halfIndWidth;
               }
+
+                // ensure we never place the drop indicator beyond
+                // our limits
+                if (newMarginLeft < minMarginLeft)
+                  newMarginLeft = minMarginLeft;
+                else if (newMarginLeft > maxMarginLeft)
+                  newMarginLeft = maxMarginLeft;
+              }
+              ind.style.marginLeft = newMarginLeft + 'px';
+            } else {
+              var newMarginRight;
+              var minMarginRight = tabStripBoxObject.x - halfIndWidth -
+                                   ib.boxObject.x;
+              // make sure we don't place the tab drop indicator past the
+              // edge, or the containing box will flex and stretch
+              // the tab drop indicator bar, which will flex the url bar.  
+              // XXX todo
+              // just use first value if you can figure out how to get
+              // the tab drop indicator to crop instead of flex and stretch
+              // the tab drop indicator bar.
+              var maxMarginRight = Math.min(
+                (minMarginRight + tabStripBoxObject.width), 
+                (ib.boxObject.x + ib.boxObject.width - ind.boxObject.width));
+
+              // if we are scrolling, put the drop indicator at the edge
+              // so that it doesn't jump while scrolling
+              if (pixelsToScroll > 0)
+                newMarginRight = maxMarginRight;
+              else if (pixelsToScroll < 0)
+                newMarginRight = minMarginRight;
+              else {
+              if (newIndex == this.mTabs.length) {
+                  newMarginRight = this.boxObject.width + 
+                                   this.boxObject.screenX -
+                                   this.mTabs[newIndex-1].boxObject.screenX -
+                                   halfIndWidth;
+              } else {
+                  newMarginRight = this.boxObject.width + 
+                                   this.boxObject.screenX -
+                                   this.mTabs[newIndex].boxObject.screenX -
+                                   this.mTabs[newIndex].boxObject.width -
+                                   halfIndWidth;
+                }
+
+                // ensure we never place the drop indicator beyond
+                // our limits
+                if (newMarginRight < minMarginRight)
+                  newMarginRight = minMarginRight;
+                else if (newMarginRight > maxMarginRight)
+                  newMarginRight = maxMarginRight;
+              }
+              ind.style.marginRight = newMarginRight + 'px';
             }
           ]]>
         </body>
@@ -2520,38 +2536,17 @@
         <children/>
       </xul:scrollbox>
       <xul:stack align="center" pack="end" class="scrollbutton-down-stack">
-        <!-- XXXsspitzer hack
-             this extra hbox with position: relative
-             is needed to work around two bugs.
-             see bugs #346307 and #346035 
-        -->
-        <xul:hbox style="position: relative;" class="scrollbutton-rel-box">
-          <xul:hbox flex="1" class="scrollbutton-down-box" 
-                             collapsed="true" anonid="down-box"/>
-        </xul:hbox>
-        <!-- XXXsspitzer hack
-             this extra hbox with position: relative
-             is needed to work around two bugs.
-             see bugs #346307 and #346035 
-        -->
-        <xul:hbox style="position: relative;" class="scrollbutton-rel-box">
-          <xul:hbox flex="1" class="scrollbutton-down-box-animate" 
-                             collapsed="true" anonid="down-box-animate"/>
-        </xul:hbox>
-        <!-- XXXsspitzer hack
-             this extra hbox with position: relative
-             is needed to work around two bugs.
-             see bugs #346307 and #346035 
-        -->
-        <xul:hbox style="position: relative;" class="scrollbutton-rel-box">
-          <xul:toolbarbutton class="scrollbutton-down" collapsed="true"
-                             xbl:inherits="orient"
-                             anonid="scrollbutton-down"
-                             onmousedown="_startScroll(1);"
-                             onmouseup="_stopScroll();"
-                             onmouseout="_stopScroll();"
-                             chromedir="&locale.dir;"/>
-        </xul:hbox>
+        <xul:hbox flex="1" class="scrollbutton-down-box" 
+                           collapsed="true" anonid="down-box"/>
+        <xul:hbox flex="1" class="scrollbutton-down-box-animate" 
+                           collapsed="true" anonid="down-box-animate"/>
+        <xul:toolbarbutton class="scrollbutton-down" collapsed="true"
+                           xbl:inherits="orient"
+                           anonid="scrollbutton-down"
+                           onmousedown="_startScroll(1);"
+                           onmouseup="_stopScroll();"
+                           onmouseout="_stopScroll();"
+                           chromedir="&locale.dir;"/>
       </xul:stack>
     </content>
     <implementation>
@@ -2618,37 +2613,16 @@
         <children includes="tab"/>
       </xul:arrowscrollbox>
       <xul:stack align="center" pack="end" class="tabs-alltabs-stack">
-        <!-- XXXsspitzer hack
-             this extra hbox with position: relative
-             is needed to work around two bugs.
-             see bugs #346307 and #346035 
-        -->
-        <xul:hbox style="position: relative;">
-          <xul:hbox flex="1" class="tabs-alltabs-box" anonid="alltabs-box"/>
-        </xul:hbox>
-        <!-- XXXsspitzer hack
-             this extra hbox with position: relative
-             is needed to work around two bugs.
-             see bugs #346307 and #346035 
-        -->
-        <xul:hbox style="position: relative;">
-          <xul:hbox flex="1" class="tabs-alltabs-box-animate" 
-                    anonid="alltabs-box-animate"/>
-        </xul:hbox>
-        <!-- XXXsspitzer hack
-             this extra hbox with position: relative
-             is needed to work around two bugs.
-             see bugs #346307 and #346035 
-        -->
-        <xul:hbox style="position: relative;">
-          <xul:toolbarbutton class="tabs-alltabs-button" type="menu"
-                             anonid="alltabs-button"
-                             tooltipstring="&listAllTabs.label;">
-            <xul:menupopup class="tabs-alltabs-popup"
-                           anonid="alltabs-popup" 
-                           position="after_end"/>
+        <xul:hbox flex="1" class="tabs-alltabs-box" anonid="alltabs-box"/>
+        <xul:hbox flex="1" class="tabs-alltabs-box-animate" 
+                  anonid="alltabs-box-animate"/>
+        <xul:toolbarbutton class="tabs-alltabs-button" type="menu"
+                           anonid="alltabs-button"
+                           tooltipstring="&listAllTabs.label;">
+          <xul:menupopup class="tabs-alltabs-popup"
+                         anonid="alltabs-popup" 
+                         position="after_end"/>
         </xul:toolbarbutton>
-        </xul:hbox>
       </xul:stack>
       <xul:hbox class="tabs-closebutton-box" align="center" pack="end" anonid="tabstrip-closebutton">
         <xul:toolbarbutton class="close-button tabs-closebutton"/>

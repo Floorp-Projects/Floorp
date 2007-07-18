@@ -112,7 +112,7 @@ PRUint32 XPCDispInterface::Allocator::Count() const
 XPCDispInterface*
 XPCDispInterface::NewInstance(JSContext* cx, nsISupports * pIface)
 {
-    CComQIPtr<IDispatch> pDispatch(NS_REINTERPRET_CAST(IUnknown*,pIface));
+    CComQIPtr<IDispatch> pDispatch(reinterpret_cast<IUnknown*>(pIface));
 
     if(pDispatch)
     {
@@ -181,7 +181,7 @@ PRBool InitializeMember(JSContext * cx, ITypeInfo * pTypeInfo,
     if(nameCount != 1)
         return PR_FALSE;
     JSString* str = JS_InternUCStringN(cx,
-                                       NS_REINTERPRET_CAST(const jschar *, name),
+                                       reinterpret_cast<const jschar *>(name),
                                        ::SysStringLen(name));
     ::SysFreeString(name);
     if(!str)
@@ -374,8 +374,8 @@ JSBool XPCDispInterface::Member::GetValue(XPCCallContext& ccx,
 
         {   // scoped lock
             XPCAutoLock lock(ccx.GetRuntime()->GetMapLock());
-            NS_CONST_CAST(Member*,this)->mVal = OBJECT_TO_JSVAL(funobj);
-            NS_CONST_CAST(Member*,this)->mType |= RESOLVED;
+            const_cast<Member*>(this)->mVal = OBJECT_TO_JSVAL(funobj);
+            const_cast<Member*>(this)->mType |= RESOLVED;
         }
     }
     *retval = mVal;

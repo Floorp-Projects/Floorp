@@ -332,7 +332,7 @@ struct RenumberItemsArray {
 RenumberItemsArray::~RenumberItemsArray()
 {
   for (PRInt32 i = 0; i < items.Count(); ++i) {
-    delete NS_STATIC_CAST(RenumberItem*, items[i]);
+    delete static_cast<RenumberItem*>(items[i]);
   }
 }
 
@@ -377,14 +377,12 @@ nsNavBookmarks::InitRoots()
   rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("tags"), &mTagRoot, mRoot, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef MOZ_PLACES_BOOKMARKS
   if (importDefaults) {
     // when there is no places root, we should define the hierarchy by
     // importing the default one.
     rv = InitDefaults();
     NS_ENSURE_SUCCESS(rv, rv);
   }
-#endif
 
   // migration for bug 382094 - remove for A6
   PRInt64 parent;
@@ -702,7 +700,7 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 RemoveBookmarkHashCallback(nsTrimInt64HashKey::KeyType aKey,
                            PRInt64& aBookmark, void* aUserArg)
 {
-  const PRInt64* removeThisOne = NS_REINTERPRET_CAST(const PRInt64*, aUserArg);
+  const PRInt64* removeThisOne = reinterpret_cast<const PRInt64*>(aUserArg);
   if (aBookmark == *removeThisOne)
     return PL_DHASH_REMOVE;
   return PL_DHASH_NEXT;
@@ -720,7 +718,7 @@ nsNavBookmarks::UpdateBookmarkHashOnRemove(PRInt64 aPlaceId)
 
   // remove it
   mBookmarksHash.Enumerate(RemoveBookmarkHashCallback,
-                           NS_REINTERPRET_CAST(void*, &aPlaceId));
+                           reinterpret_cast<void*>(&aPlaceId));
   return NS_OK;
 }
 
@@ -939,6 +937,9 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder, nsIURI *aItem, PRInt32 aIndex,
   NS_ENSURE_SUCCESS(rv, rv);
   *aNewBookmarkId = rowId;
 
+  rv = SetItemLastModified(aFolder, PR_Now());
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -992,6 +993,9 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
     rv = AdjustIndices(folderId, childIndex + 1, PR_INT32_MAX, -1);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  rv = SetItemLastModified(folderId, PR_Now());
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1076,7 +1080,10 @@ nsNavBookmarks::CreateFolderWithID(PRInt64 aFolder, PRInt64 aParent,
   PRInt64 id;
   rv = dbConn->GetLastInsertRowID(&id);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
+  rv = SetItemLastModified(aParent, PR_Now());
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1167,6 +1174,9 @@ nsNavBookmarks::InsertSeparator(PRInt64 aParent, PRInt32 aIndex,
   rv = dbConn->GetLastInsertRowID(&rowId);
   NS_ENSURE_SUCCESS(rv, rv);
   *aNewItemId = rowId;
+
+  rv = SetItemLastModified(aParent, PR_Now());
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1302,6 +1312,9 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = AdjustIndices(parent, index + 1, PR_INT32_MAX, -1);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = SetItemLastModified(parent, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
@@ -1530,6 +1543,12 @@ nsNavBookmarks::MoveItem(PRInt64 aItemId, PRInt64 aNewParent, PRInt32 aIndex)
   rv = dbConn->ExecuteSimpleSQL(buffer);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  PRTime now = PR_Now();
+  rv = SetItemLastModified(oldParent, now);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetItemLastModified(aNewParent, now);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1695,10 +1714,10 @@ nsNavBookmarks::SetItemTitle(PRInt64 aItemId, const nsAString &aTitle)
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = transaction.Commit();
+  rv = SetItemLastModified(aItemId, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = SetItemLastModified(aItemId, PR_Now());
+  rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
   ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
@@ -2066,14 +2085,14 @@ nsNavBookmarks::ChangeBookmarkURI(PRInt64 aBookmarkId, nsIURI *aNewURI)
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = SetItemLastModified(aBookmarkId, PR_Now());
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString spec;
   rv = aNewURI->GetSpec(spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = SetItemLastModified(aBookmarkId, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Pass the new URI to OnItemChanged.
@@ -2139,8 +2158,8 @@ nsNavBookmarks::GetBookmarkIdsForURI(nsIURI *aURI, PRUint32 *aCount,
 
   // Copy the results into a new array for output
   if (bookmarks.Length()) {
-    *aBookmarks = NS_STATIC_CAST(PRInt64*,
-                           nsMemory::Alloc(sizeof(PRInt64) * bookmarks.Length()));
+    *aBookmarks = static_cast<PRInt64*>
+                             (nsMemory::Alloc(sizeof(PRInt64) * bookmarks.Length()));
     if (! *aBookmarks)
       return NS_ERROR_OUT_OF_MEMORY;
     for (PRUint32 i = 0; i < bookmarks.Length(); i ++)
@@ -2271,10 +2290,11 @@ nsNavBookmarks::SetKeywordForBookmark(PRInt64 aBookmarkId, const nsAString& aKey
   NS_ENSURE_SUCCESS(rv, rv);
   rv = updateKeywordStmnt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
-  transaction.Commit();
-    
+
   rv = SetItemLastModified(aBookmarkId, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
+
+  transaction.Commit();
 
   // Pass the new keyword to OnItemChanged.
   ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
@@ -2593,4 +2613,20 @@ nsNavBookmarks::OnItemAnnotationRemoved(PRInt64 aItemId, const nsACString& aName
                       OnItemChanged(aItemId, aName, PR_TRUE, EmptyCString()));
 
   return NS_OK;
+}
+
+PRBool
+nsNavBookmarks::ItemExists(PRInt64 aItemId) {
+  mozStorageStatementScoper scope(mDBGetItemProperties);
+  nsresult rv = mDBGetItemProperties->BindInt64Parameter(0, aItemId);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  PRBool results;
+  rv = mDBGetItemProperties->ExecuteStep(&results);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  if (!results)
+    return PR_FALSE;
+
+  return PR_TRUE;
 }

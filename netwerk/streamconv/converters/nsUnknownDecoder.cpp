@@ -272,7 +272,7 @@ nsUnknownDecoder::GetMIMETypeFromContent(nsIRequest* aRequest,
                                          PRUint32 aLength,
                                          nsACString& type)
 {
-  mBuffer = NS_CONST_CAST(char*, NS_REINTERPRET_CAST(const char*, aData));
+  mBuffer = const_cast<char*>(reinterpret_cast<const char*>(aData));
   mBufferLen = aLength;
   DetermineContentType(aRequest);
   mBuffer = nsnull;

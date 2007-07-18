@@ -91,7 +91,7 @@ xpctestNoisy::QueryInterface(REFNSIID iid, void** result)
 
     if (iid.Equals(NS_GET_IID(nsIXPCTestNoisy)) ||
         iid.Equals(NS_GET_IID(nsISupports))) {
-        *result = NS_STATIC_CAST(nsIXPCTestNoisy*, this);
+        *result = static_cast<nsIXPCTestNoisy*>(this);
         printf("Noisy %d - QueryInterface called and succeeding\n", mID);
         NS_ADDREF(this);
         return NS_OK;

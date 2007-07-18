@@ -813,9 +813,9 @@ nsFontMetricsOS2::InitializeGlobalFonts()
         PL_strcasestr(font->szFacename, "regular") != nsnull ||
         PL_strcasestr(font->szFacename, "-normal") != nsnull)
     {
-      f = NS_STATIC_CAST(char*, font->szFamilyname);
+      f = static_cast<char*>(font->szFamilyname);
     } else {
-      f = NS_STATIC_CAST(char*, font->szFacename);
+      f = static_cast<char*>(font->szFacename);
     }
     nsAutoChar16Buffer fontname;
     PRInt32 len;
@@ -2053,7 +2053,7 @@ struct FindGlobalFontData
 PR_STATIC_CALLBACK(PLDHashOperator)
 FindGlobalFontEnumFunc(GlobalFontEntry* aEntry, void* aData)
 {
-  FindGlobalFontData* data = NS_STATIC_CAST(FindGlobalFontData*, aData);
+  FindGlobalFontData* data = static_cast<FindGlobalFontData*>(aData);
   strcpy(data->font->mFattrs.szFacename, aEntry->mMetrics->szFacename);
 #ifdef PERF_HASGLYPH_CHAR_MAP
   if (aEntry->mHaveCheckedCharMap == nsnull) {
@@ -2676,7 +2676,7 @@ struct EnumerateAllFontsData
 PR_STATIC_CALLBACK(PLDHashOperator)
 EnumerateAllFontsCallback(GlobalFontEntry* aEntry, void* aData)
 {
-  EnumerateAllFontsData* data = NS_STATIC_CAST(EnumerateAllFontsData*, aData);
+  EnumerateAllFontsData* data = static_cast<EnumerateAllFontsData*>(aData);
   data->array[data->count++] = ToNewUnicode(aEntry->GetKey());
   return PL_DHASH_NEXT;
 }

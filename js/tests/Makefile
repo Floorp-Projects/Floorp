@@ -11,7 +11,7 @@ menu.html: menuhead.html menufoot.html Makefile excluded-n.tests $(TEST_JS)
 	perl mklistpage.pl > menubody.html
 	cat menuhead.html menubody.html menufoot.html > menu.html
 
-excluded-n.tests: spidermonkey-n.tests slow-n.tests
+excluded-n.tests: spidermonkey-n.tests slow-n.tests performance.tests
 	cat $^ > $@
 
 spidermonkey-extensions-n.tests: $(TEST_JS)

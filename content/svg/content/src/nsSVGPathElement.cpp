@@ -130,9 +130,7 @@ nsSVGPathElement::GetPointAtLength(float distance, nsIDOMSVGPoint **_retval)
   distance = PR_MAX(0,           distance);
   distance = PR_MIN(totalLength, distance);
 
-  gfxPoint pt = flat->FindPoint(gfxPoint(distance, 0));
-
-  return NS_NewSVGPoint(_retval, pt.x, pt.y);
+  return NS_NewSVGPoint(_retval, flat->FindPoint(gfxPoint(distance, 0)));
 }
 
 /* unsigned long getPathSegAtLength (in float distance); */
@@ -155,7 +153,7 @@ nsSVGPathElement::GetPathSegAtLength(float distance, PRUint32 *_retval)
   while (distCovered < distance && i < numSegments - 1) {
     nsIDOMSVGPathSeg *iSeg;
     mSegments->GetItem(i, &iSeg);
-    nsSVGPathSeg* curSeg = NS_STATIC_CAST(nsSVGPathSeg*, iSeg);
+    nsSVGPathSeg* curSeg = static_cast<nsSVGPathSeg*>(iSeg);
     if (i == 0) {
       curSeg->GetLength(&ts);
     } else {
@@ -516,7 +514,8 @@ CalcVectorAngle(double ux, double uy, double vx, double vy)
 }
 
 void
-nsSVGPathElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks) {
+nsSVGPathElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
+{
   if (NS_FAILED(CreatePathSegList()))
     return;
 
@@ -976,7 +975,7 @@ nsSVGPathList::Playback(gfxContext *aCtx)
   float *args = mArguments;
   for (PRUint32 i = 0; i < mNumCommands; i++) {
     PRUint8 command =
-      NS_REINTERPRET_CAST(PRUint8*, mArguments + mNumArguments)[i / 4];
+      reinterpret_cast<PRUint8*>(mArguments + mNumArguments)[i / 4];
     command = (command >> (2 * (i % 4))) & 0x3;
     switch (command) {
     case MOVETO:

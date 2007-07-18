@@ -262,7 +262,7 @@ nsComposerCommandsUpdater::PrimeUpdateTimer()
   }
 
   const PRUint32 kUpdateTimerDelay = 150;
-  return mUpdateTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*, this),
+  return mUpdateTimer->InitWithCallback(static_cast<nsITimerCallback*>(this),
                                         kUpdateTimerDelay,
                                         nsITimer::TYPE_ONE_SHOT);
 }

@@ -131,7 +131,7 @@ public:
    * @result the view manager
    */
   nsIViewManager* GetViewManager() const
-  { return NS_REINTERPRET_CAST(nsIViewManager*, mViewManager); }
+  { return reinterpret_cast<nsIViewManager*>(mViewManager); }
 
   /**
    * Destroy the view.
@@ -224,19 +224,19 @@ public:
    * Called to query the parent of the view.
    * @result view's parent
    */
-  nsIView* GetParent() const { return NS_REINTERPRET_CAST(nsIView*, mParent); }
+  nsIView* GetParent() const { return reinterpret_cast<nsIView*>(mParent); }
 
   /**
    * The view's first child is the child which is earliest in document order.
    * @result first child
    */
-  nsIView* GetFirstChild() const { return NS_REINTERPRET_CAST(nsIView*, mFirstChild); }
+  nsIView* GetFirstChild() const { return reinterpret_cast<nsIView*>(mFirstChild); }
 
   /**
    * Called to query the next sibling of the view.
    * @result view's next sibling
    */
-  nsIView* GetNextSibling() const { return NS_REINTERPRET_CAST(nsIView*, mNextSibling); }
+  nsIView* GetNextSibling() const { return reinterpret_cast<nsIView*>(mNextSibling); }
 
   /**
    * Set the view's link to client owned data.

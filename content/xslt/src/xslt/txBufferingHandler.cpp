@@ -236,7 +236,7 @@ txBufferingHandler::characters(const nsSubstring& aData, PRBool aDOE)
     txOutputTransaction* transaction = mBuffer->getLastTransaction();
     if (transaction && transaction->mType == type) {
         mBuffer->mStringValue.Append(aData);
-        NS_STATIC_CAST(txCharacterTransaction*, transaction)->mLength +=
+        static_cast<txCharacterTransaction*>(transaction)->mLength +=
             aData.Length();
         return NS_OK;
     }
@@ -350,7 +350,7 @@ txBufferingHandler::startElement(nsIAtom* aPrefix,
 PR_STATIC_CALLBACK(PRBool)
 deleteTransaction(void* aElement, void *aData)
 {
-    delete NS_STATIC_CAST(txOutputTransaction*, aElement);
+    delete static_cast<txOutputTransaction*>(aElement);
     return PR_TRUE;
 }
 
@@ -378,17 +378,17 @@ struct Holder
 PR_STATIC_CALLBACK(PRBool)
 flushTransaction(void* aElement, void *aData)
 {
-    Holder* holder = NS_STATIC_CAST(Holder*, aData);
+    Holder* holder = static_cast<Holder*>(aData);
     txAXMLEventHandler* handler = *holder->mHandler;
     txOutputTransaction* transaction =
-        NS_STATIC_CAST(txOutputTransaction*, aElement);
+        static_cast<txOutputTransaction*>(aElement);
 
     nsresult rv;
     switch (transaction->mType) {
         case txOutputTransaction::eAttributeAtomTransaction:
         {
             txAttributeAtomTransaction* transaction =
-                NS_STATIC_CAST(txAttributeAtomTransaction*, aElement);
+                static_cast<txAttributeAtomTransaction*>(aElement);
             rv = handler->attribute(transaction->mPrefix,
                                     transaction->mLocalName,
                                     transaction->mLowercaseLocalName,
@@ -399,7 +399,7 @@ flushTransaction(void* aElement, void *aData)
         case txOutputTransaction::eAttributeTransaction:
         {
             txAttributeTransaction* attrTransaction =
-                NS_STATIC_CAST(txAttributeTransaction*, aElement);
+                static_cast<txAttributeTransaction*>(aElement);
             rv = handler->attribute(attrTransaction->mPrefix,
                                     attrTransaction->mLocalName,
                                     attrTransaction->mNsID,
@@ -410,7 +410,7 @@ flushTransaction(void* aElement, void *aData)
         case txOutputTransaction::eCharacterNoOETransaction:
         {
             txCharacterTransaction* charTransaction =
-                NS_STATIC_CAST(txCharacterTransaction*, aElement);
+                static_cast<txCharacterTransaction*>(aElement);
             nsAFlatString::const_char_iterator& start =
                 holder->mIter;
             nsAFlatString::const_char_iterator end =
@@ -424,7 +424,7 @@ flushTransaction(void* aElement, void *aData)
         case txOutputTransaction::eCommentTransaction:
         {
             txCommentTransaction* commentTransaction =
-                NS_STATIC_CAST(txCommentTransaction*, aElement);
+                static_cast<txCommentTransaction*>(aElement);
             rv = handler->comment(commentTransaction->mValue);
             break;
         }
@@ -436,7 +436,7 @@ flushTransaction(void* aElement, void *aData)
         case txOutputTransaction::ePITransaction:
         {
             txPITransaction* piTransaction =
-                NS_STATIC_CAST(txPITransaction*, aElement);
+                static_cast<txPITransaction*>(aElement);
             rv = handler->processingInstruction(piTransaction->mTarget,
                                                 piTransaction->mData);
             break;
@@ -449,7 +449,7 @@ flushTransaction(void* aElement, void *aData)
         case txOutputTransaction::eStartElementAtomTransaction:
         {
             txStartElementAtomTransaction* transaction =
-                NS_STATIC_CAST(txStartElementAtomTransaction*, aElement);
+                static_cast<txStartElementAtomTransaction*>(aElement);
             rv = handler->startElement(transaction->mPrefix,
                                        transaction->mLocalName,
                                        transaction->mLowercaseLocalName,
@@ -459,7 +459,7 @@ flushTransaction(void* aElement, void *aData)
         case txOutputTransaction::eStartElementTransaction:
         {
             txStartElementTransaction* transaction =
-                NS_STATIC_CAST(txStartElementTransaction*, aElement);
+                static_cast<txStartElementTransaction*>(aElement);
             rv = handler->startElement(transaction->mPrefix,
                                        transaction->mLocalName,
                                        transaction->mNsID);
@@ -490,5 +490,5 @@ txResultBuffer::getLastTransaction()
     if (last < 0) {
         return nsnull;
     }
-    return NS_STATIC_CAST(txOutputTransaction*, mTransactions[last]);
+    return static_cast<txOutputTransaction*>(mTransactions[last]);
 }

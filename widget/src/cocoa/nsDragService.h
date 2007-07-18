@@ -43,10 +43,17 @@
 
 #include <Cocoa/Cocoa.h>
 
-extern NSString* const kWildcardPboardType;
+#ifdef MOZ_LOGGING
+// make sure that logging is enabled before including prlog.h
+#define FORCE_PR_LOG
+#include "prlog.h"
+#endif
 
-class nsILocalFile;
-class nsIDOMDragEvent;
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* sCocoaLog;
+#endif
+
+extern NSString* const kWildcardPboardType;
 
 class nsDragService : public nsBaseDragService
 {
@@ -60,6 +67,7 @@ public:
   // nsIDragService
   NS_IMETHOD InvokeDragSession(nsIDOMNode *aDOMNode, nsISupportsArray * anArrayTransferables,
                                nsIScriptableRegion * aRegion, PRUint32 aActionType);
+  NS_IMETHOD EndDragSession(PRBool aDoneDrag);
 
   // nsIDragSession
   NS_IMETHOD GetData(nsITransferable * aTransferable, PRUint32 aItemIndex);
@@ -71,6 +79,8 @@ private:
   NSImage* ConstructDragImage(nsIDOMNode* aDOMNode,
                               nsRect* aDragRect,
                               nsIScriptableRegion* aRegion);
+
+  nsCOMPtr<nsISupportsArray> mDataItems; // only valid for a drag started within gecko
 };
 
 #endif // nsDragService_h_

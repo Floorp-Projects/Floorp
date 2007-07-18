@@ -284,7 +284,7 @@ public:
   nsFixedSizeAllocator&  GetArenaPool() { return mNodePool; }
 
 #ifdef HEAP_ALLOCATED_NODES
-  void Recycle(nsCParserNode* aNode) { mSharedNodes.Push(NS_STATIC_CAST(void*,aNode)); }
+  void Recycle(nsCParserNode* aNode) { mSharedNodes.Push(static_cast<void*>(aNode)); }
 protected:
   nsDeque mSharedNodes;
 #ifdef DEBUG_TRACK_NODES

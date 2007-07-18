@@ -120,7 +120,7 @@ nsEmbedStream::OpenStream(nsIURI *aBaseURI, const nsACString& aContentType)
 
   // create a new input stream channel
   rv = NS_NewInputStreamChannel(getter_AddRefs(mChannel), aBaseURI,
-				NS_STATIC_CAST(nsIInputStream *, this),
+				static_cast<nsIInputStream *>(this),
 				aContentType);
   if (NS_FAILED(rv))
     return rv;
@@ -194,7 +194,7 @@ nsEmbedStream::AppendToStream(const PRUint8 *aData, PRUint32 aLen)
   // notify our listeners
   rv = mStreamListener->OnDataAvailable(mChannel,
 					NULL,
-					NS_STATIC_CAST(nsIInputStream *, this),
+					static_cast<nsIInputStream *>(this),
 					mOffset, /* offset */
 					aLen); /* len */
   // move our counter
@@ -231,7 +231,7 @@ NS_METHOD
 nsEmbedStream::Append(const PRUint8 *aData, PRUint32 aLen)
 {
   PRUint32 bytesWritten = 0;
-  nsresult rv = mOutputStream->Write(NS_REINTERPRET_CAST(const char*, aData),
+  nsresult rv = mOutputStream->Write(reinterpret_cast<const char*>(aData),
                                      aLen, &bytesWritten);
   if (NS_FAILED(rv))
     return rv;

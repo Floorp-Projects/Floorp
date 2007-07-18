@@ -136,28 +136,21 @@ textbox[disabled] {
 }
 
 /* General Tab */
-.caption-icon {
+groupbox.collapsable caption .caption-icon { 
   width: 9px;
   height: 9px;
   background-repeat: no-repeat;
   background-position: center;
   -moz-margin-start: 1px;
   -moz-margin-end: 3px;
-}
-
-#securityBoxCaption .caption-icon {
-  display: none;
-}
-
-groupbox caption .caption-icon { 
   background-image: url("chrome://global/skin/tree/twisty-open.png");
 }
 
-groupbox[closed="true"] {
+groupbox.collapsable[closed="true"] {
   border: none;
 }
 
-groupbox[closed="true"] caption .caption-icon { 
+groupbox.collapsable[closed="true"] caption .caption-icon { 
   background-image: url("chrome://global/skin/tree/twisty-clsd.png");
 }
 
@@ -166,16 +159,12 @@ groupbox tree {
   border: none;
 }
 
-#metaTags .groupbox-body { 
+groupbox.treebox .groupbox-body { 
   padding-top: 0;
 }
 
 #securityBox description { 
   -moz-margin-start: 10px;
-}
-
-#securityBox .caption-icon {
-  background-image: none;
 }
 
 #general-security-identity {

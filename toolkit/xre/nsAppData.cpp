@@ -44,7 +44,7 @@
 void
 SetAllocatedString(const char *&str, const char *newvalue)
 {
-  NS_Free(NS_CONST_CAST(char*, str));
+  NS_Free(const_cast<char*>(str));
   if (newvalue) {
     str = NS_strdup(newvalue);
   }
@@ -56,7 +56,7 @@ SetAllocatedString(const char *&str, const char *newvalue)
 void
 SetAllocatedString(const char *&str, const nsACString &newvalue)
 {
-  NS_Free(NS_CONST_CAST(char*, str));
+  NS_Free(const_cast<char*>(str));
   if (newvalue.IsEmpty()) {
     str = nsnull;
   }
@@ -68,6 +68,8 @@ SetAllocatedString(const char *&str, const nsACString &newvalue)
 ScopedAppData::ScopedAppData(const nsXREAppData* aAppData)
 {
   Zero();
+
+  this->size = aAppData->size;
 
   SetAllocatedString(this->vendor, aAppData->vendor);
   SetAllocatedString(this->name, aAppData->name);
@@ -241,6 +243,6 @@ XRE_FreeAppData(nsXREAppData *aAppData)
     return;
   }
 
-  ScopedAppData* sad = NS_STATIC_CAST(ScopedAppData*, aAppData);
+  ScopedAppData* sad = static_cast<ScopedAppData*>(aAppData);
   delete sad;
 }

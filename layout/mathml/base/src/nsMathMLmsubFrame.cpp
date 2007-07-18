@@ -138,8 +138,7 @@ nsMathMLmsubFrame::PlaceSubScript (nsPresContext*      aPresContext,
   if (!baseFrame || !subScriptFrame || subScriptFrame->GetNextSibling()) {
     // report an error, encourage people to get their markups in order
     NS_WARNING("invalid markup");
-    return NS_STATIC_CAST(nsMathMLContainerFrame*, 
-                          aFrame)->ReflowError(aRenderingContext, 
+    return static_cast<nsMathMLContainerFrame*>(aFrame)->ReflowError(aRenderingContext, 
                                                aDesiredSize);
   }
   GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);

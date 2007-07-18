@@ -307,8 +307,13 @@ nsMozIconURI::SetSpec(const nsACString &aSpec)
         {
           nsCAutoString filespec;
           tmpURI->GetSpec(filespec);
-          if (filespec.Length() > 8 && filespec.CharAt(8) != '/')
-            mFileIcon = tmpURI; // looks good, save the file (bug 376328)
+          if ( strncmp("file:////", filespec.get(), 9) &&
+               strncmp("file:///%", filespec.get(), 9) )
+          {
+            // accept only local files; disallow UNC paths (bug 376328)
+            // and attempts to escape them (bug 386998)
+            mFileIcon = tmpURI;
+          }
         }
       }
       if (!sizeString.IsEmpty())

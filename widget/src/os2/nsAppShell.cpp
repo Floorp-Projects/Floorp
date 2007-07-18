@@ -48,7 +48,7 @@ static UINT sMsgId;
 MRESULT EXPENTRY EventWindowProc(HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
   if (msg == sMsgId) {
-    nsAppShell *as = NS_REINTERPRET_CAST(nsAppShell *, mp2);
+    nsAppShell *as = reinterpret_cast<nsAppShell *>(mp2);
     as->NativeEventCallback();
     NS_RELEASE(as);
     return (MRESULT)TRUE;
@@ -106,7 +106,7 @@ nsAppShell::ScheduleNativeEventCallback()
 {
   // post a message to the native event queue...
   NS_ADDREF_THIS();
-  WinPostMsg(mEventWnd, sMsgId, 0, NS_REINTERPRET_CAST(MPARAM, this));
+  WinPostMsg(mEventWnd, sMsgId, 0, reinterpret_cast<MPARAM>(this));
 }
 
 PRBool

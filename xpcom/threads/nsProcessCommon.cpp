@@ -229,7 +229,7 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
     // copy the args
     PRUint32 i;
     for (i=0; i < count; i++) {
-        my_argv[i+1] = NS_CONST_CAST(char*, args[i]);
+        my_argv[i+1] = const_cast<char*>(args[i]);
     }
     // we need to set argv[0] to the program name.
     my_argv[0] = mTargetPath.BeginWriting();
@@ -251,7 +251,7 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
     startupInfo.cb = sizeof(startupInfo);
 
     retVal = CreateProcess(NULL,
-                           // NS_CONST_CAST(char*, mTargetPath.get()),
+                           // const_cast<char*>(mTargetPath.get()),
                            cmdLine,
                            NULL,  /* security attributes for the new
                                    * process */

@@ -76,6 +76,7 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
     NS_IMETHOD GetRole(PRUint32 *aRole);
     NS_IMETHOD GetName(nsAString& aName);
     NS_IMETHOD GetValue(nsAString& aValue);
+    NS_IMETHOD GetDescription(nsAString& aDescription);
     NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
     NS_IMETHOD GetFocusedChild(nsIAccessible **aFocusedChild);
     NS_IMETHOD GetParent(nsIAccessible **aParent);
@@ -88,9 +89,6 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
 
     // nsIDocumentObserver
     NS_DECL_NSIDOCUMENTOBSERVER
-
-    NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible,
-                                void* aData);
 
     static void FlushEventsCallback(nsITimer *aTimer, void *aClosure);
 
@@ -137,7 +135,7 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
      */
     void ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute);
 
-    nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> mAccessNodeCache;
+    nsAccessNodeHashtable mAccessNodeCache;
     void *mWnd;
     nsCOMPtr<nsIDocument> mDocument;
     nsCOMPtr<nsITimer> mScrollWatchTimer;

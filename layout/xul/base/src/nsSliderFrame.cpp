@@ -512,8 +512,8 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
     break;
 
     case NS_MOUSE_BUTTON_UP:
-      if (NS_STATIC_CAST(nsMouseEvent*, aEvent)->button == nsMouseEvent::eLeftButton ||
-          (NS_STATIC_CAST(nsMouseEvent*, aEvent)->button == nsMouseEvent::eMiddleButton &&
+      if (static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton ||
+          (static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eMiddleButton &&
            gMiddlePref)) {
         // stop capturing
         AddListener();
@@ -530,11 +530,11 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
     //return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
     return NS_OK;
   } else if ((aEvent->message == NS_MOUSE_BUTTON_DOWN &&
-              NS_STATIC_CAST(nsMouseEvent*, aEvent)->button ==
+              static_cast<nsMouseEvent*>(aEvent)->button ==
                 nsMouseEvent::eLeftButton &&
-              NS_STATIC_CAST(nsMouseEvent*, aEvent)->isShift) ||
+              static_cast<nsMouseEvent*>(aEvent)->isShift) ||
              (gMiddlePref && aEvent->message == NS_MOUSE_BUTTON_DOWN &&
-              NS_STATIC_CAST(nsMouseEvent*, aEvent)->button ==
+              static_cast<nsMouseEvent*>(aEvent)->button ==
                 nsMouseEvent::eMiddleButton)) {
     // convert coord from twips to pixels
     nsPoint eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
@@ -765,7 +765,7 @@ nsSliderFrame::SetCurrentPositionInternal(nsIContent* aScrollbar, nscoord newpos
       if (shell) {
         nsIFrame* frame = shell->GetPrimaryFrameFor(content);
         if (frame && frame->GetType() == nsGkAtoms::sliderFrame) {
-          NS_STATIC_CAST(nsSliderFrame*, frame)->
+          static_cast<nsSliderFrame*>(frame)->
             CurrentPositionChanged(frame->PresContext(), aImmediateRedraw);
         }
       }

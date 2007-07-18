@@ -109,8 +109,67 @@ gfxFontconfigUtils::GetFontList(const nsACString& aLangGroup,
     return NS_OK;
 }
 
-// this is in nsFontConfigUtils.h
-extern void NS_AddLangGroup (FcPattern *aPattern, nsIAtom *aLangGroup);
+struct MozGtkLangGroup {
+    const char    *mozLangGroup;
+    const FcChar8 *Lang;
+};
+
+const MozGtkLangGroup MozGtkLangGroups[] = {
+    { "x-western",      (const FcChar8 *)"en" },
+    { "x-central-euro", (const FcChar8 *)"pl" },
+    { "x-cyrillic",     (const FcChar8 *)"ru" },
+    { "x-baltic",       (const FcChar8 *)"lv" },
+    { "x-devanagari",   (const FcChar8 *)"hi" },
+    { "x-tamil",        (const FcChar8 *)"ta" },
+    { "x-armn",         (const FcChar8 *)"hy" },
+    { "x-beng",         (const FcChar8 *)"bn" },
+    { "x-cans",         (const FcChar8 *)"iu" },
+    { "x-ethi",         (const FcChar8 *)"am" },
+    { "x-geor",         (const FcChar8 *)"ka" },
+    { "x-gujr",         (const FcChar8 *)"gu" },
+    { "x-guru",         (const FcChar8 *)"pa" },
+    { "x-khmr",         (const FcChar8 *)"km" },
+    { "x-mlym",         (const FcChar8 *)"ml" },
+    { "x-unicode",                       0    },
+    { "x-user-def",                      0    }
+};
+
+static const MozGtkLangGroup*
+NS_FindFCLangGroup (nsACString &aLangGroup)
+{
+    for (unsigned int i=0; i < NS_ARRAY_LENGTH(MozGtkLangGroups); ++i) {
+        if (aLangGroup.Equals(MozGtkLangGroups[i].mozLangGroup,
+                              nsCaseInsensitiveCStringComparator())) {
+            return &MozGtkLangGroups[i];
+        }
+    }
+
+    return nsnull;
+}
+
+static void
+NS_AddLangGroup(FcPattern *aPattern, nsIAtom *aLangGroup)
+{
+    // Find the FC lang group for this lang group
+    nsCAutoString cname;
+    aLangGroup->ToUTF8String(cname);
+
+    // see if the lang group needs to be translated from mozilla's
+    // internal mapping into fontconfig's
+    const struct MozGtkLangGroup *langGroup;
+    langGroup = NS_FindFCLangGroup(cname);
+
+    // if there's no lang group, just use the lang group as it was
+    // passed to us
+    //
+    // we're casting away the const here for the strings - should be
+    // safe.
+    if (!langGroup)
+        FcPatternAddString(aPattern, FC_LANG, (FcChar8 *)cname.get());
+    else if (langGroup->Lang)
+        FcPatternAddString(aPattern, FC_LANG, (FcChar8 *)langGroup->Lang);
+}
+
 
 nsresult
 gfxFontconfigUtils::GetFontListInternal(nsCStringArray& aListOfFonts,
@@ -134,7 +193,7 @@ gfxFontconfigUtils::GetFontListInternal(nsCStringArray& aListOfFonts,
     // take the pattern and add the lang group to it
     if (aLangGroup && !aLangGroup->IsEmpty()) {
         nsCOMPtr<nsIAtom> langAtom = do_GetAtom(*aLangGroup);
-        //XXX fix me //NS_AddLangGroup(pat, langAtom);
+        NS_AddLangGroup(pat, langAtom);
     }
 
     fs = FcFontList(NULL, pat, os);

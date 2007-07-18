@@ -102,7 +102,7 @@ nsArray::IndexOf(PRUint32 aStartIndex, nsISupports* aElement,
 NS_IMETHODIMP
 nsArray::Enumerate(nsISimpleEnumerator **aResult)
 {
-    return NS_NewArrayEnumerator(aResult, NS_STATIC_CAST(nsIArray*, this));
+    return NS_NewArrayEnumerator(aResult, static_cast<nsIArray*>(this));
 }
 
 // nsIMutableArray implementation
@@ -113,8 +113,8 @@ nsArray::AppendElement(nsISupports* aElement, PRBool aWeak)
     PRBool result;
     if (aWeak) {
         nsCOMPtr<nsISupports> elementRef =
-            getter_AddRefs(NS_STATIC_CAST(nsISupports*,
-                                          NS_GetWeakReference(aElement)));
+            getter_AddRefs(static_cast<nsISupports*>
+                                      (NS_GetWeakReference(aElement)));
         NS_ASSERTION(elementRef, "AppendElement: Trying to use weak references on an object that doesn't support it");
         if (!elementRef)
             return NS_ERROR_FAILURE;
@@ -141,8 +141,8 @@ nsArray::InsertElementAt(nsISupports* aElement, PRUint32 aIndex, PRBool aWeak)
     nsCOMPtr<nsISupports> elementRef;
     if (aWeak) {
         elementRef =
-            getter_AddRefs(NS_STATIC_CAST(nsISupports*,
-                                          NS_GetWeakReference(aElement)));
+            getter_AddRefs(static_cast<nsISupports*>
+                                      (NS_GetWeakReference(aElement)));
         NS_ASSERTION(elementRef, "InsertElementAt: Trying to use weak references on an object that doesn't support it");
         if (!elementRef)
             return NS_ERROR_FAILURE;
@@ -159,8 +159,8 @@ nsArray::ReplaceElementAt(nsISupports* aElement, PRUint32 aIndex, PRBool aWeak)
     nsCOMPtr<nsISupports> elementRef;
     if (aWeak) {
         elementRef =
-            getter_AddRefs(NS_STATIC_CAST(nsISupports*,
-                                          NS_GetWeakReference(aElement)));
+            getter_AddRefs(static_cast<nsISupports*>
+                                      (NS_GetWeakReference(aElement)));
         NS_ASSERTION(elementRef, "ReplaceElementAt: Trying to use weak references on an object that doesn't support it");
         if (!elementRef)
             return NS_ERROR_FAILURE;
@@ -185,10 +185,10 @@ PRBool
 FindElementCallback(void *aElement, void* aClosure)
 {
     findIndexOfClosure* closure =
-        NS_STATIC_CAST(findIndexOfClosure*, aClosure);
+        static_cast<findIndexOfClosure*>(aClosure);
 
     nsISupports* element =
-        NS_STATIC_CAST(nsISupports*, aElement);
+        static_cast<nsISupports*>(aElement);
     
     // don't start searching until we're past the startIndex
     if (closure->resultIndex >= closure->startIndex &&

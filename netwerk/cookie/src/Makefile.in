@@ -50,6 +50,7 @@ REQUIRES	= \
 		xpcom \
 		string \
 		pref \
+		storage \
 		$(NULL)
 
 CPPSRCS		= \

@@ -50,9 +50,6 @@ ifeq ($(OS_ARCH),OSF1)
 SHELL := ksh
 endif
 
-BUILD_DATE = gbdate.h
-BUILD_DATE_TS = gbdate.tstamp
-
 MODULE		= layout
 LIBRARY_NAME	= gklayout
 EXPORT_LIBRARY = 1
@@ -103,7 +100,6 @@ REQUIRES	= xpcom \
 		  webbrwsr \
 		  uconv \
 		  txtsvc \
-		  inspector \
 		  $(NULL)
 
 ifdef MOZ_ENABLE_CAIRO_GFX
@@ -112,7 +108,6 @@ endif
 
 CPPSRCS		= \
 		nsLayoutModule.cpp \
-		nsContentHTTPStartup.cpp \
 		nsContentDLF.cpp \
 		nsLayoutStatics.cpp \
 		$(NULL)
@@ -169,6 +164,12 @@ SHARED_LIBRARY_LIBS += \
 endif
 
 ifndef MOZ_NO_INSPECTOR_APIS
+LOCAL_INCLUDES  += \
+      -I$(srcdir)/../inspector/src \
+      $(NULL)
+REQUIRES += \
+      inspector \
+      $(NULL)
 SHARED_LIBRARY_LIBS += ../inspector/src/$(LIB_PREFIX)inspector_s.$(LIB_SUFFIX)
 else
 DEFINES += -DMOZ_NO_INSPECTOR_APIS
@@ -213,6 +214,7 @@ DEFINES += -DENABLE_EDITOR_API_LOG
 endif
 
 EXTRA_DSO_LDOPTS = \
+		$(MOZ_FIX_LINK_PATHS) \
 		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
@@ -261,7 +263,6 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(srcdir)/../style \
 		   -I$(srcdir)/../xul/content/src \
 		   -I$(srcdir)/../xul/base/src \
-		   -I$(srcdir)/../inspector/src \
 		   -I$(topsrcdir)/content/base/src \
 		   -I$(topsrcdir)/content/html/content/src \
 		   -I$(topsrcdir)/content/html/document/src \
@@ -298,24 +299,8 @@ endif
 
 DEFINES += -D_IMPL_NS_LAYOUT
 
-GARBAGE += $(BUILD_DATE) $(BUILD_DATE_TS)
-
 ifeq ($(OS_ARCH),IRIX)
 ifeq ($(GNU_CXX),1)
 LDFLAGS += -Wl,-LD_LAYOUT:lgot_buffer=50
 endif
 endif
-
-
-export:: $(BUILD_DATE)
-
-$(BUILD_DATE_TS): FORCE
-	@for f in $(SHARED_LIBRARY_LIBS); do \
-		if [ $$f -nt $@ ]; then \
-			touch $@; \
-		fi; \
-	done
-
-$(BUILD_DATE):: gbdate.pl $(BUILD_DATE_TS)
-	$(RM) $@
-	$(PERL) $(srcdir)/gbdate.pl > $@

@@ -44,6 +44,8 @@
 #include "nsIComponentManager.idl"
 #include "nsIScriptableInterfaces.idl"
 
+interface xpcIJSWeakReference;
+
 /**
 * interface of Components.classes
 * (interesting stuff only reflected into JavaScript)
@@ -121,7 +123,7 @@ interface nsIXPCComponents_utils_Sandbox : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(5f4fc051-6b1d-4b5e-b4fe-f5096717630b)]
+[scriptable, uuid(da2267f2-d4cc-448f-9d70-1c7fe134d2fe)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -174,22 +176,22 @@ interface nsIXPCComponents_Utils : nsISupports
      *
      * Synchronously loads and evaluates the js file located at
      * 'registryLocation' with a new, fully privileged global object.
-     * After loading, looks for a property 'EXPORTED_SYMBOLS' on the
-     * new global object. 'EXPORTED_SYMBOLS' is expected to be an
-     * array of strings identifying properties on the global object.
-     * If present, these properties will be installed as properties on
-     * targetObj, or, if 'targetObj' is not specified, on the caller's
-     * global object.
      *
-     * @param registryLocation the string identifying the location of the
-     *        module to import. For the format of the string, see
-     *        nsIComponentManagerObsolete.registryLocationForSpec.
-     *        Note that the format of this parameter is expected to change
-     *        (see bug 380970).
+     * If 'targetObj' is specified and equal to null, returns the
+     * module's global object. Otherwise (if 'targetObj' is not
+     * specified, or 'targetObj' is != null) looks for a property
+     * 'EXPORTED_SYMBOLS' on the new global object. 'EXPORTED_SYMBOLS'
+     * is expected to be an array of strings identifying properties on
+     * the global object.  These properties will be installed as
+     * properties on 'targetObj', or, if 'targetObj' is not specified,
+     * on the caller's global object. If 'EXPORTED_SYMBOLS' is not
+     * found, an error is thrown.
+     *
+     * @param resourceURI A resource:// URI string to load the module from.
      * @param targetObj  the object to install the exported properties on.
-     *        If this parameter is null or is a primitive value, this
-     *        method throws an exception.
-     * @returns the new global object the module code was loaded into.
+     *        If this parameter is a primitive value, this method throws
+     *        an exception.
+     * @returns the module code's global object.
      *
      * The implementation maintains a hash of registryLocation->global obj.
      * Subsequent invocations of importModule with 'registryLocation'
@@ -201,6 +203,20 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     void /* JSObject */ import(in AUTF8String registryLocation
                                /*, [optional] in JSObject targetObj */);
+
+    /*
+     * To be called from JS only.
+     *
+     * Return a weak reference for the given JS object.
+     */
+    xpcIJSWeakReference getWeakReference(/* in JSObject obj */);
+
+    /*
+     * To be called from JS only.
+     *
+     * Force an immediate garbage collection cycle.
+     */
+    void forceGC();
 };
 
 /**

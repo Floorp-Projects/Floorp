@@ -186,7 +186,7 @@ nsHTMLTableRowElement::GetRowIndex(PRInt32* aValue)
 
       rows->Item(i, getter_AddRefs(node));
 
-      if (node.get() == NS_STATIC_CAST(nsIDOMNode *, this)) {
+      if (node.get() == static_cast<nsIDOMNode *>(this)) {
         *aValue = i;
         found = PR_TRUE;
       }
@@ -219,7 +219,7 @@ nsHTMLTableRowElement::GetSectionRowIndex(PRInt32* aValue)
       nsCOMPtr<nsIDOMNode> node;
       rows->Item(i, getter_AddRefs(node));
 
-      if (node.get() == NS_STATIC_CAST(nsIDOMNode *, this)) {
+      if (node.get() == static_cast<nsIDOMNode *>(this)) {
         *aValue = i;
         found = PR_TRUE;
       }

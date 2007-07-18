@@ -272,7 +272,7 @@ static PRBool PR_CALLBACK InitBFSTable(nsHashKey *aKey, void *aData, void* closu
     state->distance = -1;
     state->predecessor = nsnull;
 
-    SCTableData *data = new SCTableData(NS_STATIC_CAST(nsCStringKey*, aKey));
+    SCTableData *data = new SCTableData(static_cast<nsCStringKey*>(aKey));
     if (!data) {
         delete state;
         return PR_FALSE;

@@ -44,7 +44,7 @@ class nsMIMEInfoMac : public nsMIMEInfoImpl {
     nsMIMEInfoMac(const char* aMIMEType = "") : nsMIMEInfoImpl(aMIMEType) {}
     nsMIMEInfoMac(const nsACString& aMIMEType) : nsMIMEInfoImpl(aMIMEType) {}
 
-    NS_IMETHOD LaunchWithFile(nsIFile* aFile);
+    NS_IMETHOD LaunchWithURI(nsIURI* aURI);
 
 #ifdef DEBUG
   protected:

@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-## $Id: mozilla.in,v 1.13 2005/09/20 21:11:34 dbaron%dbaron.org Exp $
+## $Id: mozilla.in,v 1.14 2007/06/23 05:30:29 ajschult%verizon.net Exp $
 ## 
 ## Usage:
 ##
@@ -48,46 +48,6 @@
 ## The script will setup all the environment voodoo needed to make
 ## the mozilla-bin binary to work.
 ##
-
-moz_pis_startstop_scripts()
-{
-  MOZ_USER_DIR="%MOZ_USER_DIR%"
-  # MOZ_PIS_ is the name space for "Mozilla Plugable Init Scripts"
-  # These variables and there meaning are specified in
-  # mozilla/xpfe/bootstrap/init.d/README
-  MOZ_PIS_API=2
-  MOZ_PIS_MOZBINDIR="${dist_bin}"
-  MOZ_PIS_SESSION_PID="$$"
-  MOZ_PIS_USER_DIR="${MOZ_USER_DIR}"
-  export MOZ_PIS_API MOZ_PIS_MOZBINDIR MOZ_PIS_SESSION_PID MOZ_PIS_USER_DIR
-  
-  case "${1}" in
-    "start")
-      for curr_pis in "${dist_bin}/init.d"/S* "${HOME}/${MOZ_USER_DIR}/init.d"/S* ; do
-        if [ -x "${curr_pis}" ] ; then
-          case "${curr_pis}" in
-            *.sh) .  "${curr_pis}"         ;;
-            *)       "${curr_pis}" "start" ;;
-          esac
-        fi
-      done
-      ;;
-    "stop")
-      for curr_pis in "${HOME}/${MOZ_USER_DIR}/init.d"/K* "${dist_bin}/init.d"/K* ; do
-        if [ -x "${curr_pis}" ] ; then
-          case "${curr_pis}" in
-            *.sh) . "${curr_pis}"        ;;
-            *)      "${curr_pis}" "stop" ;;
-          esac
-        fi
-      done
-      ;;
-    *)
-      echo 1>&2 "$0: Internal error in moz_pis_startstop_scripts."
-      exit 1
-      ;;
-  esac
-}
 
 #uncomment for debugging
 #set -x
@@ -173,18 +133,12 @@ done
 
 export MRE_HOME
 
-## Start addon scripts
-moz_pis_startstop_scripts "start"
-
 if [ $debugging = 1 ]
 then
   echo $dist_bin/run-mozilla.sh $script_args $dist_bin/$MOZILLA_BIN "$@"
 fi
 "$dist_bin/run-mozilla.sh" $script_args "$dist_bin/$MOZILLA_BIN" "$@"
 exitcode=$?
-
-## Stop addon scripts
-moz_pis_startstop_scripts "stop"
 
 exit $exitcode
 # EOF.

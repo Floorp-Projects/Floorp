@@ -378,8 +378,8 @@ TableBackgroundPainter::PaintTable(nsTableFrame* aTableFrame,
        right border is the next one's left border.*/
     //Start with table's left border.
     nscoord lastLeftBorder = aTableFrame->GetContinuousLeftBCBorderWidth();
-    for (nsTableColGroupFrame* cgFrame = NS_STATIC_CAST(nsTableColGroupFrame*, colGroupList.FirstChild());
-         cgFrame; cgFrame = NS_STATIC_CAST(nsTableColGroupFrame*, cgFrame->GetNextSibling())) {
+    for (nsTableColGroupFrame* cgFrame = static_cast<nsTableColGroupFrame*>(colGroupList.FirstChild());
+         cgFrame; cgFrame = static_cast<nsTableColGroupFrame*>(cgFrame->GetNextSibling())) {
 
       if (cgFrame->GetColCount() < 1) {
         //No columns, no cells, so no need for data
@@ -406,7 +406,7 @@ TableBackgroundPainter::PaintTable(nsTableFrame* aTableFrame,
       
       /*Loop over columns in this colgroup*/
       for (nsTableColFrame* col = cgFrame->GetFirstColumn(); col;
-           col = NS_STATIC_CAST(nsTableColFrame*, col->GetNextSibling())) {
+           col = static_cast<nsTableColFrame*>(col->GetNextSibling())) {
         /*Create data struct for column*/
         PRUint32 colIndex = col->GetColIndex();
         NS_ASSERTION(colIndex < mNumCols, "prevent array boundary violation");
@@ -506,7 +506,7 @@ TableBackgroundPainter::PaintRowGroup(nsTableRowGroupFrame* aFrame,
   }
 
   // It's OK if cursor is null here.
-  nsTableRowFrame* row = NS_STATIC_CAST(nsTableRowFrame*, cursor);  
+  nsTableRowFrame* row = static_cast<nsTableRowFrame*>(cursor);  
   if (!row) {
     // No useful cursor; just start at the top.  Don't bother to set up a
     // cursor; if we've gotten this far then we've already built the display
@@ -560,7 +560,7 @@ TableBackgroundPainter::PaintRow(nsTableRowFrame* aFrame,
         border.bottom = nextRow->GetOuterTopContBCBorderWidth();
       }
       else { //acquire rg's bottom border
-        nsTableRowGroupFrame* rowGroup = NS_STATIC_CAST(nsTableRowGroupFrame*, aFrame->GetParent());
+        nsTableRowGroupFrame* rowGroup = static_cast<nsTableRowGroupFrame*>(aFrame->GetParent());
         rowGroup->GetContinuousBCBorderWidth(border);
       }
       //get the rest of the borders; will overwrite all but bottom

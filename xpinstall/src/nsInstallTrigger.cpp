@@ -539,11 +539,11 @@ nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion*
     REGERR               status;
     nsInstallVersion     regNameVersion;
 
-    status = VR_GetVersion( NS_CONST_CAST(char *, regName.get()), &cVersion );
+    status = VR_GetVersion( const_cast<char *>(regName.get()), &cVersion );
     if ( status == REGERR_OK )
     {
         // we found the version
-        if ( VR_ValidateComponent( NS_CONST_CAST(char *, regName.get()) ) != REGERR_NOFILE )
+        if ( VR_ValidateComponent( const_cast<char *>(regName.get()) ) != REGERR_NOFILE )
         {
             // and the installed file was not missing:  do the compare
             regNameVersion.Init(cVersion.major,
@@ -565,7 +565,7 @@ nsInstallTrigger::GetVersion(const nsString& component, nsString& version)
     NS_ConvertUTF16toUTF8 regName(component);
     REGERR               status;
 
-    status = VR_GetVersion( NS_CONST_CAST(char *, regName.get()), &cVersion );
+    status = VR_GetVersion( const_cast<char *>(regName.get()), &cVersion );
 
     version.Truncate();
 

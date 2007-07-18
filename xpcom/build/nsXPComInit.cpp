@@ -578,7 +578,7 @@ NS_InitXPCOM3(nsIServiceManager* *result,
 
     if (result) {
         nsIServiceManager *serviceManager =
-            NS_STATIC_CAST(nsIServiceManager*, compMgr);
+            static_cast<nsIServiceManager*>(compMgr);
 
         NS_ADDREF(*result = serviceManager);
     }
@@ -588,7 +588,7 @@ NS_InitXPCOM3(nsIServiceManager* *result,
     rv = compMgr->RegisterService(kMemoryCID, memory);
     if (NS_FAILED(rv)) return rv;
 
-    rv = compMgr->RegisterService(kComponentManagerCID, NS_STATIC_CAST(nsIComponentManager*, compMgr));
+    rv = compMgr->RegisterService(kComponentManagerCID, static_cast<nsIComponentManager*>(compMgr));
     if (NS_FAILED(rv)) return rv;
 
 #ifdef GC_LEAK_DETECTOR
@@ -619,7 +619,7 @@ NS_InitXPCOM3(nsIServiceManager* *result,
     }
 
     nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(
-        NS_STATIC_CAST(nsIComponentManager*,compMgr), &rv);
+        static_cast<nsIComponentManager*>(compMgr), &rv);
     if (registrar) {
         for (int i = 0; i < components_length; i++)
             RegisterGenericFactory(registrar, &components[i]);

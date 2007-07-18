@@ -68,7 +68,7 @@ CWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent, PRUint32 aChrom
         return NS_ERROR_FAILURE;
     }
 
-    CWebBrowserContainer *pContainer = NS_STATIC_CAST(CWebBrowserContainer *, aParent);
+    CWebBrowserContainer *pContainer = static_cast<CWebBrowserContainer *>(aParent);
     
     CComQIPtr<IDispatch> dispNew;
     VARIANT_BOOL bCancel = VARIANT_FALSE;

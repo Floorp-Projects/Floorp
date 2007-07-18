@@ -44,4 +44,6 @@ VPATH		= @srcdir@
 MODULE		= pipnss
 DIRS		= resources src public
 
+XPCSHELL_TESTS  = tests
+
 include $(topsrcdir)/config/rules.mk

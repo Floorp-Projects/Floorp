@@ -1365,6 +1365,10 @@ Engine.prototype = {
         this._type = SEARCH_TYPE_SHERLOCK;
         this._parseAsSherlock();
     }
+
+    // No need to keep a ref to our data (which in some cases can be a document
+    // element) past this point
+    this._data = null;
   },
 
   /**
@@ -2725,8 +2729,10 @@ SearchService.prototype = {
       this._currentEngine = null;
 
     if (engineToRemove._readOnly) {
-      // Just hide it (the "hidden" setter will notify)
+      // Just hide it (the "hidden" setter will notify) and remove its alias to
+      // avoid future conflicts with other engines.
       engineToRemove.hidden = true;
+      engineToRemove.alias = null;
     } else {
       // Remove the engine file from disk (this might throw)
       engineToRemove._remove();

@@ -78,6 +78,8 @@ const PREF_BLOCKLIST_DETAILS_URL      = "extensions.blocklist.detailsURL";
 const PREF_BLOCKLIST_ENABLED          = "extensions.blocklist.enabled";
 const PREF_BLOCKLIST_INTERVAL         = "extensions.blocklist.interval";
 const PREF_UPDATE_NOTIFYUSER          = "extensions.update.notifyUser";
+const PREF_MATCH_OS_LOCALE            = "intl.locale.matchOS";
+const PREF_SELECTED_LOCALE            = "general.useragent.locale";
 
 const DIR_EXTENSIONS                  = "extensions";
 const DIR_CHROME                      = "chrome";
@@ -172,6 +174,7 @@ var gInstallManifestRoot  = null;
 var gVersionChecker       = null;
 var gLoggingEnabled       = null;
 var gCheckCompatibility   = true;
+var gLocale               = "en-US";
 
 /** 
  * Valid GUIDs fit this pattern.
@@ -445,20 +448,6 @@ function fileIsItemPackage(file) {
   if (fileURL instanceof nsIURL)
     var extension = fileURL.fileExtension.toLowerCase();
   return extension == "xpi" || extension == "jar";
-}
-
-/** 
- * Return the leaf name used by the extension system for staging an item.
- * @param   id
- *          The GUID of the item
- * @param   type
- *          The nsIUpdateItem type of the item
- * @returns The leaf name of the staged file.
- */
-function getStagedLeafName(id, type) {
-  if (type == nsIUpdateItem.TYPE_THEME) 
-    return id + ".jar";
-  return id + ".xpi";
 }
 
 /**
@@ -2236,17 +2225,6 @@ var StartupCache = {
     return entries;
   },
 
-  /**
-   * Call a function on each entry.  The callback function takes a single
-   * parameter, which is an entry object.
-   */
-  forEachEntry: function(callback) {
-    for (var key in this.entries) {
-      for (id in this.entries[key])
-        callback(this.entries[key][id]);
-    }
-  },
-  
   /** 
    * Read the Item-Change manifest file into a hash of properties.
    * The Item-Change manifest currently holds a list of paths, with the last
@@ -2409,8 +2387,7 @@ var Blocklist = {
     this.entries = this._loadBlocklistFromFile(getFile(KEY_PROFILEDIR,
                                                        [FILE_BLOCKLIST]));
     var em = Components.classes["@mozilla.org/extensions/manager;1"]
-                       .getService(Components.interfaces.nsIExtensionManager)
-                       .QueryInterface(Components.interfaces.nsIExtensionManager_MOZILLA_1_8_BRANCH);
+                       .getService(Components.interfaces.nsIExtensionManager);
     em.checkForBlocklistChanges();
   },
 
@@ -2738,6 +2715,8 @@ ExtensionManager.prototype = {
         this._loggingToggled();
       else if (data == PREF_EM_CHECK_COMPATIBILITY)
         this._checkCompatToggled();
+      else if ((data == PREF_MATCH_OS_LOCALE) || (data == PREF_SELECTED_LOCALE))
+        this._updateLocale();
       break;
     }
   },
@@ -2750,6 +2729,23 @@ ExtensionManager.prototype = {
     gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
   },
 
+  /**
+   * Retrieves the current locale
+   */
+  _updateLocale: function() {
+    try {
+      if (gPref.getBoolPref(PREF_MATCH_OS_LOCALE)) {
+        var localeSvc = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
+                                  .getService(Components.interfaces.nsILocaleService);
+        gLocale = localeSvc.getLocaleComponentForUserAgent();
+        return;
+      }
+    }
+    catch (ex) {
+    }
+    gLocale = gPref.getCharPref(PREF_SELECTED_LOCALE);
+  },
+  
   /**
    * Enables or disables extensions that are incompatible depending upon the pref
    * setting for compatibility checking.
@@ -2793,6 +2789,9 @@ ExtensionManager.prototype = {
     gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
     gCheckCompatibility = getPref("getBoolPref", PREF_EM_CHECK_COMPATIBILITY, true);
     gPref.addObserver("extensions.", this, false);
+    gPref.addObserver(PREF_MATCH_OS_LOCALE, this, false);
+    gPref.addObserver(PREF_SELECTED_LOCALE, this, false);
+    this._updateLocale();
   },
 
   /**
@@ -2825,11 +2824,16 @@ ExtensionManager.prototype = {
 
     // Release strongly held services.
     gOS = null;
-    if (this._ds && gRDF) 
-      gRDF.UnregisterDataSource(this._ds)
+    if (this._ptr && gRDF) {
+      gRDF.UnregisterDataSource(this._ptr);
+      this._ptr = null;
+    }
     gRDF = null;
-    if (gPref)
+    if (gPref) {
       gPref.removeObserver("extensions.", this);
+      gPref.removeObserver(PREF_MATCH_OS_LOCALE, this);
+      gPref.removeObserver(PREF_SELECTED_LOCALE, this);
+    }
     gPref = null;
     gConsole = null;
     gVersionChecker = null;
@@ -2944,7 +2948,8 @@ ExtensionManager.prototype = {
 
     var updater = new ExtensionItemUpdater(gApp.ID, gApp.version, this);
     updater._background = true;
-    updater.checkForUpdates(items, items.length, false, null);
+    updater.checkForUpdates(items, items.length,
+                            nsIExtensionManager.UPDATE_CHECK_NEWVERSION, null);
   },
   
   /**
@@ -4469,7 +4474,7 @@ ExtensionManager.prototype = {
                             "", /* Icon URL */
                             installData.updateURL || "", 
                             installData.type);
-        em.update([item], 1, true, this);
+        em.update([item], 1, nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY, this);
       },
       
       /**
@@ -4477,7 +4482,6 @@ ExtensionManager.prototype = {
        */
       onUpdateStarted: function() {
         LOG("Phone Home Listener: Update Started");
-        em.datasource.onUpdateStarted();
       },
       
       /**
@@ -4487,7 +4491,6 @@ ExtensionManager.prototype = {
         LOG("Phone Home Listener: Update Ended");
         // We are responsible for cleaning up this file!
         this._installRDF.remove(false);
-        em.datasource.onUpdateEnded();
       },
       
       /**
@@ -4497,7 +4500,6 @@ ExtensionManager.prototype = {
         LOG("Phone Home Listener: Update For " + addon.id + " started");
         em.datasource.addIncompatibleUpdateItem(addon.name, this._xpi.path,
                                                 addon.type, addon.version);
-        em.datasource.onAddonUpdateStarted(addon);
       },
       
       /**
@@ -4541,7 +4543,6 @@ ExtensionManager.prototype = {
           // We are responsible for cleaning up this file!
           InstallLocations.get(aInstallLocationKey).removeFile(this._xpi);
         }
-        em.datasource.onAddonUpdateEnded(addon, status);
       },
 
       /**
@@ -4736,8 +4737,26 @@ ExtensionManager.prototype = {
   _configureForthcomingItem: function(installManifest, id, installLocation, type) {
     var ds = this.datasource;
     ds.updateVisibleList(id, installLocation.name, false);
-    var props = { name            : EM_L(getManifestProperty(installManifest, "name")),
+    
+    var name = null;
+    var localizationProp = EM_R("localized");
+    var localeProp = EM_R("locale");
+    var localizations = installManifest.GetTargets(gInstallManifestRoot, localizationProp, true);
+    while (localizations.hasMoreElements()) {
+      var localization = localizations.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+      var locales = installManifest.GetTargets(localization, localeProp, true);
+      while (locales.hasMoreElements()) {
+        var locale = locales.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+        if (stringData(locale) == gLocale)
+          name = installManifest.GetTarget(localization, EM_R("name"), true);
+      }
+    }
+    if (!name)
+      name = EM_L(getManifestProperty(installManifest, "name"));
+
+    var props = { name            : name,
                   version         : EM_L(getManifestProperty(installManifest, "version")),
+                  newVersion      : EM_L(getManifestProperty(installManifest, "version")),
                   installLocation : EM_L(installLocation.name),
                   type            : EM_I(type),
                   availableUpdateURL    : null,
@@ -4779,6 +4798,7 @@ ExtensionManager.prototype = {
     ds.updateVisibleList(id, installLocation.name, false);
     var props = { installLocation : EM_L(installLocation.name),
                   type            : EM_I(type),
+                  newVersion      : EM_L(getManifestProperty(installManifest, "version")),
                   availableUpdateURL      : null,
                   availableUpdateHash     : null,
                   availableUpdateVersion  : null };
@@ -5300,7 +5320,7 @@ ExtensionManager.prototype = {
   /**
    * See nsIExtensionManager.idl
    */
-  update: function(items, itemCount, versionUpdateOnly, listener) {
+  update: function(items, itemCount, updateCheckType, listener) {
     var appID = gApp.ID;
     var appVersion = gApp.version;
 
@@ -5308,7 +5328,7 @@ ExtensionManager.prototype = {
       items = this.getItemList(nsIUpdateItem.TYPE_ADDON, { });
 
     var updater = new ExtensionItemUpdater(appID, appVersion, this);
-    updater.checkForUpdates(items, items.length, versionUpdateOnly, listener);
+    updater.checkForUpdates(items, items.length, updateCheckType, listener);
   },
 
 
@@ -5717,6 +5737,7 @@ ExtensionManager.prototype = {
    * The Extensions RDF Datasource
    */
   _ds: null,
+  _ptr: null,
 
   /** 
    * Loads the Extensions Datasource. This should not be called unless: 
@@ -5727,8 +5748,11 @@ ExtensionManager.prototype = {
   _ensureDS: function() {
     if (!this._ds) {
       this._ds = new ExtensionsDataSource(this);
-      if (this._ds)
+      if (this._ds) {
         this._ds.loadExtensions();
+        this._ptr = gRDF.GetDataSource("rdf:extensions");
+        gRDF.RegisterDataSource(this._ptr, true);
+      }
     }
   },
 
@@ -5774,7 +5798,6 @@ ExtensionManager.prototype = {
    */
   QueryInterface: function(iid) {
     if (!iid.equals(Components.interfaces.nsIExtensionManager) &&
-        !iid.equals(Components.interfaces.nsIExtensionManager_MOZILLA_1_8_BRANCH) &&
         !iid.equals(Components.interfaces.nsITimerCallback) &&
         !iid.equals(Components.interfaces.nsIObserver) &&
         !iid.equals(Components.interfaces.nsISupports))
@@ -5932,7 +5955,7 @@ ExtensionItemUpdater.prototype = {
   _appVersion         : "",
   _emDS               : null,
   _em                 : null,
-  _versionUpdateOnly  : 0,
+  _updateCheckType    : 0,
   _items              : [],
   _listener           : null,
   _background         : false,
@@ -5966,12 +5989,12 @@ ExtensionItemUpdater.prototype = {
   //      we look ONLY for compatibility updates in this case to determine
   //      whether or not the item can be installed.
   //  
-  checkForUpdates: function(aItems, aItemCount, aVersionUpdateOnly, 
+  checkForUpdates: function(aItems, aItemCount, aUpdateCheckType, 
                             aListener) {
     this._listener = new AddonUpdateCheckListener(aListener, this._emDS);
     if (this._listener)
       this._listener.onUpdateStarted();
-    this._versionUpdateOnly = aVersionUpdateOnly;
+    this._updateCheckType = aUpdateCheckType;
     this._items = aItems;
     this._responseCount = aItemCount;
     
@@ -5982,7 +6005,7 @@ ExtensionItemUpdater.prototype = {
       var e = this._items[i];
       if (this._listener)
         this._listener.onAddonUpdateStarted(e);
-      (new RDFItemUpdater(this)).checkForUpdates(e, aVersionUpdateOnly);
+      (new RDFItemUpdater(this)).checkForUpdates(e, aUpdateCheckType);
     }
   },
   
@@ -6016,26 +6039,37 @@ ExtensionItemUpdater.prototype = {
         this._em._appEnableItem(aLocalItem.id);
       return true;
     }
-    else if (this._versionUpdateOnly == 2)
+    else if (this._updateCheckType == nsIExtensionManager.UPDATE_SYNC_COMPATIBILITY)
       this._emDS.updateTargetAppInfo(aLocalItem.id, aRemoteItem.minAppVersion,
                                      aRemoteItem.maxAppVersion);
     return false;
   },
   
-  _isValidUpdate: function(aLocalItem, aRemoteItem) {
+  /**
+   * Checks whether a discovered update is valid for install
+   * @param   aLocalItem
+   *          The already installed nsIUpdateItem that the update is for
+   * @param   aVersion
+   *          The updated version of the add-on
+   * @param   aMinAppVersion
+   *          The minimum application version that the update supports
+   * @param   aMaxApVersion
+   *          The maximum application version that the update supports
+   */
+  _isValidUpdate: function(aLocalItem, aVersion, aMinAppVersion, aMaxAppVersion) {
     var appExtensionsVersion = gApp.version;
 
     // Check if the update will only run on a newer version of Firefox. 
-    if (aRemoteItem.minAppVersion && 
-        gVersionChecker.compare(appExtensionsVersion, aRemoteItem.minAppVersion) < 0) 
+    if (aMinAppVersion && 
+        gVersionChecker.compare(appExtensionsVersion, aMinAppVersion) < 0) 
       return false;
 
     // Check if the update will only run on an older version of Firefox. 
-    if (aRemoteItem.maxAppVersion && 
-        gVersionChecker.compare(appExtensionsVersion, aRemoteItem.maxAppVersion) > 0) 
+    if (aMaxAppVersion && 
+        gVersionChecker.compare(appExtensionsVersion, aMaxAppVersion) > 0) 
       return false;
 
-    if (this._emDS.isBlocklisted(aRemoteItem.id, aRemoteItem.version,
+    if (this._emDS.isBlocklisted(aLocalItem.id, aVersion,
                                  undefined, undefined))
       return false;
     
@@ -6074,10 +6108,10 @@ function RDFItemUpdater(aUpdater) {
 
 RDFItemUpdater.prototype = {
   _updater            : null,
-  _versionUpdateOnly  : 0,
+  _updateCheckType    : 0,
   _item               : null,
   
-  checkForUpdates: function(aItem, aVersionUpdateOnly) {
+  checkForUpdates: function(aItem, aUpdateCheckType) {
     // A preference setting can disable updating for this item
     try {
       if (!gPref.getBoolPref(PREF_EM_ITEM_UPDATE_ENABLED.replace(/%UUID%/, aItem.id))) {
@@ -6118,13 +6152,14 @@ RDFItemUpdater.prototype = {
 
     // Don't check items for updates if the location can't be written to except
     // when performing a version only update.
-    if (!aVersionUpdateOnly && (!installLocation || !installLocation.canAccess)) {
+    if ((aUpdateCheckType == nsIExtensionManager.UPDATE_CHECK_NEWVERSION) && 
+        (!installLocation || !installLocation.canAccess)) {
       var status = nsIAddonUpdateCheckListener.STATUS_READ_ONLY;
       this._updater.checkForDone(aItem, status);
       return;
     }
 
-    this._versionUpdateOnly = aVersionUpdateOnly;
+    this._updateCheckType = aUpdateCheckType;
     this._item = aItem;
   
     var itemStatus;
@@ -6324,7 +6359,7 @@ RDFItemUpdater.prototype = {
     // Parse the response RDF
     function UpdateData() {}; 
     UpdateData.prototype = { version: "0.0", updateLink: null, updateHash: null,
-                             minVersion: "0.0", maxVersion: "0.0" };
+                             minVersion: "0.0", maxVersion: "0.0", found: false };
     
     var versionUpdate = new UpdateData();
     var newestUpdate  = new UpdateData();
@@ -6332,37 +6367,36 @@ RDFItemUpdater.prototype = {
     var newerItem, sameItem;
     
     // Firefox 1.0PR+ update.rdf format
-    if (!this._versionUpdateOnly) {
+    if (this._updateCheckType == nsIExtensionManager.UPDATE_CHECK_NEWVERSION) {
       // Look for newer versions of this item, we only do this in "normal" 
       // mode... see comment by ExtensionItemUpdater_checkForUpdates 
       // about how we do this in all cases but Install Phone Home - which 
       // only needs to do a version check.
-      this._parseV20UpdateInfo(aDatasource, aLocalItem, newestUpdate, false);
+      this._parseV20UpdateInfo(aDatasource, aLocalItem, newestUpdate,
+                               nsIExtensionManager.UPDATE_CHECK_NEWVERSION);
 
-      newerItem = makeItem(aLocalItem.id, 
-                           newestUpdate.version, 
-                           aLocalItem.installLocationKey,
-                           newestUpdate.minVersion, 
-                           newestUpdate.maxVersion, 
-                           aLocalItem.name, 
-                           newestUpdate.updateLink,
-                           newestUpdate.updateHash,
-                           "", /* Icon URL */
-                           "", /* RDF Update URL */
-                           aLocalItem.type);
-      if (this._updater._isValidUpdate(aLocalItem, newerItem))
+      if (newestUpdate.found) {
+        newerItem = makeItem(aLocalItem.id, 
+                             newestUpdate.version, 
+                             aLocalItem.installLocationKey,
+                             newestUpdate.minVersion, 
+                             newestUpdate.maxVersion, 
+                             aLocalItem.name, 
+                             newestUpdate.updateLink,
+                             newestUpdate.updateHash,
+                             "", /* Icon URL */
+                             "", /* RDF Update URL */
+                             aLocalItem.type);
         ++this._updater._updateCount;
-      else
-        newerItem = null;
+      }
     }
     
     // Now look for updated version compatibility metadata for the currently
     // installed version...
-    this._parseV20UpdateInfo(aDatasource, aLocalItem, versionUpdate, true);
+    this._parseV20UpdateInfo(aDatasource, aLocalItem, versionUpdate,
+                             nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY);
 
-    var result = gVersionChecker.compare(versionUpdate.version, 
-                                          aLocalItem.version);
-    if (result == 0) {
+    if (versionUpdate.found) {
       // Local version exactly matches the "Version Update" remote version, 
       // Apply changes into local datasource.
       sameItem = makeItem(aLocalItem.id, 
@@ -6376,15 +6410,11 @@ RDFItemUpdater.prototype = {
                           "", /* Icon URL */
                           "", /* RDF Update URL */
                           aLocalItem.type);
-      if (this._updater._isValidUpdate(aLocalItem, sameItem)) {
-        // Install-time updates are not written to the DS because there is no
-        // entry yet, EM just uses the notifications to ascertain (by hand)
-        // whether or not there is a remote maxVersion tweak that makes the 
-        // item being installed compatible.
-        if (!this._updater._applyVersionUpdates(aLocalItem, sameItem))
-          sameItem = null;
-      }
-      else 
+      // Install-time updates are not written to the DS because there is no
+      // entry yet, EM just uses the notifications to ascertain (by hand)
+      // whether or not there is a remote maxVersion tweak that makes the 
+      // item being installed compatible.
+      if (!this._updater._applyVersionUpdates(aLocalItem, sameItem))
         sameItem = null;
     }
     
@@ -6397,7 +6427,8 @@ RDFItemUpdater.prototype = {
           "version of this item: " + sameItem.objectSource);
     }
     var item = null, status = nsIAddonUpdateCheckListener.STATUS_NONE;
-    if (!this._versionUpdateOnly && newerItem) {
+    if (this._updateCheckType == nsIExtensionManager.UPDATE_CHECK_NEWVERSION
+        && newerItem) {
       item = newerItem;
       status = nsIAddonUpdateCheckListener.STATUS_UPDATE;
     }
@@ -6432,7 +6463,7 @@ RDFItemUpdater.prototype = {
   },
   
   // Parses Firefox 1.0RC1+ update.rdf format
-  _parseV20UpdateInfo: function(aDataSource, aLocalItem, aUpdateData, aVersionUpdatesOnly) {
+  _parseV20UpdateInfo: function(aDataSource, aLocalItem, aUpdateData, aUpdateCheckType) {
     var extensionRes  = gRDF.GetResource(getItemPrefix(aLocalItem.type) + aLocalItem.id);
 
     var updatesArc = gRDF.GetResource(EM_NS("updates"));
@@ -6459,10 +6490,8 @@ RDFItemUpdater.prototype = {
     if (cu.IsContainer(aDataSource, updates)) {
       var ctr = getContainer(aDataSource, updates);
 
-      // In "all update types" mode, we look for newer versions, starting with the 
-      // current installed version.
-      if (!aVersionUpdatesOnly) 
-        aUpdateData.version = aLocalItem.version;
+      // Initial target version is the currently installed version
+      aUpdateData.version = aLocalItem.version;
 
       var versions = ctr.GetElements();
       while (versions.hasMoreElements()) {
@@ -6470,14 +6499,14 @@ RDFItemUpdater.prototype = {
         // information depending on whether or not we've bene invoked in 
         // "version updates only" mode or "version+newest" mode. 
         var version = versions.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-        this._parseV20Update(aDataSource, version, aLocalItem, aUpdateData, aVersionUpdatesOnly);
-        if (aVersionUpdatesOnly && aUpdateData.updateLink)
+        this._parseV20Update(aDataSource, version, aLocalItem, aUpdateData, aUpdateCheckType);
+        if (aUpdateCheckType && aUpdateData.found)
           break;
       }
     }
   },
   
-  _parseV20Update: function(aDataSource, aUpdateResource, aLocalItem, aUpdateData, aVersionUpdatesOnly) {
+  _parseV20Update: function(aDataSource, aUpdateResource, aLocalItem, aUpdateData, aUpdateCheckType) {
     var version = this._getPropertyFromResource(aDataSource, aUpdateResource, 
                                                 "version", aLocalItem);
     var taArc = gRDF.GetResource(EM_NS("targetApplication"));
@@ -6488,13 +6517,21 @@ RDFItemUpdater.prototype = {
       if (id != this._updater._appID)
         continue;
       
-      var result = gVersionChecker.compare(version, aLocalItem.version);
-      if (aVersionUpdatesOnly ? result == 0 : result > 0) {
-        aUpdateData.version = version;
-        aUpdateData.updateLink = this._getPropertyFromResource(aDataSource, targetApp, "updateLink", aLocalItem);
-        aUpdateData.updateHash = this._getPropertyFromResource(aDataSource, targetApp, "updateHash", aLocalItem);
-        aUpdateData.minVersion = this._getPropertyFromResource(aDataSource, targetApp, "minVersion", aLocalItem);
-        aUpdateData.maxVersion = this._getPropertyFromResource(aDataSource, targetApp, "maxVersion", aLocalItem);
+      /* If we are looking for new versions then test whether this discovered
+       * version is larger than any previously found update. Otherwise check
+       * if this update is for the same version as we have installed. */
+      var result = gVersionChecker.compare(version, aUpdateData.version);
+      if (aUpdateCheckType == nsIExtensionManager.UPDATE_CHECK_NEWVERSION ? result > 0 : result == 0) {
+        var maxAppVersion = this._getPropertyFromResource(aDataSource, targetApp, "maxVersion", aLocalItem);
+        var minAppVersion = this._getPropertyFromResource(aDataSource, targetApp, "minVersion", aLocalItem);
+        if (this._updater._isValidUpdate(aLocalItem, version, minAppVersion, maxAppVersion)) {
+          aUpdateData.found = true;
+          aUpdateData.version = version;
+          aUpdateData.updateLink = this._getPropertyFromResource(aDataSource, targetApp, "updateLink", aLocalItem);
+          aUpdateData.updateHash = this._getPropertyFromResource(aDataSource, targetApp, "updateHash", aLocalItem);
+          aUpdateData.minVersion = minAppVersion;
+          aUpdateData.maxVersion = maxAppVersion;
+        }
       }
     }
   }
@@ -6512,7 +6549,6 @@ function ExtensionsDataSource(em) {
   
   this._itemRoot = gRDF.GetResource(RDFURI_ITEM_ROOT);
   this._defaultTheme = gRDF.GetResource(RDFURI_DEFAULT_THEME);
-  gRDF.RegisterDataSource(this, true);
 }
 ExtensionsDataSource.prototype = {
   _inner    : null,
@@ -6811,35 +6847,6 @@ ExtensionsDataSource.prototype = {
       }
     }
     countRef.value = items.length;
-    return items;
-  },
-
-  /**
-   * Get a list of Item IDs that have a flag set
-   * @param   flag
-   *          The name of an RDF property (less EM_NS) to check for
-   * @param   desiredType
-   *          The nsIUpdateItem type of item to look for
-   * @returns An array of Item IDs 
-   *
-   * XXXben - this function is a little weird since it returns an array of 
-   *          strings, not an array of nsIUpdateItems...  
-   */
-  getItemsWithFlagUnset: function(flag, desiredType) {
-    var items = [];
-
-    var ctr = getContainer(this, this._itemRoot);    
-    var elements = ctr.GetElements();
-    while (elements.hasMoreElements()) {
-      var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-      var id = stripPrefix(e.Value, PREFIX_ITEM_URI);
-      var type = this.getItemProperty(id, "type");
-      if (type != -1 && type & desiredType) {
-        var value = this.GetTarget(e, EM_R(flag), true);
-        if (!value)
-          items.push(id);
-      }
-    }
     return items;
   },
   
@@ -7230,6 +7237,46 @@ ExtensionsDataSource.prototype = {
   },
   
   /**
+   * Copies localized properties from an install manifest to the datasource
+   *
+   * @param   installManifest
+   *          The Install Manifest datasource we are copying from
+   * @param   source
+   *          The source resource of the localized properties
+   * @param   target
+   *          The target resource to store the localized properties
+   */
+  _addLocalizedMetadata: function(installManifest, sourceRes, targetRes)
+  {
+    var singleProps = ["name", "description", "creator", "homepageURL"];
+
+    for (var i = 0; i < singleProps.length; ++i) {
+      var property = EM_R(singleProps[i]);
+      var literal = installManifest.GetTarget(sourceRes, property, true);
+      // If literal is null, _setProperty will remove any existing.
+      this._setProperty(this._inner, targetRes, property, literal);
+    }    
+    
+    // Assert properties with multiple values    
+    var manyProps = ["developer", "translator", "contributor"];
+    for (var i = 0; i < manyProps.length; ++i) {
+      var property = EM_R(manyProps[i]);
+      var literals = installManifest.GetTargets(sourceRes, property, true);
+      
+      var oldValues = this._inner.GetTargets(targetRes, property, true);
+      while (oldValues.hasMoreElements()) {
+        var oldValue = oldValues.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+        this._inner.Unassert(targetRes, property, oldValue);
+      }
+      while (literals.hasMoreElements()) {
+        var literal = literals.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+        this._inner.Assert(targetRes, property, literal, true);
+      }
+    }
+
+  },
+  
+  /**
    * Copies metadata from an Install Manifest Datasource into the Extensions
    * DataSource.
    * @param   id
@@ -7240,12 +7287,13 @@ ExtensionsDataSource.prototype = {
    *          The Install Location of the item. 
    */
   addItemMetadata: function(id, installManifest, installLocation) {
-    // Copy the assertions over from the source datasource. 
     var targetRes = getResourceForID(id);
+    // Remove any temporary assertions used for the install process
+    this._setProperty(this._inner, targetRes, EM_R("newVersion"), null);
+    // Copy the assertions over from the source datasource. 
     // Assert properties with single values
-    var singleProps = ["version", "name", "description", "creator", "homepageURL", 
-                       "updateURL", "updateService", "optionsURL", "aboutURL", 
-                       "iconURL", "internalName"];
+    var singleProps = ["version", "updateURL", "updateService", "optionsURL",
+                       "aboutURL", "iconURL", "internalName"];
 
     // Items installed into restricted Install Locations can also be locked 
     // (can't be removed or disabled), and hidden (not shown in the UI)
@@ -7260,22 +7308,30 @@ ExtensionsDataSource.prototype = {
       this._setProperty(this._inner, targetRes, property, literal);
     }    
     
-    // Assert properties with multiple values    
-    var manyProps = ["developer", "translator", "contributor"];
-    for (var i = 0; i < manyProps.length; ++i) {
-      var property = EM_R(manyProps[i]);
-      var literals = installManifest.GetTargets(gInstallManifestRoot, property, true);
-      
-      var oldValues = this._inner.GetTargets(targetRes, property, true);
-      while (oldValues.hasMoreElements()) {
-        var oldValue = oldValues.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
-        this._inner.Unassert(targetRes, property, oldValue);
-      }
+    var localizedProp = EM_R("localized");
+    var localeProp = EM_R("locale");
+    // Remove old localized properties
+    var oldValues = this._inner.GetTargets(targetRes, localizedProp, true);
+    while (oldValues.hasMoreElements()) {
+      var oldValue = oldValues.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+      this._cleanResource(oldValue);
+      this._inner.Unassert(targetRes, localizedProp, oldValue);
+    }
+    // Add each localized property
+    var localizations = installManifest.GetTargets(gInstallManifestRoot, localizedProp, true);
+    while (localizations.hasMoreElements()) {
+      var localization = localizations.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var anon = gRDF.GetAnonymousResource();
+      var literals = installManifest.GetTargets(localization, localeProp, true);
       while (literals.hasMoreElements()) {
         var literal = literals.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
-        this._inner.Assert(targetRes, property, literal, true);
+        this._inner.Assert(anon, localeProp, literal, true);
       }
+      this._addLocalizedMetadata(installManifest, localization, anon);
+      this._inner.Assert(targetRes, localizedProp, anon, true);
     }
+    // Add the fallback properties
+    this._addLocalizedMetadata(installManifest, gInstallManifestRoot, targetRes);
 
     // Version/Dependency Info
     var versionProps = ["targetApplication", "requires"];
@@ -7313,7 +7369,7 @@ ExtensionsDataSource.prototype = {
    */
   removeItemMetadata: function(id) {
     var item = getResourceForID(id);
-    var resources = ["targetApplication", "requires"];
+    var resources = ["targetApplication", "requires", "localized"];
     for (var i = 0; i < resources.length; ++i) {
       var targetApps = this._inner.GetTargets(item, EM_R(resources[i]), true);
       while (targetApps.hasMoreElements()) {
@@ -7372,12 +7428,17 @@ ExtensionsDataSource.prototype = {
    *          The property (less EM_NS) to update.
    */
   _updateProperty: function(item, property) {
-    var propertyResource = EM_R(property);
-    var value = this.GetTarget(item, propertyResource, true);
-    if (item && value) {
-      for (var i = 0; i < this._observers.length; ++i)
-        this._observers[i].onChange(this, item, propertyResource, 
-                                    EM_L(""), value);
+    if (item) {
+      var propertyResource = EM_R(property);
+      var value = this.GetTarget(item, propertyResource, true);
+      for (var i = 0; i < this._observers.length; ++i) {
+        if (value)
+          this._observers[i].onChange(this, item, propertyResource, 
+                                      EM_L(""), value);
+        else
+          this._observers[i].onUnassert(this, item, propertyResource, 
+                                        EM_L(""));
+      }
     }
   },
   
@@ -7941,18 +8002,6 @@ ExtensionsDataSource.prototype = {
     return null;
   },
 
-  /** 
-   * Gets the em:availableUpdateURL - the URL to an XPI update package, if
-   * present, or a literal string "none" if there is no update XPI URL.
-   * XXXrstrong we return none due to bug 331689 
-   */
-  _rdfGet_availableUpdateURL: function(item, property) {
-    var value = this._inner.GetTarget(item, property, true);
-    if (!value) 
-      return EM_L("none");
-    return value;
-  },
-
   /**
    * Get the em:satisfiesDependencies property - literal string "false" for
    * dependencies not satisfied (e.g. dependency disabled, incorrect version,
@@ -7968,7 +8017,6 @@ ExtensionsDataSource.prototype = {
   /**
    * Get the em:opType property (controls widget state for the EM UI)
    * from the Startup Cache (e.g. extensions.cache)
-   * XXXrstrong we return none for OP_NONE due to bug 331689 
    */
   _rdfGet_opType: function(item, property) {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
@@ -7976,9 +8024,29 @@ ExtensionsDataSource.prototype = {
     if (key in StartupCache.entries && id in StartupCache.entries[key] &&
         StartupCache.entries[key][id] && StartupCache.entries[key][id].op != OP_NONE)
       return EM_L(StartupCache.entries[key][id].op);
-    return EM_L("none");
+    return null;
   },
 
+  /**
+   * Finds the localized resource for an add-on.
+   */
+  _getLocalizedResource: function(item)
+  {
+    var localizedProp = EM_R("localized");
+    var localeProp = EM_R("locale");
+    var localizations = this._inner.GetTargets(item, localizedProp, true);
+    while (localizations.hasMoreElements()) {
+      var localized = localizations.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+      var list = this._inner.GetTargets(localized, localeProp, true);
+      while (list.hasMoreElements()) {
+        var locale = list.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+        if (stringData(locale) == gLocale)
+          return localized;
+      }
+    }
+    return null;
+  },
+  
   /**
    * Gets a localizable property. Install Manifests are generally only in one 
    * language, however an item can customize by providing localized prefs in 
@@ -8001,6 +8069,12 @@ ExtensionsDataSource.prototype = {
         return EM_L(value.data);
     }
     catch (e) {
+    }
+
+    var localized = this._getLocalizedResource(item);
+    if (localized) {
+      var value = this._inner.GetTarget(localized, property, true);
+      return value ? value : EM_L("");
     }
     return null;
   },
@@ -8060,9 +8134,7 @@ ExtensionsDataSource.prototype = {
   _rdfGet_updateable: function(item, property) {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
     var opType = this.getItemProperty(id, "opType");
-    if (opType == OP_NEEDS_INSTALL || opType == OP_NEEDS_UNINSTALL ||
-        opType == OP_NEEDS_UPGRADE ||
-        this.getItemProperty(id, "appManaged") == "true")
+    if (opType != OP_NONE || this.getItemProperty(id, "appManaged") == "true")
       return EM_L("false");
 
     if (getPref("getBoolPref", (PREF_EM_ITEM_UPDATE_ENABLED.replace(/%UUID%/, id), false)) == true)
@@ -8129,7 +8201,17 @@ ExtensionsDataSource.prototype = {
         break;
       }
     }
-    return values.length > 0 ? values : null;
+    if (values.length > 0)
+      return values;
+
+    var localized = this._getLocalizedResource(item);
+    if (localized) {
+      var targets = this._inner.GetTargets(localized, property, true);
+      while (targets.hasMoreElements())
+        values.push(targets.getNext());
+      return values;
+    }
+    return null;
   },
 
   /**
@@ -8359,6 +8441,14 @@ UpdateItem.prototype = {
   }
 };
 
+var ExtensionManagerDataSourceFactory = {
+  createInstance: function() {
+    return Components.classes[ExtensionManager.prototype.contractID]
+                     .getService(Components.interfaces.nsIExtensionManager)
+                     .datasource;
+  }
+}
+
 var gModule = {
   registerSelf: function(componentManager, fileSpec, location, type) {
     componentManager = componentManager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
@@ -8409,6 +8499,11 @@ var gModule = {
                contractID : "@mozilla.org/updates/item;1",
                className  : "Update Item",
                factory    : #1#(UpdateItem)
+             },
+    datasource: { CID        : Components.ID("{69BB8313-2D4F-45EC-97E0-D39DA58ECCE9}"),
+                  contractID : "@mozilla.org/rdf/datasource;1?name=extensions",
+                  className  : "Extension Manager Data Source",
+                  factory    : ExtensionManagerDataSourceFactory
              }
    },
 

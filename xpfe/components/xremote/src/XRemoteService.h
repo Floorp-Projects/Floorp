@@ -54,7 +54,7 @@ class XRemoteService : public nsISuiteRemoteService
   XRemoteService();
   virtual ~XRemoteService();
 
-  NS_DEFINE_STATIC_CID_ACCESSOR(NS_XREMOTESERVICE_CID);
+  NS_DEFINE_STATIC_CID_ACCESSOR(NS_XREMOTESERVICE_CID)
 
   NS_DECL_ISUPPORTS
 

@@ -53,6 +53,17 @@ MODULE          = cairo
 LIBRARY_NAME    = mozcairo
 LIBXUL_LIBRARY = 1
 
+ifdef GNU_CC
+MODULE_OPTIMIZE_FLAGS = -O2
+else
+ifeq ($(OS_ARCH),SunOS)
+MODULE_OPTIMIZE_FLAGS = -fast
+endif
+ifeq ($(OS_ARCH),WINNT)
+MODULE_OPTIMIZE_FLAGS = -O2
+endif
+endif
+
 REQUIRES        = $(PNG_REQUIRES) \
                   $(ZLIB_REQUIRES) \
                   libpixman \

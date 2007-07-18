@@ -39,8 +39,11 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir	= layout/base/tests
 
 include $(DEPTH)/config/autoconf.mk
+
+ifeq (0,1) # false, since TestSpaceManager is broken
 
 MOZILLA_INTERNAL_API = 1
 
@@ -69,6 +72,20 @@ LIBS		+= \
 		$(TK_LIBS) \
 		$(NULL)
 
+endif # false
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -D_IMPL_NS_LAYOUT
+
+ifdef MOZ_MOCHITEST
+
+_TEST_FILES =	\
+		test_bug66619.html \
+		test_bug388019.html \
+		$(NULL)
+
+libs:: $(_TEST_FILES)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+endif # MOZ_MOCHITEST

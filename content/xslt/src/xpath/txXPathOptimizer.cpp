@@ -83,7 +83,7 @@ public:
         // This will return an invalid node, but we should never
         // get here so that's fine.
 
-        return *NS_STATIC_CAST(txXPathNode*, nsnull);
+        return *static_cast<txXPathNode*>(nsnull);
     }
     PRUint32 size()
     {
@@ -167,14 +167,14 @@ txXPathOptimizer::optimize(Expr* aInExpr, Expr** aOutExpr)
 nsresult
 txXPathOptimizer::optimizeStep(Expr* aInExpr, Expr** aOutExpr)
 {
-    LocationStep* step = NS_STATIC_CAST(LocationStep*, aInExpr);
+    LocationStep* step = static_cast<LocationStep*>(aInExpr);
 
     if (step->getAxisIdentifier() == LocationStep::ATTRIBUTE_AXIS) {
         // Test for @foo type steps.
         txNameTest* nameTest = nsnull;
         if (!step->getSubExprAt(0) &&
             step->getNodeTest()->getType() == txNameTest::NAME_TEST &&
-            (nameTest = NS_STATIC_CAST(txNameTest*, step->getNodeTest()))->
+            (nameTest = static_cast<txNameTest*>(step->getNodeTest()))->
                 mLocalName != txXPathAtoms::_asterix) {
 
             *aOutExpr = new txNamedAttributeStep(nameTest->mNamespace,
@@ -204,7 +204,7 @@ txXPathOptimizer::optimizeStep(Expr* aInExpr, Expr** aOutExpr)
 nsresult
 txXPathOptimizer::optimizePath(Expr* aInExpr, Expr** aOutExpr)
 {
-    PathExpr* path = NS_STATIC_CAST(PathExpr*, aInExpr);
+    PathExpr* path = static_cast<PathExpr*>(aInExpr);
 
     PRUint32 i;
     Expr* subExpr;
@@ -214,7 +214,7 @@ txXPathOptimizer::optimizePath(Expr* aInExpr, Expr** aOutExpr)
         if (path->getPathOpAt(i) == PathExpr::DESCENDANT_OP &&
             subExpr->getType() == Expr::LOCATIONSTEP_EXPR &&
             !subExpr->getSubExprAt(0)) {
-            LocationStep* step = NS_STATIC_CAST(LocationStep*, subExpr);
+            LocationStep* step = static_cast<LocationStep*>(subExpr);
             if (step->getAxisIdentifier() == LocationStep::CHILD_AXIS) {
                 step->setAxisIdentifier(LocationStep::DESCENDANT_AXIS);
                 path->setPathOpAt(i, PathExpr::RELATIVE_OP);
@@ -232,13 +232,13 @@ txXPathOptimizer::optimizePath(Expr* aInExpr, Expr** aOutExpr)
     if (subExpr->getType() == Expr::LOCATIONSTEP_EXPR &&
         path->getSubExprAt(1) &&
         path->getPathOpAt(1) != PathExpr::DESCENDANT_OP) {
-        step = NS_STATIC_CAST(LocationStep*, subExpr);
+        step = static_cast<LocationStep*>(subExpr);
         if (step->getAxisIdentifier() == LocationStep::SELF_AXIS &&
             !step->getSubExprAt(0)) {
             txNodeTest* test = step->getNodeTest();
             txNodeTypeTest* typeTest;
             if (test->getType() == txNodeTest::NODETYPE_TEST &&
-                (typeTest = NS_STATIC_CAST(txNodeTypeTest*, test))->
+                (typeTest = static_cast<txNodeTypeTest*>(test))->
                   getNodeTestType() == txNodeTypeTest::NODE_TYPE) {
                 // We have a '.' as first step followed by a single '/'.
 
@@ -263,7 +263,7 @@ txXPathOptimizer::optimizePath(Expr* aInExpr, Expr** aOutExpr)
 nsresult
 txXPathOptimizer::optimizeUnion(Expr* aInExpr, Expr** aOutExpr)
 {
-    UnionExpr* uni = NS_STATIC_CAST(UnionExpr*, aInExpr);
+    UnionExpr* uni = static_cast<UnionExpr*>(aInExpr);
 
     // Check for expressions like "foo | bar" and
     // "descendant::foo | descendant::bar"
@@ -277,7 +277,7 @@ txXPathOptimizer::optimizeUnion(Expr* aInExpr, Expr** aOutExpr)
             continue;
         }
 
-        LocationStep* currentStep = NS_STATIC_CAST(LocationStep*, subExpr);
+        LocationStep* currentStep = static_cast<LocationStep*>(subExpr);
         LocationStep::LocationStepType axis = currentStep->getAxisIdentifier();
 
         txUnionNodeTest* unionTest = nsnull;
@@ -291,7 +291,7 @@ txXPathOptimizer::optimizeUnion(Expr* aInExpr, Expr** aOutExpr)
                 continue;
             }
 
-            LocationStep* step = NS_STATIC_CAST(LocationStep*, subExpr);
+            LocationStep* step = static_cast<LocationStep*>(subExpr);
             if (step->getAxisIdentifier() != axis) {
                 continue;
             }

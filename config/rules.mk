@@ -201,10 +201,17 @@ ifndef GNU_CC
 #
 # Changes to the PDBFILE naming scheme should also be reflected in HOST_PDBFILE
 # 
+ifdef LIBRARY_NAME
+PDBFILE=$(LIBRARY_NAME).pdb
+ifdef MOZ_DEBUG
+CODFILE=$(LIBRARY_NAME).cod
+endif
+else
 PDBFILE=$(basename $(@F)).pdb
 ifdef MOZ_DEBUG
 CODFILE=$(basename $(@F)).cod
 endif
+endif # LIBRARY_NAME
 
 ifdef MOZ_MAPINFO
 ifdef LIBRARY_NAME
@@ -429,7 +436,7 @@ ifdef SHARED_LIBRARY
 ifdef IS_COMPONENT
 EXTRA_DSO_LDOPTS	+= -bundle
 else
-EXTRA_DSO_LDOPTS	+= -dynamiclib -install_name @executable_path/$(SHARED_LIBRARY) -compatibility_version 1 -current_version 1
+EXTRA_DSO_LDOPTS	+= -dynamiclib -install_name @executable_path/$(SHARED_LIBRARY) -compatibility_version 1 -current_version 1 -single_module
 endif
 endif
 endif
@@ -1097,6 +1104,11 @@ ifdef NO_LD_ARCHIVE_FLAGS
 SUB_SHLOBJS = $(SUB_LOBJS)
 endif
 
+# On Darwin (Mac OS X), dwarf2 debugging uses debug info left in .o files,
+# so instead of deleting .o files after repacking them into a dylib, we make
+# symlinks back to the originals. The symlinks are a no-op for stabs debugging,
+# so no need to conditionalize on OS version or debugging format.
+
 $(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(DEF_FILE) $(RESFILE) $(SHARED_LIBRARY_LIBS) $(EXTRA_DEPS) $(DSO_LDOPTS_DEPS) Makefile Makefile.in
 ifndef INCREMENTAL_LINKER
 	rm -f $@
@@ -1133,7 +1145,22 @@ ifdef EMBED_MANIFEST_AT
 endif   # embed manifest
 endif	# MSVC with manifest tool
 endif	# WINNT && !GCC
-	@rm -f foodummyfilefoo $(SUB_SHLOBJS) $(DELETE_AFTER_LINK)
+ifeq ($(OS_ARCH),Darwin)
+	@for lib in $(SHARED_LIBRARY_LIBS); do \
+		libdir=`echo $$lib|sed -e 's,/[^/]*\.a,,'`; \
+		ofiles=`$(AR_LIST) $${lib}`; \
+		for ofile in $$ofiles; do \
+			if [ -f $$libdir/$$ofile ]; then \
+				rm -f $$ofile; \
+				ln -s $$libdir/$$ofile $$ofile; \
+			fi; \
+		done; \
+	done
+	@touch $(SHARED_LIBRARY)
+else # non-Darwin
+	@rm -f $(SUB_SHLOBJS)
+endif # Darwin
+	@rm -f foodummyfilefoo $(DELETE_AFTER_LINK)
 else # os2 vacpp
 	$(MKSHLIB) -O:$@ -DLL -INC:_dllentry $(LDFLAGS) $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
 endif # !os2 vacpp
@@ -1268,10 +1295,16 @@ $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.m Makefile Makefile.in
 %.s: %.cpp
 	$(CCC) -S $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
 
+%.s: %.cc
+	$(CCC) -S $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
+
 %.s: %.c
 	$(CC) -S $(COMPILE_CFLAGS) $(_VPATH_SRCS)
 
 %.i: %.cpp
+	$(CCC) -C -E $(COMPILE_CXXFLAGS) $(_VPATH_SRCS) > $*.i
+
+%.i: %.cc
 	$(CCC) -C -E $(COMPILE_CXXFLAGS) $(_VPATH_SRCS) > $*.i
 
 %.i: %.c

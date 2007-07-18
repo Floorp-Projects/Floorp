@@ -131,7 +131,7 @@ nsStorageStream::GetOutputStream(PRInt32 aStartingOffset,
     if (NS_FAILED(rv)) return rv;
 
     NS_ADDREF(this);
-    *aOutputStream = NS_STATIC_CAST(nsIOutputStream*, this);
+    *aOutputStream = static_cast<nsIOutputStream*>(this);
     mWriteInProgress = PR_TRUE;
     return NS_OK;
 }

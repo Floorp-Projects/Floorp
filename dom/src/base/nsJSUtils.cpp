@@ -97,8 +97,8 @@ jsval
 nsJSUtils::ConvertStringToJSVal(const nsString& aProp, JSContext* aContext)
 {
   JSString *jsstring =
-    ::JS_NewUCStringCopyN(aContext, NS_REINTERPRET_CAST(const jschar*,
-                                                        aProp.get()),
+    ::JS_NewUCStringCopyN(aContext, reinterpret_cast<const jschar*>
+                                                    (aProp.get()),
                           aProp.Length());
 
   // set the return value
@@ -111,8 +111,8 @@ nsJSUtils::ConvertJSValToString(nsAString& aString, JSContext* aContext,
 {
   JSString *jsstring;
   if ((jsstring = ::JS_ValueToString(aContext, aValue)) != nsnull) {
-    aString.Assign(NS_REINTERPRET_CAST(const PRUnichar*,
-                                       ::JS_GetStringChars(jsstring)),
+    aString.Assign(reinterpret_cast<const PRUnichar*>
+                                   (::JS_GetStringChars(jsstring)),
                    ::JS_GetStringLength(jsstring));
   }
   else {

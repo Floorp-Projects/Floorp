@@ -67,7 +67,7 @@ static nsresult
 convertRtfToNode(txIEvalContext *aContext, txResultTreeFragment *aRtf)
 {
     txExecutionState* es = 
-        NS_STATIC_CAST(txExecutionState*, aContext->getPrivateContext());
+        static_cast<txExecutionState*>(aContext->getPrivateContext());
     if (!es) {
         NS_ERROR("Need txExecutionState!");
 
@@ -110,7 +110,7 @@ createTextNode(txIEvalContext *aContext, nsString& aValue,
                txXPathNode* *aResult)
 {
     txExecutionState* es = 
-        NS_STATIC_CAST(txExecutionState*, aContext->getPrivateContext());
+        static_cast<txExecutionState*>(aContext->getPrivateContext());
     if (!es) {
         NS_ERROR("Need txExecutionState!");
 
@@ -139,7 +139,7 @@ static nsresult
 createDocFragment(txIEvalContext *aContext, nsIContent** aResult)
 {
     txExecutionState* es = 
-        NS_STATIC_CAST(txExecutionState*, aContext->getPrivateContext());
+        static_cast<txExecutionState*>(aContext->getPrivateContext());
     if (!es) {
         NS_ERROR("Need txExecutionState!");
 
@@ -310,8 +310,8 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
                 if (exprResult->getResultType() ==
                     txAExprResult::RESULT_TREE_FRAGMENT) {
                     txResultTreeFragment *rtf =
-                        NS_STATIC_CAST(txResultTreeFragment*,
-                                       exprResult.get());
+                        static_cast<txResultTreeFragment*>
+                                   (exprResult.get());
 
                     const txXPathNode *node = rtf->getNode();
                     if (!node) {
@@ -725,7 +725,7 @@ TX_ConstructEXSLTFunction(nsIAtom *aName,
         txEXSLTFunctionDescriptor& desc = descriptTable[i];
         if (aName == *desc.mName && aNamespaceID == desc.mNamespaceID) {
             *aResult = new txEXSLTFunctionCall(
-                NS_STATIC_CAST(txEXSLTFunctionCall::eType, i));
+                static_cast<txEXSLTFunctionCall::eType>(i));
 
             return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
         }

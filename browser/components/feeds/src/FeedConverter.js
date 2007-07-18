@@ -55,9 +55,6 @@ const FPH_CLASSNAME = "Feed Protocol Handler";
 const PCPH_CONTRACTID = "@mozilla.org/network/protocol;1?name=pcast";
 const PCPH_CLASSID = Components.ID("{1c31ed79-accd-4b94-b517-06e0c81999d5}");
 const PCPH_CLASSNAME = "Podcast Protocol Handler";
-const FHS_CONTRACTID = "@mozilla.org/browser/feeds/handler-service;1";
-const FHS_CLASSID = Components.ID("{792a7e82-06a0-437c-af63-b2d12e808acc}");
-const FHS_CLASSNAME = "Feed Handler Service";
 
 const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
 const TYPE_ANY = "*/*";
@@ -393,11 +390,7 @@ var FeedResultService = {
           Cc["@mozilla.org/appshell/window-mediator;1"].
           getService(Ci.nsIWindowMediator);
       var topWindow = wm.getMostRecentWindow("navigator:browser");
-#ifdef MOZ_PLACES_BOOKMARKS
       topWindow.PlacesCommandHook.addLiveBookmark(spec, title, subtitle);
-#else
-      topWindow.FeedHandler.addLiveBookmark(spec, title, subtitle);
-#endif
       break;
     }
   },

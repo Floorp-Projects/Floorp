@@ -172,9 +172,9 @@ int main(int argc, char *argv[])
 
         ProfileChangeObserver *observer = new ProfileChangeObserver;
         observer->AddRef();
-        observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), "profile-approve-change", PR_TRUE);
-        observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), "profile-change-teardown", PR_TRUE);
-        observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), "profile-after-change", PR_TRUE);
+        observerService->AddObserver(static_cast<nsIObserver *>(observer), "profile-approve-change", PR_TRUE);
+        observerService->AddObserver(static_cast<nsIObserver *>(observer), "profile-change-teardown", PR_TRUE);
+        observerService->AddObserver(static_cast<nsIObserver *>(observer), "profile-after-change", PR_TRUE);
 
         InitializeWindowCreator();
 
@@ -264,7 +264,7 @@ nsresult InitializeWindowCreator()
     WindowCreator *creatorCallback = new WindowCreator();
     if (creatorCallback)
     {
-        nsCOMPtr<nsIWindowCreator> windowCreator(NS_STATIC_CAST(nsIWindowCreator *, creatorCallback));
+        nsCOMPtr<nsIWindowCreator> windowCreator(static_cast<nsIWindowCreator *>(creatorCallback));
         if (windowCreator)
         {
             nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
@@ -1410,7 +1410,7 @@ nsresult CreateBrowserWindow(PRUint32 aChromeFlags,
 
   // the interface to return and one addref, which we assume will be
   // immediately released
-  CallQueryInterface(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome), aNewWindow);
+  CallQueryInterface(static_cast<nsIWebBrowserChrome*>(chrome), aNewWindow);
   // now an extra addref; the window owns itself (to be released by
   // WebBrowserChromeUI::Destroy)
   NS_ADDREF(*aNewWindow);
@@ -1425,12 +1425,12 @@ nsresult CreateBrowserWindow(PRUint32 aChromeFlags,
     return NS_ERROR_FAILURE;
 
   // Place it where we want it.
-  ResizeEmbedding(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome));
+  ResizeEmbedding(static_cast<nsIWebBrowserChrome*>(chrome));
 
   // Subscribe new window to profile changes so it can kill itself when one happens
   nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1"));
   if (observerService)
-    observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, chrome),
+    observerService->AddObserver(static_cast<nsIObserver *>(chrome),
                                  "profile-change-teardown", PR_TRUE);
 
   // if opened as chrome, it'll be made visible after the chrome has loaded.

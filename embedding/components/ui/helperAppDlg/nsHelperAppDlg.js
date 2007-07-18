@@ -466,8 +466,10 @@ nsHelperAppDialog.prototype = {
         this.initDefaultApp();
 
         // Fill application name textbox.
-        if (this.chosenApp && this.chosenApp.path) {
-            this.dialogElement( "appPath" ).value = this.getPath(this.chosenApp);
+        if (this.chosenApp && this.chosenApp.executable &&
+            this.chosenApp.executable.path) {
+            this.dialogElement( "appPath" ).value = 
+              this.getPath(this.chosenApp.executable);
         }
 
         var useDefault = this.dialogElement( "useSystemDefault" );;
@@ -517,10 +519,10 @@ nsHelperAppDialog.prototype = {
             // First, see if one was chosen via the Choose... button.
             if ( result ) {
                 // Verify that the user didn't type in something different later.
-                if ( typed != result.path ) {
+                if ( typed != result.executable.path ) {
                     // Use what was typed in.
                     try {
-                        result.QueryInterface( Components.interfaces.nsILocalFile ).initWithPath( typed );
+                        result.executable.QueryInterface( Components.interfaces.nsILocalFile ).initWithPath( typed );
                     } catch( e ) {
                         // Invalid path was typed.
                         result = null;
@@ -528,10 +530,15 @@ nsHelperAppDialog.prototype = {
                 }
             } else {
                 // The user didn't use the Choose... button, try using what they typed in.
-                result = Components.classes[ "@mozilla.org/file/local;1" ]
+                var localFile = Components.classes[ "@mozilla.org/file/local;1" ]
                     .createInstance( Components.interfaces.nsILocalFile );
                 try {
-                    result.initWithPath( typed );
+                    localFile.initWithPath( typed );
+                    result = Components.classes[
+                      "@mozilla.org/uriloader/local-handler-app;1"].
+                      createInstance(Components.interfaces.nsILocalHandlerApp);
+                    result.executable = localFile;
+
                 } catch( e ) {
                     result = null;
                 }
@@ -591,10 +598,9 @@ nsHelperAppDialog.prototype = {
             needUpdate = this.mLauncher.MIMEInfo.preferredAction != this.nsIMIMEInfo.useHelperApp || this.appChanged();
             if ( needUpdate ) {
                 this.mLauncher.MIMEInfo.preferredAction = this.nsIMIMEInfo.useHelperApp;
-                // App may have changed - Update application and description
+                // App may have changed - Update application
                 var app = this.helperAppChoice();
                 this.mLauncher.MIMEInfo.preferredApplicationHandler = app;
-                this.mLauncher.MIMEInfo.applicationDescription = "";
             }
         }
         // Only care about the state of "always ask" if this dialog wasn't forced
@@ -635,7 +641,7 @@ nsHelperAppDialog.prototype = {
         // Verify typed app path, if necessary.
         if ( this.dialogElement( "openUsing" ).selected ) {
             var helperApp = this.helperAppChoice();
-            if ( !helperApp || !helperApp.exists() ) {
+            if ( !helperApp || !helperApp.executable || !helperApp.exists() ) {
                 // Show alert and try again.
                 var msg = this.replaceInsert( this.getString( "badApp" ), 1, this.dialogElement( "appPath" ).value );
                 var svc = Components.classes[ "@mozilla.org/embedcomp/prompt-service;1" ]
@@ -731,9 +737,15 @@ nsHelperAppDialog.prototype = {
 
         if ( fp.show() == nsIFilePicker.returnOK && fp.file ) {
             // Remember the file they chose to run.
-            this.chosenApp = fp.file;
+
+            var localHandler = Components.classes[
+              "@mozilla.org/uriloader/local-handler-app;1"].
+                createInstance(Components.interfaces.nsILocalHandlerApp);
+            localHandler.executable = fp.file;
+            this.chosenApp = localHandler;
             // Update dialog.
-            this.dialogElement( "appPath" ).value = this.getPath(this.chosenApp);
+            this.dialogElement( "appPath" ).value = 
+              this.getPath(this.chosenApp.executable);
         }
     },
 

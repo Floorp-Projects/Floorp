@@ -59,6 +59,8 @@
 
 #include "nsICommandManager.h"
 
+class nsIEditor;
+class nsIEditorDocShell;
 class nsIParser;
 class nsIURI;
 class nsIMarkupDocumentViewer;
@@ -128,22 +130,11 @@ public:
   virtual PRBool IsCaseSensitive();
 
   // nsIMutationObserver
-  virtual void ContentAppended(nsIDocument* aDocument,
-                               nsIContent* aContainer,
-                               PRInt32 aNewIndexInContainer);
-  virtual void ContentInserted(nsIDocument* aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aChild,
-                               PRInt32 aIndexInContainer);
-  virtual void ContentRemoved(nsIDocument* aDocument,
-                              nsIContent* aContainer,
-                              nsIContent* aChild,
-                              PRInt32 aIndexInContainer);
-  virtual void AttributeChanged(nsIDocument* aDocument,
-                                nsIContent* aChild,
-                                PRInt32 aNameSpaceID,
-                                nsIAtom* aAttribute,
-                                PRInt32 aModType);
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
+
   // nsIDOMDocument interface
   NS_DECL_NSIDOMDOCUMENT
 
@@ -206,6 +197,13 @@ public:
                               PRBool aDocumentDefaultType,
                               nsIContent** aResult);
 #endif
+
+  nsresult ChangeContentEditableCount(nsIContent *aElement, PRInt32 aChange);
+
+  virtual PRBool IsEditingOn()
+  {
+    return mEditingState != eOff;
+  }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLDocument, nsDocument)
 
@@ -365,7 +363,20 @@ protected:
                                            PRBool& isBoolean,
                                            PRBool& boolValue);
   nsCOMPtr<nsICommandManager> mMidasCommandManager;
-  PRBool                      mEditingIsOn;
+
+  nsresult TurnEditingOff();
+  nsresult EditingStateChanged();
+
+  PRUint32 mContentEditableCount;
+  enum EditingState {
+    eSettingUp = -1,
+    eOff = 0,
+    eDesignMode,
+    eContentEditable
+  };
+  EditingState mEditingState;
+  PRPackedBool mScriptsEnabled;
+  PRPackedBool mPluginsEnabled;
 
   nsresult   DoClipboardSecurityCheck(PRBool aPaste);
   static jsval       sCutCopyInternal_id;

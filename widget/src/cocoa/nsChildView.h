@@ -69,6 +69,12 @@
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
 
+#ifdef MOZ_LOGGING
+// make sure that logging is enabled before including prlog.h
+#define FORCE_PR_LOG
+#include "prlog.h"
+#endif
+
 class gfxASurface;
 class nsChildView;
 union nsPluginPort;
@@ -191,7 +197,9 @@ public:
   NS_IMETHOD              SetIMEEnabled(PRUint32 aState);
   NS_IMETHOD              GetIMEEnabled(PRUint32* aState);
   NS_IMETHOD              CancelIMEComposition();
- 
+  NS_IMETHOD              GetToggledKeyState(PRUint32 aKeyCode,
+                                             PRBool* aLEDState);
+
   // nsIWidget interface
   NS_IMETHOD              Create(nsIWidget *aParent,
                                  const nsRect &aRect,
@@ -298,7 +306,6 @@ public:
   virtual PRBool    PointInWidget(Point aThePoint);
   
   virtual PRBool    DispatchWindowEvent(nsGUIEvent& event);
-  virtual PRBool    DispatchWindowEvent(nsGUIEvent &event,nsEventStatus &aStatus);
   virtual void      AcceptFocusOnClick(PRBool aBool) { mAcceptFocusOnClick = aBool;};
   PRBool            AcceptFocusOnClick() { return mAcceptFocusOnClick;};
   

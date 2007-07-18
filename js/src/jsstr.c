@@ -182,7 +182,7 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
         if (!ldep) {
             JS_free(cx, s);
         } else {
-            s = JS_realloc(cx, ls, (ln + 1) * sizeof(jschar));
+            s = (jschar *) JS_realloc(cx, ls, (ln + 1) * sizeof(jschar));
             if (s)
                 left->chars = s;
         }
@@ -2369,6 +2369,8 @@ js_InitRuntimeStringState(JSContext *cx)
     return JS_TRUE;
 
   bad:
+    if (empty)
+        js_UnlockGCThingRT(rt, empty);
 #ifdef JS_THREADSAFE
     JS_DESTROY_LOCK(rt->deflatedStringCacheLock);
     rt->deflatedStringCacheLock = NULL;
@@ -2924,7 +2926,7 @@ js_DeflateStringToBuffer(JSContext *cx, const jschar *src, size_t srclen,
         }
         if (v < 0x0080) {
             /* no encoding necessary - performance hack */
-            if (!dstlen)
+            if (dstlen == 0)
                 goto bufferTooSmall;
             *dst++ = (char) v;
             utf8Len = 1;
@@ -3038,7 +3040,7 @@ bufferTooSmall:
     return JS_FALSE;
 }
 
-#else
+#else /* !JS_C_STRINGS_ARE_UTF8 */
 
 JSBool
 js_InflateStringToBuffer(JSContext* cx, const char *bytes, size_t length,
@@ -3191,6 +3193,17 @@ js_GetStringBytes(JSContext *cx, JSString *str)
         /* JS_GetStringBytes calls us with null cx. */
         rt = js_GetGCStringRuntime(str);
     }
+
+#ifdef JS_THREADSAFE
+    if (!rt->deflatedStringCacheLock) {
+        /*
+         * Called from last GC (see js_DestroyContext), after runtime string
+         * state has been finalized.  We have no choice but to leak here.
+         */
+        return js_DeflateString(NULL, JSSTRING_CHARS(str),
+                                      JSSTRING_LENGTH(str));
+    }
+#endif
 
     JS_ACQUIRE_LOCK(rt->deflatedStringCacheLock);
 
@@ -4546,7 +4559,8 @@ AddCharsToURI(JSContext *cx, JSString *str, const jschar *chars, size_t length)
     if (!str->chars ||
         JS_HOWMANY(total, URI_CHUNK) > JS_HOWMANY(str->length + 1, URI_CHUNK)) {
         total = JS_ROUNDUP(total, URI_CHUNK);
-        newchars = JS_realloc(cx, str->chars, total * sizeof(jschar));
+        newchars = (jschar *) JS_realloc(cx, str->chars,
+                                         total * sizeof(jschar));
         if (!newchars)
             return JS_FALSE;
         str->chars = newchars;

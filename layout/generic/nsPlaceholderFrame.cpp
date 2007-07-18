@@ -159,6 +159,23 @@ nsPlaceholderFrame::CanContinueTextRun() const
   return mOutOfFlowFrame->CanContinueTextRun();
 }
 
+NS_IMETHODIMP
+nsPlaceholderFrame::GetParentStyleContextFrame(nsPresContext* aPresContext,
+                                               nsIFrame**      aProviderFrame,
+                                               PRBool*         aIsChild)
+{
+  NS_PRECONDITION(GetParent(), "How can we not have a parent here?");
+  *aIsChild = PR_FALSE;
+
+  // Lie about our pseudo so we can step out of all anon boxes and
+  // pseudo-elements.  The other option would be to reimplement the
+  // {ib} split gunk here.
+  *aProviderFrame =
+    CorrectStyleParentFrame(GetParent(), nsGkAtoms::placeholderFrame);
+  return NS_OK;
+}
+
+
 #ifdef DEBUG
 static void
 PaintDebugPlaceholder(nsIFrame* aFrame, nsIRenderingContext* aCtx,
@@ -208,7 +225,7 @@ nsPlaceholderFrame::List(FILE* out, PRInt32 aIndent) const
   IndentBy(out, aIndent);
   ListTag(out);
 #ifdef DEBUG_waterson
-  fprintf(out, " [parent=%p]", NS_STATIC_CAST(void*, mParent));
+  fprintf(out, " [parent=%p]", static_cast<void*>(mParent));
 #endif
   if (HasView()) {
     fprintf(out, " [view=%p]", (void*)GetView());
@@ -220,10 +237,10 @@ nsPlaceholderFrame::List(FILE* out, PRInt32 aIndent) const
   nsIFrame* prevInFlow = GetPrevInFlow();
   nsIFrame* nextInFlow = GetNextInFlow();
   if (nsnull != prevInFlow) {
-    fprintf(out, " prev-in-flow=%p", NS_STATIC_CAST(void*, prevInFlow));
+    fprintf(out, " prev-in-flow=%p", static_cast<void*>(prevInFlow));
   }
   if (nsnull != nextInFlow) {
-    fprintf(out, " next-in-flow=%p", NS_STATIC_CAST(void*, nextInFlow));
+    fprintf(out, " next-in-flow=%p", static_cast<void*>(nextInFlow));
   }
   if (mOutOfFlowFrame) {
     fprintf(out, " outOfFlowFrame=");

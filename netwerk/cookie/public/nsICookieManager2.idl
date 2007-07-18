@@ -43,7 +43,7 @@ interface nsICookie2;
  * Additions to the frozen nsICookieManager
  */
 
-[scriptable, uuid(9facbb48-c05d-470b-b4da-897c8d613e00)]
+[scriptable, uuid(fdbce92e-254c-436c-a0ba-04504d1434d0)]
 interface nsICookieManager2 : nsICookieManager
 {
   /**
@@ -60,8 +60,11 @@ interface nsICookieManager2 : nsICookieManager
    *        cookie name
    * @param aValue
    *        cookie data
-   * @param aSecure
+   * @param aIsSecure
    *        true if the cookie should only be sent over a secure connection.
+   * @param aIsHttpOnly
+   *        true if the cookie should only be sent to, and can only be
+   *        modified by, an http connection.
    * @param aIsSession
    *        true if the cookie should exist for the current session only.
    *        see aExpiry.
@@ -74,7 +77,8 @@ interface nsICookieManager2 : nsICookieManager
            in AUTF8String aPath,
            in ACString    aName,
            in ACString    aValue,
-           in boolean     aSecure,
+           in boolean     aIsSecure,
+           in boolean     aIsHttpOnly,
            in boolean     aIsSession,
            in PRInt64     aExpiry);
 

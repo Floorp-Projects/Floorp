@@ -58,7 +58,7 @@ interface nsIDOMWindow;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(ae5792a3-77ad-40d6-8450-d28d19b66889)]
+[scriptable, uuid(6cc11286-e02d-4a8d-960a-e7a61161b230)]
 interface nsIAccessibleDocument : nsISupports
 {
   /**
@@ -120,5 +120,5 @@ interface nsIAccessibleDocument : nsISupports
    * @return An first nsIAccessible found by crawling up the DOM node
    *         to the document root.
    */
-  nsIAccessible getAccessibleInParentChain(in nsIDOMNode aDOMNode, in boolean aCanCreate);
+  nsIAccessible getAccessibleInParentChain(in nsIDOMNode aDOMNode);
 };

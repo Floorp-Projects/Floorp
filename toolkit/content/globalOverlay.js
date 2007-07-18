@@ -1,8 +1,8 @@
 function closeWindow(aClose, aPromptFunction)
 {
   var windowCount = 0;
-   var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                      .getService(Components.interfaces.nsIWindowMediator);
+  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                     .getService(Components.interfaces.nsIWindowMediator);
   var e = wm.getEnumerator(null);
   
   while (e.hasMoreElements()) {
@@ -16,9 +16,10 @@ function closeWindow(aClose, aPromptFunction)
   // If we're down to the last window and someone tries to shut down, check to make sure we can!
   if (windowCount == 1 && !canQuitApplication())
     return false;
+  else if (windowCount != 1)
 #endif
-  if (windowCount != 1 && typeof(aPromptFunction) == "function" && !aPromptFunction())
-    return false;
+    if (typeof(aPromptFunction) == "function" && !aPromptFunction())
+      return false;
 
   if (aClose)    
     window.close();
@@ -51,19 +52,9 @@ function goQuitApplication()
   if (!canQuitApplication())
     return false;
 
-  var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-  var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
-  var enumerator = windowManagerInterface.getEnumerator( null );
   var appStartup = Components.classes['@mozilla.org/toolkit/app-startup;1'].
                      getService(Components.interfaces.nsIAppStartup);
 
-  while ( enumerator.hasMoreElements()  )
-  {
-     var domWindow = enumerator.getNext();
-     if (("tryToClose" in domWindow) && !domWindow.tryToClose())
-       return false;
-     domWindow.close();
-  };
   appStartup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit);
   return true;
 }

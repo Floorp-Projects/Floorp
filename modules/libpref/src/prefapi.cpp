@@ -88,7 +88,7 @@
 PR_STATIC_CALLBACK(void)
 clearPrefEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
-    PrefHashEntry *pref = NS_STATIC_CAST(PrefHashEntry *, entry);
+    PrefHashEntry *pref = static_cast<PrefHashEntry *>(entry);
     if (pref->flags & PREF_STRING)
     {
         PR_FREEIF(pref->defaultPref.stringVal);
@@ -105,13 +105,13 @@ matchPrefEntry(PLDHashTable*, const PLDHashEntryHdr* entry,
                const void* key)
 {
     const PrefHashEntry *prefEntry =
-        NS_STATIC_CAST(const PrefHashEntry*,entry);
+        static_cast<const PrefHashEntry*>(entry);
 
     if (prefEntry->key == key) return PR_TRUE;
 
     if (!prefEntry->key || !key) return PR_FALSE;
 
-    const char *otherKey = NS_REINTERPRET_CAST(const char*, key);
+    const char *otherKey = reinterpret_cast<const char*>(key);
     return (strcmp(prefEntry->key, otherKey) == 0);
 }
 
@@ -160,7 +160,7 @@ static char *ArenaStrDup(const char* str, PLArenaPool* aArena)
     PL_ARENA_ALLOCATE(mem, aArena, len+1);
     if (mem)
         memcpy(mem, str, len+1);
-    return NS_STATIC_CAST(char*, mem);
+    return static_cast<char*>(mem);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -311,8 +311,8 @@ PREF_SetBoolPref(const char *pref_name, PRBool value, PRBool set_default)
 PLDHashOperator
 pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg)
 {
-    pref_saveArgs *argData = NS_STATIC_CAST(pref_saveArgs *, arg);
-    PrefHashEntry *pref = NS_STATIC_CAST(PrefHashEntry *, heh);
+    pref_saveArgs *argData = static_cast<pref_saveArgs *>(arg);
+    PrefHashEntry *pref = static_cast<PrefHashEntry *>(heh);
 
     PR_ASSERT(pref);
     if (!pref)
@@ -511,7 +511,7 @@ nsresult PREF_GetBoolPref(const char *pref_name, PRBool * return_value, PRBool g
 PR_STATIC_CALLBACK(PLDHashOperator)
 pref_DeleteItem(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg)
 {
-    PrefHashEntry* he = NS_STATIC_CAST(PrefHashEntry*,heh);
+    PrefHashEntry* he = static_cast<PrefHashEntry*>(heh);
     const char *to_delete = (const char *) arg;
     int len = PL_strlen(to_delete);
 
@@ -581,7 +581,7 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 pref_ClearUserPref(PLDHashTable *table, PLDHashEntryHdr *he, PRUint32,
                    void *arg)
 {
-    PrefHashEntry *pref = NS_STATIC_CAST(PrefHashEntry*,  he);
+    PrefHashEntry *pref = static_cast<PrefHashEntry*>(he);
 
     PLDHashOperator nextOp = PL_DHASH_NEXT;
 
@@ -682,7 +682,7 @@ static void pref_SetValue(PrefValue* oldValue, PrefValue newValue, PrefType type
 static inline PrefHashEntry* pref_HashTableLookup(const void *key)
 {
     PrefHashEntry* result =
-        NS_STATIC_CAST(PrefHashEntry*, PL_DHashTableOperate(&gHashTable, key, PL_DHASH_LOOKUP));
+        static_cast<PrefHashEntry*>(PL_DHashTableOperate(&gHashTable, key, PL_DHASH_LOOKUP));
 
     if (PL_DHASH_ENTRY_IS_FREE(result))
         return nsnull;
@@ -695,7 +695,7 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, PRBool s
     if (!gHashTable.ops)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    PrefHashEntry* pref = NS_STATIC_CAST(PrefHashEntry*, PL_DHashTableOperate(&gHashTable, key, PL_DHASH_ADD));
+    PrefHashEntry* pref = static_cast<PrefHashEntry*>(PL_DHashTableOperate(&gHashTable, key, PL_DHASH_ADD));
 
     if (!pref)
         return NS_ERROR_OUT_OF_MEMORY;

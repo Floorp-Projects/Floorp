@@ -122,7 +122,7 @@ SessionStoreService.prototype = {
   _loadState: STATE_STOPPED,
 
   // minimal interval between two save operations (in milliseconds)
-  _interval: 1000,
+  _interval: 10000,
 
   // when crash recovery is disabled, session data is not written to disk
   _resume_from_crash: true,
@@ -293,6 +293,7 @@ SessionStoreService.prototype = {
           delete aBrowser.parentNode.__SS_data;
         });
       });
+      this._lastWindowClosed = null;
       this._clearDisk();
       // also clear all data about closed tabs
       for (ix in this._windows) {
@@ -325,7 +326,7 @@ SessionStoreService.prototype = {
         this.saveStateDelayed(null, -1);
         break;
       case "sessionstore.resume_from_crash":
-        this._resume_from_crash = this._getPref("sessionstore.resume_from_crash", this._resume_from_crash);
+        this._resume_from_crash = this._prefBranch.getBoolPref("sessionstore.resume_from_crash");
         // either create the file with crash recovery information or remove it
         // (when _loadState is not STATE_RUNNING, that file is used for session resuming instead)
         if (this._resume_from_crash)
@@ -350,14 +351,10 @@ SessionStoreService.prototype = {
   handleEvent: function sss_handleEvent(aEvent) {
     switch (aEvent.type) {
       case "load":
-        this.onTabLoad(aEvent.currentTarget.ownerDocument.defaultView, aEvent.currentTarget, aEvent);
-        break;
       case "pageshow":
         this.onTabLoad(aEvent.currentTarget.ownerDocument.defaultView, aEvent.currentTarget, aEvent);
         break;
       case "input":
-        this.onTabInput(aEvent.currentTarget.ownerDocument.defaultView, aEvent.currentTarget, aEvent);
-        break;
       case "DOMAutoComplete":
         this.onTabInput(aEvent.currentTarget.ownerDocument.defaultView, aEvent.currentTarget, aEvent);
         break;
@@ -412,7 +409,7 @@ SessionStoreService.prototype = {
       this._loadState = STATE_RUNNING;
       this._lastSaveTime = Date.now();
       
-      // don't save during the first five seconds
+      // don't save during the first ten seconds
       // (until most of the pages have been restored)
       this.saveStateDelayed(aWindow, 10000);
 
@@ -581,6 +578,9 @@ SessionStoreService.prototype = {
     delete aPanel.__SS_data;
     delete aPanel.__SS_text;
     this.saveStateDelayed(aWindow);
+    
+    // attempt to update the current URL we send in a crash report
+    this._updateCrashReportURL(aWindow);
   },
 
   /**
@@ -610,6 +610,9 @@ SessionStoreService.prototype = {
     if (this._loadState == STATE_RUNNING) {
       this._windows[aWindow.__SSi].selected = aPanels.selectedIndex;
       this.saveStateDelayed(aWindow);
+
+      // attempt to update the current URL we send in a crash report
+      this._updateCrashReportURL(aWindow);
     }
   },
 
@@ -894,7 +897,7 @@ SessionStoreService.prototype = {
    */
   _saveTextData: function sss_saveTextData(aPanel, aTextarea) {
     var id = aTextarea.id ? "#" + aTextarea.id :
-                                  aTextarea.name;
+                            aTextarea.name;
     if (!id
       || !(aTextarea instanceof Ci.nsIDOMHTMLTextAreaElement 
       || aTextarea instanceof Ci.nsIDOMHTMLInputElement)) {
@@ -1009,6 +1012,9 @@ SessionStoreService.prototype = {
         }
         hosts[host] = true;
       }
+      else if (/^file:\/\/([^\/]*)/.test(aEntry.url)) {
+        hosts[RegExp.$1] = true;
+      }
       if (aEntry.children) {
         aEntry.children.forEach(extractHosts);
       }
@@ -1026,45 +1032,37 @@ SessionStoreService.prototype = {
     var cookiesEnum = Cc["@mozilla.org/cookiemanager;1"].
                       getService(Ci.nsICookieManager).enumerator;
     // collect the cookies per window
-    for (var i = 0; i < aWindows.length; i++) {
-      aWindows[i].cookies = { count: 0 };
-    }
+    for (var i = 0; i < aWindows.length; i++)
+      aWindows[i].cookies = [];
     
-    var _this = this;
+    // MAX_EXPIRY should be 2^63-1, but JavaScript can't handle that precision
+    var MAX_EXPIRY = Math.pow(2, 62);
     while (cookiesEnum.hasMoreElements()) {
       var cookie = cookiesEnum.getNext().QueryInterface(Ci.nsICookie2);
-      if (cookie.isSession && cookie.host) {
-        var url = "", value = "";
+      if (cookie.isSession && this._checkPrivacyLevel(cookie.isSecure)) {
+        var jscookie = null;
         aWindows.forEach(function(aWindow) {
           if (aWindow._hosts && aWindow._hosts[cookie.rawHost]) {
-            // make sure to construct URL and value only once per cookie
-            if (!url) {
-              var url = "http" + (cookie.isSecure ? "s" : "") + "://" + cookie.host + (cookie.path || "").replace(/^(?!\/)/, "/");
-              if (_this._checkPrivacyLevel(cookie.isSecure)) {
-                value = (cookie.name || "name") + "=" + (cookie.value || "") + ";";
-                value += cookie.isDomain ? "domain=" + cookie.rawHost + ";" : "";
-                value += cookie.path ? "path=" + cookie.path + ";" : "";
-                value += cookie.isSecure ? "secure;" : "";
-              }
+            // serialize the cookie when it's first needed
+            if (!jscookie) {
+              jscookie = { host: cookie.host, value: cookie.value };
+              // only add attributes with non-default values (saving a few bits)
+              if (cookie.path) jscookie.path = cookie.path;
+              if (cookie.name) jscookie.name = cookie.name;
+              if (cookie.isSecure) jscookie.secure = true;
+              if (cookie.isHttpOnly) jscookie.httponly = true;
+              if (cookie.expiry < MAX_EXPIRY) jscookie.expiry = cookie.expiry;
             }
-            if (value) {
-              // in order to not unnecessarily bloat the session file,
-              // all window cookies are saved into one JS object
-              var cookies = aWindow.cookies;
-              cookies["domain" + ++cookies.count] = url;
-              cookies["value" + cookies.count] = value;
-            }
+            aWindow.cookies.push(jscookie);
           }
         });
       }
     }
     
     // don't include empty cookie sections
-    for (i = 0; i < aWindows.length; i++) {
-      if (aWindows[i].cookies.count == 0) {
+    for (i = 0; i < aWindows.length; i++)
+      if (aWindows[i].cookies.length == 0)
         delete aWindows[i].cookies;
-      }
-    }
   },
 
   /**
@@ -1296,8 +1294,8 @@ SessionStoreService.prototype = {
     }
 
     // helper hash for ensuring unique frame IDs
-    var aIdMap = { used: {} };
-    this.restoreHistory(aWindow, aTabs, aIdMap);
+    var idMap = { used: {} };
+    this.restoreHistory(aWindow, aTabs, idMap);
   },
 
   /**
@@ -1570,21 +1568,36 @@ SessionStoreService.prototype = {
   },
 
   /**
-   * Restores cookies to cookie service
+   * Restores cookies (accepting both Firefox 2.0 and current format)
    * @param aCookies
-   *        Array of cookie data
+   *        Array of cookie objects
    */
   restoreCookies: function sss_restoreCookies(aCookies) {
-    var cookieService = Cc["@mozilla.org/cookieService;1"].
-                        getService(Ci.nsICookieService);
-    var ioService = Cc["@mozilla.org/network/io-service;1"].
-                    getService(Ci.nsIIOService);
-    
-    for (var i = 1; i <= aCookies.count; i++) {
-      try {
-        cookieService.setCookieString(ioService.newURI(aCookies["domain" + i], null, null), null, aCookies["value" + i] + "expires=0;", null);
+    if (aCookies.count && aCookies.domain1) {
+      // convert to the new cookie serialization format
+      var converted = [];
+      for (var i = 1; i <= aCookies.count; i++) {
+        // for simplicity we only accept the format we produced ourselves
+        var parsed = aCookies["value" + i].match(/^([^=;]+)=([^;]*);(?:domain=[^;]+;)?(?:path=([^;]*);)?(secure;)?(httponly;)?/);
+        if (parsed && /^https?:\/\/([^\/]+)/.test(aCookies["domain" + i]))
+          converted.push({
+            host: RegExp.$1, path: parsed[3], name: parsed[1], value: parsed[2],
+            secure: parsed[4], httponly: parsed[5]
+          });
       }
-      catch (ex) { debug(ex); } // don't let a single cookie stop recovering (might happen if a user tried to edit the session file)
+      aCookies = converted;
+    }
+    
+    var cookieManager = Cc["@mozilla.org/cookiemanager;1"].
+                        getService(Ci.nsICookieManager2);
+    // MAX_EXPIRY should be 2^63-1, but JavaScript can't handle that precision
+    var MAX_EXPIRY = Math.pow(2, 62);
+    for (i = 0; i < aCookies.length; i++) {
+      var cookie = aCookies[i];
+      try {
+        cookieManager.add(cookie.host, cookie.path || "", cookie.name || "", cookie.value, !!cookie.secure, !!cookie.httponly, true, "expiry" in cookie ? cookie.expiry : MAX_EXPIRY);
+      }
+      catch (ex) { Components.utils.reportError(ex); } // don't let a single cookie stop recovering
     }
   },
 
@@ -1613,9 +1626,7 @@ SessionStoreService.prototype = {
       var url = stmt.getUTF8String(0);
       
       var savedTo = stmt.getUTF8String(1);
-      var savedToURI = Cc["@mozilla.org/network/io-service;1"].
-                       getService(Ci.nsIIOService).
-                       newURI(savedTo, null, null);
+      var savedToURI = ioService.newURI(savedTo, null, null);
       savedTo = savedToURI.path;
    
       var dl = { id: stmt.getInt64(2), url: url, savedTo: savedTo };
@@ -1858,11 +1869,28 @@ SessionStoreService.prototype = {
    * @param string
    * @returns nsIURI
    */
-   _getURIFromString: function sss_getURIFromString(aString) {
-     var ioService = Cc["@mozilla.org/network/io-service;1"].
-                     getService(Ci.nsIIOService);
-     return ioService.newURI(aString, null, null);
-   },
+  _getURIFromString: function sss_getURIFromString(aString) {
+    var ioService = Cc["@mozilla.org/network/io-service;1"].
+                    getService(Ci.nsIIOService);
+    return ioService.newURI(aString, null, null);
+  },
+
+  /**
+   * Annotate a breakpad crash report with the currently selected tab's URL.
+   */
+  _updateCrashReportURL: function sss_updateCrashReportURL(aWindow) {
+    if (!Ci.nsICrashReporter) {
+      // if breakpad isn't built, don't bother next time at all
+      this._updateCrashReportURL = function(aWindow) {};
+      return;
+    }
+    try {
+      var currentUrl = aWindow.getBrowser().currentURI.spec;
+      var cr = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsICrashReporter);
+      cr.annotateCrashReport("URL", currentUrl);
+    }
+    catch (ex) { debug(ex); }
+  },
 
   /**
    * safe eval'ing

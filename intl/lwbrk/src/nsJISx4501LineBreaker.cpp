@@ -349,12 +349,21 @@ nsJISx4051LineBreaker::~nsJISx4051LineBreaker()
 
 NS_IMPL_ISUPPORTS1(nsJISx4051LineBreaker, nsILineBreaker)
 
-#define U_PERIOD ((PRUnichar) '.')
-#define U_COMMA ((PRUnichar) ',')
-#define U_SPACE ((PRUnichar) ' ')
-#define U_RIGHT_SINGLE_QUOTATION_MARK ((PRUnichar) 0x2019)
+#define U_PERIOD    PRUnichar('.')
+#define U_COMMA     PRUnichar(',')
+#define U_SEMICOLON PRUnichar(';')
+#define U_SLASH     PRUnichar('/')
+#define U_SPACE     PRUnichar(' ')
+#define U_HYPHEN    PRUnichar('-')
+#define U_EQUAL     PRUnichar('=')
+#define U_NULL      PRUnichar(0x0000)
+#define U_RIGHT_SINGLE_QUOTATION_MARK PRUnichar(0x2019)
 #define NEED_CONTEXTUAL_ANALYSIS(c) ((c) == U_PERIOD || \
                                      (c) == U_COMMA || \
+                                     (c) == U_SEMICOLON || \
+                                     (c) == U_SLASH || \
+                                     (c) == U_HYPHEN || \
+                                     (c) == U_EQUAL || \
                                      (c) == U_RIGHT_SINGLE_QUOTATION_MARK)
 #define NUMERIC_CLASS  6 // JIS x4051 class 15 is now map to simplified class 6
 #define CHARACTER_CLASS  8 // JIS x4051 class 18 is now map to simplified class 8
@@ -363,17 +372,17 @@ NS_IMPL_ISUPPORTS1(nsJISx4051LineBreaker, nsILineBreaker)
 static PRInt8 ContextualAnalysis(
   PRUnichar prev, PRUnichar cur, PRUnichar next)
 {
-   if(U_COMMA == cur)
+   if(U_COMMA == cur || U_SEMICOLON == cur)
    {
-     if(IS_ASCII_DIGIT (prev) && IS_ASCII_DIGIT (next))
+     if((IS_ASCII_DIGIT(prev) || prev == U_NULL) && IS_ASCII_DIGIT(next))
        return NUMERIC_CLASS;
    }
    else if(U_PERIOD == cur)
    {
-     if((IS_ASCII_DIGIT (prev) || (0x0020 == prev)) && 
-         IS_ASCII_DIGIT (next))
+     if((IS_ASCII_DIGIT(prev) || prev == U_SPACE || prev == U_NULL) &&
+         IS_ASCII_DIGIT(next))
        return NUMERIC_CLASS;
- 
+
      // By assigning a full stop  character class only when it's followed by
      // class 6 (numeric), 7, and 8 (character). Note that class 9 (Thai) 
      // doesn't matter, either way, we prevent lines from breaking around 
@@ -381,9 +390,17 @@ static PRInt8 ContextualAnalysis(
      // followed by CJK  characters. With an additional condition of it being 
      // preceded by  class 0 or class > 5, we make sure that it does not 
      // start a line  (see bug 164759). 
-     PRUint8 pc = GetClass(prev);
+     PRUint8 pc = prev != U_NULL ? GetClass(prev) : CHARACTER_CLASS;
      if((pc > 5 || pc == 0)  && GetClass(next) > 5)
        return CHARACTER_CLASS;
+   }
+   else if(U_SLASH == cur || U_HYPHEN == cur || U_EQUAL == cur)
+   {
+     // if slash is a first character, don't break at this point (e.g., "/root")
+     if (U_SLASH == cur && prev == U_NULL)
+       return CHARACTER_CLASS;
+     if (IS_ASCII_DIGIT(next))
+       return NUMERIC_CLASS;
    }
    else if(U_RIGHT_SINGLE_QUOTATION_MARK == cur)
    {
@@ -433,7 +450,7 @@ ROUTE_CJK_BETWEEN:
 
   PRInt8 c1, c2;
   if(NEED_CONTEXTUAL_ANALYSIS(aText1[aTextLen1-1]))
-    c1 = ContextualAnalysis((aTextLen1>1)?aText1[aTextLen1-2]:0,
+    c1 = ContextualAnalysis((aTextLen1>1)?aText1[aTextLen1-2]:U_NULL,
                                   aText1[aTextLen1-1],
                                   aText2[0]);
   else 
@@ -442,7 +459,7 @@ ROUTE_CJK_BETWEEN:
   if(NEED_CONTEXTUAL_ANALYSIS(aText2[0]))
     c2 = ContextualAnalysis(aText1[aTextLen1-1],
                             aText2[0],
-                            (aTextLen2>1)?aText2[1]:0);
+                            (aTextLen2>1)?aText2[1]:U_NULL);
   else 
     c2 = GetClass(aText2[0]);
 
@@ -481,9 +498,9 @@ ROUTE_CJK_NEXT:
   cur = aPos;
   if(NEED_CONTEXTUAL_ANALYSIS(aText[cur]))
   {
-    c1 = ContextualAnalysis((cur>0)?aText[cur-1]:0,
+    c1 = ContextualAnalysis((cur>0)?aText[cur-1]:U_NULL,
                             aText[cur],
-                            (cur<(aLen-1)) ?aText[cur+1]:0);
+                            (cur<(aLen-1)) ?aText[cur+1]:U_NULL);
   } else  {
     c1 = GetClass(aText[cur]);
   }
@@ -495,9 +512,9 @@ ROUTE_CJK_NEXT:
   {
      if(NEED_CONTEXTUAL_ANALYSIS(aText[cur]))
      {
-       c2 = ContextualAnalysis((cur>0)?aText[cur-1]:0,
+       c2 = ContextualAnalysis((cur>0)?aText[cur-1]:U_NULL,
                                aText[cur],
-                               (cur<(aLen-1)) ?aText[cur+1]:0);
+                               (cur<(aLen-1)) ?aText[cur+1]:U_NULL);
      } else {
        c2 = GetClass(aText[cur]);
      }
@@ -537,9 +554,9 @@ ROUTE_CJK_PREV:
   PRInt8 c1, c2;
   if(NEED_CONTEXTUAL_ANALYSIS(aText[cur-1]))
   {
-    c2 = ContextualAnalysis(((cur-1)>0)?aText[cur-2]:0,
+    c2 = ContextualAnalysis(((cur-1)>0)?aText[cur-2]:U_NULL,
                             aText[cur-1],
-                            (cur<aLen) ?aText[cur]:0);
+                            (cur<aLen) ?aText[cur]:U_NULL);
   } else  {
     c2 = GetClass(aText[cur-1]);
   }
@@ -551,9 +568,9 @@ ROUTE_CJK_PREV:
   {
      if(NEED_CONTEXTUAL_ANALYSIS(aText[cur-1]))
      {
-       c1 = ContextualAnalysis(((cur-1)>0)?aText[cur-2]:0,
+       c1 = ContextualAnalysis(((cur-1)>0)?aText[cur-2]:U_NULL,
                                aText[cur-1],
-                               (cur<aLen) ?aText[cur]:0);
+                               (cur<aLen) ?aText[cur]:U_NULL);
      } else {
        c1 = GetClass(aText[cur-1]);
      }
@@ -578,9 +595,9 @@ nsJISx4051LineBreaker::GetJISx4051Breaks(const PRUnichar* aChars, PRUint32 aLeng
     PRInt8 cl;
 
     if (NEED_CONTEXTUAL_ANALYSIS(ch)) {
-      cl = ContextualAnalysis(cur > 0 ? aChars[cur - 1] : 0,
+      cl = ContextualAnalysis(cur > 0 ? aChars[cur - 1] : U_NULL,
                               ch,
-                              cur + 1 < aLength ? aChars[cur + 1] : 0);
+                              cur + 1 < aLength ? aChars[cur + 1] : U_NULL);
     } else {
       cl = GetClass(ch);
     }
@@ -592,6 +609,36 @@ nsJISx4051LineBreaker::GetJISx4051Breaks(const PRUnichar* aChars, PRUint32 aLeng
       } else {
         allowBreak = GetPair(lastClass, cl);
       }
+    } else {
+      allowBreak = PR_FALSE;
+    }
+    aBreakBefore[cur] = allowBreak;
+    lastClass = cl;
+  }
+}
+
+void
+nsJISx4051LineBreaker::GetJISx4051Breaks(const PRUint8* aChars, PRUint32 aLength,
+                                         PRPackedBool* aBreakBefore)
+{
+  PRUint32 cur;
+  PRInt8 lastClass = -1;
+
+  for (cur = 0; cur < aLength; ++cur) {
+    PRUnichar ch = aChars[cur];
+    PRInt8 cl;
+
+    if (NEED_CONTEXTUAL_ANALYSIS(ch)) {
+      cl = ContextualAnalysis(cur > 0 ? aChars[cur - 1] : U_NULL,
+                              ch,
+                              cur + 1 < aLength ? aChars[cur + 1] : U_NULL);
+    } else {
+      cl = GetClass(ch);
+    }
+
+    PRBool allowBreak;
+    if (cur > 0) {
+      allowBreak = GetPair(lastClass, cl);
     } else {
       allowBreak = PR_FALSE;
     }

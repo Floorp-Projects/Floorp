@@ -65,8 +65,8 @@ CAccessibleHyperlink::QueryInterface(REFIID iid, void** ppv)
     if (!acc)
       return E_NOINTERFACE;
 
-    *ppv = NS_STATIC_CAST(IAccessibleHyperlink*, this);
-    (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
+    *ppv = static_cast<IAccessibleHyperlink*>(this);
+    (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
     return S_OK;
   }
 
@@ -99,7 +99,7 @@ CAccessibleHyperlink::get_anchor(long aIndex, VARIANT *aAnchor)
   if (NS_FAILED(rv))
     return E_FAIL;
 
-  IUnknown *unknownPtr = NS_STATIC_CAST(IUnknown*, instancePtr);
+  IUnknown *unknownPtr = static_cast<IUnknown*>(instancePtr);
   aAnchor->ppunkVal = &unknownPtr;
   aAnchor->vt = VT_UNKNOWN;
 

@@ -53,6 +53,10 @@ toolbox {
 
 /* ::::: toolbar & menubar ::::: */
 
+toolbar, menubar {
+  -moz-appearance: toolbar;
+}
+
 toolbar {
   min-width: 1px;
   min-height: 19px;

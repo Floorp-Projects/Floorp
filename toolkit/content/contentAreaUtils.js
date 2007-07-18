@@ -169,6 +169,48 @@ function saveDocument(aDocument, aSkipPrompt)
                aDocument.contentType, false, null, null, aSkipPrompt);
 }
 
+function DownloadListener(win, transfer) {
+  function makeClosure(name) {
+    return function() {
+      transfer[name].apply(transfer, arguments);
+    }
+  }
+
+  this.window = win;
+
+  // Now... we need to forward all calls to our transfer
+  for (var i in transfer) {
+    if (i != "QueryInterface")
+      this[i] = makeClosure(i);
+  }
+}
+
+DownloadListener.prototype = {
+  QueryInterface: function dl_qi(aIID)
+  {
+    if (aIID.equals(Components.interfaces.nsIInterfaceRequestor) ||
+        aIID.equals(Components.interfaces.nsIWebProgressListener) ||
+        aIID.equals(Components.interfaces.nsIWebProgressListener2) ||
+        aIID.equals(Components.interfaces.nsISupports)) {
+      return this;
+    }
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+
+  getInterface: function dl_gi(aIID)
+  {
+    if (aIID.equals(Components.interfaces.nsIAuthPrompt) ||
+        aIID.equals(Components.interfaces.nsIAuthPrompt2)) {
+      var ww =
+        Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                  .getService(Components.interfaces.nsIPromptFactory);
+      return ww.getPrompt(this.window, aIID);
+    }
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  }
+}
+
 /**
  * internalSave: Used when saving a document or URL. This method:
  *  - Determines a local target filename to use (unless parameter
@@ -311,13 +353,13 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
     const kWrapColumn = 80;
     tr.init((aChosenData ? aChosenData.uri : fileInfo.uri),
             persistArgs.target, "", null, null, null, persist);
-    persist.progressListener = tr;
+    persist.progressListener = new DownloadListener(window, tr);
     persist.saveDocument(persistArgs.source, persistArgs.target, filesFolder,
                          persistArgs.contentType, encodingFlags, kWrapColumn);
   } else {
     tr.init((aChosenData ? aChosenData.uri : source),
             persistArgs.target, "", null, null, null, persist);
-    persist.progressListener = tr;
+    persist.progressListener = new DownloadListener(window, tr);
     persist.saveURI((aChosenData ? aChosenData.uri : source),
                     null, aReferrer, persistArgs.postData, null,
                     persistArgs.target);

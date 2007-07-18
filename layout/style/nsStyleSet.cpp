@@ -305,7 +305,7 @@ nsStyleSet::EnableQuirkStyleSheet(PRBool aEnable)
       nsIStyleSheet *sheet = mSheets[eAgentSheet].ObjectAt(i);
       NS_ASSERTION(sheet, "mAgentSheets should not contain null sheets");
 
-      nsICSSStyleSheet *cssSheet = NS_STATIC_CAST(nsICSSStyleSheet*, sheet);
+      nsICSSStyleSheet *cssSheet = static_cast<nsICSSStyleSheet*>(sheet);
       NS_ASSERTION(nsCOMPtr<nsICSSStyleSheet>(do_QueryInterface(sheet)) == cssSheet,
                    "Agent sheet must be a CSSStyleSheet");
 
@@ -340,7 +340,7 @@ static PRBool
 EnumRulesMatching(nsIStyleRuleProcessor* aProcessor, void* aData)
 {
   ElementRuleProcessorData* data =
-    NS_STATIC_CAST(ElementRuleProcessorData*, aData);
+    static_cast<ElementRuleProcessorData*>(aData);
 
   aProcessor->RulesMatching(data);
   return PR_TRUE;
@@ -465,11 +465,7 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   nsRuleNode* lastPresHintRN = mRuleWalker->GetCurrentNode();
 
   mRuleWalker->SetLevel(eUserSheet, PR_FALSE);
-  PRBool skipUserStyles = aData->mContent &&
-    aData->mContent == aData->mContent->GetBindingParent();
-  NS_ASSERTION(!skipUserStyles || aData->mContent->IsNativeAnonymous() ||
-               aData->mContent->IsNodeOfType(nsINode::eXUL),
-               "Content with bogus binding parent");
+  PRBool skipUserStyles = IsNativeAnonymous(aData->mContent);
   if (!skipUserStyles && mRuleProcessors[eUserSheet]) // NOTE: different
     (*aCollectorFunc)(mRuleProcessors[eUserSheet], aData);
   nsRuleNode* lastUserRN = mRuleWalker->GetCurrentNode();
@@ -533,11 +529,7 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
   if (mRuleProcessors[ePresHintSheet])
     (*aFunc)(mRuleProcessors[ePresHintSheet], aData);
 
-  PRBool skipUserStyles = aData->mContent &&
-    aData->mContent == aData->mContent->GetBindingParent();
-  NS_ASSERTION(!skipUserStyles || aData->mContent->IsNativeAnonymous() ||
-               aData->mContent->IsNodeOfType(nsINode::eXUL),
-               "Content with bogus binding parent");
+  PRBool skipUserStyles = IsNativeAnonymous(aData->mContent);
   if (!skipUserStyles && mRuleProcessors[eUserSheet]) // NOTE: different
     (*aFunc)(mRuleProcessors[eUserSheet], aData);
 
@@ -652,7 +644,7 @@ static PRBool
 EnumPseudoRulesMatching(nsIStyleRuleProcessor* aProcessor, void* aData)
 {
   PseudoRuleProcessorData* data =
-    NS_STATIC_CAST(PseudoRuleProcessorData*, aData);
+    static_cast<PseudoRuleProcessorData*>(aData);
 
   aProcessor->RulesMatching(data);
   return PR_TRUE;
@@ -806,7 +798,7 @@ nsStyleSet::NotifyStyleContextDestroyed(nsPresContext* aPresContext,
     // undisplayed map and "additional style contexts" since they are
     // descendants of the root.
     for (PRInt32 i = mRoots.Count() - 1; i >= 0; --i) {
-      NS_STATIC_CAST(nsStyleContext*,mRoots[i])->Mark();
+      static_cast<nsStyleContext*>(mRoots[i])->Mark();
     }
 
     // Sweep the rule tree.
@@ -825,7 +817,7 @@ nsStyleSet::ClearStyleData(nsPresContext* aPresContext)
   mRuleTree->ClearStyleData();
 
   for (PRInt32 i = mRoots.Count() - 1; i >= 0; --i) {
-    NS_STATIC_CAST(nsStyleContext*,mRoots[i])->ClearStyleData(aPresContext);
+    static_cast<nsStyleContext*>(mRoots[i])->ClearStyleData(aPresContext);
   }
 }
 
@@ -902,8 +894,10 @@ nsStyleSet::HasStateDependentStyle(nsPresContext* aPresContext,
 
 struct AttributeData : public AttributeRuleProcessorData {
   AttributeData(nsPresContext* aPresContext,
-                nsIContent* aContent, nsIAtom* aAttribute, PRInt32 aModType)
-    : AttributeRuleProcessorData(aPresContext, aContent, aAttribute, aModType),
+                nsIContent* aContent, nsIAtom* aAttribute, PRInt32 aModType,
+                PRUint32 aStateMask)
+    : AttributeRuleProcessorData(aPresContext, aContent, aAttribute, aModType,
+                                 aStateMask),
       mHint(nsReStyleHint(0))
   {}
   nsReStyleHint   mHint;
@@ -922,9 +916,10 @@ SheetHasAttributeStyle(nsIStyleRuleProcessor* aProcessor, void *aData)
 // Test if style is dependent on content state
 nsReStyleHint
 nsStyleSet::HasAttributeDependentStyle(nsPresContext* aPresContext,
-                                       nsIContent*     aContent,
-                                       nsIAtom*        aAttribute,
-                                       PRInt32         aModType)
+                                       nsIContent*    aContent,
+                                       nsIAtom*       aAttribute,
+                                       PRInt32        aModType,
+                                       PRUint32       aStateMask)
 {
   nsReStyleHint result = nsReStyleHint(0);
 
@@ -936,10 +931,28 @@ nsStyleSet::HasAttributeDependentStyle(nsPresContext* aPresContext,
        mRuleProcessors[eDocSheet]          ||
        mRuleProcessors[eStyleAttrSheet]    ||
        mRuleProcessors[eOverrideSheet])) {
-    AttributeData data(aPresContext, aContent, aAttribute, aModType);
+    AttributeData data(aPresContext, aContent, aAttribute, aModType,
+                       aStateMask);
     WalkRuleProcessors(SheetHasAttributeStyle, &data);
     result = data.mHint;
   }
 
   return result;
+}
+
+PRBool
+nsStyleSet::IsNativeAnonymous(nsIContent* aContent)
+{
+  while (aContent) {
+    nsIContent* bindingParent = aContent->GetBindingParent();
+    if (bindingParent == aContent) {
+      NS_ASSERTION(bindingParent->IsNativeAnonymous() ||
+                   bindingParent->IsNodeOfType(nsINode::eXUL),
+                   "Bogus binding parent?");
+      return PR_TRUE;
+    }
+    aContent = bindingParent;
+  }
+
+  return PR_FALSE;
 }

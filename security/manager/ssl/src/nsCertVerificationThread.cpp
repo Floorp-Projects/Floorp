@@ -141,7 +141,7 @@ void nsCertVerificationThread::Run(void)
       if (mExitRequested)
         break;
       
-      job = NS_STATIC_CAST(nsBaseVerificationJob*, mJobQ.PopFront());
+      job = static_cast<nsBaseVerificationJob*>(mJobQ.PopFront());
     }
 
     if (job)
@@ -156,7 +156,7 @@ void nsCertVerificationThread::Run(void)
 
     while (verification_thread_singleton->mJobQ.GetSize()) {
       nsCertVerificationJob *job = 
-        NS_STATIC_CAST(nsCertVerificationJob*, mJobQ.PopFront());
+        static_cast<nsCertVerificationJob*>(mJobQ.PopFront());
       delete job;
     }
   }

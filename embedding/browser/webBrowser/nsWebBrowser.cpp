@@ -379,7 +379,7 @@ NS_IMETHODIMP nsWebBrowser::EnableGlobalHistory(PRBool aEnable)
 #if (defined(XP_MAC) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_COCOA)
 NS_IMETHODIMP nsWebBrowser::EnsureTopLevelWidget(nativeWindow aWindow)
 {
-    WindowPtr macWindow = NS_STATIC_CAST(WindowPtr, aWindow);
+    WindowPtr macWindow = static_cast<WindowPtr>(aWindow);
     nsIWidget *widget = nsnull;
     nsCOMPtr<nsIWidget> newWidget;
     nsresult rv = NS_ERROR_FAILURE;
@@ -546,7 +546,7 @@ NS_IMETHODIMP nsWebBrowser::GetSameTypeParent(nsIDocShellTreeItem** aParent)
 NS_IMETHODIMP nsWebBrowser::GetRootTreeItem(nsIDocShellTreeItem** aRootTreeItem)
 {
    NS_ENSURE_ARG_POINTER(aRootTreeItem);
-   *aRootTreeItem = NS_STATIC_CAST(nsIDocShellTreeItem*, this);
+   *aRootTreeItem = static_cast<nsIDocShellTreeItem*>(this);
 
    nsCOMPtr<nsIDocShellTreeItem> parent;
    NS_ENSURE_SUCCESS(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
@@ -562,7 +562,7 @@ NS_IMETHODIMP nsWebBrowser::GetRootTreeItem(nsIDocShellTreeItem** aRootTreeItem)
 NS_IMETHODIMP nsWebBrowser::GetSameTypeRootTreeItem(nsIDocShellTreeItem** aRootTreeItem)
 {
    NS_ENSURE_ARG_POINTER(aRootTreeItem);
-   *aRootTreeItem = NS_STATIC_CAST(nsIDocShellTreeItem*, this);
+   *aRootTreeItem = static_cast<nsIDocShellTreeItem*>(this);
 
    nsCOMPtr<nsIDocShellTreeItem> parent;
    NS_ENSURE_SUCCESS(GetSameTypeParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
@@ -584,7 +584,7 @@ NS_IMETHODIMP nsWebBrowser::FindItemWithName(const PRUnichar *aName,
    NS_ASSERTION(mDocShellTreeOwner, "This should always be set when in this situation");
 
    return mDocShellAsItem->FindItemWithName(aName, 
-      NS_STATIC_CAST(nsIDocShellTreeOwner*, mDocShellTreeOwner),
+      static_cast<nsIDocShellTreeOwner*>(mDocShellTreeOwner),
       aOriginalRequestor, _retval);
 }
 
@@ -1178,7 +1178,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
       widgetInit.mWindowType = eWindowType_child;
       nsRect bounds(mInitInfo->x, mInitInfo->y, mInitInfo->cx, mInitInfo->cy);
       
-      mInternalWidget->SetClientData(NS_STATIC_CAST(nsWebBrowser *, this));
+      mInternalWidget->SetClientData(static_cast<nsWebBrowser *>(this));
       mInternalWidget->Create(mParentNativeWindow, bounds, nsWebBrowser::HandleEvent,
                               nsnull, nsnull, nsnull, &widgetInit);  
       }
@@ -1218,7 +1218,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
    // nsIWebProgressListener.
    nsCOMPtr<nsISupports> supports = nsnull;
    (void)mDocShellTreeOwner->QueryInterface(NS_GET_IID(nsIWebProgressListener),
-                             NS_STATIC_CAST(void**, getter_AddRefs(supports)));
+                             static_cast<void**>(getter_AddRefs(supports)));
    (void)BindListener(supports, NS_GET_IID(nsIWebProgressListener));
 
    NS_ENSURE_SUCCESS(mDocShellAsWin->InitWindow(nsnull,
@@ -1713,12 +1713,12 @@ nsEventStatus PR_CALLBACK nsWebBrowser::HandleEvent(nsGUIEvent *aEvent)
   if (!data)
     return result;
 
-  browser = NS_STATIC_CAST(nsWebBrowser *, data);
+  browser = static_cast<nsWebBrowser *>(data);
 
   switch(aEvent->message) {
 
   case NS_PAINT: {
-      nsPaintEvent *paintEvent = NS_STATIC_CAST(nsPaintEvent *, aEvent);
+      nsPaintEvent *paintEvent = static_cast<nsPaintEvent *>(aEvent);
       nsIRenderingContext *rc = paintEvent->renderingContext;
       nscolor oldColor;
       rc->GetColor(oldColor);

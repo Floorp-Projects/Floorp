@@ -5,10 +5,12 @@ TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
 TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
 source ${TEST_BIN}/library.sh
 
+TEST_JSDIR=${TEST_JSDIR:-$TEST_DIR/tests/mozilla.org/js}
+
 TEST_JSEACH_TIMEOUT=${TEST_JSEACH_TIMEOUT:-240}
 TEST_JSEACH_PAGE_TIMEOUT=${TEST_JSEACH_PAGE_TIMEOUT:-240}
 
-TEST_WWW_JS=`pwd|sed "s|$TEST_DIR||"`
+TEST_WWW_JS=`echo $TEST_JSDIR|sed "s|$TEST_DIR||"`
 #
 # options processing
 #
@@ -60,8 +62,6 @@ if [[ -z "$product" || -z "$branch" || -z "$executablepath" || -z "$profilename"
     usage
 fi
 
-make
-
 executable=`get_executable $product $branch $executablepath`
 
 case "$branch" in 
@@ -76,9 +76,13 @@ case "$branch" in
         ;;
 esac
 
+pushd $TEST_JSDIR
+
+make
+
 cat "$list" | while read url; do 
 	edit-talkback.sh -p "$product" -b "$branch" -x "$executablepath" -i "$url"
-	time timed_run $TEST_JSEACH_TIMEOUT "$url" \
+	time timed_run.py $TEST_JSEACH_TIMEOUT "$url" \
 		"$executable" -P "$profilename" \
 		-spider -start -quit \
 		-uri "$url" \
@@ -86,7 +90,4 @@ cat "$list" | while read url; do
 		-hook "http://$TEST_HTTP$TEST_WWW_JS/userhookeach.js"; 
 done
 
-
-
-
-
+popd

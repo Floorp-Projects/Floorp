@@ -137,7 +137,7 @@ PRBool nsClipboard::GetClipboardDataByID(ULONG ulFormatID, const char *aFlavor)
   PRUint32 NumOfBytes;
   PRBool TempBufAllocated = PR_FALSE;
 
-  PVOID pClipboardData = NS_REINTERPRET_CAST(PVOID, WinQueryClipbrdData( 0, ulFormatID ));
+  PVOID pClipboardData = reinterpret_cast<PVOID>(WinQueryClipbrdData( 0, ulFormatID ));
 
   if (!pClipboardData) 
     return PR_FALSE;
@@ -148,14 +148,14 @@ PRBool nsClipboard::GetClipboardDataByID(ULONG ulFormatID, const char *aFlavor)
 
     if (ulFormatID == CF_TEXT)     // CF_TEXT is one byte character set
     {
-      PRUint32 NumOfChars = strlen( NS_STATIC_CAST (char*, pDataMem) );
+      PRUint32 NumOfChars = strlen( static_cast<char*>(pDataMem) );
       NumOfBytes = NumOfChars;
 
       if (!strcmp( aFlavor, kUnicodeMime ))  // Asked for unicode, but only plain text available.  Convert it!
       {
         nsAutoChar16Buffer buffer;
         PRInt32 bufLength;
-        MultiByteToWideChar(0, NS_STATIC_CAST(char*, pDataMem), NumOfChars,
+        MultiByteToWideChar(0, static_cast<char*>(pDataMem), NumOfChars,
                             buffer, bufLength);
         pDataMem = ToNewUnicode(nsDependentString(buffer.get()));
         TempBufAllocated = PR_TRUE;
@@ -165,7 +165,7 @@ PRBool nsClipboard::GetClipboardDataByID(ULONG ulFormatID, const char *aFlavor)
     }
     else                           // All other text/.. flavors are in unicode
     {
-      PRUint32 NumOfChars = UniStrlen( NS_STATIC_CAST(UniChar*, pDataMem) );
+      PRUint32 NumOfChars = UniStrlen( static_cast<UniChar*>(pDataMem) );
       NumOfBytes = NumOfChars * sizeof(UniChar);
       PVOID pTempBuf = nsMemory::Alloc(NumOfBytes);
       memcpy(pTempBuf, pDataMem, NumOfBytes);
@@ -175,7 +175,7 @@ PRBool nsClipboard::GetClipboardDataByID(ULONG ulFormatID, const char *aFlavor)
 
     // DOM wants LF only, so convert from CRLF
     nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks( aFlavor, &pDataMem,   // pDataMem could be reallocated !!
-                                                        NS_REINTERPRET_CAST(PRInt32*, &NumOfBytes) );  // yuck
+                                                        reinterpret_cast<PRInt32*>(&NumOfBytes) );  // yuck
 
   }
   else                             // Assume rest of flavors are binary data
@@ -206,14 +206,17 @@ PRBool nsClipboard::GetClipboardDataByID(ULONG ulFormatID, const char *aFlavor)
     }
     else
     {
-      pDataMem = NS_STATIC_CAST(PBYTE, pClipboardData) + sizeof(PRUint32);
-      NumOfBytes = *(NS_STATIC_CAST(PRUint32*, pClipboardData));
+      pDataMem = static_cast<PBYTE>(pClipboardData) + sizeof(PRUint32);
+      NumOfBytes = *(static_cast<PRUint32*>(pClipboardData));
     }
   }
 
   nsCOMPtr<nsISupports> genericDataWrapper;
   nsPrimitiveHelpers::CreatePrimitiveForData( aFlavor, pDataMem, NumOfBytes, getter_AddRefs(genericDataWrapper) );
-  nsresult errCode = mTransferable->SetTransferData( aFlavor, genericDataWrapper, NumOfBytes );
+#ifdef DEBUG
+  nsresult errCode =
+#endif
+  mTransferable->SetTransferData( aFlavor, genericDataWrapper, NumOfBytes );
 #ifdef DEBUG
   if (errCode != NS_OK)
     printf( "nsClipboard:: Error setting data into transferable\n" );
@@ -234,7 +237,10 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
 
   // Get the data from the transferable
   nsCOMPtr<nsISupports> genericDataWrapper;
-  nsresult errCode = mTransferable->GetTransferData( aFlavor, getter_AddRefs(genericDataWrapper), &NumOfBytes );
+#ifdef DEBUG
+  nsresult errCode =
+#endif
+  mTransferable->GetTransferData( aFlavor, getter_AddRefs(genericDataWrapper), &NumOfBytes );
 #ifdef DEBUG
   if (NS_FAILED(errCode)) printf( "nsClipboard:: Error getting data from transferable\n" );
 #endif
@@ -254,18 +260,19 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
     {
       char* pByteMem = nsnull;
 
-      if (DosAllocSharedMem( NS_REINTERPRET_CAST(PPVOID, &pByteMem), nsnull, NumOfBytes + sizeof(char), 
+      if (DosAllocSharedMem( reinterpret_cast<PPVOID>(&pByteMem), nsnull, NumOfBytes + sizeof(char), 
                              PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR)
       {
         memcpy( pByteMem, pMozData, NumOfBytes );       // Copy text string
         pByteMem[NumOfBytes] = '\0';                    // Append terminator
 
-        // Don't copy text larger than 64K to the clipboard
-        if (strlen(pByteMem) <= 0xFFFF) {
-          WinSetClipbrdData( 0, NS_REINTERPRET_CAST(ULONG, pByteMem), ulFormatID, CFI_POINTER );
-        } else {
+        // With Warp4 copying more than 64K to the clipboard works well, but
+        // legacy apps cannot always handle it. So output an alarm to alert the
+        // user that there might be a problem.
+        if (strlen(pByteMem) > 0xFFFF) {
           WinAlarm(HWND_DESKTOP, WA_ERROR);
         }
+        WinSetClipbrdData(0, reinterpret_cast<ULONG>(pByteMem), ulFormatID, CFI_POINTER);
       }
     }
     else                           // All other text/.. flavors are in unicode
@@ -273,13 +280,13 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
       UniChar* pUnicodeMem = nsnull;
       PRUint32 NumOfChars = NumOfBytes / sizeof(UniChar);
    
-      if (DosAllocSharedMem( NS_REINTERPRET_CAST(PPVOID, &pUnicodeMem), nsnull, NumOfBytes + sizeof(UniChar), 
+      if (DosAllocSharedMem( reinterpret_cast<PPVOID>(&pUnicodeMem), nsnull, NumOfBytes + sizeof(UniChar), 
                              PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR) 
       {
         memcpy( pUnicodeMem, pMozData, NumOfBytes );    // Copy text string
         pUnicodeMem[NumOfChars] = L'\0';                // Append terminator
 
-        WinSetClipbrdData( 0, NS_REINTERPRET_CAST(ULONG, pUnicodeMem), ulFormatID, CFI_POINTER );
+        WinSetClipbrdData( 0, reinterpret_cast<ULONG>(pUnicodeMem), ulFormatID, CFI_POINTER );
       }
 
       // If the flavor is unicode, we also put it on the clipboard as CF_TEXT
@@ -289,7 +296,7 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
       {
         char* pByteMem = nsnull;
 
-        if (DosAllocSharedMem(NS_REINTERPRET_CAST(PPVOID, &pByteMem), nsnull,
+        if (DosAllocSharedMem(reinterpret_cast<PPVOID>(&pByteMem), nsnull,
                               NumOfBytes + 1, 
                               PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR) 
         {
@@ -312,16 +319,16 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
 
           nsAutoCharBuffer buffer;
           PRInt32 bufLength;
-          WideCharToMultiByte(0, NS_STATIC_CAST(PRUnichar*, pMozData),
+          WideCharToMultiByte(0, static_cast<PRUnichar*>(pMozData),
                               NumOfBytes, buffer, bufLength);
           memcpy(pByteMem, buffer.get(), NumOfBytes);
-          // Don't copy text larger than 64K to the clipboard
-          if (strlen(pByteMem) <= 0xFFFF) {
-            WinSetClipbrdData(0, NS_REINTERPRET_CAST(ULONG, pByteMem), CF_TEXT,
-                              CFI_POINTER);
-          } else {
+          // With Warp4 copying more than 64K to the clipboard works well, but
+          // legacy apps cannot always handle it. So output an alarm to alert the
+          // user that there might be a problem.
+          if (strlen(pByteMem) > 0xFFFF) {
             WinAlarm(HWND_DESKTOP, WA_ERROR);
           }
+          WinSetClipbrdData(0, reinterpret_cast<ULONG>(pByteMem), CF_TEXT, CFI_POINTER);
         }
       }
     }
@@ -330,13 +337,13 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
   {
     PBYTE pBinaryMem = nsnull;
 
-    if (DosAllocSharedMem( NS_REINTERPRET_CAST(PPVOID, &pBinaryMem), nsnull, NumOfBytes + sizeof(PRUint32), 
+    if (DosAllocSharedMem( reinterpret_cast<PPVOID>(&pBinaryMem), nsnull, NumOfBytes + sizeof(PRUint32), 
                            PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR) 
     {
-      *(NS_REINTERPRET_CAST(PRUint32*, pBinaryMem)) = NumOfBytes;          // First DWORD contains data length
+      *(reinterpret_cast<PRUint32*>(pBinaryMem)) = NumOfBytes;          // First DWORD contains data length
       memcpy( pBinaryMem + sizeof(PRUint32), pMozData, NumOfBytes );  // Copy binary data
 
-      WinSetClipbrdData( 0, NS_REINTERPRET_CAST(ULONG, pBinaryMem), ulFormatID, CFI_POINTER );
+      WinSetClipbrdData( 0, reinterpret_cast<ULONG>(pBinaryMem), ulFormatID, CFI_POINTER );
     }
 
     // If the flavor is image, we also put it on clipboard as CF_BITMAP

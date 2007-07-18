@@ -104,7 +104,7 @@ mozStorageStatement::Initialize(mozIStorageConnection *aDBConnection, const nsAC
     sqlite3 *db = nsnull;
     // XXX - need to implement a private iid to QI for here, to make sure
     // we have a real mozStorageConnection
-    mozStorageConnection *msc = NS_STATIC_CAST(mozStorageConnection*, aDBConnection);
+    mozStorageConnection *msc = static_cast<mozStorageConnection*>(aDBConnection);
     db = msc->GetNativeConnection();
     NS_ENSURE_TRUE(db != nsnull, NS_ERROR_NULL_POINTER);
 
@@ -117,7 +117,8 @@ mozStorageStatement::Initialize(mozIStorageConnection *aDBConnection, const nsAC
     int nRetries = 0;
 
     while (nRetries < 2) {
-        srv = sqlite3_prepare (db, nsPromiseFlatCString(aSQLStatement).get(), aSQLStatement.Length(), &mDBStatement, NULL);
+        srv = sqlite3_prepare_v2(db, nsPromiseFlatCString(aSQLStatement).get(),
+                                 aSQLStatement.Length(), &mDBStatement, NULL);
         if ((srv == SQLITE_SCHEMA && nRetries != 0) ||
             (srv != SQLITE_SCHEMA && srv != SQLITE_OK))
         {
@@ -142,10 +143,8 @@ mozStorageStatement::Initialize(mozIStorageConnection *aDBConnection, const nsAC
 
     for (unsigned int i = 0; i < mResultColumnCount; i++) {
         const void *name = sqlite3_column_name16 (mDBStatement, i);
-        if (name != nsnull)
-            mColumnNames.AppendString(nsDependentString(NS_STATIC_CAST(const PRUnichar*, name)));
-        else
-            mColumnNames.AppendString(EmptyString());
+        mColumnNames.AppendString(
+            nsDependentString(static_cast<const PRUnichar*>(name)));
     }
 
     // doing a sqlite3_prepare sets up the execution engine
@@ -214,26 +213,20 @@ mozStorageStatement::GetParameterName(PRUint32 aParamIndex, nsACString & _retval
     return NS_OK;
 }
 
-/* void getParameterIndexes(in AUTF8String aParameterName, out unsigned long aCount, [array,size_is(aCount),retval] out unsigned long aIndexes); */
+/* unsigned long getParameterIndex(in AUTF8String aParameterName); */
 NS_IMETHODIMP
-mozStorageStatement::GetParameterIndexes(const nsACString &aParameterName, PRUint32 *aCount, PRUint32 **aIndexes)
+mozStorageStatement::GetParameterIndex(const nsACString &aName,
+                                       PRUint32 *_retval)
 {
     NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
-    NS_ENSURE_ARG_POINTER(aCount);
-    NS_ENSURE_ARG_POINTER(aIndexes);
 
-    int *indexes, count;
-    count = sqlite3_bind_parameter_indexes(mDBStatement, nsPromiseFlatCString(aParameterName).get(), &indexes);
-    if (count) {
-        *aIndexes = (PRUint32*) nsMemory::Alloc(sizeof(PRUint32) * count);
-        for (int i = 0; i < count; i++)
-            (*aIndexes)[i] = indexes[i];
-        sqlite3_free_parameter_indexes(indexes);
-        *aCount = count;
-    } else {
-        *aCount = 0;
-        *aIndexes = nsnull;
-    }
+    int ind = sqlite3_bind_parameter_index(mDBStatement,
+                                           nsPromiseFlatCString(aName).get());
+    if (ind  == 0) // Named parameter not found
+        return NS_ERROR_INVALID_ARG;
+    
+    *_retval = ind - 1; // SQLite indexes are 1-based, we are 0-based
+
     return NS_OK;
 }
 
@@ -391,68 +384,39 @@ mozStorageStatement::ExecuteStep(PRBool *_retval)
         }
     }
 
-    int nRetries = 0;
-
-    while (nRetries < 2) {
-        int srv = sqlite3_step (mDBStatement);
+    int srv = sqlite3_step (mDBStatement);
 
 #ifdef PR_LOGGING
-        if (srv != SQLITE_ROW && srv != SQLITE_DONE)
-        {
-            nsCAutoString errStr;
-            mDBConnection->GetLastErrorString(errStr);
-            PR_LOG(gStorageLog, PR_LOG_DEBUG, ("mozStorageStatement::ExecuteStep error: %s", errStr.get()));
-        }
+    if (srv != SQLITE_ROW && srv != SQLITE_DONE)
+    {
+        nsCAutoString errStr;
+        mDBConnection->GetLastErrorString(errStr);
+        PR_LOG(gStorageLog, PR_LOG_DEBUG, ("mozStorageStatement::ExecuteStep error: %s", errStr.get()));
+    }
 #endif
 
-        // SQLITE_ROW and SQLITE_DONE are non-errors
-        if (srv == SQLITE_ROW) {
-            // we got a row back
-            mExecuting = PR_TRUE;
-            *_retval = PR_TRUE;
-            return NS_OK;
-        } else if (srv == SQLITE_DONE) {
-            // statement is done (no row returned)
-            mExecuting = PR_FALSE;
-            *_retval = PR_FALSE;
-            return NS_OK;
-        } else if (srv == SQLITE_BUSY ||
-                   srv == SQLITE_MISUSE)
-        {
-            mExecuting = PR_FALSE;
-            return NS_ERROR_FAILURE;
-        } else if (srv == SQLITE_SCHEMA) {
-            // step should never return SQLITE_SCHEMA
-            NS_NOTREACHED("sqlite3_step returned SQLITE_SCHEMA!");
-            return NS_ERROR_FAILURE;
-        } else if (srv == SQLITE_ERROR) {
-            // so we may end up with a SQLITE_ERROR/SQLITE_SCHEMA only after
-            // we reset, because SQLite's error reporting story
-            // sucks.
-            if (mExecuting == PR_TRUE) {
-                PR_LOG(gStorageLog, PR_LOG_ERROR, ("SQLITE_ERROR after mExecuting was true!"));
-
-                mExecuting = PR_FALSE;
-                return NS_ERROR_FAILURE;
-            }
-
-            srv = sqlite3_reset(mDBStatement);
-            if (srv == SQLITE_SCHEMA) {
-                rv = Recreate();
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                nRetries++;
-            } else {
-                return NS_ERROR_FAILURE;
-            }
-        } else {
-            // something that shouldn't happen happened
-            NS_ERROR ("sqlite3_step returned an error code we don't know about!");
-        }
+    // SQLITE_ROW and SQLITE_DONE are non-errors
+    if (srv == SQLITE_ROW) {
+        // we got a row back
+        mExecuting = PR_TRUE;
+        *_retval = PR_TRUE;
+        return NS_OK;
+    } else if (srv == SQLITE_DONE) {
+        // statement is done (no row returned)
+        mExecuting = PR_FALSE;
+        *_retval = PR_FALSE;
+        return NS_OK;
+    } else if (srv == SQLITE_BUSY || srv == SQLITE_MISUSE) {
+        mExecuting = PR_FALSE;
+        return NS_ERROR_FAILURE;
+    } else if (mExecuting == PR_TRUE) {
+#ifdef PR_LOGGING
+        PR_LOG(gStorageLog, PR_LOG_ERROR, ("SQLite error after mExecuting was true!"));
+#endif
+        mExecuting = PR_FALSE;
     }
 
-    // shouldn't get here
-    return NS_ERROR_FAILURE;
+    return ConvertResultCode(srv);
 }
 
 /* [noscript,notxpcom] sqlite3stmtptr getNativeStatementPointer(); */
@@ -629,7 +593,7 @@ mozStorageStatement::GetString(PRUint32 aIndex, nsAString & _retval)
     } else {
         int slen = sqlite3_column_bytes16 (mDBStatement, aIndex);
         const void *text = sqlite3_column_text16 (mDBStatement, aIndex);
-        const PRUnichar *wstr = NS_STATIC_CAST(const PRUnichar *, text);
+        const PRUnichar *wstr = static_cast<const PRUnichar *>(text);
         _retval.Assign (wstr, slen/2);
     }
     return NS_OK;

@@ -46,8 +46,8 @@
 
 menu,
 menuitem {
+  -moz-appearance: menuitem;
   -moz-box-align: center;
-  border: 1px solid transparent;
   color: MenuText;
   font: menu;
   list-style-image: none;
@@ -76,7 +76,6 @@ menuitem.spell-suggestion {
 .menu-iconic-text {
   margin: 0px !important;
   padding: 0px;
-  padding-bottom: 2px;
   color: inherit;
 }
 
@@ -107,56 +106,33 @@ menuitem.spell-suggestion {
 .menu-iconic-left,
 .menu-right {
   min-width:  1.28em;
-  min-height: 1.28em;
+  min-height: 1.21em;
+}
+
+menuitem.menuitem-iconic > .menu-iconic-left {
+  /* there's only space for 15px - make room for one more */
+  -moz-margin-start: -1px;
 }
 
 /* ..... menu arrow box ..... */
 
 .menu-right {
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-image: url("chrome://global/skin/menu/Menu-arrow.png");
+  -moz-appearance: menuarrow;
+  -moz-margin-end: -2px;
   list-style-image: none;
-}
-
-.menu-right[_moz-menuactive="true"] {
-  background-image: url("chrome://global/skin/menu/Menu-arrow-hover.png");
-}
-
-.menu-right[disabled="true"] {
-  background-image: url("chrome://global/skin/menu/Menu-arrow-disabled.png") !important;
-}
-
-.menu-right[chromedir="rtl"] {
-  background-image: url("chrome://global/skin/menu/Menu-arrow-rtl.png");
-}
-
-.menu-right[chromedir="rtl"][_moz-menuactive="true"] {
-  background-image: url("chrome://global/skin/menu/Menu-arrow-hover-rtl.png");
-}
-
-.menu-right[chromedir="rtl"][disabled="true"] {
-  background-image: url("chrome://global/skin/menu/Menu-arrow-disabled-rtl.png") !important;
 }
 
 /* ::::: menu/menuitems in menubar ::::: */
 
 menubar > menu {
-  border: 1px solid transparent;
-  padding: 1px;
-}
-menubar > menu[_moz-menuactive="true"] {
-  border-top-color   : ThreeDHighlight;
-  border-left-color  : ThreeDHighlight;
-  border-right-color : ThreeDShadow;
-  border-bottom-color: ThreeDShadow;
+  border: 2px solid transparent;
 }
 menubar > menu[_moz-menuactive="true"][open="true"] {
-  border-top-color   : ThreeDShadow;
-  border-left-color  : ThreeDShadow;
-  border-right-color : ThreeDHighlight;
-  border-bottom-color: ThreeDHighlight;
-  padding: 2px 0px 0px 2px;
+  border-width: 3px 1px 1px 3px;
+}
+menubar > menu[_moz-menuactive="true"],
+menubar > menu[_moz-menuactive="true"][open="true"] {
+  color: -moz-menubarhovertext;
 }
 
 /* ..... internal content .... */
@@ -183,8 +159,8 @@ menupopup > menu[_moz-menuactive="true"],
 menupopup > menuitem[_moz-menuactive="true"],
 popup > menu[_moz-menuactive="true"],
 popup > menuitem[_moz-menuactive="true"] {
-  background-color: Highlight;
-  color: HighlightText;
+  background-color: -moz-menuhover;
+  color: -moz-menuhovertext;
 }
 
 /* ::::: menu/menuitems in menulist popups ::::: */
@@ -218,38 +194,22 @@ menulist > menupopup > menuitem > .menu-iconic-text {
   margin: 0 !important;
 }
 
-/* ::::: checkbox menuitem ::::: */
+/* ::::: checkbox and radio menuitems ::::: */
 
+menuitem[type="checkbox"],
 menuitem[checked="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-check.gif");
-  -moz-image-region: auto;
+  -moz-appearance: checkmenuitem;
+}
+menuitem[type="checkbox"] > .menu-iconic-left,
+menuitem[checked="true"] > .menu-iconic-left {
+  -moz-appearance: menucheckbox;
 }
 
-menuitem[checked="true"][disabled="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-check-disabled.gif");
-  -moz-image-region: auto;
+menuitem[type="radio"] {
+  -moz-appearance: radiomenuitem;
 }
-
-menuitem[checked="true"][_moz-menuactive="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-check-hover.gif");
-  -moz-image-region: auto;
-}
-
-/* ::::: radio menuitem ::::: */
-
-menuitem[checked="true"][type="radio"] {
-  list-style-image: url("chrome://global/skin/menu/menu-radio.gif");
-  -moz-image-region: auto;
-}
-
-menuitem[checked="true"][type="radio"][disabled="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-radio-disabled.gif");
-  -moz-image-region: auto;
-}
-
-menuitem[checked="true"][type="radio"][_moz-menuactive="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-radio-hover.gif");
-  -moz-image-region: auto;
+menuitem[type="radio"] > .menu-iconic-left {
+  -moz-appearance: menuradio;
 }
 
 /* ::::: menuseparator ::::: */

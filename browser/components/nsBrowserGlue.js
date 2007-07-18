@@ -35,7 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+const Cr = Components.results;
 
 // Constructor
 
@@ -49,7 +51,7 @@ BrowserGlue.prototype = {
 
   QueryInterface: function(iid) 
   {
-     xpcomCheckInterfaces(iid, kServiceIIds, Components.results.NS_ERROR_NO_INTERFACE);
+     xpcomCheckInterfaces(iid, kServiceIIds, Cr.NS_ERROR_NO_INTERFACE);
      return this;
   }
 ,
@@ -71,8 +73,8 @@ BrowserGlue.prototype = {
         break;
       case "browser:purge-session-history":
         // reset the console service's error buffer
-        const cs = Components.classes["@mozilla.org/consoleservice;1"]
-                             .getService(Components.interfaces.nsIConsoleService);
+        const cs = Cc["@mozilla.org/consoleservice;1"].
+                   getService(Ci.nsIConsoleService);
         cs.logStringMessage(null); // clear the console (in case it's open)
         cs.reset();
         break;
@@ -81,9 +83,9 @@ BrowserGlue.prototype = {
         break;
       case "quit-application-granted":
         if (this._saveSession) {
-          var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                                      .getService(Components.interfaces.nsIPrefBranch);
-          prefService.setBoolPref("browser.sessionstore.resume_session_once", true);
+          var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                           getService(Ci.nsIPrefBranch);
+          prefBranch.setBoolPref("browser.sessionstore.resume_session_once", true);
         }
         break;
     }
@@ -93,8 +95,8 @@ BrowserGlue.prototype = {
   _init: function() 
   {
     // observer registration
-    const osvr = Components.classes['@mozilla.org/observer-service;1']
-                           .getService(Components.interfaces.nsIObserverService);
+    const osvr = Cc['@mozilla.org/observer-service;1'].
+                 getService(Ci.nsIObserverService);
     osvr.addObserver(this, "profile-before-change", false);
     osvr.addObserver(this, "profile-change-teardown", false);
     osvr.addObserver(this, "xpcom-shutdown", false);
@@ -108,8 +110,8 @@ BrowserGlue.prototype = {
   _dispose: function() 
   {
     // observer removal 
-    const osvr = Components.classes['@mozilla.org/observer-service;1']
-                           .getService(Components.interfaces.nsIObserverService);
+    const osvr = Cc['@mozilla.org/observer-service;1'].
+                 getService(Ci.nsIObserverService);
     osvr.removeObserver(this, "profile-before-change");
     osvr.removeObserver(this, "profile-change-teardown");
     osvr.removeObserver(this, "xpcom-shutdown");
@@ -125,27 +127,27 @@ BrowserGlue.prototype = {
     // check to see if the EULA must be shown on startup
     try {
       var mustDisplayEULA = true;
-      var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                                  .getService(Components.interfaces.nsIPrefBranch);
-      var EULAVersion = prefService.getIntPref("browser.EULA.version");
-      mustDisplayEULA = !prefService.getBoolPref("browser.EULA." + EULAVersion + ".accepted");
+      var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                       getService(Ci.nsIPrefBranch);
+      var EULAVersion = prefBranch.getIntPref("browser.EULA.version");
+      mustDisplayEULA = !prefBranch.getBoolPref("browser.EULA." + EULAVersion + ".accepted");
     } catch(ex) {
     }
 
     if (mustDisplayEULA) {
-      var ww2 = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                         .getService(Components.interfaces.nsIWindowWatcher);
+      var ww2 = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+                getService(Ci.nsIWindowWatcher);
       ww2.openWindow(null, "chrome://browser/content/EULA.xul", 
                      "_blank", "chrome,centerscreen,modal,resizable=yes", null);
     }
 
     this.Sanitizer.onStartup();
     // check if we're in safe mode
-    var app = Components.classes["@mozilla.org/xre/app-info;1"].getService(Components.interfaces.nsIXULAppInfo)
-                        .QueryInterface(Components.interfaces.nsIXULRuntime);
+    var app = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).
+              QueryInterface(Ci.nsIXULRuntime);
     if (app.inSafeMode) {
-      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                         .getService(Components.interfaces.nsIWindowWatcher);
+      var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+               getService(Ci.nsIWindowWatcher);
       ww.openWindow(null, "chrome://browser/content/safeMode.xul", 
                     "_blank", "chrome,centerscreen,modal,resizable=no", null);
     }
@@ -172,8 +174,8 @@ BrowserGlue.prototype = {
   {
     // here we enter last survival area, in order to avoid multiple
     // "quit-application" notifications caused by late window closings
-    const appStartup = Components.classes['@mozilla.org/toolkit/app-startup;1']
-                                 .getService(Components.interfaces.nsIAppStartup);
+    const appStartup = Cc['@mozilla.org/toolkit/app-startup;1'].
+                       getService(Ci.nsIAppStartup);
     try {
       appStartup.enterLastWindowClosingSurvivalArea();
 
@@ -187,8 +189,8 @@ BrowserGlue.prototype = {
 
   _onQuitRequest: function(aCancelQuit)
   {
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                       .getService(Components.interfaces.nsIWindowMediator);
+    var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+             getService(Ci.nsIWindowMediator);
     var windowcount = 0;
     var pagecount = 0;
     var browserEnum = wm.getEnumerator("navigator:browser");
@@ -205,21 +207,21 @@ BrowserGlue.prototype = {
     if (pagecount < 2)
       return;
 
-    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                                .getService(Components.interfaces.nsIPrefBranch);
+    var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                     getService(Ci.nsIPrefBranch);
     var showPrompt = true;
     try {
-      if (prefService.getIntPref("browser.startup.page") == 3 ||
-          prefService.getBoolPref("browser.sessionstore.resume_session_once"))
+      if (prefBranch.getIntPref("browser.startup.page") == 3 ||
+          prefBranch.getBoolPref("browser.sessionstore.resume_session_once"))
         showPrompt = false;
       else
-        showPrompt = prefService.getBoolPref("browser.warnOnQuit");
+        showPrompt = prefBranch.getBoolPref("browser.warnOnQuit");
     } catch (ex) {}
 
     var buttonChoice = 0;
     if (showPrompt) {
-      var bundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                                    .getService(Components.interfaces.nsIStringBundleService);
+      var bundleService = Cc["@mozilla.org/intl/stringbundle;1"].
+                          getService(Ci.nsIStringBundleService);
       var quitBundle = bundleService.createBundle("chrome://browser/locale/quitDialog.properties");
       var brandBundle = bundleService.createBundle("chrome://branding/locale/brand.properties");
 
@@ -238,8 +240,8 @@ BrowserGlue.prototype = {
         var message = quitBundle.formatStringFromName("message",
                                                       [appName], 1);
 
-      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                    .getService(Components.interfaces.nsIPromptService);
+      var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+                          getService(Ci.nsIPromptService);
 
       var flags = promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0 +
                   promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1 +
@@ -253,17 +255,17 @@ BrowserGlue.prototype = {
       switch (buttonChoice) {
       case 0:
         if (neverAsk.value)
-          prefService.setBoolPref("browser.warnOnQuit", false);
+          prefBranch.setBoolPref("browser.warnOnQuit", false);
         break;
       case 1:
-        aCancelQuit.QueryInterface(Components.interfaces.nsISupportsPRBool);
+        aCancelQuit.QueryInterface(Ci.nsISupportsPRBool);
         aCancelQuit.data = true;
         break;
       case 2:
         // could also set browser.warnOnQuit to false here,
         // but not setting it is a little safer.
         if (neverAsk.value)
-          prefService.setIntPref("browser.startup.page", 3);
+          prefBranch.setIntPref("browser.startup.page", 3);
         break;
       }
 
@@ -275,9 +277,9 @@ BrowserGlue.prototype = {
   get Sanitizer() 
   {
     if(typeof(Sanitizer) != "function") { // we should dynamically load the script
-      Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-                .getService(Components.interfaces.mozIJSSubScriptLoader)
-                .loadSubScript("chrome://browser/content/sanitize.js", null);
+      Cc["@mozilla.org/moz/jssubscript-loader;1"].
+      getService(Ci.mozIJSSubScriptLoader).
+      loadSubScript("chrome://browser/content/sanitize.js", null);
     }
     return Sanitizer;
   },
@@ -287,44 +289,43 @@ BrowserGlue.prototype = {
    * - imports the bookmarks html file if bookmarks datastore is empty
    */
   _initPlaces: function bg__initPlaces() {
-#ifdef MOZ_PLACES_BOOKMARKS
     // we need to instantiate the history service before we check the 
     // the browser.places.importBookmarksHTML pref, as 
     // nsNavHistory::ForceMigrateBookmarksDB() will set that pref
     // if we need to force a migration (due to a schema change)
-    var histsvc = Components.classes["@mozilla.org/browser/nav-history-service;1"]
-                            .getService(Components.interfaces.nsINavHistoryService);
+    var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+                  getService(Ci.nsINavHistoryService);
 
     var importBookmarks = false;
     try {
-      var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                                  .getService(Components.interfaces.nsIPrefBranch);
-      importBookmarks = prefService.getBoolPref("browser.places.importBookmarksHTML");
+      var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                       getService(Ci.nsIPrefBranch);
+      importBookmarks = prefBranch.getBoolPref("browser.places.importBookmarksHTML");
     } catch(ex) {}
 
     if (!importBookmarks)
       return;
 
-    var dirService = Components.classes["@mozilla.org/file/directory_service;1"]
-                               .getService(Components.interfaces.nsIProperties);
+    var dirService = Cc["@mozilla.org/file/directory_service;1"].
+                     getService(Ci.nsIProperties);
 
-    var bookmarksFile = dirService.get("BMarks", Components.interfaces.nsILocalFile);
+    var bookmarksFile = dirService.get("BMarks", Ci.nsILocalFile);
 
     if (bookmarksFile.exists()) {
       // import the file
       try {
         var importer = 
-          Components.classes["@mozilla.org/browser/places/import-export-service;1"]
-                    .getService(Components.interfaces.nsIPlacesImportExportService);
+          Cc["@mozilla.org/browser/places/import-export-service;1"].
+          getService(Ci.nsIPlacesImportExportService);
         importer.importHTMLFromFile(bookmarksFile, true);
       } catch(ex) {
       } finally {
-        prefService.setBoolPref("browser.places.importBookmarksHTML", false);
+        prefBranch.setBoolPref("browser.places.importBookmarksHTML", false);
       }
 
       // backup pre-places bookmarks.html
       // XXXtodo remove this before betas, after import/export is solid
-      var profDir = dirService.get("ProfD", Components.interfaces.nsILocalFile);
+      var profDir = dirService.get("ProfD", Ci.nsILocalFile);
       var bookmarksBackup = profDir.clone();
       bookmarksBackup.append("bookmarks.preplaces.html");
       if (!bookmarksBackup.exists()) {
@@ -336,7 +337,6 @@ BrowserGlue.prototype = {
         }
       }
     }
-#endif
   },
 
   /**
@@ -344,13 +344,11 @@ BrowserGlue.prototype = {
    * - back up and archive bookmarks
    */
   _shutdownPlaces: function bg__shutdownPlaces() {
-#ifdef MOZ_PLACES_BOOKMARKS
     // backup bookmarks to bookmarks.html
     var importer =
-      Components.classes["@mozilla.org/browser/places/import-export-service;1"]
-                .getService(Components.interfaces.nsIPlacesImportExportService);
+      Cc["@mozilla.org/browser/places/import-export-service;1"].
+      getService(Ci.nsIPlacesImportExportService);
     importer.backupBookmarksFile();
-#endif
   },
   
   // ------------------------------
@@ -377,10 +375,10 @@ const kServiceCId = Components.ID(kServiceId);
 
 // interfaces implemented by this component
 const kServiceIIds = [ 
-  Components.interfaces.nsIObserver,
-  Components.interfaces.nsISupports,
-  Components.interfaces.nsISupportsWeakReference,
-  Components.interfaces.nsIBrowserGlue
+  Ci.nsIObserver,
+  Ci.nsISupports,
+  Ci.nsISupportsWeakReference,
+  Ci.nsIBrowserGlue
   ];
 
 // categories which this component is registered in
@@ -391,10 +389,10 @@ const kServiceFactory = {
   _instance: null,
   createInstance: function (outer, iid) 
   {
-    if (outer != null) throw Components.results.NS_ERROR_NO_AGGREGATION;
+    if (outer != null) throw Cr.NS_ERROR_NO_AGGREGATION;
 
     xpcomCheckInterfaces(iid, kServiceIIds, 
-                          Components.results.NS_ERROR_INVALID_ARG);
+                          Cr.NS_ERROR_INVALID_ARG);
     return this._instance == null ?
       this._instance = new kServiceConstructor() : this._instance;
   }
@@ -415,15 +413,15 @@ var Module = {
   registerSelf: function(compMgr, fileSpec, location, type) 
   {
     if (!this.registered) {
-      compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar)
+      compMgr.QueryInterface(Ci.nsIComponentRegistrar)
              .registerFactoryLocation(kServiceCId,
                                       kServiceName,
                                       kServiceCtrId, 
                                       fileSpec,
                                       location, 
                                       type);
-      const catman = Components.classes['@mozilla.org/categorymanager;1']
-                               .getService(Components.interfaces.nsICategoryManager);
+      const catman = Cc['@mozilla.org/categorymanager;1'].
+                     getService(Ci.nsICategoryManager);
       var len = kServiceCats.length;
       for (var j = 0; j < len; j++) {
         catman.addCategoryEntry(kServiceCats[j],
@@ -435,10 +433,10 @@ var Module = {
   
   unregisterSelf: function(compMgr, fileSpec, location) 
   {
-    compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar)
+    compMgr.QueryInterface(Ci.nsIComponentRegistrar)
            .unregisterFactoryLocation(kServiceCId, fileSpec);
-    const catman = Components.classes['@mozilla.org/categorymanager;1']
-                             .getService(Components.interfaces.nsICategoryManager);
+    const catman = Cc['@mozilla.org/categorymanager;1'].
+                   getService(Ci.nsICategoryManager);
     var len = kServiceCats.length;
     for (var j = 0; j < len; j++) {
       catman.deleteCategoryEntry(kServiceCats[j], kServiceCtrId, true);
@@ -450,8 +448,8 @@ var Module = {
     if(cid.equals(kServiceCId))
       return kServiceFactory;
     
-    throw Components.results[
-      iid.equals(Components.interfaces.nsIFactory)
+    throw Cr[
+      iid.equals(Ci.nsIFactory)
       ? "NS_ERROR_NO_INTERFACE"
       : "NS_ERROR_NOT_IMPLEMENTED"
     ];

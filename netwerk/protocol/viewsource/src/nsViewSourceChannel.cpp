@@ -224,14 +224,14 @@ nsViewSourceChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     nsCOMPtr<nsILoadGroup> loadGroup;
     mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
     if (loadGroup)
-        loadGroup->AddRequest(NS_STATIC_CAST(nsIViewSourceChannel*,
-                                             this), nsnull);
+        loadGroup->AddRequest(static_cast<nsIViewSourceChannel*>
+                                         (this), nsnull);
     
     nsresult rv = mChannel->AsyncOpen(this, ctxt);
 
     if (NS_FAILED(rv) && loadGroup)
-        loadGroup->RemoveRequest(NS_STATIC_CAST(nsIViewSourceChannel*,
-                                                this),
+        loadGroup->RemoveRequest(static_cast<nsIViewSourceChannel*>
+                                            (this),
                                  nsnull, rv);
 
     if (NS_SUCCEEDED(rv)) {
@@ -471,8 +471,8 @@ nsViewSourceChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     mCachingChannel = do_QueryInterface(aRequest);
     mUploadChannel = do_QueryInterface(aRequest);
     
-    return mListener->OnStartRequest(NS_STATIC_CAST(nsIViewSourceChannel*,
-                                                    this),
+    return mListener->OnStartRequest(static_cast<nsIViewSourceChannel*>
+                                                (this),
                                      aContext);
 }
 
@@ -488,13 +488,13 @@ nsViewSourceChannel::OnStopRequest(nsIRequest *aRequest, nsISupports* aContext,
         mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
         if (loadGroup)
         {
-            loadGroup->RemoveRequest(NS_STATIC_CAST(nsIViewSourceChannel*,
-                                                    this),
+            loadGroup->RemoveRequest(static_cast<nsIViewSourceChannel*>
+                                                (this),
                                      nsnull, aStatus);
         }
     }
-    return mListener->OnStopRequest(NS_STATIC_CAST(nsIViewSourceChannel*,
-                                                   this),
+    return mListener->OnStopRequest(static_cast<nsIViewSourceChannel*>
+                                               (this),
                                     aContext, aStatus);
 }
 
@@ -506,8 +506,8 @@ nsViewSourceChannel::OnDataAvailable(nsIRequest *aRequest, nsISupports* aContext
                                PRUint32 aLength) 
 {
     NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
-    return mListener->OnDataAvailable(NS_STATIC_CAST(nsIViewSourceChannel*,
-                                                     this),
+    return mListener->OnDataAvailable(static_cast<nsIViewSourceChannel*>
+                                                 (this),
                                       aContext, aInputStream,
                                       aSourceOffset, aLength);
 }

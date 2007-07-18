@@ -113,15 +113,6 @@ public:
   // nsIContent
   virtual PRInt32 IntrinsicState() const;
 
-  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                             PRBool aNotify)
-  {
-    nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute,
-                                                  aNotify);
-
-    AfterSetAttr(aNameSpaceID, aAttribute, nsnull, aNotify);
-    return rv;
-  }
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
@@ -133,11 +124,6 @@ protected:
    */
   nsIContent* GetSelect();
 
-  /**
-   * Called when an attribute has just been changed
-   */
-  virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAString* aValue, PRBool aNotify);
   PRPackedBool mIsInitialized;
   PRPackedBool mIsSelected;
 };
@@ -324,7 +310,7 @@ nsHTMLOptionElement::GetIndex(PRInt32* aIndex)
       for (PRUint32 i = 0; i < length; i++) {
         options->Item(i, getter_AddRefs(thisOption));
 
-        if (thisOption.get() == NS_STATIC_CAST(nsIDOMNode *, this)) {
+        if (thisOption.get() == static_cast<nsIDOMNode *>(this)) {
           *aIndex = i;
 
           break;
@@ -377,13 +363,13 @@ nsHTMLOptionElement::IntrinsicState() const
   // toggles some of our hidden internal state at that!  Would that we could
   // use |mutable|.
   PRBool selected;
-  NS_CONST_CAST(nsHTMLOptionElement*, this)->GetSelected(&selected);
+  const_cast<nsHTMLOptionElement*>(this)->GetSelected(&selected);
   if (selected) {
     state |= NS_EVENT_STATE_CHECKED;
   }
 
   // Also calling a non-const interface method (for :default)
-  NS_CONST_CAST(nsHTMLOptionElement*, this)->GetDefaultSelected(&selected);
+  const_cast<nsHTMLOptionElement*>(this)->GetDefaultSelected(&selected);
   if (selected) {
     state |= NS_EVENT_STATE_DEFAULT;
   }
@@ -419,30 +405,6 @@ nsHTMLOptionElement::GetSelect()
   return nsnull;
 }
 
-nsresult
-nsHTMLOptionElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                  const nsAString* aValue, PRBool aNotify)
-{
-  if (aNotify && aNameSpaceID == kNameSpaceID_None &&
-      (aName == nsGkAtoms::disabled || aName == nsGkAtoms::selected)) {
-    PRInt32 states;
-    if (aName == nsGkAtoms::disabled) {
-      states = NS_EVENT_STATE_DISABLED | NS_EVENT_STATE_ENABLED;
-    } else {
-      states = NS_EVENT_STATE_DEFAULT;
-    }
-    
-    nsIDocument* document = GetCurrentDoc();
-    if (document) {
-      mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, PR_TRUE);
-      document->ContentStatesChanged(this, nsnull, states);
-    }
-  }
-
-  return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,
-                                            aNotify);
-}
-
 NS_IMETHODIMP    
 nsHTMLOptionElement::Initialize(JSContext* aContext, 
                                 JSObject *aObj,
@@ -463,8 +425,8 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
         return result;
       }
 
-      textContent->SetText(NS_REINTERPRET_CAST(const PRUnichar*,
-                                               JS_GetStringChars(jsstr)),
+      textContent->SetText(reinterpret_cast<const PRUnichar*>
+                                           (JS_GetStringChars(jsstr)),
                            JS_GetStringLength(jsstr),
                            PR_FALSE);
       
@@ -479,8 +441,8 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
       jsstr = JS_ValueToString(aContext, argv[1]);
       if (nsnull != jsstr) {
         // Set the value attribute for this element
-        nsAutoString value(NS_REINTERPRET_CAST(const PRUnichar*,
-                                               JS_GetStringChars(jsstr)));
+        nsAutoString value(reinterpret_cast<const PRUnichar*>
+                                           (JS_GetStringChars(jsstr)));
 
         result = SetAttr(kNameSpaceID_None, nsGkAtoms::value, value,
                          PR_FALSE);

@@ -40,7 +40,7 @@
 const NHRVO = Ci.nsINavHistoryResultViewObserver;
 
 // XXXmano: we should move most/all of these constants to PlacesUtils
-const ORGANIZER_ROOT_HISTORY_UNSORTED = "place:beginTime=-2592000000000&beginTimeRef=1&endTime=7200000000&endTimeRef=2&type=1";
+const ORGANIZER_ROOT_HISTORY_UNSORTED = "place:type=1";
 const ORGANIZER_ROOT_BOOKMARKS = "place:folder=2&group=3&excludeItems=1&queryType=1";
 const ORGANIZER_SUBSCRIPTIONS_QUERY = "place:annotation=livemark%2FfeedURI";
 
@@ -114,8 +114,7 @@ PlacesController.prototype = {
     case "cmd_copy":
       return this._view.hasSelection;
     case "cmd_paste":
-      return this._canInsert() && 
-             this._hasClipboardData() && this._canPaste();
+      return this._canInsert() && this._canPaste();
     case "cmd_selectAll":
       if (this._view.selType != "single") {
         var result = this._view.getResult();
@@ -139,7 +138,7 @@ PlacesController.prototype = {
         return false;
 
       if (this._view.hasSingleSelection && PlacesUtils.nodeIsFolder(node)) {
-        var contents = PlacesUtils.getFolderContents(node.itemId, false, false);
+        var contents = PlacesUtils.getFolderContents(node.itemId, false, false).root;
         for (var i = 0; i < contents.childCount; ++i) {
           var child = contents.getChild(i);
           if (PlacesUtils.nodeIsURI(child))
@@ -158,7 +157,6 @@ PlacesController.prototype = {
         }
       }
       return false;
-#ifdef MOZ_PLACES_BOOKMARKS
     case "placesCmd_new:folder":
     case "placesCmd_new:livemark":
       return this._canInsert() &&
@@ -170,7 +168,10 @@ PlacesController.prototype = {
     case "placesCmd_new:separator":
       return this._canInsert() &&
              this._view.peerDropTypes
-                 .indexOf(PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR) != -1;
+                 .indexOf(PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR) != -1 &&
+             !asQuery(this._view.getResult().root).queryOptions.excludeItems &&
+             this._view.getResult().sortingMode ==
+                 Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
     case "placesCmd_show:info":
       if (this._view.hasSingleSelection) {
         var selectedNode = this._view.selectedNode;
@@ -215,7 +216,9 @@ PlacesController.prototype = {
       var selectedNode = this._view.selectedNode;
       return selectedNode &&
              PlacesUtils.nodeIsFolder(selectedNode) &&
-             !PlacesUtils.nodeIsReadOnly(selectedNode);
+             !PlacesUtils.nodeIsReadOnly(selectedNode) &&
+             this._view.getResult().sortingMode ==
+                 Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
     case "placesCmd_setAsBookmarksToolbarFolder":
       if (this._view.hasSingleSelection) {
         var selectedNode = this._view.selectedNode;
@@ -225,7 +228,6 @@ PlacesController.prototype = {
         }
       }
       return false;
-#endif
     default:
       return false;
     }
@@ -286,7 +288,6 @@ PlacesController.prototype = {
     case "placesCmd_open:tabs":
       this.openLinksInTabs();
       break;
-#ifdef MOZ_PLACES_BOOKMARKS
     case "placesCmd_new:folder":
       this.newItem("folder");
       break;
@@ -317,7 +318,6 @@ PlacesController.prototype = {
     case "placesCmd_setAsBookmarksToolbarFolder":
       this.setBookmarksToolbarFolder();
       break;
-#endif
     }
   },
 
@@ -371,31 +371,6 @@ PlacesController.prototype = {
   },
 
   /**
-   * Determines whether or not the clipboard contains data that the active
-   * view can support in a paste operation. 
-   * @returns true if the clipboard contains data compatible with the active
-   *          view, false otherwise. 
-   */
-  _hasClipboardData: function PC__hasClipboardData() {
-    var types = this._view.peerDropTypes;
-    var flavors = 
-        Cc["@mozilla.org/supports-array;1"].
-        createInstance(Ci.nsISupportsArray);
-    for (var i = 0; i < types.length; ++i) {
-      var cstring = 
-          Cc["@mozilla.org/supports-cstring;1"].
-          createInstance(Ci.nsISupportsCString);
-      cstring.data = types[i];
-      flavors.AppendElement(cstring);
-    }
-
-    var clipboard = 
-        Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
-    return clipboard.hasDataMatchingFlavors(flavors, 
-                                            Ci.nsIClipboard.kGlobalClipboard);
-  },
-
-  /**
    * Determines whether or not nodes can be inserted relative to the selection.
    */
   _canInsert: function PC__canInsert() {
@@ -421,22 +396,41 @@ PlacesController.prototype = {
    * Looks at the data on the clipboard to see if it is paste-able. 
    * Paste-able data is:
    *   - in a format that the view can receive
-   *   - not a set of URIs that is entirely already present in the view, 
-   *     since we can only have one instance of a URI per container. 
    * @returns true if the data is paste-able, false if the clipboard data
    *          cannot be pasted
    */
   _canPaste: function PC__canPaste() {
+    var types = this._view.peerDropTypes;
+    var flavors = 
+        Cc["@mozilla.org/supports-array;1"].
+        createInstance(Ci.nsISupportsArray);
+    for (var i = 0; i < types.length; ++i) {
+      var cstring = 
+          Cc["@mozilla.org/supports-cstring;1"].
+          createInstance(Ci.nsISupportsCString);
+      cstring.data = types[i];
+      flavors.AppendElement(cstring);
+    }
+
+    var clipboard = 
+        Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
+    var hasClipboardData = clipboard.hasDataMatchingFlavors(flavors, 
+                                            Ci.nsIClipboard.kGlobalClipboard);
+    if (!hasClipboardData)
+      return false;
+
+    // XXX todo
+    // see bug #387007 for an idea on how to make this more efficient
+    // right now, we are pulling data off the clipboard and using
+    // unwrapNodes() to verify it.
+
     var xferable = 
         Cc["@mozilla.org/widget/transferable;1"].
         createInstance(Ci.nsITransferable);
-    xferable.addDataFlavor(PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER);
-    xferable.addDataFlavor(PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR);
-    xferable.addDataFlavor(PlacesUtils.TYPE_X_MOZ_PLACE);
-    xferable.addDataFlavor(PlacesUtils.TYPE_X_MOZ_URL);
 
-    var clipboard = Cc["@mozilla.org/widget/clipboard;1"].
-                    getService(Ci.nsIClipboard);
+    for (var j = 0; j < types.length; ++j) {
+      xferable.addDataFlavor(types[j]);
+    }
     clipboard.getData(xferable, Ci.nsIClipboard.kGlobalClipboard);
 
     try {
@@ -447,14 +441,12 @@ PlacesController.prototype = {
       if (this._view.peerDropTypes.indexOf(type.value) == -1)
         return false;
 
-      // unwrapNodes will throw if the data blob is malformed. 
-      var nodes = PlacesUtils.unwrapNodes(data, type.value);
-
-      var ip = this._view.insertionPoint;
-      return ip != null;
+      // unwrapNodes() will throw if the data blob is malformed. 
+      var unwrappedNodes = PlacesUtils.unwrapNodes(data, type.value);
+      return this._view.insertionPoint != null;
     }
     catch (e) {
-      // Unwrap nodes failed, possibly because a field that should have 
+      // unwrapeNodes() failed, possibly because a field that should have 
       // contained a URI did not actually contain something that is 
       // parse-able as a URI. 
       return false;
@@ -889,7 +881,7 @@ PlacesController.prototype = {
       // Open each uri in the folder in a tab.
       var index = firstIndex;
       var urlsToOpen = [];
-      var contents = PlacesUtils.getFolderContents(node.itemId, false, false);
+      var contents = PlacesUtils.getFolderContents(node.itemId, false, false).root;
       for (var i = 0; i < contents.childCount; ++i) {
         var child = contents.getChild(i);
         if (PlacesUtils.nodeIsURI(child))
@@ -997,8 +989,8 @@ PlacesController.prototype = {
     var ip = this._view.insertionPoint;
     if (!ip)
       throw Cr.NS_ERROR_NOT_AVAILABLE;
-    var txn = new PlacesCreateSeparatorTransaction(ip.itemId, ip.index);
-    PlacesUtils.tm.doTransaction(txn);
+    var txn = PlacesUtils.ptm.createSeparator(ip.itemId, ip.index);
+    PlacesUtils.ptm.commitTransaction(txn);
   },
 
   /**
@@ -1015,9 +1007,9 @@ PlacesController.prototype = {
    */
   sortFolderByName: function PC_sortFolderByName() {
     var selectedNode = this._view.selectedNode;
-    var txn = new PlacesSortFolderByNameTransaction(selectedNode.itemId,
-                                                    selectedNode.bookmarkIndex);
-    PlacesUtils.tm.doTransaction(txn);
+    var txn = PlacesUtils.ptm.sortFolderByName(selectedNode.itemId,
+                                               selectedNode.bookmarkIndex);
+    PlacesUtils.ptm.commitTransaction(txn);
   },
 
   /**
@@ -1025,28 +1017,25 @@ PlacesController.prototype = {
    */
   setBookmarksToolbarFolder: function PC_setBookmarksToolbarFolder() {
     if (!this._view.hasSingleSelection)
-      return false;
+      return;
+
     var selectedNode = this._view.selectedNode;
-    var txn = new PlacesSetBookmarksToolbarTransaction(selectedNode.itemId);
-    PlacesUtils.tm.doTransaction(txn);
-    return true;
+    var txn = PlacesUtils.ptm.setBookmarksToolbar(selectedNode.itemId);
+    PlacesUtils.ptm.commitTransaction(txn);
   },
 
 
   /**
-   * Creates a set of transactions for the removal of a range of items. A range is 
-   * an array of adjacent nodes in a view.
-   * @param   range
-   *          An array of nodes to remove. Should all be adjacent. 
-   * @param   transactions
-   *          An array of transactions.
+   * Walk the list of folders we're removing in this delete operation, and
+   * see if the selected node specified is already implicitly being removed 
+   * because it is a child of that folder. 
+   * @param   node
+   *          Node to check for containment. 
+   * @param   pastFolders
+   *          List of folders the calling function has already traversed
+   * @returns true if the node should be skipped, false otherwise. 
    */
-  _removeRange: function PC__removeRange(range, transactions) {
-    NS_ASSERT(transactions instanceof Array, "Must pass a transactions array");
-    var index = PlacesUtils.getIndexOfNode(range[0]);
-
-    var removedFolders = [];
-
+  _shouldSkipNode: function PC_shouldSkipNode(node, pastFolders) {
     /**
      * Determines if a node is contained by another node within a resultset. 
      * @param   node
@@ -1064,44 +1053,36 @@ PlacesController.prototype = {
       }
       return false;
     }
-
-    /**
-     * Walk the list of folders we're removing in this delete operation, and
-     * see if the selected node specified is already implicitly being removed 
-     * because it is a child of that folder. 
-     * @param   node
-     *          Node to check for containment. 
-     * @returns true if the node should be skipped, false otherwise. 
-     */
-    function shouldSkipNode(node) {
-      for (var j = 0; j < removedFolders.length; ++j) {
-        if (isContainedBy(node, removedFolders[j]))
+  
+      for (var j = 0; j < pastFolders.length; ++j) {
+        if (isContainedBy(node, pastFolders[j]))
           return true;
       }
-      return false;          
-    }
+      return false;
+  },
+
+  /**
+   * Creates a set of transactions for the removal of a range of items. 
+   * A range is an array of adjacent nodes in a view.
+   * @param   [in] range
+   *          An array of nodes to remove. Should all be adjacent. 
+   * @param   [out] transactions
+   *          An array of transactions.
+   */
+  _removeRange: function PC__removeRange(range, transactions) {
+    NS_ASSERT(transactions instanceof Array, "Must pass a transactions array");
+
+    var removedFolders = [];
 
     for (var i = 0; i < range.length; ++i) {
       var node = range[i];
-      if (shouldSkipNode(node))
+      if (this._shouldSkipNode(node, removedFolders))
         continue;
 
-      if (PlacesUtils.nodeIsFolder(node)) {
-        // TODO -- node.parent might be a query and not a folder.  See bug 324948
-        var folder = node;
-        removedFolders.push(folder);
-        transactions.push(new PlacesRemoveFolderTransaction(folder.itemId));
-      }
-      else if (PlacesUtils.nodeIsSeparator(node)) {
-        // A Bookmark separator.
-        transactions.push(new PlacesRemoveSeparatorTransaction(
-          node.parent.itemId, index));
-      }
-      else if (PlacesUtils.nodeIsFolder(node.parent)) {
-        // A Bookmark in a Bookmark Folder.
-        transactions.push(new PlacesRemoveItemTransaction(node.itemId,
-          PlacesUtils._uri(node.uri), node.parent.itemId, index));
-      }
+      if (PlacesUtils.nodeIsFolder(node))
+        removedFolders.push(node);
+
+      transactions.push(PlacesUtils.ptm.removeItem(node.itemId));
     }
   },
 
@@ -1113,11 +1094,13 @@ PlacesController.prototype = {
   _removeRowsFromBookmarks: function PC__removeRowsFromBookmarks(txnName) {
     var ranges = this._view.getRemovableSelectionRanges();
     var transactions = [];
+    // Delete the selected rows. Do this by walking the selection backward, so
+    // that when undo is performed they are re-inserted in the correct order.
     for (var i = ranges.length - 1; i >= 0 ; --i)
       this._removeRange(ranges[i], transactions);
     if (transactions.length > 0) {
-      var txn = new PlacesAggregateTransaction(txnName, transactions);
-      PlacesUtils.tm.doTransaction(txn);
+      var txn = PlacesUtils.ptm.aggregateTransactions(txnName, transactions);
+      PlacesUtils.ptm.commitTransaction(txn);
     }
   },
 
@@ -1148,14 +1131,22 @@ PlacesController.prototype = {
     NS_ASSERT(aTxnName !== undefined, "Must supply Transaction Name");
     this._view.saveSelection(this._view.SAVE_SELECTION_REMOVE);
 
-    // Delete the selected rows. Do this by walking the selection backward, so
-    // that when undo is performed they are re-inserted in the correct order.
-    var type = this._view.getResult().root.type; 
-    if (PlacesUtils.nodeIsFolder(this._view.getResult().root))
-      this._removeRowsFromBookmarks(aTxnName);
-    else
-      this._removeRowsFromHistory();
+    var root = this._view.getResult().root;
 
+    if (PlacesUtils.nodeIsFolder(root)) 
+      this._removeRowsFromBookmarks(aTxnName);
+    else if (PlacesUtils.nodeIsQuery(root)) {
+      var queryType = asQuery(root).queryOptions.queryType;
+      if (queryType == Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS)
+        this._removeRowsFromBookmarks(aTxnName);
+      else if (queryType == Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY)
+        this._removeRowsFromHistory();
+      else
+        NS_ASSERT(false, "implement support for QUERY_TYPE_UNIFIED");
+    }
+    else
+      NS_ASSERT(false, "unexpected root");
+      
     this._view.restoreSelection();
   },
 
@@ -1226,35 +1217,36 @@ PlacesController.prototype = {
         Cc["@mozilla.org/widget/transferable;1"].
         createInstance(Ci.nsITransferable);
     var foundFolder = false, foundLink = false;
-    var pcString = psString = placeString = mozURLString = htmlString = unicodeString = "";
+    var copiedFolders = [];
+    var placeString = mozURLString = htmlString = unicodeString = "";
+    
     for (var i = 0; i < nodes.length; ++i) {
       var node = nodes[i];
+      if (this._shouldSkipNode(node, copiedFolders))
+        continue;
+      if (PlacesUtils.nodeIsFolder(node))
+        copiedFolders.push(node);
+        
       function generateChunk(type, overrideURI) {
-        var suffix = i < (nodes.length - 1) ? NEWLINE : "";
-        return PlacesUtils.wrapNode(node, type, overrideURI) + suffix;
+        var suffix = i < (nodes.length - 1) ? "\n" : "";
+        var uri = overrideURI;
+        
+        if (PlacesUtils.nodeIsLivemarkContainer(node))
+          uri = PlacesUtils.livemarks.getFeedURI(node.itemId).spec
+          
+        mozURLString += (PlacesUtils.wrapNode(node, PlacesUtils.TYPE_X_MOZ_URL,
+                                               uri) + suffix);
+        unicodeString += (PlacesUtils.wrapNode(node, PlacesUtils.TYPE_UNICODE,
+                                               uri) + suffix);
+        htmlString += (PlacesUtils.wrapNode(node, PlacesUtils.TYPE_HTML,
+                                               uri) + suffix);
+        
+        var placeSuffix = i < (nodes.length - 1) ? "," : "";
+        return PlacesUtils.wrapNode(node, type, overrideURI) + placeSuffix;
       }
 
-      function generateURIChunks(overrideURI) {
-        mozURLString += generateChunk(PlacesUtils.TYPE_X_MOZ_URL, overrideURI);
-        htmlString += generateChunk(PlacesUtils.TYPE_HTML, overrideURI);
-        unicodeString += generateChunk(PlacesUtils.TYPE_UNICODE, overrideURI);
-      }
-
-      if (PlacesUtils.nodeIsFolder(node) || PlacesUtils.nodeIsQuery(node)) {
-        pcString += generateChunk(PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER);
-
-        // Also copy the feed URI for live-bookmark folders
-        if (PlacesUtils.nodeIsLivemarkContainer(node)) {
-          var uri = PlacesUtils.livemarks.getFeedURI(node.itemId);
-          generateURIChunks(uri.spec);
-        }
-      }
-      else if (PlacesUtils.nodeIsSeparator(node))
-        psString += generateChunk(PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR);
-      else {
+        // all items wrapped as TYPE_X_MOZ_PLACE
         placeString += generateChunk(PlacesUtils.TYPE_X_MOZ_PLACE);
-        generateURIChunks();
-      }
     }
 
     function addData(type, data) {
@@ -1262,11 +1254,7 @@ PlacesController.prototype = {
       xferable.setTransferData(type, PlacesUtils._wrapString(data), data.length * 2);
     }
     // This order is _important_! It controls how this and other applications 
-    // select data to be inserted based on type. 
-    if (pcString)
-      addData(PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER, pcString);
-    if (psString)
-      addData(PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR, psString);
+    // select data to be inserted based on type.
     if (placeString)
       addData(PlacesUtils.TYPE_X_MOZ_PLACE, placeString);
     if (mozURLString)
@@ -1276,8 +1264,7 @@ PlacesController.prototype = {
     if (htmlString)
       addData(PlacesUtils.TYPE_HTML, htmlString);
 
-    if (pcString || psString || placeString || unicodeString || htmlString || 
-        mozURLString) {
+    if (placeString || unicodeString || htmlString || mozURLString) {
       var clipboard = 
           Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
       clipboard.setData(xferable, null, Ci.nsIClipboard.kGlobalClipboard);
@@ -1342,9 +1329,14 @@ PlacesController.prototype = {
         data = data.value.QueryInterface(Ci.nsISupportsString).data;
         var items = PlacesUtils.unwrapNodes(data, type.value);
         var transactions = [];
+        var index = ip.index;
         for (var i = 0; i < items.length; ++i) {
+          // adjusted to make sure that items are given the correct index -
+          // transactions insert differently if index == -1
+          if (ip.index > -1)
+            index = ip.index + i;
           transactions.push(PlacesUtils.makeTransaction(items[i], type.value, 
-                                                        ip.itemId, ip.index,
+                                                        ip.itemId, index,
                                                         true));
         }
         return transactions;
@@ -1361,14 +1353,11 @@ PlacesController.prototype = {
 
     // Get transactions to paste any folders, separators or links that might
     // be on the clipboard, aggregate them and execute them. 
-    var transactions = 
-        [].concat(getTransactions([PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER]),
-                  getTransactions([PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR]),
-                  getTransactions([PlacesUtils.TYPE_X_MOZ_PLACE,
-                                   PlacesUtils.TYPE_X_MOZ_URL, 
-                                   PlacesUtils.TYPE_UNICODE]));
-    var txn = new PlacesAggregateTransaction("Paste", transactions);
-    PlacesUtils.tm.doTransaction(txn);
+    var transactions = getTransactions([PlacesUtils.TYPE_X_MOZ_PLACE,
+                                        PlacesUtils.TYPE_X_MOZ_URL, 
+                                        PlacesUtils.TYPE_UNICODE]);
+    var txn = PlacesUtils.ptm.aggregateTransactions("Paste", transactions);
+    PlacesUtils.ptm.commitTransaction(txn);
   }
 };
 
@@ -1501,756 +1490,8 @@ var PlacesControllerDragHelper = {
                         insertionPoint.index, copy));
     }
 
-    var txn = new PlacesAggregateTransaction("DropItems", transactions);
-    PlacesUtils.tm.doTransaction(txn);
-  }
-};
-
-/**
- * Method and utility stubs for Place Edit Transactions
- */
-function PlacesBaseTransaction() {
-}
-PlacesBaseTransaction.prototype = {
-  utils: PlacesUtils,
-
-  bookmarks: Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-             getService(Ci.nsINavBookmarksService),
-  _livemarks: null,
-  get livemarks() {
-    if (!this._livemarks) {
-      this._livemarks =
-        Cc["@mozilla.org/browser/livemark-service;2"].
-        getService(Ci.nsILivemarkService);
-    }
-    return this._livemarks;
-  },
-
-  // The minimum amount of transactions we should tell our observers to begin
-  // batching (rather than letting them do incremental drawing).
-  MIN_TRANSACTIONS_FOR_BATCH: 5,
-
-  LOG: LOG,
-  redoTransaction: function PIT_redoTransaction() {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  },
-
-  get isTransient() {
-    return false;
-  },
-
-  merge: function PIT_merge(transaction) {
-    return false;
-  }
-};
-
-/**
- * Performs several Places Transactions in a single batch. 
- */
-function PlacesAggregateTransaction(name, transactions) {
-  this._transactions = transactions;
-  this._name = name;
-  this.container = -1;
-  this.redoTransaction = this.doTransaction;
-}
-PlacesAggregateTransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype,
-  
-  doTransaction: function PAT_doTransaction() {
-    this.LOG("== " + this._name + " (Aggregate) ==============");
-    if (this._transactions.length >= this.MIN_TRANSACTIONS_FOR_BATCH) {
-      var callback = {
-        _self: this,
-        runBatched: function() {
-          this._self.commit(false);
-        }
-      };
-      this.utils.bookmarks.runInBatchMode(callback, null);
-    }
-    else
-      this.commit(false);
-
-    this.LOG("== " + this._name + " (Aggregate Ends) =========");
-  },
-
-  undoTransaction: function PAT_undoTransaction() {
-    this.LOG("== UN" + this._name + " (UNAggregate) ============");
-    if (this._transactions.length >= this.MIN_TRANSACTIONS_FOR_BATCH) {
-      var callback = {
-        _self: this,
-        runBatched: function() {
-          this._self.commit(true);
-        }
-      };
-      this.utils.bookmarks.runInBatchMode(callback, null);
-    }
-    else
-      this.commit(true);
-  
-    this.LOG("== UN" + this._name + " (UNAggregate Ends) =======");
-  },
-
-  commit: function PAT_commit(aUndo) {
-    for (var i = this._transactions.length - 1; i >= 0; --i) {
-      var txn = this._transactions[i];
-      if (this.container > -1) 
-        txn.container = this.container;
-      if (aUndo)
-        txn.undoTransaction();
-      else
-        txn.doTransaction();
-    }
-  }
-};
-
-
-/**
- * Transaction for creating a new folder item.
- *
- * @param aName
- *        the name of the new folder
- * @param aContainer
- *        the identifier of the folder in which the new folder should be
- *        added.
- * @param [optional] aIndex
- *        the index of the item in aContainer, pass -1 or nothing to create
- *        the item at the end of aContainer.
- * @param [optional] aAnnotations
- *        the annotations to set for the new folder.
- * @param [optional] aChildItemsTransactions
- *        array of transactions for items to be created under the new folder.
- */
-function PlacesCreateFolderTransaction(aName, aContainer, aIndex,
-                                       aAnnotations, aChildItemsTransactions) {
-  this._name = aName;
-  this._container = aContainer;
-  this._index = typeof(aIndex) == "number" ? aIndex : -1;
-  this._annotations = aAnnotations;
-  this._id = null;
-  this._childItemsTransactions = aChildItemsTransactions || [];
-  this.redoTransaction = this.doTransaction;
-}
-PlacesCreateFolderTransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype,
-
-  // childItemsTransaction support
-  get container() { return this._container; },
-  set container(val) { return this._container = val; },
-
-  doTransaction: function PCFT_doTransaction() {
-    var bookmarks = this.utils.bookmarks;
-    this._id = bookmarks.createFolder(this._container, this._name, this._index);
-    if (this._annotations.length > 0)
-      this.utils.setAnnotationsForItem(this._id, this._annotations);
-
-    for (var i = 0; i < this._childItemsTransactions.length; ++i) {
-      var txn = this._childItemsTransactions[i];
-      txn.container = this._id;
-      txn.doTransaction();
-    }
-  },
-
-  undoTransaction: function PCFT_undoTransaction() {
-    this.bookmarks.removeFolder(this._id);
-    for (var i = 0; i < this._childItemsTransactions.length; ++i) {
-      var txn = this.childItemsTransactions[i];
-      txn.undoTransaction();
-    }
-  }
-};
-
-/**
- * Transaction for creating a new bookmark item
- *
- * @param aURI
- *        the uri of the new bookmark (nsIURI)
- * @param aContainer
- *        the identifier of the folder in which the bookmark should be added.
- * @param [optional] aIndex
- *        the index of the item in aContainer, pass -1 or nothing to create
- *        the item at the end of aContainer.
- * @param [optional] aTitle
- *        the title of the new bookmark.
- * @param [optional] aKeyword
- *        the keyword of the new bookmark.
- * @param [optional] aAnnotations
- *        the annotations to set for the new bookmark.
- * @param [optional] aChildTransactions
- *        child transactions to commit after creating the bookmark. Prefer
- *        using any of the arguments above if possible. In general, a child
- *        transations should be used only if the change it does has to be
- *        reverted manually when removing the bookmark item.
- *        a child transaction must support setting its bookmark-item
- *        identifier via an "id" js setter.
- */
-function PlacesCreateItemTransaction(aURI, aContainer, aIndex, aTitle,
-                                     aKeyword, aAnnotations,
-                                     aChildTransactions) {
-  this._uri = aURI;
-  this._container = aContainer;
-  this._index = typeof(aIndex) == "number" ? aIndex : -1;
-  this._title = aTitle;
-  this._keyword = aKeyword;
-  this._annotations = aAnnotations;
-  this._childTransactions = aChildTransactions || [];
-  this.redoTransaction = this.doTransaction;
-}
-PlacesCreateItemTransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype,
-
-  // childItemsTransactions support for the create-folder transaction
-  get container() { return this._container; },
-  set container(val) { return this._container = val; },
-
-  doTransaction: function PCIT_doTransaction() {
-    var bookmarks = this.utils.bookmarks;
-    this._id = bookmarks.insertBookmark(this.container, this._uri, this._index,
-                                        this._title);
-    if (this._keyword)
-      bookmarks.setKeywordForBookmark(this._id, this._keyword);
-    if (this._annotations && this._annotations.length > 0)
-      this.utils.setAnnotationsForItem(this._id, this._annotations);
-
-    for (var i = 0; i < this._childTransactions.length; ++i) {
-      var txn = this._childTransactions[i];
-      txn.id = this._id;
-      txn.doTransaction();
-    }
-  },
-
-  undoTransaction: function PCIT_undoTransaction() {
-    this.utils.bookmarks.removeItem(this._id);
-    for (var i = 0; i < this._childTransactions.length; ++i) {
-      var txn = this._childTransactions[i];
-      txn.undoTransaction();
-    }
-  }
-};
-
-/**
- * Transaction for creating a new separator item
- *
- * @param aContainer
- *        the identifier of the folder in which the separator should be
- *        added.
- * @param [optional] aIndex
- *        the index of the item in aContainer, pass -1 or nothing to create
- *        the separator at the end of aContainer.
- */
-function PlacesCreateSeparatorTransaction(aContainer, aIndex) {
-  this._container = aContainer;
-  this._index = typeof(aIndex) == "number" ? aIndex : -1;
-  this._id = null;
-}
-PlacesCreateSeparatorTransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype,
-
-  // childItemsTransaction support
-  get container() { return this._container; },
-  set container(val) { return this._container = val; },
-
-  doTransaction: function PCST_doTransaction() {
-    this.LOG("Create separator in: " + this.container + "," + this._index);
-    this._id = this.bookmarks.insertSeparator(this.container, this._index);
-  },
-
-  undoTransaction: function PCST_undoTransaction() {
-    this.LOG("UNCreate separator from: " + this.container + "," + this._index);
-    this.bookmarks.removeChildAt(this.container, this._index);
-  }
-};
-
-/**
- * Transaction for creating a new live-bookmark item.
- *
- * @see nsILivemarksService::createLivemark for documentation regarding the
- * first three arguments.
- *
- * @param aContainer
- *        the identifier of the folder in which the live-bookmark should be
- *        added.
- * @param [optional] aIndex
- *        the index of the item in aContainer, pass -1 or nothing to create
- *        the item at the end of aContainer.
- * @param [optional] aAnnotations
- *        the annotations to set for the new live-bookmark.
- */
-function PlacesCreateLivemarkTransaction(aFeedURI, aSiteURI, aName,
-                                         aContainer, aIndex, aAnnotations) {
-  this._feedURI = aFeedURI;
-  this._siteURI = aSiteURI;
-  this._name = aName;
-  this._container = aContainer;
-  this._index = typeof(aIndex) == "number" ? aIndex : -1;
-  this._annotations = aAnnotations;
-}
-PlacesCreateLivemarkTransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype,
-
-  // childItemsTransaction support
-  get container() { return this._container; },
-  set container(val) { return this._container = val; },
-
-  doTransaction: function PCLT_doTransaction() {
-    this._id = this.utils.livemarks
-                   .createLivemark(this._container, this._name, this._siteURI,
-                                   this._feedURI, this._index);
-    if (this._annotations)
-      this.utils.setAnnotationsForItem(this._id, this._annotations);
-  },
-
-  undoTransaction: function PCLT_undoTransaction() {
-    this.bookmarks.removeFolder(this._id);
-  }
-};
-
-/**
- * Move an Item
- */
-function PlacesMoveItemTransaction(aItemId, aNewContainer, aNewIndex) {
-  NS_ASSERT(!isNaN(aItemId + aNewContainer + aNewIndex), "Parameter is NaN!");
-  NS_ASSERT(aNewIndex >= -1, "invalid insertion index");
-  this._id = aItemId;
-  this._oldContainer = this.utils.bookmarks.getFolderIdForItem(this._id);
-  this._oldIndex = this.utils.bookmarks.getItemIndex(this._id);
-  NS_ASSERT(this._oldContainer > 0 && this._oldIndex >= 0, "invalid item");
-  this._newContainer = aNewContainer;
-  this._newIndex = aNewIndex;
-  this.redoTransaction = this.doTransaction;
-}
-PlacesMoveItemTransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype,
-
-  doTransaction: function PMIT_doTransaction() {
-    this.bookmarks.moveItem(this._id, this._newContainer, this._newIndex);
-  },
-
-  undoTransaction: function PMIT_undoTransaction() {
-    this.bookmarks.moveItem(this._id, this._oldContainer, this._oldIndex);
-  }
-};
-
-/**
- * Remove a Folder
- * This is a little complicated. When we remove a container we need to remove 
- * all of its children. We can't just repurpose our existing transactions for
- * this since they cache their parent container id. Since the folder structure
- * is being removed, this id is being destroyed and when it is re-created will
- * likely have a different id.
- */
-
-function PlacesRemoveFolderTransaction(id) {
-  this._removeTxn = this.bookmarks.getRemoveFolderTransaction(id);
-  this._id = id;
-  this._transactions = []; // A set of transactions to remove content.
-  this.redoTransaction = this.doTransaction;
-}
-PlacesRemoveFolderTransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype, 
-  /**
-   * Create a flat, ordered list of transactions for a depth-first recreation
-   * of items within this folder.
-   */
-  _saveFolderContents: function PRFT__saveFolderContents() {
-    this._transactions = [];
-    var contents = this.utils.getFolderContents(this._id, false, false);
-    var ios = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);  
-    for (var i = 0; i < contents.childCount; ++i) {
-      var child = contents.getChild(i);
-      var txn;
-      if (child.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER) {
-        txn = new PlacesRemoveFolderTransaction(child.itemId);
-      }
-      else if (child.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
-        txn = new PlacesRemoveSeparatorTransaction(this._id, i);
-      }
-      else {
-        txn = new PlacesRemoveItemTransaction(child.itemId,
-                                              ios.newURI(child.uri, null, null),
-                                              this._id, i);
-      }
-      this._transactions.push(txn);
-    }
-  },
-
-  doTransaction: function PRFT_doTransaction() {
-    var title = this.bookmarks.getItemTitle(this._id);
-    this.LOG("Remove Folder: " + title);
-
-    this._saveFolderContents();
-
-    // Remove children backwards to preserve parent-child relationships.
-    for (var i = this._transactions.length - 1; i >= 0; --i)
-      this._transactions[i].doTransaction();
-    
-    // Remove this folder itself. 
-    this._removeTxn.doTransaction();
-  },
-
-  undoTransaction: function PRFT_undoTransaction() {
-    this._removeTxn.undoTransaction();
-    
-    var title = this.bookmarks.getItemTitle(this._id);
-    this.LOG("UNRemove Folder: " + title);
-    
-    // Create children forwards to preserve parent-child relationships.
-    for (var i = 0; i < this._transactions.length; ++i)
-      this._transactions[i].undoTransaction();
-  }
-};
-
-/**
- * Remove an Item
- */
-function PlacesRemoveItemTransaction(id, uri, oldContainer, oldIndex) {
-  this._id = id;
-  this._uri = uri;
-  this._oldContainer = oldContainer;
-  this._oldIndex = oldIndex;
-  this._annotations = [];
-  this.redoTransaction = this.doTransaction;
-}
-PlacesRemoveItemTransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype, 
-  
-  doTransaction: function PRIT_doTransaction() {
-    this.LOG("Remove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex);
-    this._title = this.bookmarks.getItemTitle(this._id);
-    this._annotations = this.utils.getAnnotationsForItem(this._id);
-    this.utils.bookmarks.removeItem(this._id);
-  },
-  
-  undoTransaction: function PRIT_undoTransaction() {
-    this.LOG("UNRemove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex);
-    this._id = this.bookmarks.insertBookmark(this._oldContainer, this._uri,
-                                             this._oldIndex, this._title);
-    this.utils.setAnnotationsForItem(this._id, this._annotations);
-  }
-};
-
-/**
- * Remove a separator
- */
-function PlacesRemoveSeparatorTransaction(oldContainer, oldIndex) {
-  this._oldContainer = oldContainer;
-  this._oldIndex = oldIndex;
-  this.redoTransaction = this.doTransaction;
-}
-PlacesRemoveSeparatorTransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype, 
-
-  doTransaction: function PRST_doTransaction() {
-    this.LOG("Remove Separator from: " + this._oldContainer + "," + this._oldIndex);
-    this.bookmarks.removeChildAt(this._oldContainer, this._oldIndex);
-  },
-  
-  undoTransaction: function PRST_undoTransaction() {
-    this.LOG("UNRemove Separator from: " + this._oldContainer + "," + this._oldIndex);
-    this.bookmarks.insertSeparator(this._oldContainer, this._oldIndex);
-  }
-};
-
-/**
- * Edit a bookmark's title.
- */
-function PlacesEditItemTitleTransaction(id, newTitle) {
-  this._id = id;
-  this._newTitle = newTitle;
-  this._oldTitle = "";
-  this.redoTransaction = this.doTransaction;
-}
-PlacesEditItemTitleTransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype,
-
-  doTransaction: function PEITT_doTransaction() {
-    this._oldTitle = this.bookmarks.getItemTitle(this._id);
-    this.bookmarks.setItemTitle(this._id, this._newTitle);
-  },
-
-  undoTransaction: function PEITT_undoTransaction() {
-    this.bookmarks.setItemTitle(this._id, this._oldTitle);
-  }
-};
-
-/**
- * Edit a bookmark's uri.
- */
-function PlacesEditBookmarkURITransaction(aBookmarkId, aNewURI) {
-  this._id = aBookmarkId;
-  this._newURI = aNewURI;
-  this.redoTransaction = this.doTransaction;
-}
-PlacesEditBookmarkURITransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype,
-
-  doTransaction: function PEBUT_doTransaction() {
-    this._oldURI = this.bookmarks.getBookmarkURI(this._id);
-    this.bookmarks.changeBookmarkURI(this._id, this._newURI);
-  },
-
-  undoTransaction: function PEBUT_undoTransaction() {
-    this.bookmarks.changeBookmarkURI(this._id, this._oldURI);
-  }
-};
-
-/**
- * Set/Unset Load-in-sidebar annotation
- */
-function PlacesSetLoadInSidebarTransaction(aBookmarkId, aLoadInSidebar) {
-  this.id = aBookmarkId;
-  this._loadInSidebar = aLoadInSidebar;
-  this.redoTransaction = this.doTransaction;
-}
-PlacesSetLoadInSidebarTransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype,
-  _anno: {
-    name: LOAD_IN_SIDEBAR_ANNO,
-    type: Ci.nsIAnnotationService.TYPE_INT32,
-    value: 1,
-    flags: 0,
-    expires: Ci.nsIAnnotationService.EXPIRE_NEVER
-  },
-
-  doTransaction: function PSLIST_doTransaction() {
-    this._wasSet = this.utils.annotations
-                       .itemHasAnnotation(this.id, this._anno.name);
-    if (this._loadInSidebar) {
-      this.utils.setAnnotationsForItem(this.id, [this._anno]);
-    }
-    else {
-      try {
-        this.utils.annotations.removeItemAnnotation(this.id, this._anno.name);
-      } catch(ex) { }
-    }
-  },
-
-  undoTransaction: function PSLIST_undoTransaction() {
-    if (this._wasSet != this._loadInSidebar) {
-      this._loadInSidebar = !this._loadInSidebar;
-      this.doTransaction();
-    }
-  }
-};
-
-/**
- * Edit a the description of a bookmark or a folder
- *
- */
-function PlacesEditItemDescriptionTransaction(aItemId, aDescription) {
-  this.id = aItemId;
-  this._newDescription = aDescription;
-  this.redoTransaction = this.doTransaction;
-}
-PlacesEditItemDescriptionTransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype,
-  _oldDescription: "",
-  DESCRIPTION_ANNO: DESCRIPTION_ANNO,
-  nsIAnnotationService: Components.interfaces.nsIAnnotationService,
-
-  doTransaction: function PSLIST_doTransaction() {
-    const annos = this.utils.annotations;
-
-    if (annos.itemHasAnnotation(this.id, this.DESCRIPTION_ANNO)) {
-      this._oldDescription =
-        annos.getItemAnnotationString(this.id, this.DESCRIPTION_ANNO);
-    }
-
-    if (this._newDescription) {
-      annos.setItemAnnotationString(this.id, this.DESCRIPTION_ANNO,
-                                    this._newDescription, 0,
-                                    this.nsIAnnotationService.EXPIRE_NEVER);
-    }
-    else if (this._oldDescription)
-      annos.removeItemAnnotation(this.id, this.DESCRIPTION_ANNO);
-  },
-
-  undoTransaction: function PSLIST_undoTransaction() {
-    const annos = this.utils.annotations;
-
-    if (this._oldDescription) {
-      annos.setItemAnnotationString(this.id, this.DESCRIPTION_ANNO,
-                                    this._oldDescription, 0,
-                                    this.nsIAnnotationService.EXPIRE_NEVER);
-    }
-    else if (annos.itemHasAnnotation(this.id, this.DESCRIPTION_ANNO))
-      annos.removeItemAnnotation(this.id, this.DESCRIPTION_ANNO);
-  }
-};
-
-/**
- * Edit a bookmark's keyword.
- */
-function PlacesEditBookmarkKeywordTransaction(id, newKeyword) {
-  this.id = id;
-  this._newKeyword = newKeyword;
-  this._oldKeyword = "";
-  this.redoTransaction = this.doTransaction;
-}
-PlacesEditBookmarkKeywordTransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype,
-
-  doTransaction: function PEBKT_doTransaction() {
-    this._oldKeyword = this.bookmarks.getKeywordForBookmark(this.id);
-    this.bookmarks.setKeywordForBookmark(this.id, this._newKeyword);
-  },
-
-  undoTransaction: function PEBKT_undoTransaction() {
-    this.bookmarks.setKeywordForBookmark(this.id, this._oldKeyword);
-  }
-};
-
-/**
- * Edit the post data associated with a URI
- */
-function PlacesEditURIPostDataTransaction(aURI, aPostData) {
-  this._uri = aURI;
-  this._newPostData = aPostData;
-  this._oldPostData = null;
-  this.redoTransaction = this.doTransaction;
-}
-PlacesEditURIPostDataTransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype,
-
-  doTransaction: function PEUPDT_doTransaction() {
-    this._oldPostData = this.utils.getPostDataForURI(this._uri);
-    this.utils.setPostDataForURI(this._uri, this._newPostData);
-  },
-
-  undoTransaction: function PEUPDT_undoTransaction() {
-    this.utils.setPostDataForURI(this._uri, this._oldPostData);
-  }
-};
-
-/**
- * Edit a live bookmark's site URI.
- */
-function PlacesEditLivemarkSiteURITransaction(folderId, uri) {
-  this._folderId = folderId;
-  this._newURI = uri;
-  this._oldURI = null;
-  this.redoTransaction = this.doTransaction;
-}
-PlacesEditLivemarkSiteURITransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype,
-
-  doTransaction: function PELSUT_doTransaction() {
-    this._oldURI = this.livemarks.getSiteURI(this._folderId);
-    this.livemarks.setSiteURI(this._folderId, this._newURI);
-  },
-
-  undoTransaction: function PELSUT_undoTransaction() {
-    this.livemarks.setSiteURI(this._folderId, this._oldURI);
-  }
-};
-
-/**
- * Edit a live bookmark's feed URI.
- */
-function PlacesEditLivemarkFeedURITransaction(folderId, uri) {
-  this._folderId = folderId;
-  this._newURI = uri;
-  this._oldURI = null;
-  this.redoTransaction = this.doTransaction;
-}
-PlacesEditLivemarkFeedURITransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype,
-
-  doTransaction: function PELFUT_doTransaction() {
-    this._oldURI = this.livemarks.getFeedURI(this._folderId);
-    this.livemarks.setFeedURI(this._folderId, this._newURI);
-    this.livemarks.reloadLivemarkFolder(this._folderId);
-  },
-
-  undoTransaction: function PELFUT_undoTransaction() {
-    this.livemarks.setFeedURI(this._folderId, this._oldURI);
-    this.livemarks.reloadLivemarkFolder(this._folderId);
-  }
-};
-
-/**
- * Edit a bookmark's microsummary.
- */
-function PlacesEditBookmarkMicrosummaryTransaction(aID, newMicrosummary) {
-  this.id = aID;
-  this._newMicrosummary = newMicrosummary;
-  this._oldMicrosummary = null;
-  this.redoTransaction = this.doTransaction;
-}
-PlacesEditBookmarkMicrosummaryTransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype,
-  
-  mss: PlacesUtils.microsummaries,
-
-  doTransaction: function PEBMT_doTransaction() {
-    this._oldMicrosummary = this.mss.getMicrosummary(this.id);
-    if (this._newMicrosummary)
-      this.mss.setMicrosummary(this.id, this._newMicrosummary);
-    else
-      this.mss.removeMicrosummary(this.id);
-  },
-
-  undoTransaction: function PEBMT_undoTransaction() {
-    if (this._oldMicrosummary)
-      this.mss.setMicrosummary(this.id, this._oldMicrosummary);
-    else
-      this.mss.removeMicrosummary(this.id);
-  }
-};
-
-/**
- * Sort a folder by name
- */
-function PlacesSortFolderByNameTransaction(aFolderId, aFolderIndex) {
-  this._folderId = aFolderId;
-  this._folderIndex = aFolderIndex;
-  this._oldOrder = null,
-  this.redoTransaction = this.doTransaction;
-}
-PlacesSortFolderByNameTransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype,
-
-  doTransaction: function PSSFBN_doTransaction() {
-    this._oldOrder = [];
-
-    var items = [];
-    var contents = this.utils.getFolderContents(this._folderId, false, false);
-    var count = contents.childCount;
-    for (var i = 0; i < count; ++i) {
-      var item = contents.getChild(i);
-      this._oldOrder[item.itemId] = i;
-      items.push(item);
-    }
-
-    items.sort(function (a, b) { return a.title.localeCompare(b.title); });
-
-    for (var i = 0; i < count; ++i)
-      this.bookmarks.setItemIndex(items[i].itemId, i);
-  },
-
-  undoTransaction: function PSSFBN_undoTransaction() {
-    for (item in this._oldOrder)
-      this.bookmarks.setItemIndex(item, this._oldOrder[item]);
-  }
-};
-
-/**
- * Set the bookmarks toolbar folder.
- */
-function PlacesSetBookmarksToolbarTransaction(aFolderId) {
-  this._folderId = aFolderId;
-  this._oldFolderId = this.utils.toolbarFolder;
-  this.redoTransaction = this.doTransaction;
-}
-PlacesSetBookmarksToolbarTransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype,
-  
-  doTransaction: function PSBTT_doTransaction() {
-    this.utils.bookmarks.toolbarFolder = this._folderId;
-  },
-
-  undoTransaction: function PSBTT_undoTransaction() {
-    this.utils.bookmarks.toolbarFolder = this._oldFolderId;
+    var txn = PlacesUtils.ptm.aggregateTransactions("DropItems", transactions);
+    PlacesUtils.ptm.commitTransaction(txn);
   }
 };
 
@@ -2259,7 +1500,6 @@ function goUpdatePlacesCommands() {
   goUpdateCommand("placesCmd_open:window");
   goUpdateCommand("placesCmd_open:tab");
   goUpdateCommand("placesCmd_open:tabs");
-#ifdef MOZ_PLACES_BOOKMARKS
   goUpdateCommand("placesCmd_new:folder");
   goUpdateCommand("placesCmd_new:bookmark");
   goUpdateCommand("placesCmd_new:livemark");
@@ -2270,5 +1510,4 @@ function goUpdatePlacesCommands() {
   goUpdateCommand("placesCmd_reload");
   goUpdateCommand("placesCmd_reloadMicrosummary");
   goUpdateCommand("placesCmd_sortBy:name");
-#endif
 }

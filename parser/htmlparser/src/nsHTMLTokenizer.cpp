@@ -395,7 +395,7 @@ nsresult nsHTMLTokenizer::ScanDocStructure(PRBool aFinalChunk)
                   nsDequeIterator it(theStack, earlyPos), end(theStack.End());
                   while (it < end) {
                     CHTMLToken *theMalformedToken = 
-                        NS_STATIC_CAST(CHTMLToken*, it++);
+                        static_cast<CHTMLToken*>(it++);
                   
                     theMalformedToken->SetContainerInfo(eMalformed);
                   }
@@ -409,7 +409,7 @@ nsresult nsHTMLTokenizer::ScanDocStructure(PRBool aFinalChunk)
           case eToken_end: 
             {
               CHTMLToken *theLastToken =
-                NS_STATIC_CAST(CHTMLToken*, theStack.Peek());
+                static_cast<CHTMLToken*>(theStack.Peek());
               if (theLastToken) {
                 if (theTag == theLastToken->GetTypeID()) {
                   theStack.Pop(); // Yank it for real 
@@ -427,7 +427,7 @@ nsresult nsHTMLTokenizer::ScanDocStructure(PRBool aFinalChunk)
                     do {
                       theLastToken->SetContainerInfo(eMalformed);
                       tempStack.Push(theLastToken);
-                      theLastToken = NS_STATIC_CAST(CHTMLToken*, theStack.Pop());
+                      theLastToken = static_cast<CHTMLToken*>(theStack.Pop());
                     } while (theLastToken && theTag != theLastToken->GetTypeID());
                     // XXX The above test can confuse two different userdefined 
                     // tags.
@@ -643,8 +643,8 @@ nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,
 
   while (!done && result == NS_OK) {
     CAttributeToken* theToken =
-      NS_STATIC_CAST(CAttributeToken*,
-                     theAllocator->CreateTokenOfType(eToken_attribute,
+      static_cast<CAttributeToken*>
+                 (theAllocator->CreateTokenOfType(eToken_attribute,
                                                      eHTMLTag_unknown));
     if (NS_LIKELY(theToken != nsnull)) {
       // Tell the new token to finish consuming text...
@@ -791,7 +791,7 @@ nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,
             theAllocator->CreateTokenOfType(eToken_text, eHTMLTag_text);
         NS_ENSURE_TRUE(text, NS_ERROR_OUT_OF_MEMORY);
 
-        CTextToken* textToken = NS_STATIC_CAST(CTextToken*, text);
+        CTextToken* textToken = static_cast<CTextToken*>(text);
 
         if (isCDATA) {
           result = textToken->ConsumeCharacterData(theTag != eHTMLTag_script,

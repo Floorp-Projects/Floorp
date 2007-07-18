@@ -202,14 +202,10 @@ NS_IMETHODIMP nsSubDocumentFrame::GetAccessible(nsIAccessible** aAccessible)
 NS_IMETHODIMP
 nsSubDocumentFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsIFrameFrame))) {
-    nsISupports *tmp = NS_STATIC_CAST(nsIFrameFrame *, this);
-    *aInstancePtr = tmp;
+    *aInstancePtr = static_cast<nsIFrameFrame*>(this);
     return NS_OK;
   }
 
@@ -304,7 +300,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsIView* subdocView = mInnerView->GetFirstChild();
   if (!subdocView)
     return NS_OK;
-  nsIFrame* f = NS_STATIC_CAST(nsIFrame*, subdocView->GetClientData());
+  nsIFrame* f = static_cast<nsIFrame*>(subdocView->GetClientData());
   if (!f)
     return NS_OK;
   

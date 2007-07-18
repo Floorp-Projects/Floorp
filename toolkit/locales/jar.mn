@@ -32,7 +32,6 @@
   locale/@AB_CD@/global/license.dtd                     (%chrome/global/license.dtd)
   locale/@AB_CD@/global/mozilla.dtd                     (%chrome/global/mozilla.dtd)
   locale/@AB_CD@/global/notification.dtd                (%chrome/global/notification.dtd)
-+ locale/@AB_CD@/global/nsTreeSorting.properties        (%chrome/global/nsTreeSorting.properties)
   locale/@AB_CD@/global/preferences.dtd                 (%chrome/global/preferences.dtd)
 + locale/@AB_CD@/global/printdialog.dtd                 (%chrome/global/printdialog.dtd)
 + locale/@AB_CD@/global/printjoboptions.dtd             (%chrome/global/printjoboptions.dtd)

@@ -55,7 +55,6 @@
 #include "nsIXBLService.h"
 #include "nsGkAtoms.h"
 #include "nsICSSStyleRule.h"
-#include "nsISVGSVGElement.h"
 #include "nsRuleWalker.h"
 #include "nsCSSDeclaration.h"
 #include "nsCSSProps.h"
@@ -338,7 +337,8 @@ nsSVGElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify)
 
   PRBool hasListeners = aNotify &&
     nsContentUtils::HasMutationListeners(this,
-                                         NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
+                                         NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
+                                         this);
 
   // There's no point in comparing the stylerule pointers since we're always
   // getting a new stylerule here. And we can't compare the stringvalues of
@@ -640,7 +640,8 @@ nsSVGElement::DidModifySVGObservable(nsISVGValue* aObservable,
   PRBool modification = PR_FALSE;
   PRBool hasListeners =
     nsContentUtils::HasMutationListeners(this,
-                                         NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
+                                         NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
+                                         this);
 
   if (hasListeners || IsInDoc()) {
     modification = !!mAttrsAndChildren.GetAttr(attrName->LocalName(),
@@ -809,7 +810,7 @@ nsSVGElement::GetCtx()
 {
   nsCOMPtr<nsIDOMSVGSVGElement> svg;
   GetOwnerSVGElement(getter_AddRefs(svg));
-  return NS_STATIC_CAST(nsSVGSVGElement*, svg.get());
+  return static_cast<nsSVGSVGElement*>(svg.get());
 }
 
 nsSVGElement::LengthAttributesInfo
@@ -855,13 +856,17 @@ nsSVGElement::GetAnimatedLengthValues(float *aFirst, ...)
   va_start(args, aFirst);
 
   while (f && i < info.mLengthCount) {
+    PRUint8 type = info.mLengths[i].GetSpecifiedUnitType();
     if (!ctx) {
-      PRUint8 type = info.mLengths[i].GetSpecifiedUnitType();
       if (type != nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER &&
           type != nsIDOMSVGLength::SVG_LENGTHTYPE_PX)
         ctx = GetCtx();
     }
-    *f = info.mLengths[i++].GetAnimValue(ctx);
+    if (type == nsIDOMSVGLength::SVG_LENGTHTYPE_EMS ||
+        type == nsIDOMSVGLength::SVG_LENGTHTYPE_EXS)
+      *f = info.mLengths[i++].GetAnimValue(this);
+    else
+      *f = info.mLengths[i++].GetAnimValue(ctx);
     f = va_arg(args, float*);
   }
 
@@ -932,22 +937,22 @@ nsSVGElement::ReportAttributeParseFailure(nsIDocument* aDocument,
 void
 nsSVGElement::RecompileScriptEventListeners()
 {
-    PRInt32 i, count = mAttrsAndChildren.AttrCount();
-    for (i = 0; i < count; ++i) {
-        const nsAttrName *name = mAttrsAndChildren.AttrNameAt(i);
+  PRInt32 i, count = mAttrsAndChildren.AttrCount();
+  for (i = 0; i < count; ++i) {
+    const nsAttrName *name = mAttrsAndChildren.AttrNameAt(i);
 
-        // Eventlistenener-attributes are always in the null namespace
-        if (!name->IsAtom()) {
-            continue;
-        }
-
-        nsIAtom *attr = name->Atom();
-        if (!IsEventName(attr)) {
-            continue;
-        }
-
-        nsAutoString value;
-        GetAttr(kNameSpaceID_None, attr, value);
-        AddScriptEventListener(GetEventNameForAttr(attr), value, PR_TRUE);
+    // Eventlistenener-attributes are always in the null namespace
+    if (!name->IsAtom()) {
+        continue;
     }
+
+    nsIAtom *attr = name->Atom();
+    if (!IsEventName(attr)) {
+      continue;
+    }
+
+    nsAutoString value;
+    GetAttr(kNameSpaceID_None, attr, value);
+    AddScriptEventListener(GetEventNameForAttr(attr), value, PR_TRUE);
+  }
 }

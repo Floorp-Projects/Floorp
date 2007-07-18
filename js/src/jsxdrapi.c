@@ -93,7 +93,7 @@ typedef struct JSXDRMemState {
                 void *data_ = JS_realloc((xdr)->cx, MEM_BASE(xdr), limit_);   \
                 if (!data_)                                                   \
                     return 0;                                                 \
-                MEM_BASE(xdr) = data_;                                        \
+                MEM_BASE(xdr) = (char *) data_;                               \
                 MEM_LIMIT(xdr) = limit_;                                      \
             }                                                                 \
         } else {                                                              \
@@ -244,7 +244,7 @@ JS_XDRNewMem(JSContext *cx, JSXDRMode mode)
         return NULL;
     JS_XDRInitBase(xdr, mode, cx);
     if (mode == JSXDR_ENCODE) {
-        if (!(MEM_BASE(xdr) = JS_malloc(cx, MEM_BLOCK))) {
+        if (!(MEM_BASE(xdr) = (char *) JS_malloc(cx, MEM_BLOCK))) {
             JS_free(cx, xdr);
             return NULL;
         }
@@ -273,7 +273,7 @@ JS_XDRMemSetData(JSXDRState *xdr, void *data, uint32 len)
     if (xdr->ops != &xdrmem_ops)
         return;
     MEM_LIMIT(xdr) = len;
-    MEM_BASE(xdr) = data;
+    MEM_BASE(xdr) = (char *) data;
     MEM_COUNT(xdr) = 0;
 }
 
@@ -301,7 +301,7 @@ JS_XDRDestroy(JSXDRState *xdr)
     if (xdr->registry) {
         JS_free(cx, xdr->registry);
         if (xdr->reghash)
-            JS_DHashTableDestroy(xdr->reghash);
+            JS_DHashTableDestroy((JSDHashTable *) xdr->reghash);
     }
     JS_free(cx, xdr);
 }
@@ -630,11 +630,11 @@ js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
     if (type == JSVAL_DOUBLE) {
         if (!XDRDoubleValue(xdr, &d))
             return JS_FALSE;
-        atom = js_AtomizeDouble(xdr->cx, d, 0);
+        atom = js_AtomizeDouble(xdr->cx, d);
     } else {
         if (!XDRValueBody(xdr, type, &v))
             return JS_FALSE;
-        atom = js_AtomizeValue(xdr->cx, v, 0);
+        atom = js_AtomizePrimitiveValue(xdr->cx, v);
     }
 
     if (!atom)
@@ -775,7 +775,8 @@ JS_XDRRegisterClass(JSXDRState *xdr, JSClass *clasp, uint32 *idp)
     registry[numclasses] = clasp;
     if (xdr->reghash) {
         JSRegHashEntry *entry = (JSRegHashEntry *)
-            JS_DHashTableOperate(xdr->reghash, clasp->name, JS_DHASH_ADD);
+            JS_DHashTableOperate((JSDHashTable *) xdr->reghash,
+                                 clasp->name, JS_DHASH_ADD);
         if (!entry) {
             JS_ReportOutOfMemory(xdr->cx);
             return JS_FALSE;
@@ -807,8 +808,8 @@ JS_XDRFindClassIdByName(JSXDRState *xdr, const char *name)
                 for (i = 0; i < numclasses; i++) {
                     JSClass *clasp = xdr->registry[i];
                     entry = (JSRegHashEntry *)
-                        JS_DHashTableOperate(xdr->reghash, clasp->name,
-                                             JS_DHASH_ADD);
+                        JS_DHashTableOperate((JSDHashTable *) xdr->reghash,
+                                             clasp->name, JS_DHASH_ADD);
                     entry->name = clasp->name;
                     entry->index = i;
                 }
@@ -818,7 +819,8 @@ JS_XDRFindClassIdByName(JSXDRState *xdr, const char *name)
         /* If we managed to create reghash, use it for O(1) Find. */
         if (xdr->reghash) {
             entry = (JSRegHashEntry *)
-                JS_DHashTableOperate(xdr->reghash, name, JS_DHASH_LOOKUP);
+                JS_DHashTableOperate((JSDHashTable *) xdr->reghash,
+                                     name, JS_DHASH_LOOKUP);
             if (JS_DHASH_ENTRY_IS_BUSY(&entry->hdr))
                 return CLASS_INDEX_TO_ID(entry->index);
         }

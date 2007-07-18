@@ -70,8 +70,8 @@ CAccessibleText::QueryInterface(REFIID iid, void** ppv)
     if (!textAcc) {
       return E_NOINTERFACE;
     }
-    *ppv = NS_STATIC_CAST(IAccessibleText*, this);
-    (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
+    *ppv = static_cast<IAccessibleText*>(this);
+    (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
     return S_OK;
   }
 
@@ -111,7 +111,7 @@ CAccessibleText::get_attributes(long aOffset, long *aStartOffset,
   if (!instancePtr)
     return E_FAIL;
 
-  IAccessible2 *pAccessible2 = NS_STATIC_CAST(IAccessible2*, *instancePtr);
+  IAccessible2 *pAccessible2 = static_cast<IAccessible2*>(*instancePtr);
   HRESULT hr = pAccessible2->get_attributes(aTextAttributes);
   pAccessible2->Release();
 
@@ -378,7 +378,7 @@ CAccessibleText::scrollSubstringTo(long aStartIndex, long aEndIndex,
   if (!instancePtr)
     return E_FAIL;
 
-  IAccessible2 *pAccessible2 = NS_STATIC_CAST(IAccessible2*, *instancePtr);
+  IAccessible2 *pAccessible2 = static_cast<IAccessible2*>(*instancePtr);
   HRESULT hr = pAccessible2->scrollTo(aScrollType);
   pAccessible2->Release();
 
@@ -410,7 +410,7 @@ CAccessibleText::scrollSubstringToPoint(long aStartIndex, long aEndIndex,
   if (!instancePtr)
     return E_FAIL;
 
-  IAccessible2 *pAccessible2 = NS_STATIC_CAST(IAccessible2*, *instancePtr);
+  IAccessible2 *pAccessible2 = static_cast<IAccessible2*>(*instancePtr);
   HRESULT hr = pAccessible2->scrollToPoint(aCoordinateType, aX, aY);
   pAccessible2->Release();
 

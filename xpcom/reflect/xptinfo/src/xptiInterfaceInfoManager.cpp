@@ -1720,7 +1720,7 @@ EntryToInfo(xptiInterfaceEntry* entry, nsIInterfaceInfo **_retval)
         return rv;
 
     // Transfer the AddRef done by GetInterfaceInfo.
-    *_retval = NS_STATIC_CAST(nsIInterfaceInfo*, info);
+    *_retval = static_cast<nsIInterfaceInfo*>(info);
     return NS_OK;    
 }
 
@@ -1983,7 +1983,7 @@ xptiAdditionalManagersEnumerator::xptiAdditionalManagersEnumerator()
 
 PRBool xptiAdditionalManagersEnumerator::AppendElement(nsIInterfaceInfoManager* element)
 {
-    if(!mArray.AppendElement(NS_STATIC_CAST(nsISupports*, element)))
+    if(!mArray.AppendElement(static_cast<nsISupports*>(element)))
         return PR_FALSE;
     mCount++;
     return PR_TRUE;
@@ -2016,8 +2016,8 @@ NS_IMETHODIMP xptiInterfaceInfoManager::AddAdditionalManager(nsIInterfaceInfoMan
 {
     nsCOMPtr<nsIWeakReference> weakRef = do_GetWeakReference(manager);
     nsISupports* ptrToAdd = weakRef ? 
-                    NS_STATIC_CAST(nsISupports*, weakRef) :
-                    NS_STATIC_CAST(nsISupports*, manager);
+                    static_cast<nsISupports*>(weakRef) :
+                    static_cast<nsISupports*>(manager);
     { // scoped lock...
         nsAutoLock lock(mAdditionalManagersLock);
         PRInt32 index;
@@ -2035,8 +2035,8 @@ NS_IMETHODIMP xptiInterfaceInfoManager::RemoveAdditionalManager(nsIInterfaceInfo
 {
     nsCOMPtr<nsIWeakReference> weakRef = do_GetWeakReference(manager);
     nsISupports* ptrToRemove = weakRef ? 
-                    NS_STATIC_CAST(nsISupports*, weakRef) :
-                    NS_STATIC_CAST(nsISupports*, manager);
+                    static_cast<nsISupports*>(weakRef) :
+                    static_cast<nsISupports*>(manager);
     { // scoped lock...
         nsAutoLock lock(mAdditionalManagersLock);
         if(!mAdditionalManagers.RemoveElement(ptrToRemove))
@@ -2101,7 +2101,7 @@ NS_IMETHODIMP xptiInterfaceInfoManager::EnumerateAdditionalManagers(nsISimpleEnu
             // an nsIInterfaceInfoManager into the array, so we can avoid an
             // extra QI here and just do a cast.
             if(!enumerator->AppendElement(
-                    NS_REINTERPRET_CAST(nsIInterfaceInfoManager*, raw.get())))
+                    reinterpret_cast<nsIInterfaceInfoManager*>(raw.get())))
                 return NS_ERROR_FAILURE;
         }
     }

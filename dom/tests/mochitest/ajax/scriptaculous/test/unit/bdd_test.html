@@ -1,0 +1,138 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>script.aculo.us Unit test file</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <script src="../../lib/prototype.js" type="text/javascript"></script>
+  <script src="../../src/scriptaculous.js" type="text/javascript"></script>
+  <script src="../../src/unittest.js" type="text/javascript"></script>
+  <link rel="stylesheet" href="../test.css" type="text/css" />
+</head>
+<body>
+<h1>script.aculo.us Unit test file</h1>
+
+<!-- Log output -->
+<div id="testlog"> </div>
+
+<div id="d">initial</div>
+
+<!-- Tests follow -->
+<script type="text/javascript" language="javascript" charset="utf-8">
+// <![CDATA[
+var moo = 0;
+
+var assertMethods = [];
+for(method in Test.Unit.Assertions.prototype) {
+  if(/^assert/.test(method)) assertMethods.push(method);
+}
+
+var testObj = {
+  isNice: function(){
+    return true;
+  },
+  isBroken: function(){
+    return false;
+  }
+}
+
+Test.context("BDD-style testing",{
+  
+  setup: function() {
+    $('d').update('setup!');
+    moo++;
+  },
+  
+  teardown: function() {
+    moo--;
+  },
+  
+  'should run setup before each specification': function(){
+    assert($('d').innerHTML == 'setup!');
+    assert(moo == 1);
+  },
+  
+  'should run teardown after each specification': function(){
+    assert(moo == 1);
+  },
+  
+  'should provide extensions to tie in isSomething and respondsTo object methods': function(){
+    Object.extend(testObj, Test.BDDMethods);
+    
+    testObj.shouldBe('nice');
+    testObj.shouldNotBe('broken');
+    
+    testObj.shouldRespondTo('isNice');
+    testObj.shouldRespondTo('isBroken');
+  },
+  
+  'should automatically add extensions to strings': function(){
+    'a'.shouldEqual('a');
+    'a'.shouldNotEqual('b');
+    'a'.shouldNotBeNull();
+    'a'.shouldBeA(String);
+    
+    var aString = 'boo!';
+    aString.shouldEqual('boo!');
+    aString.shouldBeA(String);
+    aString.shouldNotBeA(Number);
+  },
+  
+  'should automatically add extensions to numbers': function(){
+    var n = 123;    
+    n.shouldEqual(123);
+    n.shouldNotEqual(4);
+    
+    n.shouldBeA(Number);
+    n.shouldNotBeA(Test);
+  },
+  
+  'should automatically add extensions to arrays': function(){
+    ['a'].shouldNotBeA(String);
+    [1,2,3].shouldBeAn(Array);
+    [1,2,3].shouldEqualEnum([1,2,3]);
+  },
+  
+  'should support the eval() method': function(){
+    eval('2*2').shouldEqual(4);
+  },
+  
+  'should support equality assertion': function(){
+    assertEqual(1, 1);
+    assertEqual('a', 'a');
+    assertEqual(1, '1');
+    
+    var x = 1;
+    var y = 1;
+    assertEqual(1, x)
+    assertEqual(x, y);
+  },
+  
+  'should provide all assertions': function(){
+    assertMethods.each(function(m){
+      assert(typeof this[m] == 'function');
+    }.bind(this)); 
+  },
+  
+  'should support deferred execution': function(){
+    wait(10,function(){
+      'a'.shouldEqual('a');
+    });
+    
+    wait(10,function(){
+      'a'.shouldEqual('a');
+      wait(10,function(){
+        'a'.shouldEqual('a');
+        wait(10,function(){
+          'a'.shouldEqual('a');
+        });
+      });
+    });
+  }
+  
+});
+
+// ]]>
+</script>
+</body>
+</html>

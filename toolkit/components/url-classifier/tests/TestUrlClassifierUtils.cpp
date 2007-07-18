@@ -45,7 +45,7 @@ static int gPassedTests = 0;
 
 static char int_to_hex_digit(PRInt32 i) {
   NS_ASSERTION((i >= 0) && (i <= 15), "int too big in int_to_hex_digit");
-  return NS_STATIC_CAST(char, ((i < 10) ? (i + '0') : ((i - 10) + 'A')));
+  return static_cast<char>(((i < 10) ? (i + '0') : ((i - 10) + 'A')));
 }
 
 static void CheckEquals(nsCString & expected, nsCString & actual)
@@ -85,7 +85,7 @@ void TestUnescape()
     allCharsEncodedLowercase.Append(tolower(int_to_hex_digit(i / 16)));
     allCharsEncodedLowercase.Append(tolower(int_to_hex_digit(i % 16)));
     
-    allCharsAsString.Append(NS_STATIC_CAST(char, i));
+    allCharsAsString.Append(static_cast<char>(i));
   }
   
   nsUrlClassifierUtils utils;
@@ -131,7 +131,7 @@ void TestEnc()
   nsCString noenc;
   for (PRInt32 i = 33; i < 127; i++) {
     if (i != 37) {                      // skip %
-      noenc.Append(NS_STATIC_CAST(char, i));
+      noenc.Append(static_cast<char>(i));
     }
   }
   nsUrlClassifierUtils utils;
@@ -143,7 +143,7 @@ void TestEnc()
   nsCString yesAsString, yesExpectedString;
   for (PRInt32 i = 1; i < 256; i++) {
     if (i < 33 || i == 37 || i > 126) {
-      yesAsString.Append(NS_STATIC_CAST(char, i));
+      yesAsString.Append(static_cast<char>(i));
       yesExpectedString.Append('%');
       yesExpectedString.Append(int_to_hex_digit(i / 16));
       yesExpectedString.Append(int_to_hex_digit(i % 16));

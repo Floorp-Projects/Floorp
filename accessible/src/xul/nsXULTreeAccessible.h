@@ -84,7 +84,7 @@ public:
 protected:
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsCOMPtr<nsITreeView> mTreeView;
-  nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *mAccessNodeCache;
+  nsAccessNodeHashtable *mAccessNodeCache;
 
   NS_IMETHOD ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState);
 };

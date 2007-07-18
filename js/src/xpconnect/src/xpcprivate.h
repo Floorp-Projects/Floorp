@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=80:
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -125,6 +125,8 @@
 #ifdef XPC_TOOLS_SUPPORT
 #include "nsIXPCToolsProfiler.h"
 #endif
+
+#include "nsIThreadInternal.h"
 
 #ifdef XPC_IDISPATCH_SUPPORT
 // This goop was added because of EXCEPINFO in ThrowCOMError
@@ -426,6 +428,7 @@ const PRBool OBJ_IS_NOT_GLOBAL = PR_FALSE;
 struct JSObjectRefcounts;
 
 class nsXPConnect : public nsIXPConnect,
+                    public nsIThreadObserver,
                     public nsSupportsWeakReference,
                     public nsCycleCollectionLanguageRuntime,
                     public nsCycleCollectionParticipant
@@ -434,6 +437,7 @@ public:
     // all the interface method declarations...
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCONNECT
+    NS_DECL_NSITHREADOBSERVER
 
     // non-interface implementation
 public:
@@ -672,7 +676,7 @@ public:
 
     void DebugDump(PRInt16 depth);
 
-    void SystemIsBeingShutDown(XPCCallContext* ccx);
+    void SystemIsBeingShutDown(JSContext* cx);
 
     PRThread* GetThreadRunningGC() const {return mThreadRunningGC;}
 
@@ -1130,10 +1134,13 @@ public:
                         JSBool OKIfNotInitialized = JS_FALSE);
 
     static void
-    SystemIsBeingShutDown(XPCCallContext& ccx);
+    SystemIsBeingShutDown(JSContext* cx);
 
     static void
     TraceJS(JSTracer* trc, XPCJSRuntime* rt);
+
+    static void
+    SuspectAllWrappers(XPCJSRuntime* rt);
 
     static void
     FinishedMarkPhaseOfGC(JSContext* cx, XPCJSRuntime* rt);
@@ -1765,7 +1772,7 @@ public:
 
     void JSProtoObjectFinalized(JSContext *cx, JSObject *obj);
 
-    void SystemIsBeingShutDown(XPCCallContext& ccx);
+    void SystemIsBeingShutDown(JSContext* cx);
 
     void DebugDump(PRInt16 depth);
 
@@ -2023,7 +2030,7 @@ public:
 
     void FlatJSObjectFinalized(JSContext *cx, JSObject *obj);
 
-    void SystemIsBeingShutDown(XPCCallContext& ccx);
+    void SystemIsBeingShutDown(JSContext* cx);
 
 #ifdef XPC_DETECT_LEADING_UPPERCASE_ACCESS_ERRORS
     // This will try to find a member that is of the form "camelCased"
@@ -3745,10 +3752,15 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop);
 // that *rval doesn't get collected during the call or usage after the
 // call. This helper will use filename and lineNo for error reporting,
 // and if no filename is provided it will use the codebase from the
-// principal and line number 1 as a fallback.
+// principal and line number 1 as a fallback. if returnStringOnly is
+// true, then the result in *rval, or the exception in cx->exception
+// will be coerced into strings. If an exception is thrown converting
+// an exception to a string, evalInSandbox will return an NS_ERROR_*
+// result, and cx->exception will be empty.
 nsresult
 xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
-                  const char *filename, PRInt32 lineNo, jsval *rval);
+                  const char *filename, PRInt32 lineNo,
+                  PRBool returnStringOnly, jsval *rval);
 #endif /* !XPCONNECT_STANDALONE */
 
 /***************************************************************************/

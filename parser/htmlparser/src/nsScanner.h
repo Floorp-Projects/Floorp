@@ -43,8 +43,8 @@
  * The scanner is a low-level service class that knows
  * how to consume characters out of an (internal) stream.
  * This class also offers a series of utility methods
- * that most tokenizers want, such as readUntil(), 
- * readWhile() and SkipWhitespace().
+ * that most tokenizers want, such as readUntil()
+ * and SkipWhitespace().
  */
 
 
@@ -57,7 +57,6 @@
 #include "prtypes.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsScannerString.h"
-#include "nsIInputStream.h"
 
 class nsParser;
 
@@ -99,18 +98,6 @@ class nsScanner {
        */
       nsScanner(nsString& aFilename,PRBool aCreateStream, const nsACString& aCharset, PRInt32 aSource);
 
-      /**
-       *  Use this constructor if you want i/o to be stream based.
-       *
-       *  @update  ftang 3/02/99
-       *  @param   aCharset charset
-       *  @param   aCharsetSource - where the charset info came from 
-       *  @param   aMode represents the parser mode (nav, other)
-       *  @return  
-       */
-      nsScanner(const nsAString& aFilename, nsIInputStream* aStream, const nsACString& aCharset, PRInt32 aSource);
-
-
       ~nsScanner();
 
       /**
@@ -135,15 +122,6 @@ class nsScanner {
       nsresult Peek(nsAString& aStr, PRInt32 aNumChars, PRInt32 aOffset = 0);
 
       /**
-       *  Skip over chars as long as they're in aSkipSet
-       *  
-       *  @update  gess 3/25/98
-       *  @param   set of chars to be skipped
-       *  @return  error code
-       */
-      nsresult SkipOver(nsString& SkipChars);
-
-      /**
        *  Skip over chars as long as they equal given char
        *  
        *  @update  gess 3/25/98
@@ -151,24 +129,6 @@ class nsScanner {
        *  @return  error code
        */
       nsresult SkipOver(PRUnichar aSkipChar);
-
-      /**
-       *  Skip over chars until they're in aValidSet
-       *  
-       *  @update  gess 3/25/98
-       *  @param   aValid set contains chars you're looking for
-       *  @return  error code
-       */
-      nsresult SkipTo(nsString& aValidSet);
-
-      /**
-       *  Skip over chars as long as they're in aSequence
-       *  
-       *  @update  gess 3/25/98
-       *  @param   contains sequence to be skipped
-       *  @return  error code
-       */
-      nsresult SkipPast(nsString& aSequence);
 
       /**
        *  Skip whitespace on scanner input stream
@@ -237,18 +197,6 @@ class nsScanner {
                          nsScannerIterator& aEnd,
                          const nsReadEndCondition& aEndCondition, 
                          PRBool addTerminal);
-
-
-      /**
-       *  Consume characters while they're members of anInputSet
-       *  
-       *  @update  gess 3/25/98
-       *  @param   aString receives new data from stream
-       *  @param   anInputSet contains valid chars
-       *  @param   addTerminal tells us whether to append terminal to aString
-       *  @return  error code
-       */
-      nsresult ReadWhile(nsString& aString,nsString& anInputSet,PRBool addTerminal);
 
       /**
        *  Records current offset position in input stream. This allows us
@@ -367,28 +315,14 @@ class nsScanner {
         mParser = aParser;
       }
 
-
-      /**
-       * Fill internal buffer with new data, returns an error if
-       * no new data is read.
-       *
-       * @update  gess4/3/98
-       */
-      nsresult FillBuffer(void);
-
   protected:
-
-      enum {eBufferSizeThreshold=0x1000};  //4K
 
       void AppendToBuffer(nsScannerString::Buffer *, nsIRequest *aRequest);
       void AppendToBuffer(const nsAString& aStr)
       {
         AppendToBuffer(nsScannerString::AllocBufferFromString(aStr), nsnull);
       }
-      void AppendASCIItoBuffer(const char* aData, PRUint32 aLen,
-                               nsIRequest *aRequest);
 
-      nsCOMPtr<nsIInputStream>     mInputStream;
       nsScannerString*             mSlidingBuffer;
       nsScannerIterator            mCurrentPosition; // The position we will next read from in the scanner buffer
       nsScannerIterator            mMarkPosition;    // The position last marked (we may rewind to here)
@@ -396,7 +330,6 @@ class nsScanner {
       nsString        mFilename;
       PRUint32        mCountRemaining; // The number of bytes still to be read
                                        // from the scanner buffer
-      PRUint32        mTotalRead;
       PRPackedBool    mIncremental;
       PRInt32         mFirstNonWhitespacePosition;
       PRInt32         mCharsetSource;

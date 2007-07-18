@@ -149,9 +149,9 @@ nsSVGUseFrame::AttributeChanged(PRInt32         aNameSpaceID,
 void
 nsSVGUseFrame::Destroy()
 {
-  nsSVGUseElement *use = NS_STATIC_CAST(nsSVGUseElement*, mContent);
-  use->DestroyAnonymousContent();
+  nsRefPtr<nsSVGUseElement> use = static_cast<nsSVGUseElement*>(mContent);
   nsSVGUseFrameBase::Destroy();
+  use->DestroyAnonymousContent();
 }
 
 
@@ -176,7 +176,7 @@ nsSVGUseFrame::GetCanvasTM()
 
   // x and y:
   float x, y;
-  nsSVGElement *element = NS_STATIC_CAST(nsSVGElement*, mContent);
+  nsSVGElement *element = static_cast<nsSVGElement*>(mContent);
   element->GetAnimatedLengthValues(&x, &y, nsnull);
 
   nsCOMPtr<nsIDOMSVGMatrix> fini;
@@ -194,7 +194,7 @@ nsSVGUseFrame::GetCanvasTM()
 nsresult
 nsSVGUseFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 {
-  nsSVGUseElement *use = NS_STATIC_CAST(nsSVGUseElement*, mContent);
+  nsSVGUseElement *use = static_cast<nsSVGUseElement*>(mContent);
 
   nsIContent* clone = use->CreateAnonymousContent();
   if (!clone)

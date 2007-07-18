@@ -390,7 +390,7 @@ nsProxyObject::QueryInterface(REFNSIID aIID, void **aResult)
     }
 
     if (aIID.Equals(NS_GET_IID(nsISupports))) {
-        *aResult = NS_STATIC_CAST(nsISupports*, this);
+        *aResult = static_cast<nsISupports*>(this);
         AddRef();
         return NS_OK;
     }
@@ -413,7 +413,7 @@ nsProxyObject::LockedFind(REFNSIID aIID, void **aResult)
 
     for (peo = mFirst; peo; peo = peo->mNext) {
         if (peo->GetClass()->GetProxiedIID().Equals(aIID)) {
-            *aResult = NS_STATIC_CAST(nsISupports*, peo->mXPTCStub);
+            *aResult = static_cast<nsISupports*>(peo->mXPTCStub);
             peo->AddRef();
             return NS_OK;
         }
@@ -446,7 +446,7 @@ nsProxyObject::LockedFind(REFNSIID aIID, void **aResult)
 
     NS_ADDREF(peo);
 
-    *aResult = NS_STATIC_CAST(nsISupports*, peo->mXPTCStub);
+    *aResult = static_cast<nsISupports*>(peo->mXPTCStub);
     return NS_OK;
 }
 

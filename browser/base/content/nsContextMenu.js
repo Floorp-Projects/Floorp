@@ -39,6 +39,7 @@
 #   Pamela Greene <pamg.bugs@gmail.com>
 #   Michael Ventnor <ventnors_dogs234@yahoo.com.au>
 #   Simon Bünzli <zeniko@gmail.com>
+#   Gijs Kruitbosch <gijskruitbosch@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -62,6 +63,7 @@ function nsContextMenu(aXulMenu, aBrowser) {
   this.onKeywordField    = false;
   this.onImage           = false;
   this.onLoadedImage     = false;
+  this.onCanvas          = false;
   this.onLink            = false;
   this.onMailtoLink      = false;
   this.onSaveableLink    = false;
@@ -127,7 +129,7 @@ nsContextMenu.prototype = {
 
   initNavigationItems: function CM_initNavigationItems() {
     var shouldShow = !(this.isContentSelected || this.onLink || this.onImage ||
-                       this.onTextInput);
+                       this.onCanvas || this.onTextInput);
     this.showItem("context-back", shouldShow);
     this.showItem("context-forward", shouldShow);
     this.showItem("context-reload", shouldShow);
@@ -139,8 +141,8 @@ nsContextMenu.prototype = {
   },
 
   initSaveItems: function CM_initSaveItems() {
-    var shouldShow = !(this.inDirList || this.isContentSelected ||
-                       this.onTextInput || this.onLink || this.onImage);
+    var shouldShow = !(this.inDirList || this.onTextInput || this.onLink ||
+                       this.isContentSelected || this.onImage || this.onCanvas);
     this.showItem("context-savepage", shouldShow);
     this.showItem("context-sendpage", shouldShow);
 
@@ -148,8 +150,9 @@ nsContextMenu.prototype = {
     this.showItem("context-savelink", this.onSaveableLink);
     this.showItem("context-sendlink", this.onSaveableLink);
 
-    // Save+Send image depends on whether we're on an image.
-    this.showItem("context-saveimage", this.onLoadedImage);
+    // Save image depends on whether we're on a loaded image, or a canvas.
+    this.showItem("context-saveimage", this.onLoadedImage || this.onCanvas);
+    // We can send an image (even unloaded), but not a canvas:
     this.showItem("context-sendimage", this.onImage);
   },
 
@@ -186,9 +189,10 @@ nsContextMenu.prototype = {
               .disabled = this.disableSetDesktopBackground();
     }
 
-    // View Image depends on whether an image was clicked on.
-    this.showItem("context-viewimage",
-                  this.onImage && (!this.onStandaloneImage || this.inFrame));
+    // View image depends on having an image that's not standalone
+    // (or is in a frame), or a canvas.
+    this.showItem("context-viewimage", (this.onImage &&
+                  (!this.onStandaloneImage || this.inFrame)) || this.onCanvas);
 
     // View background image depends on whether there is one.
     this.showItem("context-viewbgimage", shouldShow);
@@ -346,6 +350,7 @@ nsContextMenu.prototype = {
     this.onImage           = false;
     this.onLoadedImage     = false;
     this.onStandaloneImage = false;
+    this.onCanvas          = false;
     this.onMetaDataItem    = false;
     this.onTextInput       = false;
     this.onKeywordField    = false;
@@ -389,6 +394,9 @@ nsContextMenu.prototype = {
         this.imageURL = this.target.currentURI.spec;
         if (this.target.ownerDocument instanceof ImageDocument)
           this.onStandaloneImage = true;
+      }
+      else if (this.target instanceof HTMLCanvasElement) {
+        this.onCanvas = true;
       }
       else if (this.target instanceof HTMLInputElement ) {
         this.onTextInput = this.isTargetATextBox(this.target);
@@ -465,7 +473,7 @@ nsContextMenu.prototype = {
         // Link?
         if (!this.onLink &&
              ((elem instanceof HTMLAnchorElement && elem.href) ||
-              elem instanceof HTMLAreaElement ||
+              (elem instanceof HTMLAreaElement && elem.href) ||
               elem instanceof HTMLLinkElement ||
               elem.getAttributeNS("http://www.w3.org/1999/xlink", "type") == "simple")) {
             
@@ -480,8 +488,8 @@ nsContextMenu.prototype = {
           var parent = elem.parentNode;
           while (parent) {
             try {
-              if ((parent instanceof HTMLAnchorElement && elem.href) ||
-                  parent instanceof HTMLAreaElement ||
+              if ((parent instanceof HTMLAnchorElement && parent.href) ||
+                  (parent instanceof HTMLAreaElement && parent.href) ||
                   parent instanceof HTMLLinkElement ||
                   parent.getAttributeNS("http://www.w3.org/1999/xlink", "type") == "simple")
                 realLink = parent;
@@ -685,11 +693,19 @@ nsContextMenu.prototype = {
 
   // Change current window to the URL of the image.
   viewImage: function(e) {
-    urlSecurityCheck(this.imageURL,
-                     this.browser.contentPrincipal,
-                     Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+    var viewURL;
+
+    if (this.onCanvas)
+      viewURL = this.target.toDataURL();
+    else {
+      viewURL = this.imageURL;
+      urlSecurityCheck(viewURL,
+                       this.browser.contentPrincipal,
+                       Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+    }
+
     var doc = this.target.ownerDocument;
-    openUILink( this.imageURL, e, null, null, null, null, doc.documentURIObject );
+    openUILink(viewURL, e, null, null, null, null, doc.documentURIObject );
   },
 
   // Change current window to the URL of the background image.
@@ -778,9 +794,16 @@ nsContextMenu.prototype = {
   // Save URL of clicked-on image.
   saveImage: function() {
     var doc =  this.target.ownerDocument;
-    urlSecurityCheck(this.imageURL, doc.nodePrincipal);
-    saveImageURL(this.imageURL, null, "SaveImageTitle", false,
-                 false, doc.documentURIObject);
+    if (this.onCanvas) {
+      // Bypass cache, since it's a data: URL.
+      saveImageURL(this.target.toDataURL(), "canvas.png", "SaveImageTitle",
+                   true, false, doc.documentURIObject);
+    }
+    else {
+      urlSecurityCheck(this.imageURL, doc.nodePrincipal);
+      saveImageURL(this.imageURL, null, "SaveImageTitle", false,
+                   false, doc.documentURIObject);
+    }
   },
 
   sendImage: function() {
@@ -1093,7 +1116,6 @@ nsContextMenu.prototype = {
     openUILinkIn(uri, where);
   },
 
-#ifdef MOZ_PLACES_BOOKMARKS
   bookmarkThisPage: function CM_bookmarkThisPage() {
     PlacesCommandHook.bookmarkPage(this.browser);
   },
@@ -1108,25 +1130,6 @@ nsContextMenu.prototype = {
     var description = PlacesUtils.getDescriptionFromDocument(doc);
     PlacesUtils.showAddBookmarkUI(uri, doc.title, description);
   },
-#else
-  bookmarkThisPage: function CM_bookmarkThisPage() {
-    addBookmarkAs(this.browser);
-  },
-
-  bookmarkLink: function CM_bookmarkLink() {
-    BookmarksUtils.addBookmark(this.linkURL, this.linkText());
-  },
-
-  addBookmarkForFrame: function CM_addBookmarkForFrame() {
-    var doc = this.target.ownerDocument;
-    var uri = doc.location.href;
-    var title = doc.title;
-    var description = BookmarksUtils.getDescriptionFromDocument(doc);
-    if (!title)
-      title = uri;
-    BookmarksUtils.addBookmark(uri, title, doc.charset, description);
-  },
-#endif
 
   savePageAs: function CM_savePageAs() {
     saveDocument(this.browser.contentDocument);

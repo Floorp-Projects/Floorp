@@ -42,7 +42,7 @@ interface nsIURI;
 interface nsIChannel;
 
 
-[scriptable, uuid(c61d3ad1-00aa-407c-b7d7-de48b3f18662)]
+[scriptable, uuid(0b8a9b32-713f-4c39-bea0-6cacec46f385)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -213,7 +213,7 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     /**
      * Return a principal that has the same origin as aURI.
      */
-    [noscript] nsIPrincipal getCodebasePrincipal(in nsIURI aURI);
+    nsIPrincipal getCodebasePrincipal(in nsIURI aURI);
 
     ///////////////// Capabilities API /////////////////////
     /**
@@ -306,7 +306,14 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * channel owner if there is one, and the codebase principal for the
      * channel's URI otherwise.  aChannel must not be null.
      */
-    [noscript] nsIPrincipal getChannelPrincipal(in nsIChannel aChannel);
+    nsIPrincipal getChannelPrincipal(in nsIChannel aChannel);
+
+    /**
+     * Check whether a given principal is a system principal.  This allows us
+     * to avoid handing back the system principal to script while allowing
+     * script to check whether a given principal is system.
+     */
+    boolean isSystemPrincipal(in nsIPrincipal aPrincipal);
 };
 
 %{C++

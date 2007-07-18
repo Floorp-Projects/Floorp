@@ -469,9 +469,9 @@ PLDHashOperator
 DestroyJavaProxyMappingEnum(PLDHashTable* aTable, PLDHashEntryHdr* aHeader,
                             PRUint32 aNumber, void* aData)
 {
-  JNIEnv* env = NS_STATIC_CAST(JNIEnv*, aData);
+  JNIEnv* env = static_cast<JNIEnv*>(aData);
   NativeToJavaProxyMap::Entry* entry =
-                          NS_STATIC_CAST(NativeToJavaProxyMap::Entry*, aHeader);
+                          static_cast<NativeToJavaProxyMap::Entry*>(aHeader);
 
   // first, delete XPCOM instances from the Java proxies
   nsresult rv;
@@ -483,7 +483,7 @@ DestroyJavaProxyMappingEnum(PLDHashTable* aTable, PLDHashEntryHdr* aHeader,
     NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get XPCOM instance from Java proxy");
 
     if (NS_SUCCEEDED(rv)) {
-      JavaXPCOMInstance* inst = NS_STATIC_CAST(JavaXPCOMInstance*, xpcom_obj);
+      JavaXPCOMInstance* inst = static_cast<JavaXPCOMInstance*>(xpcom_obj);
 #ifdef DEBUG_JAVAXPCOM
       char* iid_str = item->iid.ToString();
       LOG(("- NativeToJavaProxyMap (Java=%08x | XPCOM=%08x | IID=%s)\n",
@@ -524,7 +524,7 @@ NativeToJavaProxyMap::Add(JNIEnv* env, nsISupports* aXPCOMObject,
 {
   nsAutoLock lock(gJavaXPCOMLock);
 
-  Entry* e = NS_STATIC_CAST(Entry*, PL_DHashTableOperate(mHashTable,
+  Entry* e = static_cast<Entry*>(PL_DHashTableOperate(mHashTable,
                                                          aXPCOMObject,
                                                          PL_DHASH_ADD));
   if (!e)
@@ -564,7 +564,7 @@ NativeToJavaProxyMap::Find(JNIEnv* env, nsISupports* aNativeObject,
   nsAutoLock lock(gJavaXPCOMLock);
 
   *aResult = nsnull;
-  Entry* e = NS_STATIC_CAST(Entry*, PL_DHashTableOperate(mHashTable,
+  Entry* e = static_cast<Entry*>(PL_DHashTableOperate(mHashTable,
                                                          aNativeObject,
                                                          PL_DHASH_LOOKUP));
 
@@ -601,7 +601,7 @@ NativeToJavaProxyMap::Remove(JNIEnv* env, nsISupports* aNativeObject,
   // This is only called from finalizeProxy(), which already holds the lock.
   //  nsAutoLock lock(gJavaXPCOMLock);
 
-  Entry* e = NS_STATIC_CAST(Entry*, PL_DHashTableOperate(mHashTable,
+  Entry* e = static_cast<Entry*>(PL_DHashTableOperate(mHashTable,
                                                          aNativeObject,
                                                          PL_DHASH_LOOKUP));
 
@@ -661,7 +661,7 @@ DestroyXPTCMappingEnum(PLDHashTable* aTable, PLDHashEntryHdr* aHeader,
                        PRUint32 aNumber, void* aData)
 {
   JavaToXPTCStubMap::Entry* entry =
-                             NS_STATIC_CAST(JavaToXPTCStubMap::Entry*, aHeader);
+                             static_cast<JavaToXPTCStubMap::Entry*>(aHeader);
 
   // The XPTC stub will be released by the XPCOM side, if it hasn't been
   // already.  We just need to delete the Java global ref held by the XPTC stub,
@@ -689,8 +689,8 @@ JavaToXPTCStubMap::Add(jint aJavaObjectHashCode, nsJavaXPTCStub* aProxy)
 {
   nsAutoLock lock(gJavaXPCOMLock);
 
-  Entry* e = NS_STATIC_CAST(Entry*,
-                            PL_DHashTableOperate(mHashTable,
+  Entry* e = static_cast<Entry*>
+                        (PL_DHashTableOperate(mHashTable,
                                            NS_INT32_TO_PTR(aJavaObjectHashCode),
                                            PL_DHASH_ADD));
   if (!e)
@@ -727,8 +727,8 @@ JavaToXPTCStubMap::Find(jint aJavaObjectHashCode, const nsIID& aIID,
   nsAutoLock lock(gJavaXPCOMLock);
 
   *aResult = nsnull;
-  Entry* e = NS_STATIC_CAST(Entry*,
-                            PL_DHashTableOperate(mHashTable,
+  Entry* e = static_cast<Entry*>
+                        (PL_DHashTableOperate(mHashTable,
                                            NS_INT32_TO_PTR(aJavaObjectHashCode),
                                            PL_DHASH_LOOKUP));
 
@@ -845,7 +845,7 @@ JavaObjectToNativeInterface(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsISupports* rootObject =
-              NS_STATIC_CAST(JavaXPCOMInstance*, inst)->GetInstance();
+              static_cast<JavaXPCOMInstance*>(inst)->GetInstance();
     rv = rootObject->QueryInterface(aIID, aResult);
     NS_ENSURE_SUCCESS(rv, rv);
 

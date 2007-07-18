@@ -1658,17 +1658,6 @@ var gFinishedPage = {
     // Notify all windows that an application quit has been granted.
     os.notifyObservers(null, "quit-application-granted", null);
 
-    // Enumerate all windows and call shutdown handlers
-    var wm =
-        Components.classes["@mozilla.org/appshell/window-mediator;1"].
-        getService(Components.interfaces.nsIWindowMediator);
-    var windows = wm.getEnumerator(null);
-    while (windows.hasMoreElements()) {
-      var win = windows.getNext();
-      if (("tryToClose" in win) && !win.tryToClose())
-        return;
-    }
-    
     var appStartup = 
         Components.classes["@mozilla.org/toolkit/app-startup;1"].
         getService(Components.interfaces.nsIAppStartup);

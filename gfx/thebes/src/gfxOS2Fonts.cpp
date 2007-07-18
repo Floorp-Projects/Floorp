@@ -89,7 +89,16 @@ gfxOS2Font::~gfxOS2Font()
 #define MOZ_FT_TRUNC(x) ((x) >> 6)
 #define CONVERT_DESIGN_UNITS_TO_PIXELS(v, s) \
         MOZ_FT_TRUNC(MOZ_FT_ROUND(FT_MulFix((v), (s))))
+#define CONVERT_DESIGN_UNITS_TO_PIXELS_X(v) \
+        CONVERT_DESIGN_UNITS_TO_PIXELS(v, face->size->metrics.x_scale)
+#define CONVERT_DESIGN_UNITS_TO_PIXELS_Y(v) \
+        CONVERT_DESIGN_UNITS_TO_PIXELS(v, face->size->metrics.y_scale)
 
+// gfxOS2Font::GetMetrics()
+// return the metrics of the current font using the gfxFont metrics structure.
+// If the metrics are not available yet, compute them using the FreeType
+// function on the font. (This is partly based on the respective function from
+// gfxPangoFonts)
 const gfxFont::Metrics& gfxOS2Font::GetMetrics()
 {
 #ifdef DEBUG_thebes_1
@@ -98,88 +107,108 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
     if (!mMetrics) {
         mMetrics = new gfxFont::Metrics;
     
-        // XXX maybe use CONVERT_DESIGN_UNITS_TO_PIXELS(..., face->size->metrics.y_scale);
-        //     on all (y) properties?!
         FT_UInt gid;
         FT_Face face = cairo_ft_scaled_font_lock_face(CairoScaledFont());
 
-#if 0
-        // face->units_per_EM doesn't work here, so use height of 'm' (the font's emHeight)
-        // and scale to correct height
-        gid = FT_Get_Char_Index(face, 'm'); // select the glyph
-        FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT); // load it into the slot
-        gfxFloat scale = face->glyph->metrics.height / mStyle.size;
-        // XXX no, that doesn't work, gives completely bogus results for maxHeight etc.
-#endif
-        // instead, use this hack to scale, seems to give good results for all fonts
-        // and sizes
-        gfxFloat scale = face->units_per_EM / 8;
-    
         // properties of 'x', also use its width as average width
         gid = FT_Get_Char_Index(face, 'x'); // select the glyph
         FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT); // load it into the slot
-        mMetrics->xHeight = face->glyph->metrics.height / scale;
-        mMetrics->aveCharWidth = face->glyph->metrics.width / scale;
+        mMetrics->xHeight = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->glyph->metrics.height);
+        mMetrics->aveCharWidth = CONVERT_DESIGN_UNITS_TO_PIXELS_X(face->glyph->metrics.width);
         // properties of space
         gid = FT_Get_Char_Index(face, ' ');
         FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT);
         // face->glyph->metrics.width doesn't work for spaces, use advance.x instead
-        // XXX spaces are always too narrow, unless I multiply by some extra factor
-        mMetrics->spaceWidth = face->glyph->advance.x / scale * 2;
+        // spaces are always too narrow, unless I multiply by some extra factor
+        mMetrics->spaceWidth = CONVERT_DESIGN_UNITS_TO_PIXELS_X(face->glyph->advance.x);
         // save the space glyph
         mSpaceGlyph = gid;
     
         // now load the OS/2 TrueType table to load access some more properties
         TT_OS2 *os2 = (TT_OS2 *)FT_Get_Sfnt_Table(face, ft_sfnt_os2);
         if (os2 && os2->version !=  0xFFFF) { // should be there if not old Mac font
-            mMetrics->superscriptOffset = PR_MAX(1, os2->ySuperscriptYOffset) / scale;
+            mMetrics->superscriptOffset = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(os2->ySuperscriptYOffset);
+            mMetrics->superscriptOffset = PR_MAX(1, mMetrics->superscriptOffset);
             // some fonts have the incorrect sign (from gfxPangoFonts)
-            mMetrics->subscriptOffset   = PR_MAX(1, fabs(os2->ySubscriptYOffset)) / scale;
+            mMetrics->subscriptOffset   = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(os2->ySubscriptYOffset);
+            mMetrics->subscriptOffset   = PR_MAX(1, fabs(mMetrics->subscriptOffset));
         } else {
-            mMetrics->superscriptOffset = mMetrics->xHeight / scale;
-            mMetrics->subscriptOffset   = mMetrics->xHeight / scale;
+            mMetrics->superscriptOffset = mMetrics->xHeight;
+            mMetrics->subscriptOffset   = mMetrics->xHeight;
         }
         // could access these via os2 table, but copy behavior from gfxPangoFonts
-        mMetrics->strikeoutOffset = mMetrics->xHeight / 2.0 / scale;
-        mMetrics->strikeoutSize   = face->underline_thickness / scale;
-        mMetrics->underlineOffset = face->underline_position / scale;
-        mMetrics->underlineSize   = face->underline_thickness / scale;
+        mMetrics->strikeoutOffset = mMetrics->xHeight / 2.0;
+        mMetrics->strikeoutSize   = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->underline_thickness);
+        // seems that underlineOffset really has to be negative
+        mMetrics->underlineOffset = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->underline_position);
+        mMetrics->underlineSize   = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->underline_thickness);
     
-        // dividing by scale doesn't make sense
+        // descents are negative in FT but Thebes wants them positive
         mMetrics->emHeight        = face->size->metrics.y_ppem;
-        mMetrics->emAscent        = face->ascender / scale;
-        mMetrics->emDescent       = face->descender / scale;
-        mMetrics->maxHeight       = face->height / scale;
-        mMetrics->maxAscent       = face->bbox.yMax / scale;
-        mMetrics->maxDescent      = face->bbox.yMin / scale;
-        mMetrics->maxAdvance      = face->max_advance_width / scale;
+        mMetrics->emAscent        = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->ascender);
+        mMetrics->emDescent       = -CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->descender);
+        mMetrics->maxHeight       = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->height);
+        mMetrics->maxAscent       = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->bbox.yMax);
+        mMetrics->maxDescent      = -CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->bbox.yMin);
+        mMetrics->maxAdvance      = CONVERT_DESIGN_UNITS_TO_PIXELS_X(face->max_advance_width);
         // leading are not available directly (only for WinFNTs)
-        mMetrics->internalLeading = (face->bbox.yMax - face->bbox.yMin
-                                     - mMetrics->xHeight) / scale;
-        mMetrics->externalLeading = 0; // normal value for OS/2 fonts
+        double lineHeight = mMetrics->maxAscent + mMetrics->maxDescent;
+        if (lineHeight > mMetrics->emHeight) {
+            mMetrics->internalLeading = lineHeight - mMetrics->emHeight;
+        } else {
+            mMetrics->internalLeading = 0;
+        }
+        mMetrics->externalLeading = 0; // normal value for OS/2 fonts, too
     
 #ifdef DEBUG_thebes_1
         printf("gfxOS2Font[%#x]::GetMetrics():\n"
-               "  scale=%f\n"
+               "  %s\n"
                "  emHeight=%f==%f=gfxFont::mStyle.size\n"
                "  maxHeight=%f\n"
                "  xHeight=%f\n"
                "  aveCharWidth=%f==xWidth\n"
-               "  spaceWidth=%f\n",
+               "  spaceWidth=%f\n"
+               "  others: %f %f   %f %f   %f %f\n      %f %f %f   %f %f %f\n      %f %f\n",
                (unsigned)this,
-               scale,
-               mStyle.size,
-               mMetrics->emHeight,
+               NS_LossyConvertUTF16toASCII(mName).get(),
+               mMetrics->emHeight, mStyle.size,
                mMetrics->maxHeight,
                mMetrics->xHeight,
                mMetrics->aveCharWidth,
-               mMetrics->spaceWidth);
+               mMetrics->spaceWidth,
+               mMetrics->superscriptOffset, mMetrics->subscriptOffset,
+               mMetrics->strikeoutOffset, mMetrics->strikeoutSize,
+               mMetrics->underlineOffset, mMetrics->underlineSize,
+               mMetrics->emAscent, mMetrics->emDescent, mMetrics->maxHeight,
+               mMetrics->maxAscent, mMetrics->maxDescent, mMetrics->maxAdvance,
+               mMetrics->internalLeading, mMetrics->externalLeading
+              );
 #endif
         cairo_ft_scaled_font_unlock_face(CairoScaledFont());
     }
     return *mMetrics;
 }
 
+// weight list copied from fontconfig.h
+// unfortunately, the OS/2 version so far only supports regular and bold
+static const PRInt8 nFcWeight = 2; // 10; // length of weight list
+static const int fcWeight[] = {
+    //FC_WEIGHT_THIN,
+    //FC_WEIGHT_EXTRALIGHT, // == FC_WEIGHT_ULTRALIGHT
+    //FC_WEIGHT_LIGHT,
+    //FC_WEIGHT_BOOK,
+    FC_WEIGHT_REGULAR, // == FC_WEIGHT_NORMAL
+    //FC_WEIGHT_MEDIUM,
+    //FC_WEIGHT_DEMIBOLD, // == FC_WEIGHT_SEMIBOLD
+    FC_WEIGHT_BOLD,
+    //FC_WEIGHT_EXTRABOLD, // == FC_WEIGHT_ULTRABOLD
+    //FC_WEIGHT_BLACK // == FC_WEIGHT_HEAVY
+};
+
+// gfxOS2Font::CairoFontFace()
+// return a font face usable by cairo for font rendering
+// if none was created yet, use FontConfig patterns based on the current style
+// to create a new font face
 cairo_font_face_t *gfxOS2Font::CairoFontFace()
 {
 #ifdef DEBUG_thebes_2
@@ -197,20 +226,34 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
         FcPatternAddString(fcPattern, FC_FAMILY,
                            (FcChar8 *)NS_LossyConvertUTF16toASCII(mName).get());
 
-        PRUint8 fcProperty;
-        // add weight to pattern
-        switch (mStyle.weight) {
-        case FONT_WEIGHT_NORMAL:
-            fcProperty = FC_WEIGHT_NORMAL;
-            break;
-        case FONT_WEIGHT_BOLD:
-            fcProperty = FC_WEIGHT_BOLD;
-            break;
-        default:
-            fcProperty = FC_WEIGHT_MEDIUM;
+        // adjust font weight using the offset
+        // The requirements outlined in gfxFont.h are difficult to meet without
+        // having a table of available font weights, so we map the gfxFont
+        // weight to possible FontConfig weights.
+        PRInt8 weight, offset;
+        mStyle.ComputeWeightAndOffset(&weight, &offset);
+        // gfxFont weight   FC weight
+        //    400              80
+        //    700             200
+        PRInt16 fcW = 40 * weight - 80; // match gfxFont weight to base FC weight
+        // find the correct weight in the list 
+        PRInt8 i = 0;
+        while (i < nFcWeight && fcWeight[i] < fcW) {
+            i++;
         }
-        FcPatternAddInteger(fcPattern, FC_WEIGHT, fcProperty);
+        // add the offset, but observe the available number of weights
+        i += offset;
+        if (i < 0) {
+            i = 0;
+        } else if (i >= nFcWeight) {
+            i = nFcWeight - 1;
+        }
+        fcW = fcWeight[i];
 
+        // add weight to pattern
+        FcPatternAddInteger(fcPattern, FC_WEIGHT, fcW);
+
+        PRUint8 fcProperty;
         // add style to pattern
         switch (mStyle.style) {
         case FONT_STYLE_ITALIC:
@@ -253,11 +296,6 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
         mFontFace = cairo_ft_font_face_create_for_pattern(fcMatch);
         FcPatternDestroy(fcMatch);
     }
-#ifdef DEBUG_thebes_2
-    printf("  cairo_font_face_type=%s (%d)\n",
-           cairo_font_face_get_type(mFontFace) == CAIRO_FONT_TYPE_FT ? "FT" : "??",
-           cairo_font_face_get_type(mFontFace));
-#endif
 
     NS_ASSERTION(mFontFace, "Failed to make font face");
     return mFontFace;
@@ -369,18 +407,16 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUnichar* aString, PRUint32 aLen
     printf("gfxOS2FontGroup[%#x]::MakeTextRun(PRUnichar aString, %d, %#x, %d)\n",
            (unsigned)this, /*(const char*)aString,*/ aLength, (unsigned)aParams, aFlags);
 #endif
-    NS_ASSERTION(!(aFlags & TEXT_NEED_BOUNDING_BOX), "Glyph extents not yet supported");
     gfxTextRun *textRun = new gfxTextRun(aParams, aString, aLength, this, aFlags);
     if (!textRun)
         return nsnull;
-    NS_ASSERTION(aParams->mContext, "MakeTextRun called without a gfxContext");
 
     textRun->RecordSurrogates(aString);
     
     nsCAutoString utf8;
     PRInt32 headerLen = AppendDirectionalIndicatorUTF8(textRun->IsRightToLeft(), utf8);
     AppendUTF16toUTF8(Substring(aString, aString + aLength), utf8);
-    InitTextRun(textRun, (PRUint8 *)utf8.get(), utf8.Length(), headerLen, aString, aLength);
+    InitTextRun(textRun, (PRUint8 *)utf8.get(), utf8.Length(), headerLen);
 
 #ifdef DEBUG_thebes_2
     printf("gfxOS2FontGroup[%#x]::MakeTextRun(PRUnichar aString, %d, %#x) is done: %#x\n",
@@ -396,24 +432,26 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUint8* aString, PRUint32 aLengt
     printf("gfxOS2FontGroup[%#x]::MakeTextRun(PRUint8 aString, %d, %#x, %d)\n",
            (unsigned)this, /*(const char*)aString,*/ aLength, (unsigned)aParams, aFlags);
 #endif
-    NS_ASSERTION(aFlags & TEXT_IS_8BIT, "should be marked 8bit");
+    NS_ASSERTION(aFlags & TEXT_IS_8BIT, "8bit should have been set");
     gfxTextRun *textRun = new gfxTextRun(aParams, aString, aLength, this, aFlags);
     if (!textRun)
         return nsnull;
-    NS_ASSERTION(aParams->mContext, "MakeTextRun called without a gfxContext");
 
-    const char *utf8Chars = NS_REINTERPRET_CAST(const char *, aString);
+    const char *chars = reinterpret_cast<const char *>(aString);
     PRBool isRTL = textRun->IsRightToLeft();
-    if (!isRTL) {
-        // We don't need to send an override character here, the characters must
-        // be all LTR
-        InitTextRun(textRun, (PRUint8 *)utf8Chars, aLength, 0, nsnull, 0);
+    if ((aFlags & TEXT_IS_ASCII) && !isRTL) {
+        // We don't need to send an override character here, the characters must be all
+        // LTR
+        InitTextRun(textRun, (PRUint8 *)chars, aLength, 0);
     } else {
-        NS_ConvertASCIItoUTF16 unicodeString(utf8Chars, aLength);
+        // Although chars in not necessarily ASCII (as it may point to the low
+        // bytes of any UCS-2 characters < 256), NS_ConvertASCIItoUTF16 seems
+        // to DTRT.
+        NS_ConvertASCIItoUTF16 unicodeString(chars, aLength);
         nsCAutoString utf8;
         PRInt32 headerLen = AppendDirectionalIndicatorUTF8(isRTL, utf8);
         AppendUTF16toUTF8(unicodeString, utf8);
-        InitTextRun(textRun, (PRUint8 *)utf8.get(), utf8.Length(), headerLen, nsnull, 0);
+        InitTextRun(textRun, (PRUint8 *)utf8.get(), utf8.Length(), headerLen);
     }
 
 #ifdef DEBUG_thebes_2
@@ -425,9 +463,7 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUint8* aString, PRUint32 aLengt
 
 void gfxOS2FontGroup::InitTextRun(gfxTextRun *aTextRun, const PRUint8 *aUTF8Text,
                                   PRUint32 aUTF8Length,
-                                  PRUint32 aUTF8HeaderLength,
-                                  const PRUnichar *aUTF16Text,
-                                  PRUint32 aUTF16Length)
+                                  PRUint32 aUTF8HeaderLength)
 {
     CreateGlyphRunsFT(aTextRun, aUTF8Text + aUTF8HeaderLength,
                       aUTF8Length - aUTF8HeaderLength);
@@ -502,10 +538,8 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
         if (ch == 0) {
             // treat this null byte as a missing glyph, don't create a glyph for it
             aTextRun->SetMissingGlyph(utf16Offset, 0);
-        } else if (ch < 0x10000 && IsInvisibleChar(PRUnichar(ch))) {
-            // hide glyphs for invisible chars (tabs, linebreaks)
-            aTextRun->SetCharacterGlyph(utf16Offset, g.SetMissing());
         } else {
+            NS_ASSERTION(!IsInvalidChar(ch), "Invalid char detected");
             FT_UInt gid = FT_Get_Char_Index(face, ch); // find the glyph id
             PRInt32 advance = 0;
             if (gid == font->GetSpaceGlyph()) {
@@ -517,7 +551,8 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
                 advance = MOZ_FT_TRUNC(face->glyph->advance.x) * appUnitsPerDevUnit;
             }
 #ifdef DEBUG_thebes_2
-            printf(" gid=%d, advance=%d\n", gid, advance);
+            printf(" gid=%d, advance=%d (%s)\n", gid, advance,
+                   NS_LossyConvertUTF16toASCII(font->GetName()).get());
 #endif
             
             if (advance >= 0 &&
@@ -555,7 +590,7 @@ PRBool gfxOS2FontGroup::FontCallback(const nsAString& aFontName,
                                      const nsACString& aGenericName,
                                      void *aClosure)
 {
-    nsStringArray *sa = NS_STATIC_CAST(nsStringArray*, aClosure);
+    nsStringArray *sa = static_cast<nsStringArray*>(aClosure);
     if (sa->IndexOf(aFontName) < 0) {
         sa->AppendString(aFontName);
     }

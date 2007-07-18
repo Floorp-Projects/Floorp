@@ -38,7 +38,7 @@
 var gTestfile = 'regress-369404.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 369404;
-var summary = 'Assertion failure: !SPROP_HAS_STUB_SETTER(sprop) || (sprop->attrs & JSPROP_GETTER) ';
+var summary = 'Do not assert: !SPROP_HAS_STUB_SETTER(sprop) || (sprop->attrs & JSPROP_GETTER) ';
 var actual = 'No Crash';
 var expect = 'No Crash';
 

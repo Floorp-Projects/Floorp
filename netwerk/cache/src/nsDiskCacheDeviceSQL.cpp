@@ -46,6 +46,7 @@
 #include "nsString.h"
 #include "nsPrintfCString.h"
 #include "nsCRT.h"
+#include "nsIVariant.h"
 
 #include "mozIStorageService.h"
 #include "mozIStorageStatement.h"
@@ -202,9 +203,11 @@ GetCacheDataFile(nsIFile *cacheDir, const char *cid, const char *key,
 }
 
 NS_IMETHODIMP
-nsOfflineCacheEvictionFunction::OnFunctionCall(mozIStorageValueArray *values)
+nsOfflineCacheEvictionFunction::OnFunctionCall(mozIStorageValueArray *values, nsIVariant **_retval)
 {
   LOG(("nsOfflineCacheDevice::EvictionObserver\n"));
+  
+  *_retval = nsnull;
 
   PRUint32 numEntries;
   nsresult rv = values->GetNumEntries(&numEntries);
@@ -762,7 +765,7 @@ nsOfflineCacheDevice::Init()
     new nsOfflineCacheEvictionFunction(this);
   if (!evictionFunction) return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = mDB->CreateFunction("cache_eviction_observer", 3, evictionFunction);
+  rv = mDB->CreateFunction(NS_LITERAL_CSTRING("cache_eviction_observer"), 3, evictionFunction);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // create all (most) of our statements up front
@@ -770,7 +773,7 @@ nsOfflineCacheDevice::Init()
     nsCOMPtr<mozIStorageStatement> &statement;
     const char *sql;
     StatementSql (nsCOMPtr<mozIStorageStatement> &aStatement, const char *aSql):
-      statement (aStatement), sql (aSql) {};
+      statement (aStatement), sql (aSql) {}
   } prepared[] = {
     StatementSql ( mStatement_CacheSize,         "SELECT Sum(DataSize) from moz_cache;" ),
     StatementSql ( mStatement_EntryCount,        "SELECT count(*) from moz_cache;" ),
@@ -1318,7 +1321,7 @@ nsOfflineCacheDevice::GetOwnedKeys(const char * clientID,
   }
 
   *count = keyArray.Length();
-  char **ret = NS_STATIC_CAST(char **, NS_Alloc(*count * sizeof(char*)));
+  char **ret = static_cast<char **>(NS_Alloc(*count * sizeof(char*)));
   if (!ret) return NS_ERROR_OUT_OF_MEMORY;
 
   for (PRUint32 i = 0; i <  *count; i++) {

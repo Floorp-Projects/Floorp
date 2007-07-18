@@ -76,7 +76,7 @@ nsresult GeckoContainer::CreateBrowser(PRInt32 aX, PRInt32 aY,
     if (!mWebBrowser || NS_FAILED(rv))
         return NS_ERROR_FAILURE;
 
-    mWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome *, this));
+    mWebBrowser->SetContainerWindow(static_cast<nsIWebBrowserChrome *>(this));
 
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(mWebBrowser);
     dsti->SetItemType(
@@ -96,13 +96,13 @@ nsresult GeckoContainer::CreateBrowser(PRInt32 aX, PRInt32 aY,
                              aX, aY, aCX, aCY);
     browserBaseWindow->Create();
 
-    nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, this));
+    nsCOMPtr<nsIWebProgressListener> listener(static_cast<nsIWebProgressListener*>(this));
     nsCOMPtr<nsIWeakReference> thisListener(do_GetWeakReference(listener));
     (void)mWebBrowser->AddWebBrowserListener(thisListener, 
         NS_GET_IID(nsIWebProgressListener));
 
     if (mIsURIContentListener)
-        mWebBrowser->SetParentURIContentListener(NS_STATIC_CAST(nsIURIContentListener *, this));
+        mWebBrowser->SetParentURIContentListener(static_cast<nsIURIContentListener *>(this));
 
 
     // The window has been created. Now register for history notifications

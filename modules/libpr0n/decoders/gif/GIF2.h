@@ -74,7 +74,6 @@ typedef enum {
 
 /* A GIF decoder's state */
 typedef struct gif_struct {
-    void* clientptr;
     /* Parsing state machine */
     gstate state;                   /* Curent decoder master state */
     PRUint32 bytes_to_consume;      /* Number of bytes to accumulate */
@@ -85,7 +84,6 @@ typedef struct gif_struct {
     int datasize;
     int codesize;
     int codemask;
-    int clear_code;             /* Codeword used to trigger dictionary reset */
     int avail;                  /* Index of next available slot in dictionary */
     int oldcode;
     PRUint8 firstchar;
@@ -112,7 +110,6 @@ typedef struct gif_struct {
                                    for this image in a multi-image GIF */
 
     /* Global (multi-image) state */
-    int screen_bgcolor;         /* Logical screen background color */
     int version;                /* Either 89 for GIF89 or 87 for GIF87 */
     PRUintn screen_width;       /* Logical screen width & height */
     PRUintn screen_height;
@@ -133,17 +130,6 @@ typedef struct gif_struct {
     PRUint8   stack[MAX_BITS];           /* Base of LZW decoder stack */
 
 } gif_struct;
-
-
-/* These are the APIs that the client calls to intialize,
-push data to, and shut down the GIF decoder. */
-PRBool GIFInit(gif_struct* gs, void* aClientData);
-
-void gif_destroy(gif_struct* aGIFStruct);
-
-PRStatus gif_write(gif_struct* aGIFStruct, const PRUint8 * buf, PRUint32 numbytes);
-
-PRBool gif_write_ready(const gif_struct* aGIFStruct);
 
 #endif
 

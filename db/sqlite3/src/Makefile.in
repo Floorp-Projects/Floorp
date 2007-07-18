@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+#   Shawn Wilsher <me@shawnwilsher.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -44,56 +45,32 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE           = sqlite3
-LIBRARY_NAME     = sqlite3_s
-MODULE_NAME      = sqlite3
-FORCE_STATIC_LIB = 1
+LIBRARY_NAME     = sqlite3
+FORCE_SHARED_LIB = 1
+VISIBILITY_FLAGS =
+
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
+ifndef GNU_CC
+MAPFILE = $(LIBRARY_NAME).map
+DEFFILE = $(win_srcdir)/sqlite.def
+endif
+endif
+
+ifdef GNU_CC
+MODULE_OPTIMIZE_FLAGS = -O3
+else
+ifeq ($(OS_ARCH),SunOS)
+MODULE_OPTIMIZE_FLAGS = -fast
+endif
+ifeq ($(OS_ARCH),WINNT)
+MODULE_OPTIMIZE_FLAGS = -Ox
+endif
+endif
 
 EXPORTS = sqlite3.h sqlite3file.h
 
 CSRCS = \
-	alter.c \
-	analyze.c \
-	attach.c \
-	auth.c \
-	btree.c \
-	build.c \
-	callback.c \
-	complete.c \
-	date.c \
-	delete.c \
-	experimental.c \
-	expr.c \
-	func.c \
-	hash.c \
-	insert.c \
-	legacy.c \
-	main.c \
-	opcodes.c \
-	os.c \
-	os_unix.c \
-	os_win.c \
-	os_os2.c \
-	os_beos.c \
-	pager.c \
-	parse.c \
-	pragma.c \
-	prepare.c \
-	printf.c \
-	random.c \
-	select.c \
-	table.c \
-	tokenize.c \
-	trigger.c \
-	update.c \
-	utf.c \
-	util.c \
-	vacuum.c \
-	vdbe.c \
-	vdbeapi.c \
-	vdbeaux.c \
-	vdbefifo.c \
-	vdbemem.c \
-	where.c \
+	sqlite3.c \
 	$(NULL)
 
 # REFEF_IO allows us to override IO functions, which is used in the AsyncIO
@@ -107,15 +84,7 @@ DEFINES += -DOS2_HIGH_MEMORY
 endif
 endif
 
-ifdef ENABLE_TESTS
-##LIBS = $(DIST)/lib/$(LIB_PREFIX)sqlite3_s.$(LIB_SUFFIX)
-##SIMPLE_PROGRAMS = sqlite-shell
-endif
-
 include $(topsrcdir)/config/rules.mk
-
-sqlite-shell.$(OBJ_SUFFIX): shell.c
-	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(_VPATH_SRCS)
 
 # next line allows use of MOZ_OBJDIR in .mozconfig with older gcc on BeOS, maybe others
 LOCAL_INCLUDES += -I$(srcdir)

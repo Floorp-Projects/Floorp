@@ -28,7 +28,7 @@
   width: 16px;
   height: 16px;
   -moz-margin-start: 9px;
-  list-style-image: url("chrome://browser/skin/bookmarks/bookmark-item.png");
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
 .searchbar-engine-button-top {

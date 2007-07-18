@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nsPKCS12Blob.cpp,v 1.47 2006/05/10 17:29:56 darin%meer.net Exp $ */
+/* $Id: nsPKCS12Blob.cpp,v 1.48 2007/07/08 07:08:42 jwalden%mit.edu Exp $ */
 
 #include "prmem.h"
 #include "prprf.h"
@@ -649,7 +649,7 @@ OSErr ConvertMacPathToUnixPath(const char *macPath, char **unixPath)
 SECStatus PR_CALLBACK
 nsPKCS12Blob::digest_open(void *arg, PRBool reading)
 {
-  nsPKCS12Blob *cx = NS_REINTERPRET_POINTER_CAST(nsPKCS12Blob *, arg);
+  nsPKCS12Blob *cx = reinterpret_cast<nsPKCS12Blob *>(arg);
   NS_ENSURE_TRUE(cx, SECFailure);
   
   if (reading) {
@@ -684,7 +684,7 @@ nsPKCS12Blob::digest_open(void *arg, PRBool reading)
 SECStatus PR_CALLBACK
 nsPKCS12Blob::digest_close(void *arg, PRBool remove_it)
 {
-  nsPKCS12Blob *cx = NS_REINTERPRET_POINTER_CAST(nsPKCS12Blob *, arg);
+  nsPKCS12Blob *cx = reinterpret_cast<nsPKCS12Blob *>(arg);
   NS_ENSURE_TRUE(cx, SECFailure);
 
   delete cx->mDigestIterator;
@@ -703,7 +703,7 @@ nsPKCS12Blob::digest_close(void *arg, PRBool remove_it)
 int PR_CALLBACK
 nsPKCS12Blob::digest_read(void *arg, unsigned char *buf, unsigned long len)
 {
-  nsPKCS12Blob *cx = NS_REINTERPRET_POINTER_CAST(nsPKCS12Blob *, arg);
+  nsPKCS12Blob *cx = reinterpret_cast<nsPKCS12Blob *>(arg);
   NS_ENSURE_TRUE(cx, SECFailure);
   NS_ENSURE_TRUE(cx->mDigest, SECFailure);
 
@@ -726,15 +726,15 @@ nsPKCS12Blob::digest_read(void *arg, unsigned char *buf, unsigned long len)
 int PR_CALLBACK
 nsPKCS12Blob::digest_write(void *arg, unsigned char *buf, unsigned long len)
 {
-  nsPKCS12Blob *cx = NS_REINTERPRET_POINTER_CAST(nsPKCS12Blob *, arg);
+  nsPKCS12Blob *cx = reinterpret_cast<nsPKCS12Blob *>(arg);
   NS_ENSURE_TRUE(cx, SECFailure);
   NS_ENSURE_TRUE(cx->mDigest, SECFailure);
 
   // make sure we are in write mode, read iterator has not yet been allocated
   NS_ENSURE_FALSE(cx->mDigestIterator, SECFailure);
   
-  cx->mDigest->Append(NS_REINTERPRET_CAST(char *, buf),
-                     NS_STATIC_CAST(PRUint32, len));
+  cx->mDigest->Append(reinterpret_cast<char *>(buf),
+                     static_cast<PRUint32>(len));
   
   return len;
 }
@@ -785,7 +785,7 @@ nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
       nickname = nickFromPropC;
     }
     CERTCertificate *cert = CERT_FindCertByNickname(CERT_GetDefaultCertDB(),
-                                           NS_CONST_CAST(char*,nickname.get()));
+                                           const_cast<char*>(nickname.get()));
     if (!cert) {
       break;
     }

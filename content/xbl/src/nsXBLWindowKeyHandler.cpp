@@ -292,7 +292,7 @@ GetEditorKeyBindings()
 static void
 DoCommandCallback(const char *aCommand, void *aData)
 {
-  nsIControllers *controllers = NS_STATIC_CAST(nsIControllers*, aData);
+  nsIControllers *controllers = static_cast<nsIControllers*>(aData);
   if (controllers) {
     nsCOMPtr<nsIController> controller;
     controllers->GetControllerForCommand(aCommand, getter_AddRefs(controller));

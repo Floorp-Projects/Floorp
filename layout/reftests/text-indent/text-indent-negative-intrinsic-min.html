@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test for intrinsic widths and negative text-indent</title>
+<style type="text/css">
+
+body { font-size: 12px; }
+
+body > div, body > pre {
+	float: left; clear: left; margin: 1px; height: 2em;
+	border: medium solid;
+}
+
+span {
+    display: inline-block;
+    height: 1em;
+    width: 1em;
+}
+
+</style>
+</head>
+<body style="width: 1px">
+
+<div style="text-indent: -3em;"><span style="width: 1em"></span></div>
+<div style="text-indent: -3em;"><span style="width: 5em"></span></div>
+
+<div style="text-indent: -3em;"><span style="width: 1em"></span>&#x200b;<span style="width: 1em"></span></div>
+<div style="text-indent: -3em;"><span style="width: 1em"></span>&#x200b;<span style="width: 3em"></span></div>
+<div style="text-indent: -3em;"><span style="width: 1em"></span>&#x200b;<span style="width: 3em"></span>&#x200b;<span style="width: 3em"></span></div>
+<div style="text-indent: -3em;"><span style="width: 4em"></span>&#x200b;<span style="width: 3em"></span></div>
+<div style="text-indent: -3em;"><span style="width: 1em"></span><br><span style="width: 1em"></span></div>
+<div style="text-indent: -3em;"><span style="width: 5em"></span><br><span style="width: 1em"></span></div>
+<pre style="text-indent: -3em"><span style="width: 1em"></span>
+<span style="width: 5em"></span></pre>
+<pre style="text-indent: -3em"><span style="width: 5em"></span>
+<span style="width: 1em"></span></pre>
+
+</body>
+</html>

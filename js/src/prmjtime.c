@@ -50,6 +50,7 @@
 #include "jsutil.h"
 
 #include "jsprf.h"
+#include "jslock.h"
 #include "prmjtime.h"
 
 #define PRMJ_DO_MILLISECONDS 1
@@ -60,6 +61,13 @@
 #ifdef XP_WIN
 #include <windef.h>
 #include <winbase.h>
+#include <math.h>     /* for fabs */
+#include <mmsystem.h> /* for timeBegin/EndPeriod */
+
+#ifdef JS_THREADSAFE
+#include <prinit.h>
+#endif
+
 #endif
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
@@ -100,7 +108,7 @@ PRMJ_LocalGMTDifference()
     ltime.tm_gmtoff = 0;
     return timelocal(&ltime) - (24 * 3600);
 #else
-    return mktime(&ltime) - (24L * 3600L);
+    return (JSInt32)mktime(&ltime) - (24L * 3600L);
 #endif
 }
 
@@ -143,6 +151,181 @@ PRMJ_ToExtendedTime(JSInt32 base_time)
     return exttime;
 }
 
+#ifdef XP_WIN
+typedef struct CalibrationData
+{
+    long double freq;         /* The performance counter frequency */
+    long double offset;       /* The low res 'epoch' */
+    long double timer_offset; /* The high res 'epoch' */
+
+    /* The last high res time that we returned since recalibrating */
+    JSInt64 last;
+
+    JSBool calibrated;
+
+#ifdef JS_THREADSAFE
+    CRITICAL_SECTION data_lock;
+    CRITICAL_SECTION calibration_lock;
+#endif
+} CalibrationData;
+
+static const JSInt64 win2un = JSLL_INIT(0x19DB1DE, 0xD53E8000);
+
+static CalibrationData calibration = { 0 };
+
+#define FILETIME2INT64(ft) (((JSInt64)ft.dwHighDateTime) << 32LL | (JSInt64)ft.dwLowDateTime)
+
+static void
+NowCalibrate()
+{
+    FILETIME ft, ftStart;
+    LARGE_INTEGER liFreq, now;
+
+    if (calibration.freq == 0.0) {
+        if(!QueryPerformanceFrequency(&liFreq)) {
+            /* High-performance timer is unavailable */
+            calibration.freq = -1.0;
+        } else {
+            calibration.freq = (long double) liFreq.QuadPart;
+        }
+    } 
+    if (calibration.freq > 0.0) {
+        JSInt64 calibrationDelta = 0;
+
+        /* By wrapping a timeBegin/EndPeriod pair of calls around this loop,
+           the loop seems to take much less time (1 ms vs 15ms) on Vista. */
+        timeBeginPeriod(1);
+        GetSystemTimeAsFileTime(&ftStart);
+        do {
+            GetSystemTimeAsFileTime(&ft);
+        } while (memcmp(&ftStart,&ft, sizeof(ft)) == 0);
+        timeEndPeriod(1);
+
+        /*
+        calibrationDelta = (FILETIME2INT64(ft) - FILETIME2INT64(ftStart))/10;
+        fprintf(stderr, "Calibration delta was %I64d us\n", calibrationDelta);
+        */
+
+        QueryPerformanceCounter(&now);
+
+        calibration.offset = (long double) FILETIME2INT64(ft);
+        calibration.timer_offset = (long double) now.QuadPart;
+
+        /* The windows epoch is around 1600. The unix epoch is around
+           1970. win2un is the difference (in windows time units which
+           are 10 times more highres than the JS time unit) */
+        calibration.offset -= win2un;
+        calibration.offset *= 0.1;
+        calibration.last = 0;
+
+        calibration.calibrated = JS_TRUE;
+    }
+}
+
+#define CALIBRATIONLOCK_SPINCOUNT 0
+#define DATALOCK_SPINCOUNT 4096
+#define LASTLOCK_SPINCOUNT 4096
+
+#ifdef JS_THREADSAFE
+static PRStatus PR_CALLBACK
+NowInit(void)
+{
+    memset(&calibration, 0, sizeof(calibration));
+    NowCalibrate();
+    InitializeCriticalSectionAndSpinCount(&calibration.calibration_lock, CALIBRATIONLOCK_SPINCOUNT);
+    InitializeCriticalSectionAndSpinCount(&calibration.data_lock, DATALOCK_SPINCOUNT);
+    return PR_SUCCESS;
+}
+
+void
+PRMJ_NowShutdown()
+{
+    DeleteCriticalSection(&calibration.calibration_lock);
+    DeleteCriticalSection(&calibration.data_lock);
+}
+
+#define MUTEX_LOCK(m) EnterCriticalSection(m)
+#define MUTEX_TRYLOCK(m) TryEnterCriticalSection(m)
+#define MUTEX_UNLOCK(m) LeaveCriticalSection(m)
+#define MUTEX_SETSPINCOUNT(m, c) SetCriticalSectionSpinCount((m),(c))
+
+static PRCallOnceType calibrationOnce = { 0 };
+
+#else
+
+#define MUTEX_LOCK(m)
+#define MUTEX_TRYLOCK(m) 1
+#define MUTEX_UNLOCK(m)
+#define MUTEX_SETSPINCOUNT(m, c)
+
+#endif
+
+
+#endif // XP_WIN
+
+/*
+
+Win32 python-esque pseudo code
+Please see bug 363258 for why the win32 timing code is so complex.
+
+calibration mutex : Win32CriticalSection(spincount=0)
+data mutex : Win32CriticalSection(spincount=4096)
+
+def NowInit():
+  init mutexes
+  PRMJ_NowCalibration()
+
+def NowCalibration():
+  expensive up-to-15ms call
+
+def PRMJ_Now():
+  returnedTime = 0
+  needCalibration = False
+  cachedOffset = 0.0
+  calibrated = False
+  PR_CallOnce(PRMJ_NowInit)
+  do
+    if not global.calibrated or needCalibration:
+      acquire calibration mutex
+        acquire data mutex
+
+          // Only recalibrate if someone didn't already
+          if cachedOffset == calibration.offset:
+            // Have all waiting threads immediately wait 
+            set data mutex spin count = 0
+            PRMJ_NowCalibrate()
+            calibrated = 1
+
+            set data mutex spin count = default
+        release data mutex
+      release calibration mutex
+
+    calculate lowres time
+
+    if highres timer available:
+      acquire data mutex
+        calculate highres time
+        cachedOffset = calibration.offset
+        highres time = calibration.last = max(highres time, calibration.last)
+      release data mutex
+
+      get kernel tick interval
+
+      if abs(highres - lowres) < kernel tick:
+        returnedTime = highres time
+        needCalibration = False
+      else:
+        if calibrated:
+          returnedTime = lowres
+          needCalibration = False
+        else:
+          needCalibration = True
+    else:
+      returnedTime = lowres
+  while needCalibration
+
+*/
+
 JSInt64
 PRMJ_Now(void)
 {
@@ -151,10 +334,14 @@ PRMJ_Now(void)
     struct timeb b;
 #endif
 #ifdef XP_WIN
-    JSInt64 s, us,
-    win2un = JSLL_INIT(0x19DB1DE, 0xD53E8000),
-    ten = JSLL_INIT(0, 10);
-    FILETIME time, midnight;
+    static int nCalls = 0;
+    long double lowresTime, highresTimerValue;
+    FILETIME ft;
+    LARGE_INTEGER now;
+    JSBool calibrated = JS_FALSE;
+    JSBool needsCalibration = JS_FALSE;
+    JSInt64 returnedTime;
+    long double cachedOffset = 0.0;
 #endif
 #if defined(XP_UNIX) || defined(XP_BEOS)
     struct timeval tv;
@@ -173,25 +360,132 @@ PRMJ_Now(void)
     return s;
 #endif
 #ifdef XP_WIN
-    /* The windows epoch is around 1600. The unix epoch is around 1970.
-       win2un is the difference (in windows time units which are 10 times
-       more precise than the JS time unit) */
-    GetSystemTimeAsFileTime(&time);
-    /* Win9x gets confused at midnight
-       http://support.microsoft.com/default.aspx?scid=KB;en-us;q224423
-       So if the low part (precision <8mins) is 0 then we get the time
-       again. */
-    if (!time.dwLowDateTime) {
-        GetSystemTimeAsFileTime(&midnight);
-        time.dwHighDateTime = midnight.dwHighDateTime;
+
+    /* To avoid regressing startup time (where high resolution is likely
+       not needed), give the old behavior for the first few calls.
+       This does not appear to be needed on Vista as the timeBegin/timeEndPeriod
+       calls seem to immediately take effect. */
+    int thiscall = JS_ATOMIC_INCREMENT(&nCalls);
+    /* 10 seems to be the number of calls to load with a blank homepage */
+    if (thiscall <= 10) {
+        GetSystemTimeAsFileTime(&ft);
+        return (FILETIME2INT64(ft)-win2un)/10L;
     }
-    JSLL_UI2L(s, time.dwHighDateTime);
-    JSLL_UI2L(us, time.dwLowDateTime);
-    JSLL_SHL(s, s, 32);
-    JSLL_ADD(s, s, us);
-    JSLL_SUB(s, s, win2un);
-    JSLL_DIV(s, s, ten);
-    return s;
+
+    /* For non threadsafe platforms, NowInit is not necessary */
+#ifdef JS_THREADSAFE
+    PR_CallOnce(&calibrationOnce, NowInit);
+#endif
+    do {
+        if (!calibration.calibrated || needsCalibration) {
+            MUTEX_LOCK(&calibration.calibration_lock);
+            MUTEX_LOCK(&calibration.data_lock);
+
+            /* Recalibrate only if no one else did before us */
+            if(calibration.offset == cachedOffset) {
+                /* Since calibration can take a while, make any other
+                   threads immediately wait */
+                MUTEX_SETSPINCOUNT(&calibration.data_lock, 0);
+
+                NowCalibrate();
+
+                calibrated = JS_TRUE;
+
+                /* Restore spin count */
+                MUTEX_SETSPINCOUNT(&calibration.data_lock, DATALOCK_SPINCOUNT);
+            }
+            MUTEX_UNLOCK(&calibration.data_lock);
+            MUTEX_UNLOCK(&calibration.calibration_lock);
+        }
+
+
+        /* Calculate a low resolution time */
+        GetSystemTimeAsFileTime(&ft);
+        lowresTime = 0.1*(long double)(FILETIME2INT64(ft) - win2un);
+
+        if (calibration.freq > 0.0) {
+            long double highresTime, diff;
+
+            DWORD timeAdjustment, timeIncrement;
+            BOOL timeAdjustmentDisabled;
+
+            /* Default to 15.625 ms if the syscall fails */
+            long double skewThreshold = 15625.25;
+            /* Grab high resolution time */
+            QueryPerformanceCounter(&now);
+            highresTimerValue = (long double)now.QuadPart;
+
+            MUTEX_LOCK(&calibration.data_lock);
+            highresTime = calibration.offset + PRMJ_USEC_PER_SEC*
+                 (highresTimerValue-calibration.timer_offset)/calibration.freq;
+            cachedOffset = calibration.offset;
+
+            /* On some dual processor/core systems, we might get an earlier time
+               so we cache the last time that we returned */
+            calibration.last = max(calibration.last,(JSInt64)highresTime);
+            returnedTime = calibration.last;
+            MUTEX_UNLOCK(&calibration.data_lock);
+
+            /* Rather than assume the NT kernel ticks every 15.6ms, ask it */
+            if (GetSystemTimeAdjustment(&timeAdjustment,
+                                        &timeIncrement,
+                                        &timeAdjustmentDisabled)) {
+                if (timeAdjustmentDisabled) {
+                    /* timeAdjustment is in units of 100ns */
+                    skewThreshold = timeAdjustment/10.0;
+                } else {
+                    /* timeIncrement is in units of 100ns */
+                    skewThreshold = timeIncrement/10.0;
+                }
+            }
+
+            /* Check for clock skew */
+            diff = lowresTime - highresTime;
+
+            /* For some reason that I have not determined, the skew can be
+               up to twice a kernel tick. This does not seem to happen by
+               itself, but I have only seen it triggered by another program
+               doing some kind of file I/O. The symptoms are a negative diff
+               followed by an equally large positive diff. */
+            if (fabs(diff) > 2*skewThreshold) {
+                //fprintf(stderr,"Clock skew detected (diff = %f)!\n", diff);
+
+                if (calibrated) {
+                    /* If we already calibrated once this instance, and the
+                       clock is still skewed, then either the processor(s) are
+                       wildly changing clockspeed or the system is so busy that
+                       we get switched out for long periods of time. In either
+                       case, it would be infeasible to make use of high
+                       resolution results for anything, so let's resort to old
+                       behavior for this call. It's possible that in the
+                       future, the user will want the high resolution timer, so
+                       we don't disable it entirely. */
+                    returnedTime = (JSInt64)lowresTime;
+                    needsCalibration = JS_FALSE;
+                } else { 
+                    /* It is possible that when we recalibrate, we will return a
+                       value less than what we have returned before; this is
+                       unavoidable. We cannot tell the different between a
+                       faulty QueryPerformanceCounter implementation and user
+                       changes to the operating system time. Since we must
+                       respect user changes to the operating system time, we
+                       cannot maintain the invariant that Date.now() never
+                       decreases; the old implementation has this behavior as
+                       well. */
+                    needsCalibration = JS_TRUE;
+                }
+            } else {
+                /* No detectable clock skew */
+                returnedTime = (JSInt64)highresTime;
+                needsCalibration = JS_FALSE;
+            }
+        } else {
+            /* No high resolution timer is available, so fall back */
+            returnedTime = (JSInt64)lowresTime;
+        }
+    } while (needsCalibration);
+
+    return returnedTime;
 #endif
 
 #if defined(XP_UNIX) || defined(XP_BEOS)

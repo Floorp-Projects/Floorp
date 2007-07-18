@@ -38,7 +38,7 @@
 var gTestfile = 'regress-356250.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 356250;
-var summary = 'Assertion: !fp->fun || !(fp->fun->flags & JSFUN_HEAVYWEIGHT) || fp->callobj';
+var summary = 'Do not assert: !fp->fun || !(fp->fun->flags & JSFUN_HEAVYWEIGHT) || fp->callobj';
 var actual = 'No Crash';
 var expect = 'No Crash';
 

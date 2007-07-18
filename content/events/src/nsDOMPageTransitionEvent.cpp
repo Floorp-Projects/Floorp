@@ -65,7 +65,7 @@ NS_IMPL_RELEASE_INHERITED(nsDOMPageTransitionEvent, nsDOMEvent)
 NS_IMETHODIMP
 nsDOMPageTransitionEvent::GetPersisted(PRBool* aPersisted)
 {
-  *aPersisted = NS_STATIC_CAST(nsPageTransitionEvent*, mEvent)->persisted;
+  *aPersisted = static_cast<nsPageTransitionEvent*>(mEvent)->persisted;
   return NS_OK;
 }
 
@@ -78,7 +78,7 @@ nsDOMPageTransitionEvent::InitPageTransitionEvent(const nsAString &aTypeArg,
   nsresult rv = nsDOMEvent::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_STATIC_CAST(nsPageTransitionEvent*, mEvent)->persisted = aPersisted;
+  static_cast<nsPageTransitionEvent*>(mEvent)->persisted = aPersisted;
   return NS_OK;
 }
 

@@ -85,15 +85,6 @@ function getFile(key) {
 }
 
 /**
- * Return the full path given a relative path and a base directory.
- */
-function getFileRelativeTo(dir, relPath) {
-  var file = dir.clone().QueryInterface(Components.interfaces.nsILocalFile);
-  file.setRelativeDescriptor(dir, relPath);
-  return file;
-}
-
-/**
  * Creates a new file object given a native file path.
  * @param   path
  *          The native file path.

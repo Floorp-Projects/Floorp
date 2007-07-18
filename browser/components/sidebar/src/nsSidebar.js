@@ -121,7 +121,6 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
     if (!sidebarURLSecurityCheck(aContentURL))
       return;
 
-#ifdef MOZ_PLACES_BOOKMARKS
     var uri = null;
     var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                               .getService(Components.interfaces.nsIIOService);
@@ -130,21 +129,7 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
     }
     catch(ex) { return; }
 
-    win.PlacesUtils.showAddBookmarkUI(uri, aTitle, null, true, true);
-#else
-    var dialogArgs = {
-      name: aTitle,
-      url: aContentURL,
-      bWebPanel: true
-    }
-#ifdef XP_MACOSX
-    var features = "chrome,dialog,resizable,modal";
-#else
-    var features = "centerscreen,chrome,dialog,resizable,dependent";
-#endif
-    win.openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-                   features, dialogArgs);
-#endif
+    win.PlacesUtils.showMinimalAddBookmarkUI(uri, aTitle, null, null, true, true);
 }
 
 nsSidebar.prototype.validateSearchEngine =

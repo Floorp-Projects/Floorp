@@ -66,6 +66,7 @@
 #include "jsapi.h"
 #include "txExprParser.h"
 #include "nsIErrorService.h"
+#include "nsIScriptSecurityManager.h"
 
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 
@@ -303,6 +304,7 @@ NS_INTERFACE_MAP_BEGIN(txMozillaXSLTProcessor)
     NS_INTERFACE_MAP_ENTRY(nsIXSLTProcessorPrivate)
     NS_INTERFACE_MAP_ENTRY(nsIDocumentTransformer)
     NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
+    NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXSLTProcessor)
     NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XSLTProcessor)
 NS_INTERFACE_MAP_END
@@ -344,7 +346,7 @@ txMozillaXSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
                    type == nsIDOMNode::DOCUMENT_NODE,
                    NS_ERROR_INVALID_ARG);
 
-    nsresult rv = TX_CompileStylesheet(aStyleDOM, this,
+    nsresult rv = TX_CompileStylesheet(aStyleDOM, this, mPrincipal,
                                        getter_AddRefs(mStylesheet));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -515,7 +517,7 @@ txMozillaXSLTProcessor::AddXSLTParam(const nsString& aName,
     NS_ENSURE_SUCCESS(rv, rv);
 
     txExpandedName varName(nsId, name);
-    txVariable* var = NS_STATIC_CAST(txVariable*, mVariables.get(varName));
+    txVariable* var = static_cast<txVariable*>(mVariables.get(varName));
     if (var) {
         var->setValue(value);
         
@@ -598,7 +600,7 @@ txMozillaXSLTProcessor::ImportStylesheet(nsIDOMNode *aStyle)
                    type == nsIDOMNode::DOCUMENT_NODE,
                    NS_ERROR_INVALID_ARG);
 
-    nsresult rv = TX_CompileStylesheet(aStyle, this,
+    nsresult rv = TX_CompileStylesheet(aStyle, this, mPrincipal,
                                        getter_AddRefs(mStylesheet));
     // XXX set up exception context, bug 204658
     NS_ENSURE_SUCCESS(rv, rv);
@@ -678,7 +680,7 @@ txMozillaXSLTProcessor::TransformToDoc(nsIDOMDocument *aOutputDoc,
     if (NS_SUCCEEDED(rv)) {
         if (aResult) {
             txAOutputXMLEventHandler* handler =
-                NS_STATIC_CAST(txAOutputXMLEventHandler*, es.mOutputHandler);
+                static_cast<txAOutputXMLEventHandler*>(es.mOutputHandler);
             handler->getOutputDocument(aResult);
         }
     }
@@ -802,8 +804,8 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
 
                 if (result->getResultType() == txAExprResult::NODESET) {
                     txNodeSet *nodeSet =
-                        NS_STATIC_CAST(txNodeSet*,
-                                       NS_STATIC_CAST(txAExprResult*, result));
+                        static_cast<txNodeSet*>
+                                   (static_cast<txAExprResult*>(result));
 
                     nsCOMPtr<nsIDOMNode> node;
                     PRInt32 i, count = nodeSet->size();
@@ -882,7 +884,7 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
                 return NS_ERROR_ILLEGAL_VALUE;
             }
 
-            nsISupports** values = NS_STATIC_CAST(nsISupports**, array);
+            nsISupports** values = static_cast<nsISupports**>(array);
 
             PRUint32 i;
             for (i = 0; i < count; ++i) {
@@ -929,7 +931,7 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
     nsCOMPtr<nsIAtom> localName = do_GetAtom(aLocalName);
     txExpandedName varName(nsId, localName);
 
-    txVariable* var = NS_STATIC_CAST(txVariable*, mVariables.get(varName));
+    txVariable* var = static_cast<txVariable*>(mVariables.get(varName));
     if (var) {
         var->setValue(value);
         return NS_OK;
@@ -953,7 +955,7 @@ txMozillaXSLTProcessor::GetParameter(const nsAString& aNamespaceURI,
     nsCOMPtr<nsIAtom> localName = do_GetAtom(aLocalName);
     txExpandedName varName(nsId, localName);
 
-    txVariable* var = NS_STATIC_CAST(txVariable*, mVariables.get(varName));
+    txVariable* var = static_cast<txVariable*>(mVariables.get(varName));
     if (var) {
         return var->getValue(aResult);
     }
@@ -1021,10 +1023,9 @@ txMozillaXSLTProcessor::GetFlags(PRUint32* aFlags)
 }
 
 NS_IMETHODIMP
-txMozillaXSLTProcessor::LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup,
-                                       nsIPrincipal* aCallerPrincipal)
+txMozillaXSLTProcessor::LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup)
 {
-    nsresult rv = TX_LoadSheet(aUri, this, aLoadGroup, aCallerPrincipal);
+    nsresult rv = TX_LoadSheet(aUri, this, aLoadGroup, mPrincipal);
     if (NS_FAILED(rv) && mObserver) {
         // This is most likely a network or security error, just
         // use the uri as context.
@@ -1184,7 +1185,8 @@ txMozillaXSLTProcessor::ensureStylesheet()
     if (!style) {
         style = do_QueryInterface(mStylesheetDocument);
     }
-    return TX_CompileStylesheet(style, this, getter_AddRefs(mStylesheet));
+    return TX_CompileStylesheet(style, this, mPrincipal,
+                                getter_AddRefs(mStylesheet));
 }
 
 void
@@ -1212,7 +1214,8 @@ txMozillaXSLTProcessor::AttributeChanged(nsIDocument* aDocument,
                                          nsIContent* aContent,
                                          PRInt32 aNameSpaceID,
                                          nsIAtom* aAttribute,
-                                         PRInt32 aModType)
+                                         PRInt32 aModType,
+                                         PRUint32 aStateMask)
 {
     mStylesheet = nsnull;
 }
@@ -1243,9 +1246,32 @@ txMozillaXSLTProcessor::ContentRemoved(nsIDocument* aDocument,
     mStylesheet = nsnull;
 }
 
+NS_IMETHODIMP
+txMozillaXSLTProcessor::Initialize(JSContext* cx, JSObject* obj,
+                                   PRUint32 argc, jsval* argv)
+{
+    nsCOMPtr<nsIPrincipal> prin;
+    nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+    NS_ENSURE_TRUE(secMan, NS_ERROR_UNEXPECTED);
+
+    secMan->GetSubjectPrincipal(getter_AddRefs(prin));
+    NS_ENSURE_TRUE(prin, NS_ERROR_UNEXPECTED);
+
+    return Init(prin);
+}
+
+NS_IMETHODIMP
+txMozillaXSLTProcessor::Init(nsIPrincipal* aPrincipal)
+{
+    NS_ENSURE_ARG_POINTER(aPrincipal);
+    mPrincipal = aPrincipal;
+
+    return NS_OK;
+}
+
 /* static*/
 nsresult
-txMozillaXSLTProcessor::Init()
+txMozillaXSLTProcessor::Startup()
 {
     if (!txXSLTProcessor::init()) {
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1429,8 +1455,8 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
                 NS_ENSURE_TRUE(str, NS_ERROR_FAILURE);
 
                 const PRUnichar *strChars =
-                    NS_REINTERPRET_CAST(const PRUnichar*,
-                                        ::JS_GetStringChars(str));
+                    reinterpret_cast<const PRUnichar*>
+                                    (::JS_GetStringChars(str));
                 nsDependentString value(strChars, ::JS_GetStringLength(str));
 
                 *aResult = new StringResult(value, nsnull);
@@ -1459,7 +1485,7 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
                          type == nsIDataType::VTYPE_INTERFACE_IS,
                          "Huh, we checked this in SetParameter?");
 
-            nsISupports** values = NS_STATIC_CAST(nsISupports**, array);
+            nsISupports** values = static_cast<nsISupports**>(array);
 
             nsRefPtr<txNodeSet> nodeSet = new txNodeSet(nsnull);
             if (!nodeSet) {

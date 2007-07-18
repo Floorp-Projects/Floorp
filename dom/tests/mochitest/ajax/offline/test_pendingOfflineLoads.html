@@ -1,0 +1,131 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>navigator.pendingOfflineLoads Test</title>
+
+<link id="load1" rel="offline-resource" href="http://localhost:8888/unknown1">
+<link id="load2" rel="offline-resource" href="http://localhost:8888/MochiKit/packed.js">
+
+<script type="text/javascript" src="/MochiKit/packed.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+
+<script type="text/javascript">
+
+var base = window.location.protocol + "//" + window.location.host;
+var thisURL = base + window.location.pathname;
+
+var expectedCompletions = {};
+
+expectedCompletions["http://localhost:8888/unknown1"] = {
+  "source": document.getElementById("load1"),
+  "status": 404
+};
+expectedCompletions["http://localhost:8888/unknown2"] = {
+  "source": null,
+  "status": 404
+};
+expectedCompletions["http://localhost:8888/MochiKit/packed.js"] = {
+  "source": document.getElementById("load2"),
+  "status": 200
+};
+expectedCompletions[thisURL] = {
+  "source": null,
+  "status": 200
+};
+
+var expectedAdditions = { };
+for (var uri in expectedCompletions) {
+  expectedAdditions[uri] = expectedCompletions[uri];
+}
+
+function check_load_added(load)
+{
+  var source = load.source;
+  var uri = load.uri;
+
+  ok(expectedAdditions[uri], uri + " should be in the expected addition list");
+  ok(expectedAdditions[uri].source == source,
+     uri + " should come from the expected source");
+  ok(load.status == 0, "status should be 0");
+  delete expectedAdditions[uri];
+}
+
+
+function load_requested(e)
+{
+  check_load_added(e.status);
+}
+
+function load_completed(e)
+{
+  var load = e.status;
+  var uri = load.uri;
+
+  ok(expectedCompletions[uri],
+     uri + " should be in the expected completion list");
+  ok(expectedCompletions[uri].source == load.source,
+     uri + " should come from the expected source");
+  ok(expectedCompletions[uri].status == load.status,
+     uri + " should have a load status of " + expectedCompletions[uri].status);
+
+  delete expectedCompletions[uri];
+
+  if (navigator.pendingOfflineLoads.length == 0) {
+    for (var name in expectedAdditions) {
+      ok(false, name + " did not receive a request event");
+    }
+
+    for (var name in expectedCompletions) {
+      ok(false, name + " did not receive a completed event");
+    }
+
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    // Clear the ownership list
+    var cacheService = Components.classes["@mozilla.org/network/cache-service;1"]
+      .getService(Components.interfaces.nsICacheService);
+    var cacheSession = cacheService.createSession("HTTP-offline",
+                                                  Components.interfaces.nsICache.STORE_OFFLINE,
+                                                  true)
+      .QueryInterface(Components.interfaces.nsIOfflineCacheSession);
+    cacheSession.setOwnedKeys(window.location.host, thisURL, 0, []);
+    cacheSession.setOwnedKeys(window.location.host, "", 0, []);
+    cacheSession.evictUnownedEntries();
+
+    SimpleTest.finish();
+  }
+}
+
+function run_test()
+{
+  navigator.pendingOfflineLoads.addEventListener("loadrequested",
+                                                 load_requested,
+                                                 false);
+  navigator.pendingOfflineLoads.addEventListener("loadcompleted",
+                                                 load_completed,
+                                                 false);
+
+  // The <link rel="offline-resource"> should already be in the queue
+  ok(navigator.pendingOfflineLoads.length == 2,
+     "<link rel=\"offline-resource\"> loads should already be in the queue");
+
+  for (var i = 0; i < navigator.pendingOfflineLoads.length; i++) {
+    var load = navigator.pendingOfflineLoads[i];
+    check_load_added(navigator.pendingOfflineLoads[i]);
+  }
+
+  // Add the correct resources
+  navigator.offlineResources.add("http://localhost:8888/unknown2");
+  navigator.offlineResources.add(thisURL);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+<body onload="run_test()">
+
+
+
+</body>
+</html>

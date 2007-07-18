@@ -68,7 +68,7 @@ class nsIAtom;
 class nsIView;
 
 // When mNextSibling is set to this, it indicates there ar eno more siblings
-#define DEAD_END_ACCESSIBLE NS_STATIC_CAST(nsIAccessible*, (void*)1)
+#define DEAD_END_ACCESSIBLE static_cast<nsIAccessible*>((void*)1)
 
 // Saves a data member -- if child count equals this value we haven't
 // cached children or child count yet
@@ -167,7 +167,21 @@ protected:
 
   // Relation helpers
   nsresult GetTextFromRelationID(nsIAtom *aIDAttrib, nsString &aName);
+
+  /**
+   * Search element in neighborhood of the given element by tag name and
+   * attribute value that equals to ID attribute of the current element.
+   * ID attribute can be either 'id' attribute or 'anonid' if the element is
+   * anonymous.
+   *
+   * @param aRelationAttr - attribute name of searched element
+   * @param aRelationNamespaceID - namespace id of searched attribute, by default
+   *                               empty namespace
+   * @param aAncestorLevelsToSearch - points how is the neighborhood of the
+   *                                  given element big.
+   */
   already_AddRefed<nsIDOMNode> FindNeighbourPointingToThis(nsIAtom *aRelationAttr,
+                                                           PRUint32 aRelationNameSpaceID = kNameSpaceID_None,
                                                            PRUint32 aAncestorLevelsToSearch = 0);
 
   /**
@@ -178,13 +192,16 @@ protected:
    *
    * @param aForNode - the given element the search is performed for
    * @param aTagName - tag name of searched element
-   * @param aAttr - attribute name of searched element
+   * @param aRelationAttr - attribute name of searched element
+   * @param aRelationNamespaceID - namespace id of searched attribute, by default
+   *                               empty namespace
    * @param aAncestorLevelsToSearch - points how is the neighborhood of the
    *                                  given element big.
    */
   static nsIContent *FindNeighbourPointingToNode(nsIContent *aForNode,
                                                  nsIAtom *aTagName,
-                                                 nsIAtom *aAttr,
+                                                 nsIAtom *aRelationAttr,
+                                                 PRUint32 aRelationNameSpaceID = kNameSpaceID_None,
                                                  PRUint32 aAncestorLevelsToSearch = 5);
 
   /**
@@ -194,17 +211,17 @@ protected:
    *
    * @param aId - value of searched attribute
    * @param aLookContent - element that search is performed inside
-   * @param aForAttrib - searched attribute
+   * @param aRelationAttr - searched attribute
+   * @param aRelationNamespaceID - namespace id of searched attribute, by default
+   *                               empty namespace
    * @param aExcludeContent - element that is skiped for search
-   * @param aForAttribNamespace - namespace id of searched attribute, by default
-   *                              empty namespace
    * @param aTagType - tag name of searched element, by default it is 'label'
    */
   static nsIContent *FindDescendantPointingToID(const nsAString *aId,
                                                 nsIContent *aLookContent,
-                                                nsIAtom *forAttrib,
+                                                nsIAtom *aRelationAttr,
+                                                PRUint32 aRelationNamespaceID = kNameSpaceID_None,
                                                 nsIContent *aExcludeContent = nsnull,
-                                                PRUint32 aForAttribNamespace = kNameSpaceID_None,
                                                 nsIAtom *aTagType = nsAccessibilityAtoms::label);
 
   static nsIContent *GetHTMLLabelContent(nsIContent *aForNode);

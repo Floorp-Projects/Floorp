@@ -42,7 +42,6 @@
 #include "nsCOMPtr.h"
 #include "nsSVGAnimatedLengthList.h"
 #include "nsSVGLengthList.h"
-#include "nsISVGSVGElement.h"
 #include "nsSVGSVGElement.h"
 #include "nsISVGTextContentMetrics.h"
 #include "nsIFrame.h"

@@ -272,9 +272,9 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 					!strcmp(cliphdr[index].type, Ph_CLIPBOARD_TYPE_HTML) ||
 					!strcmp(cliphdr[index].type, Ph_CLIPBOARD_TYPE_MOZ_BOOKMARK) )
 			{
-				PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, data);
+				PRUnichar* castedUnicode = reinterpret_cast<PRUnichar*>(data);
 				char *utf8String = ToNewUTF8String(nsDependentString(castedUnicode, dataLen/2));
-				nsMemory::Free(NS_REINTERPRET_CAST(char*, data));
+				nsMemory::Free(reinterpret_cast<char*>(data));
 
 				if( !strcmp(cliphdr[index].type, Ph_CLIPBOARD_TYPE_TEXT) )
 				{
@@ -286,7 +286,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 					char *temp = ( char * ) nsMemory::Alloc( len + 1 );
 					memcpy( temp, utf8String, len );
 					temp[len] = 0;
-					nsMemory::Free(NS_REINTERPRET_CAST(char*, utf8String));
+					nsMemory::Free(reinterpret_cast<char*>(utf8String));
 
         	cliphdr[index].length = len+1;
         	cliphdr[index].data = temp;
@@ -302,7 +302,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 
 	PhClipboardCopy( mInputGroup, index, cliphdr );
 	for( PRUint32 k=0; k<index; k++)
-		nsMemory::Free(NS_REINTERPRET_CAST(char*, cliphdr[k].data));
+		nsMemory::Free(reinterpret_cast<char*>(cliphdr[k].data));
 
 	free( cliphdr );
 
@@ -443,7 +443,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
 
     					decoder->GetMaxLength(data, dataLen, &outUnicodeLen);   // |outUnicodeLen| is number of chars
     					if (outUnicodeLen) {
-      					unicodeData = NS_REINTERPRET_CAST(PRUnichar*, nsMemory::Alloc((outUnicodeLen + 1) * sizeof(PRUnichar)));
+      					unicodeData = reinterpret_cast<PRUnichar*>(nsMemory::Alloc((outUnicodeLen + 1) * sizeof(PRUnichar)));
       					if ( unicodeData ) {
         					PRInt32 numberTmp = dataLen;
         					rv = decoder->Convert(data, &numberTmp, unicodeData, &outUnicodeLen);
@@ -457,7 +457,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
 								} // if valid length
 
 
-    					data = NS_REINTERPRET_CAST(char*,unicodeData);
+    					data = reinterpret_cast<char*>(unicodeData);
     					dataLen = outUnicodeLen * 2;
 
 							nsCOMPtr<nsISupports> genericDataWrapper;

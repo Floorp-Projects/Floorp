@@ -54,6 +54,7 @@ const kDisplayModeTabIDS = ["NormalModeButton", "TagModeButton", "SourceModeButt
 const kNormalStyleSheet = "chrome://editor/content/EditorContent.css";
 const kAllTagsStyleSheet = "chrome://editor/content/EditorAllTags.css";
 const kParagraphMarksStyleSheet = "chrome://editor/content/EditorParagraphMarks.css";
+const kContentEditableStyleSheet = "resource:/res/contenteditable.css";
 
 const kTextMimeType = "text/plain";
 const kHTMLMimeType = "text/html";
@@ -399,6 +400,10 @@ var gEditorDocumentObserver =
 
           //  and extra styles for showing anchors, table borders, smileys, etc
           editor.addOverrideStyleSheet(kNormalStyleSheet);
+
+          // remove contenteditable stylesheets if they were applied by the
+          // editingSession
+          editor.removeOverrideStyleSheet(kContentEditableStyleSheet);
         } catch (e) {}
 
         // Things for just the Web Composer application

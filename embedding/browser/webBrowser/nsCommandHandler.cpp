@@ -83,7 +83,7 @@ nsresult nsCommandHandler::GetCommandHandler(nsICommandHandler **aCommandHandler
     nsCOMPtr<nsICDocShellTreeOwner> realTreeOwner(do_QueryInterface(treeOwner));
     if (realTreeOwner)
     {
-        nsDocShellTreeOwner *tree = NS_STATIC_CAST(nsDocShellTreeOwner *, treeOwner);
+        nsDocShellTreeOwner *tree = static_cast<nsDocShellTreeOwner *>(treeOwner);
         if (tree->mTreeOwner)
         {
             nsresult rv;

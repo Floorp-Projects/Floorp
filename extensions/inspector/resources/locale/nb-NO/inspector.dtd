@@ -12,8 +12,14 @@
 
 <!ENTITY mnFile.label "Fil">
 <!ENTITY mnFile.accesskey "f">
-  <!ENTITY cmdShowOpenURLDialog.label "Inspiser en adresse ...">
+  <!ENTITY mnInspectContentDocument.label "Inspiser innholdsdokument">
+  <!ENTITY mnInspectContentDocument.accesskey "n">
+  <!ENTITY mnInspectChromeDocument.label "Inspiser chrome-dokument">
+  <!ENTITY mnInspectChromeDocument.accesskey "s">
+  <!ENTITY cmdShowOpenURLDialog.label "Inspiser adresse ...">
   <!ENTITY cmdShowOpenURLDialog.accesskey "I">
+  <!ENTITY cmdSave.label "Lagre DOM som ...">
+  <!ENTITY cmdSave.accesskey "L">
   <!ENTITY cmdClose.label "Lukk">
   <!ENTITY cmdClose.accesskey "L">
   <!ENTITY cmdExit.label "Avslutt">
@@ -36,26 +42,15 @@
 
 <!ENTITY mnSearch.label "Søk">
 <!ENTITY mnSearch.accesskey "s">
-  <!ENTITY mnSearchPlugins.label "Utvidelser">
-  <!ENTITY mnSearchPlugins.accesskey "u">
-    <!ENTITY cmdRunSearch.label "Kjør ...">
-    <!ENTITY cmdRunSearch.accesskey "k">
 
 <!ENTITY mnView.label "Vis">
 <!ENTITY mnView.accesskey "v">
   <!ENTITY cmdToggleBrowser.label "Nettleser">
   <!ENTITY cmdToggleSearch.label "Søkeresultat">
 
-<!ENTITY cmdViewSearchItem.label "Vis ...">
-<!ENTITY cmdEditSearchItem.label "Rediger ...">
-<!ENTITY cmdCopySearchItemLine.label "Kopier linje">
-<!ENTITY cmdCopySearchItemAll.label "Kopier alt">
-<!ENTITY cmdSaveSearchItemText.label "Lagre ...">
-<!ENTITY cmdClearSearch.label "Tøm">
-<!ENTITY cmdHideSearchItems.label "Skjul">
-
 <!ENTITY browserPanel.label "Nettleser">
 
 <!ENTITY inspectNewWindow.label "Inspiser i nytt vindu">
 
+<!ENTITY saveCmd.key "S">
 <!ENTITY closeCmd.key "W">

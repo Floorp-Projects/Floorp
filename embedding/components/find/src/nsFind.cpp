@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; 
-c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -65,6 +64,7 @@ c-basic-offset: 2 -*- */
 #include "nsIDOMElement.h"
 #include "nsIWordBreaker.h"
 #include "nsCRT.h"
+#include "nsIRange.h"
 
 // Yikes!  Casting a char to unichar can fill with ones!
 #define CHAR_TO_UNICHAR(c) ((PRUnichar)(const unsigned char)c)
@@ -300,10 +300,10 @@ nsFindContentIterator::Reset()
     }
   }
 
-  // Note: OK to just set up the outer iterator here; if our range has an
+  // Note: OK to just set up the outer iterator here; if our range has a native
   // anonymous endpoint we'll end up setting up an inner iterator, and
   // reset the outer one in the process.
-  nsCOMPtr<nsIDOMRange> range (do_CreateInstance(kRangeCID));
+  nsCOMPtr<nsIDOMRange> range = nsFind::CreateRange();
   range->SetStart(mStartNode, mStartOffset);
   range->SetEnd(mEndNode, mEndOffset);
   mOuterIterator->Init(range);
@@ -400,8 +400,8 @@ nsFindContentIterator::SetupInnerIterator(nsIContent* aContent)
   editor->GetRootElement(getter_AddRefs(rootElement));
   nsCOMPtr<nsIContent> rootContent(do_QueryInterface(rootElement));
 
-  nsCOMPtr<nsIDOMRange> innerRange(do_CreateInstance(kRangeCID));
-  nsCOMPtr<nsIDOMRange> outerRange(do_CreateInstance(kRangeCID));
+  nsCOMPtr<nsIDOMRange> innerRange = nsFind::CreateRange();
+  nsCOMPtr<nsIDOMRange> outerRange = nsFind::CreateRange();
   if (!innerRange || !outerRange) {
     return;
   }
@@ -1210,7 +1210,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
         // Make the range:
         nsCOMPtr<nsIDOMNode> startParent;
         nsCOMPtr<nsIDOMNode> endParent;
-        nsCOMPtr<nsIDOMRange> range (do_CreateInstance(kRangeCID));
+        nsCOMPtr<nsIDOMRange> range = CreateRange();
         if (range)
         {
           PRInt32 matchStartOffset, matchEndOffset;
@@ -1327,4 +1327,18 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
   return NS_OK;
 }
 
+/* static */
+already_AddRefed<nsIDOMRange>
+nsFind::CreateRange()
+{
+  nsCOMPtr<nsIRange> range = do_CreateInstance(kRangeCID);
+  if (!range) {
+    return nsnull;
+  }
 
+  range->SetMaySpanAnonymousSubtrees(PR_TRUE);
+
+  nsIDOMRange* result;
+  CallQueryInterface(range.get(), &result);
+  return result;
+}

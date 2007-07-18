@@ -183,7 +183,8 @@ nsSVGPatternFrame::GetType() const
 // matrix, which depends on our units parameters
 // and X, Y, Width, and Height
 already_AddRefed<nsIDOMSVGMatrix> 
-nsSVGPatternFrame::GetCanvasTM() {
+nsSVGPatternFrame::GetCanvasTM()
+{
   nsIDOMSVGMatrix *rCTM;
   
   if (mCTM) {
@@ -316,7 +317,7 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
   nsRefPtr<gfxASurface> tmpSurface =
     gfxPlatform::GetPlatform()->CreateOffscreenSurface(surfaceSize,
                                                        gfxASurface::ImageFormatARGB32);
-  if (!tmpSurface)
+  if (!tmpSurface || tmpSurface->CairoStatus())
     return NS_ERROR_FAILURE;
 
   gfxContext tmpContext(tmpSurface);
@@ -385,8 +386,8 @@ nsSVGPatternFrame::GetPatternUnits()
   // See if we need to get the value from another pattern
   if (!checkURITarget(nsGkAtoms::patternUnits)) {
     // No, return the values
-    nsSVGPatternElement *patternElement = NS_STATIC_CAST(nsSVGPatternElement*,
-                                                         mContent);
+    nsSVGPatternElement *patternElement = static_cast<nsSVGPatternElement*>
+                                                     (mContent);
     patternElement->mPatternUnits->GetAnimVal(&rv);
   } else {
     // Yes, get it from the target
@@ -404,8 +405,8 @@ nsSVGPatternFrame::GetPatternContentUnits()
   // See if we need to get the value from another pattern
   if (!checkURITarget(nsGkAtoms::patternContentUnits)) {
     // No, return the values
-    nsSVGPatternElement *patternElement = NS_STATIC_CAST(nsSVGPatternElement*,
-                                                         mContent);
+    nsSVGPatternElement *patternElement = static_cast<nsSVGPatternElement*>
+                                                     (mContent);
     patternElement->mPatternContentUnits->GetAnimVal(&rv);
   } else {
     // Yes, get it from the target
@@ -422,8 +423,8 @@ nsSVGPatternFrame::GetPatternTransform()
   // See if we need to get the value from another pattern
   if (!checkURITarget(nsGkAtoms::patternTransform)) {
     // No, return the values
-    nsSVGPatternElement *patternElement = NS_STATIC_CAST(nsSVGPatternElement*,
-                                                         mContent);
+    nsSVGPatternElement *patternElement = static_cast<nsSVGPatternElement*>
+                                                     (mContent);
     nsCOMPtr<nsIDOMSVGTransformList> lTrans;
     patternElement->mPatternTransform->GetAnimVal(getter_AddRefs(lTrans));
     nsCOMPtr<nsIDOMSVGMatrix> patternTransform =
@@ -489,7 +490,7 @@ nsSVGPatternFrame::GetX()
   } else {
     // No, return the values
     nsSVGPatternElement *pattern =
-      NS_STATIC_CAST(nsSVGPatternElement*, mContent);
+      static_cast<nsSVGPatternElement*>(mContent);
     rv = &pattern->mLengthAttributes[nsSVGPatternElement::X];
   }
   mLoopFlag = PR_FALSE;
@@ -508,7 +509,7 @@ nsSVGPatternFrame::GetY()
   } else {
     // No, return the values
     nsSVGPatternElement *pattern =
-      NS_STATIC_CAST(nsSVGPatternElement*, mContent);
+      static_cast<nsSVGPatternElement*>(mContent);
     rv = &pattern->mLengthAttributes[nsSVGPatternElement::Y];
   }
   mLoopFlag = PR_FALSE;
@@ -527,7 +528,7 @@ nsSVGPatternFrame::GetWidth()
   } else {
     // No, return the values
     nsSVGPatternElement *pattern =
-      NS_STATIC_CAST(nsSVGPatternElement*, mContent);
+      static_cast<nsSVGPatternElement*>(mContent);
     rv = &pattern->mLengthAttributes[nsSVGPatternElement::WIDTH];
   }
   mLoopFlag = PR_FALSE;
@@ -546,7 +547,7 @@ nsSVGPatternFrame::GetHeight()
   } else {
     // No, return the values
     nsSVGPatternElement *pattern =
-      NS_STATIC_CAST(nsSVGPatternElement*, mContent);
+      static_cast<nsSVGPatternElement*>(mContent);
     rv = &pattern->mLengthAttributes[nsSVGPatternElement::HEIGHT];
   }
   mLoopFlag = PR_FALSE;
@@ -654,7 +655,7 @@ nsSVGPatternFrame::GetPatternRect(nsIDOMSVGRect **patternRect,
 static float
 GetLengthValue(nsSVGLength2 *aLength)
 {
-  return aLength->GetAnimValue(NS_STATIC_CAST(nsSVGSVGElement*, nsnull));
+  return aLength->GetAnimValue(static_cast<nsSVGSVGElement*>(nsnull));
 }
 
 nsresult
@@ -756,10 +757,10 @@ nsSVGPatternFrame::GetCallerGeometry(nsIDOMSVGMatrix **aCTM,
   // element.
   nsIAtom *callerType = aSource->GetType();
   if (callerType ==  nsGkAtoms::svgGlyphFrame) {
-    *aContent = NS_STATIC_CAST(nsSVGElement*,
-                               aSource->GetContent()->GetParent());
+    *aContent = static_cast<nsSVGElement*>
+                           (aSource->GetContent()->GetParent());
   } else {
-    *aContent = NS_STATIC_CAST(nsSVGElement*, aSource->GetContent());
+    *aContent = static_cast<nsSVGElement*>(aSource->GetContent());
   }
   NS_ASSERTION(aContent,"Caller does not have any content!");
   if (!aContent)

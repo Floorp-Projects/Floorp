@@ -47,7 +47,7 @@ nsTPromiseFlatString_CharT::Init(const substring_type& str)
 
     if (str.IsTerminated())
       {
-        mData = NS_CONST_CAST(char_type*, str.Data());
+        mData = const_cast<char_type*>(str.Data());
         mLength = str.Length();
         mFlags = F_TERMINATED; // does not promote F_VOIDED
       }

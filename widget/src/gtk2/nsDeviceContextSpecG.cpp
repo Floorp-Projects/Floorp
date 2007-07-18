@@ -67,6 +67,7 @@
 #endif /* USE_POSTSCRIPT */
 
 #include "nsPrintJobFactoryGTK.h"
+#include "nsIPrintJobGTK.h"
 
 #include "nsIFileStreams.h"
 #include "nsILocalFile.h"
@@ -390,22 +391,9 @@ nsDeviceContextSpecGTK::~nsDeviceContextSpecGTK()
   delete mPrintJob;
 }
 
-#ifdef MOZ_CAIRO_GFX
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecGTK,
                    nsIDeviceContextSpec)
-#else
-/* Use only PostScript module */
-#if defined(USE_POSTSCRIPT)
-NS_IMPL_ISUPPORTS2(nsDeviceContextSpecGTK,
-                   nsIDeviceContextSpec,
-                   nsIDeviceContextSpecPS)
-#else
-NS_IMPL_ISUPPORTS1(nsDeviceContextSpecGTK,
-                   nsIDeviceContextSpec)
-#endif
-#endif
 
-#ifdef MOZ_CAIRO_GFX
 //#define USE_PDF 1
 #include "gfxPDFSurface.h"
 #include "gfxPSSurface.h"
@@ -415,17 +403,20 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
   const char *path;
   GetPath(&path);
 
-  PRInt32 width, height;
-  GetPageSizeInTwips(&width, &height);
-  double w, h;
+  double width, height;
+  mPrintSettings->GetEffectivePageSize(&width, &height);
   // convert twips to points
-  w = width/20;
-  h = height/20;
+  width /= 20;
+  height /= 20;
 
-  printf("\"%s\", %d, %d\n", path, width, height);
+  DO_PR_DEBUG_LOG(("\"%s\", %f, %f\n", path, width, height));
 
-  nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
-  nsresult rv = file->InitWithPath(NS_ConvertUTF8toUTF16(path));
+  nsresult rv = nsPrintJobFactoryGTK::CreatePrintJob(this, mPrintJob);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsILocalFile> file;
+  rv = mPrintJob->GetSpoolFile(getter_AddRefs(file));
   if (NS_FAILED(rv))
     return rv;
 
@@ -434,11 +425,10 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
   if (NS_FAILED(rv))
     return rv;
 
-  nsPrintJobFactoryGTK::CreatePrintJob((this), mPrintJob);
 #ifdef USE_PDF
-  gfxPDFSurface *surface = new gfxPDFSurface(stream, gfxSize(w, h));
+  gfxPDFSurface *surface = new gfxPDFSurface(stream, gfxSize(width, height));
 #else
-  gfxPSSurface *surface = new gfxPSSurface(stream, gfxSize(w, h));
+  gfxPSSurface *surface = new gfxPSSurface(stream, gfxSize(width, height));
 #endif
 //  surface->SetDPI(600, 600);
   
@@ -447,23 +437,11 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
 
   return NS_OK;
 }
-#endif
 
 /** -------------------------------------------------------
  *  Initialize the nsDeviceContextSpecGTK
  *  @update   dc 2/15/98
  *  @update   syd 3/2/99
- *
- * gisburn: Please note that this function exists as 1:1 copy in other
- * toolkits including:
- * - GTK+-toolkit:
- *   file:     mozilla/gfx/src/gtk/nsDeviceContextSpecG.cpp
- *   function: NS_IMETHODIMP nsDeviceContextSpecGTK::Init()
- * - Xlib-toolkit: 
- *   file:     mozilla/gfx/src/xlib/nsDeviceContextSpecXlib.cpp 
- *   function: NS_IMETHODIMP nsDeviceContextSpecXlib::Init()
- * 
- * ** Please update the other toolkits when changing this function.
  */
 NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget *aWidget,
                                            nsIPrintSettings* aPS,
@@ -684,11 +662,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetDownloadFonts(PRBool &aDownloadFonts)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight)
-{
-  return mPrintSettings->GetPageSizeInTwips(aWidth, aHeight);
-}
-
 NS_IMETHODIMP nsDeviceContextSpecGTK::GetPrintMethod(PrintMethod &aMethod)
 {
   return GetPrintMethod(mPrinter, aMethod);
@@ -714,24 +687,10 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::BeginDocument(PRUnichar * aTitle, PRUnicha
 {
   return NS_OK;
 }
-#include <errno.h>
+
 NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument()
 {
-  if (mToPrinter) {
-    const char *path;
-    GetPath(&path);
-    FILE *src = fopen(path, "r");
-    FILE *dst;
-    mPrintJob->StartSubmission(&dst);
-    while(!feof(src)) {
-      char data[255] = {0};
-      size_t s = fread(data, 1, sizeof(data), src);
-      fwrite(data, 1, s, dst);
-    }
-    fclose(src);
-    mPrintJob->FinishSubmission();
-  }
-  return NS_OK;
+  return mPrintJob->Submit();
 }
 
 /* Get prefs for printer

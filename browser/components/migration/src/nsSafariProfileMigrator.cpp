@@ -41,12 +41,8 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDocShellCID.h"
-#ifdef MOZ_PLACES_BOOKMARKS
 #include "nsINavBookmarksService.h"
 #include "nsBrowserCompsCID.h"
-#else
-#include "nsIBookmarksService.h"
-#endif
 #include "nsIBrowserHistory.h"
 #include "nsICookieManager2.h"
 #include "nsIFileProtocolHandler.h"
@@ -823,7 +819,10 @@ nsSafariProfileMigrator::CopyCookies(PRBool aReplace)
 
       expiryTime += SAFARI_DATE_OFFSET;
       cookieManager->Add(domain, path, name, value,
-                         PR_FALSE, PR_FALSE, expiryTime);
+                         PR_FALSE, // isSecure
+                         PR_FALSE, // isHttpOnly
+                         PR_FALSE, // isSession
+                         expiryTime);
     }
   }
   ::CFRelease(safariCookies);
@@ -893,7 +892,6 @@ nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
   // a folder called "Imported IE Favorites" and place all the Bookmarks there.
   nsresult rv;
 
-#ifdef MOZ_PLACES_BOOKMARKS
   nsCOMPtr<nsINavBookmarksService> bms(do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
   PRInt64 root;
@@ -901,21 +899,6 @@ nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt64 folder;
-#else
-  nsCOMPtr<nsIRDFService> rdf(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIRDFResource> root;
-  rdf->GetResource(NS_LITERAL_CSTRING("NC:BookmarksRoot"), getter_AddRefs(root));
-
-  nsCOMPtr<nsIBookmarksService> bms(do_GetService("@mozilla.org/browser/bookmarks-service;1", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool dummy;
-  bms->ReadBookmarks(&dummy);
-
-  nsCOMPtr<nsIRDFResource> folder;
-#endif
   if (!aReplace) {
     nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -933,13 +916,8 @@ nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
                                  sourceNameStrings, 1,
                                  getter_Copies(importedSafariBookmarksTitle));
 
-#ifdef MOZ_PLACES_BOOKMARKS
     bms->CreateFolder(root, importedSafariBookmarksTitle, nsINavBookmarksService::DEFAULT_INDEX,
                       &folder);
-#else
-    bms->CreateFolderInContainer(importedSafariBookmarksTitle.get(), root, -1,
-                                 getter_AddRefs(folder));
-#endif
   }
   else {
     // In non-replace mode we are merging at the top level.
@@ -976,7 +954,6 @@ nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
         (CFArrayRef)::CFDictionaryGetValue(safariBookmarks, CFSTR("Children"));
       if (children) {
         rv = ParseBookmarksFolder(children, folder, bms, PR_TRUE);
-#ifdef MOZ_PLACES_BOOKMARKS
         if (NS_SUCCEEDED(rv)) {
           // after importing the favorites, 
           // we need to set this pref so that on startup
@@ -986,7 +963,6 @@ nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
           rv = pref->SetBoolPref("browser.places.importBookmarksHTML", PR_FALSE);
           NS_ENSURE_SUCCESS(rv, rv);
         }
-#endif
       }
     }
   }
@@ -996,13 +972,8 @@ nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
 
 nsresult
 nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
-#ifdef MOZ_PLACES_BOOKMARKS
                                               PRInt64 aParentFolder,
                                               nsINavBookmarksService * aBookmarksService,
-#else
-                                              nsIRDFResource* aParentResource,
-                                              nsIBookmarksService* aBookmarksService,
-#endif
                                               PRBool aIsAtRootLevel)
 {
   nsresult rv = NS_OK;
@@ -1031,13 +1002,8 @@ nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
       // Look for the BookmarksBar Bookmarks and add them into the appropriate
       // Personal Toolbar Root
       if (title.EqualsLiteral("BookmarksBar") && aIsAtRootLevel) {
-#ifdef MOZ_PLACES_BOOKMARKS
         PRInt64 toolbarFolder;
         aBookmarksService->GetToolbarFolder(&toolbarFolder);
-#else
-        nsCOMPtr<nsIRDFResource> toolbarFolder;
-        aBookmarksService->GetBookmarksToolbarFolder(getter_AddRefs(toolbarFolder));
-#endif
 
         rv |= ParseBookmarksFolder(children,
                                    toolbarFolder,
@@ -1047,29 +1013,17 @@ nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
       // Look for the BookmarksMenu Bookmarks and flatten them into the top level
       else if (title.EqualsLiteral("BookmarksMenu") && aIsAtRootLevel) {
         rv |= ParseBookmarksFolder(children,
-#ifdef MOZ_PLACES_BOOKMARKS
                                    aParentFolder,
-#else
-                                   aParentResource,
-#endif
                                    aBookmarksService,
                                    PR_TRUE);
       }
       else {
         // Encountered a Folder, so create one in our Bookmarks DataSource and then
         // parse the contents of the Safari one into it...
-#ifdef MOZ_PLACES_BOOKMARKS
         PRInt64 folder;
         rv |= aBookmarksService->CreateFolder(aParentFolder, title,
                                               nsINavBookmarksService::DEFAULT_INDEX,
                                               &folder);
-#else
-        nsCOMPtr<nsIRDFResource> folder;
-        rv |= aBookmarksService->CreateFolderInContainer(title.get(),
-                                                         aParentResource,
-                                                         -1,
-                                                         getter_AddRefs(folder));
-#endif
         rv |= ParseBookmarksFolder(children,
                                    folder,
                                    aBookmarksService,
@@ -1083,25 +1037,12 @@ nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
       nsAutoString title, url;
       if (GetDictionaryStringValue(URIDictionary, CFSTR("title"), title) &&
           GetDictionaryStringValue(entry, CFSTR("URLString"), url)) {
-#ifdef MOZ_PLACES_BOOKMARKS
         nsCOMPtr<nsIURI> uri;
         PRInt64 id;
         rv |= NS_NewURI(getter_AddRefs(uri), url);
         rv |= aBookmarksService->InsertBookmark(aParentFolder, uri,
                                                 nsINavBookmarksService::DEFAULT_INDEX,
                                                 title, &id);
-#else
-        nsCOMPtr<nsIRDFResource> bookmark;
-        rv |= aBookmarksService->CreateBookmarkInContainer(title.get(),
-                                                           url.get(),
-                                                           nsnull,
-                                                           nsnull,
-                                                           nsnull,
-                                                           nsnull,
-                                                           aParentResource,
-                                                           -1,
-                                                           getter_AddRefs(bookmark));
-#endif
       }
     }
   }

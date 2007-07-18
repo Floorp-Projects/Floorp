@@ -358,7 +358,7 @@ void
 nsDragHelperService::DragOverTimerHandler(EventLoopTimerRef aTimer,
                                           void* aUserData)
 {
-  nsDragHelperService* self = NS_STATIC_CAST(nsDragHelperService*, aUserData);
+  nsDragHelperService* self = static_cast<nsDragHelperService*>(aUserData);
 
   self->DoDragAction(NS_DRAGDROP_OVER,
                      self->mDragOverDragRef, self->mDragOverSink);

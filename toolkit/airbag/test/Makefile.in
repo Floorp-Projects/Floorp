@@ -51,7 +51,7 @@ endif
 REQUIRES = \
 	xpcom \
 	string \
-	airbag \
+	crashreporter \
 	$(NULL)
 
 LIBS = \

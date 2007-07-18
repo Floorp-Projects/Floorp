@@ -141,7 +141,6 @@ jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/viewZoomOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/tasksOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/messenger/mailTasksOverlay.dtd
 jar:resource:///chrome/venkman.jar!/locale/en-US/venkman/venkman-overlay.dtd
-jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/permissions/cookieTasksOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/wallet/walletTasksOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/global/charsetOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/navigator/linkToolbar.dtd
@@ -166,7 +165,6 @@ jar:resource:///chrome/comm.jar!/content/communicator/viewZoomOverlay.xul
 jar:resource:///chrome/comm.jar!/content/communicator/tasksOverlay.xul
 jar:resource:///chrome/messenger.jar!/content/messenger/mailTasksOverlay.xul
 jar:resource:///chrome/venkman.jar!/content/venkman/venkman-overlay.xul
-jar:resource:///chrome/comm.jar!/content/communicator/permissions/cookieTasksOverlay.xul
 jar:resource:///chrome/comm.jar!/content/wallet/walletTasksOverlay.xul
 jar:resource:///chrome/toolkit.jar!/content/global/charsetOverlay.xul
 jar:resource:///chrome/comm.jar!/content/navigator/platformNavigationBindings.xul

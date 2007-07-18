@@ -214,6 +214,10 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
 
     while (offset < aLength && !IsSpace(aText[offset])) {
       mCurrentWord.AppendElement(aText[offset]);
+      if (!mCurrentWordContainsComplexChar &&
+          IsComplexASCIIChar(aText[offset])) {
+        mCurrentWordContainsComplexChar = PR_TRUE;
+      }
       ++offset;
     }
 
@@ -249,6 +253,7 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
     }
   }
   PRUint32 wordStart = offset;
+  PRBool wordHasComplexChar = PR_FALSE;
 
   for (;;) {
     PRUint8 ch = aText[offset];
@@ -261,17 +266,31 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
     mAfterSpace = isSpace;
 
     if (isSpace) {
-      // The current word can't have any complex characters inside it
-      // because this is 8-bit text, so just ignore it
+      if (offset > wordStart && wordHasComplexChar) {
+        if (aFlags & BREAK_ALLOW_INSIDE) {
+          // Save current start-of-word state because GetJISx4051Breaks will
+          // set it to false
+          PRPackedBool currentStart = breakState[wordStart];
+          nsContentUtils::LineBreaker()->
+            GetJISx4051Breaks(aText + wordStart, offset - wordStart,
+                              breakState.Elements() + wordStart);
+          breakState[wordStart] = currentStart;
+        }
+        wordHasComplexChar = PR_FALSE;
+      }
+
       ++offset;
       if (offset >= aLength)
         break;
       wordStart = offset;
     } else {
+      if (!wordHasComplexChar && IsComplexASCIIChar(ch)) {
+        wordHasComplexChar = PR_TRUE;
+      }
       ++offset;
       if (offset >= aLength) {
         // Save this word
-        mCurrentWordContainsComplexChar = PR_FALSE;
+        mCurrentWordContainsComplexChar = wordHasComplexChar;
         PRUint32 len = offset - wordStart;
         PRUnichar* elems = mCurrentWord.AppendElements(len);
         if (!elems)
@@ -285,8 +304,6 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
         offset = wordStart + 1;
         break;
       }
-      // We can't break inside words in 8-bit text (no complex characters), so
-      // there is no need to do anything else to handle words
     }
   }
 

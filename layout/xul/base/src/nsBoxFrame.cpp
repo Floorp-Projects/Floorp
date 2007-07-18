@@ -136,9 +136,9 @@ nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell,
                        nsStyleContext* aContext,
                        PRBool aIsRoot,
                        nsIBoxLayout* aLayoutManager) :
-  nsContainerFrame(aContext)
+  nsContainerFrame(aContext),
+  mMouseThrough(unset)
 {
-  mState |= NS_FRAME_IS_BOX;
   mState |= NS_STATE_IS_HORIZONTAL;
   mState |= NS_STATE_AUTO_STRETCH;
 
@@ -223,10 +223,45 @@ nsBoxFrame::Init(nsIContent*      aContent,
       GetDebugPref(GetPresContext());
 #endif
 
+  mMouseThrough = unset;
+
+  UpdateMouseThrough();
+
   // register access key
   rv = RegUnregAccessKey(PR_TRUE);
 
   return rv;
+}
+
+void nsBoxFrame::UpdateMouseThrough()
+{
+  if (mContent) {
+    static nsIContent::AttrValuesArray strings[] =
+      {&nsGkAtoms::never, &nsGkAtoms::always, nsnull};
+    static const eMouseThrough values[] = {never, always};
+    PRInt32 index = mContent->FindAttrValueIn(kNameSpaceID_None,
+        nsGkAtoms::mousethrough, strings, eCaseMatters);
+    if (index >= 0) {
+      mMouseThrough = values[index];
+    }
+  }
+}
+
+PRBool
+nsBoxFrame::GetMouseThrough() const
+{
+  switch(mMouseThrough)
+  {
+    case always:
+      return PR_TRUE;
+    case never:
+      return PR_FALSE;
+    case unset:
+      if (mParent && mParent->IsBoxFrame())
+        return mParent->GetMouseThrough();
+  }
+
+  return PR_FALSE;
 }
 
 void
@@ -1081,6 +1116,7 @@ nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
       aAttribute == nsGkAtoms::orient       ||
       aAttribute == nsGkAtoms::pack         ||
       aAttribute == nsGkAtoms::dir          ||
+      aAttribute == nsGkAtoms::mousethrough ||
       aAttribute == nsGkAtoms::equalsize) {
 
     if (aAttribute == nsGkAtoms::align  ||
@@ -1145,6 +1181,9 @@ nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
              aAttribute == nsGkAtoms::top) {
       mState &= ~NS_STATE_STACK_NOT_POSITIONED;
     }
+    else if (aAttribute == nsGkAtoms::mousethrough) {
+      UpdateMouseThrough();
+    }
 
     PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
@@ -1198,7 +1237,7 @@ public:
 #endif
 
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) {
-    NS_STATIC_CAST(nsBoxFrame*, mFrame)->
+    static_cast<nsBoxFrame*>(mFrame)->
       DisplayDebugInfoFor(this, aPt - aBuilder->ToReferenceFrame(mFrame));
     return PR_TRUE;
   }
@@ -1211,7 +1250,7 @@ void
 nsDisplayXULDebug::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  NS_STATIC_CAST(nsBoxFrame*, mFrame)->
+  static_cast<nsBoxFrame*>(mFrame)->
     PaintXULDebugOverlay(*aCtx, aBuilder->ToReferenceFrame(mFrame));
 }
 
@@ -1219,7 +1258,7 @@ static void
 PaintXULDebugBackground(nsIFrame* aFrame, nsIRenderingContext* aCtx,
                         const nsRect& aDirtyRect, nsPoint aPt)
 {
-  NS_STATIC_CAST(nsBoxFrame*, aFrame)->PaintXULDebugBackground(*aCtx, aPt);
+  static_cast<nsBoxFrame*>(aFrame)->PaintXULDebugBackground(*aCtx, aPt);
 }
 #endif
 
@@ -1754,25 +1793,37 @@ nsresult
 nsBoxFrame::CreateViewForFrame(nsPresContext*  aPresContext,
                                nsIFrame*        aFrame,
                                nsStyleContext*  aStyleContext,
-                               PRBool           aForce)
+                               PRBool           aForce,
+                               PRBool           aIsPopup)
 {
   NS_ASSERTION(aForce, "We only get called to force view creation now");
   // If we don't yet have a view, see if we need a view
   if (!aFrame->HasView()) {
+    nsViewVisibility visibility = nsViewVisibility_kShow;
     PRInt32 zIndex = 0;
     PRBool  autoZIndex = PR_FALSE;
 
     if (aForce) {
-      // Create a view
-      nsIFrame* parent = aFrame->GetAncestorWithView();
-      NS_ASSERTION(parent, "GetAncestorWithView failed");
-      nsIView* parentView = parent->GetView();
-      NS_ASSERTION(parentView, "no parent with view");
-      nsIViewManager* viewManager = parentView->GetViewManager();
+      nsIView* parentView;
+      nsIViewManager* viewManager = aPresContext->GetViewManager();
       NS_ASSERTION(nsnull != viewManager, "null view manager");
 
       // Create a view
-      nsIView *view = viewManager->CreateView(aFrame->GetRect(), parentView);
+      if (aIsPopup) {
+        viewManager->GetRootView(parentView);
+        visibility = nsViewVisibility_kHide;
+        zIndex = PR_INT32_MAX;
+      }
+      else {
+        nsIFrame* parent = aFrame->GetAncestorWithView();
+        NS_ASSERTION(parent, "GetAncestorWithView failed");
+        parentView = parent->GetView();
+      }
+
+      NS_ASSERTION(parentView, "no parent view");
+
+      // Create a view
+      nsIView *view = viewManager->CreateView(aFrame->GetRect(), parentView, visibility);
       if (view) {
         // Insert the view into the view hierarchy. If the parent view is a
         // scrolling view we need to do this differently

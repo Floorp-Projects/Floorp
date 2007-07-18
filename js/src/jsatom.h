@@ -66,12 +66,9 @@ struct JSAtom {
     JSHashEntry         entry;          /* key is jsval or unhidden atom
                                            if ATOM_HIDDEN */
     uint32              flags;          /* pinned, interned, and mark flags */
-    jsatomid            number;         /* atom serial number and hash code */
 };
 
 #define ATOM_KEY(atom)            ((jsval)(atom)->entry.key)
-#define ATOM_IS_OBJECT(atom)      JSVAL_IS_OBJECT(ATOM_KEY(atom))
-#define ATOM_TO_OBJECT(atom)      JSVAL_TO_OBJECT(ATOM_KEY(atom))
 #define ATOM_IS_INT(atom)         JSVAL_IS_INT(ATOM_KEY(atom))
 #define ATOM_TO_INT(atom)         JSVAL_TO_INT(ATOM_KEY(atom))
 #define ATOM_IS_DOUBLE(atom)      JSVAL_IS_DOUBLE(ATOM_KEY(atom))
@@ -80,6 +77,18 @@ struct JSAtom {
 #define ATOM_TO_STRING(atom)      JSVAL_TO_STRING(ATOM_KEY(atom))
 #define ATOM_IS_BOOLEAN(atom)     JSVAL_IS_BOOLEAN(ATOM_KEY(atom))
 #define ATOM_TO_BOOLEAN(atom)     JSVAL_TO_BOOLEAN(ATOM_KEY(atom))
+
+JS_STATIC_ASSERT(sizeof(JSHashNumber) == 4);
+JS_STATIC_ASSERT(sizeof(JSAtom *) == JS_BYTES_PER_WORD);
+
+#if JS_BYTES_PER_WORD == 4
+# define ATOM_HASH(atom)          ((JSHashNumber)(atom) >> 2)
+#elif JS_BYTES_PER_WORD == 8
+# define ATOM_HASH(atom)          (((JSHashNumber)(atom) >> 3) ^              \
+                                   (JSHashNumber)((jsuword)(atom) >> 32))
+#else
+# error "Unsupported configuration"
+#endif
 
 /*
  * Return a printable, lossless char[] representation of a string-type atom.
@@ -95,7 +104,7 @@ struct JSAtomListElement {
 
 #define ALE_ATOM(ale)   ((JSAtom *) (ale)->entry.key)
 #define ALE_INDEX(ale)  ((jsatomid) JS_PTR_TO_UINT32((ale)->entry.value))
-#define ALE_JSOP(ale)   ((JSOp) (ale)->entry.value)
+#define ALE_JSOP(ale)   ((JSOp) JS_PTR_TO_UINT32((ale)->entry.value))
 #define ALE_VALUE(ale)  ((jsval) (ale)->entry.value)
 #define ALE_NEXT(ale)   ((JSAtomListElement *) (ale)->entry.next)
 
@@ -121,7 +130,8 @@ struct JSAtomList {
 #define ATOM_LIST_LOOKUP(_ale,_hep,_al,_atom)                                 \
     JS_BEGIN_MACRO                                                            \
         if ((_al)->table) {                                                   \
-            _hep = JS_HashTableRawLookup((_al)->table, _atom->number, _atom); \
+            _hep = JS_HashTableRawLookup((_al)->table, ATOM_HASH(_atom),      \
+                                         _atom);                              \
             _ale = *_hep ? (JSAtomListElement *) *_hep : NULL;                \
         } else {                                                              \
             JSHashEntry **_alep = &(_al)->list;                               \
@@ -147,7 +157,6 @@ struct JSAtomMap {
 struct JSAtomState {
     JSRuntime           *runtime;       /* runtime that owns us */
     JSHashTable         *table;         /* hash table containing all atoms */
-    jsatomid            number;         /* one beyond greatest atom number */
     jsatomid            liveAtoms;      /* number of live atoms after last GC */
 
     /* The rt->emptyString atom, see jsstr.c's js_InitRuntimeStringState. */
@@ -247,6 +256,10 @@ struct JSAtomState {
     JSAtom              *currentAtom;
 #endif
 };
+
+#define ATOM_OFFSET(name)       offsetof(JSAtomState, name##Atom)
+#define OFFSET_TO_ATOM(rt,off)  (*(JSAtom **)((char*)&(rt)->atomState + (off)))
+#define CLASS_ATOM_OFFSET(name) offsetof(JSAtomState,classAtoms[JSProto_##name])
 
 #define CLASS_ATOM(cx,name) \
     ((cx)->runtime->atomState.classAtoms[JSProto_##name])
@@ -363,36 +376,15 @@ extern void
 js_UnpinPinnedAtoms(JSAtomState *state);
 
 /*
- * Find or create the atom for an object.  If we create a new atom, give it the
- * type indicated in flags.  Return 0 on failure to allocate memory.
+ * Find or create the atom for a double value. Return null on failure to
+ * allocate memory.
  */
 extern JSAtom *
-js_AtomizeObject(JSContext *cx, JSObject *obj, uintN flags);
+js_AtomizeDouble(JSContext *cx, jsdouble d);
 
 /*
- * Find or create the atom for a Boolean value.  If we create a new atom, give
- * it the type indicated in flags.  Return 0 on failure to allocate memory.
- */
-extern JSAtom *
-js_AtomizeBoolean(JSContext *cx, JSBool b, uintN flags);
-
-/*
- * Find or create the atom for an integer value.  If we create a new atom, give
- * it the type indicated in flags.  Return 0 on failure to allocate memory.
- */
-extern JSAtom *
-js_AtomizeInt(JSContext *cx, jsint i, uintN flags);
-
-/*
- * Find or create the atom for a double value.  If we create a new atom, give
- * it the type indicated in flags.  Return 0 on failure to allocate memory.
- */
-extern JSAtom *
-js_AtomizeDouble(JSContext *cx, jsdouble d, uintN flags);
-
-/*
- * Find or create the atom for a string.  If we create a new atom, give it the
- * type indicated in flags.  Return 0 on failure to allocate memory.
+ * Find or create the atom for a string. Return null on failure to allocate
+ * memory.
  */
 extern JSAtom *
 js_AtomizeString(JSContext *cx, JSString *str, uintN flags);
@@ -411,10 +403,10 @@ extern JSAtom *
 js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length);
 
 /*
- * This variant handles all value tag types.
+ * This variant handles all primitive values.
  */
 extern JSAtom *
-js_AtomizeValue(JSContext *cx, jsval value, uintN flags);
+js_AtomizePrimitiveValue(JSContext *cx, jsval v);
 
 /*
  * Convert v to an atomized string.
@@ -436,19 +428,11 @@ js_GetAtom(JSContext *cx, JSAtomMap *map, jsatomid i);
 
 /*
  * For all unmapped atoms recorded in al, add a mapping from the atom's index
- * to its address.  The GC must not run until all indexed atoms in atomLists
- * have been mapped by scripts connected to live objects (Function and Script
- * class objects have scripts as/in their private data -- the GC knows about
- * these two classes).
- */
-extern JS_FRIEND_API(JSBool)
-js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al);
-
-/*
- * Free map->vector and clear map.
+ * to its address. map->length must already be set to the number of atoms in
+ * the list and map->vector must point to pre-allocated memory.
  */
 extern JS_FRIEND_API(void)
-js_FreeAtomMap(JSContext *cx, JSAtomMap *map);
+js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al);
 
 JS_END_EXTERN_C
 

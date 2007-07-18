@@ -2256,29 +2256,6 @@ pref("print.postscript.paper_size",    "letter");
 pref("print.postscript.orientation",   "portrait");
 pref("print.postscript.print_command", "lpr ${MOZ_PRINTER_NAME:+'-P'}${MOZ_PRINTER_NAME}");
 
-/* PostScript print module font config
- * this list is used by the postscript font
- * to enumerate the list of langGroups
- * there should be a call to get the
- * langGroups; see bug 75054
- */
-pref("print.postscript.nativefont.ar",             "");
-pref("print.postscript.nativefont.el",             "");
-pref("print.postscript.nativefont.he",             "");
-pref("print.postscript.nativefont.ja",             "");
-pref("print.postscript.nativefont.ko",             "");
-pref("print.postscript.nativefont.th",             "");
-pref("print.postscript.nativefont.tr",             "");
-pref("print.postscript.nativefont.x-baltic",       "");
-pref("print.postscript.nativefont.x-central-euro", "");
-pref("print.postscript.nativefont.x-cyrillic",     "");
-pref("print.postscript.nativefont.x-unicode",      "");
-pref("print.postscript.nativefont.x-user-def",     "");
-pref("print.postscript.nativefont.x-western",      "");
-pref("print.postscript.nativefont.zh-CN",          "");
-pref("print.postscript.nativefont.zh-TW",          "");
-pref("print.postscript.nativefont.zh-HK",          "");
-
 # XP_UNIX
 #endif
 #endif

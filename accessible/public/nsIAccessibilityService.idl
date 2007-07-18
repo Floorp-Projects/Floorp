@@ -45,14 +45,13 @@ interface nsIFrame;
 interface nsObjectFrame;
 interface nsIContent;
 
-[uuid(e4cdb7c5-d029-4bee-bff5-99455c6e0057)]
+[uuid(933f7472-cbe3-4d95-a77a-ce7ea3812b32)]
 interface nsIAccessibilityService : nsIAccessibleRetrieval
 {
   nsIAccessible createOuterDocAccessible(in nsIDOMNode aNode);
   nsIAccessible createRootAccessible(in nsIPresShell aShell, in nsIDocument aDocument);
 
   nsIAccessible createHTML4ButtonAccessible(in nsISupports aFrame);
-  nsIAccessible createHTMLAreaAccessible(in nsIWeakReference aPresShell, in nsIDOMNode aDOMNode, in nsIAccessible aAccParent);
   nsIAccessible createHyperTextAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLBRAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLButtonAccessible(in nsISupports aFrame);
@@ -74,6 +73,7 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
   nsIAccessible createHTMLTableHeadAccessible(in nsIDOMNode aDOMNode);
   nsIAccessible createHTMLTextAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLTextFieldAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLCaptionAccessible(in nsISupports aFrame);
 
   nsIAccessible getAccessible(in nsIDOMNode aNode, in nsIPresShell aPresShell,                          
                               in nsIWeakReference aWeakShell, 

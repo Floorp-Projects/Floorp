@@ -101,7 +101,7 @@ PLDHashOperator
 TraverseMapEntry(nsAttrHashKey::KeyType aKey, nsCOMPtr<nsIDOMNode>& aData, void* aUserArg)
 {
   nsCycleCollectionTraversalCallback *cb = 
-    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aUserArg);
+    static_cast<nsCycleCollectionTraversalCallback*>(aUserArg);
 
   cb->NoteXPCOMChild(aData.get());
 
@@ -129,7 +129,7 @@ SetOwnerDocumentFunc(nsAttrHashKey::KeyType aKey, nsCOMPtr<nsIDOMNode>& aData,
 {
   nsCOMPtr<nsIAttribute> attr(do_QueryInterface(aData));
   NS_ASSERTION(attr, "non-nsIAttribute somehow made it into the hashmap?!");
-  nsresult rv = attr->SetOwnerDocument(NS_STATIC_CAST(nsIDocument*, aUserArg));
+  nsresult rv = attr->SetOwnerDocument(static_cast<nsIDocument*>(aUserArg));
 
   return NS_FAILED(rv) ? PL_DHASH_STOP : PL_DHASH_NEXT;
 }

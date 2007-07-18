@@ -491,8 +491,7 @@ nsXULMenuitemAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribu
   // XXX: we don't support xul:menuitem inside xul:menu element now until
   // bug 372552 is fixed.
 
-  nsAccessibilityUtils::
-    SetAccAttrsForXULSelectControlItem(mDOMNode, aAttributes);
+  nsAccUtils::SetAccAttrsForXULSelectControlItem(mDOMNode, aAttributes);
 
   return NS_OK;
 }

@@ -141,24 +141,6 @@ NS_IMETHODIMP DeviceContextImpl::CreateRenderingContext(nsIView *aView, nsIRende
   return rv;
 }
 
-NS_IMETHODIMP DeviceContextImpl::CreateRenderingContext(nsIDrawingSurface* aSurface, nsIRenderingContext *&aContext)
-{
-  nsresult rv;
-
-  aContext = nsnull;
-  nsCOMPtr<nsIRenderingContext> pContext;
-  rv = CreateRenderingContextInstance(*getter_AddRefs(pContext));
-  if (NS_SUCCEEDED(rv)) {
-    rv = InitRenderingContext(pContext, aSurface);
-    if (NS_SUCCEEDED(rv)) {
-      aContext = pContext;
-      NS_ADDREF(aContext);
-    }
-  }
-  
-  return rv;
-}
-
 NS_IMETHODIMP DeviceContextImpl::CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext)
 {
   nsresult rv;
@@ -193,11 +175,6 @@ NS_IMETHODIMP DeviceContextImpl::CreateRenderingContextInstance(nsIRenderingCont
 nsresult DeviceContextImpl::InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWin)
 {
   return aContext->Init(this, aWin);
-}
-
-nsresult DeviceContextImpl::InitRenderingContext(nsIRenderingContext *aContext, nsIDrawingSurface* aSurface)
-{
-  return aContext->Init(this, aSurface);
 }
 
 NS_IMETHODIMP DeviceContextImpl::CreateFontCache()
@@ -497,7 +474,7 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
   nsIFontMetrics* fm;
   PRInt32 n = mFontMetrics.Count() - 1;
   for (PRInt32 i = n; i >= 0; --i) {
-    fm = NS_STATIC_CAST(nsIFontMetrics*, mFontMetrics[i]);
+    fm = static_cast<nsIFontMetrics*>(mFontMetrics[i]);
     if (fm->Font().Equals(aFont)) {
       nsCOMPtr<nsIAtom> langGroup;
       fm->GetLangGroup(getter_AddRefs(langGroup));
@@ -550,7 +527,7 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
 
   n = mFontMetrics.Count() - 1; // could have changed in Compact()
   if (n >= 0) {
-    aMetrics = NS_STATIC_CAST(nsIFontMetrics*, mFontMetrics[n]);
+    aMetrics = static_cast<nsIFontMetrics*>(mFontMetrics[n]);
     NS_ADDREF(aMetrics);
     return NS_OK;
   }
@@ -579,7 +556,7 @@ nsresult nsFontCache::Compact()
 {
   // Need to loop backward because the running element can be removed on the way
   for (PRInt32 i = mFontMetrics.Count()-1; i >= 0; --i) {
-    nsIFontMetrics* fm = NS_STATIC_CAST(nsIFontMetrics*, mFontMetrics[i]);
+    nsIFontMetrics* fm = static_cast<nsIFontMetrics*>(mFontMetrics[i]);
     nsIFontMetrics* oldfm = fm;
     // Destroy() isn't here because we want our device context to be notified
     NS_RELEASE(fm); // this will reset fm to nsnull
@@ -596,7 +573,7 @@ nsresult nsFontCache::Compact()
 nsresult nsFontCache::Flush()
 {
   for (PRInt32 i = mFontMetrics.Count()-1; i >= 0; --i) {
-    nsIFontMetrics* fm = NS_STATIC_CAST(nsIFontMetrics*, mFontMetrics[i]);
+    nsIFontMetrics* fm = static_cast<nsIFontMetrics*>(mFontMetrics[i]);
     // Destroy() will unhook our device context from the fm so that we won't
     // waste time in triggering the notification of FontMetricsDeleted()
     // in the subsequent release

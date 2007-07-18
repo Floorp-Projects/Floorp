@@ -45,6 +45,8 @@ bin/components/libjar50.so
 ; [Base Browser Files]
 bin/@MOZ_APP_NAME@-bin
 bin/@MOZ_APP_NAME@
+bin/application.ini
+bin/platform.ini
 bin/mozilla-xremote-client
 bin/run-mozilla.sh
 bin/plugins/libnullplugin.so
@@ -58,7 +60,6 @@ bin/components/appshell.xpt
 bin/components/appstartup.xpt
 bin/components/autocomplete.xpt
 bin/components/autoconfig.xpt
-bin/components/bookmarks.xpt
 bin/components/browsercompsbase.xpt
 bin/components/browserplaces.xpt
 bin/components/browsersearch.xpt
@@ -75,7 +76,9 @@ bin/components/content_html.xpt
 bin/components/content_xmldoc.xpt
 bin/components/content_xslt.xpt
 bin/components/content_xtf.xpt
+bin/components/contentprefs.xpt
 bin/components/cookie.xpt
+bin/components/crashreporter.xpt
 bin/components/directory.xpt
 bin/components/docshell.xpt
 bin/components/dom.xpt
@@ -107,7 +110,6 @@ bin/components/find.xpt
 bin/components/fuel.xpt
 bin/components/gfx.xpt
 bin/components/helperAppDlg.xpt
-bin/components/history.xpt
 bin/components/htmlparser.xpt
 bin/components/imglib2.xpt
 ; bin/components/imgicon.xpt
@@ -172,6 +174,7 @@ bin/components/windowds.xpt
 bin/components/windowwatcher.xpt
 bin/components/xml-rpc.xpt
 bin/components/xpcom_base.xpt
+bin/components/xpcom_system.xpt
 bin/components/xpcom_components.xpt
 bin/components/xpcom_ds.xpt
 bin/components/xpcom_io.xpt
@@ -194,6 +197,7 @@ bin/components/nsBrowserContentHandler.js
 bin/components/nsBrowserGlue.js
 bin/components/nsSetDefaultBrowser.js
 bin/components/nsMicrosummaryService.js
+bin/components/nsPlacesTransactionsService.js
 bin/components/nsSearchService.js
 bin/components/nsSearchSuggestions.js
 bin/components/nsLoginInfo.js
@@ -201,7 +205,7 @@ bin/components/nsLoginManager.js
 bin/components/nsLoginManagerPrompter.js
 bin/components/storage-Legacy.js
 bin/components/jsconsole-clhandler.js
-bin/components/nsCloseAllWindows.js
+bin/components/nsTryToClose.js
 bin/components/nsDictionary.js
 bin/components/nsFilePicker.js
 bin/components/nsHelperAppDlg.js
@@ -217,7 +221,6 @@ bin/components/nsUpdateService.js
 bin/components/pluginGlue.js
 bin/components/extensions.xpt
 bin/components/update.xpt
-bin/components/nsBookmarkTransactionManager.js
 bin/components/nsSessionStartup.js
 bin/components/nsSessionStore.js
 bin/components/sessionstore.xpt
@@ -229,6 +232,10 @@ bin/components/txEXSLTRegExFunctions.js
 bin/components/nsLivemarkService.js
 bin/components/nsTaggingService.js
 bin/components/nsDefaultCLH.js
+bin/components/nsContentPrefService.js
+
+; Modules
+bin/modules/*
 
 ; Safe Browsing
 bin/components/nsSafebrowsingApplication.js
@@ -284,6 +291,8 @@ bin/res/quirk.css
 bin/res/forms.css
 bin/res/platform-forms.css
 bin/res/EditorOverride.css
+bin/res/contenteditable.css
+bin/res/designmode.css
 bin/res/table-add-column-after-active.gif
 bin/res/table-add-column-after-hover.gif
 bin/res/table-add-column-after.gif
@@ -344,6 +353,11 @@ bin/chrome/pippki.manifest
 ;
 bin/updater
 
+; [Crash Reporter]
+;
+bin/crashreporter
+bin/crashreporter.ini
+
 ; [Extensions]
 ;
 bin/components/libnkgnomevfs.so
@@ -356,14 +370,3 @@ bin/extensions/inspector@mozilla.org/components/inspector-cmdline.js
 bin/extensions/inspector@mozilla.org/chrome.manifest
 bin/extensions/inspector@mozilla.org/chrome/inspector.jar
 bin/extensions/inspector@mozilla.org/defaults/preferences/inspector.js
-
-; [Additional Browsing Enhancements]
-[abe]
-
-[talkback]
-bin/README.txt,bin/readme.txt
-bin/extensions/talkback@mozilla.org/install.rdf
-bin/extensions/talkback@mozilla.org/chrome.manifest
-bin/extensions/talkback@mozilla.org/components/libqfaservices.so
-bin/extensions/talkback@mozilla.org/components/qfaservices.xpt
-bin/extensions/talkback@mozilla.org/components/talkback/*

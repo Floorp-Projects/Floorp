@@ -22,6 +22,7 @@
 #   Ben Goodger <beng@google.com> (Original author)
 #   Gavin Sharp <gavin@gavinsharp.com>
 #   Pamela Greene <pamg.bugs@gmail.com>
+#   Ryan Flint <rflint@dslr.net>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -150,12 +151,71 @@ var gEngineManagerDialog = {
     document.getElementById("engineList").focus();
   },
 
+  editKeyword: function engineManager_editKeyword() {
+    var selectedEngine = gEngineView.selectedEngine;
+    if (!selectedEngine)
+      return;
+
+    var prompt = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+                 getService(Ci.nsIPromptService);
+    var alias = { value: selectedEngine.alias };
+    var strings = document.getElementById("engineManagerBundle");
+    var title = strings.getString("editTitle");
+    var msg = strings.getFormattedString("editMsg", [selectedEngine.name]);
+
+    while (prompt.prompt(window, title, msg, alias, null, { })) {
+      var searchService = Cc["@mozilla.org/browser/search-service;1"].
+                          getService(Ci.nsIBrowserSearchService);
+      var engine = searchService.getEngineByAlias(alias.value);
+      var bduplicate = false;
+      var eduplicate = false;
+
+      if (engine) {
+        if (engine.name != selectedEngine.name)
+          eduplicate = true;
+      } else {
+        try {
+          var bmserv = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+                       getService(Ci.nsINavBookmarksService);
+          if (bmserv.getURIForKeyword(alias.value))
+            bduplicate = true;
+        } catch(ex) {}
+
+        // Check for duplicates in changes we haven't committed yet
+        var engines = gEngineView._engineStore.engines;
+        for each (var engine in engines) {
+          if (engine.alias == alias.value && 
+              engine.name != selectedEngine.name) {
+            eduplicate = true;
+            break;
+          }
+        }
+      } 
+
+      // Notify the user if they have chosen an existing engine/bookmark keyword
+      if (eduplicate || bduplicate) {
+        var dtitle = strings.getString("duplicateTitle");
+        var bmsg = strings.getString("duplicateBookmarkMsg");
+        var emsg = strings.getFormattedString("duplicateEngineMsg",
+                                              [engine.name]);
+
+        prompt.alert(window, dtitle, (eduplicate) ? emsg : bmsg);
+      } else {
+        gEngineView._engineStore.changeEngine(selectedEngine, "alias",
+                                              alias.value);
+        gEngineView.invalidate();
+        break;
+      }
+    }
+  },
+
   onSelect: function engineManager_onSelect() {
     // buttons only work if an engine is selected and it's not the last engine
     var disableButtons = (gEngineView.selectedIndex == -1) ||
                          (gEngineView.lastIndex == 0);
     var lastSelected = (gEngineView.selectedIndex == gEngineView.lastIndex);
     var firstSelected = (gEngineView.selectedIndex == 0);
+    var noSelection = (gEngineView.selectedIndex == -1);
 
     document.getElementById("cmd_remove").setAttribute("disabled",
                                                        disableButtons);
@@ -165,6 +225,8 @@ var gEngineManagerDialog = {
 
     document.getElementById("cmd_movedown").setAttribute("disabled",
                                              disableButtons || lastSelected);
+    document.getElementById("cmd_editkeyword").setAttribute("disabled",
+                                                            noSelection);
   }
 };
 
@@ -230,6 +292,23 @@ EngineUnhideOp.prototype = {
     var searchService = Cc["@mozilla.org/browser/search-service;1"].
                         getService(Ci.nsIBrowserSearchService);
     searchService.moveEngine(this._engine, this._newIndex);
+  }
+}
+
+function EngineChangeOp(aEngineClone, aProp, aValue) {
+  if (!aEngineClone)
+    throw new Error("bad args to new EngineChangeOp!");
+
+  this._engine = aEngineClone.originalEngine;
+  this._prop = aProp;
+  this._newValue = aValue;
+}
+EngineChangeOp.prototype = {
+  _engine: null,
+  _prop: null,
+  _newValue: null,
+  commit: function ECO_commit() {
+    this._engine[this._prop] = this._newValue;
   }
 }
 
@@ -349,6 +428,15 @@ EngineStore.prototype = {
     return added;
   },
 
+  changeEngine: function ES_changeEngine(aEngine, aProp, aNewValue) {
+    var index = this._getIndexForEngine(aEngine);
+    if (index == -1)
+      throw new Error("invalid engine?");
+
+    this._engines[index][aProp] = aNewValue;
+    this._ops.push(new EngineChangeOp(aEngine, aProp, aNewValue));
+  },
+
   reloadIcons: function ES_reloadIcons() {
     this._engines.forEach(function (e) {
       e.uri = e.originalEngine.uri;
@@ -431,6 +519,8 @@ EngineView.prototype = {
   getCellText: function(index, column) {
     if (column.id == "engineName")
       return this._engineStore.engines[index].name;
+    else if (column.id == "engineKeyword")
+      return this._engineStore.engines[index].alias;
     return "";
   },
 

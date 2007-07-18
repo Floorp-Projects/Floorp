@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=80:
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -47,6 +47,7 @@
 #include "xpcIJSModuleLoader.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIDOMWindow.h"
+#include "xpcJSWeakReference.h"
 
 #ifdef MOZ_JSLOADER
 #include "mozJSComponentLoader.h"
@@ -114,14 +115,14 @@ nsXPCComponents_Interfaces::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 #endif
     *aCount = count;
     nsIID **array;
-    *aArray = array = NS_STATIC_CAST(nsIID**, nsMemory::Alloc(count * sizeof(nsIID*)));
+    *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
     if(!array)
         return NS_ERROR_OUT_OF_MEMORY;
 
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = NS_STATIC_CAST(nsIID *, nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \
@@ -343,7 +344,7 @@ nsXPCComponents_Interfaces::NewResolve(nsIXPConnectWrappedNative *wrapper,
             return NS_OK;
 
         nsCOMPtr<nsIJSIID> nsid =
-            dont_AddRef(NS_STATIC_CAST(nsIJSIID*, nsJSIID::NewID(info)));
+            dont_AddRef(static_cast<nsIJSIID*>(nsJSIID::NewID(info)));
 
         if(nsid)
         {
@@ -353,7 +354,7 @@ nsXPCComponents_Interfaces::NewResolve(nsIXPConnectWrappedNative *wrapper,
             {
                 nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
                 if(NS_SUCCEEDED(xpc->WrapNative(cx, obj,
-                                                NS_STATIC_CAST(nsIJSIID*,nsid),
+                                                static_cast<nsIJSIID*>(nsid),
                                                 NS_GET_IID(nsIJSIID),
                                                 getter_AddRefs(holder))))
                 {
@@ -459,14 +460,14 @@ nsXPCComponents_InterfacesByID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray
 #endif
     *aCount = count;
     nsIID **array;
-    *aArray = array = NS_STATIC_CAST(nsIID**, nsMemory::Alloc(count * sizeof(nsIID*)));
+    *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
     if(!array)
         return NS_ERROR_OUT_OF_MEMORY;
 
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = NS_STATIC_CAST(nsIID *, nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \
@@ -674,8 +675,8 @@ nsXPCComponents_InterfacesByID::NewResolve(nsIXPConnectWrappedNative *wrapper,
        nsnull != (name = JS_GetStringChars(JSVAL_TO_STRING(id))))
     {
         nsID iid;
-        if (!iid.Parse(NS_ConvertUTF16toUTF8(NS_REINTERPRET_CAST(const PRUnichar*,
-name)).get()))
+        if (!iid.Parse(NS_ConvertUTF16toUTF8(reinterpret_cast<const PRUnichar*>
+                                                             (name)).get()))
             return NS_OK;
 
         nsCOMPtr<nsIInterfaceInfo> info;
@@ -684,7 +685,7 @@ name)).get()))
             return NS_OK;
 
         nsCOMPtr<nsIJSIID> nsid =
-            dont_AddRef(NS_STATIC_CAST(nsIJSIID*, nsJSIID::NewID(info)));
+            dont_AddRef(static_cast<nsIJSIID*>(nsJSIID::NewID(info)));
 
         if (!nsid)
             return NS_ERROR_OUT_OF_MEMORY;
@@ -695,7 +696,7 @@ name)).get()))
         {
             nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
             if(NS_SUCCEEDED(xpc->WrapNative(cx, obj,
-                                            NS_STATIC_CAST(nsIJSIID*,nsid),
+                                            static_cast<nsIJSIID*>(nsid),
                                             NS_GET_IID(nsIJSIID),
                                             getter_AddRefs(holder))))
             {
@@ -790,14 +791,14 @@ nsXPCComponents_Classes::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     PRUint32 count = 2;
     *aCount = count;
     nsIID **array;
-    *aArray = array = NS_STATIC_CAST(nsIID**, nsMemory::Alloc(count * sizeof(nsIID*)));
+    *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
     if(!array)
         return NS_ERROR_OUT_OF_MEMORY;
 
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = NS_STATIC_CAST(nsIID *, nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \
@@ -980,7 +981,7 @@ nsXPCComponents_Classes::NewResolve(nsIXPConnectWrappedNative *wrapper,
        name[0] != '{') // we only allow contractids here
     {
         nsCOMPtr<nsIJSCID> nsid =
-            dont_AddRef(NS_STATIC_CAST(nsIJSCID*,nsJSCID::NewID(name)));
+            dont_AddRef(static_cast<nsIJSCID*>(nsJSCID::NewID(name)));
         if(nsid)
         {
             nsCOMPtr<nsIXPConnect> xpc;
@@ -989,7 +990,7 @@ nsXPCComponents_Classes::NewResolve(nsIXPConnectWrappedNative *wrapper,
             {
                 nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
                 if(NS_SUCCEEDED(xpc->WrapNative(cx, obj,
-                                                NS_STATIC_CAST(nsIJSCID*,nsid),
+                                                static_cast<nsIJSCID*>(nsid),
                                                 NS_GET_IID(nsIJSCID),
                                                 getter_AddRefs(holder))))
                 {
@@ -1045,14 +1046,14 @@ nsXPCComponents_ClassesByID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     PRUint32 count = 2;
     *aCount = count;
     nsIID **array;
-    *aArray = array = NS_STATIC_CAST(nsIID**, nsMemory::Alloc(count * sizeof(nsIID*)));
+    *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
     if(!array)
         return NS_ERROR_OUT_OF_MEMORY;
 
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = NS_STATIC_CAST(nsIID *, nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \
@@ -1252,7 +1253,7 @@ nsXPCComponents_ClassesByID::NewResolve(nsIXPConnectWrappedNative *wrapper,
        IsRegisteredCLSID(name)) // we only allow canonical CLSIDs here
     {
         nsCOMPtr<nsIJSCID> nsid =
-            dont_AddRef(NS_STATIC_CAST(nsIJSCID*,nsJSCID::NewID(name)));
+            dont_AddRef(static_cast<nsIJSCID*>(nsJSCID::NewID(name)));
         if(nsid)
         {
             nsCOMPtr<nsIXPConnect> xpc;
@@ -1261,7 +1262,7 @@ nsXPCComponents_ClassesByID::NewResolve(nsIXPConnectWrappedNative *wrapper,
             {
                 nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
                 if(NS_SUCCEEDED(xpc->WrapNative(cx, obj,
-                                                NS_STATIC_CAST(nsIJSCID*,nsid),
+                                                static_cast<nsIJSCID*>(nsid),
                                                 NS_GET_IID(nsIJSCID),
                                                 getter_AddRefs(holder))))
                 {
@@ -1319,14 +1320,14 @@ nsXPCComponents_Results::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     PRUint32 count = 2;
     *aCount = count;
     nsIID **array;
-    *aArray = array = NS_STATIC_CAST(nsIID**, nsMemory::Alloc(count * sizeof(nsIID*)));
+    *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
     if(!array)
         return NS_ERROR_OUT_OF_MEMORY;
 
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = NS_STATIC_CAST(nsIID *, nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \
@@ -1551,14 +1552,14 @@ nsXPCComponents_ID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     PRUint32 count = 2;
     *aCount = count;
     nsIID **array;
-    *aArray = array = NS_STATIC_CAST(nsIID**, nsMemory::Alloc(count * sizeof(nsIID*)));
+    *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
     if(!array)
         return NS_ERROR_OUT_OF_MEMORY;
 
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = NS_STATIC_CAST(nsIID *, nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \
@@ -1778,14 +1779,14 @@ nsXPCComponents_Exception::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     PRUint32 count = 2;
     *aCount = count;
     nsIID **array;
-    *aArray = array = NS_STATIC_CAST(nsIID**, nsMemory::Alloc(count * sizeof(nsIID*)));
+    *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
     if(!array)
         return NS_ERROR_OUT_OF_MEMORY;
 
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = NS_STATIC_CAST(nsIID *, nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \
@@ -2071,14 +2072,14 @@ nsXPCConstructor::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     PRUint32 count = 2;
     *aCount = count;
     nsIID **array;
-    *aArray = array = NS_STATIC_CAST(nsIID**, nsMemory::Alloc(count * sizeof(nsIID*)));
+    *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
     if(!array)
         return NS_ERROR_OUT_OF_MEMORY;
 
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = NS_STATIC_CAST(nsIID *, nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \
@@ -2336,14 +2337,14 @@ nsXPCComponents_Constructor::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     PRUint32 count = 2;
     *aCount = count;
     nsIID **array;
-    *aArray = array = NS_STATIC_CAST(nsIID**, nsMemory::Alloc(count * sizeof(nsIID*)));
+    *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
     if(!array)
         return NS_ERROR_OUT_OF_MEMORY;
 
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = NS_STATIC_CAST(nsIID *, nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \
@@ -2564,7 +2565,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
         {
             cInterfaceID =
                 dont_AddRef(
-                    NS_STATIC_CAST(nsIJSIID*, nsJSIID::NewID(info)));
+                    static_cast<nsIJSIID*>(nsJSIID::NewID(info)));
         }
         if(!cInterfaceID)
             return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
@@ -2613,8 +2614,8 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
     }
 
     nsCOMPtr<nsIXPCConstructor> ctor =
-        NS_STATIC_CAST(nsIXPCConstructor*,
-            new nsXPCConstructor(cClassID, cInterfaceID, cInitializer));
+        static_cast<nsIXPCConstructor*>
+                   (new nsXPCConstructor(cClassID, cInterfaceID, cInitializer));
     if(!ctor)
         return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
 
@@ -2749,8 +2750,8 @@ nsXPCComponents_Utils::LookupMethod()
     nsCOMPtr<nsISupports> callee;
     cc->GetCallee(getter_AddRefs(callee));
     if(!callee || callee.get() !=
-                  NS_STATIC_CAST(const nsISupports*,
-                                 NS_STATIC_CAST(const nsIXPCComponents_Utils*,this)))
+                  static_cast<const nsISupports*>
+                             (static_cast<const nsIXPCComponents_Utils*>(this)))
         return NS_ERROR_FAILURE;
 #endif
 
@@ -2785,6 +2786,8 @@ nsXPCComponents_Utils::LookupMethod()
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
     JSObject* obj = JSVAL_TO_OBJECT(argv[0]);
+
+    OBJ_TO_INNER_OBJECT(cx, obj);
 
     // second param must be a string
     if(!JSVAL_IS_STRING(argv[1]))
@@ -2873,8 +2876,8 @@ nsXPCComponents_Utils::ReportError()
     nsCOMPtr<nsISupports> callee;
     cc->GetCallee(getter_AddRefs(callee));
     if(!callee || callee.get() !=
-                  NS_STATIC_CAST(const nsISupports*,
-                                 NS_STATIC_CAST(const nsIXPCComponents_Utils*,this))) {
+                  static_cast<const nsISupports*>
+                             (static_cast<const nsIXPCComponents_Utils*>(this))) {
         NS_ERROR("reportError() must only be called from JS!");
         return NS_ERROR_FAILURE;
     }
@@ -2909,11 +2912,11 @@ nsXPCComponents_Utils::ReportError()
 
         PRUint32 column = err->uctokenptr - err->uclinebuf;
 
-        rv = scripterr->Init(NS_REINTERPRET_CAST(const PRUnichar*,
-                                                 err->ucmessage),
+        rv = scripterr->Init(reinterpret_cast<const PRUnichar*>
+                                             (err->ucmessage),
                              fileUni.get(),
-                             NS_REINTERPRET_CAST(const PRUnichar*,
-                                                 err->uclinebuf),
+                             reinterpret_cast<const PRUnichar*>
+                                             (err->uclinebuf),
                              err->lineno,
                              column,
                              err->flags,
@@ -2945,8 +2948,8 @@ nsXPCComponents_Utils::ReportError()
             frame->GetLineNumber(&lineNo);
         }
 
-        rv = scripterr->Init(NS_REINTERPRET_CAST(const PRUnichar*,
-                                                 JS_GetStringChars(msgstr)),
+        rv = scripterr->Init(reinterpret_cast<const PRUnichar*>
+                                             (JS_GetStringChars(msgstr)),
                              NS_ConvertUTF8toUTF16(fileName).get(),
                              nsnull,
                              lineNo, 0,
@@ -3277,8 +3280,8 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
     nsISupports *prinOrSop = nsnull;
     if (JSVAL_IS_STRING(argv[0])) {
         JSString *codebasestr = JSVAL_TO_STRING(argv[0]);
-        nsAutoString codebase(NS_REINTERPRET_CAST(PRUnichar*,
-                                                  JS_GetStringChars(codebasestr)),
+        nsAutoString codebase(reinterpret_cast<PRUnichar*>
+                                              (JS_GetStringChars(codebasestr)),
                               JS_GetStringLength(codebasestr));
         nsCOMPtr<nsIURI> uri;
         rv = NS_NewURI(getter_AddRefs(uri), codebase);
@@ -3383,7 +3386,7 @@ JSBool JS_DLL_CALLBACK
 ContextHolder::ContextHolderBranchCallback(JSContext *cx, JSScript *script)
 {
     ContextHolder* thisObject =
-        NS_STATIC_CAST(ContextHolder*, JS_GetContextPrivate(cx));
+        static_cast<ContextHolder*>(JS_GetContextPrivate(cx));
     NS_ASSERTION(thisObject, "How did that happen?");
 
     if (thisObject->mOrigBranchCallback) {
@@ -3456,7 +3459,8 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
         }
     }
 
-    rv = xpc_EvalInSandbox(cx, sandbox, source, filename.get(), lineNo, rval);
+    rv = xpc_EvalInSandbox(cx, sandbox, source, filename.get(), lineNo,
+                           PR_FALSE, rval);
 
     if (NS_SUCCEEDED(rv)) {
         if (JS_IsExceptionPending(cx)) {
@@ -3473,7 +3477,8 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
 #ifndef XPCONNECT_STANDALONE
 nsresult
 xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
-                  const char *filename, PRInt32 lineNo, jsval *rval)
+                  const char *filename, PRInt32 lineNo,
+                  PRBool returnStringOnly, jsval *rval)
 {
     if (JS_GetClass(cx, sandbox) != &SandboxClass)
         return NS_ERROR_INVALID_ARG;
@@ -3518,21 +3523,54 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
     nsresult rv = NS_OK;
 
     AutoJSRequestWithNoCallContext req(sandcx->GetJSContext());
+    JSString *str = nsnull;
     if (!JS_EvaluateUCScriptForPrincipals(sandcx->GetJSContext(), sandbox,
                                           jsPrincipals,
-                                          NS_REINTERPRET_CAST(const jschar *,
-                                              PromiseFlatString(source).get()),
+                                          reinterpret_cast<const jschar *>
+                                                          (PromiseFlatString(source).get()),
                                           source.Length(), filename, lineNo,
-                                          rval)) {
+                                          rval) ||
+        (returnStringOnly &&
+         !JSVAL_IS_VOID(*rval) &&
+         !(str = JS_ValueToString(sandcx->GetJSContext(), *rval)))) {
         jsval exn;
         if (JS_GetPendingException(sandcx->GetJSContext(), &exn)) {
-            AutoJSSuspendRequestWithNoCallContext sus(sandcx->GetJSContext());
-            AutoJSRequestWithNoCallContext cxreq(cx);
+            // Stash the exception in |cx| so we can execute code on
+            // sandcx without a pending exception.
+            {
+                AutoJSSuspendRequestWithNoCallContext sus(sandcx->GetJSContext());
+                AutoJSRequestWithNoCallContext cxreq(cx);
 
-            JS_SetPendingException(cx, exn);
+                JS_SetPendingException(cx, exn);
+            }
+
+            JS_ClearPendingException(sandcx->GetJSContext());
+            if (returnStringOnly) {
+                // The caller asked for strings only, convert the
+                // exception into a string.
+                str = JS_ValueToString(sandcx->GetJSContext(), exn);
+
+                AutoJSSuspendRequestWithNoCallContext sus(sandcx->GetJSContext());
+                AutoJSRequestWithNoCallContext cxreq(cx);
+                if (str) {
+                    // We converted the exception to a string. Use that
+                    // as the value exception.
+                    JS_SetPendingException(cx, STRING_TO_JSVAL(str));
+                } else {
+                    JS_ClearPendingException(cx);
+                    rv = NS_ERROR_FAILURE;
+                }
+            }
+
+            // Clear str so we don't confuse callers.
+            str = nsnull;
         } else {
             rv = NS_ERROR_OUT_OF_MEMORY;
         }
+    }
+
+    if (str) {
+        *rval = STRING_TO_JSVAL(str);
     }
 
     if (stack) {
@@ -3562,6 +3600,43 @@ nsXPCComponents_Utils::Import(const nsACString & registryLocation)
 #endif
 }
 
+/* xpcIJSWeakReference getWeakReference (); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetWeakReference(xpcIJSWeakReference **_retval)
+{
+    nsRefPtr<xpcJSWeakReference> ref(new xpcJSWeakReference());
+    if (!ref)
+        return NS_ERROR_OUT_OF_MEMORY;
+    ref->Init();
+    *_retval = ref;
+    NS_ADDREF(*_retval);
+    return NS_OK;
+}
+
+/* void forceGC (); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::ForceGC()
+{
+    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
+    if (!xpc)
+        return NS_ERROR_FAILURE;
+
+    // get the xpconnect native call context
+    nsCOMPtr<nsIXPCNativeCallContext> cc;
+    nsresult rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    if (!cc)
+        return rv;
+
+    // Get JSContext of current call
+    JSContext* cx;
+    cc->GetJSContext(&cx);
+    if (!cx)
+        return NS_ERROR_FAILURE;
+
+    JS_GC(cx);
+
+    return NS_OK;
+}
 
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
 /* string canCreateWrapper (in nsIIDPtr iid); */
@@ -3631,14 +3706,14 @@ nsXPCComponents::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 #endif
     *aCount = count;
     nsIID **array;
-    *aArray = array = NS_STATIC_CAST(nsIID**, nsMemory::Alloc(count * sizeof(nsIID*)));
+    *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
     if(!array)
         return NS_ERROR_OUT_OF_MEMORY;
 
     PRUint32 index = 0;
     nsIID* clone;
 #define PUSH_IID(id) \
-    clone = NS_STATIC_CAST(nsIID *, nsMemory::Clone(&NS_GET_IID( id ), \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
                                                     sizeof(nsIID)));  \
     if (!clone)                                                       \
         goto oom;                                                     \

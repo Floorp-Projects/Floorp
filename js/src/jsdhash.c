@@ -102,7 +102,7 @@ JS_DHashStringKey(JSDHashTable *table, const void *key)
     const unsigned char *s;
 
     h = 0;
-    for (s = key; *s != '\0'; s++)
+    for (s = (const unsigned char *) key; *s != '\0'; s++)
         h = (h >> (JS_DHASH_BITS - 4)) ^ (h << 4) ^ *s;
     return h;
 }
@@ -132,7 +132,8 @@ JS_DHashMatchStringKey(JSDHashTable *table,
 
     /* XXX tolerate null keys on account of sloppy Mozilla callers. */
     return stub->key == key ||
-           (stub->key && key && strcmp(stub->key, key) == 0);
+           (stub->key && key &&
+            strcmp((const char *) stub->key, (const char *) key) == 0);
 }
 
 JS_PUBLIC_API(void)
@@ -215,7 +216,7 @@ JS_DHashTableInit(JSDHashTable *table, const JSDHashTableOps *ops, void *data,
         fprintf(stderr,
                 "jsdhash: for the table at address %p, the given entrySize"
                 " of %lu %s favors chaining over double hashing.\n",
-                (void *)table,
+                (void *) table,
                 (unsigned long) entrySize,
                 (entrySize > 16 * sizeof(void*)) ? "definitely" : "probably");
     }
@@ -239,7 +240,8 @@ JS_DHashTableInit(JSDHashTable *table, const JSDHashTableOps *ops, void *data,
     table->generation = 0;
     nbytes = capacity * entrySize;
 
-    table->entryStore = ops->allocTable(table, nbytes + ENTRY_STORE_EXTRA);
+    table->entryStore = (char *) ops->allocTable(table,
+                                                 nbytes + ENTRY_STORE_EXTRA);
     if (!table->entryStore)
         return JS_FALSE;
     memset(table->entryStore, 0, nbytes);
@@ -526,7 +528,8 @@ ChangeTable(JSDHashTable *table, int deltaLog2)
     entrySize = table->entrySize;
     nbytes = newCapacity * entrySize;
 
-    newEntryStore = table->ops->allocTable(table, nbytes + ENTRY_STORE_EXTRA);
+    newEntryStore = (char *) table->ops->allocTable(table,
+                                                    nbytes + ENTRY_STORE_EXTRA);
     if (!newEntryStore)
         return JS_FALSE;
 

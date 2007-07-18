@@ -64,6 +64,7 @@ public:
   virtual nsresult CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPluginInstance);
 private:
   GtkWidget*  mGtkSocket;
+  NPSetWindowCallbackStruct m_ws_info;
   nsresult  CreateXEmbedWindow();
   void      SetAllocation();
   PRBool    CanGetValueFromPlugin(nsCOMPtr<nsIPluginInstance> &aPluginInstance);
@@ -80,9 +81,14 @@ nsPluginNativeWindowGtk2::nsPluginNativeWindowGtk2() : nsPluginNativeWindow()
   width = 0; 
   height = 0; 
   memset(&clipRect, 0, sizeof(clipRect));
-  ws_info = nsnull;
+  ws_info = &m_ws_info;
   type = nsPluginWindowType_Window;
   mGtkSocket = 0;
+  m_ws_info.type = 0;
+  m_ws_info.display = nsnull;
+  m_ws_info.visual = nsnull;
+  m_ws_info.colormap = 0;
+  m_ws_info.depth = 0;
 }
 
 nsPluginNativeWindowGtk2::~nsPluginNativeWindowGtk2() 
@@ -111,28 +117,30 @@ nsresult PLUG_DeletePluginNativeWindow(nsPluginNativeWindow * aPluginNativeWindo
 nsresult nsPluginNativeWindowGtk2::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPluginInstance)
 {
   if(aPluginInstance) {
-    nsresult rv;
-    PRBool val = PR_FALSE;
-    if(!mGtkSocket) {
-      if (CanGetValueFromPlugin(aPluginInstance))
-        rv = aPluginInstance->GetValue
-               ((nsPluginInstanceVariable)NPPVpluginNeedsXEmbed, &val);
-    }
+    if (type == nsPluginWindowType_Window) {
+      nsresult rv;
+      PRBool val = PR_FALSE;
+      if(!mGtkSocket) {
+        if (CanGetValueFromPlugin(aPluginInstance))
+          rv = aPluginInstance->GetValue
+            ((nsPluginInstanceVariable)NPPVpluginNeedsXEmbed, &val);
+      }
 #ifdef DEBUG
-    printf("nsPluginNativeWindowGtk2: NPPVpluginNeedsXEmbed=%d\n", val);
+      printf("nsPluginNativeWindowGtk2: NPPVpluginNeedsXEmbed=%d\n", val);
 #endif
-    if(val) {
-      CreateXEmbedWindow();
-    }
+      if(val) {
+        CreateXEmbedWindow();
+      }
 
-    if(mGtkSocket) {
-      // Make sure to resize and re-place the window if required
-      SetAllocation();
-      window = (nsPluginPort *)gtk_socket_get_id(GTK_SOCKET(mGtkSocket));
-    }
+      if(mGtkSocket) {
+        // Make sure to resize and re-place the window if required
+        SetAllocation();
+        window = (nsPluginPort *)gtk_socket_get_id(GTK_SOCKET(mGtkSocket));
+      }
 #ifdef DEBUG
-    printf("nsPluginNativeWindowGtk2: call SetWindow with xid=%p\n", (void *)window);
+      printf("nsPluginNativeWindowGtk2: call SetWindow with xid=%p\n", (void *)window);
 #endif
+    }
     aPluginInstance->SetWindow(this);
   }
   else if (mPluginInstance)

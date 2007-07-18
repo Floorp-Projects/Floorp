@@ -55,7 +55,6 @@
 #include "nsGfxCIID.h"
 #include "nsTransform2D.h"
 #include "nsIMenuFrame.h"
-#include "nsIMenuParent.h"
 #include "prlink.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsWidgetAtoms.h"
@@ -63,11 +62,9 @@
 #include <gdk/gdkprivate.h>
 #include <gdk/gdkx.h>
 
-#ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
 #include "gfxPlatformGtk.h"
 #include "gfxXlibNativeRenderer.h"
-#endif
 
 NS_IMPL_ISUPPORTS2(nsNativeThemeGTK, nsITheme, nsIObserver)
 
@@ -230,72 +227,73 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       aState->isDefault = FALSE; // XXX fix me
       aState->canDefault = FALSE; // XXX fix me
 
-      // For these widget types, some element (either a child or parent)
-      // actually has element focus, so we check the focused attribute
-      // to see whether to draw in the focused state.
-      if (aWidgetType == NS_THEME_TEXTFIELD ||
-          aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
-          aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||
-          aWidgetType == NS_THEME_RADIO_CONTAINER ||
-          aWidgetType == NS_THEME_RADIO_LABEL ||
-          IsRadioWidgetType(aWidgetType)) {
-        aState->focused = IsFocused(aFrame);
-      }
-
-      if (aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL ||
-          aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL) {
-        // for scrollbars we need to go up two to go from the thumb to
-        // the slider to the actual scrollbar object
-        nsIFrame *tmpFrame = aFrame->GetParent()->GetParent();
-
-        aState->curpos = CheckIntAttr(tmpFrame, nsWidgetAtoms::curpos);
-        aState->maxpos = CheckIntAttr(tmpFrame, nsWidgetAtoms::maxpos);
-      }
-
-      // In order to simulate native GTK scrollbar click behavior, we set the
-      // active attribute on the element to true if it's pressed with any mouse
-      // button. This allows us to show that it's active without setting :active
-      if (aWidgetType == NS_THEME_SCROLLBAR_BUTTON_UP ||
-          aWidgetType == NS_THEME_SCROLLBAR_BUTTON_DOWN ||
-          aWidgetType == NS_THEME_SCROLLBAR_BUTTON_LEFT ||
-          aWidgetType == NS_THEME_SCROLLBAR_BUTTON_RIGHT) {
-          if (CheckBooleanAttr(aFrame, nsWidgetAtoms::active))
-            aState->active = PR_TRUE;
-      }
-
-      // menu item state is determined by the attribute "_moz-menuactive",
-      // and not by the mouse hovering (accessibility).  as a special case,
-      // menus which are children of a menu bar are only marked as prelight
-      // if they are open, not on normal hover.
-
-      if (aWidgetType == NS_THEME_MENUITEM ||
-          aWidgetType == NS_THEME_CHECKMENUITEM ||
-          aWidgetType == NS_THEME_RADIOMENUITEM) {
-        PRBool isTopLevel = PR_FALSE;
-        nsIMenuFrame *menuFrame;
-        CallQueryInterface(aFrame, &menuFrame);
-
-        if (menuFrame) {
-          nsIMenuParent *menuParent = menuFrame->GetMenuParent();
-          if (menuParent)
-            menuParent->IsMenuBar(isTopLevel);
+      if (aFrame && aFrame->GetContent()->IsNodeOfType(nsINode::eXUL)) {
+        // For these widget types, some element (either a child or parent)
+        // actually has element focus, so we check the focused attribute
+        // to see whether to draw in the focused state.
+        if (aWidgetType == NS_THEME_TEXTFIELD ||
+            aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
+            aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||
+            aWidgetType == NS_THEME_RADIO_CONTAINER ||
+            aWidgetType == NS_THEME_RADIO_LABEL) {
+          aState->focused = IsFocused(aFrame);
+        } else if (IsRadioWidgetType(aWidgetType) ||
+                   IsCheckboxWidgetType(aWidgetType)) {
+          // In XUL, checkboxes and radios shouldn't have focus rings, their labels do
+          aState->focused = FALSE;
         }
 
-        if (isTopLevel) {
-          PRBool isOpen;
-          menuFrame->MenuIsOpen(isOpen);
-          aState->inHover = isOpen;
-        } else {
-          aState->inHover = CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive);
+        if (aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL ||
+            aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL) {
+          // for scrollbars we need to go up two to go from the thumb to
+          // the slider to the actual scrollbar object
+          nsIFrame *tmpFrame = aFrame->GetParent()->GetParent();
+
+          aState->curpos = CheckIntAttr(tmpFrame, nsWidgetAtoms::curpos);
+          aState->maxpos = CheckIntAttr(tmpFrame, nsWidgetAtoms::maxpos);
         }
 
-        aState->active = FALSE;
-        
-        if (aWidgetType == NS_THEME_CHECKMENUITEM ||
+        // In order to simulate native GTK scrollbar click behavior, we set the
+        // active attribute on the element to true if it's pressed with any mouse
+        // button. This allows us to show that it's active without setting :active
+        if (aWidgetType == NS_THEME_SCROLLBAR_BUTTON_UP ||
+            aWidgetType == NS_THEME_SCROLLBAR_BUTTON_DOWN ||
+            aWidgetType == NS_THEME_SCROLLBAR_BUTTON_LEFT ||
+            aWidgetType == NS_THEME_SCROLLBAR_BUTTON_RIGHT) {
+            if (CheckBooleanAttr(aFrame, nsWidgetAtoms::active))
+              aState->active = PR_TRUE;
+        }
+
+        // menu item state is determined by the attribute "_moz-menuactive",
+        // and not by the mouse hovering (accessibility).  as a special case,
+        // menus which are children of a menu bar are only marked as prelight
+        // if they are open, not on normal hover.
+
+        if (aWidgetType == NS_THEME_MENUITEM ||
+            aWidgetType == NS_THEME_CHECKMENUITEM ||
             aWidgetType == NS_THEME_RADIOMENUITEM) {
-          *aWidgetFlags = aFrame && aFrame->GetContent()->
-            AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::checked,
-                        nsWidgetAtoms::_true, eIgnoreCase);
+          PRBool isTopLevel = PR_FALSE;
+          nsIMenuFrame *menuFrame;
+          CallQueryInterface(aFrame, &menuFrame);
+
+          if (menuFrame) {
+            isTopLevel = menuFrame->IsOnMenuBar();
+          }
+
+          if (isTopLevel) {
+            aState->inHover = menuFrame->IsOpen();
+          } else {
+            aState->inHover = CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive);
+          }
+
+          aState->active = FALSE;
+        
+          if (aWidgetType == NS_THEME_CHECKMENUITEM ||
+              aWidgetType == NS_THEME_RADIOMENUITEM) {
+            *aWidgetFlags = aFrame && aFrame->GetContent()->
+              AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::checked,
+                          nsWidgetAtoms::_true, eIgnoreCase);
+          }
         }
       }
     }
@@ -463,7 +461,6 @@ NativeThemeErrorHandler(Display* dpy, XErrorEvent* error) {
   return 0;
 }
 
-#ifdef MOZ_CAIRO_GFX
 class ThemeRenderer : public gfxXlibNativeRenderer {
 public:
   ThemeRenderer(GtkWidgetState aState, GtkThemeWidgetType aGTKWidgetType,
@@ -525,7 +522,6 @@ ThemeRenderer::NativeDraw(Display* dpy, Drawable drawable, Visual* visual,
   g_object_unref(G_OBJECT(gdkPixmap));
   return NS_OK;
 }
-#endif
 
 static PRBool
 GetExtraSizeForWidget(PRUint8 aWidgetType, nsIntMargin* aExtra)
@@ -571,55 +567,6 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
                             &flags))
     return NS_OK;
     
-#ifndef MOZ_CAIRO_GFX
-  GdkWindow* window = NS_STATIC_CAST(GdkWindow*,
-    aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_GDK_DRAWABLE));
-
-  nsTransform2D* transformMatrix;
-  aContext->GetCurrentTransform(transformMatrix);
-
-  nsRect tr(aRect);
-  transformMatrix->TransformCoord(&tr.x, &tr.y, &tr.width, &tr.height);
-  GdkRectangle gdk_rect = {tr.x, tr.y, tr.width, tr.height};
-
-  nsRect cr(aClipRect);
-  transformMatrix->TransformCoord(&cr.x, &cr.y, &cr.width, &cr.height);
-  GdkRectangle gdk_clip = {cr.x, cr.y, cr.width, cr.height};
-
-  NS_ASSERTION(!IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType),
-               "Trying to render an unsafe widget!");
-
-  PRBool safeState = IsWidgetStateSafe(mSafeWidgetStates, aWidgetType, &state);
-  XErrorHandler oldHandler = nsnull;
-  if (!safeState) {
-    gLastXError = 0;
-    oldHandler = XSetErrorHandler(NativeThemeErrorHandler);
-  }
-
-  moz_gtk_widget_paint(gtkWidgetType, window, &gdk_rect, &gdk_clip, &state,
-                       flags);
-
-  if (!safeState) {
-    gdk_flush();
-    XSetErrorHandler(oldHandler);
-
-    if (gLastXError) {
-#ifdef DEBUG
-      printf("GTK theme failed for widget type %d, error was %d, state was "
-             "[active=%d,focused=%d,inHover=%d,disabled=%d]\n",
-             aWidgetType, gLastXError, state.active, state.focused,
-             state.inHover, state.disabled);
-#endif
-      NS_WARNING("GTK theme failed; disabling unsafe widget");
-      SetWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType);
-      // force refresh of the window, because the widget was not
-      // successfully drawn it must be redrawn using the default look
-      RefreshWidgetWindow(aFrame);
-    } else {
-      SetWidgetStateSafe(mSafeWidgetStates, aWidgetType, &state);
-    }
-  }
-#else
   nsCOMPtr<nsIDeviceContext> dctx = nsnull;
   aContext->GetDeviceContext(*getter_AddRefs(dctx));
   PRInt32 p2a = dctx->AppUnitsPerDevPixel();
@@ -706,7 +653,6 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
       SetWidgetStateSafe(mSafeWidgetStates, aWidgetType, &state);
     }
   }
-#endif
 
   return NS_OK;
 }
@@ -1014,6 +960,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_SPINNER_UP_BUTTON:
   case NS_THEME_SPINNER_DOWN_BUTTON:
     // case NS_THEME_SCROLLBAR:  (n/a for gtk)
+    // case NS_THEME_SCROLLBAR_SMALL: (n/a for gtk)
   case NS_THEME_SCROLLBAR_BUTTON_UP:
   case NS_THEME_SCROLLBAR_BUTTON_DOWN:
   case NS_THEME_SCROLLBAR_BUTTON_LEFT:

@@ -84,10 +84,12 @@ def GenerateFirefoxCommandLine(firefox_path, profile_dir, url):
   if url:
     url_arg = '-url %s' % url
 
-  cmd = '%s "%s %s %s"' % (config.CYGWIN,
+  cmd = '%s "%s %s %s -width %d -height %d"' % (config.CYGWIN,
                            GetCygwinPath(firefox_path),
                            profile_arg,
-                           url_arg)
+                           url_arg,
+                           config.BROWSER_WIDTH,
+                           config.BROWSER_HEIGHT)
   return cmd
 
 

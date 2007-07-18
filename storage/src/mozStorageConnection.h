@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *   Lev Serebryakov <lev@serebryakov.spb.ru>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,6 +43,8 @@
 #include "nsCOMPtr.h"
 
 #include "nsString.h"
+#include "nsDataHashtable.h"
+#include "mozIStorageProgressHandler.h"
 #include "mozIStorageConnection.h"
 
 #include "nsIMutableArray.h"
@@ -70,13 +73,31 @@ private:
     ~mozStorageConnection();
 
 protected:
+    struct FindFuncEnumArgs {
+        nsISupports *mTarget;
+        PRBool       mFound;
+    };
+
     void HandleSqliteError(const char *aSqlStatement);
+    static PLDHashOperator s_FindFuncEnum(const nsACString &aKey,
+                                          nsISupports* aData, void* userArg);
+    static PLDHashOperator s_ReleaseFuncEnum(const nsACString &aKey,
+                                             nsISupports* aData, void* userArg);
+    PRBool FindFunctionByInstance(nsISupports *aInstance);
+
+    static int s_ProgressHelper(void *arg);
+    // Generic progress handler
+    // Dispatch call to registered progress handler,
+    // if there is one. Do nothing in other cases.
+    int ProgressHandler();
 
     sqlite3 *mDBConn;
     nsCOMPtr<nsIFile> mDatabaseFile;
     PRBool mTransactionInProgress;
 
-    nsCOMPtr<nsIMutableArray> mFunctions;
+    nsDataHashtable<nsCStringHashKey, nsISupports*> mFunctions;
+
+    nsCOMPtr<mozIStorageProgressHandler> mProgressHandler;
 
     // This isn't accessed but is used to make sure that the connections do
     // not outlive the service. The service, for example, owns certain locks

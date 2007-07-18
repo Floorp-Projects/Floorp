@@ -238,6 +238,8 @@ res/viewsource.css
 res/hiddenWindow.html
 res/ua.css
 res/forms.css
+res/contenteditable.css
+res/designmode.css
 res/arrow.gif
 res/arrowd.gif
 res/loading-image.gif

@@ -132,25 +132,6 @@ nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
-static void
-AddFrameToChildBounds(nsIFrame* aKidFrame, nsRect* aChildBounds)
-{
-  NS_PRECONDITION(aKidFrame, "Must have kid frame");
-  
-  if (!aChildBounds) {
-    return;
-  }
-
-  // Add in the child's bounds
-  nsRect kidBounds = aKidFrame->GetRect();
-  nsRect* kidOverflow = aKidFrame->GetOverflowAreaProperty();
-  if (kidOverflow) {
-    // Put it in the parent's coordinate system
-    kidBounds = *kidOverflow + kidBounds.TopLeft();
-  }
-  aChildBounds->UnionRect(*aChildBounds, kidBounds);
-}
-
 nsresult
 nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
                                   nsPresContext*          aPresContext,
@@ -175,10 +156,11 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
       // Reflow the frame
       nsReflowStatus  kidStatus;
       ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState, aContainingBlockWidth,
-                          aContainingBlockHeight, kidFrame, kidStatus);
-
+                          aContainingBlockHeight, kidFrame, kidStatus, aChildBounds);
+    } else if (aChildBounds) {
+      aChildBounds->UnionRect(*aChildBounds, kidFrame->GetOverflowRect() +
+                                             kidFrame->GetPosition());
     }
-    AddFrameToChildBounds(kidFrame, aChildBounds);
   }
   return NS_OK;
 }
@@ -334,7 +316,8 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
                                                nscoord                  aContainingBlockWidth,
                                                nscoord                  aContainingBlockHeight,
                                                nsIFrame*                aKidFrame,
-                                               nsReflowStatus&          aStatus)
+                                               nsReflowStatus&          aStatus,
+                                               nsRect*                  aChildBounds)
 {
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
@@ -387,19 +370,6 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
 
   // Send the WillReflow() notification and position the frame
   aKidFrame->WillReflow(aPresContext);
-
-  // XXXldb We can simplify this if we come up with a better way to
-  // position views.
-  nscoord x;
-  if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.left) {
-    // Just use the current x-offset
-    x = aKidFrame->GetPosition().x;
-  } else {
-    x = border.left + kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left;
-  }
-  aKidFrame->SetPosition(nsPoint(x, border.top +
-                                    kidReflowState.mComputedOffsets.top +
-                                    kidReflowState.mComputedMargin.top));
 
   // Do the reflow
   rv = aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
@@ -493,6 +463,10 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     printf("\n");
   }
 #endif
+
+  if (aChildBounds)
+    aChildBounds->UnionRect(*aChildBounds, kidDesiredSize.mOverflowArea +
+                                           rect.TopLeft());
 
   return rv;
 }

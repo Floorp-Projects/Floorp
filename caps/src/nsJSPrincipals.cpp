@@ -63,8 +63,8 @@ nsGlobalPrivilegesEnabled(JSContext *cx, JSPrincipals *jsprin)
 JS_STATIC_DLL_CALLBACK(JSBool)
 nsJSPrincipalsSubsume(JSPrincipals *jsprin, JSPrincipals *other)
 {
-    nsJSPrincipals *nsjsprin = NS_STATIC_CAST(nsJSPrincipals *, jsprin);
-    nsJSPrincipals *nsother  = NS_STATIC_CAST(nsJSPrincipals *, other);
+    nsJSPrincipals *nsjsprin = static_cast<nsJSPrincipals *>(jsprin);
+    nsJSPrincipals *nsother  = static_cast<nsJSPrincipals *>(other);
 
     JSBool result;
     nsresult rv = nsjsprin->nsIPrincipalPtr->Subsumes(nsother->nsIPrincipalPtr,
@@ -75,7 +75,7 @@ nsJSPrincipalsSubsume(JSPrincipals *jsprin, JSPrincipals *other)
 JS_STATIC_DLL_CALLBACK(void)
 nsDestroyJSPrincipals(JSContext *cx, struct JSPrincipals *jsprin)
 {
-    nsJSPrincipals *nsjsprin = NS_STATIC_CAST(nsJSPrincipals *, jsprin);
+    nsJSPrincipals *nsjsprin = static_cast<nsJSPrincipals *>(jsprin);
 
     // We need to destroy the nsIPrincipal. We'll do this by adding
     // to the refcount and calling release
@@ -106,7 +106,7 @@ nsTranscodeJSPrincipals(JSXDRState *xdr, JSPrincipals **jsprinp)
 
     if (xdr->mode == JSXDR_ENCODE) {
         nsIObjectOutputStream *stream =
-            NS_REINTERPRET_CAST(nsIObjectOutputStream*, xdr->userdata);
+            reinterpret_cast<nsIObjectOutputStream*>(xdr->userdata);
 
         // Flush xdr'ed data to the underlying object output stream.
         uint32 size;
@@ -121,7 +121,7 @@ nsTranscodeJSPrincipals(JSXDRState *xdr, JSPrincipals **jsprinp)
                 // Require that GetJSPrincipals has been called already by the
                 // code that compiled the script that owns the principals.
                 nsJSPrincipals *nsjsprin =
-                    NS_STATIC_CAST(nsJSPrincipals*, *jsprinp);
+                    static_cast<nsJSPrincipals*>(*jsprinp);
 
                 rv = stream->WriteObject(nsjsprin->nsIPrincipalPtr, PR_TRUE);
             }
@@ -129,7 +129,7 @@ nsTranscodeJSPrincipals(JSXDRState *xdr, JSPrincipals **jsprinp)
     } else {
         NS_ASSERTION(JS_XDRMemDataLeft(xdr) == 0, "XDR out of sync?!");
         nsIObjectInputStream *stream =
-            NS_REINTERPRET_CAST(nsIObjectInputStream*, xdr->userdata);
+            reinterpret_cast<nsIObjectInputStream*>(xdr->userdata);
 
         nsCOMPtr<nsIPrincipal> prin;
         rv = stream->ReadObject(PR_TRUE, getter_AddRefs(prin));

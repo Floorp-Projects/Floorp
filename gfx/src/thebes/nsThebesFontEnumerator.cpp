@@ -88,8 +88,8 @@ nsThebesFontEnumerator::EnumerateFonts(const char *aLangGroup,
         return NS_OK;
     }
 
-    PRUnichar **fs = NS_STATIC_CAST(PRUnichar **,
-                                    nsMemory::Alloc(fontList.Count() * sizeof(PRUnichar*)));
+    PRUnichar **fs = static_cast<PRUnichar **>
+                                (nsMemory::Alloc(fontList.Count() * sizeof(PRUnichar*)));
     for (int i = 0; i < fontList.Count(); i++) {
         fs[i] = ToNewUnicode(*fontList[i]);
     }

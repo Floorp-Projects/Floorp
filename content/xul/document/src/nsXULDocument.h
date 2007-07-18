@@ -116,20 +116,10 @@ public:
     virtual void EndLoad();
 
     // nsIMutationObserver interface
-    virtual void ContentAppended(nsIDocument* aDocument,
-                                 nsIContent* aContainer,
-                                 PRInt32 aNewIndexInContainer);
-    virtual void ContentInserted(nsIDocument* aDocument,
-                                 nsIContent* aContainer,
-                                 nsIContent* aChild,
-                                 PRInt32 aIndexInContainer);
-    virtual void ContentRemoved(nsIDocument* aDocument,
-                                nsIContent* aContainer,
-                                nsIContent* aChild,
-                                PRInt32 aIndexInContainer);
-    virtual void AttributeChanged(nsIDocument* aDocument, nsIContent* aElement,
-                                  PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                                  PRInt32 aModType);
+    NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
+    NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
+    NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
+    NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
     // nsIXULDocument interface
     NS_IMETHOD AddElementForID(const nsAString& aID, nsIContent* aElement);
@@ -658,11 +648,13 @@ protected:
 
     class ParserObserver : public nsIRequestObserver {
     protected:
-        nsXULDocument* mDocument;
+        nsRefPtr<nsXULDocument> mDocument;
+        nsRefPtr<nsXULPrototypeDocument> mPrototype;
         virtual ~ParserObserver();
 
     public:
-        ParserObserver(nsXULDocument* aDocument);
+        ParserObserver(nsXULDocument* aDocument,
+                       nsXULPrototypeDocument* aPrototype);
 
         NS_DECL_ISUPPORTS
         NS_DECL_NSIREQUESTOBSERVER

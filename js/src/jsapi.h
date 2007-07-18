@@ -1237,9 +1237,10 @@ struct JSExtendedClass {
 #define JSCLASS_CACHED_PROTO_WIDTH      8
 #define JSCLASS_CACHED_PROTO_MASK       JS_BITMASK(JSCLASS_CACHED_PROTO_WIDTH)
 #define JSCLASS_HAS_CACHED_PROTO(key)   ((key) << JSCLASS_CACHED_PROTO_SHIFT)
-#define JSCLASS_CACHED_PROTO_KEY(clasp) (((clasp)->flags                      \
-                                          >> JSCLASS_CACHED_PROTO_SHIFT)      \
-                                         & JSCLASS_CACHED_PROTO_MASK)
+#define JSCLASS_CACHED_PROTO_KEY(clasp) ((JSProtoKey)                         \
+                                         (((clasp)->flags                     \
+                                           >> JSCLASS_CACHED_PROTO_SHIFT)     \
+                                          & JSCLASS_CACHED_PROTO_MASK))
 
 /* Initializer for unused members of statically initialized JSClass structs. */
 #define JSCLASS_NO_OPTIONAL_MEMBERS     0,0,0,0,0,0,0,0

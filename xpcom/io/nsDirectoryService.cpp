@@ -635,19 +635,19 @@ nsDirectoryService::Get(const char* prop, const nsIID & uuid, void* *result)
     {
         if (fileData.persistent)
         {
-            Set(prop, NS_STATIC_CAST(nsIFile*, fileData.data));
+            Set(prop, static_cast<nsIFile*>(fileData.data));
         }
         nsresult rv = (fileData.data)->QueryInterface(uuid, result);
         NS_RELEASE(fileData.data);  // addref occurs in FindProviderFile()
         return rv;
     }
 
-    FindProviderFile(NS_STATIC_CAST(nsIDirectoryServiceProvider*, this), &fileData);
+    FindProviderFile(static_cast<nsIDirectoryServiceProvider*>(this), &fileData);
     if (fileData.data)
     {
         if (fileData.persistent)
         {
-            Set(prop, NS_STATIC_CAST(nsIFile*, fileData.data));
+            Set(prop, static_cast<nsIFile*>(fileData.data));
         }
         nsresult rv = (fileData.data)->QueryInterface(uuid, result);
         NS_RELEASE(fileData.data);  // addref occurs in FindProviderFile()

@@ -45,7 +45,7 @@ interface nsISimpleEnumerator;
 
 [ptr] native sqlite3stmtptr(struct sqlite3_stmt);
 
-[scriptable, uuid(1f39bc95-090d-40a5-9dee-6d5a591e48bf)]
+[scriptable, uuid(76b1b70e-5740-488d-b910-3f0f02ab2fd1)]
 interface mozIStorageStatement : mozIStorageValueArray {
   /**
    * Initialize this query with the given SQL statement.
@@ -74,12 +74,12 @@ interface mozIStorageStatement : mozIStorageValueArray {
   AUTF8String getParameterName(in unsigned long aParamIndex);
 
   /**
-   * All indexes of a named parameter, if it's specified more than once
+   * Returns the index of the named parameter.
+   *
+   * @param aName The name of the parameter you want the index for.
+   * @return The index of the named parameter.
    */
-  void getParameterIndexes
-    (in AUTF8String aParameterName,
-     out unsigned long aCount,
-     [array,size_is(aCount),retval] out unsigned long aIndexes);
+  unsigned long getParameterIndex(in AUTF8String aName);
 
   /**
    * Number of columns returned

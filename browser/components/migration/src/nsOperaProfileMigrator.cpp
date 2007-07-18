@@ -40,12 +40,8 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDocShellCID.h"
-#ifdef MOZ_PLACES_BOOKMARKS
 #include "nsINavBookmarksService.h"
 #include "nsBrowserCompsCID.h"
-#else
-#include "nsIBookmarksService.h"
-#endif
 #include "nsIBrowserProfileMigrator.h"
 #include "nsIBrowserHistory.h"
 #include "nsICookieManager2.h"
@@ -796,7 +792,7 @@ nsOperaCookieMigrator::Migrate()
       break;
     case COOKIE_EXPIRY:
       mStream->Read16(&length);
-      mStream->Read32(NS_REINTERPRET_CAST(PRUint32*, &(mCurrCookie.expiryTime)));
+      mStream->Read32(reinterpret_cast<PRUint32*>(&(mCurrCookie.expiryTime)));
       break;
     case COOKIE_SECURE:
       mCurrCookie.isSecure = PR_TRUE;
@@ -808,7 +804,7 @@ nsOperaCookieMigrator::Migrate()
       {
         mStream->Read16(&length);
         PRTime temp;
-        mStream->Read32(NS_REINTERPRET_CAST(PRUint32*, &temp));
+        mStream->Read32(reinterpret_cast<PRUint32*>(&temp));
       }
       break;
     case COOKIE_COMMENT:
@@ -906,7 +902,8 @@ nsOperaCookieMigrator::AddCookie(nsICookieManager2* aManager)
                               mCurrCookie.id, 
                               mCurrCookie.data, 
                               mCurrCookie.isSecure, 
-                              PR_FALSE, 
+                              PR_FALSE, // isHttpOnly
+                              PR_FALSE, // isSession
                               PRInt64(mCurrCookie.expiryTime));
 
   mCurrCookie.isSecure = 0;
@@ -1040,25 +1037,12 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
   nsCOMPtr<nsILineInputStream> lineInputStream(do_QueryInterface(fileInputStream));
 
   nsresult rv;
-#ifdef MOZ_PLACES_BOOKMARKS
   nsCOMPtr<nsINavBookmarksService> bms(do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
   PRInt64 root;
   rv = bms->GetBookmarksRoot(&root);
   NS_ENSURE_SUCCESS(rv, rv);
   PRInt64 parentFolder;
-#else
-  nsCOMPtr<nsIBookmarksService> bms(do_GetService("@mozilla.org/browser/bookmarks-service;1"));
-  NS_ENSURE_TRUE(bms, NS_ERROR_FAILURE);
-  PRBool dummy;
-  bms->ReadBookmarks(&dummy);
-
-  nsCOMPtr<nsIRDFService> rdf(do_GetService("@mozilla.org/rdf/rdf-service;1"));
-  nsCOMPtr<nsIRDFResource> root;
-  rdf->GetResource(NS_LITERAL_CSTRING("NC:BookmarksRoot"), 
-                   getter_AddRefs(root));
-  nsCOMPtr<nsIRDFResource> parentFolder;
-#endif
 
   nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
   nsCOMPtr<nsIStringBundle> bundle;
@@ -1074,13 +1058,8 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
                                  sourceNameStrings, 1, 
                                  getter_Copies(importedOperaHotlistTitle));
 
-#ifdef MOZ_PLACES_BOOKMARKS
     bms->CreateFolder(parentFolder, importedOperaHotlistTitle,
                       nsINavBookmarksService::DEFAULT_INDEX, &parentFolder);
-#else
-    bms->CreateFolderInContainer(importedOperaHotlistTitle.get(), 
-                                 root, -1, getter_AddRefs(parentFolder));
-#endif
   }
   else
     parentFolder = root;
@@ -1091,22 +1070,13 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
   printf("*** done copying smart keywords\n");
 #endif
 
-#ifdef MOZ_PLACES_BOOKMARKS
   PRInt64 toolbar;
   rv = bms->GetToolbarFolder(&toolbar);
   NS_ENSURE_SUCCESS(rv, rv);
-#else
-  nsCOMPtr<nsIRDFResource> toolbar;
-  bms->GetBookmarksToolbarFolder(getter_AddRefs(toolbar));
-  
-  if (aReplace)
-    ClearToolbarFolder(bms, toolbar);
-#endif
 
   rv = ParseBookmarksFolder(lineInputStream, parentFolder, toolbar, bms);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef MOZ_PLACES_BOOKMARKS
   // after importing the favorites, 
   // we need to set this pref so that on startup
   // we don't blow away what we just imported
@@ -1114,21 +1084,14 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
   NS_ENSURE_TRUE(pref, NS_ERROR_FAILURE);
   rv = pref->SetBoolPref("browser.places.importBookmarksHTML", PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
-#endif
-  return rv;
+  return NS_OK;
 }
 
 #if defined(XP_WIN) || (defined(XP_UNIX) && !defined(XP_MACOSX))
 nsresult
-#ifdef MOZ_PLACES_BOOKMARKS
 nsOperaProfileMigrator::CopySmartKeywords(nsINavBookmarksService* aBMS, 
                                           nsIStringBundle* aBundle, 
                                           PRInt64 aParentFolder)
-#else
-nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS, 
-                                          nsIStringBundle* aBundle, 
-                                          nsIRDFResource* aParentFolder)
-#endif
 {
   nsresult rv;
 
@@ -1155,16 +1118,10 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
                                 sourceNameStrings, 1, 
                                 getter_Copies(importedSearchUrlsTitle));
 
-#ifdef MOZ_PLACES_BOOKMARKS
   PRInt64 keywordsFolder;
   rv = aBMS->CreateFolder(aParentFolder, importedSearchUrlsTitle,
                           nsINavBookmarksService::DEFAULT_INDEX, &keywordsFolder);
   NS_ENSURE_SUCCESS(rv, rv);
-#else
-  nsCOMPtr<nsIRDFResource> keywordsFolder;
-  aBMS->CreateFolderInContainer(importedSearchUrlsTitle.get(), 
-                                aParentFolder, -1, getter_AddRefs(keywordsFolder));
-#endif
 
   PRInt32 sectionIndex = 1;
   nsCAutoString name, url, keyword;
@@ -1225,60 +1182,16 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
     aBundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchUrlDesc").get(),
                                   descStrings, 2, getter_Copies(keywordDesc));
 
-#ifdef MOZ_PLACES_BOOKMARKS
     PRInt64 newId;
     rv = aBMS->InsertBookmark(keywordsFolder, uri,
                               nsINavBookmarksService::DEFAULT_INDEX,
                               nameStr, &newId);
     NS_ENSURE_SUCCESS(rv, rv);
     // TODO -- set bookmark keyword to keyword and description to keywordDesc.
-#else
-    nsCOMPtr<nsIRDFResource> itemRes;
-
-    // XXX We don't know for sure how Opera deals with IDN hostnames in URL.
-    // Assuming it's in UTF-8 is rather safe because it covers two cases 
-    // (UTF-8 and ASCII) out of three cases (the last is a non-UTF-8
-    // multibyte encoding).
-    rv = aBMS->CreateBookmarkInContainer(nameStr.get(), 
-                                         NS_ConvertUTF8toUTF16(url).get(), 
-                                         NS_ConvertUTF8toUTF16(keyword).get(), 
-                                         keywordDesc.get(), 
-                                         nsnull, 
-                                         nsnull,
-                                         keywordsFolder,
-                                         -1, 
-                                         getter_AddRefs(itemRes));
-#endif
   }
   while (1);
   
   return rv;
-}
-#endif
-
-#ifndef MOZ_PLACES_BOOKMARKS
-void
-nsOperaProfileMigrator::ClearToolbarFolder(nsIBookmarksService* aBookmarksService, nsIRDFResource* aToolbarFolder)
-{
-  // If we're here, it means the user's doing a _replace_ import which means
-  // clear out the content of this folder, and replace it with the new content
-  nsCOMPtr<nsIRDFContainer> ctr(do_CreateInstance("@mozilla.org/rdf/container;1"));
-  nsCOMPtr<nsIRDFDataSource> bmds(do_QueryInterface(aBookmarksService));
-  ctr->Init(bmds, aToolbarFolder);
-
-  nsCOMPtr<nsISimpleEnumerator> e;
-  ctr->GetElements(getter_AddRefs(e));
-
-  PRBool hasMore;
-  e->HasMoreElements(&hasMore);
-  while (hasMore) {
-    nsCOMPtr<nsIRDFResource> b;
-    e->GetNext(getter_AddRefs(b));
-
-    ctr->RemoveElement(b, PR_FALSE);
-
-    e->HasMoreElements(&hasMore);
-  }
 }
 #endif
 
@@ -1335,15 +1248,9 @@ typedef enum { EntryType_BOOKMARK, EntryType_FOLDER } EntryType;
 
 nsresult
 nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream, 
-#ifdef MOZ_PLACES_BOOKMARKS
                                              PRInt64 aParent,
                                              PRInt64 aToolbar,
                                              nsINavBookmarksService* aBMS)
-#else
-                                             nsIRDFResource* aParent, 
-                                             nsIRDFResource* aToolbar,
-                                             nsIBookmarksService* aBMS)
-#endif
 {
   nsresult rv;
   PRBool moreData = PR_FALSE;
@@ -1396,12 +1303,8 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
       // Assuming it's in UTF-8 is rather safe because it covers two cases 
       // (UTF-8 and ASCII) out of three cases (the last is a non-UTF-8
       // multibyte encoding).
-#ifndef MOZ_PLACES_BOOKMARKS
-      nsCOMPtr<nsIRDFResource> itemRes;
-#endif
       if (entryType == EntryType_BOOKMARK) {
         if (!name.IsEmpty() && !url.IsEmpty()) {
-#ifdef MOZ_PLACES_BOOKMARKS
           nsCOMPtr<nsIURI> uri;
           rv = NS_NewURI(getter_AddRefs(uri), url);
           if (NS_FAILED(rv))
@@ -1412,19 +1315,6 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
                                     name, &id);
           if (NS_FAILED(rv))
             continue;
-#else
-          rv = aBMS->CreateBookmarkInContainer(name.get(), 
-                                               NS_ConvertUTF8toUTF16(url).get(), 
-                                               keyword.get(), 
-                                               description.get(), 
-                                               nsnull, 
-                                               nsnull,
-                                               onToolbar ? aToolbar : aParent, 
-                                               -1, 
-                                               getter_AddRefs(itemRes));
-          if (NS_FAILED(rv))
-            continue;
-#endif
           name.Truncate();
           url.Truncate();
           keyword.Truncate();
@@ -1434,22 +1324,12 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
       }
       else if (entryType == EntryType_FOLDER) {
         if (!name.IsEmpty()) {
-#ifdef MOZ_PLACES_BOOKMARKS
           PRInt64 newFolder;
           rv = aBMS->CreateFolder(onToolbar ? aToolbar : aParent,
                                   name, nsINavBookmarksService::DEFAULT_INDEX, &newFolder);
           if (NS_FAILED(rv)) 
             continue;
           rv = ParseBookmarksFolder(aStream, newFolder, aToolbar, aBMS);
-#else
-          rv = aBMS->CreateFolderInContainer(name.get(), 
-                                             onToolbar ? aToolbar : aParent, 
-                                             -1, 
-                                             getter_AddRefs(itemRes));
-          if (NS_FAILED(rv)) 
-            continue;
-          rv = ParseBookmarksFolder(aStream, itemRes, aToolbar, aBMS);
-#endif
           name.Truncate();
         }
       }

@@ -345,7 +345,7 @@ static OSStatus
 CreatePathFromRectsProc(UInt16 aMessage, RgnHandle aRegion, const Rect* aRect,
                         void* aData)
 {
-  CGContextRef context = NS_STATIC_CAST(CGContextRef, aData);
+  CGContextRef context = static_cast<CGContextRef>(aData);
 
   if (aMessage == kQDRegionToRectsMsgParse)
   {

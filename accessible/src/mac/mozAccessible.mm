@@ -328,7 +328,7 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
   //
   // get the native root accessible, and tell it to return its first parent unignored accessible.
   nsRefPtr<nsRootAccessible> root(mGeckoAccessible->GetRootAccessible());
-  id nativeParent = GetNativeFromGeckoAccessible(NS_STATIC_CAST(nsIAccessible*, root));
+  id nativeParent = GetNativeFromGeckoAccessible(static_cast<nsIAccessible*>(root));
   NSAssert1 (nativeParent, @"!!! we can't find a parent for %@", self);
   
   return GetClosestInterestingAccessible(nativeParent);
@@ -510,7 +510,7 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
 
 - (NSWindow*)window
 {
-  nsAccessibleWrap *accWrap = NS_STATIC_CAST (nsAccessibleWrap*, mGeckoAccessible);
+  nsAccessibleWrap *accWrap = static_cast<nsAccessibleWrap*>(mGeckoAccessible);
   NSWindow *nativeWindow = nil;
   accWrap->GetNativeWindow ((void**)&nativeWindow);
   

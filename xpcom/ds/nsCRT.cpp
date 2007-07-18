@@ -81,19 +81,19 @@ char* nsCRT::strtok(char* string, const char* delims, char* *newStr)
     delimTable[i] = '\0';
 
   for (i = 0; delims[i]; i++) {
-    SET_DELIM(delimTable, NS_STATIC_CAST(PRUint8, delims[i]));
+    SET_DELIM(delimTable, static_cast<PRUint8>(delims[i]));
   }
   NS_ASSERTION(delims[i] == '\0', "too many delimiters");
 
   // skip to beginning
-  while (*str && IS_DELIM(delimTable, NS_STATIC_CAST(PRUint8, *str))) {
+  while (*str && IS_DELIM(delimTable, static_cast<PRUint8>(*str))) {
     str++;
   }
   result = str;
 
   // fix up the end of the token
   while (*str) {
-    if (IS_DELIM(delimTable, NS_STATIC_CAST(PRUint8, *str))) {
+    if (IS_DELIM(delimTable, static_cast<PRUint8>(*str))) {
       *str++ = '\0';
       break;
     }
@@ -205,6 +205,21 @@ PRUint32 nsCRT::HashCode(const char* str, PRUint32* resultingStrLen)
   return h;
 }
 
+PRUint32 nsCRT::HashCode(const char* start, PRUint32 length)
+{
+  PRUint32 h = 0;
+  const char* s = start;
+  const char* end = start + length;
+
+  unsigned char c;
+  while ( s < end ) {
+    c = *s++;
+    ADD_TO_HASHVAL(h, c);
+  }
+
+  return h;
+}
+
 PRUint32 nsCRT::HashCode(const PRUnichar* str, PRUint32* resultingStrLen)
 {
   PRUint32 h = 0;
@@ -221,92 +236,107 @@ PRUint32 nsCRT::HashCode(const PRUnichar* str, PRUint32* resultingStrLen)
   return h;
 }
 
-PRUint32 nsCRT::HashCodeAsUTF8(const PRUnichar* str, PRUint32* resultingStrLen)
+PRUint32 nsCRT::HashCodeAsUTF8(const PRUnichar* start, PRUint32 length)
 {
   PRUint32 h = 0;
-  const PRUnichar* s = str;
+  const PRUnichar* s = start;
+  const PRUnichar* end = start + length;
 
-  {
-    PRUint16 W1 = 0;      // the first UTF-16 word in a two word tuple
-    PRUint32 U = 0;       // the current char as UCS-4
-    int code_length = 0;  // the number of bytes in the UTF-8 sequence for the current char
+  PRUint16 W1 = 0;      // the first UTF-16 word in a two word tuple
+  PRUint32 U = 0;       // the current char as UCS-4
+  int code_length = 0;  // the number of bytes in the UTF-8 sequence for the current char
 
-    PRUint16 W;
-    while ( (W = *s++) )
-      {
-          /*
-           * On the fly, decoding from UTF-16 (and/or UCS-2) into UTF-8 as per
-           *  http://www.ietf.org/rfc/rfc2781.txt
-           *  http://www.ietf.org/rfc/rfc3629.txt
-           */
+  PRUint16 W;
+  while ( s < end )
+    {
+      W = *s++;
+        /*
+         * On the fly, decoding from UTF-16 (and/or UCS-2) into UTF-8 as per
+         *  http://www.ietf.org/rfc/rfc2781.txt
+         *  http://www.ietf.org/rfc/rfc3629.txt
+         */
 
-        if ( !W1 )
-          {
-            if ( !IS_SURROGATE(W) )
-              {
-                U = W;
-                if ( W <= 0x007F )
-                  code_length = 1;
-                else if ( W <= 0x07FF )
-                  code_length = 2;
-                else
-                  code_length = 3;
-              }
-            else if ( NS_IS_HIGH_SURROGATE(W) )
+      if ( !W1 )
+        {
+          if ( !IS_SURROGATE(W) )
+            {
+              U = W;
+              if ( W <= 0x007F )
+                code_length = 1;
+              else if ( W <= 0x07FF )
+                code_length = 2;
+              else
+                code_length = 3;
+            }
+          else if ( NS_IS_HIGH_SURROGATE(W) && s < end)
+            {
               W1 = W;
-#ifdef DEBUG
-            else NS_ERROR("Got low surrogate but no previous high surrogate");
-#endif
-          }
-        else
-          {
-              // as required by the standard, this code is careful to
-              //  throw out illegal sequences
 
-            if ( NS_IS_LOW_SURROGATE(W) )
-              {
-                U = SURROGATE_TO_UCS4(W1, W);
-                NS_ASSERTION(IS_VALID_CHAR(U), "How did this happen?");
-                code_length = 4;
-              }
-#ifdef DEBUG
-            else NS_ERROR("High surrogate not followed by low surrogate");
-#endif
-            W1 = 0;
-          }
+              continue;
+            }
+          else
+            {
+              // Treat broken characters as the Unicode replacement
+              // character 0xFFFD
+              U = 0xFFFD;
+
+              code_length = 3;
+
+              NS_WARNING("Got low surrogate but no previous high surrogate");
+            }
+        }
+      else
+        {
+          // as required by the standard, this code is careful to
+          // throw out illegal sequences
+
+          if ( NS_IS_LOW_SURROGATE(W) )
+            {
+              U = SURROGATE_TO_UCS4(W1, W);
+              NS_ASSERTION(IS_VALID_CHAR(U), "How did this happen?");
+              code_length = 4;
+            }
+          else
+            {
+              // Treat broken characters as the Unicode replacement
+              // character 0xFFFD
+              U = 0xFFFD;
+
+              code_length = 3;
+
+              NS_WARNING("High surrogate not followed by low surrogate");
+            }
+
+          W1 = 0;
+        }
 
 
-        if ( code_length > 0 )
-          {
-            static const PRUint16 sBytePrefix[5]  = { 0x0000, 0x0000, 0x00C0, 0x00E0, 0x00F0  };
-            static const PRUint16 sShift[5]       = { 0, 0, 6, 12, 18 };
+      static const PRUint16 sBytePrefix[5]  = { 0x0000, 0x0000, 0x00C0, 0x00E0, 0x00F0  };
+      static const PRUint16 sShift[5]       = { 0, 0, 6, 12, 18 };
 
-              /*
-               *  Unlike the algorithm in http://www.ietf.org/rfc/rfc3629.txt
-               *  we must calculate the bytes in left to right order so that
-               *  our hash result matches what the narrow version would calculate
-               *  on an already UTF-8 string.
-               */
+      /*
+       *  Unlike the algorithm in
+       *  http://www.ietf.org/rfc/rfc3629.txt we must calculate the
+       *  bytes in left to right order so that our hash result
+       *  matches what the narrow version would calculate on an
+       *  already UTF-8 string.
+       */
 
-              // hash the first (and often, only, byte)
-            ADD_TO_HASHVAL(h, (sBytePrefix[code_length] |
-                               (U>>sShift[code_length])));
+      // hash the first (and often, only, byte)
+      ADD_TO_HASHVAL(h, (sBytePrefix[code_length] | (U>>sShift[code_length])));
 
-              // an unrolled loop for hashing any remaining bytes in this sequence
-            switch ( code_length )
-              {  // falling through in each case
-                case 4:   ADD_TO_HASHVAL(h, (0x80 | ((U>>12) & 0x003F)));
-                case 3:   ADD_TO_HASHVAL(h, (0x80 | ((U>>6 ) & 0x003F)));
-                case 2:   ADD_TO_HASHVAL(h, (0x80 | ( U      & 0x003F)));
-                default:  code_length = 0;
-                  break;
-              }
-          }
-      }
-  }
+      // an unrolled loop for hashing any remaining bytes in this
+      // sequence
+      switch ( code_length )
+        {  // falling through in each case
+          case 4:   ADD_TO_HASHVAL(h, (0x80 | ((U>>12) & 0x003F)));
+          case 3:   ADD_TO_HASHVAL(h, (0x80 | ((U>>6 ) & 0x003F)));
+          case 2:   ADD_TO_HASHVAL(h, (0x80 | ( U      & 0x003F)));
+          default:  code_length = 0;
+            break;
+        }
+    }
 
-  if ( resultingStrLen )
-    *resultingStrLen = (s-str)-1;
   return h;
 }
 

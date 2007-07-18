@@ -134,7 +134,7 @@ EmbedStream::OpenStream(const char *aBaseURI, const char *aContentType)
 
   // create a new input stream channel
   rv = NS_NewInputStreamChannel(getter_AddRefs(mChannel), uri,
-				NS_STATIC_CAST(nsIInputStream *, this),
+				static_cast<nsIInputStream *>(this),
 				nsDependentCString(aContentType));
   if (NS_FAILED(rv))
     return rv;
@@ -203,7 +203,7 @@ EmbedStream::AppendToStream(const char *aData, int aLen)
   nsCOMPtr<nsIRequest> request = do_QueryInterface(mChannel); 
   rv = mStreamListener->OnDataAvailable(request,
 					NULL,
-					NS_STATIC_CAST(nsIInputStream *, this),
+					static_cast<nsIInputStream *>(this),
 					mOffset, /* offset */
 					aLen); /* len */
   // move our counter

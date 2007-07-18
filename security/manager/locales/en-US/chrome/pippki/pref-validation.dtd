@@ -42,6 +42,7 @@
 <!ENTITY  validation.managecrls.button            "Manage CRLs...">
 <!ENTITY  validation.managecrls.accesskey         "M">
 <!ENTITY  validation.crlmanager.label             "Manage CRLs">
+<!ENTITY  validation.crlmanager.description       "These Certificate Revocation Lists (CRL) are stored in your certificate database:">
 <!ENTITY  validation.crlname.label                "Name">
 <!ENTITY  validation.crllastupdate.label          "Last Update">
 <!ENTITY  validation.crlnextupdate.label          "Next Update">

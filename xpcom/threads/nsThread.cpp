@@ -44,6 +44,7 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "prlog.h"
+#include "nsThreadUtilsInternal.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo *sLog = PR_NewLogModule("nsThread");
@@ -51,6 +52,8 @@ static PRLogModuleInfo *sLog = PR_NewLogModule("nsThread");
 #define LOG(args) PR_LOG(sLog, PR_LOG_DEBUG, args)
 
 NS_DECL_CI_INTERFACE_GETTER(nsThread)
+
+nsIThreadObserver* nsThread::sGlobalObserver;
 
 //-----------------------------------------------------------------------------
 // Because we do not have our own nsIFactory, we have to implement nsIClassInfo
@@ -135,7 +138,7 @@ NS_INTERFACE_MAP_BEGIN(nsThread)
   NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIThread)
   if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
-    foundInterface = NS_STATIC_CAST(nsIClassInfo*, &sThreadClassInfo);
+    foundInterface = static_cast<nsIClassInfo*>(&sThreadClassInfo);
   } else
 NS_INTERFACE_MAP_END
 NS_IMPL_CI_INTERFACE_GETTER4(nsThread, nsIThread, nsIThreadInternal,
@@ -231,7 +234,7 @@ private:
 /*static*/ void
 nsThread::ThreadFunc(void *arg)
 {
-  nsThread *self = NS_STATIC_CAST(nsThread *, arg);  // strong reference
+  nsThread *self = static_cast<nsThread *>(arg);  // strong reference
   self->mThread = PR_GetCurrentThread();
 
   // Inform the ThreadManager
@@ -464,6 +467,11 @@ nsThread::ProcessNextEvent(PRBool mayWait, PRBool *result)
 
   NS_ENSURE_STATE(PR_GetCurrentThread() == mThread);
 
+  PRBool notifyGlobalObserver = (sGlobalObserver != nsnull);
+  if (notifyGlobalObserver) 
+    sGlobalObserver->OnProcessNextEvent(this, mayWait && !ShuttingDown(),
+                                        mRunningEvent);
+
   nsCOMPtr<nsIThreadObserver> obs = mObserver;
   if (obs)
     obs->OnProcessNextEvent(this, mayWait && !ShuttingDown(), mRunningEvent);
@@ -488,6 +496,9 @@ nsThread::ProcessNextEvent(PRBool mayWait, PRBool *result)
 
   if (obs)
     obs->AfterProcessNextEvent(this, mRunningEvent);
+
+  if (notifyGlobalObserver && sGlobalObserver)
+    sGlobalObserver->AfterProcessNextEvent(this, mRunningEvent);
 
   return rv;
 }
@@ -616,5 +627,20 @@ nsThreadSyncDispatch::Run()
     // unblock the origin thread
     mOrigin->Dispatch(this, NS_DISPATCH_NORMAL);
   }
+  return NS_OK;
+}
+
+nsresult
+NS_SetGlobalThreadObserver(nsIThreadObserver* aObserver)
+{
+  if (aObserver && nsThread::sGlobalObserver) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsThread::sGlobalObserver = aObserver;
   return NS_OK;
 }

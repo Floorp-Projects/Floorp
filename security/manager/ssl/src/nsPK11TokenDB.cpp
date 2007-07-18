@@ -320,7 +320,7 @@ NS_IMETHODIMP nsPK11Token::CheckPassword(const PRUnichar *password, PRBool *_ret
   PRInt32 prerr;
   NS_ConvertUTF16toUTF8 aUtf8Password(password);
   srv = PK11_CheckUserPassword(mSlot, 
-                  NS_CONST_CAST(char *, aUtf8Password.get()));
+                  const_cast<char *>(aUtf8Password.get()));
   if (srv != SECSuccess) {
     *_retval =  PR_FALSE;
     prerr = PR_GetError();
@@ -345,7 +345,7 @@ NS_IMETHODIMP nsPK11Token::InitPassword(const PRUnichar *initialPassword)
     SECStatus status;
 
     NS_ConvertUTF16toUTF8 aUtf8InitialPassword(initialPassword);
-    status = PK11_InitPin(mSlot, "", NS_CONST_CAST(char*, aUtf8InitialPassword.get()));
+    status = PK11_InitPin(mSlot, "", const_cast<char*>(aUtf8InitialPassword.get()));
     if (status == SECFailure) { rv = NS_ERROR_FAILURE; goto done; }
 
 done:
@@ -406,8 +406,8 @@ NS_IMETHODIMP nsPK11Token::ChangePassword(const PRUnichar *oldPassword, const PR
   NS_ConvertUTF16toUTF8 aUtf8OldPassword(oldPassword);
   NS_ConvertUTF16toUTF8 aUtf8NewPassword(newPassword);
   rv = PK11_ChangePW(mSlot, 
-               NS_CONST_CAST(char *, aUtf8OldPassword.get()), 
-               NS_CONST_CAST(char *, aUtf8NewPassword.get()));
+               const_cast<char *>(aUtf8OldPassword.get()), 
+               const_cast<char *>(aUtf8NewPassword.get()));
   return (rv == SECSuccess) ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -497,7 +497,7 @@ FindTokenByName(const PRUnichar* tokenName, nsIPK11Token **_retval)
   nsresult rv = NS_OK;
   PK11SlotInfo *slot = 0;
   NS_ConvertUTF16toUTF8 aUtf8TokenName(tokenName);
-  slot = PK11_FindSlotByName(NS_CONST_CAST(char*, aUtf8TokenName.get()));
+  slot = PK11_FindSlotByName(const_cast<char*>(aUtf8TokenName.get()));
   if (!slot) { rv = NS_ERROR_FAILURE; goto done; }
 
   *_retval = new nsPK11Token(slot);

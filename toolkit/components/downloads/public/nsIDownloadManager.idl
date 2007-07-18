@@ -169,7 +169,8 @@ interface nsIDownloadManager : nsISupports {
    * @param aParent   The parent, or opener, of the front end (optional).
    * @param aID The unique ID of the download to be selected.
    * @see nsIWindowWatcher::openWindow for behavior of null aParent.
-   * @throws NS_ERROR_FAILUIRE if the download is not in-progress.
+   * @throws NS_ERROR_FAILURE if the Download Manager does not know about the
+   *         download.
    */
   void open(in nsIDOMWindow aParent, in unsigned long aID);
 

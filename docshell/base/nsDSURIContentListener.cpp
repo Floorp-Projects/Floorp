@@ -142,7 +142,7 @@ nsDSURIContentListener::DoContent(const char* aContentType,
     }
 
     if (loadFlags & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI) {
-        nsCOMPtr<nsIDOMWindowInternal> domWindow = do_GetInterface(NS_STATIC_CAST(nsIDocShell*, mDocShell));
+        nsCOMPtr<nsIDOMWindowInternal> domWindow = do_GetInterface(static_cast<nsIDocShell*>(mDocShell));
         NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
         domWindow->Focus();
     }

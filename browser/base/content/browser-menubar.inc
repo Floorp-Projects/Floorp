@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,7 +49,7 @@
                           label="&tabCmd.label;" accesskey="&tabCmd.accesskey;"/>
                 <menuitem label="&openLocationCmd.label;" accesskey="&openLocationCmd.accesskey;" key="focusURLBar" command="Browser:OpenLocation"/>
                 <menuitem label="&openFileCmd.label;" accesskey="&openFileCmd.accesskey;" key="openFileKb" command="Browser:OpenFile"/>
-                <menuitem id="menu_closeWindow" hidden="true" command="cmd_closeWindow" key="key_closeWindow" label="&closeWindow.label;"/>
+                <menuitem id="menu_closeWindow" hidden="true" command="cmd_closeWindow" key="key_closeWindow" label="&closeWindow.label;" accesskey="&closeWindow.accesskey;"/>
                 <menuitem id="menu_close" label="&closeCmd.label;" key="key_close" accesskey="&closeCmd.accesskey;" command="cmd_close"/>
                 <menuseparator/>
                 <menuitem label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" key="key_savePage" command="Browser:SavePage"/>
@@ -322,7 +323,6 @@
               </menupopup>
             </menu>
 
-#ifdef MOZ_PLACES
             <menu id="history-menu"
                   oncommand="var url = event.target.getAttribute('statustext'); if (url) openUILink(url, event, false, true);"
                   onclick="checkForMiddleClick(this, event);"
@@ -331,7 +331,7 @@
               <menupopup id="goPopup"
                          type="places"
                          onpopupshowing="HistoryMenu.onPopupShowing(this);"
-                         place="place:beginTime=-2592000000000&amp;beginTimeRef=1&amp;endTime=7200000000&amp;endTimeRef=2&amp;type=0&amp;sort=4&amp;maxResults=10">
+                         place="place:type=0&amp;sort=4&amp;maxResults=10">
                 <menuitem label="&backCmd.label;"
 #ifdef XP_MACOSX
                           key="goBackKb2"
@@ -366,94 +366,7 @@
                           key="key_gotoHistory"/>
               </menupopup>
             </menu>
-#else
-            <menu id="go-menu" label="&historyMenu.label;" accesskey="&historyMenu.accesskey;" 
-                  oncommand="var url = event.target.getAttribute('statustext'); if (url) openUILink(url, event, false, true);"
-                  onclick="checkForMiddleClick(this, event);">
 
-              <menupopup id="goPopup" onpopupshowing="updateGoMenu(event, this);" onpopuphiding="onGoMenuHidden(event);">
-                <menuitem label="&backCmd.label;"
-#ifdef XP_MACOSX
-                          key="goBackKb2"
-#else
-                          key="goBackKb"
-#endif
-                          oncommand="BrowserBack(event, true)"
-                          onclick="checkForMiddleClick(this, event);">
-                  <observes element="Browser:Back" attribute="disabled" />
-                </menuitem>
-                <menuitem label="&forwardCmd.label;" 
-#ifdef XP_MACOSX
-                          key="goForwardKb2"
-#else
-                          key="goForwardKb"
-#endif
-                          oncommand="BrowserForward(event, true)"
-                          onclick="checkForMiddleClick(this, event);">
-                  <observes element="Browser:Forward" attribute="disabled" />
-                </menuitem>
-
-                <menuitem label="&goHomeCmd.label;"
-                          command="Browser:Home"
-                          key="goHome"/>
-                <menuseparator id="startHistorySeparator"/>
-                <menuseparator hidden="true" id="endHistorySeparator"/>
-                <menu id="historyUndoMenu" label="&historyUndoMenu.label;" disabled="true">
-                  <menupopup id="historyUndoPopup" onpopupshowing="HistoryMenu.populateUndoSubmenu();"/>
-                </menu>
-                <menuseparator id="endUndoSeparator"/>
-                <menuitem observes="viewHistorySidebar" label="&historyShowSidebarCmd.label;"
-                          key="key_gotoHistory"/>
-              </menupopup>
-            </menu>
-#endif
-
-#ifndef MOZ_PLACES_BOOKMARKS
-            <menu id="bookmarks-menu" label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;"
-                  datasources="rdf:bookmarks rdf:files" 
-                  ref="NC:BookmarksRoot" flags="dont-test-empty"
-                  template='bookmarks-template'
-                  infer="forward-proxy"
-                  onpopupshowing="BookmarksMenu.onShowMenu(event.target)"
-                  onpopuphidden="BookmarksMenu.onHideMenu(event.target)"
-                  oncommand="BookmarksMenu.loadBookmark(event, event.target, this.database)"
-                  onclick="BookmarksMenu.loadBookmarkMiddleClick(event, this.database)"
-                  ondraggesture="nsDragAndDrop.startDrag(event, BookmarksMenuDNDObserver)"
-                  ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDNDObserver); event.stopPropagation()"
-                  ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.stopPropagation()"
-                  ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDNDObserver); event.stopPropagation()"
-                  ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDNDObserver); event.stopPropagation()">
-              <menupopup id="menu_BookmarksPopup" contextmenu='bookmarks-context-menu'>
-                <menuitem key="addBookmarkAsKb"
-                          label="&addCurPageAsCmd.label;"
-                          command="Browser:AddBookmarkAs"/>
-                <menuitem id="subscribeToPageMenuitem"
-                          label="&subscribeToPageMenuitem.label;"
-                          oncommand="return FeedHandler.subscribeToFeed(null, event);"
-                          onclick="checkForMiddleClick(this, event);"
-                          disabled="true"/>
-                <menu id="subscribeToPageMenupopup"
-                      label="&subscribeToPageMenupopup.label;"
-                      hidden="true">
-                  <menupopup id="subscribeToPageSubmenuMenupopup" 
-                             onpopupshowing="return FeedHandler.buildFeedList(event.target);" 
-                             oncommand="return FeedHandler.subscribeToFeed(null, event);"
-                             onclick="checkForMiddleClick(this, event);"/>
-                </menu>
-                <menuitem id="bookmarkAllCmd"
-# Accel+Shift+A-F are reserved on GTK2
-#ifndef MOZ_WIDGET_GTK2
-                          key="bookmarkAllTabsKb"
-#endif
-                          label="&bookmarkAllCmd.label;"
-                          command="Browser:BookmarkAllTabs"/>
-                <menuitem key="manBookmarkKb" 
-                          label="&manBookmarksCmd.label;"
-                          oncommand="toOpenWindowByType('bookmarks:manager', 'chrome://browser/content/bookmarks/bookmarksManager.xul');"/>
-                <menuseparator/>
-              </menupopup>
-            </menu>
-#else
   <menu id="bookmarksMenu" 
         label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;"
         ondragenter="PlacesMenuDNDController.onBookmarksMenuDragEnter(event);"
@@ -490,7 +403,6 @@
       <menuseparator builder="start"/>
     </menupopup>
   </menu>
-#endif
         
             <menu id="tools-menu" label="&toolsMenu.label;" accesskey="&toolsMenu.accesskey;">
               <menupopup id="menu_ToolsPopup">
@@ -533,106 +445,3 @@
 #endif
           <menu id="helpMenu" />
         </menubar>
-
-#ifndef MOZ_PLACES_BOOKMARKS
-  <template id='bookmarks-template' xmlns:nc="http://home.netscape.com/NC-rdf#">
-    <rule parent="hbox" rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-      <toolbarseparator uri="rdf:*"
-                        rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
-    </rule>
-    <rule parent="hbox" rdf:type="http://home.netscape.com/NC-rdf#Livemark">
-      <toolbarbutton type="menu" class="bookmark-item" uri="rdf:*" editable="true"
-                     rdf:type="http://home.netscape.com/NC-rdf#Folder"
-                     label="rdf:http://home.netscape.com/NC-rdf#Name"
-                     livemark="true"
-                     chromedir="&locale.dir;">
-#ifdef XP_MACOSX
-        <menupopup/>
-#else
-        <menupopup contextmenu="bookmarks-context-menu"/>
-#endif
-      </toolbarbutton>
-    </rule>
-    <rule parent="hbox" iscontainer="true">
-      <toolbarbutton type="menu" class="bookmark-item" uri="rdf:*" editable="true"
-                     rdf:type="http://home.netscape.com/NC-rdf#Folder"
-                     label="rdf:http://home.netscape.com/NC-rdf#Name">
-#ifdef XP_MACOSX
-        <menupopup/>
-#else
-        <menupopup contextmenu="bookmarks-context-menu"/>
-#endif
-      </toolbarbutton>
-    </rule>
-    <rule parent="hbox" rdf:type="http://home.netscape.com/NC-rdf#MicsumBookmark">
-      <toolbarbutton class="bookmark-item-microsummarized bookmark-item"
-                     uri="rdf:*" editable="true" 
-                     status="rdf:http://home.netscape.com/WEB-rdf#status"
-                     rdf:type="http://home.netscape.com/NC-rdf#Bookmark"
-                     image="rdf:http://home.netscape.com/NC-rdf#Icon"
-                     statustext="rdf:http://home.netscape.com/NC-rdf#URL"
-                     tooltip="btTooltip"
-                     label="rdf:http://home.netscape.com/NC-rdf#GeneratedTitle"/>
-    </rule>
-    <rule parent="hbox">
-      <toolbarbutton class="bookmark-item" uri="rdf:*" editable="true" 
-                     status="rdf:http://home.netscape.com/WEB-rdf#status"
-                     rdf:type="http://home.netscape.com/NC-rdf#Bookmark"
-                     image="rdf:http://home.netscape.com/NC-rdf#Icon"
-                     statustext="rdf:http://home.netscape.com/NC-rdf#URL"
-                     tooltip="btTooltip"
-                     label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-    </rule>
-    <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-      <menupopup> 
-        <menuseparator uri="rdf:*" />
-      </menupopup>
-    </rule>
-    <rule rdf:type="http://home.netscape.com/NC-rdf#Livemark">
-      <menupopup>
-        <menu class="menu-iconic bookmark-item" uri="rdf:*"
-              label="rdf:http://home.netscape.com/NC-rdf#Name"
-              type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-              livemark="true">
-#ifdef XP_MACOSX
-          <menupopup/>
-#else
-          <menupopup contextmenu="bookmarks-context-menu"/>
-#endif
-        </menu>
-      </menupopup>
-    </rule>
-    <rule iscontainer="true">
-      <menupopup>
-        <menu class="menu-iconic bookmark-item" uri="rdf:*"
-              label="rdf:http://home.netscape.com/NC-rdf#Name"
-              type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-#ifdef XP_MACOSX
-        <menupopup/>
-#else
-        <menupopup contextmenu="bookmarks-context-menu"/>
-#endif
-        </menu>
-      </menupopup>
-    </rule>
-    <rule rdf:type="http://home.netscape.com/NC-rdf#MicsumBookmark">
-      <menupopup>
-        <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
-                  label="rdf:http://home.netscape.com/NC-rdf#GeneratedTitle" 
-                  image="rdf:http://home.netscape.com/NC-rdf#Icon"
-                  status="rdf:http://home.netscape.com/WEB-rdf#status"
-                  statustext="rdf:http://home.netscape.com/NC-rdf#URL"/>
-      </menupopup>
-    </rule>
-    <rule>
-      <menupopup>
-        <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
-                  label="rdf:http://home.netscape.com/NC-rdf#Name" 
-                  image="rdf:http://home.netscape.com/NC-rdf#Icon"
-                  status="rdf:http://home.netscape.com/WEB-rdf#status"
-                  statustext="rdf:http://home.netscape.com/NC-rdf#URL"/>
-      </menupopup>
-    </rule>
-  </template>
-
-#endif

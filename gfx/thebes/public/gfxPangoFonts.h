@@ -131,8 +131,7 @@ public:
                                     const Parameters *aParams, PRUint32 aFlags);
 
     gfxPangoFont *GetFontAt(PRInt32 i) {
-        return NS_STATIC_CAST(gfxPangoFont*, 
-                              NS_STATIC_CAST(gfxFont*, mFonts[i]));
+        return static_cast<gfxPangoFont*>(static_cast<gfxFont*>(mFonts[i]));
     }
 
 protected:
@@ -140,8 +139,15 @@ protected:
 
     // ****** Textrun glyph conversion helpers ******
 
+    /**
+     * Fill in the glyph-runs for the textrun.
+     * @param aTake8BitPath the text contains only characters below 0x100
+     * (TEXT_IS_8BIT can return false when the characters are all below 0x100
+     * but stored in UTF16 format)
+     */
     void InitTextRun(gfxTextRun *aTextRun, const gchar *aUTF8Text,
-                     PRUint32 aUTF8Length, PRUint32 aUTF8HeaderLength);
+                     PRUint32 aUTF8Length, PRUint32 aUTF8HeaderLength,
+                     PRBool aTake8BitPath);
     // Returns NS_ERROR_FAILURE if there's a missing glyph
     nsresult SetGlyphs(gfxTextRun *aTextRun, gfxPangoFont *aFont,
                        const gchar *aUTF8, PRUint32 aUTF8Length,
