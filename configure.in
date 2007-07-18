@@ -4117,7 +4117,7 @@ MOZ_URL_CLASSIFIER=
 MOZ_USE_NATIVE_UCONV=
 MOZ_V1_STRING_ABI=
 MOZ_VIEW_SOURCE=1
-MOZ_WEBSERVICES=1
+MOZ_WEBSERVICES=
 MOZ_XMLEXTRAS=1
 MOZ_XPFE_COMPONENTS=1
 MOZ_XPINSTALL=1
@@ -5239,10 +5239,10 @@ MOZ_ARG_DISABLE_BOOL(xmlextras,
 dnl ========================================================
 dnl Webservices
 dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(webservices,
-[  --disable-webservices Disable Webservices/SOAP support ],
-    MOZ_WEBSERVICES=,
-    MOZ_WEBSERVICES=1 )
+MOZ_ARG_ENABLE_BOOL(webservices,
+[  --enable-webservices Enable Webservices/SOAP support ],
+    MOZ_WEBSERVICES=1,
+    MOZ_WEBSERVICES= )
 
 dnl ========================================================
 dnl Pref extensions (autoconfig and system-pref)
