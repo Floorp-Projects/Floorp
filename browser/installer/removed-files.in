@@ -467,6 +467,9 @@ searchplugins/zoznam-sk.gif
 components/sidebar.xpt
 components/xmlextras.xpt
 components/xpcom.xpt
+components/bookmarks.xpt
+components/history.xpt
+components/nsBookmarkTransactionManager.js
 extensions/talkback@mozilla.org/
 extensions/talkback@mozilla.org/install.rdf
 extensions/talkback@mozilla.org/chrome.manifest
