@@ -215,7 +215,7 @@ protected:
                                      const nsRect& aBorderArea,
                                      const nsStyleBackground& aColor,
                                      const nsStyleBorder& aBorder,
-                                     PRInt16 aTheRadius[4],
+                                     nscoord aTheRadius[4],
                                      PRBool aCanPaintNonWhite);
 
   static nscolor MakeBevelColor(PRIntn whichSide, PRUint8 style,
@@ -230,100 +230,6 @@ protected:
                            const nsPoint aPoints[],
                            PRInt32 aNumPoints,
                            nsRect* aGap);
-
-};
-
-
-
-/** ---------------------------------------------------
- *  Class QBCurve, a quadratic bezier curve, used to implement the rounded rectangles
- *	@update 3/26/99 dwc
- */
-class QBCurve
-{
-
-public:
-	nsFloatPoint	mAnc1;
-	nsFloatPoint	mCon;
-	nsFloatPoint mAnc2;
-
-  QBCurve() {mAnc1.x=0;mAnc1.y=0;mCon=mAnc2=mAnc1;}
-  void SetControls(nsFloatPoint &aAnc1,nsFloatPoint &aCon,nsFloatPoint &aAnc2) { mAnc1 = aAnc1; mCon = aCon; mAnc2 = aAnc2;}
-  void SetPoints(float a1x,float a1y,float acx,float acy,float a2x,float a2y) {mAnc1.MoveTo(a1x,a1y),mCon.MoveTo(acx,acy),mAnc2.MoveTo(a2x,a2y);}
-
-/** ---------------------------------------------------
- *  Divide a Quadratic curve into line segments if it is not smaller than a certain size
- *  else it is so small that it can be approximated by 2 lineto calls
- *  @param aRenderingContext -- The RenderingContext to use to draw with
- *  @param aPointArray[] -- A list of points we can put line calls into instead of drawing.  If null, lines are drawn
- *  @param aCurInex -- a pointer to an Integer that tells were to put the points into the array, incremented when finished
- *	@update 3/26/99 dwc
- */
-  void SubDivide(nsIRenderingContext *aRenderingContext,nsPoint  aPointArray[],PRInt32 *aCurIndex);
-
-/** ---------------------------------------------------
- *  Divide a Quadratic Bezier curve at the mid-point
- *	@update 3/26/99 dwc
- *  @param aCurve1 -- Curve 1 as a result of the division
- *  @param aCurve2 -- Curve 2 as a result of the division
- */
-  void MidPointDivide(QBCurve *A,QBCurve *B);
-};
-
-
-/** ---------------------------------------------------
- *  Class RoundedRect, A class to encapsulate all the rounded rect functionality, 
- *  which are based on the QBCurve
- *	@update 4/13/99 dwc
- */
-class RoundedRect
-{
-
-public:
-  PRInt32 mRoundness[4];
-
-  PRBool  mDoRound;
-
-  PRInt32 mLeft;
-  PRInt32 mRight;
-  PRInt32 mTop;
-  PRInt32 mBottom;
-
-  /** 
-   *  Construct a rounded rectangle object
-   *  @update 4/19/99
-   */
-  void  RoundRect() {mRoundness[0]=0;}
-
-  /**
-   *  Set the curves boundaries and then break it up into the curve pieces for rendering
-   *  @update 4/13/99 dwc
-   *  @param aLeft -- Left side of bounding box
-   *  @param aTop -- Top side of bounding box
-   *  @param aWidth -- Width of bounding box
-   *  @param aHeight -- Height of bounding box
-   *  @param aRadius -- radius for the rounding
-   */
-  void  Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRInt16 aRadius[4],PRInt16 aNumTwipPerPix);
-
-
-  /**
-   *  Calculate the inset of a curve based on a border
-   *  @update 4/13/99 dwc
-   *  @param aLeft -- Left side of bounding box
-   *  @param aTop -- Top side of bounding box
-   */
-  void  CalcInsetCurves(QBCurve &aULCurve,QBCurve &aURCurve,QBCurve &aLLCurve,QBCurve &aLRCurve,nsMargin &aBorder);
-
-  /** ---------------------------------------------------
-   *  set the passed in curves to the rounded borders of the rectangle
-   *	@update 4/13/99 dwc
-   *  @param aULCurve -- upperleft curve
-   *  @param aURCurve -- upperright curve
-   *  @param aLRCurve -- lowerright curve
-   *  @param aLLCurve -- lowerleft curve
-   */
-  void GetRoundedBorders(QBCurve &aULCurve,QBCurve &aURCurve,QBCurve &aLLCurve,QBCurve &aLRCurve);
 
 };
 
