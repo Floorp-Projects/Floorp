@@ -56,6 +56,7 @@ bin\res\effective_tld_names.dat
 bin\xpicleanup.exe
 bin\LICENSE
 bin\README.txt
+bin\sqlite3.dll
 
 ; [Components]
 bin\components\alerts.xpt

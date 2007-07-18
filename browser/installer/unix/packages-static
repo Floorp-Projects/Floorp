@@ -53,6 +53,7 @@ bin/plugins/libnullplugin.so
 bin/res/cmessage.txt
 bin/res/effective_tld_names.dat
 bin/xpicleanup
+bin/sqlite3.so
 
 ; [Components]
 bin/components/accessibility.xpt
