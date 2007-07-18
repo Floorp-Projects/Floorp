@@ -998,6 +998,21 @@ public:
         PRUint32    mEndOffset;
     };
 
+    class GlyphRunOffsetComparator {
+    public:
+        PRBool Equals(const GlyphRun& a,
+                      const GlyphRun& b) const
+        {
+            return a.mCharacterOffset == b.mCharacterOffset;
+        }
+
+        PRBool LessThan(const GlyphRun& a,
+                        const GlyphRun& b) const
+        {
+            return a.mCharacterOffset < b.mCharacterOffset;
+        }
+    };
+
     friend class GlyphRunIterator;
     friend class FontSelector;
 
@@ -1013,9 +1028,18 @@ public:
      * only during initialization when font substitution has been computed.
      * Call it before setting up the glyphs for the characters in this run;
      * SetMissingGlyph requires that the correct glyphrun be installed.
+     *
+     * If aForceNewRun, a new glyph run will be added, even if the
+     * previously added run uses the same font.  If glyph runs are
+     * added out of strictly increasing aStartCharIndex order (via
+     * force), then SortGlyphRuns must be called after all glyph runs
+     * are added before any further operations are performed with this
+     * TextRun.
      */
-    nsresult AddGlyphRun(gfxFont *aFont, PRUint32 aStartCharIndex);
+    nsresult AddGlyphRun(gfxFont *aFont, PRUint32 aStartCharIndex, PRBool aForceNewRun = PR_FALSE);
     void ResetGlyphRuns() { mGlyphRuns.Clear(); }
+    void SortGlyphRuns();
+
     // Call the following glyph-setters during initialization or during reshaping
     // only. It is OK to overwrite existing data for a character.
     /**

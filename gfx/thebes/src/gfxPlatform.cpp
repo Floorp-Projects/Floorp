@@ -287,11 +287,12 @@ AppendGenericFontFromPref(nsString& aFonts, const char *aLangGroup, const char *
 }
 
 void
-gfxPlatform::GetPrefFonts(const char *aLangGroup, nsString& aFonts)
+gfxPlatform::GetPrefFonts(const char *aLangGroup, nsString& aFonts, PRBool aAppendUnicode)
 {
     aFonts.Truncate();
 
     AppendGenericFontFromPref(aFonts, aLangGroup, nsnull);
-    AppendGenericFontFromPref(aFonts, "x-unicode", nsnull);
+    if (aAppendUnicode)
+        AppendGenericFontFromPref(aFonts, "x-unicode", nsnull);
 }
 
