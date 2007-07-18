@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for correct handling of aStartStruct parameter to nsRuleNode::Compute*Data</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <style type="text/css" id="stylesheet"></style>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=216456">Mozilla Bug 216456</a>
+<p id="display">
+  <span id="base"></span>
+  <span id="test"></span>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var gNoComputedStyle = {
+  "-moz-force-broken-image-icon": true,
+  "-moz-border-end": true, // NB: shorthand
+  "-moz-border-end-color": true,
+  "-moz-border-end-style": true,
+  "-moz-border-end-width": true,
+  "-moz-border-start": true, // NB: shorthand
+  "-moz-border-start-color": true,
+  "-moz-border-start-style": true,
+  "-moz-border-start-width": true,
+  "-moz-margin-end": true,
+  "-moz-margin-start": true,
+  "-moz-padding-end": true,
+  "-moz-padding-start": true,
+  "background-position": true,
+  "content": true,
+  "page-break-after": true,
+  "page-break-before": true,
+  "quotes": true,
+  "clip-path": true,
+  "clip-rule": true,
+  "color-interpolation": true,
+  "color-interpolation-filters": true,
+  "dominant-baseline": true,
+  "fill": true,
+  "fill-opacity": true,
+  "fill-rule": true,
+  "filter": true,
+  "flood-color": true,
+  "flood-opacity": true,
+  "marker": true, // NB: shorthand
+  "marker-end": true,
+  "marker-mid": true,
+  "marker-start": true,
+  "mask": true,
+  "pointer-events": true,
+  "shape-rendering": true,
+  "stop-color": true,
+  "stop-opacity": true,
+  "stroke": true,
+  "stroke-dasharray": true,
+  "stroke-dashoffset": true,
+  "stroke-linecap": true,
+  "stroke-linejoin": true,
+  "stroke-miterlimit": true,
+  "stroke-opacity": true,
+  "stroke-width": true,
+  "text-anchor": true,
+  "text-rendering": true,
+};
+
+var gXFailComputed = {
+  // The initial value of -moz-user-select can't be specified and isn't
+  // serialized correctly.
+  "-moz-user-select": true
+};
+
+function xfail_computecheck(prop, roundnum) {
+    return prop in gNoComputedStyle || prop in gXFailComputed;
+}
+
+function xfail_test(prop, roundnum) {
+    return false;
+}
+
+var gStyleSheet = document.getElementById("stylesheet").sheet;
+var gRule1 = gStyleSheet.cssRules[gStyleSheet.insertRule("#base, #test {}", gStyleSheet.cssRules.length)];
+var gRule2 = gStyleSheet.cssRules[gStyleSheet.insertRule("#test {}", gStyleSheet.cssRules.length)];
+
+var gBase = getComputedStyle(document.getElementById("base"), "");
+var gTest = getComputedStyle(document.getElementById("test"), "");
+
+function round(lower_set, higher_set, roundnum) {
+
+  for (var prop in gCSSProperties) {
+    var info = gCSSProperties[prop];
+    if (info.backend_only || info.subproperties)
+      continue;
+    gRule1.style.setProperty(prop, info[lower_set][0], "");
+    gRule2.style.setProperty(prop, info[higher_set][0], "");
+  }
+
+  for (var prop in gCSSProperties) {
+    var info = gCSSProperties[prop];
+    if (info.backend_only || info.subproperties)
+      continue;
+
+    if ("prerequisites" in info) {
+      for (var prereq in info.prerequisites) {
+        gRule2.style.setProperty(prereq, info.prerequisites[prereq], "");
+      }
+    }
+
+    gBase.getPropertyValue(prop);
+    var higher_set_val = gTest.getPropertyValue(prop);
+    gRule2.style.setProperty(prop, info[lower_set][0], "");
+    var lower_set_val = gTest.getPropertyValue(prop);
+    (xfail_computecheck(prop, roundnum) ? todo_isnot : isnot)(higher_set_val, lower_set_val, "initial and other values of " + prop + " are different");
+    gRule2.style.removeProperty(prop);
+    (xfail_test(prop, roundnum) ? todo_is : is)(gTest.getPropertyValue(prop), lower_set_val, prop + " is not touched when its value comes from aStartStruct");
+
+    gRule2.style.setProperty(prop, info[higher_set][0], "");
+    if ("prerequisites" in info) {
+      for (var prereq in info.prerequisites) {
+        gRule2.style.setProperty(prereq, gCSSProperties[prereq][higher_set][0], "");
+      }
+    }
+  }
+}
+
+round("other_values", "initial_values", 1);
+round("initial_values", "other_values", 2);
+
+</script>
+</pre>
+</body>
+</html>

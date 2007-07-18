@@ -494,8 +494,8 @@ DoesRequireBody(CToken* aToken, nsITokenizer* aTokenizer)
         // IE & Nav4x opens up a body for type=text - Bug 66985
         PRInt32 ac = aToken->GetAttributeCount();
         for(PRInt32 i = 0; i < ac; ++i) {
-          CAttributeToken* attr = NS_STATIC_CAST(CAttributeToken*,
-                                                 aTokenizer->GetTokenAt(i));
+          CAttributeToken* attr = static_cast<CAttributeToken*>
+                                             (aTokenizer->GetTokenAt(i));
           const nsSubstring& name = attr->GetKey();
           const nsAString& value = attr->GetValue();
 
@@ -542,7 +542,7 @@ CNavDTD::HandleToken(CToken* aToken, nsIParser* aParser)
   }
 
   nsresult        result   = NS_OK;
-  CHTMLToken*     theToken = NS_STATIC_CAST(CHTMLToken*, aToken);
+  CHTMLToken*     theToken = static_cast<CHTMLToken*>(aToken);
   eHTMLTokenTypes theType  = eHTMLTokenTypes(theToken->GetTokenType());
   eHTMLTags       theTag   = (eHTMLTags)theToken->GetTypeID();
 
@@ -665,7 +665,7 @@ CNavDTD::HandleToken(CToken* aToken, nsIParser* aParser)
               CToken *current = aToken;
               while (current->GetTokenType() != eToken_end ||
                      current->GetTypeID() != theTag) {
-                current = NS_STATIC_CAST(CToken *, mTokenizer->PopToken());
+                current = static_cast<CToken *>(mTokenizer->PopToken());
                 NS_ASSERTION(current, "The tokenizer is not creating good "
                                       "alternate tags");
                 PushIntoMisplacedStack(current);
@@ -868,7 +868,7 @@ CNavDTD::HandleDefaultStartToken(CToken* aToken, eHTMLTags aChildTag,
   if (mParserCommand != eViewFragment) {
     PRBool  theChildAgrees = PR_TRUE;
     PRInt32 theIndex = mBodyContext->GetCount();
-    PRBool  theParentContains = -1;
+    PRBool  theParentContains = PR_FALSE;
 
     do {
       eHTMLTags theParentTag = mBodyContext->TagAt(--theIndex);
@@ -1057,7 +1057,7 @@ CNavDTD::WillHandleStartTag(CToken* aToken, eHTMLTags aTag,
 static void
 PushMisplacedAttributes(nsIParserNode& aNode, nsDeque& aDeque)
 {
-  nsCParserNode& theAttrNode = NS_STATIC_CAST(nsCParserNode &, aNode);
+  nsCParserNode& theAttrNode = static_cast<nsCParserNode &>(aNode);
 
   for (PRInt32 count = aNode.GetAttributeCount(); count > 0; --count) {
     CToken* theAttrToken = theAttrNode.PopAttributeToken();
@@ -1636,7 +1636,7 @@ CNavDTD::HandleEndToken(CToken* aToken)
               // break in such cases. So, let's simulate that effect for
               // compatibility.
               // Ex. <html><body>Hello</P>There</body></html>
-              PRBool theParentContains = -1;
+              PRInt32 theParentContains = -1;
               if (!CanOmit(theParentTag, theChildTag, theParentContains)) {
                 CToken* theStartToken =
                   mTokenAllocator->CreateTokenOfType(eToken_start, theChildTag);
@@ -1836,7 +1836,7 @@ CNavDTD::HandleEntityToken(CToken* aToken)
   nsCParserNode* theNode = mNodeAllocator.CreateNode(aToken, mTokenAllocator);
   NS_ENSURE_TRUE(theNode, NS_ERROR_OUT_OF_MEMORY);
 
-  PRBool theParentContains = -1;
+  PRInt32 theParentContains = -1;
   if (CanOmit(theParentTag, eHTMLTag_entity, theParentContains)) {
     eHTMLTags theCurrTag = (eHTMLTags)aToken->GetTypeID();
     HandleOmittedTag(aToken, theCurrTag, theParentTag, theNode);
@@ -1938,7 +1938,7 @@ CNavDTD::HandleDocTypeDeclToken(CToken* aToken)
 {
   NS_PRECONDITION(nsnull != aToken, kNullToken);
 
-  CDoctypeDeclToken* theToken = NS_STATIC_CAST(CDoctypeDeclToken*, aToken);
+  CDoctypeDeclToken* theToken = static_cast<CDoctypeDeclToken*>(aToken);
   nsAutoString docTypeStr(theToken->GetStringValue());
   // XXX Doesn't this count the newlines twice?
   if (!IsParserInDocWrite()) {
@@ -2113,7 +2113,7 @@ CNavDTD::IsInlineElement(PRInt32 aTagID, PRInt32 aParentID) const
  */
 PRBool
 CNavDTD::CanPropagate(eHTMLTags aParent, eHTMLTags aChild,
-                      PRBool aParentContains)
+                      PRInt32 aParentContains)
 {
   PRBool result = PR_FALSE;
   if (aParentContains == -1) {
@@ -2161,7 +2161,7 @@ CNavDTD::CanPropagate(eHTMLTags aParent, eHTMLTags aChild,
  *  @return  PR_TRUE if given tag can contain other tags
  */
 PRBool
-CNavDTD::CanOmit(eHTMLTags aParent, eHTMLTags aChild, PRBool& aParentContains)
+CNavDTD::CanOmit(eHTMLTags aParent, eHTMLTags aChild, PRInt32& aParentContains)
 {
   eHTMLTags theAncestor = gHTMLElements[aChild].mExcludingAncestor;
   if (eHTMLTag_unknown != theAncestor && HasOpenContainer(theAncestor)) {
@@ -2437,7 +2437,7 @@ CNavDTD::OpenHTML(const nsCParserNode *aNode)
 
   // Don't push more than one HTML tag into the stack.
   if (mBodyContext->GetCount() == 0)  {
-    mBodyContext->Push(NS_CONST_CAST(nsCParserNode*, aNode), 0, PR_FALSE); 
+    mBodyContext->Push(const_cast<nsCParserNode*>(aNode), 0, PR_FALSE); 
   }
 
   return result;
@@ -2474,7 +2474,7 @@ CNavDTD::OpenBody(const nsCParserNode *aNode)
     START_TIMER();
 
     if (!HasOpenContainer(eHTMLTag_body)) {
-      mBodyContext->Push(NS_CONST_CAST(nsCParserNode*, aNode), 0, PR_FALSE);
+      mBodyContext->Push(const_cast<nsCParserNode*>(aNode), 0, PR_FALSE);
       mTokenizer->PrependTokens(mMisplacedContent);
     }
   }
@@ -2605,7 +2605,7 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
 
     // For residual style tags rs_tag will be true and hence
     // the body context will hold an extra reference to the node.
-    mBodyContext->Push(NS_CONST_CAST(nsCParserNode*, aNode), aStyleStack, rs_tag); 
+    mBodyContext->Push(const_cast<nsCParserNode*>(aNode), aStyleStack, rs_tag); 
   }
 
   return result;
@@ -2983,7 +2983,7 @@ CNavDTD::AddHeadContent(nsIParserNode *aNode)
         mHeadContainerPosition = mBodyContext->GetCount();
       }
 
-      mBodyContext->Push(NS_STATIC_CAST(nsCParserNode*, aNode), nsnull,
+      mBodyContext->Push(static_cast<nsCParserNode*>(aNode), nsnull,
                          PR_FALSE);
 
       // Note: The head context is already opened.

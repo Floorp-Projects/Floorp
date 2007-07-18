@@ -237,7 +237,7 @@ nsPlainTextSerializer::GetLastBool(const nsVoidArray& aStack)
   if (size == 0) {
     return PR_FALSE;
   }
-  return (aStack.ElementAt(size-1) != NS_REINTERPRET_CAST(void*, PR_FALSE));
+  return (aStack.ElementAt(size-1) != reinterpret_cast<void*>(PR_FALSE));
 }
 
 void
@@ -245,7 +245,7 @@ nsPlainTextSerializer::SetLastBool(nsVoidArray& aStack, PRBool aValue)
 {
   PRUint32 size = aStack.Count();
   if (size > 0) {
-    aStack.ReplaceElementAt(NS_REINTERPRET_CAST(void*, aValue), size-1);
+    aStack.ReplaceElementAt(reinterpret_cast<void*>(aValue), size-1);
   }
   else {
     NS_ERROR("There is no \"Last\" value");
@@ -255,7 +255,7 @@ nsPlainTextSerializer::SetLastBool(nsVoidArray& aStack, PRBool aValue)
 void
 nsPlainTextSerializer::PushBool(nsVoidArray& aStack, PRBool aValue)
 {
-    aStack.AppendElement(NS_REINTERPRET_CAST(void*, aValue));
+    aStack.AppendElement(reinterpret_cast<void*>(aValue));
 }
 
 PRBool
@@ -264,7 +264,7 @@ nsPlainTextSerializer::PopBool(nsVoidArray& aStack)
   PRBool returnValue = PR_FALSE;
   PRUint32 size = aStack.Count();
   if (size > 0) {
-    returnValue = (aStack.ElementAt(size-1) != NS_REINTERPRET_CAST(void*, PR_FALSE));
+    returnValue = (aStack.ElementAt(size-1) != reinterpret_cast<void*>(PR_FALSE));
     aStack.RemoveElementAt(size-1);
   }
   return returnValue;

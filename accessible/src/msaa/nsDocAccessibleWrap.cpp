@@ -85,12 +85,12 @@ STDMETHODIMP nsDocAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
   *ppv = NULL;
 
   if (IID_ISimpleDOMDocument == iid)
-    *ppv = NS_STATIC_CAST(ISimpleDOMDocument*, this);
+    *ppv = static_cast<ISimpleDOMDocument*>(this);
 
   if (NULL == *ppv)
     return nsHyperTextAccessibleWrap::QueryInterface(iid, ppv);
     
-  (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
+  (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
   return S_OK;
 }
 
@@ -127,7 +127,7 @@ STDMETHODIMP nsDocAccessibleWrap::get_accChild(
     if (xpAccessible) {
       IAccessible *msaaAccessible;
       xpAccessible->GetNativeInterface((void**)&msaaAccessible);
-      *ppdispChild = NS_STATIC_CAST(IDispatch*, msaaAccessible);
+      *ppdispChild = static_cast<IDispatch*>(msaaAccessible);
       return S_OK;
     }
     else if (mDocument) {
@@ -194,11 +194,9 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireAnchorJumpEvent()
   }
 
   nsCOMPtr<nsIAccessible> accessible = GetFirstAvailableAccessible(focusNode, PR_TRUE);
-  nsCOMPtr<nsPIAccessible> privateAccessible = do_QueryInterface(accessible);
-  if (privateAccessible) {
-    privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_SCROLLING_START,
-                                        accessible, nsnull);
-  }
+  nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_SCROLLING_START,
+                           accessible);
+
   return NS_OK;
 }
 

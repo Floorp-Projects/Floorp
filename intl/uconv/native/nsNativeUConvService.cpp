@@ -378,7 +378,7 @@ NativeUConvService::GetNativeConverter(const char* from,
 
     //nsRefPtr<IConvAdaptor> ucl = new IConvAdaptor();
     IConvAdaptor *adaptor=new IConvAdaptor();
-    nsCOMPtr<nsISupports> ucl(NS_STATIC_CAST(nsIUnicodeDecoder*,adaptor));
+    nsCOMPtr<nsISupports> ucl(static_cast<nsIUnicodeDecoder*>(adaptor));
     if (!ucl)
         return NS_ERROR_OUT_OF_MEMORY;
 

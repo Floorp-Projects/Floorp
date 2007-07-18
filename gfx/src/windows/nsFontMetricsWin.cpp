@@ -1499,7 +1499,7 @@ PR_STATIC_CALLBACK(PLHashEntry*) fontmap_AllocEntry(void *pool, const void *key)
 PR_STATIC_CALLBACK(void) fontmap_FreeEntry(void *pool, PLHashEntry *he, PRUint32 flag)
 {
   if (flag == HT_FREE_ENTRY)  {
-    nsFontInfo *fontInfo = NS_STATIC_CAST(nsFontInfo *, he);
+    nsFontInfo *fontInfo = static_cast<nsFontInfo *>(he);
     if (fontInfo->mCCMap && (fontInfo->mCCMap != nsFontMetricsWin::gEmptyCCMap))
       FreeCCMap(fontInfo->mCCMap); 
 #ifdef MOZ_MATHML
@@ -1825,7 +1825,7 @@ nsFontMetricsWin::GetCCMAP(HDC aDC, const char* aShortName,
     if (he) {
       // an identical map has already been added
       delete name;
-      info = NS_STATIC_CAST(nsFontInfo *, he);
+      info = static_cast<nsFontInfo *>(he);
       if (aCharset) {
         *aCharset = info->mCharset;
       }
@@ -1889,7 +1889,7 @@ nsFontMetricsWin::GetCCMAP(HDC aDC, const char* aShortName,
   NS_ASSERTION(hep, "bad code");
   he = PL_HashTableRawAdd(gFontMaps, hep, hash, name, nsnull);
   if (he) {
-    info = NS_STATIC_CAST(nsFontInfo*, he);
+    info = static_cast<nsFontInfo*>(he);
     he->value = info;    // so PL_HashTableLookup returns an nsFontInfo*
     info->mType = fontType;
     info->mCharset = charset;
@@ -3005,7 +3005,7 @@ PR_STATIC_CALLBACK(PLHashEntry*) fontweight_AllocEntry(void *pool, const void *k
 PR_STATIC_CALLBACK(void) fontweight_FreeEntry(void *pool, PLHashEntry *he, PRUint32 flag)
 {
   if (flag == HT_FREE_ENTRY)  {
-    nsFontWeightEntry *fontWeightEntry = NS_STATIC_CAST(nsFontWeightEntry *, he);
+    nsFontWeightEntry *fontWeightEntry = static_cast<nsFontWeightEntry *>(he);
     delete fontWeightEntry;
   }
 }
@@ -3290,7 +3290,7 @@ nsFontMetricsWin::LookForFontWeightTable(HDC aDC, const nsString& aName)
   he = *hep;
   if (he) {
     // an identical fontweight has already been added
-    weightEntry = NS_STATIC_CAST(nsFontWeightEntry *, he);
+    weightEntry = static_cast<nsFontWeightEntry *>(he);
     return weightEntry->mWeightTable;
   }
 
@@ -3301,7 +3301,7 @@ nsFontMetricsWin::LookForFontWeightTable(HDC aDC, const nsString& aName)
    // Store it in font weight HashTable.
   he = PL_HashTableRawAdd(gFontWeights, hep, hash, &searchEntry, nsnull);
   if (he) {   
-    weightEntry = NS_STATIC_CAST(nsFontWeightEntry*, he);
+    weightEntry = static_cast<nsFontWeightEntry*>(he);
     weightEntry->mFontName = low;
     weightEntry->mWeightTable = weightTable;
     he->key = weightEntry;

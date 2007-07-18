@@ -40,7 +40,6 @@
 #include "nsSVGLength.h"
 #include "nsSVGAnimatedString.h"
 #include "nsCOMPtr.h"
-#include "nsISVGSVGElement.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsSVGAnimatedPreserveAspectRatio.h"
@@ -360,7 +359,7 @@ nsSVGImageElement::ConstructPath(gfxContext *aCtx)
 
   GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
 
-  if (width == 0 || height == 0)
+  if (width <= 0 || height <= 0)
     return;
 
   aCtx->Rectangle(gfxRect(x, y, width, height));

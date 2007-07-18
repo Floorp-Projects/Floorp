@@ -38,53 +38,25 @@
 #ifndef nsIMenuFrame_h___
 #define nsIMenuFrame_h___
 
-// {2281EFC8-A8BA-4a73-8CF7-DB4EECA5EAEC}
+#include "nsISupports.h"
+
+// this interface exists solely because native themes need to call into it.
+// Only menu frames should implement it
+
+// {212521C8-1509-4F41-ADDB-6A0B9356770F}
 #define NS_IMENUFRAME_IID \
-{ 0x2281efc8, 0xa8ba, 0x4a73, { 0x8c, 0xf7, 0xdb, 0x4e, 0xec, 0xa5, 0xea, 0xec } }
-
-class nsIMenuParent;
-class nsIDOMElement;
-class nsIDOMKeyEvent;
-
-enum nsMenuType {
-  eMenuType_Normal = 0,
-  eMenuType_Checkbox = 1,
-  eMenuType_Radio = 2
-};
+{ 0x212521C8, 0x1509, 0x4F41, { 0xAD, 0xDB, 0x6A, 0x0B, 0x93, 0x56, 0x77, 0x0F } }
 
 class nsIMenuFrame : public nsISupports {
 
 public:
+
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMENUFRAME_IID)
 
-  NS_IMETHOD ActivateMenu(PRBool aActivate) = 0;
-  NS_IMETHOD SelectMenu(PRBool aFlag) = 0;
-  NS_IMETHOD OpenMenu(PRBool aFlag) = 0;
-
-  NS_IMETHOD MenuIsOpen(PRBool& aResult) = 0;
-  NS_IMETHOD MenuIsContainer(PRBool& aResult) = 0;
-  NS_IMETHOD MenuIsChecked(PRBool& aResult) = 0;
-  NS_IMETHOD MenuIsDisabled(PRBool& aResult) = 0;
-
-  NS_IMETHOD SelectFirstItem() = 0;
-
-  NS_IMETHOD Escape(PRBool& aHandledFlag) = 0;
-  NS_IMETHOD Enter() = 0;
-  NS_IMETHOD ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFlag) = 0;
-  NS_IMETHOD KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag) = 0;
-
-  virtual nsIMenuParent *GetMenuParent() = 0;
-  virtual nsIFrame *GetMenuChild() = 0;
- 
-  NS_IMETHOD GetRadioGroupName(nsString &aName) = 0;
-  NS_IMETHOD GetMenuType(nsMenuType &aType) = 0;
-
-  NS_IMETHOD MarkAsGenerated() = 0;
-
-  NS_IMETHOD UngenerateMenu() = 0;
-
-  NS_IMETHOD GetActiveChild(nsIDOMElement** aResult)=0;
-  NS_IMETHOD SetActiveChild(nsIDOMElement* aChild)=0;
+  virtual PRBool IsOpen() = 0;
+  virtual PRBool IsMenu() = 0;
+  virtual PRBool IsOnMenuBar() = 0;
+  virtual PRBool IsOnActiveMenuBar() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIMenuFrame, NS_IMENUFRAME_IID)

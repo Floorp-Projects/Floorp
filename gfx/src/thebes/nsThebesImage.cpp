@@ -336,7 +336,7 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
         return NS_OK;
     }
 
-    nsThebesRenderingContext *thebesRC = NS_STATIC_CAST(nsThebesRenderingContext*, &aContext);
+    nsThebesRenderingContext *thebesRC = static_cast<nsThebesRenderingContext*>(&aContext);
     gfxContext *ctx = thebesRC->Thebes();
 
 #if 0
@@ -383,7 +383,7 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
     }
 
     // Reject over-wide or over-tall images.
-    if (!AllowedImageSize(destRect.size.width, destRect.size.height))
+    if (!AllowedImageSize(destRect.size.width + 1, destRect.size.height + 1))
         return NS_ERROR_FAILURE;
 
     nsRefPtr<gfxPattern> pat;
@@ -583,22 +583,11 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
     return NS_OK;
 }
 
-/* This function is going away; it's been replaced by ThebesDrawTile above. */
-NS_IMETHODIMP
-nsThebesImage::DrawTile(nsIRenderingContext &aContext,
-                        nsIDrawingSurface *aSurface,
-                        PRInt32 aSXOffset, PRInt32 aSYOffset,
-                        PRInt32 aPadX, PRInt32 aPadY,
-                        const nsRect &aTileRect)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /* This is only used by the GIF decoder, via gfxImageFrame::DrawTo */
 NS_IMETHODIMP
 nsThebesImage::DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-    nsThebesImage *dstThebesImage = NS_STATIC_CAST(nsThebesImage*, aDstImage);
+    nsThebesImage *dstThebesImage = static_cast<nsThebesImage*>(aDstImage);
 
     nsRefPtr<gfxContext> dst = new gfxContext(dstThebesImage->ThebesSurface());
 

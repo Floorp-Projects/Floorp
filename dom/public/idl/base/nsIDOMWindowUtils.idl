@@ -45,7 +45,9 @@
  * getInterface on a DOMWindow.
  */
 
-[scriptable, uuid(76cdfff8-6f13-43e8-9ed4-36066cd83742)]
+interface nsIDOMElement;
+
+[scriptable, uuid(1F313394-73AB-41BF-8307-9FC5DA8A481E)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -126,4 +128,13 @@ interface nsIDOMWindowUtils : nsISupports {
                     in long aKeyCode,
                     in long aCharCode,
                     in long aModifiers);
+
+  /**
+   * Focus the element aElement. The element should be in the same document
+   * that the window is displaying. Pass null to blur the element, if any,
+   * that currently has focus, and focus the document.
+   *
+   * @param aElement the element to focus
+   */
+  void focus(in nsIDOMElement aElement);
 };

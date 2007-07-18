@@ -49,6 +49,7 @@ XPIDLSRCS = \
 	nsICommandLine.idl \
 	nsICommandLineRunner.idl \
 	nsICommandLineHandler.idl \
+	nsICommandLineValidator.idl \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

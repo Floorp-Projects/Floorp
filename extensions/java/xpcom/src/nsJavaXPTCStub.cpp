@@ -250,7 +250,7 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
   // All Java objects support weak references
   if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference)))
   {
-    *aInstancePtr = NS_STATIC_CAST(nsISupportsWeakReference*, master);
+    *aInstancePtr = static_cast<nsISupportsWeakReference*>(master);
     NS_ADDREF(master);
     return NS_OK;
   }
@@ -816,7 +816,7 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
       if (!aParamInfo.IsOut()) {  // 'in'
         ptr = aVariant.val.p;
       } else if (aVariant.val.p) {  // 'inout' & 'out'
-        void** variant = NS_STATIC_CAST(void**, aVariant.val.p);
+        void** variant = static_cast<void**>(aVariant.val.p);
         ptr = *variant;
       }
 
@@ -858,9 +858,9 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     {
       nsID* iid = nsnull;
       if (!aParamInfo.IsOut()) {  // 'in'
-        iid = NS_STATIC_CAST(nsID*, aVariant.val.p);
+        iid = static_cast<nsID*>(aVariant.val.p);
       } else if (aVariant.val.p) {  // 'inout' & 'out'
-        nsID** variant = NS_STATIC_CAST(nsID**, aVariant.val.p);
+        nsID** variant = static_cast<nsID**>(aVariant.val.p);
         iid = *variant;
       }
 
@@ -900,9 +900,9 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     {
       nsISupports* xpcom_obj = nsnull;
       if (!aParamInfo.IsOut()) {  // 'in'
-        xpcom_obj = NS_STATIC_CAST(nsISupports*, aVariant.val.p);
+        xpcom_obj = static_cast<nsISupports*>(aVariant.val.p);
       } else if (aVariant.val.p) {  // 'inout' & 'out'
-        nsISupports** variant = NS_STATIC_CAST(nsISupports**, aVariant.val.p);
+        nsISupports** variant = static_cast<nsISupports**>(aVariant.val.p);
         xpcom_obj = *variant;
       }
 
@@ -972,7 +972,7 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
         break;
       }
 
-      nsString* str = NS_STATIC_CAST(nsString*, aVariant.val.p);
+      nsString* str = static_cast<nsString*>(aVariant.val.p);
       if (!str) {
         rv = NS_ERROR_FAILURE;
         break;
@@ -1003,7 +1003,7 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
         break;
       }
 
-      nsCString* str = NS_STATIC_CAST(nsCString*, aVariant.val.p);
+      nsCString* str = static_cast<nsCString*>(aVariant.val.p);
       if (!str) {
         rv = NS_ERROR_FAILURE;
         break;
@@ -1027,7 +1027,7 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_VOID:
     {
       if (!aParamInfo.IsOut()) {  // 'in'
-        aJValue.j = NS_REINTERPRET_CAST(jlong, aVariant.val.p);
+        aJValue.j = reinterpret_cast<jlong>(aVariant.val.p);
         aMethodSig.Append('J');
       } else {  // 'inout' & 'out'
         if (aVariant.val.p) {
@@ -1282,7 +1282,7 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
         if (tag == nsXPTType::T_DOUBLE)
           *((double *) aVariant.val.p) = value;
         else
-          *((PRUint64 *) aVariant.val.p) = NS_STATIC_CAST(PRUint64, value);
+          *((PRUint64 *) aVariant.val.p) = static_cast<PRUint64>(value);
       }
     }
     break;
@@ -1333,7 +1333,7 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
         str = (jstring) env->GetObjectArrayElement((jobjectArray) aJValue.l, 0);
       }
 
-      char** variant = NS_STATIC_CAST(char**, aVariant.val.p);
+      char** variant = static_cast<char**>(aVariant.val.p);
       if (str) {
         // Get string buffer
         const char* char_ptr = env->GetStringUTFChars(str, nsnull);
@@ -1379,7 +1379,7 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
         str = (jstring) env->GetObjectArrayElement((jobjectArray) aJValue.l, 0);
       }
 
-      PRUnichar** variant = NS_STATIC_CAST(PRUnichar**, aVariant.val.p);
+      PRUnichar** variant = static_cast<PRUnichar**>(aVariant.val.p);
       if (str) {
         // Get string buffer
         const jchar* wchar_ptr = env->GetStringChars(str, nsnull);
@@ -1429,7 +1429,7 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
         str = (jstring) env->GetObjectArrayElement((jobjectArray) aJValue.l, 0);
       }
 
-      nsID** variant = NS_STATIC_CAST(nsID**, aVariant.val.p);
+      nsID** variant = static_cast<nsID**>(aVariant.val.p);
       if (str) {
         // Get string buffer
         const char* char_ptr = env->GetStringUTFChars(str, nsnull);
@@ -1526,7 +1526,7 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
 
       // For 'inout' params, if the resulting xpcom value is different than the
       // one passed in, then we must release the incoming xpcom value.
-      nsISupports** variant = NS_STATIC_CAST(nsISupports**, aVariant.val.p);
+      nsISupports** variant = static_cast<nsISupports**>(aVariant.val.p);
       if (aParamInfo.IsIn() && *variant) {
         nsCOMPtr<nsISupports> in = do_QueryInterface(*variant);
         nsCOMPtr<nsISupports> out = do_QueryInterface((nsISupports*) xpcom_obj);
@@ -1535,7 +1535,7 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
         }
       }
 
-      *(NS_STATIC_CAST(void**, aVariant.val.p)) = xpcom_obj;
+      *(static_cast<void**>(aVariant.val.p)) = xpcom_obj;
     }
     break;
 
@@ -1549,7 +1549,7 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
       }
 
       jstring jstr = (jstring) aJValue.l;
-      nsString* variant = NS_STATIC_CAST(nsString*, aVariant.val.p);
+      nsString* variant = static_cast<nsString*>(aVariant.val.p);
       
       if (jstr) {
         // Get string buffer
@@ -1579,7 +1579,7 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
       }
 
       jstring jstr = (jstring) aJValue.l;
-      nsCString* variant = NS_STATIC_CAST(nsCString*, aVariant.val.p);
+      nsCString* variant = static_cast<nsCString*>(aVariant.val.p);
       
       if (jstr) {
         // Get string buffer
@@ -1602,7 +1602,7 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_VOID:
     {
       if (aParamInfo.IsRetval()) {  // 'retval'
-        aVariant.val.p = NS_REINTERPRET_CAST(void*, aJValue.j);
+        aVariant.val.p = reinterpret_cast<void*>(aJValue.j);
       } else if (aJValue.l) {  // 'inout' & 'out'
         env->GetLongArrayRegion((jlongArray) aJValue.l, 0, 1,
                                 (jlong*) aVariant.val.p);

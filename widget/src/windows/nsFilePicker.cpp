@@ -129,7 +129,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
   // suppress blur events
   if (mParentWidget) {
     nsIWidget *tmp = mParentWidget;
-    nsWindow *parent = NS_STATIC_CAST(nsWindow *, tmp);
+    nsWindow *parent = static_cast<nsWindow *>(tmp);
     parent->SuppressBlurEvents(PR_TRUE);
   }
 
@@ -391,7 +391,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
   }
   if (mParentWidget) {
     nsIWidget *tmp = mParentWidget;
-    nsWindow *parent = NS_STATIC_CAST(nsWindow *, tmp);
+    nsWindow *parent = static_cast<nsWindow *>(tmp);
     parent->SuppressBlurEvents(PR_FALSE);
   }
 

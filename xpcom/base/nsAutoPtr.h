@@ -60,7 +60,7 @@ class nsAutoPtr
       begin_assignment()
         {
           assign(0);
-          return NS_REINTERPRET_CAST(void**, &mRawPtr);
+          return reinterpret_cast<void**>(&mRawPtr);
         }
 
       void
@@ -192,7 +192,7 @@ class nsAutoPtr
           // This is not intended to be used by clients.  See |address_of|
           // below.
         {
-          return NS_CONST_CAST(nsAutoPtr<T>*, this);
+          return const_cast<nsAutoPtr<T>*>(this);
         }
 
 #else // CANT_RESOLVE_CPP_CONST_AMBIGUITY
@@ -227,10 +227,10 @@ class nsAutoPtr
       StartAssignment()
         {
 #ifndef NSCAP_FEATURE_INLINE_STARTASSIGNMENT
-          return NS_REINTERPRET_CAST(T**, begin_assignment());
+          return reinterpret_cast<T**>(begin_assignment());
 #else
           assign(0);
-          return NS_REINTERPRET_CAST(T**, &mRawPtr);
+          return reinterpret_cast<T**>(&mRawPtr);
 #endif
         }
   };
@@ -297,7 +297,7 @@ class nsAutoPtrGetterTransfers
 
       operator void**()
         {
-          return NS_REINTERPRET_CAST(void**, mTargetSmartPtr.StartAssignment());
+          return reinterpret_cast<void**>(mTargetSmartPtr.StartAssignment());
         }
 
       operator T**()
@@ -336,7 +336,7 @@ inline
 NSCAP_BOOL
 operator==( const nsAutoPtr<T>& lhs, const nsAutoPtr<U>& rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) == NS_STATIC_CAST(const U*, rhs.get());
+    return static_cast<const T*>(lhs.get()) == static_cast<const U*>(rhs.get());
   }
 
 
@@ -345,7 +345,7 @@ inline
 NSCAP_BOOL
 operator!=( const nsAutoPtr<T>& lhs, const nsAutoPtr<U>& rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) != NS_STATIC_CAST(const U*, rhs.get());
+    return static_cast<const T*>(lhs.get()) != static_cast<const U*>(rhs.get());
   }
 
 
@@ -356,7 +356,7 @@ inline
 NSCAP_BOOL
 operator==( const nsAutoPtr<T>& lhs, const U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) == NS_STATIC_CAST(const U*, rhs);
+    return static_cast<const T*>(lhs.get()) == static_cast<const U*>(rhs);
   }
 
 template <class T, class U>
@@ -364,7 +364,7 @@ inline
 NSCAP_BOOL
 operator==( const U* lhs, const nsAutoPtr<T>& rhs )
   {
-    return NS_STATIC_CAST(const U*, lhs) == NS_STATIC_CAST(const T*, rhs.get());
+    return static_cast<const U*>(lhs) == static_cast<const T*>(rhs.get());
   }
 
 template <class T, class U>
@@ -372,7 +372,7 @@ inline
 NSCAP_BOOL
 operator!=( const nsAutoPtr<T>& lhs, const U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) != NS_STATIC_CAST(const U*, rhs);
+    return static_cast<const T*>(lhs.get()) != static_cast<const U*>(rhs);
   }
 
 template <class T, class U>
@@ -380,7 +380,7 @@ inline
 NSCAP_BOOL
 operator!=( const U* lhs, const nsAutoPtr<T>& rhs )
   {
-    return NS_STATIC_CAST(const U*, lhs) != NS_STATIC_CAST(const T*, rhs.get());
+    return static_cast<const U*>(lhs) != static_cast<const T*>(rhs.get());
   }
 
   // To avoid ambiguities caused by the presence of builtin |operator==|s
@@ -396,7 +396,7 @@ inline
 NSCAP_BOOL
 operator==( const nsAutoPtr<T>& lhs, U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) == NS_CONST_CAST(const U*, rhs);
+    return static_cast<const T*>(lhs.get()) == const_cast<const U*>(rhs);
   }
 
 template <class T, class U>
@@ -404,7 +404,7 @@ inline
 NSCAP_BOOL
 operator==( U* lhs, const nsAutoPtr<T>& rhs )
   {
-    return NS_CONST_CAST(const U*, lhs) == NS_STATIC_CAST(const T*, rhs.get());
+    return const_cast<const U*>(lhs) == static_cast<const T*>(rhs.get());
   }
 
 template <class T, class U>
@@ -412,7 +412,7 @@ inline
 NSCAP_BOOL
 operator!=( const nsAutoPtr<T>& lhs, U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) != NS_CONST_CAST(const U*, rhs);
+    return static_cast<const T*>(lhs.get()) != const_cast<const U*>(rhs);
   }
 
 template <class T, class U>
@@ -420,7 +420,7 @@ inline
 NSCAP_BOOL
 operator!=( U* lhs, const nsAutoPtr<T>& rhs )
   {
-    return NS_CONST_CAST(const U*, lhs) != NS_STATIC_CAST(const T*, rhs.get());
+    return const_cast<const U*>(lhs) != static_cast<const T*>(rhs.get());
   }
 #endif
 
@@ -434,7 +434,7 @@ NSCAP_BOOL
 operator==( const nsAutoPtr<T>& lhs, NSCAP_Zero* rhs )
     // specifically to allow |smartPtr == 0|
   {
-    return NS_STATIC_CAST(const void*, lhs.get()) == NS_REINTERPRET_CAST(const void*, rhs);
+    return static_cast<const void*>(lhs.get()) == reinterpret_cast<const void*>(rhs);
   }
 
 template <class T>
@@ -443,7 +443,7 @@ NSCAP_BOOL
 operator==( NSCAP_Zero* lhs, const nsAutoPtr<T>& rhs )
     // specifically to allow |0 == smartPtr|
   {
-    return NS_REINTERPRET_CAST(const void*, lhs) == NS_STATIC_CAST(const void*, rhs.get());
+    return reinterpret_cast<const void*>(lhs) == static_cast<const void*>(rhs.get());
   }
 
 template <class T>
@@ -452,7 +452,7 @@ NSCAP_BOOL
 operator!=( const nsAutoPtr<T>& lhs, NSCAP_Zero* rhs )
     // specifically to allow |smartPtr != 0|
   {
-    return NS_STATIC_CAST(const void*, lhs.get()) != NS_REINTERPRET_CAST(const void*, rhs);
+    return static_cast<const void*>(lhs.get()) != reinterpret_cast<const void*>(rhs);
   }
 
 template <class T>
@@ -461,7 +461,7 @@ NSCAP_BOOL
 operator!=( NSCAP_Zero* lhs, const nsAutoPtr<T>& rhs )
     // specifically to allow |0 != smartPtr|
   {
-    return NS_REINTERPRET_CAST(const void*, lhs) != NS_STATIC_CAST(const void*, rhs.get());
+    return reinterpret_cast<const void*>(lhs) != static_cast<const void*>(rhs.get());
   }
 
 
@@ -476,7 +476,7 @@ NSCAP_BOOL
 operator==( const nsAutoPtr<T>& lhs, int rhs )
     // specifically to allow |smartPtr == 0|
   {
-    return NS_STATIC_CAST(const void*, lhs.get()) == NS_REINTERPRET_CAST(const void*, rhs);
+    return static_cast<const void*>(lhs.get()) == reinterpret_cast<const void*>(rhs);
   }
 
 template <class T>
@@ -485,7 +485,7 @@ NSCAP_BOOL
 operator==( int lhs, const nsAutoPtr<T>& rhs )
     // specifically to allow |0 == smartPtr|
   {
-    return NS_REINTERPRET_CAST(const void*, lhs) == NS_STATIC_CAST(const void*, rhs.get());
+    return reinterpret_cast<const void*>(lhs) == static_cast<const void*>(rhs.get());
   }
 
 #endif // !defined(HAVE_CPP_TROUBLE_COMPARING_TO_ZERO)
@@ -502,7 +502,7 @@ class nsAutoArrayPtr
       begin_assignment()
         {
           assign(0);
-          return NS_REINTERPRET_CAST(void**, &mRawPtr);
+          return reinterpret_cast<void**>(&mRawPtr);
         }
 
       void
@@ -612,7 +612,7 @@ class nsAutoArrayPtr
           // This is not intended to be used by clients.  See |address_of|
           // below.
         {
-          return NS_CONST_CAST(nsAutoArrayPtr<T>*, this);
+          return const_cast<nsAutoArrayPtr<T>*>(this);
         }
 
 #else // CANT_RESOLVE_CPP_CONST_AMBIGUITY
@@ -647,10 +647,10 @@ class nsAutoArrayPtr
       StartAssignment()
         {
 #ifndef NSCAP_FEATURE_INLINE_STARTASSIGNMENT
-          return NS_REINTERPRET_CAST(T**, begin_assignment());
+          return reinterpret_cast<T**>(begin_assignment());
 #else
           assign(0);
-          return NS_REINTERPRET_CAST(T**, &mRawPtr);
+          return reinterpret_cast<T**>(&mRawPtr);
 #endif
         }
   };
@@ -717,7 +717,7 @@ class nsAutoArrayPtrGetterTransfers
 
       operator void**()
         {
-          return NS_REINTERPRET_CAST(void**, mTargetSmartPtr.StartAssignment());
+          return reinterpret_cast<void**>(mTargetSmartPtr.StartAssignment());
         }
 
       operator T**()
@@ -756,7 +756,7 @@ inline
 NSCAP_BOOL
 operator==( const nsAutoArrayPtr<T>& lhs, const nsAutoArrayPtr<U>& rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) == NS_STATIC_CAST(const U*, rhs.get());
+    return static_cast<const T*>(lhs.get()) == static_cast<const U*>(rhs.get());
   }
 
 
@@ -765,7 +765,7 @@ inline
 NSCAP_BOOL
 operator!=( const nsAutoArrayPtr<T>& lhs, const nsAutoArrayPtr<U>& rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) != NS_STATIC_CAST(const U*, rhs.get());
+    return static_cast<const T*>(lhs.get()) != static_cast<const U*>(rhs.get());
   }
 
 
@@ -776,7 +776,7 @@ inline
 NSCAP_BOOL
 operator==( const nsAutoArrayPtr<T>& lhs, const U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) == NS_STATIC_CAST(const U*, rhs);
+    return static_cast<const T*>(lhs.get()) == static_cast<const U*>(rhs);
   }
 
 template <class T, class U>
@@ -784,7 +784,7 @@ inline
 NSCAP_BOOL
 operator==( const U* lhs, const nsAutoArrayPtr<T>& rhs )
   {
-    return NS_STATIC_CAST(const U*, lhs) == NS_STATIC_CAST(const T*, rhs.get());
+    return static_cast<const U*>(lhs) == static_cast<const T*>(rhs.get());
   }
 
 template <class T, class U>
@@ -792,7 +792,7 @@ inline
 NSCAP_BOOL
 operator!=( const nsAutoArrayPtr<T>& lhs, const U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) != NS_STATIC_CAST(const U*, rhs);
+    return static_cast<const T*>(lhs.get()) != static_cast<const U*>(rhs);
   }
 
 template <class T, class U>
@@ -800,7 +800,7 @@ inline
 NSCAP_BOOL
 operator!=( const U* lhs, const nsAutoArrayPtr<T>& rhs )
   {
-    return NS_STATIC_CAST(const U*, lhs) != NS_STATIC_CAST(const T*, rhs.get());
+    return static_cast<const U*>(lhs) != static_cast<const T*>(rhs.get());
   }
 
   // To avoid ambiguities caused by the presence of builtin |operator==|s
@@ -816,7 +816,7 @@ inline
 NSCAP_BOOL
 operator==( const nsAutoArrayPtr<T>& lhs, U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) == NS_CONST_CAST(const U*, rhs);
+    return static_cast<const T*>(lhs.get()) == const_cast<const U*>(rhs);
   }
 
 template <class T, class U>
@@ -824,7 +824,7 @@ inline
 NSCAP_BOOL
 operator==( U* lhs, const nsAutoArrayPtr<T>& rhs )
   {
-    return NS_CONST_CAST(const U*, lhs) == NS_STATIC_CAST(const T*, rhs.get());
+    return const_cast<const U*>(lhs) == static_cast<const T*>(rhs.get());
   }
 
 template <class T, class U>
@@ -832,7 +832,7 @@ inline
 NSCAP_BOOL
 operator!=( const nsAutoArrayPtr<T>& lhs, U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) != NS_CONST_CAST(const U*, rhs);
+    return static_cast<const T*>(lhs.get()) != const_cast<const U*>(rhs);
   }
 
 template <class T, class U>
@@ -840,7 +840,7 @@ inline
 NSCAP_BOOL
 operator!=( U* lhs, const nsAutoArrayPtr<T>& rhs )
   {
-    return NS_CONST_CAST(const U*, lhs) != NS_STATIC_CAST(const T*, rhs.get());
+    return const_cast<const U*>(lhs) != static_cast<const T*>(rhs.get());
   }
 #endif
 
@@ -854,7 +854,7 @@ NSCAP_BOOL
 operator==( const nsAutoArrayPtr<T>& lhs, NSCAP_Zero* rhs )
     // specifically to allow |smartPtr == 0|
   {
-    return NS_STATIC_CAST(const void*, lhs.get()) == NS_REINTERPRET_CAST(const void*, rhs);
+    return static_cast<const void*>(lhs.get()) == reinterpret_cast<const void*>(rhs);
   }
 
 template <class T>
@@ -863,7 +863,7 @@ NSCAP_BOOL
 operator==( NSCAP_Zero* lhs, const nsAutoArrayPtr<T>& rhs )
     // specifically to allow |0 == smartPtr|
   {
-    return NS_REINTERPRET_CAST(const void*, lhs) == NS_STATIC_CAST(const void*, rhs.get());
+    return reinterpret_cast<const void*>(lhs) == static_cast<const void*>(rhs.get());
   }
 
 template <class T>
@@ -872,7 +872,7 @@ NSCAP_BOOL
 operator!=( const nsAutoArrayPtr<T>& lhs, NSCAP_Zero* rhs )
     // specifically to allow |smartPtr != 0|
   {
-    return NS_STATIC_CAST(const void*, lhs.get()) != NS_REINTERPRET_CAST(const void*, rhs);
+    return static_cast<const void*>(lhs.get()) != reinterpret_cast<const void*>(rhs);
   }
 
 template <class T>
@@ -881,7 +881,7 @@ NSCAP_BOOL
 operator!=( NSCAP_Zero* lhs, const nsAutoArrayPtr<T>& rhs )
     // specifically to allow |0 != smartPtr|
   {
-    return NS_REINTERPRET_CAST(const void*, lhs) != NS_STATIC_CAST(const void*, rhs.get());
+    return reinterpret_cast<const void*>(lhs) != static_cast<const void*>(rhs.get());
   }
 
 
@@ -896,7 +896,7 @@ NSCAP_BOOL
 operator==( const nsAutoArrayPtr<T>& lhs, int rhs )
     // specifically to allow |smartPtr == 0|
   {
-    return NS_STATIC_CAST(const void*, lhs.get()) == NS_REINTERPRET_CAST(const void*, rhs);
+    return static_cast<const void*>(lhs.get()) == reinterpret_cast<const void*>(rhs);
   }
 
 template <class T>
@@ -905,7 +905,7 @@ NSCAP_BOOL
 operator==( int lhs, const nsAutoArrayPtr<T>& rhs )
     // specifically to allow |0 == smartPtr|
   {
-    return NS_REINTERPRET_CAST(const void*, lhs) == NS_STATIC_CAST(const void*, rhs.get());
+    return reinterpret_cast<const void*>(lhs) == static_cast<const void*>(rhs.get());
   }
 
 #endif // !defined(HAVE_CPP_TROUBLE_COMPARING_TO_ZERO)
@@ -932,7 +932,7 @@ class nsRefPtr
       begin_assignment()
         {
           assign_assuming_AddRef(0);
-          return NS_REINTERPRET_CAST(void**, &mRawPtr);
+          return reinterpret_cast<void**>(&mRawPtr);
         }
 
       void
@@ -1041,7 +1041,7 @@ class nsRefPtr
             Returns a |nsDerivedSafe<T>*| to deny clients the use of |AddRef| and |Release|.
           */
         {
-          return NS_CONST_CAST(T*, mRawPtr);
+          return const_cast<T*>(mRawPtr);
         }
 
       operator nsDerivedSafe<T>*() const
@@ -1071,7 +1071,7 @@ class nsRefPtr
           // This is not intended to be used by clients.  See |address_of|
           // below.
         {
-          return NS_CONST_CAST(nsRefPtr<T>*, this);
+          return const_cast<nsRefPtr<T>*>(this);
         }
 
 #else // CANT_RESOLVE_CPP_CONST_AMBIGUITY
@@ -1106,10 +1106,10 @@ class nsRefPtr
       StartAssignment()
         {
 #ifndef NSCAP_FEATURE_INLINE_STARTASSIGNMENT
-          return NS_REINTERPRET_CAST(T**, begin_assignment());
+          return reinterpret_cast<T**>(begin_assignment());
 #else
           assign_assuming_AddRef(0);
-          return NS_REINTERPRET_CAST(T**, &mRawPtr);
+          return reinterpret_cast<T**>(&mRawPtr);
 #endif
         }
 
@@ -1117,8 +1117,8 @@ class nsRefPtr
       nsDerivedSafe<T>*
       get_DerivedSafe() const
         {
-          return NS_CONST_CAST(nsDerivedSafe<T>*,
-                        NS_REINTERPRET_CAST(const nsDerivedSafe<T>*, mRawPtr));
+          return const_cast<nsDerivedSafe<T>*>
+                           (reinterpret_cast<const nsDerivedSafe<T>*>(mRawPtr));
         }
       
   };
@@ -1185,7 +1185,7 @@ class nsRefPtrGetterAddRefs
 
       operator void**()
         {
-          return NS_REINTERPRET_CAST(void**, mTargetSmartPtr.StartAssignment());
+          return reinterpret_cast<void**>(mTargetSmartPtr.StartAssignment());
         }
 
       operator T**()
@@ -1224,7 +1224,7 @@ inline
 NSCAP_BOOL
 operator==( const nsRefPtr<T>& lhs, const nsRefPtr<U>& rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) == NS_STATIC_CAST(const U*, rhs.get());
+    return static_cast<const T*>(lhs.get()) == static_cast<const U*>(rhs.get());
   }
 
 
@@ -1233,7 +1233,7 @@ inline
 NSCAP_BOOL
 operator!=( const nsRefPtr<T>& lhs, const nsRefPtr<U>& rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) != NS_STATIC_CAST(const U*, rhs.get());
+    return static_cast<const T*>(lhs.get()) != static_cast<const U*>(rhs.get());
   }
 
 
@@ -1244,7 +1244,7 @@ inline
 NSCAP_BOOL
 operator==( const nsRefPtr<T>& lhs, const U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) == NS_STATIC_CAST(const U*, rhs);
+    return static_cast<const T*>(lhs.get()) == static_cast<const U*>(rhs);
   }
 
 template <class T, class U>
@@ -1252,7 +1252,7 @@ inline
 NSCAP_BOOL
 operator==( const U* lhs, const nsRefPtr<T>& rhs )
   {
-    return NS_STATIC_CAST(const U*, lhs) == NS_STATIC_CAST(const T*, rhs.get());
+    return static_cast<const U*>(lhs) == static_cast<const T*>(rhs.get());
   }
 
 template <class T, class U>
@@ -1260,7 +1260,7 @@ inline
 NSCAP_BOOL
 operator!=( const nsRefPtr<T>& lhs, const U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) != NS_STATIC_CAST(const U*, rhs);
+    return static_cast<const T*>(lhs.get()) != static_cast<const U*>(rhs);
   }
 
 template <class T, class U>
@@ -1268,7 +1268,7 @@ inline
 NSCAP_BOOL
 operator!=( const U* lhs, const nsRefPtr<T>& rhs )
   {
-    return NS_STATIC_CAST(const U*, lhs) != NS_STATIC_CAST(const T*, rhs.get());
+    return static_cast<const U*>(lhs) != static_cast<const T*>(rhs.get());
   }
 
   // To avoid ambiguities caused by the presence of builtin |operator==|s
@@ -1284,7 +1284,7 @@ inline
 NSCAP_BOOL
 operator==( const nsRefPtr<T>& lhs, U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) == NS_CONST_CAST(const U*, rhs);
+    return static_cast<const T*>(lhs.get()) == const_cast<const U*>(rhs);
   }
 
 template <class T, class U>
@@ -1292,7 +1292,7 @@ inline
 NSCAP_BOOL
 operator==( U* lhs, const nsRefPtr<T>& rhs )
   {
-    return NS_CONST_CAST(const U*, lhs) == NS_STATIC_CAST(const T*, rhs.get());
+    return const_cast<const U*>(lhs) == static_cast<const T*>(rhs.get());
   }
 
 template <class T, class U>
@@ -1300,7 +1300,7 @@ inline
 NSCAP_BOOL
 operator!=( const nsRefPtr<T>& lhs, U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) != NS_CONST_CAST(const U*, rhs);
+    return static_cast<const T*>(lhs.get()) != const_cast<const U*>(rhs);
   }
 
 template <class T, class U>
@@ -1308,7 +1308,7 @@ inline
 NSCAP_BOOL
 operator!=( U* lhs, const nsRefPtr<T>& rhs )
   {
-    return NS_CONST_CAST(const U*, lhs) != NS_STATIC_CAST(const T*, rhs.get());
+    return const_cast<const U*>(lhs) != static_cast<const T*>(rhs.get());
   }
 #endif
 
@@ -1322,7 +1322,7 @@ NSCAP_BOOL
 operator==( const nsRefPtr<T>& lhs, NSCAP_Zero* rhs )
     // specifically to allow |smartPtr == 0|
   {
-    return NS_STATIC_CAST(const void*, lhs.get()) == NS_REINTERPRET_CAST(const void*, rhs);
+    return static_cast<const void*>(lhs.get()) == reinterpret_cast<const void*>(rhs);
   }
 
 template <class T>
@@ -1331,7 +1331,7 @@ NSCAP_BOOL
 operator==( NSCAP_Zero* lhs, const nsRefPtr<T>& rhs )
     // specifically to allow |0 == smartPtr|
   {
-    return NS_REINTERPRET_CAST(const void*, lhs) == NS_STATIC_CAST(const void*, rhs.get());
+    return reinterpret_cast<const void*>(lhs) == static_cast<const void*>(rhs.get());
   }
 
 template <class T>
@@ -1340,7 +1340,7 @@ NSCAP_BOOL
 operator!=( const nsRefPtr<T>& lhs, NSCAP_Zero* rhs )
     // specifically to allow |smartPtr != 0|
   {
-    return NS_STATIC_CAST(const void*, lhs.get()) != NS_REINTERPRET_CAST(const void*, rhs);
+    return static_cast<const void*>(lhs.get()) != reinterpret_cast<const void*>(rhs);
   }
 
 template <class T>
@@ -1349,7 +1349,7 @@ NSCAP_BOOL
 operator!=( NSCAP_Zero* lhs, const nsRefPtr<T>& rhs )
     // specifically to allow |0 != smartPtr|
   {
-    return NS_REINTERPRET_CAST(const void*, lhs) != NS_STATIC_CAST(const void*, rhs.get());
+    return reinterpret_cast<const void*>(lhs) != static_cast<const void*>(rhs.get());
   }
 
 
@@ -1364,7 +1364,7 @@ NSCAP_BOOL
 operator==( const nsRefPtr<T>& lhs, int rhs )
     // specifically to allow |smartPtr == 0|
   {
-    return NS_STATIC_CAST(const void*, lhs.get()) == NS_REINTERPRET_CAST(const void*, rhs);
+    return static_cast<const void*>(lhs.get()) == reinterpret_cast<const void*>(rhs);
   }
 
 template <class T>
@@ -1373,7 +1373,7 @@ NSCAP_BOOL
 operator==( int lhs, const nsRefPtr<T>& rhs )
     // specifically to allow |0 == smartPtr|
   {
-    return NS_REINTERPRET_CAST(const void*, lhs) == NS_STATIC_CAST(const void*, rhs.get());
+    return reinterpret_cast<const void*>(lhs) == static_cast<const void*>(rhs.get());
   }
 
 #endif // !defined(HAVE_CPP_TROUBLE_COMPARING_TO_ZERO)

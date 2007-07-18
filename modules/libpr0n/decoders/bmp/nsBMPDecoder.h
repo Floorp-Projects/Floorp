@@ -44,6 +44,7 @@
 #include "imgIContainer.h"
 #include "imgIDecoderObserver.h"
 #include "gfxIImageFrame.h"
+#include "gfxColor.h"
 
 #define NS_BMPDECODER_CID \
 { /* {78c61626-4d1f-4843-9364-4652d98ff6e1} */ \
@@ -169,16 +170,6 @@ private:
      * the bitmasks from mBitFields */
     NS_METHOD CalcBitShift();
 
-    /** Sets the image data. mCurLine is used to get the row,
-     * mDecoded is used to get the data */
-    nsresult SetData();
-
-    /** Sets the rle data. mCurLine is used to get the row,
-     * mDecoded is used to get the data for the first row,
-     * all subsequent rows are blank.
-     * @param rows Number of rows of data to set */
-    nsresult WriteRLERows(PRUint32 rows);
-
     nsCOMPtr<imgIDecoderObserver> mObserver;
 
     nsCOMPtr<imgIContainer> mImage;
@@ -197,18 +188,15 @@ private:
 
     bitFields mBitFields;
 
+    PRUint32 *mImageData; ///< Pointer to the image data for the frame
     PRUint8 *mRow;      ///< Holds one raw line of the image
     PRUint32 mRowBytes; ///< How many bytes of the row were already received
     PRInt32 mCurLine;   ///< Index of the line of the image that's currently being decoded
-    PRUint8 *mAlpha;    ///< Holds one line of unpacked alpha data
-    PRUint8 *mAlphaPtr; ///< Pointer within unpacked alpha data
-    PRUint8 *mDecoded;  ///< Holds one line of color image data
-    PRUint8 *mDecoding; ///< Pointer within image data
+    PRInt32 mOldLine;   ///< Previous index of the line 
+    PRInt32 mCurPos;    ///< Index in the current line of the image
 
     ERLEState mState;   ///< Maintains the current state of the RLE decoding
     PRUint32 mStateData;///< Decoding information that is needed depending on mState
-
-    PRUint32 mBpr;      ///< Cached image bytes per row
 
     /** Set mBFH from the raw data in mRawBuf, converting from little-endian
      * data to native data as necessary */
@@ -219,24 +207,25 @@ private:
 };
 
 /** Sets the pixel data in aDecoded to the given values.
- * The variable passed in as aDecoded will be moved on 3 or 4 bytes! */
-inline void SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue, PRUint8 aAlpha = 0xFF)
+ * @param aDecoded pointer to pixel to be set, will be incremented to point to the next pixel.
+ */
+static inline void SetPixel(PRUint32*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue, PRUint8 aAlpha = 0xFF)
 {
-    *(PRUint32*)aDecoded = (aAlpha << 24) | (aRed << 16) | (aGreen << 8) | aBlue;
-    aDecoded += 4;
+    *aDecoded++ = GFX_PACKED_PIXEL(aAlpha, aRed, aGreen, aBlue);
 }
 
-inline void SetPixel(PRUint8*& aDecoded, PRUint8 idx, colorTable* aColors)
+static inline void SetPixel(PRUint32*& aDecoded, PRUint8 idx, colorTable* aColors)
 {
     SetPixel(aDecoded, aColors[idx].red, aColors[idx].green, aColors[idx].blue);
 }
 
 /** Sets two (or one if aCount = 1) pixels
- * @param aDecoded where the data is stored. Will be moved 3 or 6 bytes,
+ * @param aDecoded where the data is stored. Will be moved 4 resp 8 bytes
  * depending on whether one or two pixels are written.
  * @param aData The values for the two pixels
- * @param aCount Current count. Is decremented by one or two. */
-inline void Set4BitPixel(PRUint8*& aDecoded, PRUint8 aData,
+ * @param aCount Current count. Is decremented by one or two.
+ */
+inline void Set4BitPixel(PRUint32*& aDecoded, PRUint8 aData,
                          PRUint32& aCount, colorTable* aColors)
 {
     PRUint8 idx = aData >> 4;

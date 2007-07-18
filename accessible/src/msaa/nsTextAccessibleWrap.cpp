@@ -78,12 +78,12 @@ STDMETHODIMP nsTextAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
   *ppv = nsnull;
 
   if (IID_IUnknown == iid || IID_ISimpleDOMText == iid)
-    *ppv = NS_STATIC_CAST(ISimpleDOMText*, this);
+    *ppv = static_cast<ISimpleDOMText*>(this);
 
   if (nsnull == *ppv)
     return nsAccessibleWrap::QueryInterface(iid, ppv);
    
-  (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef(); 
+  (reinterpret_cast<IUnknown*>(*ppv))->AddRef(); 
   return S_OK;
 }
 

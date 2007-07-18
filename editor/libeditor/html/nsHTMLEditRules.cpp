@@ -243,7 +243,7 @@ NS_IMPL_QUERY_INTERFACE3(nsHTMLEditRules, nsIHTMLEditRules, nsIEditRules, nsIEdi
 NS_IMETHODIMP
 nsHTMLEditRules::Init(nsPlaintextEditor *aEditor, PRUint32 aFlags)
 {
-  mHTMLEditor = NS_STATIC_CAST(nsHTMLEditor*, aEditor);
+  mHTMLEditor = static_cast<nsHTMLEditor*>(aEditor);
   nsresult res;
   
   // call through to base class Init 
@@ -584,7 +584,52 @@ nsHTMLEditRules::WillDoAction(nsISelection *aSelection,
   *aHandled = PR_FALSE;
     
   // my kingdom for dynamic cast
-  nsTextRulesInfo *info = NS_STATIC_CAST(nsTextRulesInfo*, aInfo);
+  nsTextRulesInfo *info = static_cast<nsTextRulesInfo*>(aInfo);
+
+  // Deal with actions for which we don't need to check whether the selection is
+  // editable.
+  if (info->action == kOutputText) {
+    return nsTextEditRules::WillDoAction(aSelection, aInfo, aCancel, aHandled);
+  }
+
+  nsCOMPtr<nsIDOMRange> domRange;
+  nsresult rv = aSelection->GetRangeAt(0, getter_AddRefs(domRange));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMNode> selStartNode;
+  rv = domRange->GetStartContainer(getter_AddRefs(selStartNode));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mHTMLEditor->IsModifiableNode(selStartNode))
+  {
+    *aCancel = PR_TRUE;
+
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMNode> selEndNode;
+  rv = domRange->GetEndContainer(getter_AddRefs(selEndNode));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (selStartNode != selEndNode)
+  {
+    if (!mHTMLEditor->IsModifiableNode(selEndNode))
+    {
+      *aCancel = PR_TRUE;
+
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIRange> range = do_QueryInterface(domRange);
+    nsCOMPtr<nsIDOMNode> ancestor =
+      do_QueryInterface(range->GetCommonAncestor());
+    if (!mHTMLEditor->IsModifiableNode(ancestor))
+    {
+      *aCancel = PR_TRUE;
+
+      return NS_OK;
+    }
+  }
     
   switch (info->action)
   {
@@ -636,7 +681,7 @@ NS_IMETHODIMP
 nsHTMLEditRules::DidDoAction(nsISelection *aSelection,
                              nsRulesInfo *aInfo, nsresult aResult)
 {
-  nsTextRulesInfo *info = NS_STATIC_CAST(nsTextRulesInfo*, aInfo);
+  nsTextRulesInfo *info = static_cast<nsTextRulesInfo*>(aInfo);
   switch (info->action)
   {
     case kInsertBreak:
@@ -1569,6 +1614,13 @@ nsHTMLEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
     
   if (!blockParent) return NS_ERROR_FAILURE;
   
+  // do nothing if the node is read-only
+  if (!mHTMLEditor->IsModifiableNode(blockParent))
+  {
+    *aCancel = PR_TRUE;
+    return NS_OK;
+  }
+
   // if block is empty, populate with br.
   // (for example, imagine a div that contains the word "text".  the user selects
   // "text" and types return.  "text" is deleted leaving an empty block.  we want
@@ -3915,6 +3967,9 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
              (nsHTMLEditUtils::IsTable(n) || !nsHTMLEditUtils::IsTableElement(n)))
       {
         n->GetParentNode(getter_AddRefs(tmp));
+        if (!tmp) {
+          break;
+        }
         n = tmp;
         if (nsHTMLEditUtils::IsBlockquote(n))
         {
@@ -5554,6 +5609,21 @@ nsHTMLEditRules::PromoteRange(nsIDOMRange *inRange,
   return res;
 } 
 
+class nsUniqueFunctor : public nsBoolDomIterFunctor
+{
+public:
+  nsUniqueFunctor(nsCOMArray<nsIDOMNode> &aArray) : mArray(aArray)
+  {
+  }
+  virtual PRBool operator()(nsIDOMNode* aNode)  // used to build list of all nodes iterator covers
+  {
+    return mArray.IndexOf(aNode) < 0;
+  }
+
+private:
+  nsCOMArray<nsIDOMNode> &mArray;
+};
+
 ///////////////////////////////////////////////////////////////////////////
 // GetNodesForOperation: run through the ranges in the array and construct 
 //                       a new array of nodes to be acted on.
@@ -5618,12 +5688,25 @@ nsHTMLEditRules::GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges,
   {
     opRange = inArrayOfRanges[i];
     
-    nsTrivialFunctor functor;
     nsDOMSubtreeIterator iter;
     res = iter.Init(opRange);
     if (NS_FAILED(res)) return res;
-    res = iter.AppendList(functor, outArrayOfNodes);
-    if (NS_FAILED(res)) return res;    
+    if (outArrayOfNodes.Count() == 0) {
+      nsTrivialFunctor functor;
+      res = iter.AppendList(functor, outArrayOfNodes);
+      if (NS_FAILED(res)) return res;    
+    }
+    else {
+      // We don't want duplicates in outArrayOfNodes, so we use an
+      // iterator/functor that only return nodes that are not already in
+      // outArrayOfNodes.
+      nsCOMArray<nsIDOMNode> nodes;
+      nsUniqueFunctor functor(outArrayOfNodes);
+      res = iter.AppendList(functor, nodes);
+      if (NS_FAILED(res)) return res;
+      if (!outArrayOfNodes.AppendObjects(nodes))
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
   }    
 
   // certain operations should not act on li's and td's, but rather inside 

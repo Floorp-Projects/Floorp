@@ -135,13 +135,23 @@ nsTableCellFrame::NotifyPercentHeight(const nsHTMLReflowState& aReflowState)
     // are based on the height of the cell, since its containing block
     // is the inner cell frame.
 
-    for (const nsHTMLReflowState *rs = aReflowState.parentReflowState;
-         rs != cellRS;
-         rs = rs->parentReflowState) {
-      rs->frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
-    }
+    // We'll only honor the percent height if sibling-cells/ancestors
+    // have specified/pct height. (Also, siblings only count for this if
+    // both this cell and the sibling cell span exactly 1 row.)
 
-    nsTableFrame::RequestSpecialHeightReflow(*cellRS);
+    if (nsTableFrame::AncestorsHaveStyleHeight(*cellRS) ||
+        (nsTableFrame::GetTableFrame(this)->GetEffectiveRowSpan(*this) == 1 &&
+         (cellRS->parentReflowState->frame->GetStateBits() &
+          NS_ROW_HAS_CELL_WITH_STYLE_HEIGHT))) {
+
+      for (const nsHTMLReflowState *rs = aReflowState.parentReflowState;
+           rs != cellRS;
+           rs = rs->parentReflowState) {
+        rs->frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
+      }
+      
+      nsTableFrame::RequestSpecialHeightReflow(*cellRS);
+    }
   }
 }
 
@@ -182,7 +192,7 @@ nsresult
 nsTableCellFrame::GetRowIndex(PRInt32 &aRowIndex) const
 {
   nsresult result;
-  nsTableRowFrame* row = NS_STATIC_CAST(nsTableRowFrame*, GetParent());
+  nsTableRowFrame* row = static_cast<nsTableRowFrame*>(GetParent());
   if (row) {
     aRowIndex = row->GetRowIndex();
     result = NS_OK;
@@ -211,6 +221,13 @@ nsTableCellFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                    nsIAtom*        aAttribute,
                                    PRInt32         aModType)
 {
+  // We need to recalculate in this case because of the nowrap quirk in
+  // BasicTableLayoutStrategy
+  if (aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::nowrap &&
+      PresContext()->CompatibilityMode() == eCompatibility_NavQuirks) {
+    PresContext()->PresShell()->
+      FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
+  }
   // let the table frame decide what to do
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (tableFrame) {
@@ -364,7 +381,7 @@ public:
 void nsDisplayTableCellBackground::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  NS_STATIC_CAST(nsTableCellFrame*, mFrame)->
+  static_cast<nsTableCellFrame*>(mFrame)->
     PaintBackground(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
 }
 
@@ -372,7 +389,7 @@ static void
 PaintTableCellSelection(nsIFrame* aFrame, nsIRenderingContext* aCtx,
                         const nsRect& aRect, nsPoint aPt)
 {
-  NS_STATIC_CAST(nsTableCellFrame*, aFrame)->DecorateForSelection(*aCtx, aPt);
+  static_cast<nsTableCellFrame*>(aFrame)->DecorateForSelection(*aCtx, aPt);
 }
 
 NS_IMETHODIMP
@@ -725,9 +742,9 @@ CalcUnpaginagedHeight(nsPresContext*       aPresContext,
   const nsTableCellFrame* firstCellInFlow   = (nsTableCellFrame*)aCellFrame.GetFirstInFlow();
   nsTableFrame*           firstTableInFlow  = (nsTableFrame*)aTableFrame.GetFirstInFlow();
   nsTableRowFrame*        row
-    = NS_STATIC_CAST(nsTableRowFrame*, firstCellInFlow->GetParent());
+    = static_cast<nsTableRowFrame*>(firstCellInFlow->GetParent());
   nsTableRowGroupFrame*   firstRGInFlow
-    = NS_STATIC_CAST(nsTableRowGroupFrame*, row->GetParent());
+    = static_cast<nsTableRowGroupFrame*>(row->GetParent());
 
   PRInt32 rowIndex;
   firstCellInFlow->GetRowIndex(rowIndex);
@@ -754,6 +771,10 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
 {
   DO_GLOBAL_REFLOW_COUNT("nsTableCellFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
+
+  if (aReflowState.mFlags.mSpecialHeightReflow) {
+    GetFirstInFlow()->AddStateBits(NS_TABLE_CELL_HAD_SPECIAL_REFLOW);
+  }
 
   // work around pixel rounding errors, round down to ensure we don't exceed the avail height in
   nscoord availHeight = aReflowState.availableHeight;
@@ -818,7 +839,11 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
   // but only those than are tables in standards mode.  NeedsToObserve
   // will determine how far this is propagated to descendants.
   kidReflowState.mPercentHeightObserver = this;
-  if (aReflowState.mFlags.mSpecialHeightReflow) {
+  if (aReflowState.mFlags.mSpecialHeightReflow ||
+      (GetFirstInFlow()->GetStateBits() & NS_TABLE_CELL_HAD_SPECIAL_REFLOW)) {
+    // We need to force the kid to have mVResize set if we've had a
+    // special reflow in the past, since the non-special reflow needs to
+    // resize back to what it was without the special height reflow.
     kidReflowState.mFlags.mVResize = PR_TRUE;
   }
 
@@ -886,18 +911,17 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
 NS_IMPL_ADDREF_INHERITED(nsTableCellFrame, nsHTMLContainerFrame)
 NS_IMPL_RELEASE_INHERITED(nsTableCellFrame, nsHTMLContainerFrame)
 
-nsresult nsTableCellFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+NS_IMETHODIMP
+nsTableCellFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsITableCellLayout))) {
-    *aInstancePtr = (void*) (nsITableCellLayout *)this;
+    *aInstancePtr = static_cast<nsITableCellLayout*>(this);
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsIPercentHeightObserver))) {
-    *aInstancePtr = (void*) (nsIPercentHeightObserver *)this;
+    *aInstancePtr = static_cast<nsIPercentHeightObserver*>(this);
     return NS_OK;
   }
 
@@ -910,7 +934,7 @@ NS_IMETHODIMP nsTableCellFrame::GetAccessible(nsIAccessible** aAccessible)
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    return accService->CreateHTMLTableCellAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+    return accService->CreateHTMLTableCellAccessible(static_cast<nsIFrame*>(this), aAccessible);
   }
 
   return NS_ERROR_FAILURE;

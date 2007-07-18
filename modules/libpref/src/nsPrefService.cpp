@@ -152,7 +152,7 @@ nsresult nsPrefService::Init()
   rv = mRootBranch->GetCharPref("general.config.filename", getter_Copies(lockFileName));
   if (NS_SUCCEEDED(rv))
     NS_CreateServicesFromCategory("pref-config-startup",
-                                  NS_STATIC_CAST(nsISupports *, NS_STATIC_CAST(void *, this)),
+                                  static_cast<nsISupports *>(static_cast<void *>(this)),
                                   "pref-config-startup");    
 
   nsCOMPtr<nsIObserverService> observerService = 

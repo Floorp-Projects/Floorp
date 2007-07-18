@@ -87,36 +87,42 @@ typedef enum JSOpLength {
 #define JOF_2BYTE         13      /* 2-byte opcode, e.g., upper 8 bits of 24-bit
                                      atom index */
 #define JOF_LOCAL         14      /* block-local operand stack variable */
-#define JOF_TYPEMASK      0x000f  /* mask for above immediate types */
-#define JOF_NAME          (1U<<4) /* name operation */
-#define JOF_PROP          (2U<<4) /* obj.prop operation */
-#define JOF_ELEM          (3U<<4) /* obj[index] operation */
-#define JOF_XMLNAME       (4U<<4) /* XML name: *, a::b, @a, @a::b, etc. */
-#define JOF_VARPROP       (5U<<4) /* x.prop for arg, var, or local x */
-#define JOF_MODEMASK      (7U<<4) /* mask for above addressing modes */
-#define JOF_SET           (1U<<7) /* set (i.e., assignment) operation */
-#define JOF_DEL           (1U<<8) /* delete operation */
-#define JOF_DEC           (1U<<9) /* decrement (--, not ++) opcode */
-#define JOF_INC           (2U<<9) /* increment (++, not --) opcode */
-#define JOF_INCDEC        (3U<<9) /* increment or decrement opcode */
-#define JOF_POST         (1U<<11) /* postorder increment or decrement */
-#define JOF_IMPORT       (1U<<12) /* import property op */
-#define JOF_FOR          (1U<<13) /* for-in property op */
+#define JOF_OBJECT        15      /* unsigned 16-bit object pool index */
+#define JOF_INDEXOBJECT   16      /* uint16 slot index + object pool index */
+#define JOF_REGEXP        17      /* unsigned 16-bit regexp pool index */
+#define JOF_INT8          18      /* int8 immediate operand */
+#define JOF_INT32         19      /* int32 immediate operand */
+#define JOF_TYPEMASK      0x001f  /* mask for above immediate types */
+
+#define JOF_NAME          (1U<<5) /* name operation */
+#define JOF_PROP          (2U<<5) /* obj.prop operation */
+#define JOF_ELEM          (3U<<5) /* obj[index] operation */
+#define JOF_XMLNAME       (4U<<5) /* XML name: *, a::b, @a, @a::b, etc. */
+#define JOF_VARPROP       (5U<<5) /* x.prop for arg, var, or local x */
+#define JOF_MODEMASK      (7U<<5) /* mask for above addressing modes */
+#define JOF_SET           (1U<<8) /* set (i.e., assignment) operation */
+#define JOF_DEL           (1U<<9) /* delete operation */
+#define JOF_DEC          (1U<<10) /* decrement (--, not ++) opcode */
+#define JOF_INC          (2U<<10) /* increment (++, not --) opcode */
+#define JOF_INCDEC       (3U<<10) /* increment or decrement opcode */
+#define JOF_POST         (1U<<12) /* postorder increment or decrement */
+#define JOF_IMPORT       (1U<<13) /* import property op */
+#define JOF_FOR          (1U<<14) /* for-in property op */
 #define JOF_ASSIGNING     JOF_SET /* hint for JSClass.resolve, used for ops
                                      that do simplex assignment */
-#define JOF_DETECTING    (1U<<14) /* object detection for JSNewResolveOp */
-#define JOF_BACKPATCH    (1U<<15) /* backpatch placeholder during codegen */
-#define JOF_LEFTASSOC    (1U<<16) /* left-associative operator */
-#define JOF_DECLARING    (1U<<17) /* var, const, or function declaration op */
-#define JOF_ATOMBASE     (1U<<18) /* atom segment base setting prefix op */
-#define JOF_CALLOP       (1U<<19) /* call operation that pushes function and
+#define JOF_DETECTING    (1U<<15) /* object detection for JSNewResolveOp */
+#define JOF_BACKPATCH    (1U<<16) /* backpatch placeholder during codegen */
+#define JOF_LEFTASSOC    (1U<<17) /* left-associative operator */
+#define JOF_DECLARING    (1U<<18) /* var, const, or function declaration op */
+#define JOF_INDEXBASE    (1U<<19) /* atom segment base setting prefix op */
+#define JOF_CALLOP       (1U<<20) /* call operation that pushes function and
                                      this */
-#define JOF_PARENHEAD    (1U<<20) /* opcode consumes value of expression in
+#define JOF_PARENHEAD    (1U<<21) /* opcode consumes value of expression in
                                      parenthesized statement head */
-#define JOF_INVOKE       (1U<<21) /* JSOP_CALL, JSOP_NEW, JSOP_EVAL */
-#define JOF_TMPSLOT      (1U<<22) /* interpreter uses extra temporray slot
+#define JOF_INVOKE       (1U<<22) /* JSOP_CALL, JSOP_NEW, JSOP_EVAL */
+#define JOF_TMPSLOT      (1U<<23) /* interpreter uses extra temporray slot
                                      to root intermediate objects */
-#define JOF_TMPSLOT_SHIFT 22
+#define JOF_TMPSLOT_SHIFT 23
 
 /* Shorthands for mode from format and mode from opcode. */
 #define JOF_MODE(fmt)   ((fmt) & JOF_MODEMASK)
@@ -180,31 +186,22 @@ typedef enum JSOpLength {
 #define JUMPX_OFFSET_MAX        ((int32)0x7fffffff)
 
 /*
- * A literal is indexed by a per-script atom map.  Most scripts have relatively
- * few literals, so the standard JOF_CONST format specifies a fixed 16 bits of
- * immediate operand index.  A script with more than 64K literals must wrap the
- * bytecode into JSOP_ATOMBASE and JSOP_RESETBASE pair.
+ * A literal is indexed by a per-script atom or object maps. Most scripts
+ * have relatively few literals, so the standard JOF_CONST, JOF_OBJECT and
+ * JOF_REGEXP formats specifies a fixed 16 bits of immediate operand index.
+ * A script with more than 64K literals must wrap the bytecode into
+ * JSOP_INDEXBASE and JSOP_RESETBASE pair.
  */
-#define ATOM_INDEX_LEN          2
-#define ATOM_INDEX_HI(i)        ((jsbytecode)((i) >> 8))
-#define ATOM_INDEX_LO(i)        ((jsbytecode)(i))
-#define GET_ATOM_INDEX(pc)      GET_UINT16(pc)
-#define SET_ATOM_INDEX(pc,i)    ((pc)[1] = ATOM_INDEX_HI(i),                  \
-                                 (pc)[2] = ATOM_INDEX_LO(i))
+#define INDEX_LEN               2
+#define INDEX_HI(i)             ((jsbytecode)((i) >> 8))
+#define INDEX_LO(i)             ((jsbytecode)(i))
+#define GET_INDEX(pc)           GET_UINT16(pc)
+#define SET_INDEX(pc,i)         ((pc)[1] = INDEX_HI(i), (pc)[2] = INDEX_LO(i))
 
-#define ASSERT_ATOM_INDEX_IN_MAP(script,atoms,index)                          \
-    JS_ASSERT((size_t)((atoms) - (script)->atomMap.vector) <                  \
-              (size_t)(script)->atomMap.length - (size_t)(index))
-
-#define GET_ATOM(script,atoms,pc)                                             \
-    (ASSERT_ATOM_INDEX_IN_MAP(script,atoms,GET_ATOM_INDEX(pc)),               \
-     (atoms)[GET_ATOM_INDEX(pc)])
-
-#define GET_ATOMBASE(pc)        (JS_ASSERT(*(pc) == JSOP_ATOMBASE),           \
+#define GET_INDEXBASE(pc)       (JS_ASSERT(*(pc) == JSOP_INDEXBASE),          \
                                  ((uintN)((pc)[1])) << 16)
-#define ATOMBASE_LEN            1
+#define INDEXBASE_LEN           1
 
-/* A full atom index for JSOP_UINT24 uses 24 bits of immediate operand. */
 #define UINT24_HI(i)            ((jsbytecode)((i) >> 16))
 #define UINT24_MID(i)           ((jsbytecode)((i) >> 8))
 #define UINT24_LO(i)            ((jsbytecode)(i))
@@ -215,12 +212,22 @@ typedef enum JSOpLength {
                                  (pc)[2] = UINT24_MID(i),                     \
                                  (pc)[3] = UINT24_LO(i))
 
-/* Atom index limit is determined by SN_3BYTE_OFFSET_FLAG, see jsemit.h. */
-#define ATOM_INDEX_LIMIT_LOG2   23
-#define ATOM_INDEX_LIMIT        ((uint32)1 << ATOM_INDEX_LIMIT_LOG2)
+#define GET_INT8(pc)            ((jsint)(int8)(pc)[1])
 
-JS_STATIC_ASSERT(sizeof(jsatomid) * JS_BITS_PER_BYTE >=
-                 ATOM_INDEX_LIMIT_LOG2 + 1);
+#define GET_INT32(pc)           ((jsint)(((uint32)((pc)[1]) << 24) |          \
+                                         ((uint32)((pc)[2]) << 16) |          \
+                                         ((uint32)((pc)[3]) << 8)  |          \
+                                         (uint32)(pc)[4]))
+#define SET_INT32(pc,i)         ((pc)[1] = (jsbytecode)((uint32)(i) >> 24),   \
+                                 (pc)[2] = (jsbytecode)((uint32)(i) >> 16),   \
+                                 (pc)[3] = (jsbytecode)((uint32)(i) >> 8),    \
+                                 (pc)[4] = (jsbytecode)(uint32)(i))
+
+/* Index limit is determined by SN_3BYTE_OFFSET_FLAG, see jsemit.h. */
+#define INDEX_LIMIT_LOG2        23
+#define INDEX_LIMIT             ((uint32)1 << INDEX_LIMIT_LOG2)
+
+JS_STATIC_ASSERT(sizeof(uint32) * JS_BITS_PER_BYTE >= INDEX_LIMIT_LOG2 + 1);
 
 /* Actual argument count operand format helpers. */
 #define ARGC_HI(argc)           UINT16_HI(argc)
@@ -289,11 +296,39 @@ extern JSBool
 js_puts(JSPrinter *jp, const char *s);
 
 /*
- * A slower version of GET_ATOM when the caller does not want to maintain
- * the atom table segment register itself.
+ * Get index operand from the bytecode using a bytecode analysis to deduce the
+ * the index register.
  */
-extern JSAtom*
-js_GetAtomFromBytecode(JSScript *script, jsbytecode *pc, ptrdiff_t pcoff);
+uintN
+js_GetIndexFromBytecode(JSScript *script, jsbytecode *pc, ptrdiff_t pcoff);
+
+/*
+ * A slower version of GET_ATOM when the caller does not want to maintain
+ * the index segment register itself.
+ */
+#define GET_ATOM_FROM_BYTECODE(script, pc, pcoff, atom)                       \
+    JS_BEGIN_MACRO                                                            \
+        uintN index_ = js_GetIndexFromBytecode((script), (pc), (pcoff));      \
+        JS_GET_SCRIPT_ATOM((script), index_, atom);                           \
+    JS_END_MACRO
+
+#define GET_OBJECT_FROM_BYTECODE(script, pc, pcoff, obj)                      \
+    JS_BEGIN_MACRO                                                            \
+        uintN index_ = js_GetIndexFromBytecode((script), (pc), (pcoff));      \
+        JS_GET_SCRIPT_OBJECT((script), index_, obj);                          \
+    JS_END_MACRO
+
+#define GET_FUNCTION_FROM_BYTECODE(script, pc, pcoff, obj)                    \
+    JS_BEGIN_MACRO                                                            \
+        GET_OBJECT_FROM_BYTECODE(script, pc, pcoff, obj);                     \
+        JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_FunctionClass);               \
+    JS_END_MACRO
+
+#define GET_REGEXP_FROM_BYTECODE(script, pc, pcoff, obj)                      \
+    JS_BEGIN_MACRO                                                            \
+        uintN index_ = js_GetIndexFromBytecode((script), (pc), (pcoff));      \
+        JS_GET_SCRIPT_REGEXP((script), index_, obj);                          \
+    JS_END_MACRO
 
 #ifdef DEBUG
 /*

@@ -386,7 +386,7 @@ void nsTimerImpl::Fire()
       mCallback.i->Notify(this);
       break;
     case CALLBACK_TYPE_OBSERVER:
-      mCallback.o->Observe(NS_STATIC_CAST(nsITimer*,this),
+      mCallback.o->Observe(static_cast<nsITimer*>(this),
                            NS_TIMER_CALLBACK_TOPIC,
                            nsnull);
       break;

@@ -309,7 +309,7 @@ public:
    */
   PRBool Mutated(PRUint8 aIgnoreCount)
   {
-    return sMutationCount < NS_STATIC_CAST(PRUint32, eMaxMutations - aIgnoreCount);
+    return sMutationCount < static_cast<PRUint32>(eMaxMutations - aIgnoreCount);
   }
 
   // This function should be called whenever a mutation that we want to keep
@@ -553,26 +553,6 @@ public:
                                   const nsAString& aValue,
                                   PRBool aDefer = PR_TRUE);
 
-  /**
-   * Trigger a link with uri aLinkURI.  If aClick is false, this triggers a
-   * mouseover on the link, otherwise it triggers a load, after doing a
-   * security check.  The node principal of |this| is used for the security
-   * check.
-   *
-   * @param aPresContext the pres context.
-   * @param aLinkURI the URI of the link
-   * @param aTargetSpec the target (like target=, may be empty)
-   * @param aClick whether this was a click or not (if false, it assumes you
-   *        just hovered over the link)
-   * @param aIsUserTriggered whether the user triggered the link.
-   *        This would be false for loads from auto XLinks or from the
-   *        click() method if we ever implement it.
-   */
-  nsresult TriggerLink(nsPresContext* aPresContext,
-                       nsIURI* aLinkURI,
-                       const nsAFlatString& aTargetSpec,
-                       PRBool aClick,
-                       PRBool aIsUserTriggered);
   /**
    * Do whatever needs to be done when the mouse leaves a link
    */
@@ -960,12 +940,12 @@ protected:
 
   nsDOMSlots *GetDOMSlots()
   {
-    return NS_STATIC_CAST(nsDOMSlots*, GetSlots());
+    return static_cast<nsDOMSlots*>(GetSlots());
   }
 
   nsDOMSlots *GetExistingDOMSlots() const
   {
-    return NS_STATIC_CAST(nsDOMSlots*, GetExistingSlots());
+    return static_cast<nsDOMSlots*>(GetExistingSlots());
   }
 
   /**

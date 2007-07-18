@@ -52,13 +52,13 @@ static void Assert(PRBool aCondition, const char* aStatement)
 static void AssertString(nsIAtom *aAtom, const nsACString& aString)
 {
     const char *str;
-    NS_STATIC_CAST(AtomImpl*,aAtom)->GetUTF8String(&str);
+    static_cast<AtomImpl*>(aAtom)->GetUTF8String(&str);
     Assert(nsDependentCString(str) == aString, "string is correct");
 }
 
 static void AssertPermanence(nsIAtom *aAtom, PRBool aPermanence)
 {
-    Assert(NS_STATIC_CAST(AtomImpl*,aAtom)->IsPermanent() == aPermanence,
+    Assert(static_cast<AtomImpl*>(aAtom)->IsPermanent() == aPermanence,
            aPermanence ? "atom is permanent" : "atom is not permanent");
 }
 

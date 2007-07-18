@@ -424,7 +424,7 @@ DISPID XPCDispNameArray::Find(const nsAString &target) const
     for(PRUint32 index = 0; index < mCount; ++index) 
     {
         if(mNames[index].Equals(target)) 
-            return NS_STATIC_CAST(DISPID, index + 1);
+            return static_cast<DISPID>(index + 1);
     }
     return 0; 
 }
@@ -443,8 +443,7 @@ jsval XPCDispIDArray::Item(JSContext* cx, PRUint32 index) const
 {
     jsval val;
     if(!JS_IdToValue(cx, 
-                     NS_REINTERPRET_CAST(jsid, 
-                                         mIDArray.ElementAt(index)), &val))
+                     reinterpret_cast<jsid>(mIDArray.ElementAt(index)), &val))
         return JSVAL_NULL;
     return val;
 }
@@ -467,7 +466,7 @@ JSBool XPCDispIDArray::IsMarked() const
 inline
 FUNCDESC* XPCDispTypeInfo::FuncDescArray::Get(PRUint32 index) 
 {
-    return NS_REINTERPRET_CAST(FUNCDESC*,mArray[index]);
+    return reinterpret_cast<FUNCDESC*>(mArray[index]);
 }
 
 inline
@@ -547,7 +546,7 @@ const nsAString & XPCDispJSPropertyInfo::GetName() const
 inline
 XPCDispJSPropertyInfo::property_type XPCDispJSPropertyInfo::PropertyType() const
 {
-    return NS_STATIC_CAST(property_type,mPropertyType & ~SETTER_MODE);
+    return static_cast<property_type>(mPropertyType & ~SETTER_MODE);
 }
 
 //=============================================================================
@@ -557,28 +556,28 @@ inline
 const nsIID & XPCDispIID2nsIID(const IID & iid)
 {
     NS_ASSERTION(sizeof(IID) == sizeof(nsIID), "IID is not the same size as nsIID");
-    return NS_REINTERPRET_CAST(const nsIID &,iid);
+    return reinterpret_cast<const nsIID &>(iid);
 }
 
 inline
 const IID & XPCDispIID2IID(const nsIID & iid)
 {
     NS_ASSERTION(sizeof(IID) == sizeof(nsIID), "IID is not the same size as nsIID");
-    return NS_REINTERPRET_CAST(const IID &, iid);
+    return reinterpret_cast<const IID &>(iid);
 }
 
 inline
 const nsCID & XPCDispCLSID2nsCID(const CLSID & clsid)
 {
     NS_ASSERTION(sizeof(CLSID) == sizeof(nsCID), "CLSID is not the same size as nsCID");
-    return NS_REINTERPRET_CAST(const nsCID &,clsid);
+    return reinterpret_cast<const nsCID &>(clsid);
 }
 
 inline
 const CLSID & XPCDispnsCID2CLSID(const nsCID & clsid)
 {
     NS_ASSERTION(sizeof(CLSID) == sizeof(nsCID), "CLSID is not the same size as nsCID");
-    return NS_REINTERPRET_CAST(const CLSID &, clsid);
+    return reinterpret_cast<const CLSID &>(clsid);
 }
 
 //=============================================================================
@@ -601,7 +600,7 @@ VARIANT & XPCDispParams::GetParamRef(PRUint32 index)
 inline
 _variant_t XPCDispParams::GetParam(PRUint32 index) const
 {
-    return NS_CONST_CAST(XPCDispParams*,this)->GetParamRef(index);
+    return const_cast<XPCDispParams*>(this)->GetParamRef(index);
 }
 
 inline
@@ -663,6 +662,6 @@ PRUnichar* xpc_JSString2PRUnichar(XPCCallContext& ccx, jsval val,
         return nsnull;
     if(length)
         *length = JS_GetStringLength(str);
-    return NS_REINTERPRET_CAST(PRUnichar*,JS_GetStringChars(str));
+    return reinterpret_cast<PRUnichar*>(JS_GetStringChars(str));
 }
 

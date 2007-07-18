@@ -204,7 +204,7 @@ basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::GetWritableFragment( nsWri
         case kFirstFragment:
         case kLastFragment:
         case kFragmentAt:
-          aFragment.mEnd = (aFragment.mStart = NS_CONST_CAST(CharT*, mRawString.data())) + mRawString.length();
+          aFragment.mEnd = (aFragment.mStart = const_cast<CharT*>(mRawString.data())) + mRawString.length();
           return aFragment.mStart + aOffset;
         
         case kPrevFragment:
@@ -221,7 +221,7 @@ basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::do_AssignFromReadable( con
     typedef basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT> this_t;
 
     if ( SameImplementation(*this, rhs) )
-      mRawString = NS_STATIC_CAST(this_t, rhs).mRawString;
+      mRawString = static_cast<this_t>(rhs).mRawString;
     else
       basic_nsAString<CharT>::do_AssignFromReadable(rhs);
   }

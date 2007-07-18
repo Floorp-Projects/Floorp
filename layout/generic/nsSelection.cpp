@@ -447,7 +447,7 @@ public:
 
     // Store the content from the nearest capturing frame. If this returns null
     // the capturing frame is the root.
-    nsIFrame* clientFrame = NS_STATIC_CAST(nsIFrame*, aView->GetClientData());
+    nsIFrame* clientFrame = static_cast<nsIFrame*>(aView->GetClientData());
     NS_ASSERTION(clientFrame, "Missing client frame");
 
     nsIFrame* capturingFrame = nsFrame::GetNearestCapturingFrame(clientFrame);
@@ -550,7 +550,7 @@ public:
 
       nsIView* captureView = capturingFrame->GetMouseCapturer();
     
-      nsIFrame* viewFrame = NS_STATIC_CAST(nsIFrame*, captureView->GetClientData());
+      nsIFrame* viewFrame = static_cast<nsIFrame*>(captureView->GetClientData());
       NS_ASSERTION(viewFrame, "View must have a client frame");
       
       mFrameSelection->HandleDrag(viewFrame, mPoint);
@@ -664,11 +664,21 @@ IsValidSelectionPoint(nsFrameSelection *aFrameSel, nsIContent *aContent)
     return PR_FALSE;
   if (aFrameSel)
   {
-    nsCOMPtr<nsIContent> tLimiter = aFrameSel->GetLimiter();
-    if (tLimiter && tLimiter != aContent)
+    nsIContent *limiter = aFrameSel->GetLimiter();
+    if (limiter)
     {
-      if (tLimiter != aContent->GetParent()) //if newfocus == the limiter. that's ok. but if not there and not parent bad
+      if (limiter != aContent && limiter != aContent->GetParent()) //if newfocus == the limiter. that's ok. but if not there and not parent bad
         return PR_FALSE; //not in the right content. tLimiter said so
+    }
+    limiter = aFrameSel->GetAncestorLimiter();
+    if (limiter)
+    {
+      nsIContent *content = aContent;
+      while (content && content != limiter)
+      {
+        content = content->GetParent();
+      }
+      return content != nsnull;
     }
   }
   return PR_TRUE;
@@ -825,6 +835,7 @@ nsFrameSelection::nsFrameSelection()
   mChangesDuringBatching = PR_FALSE;
   mNotifyFrames = PR_TRUE;
   mLimiter = nsnull; //no default limiter.
+  mAncestorLimiter = nsnull;
   
   mMouseDoubleDownState = PR_FALSE;
   
@@ -2220,8 +2231,10 @@ nsFrameSelection::HandleClick(nsIContent *aNewFocus,
 
   InvalidateDesiredX();
 
-  if (!aContinueSelection)
+  if (!aContinueSelection) {
     mMaintainRange = nsnull;
+    mAncestorLimiter = nsnull;
+  }
 
   mHint = HINT(aHint);
   // Don't take focus when dragging off of a table
@@ -2516,7 +2529,7 @@ nsFrameSelection::GetSelection(SelectionType aType)
   if (index < 0)
     return nsnull;
 
-  return NS_STATIC_CAST(nsISelection*, mDomSelections[index]);
+  return static_cast<nsISelection*>(mDomSelections[index]);
 }
 
 nsresult
@@ -2674,7 +2687,7 @@ nsFrameSelection::CommonPageMove(PRBool aForward,
     return;
 
   if (scrolledView)
-    mainframe = NS_STATIC_CAST(nsIFrame*, scrolledView->GetClientData());
+    mainframe = static_cast<nsIFrame*>(scrolledView->GetClientData());
 
   if (!mainframe)
     return;
@@ -2786,6 +2799,9 @@ nsFrameSelection::SelectAll()
   {
     rootContent = mLimiter;//addrefit
   }
+  else if (mAncestorLimiter) {
+    rootContent = mAncestorLimiter;
+  }
   else
   {
     nsIDocument *doc = mShell->GetDocument();
@@ -2797,7 +2813,7 @@ nsFrameSelection::SelectAll()
   }
   PRInt32 numChildren = rootContent->GetChildCount();
   PostReason(nsISelectionListener::NO_REASON);
-  return TakeFocus(mLimiter, 0, numChildren, PR_FALSE, PR_FALSE);
+  return TakeFocus(rootContent, 0, numChildren, PR_FALSE, PR_FALSE);
 }
 
 //////////END FRAMESELECTION
@@ -3823,6 +3839,23 @@ nsFrameSelection::CreateAndAddRange(nsIDOMNode *aParentNode, PRInt32 aOffset)
 
 // End of Table Selection
 
+void
+nsFrameSelection::SetAncestorLimiter(nsIContent *aLimiter)
+{
+  if (mAncestorLimiter != aLimiter) {
+    mAncestorLimiter = aLimiter;
+    PRInt8 index =
+      GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+    if (!IsValidSelectionPoint(this, mDomSelections[index]->FetchFocusNode())) {
+      ClearNormalSelection();
+      if (mAncestorLimiter) {
+        PostReason(nsISelectionListener::NO_REASON);
+        TakeFocus(mAncestorLimiter, 0, 0, PR_FALSE, PR_FALSE);
+      }
+    }
+  }
+}
+
 //END nsFrameSelection methods
 
 
@@ -3869,7 +3902,7 @@ nsFrameSelection::DeleteFromDocument()
   nsCOMPtr<nsIDOMRange> range;
   while (iter.IsDone())
   {
-    res = iter.CurrentItem(NS_STATIC_CAST(nsIDOMRange**, getter_AddRefs(range)));
+    res = iter.CurrentItem(static_cast<nsIDOMRange**>(getter_AddRefs(range)));
     if (NS_FAILED(res))
       return res;
     res = range->DeleteContents();
@@ -4628,8 +4661,8 @@ nsTypedSelection::GetRangesForInterval(nsIDOMNode* aBeginNode, PRInt32 aBeginOff
   if (results.Count() == 0)
     return NS_OK;
 
-  *aResults = NS_STATIC_CAST(nsIDOMRange**,
-      nsMemory::Alloc(sizeof(nsIDOMRange*) * results.Count()));
+  *aResults = static_cast<nsIDOMRange**>
+                         (nsMemory::Alloc(sizeof(nsIDOMRange*) * results.Count()));
   NS_ENSURE_TRUE(*aResults, NS_ERROR_OUT_OF_MEMORY);
 
   *aResultCount = results.Count();
@@ -5288,6 +5321,13 @@ nsTypedSelection::GetFrameSelection(nsFrameSelection **aFrameSelection) {
   NS_ENSURE_ARG_POINTER(aFrameSelection);
   *aFrameSelection = mFrameSelection;
   NS_IF_ADDREF(*aFrameSelection);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTypedSelection::SetAncestorLimiter(nsIContent *aContent)
+{
+  mFrameSelection->SetAncestorLimiter(aContent);
   return NS_OK;
 }
 
@@ -7055,9 +7095,9 @@ nsTypedSelection::GetSelectionRegionRectAndScrollableView(SelectionRegion aRegio
 
   // If the point we are interested in is outside the clip region, we aim
   // to over-scroll it by a quarter of the clip's width.
-  PRInt32 pad = clipRect.width >> 2;
+  PRInt32 pad = clipRect.width / 4;
 
-  if (pad <= 0)
+  if (pad == 0)
     pad = 3; // Arbitrary
 
   if (aRect->x >= clipRect.XMost()) {

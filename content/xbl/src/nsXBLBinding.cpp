@@ -111,14 +111,14 @@
 PR_STATIC_CALLBACK(void)
 XBLFinalize(JSContext *cx, JSObject *obj)
 {
-  nsXBLJSClass* c = NS_STATIC_CAST(nsXBLJSClass*, ::JS_GetClass(cx, obj));
+  nsXBLJSClass* c = static_cast<nsXBLJSClass*>(::JS_GetClass(cx, obj));
   c->Drop();
 }
 
 nsXBLJSClass::nsXBLJSClass(const nsAFlatCString& aClassName)
 {
   memset(this, 0, sizeof(nsXBLJSClass));
-  next = prev = NS_STATIC_CAST(JSCList*, this);
+  next = prev = static_cast<JSCList*>(this);
   name = ToNewCString(aClassName);
   addProperty = delProperty = setProperty = getProperty = ::JS_PropertyStub;
   enumerate = ::JS_EnumerateStub;
@@ -130,7 +130,7 @@ nsXBLJSClass::nsXBLJSClass(const nsAFlatCString& aClassName)
 nsrefcnt
 nsXBLJSClass::Destroy()
 {
-  NS_ASSERTION(next == prev && prev == NS_STATIC_CAST(JSCList*, this),
+  NS_ASSERTION(next == prev && prev == static_cast<JSCList*>(this),
                "referenced nsXBLJSClass is on LRU list already!?");
 
   if (nsXBLService::gClassTable) {
@@ -143,7 +143,7 @@ nsXBLJSClass::Destroy()
     delete this;
   } else {
     // Put this most-recently-used class on end of the LRU-sorted freelist.
-    JSCList* mru = NS_STATIC_CAST(JSCList*, this);
+    JSCList* mru = static_cast<JSCList*>(this);
     JS_APPEND_LINK(mru, &nsXBLService::gClassLRUList);
     nsXBLService::gClassLRUListLength++;
   }
@@ -177,7 +177,7 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 TraverseKey(nsISupports* aKey, nsInsertionPointList* aData, void* aClosure)
 {
   nsCycleCollectionTraversalCallback &cb = 
-    *NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aClosure);
+    *static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
 
   cb.NoteXPCOMChild(aKey);
   if (aData) {
@@ -1079,10 +1079,10 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
     classObject = (nsXBLService::gClassTable)->Get(&key);
 
     if (classObject) {
-      c = NS_STATIC_CAST(nsXBLJSClass*, classObject);
+      c = static_cast<nsXBLJSClass*>(classObject);
 
       // If c is on the LRU list (i.e., not linked to itself), remove it now!
-      JSCList* link = NS_STATIC_CAST(JSCList*, c);
+      JSCList* link = static_cast<JSCList*>(c);
       if (c->next != link) {
         JS_REMOVE_AND_INIT_LINK(link);
         nsXBLService::gClassLRUListLength--;
@@ -1101,7 +1101,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
         nsXBLService::gClassLRUListLength--;
 
         // Remove any mapping from the old name to the class struct.
-        c = NS_STATIC_CAST(nsXBLJSClass*, lru);
+        c = static_cast<nsXBLJSClass*>(lru);
         nsCStringKey oldKey(c->name);
         (nsXBLService::gClassTable)->Remove(&oldKey);
 

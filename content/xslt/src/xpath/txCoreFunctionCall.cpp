@@ -134,9 +134,9 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             txXPathTreeWalker walker(aContext->getContextNode());
             
             if (exprResult->getResultType() == txAExprResult::NODESET) {
-                txNodeSet* nodes = NS_STATIC_CAST(txNodeSet*,
-                                                  NS_STATIC_CAST(txAExprResult*,
-                                                                 exprResult));
+                txNodeSet* nodes = static_cast<txNodeSet*>
+                                              (static_cast<txAExprResult*>
+                                                          (exprResult));
                 PRInt32 i;
                 for (i = 0; i < nodes->size(); ++i) {
                     nsAutoString idList;
@@ -741,7 +741,7 @@ txCoreFunctionCall::getTypeFromAtom(nsIAtom* aName, eType& aType)
     PRUint32 i;
     for (i = 0; i < NS_ARRAY_LENGTH(descriptTable); ++i) {
         if (aName == *descriptTable[i].mName) {
-            aType = NS_STATIC_CAST(eType, i);
+            aType = static_cast<eType>(i);
 
             return PR_TRUE;
         }

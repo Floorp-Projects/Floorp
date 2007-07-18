@@ -42,7 +42,6 @@
 #include "nsICookie.h"
 #include "nsICookie2.h"
 #include "nsString.h"
-#include "nsInt64.h"
 
 /** 
  * The nsCookie class is the main cookie storage medium for use within cookie
@@ -75,14 +74,11 @@ class nsCookie : public nsICookie2
              const char     *aHost,
              const char     *aPath,
              const char     *aEnd,
-             nsInt64         aExpiry,
-             nsInt64         aLastAccessed,
-             PRUint32        aCreationTime,
+             PRInt64         aExpiry,
+             PRInt64         aCreationID,
              PRBool          aIsSession,
              PRBool          aIsSecure,
-             PRBool          aIsHttpOnly,
-             nsCookieStatus  aStatus,
-             nsCookiePolicy  aPolicy)
+             PRBool          aIsHttpOnly)
      : mNext(nsnull)
      , mName(aName)
      , mValue(aValue)
@@ -90,14 +86,11 @@ class nsCookie : public nsICookie2
      , mPath(aPath)
      , mEnd(aEnd)
      , mExpiry(aExpiry)
-     , mLastAccessed(aLastAccessed)
-     , mCreationTime(aCreationTime)
+     , mCreationID(aCreationID)
      , mRefCnt(0)
      , mIsSession(aIsSession != PR_FALSE)
      , mIsSecure(aIsSecure != PR_FALSE)
      , mIsHttpOnly(aIsHttpOnly != PR_FALSE)
-     , mStatus(aStatus)
-     , mPolicy(aPolicy)
     {
     }
 
@@ -108,13 +101,11 @@ class nsCookie : public nsICookie2
                              const nsACString &aValue,
                              const nsACString &aHost,
                              const nsACString &aPath,
-                             nsInt64           aExpiry,
-                             nsInt64           aLastAccessed,
+                             PRInt64           aExpiry,
+                             PRInt64           aCreationID,
                              PRBool            aIsSession,
                              PRBool            aIsSecure,
-                             PRBool            aIsHttpOnly,
-                             nsCookieStatus    aStatus,
-                             nsCookiePolicy    aPolicy);
+                             PRBool            aIsHttpOnly);
 
     virtual ~nsCookie() {}
 
@@ -124,21 +115,21 @@ class nsCookie : public nsICookie2
     inline const nsDependentCString Host()  const { return nsDependentCString(mHost, mPath - 1); }
     inline const nsDependentCString RawHost() const { return nsDependentCString(IsDomain() ? mHost + 1 : mHost, mPath - 1); }
     inline const nsDependentCString Path()  const { return nsDependentCString(mPath, mEnd); }
-    inline nsInt64 Expiry()                 const { return mExpiry; }
-    inline nsInt64 LastAccessed()           const { return mLastAccessed; }
-    inline PRUint32 CreationTime()          const { return mCreationTime; }
+    inline PRInt64 Expiry()                 const { return mExpiry; }
+    inline PRInt64 CreationID()             const { return mCreationID; }
+    // cookie creation time, in seconds
+    inline PRInt64 CreationTime()           const { return mCreationID / PR_USEC_PER_SEC; }
     inline PRBool IsSession()               const { return mIsSession; }
     inline PRBool IsDomain()                const { return *mHost == '.'; }
     inline PRBool IsSecure()                const { return mIsSecure; }
     inline PRBool IsHttpOnly()              const { return mIsHttpOnly; }
-    inline nsCookieStatus Status()          const { return mStatus; }
-    inline nsCookiePolicy Policy()          const { return mPolicy; }
 
     // setters
-    inline void SetLastAccessed(nsInt64 aLastAccessed) { mLastAccessed = aLastAccessed; }
-    inline void SetExpiry(PRInt64 aExpiry)             { mExpiry = aExpiry; }
-    inline void SetIsSession(PRBool aIsSession)        { mIsSession = aIsSession; }
-    inline void SetCreationTime(PRUint32 aCT)          { mCreationTime = aCT; }
+    inline void SetExpiry(PRInt64 aExpiry)        { mExpiry = aExpiry; }
+    inline void SetIsSession(PRBool aIsSession)   { mIsSession = aIsSession; }
+    // set the creation id manually, overriding the monotonicity checks in Create().
+    // use with caution!
+    inline void SetCreationID(PRInt64 aID)        { mCreationID = aID; }
 
     // linked list management helper
     inline nsCookie*& Next() { return mNext; }
@@ -156,15 +147,14 @@ class nsCookie : public nsICookie2
     const char *mHost;
     const char *mPath;
     const char *mEnd;
-    nsInt64     mExpiry;
-    nsInt64     mLastAccessed;
-    PRUint32    mCreationTime;
+    PRInt64     mExpiry;
+    // creation id is unique for each cookie and approximately represents the cookie
+    // creation time, in microseconds.
+    PRInt64     mCreationID;
     PRUint32    mRefCnt    : 16;
     PRUint32    mIsSession : 1;
     PRUint32    mIsSecure  : 1;
     PRUint32    mIsHttpOnly: 1;
-    PRUint32    mStatus    : 3;
-    PRUint32    mPolicy    : 3;
 };
 
 #endif // nsCookie_h__

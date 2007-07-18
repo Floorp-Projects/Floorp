@@ -563,7 +563,7 @@ ElementTraverser(const nsAString& key, nsIDOMHTMLInputElement* element,
                  void* userArg)
 {
   nsCycleCollectionTraversalCallback *cb = 
-    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, userArg);
+    static_cast<nsCycleCollectionTraversalCallback*>(userArg);
  
   cb->NoteXPCOMChild(element);
   return PL_DHASH_NEXT;
@@ -688,7 +688,7 @@ NS_IMETHODIMP
 nsHTMLFormElement::Reset()
 {
   nsFormEvent event(PR_TRUE, NS_FORM_RESET);
-  nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this), nsnull,
+  nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), nsnull,
                               &event);
   return NS_OK;
 }
@@ -759,7 +759,7 @@ nsHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 nsresult
 nsHTMLFormElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
-  if (aVisitor.mEvent->originalTarget == NS_STATIC_CAST(nsIContent*, this)) {
+  if (aVisitor.mEvent->originalTarget == static_cast<nsIContent*>(this)) {
     PRUint32 msg = aVisitor.mEvent->message;
     if (msg == NS_FORM_SUBMIT) {
       if (mGeneratingSubmit) {
@@ -787,7 +787,7 @@ nsHTMLFormElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 nsresult
 nsHTMLFormElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
-  if (aVisitor.mEvent->originalTarget == NS_STATIC_CAST(nsIContent*, this)) {
+  if (aVisitor.mEvent->originalTarget == static_cast<nsIContent*>(this)) {
     PRUint32 msg = aVisitor.mEvent->message;
     if (msg == NS_FORM_SUBMIT) {
       // let the form know not to defer subsequent submissions
@@ -981,7 +981,7 @@ nsHTMLFormElement::SubmitSubmission(nsIFormSubmission* aFormSubmission)
   nsIDocument* doc = GetCurrentDoc();
   nsCOMPtr<nsISupports> container = doc ? doc->GetContainer() : nsnull;
   nsCOMPtr<nsILinkHandler> linkHandler(do_QueryInterface(container));
-  if (!linkHandler) {
+  if (!linkHandler || IsEditable()) {
     mIsSubmitting = PR_FALSE;
     return NS_OK;
   }
@@ -1353,7 +1353,7 @@ nsHTMLFormElement::ResetDefaultSubmitElement(PRBool aNotify,
   mDefaultSubmitElement = FindDefaultSubmit(aPrevDefaultInElements,
                                             aPrevDefaultIndex);
 
-  // Inform about change.  Note that we dont' notify on the old default submit
+  // Inform about change.  Note that we don't notify on the old default submit
   // (which is being removed) because it's either being removed from the DOM or
   // changing attributes in a way that makes it responsible for sending its own
   // notifications.
@@ -1744,7 +1744,7 @@ nsHTMLFormElement::GetPositionInGroup(nsIDOMHTMLInputElement *aRadio,
   // XXX If ResolveName could return an nsContentList instead then we 
   //     could get an nsContentList instead of using this hacky upcast
   nsBaseContentList *radioGroup =
-    NS_STATIC_CAST(nsBaseContentList *, (nsIDOMNodeList *)radioNodeList);
+    static_cast<nsBaseContentList *>((nsIDOMNodeList *)radioNodeList);
   NS_ASSERTION(radioGroup, "No such radio group in this container");
   if (!radioGroup) {
     return NS_OK;
@@ -1787,7 +1787,7 @@ nsHTMLFormElement::GetNextRadioButton(const nsAString& aName,
   //     could get an nsContentList instead of using this hacky upcast
 
   nsBaseContentList *radioGroup =
-    NS_STATIC_CAST(nsBaseContentList *, (nsIDOMNodeList *)radioNodeList);
+    static_cast<nsBaseContentList *>((nsIDOMNodeList *)radioNodeList);
   if (!radioGroup) {
     return NS_ERROR_FAILURE;
   }
@@ -1986,7 +1986,7 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 ControlTraverser(const nsAString& key, nsISupports* control, void* userArg)
 {
   nsCycleCollectionTraversalCallback *cb = 
-    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, userArg);
+    static_cast<nsCycleCollectionTraversalCallback*>(userArg);
  
   cb->NoteXPCOMChild(control);
   return PL_DHASH_NEXT;
@@ -2144,8 +2144,8 @@ nsFormControlList::AddElementToTable(nsIFormControl* aChild,
       NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
 
       // Upcast, uggly, but it works!
-      nsBaseContentList *list = NS_STATIC_CAST(nsBaseContentList *,
-                                               (nsIDOMNodeList *)nodeList.get());
+      nsBaseContentList *list = static_cast<nsBaseContentList *>
+                                           ((nsIDOMNodeList *)nodeList.get());
 
       PRInt32 oldIndex = list->IndexOf(newChild, PR_FALSE);
       
@@ -2206,8 +2206,8 @@ nsFormControlList::RemoveElementFromTable(nsIFormControl* aChild,
   NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
 
   // Upcast, uggly, but it works!
-  nsBaseContentList *list = NS_STATIC_CAST(nsBaseContentList *,
-                                           (nsIDOMNodeList *)nodeList.get());
+  nsBaseContentList *list = static_cast<nsBaseContentList *>
+                                       ((nsIDOMNodeList *)nodeList.get());
 
   list->RemoveElement(content);
 

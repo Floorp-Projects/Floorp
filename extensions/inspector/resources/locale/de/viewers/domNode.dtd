@@ -38,14 +38,18 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY nodeName.label "Node-Name:">
+<!ENTITY localName.label "Lokaler Name:">
 <!ENTITY namespaceURI.label "Namespace-URI:">
 <!ENTITY nodeType.label "Node-Typ:">
 <!ENTITY nodeValue.label "Knoten-Wert:">
 
 <!ENTITY namespaceTitle.null.label "null">
 <!ENTITY namespaceTitle.default.label "Dokumentstandard">
+<!ENTITY namespaceTitle.custom.label "Benutzerdefiniert">
 
-<!-- LOCALIZATION NOTE: DO NOT LOCALIZE These are generic Namespaces -->
+<!-- LOCALIZATION NOTE: The following entities are names of W3C specifications.
+                        Please consult http://www.w3.org/Consortium/Translation/
+                        for appropriate translation or leave unchanged. -->
 <!ENTITY namespaceTitle.XMLNS.label "XMLNS">
 <!ENTITY namespaceTitle.XML.label "XML">
 <!ENTITY namespaceTitle.XHTML.label "XHTML">
@@ -59,4 +63,3 @@
 <!ENTITY namespaceTitle.XMLEvents.label "XML-Ereignisse">
 <!ENTITY namespaceTitle.WAIRoles.label "WAI-Rollen">
 <!ENTITY namespaceTitle.WAIProperties.label "WAI-Eigenschaften">
-<!ENTITY namespaceTitle.custom.label "Benutzerdefiniert">

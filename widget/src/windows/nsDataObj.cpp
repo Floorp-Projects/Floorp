@@ -313,7 +313,7 @@ nsDataObj::~nsDataObj()
   NS_IF_RELEASE(mTransferable);
   PRInt32 i;
   for (i=0;i<mDataFlavors->Count();i++) {
-    nsCAutoString* df = NS_REINTERPRET_CAST(nsCAutoString *, mDataFlavors->ElementAt(i));
+    nsCAutoString* df = reinterpret_cast<nsCAutoString *>(mDataFlavors->ElementAt(i));
     delete df;
   }
 
@@ -409,7 +409,7 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
   FORMATETC fe;
   m_enumFE->Reset();
   while (NOERROR == m_enumFE->Next(1, &fe, &count)) {
-    nsCAutoString * df = NS_REINTERPRET_CAST(nsCAutoString*, mDataFlavors->SafeElementAt(dfInx));
+    nsCAutoString * df = reinterpret_cast<nsCAutoString*>(mDataFlavors->SafeElementAt(dfInx));
     if ( df ) {
       if (FormatsMatch(fe, *pFE)) {
         pSTM->pUnkForRelease = NULL;        // caller is responsible for deleting this data
@@ -889,8 +889,7 @@ nsDataObj :: GetFileDescriptorInternetShortcutA ( FORMATETC& aFE, STGMEDIUM& aST
   if (!fileGroupDescHandle)
     return E_OUTOFMEMORY;
 
-  LPFILEGROUPDESCRIPTORA fileGroupDescA = NS_REINTERPRET_CAST(LPFILEGROUPDESCRIPTORA, 
-      ::GlobalLock(fileGroupDescHandle));
+  LPFILEGROUPDESCRIPTORA fileGroupDescA = reinterpret_cast<LPFILEGROUPDESCRIPTORA>(::GlobalLock(fileGroupDescHandle));
   if (!fileGroupDescA) {
     ::GlobalFree(fileGroupDescHandle);
     return E_OUTOFMEMORY;
@@ -935,8 +934,7 @@ nsDataObj :: GetFileDescriptorInternetShortcutW ( FORMATETC& aFE, STGMEDIUM& aST
   if (!fileGroupDescHandle)
     return E_OUTOFMEMORY;
 
-  LPFILEGROUPDESCRIPTORW fileGroupDescW = NS_REINTERPRET_CAST(LPFILEGROUPDESCRIPTORW, 
-      ::GlobalLock(fileGroupDescHandle));
+  LPFILEGROUPDESCRIPTORW fileGroupDescW = reinterpret_cast<LPFILEGROUPDESCRIPTORW>(::GlobalLock(fileGroupDescHandle));
   if (!fileGroupDescW) {
     ::GlobalFree(fileGroupDescHandle);
     return E_OUTOFMEMORY;
@@ -996,7 +994,7 @@ nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
   if ( !hGlobalMemory )
     return E_OUTOFMEMORY;
 
-  char* contents = NS_REINTERPRET_CAST(char*, ::GlobalLock(hGlobalMemory));
+  char* contents = reinterpret_cast<char*>(::GlobalLock(hGlobalMemory));
   if ( !contents ) {
     ::GlobalFree( hGlobalMemory );
     return E_OUTOFMEMORY;
@@ -1114,7 +1112,7 @@ HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
     // Someone is asking for text/plain; convert the unicode (assuming it's present)
     // to text with the correct platform encoding.
     char* plainTextData = nsnull;
-    PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, data);
+    PRUnichar* castedUnicode = reinterpret_cast<PRUnichar*>(data);
     PRInt32 plainTextLen = 0;
     nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText ( castedUnicode, len / 2, &plainTextData, &plainTextLen );
    
@@ -1133,7 +1131,7 @@ HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
   else if ( aFE.cfFormat == nsClipboard::CF_HTML ) {
     // Someone is asking for win32's HTML flavor. Convert our html fragment
     // from unicode to UTF-8 then put it into a format specified by msft.
-    NS_ConvertUTF16toUTF8 converter ( NS_REINTERPRET_CAST(PRUnichar*, data) );
+    NS_ConvertUTF16toUTF8 converter ( reinterpret_cast<PRUnichar*>(data) );
     char* utf8HTML = nsnull;
     nsresult rv = BuildPlatformHTML ( converter.get(), &utf8HTML );      // null terminates
     
@@ -1158,8 +1156,8 @@ HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
 
   // Copy text to Global Memory Area
   if ( hGlobalMemory ) {
-    char* dest = NS_REINTERPRET_CAST(char*, GlobalLock(hGlobalMemory));
-    char* source = NS_REINTERPRET_CAST(char*, data);
+    char* dest = reinterpret_cast<char*>(GlobalLock(hGlobalMemory));
+    char* source = reinterpret_cast<char*>(data);
     memcpy ( dest, source, allocLen );                         // copies the null as well
     GlobalUnlock(hGlobalMemory);
   }
@@ -1488,7 +1486,7 @@ nsDataObj::ExtractUniformResourceLocatorA(FORMATETC& aFE, STGMEDIUM& aSTG )
   if (!hGlobalMemory)
     return E_OUTOFMEMORY;
 
-  char* contents = NS_REINTERPRET_CAST(char*, GlobalLock(hGlobalMemory));
+  char* contents = reinterpret_cast<char*>(GlobalLock(hGlobalMemory));
   if (!contents) {
     GlobalFree(hGlobalMemory);
     return E_OUTOFMEMORY;
@@ -1516,7 +1514,7 @@ nsDataObj::ExtractUniformResourceLocatorW(FORMATETC& aFE, STGMEDIUM& aSTG )
   if (!hGlobalMemory)
     return E_OUTOFMEMORY;
 
-  wchar_t* contents = NS_REINTERPRET_CAST(wchar_t*, GlobalLock(hGlobalMemory));
+  wchar_t* contents = reinterpret_cast<wchar_t*>(GlobalLock(hGlobalMemory));
   if (!contents) {
     GlobalFree(hGlobalMemory);
     return E_OUTOFMEMORY;
@@ -1588,8 +1586,7 @@ HRESULT nsDataObj::GetFileDescriptor_IStreamA(FORMATETC& aFE, STGMEDIUM& aSTG)
   HGLOBAL fileGroupDescHandle = ::GlobalAlloc(GMEM_ZEROINIT|GMEM_SHARE,sizeof(FILEGROUPDESCRIPTORW));
   NS_ENSURE_TRUE(fileGroupDescHandle, E_OUTOFMEMORY);
 
-  LPFILEGROUPDESCRIPTORA fileGroupDescA = NS_REINTERPRET_CAST(LPFILEGROUPDESCRIPTORA, 
-                                                              ::GlobalLock(fileGroupDescHandle));
+  LPFILEGROUPDESCRIPTORA fileGroupDescA = reinterpret_cast<LPFILEGROUPDESCRIPTORA>(::GlobalLock(fileGroupDescHandle));
   if (!fileGroupDescA) {
     ::GlobalFree(fileGroupDescHandle);
     return E_OUTOFMEMORY;
@@ -1628,8 +1625,7 @@ HRESULT nsDataObj::GetFileDescriptor_IStreamW(FORMATETC& aFE, STGMEDIUM& aSTG)
   HGLOBAL fileGroupDescHandle = ::GlobalAlloc(GMEM_ZEROINIT|GMEM_SHARE,sizeof(FILEGROUPDESCRIPTORW));
   NS_ENSURE_TRUE(fileGroupDescHandle, E_OUTOFMEMORY);
 
-  LPFILEGROUPDESCRIPTORW fileGroupDescW = NS_REINTERPRET_CAST(LPFILEGROUPDESCRIPTORW, 
-                                                              ::GlobalLock(fileGroupDescHandle));
+  LPFILEGROUPDESCRIPTORW fileGroupDescW = reinterpret_cast<LPFILEGROUPDESCRIPTORW>(::GlobalLock(fileGroupDescHandle));
   if (!fileGroupDescW) {
     ::GlobalFree(fileGroupDescHandle);
     return E_OUTOFMEMORY;

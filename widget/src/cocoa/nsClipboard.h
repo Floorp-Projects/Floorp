@@ -41,6 +41,18 @@
 
 #include "nsBaseClipboard.h"
 
+#import <Cocoa/Cocoa.h>
+
+#ifdef MOZ_LOGGING
+// make sure that logging is enabled before including prlog.h
+#define FORCE_PR_LOG
+#include "prlog.h"
+#endif
+
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* sCocoaLog;
+#endif
+
 class nsITransferable;
 
 
@@ -54,11 +66,17 @@ public:
   // nsIClipboard  
   NS_IMETHOD  HasDataMatchingFlavors(nsISupportsArray *aFlavorList, PRInt32 aWhichClipboard, PRBool *_retval);
 
+  // Helper methods, used also by nsDragService
+  static NSDictionary* PasteboardDictFromTransferable(nsITransferable *aTransferable);
+
 protected:
 
   // impelement the native clipboard behavior
   NS_IMETHOD SetNativeClipboardData(PRInt32 aWhichClipboard);
   NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable, PRInt32 aWhichClipboard);
+  
+private:
+  int mChangeCount; // this is always set to the native change count after any clipboard modifications
 
 };
 

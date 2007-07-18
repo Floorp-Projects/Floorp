@@ -554,8 +554,9 @@ class CalculateUTF8Length
   };
 
 /**
- * A character sink (see |copy_string| in nsAlgorithm.h) for converting
- * UTF-16 to UTF-8.
+ * A character sink (see |copy_string| in nsAlgorithm.h) for
+ * converting UTF-16 to UTF-8. Treats invalid UTF-16 data as 0xFFFD
+ * (0xEFBFBD in UTF-8).
  */
 class ConvertUTF16toUTF8
   {
@@ -622,15 +623,26 @@ class ConvertUTF16toUTF8
                   }
                 else
                   {
-                    NS_ERROR("got a High Surrogate but no low surrogate");
-                    // output nothing.
+                    // Treat broken characters as the Unicode
+                    // replacement character 0xFFFD (0xEFBFBD in
+                    // UTF-8)
+                    *out++ = 0xEF;
+                    *out++ = 0xBF;
+                    *out++ = 0xBD;
+
+                    NS_WARNING("got a High Surrogate but no low surrogate");
                   }
               }
             else // U+DC00 - U+DFFF
               {
+                // Treat broken characters as the Unicode replacement
+                // character 0xFFFD (0xEFBFBD in UTF-8)
+                *out++ = 0xEF;
+                *out++ = 0xBF;
+                *out++ = 0xBD;
+
                 // DC00- DFFF - Low Surrogate
-                NS_ERROR("got a low Surrogate but no high surrogate");
-                // output nothing.
+                NS_WARNING("got a low Surrogate but no high surrogate");
               }
           }
 
@@ -650,7 +662,8 @@ class ConvertUTF16toUTF8
 
 /**
  * A character sink (see |copy_string| in nsAlgorithm.h) for computing
- * the number of bytes a UTF-16 would occupy in UTF-8.
+ * the number of bytes a UTF-16 would occupy in UTF-8. Treats invalid
+ * UTF-16 data as 0xFFFD (0xEFBFBD in UTF-8).
  */
 class CalculateUTF8Size
   {
@@ -687,10 +700,23 @@ class CalculateUTF8Size
                 if (0xDC00 == (0xFC00 & c))
                   mSize += 4;
                 else
-                  NS_ERROR("got a high Surrogate but no low surrogate");
+                  {
+                    // Treat broken characters as the Unicode
+                    // replacement character 0xFFFD (0xEFBFBD in
+                    // UTF-8)
+                    mSize += 3;
+
+                    NS_WARNING("got a high Surrogate but no low surrogate");
+                  }
               }
             else // U+DC00 - U+DFFF
-              NS_ERROR("got a low Surrogate but no high surrogate");
+              {
+                // Treat broken characters as the Unicode replacement
+                // character 0xFFFD (0xEFBFBD in UTF-8)
+                mSize += 3;
+
+                NS_WARNING("got a low Surrogate but no high surrogate");
+              }
           }
 
         return N;

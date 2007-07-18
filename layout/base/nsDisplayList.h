@@ -580,7 +580,7 @@ public:
    * @return the item at the top of the list, or null if the list is empty
    */
   nsDisplayItem* GetTop() const {
-    return mTop != &mSentinel ? NS_STATIC_CAST(nsDisplayItem*, mTop) : nsnull;
+    return mTop != &mSentinel ? static_cast<nsDisplayItem*>(mTop) : nsnull;
   }
   /**
    * @return the item at the bottom of the list, or null if the list is empty

@@ -105,12 +105,12 @@ public:
                           nsIURI* aURI)
     : mContent(aContent), mFrame(aFrame), mContentType(aType), mURI(aURI)
   {
-    NS_STATIC_CAST(nsIObjectLoadingContent *, mContent)->AddRef();
+    static_cast<nsIObjectLoadingContent *>(mContent)->AddRef();
   }
 
   ~nsAsyncInstantiateEvent()
   {
-    NS_STATIC_CAST(nsIObjectLoadingContent *, mContent)->Release();
+    static_cast<nsIObjectLoadingContent *>(mContent)->Release();
   }
 
   NS_IMETHOD Run();
@@ -152,29 +152,37 @@ nsAsyncInstantiateEvent::Run()
 }
 
 /**
- * A task for firing PluginNotFound DOM Events.
+ * A task for firing PluginNotFound and PluginBlocklisted DOM Events.
  */
-class nsPluginNotFoundEvent : public nsRunnable {
+class nsPluginErrorEvent : public nsRunnable {
 public:
   nsCOMPtr<nsIContent> mContent;
+  PRBool mBlocklisted;
 
-  nsPluginNotFoundEvent(nsIContent* aContent)
-    : mContent(aContent)
+  nsPluginErrorEvent(nsIContent* aContent, PRBool aBlocklisted)
+    : mContent(aContent),
+      mBlocklisted(aBlocklisted)
   {}
 
-  ~nsPluginNotFoundEvent() {}
+  ~nsPluginErrorEvent() {}
 
   NS_IMETHOD Run();
 };
 
 NS_IMETHODIMP
-nsPluginNotFoundEvent::Run()
+nsPluginErrorEvent::Run()
 {
   LOG(("OBJLC []: Firing plugin not found event for content %p\n",
        mContent.get()));
-  nsContentUtils::DispatchTrustedEvent(mContent->GetDocument(), mContent,
-                                       NS_LITERAL_STRING("PluginNotFound"),
-                                       PR_TRUE, PR_TRUE);
+  if (mBlocklisted)
+    nsContentUtils::DispatchTrustedEvent(mContent->GetDocument(), mContent,
+                                         NS_LITERAL_STRING("PluginBlocklisted"),
+                                         PR_TRUE, PR_TRUE);
+  else
+    nsContentUtils::DispatchTrustedEvent(mContent->GetDocument(), mContent,
+                                         NS_LITERAL_STRING("PluginNotFound"),
+                                         PR_TRUE, PR_TRUE);
+
   return NS_OK;
 }
 
@@ -281,7 +289,8 @@ IsSupportedPlugin(const nsCString& aMIMEType)
 }
 
 nsObjectLoadingContent::nsObjectLoadingContent()
-  : mChannel(nsnull)
+  : mPendingInstantiateEvent(nsnull)
+  , mChannel(nsnull)
   , mType(eType_Loading)
   , mInstantiating(PR_FALSE)
   , mUserDisabled(PR_FALSE)
@@ -338,7 +347,7 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
   }
 
   nsCOMPtr<nsIContent> thisContent = 
-    do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
   switch (newType) {
     case eType_Image:
@@ -366,12 +375,27 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
         }
       }
 
+      nsCOMPtr<nsIURI> uri;
+      chan->GetURI(getter_AddRefs(uri));
+      rv = mFrameLoader->CheckForRecursiveLoad(uri);
+      if (NS_FAILED(rv)) {
+        Fallback(PR_FALSE);
+        return rv;
+      }
+
       if (mType != newType) {
         // XXX We must call this before getting the docshell to work around
         // bug 300540; when that's fixed, this if statement can be removed.
         mType = newType;
         notifier.Notify();
       }
+
+      // We're loading a document, so we have to set LOAD_DOCUMENT_URI
+      // (especially important for firing onload)
+      nsLoadFlags flags = 0;
+      chan->GetLoadFlags(&flags);
+      flags |= nsIChannel::LOAD_DOCUMENT_URI;
+      chan->SetLoadFlags(flags);
 
       nsCOMPtr<nsIDocShell> docShell;
       rv = mFrameLoader->GetDocShell(getter_AddRefs(docShell));
@@ -418,8 +442,9 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
       PluginSupportState pluginState = GetPluginSupportState(thisContent,
                                                              mContentType);
       // Do nothing, but fire the plugin not found event if needed
-      if (pluginState == ePluginUnsupported) {
-        FirePluginNotFound(thisContent);
+      if (pluginState == ePluginUnsupported ||
+          pluginState == ePluginBlocklisted) {
+        FirePluginError(thisContent, pluginState == ePluginBlocklisted);
       }
       if (pluginState != ePluginDisabled) {
         mTypeUnsupported = PR_TRUE;
@@ -535,7 +560,7 @@ nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
     mInstantiating = PR_TRUE;
 
     nsCOMPtr<nsIContent> thisContent = 
-      do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
+      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
     NS_ASSERTION(thisContent, "must be a content");
 
     nsIDocument* doc = thisContent->GetCurrentDoc();
@@ -695,7 +720,7 @@ nsObjectLoadingContent::LoadObject(const nsAString& aURI,
 
   // Avoid StringToURI in order to use the codebase attribute as base URI
   nsCOMPtr<nsIContent> thisContent = 
-    do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
 
   nsIDocument* doc = thisContent->GetOwnerDoc();
@@ -757,7 +782,7 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
   mContentType = aTypeHint;
 
   nsCOMPtr<nsIContent> thisContent = 
-    do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
 
   nsIDocument* doc = thisContent->GetOwnerDoc();
@@ -804,7 +829,7 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
       NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OBJECT,
                                 aURI,
                                 doc->GetDocumentURI(),
-                                NS_STATIC_CAST(nsIImageLoadingContent*, this),
+                                static_cast<nsIImageLoadingContent*>(this),
                                 aTypeHint,
                                 nsnull, //extra
                                 &shouldLoad,
@@ -879,8 +904,9 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
         // No need to load anything
         PluginSupportState pluginState = GetPluginSupportState(thisContent,
                                                                aTypeHint);
-        if (pluginState == ePluginUnsupported) {
-          FirePluginNotFound(thisContent);
+        if (pluginState == ePluginUnsupported ||
+            pluginState == ePluginBlocklisted) {
+          FirePluginError(thisContent, pluginState == ePluginBlocklisted);
         }
         if (pluginState != ePluginDisabled) {
           fallback.TypeUnsupported();
@@ -1087,7 +1113,7 @@ PRBool
 nsObjectLoadingContent::IsSupportedDocument(const nsCString& aMimeType)
 {
   nsCOMPtr<nsIContent> thisContent = 
-    do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
 
   nsresult rv;
@@ -1148,7 +1174,7 @@ nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
        this, aOldType, aOldState, mType, ObjectState(), aSync));
 
   nsCOMPtr<nsIContent> thisContent = 
-    do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
 
   nsIDocument* doc = thisContent->GetCurrentDoc();
@@ -1185,15 +1211,16 @@ nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
 }
 
 /* static */ void
-nsObjectLoadingContent::FirePluginNotFound(nsIContent* thisContent)
+nsObjectLoadingContent::FirePluginError(nsIContent* thisContent,
+                                        PRBool blocklisted)
 {
-  LOG(("OBJLC []: Dispatching PluginNotFound event for content %p\n",
+  LOG(("OBJLC []: Dispatching nsPluginErrorEvent for content %p\n",
        thisContent));
 
-  nsCOMPtr<nsIRunnable> ev = new nsPluginNotFoundEvent(thisContent);
+  nsCOMPtr<nsIRunnable> ev = new nsPluginErrorEvent(thisContent, blocklisted);
   nsresult rv = NS_DispatchToCurrentThread(ev);
   if (NS_FAILED(rv)) {
-    NS_WARNING("failed to dispatch nsPluginNotFoundEvent");
+    NS_WARNING("failed to dispatch nsPluginErrorEvent");
   }
 }
 
@@ -1222,7 +1249,7 @@ nsObjectLoadingContent::GetTypeOfContent(const nsCString& aMIMEType)
   }
 
   nsCOMPtr<nsIContent> thisContent = 
-    do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
 
   if (ShouldShowDefaultPlugin(thisContent, aMIMEType)) {
@@ -1291,7 +1318,7 @@ nsIObjectFrame*
 nsObjectLoadingContent::GetFrame()
 {
   nsCOMPtr<nsIContent> thisContent = 
-    do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
 
   PRBool flushed = PR_FALSE;
@@ -1367,7 +1394,7 @@ nsObjectLoadingContent::Instantiate(const nsACString& aMIMEType, nsIURI* aURI)
     // We need some URI. If we have nothing else, use the base URI.
     // XXX(biesi): The code used to do this. Not sure why this is correct...
     nsCOMPtr<nsIContent> thisContent = 
-      do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
+      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
     NS_ASSERTION(thisContent, "must be a content");
 
     GetObjectBaseURI(thisContent, getter_AddRefs(baseURI));
@@ -1429,5 +1456,9 @@ nsObjectLoadingContent::GetPluginDisabledState(const nsCString& aContentType)
     return ePluginUnsupported;
   }
   nsresult rv = host->IsPluginEnabledForType(aContentType.get());
-  return rv == NS_ERROR_PLUGIN_DISABLED ? ePluginDisabled : ePluginUnsupported;
+  if (rv == NS_ERROR_PLUGIN_DISABLED)
+    return ePluginDisabled;
+  if (rv == NS_ERROR_PLUGIN_BLOCKLISTED)
+    return ePluginBlocklisted;
+  return ePluginUnsupported;
 }

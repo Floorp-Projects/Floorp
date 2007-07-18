@@ -465,7 +465,7 @@ LocalSearchDataSource::parseDate(const nsAString& aDate,
 {
     // date is in the form of msec since epoch, but use NSPR to
     // parse the time
-    PRTime *outTime = NS_STATIC_CAST(PRTime*,aResult);
+    PRTime *outTime = static_cast<PRTime*>(aResult);
     PRStatus err;
     err = PR_ParseTimeString(NS_ConvertUTF16toUTF8(aDate).get(),
                              PR_FALSE, // PR_FALSE == use current timezone

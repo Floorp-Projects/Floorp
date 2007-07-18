@@ -86,14 +86,13 @@ REQUIRES += tracemalloc
 endif
 
 ifdef MOZ_AIRBAG
-REQUIRES += airbag
+REQUIRES += crashreporter
 endif
 
 FORCE_STATIC_LIB = 1
 
 XPIDLSRCS = \
 	nsINativeAppSupport.idl \
-	nsIXULAppInfo.idl \
 	nsIXULRuntime.idl \
 	$(NULL)
 
@@ -143,7 +142,11 @@ else
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 CPPSRCS += nsNativeAppSupportBeOS.cpp
 else
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+CPPSRCS += nsNativeAppSupportUnix.cpp
+else
 CPPSRCS += nsNativeAppSupportDefault.cpp
+endif
 endif
 endif
 endif
@@ -253,3 +256,12 @@ endif
 
 export:: $(addprefix $(topsrcdir)/xpfe/bootstrap/, $(SHAREDCPPSRCS)) $(STACKWALK_CPPSRCS)
 	$(INSTALL) $^ .
+
+platform.ini: FORCE
+	$(PYTHON) $(srcdir)/make-platformini.py $(topsrcdir)/config/milestone.txt > $@
+
+libs:: platform.ini
+	$(INSTALL) $^ $(DIST)/bin
+
+install::
+	$(INSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)

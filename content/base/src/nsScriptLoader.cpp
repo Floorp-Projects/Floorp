@@ -744,7 +744,7 @@ nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const PRUint8* aData,
   if (NS_SUCCEEDED(rv)) {
     PRInt32 unicodeLength = 0;
 
-    rv = unicodeDecoder->GetMaxLength(NS_REINTERPRET_CAST(const char*, aData),
+    rv = unicodeDecoder->GetMaxLength(reinterpret_cast<const char*>(aData),
                                       aLength, &unicodeLength);
     if (NS_SUCCEEDED(rv)) {
       if (!EnsureStringLength(aString, unicodeLength))
@@ -757,7 +757,7 @@ nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const PRUint8* aData,
       PRInt32 convertedLength = 0;
       PRInt32 bufferLength = unicodeLength;
       do {
-        rv = unicodeDecoder->Convert(NS_REINTERPRET_CAST(const char*, aData),
+        rv = unicodeDecoder->Convert(reinterpret_cast<const char*>(aData),
                                      (PRInt32 *) &aLength, ustr,
                                      &unicodeLength);
         if (NS_FAILED(rv)) {
@@ -787,7 +787,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
                                  PRUint32 aStringLen,
                                  const PRUint8* aString)
 {
-  nsScriptLoadRequest* request = NS_STATIC_CAST(nsScriptLoadRequest*, aContext);
+  nsScriptLoadRequest* request = static_cast<nsScriptLoadRequest*>(aContext);
   NS_ASSERTION(request, "null request in stream complete handler");
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 

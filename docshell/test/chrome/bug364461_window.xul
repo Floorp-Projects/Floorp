@@ -1,0 +1,317 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is bug 364461 mochitest
+   -
+   - The Initial Developer of the Original Code is
+   - Sylvain Pasche <sylvain.pasche@gmail.com>.
+   - Portions created by the Initial Developer are Copyright (C) 2007
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="364461Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="onLoad();"
+        title="364461 test">
+
+  <script type="application/javascript"><![CDATA[
+
+    const LISTEN_EVENTS = ["load", "unload", "pageshow", "pagehide"];
+    const MISSING_EVENTS_TIMEOUT = 5000;
+
+    var gBrowser;
+    var gTestsIterator;
+    var gExpected = [];
+    var gMissingEventsTimeoutId;
+
+    function ok(condition, message) {
+      window.opener.wrappedJSObject.SimpleTest.ok(condition, message);
+    }
+    function is(a, b, message) {
+      window.opener.wrappedJSObject.SimpleTest.is(a, b, message);
+    }
+    function finish() {
+      clearTimeout(gMissingEventsTimeoutId);
+    
+      for each (let eventType in LISTEN_EVENTS) {
+        gBrowser.removeEventListener(eventType, eventListener, true);
+      }
+    
+      window.close();
+      window.opener.wrappedJSObject.SimpleTest.finish();
+    }
+
+    function onLoad() {
+      gBrowser = document.getElementById("content");
+
+      for each (let eventType in LISTEN_EVENTS) {
+        gBrowser.addEventListener(eventType, eventListener, true);
+      }
+      
+      gMissingEventsTimeoutId = setTimeout(function() {
+        ok(false, "Did not receive all expected events");
+        finish();
+      }, MISSING_EVENTS_TIMEOUT);
+      
+      gTestsIterator = testsIterator();
+      nextTest();
+    }
+
+    function eventListener(event) {
+      ok(gExpected.length >= 1, "Unexpected event " + event.type);
+      if (gExpected.length == 0) {
+        // in case of unexpected event, try to continue anyway
+        setTimeout(nextTest, 0);
+        return;
+      }
+
+      var exp = gExpected.shift();
+      is(event.type, exp.type, "Invalid event received");
+      if (typeof(exp.persisted) != "undefined") {
+        is(event.persisted, exp.persisted, "Invalid persisted state");
+      }
+      if (exp.title) {
+        ok(event.originalTarget instanceof HTMLDocument,
+           "originalTarget not a HTMLDocument");
+        is(event.originalTarget.title, exp.title, "titles don't match");
+      }
+
+      if (gExpected.length == 0) {
+        setTimeout(nextTest, 0);
+      }
+    }
+
+    function nextTest() {
+      try {
+        gTestsIterator.next();
+      } catch (err if err instanceof StopIteration) {
+        finish();
+      }
+    }
+
+    function testsIterator() {
+
+      // Tests 1 + 2:
+      //  Back/forward between two simple documents. Bfcache will be used.
+
+      var test1Doc = "data:text/html,<html><head><title>test1</title></head>" +
+                     "<body>test1</body></html>";
+
+      gExpected = [{type: "pagehide", persisted: true},
+                   {type: "load", title: "test1"},
+                   {type: "pageshow", title: "test1", persisted: false}];
+      gBrowser.loadURI(test1Doc);
+      yield;
+
+      var test2Doc = "data:text/html,<html><head><title>test2</title></head>" +
+                     "<body>test2</body></html>";
+
+      gExpected = [{type: "pagehide", title: "test1", persisted: true},
+                   {type: "load", title: "test2"},
+                   {type: "pageshow", title: "test2", persisted: false}];
+      gBrowser.loadURI(test2Doc);
+      yield;
+
+      gExpected = [{type: "pagehide", title: "test2", persisted: true},
+                   {type: "pageshow", title: "test1", persisted: true}];
+      gBrowser.goBack();
+      yield;
+      
+      gExpected = [{type: "pagehide", title: "test1", persisted: true},
+                   {type: "pageshow", title: "test2", persisted: true}];
+      gBrowser.goForward();
+      yield;
+
+      // Tests 3 + 4:
+      //  Back/forward between a two-level deep iframed document and a simple
+      //  document. Bfcache will be used and events should be dispatched to
+      //  all frames.
+
+      var test3Doc = "data:text/html,<html><head><title>test3</title>" +
+                      "</head><body>" +
+                      "<iframe src='data:text/html," +
+                        "<html><head><title>test3-nested1</title></head>" +
+                        "<body>test3-nested1" +
+                          "<iframe src=\"data:text/html," +
+                            "<html><head><title>test3-nested2</title></head>" +
+                            "<body>test3-nested2</body></html>\">" +
+                          "</iframe>" +
+                        "</body></html>'>" +
+                      "</iframe>" +
+                    "</body></html>";
+
+      gExpected = [{type: "pagehide", title: "test2", persisted: true},
+                   {type: "load", title: "test3-nested2"},
+                   {type: "pageshow", title: "test3-nested2", persisted: false},
+                   {type: "load", title: "test3-nested1"},
+                   {type: "pageshow", title: "test3-nested1", persisted: false},
+                   {type: "load", title: "test3"},
+                   {type: "pageshow", title: "test3", persisted: false}];
+      gBrowser.loadURI(test3Doc);
+      yield;
+
+      var test4Doc = "data:text/html,<html><head><title>test4</title></head>" +
+                     "<body>test4</body></html>";
+
+      gExpected = [{type: "pagehide", title: "test3", persisted: true},
+                   {type: "pagehide", title: "test3-nested1", persisted: true},
+                   {type: "pagehide", title: "test3-nested2", persisted: true},
+                   {type: "load", title: "test4"},
+                   {type: "pageshow", title: "test4", persisted: false}];
+      gBrowser.loadURI(test4Doc);
+      yield;
+
+      gExpected = [{type: "pagehide", title: "test4", persisted: true},
+                   {type: "pageshow", title: "test3-nested2", persisted: true},
+                   {type: "pageshow", title: "test3-nested1", persisted: true},
+                   {type: "pageshow", title: "test3", persisted: true}];
+      gBrowser.goBack();
+      yield;
+
+      // This is where the two nested pagehide are not dispatched in bug 364461
+      gExpected = [{type: "pagehide", title: "test3", persisted: true},
+                   {type: "pagehide", title: "test3-nested1", persisted: true},
+                   {type: "pagehide", title: "test3-nested2", persisted: true},
+                   {type: "pageshow", title: "test4", persisted: true}];
+      gBrowser.goForward();
+      yield;
+
+      // Tests 5 + 6:
+      //  Back/forward between a document containing an unload handler and a
+      //  a simple document. Bfcache won't be used for the first one (see
+      //  http://developer.mozilla.org/en/docs/Using_Firefox_1.5_caching).
+      
+      var test5Doc = "data:text/html,<html><head><title>test5</title></head>" +
+                     "<body onunload='while(false) { /* nop */ }'>" +
+                     "test5</body></html>";
+
+      gExpected = [{type: "pagehide", title: "test4", persisted: true},
+                   {type: "load", title: "test5"},
+                   {type: "pageshow", title: "test5", persisted: false}];
+      gBrowser.loadURI(test5Doc);
+      yield;
+
+      var test6Doc = "data:text/html,<html><head><title>test6</title></head>" +
+                     "<body>test6</body></html>";
+
+      gExpected = [{type: "pagehide", title: "test5", persisted: false},
+                   {type: "unload", title: "test5"},
+                   {type: "load", title: "test6"},
+                   {type: "pageshow", title: "test6", persisted: false}];
+      gBrowser.loadURI(test6Doc);
+      yield;
+
+      gExpected = [{type: "pagehide", title: "test6", persisted: true},
+                   {type: "load", title: "test5"},
+                   {type: "pageshow", title: "test5", persisted: false}];
+      gBrowser.goBack();
+      yield;
+      
+      gExpected = [{type: "pagehide", title: "test5", persisted: false},
+                   {type: "unload", title: "test5"},
+                   {type: "pageshow", title: "test6", persisted: true}];
+      gBrowser.goForward();
+      yield;
+
+      // Test 7:
+      //  Testcase from https://bugzilla.mozilla.org/show_bug.cgi?id=384977#c10
+      //  Check that navigation is not blocked after a document is restored
+      //  from bfcache
+      
+      var test7Doc = "data:text/html,<html><head><title>test7</title>" +
+                      "</head><body>" +
+                      "<iframe src='data:text/html," +
+                        "<html><head><title>test7-nested1</title></head>" +
+                        "<body>test7-nested1<br/>" +
+                        "<a href=\"data:text/plain,aaa\" target=\"_main\">" +
+                          "Click me, hit back, click me again</a>" +
+                        "</body></html>'>" +
+                      "</iframe>" +
+                    "</body></html>";
+      
+      gExpected = [{type: "pagehide", title: "test6", persisted: true},
+                   {type: "load", title: "test7-nested1"},
+                   {type: "pageshow", title: "test7-nested1", persisted: false},
+                   {type: "load", title: "test7"},
+                   {type: "pageshow", title: "test7", persisted: false}];
+      gBrowser.loadURI(test7Doc);
+      yield;
+
+      // Simulates a click on the link inside the iframe
+      function clickIframeLink() {
+        var iframe = gBrowser.contentDocument.getElementsByTagName("iframe")[0];
+        var w = iframe.contentWindow;
+        var d = iframe.contentDocument;
+        
+        var evt = d.createEvent("MouseEvents");
+        evt.initMouseEvent("click", true, true, w,
+                           0, 0, 0, 0, 0, false, false, false, false, 0, null);
+        d.getElementsByTagName("a")[0].dispatchEvent(evt);
+      }
+
+      gExpected = [{type: "pagehide", title: "test7", persisted: true},
+                   {type: "pagehide", title: "test7-nested1", persisted: true},
+                   {type: "load"},
+                   {type: "pageshow", persisted: false}];
+      clickIframeLink();
+      yield;
+      
+      is(gBrowser.currentURI.spec, "data:text/plain,aaa",
+         "Navigation is blocked when clicking link");
+      
+      gExpected = [{type: "pagehide", persisted: true},
+                   {type: "pageshow", title: "test7-nested1", persisted: true},
+                   {type: "pageshow", title: "test7", persisted: true}];
+      gBrowser.goBack();
+      yield;
+      
+      gExpected = [{type: "pagehide", title: "test7", persisted: true},
+                   {type: "pagehide", title: "test7-nested1", persisted: true},
+                   {type: "load"},
+                   {type: "pageshow", persisted: false}];
+      clickIframeLink();
+      yield;
+      
+      is(gBrowser.currentURI.spec, "data:text/plain,aaa",
+         "Navigation is blocked when clicking link");
+
+      // nextTest has to be called from here, as no events are fired in this
+      // step
+      setTimeout(nextTest, 0);
+      yield;
+    }
+  ]]></script>
+
+  <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+</window>

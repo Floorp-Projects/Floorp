@@ -87,19 +87,19 @@ NS_IMETHODIMP nsScriptablePeer::QueryInterface(const nsIID& aIID, void** aInstan
     return NS_ERROR_NULL_POINTER; 
 
   if(aIID.Equals(kISimplePluginIID)) {
-    *aInstancePtr = NS_STATIC_CAST(nsISimplePlugin*, this); 
+    *aInstancePtr = static_cast<nsISimplePlugin*>(this); 
     AddRef();
     return NS_OK;
   }
 
   if(aIID.Equals(kIClassInfoIID)) {
-    *aInstancePtr = NS_STATIC_CAST(nsIClassInfo*, this); 
+    *aInstancePtr = static_cast<nsIClassInfo*>(this); 
     AddRef();
     return NS_OK;
   }
 
   if(aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = NS_STATIC_CAST(nsISupports*,(NS_STATIC_CAST(nsISimplePlugin*, this))); 
+    *aInstancePtr = static_cast<nsISupports*>((static_cast<nsISimplePlugin*>(this))); 
     AddRef();
     return NS_OK;
   }

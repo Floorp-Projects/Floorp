@@ -72,6 +72,7 @@
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsDocShellLoadTypes.h"
 #include "nsIWebNavigation.h"
 #include "nsIBaseWindow.h"
 #include "nsIWebShellServices.h"
@@ -125,6 +126,7 @@
 #include "nsIMutableArray.h"
 #include "nsArrayUtils.h"
 #include "nsIEffectiveTLDService.h"
+#include "nsIEventStateManager.h"
 
 #include "nsIPrompt.h"
 //AHMED 12-2
@@ -133,6 +135,11 @@
 #include "nsIEditingSession.h"
 #include "nsIEditor.h"
 #include "nsNodeInfoManager.h"
+#include "nsIEditor.h"
+#include "nsIEditorDocShell.h"
+#include "nsIEditorStyleSheets.h"
+#include "nsIInlineSpellChecker.h"
+#include "nsRange.h"
 
 #define NS_MAX_DOCUMENT_WRITE_DEPTH 20
 
@@ -222,7 +229,7 @@ public:
   }
 
   nsIContent* GetIdContent() {
-    return NS_STATIC_CAST(nsIContent*, mIdContentList.SafeElementAt(0));
+    return static_cast<nsIContent*>(mIdContentList.SafeElementAt(0));
   }
 
   PRBool AddIdContent(nsIContent* aContent);
@@ -285,8 +292,8 @@ IdAndNameHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
                         const void *key)
 {
   const IdAndNameMapEntry *e =
-    NS_STATIC_CAST(const IdAndNameMapEntry *, entry);
-  const nsIAtom *atom = NS_STATIC_CAST(const nsIAtom *, key);
+    static_cast<const IdAndNameMapEntry *>(entry);
+  const nsIAtom *atom = static_cast<const nsIAtom *>(key);
 
   return atom == e->mKey;
 }
@@ -294,7 +301,7 @@ IdAndNameHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
 PR_STATIC_CALLBACK(void)
 IdAndNameHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
-  IdAndNameMapEntry *e = NS_STATIC_CAST(IdAndNameMapEntry *, entry);
+  IdAndNameMapEntry *e = static_cast<IdAndNameMapEntry *>(entry);
 
   // An entry is being cleared, let the entry do its own cleanup.
   e->~IdAndNameMapEntry();
@@ -304,8 +311,8 @@ PR_STATIC_CALLBACK(PRBool)
 IdAndNameHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                        const void *key)
 {
-  nsIAtom *atom = NS_CONST_CAST(nsIAtom *,
-                                NS_STATIC_CAST(const nsIAtom*, key));
+  nsIAtom *atom = const_cast<nsIAtom *>
+                            (static_cast<const nsIAtom*>(key));
 
   // Inititlize the entry with placement new
   new (entry) IdAndNameMapEntry(atom);
@@ -341,8 +348,8 @@ IdAndNameMapEntryTraverse(PLDHashTable *table, PLDHashEntryHdr *hdr,
                           PRUint32 number, void *arg)
 {
   nsCycleCollectionTraversalCallback *cb =
-    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, arg);
-  IdAndNameMapEntry *entry = NS_STATIC_CAST(IdAndNameMapEntry*, hdr);
+    static_cast<nsCycleCollectionTraversalCallback*>(arg);
+  IdAndNameMapEntry *entry = static_cast<IdAndNameMapEntry*>(hdr);
 
   if (entry->mNameContentList != NAME_NOT_VALID)
     cb->NoteXPCOMChild(entry->mNameContentList);
@@ -621,14 +628,11 @@ CheckSameOrigin(nsINode* aNode1, nsINode* aNode2)
   NS_PRECONDITION(aNode1, "Null node?");
   NS_PRECONDITION(aNode2, "Null node?");
 
-  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  if (!secMan) {
-    return PR_FALSE;
-  }
-
+  PRBool equal;
   return
-    NS_SUCCEEDED(secMan->CheckSameOriginPrincipal(aNode1->NodePrincipal(),
-                                                  aNode2->NodePrincipal()));
+    NS_SUCCEEDED(aNode1->NodePrincipal()->
+                   Equals(aNode2->NodePrincipal(), &equal)) &&
+    equal;
 }
 
 PRBool
@@ -1114,7 +1118,7 @@ nsHTMLDocument::DocumentWriteTerminationFunc(nsISupports *aRef)
   nsCOMPtr<nsIParser> parser = do_QueryElementAt(arr, 1);
   NS_ASSERTION(parser, "Must have parser!");
 
-  nsHTMLDocument *htmldoc = NS_STATIC_CAST(nsHTMLDocument*, doc.get());
+  nsHTMLDocument *htmldoc = static_cast<nsHTMLDocument*>(doc.get());
 
   // Check whether htmldoc still has the same parser.  If not, it's
   // not for us to mess with it.
@@ -1177,7 +1181,7 @@ nsHTMLDocument::EndLoad()
           nsCOMPtr<nsIMutableArray> arr =
             do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
           if (NS_SUCCEEDED(rv)) {
-            rv = arr->AppendElement(NS_STATIC_CAST(nsIDocument*, this),
+            rv = arr->AppendElement(static_cast<nsIDocument*>(this),
                                     PR_FALSE);
             if (NS_SUCCEEDED(rv)) {
               rv = arr->AppendElement(mParser, PR_FALSE);
@@ -1204,8 +1208,13 @@ nsHTMLDocument::EndLoad()
                mWriteState == eDocumentClosed, "EndLoad called early");
   mWriteState = eNotWriting;
 
+  PRBool turnOnEditing =
+    mParser && (HasFlag(NODE_IS_EDITABLE) || mContentEditableCount > 0);
   // Note: nsDocument::EndLoad nulls out mParser.
   nsDocument::EndLoad();
+  if (turnOnEditing) {
+    EditingStateChanged();
+  }
 }
 
 NS_IMETHODIMP
@@ -1379,7 +1388,8 @@ nsHTMLDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
 void
 nsHTMLDocument::AttributeChanged(nsIDocument* aDocument,
                                  nsIContent* aContent, PRInt32 aNameSpaceID,
-                                 nsIAtom* aAttribute, PRInt32 aModType)
+                                 nsIAtom* aAttribute, PRInt32 aModType,
+                                 PRUint32 aStateMask)
 {
   NS_ASSERTION(aDocument == this, "unexpected doc");
 
@@ -2021,7 +2031,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     return NS_OK;
   }
 
-  if (!nsContentUtils::CanCallerAccess(NS_STATIC_CAST(nsIDOMHTMLDocument*, this))) {
+  if (!nsContentUtils::CanCallerAccess(static_cast<nsIDOMHTMLDocument*>(this))) {
     nsPIDOMWindow *win = GetWindow();
     if (win) {
       nsCOMPtr<nsIDOMElement> frameElement;
@@ -2134,9 +2144,10 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
     // If callerPrincipal doesn't match our principal. make sure that
     // SetNewDocument gives us a new inner window and clears our scope.
+    PRBool samePrincipal;
     if (!callerPrincipal ||
-        NS_FAILED(nsContentUtils::GetSecurityManager()->
-          CheckSameOriginPrincipal(callerPrincipal, NodePrincipal()))) {
+        NS_FAILED(callerPrincipal->Equals(NodePrincipal(), &samePrincipal)) ||
+        !samePrincipal) {
       SetIsInitialDocument(PR_FALSE);
     }      
 
@@ -2207,14 +2218,14 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     mRootContent = root;
   }
 
-  if (mEditingIsOn) {
+  if (IsEditingOn()) {
     // Reset() blows away all event listeners in the document, and our
     // editor relies heavily on those. Midas is turned on, to make it
     // work, re-initialize it to give it a chance to add its event
     // listeners again.
 
-    SetDesignMode(NS_LITERAL_STRING("off"));
-    SetDesignMode(NS_LITERAL_STRING("on"));
+    TurnEditingOff();
+    EditingStateChanged();
   }
 
   // Zap the old title -- otherwise it would hang around until document.close()
@@ -2252,26 +2263,15 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
     // Now check whether we were opened with a "replace" argument.  If
     // so, we need to tell the docshell to not create a new history
-    // entry for this load.
-    // XXXbz we're basically duplicating the MAKE_LOAD_TYPE macro from
-    // nsDocShell.h.  All this stuff needs better apis.
-    PRUint32 loadType;
-    if (aReplace) {
-      loadType = nsIDocShell::LOAD_CMD_NORMAL |
-        (nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY << 16);
-    } else {
-      // Make sure that we're doing a normal load, not whatever type
-      // of load was previously done on this docshell.
-      loadType = nsIDocShell::LOAD_CMD_NORMAL |
-        (nsIWebNavigation::LOAD_FLAGS_NONE << 16);
-    }
-    docshell->SetLoadType(loadType);
-    
+    // entry for this load. Otherwise, make sure that we're doing a normal load,
+    // not whatever type of load was previously done on this docshell.
+    docshell->SetLoadType(aReplace ? LOAD_NORMAL_REPLACE : LOAD_NORMAL);
+
     nsCOMPtr<nsIContentViewer> cv;
     docshell->GetContentViewer(getter_AddRefs(cv));
     nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(cv);
     if (docViewer) {
-      docViewer->LoadStart(NS_STATIC_CAST(nsIHTMLDocument *, this));
+      docViewer->LoadStart(static_cast<nsIHTMLDocument *>(this));
     }
   }
 
@@ -2492,8 +2492,8 @@ nsHTMLDocument::ScriptWriteCommon(PRBool aNewlineTerminate)
       JSString *jsstr = JS_ValueToString(cx, argv[0]);
       NS_ENSURE_TRUE(jsstr, NS_ERROR_OUT_OF_MEMORY);
 
-      nsDependentString str(NS_REINTERPRET_CAST(const PRUnichar *,
-                                              ::JS_GetStringChars(jsstr)),
+      nsDependentString str(reinterpret_cast<const PRUnichar *>
+                                            (::JS_GetStringChars(jsstr)),
                           ::JS_GetStringLength(jsstr));
 
       return WriteCommon(str, aNewlineTerminate);
@@ -2508,8 +2508,8 @@ nsHTMLDocument::ScriptWriteCommon(PRBool aNewlineTerminate)
         JSString *str = JS_ValueToString(cx, argv[i]);
         NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
-        string_buffer.Append(NS_REINTERPRET_CAST(const PRUnichar *,
-                                                 ::JS_GetStringChars(str)),
+        string_buffer.Append(reinterpret_cast<const PRUnichar *>
+                                             (::JS_GetStringChars(str)),
                              ::JS_GetStringLength(str));
       }
 
@@ -2548,8 +2548,8 @@ nsHTMLDocument::GetElementById(const nsAString& aElementId,
   // us being notified (all removals notify immediately, as far as I can tell).
   // So do the lookup first.
   IdAndNameMapEntry *entry =
-    NS_STATIC_CAST(IdAndNameMapEntry *,
-                   PL_DHashTableOperate(&mIdAndNameHashTable, idAtom,
+    static_cast<IdAndNameMapEntry *>
+               (PL_DHashTableOperate(&mIdAndNameHashTable, idAtom,
                                         PL_DHASH_ADD));
   NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
 
@@ -2572,8 +2572,8 @@ nsHTMLDocument::GetElementById(const nsAString& aElementId,
       // entry again, adding if necessary (the adding may be necessary in case
       // the flush actually deleted entries).
       entry =
-        NS_STATIC_CAST(IdAndNameMapEntry *,
-                       PL_DHashTableOperate(&mIdAndNameHashTable, idAtom,
+        static_cast<IdAndNameMapEntry *>
+                   (PL_DHashTableOperate(&mIdAndNameHashTable, idAtom,
                                             PL_DHASH_ADD));
       NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
     }
@@ -2672,7 +2672,7 @@ nsHTMLDocument::MatchNameAttribute(nsIContent* aContent, PRInt32 aNamespaceID,
                                    nsIAtom* aAtom, void* aData)
 {
   NS_PRECONDITION(aContent, "Must have content node to work with!");
-  nsString* elementName = NS_STATIC_CAST(nsString*, aData);
+  nsString* elementName = static_cast<nsString*>(aData);
   return aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                                *elementName, eCaseMatters);
 }
@@ -3022,7 +3022,7 @@ ReportUseOfDeprecatedMethod(nsHTMLDocument* aDoc, const char* aWarning)
   nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
                                   aWarning,
                                   nsnull, 0,
-                                  NS_STATIC_CAST(nsIDocument*, aDoc)->
+                                  static_cast<nsIDocument*>(aDoc)->
                                     GetDocumentURI(),
                                   EmptyString(), 0, 0,
                                   nsIScriptError::warningFlag,
@@ -3102,8 +3102,8 @@ ReserveNameInHash(const char* aName, PLDHashTable *aHash)
   NS_ENSURE_TRUE(atom, NS_ERROR_OUT_OF_MEMORY);
   
   IdAndNameMapEntry *entry =
-    NS_STATIC_CAST(IdAndNameMapEntry *,
-                   PL_DHashTableOperate(aHash, atom, PL_DHASH_ADD));
+    static_cast<IdAndNameMapEntry *>
+               (PL_DHashTableOperate(aHash, atom, PL_DHASH_ADD));
 
   NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
 
@@ -3191,8 +3191,8 @@ nsHTMLDocument::UpdateNameTableEntry(nsIAtom* aName,
   "nsHTMLDocument::UpdateNameTableEntry Don't call me on an XHTML document!!!");
 
   IdAndNameMapEntry *entry =
-    NS_STATIC_CAST(IdAndNameMapEntry *,
-                   PL_DHashTableOperate(&mIdAndNameHashTable, aName,
+    static_cast<IdAndNameMapEntry *>
+               (PL_DHashTableOperate(&mIdAndNameHashTable, aName,
                                         PL_DHASH_LOOKUP));
 
   if (PL_DHASH_ENTRY_IS_FREE(entry)) {
@@ -3222,8 +3222,8 @@ nsHTMLDocument::UpdateIdTableEntry(nsIAtom* aId, nsIContent *aContent)
   PRBool liveTable = IdTableIsLive();
   PLDHashOperator op = liveTable ? PL_DHASH_ADD : PL_DHASH_LOOKUP;
   IdAndNameMapEntry *entry =
-    NS_STATIC_CAST(IdAndNameMapEntry *,
-                   PL_DHashTableOperate(&mIdAndNameHashTable, aId,
+    static_cast<IdAndNameMapEntry *>
+               (PL_DHashTableOperate(&mIdAndNameHashTable, aId,
                                         op));
 
   NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
@@ -3244,8 +3244,8 @@ nsHTMLDocument::RemoveFromNameTable(nsIAtom* aName, nsIContent *aContent)
   "nsHTMLDocument::RemoveFromNameTable Don't call me on an XHTML document!!!");
 
   IdAndNameMapEntry *entry =
-    NS_STATIC_CAST(IdAndNameMapEntry *,
-                   PL_DHashTableOperate(&mIdAndNameHashTable, aName,
+    static_cast<IdAndNameMapEntry *>
+               (PL_DHashTableOperate(&mIdAndNameHashTable, aName,
                                         PL_DHASH_LOOKUP));
 
   if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->mNameContentList &&
@@ -3266,8 +3266,8 @@ nsHTMLDocument::RemoveFromIdTable(nsIContent *aContent)
   }
 
   IdAndNameMapEntry *entry =
-    NS_STATIC_CAST(IdAndNameMapEntry *,
-                   PL_DHashTableOperate(&mIdAndNameHashTable, id,
+    static_cast<IdAndNameMapEntry *>
+               (PL_DHashTableOperate(&mIdAndNameHashTable, id,
                                         PL_DHASH_LOOKUP));
 
   if (PL_DHASH_ENTRY_IS_FREE(entry)) {
@@ -3402,8 +3402,8 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
   // be updated as content is added and removed.
 
   IdAndNameMapEntry *entry =
-    NS_STATIC_CAST(IdAndNameMapEntry *,
-                   PL_DHashTableOperate(&mIdAndNameHashTable, name,
+    static_cast<IdAndNameMapEntry *>
+               (PL_DHashTableOperate(&mIdAndNameHashTable, name,
                                         PL_DHASH_ADD));
   NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
 
@@ -3431,8 +3431,8 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
     // entry again, adding if necessary (the adding may be necessary in case
     // the flush actually deleted entries).
     entry =
-      NS_STATIC_CAST(IdAndNameMapEntry *,
-                     PL_DHashTableOperate(&mIdAndNameHashTable, name,
+      static_cast<IdAndNameMapEntry *>
+                 (PL_DHashTableOperate(&mIdAndNameHashTable, name,
                                           PL_DHASH_ADD));
     NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
   }
@@ -3717,7 +3717,7 @@ nsHTMLDocument::GenerateParserKey(void)
 NS_IMETHODIMP
 nsHTMLDocument::GetDesignMode(nsAString & aDesignMode)
 {
-  if (mEditingIsOn) {
+  if (HasFlag(NODE_IS_EDITABLE)) {
     aDesignMode.AssignLiteral("on");
   }
   else {
@@ -3726,9 +3726,151 @@ nsHTMLDocument::GetDesignMode(nsAString & aDesignMode)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
+nsresult
+nsHTMLDocument::ChangeContentEditableCount(nsIContent *aElement,
+                                           PRInt32 aChange)
 {
+  NS_ASSERTION(mContentEditableCount + aChange >= 0,
+               "Trying to decrement too much.");
+
+  mContentEditableCount += aChange;
+
+  if (mParser) {
+    return NS_OK;
+  }
+
+  EditingState oldState = mEditingState;
+
+  nsresult rv = EditingStateChanged();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (oldState == mEditingState && mEditingState == eContentEditable) {
+    // We just changed the contentEditable state of a node, we need to reset
+    // the spellchecking state of that node.
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
+    if (node) {
+      nsPIDOMWindow *window = GetWindow();
+      if (!window)
+        return NS_ERROR_FAILURE;
+
+      nsIDocShell *docshell = window->GetDocShell();
+      if (!docshell)
+        return NS_ERROR_FAILURE;
+
+      nsCOMPtr<nsIEditorDocShell> editorDocShell =
+        do_QueryInterface(docshell, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIEditor> editor;
+      editorDocShell->GetEditor(getter_AddRefs(editor));
+      if (editor) {
+        nsCOMPtr<nsIDOMRange> range;
+        rv = NS_NewRange(getter_AddRefs(range));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = range->SelectNode(node);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsIInlineSpellChecker> spellChecker;
+        rv = editor->GetInlineSpellChecker(PR_FALSE,
+                                           getter_AddRefs(spellChecker));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (spellChecker) {
+          rv = spellChecker->SpellCheckRange(range);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+static void
+NotifyEditableStateChange(nsINode *aNode, nsIDocument *aDocument,
+                          PRBool aEditable)
+{
+  PRUint32 i, n = aNode->GetChildCount();
+  for (i = 0; i < n; ++i) {
+    nsIContent *child = aNode->GetChildAt(i);
+    if (child->HasFlag(NODE_IS_EDITABLE) != aEditable) {
+      aDocument->ContentStatesChanged(child, nsnull,
+                                      NS_EVENT_STATE_MOZ_READONLY |
+                                      NS_EVENT_STATE_MOZ_READWRITE);
+    }
+    NotifyEditableStateChange(child, aDocument, aEditable);
+  }
+}
+
+nsresult
+nsHTMLDocument::TurnEditingOff()
+{
+  NS_ASSERTION(mEditingState != eOff, "Editing is already off.");
+
+  nsPIDOMWindow *window = GetWindow();
+  if (!window)
+    return NS_ERROR_FAILURE;
+
+  nsIDocShell *docshell = window->GetDocShell();
+  if (!docshell)
+    return NS_ERROR_FAILURE;
+
+  nsresult rv;
+  nsCOMPtr<nsIEditorDocShell> editorDocShell =
+    do_QueryInterface(docshell, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIEditingSession> editSession = do_GetInterface(docshell, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // turn editing off
+  rv = editSession->TearDownEditorOnWindow(window, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIEditor> editor;
+  editorDocShell->GetEditor(getter_AddRefs(editor));
+  nsCOMPtr<nsIEditorStyleSheets> editorss = do_QueryInterface(editor);
+  if (editorss) {
+    editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/contenteditable.css"));
+    if (mEditingState == eDesignMode)
+      editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/designmode.css"));
+  }
+
+  if (mEditingState == eDesignMode) {
+    rv = docshell->SetAllowJavascript(mScriptsEnabled);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = docshell->SetAllowPlugins(mPluginsEnabled);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  mEditingState = eOff;
+
+  return NS_OK;
+}
+
+nsresult
+nsHTMLDocument::EditingStateChanged()
+{
+  if (mEditingState == eSettingUp) {
+    // XXX We shouldn't recurse.
+    return NS_OK;
+  }
+
+  PRBool designMode = HasFlag(NODE_IS_EDITABLE);
+  EditingState newState = designMode ? eDesignMode :
+                          (mContentEditableCount > 0 ? eContentEditable : eOff);
+  if (mEditingState == newState) {
+    // No changes in editing mode.
+    return NS_OK;
+  }
+
+  if (newState == eOff) {
+    // Editing is being turned off.
+    return TurnEditingOff();
+  }
+
   // get editing session
   nsPIDOMWindow *window = GetWindow();
   if (!window)
@@ -3738,6 +3880,135 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
   if (!docshell)
     return NS_ERROR_FAILURE;
 
+  nsresult rv;
+  nsCOMPtr<nsIEditingSession> editSession = do_GetInterface(docshell, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool makeWindowEditable = (mEditingState == eOff);
+  if (makeWindowEditable) {
+    // Editing is being turned on (through designMode or contentEditable)
+    // Turn on editor.
+    // XXX This can cause flushing which can change the editing state, so make
+    //     sure to avoid recursing.
+    EditingState oldState = mEditingState;
+    mEditingState = eSettingUp;
+
+    rv = editSession->MakeWindowEditable(window, "html", PR_FALSE, PR_FALSE,
+                                         PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mEditingState = oldState;
+  }
+
+  // XXX Need to call TearDownEditorOnWindow for all failures.
+  nsCOMPtr<nsIEditorDocShell> editorDocShell =
+    do_QueryInterface(docshell, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIEditor> editor;
+  editorDocShell->GetEditor(getter_AddRefs(editor));
+  if (!editor)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIEditorStyleSheets> editorss = do_QueryInterface(editor, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  editorss->AddOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/contenteditable.css"));
+
+  // Should we update the editable state of all the nodes in the document? We
+  // need to do this when the designMode value changes, as that overrides
+  // specific states on the elements.
+  PRBool updateState;
+
+  PRBool spellRecheckAll = PR_FALSE;
+  if (designMode) {
+    // designMode is being turned on (overrides contentEditable).
+    editorss->AddOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/designmode.css"));
+
+    // Store scripting and plugins state.
+    PRBool tmp;
+    rv = docshell->GetAllowJavascript(&tmp);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mScriptsEnabled = tmp;
+
+    rv = docshell->SetAllowJavascript(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = docshell->GetAllowPlugins(&tmp);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mPluginsEnabled = tmp;
+
+    rv = docshell->SetAllowPlugins(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    updateState = PR_TRUE;
+    spellRecheckAll = mEditingState == eContentEditable;
+  }
+  else if (mEditingState == eDesignMode) {
+    // designMode is being turned off (contentEditable is still on).
+    editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/designmode.css"));
+
+    rv = docshell->SetAllowJavascript(mScriptsEnabled);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = docshell->SetAllowPlugins(mPluginsEnabled);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    updateState = PR_TRUE;
+  }
+  else {
+    // contentEditable is being turned on (and designMode is off).
+    updateState = PR_FALSE;
+  }
+
+  mEditingState = newState;
+
+  if (makeWindowEditable) {
+    // Set the editor to not insert br's on return when in p
+    // elements by default.
+    // XXX Do we only want to do this for designMode?
+    PRBool unused;
+    rv = ExecCommand(NS_LITERAL_STRING("insertBrOnReturn"), PR_FALSE,
+                     NS_LITERAL_STRING("false"), &unused);
+
+    if (NS_FAILED(rv)) {
+      // Editor setup failed. Editing is not on after all.
+      // XXX Should we reset the editable flag on nodes?
+      editSession->TearDownEditorOnWindow(window, PR_TRUE);
+      mEditingState = eOff;
+
+      return rv;
+    }
+  }
+
+  if (updateState) {
+    mozAutoDocUpdate upd(this, UPDATE_CONTENT_STATE, PR_TRUE);
+    NotifyEditableStateChange(this, this, !designMode);
+  }
+
+  // Resync the editor's spellcheck state.
+  if (spellRecheckAll) {
+    nsCOMPtr<nsISelectionController> selcon;
+    nsresult rv = editor->GetSelectionController(getter_AddRefs(selcon));
+    NS_ENSURE_SUCCESS(rv, rv); 
+
+    nsCOMPtr<nsISelection> spellCheckSelection;
+    rv = selcon->GetSelection(nsISelectionController::SELECTION_SPELLCHECK,
+                              getter_AddRefs(spellCheckSelection));
+    if (NS_SUCCEEDED(rv)) {
+      spellCheckSelection->RemoveAllRanges();
+    }
+  }
+  editor->SyncRealTimeSpell();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
+{
   nsresult rv = NS_OK;
 
   if (!nsContentUtils::IsCallerTrustedForWrite()) {
@@ -3746,58 +4017,22 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
     rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
     NS_ENSURE_SUCCESS(rv, rv);
     if (subject) {
-      rv = secMan->CheckSameOriginPrincipal(subject, NodePrincipal());
+      PRBool subsumes;
+      rv = subject->Subsumes(NodePrincipal(), &subsumes);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      NS_ENSURE_TRUE(subsumes, NS_ERROR_DOM_PROP_ACCESS_DENIED);
     }
   }
 
-  nsCOMPtr<nsIEditingSession> editSession = do_GetInterface(docshell);
-  if (!editSession)
-    return NS_ERROR_FAILURE;
+  PRBool editableMode = HasFlag(NODE_IS_EDITABLE);
+  if (aDesignMode.LowerCaseEqualsASCII(editableMode ? "off" : "on")) {
+    SetEditableFlag(!editableMode);
 
-  if (aDesignMode.LowerCaseEqualsLiteral("on") && !mEditingIsOn) {
-    rv = editSession->MakeWindowEditable(window, "html", PR_FALSE);
-
-    if (NS_SUCCEEDED(rv)) {
-      // now that we've successfully created the editor, we can
-      // reset our flag
-      mEditingIsOn = PR_TRUE;
-
-      // Set the editor to not insert br's on return when in p
-      // elements by default.
-      PRBool unused;
-      rv = ExecCommand(NS_LITERAL_STRING("insertBrOnReturn"), PR_FALSE,
-                       NS_LITERAL_STRING("false"), &unused);
-
-      if (NS_FAILED(rv)) {
-        // Editor setup failed. Editing is is not on after all.
-
-        editSession->TearDownEditorOnWindow(window);
-
-        mEditingIsOn = PR_FALSE;
-      } else {
-        // Resync the editor's spellcheck state, since when the editor was
-        // created it asked us whether designMode was on, and we told it no.
-        // Note that reporting "yes" (by setting mEditingIsOn true before
-        // calling MakeWindowEditable()) exposed several crash bugs (see bugs
-        // 348497, 348981).
-        nsCOMPtr<nsIEditor> editor;
-        rv = editSession->GetEditorForWindow(window, getter_AddRefs(editor));
-        if (NS_SUCCEEDED(rv)) {
-          editor->SyncRealTimeSpell();
-        }
-      }
-    }
-  } else if (aDesignMode.LowerCaseEqualsLiteral("off") && mEditingIsOn) {
-    // turn editing off
-    rv = editSession->TearDownEditorOnWindow(window);
-
-    if (NS_SUCCEEDED(rv)) {
-      mEditingIsOn = PR_FALSE;
-    }
+    return EditingStateChanged();
   }
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -3982,19 +4217,21 @@ nsHTMLDocument::ConvertToMidasInternalCommand(const nsAString & inCommandID,
         NS_ConvertUTF16toUTF8 convertedParam(inParam);
 
         // check to see if we need to convert the parameter
-        PRUint32 j;
-        for (j = 0; j < MidasParamCount; ++j) {
-          if (convertedParam.Equals(gMidasParamTable[j].incomingParamString,
-                                    nsCaseInsensitiveCStringComparator())) {
-            outParam.Assign(gMidasParamTable[j].internalParamString);
-            break;
+        if (outCommandID.EqualsLiteral("cmd_paragraphState")) {
+          PRUint32 j;
+          for (j = 0; j < MidasParamCount; ++j) {
+            if (convertedParam.Equals(gMidasParamTable[j].incomingParamString,
+                                      nsCaseInsensitiveCStringComparator())) {
+              outParam.Assign(gMidasParamTable[j].internalParamString);
+              break;
+            }
           }
-        }
 
-        // if we didn't convert the parameter, just
-        // pass through the parameter that was passed to us
-        if (j == MidasParamCount)
+          return j != MidasParamCount;
+        }
+        else {
           outParam.Assign(convertedParam);
+        }
       }
     }
   } // end else for useNewParam (do convert existing param)
@@ -4069,12 +4306,12 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
   *_retval = PR_FALSE;
 
   // if editing is not on, bail
-  if (!mEditingIsOn)
+  if (!IsEditingOn())
     return NS_ERROR_FAILURE;
 
   // if they are requesting UI from us, let's fail since we have no UI
   if (doShowUI)
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 
   nsresult rv = NS_OK;
 
@@ -4105,7 +4342,7 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
   PRBool isBool, boolVal;
   if (!ConvertToMidasInternalCommand(commandID, value,
                                      cmdToDispatch, paramStr, isBool, boolVal))
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 
   if (!isBool && paramStr.IsEmpty()) {
     rv = cmdMgr->DoCommand(cmdToDispatch.get(), nsnull, window);
@@ -4144,7 +4381,7 @@ nsHTMLDocument::ExecCommandShowHelp(const nsAString & commandID,
   *_retval = PR_FALSE;
 
   // if editing is not on, bail
-  if (!mEditingIsOn)
+  if (!IsEditingOn())
     return NS_ERROR_FAILURE;
 
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -4159,7 +4396,7 @@ nsHTMLDocument::QueryCommandEnabled(const nsAString & commandID,
   *_retval = PR_FALSE;
 
   // if editing is not on, bail
-  if (!mEditingIsOn)
+  if (!IsEditingOn())
     return NS_ERROR_FAILURE;
 
   // get command manager and dispatch command to our window if it's acceptable
@@ -4190,7 +4427,7 @@ nsHTMLDocument::QueryCommandIndeterm(const nsAString & commandID,
   *_retval = PR_FALSE;
 
   // if editing is not on, bail
-  if (!mEditingIsOn)
+  if (!IsEditingOn())
     return NS_ERROR_FAILURE;
 
   // get command manager and dispatch command to our window if it's acceptable
@@ -4232,7 +4469,7 @@ nsHTMLDocument::QueryCommandState(const nsAString & commandID, PRBool *_retval)
   *_retval = PR_FALSE;
 
   // if editing is not on, bail
-  if (!mEditingIsOn)
+  if (!IsEditingOn())
     return NS_ERROR_FAILURE;
 
   // get command manager and dispatch command to our window if it's acceptable
@@ -4294,7 +4531,7 @@ nsHTMLDocument::QueryCommandSupported(const nsAString & commandID,
   *_retval = PR_FALSE;
 
   // if editing is not on, bail
-  if (!mEditingIsOn)
+  if (!IsEditingOn())
     return NS_ERROR_FAILURE;
 
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -4308,7 +4545,7 @@ nsHTMLDocument::QueryCommandText(const nsAString & commandID,
   _retval.SetLength(0);
 
   // if editing is not on, bail
-  if (!mEditingIsOn)
+  if (!IsEditingOn())
     return NS_ERROR_FAILURE;
 
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -4322,7 +4559,7 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
   _retval.SetLength(0);
 
   // if editing is not on, bail
-  if (!mEditingIsOn)
+  if (!IsEditingOn())
     return NS_ERROR_FAILURE;
 
   // get command manager and dispatch command to our window if it's acceptable

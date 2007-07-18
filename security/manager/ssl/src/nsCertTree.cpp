@@ -95,7 +95,7 @@ PR_STATIC_CALLBACK(PRBool)
 CompareCacheMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                          const void *key)
 {
-  const CompareCacheHashEntryPtr *entryPtr = NS_STATIC_CAST(const CompareCacheHashEntryPtr*, hdr);
+  const CompareCacheHashEntryPtr *entryPtr = static_cast<const CompareCacheHashEntryPtr*>(hdr);
   return entryPtr->entry->key == key;
 }
 
@@ -104,7 +104,7 @@ CompareCacheInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
                      const void *key)
 {
   new (hdr) CompareCacheHashEntryPtr();
-  CompareCacheHashEntryPtr *entryPtr = NS_STATIC_CAST(CompareCacheHashEntryPtr*, hdr);
+  CompareCacheHashEntryPtr *entryPtr = static_cast<CompareCacheHashEntryPtr*>(hdr);
   if (!entryPtr->entry) {
     return PR_FALSE;
   }
@@ -115,7 +115,7 @@ CompareCacheInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
 PR_STATIC_CALLBACK(void)
 CompareCacheClearEntry(PLDHashTable *table, PLDHashEntryHdr *hdr)
 {
-  CompareCacheHashEntryPtr *entryPtr = NS_STATIC_CAST(CompareCacheHashEntryPtr*, hdr);
+  CompareCacheHashEntryPtr *entryPtr = static_cast<CompareCacheHashEntryPtr*>(hdr);
   entryPtr->~CompareCacheHashEntryPtr();
 }
 
@@ -188,10 +188,10 @@ nsCertTree::FreeCertArray()
 CompareCacheHashEntry *
 nsCertTree::getCacheEntry(void *cache, void *aCert)
 {
-  PLDHashTable &aCompareCache = *NS_REINTERPRET_CAST(PLDHashTable*, cache);
+  PLDHashTable &aCompareCache = *reinterpret_cast<PLDHashTable*>(cache);
   CompareCacheHashEntryPtr *entryPtr = 
-    NS_STATIC_CAST(CompareCacheHashEntryPtr*,
-                   PL_DHashTableOperate(&aCompareCache, aCert, PL_DHASH_ADD));
+    static_cast<CompareCacheHashEntryPtr*>
+               (PL_DHashTableOperate(&aCompareCache, aCert, PL_DHASH_ADD));
   return entryPtr ? entryPtr->entry : NULL;
 }
 
@@ -361,7 +361,7 @@ nsCertTree::GetCertsByTypeFromCache(nsINSSCertCache   *aCache,
                                     nsISupportsArray **_certs)
 {
   NS_ENSURE_ARG_POINTER(aCache);
-  CERTCertList *certList = NS_REINTERPRET_CAST(CERTCertList*, aCache->GetCachedCerts());
+  CERTCertList *certList = reinterpret_cast<CERTCertList*>(aCache->GetCachedCerts());
   if (!certList)
     return NS_ERROR_FAILURE;
   return GetCertsByTypeFromCertList(certList, aType, aCertCmpFn, aCertCmpFnArg, _certs);

@@ -159,7 +159,7 @@ void nsEntryStack::Push(nsCParserNode* aNode,
     mEntries[mCount].mTag = (eHTMLTags)aNode->GetNodeType();
     if (aRefCntNode) {
       aNode->mUseCount++;
-      mEntries[mCount].mNode = NS_CONST_CAST(nsCParserNode*,aNode);
+      mEntries[mCount].mNode = const_cast<nsCParserNode*>(aNode);
       IF_HOLD(mEntries[mCount].mNode);
     }
     mEntries[mCount].mParent=aStyleStack;
@@ -199,7 +199,7 @@ void nsEntryStack::PushFront(nsCParserNode* aNode,
     mEntries[0].mTag = (eHTMLTags)aNode->GetNodeType();
     if (aRefCntNode) {
       aNode->mUseCount++;
-      mEntries[0].mNode = NS_CONST_CAST(nsCParserNode*,aNode);
+      mEntries[0].mNode = const_cast<nsCParserNode*>(aNode);
       IF_HOLD(mEntries[0].mNode);
     }
     mEntries[0].mParent=aStyleStack;
@@ -995,7 +995,7 @@ nsCParserNode* nsNodeAllocator::CreateNode(CToken* aToken,
     int x=10; //this is very BAD!
   }
 #endif
-  result = NS_STATIC_CAST(nsCParserNode*,mSharedNodes.Pop());
+  result = static_cast<nsCParserNode*>(mSharedNodes.Pop());
   if (result) {
     result->Init(aToken, aTokenAllocator,this);
   }
@@ -1003,7 +1003,7 @@ nsCParserNode* nsNodeAllocator::CreateNode(CToken* aToken,
     result = nsCParserNode::Create(aToken, aTokenAllocator,this);
 #ifdef DEBUG_TRACK_NODES
     ++mCount;
-    AddNode(NS_STATIC_CAST(nsCParserNode*,result));
+    AddNode(static_cast<nsCParserNode*>(result));
 #endif
     IF_HOLD(result);
   }
@@ -1103,7 +1103,7 @@ nsObserverEntry::Notify(nsIParserNode* aNode,
         aParser->GetChannel(getter_AddRefs(channel));
 
         for (index=0;index<theObserversCount;++index) {
-          nsIElementObserver* observer = NS_STATIC_CAST(nsIElementObserver*,theObservers->ElementAt(index));
+          nsIElementObserver* observer = static_cast<nsIElementObserver*>(theObservers->ElementAt(index));
           if (observer) {
             result = observer->Notify(aWebShell, channel,
                                       nsHTMLTags::GetStringValue(theTag),

@@ -54,15 +54,11 @@
 #include "nsTransform2D.h"
 #include "nsVoidArray.h"
 #include "nsIThebesFontMetrics.h"
-#include "nsIThebesRenderingContext.h"
 #include "gfxContext.h"
 
 class nsIImage;
 
-class nsThebesDrawingSurface;
-
-class nsThebesRenderingContext : public nsIThebesRenderingContext,
-                                 public nsRenderingContextImpl
+class nsThebesRenderingContext : public nsRenderingContextImpl
 {
 public:
     nsThebesRenderingContext();
@@ -74,35 +70,14 @@ public:
     NS_IMETHOD Init(nsIDeviceContext* aContext, gfxContext* aThebesContext);
 
     NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWidget);
-    NS_IMETHOD Init(nsIDeviceContext* aContext, nsIDrawingSurface *aSurface);
     NS_IMETHOD CommonInit(void);
-    NS_IMETHOD Reset(void);
     NS_IMETHOD GetDeviceContext(nsIDeviceContext *& aDeviceContext);
-    NS_IMETHOD LockDrawingSurface(PRInt32 aX, PRInt32 aY,
-                                  PRUint32 aWidth, PRUint32 aHeight,
-                                  void **aBits, PRInt32 *aStride,
-                                  PRInt32 *aWidthBytes,
-                                  PRUint32 aFlags);
-    NS_IMETHOD UnlockDrawingSurface(void);
-    NS_IMETHOD SelectOffScreenDrawingSurface(nsIDrawingSurface *aSurface);
-    NS_IMETHOD GetDrawingSurface(nsIDrawingSurface **aSurface);
     NS_IMETHOD GetHints(PRUint32& aResult);
-    NS_IMETHOD DrawNativeWidgetPixmap(void* aSrcSurfaceBlack,
-                                      void* aSrcSurfaceWhite,
-                                      const nsIntSize& aSrcSize, 
-                                      const nsPoint& aDestPos);
     NS_IMETHOD PushState(void);
     NS_IMETHOD PopState(void);
-    NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aIsVisible);
     NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine);
-    NS_IMETHOD GetClipRect(nsRect &aRect, PRBool &aHasLocalClip);
     NS_IMETHOD SetLineStyle(nsLineStyle aLineStyle);
-    NS_IMETHOD GetLineStyle(nsLineStyle &aLineStyle);
-    NS_IMETHOD GetPenMode(nsPenMode &aPenMode);
-    NS_IMETHOD SetPenMode(nsPenMode aPenMode);
     NS_IMETHOD SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine);
-    NS_IMETHOD CopyClipRegion(nsIRegion &aRegion);
-    NS_IMETHOD GetClipRegion(nsIRegion **aRegion);
     NS_IMETHOD SetColor(nscolor aColor);
     NS_IMETHOD GetColor(nscolor &aColor) const;
     NS_IMETHOD SetFont(const nsFont& aFont, nsIAtom* aLangGroup);
@@ -111,34 +86,19 @@ public:
     NS_IMETHOD Translate(nscoord aX, nscoord aY);
     NS_IMETHOD Scale(float aSx, float aSy);
     NS_IMETHOD GetCurrentTransform(nsTransform2D *&aTransform);
-    NS_IMETHOD CreateDrawingSurface(const nsRect &aBounds, PRUint32 aSurfFlags, nsIDrawingSurface* &aSurface);
-    NS_IMETHOD CreateDrawingSurface(nsNativeWidget aWidget, nsIDrawingSurface* &aSurface);
-    NS_IMETHOD DestroyDrawingSurface(nsIDrawingSurface *aDS);
 
     NS_IMETHOD DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
-    NS_IMETHOD DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints);
     NS_IMETHOD DrawRect(const nsRect& aRect);
     NS_IMETHOD DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
     NS_IMETHOD FillRect(const nsRect& aRect);
     NS_IMETHOD FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
     NS_IMETHOD InvertRect(const nsRect& aRect);
     NS_IMETHOD InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-    NS_IMETHOD FlushRect(const nsRect& aRect);
-    NS_IMETHOD FlushRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-    NS_IMETHOD DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
     NS_IMETHOD FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
     NS_IMETHOD DrawEllipse(const nsRect& aRect);
     NS_IMETHOD DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
     NS_IMETHOD FillEllipse(const nsRect& aRect);
     NS_IMETHOD FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-    NS_IMETHOD DrawArc(const nsRect& aRect,
-                       float aStartAngle, float aEndAngle);
-    NS_IMETHOD DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                       float aStartAngle, float aEndAngle);
-    NS_IMETHOD FillArc(const nsRect& aRect,
-                       float aStartAngle, float aEndAngle);
-    NS_IMETHOD FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                       float aStartAngle, float aEndAngle);
 
     NS_IMETHOD GetWidth(const nsString& aString, nscoord &aWidth,
                         PRInt32 *aFontID = nsnull)
@@ -218,19 +178,12 @@ public:
     NS_IMETHOD PushFilter(const nsRect& aRect, PRBool aAreaIsOpaque, float aOpacity);
     NS_IMETHOD PopFilter();
 
-    NS_IMETHOD CopyOffScreenBits(nsIDrawingSurface *aSrcSurf,
-                                 PRInt32 aSrcX, PRInt32 aSrcY,
-                                 const nsRect &aDestBounds,
-                                 PRUint32 aCopyFlags);
     virtual void* GetNativeGraphicData(GraphicDataType aType);
 
     NS_IMETHOD PushTranslation(PushedTranslation* aState);
     NS_IMETHOD PopTranslation(PushedTranslation* aState);
     NS_IMETHOD SetTranslation(nscoord aX, nscoord aY);
 
-    NS_IMETHOD DrawImage(imgIContainer *aImage,
-                         const nsRect &aSrcRect,
-                         const nsRect &aDestRect);
     NS_IMETHOD DrawTile(imgIContainer *aImage, nscoord aXOffset, nscoord aYOffset,
                         const nsRect * aTargetRect);
     NS_IMETHOD SetRightToLeftText(PRBool aIsRTL);
@@ -277,13 +230,6 @@ protected:
 
     nsLineStyle mLineStyle;
     nscolor mColor;
-
-    // this is always the local surface
-    nsCOMPtr<nsThebesDrawingSurface> mLocalDrawingSurface;
-
-    // this is the current drawing surface; might be same
-    // as local, or might be offscreen
-    nsCOMPtr<nsThebesDrawingSurface> mDrawingSurface;
 
     // the rendering context
     nsRefPtr<gfxContext> mThebes;

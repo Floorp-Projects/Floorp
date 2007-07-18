@@ -1,0 +1,28 @@
+<html>
+<head>
+<link rel="stylesheet" href="370525-style.css"/>
+</head>
+
+<body>
+rowspan=2 on the cell with the percent-height div,
+with specified height on a sibling
+<table>
+ <tr>
+   <td style="background: lightgreen" rowspan="2">
+    <div>
+     height=75% / ignored
+    </div>
+    blah
+   </td>
+   <td style="background: orange">
+    1st row, 2nd column.
+   </td>
+ </tr>
+ <tr>
+   <td  style="background: lightblue" height="200px">
+    2nd row, 1st column. height=200px.
+   </td>
+ </tr>
+</table>
+</body>
+</html>

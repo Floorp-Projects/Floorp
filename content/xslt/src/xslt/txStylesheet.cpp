@@ -118,12 +118,12 @@ txStylesheet::~txStylesheet()
     delete mRootFrame;
     txListIterator frameIter(&mImportFrames);
     while (frameIter.hasNext()) {
-        delete NS_STATIC_CAST(ImportFrame*, frameIter.next());
+        delete static_cast<ImportFrame*>(frameIter.next());
     }
 
     txListIterator instrIter(&mTemplateInstructions);
     while (instrIter.hasNext()) {
-        delete NS_STATIC_CAST(txInstruction*, instrIter.next());
+        delete static_cast<txInstruction*>(instrIter.next());
     }
     
     // We can't make the map own its values because then we wouldn't be able
@@ -149,9 +149,9 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
     txListIterator frameIter(&mImportFrames);
 
     if (aImportedBy) {
-        ImportFrame* curr = NS_STATIC_CAST(ImportFrame*, frameIter.next());
+        ImportFrame* curr = static_cast<ImportFrame*>(frameIter.next());
         while (curr != aImportedBy) {
-               curr = NS_STATIC_CAST(ImportFrame*, frameIter.next());
+               curr = static_cast<ImportFrame*>(frameIter.next());
         }
         endFrame = aImportedBy->mFirstNotImported;
     }
@@ -162,7 +162,7 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
 
     ImportFrame* frame;
     while (!matchTemplate &&
-           (frame = NS_STATIC_CAST(ImportFrame*, frameIter.next())) &&
+           (frame = static_cast<ImportFrame*>(frameIter.next())) &&
            frame != endFrame) {
 
         // get templatelist for this mode
@@ -316,18 +316,18 @@ txStylesheet::doneCompiling()
     // all items
     frameIter.reset();
     ImportFrame* frame;
-    while ((frame = NS_STATIC_CAST(ImportFrame*, frameIter.next()))) {
+    while ((frame = static_cast<ImportFrame*>(frameIter.next()))) {
         nsTPtrArray<txStripSpaceTest> frameStripSpaceTests;
 
         txListIterator itemIter(&frame->mToplevelItems);
         itemIter.resetToEnd();
         txToplevelItem* item;
-        while ((item = NS_STATIC_CAST(txToplevelItem*, itemIter.previous()))) {
+        while ((item = static_cast<txToplevelItem*>(itemIter.previous()))) {
             switch (item->getType()) {
                 case txToplevelItem::attributeSet:
                 {
-                    rv = addAttributeSet(NS_STATIC_CAST(txAttributeSetItem*,
-                                                        item));
+                    rv = addAttributeSet(static_cast<txAttributeSetItem*>
+                                                    (item));
                     NS_ENSURE_SUCCESS(rv, rv);
                     break;
                 }
@@ -338,19 +338,19 @@ txStylesheet::doneCompiling()
                 }
                 case txToplevelItem::output:
                 {
-                    mOutputFormat.merge(NS_STATIC_CAST(txOutputItem*, item)->mFormat);
+                    mOutputFormat.merge(static_cast<txOutputItem*>(item)->mFormat);
                     break;
                 }
                 case txToplevelItem::stripSpace:
                 {
-                    rv = addStripSpace(NS_STATIC_CAST(txStripSpaceItem*, item),
+                    rv = addStripSpace(static_cast<txStripSpaceItem*>(item),
                                        frameStripSpaceTests);
                     NS_ENSURE_SUCCESS(rv, rv);
                     break;
                 }
                 case txToplevelItem::templ:
                 {
-                    rv = addTemplate(NS_STATIC_CAST(txTemplateItem*, item),
+                    rv = addTemplate(static_cast<txTemplateItem*>(item),
                                      frame);
                     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -358,8 +358,8 @@ txStylesheet::doneCompiling()
                 }
                 case txToplevelItem::variable:
                 {
-                    rv = addGlobalVariable(NS_STATIC_CAST(txVariableItem*,
-                                                          item));
+                    rv = addGlobalVariable(static_cast<txVariableItem*>
+                                                      (item));
                     NS_ENSURE_SUCCESS(rv, rv);
 
                     break;
@@ -477,15 +477,15 @@ txStylesheet::addTemplate(txTemplateItem* aTemplate,
 nsresult
 txStylesheet::addFrames(txListIterator& aInsertIter)
 {
-    ImportFrame* frame = NS_STATIC_CAST(ImportFrame*, aInsertIter.current());
+    ImportFrame* frame = static_cast<ImportFrame*>(aInsertIter.current());
     nsresult rv = NS_OK;
     txListIterator iter(&frame->mToplevelItems);
     txToplevelItem* item;
-    while ((item = NS_STATIC_CAST(txToplevelItem*, iter.next()))) {
+    while ((item = static_cast<txToplevelItem*>(iter.next()))) {
         if (item->getType() == txToplevelItem::import) {
-            txImportItem* import = NS_STATIC_CAST(txImportItem*, item);
+            txImportItem* import = static_cast<txImportItem*>(item);
             import->mFrame->mFirstNotImported =
-                NS_STATIC_CAST(ImportFrame*, aInsertIter.next());
+                static_cast<ImportFrame*>(aInsertIter.next());
             rv = aInsertIter.addBefore(import->mFrame);
             NS_ENSURE_SUCCESS(rv, rv);
 
@@ -631,7 +631,7 @@ txStylesheet::ImportFrame::~ImportFrame()
 {
     txListIterator tlIter(&mToplevelItems);
     while (tlIter.hasNext()) {
-        delete NS_STATIC_CAST(txToplevelItem*, tlIter.next());
+        delete static_cast<txToplevelItem*>(tlIter.next());
     }
 }
 

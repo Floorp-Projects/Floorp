@@ -71,8 +71,8 @@ nsAccessibleRelationWrap::QueryInterface(REFIID iid, void** ppv)
   *ppv = NULL;
 
   if (IID_IAccessibleRelation == iid || IID_IUnknown == iid) {
-    *ppv = NS_STATIC_CAST(IAccessibleRelation*, this);
-    (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
+    *ppv = static_cast<IAccessibleRelation*>(this);
+    (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
     return S_OK;
   }
 
@@ -175,7 +175,7 @@ nsAccessibleRelationWrap::get_target(long aTargetIndex, IUnknown **aTarget)
   if (NS_FAILED(rv))
     return E_FAIL;
 
-  *aTarget = NS_STATIC_CAST(IUnknown*, instancePtr);
+  *aTarget = static_cast<IUnknown*>(instancePtr);
   return S_OK;
 }
 
@@ -209,7 +209,7 @@ nsAccessibleRelationWrap::get_targets(long aMaxTargets, IUnknown **aTarget,
     if (NS_FAILED(rv))
       break;
 
-    aTarget[index] = NS_STATIC_CAST(IUnknown*, instancePtr);
+    aTarget[index] = static_cast<IUnknown*>(instancePtr);
   }
 
   if (NS_FAILED(rv)) {

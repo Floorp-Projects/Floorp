@@ -55,10 +55,12 @@
  * right calling conventions on Win16.
  */
 
+/* XXX NP_CALLBACK should be the same as NP_LOADDS in npapi.h which differs
+   for WIN16 and maybe WIN64? */
 #ifdef XP_OS2
-#define NP_EXPORT _System
+#define NP_CALLBACK _System
 #else
-#define NP_EXPORT
+#define NP_CALLBACK
 #endif
 
 #if defined(XP_WIN)
@@ -171,76 +173,76 @@ protected:
 
 
 PR_BEGIN_EXTERN_C
-NPObject* NP_EXPORT
+NPObject* NP_CALLBACK
 _getwindowobject(NPP npp);
 
-NPObject* NP_EXPORT
+NPObject* NP_CALLBACK
 _getpluginelement(NPP npp);
 
-NPIdentifier NP_EXPORT
+NPIdentifier NP_CALLBACK
 _getstringidentifier(const NPUTF8* name);
 
-void NP_EXPORT
+void NP_CALLBACK
 _getstringidentifiers(const NPUTF8** names, int32_t nameCount,
                       NPIdentifier *identifiers);
 
-bool NP_EXPORT
+bool NP_CALLBACK
 _identifierisstring(NPIdentifier identifiers);
 
-NPIdentifier NP_EXPORT
+NPIdentifier NP_CALLBACK
 _getintidentifier(int32_t intid);
 
-NPUTF8* NP_EXPORT
+NPUTF8* NP_CALLBACK
 _utf8fromidentifier(NPIdentifier identifier);
 
-int32_t NP_EXPORT
+int32_t NP_CALLBACK
 _intfromidentifier(NPIdentifier identifier);
 
-NPObject* NP_EXPORT
+NPObject* NP_CALLBACK
 _createobject(NPP npp, NPClass* aClass);
 
-NPObject* NP_EXPORT
+NPObject* NP_CALLBACK
 _retainobject(NPObject* npobj);
 
-void NP_EXPORT
+void NP_CALLBACK
 _releaseobject(NPObject* npobj);
 
-bool NP_EXPORT
+bool NP_CALLBACK
 _invoke(NPP npp, NPObject* npobj, NPIdentifier method, const NPVariant *args,
         uint32_t argCount, NPVariant *result);
 
-bool NP_EXPORT
+bool NP_CALLBACK
 _invokeDefault(NPP npp, NPObject* npobj, const NPVariant *args,
                uint32_t argCount, NPVariant *result);
 
-bool NP_EXPORT
+bool NP_CALLBACK
 _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result);
 
-bool NP_EXPORT
+bool NP_CALLBACK
 _getproperty(NPP npp, NPObject* npobj, NPIdentifier property,
              NPVariant *result);
 
-bool NP_EXPORT
+bool NP_CALLBACK
 _setproperty(NPP npp, NPObject* npobj, NPIdentifier property,
              const NPVariant *value);
 
-bool NP_EXPORT
+bool NP_CALLBACK
 _removeproperty(NPP npp, NPObject* npobj, NPIdentifier property);
 
-bool NP_EXPORT
+bool NP_CALLBACK
 _hasproperty(NPP npp, NPObject* npobj, NPIdentifier propertyName);
 
-bool NP_EXPORT
+bool NP_CALLBACK
 _hasmethod(NPP npp, NPObject* npobj, NPIdentifier methodName);
 
-bool NP_EXPORT
+bool NP_CALLBACK
 _enumerate(NPP npp, NPObject *npobj, NPIdentifier **identifier,
            uint32_t *count);
 
-void NP_EXPORT
+void NP_CALLBACK
 _releasevariantvalue(NPVariant *variant);
 
-void NP_EXPORT
+void NP_CALLBACK
 _setexception(NPObject* npobj, const NPUTF8 *message);
 
 PR_END_EXTERN_C
@@ -250,6 +252,17 @@ PeekException();
 
 void
 PopException();
+
+void
+OnPluginDestroy(NPP instance);
+
+void
+OnShutdown();
+
+void
+EnterAsyncPluginThreadCallLock();
+void
+ExitAsyncPluginThreadCallLock();
 
 class NPPStack
 {

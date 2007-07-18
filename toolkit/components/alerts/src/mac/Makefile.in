@@ -58,6 +58,7 @@ CMMSRCS = \
   nsAlertsService.mm \
   mozGrowlDelegate.mm \
   nsAlertsImageLoadListener.mm \
+  nsNotificationsList.mm \
   $(NULL)
 
 CPPSRCS = \
@@ -67,6 +68,10 @@ CPPSRCS = \
 LOCAL_INCLUDES += \
   -I$(srcdir)/growl/ \
   -I$(topsrcdir)/toolkit/components/build/ \
+  $(NULL)
+
+EXPORTS = \
+  nsAlertsService.h \
   $(NULL)
 
 SHARED_LIBRARY_LIBS = \

@@ -389,8 +389,8 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLScriptElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIScriptElement)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   if (mScriptEventHandler && aIID.Equals(NS_GET_IID(nsIScriptEventHandler)))
-    foundInterface = NS_STATIC_CAST(nsIScriptEventHandler*,
-                                    mScriptEventHandler);
+    foundInterface = static_cast<nsIScriptEventHandler*>
+                                (mScriptEventHandler);
   else
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLScriptElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END

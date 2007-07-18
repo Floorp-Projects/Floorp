@@ -140,113 +140,112 @@ typedef PRUint32 nsSplittableType;
  */
 typedef PRUint32 nsFrameState;
 
-#define NS_FRAME_IN_REFLOW                            0x00000001
-// This is only set during painting
-#define NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO      0x00000001
+enum {
+  NS_FRAME_IN_REFLOW =                          0x00000001,
 
-// This bit is set when a frame is created. After it has been reflowed
-// once (during the DidReflow with a finished state) the bit is
-// cleared.
-#define NS_FRAME_FIRST_REFLOW                         0x00000002
+  // This is only set during painting
+  NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO =    0x00000001,
 
-// For a continuation frame, if this bit is set, then this a "fluid" 
-// continuation, i.e., across a line boundary. Otherwise it's a "hard"
-// continuation, e.g. a bidi continuation.
-#define NS_FRAME_IS_FLUID_CONTINUATION                0x00000004
+  // This bit is set when a frame is created. After it has been reflowed
+  // once (during the DidReflow with a finished state) the bit is
+  // cleared.
+  NS_FRAME_FIRST_REFLOW =                       0x00000002,
 
-// This bit is set when the frame's overflow rect is
-// different from its border rect (i.e. GetOverflowRect() != GetRect())
-#define NS_FRAME_OUTSIDE_CHILDREN                     0x00000008
+  // For a continuation frame, if this bit is set, then this a "fluid" 
+  // continuation, i.e., across a line boundary. Otherwise it's a "hard"
+  // continuation, e.g. a bidi continuation.
+  NS_FRAME_IS_FLUID_CONTINUATION =              0x00000004,
 
-// If this bit is set, then a reference to the frame is being held
-// elsewhere.  The frame may want to send a notification when it is
-// destroyed to allow these references to be cleared.
-#define NS_FRAME_EXTERNAL_REFERENCE                   0x00000010
+  // This bit is set when the frame's overflow rect is
+  // different from its border rect (i.e. GetOverflowRect() != GetRect())
+  NS_FRAME_OUTSIDE_CHILDREN =                   0x00000008,
 
-// If this bit is set, this frame or one of its descendants has a
-// percentage height that depends on an ancestor of this frame.
-// (Or it did at one point in the past, since we don't necessarily clear
-// the bit when it's no longer needed; it's an optimization.)
-#define NS_FRAME_CONTAINS_RELATIVE_HEIGHT             0x00000020
+  // If this bit is set, then a reference to the frame is being held
+  // elsewhere.  The frame may want to send a notification when it is
+  // destroyed to allow these references to be cleared.
+  NS_FRAME_EXTERNAL_REFERENCE =                 0x00000010,
 
-// If this bit is set, then the frame corresponds to generated content
-#define NS_FRAME_GENERATED_CONTENT                    0x00000040
+  // If this bit is set, this frame or one of its descendants has a
+  // percentage height that depends on an ancestor of this frame.
+  // (Or it did at one point in the past, since we don't necessarily clear
+  // the bit when it's no longer needed; it's an optimization.)
+  NS_FRAME_CONTAINS_RELATIVE_HEIGHT =           0x00000020,
 
-// If this bit is set, then the frame uses XUL flexible box layout
-// for its children.
-#define NS_FRAME_IS_BOX                               0x00000080
+  // If this bit is set, then the frame corresponds to generated content
+  NS_FRAME_GENERATED_CONTENT =                  0x00000040,
 
-// If this bit is set, then the frame has been moved out of the flow,
-// e.g., it is absolutely positioned or floated
-#define NS_FRAME_OUT_OF_FLOW                          0x00000100
+  // If this bit is set, then the frame has been moved out of the flow,
+  // e.g., it is absolutely positioned or floated
+  NS_FRAME_OUT_OF_FLOW =                        0x00000100,
 
-// If this bit is set, then the frame reflects content that may be selected
-#define NS_FRAME_SELECTED_CONTENT                     0x00000200
+  // If this bit is set, then the frame reflects content that may be selected
+  NS_FRAME_SELECTED_CONTENT =                   0x00000200,
 
-// If this bit is set, then the frame is dirty and needs to be reflowed.
-// This bit is set when the frame is first created.
-// This bit is cleared by DidReflow after the required call to Reflow has
-// finished.
-// Do not set this bit yourself if you plan to pass the frame to
-// nsIPresShell::FrameNeedsReflow.  Pass the right arguments instead.
-#define NS_FRAME_IS_DIRTY                             0x00000400
+  // If this bit is set, then the frame is dirty and needs to be reflowed.
+  // This bit is set when the frame is first created.
+  // This bit is cleared by DidReflow after the required call to Reflow has
+  // finished.
+  // Do not set this bit yourself if you plan to pass the frame to
+  // nsIPresShell::FrameNeedsReflow.  Pass the right arguments instead.
+  NS_FRAME_IS_DIRTY =                           0x00000400,
 
-// If this bit is set then the frame is unflowable.
-#define NS_FRAME_IS_UNFLOWABLE                        0x00000800
+  // If this bit is set then the frame is unflowable.
+  NS_FRAME_IS_UNFLOWABLE =                      0x00000800,
 
-// If this bit is set, either:
-//  1. the frame has children that have either NS_FRAME_IS_DIRTY or
-//     NS_FRAME_HAS_DIRTY_CHILDREN, or
-//  2. the frame has had descendants removed.
-// It means that Reflow needs to be called, but that Reflow will not
-// do as much work as it would if NS_FRAME_IS_DIRTY were set.
-// This bit is cleared by DidReflow after the required call to Reflow has
-// finished.
-// Do not set this bit yourself if you plan to pass the frame to
-// nsIPresShell::FrameNeedsReflow.  Pass the right arguments instead.
-#define NS_FRAME_HAS_DIRTY_CHILDREN                   0x00001000
+  // If this bit is set, either:
+  //  1. the frame has children that have either NS_FRAME_IS_DIRTY or
+  //     NS_FRAME_HAS_DIRTY_CHILDREN, or
+  //  2. the frame has had descendants removed.
+  // It means that Reflow needs to be called, but that Reflow will not
+  // do as much work as it would if NS_FRAME_IS_DIRTY were set.
+  // This bit is cleared by DidReflow after the required call to Reflow has
+  // finished.
+  // Do not set this bit yourself if you plan to pass the frame to
+  // nsIPresShell::FrameNeedsReflow.  Pass the right arguments instead.
+  NS_FRAME_HAS_DIRTY_CHILDREN =                 0x00001000,
 
-// If this bit is set, the frame has an associated view
-#define NS_FRAME_HAS_VIEW                             0x00002000
+  // If this bit is set, the frame has an associated view
+  NS_FRAME_HAS_VIEW =                           0x00002000,
 
-// If this bit is set, the frame was created from anonymous content.
-#define NS_FRAME_INDEPENDENT_SELECTION                0x00004000
+  // If this bit is set, the frame was created from anonymous content.
+  NS_FRAME_INDEPENDENT_SELECTION =              0x00004000,
 
-// If this bit is set, the frame is "special" (lame term, I know),
-// which means that it is part of the mangled frame hierarchy that
-// results when an inline has been split because of a nested block.
-#define NS_FRAME_IS_SPECIAL                           0x00008000
+  // If this bit is set, the frame is "special" (lame term, I know),
+  // which means that it is part of the mangled frame hierarchy that
+  // results when an inline has been split because of a nested block.
+  NS_FRAME_IS_SPECIAL =                         0x00008000,
 
-// If this bit is set, the frame doesn't allow ignorable whitespace as
-// children. For example, the whitespace between <table>\n<tr>\n<td>
-// will be excluded during the construction of children. 
-// The bit is set when the frame is first created and remain
-// unchanged during the life-time of the frame.
-#define NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE         0x00010000
+  // If this bit is set, the frame doesn't allow ignorable whitespace as
+  // children. For example, the whitespace between <table>\n<tr>\n<td>
+  // will be excluded during the construction of children. 
+  // The bit is set when the frame is first created and remain
+  // unchanged during the life-time of the frame.
+  NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE =       0x00010000,
 
 #ifdef IBMBIDI
-// If this bit is set, the frame itself is a bidi continuation,
-// or is incomplete (its next sibling is a bidi continuation)
-#define NS_FRAME_IS_BIDI                              0x00020000
+  // If this bit is set, the frame itself is a bidi continuation,
+  // or is incomplete (its next sibling is a bidi continuation)
+  NS_FRAME_IS_BIDI =                            0x00020000,
 #endif
 
-// If this bit is set the frame has descendant with a view
-#define NS_FRAME_HAS_CHILD_WITH_VIEW                  0x00040000
+  // If this bit is set the frame has descendant with a view
+  NS_FRAME_HAS_CHILD_WITH_VIEW =                0x00040000,
 
-// If this bit is set, then reflow may be dispatched from the current
-// frame instead of the root frame.
-#define NS_FRAME_REFLOW_ROOT                          0x00080000
+  // If this bit is set, then reflow may be dispatched from the current
+  // frame instead of the root frame.
+  NS_FRAME_REFLOW_ROOT =                        0x00080000,
 
-// The lower 20 bits of the frame state word are reserved by this API.
-#define NS_FRAME_RESERVED                             0x000FFFFF
+  // The lower 20 bits of the frame state word are reserved by this API.
+  NS_FRAME_RESERVED =                           0x000FFFFF,
 
-// The upper 12 bits of the frame state word are reserved for frame
-// implementations.
-#define NS_FRAME_IMPL_RESERVED                        0xFFF00000
+  // The upper 12 bits of the frame state word are reserved for frame
+  // implementations.
+  NS_FRAME_IMPL_RESERVED =                      0xFFF00000,
 
-// Box layout bits
-#define NS_STATE_IS_HORIZONTAL                        0x00400000
-#define NS_STATE_IS_DIRECTION_NORMAL                  0x80000000
+  // Box layout bits
+  NS_STATE_IS_HORIZONTAL =                      0x00400000,
+  NS_STATE_IS_DIRECTION_NORMAL =                0x80000000
+};
 
 // Helper macros
 #define NS_SUBTREE_DIRTY(_frame)  \
@@ -617,7 +616,7 @@ public:
 #else
   #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                      \
     const nsStyle##name_ * GetStyle##name_ () const {                         \
-      return NS_STATIC_CAST(const nsStyle##name_*,                            \
+      return static_cast<const nsStyle##name_*>(                              \
                             GetStyleDataExternal(eStyleStruct_##name_));      \
     }
 #endif
@@ -1012,10 +1011,10 @@ public:
   virtual nsIFrame* GetNextContinuation() const = 0;
   NS_IMETHOD SetNextContinuation(nsIFrame*) = 0;
   virtual nsIFrame* GetFirstContinuation() const {
-    return NS_CONST_CAST(nsIFrame*, this);
+    return const_cast<nsIFrame*>(this);
   }
   virtual nsIFrame* GetLastContinuation() const {
-    return NS_CONST_CAST(nsIFrame*, this);
+    return const_cast<nsIFrame*>(this);
   }
   
   /**
@@ -1033,14 +1032,14 @@ public:
    * Return the first frame in our current flow. 
    */
   virtual nsIFrame* GetFirstInFlow() const {
-    return NS_CONST_CAST(nsIFrame*, this);
+    return const_cast<nsIFrame*>(this);
   }
 
   /**
    * Return the last frame in our current flow.
    */
   virtual nsIFrame* GetLastInFlow() const {
-    return NS_CONST_CAST(nsIFrame*, this);
+    return const_cast<nsIFrame*>(this);
   }
 
 
@@ -1119,18 +1118,29 @@ public:
   struct InlineMinWidthData : public InlineIntrinsicWidthData {
     InlineMinWidthData()
       : trailingTextFrame(nsnull)
+      , atStartOfLine(PR_TRUE)
     {}
 
-    void Break(nsIRenderingContext *aRenderingContext);
+    // We need to distinguish forced and optional breaks for cases where the
+    // current line total is negative.  When it is, we need to ignore
+    // optional breaks to prevent min-width from ending up bigger than
+    // pref-width.
+    void ForceBreak(nsIRenderingContext *aRenderingContext);
+    void OptionallyBreak(nsIRenderingContext *aRenderingContext);
 
     // The last text frame processed so far in the current line, when
     // the last characters in that text frame are relevant for line
     // break opportunities.
     nsIFrame *trailingTextFrame;
+
+    // Whether we're currently at the start of the line.  If we are, we
+    // can't break (for example, between the text-indent and the first
+    // word).
+    PRBool atStartOfLine;
   };
 
   struct InlinePrefWidthData : public InlineIntrinsicWidthData {
-    void Break(nsIRenderingContext *aRenderingContext);
+    void ForceBreak(nsIRenderingContext *aRenderingContext);
   };
 
   /**
@@ -1449,6 +1459,7 @@ public:
     // A frame that participates in inline reflow, i.e., one that
     // requires nsHTMLReflowState::mLineLayout.
     eLineParticipant =                  1 << 6,
+    eXULBox =                           1 << 7,
 
 
     // These are to allow nsFrame::Init to assert that IsFrameOfType
@@ -1838,7 +1849,10 @@ NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::embeddingLevel))
   // BOX LAYOUT METHODS
   // These methods have been migrated from nsIBox and are in the process of
   // being refactored. DO NOT USE OUTSIDE OF XUL.
-  PRBool IsBoxFrame() const { return (mState & NS_FRAME_IS_BOX) != 0; }
+  PRBool IsBoxFrame() const
+  {
+    return IsFrameOfType(nsIFrame::eXULBox);
+  }
   PRBool IsBoxWrapped() const
   { return (!IsBoxFrame() && mParent && mParent->IsBoxFrame()); }
 

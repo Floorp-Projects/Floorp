@@ -112,7 +112,7 @@ nsDisplayTextDecoration::Paint(nsDisplayListBuilder* aBuilder,
 
   // REVIEW: From nsHTMLContainerFrame::PaintTextDecorations
   nscoord ascent, offset, size;
-  nsHTMLContainerFrame* f = NS_STATIC_CAST(nsHTMLContainerFrame*, mFrame);
+  nsHTMLContainerFrame* f = static_cast<nsHTMLContainerFrame*>(mFrame);
   fm->GetMaxAscent(ascent);
   if (mDecoration != NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
     fm->GetUnderline(offset, size);
@@ -255,7 +255,7 @@ nsHTMLContainerFrame::GetTextDecorations(nsPresContext* aPresContext,
 
       nsStyleContext* styleContext = frame->GetStyleContext();
       const nsStyleDisplay* styleDisplay = styleContext->GetStyleDisplay();
-      if (!styleDisplay->IsBlockLevel() &&
+      if (!styleDisplay->IsBlockOutside() &&
           styleDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CELL) {
         // If an inline frame is discovered while walking up the tree,
         // we should stop according to CSS3 draft. CSS2 is rather vague
@@ -567,14 +567,6 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIFrame* aFrame,
     // in which case we want to call with aAbove == PR_FALSE to insert at the beginning
     // in document order
     viewManager->InsertChild(parentView, view, insertBefore, insertBefore != nsnull);
-
-    if (nsnull != aContentParentFrame) {
-      nsIView* zParentView = aContentParentFrame->GetClosestView();
-      if (zParentView != parentView) {
-        insertBefore = nsLayoutUtils::FindSiblingViewFor(zParentView, aFrame);
-        viewManager->InsertZPlaceholder(zParentView, view, insertBefore, insertBefore != nsnull);
-      }
-    }
   }
 
   // REVIEW: Don't create a widget for fixed-pos elements anymore.

@@ -103,7 +103,7 @@ _SUBDIR_CONFIG_ARGS="$ac_configure_args"
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 MOZJPEG=62
-MOZPNG=10207
+MOZPNG=10217
 MOZZLIB=0x1230
 NSPR_VERSION=4
 NSS_VERSION=3
@@ -196,14 +196,6 @@ MOZ_ARG_ENABLE_BOOL(compile-environment,
                            Disable compiler/library checks.],
     COMPILE_ENVIRONMENT=1,
     COMPILE_ENVIRONMENT= )
-
-AC_PATH_PROGS(NSINSTALL_BIN, nsinstall )
-if test -z "$COMPILE_ENVIRONMENT"; then
-if test -z "$NSINSTALL_BIN" || test "$NSINSTALL_BIN" = ":"; then
-    AC_MSG_ERROR([nsinstall not found in \$PATH])
-fi
-fi
-AC_SUBST(NSINSTALL_BIN)
 
 dnl ========================================================
 dnl Checks for compilers.
@@ -641,6 +633,14 @@ if test -z "$PYTHON"; then
 fi
 echo PYTHON="$PYTHON"
 
+AC_PATH_PROGS(NSINSTALL_BIN, nsinstall )
+if test -z "$COMPILE_ENVIRONMENT"; then
+if test -z "$NSINSTALL_BIN" || test "$NSINSTALL_BIN" = ":"; then
+    NSINSTALL_BIN='$(PYTHON) $(topsrcdir)/config/nsinstall.py'
+fi
+fi
+AC_SUBST(NSINSTALL_BIN)
+
 AC_PATH_PROG(DOXYGEN, doxygen, :)
 AC_PATH_PROG(WHOAMI, whoami, :)
 AC_PATH_PROG(AUTOCONF, autoconf, :)
@@ -680,9 +680,7 @@ darwin*)
         if test "$GCC_BUILD" = "4061" ; then
             AC_MSG_ERROR([You are attempting to use Apple gcc 4.0 build 4061.
 This compiler was supplied with Xcode 2.0, and contains bugs that prevent it
-from building Mozilla.
-Either upgrade to Xcode 2.1 or later, or switch the system's default compiler
-to gcc 3.3 by running \"sudo gcc_select 3.3\".])
+from building Mozilla. Upgrade to Xcode 2.1 or later.])
         fi
     fi
 
@@ -908,7 +906,6 @@ if test -n "$CROSS_COMPILE"; then
     OS_TARGET="${target_os}"
     OS_ARCH=`echo $target_os | sed -e 's|/|_|g'`
     OS_RELEASE=
-    OS_TEST="${target_cpu}"
     case "${target_os}" in
         linux*)       OS_ARCH=Linux OS_TARGET=Linux ;;
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
@@ -920,8 +917,12 @@ else
     OS_TARGET=`uname -s`
     OS_ARCH=`uname -s | sed -e 's|/|_|g'`
     OS_RELEASE=`uname -r`
-    OS_TEST=`uname -m`
 fi
+
+# Before this used `uname -m` when not cross compiling
+# but that breaks when you have a 64 bit kernel with a 32 bit userland.
+OS_TEST="${target_cpu}"
+
 _COMPILER_PREFIX=
 
 HOST_OS_ARCH=`echo $host_os | sed -e 's|/|_|g'`
@@ -1857,6 +1858,9 @@ case "$target" in
         LIBXUL_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib'
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         MOZ_XPCOM_OBSOLETE_LIBS='$(LIBXUL_DIST)/lib/xpcom_compat.lib'
+        if test $_MSC_VER -ge 1400; then
+            LDFLAGS="$LDFLAGS -NXCOMPAT -SAFESEH"
+        fi
     fi
     MOZ_JPEG_LIBS='$(call EXPAND_LIBNAME_PATH,jpeg$(MOZ_BITS)$(VERSION_NUMBER),$(DEPTH)/jpeg)'
     MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,png,$(DEPTH)/modules/libimg/png)'
@@ -2278,7 +2282,7 @@ dnl the qsort routine under solaris is faulty
        MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -h $@ -o $@'
        MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_FLAGS) -G -z muldefs -h $@ -o $@'
        MKSHLIB_FORCE_ALL='-z allextract'
-       MKSHLIB_UNFORCE_ALL=''
+       MKSHLIB_UNFORCE_ALL='-z defaultextract'
        DSO_LDOPTS='-G -z muldefs'
        AR_LIST="$AR t"
        AR_EXTRACT="$AR x"
@@ -2695,8 +2699,8 @@ EOF
 EOF
                       ac_cv_visibility_pragma=no
                       if ${CC-cc} -Werror -S conftest.c -o conftest.s >/dev/null 2>&1; then
-                        if egrep '\.(hidden|extern_private).*foo_hidden' conftest.s >/dev/null; then
-                          if ! egrep '\.(hidden|extern_private).*foo_default' conftest.s > /dev/null; then
+                        if egrep '\.(hidden|private_extern).*foo_hidden' conftest.s >/dev/null; then
+                          if ! egrep '\.(hidden|private_extern).*foo_default' conftest.s > /dev/null; then
                             ac_cv_visibility_pragma=yes
                           fi
                         fi
@@ -2719,7 +2723,7 @@ EOF
                        if ! ${CXX-g++} ${CXXFLAGS} ${DSO_PIC_CFLAGS} ${DSO_LDOPTS} -S -o conftest.S conftest.c > /dev/null 2>&1 ; then
                          ac_cv_have_visibility_class_bug=yes
                        else
-                         if test `grep -c "@PLT" conftest.S` = 0; then
+                         if test `egrep -c '@PLT|\\$stub' conftest.S` = 0; then
                            ac_cv_have_visibility_class_bug=yes
                          fi
                        fi
@@ -3066,7 +3070,7 @@ dnl Check for MacOS deployment target version
 dnl ========================================================
 
 MOZ_ARG_ENABLE_STRING(macos-target,
-                      [  --enable-macos-target=VER (default=10.3/ppc, 10.4/x86)
+                      [  --enable-macos-target=VER (default=10.4)
                           Set the minimum MacOS version needed at runtime],
                       [_MACOSX_DEPLOYMENT_TARGET=$enableval])
 
@@ -3079,17 +3083,7 @@ case "$target" in
         dnl No value specified on the command line or in the environment,
         dnl use the lesser of the application's minimum or the architecture's
         dnl minimum.
-        case "${target_cpu}" in
-            powerpc*)
-                dnl Architecture minimum 10.3
-                dnl export MACOSX_DEPLOYMENT_TARGET=10.3
-                export MACOSX_DEPLOYMENT_TARGET=10.2
-                ;;
-            i*86*)
-                dnl Architecture minimum 10.4
-                export MACOSX_DEPLOYMENT_TARGET=10.4
-                ;;
-        esac
+        export MACOSX_DEPLOYMENT_TARGET=10.4
     fi
     ;;
 esac
@@ -3832,7 +3826,17 @@ if test -n "$_USE_SYSTEM_NSPR"; then
     AM_PATH_NSPR(4.0.0, [MOZ_NATIVE_NSPR=1], [MOZ_NATIVE_NSPR=])
 fi
 
-if test -z "$MOZ_NATIVE_NSPR"; then
+if test -n "$MOZ_NATIVE_NSPR"; then
+    _SAVE_CFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS $NSPR_CFLAGS"
+    AC_TRY_COMPILE([#include "prlog.h"],
+                [#ifndef PR_STATIC_ASSERT
+                 #error PR_STATIC_ASSERT not defined
+                 #endif],
+                [MOZ_NATIVE_NSPR=1],
+                AC_MSG_ERROR([system NSPR does not support PR_STATIC_ASSERT]))
+    CFLAGS=$_SAVE_CFLAGS
+else
     NSPR_CFLAGS='`$(DEPTH)/nsprpub/config/nspr-config --prefix=$(LIBXUL_DIST) --includedir=$(LIBXUL_DIST)/include/nspr --cflags`'
     # explicitly set libs for Visual Age C++ for OS/2
     if test "$OS_ARCH" = "OS2" -a "$VACPP" = "yes"; then
@@ -3990,9 +3994,11 @@ if test -z "$PNG_DIR" -o "$PNG_DIR" = no; then
 else
     _SAVE_PNG_LIBS=$PNG_LIBS
     AC_CHECK_LIB(png, png_get_valid, [SYSTEM_PNG=1 PNG_LIBS="-lpng $PNG_LIBS"],
-                 SYSTEM_PNG=, $PNG_LIBS)
+                 AC_MSG_ERROR([--with-system-png requested but no working libpng found]), 
+                 $PNG_LIBS)
     AC_CHECK_LIB(png, png_get_acTL, ,
-                 [SYSTEM_PNG= PNG_LIBS=$_SAVE_PNG_LIBS], $_SAVE_PNG_LIBS)
+                 AC_MSG_ERROR([--with-system-png won't work because the system's libpng doesn't have APNG support]),
+                 $_SAVE_PNG_LIBS)
 fi
 if test "$SYSTEM_PNG" = 1; then
     LIBS="$PNG_LIBS $LIBS"
@@ -4006,7 +4012,7 @@ if test "$SYSTEM_PNG" = 1; then
                      #error "Insufficient libpng version."
                      #endif ],
                    SYSTEM_PNG=1,
-                   [SYSTEM_PNG= PNG_CFLAGS= PNG_LIBS=]) 
+                   AC_MSG_ERROR([--with-system-png requested but no working libpng found]))
 fi
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
@@ -4471,8 +4477,8 @@ cairo-gtk2)
     MOZ_ENABLE_CAIRO_GFX=1
     MOZ_ENABLE_GTK2=1
     MOZ_ENABLE_XREMOTE=1
-    TK_CFLAGS='$(MOZ_GTK2_CFLAGS) $(MOZ_CAIRO_CFLAGS)'
-    TK_LIBS='$(MOZ_GTK2_LIBS) $(MOZ_CAIRO_LIBS)'
+    TK_CFLAGS='$(MOZ_GTK2_CFLAGS)'
+    TK_LIBS='$(MOZ_GTK2_LIBS)'
     AC_DEFINE(MOZ_WIDGET_GTK2)
     ;;
 cairo-beos)
@@ -5303,8 +5309,10 @@ dnl ========================================================
 dnl = Airbag crash reporting (on by default on supported platforms)
 dnl ========================================================
 
-if test "$OS_ARCH" = "WINNT" -a -z "$GNU_CC" \
-  || test "$OS_ARCH" = "Darwin"; then
+if (test "$OS_ARCH" = "WINNT" -a -z "$GNU_CC" \
+    || test "$OS_ARCH" = "Darwin" \
+    || test "$OS_ARCH" = "Linux") \
+   && test -z "$HAVE_64BIT_OS"; then
    MOZ_AIRBAG=1
 fi
 
@@ -5315,7 +5323,32 @@ MOZ_ARG_DISABLE_BOOL(airbag,
 
 if test -n "$MOZ_AIRBAG"; then
    AC_DEFINE(MOZ_AIRBAG)
+
+  if test "$OS_ARCH" = "Linux"; then
+    PKG_CHECK_MODULES(MOZ_LIBCURL, libcurl, _CURL_FOUND=1, _CURL_FOUND=)
+    if test -z "$_CURL_FOUND"; then
+       AC_PATH_PROGS(CURL_CONFIG, $CURL_CONFIG curl-config)
+       if test -n "$CURL_CONFIG"; then
+          AC_MSG_CHECKING(MOZ_LIBCURL_CFLAGS)
+          MOZ_LIBCURL_CFLAGS=`${CURL_CONFIG} --cflags`
+          AC_MSG_RESULT($MOZ_LIBCURL_CFLAGS)
+
+          AC_MSG_CHECKING(MOZ_LIBCURL_LIBS)
+          MOZ_LIBCURL_LIBS=`${CURL_CONFIG} --libs`
+          AC_MSG_RESULT($MOZ_LIBCURL_LIBS)
+
+          _CURL_FOUND=1
+       fi
+    fi
+
+    if test -z "$_CURL_FOUND" && test -z "$SKIP_LIBRARY_CHECKS"; then
+        AC_MSG_ERROR([Couldn't find libcurl, which is required for the crash reporter.  Use --disable-airbag to disable the crash reporter.])
+    fi
+  fi
 fi
+
+AC_SUBST(MOZ_LIBCURL_CFLAGS)
+AC_SUBST(MOZ_LIBCURL_LIBS)
 
 dnl ========================================================
 dnl = Build mochitest JS/DOM tests (on by default)
@@ -5429,6 +5462,15 @@ fi
 
 dnl Remove dupes
 MOZ_EXTENSIONS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_EXTENSIONS}`
+
+dnl Ensure every extension exists, to avoid mostly-inscrutable error messages
+dnl when trying to build a non-existent extension.
+for extension in $MOZ_EXTENSIONS; do
+    if test ! -d "${srcdir}/extensions/${extension}"; then
+        AC_MSG_ERROR([Unrecognized extension provided to --enable-extensions: ${extension}.])
+    fi
+done
+
 
 dnl ========================================================
 dnl Image decoders
@@ -5746,17 +5788,10 @@ if test -n "$MOZ_PLACES"; then
     AC_DEFINE(MOZ_PLACES)
     MOZ_MORK=
     MOZ_MORKREADER=1
-fi
-
-dnl ========================================================
-dnl = Enable places bookmarks (use places for bookmarks)
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(places-bookmarks,
-[  --enable-places_bookmarks        Enable 'places' for bookmarks backend],
-    MOZ_PLACES_BOOKMARKS=1,
-    MOZ_PLACES_BOOKMARKS= )
-if test -n "$MOZ_PLACES_BOOKMARKS"; then
-    AC_DEFINE(MOZ_PLACES_BOOKMARKS)
+else
+  if test "$MOZ_BUILD_APP" = "browser"; then
+    AC_MSG_ERROR([Cannot build Firefox with --disable-places.])
+  fi
 fi
 
 dnl ========================================================
@@ -6645,6 +6680,11 @@ MOZ_ARG_ENABLE_BOOL(static,
 [  --enable-static         Enable building of internal static libs],
     BUILD_STATIC_LIBS=1,
     BUILD_STATIC_LIBS=)
+
+dnl Disable libxul in debug builds.
+if test -n "$MOZ_DEBUG"; then
+   MOZ_ENABLE_LIBXUL=
+fi
 
 MOZ_ARG_ENABLE_BOOL(libxul,
 [  --enable-libxul         Enable building of libxul],

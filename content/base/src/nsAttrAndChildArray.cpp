@@ -113,7 +113,7 @@ GetIndexFromCache(const nsAttrAndChildArray* aArray)
  * See Bug 231104 for more information.
  */
 #define ATTRS(_impl) \
-  NS_REINTERPRET_CAST(InternalAttr*, &((_impl)->mBuffer[0]))
+  reinterpret_cast<InternalAttr*>(&((_impl)->mBuffer[0]))
   
 
 #define NS_IMPL_EXTRA_SIZE \
@@ -213,7 +213,7 @@ nsAttrAndChildArray::RemoveChildAt(PRUint32 aPos)
 
   PRUint32 childCount = ChildCount();
   void** pos = mImpl->mBuffer + AttrSlotsSize() + aPos;
-  nsIContent* child = NS_STATIC_CAST(nsIContent*, *pos);
+  nsIContent* child = static_cast<nsIContent*>(*pos);
   NS_RELEASE(child);
   memmove(pos, pos + 1, (childCount - aPos - 1) * sizeof(nsIContent*));
   SetChildCount(childCount - 1);
@@ -265,7 +265,7 @@ nsAttrAndChildArray::IndexOfChild(nsINode* aPossibleChild) const
         if (children[cursor] == aPossibleChild) {
           AddIndexToCache(this, cursor);
 
-          return NS_STATIC_CAST(PRInt32, cursor);
+          return static_cast<PRInt32>(cursor);
         }
       }
     }
@@ -274,7 +274,7 @@ nsAttrAndChildArray::IndexOfChild(nsINode* aPossibleChild) const
         if (children[cursor] == aPossibleChild) {
           AddIndexToCache(this, cursor);
 
-          return NS_STATIC_CAST(PRInt32, cursor);
+          return static_cast<PRInt32>(cursor);
         }
       }
     }
@@ -285,7 +285,7 @@ nsAttrAndChildArray::IndexOfChild(nsINode* aPossibleChild) const
 
   for (i = 0; i < count; ++i) {
     if (children[i] == aPossibleChild) {
-      return NS_STATIC_CAST(PRInt32, i);
+      return static_cast<PRInt32>(i);
     }
   }
 
@@ -497,7 +497,7 @@ nsAttrAndChildArray::GetSafeAttrNameAt(PRUint32 aPos) const
     return nsnull;
   }
 
-  return &NS_REINTERPRET_CAST(InternalAttr*, pos)->mName;
+  return &reinterpret_cast<InternalAttr*>(pos)->mName;
 }
 
 const nsAttrName*
@@ -619,7 +619,7 @@ nsAttrAndChildArray::Compact()
     mImpl = nsnull;
   }
   else if (newSize < mImpl->mBufferSize) {
-    mImpl = NS_STATIC_CAST(Impl*, PR_Realloc(mImpl, (newSize + NS_IMPL_EXTRA_SIZE) * sizeof(nsIContent*)));
+    mImpl = static_cast<Impl*>(PR_Realloc(mImpl, (newSize + NS_IMPL_EXTRA_SIZE) * sizeof(nsIContent*)));
     NS_ASSERTION(mImpl, "failed to reallocate to smaller buffer");
 
     mImpl->mBufferSize = newSize;
@@ -644,7 +644,7 @@ nsAttrAndChildArray::Clear()
 
   PRUint32 end = slotCount * ATTRSIZE + ChildCount();
   for (i = slotCount * ATTRSIZE; i < end; ++i) {
-    nsIContent* child = NS_STATIC_CAST(nsIContent*, mImpl->mBuffer[i]);
+    nsIContent* child = static_cast<nsIContent*>(mImpl->mBuffer[i]);
     // making this PR_FALSE so tree teardown doesn't end up being
     // O(N*D) (number of nodes times average depth of tree).
     child->UnbindFromTree(PR_FALSE); // XXX is it better to let the owner do this?
@@ -755,8 +755,8 @@ nsAttrAndChildArray::GrowBy(PRUint32 aGrowSize)
     size = PR_BIT(PR_CeilingLog2(minSize));
   }
 
-  Impl* newImpl = NS_STATIC_CAST(Impl*,
-      mImpl ? PR_Realloc(mImpl, size * sizeof(void*)) :
+  Impl* newImpl = static_cast<Impl*>
+                             (mImpl ? PR_Realloc(mImpl, size * sizeof(void*)) :
               PR_Malloc(size * sizeof(void*)));
   NS_ENSURE_TRUE(newImpl, PR_FALSE);
 

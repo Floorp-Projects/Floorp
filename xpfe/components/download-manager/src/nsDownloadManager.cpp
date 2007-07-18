@@ -567,7 +567,7 @@ NS_IMETHODIMP
 nsDownloadManager::PauseDownload(nsIDownload* aDownload)
 {
   NS_ENSURE_ARG_POINTER(aDownload);
-  return NS_STATIC_CAST(nsDownload*, aDownload)->Suspend();
+  return static_cast<nsDownload*>(aDownload)->Suspend();
 }
 
 NS_IMETHODIMP
@@ -732,7 +732,7 @@ nsDownloadManager::OpenProgressDialogFor(nsIDownload* aDownload, nsIDOMWindow* a
 {
   NS_ENSURE_ARG_POINTER(aDownload);
   nsresult rv;
-  nsDownload* internalDownload = NS_STATIC_CAST(nsDownload*, aDownload);
+  nsDownload* internalDownload = static_cast<nsDownload*>(aDownload);
   nsIProgressDialog* oldDialog = internalDownload->GetDialog();
   
   if (oldDialog) {
@@ -961,7 +961,7 @@ nsDownload::Cancel()
   // we have to notify it that we're cancelling
   nsCOMPtr<nsIObserver> observer = do_QueryInterface(GetDialog());
   if (observer) {
-    rv = observer->Observe(NS_STATIC_CAST(nsIDownload*, this), "oncancel", nsnull);
+    rv = observer->Observe(static_cast<nsIDownload*>(this), "oncancel", nsnull);
   }
   
   return rv;

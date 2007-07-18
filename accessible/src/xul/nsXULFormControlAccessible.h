@@ -92,8 +92,8 @@ class nsXULGroupboxAccessible : public nsAccessibleWrap
 public:
   nsXULGroupboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *_retval); 
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetName(nsAString& _retval);
+  NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated);
 };
 
 class nsXULProgressMeterAccessible : public nsFormControlAccessible
@@ -130,6 +130,14 @@ class nsXULStatusBarAccessible : public nsAccessibleWrap
 public:
   nsXULStatusBarAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *aRole);
+};
+
+class nsXULToolbarButtonAccessible : public nsXULButtonAccessible
+{
+public:
+  nsXULToolbarButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
+  static PRBool IsSeparator(nsIAccessible *aAccessible);
 };
 
 class nsXULToolbarAccessible : public nsAccessibleWrap

@@ -17,6 +17,14 @@
       <xul:label class="toolbarbutton-text" crop="right" flex="1"
                  xbl:inherits="value=label,accesskey,crop,toolbarmode,buttonstyle"/>
     </content>
+    
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XULToolbarButton;
+        </getter>
+      </property>
+    </implementation>
   </binding>
 
   <binding id="menu" display="xul:menu" 

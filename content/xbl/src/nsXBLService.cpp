@@ -534,7 +534,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
                                                document->NodePrincipal(),
                                                nsIScriptSecurityManager::ALLOW_CHROME,
                                                PR_TRUE,
-                                               nsIContentPolicy::TYPE_OTHER,
+                                               nsIContentPolicy::TYPE_XBL,
                                                document);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -742,7 +742,7 @@ nsXBLService::FlushMemory()
 {
   while (!JS_CLIST_IS_EMPTY(&gClassLRUList)) {
     JSCList* lru = gClassLRUList.next;
-    nsXBLJSClass* c = NS_STATIC_CAST(nsXBLJSClass*, lru);
+    nsXBLJSClass* c = static_cast<nsXBLJSClass*>(lru);
 
     JS_REMOVE_AND_INIT_LINK(lru);
     delete c;
@@ -971,7 +971,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
       CheckSecurityBeforeLoad(aBindingURI, aBoundDocument->NodePrincipal(),
                               nsIScriptSecurityManager::ALLOW_CHROME,
                               PR_TRUE,
-                              nsIContentPolicy::TYPE_OTHER,
+                              nsIContentPolicy::TYPE_XBL,
                               aBoundDocument);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -1029,7 +1029,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
         listener = bindingManager->GetLoadingDocListener(documentURI);
       if (listener) {
         nsXBLStreamListener* xblListener =
-          NS_STATIC_CAST(nsXBLStreamListener*, listener.get());
+          static_cast<nsXBLStreamListener*>(listener.get());
         // Create a new load observer.
         if (!xblListener->HasRequest(aBindingURI, aBoundElement)) {
           nsXBLBindingRequest* req = nsXBLBindingRequest::Create(mPool, aBindingURI, aBoundElement);
@@ -1178,7 +1178,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
 
     nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(doc));
     target->AddEventListener(NS_LITERAL_STRING("load"),
-                             NS_STATIC_CAST(nsIDOMLoadListener*, xblListener),
+                             static_cast<nsIDOMLoadListener*>(xblListener),
                              PR_FALSE);
 
     // Add ourselves to the list of loading docs.

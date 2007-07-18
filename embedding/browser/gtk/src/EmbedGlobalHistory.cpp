@@ -562,8 +562,8 @@ nsresult EmbedGlobalHistory::RemoveEntries(const PRUnichar *url, int time)
     GList *node = g_list_find_custom(mURLList, NS_ConvertUTF16toUTF8(url).get(), (GCompareFunc) history_entry_find_exist);
     if (!node) return rv;
     if (node->data) {
-      HistoryEntry *entry = NS_STATIC_CAST(HistoryEntry *,
-                                           node->data);
+      HistoryEntry *entry = static_cast<HistoryEntry *>
+                                       (node->data);
 
       entry->mLastVisitTime = 0;
       delete entry;
@@ -685,7 +685,7 @@ nsresult EmbedGlobalHistory::WriteEntryIfWritten(GList *list, OUTPUT_STREAM *fil
 
   unsigned int counter = g_list_length(list);
   while (counter > 0) {
-    HistoryEntry *entry = NS_STATIC_CAST(HistoryEntry*, g_list_nth_data(list, counter-1));
+    HistoryEntry *entry = static_cast<HistoryEntry*>(g_list_nth_data(list, counter-1));
     counter--;
     if (!entry || entryHasExpired(entry)) {
       continue;
@@ -702,7 +702,7 @@ nsresult EmbedGlobalHistory::WriteEntryIfUnwritten(GList *list, OUTPUT_STREAM *f
     return NS_ERROR_FAILURE;
   unsigned int counter = g_list_length(list);
   while (counter > 0) {
-    HistoryEntry *entry = NS_STATIC_CAST(HistoryEntry*, g_list_nth_data(list, counter-1));
+    HistoryEntry *entry = static_cast<HistoryEntry*>(g_list_nth_data(list, counter-1));
     if (!entry || entryHasExpired(entry)) {
       counter--;
       continue;
@@ -896,8 +896,8 @@ nsresult EmbedGlobalHistory::GetContentList(GtkMozHistoryItem **GtkHI, int *coun
   UNACCEPTABLE_CRASHY_GLIB_ALLOCATION(*GtkHI);
   GtkMozHistoryItem * item = (GtkMozHistoryItem *)*GtkHI;
   while (num_items < g_list_length(mURLList)) {
-    HistoryEntry *entry = NS_STATIC_CAST(HistoryEntry*,
-                                         g_list_nth_data(mURLList, num_items));
+    HistoryEntry *entry = static_cast<HistoryEntry*>
+                                     (g_list_nth_data(mURLList, num_items));
     // verify if the entry has expired and discard it
     if (entryHasExpired(entry)) {
       break;

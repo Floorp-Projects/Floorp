@@ -80,7 +80,6 @@ toolkit.jar:
         content/global/aboutAbout.html              (resources/content/aboutAbout.html) 
         content/global/hiddenWindow.xul             (resources/content/hiddenWindow.xul) 
         content/global/fullScreen.js                (resources/content/fullScreen.js)
-        content/global/build.dtd                    (build.dtd)
         content/global/nsWidgetStateManager.js      (resources/content/nsWidgetStateManager.js)
 #endif
 

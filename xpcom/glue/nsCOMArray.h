@@ -97,11 +97,11 @@ public:
     }
 
     nsISupports* ObjectAt(PRInt32 aIndex) const {
-        return NS_STATIC_CAST(nsISupports*, mArray.FastElementAt(aIndex));
+        return static_cast<nsISupports*>(mArray.FastElementAt(aIndex));
     }
     
     nsISupports* SafeObjectAt(PRInt32 aIndex) const {
-        return NS_STATIC_CAST(nsISupports*, mArray.SafeElementAt(aIndex));
+        return static_cast<nsISupports*>(mArray.SafeElementAt(aIndex));
     }
 
     nsISupports* operator[](PRInt32 aIndex) const {
@@ -111,7 +111,7 @@ public:
     // Ensures there is enough space to store a total of aCapacity objects.
     // This method never deletes any objects.
     PRBool SetCapacity(PRUint32 aCapacity) {
-      return aCapacity > 0 ? mArray.SizeTo(NS_STATIC_CAST(PRInt32, aCapacity))
+      return aCapacity > 0 ? mArray.SizeTo(static_cast<PRInt32>(aCapacity))
                            : PR_TRUE;
     }
 
@@ -157,12 +157,12 @@ class nsCOMArray : public nsCOMArray_base
 
     // these do NOT refcount on the way out, for speed
     T* ObjectAt(PRInt32 aIndex) const {
-        return NS_STATIC_CAST(T*,nsCOMArray_base::ObjectAt(aIndex));
+        return static_cast<T*>(nsCOMArray_base::ObjectAt(aIndex));
     }
 
     // these do NOT refcount on the way out, for speed
     T* SafeObjectAt(PRInt32 aIndex) const {
-        return NS_STATIC_CAST(T*,nsCOMArray_base::SafeObjectAt(aIndex));
+        return static_cast<T*>(nsCOMArray_base::SafeObjectAt(aIndex));
     }
 
     // indexing operator for syntactic sugar
@@ -174,7 +174,7 @@ class nsCOMArray : public nsCOMArray_base
     // note: this does not check COM object identity. Use
     // IndexOfObject() for that purpose
     PRInt32 IndexOf(T* aObject) const {
-        return nsCOMArray_base::IndexOf(NS_STATIC_CAST(nsISupports*, aObject));
+        return nsCOMArray_base::IndexOf(static_cast<nsISupports*>(aObject));
     }
 
     // index of the element in question.. be careful!
@@ -183,13 +183,13 @@ class nsCOMArray : public nsCOMArray_base
     // if you need to do this frequently then consider enforcing
     // COM object identity before adding/comparing elements
     PRInt32 IndexOfObject(T* aObject) const {
-        return nsCOMArray_base::IndexOfObject(NS_STATIC_CAST(nsISupports*, aObject));
+        return nsCOMArray_base::IndexOfObject(static_cast<nsISupports*>(aObject));
     }
 
     // inserts aObject at aIndex, shifting the objects at aIndex and
     // later to make space
     PRBool InsertObjectAt(T* aObject, PRInt32 aIndex) {
-        return nsCOMArray_base::InsertObjectAt(NS_STATIC_CAST(nsISupports*, aObject), aIndex);
+        return nsCOMArray_base::InsertObjectAt(static_cast<nsISupports*>(aObject), aIndex);
     }
 
     // inserts the objects from aObject at aIndex, shifting the
@@ -201,7 +201,7 @@ class nsCOMArray : public nsCOMArray_base
     // replaces an existing element. Warning: if the array grows,
     // the newly created entries will all be null
     PRBool ReplaceObjectAt(T* aObject, PRInt32 aIndex) {
-        return nsCOMArray_base::ReplaceObjectAt(NS_STATIC_CAST(nsISupports*, aObject), aIndex);
+        return nsCOMArray_base::ReplaceObjectAt(static_cast<nsISupports*>(aObject), aIndex);
     }
 
     // override nsVoidArray stuff so that they can be accessed by
@@ -243,7 +243,7 @@ class nsCOMArray : public nsCOMArray_base
 
     // append an object, growing the array as necessary
     PRBool AppendObject(T *aObject) {
-        return nsCOMArray_base::AppendObject(NS_STATIC_CAST(nsISupports*, aObject));
+        return nsCOMArray_base::AppendObject(static_cast<nsISupports*>(aObject));
     }
 
     // append objects, growing the array as necessary
@@ -255,7 +255,7 @@ class nsCOMArray : public nsCOMArray_base
     // array as necessary
     // Warning: if you pass null here, it will remove the first null element
     PRBool RemoveObject(T *aObject) {
-        return nsCOMArray_base::RemoveObject(NS_STATIC_CAST(nsISupports*, aObject));
+        return nsCOMArray_base::RemoveObject(static_cast<nsISupports*>(aObject));
     }
 
     // remove an element at a specific position, shrinking the array

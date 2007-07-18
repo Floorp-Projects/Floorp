@@ -72,7 +72,7 @@ nsStreamCipher::InitWithIV_(nsIKeyObject *aKey, SECItem* aIV)
   rv = aKey->GetKeyObj(&keyObj);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PK11SymKey *symkey = NS_REINTERPRET_CAST(PK11SymKey*, keyObj);
+  PK11SymKey *symkey = reinterpret_cast<PK11SymKey*>(keyObj);
   if (!symkey)
     return NS_ERROR_FAILURE;
 

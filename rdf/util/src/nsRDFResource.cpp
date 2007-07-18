@@ -37,13 +37,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsRDFResource.h"
-#include "nsCRT.h"
 #include "nsIServiceManager.h"
 #include "nsIRDFDelegateFactory.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
-#include "nsXPIDLString.h"
 #include "prlog.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
@@ -91,7 +91,7 @@ nsRDFResource::EqualsNode(nsIRDFNode* aNode, PRBool* aResult)
     nsIRDFResource* resource;
     rv = aNode->QueryInterface(NS_GET_IID(nsIRDFResource), (void**)&resource);
     if (NS_SUCCEEDED(rv)) {
-        *aResult = (NS_STATIC_CAST(nsIRDFResource*, this) == resource);
+        *aResult = (static_cast<nsIRDFResource*>(this) == resource);
         NS_RELEASE(resource);
         return NS_OK;
     }
@@ -203,17 +203,17 @@ nsRDFResource::GetDelegate(const char* aKey, REFNSIID aIID, void** aResult)
     // Okay, we've successfully created a delegate. Let's remember it.
     entry = new DelegateEntry;
     if (! entry) {
-        NS_RELEASE(*NS_REINTERPRET_CAST(nsISupports**, aResult));
+        NS_RELEASE(*reinterpret_cast<nsISupports**>(aResult));
         return NS_ERROR_OUT_OF_MEMORY;
     }
     
     entry->mKey      = aKey;
-    entry->mDelegate = do_QueryInterface(*NS_REINTERPRET_CAST(nsISupports**, aResult), &rv);
+    entry->mDelegate = do_QueryInterface(*reinterpret_cast<nsISupports**>(aResult), &rv);
     if (NS_FAILED(rv)) {
         NS_ERROR("nsRDFResource::GetDelegate(): can't QI to nsISupports!");
 
         delete entry;
-        NS_RELEASE(*NS_REINTERPRET_CAST(nsISupports**, aResult));
+        NS_RELEASE(*reinterpret_cast<nsISupports**>(aResult));
         return NS_ERROR_FAILURE;
     }
 

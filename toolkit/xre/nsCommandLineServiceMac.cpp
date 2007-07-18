@@ -60,7 +60,7 @@
 #include "nsIWindowWatcher.h"
 #include "jsapi.h"
 #include "nsReadableUtils.h"
-#include "nsICloseAllWindows.h"
+#include "nsIObserverService.h"
 #include "nsIPrefService.h"
 
 #include "nsAEEventHandling.h"
@@ -453,16 +453,26 @@ OSErr nsMacCommandLine::Quit(TAskSave askSave)
 {
   nsresult rv;
   
-  nsCOMPtr<nsICloseAllWindows> closer =
-           do_CreateInstance("@mozilla.org/appshell/closeallwindows;1", &rv);
+  nsCOMPtr<nsIObserverService> obsServ =
+           do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_FAILED(rv))
     return errAEEventNotHandled;
 
-  PRBool doQuit;
-  rv = closer->CloseAll(askSave != eSaveNo, &doQuit);
+  nsCOMPtr<nsISupportsPRBool> cancelQuit =
+           do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return errAEEventNotHandled;
-  if (!doQuit)
+
+  cancelQuit->SetData(PR_FALSE);
+  if (askSave != eSaveNo) {
+    rv = obsServ->NotifyObservers(cancelQuit, "quit-application-requested", nsnull);
+    if (NS_FAILED(rv))
+      return errAEEventNotHandled;
+  }
+
+  PRBool abortQuit;
+  cancelQuit->GetData(&abortQuit);
+  if (abortQuit)
     return userCanceledErr;
 
   nsCOMPtr<nsIAppStartup> appStartup =
@@ -470,6 +480,7 @@ OSErr nsMacCommandLine::Quit(TAskSave askSave)
   if (NS_FAILED(rv))
     return errAEEventNotHandled;
 
+  obsServ->NotifyObservers(nsnull, "quit-application-granted", nsnull);
   appStartup->Quit(nsIAppStartup::eAttemptQuit);
   return noErr;
 }

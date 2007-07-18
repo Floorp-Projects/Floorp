@@ -1568,36 +1568,21 @@ CNewlineToken::Consume(PRUnichar aChar, nsScanner& aScanner, PRInt32 aFlag)
    * a line feed (&#x000A;), or a carriage return/line feed pair.
    * All line breaks constitute white space."
    */
-  PRUnichar theChar;
-  nsresult result = aScanner.Peek(theChar);
 
-  if (NS_OK == result) {
-    switch(aChar) {
-      case kNewLine:
-        if (kCR == theChar) {
-          result = aScanner.GetChar(theChar);
-        }
-        break;
-
-      case kCR:
-        // Convert CRLF into just CR
-        if (kNewLine == theChar) {
-          result = aScanner.GetChar(theChar);
-        }
-        break;
-
-      default:
-        break;
+  nsresult rv = NS_OK;
+  if (aChar == kCR) {
+    PRUnichar theChar;
+    rv = aScanner.Peek(theChar);
+    if (theChar == kNewLine) {
+      rv = aScanner.GetChar(theChar);
+    } else if (rv == kEOF && !aScanner.IsIncremental()) {
+      // Make sure we don't lose information about this trailing newline.
+      rv = NS_OK;
     }
   }
 
-  if (result == kEOF && !aScanner.IsIncremental()) {
-    // Make sure we don't lose information about this trailing newline.
-    result = NS_OK;
-  }
-
   mNewlineCount = 1;
-  return result;
+  return rv;
 }
 
 CAttributeToken::CAttributeToken()

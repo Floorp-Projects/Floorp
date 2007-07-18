@@ -217,10 +217,8 @@ var PlacesOrganizer = {
     var findCommand = document.getElementById("OrganizerCommand_find:current");
     var findLabel = PlacesUtils.getFormattedString("findInPrefix", [node.title]);
     findCommand.setAttribute("label", findLabel);
-    if (PlacesSearchBox.filterCollection == "collection") {
+    if (PlacesSearchBox.filterCollection == "collection")
       PlacesSearchBox.updateCollectionTitle(node.title);
-      PlacesSearchBox.syncGrayText();
-    }
   },
 
   /**
@@ -318,8 +316,8 @@ var PlacesOrganizer = {
     var selectedNode = aView.selectedNode;
     if (selectedNode) {
       if (PlacesUtils.nodeIsFolder(selectedNode)) {
-        var childsCount =
-          PlacesUtils.getFolderContents(selectedNode.itemId).childCount;
+        var childsCount = 
+          PlacesUtils.getFolderContents(selectedNode.itemId).root.childCount;
         statusText = PlacesUtils.getFormattedString("status_foldercount",
                                                     [childsCount]);
       }
@@ -364,7 +362,7 @@ var PlacesSearchBox = {
     switch (PlacesSearchBox.filterCollection) {
     case "collection":
       var folderId = content.getResult().root.itemId;
-      content.applyFilter(filterString, true, folderId, OptionsFilter);
+      content.applyFilter(filterString, true, [folderId], OptionsFilter);
       PO.setHeaderText(PO.HEADER_TYPE_SEARCH, filterString);
       break;
     case "bookmarks":
@@ -374,7 +372,7 @@ var PlacesSearchBox = {
         PlacesOrganizer.onPlaceSelected();
       break;
     case "all":
-      content.applyFilter(filterString, false, 0, OptionsFilter);
+      content.applyFilter(filterString, false, null, OptionsFilter);
       PO.setHeaderText(PO.HEADER_TYPE_SEARCH, filterString);
       break;
     }
@@ -409,7 +407,9 @@ var PlacesSearchBox = {
         PlacesUtils.getFormattedString("searchCurrentDefault", [title]);
     }
     else
-      this.searchFilter.grayText = PlacesUtils.getString("searchDefault");
+      this.searchFilter.grayText = PlacesUtils.getString("searchByDefault");
+
+    this.syncGrayText();
   },
 
   /**
@@ -446,7 +446,7 @@ var PlacesSearchBox = {
    */
   init: function PSB_init() {
     var searchFilter = this.searchFilter;
-    searchFilter.grayText = PlacesUtils.getString("searchDefault");
+    searchFilter.grayText = PlacesUtils.getString("searchByDefault");
     searchFilter.reset();
   },
   

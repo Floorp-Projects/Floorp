@@ -40,7 +40,7 @@
 
 void PR_CALLBACK nsPSMBackgroundThread::nsThreadRunner(void *arg)
 {
-  nsPSMBackgroundThread *self = NS_STATIC_CAST(nsPSMBackgroundThread *, arg);
+  nsPSMBackgroundThread *self = static_cast<nsPSMBackgroundThread *>(arg);
   self->Run();
 }
 
@@ -59,7 +59,7 @@ nsresult nsPSMBackgroundThread::startThread()
   if (!mMutex || !mCond)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  mThreadHandle = PR_CreateThread(PR_USER_THREAD, nsThreadRunner, NS_STATIC_CAST(void*, this), 
+  mThreadHandle = PR_CreateThread(PR_USER_THREAD, nsThreadRunner, static_cast<void*>(this), 
     PR_PRIORITY_NORMAL, PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
 
   NS_ASSERTION(mThreadHandle, "Could not create nsPSMBackgroundThread\n");

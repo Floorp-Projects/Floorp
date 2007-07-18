@@ -113,16 +113,8 @@ nsBrowserDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
   nsCOMPtr<nsIFile> file;
 
   char const* leafName = nsnull;
-#ifndef MOZ_PLACES_BOOKMARKS
-  PRBool restoreBookmarksBackup = PR_FALSE;
-  PRBool ensureFilePermissions = PR_FALSE;
-#endif
 
   if (!strcmp(aKey, NS_APP_BOOKMARKS_50_FILE)) {
-#ifndef MOZ_PLACES_BOOKMARKS
-    ensureFilePermissions = PR_TRUE;
-    restoreBookmarksBackup = PR_TRUE;
-#endif
     leafName = "bookmarks.html";
 
     nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
@@ -184,39 +176,7 @@ nsBrowserDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
 
     file->AppendNative(leafstr);
   }
-#ifndef MOZ_PLACES_BOOKMARKS
-  PRBool exists;
-  rv = file->Exists(&exists);
 
-  if (restoreBookmarksBackup && NS_SUCCEEDED(rv) && exists) {
-    PRInt64 fileSize;
-    file->GetFileSize(&fileSize);
-    if (fileSize == 0)
-    {
-      file->Remove(PR_FALSE);
-      exists = PR_FALSE;
-    }
-  }
-
-  if (NS_SUCCEEDED(rv) && !exists) {
-    if (!restoreBookmarksBackup ||
-	NS_FAILED(RestoreBookmarksFromBackup(leafstr, parentDir, file)))
-      EnsureProfileFile(leafstr, parentDir, file);
-  }
-
-  if (ensureFilePermissions) {
-    PRBool fileToEnsureExists;
-    PRBool isWritable;
-    if (NS_SUCCEEDED(file->Exists(&fileToEnsureExists)) && fileToEnsureExists
-        && NS_SUCCEEDED(file->IsWritable(&isWritable)) && !isWritable) {
-      PRUint32 permissions;
-      if (NS_SUCCEEDED(file->GetPermissions(&permissions))) {
-        rv = file->SetPermissions(permissions | 0600);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to ensure file permissions");
-      }
-    }
-  }
-#endif
   *aPersist = PR_TRUE;
   NS_ADDREF(*aResult = file);
 
@@ -338,52 +298,6 @@ static const nsModuleComponentInfo components[] = {
 };
 
 NS_IMPL_NSGETMODULE(BrowserDirProvider, components)
-#ifndef MOZ_PLACES_BOOKMARKS
-nsresult
-nsBrowserDirectoryProvider::RestoreBookmarksFromBackup(const nsACString& aLeafName,
-						       nsIFile* aParentDir,
-						       nsIFile* aTarget)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIFile> backupFile;
-  rv = aParentDir->Clone(getter_AddRefs(backupFile));
-  if (NS_FAILED(rv))
-    return rv;
-
-  backupFile->AppendNative(nsDependentCString("bookmarks.bak"));
-
-  PRBool exists;
-  rv = backupFile->Exists(&exists);
-  if (NS_FAILED(rv) || !exists)
-    return NS_ERROR_FAILURE;
-
-  return backupFile->CopyToNative(aParentDir, aLeafName);
-}
-
-void
-nsBrowserDirectoryProvider::EnsureProfileFile(const nsACString& aLeafName,
-                                              nsIFile* aParentDir,
-                                              nsIFile* aTarget)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIFile> defaults;
-  rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_50_DIR,
-                              getter_AddRefs(defaults));
-  if (NS_FAILED(rv))
-    return;
-
-  defaults->AppendNative(aLeafName);
-
-  PRBool exists;
-  rv = defaults->Exists(&exists);
-  if (NS_FAILED(rv) || !exists)
-    return;
-
-  defaults->CopyToNative(aParentDir, aLeafName);
-}
-#endif
 NS_IMPL_ISUPPORTS1(nsBrowserDirectoryProvider::AppendingEnumerator,
                    nsISimpleEnumerator)
 

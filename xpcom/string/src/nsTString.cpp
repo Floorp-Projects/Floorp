@@ -42,7 +42,7 @@ nsTAdoptingString_CharT::operator=( const self_type& str )
   {
     // This'll violate the constness of this argument, that's just
     // the nature of this class...
-    self_type* mutable_str = NS_CONST_CAST(self_type*, &str);
+    self_type* mutable_str = const_cast<self_type*>(&str);
 
     if (str.mFlags & F_OWNED)
       {

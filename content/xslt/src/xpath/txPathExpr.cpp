@@ -92,9 +92,9 @@ PathExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     NS_ENSURE_TRUE(res->getResultType() == txAExprResult::NODESET,
                    NS_ERROR_XSLT_NODESET_EXPECTED);
 
-    nsRefPtr<txNodeSet> nodes = NS_STATIC_CAST(txNodeSet*,
-                                               NS_STATIC_CAST(txAExprResult*,
-                                                              res));
+    nsRefPtr<txNodeSet> nodes = static_cast<txNodeSet*>
+                                           (static_cast<txAExprResult*>
+                                                       (res));
     if (nodes->isEmpty()) {
         res.swap(*aResult);
 
@@ -129,9 +129,9 @@ PathExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                     //XXX ErrorReport: report nonnodeset error
                     return NS_ERROR_XSLT_NODESET_EXPECTED;
                 }
-                resNodes = NS_STATIC_CAST(txNodeSet*,
-                                          NS_STATIC_CAST(txAExprResult*,
-                                                         res));
+                resNodes = static_cast<txNodeSet*>
+                                      (static_cast<txAExprResult*>
+                                                  (res));
             }
 
             if (tmpNodes) {
@@ -184,8 +184,8 @@ PathExpr::evalDescendants(Expr* aStep, const txXPathNode& aNode,
         return NS_ERROR_XSLT_NODESET_EXPECTED;
     }
 
-    txNodeSet* oldSet = NS_STATIC_CAST(txNodeSet*,
-                                       NS_STATIC_CAST(txAExprResult*, res));
+    txNodeSet* oldSet = static_cast<txNodeSet*>
+                                   (static_cast<txAExprResult*>(res));
     nsRefPtr<txNodeSet> newSet;
     rv = aContext->recycler()->getNonSharedNodeSet(oldSet,
                                                    getter_AddRefs(newSet));

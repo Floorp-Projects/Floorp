@@ -96,7 +96,7 @@ void nsPrivateTextRangeList::AppendTextRange(nsRefPtr<nsPrivateTextRange>& aRang
 
 NS_METHOD nsPrivateTextRangeList::GetLength(PRUint16* aLength)
 {
-	*aLength = NS_STATIC_CAST(PRUint16, mList.Length());
+	*aLength = static_cast<PRUint16>(mList.Length());
 	return NS_OK;
 }
 

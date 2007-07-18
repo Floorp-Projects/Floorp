@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Boris Zbarsky <bzbarsky@mit.edu> (original author)
  *   Benjamin Smedberg <benjamin@smedbergs.us>
+ *   Prasad Sunkari <prasad@medhas.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,7 +45,7 @@ interface nsIURI;
 /**
  * nsINetUtil provides various network-related utility methods.
  */
-[scriptable, uuid(7701f947-e4aa-431c-aec6-6bb304193460)]
+[scriptable, uuid(fbbd8771-8059-4269-8352-a6f2ca6b3c7b)]
 interface nsINetUtil : nsISupports
 {
   /**
@@ -60,30 +61,6 @@ interface nsINetUtil : nsISupports
   AUTF8String parseContentType(in AUTF8String aTypeHeader,
                                out AUTF8String aCharset,
                                out boolean aHadCharset);
-
-  /** Escape every character with its %XX-escaped equivalent */
-  const unsigned long ESCAPE_ALL = 0;
-
-  /** Leave alphanumeric characters intact and %XX-escape all others */
-  const unsigned long ESCAPE_XALPHAS = 1;
-
-  /** Leave alphanumeric characters intact, convert spaces to '+',
-      %XX-escape all others */
-  const unsigned long ESCAPE_XPALPHAS = 2;
-
-  /** Leave alphanumeric characters and forward slashes intact,
-      %XX-escape all others */
-  const unsigned long ESCAPE_URL_PATH = 4;
-
-  /**
-   * escape a string with %00-style escaping
-   */
-  ACString escapeString(in ACString aString, in unsigned long aEscapeType);
-
-  /**
-   * unescape a %00-style escaped string
-   */
-  ACString unescapeString(in ACString aString);
 
   /**
    * Test whether the given URI's handler has the given protocol flags.
@@ -116,4 +93,104 @@ interface nsINetUtil : nsISupports
    * that case it will return null.
    */
   nsIURI toImmutableURI(in nsIURI aURI);
+
+  /** Escape every character with its %XX-escaped equivalent */
+  const unsigned long ESCAPE_ALL = 0;
+
+  /** Leave alphanumeric characters intact and %XX-escape all others */
+  const unsigned long ESCAPE_XALPHAS = 1;
+
+  /** Leave alphanumeric characters intact, convert spaces to '+',
+      %XX-escape all others */
+  const unsigned long ESCAPE_XPALPHAS = 2;
+
+  /** Leave alphanumeric characters and forward slashes intact,
+      %XX-escape all others */
+  const unsigned long ESCAPE_URL_PATH = 4;
+
+  /**
+   * escape a string with %00-style escaping
+   */
+  ACString escapeString(in ACString aString, in unsigned long aEscapeType);
+
+  /** %XX-escape URL scheme */
+  const unsigned long ESCAPE_URL_SCHEME = 1;
+
+  /** %XX-escape username in the URL */
+  const unsigned long ESCAPE_URL_USERNAME = 1 << 1;
+
+  /** %XX-escape password in the URL */
+  const unsigned long ESCAPE_URL_PASSWORD = 1 << 2;
+
+  /** %XX-escape URL host */
+  const unsigned long ESCAPE_URL_HOST = 1 << 3;
+
+  /** %XX-escape URL directory */
+  const unsigned long ESCAPE_URL_DIRECTORY = 1 << 4;
+
+  /** %XX-escape file basename in the URL */
+  const unsigned long ESCAPE_URL_FILE_BASENAME = 1 << 5;
+
+  /** %XX-escape file extension in the URL */
+  const unsigned long ESCAPE_URL_FILE_EXTENSION = 1 << 6;
+
+  /** %XX-escape URL parameters */
+  const unsigned long ESCAPE_URL_PARAM = 1 << 7;
+
+  /** %XX-escape URL query */
+  const unsigned long ESCAPE_URL_QUERY = 1 << 8;
+
+  /** %XX-escape URL ref */
+  const unsigned long ESCAPE_URL_REF = 1 << 9;
+
+  /** %XX-escape URL path - same as escaping directory, basename and extension */
+  const unsigned long ESCAPE_URL_FILEPATH = 
+    ESCAPE_URL_DIRECTORY | ESCAPE_URL_FILE_BASENAME | ESCAPE_URL_FILE_EXTENSION;
+
+  /** %XX-escape scheme, username, password, host, path, params, query and ref */
+  const unsigned long ESCAPE_URL_MINIMAL = 
+    ESCAPE_URL_SCHEME | ESCAPE_URL_USERNAME | ESCAPE_URL_PASSWORD |
+    ESCAPE_URL_HOST   | ESCAPE_URL_FILEPATH | ESCAPE_URL_PARAM    |
+    ESCAPE_URL_QUERY  | ESCAPE_URL_REF;
+
+  /** Force %XX-escaping of already escaped sequences */
+  const unsigned long ESCAPE_URL_FORCED = 1 << 10;
+
+  /** Skip non-ascii octets, %XX-escape all others */
+  const unsigned long ESCAPE_URL_ONLY_ASCII = 1 << 11;     
+
+  /** 
+   * Skip graphic octets (0x20-0x7E) when escaping
+   * Skips all ascii octets when unescaping 
+   */
+  const unsigned long ESCAPE_URL_ONLY_NONASCII = 1 << 12;
+
+  /** Force %XX-escape of colon */
+  const unsigned long ESCAPE_URL_COLON = 1 << 14;
+
+  /** Skip C0 and DEL from unescaping */
+  const unsigned long ESCAPE_URL_SKIP_CONTROL = 1 << 15;
+
+  /**
+   * %XX-Escape invalid chars in a URL segment. 
+   *
+   * @param aStr the URL to be escaped
+   * @param aFlags the URL segment type flags
+   *
+   * @return the escaped string (the string itself if escaping did not happen)
+   *
+   */
+  ACString escapeURL(in ACString aStr, in unsigned long aFlags);
+
+  /**
+   * Expands URL escape sequences
+   *
+   * @param aStr the URL to be unescaped
+   * @param aFlags only ESCAPE_URL_ONLY_NONASCII, ESCAPE_URL_SKIP_CONTROL and 
+   *               are recognized.  If |aFlags| is 0 all escape sequences are 
+   *               unescaped
+   * @return unescaped string
+   */
+  ACString unescapeString(in ACString aStr, in unsigned long aFlags);
+
 };

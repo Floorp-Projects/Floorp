@@ -1556,7 +1556,7 @@ public:
   virtual ~ElementArray();
 
   ElementInfo* ElementAt(PRInt32 aIndex) const {
-    return NS_STATIC_CAST(ElementInfo*, nsAutoVoidArray::ElementAt(aIndex));
+    return static_cast<ElementInfo*>(nsAutoVoidArray::ElementAt(aIndex));
   }
 
   ElementInfo* operator[](PRInt32 aIndex) const {
@@ -2006,7 +2006,7 @@ nsBookmarksService::GetBookmarkToPing(nsIRDFResource **theBookmark)
 void
 nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 {
-    nsBookmarksService *bmks = NS_STATIC_CAST(nsBookmarksService *, aClosure);
+    nsBookmarksService *bmks = static_cast<nsBookmarksService *>(aClosure);
     if (!bmks)  return;
     nsresult            rv;
 
@@ -2669,9 +2669,9 @@ int
 nsBookmarksService::Compare(const void* aElement1, const void* aElement2, void* aData)
 {
     const ElementInfo* elementInfo1 =
-      NS_STATIC_CAST(ElementInfo*, NS_CONST_CAST(void*, aElement1));
+      static_cast<ElementInfo*>(const_cast<void*>(aElement1));
     const ElementInfo* elementInfo2 =
-      NS_STATIC_CAST(ElementInfo*, NS_CONST_CAST(void*, aElement2));
+      static_cast<ElementInfo*>(const_cast<void*>(aElement2));
     SortInfo* sortInfo = (SortInfo*)aData;
 
     if (sortInfo->mFoldersFirst) {

@@ -109,27 +109,31 @@ nsRDFItemUpdater.prototype = {
           target = child;
         }
 
-        function getPFSValueFromRDF(aValue, aDatasource, aRDFService){
+        var rdfs = this._rdfService;
+
+        function getPFSValueFromRDF(aValue){
           var rv = null;
 
-          var myTarget = aDatasource.GetTarget(target, aRDFService.GetResource(PFS_NS + aValue), true);
+          var myTarget = aDatasource.GetTarget(target, rdfs.GetResource(PFS_NS + aValue), true);
           if (myTarget)
             rv = myTarget.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
 
           return rv;
         }
 
-        pluginInfo = new Object();
-        pluginInfo.name = getPFSValueFromRDF("name", aDatasource, this._rdfService);
-        pluginInfo.pid = getPFSValueFromRDF("guid", aDatasource, this._rdfService);
-        pluginInfo.version = getPFSValueFromRDF("version", aDatasource, this._rdfService);
-        pluginInfo.IconUrl = getPFSValueFromRDF("IconUrl", aDatasource, this._rdfService);
-        pluginInfo.XPILocation = getPFSValueFromRDF("XPILocation", aDatasource, this._rdfService);
-        pluginInfo.InstallerShowsUI = getPFSValueFromRDF("InstallerShowsUI", aDatasource, this._rdfService);
-        pluginInfo.manualInstallationURL = getPFSValueFromRDF("manualInstallationURL", aDatasource, this._rdfService);
-        pluginInfo.requestedMimetype = getPFSValueFromRDF("requestedMimetype", aDatasource, this._rdfService);
-        pluginInfo.licenseURL = getPFSValueFromRDF("licenseURL", aDatasource, this._rdfService);
-        pluginInfo.needsRestart = getPFSValueFromRDF("needsRestart", aDatasource, this._rdfService);
+        pluginInfo = {
+          name: getPFSValueFromRDF("name"),
+          pid: getPFSValueFromRDF("guid"),
+          version: getPFSValueFromRDF("version"),
+          IconUrl: getPFSValueFromRDF("IconUrl"),
+          XPILocation: getPFSValueFromRDF("XPILocation"),
+          XPIHash: getPFSValueFromRDF("XPIHash"),
+          InstallerShowsUI: getPFSValueFromRDF("InstallerShowsUI"),
+          manualInstallationURL: getPFSValueFromRDF("manualInstallationURL"),
+          requestedMimetype: getPFSValueFromRDF("requestedMimetype"),
+          licenseURL: getPFSValueFromRDF("licenseURL"),
+          needsRestart: getPFSValueFromRDF("needsRestart")
+        };
       }
       catch (ex){}
     }

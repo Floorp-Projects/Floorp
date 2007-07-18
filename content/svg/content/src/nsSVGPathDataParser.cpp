@@ -1403,7 +1403,7 @@ nsSVGArcConverter::nsSVGArcConverter(float x1, float y1,
     dtheta += 2.0*M_PI;
 
   // Convert into cubic bezier segments <= 90deg
-  mNumSegs = NS_STATIC_CAST(int, ceil(fabs(dtheta/(M_PI/2.0))));
+  mNumSegs = static_cast<int>(ceil(fabs(dtheta/(M_PI/2.0))));
   mDelta = dtheta/mNumSegs;
   mT = 8.0/3.0 * sin(mDelta/4.0) * sin(mDelta/4.0) / sin(mDelta/2.0);
 

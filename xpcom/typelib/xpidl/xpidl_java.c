@@ -290,6 +290,9 @@ interface_declaration(TreeState *state)
         strncpy(outname, state->filename, p + 1 - state->filename);
         outname[p + 1 - state->filename] = '\0';
     }
+    else {
+        outname[0] = '\0';
+    }
     strcat(outname, interface_name);
     strcat(outname, ".java");
 

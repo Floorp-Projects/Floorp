@@ -59,8 +59,8 @@ CAccessibleHypertext::QueryInterface(REFIID iid, void** ppv)
     if (!hyperAcc)
       return E_NOINTERFACE;
 
-    *ppv = NS_STATIC_CAST(IAccessibleHypertext*, this);
-    (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
+    *ppv = static_cast<IAccessibleHypertext*>(this);
+    (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
     return S_OK;
   }
 
@@ -107,7 +107,7 @@ CAccessibleHypertext::get_hyperlink(long aIndex,
   void *instancePtr = NULL;
   nsresult rv =  winAccessNode->QueryNativeInterface(IID_IAccessibleHyperlink,
                                                      &instancePtr);
-  *aHyperlink = NS_STATIC_CAST(IAccessibleHyperlink*, instancePtr);
+  *aHyperlink = static_cast<IAccessibleHyperlink*>(instancePtr);
 
   return NS_FAILED(rv) ? E_FAIL : S_OK;
 }

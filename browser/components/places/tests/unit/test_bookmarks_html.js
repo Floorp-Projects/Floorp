@@ -82,6 +82,7 @@ try {
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const POST_DATA_ANNO = "URIProperties/POSTData";
+const LAST_CHARSET_ANNO = "URIProperties/characterSet";
 
 // main
 function run_test() {
@@ -227,8 +228,7 @@ function testCanonicalBookmarks(aFolder) {
   do_check_true(annosvc.itemHasAnnotation(testFolder.itemId,
                                           DESCRIPTION_ANNO));
   do_check_eq("folder test comment",
-              annosvc.getItemAnnotationString(testFolder.itemId,
-                                              DESCRIPTION_ANNO));
+              annosvc.getItemAnnotation(testFolder.itemId, DESCRIPTION_ANNO));
   // open test folder, and test the children
   testFolder.containerOpen = true;
   var cc = testFolder.childCount;
@@ -257,14 +257,17 @@ function testCanonicalBookmarks(aFolder) {
   var pageURI = iosvc.newURI(testBookmark1.uri, "", null);
   do_check_true(annosvc.pageHasAnnotation(pageURI, POST_DATA_ANNO));
   do_check_eq("hidden1%3Dbar&text1%3D%25s",
-              annosvc.getPageAnnotationString(pageURI, POST_DATA_ANNO));
+              annosvc.getPageAnnotation(pageURI, POST_DATA_ANNO));
   // last charset 
+  do_check_true(annosvc.pageHasAnnotation(pageURI, LAST_CHARSET_ANNO));
+  do_check_eq("ISO-8859-1", annosvc.getPageAnnotation(pageURI,
+                                                      LAST_CHARSET_ANNO));
   // description 
   do_check_true(annosvc.itemHasAnnotation(testBookmark1.itemId,
                                           DESCRIPTION_ANNO));
   do_check_eq("item description",
-              annosvc.getItemAnnotationString(testBookmark1.itemId,
-                                              DESCRIPTION_ANNO));
+              annosvc.getItemAnnotation(testBookmark1.itemId,
+                                        DESCRIPTION_ANNO));
 
   /*
   // XXX Bug 380468

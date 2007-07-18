@@ -61,7 +61,7 @@ nsresult nsUnicodeEncodeHelper::ConvertByTable(
   nsresult res = NS_OK;
 
   while (src < srcEnd) {
-    if (!uMapCode((uTable*) aMappingTable, NS_STATIC_CAST(PRUnichar, *(src++)), NS_REINTERPRET_CAST(PRUint16*, &med))) {
+    if (!uMapCode((uTable*) aMappingTable, static_cast<PRUnichar>(*(src++)), reinterpret_cast<PRUint16*>(&med))) {
       res = NS_ERROR_UENC_NOMAPPING;
       break;
     }
@@ -114,7 +114,7 @@ nsresult nsUnicodeEncodeHelper::ConvertByMultiTable(
 
   while (src < srcEnd) {
     for (i=0; i<aTableCount; i++) 
-      if (uMapCode((uTable*) aMappingTable[i], NS_STATIC_CAST(PRUint16, *src), NS_REINTERPRET_CAST(PRUint16*, &med))) break;
+      if (uMapCode((uTable*) aMappingTable[i], static_cast<PRUint16>(*src), reinterpret_cast<PRUint16*>(&med))) break;
 
     src++;
     if (i == aTableCount) {

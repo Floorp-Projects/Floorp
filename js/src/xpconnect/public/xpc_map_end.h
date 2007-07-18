@@ -159,12 +159,12 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::DelProperty(nsIXPConnectWrappedNative *wrapper,
 
 #ifndef XPC_MAP_WANT_GETPROPERTY
 NS_IMETHODIMP XPC_MAP_CLASSNAME::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
-    {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
+    {NS_WARNING("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
 #endif
 
 #ifndef XPC_MAP_WANT_SETPROPERTY
 NS_IMETHODIMP XPC_MAP_CLASSNAME::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
-    {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
+    {NS_WARNING("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
 #endif
 
 #ifndef XPC_MAP_WANT_NEWENUMERATE

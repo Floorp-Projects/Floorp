@@ -251,11 +251,17 @@ nsSVGLength2::GetAnimValueString(nsAString & aValueAsString)
 float
 nsSVGLength2::ConvertToUserUnits(float aVal, nsSVGElement *aSVGElement)
 {
-  if (mSpecifiedUnitType == nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER ||
-      mSpecifiedUnitType == nsIDOMSVGLength::SVG_LENGTHTYPE_PX)
-    return aVal;
-
-  return ConvertToUserUnits(aVal, aSVGElement->GetCtx());
+  switch (mSpecifiedUnitType) {
+    case nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER:
+    case nsIDOMSVGLength::SVG_LENGTHTYPE_PX:
+      return aVal;
+    case nsIDOMSVGLength::SVG_LENGTHTYPE_EMS:
+      return aVal * GetEmLength(aSVGElement);
+    case nsIDOMSVGLength::SVG_LENGTHTYPE_EXS:
+      return aVal * GetExLength(aSVGElement);
+    default:
+      return ConvertToUserUnits(aVal, aSVGElement->GetCtx());
+  }
 }
 
 float
@@ -278,9 +284,9 @@ nsSVGLength2::ConvertToUserUnits(float aVal, nsSVGSVGElement *aCtx)
     case nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE:
       return aVal * GetAxisLength(aCtx) / 100.0f;
     case nsIDOMSVGLength::SVG_LENGTHTYPE_EMS:
+      return aVal * GetEmLength(aCtx);
     case nsIDOMSVGLength::SVG_LENGTHTYPE_EXS:
-      NS_NOTYETIMPLEMENTED("nsIDOMSVGLength::SVG_LENGTHTYPE_EXS");
-      return 0;
+      return aVal * GetExLength(aCtx);
     default:
       NS_NOTREACHED("Unknown unit type");
       return 0;
@@ -293,7 +299,9 @@ nsSVGLength2::SetBaseValue(float aValue, nsSVGElement *aSVGElement)
   nsSVGSVGElement *ctx = nsnull;
 
   if (mSpecifiedUnitType != nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER &&
-      mSpecifiedUnitType != nsIDOMSVGLength::SVG_LENGTHTYPE_PX)
+      mSpecifiedUnitType != nsIDOMSVGLength::SVG_LENGTHTYPE_PX &&
+      mSpecifiedUnitType != nsIDOMSVGLength::SVG_LENGTHTYPE_EMS &&
+      mSpecifiedUnitType != nsIDOMSVGLength::SVG_LENGTHTYPE_EXS)
     ctx = aSVGElement->GetCtx();
 
   switch (mSpecifiedUnitType) {
@@ -320,9 +328,10 @@ nsSVGLength2::SetBaseValue(float aValue, nsSVGElement *aSVGElement)
       mBaseVal = aValue * 100.0f / GetAxisLength(ctx);
       break;
     case nsIDOMSVGLength::SVG_LENGTHTYPE_EMS:
+      mBaseVal = aValue / GetEmLength(aSVGElement);
+      break;
     case nsIDOMSVGLength::SVG_LENGTHTYPE_EXS:
-      NS_NOTYETIMPLEMENTED("nsIDOMSVGLength::SVG_LENGTHTYPE_EXS");
-      mBaseVal = 0;
+      mBaseVal = aValue / GetExLength(aSVGElement);
       break;
     default:
       NS_NOTREACHED("Unknown unit type");

@@ -75,23 +75,24 @@ StrBlockCopy(const nsACString &aSource1,
  * creation helper
  ******************************************************************************/
 
-// This is a counter that is incremented each time we allocate a new nsCookie.
-// The value of the counter is stored with each nsCookie so that we can sort
-// cookies by creation time (within the current browser session).
-static PRUint32 gLastCreationTime;
+// This is a counter that keeps track of the last used creation id, each time we
+// create a new nsCookie. The creation id is nominally the time (in microseconds)
+// the cookie was created. This id also corresponds to the row id used in the
+// sqlite database, which must be unique. However, since it's possible two cookies
+// may be created at the same time, or the system clock isn't monotonic, we must
+// check each id to enforce monotonicity.
+static PRInt64 gLastCreationID;
 
 nsCookie *
 nsCookie::Create(const nsACString &aName,
                  const nsACString &aValue,
                  const nsACString &aHost,
                  const nsACString &aPath,
-                 nsInt64          aExpiry,
-                 nsInt64          aLastAccessed,
-                 PRBool           aIsSession,
-                 PRBool           aIsSecure,
-                 PRBool           aIsHttpOnly,
-                 nsCookieStatus   aStatus,
-                 nsCookiePolicy   aPolicy)
+                 PRInt64           aExpiry,
+                 PRInt64           aCreationID,
+                 PRBool            aIsSession,
+                 PRBool            aIsSecure,
+                 PRBool            aIsHttpOnly)
 {
   // find the required string buffer size, adding 4 for the terminating nulls
   const PRUint32 stringLength = aName.Length() + aValue.Length() +
@@ -105,15 +106,21 @@ nsCookie::Create(const nsACString &aName,
 
   // assign string members
   char *name, *value, *host, *path, *end;
-  name = NS_STATIC_CAST(char *, place) + sizeof(nsCookie);
+  name = static_cast<char *>(place) + sizeof(nsCookie);
   StrBlockCopy(aName, aValue, aHost, aPath,
                name, value, host, path, end);
 
+  // check if the creation id given to us is greater than the running maximum
+  // (it should always be monotonically increasing). if it's not, make up our own.
+  if (aCreationID > gLastCreationID)
+    gLastCreationID = aCreationID;
+  else
+    aCreationID = ++gLastCreationID;
+
   // construct the cookie. placement new, oh yeah!
   return new (place) nsCookie(name, value, host, path, end,
-                              aExpiry, aLastAccessed, ++gLastCreationTime,
-                              aIsSession, aIsSecure, aIsHttpOnly,
-                              aStatus, aPolicy);
+                              aExpiry, aCreationID,
+                              aIsSession, aIsSecure, aIsHttpOnly);
 }
 
 /******************************************************************************
@@ -131,9 +138,9 @@ NS_IMETHODIMP nsCookie::GetExpiry(PRInt64 *aExpiry)        { *aExpiry = Expiry()
 NS_IMETHODIMP nsCookie::GetIsSession(PRBool *aIsSession)   { *aIsSession = IsSession(); return NS_OK; }
 NS_IMETHODIMP nsCookie::GetIsDomain(PRBool *aIsDomain)     { *aIsDomain = IsDomain();   return NS_OK; }
 NS_IMETHODIMP nsCookie::GetIsSecure(PRBool *aIsSecure)     { *aIsSecure = IsSecure();   return NS_OK; }
-NS_IMETHODIMP nsCookie::GetStatus(nsCookieStatus *aStatus) { *aStatus = Status();       return NS_OK; }
-NS_IMETHODIMP nsCookie::GetPolicy(nsCookiePolicy *aPolicy) { *aPolicy = Policy();       return NS_OK; }
-NS_IMETHODIMP nsCookie::GetHttpOnly(PRBool *aHttpOnly)     { *aHttpOnly = IsHttpOnly(); return NS_OK; }
+NS_IMETHODIMP nsCookie::GetIsHttpOnly(PRBool *aHttpOnly)   { *aHttpOnly = IsHttpOnly(); return NS_OK; }
+NS_IMETHODIMP nsCookie::GetStatus(nsCookieStatus *aStatus) { *aStatus = 0;              return NS_OK; }
+NS_IMETHODIMP nsCookie::GetPolicy(nsCookiePolicy *aPolicy) { *aPolicy = 0;              return NS_OK; }
 
 // compatibility method, for use with the legacy nsICookie interface.
 // here, expires == 0 denotes a session cookie.
@@ -143,7 +150,7 @@ nsCookie::GetExpires(PRUint64 *aExpires)
   if (IsSession()) {
     *aExpires = 0;
   } else {
-    *aExpires = Expiry() > nsInt64(0) ? PRInt64(Expiry()) : 1;
+    *aExpires = Expiry() > 0 ? Expiry() : 1;
   }
   return NS_OK;
 }

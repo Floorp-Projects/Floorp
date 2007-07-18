@@ -43,7 +43,51 @@ sub Execute {
 
 sub Verify {
     my $this = shift;
-    # TODO verify source archive
+
+    my $config = new Bootstrap::Config();
+    my $logDir = $config->Get(var => 'logDir');
+
+    my $logFile = catfile($logDir, 'source.log');
+
+    $this->CheckLog(
+        log => $logFile,
+        checkFor => '^checkout finish',
+    );
+
+    $this->CheckLog(
+        log => $logFile,
+        notAllowed => '^tar',
+    );
+}
+
+sub Push {
+    my $this = shift;
+
+    my $config = new Bootstrap::Config();
+    my $product = $config->Get(var => 'product');
+    my $version = $config->Get(var => 'version');
+    my $rc = $config->Get(var => 'rc');
+    my $logDir = $config->Get(var => 'logDir');
+    my $stageHome = $config->Get(var => 'stageHome');
+
+    my $stageDir =  catfile($stageHome, $product . '-' . $version);
+    my $candidateDir = catfile('/home', 'ftp', 'pub', $product, 'nightly',
+                            $version . '-candidates', 'rc' . $rc ) . '/';
+
+    if (not -d $candidateDir) {
+        MkdirWithPath(dir => $candidateDir) 
+          or die("Could not mkdir $candidateDir: $!");
+        $this->Log(msg => "Created directory $candidateDir");
+    }
+
+    $this->Shell(
+      cmd => 'rsync',
+      cmdArgs => ['-av', catfile('batch-source', 'rc' . $rc, 
+                            $product . '-' . $version . '-source.tar.bz2'),
+                  $candidateDir],
+      logFile => catfile($logDir, 'source.log'),
+      dir => catfile($stageDir),
+    );
 }
 
 sub Announce {
@@ -52,13 +96,10 @@ sub Announce {
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
     my $version = $config->Get(var => 'version');
-    my $logDir = $config->Get(var => 'logDir');
-
-    my $logFile = catfile($logDir, 'source.log');
 
     $this->SendAnnouncement(
       subject => "$product $version source step finished",
-      message => "$product $version source archive is ready to be copied to the candidates dir.",
+      message => "$product $version source archive was copied to the candidates dir.",
     );
 }
 

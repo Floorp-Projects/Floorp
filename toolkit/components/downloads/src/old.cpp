@@ -18,7 +18,7 @@ nsDownloadManager::OpenProgressDialogFor(const PRUnichar* aPath, nsIDOMWindow* a
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDownload> download;
-  nsDownload* internalDownload = NS_STATIC_CAST(nsDownload*, mCurrDownloads.Get(&key));
+  nsDownload* internalDownload = static_cast<nsDownload*>(mCurrDownloads.Get(&key));
   internalDownload->QueryInterface(NS_GET_IID(nsIDownload), (void**) getter_AddRefs(download));
   if (!download)
     return NS_ERROR_FAILURE;

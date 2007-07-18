@@ -138,7 +138,7 @@ nsViewSourceHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
         return rv;
     }
 
-    *result = NS_STATIC_CAST(nsIViewSourceChannel*, channel);
+    *result = static_cast<nsIViewSourceChannel*>(channel);
     return NS_OK;
 }
 

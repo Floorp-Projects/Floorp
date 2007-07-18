@@ -116,7 +116,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
         flags |= gfxTextRunFactory::TEXT_IS_ASCII |
                  gfxTextRunFactory::TEXT_IS_8BIT;
         length = strlen(test->mString);
-        textRun = fontGroup->MakeTextRun(NS_REINTERPRET_CAST(const PRUint8*, test->mString), length, &params, flags);
+        textRun = fontGroup->MakeTextRun(reinterpret_cast<const PRUint8*>(test->mString), length, &params, flags);
     } else {
         flags |= gfxTextRunFactory::TEXT_HAS_SURROGATES; // just in case
         NS_ConvertUTF8toUTF16 str(nsDependentCString(test->mString));

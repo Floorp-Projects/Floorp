@@ -34,12 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
-const nsISupports = Components.interfaces.nsISupports;
-const nsIClassInfo = Components.interfaces.nsIClassInfo;
-const nsIObserver = Components.interfaces.nsIObserver;
-const fuelIApplication = Components.interfaces.fuelIApplication;
 
+const Ci = Components.interfaces;
+const Cc = Components.classes;
 
 //=================================================
 // Shutdown - used to store cleanup functions which will
@@ -50,7 +47,7 @@ var gShutdown = [];
 // Console constructor
 function Console() {
   this._console = Components.classes["@mozilla.org/consoleservice;1"]
-    .getService(Components.interfaces.nsIConsoleService);
+    .getService(Ci.nsIConsoleService);
 }
 
 //=================================================
@@ -62,11 +59,11 @@ Console.prototype = {
   
   open : function cs_open() {
     var wMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                              .getService(Components.interfaces.nsIWindowMediator);
+                              .getService(Ci.nsIWindowMediator);
     var console = wMediator.getMostRecentWindow("global:console");
     if (!console) {
       var wWatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                             .getService(Components.interfaces.nsIWindowWatcher);
+                             .getService(Ci.nsIWindowWatcher);
       wWatch.openWindow(null, "chrome://global/content/console.xul", "_blank",
                         "chrome,dialog=no,all", cmdLine);
     } else {
@@ -149,13 +146,6 @@ Events.prototype = {
 
 
 //=================================================
-// Preferences constants
-const nsIPrefService = Components.interfaces.nsIPrefService;
-const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
-const nsIPrefBranch2 = Components.interfaces.nsIPrefBranch2;
-const nsISupportsString = Components.interfaces.nsISupportsString;
-
-//=================================================
 // PreferenceBranch constructor
 function PreferenceBranch(aBranch) {
   if (!aBranch)
@@ -163,13 +153,13 @@ function PreferenceBranch(aBranch) {
   
   this._root = aBranch;
   this._prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                          .getService(nsIPrefService);
+                          .getService(Ci.nsIPrefService);
 
   if (aBranch)
     this._prefs = this._prefs.getBranch(aBranch);
     
-  this._prefs.QueryInterface(nsIPrefBranch);
-  this._prefs.QueryInterface(nsIPrefBranch2);
+  this._prefs.QueryInterface(Ci.nsIPrefBranch);
+  this._prefs.QueryInterface(Ci.nsIPrefBranch2);
   
   this._prefs.addObserver(this._root, this, false);
   this._events = new Events();
@@ -225,7 +215,7 @@ PreferenceBranch.prototype = {
   },
   
   has : function prefs_has(aName) {
-    return (this._prefs.getPrefType(aName) != nsIPrefBranch.PREF_INVALID);
+    return (this._prefs.getPrefType(aName) != Ci.nsIPrefBranch.PREF_INVALID);
   },
   
   get : function prefs_get(aName) {
@@ -236,13 +226,13 @@ PreferenceBranch.prototype = {
     var type = this._prefs.getPrefType(aName);
     
     switch (type) {
-      case nsIPrefBranch2.PREF_STRING:
-        aValue = this._prefs.getComplexValue(aName, nsISupportsString).data;
+      case Ci.nsIPrefBranch2.PREF_STRING:
+        aValue = this._prefs.getComplexValue(aName, Ci.nsISupportsString).data;
         break;
-      case nsIPrefBranch2.PREF_BOOL:
+      case Ci.nsIPrefBranch2.PREF_BOOL:
         aValue = this._prefs.getBoolPref(aName);
         break;
-      case nsIPrefBranch2.PREF_INT:
+      case Ci.nsIPrefBranch2.PREF_INT:
         aValue = this._prefs.getIntPref(aName);
         break;
     }
@@ -256,9 +246,9 @@ PreferenceBranch.prototype = {
     switch (type) {
       case "String":
         var str = Components.classes["@mozilla.org/supports-string;1"]
-                            .createInstance(nsISupportsString);
+                            .createInstance(Ci.nsISupportsString);
         str.data = aValue;
-        this._prefs.setComplexValue(aName, nsISupportsString, str);
+        this._prefs.setComplexValue(aName, Ci.nsISupportsString, str);
         break;
       case "Boolean":
         this._prefs.setBoolPref(aName, aValue);
@@ -304,13 +294,13 @@ Preference.prototype = {
     var type = this._prefs.getPrefType(name);
     
     switch (type) {
-      case nsIPrefBranch2.PREF_STRING:
+      case Ci.nsIPrefBranch2.PREF_STRING:
         value = "String";
         break;
-      case nsIPrefBranch2.PREF_BOOL:
+      case Ci.nsIPrefBranch2.PREF_BOOL:
         value = "Boolean";
         break;
-      case nsIPrefBranch2.PREF_INT:
+      case Ci.nsIPrefBranch2.PREF_INT:
         value = "Number";
         break;
     }
@@ -382,10 +372,6 @@ SessionStorage.prototype = {
 
 
 //=================================================
-// Extension constants
-const nsIUpdateItem = Components.interfaces.nsIUpdateItem;
-
-//=================================================
 // Extension constructor
 function Extension(aItem) {
   this._item = aItem;
@@ -401,7 +387,7 @@ function Extension(aItem) {
   }
 
   var os = Components.classes["@mozilla.org/observer-service;1"]
-                     .getService(Components.interfaces.nsIObserverService);
+                     .getService(Ci.nsIObserverService);
   os.addObserver(this, "em-action-requested", false);
   
   var self = this;
@@ -409,12 +395,12 @@ function Extension(aItem) {
 }
 
 //=================================================
-// Extensions implementation
+// Extension implementation
 Extension.prototype = {
   // cleanup observer so we don't leak
   _shutdown: function ext_shutdown() {
     var os = Components.classes["@mozilla.org/observer-service;1"]
-                       .getService(Components.interfaces.nsIObserverService);
+                       .getService(Ci.nsIObserverService);
     os.removeObserver(this, "em-action-requested");
 
     this._prefs = null;
@@ -425,11 +411,18 @@ Extension.prototype = {
   // for nsIObserver  
   observe: function ext_observe(aSubject, aTopic, aData)
   {
-    if ((aData == "item-uninstalled") &&
-        (aSubject instanceof nsIUpdateItem) &&
-        (aSubject.id == this._item.id))
+    if ((aSubject instanceof Ci.nsIUpdateItem) && (aSubject.id == this._item.id))
     {
-      this._events.dispatch("uninstall", this._item.id);
+      if (aData == "item-uninstalled")
+        this._events.dispatch("uninstall", this._item.id);
+      else if (aData == "item-disabled")
+        this._events.dispatch("disable", this._item.id);
+      else if (aData == "item-enabled")
+        this._events.dispatch("enable", this._item.id);
+      else if (aData == "item-cancel-action")
+        this._events.dispatch("cancel", this._item.id);
+      else if (aData == "item-upgraded")
+        this._events.dispatch("upgrade", this._item.id);
     }
   },
 
@@ -467,8 +460,10 @@ Extension.prototype = {
 // Extensions constructor
 function Extensions() {
   this._extmgr = Components.classes["@mozilla.org/extensions/manager;1"]
-                           .getService(Components.interfaces.nsIExtensionManager);
-                             
+                           .getService(Ci.nsIExtensionManager);
+                           
+  this._cache = {};
+  
   var self = this;
   gShutdown.push(function() { self._shutdown(); });
 }
@@ -476,8 +471,21 @@ function Extensions() {
 //=================================================
 // Extensions implementation
 Extensions.prototype = {
-  _shutdown : function() {
+  _shutdown : function exts_shutdown() {
     this._extmgr = null;
+    this._cache = null;
+  },
+  
+  /*
+   * Helper method to check cache before creating a new extension
+   */
+  _get : function exts_get(aId) {
+    if (this._cache.hasOwnProperty(aId))
+      return this._cache[aId];
+      
+    var newExt = new Extension(this._extmgr.getItemForID(aId));
+    this._cache[aId] = newExt;
+    return newExt;
   },
   
   get all() {
@@ -492,10 +500,10 @@ Extensions.prototype = {
   // maxVersion: "2.0"
   find : function exts_find(aOptions) {
     var retVal = [];
-    var items = this._extmgr.getItemList(nsIUpdateItem.TYPE_EXTENSION, {});
+    var items = this._extmgr.getItemList(Ci.nsIUpdateItem.TYPE_EXTENSION, {});
     
     for (var i = 0; i < items.length; i++) {
-      retVal.push(new Extension(items[i]));
+      retVal.push(this._get(items[i].id));
     }
 
     return retVal;
@@ -509,9 +517,577 @@ Extensions.prototype = {
   },
   
   get : function exts_get(aId) {
-    return this.has(aId) ? new Extension(this._extmgr.getItemForID(aId)) : null;
+    return this.has(aId) ? this._get(aId) : null;
   }
 };
+
+//=================================================
+// Singleton that holds services and utilities
+var Utilities = {
+  _bookmarks : null,
+  get bookmarks() {
+    if (!this._bookmarks) {
+      this._bookmarks = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+                        getService(Ci.nsINavBookmarksService);
+    }
+    return this._bookmarks;
+  },
+
+  _livemarks : null,
+  get livemarks() {
+    if (!this._livemarks) {
+      this._livemarks = Cc["@mozilla.org/browser/livemark-service;2"].
+                        getService(Ci.nsILivemarkService);
+    }
+    return this._livemarks;
+  },
+
+  _annotations : null,
+  get annotations() {
+    if (!this._annotations) {
+      this._annotations = Cc["@mozilla.org/browser/annotation-service;1"].
+                          getService(Ci.nsIAnnotationService);
+    }
+    return this._annotations;
+  },
+  
+  _history : null,
+  get history() {
+    if (!this._history) {
+      this._history = Cc["@mozilla.org/browser/nav-history-service;1"].
+                      getService(Ci.nsINavHistoryService);
+    }
+    return this._history;
+  },
+  
+  _windowMediator : null,
+  get windowMediator() {
+    if (!this._windowMediator) {
+      this._windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].
+                             getService(Ci.nsIWindowMediator);
+    }
+    return this._windowMediator;
+  },
+  
+  makeURI : function(aSpec) {
+    if (!aSpec)
+      return null;
+    var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+    return ios.newURI(aSpec, null, null);
+  },
+  
+  free : function() {
+    this._bookmarks = null;
+    this._livemarks = null;
+    this._annotations = null;
+    this._history = null;
+    this._windowMediator = null;
+  }
+};
+
+
+//=================================================
+// Window implementation
+function Window(aWindow) {
+  this._window = aWindow;
+  this._tabbrowser = aWindow.getBrowser();
+  this._events = new Events();
+  this._cleanup = {};
+  
+  this._watch("TabOpen");
+  this._watch("TabMove");
+  this._watch("TabClose");
+  this._watch("TabSelect");
+                                 
+  var self = this;
+  gShutdown.push(function() { self._shutdown(); });
+}
+
+Window.prototype = {
+  get events() {
+    return this._events;
+  },
+
+  /*
+   * Helper used to setup event handlers on the XBL element. Note that the events
+   * are actually dispatched to tabs, so we capture them.
+   */
+  _watch : function(aType) {
+    var self = this;
+    this._tabbrowser.addEventListener(aType, 
+      this._cleanup[aType] = function(e){ self._event(e); },
+      true);
+  },
+  
+  /*
+   * Helper event callback used to redirect events made on the XBL element
+   */
+  _event : function(aEvent) {
+    this._events.dispatch(aEvent.type, "");
+  },
+  
+  get tabs() {
+    var tabs = [];
+    var browsers = this._tabbrowser.browsers;
+    
+    for (var i=0; i<browsers.length; i++)
+      tabs.push(new BrowserTab(this._window, browsers[i]));
+    
+    return tabs;
+  },
+  
+  get activeTab() {
+    return new BrowserTab(this._window, this._tabbrowser.selectedBrowser);
+  },
+  
+  open : function(aURI) {
+    return new BrowserTab(this._window, this._tabbrowser.addTab(aURI.spec).linkedBrowser);
+  },
+  
+  _shutdown : function() {
+    for (var type in this._cleanup)
+      this._tabbrowser.removeEventListener(type, this._cleanup[type], true);
+    this._cleanup = null;
+
+    this._window = null;
+    this._tabbrowser = null;
+    this._events = null;
+  }
+};
+
+
+//=================================================
+// BrowserTab implementation
+function BrowserTab(aWindow, aBrowser) {
+  this._window = aWindow;
+  this._tabbrowser = aWindow.getBrowser();
+  this._browser = aBrowser;
+  this._events = new Events();
+  this._cleanup = {};
+  
+  this._watch("load");
+                                 
+  var self = this;
+  gShutdown.push(function() { self._shutdown(); });
+}
+
+BrowserTab.prototype = {
+  get uri() {
+    return this._browser.currentURI;
+  },
+  
+  get index() {
+    var tabs = this._tabbrowser.mTabs;
+    for (var i=0; i<tabs.length; i++) {
+      if (tabs[i].linkedBrowser == this._browser)
+        return i;
+    }
+    return -1;
+  },
+
+  get events() {
+    return this._events;
+  },
+  
+  get window() {
+    return this._window;
+  },
+  
+  get document() {
+    return this._browser.contentDocument;
+  },
+  
+  /*
+   * Helper used to setup event handlers on the XBL element
+   */
+  _watch : function(aType) {
+    var self = this;
+    this._browser.addEventListener(aType,
+      this._cleanup[aType] = function(e){ self._event(e); },
+      true);
+  },
+  
+  /*
+   * Helper event callback used to redirect events made on the XBL element
+   */
+  _event : function(aEvent) {
+    if (aEvent.type == "load" && (!aEvent.originalTarget instanceof Ci.nsIDOMHTMLDocument ||
+      aEvent.originalTarget.defaultView.frameElement))
+      return;
+      
+    this._events.dispatch(aEvent.type, "");
+  },
+  
+  /*
+   * Helper used to determine the index offset of the browsertab
+   */
+  _getTab : function() {
+    var tabs = this._tabbrowser.mTabs;
+    return tabs[this.index] || null;
+  },
+  
+  load : function(aURI) {
+    this._browser.loadURI(aURI.spec, null, null);
+  },
+  
+  focus : function() {
+    this._tabbrowser.selectedTab = this._getTab();
+    this._tabbrowser.focus();
+  },
+  
+  close : function() {
+    this._tabbrowser.removeTab(this._getTab());
+  },
+  
+  moveBefore : function(aBefore) {
+    this._tabbrowser.moveTabTo(this._getTab(), aBefore.index);
+  },
+  
+  moveToEnd : function() {
+    this._tabbrowser.moveTabTo(this._getTab(), this._tabbrowser.browsers.length);
+  },
+  
+  _shutdown : function() {
+    for (var type in this._cleanup)
+      this._browser.removeEventListener(type, this._cleanup[type], true);
+    this._cleanup = null;
+    
+    this._window = null;
+    this._tabbrowser = null;
+    this._browser = null;
+    this._events = null;
+  }
+};
+
+
+//=================================================
+// Annotations implementation
+function Annotations(aId) {
+  this._id = aId;
+}
+
+Annotations.prototype = {
+  get names() {
+    return Utilities.annotations.getItemAnnotationNames(this._id, {});
+  },
+  
+  has : function(aName) {
+    return Utilities.annotations.itemHasAnnotation(this._id, aName);
+  },
+  
+  get : function(aName) {
+    return Utilities.annotations.getItemAnnotation(this._id, aName);
+  },
+  
+  set : function(aName, aValue, aExpiration) {
+    Utilities.annotations.setItemAnnotation(this._id, aName, aValue, 0, aExpiration);
+  },
+    
+  remove : function(aName) {
+    if (aName)
+      Utilities.annotations.removeItemAnnotation(this._id, aName);
+  }
+};
+
+
+//=================================================
+// Bookmark implementation
+function Bookmark(aId, aParent, aType) {
+  this._id = aId;
+  this._parent = aParent;
+  this._type = aType || "bookmark";
+  this._annotations = new Annotations(this._id);
+  this._events = new Events();
+
+  Utilities.bookmarks.addObserver(this, false);  
+                                 
+  var self = this;
+  gShutdown.push(function() { self._shutdown(); });
+}
+
+Bookmark.prototype = {
+  _shutdown : function() {
+    this._annotations = null;
+    this._events = null;
+    
+    Utilities.bookmarks.removeObserver(this);  
+  },
+  
+  get id() {
+    return this._id;
+  },
+  
+  get title() {
+    return Utilities.bookmarks.getItemTitle(this._id);
+  },
+
+  set title(aTitle) {
+    Utilities.bookmarks.setItemTitle(this._id, aTitle);
+  },
+
+  get uri() {
+    return Utilities.bookmarks.getBookmarkURI(this._id);
+  },
+
+  set uri(aURI) {
+    return Utilities.bookmarks.changeBookmarkURI(this._id, aURI);
+  },
+
+  get description() {
+    return this._annotations.get("bookmarkProperties/description");
+  },
+
+  set description(aDesc) {
+    this._annotations.set("bookmarkProperties/description", aDesc, Ci.nsIAnnotationService.EXPIRE_NEVER);
+  },
+
+  get keyword() {
+    return Utilities.bookmarks.getKeywordForBookmark(this._id);
+  },
+
+  set keyword(aKeyword) {
+    Utilities.bookmarks.setKeywordForBookmark(this._id, aKeyword);
+  },
+
+  get type() {
+    return this._type;
+  },
+
+  get parent() {
+    return this._parent;
+  },
+  
+  set parent(aFolder) {
+    Utilities.bookmarks.moveItem(this._id, aFolder.id, Utilities.bookmarks.DEFAULT_INDEX);
+    // this._parent is updated in onItemMoved
+  },
+  
+  get annotations() {
+    return this._annotations;
+  },
+  
+  get events() {
+    return this._events;
+  },
+  
+  remove : function() {
+    Utilities.bookmarks.removeItem(this._id);
+  },
+  
+  // observer
+  onBeginUpdateBatch : function() {
+  },
+
+  onEndUpdateBatch : function() {
+  },
+
+  onItemAdded : function(aId, aFolder, aIndex) {
+    // bookmark object doesn't exist at this point
+  },
+
+  onItemRemoved : function(aId, aFolder, aIndex) {
+    if (this._id == aId)
+      this._events.dispatch("remove", aId);
+  },
+
+  onItemChanged : function(aId, aProperty, aIsAnnotationProperty, aValue) {
+    if (this._id == aId)
+      this._events.dispatch("change", aProperty);
+  },
+
+  onItemVisited: function(aId, aVisitID, aTime) {
+  },
+
+  onItemMoved: function(aId, aOldParent, aOldIndex, aNewParent, aNewIndex) {
+    if (this._id == aId) {
+      this._parent = new BookmarkFolder(aNewParent, Utilities.bookmarks.getFolderIdForItem(aNewParent));    
+      this._events.dispatch("move", aId);
+    }
+  },
+
+  QueryInterface: function(aIID) {
+    if (aIID.equals(Ci.fuelIBookmark) ||
+        aIID.equals(Ci.nsINavBookmarkObserver) ||
+        aIID.equals(Ci.nsISupports)) {
+      return this;
+    }
+    throw Component.result.NS_ERROR_NO_INTERFACE;
+  }
+}; 
+
+
+//=================================================
+// BookmarkFolder implementation
+function BookmarkFolder(aId, aParent) {
+  this._id = aId;
+  if (this._id == null)
+    this._id = Utilities.bookmarks.bookmarksRoot;
+  
+  this._parent = aParent;
+                                 
+  this._annotations = new Annotations(this._id);
+  this._events = new Events();
+
+  Utilities.bookmarks.addObserver(this, false);  
+
+  var self = this;
+  gShutdown.push(function() { self._shutdown(); });
+}
+
+BookmarkFolder.prototype = {
+  _shutdown : function() {
+    this._annotations = null;
+    this._events = null;
+    
+    Utilities.bookmarks.removeObserver(this);  
+  },
+  
+  get id() {
+    return this._id;
+  },
+  
+  get title() {
+    return Utilities.bookmarks.getItemTitle(this._id);
+  },
+
+  set title(aTitle) {
+    Utilities.bookmarks.setItemTitle(this._id, aTitle);
+  },
+
+  get description() {
+    return this._annotations.get("bookmarkProperties/description");
+  },
+
+  set description(aDesc) {
+    this._annotations.set("bookmarkProperties/description", aDesc, Ci.nsIAnnotationService.EXPIRE_NEVER);
+  },
+
+  get type() {
+    return "folder";
+  },
+
+  get parent() {
+    return this._parent;
+  },
+  
+  set parent(aFolder) {
+    Utilities.bookmarks.moveItem(this._id, aFolder.id, Utilities.bookmarks.DEFAULT_INDEX);
+    // this._parent is updated in onItemMoved
+  },
+
+  get annotations() {
+    return this._annotations;
+  },
+  
+  get events() {
+    return this._events;
+  },
+  
+  get children() {
+    var items = [];
+    
+    var options = Utilities.history.getNewQueryOptions();
+    var query = Utilities.history.getNewQuery();
+    query.setFolders([this._id], 1);
+    var result = Utilities.history.executeQuery(query, options);
+    var rootNode = result.root;
+    rootNode.containerOpen = true;
+    var cc = rootNode.childCount;
+    for (var i=0; i<cc; ++i) {
+      var node = rootNode.getChild(i);
+      if (node.type == node.RESULT_TYPE_FOLDER) {
+        var folder = new BookmarkFolder(node.itemId, this._id);
+        items.push(folder);
+      }
+      else if (node.type == node.RESULT_TYPE_SEPARATOR) {
+        var separator = new Bookmark(node.itemId, this._id, "separator");
+        items.push(separator);
+      }
+      else {
+        var bookmark = new Bookmark(node.itemId, this._id, "bookmark");
+        items.push(bookmark);
+      }
+    }
+    rootNode.containerOpen = false;
+
+    return items;
+  },
+  
+  addBookmark : function(aTitle, aUri) {
+    var newBookmarkID = Utilities.bookmarks.insertBookmark(this._id, aUri, Utilities.bookmarks.DEFAULT_INDEX, aTitle);
+    var newBookmark = new Bookmark(newBookmarkID, this, "bookmark");
+    return newBookmark;
+  },
+  
+  addSeparator : function() {
+    var newBookmarkID = Utilities.bookmarks.insertSeparator(this._id, Utilities.bookmarks.DEFAULT_INDEX);
+    var newBookmark = new Bookmark(newBookmarkID, this, "separator");
+    return newBookmark;
+  },
+  
+  addFolder : function(aTitle) {
+    var newFolderID = Utilities.bookmarks.createFolder(this._id, aTitle, Utilities.bookmarks.DEFAULT_INDEX);
+    var newFolder = new BookmarkFolder(newFolderID, this);
+    return newFolder;
+  },
+  
+  remove : function() {
+    Utilities.bookmarks.removeFolder(this._id);
+  },
+  
+  // observer
+  onBeginUpdateBatch : function() {
+  },
+
+  onEndUpdateBatch : function() {
+  },
+
+  onItemAdded : function(aId, aFolder, aIndex) {
+    // handle root folder events
+    if (!this._parent)
+      this._events.dispatch("add", aId);
+    
+    // handle this folder events  
+    if (this._id == aFolder)
+      this._events.dispatch("addchild", aId);
+  },
+
+  onItemRemoved : function(aId, aFolder, aIndex) {
+    // handle root folder events
+    if (!this._parent || this._id == aId)
+      this._events.dispatch("remove", aId);
+
+    // handle this folder events      
+    if (this._id == aFolder)
+      this._events.dispatch("removechild", aId);
+  },
+
+  onItemChanged : function(aId, aProperty, aIsAnnotationProperty, aValue) {
+    // handle root folder and this folder events
+    if (!this._parent || this._id == aId)
+      this._events.dispatch("change", aProperty);
+  },
+
+  onItemVisited: function(aId, aVisitID, aTime) {
+  },
+
+  onItemMoved: function(aId, aOldParent, aOldIndex, aNewParent, aNewIndex) {
+    // handle this folder event, root folder cannot be moved
+    if (this._id == aId) {
+      this._parent = new BookmarkFolder(aNewParent, Utilities.bookmarks.getFolderIdForItem(aNewParent));    
+      this._events.dispatch("move", aId);
+    }
+  },
+
+  QueryInterface: function(aIID) {
+    if (aIID.equals(Ci.fuelIBookmarkFolder) ||
+        aIID.equals(Ci.nsINavBookmarkObserver) ||
+        aIID.equals(Ci.nsISupports)) {
+      return this;
+    }
+    throw Component.result.NS_ERROR_NO_INTERFACE;
+  }
+}; 
 
 
 const CLASS_ID = Components.ID("fe74cf80-aa2d-11db-abbd-0800200c9a66");
@@ -525,12 +1101,13 @@ function Application() {
   this._prefs = null;
   this._storage = null;
   this._events = null;
+  this._bookmarks = null;
   
   this._info = Components.classes["@mozilla.org/xre/app-info;1"]
-                     .getService(Components.interfaces.nsIXULAppInfo);
+                     .getService(Ci.nsIXULAppInfo);
     
   var os = Components.classes["@mozilla.org/observer-service;1"]
-                     .getService(Components.interfaces.nsIObserverService);
+                     .getService(Ci.nsIObserverService);
 
   os.addObserver(this, "final-ui-startup", false);
   os.addObserver(this, "quit-application-requested", false);
@@ -578,7 +1155,7 @@ Application.prototype = {
 
       // release our observers      
       var os = Components.classes["@mozilla.org/observer-service;1"]
-                         .getService(Components.interfaces.nsIObserverService);
+                         .getService(Ci.nsIObserverService);
 
       os.removeObserver(this, "final-ui-startup");
 
@@ -594,6 +1171,9 @@ Application.prototype = {
       this._storage = null;
       this._events = null;
       this._extensions = null;
+      this._bookmarks = null;
+      
+      Utilities.free();
     }
   },
 
@@ -601,11 +1181,11 @@ Application.prototype = {
   classDescription : "Application",
   classID : CLASS_ID,
   contractID : CONTRACT_ID,
-  flags : nsIClassInfo.SINGLETON,
-  implementationLanguage : Components.interfaces.nsIProgrammingLanguage.JAVASCRIPT,
+  flags : Ci.nsIClassInfo.SINGLETON,
+  implementationLanguage : Ci.nsIProgrammingLanguage.JAVASCRIPT,
 
   getInterfaces : function app_gi(aCount) {
-    var interfaces = [fuelIApplication, nsIObserver, nsIClassInfo];
+    var interfaces = [Ci.fuelIApplication, Ci.nsIObserver, Ci.nsIClassInfo];
     aCount.value = interfaces.length;
     return interfaces;
   },
@@ -617,10 +1197,10 @@ Application.prototype = {
   // for nsISupports
   QueryInterface: function app_qi(aIID) {
     // add any other interfaces you support here
-    if (aIID.equals(fuelIApplication) ||
-        aIID.equals(nsIObserver) ||
-        aIID.equals(nsIClassInfo) ||
-        aIID.equals(nsISupports))
+    if (aIID.equals(Ci.fuelIApplication) ||
+        aIID.equals(Ci.nsIObserver) ||
+        aIID.equals(Ci.nsIClassInfo) ||
+        aIID.equals(Ci.nsISupports))
     {
       return this;
     }
@@ -657,14 +1237,34 @@ Application.prototype = {
         this._events = new Events();
 
     return this._events;
+  },
+
+  get bookmarks() {
+    if (this._bookmarks == null)
+      this._bookmarks = new BookmarkFolder(null, null);
+
+    return this._bookmarks;
+  },
+  
+  get windows() {
+    var win = [];
+    var enum = Utilities.windowMediator.getEnumerator("navigator:browser");
+    
+    while (enum.hasMoreElements())
+      win.push(new Window(enum.getNext()));
+
+    return win;
+  },
+  
+  get activeWindow() {
+    return new Window(Utilities.windowMediator.getMostRecentWindow("navigator:browser"));
   }
-}
+};
 
 //=================================================
 // Factory - Treat Application as a singleton
 var gSingleton = null;
 var ApplicationFactory = {
-  
   createInstance: function af_ci(aOuter, aIID) {
     if (aOuter != null)
       throw Components.results.NS_ERROR_NO_AGGREGATION;
@@ -681,31 +1281,31 @@ var ApplicationFactory = {
 // Module
 var ApplicationModule = {
   registerSelf: function am_rs(aCompMgr, aFileSpec, aLocation, aType) {
-    aCompMgr = aCompMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+    aCompMgr = aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
     aCompMgr.registerFactoryLocation(CLASS_ID, CLASS_NAME, CONTRACT_ID, aFileSpec, aLocation, aType);
     
     var categoryManager = Components.classes["@mozilla.org/categorymanager;1"]
-                                    .getService(Components.interfaces.nsICategoryManager);
+                                    .getService(Ci.nsICategoryManager);
     // make Application a startup observer
     categoryManager.addCategoryEntry("app-startup", CLASS_NAME, "service," + CONTRACT_ID, true, true);
 
-    // add Application as a global property for easy access                                     
-    categoryManager.addCategoryEntry("JavaScript global property", "Application", CONTRACT_ID, true, true);
+    // add Application as a global property for easy access
+    categoryManager.addCategoryEntry("JavaScript global privileged property", "Application", CONTRACT_ID, true, true);
   },
 
   unregisterSelf: function am_us(aCompMgr, aLocation, aType) {
-    aCompMgr = aCompMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+    aCompMgr = aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
     aCompMgr.unregisterFactoryLocation(CLASS_ID, aLocation);        
 
     // cleanup categories
     var categoryManager = Components.classes["@mozilla.org/categorymanager;1"]
-                                    .getService(Components.interfaces.nsICategoryManager);
+                                    .getService(Ci.nsICategoryManager);
     categoryManager.deleteCategoryEntry("app-startup", "service," + CONTRACT_ID, true);
     categoryManager.deleteCategoryEntry("JavaScript global property", CONTRACT_ID, true);
   },
   
   getClassObject: function am_gco(aCompMgr, aCID, aIID) {
-    if (!aIID.equals(Components.interfaces.nsIFactory))
+    if (!aIID.equals(Ci.nsIFactory))
       throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
 
     if (aCID.equals(CLASS_ID))

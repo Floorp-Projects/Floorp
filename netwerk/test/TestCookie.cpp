@@ -44,6 +44,7 @@
 #include "nsICookie2.h"
 #include <stdio.h>
 #include "plstr.h"
+#include "prprf.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
 #include "nsStringAPI.h"
@@ -642,19 +643,52 @@ main(PRInt32 argc, char *argv[])
       GetACookie(cookieService, "http://multi.path.tests/one/two/three/four/five/six/", nsnull, getter_Copies(cookie));
       rv[0] = CheckResult(cookie.get(), MUST_EQUAL, "test7=path; test6=path; test3=path; test1=path; test5=path; test4=path; test2=path; test8=path");
 
+      allTestsPassed = PrintResult(rv, 1) && allTestsPassed;
+
 
       // *** httponly tests 
       printf("*** Beginning httponly tests...\n");
+
+      // Since this cookie is NOT set via http, setting it fails
+      SetACookieNoHttp(cookieService, "http://httponly.test/", "test=httponly; httponly");
+      GetACookie(cookieService, "http://httponly.test/", nsnull, getter_Copies(cookie));
+      rv[0] = CheckResult(cookie.get(), MUST_BE_NULL);
       // Since this cookie is set via http, it can be retrieved
       SetACookie(cookieService, "http://httponly.test/", nsnull, "test=httponly; httponly", nsnull);
       GetACookie(cookieService, "http://httponly.test/", nsnull, getter_Copies(cookie));
-      rv[0] = CheckResult(cookie.get(), MUST_EQUAL, "test=httponly");
-      // Since this cookie is NOT set via http, it can NOT be retrieved
+      rv[1] = CheckResult(cookie.get(), MUST_EQUAL, "test=httponly");
+      // ... but not by web content
+      GetACookieNoHttp(cookieService, "http://httponly.test/", getter_Copies(cookie));
+      rv[2] = CheckResult(cookie.get(), MUST_BE_NULL);
+      // Non-Http cookies should not replace HttpOnly cookies
+      SetACookie(cookieService, "http://httponly.test/", nsnull, "test=httponly; httponly", nsnull);
+      SetACookieNoHttp(cookieService, "http://httponly.test/", "test=not-httponly");
+      GetACookie(cookieService, "http://httponly.test/", nsnull, getter_Copies(cookie));
+      rv[3] = CheckResult(cookie.get(), MUST_EQUAL, "test=httponly");
+      // ... and, if an HttpOnly cookie already exists, should not be set at all
+      GetACookieNoHttp(cookieService, "http://httponly.test/", getter_Copies(cookie));
+      rv[4] = CheckResult(cookie.get(), MUST_BE_NULL);
+      // Non-Http cookies should not delete HttpOnly cookies
+      SetACookie(cookieService, "http://httponly.test/", nsnull, "test=httponly; httponly", nsnull);
+      SetACookieNoHttp(cookieService, "http://httponly.test/", "test=httponly; max-age=-1");
+      GetACookie(cookieService, "http://httponly.test/", nsnull, getter_Copies(cookie));
+      rv[5] = CheckResult(cookie.get(), MUST_EQUAL, "test=httponly");
+      // ... but HttpOnly cookies should
+      SetACookie(cookieService, "http://httponly.test/", nsnull, "test=httponly; httponly; max-age=-1", nsnull);
+      GetACookie(cookieService, "http://httponly.test/", nsnull, getter_Copies(cookie));
+      rv[6] = CheckResult(cookie.get(), MUST_BE_NULL);
+      // Non-Httponly cookies can replace HttpOnly cookies when set over http
+      SetACookie(cookieService, "http://httponly.test/", nsnull, "test=httponly; httponly", nsnull);
+      SetACookie(cookieService, "http://httponly.test/", nsnull, "test=not-httponly", nsnull);
+      GetACookieNoHttp(cookieService, "http://httponly.test/", getter_Copies(cookie));
+      rv[7] = CheckResult(cookie.get(), MUST_EQUAL, "test=not-httponly");
+      // scripts should not be able to set httponly cookies by replacing an existing non-httponly cookie
+      SetACookie(cookieService, "http://httponly.test/", nsnull, "test=not-httponly", nsnull);
       SetACookieNoHttp(cookieService, "http://httponly.test/", "test=httponly; httponly");
       GetACookieNoHttp(cookieService, "http://httponly.test/", getter_Copies(cookie));
-      rv[1] = CheckResult(cookie.get(), MUST_NOT_EQUAL, "test=httponly");
+      rv[8] = CheckResult(cookie.get(), MUST_EQUAL, "test=not-httponly");
 
-      allTestsPassed = PrintResult(rv, 2) && allTestsPassed;
+      allTestsPassed = PrintResult(rv, 9) && allTestsPassed;
 
 
       // *** nsICookieManager{2} interface tests
@@ -672,6 +706,7 @@ main(PRInt32 argc, char *argv[])
                                            NS_LITERAL_CSTRING("test1"),          // name
                                            NS_LITERAL_CSTRING("yes"),            // value
                                            PR_FALSE,                             // is secure
+                                           PR_FALSE,                             // is httponly
                                            PR_TRUE,                              // is session
                                            LL_MAXINT));                          // expiry time
       rv[2] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("cookiemgr.test"), // domain
@@ -679,6 +714,7 @@ main(PRInt32 argc, char *argv[])
                                            NS_LITERAL_CSTRING("test2"),          // name
                                            NS_LITERAL_CSTRING("yes"),            // value
                                            PR_FALSE,                             // is secure
+                                           PR_TRUE,                              // is httponly
                                            PR_TRUE,                              // is session
                                            LL_MAXINT));                          // expiry time
       rv[3] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("new.domain"),     // domain
@@ -686,6 +722,7 @@ main(PRInt32 argc, char *argv[])
                                            NS_LITERAL_CSTRING("test3"),          // name
                                            NS_LITERAL_CSTRING("yes"),            // value
                                            PR_FALSE,                             // is secure
+                                           PR_FALSE,                             // is httponly
                                            PR_TRUE,                              // is session
                                            LL_MAXINT));                          // expiry time
       // confirm using enumerator
@@ -708,34 +745,94 @@ main(PRInt32 argc, char *argv[])
           newDomainCookie = cookie2;
       }
       rv[5] = i == 3;
+      // check the httpOnly attribute of the second cookie is honored
+      GetACookie(cookieService, "http://cookiemgr.test/foo/", nsnull, getter_Copies(cookie));
+      rv[6] = CheckResult(cookie.get(), MUST_CONTAIN, "test2=yes");
+      GetACookieNoHttp(cookieService, "http://cookiemgr.test/foo/", getter_Copies(cookie));
+      rv[7] = CheckResult(cookie.get(), MUST_NOT_CONTAIN, "test2=yes");
       // check CountCookiesFromHost()
       PRUint32 hostCookies = 0;
-      rv[6] = NS_SUCCEEDED(cookieMgr2->CountCookiesFromHost(NS_LITERAL_CSTRING("cookiemgr.test"), &hostCookies)) &&
+      rv[8] = NS_SUCCEEDED(cookieMgr2->CountCookiesFromHost(NS_LITERAL_CSTRING("cookiemgr.test"), &hostCookies)) &&
               hostCookies == 2;
       // check CookieExists() using the third cookie
       PRBool found;
-      rv[7] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && found;
+      rv[9] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && found;
       // remove the cookie, block it, and ensure it can't be added again
-      rv[8] = NS_SUCCEEDED(cookieMgr->Remove(NS_LITERAL_CSTRING("new.domain"), // domain
-                                             NS_LITERAL_CSTRING("test3"),      // name
-                                             NS_LITERAL_CSTRING("/rabbit"),    // path
-                                             PR_TRUE));                        // is blocked
-      rv[9] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && !found;
-      rv[10] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("new.domain"),     // domain
+      rv[10] = NS_SUCCEEDED(cookieMgr->Remove(NS_LITERAL_CSTRING("new.domain"), // domain
+                                              NS_LITERAL_CSTRING("test3"),      // name
+                                              NS_LITERAL_CSTRING("/rabbit"),    // path
+                                              PR_TRUE));                        // is blocked
+      rv[11] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && !found;
+      rv[12] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("new.domain"),     // domain
                                             NS_LITERAL_CSTRING("/rabbit"),        // path
                                             NS_LITERAL_CSTRING("test3"),          // name
                                             NS_LITERAL_CSTRING("yes"),            // value
                                             PR_FALSE,                             // is secure
+                                            PR_FALSE,                             // is httponly
                                             PR_TRUE,                              // is session
-                                            LL_ZERO));                            // expiry time
-      rv[11] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && !found;
+                                            LL_MININT));                          // expiry time
+      rv[13] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && !found;
       // double-check RemoveAll() using the enumerator
-      rv[12] = NS_SUCCEEDED(cookieMgr->RemoveAll());
-      rv[13] = NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator))) &&
+      rv[14] = NS_SUCCEEDED(cookieMgr->RemoveAll());
+      rv[15] = NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator))) &&
                NS_SUCCEEDED(enumerator->HasMoreElements(&more)) &&
                !more;
 
-      allTestsPassed = PrintResult(rv, 14) && allTestsPassed;
+      allTestsPassed = PrintResult(rv, 16) && allTestsPassed;
+
+
+      // *** eviction and creation ordering tests
+      printf("*** Beginning eviction and creation ordering tests...\n");
+
+      // test that cookies are
+      // a) returned by order of creation time (oldest first, newest last)
+      // b) evicted by order of creation time, if the limit on cookies per host (50) is reached
+      nsCAutoString name;
+      nsCAutoString expected;
+      for (PRInt32 i = 0; i < 60; ++i) {
+        name = NS_LITERAL_CSTRING("test");
+        name.AppendInt(i);
+        name += NS_LITERAL_CSTRING("=creation");
+        SetACookie(cookieService, "http://creation.ordering.tests/", nsnull, name.get(), nsnull);
+
+        if (i >= 10) {
+          expected += name;
+          if (i < 59)
+            expected += NS_LITERAL_CSTRING("; ");
+        }
+      }
+      GetACookie(cookieService, "http://creation.ordering.tests/", nsnull, getter_Copies(cookie));
+      rv[0] = CheckResult(cookie.get(), MUST_EQUAL, expected.get());
+
+      // test that cookies are evicted by order of creation time, if the limit on total cookies
+      // (1000) is reached
+      nsCAutoString host;
+      for (PRInt32 i = 0; i < 1010; ++i) {
+        host = NS_LITERAL_CSTRING("http://eviction.");
+        host.AppendInt(i);
+        host += NS_LITERAL_CSTRING(".tests/");
+        SetACookie(cookieService, host.get(), nsnull, "test=eviction", nsnull);
+      }
+      rv[1] = NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator)));
+      i = 0;
+      rv[2] = PR_FALSE; // init to failure in case we break from the while loop
+      while (NS_SUCCEEDED(enumerator->HasMoreElements(&more)) && more) {
+        nsCOMPtr<nsISupports> cookie;
+        if (NS_FAILED(enumerator->GetNext(getter_AddRefs(cookie)))) break;
+        ++i;
+        
+        // keep tabs on the third cookie, so we can check it later
+        nsCOMPtr<nsICookie2> cookie2(do_QueryInterface(cookie));
+        if (!cookie2) break;
+        nsCAutoString domain;
+        cookie2->GetRawHost(domain);
+        PRInt32 hostNumber;
+        PRInt32 numInts = PR_sscanf(domain.get(), "eviction.%ld.tests", &hostNumber);
+        if (numInts != 1 || hostNumber < 10) break;
+      }
+      rv[2] = i == 1000;
+
+      allTestsPassed = PrintResult(rv, 3) && allTestsPassed;
 
 
       // XXX the following are placeholders: add these tests please!

@@ -367,7 +367,7 @@ GeckoProtocolChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aCont
         if (stricmp(scheme.get(), gCallbacks[i].mScheme.get()) == 0)
         {
             rv = gCallbacks[i].mCallback->GetData(
-                mURI, NS_STATIC_CAST(nsIChannel *,this), mContentType, &mData, &mContentLength);
+                mURI, static_cast<nsIChannel *>(this), mContentType, &mData, &mContentLength);
             if (NS_FAILED(rv)) return rv;
             
             rv = NS_NewByteInputStream(getter_AddRefs(mContentStream),

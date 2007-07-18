@@ -41,11 +41,16 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir  = docshell/test
 
+DIRS += chrome \
+	browser \
+	$(NULL)
+
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
 		test_bug344861.html \
+		test_bug387979.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

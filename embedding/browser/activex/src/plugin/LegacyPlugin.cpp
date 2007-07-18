@@ -432,7 +432,7 @@ GetPluginsContext(PluginInstanceData *pData)
 {
     nsCOMPtr<nsIDOMWindow> window;
     NPN_GetValue(pData->pPluginInstance, NPNVDOMWindow, 
-                 NS_STATIC_CAST(nsIDOMWindow **, getter_AddRefs(window)));
+                 static_cast<nsIDOMWindow **>(getter_AddRefs(window)));
 
     nsCOMPtr<nsIScriptGlobalObject> globalObject(do_QueryInterface(window));
     if (!globalObject)
@@ -443,7 +443,7 @@ GetPluginsContext(PluginInstanceData *pData)
     if (!scriptContext)
         return nsnull;
 
-    return NS_REINTERPRET_CAST(JSContext*, scriptContext->GetNativeContext());
+    return reinterpret_cast<JSContext*>(scriptContext->GetNativeContext());
 }
 
 #endif
@@ -835,7 +835,7 @@ NewControl(const char *pluginType,
             {
                 nsCOMPtr<nsIDOMElement> element;
                 NPN_GetValue(pData->pPluginInstance, NPNVDOMElement, 
-                             NS_STATIC_CAST(nsIDOMElement **, getter_AddRefs(element)));
+                             static_cast<nsIDOMElement **>(getter_AddRefs(element)));
                 if (element)
                 {
                     nsCOMPtr<nsIDOMNode> tagAsNode (do_QueryInterface(element));

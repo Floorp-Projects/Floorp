@@ -128,6 +128,8 @@ GetWidthInfo(nsIRenderingContext *aRenderingContext,
         // Quirk: A cell with "nowrap" set and a coord value for the
         // width which is bigger than the intrinsic minimum width uses
         // that coord value as the minimum width.
+        // This is kept up-to-date with dynamic chnages to nowrap by code in
+        // nsTableCellFrame::AttributeChanged
         if (aIsCell && w > minCoord &&
             aFrame->PresContext()->CompatibilityMode() ==
               eCompatibility_NavQuirks &&

@@ -95,7 +95,7 @@
 <!ENTITY toBeEnabled.label                "This add-on will be enabled when &brandShortName; is restarted.">
 <!ENTITY toBeInstalled.label              "This add-on will be installed when &brandShortName; is restarted.">
 <!ENTITY toBeUninstalled.label            "This add-on will be uninstalled when &brandShortName; is restarted.">
-<!ENTITY toBeUpgraded.label               "This add-on will be upgraded when &brandShortName; is restarted.">
+<!ENTITY toBeUpdated.label                "This add-on will be updated when &brandShortName; is restarted.">
 
 <!ENTITY getExtensions.label              "Get Extensions">
 <!ENTITY getExtensions.tooltip            "Get Extensions from addons.mozilla.org">
@@ -108,6 +108,7 @@
 <!ENTITY updateSuccess.label              "Update completed successfully.">
 <!ENTITY installSuccess.label             "Install completed successfully.">
 <!ENTITY installSuccessRestart.label      "Restart to complete the installation.">
+<!ENTITY updateSuccessRestart.label       "Restart to complete the update.">
 <!ENTITY installWaiting.label             "Waiting...">
 <!ENTITY installIncompatibleUpdate.label  "Checking compatibility...">
 <!ENTITY installFinishing.label           "Installing...">

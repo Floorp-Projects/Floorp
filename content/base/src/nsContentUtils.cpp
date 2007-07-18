@@ -138,6 +138,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIKBStateControl.h"
 #include "nsIMEStateManager.h"
 #include "nsContentErrors.h"
+#include "nsUnicharUtilCIID.h"
+#include "nsICaseConversion.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -176,6 +178,7 @@ nsIContentPolicy *nsContentUtils::sContentPolicyService;
 PRBool nsContentUtils::sTriedToGetContentPolicy = PR_FALSE;
 nsILineBreaker *nsContentUtils::sLineBreaker;
 nsIWordBreaker *nsContentUtils::sWordBreaker;
+nsICaseConversion *nsContentUtils::sCaseConv;
 nsVoidArray *nsContentUtils::sPtrsToPtrsToRelease;
 nsIJSRuntimeService *nsContentUtils::sJSRuntimeService;
 JSRuntime *nsContentUtils::sJSScriptRuntime;
@@ -224,7 +227,7 @@ PR_STATIC_CALLBACK(void)
 EventListenerManagerHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
   EventListenerManagerMapEntry *lm =
-    NS_STATIC_CAST(EventListenerManagerMapEntry *, entry);
+    static_cast<EventListenerManagerMapEntry *>(entry);
 
   // Let the EventListenerManagerMapEntry clean itself up...
   lm->~EventListenerManagerMapEntry();
@@ -270,6 +273,9 @@ nsContentUtils::Init()
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = CallGetService(NS_WBRK_CONTRACTID, &sWordBreaker);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = CallGetService(NS_UNICHARUTIL_CONTRACTID, &sCaseConv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Ignore failure and just don't load images
@@ -667,6 +673,7 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sIOService);
   NS_IF_RELEASE(sLineBreaker);
   NS_IF_RELEASE(sWordBreaker);
+  NS_IF_RELEASE(sCaseConv);
 #ifdef MOZ_XTF
   NS_IF_RELEASE(sXTFService);
 #endif
@@ -683,7 +690,7 @@ nsContentUtils::Shutdown()
   if (sPtrsToPtrsToRelease) {
     for (i = 0; i < sPtrsToPtrsToRelease->Count(); ++i) {
       nsISupports** ptrToPtr =
-        NS_STATIC_CAST(nsISupports**, sPtrsToPtrsToRelease->ElementAt(i));
+        static_cast<nsISupports**>(sPtrsToPtrsToRelease->ElementAt(i));
       NS_RELEASE(*ptrToPtr);
     }
     delete sPtrsToPtrsToRelease;
@@ -708,6 +715,22 @@ nsContentUtils::Shutdown()
       sEventListenerManagersHash.ops = nsnull;
     }
   }
+}
+
+static PRBool IsCallerTrustedForCapability(const char* aCapability)
+{
+  // The secman really should handle UniversalXPConnect case, since that
+  // should include UniversalBrowserRead... doesn't right now, though.
+  PRBool hasCap;
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  if (NS_FAILED(ssm->IsCapabilityEnabled(aCapability, &hasCap)))
+    return PR_FALSE;
+  if (hasCap)
+    return PR_TRUE;
+    
+  if (NS_FAILED(ssm->IsCapabilityEnabled("UniversalXPConnect", &hasCap)))
+    return PR_FALSE;
+  return hasCap;
 }
 
 /**
@@ -748,8 +771,15 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
     return NS_OK;
   }
 
-  return sSecurityManager->CheckSameOriginPrincipal(trustedPrincipal,
-                                                    unTrustedPrincipal);
+  PRBool equal;
+  // XXXbz should we actually have a Subsumes() check here instead?  Or perhaps
+  // a separate method for that, with callers using one or the other?
+  if (NS_FAILED(trustedPrincipal->Equals(unTrustedPrincipal, &equal)) ||
+      !equal) {
+    return NS_ERROR_DOM_PROP_ACCESS_DENIED;
+  }
+
+  return NS_OK;
 }
 
 // static
@@ -768,41 +798,29 @@ nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
     return PR_TRUE;
   }
 
-  nsCOMPtr<nsIPrincipal> systemPrincipal;
-  sSecurityManager->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
-
-  if (subjectPrincipal == systemPrincipal) {
-    // we're running as system, grant access to the node.
-
-    return PR_TRUE;
-  }
-
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(node, PR_FALSE);
 
-  nsresult rv;
-  PRBool enabled = PR_FALSE;
   nsIPrincipal* nodePrincipal = node->NodePrincipal();
-  if (nodePrincipal == systemPrincipal) {
-    // we know subjectPrincipal != systemPrincipal so we can only
-    // access the object if UniversalXPConnect is enabled. We can
-    // avoid wasting time in CheckSameOriginPrincipal
 
-    rv = sSecurityManager->IsCapabilityEnabled("UniversalXPConnect", &enabled);
-    return NS_SUCCEEDED(rv) && enabled;
-  }
+  PRBool subsumes;
+  nsresult rv = subjectPrincipal->Subsumes(nodePrincipal, &subsumes);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = sSecurityManager->CheckSameOriginPrincipal(subjectPrincipal,
-                                                  nodePrincipal);
-  if (NS_SUCCEEDED(rv)) {
+  if (subsumes) {
     return PR_TRUE;
   }
 
-  // see if the caller has otherwise been given the ability to touch
-  // input args to DOM methods
+  // The subject doesn't subsume the node.  Allow access only if the subject
+  // has either "UniversalXPConnect" (if the node has the system principal) or
+  // "UniversalBrowserRead" (in all other cases).
+  PRBool isSystem;
+  rv = sSecurityManager->IsSystemPrincipal(nodePrincipal, &isSystem);
+  isSystem = NS_FAILED(rv) || isSystem;
+  const char* capability =
+    NS_FAILED(rv) || isSystem ? "UniversalXPConnect" : "UniversalBrowserRead";
 
-  rv = sSecurityManager->IsCapabilityEnabled("UniversalBrowserRead", &enabled);
-  return NS_SUCCEEDED(rv) && enabled;
+  return IsCallerTrustedForCapability(capability);
 }
 
 //static
@@ -816,7 +834,7 @@ nsContentUtils::InProlog(nsINode *aNode)
     return PR_FALSE;
   }
 
-  nsIDocument* doc = NS_STATIC_CAST(nsIDocument*, parent);
+  nsIDocument* doc = static_cast<nsIDocument*>(parent);
   nsIContent* root = doc->GetRootContent();
 
   return !root || doc->IndexOf(aNode) < doc->IndexOf(root);
@@ -993,13 +1011,13 @@ nsContentUtils::ReparentContentWrappersInScope(nsIScriptGlobalObject *aOldScope,
   // Try really hard to find a context to work on.
   nsIScriptContext *context = aOldScope->GetContext();
   if (context) {
-    cx = NS_STATIC_CAST(JSContext *, context->GetNativeContext());
+    cx = static_cast<JSContext *>(context->GetNativeContext());
   }
 
   if (!cx) {
     context = aNewScope->GetContext();
     if (context) {
-      cx = NS_STATIC_CAST(JSContext *, context->GetNativeContext());
+      cx = static_cast<JSContext *>(context->GetNativeContext());
     }
 
     if (!cx) {
@@ -1106,22 +1124,6 @@ nsContentUtils::IsCallerChrome()
   }
 
   return is_caller_chrome;
-}
-
-static PRBool IsCallerTrustedForCapability(const char* aCapability)
-{
-  // The secman really should handle UniversalXPConnect case, since that
-  // should include UniversalBrowserRead... doesn't right now, though.
-  PRBool hasCap;
-  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  if (NS_FAILED(ssm->IsCapabilityEnabled(aCapability, &hasCap)))
-    return PR_FALSE;
-  if (hasCap)
-    return PR_TRUE;
-    
-  if (NS_FAILED(ssm->IsCapabilityEnabled("UniversalXPConnect", &hasCap)))
-    return PR_FALSE;
-  return hasCap;
 }
 
 PRBool
@@ -1286,17 +1288,17 @@ nsContentUtils::ComparePosition(nsINode* aNode1,
   // Check if either node is an attribute
   nsIAttribute* attr1 = nsnull;
   if (aNode1->IsNodeOfType(nsINode::eATTRIBUTE)) {
-    attr1 = NS_STATIC_CAST(nsIAttribute*, aNode1);
+    attr1 = static_cast<nsIAttribute*>(aNode1);
     nsIContent* elem = attr1->GetContent();
     // If there is an owner element add the attribute
     // to the chain and walk up to the element
     if (elem) {
       aNode1 = elem;
-      parents1.AppendElement(NS_STATIC_CAST(nsINode*, attr1));
+      parents1.AppendElement(static_cast<nsINode*>(attr1));
     }
   }
   if (aNode2->IsNodeOfType(nsINode::eATTRIBUTE)) {
-    nsIAttribute* attr2 = NS_STATIC_CAST(nsIAttribute*, aNode2);
+    nsIAttribute* attr2 = static_cast<nsIAttribute*>(aNode2);
     nsIContent* elem = attr2->GetContent();
     if (elem == aNode1 && attr1) {
       // Both nodes are attributes on the same element.
@@ -1322,7 +1324,7 @@ nsContentUtils::ComparePosition(nsINode* aNode1,
 
     if (elem) {
       aNode2 = elem;
-      parents2.AppendElement(NS_STATIC_CAST(nsINode*, attr2));
+      parents2.AppendElement(static_cast<nsINode*>(attr2));
     }
   }
 
@@ -1367,8 +1369,8 @@ nsContentUtils::ComparePosition(nsINode* aNode1,
       // IndexOf will return -1 for the attribute making the attribute be
       // considered before any child.
       return parent->IndexOf(child1) < parent->IndexOf(child2) ?
-        NS_STATIC_CAST(PRUint16, nsIDOM3Node::DOCUMENT_POSITION_PRECEDING) :
-        NS_STATIC_CAST(PRUint16, nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING);
+        static_cast<PRUint16>(nsIDOM3Node::DOCUMENT_POSITION_PRECEDING) :
+        static_cast<PRUint16>(nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING);
     }
     parent = child1;
   }
@@ -2046,13 +2048,29 @@ nsContentUtils::SplitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
 }
 
 // static
+nsPresContext*
+nsContentUtils::GetContextForContent(nsIContent* aContent)
+{
+  nsIDocument* doc = aContent->GetCurrentDoc();
+  if (doc) {
+    nsIPresShell *presShell = doc->GetPrimaryShell();
+    if (presShell) {
+      return presShell->GetPresContext();
+    }
+  }
+  return nsnull;
+}
+
+// static
 PRBool
 nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
                              nsIDocument* aLoadingDocument,
+                             nsIPrincipal* aLoadingPrincipal,
                              PRInt16* aImageBlockingStatus)
 {
   NS_PRECONDITION(aURI, "Must have a URI");
   NS_PRECONDITION(aLoadingDocument, "Must have a document");
+  NS_PRECONDITION(aLoadingPrincipal, "Must have a loading principal");
 
   nsresult rv;
 
@@ -2077,9 +2095,10 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
 
   if (appType != nsIDocShell::APP_TYPE_EDITOR) {
     // Editor apps get special treatment here, editors can load images
-    // from anywhere.
+    // from anywhere.  This allows editor to insert images from file://
+    // into documents that are being edited.
     rv = sSecurityManager->
-      CheckLoadURIWithPrincipal(aLoadingDocument->NodePrincipal(), aURI,
+      CheckLoadURIWithPrincipal(aLoadingPrincipal, aURI,
                                 nsIScriptSecurityManager::ALLOW_CHROME);
     if (NS_FAILED(rv)) {
       if (aImageBlockingStatus) {
@@ -2091,11 +2110,15 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
     }
   }
 
+  nsCOMPtr<nsIURI> loadingURI;
+  rv = aLoadingPrincipal->GetURI(getter_AddRefs(loadingURI));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
   PRInt16 decision = nsIContentPolicy::ACCEPT;
 
   rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_IMAGE,
                                  aURI,
-                                 aLoadingDocument->GetDocumentURI(),
+                                 loadingURI,
                                  aContext,
                                  EmptyCString(), //mime guess
                                  nsnull,         //extra
@@ -2112,11 +2135,13 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
 // static
 nsresult
 nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
-                          nsIURI* aReferrer, imgIDecoderObserver* aObserver,
-                          PRInt32 aLoadFlags, imgIRequest** aRequest)
+                          nsIPrincipal* aLoadingPrincipal, nsIURI* aReferrer,
+                          imgIDecoderObserver* aObserver, PRInt32 aLoadFlags,
+                          imgIRequest** aRequest)
 {
   NS_PRECONDITION(aURI, "Must have a URI");
   NS_PRECONDITION(aLoadingDocument, "Must have a document");
+  NS_PRECONDITION(aLoadingPrincipal, "Must have a principal");
   NS_PRECONDITION(aRequest, "Null out param");
 
   if (!sImgLoader) {
@@ -2128,6 +2153,9 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
   NS_ASSERTION(loadGroup, "Could not get loadgroup; onload may fire too early");
 
   nsIURI *documentURI = aLoadingDocument->GetDocumentURI();
+
+  // We don't use aLoadingPrincipal for anything here yet... but we
+  // will.  See bug 377092.
 
   // XXXbz using "documentURI" for the initialDocumentURI is not quite
   // right, but the best we can do here...
@@ -2959,18 +2987,15 @@ nsContentUtils::HasNonEmptyAttr(nsIContent* aContent, PRInt32 aNameSpaceID,
 /* static */
 PRBool
 nsContentUtils::HasMutationListeners(nsINode* aNode,
-                                     PRUint32 aType)
+                                     PRUint32 aType,
+                                     nsINode* aTargetForSubtreeModified)
 {
   nsIDocument* doc = aNode->GetOwnerDoc();
   if (!doc) {
     return PR_FALSE;
   }
 
-  // To batch DOMSubtreeModified properly, all mutation events should be
-  // processed if one is being processed already.
-  if (doc->MutationEventBeingDispatched()) {
-    return PR_TRUE;
-  }
+  doc->MayDispatchMutationEvent(aTargetForSubtreeModified);
 
   // global object will be null for documents that don't have windows.
   nsCOMPtr<nsPIDOMWindow> window;
@@ -3023,8 +3048,8 @@ nsContentUtils::TraverseListenerManager(nsINode *aNode,
   }
 
   EventListenerManagerMapEntry *entry =
-    NS_STATIC_CAST(EventListenerManagerMapEntry *,
-                   PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
+    static_cast<EventListenerManagerMapEntry *>
+               (PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
                                         PL_DHASH_LOOKUP));
   if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
     cb.NoteXPCOMChild(entry->mListenerManager);
@@ -3051,8 +3076,8 @@ nsContentUtils::GetListenerManager(nsINode *aNode,
 
   if (!aCreateIfNotFound) {
     EventListenerManagerMapEntry *entry =
-      NS_STATIC_CAST(EventListenerManagerMapEntry *,
-                     PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
+      static_cast<EventListenerManagerMapEntry *>
+                 (PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
                                           PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
       *aResult = entry->mListenerManager;
@@ -3062,8 +3087,8 @@ nsContentUtils::GetListenerManager(nsINode *aNode,
   }
 
   EventListenerManagerMapEntry *entry =
-    NS_STATIC_CAST(EventListenerManagerMapEntry *,
-                   PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
+    static_cast<EventListenerManagerMapEntry *>
+               (PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
                                         PL_DHASH_ADD));
 
   if (!entry) {
@@ -3096,8 +3121,8 @@ nsContentUtils::RemoveListenerManager(nsINode *aNode)
 {
   if (sEventListenerManagersHash.ops) {
     EventListenerManagerMapEntry *entry =
-      NS_STATIC_CAST(EventListenerManagerMapEntry *,
-                     PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
+      static_cast<EventListenerManagerMapEntry *>
+                 (PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
                                           PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
       nsCOMPtr<nsIEventListenerManager> listenerManager;
@@ -3410,7 +3435,7 @@ nsContentUtils::AppendNodeTextContent(nsINode* aNode, PRBool aDeep,
                                       nsAString& aResult)
 {
   if (aNode->IsNodeOfType(nsINode::eTEXT)) {
-    NS_STATIC_CAST(nsIContent*, aNode)->AppendTextTo(aResult);
+    static_cast<nsIContent*>(aNode)->AppendTextTo(aResult);
   }
   else if (aDeep) {
     AppendNodeTextContentsRecurse(aNode, aResult);
@@ -3462,7 +3487,7 @@ nsContentUtils::IsInSameAnonymousTree(nsINode* aNode,
     return aContent->GetBindingParent() == nsnull;
   }
 
-  return NS_STATIC_CAST(nsIContent*, aNode)->GetBindingParent() ==
+  return static_cast<nsIContent*>(aNode)->GetBindingParent() ==
          aContent->GetBindingParent();
  
 }
@@ -3495,6 +3520,7 @@ nsContentUtils::GetDOMScriptObjectFactory()
 nsresult
 nsContentUtils::HoldScriptObject(PRUint32 aLangID, void *aObject)
 {
+  NS_ASSERTION(aObject, "unexpected null object");
   nsresult rv;
 
   PRUint32 langIndex = NS_STID_INDEX(aLangID);
@@ -3514,6 +3540,8 @@ nsContentUtils::HoldScriptObject(PRUint32 aLangID, void *aObject)
   NS_ENSURE_SUCCESS(rv, rv);
 
   ++sScriptRootCount[langIndex];
+  NS_LOG_ADDREF(sScriptRuntimes[langIndex], sScriptRootCount[langIndex],
+                "HoldScriptObject", sizeof(void*));
 
   return NS_OK;
 }
@@ -3522,7 +3550,10 @@ nsContentUtils::HoldScriptObject(PRUint32 aLangID, void *aObject)
 nsresult
 nsContentUtils::DropScriptObject(PRUint32 aLangID, void *aObject)
 {
+  NS_ASSERTION(aObject, "unexpected null object");
   PRUint32 langIndex = NS_STID_INDEX(aLangID);
+  NS_LOG_RELEASE(sScriptRuntimes[langIndex], sScriptRootCount[langIndex] - 1,
+                 "HoldScriptObject");
   nsresult rv = sScriptRuntimes[langIndex]->DropScriptObject(aObject);
   if (--sScriptRootCount[langIndex] == 0) {
     NS_RELEASE(sScriptRuntimes[langIndex]);
@@ -3605,4 +3636,47 @@ nsContentUtils::CheckSecurityBeforeLoad(nsIURI* aURIToLoad,
     return NS_OK;
   }
   return sSecurityManager->CheckSameOriginURI(loadingURI, aURIToLoad);
+}
+
+/* static */
+void
+nsContentUtils::TriggerLink(nsIContent *aContent, nsPresContext *aPresContext,
+                            nsIURI *aLinkURI, const nsString &aTargetSpec,
+                            PRBool aClick, PRBool aIsUserTriggered)
+{
+  NS_ASSERTION(aPresContext, "Need a nsPresContext");
+  NS_PRECONDITION(aLinkURI, "No link URI");
+
+  if (aContent->IsEditable()) {
+    return;
+  }
+
+  nsILinkHandler *handler = aPresContext->GetLinkHandler();
+  if (!handler) {
+    return;
+  }
+
+  if (!aClick) {
+    handler->OnOverLink(aContent, aLinkURI, aTargetSpec.get());
+
+    return;
+  }
+
+  // Check that this page is allowed to load this URI.
+  nsresult proceed = NS_OK;
+
+  if (sSecurityManager) {
+    PRUint32 flag =
+      aIsUserTriggered ?
+      (PRUint32)nsIScriptSecurityManager::STANDARD :
+      (PRUint32)nsIScriptSecurityManager::LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT;
+    proceed =
+      sSecurityManager->CheckLoadURIWithPrincipal(aContent->NodePrincipal(),
+                                                  aLinkURI, flag);
+  }
+
+  // Only pass off the click event if the script security manager says it's ok.
+  if (NS_SUCCEEDED(proceed)) {
+    handler->OnLinkClick(aContent, aLinkURI, aTargetSpec.get());
+  }
 }

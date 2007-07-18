@@ -67,24 +67,11 @@ public:
 
   nsPlaceholderFrame* mPlaceholder;     // nsPlaceholderFrame
 
-  // This will be true if the float was placed on the current line
-  // instead of below the current line.
-  PRBool mIsCurrentLineFloat;
-
-  nsMargin mMargins;                    // computed margins
-
-  nsMargin mOffsets;                    // computed offsets (relative pos)
-
   // Region in the spacemanager impacted by this float; the
   // coordinates are relative to the containing block frame. The
   // region includes the margins around the float, but doesn't
   // include the relative offsets.
   nsRect mRegion;
-
-  // Combined area for the float. This will not include the margins
-  // for the float. Like mRegion, the coordinates are relative to
-  // the containing block frame.
-  nsRect mCombinedArea;
 
 protected:
   nsFloatCache* mNext;
@@ -623,7 +610,7 @@ class nsLineList_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return *NS_STATIC_CAST(pointer, mCurrent);
+      return *static_cast<pointer>(mCurrent);
     }
 
     pointer operator->()
@@ -631,7 +618,7 @@ class nsLineList_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return NS_STATIC_CAST(pointer, mCurrent);
+      return static_cast<pointer>(mCurrent);
     }
 
     pointer get()
@@ -639,7 +626,7 @@ class nsLineList_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return NS_STATIC_CAST(pointer, mCurrent);
+      return static_cast<pointer>(mCurrent);
     }
 
     operator pointer()
@@ -647,7 +634,7 @@ class nsLineList_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return NS_STATIC_CAST(pointer, mCurrent);
+      return static_cast<pointer>(mCurrent);
     }
 
     const_reference operator*() const
@@ -655,7 +642,7 @@ class nsLineList_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return *NS_STATIC_CAST(const_pointer, mCurrent);
+      return *static_cast<const_pointer>(mCurrent);
     }
 
     const_pointer operator->() const
@@ -663,7 +650,7 @@ class nsLineList_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return NS_STATIC_CAST(const_pointer, mCurrent);
+      return static_cast<const_pointer>(mCurrent);
     }
 
 #ifndef __MWERKS__
@@ -672,7 +659,7 @@ class nsLineList_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return NS_STATIC_CAST(const_pointer, mCurrent);
+      return static_cast<const_pointer>(mCurrent);
     }
 #endif /* !__MWERKS__ */
 
@@ -702,15 +689,34 @@ class nsLineList_iterator {
 
     // Passing by value rather than by reference and reference to const
     // to keep AIX happy.
-    // XXX Should add assertions that |mListLink| is the same for both.
     PRBool operator==(const iterator_self_type aOther) const
-        { return mCurrent == aOther.mCurrent; }
+    {
+#ifdef NS_LINELIST_DEBUG_PASS_END
+      NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
+#endif
+      return mCurrent == aOther.mCurrent;
+    }
     PRBool operator!=(const iterator_self_type aOther) const
-        { return mCurrent != aOther.mCurrent; }
+    {
+#ifdef NS_LINELIST_DEBUG_PASS_END
+      NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
+#endif
+      return mCurrent != aOther.mCurrent;
+    }
     PRBool operator==(const iterator_self_type aOther)
-        { return mCurrent == aOther.mCurrent; }
+    {
+#ifdef NS_LINELIST_DEBUG_PASS_END
+      NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
+#endif
+      return mCurrent == aOther.mCurrent;
+    }
     PRBool operator!=(const iterator_self_type aOther)
-        { return mCurrent != aOther.mCurrent; }
+    {
+#ifdef NS_LINELIST_DEBUG_PASS_END
+      NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
+#endif
+      return mCurrent != aOther.mCurrent;
+    }
 
   private:
     link_type *mCurrent;
@@ -785,7 +791,7 @@ class nsLineList_reverse_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return *NS_STATIC_CAST(pointer, mCurrent);
+      return *static_cast<pointer>(mCurrent);
     }
 
     pointer operator->()
@@ -793,7 +799,7 @@ class nsLineList_reverse_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return NS_STATIC_CAST(pointer, mCurrent);
+      return static_cast<pointer>(mCurrent);
     }
 
     pointer get()
@@ -801,7 +807,7 @@ class nsLineList_reverse_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return NS_STATIC_CAST(pointer, mCurrent);
+      return static_cast<pointer>(mCurrent);
     }
 
     operator pointer()
@@ -809,7 +815,7 @@ class nsLineList_reverse_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return NS_STATIC_CAST(pointer, mCurrent);
+      return static_cast<pointer>(mCurrent);
     }
 
     const_reference operator*() const
@@ -817,7 +823,7 @@ class nsLineList_reverse_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return *NS_STATIC_CAST(const_pointer, mCurrent);
+      return *static_cast<const_pointer>(mCurrent);
     }
 
     const_pointer operator->() const
@@ -825,7 +831,7 @@ class nsLineList_reverse_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return NS_STATIC_CAST(const_pointer, mCurrent);
+      return static_cast<const_pointer>(mCurrent);
     }
 
 #ifndef __MWERKS__
@@ -834,7 +840,7 @@ class nsLineList_reverse_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return NS_STATIC_CAST(const_pointer, mCurrent);
+      return static_cast<const_pointer>(mCurrent);
     }
 #endif /* !__MWERKS__ */
 
@@ -927,7 +933,7 @@ class nsLineList_const_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return *NS_STATIC_CAST(const_pointer, mCurrent);
+      return *static_cast<const_pointer>(mCurrent);
     }
 
     const_pointer operator->() const
@@ -935,7 +941,7 @@ class nsLineList_const_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return NS_STATIC_CAST(const_pointer, mCurrent);
+      return static_cast<const_pointer>(mCurrent);
     }
 
     const_pointer get() const
@@ -943,7 +949,7 @@ class nsLineList_const_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return NS_STATIC_CAST(const_pointer, mCurrent);
+      return static_cast<const_pointer>(mCurrent);
     }
 
 #ifndef __MWERKS__
@@ -952,7 +958,7 @@ class nsLineList_const_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return NS_STATIC_CAST(const_pointer, mCurrent);
+      return static_cast<const_pointer>(mCurrent);
     }
 #endif /* !__MWERKS__ */
 
@@ -1057,7 +1063,7 @@ class nsLineList_const_reverse_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return *NS_STATIC_CAST(const_pointer, mCurrent);
+      return *static_cast<const_pointer>(mCurrent);
     }
 
     const_pointer operator->() const
@@ -1065,7 +1071,7 @@ class nsLineList_const_reverse_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return NS_STATIC_CAST(const_pointer, mCurrent);
+      return static_cast<const_pointer>(mCurrent);
     }
 
     const_pointer get() const
@@ -1073,7 +1079,7 @@ class nsLineList_const_reverse_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return NS_STATIC_CAST(const_pointer, mCurrent);
+      return static_cast<const_pointer>(mCurrent);
     }
 
 #ifndef __MWERKS__
@@ -1082,7 +1088,7 @@ class nsLineList_const_reverse_iterator {
 #ifdef NS_LINELIST_DEBUG_PASS_END
       NS_ASSERTION(mCurrent != mListLink, "running past end");
 #endif
-      return NS_STATIC_CAST(const_pointer, mCurrent);
+      return static_cast<const_pointer>(mCurrent);
     }
 #endif /* !__MWERKS__ */
 
@@ -1251,25 +1257,25 @@ class nsLineList {
     pointer front()
     {
       NS_ASSERTION(!empty(), "no element to return");
-      return NS_STATIC_CAST(pointer, mLink._mNext);
+      return static_cast<pointer>(mLink._mNext);
     }
 
     const_pointer front() const
     {
       NS_ASSERTION(!empty(), "no element to return");
-      return NS_STATIC_CAST(const_pointer, mLink._mNext);
+      return static_cast<const_pointer>(mLink._mNext);
     }
 
     pointer back()
     {
       NS_ASSERTION(!empty(), "no element to return");
-      return NS_STATIC_CAST(pointer, mLink._mPrev);
+      return static_cast<pointer>(mLink._mPrev);
     }
 
     const_pointer back() const
     {
       NS_ASSERTION(!empty(), "no element to return");
-      return NS_STATIC_CAST(const_pointer, mLink._mPrev);
+      return static_cast<const_pointer>(mLink._mPrev);
     }
 
     void push_front(pointer aNew)

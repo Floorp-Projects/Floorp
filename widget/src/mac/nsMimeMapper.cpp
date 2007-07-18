@@ -273,7 +273,7 @@ nsMimeMapperMac::ExportMapping ( short * outLength ) const
   // create a string of that length and fill it in with each mapping. We have to
   // consider the possibility that there aren't any generic (internal mozilla) flavors
   // so the map could be empty.
-  exportBuffer = NS_STATIC_CAST(char*, nsMemory::Alloc(len + 1));      // don't forget the NULL
+  exportBuffer = static_cast<char*>(nsMemory::Alloc(len + 1));      // don't forget the NULL
   if ( !exportBuffer )
     return nsnull;
   *exportBuffer = '\0';                          // null terminate at the start for strcat()

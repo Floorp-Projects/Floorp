@@ -38,7 +38,7 @@
 var gTestfile = 'regress-361360.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 361360;
-var summary = 'Assertion: !caller || caller->pc involving setter and watch';
+var summary = 'Do not assert: !caller || caller->pc involving setter and watch';
 var actual = '';
 var expect = '';
 

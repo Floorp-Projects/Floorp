@@ -1161,7 +1161,7 @@ nsChromeRegistry::LoadDataSource(const nsACString &aFileName,
   {
     nsCStringKey skey(key);
     nsCOMPtr<nsISupports> supports =
-      getter_AddRefs(NS_STATIC_CAST(nsISupports*, mDataSourceTable->Get(&skey)));
+      getter_AddRefs(static_cast<nsISupports*>(mDataSourceTable->Get(&skey)));
 
     if (supports)
     {

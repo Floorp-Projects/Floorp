@@ -321,7 +321,7 @@ nsHTMLCanvasElement::ToDataURL(nsAString& aDataURL)
     if (!JSVAL_IS_STRING(argv[0]))
       return NS_ERROR_DOM_SYNTAX_ERR;
     JSString *type = JS_ValueToString(ctx, argv[0]);
-    return ToDataURLImpl (nsDependentString(NS_REINTERPRET_CAST(PRUnichar*,(JS_GetStringChars(type)))),
+    return ToDataURLImpl (nsDependentString(reinterpret_cast<PRUnichar*>((JS_GetStringChars(type)))),
                           EmptyString(), aDataURL);
   }
 
@@ -334,8 +334,8 @@ nsHTMLCanvasElement::ToDataURL(nsAString& aDataURL)
     type = JS_ValueToString(ctx, argv[0]);
     params = JS_ValueToString(ctx, argv[1]);
 
-    return ToDataURLImpl (nsDependentString(NS_REINTERPRET_CAST(PRUnichar*,JS_GetStringChars(type))),
-                          nsDependentString(NS_REINTERPRET_CAST(PRUnichar*,JS_GetStringChars(params))),
+    return ToDataURLImpl (nsDependentString(reinterpret_cast<PRUnichar*>(JS_GetStringChars(type))),
+                          nsDependentString(reinterpret_cast<PRUnichar*>(JS_GetStringChars(params))),
                           aDataURL);
   }
 
@@ -455,10 +455,16 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
       return NS_ERROR_INVALID_ARG;
 
     rv = mCurrentContext->SetCanvasElement(this);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      mCurrentContext = nsnull;
+      return rv;
+    }
 
     rv = UpdateContext();
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      mCurrentContext = nsnull;
+      return rv;
+    }
 
     mCurrentContextId.Assign(aContextId);
   } else if (!mCurrentContextId.Equals(aContextId)) {

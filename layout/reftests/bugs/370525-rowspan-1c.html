@@ -1,0 +1,23 @@
+<html>
+<head>
+<link rel="stylesheet" href="370525-style.css"/>
+</head>
+
+<body>
+rowspan=2 on the cell with the percent-height div, with specified
+height on a sibling. Also, does not explicitly create 2nd row.
+<table>
+ <tr>
+   <td style="background: lightgreen" rowspan="2">
+    <div style="height: 75%">
+     height=75% / 150px
+    </div>
+    blah
+   </td>
+   <td  style="background: lightblue" height="200px">
+    height=200px.
+   </td>
+ </tr>
+</table>
+</body>
+</html>

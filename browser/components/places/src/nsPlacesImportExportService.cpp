@@ -56,8 +56,8 @@
  * Bookmark := a
  *   HREF is the destination of the bookmark
  *   FEEDURL is the URI of the RSS feed if this is a livemark.
- *   LAST_CHARSET should be stored as an annotation (FIXME bug 334408) so that the
- *     next time we go to that page we remember the user's preference.
+ *   LAST_CHARSET is stored as an annotation so that the next time we go to
+ *     that page we remember the user's preference.
  *   WEB_PANEL is set to "true" if the bookmark should be loaded in the sidebar.
  *   ICON will be stored in the favicon service
  *   ICON_URI is new for places bookmarks.html, it refers to the original
@@ -102,11 +102,12 @@
 #include "nsToolkitCompsCID.h"
 #include "nsIHTMLContentSink.h"
 #include "nsIParser.h"
+#include "prprf.h"
 
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
 #define KEY_TOOLBARFOLDER_LOWER "personal_toolbar_folder"
-#define KEY_BOOKMARKSSMENU_LOWER "bookmarks_menu"
+#define KEY_BOOKMARKSMENU_LOWER "bookmarks_menu"
 #define KEY_PLACESROOT_LOWER "places_root"
 #define KEY_HREF_LOWER "href"
 #define KEY_FEEDURL_LOWER "feedurl"
@@ -116,7 +117,6 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 #define KEY_ICON_URI_LOWER "icon_uri"
 #define KEY_SHORTCUTURL_LOWER "shortcuturl"
 #define KEY_POST_DATA_LOWER "post_data"
-#define KEY_ITEM_ID_LOWER "item_id"
 #define KEY_NAME_LOWER "name"
 #define KEY_MICSUM_GEN_URI_LOWER "micsum_gen_uri"
 #define KEY_GENERATED_TITLE_LOWER "generated_title"
@@ -127,8 +127,9 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 #define DESCRIPTION_ANNO NS_LITERAL_CSTRING("bookmarkProperties/description")
 #define POST_DATA_ANNO NS_LITERAL_CSTRING("URIProperties/POSTData")
 #define GENERATED_TITLE_ANNO NS_LITERAL_CSTRING("bookmarks/generatedTitle")
+#define LAST_CHARSET_ANNO NS_LITERAL_CSTRING("URIProperties/characterSet")
 
-#define BOOKMARKSS_MENU_ICON_URI "chrome://browser/skin/places/bookmarksMenu.png"
+#define BOOKMARKS_MENU_ICON_URI "chrome://browser/skin/places/bookmarksMenu.png"
 
 // define to get debugging messages on console about import/export
 //#define DEBUG_IMPORT
@@ -179,9 +180,6 @@ public:
   // special. 'ConsumeHeading' resets this.
   ContainerType mLastContainerType;
 
-  // Container Id, see above
-  PRInt64 mLastContainerId;
-
   // this contains the text from the last begin tag until now. It is reset
   // at every begin tag. We can check it when we see a </a>, or </h3>
   // to see what the text content of that node should be.
@@ -212,11 +210,10 @@ public:
   // and the livemark title is known, we can create it.
   nsCOMPtr<nsIURI> mPreviousFeed;
 
-  void ConsumeHeading(nsAString* aHeading, ContainerType* aContainerType, PRInt64* aContainerId)
+  void ConsumeHeading(nsAString* aHeading, ContainerType* aContainerType)
   {
     *aHeading = mPreviousText;
     *aContainerType = mLastContainerType;
-    *aContainerId = mLastContainerId;
     mPreviousText.Truncate();
   }
 
@@ -371,12 +368,15 @@ protected:
   // in the hierarchy, to where we find them in the bookmarks file
   // being imported. This should be set when we are loading 
   // the default places html file, and should be unset when doing
-  // normal imports so that root folders will not get moved  when
+  // normal imports so that root folders will not get moved when
   // importing bookmarks.html files.
   PRBool mAllowRootChanges;
 
   // if set, this is an import of initial bookmarks.html content,
   // so we don't want to kick off HTTP traffic
+  // and we want the imported personal toolbar folder
+  // to be set as the personal toolbar folder.  (if not set
+  // we will treat it as a normal folder.)
   PRBool mIsImportDefaults;
 
   // If a folder was specified to import into, then ignore flags to put
@@ -650,8 +650,17 @@ BookmarkContentSink::HandleContainerEnd()
   BookmarkImportFrame& frame = CurFrame();
   if (frame.mContainerNesting > 0)
     frame.mContainerNesting --;
-  if (mFrames.Length() > 1 && frame.mContainerNesting == 0)
+  if (mFrames.Length() > 1 && frame.mContainerNesting == 0) {
+    // we also need to re-set the imported last-modified date here. Otherwise
+    // the addition of items will override the imported field.
+    BookmarkImportFrame& prevFrame = PreviousFrame();
+    if (prevFrame.mPreviousLastModifiedDate > 0) {
+      nsresult rv = mBookmarksService->SetItemLastModified(frame.mContainerID,
+                                                           prevFrame.mPreviousLastModifiedDate);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "SetItemLastModified failed");
+    }
     PopFrame();
+  }
 }
 
 
@@ -700,7 +709,6 @@ BookmarkContentSink::HandleHeadBegin(const nsIParserNode& node)
   // the descriptions contained in a <dd>). Neither is any previous head type
   frame.mPreviousLink = nsnull;
   frame.mLastContainerType = BookmarkImportFrame::Container_Normal;
-  frame.mLastContainerId = 0;
 
   // It is syntactically possible for a heading to appear after another heading
   // but before the <dl> that encloses that folder's contents.  This should not
@@ -727,17 +735,17 @@ BookmarkContentSink::HandleHeadBegin(const nsIParserNode& node)
   if (!mFolderSpecified) {
     for (PRInt32 i = 0; i < attrCount; i ++) {
       if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_TOOLBARFOLDER_LOWER)) {
-        frame.mLastContainerType = BookmarkImportFrame::Container_Toolbar;
+        if (mIsImportDefaults)
+          frame.mLastContainerType = BookmarkImportFrame::Container_Toolbar;
         break;
-      } else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_BOOKMARKSSMENU_LOWER)) {
-        frame.mLastContainerType = BookmarkImportFrame::Container_Menu;
+      } else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_BOOKMARKSMENU_LOWER)) {
+        if (mIsImportDefaults)
+          frame.mLastContainerType = BookmarkImportFrame::Container_Menu;
         break;
       } else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_PLACESROOT_LOWER)) {
-        frame.mLastContainerType = BookmarkImportFrame::Container_Places;
+        if (mIsImportDefaults)
+          frame.mLastContainerType = BookmarkImportFrame::Container_Places;
         break;
-      } else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_ITEM_ID_LOWER)) {
-        frame.mLastContainerId =
-          ConvertImportedIdToInternalId(NS_ConvertUTF16toUTF8(node.GetValueAt(i)));
       } else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_DATE_ADDED_LOWER)) {
         frame.mPreviousDateAdded =
           ConvertImportedDateToInternalDate(NS_ConvertUTF16toUTF8(node.GetValueAt(i)));
@@ -820,8 +828,6 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
       postData = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_WEB_PANEL_LOWER)) {
       webPanel = node.GetValueAt(i);
-    } else if (key.LowerCaseEqualsLiteral(KEY_ITEM_ID_LOWER)) {
-      itemId = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_MICSUM_GEN_URI_LOWER)) {
       micsumGenURI = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_GENERATED_TITLE_LOWER)) {
@@ -950,11 +956,9 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   // recalculated by the microsummary service
   if (!micsumGenURI.IsEmpty()) {
     nsCOMPtr<nsIURI> micsumGenURIObject;
-    nsCOMPtr<nsIURI> hrefObject;
-    if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(micsumGenURIObject), micsumGenURI)) &&
-        NS_SUCCEEDED(NS_NewURI(getter_AddRefs(hrefObject), href))) {
+    if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(micsumGenURIObject), micsumGenURI))) {
       nsCOMPtr<nsIMicrosummary> microsummary;
-      mMicrosummaryService->CreateMicrosummary(hrefObject, micsumGenURIObject,
+      mMicrosummaryService->CreateMicrosummary(frame.mPreviousLink, micsumGenURIObject,
                                                getter_AddRefs(microsummary));
       mMicrosummaryService->SetMicrosummary(frame.mPreviousId, microsummary);
 
@@ -966,7 +970,16 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
     }
   }
 
-  // FIXME bug 334408: save the last charset
+  // import last charset
+  if (!lastCharset.IsEmpty()) {
+    PRBool hasCharset = PR_FALSE;
+    mAnnotationService->PageHasAnnotation(frame.mPreviousLink,
+                                          LAST_CHARSET_ANNO, &hasCharset);
+    if (!hasCharset)
+      mAnnotationService->SetPageAnnotationString(frame.mPreviousLink, LAST_CHARSET_ANNO,
+                                                  lastCharset, 0,
+                                                  nsIAnnotationService::EXPIRE_NEVER);
+  }
 }
 
 
@@ -1072,67 +1085,34 @@ BookmarkContentSink::HandleSeparator(const nsIParserNode& aNode)
 {
   BookmarkImportFrame& frame = CurFrame();
 
-  // check for pre-existing id
-  PRInt64 id = 0;
-  nsAutoString itemIdAttr;
+  // create the separator
+
+#ifdef DEBUG_IMPORT
+  PrintNesting();
+  printf("--------\n");
+#endif
+
+  PRInt64 itemId;
+  mBookmarksService->InsertSeparator(frame.mContainerID,
+                                     mBookmarksService->DEFAULT_INDEX,
+                                     &itemId);
+  // Import separator title if set
+  nsAutoString name;
   PRInt32 attrCount = aNode.GetAttributeCount();
   for (PRInt32 i = 0; i < attrCount; i ++) {
     const nsAString& key = aNode.GetKeyAt(i);
-    if (key.LowerCaseEqualsLiteral(KEY_ITEM_ID_LOWER)) {
-      itemIdAttr = aNode.GetValueAt(i);
-    }
+    if (key.LowerCaseEqualsLiteral(KEY_NAME_LOWER))
+      name = aNode.GetValueAt(i);
   }
+  name.Trim(kWhitespace);
 
-  itemIdAttr.Trim(kWhitespace);
-  id = ConvertImportedIdToInternalId(NS_ConvertUTF16toUTF8(itemIdAttr));
+  if (!name.IsEmpty())
+    mBookmarksService->SetItemTitle(itemId, name);
 
-  // check id validity
-  if (id > 0) {
-    PRInt64 parent;
-    nsresult rv = mBookmarksService->GetFolderIdForItem(id, &parent);
-    if (NS_FAILED(rv) || parent != frame.mContainerID) {
-      id = 0;
-    }
-  }
-
-  if (id > 0) {
-    PRUint16 type;
-    nsresult rv = mBookmarksService->GetItemType(id, &type);
-    if (NS_FAILED(rv) || type != mBookmarksService->TYPE_SEPARATOR) {
-      id = 0;
-    }
-  }
-
-  if (id == 0) {
-    // create the separator
-
-#ifdef DEBUG_IMPORT
-    PrintNesting();
-    printf("--------\n");
-#endif
-
-    PRInt64 itemId;
-    mBookmarksService->InsertSeparator(frame.mContainerID,
-                                       mBookmarksService->DEFAULT_INDEX,
-                                       &itemId);
-    // Import separator title if set
-    nsAutoString name;
-    PRInt32 attrCount = aNode.GetAttributeCount();
-    for (PRInt32 i = 0; i < attrCount; i ++) {
-      const nsAString& key = aNode.GetKeyAt(i);
-      if (key.LowerCaseEqualsLiteral(KEY_NAME_LOWER))
-        name = aNode.GetValueAt(i);
-    }
-    name.Trim(kWhitespace);
-
-    if (!name.IsEmpty())
-      mBookmarksService->SetItemTitle(itemId, name);
-
-    // Note: we do not need to import ADD_DATE or LAST_MODIFIED for separators
-    // because pre-Places bookmarks does not support them.
-    // and we can't write them out because attributes other than NAME make Firefox 2.x
-    // crash/hang - see bug #381129
-  }
+  // Note: we do not need to import ADD_DATE or LAST_MODIFIED for separators
+  // because pre-Places bookmarks does not support them.
+  // and we can't write them out because attributes other than NAME
+  // will make Firefox 2.x crash/hang - see bug #381129
 }
 
 
@@ -1149,73 +1129,58 @@ BookmarkContentSink::NewFrame()
   PRInt64 ourID = 0;
   nsString containerName;
   BookmarkImportFrame::ContainerType containerType;
-  CurFrame().ConsumeHeading(&containerName, &containerType, &ourID);
+  CurFrame().ConsumeHeading(&containerName, &containerType);
 
   PRBool updateFolder = PR_FALSE;
-
-  if (ourID > 0) {
-    // Check that folder id is valid.
-    PRInt64 ourParentId;
-    rv = mBookmarksService->GetFolderIdForItem(ourID, &ourParentId);
-    if (NS_FAILED(rv) || ourParentId != CurFrame().mContainerID) {
-      ourID = 0;
-    }
+  
+  switch (containerType) {
+    case BookmarkImportFrame::Container_Normal:
+      // append a new folder
+      rv = mBookmarksService->CreateFolder(CurFrame().mContainerID,
+                                           containerName,
+                                           mBookmarksService->DEFAULT_INDEX, 
+                                           &ourID);
+      NS_ENSURE_SUCCESS(rv, rv);
+      break;
+    case BookmarkImportFrame::Container_Places:
+      // places root, never reparent here, when we're building the initial
+      // hierarchy, it will only be defined at the top level
+      rv = mBookmarksService->GetPlacesRoot(&ourID);
+      NS_ENSURE_SUCCESS(rv, rv);
+      break;
+    case BookmarkImportFrame::Container_Menu:
+      // menu root
+      rv = mBookmarksService->GetBookmarksRoot(&ourID);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (mAllowRootChanges) {
+        updateFolder = PR_TRUE;
+        rv = SetFaviconForFolder(ourID, NS_LITERAL_CSTRING(BOOKMARKS_MENU_ICON_URI));
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      break;
+    case BookmarkImportFrame::Container_Toolbar:
+      // get toolbar folder
+      PRInt64 toolbarFolder;
+      rv = mBookmarksService->GetToolbarFolder(&toolbarFolder);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (!toolbarFolder) {
+        // create new folder
+        rv = mBookmarksService->CreateFolder(CurFrame().mContainerID,
+                                             containerName,
+                                             mBookmarksService->DEFAULT_INDEX, &ourID);
+        NS_ENSURE_SUCCESS(rv, rv);
+        // there's no toolbar folder, so make us the toolbar folder
+        rv = mBookmarksService->SetToolbarFolder(ourID);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      else {
+        ourID = toolbarFolder;
+      }
+      break;
+    default:
+      NS_NOTREACHED("Unknown container type");
   }
 
-  if (ourID == 0) {
-    switch (containerType) {
-      case BookmarkImportFrame::Container_Normal:
-        // regular folder: use an existing folder if that name already exists
-        rv = mBookmarksService->GetChildFolder(CurFrame().mContainerID,
-                                               containerName, &ourID);
-        NS_ENSURE_SUCCESS(rv, rv);
-        if (ourID == 0) {
-          // need to append a new folder
-          rv = mBookmarksService->CreateFolder(CurFrame().mContainerID,
-                                              containerName,
-                                              mBookmarksService->DEFAULT_INDEX, &ourID);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-        break;
-      case BookmarkImportFrame::Container_Places:
-        // places root, never reparent here, when we're building the initial
-        // hierarchy, it will only be defined at the top level
-        rv = mBookmarksService->GetPlacesRoot(&ourID);
-        NS_ENSURE_SUCCESS(rv, rv);
-        break;
-      case BookmarkImportFrame::Container_Menu:
-        // menu root
-        rv = mBookmarksService->GetBookmarksRoot(&ourID);
-        NS_ENSURE_SUCCESS(rv, rv);
-        if (mAllowRootChanges) {
-          updateFolder = PR_TRUE;
-          rv = SetFaviconForFolder(ourID, NS_LITERAL_CSTRING(BOOKMARKSS_MENU_ICON_URI));
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-        break;
-      case BookmarkImportFrame::Container_Toolbar:
-        // get toolbar folder
-        PRInt64 toolbarFolder;
-        rv = mBookmarksService->GetToolbarFolder(&toolbarFolder);
-        NS_ENSURE_SUCCESS(rv, rv);
-        if (!toolbarFolder) {
-          // create new folder
-          rv = mBookmarksService->CreateFolder(CurFrame().mContainerID,
-                                              containerName,
-                                              mBookmarksService->DEFAULT_INDEX, &ourID);
-          NS_ENSURE_SUCCESS(rv, rv);
-          // there's no toolbar folder, so make us the toolbar folder
-          rv = mBookmarksService->SetToolbarFolder(ourID);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-        else {
-          ourID = toolbarFolder;
-        }
-        break;
-      default:
-        NS_NOTREACHED("Unknown container type");
-    }
-  }
 #ifdef DEBUG_IMPORT
   PrintNesting();
   printf("Folder %lld \'%s\'", ourID, NS_ConvertUTF16toUTF8(containerName).get());
@@ -1315,10 +1280,12 @@ BookmarkContentSink::SetFaviconForURI(nsIURI* aPageURI, nsIURI* aIconURI,
     faviconSpec.AssignLiteral("http://www.mozilla.org/2005/made-up-favicon/");
     faviconSpec.AppendInt(serialNumber);
     faviconSpec.AppendLiteral("-");
-    faviconSpec.AppendInt(PR_Now()); // casting from PRInt64 -> PRInt32, data loss, fix me
+    char buf[32];
+    PR_snprintf(buf, sizeof(buf), "%lld", PR_Now());
+    faviconSpec.Append(buf);
     rv = NS_NewURI(getter_AddRefs(faviconURI), faviconSpec);
     NS_ENSURE_SUCCESS(rv, rv);
-    serialNumber ++;
+    serialNumber++;
   }
 
   nsCOMPtr<nsIURI> dataURI;
@@ -1348,12 +1315,12 @@ BookmarkContentSink::SetFaviconForURI(nsIURI* aPageURI, nsIURI* aIconURI,
     return NS_ERROR_FAILURE;
 
   // read all the decoded data
-  PRUint8* buffer = NS_STATIC_CAST(PRUint8*,
-                                   nsMemory::Alloc(sizeof(PRUint8) * available));
+  PRUint8* buffer = static_cast<PRUint8*>
+                               (nsMemory::Alloc(sizeof(PRUint8) * available));
   if (!buffer)
     return NS_ERROR_OUT_OF_MEMORY;
   PRUint32 numRead;
-  rv = stream->Read(NS_REINTERPRET_CAST(char*, buffer), available, &numRead);
+  rv = stream->Read(reinterpret_cast<char*>(buffer), available, &numRead);
   if (NS_FAILED(rv) || numRead != available) {
     nsMemory::Free(buffer);
     return rv;
@@ -1477,7 +1444,7 @@ static const char kDescriptionIntro[] = "<DD>";
 static const char kDescriptionClose[] = NS_LINEBREAK;
 
 static const char kPlacesRootAttribute[] = " PLACES_ROOT=\"true\"";
-static const char kBookmarksRootAttribute[] = " BOOKMARKSS_MENU=\"true\"";
+static const char kBookmarksRootAttribute[] = " BOOKMARKS_MENU=\"true\"";
 static const char kToolbarFolderAttribute[] = " PERSONAL_TOOLBAR_FOLDER=\"true\"";
 static const char kIconAttribute[] = " ICON=\"";
 static const char kIconURIAttribute[] = " ICON_URI=\"";
@@ -1491,6 +1458,7 @@ static const char kNameAttribute[] = " NAME=\"";
 static const char kMicsumGenURIAttribute[]    = " MICSUM_GEN_URI=\"";
 static const char kDateAddedAttribute[] = " ADD_DATE=\"";
 static const char kLastModifiedAttribute[] = " LAST_MODIFIED=\"";
+static const char kLastCharsetAttribute[] = " LAST_CHARSET=\"";
 
 // WriteContainerPrologue
 //
@@ -1534,7 +1502,7 @@ static nsresult
 DataToDataURI(PRUint8* aData, PRUint32 aDataLen, const nsACString& aMimeType,
               nsACString& aDataURI)
 {
-  char* encoded = PL_Base64Encode(NS_REINTERPRET_CAST(const char*, aData),
+  char* encoded = PL_Base64Encode(reinterpret_cast<const char*>(aData),
                                   aDataLen, nsnull);
   if (!encoded)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1628,11 +1596,15 @@ WriteDateAttribute(const char aAttributeStart[], PRInt32 aLength, PRTime aAttrib
   PRUint32 dummy;
   nsresult rv = aOutput->Write(aAttributeStart, aLength, &dummy);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // in bookmarks.html this value is in seconds, not microseconds
+  aAttributeValue /= 1000000; 
+
   // write attribute value
-  nsCAutoString dateInSeconds;
-  aAttributeValue/= 1000000; // in bookmarks.html this value is in seconds, not microseconds
-  dateInSeconds.AppendInt(aAttributeValue);  // casting from PRInt64 -> PRInt32, data loss, fix me
-  rv = aOutput->Write(dateInSeconds.get(), dateInSeconds.Length(), &dummy);
+  char dateInSeconds[32];
+  PR_snprintf(dateInSeconds, sizeof(dateInSeconds), "%lld", aAttributeValue);
+  rv = aOutput->Write(dateInSeconds, strlen(dateInSeconds), &dummy);
+
   NS_ENSURE_SUCCESS(rv, rv);
   return aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
 }
@@ -1728,17 +1700,7 @@ nsPlacesImportExportService::WriteContainerHeader(nsINavHistoryResultNode* aFold
     rv = aOutput->Write(kToolbarFolderAttribute, sizeof(kToolbarFolderAttribute)-1, &dummy);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  
-  // write id as ITEM_ID as non-rdf IDs can confuse Firefox 2
-  rv = aOutput->Write(kItemIdAttribute, sizeof(kItemIdAttribute)-1, &dummy);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCAutoString itemIdAttr;
-  itemIdAttr.AppendInt(folderId); // casting from PRInt64 -> PRInt32, data loss, fix me
-  rv = aOutput->Write(itemIdAttr.get(), itemIdAttr.Length(), &dummy);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+ 
   // favicon (most folders won't have one)
   nsCOMPtr<nsIURI> folderURI;
   rv = mBookmarksService->GetFolderURI(folderId, getter_AddRefs(folderURI));
@@ -1897,16 +1859,6 @@ nsPlacesImportExportService::WriteItem(nsINavHistoryResultNode* aItem,
   rv = aItem->GetItemId(&itemId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // write id as ITEM_ID as non-rdf IDs can confuse Firefox 2
-  rv = aOutput->Write(kItemIdAttribute, sizeof(kItemIdAttribute)-1, &dummy);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCAutoString itemIdAttr;
-  itemIdAttr.AppendInt(itemId); // casting from PRInt64 -> PRInt32, data loss, fix me
-  rv = aOutput->Write(itemIdAttr.get(), itemIdAttr.Length(), &dummy);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // keyword (shortcuturl)
   nsAutoString keyword;
   rv = mBookmarksService->GetKeywordForBookmark(itemId, keyword);
@@ -1979,7 +1931,25 @@ nsPlacesImportExportService::WriteItem(nsINavHistoryResultNode* aItem,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // FIXME bug 334408: write last character set here
+  // last charset
+  PRBool hasLastCharset = PR_FALSE;
+  rv = mAnnotationService->PageHasAnnotation(pageURI, LAST_CHARSET_ANNO,
+                                             &hasLastCharset);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (hasLastCharset) {
+    nsAutoString lastCharset;
+    rv = mAnnotationService->GetPageAnnotationString(pageURI, LAST_CHARSET_ANNO,
+                                                     lastCharset);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aOutput->Write(kLastCharsetAttribute, sizeof(kLastCharsetAttribute)-1, &dummy);
+    NS_ENSURE_SUCCESS(rv, rv);
+    char* escapedLastCharset = nsEscapeHTML(NS_ConvertUTF16toUTF8(lastCharset).get());
+    rv = aOutput->Write(escapedLastCharset, strlen(escapedLastCharset), &dummy);
+    nsMemory::Free(escapedLastCharset);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // '>'
   rv = aOutput->Write(kCloseAngle, sizeof(kCloseAngle)-1, &dummy);
@@ -2070,16 +2040,6 @@ nsPlacesImportExportService::WriteLivemark(nsINavHistoryResultNode* aFolder, con
     rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  // write id as ITEM_ID as non-rdf IDs can confuse Firefox 2
-  rv = aOutput->Write(kItemIdAttribute, sizeof(kItemIdAttribute)-1, &dummy);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCAutoString itemIdAttr;
-  itemIdAttr.AppendInt(folderId); // casting from PRInt64 -> PRInt32, data loss, fix me
-  rv = aOutput->Write(itemIdAttr.get(), itemIdAttr.Length(), &dummy);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // '>'
   rv = aOutput->Write(kCloseAngle, sizeof(kCloseAngle)-1, &dummy);

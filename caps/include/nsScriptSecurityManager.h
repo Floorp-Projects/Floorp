@@ -97,7 +97,7 @@ public:
     typedef const nsIPrincipal* KeyTypePointer;
 
     PrincipalKey(const nsIPrincipal* key)
-      : mKey(NS_CONST_CAST(nsIPrincipal*, key))
+      : mKey(const_cast<nsIPrincipal*>(key))
     {
     }
 
@@ -118,7 +118,7 @@ public:
     PRBool KeyEquals(KeyTypePointer aKey) const
     {
         PRBool eq;
-        mKey->Equals(NS_CONST_CAST(nsIPrincipal*, aKey),
+        mKey->Equals(const_cast<nsIPrincipal*>(aKey),
                      &eq);
         return eq;
     }
@@ -131,7 +131,7 @@ public:
     static PLDHashNumber HashKey(KeyTypePointer aKey)
     {
         PRUint32 hash;
-        NS_CONST_CAST(nsIPrincipal*, aKey)->GetHashValue(&hash);
+        const_cast<nsIPrincipal*>(aKey)->GetHashValue(&hash);
         return PLDHashNumber(hash);
     }
 
@@ -352,10 +352,10 @@ MoveClassPolicyEntry(PLDHashTable *table,
     memcpy(to, from, table->entrySize);
 
     // Now update the mDefaultPolicy pointer that points to us, if any.
-    ClassPolicy* cp = NS_STATIC_CAST(ClassPolicy*, to);
+    ClassPolicy* cp = static_cast<ClassPolicy*>(to);
     if (cp->mDomainWeAreWildcardFor) {
         NS_ASSERTION(cp->mDomainWeAreWildcardFor->mWildcardPolicy ==
-                     NS_STATIC_CAST(const ClassPolicy*, from),
+                     static_cast<const ClassPolicy*>(from),
                      "Unexpected wildcard policy on mDomainWeAreWildcardFor");
         cp->mDomainWeAreWildcardFor->mWildcardPolicy = cp;
     }

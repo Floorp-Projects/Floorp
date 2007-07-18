@@ -54,18 +54,6 @@
 #include "gfxQuartzSurface.h"
 #include "gfxImageSurface.h"
 
-// These symbols don't exist on 10.3, but we use them on 10.4 and greater
-#if MAC_OS_X_VERSION_MAX_ALLOWED < MAX_OS_X_VERSION_10_4
-extern PMSessionGetCGGraphicsContext(PMPrintSession, CGContextRef *);
-extern PMSessionBeginCGDocumentNoDialog(PMPrintSession, PMPrintSettings, PMPageFormat);
-#endif
-
-// These functions don't exist on 10.3, which we build against. However, we want to be able to use them on
-// 10.4, so we need to access them at runtime.
-typedef OSStatus (*fpPMSessionBeginCGDocumentNoDialog_type)(PMPrintSession, PMPrintSettings, PMPageFormat);
-typedef OSStatus (*fpPMSessionGetCGGraphicsContext_type)(PMPrintSession, CGContextRef*);
-static fpPMSessionBeginCGDocumentNoDialog_type fpPMSessionBeginCGDocumentNoDialog = NULL;
-static fpPMSessionGetCGGraphicsContext_type fpPMSessionGetCGGraphicsContext = NULL;
 
 /** -------------------------------------------------------
  *  Construct the nsDeviceContextSpecX
@@ -77,16 +65,6 @@ nsDeviceContextSpecX::nsDeviceContextSpecX()
 , mPrintSettings(kPMNoPrintSettings)
 , mBeganPrinting(PR_FALSE)
 {
-    //We have to load these at runtime to use them on 10.4, since we build against 10.3.
-    if (nsToolkit::OnTigerOrLater()) {
-        CFBundleRef bundle = ::CFBundleGetBundleWithIdentifier(CFSTR("com.apple.ApplicationServices"));
-        if (bundle) {
-            fpPMSessionBeginCGDocumentNoDialog = (fpPMSessionBeginCGDocumentNoDialog_type)
-              ::CFBundleGetFunctionPointerForName(bundle, CFSTR("PMSessionBeginCGDocumentNoDialog"));
-            fpPMSessionGetCGGraphicsContext = (fpPMSessionGetCGGraphicsContext_type)
-              ::CFBundleGetFunctionPointerForName(bundle, CFSTR("PMSessionGetCGGraphicsContext"));
-        }
-    }
 }
 
 /** -------------------------------------------------------
@@ -100,11 +78,8 @@ nsDeviceContextSpecX::~nsDeviceContextSpecX()
   ClosePrintManager();
 }
 
-#ifdef MOZ_CAIRO_GFX
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecX, nsIDeviceContextSpec)
-#else
-NS_IMPL_ISUPPORTS2(nsDeviceContextSpecX, nsIDeviceContextSpec, nsIPrintingContext)
-#endif
+
 /** -------------------------------------------------------
  *  Initialize the nsDeviceContextSpecMac
  *  @update   dc 12/02/98
@@ -173,26 +148,9 @@ NS_IMETHODIMP nsDeviceContextSpecX::BeginDocument(PRUnichar*  aTitle,
     status = ::PMSetLastPage(mPrintSettings, aEndPage, false);
     NS_ASSERTION(status == noErr, "PMSetLastPage failed");
 
-    if (nsToolkit::OnTigerOrLater() && fpPMSessionBeginCGDocumentNoDialog) {
-        //On 10.4 and above, we can easily use CoreGraphics
-        status = fpPMSessionBeginCGDocumentNoDialog(mPrintSession, mPrintSettings, mPageFormat);
-    } else {
-        //Not so on 10.3. The following (taken from Apple sample code) allows us to get a CGContextRef later on 10.3
-        CFStringRef strings[1];
-        CFArrayRef graphicsContextsArray;
-
-        strings[0] = kPMGraphicsContextCoreGraphics;
-        graphicsContextsArray = ::CFArrayCreate(kCFAllocatorDefault, (const void **)strings, 1, &kCFTypeArrayCallBacks);
-
-        if (graphicsContextsArray != NULL) {
-            ::PMSessionSetDocumentFormatGeneration(mPrintSession, kPMDocumentFormatPDF, graphicsContextsArray, NULL);
-            ::CFRelease(graphicsContextsArray);
-        }
-        //Actually create the document
-        status = ::PMSessionBeginDocumentNoDialog(mPrintSession, mPrintSettings, mPageFormat);
-    }
-    
-    if (status != noErr) return NS_ERROR_ABORT;
+    status = ::PMSessionBeginCGDocumentNoDialog(mPrintSession, mPrintSettings, mPageFormat);
+    if (status != noErr)
+      return NS_ERROR_ABORT;
 
     return NS_OK;
 }
@@ -258,14 +216,9 @@ NS_IMETHODIMP nsDeviceContextSpecX::GetSurfaceForPrinter(gfxASurface **surface)
     const double width = right - left;
     const double height = bottom - top;
 
-    //On 10.4 or later, just use CG natively. On 10.3, though, we have to request CG specifically.
     CGContextRef context;
-    if (nsToolkit::OnTigerOrLater() && fpPMSessionGetCGGraphicsContext) {
-        fpPMSessionGetCGGraphicsContext(mPrintSession, &context);
-    } else {
-        ::PMSessionGetGraphicsContext(mPrintSession, kPMGraphicsContextCoreGraphics, (void **)&context);
-    }
-    
+    ::PMSessionGetCGGraphicsContext(mPrintSession, &context);
+
     nsRefPtr<gfxASurface> newSurface;
 
     if (context) {

@@ -1319,7 +1319,10 @@ png_handle_tRNS(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
    }
 
    if (png_crc_finish(png_ptr, 0))
+   {
+      png_ptr->num_trans = 0;
       return;
+   }
 
    png_set_tRNS(png_ptr, info_ptr, readbuf, png_ptr->num_trans,
       &(png_ptr->trans_values));

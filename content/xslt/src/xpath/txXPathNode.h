@@ -131,12 +131,12 @@ private:
     nsIContent* Content() const
     {
         NS_ASSERTION(isContent() || isAttribute(), "wrong type");
-        return NS_STATIC_CAST(nsIContent*, mNode);
+        return static_cast<nsIContent*>(mNode);
     }
     nsIDocument* Document() const
     {
         NS_ASSERTION(isDocument(), "wrong type");
-        return NS_STATIC_CAST(nsIDocument*, mNode);
+        return static_cast<nsIDocument*>(mNode);
     }
 
     enum PositionType

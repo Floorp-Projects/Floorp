@@ -42,18 +42,11 @@
 #include "nsIDeviceContextSpec.h"
 #include "nsIPrintSettings.h"
 #include "nsIPrintOptions.h" 
-#include "nsVoidArray.h"
 #include "nsCOMPtr.h"
-
-#ifndef MOZ_CAIRO_GFX
-#ifdef USE_POSTSCRIPT
-#include "nsIDeviceContextSpecPS.h"
-#endif /* USE_POSTSCRIPT */
-#endif
 
 #include "nsCRT.h" /* should be <limits.h>? */
 
-#include "nsIPrintJobGTK.h"
+class nsIPrintJobGTK;
 
 #define NS_PORTRAIT  0
 #define NS_LANDSCAPE 1
@@ -65,20 +58,13 @@ typedef enum
 } PrintMethod;
 
 class nsDeviceContextSpecGTK : public nsIDeviceContextSpec
-#ifndef MOZ_CAIRO_GFX
-#ifdef USE_POSTSCRIPT
-                              , public nsIDeviceContextSpecPS
-#endif /* USE_POSTSCRIPT */
-#endif
 {
 public:
   nsDeviceContextSpecGTK();
 
   NS_DECL_ISUPPORTS
 
-#ifdef MOZ_CAIRO_GFX
   NS_IMETHOD GetSurfaceForPrinter(gfxASurface **surface);
-#endif
 
   NS_IMETHOD Init(nsIWidget *aWidget, nsIPrintSettings* aPS, PRBool aIsPrintPreview);
   NS_IMETHOD ClosePrintManager(); 
@@ -103,7 +89,6 @@ public:
   NS_IMETHOD GetUserCancelled(PRBool &aCancel);      
   NS_IMETHOD GetPrintMethod(PrintMethod &aMethod);
   static nsresult GetPrintMethod(const char *aPrinter, PrintMethod &aMethod);
-  NS_IMETHOD GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight);
   NS_IMETHOD GetPaperName(const char **aPaperName);
   NS_IMETHOD GetPlexName(const char **aPlexName);
   NS_IMETHOD GetResolutionName(const char **aResolutionName);

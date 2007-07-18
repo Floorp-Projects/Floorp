@@ -1232,7 +1232,7 @@ PRInt32 nsRenderingContextMac::GetMaxStringLength()
 {
   if (!mGS->mFontMetrics)
     return 1;
-  return NS_STATIC_CAST(nsFontMetricsMac*, mGS->mFontMetrics)->GetMaxStringLength();
+  return static_cast<nsFontMetricsMac*>(mGS->mFontMetrics)->GetMaxStringLength();
 }
 
 #pragma mark -

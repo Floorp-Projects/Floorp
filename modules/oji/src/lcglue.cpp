@@ -89,7 +89,7 @@ private:
 
 static void PR_CALLBACK detach_JVMContext(void* storage)
 {
-	JVMContext* context = NS_REINTERPRET_CAST(JVMContext*, storage);
+	JVMContext* context = reinterpret_cast<JVMContext*>(storage);
 	
 	JNIEnv* proxyEnv = context->proxyEnv;
 	if (proxyEnv != NULL) {
@@ -130,7 +130,7 @@ map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, void* java_applet_
 	// it lives in to make any sense of all this.
 	JSContext* context = NULL;
 	if (java_applet_obj != NULL) {
-		nsIPluginInstance* pluginInstance = NS_REINTERPRET_CAST(nsIPluginInstance*, java_applet_obj);
+		nsIPluginInstance* pluginInstance = reinterpret_cast<nsIPluginInstance*>(java_applet_obj);
 	        nsIPluginInstancePeer* pluginPeer = NULL;
 		if (pluginInstance->GetPeer(&pluginPeer) == NS_OK) {
 			nsIPluginInstancePeer2* pluginPeer2 = NULL;
@@ -218,7 +218,7 @@ map_java_object_to_js_object_impl(JNIEnv *env, void *pluginInstancePtr, char* *e
 	/*
 	 * Check for the mayscript tag.
 	 */
-	nsIPluginInstance* pluginInstance = NS_REINTERPRET_CAST(nsIPluginInstance*, pluginInstancePtr);
+	nsIPluginInstance* pluginInstance = reinterpret_cast<nsIPluginInstance*>(pluginInstancePtr);
 	nsIPluginInstancePeer* pluginPeer;
 	if (pluginInstance->GetPeer(&pluginPeer) == NS_OK) {
 		nsIJVMPluginTagInfo* tagInfo;
@@ -344,7 +344,7 @@ create_java_vm_impl(SystemJavaVM* *jvm, JNIEnv* *initialEnv, void* initargs)
         return PR_FALSE;
     // serv will be released when this function returns, but that's OK because
     // the XPCOM service manager will keep it alive.
-    *jvm = NS_REINTERPRET_CAST(SystemJavaVM*, serv.get());
+    *jvm = reinterpret_cast<SystemJavaVM*>(serv.get());
     return PR_TRUE;
 }
 
@@ -376,7 +376,7 @@ get_java_vm_impl(JNIEnv* env)
     nsresult rv;
     nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &rv);
     if (NS_FAILED(rv)) return NULL;
-    SystemJavaVM* jvm = NS_REINTERPRET_CAST(SystemJavaVM*, managerService.get());  
+    SystemJavaVM* jvm = reinterpret_cast<SystemJavaVM*>(managerService.get());  
     return jvm;
 }
 

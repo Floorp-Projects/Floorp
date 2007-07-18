@@ -308,7 +308,7 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
   nsCOMPtr<nsIX509Cert> x509Proxy;
   NS_GetProxyForObject( NS_PROXY_TO_MAIN_THREAD,
                         NS_GET_IID(nsIX509Cert),
-                        NS_STATIC_CAST(nsIX509Cert*, this),
+                        static_cast<nsIX509Cert*>(this),
                         NS_PROXY_SYNC | NS_PROXY_ALWAYS,
                         getter_AddRefs(x509Proxy));
 
@@ -997,7 +997,7 @@ nsNSSCertificate::GetValidity(nsIX509CertValidity **aValidity)
    return  NS_ERROR_OUT_OF_MEMORY; 
 
   NS_ADDREF(validity);
-  *aValidity = NS_STATIC_CAST(nsIX509CertValidity*, validity);
+  *aValidity = static_cast<nsIX509CertValidity*>(validity);
   return NS_OK;
 }
 

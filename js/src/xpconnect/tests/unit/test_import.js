@@ -41,19 +41,29 @@ function run_test() {
   var scope = {};
   Components.utils.import("resource://gre/modules/XPCOMUtils.jsm", scope);
   do_check_eq(typeof(scope.XPCOMUtils), "object");
-  do_check_eq(typeof(scope.XPCOMUtils.generateFactory), "function");
+  do_check_eq(typeof(scope.XPCOMUtils.generateModule), "function");
   
-  // try again on the global object
+  // access module's global object directly without importing any
+  // symbols
+  var module = Components.utils.import("resource://gre/modules/XPCOMUtils.jsm",
+                                       null);
+  do_check_eq(typeof(XPCOMUtils), "undefined");
+  do_check_eq(typeof(module), "object");
+  do_check_eq(typeof(module.XPCOMUtils), "object");
+  do_check_eq(typeof(module.XPCOMUtils.generateModule), "function");
+  do_check_true(scope.XPCOMUtils == module.XPCOMUtils);
+
+  // import symbols to our global object
   do_check_eq(typeof(Components.utils.import), "function");
   Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
   do_check_eq(typeof(XPCOMUtils), "object");
-  do_check_eq(typeof(XPCOMUtils.generateFactory), "function");
+  do_check_eq(typeof(XPCOMUtils.generateModule), "function");
   
   // try on a new object
   var scope2 = {};
   Components.utils.import("resource://gre/modules/XPCOMUtils.jsm", scope2);
   do_check_eq(typeof(scope2.XPCOMUtils), "object");
-  do_check_eq(typeof(scope2.XPCOMUtils.generateFactory), "function");
+  do_check_eq(typeof(scope2.XPCOMUtils.generateModule), "function");
   
   do_check_true(scope2.XPCOMUtils == scope.XPCOMUtils);
 
@@ -62,7 +72,7 @@ function run_test() {
   try {
       Components.utils.import("resource://gre/modules/XPCOMUtils.jsm", "wrong");
   } catch (ex) {
-      print("ex: " + ex);
+      print("exception (expected): " + ex);
       didThrow = true;
   }
   do_check_true(didThrow);
@@ -74,6 +84,17 @@ function run_test() {
   var foo = Components.classes[contractID + "1"]
                       .createInstance(Components.interfaces.nsIClassInfo);
   do_check_true(Boolean(foo));
+  do_check_true(foo.contractID == contractID + "1");
+  // XXX the following check succeeds only if the test component wasn't
+  //     already registered. Need to figure out a way to force registration
+  //     (to manually force it, delete compreg.dat before running the test)
+  // do_check_true(foo.wrappedJSObject.postRegisterCalled);
+
+  // try to create a component by CID
+  const cid = "{6b933fe6-6eba-4622-ac86-e4f654f1b474}";
+  do_check_true(cid in Components.classesByID);
+  foo = Components.classesByID[cid]
+                  .createInstance(Components.interfaces.nsIClassInfo);
   do_check_true(foo.contractID == contractID + "1");
 
   // try to create another component which doesn't directly implement QI

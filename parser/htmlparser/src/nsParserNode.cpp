@@ -326,7 +326,7 @@ nsCParserStartNode::GetKeyAt(PRUint32 anIndex) const
 {
   if ((PRInt32)anIndex < mAttributes.GetSize()) {
     CAttributeToken* attr = 
-      NS_STATIC_CAST(CAttributeToken*, mAttributes.ObjectAt(anIndex));
+      static_cast<CAttributeToken*>(mAttributes.ObjectAt(anIndex));
     if (attr) {
       return attr->GetKey();
     }
@@ -339,7 +339,7 @@ nsCParserStartNode::GetValueAt(PRUint32 anIndex) const
 {
   if (PRInt32(anIndex) < mAttributes.GetSize()) {
     CAttributeToken* attr = 
-      NS_STATIC_CAST(CAttributeToken*, mAttributes.ObjectAt(anIndex));
+      static_cast<CAttributeToken*>(mAttributes.ObjectAt(anIndex));
     if (attr) {
       return attr->GetValue();
     }
@@ -350,7 +350,7 @@ nsCParserStartNode::GetValueAt(PRUint32 anIndex) const
 CToken* 
 nsCParserStartNode::PopAttributeToken() 
 {
-  return NS_STATIC_CAST(CToken*, mAttributes.Pop());
+  return static_cast<CToken*>(mAttributes.Pop());
 }
 
 void nsCParserStartNode::GetSource(nsString& aString) const
@@ -365,7 +365,7 @@ void nsCParserStartNode::GetSource(nsString& aString) const
   PRInt32 size = mAttributes.GetSize();
   for (index = 0 ; index < size; ++index) {
     CAttributeToken *theToken = 
-      NS_STATIC_CAST(CAttributeToken*, mAttributes.ObjectAt(index));
+      static_cast<CAttributeToken*>(mAttributes.ObjectAt(index));
     if (theToken) {
       theToken->AppendSourceTo(aString);
       aString.Append(PRUnichar(' ')); //this will get removed...
@@ -378,7 +378,7 @@ nsresult nsCParserStartNode::ReleaseAll()
 {
   NS_ASSERTION(0!=mTokenAllocator, "Error: no token allocator");
   CToken* theAttrToken;
-  while ((theAttrToken = NS_STATIC_CAST(CToken*, mAttributes.Pop()))) {
+  while ((theAttrToken = static_cast<CToken*>(mAttributes.Pop()))) {
     IF_FREE(theAttrToken, mTokenAllocator);
   }
   nsCParserNode::ReleaseAll();

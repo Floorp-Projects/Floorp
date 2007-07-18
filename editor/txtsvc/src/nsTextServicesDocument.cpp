@@ -2724,7 +2724,7 @@ nsTextServicesDocument::CreateContentIterator(nsIDOMRange *aRange, nsIContentIte
   // This class wraps the ContentIterator in order to give itself a chance 
   // to filter out certain content nodes
   nsFilteredContentIterator* filter = new nsFilteredContentIterator(mTxtSvcFilter);
-  *aIterator = NS_STATIC_CAST(nsIContentIterator *, filter);
+  *aIterator = static_cast<nsIContentIterator *>(filter);
   if (*aIterator) {
     NS_IF_ADDREF(*aIterator);
     result = filter ? NS_OK : NS_ERROR_FAILURE;
@@ -3067,7 +3067,7 @@ nsTextServicesDocument::DidSkip(nsIContentIterator* aFilteredIter)
   // So if the iterator bailed on one of the "filtered" content nodes then we 
   // consider that to be a block and bail with PR_TRUE
   if (aFilteredIter) {
-    nsFilteredContentIterator* filter = NS_STATIC_CAST(nsFilteredContentIterator *, aFilteredIter);
+    nsFilteredContentIterator* filter = static_cast<nsFilteredContentIterator *>(aFilteredIter);
     if (filter && filter->DidSkip()) {
       return PR_TRUE;
     }
@@ -3080,7 +3080,7 @@ nsTextServicesDocument::ClearDidSkip(nsIContentIterator* aFilteredIter)
 {
   // Clear filter's skip flag
   if (aFilteredIter) {
-    nsFilteredContentIterator* filter = NS_STATIC_CAST(nsFilteredContentIterator *, aFilteredIter);
+    nsFilteredContentIterator* filter = static_cast<nsFilteredContentIterator *>(aFilteredIter);
     filter->ClearDidSkip();
   }
 }

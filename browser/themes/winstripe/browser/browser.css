@@ -25,6 +25,7 @@
  *   Dean Tessman (dean_tessman@hotmail.com)
  *   Blake Ross (blake@cs.stanford.edu)
  *   Pamela Greene (pamg.bugs@gmail.com)
+ *   Dao Gottwald (dao@design-noir.de)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -154,11 +155,9 @@ toolbarpaletteitem[place="toolbar"] .bookmarks-toolbar-items {
   visibility: hidden;
 }
 
-%ifdef MOZ_PLACES_BOOKMARKS
 toolbarpaletteitem[place="toolbar"] .places-toolbar-items {
   display: none;
 }
-%endif
 
 /* ::::: bookmark menus ::::: */
 
@@ -258,13 +257,6 @@ menuitem.bookmark-item {
   list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
 
-#back-button[chromedir="rtl"],
-#forward-button[chromedir="rtl"] {
-  -moz-box-orient: vertical;
-  min-width: 0;
-  list-style-image: url("chrome://browser/skin/Toolbar-rtl.png");
-}
-
 .toolbarbutton-1 .toolbarbutton-icon {
   -moz-margin-end: 0px;
 }
@@ -288,12 +280,11 @@ toolbar:not([iconsize="small"]) .toolbarbutton-1 .toolbarbutton-icon {
   padding-top: 1px;
 }
 
-/* back button-- */
+/* back button */
 
 #back-button {
   -moz-image-region: rect(0px 24px 24px 0px); 
 }
-
 #back-button:not([disabled="true"]):hover,
 #back-button[buttonover="true"] {
   -moz-image-region: rect(24px 24px 48px 0px);
@@ -305,12 +296,25 @@ toolbar:not([iconsize="small"]) .toolbarbutton-1 .toolbarbutton-icon {
   -moz-image-region: rect(96px 24px 120px 0px);
 }
 
+#back-button[chromedir="rtl"] {
+  -moz-image-region: rect(0px 48px 24px 24px);
+}
+#back-button[chromedir="rtl"]:not([disabled="true"]):hover,
+#back-button[chromedir="rtl"][buttonover="true"] {
+  -moz-image-region: rect(24px 48px 48px 24px);
+}
+#back-button[chromedir="rtl"][disabled="true"] {
+  -moz-image-region: rect(48px 48px 72px 24px);
+}
+#back-button[chromedir="rtl"]:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(96px 48px 120px 24px);
+}
+
 /* forward button */
 
 #forward-button {
   -moz-image-region: rect(0px 48px 24px 24px);
 }
-
 #forward-button:not([disabled="true"]):hover,
 #forward-button[buttonover="true"] {
   -moz-image-region: rect(24px 48px 48px 24px);
@@ -320,6 +324,20 @@ toolbar:not([iconsize="small"]) .toolbarbutton-1 .toolbarbutton-icon {
 }
 #forward-button:not([disabled="true"]):hover:active {
   -moz-image-region: rect(96px 48px 120px 24px);
+}
+
+#forward-button[chromedir="rtl"] {
+  -moz-image-region: rect(0px 24px 24px 0px); 
+}
+#forward-button[chromedir="rtl"]:not([disabled="true"]):hover,
+#forward-button[chromedir="rtl"][buttonover="true"] {
+  -moz-image-region: rect(24px 24px 48px 0px);
+}
+#forward-button[chromedir="rtl"][disabled="true"] {
+  -moz-image-region: rect(48px 24px 72px 0px);
+}
+#forward-button[chromedir="rtl"]:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(96px 24px 120px 0px);
 }
 
 /* stop button */
@@ -522,13 +540,6 @@ toolbar[iconsize="small"] .toolbarbutton-1 {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
 }
 
-toolbar[iconsize="small"] #back-button[chromedir="rtl"],
-toolbar[iconsize="small"] #forward-button[chromedir="rtl"] {
-  -moz-box-orient: vertical;
-  min-width: 0;
-  list-style-image: url("chrome://browser/skin/Toolbar-rtl-small.png");
-}
-
 toolbar[iconsize="small"] .toolbarbutton-1 .toolbarbutton-icon {
   -moz-margin-end: 0px;
 }
@@ -537,9 +548,7 @@ toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"] {
   border: 0 !important;
 }
 
-/* ::::: small back button ::::: */
-
-/* back button-- */
+/* back button */
 
 toolbar[iconsize="small"] #back-button .toolbarbutton-icon {
   padding-right: 1px;
@@ -558,8 +567,21 @@ toolbar[iconsize="small"] #back-button:not([disabled="true"]):hover:active {
   -moz-image-region: rect(64px 16px 80px 0px);
 }
 
+toolbar[iconsize="small"] #back-button[chromedir="rtl"] {
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
+toolbar[iconsize="small"] #back-button[chromedir="rtl"]:not([disabled="true"]):hover,
+toolbar[iconsize="small"] #back-button[chromedir="rtl"][buttonover="true"] {
+  -moz-image-region: rect(16px 32px 32px 16px);
+}
+toolbar[iconsize="small"] #back-button[chromedir="rtl"][disabled="true"] {
+  -moz-image-region: rect(32px 32px 48px 16px);
+}
+toolbar[iconsize="small"] #back-button[chromedir="rtl"]:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(64px 32px 80px 16px);
+}
 
-/* small forward button-- */
+/* forward button */
 
 toolbar[iconsize="small"] #forward-button .toolbarbutton-icon {
   padding-right: 1px;
@@ -576,6 +598,20 @@ toolbar[iconsize="small"] #forward-button[disabled="true"] {
 }
 toolbar[iconsize="small"] #forward-button:not([disabled="true"]):hover:active {
   -moz-image-region: rect(64px 32px 80px 16px);
+}
+
+toolbar[iconsize="small"] #forward-button[chromedir="rtl"] {
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+toolbar[iconsize="small"] #forward-button[chromedir="rtl"]:not([disabled="true"]):hover,
+toolbar[iconsize="small"] #forward-button[chromedir="rtl"][buttonover="true"] {
+  -moz-image-region: rect(16px 16px 32px 0px);
+}
+toolbar[iconsize="small"] #forward-button[chromedir="rtl"][disabled="true"] {
+  -moz-image-region: rect(32px 16px 48px 0px);
+}
+toolbar[iconsize="small"] #forward-button[chromedir="rtl"]:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(64px 16px 80px 0px);
 }
 
 /* stop button */
@@ -831,6 +867,52 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
   -moz-border-right-colors: #96969D;
   -moz-border-left-colors: #96969D;
   border: 1px solid;
+}
+
+.formatted-url {
+  -moz-box-align: center;
+  margin: 0 3px;
+  /*XXX Gecko 1.9 quirk*/
+  -moz-padding-start: 1px;
+}
+
+.formatted-url * {
+  margin: 0;
+  padding: 0;
+  cursor: text;
+}
+
+.formatted-url-contents {
+  color: graytext;
+}
+
+.formatted-url-domain {
+  color: -moz-fieldtext;
+}
+
+#urlbar[level="high"] .formatted-url-contents ,
+#urlbar[level="low"] .formatted-url-contents {
+  color: rgb(150, 150, 130);
+}
+
+#urlbar[level="low"] .formatted-url-domain ,
+#urlbar[level="high"] .formatted-url-domain {
+  color: black;
+}
+
+.formatted-url-ellipsis {
+  -moz-margin-start: .3em;
+}
+
+#urlbar[protocolhidden="true"] .formatted-url-prePath > .formatted-url-subdomain ,
+#urlbar[protocolhidden="true"] .formatted-url-prePath > .formatted-url-port {
+  -moz-box-flex: 1;
+  text-align: right;
+}
+
+#urlbar[chromedir="rtl"][protocolhidden="true"] .formatted-url-prePath > .formatted-url-subdomain ,
+#urlbar[chromedir="ltr"][protocolhidden="true"] .formatted-url-prePath > .formatted-url-port {
+  text-align: left;
 }
 
 #urlbar-container {
@@ -1330,7 +1412,6 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
   list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
 }
 
-%ifdef MOZ_PLACES_BOOKMARKS
 /* Personal toolbar */
 .toolbar-drop-indicator {
   height: 16px;
@@ -1371,12 +1452,4 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 .bookmark-item[dragover-bottom="true"] {
   -moz-border-bottom-colors: #000000;
-}
-%endif
-
-/* ::::: Tooltips (multi-line) from content ::::: */
-.htmltooltip-label {
-  max-width: 40em;
-  margin: 0;
-  white-space: -moz-pre-wrap;
 }

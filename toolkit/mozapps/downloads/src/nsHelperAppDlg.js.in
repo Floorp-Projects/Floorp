@@ -25,6 +25,7 @@
 #   Scott MacGregor <mscott@netscape.com>
 #   Ben Goodger <ben@bengoodger.com> (2.0)
 #   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
+#   Dan Mosedale <dmose@mozilla.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -683,9 +684,11 @@ nsUnknownContentTypeDialog.prototype = {
       var otherHandler = this.dialogElement("otherHandler");
               
       // Fill application name textbox.
-      if (this.chosenApp && this.chosenApp.path) {
-        otherHandler.setAttribute("path", this.getPath(this.chosenApp));
-        otherHandler.label = this.chosenApp.leafName;
+      if (this.chosenApp && this.chosenApp.executable && 
+          this.chosenApp.executable.path) {
+        otherHandler.setAttribute("path",
+                                  this.getPath(this.chosenApp.executable));
+        otherHandler.label = this.chosenApp.executable.leafName;
         otherHandler.hidden = false;
       }
 
@@ -808,10 +811,9 @@ nsUnknownContentTypeDialog.prototype = {
         needUpdate = this.mLauncher.MIMEInfo.preferredAction != this.nsIMIMEInfo.useHelperApp || this.appChanged();
         if (needUpdate) {
           this.mLauncher.MIMEInfo.preferredAction = this.nsIMIMEInfo.useHelperApp;
-          // App may have changed - Update application and description
+          // App may have changed - Update application
           var app = this.helperAppChoice();
           this.mLauncher.MIMEInfo.preferredApplicationHandler = app;
-          this.mLauncher.MIMEInfo.applicationDescription = "";
         }
       }
       // We will also need to update if the "always ask" flag has changed.
@@ -844,7 +846,8 @@ nsUnknownContentTypeDialog.prototype = {
       // Verify typed app path, if necessary.
       if (this.useOtherHandler) {
         var helperApp = this.helperAppChoice();
-        if (!helperApp || !helperApp.exists()) {
+        if (!helperApp || !helperApp.executable ||
+            !helperApp.executable.exists()) {
           // Show alert and try again.        
           var bundle = this.dialogElement("strings");                    
           var msg = bundle.getFormattedString("badApp", [this.dialogElement("otherHandler").path]);
@@ -959,12 +962,17 @@ nsUnknownContentTypeDialog.prototype = {
         this.dialogElement("modeDeck").setAttribute("selectedIndex", "0");
         
         // Remember the file they chose to run.
-        this.chosenApp = fp.file;
+        var localHandlerApp = 
+          Components.classes["@mozilla.org/uriloader/local-handler-app;1"].
+          createInstance(Components.interfaces.nsILocalHandlerApp);
+        localHandlerApp.executable = fp.file;
+        this.chosenApp = localHandlerApp;
+        
         // Update dialog.
         var otherHandler = this.dialogElement("otherHandler");
         otherHandler.removeAttribute("hidden");
-        otherHandler.setAttribute("path", this.getPath(this.chosenApp));
-        otherHandler.label = this.chosenApp.leafName;
+        otherHandler.setAttribute("path", this.getPath(this.chosenApp.executable));
+        otherHandler.label = this.chosenApp.executable.leafName;
         this.dialogElement("openHandler").selectedIndex = 1;
         this.dialogElement("openHandler").setAttribute("lastSelectedItemID", "otherHandler");
         

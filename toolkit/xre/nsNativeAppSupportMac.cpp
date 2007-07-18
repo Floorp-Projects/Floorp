@@ -37,11 +37,7 @@
 
 #include "nsString.h"
 
-#include <Gestalt.h>
-#include <Dialogs.h>
-#include <Resources.h>
-#include <TextUtils.h>
-#include <ControlDefinitions.h>
+#include <Carbon/Carbon.h>
 
 #include "nsCOMPtr.h"
 #include "nsNativeAppSupportBase.h"
@@ -111,21 +107,13 @@ NS_IMETHODIMP nsNativeAppSupportMac::Start(PRBool *_retval)
   Str255 str1;
   Str255 str2;
   SInt16 outItemHit;
-  long   response = 0;
-  OSErr  err = ::Gestalt (gestaltSystemVersion, &response);
-  // check for at least MacOS 8.5
-  if ( err || response < 0x850)
-  {
-    ::StopAlert (5000, NULL);
-    *_retval = PR_FALSE;
-    return NS_ERROR_FAILURE;
-  }
-  
-#if TARGET_CARBON
-  // If we're running under Mac OS X check for at least Mac OS X 10.1
+  long response = 0;
+  OSErr err = ::Gestalt (gestaltSystemVersion, &response);
+
+  // If we're running under Mac OS X check for at least Mac OS X 10.3
   // If that fails display a StandardAlert giving the user the option
   // to continue running the app or quitting
-  if (response >= 0x00001000 && response < 0x00001010)
+  if ((err != noErr) || response < 0x00001030)
   {
     // put up error dialog
     Str255 continueButtonLabel;
@@ -152,28 +140,10 @@ NS_IMETHODIMP nsNativeAppSupportMac::Start(PRBool *_retval)
       if (outItemHit == kAlertStdAlertCancelButton)
         return PR_FALSE;
     }
-    else
-      return PR_FALSE;
-  }
-  
-  // We also check for CarbonLib version >= 1.4 if OS vers < 10.0
-  // which is always cause for the app to quit
-  if (response < 0x00001000)
-  {
-    err = ::Gestalt (gestaltCarbonVersion, &response);
-    if (err || response < 0x00000140)
-    {
-      // put up error dialog
-      ::GetIndString(str1, kNSOSVersErrsStrArrayID, eCarbonLibVersTooOldIndex);
-      ::GetIndString(str2, kNSOSVersErrsStrArrayID, eCarbonLibVersTooOldExplanationIndex);
-      if (StrLength(str1) && StrLength(str1))
-      {
-        ::StandardAlert(kAlertStopAlert, str1, str2, nil, &outItemHit);
-      }
+    else {
       return PR_FALSE;
     }
   }
-#endif
 
   *_retval = PR_TRUE;
   return NS_OK;

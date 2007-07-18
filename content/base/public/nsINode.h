@@ -60,53 +60,66 @@ class nsChildContentList;
 class nsNodeWeakReference;
 class nsNodeSupportsWeakRefTearoff;
 
-// This bit will be set if the node doesn't have nsSlots
-#define NODE_DOESNT_HAVE_SLOTS       0x00000001U
+enum {
+  // This bit will be set if the node doesn't have nsSlots
+  NODE_DOESNT_HAVE_SLOTS =       0x00000001U,
 
-// This bit will be set if the node has a listener manager in the listener
-// manager hash
-#define NODE_HAS_LISTENERMANAGER     0x00000002U
+  // This bit will be set if the node has a listener manager in the listener
+  // manager hash
+  NODE_HAS_LISTENERMANAGER =     0x00000002U,
 
-// Whether this node has had any properties set on it
-#define NODE_HAS_PROPERTIES          0x00000004U
+  // Whether this node has had any properties set on it
+  NODE_HAS_PROPERTIES =          0x00000004U,
 
-// Whether this node is anonymous
-// NOTE: Should only be used on nsIContent nodes
-#define NODE_IS_ANONYMOUS            0x00000008U
+  // Whether this node is anonymous
+  // NOTE: Should only be used on nsIContent nodes
+  NODE_IS_ANONYMOUS =            0x00000008U,
 
-// Whether this node is anonymous for events
-// NOTE: Should only be used on nsIContent nodes
-#define NODE_IS_ANONYMOUS_FOR_EVENTS 0x00000010U
+  // Whether this node is anonymous for events
+  // NOTE: Should only be used on nsIContent nodes
+  NODE_IS_ANONYMOUS_FOR_EVENTS = 0x00000010U,
 
-// Whether this node may have a frame
-// NOTE: Should only be used on nsIContent nodes
-#define NODE_MAY_HAVE_FRAME          0x00000020U
+  // Whether this node may have a frame
+  // NOTE: Should only be used on nsIContent nodes
+  NODE_MAY_HAVE_FRAME =          0x00000020U,
 
-// Forces the XBL code to treat this node as if it were
-// in the document and therefore should get bindings attached.
-#define NODE_FORCE_XBL_BINDINGS      0x00000040U
+  // Forces the XBL code to treat this node as if it were
+  // in the document and therefore should get bindings attached.
+  NODE_FORCE_XBL_BINDINGS =      0x00000040U,
 
-// Whether a binding manager may have a pointer to this
-#define NODE_MAY_BE_IN_BINDING_MNGR  0x00000080U
+  // Whether a binding manager may have a pointer to this
+  NODE_MAY_BE_IN_BINDING_MNGR =  0x00000080U,
 
-// Four bits for the script-type ID
-#define NODE_SCRIPT_TYPE_OFFSET                8
+  NODE_IS_EDITABLE =             0x00000100U,
 
-// Remaining bits are node type specific.
-#define NODE_TYPE_SPECIFIC_BITS_OFFSET       0x0c
+  // Four bits for the script-type ID
+  NODE_SCRIPT_TYPE_OFFSET =                9,
 
-// Useful macro for getting a node given an nsIContent and an nsIDocument
-// Returns the first argument cast to nsINode if it is non-null, otherwise
-// returns the second (which may be null)
-#define NODE_FROM(content_, document_)                  \
-  ((content_) ? NS_STATIC_CAST(nsINode*, (content_)) :  \
-                NS_STATIC_CAST(nsINode*, (document_)))
+  NODE_SCRIPT_TYPE_SIZE =                  4,
+
+  // Remaining bits are node type specific.
+  NODE_TYPE_SPECIFIC_BITS_OFFSET =
+    NODE_SCRIPT_TYPE_OFFSET + NODE_SCRIPT_TYPE_SIZE
+};
+
+// Useful inline function for getting a node given an nsIContent and an
+// nsIDocument.  Returns the first argument cast to nsINode if it is non-null,
+// otherwise returns the second (which may be null).  We use type variables
+// instead of nsIContent* and nsIDocument* because the actual types must be
+// known for the cast to work.
+template<class C, class D>
+inline nsINode* NODE_FROM(C& aContent, D& aDocument)
+{
+  if (aContent)
+    return static_cast<nsINode*>(aContent);
+  return static_cast<nsINode*>(aDocument);
+}
 
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x22ab1440, 0xa6ee, 0x4da7, \
-  { 0xbc, 0x3b, 0x94, 0x2e, 0x56, 0x0d, 0xdc, 0xe0 } }
+{ 0x8cef8b4e, 0x4b7f, 0x4f86, \
+  { 0xba, 0x64, 0x75, 0xdf, 0xed, 0x0d, 0xa2, 0x3e } }
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsINode_base : public nsPIDOMEventTarget {
@@ -458,8 +471,8 @@ public:
   nsIContent* GetParent() const
   {
     return NS_LIKELY(mParentPtrBits & PARENT_BIT_PARENT_IS_CONTENT) ?
-           NS_REINTERPRET_CAST(nsIContent*,
-                               mParentPtrBits & ~kParentBitMask) :
+           reinterpret_cast<nsIContent*>
+                           (mParentPtrBits & ~kParentBitMask) :
            nsnull;
   }
 
@@ -470,7 +483,7 @@ public:
    */
   nsINode* GetNodeParent() const
   {
-    return NS_REINTERPRET_CAST(nsINode*, mParentPtrBits & ~kParentBitMask);
+    return reinterpret_cast<nsINode*>(mParentPtrBits & ~kParentBitMask);
   }
 
   /**
@@ -596,6 +609,25 @@ public:
     *flags &= ~aFlagsToUnset;
   }
 
+  void SetEditableFlag(PRBool aEditable)
+  {
+    if (aEditable) {
+      SetFlags(NODE_IS_EDITABLE);
+    }
+    else {
+      UnsetFlags(NODE_IS_EDITABLE);
+    }
+  }
+
+  PRBool IsEditable() const
+  {
+#ifdef _IMPL_NS_LAYOUT
+    return IsEditableInternal();
+#else
+    return IsEditableExternal();
+#endif
+  }
+
 protected:
 
   // Override this function to create a custom slots class.
@@ -609,7 +641,7 @@ protected:
   nsSlots* FlagsAsSlots() const
   {
     NS_ASSERTION(HasSlots(), "check HasSlots first");
-    return NS_REINTERPRET_CAST(nsSlots*, mFlagsOrSlots);
+    return reinterpret_cast<nsSlots*>(mFlagsOrSlots);
   }
 
   nsSlots* GetExistingSlots() const
@@ -625,10 +657,16 @@ protected:
 
     nsSlots* slots = CreateSlots();
     if (slots) {
-      mFlagsOrSlots = NS_REINTERPRET_CAST(PtrBits, slots);
+      mFlagsOrSlots = reinterpret_cast<PtrBits>(slots);
     }
 
     return slots;
+  }
+
+  PRBool IsEditableInternal() const;
+  virtual PRBool IsEditableExternal() const
+  {
+    return IsEditableInternal();
   }
 
   nsCOMPtr<nsINodeInfo> mNodeInfo;

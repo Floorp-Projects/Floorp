@@ -198,7 +198,7 @@ struct EventTypeData
   const nsIID*             iid;
 };
 
-#define HANDLER(x) NS_REINTERPRET_CAST(GenericHandler, x)
+#define HANDLER(x) reinterpret_cast<GenericHandler>(x)
 
 static const EventDispatchData sMouseEvents[] = {
   { NS_MOUSE_BUTTON_DOWN,        HANDLER(&nsIDOMMouseListener::MouseDown)     },
@@ -373,7 +373,7 @@ nsEventListenerManager::RemoveAllListeners()
   mListenersRemoved = PR_TRUE;
   PRInt32 count = mListeners.Count();
   for (PRInt32 i = 0; i < count; i++) {
-    delete NS_STATIC_CAST(nsListenerStruct*, mListeners.ElementAt(i));
+    delete static_cast<nsListenerStruct*>(mListeners.ElementAt(i));
   }
   mListeners.Clear();
   return NS_OK;
@@ -402,7 +402,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventListenerManager)
   PRInt32 i, count = tmp->mListeners.Count();
   nsListenerStruct *ls;
   for (i = 0; i < count; i++) {
-    ls = NS_STATIC_CAST(nsListenerStruct*, tmp->mListeners.ElementAt(i));
+    ls = static_cast<nsListenerStruct*>(tmp->mListeners.ElementAt(i));
     if (ls) {
       cb.NoteXPCOMChild(ls->mListener.get());
     }
@@ -485,7 +485,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   nsListenerStruct* ls = nsnull;
   PRInt32 count = mListeners.Count();
   for (PRInt32 i = 0; i < count; i++) {
-    ls = NS_STATIC_CAST(nsListenerStruct*, mListeners.ElementAt(i));
+    ls = static_cast<nsListenerStruct*>(mListeners.ElementAt(i));
     if (ls->mListener == aListener && ls->mFlags == aFlags &&
         ls->mGroupFlags == group &&
         (EVENT_TYPE_EQUALS(ls, aType, aTypeAtom) ||
@@ -571,7 +571,7 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
 
   PRInt32 count = mListeners.Count();
   for (PRInt32 i = 0; i < count; ++i) {
-    ls = NS_STATIC_CAST(nsListenerStruct*, mListeners.ElementAt(i));
+    ls = static_cast<nsListenerStruct*>(mListeners.ElementAt(i));
     if (ls->mListener == aListener &&
         ls->mGroupFlags == group &&
         ((ls->mFlags & ~NS_PRIV_EVENT_UNTRUSTED_PERMITTED) == aFlags) &&
@@ -654,7 +654,7 @@ nsEventListenerManager::FindJSEventListener(PRUint32 aEventType,
   nsListenerStruct *ls;
   PRInt32 count = mListeners.Count();
   for (PRInt32 i = 0; i < count; ++i) {
-    ls = NS_STATIC_CAST(nsListenerStruct*, mListeners.ElementAt(i));
+    ls = static_cast<nsListenerStruct*>(mListeners.ElementAt(i));
     if (EVENT_TYPE_EQUALS(ls, aEventType, aTypeAtom) &&
         ls->mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) {
       return ls;
@@ -809,7 +809,7 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
       else {
         PRInt32 nameSpace = kNameSpaceID_Unknown;
         if (node && node->IsNodeOfType(nsINode::eCONTENT)) {
-          nsIContent* content = NS_STATIC_CAST(nsIContent*, node.get());
+          nsIContent* content = static_cast<nsIContent*>(node.get());
           nameSpace = content->GetNameSpaceID();
         }
         else if (doc) {
@@ -826,6 +826,10 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
                                           aBody,
                                           url.get(), lineNo,
                                           handler);
+        if (rv == NS_ERROR_ILLEGAL_VALUE) {
+          NS_WARNING("Probably a syntax error in the event handler!");
+          return NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA;
+        }
         NS_ENSURE_SUCCESS(rv, rv);
         // And bind it.
         rv = context->BindCompiledEventHandler(aObject, scope,
@@ -1175,7 +1179,7 @@ found:
   PRBool hasListener = PR_FALSE;
   for (PRInt32 k = 0; !mListenersRemoved && k < count; ++k) {
     nsListenerStruct* ls =
-      NS_STATIC_CAST(nsListenerStruct*, originalListeners.FastElementAt(k));
+      static_cast<nsListenerStruct*>(originalListeners.FastElementAt(k));
     if (!ls || (mListenerRemoved && mListeners.IndexOf(ls) == -1)) {
       continue;
     }
@@ -1387,7 +1391,7 @@ nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
   nsresult ret = NS_OK;
 
   PRBool contextMenuKey =
-    NS_STATIC_CAST(nsMouseEvent*, aEvent)->context == nsMouseEvent::eContextMenuKey;
+    static_cast<nsMouseEvent*>(aEvent)->context == nsMouseEvent::eContextMenuKey;
   if (nsnull == *aDOMEvent) {
     // If we're here because of the key-equiv for showing context menus, we
     // have to twiddle with the NS event to make sure the context menu comes
@@ -1400,7 +1404,7 @@ nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
       aEvent->refPoint.x = 0;
       aEvent->refPoint.y = 0;
     }
-    ret = NS_NewDOMMouseEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsInputEvent*, aEvent));
+    ret = NS_NewDOMMouseEvent(aDOMEvent, aPresContext, static_cast<nsInputEvent*>(aEvent));
     NS_ENSURE_SUCCESS(ret, ret);
   }
 
@@ -1672,8 +1676,8 @@ nsEventListenerManager::HasMutationListeners(PRBool* aListener)
   if (mMayHaveMutationListeners) {
     PRInt32 count = mListeners.Count();
     for (PRInt32 i = 0; i < count; ++i) {
-      nsListenerStruct* ls = NS_STATIC_CAST(nsListenerStruct*,
-                                            mListeners.FastElementAt(i));
+      nsListenerStruct* ls = static_cast<nsListenerStruct*>
+                                        (mListeners.FastElementAt(i));
       if (ls &&
           ls->mEventType >= NS_MUTATION_START &&
           ls->mEventType <= NS_MUTATION_END) {
@@ -1693,8 +1697,8 @@ nsEventListenerManager::MutationListenerBits()
   if (mMayHaveMutationListeners) {
     PRInt32 i, count = mListeners.Count();
     for (i = 0; i < count; ++i) {
-      nsListenerStruct* ls = NS_STATIC_CAST(nsListenerStruct*,
-                                            mListeners.FastElementAt(i));
+      nsListenerStruct* ls = static_cast<nsListenerStruct*>
+                                        (mListeners.FastElementAt(i));
       if (ls &&
           (ls->mEventType >= NS_MUTATION_START &&
            ls->mEventType <= NS_MUTATION_END)) {
@@ -1733,8 +1737,8 @@ found:
 
   PRInt32 i, count = mListeners.Count();
   for (i = 0; i < count; ++i) {
-    nsListenerStruct* ls = NS_STATIC_CAST(nsListenerStruct*,
-                                          mListeners.FastElementAt(i));
+    nsListenerStruct* ls = static_cast<nsListenerStruct*>
+                                      (mListeners.FastElementAt(i));
     if (ls &&
         (ls->mTypeAtom == atom ||
          EVENT_TYPE_DATA_EQUALS(ls->mTypeData, typeData))) {
@@ -1749,8 +1753,8 @@ nsEventListenerManager::HasUnloadListeners()
 {
   PRInt32 count = mListeners.Count();
   for (PRInt32 i = 0; i < count; ++i) {
-    nsListenerStruct* ls = NS_STATIC_CAST(nsListenerStruct*,
-                                          mListeners.FastElementAt(i));
+    nsListenerStruct* ls = static_cast<nsListenerStruct*>
+                                      (mListeners.FastElementAt(i));
     if (ls &&
         (ls->mEventType == NS_PAGE_UNLOAD ||
          ls->mEventType == NS_BEFORE_PAGE_UNLOAD) ||

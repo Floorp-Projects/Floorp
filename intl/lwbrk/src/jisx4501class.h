@@ -22,8 +22,8 @@
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -43,14 +43,14 @@ static const PRUint32 gLBClass00[32] = {
 0x55555555, // U+0008 - U+000F
 0x55555555, // U+0010 - U+0017
 0x55555555, // U+0018 - U+001F
-0x88438815, // U+0020 - U+0027
-0x81515810, // U+0028 - U+002F
+0x88108815, // U+0020 - U+0027
+0x11118810, // U+0028 - U+002F
 0x66666666, // U+0030 - U+0037
-0x11501166, // U+0038 - U+003F
+0x11101866, // U+0038 - U+003F
 0x88888888, // U+0040 - U+0047
 0x88888888, // U+0048 - U+004F
 0x88888888, // U+0050 - U+0057
-0x88130888, // U+0058 - U+005F
+0x88100888, // U+0058 - U+005F
 0x88888888, // U+0060 - U+0067
 0x88888888, // U+0068 - U+006F
 0x88888888, // U+0070 - U+0077
@@ -59,17 +59,17 @@ static const PRUint32 gLBClass00[32] = {
 0x88888888, // U+0088 - U+008F
 0x88888888, // U+0090 - U+0097
 0x88888888, // U+0098 - U+009F
-0x58383488, // U+00A0 - U+00A7
-0x85888858, // U+00A8 - U+00AF
-0x85888854, // U+00B0 - U+00B7
+0x88383488, // U+00A0 - U+00A7
+0x88888888, // U+00A8 - U+00AF
+0x88888881, // U+00B0 - U+00B7
 0x88888888, // U+00B8 - U+00BF
 0x88888888, // U+00C0 - U+00C7
 0x88888888, // U+00C8 - U+00CF
-0x58888888, // U+00D0 - U+00D7
+0x88888888, // U+00D0 - U+00D7
 0x88888888, // U+00D8 - U+00DF
 0x88888888, // U+00E0 - U+00E7
 0x88888888, // U+00E8 - U+00EF
-0x58888888, // U+00F0 - U+00F7
+0x88888888, // U+00F0 - U+00F7
 0x88888888, // U+00F8 - U+00FF
 };
 
@@ -77,7 +77,7 @@ static const PRUint32 gLBClass20[32] = {
 0x55555555, // U+2000 - U+2007
 0x88885555, // U+2008 - U+200F
 0x88828888, // U+2010 - U+2017
-0x01100110, // U+2018 - U+201F
+0x88888888, // U+2018 - U+201F
 0x81118888, // U+2020 - U+2027
 0x88888888, // U+2028 - U+202F
 0x88884444, // U+2030 - U+2037

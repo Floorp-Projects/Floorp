@@ -23,18 +23,6 @@ download[state="4"] {
   -moz-binding: url('chrome://mozapps/content/downloads/download.xml#download-paused');
 }
 
-download[state="5"] {
-  -moz-binding: url('chrome://mozapps/content/downloads/download.xml#install-downloading');
-}
-
-download[state="6"] {
-  -moz-binding: url('chrome://mozapps/content/downloads/download.xml#install-installing');
-}
-
-download[state="7"] {
-  -moz-binding: url('chrome://mozapps/content/downloads/download.xml#install-done');
-}
-
 /* Only focus links in the selected item*/
 download:not([selected="true"]) .text-link {
   -moz-user-focus: none;

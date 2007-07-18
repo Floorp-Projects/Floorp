@@ -66,9 +66,11 @@ css_properties.js: host_ListCSSProperties$(HOST_BIN_SUFFIX) css_properties_like_
 	./host_ListCSSProperties$(HOST_BIN_SUFFIX) > $@
 	cat $(srcdir)/css_properties_like_longhand.js >> $@
 
-_TEST_FILES = 	test_bug221428.html \
+_TEST_FILES =	test_bug74880.html \
+		test_bug221428.html \
 		test_bug302186.html \
 		test_bug319381.html \
+		test_bug357614.html \
 		test_bug365932.html \
 		test_bug372770.html \
 		test_bug373293.html \
@@ -76,6 +78,8 @@ _TEST_FILES = 	test_bug221428.html \
 		test_bug379440.html \
 		test_bug379741.html \
 		test_bug383075.html \
+		test_bug387615.html \
+		test_compute_data_with_start_struct.html \
 		test_dont_use_document_colors.html \
 		test_inherit_storage.html \
 		test_inherit_computation.html \

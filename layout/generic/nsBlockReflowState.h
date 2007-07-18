@@ -117,7 +117,7 @@ public:
 
   /**
    * Adjusts the border/padding to return 0 for the top if
-   * we are no the first in flow.
+   * we are not the first in flow.
    */
   nsMargin BorderPadding() const {
     nsMargin result = mReflowState.mComputedBorderPadding;

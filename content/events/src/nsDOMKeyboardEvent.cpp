@@ -174,7 +174,7 @@ nsDOMKeyboardEvent::InitKeyEvent(const nsAString& aType, PRBool aCanBubble, PRBo
   nsresult rv = nsDOMUIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsKeyEvent* keyEvent = NS_STATIC_CAST(nsKeyEvent*, mEvent);
+  nsKeyEvent* keyEvent = static_cast<nsKeyEvent*>(mEvent);
   keyEvent->isControl = aCtrlKey;
   keyEvent->isAlt = aAltKey;
   keyEvent->isShift = aShiftKey;

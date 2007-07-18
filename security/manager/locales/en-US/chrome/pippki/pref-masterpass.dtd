@@ -56,6 +56,3 @@
 <!ENTITY  resetpassword.text                     "If you reset your master password, all of your stored web and e-mail passwords, form data, personal certificates, and private keys will be lost.">
 <!ENTITY  resetpassword.button                   "Reset Password">
 <!ENTITY  resetpassword.accesskey                "R">
-<!ENTITY  encryptExpire.label                    "Expire master password after each use.">
-<!ENTITY  encryptExpire.accesskey                "E">
-

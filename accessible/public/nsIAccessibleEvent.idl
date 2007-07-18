@@ -541,3 +541,12 @@ interface nsIAccessibleTextChangeEvent : nsIAccessibleEvent
   boolean isInserted();
 };
 
+[scriptable, uuid(b9076dce-4cd3-4e3d-a7f6-7f33a7f40c31)]
+interface nsIAccessibleCaretMoveEvent: nsIAccessibleEvent
+{
+  /**
+   * Return caret offset.
+   */
+  readonly attribute long caretOffset;
+};
+

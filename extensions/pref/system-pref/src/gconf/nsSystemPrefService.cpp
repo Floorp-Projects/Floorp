@@ -212,7 +212,7 @@ struct SysPrefCallbackData {
 PRBool PR_CALLBACK
 sysPrefDeleteObserver(void *aElement, void *aData) {
     SysPrefCallbackData *pElement =
-        NS_STATIC_CAST(SysPrefCallbackData *, aElement);
+        static_cast<SysPrefCallbackData *>(aElement);
     NS_RELEASE(pElement->observer);
     nsMemory::Free(pElement);
     return PR_TRUE;
@@ -520,7 +520,7 @@ nsSystemPrefService::OnPrefChange(PRUint32 aPrefAtom, void *aData)
         observer = do_QueryInterface(pData->observer);
 
     if (observer)
-        observer->Observe(NS_STATIC_CAST(nsIPrefBranch *, this),
+        observer->Observe(static_cast<nsIPrefBranch *>(this),
                           NS_SYSTEMPREF_PREFCHANGE_TOPIC_ID,
                           NS_ConvertUTF8toUTF16(mGConf->GetMozKey(aPrefAtom)).
                           get());
@@ -908,7 +908,7 @@ void gconf_key_listener (void* client, guint cnxn_id,
     SYSPREF_LOG(("...SYSPREF_LOG...key listener get called \n"));
     if (!user_data)
         return;
-    GConfCallbackData *pData = NS_REINTERPRET_CAST(GConfCallbackData *,
-                                                   user_data);
+    GConfCallbackData *pData = reinterpret_cast<GConfCallbackData *>
+                                               (user_data);
     pData->proxy->OnNotify(client, entry, cnxn_id, pData);
 }

@@ -273,7 +273,7 @@ nsMetricsService::BadCertListener::GetInterface(const nsIID &uuid,
   NS_ENSURE_ARG_POINTER(result);
 
   if (uuid.Equals(NS_GET_IID(nsIBadCertListener))) {
-    *result = NS_STATIC_CAST(nsIBadCertListener *, this);
+    *result = static_cast<nsIBadCertListener *>(this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -871,7 +871,7 @@ nsMetricsService::PruneDisabledCollectors(const nsAString &key,
                                           void *userData)
 {
   DisabledCollectorsClosure *dc =
-    NS_STATIC_CAST(DisabledCollectorsClosure *, userData);
+    static_cast<DisabledCollectorsClosure *>(userData);
 
   // The frozen string API doesn't expose operator==, so we can't use
   // IndexOf() here.
@@ -951,7 +951,7 @@ CopySegmentToStream(nsIInputStream *inStr,
                     PRUint32 count,
                     PRUint32 *countWritten)
 {
-  nsIOutputStream *outStr = NS_STATIC_CAST(nsIOutputStream *, closure);
+  nsIOutputStream *outStr = static_cast<nsIOutputStream *>(closure);
   *countWritten = 0;
   while (count) {
     PRUint32 n;
@@ -1552,7 +1552,7 @@ nsMetricsService::GenerateClientID(nsCString &clientID)
   nsMetricsUtils::GetRandomNoise(input.b, sizeof(input.b));
 
   return HashBytes(
-      NS_REINTERPRET_CAST(const PRUint8 *, &input), sizeof(input), clientID);
+      reinterpret_cast<const PRUint8 *>(&input), sizeof(input), clientID);
 }
 
 nsresult
@@ -1574,7 +1574,7 @@ nsMetricsService::HashBytes(const PRUint8 *bytes, PRUint32 length,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  PL_Base64Encode(NS_REINTERPRET_CAST(char*, buf), resultLength, resultBuffer);
+  PL_Base64Encode(reinterpret_cast<char*>(buf), resultLength, resultBuffer);
 
   // Size the string to its null-terminated length
   result.SetLength(strlen(resultBuffer));
@@ -1626,7 +1626,7 @@ nsMetricsService::HashUTF8(const nsCString &str, nsCString &hashed)
   }
 
   return HashBytes(
-      NS_REINTERPRET_CAST(const PRUint8 *, str.get()), str.Length(), hashed);
+      reinterpret_cast<const PRUint8 *>(str.get()), str.Length(), hashed);
 }
 
 /* static */ nsresult
@@ -1727,7 +1727,7 @@ nsMetricsUtils::GetRandomNoise(void *buf, PRSize size)
   PRSize nbytes = 0;
   while (nbytes < size) {
     PRSize n = PR_GetRandomNoise(
-        NS_STATIC_CAST(char *, buf) + nbytes, size - nbytes);
+        static_cast<char *>(buf) + nbytes, size - nbytes);
     if (n == 0) {
       MS_LOG(("Couldn't get any random bytes"));
       return PR_FALSE;

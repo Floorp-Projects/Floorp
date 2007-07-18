@@ -74,6 +74,7 @@
 #include "nsThreadUtils.h"
 #include "nsIJSContextStack.h"
 #include "nsIScriptChannel.h"
+#include "nsIDocument.h"
 
 class nsJSThunk : public nsIInputStream
 {
@@ -296,36 +297,23 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         }
         if (NS_FAILED(rv)) {
             return rv;
-        }    
+        }
 
         rv = xpc->EvalInSandboxObject(NS_ConvertUTF8toUTF16(script), cx,
-                                      sandbox, &rval);
+                                      sandbox, PR_TRUE, &rval);
 
         // Propagate and report exceptions that happened in the
         // sandbox.
         if (JS_IsExceptionPending(cx)) {
             JS_ReportPendingException(cx);
+            isUndefined = PR_TRUE;
+        } else {
+            isUndefined = rval == JSVAL_VOID;
         }
 
-        isUndefined = rval == JSVAL_VOID;
-
         if (!isUndefined && NS_SUCCEEDED(rv)) {
-            JSAutoRequest ar(cx);
-
-            JSString *str = JS_ValueToString(cx, rval);
-            if (!str) {
-                // Report any pending exceptions.
-                if (JS_IsExceptionPending(cx)) {
-                    JS_ReportPendingException(cx);
-                }
-
-                // We don't know why this failed, so just use a
-                // generic error code. It'll be translated to a
-                // different one below anyways.
-                rv = NS_ERROR_FAILURE;
-            } else {
-                result = nsDependentJSString(str);
-            }
+            NS_ASSERTION(JSVAL_IS_STRING(rval), "evalInSandbox is broken");
+            result = nsDependentJSString(JSVAL_TO_STRING(rval));
         }
 
         stack->Pop(nsnull);
@@ -414,6 +402,8 @@ protected:
     nsresult StopAll();
 
     void NotifyListener();
+
+    void CleanupStrongRefs();
     
 protected:
     nsCOMPtr<nsIChannel>    mStreamChannel;
@@ -421,6 +411,10 @@ protected:
     nsCOMPtr<nsISupports> mContext; // The context passed to AsyncOpen
     nsCOMPtr<nsPIDOMWindow> mOriginalInnerWindow;  // The inner window our load
                                                    // started against.
+    // If we blocked onload on a document in AsyncOpen, this is the document we
+    // did it on.
+    nsCOMPtr<nsIDocument>   mDocumentOnloadBlockedOn;
+
     nsresult mStatus; // Our status
 
     nsLoadFlags             mLoadFlags;
@@ -632,6 +626,26 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
         loadGroup->AddRequest(this, nsnull);
     }
 
+    mDocumentOnloadBlockedOn =
+        do_QueryInterface(mOriginalInnerWindow->GetExtantDocument());
+    if (mDocumentOnloadBlockedOn) {
+        // If we're a document channel, we need to actually block onload on our
+        // _parent_ document.  This is because we don't actually set our
+        // LOAD_DOCUMENT_URI flag, so a docloader we're loading in as the
+        // document channel will claim to not be busy, and our parent's onload
+        // could fire too early.
+        nsLoadFlags loadFlags;
+        mStreamChannel->GetLoadFlags(&loadFlags);
+        if (loadFlags & LOAD_DOCUMENT_URI) {
+            mDocumentOnloadBlockedOn =
+                mDocumentOnloadBlockedOn->GetParentDocument();
+        }
+    }
+    if (mDocumentOnloadBlockedOn) {
+        mDocumentOnloadBlockedOn->BlockOnload();
+    }
+
+
     mPopupState = win->GetPopupControlState();
 
     nsRunnableMethod<nsJSChannel>::Method method;
@@ -655,9 +669,7 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
             mStatus != NS_BINDING_ABORTED) {
             // Note that calling EvaluateScript() handled removing us from the
             // loadgroup and marking us as not active anymore.
-            mListener = nsnull;
-            mContext = nsnull;
-            mOriginalInnerWindow = nsnull;
+            CleanupStrongRefs();
             return mStatus;
         }
 
@@ -673,9 +685,7 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
     if (NS_FAILED(rv)) {
         loadGroup->RemoveRequest(this, nsnull, rv);
         mIsActive = PR_FALSE;
-        mListener = nsnull;
-        mContext = nsnull;
-        mOriginalInnerWindow = nsnull;
+        CleanupStrongRefs();
     }
     return rv;
 }
@@ -784,15 +794,22 @@ nsJSChannel::EvaluateScript()
 void
 nsJSChannel::NotifyListener()
 {
-    // Make sure to drop our ref to mListener
-    nsCOMPtr<nsIStreamListener> listener;
-    listener.swap(mListener);
+    mListener->OnStartRequest(this, mContext);
+    mListener->OnStopRequest(this, mContext, mStatus);
 
-    listener->OnStartRequest(this, mContext);
-    listener->OnStopRequest(this, mContext, mStatus);
+    CleanupStrongRefs();
+}
 
+void
+nsJSChannel::CleanupStrongRefs()
+{
+    mListener = nsnull;
     mContext = nsnull;
     mOriginalInnerWindow = nsnull;
+    if (mDocumentOnloadBlockedOn) {
+        mDocumentOnloadBlockedOn->UnblockOnload(PR_FALSE);
+        mDocumentOnloadBlockedOn = nsnull;
+    }
 }
 
 NS_IMETHODIMP
@@ -931,11 +948,9 @@ nsJSChannel::OnStopRequest(nsIRequest* aRequest,
 {
     NS_ENSURE_TRUE(aRequest == mStreamChannel, NS_ERROR_UNEXPECTED);
 
-    // Make sure to drop our ref to mListener
-    nsCOMPtr<nsIStreamListener> listener;
-    listener.swap(mListener);
+    nsCOMPtr<nsIStreamListener> listener = mListener;
 
-    mContext = nsnull;
+    CleanupStrongRefs();
     
     return listener->OnStopRequest(this, aContext, aStatus);
 }

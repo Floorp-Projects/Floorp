@@ -113,7 +113,7 @@ endif
 # Solaris/Intel
 #
 ifeq ($(OS_ARCH),SunOS)
-ifeq ($(OS_TEST),i86pc)
+ifeq (86,$(findstring 86,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_x86_solaris.cpp xptcstubs_x86_solaris.cpp
 # 28817: if Solaris Intel OS, and native compiler, always build optimised.
 ifndef GNU_CC
@@ -427,7 +427,7 @@ xptcstubs_asm_openvms_alpha.o: $(PUBLIC)/xptcstubsdef.inc $(srcdir)/xptcstubs_as
 endif
 
 ifeq ($(OS_ARCH),SunOS)
-ifeq ($(OS_TEST),i86pc)
+ifeq (86,$(findstring 86,$(OS_TEST)))
 ifndef GNU_CC
 xptcstubs_asm_x86_solaris_SUNW.o: $(PUBLIC)/xptcstubsdef.inc $(srcdir)/xptcstubs_asm_x86_solaris_SUNW.s
 	sed \

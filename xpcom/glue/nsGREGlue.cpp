@@ -560,7 +560,7 @@ CheckINIHeader(const char *aHeader, void *aClosure)
 {
   nsresult rv;
 
-  INIClosure *c = NS_REINTERPRET_CAST(INIClosure *, aClosure);
+  INIClosure *c = reinterpret_cast<INIClosure *>(aClosure);
 
   if (!CheckVersion(aHeader, c->versions, c->versionsLength))
     return PR_TRUE;

@@ -69,7 +69,6 @@
 #include "nsTopProgressNotifier.h"
 #include "nsLoggingProgressNotifier.h"
 
-#include "nsBuildID.h"
 #include "nsProcess.h"
 
 /* For Javascript Namespace Access */

@@ -132,7 +132,7 @@ decode_pqg_params(char *aStr)
     if (!arena)
         return nsnull;
 
-    params = NS_STATIC_CAST(PQGParams*, PORT_ArenaZAlloc(arena, sizeof(PQGParams)));
+    params = static_cast<PQGParams*>(PORT_ArenaZAlloc(arena, sizeof(PQGParams)));
     if (!params)
         goto loser;
     params->arena = arena;
@@ -438,7 +438,7 @@ GetSlotWithMechanism(PRUint32 aMechanism,
         }
 
         // Allocate the slot name buffer //
-        tokenNameList = NS_STATIC_CAST(PRUnichar**, nsMemory::Alloc(sizeof(PRUnichar *) * numSlots));
+        tokenNameList = static_cast<PRUnichar**>(nsMemory::Alloc(sizeof(PRUnichar *) * numSlots));
         if (!tokenNameList) {
             rv = NS_ERROR_OUT_OF_MEMORY;
             goto loser;

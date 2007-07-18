@@ -38,7 +38,7 @@
 var gTestfile = 'regress-379483.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 379483;
-var summary = 'Assertion: top < ss->printer->script->depth';
+var summary = 'Do not assert: top < ss->printer->script->depth';
 var actual = 'No Crash';
 var expect = 'No Crash';
 

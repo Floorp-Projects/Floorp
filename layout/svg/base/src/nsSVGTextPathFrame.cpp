@@ -68,7 +68,8 @@ nsSVGPathListener::AttributeChanged(nsIDocument *aDocument,
                                     nsIContent *aContent,
                                     PRInt32 aNameSpaceID,
                                     nsIAtom *aAttribute,
-                                    PRInt32 aModType)
+                                    PRInt32 aModType,
+                                    PRUint32 aStateMask)
 {
   mTextPathFrame->UpdateGraphic();
 }
@@ -129,7 +130,7 @@ nsSVGTextPathFrame::Init(nsIContent*      aContent,
       return NS_ERROR_FAILURE;
 
     NS_NewSVGLengthList(getter_AddRefs(mX),
-                        NS_STATIC_CAST(nsSVGElement*, mContent),
+                        static_cast<nsSVGElement*>(mContent),
                         nsSVGUtils::X);
     if (mX) {
       nsCOMPtr<nsIDOMSVGLength> length;
@@ -209,8 +210,8 @@ nsSVGTextPathFrame::GetFlattenedPath() {
   if (!path)
     return nsnull;
 
-  nsSVGPathGeometryElement *element = NS_STATIC_CAST(nsSVGPathGeometryElement*,
-                                                     path->GetContent());
+  nsSVGPathGeometryElement *element = static_cast<nsSVGPathGeometryElement*>
+                                                 (path->GetContent());
 
   if (!mPathListener) {
     mPathListener = new nsSVGPathListener(path->GetContent(), this);
