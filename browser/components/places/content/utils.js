@@ -456,7 +456,7 @@ var PlacesUtils = {
    */
   wrapNode: function PU_wrapNode(aNode, aType, aOverrideURI) {
     var self = this;
-    
+
     // when wrapping a node, we want all the items, even if the original
     // query options are excluding them.
     // this can happen when copying from the left hand pane of the bookmarks
@@ -470,7 +470,7 @@ var PlacesUtils = {
       }
       return cNode;
     }
-    
+
     switch (aType) {
       case this.TYPE_X_MOZ_PLACE:
       case this.TYPE_X_MOZ_PLACE_SEPARATOR:
@@ -494,7 +494,7 @@ var PlacesUtils = {
             nodeType = self.TYPE_X_MOZ_PLACE;
           else if (self.nodeIsSeparator(bNode))
             nodeType = self.TYPE_X_MOZ_PLACE_SEPARATOR;
-            
+
           var node = { id: nodeId,
                        uri: nodeUri,
                        title: nodeTitle,
@@ -503,9 +503,10 @@ var PlacesUtils = {
                        keyword: nodeKeyword,
                        annos: nodeAnnos,
                        type: nodeType };
-          
+
           // Recurse down children if the node is a folder
           if (self.nodeIsContainer(bNode)) {
+            asContainer(bNode);
             if (self.nodeIsLivemarkContainer(bNode)) {
               // just save the livemark info, reinstantiate on other end
               var feedURI = self.livemarks.getFeedURI(bNode.itemId).spec;
@@ -534,20 +535,20 @@ var PlacesUtils = {
           return node;
         }
         return this.toJSONString(gatherDataPlace(convertNode(aNode)));
-        
+
       case this.TYPE_X_MOZ_URL:
         function gatherDataUrl(bNode) {
           if (self.nodeIsLivemarkContainer(bNode)) {
             var siteURI = self.livemarks.getSiteURI(bNode.itemId).spec;
             return siteURI + "\n" + bNode.title;
           }
-          else if (self.nodeIsURI(bNode))
+          if (self.nodeIsURI(bNode))
             return (aOverrideURI || bNode.uri) + "\n" + bNode.title;
-          else // ignore containers and separators - items without valid URIs
-            return "";
+          // ignore containers and separators - items without valid URIs
+          return "";
         }
         return gatherDataUrl(convertNode(aNode));
-        
+
       case this.TYPE_HTML:
         function gatherDataHtml(bNode) {
           function htmlEscape(s) {
@@ -564,11 +565,12 @@ var PlacesUtils = {
             var siteURI = self.livemarks.getSiteURI(bNode.itemId).spec;
             return "<A HREF=\"" + siteURI + "\">" + escapedTitle + "</A>\n";
           }
-          else if (self.nodeIsContainer(bNode)) {
+          if (self.nodeIsContainer(bNode)) {
+            asContainer(bNode);
             var wasOpen = bNode.containerOpen;
             if (!wasOpen)
               bNode.containerOpen = true;
-            
+
             var childString = "<DL><DT>" + escapedTitle + "</DT>\n";
             var cc = bNode.childCount;
             for (var i = 0; i < cc; ++i)
@@ -578,21 +580,20 @@ var PlacesUtils = {
             bNode.containerOpen = wasOpen;
             return childString + "</DL>\n";
           }
-          else if (self.nodeIsURI(bNode))
+          if (self.nodeIsURI(bNode))
             return "<A HREF=\"" + bNode.uri + "\">" + escapedTitle + "</A>\n";
-          else if (self.nodeIsSeparator(bNode))
+          if (self.nodeIsSeparator(bNode))
             return "<HR>\n";
-          else
-            return "";
+          return "";
         }
         return gatherDataHtml(convertNode(aNode));
     }
     // case this.TYPE_UNICODE:
     function gatherDataText(bNode) {
-      if (self.nodeIsLivemarkContainer(bNode)) {
+      if (self.nodeIsLivemarkContainer(bNode))
         return self.livemarks.getSiteURI(bNode.itemId).spec;
-      }
-      else if (self.nodeIsContainer(bNode)) {
+      if (self.nodeIsContainer(bNode)) {
+        asContainer(bNode);
         var wasOpen = bNode.containerOpen;
         if (!wasOpen)
           bNode.containerOpen = true;
@@ -607,12 +608,11 @@ var PlacesUtils = {
         bNode.containerOpen = wasOpen;
         return childString;
       }
-      else if (self.nodeIsURI(bNode))
+      if (self.nodeIsURI(bNode))
         return (aOverrideURI || bNode.uri);
-      else if (self.nodeIsSeparator(bNode))
+      if (self.nodeIsSeparator(bNode))
         return "--------------------";
-      else
-        return "";
+      return "";
     }
 
     return gatherDataText(convertNode(aNode));
@@ -700,18 +700,18 @@ var PlacesUtils = {
             var annos = node.folder.annos;
             var folderItemsTransactions =
               getChildItemsTransactions(node.children);
-            txn = this.ptm.createFolder(title, -1, aIndex, annos,
+            txn = self.ptm.createFolder(title, -1, index, annos,
                                         folderItemsTransactions);
           }
           else { // node is a livemark
             var feedURI = self._uri(node.uri.feed);
             var siteURI = self._uri(node.uri.site);
-            txn = this.ptm.createLivemark(feedURI, siteURI, node.title,
+            txn = self.ptm.createLivemark(feedURI, siteURI, node.title,
                                           aContainer, index, node.annos);
           }
         }
         else if (node.type == self.TYPE_X_MOZ_PLACE_SEPARATOR)
-          txn = this.ptm.createSeparator(-1, aIndex);
+          txn = self.ptm.createSeparator(-1, index);
         else if (node.type == self.TYPE_X_MOZ_PLACE)
           txn = self._getBookmarkItemCopyTransaction(node, -1, index);
 
