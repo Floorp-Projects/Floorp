@@ -53,7 +53,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  expect = 'SyntaxError: invalid array comprehension left-hand side';
+  expect = /SyntaxError: /;
   try
   {
     eval('let [2 for (x in [])] = 4;');
@@ -63,7 +63,7 @@ function test()
     actual = ex + '';
   }
 
-  reportCompare(expect, actual, summary);
+  reportMatch(expect, actual, summary);
 
   exitFunc ('test');
 }
