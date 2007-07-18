@@ -135,12 +135,10 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
 
   do {
     MSG msg;
-    // Give priority to system messages (in particular keyboard, mouse, and
-    // non-user messages).
+    // Give priority to system messages (in particular keyboard, mouse, timer,
+    // and paint messages).
     if (PeekKeyAndIMEMessage(&msg, NULL) ||
         ::PeekMessageW(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
-        // See bug 378830.
-        ::PeekMessageW(&msg, NULL, 0, WM_USER - 1, PM_REMOVE) || 
         ::PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
       gotMessage = PR_TRUE;
       if (msg.message == WM_QUIT) {
