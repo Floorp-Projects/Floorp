@@ -67,8 +67,6 @@
  * per nsToolkit.
  */
 
-#define MAC_OS_X_VERSION_10_2_HEX 0x00001020
-#define MAC_OS_X_VERSION_10_3_HEX 0x00001030
 #define MAC_OS_X_VERSION_10_4_HEX 0x00001040
 #define MAC_OS_X_VERSION_10_5_HEX 0x00001050
 
@@ -85,8 +83,6 @@ public:
   static long        OSXVersion();
   
   // Convenience functions to check the OS version
-  static PRBool      OnPantherOrLater();
-  static PRBool      OnTigerOrLater();
   static PRBool      OnLeopardOrLater();
   
   static void        PostSleepWakeNotification(const char* aNotification);
