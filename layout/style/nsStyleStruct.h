@@ -50,14 +50,12 @@
 #include "nsMargin.h"
 #include "nsRect.h"
 #include "nsFont.h"
-#include "nsVoidArray.h"
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
 #include "nsChangeHint.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
-#include "nsCOMArray.h"
 #include "nsIAtom.h"
 #include "nsIURI.h"
 #include "nsCSSValue.h"
@@ -1316,57 +1314,5 @@ struct nsStyleSVGReset : public nsStyleStruct {
   PRUint8          mDominantBaseline; // [reset] see nsStyleConsts.h
 };
 #endif
-
-
-#define BORDER_PRECEDENT_EQUAL  0
-#define BORDER_PRECEDENT_LOWER  1
-#define BORDER_PRECEDENT_HIGHER 2
-
-struct nsBorderEdges;
-
-/** an encapsulation of border edge info */
-struct nsBorderEdge
-{
-  /** the thickness of the edge */
-  nscoord mWidth;
-  /** the length of the edge */
-  nscoord mLength;
-  nscolor mColor;
-  /** if this edge is an outside edge, the border infor for the adjacent inside object */
-  nsBorderEdges * mInsideNeighbor;
-  PRUint8 mStyle;  
-  /** which side does this edge represent? */
-  PRUint8 mSide;
-
-  nsBorderEdge();
-};
-
-inline nsBorderEdge::nsBorderEdge()
-{
-  mWidth=0;
-  mLength=0;
-  mStyle=NS_STYLE_BORDER_STYLE_NONE;
-  mColor=0;
-  mSide=NS_SIDE_LEFT;
-  mInsideNeighbor = nsnull;
-}
-
-/** an encapsulation of a border defined by its edges 
-  * owner of this struct is responsible for freeing any data stored in mEdges
-  */
-struct nsBorderEdges
-{
-  nsVoidArray  mEdges[4];
-  nsMargin     mMaxBorderWidth;
-  PRPackedBool mOutsideEdge;
-
-  nsBorderEdges();
-};
-
-inline nsBorderEdges::nsBorderEdges()
-{
-  mMaxBorderWidth.SizeTo(0,0,0,0);
-  mOutsideEdge = PR_TRUE;
-}
 
 #endif /* nsStyleStruct_h___ */
