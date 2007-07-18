@@ -819,30 +819,44 @@ nsDocShell::LoadURI(nsIURI * aURI,
     }
     // Perform the load...
     else {
-        // We need an owner (a referring principal). 3 possibilities:
-        // (1) If a principal was passed in, that's what we'll use.
-        // (2) If the caller has allowed inheriting from the current document,
+        // We need an owner (a referring principal). 4 possibilities:
+        // (1) If the system principal was passed in and we're a typeContent
+        //     docshell, inherit the principal from the current document
+        //     instead.
+        // (2) In all other cases when the principal passed in is not null,
+        //     use that principal.
+        // (3) If the caller has allowed inheriting from the current document,
         //     or if we're being called from system code (eg chrome JS or pure
         //     C++) then inheritOwner should be true and InternalLoad will get
         //     an owner from the current document. If none of these things are
         //     true, then
-        // (3) we pass a null owner into the channel, and an owner will be
-        //     created later from the URL.
+        // (4) we pass a null owner into the channel, and an owner will be
+        //     created later from the channel's internal data.
         //
-        // NOTE: This all only works because the only thing the owner is used
-        //       for in InternalLoad is data: and javascript: URIs.  For other
-        //       URIs this would all be dead wrong!
+        // NOTE: This all only works because the only thing the owner is used  
+        //       for in InternalLoad is data:, javascript:, and about:blank
+        //       URIs.  For other URIs this would all be dead wrong!
+        nsCOMPtr<nsIScriptSecurityManager> secMan =
+            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (owner && mItemType != typeChrome) {
+            nsCOMPtr<nsIPrincipal> ownerPrincipal = do_QueryInterface(owner);
+            PRBool isSystem;
+            rv = secMan->IsSystemPrincipal(ownerPrincipal, &isSystem);
+            NS_ENSURE_SUCCESS(rv, rv);
+            
+            if (isSystem) {
+                owner = nsnull;
+                inheritOwner = PR_TRUE;
+            }
+        }
         if (!owner && !inheritOwner) {
             // See if there's system or chrome JS code running
-            nsCOMPtr<nsIScriptSecurityManager> secMan;
-
-            secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-            if (NS_SUCCEEDED(rv)) {
-                rv = secMan->SubjectPrincipalIsSystem(&inheritOwner);
-                if (NS_FAILED(rv)) {
-                    // Set it back to false
-                    inheritOwner = PR_FALSE;
-                }
+            rv = secMan->SubjectPrincipalIsSystem(&inheritOwner);
+            if (NS_FAILED(rv)) {
+                // Set it back to false
+                inheritOwner = PR_FALSE;
             }
         }
 
