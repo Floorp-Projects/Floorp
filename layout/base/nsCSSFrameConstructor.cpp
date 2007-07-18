@@ -117,7 +117,7 @@
 #include "nsImageFrame.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsContentErrors.h"
-
+#include "nsIPrincipal.h"
 #include "nsIDOMWindowInternal.h"
 
 #include "nsBox.h"
@@ -4209,8 +4209,10 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
       return NS_ERROR_FAILURE;
 
     nsRefPtr<nsXBLBinding> binding;
-    rv = xblService->LoadBindings(aDocElement, display->mBinding, PR_FALSE,
-                                  getter_AddRefs(binding), &resolveStyle);
+    rv = xblService->LoadBindings(aDocElement, display->mBinding->mURI,
+                                  display->mBinding->mOriginPrincipal,
+                                  PR_FALSE, getter_AddRefs(binding),
+                                  &resolveStyle);
     if (NS_FAILED(rv))
       return NS_OK; // Binding will load asynchronously.
 
@@ -7460,8 +7462,9 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
       if (!xblService)
         return NS_ERROR_FAILURE;
 
-      rv = xblService->LoadBindings(aContent, display->mBinding, PR_FALSE,
-                                    getter_AddRefs(binding.mBinding),
+      rv = xblService->LoadBindings(aContent, display->mBinding->mURI,
+                                    display->mBinding->mOriginPrincipal,
+                                    PR_FALSE, getter_AddRefs(binding.mBinding),
                                     &resolveStyle);
       if (NS_FAILED(rv))
         return NS_OK;

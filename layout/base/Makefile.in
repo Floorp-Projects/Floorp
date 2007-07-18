@@ -78,6 +78,7 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  accessibility \
 		  shistory \
+		  caps \
 		  $(NULL)
 
 ifdef MOZ_ENABLE_CAIRO_GFX

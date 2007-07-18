@@ -58,6 +58,7 @@
 #include "xptcall.h"
 #include "prprf.h"
 #include "nsTArray.h"
+#include "nsCSSValue.h"
 
 // JavaScript includes
 #include "jsapi.h"
@@ -6954,7 +6955,7 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                                                                     nsnull);
     NS_ENSURE_TRUE(sc, NS_ERROR_FAILURE);
 
-    nsIURI *bindingURL = sc->GetStyleDisplay()->mBinding;
+    nsCSSValue::URL *bindingURL = sc->GetStyleDisplay()->mBinding;
     if (!bindingURL) {
       // No binding, nothing left to do here.
       return NS_OK;
@@ -6966,7 +6967,8 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));
     NS_ENSURE_TRUE(xblService, NS_ERROR_NOT_AVAILABLE);
 
-    xblService->LoadBindings(content, bindingURL, PR_FALSE,
+    xblService->LoadBindings(content, bindingURL->mURI,
+                             bindingURL->mOriginPrincipal, PR_FALSE,
                              getter_AddRefs(binding), &dummy);
   }
   

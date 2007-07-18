@@ -3605,6 +3605,7 @@ nsContentUtils::CheckSecurityBeforeLoad(nsIURI* aURIToLoad,
                                         const nsACString& aMimeGuess,
                                         nsISupports* aExtra)
 {
+  // XXXbz do we want to fast-path skin stylesheets loading XBL here somehow?
   nsCOMPtr<nsIURI> loadingURI;
   nsresult rv = aLoadingPrincipal->GetURI(getter_AddRefs(loadingURI));
   NS_ENSURE_SUCCESS(rv, rv);
