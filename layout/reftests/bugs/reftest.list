@@ -214,7 +214,7 @@ fails == 368020-1.html 368020-1-ref.html # bug 368079
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 368020-2.html 368020-2-ref.html # bug 368157 (gtk)
 fails == 368020-3.html 368020-3-ref.html # bug 368085
 fails == 368020-4.html 368020-4-ref.html # bug 368085
-== 368020-5.html 368020-5-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 368020-5.html 368020-5-ref.html # bug 388591
 == 368155-1.xhtml 368155-1-ref.xhtml
 == 368155-negative-margins-1.html 368155-negative-margins-1-ref.html
 # we can't test this because there's antialiasing involved, and our comparison
