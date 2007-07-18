@@ -48,10 +48,14 @@ interface nsIInputStream;
  *
  * @param aInStream stream being read
  * @param aClosure opaque parameter passed to ReadSegments
- * @param aFromSegment pointer to memory owned by the input stream
- * @param aToOffset amount already read (since ReadSegments was called)
- * @param aCount length of fromSegment
- * @param aWriteCount number of bytes read
+ * @param aFromSegment pointer to memory owned by the input stream.  This is
+ *                     where the writer function should start consuming data.
+ * @param aToOffset amount of data already consumed by this writer during this
+ *                  ReadSegments call.  This is also the sum of the aWriteCount
+ *                  returns from this writer over the previous invocations of
+ *                  the writer by this ReadSegments call.
+ * @param aCount Number of bytes available to be read starting at aFromSegment
+ * @param [out] aWriteCount number of bytes read by this writer function call
  *
  * Implementers should return the following:
  *
