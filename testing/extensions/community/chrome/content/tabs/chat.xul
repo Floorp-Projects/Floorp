@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chome://qa/skin/" type="text/css"?>
+
+<!DOCTYPE overlay [
+<!ENTITY % qaDTD SYSTEM "chrome://qa/locale/qa.dtd"> %qaDTD;
+]>
+
+<overlay id="qa-qmo-overlay" 
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml">
+
+
+<script type="application/x-javascript" 
+	src="chrome://chatzillaservice_qa/content/chatzilla-service.js" />
+
+<tabpanel id="qa-tab-chat">
+<vbox>
+  
+  <groupbox style="width:350px;">
+    <caption label="&qa.chat.introtitle;" />
+    <description>&qa.chat.intro;</description>
+    <spacer style="height: 1em;" />
+    <description>&qa.chat.intro2;</description>
+  </groupbox>
+  
+  <groupbox style="width:350px;">
+    <caption label="&qa.chat.howdoItitle;" />
+    <div xmlns="http://www.w3.org/1999/xhtml" id="qa-qmo-forumposts">
+      <ul>
+        <li><a href="&qa.chat.howdoI.imourl;" target="_blank">&qa.chat.howdoI.imo;</a></li>
+        <li><a href="&qa.chat.howdoI.irchelpurl;" target="_blank">&qa.chat.howdoI.irchelp;</a></li>
+      </ul>
+    </div>
+    <button style="margin-top: 12px; padding-left: 2em; padding-right: 2em;"
+      	oncommand="openQAChat();" label="&qa.chat.howdoI.joinnow;" />
+  </groupbox>
+  
+  <script type="application/x-javascript">
+    function openQAChat() {
+    	spawnChatZilla('irc://irc.mozilla.org/qa', 0);
+    }
+  </script>
+  
+</vbox>
+</tabpanel>
+
+</overlay>
