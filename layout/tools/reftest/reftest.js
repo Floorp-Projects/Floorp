@@ -1,3 +1,4 @@
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- /
 /* vim: set shiftwidth=4 tabstop=8 autoindent cindent expandtab: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -56,11 +57,17 @@ var gURLs;
 var gState;
 var gPart1Key;
 var gFailureTimeout;
+var gServer;
+var gCount = 0;
+
+var gIOService;
 
 const EXPECTED_PASS = 0;
 const EXPECTED_FAIL = 1;
 const EXPECTED_RANDOM = 2;
 const EXPECTED_DEATH = 3;  // test must be skipped to avoid e.g. crash/hang
+
+const HTTP_SERVER_PORT = 4444;
 
 function OnRefTestLoad()
 {
@@ -73,8 +80,12 @@ function OnRefTestLoad()
     gCanvas.setAttribute("width", windowElem.getAttribute("width"));
     gCanvas.setAttribute("height", windowElem.getAttribute("height"));
 
+    gIOService = CC[IO_SERVICE_CONTRACTID].getService(CI.nsIIOService);
+
     try {
         ReadTopManifest(window.arguments[0]);
+        if (gServer)
+            gServer.start(HTTP_SERVER_PORT);
         StartCurrentTest();
     } catch (ex) {
         gBrowser.loadURI('data:text/plain,' + ex);
@@ -89,8 +100,7 @@ function OnRefTestUnload()
 function ReadTopManifest(aFileURL)
 {
     gURLs = new Array();
-    var ios = CC[IO_SERVICE_CONTRACTID].getService(CI.nsIIOService);
-    var url = ios.newURI(aFileURL, null, null);
+    var url = gIOService.newURI(aFileURL, null, null);
     if (!url || !url.schemeIs("file"))
         throw "Expected a file URL for the manifest.";
     ReadManifest(url);
@@ -98,7 +108,6 @@ function ReadTopManifest(aFileURL)
 
 function ReadManifest(aURL)
 {
-    var ios = CC[IO_SERVICE_CONTRACTID].getService(CI.nsIIOService);
     var listURL = aURL.QueryInterface(CI.nsIFileURL);
 
     var secMan = CC[NS_SCRIPTSECURITYMANAGER_CONTRACTID]
@@ -156,30 +165,70 @@ function ReadManifest(aURL)
             }
         }
 
+        var runHttp = items[0] == "HTTP";
+        if (runHttp)
+            items.shift();
+
         if (items[0] == "include") {
-            if (items.length != 2)
+            if (items.length != 2 || runHttp)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo;
-            var incURI = ios.newURI(items[1], null, listURL);
+            var incURI = gIOService.newURI(items[1], null, listURL);
             secMan.checkLoadURI(aURL, incURI,
                                 CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             ReadManifest(incURI);
         } else if (items[0] == "==" || items[0] == "!=") {
             if (items.length != 3)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo;
-            var testURI = ios.newURI(items[1], null, listURL);
-            var refURI = ios.newURI(items[2], null, listURL);
+            var [testURI, refURI] = runHttp
+                                  ? ServeFiles(aURL,
+                                               listURL.file.parent, items[1], items[2])
+                                  : [gIOService.newURI(items[1], null, listURL),
+                                     gIOService.newURI(items[2], null, listURL)];
+            var prettyPath = runHttp
+                           ? gIOService.newURI(items[1], null, listURL).spec
+                           : testURI.spec;
             secMan.checkLoadURI(aURL, testURI,
                                 CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             secMan.checkLoadURI(aURL, refURI,
                                 CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             gURLs.push( { equal: (items[0] == "=="),
                           expected: expected_status,
+                          prettyPath: prettyPath,
                           url1: testURI,
-                          url2: refURI} );
+                          url2: refURI } );
         } else {
             throw "Error in manifest file " + aURL.spec + " line " + lineNo;
         }
     } while (more);
+}
+
+function ServeFiles(manifestURL, directory, file1, file2)
+{
+    if (!gServer)
+        gServer = CC["@mozilla.org/server/jshttp;1"].
+                      createInstance(CI.nsIHttpServer);
+
+    gCount++;
+    var path = "/" + gCount + "/";
+    gServer.registerDirectory(path, directory);
+
+    var testURI = gIOService.newURI("http://localhost:" + HTTP_SERVER_PORT +
+                                    path + file1,
+                                    null, null);
+    var refURI = gIOService.newURI("http://localhost:" + HTTP_SERVER_PORT +
+                                   path + file2,
+                                   null, null);
+
+    var secMan = CC[NS_SCRIPTSECURITYMANAGER_CONTRACTID]
+                     .getService(CI.nsIScriptSecurityManager);
+
+    // XXX necessary?  manifestURL guaranteed to be file, others always HTTP
+    secMan.checkLoadURI(manifestURL, testURI,
+                        CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+    secMan.checkLoadURI(manifestURL, refURI,
+                        CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+
+    return [testURI, refURI];
 }
 
 function StartCurrentTest()
@@ -206,6 +255,8 @@ function StartCurrentURI(aState)
 
 function DoneTests()
 {
+    if (gServer)
+        gServer.stop();
     goQuitApplication();
 }
 
@@ -318,7 +369,7 @@ function DocumentLoaded()
             if (!gURLs[0].equal) {
                 result += "(!=) ";
             }
-            result += gURLs[0].url1.spec; // the URL being tested
+            result += gURLs[0].prettyPath; // the URL being tested
             dump(result + "\n");
             if (!test_passed && expected == EXPECTED_PASS) {
                 dump("REFTEST   IMAGE 1 (TEST): " + gPart1Key + "\n");
@@ -330,7 +381,7 @@ function DocumentLoaded()
             StartCurrentTest();
             break;
         default:
-            throw "Unexpected state."
+            throw "Unexpected state.";
     }
 }
 
