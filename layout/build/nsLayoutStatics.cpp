@@ -170,16 +170,17 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
-#ifndef MOZ_NO_INSPECTOR_APIS
-  inDOMView::InitAtoms();
-#endif
-
 #ifdef MOZ_XUL
   rv = nsXULContentUtils::Init();
   if (NS_FAILED(rv)) {
     NS_ERROR("Could not initialize nsXULContentUtils");
     return rv;
   }
+
+#ifndef MOZ_NO_INSPECTOR_APIS
+  inDOMView::InitAtoms();
+#endif
+
 #endif
 
 #ifdef MOZ_MATHML

@@ -451,7 +451,9 @@ MAKE_CTOR(CreateNewContainerBoxObject,  nsIBoxObject,           NS_NewContainerB
 #endif // MOZ_XUL
 
 #ifndef MOZ_NO_INSPECTOR_APIS
+#ifdef MOZ_XUL
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDOMView)
+#endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDeepTreeWalker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inFlasher)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inCSSValueSearch)
@@ -857,11 +859,12 @@ static const nsModuleComponentInfo gComponents[] = {
 #endif // MOZ_XUL
 
 #ifndef MOZ_NO_INSPECTOR_APIS
-
+#ifdef MOZ_XUL
   { "DOM View",
     IN_DOMVIEW_CID, 
     "@mozilla.org/inspector/dom-view;1",
     inDOMViewConstructor },
+#endif
 
   { "Deep Tree Walker", 
     IN_DEEPTREEWALKER_CID, 
