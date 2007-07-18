@@ -656,10 +656,7 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
 
         // chrome is always allowed, so clear the flag if the opener is chrome
         if (popupConditions) {
-          PRBool isChrome = PR_FALSE;
-          if (sm)
-            sm->SubjectPrincipalIsSystem(&isChrome);
-          popupConditions = !isChrome;
+          popupConditions = !isCallerChrome;
         }
 
         if (popupConditions)
@@ -820,6 +817,17 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
       nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(aParent));
       if (sop) {
         newWindowPrincipal = sop->GetPrincipal();
+      }
+    }
+
+    PRBool isSystem;
+    rv = sm->IsSystemPrincipal(newWindowPrincipal, &isSystem);
+    if (NS_FAILED(rv) || isSystem) {
+      // Don't pass this principal along to content windows
+      PRInt32 itemType;
+      rv = newDocShellItem->GetItemType(&itemType);
+      if (NS_FAILED(rv) || itemType != nsIDocShellTreeItem::typeChrome) {
+        newWindowPrincipal = nsnull;        
       }
     }
 
