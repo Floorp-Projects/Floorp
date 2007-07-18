@@ -760,8 +760,10 @@ struct nsStyleDisplay : public nsStyleStruct {
 #ifdef DEBUG
   static nsChangeHint MaxDifference();
 #endif
-  
-  nsCOMPtr<nsIURI> mBinding;    // [reset]
+
+  // We guarantee that if mBinding is non-null, so are mBinding->mURI and
+  // mBinding->mOriginPrincipal.
+  nsRefPtr<nsCSSValue::URL> mBinding;    // [reset]
 #if 0
   // XXX This is how it is defined in the CSS2 spec, but the errata
   // changed it to be consistent with the positioning draft and how

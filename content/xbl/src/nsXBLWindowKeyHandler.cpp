@@ -119,6 +119,7 @@ void nsXBLSpecialDocInfo::LoadDocInfo()
   }
   xblService->LoadBindingDocumentInfo(nsnull, nsnull,
                                       bindingURI,
+                                      nsnull,
                                       PR_TRUE, 
                                       getter_AddRefs(mHTMLBindings));
 
@@ -132,6 +133,7 @@ void nsXBLSpecialDocInfo::LoadDocInfo()
 
     xblService->LoadBindingDocumentInfo(nsnull, nsnull,
                                         bindingURI,
+                                        nsnull,
                                         PR_TRUE, 
                                         getter_AddRefs(mUserHTMLBindings));
   }

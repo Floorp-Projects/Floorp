@@ -690,7 +690,8 @@ nsBindingManager::GetSingleInsertionPoint(nsIContent* aParent,
 }
 
 nsresult
-nsBindingManager::AddLayeredBinding(nsIContent* aContent, nsIURI* aURL)
+nsBindingManager::AddLayeredBinding(nsIContent* aContent, nsIURI* aURL,
+                                    nsIPrincipal* aOriginPrincipal)
 {
   // First we need to load our binding.
   nsresult rv;
@@ -702,8 +703,8 @@ nsBindingManager::AddLayeredBinding(nsIContent* aContent, nsIURI* aURL)
   // Load the bindings.
   nsRefPtr<nsXBLBinding> binding;
   PRBool dummy;
-  xblService->LoadBindings(aContent, aURL, PR_TRUE, getter_AddRefs(binding),
-                           &dummy);
+  xblService->LoadBindings(aContent, aURL, aOriginPrincipal, PR_TRUE,
+                           getter_AddRefs(binding), &dummy);
   if (binding) {
     AddToAttachedQueue(binding);
     ProcessAttachedQueue();
@@ -766,7 +767,8 @@ nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL)
 
 nsresult
 nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc,
-                                      nsIURI* aURL)
+                                      nsIURI* aURL,
+                                      nsIPrincipal* aOriginPrincipal)
 {
   NS_PRECONDITION(aURL, "Must have a URI to load!");
   
@@ -780,7 +782,8 @@ nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc,
   // Load the binding doc.
   nsCOMPtr<nsIXBLDocumentInfo> info;
   xblService->LoadBindingDocumentInfo(nsnull, aBoundDoc, aURL,
-                                      PR_TRUE, getter_AddRefs(info));
+                                      aOriginPrincipal, PR_TRUE,
+                                      getter_AddRefs(info));
   if (!info)
     return NS_ERROR_FAILURE;
 
