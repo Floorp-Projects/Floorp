@@ -284,7 +284,6 @@ IsSupportedPlugin(const nsCString& aMIMEType)
     return PR_FALSE;
   }
   nsresult rv = host->IsPluginEnabledForType(aMIMEType.get());
-  // XXX do plugins expect to work via extension too?
   return NS_SUCCEEDED(rv);
 }
 
