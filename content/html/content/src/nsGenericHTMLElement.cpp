@@ -1231,11 +1231,17 @@ nsGenericHTMLElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 already_AddRefed<nsIDOMHTMLFormElement>
 nsGenericHTMLElement::FindForm(nsIForm* aCurrentForm)
 {
+  // Make sure we don't end up finding a form that's anonymous from
+  // our point of view.
+  nsIContent* bindingParent = GetBindingParent();
+
   nsIContent* content = this;
-  while (content) {
+  while (content != bindingParent && content) {
     // If the current ancestor is a form, return it as our form
     if (content->Tag() == nsGkAtoms::form &&
         content->IsNodeOfType(nsINode::eHTML)) {
+      NS_ASSERTION(nsContentUtils::IsInSameAnonymousTree(this, content),
+                   "Walked too far?");
       nsIDOMHTMLFormElement* form;
       CallQueryInterface(content, &form);
 
@@ -1266,18 +1272,6 @@ nsGenericHTMLElement::FindForm(nsIForm* aCurrentForm)
           return form;
         }
       } while (iter);
-    }
-    
-    if (content) {
-      PRInt32 i = content->IndexOf(prevContent);
-
-      if (i < 0) {
-        // This means 'prevContent' is anonymous content, form controls in
-        // anonymous content can't refer to the real form, if they do
-        // they end up in form.elements n' such, and that's wrong...
-
-        return nsnull;
-      }
     }
   }
 
