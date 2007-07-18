@@ -172,6 +172,7 @@ nsPlaceholderFrame::GetParentStyleContextFrame(nsPresContext* aPresContext,
   // {ib} split gunk here.
   *aProviderFrame =
     CorrectStyleParentFrame(GetParent(), nsGkAtoms::placeholderFrame);
+  return NS_OK;
 }
 
 
