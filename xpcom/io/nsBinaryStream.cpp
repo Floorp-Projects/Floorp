@@ -315,7 +315,30 @@ NS_IMETHODIMP
 nsBinaryInputStream::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead)
 {
     NS_ENSURE_STATE(mInputStream);
-    return mInputStream->Read(aBuffer, aCount, aNumRead);
+
+    // mInputStream might give us short reads, so deal with that.
+    PRUint32 totalRead = 0;
+
+    PRUint32 bytesRead;
+    do {
+        nsresult rv = mInputStream->Read(aBuffer, aCount, &bytesRead);
+        if (rv == NS_BASE_STREAM_WOULD_BLOCK && totalRead != 0) {
+            // We already read some data.  Return it.
+            break;
+        }
+        
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+
+        totalRead += bytesRead;
+        aBuffer += bytesRead;
+        aCount -= bytesRead;
+    } while (aCount != 0 && bytesRead != 0);
+
+    *aNumRead = totalRead;
+    
+    return NS_OK;
 }
 
 
@@ -328,6 +351,8 @@ struct ReadSegmentsClosure {
     nsIInputStream* mRealInputStream;
     void* mRealClosure;
     nsWriteSegmentFun mRealWriter;
+    nsresult mRealResult;
+    PRUint32 mBytesRead;  // to properly implement aToOffset
 };
 
 // the thunking function
@@ -342,10 +367,17 @@ ReadSegmentForwardingThunk(nsIInputStream* aStream,
     ReadSegmentsClosure* thunkClosure =
         reinterpret_cast<ReadSegmentsClosure*>(aClosure);
 
-    return thunkClosure->mRealWriter(thunkClosure->mRealInputStream,
-                                     thunkClosure->mRealClosure,
-                                     aFromSegment, aToOffset,
-                                     aCount, aWriteCount);
+    NS_ASSERTION(NS_SUCCEEDED(thunkClosure->mRealResult),
+                 "How did this get to be a failure status?");
+
+    thunkClosure->mRealResult =
+        thunkClosure->mRealWriter(thunkClosure->mRealInputStream,
+                                  thunkClosure->mRealClosure,
+                                  aFromSegment,
+                                  thunkClosure->mBytesRead + aToOffset,
+                                  aCount, aWriteCount);
+
+    return thunkClosure->mRealResult;
 }
 
 
@@ -354,9 +386,32 @@ nsBinaryInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUi
 {
     NS_ENSURE_STATE(mInputStream);
 
-    ReadSegmentsClosure thunkClosure = { this, closure, writer };
+    ReadSegmentsClosure thunkClosure = { this, closure, writer, NS_OK, 0 };
     
-    return mInputStream->ReadSegments(ReadSegmentForwardingThunk, &thunkClosure, count, _retval);
+    // mInputStream might give us short reads, so deal with that.
+    PRUint32 bytesRead;
+    do {
+        nsresult rv = mInputStream->ReadSegments(ReadSegmentForwardingThunk,
+                                                 &thunkClosure,
+                                                 count, &bytesRead);
+
+        if (rv == NS_BASE_STREAM_WOULD_BLOCK && thunkClosure.mBytesRead != 0) {
+            // We already read some data.  Return it.
+            break;
+        }
+        
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+
+        thunkClosure.mBytesRead += bytesRead;
+        count -= bytesRead;
+    } while (count != 0 && bytesRead != 0 &&
+             NS_SUCCEEDED(thunkClosure.mRealResult));
+
+    *_retval = thunkClosure.mBytesRead;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
