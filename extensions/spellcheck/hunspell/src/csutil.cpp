@@ -101,8 +101,8 @@ using namespace std;
 #endif
 #endif
 
-struct unicode_info2 * utf_tbl = NULL;
-int utf_tbl_count = 0; // utf_tbl can be used by multiple Hunspell instances
+static struct unicode_info2 * utf_tbl = NULL;
+static int utf_tbl_count = 0; // utf_tbl can be used by multiple Hunspell instances
 
 /* only UTF-16 (BMP) implementation */
 char * u16_u8(char * dest, int size, const w_char * src, int srclen) {
@@ -158,7 +158,7 @@ int u8_u16(w_char * dest, int size, const char * src) {
     w_char * u2 = dest;
     w_char * u2_max = u2 + size;
     
-    while (*u8 && (u2 < u2_max)) {
+    while ((u2 < u2_max) && *u8) {
     switch ((*u8) & 0xf0) {
         case 0x00:
         case 0x10:
@@ -289,15 +289,19 @@ int flag_bsearch(unsigned short flags[], unsigned short flag, int length) {
          *stringp = dp+1;
          int nc = (int)((unsigned long)dp - (unsigned long)mp);
          rv = (char *) malloc(nc+1);
-         memcpy(rv,mp,nc);
-         *(rv+nc) = '\0';
-         return rv;
+	 if (rv) {
+            memcpy(rv,mp,nc);
+            *(rv+nc) = '\0';
+            return rv;
+	 }
       } else {
-        rv = (char *) malloc(n+1);
-        memcpy(rv, mp, n);
-        *(rv+n) = '\0';
-        *stringp = mp + n;
-        return rv;
+         rv = (char *) malloc(n+1);
+         if (rv) {
+    	    memcpy(rv, mp, n);
+            *(rv+n) = '\0';
+            *stringp = mp + n;
+            return rv;
+         }
       }
    }
    return NULL;
@@ -5186,7 +5190,7 @@ int initialize_utf_tbl() {
 #endif
 
 void free_utf_tbl() {
-  if (utf_tbl_count > 0) utf_tbl--;
+  if (utf_tbl_count > 0) utf_tbl_count--;
   if (utf_tbl && (utf_tbl_count == 0)) {
     free(utf_tbl);
     utf_tbl = NULL;
@@ -5344,14 +5348,14 @@ void remove_ignored_chars(char * word, char * ignored_chars)
    *word = '\0';
 }
 
-int parse_string(char * line, char ** out, const char * name)
+int parse_string(char * line, char ** out, const char * WARNVAR)
 {
    char * tp = line;
    char * piece;
    int i = 0;
    int np = 0;
    if (*out) {
-      HUNSPELL_WARNING(stderr, "error: duplicate %s line\n", name);
+      HUNSPELL_WARNING(stderr, "error: duplicate %s line\n", warnvar);
       return 1;
    }
    piece = mystrsep(&tp, 0);
@@ -5372,7 +5376,7 @@ int parse_string(char * line, char ** out, const char * name)
       piece = mystrsep(&tp, 0);
    }
    if (np != 2) {
-      HUNSPELL_WARNING(stderr, "error: missing %s information\n", name);
+      HUNSPELL_WARNING(stderr, "error: missing %s information\n", warnvar);
       return 1;
    } 
    return 0;

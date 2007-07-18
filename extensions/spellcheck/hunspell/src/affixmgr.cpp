@@ -2993,7 +2993,7 @@ int AffixMgr::get_checksharps()
 char * AffixMgr::get_ignore()
 {
   if (!ignorechars) return NULL;
-  return mystrdup(ignorechars);
+  return ignorechars;
 }
 
 // return the preferred ignore string for suggestions
@@ -3936,7 +3936,7 @@ int  AffixMgr::parse_affix(char * line, const char at, FILE * af, char * dupflag
    return 0;
 }
 
-int AffixMgr::redundant_condition(char ft, char * strip, int stripl, const char * cond, char * line) {
+int AffixMgr::redundant_condition(char ft, char * strip, int stripl, const char * cond, char * WARNVAR) {
   int condl = strlen(cond);
   int i;
   int j;
@@ -3949,7 +3949,7 @@ int AffixMgr::redundant_condition(char ft, char * strip, int stripl, const char 
       for (i = 0, j = 0; (i < stripl) && (j < condl); i++, j++) {
         if (cond[j] != '[') {
           if (cond[j] != strip[i]) {
-            HUNSPELL_WARNING(stderr, "warning: incompatible stripping characters and condition:\n%s\n", line);
+            HUNSPELL_WARNING(stderr, "warning: incompatible stripping characters and condition:\n%s\n", warnvar);
           }
         } else {
           neg = (cond[j+1] == '^') ? 1 : 0;
@@ -3959,11 +3959,11 @@ int AffixMgr::redundant_condition(char ft, char * strip, int stripl, const char 
             if (strip[i] == cond[j]) in = 1;
           } while ((j < (condl - 1)) && (cond[j] != ']'));
           if (j == (condl - 1) && (cond[j] != ']')) {
-            HUNSPELL_WARNING(stderr, "error: missing ] in condition:\n%s\n", line);
+            HUNSPELL_WARNING(stderr, "error: missing ] in condition:\n%s\n", warnvar);
             return 0;
           }
           if ((!neg && !in) || (neg && in)) {
-            HUNSPELL_WARNING(stderr, "warning: incompatible stripping characters and condition:\n%s\n", line);
+            HUNSPELL_WARNING(stderr, "warning: incompatible stripping characters and condition:\n%s\n", warnvar);
             return 0;          
           }
         }
@@ -3977,7 +3977,7 @@ int AffixMgr::redundant_condition(char ft, char * strip, int stripl, const char 
       for (i = stripl - 1, j = condl - 1; (i >= 0) && (j >= 0); i--, j--) {
         if (cond[j] != ']') {
           if (cond[j] != strip[i]) {
-            HUNSPELL_WARNING(stderr, "warning: incompatible stripping characters and condition:\n%s\n", line);
+            HUNSPELL_WARNING(stderr, "warning: incompatible stripping characters and condition:\n%s\n", warnvar);
           }
         } else {
           in = 0;
@@ -3986,12 +3986,12 @@ int AffixMgr::redundant_condition(char ft, char * strip, int stripl, const char 
             if (strip[i] == cond[j]) in = 1;
           } while ((j > 0) && (cond[j] != '['));
           if ((j == 0) && (cond[j] != '[')) {
-            HUNSPELL_WARNING(stderr, "error: missing ] in condition:\n%s\n", line);
+            HUNSPELL_WARNING(stderr, "error: missing ] in condition:\n%s\n", warnvar);
             return 0;
           }
           neg = (cond[j+1] == '^') ? 1 : 0;
           if ((!neg && !in) || (neg && in)) {
-            HUNSPELL_WARNING(stderr, "warning: incompatible stripping characters and condition:\n%s\n", line);
+            HUNSPELL_WARNING(stderr, "warning: incompatible stripping characters and condition:\n%s\n", warnvar);
             return 0;          
           }
         }
