@@ -188,6 +188,10 @@ nsHTMLCanvasFrame::PaintCanvas(nsIRenderingContext& aRenderingContext,
   if (!canvas)
     return;
 
+  // anything to do?
+  if (inner.width == 0 || inner.height == 0)
+    return;
+
   nsSize canvasSize = GetCanvasSize();
   nsSize sizeAppUnits(PresContext()->DevPixelsToAppUnits(canvasSize.width),
                       PresContext()->DevPixelsToAppUnits(canvasSize.height));
