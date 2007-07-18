@@ -3764,24 +3764,24 @@ nsHTMLDocument::ChangeContentEditableCount(nsIContent *aElement,
       nsCOMPtr<nsIEditor> editor;
       editorDocShell->GetEditor(getter_AddRefs(editor));
       if (editor) {
-      nsCOMPtr<nsIDOMRange> range;
-      rv = NS_NewRange(getter_AddRefs(range));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = range->SelectNode(node);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsIInlineSpellChecker> spellChecker;
-      rv = editor->GetInlineSpellChecker(PR_FALSE,
-                                         getter_AddRefs(spellChecker));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (spellChecker) {
-        rv = spellChecker->SpellCheckRange(range);
+        nsCOMPtr<nsIDOMRange> range;
+        rv = NS_NewRange(getter_AddRefs(range));
         NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = range->SelectNode(node);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsIInlineSpellChecker> spellChecker;
+        rv = editor->GetInlineSpellChecker(PR_FALSE,
+                                           getter_AddRefs(spellChecker));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (spellChecker) {
+          rv = spellChecker->SpellCheckRange(range);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
       }
     }
-  }
   }
 
   return NS_OK;
@@ -3832,9 +3832,9 @@ nsHTMLDocument::TurnEditingOff()
   editorDocShell->GetEditor(getter_AddRefs(editor));
   nsCOMPtr<nsIEditorStyleSheets> editorss = do_QueryInterface(editor);
   if (editorss) {
-  editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/contenteditable.css"));
+    editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/contenteditable.css"));
     if (mEditingState == eDesignMode)
-    editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/designmode.css"));
+      editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/designmode.css"));
   }
 
   if (mEditingState == eDesignMode) {
