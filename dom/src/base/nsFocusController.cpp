@@ -262,6 +262,17 @@ nsFocusController::GetControllers(nsIControllers** aResult)
       do_QueryInterface(mCurrentElement);
     if (htmlInputElement)
       return htmlInputElement->GetControllers(aResult);
+
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mCurrentElement);
+    if (content && content->IsEditable()) {
+      // Move up to the window.
+      nsCOMPtr<nsIDOMDocument> domDoc;
+      mCurrentElement->GetOwnerDocument(getter_AddRefs(domDoc));
+      nsCOMPtr<nsIDOMWindowInternal> domWindow =
+        do_QueryInterface(GetWindowFromDocument(domDoc));
+      if (domWindow)
+        return domWindow->GetControllers(aResult);
+    }
   }
   else if (mCurrentWindow) {
     nsCOMPtr<nsIDOMWindowInternal> domWindow =
