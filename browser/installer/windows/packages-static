@@ -66,7 +66,6 @@ bin\components\appshell.xpt
 bin\components\appstartup.xpt
 bin\components\autocomplete.xpt
 bin\components\autoconfig.xpt
-bin\components\bookmarks.xpt
 bin\components\browsercompsbase.xpt
 bin\components\browserplaces.xpt
 bin\components\browsersearch.xpt
@@ -115,7 +114,6 @@ bin\components\feeds.xpt
 bin\components\find.xpt
 bin\components\fuel.xpt
 bin\components\gfx.xpt
-bin\components\history.xpt
 bin\components\htmlparser.xpt
 bin\components\imglib2.xpt
 bin\components\imgicon.xpt
@@ -223,7 +221,6 @@ bin\components\storage-Legacy.js
 bin\components\pluginGlue.js
 bin\components\extensions.xpt
 bin\components\update.xpt
-bin\components\nsBookmarkTransactionManager.js
 bin\components\nsSessionStartup.js
 bin\components\nsSessionStore.js
 bin\components\sessionstore.xpt
