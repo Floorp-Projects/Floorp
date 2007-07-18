@@ -806,7 +806,7 @@ nsXULPopupManager::GetOpenPopups()
 
   nsMenuChainItem* item = mCurrentMenu;
   while (item) {
-    popups.AppendElement(item->Frame());
+    popups.AppendElement(static_cast<nsIFrame*>(item->Frame()));
     item = item->GetParent();
   }
 
