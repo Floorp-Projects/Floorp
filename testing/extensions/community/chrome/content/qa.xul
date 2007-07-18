@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chome://qa/skin/" type="text/css"?>
+
+<!DOCTYPE window [
+<!ENTITY % qaDTD SYSTEM "chrome://qa/locale/qa.dtd"> %qaDTD;
+]>
+
+<?xul-overlay href="chrome://qa/content/tabs/litmus.xul"?>
+<?xul-overlay href="chrome://qa/content/tabs/settings.xul"?>
+<?xul-overlay href="chrome://qa/content/tabs/qmo.xul"?>
+<?xul-overlay href="chrome://qa/content/tabs/chat.xul"?>
+<?xul-overlay href="chrome://qa/content/tabs/bugzilla.xul"?>
+
+<window
+  id="qa-mainwindow"
+  title="&qa.mainwindow.title;"
+  width="400"
+  height="750"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  onload="qaMain.onToolOpen();">
+
+<style xmlns="http://www.w3.org/1999/xhtml">
+@import url(chrome://qa/skin/);
+</style>
+
+<stringbundleset id="stringbundleset">
+  <stringbundle id="bundle_qa" src="chrome://qa/locale/qa.properties" />
+  <stringbundle id="bundle_urls" src="chrome://qa/locale/urls.properties" />
+</stringbundleset>
+
+<script type="application/x-javascript" src="chrome://qa/content/MochiKit/MochiKit.js" />
+<script type="application/x-javascript" src="chrome://qa/content/litmusReporter.js" />
+<script type="application/x-javascript" src="chrome://qa/content/prefs.js" />
+<script type="application/x-javascript" src="chrome://qa/content/common.js" />
+<script type="application/x-javascript" src="chrome://qa/content/litmus.js" />
+<script type="application/x-javascript" src="chrome://qa/content/qa.js" />
+
+
+<tabbox id="qa_tabbox">
+  <tabs id="qa_tabrow">
+    <tab image="chrome://qa/skin/qmo.png" />
+    <tab label="&qa.litmus.title;" />
+    <tab label="&qa.bugzilla.title;" />
+    <tab label="&qa.chat.title;" />
+    <spacer flex="1" />
+    <tab label="&qa.preferences.title;" id="qa-tabbar-prefs" />
+    <tab label="&qa.help.title;" />
+  </tabs>
+  <tabpanels>
+    <tabpanel id="qa-tab-qmo"></tabpanel>
+    <tabpanel id="qa-tab-litmus"></tabpanel>
+    <tabpanel id="qa-tab-bugzilla"></tabpanel>
+    <tabpanel id="qa-tab-chat"></tabpanel>
+    
+    <tabpanel id="qa-tab-SPACER"></tabpanel>
+    
+    <tabpanel id="qa-tab-settings"></tabpanel>
+    <tabpanel id="qa-tab-help"></tabpanel>
+  </tabpanels>
+</tabbox>
+  
+<statusbar id="qa-statusbar">
+  <statusbarpanel id="qa-statusbar-text" flex="1" />
+</statusbar>
+  
+</window>

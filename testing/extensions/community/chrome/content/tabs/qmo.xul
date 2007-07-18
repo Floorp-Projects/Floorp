@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chome://qa/skin/" type="text/css"?>
+
+<!DOCTYPE overlay [
+<!ENTITY % qaDTD SYSTEM "chrome://qa/locale/qa.dtd"> %qaDTD;
+]>
+
+<overlay id="qa-qmo-overlay" 
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml">
+
+<script type="application/x-javascript" src="chrome://qa/content/tabs/qa.js" />
+<script type="application/x-javascript" src="chrome://qa/content/tabs/qmo.js" />
+<script type="application/x-javascript">
+  window.addEventListener('load', qmo.populateFields, false)
+</script>
+
+<tabpanel id="qa-tab-qmo">
+<vbox>
+  <label href="http://quality.mozilla.org" value="&qa.qmo.visit;" class="text-link" />
+  
+  <hbox>
+  <groupbox>
+    <caption label="&qa.qmo.help;" />
+    <div xmlns="http://www.w3.org/1999/xhtml" id="qa-qmo-help">
+    </div>
+  </groupbox>
+  <groupbox>
+    <caption label="&qa.qmo.events;" />
+    <div xmlns="http://www.w3.org/1999/xhtml" id="qa-qmo-events">
+      <ul>
+      </ul>
+    </div>
+  </groupbox>
+  </hbox>
+  
+  <groupbox>
+    <caption label="&qa.qmo.forumposts;" />
+    <div xmlns="http://www.w3.org/1999/xhtml" id="qa-qmo-forumposts">
+      <ul>
+      </ul>
+    </div>
+  </groupbox>
+  
+  <groupbox style="height: 200px; width:100px; overflow: auto; margin-right: 12px;">
+    <caption label="&qa.qmo.thelatest;" />
+    <div xmlns="http://www.w3.org/1999/xhtml" id="qa-qmo-latest">
+	
+    </div>
+  </groupbox>
+  
+</vbox>
+</tabpanel>
+
+</overlay>
