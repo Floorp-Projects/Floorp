@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://qa/skin/qa.css" type="text/css"?>
+
+<!DOCTYPE overlay [
+<!ENTITY % qaDTD SYSTEM "chrome://qa/locale/qa.dtd"> %qaDTD;
+]>
+
+<overlay id="qa" 
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <script type="application/x-javascript" src="chrome://qa/content/MochiKit/MochiKit.js" />
+ <script type="application/x-javascript" src="chrome://qa/content/prefs.js" />
+ <script type="application/x-javascript" src="chrome://qa/content/qa.js" />
+ <script type="application/x-javascript" src="chrome://qa/content/notifications.js" />
+ 
+ <statusbar id="status-bar">
+  <statusbarpanel class="statusbarpanel-iconic" id="qa-statusbar-overlay" 
+  	src="chrome://qa/skin/qmo-16px.png" onclick="qaMain.openQATool(); qaNotifications.checkNotificationStatus();" />
+ </statusbar>
+ 
+ <window id="main-window">
+   <vbox id="qa-notify" class="qa-notify" hidden="true">
+     <vbox flex="1" class="qa-notify">
+       <hbox pack="end" align="center">
+         <toolbarbutton class="tabs-closebutton" 
+           oncommand="qaNotifications.showHideNotify(false);" />
+       </hbox>
+       <vbox id="qa-notify-box">
+       <vbox>
+         <hbox align="center" id="qa-notify-header-box" style="overflow: hidden">
+           <label id="qa-notify-header" value="" />
+         </hbox>  
+         <vbox>
+           <description id="qa-notify-text"></description>
+           <label id="qa-notify-infolink" class="text-link" href="" 
+             value="" />
+         </vbox> 
+         </vbox>
+       </vbox>  
+     </vbox>
+   </vbox>
+ </window>
+ 
+ 
+</overlay>
