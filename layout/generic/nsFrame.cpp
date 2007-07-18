@@ -5500,7 +5500,9 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
     return aProspectiveParent;
   }
 
-  // Otherwise, walk up out of all anon boxes
+  // Otherwise, walk up out of all anon boxes.  For placeholder frames, walk ot
+  // of all pseudo-elements a well.  Otherwise ReParentStyleContext could cause
+  // style data to be out of sync with the frame tree.
   nsIFrame* parent = aProspectiveParent;
   do {
     if (parent->GetStateBits() & NS_FRAME_IS_SPECIAL) {
@@ -5522,7 +5524,13 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
     }
       
     nsIAtom* parentPseudo = parent->GetStyleContext()->GetPseudoType();
-    if (!parentPseudo || !nsCSSAnonBoxes::IsAnonBox(parentPseudo)) {
+    if (!parentPseudo ||
+        (!nsCSSAnonBoxes::IsAnonBox(parentPseudo) &&
+         // nsPlaceholderFrame pases in nsGkAtoms::placeholderFrame for
+         // aChildPseudo (even though that's not a valid pseudo-type) just to
+         // trigger this behavior of walking up to the nearest non-pseudo
+         // ancestor.
+         aChildPseudo != nsGkAtoms::placeholderFrame)) {
       return parent;
     }
 
