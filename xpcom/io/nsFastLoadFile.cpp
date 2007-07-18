@@ -579,7 +579,7 @@ nsFastLoadFileReader::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aBytesRead)
         }
     }
 
-    rv = mInputStream->Read(aBuffer, aCount, aBytesRead);
+    rv = nsBinaryInputStream::Read(aBuffer, aCount, aBytesRead);
 
     if (NS_SUCCEEDED(rv) && entry) {
         NS_ASSERTION(entry->mBytesLeft >= *aBytesRead, "demux Read underflow!");
