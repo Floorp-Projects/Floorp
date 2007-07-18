@@ -192,6 +192,13 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
     else
         mMetrics.aveCharWidth = xWidth;
 
+    if (gfxQuartzFontCache::SharedFontCache()->IsFixedPitch(aFontID)) {
+        // Some Quartz fonts are fixed pitch, but there's some glyph with a bigger
+        // advance than the average character width... this forces
+        // those fonts to be recognized like fixed pitch fonts by layout.
+        mMetrics.maxAdvance = mMetrics.aveCharWidth;
+    }
+
     mMetrics.underlineOffset = atsMetrics.underlinePosition * size;
     // ATSUI sometimes returns 0 for underline thickness, see bug 361576.
     mMetrics.underlineSize = PR_MAX(1.0f, atsMetrics.underlineThickness * size);
@@ -207,7 +214,7 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
     mSpaceGlyph = glyphID;
 
 #if 0
-    fprintf (stderr, "Font: %p size: %f", this, size);
+    fprintf (stderr, "Font: %p size: %f (fixed: %d)", this, size, gfxQuartzFontCache::SharedFontCache()->IsFixedPitch(aFontID));
     fprintf (stderr, "    emHeight: %f emAscent: %f emDescent: %f\n", mMetrics.emHeight, mMetrics.emAscent, mMetrics.emDescent);
     fprintf (stderr, "    maxAscent: %f maxDescent: %f maxAdvance: %f\n", mMetrics.maxAscent, mMetrics.maxDescent, mMetrics.maxAdvance);
     fprintf (stderr, "    internalLeading: %f externalLeading: %f\n", mMetrics.externalLeading, mMetrics.internalLeading);
