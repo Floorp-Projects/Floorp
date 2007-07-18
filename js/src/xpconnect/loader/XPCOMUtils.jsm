@@ -59,7 +59,7 @@
  *
  *    // [optional] custom factory (an object implementing nsIFactory). If not
  *    // provided, the default factory is used, which returns
- *    // |(new MyComponent()).QueryInterface(iid)| in its createInterface().
+ *    // |(new MyComponent()).QueryInterface(iid)| in its createInstance().
  *    _xpcom_factory: { ... }
  *
  *    // QueryInterface implementation, e.g. using the generateQI helper
