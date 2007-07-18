@@ -1521,14 +1521,16 @@ gfxTextRun::FindFirstGlyphRunContaining(PRUint32 aOffset)
 }
 
 nsresult
-gfxTextRun::AddGlyphRun(gfxFont *aFont, PRUint32 aUTF16Offset)
+gfxTextRun::AddGlyphRun(gfxFont *aFont, PRUint32 aUTF16Offset, PRBool aForceNewRun)
 {
     PRUint32 numGlyphRuns = mGlyphRuns.Length();
-    if (numGlyphRuns > 0) {
+    if (!aForceNewRun &&
+        numGlyphRuns > 0)
+    {
         GlyphRun *lastGlyphRun = &mGlyphRuns[numGlyphRuns - 1];
 
         NS_ASSERTION(lastGlyphRun->mCharacterOffset <= aUTF16Offset,
-                     "Glyph runs out of order");
+                     "Glyph runs out of order (and run not forced)");
 
         if (lastGlyphRun->mFont == aFont)
             return NS_OK;
@@ -1538,8 +1540,8 @@ gfxTextRun::AddGlyphRun(gfxFont *aFont, PRUint32 aUTF16Offset)
         }
     }
 
-    NS_ASSERTION(numGlyphRuns > 0 || aUTF16Offset == 0,
-                 "First run doesn't cover the first character?");
+    NS_ASSERTION(aForceNewRun || numGlyphRuns > 0 || aUTF16Offset == 0,
+                 "First run doesn't cover the first character (and run not forced)?");
 
     GlyphRun *glyphRun = mGlyphRuns.AppendElement();
     if (!glyphRun)
@@ -1547,6 +1549,13 @@ gfxTextRun::AddGlyphRun(gfxFont *aFont, PRUint32 aUTF16Offset)
     glyphRun->mFont = aFont;
     glyphRun->mCharacterOffset = aUTF16Offset;
     return NS_OK;
+}
+
+void
+gfxTextRun::SortGlyphRuns()
+{
+    GlyphRunOffsetComparator comp;
+    mGlyphRuns.Sort(comp);
 }
 
 PRUint32
