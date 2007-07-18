@@ -64,6 +64,7 @@ components/@DLL_PREFIX@spellchk@DLL_SUFFIX@
 components/xpti.dat
 components/xptitemp.dat
 components/nsBackgroundUpdateService.js
+components/nsCloseAllWindows.js
 #ifndef XP_MACOSX
 components/autocomplete.xpt
 #endif
