@@ -461,7 +461,7 @@ function getIDFromResourceURI(aURI)
 
 function openURL(aURL)
 {
-# If we're not a browser, use the external protocol service to load the URI.
+# If we're not Firefox, use the external protocol service to load the URI.
 #ifndef MOZ_PHOENIX
   var uri = Components.classes["@mozilla.org/network/io-service;1"]
                       .getService(nsIIOService).newURI(aURL, null, null);
@@ -606,7 +606,7 @@ function Startup()
       if (window.arguments[0] == "updates-only") {
         gUpdatesOnly = true;
 #ifdef MOZ_PHOENIX
-        // If we are a browser when updating on startup don't display context
+        // If we are Firefox when updating on startup don't display context
         // menuitems that can open a browser window.
         gUpdateContextMenus = gUpdateContextMenusNoBrowser;
 #endif
