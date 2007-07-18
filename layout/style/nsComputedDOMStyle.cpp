@@ -431,7 +431,7 @@ nsComputedDOMStyle::GetBinding(nsIDOMCSSValue** aValue)
   const nsStyleDisplay* display = GetStyleDisplay();
 
   if (display->mBinding) {
-    val->SetURI(display->mBinding);
+    val->SetURI(display->mBinding->mURI);
   } else {
     val->SetIdent(nsGkAtoms::none);
   }

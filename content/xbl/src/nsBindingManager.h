@@ -62,6 +62,7 @@ class nsXBLBinding;
 template<class E> class nsRefPtr;
 typedef nsTArray<nsRefPtr<nsXBLBinding> > nsBindingList;
 template<class T> class nsRunnableMethod;
+class nsIPrincipal;
 
 class nsBindingManager : public nsIMutationObserver
 {
@@ -154,9 +155,11 @@ public:
   nsIContent* GetSingleInsertionPoint(nsIContent* aParent, PRUint32* aIndex,
                                       PRBool* aMultipleInsertionPoints);
 
-  nsresult AddLayeredBinding(nsIContent* aContent, nsIURI* aURL);
+  nsresult AddLayeredBinding(nsIContent* aContent, nsIURI* aURL,
+                             nsIPrincipal* aOriginPrincipal);
   nsresult RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL);
-  nsresult LoadBindingDocument(nsIDocument* aBoundDoc, nsIURI* aURL);
+  nsresult LoadBindingDocument(nsIDocument* aBoundDoc, nsIURI* aURL,
+                               nsIPrincipal* aOriginPrincipal);
 
   nsresult AddToAttachedQueue(nsXBLBinding* aBinding);
   void ProcessAttachedQueue();

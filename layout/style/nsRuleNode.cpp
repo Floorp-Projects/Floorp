@@ -2728,7 +2728,14 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
 
   // binding: url, none, inherit
   if (eCSSUnit_URL == displayData.mBinding.GetUnit()) {
-    display->mBinding = displayData.mBinding.GetURLValue();
+    nsCSSValue::URL* url = displayData.mBinding.GetURLStructValue();
+    NS_ASSERTION(url, "What's going on here?");
+    
+    if (NS_LIKELY(url->mURI)) {
+      display->mBinding = url;
+    } else {
+      display->mBinding = nsnull;
+    }
   }
   else if (eCSSUnit_None == displayData.mBinding.GetUnit()) {
     display->mBinding = nsnull;
