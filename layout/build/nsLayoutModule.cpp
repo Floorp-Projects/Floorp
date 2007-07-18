@@ -232,19 +232,23 @@ class nsIDocumentLoaderFactory;
 
 static NS_DEFINE_CID(kWindowCommandTableCID, NS_WINDOWCOMMANDTABLE_CID);
 
-#ifdef MOZ_XUL
 #include "nsIBoxObject.h"
-#include "nsIXULDocument.h"
-#include "nsIXULPrototypeCache.h"
-#include "nsIXULSortService.h"
 
 #ifndef MOZ_NO_INSPECTOR_APIS
+#ifdef MOZ_XUL
 #include "inDOMView.h"
+#endif /* MOZ_XUL */
+
 #include "inDeepTreeWalker.h"
 #include "inFlasher.h"
 #include "inCSSValueSearch.h"
 #include "inDOMUtils.h"
-#endif
+#endif /* MOZ_NO_INSPECTOR_APIS */
+
+#ifdef MOZ_XUL
+#include "nsIXULDocument.h"
+#include "nsIXULPrototypeCache.h"
+#include "nsIXULSortService.h"
 
 NS_IMETHODIMP
 NS_NewXULContentBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
