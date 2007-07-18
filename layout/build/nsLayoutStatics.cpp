@@ -87,6 +87,10 @@
 #include "nsXULElement.h"
 #include "nsXULPrototypeCache.h"
 #include "nsXULTooltipListener.h"
+
+#ifndef MOZ_NO_INSPECTOR_APIS
+#include "inDOMView.h"
+#endif
 #endif
 
 #ifdef MOZ_MATHML
@@ -96,10 +100,6 @@
 
 #ifdef MOZ_SVG
 PRBool NS_SVGEnabled();
-#endif
-
-#ifndef MOZ_NO_INSPECTOR_APIS
-#include "inDOMView.h"
 #endif
 
 #ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
