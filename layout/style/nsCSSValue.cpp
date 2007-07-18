@@ -422,9 +422,24 @@ nsCSSValue::URL::operator==(const URL& aOther) const
            (mURI && aOther.mURI &&
             NS_SUCCEEDED(mURI->Equals(aOther.mURI, &eq)) &&
             eq)) &&
-          NS_SUCCEEDED(mOriginPrincipal->Equals(aOther.mOriginPrincipal,
-                                                &eq)) &&
-          eq;
+          (mOriginPrincipal == aOther.mOriginPrincipal ||
+           (NS_SUCCEEDED(mOriginPrincipal->Equals(aOther.mOriginPrincipal,
+                                                  &eq)) && eq));
+}
+
+PRBool
+nsCSSValue::URL::URIEquals(const URL& aOther) const
+{
+  PRBool eq;
+  // Worth comparing mURI to aOther.mURI and mOriginPrincipal to
+  // aOther.mOriginPrincipal, because in the (probably common) case when this
+  // value was one of the ones that in fact did not change this will be our
+  // fast path to equality
+  return (mURI == aOther.mURI ||
+          (NS_SUCCEEDED(mURI->Equals(aOther.mURI, &eq)) && eq)) &&
+         (mOriginPrincipal == aOther.mOriginPrincipal ||
+          (NS_SUCCEEDED(mOriginPrincipal->Equals(aOther.mOriginPrincipal,
+                                                 &eq)) && eq));
 }
 
 nsCSSValue::Image::Image(nsIURI* aURI, nsStringBuffer* aString,
