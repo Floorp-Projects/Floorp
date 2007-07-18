@@ -1207,9 +1207,7 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
   else if (kind == kEventMenuOpening || kind == kEventMenuClosed) {
     if (kind == kEventMenuOpening && gRollupListener != nsnull && gRollupWidget != nsnull) {
       gRollupListener->Rollup();
-      // returning userCanceledErr crashes on Panther. See bug 351230.
-      if (nsToolkit::OnTigerOrLater())
-        return userCanceledErr;
+      return userCanceledErr;
     }
     
     nsISupports* supports = reinterpret_cast<nsISupports*>(userData);
@@ -1273,7 +1271,7 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, Event
 // and that doesn't work for us. We don't need any carbon events until after the
 // first time the menu is shown, so when that happens we install the carbon
 // event handler. This works because at this point we can get a MenuRef without
-// much trouble. This call is 10.3+, so this stuff won't work on 10.2.x or less.
+// much trouble.
 - (void)menuNeedsUpdate:(NSMenu*)aMenu
 {
   if (!mHaveInstalledCarbonEvents) {
