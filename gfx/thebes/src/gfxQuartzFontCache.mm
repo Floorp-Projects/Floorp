@@ -102,13 +102,17 @@ FontEntry::GetNSFont(float aSize)
 PRBool
 FontEntry::IsFixedPitch()
 {
-    return Traits() & NSFixedPitchFontMask ? PR_TRUE : PR_FALSE;
+    if (!mWeight)
+        RealizeWeightAndTraits();
+    return mFixedPitch;
 }
 
 PRBool
 FontEntry::IsItalicStyle()
 {
-    return Traits() & NSItalicFontMask ? PR_TRUE : PR_FALSE;
+    if (!mWeight)
+        RealizeWeightAndTraits();
+    return mItalicStyle;
 }
 
 PRBool
@@ -121,9 +125,14 @@ void
 FontEntry::RealizeWeightAndTraits()
 {
     NSFont *font = GetNSFont(10.0);
+    // traitsOfFont seems to give bogus results in some cases,
+    // see http://lists.apple.com/archives/cocoa-dev/2001/Dec/msg00836.html
+    // so we just ask the font directly.  annoyingly, we can't ask
+    // the font for its weight, so we have to use the fm for that.
     NSFontManager *fontManager = [NSFontManager sharedFontManager];
     mWeight = [fontManager weightOfFont:font];
-    mTraits = [fontManager traitsOfFont:font];
+    mItalicStyle = [font italicAngle] != 0.0;
+    mFixedPitch = [font isFixedPitch];
 }
 
 void
@@ -771,4 +780,17 @@ gfxQuartzFontCache::GetPostscriptNameForFontID(ATSUFontID fid)
     }
 
     return fe->Name();
+}
+
+PRBool
+gfxQuartzFontCache::IsFixedPitch(ATSUFontID fid)
+{
+    nsRefPtr<FontEntry> fe;
+
+    if (!mFontIDTable.Get(PRUint32(fid), &fe)) {
+        NS_WARNING("Invalid font");
+        return PR_FALSE;
+    }
+
+    return fe->IsFixedPitch();
 }
