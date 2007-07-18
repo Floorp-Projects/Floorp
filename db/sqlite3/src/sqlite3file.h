@@ -200,7 +200,11 @@ struct sqlite3OsVtbl {
   /*
   ** Files other than os.c just reference the global virtual function table. 
   */
+#ifdef XP_WIN
+  extern __declspec(dllimport) struct sqlite3OsVtbl sqlite3Os;
+#else
   extern struct sqlite3OsVtbl sqlite3Os;
+#endif // windows symbol ifdef
 #endif /* _SQLITE_OS_C_ */
 
 } // extern "C"

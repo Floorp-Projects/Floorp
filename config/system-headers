@@ -608,6 +608,8 @@ SIOUX.h
 size_t.h
 someincludefile.h
 Sound.h
+sqlite3.h
+sqlite3file.h
 ssdef.h
 sslerr.h
 ssl.h
