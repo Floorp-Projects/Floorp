@@ -101,13 +101,6 @@ static void blinkRgn(RgnHandle rgn);
 nsIRollupListener * gRollupListener = nsnull;
 nsIWidget         * gRollupWidget   = nsnull;
 
-// This mask is only defined on 10.4 and up.
-#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_4
-enum {
-  NSDeviceIndependentModifierFlagsMask = 0xffff0000U
-};
-#endif
-
 
 @interface ChildView(Private)
 
@@ -1706,9 +1699,6 @@ NS_IMETHODIMP nsChildView::GetToggledKeyState(PRUint32 aKeyCode,
       key = alphaLock;
       break;
     case NS_VK_NUM_LOCK:
-      // 10.3 doesn't return the NUM_LOCK state.
-      if (nsToolkit::OSXVersion() < MAC_OS_X_VERSION_10_4_HEX)
-        return NS_ERROR_NOT_IMPLEMENTED;
       key = kEventKeyModifierNumLockMask;
       break;
     // Mac doesn't support SCROLL_LOCK state.
@@ -2353,7 +2343,7 @@ NSEvent* globalDragEvent = nil;
 }
 
 
-// A panther-only method, allows us to turn off setting up the clip region
+// Allows us to turn off setting up the clip region
 // before each drawRect. We already clip within gecko.
 - (BOOL)wantsDefaultClipping
 {

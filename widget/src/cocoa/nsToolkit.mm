@@ -359,22 +359,13 @@ long nsToolkit::OSXVersion()
     OSErr err = ::Gestalt(gestaltSystemVersion, &gOSXVersion);
     if (err != noErr) {
       //This should probably be changed when our minimum version changes
-      NS_ERROR("Couldn't determine OS X version, assuming 10.3");
-      gOSXVersion = MAC_OS_X_VERSION_10_3_HEX;
+      NS_ERROR("Couldn't determine OS X version, assuming 10.4");
+      gOSXVersion = MAC_OS_X_VERSION_10_4_HEX;
     }
   }
   return gOSXVersion;
 }
 
-PRBool nsToolkit::OnPantherOrLater()
-{
-    return (OSXVersion() >= MAC_OS_X_VERSION_10_3_HEX) ? PR_TRUE : PR_FALSE;
-}
-
-PRBool nsToolkit::OnTigerOrLater()
-{
-    return (OSXVersion() >= MAC_OS_X_VERSION_10_4_HEX) ? PR_TRUE : PR_FALSE;
-}
 
 PRBool nsToolkit::OnLeopardOrLater()
 {
