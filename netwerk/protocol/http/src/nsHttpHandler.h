@@ -284,7 +284,7 @@ private:
     nsXPIDLCString mVendor;
     nsXPIDLCString mVendorSub;
     nsXPIDLCString mVendorComment;
-    nsXPIDLCString mProduct;
+    nsCString      mProduct;
     nsXPIDLCString mProductSub;
     nsXPIDLCString mProductComment;
     nsCString      mExtraUA;

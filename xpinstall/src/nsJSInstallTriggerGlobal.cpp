@@ -311,26 +311,26 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
           break;
         }
 
-        name = NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars( str ));
+        name = reinterpret_cast<const PRUnichar*>(JS_GetStringChars( str ));
 
         URL = iconURL = nsnull;
         hash = nsnull;
-        JS_GetUCProperty( cx, JSVAL_TO_OBJECT(argv[0]), NS_REINTERPRET_CAST(const jschar*, name), nsCRT::strlen(name), &v );
+        JS_GetUCProperty( cx, JSVAL_TO_OBJECT(argv[0]), reinterpret_cast<const jschar*>(name), nsCRT::strlen(name), &v );
         if ( JSVAL_IS_OBJECT(v) && JSVAL_TO_OBJECT(v) ) 
         {
           jsval v2;
           if (JS_GetProperty( cx, JSVAL_TO_OBJECT(v), "URL", &v2 ) && !JSVAL_IS_VOID(v2))
-            URL = NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars( JS_ValueToString( cx, v2 ) ));
+            URL = reinterpret_cast<const PRUnichar*>(JS_GetStringChars( JS_ValueToString( cx, v2 ) ));
 
           if (JS_GetProperty( cx, JSVAL_TO_OBJECT(v), "IconURL", &v2 ) && !JSVAL_IS_VOID(v2))
-            iconURL = NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars( JS_ValueToString( cx, v2 ) ));
+            iconURL = reinterpret_cast<const PRUnichar*>(JS_GetStringChars( JS_ValueToString( cx, v2 ) ));
 
           if (JS_GetProperty( cx, JSVAL_TO_OBJECT(v), "Hash", &v2) && !JSVAL_IS_VOID(v2))
-            hash = NS_REINTERPRET_CAST(const char*, JS_GetStringBytes( JS_ValueToString( cx, v2 ) ));
+            hash = reinterpret_cast<const char*>(JS_GetStringBytes( JS_ValueToString( cx, v2 ) ));
         }
         else
         {
-          URL = NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars( JS_ValueToString( cx, v ) ));
+          URL = reinterpret_cast<const PRUnichar*>(JS_GetStringChars( JS_ValueToString( cx, v ) ));
         }
 
         if ( URL )

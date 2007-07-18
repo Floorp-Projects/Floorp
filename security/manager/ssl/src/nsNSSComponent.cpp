@@ -138,6 +138,7 @@ extern char * PR_CALLBACK
 pk11PasswordPrompt(PK11SlotInfo *slot, PRBool retry, void *arg);
 
 #define PIPNSS_STRBUNDLE_URL "chrome://pipnss/locale/pipnss.properties"
+#define NSSERR_STRBUNDLE_URL "chrome://pipnss/locale/nsserrors.properties"
 
 
 static PLHashNumber PR_CALLBACK certHashtable_keyHash(const void *key)
@@ -545,6 +546,46 @@ nsNSSComponent::GetPIPNSSBundleString(const char *name,
   return rv;
 }
 
+NS_IMETHODIMP
+nsNSSComponent::NSSBundleFormatStringFromName(const char *name,
+                                              const PRUnichar **params,
+                                              PRUint32 numParams,
+                                              nsAString &outString)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  if (mNSSErrorsBundle && name) {
+    nsXPIDLString result;
+    rv = mNSSErrorsBundle->FormatStringFromName(NS_ConvertASCIItoUTF16(name).get(),
+                                                params, numParams,
+                                                getter_Copies(result));
+    if (NS_SUCCEEDED(rv)) {
+      outString = result;
+    }
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsNSSComponent::GetNSSBundleString(const char *name,
+                                   nsAString &outString)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  outString.SetLength(0);
+  if (mNSSErrorsBundle && name) {
+    nsXPIDLString result;
+    rv = mNSSErrorsBundle->GetStringFromName(NS_ConvertASCIItoUTF16(name).get(),
+                                             getter_Copies(result));
+    if (NS_SUCCEEDED(rv)) {
+      outString = result;
+      rv = NS_OK;
+    }
+  }
+
+  return rv;
+}
+
 
 NS_IMETHODIMP
 nsNSSComponent::SkipOcsp()
@@ -751,7 +792,7 @@ nsNSSComponent::InstallLoadableRoots()
     /* If a module exists with the same name, delete it. */
     NS_ConvertUTF16toUTF8 modNameUTF8(modName);
     int modType;
-    SECMOD_DeleteModule(NS_CONST_CAST(char*, modNameUTF8.get()), &modType);
+    SECMOD_DeleteModule(const_cast<char*>(modNameUTF8.get()), &modType);
 
     nsCString pkcs11moduleSpec;
     pkcs11moduleSpec.Append(NS_LITERAL_CSTRING("name=\""));
@@ -764,14 +805,19 @@ nsNSSComponent::InstallLoadableRoots()
     PORT_Free(escaped_fullLibraryPath);
 
     RootsModule =
-      SECMOD_LoadUserModule(NS_CONST_CAST(char*, pkcs11moduleSpec.get()), 
+      SECMOD_LoadUserModule(const_cast<char*>(pkcs11moduleSpec.get()), 
                             nsnull, // no parent 
                             PR_FALSE); // do not recurse
 
     if (RootsModule) {
-      // found a module, no need to try other directories
+      PRBool found = (RootsModule->loaded);
+
       SECMOD_DestroyModule(RootsModule);
-      break;
+      RootsModule = nsnull;
+
+      if (found) {
+        break;
+      }
     }
   }
 }
@@ -856,6 +902,11 @@ nsNSSComponent::InitializePIPNSSBundle()
   bundleService->CreateBundle(PIPNSS_STRBUNDLE_URL,
                               getter_AddRefs(mPIPNSSBundle));
   if (!mPIPNSSBundle)
+    rv = NS_ERROR_FAILURE;
+
+  bundleService->CreateBundle(NSSERR_STRBUNDLE_URL,
+                              getter_AddRefs(mNSSErrorsBundle));
+  if (!mNSSErrorsBundle)
     rv = NS_ERROR_FAILURE;
 
   return rv;
@@ -1207,7 +1258,7 @@ nsNSSComponent::DefineNextTimer()
     interval = primaryDelay;
   }
   
-  mTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*, this), 
+  mTimer->InitWithCallback(static_cast<nsITimerCallback*>(this), 
                            interval,
                            nsITimer::TYPE_ONE_SHOT);
   crlDownloadTimerOn = PR_TRUE;
@@ -2177,18 +2228,21 @@ nsNSSComponent::GetErrorMessage(nsresult aXPCOMErrorCode, nsAString &aErrorMessa
   if (!IS_SEC_ERROR(aNSPRCode) && !IS_SSL_ERROR(aNSPRCode))
     return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIStringBundle> theBundle = mPIPNSSBundle;
   const char *id_str = nsNSSErrors::getOverrideErrorStringName(aNSPRCode);
 
-  if (!id_str)
+  if (!id_str) {
     id_str = nsNSSErrors::getDefaultErrorStringName(aNSPRCode);
+    theBundle = mNSSErrorsBundle;
+  }
 
-  if (!id_str || !mPIPNSSBundle)
+  if (!id_str || !theBundle)
     return NS_ERROR_FAILURE;
 
   nsAutoString msg;
   nsresult rv =
-    mPIPNSSBundle->GetStringFromName(NS_ConvertASCIItoUTF16(id_str).get(),
-                                     getter_Copies(msg));
+    theBundle->GetStringFromName(NS_ConvertASCIItoUTF16(id_str).get(),
+                                 getter_Copies(msg));
   if (NS_SUCCEEDED(rv)) {
     aErrorMessage = msg;
   }

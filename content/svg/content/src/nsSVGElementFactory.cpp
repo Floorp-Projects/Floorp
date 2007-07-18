@@ -144,6 +144,8 @@ nsresult
 NS_NewSVGFETurbulenceElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGSwitchElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGFEConvolveMatrixElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
@@ -250,8 +252,9 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     return NS_NewSVGFEFloodElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::feTurbulence)
     return NS_NewSVGFETurbulenceElement(aResult, aNodeInfo);
-  if (name == nsGkAtoms::feConvolveMatrix   ||
-      name == nsGkAtoms::feDiffuseLighting  ||
+  if (name == nsGkAtoms::feConvolveMatrix)
+    return NS_NewSVGFEConvolveMatrixElement(aResult, aNodeInfo);
+  if (name == nsGkAtoms::feDiffuseLighting  ||
       name == nsGkAtoms::feDisplacementMap  ||
       name == nsGkAtoms::feImage            ||
       name == nsGkAtoms::feSpecularLighting ||

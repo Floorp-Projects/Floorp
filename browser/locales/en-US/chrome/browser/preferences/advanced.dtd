@@ -86,7 +86,7 @@
 <!ENTITY viewCerts.accesskey             "s">
 <!ENTITY viewCRLs.label                  "Revocation Lists">
 <!ENTITY viewCRLs.accesskey              "R">
-<!ENTITY verify.label                    "Verification">
-<!ENTITY verify.accesskey                "V">
+<!ENTITY verify2.label                   "Validation">
+<!ENTITY verify2.accesskey               "V">
 <!ENTITY viewSecurityDevices.label       "Security Devices">
 <!ENTITY viewSecurityDevices.accesskey   "y">

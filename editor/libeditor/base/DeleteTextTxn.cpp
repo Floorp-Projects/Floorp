@@ -65,6 +65,11 @@ NS_IMETHODIMP DeleteTextTxn::Init(nsIEditor *aEditor,
 
   mEditor = aEditor;
   mElement = do_QueryInterface(aElement);
+  // do nothing if the node is read-only
+  if (!mEditor->IsModifiableNode(mElement)) {
+    return NS_ERROR_FAILURE;
+  }
+
   mOffset = aOffset;
   mNumCharsToDelete = aNumCharsToDelete;
   NS_ASSERTION(0!=aNumCharsToDelete, "bad arg, numCharsToDelete");

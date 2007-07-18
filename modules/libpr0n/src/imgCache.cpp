@@ -225,7 +225,7 @@ PRBool imgCache::Put(nsIURI *aKey, imgRequest *request, nsICacheEntryDescriptor 
   if (NS_FAILED(rv) || !entry)
     return PR_FALSE;
 
-  nsCOMPtr<nsISupports> sup = NS_REINTERPRET_CAST(nsISupports*, request);
+  nsCOMPtr<nsISupports> sup = reinterpret_cast<nsISupports*>(request);
   entry->SetCacheElement(sup);
 
   entry->MarkValid();
@@ -307,7 +307,7 @@ PRBool imgCache::Get(nsIURI *aKey, PRBool *aHasExpired, imgRequest **aRequest, n
   nsCOMPtr<nsISupports> sup;
   entry->GetCacheElement(getter_AddRefs(sup));
 
-  *aRequest = NS_REINTERPRET_CAST(imgRequest*, sup.get());
+  *aRequest = reinterpret_cast<imgRequest*>(sup.get());
   NS_IF_ADDREF(*aRequest);
 
   *aEntry = entry;

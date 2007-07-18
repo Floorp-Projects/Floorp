@@ -38,7 +38,7 @@
 var gTestfile = 'regress-372565.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 372565;
-var summary = 'Assertion failure: top < ss->printer->script->depth" decompiling a function where a const identifier is used as a for-loop variable';
+var summary = 'Do not assert: top < ss->printer->script->depth" decompiling a function where a const identifier is used as a for-loop variable';
 var actual = '';
 var expect = '';
 

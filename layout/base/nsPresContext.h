@@ -64,7 +64,6 @@ class nsImageLoader;
 #ifdef IBMBIDI
 class nsBidiPresUtils;
 #endif // IBMBIDI
-#include "nsTArray.h"
 
 struct nsRect;
 
@@ -703,23 +702,6 @@ public:
   // Is this presentation in a chrome docshell?
   PRBool IsChrome();
 
-  const nsTArray<nsIFrame*>& GetActivePopups() {
-    NS_ASSERTION(this == RootPresContext(), "Only on root prescontext");
-    return mActivePopups;
-  }
-  void NotifyAddedActivePopupToTop(nsIFrame* aFrame) {
-    NS_ASSERTION(this == RootPresContext(), "Only on root prescontext");
-    mActivePopups.AppendElement(aFrame);
-  }
-  PRBool ContainsActivePopup(nsIFrame* aFrame) {
-    NS_ASSERTION(this == RootPresContext(), "Only on root prescontext");
-    return mActivePopups.IndexOf(aFrame) >= 0;
-  }
-  void NotifyRemovedActivePopup(nsIFrame* aFrame) {
-    NS_ASSERTION(this == RootPresContext(), "Only on root prescontext");
-    mActivePopups.RemoveElement(aFrame);
-  }
-
 protected:
   friend class nsRunnableMethod<nsPresContext>;
   NS_HIDDEN_(void) ThemeChangedInternal();
@@ -761,11 +743,6 @@ protected:
 
   nsInterfaceHashtable<nsVoidPtrHashKey, nsImageLoader> mImageLoaders;
   nsWeakPtr             mContainer;
-
-  // Only used in the root prescontext (this->RootPresContext() == this)
-  // This is a list of all active popups from bottom to top in z-order
-  // (usually empty, of course)
-  nsTArray<nsIFrame*>   mActivePopups;
 
   float                 mTextZoom;      // Text zoom, defaults to 1.0
 
@@ -916,10 +893,8 @@ struct nsAutoLayoutPhase {
       case eLayoutPhase_FrameC:
         NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_Paint] == 0,
                      "constructing frames in the middle of a paint");
-        // The popup code causes us to hit this too often to be an
-        // NS_ASSERTION, despite how scary it is.
-        NS_WARN_IF_FALSE(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
-                         "constructing frames in the middle of reflow");
+        NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
+                     "constructing frames in the middle of reflow");
         // The nsXBLService::LoadBindings call in ConstructFrameInternal
         // makes us hit this one too often to be an NS_ASSERTION,
         // despite how scary it is.

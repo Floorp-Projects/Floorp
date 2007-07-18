@@ -426,12 +426,12 @@ nsJVMManager::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
         return NS_OK;
     }
     if (aIID.Equals(kIJVMThreadManagerIID)) {
-        *aInstancePtr = (void*) NS_STATIC_CAST(nsIJVMThreadManager*, this);
+        *aInstancePtr = (void*) static_cast<nsIJVMThreadManager*>(this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
     if (aIID.Equals(kILiveConnectManagerIID)) {
-        *aInstancePtr = (void*) NS_STATIC_CAST(nsILiveConnectManager*, this);
+        *aInstancePtr = (void*) static_cast<nsILiveConnectManager*>(this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
@@ -441,7 +441,7 @@ nsJVMManager::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
         return NS_OK;
     }
     if (aIID.Equals(NS_GET_IID(nsIObserver))) {
-        *aInstancePtr = (void*) NS_STATIC_CAST(nsIObserver*, this);
+        *aInstancePtr = (void*) static_cast<nsIObserver*>(this);
         NS_ADDREF_THIS();
         return NS_OK;
     }

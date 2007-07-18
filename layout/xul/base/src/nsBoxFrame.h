@@ -99,6 +99,7 @@ public:
   virtual Halignment GetHAlign() const { return mHalign; }
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
 
+  virtual PRBool GetMouseThrough() const;
   virtual PRBool ComputesOwnOverflowArea() { return PR_FALSE; }
 
   // ----- child and sibling operations ---
@@ -147,7 +148,7 @@ public:
     // that contains a block so nsHTMLReflowState doesn't tell us to be
     // NS_INTRINSICSIZE wide.)
     return nsContainerFrame::IsFrameOfType(aFlags &
-      ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
+      ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock | eXULBox));
   }
 
 #ifdef DEBUG
@@ -161,11 +162,14 @@ public:
   virtual ~nsBoxFrame();
   
   nsBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
- 
+
+  // if aIsPopup is true, then the view is for a popup. In this case,
+  // the view is added a child of the root view, and is initially hidden
   static nsresult CreateViewForFrame(nsPresContext* aPresContext,
                                      nsIFrame* aChild,
                                      nsStyleContext* aStyleContext,
-                                     PRBool aForce);
+                                     PRBool aForce,
+                                     PRBool aIsPopup = PR_FALSE);
 
   // virtual so nsStackFrame, nsButtonBoxFrame, nsSliderFrame and nsMenuFrame
   // can override it
@@ -254,12 +258,15 @@ private:
     void DrawLine(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
     void FillRect(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height);
 #endif
+    void UpdateMouseThrough();
 
     void CacheAttributes();
 
     // instance variables.
     Halignment mHalign;
     Valignment mValign;
+
+    eMouseThrough mMouseThrough;
 
 #ifdef DEBUG_LAYOUT
     static PRBool gDebug;

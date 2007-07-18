@@ -71,8 +71,8 @@ void nsIntervalSet::FreeInterval(nsIntervalSet::Interval *aInterval)
 
 void nsIntervalSet::IncludeInterval(coord_type aBegin, coord_type aEnd)
 {
-    Interval *newInterval = NS_STATIC_CAST(Interval*,
-                               (*mAlloc)(sizeof(Interval), mAllocatorClosure));
+    Interval *newInterval = static_cast<Interval*>
+                                       ((*mAlloc)(sizeof(Interval), mAllocatorClosure));
     if (!newInterval) {
         NS_NOTREACHED("allocation failure");
         return;

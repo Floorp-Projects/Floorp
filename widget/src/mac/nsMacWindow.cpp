@@ -314,7 +314,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
     // When creating a popup window, aNativeParent is not a WindowPtr but
     // an nsIWidget, so walk up that tree to the top-level window and get
     // the dispatch handler.
-    nsIWidget* widget = NS_STATIC_CAST(nsIWidget*, aNativeParent);
+    nsIWidget* widget = static_cast<nsIWidget*>(aNativeParent);
     nsIWidget* topWidget = nsnull;
 
     while (widget && (widget = widget->GetParent()))
@@ -367,7 +367,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
         // when we show it.
         mOffsetParent = aParent;
         if( aParent )
-          theToolkit = getter_AddRefs(aParent->GetToolkit());
+          theToolkit = aParent->GetToolkit();
 
         mAcceptsActivation = PR_FALSE;
 
@@ -563,7 +563,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
   // ourselves off a property of the window. This allows places like
   // event handlers to get our widget or event sink when all they have
   // is a native WindowPtr.
-  nsIWidget* temp = NS_STATIC_CAST(nsIWidget*, this);
+  nsIWidget* temp = static_cast<nsIWidget*>(this);
   OSStatus err = ::SetWindowProperty ( mWindowPtr,
                           kTopLevelWidgetPropertyCreator, kTopLevelWidgetRefPropertyTag,
                           sizeof(nsIWidget*), &temp );
@@ -666,7 +666,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
                                       sKeyEventHandlerUPP,
                                       GetEventTypeCount(kKeyEventList),
                                       kKeyEventList,
-                                      NS_STATIC_CAST(void*, this),
+                                      static_cast<void*>(this),
                                       NULL);
     NS_ASSERTION(err == noErr, "Couldn't install key event handler");
 
@@ -720,7 +720,7 @@ nsMacWindow::ScrollEventHandler(EventHandlerCallRef aHandlerCallRef,
   SInt32 deltaY = 0, deltaX = 0;
   PRBool isPixels = PR_FALSE;
 
-  nsMacWindow* self = NS_REINTERPRET_CAST(nsMacWindow*, aUserData);
+  nsMacWindow* self = reinterpret_cast<nsMacWindow*>(aUserData);
 
   EventKind kind = ::GetEventKind(aEvent);
 
@@ -822,7 +822,7 @@ pascal OSStatus
 nsMacWindow::WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef inEvent, void* userData )
 {
   OSStatus retVal = eventNotHandledErr;  // Presume we won't consume the event
-  nsMacWindow* self = NS_REINTERPRET_CAST(nsMacWindow*, userData);
+  nsMacWindow* self = reinterpret_cast<nsMacWindow*>(userData);
   if (self) {
     UInt32 what = ::GetEventKind(inEvent);
     switch (what) {
@@ -1979,7 +1979,7 @@ nsMacWindow::DispatchEvent ( void* anEvent, PRBool *_retval )
 {
   *_retval = PR_FALSE;
   NS_ENSURE_TRUE(mMacEventHandler.get(), NS_ERROR_FAILURE);
-  *_retval = mMacEventHandler->HandleOSEvent(*NS_REINTERPRET_CAST(EventRecord*,anEvent));
+  *_retval = mMacEventHandler->HandleOSEvent(*reinterpret_cast<EventRecord*>(anEvent));
 
   return NS_OK;
 }
@@ -1996,7 +1996,7 @@ nsMacWindow::DispatchMenuEvent ( void* anEvent, PRInt32 aNativeResult, PRBool *_
 #if USE_MENUSELECT
   *_retval = PR_FALSE;
   NS_ENSURE_TRUE(mMacEventHandler.get(), NS_ERROR_FAILURE);
-  *_retval = mMacEventHandler->HandleMenuCommand(*NS_REINTERPRET_CAST(EventRecord*,anEvent), aNativeResult);
+  *_retval = mMacEventHandler->HandleMenuCommand(*reinterpret_cast<EventRecord*>(anEvent), aNativeResult);
 #endif
 
   return NS_OK;
@@ -2308,13 +2308,13 @@ NS_IMETHODIMP nsMacWindow::GetChildSheet(PRBool aShown, nsMacWindow** _retval)
 
   while (child) {
     // nsWindow is the base widget in the Carbon widget library, this is safe
-    nsWindow* window = NS_STATIC_CAST(nsWindow*, child);
+    nsWindow* window = static_cast<nsWindow*>(child);
 
     nsWindowType type;
     if (NS_SUCCEEDED(window->GetWindowType(type)) &&
         type == eWindowType_sheet) {
       // if it's a sheet, it must be an nsMacWindow
-      nsMacWindow* macWindow = NS_STATIC_CAST(nsMacWindow*, window);
+      nsMacWindow* macWindow = static_cast<nsMacWindow*>(window);
 
       if ((aShown && macWindow->mShown) ||
           (!aShown && macWindow->mSheetNeedsShow)) {
@@ -2355,7 +2355,7 @@ nsMacWindow::KeyEventHandler(EventHandlerCallRef aHandlerCallRef,
                              EventRef            aEvent,
                              void*               aUserData)
 {
-  nsMacWindow* self = NS_STATIC_CAST(nsMacWindow*, aUserData);
+  nsMacWindow* self = static_cast<nsMacWindow*>(aUserData);
   NS_ASSERTION(self, "No self?");
   NS_ASSERTION(self->mMacEventHandler.get(), "No mMacEventHandler?");
 

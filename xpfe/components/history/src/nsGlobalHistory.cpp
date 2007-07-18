@@ -2405,7 +2405,7 @@ nsGlobalHistory::BeginUpdateBatch()
     if (NS_FAILED(rv)) return rv;
 
     for (PRInt32 i = 0; i < PRInt32(count); ++i) {
-      nsIRDFObserver* observer = NS_STATIC_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
+      nsIRDFObserver* observer = static_cast<nsIRDFObserver*>(mObservers->ElementAt(i));
 
       NS_ASSERTION(observer != nsnull, "null ptr");
       if (! observer)
@@ -2435,7 +2435,7 @@ nsGlobalHistory::EndUpdateBatch()
     if (NS_FAILED(rv)) return rv;
 
     for (PRInt32 i = 0; i < PRInt32(count); ++i) {
-      nsIRDFObserver* observer = NS_STATIC_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
+      nsIRDFObserver* observer = static_cast<nsIRDFObserver*>(mObservers->ElementAt(i));
 
       NS_ASSERTION(observer != nsnull, "null ptr");
       if (! observer)
@@ -3139,7 +3139,7 @@ nsGlobalHistory::NotifyAssert(nsIRDFResource* aSource,
     if (NS_FAILED(rv)) return rv;
 
     for (PRInt32 i = 0; i < PRInt32(count); ++i) {
-      nsIRDFObserver* observer = NS_STATIC_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
+      nsIRDFObserver* observer = static_cast<nsIRDFObserver*>(mObservers->ElementAt(i));
 
       NS_ASSERTION(observer != nsnull, "null ptr");
       if (! observer)
@@ -3167,7 +3167,7 @@ nsGlobalHistory::NotifyUnassert(nsIRDFResource* aSource,
     if (NS_FAILED(rv)) return rv;
 
     for (PRInt32 i = 0; i < PRInt32(count); ++i) {
-      nsIRDFObserver* observer = NS_STATIC_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
+      nsIRDFObserver* observer = static_cast<nsIRDFObserver*>(mObservers->ElementAt(i));
 
       NS_ASSERTION(observer != nsnull, "null ptr");
       if (! observer)
@@ -3197,7 +3197,7 @@ nsGlobalHistory::NotifyChange(nsIRDFResource* aSource,
     if (NS_FAILED(rv)) return rv;
 
     for (PRInt32 i = 0; i < PRInt32(count); ++i) {
-      nsIRDFObserver* observer = NS_STATIC_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
+      nsIRDFObserver* observer = static_cast<nsIRDFObserver*>(mObservers->ElementAt(i));
 
       NS_ASSERTION(observer != nsnull, "null ptr");
       if (! observer)
@@ -4406,7 +4406,7 @@ nsGlobalHistory::AutoCompleteSortComparison(nsIMdbRow* row1, nsIMdbRow* row2,
                                             void* closureVoid)
 {
   AutoCompleteSortClosure* closure = 
-      NS_STATIC_CAST(AutoCompleteSortClosure*, closureVoid);
+      static_cast<AutoCompleteSortClosure*>(closureVoid);
 
   // get visit counts - we're ignoring all errors from GetRowValue(), 
   // and relying on default values

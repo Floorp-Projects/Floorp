@@ -56,7 +56,7 @@
 ]>
 
 <window id="places"
-        title="&places.title;" 
+        title="&places.bm.title;" 
         windowtype="Places:Organizer" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="PlacesOrganizer.init();"
@@ -74,8 +74,9 @@
   <commandset id="placesCommands"/>
   
   <commandset id="organizerCommandSet">
-    <command id="OrganizerCommand_find:all" 
-             label="&cmd.find.label;" accesskey="&cmd.find.accesskey;"
+    <command id="OrganizerCommand_find:all"
+             label="&cmd.findInBookmarks.label;"
+             accesskey="&cmd.findInBookmarks.accesskey;"
              oncommand="PlacesSearchBox.findAll();"/>
     <command id="OrganizerCommand_find:current"
              label="&cmd.findCurrent.label;"
@@ -315,7 +316,8 @@
                collection="bookmarks">
         <button type="menu" class="filterList" id="filterList_history">
           <menupopup>
-            <menuitem label="&search.all.label;" accesskey="&search.all.accesskey;"
+            <menuitem label="&search.allBookmarks.label;"
+                      accesskey="&search.allBookmarks.accesskey;"
                       type="radio" name="collection" value="all" 
                       checked="true" default="true"/>
             <menuitem label="&search.collection.label;" accesskey="&search.collection.accesskey;"

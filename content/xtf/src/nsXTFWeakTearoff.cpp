@@ -119,7 +119,9 @@ NS_IMPL_RELEASE(nsXTFWeakTearoff)
 NS_IMETHODIMP
 nsXTFWeakTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if(aIID.Equals(mIID) || aIID.Equals(NS_GET_IID(nsISupports))) {
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
+  if (aIID.Equals(mIID) || aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = mXPTCStub;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -127,6 +129,7 @@ nsXTFWeakTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   // we can't map QI onto the obj, because the xpcom wrapper otherwise
   // QI-accumulates all interfaces defined on mObj
   //  else return mObj->QueryInterface(aIID, aInstancePtr); 
+  *aInstancePtr = nsnull;
   return NS_ERROR_NO_INTERFACE;
 }
 

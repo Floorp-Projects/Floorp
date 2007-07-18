@@ -38,6 +38,9 @@
 
 var rssController = {
   __proto__: baseController,
+  get path() {
+    return 'results/' + this.tag + '/feed-reader-results.json';
+  },
   beforeSelect: function() {
     this.hashes = {};
     rssView.setUpHandlers();

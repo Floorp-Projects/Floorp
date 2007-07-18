@@ -290,20 +290,28 @@ var BookmarksEventHandler = {
     if (target.localName == "menupopup" &&
         target.id != "bookmarksMenuPopup" &&
         target.getAttribute("anonid") != "chevronPopup") {
-      // Show "Open All in Tabs" menuitem if there are at least
-      // two menuitems with places result nodes, and "Open (Feed Name)"
-      // if it's a livemark with a siteURI.
+      // Add the "Open All in Tabs" menuitem if there are
+      // at least two menuitems with places result nodes.
+      // Add the "Open (Feed Name)" menuitem if it's a livemark with a siteURI.
       var numNodes = 0;
       var hasMultipleEntries = false;
       var hasFeedHomePage = false;
       var currentChild = target.firstChild;
-      while (currentChild && numNodes < 2) {
-        if (currentChild.node && currentChild.localName == "menuitem")
+      while (currentChild) {
+        if (currentChild.localName == "menuitem" && currentChild.node)
           numNodes++;
+
+        // If the menuitem already exists, do nothing.
+        if (currentChild.getAttribute("openInTabs") == "true")
+          return;
+        if (currentChild.hasAttribute("siteURI"))
+          return;
+
         currentChild = currentChild.nextSibling;
       }
       if (numNodes > 1)
         hasMultipleEntries = true;
+
       var button = target.parentNode;
       if (button.getAttribute("livemark") == "true" &&
           button.hasAttribute("siteURI"))

@@ -422,7 +422,7 @@
     </handlers>
   </binding>
 
-  <binding id="colorpicker-button">
+  <binding id="colorpicker-button" extends="xul:menu">
     <resources>
       <stylesheet src="chrome://global/skin/colorpicker.css"/>
     </resources>
@@ -430,15 +430,13 @@
     <content>
       <xul:hbox class="colorpicker-button-colorbox" anonid="colorbox" flex="1" xbl:inherits="disabled"/>
 
-      <xul:popupset>
-        <xul:popup class="colorpicker-button-menupopup" anonid="colorpopup"
-                   onmousedown="event.stopPropagation()"
-                   onpopupshowing="this._colorPicker.onPopupShowing()"
-                   onpopuphiding="this._colorPicker.onPopupHiding()"
-                   onselect="this._colorPicker.pickerChange()">
-           <xul:colorpicker xbl:inherits="palettename,disabled" allowevents="true" anonid="colorpicker"/>
-         </xul:popup>
-       </xul:popupset>
+      <xul:panel class="colorpicker-button-menupopup" anonid="colorpopup"
+                 onmousedown="event.stopPropagation()"
+                 onpopupshowing="this._colorPicker.onPopupShowing()"
+                 onpopuphiding="this._colorPicker.onPopupHiding()"
+                 onselect="this._colorPicker.pickerChange()">
+        <xul:colorpicker xbl:inherits="palettename,disabled" allowevents="true" anonid="colorpicker"/>
+      </xul:panel>
     </content>
     
     <implementation implements="nsIAccessibleProvider, nsIDOMXULControlElement">
@@ -450,7 +448,9 @@
         </getter>
       </property>
     
-      <property name="open" onget="return this.mOpen"/>
+      <property name="open"
+                onget="return this.getAttribute('open') == 'true'"
+                onset="this.showPopup();"/>
       <property name="color">
         <getter><![CDATA[
           return this.getAttribute("color");
@@ -464,8 +464,6 @@
       
       <method name="initialize">
         <body><![CDATA[
-          this.mOpen = false;
-                    
           this.mColorBox = document.getAnonymousElementByAttribute(this, "anonid", "colorbox");
           this.mColorBox.style.backgroundColor = this.color;
         
@@ -503,7 +501,7 @@
 
       <method name="showPopup">
         <body><![CDATA[
-          this.mPicker.parentNode.showPopup(this, -1, -1, "popup", "bottomleft", "topleft");
+          this.mPicker.parentNode.openPopup(this, "after_start", 0, 0, false, false);
         ]]></body>
       </method>
       
@@ -515,22 +513,17 @@
 
       <method name="onPopupShowing">
         <body><![CDATA[
-          this.mOpen = true;
-          this.setAttribute("open", "true");
-
           if ("resetHover" in this.mPicker)
             this.mPicker.resetHover();
-            this.mPicker.addKeyListener();
-            this.mPicker.mIsPopup = true;
-            // Initialize to current button's color
-            this.mPicker.initColor(this.color);
+          this.mPicker.addKeyListener();
+          this.mPicker.mIsPopup = true;
+          // Initialize to current button's color
+          this.mPicker.initColor(this.color);
         ]]></body>
       </method>
       
       <method name="onPopupHiding">
         <body><![CDATA[
-          this.mOpen = false;
-          this.removeAttribute("open");
           // Removes the key listener
           this.mPicker.removeKeyListener();
           this.mPicker.mIsPopup = false;
@@ -555,23 +548,11 @@
     <handlers>
       <handler event="keydown"><![CDATA[
         // open popup if key is space/up/left/right/down and popup is closed
-        if ( (event.keyCode == 32 || (event.keyCode > 36 && event.keyCode < 41)) && !this.mOpen)
-          
+        if ( (event.keyCode == 32 || (event.keyCode > 36 && event.keyCode < 41)) && !this.open)
           this.showPopup();
+        else if ( (event.keyCode == 27) && this.open)
+          this.hidePopup();
       ]]></handler>
-
-      <handler event="mousedown"><![CDATA[
-        if (this.disabled)
-          return;
-
-        // Though I would prefer the open the popup using the built-in
-        // popup="_child" mechanism, I can't use that because I can't seem to
-        // get it to recognize the popupalign and popupanchor attributes that way
-        // So, I have to do it manually...
-        this.focus();
-        this.showPopup();
-      ]]></handler>
-      
     </handlers>
   </binding>
 

@@ -140,7 +140,7 @@ void nsProfileLock::RemovePidLockFiles()
 {
     while (!PR_CLIST_IS_EMPTY(&mPidLockList))
     {
-        nsProfileLock *lock = NS_STATIC_CAST(nsProfileLock*, mPidLockList.next);
+        nsProfileLock *lock = static_cast<nsProfileLock*>(mPidLockList.next);
         lock->Unlock();
     }
 }

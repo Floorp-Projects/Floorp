@@ -1613,6 +1613,117 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 !macroend
 
 /**
+ * Finds an existing installation path of the application based on the
+ * application name so we can default to using this path for the install. If
+ * there is zero or more than one installation for the application then we
+ * default to the normal default path. This uses SHCTX to determine the
+ * registry hive so you must call SetShellVarContext first.
+ *
+ * IMPORTANT! $R9 will be overwritten by this macro with the return value so
+ *            protect yourself!
+ *
+ * @param   _KEY
+ *          The registry subkey (typically this will be Software\Mozilla\App Name).
+ * @return  _RESULT
+ *          false if a single install location for this app name isn't found,
+ *          path to the install directory if a single install location is found.
+ *
+ * $R5 = _KEY
+ * $R6 = value returned from EnumRegKey
+ * $R7 = value returned from ReadRegStr
+ * $R8 = counter for the loop's EnumRegKey
+ * $R9 = _RESULT
+ */
+!macro GetSingleInstallPath
+
+  !ifndef ${_MOZFUNC_UN}GetSingleInstallPath
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}GetSingleInstallPath "!insertmacro ${_MOZFUNC_UN}GetSingleInstallPathCall"
+
+    Function ${_MOZFUNC_UN}GetSingleInstallPath
+      Exch $R5
+      Push $R6
+      Push $R7
+      Push $R8
+
+      StrCpy $R9 "false"
+      StrCpy $R8 0  ; set the counter for the loop to 0
+
+      loop:
+      ClearErrors
+      EnumRegKey $R6 SHCTX $R5 $R8
+      IfErrors cleanup
+      StrCmp $R6 "" cleanup  ; if empty there are no more keys to enumerate
+      IntOp $R8 $R8 + 1      ; increment the loop's counter
+      ClearErrors
+      ReadRegStr $R7 SHCTX "$R5\$R6\Main" "PathToExe"
+      IfErrors loop
+      GetFullPathName $R7 "$R7"
+      IfErrors loop
+
+
+      StrCmp "$R9" "false" 0 +3
+      StrCpy $R9 "$R7"
+      GoTo Loop
+
+      StrCpy $R9 "false"
+
+      cleanup:
+      StrCmp $R9 "false" end
+      ${${_MOZFUNC_UN}GetParent} "$R9" $R9
+      StrCpy $R8 $R9 "" -1  ; Copy the last char.
+      StrCmp $R8 '\' end    ; Is it a \?
+      StrCpy $R9 "$R9\"     ; Append \ to the string
+
+      end:
+      ClearErrors
+
+      Pop $R8
+      Pop $R7
+      Pop $R6
+      Exch $R5
+      Push $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro GetSingleInstallPathCall _KEY _RESULT
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_KEY}"
+  Call GetSingleInstallPath
+  Pop ${_RESULT}
+  !verbose pop
+!macroend
+
+!macro un.GetSingleInstallPathCall _KEY _RESULT
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_KEY}"
+  Call un.GetSingleInstallPath
+  Pop ${_RESULT}
+  !verbose pop
+!macroend
+
+!macro un.GetSingleInstallPath
+  !ifndef un.GetSingleInstallPath
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro GetSingleInstallPath
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+/**
  * Writes common registry values for a handler using SHCTX.
  * @param   _KEY
  *          The subkey in relation to the key root.
@@ -1879,3 +1990,86 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
  !endif
 !macroend
 
+/**
+ * If present removes the VirtualStore directory for this installation. Uses the
+ * program files directory path and the current install location to determine
+ * the sub-directory in the VirtualStore directory.
+*/
+!macro CleanVirtualStore
+  !ifndef ${_MOZFUNC_UN}CleanVirtualStore
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}CleanVirtualStore "!insertmacro ${_MOZFUNC_UN}CleanVirtualStoreCall"
+
+    Function ${_MOZFUNC_UN}CleanVirtualStore
+      Push $R9
+      Push $R8
+      Push $R7
+
+      StrLen $R9 "$INSTDIR"
+
+      ; Get the installation's directory name including the preceding slash
+      start:
+      IntOp $R8 $R8 - 1
+      IntCmp $R8 -$R9 end end 0
+      StrCpy $R7 "$INSTDIR" 1 $R8
+      StrCmp $R7 "\" 0 start
+
+      StrCpy $R9 "$INSTDIR" "" $R8
+
+      ClearErrors
+      GetFullPathName $R8 "$PROGRAMFILES$R9"
+      IfErrors end
+      GetFullPathName $R7 "$INSTDIR"
+
+      ; Compare the installation's directory path with the path created by
+      ; concatenating the installation's directory name and the path to the
+      ; program files directory.
+      StrCmp "$R7" "$R8" 0 end
+
+      StrCpy $R8 "$PROGRAMFILES" "" 2 ; Remove the drive letter and colon
+      StrCpy $R7 "$PROFILE\AppData\Local\VirtualStore$R8$R9"
+
+      IfFileExists "$R7" 0 end
+      RmDir /r "$R7"
+
+      end:
+      ClearErrors
+
+      Pop $R7
+      Pop $R8
+      Pop $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro CleanVirtualStoreCall
+ !verbose push
+ !verbose ${_MOZFUNC_VERBOSE}
+ Call CleanVirtualStore
+ !verbose pop
+!macroend
+
+!macro un.CleanVirtualStoreCall
+ !verbose push
+ !verbose ${_MOZFUNC_VERBOSE}
+ Call un.CleanVirtualStore
+ !verbose pop
+!macroend
+
+!macro un.CleanVirtualStore
+ !ifndef un.CleanVirtualStore
+   !verbose push
+   !verbose ${_MOZFUNC_VERBOSE}
+   !undef _MOZFUNC_UN
+   !define _MOZFUNC_UN "un."
+
+   !insertmacro CleanVirtualStore
+
+   !undef _MOZFUNC_UN
+   !define _MOZFUNC_UN
+   !verbose pop
+ !endif
+!macroend

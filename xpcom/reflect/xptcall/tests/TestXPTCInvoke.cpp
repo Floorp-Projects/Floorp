@@ -1068,19 +1068,19 @@ FooBarImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 
   if (aIID.Equals(NS_GET_IID(nsIFoo))) {
-    *aInstancePtr = (void*) NS_STATIC_CAST(nsIFoo*,this);
+    *aInstancePtr = (void*) static_cast<nsIFoo*>(this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsIBar))) {
-    *aInstancePtr = (void*) NS_STATIC_CAST(nsIBar*,this);
+    *aInstancePtr = (void*) static_cast<nsIBar*>(this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
 
   if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = (void*) NS_STATIC_CAST(nsISupports*,
-                                           NS_STATIC_CAST(nsIFoo*,this));
+    *aInstancePtr = (void*) static_cast<nsISupports*>
+                                       (static_cast<nsIFoo*>(this));
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -1239,19 +1239,19 @@ FooBarImpl2::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 
   if (aIID.Equals(NS_GET_IID(nsIFoo))) {
-    *aInstancePtr = (void*) NS_STATIC_CAST(nsIFoo2*,this);
+    *aInstancePtr = (void*) static_cast<nsIFoo2*>(this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsIBar))) {
-    *aInstancePtr = (void*) NS_STATIC_CAST(nsIBar2*,this);
+    *aInstancePtr = (void*) static_cast<nsIBar2*>(this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
 
   if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = (void*) NS_STATIC_CAST(nsISupports*,
-                                           NS_STATIC_CAST(nsIFoo2*,this));
+    *aInstancePtr = (void*) static_cast<nsISupports*>
+                                       (static_cast<nsIFoo2*>(this));
     NS_ADDREF_THIS();
     return NS_OK;
   }

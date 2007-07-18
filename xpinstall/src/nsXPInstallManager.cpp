@@ -860,7 +860,7 @@ void nsXPInstallManager::Shutdown()
         {
             for (PRUint32 i = 0; i < mTriggers->Size(); i++ )
             {
-                item = NS_STATIC_CAST(nsXPITriggerItem*, mTriggers->Get(i));
+                item = static_cast<nsXPITriggerItem*>(mTriggers->Get(i));
                 if ( item && item->mFile && !item->IsFileURL() )
                     item->mFile->Remove(PR_FALSE);
             }

@@ -116,7 +116,7 @@ PRBool nsDBusService::HandleMessage(DBusMessage* message) {
 static DBusHandlerResult dbus_filter(DBusConnection* connection,
                                      DBusMessage* message,
                                      void* user_data) {
-  return NS_STATIC_CAST(nsDBusService*, user_data)->HandleMessage(message)
+  return static_cast<nsDBusService*>(user_data)->HandleMessage(message)
     ? DBUS_HANDLER_RESULT_HANDLED : DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }
 
@@ -131,7 +131,7 @@ void nsDBusService::DoTimerCallback(nsITimer *aTimer) {
 }
 
 static void TimerCallback(nsITimer *aTimer, void *aClosure) {
-  NS_STATIC_CAST(nsDBusService*, aClosure)->DoTimerCallback(aTimer);
+  static_cast<nsDBusService*>(aClosure)->DoTimerCallback(aTimer);
 }
 
 void nsDBusService::DropConnection() {

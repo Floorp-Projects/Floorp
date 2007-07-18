@@ -336,7 +336,7 @@ static const char   kSearchProtocol[] = "internetsearch:";
 int PR_CALLBACK
 searchModePrefCallback(const char *pref, void *aClosure)
 {
-  InternetSearchDataSource *searchDS = NS_STATIC_CAST(InternetSearchDataSource *, aClosure);
+  InternetSearchDataSource *searchDS = static_cast<InternetSearchDataSource *>(aClosure);
   NS_ASSERTION(searchDS, "No closure?");
 
   nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
@@ -559,7 +559,7 @@ InternetSearchDataSource::GetSearchEngineToPing(nsIRDFResource **theEngine, nsCS
 void
 InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 {
-  InternetSearchDataSource *search = NS_STATIC_CAST(InternetSearchDataSource *, aClosure);
+  InternetSearchDataSource *search = static_cast<InternetSearchDataSource *>(aClosure);
   if (!search)  return;
 
   if (!search->busySchedule)
@@ -3323,7 +3323,7 @@ InternetSearchDataSource::DecodeData(const char *aCharset, const PRUnichar *aInS
   rv = unicodeDecoder->GetMaxLength(value.get(), srcLength, &outUnicodeLen);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aOutString = NS_REINTERPRET_CAST(PRUnichar*, nsMemory::Alloc((outUnicodeLen + 1) * sizeof(PRUnichar)));
+  *aOutString = reinterpret_cast<PRUnichar*>(nsMemory::Alloc((outUnicodeLen + 1) * sizeof(PRUnichar)));
   NS_ENSURE_TRUE(*aOutString, NS_ERROR_OUT_OF_MEMORY);
 
   rv = unicodeDecoder->Convert(value.get(), &srcLength, *aOutString, &outUnicodeLen);

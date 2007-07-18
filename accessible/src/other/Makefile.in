@@ -69,7 +69,6 @@ REQUIRES	= content \
 CPPSRCS = \
   nsAccessNodeWrap.cpp \
   nsAccessibleWrap.cpp \
-  nsDocAccessibleWrap.cpp \
   nsRootAccessibleWrap.cpp \
   $(NULL)
 

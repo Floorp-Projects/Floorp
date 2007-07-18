@@ -251,6 +251,11 @@ NS_IMETHODIMP nsWidget::CancelIMEComposition() {
   return NS_ERROR_NOT_IMPLEMENTED;
 	}
 
+NS_IMETHODIMP nsWidget::GetToggledKeyState(PRUint32 aKeyCode,
+                                           PRBool* aLEDState) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+	}
+
 //-------------------------------------------------------------------------
 //
 // Hide or show this component
@@ -698,7 +703,7 @@ NS_IMETHODIMP nsWidget::DispatchEvent( nsGUIEvent *aEvent, nsEventStatus &aStatu
 
   if( nsnull != mMenuListener ) {
     if( NS_MENU_EVENT == aEvent->eventStructType )
-      aStatus = mMenuListener->MenuSelected(NS_STATIC_CAST(nsMenuEvent&, *aEvent));
+      aStatus = mMenuListener->MenuSelected(static_cast<nsMenuEvent&>(*aEvent));
   	}
 
   aStatus = nsEventStatus_eIgnore;

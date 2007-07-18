@@ -302,7 +302,7 @@ GRE_NATIVE(lockProfileDirectory) (JNIEnv* env, jobject, jobject aDirectory)
         if (clazz) {
           jmethodID mid = env->GetMethodID(clazz, "<init>", "(J)V");
           if (mid) {
-            return env->NewObject(clazz, mid, NS_REINTERPRET_CAST(jlong, lock));
+            return env->NewObject(clazz, mid, reinterpret_cast<jlong>(lock));
           }
         }
 
@@ -392,7 +392,7 @@ JXUTILS_NATIVE(wrapJavaObject) (JNIEnv* env, jobject, jobject aJavaObject,
   if (NS_FAILED(rv)) {
     ThrowException(env, rv, "Failed to create XPCOM proxy for Java object");
   }
-  return NS_REINTERPRET_CAST(jlong, xpcomObject);
+  return reinterpret_cast<jlong>(xpcomObject);
 }
 
 extern "C" NS_EXPORT jobject JNICALL
@@ -401,7 +401,7 @@ JXUTILS_NATIVE(wrapXPCOMObject) (JNIEnv* env, jobject, jlong aXPCOMObject,
 {
   nsresult rv;
   jobject javaObject = nsnull;
-  nsISupports* xpcomObject = NS_REINTERPRET_CAST(nsISupports*, aXPCOMObject);
+  nsISupports* xpcomObject = reinterpret_cast<nsISupports*>(aXPCOMObject);
 
   if (!xpcomObject || !aIID) {
     rv = NS_ERROR_NULL_POINTER;

@@ -102,7 +102,6 @@
 #include <commctrl.h>
 #include "prtime.h"
 #ifdef MOZ_CAIRO_GFX
-#include "nsIThebesRenderingContext.h"
 #include "gfxContext.h"
 #include "gfxWindowsSurface.h"
 #else
@@ -757,15 +756,14 @@ void nsWindow::GlobalMsgWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 //-------------------------------------------------------------------------
 NS_IMPL_ADDREF(nsWindow)
 NS_IMPL_RELEASE(nsWindow)
-NS_IMETHODIMP nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+NS_IMETHODIMP
+nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(NS_GET_IID(nsIKBStateControl))) {
-    *aInstancePtr = (void*) ((nsIKBStateControl*)this);
-    NS_ADDREF((nsBaseWidget*)this);
+    *aInstancePtr = static_cast<nsIKBStateControl*>(this);
+    NS_ADDREF(static_cast<nsBaseWidget*>(this));
     return NS_OK;
   }
 
@@ -1638,9 +1636,20 @@ NS_METHOD nsWindow::Destroy()
 NS_IMETHODIMP nsWindow::SetParent(nsIWidget *aNewParent)
 {
   if (aNewParent) {
+    nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
+
+    nsIWidget* parent = GetParent();
+    if (parent) {
+      parent->RemoveChild(this);
+    }
+
     HWND newParent = (HWND)aNewParent->GetNativeData(NS_NATIVE_WINDOW);
     NS_ASSERTION(newParent, "Parent widget has a null native window handle");
-    ::SetParent(mWnd, newParent);
+    if (newParent && mWnd) {
+      ::SetParent(mWnd, newParent);
+    }
+
+    aNewParent->AddChild(this);
 
     return NS_OK;
   }
@@ -2711,10 +2720,10 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
     head.bV4AlphaMask = 0xFF000000;
 
     HBITMAP bmp = ::CreateDIBitmap(dc,
-                                   NS_REINTERPRET_CAST(CONST BITMAPINFOHEADER*, &head),
+                                   reinterpret_cast<CONST BITMAPINFOHEADER*>(&head),
                                    CBM_INIT,
                                    aImageData,
-                                   NS_REINTERPRET_CAST(CONST BITMAPINFO*, &head),
+                                   reinterpret_cast<CONST BITMAPINFO*>(&head),
                                    DIB_RGB_COLORS);
 
     ::SelectObject(dc, oldbits);
@@ -3832,6 +3841,8 @@ void nsWindow::ConstrainZLevel(HWND *aAfter)
 // Process all nsWindows messages
 //
 //-------------------------------------------------------------------------
+static PRBool gJustGotDeactivate = PR_FALSE;
+static PRBool gJustGotActivate = PR_FALSE;
 
 #ifdef NS_DEBUG
 
@@ -4305,6 +4316,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
   PRBool result = PR_FALSE;                 // call the default nsWindow proc
   static PRBool getWheelInfo = PR_TRUE;
   *aRetValue = 0;
+  PRBool isMozWindowTakingFocus = PR_TRUE;
   nsPaletteInfo palInfo;
 
   // Uncomment this to see all windows messages
@@ -4864,15 +4876,17 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         PRInt32 fActive = LOWORD(wParam);
 
         if (WA_INACTIVE == fActive) {
+          gJustGotDeactivate = PR_TRUE;
           if (mIsTopWidgetWindow)
             mLastKeyboardLayout = gKeyboardLayout;
         } else {
+          gJustGotActivate = PR_TRUE;
           nsMouseEvent event(PR_TRUE, NS_MOUSE_ACTIVATE, this,
                              nsMouseEvent::eReal);
           InitEvent(event);
 
           event.acceptActivation = PR_TRUE;
-
+  
           PRBool result = DispatchWindowEvent(&event);
           NS_RELEASE(event.widget);
 
@@ -4884,13 +4898,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           if (gSwitchKeyboardLayout && mLastKeyboardLayout)
             ActivateKeyboardLayout(mLastKeyboardLayout, 0);
         }
-
-        // XXX We want DefWindowProc processing when switching between Mozilla
-        // windows. Otherwise, we might receive a WM_ACTIVATE without a 
-        // following WM_SETFOCUS. Leverage on an undocumented finding where
-        // lParam is always NULL when switching between windows of different
-        // processes.
-        result = (HWND)lParam == NULL;
       }
       break;
 
@@ -4963,29 +4970,20 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         ImmSetOpenStatus(hC, FALSE);
       }
 #endif
-      {
-        nsWindow* topWindow = GetNSWindowPtr(::GetAncestor(mWnd, GA_ROOT));
- 
-        if ((HWND)wParam == NULL ||
-            (topWindow && topWindow->mWnd != ::GetAncestor((HWND)wParam, GA_ROOT))) {
-          result = DispatchFocus(NS_DEACTIVATE, PR_FALSE);
-        }
-        else {
-          PRBool isMozWindowTakingFocus = PR_TRUE;
-          WCHAR className[kMaxClassNameLength];
-          
-          ::GetClassNameW((HWND)wParam, className, kMaxClassNameLength);
-          if (wcscmp(className, kWClassNameUI) &&
-              wcscmp(className, kWClassNameContent) &&
-              wcscmp(className, kWClassNameContentFrame) &&
-              wcscmp(className, kWClassNameDialog) &&
-              wcscmp(className, kWClassNameGeneral)) {
-            isMozWindowTakingFocus = PR_FALSE;
-          }
-
-          result = DispatchFocus(NS_LOSTFOCUS, isMozWindowTakingFocus);
-        }
+      WCHAR className[kMaxClassNameLength];
+      ::GetClassNameW((HWND)wParam, className, kMaxClassNameLength);
+      if (wcscmp(className, kWClassNameUI) &&
+          wcscmp(className, kWClassNameContent) &&
+          wcscmp(className, kWClassNameContentFrame) &&
+          wcscmp(className, kWClassNameDialog) &&
+          wcscmp(className, kWClassNameGeneral)) {
+        isMozWindowTakingFocus = PR_FALSE;
       }
+      if (gJustGotDeactivate) {
+        gJustGotDeactivate = PR_FALSE;
+        result = DispatchFocus(NS_DEACTIVATE, isMozWindowTakingFocus);
+      }
+      result = DispatchFocus(NS_LOSTFOCUS, isMozWindowTakingFocus);
       break;
 
     case WM_WINDOWPOSCHANGED:
@@ -5083,6 +5081,26 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         InitEvent(event);
 
         result = DispatchWindowEvent(&event);
+
+        if (pl.showCmd == SW_SHOWMINIMIZED) {
+          // Deactivate
+          WCHAR className[kMaxClassNameLength];
+          ::GetClassNameW((HWND)wParam, className, kMaxClassNameLength);
+          if (wcscmp(className, kWClassNameUI) &&
+              wcscmp(className, kWClassNameContent) &&
+              wcscmp(className, kWClassNameContentFrame) &&
+              wcscmp(className, kWClassNameDialog) &&
+              wcscmp(className, kWClassNameGeneral)) {
+            isMozWindowTakingFocus = PR_FALSE;
+          }
+          gJustGotDeactivate = PR_FALSE;
+          result = DispatchFocus(NS_DEACTIVATE, isMozWindowTakingFocus);
+        } else if (pl.showCmd == SW_SHOWNORMAL){
+          // Make sure we're active
+          result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
+          result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
+        }
+
         NS_RELEASE(event.widget);
       }
     }
@@ -7508,6 +7526,17 @@ NS_IMETHODIMP nsWindow::CancelIMEComposition()
   return NS_OK;
 }
 
+//==========================================================================
+NS_IMETHODIMP
+nsWindow::GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState)
+{
+#ifdef DEBUG_KBSTATE
+  printf("GetToggledKeyState\n");
+#endif 
+  NS_ENSURE_ARG_POINTER(aLEDState);
+  *aLEDState = (::GetKeyState(aKeyCode) & 1) != 0;
+  return NS_OK;
+}
 
 #define PT_IN_RECT(pt, rc)  ((pt).x>(rc).left && (pt).x <(rc).right && (pt).y>(rc).top && (pt).y<(rc).bottom)
 

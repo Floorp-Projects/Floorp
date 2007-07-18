@@ -98,21 +98,3 @@ button.plain {
   margin: 0 !important;
   padding: 0 !important;
 }
-
-/* ::::: close button ::::: */
-
-.close-button {
-  list-style-image: url("chrome://global/skin/icons/close-button.gif");
-}
-
-.close-button > .toolbarbutton-icon {
-  margin: 0;
-}
-
-.close-button > .toolbarbutton-text {
-  display: none;
-}
-
-.dialog-button {
-	font: menu;
-}

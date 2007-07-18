@@ -135,7 +135,8 @@ public:
                 nsICSSStyleSheet* aSheet,
                 PRBool aSyncLoad,
                 PRBool aAllowUnsafeRules,
-                nsICSSLoaderObserver* aObserver);
+                nsICSSLoaderObserver* aObserver,
+                nsIPrincipal* aLoaderPrincipal);
 
   already_AddRefed<nsIURI> GetReferrerURI();
   
@@ -245,7 +246,7 @@ public:
   }
  
   nsURIAndPrincipalHashKey* GetKey() const {
-    return NS_CONST_CAST(nsURIAndPrincipalHashKey*, this);
+    return const_cast<nsURIAndPrincipalHashKey*>(this);
   }
   const nsURIAndPrincipalHashKey* GetKeyPointer() const { return this; }
  
@@ -340,10 +341,16 @@ public:
   NS_IMETHOD LoadSheetSync(nsIURI* aURL, PRBool aAllowUnsafeRules,
                            nsICSSStyleSheet** aSheet);
 
-  NS_IMETHOD LoadSheet(nsIURI* aURL, nsICSSLoaderObserver* aObserver,
+  NS_IMETHOD LoadSheet(nsIURI* aURL,
+                       nsIURI* aOriginURI,
+                       nsIPrincipal* aOriginPrincipal,
+                       nsICSSLoaderObserver* aObserver,
                        nsICSSStyleSheet** aSheet);
 
-  NS_IMETHOD LoadSheet(nsIURI* aURL, nsICSSLoaderObserver* aObserver);
+  NS_IMETHOD LoadSheet(nsIURI* aURL,
+                       nsIURI* aOriginURI,
+                       nsIPrincipal* aOriginPrincipal,
+                       nsICSSLoaderObserver* aObserver);
 
   // stop loading all sheets
   NS_IMETHOD Stop(void);
@@ -372,6 +379,8 @@ public:
   PRBool IsAlternate(const nsAString& aTitle, PRBool aHasAlternateRel);
 
 private:
+  // Note: null aSourceURI or aSourcePrincipal indicates that the content
+  // policy or CheckLoadURI checks (respectively) should be skipped.
   nsresult CheckLoadAllowed(nsIURI* aSourceURI,
                             nsIPrincipal* aSourcePrincipal,
                             nsIURI* aTargetURI,
@@ -409,6 +418,8 @@ private:
 
   nsresult InternalLoadNonDocumentSheet(nsIURI* aURL,
                                         PRBool aAllowUnsafeRules,
+                                        nsIURI* aOriginURI,
+                                        nsIPrincipal* aOriginPrincipal,
                                         nsICSSStyleSheet** aSheet,
                                         nsICSSLoaderObserver* aObserver);
 

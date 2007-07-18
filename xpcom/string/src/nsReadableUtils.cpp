@@ -109,12 +109,34 @@ CopyUTF8toUTF16( const char* aSource, nsAString& aDest )
     AppendUTF8toUTF16(aSource, aDest);
   }
 
+// Like GetMutableData, but returns false if it can't
+// allocate enough memory (e.g. due to OOM) rather than
+// returning zero (which could have other meanings) and
+// throws away the out-param pointer.
+PRBool
+SetLengthForWriting(nsAString& aDest, PRUint32 aDesiredLength)
+  {
+    PRUnichar* dummy;
+    PRUint32 len = aDest.GetMutableData(&dummy, aDesiredLength);
+    return (len >= aDesiredLength);
+  }
+
+PRBool
+SetLengthForWritingC(nsACString& aDest, PRUint32 aDesiredLength)
+  {
+    char* dummy;
+    PRUint32 len = aDest.GetMutableData(&dummy, aDesiredLength);
+    return (len >= aDesiredLength);
+  }
+
+
 NS_COM
 void
 LossyAppendUTF16toASCII( const nsAString& aSource, nsACString& aDest )
   {
     PRUint32 old_dest_length = aDest.Length();
-    aDest.SetLength(old_dest_length + aSource.Length());
+    if (!SetLengthForWritingC(aDest, old_dest_length + aSource.Length()))
+        return;
 
     nsAString::const_iterator fromBegin, fromEnd;
 
@@ -134,7 +156,8 @@ void
 AppendASCIItoUTF16( const nsACString& aSource, nsAString& aDest )
   {
     PRUint32 old_dest_length = aDest.Length();
-    aDest.SetLength(old_dest_length + aSource.Length());
+    if (!SetLengthForWriting(aDest, old_dest_length + aSource.Length()))
+        return;
 
     nsACString::const_iterator fromBegin, fromEnd;
 
@@ -183,7 +206,8 @@ AppendUTF16toUTF8( const nsAString& aSource, nsACString& aDest )
         PRUint32 old_dest_length = aDest.Length();
 
         // Grow the buffer if we need to.
-        aDest.SetLength(old_dest_length + count);
+        if(!SetLengthForWritingC(aDest, old_dest_length + count))
+            return;
 
         nsACString::iterator dest;
         aDest.BeginWriting(dest);
@@ -238,7 +262,8 @@ AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest )
         PRUint32 old_dest_length = aDest.Length();
 
         // Grow the buffer if we need to.
-        aDest.SetLength(old_dest_length + count);
+        if(!SetLengthForWriting(aDest, old_dest_length + count))
+            return;
 
         nsAString::iterator dest;
         aDest.BeginWriting(dest);
@@ -307,7 +332,7 @@ inline
 ToCharT*
 AllocateStringCopy( const FromStringT& aSource, ToCharT* )
   {
-    return NS_STATIC_CAST(ToCharT*, nsMemory::Alloc((aSource.Length()+1) * sizeof(ToCharT)));
+    return static_cast<ToCharT*>(nsMemory::Alloc((aSource.Length()+1) * sizeof(ToCharT)));
   }
 
 
@@ -337,8 +362,8 @@ ToNewUTF8String( const nsAString& aSource, PRUint32 *aUTF8Count )
     if (aUTF8Count)
       *aUTF8Count = calculator.Size();
 
-    char *result = NS_STATIC_CAST(char*,
-        nsMemory::Alloc(calculator.Size() + 1));
+    char *result = static_cast<char*>
+                              (nsMemory::Alloc(calculator.Size() + 1));
     if (!result)
       return nsnull;
 
@@ -408,8 +433,8 @@ UTF8ToNewUnicode( const nsACString& aSource, PRUint32 *aUTF16Count )
     if (aUTF16Count)
       *aUTF16Count = calculator.Length();
 
-    PRUnichar *result = NS_STATIC_CAST(PRUnichar*,
-        nsMemory::Alloc(sizeof(PRUnichar) * (calculator.Length() + 1)));
+    PRUnichar *result = static_cast<PRUnichar*>
+                                   (nsMemory::Alloc(sizeof(PRUnichar) * (calculator.Length() + 1)));
     if (!result)
       return nsnull;
 
@@ -438,7 +463,9 @@ CopyUnicodeTo( const nsAString::const_iterator& aSrcStart,
                nsAString& aDest )
   {
     nsAString::iterator writer;
-    aDest.SetLength(Distance(aSrcStart, aSrcEnd));
+    if (!SetLengthForWriting(aDest, Distance(aSrcStart, aSrcEnd)))
+        return;
+
     aDest.BeginWriting(writer);
     nsAString::const_iterator fromBegin(aSrcStart);
     
@@ -453,7 +480,9 @@ AppendUnicodeTo( const nsAString::const_iterator& aSrcStart,
   {
     nsAString::iterator writer;
     PRUint32 oldLength = aDest.Length();
-    aDest.SetLength(oldLength + Distance(aSrcStart, aSrcEnd));
+    if(!SetLengthForWriting(aDest, oldLength + Distance(aSrcStart, aSrcEnd)))
+        return;
+
     aDest.BeginWriting(writer).advance(oldLength);
     nsAString::const_iterator fromBegin(aSrcStart);
     
@@ -628,7 +657,7 @@ class ConvertToUpperCase
       PRUint32
       write( const char* aSource, PRUint32 aSourceLength )
         {
-          char* cp = NS_CONST_CAST(char*,aSource);
+          char* cp = const_cast<char*>(aSource);
           const char* end = aSource + aSourceLength;
           while (cp != end) {
             char ch = *cp;
@@ -702,7 +731,9 @@ ToUpperCase( const nsACString& aSource, nsACString& aDest )
   {
     nsACString::const_iterator fromBegin, fromEnd;
     nsACString::iterator toBegin;
-    aDest.SetLength(aSource.Length());
+    if (!SetLengthForWritingC(aDest, aSource.Length()))
+        return;
+
     CopyToUpperCase converter(aDest.BeginWriting(toBegin));
     copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
   }
@@ -718,7 +749,7 @@ class ConvertToLowerCase
       PRUint32
       write( const char* aSource, PRUint32 aSourceLength )
         {
-          char* cp = NS_CONST_CAST(char*,aSource);
+          char* cp = const_cast<char*>(aSource);
           const char* end = aSource + aSourceLength;
           while (cp != end) {
             char ch = *cp;
@@ -792,7 +823,9 @@ ToLowerCase( const nsACString& aSource, nsACString& aDest )
   {
     nsACString::const_iterator fromBegin, fromEnd;
     nsACString::iterator toBegin;
-    aDest.SetLength(aSource.Length());
+    if (!SetLengthForWritingC(aDest, aSource.Length()))
+        return;
+
     CopyToLowerCase converter(aDest.BeginWriting(toBegin));
     copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
   }

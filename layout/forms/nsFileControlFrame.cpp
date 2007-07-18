@@ -208,18 +208,17 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 NS_IMETHODIMP
 nsFileControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  NS_PRECONDITION(aInstancePtr, "null ptr");
-  if (NS_UNLIKELY(!aInstancePtr)) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
   if (aIID.Equals(NS_GET_IID(nsIAnonymousContentCreator))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIAnonymousContentCreator*, this);
+    *aInstancePtr = static_cast<nsIAnonymousContentCreator*>(this);
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIFormControlFrame*, this);
+    *aInstancePtr = static_cast<nsIFormControlFrame*>(this);
     return NS_OK;
   }
+
   return nsAreaFrame::QueryInterface(aIID, aInstancePtr);
 }
 
@@ -333,13 +332,12 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
       // and not fire onchange when it should.
       PRBool oldState = mTextFrame->GetFireChangeEventState();
       mTextFrame->SetFireChangeEventState(PR_TRUE);
-      mTextFrame->SetFormProperty(nsGkAtoms::value, unicodePath);
-      mTextFrame->SetFireChangeEventState(oldState);
       nsCOMPtr<nsIFileControlElement> fileControl = do_QueryInterface(mContent);
       if (fileControl) {
         fileControl->SetFileName(unicodePath);
       }
       
+      mTextFrame->SetFireChangeEventState(oldState);
       // May need to fire an onchange here
       mTextFrame->CheckFireOnChange();
       return NS_OK;

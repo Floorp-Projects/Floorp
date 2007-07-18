@@ -113,13 +113,18 @@ void AppLauncherDlg::OnInitDialog()
         mHelperAppLauncher->GetSource(getter_AddRefs(uri));
         uri->GetSpec(url);
     }
-    nsMIMEInfoHandleAction prefAction = nsIMIMEInfo::saveToDisk;
+    nsHandlerInfoAction prefAction = nsIMIMEInfo::saveToDisk;
     nsAutoString appName;
     nsCAutoString contentType;
     if (mimeInfo)
     {
         mimeInfo->GetPreferredAction(&prefAction);
-        mimeInfo->GetApplicationDescription(appName);
+        nsCOMPtr<nsIHandlerApp> handlerApp;
+        mimeInfo->GetPreferredApplicationHandler(getter_AddRefs(handlerApp));
+        if (handlerApp)
+        {
+            handlerApp->GetName(appName);
+        }
         mimeInfo->GetMIMEType(contentType);
     }
     if (prefAction == nsIMIMEInfo::saveToDisk)

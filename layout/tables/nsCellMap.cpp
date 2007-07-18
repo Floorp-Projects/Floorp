@@ -290,7 +290,7 @@ nsTableCellMap::GetMapFor(const nsTableRowGroupFrame* aRowGroup,
   
   // if aRowGroup is a repeated header or footer find the header or footer it was repeated from
   if (aRowGroup->IsRepeatable()) {
-    nsTableFrame* fifTable = NS_STATIC_CAST(nsTableFrame*, mTableFrame.GetFirstInFlow());
+    nsTableFrame* fifTable = static_cast<nsTableFrame*>(mTableFrame.GetFirstInFlow());
 
     const nsStyleDisplay* display = aRowGroup->GetStyleDisplay();
     nsTableRowGroupFrame* rgOrig = 
@@ -2708,7 +2708,7 @@ void nsCellMap::DestroyCellData(CellData* aData)
   }
   
   if (mIsBC) {
-    BCCellData* bcData = NS_STATIC_CAST(BCCellData*, aData);
+    BCCellData* bcData = static_cast<BCCellData*>(aData);
     bcData->~BCCellData();
     mPresContext->FreeToShell(sizeof(BCCellData), bcData);
   } else {

@@ -55,7 +55,7 @@ nsGenericFactory::nsGenericFactory(const nsModuleComponentInfo *info)
     : mInfo(info)
 {
     if (mInfo && mInfo->mClassInfoGlobal)
-        *mInfo->mClassInfoGlobal = NS_STATIC_CAST(nsIClassInfo *, this);
+        *mInfo->mClassInfoGlobal = static_cast<nsIClassInfo *>(this);
 }
 
 nsGenericFactory::~nsGenericFactory()
@@ -139,8 +139,8 @@ NS_IMETHODIMP nsGenericFactory::GetClassDescription(char * *aClassDescription)
 NS_IMETHODIMP nsGenericFactory::GetClassID(nsCID * *aClassID)
 {
     *aClassID =
-        NS_REINTERPRET_CAST(nsCID*,
-                            nsMemory::Clone(&mInfo->mCID, sizeof mInfo->mCID));
+        reinterpret_cast<nsCID*>
+                        (nsMemory::Clone(&mInfo->mCID, sizeof mInfo->mCID));
     if (! *aClassID)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
@@ -171,7 +171,7 @@ NS_IMETHODIMP nsGenericFactory::SetComponentInfo(const nsModuleComponentInfo *in
         *mInfo->mClassInfoGlobal = 0;
     mInfo = info;
     if (mInfo && mInfo->mClassInfoGlobal)
-        *mInfo->mClassInfoGlobal = NS_STATIC_CAST(nsIClassInfo *, this);
+        *mInfo->mClassInfoGlobal = static_cast<nsIClassInfo *>(this);
     return NS_OK;
 }
 
@@ -390,7 +390,7 @@ nsGenericModule::RegisterSelf(nsIComponentManager *aCompMgr,
     nsresult rv = NS_OK;
 
 #ifdef DEBUG
-    printf_stderr("*** Registering %s components (all right -- a generic module!)\n", mModuleName);
+    printf_stderr("*** Registering components in: %s\n", mModuleName);
 #endif
 
     const nsModuleComponentInfo* cp = mComponents;
@@ -438,7 +438,7 @@ nsGenericModule::UnregisterSelf(nsIComponentManager* aCompMgr,
                             const char* registryLocation)
 {
 #ifdef DEBUG
-    printf_stderr("*** Unregistering %s components (all right -- a generic module!)\n", mModuleName);
+    printf_stderr("*** Unregistering components in: %s\n", mModuleName);
 #endif
     const nsModuleComponentInfo* cp = mComponents;
     for (PRUint32 i = 0; i < mComponentCount; i++) {

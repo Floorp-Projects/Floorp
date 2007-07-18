@@ -105,7 +105,7 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
 {
     *aResult = nsnull;
     txExecutionState* es =
-        NS_STATIC_CAST(txExecutionState*, aContext->getPrivateContext());
+        static_cast<txExecutionState*>(aContext->getPrivateContext());
 
     nsRefPtr<txNodeSet> nodeSet;
     nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodeSet));
@@ -143,9 +143,9 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
 
     if (exprResult1->getResultType() == txAExprResult::NODESET) {
         // The first argument is a NodeSet, iterate on its nodes
-        txNodeSet* nodeSet1 = NS_STATIC_CAST(txNodeSet*,
-                                             NS_STATIC_CAST(txAExprResult*,
-                                                            exprResult1));
+        txNodeSet* nodeSet1 = static_cast<txNodeSet*>
+                                         (static_cast<txAExprResult*>
+                                                     (exprResult1));
         PRInt32 i;
         for (i = 0; i < nodeSet1->size(); ++i) {
             const txXPathNode& node = nodeSet1->get(i);

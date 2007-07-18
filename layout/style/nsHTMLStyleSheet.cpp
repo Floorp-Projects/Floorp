@@ -304,7 +304,7 @@ PR_STATIC_CALLBACK(PLDHashNumber)
 MappedAttrTable_HashKey(PLDHashTable *table, const void *key)
 {
   nsMappedAttributes *attributes =
-    NS_STATIC_CAST(nsMappedAttributes*, NS_CONST_CAST(void*, key));
+    static_cast<nsMappedAttributes*>(const_cast<void*>(key));
 
   return attributes->HashValue();
 }
@@ -312,7 +312,7 @@ MappedAttrTable_HashKey(PLDHashTable *table, const void *key)
 PR_STATIC_CALLBACK(void)
 MappedAttrTable_ClearEntry(PLDHashTable *table, PLDHashEntryHdr *hdr)
 {
-  MappedAttrTableEntry *entry = NS_STATIC_CAST(MappedAttrTableEntry*, hdr);
+  MappedAttrTableEntry *entry = static_cast<MappedAttrTableEntry*>(hdr);
 
   entry->mAttributes->DropStyleSheetReference();
   memset(entry, 0, sizeof(MappedAttrTableEntry));
@@ -323,9 +323,9 @@ MappedAttrTable_MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                            const void *key)
 {
   nsMappedAttributes *attributes =
-    NS_STATIC_CAST(nsMappedAttributes*, NS_CONST_CAST(void*, key));
+    static_cast<nsMappedAttributes*>(const_cast<void*>(key));
   const MappedAttrTableEntry *entry =
-    NS_STATIC_CAST(const MappedAttrTableEntry*, hdr);
+    static_cast<const MappedAttrTableEntry*>(hdr);
 
   return attributes->Equals(entry->mAttributes);
 }
@@ -533,6 +533,10 @@ NS_IMETHODIMP
 nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
                                              nsReStyleHint* aResult)
 {
+  // Note: no need to worry about whether some states changed with this
+  // attribute here, because we handle that under HasStateDependentStyle() as
+  // needed.
+
   // Result is true for |href| changes on HTML links if we have link rules.
   nsIContent *content = aData->mContent;
   if (aData->mAttribute == nsGkAtoms::href &&
@@ -801,8 +805,8 @@ nsHTMLStyleSheet::UniqueMappedAttributes(nsMappedAttributes* aMapped)
       return nsnull;
     }
   }
-  MappedAttrTableEntry *entry = NS_STATIC_CAST(MappedAttrTableEntry*,
-    PL_DHashTableOperate(&mMappedAttrTable, aMapped, PL_DHASH_ADD));
+  MappedAttrTableEntry *entry = static_cast<MappedAttrTableEntry*>
+                                           (PL_DHashTableOperate(&mMappedAttrTable, aMapped, PL_DHASH_ADD));
   if (!entry)
     return nsnull;
   if (!entry->mAttributes) {

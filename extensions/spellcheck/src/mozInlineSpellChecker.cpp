@@ -93,6 +93,8 @@
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsIContent.h"
+#include "nsIEventStateManager.h"
 
 // Set to spew messages to the console about what is happening.
 //#define DEBUG_INLINESPELL
@@ -626,9 +628,9 @@ mozInlineSpellChecker::RegisterEventListeners()
   nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(doc, &rv);
   NS_ENSURE_SUCCESS(rv, rv); 
 
-  piTarget->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*, this),
+  piTarget->AddEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
                                   NS_GET_IID(nsIDOMMouseListener));
-  piTarget->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMKeyListener*, this),
+  piTarget->AddEventListenerByIID(static_cast<nsIDOMKeyListener*>(this),
                                   NS_GET_IID(nsIDOMKeyListener));
 
   return NS_OK;
@@ -651,9 +653,9 @@ mozInlineSpellChecker::UnregisterEventListeners()
   nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(doc);
   NS_ENSURE_TRUE(piTarget, NS_ERROR_NULL_POINTER);
 
-  piTarget->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*, this),
+  piTarget->RemoveEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
                                      NS_GET_IID(nsIDOMMouseListener));
-  piTarget->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMKeyListener*, this),
+  piTarget->RemoveEventListenerByIID(static_cast<nsIDOMKeyListener*>(this),
                                      NS_GET_IID(nsIDOMKeyListener));
   
   return NS_OK;
@@ -1107,6 +1109,11 @@ mozInlineSpellChecker::SkipSpellCheckForNode(nsIEditor* aEditor,
       parent->GetParentNode(getter_AddRefs(nextParent));
       parent = nextParent;
     }
+  }
+  else {
+    // XXX Do we really want this for all read-write content?
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+    *checkSpelling = content->IntrinsicState() & NS_EVENT_STATE_MOZ_READWRITE;
   }
 
   return NS_OK;

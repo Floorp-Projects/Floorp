@@ -21,6 +21,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -63,7 +64,9 @@
         buttons="accept,extra2"
 #endif
         creditslabel="&copyright;"
-        aboutlabel="&aboutLink;">
+        creditsaccesskey="&copyright.accesskey;"
+        aboutlabel="&aboutLink;"
+        aboutaccesskey="&aboutLink.accesskey;">
     
   <script type="application/x-javascript" src="chrome://browser/content/aboutDialog.js"/>
 

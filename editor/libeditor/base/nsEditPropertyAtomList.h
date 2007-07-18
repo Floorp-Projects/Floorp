@@ -166,6 +166,7 @@ EDITOR_ATOM(cssWhitespace, "white-space")
 EDITOR_ATOM(cssWidth, "width")
 EDITOR_ATOM(cssZIndex, "z-index")
 
+EDITOR_ATOM(cssMozUserModify, "-moz-user-modify")
 EDITOR_ATOM(cssMozUserSelect, "-moz-user-select")
 EDITOR_ATOM(mozdirty, "_moz_dirty")
 

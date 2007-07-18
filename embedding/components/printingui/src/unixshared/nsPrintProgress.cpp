@@ -98,7 +98,7 @@ NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(nsIDOMWindowInternal *parent,
       do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    ifptr->SetData(NS_STATIC_CAST(nsIPrintProgress*, this));
+    ifptr->SetData(static_cast<nsIPrintProgress*>(this));
     ifptr->SetDataIID(&NS_GET_IID(nsIPrintProgress));
 
     array->AppendElement(ifptr);

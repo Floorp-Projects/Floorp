@@ -95,14 +95,14 @@ nsSpaceManager::BandList::Clear()
 PR_STATIC_CALLBACK(void*)
 PSArenaAllocCB(size_t aSize, void* aClosure)
 {
-  return NS_STATIC_CAST(nsIPresShell*, aClosure)->AllocateFrame(aSize);
+  return static_cast<nsIPresShell*>(aClosure)->AllocateFrame(aSize);
 }
 
 // PresShell Arena free callback (for nsIntervalSet use below)
 PR_STATIC_CALLBACK(void)
 PSArenaFreeCB(size_t aSize, void* aPtr, void* aClosure)
 {
-  NS_STATIC_CAST(nsIPresShell*, aClosure)->FreeFrame(aSize, aPtr);
+  static_cast<nsIPresShell*>(aClosure)->FreeFrame(aSize, aPtr);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1571,7 +1571,7 @@ nsAutoSpaceManager::~nsAutoSpaceManager()
 
 #ifdef NOISY_SPACEMANAGER
     if (mOld) {
-      NS_STATIC_CAST(nsFrame *, mReflowState.frame)->ListTag(stdout);
+      static_cast<nsFrame *>(mReflowState.frame)->ListTag(stdout);
       printf(": space-manager %p after reflow\n", mOld);
       mOld->List(stdout);
     }

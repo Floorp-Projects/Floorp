@@ -869,8 +869,8 @@ NS_IMETHODIMP ns4xPluginInstance::Start(void)
 
   if(mStarted)
     return NS_OK;
-  else
-    return InitializePlugin(mPeer); 
+
+  return InitializePlugin(mPeer); 
 }
 
 
@@ -900,6 +900,14 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
   if(!mStarted)
     return NS_OK;
 
+  // Make sure we lock while we're writing to mStarted after we've
+  // started as other threads might be checking that inside a lock.
+  EnterAsyncPluginThreadCallLock();
+  mStarted = PR_FALSE;
+  ExitAsyncPluginThreadCallLock();
+
+  OnPluginDestroy(&fNPP);
+
   if (fCallbacks->destroy == NULL)
     return NS_ERROR_FAILURE; // XXX right error?
 
@@ -924,8 +932,6 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPP Destroy called: this=%p, npp=%p, return=%d\n", this, &fNPP, error));
-
-  mStarted = PR_FALSE;
 
   nsJSNPRuntime::OnPluginDestroy(&fNPP);
 
@@ -1105,123 +1111,113 @@ NS_IMETHODIMP ns4xPluginInstance::Destroy(void)
 ////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 {
-#if defined (MOZ_WIDGET_GTK2)
-  NPSetWindowCallbackStruct *ws;
-#endif
-
   // XXX 4.x plugins don't want a SetWindow(NULL).
   if (!window || !mStarted)
     return NS_OK;
   
   NPError error;
-  
+
+  // It would be nice if this was all moved to
+  // nsPluginNativeWindowGtk2::CallSetWindow or nsWindow or somewhere else?
 #if defined (MOZ_WIDGET_GTK2)
-  PRBool isXembed = PR_FALSE;
-  // bug 108337, flash plugin on linux doesn't like window->width <= 0
-  if ((PRInt32) window->width <= 0 || (PRInt32) window->height <= 0)
-    return NS_OK;
+  if (window->type == nsPluginWindowType_Window) {
+    PRBool isXembed = PR_FALSE;
+    // bug 108337, flash plugin on linux doesn't like window->width <= 0
+    if ((PRInt32) window->width <= 0 || (PRInt32) window->height <= 0)
+      return NS_OK;
 
-  // We need to test if this is an xembed window before doing checks
-  // below, as they might be used on the first pass or on later passes
-  // when we resize the plugin window.
-  GdkWindow *win = gdk_window_lookup((XID)window->window);
-  if (!win)
-    return NS_ERROR_FAILURE;
+    // We need to test if this is an xembed window before doing checks
+    // below, as they might be used on the first pass or on later passes
+    // when we resize the plugin window.
+    GdkWindow *win = gdk_window_lookup((XID)window->window);
+    if (!win)
+      return NS_ERROR_FAILURE;
 
-  gpointer user_data = nsnull;
-  gdk_window_get_user_data(win, &user_data);
-  if (user_data && GTK_IS_WIDGET(user_data)) {
-    GtkWidget* widget = GTK_WIDGET(user_data);
+    gpointer user_data = nsnull;
+    gdk_window_get_user_data(win, &user_data);
+    if (user_data && GTK_IS_WIDGET(user_data)) {
+      GtkWidget* widget = GTK_WIDGET(user_data);
 
-    if (GTK_IS_SOCKET(widget))
-      isXembed = PR_TRUE;
-  }
-
-  // Allocate and fill out the ws_info data
-  if (!window->ws_info || !mXtBin) {
-    if (!window->ws_info) {
-#ifdef NS_DEBUG
-      printf("About to create new ws_info...\n");
-#endif    
-
-      // allocate a new NPSetWindowCallbackStruct structure at ws_info
-      window->ws_info = (NPSetWindowCallbackStruct *)PR_MALLOC(sizeof(NPSetWindowCallbackStruct));
-
-      if (!window->ws_info)
-        return NS_ERROR_OUT_OF_MEMORY;
+      if (GTK_IS_SOCKET(widget))
+        isXembed = PR_TRUE;
     }
 
-    ws = (NPSetWindowCallbackStruct *)window->ws_info;
+    // Fill out the ws_info data.
+    // (ws_info should be non-null but check just in case.)
+    if (!mXtBin && window->ws_info) {
 
-    if (!isXembed)
-    {  
+      NPSetWindowCallbackStruct* ws =
+        static_cast<NPSetWindowCallbackStruct*>(window->ws_info);
+
+      if (!isXembed) {  
 #ifdef NS_DEBUG      
-      printf("About to create new xtbin of %i X %i from %p...\n",
-             window->width, window->height, win);
+        printf("About to create new xtbin of %i X %i from %p...\n",
+               window->width, window->height, (void*)win);
 #endif
 
 #if 0
-      // if we destroyed the plugin when we left the page, we could remove this
-      // code (i believe) the problem here is that the window gets destroyed when
-      // its parent, etc does by changing a page the plugin instance is being
-      // held on to, so when we return to the page, we have a mXtBin, but it is
-      // in a not-so-good state.
-      // --
-      // this is lame.  we shouldn't be destroying this everytime, but I can't find
-      // a good way to tell if we need to destroy/recreate the xtbin or not
-      // what if the plugin wants to change the window and not just resize it??
-      // (pav)
+        // if we destroyed the plugin when we left the page, we could remove this
+        // code (i believe) the problem here is that the window gets destroyed when
+        // its parent, etc does by changing a page the plugin instance is being
+        // held on to, so when we return to the page, we have a mXtBin, but it is
+        // in a not-so-good state.
+        // --
+        // this is lame.  we shouldn't be destroying this everytime, but I can't find
+        // a good way to tell if we need to destroy/recreate the xtbin or not
+        // what if the plugin wants to change the window and not just resize it??
+        // (pav)
 
-      if (mXtBin) {
-        gtk_widget_destroy(mXtBin);
-        mXtBin = NULL;
+        if (mXtBin) {
+          gtk_widget_destroy(mXtBin);
+          mXtBin = NULL;
+        }
+#endif
+
+
+        if (!mXtBin) {
+          mXtBin = gtk_xtbin_new(win, 0);
+          // Check to see if creating mXtBin failed for some reason.
+          // if it did, we can't go any further.
+          if (!mXtBin)
+            return NS_ERROR_FAILURE;
+        } 
+
+        gtk_widget_set_usize(mXtBin, window->width, window->height);
+
+#ifdef NS_DEBUG
+        printf("About to show xtbin(%p)...\n", (void*)mXtBin); fflush(NULL);
+#endif
+        gtk_widget_show(mXtBin);
+#ifdef NS_DEBUG
+        printf("completed gtk_widget_show(%p)\n", (void*)mXtBin); fflush(NULL);
+#endif
       }
-#endif
 
-
-      if (!mXtBin) {
-        mXtBin = gtk_xtbin_new(win, 0);
-        // Check to see if creating mXtBin failed for some reason.
-        // if it did, we can't go any further.
-        if (!mXtBin)
-          return NS_ERROR_FAILURE;
-      } 
-
-      gtk_widget_set_usize(mXtBin, window->width, window->height);
-
-#ifdef NS_DEBUG
-      printf("About to show xtbin(%p)...\n", mXtBin); fflush(NULL);
-#endif
-      gtk_widget_show(mXtBin);
-#ifdef NS_DEBUG
-      printf("completed gtk_widget_show(%p)\n", mXtBin); fflush(NULL);
-#endif
-    }
-
-    // fill in window info structure 
-    ws->type = 0; // OK, that was a guess!!
+      // fill in window info structure 
+      ws->type = 0; // OK, that was a guess!!
 #ifdef MOZ_X11
-    ws->depth = gdk_window_get_visual(win)->depth;
-    if (!isXembed)
-      ws->display = GTK_XTBIN(mXtBin)->xtdisplay;
-    else
-      ws->display = GDK_WINDOW_XDISPLAY(win);
-    ws->visual = GDK_VISUAL_XVISUAL(gdk_window_get_visual(win));
-    ws->colormap = GDK_COLORMAP_XCOLORMAP(gdk_window_get_colormap(win));
+      ws->depth = gdk_window_get_visual(win)->depth;
+      if (!isXembed)
+        ws->display = GTK_XTBIN(mXtBin)->xtdisplay;
+      else
+        ws->display = GDK_WINDOW_XDISPLAY(win);
+      ws->visual = GDK_VISUAL_XVISUAL(gdk_window_get_visual(win));
+      ws->colormap = GDK_COLORMAP_XCOLORMAP(gdk_window_get_colormap(win));
 
-    XFlush(ws->display);
+      XFlush(ws->display);
 #endif
-  } // !window->ws_info
+    } // !mXtBin
 
-  if (!mXtBin && !isXembed)
-    return NS_ERROR_FAILURE;
+    if (!mXtBin && !isXembed)
+      return NS_ERROR_FAILURE;
 
-  if (!isXembed) {
-    // And now point the NPWindow structures window 
-    // to the actual X window
-    window->window = (nsPluginPort *)GTK_XTBIN(mXtBin)->xtwindow;
+    if (!isXembed) {
+      // And now point the NPWindow structures window 
+      // to the actual X window
+      window->window = (nsPluginPort *)GTK_XTBIN(mXtBin)->xtwindow;
     
-    gtk_xtbin_resize(mXtBin, window->width, window->height);
+      gtk_xtbin_resize(mXtBin, window->width, window->height);
+    }
   }
   
 #endif // MOZ_WIDGET
@@ -1352,9 +1348,8 @@ NS_IMETHODIMP ns4xPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* hand
     result = CallNPP_HandleEventProc(fCallbacks->event,
                                      &fNPP,
                                      (void*) event->event);
-#endif
 
-#if defined(XP_WIN) || defined(XP_OS2)
+#elif defined(XP_WIN) || defined(XP_OS2)
       NPEvent npEvent;
       npEvent.event = event->event;
       npEvent.wParam = event->wParam;
@@ -1363,6 +1358,11 @@ NS_IMETHODIMP ns4xPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* hand
       NS_TRY_SAFE_CALL_RETURN(result, CallNPP_HandleEventProc(fCallbacks->event,
                                     &fNPP,
                                     (void*)&npEvent), fLibrary, this);
+
+#else // MOZ_X11 or other
+      result = CallNPP_HandleEventProc(fCallbacks->event,
+                                       &fNPP,
+                                       (void*)&event->event);
 #endif
 
       NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,

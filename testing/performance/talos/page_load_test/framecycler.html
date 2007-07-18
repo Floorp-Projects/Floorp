@@ -4,7 +4,7 @@
 
   var NUM_PAGES;
   var NUM_CYCLES;
-  var DEFAULT_TIMEOUT = 5000; //how long any given page can take to load
+  var DEFAULT_TIMEOUT = 25000; //how long any given page can take to load
   var t; 
 
   function parseParams() {
@@ -124,34 +124,37 @@
     var rstring = "__start_page_load_report";
 
     var r = getArrayStats(all);
-    //dump(
-    //  "(tinderbox dropping follows)\n"+
-    //  "_x_x_mozilla_page_load,"+avgmed+","+r.max+","+r.min+"\n"+
-    //  "_x_x_mozilla_page_load_details,avgmedian|"+avgmed+"|average|"+avg.toFixed(2)+"|minimum|"+r.min+"|maximum|"+r.max+"|stddev|"+r.stdd.toFixed(2)+":"
-    //);
+    dump(
+      "__start_tp_report\n" + 
+      "_x_x_mozilla_page_load,"+avgmed+","+r.max+","+r.min+"\n"+
+      "_x_x_mozilla_page_load_details,avgmedian|"+avgmed+"|average|"+avg.toFixed(2)+"|minimum|"+r.min+"|maximum|"+r.max+"|stddev|"+r.stdd.toFixed(2)+"\n"
+    );
 
     for (var i = 0; i < timeVals.length; ++i) {
       r = getArrayStats(timeVals[i]);
       fields = pages[i].split('/');
-      rstring += "page:" + fields[5] + ":" + r.median.toFixed(2) + "\n";
-      //dump(
-      //  '|'+
-      //  i+';'+
-      //  pages[i]+';'+
-      //  r.median+';'+
-      //  r.mean+';'+
-      //  r.min+';'+
-      //  r.max
-      //);
+      //rstring += "page:" + fields[5] + ":" + r.median.toFixed(2) + "\n";
+      dump(
+        '|'+
+        i+';'+
+        //pages[i]+';'+
+        fields[5]+';'+
+        r.median+';'+
+        r.mean+';'+
+        r.min+';'+
+        r.max
+      );
       for (var j = 0; j < timeVals[i].length; ++j) {
-        //dump(
-        //  ';'+timeVals[i][j]
-        //);
+        dump(
+          ';'+timeVals[i][j]
+        );
       }
+      dump("\n")
     } 
-    rstring += "__end_page_load_report";
+    dump("__end_tp_report\n");
+    //rstring += "__end_page_load_report";
     //alert(rstring);
-    dump(rstring);
+    //dump(rstring);
   }
 
   function showReport() {

@@ -184,7 +184,7 @@ PropertyHashToArrayFunc (const nsAString &aKey,
                          void *userArg)
 {
     nsIMutableArray *propertyArray =
-        NS_STATIC_CAST(nsIMutableArray *, userArg);
+        static_cast<nsIMutableArray *>(userArg);
     nsSimpleProperty *sprop = new nsSimpleProperty(aKey, aData);
     propertyArray->AppendElement(sprop, PR_FALSE);
     return PL_DHASH_NEXT;

@@ -120,6 +120,9 @@
 
 #include "nsCRT.h"
 
+#include "nsMIMEInfoImpl.h"
+#include "nsHandlerAppImpl.h"
+
 #ifdef PR_LOGGING
 PRLogModuleInfo* nsExternalHelperAppService::mLog = nsnull;
 #endif
@@ -566,7 +569,10 @@ nsresult nsExternalHelperAppService::InitDataSource()
     rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_ALWAYSASK),
                      getter_AddRefs(kNC_AlwaysAsk));  
     rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_PRETTYNAME),
-                     getter_AddRefs(kNC_PrettyName));  
+                     getter_AddRefs(kNC_PrettyName));
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_URITEMPLATE),
+                     getter_AddRefs(kNC_UriTemplate));
+     
   }
   
   mDataSourceInitialized = PR_TRUE;
@@ -715,8 +721,9 @@ NS_IMETHODIMP nsExternalHelperAppService::ApplyDecodingForExtension(const nsACSt
 }
 
 #ifdef MOZ_RDF
-nsresult nsExternalHelperAppService::FillTopLevelProperties(nsIRDFResource * aContentTypeNodeResource, 
-                                                            nsIRDFService * aRDFService, nsIMIMEInfo * aMIMEInfo)
+nsresult nsExternalHelperAppService::FillMIMEExtensionProperties(
+  nsIRDFResource * aContentTypeNodeResource, nsIRDFService * aRDFService,
+  nsIMIMEInfo * aMIMEInfo)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIRDFNode> target;
@@ -726,12 +733,7 @@ nsresult nsExternalHelperAppService::FillTopLevelProperties(nsIRDFResource * aCo
   rv = InitDataSource();
   if (NS_FAILED(rv)) return NS_OK;
 
-  // set the pretty name description, if nonempty
-  FillLiteralValueFromTarget(aContentTypeNodeResource,kNC_Description, &stringValue);
-  if (stringValue && *stringValue)
-    aMIMEInfo->SetDescription(nsDependentString(stringValue));
-
-  // now iterate over all the file type extensions...
+  // iterate over all the file type extensions...
   nsCOMPtr<nsISimpleEnumerator> fileExtensions;
   mOverRideDataSource->GetTargets(aContentTypeNodeResource, kNC_FileExtensions, PR_TRUE, getter_AddRefs(fileExtensions));
 
@@ -787,10 +789,9 @@ nsresult nsExternalHelperAppService::FillLiteralValueFromTarget(nsIRDFResource *
   return rv;
 }
 
-nsresult nsExternalHelperAppService::FillContentHandlerProperties(const char * aContentType, 
-                                                                  nsIRDFResource * aContentTypeNodeResource, 
-                                                                  nsIRDFService * aRDFService, 
-                                                                  nsIMIMEInfo * aMIMEInfo)
+nsresult nsExternalHelperAppService::FillContentHandlerProperties(
+  const char * aContentType, const char * aTypeNodePrefix,
+  nsIRDFService * aRDFService, nsIHandlerInfo * aHandlerInfo)
 {
   nsCOMPtr<nsIRDFNode> target;
   nsCOMPtr<nsIRDFLiteral> literal;
@@ -800,7 +801,8 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(const char * a
   rv = InitDataSource();
   if (NS_FAILED(rv)) return rv;
 
-  nsCAutoString contentTypeHandlerNodeName(NC_CONTENT_NODE_HANDLER_PREFIX);
+  nsCAutoString contentTypeHandlerNodeName(aTypeNodePrefix);
+  contentTypeHandlerNodeName.Append(NC_HANDLER_SUFFIX);
   contentTypeHandlerNodeName.Append(aContentType);
 
   nsCOMPtr<nsIRDFResource> contentTypeHandlerNodeResource;
@@ -808,56 +810,79 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(const char * a
   NS_ENSURE_TRUE(contentTypeHandlerNodeResource, NS_ERROR_FAILURE); // that's not good! we have an error in the rdf file
 
   // now process the application handler information
-  aMIMEInfo->SetPreferredAction(nsIMIMEInfo::useHelperApp);
+  aHandlerInfo->SetPreferredAction(nsIHandlerInfo::useHelperApp);
 
   // save to disk
   FillLiteralValueFromTarget(contentTypeHandlerNodeResource,kNC_SaveToDisk, &stringValue);
   NS_NAMED_LITERAL_STRING(trueString, "true");
   NS_NAMED_LITERAL_STRING(falseString, "false");
   if (stringValue && trueString.Equals(stringValue))
-       aMIMEInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
+       aHandlerInfo->SetPreferredAction(nsIHandlerInfo::saveToDisk);
 
   // use system default
   FillLiteralValueFromTarget(contentTypeHandlerNodeResource,kNC_UseSystemDefault, &stringValue);
   if (stringValue && trueString.Equals(stringValue))
-      aMIMEInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
+      aHandlerInfo->SetPreferredAction(nsIHandlerInfo::useSystemDefault);
 
   // handle internal
   FillLiteralValueFromTarget(contentTypeHandlerNodeResource,kNC_HandleInternal, &stringValue);
   if (stringValue && trueString.Equals(stringValue))
-       aMIMEInfo->SetPreferredAction(nsIMIMEInfo::handleInternally);
+       aHandlerInfo->SetPreferredAction(nsIHandlerInfo::handleInternally);
   
   // always ask
   FillLiteralValueFromTarget(contentTypeHandlerNodeResource,kNC_AlwaysAsk, &stringValue);
   // Only skip asking if we are absolutely sure the user does not want
   // to be asked.  Any sort of bofus data should mean we ask.
-  aMIMEInfo->SetAlwaysAskBeforeHandling(!stringValue ||
+  aHandlerInfo->SetAlwaysAskBeforeHandling(!stringValue ||
                                         !falseString.Equals(stringValue));
 
 
   // now digest the external application information
 
-  nsCAutoString externalAppNodeName (NC_CONTENT_NODE_EXTERNALAPP_PREFIX);
+  nsCAutoString externalAppNodeName(aTypeNodePrefix);
+  externalAppNodeName.AppendLiteral(NC_EXTERNALAPP_SUFFIX);
   externalAppNodeName.Append(aContentType);
   nsCOMPtr<nsIRDFResource> externalAppNodeResource;
   aRDFService->GetResource(externalAppNodeName, getter_AddRefs(externalAppNodeResource));
 
   // Clear out any possibly set preferred application, to match the datasource
-  aMIMEInfo->SetApplicationDescription(EmptyString());
-  aMIMEInfo->SetPreferredApplicationHandler(nsnull);
+  aHandlerInfo->SetPreferredApplicationHandler(nsnull);
   if (externalAppNodeResource)
   {
-    FillLiteralValueFromTarget(externalAppNodeResource, kNC_PrettyName, &stringValue);
-    if (stringValue)
-      aMIMEInfo->SetApplicationDescription(nsDependentString(stringValue));
- 
+    const PRUnichar * appName;
+    FillLiteralValueFromTarget(externalAppNodeResource, kNC_PrettyName,
+                               &appName);
+
+    // if we've got a path name, this must be a local app
     FillLiteralValueFromTarget(externalAppNodeResource, kNC_Path, &stringValue);
     if (stringValue && stringValue[0])
     {
       nsCOMPtr<nsIFile> application;
       GetFileTokenForPath(stringValue, getter_AddRefs(application));
-      if (application)
-        aMIMEInfo->SetPreferredApplicationHandler(application);
+      if (application) {
+        nsLocalHandlerApp *handlerApp(new nsLocalHandlerApp(appName, application));
+        if (!handlerApp) { 
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        rv = aHandlerInfo->SetPreferredApplicationHandler(handlerApp);
+      }
+    } else {
+      // if we got here, there's no path name in the RDF graph, so this must 
+      // be a web app
+      FillLiteralValueFromTarget(externalAppNodeResource, kNC_UriTemplate, 
+                                 &stringValue);
+      if (stringValue && stringValue[0]) {
+        nsWebHandlerApp *handlerApp(new nsWebHandlerApp(appName, 
+          NS_ConvertUTF16toUTF8(stringValue)));
+        
+        if (!handlerApp) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+        rv = aHandlerInfo->SetPreferredApplicationHandler(handlerApp);
+      } else {
+        return NS_ERROR_FAILURE; // no path name _and_ no uri template
+      }
     }
   }
 
@@ -903,7 +928,8 @@ PRBool nsExternalHelperAppService::MIMETypeIsInDataSource(const char * aContentT
   return PR_FALSE;
 }
 
-nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const nsACString& aContentType, nsIMIMEInfo * aMIMEInfo)
+nsresult nsExternalHelperAppService::FillMIMEInfoForMimeTypeFromDS(
+  const nsACString& aContentType, nsIMIMEInfo * aMIMEInfo)
 {
 #ifdef MOZ_RDF
   NS_ENSURE_ARG_POINTER(aMIMEInfo);
@@ -918,34 +944,94 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const nsACStri
   nsCOMPtr<nsIRDFService> rdf = do_GetService(kRDFServiceCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  
-  // Build uri for the mimetype resource.
-  nsCAutoString contentTypeNodeName(NC_CONTENT_NODE_PREFIX);
-  nsCAutoString contentType(aContentType);
-  ToLowerCase(contentType);
-  contentTypeNodeName.Append(contentType);
+  // get lowercase typename & uri for the handlertype resource.
+  nsCAutoString typeNodeName(NC_CONTENT_NODE_PREFIX);
+  nsCAutoString type(aContentType);
+  ToLowerCase(type);
+  typeNodeName.Append(type);
 
-  // Get the mime type resource.
-  nsCOMPtr<nsIRDFResource> contentTypeNodeResource;
-  rv = rdf->GetResource(contentTypeNodeName, getter_AddRefs(contentTypeNodeResource));
+  // Get the handler type resource.
+  nsCOMPtr<nsIRDFResource> typeNodeResource;
+  rv = rdf->GetResource(typeNodeName, getter_AddRefs(typeNodeResource));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // we need a way to determine if this content type resource is really in the graph or not...
-  // ...Test that there's a #value arc from the mimetype resource to the mimetype literal string.
-  nsCOMPtr<nsIRDFLiteral> mimeLiteral;
-  NS_ConvertUTF8toUTF16 mimeType(contentType);
-  rv = rdf->GetLiteral( mimeType.get(), getter_AddRefs( mimeLiteral ) );
+  // fill in MIME-specific extension info
+  rv = FillMIMEExtensionProperties(typeNodeResource, rdf, aMIMEInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return FillHandlerInfoForTypeFromDS(typeNodeResource.get(), type, rdf, 
+                                      NC_CONTENT_NODE_PREFIX, aMIMEInfo); 
+#else
+  return NS_ERROR_NOT_AVAILABLE;
+#endif
+}
+
+nsresult nsExternalHelperAppService::FillProtoInfoForSchemeFromDS(
+    const nsACString& aType, nsIHandlerInfo * aHandlerInfo)
+{
+#ifdef MOZ_RDF
+  NS_ENSURE_ARG_POINTER(aHandlerInfo);
+  nsresult rv = InitDataSource();
+  if (NS_FAILED(rv)) return rv;
+
+  // can't do anything if we have no datasource...
+  if (!mOverRideDataSource)
+    return NS_ERROR_FAILURE;
+
+  // Get the RDF service.
+  nsCOMPtr<nsIRDFService> rdf = do_GetService(kRDFServiceCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // get lowercase typename & get uri for the handlertype resource.
+  nsCAutoString typeNodeName(NC_SCHEME_NODE_PREFIX);
+  nsCAutoString type(aType);
+  ToLowerCase(type);
+  typeNodeName.Append(type);
+
+  // Get the handler type resource.
+  nsCOMPtr<nsIRDFResource> typeNodeResource;
+  rv = rdf->GetResource(typeNodeName, getter_AddRefs(typeNodeResource));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return FillHandlerInfoForTypeFromDS(typeNodeResource.get(), type, rdf,
+                                      NC_SCHEME_NODE_PREFIX, aHandlerInfo);
+#else
+  return NS_ERROR_NOT_AVAILABLE;
+#endif
+}
+
+nsresult nsExternalHelperAppService::FillHandlerInfoForTypeFromDS(
+  nsIRDFResource *aTypeNodeResource, const nsCAutoString &aType, 
+  nsIRDFService *rdf, const char *aTypeNodePrefix,
+  nsIHandlerInfo * aHandlerInfo)
+{
+#ifdef MOZ_RDF
+
+  // we need a way to determine if this type resource is really in the graph
+  // or not... Test that there's a #value arc from the type resource to the
+  // type literal string.
+  nsCOMPtr<nsIRDFLiteral> typeLiteral;
+  NS_ConvertUTF8toUTF16 UTF16Type(aType);
+  nsresult rv = rdf->GetLiteral( UTF16Type.get(), 
+                                 getter_AddRefs( typeLiteral ) );
   NS_ENSURE_SUCCESS(rv, rv);
   
   PRBool exists = PR_FALSE;
-  rv = mOverRideDataSource->HasAssertion(contentTypeNodeResource, kNC_Value, mimeLiteral, PR_TRUE, &exists );
-
+  rv = mOverRideDataSource->HasAssertion(aTypeNodeResource, kNC_Value,
+                                         typeLiteral, PR_TRUE, &exists );
   if (NS_SUCCEEDED(rv) && exists)
   {
-     // fill the mimeinfo in based on the values from the data source
-     rv = FillTopLevelProperties(contentTypeNodeResource, rdf, aMIMEInfo);
-     NS_ENSURE_SUCCESS(rv, rv);
-     rv = FillContentHandlerProperties(contentType.get(), contentTypeNodeResource, rdf, aMIMEInfo);
+     // fill in the handlerinfo based on the values from the data source
+
+     // set the pretty name description, if nonempty
+     const PRUnichar *stringValue;
+     FillLiteralValueFromTarget(aTypeNodeResource, kNC_Description, 
+                                &stringValue);
+     if (stringValue && *stringValue)
+       aHandlerInfo->SetDescription(nsDependentString(stringValue));
+
+     rv = FillContentHandlerProperties(aType.get(), aTypeNodePrefix,
+                                       rdf, aHandlerInfo);
 
   } // if we have a node in the graph for this content type
   // If we had success, but entry doesn't exist, we don't want to return success
@@ -959,14 +1045,15 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const nsACStri
 #endif /* MOZ_RDF */
 }
 
-nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromDS(const nsACString& aFileExtension, nsIMIMEInfo * aMIMEInfo)
+nsresult nsExternalHelperAppService::FillMIMEInfoForExtensionFromDS(
+  const nsACString& aFileExtension, nsIMIMEInfo * aMIMEInfo)
 {
   nsCAutoString type;
   PRBool found = GetTypeFromDS(aFileExtension, type);
   if (!found)
     return NS_ERROR_NOT_AVAILABLE;
 
-  return GetMIMEInfoForMimeTypeFromDS(type, aMIMEInfo);
+  return FillMIMEInfoForMimeTypeFromDS(type, aMIMEInfo);
 }
 
 PRBool nsExternalHelperAppService::GetTypeFromDS(const nsACString& aExtension,
@@ -1051,16 +1138,17 @@ nsresult nsExternalHelperAppService::GetFileTokenForPath(const PRUnichar * aPlat
 NS_IMETHODIMP nsExternalHelperAppService::ExternalProtocolHandlerExists(const char * aProtocolScheme,
                                                                         PRBool * aHandlerExists)
 {
-  // check for web-based handler
-  nsCAutoString uriTemplate;
-  nsresult rv = GetWebProtocolHandlerURITemplate(
-    nsDependentCString(aProtocolScheme), uriTemplate);
+  // if we've got handler info in the datasource, that means that at least one
+  // web handler exists
+  nsCOMPtr<nsIHandlerInfo> handlerInfo;
+  nsresult rv = GetProtocolHandlerInfo(
+      nsDependentCString(aProtocolScheme), getter_AddRefs(handlerInfo));
   if (NS_SUCCEEDED(rv)) {
     *aHandlerExists = PR_TRUE;
     return NS_OK;
   }
 
-  // fall back on an os-based handler
+  // if not, fall back on an os-based handler
   return OSProtocolHandlerExists(aProtocolScheme, aHandlerExists);
 }
 
@@ -1375,39 +1463,32 @@ nsresult nsExternalHelperAppService::ExpungeTemporaryFiles()
 }
 
 nsresult
-nsExternalHelperAppService::GetWebProtocolHandlerURITemplate(const nsACString &aScheme, 
-                                                             nsACString &aUriTemplate)
+nsExternalHelperAppService::GetProtocolHandlerInfo(const nsACString &aScheme, 
+                                                   nsIHandlerInfo **aHandlerInfo)
 {
-  nsresult rv;
-  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID,
-                                                     &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-    
-  // before we expose this to the UI, we need sort out our strategy re
+  // XXX before we expose this to the UI, we need sort out our strategy re
   // the "warning" and "exposed" prefs
 
   // XXX enterprise customers should be able to turn this support off with a
   // single master pref (maybe use one of the "exposed" prefs here?)
-  
-  // do we have an automatic handler for this protocol?
-  nsCAutoString autoTemplatePref("network.protocol-handler.web.auto.");
-  autoTemplatePref += aScheme;
-    
-  nsCAutoString autoTemplate;
-  rv = prefBranch->GetCharPref(autoTemplatePref.get(), 
-                               getter_Copies(autoTemplate));
-  // if so, return it.
-  if (NS_SUCCEEDED(rv)) {
-      aUriTemplate.Assign(autoTemplate);
-      return NS_OK;
+
+  // nsIMIMEInfo is a superset of nsIHandlerInfo.  Furthermore, nsMimeInfoImpl
+  // and subclasses have lots of good platform specific-knowledge of local
+  // applications which we might need later.  For now, just use nsMIMEInfoImpl
+  // instead of implementating a separate nsIHandlerInfo object.
+  nsMIMEInfoImpl *mimeInfo = new nsMIMEInfoImpl;
+  if (!mimeInfo) {
+    return NS_ERROR_OUT_OF_MEMORY;    
   }
-
-  // XXX since there's no automatic handler, if we have any choices, offer them
-  // up as well as including the option to make one of the choices automatic.  
-  // do so by returning "about:protoHandlerChooser?uri=%s" as the template or 
-  // perhaps by opening a dialog
-
-  return NS_ERROR_FAILURE;
+  NS_ADDREF(*aHandlerInfo = mimeInfo);
+     
+  nsresult rv = FillProtoInfoForSchemeFromDS(aScheme, *aHandlerInfo);     
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(*aHandlerInfo);
+    return rv;
+  }
+  
+  return NS_OK;
 }
  
 // XPCOM profile change observer
@@ -1469,8 +1550,8 @@ nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
   AppendUTF8toUTF16(aTempFileExtension, mTempFileExtension);
 
   // replace platform specific path separator and illegal characters to avoid any confusion
-  mSuggestedFileName.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
-  mTempFileExtension.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
+  mSuggestedFileName.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '_');
+  mTempFileExtension.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '_');
   
   // Make sure extension is correct.
   EnsureSuggestedFileName();
@@ -1894,7 +1975,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
      * test here is as close as possible to what will really be
      * happening if we decide to execute
      */
-    nsCOMPtr<nsIFile> prefApp;
+    nsCOMPtr<nsIHandlerApp> prefApp;
     mMimeInfo->GetPreferredApplicationHandler(getter_AddRefs(prefApp));
     if (action != nsIMIMEInfo::useHelperApp || !prefApp) {
       nsCOMPtr<nsIFile> fileToTest;
@@ -2166,7 +2247,7 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
   nsresult rv = NS_OK;
   if (mProgressListenerInitialized && !mCanceled)
   {
-    nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
+    nsHandlerInfoAction action = nsIMIMEInfo::saveToDisk;
     mMimeInfo->GetPreferredAction(&action);
     if (action == nsIMIMEInfo::useHelperApp ||
         action == nsIMIMEInfo::useSystemDefault)
@@ -2467,7 +2548,11 @@ nsresult nsExternalAppHandler::OpenWithApplication()
   // if a stop request was already issued then proceed with launching the application.
   if (mStopRequestIssued)
   {
-    rv = mMimeInfo->LaunchWithFile(mFinalFileDestination);
+    nsCOMPtr<nsIURI> fileUri;
+    rv = NS_NewFileURI(getter_AddRefs(fileUri), mFinalFileDestination);
+    if (NS_SUCCEEDED(rv)) {
+      rv = mMimeInfo->LaunchWithURI(fileUri);        
+    }
     if (NS_FAILED(rv))
     {
       // Send error notification.
@@ -2521,8 +2606,11 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
   ProcessAnyRefreshTags(); 
   
   mReceivedDispositionInfo = PR_TRUE; 
-  if (mMimeInfo && aApplication)
-    mMimeInfo->SetPreferredApplicationHandler(aApplication);
+  if (mMimeInfo && aApplication) {
+    nsLocalHandlerApp *handlerApp(new nsLocalHandlerApp(EmptyString(), 
+                                                        aApplication));
+    mMimeInfo->SetPreferredApplicationHandler(handlerApp);
+  }
 
   // Now check if the file is local, in which case we won't bother with saving
   // it to a temporary directory and just launch it from where it is
@@ -2535,7 +2623,7 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
 
     if (NS_SUCCEEDED(rv))
     {
-      rv = mMimeInfo->LaunchWithFile(file);
+      rv = mMimeInfo->LaunchWithURI(fileUrl);
       if (NS_SUCCEEDED(rv))
         return NS_OK;
     }
@@ -2609,7 +2697,7 @@ NS_IMETHODIMP nsExternalAppHandler::Cancel(nsresult aReason)
   // But if we haven't received disposition info yet, then we're
   // here because the user cancelled the helper app dialog.
   // Delete the file in this case.
-  nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
+  nsHandlerInfoAction action = nsIMIMEInfo::saveToDisk;
   mMimeInfo->GetPreferredAction(&action);
   if (mTempFile &&
       (!mReceivedDispositionInfo || action != nsIMIMEInfo::saveToDisk))
@@ -2748,7 +2836,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const nsACStri
   // (2) Now, let's see if we can find something in our datasource
   // This will not overwrite the OS information that interests us
   // (i.e. default application, default app. description)
-  nsresult rv = GetMIMEInfoForMimeTypeFromDS(typeToUse, *_retval);
+  nsresult rv = FillMIMEInfoForMimeTypeFromDS(typeToUse, *_retval);
   found = found || NS_SUCCEEDED(rv);
 
   LOG(("Data source: Via type: retval 0x%08x\n", rv));
@@ -2756,7 +2844,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const nsACStri
   if (!found || NS_FAILED(rv)) {
     // No type match, try extension match
     if (!aFileExt.IsEmpty()) {
-      rv = GetMIMEInfoForExtensionFromDS(aFileExt, *_retval);
+      rv = FillMIMEInfoForExtensionFromDS(aFileExt, *_retval);
       LOG(("Data source: Via ext: retval 0x%08x\n", rv));
       found = found || NS_SUCCEEDED(rv);
     }
@@ -2775,11 +2863,11 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const nsACStri
      */
     if (!typeToUse.Equals(APPLICATION_OCTET_STREAM, nsCaseInsensitiveCStringComparator()))
 #endif
-      rv = GetMIMEInfoForMimeTypeFromExtras(typeToUse, *_retval);
+      rv = FillMIMEInfoForMimeTypeFromExtras(typeToUse, *_retval);
     LOG(("Searched extras (by type), rv 0x%08X\n", rv));
     // If that didn't work out, try file extension from extras
     if (NS_FAILED(rv) && !aFileExt.IsEmpty()) {
-      rv = GetMIMEInfoForExtensionFromExtras(aFileExt, *_retval);
+      rv = FillMIMEInfoForExtensionFromExtras(aFileExt, *_retval);
       LOG(("Searched extras (by ext), rv 0x%08X\n", rv));
     }
   }
@@ -2987,7 +3075,8 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile(nsIFile* aFile, nsACSt
   return GetTypeFromExtension(fileExt, aContentType);
 }
 
-nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromExtras(const nsACString& aContentType, nsIMIMEInfo * aMIMEInfo )
+nsresult nsExternalHelperAppService::FillMIMEInfoForMimeTypeFromExtras(
+  const nsACString& aContentType, nsIMIMEInfo * aMIMEInfo)
 {
   NS_ENSURE_ARG( aMIMEInfo );
 
@@ -3014,13 +3103,14 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromExtras(const nsAC
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromExtras(const nsACString& aExtension, nsIMIMEInfo * aMIMEInfo)
+nsresult nsExternalHelperAppService::FillMIMEInfoForExtensionFromExtras(
+  const nsACString& aExtension, nsIMIMEInfo * aMIMEInfo)
 {
   nsCAutoString type;
   PRBool found = GetTypeFromExtras(aExtension, type);
   if (!found)
     return NS_ERROR_NOT_AVAILABLE;
-  return GetMIMEInfoForMimeTypeFromExtras(type, aMIMEInfo);
+  return FillMIMEInfoForMimeTypeFromExtras(type, aMIMEInfo);
 }
 
 PRBool nsExternalHelperAppService::GetTypeFromExtras(const nsACString& aExtension, nsACString& aMIMEType)

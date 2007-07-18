@@ -71,14 +71,14 @@ PLDHashOperator PR_CALLBACK nsUICommandCollector::AddCommandEventListener(
 const nsIDOMWindow* key, PRUint32 windowID, void* userArg)
 {
   nsCOMPtr<nsIDOMEventTarget> windowTarget =
-    do_QueryInterface(NS_CONST_CAST(nsIDOMWindow *, key));
+    do_QueryInterface(const_cast<nsIDOMWindow *>(key));
   if (!windowTarget) {
     MS_LOG(("Error casting domeventtarget"));
     return PL_DHASH_NEXT;
   }
 
-  nsUICommandCollector* collector = NS_STATIC_CAST(nsUICommandCollector*,
-                                                   userArg);
+  nsUICommandCollector* collector = static_cast<nsUICommandCollector*>
+                                               (userArg);
   collector->AddEventListeners(windowTarget);
   return PL_DHASH_NEXT;
 }
@@ -88,14 +88,14 @@ PLDHashOperator PR_CALLBACK nsUICommandCollector::RemoveCommandEventListener(
 const nsIDOMWindow* key, PRUint32 windowID, void* userArg)
 {
   nsCOMPtr<nsIDOMEventTarget> windowTarget =
-    do_QueryInterface(NS_CONST_CAST(nsIDOMWindow *, key));
+    do_QueryInterface(const_cast<nsIDOMWindow *>(key));
   if (!windowTarget) {
     MS_LOG(("Error casting domeventtarget"));
     return PL_DHASH_NEXT;
   }
 
-  nsUICommandCollector* collector = NS_STATIC_CAST(nsUICommandCollector*,
-                                                   userArg);
+  nsUICommandCollector* collector = static_cast<nsUICommandCollector*>
+                                               (userArg);
   collector->RemoveEventListeners(windowTarget);
   return PL_DHASH_NEXT;
 }
@@ -127,7 +127,7 @@ nsUICommandCollector::OnAttach()
   NS_ENSURE_STATE(ms);
 
   ms->WindowMap().EnumerateRead(AddCommandEventListener,
-                                NS_STATIC_CAST(nsIDOMEventListener*, this));
+                                static_cast<nsIDOMEventListener*>(this));
 
   return NS_OK;
 }
@@ -152,7 +152,7 @@ nsUICommandCollector::OnDetach()
   NS_ENSURE_STATE(ms);
 
   ms->WindowMap().EnumerateRead(RemoveCommandEventListener,
-    NS_STATIC_CAST(nsIDOMEventListener*, this));
+    static_cast<nsIDOMEventListener*>(this));
 
   return NS_OK;
 }

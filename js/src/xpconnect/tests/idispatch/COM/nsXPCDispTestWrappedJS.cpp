@@ -44,7 +44,7 @@ bool CompareVariant(const _variant_t & left, const _variant_t & right)
 #define CompareFunction(type)                                               \
 bool CompareVariant##type(const _variant_t & left, const _variant_t & right)     \
 {                                                                           \
-    return static_cast<type>(left) == static_cast<type>(right);   \
+    return static_cast<type>(left) == static_cast<type>(right);             \
 }
 
 CompareFunction(long);

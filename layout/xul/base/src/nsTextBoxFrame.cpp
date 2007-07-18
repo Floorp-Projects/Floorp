@@ -294,7 +294,7 @@ public:
 void nsDisplayXULTextBox::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  NS_STATIC_CAST(nsTextBoxFrame*, mFrame)->
+  static_cast<nsTextBoxFrame*>(mFrame)->
     PaintTitle(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
 }
 

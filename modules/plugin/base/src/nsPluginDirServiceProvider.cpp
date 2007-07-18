@@ -614,7 +614,7 @@ nsPluginDirServiceProvider::GetPLIDDirectoriesWithHKEY(HKEY aKey, nsCOMArray<nsI
           if (NS_SUCCEEDED(localFile->Exists(&isFileThere)) && isFileThere) {
             PRInt32 c = aDirs.Count();
             for (PRInt32 i = 0; i < c; i++) {
-              nsIFile *dup = NS_STATIC_CAST(nsIFile*, aDirs[i]);
+              nsIFile *dup = static_cast<nsIFile*>(aDirs[i]);
               if (dup &&
                   NS_SUCCEEDED(dup->Equals(localFile, &isDupEntry)) &&
                   isDupEntry) {

@@ -581,6 +581,8 @@
 
       <method name="initialize">
         <body><![CDATA[
+          const kXULNS =
+            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
           // Initialize fields
           this._stringBundle = this._getParentSearchbar()._stringBundle;
           this._formHistSvc =
@@ -601,9 +603,9 @@
           var cxmenu = document.getAnonymousElementByAttribute(textBox,
                                             "anonid", "input-box-contextmenu");
 
-          var element = document.createElementNS(XUL_NS, "menuseparator");
+          var element = document.createElementNS(kXULNS, "menuseparator");
           cxmenu.appendChild(element);
-          element = document.createElementNS(XUL_NS, "menuitem");
+          element = document.createElementNS(kXULNS, "menuitem");
           var label = this._stringBundle.getString("cmd_clearHistory");
           var akey = this._stringBundle.getString("cmd_clearHistory_accesskey");
           element.setAttribute("label", label);
@@ -612,7 +614,7 @@
 
           cxmenu.appendChild(element);
 
-          element = document.createElementNS(XUL_NS, "menuitem");
+          element = document.createElementNS(kXULNS, "menuitem");
           label = this._stringBundle.getString("cmd_showSuggestions");
           akey = this._stringBundle.getString("cmd_showSuggestions_accesskey");
           element.setAttribute("anonid", "toggle-suggest-item");

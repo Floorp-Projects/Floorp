@@ -113,11 +113,6 @@ struct JSThread {
      */
     uint32              gcMallocBytes;
 
-#if JS_HAS_GENERATORS
-    /* Flag indicating that the current thread is executing close hooks. */
-    JSBool              gcRunningCloseHooks;
-#endif
-
     /*
      * Store the GSN cache in struct JSThread, not struct JSContext, both to
      * save space and to simplify cleanup in js_GC.  Any embedding (Firefox
@@ -217,11 +212,6 @@ struct JSRuntime {
      * before finalizing the iterable object.
      */
     JSPtrTable          gcIteratorTable;
-
-#if JS_HAS_GENERATORS
-    /* Runtime state to support close hooks. */
-    JSGCCloseState      gcCloseState;
-#endif
 
 #ifdef JS_GCMETER
     JSGCStats           gcStats;
@@ -500,37 +490,31 @@ typedef struct JSLocalRootStack {
 
 #define JSLRS_NULL_MARK ((uint32) -1)
 
-typedef struct JSTempValueRooter JSTempValueRooter;
-typedef void
-(* JS_DLL_CALLBACK JSTempValueTrace)(JSTracer *trc, JSTempValueRooter *tvr);
-
-typedef union JSTempValueUnion {
-    jsval               value;
-    JSObject            *object;
-    JSString            *string;
-    void                *gcthing;
-    JSTempValueTrace    trace;
-    JSScopeProperty     *sprop;
-    JSWeakRoots         *weakRoots;
-    jsval               *array;
-} JSTempValueUnion;
-
 /*
- * The following allows to reinterpret JSTempValueUnion.object as jsval using
- * the tagging property of a generic jsval described below.
+ * Macros to push/pop JSTempValueRooter instances to context-linked stack of
+ * temporary GC roots. If you need to protect a result value that flows out of
+ * a C function across several layers of other functions, use the
+ * js_LeaveLocalRootScopeWithResult internal API (see further below) instead.
+ *
+ * JSTempValueRooter.count defines the type of the rooted value referenced by
+ * JSTempValueRooter.u union of type JSTempValueUnion according to the
+ * following table:
+ *
+ *     count                description
+ * JSTVU_SINGLE         u.value contains the single value or GC-thing to root.
+ * JSTVU_TRACE          u.trace holds a trace hook called to trace the values.
+ * JSTVU_SPROP          u.sprop points to the property tree node to mark.
+ * JSTVU_WEAK_ROOTS     u.weakRoots points to saved weak roots.
+ * JSTVU_PARSE_CONTEXT  u.parseContext roots things generated during parsing.
+ *   >= 0               u.array points to a stack-allocated vector of jsvals.
  */
-JS_STATIC_ASSERT(sizeof(JSTempValueUnion) == sizeof(jsval));
-JS_STATIC_ASSERT(sizeof(JSTempValueUnion) == sizeof(JSObject *));
+#define JSTVU_SINGLE        (-1)
+#define JSTVU_TRACE         (-2)
+#define JSTVU_SPROP         (-3)
+#define JSTVU_WEAK_ROOTS    (-4)
+#define JSTVU_PARSE_CONTEXT (-5)
 
 /*
- * Context-linked stack of temporary GC roots.
- *
- * If count is -1, then u.value contains the single value or GC-thing to root.
- * If count is -2, then u.trace holds a trace hook called to trace the values.
- * If count is -3, then u.sprop points to the property tree node to mark.
- * If count is -4, then u.weakRoots points to saved weak roots.
- * If count >= 0, then u.array points to a stack-allocated vector of jsvals.
- *
  * To root a single GC-thing pointer, which need not be tagged and stored as a
  * jsval, use JS_PUSH_TEMP_ROOT_GCTHING. The macro reinterprets an arbitrary
  * GC-thing as jsval. It works because a GC-thing is aligned on a 0 mod 8
@@ -548,20 +532,10 @@ JS_STATIC_ASSERT(sizeof(JSTempValueUnion) == sizeof(JSObject *));
  * tvr.u.value safely because JSObject * and JSString * are GC-things and, as
  * such, their tag bits are all zeroes.
  *
- * If you need to protect a result value that flows out of a C function across
- * several layers of other functions, use the js_LeaveLocalRootScopeWithResult
- * internal API (see further below) instead.
+ * The following checks that this type-punning is possible.
  */
-struct JSTempValueRooter {
-    JSTempValueRooter   *down;
-    ptrdiff_t           count;
-    JSTempValueUnion    u;
-};
-
-#define JSTVU_SINGLE        (-1)
-#define JSTVU_TRACE         (-2)
-#define JSTVU_SPROP         (-3)
-#define JSTVU_WEAK_ROOTS    (-4)
+JS_STATIC_ASSERT(sizeof(JSTempValueUnion) == sizeof(jsval));
+JS_STATIC_ASSERT(sizeof(JSTempValueUnion) == sizeof(JSObject *));
 
 #define JS_PUSH_TEMP_ROOT_COMMON(cx,tvr)                                      \
     JS_BEGIN_MACRO                                                            \
@@ -639,6 +613,13 @@ struct JSTempValueRooter {
     JS_BEGIN_MACRO                                                            \
         (tvr)->count = JSTVU_WEAK_ROOTS;                                      \
         (tvr)->u.weakRoots = (weakRoots_);                                    \
+        JS_PUSH_TEMP_ROOT_COMMON(cx, tvr);                                    \
+    JS_END_MACRO
+
+#define JS_PUSH_TEMP_ROOT_PARSE_CONTEXT(cx,pc,tvr)                            \
+    JS_BEGIN_MACRO                                                            \
+        (tvr)->count = JSTVU_PARSE_CONTEXT;                                   \
+        (tvr)->u.parseContext = (pc);                                         \
         JS_PUSH_TEMP_ROOT_COMMON(cx, tvr);                                    \
     JS_END_MACRO
 
@@ -839,7 +820,8 @@ class JSAutoTempValueRooter
 #define JSVERSION_MASK                  0x0FFF  /* see JSVersion in jspubtd.h */
 #define JSVERSION_HAS_XML               0x1000  /* flag induced by XML option */
 
-#define JSVERSION_NUMBER(cx)            ((cx)->version & JSVERSION_MASK)
+#define JSVERSION_NUMBER(cx)            ((JSVersion)((cx)->version &          \
+                                                     JSVERSION_MASK))
 #define JS_HAS_XML_OPTION(cx)           ((cx)->version & JSVERSION_HAS_XML || \
                                          JSVERSION_NUMBER(cx) >= JSVERSION_1_6)
 
@@ -852,7 +834,7 @@ class JSAutoTempValueRooter
  * success.
  */
 extern JSBool
-js_InitThreadPrivateIndex(void *ptr);
+js_InitThreadPrivateIndex(void (JS_DLL_CALLBACK *ptr)(void *));
 
 /*
  * Common subroutine of JS_SetVersion and js_SetVersion, to update per-context
@@ -1041,9 +1023,8 @@ JS_STATIC_ASSERT((JSOW_BRANCH_CALLBACK & (JSOW_BRANCH_CALLBACK - 1)) == 0);
 
 /*
  * Update the operation counter and call the branch callback when it reaches
- * JSOW_BRANCH_CALLBACK limit. This macro can run the full GC and arbitrary
- * scripts via generator close hooks. Return true if it is OK to continue and
- * false otherwise.
+ * JSOW_BRANCH_CALLBACK limit. This macro can run the full GC. Return true if
+ * it is OK to continue and false otherwise.
  */
 #define JS_CHECK_OPERATION_LIMIT(cx, weight)                                  \
     (JS_COUNT_OPERATION(cx, weight),                                          \

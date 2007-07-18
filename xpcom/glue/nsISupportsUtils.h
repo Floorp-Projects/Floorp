@@ -178,17 +178,17 @@ ns_if_addref( T expr )
  * Often you have to cast an implementation pointer, e.g., |this|, to an
  * |nsISupports*|, but because you have multiple inheritance, a simple cast
  * is ambiguous.  One could simply say, e.g., (given a base |nsIBase|),
- * |NS_STATIC_CAST(nsIBase*, this)|; but that disguises the fact that what
+ * |static_cast<nsIBase*>(this)|; but that disguises the fact that what
  * you are really doing is disambiguating the |nsISupports|.  You could make
- * that more obvious with a double cast, e.g., |NS_STATIC_CAST(nsISupports*,
- * NS_STATIC_CAST(nsIBase*, this))|, but that is bulky and harder to read...
+ * that more obvious with a double cast, e.g., |static_cast<nsISupports*>
+                                                           (* static_cast<nsIBase*>(this))|, but that is bulky and harder to read...
  *
  * The following macro is clean, short, and obvious.  In the example above,
  * you would use it like this: |NS_ISUPPORTS_CAST(nsIBase*, this)|.
  */
 
 #define NS_ISUPPORTS_CAST(__unambiguousBase, __expr) \
-  NS_STATIC_CAST(nsISupports*, NS_STATIC_CAST(__unambiguousBase, __expr))
+  static_cast<nsISupports*>(static_cast<__unambiguousBase>(__expr))
 
 // a type-safe shortcut for calling the |QueryInterface()| member function
 template <class T, class DestinationType>
@@ -200,7 +200,7 @@ CallQueryInterface( T* aSource, DestinationType** aDestination )
     NS_PRECONDITION(aDestination, "null parameter");
     
     return aSource->QueryInterface(NS_GET_TEMPLATE_IID(DestinationType),
-                                   NS_REINTERPRET_CAST(void**, aDestination));
+                                   reinterpret_cast<void**>(aDestination));
 }
 
 #endif /* __nsISupportsUtils_h */

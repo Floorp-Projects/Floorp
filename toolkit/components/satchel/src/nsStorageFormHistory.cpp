@@ -602,7 +602,7 @@ nsFormHistory::AutoCompleteSearch(const nsAString &aInputName,
     NS_ENSURE_TRUE(fhResult, NS_ERROR_OUT_OF_MEMORY);
     nsresult rv = fhResult->Init();
     NS_ENSURE_SUCCESS(rv, rv);
-    NS_REINTERPRET_CAST(nsCOMPtr<nsIAutoCompleteSimpleResult>*, &fhResult)->swap(result);
+    reinterpret_cast<nsCOMPtr<nsIAutoCompleteSimpleResult>*>(&fhResult)->swap(result);
 
     result->SetSearchString(aInputValue);
 
@@ -692,8 +692,8 @@ nsFormHistoryImporter::AddToFormHistoryCB(const nsCSubstring &aRowID,
                                           const nsTArray<nsCString> *aValues,
                                           void *aData)
 {
-  FormHistoryImportClosure *data = NS_STATIC_CAST(FormHistoryImportClosure*,
-                                                  aData);
+  FormHistoryImportClosure *data = static_cast<FormHistoryImportClosure*>
+                                              (aData);
   const nsMorkReader *reader = data->reader;
   nsCString values[kColumnCount];
   const PRUnichar* valueStrings[kColumnCount];
@@ -726,11 +726,11 @@ nsFormHistoryImporter::AddToFormHistoryCB(const nsCSubstring &aRowID,
 
       // Swap the bytes in the unicode characters if necessary.
       if (data->swapBytes) {
-        SwapBytes(NS_REINTERPRET_CAST(PRUnichar*, values[i].BeginWriting()));
+        SwapBytes(reinterpret_cast<PRUnichar*>(values[i].BeginWriting()));
       }
       bytes = values[i].get();
     }
-    valueStrings[i] = NS_REINTERPRET_CAST(const PRUnichar*, bytes);
+    valueStrings[i] = reinterpret_cast<const PRUnichar*>(bytes);
     valueLengths[i] = length;
   }
 

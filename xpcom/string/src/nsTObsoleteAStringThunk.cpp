@@ -60,8 +60,8 @@ class nsTObsoleteAStringThunk_CharT : public nsTObsoleteAString_CharT
          * we are a nsTSubstring in disguise!
          */
 
-            substring_type* concrete_self()       { return NS_REINTERPRET_CAST(      substring_type*, this); }
-      const substring_type* concrete_self() const { return NS_REINTERPRET_CAST(const substring_type*, this); }
+            substring_type* concrete_self()       { return reinterpret_cast<substring_type*>(this); }
+      const substring_type* concrete_self() const { return reinterpret_cast<const substring_type*>(this); }
 
 
         /**

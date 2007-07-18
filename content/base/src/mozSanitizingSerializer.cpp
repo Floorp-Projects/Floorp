@@ -300,7 +300,7 @@ mozSanitizingHTMLSerializer::OpenContainer(const nsIParserNode& aNode)
 {
   PRInt32 type = aNode.GetNodeType();
 
-  mParserNode = NS_CONST_CAST(nsIParserNode *, &aNode);
+  mParserNode = const_cast<nsIParserNode *>(&aNode);
   return DoOpenContainer(type);
 }
 
@@ -316,7 +316,7 @@ mozSanitizingHTMLSerializer::AddLeaf(const nsIParserNode& aNode)
   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
   const nsAString& text = aNode.GetText();
 
-  mParserNode = NS_CONST_CAST(nsIParserNode*, &aNode);
+  mParserNode = const_cast<nsIParserNode*>(&aNode);
   return DoAddLeaf(type, text);
 }
 

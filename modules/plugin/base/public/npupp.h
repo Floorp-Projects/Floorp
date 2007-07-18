@@ -37,7 +37,7 @@
 
 
 /*
- *  npupp.h $Revision: 3.23 $
+ *  npupp.h $Revision: 3.25 $
  *  function call mecahnics needed by platform specific glue code.
  */
 
@@ -484,6 +484,13 @@ typedef bool (* NP_LOADDS NPN_EnumerateUPP)(NPP npp, NPObject *obj, NPIdentifier
 #define CallNPN_EnumerateProc(FUNC, ARG1, ARG2, ARG3, ARG4)		\
 		(*(FUNC))((ARG1), (ARG2), (ARG3), (ARG4))
 
+/* NPN_Enumerate */
+typedef void (* NP_LOADDS NPN_PluginThreadAsyncCallUPP)(NPP instance, void (*func)(void *), void *userData);
+#define NewNPN_PluginThreadAsyncCallProc(FUNC) \
+		((NPN_PluginThreadAsyncCallUPP) (FUNC))
+#define CallNPN_PluginThreadAsyncCallProc(FUNC, ARG1, ARG2, ARG3) \
+		(*(FUNC))((ARG1), (ARG2), (ARG3))
+
 
 /******************************************************************************************
  * The actual plugin function table definitions
@@ -554,6 +561,7 @@ typedef struct _NPNetscapeFuncs {
     NPN_PushPopupsEnabledStateUPP pushpopupsenabledstate;
     NPN_PopPopupsEnabledStateUPP poppopupsenabledstate;
     NPN_EnumerateUPP enumerate;
+    NPN_PluginThreadAsyncCallUPP pluginthreadasynccall;
 } NPNetscapeFuncs;
 
 
@@ -623,6 +631,18 @@ typedef OSErr (* NP_LOADDS BP_GetSupportedMIMETypesUPP)(BPSupportedMIMETypes*, U
 #endif
 #endif
 
+#if defined(XP_UNIX)
+/* GCC 3.3 and later support the visibility attribute. */
+#if defined(__GNUC__) && \
+    ((__GNUC__ >= 4) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3))
+#define NP_VISIBILITY_DEFAULT __attribute__((visibility("default")))
+#else
+#define NP_VISIBILITY_DEFAULT
+#endif
+
+#define NP_EXPORT(__type) NP_VISIBILITY_DEFAULT __type
+#endif
+
 #if defined( _WINDOWS ) || defined (__OS2__)
 
 #ifdef __cplusplus
@@ -672,10 +692,10 @@ extern "C" {
 
 /* plugin meta member functions */
 
-char*	NP_GetMIMEDescription(void);
-NPError	NP_Initialize(NPNetscapeFuncs*, NPPluginFuncs*);
-NPError	NP_Shutdown(void);
-NPError NP_GetValue(void *future, NPPVariable aVariable, void *aValue);
+NP_EXPORT(char*)   NP_GetMIMEDescription(void);
+NP_EXPORT(NPError) NP_Initialize(NPNetscapeFuncs*, NPPluginFuncs*);
+NP_EXPORT(NPError) NP_Shutdown(void);
+NP_EXPORT(NPError) NP_GetValue(void *future, NPPVariable aVariable, void *aValue);
 
 #ifdef __cplusplus
 }

@@ -22,6 +22,7 @@
  *   Ben Goodger <beng@google.com>
  *   Myk Melez <myk@mozilla.org>
  *   Asaf Romano <mano@mozilla.com>
+ *   Sungjoon Steve Won <stevewon@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -164,16 +165,17 @@ var PlacesUtils = {
     return this._localStore;
   },
 
-  /**
-   * The Transaction Manager for this window.
-   */
-  _tm: null,
   get tm() {
-    if (!this._tm) {
-      this._tm = Cc["@mozilla.org/transactionmanager;1"].
-                 createInstance(Ci.nsITransactionManager);
+    return this.ptm.transactionManager;
+  },
+
+  _ptm: null,
+  get ptm() {
+    if (!this._ptm) {
+      this._ptm = Cc["@mozilla.org/browser/placesTransactionsService;1"].
+                  getService(Components.interfaces.nsIPlacesTransactionsService);
     }
-    return this._tm;
+    return this._ptm;
   },
 
   /**
@@ -453,41 +455,167 @@ var PlacesUtils = {
    * @returns A string serialization of the node
    */
   wrapNode: function PU_wrapNode(aNode, aType, aOverrideURI) {
+    var self = this;
+    
+    // when wrapping a node, we want all the items, even if the original
+    // query options are excluding them.
+    // this can happen when copying from the left hand pane of the bookmarks
+    // organizer
+    function convertNode(cNode) {
+      try {
+        if (self.nodeIsFolder(cNode) && cNode.queryOptions.excludeItems)
+          return self.getFolderContents(cNode.itemId, false, true).root;
+      }
+      catch (e) {
+      }
+      return cNode;
+    }
+    
     switch (aType) {
-    case this.TYPE_X_MOZ_PLACE_CONTAINER:
-    case this.TYPE_X_MOZ_PLACE:
-    case this.TYPE_X_MOZ_PLACE_SEPARATOR:
-      // Data is encoded like this:
-      // bookmarks folder: <itemId>\n<>\n<parentId>\n<indexInParent>
-      // uri:              0\n<uri>\n<parentId>\n<indexInParent>
-      // bookmark:         <itemId>\n<uri>\n<parentId>\n<indexInParent>
-      // separator:        <itemId>\n<>\n<parentId>\n<indexInParent>
-      var wrapped = "";
-      if (aNode.itemId != -1) // 
-        wrapped += aNode.itemId + NEWLINE;
-      else
-        wrapped += "0" + NEWLINE;
-
-      if (this.nodeIsURI(aNode) || this.nodeIsQuery(aNode))
-        wrapped += aNode.uri + NEWLINE;
-      else
-        wrapped += NEWLINE;
-
-      if (this.nodeIsFolder(aNode.parent))
-        wrapped += aNode.parent.itemId + NEWLINE;
-      else
-        wrapped += "0" + NEWLINE;
-
-      wrapped += this.getIndexOfNode(aNode);
-      return wrapped;
-    case this.TYPE_X_MOZ_URL:
-      return (aOverrideURI || aNode.uri) + NEWLINE + aNode.title;
-    case this.TYPE_HTML:
-      return "<A HREF=\"" + (aOverrideURI || aNode.uri) + "\">" +
-             aNode.title + "</A>";
+      case this.TYPE_X_MOZ_PLACE:
+      case this.TYPE_X_MOZ_PLACE_SEPARATOR:
+      case this.TYPE_X_MOZ_PLACE_CONTAINER:
+        function gatherDataPlace(bNode) {
+          var nodeId = 0;
+          if (bNode.itemId != -1)
+            nodeId = bNode.itemId;
+          var nodeUri = bNode.uri
+          var nodeTitle = bNode.title;
+          var nodeParentId = 0;
+          if (bNode.parent && self.nodeIsFolder(bNode.parent))
+            nodeParentId = bNode.parent.itemId;
+          var nodeIndex = self.getIndexOfNode(bNode);
+          var nodeKeyword = self.bookmarks.getKeywordForBookmark(bNode.itemId);
+          var nodeAnnos = self.getAnnotationsForItem(bNode.itemId);
+          var nodeType = "";
+          if (self.nodeIsContainer(bNode))
+            nodeType = self.TYPE_X_MOZ_PLACE_CONTAINER;
+          else if (self.nodeIsURI(bNode)) // a bookmark or a history visit
+            nodeType = self.TYPE_X_MOZ_PLACE;
+          else if (self.nodeIsSeparator(bNode))
+            nodeType = self.TYPE_X_MOZ_PLACE_SEPARATOR;
+            
+          var node = { id: nodeId,
+                       uri: nodeUri,
+                       title: nodeTitle,
+                       parent: nodeParentId,
+                       index: nodeIndex,
+                       keyword: nodeKeyword,
+                       annos: nodeAnnos,
+                       type: nodeType };
+          
+          // Recurse down children if the node is a folder
+          if (self.nodeIsContainer(bNode)) {
+            if (self.nodeIsLivemarkContainer(bNode)) {
+              // just save the livemark info, reinstantiate on other end
+              var feedURI = self.livemarks.getFeedURI(bNode.itemId).spec;
+              var siteURI = self.livemarks.getSiteURI(bNode.itemId).spec;
+              node.uri = { feed: feedURI,
+                           site: siteURI };
+            }
+            else { // bookmark folders + history containers
+              var wasOpen = bNode.containerOpen;
+              if (!wasOpen)
+                bNode.containerOpen = true;
+              var childNodes = [];
+              var cc = bNode.childCount;
+              for (var i = 0; i < cc; ++i) {
+                var childObj = gatherDataPlace(bNode.getChild(i));
+                if (childObj != null)
+                  childNodes.push(childObj);
+              }
+              var parent = node;
+              node = { folder: parent,
+                       children: childNodes,
+                       type: self.TYPE_X_MOZ_PLACE_CONTAINER };
+              bNode.containerOpen = wasOpen;
+            }
+          } 
+          return node;
+        }
+        return this.toJSONString(gatherDataPlace(convertNode(aNode)));
+        
+      case this.TYPE_X_MOZ_URL:
+        function gatherDataUrl(bNode) {
+          if (self.nodeIsLivemarkContainer(bNode)) {
+            var siteURI = self.livemarks.getSiteURI(bNode.itemId).spec;
+            return siteURI + "\n" + bNode.title;
+          }
+          else if (self.nodeIsURI(bNode))
+            return (aOverrideURI || bNode.uri) + "\n" + bNode.title;
+          else // ignore containers and separators - items without valid URIs
+            return "";
+        }
+        return gatherDataUrl(convertNode(aNode));
+        
+      case this.TYPE_HTML:
+        function gatherDataHtml(bNode) {
+          function htmlEscape(s) {
+            s = s.replace(/&/g, "&amp;");
+            s = s.replace(/>/g, "&gt;");
+            s = s.replace(/</g, "&lt;");
+            s = s.replace(/"/g, "&quot;");
+            s = s.replace(/'/g, "&apos;");
+            return s;
+          }
+          // escape out potential HTML in the title
+          var escapedTitle = htmlEscape(bNode.title);
+          if (self.nodeIsLivemarkContainer(bNode)) {
+            var siteURI = self.livemarks.getSiteURI(bNode.itemId).spec;
+            return "<A HREF=\"" + siteURI + "\">" + escapedTitle + "</A>\n";
+          }
+          else if (self.nodeIsContainer(bNode)) {
+            var wasOpen = bNode.containerOpen;
+            if (!wasOpen)
+              bNode.containerOpen = true;
+            
+            var childString = "<DL><DT>" + escapedTitle + "</DT>\n";
+            var cc = bNode.childCount;
+            for (var i = 0; i < cc; ++i)
+              childString += "<DD>\n"
+                             + gatherDataHtml(bNode.getChild(i))
+                             + "</DD>\n";
+            bNode.containerOpen = wasOpen;
+            return childString + "</DL>\n";
+          }
+          else if (self.nodeIsURI(bNode))
+            return "<A HREF=\"" + bNode.uri + "\">" + escapedTitle + "</A>\n";
+          else if (self.nodeIsSeparator(bNode))
+            return "<HR>\n";
+          else
+            return "";
+        }
+        return gatherDataHtml(convertNode(aNode));
     }
     // case this.TYPE_UNICODE:
-    return (aOverrideURI || aNode.uri);
+    function gatherDataText(bNode) {
+      if (self.nodeIsLivemarkContainer(bNode)) {
+        return self.livemarks.getSiteURI(bNode.itemId).spec;
+      }
+      else if (self.nodeIsContainer(bNode)) {
+        var wasOpen = bNode.containerOpen;
+        if (!wasOpen)
+          bNode.containerOpen = true;
+          
+        var childString = bNode.title + "\n";
+        var cc = bNode.childCount;
+        for (var i = 0; i < cc; ++i) {
+          var child = bNode.getChild(i);
+          var suffix = i < (cc - 1) ? "\n" : "";
+          childString += gatherDataText(child) + suffix;
+        }
+        bNode.containerOpen = wasOpen;
+        return childString;
+      }
+      else if (self.nodeIsURI(bNode))
+        return (aOverrideURI || bNode.uri);
+      else if (self.nodeIsSeparator(bNode))
+        return "--------------------";
+      else
+        return "";
+    }
+
+    return gatherDataText(convertNode(aNode));
   },
 
   /**
@@ -501,9 +629,9 @@ var PlacesUtils = {
    *          The index within the container the item is copied to
    * @returns A nsITransaction object that performs the copy.
    */
-  _getURIItemCopyTransaction: function (aURI, aContainer, aIndex) {
-    var title = this.history.getPageTitle(aURI);
-    return new PlacesCreateItemTransaction(aURI, aContainer, aIndex, title);
+  _getURIItemCopyTransaction: function (aData, aContainer, aIndex) {
+    return this.ptm.createItem(this._uri(aData.uri), aContainer, aIndex,
+                               aData.title, "");
   },
 
   /**
@@ -521,30 +649,29 @@ var PlacesUtils = {
    * @returns A nsITransaction object that performs the copy.
    */
   _getBookmarkItemCopyTransaction:
-  function PU__getBookmarkItemCopyTransaction(aId, aContainer, aIndex,
+  function PU__getBookmarkItemCopyTransaction(aData, aContainer, aIndex,
                                               aExcludeAnnotations) {
-    var bookmarks = this.bookmarks;
-    var itemURL = bookmarks.getBookmarkURI(aId);
-    var itemTitle = bookmarks.getItemTitle(aId);
-    var keyword = bookmarks.getKeywordForBookmark(aId);
-    var annos = this.getAnnotationsForItem(aId);
+    var itemURL = this._uri(aData.uri);
+    var itemTitle = aData.title;
+    var keyword = aData.keyword;
+    var annos = aData.annos;
     if (aExcludeAnnotations) {
       annos =
         annos.filter(function(aValue, aIndex, aArray) {
                        return aExcludeAnnotations.indexOf(aValue.name) == -1;
                     });
     }
-    var createTxn =
-      new PlacesCreateItemTransaction(itemURL, aContainer, aIndex, itemTitle,
-                                      keyword, annos);
-    return createTxn;
+    
+    return this.ptm.createItem(itemURL, aContainer, aIndex, itemTitle, keyword,
+                               annos);
   },
 
   /**
    * Gets a transaction for copying (recursively nesting to include children)
-   * a folder and its contents from one folder to another.
+   * a folder (or container) and its contents from one folder to another. 
+   *
    * @param   aData
-   *          Unwrapped dropped folder data
+   *          Unwrapped dropped folder data - Obj containing folder and children
    * @param   aContainer
    *          The container we are copying into
    * @param   aIndex
@@ -554,33 +681,39 @@ var PlacesUtils = {
   _getFolderCopyTransaction:
   function PU__getFolderCopyTransaction(aData, aContainer, aIndex) {
     var self = this;
-    function getChildItemsTransactions(aFolderId) {
+    function getChildItemsTransactions(aChildren) {
       var childItemsTransactions = [];
-      var children = self.getFolderContents(aFolderId, false, false);
-      var cc = children.childCount;
+      var cc = aChildren.length;
+      var index = aIndex;
       for (var i = 0; i < cc; ++i) {
         var txn = null;
-        var node = children.getChild(i);
-        if (self.nodeIsFolder(node)) {
-          var nodeFolderId = node.itemId;
-          var title = self.bookmarks.getItemTitle(nodeFolderId);
-          var annos = self.getAnnotationsForItem(nodeFolderId);
-          var folderItemsTransactions =
-            getChildItemsTransactions(nodeFolderId);
-          txn = new PlacesCreateFolderTransaction(title, -1, aIndex, annos,
-                                                  folderItemsTransactions);
+        var node = aChildren[i];
+        
+        // adjusted to make sure that items are given the correct index -
+        // transactions insert differently if index == -1
+        if (aIndex > -1)
+          index = aIndex + i;
+          
+        if (node.type == self.TYPE_X_MOZ_PLACE_CONTAINER) {
+          if (node.folder) {
+            var title = node.folder.title;
+            var annos = node.folder.annos;
+            var folderItemsTransactions =
+              getChildItemsTransactions(node.children);
+            txn = this.ptm.createFolder(title, -1, aIndex, annos,
+                                        folderItemsTransactions);
+          }
+          else { // node is a livemark
+            var feedURI = self._uri(node.uri.feed);
+            var siteURI = self._uri(node.uri.site);
+            txn = this.ptm.createLivemark(feedURI, siteURI, node.title,
+                                          aContainer, index, node.annos);
+          }
         }
-        else if (self.nodeIsBookmark(node)) {
-          txn = self._getBookmarkItemCopyTransaction(node.itemId, -1,
-                                                     aIndex);
-        }
-        else if (self.nodeIsURI(node) || self.nodeIsQuery(node)) {
-          // XXXmano: can this ^ ever happen?
-          txn = self._getURIItemCopyTransaction(self._uri(node.uri), -1,
-                                                aIndex);
-        }
-        else if (self.nodeIsSeparator(node))
-          txn = new PlacesCreateSeparatorTransaction(-1, aIndex);
+        else if (node.type == self.TYPE_X_MOZ_PLACE_SEPARATOR)
+          txn = this.ptm.createSeparator(-1, aIndex);
+        else if (node.type == self.TYPE_X_MOZ_PLACE)
+          txn = self._getBookmarkItemCopyTransaction(node, -1, index);
 
         NS_ASSERT(txn, "Unexpected item under a bookmarks folder");
         if (txn)
@@ -589,12 +722,11 @@ var PlacesUtils = {
       return childItemsTransactions;
     }
 
-    var title = this.bookmarks.getItemTitle(aData.id);
-    var annos = this.getAnnotationsForItem(aData.id);
-    var createTxn =
-      new PlacesCreateFolderTransaction(title, aContainer, aIndex, annos,
-                                        getChildItemsTransactions(aData.id));
-    return createTxn;
+    var title = aData.folder.title;
+    var annos = aData.folder.annos;
+
+    return this.ptm.createFolder(title, aContainer, aIndex, annos,
+                                 getChildItemsTransactions(aData.children));
   },
 
   /**
@@ -607,41 +739,42 @@ var PlacesUtils = {
    * @returns An array of objects representing each item contained by the source.
    */
   unwrapNodes: function PU_unwrapNodes(blob, type) {
-    // We use \n here because the transferable system converts \r\n to \n
-    var parts = blob.split("\n");
+    // We split on "\n"  because the transferable system converts "\r\n" to "\n"
     var nodes = [];
-    for (var i = 0; i < parts.length; ++i) {
-      var data = { };
-      switch (type) {
-      case this.TYPE_X_MOZ_PLACE_CONTAINER:
+    switch(type) {
       case this.TYPE_X_MOZ_PLACE:
       case this.TYPE_X_MOZ_PLACE_SEPARATOR:
-        // Data in these types has 4 parts, so if there are less than 4 parts
-        // remaining, the data blob is malformed and we should stop.
-        if (i > (parts.length - 4))
-          break;
-        nodes.push({  id: parseInt(parts[i++]),
-                      uri: parts[i] ? this._uri(parts[i]) : null,
-                      parent: parseInt(parts[++i]),
-                      index: parseInt(parts[++i]) });
+      case this.TYPE_X_MOZ_PLACE_CONTAINER:
+        nodes = this.parseJSON("[" + blob + "]");
         break;
       case this.TYPE_X_MOZ_URL:
-        // See above.
-        if (i > (parts.length - 2))
+        var parts = blob.split("\n");
+        // data in this type has 2 parts per entry, so if there are fewer
+        // than 2 parts left, the blob is malformed and we should stop
+        if (parts.length % 2)
           break;
-        nodes.push({  uri: this._uri(parts[i++]),
-                      title: parts[i] ? parts[i] : parts[i-1] });
+        for (var i = 0; i < parts.length; i=i+2) {
+          var uriString = parts[i];
+          var titleString = parts[i+1];
+          // note:  this._uri() will throw if uriString is not a valid URI
+          if (this._uri(uriString)) {
+            nodes.push({ uri: uriString,
+                         title: titleString ? titleString : uriString });
+          }
+        }
         break;
       case this.TYPE_UNICODE:
-        // See above.
-        if (i > (parts.length - 1))
-          break;
-        nodes.push({  uri: this._uri(parts[i]) });
+        var parts = blob.split("\n");
+        for (var i = 0; i < parts.length; i++) {
+          var uriString = parts[i];
+          // note: this._uri() will throw if uriString is not a valid URI
+          if (uriString != "" && this._uri(uriString))
+            nodes.push({ uri: uriString, title: uriString });
+        }
         break;
       default:
         LOG("Cannot unwrap data of type " + type);
         throw Cr.NS_ERROR_INVALID_ARG;
-      }
     }
     return nodes;
   },
@@ -664,23 +797,30 @@ var PlacesUtils = {
    */
   makeTransaction: function PU_makeTransaction(data, type, container,
                                                index, copy) {
-    switch (type) {
+    switch (data.type) {
     case this.TYPE_X_MOZ_PLACE_CONTAINER:
-      if (data.id > 0) {
+      if (data.folder) {
         // Place is a folder.
         if (copy)
           return this._getFolderCopyTransaction(data, container, index);
       }
+      else if (copy) {
+        // Place is a Livemark Container, should be reinstantiated
+        var feedURI = this._uri(data.uri.feed);
+        var siteURI = this._uri(data.uri.site);
+        return this.ptm.createLivemark(feedURI, siteURI, data.title, container,
+                                       index, data.annos);
+      }
       break;
     case this.TYPE_X_MOZ_PLACE:
       if (data.id <= 0)
-        return this._getURIItemCopyTransaction(data.uri, container, index);
+        return this._getURIItemCopyTransaction(data, container, index);
   
       if (copy) {
         // Copying a child of a live-bookmark by itself should result
         // as a new normal bookmark item (bug 376731)
         var copyBookmarkAnno = 
-          this._getBookmarkItemCopyTransaction(data.id, container, index,
+          this._getBookmarkItemCopyTransaction(data, container, index,
                                                ["livemark/bookmarkFeedURI"]);
         return copyBookmarkAnno;
       }
@@ -689,27 +829,27 @@ var PlacesUtils = {
       if (copy) {
         // There is no data in a separator, so copying it just amounts to
         // inserting a new separator.
-        return new PlacesCreateSeparatorTransaction(container, index);
+        return this.ptm.createSeparator(container, index);
       }
       break;
-    case this.TYPE_X_MOZ_URL:
-    case this.TYPE_UNICODE:
-      var title = type == this.TYPE_X_MOZ_URL ? data.title : data.uri.spec;
-      var createTxn =
-        new PlacesCreateItemTransaction(data.uri, container, index, title);
-      return createTxn;
     default:
+      if (type == this.TYPE_X_MOZ_URL || type == this.TYPE_UNICODE) {
+        var title = (type == this.TYPE_X_MOZ_URL) ? data.title : data.uri;
+        return this.ptm.createItem(this._uri(data.uri), container, index,
+                                   title);
+      }
       return null;
     }
     if (data.id <= 0)
       return null;
 
     // Move the item otherwise
-    return new PlacesMoveItemTransaction(data.id, container, index);
+    var id = data.folder ? data.folder.id : data.id;
+    return this.ptm.moveItem(id, container, index);
   },
 
   /**
-   * Generates a HistoryResultNode for the contents of a folder.
+   * Generates a nsINavHistoryResult for the contents of a folder.
    * @param   folderId
    *          The folder to open
    * @param   [optional] excludeItems
@@ -719,8 +859,8 @@ var PlacesUtils = {
    *          True to make query items expand as new containers. For managing,
    *          you want this to be false, for menus and such, you want this to
    *          be true.
-   * @returns A HistoryContainerResultNode containing the contents of the
-   *          folder. This container is guaranteed to be open.
+   * @returns A nsINavHistoryResult containing the contents of the
+   *          folder. The result.root is guaranteed to be open.
    */
   getFolderContents:
   function PU_getFolderContents(aFolderId, aExcludeItems, aExpandQueries) {
@@ -733,7 +873,8 @@ var PlacesUtils = {
 
     var result = this.history.executeQuery(query, options);
     result.root.containerOpen = true;
-    return asContainer(result.root);
+    asContainer(result.root);
+    return result;
   },
 
   /**
@@ -1143,25 +1284,14 @@ var PlacesUtils = {
     for (var i = 0; i < annoNames.length; i++) {
       var flags = {}, exp = {}, mimeType = {}, storageType = {};
       annosvc.getPageAnnotationInfo(aURI, annoNames[i], flags, exp, mimeType, storageType);
-      switch (storageType.value) {
-        case annosvc.TYPE_INT32:
-          val = annosvc.getPageAnnotationInt32(aURI, annoNames[i]);
-          break;
-        case annosvc.TYPE_INT64:
-          val = annosvc.getPageAnnotationInt64(aURI, annoNames[i]);
-          break;
-        case annosvc.TYPE_DOUBLE:
-          val = annosvc.getPageAnnotationDouble(aURI, annoNames[i]);
-          break;
-        case annosvc.TYPE_STRING:
-          val = annosvc.getPageAnnotationString(aURI, annoNames[i]);
-          break;
-        case annosvc.TYPE_BINARY:
-          var data = {}, length = {}, mimeType = {};
-          annosvc.getPageAnnotationBinary(aURI, annoNames[i], data, length, mimeType);
-          val = data.value;
-          break;
+      if (storageType.value == annosvc.TYPE_BINARY) {
+        var data = {}, length = {}, mimeType = {};
+        annosvc.getPageAnnotationBinary(aURI, annoNames[i], data, length, mimeType);
+        val = data.value;
       }
+      else
+        val = annosvc.getPageAnnotation(aURI, annoNames[i]);
+
       annos.push({name: annoNames[i],
                   flags: flags.value,
                   expires: exp.value,
@@ -1173,7 +1303,7 @@ var PlacesUtils = {
   },
 
   /**
-   * Fetch all annotations for a URI, including all properties of each
+   * Fetch all annotations for an item, including all properties of each
    * annotation which would be required to recreate it.
    * @param aItemId
    *        The identifier of the itme for which annotations are to be
@@ -1187,27 +1317,15 @@ var PlacesUtils = {
     var annoNames = annosvc.getItemAnnotationNames(aItemId, {});
     for (var i = 0; i < annoNames.length; i++) {
       var flags = {}, exp = {}, mimeType = {}, storageType = {};
-      annosvc.getItemAnnotationInfo(aItemId, annoNames[i], flags, exp,
-                                    mimeType, storageType);
-      switch (storageType.value) {
-        case annosvc.TYPE_INT32:
-          val = annosvc.getItemAnnotationInt32(aItemId, annoNames[i]);
-          break;
-        case annosvc.TYPE_INT64:
-          val = annosvc.getItemAnnotationInt64(aItemId, annoNames[i]);
-          break;
-        case annosvc.TYPE_DOUBLE:
-          val = annosvc.getItemAnnotationDouble(aItemId, annoNames[i]);
-          break;
-        case annosvc.TYPE_STRING:
-          val = annosvc.getItemAnnotationString(aItemId, annoNames[i]);
-          break;
-        case annosvc.TYPE_BINARY:
-          var data = {}, length = {}, mimeType = {};
-          annosvc.getItemAnnotationBinary(aItemId, annoNames[i], data, length, mimeType);
-          val = data.value;
-          break;
+      annosvc.getItemAnnotationInfo(aItemId, annoNames[i], flags, exp, mimeType, storageType);
+      if (storageType.value == annosvc.TYPE_BINARY) {
+        var data = {}, length = {}, mimeType = {};
+        annosvc.geItemAnnotationBinary(aItemId, annoNames[i], data, length, mimeType);
+        val = data.value;
       }
+      else
+        val = annosvc.getItemAnnotation(aItemId, annoNames[i]);
+
       annos.push({name: annoNames[i],
                   flags: flags.value,
                   expires: exp.value,
@@ -1230,34 +1348,20 @@ var PlacesUtils = {
   setAnnotationsForURI: function PU_setAnnotationsForURI(aURI, aAnnos) {
     var annosvc = this.annotations;
     aAnnos.forEach(function(anno) {
-      switch (anno.type) {
-        case annosvc.TYPE_INT32:
-          annosvc.setPageAnnotationInt32(aURI, anno.name, anno.value,
-                                         anno.flags, anno.expires);
-          break;
-        case annosvc.TYPE_INT64:
-          annosvc.setPageAnnotationInt64(aURI, anno.name, anno.value,
-                                         anno.flags, anno.expires);
-          break;
-        case annosvc.TYPE_DOUBLE:
-          annosvc.setPageAnnotationDouble(aURI, anno.name, anno.value,
-                                          anno.flags, anno.expires);
-          break;
-        case annosvc.TYPE_STRING:
-          annosvc.setPageAnnotationString(aURI, anno.name, anno.value,
-                                          anno.flags, anno.expires);
-          break;
-        case annosvc.TYPE_BINARY:
-          annosvc.setPageAnnotationBinary(aURI, anno.name, anno.value,
-                                          anno.value.length, anno.mimeType,
-                                          anno.flags, anno.expires);
-          break;
+      if (anno.type == annosvc.TYPE_BINARY) {
+        annosvc.setPageAnnotationBinary(aURI, anno.name, anno.value,
+                                        anno.value.length, anno.mimeType,
+                                        anno.flags, anno.expires);
+      }
+      else {
+        annosvc.setPageAnnotation(aURI, anno.name, anno.value,
+                                  anno.flags, anno.expires);
       }
     });
   },
 
   /**
-   * Annotate a URI with a batch of annotations.
+   * Annotate an item with a batch of annotations.
    * @param aItemId
    *        The identifier of the item for which annotations are to be set
    * @param aAnnotations
@@ -1268,28 +1372,14 @@ var PlacesUtils = {
   setAnnotationsForItem: function PU_setAnnotationsForItem(aItemId, aAnnos) {
     var annosvc = this.annotations;
     aAnnos.forEach(function(anno) {
-      switch (anno.type) {
-        case annosvc.TYPE_INT32:
-          annosvc.setItemAnnotationInt32(aItemId, anno.name, anno.value,
-                                         anno.flags, anno.expires);
-          break;
-        case annosvc.TYPE_INT64:
-          annosvc.setItemAnnotationInt64(aItemId, anno.name, anno.value,
-                                         anno.flags, anno.expires);
-          break;
-        case annosvc.TYPE_DOUBLE:
-          annosvc.setItemAnnotationDouble(aItemId, anno.name, anno.value,
-                                          anno.flags, anno.expires);
-          break;
-        case annosvc.TYPE_STRING:
-          annosvc.setItemAnnotationString(aItemId, anno.name, anno.value,
-                                          anno.flags, anno.expires);
-          break;
-        case annosvc.TYPE_BINARY:
-          annosvc.setItemAnnotationBinary(aItemId, anno.name, anno.value,
-                                          anno.value.length, anno.mimeType,
-                                          anno.flags, anno.expires);
-          break;
+      if (anno.type == annosvc.TYPE_BINARY) {
+        annosvc.setItemAnnotationBinary(aItemId, anno.name, anno.value,
+                                        anno.value.length, anno.mimeType,
+                                        anno.flags, anno.expires);
+      }
+      else {
+        annosvc.setItemAnnotation(aItemId, anno.name, anno.value,
+                                  anno.flags, anno.expires);
       }
     });
   },
@@ -1318,7 +1408,7 @@ var PlacesUtils = {
   getDescriptionFromDocument: function PU_getDescriptionFromDocument(doc) {
     var metaElements = doc.getElementsByTagName("META");
     for (var i = 0; i < metaElements.length; ++i) {
-      if (metaElements[i].localName.toLowerCase() == "description" ||
+      if (metaElements[i].name.toLowerCase() == "description" ||
           metaElements[i].httpEquiv.toLowerCase() == "description") {
         return metaElements[i].content;
       }
@@ -1357,7 +1447,7 @@ var PlacesUtils = {
   setPostDataForURI: function PU_setPostDataForURI(aURI, aPostData) {
     const annos = this.annotations;
     if (aPostData)
-      annos.setPageAnnotationString(aURI, POST_DATA_ANNO, aPostData, 0, 0);
+      annos.setPageAnnotation(aURI, POST_DATA_ANNO, aPostData, 0, 0);
     else if (annos.pageHasAnnotation(aURI, POST_DATA_ANNO))
       annos.removePageAnnotation(aURI, POST_DATA_ANNO);
   },
@@ -1370,9 +1460,116 @@ var PlacesUtils = {
   getPostDataForURI: function PU_getPostDataForURI(aURI) {
     const annos = this.annotations;
     if (annos.pageHasAnnotation(aURI, POST_DATA_ANNO))
-      return annos.getPageAnnotationString(aURI, POST_DATA_ANNO);
+      return annos.getPageAnnotation(aURI, POST_DATA_ANNO);
 
     return null;
+  },
+
+  /**
+   * Converts a JavaScript object into a JSON string
+   * (see http://www.json.org/ for the full grammar).
+   *
+   * The inverse operation consists of eval("(" + JSON_string + ")");
+   * and should be provably safe.
+   *
+   * @param aJSObject is the object to be converted
+   * @return the object's JSON representation
+   */
+  toJSONString: function PU_toJSONString(aJSObject) {
+    // these characters have a special escape notation
+    const charMap = { "\b": "\\b", "\t": "\\t", "\n": "\\n", "\f": "\\f",
+                      "\r": "\\r", '"': '\\"', "\\": "\\\\" };
+    // we use a single string builder for efficiency reasons
+    var parts = [];
+    
+    // this recursive function walks through all objects and appends their
+    // JSON representation to the string builder
+    function jsonIfy(aObj) {
+      if (typeof aObj == "boolean") {
+        parts.push(aObj ? "true" : "false");
+      }
+      else if (typeof aObj == "number" && isFinite(aObj)) {
+        // there is no representation for infinite numbers or for NaN!
+        parts.push(aObj.toString());
+      }
+      else if (typeof aObj == "string") {
+        aObj = aObj.replace(/[\\"\x00-\x1F\u0080-\uFFFF]/g, function($0) {
+          // use the special escape notation if one exists, otherwise
+          // produce a general unicode escape sequence
+          return charMap[$0] ||
+            "\\u" + ("0000" + $0.charCodeAt(0).toString(16)).slice(-4);
+        });
+        parts.push('"' + aObj + '"');
+      }
+      else if (aObj == null) {
+        parts.push("null");
+      }
+      else if (aObj instanceof Array) {
+        parts.push("[");
+        for (var i = 0; i < aObj.length; i++) {
+          jsonIfy(aObj[i]);
+          parts.push(",");
+        }
+        if (parts[parts.length - 1] == ",")
+          parts.pop(); // drop the trailing colon
+        parts.push("]");
+      }
+      else if (typeof aObj == "object") {
+        parts.push("{");
+        for (var key in aObj) {
+          jsonIfy(key.toString());
+          parts.push(":");
+          jsonIfy(aObj[key]);
+          parts.push(",");
+        }
+        if (parts[parts.length - 1] == ",")
+          parts.pop(); // drop the trailing colon
+        parts.push("}");
+      }
+      else {
+        throw new Error("No JSON representation for this object!");
+      }
+    } // end of jsonIfy definition
+    jsonIfy(aJSObject);
+    
+    var newJSONString = parts.join(" ");
+    // sanity check - so that API consumers can just eval this string
+    if (/[^,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]/.test(
+      newJSONString.replace(/"(\\.|[^"\\])*"/g, "")
+    ))
+      throw new Error("JSON conversion failed unexpectedly!");
+    
+    return newJSONString;
+  },
+  
+  /**
+   * Converts a JSON string into a JavaScript object
+   * (see http://www.json.org/ for the full grammar).
+   *
+   * @param jsonText is the object to be converted
+   * @return a JS Object
+   */
+  parseJSON: function parseJSON(jsonText) {
+    var m = {
+        '\b': '\\b',
+        '\t': '\\t',
+        '\n': '\\n',
+        '\f': '\\f',
+        '\r': '\\r',
+        '"' : '\\"',
+        '\\': '\\\\'
+    };
+    
+    var EVAL_SANDBOX = new Components.utils.Sandbox("about:blank");
+    
+    if (/^[,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]*$/.test(jsonText.
+                    replace(/\\./g, '@').
+                    replace(/"[^"\\\n\r]*"/g, ''))) {
+      var j = Components.utils.evalInSandbox(jsonText, EVAL_SANDBOX);
+      return j;
+    }
+    else
+      throw new SyntaxError('parseJSON');
   }
 };
 

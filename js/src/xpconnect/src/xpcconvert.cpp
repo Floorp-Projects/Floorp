@@ -983,7 +983,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                 XPCVariant* variant = XPCVariant::newVariant(ccx, s);
                 if(!variant)
                     return JS_FALSE;
-                *((nsISupports**)d) = NS_STATIC_CAST(nsIVariant*, variant);
+                *((nsISupports**)d) = static_cast<nsIVariant*>(variant);
                 return JS_TRUE;
             }
             else if(iid->Equals(NS_GET_IID(nsIAtom)) &&
@@ -992,7 +992,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                 // We're trying to pass a string as an nsIAtom.  Let's atomize!
                 JSString* str = JSVAL_TO_STRING(s);
                 PRUnichar* chars =
-                    NS_REINTERPRET_CAST(PRUnichar*, JS_GetStringChars(str));
+                    reinterpret_cast<PRUnichar*>(JS_GetStringChars(str));
                 if (!chars) {
                     if (pErr)
                         *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
@@ -1191,7 +1191,7 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                 }
             }
 
-            *dest = NS_STATIC_CAST(nsIXPConnectJSObjectHolder*, wrapper);
+            *dest = static_cast<nsIXPConnectJSObjectHolder*>(wrapper);
             return JS_TRUE;
         }
         
@@ -1407,8 +1407,8 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
                                                 nsnull, &jswrapper);
                     if(NS_FAILED(rv))
                         return rv;
-                    *exceptn = NS_REINTERPRET_CAST(nsIException*,
-                                                   jswrapper);
+                    *exceptn = reinterpret_cast<nsIException*>
+                                               (jswrapper);
                     return NS_OK;
                 }
             }

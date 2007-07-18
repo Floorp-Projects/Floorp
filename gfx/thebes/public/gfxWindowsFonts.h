@@ -242,11 +242,18 @@ static PRUint8 CharRangeBit(PRUint32 ch) {
 
 
 class gfxSparseBitSet {
-public:
+private:
     enum { BLOCK_SIZE = 32 };
+    enum { BLOCK_SIZE_BITS = BLOCK_SIZE * 8 };
 
+    struct Block {
+        Block(unsigned char memsetValue = 0) { memset(mBits, memsetValue, BLOCK_SIZE); }
+        PRUint8 mBits[BLOCK_SIZE];
+    };
+
+public:
     PRBool test(PRUint32 aIndex) {
-        PRUint32 blockIndex = aIndex/(BLOCK_SIZE*8);
+        PRUint32 blockIndex = aIndex/BLOCK_SIZE_BITS;
         if (blockIndex >= mBlocks.Length())
             return PR_FALSE;
         Block *block = mBlocks[blockIndex];
@@ -254,26 +261,65 @@ public:
             return PR_FALSE;
         return ((block->mBits[(aIndex/8) & (BLOCK_SIZE - 1)]) & (1 << (aIndex & 0x7))) != 0;
     }
-   
+
     void set(PRUint32 aIndex) {
-        PRUint32 blockIndex = aIndex/(BLOCK_SIZE*8);
+        PRUint32 blockIndex = aIndex/BLOCK_SIZE_BITS;
         if (blockIndex >= mBlocks.Length()) {
             nsAutoPtr<Block> *blocks = mBlocks.AppendElements(blockIndex + 1 - mBlocks.Length());
-            if (!blocks) // OOM
+            if (NS_UNLIKELY(!blocks)) // OOM
                 return;
         }
         Block *block = mBlocks[blockIndex];
         if (!block) {
             block = new Block;
-            if (!block) // OOM
+            if (NS_UNLIKELY(!block)) // OOM
                 return;
-            memset(block, 0, sizeof(Block));
             mBlocks[blockIndex] = block;
         }
         block->mBits[(aIndex/8) & (BLOCK_SIZE - 1)] |= 1 << (aIndex & 0x7);
     }
 
-    PRUint32 getsize() {
+    void SetRange(PRUint32 aStart, PRUint32 aEnd) {
+        const PRUint32 startIndex = aStart/BLOCK_SIZE_BITS;
+        const PRUint32 endIndex = aEnd/BLOCK_SIZE_BITS;
+
+        if (endIndex >= mBlocks.Length()) {
+            PRUint32 numNewBlocks = endIndex + 1 - mBlocks.Length();
+            nsAutoPtr<Block> *blocks = mBlocks.AppendElements(numNewBlocks);
+            if (NS_UNLIKELY(!blocks)) // OOM
+                return;
+        }
+
+        for (PRUint32 i = startIndex; i <= endIndex; ++i) {
+            const PRUint32 blockFirstBit = i * BLOCK_SIZE_BITS;
+            const PRUint32 blockLastBit = blockFirstBit + BLOCK_SIZE_BITS - 1;
+
+            Block *block = mBlocks[i];
+            if (!block) {
+                PRBool fullBlock = PR_FALSE;
+                if (aStart <= blockFirstBit && aEnd >= blockLastBit)
+                    fullBlock = PR_TRUE;
+
+                block = new Block(fullBlock ? 0xFF : 0);
+
+                if (NS_UNLIKELY(!block)) // OOM
+                    return;
+                mBlocks[i] = block;
+
+                if (fullBlock)
+                    continue;
+            }
+
+            const PRUint32 start = aStart > blockFirstBit ? aStart - blockFirstBit : 0;
+            const PRUint32 end = PR_MIN(aEnd - blockFirstBit, BLOCK_SIZE_BITS - 1);
+
+            for (PRUint32 bit = start; bit <= end; ++bit) {
+                block->mBits[bit/8] |= 1 << (bit & 0x7);
+            }
+        }
+    }
+
+    PRUint32 GetSize() {
         PRUint32 size = 0;
         for (PRUint32 i = 0; i < mBlocks.Length(); i++)
             if (mBlocks[i])
@@ -281,14 +327,7 @@ public:
         return size;
     }
 
-    // If you want to set a lot of bits very fast, we could have Set variants
-    // that set a lot of bits at once, e.g. Set(PRUint32 aStart, PRUint32 aLength)
 
-private:
-    struct Block {
-        PRUint8 mBits[BLOCK_SIZE];
-    };
-    
     nsTArray< nsAutoPtr<Block> > mBlocks;
 };
 
@@ -305,13 +344,14 @@ public:
 
     FontEntry(const nsAString& aName, PRUint16 aFontType) : 
         mName(aName), mFontType(aFontType), mDefaultWeight(0),
-        mUnicodeFont(PR_FALSE), mCharset(0), mUnicodeRanges(0)
+        mUnicodeFont(PR_FALSE), mSymbolFont(PR_FALSE),
+        mCharset(0), mUnicodeRanges(0)
     {
     }
 
     PRBool IsCrappyFont() const {
         /* return if it is a bitmap, old school font or not a unicode font */
-        return (!mUnicodeFont || mFontType == 0 || mFontType == 1);
+        return (!mUnicodeFont || mSymbolFont || mFontType != TRUETYPE_FONTTYPE);
     }
 
     PRBool MatchesGenericFamily(const nsACString& aGeneric) const {
@@ -428,6 +468,7 @@ public:
     PRUint8 mFamily;
     PRUint8 mPitch;
     PRPackedBool mUnicodeFont;
+    PRPackedBool mSymbolFont;
 
     std::bitset<256> mCharset;
     std::bitset<128> mUnicodeRanges;

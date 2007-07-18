@@ -810,7 +810,7 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
         {
             *slash = '\0';
 
-            rv = CreateDirectoryA(NS_CONST_CAST(char*, mWorkingPath.get()), NULL);
+            rv = CreateDirectoryA(const_cast<char*>(mWorkingPath.get()), NULL);
             if (rv) {
                 rv = ConvertOS2Error(rv);
                 if (rv != NS_ERROR_FILE_ALREADY_EXISTS)
@@ -833,7 +833,7 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 
     if (type == DIRECTORY_TYPE)
     {
-        rv = CreateDirectoryA(NS_CONST_CAST(char*, mWorkingPath.get()), NULL);
+        rv = CreateDirectoryA(const_cast<char*>(mWorkingPath.get()), NULL);
         if (rv)
             return ConvertOS2Error(rv);
         else
@@ -1401,7 +1401,7 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
     APIRET rc = NO_ERROR;
 
     if (move)
-        rc = DosMove(filePath.get(), (PSZ)NS_CONST_CAST(char*, destPath.get()));
+        rc = DosMove(filePath.get(), (PSZ)const_cast<char*>(destPath.get()));
 
     if (!move || rc == ERROR_NOT_SAME_DEVICE || rc == ERROR_ACCESS_DENIED)
     {
@@ -1410,7 +1410,7 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
         // the file without error, so we need to do the same   IBM-AKR
 
         do {
-            rc = DosCopy(filePath.get(), (PSZ)NS_CONST_CAST(char*, destPath.get()), DCPY_EXISTING);
+            rc = DosCopy(filePath.get(), (PSZ)const_cast<char*>(destPath.get()), DCPY_EXISTING);
             if (rc == ERROR_TOO_MANY_OPEN_FILES) {
                 ULONG CurMaxFH = 0;
                 LONG ReqCount = 20;
@@ -1431,7 +1431,7 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
             strcat(achProgram, """COPY ");
             strcat(achProgram, filePath.get());
             strcat(achProgram, " ");
-            strcat(achProgram, (PSZ)NS_CONST_CAST(char*, destPath.get()));
+            strcat(achProgram, (PSZ)const_cast<char*>(destPath.get()));
             strcat(achProgram, """");
             achProgram[strlen(achProgram) + 1] = '\0';
             achProgram[7] = '\0';

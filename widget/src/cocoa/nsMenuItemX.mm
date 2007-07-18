@@ -97,7 +97,7 @@ NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, PRBool 
   
   // register for AttributeChanged messages
   mManager = aManager;
-  nsCOMPtr<nsIChangeObserver> obs = do_QueryInterface(NS_STATIC_CAST(nsIChangeObserver*,this));
+  nsCOMPtr<nsIChangeObserver> obs = do_QueryInterface(static_cast<nsIChangeObserver*>(this));
   mManager->Register(mContent, obs); // does not addref this
   
   // if we have a command associated with this menu item, register for changes
@@ -143,7 +143,7 @@ NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, PRBool 
     [mNativeMenuItem setEnabled:(BOOL)mEnabled];
   }
 
-  mIcon = new nsMenuItemIconX(NS_STATIC_CAST(nsIMenuItem*, this), mMenuParent, mContent);
+  mIcon = new nsMenuItemIconX(static_cast<nsIMenuItem*>(this), mMenuParent, mContent);
   
   return NS_OK;
 }

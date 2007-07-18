@@ -142,7 +142,7 @@ nsSVGStopElement::ParseAttribute(PRInt32 aNamespaceID,
       const char *str = value.get();
 
       char *rest;
-      float offset = NS_STATIC_CAST(float, PR_strtod(str, &rest));
+      float offset = static_cast<float>(PR_strtod(str, &rest));
       if (str != rest) {
         if (*rest == '%') {
           offset /= 100;

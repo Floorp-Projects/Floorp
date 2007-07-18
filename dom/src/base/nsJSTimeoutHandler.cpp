@@ -87,7 +87,7 @@ public:
   // added.
   virtual void SetLateness(PRIntervalTime aHowLate);
 
-  nsresult Init(nsIScriptContext *aContext, PRBool aIsInterval,
+  nsresult Init(nsIScriptContext *aContext, PRBool *aIsInterval,
                 PRInt32 *aInterval);
 
   void ReleaseJSObjects();
@@ -197,7 +197,7 @@ nsJSScriptTimeoutHandler::ReleaseJSObjects()
 }
 
 nsresult
-nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool aIsInterval,
+nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool *aIsInterval,
                                PRInt32 *aInterval)
 {
   if (!aContext) {
@@ -236,9 +236,10 @@ nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool aIsInterval,
 
   if (argc < 1) {
     ::JS_ReportError(cx, "Function %s requires at least 1 parameter",
-                     aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
+                     *aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
 
-    return ncc->SetExceptionWasThrown(PR_TRUE);
+    ncc->SetExceptionWasThrown(PR_TRUE);
+    return NS_ERROR_DOM_TYPE_ERR;
   }
 
   if (argc > 1 && !::JS_ValueToECMAInt32(cx, argv[1], &interval)) {
@@ -246,7 +247,14 @@ nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool aIsInterval,
                      "Second argument to %s must be a millisecond interval",
                      aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
 
-    return ncc->SetExceptionWasThrown(PR_TRUE);
+    ncc->SetExceptionWasThrown(PR_TRUE);
+    return NS_ERROR_DOM_TYPE_ERR;
+  }
+
+  if (argc == 1) {
+    // If no interval was specified, treat this like a timeout, to avoid
+    // setting an interval of 0 milliseconds.
+    *aIsInterval = PR_FALSE;
   }
 
   switch (::JS_TypeOfValue(cx, argv[0])) {
@@ -264,7 +272,7 @@ nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool aIsInterval,
 
   default:
     ::JS_ReportError(cx, "useless %s call (missing quotes around argument?)",
-                     aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
+                     *aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
 
     // Return an error that nsGlobalWindow can recognize and turn into NS_OK.
     ncc->SetExceptionWasThrown(PR_TRUE);
@@ -296,7 +304,7 @@ nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool aIsInterval,
     PRUint32 dummy;
     jsval *jsargv = nsnull;
     nsCOMPtr<nsIJSArgArray> jsarray(do_QueryInterface(array));
-    jsarray->GetArgs(&dummy, NS_REINTERPRET_CAST(void **, &jsargv));
+    jsarray->GetArgs(&dummy, reinterpret_cast<void **>(&jsargv));
     // must have worked - we own the impl! :)
     NS_ASSERTION(jsargv, "No argv!");
     for (PRInt32 i = 2; (PRUint32)i < argc; ++i) {
@@ -328,7 +336,7 @@ void nsJSScriptTimeoutHandler::SetLateness(PRIntervalTime aHowLate)
   if (jsarray) {
     PRUint32 argc;
     jsval *jsargv;
-    jsarray->GetArgs(&argc, NS_REINTERPRET_CAST(void **, &jsargv));
+    jsarray->GetArgs(&argc, reinterpret_cast<void **>(&jsargv));
     if (jsargv && argc)
       jsargv[argc-1] = INT_TO_JSVAL((jsint) aHowLate);
   } else {
@@ -340,12 +348,12 @@ const PRUnichar *
 nsJSScriptTimeoutHandler::GetHandlerText()
 {
   NS_ASSERTION(mExpr, "No expression, so no handler text!");
-  return NS_REINTERPRET_CAST(const PRUnichar *,
-                             ::JS_GetStringChars(mExpr));
+  return reinterpret_cast<const PRUnichar *>
+                         (::JS_GetStringChars(mExpr));
 }
 
 nsresult NS_CreateJSTimeoutHandler(nsIScriptContext *aContext,
-                                   PRBool aIsInterval,
+                                   PRBool *aIsInterval,
                                    PRInt32 *aInterval,
                                    nsIScriptTimeoutHandler **aRet)
 {
@@ -360,5 +368,5 @@ nsresult NS_CreateJSTimeoutHandler(nsIScriptContext *aContext,
     return rv;
   }
   return handler->QueryInterface(NS_GET_IID(nsIScriptTimeoutHandler),
-                                 NS_REINTERPRET_CAST(void **, aRet));
+                                 reinterpret_cast<void **>(aRet));
 }

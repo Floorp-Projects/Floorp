@@ -1006,7 +1006,7 @@ nsMathMLContainerFrame::ReflowForeignChild(nsIFrame*                aChildFrame,
                                            const nsHTMLReflowState& aReflowState,
                                            nsReflowStatus&          aStatus)
 {
-  nsAutoSpaceManager autoSpaceManager(NS_CONST_CAST(nsHTMLReflowState &, aReflowState));
+  nsAutoSpaceManager autoSpaceManager(const_cast<nsHTMLReflowState &>(aReflowState));
   nsresult rv = autoSpaceManager.CreateSpaceManagerFor(aPresContext, this);
   NS_ENSURE_SUCCESS(rv, rv);
 

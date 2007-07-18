@@ -128,7 +128,8 @@ protected:
                                nscoord                  aContainingBlockWidth,
                                nscoord                  aContainingBlockHeight,
                                nsIFrame*                aKidFrame,
-                               nsReflowStatus&          aStatus);
+                               nsReflowStatus&          aStatus,
+                               nsRect*                  aChildBounds);
 
 protected:
   nsFrameList mAbsoluteFrames;  // additional named child list

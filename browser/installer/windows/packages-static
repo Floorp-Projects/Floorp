@@ -48,6 +48,8 @@ bin\msvcr80.dll
 [browser]
 ; [Base Browser Files]
 bin\@MOZ_APP_NAME@.exe
+bin\application.ini
+bin\platform.ini
 bin\plugins\npnul32.dll
 bin\res\cmessage.txt
 bin\res\effective_tld_names.dat
@@ -64,7 +66,6 @@ bin\components\appshell.xpt
 bin\components\appstartup.xpt
 bin\components\autocomplete.xpt
 bin\components\autoconfig.xpt
-bin\components\bookmarks.xpt
 bin\components\browsercompsbase.xpt
 bin\components\browserplaces.xpt
 bin\components\browsersearch.xpt
@@ -81,7 +82,9 @@ bin\components\content_htmldoc.xpt
 bin\components\content_xmldoc.xpt
 bin\components\content_xslt.xpt
 bin\components\content_xtf.xpt
+bin\components\contentprefs.xpt
 bin\components\cookie.xpt
+bin\components\crashreporter.xpt
 bin\components\directory.xpt
 bin\components\docshell_base.xpt
 bin\components\dom.xpt
@@ -111,7 +114,6 @@ bin\components\feeds.xpt
 bin\components\find.xpt
 bin\components\fuel.xpt
 bin\components\gfx.xpt
-bin\components\history.xpt
 bin\components\htmlparser.xpt
 bin\components\imglib2.xpt
 bin\components\imgicon.xpt
@@ -179,6 +181,7 @@ bin\components\windowwatcher.xpt
 bin\components\shellservice.xpt
 bin\components\xml-rpc.xpt
 bin\components\xpcom_base.xpt
+bin\components\xpcom_system.xpt
 bin\components\xpcom_components.xpt
 bin\components\xpcom_ds.xpt
 bin\components\xpcom_io.xpt
@@ -198,7 +201,7 @@ bin\components\WebContentConverter.js
 bin\components\nsBrowserContentHandler.js
 bin\components\nsBrowserGlue.js
 bin\components\nsSetDefaultBrowser.js
-bin\components\nsCloseAllWindows.js
+bin\components\nsTryToClose.js
 bin\components\nsDictionary.js
 bin\components\nsHelperAppDlg.js
 bin\components\nsProxyAutoConfig.js
@@ -209,6 +212,7 @@ bin\components\nsXmlRpcClient.js
 bin\components\nsExtensionManager.js
 bin\components\nsUpdateService.js
 bin\components\nsMicrosummaryService.js
+bin\components\nsPlacesTransactionsService.js
 bin\components\nsPostUpdateWin.js
 bin\components\nsLoginInfo.js
 bin\components\nsLoginManager.js
@@ -217,7 +221,6 @@ bin\components\storage-Legacy.js
 bin\components\pluginGlue.js
 bin\components\extensions.xpt
 bin\components\update.xpt
-bin\components\nsBookmarkTransactionManager.js
 bin\components\nsSessionStartup.js
 bin\components\nsSessionStore.js
 bin\components\sessionstore.xpt
@@ -229,6 +232,10 @@ bin\components\txEXSLTRegExFunctions.js
 bin\components\nsLivemarkService.js
 bin\components\nsTaggingService.js
 bin\components\nsDefaultCLH.js
+bin\components\nsContentPrefService.js
+
+; Modules
+bin\modules\*
 
 ; Safe Browsing
 bin\components\nsSafebrowsingApplication.js
@@ -271,6 +278,8 @@ bin\res\html.css
 bin\res\quirk.css
 bin\res\forms.css
 bin\res\EditorOverride.css
+bin\res\contenteditable.css
+bin\res\designmode.css
 bin\res\table-add-column-after-active.gif
 bin\res\table-add-column-after-hover.gif
 bin\res\table-add-column-after.gif
@@ -330,7 +339,7 @@ bin\chrome\pippki.manifest
 ;
 bin\updater.exe
 
-; [airbag]
+; [Crash Reporter]
 bin\crashreporter.exe
 bin\crashreporter.ini
 
@@ -342,19 +351,3 @@ bin\extensions\inspector@mozilla.org\chrome.manifest
 bin\extensions\inspector@mozilla.org\chrome\inspector.jar
 bin\extensions\inspector@mozilla.org\defaults\preferences\inspector.js
 bin\extensions\inspector@mozilla.org\chrome\icons\default\winInspectorMain.ico
-
-; [Additional Browsing Enhancements]
-[abe]
-
-[talkback]
-bin\extensions\talkback@mozilla.org\install.rdf
-bin\extensions\talkback@mozilla.org\chrome.manifest
-bin\extensions\talkback@mozilla.org\components\qfaservices.dll
-bin\extensions\talkback@mozilla.org\components\qfaservices.xpt
-bin\extensions\talkback@mozilla.org\components\BrandRes.dll
-bin\extensions\talkback@mozilla.org\components\fullsoft.dll
-bin\extensions\talkback@mozilla.org\components\master.ini
-bin\extensions\talkback@mozilla.org\components\talkback-l10n.ini
-bin\extensions\talkback@mozilla.org\components\talkback.cnt
-bin\extensions\talkback@mozilla.org\components\talkback.exe
-bin\extensions\talkback@mozilla.org\components\talkback.hlp

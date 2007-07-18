@@ -689,7 +689,7 @@ assign_from_helper__13nsCOMPtr_baseFRC15nsCOMPtr_helperRC4nsID	proc
 	mov	[ebp+0ch],edx;	helper
 	mov	[ebp+010h],ecx;	iid
 
-; 80 		if ( NS_FAILED( helper(iid, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
+; 80 		if ( NS_FAILED( helper(iid, reinterpret_cast<void**>(&newRawPtr)) ) )
 	lea	ecx,[ebp-04h];	newRawPtr
 	mov	edx,[ebp+010h];	iid
 	mov	ebx,[ebp+0ch];	helper
@@ -723,7 +723,7 @@ void
 nsCOMPtr_base::assign_from_helper( const nsCOMPtr_helper& helper, const nsIID& iid )
 	{
 		nsISupports* newRawPtr;
-		if ( NS_FAILED( helper(iid, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
+		if ( NS_FAILED( helper(iid, reinterpret_cast<void**>(&newRawPtr)) ) )
 			newRawPtr = 0;
     assign_assuming_AddRef(newRawPtr);
 	}
@@ -739,7 +739,7 @@ extern "C" void VFTCALL assign_from_helper__13nsCOMPtr_baseFRC15nsCOMPtr_helperR
     /* this may or may not be correct but the layout is the same. */
     obj_nsQueryInterface_nsCOMPtr_helper  * pHelper = (obj_nsQueryInterface_nsCOMPtr_helper*)helper;
 
-    /* if ( NS_FAILED( helper(iid, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) ) */
+    /* if ( NS_FAILED( helper(iid, reinterpret_cast<void**>(&newRawPtr)) ) ) */
     status = pHelper->pVFT->__operator_paratheses((char*)pHelper + pHelper->pVFT->uDelta__operator_paratheses, 
                                                    iid, (void**)&newRawPtr);
     if (NS_FAILED(status))

@@ -69,6 +69,7 @@ var comparisonView = {
           for each (k in subRes[mod][fl]) {
             keys.push(k);
           }
+          keys.sort();
           new YAHOO.widget.HTMLNode("<pre>" + keys.join("\n") + "</pre>", fn, true, false);
         }
       }
@@ -78,6 +79,9 @@ var comparisonView = {
 };
 var comparisonController = {
   __proto__: baseController,
+  get path() {
+    return 'results/' + this.tag + '/cmp-data.json';
+  },
   beforeSelect: function() {
     this.result = {};
     this.isShown = false;

@@ -52,7 +52,6 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLOptionElement.h"
-#include "nsIDOMChromeWindow.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
@@ -76,13 +75,13 @@
 #include "nsScriptNameSpaceManager.h"
 #include "nsThreadUtils.h"
 #include "nsITimer.h"
-#include "nsDOMClassInfo.h"
 #include "nsIAtom.h"
 #include "nsContentUtils.h"
 #include "jscntxt.h"
 #include "nsEventDispatcher.h"
 #include "nsIContent.h"
 #include "nsCycleCollector.h"
+#include "nsNetUtil.h"
 
 // For locale aware string methods
 #include "plstr.h"
@@ -272,10 +271,6 @@ NS_ScriptErrorReporter(JSContext *cx,
                        const char *message,
                        JSErrorReport *report)
 {
-  NS_ASSERTION(message || report,
-               "Must have a message or a report; otherwise what are we "
-               "reporting?");
-  
   // XXX this means we are not going to get error reports on non DOM contexts
   nsIScriptContext *context = nsJSUtils::GetDynamicScriptContext(cx);
 
@@ -290,16 +285,14 @@ NS_ScriptErrorReporter(JSContext *cx,
 
     if (globalObject) {
       nsAutoString fileName, msg;
+      NS_NAMED_LITERAL_STRING(xoriginMsg, "Script error.");
 
-      if (report) {
-        fileName.AssignWithConversion(report->filename);
+      fileName.AssignWithConversion(report->filename);
 
-        const PRUnichar *m = NS_REINTERPRET_CAST(const PRUnichar*,
-                                                 report->ucmessage);
-
-        if (m) {
-          msg.Assign(m);
-        }
+      const PRUnichar *m = reinterpret_cast<const PRUnichar*>
+                                             (report->ucmessage);
+      if (m) {
+        msg.Assign(m);
       }
 
       if (msg.IsEmpty() && message) {
@@ -320,9 +313,8 @@ NS_ScriptErrorReporter(JSContext *cx,
         nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(globalObject));
         nsIDocShell *docShell = win ? win->GetDocShell() : nsnull;
         if (docShell &&
-            (!report ||
-             (report->errorNumber != JSMSG_OUT_OF_MEMORY &&
-              !JSREPORT_IS_WARNING(report->flags)))) {
+            (report->errorNumber != JSMSG_OUT_OF_MEMORY &&
+              !JSREPORT_IS_WARNING(report->flags))) {
           static PRInt32 errorDepth; // Recursion prevention
           ++errorDepth;
 
@@ -333,8 +325,37 @@ NS_ScriptErrorReporter(JSContext *cx,
             nsScriptErrorEvent errorevent(PR_TRUE, NS_LOAD_ERROR);
 
             errorevent.fileName = fileName.get();
-            errorevent.errorMsg = msg.get();
-            errorevent.lineNr = report ? report->lineno : 0;
+
+            nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(win));
+            nsIPrincipal *p = sop->GetPrincipal();
+
+            PRBool sameOrigin = (report->filename == nsnull);
+
+            if (p && !sameOrigin) {
+              nsCOMPtr<nsIURI> errorURI;
+              NS_NewURI(getter_AddRefs(errorURI), report->filename);
+
+              nsCOMPtr<nsIURI> codebase;
+              p->GetURI(getter_AddRefs(codebase));
+
+              if (errorURI && codebase) {
+                // FIXME: Once error reports contain the origin of the
+                // error (principals) we should change this to do the
+                // security check based on the principals and not
+                // URIs. See bug 387476.
+                sameOrigin =
+                  NS_SUCCEEDED(sSecurityManager->
+                               CheckSameOriginURI(errorURI, codebase));
+              }
+            }
+
+            if (sameOrigin) {
+              errorevent.errorMsg = msg.get();
+              errorevent.lineNr = report->lineno;
+            } else {
+              errorevent.errorMsg = xoriginMsg.get();
+              errorevent.lineNr = 0;
+            }
 
             // Dispatch() must be synchronous for the recursion block
             // (errorDepth) to work.
@@ -367,18 +388,13 @@ NS_ScriptErrorReporter(JSContext *cx,
             ? "chrome javascript"
             : "content javascript";
 
-          if (report) {
-            PRUint32 column = report->uctokenptr - report->uclinebuf;
+          PRUint32 column = report->uctokenptr - report->uclinebuf;
 
-            rv = errorObject->Init(msg.get(), fileName.get(),
-                                   NS_REINTERPRET_CAST(const PRUnichar*,
-                                                       report->uclinebuf),
-                                   report->lineno, column, report->flags,
-                                   category);
-          } else if (message) {
-            rv = errorObject->Init(msg.get(), nsnull, nsnull, 0, 0, 0,
-                                   category);
-          }
+          rv = errorObject->Init(msg.get(), fileName.get(),
+                                 reinterpret_cast<const PRUnichar*>
+                                                 (report->uclinebuf),
+                                 report->lineno, column, report->flags,
+                                 category);
 
           if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsIConsoleService> consoleService =
@@ -397,49 +413,42 @@ NS_ScriptErrorReporter(JSContext *cx,
   // mozilla with -console.
   nsCAutoString error;
   error.Assign("JavaScript ");
-  if (!report) {
-    error.Append("[no report]: ");
-    error.Append(message);
+  if (JSREPORT_IS_STRICT(report->flags))
+    error.Append("strict ");
+  if (JSREPORT_IS_WARNING(report->flags))
+    error.Append("warning: ");
+  else
+    error.Append("error: ");
+  error.Append(report->filename);
+  error.Append(", line ");
+  error.AppendInt(report->lineno, 10);
+  error.Append(": ");
+  if (report->ucmessage) {
+    AppendUTF16toUTF8(reinterpret_cast<const PRUnichar*>(report->ucmessage),
+                      error);
   } else {
-    if (JSREPORT_IS_STRICT(report->flags))
-      error.Append("strict ");
-    if (JSREPORT_IS_WARNING(report->flags))
-      error.Append("warning: ");
-    else
-      error.Append("error: ");
-    error.Append(report->filename);
-    error.Append(", line ");
-    error.AppendInt(report->lineno, 10);
-    error.Append(": ");
-    if (report->ucmessage) {
-      AppendUTF16toUTF8(NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage),
-                        error);
-    } else {
-      error.Append(message);
-    }
-    if (status != nsEventStatus_eIgnore && !JSREPORT_IS_WARNING(report->flags))
-      error.Append(" Error was suppressed by event handler\n");
+    error.Append(message);
   }
+  if (status != nsEventStatus_eIgnore && !JSREPORT_IS_WARNING(report->flags))
+    error.Append(" Error was suppressed by event handler\n");
   fprintf(stderr, "%s\n", error.get());
   fflush(stderr);
 #endif
 
 #ifdef PR_LOGGING
-  if (report) {
-    if (!gJSDiagnostics)
-      gJSDiagnostics = PR_NewLogModule("JSDiagnostics");
+  if (!gJSDiagnostics)
+    gJSDiagnostics = PR_NewLogModule("JSDiagnostics");
 
-    if (gJSDiagnostics) {
-      PR_LOG(gJSDiagnostics,
-             JSREPORT_IS_WARNING(report->flags) ? PR_LOG_WARNING : PR_LOG_ERROR,
-             ("file %s, line %u: %s\n%s%s",
-              report->filename, report->lineno, message,
-              report->linebuf ? report->linebuf : "",
-              (report->linebuf &&
-               report->linebuf[strlen(report->linebuf)-1] != '\n')
-              ? "\n"
-              : ""));
-    }
+  if (gJSDiagnostics) {
+    PR_LOG(gJSDiagnostics,
+           JSREPORT_IS_WARNING(report->flags) ? PR_LOG_WARNING : PR_LOG_ERROR,
+           ("file %s, line %u: %s\n%s%s",
+            report->filename, report->lineno, message,
+            report->linebuf ? report->linebuf : "",
+            (report->linebuf &&
+             report->linebuf[strlen(report->linebuf)-1] != '\n')
+            ? "\n"
+            : ""));
   }
 #endif
 }
@@ -502,7 +511,7 @@ LocaleToUnicode(JSContext *cx, char *src, jsval *rval)
             unichars = shrunkUnichars;
         }
         str = JS_NewUCString(cx,
-                             NS_REINTERPRET_CAST(jschar*, unichars),
+                             reinterpret_cast<jschar*>(unichars),
                              unicharLength);
       }
       if (!str)
@@ -611,8 +620,8 @@ JSObject2Win(JSContext *cx, JSObject *obj)
   if (wrapper) {
     nsCOMPtr<nsPIDOMWindow> win = do_QueryWrappedNative(wrapper);
     if (win) {
-      return NS_STATIC_CAST(nsGlobalWindow *,
-                            NS_STATIC_CAST(nsPIDOMWindow *, win));
+      return static_cast<nsGlobalWindow *>
+                        (static_cast<nsPIDOMWindow *>(win));
     }
   }
 
@@ -686,7 +695,7 @@ JSBool JS_DLL_CALLBACK
 nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
 {
   // Get the native context
-  nsJSContext *ctx = NS_STATIC_CAST(nsJSContext *, ::JS_GetContextPrivate(cx));
+  nsJSContext *ctx = static_cast<nsJSContext *>(::JS_GetContextPrivate(cx));
 
   if (!ctx) {
     // Can happen; see bug 355811
@@ -891,7 +900,7 @@ static const char js_relimit_option_str[] = JS_OPTIONS_DOT_STR "relimit";
 int PR_CALLBACK
 nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 {
-  nsJSContext *context = NS_REINTERPRET_CAST(nsJSContext *, data);
+  nsJSContext *context = reinterpret_cast<nsJSContext *>(data);
   PRUint32 oldDefaultJSOptions = context->mDefaultJSOptions;
   PRUint32 newDefaultJSOptions = oldDefaultJSOptions;
 
@@ -900,6 +909,18 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     newDefaultJSOptions |= JSOPTION_STRICT;
   else
     newDefaultJSOptions &= ~JSOPTION_STRICT;
+
+#ifdef DEBUG
+  // In debug builds, warnings are always enabled in chrome context
+  // Note this callback is also called from context's InitClasses thus we don't
+  // need to enable this directly from InitContext
+  if ((newDefaultJSOptions & JSOPTION_STRICT) == 0) {
+    nsIScriptGlobalObject *global = context->GetGlobalObject();
+    nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(global));
+    if (chromeWindow)
+      newDefaultJSOptions |= JSOPTION_STRICT;
+  }
+#endif
 
   PRBool werror = nsContentUtils::GetBoolPref(js_werror_option_str);
   if (werror)
@@ -932,11 +953,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
 
   mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS
                     | JSOPTION_NATIVE_BRANCH_CALLBACK
-                    | JSOPTION_ANONFUNFIX
-#ifdef DEBUG
-                    | JSOPTION_STRICT   // lint catching for development
-#endif
-    ;
+                    | JSOPTION_ANONFUNFIX;
 
   // Let xpconnect resync its JSContext tracker. We do this before creating
   // a new JSContext just in case the heap manager recycles the JSContext
@@ -945,7 +962,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
 
   mContext = ::JS_NewContext(aRuntime, gStackSize);
   if (mContext) {
-    ::JS_SetContextPrivate(mContext, NS_STATIC_CAST(nsIScriptContext *, this));
+    ::JS_SetContextPrivate(mContext, static_cast<nsIScriptContext *>(this));
 
     // Make sure the new context gets the default context options
     ::JS_SetOptions(mContext, mDefaultJSOptions);
@@ -954,7 +971,6 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
     nsContentUtils::RegisterPrefCallback(js_options_dot_str,
                                          JSOptionChangedCallback,
                                          this);
-    JSOptionChangedCallback(js_options_dot_str, this);
 
     ::JS_SetBranchCallback(mContext, DOMBranchCallback);
 
@@ -1045,7 +1061,7 @@ NoteContextChild(JSTracer *trc, void *thing, uint32 kind)
 
   if (kind == JSTRACE_OBJECT || kind == JSTRACE_NAMESPACE ||
       kind == JSTRACE_QNAME || kind == JSTRACE_XML) {
-    ContextCallbackItem *item = NS_STATIC_CAST(ContextCallbackItem*, trc);
+    ContextCallbackItem *item = static_cast<ContextCallbackItem*>(trc);
     item->cb->NoteScriptChild(JAVASCRIPT, thing);
   }
 }
@@ -1203,7 +1219,7 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
       *aIsUndefined = JSVAL_IS_VOID(val);
     }
 
-    *NS_STATIC_CAST(jsval*, aRetValue) = val;
+    *static_cast<jsval*>(aRetValue) = val;
     // XXX - nsScriptObjectHolder should be used once this method moves to
     // the new world order. However, use of 'jsval' appears to make this
     // tricky...
@@ -1241,8 +1257,8 @@ JSValueToAString(JSContext *cx, jsval val, nsAString *result,
 
   JSString* jsstring = ::JS_ValueToString(cx, val);
   if (jsstring) {
-    result->Assign(NS_REINTERPRET_CAST(const PRUnichar*,
-                                       ::JS_GetStringChars(jsstring)),
+    result->Assign(reinterpret_cast<const PRUnichar*>
+                                   (::JS_GetStringChars(jsstring)),
                    ::JS_GetStringLength(jsstring));
   } else {
     result->Truncate();
@@ -1671,7 +1687,7 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
                                           aURL, aLineNo);
 
   if (!fun) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_ILLEGAL_VALUE;
   }
 
   JSObject *handler = ::JS_GetFunctionObject(fun);
@@ -1778,7 +1794,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
             global->GetScriptContext(JAVASCRIPT);
           if (context && context != this) {
             JSContext* cx =
-              NS_STATIC_CAST(JSContext*, context->GetNativeContext());
+              static_cast<JSContext*>(context->GetNativeContext());
             rv = stack->Push(cx);
             if (NS_SUCCEEDED(rv)) {
               rv = sSecurityManager->CheckFunctionAccess(cx, aHandler,
@@ -1811,7 +1827,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
     // right scope anyway, and we want to make sure that the arguments end up
     // in the same scope as aTarget.
     rv = ConvertSupportsTojsvals(aargv, target, &argc,
-                                 NS_REINTERPRET_CAST(void **, &argv), &mark);
+                                 reinterpret_cast<void **>(&argv), &mark);
     if (NS_FAILED(rv)) {
       stack->Pop(nsnull);
       return rv;
@@ -1960,8 +1976,8 @@ nsJSContext::Serialize(nsIObjectOutputStream* aStream, void *aScriptObject)
     xdr->userdata = (void*) aStream;
 
     JSAutoRequest ar(cx);
-    JSScript *script = NS_REINTERPRET_CAST(JSScript*,
-                                           ::JS_GetPrivate(cx, mJSObject));
+    JSScript *script = reinterpret_cast<JSScript*>
+                                       (::JS_GetPrivate(cx, mJSObject));
     if (! ::JS_XDRScript(xdr, &script)) {
         rv = NS_ERROR_FAILURE;  // likely to be a principals serialization error
     } else {
@@ -1980,8 +1996,8 @@ nsJSContext::Serialize(nsIObjectOutputStream* aStream, void *aScriptObject)
         // one last buffer of data to write to aStream.
 
         uint32 size;
-        const char* data = NS_REINTERPRET_CAST(const char*,
-                                               ::JS_XDRMemGetData(xdr, &size));
+        const char* data = reinterpret_cast<const char*>
+                                           (::JS_XDRMemGetData(xdr, &size));
         NS_ASSERTION(data, "no decoded JSXDRState data!");
 
         rv = aStream->Write32(size);
@@ -2136,7 +2152,7 @@ nsJSContext::CreateNativeGlobalForInner(
                                           getter_AddRefs(jsholder));
   if (NS_FAILED(rv))
     return rv;
-  jsholder->GetJSObject(NS_REINTERPRET_CAST(JSObject **, aNativeGlobal));
+  jsholder->GetJSObject(reinterpret_cast<JSObject **>(aNativeGlobal));
   *aHolder = jsholder.get();
   NS_ADDREF(*aHolder);
   return NS_OK;
@@ -2346,7 +2362,7 @@ nsJSContext::SetProperty(void *aTarget, const char *aPropName, nsISupports *aArg
   
   nsresult rv;
   rv = ConvertSupportsTojsvals(aArgs, GetNativeGlobal(), &argc,
-                               NS_REINTERPRET_CAST(void **, &argv), &mark);
+                               reinterpret_cast<void **>(&argv), &mark);
   NS_ENSURE_SUCCESS(rv, rv);
   AutoFreeJSStack stackGuard(mContext, mark); // ensure always freed.
 
@@ -2354,7 +2370,7 @@ nsJSContext::SetProperty(void *aTarget, const char *aPropName, nsISupports *aArg
   JSObject *args = ::JS_NewArrayObject(mContext, argc, argv);
   jsval vargs = OBJECT_TO_JSVAL(args);
 
-  rv = ::JS_SetProperty(mContext, NS_REINTERPRET_CAST(JSObject *, aTarget), aPropName, &vargs) ?
+  rv = ::JS_SetProperty(mContext, reinterpret_cast<JSObject *>(aTarget), aPropName, &vargs) ?
        NS_OK : NS_ERROR_FAILURE;
   // free 'args'???
 
@@ -2509,7 +2525,7 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, jsval *aArgv)
       // to be equivalent; both unsigned 16-bit entities
       JSString *str =
         ::JS_NewUCStringCopyN(cx,
-                              NS_REINTERPRET_CAST(const jschar *,data.get()),
+                              reinterpret_cast<const jschar *>(data.get()),
                               data.Length());
       NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
@@ -2983,7 +2999,7 @@ nsJSContext::InitClasses(void *aGlobalObj)
 {
   nsresult rv = NS_OK;
 
-  JSObject *globalObj = NS_STATIC_CAST(JSObject *, aGlobalObj);
+  JSObject *globalObj = static_cast<JSObject *>(aGlobalObj);
 
   rv = InitializeExternalClasses();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3013,6 +3029,8 @@ nsJSContext::InitClasses(void *aGlobalObj)
   ::JS_DefineFunctions(mContext, globalObj, JProfFunctions);
 #endif
 
+  JSOptionChangedCallback(js_options_dot_str, this);
+    
   return rv;
 }
 
@@ -3747,7 +3765,7 @@ nsresult NS_CreateJSArgv(JSContext *aContext, PRUint32 argc, void *argv,
 {
   nsresult rv;
   nsJSArgArray *ret = new nsJSArgArray(aContext, argc,
-                                       NS_STATIC_CAST(jsval *, argv), &rv);
+                                       static_cast<jsval *>(argv), &rv);
   if (ret == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
   if (NS_FAILED(rv)) {

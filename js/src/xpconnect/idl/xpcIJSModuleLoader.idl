@@ -56,18 +56,22 @@ interface xpcIJSModuleLoader : nsISupports
    *
    * Synchronously loads and evaluates the js file located at
    * 'registryLocation' with a new, fully privileged global object.
-   * After loading, looks for a property 'EXPORTED_SYMBOLS' on the
-   * new global object. 'EXPORTED_SYMBOLS' is expected to be an
-   * array of strings identifying properties on the global object.
-   * If present, these properties will be installed as properties on
-   * targetObj, or, if 'targetObj' is not specified, on the caller's
-   * global object.
+   *
+   * If 'targetObj' is specified and equal to null, returns the
+   * module's global object. Otherwise (if 'targetObj' is not
+   * specified, or 'targetObj' is != null) looks for a property
+   * 'EXPORTED_SYMBOLS' on the new global object. 'EXPORTED_SYMBOLS'
+   * is expected to be an array of strings identifying properties on
+   * the global object.  These properties will be installed as
+   * properties on 'targetObj', or, if 'targetObj' is not specified,
+   * on the caller's global object. If 'EXPORTED_SYMBOLS' is not
+   * found, an error is thrown.
    *
    * @param resourceURI A resource:// URI string to load the module from.
    * @param targetObj  the object to install the exported properties on.
-   *        If this parameter is null or is a primitive value, this
-   *        method throws an exception.
-   * @returns the new global object the module code was loaded into.
+   *        If this parameter is a primitive value, this method throws
+   *        an exception.
+   * @returns the module code's global object.
    *
    * The implementation maintains a hash of registryLocation->global obj.
    * Subsequent invocations of importModule with 'registryLocation'

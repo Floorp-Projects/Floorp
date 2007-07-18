@@ -114,10 +114,8 @@ SHARED_LIBRARY_LIBS = \
 
 ifndef MOZ_SUITE
 # XXX Suite isn't ready to build this just yet
-ifdef MOZ_XPINSTALL
 ifdef MOZ_RDF
 SHARED_LIBRARY_LIBS += ../downloads/src/$(LIB_PREFIX)download_s.$(LIB_SUFFIX)
-endif
 endif
 endif
 

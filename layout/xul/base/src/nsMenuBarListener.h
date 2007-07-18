@@ -87,6 +87,10 @@ protected:
 
   static PRUint32 GetModifiers(nsIDOMKeyEvent* event);
 
+  // This should only be called by the nsMenuBarListener during event dispatch,
+  // thus ensuring that this doesn't get destroyed during the process.
+  void ToggleMenuActiveState();
+
   nsMenuBarFrame* mMenuBarFrame; // The menu bar object.
   PRBool mAccessKeyDown;         // Whether or not the ALT key is currently down.
   static PRBool mAccessKeyFocuses; // Does the access key by itself focus the menubar?

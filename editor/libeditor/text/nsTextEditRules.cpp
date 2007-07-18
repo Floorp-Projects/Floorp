@@ -62,6 +62,7 @@
 #include "nsUnicharUtils.h"
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
+#include "DeleteTextTxn.h"
 
 // for IBMBIDI
 #include "nsIPresShell.h"
@@ -297,7 +298,7 @@ nsTextEditRules::WillDoAction(nsISelection *aSelection,
   *aHandled = PR_FALSE;
 
   // my kingdom for dynamic cast
-  nsTextRulesInfo *info = NS_STATIC_CAST(nsTextRulesInfo*, aInfo);
+  nsTextRulesInfo *info = static_cast<nsTextRulesInfo*>(aInfo);
     
   switch (info->action)
   {
@@ -347,7 +348,7 @@ nsTextEditRules::DidDoAction(nsISelection *aSelection,
     return NS_ERROR_NULL_POINTER;
     
   // my kingdom for dynamic cast
-  nsTextRulesInfo *info = NS_STATIC_CAST(nsTextRulesInfo*, aInfo);
+  nsTextRulesInfo *info = static_cast<nsTextRulesInfo*>(aInfo);
 
   switch (info->action)
   {
@@ -1225,17 +1226,16 @@ nsTextEditRules::ReplaceNewlines(nsIDOMRange *aRange)
       if (offset == -1) break; // done with this node
       
       // delete the newline
-      EditTxn *txn;
+      nsRefPtr<DeleteTextTxn> txn;
       // note 1: we are not telling edit listeners about these because they don't care
       // note 2: we are not wrapping these in a placeholder because we know they already are,
       //         or, failing that, undo is disabled
-      res = mEditor->CreateTxnForDeleteText(textNode, offset, 1, (DeleteTextTxn**)&txn);
+      res = mEditor->CreateTxnForDeleteText(textNode, offset, 1,
+                                            getter_AddRefs(txn));
       if (NS_FAILED(res))  return res; 
       if (!txn)  return NS_ERROR_OUT_OF_MEMORY;
       res = mEditor->DoTransaction(txn); 
       if (NS_FAILED(res))  return res; 
-      // The transaction system (if any) has taken ownership of txn
-      NS_IF_RELEASE(txn);
       
       // insert a break
       res = mEditor->CreateBR(textNode, offset, address_of(brNode));
@@ -1296,7 +1296,9 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsISelection *aSelection)
   nsresult res = mBody->GetFirstChild(getter_AddRefs(bodyChild));        
   while ((NS_SUCCEEDED(res)) && bodyChild)
   { 
-    if (mEditor->IsMozEditorBogusNode(bodyChild) || mEditor->IsEditable(bodyChild))
+    if (mEditor->IsMozEditorBogusNode(bodyChild) ||
+        !mEditor->IsEditable(mBody) ||
+        mEditor->IsEditable(bodyChild))
     {
       needsBogusContent = PR_FALSE;
       break;

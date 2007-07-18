@@ -113,11 +113,7 @@ var gMainPane = {
   setHomePageToBookmark: function ()
   {
     var rv = { urls: null, names: null };
-#ifdef MOZ_PLACES_BOOKMARKS
     document.documentElement.openSubDialog("chrome://browser/content/preferences/selectBookmark.xul",
-#else
-    document.documentElement.openSubDialog("chrome://browser/content/bookmarks/selectBookmark.xul",
-#endif
                                            "resizable", rv);  
     if (rv.urls && rv.names) {
       var homePage = document.getElementById("browser.startup.homepage");

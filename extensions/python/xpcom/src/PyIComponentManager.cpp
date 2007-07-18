@@ -54,7 +54,7 @@ static nsIComponentManager *GetI(PyObject *self) {
 		PyErr_SetString(PyExc_TypeError, "This object is not the correct interface");
 		return NULL;
 	}
-	return NS_STATIC_CAST(nsIComponentManager*, Py_nsISupports::GetI(self));
+	return static_cast<nsIComponentManager*>(Py_nsISupports::GetI(self));
 }
 
 static PyObject *PyCreateInstanceByContractID(PyObject *self, PyObject *args)

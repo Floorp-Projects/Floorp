@@ -471,7 +471,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetStatus(PRUint32 aStatusType,
                                             const PRUnichar* aStatus)
 {
   return SetStatusWithContext(aStatusType,
-      aStatus ? NS_STATIC_CAST(const nsString &, nsDependentString(aStatus))
+      aStatus ? static_cast<const nsString &>(nsDependentString(aStatus))
               : EmptyString(),
       nsnull);
 }
@@ -804,7 +804,7 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
   nsCOMPtr<nsIWebNavigation> parentNav = do_GetInterface(aParent);
   nsCOMPtr<nsIDocShellTreeOwner> parentOwner = do_GetInterface(parentNav);
   NS_ASSERTION(SameCOMIdentity(parentOwner,
-                               NS_STATIC_CAST(nsIDocShellTreeOwner*, this)),
+                               static_cast<nsIDocShellTreeOwner*>(this)),
                "Parent from wrong docshell tree?");
 #endif
 

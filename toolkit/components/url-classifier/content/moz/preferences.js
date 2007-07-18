@@ -209,6 +209,17 @@ G_Preferences.prototype.removeObserver = function(which, callback) {
   this.prefs_.removeObserver(which, observer);
 }
 
+/**
+ * Remove all preference observers registered through this object.
+ */
+G_Preferences.prototype.removeAllObservers = function() {
+  for (var which in this.observers_) {
+    for each (var observer in this.observers_[which].observers) {
+      this.prefs_.removeObserver(which, observer);
+    }
+  }
+  this.observers_ = {};
+}
 
 /**
  * Helper class that knows how to observe preference changes and

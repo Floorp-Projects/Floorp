@@ -151,7 +151,7 @@ OpenKeyForWriting(HKEY aStartKey, const char* aKeyName, HKEY* aKey,
 //
 //   HKCU\SOFTWARE\Classes\FirefoxHTML\
 //     DefaultIcon                      (default)         REG_SZ     <apppath>,1
-//     shell\open\command               (default)         REG_SZ     <apppath> -url "%1" -requestPending
+//     shell\open\command               (default)         REG_SZ     <apppath> -requestPending -osint -url "%1"
 //     shell\open\ddeexec               (default)         REG_SZ     "%1",,0,0,,,,
 //     shell\open\ddeexec               NoActivateHandler REG_SZ
 //                       \Application   (default)         REG_SZ     Firefox
@@ -163,7 +163,7 @@ OpenKeyForWriting(HKEY aStartKey, const char* aKeyName, HKEY* aKey,
 //                                      EditFlags         REG_DWORD  2
 //                                      FriendlyTypeName  REG_SZ     <appname> URL
 //     DefaultIcon                      (default)         REG_SZ     <apppath>,1
-//     shell\open\command               (default)         REG_SZ     <apppath> -url "%1" -requestPending
+//     shell\open\command               (default)         REG_SZ     <apppath> -requestPending -osint -url "%1"
 //     shell\open\ddeexec               (default)         REG_SZ     "%1",,0,0,,,,
 //     shell\open\ddeexec               NoActivateHandler REG_SZ
 //                       \Application   (default)         REG_SZ     Firefox
@@ -172,12 +172,12 @@ OpenKeyForWriting(HKEY aStartKey, const char* aKeyName, HKEY* aKey,
 // - Protocol Mappings
 //   -----------------
 //   The following protocols:
-//    HTTP, HTTPS, FTP, GOPHER
+//    HTTP, HTTPS, FTP
 //   are mapped like so:
 //
 //   HKCU\SOFTWARE\Classes\<protocol>\
 //     DefaultIcon                      (default)         REG_SZ     <apppath>,1
-//     shell\open\command               (default)         REG_SZ     <apppath> -url "%1" -requestPending
+//     shell\open\command               (default)         REG_SZ     <apppath> -requestPending -osint -url "%1"
 //     shell\open\ddeexec               (default)         REG_SZ     "%1",,0,0,,,,
 //     shell\open\ddeexec               NoActivateHandler REG_SZ
 //                       \Application   (default)         REG_SZ     Firefox
@@ -232,7 +232,7 @@ typedef struct {
 #define CLS_HTML "FirefoxHTML"
 #define CLS_URL "FirefoxURL"
 #define VAL_FILE_ICON "%APPPATH%,1"
-#define VAL_OPEN "\"%APPPATH%\" -url \"%1\" -requestPending"
+#define VAL_OPEN "\"%APPPATH%\" -requestPending -osint -url \"%1\""
 
 #define MAKE_KEY_NAME1(PREFIX, MID) \
   PREFIX MID
@@ -273,8 +273,6 @@ static SETTING gSettings[] = {
   { MAKE_KEY_NAME2(CLS, "HTTPS", SOP),  "", VAL_OPEN, APP_PATH_SUBSTITUTION },
   { MAKE_KEY_NAME2(CLS, "FTP", DI),     "", VAL_FILE_ICON, APP_PATH_SUBSTITUTION | NON_ESSENTIAL },
   { MAKE_KEY_NAME2(CLS, "FTP", SOP),    "", VAL_OPEN, APP_PATH_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(CLS, "GOPHER", DI),  "", VAL_FILE_ICON, APP_PATH_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(CLS, "GOPHER", SOP), "", VAL_OPEN, APP_PATH_SUBSTITUTION | NON_ESSENTIAL },
 
   // DDE settings
   { MAKE_KEY_NAME2(CLS, CLS_HTML, DDE), "", DDE_COMMAND, NO_SUBSTITUTION | NON_ESSENTIAL },
@@ -292,9 +290,6 @@ static SETTING gSettings[] = {
   { MAKE_KEY_NAME2(CLS, "FTP", DDE), "", DDE_COMMAND, NO_SUBSTITUTION | NON_ESSENTIAL },
   { MAKE_KEY_NAME3(CLS, "FTP", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION | NON_ESSENTIAL },
   { MAKE_KEY_NAME3(CLS, "FTP", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(CLS, "GOPHER", DDE), "", DDE_COMMAND, NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME3(CLS, "GOPHER", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME3(CLS, "GOPHER", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION | NON_ESSENTIAL },
 
   // Windows XP Start Menu
   { MAKE_KEY_NAME2(SMI, "%APPEXE%", DI),  
@@ -548,8 +543,6 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\https\\DefaultIcon");
   (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\ftp\\shell\\open");
   (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\ftp\\DefaultIcon");
-  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\gopher\\shell\\open");
-  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\gopher\\DefaultIcon");
   (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\FirefoxURL");
   (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\FirefoxHTML");
 
@@ -832,17 +825,11 @@ WriteBitmap(nsIFile* aFile, gfxIImageFrame* aImage)
     if (written == sizeof(BITMAPFILEHEADER)) {
       stream->Write((const char*)&bmi, sizeof(BITMAPINFOHEADER), &written);
       if (written == sizeof(BITMAPINFOHEADER)) {
-#ifndef MOZ_CAIRO_GFX
-        stream->Write((const char*)bits, length, &written);
-        if (written == length)
-          rv = NS_OK;
-#else
         // write out the image data backwards because the desktop won't
         // show bitmaps with negative heights for top-to-bottom
         PRUint32 i = length;
         do {
           i -= bpr;
-
           stream->Write(((const char*)bits) + i, bpr, &written);
           if (written == bpr) {
             rv = NS_OK;
@@ -851,7 +838,6 @@ WriteBitmap(nsIFile* aFile, gfxIImageFrame* aImage)
             break;
           }
         } while (i != 0);
-#endif
       }
     }
 

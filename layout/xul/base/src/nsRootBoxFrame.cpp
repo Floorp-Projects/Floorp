@@ -85,8 +85,8 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  virtual nsIFrame* GetPopupSetFrame();
-  virtual void SetPopupSetFrame(nsIFrame* aPopupSet);
+  virtual nsPopupSetFrame* GetPopupSetFrame();
+  virtual void SetPopupSetFrame(nsPopupSetFrame* aPopupSet);
   virtual nsIContent* GetDefaultTooltip();
   virtual void SetDefaultTooltip(nsIContent* aTooltip);
   virtual nsresult AddTooltipSupport(nsIContent* aNode);
@@ -131,7 +131,7 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-  nsIFrame* mPopupSetFrame;
+  nsPopupSetFrame* mPopupSetFrame;
 
 protected:
   nsIContent* mDefaultTooltip;
@@ -275,14 +275,14 @@ nsRootBoxFrame::GetType() const
   return nsGkAtoms::rootFrame;
 }
 
-nsIFrame*
+nsPopupSetFrame*
 nsRootBoxFrame::GetPopupSetFrame()
 {
   return mPopupSetFrame;
 }
 
 void
-nsRootBoxFrame::SetPopupSetFrame(nsIFrame* aPopupSet)
+nsRootBoxFrame::SetPopupSetFrame(nsPopupSetFrame* aPopupSet)
 {
   // Under normal conditions this should only be called once.  However,
   // if something triggers ReconstructDocElementHierarchy, we will

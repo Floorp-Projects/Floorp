@@ -12,3 +12,7 @@
 == text-indent-multiple-line.html text-indent-multiple-line-ref-inline-margin.html
 == text-indent-multiple-line.html text-indent-multiple-line-ref-float.html
 != text-indent-multiple-line.html text-indent-multiple-line-notref-block-margin.html
+== text-indent-intrinsic-pref.html text-indent-intrinsic-pref-ref.html
+== text-indent-intrinsic-min.html text-indent-intrinsic-min-ref.html
+== text-indent-negative-intrinsic-pref.html text-indent-negative-intrinsic-pref-ref.html
+== text-indent-negative-intrinsic-min.html text-indent-negative-intrinsic-min-ref.html

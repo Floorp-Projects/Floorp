@@ -220,6 +220,14 @@ public:
         if (mRefCnt == 0)
             delete this;
     }
+    /**
+     * The prototype document must call ReleaseSubtree when it is going
+     * away.  This makes the parents through the tree stop owning their
+     * children, whether or not the parent's reference count is zero.
+     * Individual elements may still own individual prototypes, but
+     * those prototypes no longer remember their children to allow them
+     * to be constructed.
+     */
     virtual void ReleaseSubtree() { Release(); }
 
     NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsXULPrototypeNode)
@@ -249,7 +257,8 @@ public:
         for (i = 0; i < mNumAttributes; i++)
             mAttributes[i].Finalize(mScriptTypeID);
         delete[] mAttributes;
-        delete[] mChildren;
+        NS_ASSERTION(!mChildren && mNumChildren == 0,
+                     "ReleaseSubtree not called");
     }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -264,6 +273,9 @@ public:
           if (mChildren[i])
             mChildren[i]->ReleaseSubtree();
         }
+        mNumChildren = 0;
+        delete[] mChildren;
+        mChildren = nsnull;
       }
 
       nsXULPrototypeNode::ReleaseSubtree();
@@ -451,7 +463,7 @@ public:
     static nsXULElement* FromContent(nsIContent *aContent)
     {
         if (aContent->IsNodeOfType(eXUL))
-            return NS_STATIC_CAST(nsXULElement*, aContent);
+            return static_cast<nsXULElement*>(aContent);
         return nsnull;
     }
 
@@ -558,6 +570,7 @@ public:
     NS_DECL_NSIDOMXULELEMENT
 
     virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+    virtual PRInt32 IntrinsicState() const;
 
     nsresult GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
 

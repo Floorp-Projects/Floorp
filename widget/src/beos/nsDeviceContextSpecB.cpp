@@ -96,9 +96,6 @@ nsDeviceContextSpecBeOS :: ~nsDeviceContextSpecBeOS()
 } 
  
 static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID); 
-#ifdef USE_POSTSCRIPT
-static NS_DEFINE_IID(kIDeviceContextSpecPSIID, NS_IDEVICE_CONTEXT_SPEC_PS_IID); 
-#endif /* USE_POSTSCRIPT */
  
 #if 0 
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecBeOS, nsIDeviceContextSpec)
@@ -106,8 +103,7 @@ NS_IMPL_ISUPPORTS1(nsDeviceContextSpecBeOS, nsIDeviceContextSpec)
  
 NS_IMETHODIMP nsDeviceContextSpecBeOS :: QueryInterface(REFNSIID aIID, void** aInstancePtr) 
 { 
-  if (nsnull == aInstancePtr) 
-    return NS_ERROR_NULL_POINTER; 
+  NS_PRECONDITION(aInstancePtr, "null out param");
 
   if (aIID.Equals(kIDeviceContextSpecIID)) 
   { 
@@ -117,16 +113,6 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS :: QueryInterface(REFNSIID aIID, void** aI
     return NS_OK; 
   } 
  
-#ifdef USE_POSTSCRIPT
-  if (aIID.Equals(kIDeviceContextSpecPSIID)) 
-  { 
-    nsIDeviceContextSpecPS* tmp = this; 
-    *aInstancePtr = (void*) tmp; 
-    NS_ADDREF_THIS(); 
-    return NS_OK; 
-  }
-#endif /* USE_POSTSCRIPT */
-
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
   if (aIID.Equals(kISupportsIID)) 
@@ -138,7 +124,8 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS :: QueryInterface(REFNSIID aIID, void** aI
     return NS_OK; 
   } 
  
-  return NS_NOINTERFACE; 
+  *aInstancePtr = nsnull;
+  return NS_ERROR_NO_INTERFACE;
 } 
  
 NS_IMPL_ADDREF(nsDeviceContextSpecBeOS)
@@ -168,24 +155,6 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS::Init(nsIWidget *aWidget,
     }
   }
 
-  char      *path;
-  PRBool     reversed       = PR_FALSE;
-  PRBool     color          = PR_FALSE;
-  PRBool     tofile         = PR_FALSE;
-  PRInt16    printRange     = nsIPrintSettings::kRangeAllPages;
-  PRInt32    paper_size     = NS_LETTER_SIZE;
-  PRInt32    orientation    = NS_PORTRAIT;
-  PRInt32    fromPage       = 1;
-  PRInt32    toPage         = 1;
-  PRUnichar *command        = nsnull;
-  PRInt32    copies         = 1;
-  PRUnichar *printer        = nsnull;
-  PRUnichar *printfile      = nsnull;
-  double     dleft          = 0.5;
-  double     dright         = 0.5;
-  double     dtop           = 0.5;
-  double     dbottom        = 0.5; 
-
   rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
   if (NS_FAILED(rv)) {
     return rv;
@@ -194,205 +163,9 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS::Init(nsIWidget *aWidget,
   
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 
-  if (aPS != nsnull) {
-    aPS->GetPrinterName(&printer);
-    aPS->GetPrintReversed(&reversed);
-    aPS->GetPrintInColor(&color);
-    aPS->GetPaperSize(&paper_size);
-    aPS->GetOrientation(&orientation);
-    aPS->GetPrintCommand(&command);
-    aPS->GetPrintRange(&printRange);
-    aPS->GetToFileName(&printfile);
-    aPS->GetPrintToFile(&tofile);
-    aPS->GetStartPageRange(&fromPage);
-    aPS->GetEndPageRange(&toPage);
-    aPS->GetNumCopies(&copies);
-    aPS->GetMarginTop(&dtop);
-    aPS->GetMarginLeft(&dleft);
-    aPS->GetMarginBottom(&dbottom);
-    aPS->GetMarginRight(&dright);
-
-    if (command != nsnull && printfile != nsnull) {
-      // ToDo: Use LocalEncoding instead of UTF-8 (see bug 73446)
-      strcpy(mPrData.command, NS_ConvertUTF16toUTF8(command).get());  
-      strcpy(mPrData.path,    NS_ConvertUTF16toUTF8(printfile).get());
-    }
-    if (printer != nsnull) 
-      strcpy(mPrData.printer, NS_ConvertUTF16toUTF8(printer).get());        
-#ifdef DEBUG_rods
-    printf("margins:       %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright);
-    printf("printRange     %d\n", printRange);
-    printf("fromPage       %d\n", fromPage);
-    printf("toPage         %d\n", toPage);
-#endif /* DEBUG_rods */
-  } else {
-#ifdef VMS
-    // Note to whoever puts the "lpr" into the prefs file. Please contact me
-    // as I need to make the default be "print" instead of "lpr" for OpenVMS.
-    strcpy(mPrData.command, "print");
-#else
-    strcpy(mPrData.command, "lpr ${MOZ_PRINTER_NAME:+'-P'}${MOZ_PRINTER_NAME}");
-#endif /* VMS */
-  }
-
-  mPrData.top       = dtop;
-  mPrData.bottom    = dbottom;
-  mPrData.left      = dleft;
-  mPrData.right     = dright;
-  mPrData.fpf       = !reversed;
-  mPrData.grayscale = !color;
-  mPrData.size      = paper_size;
-  mPrData.orientation = orientation;
-  mPrData.toPrinter = !tofile;
-  mPrData.copies = copies;
-
-  // PWD, HOME, or fail 
-  
-  if (!printfile) {
-    if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) nsnull ) 
-      if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) nsnull )
-        strcpy(mPrData.path, "mozilla.ps");
-        
-    if ( path != (char *) nsnull )
-      sprintf(mPrData.path, "%s/mozilla.ps", path);
-    else
-      return NS_ERROR_FAILURE;
-  }
-  
-#ifdef NOT_IMPLEMENTED_YET
-  if (mGlobalNumPrinters) {
-     for(int i = 0; (i < mGlobalNumPrinters) && !mQueue; i++) {
-        if (!(mGlobalPrinterList->StringAt(i)->EqualsIgnoreCase(mPrData.printer)))
-           mQueue = PrnDlg.SetPrinterQueue(i);
-     }
-  }
-#endif /* NOT_IMPLEMENTED_YET */
-  
-  if (command != nsnull) {
-    nsMemory::Free(command);
-  }
-  if (printfile != nsnull) {
-    nsMemory::Free(printfile);
-  }
-
   return rv;
 }
  
-NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetToPrinter( PRBool &aToPrinter )     
-{ 
-  aToPrinter = mPrData.toPrinter;
-        return NS_OK;
-} 
-
-NS_IMETHODIMP nsDeviceContextSpecBeOS::GetPrinterName ( const char **aPrinter )
-{
-   *aPrinter = &mPrData.printer[0];
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecBeOS::GetCopies ( int &aCopies )
-{
-   aCopies = mPrData.copies;
-   return NS_OK;
-}
- 
-NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetFirstPageFirst ( PRBool &aFpf )      
-{ 
-  aFpf = mPrData.fpf; 
-  return NS_OK; 
-} 
- 
-NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetGrayscale ( PRBool &aGrayscale )      
-{ 
-  aGrayscale = mPrData.grayscale; 
-  return NS_OK; 
-} 
- 
-NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetSize ( int &aSize )      
-{ 
-  aSize = mPrData.size; 
-  return NS_OK; 
-} 
- 
-NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetPageDimensions ( float &aWidth, float &aHeight )      
-{ 
-    if ( mPrData.size == NS_LETTER_SIZE ) { 
-        aWidth = 8.5; 
-        aHeight = 11.0; 
-    } else if ( mPrData.size == NS_LEGAL_SIZE ) { 
-        aWidth = 8.5; 
-        aHeight = 14.0; 
-    } else if ( mPrData.size == NS_EXECUTIVE_SIZE ) { 
-        aWidth = 7.5; 
-        aHeight = 10.0; 
-    } else if ( mPrData.size == NS_A4_SIZE ) { 
-        // 210mm X 297mm == 8.27in X 11.69in 
-        aWidth = 8.27; 
-        aHeight = 11.69; 
-    } else if ( mPrData.size == NS_A3_SIZE ) {
-        // 297mm X 420mm == 11.69in X 16.53in
-        aWidth = 11.69;
-        aHeight = 16.53;
-    } 
-
-    if (mPrData.orientation == NS_LANDSCAPE) {
-      float temp;
-      temp = aWidth;
-      aWidth = aHeight;
-      aHeight = temp;
-    }
-
-    return NS_OK; 
-} 
- 
-NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetLandscape ( PRBool &landscape )      
-{ 
-  landscape = (mPrData.orientation == NS_LANDSCAPE);
-  return NS_OK; 
-} 
- 
-NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetTopMargin ( float &value )      
-{ 
-  value = mPrData.top; 
-  return NS_OK; 
-} 
- 
-NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetBottomMargin ( float &value )      
-{ 
-  value = mPrData.bottom; 
-  return NS_OK; 
-} 
- 
-NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetRightMargin ( float &value )      
-{ 
-  value = mPrData.right; 
-  return NS_OK; 
-} 
- 
-NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetLeftMargin ( float &value )      
-{ 
-  value = mPrData.left; 
-  return NS_OK; 
-} 
- 
-NS_IMETHODIMP nsDeviceContextSpecBeOS::GetCommand ( const char **aCommand )      
-{ 
-  *aCommand = &mPrData.command[0]; 
-  return NS_OK; 
-} 
- 
-NS_IMETHODIMP nsDeviceContextSpecBeOS::GetPath ( const char **aPath )      
-{ 
-  *aPath = &mPrData.path[0]; 
-  return NS_OK; 
-} 
- 
-NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetUserCancelled( PRBool &aCancel )     
-{ 
-  aCancel = mPrData.cancel; 
-  return NS_OK;
-}
-
 /** -------------------------------------------------------
  * Closes the printmanager if it is open.
  *  @update   dc 2/15/98
@@ -401,11 +174,6 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS :: ClosePrintManager()
 {
   return NS_OK;
 }  
-
-NS_IMETHODIMP nsDeviceContextSpecBeOS::GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight)
-{
-  return mPrintSettings->GetPageSizeInTwips(aWidth, aHeight);
-}
 
 //  Printer Enumerator
 nsPrinterEnumeratorBeOS::nsPrinterEnumeratorBeOS()

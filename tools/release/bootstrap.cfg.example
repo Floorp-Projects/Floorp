@@ -51,5 +51,8 @@ dumpLogs        = 1
 # username and server to push builds
 sshUser         = buildslave
 sshServer       = localhost
+# username and server to push update snippets to
+ausUser         = buildslave
+ausServer       = localhost
 # Tinderbox server tree that clients should report to
 buildTree       = MozillaTest

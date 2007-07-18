@@ -40,7 +40,6 @@
 #include "nsICookieManager2.h"
 #include "nsIFile.h"
 #include "nsILineInputStream.h"
-#include "nsInt64.h"
 #include "nsIOutputStream.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefLocalizedString.h"
@@ -341,7 +340,7 @@ nsNetscapeProfileMigratorBase::ImportNetscapeCookies(nsIFile* aCookiesFile)
   PRInt32 numInts;
   PRInt64 expires;
   PRBool isDomain;
-  nsInt64 currentTime = nsInt64(PR_Now()) / nsInt64(1000000);
+  PRInt64 currentTime = PR_Now() / PR_USEC_PER_SEC;
 
   nsCOMPtr<nsICookieManager2> cookieManager(do_GetService(NS_COOKIEMANAGER_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
@@ -380,7 +379,7 @@ nsNetscapeProfileMigratorBase::ImportNetscapeCookies(nsIFile* aCookiesFile)
     char *iter = buffer.BeginWriting();
     *(iter += nameIndex - 1) = char(0);
     numInts = PR_sscanf(buffer.get() + expiresIndex, "%lld", &expires);
-    if (numInts != 1 || nsInt64(expires) < currentTime)
+    if (numInts != 1 || expires < currentTime)
       continue;
 
     isDomain = Substring(buffer, isDomainIndex, pathIndex - isDomainIndex - 1).Equals(kTrue);
@@ -398,7 +397,8 @@ nsNetscapeProfileMigratorBase::ImportNetscapeCookies(nsIFile* aCookiesFile)
                             Substring(buffer, nameIndex, cookieIndex - nameIndex - 1),
                             Substring(buffer, cookieIndex, buffer.Length() - cookieIndex),
                             Substring(buffer, secureIndex, expiresIndex - secureIndex - 1).Equals(kTrue),
-                            PR_FALSE,
+                            PR_FALSE, // isHttpOnly
+                            PR_FALSE, // isSession
                             expires);
   }
 

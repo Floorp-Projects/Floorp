@@ -61,8 +61,8 @@ CAccessibleTable::QueryInterface(REFIID iid, void** ppv)
   *ppv = NULL;
 
   if (IID_IAccessibleTable == iid) {
-    *ppv = NS_STATIC_CAST(IAccessibleTable*, this);
-    (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
+    *ppv = static_cast<IAccessibleTable*>(this);
+    (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
     return S_OK;
   }
 
@@ -95,7 +95,7 @@ CAccessibleTable::get_accessibleAt(long aRow, long aColumn,
   if (NS_FAILED(rv))
     return E_FAIL;
 
-  *aAccessible = NS_STATIC_CAST(IUnknown*, instancePtr);
+  *aAccessible = static_cast<IUnknown*>(instancePtr);
   return S_OK;
 }
 
@@ -122,7 +122,7 @@ CAccessibleTable::get_caption(IUnknown **aAccessible)
   if (NS_FAILED(rv))
     return E_FAIL;
 
-  *aAccessible = NS_STATIC_CAST(IUnknown*, instancePtr);
+  *aAccessible = static_cast<IUnknown*>(instancePtr);
   return S_OK;
 }
 
@@ -208,7 +208,7 @@ CAccessibleTable::get_columnHeader(IAccessibleTable **aAccessibleTable,
   if (NS_FAILED(rv))
     return E_FAIL;
 
-  *aAccessibleTable = NS_STATIC_CAST(IAccessibleTable*, instancePtr);
+  *aAccessibleTable = static_cast<IAccessibleTable*>(instancePtr);
   return S_OK;
 }
 
@@ -267,21 +267,51 @@ STDMETHODIMP
 CAccessibleTable::get_nSelectedChildren(long *aChildCount)
 {
   *aChildCount = 0;
-  return E_NOTIMPL;
+
+  nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryInterface(this));
+  NS_ASSERTION(tableAcc, CANT_QUERY_ASSERTION_MSG);
+  if (!tableAcc)
+    return E_FAIL;
+
+  PRUint32 count = 0;
+  nsresult rv = tableAcc->GetSelectedCellsCount(&count);
+  *aChildCount = count;
+
+  return NS_FAILED(rv) ? E_FAIL : S_OK;
 }
 
 STDMETHODIMP
 CAccessibleTable::get_nSelectedColumns(long *aColumnCount)
 {
   *aColumnCount = 0;
-  return E_NOTIMPL;
+
+  nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryInterface(this));
+  NS_ASSERTION(tableAcc, CANT_QUERY_ASSERTION_MSG);
+  if (!tableAcc)
+    return E_FAIL;
+
+  PRUint32 count = 0;
+  nsresult rv = tableAcc->GetSelectedColumnsCount(&count);
+  *aColumnCount = count;
+
+  return NS_FAILED(rv) ? E_FAIL : S_OK;
 }
 
 STDMETHODIMP
 CAccessibleTable::get_nSelectedRows(long *aRowCount)
 {
   *aRowCount = 0;
-  return E_NOTIMPL;
+
+  nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryInterface(this));
+  NS_ASSERTION(tableAcc, CANT_QUERY_ASSERTION_MSG);
+  if (!tableAcc)
+    return E_FAIL;
+
+  PRUint32 count = 0;
+  nsresult rv = tableAcc->GetSelectedRowsCount(&count);
+  *aRowCount = count;
+
+  return NS_FAILED(rv) ? E_FAIL : S_OK;
 }
 
 STDMETHODIMP
@@ -348,7 +378,7 @@ CAccessibleTable::get_rowHeader(IAccessibleTable **aAccessibleTable,
   if (NS_FAILED(rv))
     return E_FAIL;
 
-  *aAccessibleTable = NS_STATIC_CAST(IAccessibleTable*, instancePtr);
+  *aAccessibleTable = static_cast<IAccessibleTable*>(instancePtr);
   return S_OK;
 }
 
@@ -371,28 +401,22 @@ CAccessibleTable::get_rowIndex(long aChildIndex, long *aRowIndex)
 
 STDMETHODIMP
 CAccessibleTable::get_selectedChildren(long aMaxChildren, long **aChildren,
-                                       long *nChildren)
+                                       long *aNChildren)
 {
-  *aChildren = NULL;
-  *nChildren = 0;
-  return E_NOTIMPL;
+  return GetSelectedItems(aMaxChildren, aChildren, aNChildren, ITEMSTYPE_CELLS);
 }
 
 STDMETHODIMP
 CAccessibleTable::get_selectedColumns(long aMaxColumns, long **aColumns,
                                       long *aNColumns)
 {
-  *aColumns = NULL;
-  *aNColumns = 0;
-  return E_NOTIMPL;
+  return GetSelectedItems(aMaxColumns, aColumns, aNColumns, ITEMSTYPE_COLUMNS);
 }
 
 STDMETHODIMP
 CAccessibleTable::get_selectedRows(long aMaxRows, long **aRows, long *aNRows)
 {
-  *aRows = NULL;
-  *aNRows = 0;
-  return E_NOTIMPL;
+  return GetSelectedItems(aMaxRows, aRows, aNRows, ITEMSTYPE_ROWS);
 }
 
 STDMETHODIMP
@@ -506,8 +530,45 @@ CAccessibleTable::get_rowColumnExtentsAtIndex(long aIndex, long *aRow,
   *aColumn = 0;
   *aRowExtents = 0;
   *aColumnExtents = 0;
+  *aIsSelected = false;
 
-  return E_NOTIMPL;
+  nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryInterface(this));
+  NS_ASSERTION(tableAcc, CANT_QUERY_ASSERTION_MSG);
+  if (!tableAcc)
+    return E_FAIL;
+
+  PRInt32 row = -1;
+  nsresult rv = tableAcc->GetRowAtIndex(aIndex, &row);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  PRInt32 column = -1;
+  rv = tableAcc->GetColumnAtIndex(aIndex, &column);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  PRInt32 rowExtents = 0;
+  rv = tableAcc->GetRowExtentAt(row, column, &rowExtents);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  PRInt32 columnExtents = 0;
+  rv = tableAcc->GetColumnExtentAt(row, column, &columnExtents);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  PRBool isSelected = PR_FALSE;
+  rv = tableAcc->IsCellSelected(row, column, &isSelected);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  *aRow = row;
+  *aColumn = column;
+  *aRowExtents = rowExtents;
+  *aColumnExtents = columnExtents;
+  *aIsSelected = isSelected;
+
+  return S_OK;
 }
 
 STDMETHODIMP
@@ -515,5 +576,52 @@ CAccessibleTable::get_modelChange(IA2TableModelChange *aModelChange)
 {
   aModelChange = NULL;
   return E_NOTIMPL;
+}
+
+// CAccessibleTable
+
+HRESULT
+CAccessibleTable::GetSelectedItems(long aMaxItems, long **aItems,
+                                   long *aItemsCount, eItemsType aType)
+{
+  *aItemsCount = 0;
+
+  nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryInterface(this));
+  NS_ASSERTION(tableAcc, CANT_QUERY_ASSERTION_MSG);
+  if (!tableAcc)
+    return E_FAIL;
+
+  PRUint32 size = 0;
+  PRInt32 *items = NULL;
+
+  nsresult rv = NS_OK;
+  switch (aType) {
+    case ITEMSTYPE_CELLS:
+      rv = tableAcc->GetSelectedCells(&size, &items);
+      break;
+    case ITEMSTYPE_COLUMNS:
+      rv = tableAcc->GetSelectedColumns(&size, &items);
+      break;
+    case ITEMSTYPE_ROWS:
+      rv = tableAcc->GetSelectedRows(&size, &items);
+      break;
+    default:
+      return E_FAIL;
+  }
+
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  if (size == 0 || !items)
+    return S_OK;
+
+  PRUint32 maxSize = size < (PRUint32)aMaxItems ? size : aMaxItems;
+  *aItemsCount = maxSize;
+
+  for (PRUint32 index = 0; index < maxSize; ++index)
+    (*aItems)[index] = items[index];
+
+  nsMemory::Free(items);
+  return S_OK;
 }
 

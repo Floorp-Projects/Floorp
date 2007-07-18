@@ -40,6 +40,10 @@
 #include "nsIAccessibilityService.h"
 #include "nsIAccessNode.h"
 #include "nsIServiceManager.h"
+#ifdef MOZ_XUL
+#include "nsIDOMXULMultSelectCntrlEl.h"
+#include "nsXULTreeAccessible.h"
+#endif
 
 NS_IMPL_ISUPPORTS1(nsAccEvent, nsIAccessibleEvent)
 
@@ -125,6 +129,37 @@ nsAccEvent::GetAccessibleByNode()
 
   nsIAccessible *accessible = nsnull;
   accService->GetAccessibleFor(mDOMNode, &accessible);
+#ifdef MOZ_XUL
+  // hack for xul tree table. We need a better way for firing delayed event
+  // against xul tree table. see bug 386821.
+  // There will be problem if some day we want to fire delayed event against
+  // the xul tree itself or an unselected treeitem.
+  nsAutoString localName;
+  mDOMNode->GetLocalName(localName);
+  if (localName.EqualsLiteral("tree")) {
+    nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelect =
+      do_QueryInterface(mDOMNode);
+    if (multiSelect) {
+      PRInt32 treeIndex = -1;
+      multiSelect->GetCurrentIndex(&treeIndex);
+      if (treeIndex >= 0) {
+        nsCOMPtr<nsIAccessibleTreeCache> treeCache(do_QueryInterface(accessible));
+        NS_IF_RELEASE(accessible);
+        nsCOMPtr<nsIAccessible> treeItemAccessible;
+        if (!treeCache ||
+            NS_FAILED(treeCache->GetCachedTreeitemAccessible(
+                      treeIndex,
+                      nsnull,
+                      getter_AddRefs(treeItemAccessible))) ||
+                      !treeItemAccessible) {
+          return nsnull;
+        }
+        NS_IF_ADDREF(accessible = treeItemAccessible);
+      }
+    }
+  }
+#endif
+
   return accessible;
 }
 
@@ -222,6 +257,33 @@ NS_IMETHODIMP
 nsAccTextChangeEvent::IsInserted(PRBool *aIsInserted)
 {
   *aIsInserted = mIsInserted;
+  return NS_OK;
+}
+
+// nsAccCaretMoveEvent
+NS_IMPL_ISUPPORTS_INHERITED1(nsAccCaretMoveEvent, nsAccEvent,
+                             nsIAccessibleCaretMoveEvent)
+
+nsAccCaretMoveEvent::
+  nsAccCaretMoveEvent(nsIAccessible *aAccessible, PRInt32 aCaretOffset) :
+  nsAccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aAccessible, nsnull),
+  mCaretOffset(aCaretOffset)
+{
+}
+
+nsAccCaretMoveEvent::
+  nsAccCaretMoveEvent(nsIDOMNode *aNode) :
+  nsAccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aNode, nsnull),
+  mCaretOffset(-1)
+{
+}
+
+NS_IMETHODIMP
+nsAccCaretMoveEvent::GetCaretOffset(PRInt32* aCaretOffset)
+{
+  NS_ENSURE_ARG_POINTER(aCaretOffset);
+
+  *aCaretOffset = mCaretOffset;
   return NS_OK;
 }
 

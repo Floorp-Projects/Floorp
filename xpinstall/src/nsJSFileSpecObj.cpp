@@ -103,8 +103,8 @@ fso_ToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 
   JSString *jsstring =
-    JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*,
-                                                stringReturned.get()),
+    JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar*>
+                                            (stringReturned.get()),
                         stringReturned.Length());
 
   // set the return value

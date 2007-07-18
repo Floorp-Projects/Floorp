@@ -173,7 +173,7 @@ struct AddColumnClosure
 PR_STATIC_CALLBACK(PLDHashOperator)
 AddColumn(const nsCSubstring &id, nsCString name, void *userData)
 {
-  AddColumnClosure *closure = NS_STATIC_CAST(AddColumnClosure*, userData);
+  AddColumnClosure *closure = static_cast<AddColumnClosure*>(userData);
   nsTArray<nsMorkReader::MorkColumn> *array = closure->array;
 
   if (!array->AppendElement(nsMorkReader::MorkColumn(id, name)) ||
@@ -261,7 +261,7 @@ nsMorkReader::EnumerateRows(RowEnumerator aCallback, void *aUserData) const
 {
   // Constify the table values
   typedef const nsDataHashtable<IDKey, const nsTArray<nsCString>* > ConstTable;
-  NS_REINTERPRET_CAST(ConstTable*, &mTable)->EnumerateRead(aCallback,
+  reinterpret_cast<ConstTable*>(&mTable)->EnumerateRead(aCallback,
                                                            aUserData);
 }
 

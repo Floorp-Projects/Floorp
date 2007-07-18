@@ -41,7 +41,7 @@
 interface nsIAccessible;
 interface nsIAccessibleEvent;
 
-[uuid(e4865da3-f292-4f1a-9c56-dd307f1bdc17)]
+[uuid(817ae493-b238-4fbc-a623-d20ed81eebcd)]
 interface nsPIAccessible : nsISupports
 {
   /**

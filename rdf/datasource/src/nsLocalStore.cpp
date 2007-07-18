@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set cindent tabstop=4 expandtab shiftwidth=4: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -280,19 +281,19 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
     if (aIID.Equals(kISupportsIID) ||
         aIID.Equals(NS_GET_IID(nsILocalStore))) {
-        *aResult = NS_STATIC_CAST(nsILocalStore*, this);
+        *aResult = static_cast<nsILocalStore*>(this);
     }
     else if (aIID.Equals(NS_GET_IID(nsIRDFDataSource))) {
-        *aResult = NS_STATIC_CAST(nsIRDFDataSource *, this);
+        *aResult = static_cast<nsIRDFDataSource *>(this);
     }
     else if (aIID.Equals(NS_GET_IID(nsIRDFRemoteDataSource))) {
-        *aResult = NS_STATIC_CAST(nsIRDFRemoteDataSource *, this);
+        *aResult = static_cast<nsIRDFRemoteDataSource *>(this);
     }
     else if (aIID.Equals(NS_GET_IID(nsIObserver))) {
-        *aResult = NS_STATIC_CAST(nsIObserver *, this);
+        *aResult = static_cast<nsIObserver *>(this);
     }
     else if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference))) {
-        *aResult = NS_STATIC_CAST(nsISupportsWeakReference *, this);
+        *aResult = static_cast<nsISupportsWeakReference *>(this);
     }
     else {
         *aResult = nsnull;
@@ -332,7 +333,11 @@ NS_IMETHODIMP
 LocalStoreImpl::Flush()
 {
 	nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner);
-    NS_ASSERTION(remote != nsnull, "not an nsIRDFRemoteDataSource");
+    // FIXME Bug 340242: Temporarily make this a warning rather than an
+    // assertion until we sort out the ordering of how we write
+    // everything to the localstore, flush it, and disconnect it when
+    // we're getting profile-change notifications.
+    NS_WARN_IF_FALSE(remote != nsnull, "not an nsIRDFRemoteDataSource");
 	if (! remote)
         return NS_ERROR_UNEXPECTED;
 

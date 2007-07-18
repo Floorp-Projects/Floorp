@@ -551,7 +551,7 @@ nsNavHistory::AutoCompleteQueryOnePrefix(const nsString& aSearchString,
     return NS_OK;
   nsCAutoString endQuery = beginQuery;
   unsigned char maxChar[6] = { 0xfd, 0xbf, 0xbf, 0xbf, 0xbf, 0xbf };
-  endQuery.Append(NS_REINTERPRET_CAST(const char*, maxChar), 6);
+  endQuery.Append(reinterpret_cast<const char*>(maxChar), 6);
 
   nsTArray<nsCString> ranges;
   if (aExcludePrefixes.Length() > 0) {
@@ -561,7 +561,7 @@ nsNavHistory::AutoCompleteQueryOnePrefix(const nsString& aSearchString,
       nsCAutoString thisPrefix = NS_ConvertUTF16toUTF8(
           mAutoCompletePrefixes[aExcludePrefixes[i]].prefix);
       ranges.AppendElement(thisPrefix);
-      thisPrefix.Append(NS_REINTERPRET_CAST(const char*, maxChar), 6);
+      thisPrefix.Append(reinterpret_cast<const char*>(maxChar), 6);
       ranges.AppendElement(thisPrefix);
     }
     ranges.AppendElement(endQuery);

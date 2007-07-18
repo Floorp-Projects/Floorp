@@ -339,12 +339,12 @@ txExprParser::createExpr(txExprLexer& lexer, txIParseContext* aContext,
         short tokPrecedence = precedence(tok);
         if (tokPrecedence != 0) {
             while (!exprs.isEmpty() && tokPrecedence
-                   <= precedence(NS_STATIC_CAST(Token*, ops.peek()))) {
+                   <= precedence(static_cast<Token*>(ops.peek()))) {
                 // can't use expr as argument due to order of evaluation
-                nsAutoPtr<Expr> left(NS_STATIC_CAST(Expr*, exprs.pop()));
+                nsAutoPtr<Expr> left(static_cast<Expr*>(exprs.pop()));
                 nsAutoPtr<Expr> right(expr);
                 rv = createBinaryExpr(left, right,
-                                      NS_STATIC_CAST(Token*, ops.pop()),
+                                      static_cast<Token*>(ops.pop()),
                                       getter_Transfers(expr));
                 if (NS_FAILED(rv)) {
                     done = PR_TRUE;
@@ -361,14 +361,14 @@ txExprParser::createExpr(txExprLexer& lexer, txIParseContext* aContext,
     }
 
     while (NS_SUCCEEDED(rv) && !exprs.isEmpty()) {
-        nsAutoPtr<Expr> left(NS_STATIC_CAST(Expr*, exprs.pop()));
+        nsAutoPtr<Expr> left(static_cast<Expr*>(exprs.pop()));
         nsAutoPtr<Expr> right(expr);
-        rv = createBinaryExpr(left, right, NS_STATIC_CAST(Token*, ops.pop()),
+        rv = createBinaryExpr(left, right, static_cast<Token*>(ops.pop()),
                               getter_Transfers(expr));
     }
     // clean up on error
     while (!exprs.isEmpty()) {
-        delete NS_STATIC_CAST(Expr*, exprs.pop());
+        delete static_cast<Expr*>(exprs.pop());
     }
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -716,7 +716,7 @@ txExprParser::createPathExpr(txExprLexer& lexer, txIParseContext* aContext,
         NS_ENSURE_TRUE(expr, NS_ERROR_OUT_OF_MEMORY);
 
 #ifdef TX_TO_STRING
-        NS_STATIC_CAST(RootExpr*, expr.get())->setSerialize(PR_FALSE);
+        static_cast<RootExpr*>(expr.get())->setSerialize(PR_FALSE);
 #endif
     }
     

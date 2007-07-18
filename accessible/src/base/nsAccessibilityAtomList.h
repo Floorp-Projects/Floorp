@@ -77,6 +77,7 @@ ACCESSIBILITY_ATOM(deckFrame, "DeckFrame")
 ACCESSIBILITY_ATOM(inlineBlockFrame, "InlineBlockFrame")
 ACCESSIBILITY_ATOM(inlineFrame, "InlineFrame")
 ACCESSIBILITY_ATOM(objectFrame, "ObjectFrame")
+ACCESSIBILITY_ATOM(placeholderFrame, "PlaceholderFrame")
 ACCESSIBILITY_ATOM(scrollFrame, "ScrollFrame")
 ACCESSIBILITY_ATOM(textFrame, "TextFrame")
 ACCESSIBILITY_ATOM(tableCellFrame, "TableCellFrame")
@@ -90,7 +91,6 @@ ACCESSIBILITY_ATOM(area, "area")
 ACCESSIBILITY_ATOM(blockquote, "blockquote")
 ACCESSIBILITY_ATOM(br, "br")
 ACCESSIBILITY_ATOM(body, "body")
-ACCESSIBILITY_ATOM(caption, "caption")
 ACCESSIBILITY_ATOM(choices, "choices") // XForms
 ACCESSIBILITY_ATOM(description, "description")    // XUL
 ACCESSIBILITY_ATOM(dd, "dd")
@@ -109,6 +109,7 @@ ACCESSIBILITY_ATOM(itemset, "itemset") // XForms
 ACCESSIBILITY_ATOM(img, "img")
 ACCESSIBILITY_ATOM(input, "input")
 ACCESSIBILITY_ATOM(label, "label")
+ACCESSIBILITY_ATOM(legend, "legend")
 ACCESSIBILITY_ATOM(li, "li")
 ACCESSIBILITY_ATOM(link, "link")
 ACCESSIBILITY_ATOM(map, "map")
@@ -132,6 +133,9 @@ ACCESSIBILITY_ATOM(thead, "thead")
 ACCESSIBILITY_ATOM(textarea, "textarea") // XForms
 ACCESSIBILITY_ATOM(textbox, "textbox")   // XUL
 ACCESSIBILITY_ATOM(toolbaritem, "toolbaritem")   // XUL
+ACCESSIBILITY_ATOM(toolbarseparator, "toolbarseparator")   // XUL
+ACCESSIBILITY_ATOM(toolbarspring, "toolbarspring")   // XUL
+ACCESSIBILITY_ATOM(toolbarspacer, "toolbarspacer")   // XUL
 ACCESSIBILITY_ATOM(tooltip, "tooltip")   // XUL
 ACCESSIBILITY_ATOM(tr, "tr")
 ACCESSIBILITY_ATOM(ul, "ul")

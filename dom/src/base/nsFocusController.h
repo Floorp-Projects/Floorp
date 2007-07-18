@@ -94,6 +94,7 @@ public:
   NS_IMETHOD GetControllers(nsIControllers** aResult);
 
   NS_IMETHOD MoveFocus(PRBool aForward, nsIDOMElement* aElt);
+  NS_IMETHOD RewindFocusState();
 
   NS_IMETHOD ResetElementFocus();
 
@@ -117,7 +118,9 @@ public:
 // Members
 protected:
   nsCOMPtr<nsIDOMElement> mCurrentElement; // [OWNER]
+  nsCOMPtr<nsIDOMElement> mPreviousElement; // [OWNER]
   nsCOMPtr<nsPIDOMWindow> mCurrentWindow; // [OWNER]
+  nsCOMPtr<nsPIDOMWindow> mPreviousWindow; // [OWNER]
   nsCOMPtr<nsIDOMNode> mPopupNode; // [OWNER]
   nsCOMPtr<nsIDOMEvent> mPopupEvent;
 

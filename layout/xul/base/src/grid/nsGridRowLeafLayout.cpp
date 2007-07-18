@@ -238,7 +238,7 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, ns
         last = current;
      }
 
-     if (child)
+     if (child && !column->mIsBogus)
        child = child->GetNextBox();
 
    }

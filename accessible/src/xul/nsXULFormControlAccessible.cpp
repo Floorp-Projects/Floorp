@@ -400,51 +400,59 @@ nsAccessibleWrap(aNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsXULGroupboxAccessible::GetRole(PRUint32 *_retval)
+NS_IMETHODIMP nsXULGroupboxAccessible::GetRole(PRUint32 *aRole)
 {
-  *_retval = nsIAccessibleRole::ROLE_GROUPING;
+  *aRole = nsIAccessibleRole::ROLE_GROUPING;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULGroupboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsXULGroupboxAccessible::GetName(nsAString& aName)
 {
-  // Groupbox doesn't support focusable state!
-  nsresult rv = nsAccessible::GetState(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aName.Truncate();
 
-  *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
+  nsCOMPtr<nsIAccessible> label;
+  GetAccessibleRelated(nsIAccessibleRelation::RELATION_LABELLED_BY,
+                       getter_AddRefs(label));
+  if (label) {
+    return label->GetName(aName);
+  }
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULGroupboxAccessible::GetName(nsAString& aName)
+NS_IMETHODIMP
+nsXULGroupboxAccessible::GetAccessibleRelated(PRUint32 aRelationType,
+                                              nsIAccessible **aRelated)
 {
-  aName.Truncate();  // Default name is blank 
+  *aRelated = nsnull;
 
-  if (mRoleMapEntry) {
-    nsAccessible::GetName(aName);
-    if (!aName.IsEmpty()) {
-      return NS_OK;
-    }
+  nsresult rv = nsAccessibleWrap::GetAccessibleRelated(aRelationType, aRelated);
+  if (NS_FAILED(rv) || *aRelated) {
+    // Either the node is shut down, or another relation mechanism has been used
+    return rv;
   }
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  if (element) {
-    nsCOMPtr<nsIDOMNodeList> captions;
-    nsAutoString nameSpaceURI;
-    element->GetNamespaceURI(nameSpaceURI);
-    element->GetElementsByTagNameNS(nameSpaceURI, NS_LITERAL_STRING("caption"), 
-                                    getter_AddRefs(captions));
-    if (captions) {
-      nsCOMPtr<nsIDOMNode> captionNode;
-      captions->Item(0, getter_AddRefs(captionNode));
-      if (captionNode) {
-        element = do_QueryInterface(captionNode);
-        NS_ASSERTION(element, "No nsIDOMElement for caption node!");
-        element->GetAttribute(NS_LITERAL_STRING("label"), aName) ;
+
+  if (aRelationType == nsIAccessibleRelation::RELATION_LABELLED_BY) {
+    // The label for xul:groupbox is generated from xul:label that is
+    // inside the anonymous content of the xul:caption.
+    // The xul:label has an accessible object but the xul:caption does not
+    nsCOMPtr<nsIAccessible> testLabelAccessible;
+    while (NextChild(testLabelAccessible)) {
+      if (Role(testLabelAccessible) == nsIAccessibleRole::ROLE_LABEL) {
+        // Ensure that it's our label
+        nsCOMPtr<nsIAccessible> testGroupboxAccessible;
+        testLabelAccessible->GetAccessibleRelated(nsIAccessibleRelation::RELATION_LABEL_FOR,
+                                                  getter_AddRefs(testGroupboxAccessible));
+        if (testGroupboxAccessible == this) {
+          // The <label> points back to this groupbox
+          NS_ADDREF(*aRelated = testLabelAccessible);
+          return NS_OK;
+        }
       }
     }
   }
+
   return NS_OK;
 }
 
@@ -573,8 +581,7 @@ nsXULRadioButtonAccessible::GetAttributesInternal(nsIPersistentProperties *aAttr
   nsresult rv = nsFormControlAccessible::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAccessibilityUtils::
-    SetAccAttrsForXULSelectControlItem(mDOMNode, aAttributes);
+  nsAccUtils::SetAccAttrsForXULSelectControlItem(mDOMNode, aAttributes);
 
   return NS_OK;
 }
@@ -633,6 +640,67 @@ NS_IMETHODIMP nsXULStatusBarAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = nsIAccessibleRole::ROLE_STATUSBAR;
   return NS_OK;
+}
+
+/**
+  * XUL Toolbar Button
+  */
+nsXULToolbarButtonAccessible::nsXULToolbarButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
+nsXULButtonAccessible(aNode, aShell)
+{
+}
+
+nsresult
+nsXULToolbarButtonAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
+{
+  NS_ENSURE_ARG_POINTER(aAttributes);
+  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
+
+  nsresult rv = nsXULButtonAccessible::GetAttributesInternal(aAttributes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIAccessible> parent(GetParent());
+  PRInt32 setSize = 0;
+  PRInt32 posInSet = 0;
+
+  if (parent) {
+    nsCOMPtr<nsIAccessible> sibling;
+    nsCOMPtr<nsIAccessible> tempSibling;
+    parent->GetFirstChild(getter_AddRefs(sibling));
+    while (sibling) {
+      if (IsSeparator(sibling)) { // end of a group of buttons
+        if (posInSet)
+          break; // we've found our group, so we're done
+        setSize = 0; // not our group, so start a new group
+      } else {
+        setSize++; // another button in the group
+        if (sibling == this)
+          posInSet = setSize; // we've found our button
+      }
+      sibling->GetNextSibling(getter_AddRefs(tempSibling));
+      sibling.swap(tempSibling);
+    }
+  }
+  
+  nsAccUtils::SetAccGroupAttrs(aAttributes, 0, posInSet, setSize);
+
+  return NS_OK;
+}
+
+PRBool
+nsXULToolbarButtonAccessible::IsSeparator(nsIAccessible *aAccessible)
+{
+  nsCOMPtr<nsIDOMNode> domNode;
+  nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aAccessible));
+  accessNode->GetDOMNode(getter_AddRefs(domNode));
+  nsCOMPtr<nsIContent> contentDomNode(do_QueryInterface(domNode));
+
+  if (!contentDomNode)
+    return PR_FALSE;
+
+  return (contentDomNode->Tag() == nsAccessibilityAtoms::toolbarseparator) ||
+         (contentDomNode->Tag() == nsAccessibilityAtoms::toolbarspacer) ||
+         (contentDomNode->Tag() == nsAccessibilityAtoms::toolbarspring);
 }
 
 /**

@@ -46,25 +46,14 @@ DARWIN_VERSION=`uname -r`
 ac_add_app_options ppc  --target=powerpc-apple-darwin$DARWIN_VERSION
 ac_add_app_options i386 --target=i386-apple-darwin$DARWIN_VERSION
 
-# ppc builds run on older systems.  The minimum SDK for x86 is 10.4u.
-ac_add_app_options ppc  --with-macos-sdk=/Developer/SDKs/MacOSX10.3.9.sdk
-ac_add_app_options i386 --with-macos-sdk=/Developer/SDKs/MacOSX10.4u.sdk
+ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.4u.sdk
 
 # $MOZ_BUILD_APP is only defined when sourced by configure.  That's not a
 # problem, because the variables it affects only need to be set for
 # configure.
 if test -n "$MOZ_BUILD_APP" ; then
   TARGET_CPU=$MOZ_BUILD_APP
-
-  # When compiling C++, Apple gcc 4.0 produces output that requires a minimum
-  # of 10.3.9.  Use 4.0 for the x86 build, which has a higher minimum than
-  # that.  Use 3.3 for ppc, which must run on older systems.  This will
-  # completely override the compiler selected with the gcc_select command.
-  if test "$TARGET_CPU" = "ppc" ; then
-    GCC_VERSION=3.3
-  else
-    GCC_VERSION=4.0
-  fi
+  GCC_VERSION=4.0
 
   # It's not strictly necessary to specify -arch during native builds, but it
   # makes the merged about:buildconfig easier to follow, and it reduces

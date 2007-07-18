@@ -90,7 +90,7 @@ EmbedWindow::Init(EmbedPrivate *aOwner)
   if (!mWebBrowser)
     return NS_ERROR_FAILURE;
 
-  mWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome *, this));
+  mWebBrowser->SetContainerWindow(static_cast<nsIWebBrowserChrome *>(this));
   
 	// get the doc shel for cut/copy/paste
 	//mRootDocShell = do_GetInterface(mWebBrowser);
@@ -462,7 +462,7 @@ NS_IMETHODIMP
 EmbedWindow::GetSiteWindow(void **aSiteWindow)
 {
   PtWidget_t *ownerAsWidget = (PtWidget_t *)(mOwner->mOwningWidget);
-  *aSiteWindow = NS_STATIC_CAST(void *, ownerAsWidget);
+  *aSiteWindow = static_cast<void *>(ownerAsWidget);
   return NS_OK;
 }
 
@@ -501,7 +501,7 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
   nsCOMPtr<nsIWidget> mainWidget;
   mBaseWindow->GetMainWidget(getter_AddRefs(mainWidget));
   PtWidget_t *window;
-  window = NS_STATIC_CAST(PtWidget_t *, mainWidget->GetNativeData(NS_NATIVE_WINDOW));
+  window = static_cast<PtWidget_t *>(mainWidget->GetNativeData(NS_NATIVE_WINDOW));
 
   PgExtentText(&extent, &pos, font, tipString, 0);
   w = extent.lr.x - extent.ul.x + 1;

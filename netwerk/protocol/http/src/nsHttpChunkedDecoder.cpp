@@ -119,7 +119,7 @@ nsHttpChunkedDecoder::ParseChunkRemaining(char *buf,
 
     *bytesConsumed = 0;
     
-    char *p = NS_STATIC_CAST(char *, memchr(buf, '\n', count));
+    char *p = static_cast<char *>(memchr(buf, '\n', count));
     if (p) {
         *p = 0;
         if ((p > buf) && (*(p-1) == '\r')) // eliminate a preceding CR

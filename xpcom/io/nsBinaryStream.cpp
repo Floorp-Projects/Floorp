@@ -160,7 +160,7 @@ nsBinaryOutputStream::Write64(PRUint64 a64)
     PRUint32 bytesWritten;
 
     a64 = NS_SWAP64(a64);
-    rv = Write(NS_REINTERPRET_CAST(char*, &a64), sizeof a64, &bytesWritten);
+    rv = Write(reinterpret_cast<char*>(&a64), sizeof a64, &bytesWritten);
     if (NS_FAILED(rv)) return rv;
     if (bytesWritten != sizeof a64)
         return NS_ERROR_FAILURE;
@@ -172,7 +172,7 @@ nsBinaryOutputStream::WriteFloat(float aFloat)
 {
     NS_ASSERTION(sizeof(float) == sizeof (PRUint32),
                  "False assumption about sizeof(float)");
-    return Write32(*NS_REINTERPRET_CAST(PRUint32*, &aFloat));
+    return Write32(*reinterpret_cast<PRUint32*>(&aFloat));
 }
 
 NS_IMETHODIMP
@@ -180,7 +180,7 @@ nsBinaryOutputStream::WriteDouble(double aDouble)
 {
     NS_ASSERTION(sizeof(double) == sizeof(PRUint64),
                  "False assumption about sizeof(double)");
-    return Write64(*NS_REINTERPRET_CAST(PRUint64*, &aDouble));
+    return Write64(*reinterpret_cast<PRUint64*>(&aDouble));
 }
 
 NS_IMETHODIMP
@@ -210,21 +210,21 @@ nsBinaryOutputStream::WriteWStringZ(const PRUnichar* aString)
     byteCount = length * sizeof(PRUnichar);
 
 #ifdef IS_BIG_ENDIAN
-    rv = WriteBytes(NS_REINTERPRET_CAST(const char*, aString), byteCount);
+    rv = WriteBytes(reinterpret_cast<const char*>(aString), byteCount);
 #else
     // XXX use WriteSegments here to avoid copy!
     PRUnichar *copy, temp[64];
     if (length <= 64) {
         copy = temp;
     } else {
-        copy = NS_REINTERPRET_CAST(PRUnichar*, nsMemory::Alloc(byteCount));
+        copy = reinterpret_cast<PRUnichar*>(nsMemory::Alloc(byteCount));
         if (!copy)
             return NS_ERROR_OUT_OF_MEMORY;
     }
     NS_ASSERTION((PRUptrdiff(aString) & 0x1) == 0, "aString not properly aligned");
     for (PRUint32 i = 0; i < length; i++)
         copy[i] = NS_SWAP16(aString[i]);
-    rv = WriteBytes(NS_REINTERPRET_CAST(const char*, copy), byteCount);
+    rv = WriteBytes(reinterpret_cast<const char*>(copy), byteCount);
     if (copy != temp)
         nsMemory::Free(copy);
 #endif
@@ -254,7 +254,7 @@ nsBinaryOutputStream::WriteBytes(const char *aString, PRUint32 aLength)
 NS_IMETHODIMP
 nsBinaryOutputStream::WriteByteArray(PRUint8 *aBytes, PRUint32 aLength)
 {
-    return WriteBytes(NS_REINTERPRET_CAST(char *, aBytes), aLength);
+    return WriteBytes(reinterpret_cast<char *>(aBytes), aLength);
 }
 
 NS_IMETHODIMP
@@ -315,7 +315,30 @@ NS_IMETHODIMP
 nsBinaryInputStream::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead)
 {
     NS_ENSURE_STATE(mInputStream);
-    return mInputStream->Read(aBuffer, aCount, aNumRead);
+
+    // mInputStream might give us short reads, so deal with that.
+    PRUint32 totalRead = 0;
+
+    PRUint32 bytesRead;
+    do {
+        nsresult rv = mInputStream->Read(aBuffer, aCount, &bytesRead);
+        if (rv == NS_BASE_STREAM_WOULD_BLOCK && totalRead != 0) {
+            // We already read some data.  Return it.
+            break;
+        }
+        
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+
+        totalRead += bytesRead;
+        aBuffer += bytesRead;
+        aCount -= bytesRead;
+    } while (aCount != 0 && bytesRead != 0);
+
+    *aNumRead = totalRead;
+    
+    return NS_OK;
 }
 
 
@@ -328,6 +351,8 @@ struct ReadSegmentsClosure {
     nsIInputStream* mRealInputStream;
     void* mRealClosure;
     nsWriteSegmentFun mRealWriter;
+    nsresult mRealResult;
+    PRUint32 mBytesRead;  // to properly implement aToOffset
 };
 
 // the thunking function
@@ -340,12 +365,19 @@ ReadSegmentForwardingThunk(nsIInputStream* aStream,
                            PRUint32 *aWriteCount)
 {
     ReadSegmentsClosure* thunkClosure =
-        NS_REINTERPRET_CAST(ReadSegmentsClosure*, aClosure);
+        reinterpret_cast<ReadSegmentsClosure*>(aClosure);
 
-    return thunkClosure->mRealWriter(thunkClosure->mRealInputStream,
-                                     thunkClosure->mRealClosure,
-                                     aFromSegment, aToOffset,
-                                     aCount, aWriteCount);
+    NS_ASSERTION(NS_SUCCEEDED(thunkClosure->mRealResult),
+                 "How did this get to be a failure status?");
+
+    thunkClosure->mRealResult =
+        thunkClosure->mRealWriter(thunkClosure->mRealInputStream,
+                                  thunkClosure->mRealClosure,
+                                  aFromSegment,
+                                  thunkClosure->mBytesRead + aToOffset,
+                                  aCount, aWriteCount);
+
+    return thunkClosure->mRealResult;
 }
 
 
@@ -354,9 +386,32 @@ nsBinaryInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUi
 {
     NS_ENSURE_STATE(mInputStream);
 
-    ReadSegmentsClosure thunkClosure = { this, closure, writer };
+    ReadSegmentsClosure thunkClosure = { this, closure, writer, NS_OK, 0 };
     
-    return mInputStream->ReadSegments(ReadSegmentForwardingThunk, &thunkClosure, count, _retval);
+    // mInputStream might give us short reads, so deal with that.
+    PRUint32 bytesRead;
+    do {
+        nsresult rv = mInputStream->ReadSegments(ReadSegmentForwardingThunk,
+                                                 &thunkClosure,
+                                                 count, &bytesRead);
+
+        if (rv == NS_BASE_STREAM_WOULD_BLOCK && thunkClosure.mBytesRead != 0) {
+            // We already read some data.  Return it.
+            break;
+        }
+        
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+
+        thunkClosure.mBytesRead += bytesRead;
+        count -= bytesRead;
+    } while (count != 0 && bytesRead != 0 &&
+             NS_SUCCEEDED(thunkClosure.mRealResult));
+
+    *_retval = thunkClosure.mBytesRead;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -397,7 +452,7 @@ nsBinaryInputStream::Read8(PRUint8* aByte)
     nsresult rv;
     PRUint32 bytesRead;
 
-    rv = Read(NS_REINTERPRET_CAST(char*, aByte), sizeof(*aByte), &bytesRead);
+    rv = Read(reinterpret_cast<char*>(aByte), sizeof(*aByte), &bytesRead);
     if (NS_FAILED(rv)) return rv;
     if (bytesRead != 1)
         return NS_ERROR_FAILURE;
@@ -410,7 +465,7 @@ nsBinaryInputStream::Read16(PRUint16* a16)
     nsresult rv;
     PRUint32 bytesRead;
 
-    rv = Read(NS_REINTERPRET_CAST(char*, a16), sizeof *a16, &bytesRead);
+    rv = Read(reinterpret_cast<char*>(a16), sizeof *a16, &bytesRead);
     if (NS_FAILED(rv)) return rv;
     if (bytesRead != sizeof *a16)
         return NS_ERROR_FAILURE;
@@ -424,7 +479,7 @@ nsBinaryInputStream::Read32(PRUint32* a32)
     nsresult rv;
     PRUint32 bytesRead;
 
-    rv = Read(NS_REINTERPRET_CAST(char*, a32), sizeof *a32, &bytesRead);
+    rv = Read(reinterpret_cast<char*>(a32), sizeof *a32, &bytesRead);
     if (NS_FAILED(rv)) return rv;
     if (bytesRead != sizeof *a32)
         return NS_ERROR_FAILURE;
@@ -438,7 +493,7 @@ nsBinaryInputStream::Read64(PRUint64* a64)
     nsresult rv;
     PRUint32 bytesRead;
 
-    rv = Read(NS_REINTERPRET_CAST(char*, a64), sizeof *a64, &bytesRead);
+    rv = Read(reinterpret_cast<char*>(a64), sizeof *a64, &bytesRead);
     if (NS_FAILED(rv)) return rv;
     if (bytesRead != sizeof *a64)
         return NS_ERROR_FAILURE;
@@ -451,7 +506,7 @@ nsBinaryInputStream::ReadFloat(float* aFloat)
 {
     NS_ASSERTION(sizeof(float) == sizeof (PRUint32),
                  "False assumption about sizeof(float)");
-    return Read32(NS_REINTERPRET_CAST(PRUint32*, aFloat));
+    return Read32(reinterpret_cast<PRUint32*>(aFloat));
 }
 
 NS_IMETHODIMP
@@ -459,7 +514,7 @@ nsBinaryInputStream::ReadDouble(double* aDouble)
 {
     NS_ASSERTION(sizeof(double) == sizeof(PRUint64),
                  "False assumption about sizeof(double)");
-    return Read64(NS_REINTERPRET_CAST(PRUint64*, aDouble));
+    return Read64(reinterpret_cast<PRUint64*>(aDouble));
 }
 
 static NS_METHOD
@@ -470,7 +525,7 @@ WriteSegmentToCString(nsIInputStream* aStream,
                       PRUint32 aCount,
                       PRUint32 *aWriteCount)
 {
-    nsACString* outString = NS_STATIC_CAST(nsACString*,aClosure);
+    nsACString* outString = static_cast<nsACString*>(aClosure);
 
     outString->Append(aFromSegment, aCount);
 
@@ -534,7 +589,7 @@ WriteSegmentToString(nsIInputStream* aStream,
     NS_PRECONDITION(aCount > 0, "Why are we being told to write 0 bytes?");
     NS_PRECONDITION(sizeof(PRUnichar) == 2, "We can't handle other sizes!");
 
-    WriteStringClosure* closure = NS_STATIC_CAST(WriteStringClosure*,aClosure);
+    WriteStringClosure* closure = static_cast<WriteStringClosure*>(aClosure);
     PRUnichar *cursor = closure->mWriteCursor;
 
     // we're always going to consume the whole buffer no matter what
@@ -564,7 +619,7 @@ WriteSegmentToString(nsIInputStream* aStream,
     
     // this array is possibly unaligned... be careful how we access it!
     const PRUnichar *unicodeSegment =
-        NS_REINTERPRET_CAST(const PRUnichar*, aFromSegment);
+        reinterpret_cast<const PRUnichar*>(aFromSegment);
 
     // calculate number of full characters in segment (aCount could be odd!)
     PRUint32 segmentLength = aCount / sizeof(PRUnichar);
@@ -631,7 +686,7 @@ nsBinaryInputStream::ReadBytes(PRUint32 aLength, char* *_rval)
     PRUint32 bytesRead;
     char* s;
 
-    s = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(aLength));
+    s = reinterpret_cast<char*>(nsMemory::Alloc(aLength));
     if (!s)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -652,7 +707,7 @@ nsBinaryInputStream::ReadBytes(PRUint32 aLength, char* *_rval)
 NS_IMETHODIMP
 nsBinaryInputStream::ReadByteArray(PRUint32 aLength, PRUint8* *_rval)
 {
-    return ReadBytes(aLength, NS_REINTERPRET_CAST(char **, _rval));
+    return ReadBytes(aLength, reinterpret_cast<char **>(_rval));
 }
 
 NS_IMETHODIMP

@@ -475,8 +475,8 @@ nsLoadCollector::OnAttach()
 nsLoadCollector::RemoveDocumentFromMap(const nsIDocument *document,
                                        DocumentEntry &entry, void *userData)
 {
-  nsIDocument *mutable_doc = NS_CONST_CAST(nsIDocument*, document);
-  mutable_doc->RemoveObserver(NS_STATIC_CAST(nsLoadCollector*, userData));
+  nsIDocument *mutable_doc = const_cast<nsIDocument*>(document);
+  mutable_doc->RemoveObserver(static_cast<nsLoadCollector*>(userData));
   return PL_DHASH_REMOVE;
 }
 
@@ -526,7 +526,7 @@ nsLoadCollector::EndUpdate(nsIDocument *document, nsUpdateType updateType)
 void
 nsLoadCollector::NodeWillBeDestroyed(const nsINode *node)
 {
-  const nsIDocument* document = NS_STATIC_CAST(const nsIDocument*, node);
+  const nsIDocument* document = static_cast<const nsIDocument*>(node);
   // Look up the document to get its id.
   DocumentEntry entry;
   if (!mDocumentMap.Get(document, &entry)) {

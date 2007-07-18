@@ -103,15 +103,10 @@ public:
 
     NS_DECL_NSIDOMEVENTLISTENER
 
-    // nsIDocumentObserver
-    virtual void AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
-                                  PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                                  PRInt32 aModType);
-    virtual void ContentRemoved(nsIDocument* aDocument,
-                                nsIContent* aContainer,
-                                nsIContent* aChild,
-                                PRInt32 aIndexInContainer);
-    virtual void NodeWillBeDestroyed(const nsINode* aNode);
+    // nsIMutationObserver
+    NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
+    NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
+    NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
     /**
      * Remove an old result and/or add a new result. This method will retrieve

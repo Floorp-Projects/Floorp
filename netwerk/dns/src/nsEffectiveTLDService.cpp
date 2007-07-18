@@ -231,7 +231,7 @@ nsEffectiveTLDService::GetEffectiveTLDLength(const nsACString &aHostname,
   else {
     defaultTLDLength = nameLength - dotLoc - 1;
   }
-  *effTLDLength = NS_STATIC_CAST(PRUint32, defaultTLDLength);
+  *effTLDLength = static_cast<PRUint32>(defaultTLDLength);
 
   // Create a mutable copy of the hostname and normalize it.  This will fail
   // if the hostname includes invalid characters.
@@ -252,14 +252,14 @@ nsEffectiveTLDService::GetEffectiveTLDLength(const nsACString &aHostname,
       break;
     if (child->exception) {
       // Exception rules use one fewer levels than were matched.
-      *effTLDLength = NS_STATIC_CAST(PRUint32, nameLength - dotLoc - 1);
+      *effTLDLength = static_cast<PRUint32>(nameLength - dotLoc - 1);
       node = child;
       break;
     }
     // For a normal match, save the location of the last stop, in case we find
     // a non-stop match followed by a non-match further along.
     if (child->stopOK)
-      *effTLDLength = NS_STATIC_CAST(PRUint32, nameLength - nextDotLoc - 1);
+      *effTLDLength = static_cast<PRUint32>(nameLength - nextDotLoc - 1);
     node = child;
     dotLoc = nextDotLoc;
   }

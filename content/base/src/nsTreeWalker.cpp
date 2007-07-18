@@ -585,7 +585,7 @@ nsresult nsTreeWalker::TestNode(nsINode* aNode, PRInt16* _filtered)
         nodeType = nsIDOMNode::ELEMENT_NODE;
     }
     else if (aNode->IsNodeOfType(nsINode::eCONTENT)) {
-        nsIAtom* tag = NS_STATIC_CAST(nsIContent*, aNode)->Tag();
+        nsIAtom* tag = static_cast<nsIContent*>(aNode)->Tag();
         if (tag == nsGkAtoms::textTagName) {
             nodeType = nsIDOMNode::TEXT_NODE;
         }

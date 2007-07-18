@@ -75,7 +75,7 @@ getActionCountCB(AtkAction *aAction)
 
     PRUint8 num = 0;
     nsresult rv = accWrap->GetNumActions(&num);
-    return (NS_FAILED(rv)) ? 0 : NS_STATIC_CAST(gint, num);
+    return (NS_FAILED(rv)) ? 0 : static_cast<gint>(num);
 }
 
 const gchar *

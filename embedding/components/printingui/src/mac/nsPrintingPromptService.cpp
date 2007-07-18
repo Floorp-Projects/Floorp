@@ -448,7 +448,7 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent,
         }
     }
 
-    *webProgressListener = NS_STATIC_CAST(nsIWebProgressListener*, this);
+    *webProgressListener = static_cast<nsIWebProgressListener*>(this);
     NS_ADDREF(*webProgressListener);
 
     return rv;

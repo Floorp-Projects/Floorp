@@ -166,7 +166,7 @@ NS_IMETHODIMP nsJPEGEncoder::InitFromData(const PRUint8* aData,
   if (aInputFormat == INPUT_FORMAT_RGB) {
     while (cinfo.next_scanline < cinfo.image_height) {
       const PRUint8* row = &aData[cinfo.next_scanline * aStride];
-      jpeg_write_scanlines(&cinfo, NS_CONST_CAST(PRUint8**, &row), 1);
+      jpeg_write_scanlines(&cinfo, const_cast<PRUint8**>(&row), 1);
     }
   } else if (aInputFormat == INPUT_FORMAT_RGBA) {
     PRUint8* row = new PRUint8[aWidth * 3];
@@ -262,7 +262,7 @@ NS_IMETHODIMP nsJPEGEncoder::ReadSegments(nsWriteSegmentFun aWriter, void *aClos
   if (aCount > maxCount)
     aCount = maxCount;
   nsresult rv = aWriter(this, aClosure,
-                        NS_REINTERPRET_CAST(const char*, mImageBuffer),
+                        reinterpret_cast<const char*>(mImageBuffer),
                         0, aCount, _retval);
   if (NS_SUCCEEDED(rv)) {
     NS_ASSERTION(*_retval <= aCount, "bad write count");
@@ -335,7 +335,7 @@ nsJPEGEncoder::StripAlpha(const PRUint8* aSrc, PRUint8* aDest,
 void // static
 nsJPEGEncoder::initDestination(jpeg_compress_struct* cinfo)
 {
-  nsJPEGEncoder* that = NS_STATIC_CAST(nsJPEGEncoder*, cinfo->client_data);
+  nsJPEGEncoder* that = static_cast<nsJPEGEncoder*>(cinfo->client_data);
   NS_ASSERTION(! that->mImageBuffer, "Image buffer already initialized");
 
   that->mImageBufferSize = 8192;
@@ -361,7 +361,7 @@ nsJPEGEncoder::initDestination(jpeg_compress_struct* cinfo)
 boolean // static
 nsJPEGEncoder::emptyOutputBuffer(jpeg_compress_struct* cinfo)
 {
-  nsJPEGEncoder* that = NS_STATIC_CAST(nsJPEGEncoder*, cinfo->client_data);
+  nsJPEGEncoder* that = static_cast<nsJPEGEncoder*>(cinfo->client_data);
   NS_ASSERTION(that->mImageBuffer, "No buffer to empty!");
 
   that->mImageBufferUsed = that->mImageBufferSize;
@@ -400,7 +400,7 @@ nsJPEGEncoder::emptyOutputBuffer(jpeg_compress_struct* cinfo)
 void // static
 nsJPEGEncoder::termDestination(jpeg_compress_struct* cinfo)
 {
-  nsJPEGEncoder* that = NS_STATIC_CAST(nsJPEGEncoder*, cinfo->client_data);
+  nsJPEGEncoder* that = static_cast<nsJPEGEncoder*>(cinfo->client_data);
   if (! that->mImageBuffer)
     return;
   that->mImageBufferUsed = cinfo->dest->next_output_byte - that->mImageBuffer;

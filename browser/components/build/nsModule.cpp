@@ -39,12 +39,7 @@
 #include "nsIGenericFactory.h"
 
 #include "nsBrowserCompsCID.h"
-#ifndef MOZ_PLACES_BOOKMARKS
-#include "nsBookmarksService.h"
-#include "nsForwardProxyDataSource.h"
-#else
 #include "nsPlacesImportExportService.h"
-#endif
 #ifdef XP_WIN
 #include "nsWindowsShellService.h"
 #elif defined(XP_MACOSX)
@@ -80,12 +75,7 @@
 
 /////////////////////////////////////////////////////////////////////////////
 
-#ifndef MOZ_PLACES_BOOKMARKS
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsForwardProxyDataSource, Init)
-#else
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlacesImportExportService)
-#endif
 #ifdef XP_WIN
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsShellService)
 #elif defined(XP_MACOSX)
@@ -134,37 +124,11 @@ static const nsModuleComponentInfo components[] =
 
 #endif
 
-#ifndef MOZ_PLACES_BOOKMARKS
-
-  { "Bookmarks",
-    NS_BOOKMARKS_SERVICE_CID,
-    NS_BOOKMARKS_SERVICE_CONTRACTID,
-    nsBookmarksServiceConstructor },
-
-  { "Bookmarks",
-    NS_BOOKMARKS_SERVICE_CID,
-    NS_BOOKMARKS_DATASOURCE_CONTRACTID,
-    nsBookmarksServiceConstructor },
-
-  { "Bookmarks",
-    NS_BOOKMARKS_SERVICE_CID,
-    "@mozilla.org/embeddor.implemented/bookmark-charset-resolver;1",
-    nsBookmarksServiceConstructor },
-
-  { "Bookmarks Forward Proxy Inference Data Source",
-    NS_RDF_FORWARDPROXY_INFER_DATASOURCE_CID,
-    NS_RDF_INFER_DATASOURCE_CONTRACTID_PREFIX "forward-proxy",
-    nsForwardProxyDataSourceConstructor },
-
-#else
-
 
   { "Places Import/Export Service",
     NS_PLACESIMPORTEXPORTSERVICE_CID,
     NS_PLACESIMPORTEXPORTSERVICE_CONTRACTID,
     nsPlacesImportExportServiceConstructor},
-
-#endif
 
   { "Feed Sniffer",
     NS_FEEDSNIFFER_CID,

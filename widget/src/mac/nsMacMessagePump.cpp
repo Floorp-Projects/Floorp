@@ -94,7 +94,7 @@ nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit)
    ::InstallApplicationEventHandler(sWNETransitionEventHandlerUPP,
                                     GetEventTypeCount(kWNETransitionEventList),
                                     kWNETransitionEventList,
-                                    NS_STATIC_CAST(void*, this),
+                                    static_cast<void*>(this),
                                     &mWNETransitionEventHandler);
 
   NS_ASSERTION(err == noErr, "Could not install WNETransitionEventHandler");
@@ -116,7 +116,7 @@ nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit)
    ::InstallApplicationEventHandler(sMouseClickEventHandlerUPP,
                                     GetEventTypeCount(kMouseClickEventList),
                                     kMouseClickEventList,
-                                    NS_STATIC_CAST(void*, this),
+                                    static_cast<void*>(this),
                                     &mMouseClickEventHandler);
   NS_ASSERTION(err == noErr, "Could not install MouseClickEventHandler");
 
@@ -243,7 +243,7 @@ PRBool nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
                 
                 EventRecord updateEvent = anEvent;
                 updateEvent.what = updateEvt;
-                updateEvent.message = NS_REINTERPRET_CAST(UInt32, whichWindow);
+                updateEvent.message = reinterpret_cast<UInt32>(whichWindow);
                 sink->DispatchEvent ( &updateEvent, &handled );
                 
                 sink->DragEvent ( NS_DRAGDROP_GESTURE, anEvent.where.h, anEvent.where.v, 0L, &handled );                
@@ -457,10 +457,10 @@ nsMacMessagePump::MouseClickEventHandler(EventHandlerCallRef aHandlerCallRef,
   // Classic mouse events don't record the button specifier. The message
   // parameter is unused in mouse click events, so let's stuff it there.
   // We'll pick it up in nsMacEventHandler::HandleMouseDownEvent().
-  eventRecord.message = NS_STATIC_CAST(UInt32, button);
+  eventRecord.message = static_cast<UInt32>(button);
 
   // Process the modified event internally
-  nsMacMessagePump* self = NS_STATIC_CAST(nsMacMessagePump*, aUserData);
+  nsMacMessagePump* self = static_cast<nsMacMessagePump*>(aUserData);
   PRBool handled = self->DispatchEvent(&eventRecord);
 
   if (handled)
@@ -482,7 +482,7 @@ nsMacMessagePump::WNETransitionEventHandler(EventHandlerCallRef aHandlerCallRef,
                                             EventRef            aEvent,
                                             void*               aUserData)
 {
-  nsMacMessagePump* self = NS_STATIC_CAST(nsMacMessagePump*, aUserData);
+  nsMacMessagePump* self = static_cast<nsMacMessagePump*>(aUserData);
 
   EventRecord eventRecord;
   ::ConvertEventRefToEventRecord(aEvent, &eventRecord);

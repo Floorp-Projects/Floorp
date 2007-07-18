@@ -57,6 +57,8 @@ public:
 
   virtual void GetJISx4051Breaks(const PRUnichar* aText, PRUint32 aLength,
                                  PRPackedBool* aBreakBefore);
+  virtual void GetJISx4051Breaks(const PRUint8* aText, PRUint32 aLength,
+                                 PRPackedBool* aBreakBefore);
 };
 
 #endif  /* nsJISx4501LineBreaker_h__ */

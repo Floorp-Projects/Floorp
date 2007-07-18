@@ -40,7 +40,6 @@
 #include "imgRequest.h"
 
 #include "imgLoader.h"
-#include "imgCache.h"
 #include "imgRequestProxy.h"
 
 #include "imgILoader.h"
@@ -129,7 +128,7 @@ nsresult imgRequest::AddProxy(imgRequestProxy *proxy, PRBool aNotify)
 {
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::AddProxy", "proxy", proxy);
 
-  mObservers.AppendElement(NS_STATIC_CAST(void*, proxy));
+  mObservers.AppendElement(static_cast<void*>(proxy));
 
   if (aNotify)
     NotifyProxyListener(proxy);
@@ -141,7 +140,7 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBoo
 {
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::RemoveProxy", "proxy", proxy);
 
-  mObservers.RemoveElement(NS_STATIC_CAST(void*, proxy));
+  mObservers.RemoveElement(static_cast<void*>(proxy));
 
   /* Check mState below before we potentially call Cancel() below. Since
      Cancel() may result in OnStopRequest being called back before Cancel()
@@ -325,7 +324,7 @@ void imgRequest::RemoveFromCache()
 PRBool imgRequest::HaveProxyWithObserver(imgRequestProxy* aProxyToIgnore) const
 {
   for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
-    imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
+    imgRequestProxy *proxy = static_cast<imgRequestProxy*>(mObservers[i]);
     if (proxy == aProxyToIgnore) {
       continue;
     }
@@ -404,7 +403,7 @@ NS_IMETHODIMP imgRequest::FrameChanged(imgIContainer *container,
 
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
-    imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
+    imgRequestProxy *proxy = static_cast<imgRequestProxy*>(mObservers[i]);
     if (proxy) proxy->FrameChanged(container, newframe, dirtyRect);
 
     // If this assertion fires, it means that imgRequest notifications could
@@ -427,7 +426,7 @@ NS_IMETHODIMP imgRequest::OnStartDecode(imgIRequest *request)
 
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
-    imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
+    imgRequestProxy *proxy = static_cast<imgRequestProxy*>(mObservers[i]);
     if (proxy) proxy->OnStartDecode();
 
     // If this assertion fires, it means that imgRequest notifications could
@@ -467,7 +466,7 @@ NS_IMETHODIMP imgRequest::OnStartContainer(imgIRequest *request, imgIContainer *
 
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
-    imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
+    imgRequestProxy *proxy = static_cast<imgRequestProxy*>(mObservers[i]);
     if (proxy) proxy->OnStartContainer(image);
 
     // If this assertion fires, it means that imgRequest notifications could
@@ -488,7 +487,7 @@ NS_IMETHODIMP imgRequest::OnStartFrame(imgIRequest *request,
 
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
-    imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
+    imgRequestProxy *proxy = static_cast<imgRequestProxy*>(mObservers[i]);
     if (proxy) proxy->OnStartFrame(frame);
 
     // If this assertion fires, it means that imgRequest notifications could
@@ -509,7 +508,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(imgIRequest *request,
 
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
-    imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
+    imgRequestProxy *proxy = static_cast<imgRequestProxy*>(mObservers[i]);
     if (proxy) proxy->OnDataAvailable(frame, rect);
 
     // If this assertion fires, it means that imgRequest notifications could
@@ -534,21 +533,17 @@ NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request,
 
   if (mCacheEntry) {
     PRUint32 cacheSize = 0;
-
     mCacheEntry->GetDataSize(&cacheSize);
 
     PRUint32 imageSize = 0;
-    PRUint32 alphaSize = 0;
-
     frame->GetImageDataLength(&imageSize);
-    frame->GetAlphaDataLength(&alphaSize);
 
-    mCacheEntry->SetDataSize(cacheSize + imageSize + alphaSize);
+    mCacheEntry->SetDataSize(cacheSize + imageSize);
   }
 
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
-    imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
+    imgRequestProxy *proxy = static_cast<imgRequestProxy*>(mObservers[i]);
     if (proxy) proxy->OnStopFrame(frame);
 
     // If this assertion fires, it means that imgRequest notifications could
@@ -570,7 +565,7 @@ NS_IMETHODIMP imgRequest::OnStopContainer(imgIRequest *request,
 
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
-    imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
+    imgRequestProxy *proxy = static_cast<imgRequestProxy*>(mObservers[i]);
     if (proxy) proxy->OnStopContainer(image);
 
     // If this assertion fires, it means that imgRequest notifications could
@@ -599,7 +594,7 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest,
 
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
-    imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
+    imgRequestProxy *proxy = static_cast<imgRequestProxy*>(mObservers[i]);
     if (proxy) proxy->OnStopDecode(GetResultFromImageStatus(mImageStatus), aStatusArg);
 
     // If this assertion fires, it means that imgRequest notifications could
@@ -644,7 +639,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   /* notify our kids */
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
-    imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
+    imgRequestProxy *proxy = static_cast<imgRequestProxy*>(mObservers[i]);
     if (proxy) proxy->OnStartRequest(aRequest, ctxt);
 
     // If this assertion fires, it means that imgRequest notifications could
@@ -769,7 +764,7 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   /* notify the kids */
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = count-1; i>=0; i--) {
-    imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
+    imgRequestProxy *proxy = static_cast<imgRequestProxy*>(mObservers[i]);
     /* calling OnStopRequest may result in the death of |proxy| so don't use the
        pointer after this call.
      */
@@ -877,7 +872,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
       return NS_IMAGELIB_ERROR_NO_DECODER;
     }
 
-    nsresult rv = mDecoder->Init(NS_STATIC_CAST(imgILoad*, this));
+    nsresult rv = mDecoder->Init(static_cast<imgILoad*>(this));
     if (NS_FAILED(rv)) {
       PR_LOG(gImgLog, PR_LOG_WARNING,
              ("[this=%p] imgRequest::OnDataAvailable -- mDecoder->Init failed\n", this));
@@ -919,7 +914,7 @@ static NS_METHOD sniff_mimetype_callback(nsIInputStream* in,
                                          PRUint32 count,
                                          PRUint32 *writeCount)
 {
-  imgRequest *request = NS_STATIC_CAST(imgRequest*, closure);
+  imgRequest *request = static_cast<imgRequest*>(closure);
 
   NS_ASSERTION(request, "request is null!");
 

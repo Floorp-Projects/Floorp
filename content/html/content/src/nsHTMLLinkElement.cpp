@@ -274,7 +274,7 @@ nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
     return;
 
   nsContentUtils::DispatchTrustedEvent(aDoc,
-                                       NS_STATIC_CAST(nsIContent*, this),
+                                       static_cast<nsIContent*>(this),
                                        aEventName, PR_TRUE, PR_TRUE);
 }
 

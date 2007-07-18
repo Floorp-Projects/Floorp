@@ -58,7 +58,7 @@ nsSVGNumber2::SetBaseValueString(const nsAString &aValueAsString,
   s.Assign(aValueAsString);
   PRInt32 err;
   float val = s.ToFloat(&err);
-  nsresult rv = NS_STATIC_CAST(nsresult, err);
+  nsresult rv = static_cast<nsresult>(err);
   NS_ENSURE_SUCCESS(rv, rv);
   mBaseVal = mAnimVal = val;
   return NS_OK;

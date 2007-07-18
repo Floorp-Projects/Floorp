@@ -38,17 +38,22 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 function nsLoginInfo() {}
 
 nsLoginInfo.prototype = {
 
-    QueryInterface : function (iid) {
-        var interfaces = [Ci.nsILoginInfo, Ci.nsISupports];
-        if (!interfaces.some( function(v) { return iid.equals(v) } ))
-            throw Components.results.NS_ERROR_NO_INTERFACE;
+    classDescription  : "LoginInfo",
+    contractID : "@mozilla.org/login-manager/loginInfo;1",
+    classID : Components.ID("{0f2f347c-1e4f-40cc-8efd-792dea70a85e}"),
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsILoginInfo]), 
+
+    // Allow storage-Legacy.js to get at the JS object so it can
+    // slap on a few extra properties for internal use.
+    get wrappedJSObject() {
         return this;
     },
-
 
     hostname      : null,
     formSubmitURL : null,
@@ -104,58 +109,7 @@ nsLoginInfo.prototype = {
 
 }; // end of nsLoginInfo implementation
 
-
-
-
-// Boilerplate code for component registration...
-var gModule = {
-    registerSelf: function(componentManager, fileSpec, location, type) {
-        componentManager = componentManager.QueryInterface(
-                                                Ci.nsIComponentRegistrar);
-        for each (var obj in this._objects) 
-            componentManager.registerFactoryLocation(obj.CID,
-                    obj.className, obj.contractID,
-                    fileSpec, location, type);
-    },
-
-    unregisterSelf: function (componentManager, location, type) {
-        for each (var obj in this._objects) 
-            componentManager.unregisterFactoryLocation(obj.CID, location);
-    },
-
-    getClassObject: function(componentManager, cid, iid) {
-        if (!iid.equals(Ci.nsIFactory))
-            throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-
-        for (var key in this._objects) {
-            if (cid.equals(this._objects[key].CID))
-                return this._objects[key].factory;
-        }
-
-        throw Components.results.NS_ERROR_NO_INTERFACE;
-    },
-
-    _objects: {
-        service: {
-            CID : Components.ID("{0f2f347c-1e4f-40cc-8efd-792dea70a85e}"),
-            contractID : "@mozilla.org/login-manager/loginInfo;1",
-            className  : "LoginInfo",
-            factory    : LoginInfoFactory = {
-                createInstance: function(aOuter, aIID) {
-                    if (aOuter != null)
-                        throw Components.results.NS_ERROR_NO_AGGREGATION;
-                    var svc = new nsLoginInfo();
-                    return svc.QueryInterface(aIID);
-                }
-            }
-        }
-    },
-
-    canUnload: function(componentManager) {
-        return true;
-    }
-};
-
+var component = [nsLoginInfo];
 function NSGetModule(compMgr, fileSpec) {
-    return gModule;
+    return XPCOMUtils.generateModule(component);
 }

@@ -44,6 +44,7 @@
 #include "nsISVGChildFrame.h"
 #include "gfxContext.h"
 #include "gfxFont.h"
+#include "gfxTextRunCache.h"
 
 struct nsSVGCharacterPosition;
 class nsSVGTextFrame;
@@ -164,7 +165,7 @@ protected:
   friend class nsSVGAutoGlyphHelperContext;
 
   // A helper class to deal with gfxTextRuns and temporary thebes
-  // contexts.  It destroys them when it goes out of scope.
+  // contexts.
   class nsSVGAutoGlyphHelperContext
   {
   public:
@@ -179,15 +180,16 @@ protected:
                                 nsSVGCharacterPosition **cp);
 
     gfxContext *GetContext() { return mCT; }
-    gfxTextRun *GetTextRun() { return mTextRun; }
+    gfxTextRun *GetTextRun() { return mTextRun.get(); }
 
   private:
     void Init(nsSVGGlyphFrame *aSource, const nsString &aText);
 
-    nsRefPtr<gfxContext> mCT;
-    nsAutoPtr<gfxTextRun> mTextRun;
+    nsRefPtr<gfxContext>         mCT;
+    gfxTextRunCache::AutoTextRun mTextRun;
   };
 
+  // The textrun must be released via gfxTextRunCache::AutoTextRun
   gfxTextRun *GetTextRun(gfxContext *aCtx,
                          const nsString &aText);
 

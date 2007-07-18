@@ -50,10 +50,8 @@ libgkgfx.so
 libgtksuperwin.so 
 libgtkembedmoz.so 
 libgfxpsshar.so
-components/libgfx_gtk.so
-components/libgfxps.so
+components/libgkgfxthebes.so
 components/gfx.xpt 
-components/libwidget_gtk.so
 components/libwidget_gtk2.so
 components/widget.xpt
 
@@ -241,6 +239,8 @@ res/viewsource.css
 res/hiddenWindow.html
 res/ua.css
 res/forms.css
+res/contenteditable.css
+res/designmode.css
 res/arrow.gif
 res/arrowd.gif
 res/loading-image.gif

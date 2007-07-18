@@ -63,10 +63,6 @@
           src="chrome://browser/content/bookmarks/sidebarUtils.js"/>
   <script type="application/x-javascript" 
           src="chrome://browser/content/places/history-panel.js"/>
-#ifndef MOZ_PLACES_BOOKMARKS
-  <script type="application/x-javascript" 
-          src="chrome://browser/content/bookmarks/bookmarks.js"/>
-#endif
 
   <commandset id="editMenuCommands"/>
   <commandset id="placesCommands"/>

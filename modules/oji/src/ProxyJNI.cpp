@@ -190,19 +190,19 @@ jvalue* JNIMethod::marshallArgs(va_list args)
             for (PRUint32 i = 0; i < argCount; i++) {
                 switch (argTypes[i]) {
                 case jobject_type:
-                    jargs[i].l = NS_STATIC_CAST(jobject, va_arg(args, void*));
+                    jargs[i].l = static_cast<jobject>(va_arg(args, void*));
                     break;
                 case jboolean_type:
-                    jargs[i].z = NS_STATIC_CAST(jboolean, va_arg(args, jint));
+                    jargs[i].z = static_cast<jboolean>(va_arg(args, jint));
                     break;
                 case jbyte_type:
-                    jargs[i].b = NS_STATIC_CAST(jbyte, va_arg(args, jint));
+                    jargs[i].b = static_cast<jbyte>(va_arg(args, jint));
                     break;
                 case jchar_type:
-                    jargs[i].c = NS_STATIC_CAST(jchar, va_arg(args, jint));
+                    jargs[i].c = static_cast<jchar>(va_arg(args, jint));
                     break;
                 case jshort_type:
-                    jargs[i].s = NS_STATIC_CAST(jshort, va_arg(args, jint));
+                    jargs[i].s = static_cast<jshort>(va_arg(args, jint));
                     break;
                 case jint_type:
                     jargs[i].i = va_arg(args, jint);
@@ -211,7 +211,7 @@ jvalue* JNIMethod::marshallArgs(va_list args)
                     jargs[i].j = va_arg(args, jlong);
                     break;
                 case jfloat_type:
-                    jargs[i].f = NS_STATIC_CAST(jfloat, va_arg(args, jdouble));
+                    jargs[i].f = static_cast<jfloat>(va_arg(args, jdouble));
                     break;
                 case jdouble_type:
                     jargs[i].d = va_arg(args, jdouble);

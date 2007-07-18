@@ -103,7 +103,7 @@ nsBulletFrame::Destroy()
   }
 
   if (mListener)
-    NS_REINTERPRET_CAST(nsBulletListener*, mListener.get())->SetFrame(nsnull);
+    reinterpret_cast<nsBulletListener*>(mListener.get())->SetFrame(nsnull);
 
   // Let base class do the rest
   nsFrame::Destroy();
@@ -194,7 +194,7 @@ public:
 void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  NS_STATIC_CAST(nsBulletFrame*, mFrame)->
+  static_cast<nsBulletFrame*>(mFrame)->
     PaintBullet(*aCtx, aBuilder->ToReferenceFrame(mFrame), aDirtyRect);
 }
 

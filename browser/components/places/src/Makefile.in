@@ -55,15 +55,17 @@ REQUIRES	= \
 		  string \
 		  docshell \
 		  necko \
-			browsercomps \
-			toolkitcomps \
+		  browsercomps \
+		  toolkitcomps \
 		  unicharutil \
-			htmlparser \
-			content \
-			places \
-			microsummaries \
+		  htmlparser \
+		  content \
+		  places \
+		  microsummaries \
 		  $(NULL)
 
 CPPSRCS = nsPlacesImportExportService.cpp
+
+EXTRA_COMPONENTS = nsPlacesTransactionsService.js
 
 include $(topsrcdir)/config/rules.mk

@@ -3,9 +3,6 @@
 <!ENTITY  history.intro             "The following updates have been installed:">
 <!ENTITY  closebutton.label         "Close">
                                      
-<!ENTITY  detailsButton.label       "Details">
-<!ENTITY  detailsButton.accesskey   "D">
-
 <!ENTITY  noupdates.label           "No updates installed yet">
 
 <!ENTITY  name.header               "Update Name">

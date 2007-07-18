@@ -49,32 +49,18 @@ var nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginIn
 ok(nsLoginInfo != null, "nsLoginInfo constructor");
 
 
-// Add some logins for testing.
-function initLogin(login, username, ufieldName, password, pfieldName, hostname, formSubmitURL) {
-	login.username      = username;
-	login.usernameField = ufieldName;
-	login.password      = password;
-	login.passwordField = pfieldName;
-	login.hostname      = hostname;
-	login.formSubmitURL = formSubmitURL
-	login.httpRealm     = null;
-}
+login = new nsLoginInfo();
+ok(login != null, "Adding login");
 
-for (var u = 1; u <= 10; u++) {
-	// TODO: don't really need |new| here, could even detect possible breakage with refs to user objs
-	login = new nsLoginInfo();
-	ok(login != null, "Adding login #" + u);
+login.init("http://localhost:8888", "http://localhost:8888", null,
+    "testuser", "testpass", "uname", "pword");
 
-	initLogin(login, "testuser"+u, "uname"+u, "testpass"+u, "pword"+u,
-			"http://localhost:8888", "http://localhost:8888");
-
-	pwmgr.addLogin(login);
-}
+pwmgr.addLogin(login);
 
 // Simple check to see if everything was added fine.
 var logins = pwmgr.getAllLogins({});
 ok(logins != null, "getAllLogins()");
-is(logins.length, 10, "check expected final number of logins");
+is(logins.length, 1, "check expected final number of logins");
 
 </script>
 </pre>

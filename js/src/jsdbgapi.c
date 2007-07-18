@@ -545,7 +545,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 if (nslots <= JS_ARRAY_LENGTH(smallv)) {
                     argv = smallv;
                 } else {
-                    argv = JS_malloc(cx, nslots * sizeof(jsval));
+                    argv = (jsval *) JS_malloc(cx, nslots * sizeof(jsval));
                     if (!argv) {
                         DBG_LOCK(rt);
                         DropWatchPointAndUnlock(cx, wp, JSWP_HELD);
@@ -615,7 +615,7 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter)
     if (JSID_IS_ATOM(id)) {
         atom = JSID_TO_ATOM(id);
     } else if (JSID_IS_INT(id)) {
-        atom = js_AtomizeInt(cx, JSID_TO_INT(id), 0);
+        atom = js_ValueToStringAtom(cx, INT_JSID_TO_JSVAL(id));
         if (!atom)
             return NULL;
     } else {
@@ -1107,7 +1107,7 @@ JS_GetScriptLineExtent(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(JSVersion)
 JS_GetScriptVersion(JSContext *cx, JSScript *script)
 {
-    return script->version & JSVERSION_MASK;
+    return (JSVersion) (script->version & JSVERSION_MASK);
 }
 
 /***************************************************************************/
@@ -1462,8 +1462,6 @@ GetAtomTotalSize(JSContext *cx, JSAtom *atom)
         nbytes += (ATOM_TO_STRING(atom)->length + 1) * sizeof(jschar);
     } else if (ATOM_IS_DOUBLE(atom)) {
         nbytes += sizeof(jsdouble);
-    } else if (ATOM_IS_OBJECT(atom)) {
-        nbytes += JS_GetObjectTotalSize(cx, ATOM_TO_OBJECT(atom));
     }
     return nbytes;
 }
@@ -1489,15 +1487,14 @@ JS_PUBLIC_API(size_t)
 JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
 {
     size_t nbytes, pbytes;
-    JSObject *obj;
     jsatomid i;
     jssrcnote *sn, *notes;
+    JSObjectArray *objarray;
     JSPrincipals *principals;
 
     nbytes = sizeof *script;
-    obj = script->object;
-    if (obj)
-        nbytes += JS_GetObjectTotalSize(cx, obj);
+    if (script->object)
+        nbytes += JS_GetObjectTotalSize(cx, script->object);
 
     nbytes += script->length * sizeof script->code[0];
     nbytes += script->atomMap.length * sizeof script->atomMap.vector[0];
@@ -1512,9 +1509,27 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
         continue;
     nbytes += (sn - notes + 1) * sizeof *sn;
 
-    if (script->trynotes) {
-        nbytes += offsetof(JSTryNoteArray, notes) +
-                  script->trynotes->length * sizeof script->trynotes->notes[0];
+    if (script->objectsOffset != 0) {
+        objarray = JS_SCRIPT_OBJECTS(script);
+        i = objarray->length;
+        nbytes += sizeof *objarray + i * sizeof objarray->vector[0];
+        do {
+            nbytes += JS_GetObjectTotalSize(cx, objarray->vector[--i]);
+        } while (i != 0);
+    }
+
+    if (script->regexpsOffset != 0) {
+        objarray = JS_SCRIPT_REGEXPS(script);
+        i = objarray->length;
+        nbytes += sizeof *objarray + i * sizeof objarray->vector[0];
+        do {
+            nbytes += JS_GetObjectTotalSize(cx, objarray->vector[--i]);
+        } while (i != 0);
+    }
+
+    if (script->trynotesOffset != 0) {
+        nbytes += sizeof(JSTryNoteArray) +
+            JS_SCRIPT_TRYNOTES(script)->length * sizeof(JSTryNote);
     }
 
     principals = script->principals;

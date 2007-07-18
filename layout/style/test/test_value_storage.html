@@ -120,7 +120,8 @@ function xfail_ser_val(property, value)
   // not the serialization.
   // XXXbz is there any way we could actually filter for that, so that colors
   // other than green could be used in the property database here?
-  if (property.match(/^border(|-bottom|-left|-right|-top)$/) &&
+  if ((property.match(/^border(|-bottom|-left|-right|-top)$/) ||
+       property.match(/^-moz-border(|-start|-end)$/)) &&
       !value.match(/(green|currentcolor)/i))
     return true;
 

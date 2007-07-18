@@ -112,8 +112,8 @@ public:
     : mIndex(0)
   {
     JNIEnv* env = GetJNIEnv();
-    mJavaFileArray = NS_STATIC_CAST(jobjectArray,
-                                    env->NewGlobalRef(aJavaFileArray));
+    mJavaFileArray = static_cast<jobjectArray>
+                                (env->NewGlobalRef(aJavaFileArray));
     mArraySize = env->GetArrayLength(aJavaFileArray);
   }
 
@@ -222,8 +222,8 @@ nsAppFileLocProviderProxy::GetFiles(const char* aProp,
 
   if (NS_SUCCEEDED(rv)) {
     // Parse return value
-    *aResult = new DirectoryEnumerator(NS_STATIC_CAST(jobjectArray,
-                                                      javaFileArray));
+    *aResult = new DirectoryEnumerator(static_cast<jobjectArray>
+                                                  (javaFileArray));
     NS_ADDREF(*aResult);
     return NS_OK;
   }

@@ -106,7 +106,9 @@ var waterfallView = {
           continue;
         }
         cell = view.getCell();
-        cell.innerHTML = '&nbsp;';
+        cell.innerHTML = '<a href="javascript:controller.showLog(\'' + 
+          b[0] + '\',\'' + loc + '\');">L</a> <a href="javascript:controller.showDetails(\'' + 
+          b[0] + '\',\'' + loc + '\');">B</a>';
         if (b[2][loc] & 2) {
           cell.className = 'busted ';
         }
@@ -152,6 +154,9 @@ var waterfallView = {
 };
 var waterfallController = {
   __proto__: baseController,
+  get path() {
+    return 'results/waterfall.json';
+  },
   beforeSelect: function() {
     this.result = {};
     this.isShown = false;

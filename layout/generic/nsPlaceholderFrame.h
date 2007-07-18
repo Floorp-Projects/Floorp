@@ -149,6 +149,9 @@ public:
   }
 #endif
 
+  NS_IMETHOD GetParentStyleContextFrame(nsPresContext* aPresContext,
+                                        nsIFrame**      aProviderFrame,
+                                        PRBool*         aIsChild);
   /**
    * @return the out-of-flow for aFrame if aFrame is a placeholder; otherwise
    * aFrame
@@ -168,7 +171,7 @@ public:
     NS_PRECONDITION(aFrame->GetType() == nsGkAtoms::placeholderFrame,
                     "Must have placeholder frame as input");
     nsIFrame* outOfFlow =
-      NS_STATIC_CAST(nsPlaceholderFrame*, aFrame)->GetOutOfFlowFrame();
+      static_cast<nsPlaceholderFrame*>(aFrame)->GetOutOfFlowFrame();
     NS_ASSERTION(outOfFlow, "Null out-of-flow for placeholder?");
     return outOfFlow;
   }

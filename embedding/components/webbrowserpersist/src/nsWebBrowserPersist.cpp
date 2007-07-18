@@ -1231,7 +1231,7 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
     // Open a channel to the URI
     nsCOMPtr<nsIChannel> inputChannel;
     rv = NS_NewChannel(getter_AddRefs(inputChannel), aURI,
-            nsnull, nsnull, NS_STATIC_CAST(nsIInterfaceRequestor *, this),
+            nsnull, nsnull, static_cast<nsIInterfaceRequestor *>(this),
             loadFlags);
     
     if (NS_FAILED(rv) || inputChannel == nsnull)
@@ -2272,7 +2272,10 @@ nsWebBrowserPersist::MakeOutputStreamFromFile(
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     // XXX brade:  get the right flags here!
-    rv = fileOutputStream->Init(aFile, -1, -1, 0);
+    PRInt32 ioFlags = -1;
+    if (mPersistFlags & nsIWebBrowserPersist::PERSIST_FLAGS_APPEND_TO_FILE)
+      ioFlags = PR_APPEND | PR_CREATE_FILE | PR_WRONLY; 
+    rv = fileOutputStream->Init(aFile, ioFlags, -1, 0);
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ENSURE_SUCCESS(CallQueryInterface(fileOutputStream, aOutputStream), NS_ERROR_FAILURE);
@@ -2730,6 +2733,7 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
                 StoreURI(NS_ConvertUTF16toUTF8(href).get());
             }
         }
+        return NS_OK;
     }
 
     // Test the node to see if it's an image, frame, iframe, css, js
@@ -3570,7 +3574,7 @@ nsWebBrowserPersist::CreateChannelFromURI(nsIURI *aURI, nsIChannel **aChannel)
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_ARG_POINTER(*aChannel);
 
-    rv = (*aChannel)->SetNotificationCallbacks(NS_STATIC_CAST(nsIInterfaceRequestor *, this));
+    rv = (*aChannel)->SetNotificationCallbacks(static_cast<nsIInterfaceRequestor *>(this));
     NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
 } 

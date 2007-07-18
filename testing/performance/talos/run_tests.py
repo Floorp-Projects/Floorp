@@ -59,10 +59,9 @@ import socket
 socket.setdefaulttimeout(480)
 
 import config
+import post_file
 import tp
 import ts
-import post_file
-
 
 def shortNames(name):
   if name == "tp_loadtime":
@@ -141,7 +140,7 @@ def test_file(filename):
   sys.stdout.flush()
   for ts_set in ts_times:
     if len(ts_set) == 0:
-	print "FAIL:no ts results:something bad happened:BAD BUILD"
+	print "FAIL:no ts results, build failed to run:BAD BUILD"
 	sys.exit(0)
 
   (res, r_strings, tp_times, tp_counters) = tp.RunPltTests(test_configs,
@@ -152,15 +151,14 @@ def test_file(filename):
   print "finished tp"
   sys.stdout.flush()
 
-
   if not res:
-    print "something bad happened during tp"
+    print "FAIL:tp did not run to completion"
     print "FAIL:" + r_strings[0]
     sys.exit(0)
 
   #TODO: place this in its own file
   #send results to the graph server
-  # each line of the string is of the format page:page_name:page_loadtime\n
+  # each line of the string is of the format i;page_name;median;mean;min;max;time vals\n
   tbox = title
   url_format = "http://%s/%s"
   link_format= "<a href = \"%s\">%s</a>"
@@ -186,8 +184,8 @@ def test_file(filename):
     i = 0
     print "formating results for: loadtime"
     print "# of values: %d" % len(page_results)
-    for mypage in page_results:
-      r = mypage.split(':')
+    for mypage in page_results[3:]:
+      r = mypage.split(';')
       tmpf.write(result_format % (float(r[2]), testname + "_loadtime", tbox, i, date, test_configs[index][3], test_configs[index][4], "discrete", r[1]))
       i = i+1
 
@@ -208,7 +206,7 @@ def test_file(filename):
   file_data = tmpf.read()
   while True:
     try:
-      ret = post_file.post_multipart(config.RESULTS_SERVER, '/bulk.cgi', [("key", "value")], [("filename", filename, file_data)
+      ret = post_file.post_multipart(config.RESULTS_SERVER, config.RESULTS_LINK, [("key", "value")], [("filename", filename, file_data)
    ])
     except IOError:
       print "IOError"

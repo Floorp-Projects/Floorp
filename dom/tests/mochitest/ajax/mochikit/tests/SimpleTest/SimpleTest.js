@@ -360,6 +360,22 @@ SimpleTest.isa = function (object, clas) {
     return SimpleTest.typeOf(object) == clas;
 };
 
+if ( parent.SimpleTest && parent.runAJAXTest ) (function(){
+    var oldOK = SimpleTest.ok;
+
+    SimpleTest.ok = function(condition, name, diag) {
+        parent.SimpleTest.ok( condition, name, diag );
+        return oldOK( condition, name, diag );
+    };
+
+    var oldFinish = SimpleTest.finish;
+
+    SimpleTest.finish = function() {
+	oldFinish();
+	parent.runAJAXTest();
+    };
+})();
+
 // Global symbols:
 var ok = SimpleTest.ok;
 var is = SimpleTest.is;

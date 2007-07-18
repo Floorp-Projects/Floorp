@@ -115,10 +115,10 @@
 </ul>
 ">
 
-<!ENTITY nssFailure.title "Secure Connection Failed">
-<!ENTITY nssFailure.longDesc "
+<!ENTITY nssFailure2.title "Secure Connection Failed">
+<!ENTITY nssFailure2.longDesc "
 <ul>
-  <li>The page you are trying to view can not be shown because the web site uses an invalid or unsupported security protocol.</li>
+  <li>The page you are trying to view can not be shown because the authenticity of the received data could not be verified.</li>
   <li>Please contact the web site owners to inform them of this problem. Alternatively, use the command found in the help menu to report this broken site.</li>
 </ul>
 ">
@@ -133,4 +133,10 @@
   <li>If your computer or network is protected by a firewall or proxy, make sure
     that &brandShortName; is permitted to access the Web.</li>
 </ul>
+">
+
+<!ENTITY malwareBlocked.title "Suspected Attack Site!">
+<!ENTITY malwareBlocked.longDesc "<p>
+Attack sites try to install programs that steal private information, use your computer to attack others, or damage your system.</p>
+<p>You should not visit this site.</p>
 ">

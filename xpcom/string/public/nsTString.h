@@ -579,11 +579,11 @@ class nsTXPIDLString_CharT : public nsTString_CharT
     public:
 
       nsTXPIDLString_CharT()
-        : string_type(NS_CONST_CAST(char_type*, char_traits::sEmptyBuffer), 0, F_TERMINATED | F_VOIDED) {}
+        : string_type(const_cast<char_type*>(char_traits::sEmptyBuffer), 0, F_TERMINATED | F_VOIDED) {}
 
         // copy-constructor required to avoid default
       nsTXPIDLString_CharT( const self_type& str )
-        : string_type(NS_CONST_CAST(char_type*, char_traits::sEmptyBuffer), 0, F_TERMINATED | F_VOIDED)
+        : string_type(const_cast<char_type*>(char_traits::sEmptyBuffer), 0, F_TERMINATED | F_VOIDED)
         {
           Assign(str);
         }

@@ -76,7 +76,7 @@ nsScreenManagerWin :: ~nsScreenManagerWin()
 {
   // walk our list of cached screens and delete them.
   for ( int i = 0; i < mScreenList.Count(); ++i ) {
-    ScreenListItem* item = NS_REINTERPRET_CAST(ScreenListItem*, mScreenList[i]);
+    ScreenListItem* item = reinterpret_cast<ScreenListItem*>(mScreenList[i]);
     delete item;
   }
 }
@@ -102,7 +102,7 @@ nsScreenManagerWin :: CreateNewScreenObject ( void* inScreen )
   // look through our screen list, hoping to find it. If it's not there,
   // add it and return the new one.
   for ( int i = 0; i < mScreenList.Count(); ++i ) {
-    ScreenListItem* curr = NS_REINTERPRET_CAST(ScreenListItem*, mScreenList[i]);
+    ScreenListItem* curr = reinterpret_cast<ScreenListItem*>(mScreenList[i]);
     if ( inScreen == curr->mMon ) {
       NS_IF_ADDREF(retScreen = curr->mScreen.get());
       return retScreen;
@@ -172,7 +172,7 @@ nsScreenManagerWin :: GetPrimaryScreen(nsIScreen** aPrimaryScreen)
 BOOL CALLBACK
 CountMonitors ( HMONITOR, HDC, LPRECT, LPARAM ioParam )
 {
-  PRUint32* countPtr = NS_REINTERPRET_CAST(PRUint32*, ioParam);
+  PRUint32* countPtr = reinterpret_cast<PRUint32*>(ioParam);
   ++(*countPtr);
 
   return TRUE; // continue the enumeration
