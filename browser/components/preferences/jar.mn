@@ -36,9 +36,7 @@ browser.jar:
 *   content/browser/preferences/security.js
 *   content/browser/preferences/securityWarnings.xul
 *   content/browser/preferences/securityWarnings.js
-#ifdef MOZ_PLACES_BOOKMARKS
 *   content/browser/preferences/selectBookmark.xul
 *   content/browser/preferences/selectBookmark.js
-#endif
 *   content/browser/preferences/tabs.xul
 *   content/browser/preferences/tabs.js
