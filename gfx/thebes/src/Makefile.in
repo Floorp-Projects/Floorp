@@ -38,16 +38,8 @@ CPPSRCS	= \
 	gfxTextRunWordCache.cpp \
 	$(NULL)
 
-ifdef MOZ_TREE_CAIRO
-SHARED_LIBRARY_LIBS += \
-	$(DEPTH)/gfx/cairo/cairo/src/$(LIB_PREFIX)mozcairo.$(LIB_SUFFIX) \
-	$(DEPTH)/gfx/cairo/libpixman/src/$(LIB_PREFIX)mozlibpixman.$(LIB_SUFFIX) \
-	$(NULL)
-else
-EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS)
-endif
-
 EXTRA_DSO_LDOPTS += \
+	$(MOZ_CAIRO_LIBS) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(XPCOM_LIBS) \
 	$(NSPR_LIBS) \
