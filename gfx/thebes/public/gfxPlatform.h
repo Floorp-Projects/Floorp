@@ -133,7 +133,7 @@ public:
                                              PRUint32 height,
                                              PRUint32 stride);
 
-    void GetPrefFonts(const char *aLangGroup, nsString& array);
+    void GetPrefFonts(const char *aLangGroup, nsString& array, PRBool aAppendUnicode = PR_TRUE);
 
 protected:
     gfxPlatform() { }
