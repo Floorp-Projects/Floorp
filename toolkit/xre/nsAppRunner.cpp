@@ -605,7 +605,7 @@ nsXULAppInfo::GetVersion(nsACString& aResult)
 NS_IMETHODIMP
 nsXULAppInfo::GetPlatformVersion(nsACString& aResult)
 {
-  aResult.AssignLiteral(gToolkitVersion);
+  aResult.Assign(gToolkitVersion);
 
   return NS_OK;
 }
