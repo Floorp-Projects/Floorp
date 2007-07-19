@@ -1,2 +1,1 @@
-== z-index-1.html z-index-1-ref.html
-
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == z-index-1.html z-index-1-ref.html
