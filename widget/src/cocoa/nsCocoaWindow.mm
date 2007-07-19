@@ -1202,6 +1202,7 @@ NS_IMETHODIMP nsCocoaWindow::GetAnimatedResize(PRUint16* aAnimation)
   RollUpPopups();
 }
 
+
 - (void)windowDidMove:(NSNotification *)aNotification
 {
   // Dispatch the move event to Gecko
@@ -1214,6 +1215,7 @@ NS_IMETHODIMP nsCocoaWindow::GetAnimatedResize(PRUint16* aAnimation)
   nsEventStatus status = nsEventStatus_eIgnore;
   mGeckoWindow->DispatchEvent(&guiEvent, status);
 }
+
 
 - (BOOL)windowShouldClose:(id)sender
 {
@@ -1299,6 +1301,7 @@ NS_IMETHODIMP nsCocoaWindow::GetAnimatedResize(PRUint16* aAnimation)
 {
   return YES;
 }
+
 
 // Dispatch a toolbar pill button clicked message to Gecko
 - (void)_toolbarPillButtonClicked:(id)sender
@@ -1423,6 +1426,7 @@ NS_IMETHODIMP nsCocoaWindow::GetAnimatedResize(PRUint16* aAnimation)
   }
 }
 
+
 - (id)initWithContentRect:(NSRect)contentRect styleMask:(unsigned int)styleMask
       backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation
 {
@@ -1431,10 +1435,12 @@ NS_IMETHODIMP nsCocoaWindow::GetAnimatedResize(PRUint16* aAnimation)
           backing:bufferingType defer:deferCreation];
 }
 
+
 - (BOOL)isContextMenu
 {
   return mIsContextMenu;
 }
+
 
 - (void)setIsContextMenu:(BOOL)flag
 {
