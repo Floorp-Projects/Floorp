@@ -602,6 +602,7 @@ nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
     nsIDocument* doc = thisContent->GetCurrentDoc();
     if (!doc) {
       // Nothing we can do while plugin loading is done in layout...
+      mInstantiating = PR_FALSE;
       return NS_OK;
     }
 
