@@ -5342,31 +5342,22 @@ MOZ_ARG_DISABLE_BOOL(airbag,
 if test -n "$MOZ_AIRBAG"; then
    AC_DEFINE(MOZ_AIRBAG)
 
-  if test "$OS_ARCH" = "Linux"; then
-    PKG_CHECK_MODULES(MOZ_LIBCURL, libcurl, _CURL_FOUND=1, _CURL_FOUND=)
-    if test -z "$_CURL_FOUND"; then
-       AC_PATH_PROGS(CURL_CONFIG, $CURL_CONFIG curl-config)
-       if test -n "$CURL_CONFIG"; then
-          AC_MSG_CHECKING(MOZ_LIBCURL_CFLAGS)
-          MOZ_LIBCURL_CFLAGS=`${CURL_CONFIG} --cflags`
-          AC_MSG_RESULT($MOZ_LIBCURL_CFLAGS)
-
-          AC_MSG_CHECKING(MOZ_LIBCURL_LIBS)
-          MOZ_LIBCURL_LIBS=`${CURL_CONFIG} --libs`
-          AC_MSG_RESULT($MOZ_LIBCURL_LIBS)
-
-          _CURL_FOUND=1
-       fi
-    fi
-
-    if test -z "$_CURL_FOUND" && test -z "$SKIP_LIBRARY_CHECKS"; then
+  if test "$OS_ARCH" = "Linux" && \
+     test -z "$SKIP_LIBRARY_CHECKS"; then
+     _SAVE_LDFLAGS=$LDFLAGS
+     LDFLAGS="$LDFLAGS -lcurl"
+     AC_CACHE_CHECK(for libcurl,
+                    ac_cv_have_libcurl,
+                    [AC_TRY_LINK([#include <curl/curl.h>],
+                                 [curl_easy_init();],
+                                 ac_cv_have_libcurl="yes",
+                                 ac_cv_have_libcurl="no")])
+    if test "$ac_cv_have_libcurl" = "no"; then
         AC_MSG_ERROR([Couldn't find libcurl, which is required for the crash reporter.  Use --disable-airbag to disable the crash reporter.])
     fi
+    LDFLAGS=$_SAVE_LDFLAGS
   fi
 fi
-
-AC_SUBST(MOZ_LIBCURL_CFLAGS)
-AC_SUBST(MOZ_LIBCURL_LIBS)
 
 dnl ========================================================
 dnl = Build mochitest JS/DOM tests (on by default)
