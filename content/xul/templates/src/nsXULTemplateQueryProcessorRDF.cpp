@@ -26,6 +26,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Joe Hewitt <hewitt@netscape.com>
  *   Neil Deakin <enndeakin@sympatico.ca>
+ *   Laurent Jouanneau <laurent.jouanneau@disruptive-innovations.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -46,6 +47,7 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
 #include "nsIRDFRemoteDataSource.h"
+#include "nsIRDFInferDataSource.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "nsIServiceManager.h"
@@ -56,6 +58,7 @@
 #include "nsUnicharUtils.h"
 #include "nsAttrName.h"
 #include "rdf.h"
+#include "nsArrayUtils.h"
 
 #include "nsContentTestNode.h"
 #include "nsRDFConInstanceTestNode.h"
@@ -215,6 +218,119 @@ nsXULTemplateQueryProcessorRDF::InitGlobals()
 // nsIXULTemplateQueryProcessor interface
 //
 
+NS_IMETHODIMP
+nsXULTemplateQueryProcessorRDF::GetDatasource(nsIArray* aDataSources,
+                                              nsIDOMNode* aRootNode,
+                                              PRBool aIsTrusted,
+                                              nsIXULTemplateBuilder* aBuilder,
+                                              PRBool* aShouldDelayBuilding,
+                                              nsISupports** aResult)
+{
+    nsCOMPtr<nsIRDFCompositeDataSource> compDB;
+    nsCOMPtr<nsIContent> root = do_QueryInterface(aRootNode);
+    nsresult rv;
+
+    *aResult = nsnull;
+    *aShouldDelayBuilding = PR_FALSE;
+
+    NS_ENSURE_TRUE(root, NS_ERROR_UNEXPECTED);
+
+    // make sure the RDF service is set up
+    rv = InitGlobals();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // create a database for the builder
+    compDB = do_CreateInstance(NS_RDF_DATASOURCE_CONTRACTID_PREFIX 
+                               "composite-datasource");
+    if (!compDB) {
+        NS_ERROR("unable to construct new composite data source");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    // check for magical attributes. XXX move to ``flags''?
+    if (root->AttrValueIs(kNameSpaceID_None,
+                          nsGkAtoms::coalesceduplicatearcs,
+                          nsGkAtoms::_false, eCaseMatters))
+        compDB->SetCoalesceDuplicateArcs(PR_FALSE);
+
+    if (root->AttrValueIs(kNameSpaceID_None,
+                          nsGkAtoms::allownegativeassertions,
+                          nsGkAtoms::_false, eCaseMatters))
+        compDB->SetAllowNegativeAssertions(PR_FALSE);
+
+    if (aIsTrusted) {
+        // If we're a privileged (e.g., chrome) document, then add the
+        // local store as the first data source in the db. Note that
+        // we _might_ not be able to get a local store if we haven't
+        // got a profile to read from yet.
+        nsCOMPtr<nsIRDFDataSource> localstore;
+        rv = gRDFService->GetDataSource("rdf:local-store",
+                                        getter_AddRefs(localstore));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = compDB->AddDataSource(localstore);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add local store to db");
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    PRUint32 length, index;
+    rv = aDataSources->GetLength(&length);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    for (index = 0; index < length; index++) {
+
+        nsCOMPtr<nsIURI> uri = do_QueryElementAt(aDataSources, index);
+        if (!uri) // we ignore other datasources than uri
+            continue;
+
+        nsCOMPtr<nsIRDFDataSource> ds;
+        nsCAutoString uristrC;
+        uri->GetSpec(uristrC);
+
+        rv = gRDFService->GetDataSource(uristrC.get(), getter_AddRefs(ds));
+
+        if (NS_FAILED(rv)) {
+            // This is only a warning because the data source may not
+            // be accessible for any number of reasons, including
+            // security, a bad URL, etc.
+  #ifdef DEBUG
+            nsCAutoString msg;
+            msg.Append("unable to load datasource '");
+            msg.Append(uristrC);
+            msg.Append('\'');
+            NS_WARNING(msg.get());
+  #endif
+            continue;
+        }
+
+        compDB->AddDataSource(ds);
+    }
+
+
+    // check if we were given an inference engine type
+    nsAutoString infer;
+    nsCOMPtr<nsIRDFDataSource> db;
+    root->GetAttr(kNameSpaceID_None, nsGkAtoms::infer, infer);
+    if (!infer.IsEmpty()) {
+        nsCString inferCID(NS_RDF_INFER_DATASOURCE_CONTRACTID_PREFIX);
+        AppendUTF16toUTF8(infer, inferCID);
+        nsCOMPtr<nsIRDFInferDataSource> inferDB =
+            do_CreateInstance(inferCID.get());
+
+        if (inferDB) {
+            inferDB->SetBaseDataSource(compDB);
+            db = do_QueryInterface(inferDB);
+        }
+        else {
+            NS_WARNING("failed to construct inference engine specified on template");
+        }
+    }
+
+    if (!db)
+        db = compDB;
+
+    return CallQueryInterface(db, aResult);
+}
 
 NS_IMETHODIMP
 nsXULTemplateQueryProcessorRDF::InitializeForBuilding(nsISupports* aDatasource,
