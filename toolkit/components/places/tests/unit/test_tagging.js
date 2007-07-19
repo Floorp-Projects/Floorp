@@ -100,8 +100,8 @@ function run_test() {
   // test getTagsForURI
   var uri1tags = tagssvc.getTagsForURI(uri1, {});
   do_check_eq(uri1tags.length, 2);
-  do_check_eq(uri1tags[0], "tag 2");
-  do_check_eq(uri1tags[1], "tag 1");
+  do_check_eq(uri1tags[0], "tag 1");
+  do_check_eq(uri1tags[1], "tag 2");
   var uri2tags = tagssvc.getTagsForURI(uri2, {});
   do_check_eq(uri2tags.length, 1);
   do_check_eq(uri2tags[0], "tag 1");

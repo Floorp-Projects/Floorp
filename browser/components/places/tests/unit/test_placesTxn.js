@@ -164,9 +164,9 @@ function run_test() {
   ptSvc.commitTransaction(ptSvc.createItem(uri("http://www.example.com"), root, -1, "Testing3"));   
   ptSvc.commitTransaction(ptSvc.createItem(uri("http://www.example.com"), fldrId, -1, "Testing4"));
   var bkmkIds = bmsvc.getBookmarkIdsForURI(uri("http://www.example.com"), {});
-  var bkmk1Id = bkmkIds[2];
+  var bkmk1Id = bkmkIds[0];
   var bkmk2Id = bkmkIds[1];
-  var bkmk3Id = bkmkIds[0];
+  var bkmk3Id = bkmkIds[2];
   var txn3 = ptSvc.moveItem(bkmk1Id, root, -1);
   txn3.doTransaction();
 
@@ -345,9 +345,9 @@ function run_test() {
   ptSvc.commitTransaction(ptSvc.createItem(uri("http://www.sortingtest.com"), srtFldId, -1, "b"));   
   ptSvc.commitTransaction(ptSvc.createItem(uri("http://www.sortingtest.com"), srtFldId, -1, "a"));
   var b = bmsvc.getBookmarkIdsForURI(uri("http://www.sortingtest.com"), {});
-  var b1 = b[2];
+  var b1 = b[0];
   var b2 = b[1];
-  var b3 = b[0];
+  var b3 = b[2];
   do_check_eq(0, bmsvc.getItemIndex(b1));
   do_check_eq(1, bmsvc.getItemIndex(b2));
   do_check_eq(2, bmsvc.getItemIndex(b3));
