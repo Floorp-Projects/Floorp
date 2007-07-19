@@ -45,7 +45,7 @@ interface nsISimpleEnumerator;
 
 [ptr] native sqlite3stmtptr(struct sqlite3_stmt);
 
-[scriptable, uuid(76b1b70e-5740-488d-b910-3f0f02ab2fd1)]
+[scriptable, uuid(98379cef-b1da-4731-8556-402f0e55eb9f)]
 interface mozIStorageStatement : mozIStorageValueArray {
   /**
    * Initialize this query with the given SQL statement.
@@ -90,6 +90,14 @@ interface mozIStorageStatement : mozIStorageValueArray {
    * Name of nth column
    */
   AUTF8String getColumnName(in unsigned long aColumnIndex);
+
+  /**
+   * Obtains the index of the column with the specified name.
+   *
+   * @param aName The name of the column.
+   * @return The index of the column with the specified name.
+   */
+  unsigned long getColumnIndex(in AUTF8String aName);
 
   /**
    * Reset parameters/statement execution
