@@ -780,11 +780,9 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
     StopResizing();
   }
 
-  // report the actual size of the window because it can be restricted
-  NSRect finalWindowFrame = [mWindow contentRectForFrameRect:[mWindow frame]];
-  mBounds.width  = (nscoord)finalWindowFrame.size.width;
-  mBounds.height = (nscoord)finalWindowFrame.size.height;
-  
+  mBounds.width  = aWidth;
+  mBounds.height = aHeight;
+
   // tell gecko to update all the child widgets
   ReportSizeEvent();
   
