@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Laurent Jouanneau <laurent.jouanneau@disruptive-innovations.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -38,6 +39,7 @@
 #include "nsISupports.idl"
 
 interface nsIAtom;
+interface nsIArray;
 interface nsISimpleEnumerator;
 interface nsIXULTemplateResult;
 interface nsIXULTemplateRuleFilter;
@@ -105,9 +107,38 @@ interface nsIXULTemplateBuilder;
  * nsIRDFDataSource or a DOM node, and will always be the same one in between
  * calls to initializeForBuilding and done.
  */
-[scriptable, uuid(11c63d9e-0c0c-444f-b252-f06c546c2ec7)]
+[scriptable, uuid(970f1c36-5d2e-4cbc-a1cf-e3327b50df71)]
 interface nsIXULTemplateQueryProcessor : nsISupports
 {
+  /**
+   * Retrieve the datasource to use for the query processor. The list of
+   * datasources in a template is specified using the datasources attribute as
+   * a space separated list of URIs. This list is processed by the builder and
+   * supplied to the query processor in the aDataSources array as a list of
+   * nsIURI objects or nsIDOMNode objects. This method may return an object
+   * corresponding to these URIs and the builder will supply this object to
+   * other query processor methods. For example, for an XML source, the
+   * datasource might be an nsIDOMNode.
+   * All of these URIs are checked by the builder so it is safe to use them.
+   * If the query processor needs to load the datasource asynchronously, it
+   * may set the aShouldDelayBuilding returned parameter to true to delay
+   * building the template content, and call the builder's Rebuild method when
+   * the data is available.
+   *
+   * @param aDataSources  the list of nsIURI objects and/or nsIDOMNode objects
+   * @param aRootNode     the root node the builder is attached to
+   * @param aIsTrusted    true if the template is in a trusted document
+   * @param aBuilder      the template builder
+   * @param aShouldDelayBuilding [out] whether the builder should wait to
+   *                                   build the content or not
+   * @returns a datasource object
+   */
+  nsISupports getDatasource(in nsIArray aDataSources,
+                            in nsIDOMNode aRootNode,
+                            in boolean aIsTrusted,
+                            in nsIXULTemplateBuilder aBuilder,
+                            out boolean aShouldDelayBuilding);
+
   /**
    * Initialize for query generation. This will be called before the rules are
    * processed and whenever the template is rebuilt. This method must be
