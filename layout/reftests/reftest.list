@@ -52,3 +52,6 @@ include native-theme/reftest.list
 
 # bidi
 include bidi/reftest.list
+
+# z-index/
+include z-index/reftest.list
