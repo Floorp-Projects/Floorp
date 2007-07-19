@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Popup Recreate Test"
+  onload="setTimeout(init, 0)"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <title>Popup Recreate Test</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>      
+
+<!--
+  This is a test for bug 388361.
+
+  This test checks that a menulist's popup is properly created and sized when
+  the popup node is removed and another added in its place.
+
+  -->
+
+<script>
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+var gState = "before";
+
+function init()
+{
+  document.getElementById("menulist").open = true;
+}
+
+function recreate()
+{
+  if (gState == "before") {
+    var element = document.getElementById("menulist");
+    while (element.hasChildNodes())
+      element.removeChild(element.firstChild);
+    element.appendItem("Cat");
+    gState = "after";
+    document.getElementById("menulist").open = true;
+  }
+  else {
+    SimpleTest.finish();
+  }
+}
+
+function checkSize()
+{
+  var menulist = document.getElementById("menulist");
+  var menurect = menulist.getBoundingClientRect();
+  var popuprect = menulist.menupopup.getBoundingClientRect();
+
+  ok(Math.round(menurect.left) == Math.round(popuprect.left) &&
+     Math.round(menurect.right) == Math.round(popuprect.right) &&
+     Math.round(popuprect.right) - Math.round(popuprect.left) > 0,
+     "height " + gState)
+  document.getElementById("menulist").open = false;
+}
+]]>
+</script>
+
+<hbox>
+  <menulist id="menulist" onpopupshown="checkSize();" onpopuphidden="recreate();">
+    <menupopup>
+      <menuitem label="Cat"/>
+    </menupopup>
+  </menulist>
+</hbox>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>
