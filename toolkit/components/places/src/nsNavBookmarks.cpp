@@ -135,9 +135,9 @@ nsNavBookmarks::Init()
 
   // mDBFindURIBookmarks
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT a.* "
+      "SELECT a.id, MAX(COALESCE(a.lastModified, 0), a.dateAdded) "
       "FROM moz_bookmarks a, moz_places h "
-      "WHERE h.url = ?1 AND a.fk = h.id and a.type = ?2"),
+      "WHERE h.url = ?1 AND a.fk = h.id and a.type = ?2 ORDER BY 2 DESC"),
     getter_AddRefs(mDBFindURIBookmarks));
   NS_ENSURE_SUCCESS(rv, rv);
 
