@@ -44,6 +44,7 @@ const nsIFilePicker          = Components.interfaces.nsIFilePicker;
 const nsIIOService           = Components.interfaces.nsIIOService;
 const nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
 const nsIURL                 = Components.interfaces.nsIURL;
+const nsIAppStartup          = Components.interfaces.nsIAppStartup;
 
 var gView             = null;
 var gExtensionManager = null;
@@ -461,24 +462,62 @@ function getIDFromResourceURI(aURI)
 
 function openURL(aURL)
 {
-# If we're not Firefox, use the external protocol service to load the URI.
-#ifndef MOZ_PHOENIX
-  var uri = Components.classes["@mozilla.org/network/io-service;1"]
-                      .getService(nsIIOService).newURI(aURL, null, null);
+  const nsILoadGroup = Components.interfaces.nsILoadGroup;
+  var ios = Components.classes["@mozilla.org/network/io-service;1"]
+                            .getService(nsIIOService);
+  var uri = ios.newURI(aURL, null, null);
 
   var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
                               .getService(Components.interfaces.nsIExternalProtocolService);
-  protocolSvc.loadUrl(uri);
-# If we're a browser, open a new browser window instead.    
-#else
-  // bug 262575
-  if (window.opener && window.opener.openUILinkIn) {
-    var newWindowPref = gPref.getIntPref("browser.link.open_newwindow");
-    var where = newWindowPref == 3 ? "tab" : "window";
-    window.opener.openUILinkIn(aURL, where);
-  } else
-    openDialog("chrome://browser/content/browser.xul", "_blank", "chrome,all,dialog=no", aURL, null, null);
-#endif
+
+  if (!protocolSvc.isExposedProtocol(uri.scheme)) {
+    // If we're not a browser, use the external protocol service to load the URI.
+    protocolSvc.loadUrl(uri);
+  }
+  else {
+    var loadgroup = Components.classes["@mozilla.org/network/load-group;1"]
+                              .createInstance(nsILoadGroup);
+    var appstartup = Components.classes["@mozilla.org/toolkit/app-startup;1"]
+                               .getService(nsIAppStartup);
+
+    var loadListener = {
+      onStartRequest: function ll_start(aRequest, aContext) {
+        appstartup.enterLastWindowClosingSurvivalArea();
+      },
+      onStopRequest: function ll_stop(aRequest, aContext, aStatusCode) {
+        appstartup.exitLastWindowClosingSurvivalArea();
+      },
+      QueryInterface: function ll_QI(iid) {
+        if (iid.equals(Components.interfaces.nsISupports) ||
+            iid.equals(Components.interfaces.nsIRequestObserver) ||
+            iid.equals(Components.interfaces.nsISupportsWeakReference))
+          return this;
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+      }
+    }
+    loadgroup.groupObserver = loadListener;
+
+    var uriListener = {
+      onStartURIOpen: function(uri) { return false; },
+      doContent: function(ctype, preferred, request, handler) { return false; },
+      isPreferred: function(ctype, desired) { return false; },
+      canHandleContent: function(ctype, preferred, desired) { return false; },
+      loadCookie: null,
+      parentContentListener: null,
+      getInterface: function(iid) {
+        if (iid.equals(Components.interfaces.nsIURIContentListener))
+          return this;
+        if (iid.equals(nsILoadGroup))
+          return loadgroup;
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+      }
+    }
+
+    var channel = ios.newChannelFromURI(uri);
+    var uriLoader = Components.classes["@mozilla.org/uriloader;1"]
+                              .getService(Components.interfaces.nsIURILoader);
+    uriLoader.openURI(channel, true, uriListener);
+  }
 }
 
 function showProgressBar() {
@@ -1457,7 +1496,6 @@ function installUpdatesAll() {
 }
 
 function restartApp() {
-  const nsIAppStartup = Components.interfaces.nsIAppStartup;
 
   // Notify all windows that an application quit has been requested.
   var os = Components.classes["@mozilla.org/observer-service;1"]
