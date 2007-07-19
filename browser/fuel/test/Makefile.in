@@ -49,8 +49,10 @@ _BROWSER_FILES =browser_Application.js \
 		browser_ApplicationStorage.js \
 		browser_Browser.js \
 		browser_Bookmarks.js \
+		browser_Extensions.js \
 		ContentA.html \
 		ContentB.html \
+		ContentWithFrames.html \
 		$(NULL)
 
 libs::	$(_BROWSER_FILES)
