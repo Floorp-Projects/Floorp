@@ -2802,6 +2802,42 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
 nsresult
 PresShell::CompleteMoveInner(PRBool aForward, PRBool aExtend, PRBool aScrollIntoView)
 {
+  nsIContent* root = mSelection->GetAncestorLimiter();
+  if (root) {
+    // make the caret be either at the very beginning (0) or the very end
+    nsIContent* node = root;
+    PRInt32 offset = 0;
+    nsFrameSelection::HINT hint = nsFrameSelection::HINTLEFT;
+    if (aForward) {
+      nsIContent* next = node;
+      PRUint32 count;
+      while ((count = next->GetChildCount()) > 0) {
+        node = next;
+        offset = count;
+        next = next->GetChildAt(count - 1);
+      }
+
+      if (offset > 0 && node->GetChildAt(offset - 1)->Tag() == nsGkAtoms::br) {
+        --offset;
+        hint = nsFrameSelection::HINTRIGHT; // for bug 106855
+      }
+    }
+
+    mSelection->HandleClick(node, offset, offset, aExtend, PR_FALSE, hint);
+
+    // HandleClick resets ancestorLimiter, so set it again.
+    mSelection->SetAncestorLimiter(root);
+
+    if (aScrollIntoView) {
+      return
+        ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, 
+                                nsISelectionController::SELECTION_FOCUS_REGION,
+                                PR_TRUE);
+    }
+
+    return NS_OK;
+  }
+
   nsIScrollableView *scrollableView;
   if (!mViewManager) 
     return NS_ERROR_UNEXPECTED;
