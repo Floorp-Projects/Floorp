@@ -1,0 +1,53 @@
+Pageload Test Component
+=======================
+
+Usage:
+
+  ./firefox -tp file:///path/to/manifest.txt [-tpargs...]
+
+See ./firefox -help for other arguments.
+
+The manifest file should contain a list of URLs or URL fragments, one
+per line.  Empty lines or lines starting with # are ignored.  If URL
+fragments are specified, then -tpprefix must be used to give a prefix
+to prepend to each line in the manifest to turn it into a complete
+URL.
+
+The result is a dump to stdout via dump() --
+browser.dom.window.dump.enabled must be set to true in the profile.  A
+number of output formats can be specified via the -tpformat command
+line option, currently 'js', 'text', and 'tinderbox' are supported.
+
+Sample 'js' format output:
+
+([({page:"1280x1024-PNG/index.html", value:133, stddev:20.049937655763422}),({page:"bugzilla.mozilla.org/index.html", value:233, stddev:36.66606060105176}),({page:"espn.go.com/index.html", value:117.6, stddev:1.2}),({page:"home.netscape.com/index.html", value:97.8, stddev:47.41898354035017}),])
+
+Sample 'text' format output:
+
+============================================================
+    Page                                     mean  stdd   min   max raw
+  0 1280x1024-PNG/index.html                  133    20   121   297 297,173,122,121,124,125
+  1 bugzilla.mozilla.org/index.html           233    37   192   395 395,273,223,192,198,279
+  2 espn.go.com/index.html                    118     1   116   254 254,117,116,119,119,117
+  3 home.netscape.com/index.html               98    47     3   124 3,121,120,124,124,121
+============================================================
+
+Sample 'tinderbox' format output:
+
+__start_tp_report
+_x_x_mozilla_page_load,778.5,NaN,NaN
+_x_x_mozilla_page_load_details,avgmedian|778.5|average|766.75|minimum|NaN|maximum|NaN|stddev|NaN|0;file:///c:/proj/mozilla-cvs/perf/tp2/base/www.cnn.com/index.html;778.5;766.75;722;1027;1027;788;777;722;780|...
+__end_tp_report
+
+Note that the minimum, maximum, stddev are not calculated; they're
+always reported as NaN.  (They were the minimum and maximum values of
+any sampled value, and the standard deviation across all sampled
+values -- not very useful.)
+
+TODO
+====
+
+* Command line option to choose whether to run with or without browser chrome.  Currently runs without.
+
+* Tinderbox-dropping style output
+  * better yet would be to teach tinderbox about JSON
