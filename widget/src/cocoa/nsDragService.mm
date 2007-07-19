@@ -134,6 +134,9 @@ static nsresult SetUpDragClipboard(nsISupportsArray* aTransferableArray)
       else if (currentKey == NSTIFFPboardType) {
         [dragPBoard setData:currentValue forType:currentKey];
       }
+      else if (currentKey == NSFilesPromisePboardType) {
+        [dragPBoard setPropertyList:currentValue forType:currentKey];        
+      }
     }
   }
 
@@ -271,18 +274,11 @@ nsDragService::InvokeDragSession(nsIDOMNode* aDOMNode, nsISupportsArray* aTransf
 
   nsBaseDragService::StartDragSession();
 
-  // It is possible to specify what file types we will create, but the Finder doesn't
-  // care; it is happy to store any type of file it is handed. So use an empty string
-  // for type.
-  NSPasteboard* workingPBoard = [NSPasteboard pasteboardWithName:NSDragPboard];
-  NSArray* fileTypeList = [NSArray arrayWithObject:@""];
-  [workingPBoard setPropertyList:fileTypeList forType:NSFilesPromisePboardType];
-
   [globalDragView dragImage:image
                          at:localPoint
                      offset:NSMakeSize(0,0)
                       event:globalDragEvent
-                 pasteboard:workingPBoard
+                 pasteboard:[NSPasteboard pasteboardWithName:NSDragPboard]
                      source:globalDragView
                   slideBack:YES];
 
