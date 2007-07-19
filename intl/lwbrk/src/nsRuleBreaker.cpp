@@ -15,11 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Theppitak Karoonboonyanan <thep@linux.thai.net>.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * - Theppitak Karoonboonyanan <thep@linux.thai.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -34,42 +35,19 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsILineBreaker_h__
-#define nsILineBreaker_h__
 
-#include "nsISupports.h"
+#include "nsComplexBreaker.h"
 
-#include "nscore.h"
+#define TH_UNICODE
+#include "rulebrk.h"
 
-#define NS_LINEBREAKER_NEED_MORE_TEXT -1
-
-// {5ae68851-d9a3-49fd-9388-58586dad8044}
-#define NS_ILINEBREAKER_IID \
-{ 0x5ae68851, 0xd9a3, 0x49fd, \
-    { 0x93, 0x88, 0x58, 0x58, 0x6d, 0xad, 0x80, 0x44 } }
-
-class nsILineBreaker : public nsISupports
+void
+NS_GetComplexLineBreaks(const PRUnichar* aText, PRUint32 aLength,
+                        PRPackedBool* aBreakBefore)
 {
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILINEBREAKER_IID)
-  virtual PRInt32 Next( const PRUnichar* aText, PRUint32 aLen, 
-                        PRUint32 aPos) = 0;
+  NS_ASSERTION(aText, "aText shouldn't be null");
 
-  virtual PRInt32 Prev( const PRUnichar* aText, PRUint32 aLen, 
-                        PRUint32 aPos) = 0;
+  for (PRUint32 i = 0; i < aLength; i++)
+    aBreakBefore[i] = (0 == TrbWordBreakPos(aText, i, aText + i, aLength - i));
+}
 
-  // Call this on a word with whitespace at either end. We will apply JISx4501
-  // rules to find breaks inside the word. aBreakBefore is set to the break-
-  // before status of each character; aBreakBefore[0] will always be false
-  // because we never return a break before the first character.
-  // aLength is the length of the aText array and also the length of the aBreakBefore
-  // output array.
-  virtual void GetJISx4051Breaks(const PRUnichar* aText, PRUint32 aLength,
-                                 PRPackedBool* aBreakBefore) = 0;
-  virtual void GetJISx4051Breaks(const PRUint8* aText, PRUint32 aLength,
-                                 PRPackedBool* aBreakBefore) = 0;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsILineBreaker, NS_ILINEBREAKER_IID)
-
-#endif  /* nsILineBreaker_h__ */
