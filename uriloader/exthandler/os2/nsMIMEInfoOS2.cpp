@@ -63,7 +63,7 @@ nsMIMEInfoOS2::~nsMIMEInfoOS2()
 {
 }
 
-NS_IMETHODIMP nsMIMEInfoOS2::LaunchWithURI(nsIFile* aURI)
+NS_IMETHODIMP nsMIMEInfoOS2::LaunchWithURI(nsIURI* aURI)
 {
   nsresult rv = NS_OK;
 
