@@ -96,6 +96,7 @@ var qmo = {
 			
 			a.textContent = text;
 			a.href = links[i].url;
+			a.target = "blank_";
 		}
 	},
 };
