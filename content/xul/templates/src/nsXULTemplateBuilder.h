@@ -53,7 +53,6 @@
 #include "nsIRDFObserver.h"
 #include "nsIRDFService.h"
 #include "nsIXULTemplateBuilder.h"
-#include "nsIDOMEventListener.h"
 
 #include "nsFixedSizeAllocator.h"
 #include "nsVoidArray.h"
@@ -78,7 +77,6 @@ class nsIRDFCompositeDataSource;
  * set of rules.
  */
 class nsXULTemplateBuilder : public nsIXULTemplateBuilder,
-                             public nsIDOMEventListener,
                              public nsStubDocumentObserver
 {
 public:
@@ -100,8 +98,6 @@ public:
 
     // nsIXULTemplateBuilder interface
     NS_DECL_NSIXULTEMPLATEBUILDER
-
-    NS_DECL_NSIDOMEVENTLISTENER
 
     // nsIMutationObserver
     NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
