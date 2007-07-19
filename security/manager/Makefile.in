@@ -85,7 +85,7 @@ endif
 
 # SunOS SPARC
 ifeq ($(OS_ARCH), SunOS)
-ifneq ($(OS_TEST), i86pc)
+ifneq (86,$(findstring 86,$(OS_TEST)))
 ifdef HAVE_64BIT_OS
 HAVE_FREEBL_LIBS =
 HAVE_FREEBL_LIBS_64 = 1
