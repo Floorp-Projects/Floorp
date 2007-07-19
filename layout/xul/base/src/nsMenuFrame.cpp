@@ -1154,6 +1154,7 @@ nsMenuFrame::RemoveFrame(nsIAtom*        aListName,
     // Go ahead and remove this frame.
     mPopupFrame->Destroy();
     mPopupFrame = nsnull;
+    mLastPref.SizeTo(-1, -1);
     PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                        NS_FRAME_HAS_DIRTY_CHILDREN);
@@ -1174,6 +1175,7 @@ nsMenuFrame::InsertFrames(nsIAtom*        aListName,
 
   if (!mPopupFrame && aFrameList->GetType() == nsGkAtoms::menuPopupFrame) {
     mPopupFrame = static_cast<nsMenuPopupFrame *>(aFrameList);
+    mLastPref.SizeTo(-1, -1);
 
 #ifdef DEBUG_LAYOUT
     nsBoxLayoutState state(PresContext());
@@ -1201,6 +1203,7 @@ nsMenuFrame::AppendFrames(nsIAtom*        aListName,
 
   if (!mPopupFrame && aFrameList->GetType() == nsGkAtoms::menuPopupFrame) {
     mPopupFrame = static_cast<nsMenuPopupFrame *>(aFrameList);
+    mLastPref.SizeTo(-1, -1);
 
 #ifdef DEBUG_LAYOUT
     nsBoxLayoutState state(PresContext());
