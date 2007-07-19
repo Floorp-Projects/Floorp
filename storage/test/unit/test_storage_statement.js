@@ -86,6 +86,30 @@ function test_getColumnName()
   do_check_eq("name", stmt.getColumnName(0));
 }
 
+function test_getColumnIndex_same_case()
+{
+  var stmt = createStatement("SELECT name, id FROM test");
+  do_check_eq(0, stmt.getColumnIndex("name"));
+  do_check_eq(1, stmt.getColumnIndex("id"));
+}
+
+function test_getColumnIndex_different_case()
+{
+  var stmt = createStatement("SELECT name, id FROM test");
+  try {
+    do_check_eq(0, stmt.getColumnIndex("NaMe"));
+    do_throw("should not get here");
+  } catch (e) {
+    do_check_eq(Cr.NS_ERROR_INVALID_ARG, e.result);
+  }
+  try {
+  do_check_eq(1, stmt.getColumnIndex("Id"));
+    do_throw("should not get here");
+  } catch (e) {
+    do_check_eq(Cr.NS_ERROR_INVALID_ARG, e.result);
+  }
+}
+
 function test_state_ready()
 {
   var stmt = createStatement("SELECT name, id FROM test");
@@ -112,7 +136,9 @@ function test_state_executing()
 var tests = [test_parameterCount_none, test_parameterCount_one,
              test_getParameterName, test_getParameterIndex_different,
              test_getParameterIndex_same, test_columnCount,
-             test_getColumnName, test_state_ready, test_state_executing];
+             test_getColumnName, test_getColumnIndex_same_case,
+             test_getColumnIndex_different_case, test_state_ready,
+             test_state_executing];
 
 function run_test()
 {
