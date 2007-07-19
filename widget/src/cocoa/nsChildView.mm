@@ -707,7 +707,6 @@ NS_IMETHODIMP nsChildView::ModalEventFilter(PRBool aRealEvent, void *aEvent,
 }
 
 
-// Enable/disable this view
 NS_IMETHODIMP nsChildView::Enable(PRBool aState)
 {
   return NS_OK;
@@ -723,24 +722,21 @@ NS_IMETHODIMP nsChildView::IsEnabled(PRBool *aState)
 }
 
 
-// Set the focus on this component
 NS_IMETHODIMP nsChildView::SetFocus(PRBool aRaise)
 {
   NSWindow* window = [mView window];
   if (window)
-    [window makeFirstResponder: mView];
+    [window makeFirstResponder:mView];
   return NS_OK;
 }
 
 
-// Get this component font
 nsIFontMetrics* nsChildView::GetFont(void)
 {
   return nsnull;
 }
 
 
-// Set this component font
 NS_IMETHODIMP nsChildView::SetFont(const nsFont &aFont)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -1405,51 +1401,34 @@ PRBool nsChildView::DispatchMouseEvent(nsMouseEvent &aEvent)
 
 PRBool nsChildView::ReportDestroyEvent()
 {
-  // nsEvent
   nsGUIEvent event(PR_TRUE, NS_DESTROY, this);
   event.time = PR_IntervalNow();
-
-  // dispatch event
-  return (DispatchWindowEvent(event));
+  return DispatchWindowEvent(event);
 }
 
 
 PRBool nsChildView::ReportMoveEvent()
 {
-  // nsEvent
   nsGUIEvent moveEvent(PR_TRUE, NS_MOVE, this);
-  moveEvent.refPoint.x     = mBounds.x;
-  moveEvent.refPoint.y     = mBounds.y;
-  moveEvent.time        = PR_IntervalNow();
-
-  // dispatch event
-  return (DispatchWindowEvent(moveEvent));
+  moveEvent.refPoint.x = mBounds.x;
+  moveEvent.refPoint.y = mBounds.y;
+  moveEvent.time       = PR_IntervalNow();
+  return DispatchWindowEvent(moveEvent);
 }
 
 
 PRBool nsChildView::ReportSizeEvent()
 {
-  // nsEvent
   nsSizeEvent sizeEvent(PR_TRUE, NS_SIZE, this);
   sizeEvent.time        = PR_IntervalNow();
-
-  // nsSizeEvent
   sizeEvent.windowSize  = &mBounds;
   sizeEvent.mWinWidth   = mBounds.width;
   sizeEvent.mWinHeight  = mBounds.height;
-  
-  // dispatch event
-  return(DispatchWindowEvent(sizeEvent));
+  return DispatchWindowEvent(sizeEvent);
 }
 
 
 #pragma mark -
-
-
-void nsChildView::CalcWindowRegions()
-{
-  // i don't think this is necessary anymore...
-}
 
 
 /*  Calculate the x and y offsets for this particular widget
@@ -1567,7 +1546,7 @@ NS_IMETHODIMP nsChildView::CaptureRollupEvents(nsIRollupListener * aListener,
 
 NS_IMETHODIMP nsChildView::SetTitle(const nsAString& title)
 {
-  // nothing to do here
+  // child views don't have titles
   return NS_OK;
 }
 
