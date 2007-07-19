@@ -108,7 +108,7 @@ SimpleTest.report = function () {
             if (test.todo && !test.result) {
                 todo++;
                 cls = "test_todo"
-                msg = "todo - " + test.name;   
+                msg = "todo - " + test.name + " " + test.diag;
             } else if (test.result &&!test.todo) {
                 passed++;
                 cls = "test_ok";
