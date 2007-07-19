@@ -44,7 +44,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(577cb745-8caf-11d3-aaef-00805f8a4905)]
+[scriptable, uuid(67cf6231-c303-4f7e-b9b1-a0e87772ecfd)]
 interface nsISidebar : nsISupports
 {
     void addPanel(in wstring aTitle, in string aContentURL,
