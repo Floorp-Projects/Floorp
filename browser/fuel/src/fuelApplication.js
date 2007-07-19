@@ -38,6 +38,8 @@
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 //=================================================
 // Shutdown - used to store cleanup functions which will
 //            be called on Application shutdown
@@ -70,7 +72,9 @@ Console.prototype = {
       // console was already open
       console.focus();
     }
-  }
+  },
+  
+  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIConsole])
 };
 
 
@@ -96,7 +100,9 @@ EventItem.prototype = {
   
   preventDefault : function ei_pd() {
     this._cancel = true;
-  }
+  },
+  
+  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIEventItem])
 };
 
 
@@ -141,7 +147,9 @@ Events.prototype = {
     });
     
     return !eventItem._cancel;
-  }
+  },
+  
+  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIEvents])
 };
 
 
@@ -161,7 +169,8 @@ function PreferenceBranch(aBranch) {
   this._prefs.QueryInterface(Ci.nsIPrefBranch);
   this._prefs.QueryInterface(Ci.nsIPrefBranch2);
   
-  this._prefs.addObserver(this._root, this, false);
+  // we want to listen to "all" changes for this branch, so pass in a blank domain
+  this._prefs.addObserver("", this, true);
   this._events = new Events();
   
   var self = this;
@@ -263,7 +272,9 @@ PreferenceBranch.prototype = {
   
   reset : function prefs_reset() {
     this._prefs.resetBranch("");
-  }
+  },
+  
+  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIPreferenceBranch, Ci.nsISupportsWeakReference])
 };
 
 
@@ -338,7 +349,9 @@ Preference.prototype = {
   
   reset : function pref_reset() {
     this.branch._prefs.clearUserPref(this.name);
-  }
+  },
+  
+  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIPreference])
 };
 
 
@@ -367,7 +380,9 @@ SessionStorage.prototype = {
   
   get : function ss_get(aName, aDefaultValue) {
     return this.has(aName) ? this._storage[aName] : aDefaultValue;
-  }
+  },
+  
+  QueryInterface : XPCOMUtils.generateQI([Ci.fuelISessionStorage])
 };
 
 
@@ -452,7 +467,9 @@ Extension.prototype = {
   
   get events() {
     return this._events;
-  }
+  },
+  
+  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIExtension])
 };
 
 
@@ -518,7 +535,9 @@ Extensions.prototype = {
   
   get : function exts_get(aId) {
     return this.has(aId) ? this._get(aId) : null;
-  }
+  },
+  
+  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIExtensions])
 };
 
 //=================================================
@@ -612,7 +631,7 @@ Window.prototype = {
    * Helper used to setup event handlers on the XBL element. Note that the events
    * are actually dispatched to tabs, so we capture them.
    */
-  _watch : function(aType) {
+  _watch : function win_watch(aType) {
     var self = this;
     this._tabbrowser.addEventListener(aType, 
       this._cleanup[aType] = function(e){ self._event(e); },
@@ -622,7 +641,7 @@ Window.prototype = {
   /*
    * Helper event callback used to redirect events made on the XBL element
    */
-  _event : function(aEvent) {
+  _event : function win_event(aEvent) {
     this._events.dispatch(aEvent.type, "");
   },
   
@@ -640,11 +659,11 @@ Window.prototype = {
     return new BrowserTab(this._window, this._tabbrowser.selectedBrowser);
   },
   
-  open : function(aURI) {
+  open : function win_open(aURI) {
     return new BrowserTab(this._window, this._tabbrowser.addTab(aURI.spec).linkedBrowser);
   },
   
-  _shutdown : function() {
+  _shutdown : function win_shutdown() {
     for (var type in this._cleanup)
       this._tabbrowser.removeEventListener(type, this._cleanup[type], true);
     this._cleanup = null;
@@ -652,7 +671,9 @@ Window.prototype = {
     this._window = null;
     this._tabbrowser = null;
     this._events = null;
-  }
+  },
+  
+  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIWindow])
 };
 
 
@@ -700,7 +721,7 @@ BrowserTab.prototype = {
   /*
    * Helper used to setup event handlers on the XBL element
    */
-  _watch : function(aType) {
+  _watch : function bt_watch(aType) {
     var self = this;
     this._browser.addEventListener(aType,
       this._cleanup[aType] = function(e){ self._event(e); },
@@ -710,10 +731,15 @@ BrowserTab.prototype = {
   /*
    * Helper event callback used to redirect events made on the XBL element
    */
-  _event : function(aEvent) {
-    if (aEvent.type == "load" && (!aEvent.originalTarget instanceof Ci.nsIDOMHTMLDocument ||
-      aEvent.originalTarget.defaultView.frameElement))
-      return;
+  _event : function bt_event(aEvent) {
+    if (aEvent.type == "load") {
+      if (!(aEvent.originalTarget instanceof Ci.nsIDOMHTMLDocument))
+        return;
+        
+      if (aEvent.originalTarget.defaultView instanceof Ci.nsIDOMWindowInternal &&
+          aEvent.originalTarget.defaultView.frameElement)
+        return;
+    }
       
     this._events.dispatch(aEvent.type, "");
   },
@@ -721,33 +747,33 @@ BrowserTab.prototype = {
   /*
    * Helper used to determine the index offset of the browsertab
    */
-  _getTab : function() {
+  _getTab : function bt_gettab() {
     var tabs = this._tabbrowser.mTabs;
     return tabs[this.index] || null;
   },
   
-  load : function(aURI) {
+  load : function bt_load(aURI) {
     this._browser.loadURI(aURI.spec, null, null);
   },
   
-  focus : function() {
+  focus : function bt_focus() {
     this._tabbrowser.selectedTab = this._getTab();
     this._tabbrowser.focus();
   },
   
-  close : function() {
+  close : function bt_close() {
     this._tabbrowser.removeTab(this._getTab());
   },
   
-  moveBefore : function(aBefore) {
+  moveBefore : function bt_movebefore(aBefore) {
     this._tabbrowser.moveTabTo(this._getTab(), aBefore.index);
   },
   
-  moveToEnd : function() {
+  moveToEnd : function bt_moveend() {
     this._tabbrowser.moveTabTo(this._getTab(), this._tabbrowser.browsers.length);
   },
   
-  _shutdown : function() {
+  _shutdown : function bt_shutdown() {
     for (var type in this._cleanup)
       this._browser.removeEventListener(type, this._cleanup[type], true);
     this._cleanup = null;
@@ -756,7 +782,9 @@ BrowserTab.prototype = {
     this._tabbrowser = null;
     this._browser = null;
     this._events = null;
-  }
+  },
+  
+  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIBrowserTab])
 };
 
 
@@ -771,7 +799,7 @@ Annotations.prototype = {
     return Utilities.annotations.getItemAnnotationNames(this._id, {});
   },
   
-  has : function(aName) {
+  has : function ann_has(aName) {
     return Utilities.annotations.itemHasAnnotation(this._id, aName);
   },
   
@@ -783,10 +811,12 @@ Annotations.prototype = {
     Utilities.annotations.setItemAnnotation(this._id, aName, aValue, 0, aExpiration);
   },
     
-  remove : function(aName) {
+  remove : function ann_remove(aName) {
     if (aName)
       Utilities.annotations.removeItemAnnotation(this._id, aName);
-  }
+  },
+  
+  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIAnnotations])
 };
 
 
@@ -806,7 +836,7 @@ function Bookmark(aId, aParent, aType) {
 }
 
 Bookmark.prototype = {
-  _shutdown : function() {
+  _shutdown : function bm_shutdown() {
     this._annotations = null;
     this._events = null;
     
@@ -870,49 +900,42 @@ Bookmark.prototype = {
     return this._events;
   },
   
-  remove : function() {
+  remove : function bm_remove() {
     Utilities.bookmarks.removeItem(this._id);
   },
   
   // observer
-  onBeginUpdateBatch : function() {
+  onBeginUpdateBatch : function bm_obub() {
   },
 
-  onEndUpdateBatch : function() {
+  onEndUpdateBatch : function bm_oeub() {
   },
 
-  onItemAdded : function(aId, aFolder, aIndex) {
+  onItemAdded : function bm_oia(aId, aFolder, aIndex) {
     // bookmark object doesn't exist at this point
   },
 
-  onItemRemoved : function(aId, aFolder, aIndex) {
+  onItemRemoved : function bm_oir(aId, aFolder, aIndex) {
     if (this._id == aId)
       this._events.dispatch("remove", aId);
   },
 
-  onItemChanged : function(aId, aProperty, aIsAnnotationProperty, aValue) {
+  onItemChanged : function bm_oic(aId, aProperty, aIsAnnotationProperty, aValue) {
     if (this._id == aId)
       this._events.dispatch("change", aProperty);
   },
 
-  onItemVisited: function(aId, aVisitID, aTime) {
+  onItemVisited: function bm_oiv(aId, aVisitID, aTime) {
   },
 
-  onItemMoved: function(aId, aOldParent, aOldIndex, aNewParent, aNewIndex) {
+  onItemMoved: function bm_oim(aId, aOldParent, aOldIndex, aNewParent, aNewIndex) {
     if (this._id == aId) {
       this._parent = new BookmarkFolder(aNewParent, Utilities.bookmarks.getFolderIdForItem(aNewParent));    
       this._events.dispatch("move", aId);
     }
   },
 
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Ci.fuelIBookmark) ||
-        aIID.equals(Ci.nsINavBookmarkObserver) ||
-        aIID.equals(Ci.nsISupports)) {
-      return this;
-    }
-    throw Component.result.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIBookmark, Ci.nsINavBookmarkObserver])
 }; 
 
 
@@ -935,7 +958,7 @@ function BookmarkFolder(aId, aParent) {
 }
 
 BookmarkFolder.prototype = {
-  _shutdown : function() {
+  _shutdown : function bmf_shutdown() {
     this._annotations = null;
     this._events = null;
     
@@ -1013,36 +1036,36 @@ BookmarkFolder.prototype = {
     return items;
   },
   
-  addBookmark : function(aTitle, aUri) {
+  addBookmark : function bmf_addbm(aTitle, aUri) {
     var newBookmarkID = Utilities.bookmarks.insertBookmark(this._id, aUri, Utilities.bookmarks.DEFAULT_INDEX, aTitle);
     var newBookmark = new Bookmark(newBookmarkID, this, "bookmark");
     return newBookmark;
   },
   
-  addSeparator : function() {
+  addSeparator : function bmf_addsep() {
     var newBookmarkID = Utilities.bookmarks.insertSeparator(this._id, Utilities.bookmarks.DEFAULT_INDEX);
     var newBookmark = new Bookmark(newBookmarkID, this, "separator");
     return newBookmark;
   },
   
-  addFolder : function(aTitle) {
+  addFolder : function bmf_addfolder(aTitle) {
     var newFolderID = Utilities.bookmarks.createFolder(this._id, aTitle, Utilities.bookmarks.DEFAULT_INDEX);
     var newFolder = new BookmarkFolder(newFolderID, this);
     return newFolder;
   },
   
-  remove : function() {
+  remove : function bmf_remove() {
     Utilities.bookmarks.removeFolder(this._id);
   },
   
   // observer
-  onBeginUpdateBatch : function() {
+  onBeginUpdateBatch : function bmf_obub() {
   },
 
-  onEndUpdateBatch : function() {
+  onEndUpdateBatch : function bmf_oeub() {
   },
 
-  onItemAdded : function(aId, aFolder, aIndex) {
+  onItemAdded : function bmf_oia(aId, aFolder, aIndex) {
     // handle root folder events
     if (!this._parent)
       this._events.dispatch("add", aId);
@@ -1052,7 +1075,7 @@ BookmarkFolder.prototype = {
       this._events.dispatch("addchild", aId);
   },
 
-  onItemRemoved : function(aId, aFolder, aIndex) {
+  onItemRemoved : function bmf_oir(aId, aFolder, aIndex) {
     // handle root folder events
     if (!this._parent || this._id == aId)
       this._events.dispatch("remove", aId);
@@ -1062,16 +1085,16 @@ BookmarkFolder.prototype = {
       this._events.dispatch("removechild", aId);
   },
 
-  onItemChanged : function(aId, aProperty, aIsAnnotationProperty, aValue) {
+  onItemChanged : function bmf_oic(aId, aProperty, aIsAnnotationProperty, aValue) {
     // handle root folder and this folder events
     if (!this._parent || this._id == aId)
       this._events.dispatch("change", aProperty);
   },
 
-  onItemVisited: function(aId, aVisitID, aTime) {
+  onItemVisited: function bmf_oiv(aId, aVisitID, aTime) {
   },
 
-  onItemMoved: function(aId, aOldParent, aOldIndex, aNewParent, aNewIndex) {
+  onItemMoved: function bmf_oim(aId, aOldParent, aOldIndex, aNewParent, aNewIndex) {
     // handle this folder event, root folder cannot be moved
     if (this._id == aId) {
       this._parent = new BookmarkFolder(aNewParent, Utilities.bookmarks.getFolderIdForItem(aNewParent));    
@@ -1079,14 +1102,7 @@ BookmarkFolder.prototype = {
     }
   },
 
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Ci.fuelIBookmarkFolder) ||
-        aIID.equals(Ci.nsINavBookmarkObserver) ||
-        aIID.equals(Ci.nsISupports)) {
-      return this;
-    }
-    throw Component.result.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIBookmarkFolder, Ci.nsINavBookmarkObserver])
 }; 
 
 
@@ -1195,17 +1211,7 @@ Application.prototype = {
   },
   
   // for nsISupports
-  QueryInterface: function app_qi(aIID) {
-    // add any other interfaces you support here
-    if (aIID.equals(Ci.fuelIApplication) ||
-        aIID.equals(Ci.nsIObserver) ||
-        aIID.equals(Ci.nsIClassInfo) ||
-        aIID.equals(Ci.nsISupports))
-    {
-      return this;
-    }
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIApplication, Ci.nsIObserver, Ci.nsIClassInfo]),
   
   get console() {
     if (this._console == null)
