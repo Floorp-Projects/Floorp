@@ -378,6 +378,9 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
 
       [pasteboardOutputDict setObject:tiffData forKey:NSTIFFPboardType];
     }
+    else if (flavorStr.EqualsLiteral(kFilePromiseMime)) {
+      [pasteboardOutputDict setObject:[NSArray arrayWithObject:@""] forKey:NSFilesPromisePboardType];      
+    }
 
     // If it wasn't a type that we recognize as exportable we don't put it on the system
     // clipboard. We'll just access it from our cached transferable when we need it.
