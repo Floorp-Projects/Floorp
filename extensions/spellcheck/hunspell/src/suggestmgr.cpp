@@ -109,7 +109,7 @@ SuggestMgr::SuggestMgr(const char * tryme, int maxn,
         w_char t[MAXSWL];    
         ctryl = u8_u16(t, MAXSWL, tryme);
         ctry_utf = (w_char *) malloc(ctryl * sizeof(w_char));
-        memcpy(ctry_utf, t, ctryl * sizeof(w_char));
+        if (ctry_utf) memcpy(ctry_utf, t, ctryl * sizeof(w_char));
     } else {
         ctry = mystrdup(tryme);
         ctryl = strlen(ctry);
@@ -502,7 +502,6 @@ int SuggestMgr::doubletwochars(char** wlst, const char * word, int ns, int cpdsu
 // perhaps we doubled two characters (pattern aba -> ababa, for example vacation -> vacacation)
 int SuggestMgr::doubletwochars_utf(char ** wlst, const w_char * word, int wl, int ns, int cpdsuggest)
 {
-  w_char        tmpc;
   w_char        candidate_utf[MAXSWL];
   char          candidate[MAXSWUTF8L];
   int state=0;
@@ -620,7 +619,6 @@ int SuggestMgr::forgotchar(char ** wlst, const char * word, int ns, int cpdsugge
    char candidate[MAXSWUTF8L];
    const char * p;
    char *       q;
-   int cwrd;
    time_t timelimit = time(NULL);
    int timer = MINTIMER;
    int wl = strlen(word);
@@ -821,6 +819,7 @@ int SuggestMgr::longswapchar_utf(char ** wlst, const w_char * word, int wl, int 
          tmpc = *p;
          *p = *q;
          *q = tmpc;
+         u16_u8(candidate, MAXSWUTF8L, candidate_utf, wl);
          ns = testsug(wlst, candidate, strlen(candidate), ns, cpdsuggest, NULL, NULL);
          if (ns == -1) return -1;
          *q = *p;
@@ -1468,6 +1467,7 @@ char * SuggestMgr::suggest_morph_for_spelling_error(const char * word)
 {
     char * p = NULL;
     char ** wlst = (char **) calloc(maxSug, sizeof(char *));
+    if (!**wlst) return NULL;
     // we will use only the first suggestion
     for (int i = 0; i < maxSug - 1; i++) wlst[i] = "";
     int ns = suggest(&wlst, word, maxSug - 1);
@@ -1476,7 +1476,7 @@ char * SuggestMgr::suggest_morph_for_spelling_error(const char * word)
         free(wlst[maxSug - 1]);
     }
     if (wlst) free(wlst);
-    return p;    
+    return p;
 }
 #endif // END OF HUNSPELL_EXPERIMENTAL CODE
 
@@ -1669,6 +1669,12 @@ void SuggestMgr::lcs(const char * s, const char * s2, int * l1, int * l2, char *
   }
   c = (char *) malloc((m + 1) * (n + 1));
   b = (char *) malloc((m + 1) * (n + 1));
+  if (!c || !b) {
+    if (c) free(c);
+    if (b) free(b);
+    *result = NULL;
+    return;
+  }
   for (i = 1; i <= m; i++) c[i*(n+1)] = 0;
   for (j = 0; j <= n; j++) c[j] = 0;
   for (i = 1; i <= m; i++) {
@@ -1700,6 +1706,7 @@ int SuggestMgr::lcslen(const char * s, const char* s2) {
   char * result;
   int len = 0;
   lcs(s, s2, &m, &n, &result);
+  if (!result) return 0;
   i = m;
   j = n;
   while ((i != 0) && (j != 0)) {
@@ -1711,6 +1718,6 @@ int SuggestMgr::lcslen(const char * s, const char* s2) {
       i--;
     } else j--;
   }
-  if (result) free(result);
+  free(result);
   return len;
 }

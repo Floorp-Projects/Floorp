@@ -448,7 +448,9 @@ private:
 
   nsCOMPtr<nsIFile>                    mPluginRegFile;
   nsCOMPtr<nsIPrefBranch>              mPrefService;
+#ifdef XP_WIN
   nsRefPtr<nsPluginDirServiceProvider> mPrivateDirServiceProvider;
+#endif /* XP_WIN */
 
   nsWeakPtr mCurrentDocument; // weak reference, we use it to id document only
 

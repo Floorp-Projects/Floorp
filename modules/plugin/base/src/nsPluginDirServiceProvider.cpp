@@ -48,8 +48,6 @@
 #include "prmem.h"
 #include "nsArrayEnumerator.h"
 
-#if defined (XP_WIN)
-
 typedef struct structVer
 {
   WORD wMajor;
@@ -193,7 +191,6 @@ CompareVersion(verBlock vbVersionOld, verBlock vbVersionNew)
   /* the versions are all the same */
   return 0;
 }
-#endif
 
 //*****************************************************************************
 // nsPluginDirServiceProvider::Constructor/Destructor
@@ -229,7 +226,6 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant,
   *_retval = nsnull;
   *persistant = PR_TRUE;
 
-#if defined(XP_WIN)
   nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (!prefs) {
     return rv;
@@ -544,7 +540,6 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant,
     }
 
   }
-#endif
 
   if (localFile && NS_SUCCEEDED(rv))
     return CallQueryInterface(localFile, _retval);
@@ -552,7 +547,6 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant,
   return rv;
 }
 
-#ifdef XP_WIN
 nsresult
 nsPluginDirServiceProvider::GetPLIDDirectories(nsISimpleEnumerator **aEnumerator)
 {
@@ -634,6 +628,4 @@ nsPluginDirServiceProvider::GetPLIDDirectoriesWithHKEY(HKEY aKey, nsCOMArray<nsI
   ::RegCloseKey(baseloc);
   return NS_OK;
 }
-
-#endif
 

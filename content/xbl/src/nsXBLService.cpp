@@ -486,9 +486,12 @@ nsXBLService::~nsXBLService(void)
 // This function loads a particular XBL file and installs all of the bindings
 // onto the element.
 NS_IMETHODIMP
-nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFlag,
+nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
+                           nsIPrincipal* aOriginPrincipal, PRBool aAugmentFlag,
                            nsXBLBinding** aBinding, PRBool* aResolveStyle) 
-{ 
+{
+  NS_PRECONDITION(aOriginPrincipal, "Must have an origin principal");
+  
   *aBinding = nsnull;
   *aResolveStyle = PR_FALSE;
 
@@ -522,26 +525,10 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
     }
   }
 
-  // Security check - Enforce same-origin policy, except to chrome.
-  // We have to be careful to not pass aContent as the context here. 
-  // Otherwise, if there is a JS-implemented content policy, we will attempt
-  // to wrap the content node, which will try to load XBL bindings for it, if
-  // any. Since we're not done loading this binding yet, that will reenter
-  // this method and we'll end up creating a binding and then immediately
-  // clobbering it in our table.  That makes things very confused, leading to
-  // misbehavior and crashes.
-  rv = nsContentUtils::CheckSecurityBeforeLoad(aURL,
-                                               document->NodePrincipal(),
-                                               nsIScriptSecurityManager::ALLOW_CHROME,
-                                               PR_TRUE,
-                                               nsIContentPolicy::TYPE_XBL,
-                                               document);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   PRBool ready;
   nsRefPtr<nsXBLBinding> newBinding;
-  if (NS_FAILED(rv = GetBinding(aContent, aURL, PR_FALSE, &ready,
-                                getter_AddRefs(newBinding)))) {
+  if (NS_FAILED(rv = GetBinding(aContent, aURL, PR_FALSE, aOriginPrincipal,
+                                &ready, getter_AddRefs(newBinding)))) {
     return rv;
   }
 
@@ -757,23 +744,25 @@ NS_IMETHODIMP nsXBLService::BindingReady(nsIContent* aBoundElement,
                                          nsIURI* aURI, 
                                          PRBool* aIsReady)
 {
-  return GetBinding(aBoundElement, aURI, PR_TRUE, aIsReady, nsnull);
+  // Don't do a security check here; we know this binding is set to go.
+  return GetBinding(aBoundElement, aURI, PR_TRUE, nsnull, aIsReady, nsnull);
 }
 
 nsresult
 nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI, 
-                         PRBool aPeekOnly, PRBool* aIsReady, 
-                         nsXBLBinding** aResult)
+                         PRBool aPeekOnly, nsIPrincipal* aOriginPrincipal,
+                         PRBool* aIsReady, nsXBLBinding** aResult)
 {
   // More than 6 binding URIs are rare, see bug 55070 comment 18.
   nsTArray<nsIURI*> uris(6);
-  return GetBinding(aBoundElement, aURI, aPeekOnly, aIsReady, aResult, uris);
+  return GetBinding(aBoundElement, aURI, aPeekOnly, aOriginPrincipal, aIsReady,
+                    aResult, uris);
 }
 
 nsresult
 nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI, 
-                         PRBool aPeekOnly, PRBool* aIsReady,
-                         nsXBLBinding** aResult,
+                         PRBool aPeekOnly, nsIPrincipal* aOriginPrincipal,
+                         PRBool* aIsReady, nsXBLBinding** aResult,
                          nsTArray<nsIURI*>& aDontExtendURIs)
 {
   NS_ASSERTION(aPeekOnly || aResult,
@@ -796,8 +785,11 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
   nsCOMPtr<nsIDocument> boundDocument = aBoundElement->GetOwnerDoc();
 
   nsCOMPtr<nsIXBLDocumentInfo> docInfo;
-  LoadBindingDocumentInfo(aBoundElement, boundDocument, aURI, PR_FALSE,
-                          getter_AddRefs(docInfo));
+  nsresult rv = LoadBindingDocumentInfo(aBoundElement, boundDocument, aURI,
+                                        aOriginPrincipal,
+                                        PR_FALSE, getter_AddRefs(docInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   if (!docInfo)
     return NS_ERROR_FAILURE;
 
@@ -830,9 +822,11 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
   PRBool hasBase = protoBinding->HasBasePrototype();
   nsXBLPrototypeBinding* baseProto = protoBinding->GetBasePrototype();
   if (baseProto) {
-    nsresult rv = GetBinding(aBoundElement, baseProto->BindingURI(), aPeekOnly,
-                             aIsReady, getter_AddRefs(baseBinding),
-                             aDontExtendURIs);
+    // Use the NodePrincipal() of the <binding> element in question
+    // for the security check.
+    rv = GetBinding(aBoundElement, baseProto->BindingURI(), aPeekOnly,
+                    child->NodePrincipal(), aIsReady,
+                    getter_AddRefs(baseBinding), aDontExtendURIs);
     if (NS_FAILED(rv))
       return rv; // We aren't ready yet.
   }
@@ -899,10 +893,9 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
         // Look up the prefix.
         // We have a base class binding. Load it right now.
         nsCOMPtr<nsIURI> bindingURI;
-        nsresult rv =
-          NS_NewURI(getter_AddRefs(bindingURI), value,
-                    doc->GetDocumentCharacterSet().get(),
-                    doc->GetBaseURI());
+        rv = NS_NewURI(getter_AddRefs(bindingURI), value,
+                       doc->GetDocumentCharacterSet().get(),
+                       doc->GetBaseURI());
         NS_ENSURE_SUCCESS(rv, rv);
         
         PRUint32 count = aDontExtendURIs.Length();
@@ -926,7 +919,10 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
           }
         }
 
-        rv = GetBinding(aBoundElement, bindingURI, aPeekOnly, aIsReady,
+        // Use the NodePrincipal() of the <binding> element in question
+        // for the security check.
+        rv = GetBinding(aBoundElement, bindingURI, aPeekOnly,
+                        child->NodePrincipal(), aIsReady,
                         getter_AddRefs(baseBinding), aDontExtendURIs);
         if (NS_FAILED(rv))
           return rv; // Binding not yet ready or an error occurred.
@@ -960,15 +956,26 @@ NS_IMETHODIMP
 nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
                                       nsIDocument* aBoundDocument,
                                       nsIURI* aBindingURI,
+                                      nsIPrincipal* aOriginPrincipal,
                                       PRBool aForceSyncLoad,
                                       nsIXBLDocumentInfo** aResult)
 {
   NS_PRECONDITION(aBindingURI, "Must have a binding URI");
+  NS_PRECONDITION(!aOriginPrincipal || aBoundDocument,
+                  "If we're doing a security check, we better have a document!");
   
   nsresult rv;
-  if (aBoundDocument) {
+  if (aOriginPrincipal) {
+    // Security check - Enforce same-origin policy, except to chrome.
+    // We have to be careful to not pass aContent as the context here. 
+    // Otherwise, if there is a JS-implemented content policy, we will attempt
+    // to wrap the content node, which will try to load XBL bindings for it, if
+    // any. Since we're not done loading this binding yet, that will reenter
+    // this method and we'll end up creating a binding and then immediately
+    // clobbering it in our table.  That makes things very confused, leading to
+    // misbehavior and crashes.
     rv = nsContentUtils::
-      CheckSecurityBeforeLoad(aBindingURI, aBoundDocument->NodePrincipal(),
+      CheckSecurityBeforeLoad(aBindingURI, aOriginPrincipal,
                               nsIScriptSecurityManager::ALLOW_CHROME,
                               PR_TRUE,
                               nsIContentPolicy::TYPE_XBL,

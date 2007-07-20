@@ -3406,8 +3406,22 @@ nsDocument::AddBinding(nsIDOMElement* aContent, const nsAString& aURI)
   if (NS_FAILED(rv)) {
     return rv;
   }
+
+  // Figure out the right principal to use
+  nsCOMPtr<nsIPrincipal> subject;
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  if (secMan) {
+    rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (!subject) {
+    // Fall back to our principal.  Or should we fall back to the null
+    // principal?  The latter would just mean no binding loads....
+    subject = NodePrincipal();
+  }
   
-  return mBindingManager->AddLayeredBinding(content, uri);
+  return mBindingManager->AddLayeredBinding(content, uri, subject);
 }
 
 NS_IMETHODIMP
@@ -3439,7 +3453,21 @@ nsDocument::LoadBindingDocument(const nsAString& aURI)
                           static_cast<nsIDocument *>(this)->GetBaseURI());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mBindingManager->LoadBindingDocument(this, uri);
+  // Figure out the right principal to use
+  nsCOMPtr<nsIPrincipal> subject;
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  if (secMan) {
+    rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (!subject) {
+    // Fall back to our principal.  Or should we fall back to the null
+    // principal?  The latter would just mean no binding loads....
+    subject = NodePrincipal();
+  }
+  
+  mBindingManager->LoadBindingDocument(this, uri, subject);
 
   return NS_OK;
 }

@@ -42,9 +42,8 @@
 #include "pratom.h"
 #include "nsLWBRKDll.h"
 #include "jisx4501class.h"
-#define TH_UNICODE
-#include "th_char.h"
-#include "rulebrk.h"
+#include "nsComplexBreaker.h"
+#include "nsTArray.h"
 #include "nsUnicharUtils.h"
 
 /* 
@@ -141,15 +140,16 @@
 
 
 
-   4. We add THAI characters and make it breakable w/ all ther class
+   4. We add COMPLEX characters and make it breakable w/ all ther class
+      except after class 1 and before class [a]
 
    Class of
    Leading    Class of Trailing Char Class
    Char        
 
-              1 [a] 7  8  9 [b]15 16 18 THAI
+              1 [a] 7  8  9 [b]15 16 18 COMPLEX
                                      
-        1     X  X  X  X  X  X  X  X  X
+        1     X  X  X  X  X  X  X  X  X  X
       [a]        X                             
         7        X  X                      
         8        X              X    
@@ -158,7 +158,7 @@
        15        X        X     X     X    
        16        X                 X  X    
        18        X              X  X  X    
-     THAI                                T
+  COMPLEX        X                       T
       
      T : need special handling
 
@@ -167,7 +167,7 @@
 
                  18    <-   1
             
-       1  0000 0001 1111 1111  = 0x01FF
+       1  0000 0011 1111 1111  = 0x03FF
       [a] 0000 0000 0000 0010  = 0x0002
        7  0000 0000 0000 0110  = 0x0006
        8  0000 0000 0100 0010  = 0x0042
@@ -176,7 +176,7 @@
       15  0000 0001 0101 0010  = 0x0152
       16  0000 0001 1000 0010  = 0x0182
       18  0000 0001 1100 0010  = 0x01C2
-    THAI  0000 0000 0000 0000  = 0x0000
+ COMPLEX  0000 0010 0000 0010  = 0x0202
 
    5. Now we map the class to number
       
@@ -189,14 +189,14 @@
       6: 15
       7: 16
       8: 18
-      9: THAI
+      9: COMPLEX
 
 */
 
 #define MAX_CLASSES 10
 
 static const PRUint16 gPair[MAX_CLASSES] = {
-  0x01FF, 
+  0x03FF, 
   0x0002, 
   0x0006, 
   0x0042, 
@@ -205,7 +205,7 @@ static const PRUint16 gPair[MAX_CLASSES] = {
   0x0152, 
   0x0182, 
   0x01C2,
-  0x0000
+  0x0202
 };
 
 
@@ -215,7 +215,7 @@ GETCLASSFROMTABLE(const PRUint32* t, PRUint16 l)
   return ((((t)[(l>>3)]) >> ((l & 0x0007)<<2)) & 0x000f);
 }
 
-#define CLASS_THAI 9
+#define CLASS_COMPLEX 9
 
 
 
@@ -235,6 +235,12 @@ IS_CJK_CHAR(PRUnichar u)
 }
 
 static inline int
+IS_COMPLEX(PRUnichar u)
+{
+  return (0x0e01 <= (u) && (u) <= 0x0e5b);
+}
+
+static inline int
 IS_SPACE(PRUnichar u)
 {
   return ((u) == 0x0020 || (u) == 0x0009 || (u) == 0x000a || (u) == 0x000d || (u)==0x200b);
@@ -251,9 +257,9 @@ static PRInt8 GetClass(PRUnichar u)
    {
      c = GETCLASSFROMTABLE(gLBClass00, l);
    } 
-   else if(th_isthai(u))
+   else if( 0x0E00 == h)
    {
-     c = CLASS_THAI;
+     c = GETCLASSFROMTABLE(gLBClass0E, l);
    }
    else if( 0x2000 == h)
    {
@@ -412,68 +418,45 @@ static PRInt8 ContextualAnalysis(
 }
 
 
-PRBool nsJISx4051LineBreaker::BreakInBetween(
-  const PRUnichar* aText1 , PRUint32 aTextLen1,
-  const PRUnichar* aText2 , PRUint32 aTextLen2)
+PRInt32 nsJISx4051LineBreaker::WordMove(
+  const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos, PRInt8 aDirection)
 {
-  if(!aText1 || !aText2 || (0 == aTextLen1) || (0==aTextLen2) ||
-     NS_IS_HIGH_SURROGATE(aText1[aTextLen1-1]) && 
-     NS_IS_LOW_SURROGATE(aText2[0]) )  //Do not separate a surrogate pair
-  {
-     return PR_FALSE;
+  PRBool  textNeedsJISx4051 = PR_FALSE;
+  PRInt32 begin, end;
+
+  for (begin = aPos; begin > 0 && !IS_SPACE(aText[begin - 1]); --begin) {
+    if (IS_CJK_CHAR(aText[begin]) || IS_COMPLEX(aText[begin])) {
+      textNeedsJISx4051 = PR_TRUE;
+    }
+  }
+  for (end = aPos + 1; end < PRInt32(aLen) && !IS_SPACE(aText[end]); ++end) {
+    if (IS_CJK_CHAR(aText[end]) || IS_COMPLEX(aText[end])) {
+      textNeedsJISx4051 = PR_TRUE;
+    }
   }
 
-  //search for CJK characters until a space is found. 
-  //if CJK char is found before space, use 4051, otherwise western
-  PRInt32 cur;
+  PRInt32 ret;
+  nsAutoTArray<PRPackedBool, 2000> breakState;
+  if (!textNeedsJISx4051 || !breakState.AppendElements(end - begin)) {
+    // No complex text character, do not try to do complex line break.
+    // (This is required for serializers. See Bug #344816.)
+    // Also fall back to this when out of memory.
+    if (aDirection < 0) {
+      ret = (begin == PRInt32(aPos)) ? begin - 1 : begin;
+    } else {
+      ret = end;
+    }
+  } else {
+    GetJISx4051Breaks(aText + begin, end - begin, breakState.Elements());
 
-  for (cur= aTextLen1-1; cur>=0; cur--)
-  {
-    if (IS_SPACE(aText1[cur]))
-      break;
-    if (IS_CJK_CHAR(aText1[cur]))
-      goto ROUTE_CJK_BETWEEN;
+    ret = aPos;
+    do {
+      ret += aDirection;
+    } while (begin < ret && ret < end && !breakState[ret - begin]);
   }
 
-  for (cur= 0; cur < (PRInt32)aTextLen2; cur++)
-  {
-    if (IS_SPACE(aText2[cur]))
-      break;
-    if (IS_CJK_CHAR(aText2[cur]))
-      goto ROUTE_CJK_BETWEEN;
-  }
-
-  //now apply western rule.
-  return IS_SPACE(aText1[aTextLen1-1]) || IS_SPACE(aText2[0]);
-
-ROUTE_CJK_BETWEEN:
-
-  PRInt8 c1, c2;
-  if(NEED_CONTEXTUAL_ANALYSIS(aText1[aTextLen1-1]))
-    c1 = ContextualAnalysis((aTextLen1>1)?aText1[aTextLen1-2]:U_NULL,
-                                  aText1[aTextLen1-1],
-                                  aText2[0]);
-  else 
-    c1 = GetClass(aText1[aTextLen1-1]);
-
-  if(NEED_CONTEXTUAL_ANALYSIS(aText2[0]))
-    c2 = ContextualAnalysis(aText1[aTextLen1-1],
-                            aText2[0],
-                            (aTextLen2>1)?aText2[1]:U_NULL);
-  else 
-    c2 = GetClass(aText2[0]);
-
-  /* Handle cases for THAI */
-  if((CLASS_THAI == c1) && (CLASS_THAI == c2))
-  {
-     return (0 == TrbWordBreakPos(aText1, aTextLen1, aText2, aTextLen2));
-  }
-  else 
-  {
-     return GetPair(c1,c2);
-  }
+  return ret;
 }
-
 
 PRInt32 nsJISx4051LineBreaker::Next(
   const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos) 
@@ -481,106 +464,18 @@ PRInt32 nsJISx4051LineBreaker::Next(
   NS_ASSERTION(aText, "aText shouldn't be null");
   NS_ASSERTION(aLen > aPos, "Illegal value (length > position)");
 
-  //forward check for CJK characters until a space is found. 
-  //if CJK char is found before space, use 4051, otherwise western
-  PRUint32 cur;
-  for (cur = aPos; cur < aLen; ++cur)
-  {
-    if (IS_SPACE(aText[cur]))
-      return cur;
-    if (IS_CJK_CHAR(aText[cur]))
-      goto ROUTE_CJK_NEXT;
-  }
-  return NS_LINEBREAKER_NEED_MORE_TEXT; // Need more text
-
-ROUTE_CJK_NEXT:
-  PRInt8 c1, c2;
-  cur = aPos;
-  if(NEED_CONTEXTUAL_ANALYSIS(aText[cur]))
-  {
-    c1 = ContextualAnalysis((cur>0)?aText[cur-1]:U_NULL,
-                            aText[cur],
-                            (cur<(aLen-1)) ?aText[cur+1]:U_NULL);
-  } else  {
-    c1 = GetClass(aText[cur]);
-  }
-  
-  if(CLASS_THAI == c1) 
-     return PRUint32(TrbFollowing(aText, aLen, aPos));
-
-  for(cur++; cur <aLen; cur++)
-  {
-     if(NEED_CONTEXTUAL_ANALYSIS(aText[cur]))
-     {
-       c2 = ContextualAnalysis((cur>0)?aText[cur-1]:U_NULL,
-                               aText[cur],
-                               (cur<(aLen-1)) ?aText[cur+1]:U_NULL);
-     } else {
-       c2 = GetClass(aText[cur]);
-     }
-
-     if(GetPair(c1, c2)) {
-       return cur;
-     }
-     c1 = c2;
-  }
-  return NS_LINEBREAKER_NEED_MORE_TEXT; // Need more text
+  PRInt32 nextPos = WordMove(aText, aLen, aPos, 1);
+  return nextPos < PRInt32(aLen) ? nextPos : NS_LINEBREAKER_NEED_MORE_TEXT;
 }
 
 PRInt32 nsJISx4051LineBreaker::Prev( 
   const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos) 
 {
   NS_ASSERTION(aText, "aText shouldn't be null");
+  NS_ASSERTION(aLen >= aPos, "Illegal value (length >= position)");
 
-  //backward check for CJK characters until a space is found. 
-  //if CJK char is found before space, use 4051, otherwise western
-  PRUint32 cur;
-  for (cur = aPos - 1; cur > 0; --cur)
-  {
-    if (IS_SPACE(aText[cur]))
-    {
-      if (cur != aPos - 1) // XXXldb Why?
-        ++cur;
-      return cur;
-    }
-    if (IS_CJK_CHAR(aText[cur]))
-      goto ROUTE_CJK_PREV;
-  }
-
-  return NS_LINEBREAKER_NEED_MORE_TEXT; // Need more text
-
-ROUTE_CJK_PREV:
-  cur = aPos;
-  PRInt8 c1, c2;
-  if(NEED_CONTEXTUAL_ANALYSIS(aText[cur-1]))
-  {
-    c2 = ContextualAnalysis(((cur-1)>0)?aText[cur-2]:U_NULL,
-                            aText[cur-1],
-                            (cur<aLen) ?aText[cur]:U_NULL);
-  } else  {
-    c2 = GetClass(aText[cur-1]);
-  }
-  // To Do: 
-  //
-  // Should handle CLASS_THAI here
-  //
-  for(cur--; cur > 0; cur--)
-  {
-     if(NEED_CONTEXTUAL_ANALYSIS(aText[cur-1]))
-     {
-       c1 = ContextualAnalysis(((cur-1)>0)?aText[cur-2]:U_NULL,
-                               aText[cur-1],
-                               (cur<aLen) ?aText[cur]:U_NULL);
-     } else {
-       c1 = GetClass(aText[cur-1]);
-     }
-
-     if(GetPair(c1, c2)) {
-       return cur;
-     }
-     c2 = c1;
-  }
-  return NS_LINEBREAKER_NEED_MORE_TEXT; // Need more text
+  PRInt32 prevPos = WordMove(aText, aLen, aPos, -1);
+  return prevPos > 0 ? prevPos : NS_LINEBREAKER_NEED_MORE_TEXT;
 }
 
 void
@@ -604,16 +499,29 @@ nsJISx4051LineBreaker::GetJISx4051Breaks(const PRUnichar* aChars, PRUint32 aLeng
 
     PRBool allowBreak;
     if (cur > 0) {
-      if (CLASS_THAI == lastClass && CLASS_THAI == cl) {
-        allowBreak = 0 == TrbWordBreakPos(aChars, cur, aChars + cur, aLength - cur);
-      } else {
-        allowBreak = GetPair(lastClass, cl);
-      }
+      NS_ASSERTION(CLASS_COMPLEX != lastClass || CLASS_COMPLEX != cl,
+                   "Loop should have prevented adjacent complex chars here");
+      allowBreak = GetPair(lastClass, cl);
     } else {
       allowBreak = PR_FALSE;
     }
     aBreakBefore[cur] = allowBreak;
     lastClass = cl;
+    if (CLASS_COMPLEX == cl) {
+      PRUint32 end = cur + 1;
+
+      while (end < aLength && CLASS_COMPLEX == GetClass(aChars[end])) {
+        ++end;
+      }
+
+      NS_GetComplexLineBreaks(aChars + cur, end - cur, aBreakBefore + cur);
+
+      // restore breakability at chunk begin, which was always set to false
+      // by the complex line breaker
+      aBreakBefore[cur] = allowBreak;
+
+      cur = end - 1;
+    }
   }
 }
 

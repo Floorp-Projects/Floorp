@@ -506,6 +506,7 @@ pango-modules.h
 pango/pangofc-decoder.h
 pango/pangofc-font.h
 pango/pangofc-fontmap.h
+pango/pango-break.h
 pango/pango-fontmap.h
 pango/pango.h
 pango/pangoxft.h

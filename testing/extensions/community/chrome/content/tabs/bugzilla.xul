@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chome://qa/skin/" type="text/css"?>
+
+<!DOCTYPE overlay [
+<!ENTITY % qaDTD SYSTEM "chrome://qa/locale/qa.dtd"> %qaDTD;
+]>
+
+<overlay id="qa-bz-overlay" 
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml">
+
+<script type="application/x-javascript" src="chrome://qa/content/tabs/qa.js" />
+<script type="application/x-javascript" src="chrome://qa/content/tabs/qmo.js" />
+<tabpanel id="qa-tab-bugzilla">
+<vbox>
+  <groupbox>
+    <div xmlns="http://www.w3.org/1999/xhtml" id="qa-bz-bugzilla">
+    </div>
+  </groupbox>
+</vbox>
+</tabpanel>
+
+<script type="application/x-javascript">
+	var bz = {
+		populateFields : function() {
+			var box = $('qa-bz-bugzilla');
+			qaTools.showHideLoadingMessage(box, true);
+			qaTools.fetchFeed(qaMain.urlbundle.getString("qa.extension.url.bz.content"), 
+				function(feed) {
+					var items = feed.items;
+					var item = items.queryElementAt(0, Ci.nsIFeedEntry);
+					qaTools.showHideLoadingMessage(box, false);
+					if (item != null) {
+						var fragment = item.summary.createDocumentFragment(box);
+						box.appendChild(fragment);
+					}
+				}
+			);
+		}
+	};
+	window.addEventListener('load', bz.populateFields, false);
+</script>
+
+</overlay>

@@ -307,7 +307,6 @@ private:
                               PercentageBaseGetter aPercentageBaseGetter,
                               nscoord aDefaultValue);
 
-  PRBool GetFrameContentWidth(nscoord& aWidth);
   PRBool GetCBContentWidth(nscoord& aWidth);
   PRBool GetCBContentHeight(nscoord& aWidth);
   PRBool GetFrameBorderRectWidth(nscoord& aWidth);

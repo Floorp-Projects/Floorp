@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Laurent Jouanneau <laurent.jouanneau@disruptive-innovations.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,14 +38,23 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMXMLDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMEvent.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMXPathNSResolver.h"
+#include "nsIDocument.h"
+#include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsIServiceManager.h"
 #include "nsUnicharUtils.h"
+#include "nsIURI.h"
+#include "nsIArray.h"
+#include "nsContentUtils.h"
+#include "nsArrayUtils.h"
 
 #include "nsXULTemplateBuilder.h"
 #include "nsXULTemplateQueryProcessorXML.h"
@@ -96,13 +106,101 @@ nsXULTemplateResultSetXML::GetNext(nsISupports **aResult)
 // nsXULTemplateQueryProcessorXML
 //
 
-NS_IMPL_ISUPPORTS1(nsXULTemplateQueryProcessorXML, nsIXULTemplateQueryProcessor)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULTemplateQueryProcessorXML)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXULTemplateQueryProcessorXML)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTemplateBuilder)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULTemplateQueryProcessorXML)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTemplateBuilder)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXULTemplateQueryProcessorXML,
+                                          nsIXULTemplateQueryProcessor)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXULTemplateQueryProcessorXML,
+                                           nsIXULTemplateQueryProcessor)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULTemplateQueryProcessorXML)
+    NS_INTERFACE_MAP_ENTRY(nsIXULTemplateQueryProcessor)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULTemplateQueryProcessor)
+NS_INTERFACE_MAP_END
+
+NS_IMETHODIMP
+nsXULTemplateQueryProcessorXML::GetDatasource(nsIArray* aDataSources,
+                                              nsIDOMNode* aRootNode,
+                                              PRBool aIsTrusted,
+                                              nsIXULTemplateBuilder* aBuilder,
+                                              PRBool* aShouldDelayBuilding,
+                                              nsISupports** aResult)
+{
+    *aResult = nsnull;
+    *aShouldDelayBuilding = PR_FALSE;
+
+    nsresult rv;
+    PRUint32 length;
+
+    aDataSources->GetLength(&length);
+    if (length == 0)
+        return NS_OK;
+
+    nsCOMPtr<nsIContent> root = do_QueryInterface(aRootNode);
+    if (!root)
+        return NS_ERROR_UNEXPECTED;
+
+    nsCOMPtr<nsIDocument> doc = root->GetCurrentDoc();
+    if (!doc)
+        return NS_ERROR_UNEXPECTED;
+
+    nsIURI *docurl = doc->GetDocumentURI();
+    nsIPrincipal *docPrincipal = doc->NodePrincipal();
+
+    // we get only the first item, because the query processor supports only
+    // one document as a datasource
+
+    nsCOMPtr<nsIDOMNode> node = do_QueryElementAt(aDataSources, 0);
+
+    if (node) {
+        return CallQueryInterface(node, aResult);
+    }
+
+    nsCOMPtr<nsIURI> uri = do_QueryElementAt(aDataSources,0);
+    if (!uri)
+        return NS_ERROR_UNEXPECTED;
+
+    nsAutoString emptyStr;
+    nsCOMPtr<nsIDOMDocument> domDocument;
+    rv = nsContentUtils::CreateDocument(emptyStr, emptyStr, nsnull,
+                                        docurl, doc->GetBaseURI(),
+                                        docPrincipal,
+                                        getter_AddRefs(domDocument));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mTemplateBuilder = aBuilder;
+    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(domDocument);
+    target->AddEventListener(NS_LITERAL_STRING("load"), this, PR_FALSE);
+
+    nsCOMPtr<nsIDOMXMLDocument> xmldoc = do_QueryInterface(domDocument);
+
+    PRBool ok;
+    nsCAutoString uristrC;
+    uri->GetSpec(uristrC);
+
+    xmldoc->Load(NS_ConvertUTF8toUTF16(uristrC), &ok);
+
+    if (ok) {
+        *aShouldDelayBuilding = PR_TRUE;
+        return CallQueryInterface(domDocument, aResult);
+    }
+
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsXULTemplateQueryProcessorXML::InitializeForBuilding(nsISupports* aDatasource,
                                                       nsIXULTemplateBuilder* aBuilder,
                                                       nsIDOMNode* aRootNode)
 {
+    if (mGenerationStarted)
+        return NS_ERROR_UNEXPECTED;
+
     // the datasource is either a document or a DOM element
     nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(aDatasource);
     if (doc)
@@ -342,4 +440,30 @@ nsXULTemplateQueryProcessorXML::CreateExpression(const nsAString& aExpr,
     }
 
     return mEvaluator->CreateExpression(aExpr, nsResolver, aCompiledExpr);
+}
+
+NS_IMETHODIMP
+nsXULTemplateQueryProcessorXML::HandleEvent(nsIDOMEvent* aEvent)
+{
+    NS_PRECONDITION(aEvent, "aEvent null");
+    nsAutoString eventType;
+    aEvent->GetType(eventType);
+
+    if (eventType.EqualsLiteral("load") && mTemplateBuilder) {
+        // remove the listener
+        nsCOMPtr<nsIDOMEventTarget> target;
+        aEvent->GetTarget(getter_AddRefs(target));
+        if (target) {
+            target->RemoveEventListener(NS_LITERAL_STRING("load"), this, PR_FALSE);
+        }
+
+        // rebuild the template
+        nsresult rv = mTemplateBuilder->Rebuild();
+
+        // to avoid leak. we don't need it after...
+        mTemplateBuilder = nsnull;
+
+        return rv;
+    }
+    return NS_OK;
 }

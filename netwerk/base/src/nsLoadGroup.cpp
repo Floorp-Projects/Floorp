@@ -534,6 +534,18 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
     }
 #endif /* PR_LOGGING */
 
+#ifdef DEBUG
+    {
+      RequestMapEntry *entry =
+          static_cast<RequestMapEntry *>
+                     (PL_DHashTableOperate(&mRequests, request,
+                                          PL_DHASH_LOOKUP));
+
+      NS_ASSERTION(PL_DHASH_ENTRY_IS_FREE(entry),
+                   "Entry added to loadgroup twice, don't do that");
+    }
+#endif
+
     //
     // Do not add the channel, if the loadgroup is being canceled...
     //

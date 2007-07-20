@@ -602,6 +602,17 @@ nsXPConnect::FinishCycleCollection()
     return NS_OK;
 }
 
+nsCycleCollectionParticipant *
+nsXPConnect::ToParticipant(void *p)
+{
+    // Put this assertion here so it fires when we still have a stack
+    // showing where the bad pointer came from.
+    NS_ASSERTION(mObjRefcounts->Get(p) > 0,
+                 "JS object but unknown to the JS GC?");
+
+    return this;
+}
+
 NS_IMETHODIMP
 nsXPConnect::Root(void *p)
 {

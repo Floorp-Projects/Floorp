@@ -43,7 +43,7 @@ comments) must be one of the following:
 
 2. A test item
 
-   <failure-type>* <type> <url> <url_ref>
+   <failure-type>* [<http>] <type> <url> <url_ref>
 
    where
 
@@ -78,17 +78,45 @@ comments) must be one of the following:
           fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") ...
           fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") ...
 
-   b. <type> is one of the following:
+   b. <http>, if present, is the string "HTTP" (sans quotes), indicating that
+      the test should be run over an HTTP server because it requires certain
+      HTTP headers or a particular HTTP status.  (Don't use this if your test
+      doesn't require this functionality, because it unnecessarily slows down
+      the test.)
+
+      HTTP tests have the restriction that any resource an HTTP test accesses
+      must be accessed using a relative URL, and the test and the resource must
+      be within the directory containing the reftest manifest that describes
+      the test (or within a descendant directory).
+
+      To modify the HTTP status or headers of a resource named FOO, create a
+      sibling file named FOO^headers^ with the following contents:
+
+      [<http-status>]
+      <http-header>*
+
+      <http-status> A line of the form "HTTP ###[ <description>]", where
+                    ### indicates the desired HTTP status and <description>
+                    indicates a desired HTTP status description, if any.
+                    If this line is omitted, the default is "HTTP 200 OK".
+      <http-header> A line in standard HTTP header line format, i.e.
+                    "Field-Name: field-value".  You may not repeat the use
+                    of a Field-Name and must coalesce such headers together,
+                    and each header must be specified on a single line, but
+                    otherwise the format exactly matches that from HTTP
+                    itself.
+
+   c. <type> is one of the following:
 
       ==  The test passes if the images of the two renderings are the
           SAME.
       !=  The test passes if the images of the two renderings are 
           DIFFERENT.
 
-   c. <url> is either a relative file path or an absolute URL for the
+   d. <url> is either a relative file path or an absolute URL for the
       test page
 
-   d. <url_ref> is either a relative file path or an absolute URL for
+   e. <url_ref> is either a relative file path or an absolute URL for
       the reference page
 
    The only difference between <url> and <url_ref> is that results of

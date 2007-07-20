@@ -3311,6 +3311,7 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
     NS_RELEASE(sPluginTempDir);
   }
 
+#ifdef XP_WIN
   if (mPrivateDirServiceProvider)
   {
     nsCOMPtr<nsIDirectoryService> dirService =
@@ -3319,6 +3320,7 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
       dirService->UnregisterProvider(mPrivateDirServiceProvider);
     mPrivateDirServiceProvider = nsnull;
   }
+#endif /* XP_WIN */
 
   nsCOMPtr<nsIPrefBranch2> prefBranch(do_QueryInterface(mPrefService));
   if (prefBranch) {
@@ -5297,9 +5299,11 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
   if (compManager)
     LoadXPCOMPlugins(compManager);
 
+#ifdef XP_WIN
   // Failure here is not a show-stopper so just warn.
   rv = EnsurePrivateDirServiceProvider();
   NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to register dir service provider.");
+#endif /* XP_WIN */
 
   nsCOMPtr<nsIProperties> dirService(do_GetService(kDirectoryServiceContractID, &rv));
   if (NS_FAILED(rv))
@@ -5331,8 +5335,7 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
   mPluginsLoaded = PR_TRUE; // at this point 'some' plugins have been loaded,
                             // the rest is optional
 
-#if defined (XP_WIN)
-
+#ifdef XP_WIN
   PRBool bScanPLIDs = PR_FALSE;
 
   if (mPrefService)
@@ -5403,7 +5406,6 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
       }
     }
   }
-
 #endif
 
   // if get to this point and did not detect changes in plugins
@@ -5832,6 +5834,7 @@ nsPluginHostImpl::RemoveCachedPluginsInfo(const char *filename, nsPluginTag **re
   }
 }
 
+#ifdef XP_WIN
 nsresult
 nsPluginHostImpl::EnsurePrivateDirServiceProvider()
 {
@@ -5850,6 +5853,7 @@ nsPluginHostImpl::EnsurePrivateDirServiceProvider()
   }
   return NS_OK;
 }
+#endif /* XP_WIN */
 
 ////////////////////////////////////////////////////////////////////////
 /* Called by GetURL and PostURL */

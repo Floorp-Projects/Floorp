@@ -160,6 +160,12 @@ HashMgr::~HashMgr()
     aliasm = NULL;
   }  
 
+#ifndef OPENOFFICEORG
+#ifndef MOZILLA_CLIENT
+  if (utf8) free_utf_tbl();
+#endif
+#endif
+
   if (enc) free(enc);
   if (lang) free(lang);
   
@@ -185,7 +191,11 @@ struct hentry * HashMgr::lookup(const char *word) const
 // add a word to the hash table (private)
 
 int HashMgr::add_word(const char * word, int wl, unsigned short * aff,
-    int al, const char * desc, bool onlyupcase)
+    int al, const char *
+#ifdef HUNSPELL_EXPERIMENTAL
+desc
+#endif
+, bool onlyupcase)
 {
     char * st = mystrdup(word);
     bool upcasehomonym = false;
@@ -222,7 +232,11 @@ int HashMgr::add_word(const char * word, int wl, unsigned short * aff,
 #endif
     } else {
        struct hentry* hp = (struct hentry *) malloc (sizeof(struct hentry));
-       if (!hp) return 1;
+       if (!hp)
+       {
+           if (st) free(st);
+           return 1;
+       }
        hp->wlen = (short) wl;
        hp->alen = (short) al;
        hp->word = st;
@@ -234,7 +248,13 @@ int HashMgr::add_word(const char * word, int wl, unsigned short * aff,
             hp->description = (desc) ? get_aliasm(atoi(desc)) : mystrdup(desc);
        } else {
             hp->description = mystrdup(desc);
-            if (desc && !hp->description) return 1;
+            if (desc && !hp->description)
+            {
+                free(hp->word);
+                free(hp->astr);
+                free(hp);
+                return 1;
+            }
             if (dp->description && complexprefixes) {
                 if (utf8) reverseword_utf(hp->description); else reverseword(hp->description);
             }
@@ -247,6 +267,8 @@ int HashMgr::add_word(const char * word, int wl, unsigned short * aff,
 		if ((dp->astr) && TESTAFF(dp->astr, ONLYUPCASEFLAG, dp->alen)) {
 		    free(dp->astr);
 		    dp->astr = hp->astr;
+		    dp->alen = hp->alen;
+		    dp->alen = hp->alen;
 		    free(hp->word);
 		    free(hp);
 		    return 0;
@@ -308,9 +330,12 @@ int HashMgr::put_word_pattern(const char * word, int wl, const char * pattern)
     struct hentry * dp = lookup(pattern);
     if (!dp || !dp->astr) return 1;
     flags = (unsigned short *) malloc (dp->alen * sizeof(short));
-    memcpy((void *) flags, (void *) dp->astr, dp->alen * sizeof(short));
-    add_word(word, wl, flags, dp->alen, NULL, false);
-    return 0;
+    if (flags) {
+	memcpy((void *) flags, (void *) dp->astr, dp->alen * sizeof(short));
+	add_word(word, wl, flags, dp->alen, NULL, false);
+        return 0;
+    }
+    return 1;
 }
 
 // walk the hash table entry by entry - null at end
@@ -440,15 +465,16 @@ int HashMgr::load_tables(const char * tpath)
 	return 5;
     }
 
-    // add decapizatalized forms to handle following cases
-    // OpenOffice.org -> OPENOFFICE.ORG
-    // CIA's -> CIA'S
+    // add inner capitalized forms to handle the following allcap forms:
+    // Mixed caps: OpenOffice.org -> OPENOFFICE.ORG
+    // Allcaps with suffixes: CIA's -> CIA'S
     captype = utf8 ? get_captype_utf8(ts, wl, langnum) : get_captype(ts, wl, csconv);
     if (((captype == HUHCAP) || (captype == HUHINITCAP) ||
       ((captype == ALLCAP) && (flags != NULL))) &&
       !((flags != NULL) && TESTAFF(flags, forbiddenword, al))) {
-          unsigned short * flags2 = (unsigned short *) malloc (sizeof(unsigned short *)* (al + 1));
-          memcpy(flags2, flags, al * sizeof(unsigned short *));
+          unsigned short * flags2 = (unsigned short *) malloc (sizeof(unsigned short) * (al+1));
+	  if (!flags2) return 6;
+          if (al) memcpy(flags2, flags, al * sizeof(unsigned short));
           flags2[al] = ONLYUPCASEFLAG;
           if (utf8) {
               char st[MAXDELEN];
@@ -498,8 +524,9 @@ int HashMgr::decode_flags(unsigned short ** result, char * flags) {
       case FLAG_LONG: { // two-character flags (1x2yZz -> 1x 2y Zz)
         len = strlen(flags);
         if (len%2 == 1) HUNSPELL_WARNING(stderr, "error: length of FLAG_LONG flagvector is odd: %s\n", flags);
-        len = len/2;
+        len /= 2;
         *result = (unsigned short *) malloc(len * sizeof(short));
+        if (!*result) return -1;
         for (int i = 0; i < len; i++) {
             (*result)[i] = (((unsigned short) flags[i * 2]) << 8) + (unsigned short) flags[i * 2 + 1]; 
         }
@@ -514,6 +541,7 @@ int HashMgr::decode_flags(unsigned short ** result, char * flags) {
           if (*p == ',') len++;
         }
         *result = (unsigned short *) malloc(len * sizeof(short));
+        if (!*result) return -1;
         dest = *result;
         for (p = flags; *p; p++) {
           if (*p == ',') {
@@ -531,6 +559,7 @@ int HashMgr::decode_flags(unsigned short ** result, char * flags) {
         w_char w[MAXDELEN/2];
         len = u8_u16(w, MAXDELEN/2, flags);
         *result = (unsigned short *) malloc(len * sizeof(short));
+        if (!*result) return -1;
         memcpy(*result, w, len * sizeof(short));
         break;
       }
@@ -538,6 +567,7 @@ int HashMgr::decode_flags(unsigned short ** result, char * flags) {
         unsigned short * dest;
         len = strlen(flags);
         *result = (unsigned short *) malloc(len * sizeof(short));
+        if (!*result) return -1;
         dest = *result;
         for (unsigned char * p = (unsigned char *) flags; *p; p++) {
           *dest = (unsigned short) *p;

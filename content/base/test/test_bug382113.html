@@ -27,8 +27,8 @@ var objectGotOnload = false;
 
 /** Test for Bug 100533 **/
 function checkEvents() {
-  // todo(childGotOnload, true, "Child got load event");
-  // todo(objectGotOnload, true, "Object got load event");
+  is(childGotOnload, true, "Child got load event");
+  is(objectGotOnload, true, "Object got load event");
   SimpleTest.finish();
 }
 </script>
