@@ -674,9 +674,7 @@ nsHTMLScrollFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
-  // XXX Might this make us count padding/border/margin twice?
-  result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
-                             mInner.mScrolledFrame, nsLayoutUtils::PREF_WIDTH);
+  result = mInner.mScrolledFrame->GetPrefWidth(aRenderingContext);
 
   nsGfxScrollFrameInner::ScrollbarStyles ss = GetScrollbarStyles();
   if (ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN && // ideal?
