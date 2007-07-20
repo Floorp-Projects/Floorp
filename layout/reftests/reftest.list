@@ -55,3 +55,6 @@ include bidi/reftest.list
 
 # z-index/
 include z-index/reftest.list
+ 
+# columns/
+include columns/reftest.list
