@@ -5419,6 +5419,12 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c tridentprofile` -ne 0; then
   MOZ_EXTENSIONS="$MOZ_EXTENSIONS tridentprofile"
 fi
 
+dnl schema-validation requires webservices
+if test -z "$MOZ_WEBSERVICES" && test `echo "$MOZ_EXTENSIONS" | grep -c schema-validation` -ne 0; then
+    AC_MSG_WARN([Cannot build schema-validation without webservices.  Removing schema-validation from MOZ_EXTENSIONS.])
+    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|schema-validation||g'`
+fi
+
 dnl xforms requires xtf and webservices and schema-validation
 if test -z "$MOZ_XTF" && test `echo "$MOZ_EXTENSIONS" | grep -c xforms` -ne 0; then
     AC_MSG_WARN([Cannot build XForms without XTF support.  Removing XForms from MOZ_EXTENSIONS.])
