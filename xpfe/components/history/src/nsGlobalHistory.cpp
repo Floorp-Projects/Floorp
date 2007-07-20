@@ -4186,6 +4186,14 @@ nsGlobalHistory::GetStyleAt(PRInt32 aIndex, nsAString& aValue)
 }
 
 NS_IMETHODIMP
+nsGlobalHistory::GetImageAt(PRInt32 aIndex, nsAString& aValue)
+{
+  NS_ENSURE_ARG(aIndex >= 0 && aIndex < mResults.Count());
+  aValue.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsGlobalHistory::RemoveValueAt(PRInt32 aIndex, PRBool aRemoveFromDb)
 {
   NS_ENSURE_ARG(aIndex >= 0 && aIndex < mResults.Count());
