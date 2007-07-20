@@ -439,11 +439,8 @@
           // there is no insertion point for history queries
           // so bail out now and save a lot of work when updating commands
           var options = asQuery(this.getResult().root).queryOptions;
-          if (options.queryType == options.QUERY_TYPE_HISTORY) {
-            NS_ASSERT(this.getResult().root.folderCount == 0, 
-                      "wrong queryType, see bug #388860");
+          if (options.queryType == options.QUERY_TYPE_HISTORY)
             return null;
-          }
 
           var orientation = NHRVO.DROP_AFTER;
           // If there is no selection, insert at the end of the container. 
