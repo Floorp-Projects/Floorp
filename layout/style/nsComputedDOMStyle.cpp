@@ -591,8 +591,7 @@ nsComputedDOMStyle::GetColumnGap(nsIDOMCSSValue** aValue)
   if (column->mColumnGap.GetUnit() == eStyleUnit_Normal) {
     val->SetAppUnits(GetStyleFont()->mFont.size);
   } else {
-    SetValueToCoord(val, GetStyleColumn()->mColumnGap,
-                    &nsComputedDOMStyle::GetFrameContentWidth);
+    SetValueToCoord(val, GetStyleColumn()->mColumnGap);
   }
 
   return CallQueryInterface(val, aValue);
@@ -2820,19 +2819,6 @@ nsComputedDOMStyle::StyleCoordToNSCoord(const nsStyleCoord& aCoord,
   }
       
   return aDefaultValue;
-}
-
-PRBool
-nsComputedDOMStyle::GetFrameContentWidth(nscoord& aWidth)
-{
-  if (!mFrame) {
-    return PR_FALSE;
-  }
-
-  FlushPendingReflows();
-
-  aWidth = mFrame->GetContentRect().width;
-  return PR_TRUE;
 }
 
 PRBool

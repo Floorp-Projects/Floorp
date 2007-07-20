@@ -316,8 +316,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal", "1em" ],
-		other_values: [ "2px", "4em", "3%" ],
-		invalid_values: []
+		other_values: [ "2px", "4em" ],
+		invalid_values: [ "3%" ]
 	},
 	"-moz-column-width": {
 		domProp: "MozColumnWidth",

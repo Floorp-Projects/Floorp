@@ -39,8 +39,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=365932
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=365932">Mozilla Bug 365932</a>
 <p id="display"></p>
 <div id="content">
-  <div id="column1" style="-moz-column-gap: 200px;"></div>
-  <div id="column2" style="-moz-column-gap: 50%;"></div>
   <div id="indent1" style="text-indent: 400px"></div>
   <div id="indent2" style="text-indent: 50%"></div>
 
@@ -154,8 +152,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=365932
   <div id="outlineradius2" style="-moz-outline-radius: 20%"></div>
 </div>
 <div id="content2" style="display: none">
-  <div id="column3" style="-moz-column-gap: 200px;"></div>
-  <div id="column4" style="-moz-column-gap: 50%;"></div>
   <div id="indent3" style="text-indent: 400px"></div>
   <div id="indent4" style="text-indent: 50%"></div>
 
@@ -209,7 +205,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=365932
 
 document.body.offsetWidth;
 
-doATest("-moz-column-gap", "column", 200, 50);
 doATest("text-indent", "indent", 400, 50);
 doATest("-moz-border-radius-topleft", "radius", 80, 10);
 doATest("-moz-outline-radius-topleft", "outlineradius", 160, 20);

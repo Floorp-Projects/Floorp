@@ -1213,7 +1213,7 @@ struct nsStyleColumn : public nsStyleStruct {
 
   PRUint32     mColumnCount; // [reset] see nsStyleConsts.h
   nsStyleCoord mColumnWidth; // [reset]
-  nsStyleCoord mColumnGap;   // [reset]
+  nsStyleCoord mColumnGap;   // [reset] coord
 };
 
 #ifdef MOZ_SVG

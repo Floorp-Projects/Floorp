@@ -1,5 +1,3 @@
-== column-gap-percent-1.html column-gap-percent-1-ref.html
-!= column-gap-percent-2.html column-gap-percent-2-ref.html
 == outline-radius-percent-1.html outline-radius-percent-1-ref.html
 == min-width-1.html min-width-1-ref.html
 == min-height-1.html min-height-1-ref.html
