@@ -242,7 +242,7 @@ Sysconfig.prototype = {
         // people switch branches, so we detect this even though it might 
         // already be set in a pref
 		if ((/^3\.0/).exec(appinfo.version)) {
-			this.branch = 'Trunk';
+			this.branch = '3.0 Branch';
 		} else if ((/^2\.0/).exec(appinfo.version)) {
 			this.branch = '2.0 Branch';
 		} else if ((/^1\.5\./).exec(appinfo.version)) {
