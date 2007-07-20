@@ -2575,6 +2575,16 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
   // so much easier...
   if (mEditor && mUseEditor) 
   {
+    // This method isn't used for user-generated changes, except for calls
+    // from nsFileControlFrame which sets mFireChangeEventState==true and
+    // restores it afterwards (ie. we want 'change' events for those changes).
+    // Focused value must be updated to prevent incorrect 'change' events,
+    // but only if user hasn't changed the value.
+    nsString val;
+    GetText(&val);
+    PRBool focusValueInit = !mFireChangeEventState &&
+      mFocusedValue.Equals(val);
+
     nsCOMPtr<nsIEditor> editor = mEditor;
     nsWeakFrame weakFrame(this);
     nsAutoString currentValue;
@@ -2669,10 +2679,7 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
       if (outerTransaction)
         mNotifyOnInput = PR_TRUE;
 
-      // This method isn't used for user-generated changes, except for calls
-      // from nsFileControlFrame which sets mFireChangeEventState==true and
-      // restores it afterwards (ie. we want onchange events for those changes).
-      if (!mFireChangeEventState) {
+      if (focusValueInit) {
         // Reset mFocusedValue so the onchange event doesn't fire incorrectly.
         InitFocusedValue();
       }
