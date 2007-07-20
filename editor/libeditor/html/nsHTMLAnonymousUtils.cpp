@@ -315,7 +315,8 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
 
   // now, let's display all contextual UI for good
 
-  if (mIsObjectResizingEnabled && focusElement) {
+  if (mIsObjectResizingEnabled && focusElement &&
+      IsModifiableNode(focusElement)) {
     if (nsEditProperty::img == focusTagAtom)
       mResizedObjectIsAnImage = PR_TRUE;
     if (refreshResizing)
@@ -325,7 +326,8 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
     if (NS_FAILED(res)) return res;
   }
 
-  if (mIsAbsolutelyPositioningEnabled && absPosElement) {
+  if (mIsAbsolutelyPositioningEnabled && absPosElement &&
+      IsModifiableNode(absPosElement)) {
     if (refreshPositioning)
       res = RefreshGrabber();
     else
@@ -333,7 +335,8 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
     if (NS_FAILED(res)) return res;
   }
 
-  if (mIsInlineTableEditingEnabled && cellElement) {
+  if (mIsInlineTableEditingEnabled && cellElement &&
+      IsModifiableNode(cellElement)) {
     if (refreshTableEditing)
       res = RefreshInlineTableEditingUI();
     else
