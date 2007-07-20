@@ -224,8 +224,6 @@ document.getElementById("bundle_qa").getString("qa.extension.prefs.loadingMsg");
 			qaPref.setPref(qaPref.prefBase+'.sysconfig.platform', 
 						$('qa-setup-platform').selectedItem.label, 'char');
 		}
-		alert(sysconfig.opsys);
-		alert($('qa-setup-opsys').selectedItem.label)
 		if (! sysconfig.opsys == $('qa-setup-opsys').selectedItem.label) {
 			alert("setting pref");
 			qaPref.setPref(qaPref.prefBase+'.sysconfig.opsys', 
