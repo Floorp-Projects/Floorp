@@ -301,8 +301,6 @@ public:
   NS_IMETHOD        EndDrawPlugin();
   
   // Mac specific methods
-  virtual void      CalcWindowRegions();
-
   virtual PRBool    PointInWidget(Point aThePoint);
   
   virtual PRBool    DispatchWindowEvent(nsGUIEvent& event);

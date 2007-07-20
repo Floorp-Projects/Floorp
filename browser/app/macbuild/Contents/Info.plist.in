@@ -121,14 +121,6 @@
 		</dict>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>gopher URL</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>gopher</string>
-			</array>
-		</dict>
-		<dict>
-			<key>CFBundleURLName</key>
 			<string>file URL</string>
 			<key>CFBundleURLSchemes</key>
 			<array>

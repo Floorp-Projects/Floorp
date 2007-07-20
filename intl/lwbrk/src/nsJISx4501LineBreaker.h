@@ -48,9 +48,6 @@ public:
   nsJISx4051LineBreaker();
   virtual ~nsJISx4051LineBreaker();
 
-  PRBool BreakInBetween( const PRUnichar* aText1 , PRUint32 aTextLen1,
-                         const PRUnichar* aText2 , PRUint32 aTextLen2);
-
   PRInt32 Next( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
 
   PRInt32 Prev( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
@@ -59,6 +56,10 @@ public:
                                  PRPackedBool* aBreakBefore);
   virtual void GetJISx4051Breaks(const PRUint8* aText, PRUint32 aLength,
                                  PRPackedBool* aBreakBefore);
+
+private:
+  PRInt32 WordMove(const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
+                   PRInt8 aDirection);
 };
 
 #endif  /* nsJISx4501LineBreaker_h__ */

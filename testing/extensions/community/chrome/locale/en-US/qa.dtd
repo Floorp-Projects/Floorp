@@ -1,0 +1,143 @@
+<!ENTITY qa.litmus.title "Litmus">
+<!ENTITY qa.litmus.selecttests "Select Tests">
+
+<!ENTITY qa.statusbar.label	"QA">
+<!ENTITY qa.mainwindow.prefs	"Preferences">
+<!ENTITY qa.mainwindow.title	"Mozilla QA">
+<!ENTITY qa.testcase.steps	"Steps to Perform">
+<!ENTITY qa.testcase.expected	"Expected Results">
+<!ENTITY qa.testcase.result.pass	"Test Passed">
+<!ENTITY qa.testcase.result.fail	"Test Failed">
+<!ENTITY qa.testcase.result.unclearbroken	"Test is unclear or broken">
+<!ENTITY qa.testcase.comment	"Comment (optional):">
+
+<!ENTITY qa.preferences.title "Settings">
+<!ENTITY qa.preferences.litmus.title "Litmus Settings">
+<!ENTITY qa.preferences.litmus.username "Email:">
+<!ENTITY qa.preferences.litmus.password "Password:">
+<!ENTITY qa.preferences.litmus.OK "Save">
+<!ENTITY qa.preferences.litmus.createAccount "Create New Account">
+
+<!ENTITY qa.preferences.notification.title "Notification Settings">
+<!ENTITY qa.preferences.notification.disableall "Disable all notifications">
+<!ENTITY qa.preferences.notification.header "Notify me when:">
+<!ENTITY qa.preferences.notification.testday "Mozilla QA is holding a test day event (biweekly)">
+<!ENTITY qa.preferences.notification.bugday "Mozilla QA is holding a bug triaging event (weekly)">
+<!ENTITY qa.preferences.notification.prerelease "My help is needed with pre-release testing">
+<!ENTITY qa.preferences.notification.qmo "There is new news from quality.mozilla.org">
+<!ENTITY qa.preferences.notification.newbuild "New builds of Firefox are recomended for testing">
+<!ENTITY qa.preferences.notification.other "There is a special QA announcement">
+
+<!ENTITY qa.qmo.title "QMO">
+<!ENTITY qa.qmo.visit "Visit QMO">
+<!ENTITY qa.qmo.help "How you can help!">
+<!ENTITY qa.qmo.events "Upcoming events">
+<!ENTITY qa.qmo.forumposts "Recent forum topics">
+<!ENTITY qa.qmo.thelatest "The latest from QMO">
+
+
+<!ENTITY qa.setup.title	"Mozilla QA Extension: Setup">
+<!ENTITY qa.setup.welcomeheader	"Welcome to the Mozilla QA Extension!">
+<!ENTITY qa.setup.welcometext	"
+<html:h4>Welcome to the Mozilla Quality Assurance community!</html:h4>
+Mozilla Quality Assurance (QA) is a network of countless volunteers 
+from the Internet community, along with a group of Mozilla employees, who share 
+the common mission of <html:i>taming the lizard</html:i> through testing and 
+constructively reporting bugs in Mozilla products.
+<html:br/><html:br/>
+This extension allows you to <html:b>find bugs</html:b> in Mozilla products by 
+running simple tests within the browser. Helping out doesn't take up much of 
+your time, doesn't require any special skills, and helps to improve Mozilla 
+products like Firefox and Thunderbird. 
+<html:br/><html:br/>
+When you find a bug, this extension helps you to <html:b>report it</html:b> 
+to <html:a href='http://litmus.mozilla.org/' target='_blank'>Litmus</html:a>, 
+the tool we use to track our testing efforts. Your test results are valuable, 
+and we use them to ensure that all features work properly across a wide range 
+of platforms, operating systems, and configurations. 
+
+<html:h4>Why Should I Get Involved?</html:h4>
+xxx
+
+<html:h5>For more information on Mozilla Quality Assurance, please
+see the 
+<html:a href='http://wiki.mozilla.org/Mozilla_QA_Community' target='_blank'>
+Mozilla QA Community Wiki</html:a>.</html:h5>
+">
+
+<!ENTITY qa.setup.aboutheader	"About the Mozilla QA Extension">
+<!ENTITY qa.setup.abouttext	"
+<html:h4>How do I get started?</html:h4>
+Getting started with Mozilla QA is easy! This setup wizard will ask you a 
+few simple questions. Once that's done, you will be taken to the test runner, 
+where you can select what you want to test, run those tests, and submit your 
+results to Litmus. You'll also have a chance to learn about QA Community 
+events and other ways to get involved.
+
+<html:h4>A note on privacy</html:h4>
+When you use the QA Extension, you are submitting test results to an 
+open system. Other members of the community will access the information you
+submit in order to improve the quality of Mozilla products. You 
+<html:b>should not</html:b> submit any private or confidential information 
+using the Mozilla QA Extension. If you provide your real name or an IRC nickname
+to display instead, we will hide your email address from 
+public view to help prevent email harvesting bots from spamming you. 
+For more information, please see our 
+<html:a href='http://www.mozilla.com/privacy-policy.html' target='_blank'>
+privacy policy</html:a>.
+
+<html:h4>Welcome to the Mozilla QA Community. Let's get started!</html:h4>
+">
+
+<!ENTITY qa.setup.accountheader	"Creating an account">
+<!ENTITY qa.setup.accounttext	"To use the QA Extension, you will need an account 
+on Litmus, our test management system.">
+<!ENTITY qa.setup.haveaccount	"Do you already have a Litmus account?">
+<!ENTITY qa.setup.accountno	"I do not have a Litmus account">
+<!ENTITY qa.setup.accountyes	"I already have a Litmus account">
+<!ENTITY qa.setup.accountyes.enterinfo	"Enter your Litmus account information:">
+<!ENTITY qa.setup.accountno.text	"Complete the form below and press the 
+<html:b>Create Account</html:b> button to create your new account. <html:br/>Once your 
+account is created, press the 'Continue' button to complete setup.">
+
+<!ENTITY qa.setup.accountdone	"
+<html:h4>Account Created</html:h4>
+<html:b>Congratulations!</html:b> Your Litmus 
+account has been created. You'll be able to use your new account both here in 
+the QA Extension, and on the Litmus website.
+
+<html:h4>That's it!</html:h4>
+<html:b>You're ready to start testing.</html:b> If you have any questions along 
+the way, you may post to the 
+<html:a href='http://weblogs.mozillazine.org/qa/' target='_blank'>Mozilla QA Blog
+</html:a>, or, if you prefer, you can join us on 
+<html:a href='http://irc.mozilla.org' target='_blank'>IRC</html:a> (Internet Relay 
+Chat) and become more involved in our testing community. 
+We are in #qa on irc.mozilla.org. If you have an irc client installed already, 
+you should be able to join by clicking this link: <html:a href='irc://irc.mozilla.org/qa'>
+join #qa</html:a>.
+">
+
+<!ENTITY qa.setup.sysconfig.header	"System Configuration">
+<!ENTITY qa.setup.sysconfig.text	"
+For your test results to be useful, we need to know a little bit about your 
+system configuration. We've tried to detect as much of the information below as 
+possible, but please check the settings below and make any necessary changes. 
+">
+<!ENTITY qa.setup.sysconfig.platform	"Platform:">
+<!ENTITY qa.setup.sysconfig.opsys	"Operating System:">
+
+<!ENTITY qa.bugzilla.title "Bugzilla">
+
+<!ENTITY qa.chat.title "Chat">
+<!ENTITY qa.chat.introtitle "What is IRC?">
+<!ENTITY qa.chat.intro "Internet Relay Chat (IRC) is the living room of the Mozilla QA Community. IRC is a place to ask questions, learn how you can help with the next versions of Firefox and Thunderbird, and meet other members of the community. Many of the regular QA events happen over IRC, such as Test Days and Bug Days. Come join us on IRC!">
+<!ENTITY qa.chat.intro2 "If you have a favorite IRC client, you can connect to <html:em>irc.mozilla.org</html:em>, channel #qa, but the easist way to get on IRC right now is through your web browser. Just click the button below.">
+<!ENTITY qa.chat.howdoItitle "How do I get on IRC?">
+<!ENTITY qa.chat.howdoI.imo "Learn more about irc.mozilla.org">
+<!ENTITY qa.chat.howdoI.imourl "http://irc.mozilla.org">
+<!ENTITY qa.chat.howdoI.irchelp "Visit irchelp.org">
+<!ENTITY qa.chat.howdoI.irchelpurl "http://www.irchelp.org">
+<!ENTITY qa.chat.howdoI.joinnow "Join IRC Now">
+
+<!ENTITY qa.help.title "Help">

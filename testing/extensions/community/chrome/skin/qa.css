@@ -1,0 +1,79 @@
+@import url(chrome://global/skin/);
+
+@import url(chrome://browser/skin/);
+
+@namespace html "http://www.w3.org/1999/xhtml";
+
+#qa-pass {
+  background: #99ff99;
+  display: none;
+}
+
+html|ul, html|ol {
+  padding-left: 12px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+html|p {
+  margin-top: 2px;
+}
+
+html|a {
+  text-decoration: underline;
+  color: black;
+}
+
+#qa-notify {
+  right: 18px;
+  bottom: 21px;
+  position: fixed;
+  border: 1px solid grey;
+  background-color: white;
+  background-image: url("logolight.png");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.qa-notify {
+  height: 140px;
+  width: 420px;
+}
+
+#qa-notify-box {
+  padding: 0px 6px 6px 6px;
+	display: table;
+}
+
+#qa-notify-header {
+  font-size: 1.5em;
+  font-weight: bold;
+}
+
+
+
+/* general formatting */
+
+.list {
+  padding-left: 10px;
+}
+
+/* @group test overview */
+#qa-litmus-testoverview {
+	text-decoration: underline;
+	font-size: x-small;
+}
+.testoverview-previous {
+	background-color: #d8d8d8;
+}
+.testoverview-next {
+	background-color: #eaeaea;
+}
+.testoverview-current {
+	background-color: gray;
+	font-weight: bold;
+}
+/* @end */
+
+
+

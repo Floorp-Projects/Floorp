@@ -76,6 +76,12 @@ static PRBool EqualURIs(nsIURI *aURI1, nsIURI *aURI2)
           eq);
 }
 
+static PRBool EqualURIs(nsCSSValue::URL *aURI1, nsCSSValue::URL *aURI2)
+{
+  return aURI1 == aURI2 ||    // handle null==null, and optimize
+         (aURI1 && aURI2 && aURI1->URIEquals(*aURI2));
+}
+
 static PRBool EqualImages(imgIRequest *aImage1, imgIRequest* aImage2)
 {
   if (aImage1 == aImage2) {

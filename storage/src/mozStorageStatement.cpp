@@ -141,10 +141,9 @@ mozStorageStatement::Initialize(mozIStorageConnection *aDBConnection, const nsAC
     mResultColumnCount = sqlite3_column_count (mDBStatement);
     mColumnNames.Clear();
 
-    for (unsigned int i = 0; i < mResultColumnCount; i++) {
-        const void *name = sqlite3_column_name16 (mDBStatement, i);
-        mColumnNames.AppendString(
-            nsDependentString(static_cast<const PRUnichar*>(name)));
+    for (PRUint32 i = 0; i < mResultColumnCount; i++) {
+        const char *name = sqlite3_column_name(mDBStatement, i);
+        mColumnNames.AppendCString(nsDependentCString(name));
     }
 
     // doing a sqlite3_prepare sets up the execution engine
@@ -255,6 +254,24 @@ mozStorageStatement::GetColumnName(PRUint32 aColumnIndex, nsACString & _retval)
     _retval.Assign(nsDependentCString(cname));
 
     return NS_OK;
+}
+
+/* unsigned long getColumnIndex(in AUTF8String aName); */
+NS_IMETHODIMP
+mozStorageStatement::GetColumnIndex(const nsACString &aName, PRUint32 *_retval)
+{
+    NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
+
+    // Surprisingly enough, SQLite doesn't provide an API for this.  We have to
+    // determine it ourselves sadly.
+    for (PRUint32 i = 0; i < mResultColumnCount; i++) {
+        if (mColumnNames[i]->Equals(aName)) {
+            *_retval = i;
+            return NS_OK;
+        }
+    }
+
+    return NS_ERROR_INVALID_ARG;
 }
 
 /* void reset (); */

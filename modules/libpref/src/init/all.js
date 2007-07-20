@@ -1601,10 +1601,12 @@ pref("network.dns.disableIPv6", true);
 # XP_MACOSX
 #endif
 
-#if XP_OS2
+#ifdef XP_OS2
 
 pref("ui.key.menuAccessKeyFocuses", true);
 pref("layout.css.dpi", -1); // max(96dpi, System setting)
+
+pref("font.alias-list", "sans,sans-serif,serif,monospace");
 
 /* Fonts only needs lists if we have a default that might not be available. */
 /* Tms Rmn, Helv and Courier are ALWAYS available on OS/2 */
@@ -1787,7 +1789,7 @@ pref("network.dns.disableIPv6", true);
 # OS2
 #endif
 
-#if XP_BEOS
+#ifdef XP_BEOS
 
 pref("layout.css.dpi", -1); // max(96dpi, System setting)
 

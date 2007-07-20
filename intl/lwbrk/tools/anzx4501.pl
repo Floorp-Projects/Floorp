@@ -400,6 +400,7 @@ printarray("00", "8");
 printarray("20", "8");
 printarray("21", "8");
 printarray("30", "5");
+printarray("0E", "9");
 
 #print %rangecount;
 

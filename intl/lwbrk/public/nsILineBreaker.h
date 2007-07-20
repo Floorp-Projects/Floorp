@@ -43,19 +43,15 @@
 
 #define NS_LINEBREAKER_NEED_MORE_TEXT -1
 
-// {C9C5938E-70EF-4db2-ADEE-E7B2CCFBBEE6}
+// {5ae68851-d9a3-49fd-9388-58586dad8044}
 #define NS_ILINEBREAKER_IID \
-{ 0xc9c5938e, 0x70ef, 0x4db2, \
-    { 0xad, 0xee, 0xe7, 0xb2, 0xcc, 0xfb, 0xbe, 0xe6 } }
+{ 0x5ae68851, 0xd9a3, 0x49fd, \
+    { 0x93, 0x88, 0x58, 0x58, 0x6d, 0xad, 0x80, 0x44 } }
 
 class nsILineBreaker : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILINEBREAKER_IID)
-  virtual PRBool BreakInBetween( const PRUnichar* aText1 , PRUint32 aTextLen1,
-                                 const PRUnichar* aText2 , 
-                                 PRUint32 aTextLen2) = 0;
-
   virtual PRInt32 Next( const PRUnichar* aText, PRUint32 aLen, 
                         PRUint32 aPos) = 0;
 

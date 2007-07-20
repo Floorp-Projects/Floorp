@@ -89,7 +89,6 @@ CPPSRCS		= \
 		nsPluginHostImpl.cpp \
 		nsPluginModule.cpp \
 		nsPluginInstancePeer.cpp \
-		nsPluginDirServiceProvider.cpp \
 		nsJSNPRuntime.cpp \
 		$(NULL)
 
@@ -100,6 +99,7 @@ else
 ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 	CPPSRCS += nsPluginsDirWin.cpp
 	CPPSRCS += nsPluginNativeWindowWin.cpp
+	CPPSRCS += nsPluginDirServiceProvider.cpp
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 	CPPSRCS += nsPluginsDirOS2.cpp
