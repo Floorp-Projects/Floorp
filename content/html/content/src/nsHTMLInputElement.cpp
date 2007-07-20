@@ -1362,8 +1362,7 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   PRBool disabled;
   nsresult rv = GetDisabled(&disabled);
   NS_ENSURE_SUCCESS(rv, rv);
-  //FIXME Allow submission etc. also when there is no prescontext, Bug 329509.
-  if (disabled || !aVisitor.mPresContext) {
+  if (disabled) {
     return NS_OK;
   }
   
@@ -1381,6 +1380,10 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     }
   }
 
+  //FIXME Allow submission etc. also when there is no prescontext, Bug 329509.
+  if (!aVisitor.mPresContext) {
+    return nsGenericHTMLElement::PreHandleEvent(aVisitor);
+  }
   //
   // Web pages expect the value of a radio button or checkbox to be set
   // *before* onclick and DOMActivate fire, and they expect that if they set
