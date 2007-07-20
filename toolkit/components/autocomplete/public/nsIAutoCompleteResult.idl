@@ -37,7 +37,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(eb43e1dc-2060-4d8e-aebf-3efec4e21cf8)]
+[scriptable, uuid(78c49e44-4613-48c4-b502-29df82231222)]
 interface nsIAutoCompleteResult : nsISupports
 {
   /**
@@ -87,6 +87,11 @@ interface nsIAutoCompleteResult : nsISupports
    * Get the style hint for the result at the given index
    */
   AString getStyleAt(in long index);
+
+  /**
+   * Get the image of the result at the given index
+   */
+  AString getImageAt(in long index);
 
   /**
    * Remove the value at the given index from the autocomplete results.
