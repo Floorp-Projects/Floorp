@@ -43,15 +43,14 @@ const interval = 500; // Update every 500 milliseconds.
 function DownloadProgressListener (aDocument, aStringBundle) 
 {
   this.doc = aDocument;
-  
+
   this._statusFormat = aStringBundle.getString("statusFormat");
   this._transferSameUnits = aStringBundle.getString("transferSameUnits");
   this._transferDiffUnits = aStringBundle.getString("transferDiffUnits");
   this._transferNoTotal = aStringBundle.getString("transferNoTotal");
-  this._remain = aStringBundle.getString("remain");
-  this._unknownTimeLeft = aStringBundle.getString("unknownTimeLeft");
-  this._longTimeFormat = aStringBundle.getString("longTimeFormat");
-  this._shortTimeFormat = aStringBundle.getString("shortTimeFormat");
+  this._timeLeft = aStringBundle.getString("timeLeft");
+  this._timeLessMinute = aStringBundle.getString("timeLessMinute");
+  this._timeUnknown = aStringBundle.getString("timeUnknown");
   this._units = [aStringBundle.getString("bytes"),
                  aStringBundle.getString("kilobyte"),
                  aStringBundle.getString("megabyte"),
@@ -148,11 +147,16 @@ DownloadProgressListener.prototype =
 
     // Update time remaining.
     let (remain) {
-      if ((aDownload.speed > 0) && (aMaxTotalProgress > 0))
-        remain = this._formatSeconds((aMaxTotalProgress - aCurTotalProgress) /
-                                     aDownload.speed) + " " + this._remain;
-      else
-        remain = this._unknownTimeLeft;
+      if ((aDownload.speed > 0) && (aMaxTotalProgress > 0)) {
+        let minutes = Math.ceil((aMaxTotalProgress - aCurTotalProgress) /
+                                aDownload.speed / 60);
+        if (minutes > 1)
+          remain = this._replaceInsert(this._timeLeft, 1, minutes);
+        else
+          remain = this._timeLessMinute;
+      } else {
+        remain = this._timeUnknown;
+      }
 
       // Insert 4 is the time remaining
       status = this._replaceInsert(status, 4, remain);
@@ -206,32 +210,5 @@ DownloadProgressListener.prototype =
     aBytes = aBytes.toFixed((aBytes > 0) && (aBytes < 100) ? 1 : 0);
 
     return [aBytes, this._units[unitIndex]];
-  },
-
-  _formatSeconds: function (secs, doc)
-  {
-    // Round the number of seconds to remove fractions.
-    secs = parseInt(secs + .5);
-    var hours = parseInt(secs/3600);
-    secs -= hours * 3600;
-    
-    var mins = parseInt(secs/60);
-    secs -= mins * 60;
-    var result = hours ? this._longTimeFormat : this._shortTimeFormat;
-
-    if (hours < 10)
-      hours = "0" + hours;
-    if (mins < 10)
-      mins = "0" + mins;
-    if (secs < 10)
-      secs = "0" + secs;
-
-    // Insert hours, minutes, and seconds into result string.
-    result = this._replaceInsert(result, 1, hours);
-    result = this._replaceInsert(result, 2, mins);
-    result = this._replaceInsert(result, 3, secs);
-
-    return result;
   }
-  
-}; 
+};
