@@ -114,8 +114,8 @@ nsSpaceManager::nsSpaceManager(nsIPresShell* aPresShell, nsIFrame* aFrame)
     mFloatDamage(PSArenaAllocCB, PSArenaFreeCB, aPresShell),
     mHaveCachedLeftYMost(PR_TRUE),
     mHaveCachedRightYMost(PR_TRUE),
-    mMaximalLeftYMost(0),
-    mMaximalRightYMost(0),
+    mMaximalLeftYMost(nscoord_MIN),
+    mMaximalRightYMost(nscoord_MIN),
     mCachedBandPosition(nsnull)
 {
   MOZ_COUNT_CTOR(nsSpaceManager);
@@ -1039,7 +1039,7 @@ nsSpaceManager::ClearRegions()
   mBandList.Clear();
   mLowestTop = NSCOORD_MIN;
   mHaveCachedLeftYMost = mHaveCachedRightYMost = PR_TRUE;
-  mMaximalLeftYMost = mMaximalRightYMost = 0;
+  mMaximalLeftYMost = mMaximalRightYMost = nscoord_MIN;
 }
 
 void
@@ -1283,8 +1283,8 @@ nsSpaceManager::ClearFloats(nscoord aY, PRUint8 aBreakType)
       (!mHaveCachedRightYMost && aBreakType != NS_STYLE_CLEAR_LEFT)) {
     // Recover our maximal YMost values.  Might need both if this is a
     // NS_STYLE_CLEAR_LEFT_AND_RIGHT
-    nscoord maximalLeftYMost = mHaveCachedLeftYMost ? mMaximalLeftYMost : 0;
-    nscoord maximalRightYMost = mHaveCachedRightYMost ? mMaximalRightYMost : 0;
+    nscoord maximalLeftYMost = mHaveCachedLeftYMost ? mMaximalLeftYMost : nscoord_MIN;
+    nscoord maximalRightYMost = mHaveCachedRightYMost ? mMaximalRightYMost : nscoord_MIN;
 
     // Optimize for most floats not being near the bottom
     for (FrameInfo *frame = mFrameInfoMap; frame; frame = frame->mNext) {
