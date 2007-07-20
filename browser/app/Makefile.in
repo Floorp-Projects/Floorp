@@ -72,7 +72,9 @@ GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBX
 
 DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID)
 
-ifndef LIBXUL_SDK
+ifdef LIBXUL_SDK
+include $(topsrcdir)/config/rules.mk
+else
 # Build a binary bootstrapping with XRE_main
 
 ifeq ($(USE_SHORT_LIBNAME), 1)

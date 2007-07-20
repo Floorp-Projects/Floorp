@@ -231,8 +231,11 @@ nsHTMLObjectElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom *aName,
   // get bound after all the attributes have been set, so we'll do the
   // object load from BindToTree/DoneAddingChildren.
   // Skip the LoadObject call in that case.
-  if (aNotify && aNameSpaceID == kNameSpaceID_None &&
-      aName == nsGkAtoms::data) {
+  // We also don't want to start loading the object when we're not yet in
+  // a document, just in case that the caller wants to set additional
+  // attributes before inserting the node into the document.
+  if (aNotify && IsInDoc() && mIsDoneAddingChildren &&
+      aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::data) {
     nsAutoString type;
     GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
     LoadObject(aValue, aNotify, NS_ConvertUTF16toUTF8(type), PR_TRUE);

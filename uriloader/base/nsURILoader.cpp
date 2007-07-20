@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode:nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sts=2 sw=2 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -975,19 +976,20 @@ nsresult nsURILoader::OpenChannel(nsIChannel* channel,
 
   // If the channel is pending, then we need to remove it from its current
   // loadgroup
-  if (aChannelIsOpen) {
-    nsCOMPtr<nsILoadGroup> oldGroup;
-    channel->GetLoadGroup(getter_AddRefs(oldGroup));
-    if (oldGroup) {
+  nsCOMPtr<nsILoadGroup> oldGroup;
+  channel->GetLoadGroup(getter_AddRefs(oldGroup));
+  if (aChannelIsOpen && !SameCOMIdentity(oldGroup, loadGroup)) {
+    // It is important to add the channel to the new group before
+    // removing it from the old one, so that the load isn't considered
+    // done as soon as the request is removed.
+    loadGroup->AddRequest(channel, nsnull);
+
+   if (oldGroup) {
       oldGroup->RemoveRequest(channel, nsnull, NS_BINDING_RETARGETED);
     }
   }
 
   channel->SetLoadGroup(loadGroup);
-
-  if (aChannelIsOpen) {
-    loadGroup->AddRequest(channel, nsnull);
-  }
 
   // prepare the loader for receiving data
   nsresult rv = loader->Prepare();

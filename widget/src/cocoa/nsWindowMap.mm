@@ -106,12 +106,10 @@
 @end
 
 
-// 
 //  TopLevelWindowData
 // 
 //  This class holds data about top-level windows. We can't use a window
 //  delegate, because an embedder may already have one.
-// 
 
 @implementation TopLevelWindowData
 
@@ -180,4 +178,3 @@
 }
 
 @end
-

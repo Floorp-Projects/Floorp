@@ -1245,8 +1245,8 @@ PlacesController.prototype = {
         return PlacesUtils.wrapNode(node, type, overrideURI) + placeSuffix;
       }
 
-        // all items wrapped as TYPE_X_MOZ_PLACE
-        placeString += generateChunk(PlacesUtils.TYPE_X_MOZ_PLACE);
+      // all items wrapped as TYPE_X_MOZ_PLACE
+      placeString += generateChunk(PlacesUtils.TYPE_X_MOZ_PLACE);
     }
 
     function addData(type, data) {
@@ -1346,7 +1346,7 @@ PlacesController.prototype = {
         // type on the clipboard. 
         // unwrapNodes will throw if the data that is present is malformed in
         // some way. 
-        // In either case, don't fail horribly, just return no data. 
+        // In either case, don't fail horribly, just return no data.
       }
       return [];
     }

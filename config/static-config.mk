@@ -83,15 +83,7 @@ STATIC_EXTRA_LIBS	+= \
 		$(NULL)
 endif
 
-ifndef MOZ_ENABLE_CAIRO_GFX
-ifdef MOZ_SVG
 STATIC_EXTRA_LIBS	+= $(MOZ_CAIRO_LIBS)
-else # not MOZ_SVG
-ifdef MOZ_ENABLE_CANVAS # not SVG, but yes on canvas
-STATIC_EXTRA_LIBS	+= $(MOZ_CAIRO_LIBS)
-endif
-endif
-endif
 
 ifdef MOZ_ENABLE_GTK2
 STATIC_EXTRA_LIBS	+= $(XLDFLAGS) $(XT_LIBS) -lgthread-2.0

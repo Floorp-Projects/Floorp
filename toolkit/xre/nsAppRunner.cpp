@@ -41,6 +41,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#if defined(XP_OS2) && defined(MOZ_OS2_HIGH_MEMORY)
+// os2safe.h has to be included before os2.h, needed for high mem
+#include <os2safe.h>
+#endif
 
 #define XPCOM_TRANSLATE_NSGM_ENTRY_POINT 1
 
@@ -148,10 +152,6 @@
 #include <shlobj.h>
 #include "nsThreadUtils.h"
 #endif
-
-#ifdef XP_OS2
-#include <process.h>
-#endif 
 
 #ifdef XP_MACOSX
 #include "nsILocalFileMac.h"
@@ -605,7 +605,7 @@ nsXULAppInfo::GetVersion(nsACString& aResult)
 NS_IMETHODIMP
 nsXULAppInfo::GetPlatformVersion(nsACString& aResult)
 {
-  aResult.AssignLiteral(gToolkitVersion);
+  aResult.Assign(gToolkitVersion);
 
   return NS_OK;
 }
@@ -1422,6 +1422,92 @@ XRE_GetBinaryPath(const char* argv0, nsILocalFile* *aResult)
 #include "nsWindowsRestart.cpp"
 #endif
 
+#if defined(XP_OS2) && (__GNUC__ == 3 && __GNUC_MINOR__ == 3) // broken OS/2 GCC
+// Copy the environment maintained by the C library into an ASCIIZ array
+// that can be used to pass it on to the OS/2 Dos* APIs (which otherwise
+// don't know anything about the stuff set by PR_SetEnv() or setenv()).
+char *createEnv()
+{
+  // just allocate the maximum amount (24 kB = 0x60000 bytes), to be able to
+  // copy the existing environment
+  char *env = (char *)calloc(0x6000, sizeof(char));
+  if (!env) {
+    return NULL;
+  }
+
+  // walk along the environ string array of the C library and copy
+  // everything (that fits) into the output environment array, leaving
+  // null bytes between the entries
+  char *penv = env; // movable pointer to result environment ASCIIZ array
+  int i = 0, space = 0x6000;
+  while (environ[i] && environ[i][0]) {
+    int len = strlen(environ[i]);
+    if (space - len <= 0) {
+      break;
+    }
+    strcpy(penv, environ[i]);
+    i++; // next environment variable
+    penv += len + 1; // jump to after next null byte
+    space -= len - 1; // subtract consumed length from usable space
+  }
+
+  return env;
+}
+
+// OS2LaunchChild() is there to replace _execv() which is broken in the C
+// runtime library that comes with GCC 3.3.5 on OS/2. It uses createEnv()
+// to copy the process environment and add necessary variables
+//
+// returns -1 on failure and 0 on success
+int OS2LaunchChild(const char *aExePath, int aArgc, char **aArgv)
+{
+  // find total length of aArgv
+  int len = 0;
+  for (int i = 0; i < aArgc; i++) {
+    len += strlen(aArgv[i]) + 1; // plus space in between
+  }
+  len++; // leave space for null byte at end
+  // allocate enough space for all strings and nulls,
+  // calloc helpfully initializes to null
+  char *args = (char *)calloc(len, sizeof(char));
+  if (!args) {
+    return -1;
+  }
+  char *pargs = args; // extra pointer to after the last argument
+  // build argument list in the format the DosStartSession() wants,
+  // adding spaces between the arguments
+  for (int i = 0; i < aArgc; i++, *pargs++ = ' ') {
+    strcpy(pargs, aArgv[i]);
+    pargs += strlen(aArgv[i]);
+  }
+  if (aArgc > 1) {
+    *(pargs-1) = '\0'; // replace last space
+  }
+  *pargs = '\0';
+  // make sure that the program is separated by null byte
+  pargs = strchr(args, ' ');
+  if (pargs) {
+    *pargs = '\0';
+  }
+
+  char *env = createEnv();
+
+  char error[CCHMAXPATH] = { 0 };
+  RESULTCODES crc = { 0 };
+  ULONG rc = DosExecPgm(error, sizeof(error), EXEC_ASYNC, args, env,
+                        &crc, (PSZ)aExePath);
+  free(args); // done with the arguments
+  if (env) {
+    free(env);
+  }
+  if (rc != NO_ERROR) {
+    return -1;
+  }
+
+  return 0;
+}
+#endif
+
 // If aBlankCommandLine is true, then the application will be launched with a
 // blank command line instead of being launched with the same command line that
 // it was initially started with.
@@ -1456,6 +1542,10 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
 
 #if defined(XP_WIN)
   if (!WinLaunchChild(exePath.get(), gRestartArgc, gRestartArgv, needElevation))
+    return NS_ERROR_FAILURE;
+#elif defined(XP_OS2) && (__GNUC__ == 3 && __GNUC_MINOR__ == 3)
+  // implementation of _execv() is broken with GCC 3.3.x on OS/2
+  if (OS2LaunchChild(exePath.get(), gRestartArgc, gRestartArgv) == -1)
     return NS_ERROR_FAILURE;
 #elif defined(XP_OS2)
   if (_execv(exePath.get(), gRestartArgv) == -1)

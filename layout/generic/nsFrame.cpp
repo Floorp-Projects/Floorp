@@ -1384,11 +1384,9 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   resultList.AppendToTop(set.BlockBorderBackgrounds());
   // 5: floats
   resultList.AppendToTop(set.Floats());
-  // 6: general content
+  // 7: general content
   resultList.AppendToTop(set.Content());
-  // 7, 8: non-negative z-index children
-  resultList.AppendToTop(set.PositionedDescendants());
-  // 9: outlines, in content tree order. We need to sort by content order
+  // 7.5: outlines, in content tree order. We need to sort by content order
   // because an element with outline that breaks and has children with outline
   // might have placed child outline items between its own outline items.
   // The element's outline items need to all come before any child outline
@@ -1398,7 +1396,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   DisplayDebugBorders(aBuilder, this, set);
 #endif
   resultList.AppendToTop(set.Outlines());
-
+  // 8, 9: non-negative z-index children
+  resultList.AppendToTop(set.PositionedDescendants());
 
   if (applyAbsPosClipping) {
     nsAbsPosClipWrapper wrapper(absPosClip);
@@ -1600,8 +1599,8 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     list.AppendToTop(pseudoStack.BlockBorderBackgrounds());
     list.AppendToTop(pseudoStack.Floats());
     list.AppendToTop(pseudoStack.Content());
+    list.AppendToTop(pseudoStack.Outlines());
     extraPositionedDescendants.AppendToTop(pseudoStack.PositionedDescendants());
-    aLists.Outlines()->AppendToTop(pseudoStack.Outlines());
 #ifdef NS_DEBUG
     DisplayDebugBorders(aBuilder, aChild, aLists);
 #endif

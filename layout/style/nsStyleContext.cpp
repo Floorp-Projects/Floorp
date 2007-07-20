@@ -551,6 +551,15 @@ public:
       Assign("[none]");
     }
   }
+
+  URICString(nsCSSValue::URL* aURI) {
+    if (aURI) {
+      NS_ASSERTION(aURI->mURI, "Must have URI here!");
+      aURI->mURI->GetSpec(*this);
+    } else {
+      Assign("[none]");
+    }
+  }
   
   URICString& operator=(const URICString& aOther) {
     Assign(aOther);

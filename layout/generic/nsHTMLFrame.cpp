@@ -592,7 +592,8 @@ CanvasFrame::Reflow(nsPresContext*          aPresContext,
       // (0, 0). We only want to invalidate GetRect() since GetOverflowRect()
       // could also include overflow to our top and left (out of the viewport)
       // which doesn't need to be painted.
-      Invalidate(GetRect(), PR_FALSE);
+      nsIFrame* viewport = PresContext()->GetPresShell()->GetRootFrame();
+      viewport->Invalidate(nsRect(nsPoint(0, 0), viewport->GetSize()));
     }
 
     // Return our desired size (which doesn't matter)

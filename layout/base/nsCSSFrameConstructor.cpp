@@ -117,7 +117,7 @@
 #include "nsImageFrame.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsContentErrors.h"
-
+#include "nsIPrincipal.h"
 #include "nsIDOMWindowInternal.h"
 
 #include "nsBox.h"
@@ -4209,8 +4209,10 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
       return NS_ERROR_FAILURE;
 
     nsRefPtr<nsXBLBinding> binding;
-    rv = xblService->LoadBindings(aDocElement, display->mBinding, PR_FALSE,
-                                  getter_AddRefs(binding), &resolveStyle);
+    rv = xblService->LoadBindings(aDocElement, display->mBinding->mURI,
+                                  display->mBinding->mOriginPrincipal,
+                                  PR_FALSE, getter_AddRefs(binding),
+                                  &resolveStyle);
     if (NS_FAILED(rv))
       return NS_OK; // Binding will load asynchronously.
 
@@ -7460,8 +7462,9 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
       if (!xblService)
         return NS_ERROR_FAILURE;
 
-      rv = xblService->LoadBindings(aContent, display->mBinding, PR_FALSE,
-                                    getter_AddRefs(binding.mBinding),
+      rv = xblService->LoadBindings(aContent, display->mBinding->mURI,
+                                    display->mBinding->mOriginPrincipal,
+                                    PR_FALSE, getter_AddRefs(binding.mBinding),
                                     &resolveStyle);
       if (NS_FAILED(rv))
         return NS_OK;
@@ -9137,30 +9140,35 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   nsIFrame* newFrame = frameItems.childList;
   if (NS_SUCCEEDED(rv) && newFrame) {
     NS_ASSERTION(!captionItems.childList, "leaking caption frames");
+    if (!prevSibling) {
+      // We're inserting the new frame as the first child. See if the
+      // parent has a :before pseudo-element
+      nsIFrame* firstChild = parentFrame->GetFirstChild(nsnull);
+
+      if (firstChild &&
+          nsLayoutUtils::IsGeneratedContentFor(aContainer, firstChild,
+                                               nsCSSPseudoElements::before)) {
+        // Insert the new frames after the last continuation of the :before
+        prevSibling = firstChild->GetLastContinuation();
+        nsIFrame* newParent = prevSibling->GetParent();
+        if (newParent != parentFrame) {
+          nsHTMLContainerFrame::ReparentFrameViewList(state.mPresContext,
+                                                      newFrame, parentFrame,
+                                                      newParent);
+          parentFrame = newParent;
+        }
+        // We perhaps could leave this true and take the AppendFrames path
+        // below, but we'd have to update appendAfterFrame and it seems safer
+        // to force all insert-after-:before cases to take these to take the
+        // InsertFrames path
+        isAppend = PR_FALSE;
+      }
+    }
+
     // Notify the parent frame
     if (isAppend) {
       AppendFrames(state, aContainer, parentFrame, newFrame, appendAfterFrame);
-    }
-    else {
-      if (!prevSibling) {
-        // We're inserting the new frame as the first child. See if the
-        // parent has a :before pseudo-element
-        nsIFrame* firstChild = parentFrame->GetFirstChild(nsnull);
-
-        if (firstChild &&
-            nsLayoutUtils::IsGeneratedContentFor(aContainer, firstChild,
-                                                 nsCSSPseudoElements::before)) {
-          // Insert the new frames after the last continuation of the :before
-          prevSibling = firstChild->GetLastContinuation();
-          nsIFrame* newParent = prevSibling->GetParent();
-          if (newParent != parentFrame) {
-            nsHTMLContainerFrame::ReparentFrameViewList(state.mPresContext,
-                                                        newFrame, parentFrame,
-                                                        newParent);
-            parentFrame = newParent;
-          }
-        }
-      }
+    } else {
       state.mFrameManager->InsertFrames(parentFrame,
                                         nsnull, prevSibling, newFrame);
     }

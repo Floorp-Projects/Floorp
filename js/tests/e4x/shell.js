@@ -41,6 +41,12 @@
 
 gTestsuite = 'e4x';
 
+if (typeof version != 'undefined') {
+    // At least in Rhino, if version is set to 150 (which is what is used
+    // in top level shell.js), the implementation assumes E4X is not available.
+    version(160);
+}
+
 /*
  * Report a failure in the 'accepted' manner
  */
