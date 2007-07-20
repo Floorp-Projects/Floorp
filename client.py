@@ -9,16 +9,12 @@ NSS_DIRS  = ('dbm',
              'security/coreconf',
              'security/dbm')
 
-# URL of the default hg repository to clone for Tamarin.  If this is a
-# relative URL, it's resolved relative to the Mozilla hg repository.
-#
-DEFAULT_TAMARIN_REPO = 'tamarin-central'
+# URL of the default hg repository to clone for Tamarin.
+DEFAULT_TAMARIN_REPO = 'http://hg.mozilla.org/tamarin-central/'
 
 import os
 import sys
 from optparse import OptionParser
-from ConfigParser import SafeConfigParser
-import urlparse
 
 topsrcdir = os.path.dirname(__file__)
 if topsrcdir == '':
@@ -99,27 +95,7 @@ def fixup_repo_options(options):
     # Handle special case: initial checkout of Tamarin.
     if (options.tamarin_repo is None
             and not os.path.exists(os.path.join(topsrcdir, 'js', 'tamarin'))):
-        # Calculate default tamarin source repository URL.
-
-        # Since DEFAULT_TAMARIN_REPO may be a relative URL, we first
-        # need to find the mozilla source repository URL, moz_repo.
-        moz_repo = options.mozilla_repo
-        if moz_repo is None:
-            cp = SafeConfigParser()
-            cp.read([os.path.join(topsrcdir, '.hg', 'hgrc')])
-            try:
-                moz_repo = cp.get("paths", "default")
-            except:
-                print ("*** Internal error: Expected to find a 'default' "
-                       "setting in the [paths] section of .hg/hgrc; "
-                       "but it's not there.")
-                raise
-
-        # Trim the standardsly-correct trailing /, if present.
-        if moz_repo.endswith('/'):
-            moz_repo = moz_repo[:-1]
-        options.tamarin_repo = urlparse.urljoin(moz_repo, DEFAULT_TAMARIN_REPO)
-
+        options.tamarin_repo = DEFAULT_TAMARIN_REPO
 
 try:
     (options, (action,)) = o.parse_args()
