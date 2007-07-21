@@ -3172,7 +3172,6 @@ nsNavHistory::LazyTimerCallback(nsITimer* aTimer, void* aClosure)
   that->CommitLazyMessages();
 }
 
-
 // nsNavHistory::CommitLazyMessages
 
 void
@@ -4514,12 +4513,15 @@ GetSimpleBookmarksQueryFolder(const nsCOMArray<nsNavHistoryQuery>& aQueries,
   query->GetHasUri(&hasIt);
   if (hasIt)
     return 0;
+  (void)query->GetHasSearchTerms(&hasIt);
+  if (hasIt)
+    return 0;
   if (aOptions->MaxResults() > 0)
     return 0;
 
   // Note that we don't care about the onlyBookmarked flag, if you specify a bookmark
   // folder, onlyBookmarked is inferred.
-
+  NS_ASSERTION(query->Folders()[0] > 0, "bad folder id");
   return query->Folders()[0];
 }
 
