@@ -41,6 +41,13 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+DIRS = \
+       $(NULL)
+
+ifdef ENABLE_TESTS
+  DIRS += tests
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 OSDIR		= os2
 else
@@ -128,6 +135,7 @@ XPIDLSRCS = \
 	nsIExternalProtocolService.idl \
 	nsIExternalHelperAppService.idl	\
 	nsIHelperAppLauncherDialog.idl \
+	nsIHandlerService.idl	\
 	$(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
@@ -147,6 +155,8 @@ OS_LIBS		+= shell32.lib
 GARBAGE		+= nsOSHelperAppService.cpp $(srcdir)/nsOSHelperAppService.cpp \
              nsMIMEInfoWin.cpp $(srcdir)/nsMIMEInfoWin.cpp
 endif
+
+EXTRA_COMPONENTS = nsHandlerService.js
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
