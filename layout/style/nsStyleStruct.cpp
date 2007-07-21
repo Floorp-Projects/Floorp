@@ -652,8 +652,8 @@ nsStyleSVG::nsStyleSVG()
     mStroke.mFallbackColor   = NS_RGB(0,0,0);
     mStrokeDasharray         = nsnull;
 
-    mStrokeDashoffset.SetFactorValue(0.0f);
-    mStrokeWidth.SetFactorValue(1.0f);
+    mStrokeDashoffset.SetCoordValue(0);
+    mStrokeWidth.SetCoordValue(nsPresContext::CSSPixelsToAppUnits(1));
 
     mFillOpacity             = 1.0f;
     mStrokeMiterlimit        = 4.0f;
@@ -686,7 +686,7 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
 
   mMarkerEnd = aSource.mMarkerEnd;
   mMarkerMid = aSource.mMarkerMid;
-  mMarkerEnd = aSource.mMarkerStart;
+  mMarkerStart = aSource.mMarkerStart;
 
   mStrokeDasharrayLength = aSource.mStrokeDasharrayLength;
   if (aSource.mStrokeDasharray) {

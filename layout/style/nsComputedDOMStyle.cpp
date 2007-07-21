@@ -2870,6 +2870,509 @@ nsComputedDOMStyle::GetFrameBorderRectWidth(nscoord& aWidth)
   return PR_TRUE;
 }
 
+#ifdef MOZ_SVG
+
+nsresult
+nsComputedDOMStyle::GetSVGPaintFor(PRBool aFill,
+                                   nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleSVG* svg = GetStyleSVG();
+  const nsStyleSVGPaint* paint = nsnull;
+
+  if (aFill)
+    paint = &svg->mFill;
+  else
+    paint = &svg->mStroke;
+
+  nsAutoString paintString;
+
+  switch (paint->mType) {
+  case eStyleSVGPaintType_None:
+  {
+    val->SetIdent(nsGkAtoms::none);
+    break;
+  }
+  case eStyleSVGPaintType_Color:
+  {
+    nsresult rv = SetToRGBAColor(val, paint->mPaint.mColor);
+    if (NS_FAILED(rv)) {
+      delete val;
+      return rv;
+    }
+    break;
+  }
+  case eStyleSVGPaintType_Server:
+  {
+    nsDOMCSSValueList *valueList = GetROCSSValueList(PR_FALSE);
+    NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
+
+    if (!valueList->AppendCSSValue(val)) {
+      delete valueList;
+      delete val;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    nsROCSSPrimitiveValue* fallback = GetROCSSPrimitiveValue();
+    if (!fallback || !valueList->AppendCSSValue(fallback)) {
+      delete valueList;
+      delete fallback;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    val->SetURI(paint->mPaint.mPaintServer);
+    nsresult rv = SetToRGBAColor(fallback, paint->mFallbackColor);
+    if (NS_FAILED(rv)) {
+      delete valueList;
+      return rv;
+    }
+
+    return CallQueryInterface(valueList, aValue);
+  }
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetFill(nsIDOMCSSValue** aValue)
+{
+  return GetSVGPaintFor(PR_TRUE, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetStroke(nsIDOMCSSValue** aValue)
+{
+  return GetSVGPaintFor(PR_FALSE, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetMarkerEnd(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleSVG* svg = GetStyleSVG();
+
+  if (svg->mMarkerEnd)
+    val->SetURI(svg->mMarkerEnd);
+  else
+    val->SetIdent(nsGkAtoms::none);
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetMarkerMid(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleSVG* svg = GetStyleSVG();
+
+  if (svg->mMarkerMid)
+    val->SetURI(svg->mMarkerMid);
+  else
+    val->SetIdent(nsGkAtoms::none);
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetMarkerStart(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleSVG* svg = GetStyleSVG();
+
+  if (svg->mMarkerStart)
+    val->SetURI(svg->mMarkerStart);
+  else
+    val->SetIdent(nsGkAtoms::none);
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetStrokeDasharray(nsIDOMCSSValue** aValue)
+{
+  const nsStyleSVG* svg = GetStyleSVG();
+
+  if (!svg->mStrokeDasharrayLength || !svg->mStrokeDasharray) {
+    nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+    NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+    val->SetIdent(nsGkAtoms::none);
+    return CallQueryInterface(val, aValue);
+  }
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
+  NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
+
+  for (PRUint32 i = 0; i < svg->mStrokeDasharrayLength; i++) {
+    nsROCSSPrimitiveValue* dash = GetROCSSPrimitiveValue();
+    if (!dash || !valueList->AppendCSSValue(dash)) {
+      delete valueList;
+      delete dash;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    SetValueToCoord(dash, svg->mStrokeDasharray[i]);
+  }
+
+  return CallQueryInterface(valueList, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetStrokeDashoffset(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  SetValueToCoord(val, GetStyleSVG()->mStrokeDashoffset);
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetStrokeWidth(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  SetValueToCoord(val, GetStyleSVG()->mStrokeWidth);
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetFillOpacity(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  val->SetNumber(GetStyleSVG()->mFillOpacity);
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetFloodOpacity(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  val->SetNumber(GetStyleSVGReset()->mFloodOpacity);
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetStopOpacity(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  val->SetNumber(GetStyleSVGReset()->mStopOpacity);
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetStrokeMiterlimit(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  val->SetNumber(GetStyleSVG()->mStrokeMiterlimit);
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetStrokeOpacity(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  val->SetNumber(GetStyleSVG()->mStrokeOpacity);
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetClipRule(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsAFlatCString& keyword =
+    nsCSSProps::ValueToKeyword(GetStyleSVG()->mClipRule,
+                               nsCSSProps::kFillRuleKTable);
+  val->SetIdent(keyword);
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetFillRule(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsAFlatCString& keyword =
+    nsCSSProps::ValueToKeyword(GetStyleSVG()->mFillRule,
+                               nsCSSProps::kFillRuleKTable);
+  val->SetIdent(keyword);
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetStrokeLinecap(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsAFlatCString& keyword =
+    nsCSSProps::ValueToKeyword(GetStyleSVG()->mStrokeLinecap,
+                               nsCSSProps::kStrokeLinecapKTable);
+  val->SetIdent(keyword);
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetStrokeLinejoin(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsAFlatCString& keyword =
+    nsCSSProps::ValueToKeyword(GetStyleSVG()->mStrokeLinejoin,
+                               nsCSSProps::kStrokeLinejoinKTable);
+  val->SetIdent(keyword);
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetTextAnchor(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsAFlatCString& keyword =
+    nsCSSProps::ValueToKeyword(GetStyleSVG()->mTextAnchor,
+                               nsCSSProps::kTextAnchorKTable);
+  val->SetIdent(keyword);
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetColorInterpolation(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleSVG* svg = GetStyleSVG();
+
+  if (svg->mColorInterpolation != NS_STYLE_COLOR_INTERPOLATION_AUTO) {
+    const nsAFlatCString& keyword =
+      nsCSSProps::ValueToKeyword(svg->mColorInterpolation,
+                                 nsCSSProps::kColorInterpolationKTable);
+    val->SetIdent(keyword);
+  } else {
+    val->SetIdent(nsGkAtoms::_auto);
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetColorInterpolationFilters(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleSVG* svg = GetStyleSVG();
+
+  if (svg->mColorInterpolationFilters != NS_STYLE_COLOR_INTERPOLATION_AUTO) {
+    const nsAFlatCString& keyword =
+      nsCSSProps::ValueToKeyword(svg->mColorInterpolationFilters,
+                                 nsCSSProps::kColorInterpolationKTable);
+    val->SetIdent(keyword);
+  } else {
+    val->SetIdent(nsGkAtoms::_auto);
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetDominantBaseline(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleSVGReset* svg = GetStyleSVGReset();
+
+  if (svg->mDominantBaseline != NS_STYLE_DOMINANT_BASELINE_AUTO) {
+    const nsAFlatCString& keyword =
+      nsCSSProps::ValueToKeyword(svg->mDominantBaseline,
+                                 nsCSSProps::kDominantBaselineKTable);
+    val->SetIdent(keyword);
+  } else {
+    val->SetIdent(nsGkAtoms::_auto);
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetPointerEvents(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleSVG* svg = GetStyleSVG();
+
+  if (svg->mPointerEvents != NS_STYLE_POINTER_EVENTS_NONE) {
+    const nsAFlatCString& keyword =
+      nsCSSProps::ValueToKeyword(svg->mPointerEvents,
+                                 nsCSSProps::kPointerEventsKTable);
+    val->SetIdent(keyword);
+  } else {
+    val->SetIdent(nsGkAtoms::none);
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetShapeRendering(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleSVG* svg = GetStyleSVG();
+
+  if (svg->mShapeRendering != NS_STYLE_SHAPE_RENDERING_AUTO) {
+    const nsAFlatCString& keyword =
+      nsCSSProps::ValueToKeyword(svg->mShapeRendering,
+                                 nsCSSProps::kShapeRenderingKTable);
+    val->SetIdent(keyword);
+  } else {
+    val->SetIdent(nsGkAtoms::_auto);
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetTextRendering(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleSVG* svg = GetStyleSVG();
+
+  if (svg->mTextRendering != NS_STYLE_TEXT_RENDERING_AUTO) {
+    const nsAFlatCString& keyword =
+      nsCSSProps::ValueToKeyword(svg->mTextRendering,
+                                 nsCSSProps::kTextRenderingKTable);
+    val->SetIdent(keyword);
+  } else {
+    val->SetIdent(nsGkAtoms::_auto);
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetStopColor(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  nsresult rv = SetToRGBAColor(val, GetStyleSVGReset()->mStopColor);
+  if (NS_FAILED(rv)) {
+    delete val;
+    return rv;
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetFloodColor(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  nsresult rv = SetToRGBAColor(val, GetStyleSVGReset()->mFloodColor);
+  if (NS_FAILED(rv)) {
+    delete val;
+    return rv;
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetClipPath(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleSVGReset* svg = GetStyleSVGReset();
+
+  if (svg->mClipPath)
+    val->SetURI(svg->mClipPath);
+  else
+    val->SetIdent(nsGkAtoms::none);
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetFilter(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleSVGReset* svg = GetStyleSVGReset();
+
+  if (svg->mFilter)
+    val->SetURI(svg->mFilter);
+  else
+    val->SetIdent(nsGkAtoms::none);
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetMask(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleSVGReset* svg = GetStyleSVGReset();
+
+  if (svg->mMask)
+    val->SetURI(svg->mMask);
+  else
+    val->SetIdent(nsGkAtoms::none);
+
+  return CallQueryInterface(val, aValue);
+}
+
+#endif // MOZ_SVG
+
+
 #define COMPUTED_STYLE_MAP_ENTRY(_prop, _method)              \
   { eCSSProperty_##_prop, &nsComputedDOMStyle::Get##_method }
 
@@ -3058,6 +3561,40 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(user_input,                    UserInput),
     COMPUTED_STYLE_MAP_ENTRY(user_modify,                   UserModify),
     COMPUTED_STYLE_MAP_ENTRY(user_select,                   UserSelect)
+
+#ifdef MOZ_SVG
+    ,
+    COMPUTED_STYLE_MAP_ENTRY(clip_path,                     ClipPath),
+    COMPUTED_STYLE_MAP_ENTRY(clip_rule,                     ClipRule),
+    COMPUTED_STYLE_MAP_ENTRY(color_interpolation,           ColorInterpolation),
+    COMPUTED_STYLE_MAP_ENTRY(color_interpolation_filters,   ColorInterpolationFilters),
+    COMPUTED_STYLE_MAP_ENTRY(dominant_baseline,             DominantBaseline),
+    COMPUTED_STYLE_MAP_ENTRY(fill,                          Fill),
+    COMPUTED_STYLE_MAP_ENTRY(fill_opacity,                  FillOpacity),
+    COMPUTED_STYLE_MAP_ENTRY(fill_rule,                     FillRule),
+    COMPUTED_STYLE_MAP_ENTRY(filter,                        Filter),
+    COMPUTED_STYLE_MAP_ENTRY(flood_color,                   FloodColor),
+    COMPUTED_STYLE_MAP_ENTRY(flood_opacity,                 FloodOpacity),
+    COMPUTED_STYLE_MAP_ENTRY(mask,                          Mask),
+    COMPUTED_STYLE_MAP_ENTRY(marker_end,                    MarkerEnd),
+    COMPUTED_STYLE_MAP_ENTRY(marker_mid,                    MarkerMid),
+    COMPUTED_STYLE_MAP_ENTRY(marker_start,                  MarkerStart),
+    COMPUTED_STYLE_MAP_ENTRY(pointer_events,                PointerEvents),
+    COMPUTED_STYLE_MAP_ENTRY(shape_rendering,               ShapeRendering),
+    COMPUTED_STYLE_MAP_ENTRY(stop_color,                    StopColor),
+    COMPUTED_STYLE_MAP_ENTRY(stop_opacity,                  StopOpacity),
+    COMPUTED_STYLE_MAP_ENTRY(stroke,                        Stroke),
+    COMPUTED_STYLE_MAP_ENTRY(stroke_dasharray,              StrokeDasharray),
+    COMPUTED_STYLE_MAP_ENTRY(stroke_dashoffset,             StrokeDashoffset),
+    COMPUTED_STYLE_MAP_ENTRY(stroke_linecap,                StrokeLinecap),
+    COMPUTED_STYLE_MAP_ENTRY(stroke_linejoin,               StrokeLinejoin),
+    COMPUTED_STYLE_MAP_ENTRY(stroke_miterlimit,             StrokeMiterlimit),
+    COMPUTED_STYLE_MAP_ENTRY(stroke_opacity,                StrokeOpacity),
+    COMPUTED_STYLE_MAP_ENTRY(stroke_width,                  StrokeWidth),
+    COMPUTED_STYLE_MAP_ENTRY(text_anchor,                   TextAnchor),
+    COMPUTED_STYLE_MAP_ENTRY(text_rendering,                TextRendering)
+#endif
+
   };
 
   *aLength = NS_ARRAY_LENGTH(map);
