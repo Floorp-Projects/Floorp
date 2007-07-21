@@ -1733,7 +1733,7 @@ nsGenericHTMLElement::GetPrimaryPresState(nsGenericHTMLElement* aContent,
 
   nsCOMPtr<nsILayoutHistoryState> history;
   nsCAutoString key;
-  GetLayoutHistoryAndKey(aContent, getter_AddRefs(history), key);
+  GetLayoutHistoryAndKey(aContent, PR_FALSE, getter_AddRefs(history), key);
 
   if (history) {
     // Get the pres state for this key, if it doesn't exist, create one
@@ -1752,6 +1752,7 @@ nsGenericHTMLElement::GetPrimaryPresState(nsGenericHTMLElement* aContent,
 
 nsresult
 nsGenericHTMLElement::GetLayoutHistoryAndKey(nsGenericHTMLElement* aContent,
+                                             PRBool aRead,
                                              nsILayoutHistoryState** aHistory,
                                              nsACString& aKey)
 {
@@ -1768,6 +1769,11 @@ nsGenericHTMLElement::GetLayoutHistoryAndKey(nsGenericHTMLElement* aContent,
   //
   *aHistory = doc->GetLayoutHistoryState().get();
   if (!*aHistory) {
+    return NS_OK;
+  }
+
+  if (aRead && !(*aHistory)->HasStates()) {
+    NS_RELEASE(*aHistory);
     return NS_OK;
   }
 
@@ -1801,7 +1807,8 @@ nsGenericHTMLElement::RestoreFormControlState(nsGenericHTMLElement* aContent,
 {
   nsCOMPtr<nsILayoutHistoryState> history;
   nsCAutoString key;
-  nsresult rv = GetLayoutHistoryAndKey(aContent, getter_AddRefs(history), key);
+  nsresult rv = GetLayoutHistoryAndKey(aContent, PR_TRUE,
+                                       getter_AddRefs(history), key);
   if (!history) {
     return PR_FALSE;
   }

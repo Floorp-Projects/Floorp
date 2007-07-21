@@ -527,10 +527,13 @@ public:
    * piece of content.
    *
    * @param aContent the content to generate the key for
+   * @param aRead if true, won't return a layout history state (and won't
+   *              generate a key) if the layout history state is empty.
    * @param aState the history state object (out param)
    * @param aKey the key (out param)
    */
   static nsresult GetLayoutHistoryAndKey(nsGenericHTMLElement* aContent,
+                                         PRBool aRead,
                                          nsILayoutHistoryState** aState,
                                          nsACString& aKey);
   /**
