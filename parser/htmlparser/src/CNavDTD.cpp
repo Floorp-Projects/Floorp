@@ -622,7 +622,9 @@ CNavDTD::HandleToken(CToken* aToken, nsIParser* aParser)
           PRBool isExclusive = PR_FALSE;
           PRBool theChildBelongsInHead =
             gHTMLElements[eHTMLTag_head].IsChildOfHead(theTag, isExclusive);
-          if (theChildBelongsInHead && !isExclusive) {
+          if (theChildBelongsInHead &&
+              !isExclusive &&
+              !gHTMLElements[theTag].HasSpecialProperty(kPreferHead)) {
             if (mMisplacedContent.GetSize() == 0 &&
                 (!gHTMLElements[theTag].HasSpecialProperty(kPreferBody) ||
                  (mFlags & NS_DTD_FLAG_HAS_EXPLICIT_HEAD))) {
