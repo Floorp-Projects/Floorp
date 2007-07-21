@@ -600,10 +600,12 @@ nsCanvasRenderingContext2D::DoDrawImageSecurityCheck(nsIURI* aURI, PRBool forceW
         ssm->GetCodebasePrincipal(aURI, getter_AddRefs(uriPrincipal));
 
         if (uriPrincipal) {
-            nsresult rv = ssm->CheckSameOriginPrincipal(elem->NodePrincipal(),
-                                                        uriPrincipal);
-            if (NS_SUCCEEDED(rv)) {
-                // Same origin
+            PRBool subsumes;
+            nsresult rv =
+                elem->NodePrincipal()->Subsumes(uriPrincipal, &subsumes);
+            
+            if (NS_SUCCEEDED(rv) && subsumes) {
+                // This canvas has access to that image anyway
                 return;
             }
         }
