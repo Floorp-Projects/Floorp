@@ -422,6 +422,14 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
          */
         js_FinishDeflatedStringCache(rt);
 
+        /*
+         * Free unit string storage only after the last GC has completed, so
+         * that js_FinalizeStringRT can detect unit strings and avoid calling
+         * free on their chars storage.
+         */
+        free(rt->unitStrings);
+        rt->unitStrings = NULL;
+
         /* Take the runtime down, now that it has no contexts or atoms. */
         JS_LOCK_GC(rt);
         rt->state = JSRTS_DOWN;
