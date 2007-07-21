@@ -1022,7 +1022,7 @@ var BookmarkPropertiesPanel = {
       expander.className = "up";
       expander.setAttribute("tooltiptext",
                             expander.getAttribute("tooltiptextup"));
-      document.documentElement.buttons = "accept,cancel, extra2";
+      document.documentElement.buttons = "accept,cancel,extra2";
 
       if (!this._folderTree.treeBoxObject.view.isContainerOpen(0))
         this._folderTree.treeBoxObject.view.toggleOpenState(0);
