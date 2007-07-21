@@ -189,8 +189,10 @@ enum {
   // nsIPresShell::FrameNeedsReflow.  Pass the right arguments instead.
   NS_FRAME_IS_DIRTY =                           0x00000400,
 
-  // If this bit is set then the frame is unflowable.
-  NS_FRAME_IS_UNFLOWABLE =                      0x00000800,
+  // If this bit is set then the frame is too deep in the frame tree, and
+  // we'll stop updating it and its children, to prevent stack overflow
+  // and the like.
+  NS_FRAME_TOO_DEEP_IN_FRAME_TREE =             0x00000800,
 
   // If this bit is set, either:
   //  1. the frame has children that have either NS_FRAME_IS_DIRTY or
