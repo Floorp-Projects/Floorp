@@ -1310,7 +1310,7 @@ nsresult
 nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                                              const nsRect&         aDirtyRect,
                                              nsDisplayList*        aList) {
-  if (GetStateBits() & NS_FRAME_IS_UNFLOWABLE)
+  if (GetStateBits() & NS_FRAME_TOO_DEEP_IN_FRAME_TREE)
     return NS_OK;
 
   // Replaced elements have their visibility handled here, because
@@ -1428,7 +1428,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   if (aBuilder->IsBackgroundOnly())
     return NS_OK;
 
-  if (aChild->GetStateBits() & NS_FRAME_IS_UNFLOWABLE)
+  if (aChild->GetStateBits() & NS_FRAME_TOO_DEEP_IN_FRAME_TREE)
     return NS_OK;
   
   const nsStyleDisplay* disp = aChild->GetStyleDisplay();
@@ -1462,8 +1462,8 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // could call GetType again but since we don't currently need it, let's
     // avoid the virtual call.
     childType = nsnull;
-    // Recheck NS_FRAME_IS_FLOWABLE
-    if (aChild->GetStateBits() & NS_FRAME_IS_UNFLOWABLE)
+    // Recheck NS_FRAME_TOO_DEEP_IN_FRAME_TREE
+    if (aChild->GetStateBits() & NS_FRAME_TOO_DEEP_IN_FRAME_TREE)
       return NS_OK;
     nsRect* savedDirty = static_cast<nsRect*>
                                     (aChild->GetProperty(nsGkAtoms::outOfFlowDirtyRectProperty));
@@ -3824,7 +3824,7 @@ nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
                             nsHTMLReflowMetrics& aMetrics)
 {
   if (aReflowState.mReflowDepth >  MAX_FRAME_DEPTH) {
-    mState |= NS_FRAME_IS_UNFLOWABLE;
+    mState |= NS_FRAME_TOO_DEEP_IN_FRAME_TREE;
     mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
     aMetrics.width = 0;
     aMetrics.height = 0;
@@ -3836,7 +3836,7 @@ nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
     aMetrics.mOverflowArea.height = 0;
     return PR_TRUE;
   }
-  mState &= ~NS_FRAME_IS_UNFLOWABLE;
+  mState &= ~NS_FRAME_TOO_DEEP_IN_FRAME_TREE;
   return PR_FALSE;
 }
 
