@@ -4248,8 +4248,8 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     svg->mColorInterpolationFilters = parentSVG->mColorInterpolationFilters;
   }
-  else if (eCSSUnit_Initial == SVGData.mColorInterpolation.GetUnit()) {
-    svg->mColorInterpolation = NS_STYLE_COLOR_INTERPOLATION_LINEARRGB;
+  else if (eCSSUnit_Initial == SVGData.mColorInterpolationFilters.GetUnit()) {
+    svg->mColorInterpolationFilters = NS_STYLE_COLOR_INTERPOLATION_LINEARRGB;
   }
 
   // fill: 
@@ -4347,7 +4347,7 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
           if (svg->mStrokeDasharray)
             memcpy(svg->mStrokeDasharray,
                    parentSVG->mStrokeDasharray,
-                   svg->mStrokeDasharrayLength * sizeof(float));
+                   svg->mStrokeDasharrayLength * sizeof(nsStyleCoord));
           else
             svg->mStrokeDasharrayLength = 0;
         }
@@ -4387,10 +4387,14 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
   }
 
   // stroke-dashoffset: <dashoffset>, inherit
-  SetCoord(SVGData.mStrokeDashoffset,
-           svg->mStrokeDashoffset, parentSVG->mStrokeDashoffset,
-           SETCOORD_LPH | SETCOORD_FACTOR,
-           aContext, mPresContext, inherited);
+  if (eCSSUnit_Initial == SVGData.mStrokeDashoffset.GetUnit()) {
+    svg->mStrokeDashoffset.SetCoordValue(0);
+  } else {
+    SetCoord(SVGData.mStrokeDashoffset,
+             svg->mStrokeDashoffset, parentSVG->mStrokeDashoffset,
+             SETCOORD_LPH | SETCOORD_FACTOR,
+             aContext, mPresContext, inherited);
+  }
 
   // stroke-linecap: enum, inherit
   if (eCSSUnit_Enumerated == SVGData.mStrokeLinecap.GetUnit()) {
@@ -4433,10 +4437,14 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
                 svg->mStrokeOpacity, inherited);  
 
   // stroke-width:
-  SetCoord(SVGData.mStrokeWidth,
-           svg->mStrokeWidth, parentSVG->mStrokeWidth,
-           SETCOORD_LPH | SETCOORD_FACTOR,
-           aContext, mPresContext, inherited);
+  if (eCSSUnit_Initial == SVGData.mStrokeWidth.GetUnit()) {
+    svg->mStrokeWidth.SetCoordValue(nsPresContext::CSSPixelsToAppUnits(1));
+  } else {
+    SetCoord(SVGData.mStrokeWidth,
+             svg->mStrokeWidth, parentSVG->mStrokeWidth,
+             SETCOORD_LPH | SETCOORD_FACTOR,
+             aContext, mPresContext, inherited);
+  }
 
   // text-anchor: enum, inherit
   if (eCSSUnit_Enumerated == SVGData.mTextAnchor.GetUnit()) {
@@ -4476,12 +4484,20 @@ nsRuleNode::ComputeSVGResetData(nsStyleStruct* aStartStruct,
   COMPUTE_START_RESET(SVGReset, (), svgReset, parentSVGReset, SVG, SVGData)
 
   // stop-color:
-  SetColor(SVGData.mStopColor, parentSVGReset->mStopColor,
-           mPresContext, aContext, svgReset->mStopColor, inherited);
+  if (eCSSUnit_Initial == SVGData.mStopColor.GetUnit()) {
+    svgReset->mStopColor = NS_RGB(0, 0, 0);
+  } else {
+    SetColor(SVGData.mStopColor, parentSVGReset->mStopColor,
+             mPresContext, aContext, svgReset->mStopColor, inherited);
+  }
 
   // flood-color:
-  SetColor(SVGData.mFloodColor, parentSVGReset->mFloodColor,
-           mPresContext, aContext, svgReset->mFloodColor, inherited);
+  if (eCSSUnit_Initial == SVGData.mFloodColor.GetUnit()) {
+    svgReset->mFloodColor = NS_RGB(0, 0, 0);
+  } else {
+    SetColor(SVGData.mFloodColor, parentSVGReset->mFloodColor,
+             mPresContext, aContext, svgReset->mFloodColor, inherited);
+  }
 
   // clip-path: url, none, inherit
   if (eCSSUnit_URL == SVGData.mClipPath.GetUnit()) {
