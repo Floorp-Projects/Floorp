@@ -297,6 +297,22 @@ typedef enum JSCharType {
 extern JSBool
 js_InitRuntimeStringState(JSContext *cx);
 
+/*
+ * Maximum character code for which we will create a pinned unit string on
+ * demand -- see JSRuntime.unitStrings in jscntxt.h.
+ */
+#define UNIT_STRING_LIMIT 256
+
+/*
+ * Get the independent string containing only character code c (backstopped
+ * with a NUL as usual for independent strings).
+ *
+ * This function must be called only for c < UNIT_STRING_LIMIT. It asserts to
+ * insist on this requirement in DEBUG builds.
+ */
+extern JSString *
+js_GetUnitString(JSContext *cx, jschar c);
+
 extern void
 js_FinishRuntimeStringState(JSContext *cx);
 

@@ -1943,7 +1943,8 @@ gc_lock_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
 void
 js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
 {
-    uintN depth, nslots;
+    uintN depth, nslots, minargs;
+
     if (fp->callobj)
         JS_CALL_OBJECT_TRACER(trc, fp->callobj, "call");
     if (fp->argsobj)
@@ -2000,8 +2001,9 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
     if (fp->argv) {
         nslots = fp->argc;
         if (fp->fun) {
-            if (fp->fun->nargs > nslots)
-                nslots = fp->fun->nargs;
+            minargs = FUN_MINARGS(fp->fun);
+            if (minargs > nslots)
+                nslots = minargs;
             if (!FUN_INTERPRETED(fp->fun))
                 nslots += fp->fun->u.n.extra;
         }
