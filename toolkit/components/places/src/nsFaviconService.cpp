@@ -294,7 +294,7 @@ nsFaviconService::SetFaviconUrlForPageInternal(nsIURI* aPage, nsIURI* aFavicon,
 
   // now link our entry with the history service
   nsNavHistory* historyService = nsNavHistory::GetHistoryService();
-  NS_ENSURE_TRUE(historyService, NS_ERROR_NO_INTERFACE);
+  NS_ENSURE_TRUE(historyService, NS_ERROR_OUT_OF_MEMORY);
 
   PRInt64 pageId;
   rv = historyService->GetUrlIdFor(aPage, &pageId, PR_TRUE);
