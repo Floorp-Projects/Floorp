@@ -1,0 +1,76 @@
+#data
+<!DOCTYPE html><html><head><noscript></noscript><style></style></head><frameset></frameset>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|     <noscript>
+|     <style>
+|   <frameset>
+
+#data
+<!DOCTYPE html><html><head><link><body></body></html>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|     <link>
+|   <body>
+
+#data
+<!DOCTYPE html><html><link><body>#</body></html>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|     <link>
+|   <body>
+|     "#"
+
+#data
+<body><body><base><link><meta><title><p></title><body><p>#</body>
+#errors
+6: missing document type declaration
+12: unexpected body element start tag
+18: base element start tag out of place
+24: link element start tag out of place
+30: meta element start tag out of place
+37: title element start tag out of place
+54: unexpected body element start tag
+#document
+| <html>
+|   <head>
+|     <base>
+|     <meta>
+|     <title>
+|       "<p>"
+|   <body>
+|     <link>
+|     <p>
+|       "#"
+
+#data
+<!doctype html><body><title>X</title><meta name=y><link rel=foo><style>
+x { content:"</style" } </style>
+#errors
+Unexpected start tag that belongs in head.
+Unexpected start tag that belongs in head.
+Unexpected start tag that belongs in head.
+Expected closing tag after </.
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|     <title>
+|       "X"
+|     <meta>
+|       name="y"
+|   <body>
+|     <link>
+|       rel="foo"
+|     <style>
+|       "
+x { content:"</style" } "
