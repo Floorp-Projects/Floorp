@@ -58,6 +58,7 @@ public:
   NS_IMETHOD AddState(const nsCString& aKey, nsPresState* aState);
   NS_IMETHOD GetState(const nsCString& aKey, nsPresState** aState);
   NS_IMETHOD RemoveState(const nsCString& aKey);
+  NS_IMETHOD_(PRBool) HasStates() const;
 
 
 private:
@@ -115,4 +116,10 @@ nsLayoutHistoryState::RemoveState(const nsCString& aKey)
 {
   mStates.Remove(aKey);
   return NS_OK;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsLayoutHistoryState::HasStates() const
+{
+  return mStates.Count() != 0;
 }

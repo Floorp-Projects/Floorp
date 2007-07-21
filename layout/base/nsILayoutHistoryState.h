@@ -50,8 +50,8 @@
 class nsPresState;
 
 #define NS_ILAYOUTHISTORYSTATE_IID \
-{0xe6abfb7c, 0x6624, 0x4b4d, \
-{0x9d, 0xfe, 0xea, 0x62, 0xae, 0xfe, 0x03, 0x31}}
+{ 0x99003f0f, 0x7ade, 0x44a1, \
+ { 0x81, 0x74, 0xe3, 0x6a, 0xa5, 0xbb, 0x6b, 0x10 } }
 
 class nsILayoutHistoryState : public nsISupports {
  public: 
@@ -74,6 +74,11 @@ class nsILayoutHistoryState : public nsISupports {
    * Remove the state object for |aKey|.
    */
   NS_IMETHOD RemoveState(const nsCString& aKey) = 0;
+
+  /**
+   * Check whether this history has any states in it
+   */
+  NS_IMETHOD_(PRBool) HasStates() const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsILayoutHistoryState,
