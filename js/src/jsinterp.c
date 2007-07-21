@@ -506,99 +506,65 @@ PutBlockObjects(JSContext *cx, JSStackFrame *fp)
 }
 
 JSBool
-js_GetPrimitiveThis(JSContext *cx, jsval *vp, JSClass *clasp, jsval *thisvp)
-{
-    jsval v;
-    JSObject *obj;
-
-    v = vp[1];
-    if (JSVAL_IS_OBJECT(v)) {
-        obj = JSVAL_TO_OBJECT(v);
-        if (!JS_InstanceOf(cx, obj, clasp, vp + 2))
-            return JS_FALSE;
-        v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
-    }
-    *thisvp = v;
-    return JS_TRUE;
-}
-
-/*
- * ECMA requires "the global object", but in embeddings such as the browser,
- * which have multiple top-level objects (windows, frames, etc. in the DOM),
- * we prefer fun's parent.  An example that causes this code to run:
- *
- *   // in window w1
- *   function f() { return this }
- *   function g() { return f }
- *
- *   // in window w2
- *   var h = w1.g()
- *   alert(h() == w1)
- *
- * The alert should display "true".
- */
-static JSBool
-ComputeGlobalThis(JSContext *cx, jsval *argv)
+js_ComputeThis(JSContext *cx, jsval *argv)
 {
     JSObject *thisp;
 
-    if (JSVAL_IS_PRIMITIVE(argv[-2]) ||
-        !OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(argv[-2]))) {
-        thisp = cx->globalObject;
-    } else {
-        jsid id;
-        jsval v;
-        uintN attrs;
-        JSObject *parent;
-
-        /* Walk up the parent chain. */
-        thisp = JSVAL_TO_OBJECT(argv[-2]);
-        id = ATOM_TO_JSID(cx->runtime->atomState.parentAtom);
-        for (;;) {
-            if (!OBJ_CHECK_ACCESS(cx, thisp, id, JSACC_PARENT, &v, &attrs))
-                return JS_FALSE;
-            parent = JSVAL_IS_VOID(v)
-                     ? OBJ_GET_PARENT(cx, thisp)
-                     : JSVAL_TO_OBJECT(v);
-            if (!parent)
-                break;
-            thisp = parent;
-        }
-    }
-    argv[-1] = OBJECT_TO_JSVAL(thisp);
-    return JS_TRUE;
-}
-
-static JSBool
-ComputeThis(JSContext *cx, jsval *argv)
-{
-    JSObject *thisp;
-
-    JS_ASSERT(!JSVAL_IS_NULL(argv[-1]));
     if (!JSVAL_IS_OBJECT(argv[-1]))
         return js_PrimitiveToObject(cx, &argv[-1]);
 
     thisp = JSVAL_TO_OBJECT(argv[-1]);
-    if (OBJ_GET_CLASS(cx, thisp) == &js_CallClass)
-        return ComputeGlobalThis(cx, argv);
+    if (thisp && OBJ_GET_CLASS(cx, thisp) != &js_CallClass) {
+        if (!thisp->map->ops->thisObject)
+            return JS_TRUE;
 
-    if (!thisp->map->ops->thisObject)
-        return JS_TRUE;
+        /* Some objects (e.g., With) delegate 'this' to another object. */
+        thisp = OBJ_THIS_OBJECT(cx, thisp);
+        if (!thisp)
+            return JS_FALSE;
+    } else {
+        /*
+         * ECMA requires "the global object", but in the presence of multiple
+         * top-level objects (windows, frames, or certain layers in the client
+         * object model), we prefer fun's parent.  An example that causes this
+         * code to run:
+         *
+         *   // in window w1
+         *   function f() { return this }
+         *   function g() { return f }
+         *
+         *   // in window w2
+         *   var h = w1.g()
+         *   alert(h() == w1)
+         *
+         * The alert should display "true".
+         */
+        if (JSVAL_IS_PRIMITIVE(argv[-2]) ||
+            !OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(argv[-2]))) {
+            thisp = cx->globalObject;
+        } else {
+            jsid id;
+            jsval v;
+            uintN attrs;
+            JSObject *parent;
 
-    /* Some objects (e.g., With) delegate 'this' to another object. */
-    thisp = thisp->map->ops->thisObject(cx, thisp);
-    if (!thisp)
-        return JS_FALSE;
+            /* Walk up the parent chain. */
+            thisp = JSVAL_TO_OBJECT(argv[-2]);
+            id = ATOM_TO_JSID(cx->runtime->atomState.parentAtom);
+            for (;;) {
+                if (!OBJ_CHECK_ACCESS(cx, thisp, id, JSACC_PARENT, &v, &attrs))
+                    return JS_FALSE;
+                parent = JSVAL_IS_VOID(v)
+                         ? OBJ_GET_PARENT(cx, thisp)
+                         : JSVAL_TO_OBJECT(v);
+                if (!parent)
+                    break;
+                thisp = parent;
+            }
+        }
+    }
     argv[-1] = OBJECT_TO_JSVAL(thisp);
     return JS_TRUE;
-}
-
-JSBool
-js_ComputeThis(JSContext *cx, jsval *argv)
-{
-    if (JSVAL_IS_NULL(argv[-1]))
-        return ComputeGlobalThis(cx, argv);
-    return ComputeThis(cx, argv);
 }
 
 #if JS_HAS_NO_SUCH_METHOD
@@ -615,9 +581,24 @@ NoSuchMethod(JSContext *cx, JSStackFrame *fp, jsval *vp, uint32 flags,
     JSBool ok;
     jsbytecode *pc;
 
-    /* NB: js_ComputeThis or equivalent must have been called already. */
+    /*
+     * We must call js_ComputeThis here to censor Call objects.  A performance
+     * hit, since we'll call it again in the normal sequence of invoke events,
+     * but at least it's idempotent.
+     *
+     * Normally, we call ComputeThis after all frame members have been set,
+     * and in particular, after any revision of the callee value at *vp  due
+     * to clasp->convert (see below).  This matters because ComputeThis may
+     * access *vp via fp->argv[-2], to follow the parent chain to a global
+     * object to use as the 'this' parameter.
+     *
+     * Obviously, here in the JSVAL_IS_PRIMITIVE(v) case, there can't be any
+     * such defaulting of 'this' to callee (v, *vp) ancestor.
+     */
     JS_ASSERT(JSVAL_IS_PRIMITIVE(vp[0]));
-    JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[1]));
+    if (!js_ComputeThis(cx, vp + 2))
+        return JS_FALSE;
+
     RESTORE_SP(fp);
 
     /* From here on, control must flow through label out: to return. */
@@ -902,7 +883,7 @@ LogCall(JSContext *cx, jsval callee, uintN argc, jsval *argv)
     key.lineno = 0;
     name = "";
     if (VALUE_IS_FUNCTION(cx, callee)) {
-        fun = (JSFunction *) OBJ_GET_PRIVATE(cx, JSVAL_TO_OBJECT(callee));
+        fun = (JSFunction *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(callee));
         if (fun->atom)
             name = js_AtomToPrintableString(cx, fun->atom);
         if (FUN_INTERPRETED(fun)) {
@@ -992,7 +973,7 @@ LogCall(JSContext *cx, jsval callee, uintN argc, jsval *argv)
             break;
           case JSTYPE_FUNCTION:
             if (VALUE_IS_FUNCTION(cx, argval)) {
-                fun = (JSFunction *) OBJ_GET_PRIVATE(cx, JSVAL_TO_OBJECT(argval));
+                fun = (JSFunction *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argval));
                 if (fun && fun->atom) {
                     str = ATOM_TO_STRING(fun->atom);
                     break;
@@ -1028,35 +1009,6 @@ LogCall(JSContext *cx, jsval callee, uintN argc, jsval *argv)
 #else
 # define ASSERT_NOT_THROWING(cx) /* nothing */
 #endif
-
-#define START_FAST_CALL(fp) (JS_ASSERT(!((fp)->flags & JSFRAME_IN_FAST_CALL)),\
-                             (fp)->flags |= JSFRAME_IN_FAST_CALL)
-#define END_FAST_CALL(fp)   (JS_ASSERT((fp)->flags & JSFRAME_IN_FAST_CALL),   \
-                             (fp)->flags &= ~JSFRAME_IN_FAST_CALL)
-
-/*
- * We check if the function accepts a primitive value as |this|. For that we
- * use a table that maps value's tag into the corresponding function flag.
- */
-JS_STATIC_ASSERT(JSVAL_INT == 1);
-JS_STATIC_ASSERT(JSVAL_DOUBLE == 2);
-JS_STATIC_ASSERT(JSVAL_STRING == 4);
-JS_STATIC_ASSERT(JSVAL_BOOLEAN == 6);
-
-static const uint16 PrimitiveTestFlags[] = {
-    JSFUN_THISP_NUMBER,     /* INT     */
-    JSFUN_THISP_NUMBER,     /* DOUBLE  */
-    JSFUN_THISP_NUMBER,     /* INT     */
-    JSFUN_THISP_STRING,     /* STRING  */
-    JSFUN_THISP_NUMBER,     /* INT     */
-    JSFUN_THISP_BOOLEAN,    /* BOOLEAN */
-    JSFUN_THISP_NUMBER      /* INT     */
-};
-
-#define PRIMITIVE_THIS_TEST(fun,thisv)                                        \
-    (JS_ASSERT(thisv != JSVAL_VOID),                                          \
-     JSFUN_THISP_TEST(JSFUN_THISP_FLAGS((fun)->flags),                        \
-                      PrimitiveTestFlags[JSVAL_TAG(thisv) - 1]))
 
 /*
  * Find a function reference and its 'this' object implicit first parameter
@@ -1169,9 +1121,8 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
     } else {
 have_fun:
         /* Get private data and set derived locals from it. */
-        fun = (JSFunction *) OBJ_GET_PRIVATE(cx, funobj);
-        nalloc = FUN_MINARGS(fun);
-        nslots = (nalloc > argc) ? nalloc - argc : 0;
+        fun = (JSFunction *) JS_GetPrivate(cx, funobj);
+        nslots = (fun->nargs > argc) ? fun->nargs - argc : 0;
         if (FUN_INTERPRETED(fun)) {
             native = NULL;
             script = fun->u.i.script;
@@ -1187,8 +1138,31 @@ have_fun:
             /* Handle bound method special case. */
             vp[1] = OBJECT_TO_JSVAL(parent);
         } else if (!JSVAL_IS_OBJECT(vp[1])) {
+            /*
+             * We check if the function accepts a primitive value as |this|.
+             * For that we use a table that maps value's tag into the
+             * corresponding function flag.
+             */
+            uintN flagToTest;
+
+            JS_STATIC_ASSERT(JSVAL_INT == 1);
+            JS_STATIC_ASSERT(JSVAL_DOUBLE == 2);
+            JS_STATIC_ASSERT(JSVAL_STRING == 4);
+            JS_STATIC_ASSERT(JSVAL_BOOLEAN == 6);
+            static const uint16 PrimitiveTestFlags[] = {
+                JSFUN_THISP_NUMBER,     /* INT     */
+                JSFUN_THISP_NUMBER,     /* DOUBLE  */
+                JSFUN_THISP_NUMBER,     /* INT     */
+                JSFUN_THISP_STRING,     /* STRING  */
+                JSFUN_THISP_NUMBER,     /* INT     */
+                JSFUN_THISP_BOOLEAN,    /* BOOLEAN */
+                JSFUN_THISP_NUMBER      /* INT     */
+            };
+
             JS_ASSERT(!(flags & JSINVOKE_CONSTRUCT));
-            if (PRIMITIVE_THIS_TEST(fun, vp[1]))
+            JS_ASSERT(vp[1] != JSVAL_VOID);
+            flagToTest = PrimitiveTestFlags[JSVAL_TAG(vp[1]) - 1];
+            if (JSFUN_THISP_TEST(JSFUN_THISP_FLAGS(fun->flags), flagToTest))
                 goto init_frame;
         }
     }
@@ -1198,11 +1172,6 @@ have_fun:
         JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[1]));
         frame.rval = vp[1];
     } else {
-        /*
-         * We must call js_ComputeThis in case we are not called from the
-         * interpreter, where a prior bytecode has computed an appropriate
-         * |this| already.
-         */
         ok = js_ComputeThis(cx, vp + 2);
         if (!ok)
             goto out2;
@@ -1213,7 +1182,7 @@ have_fun:
      * Initialize the rest of frame, except for sp (set by SAVE_SP later).
      *
      * To set thisp we use an explicit cast and not JSVAL_TO_OBJECT, as vp[1]
-     * can be a primitive value here for those native functions specified with
+     * can be a primitive value here for native functions specified with
      * JSFUN_THISP_(NUMBER|STRING|BOOLEAN) flags.
      */
     frame.thisp = (JSObject *)vp[1];
@@ -1340,43 +1309,7 @@ have_fun:
         /* But ensure that we have a scope chain. */
         if (!frame.scopeChain)
             frame.scopeChain = parent;
-
-        if (fun && (fun->flags & JSFUN_FAST_NATIVE)) {
-            /*
-             * Note the lack of START/END_FAST_CALL bracketing here. Unlike
-             * the other JSFastNative call (see the JSOP_CALL special case in
-             * js_Interpret), we have a full stack frame for this call.
-             */
-            ok = ((JSFastNative) native)(cx, argc, frame.argv - 2);
-            frame.rval = frame.argv[-2];
-        } else {
-#ifdef DEBUG_brendan
-            static FILE *fp;
-            if (!fp) {
-                fp = fopen("/tmp/slow-natives.dump", "w");
-                if (fp)
-                    setlinebuf(fp);
-            }
-            if (fp) {
-                fprintf(fp, "%p %s.%s\n",
-                        native,
-                        JSVAL_IS_OBJECT(vp[1])
-                        ? ((OBJ_GET_CLASS(cx, frame.thisp) == &js_FunctionClass)
-                           ? JS_GetFunctionName(JS_GetPrivate(cx, frame.thisp))
-                           : OBJ_GET_CLASS(cx, frame.thisp)->name)
-                        : JSVAL_IS_BOOLEAN(vp[1])
-                        ? js_BooleanClass.name
-                        : JSVAL_IS_STRING(vp[1])
-                        ? js_StringClass.name
-                        : js_NumberClass.name,
-                        fun && fun->atom
-                        ? JS_GetFunctionName(fun)
-                        : "???");
-            }
-#endif
-            ok = native(cx, frame.thisp, argc, frame.argv, &frame.rval);
-        }
-
+        ok = native(cx, frame.thisp, argc, frame.argv, &frame.rval);
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
 #ifdef DEBUG_NOT_THROWING
         if (ok && !alreadyThrowing)
@@ -1942,7 +1875,7 @@ js_InvokeConstructor(JSContext *cx, jsval *vp, uintN argc)
         parent = OBJ_GET_PARENT(cx, obj2);
 
         if (OBJ_GET_CLASS(cx, obj2) == &js_FunctionClass) {
-            funclasp = ((JSFunction *) OBJ_GET_PRIVATE(cx, obj2))->clasp;
+            funclasp = ((JSFunction *)JS_GetPrivate(cx, obj2))->clasp;
             if (funclasp)
                 clasp = funclasp;
         }
@@ -3882,8 +3815,8 @@ interrupt:
 
           BEGIN_CASE(JSOP_CALLELEM)
             /*
-             * FIXME: JSOP_CALLELEM should call getMethod on XML objects as
-             * CALLPROP does. See bug 362910.
+             * XXX callelem should call getMethod on XML objects as CALLPROP
+             * does. See bug 362910.
              */
             ELEMENT_OP(-1, ok = OBJ_GET_PROPERTY(cx, obj, id, &rval));
             STORE_OPND(-2, rval);
@@ -3915,221 +3848,185 @@ interrupt:
             vp = sp - (argc + 2);
             lval = *vp;
             SAVE_SP_AND_PC(fp);
-            if (VALUE_IS_FUNCTION(cx, lval)) {
-                obj = JSVAL_TO_OBJECT(lval);
-                fun = (JSFunction *) OBJ_GET_PRIVATE(cx, obj);
+            if (VALUE_IS_FUNCTION(cx, lval) &&
+                (obj = JSVAL_TO_OBJECT(lval),
+                 fun = (JSFunction *) JS_GetPrivate(cx, obj),
+                 FUN_INTERPRETED(fun)))
+          /* inline_call: */
+            {
+                uintN nframeslots, nvars, nslots, missing;
+                JSArena *a;
+                jsuword avail, nbytes;
+                JSBool overflow;
+                void *newmark;
+                jsval *rvp;
+                JSInlineFrame *newifp;
+                JSInterpreterHook hook;
 
-                if (fun->flags & JSFUN_FAST_NATIVE) {
-                    uintN nargs = JS_MAX(argc, fun->u.n.minargs);
-                    
-                    nargs += fun->u.n.extra;
-                    if (argc < nargs) {
-                        /*
-                         * If we can't fit missing args and local roots in
-                         * this frame's operand stack, take the slow path.
-                         */
-                        nargs -= argc;
-                        if (sp + nargs > fp->spbase + depth)
-                            goto do_invoke;
-                        do {
-                            PUSH(JSVAL_VOID);
-                        } while (--nargs != 0);
-                        SAVE_SP(fp);
-                    }
-
-                    JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[1]) ||
-                              PRIMITIVE_THIS_TEST(fun, vp[1]));
-
-                    START_FAST_CALL(fp);
-                    ok = ((JSFastNative) fun->u.n.native)(cx, argc, vp);
-                    END_FAST_CALL(fp);
-                    if (!ok)
-                        goto out;
-                    sp = vp + 1;
-                    vp[-depth] = (jsval)pc;
-                    goto end_call;
-                }
-
-                if (fun->flags & JSFUN_INTERPRETED) {
-                    uintN nframeslots, nvars, nslots, missing;
-                    JSArena *a;
-                    jsuword avail, nbytes;
-                    JSBool overflow;
-                    void *newmark;
-                    jsval *rvp;
-                    JSInlineFrame *newifp;
-                    JSInterpreterHook hook;
-
-                    /* Restrict recursion of lightweight functions. */
-                    if (inlineCallCount == MAX_INLINE_CALL_COUNT) {
-                        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                             JSMSG_OVER_RECURSED);
-                        ok = JS_FALSE;
-                        goto out;
-                    }
-
-                    /* Compute the total number of stack slots needed by fun. */
-                    nframeslots = JS_HOWMANY(sizeof(JSInlineFrame),
-                                             sizeof(jsval));
-                    nvars = fun->u.i.nvars;
-                    script = fun->u.i.script;
-                    depth = (jsint) script->depth;
-                    atoms = script->atomMap.vector;
-                    nslots = nframeslots + nvars + 2 * depth;
-
-                    /* Allocate missing expected args adjacent to actuals. */
-                    missing = (fun->nargs > argc) ? fun->nargs - argc : 0;
-                    a = cx->stackPool.current;
-                    avail = a->avail;
-                    newmark = (void *) avail;
-                    if (missing) {
-                        newsp = sp + missing;
-                        overflow = (jsuword) newsp > a->limit;
-                        if (overflow)
-                            nslots += 2 + argc + missing;
-                        else if ((jsuword) newsp > avail)
-                            avail = a->avail = (jsuword) newsp;
-                    }
-#ifdef __GNUC__
-                    else overflow = JS_FALSE; /* suppress bogus gcc warnings */
-#endif
-
-                    /* Allocate the inline frame with its vars and operands. */
-                    newsp = (jsval *) avail;
-                    nbytes = nslots * sizeof(jsval);
-                    avail += nbytes;
-                    if (avail <= a->limit) {
-                        a->avail = avail;
-                    } else {
-                        JS_ARENA_ALLOCATE_CAST(newsp, jsval *, &cx->stackPool,
-                                               nbytes);
-                        if (!newsp) {
-                            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                                 JSMSG_STACK_OVERFLOW,
-                                                 (fp && fp->fun)
-                                                 ? JS_GetFunctionName(fp->fun)
-                                                 : "script");
-                            goto bad_inline_call;
-                        }
-                    }
-
-                    /*
-                     * Move args if missing overflow arena a, then push any
-                     * missing args.
-                     */
-                    rvp = vp;
-                    if (missing) {
-                        if (overflow) {
-                            memcpy(newsp, vp, (2 + argc) * sizeof(jsval));
-                            vp = newsp;
-                            sp = vp + 2 + argc;
-                            newsp = sp + missing;
-                        }
-                        do {
-                            PUSH(JSVAL_VOID);
-                        } while (--missing != 0);
-                    }
-
-                    /* Claim space for the stack frame and initialize it. */
-                    newifp = (JSInlineFrame *) newsp;
-                    newsp += nframeslots;
-                    newifp->frame.callobj = NULL;
-                    newifp->frame.argsobj = NULL;
-                    newifp->frame.varobj = NULL;
-                    newifp->frame.script = script;
-                    newifp->frame.fun = fun;
-                    newifp->frame.argc = argc;
-                    newifp->frame.argv = vp + 2;
-                    newifp->frame.rval = JSVAL_VOID;
-                    newifp->frame.nvars = nvars;
-                    newifp->frame.vars = newsp;
-                    newifp->frame.down = fp;
-                    newifp->frame.annotation = NULL;
-                    newifp->frame.scopeChain = parent = OBJ_GET_PARENT(cx, obj);
-                    newifp->frame.sharpDepth = 0;
-                    newifp->frame.sharpArray = NULL;
-                    newifp->frame.flags = 0;
-                    newifp->frame.dormantNext = NULL;
-                    newifp->frame.xmlNamespace = NULL;
-                    newifp->frame.blockChain = NULL;
-                    newifp->rvp = rvp;
-                    newifp->mark = newmark;
-
-                    /* Compute the 'this' parameter now that argv is set. */
-                    JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
-                    JS_ASSERT(!PRIMITIVE_THIS_TEST(fun, vp[1]));
-                    newifp->frame.thisp = (JSObject *)vp[1];
-#ifdef DUMP_CALL_TABLE
-                    LogCall(cx, *vp, argc, vp + 2);
-#endif
-
-                    /* Push void to initialize local variables. */
-                    sp = newsp;
-                    while (nvars--)
-                        PUSH(JSVAL_VOID);
-                    sp += depth;
-                    newifp->frame.spbase = sp;
-                    SAVE_SP(&newifp->frame);
-
-                    /* Call the debugger hook if present. */
-                    hook = cx->debugHooks->callHook;
-                    if (hook) {
-                        newifp->frame.pc = NULL;
-                        newifp->hookData = hook(cx, &newifp->frame, JS_TRUE, 0,
-                                                cx->debugHooks->callHookData);
-                        LOAD_INTERRUPT_HANDLER(cx);
-                    } else {
-                        newifp->hookData = NULL;
-                    }
-
-                    /* Scope with a call object parented by callee's parent. */
-                    if (JSFUN_HEAVYWEIGHT_TEST(fun->flags) &&
-                        !js_GetCallObject(cx, &newifp->frame, parent)) {
-                        goto bad_inline_call;
-                    }
-
-                    /* Switch version if currentVersion wasn't overridden. */
-                    newifp->callerVersion = (JSVersion) cx->version;
-                    if (JS_LIKELY(cx->version == currentVersion)) {
-                        currentVersion = (JSVersion) script->version;
-                        if (currentVersion != cx->version)
-                            js_SetVersion(cx, currentVersion);
-                    }
-
-                    /* Push the frame and set interpreter registers. */
-                    cx->fp = fp = &newifp->frame;
-                    pc = script->code;
-#if !JS_THREADED_INTERP
-                    endpc = pc + script->length;
-#endif
-                    inlineCallCount++;
-                    JS_RUNTIME_METER(rt, inlineCalls);
-
-                    /* Load first op and dispatch it (safe since JSOP_STOP). */
-                    op = (JSOp) *pc;
-                    DO_OP();
-
-                  bad_inline_call:
-                    RESTORE_SP(fp);
-                    JS_ASSERT(fp->pc == pc);
-                    script = fp->script;
-                    depth = (jsint) script->depth;
-                    atoms = script->atomMap.vector;
-                    js_FreeRawStack(cx, newmark);
+                /* Restrict recursion of lightweight functions. */
+                if (inlineCallCount == MAX_INLINE_CALL_COUNT) {
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                         JSMSG_OVER_RECURSED);
                     ok = JS_FALSE;
                     goto out;
                 }
+
+                /* Compute the total number of stack slots needed for fun. */
+                nframeslots = JS_HOWMANY(sizeof(JSInlineFrame), sizeof(jsval));
+                nvars = fun->u.i.nvars;
+                script = fun->u.i.script;
+                depth = (jsint) script->depth;
+                atoms = script->atomMap.vector;
+                nslots = nframeslots + nvars + 2 * depth;
+
+                /* Allocate missing expected args adjacent to actual args. */
+                missing = (fun->nargs > argc) ? fun->nargs - argc : 0;
+                a = cx->stackPool.current;
+                avail = a->avail;
+                newmark = (void *) avail;
+                if (missing) {
+                    newsp = sp + missing;
+                    overflow = (jsuword) newsp > a->limit;
+                    if (overflow)
+                        nslots += 2 + argc + missing;
+                    else if ((jsuword) newsp > avail)
+                        avail = a->avail = (jsuword) newsp;
+                }
+#ifdef __GNUC__
+                else overflow = JS_FALSE;   /* suppress bogus gcc warnings */
+#endif
+
+                /* Allocate the inline frame with its vars and operand slots. */
+                newsp = (jsval *) avail;
+                nbytes = nslots * sizeof(jsval);
+                avail += nbytes;
+                if (avail <= a->limit) {
+                    a->avail = avail;
+                } else {
+                    JS_ARENA_ALLOCATE_CAST(newsp, jsval *, &cx->stackPool,
+                                           nbytes);
+                    if (!newsp) {
+                        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                             JSMSG_STACK_OVERFLOW,
+                                             (fp && fp->fun)
+                                             ? JS_GetFunctionName(fp->fun)
+                                             : "script");
+                        goto bad_inline_call;
+                    }
+                }
+
+                /* Move args if missing overflow arena a, push missing args. */
+                rvp = vp;
+                if (missing) {
+                    if (overflow) {
+                        memcpy(newsp, vp, (2 + argc) * sizeof(jsval));
+                        vp = newsp;
+                        sp = vp + 2 + argc;
+                        newsp = sp + missing;
+                    }
+                    do {
+                        PUSH(JSVAL_VOID);
+                    } while (--missing != 0);
+                }
+
+                /* Claim space for the stack frame and initialize it. */
+                newifp = (JSInlineFrame *) newsp;
+                newsp += nframeslots;
+                newifp->frame.callobj = NULL;
+                newifp->frame.argsobj = NULL;
+                newifp->frame.varobj = NULL;
+                newifp->frame.script = script;
+                newifp->frame.fun = fun;
+                newifp->frame.argc = argc;
+                newifp->frame.argv = vp + 2;
+                newifp->frame.rval = JSVAL_VOID;
+                newifp->frame.nvars = nvars;
+                newifp->frame.vars = newsp;
+                newifp->frame.down = fp;
+                newifp->frame.annotation = NULL;
+                newifp->frame.scopeChain = parent = OBJ_GET_PARENT(cx, obj);
+                newifp->frame.sharpDepth = 0;
+                newifp->frame.sharpArray = NULL;
+                newifp->frame.flags = 0;
+                newifp->frame.dormantNext = NULL;
+                newifp->frame.xmlNamespace = NULL;
+                newifp->frame.blockChain = NULL;
+                newifp->rvp = rvp;
+                newifp->mark = newmark;
+
+                /* Compute the 'this' parameter now that argv is set. */
+                if (JSFUN_BOUND_METHOD_TEST(fun->flags))
+                    vp[1] = OBJECT_TO_JSVAL(parent);
+                if (!js_ComputeThis(cx, vp + 2))
+                    goto bad_inline_call;
+                newifp->frame.thisp = JSVAL_TO_OBJECT(vp[1]);
+#ifdef DUMP_CALL_TABLE
+                LogCall(cx, *vp, argc, vp + 2);
+#endif
+
+                /* Push void to initialize local variables. */
+                sp = newsp;
+                while (nvars--)
+                    PUSH(JSVAL_VOID);
+                sp += depth;
+                newifp->frame.spbase = sp;
+                SAVE_SP(&newifp->frame);
+
+                /* Call the debugger hook if present. */
+                hook = cx->debugHooks->callHook;
+                if (hook) {
+                    newifp->frame.pc = NULL;
+                    newifp->hookData = hook(cx, &newifp->frame, JS_TRUE, 0,
+                                            cx->debugHooks->callHookData);
+                    LOAD_INTERRUPT_HANDLER(cx);
+                } else {
+                    newifp->hookData = NULL;
+                }
+
+                /* Scope with a call object parented by the callee's parent. */
+                if (JSFUN_HEAVYWEIGHT_TEST(fun->flags) &&
+                    !js_GetCallObject(cx, &newifp->frame, parent)) {
+                    goto bad_inline_call;
+                }
+
+                /* Switch to new version if currentVersion wasn't overridden. */
+                newifp->callerVersion = (JSVersion) cx->version;
+                if (JS_LIKELY(cx->version == currentVersion)) {
+                    currentVersion = (JSVersion) script->version;
+                    if (currentVersion != cx->version)
+                        js_SetVersion(cx, currentVersion);
+                }
+
+                /* Push the frame and set interpreter registers. */
+                cx->fp = fp = &newifp->frame;
+                pc = script->code;
+#if !JS_THREADED_INTERP
+                endpc = pc + script->length;
+#endif
+                inlineCallCount++;
+                JS_RUNTIME_METER(rt, inlineCalls);
+
+                /* Load first opcode and dispatch it (safe since JSOP_STOP). */
+                op = (JSOp) *pc;
+                DO_OP();
+
+              bad_inline_call:
+                RESTORE_SP(fp);
+                JS_ASSERT(fp->pc == pc);
+                script = fp->script;
+                depth = (jsint) script->depth;
+                atoms = script->atomMap.vector;
+                js_FreeRawStack(cx, newmark);
+                ok = JS_FALSE;
+                goto out;
             }
 
-          do_invoke:
             ok = js_Invoke(cx, argc, 0);
             RESTORE_SP(fp);
             LOAD_INTERRUPT_HANDLER(cx);
             if (!ok)
                 goto out;
             JS_RUNTIME_METER(rt, nonInlineCalls);
-
-          end_call:
 #if JS_HAS_LVALUE_RETURN
             if (cx->rval2set) {
                 /*
@@ -4213,13 +4110,8 @@ interrupt:
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
             }
             PUSH_OPND(rval);
-            if (op == JSOP_CALLNAME) {
+            if (op == JSOP_CALLNAME)
                 PUSH_OPND(OBJECT_TO_JSVAL(obj));
-                SAVE_SP(fp);
-                ok = ComputeThis(cx, sp);
-                if (!ok)
-                    goto out;
-            }
           END_CASE(JSOP_NAME)
 
           BEGIN_CASE(JSOP_UINT16)
@@ -4684,19 +4576,6 @@ interrupt:
             PUSH_OPND(rval);
           END_CASE(JSOP_ARGCNT)
 
-#define PUSH_GLOBAL_THIS(cx,sp)                                               \
-    JS_BEGIN_MACRO                                                            \
-        PUSH_OPND(JSVAL_NULL);                                                \
-        SAVE_SP_AND_PC(fp);                                                   \
-        ok = ComputeGlobalThis(cx, sp);                                       \
-        if (!ok)                                                              \
-            goto out;                                                         \
-    JS_END_MACRO
-
-          BEGIN_CASE(JSOP_GLOBALTHIS)
-            PUSH_GLOBAL_THIS(cx, sp);
-          END_CASE(JSOP_GLOBALTHIS)
-
           BEGIN_CASE(JSOP_GETARG)
           BEGIN_CASE(JSOP_CALLARG)
             slot = GET_ARGNO(pc);
@@ -4704,7 +4583,7 @@ interrupt:
             METER_SLOT_OP(op, slot);
             PUSH_OPND(fp->argv[slot]);
             if (op == JSOP_CALLARG)
-                PUSH_GLOBAL_THIS(cx, sp);
+                PUSH_OPND(JSVAL_NULL);
           END_CASE(JSOP_GETARG)
 
           BEGIN_CASE(JSOP_SETARG)
@@ -4723,7 +4602,7 @@ interrupt:
             METER_SLOT_OP(op, slot);
             PUSH_OPND(fp->vars[slot]);
             if (op == JSOP_CALLVAR)
-                PUSH_GLOBAL_THIS(cx, sp);
+                PUSH_OPND(JSVAL_NULL);
           END_CASE(JSOP_GETVAR)
 
           BEGIN_CASE(JSOP_SETVAR)
@@ -4843,7 +4722,7 @@ interrupt:
 
           BEGIN_CASE(JSOP_DEFFUN)
             LOAD_FUNCTION(0);
-            fun = (JSFunction *) OBJ_GET_PRIVATE(cx, obj);
+            fun = (JSFunction *) JS_GetPrivate(cx, obj);
             id = ATOM_TO_JSID(fun->atom);
 
             /*
@@ -5084,7 +4963,7 @@ interrupt:
              * name is [fun->atom, the identifier parsed by the compiler],
              * value is Result(3), and attributes are { DontDelete, ReadOnly }.
              */
-            fun = (JSFunction *) OBJ_GET_PRIVATE(cx, obj);
+            fun = (JSFunction *) JS_GetPrivate(cx, obj);
             attrs = JSFUN_GSFLAG2ATTR(fun->flags);
             if (attrs) {
                 attrs |= JSPROP_SHARED;
@@ -5158,7 +5037,7 @@ interrupt:
              * unless fun is a getter or setter (in which case, obj is cast to
              * a JSPropertyOp and passed accordingly).
              */
-            fun = (JSFunction *) OBJ_GET_PRIVATE(cx, obj);
+            fun = (JSFunction *) JS_GetPrivate(cx, obj);
             attrs = JSFUN_GSFLAG2ATTR(fun->flags);
             if (attrs) {
                 attrs |= JSPROP_SHARED;
@@ -5636,13 +5515,8 @@ interrupt:
             if (!ok)
                 goto out;
             STORE_OPND(-1, rval);
-            if (op == JSOP_CALLXMLNAME) {
+            if (op == JSOP_CALLXMLNAME)
                 PUSH_OPND(OBJECT_TO_JSVAL(obj));
-                SAVE_SP(fp);
-                ok = ComputeThis(cx, sp);
-                if (!ok)
-                    goto out;
-            }
           END_CASE(JSOP_XMLNAME)
 
           BEGIN_CASE(JSOP_DESCENDANTS)
@@ -5787,10 +5661,10 @@ interrupt:
             /* Get an immediate atom naming the property. */
             LOAD_ATOM(0);
             id = ATOM_TO_JSID(atom);
-            PUSH(JSVAL_NULL);
+            lval = FETCH_OPND(-1);
             SAVE_SP_AND_PC(fp);
-            lval = FETCH_OPND(-2);
             if (!JSVAL_IS_PRIMITIVE(lval)) {
+                STORE_OPND(-1, lval);
                 obj = JSVAL_TO_OBJECT(lval);
 
                 /* Special-case XML object method lookup, per ECMA-357. */
@@ -5804,13 +5678,6 @@ interrupt:
                 } else {
                     ok = OBJ_GET_PROPERTY(cx, obj, id, &rval);
                 }
-                if (!ok)
-                    goto out;
-                STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
-                STORE_OPND(-2, rval);
-                ok = ComputeThis(cx, sp);
-                if (!ok)
-                    goto out;
             } else {
                 if (JSVAL_IS_STRING(lval)) {
                     i = JSProto_String;
@@ -5825,27 +5692,18 @@ interrupt:
                     ok = JS_FALSE;
                     goto out;
                 }
-
                 ok = js_GetClassPrototype(cx, NULL, INT_TO_JSID(i), &obj);
                 if (!ok)
                     goto out;
                 JS_ASSERT(obj);
+                STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
                 ok = OBJ_GET_PROPERTY(cx, obj, id, &rval);
-                if (!ok)
-                    goto out;
-                STORE_OPND(-1, lval);
-                STORE_OPND(-2, rval);
-
-                /* Wrap primitive lval in object clothing if necessary. */
-                if (!VALUE_IS_FUNCTION(cx, rval) ||
-                    (obj = JSVAL_TO_OBJECT(rval),
-                     fun = (JSFunction *) OBJ_GET_PRIVATE(cx, obj),
-                     !PRIMITIVE_THIS_TEST(fun, lval))) {
-                    ok = js_PrimitiveToObject(cx, &sp[-1]);
-                    if (!ok)
-                        goto out;
-                }
+                obj = (JSObject *) lval; /* keep tagged as non-object */
             }
+            if (!ok)
+                goto out;
+            STORE_OPND(-1, rval);
+            PUSH_OPND(OBJECT_TO_JSVAL(obj));
           END_CASE(JSOP_CALLPROP)
 
           BEGIN_CASE(JSOP_GETFUNNS)
@@ -5952,7 +5810,7 @@ interrupt:
             JS_ASSERT(slot < (uintN)depth);
             PUSH_OPND(fp->spbase[slot]);
             if (op == JSOP_CALLLOCAL)
-                PUSH_GLOBAL_THIS(cx, sp);
+                PUSH_OPND(JSVAL_NULL);
           END_CASE(JSOP_GETLOCAL)
 
           BEGIN_CASE(JSOP_SETLOCAL)
@@ -6048,21 +5906,8 @@ interrupt:
             JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_ArrayClass);
             rval = FETCH_OPND(-1);
 
-            /*
-             * We know that the array is created with only a 'length' private
-             * data slot at JSSLOT_ARRAY_LENGTH, and that previous iterations
-             * of the comprehension have added the only properties directly in
-             * the array object.
-             */
-            lval = obj->fslots[JSSLOT_ARRAY_LENGTH];
-            JS_ASSERT(JSVAL_IS_INT(lval));
-            i = JSVAL_TO_INT(lval);
-            if (i == ARRAY_INIT_LIMIT) {
-                JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
-                                       JSMSG_ARRAY_INIT_TOO_BIG);
-                ok = JS_FALSE;
-                goto out;
-            }
+            /* We know that the array is created with only a 'length' slot. */
+            i = obj->map->freeslot - (JSSLOT_FREE(&js_ArrayClass) + 1);
             id = INT_TO_JSID(i);
 
             SAVE_SP_AND_PC(fp);
@@ -6087,6 +5932,7 @@ interrupt:
 #if JS_THREADED_INTERP
           L_JSOP_BACKPATCH:
           L_JSOP_BACKPATCH_POP:
+          L_JSOP_UNUSED117:
 #else
           default:
 #endif

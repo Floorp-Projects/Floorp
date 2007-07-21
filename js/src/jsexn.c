@@ -811,22 +811,20 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
  * number information along with this message.
  */
 static JSBool
-exn_toString(JSContext *cx, uintN argc, jsval *vp)
+exn_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSObject *obj;
     jsval v;
     JSString *name, *message, *result;
     jschar *chars, *cp;
     size_t name_length, message_length, length;
 
-    obj = JSVAL_TO_OBJECT(vp[1]);
     if (!OBJ_GET_PROPERTY(cx, obj,
                           ATOM_TO_JSID(cx->runtime->atomState.nameAtom),
                           &v)) {
         return JS_FALSE;
     }
     name = JSVAL_IS_STRING(v) ? JSVAL_TO_STRING(v) : cx->runtime->emptyString;
-    *vp = STRING_TO_JSVAL(name);
+    *rval = STRING_TO_JSVAL(name);
 
     if (!JS_GetProperty(cx, obj, js_message_str, &v))
         return JS_FALSE;
@@ -859,7 +857,7 @@ exn_toString(JSContext *cx, uintN argc, jsval *vp)
         result = name;
     }
 
-    *vp = STRING_TO_JSVAL(result);
+    *rval = STRING_TO_JSVAL(result);
     return JS_TRUE;
 }
 
@@ -868,47 +866,45 @@ exn_toString(JSContext *cx, uintN argc, jsval *vp)
  * Return a string that may eval to something similar to the original object.
  */
 static JSBool
-exn_toSource(JSContext *cx, uintN argc, jsval *vp)
+exn_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    jsval *localroots;
-    JSObject *obj;
+    jsval *vp;
     JSString *name, *message, *filename, *lineno_as_str, *result;
     uint32 lineno;
     size_t lineno_length, name_length, message_length, filename_length, length;
     jschar *chars, *cp;
 
-    localroots = JS_ARGV(cx, vp) + argc;
+    vp = argv + argc;   /* beginning of explicit local roots */
 
-    obj = JS_THIS_OBJECT(cx, vp);
     if (!OBJ_GET_PROPERTY(cx, obj,
                           ATOM_TO_JSID(cx->runtime->atomState.nameAtom),
-                          vp)) {
+                          rval)) {
         return JS_FALSE;
     }
-    name = js_ValueToString(cx, *vp);
+    name = js_ValueToString(cx, *rval);
     if (!name)
         return JS_FALSE;
-    *vp = STRING_TO_JSVAL(name);
+    *rval = STRING_TO_JSVAL(name);
 
-    if (!JS_GetProperty(cx, obj, js_message_str, &localroots[0]) ||
-        !(message = js_ValueToSource(cx, localroots[0]))) {
+    if (!JS_GetProperty(cx, obj, js_message_str, &vp[0]) ||
+        !(message = js_ValueToSource(cx, vp[0]))) {
         return JS_FALSE;
     }
-    localroots[0] = STRING_TO_JSVAL(message);
+    vp[0] = STRING_TO_JSVAL(message);
 
-    if (!JS_GetProperty(cx, obj, js_fileName_str, &localroots[1]) ||
-        !(filename = js_ValueToSource(cx, localroots[1]))) {
+    if (!JS_GetProperty(cx, obj, js_fileName_str, &vp[1]) ||
+        !(filename = js_ValueToSource(cx, vp[1]))) {
         return JS_FALSE;
     }
-    localroots[1] = STRING_TO_JSVAL(filename);
+    vp[1] = STRING_TO_JSVAL(filename);
 
-    if (!JS_GetProperty(cx, obj, js_lineNumber_str, &localroots[2]) ||
-        !js_ValueToECMAUint32 (cx, localroots[2], &lineno)) {
+    if (!JS_GetProperty(cx, obj, js_lineNumber_str, &vp[2]) ||
+        !js_ValueToECMAUint32 (cx, vp[2], &lineno)) {
         return JS_FALSE;
     }
 
     if (lineno != 0) {
-        lineno_as_str = js_ValueToString(cx, localroots[2]);
+        lineno_as_str = js_ValueToString(cx, vp[2]);
         if (!lineno_as_str)
             return JS_FALSE;
         lineno_length = JSSTRING_LENGTH(lineno_as_str);
@@ -981,17 +977,17 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
         JS_free(cx, chars);
         return JS_FALSE;
     }
-    *vp = STRING_TO_JSVAL(result);
+    *rval = STRING_TO_JSVAL(result);
     return JS_TRUE;
 }
 #endif
 
 static JSFunctionSpec exception_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,   exn_toSource,           0,0,0,3),
+    {js_toSource_str,   exn_toSource,           0,0,3},
 #endif
-    JS_FN(js_toString_str,   exn_toString,           0,0,0,0),
-    JS_FS_END
+    {js_toString_str,   exn_toString,           0,0,0},
+    {0,0,0,0,0}
 };
 
 JSObject *
@@ -1243,7 +1239,7 @@ js_ReportUncaughtException(JSContext *cx)
 {
     jsval exn;
     JSObject *exnObject;
-    jsval roots[5];
+    jsval vp[5];
     JSTempValueRooter tvr;
     JSErrorReport *reportp, report;
     JSString *str;
@@ -1256,8 +1252,8 @@ js_ReportUncaughtException(JSContext *cx)
     if (!JS_GetPendingException(cx, &exn))
         return JS_FALSE;
 
-    memset(roots, 0, sizeof roots);
-    JS_PUSH_TEMP_ROOT(cx, JS_ARRAY_LENGTH(roots), roots, &tvr);
+    memset(vp, 0, sizeof vp);
+    JS_PUSH_TEMP_ROOT(cx, JS_ARRAY_LENGTH(vp), vp, &tvr);
 
     /*
      * Because js_ValueToString below could error and an exception object
@@ -1269,7 +1265,7 @@ js_ReportUncaughtException(JSContext *cx)
         exnObject = NULL;
     } else {
         exnObject = JSVAL_TO_OBJECT(exn);
-        roots[0] = exn;
+        vp[0] = exn;
     }
 
     JS_ClearPendingException(cx);
@@ -1280,7 +1276,7 @@ js_ReportUncaughtException(JSContext *cx)
     if (!str) {
         bytes = "unknown (can't convert to string)";
     } else {
-        roots[1] = STRING_TO_JSVAL(str);
+        vp[1] = STRING_TO_JSVAL(str);
         bytes = js_GetStringBytes(cx, str);
         if (!bytes) {
             ok = JS_FALSE;
@@ -1295,21 +1291,21 @@ js_ReportUncaughtException(JSContext *cx)
         const char *filename;
         uint32 lineno;
 
-        ok = JS_GetProperty(cx, exnObject, js_message_str, &roots[2]);
+        ok = JS_GetProperty(cx, exnObject, js_message_str, &vp[2]);
         if (!ok)
             goto out;
-        if (JSVAL_IS_STRING(roots[2])) {
-            bytes = js_GetStringBytes(cx, JSVAL_TO_STRING(roots[2]));
+        if (JSVAL_IS_STRING(vp[2])) {
+            bytes = js_GetStringBytes(cx, JSVAL_TO_STRING(vp[2]));
             if (!bytes) {
                 ok = JS_FALSE;
                 goto out;
             }
         }
 
-        ok = JS_GetProperty(cx, exnObject, js_fileName_str, &roots[3]);
+        ok = JS_GetProperty(cx, exnObject, js_fileName_str, &vp[3]);
         if (!ok)
             goto out;
-        str = js_ValueToString(cx, roots[3]);
+        str = js_ValueToString(cx, vp[3]);
         if (!str) {
             ok = JS_FALSE;
             goto out;
@@ -1320,10 +1316,10 @@ js_ReportUncaughtException(JSContext *cx)
             goto out;
         }
 
-        ok = JS_GetProperty(cx, exnObject, js_lineNumber_str, &roots[4]);
+        ok = JS_GetProperty(cx, exnObject, js_lineNumber_str, &vp[4]);
         if (!ok)
             goto out;
-        ok = js_ValueToECMAUint32 (cx, roots[4], &lineno);
+        ok = js_ValueToECMAUint32 (cx, vp[4], &lineno);
         if (!ok)
             goto out;
 

@@ -3812,14 +3812,13 @@ regexp_finalize(JSContext *cx, JSObject *obj)
 
 /* Forward static prototype. */
 static JSBool
-regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                JSBool test, jsval *rval);
+regexp_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+            jsval *rval);
 
 static JSBool
 regexp_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    return regexp_exec_sub(cx, JSVAL_TO_OBJECT(argv[-2]), argc, argv,
-                           JS_FALSE, rval);
+    return regexp_exec(cx, JSVAL_TO_OBJECT(argv[-2]), argc, argv, rval);
 }
 
 #if JS_HAS_XDR
@@ -3895,7 +3894,8 @@ JSClass js_RegExpClass = {
 static const jschar empty_regexp_ucstr[] = {'(', '?', ':', ')', 0};
 
 JSBool
-js_regexp_toString(JSContext *cx, JSObject *obj, jsval *vp)
+js_regexp_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                   jsval *rval)
 {
     JSRegExp *re;
     const jschar *source;
@@ -3904,13 +3904,13 @@ js_regexp_toString(JSContext *cx, JSObject *obj, jsval *vp)
     uintN flags;
     JSString *str;
 
-    if (!JS_InstanceOf(cx, obj, &js_RegExpClass, vp + 2))
+    if (!JS_InstanceOf(cx, obj, &js_RegExpClass, argv))
         return JS_FALSE;
     JS_LOCK_OBJ(cx, obj);
     re = (JSRegExp *) JS_GetPrivate(cx, obj);
     if (!re) {
         JS_UNLOCK_OBJ(cx, obj);
-        *vp = STRING_TO_JSVAL(cx->runtime->emptyString);
+        *rval = STRING_TO_JSVAL(cx->runtime->emptyString);
         return JS_TRUE;
     }
 
@@ -3951,19 +3951,13 @@ js_regexp_toString(JSContext *cx, JSObject *obj, jsval *vp)
         JS_free(cx, chars);
         return JS_FALSE;
     }
-    *vp = STRING_TO_JSVAL(str);
+    *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
 
 static JSBool
-regexp_toString(JSContext *cx, uintN argc, jsval *vp)
-{
-    return js_regexp_toString(cx, JS_THIS_OBJECT(cx, vp), vp);
-}
-
-static JSBool
-regexp_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                   jsval *rval)
+regexp_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+               jsval *rval)
 {
     JSString *opt, *str;
     JSRegExp *oldre, *re;
@@ -4082,12 +4076,6 @@ created:
 }
 
 static JSBool
-regexp_compile(JSContext *cx, uintN argc, jsval *vp)
-{
-    return regexp_compile_sub(cx, JS_THIS_OBJECT(cx, vp), argc, vp + 2, vp);
-}
-
-static JSBool
 regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 JSBool test, jsval *rval)
 {
@@ -4164,31 +4152,30 @@ out:
 }
 
 static JSBool
-regexp_exec(JSContext *cx, uintN argc, jsval *vp)
+regexp_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    return regexp_exec_sub(cx, JS_THIS_OBJECT(cx, vp), argc, vp + 2, JS_FALSE,
-                           vp);
+    return regexp_exec_sub(cx, obj, argc, argv, JS_FALSE, rval);
 }
 
 static JSBool
-regexp_test(JSContext *cx, uintN argc, jsval *vp)
+regexp_test(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    if (!regexp_exec_sub(cx, JS_THIS_OBJECT(cx, vp), argc, vp + 2, JS_TRUE, vp))
+    if (!regexp_exec_sub(cx, obj, argc, argv, JS_TRUE, rval))
         return JS_FALSE;
-    if (*vp != JSVAL_TRUE)
-        *vp = JSVAL_FALSE;
+    if (*rval != JSVAL_TRUE)
+        *rval = JSVAL_FALSE;
     return JS_TRUE;
 }
 
 static JSFunctionSpec regexp_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,  regexp_toString,    0,0,0,0),
+    {js_toSource_str,   js_regexp_toString,     0,0,0},
 #endif
-    JS_FN(js_toString_str,  regexp_toString,    0,0,0,0),
-    JS_FN("compile",        regexp_compile,     0,2,0,0),
-    JS_FN("exec",           regexp_exec,        0,1,0,0),
-    JS_FN("test",           regexp_test,        0,1,0,0),
-    JS_FS_END
+    {js_toString_str,   js_regexp_toString,     0,0,0},
+    {"compile",         regexp_compile,         1,0,0},
+    {"exec",            regexp_exec,            0,0,0},
+    {"test",            regexp_test,            0,0,0},
+    {0,0,0,0,0}
 };
 
 static JSBool
@@ -4197,7 +4184,7 @@ RegExp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
         /*
          * If first arg is regexp and no flags are given, just return the arg.
-         * (regexp_compile_sub detects the regexp + flags case and throws a
+         * (regexp_compile detects the regexp + flags case and throws a
          * TypeError.)  See 10.15.3.1.
          */
         if ((argc < 2 || JSVAL_IS_VOID(argv[1])) &&
@@ -4213,12 +4200,12 @@ RegExp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             return JS_FALSE;
 
         /*
-         * regexp_compile_sub does not use rval to root its temporaries so we
-         * can use it to root obj.
+         * regexp_compile does not use rval to root its temporaries
+         * so we can use it to root obj.
          */
         *rval = OBJECT_TO_JSVAL(obj);
     }
-    return regexp_compile_sub(cx, obj, argc, argv, rval);
+    return regexp_compile(cx, obj, argc, argv, rval);
 }
 
 JSObject *
@@ -4243,7 +4230,7 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
     }
 
     /* Give RegExp.prototype private data so it matches the empty string. */
-    if (!regexp_compile_sub(cx, proto, 0, NULL, &rval))
+    if (!regexp_compile(cx, proto, 0, NULL, &rval))
         goto bad;
     return proto;
 

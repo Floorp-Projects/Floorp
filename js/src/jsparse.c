@@ -1236,7 +1236,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
              * can properly optimize accesses.
              */
             JS_ASSERT(OBJ_GET_CLASS(cx, varobj) == &js_FunctionClass);
-            JS_ASSERT(fp->fun == (JSFunction *) OBJ_GET_PRIVATE(cx, varobj));
+            JS_ASSERT(fp->fun == (JSFunction *) JS_GetPrivate(cx, varobj));
             if (!js_LookupHiddenProperty(cx, varobj, ATOM_TO_JSID(funAtom),
                                          &pobj, &prop)) {
                 return NULL;
