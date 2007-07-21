@@ -634,10 +634,38 @@ VARIANT_DONE:
     }
     else
     {
-        success = XPCConvert::NativeData2JS(ccx, pJSVal,
-                                            (const void*)&xpctvar.val,
-                                            xpctvar.type,
-                                            &iid, scope, pErr);
+        // Last ditch check to prevent us from double-wrapping a regular JS
+        // object. This allows us to unwrap regular JS objects (since we
+        // normally can't double wrap them). See bug 384632.
+        *pJSVal = JSVAL_VOID;
+        if(type == nsIDataType::VTYPE_INTERFACE ||
+           type == nsIDataType::VTYPE_INTERFACE_IS)
+        {
+            nsISupports *src = NS_REINTERPRET_CAST(nsISupports *, xpctvar.val.p);
+            if(nsXPCWrappedJSClass::IsWrappedJS(src))
+            {
+                // First QI the wrapper to the right interface.
+                nsCOMPtr<nsISupports> wrapper;
+                nsresult rv = src->QueryInterface(iid, getter_AddRefs(wrapper));
+                NS_ENSURE_SUCCESS(rv, JS_FALSE);
+
+                // Now, get the actual JS object out of the wrapper.
+                nsCOMPtr<nsIXPConnectJSObjectHolder> holder =
+                    do_QueryInterface(wrapper);
+                NS_ENSURE_TRUE(holder, JS_FALSE);
+
+                JSObject *obj;
+                holder->GetJSObject(&obj);
+                *pJSVal = OBJECT_TO_JSVAL(obj);
+            }
+        }
+        if(!JSVAL_IS_OBJECT(*pJSVal))
+        {
+            success = XPCConvert::NativeData2JS(ccx, pJSVal,
+                                                (const void*)&xpctvar.val,
+                                                xpctvar.type,
+                                                &iid, scope, pErr);
+        }
     }
 
     if(xpctvar.IsValAllocated())
