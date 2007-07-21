@@ -248,8 +248,12 @@ struct JSRuntime {
     uint32              deflatedStringCacheBytes;
 #endif
 
-    /* Empty string held for use by this runtime's contexts. */
+    /*
+     * Empty and unit-length strings held for use by this runtime's contexts.
+     * The unitStrings array and its elements are created on demand.
+     */
     JSString            *emptyString;
+    JSString            **unitStrings;
 
     /* List of active contexts sharing this runtime; protected by gcLock. */
     JSCList             contextList;
@@ -638,6 +642,9 @@ struct JSContext {
      * property values associated with this context's global object.
      */
     uint8               xmlSettingFlags;
+    uint8               padding;
+#else
+    uint16              padding;
 #endif
 
     /* Runtime version control identifier. */

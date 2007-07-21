@@ -525,7 +525,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 closure = (JSObject *) wp->closure;
                 clasp = OBJ_GET_CLASS(cx, closure);
                 if (clasp == &js_FunctionClass) {
-                    fun = (JSFunction *) JS_GetPrivate(cx, closure);
+                    fun = (JSFunction *) OBJ_GET_PRIVATE(cx, closure);
                     script = FUN_SCRIPT(fun);
                 } else if (clasp == &js_ScriptClass) {
                     fun = NULL;
@@ -537,7 +537,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
                 nslots = 2;
                 if (fun) {
-                    nslots += fun->nargs;
+                    nslots += FUN_MINARGS(fun);
                     if (FUN_NATIVE(fun))
                         nslots += fun->u.n.extra;
                 }
@@ -597,7 +597,7 @@ js_watch_set_wrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     funobj = JSVAL_TO_OBJECT(argv[-2]);
     JS_ASSERT(OBJ_GET_CLASS(cx, funobj) == &js_FunctionClass);
-    wrapper = (JSFunction *) JS_GetPrivate(cx, funobj);
+    wrapper = (JSFunction *) OBJ_GET_PRIVATE(cx, funobj);
     userid = ATOM_KEY(wrapper->atom);
     *rval = argv[0];
     return js_watch_set(cx, obj, userid, rval);
@@ -879,6 +879,12 @@ JS_GetFunctionNative(JSContext *cx, JSFunction *fun)
     return FUN_NATIVE(fun);
 }
 
+JS_PUBLIC_API(JSFastNative)
+JS_GetFunctionFastNative(JSContext *cx, JSFunction *fun)
+{
+    return FUN_FAST_NATIVE(fun);
+}
+
 JS_PUBLIC_API(JSPrincipals *)
 JS_GetScriptPrincipals(JSContext *cx, JSScript *script)
 {
@@ -1051,7 +1057,13 @@ JS_GetFrameFunction(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->argv && fp->fun ? JSVAL_TO_OBJECT(fp->argv[-2]) : NULL;
+    if (fp->argv && fp->fun) {
+        JSObject *obj = JSVAL_TO_OBJECT(fp->argv[-2]);
+        JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_FunctionClass);
+        JS_ASSERT(OBJ_GET_PRIVATE(cx, obj) == fp->fun);
+        return obj;
+    }
+    return NULL;
 }
 
 JS_PUBLIC_API(JSBool)
