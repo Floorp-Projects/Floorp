@@ -598,6 +598,119 @@ nsComputedDOMStyle::GetColumnGap(nsIDOMCSSValue** aValue)
 }
 
 nsresult
+nsComputedDOMStyle::GetContent(nsIDOMCSSValue** aValue)
+{
+  const nsStyleContent *content = GetStyleContent();
+
+  if (content->ContentCount() == 0) {
+    nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+    NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+    val->SetIdent(nsGkAtoms::none);
+    return CallQueryInterface(val, aValue);
+  }
+
+  if (content->ContentCount() == 1 &&
+      content->ContentAt(0).mType == eStyleContentType_AltContent) {
+    nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+    NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+    val->SetIdent(eCSSKeyword__moz_alt_content);
+    return CallQueryInterface(val, aValue);
+  }
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_FALSE);
+  NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
+
+  for (PRUint32 i = 0, i_end = content->ContentCount(); i < i_end; ++i) {
+    nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+    if (!val || !valueList->AppendCSSValue(val)) {
+      delete valueList;
+      delete val;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    const nsStyleContentData &data = content->ContentAt(i);
+    switch (data.mType) {
+      case eStyleContentType_String:
+        {
+          nsString str;
+          nsStyleUtil::EscapeCSSString(nsDependentString(data.mContent.mString),
+                                       str);
+          str.Insert(PRUnichar('"'), 0);
+          str.Append(PRUnichar('"'));
+          val->SetString(str);
+        }
+        break;
+      case eStyleContentType_Image:
+        {
+          nsCOMPtr<nsIURI> uri;
+          if (data.mContent.mImage) {
+            data.mContent.mImage->GetURI(getter_AddRefs(uri));
+          }
+          val->SetURI(uri);
+        }
+        break;
+      case eStyleContentType_Attr:
+        val->SetString(nsDependentString(data.mContent.mString),
+                       nsIDOMCSSPrimitiveValue::CSS_ATTR);
+        break;
+      case eStyleContentType_Counter:
+      case eStyleContentType_Counters:
+        {
+          /* FIXME: counters should really use an object */
+          nsAutoString str;
+          if (data.mType == eStyleContentType_Counter) {
+            str.AppendLiteral("counter(");
+          }
+          else {
+            str.AppendLiteral("counters(");
+          }
+          // WRITE ME
+          nsCSSValue::Array *a = data.mContent.mCounters;
+
+          str.Append(a->Item(0).GetStringBufferValue());
+          PRInt32 typeItem = 1;
+          if (data.mType == eStyleContentType_Counters) {
+            typeItem = 2;
+            str.AppendLiteral(", \"");
+            nsString itemstr;
+            nsStyleUtil::EscapeCSSString(
+              nsDependentString(a->Item(1).GetStringBufferValue()), itemstr);
+            str.Append(itemstr);
+            str.Append(PRUnichar('"'));
+          }
+          PRInt32 type = a->Item(typeItem).GetIntValue();
+          if (type != NS_STYLE_LIST_STYLE_DECIMAL) {
+            str.AppendLiteral(", ");
+            str.AppendInt(type);
+          }
+
+          str.Append(PRUnichar(')'));
+          val->SetString(str, nsIDOMCSSPrimitiveValue::CSS_COUNTER);
+        }
+        break;
+      case eStyleContentType_OpenQuote:
+        val->SetIdent(eCSSKeyword_open_quote);
+        break;
+      case eStyleContentType_CloseQuote:
+        val->SetIdent(eCSSKeyword_close_quote);
+        break;
+      case eStyleContentType_NoOpenQuote:
+        val->SetIdent(eCSSKeyword_no_open_quote);
+        break;
+      case eStyleContentType_NoCloseQuote:
+        val->SetIdent(eCSSKeyword_no_close_quote);
+        break;
+      case eStyleContentType_AltContent:
+      default:
+        NS_NOTREACHED("unexpected type");
+        break;
+    }
+  }
+
+  return CallQueryInterface(valueList, aValue);
+}
+
+nsresult
 nsComputedDOMStyle::GetCounterIncrement(nsIDOMCSSValue** aValue)
 {
   const nsStyleContent *content = GetStyleContent();
@@ -614,22 +727,14 @@ nsComputedDOMStyle::GetCounterIncrement(nsIDOMCSSValue** aValue)
 
   for (PRUint32 i = 0, i_end = content->CounterIncrementCount(); i < i_end; ++i) {
     nsROCSSPrimitiveValue* name = GetROCSSPrimitiveValue();
-    if (!name) {
-      delete valueList;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    if (!valueList->AppendCSSValue(name)) {
+    if (!name || !valueList->AppendCSSValue(name)) {
       delete valueList;
       delete name;
       return NS_ERROR_OUT_OF_MEMORY;
     }
     
     nsROCSSPrimitiveValue* value = GetROCSSPrimitiveValue();
-    if (!value) {
-      delete valueList;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    if (!valueList->AppendCSSValue(value)) {
+    if (!value || !valueList->AppendCSSValue(value)) {
       delete valueList;
       delete value;
       return NS_ERROR_OUT_OF_MEMORY;
@@ -660,22 +765,14 @@ nsComputedDOMStyle::GetCounterReset(nsIDOMCSSValue** aValue)
 
   for (PRUint32 i = 0, i_end = content->CounterResetCount(); i < i_end; ++i) {
     nsROCSSPrimitiveValue* name = GetROCSSPrimitiveValue();
-    if (!name) {
-      delete valueList;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    if (!valueList->AppendCSSValue(name)) {
+    if (!name || !valueList->AppendCSSValue(name)) {
       delete valueList;
       delete name;
       return NS_ERROR_OUT_OF_MEMORY;
     }
     
     nsROCSSPrimitiveValue* value = GetROCSSPrimitiveValue();
-    if (!value) {
-      delete valueList;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    if (!valueList->AppendCSSValue(value)) {
+    if (!value || !valueList->AppendCSSValue(value)) {
       delete valueList;
       delete value;
       return NS_ERROR_OUT_OF_MEMORY;
@@ -684,6 +781,50 @@ nsComputedDOMStyle::GetCounterReset(nsIDOMCSSValue** aValue)
     const nsStyleCounterData *data = content->GetCounterResetAt(i);
     name->SetString(data->mCounter);
     value->SetNumber(data->mValue); // XXX This should really be integer
+  }
+
+  return CallQueryInterface(valueList, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetQuotes(nsIDOMCSSValue** aValue)
+{
+  const nsStyleQuotes *quotes = GetStyleQuotes();
+
+  if (quotes->QuotesCount() == 0) {
+    nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+    NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+    val->SetIdent(nsGkAtoms::none);
+    return CallQueryInterface(val, aValue);
+  }
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_FALSE);
+  NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
+
+  for (PRUint32 i = 0, i_end = quotes->QuotesCount(); i < i_end; ++i) {
+    nsROCSSPrimitiveValue* openVal = GetROCSSPrimitiveValue();
+    if (!openVal || !valueList->AppendCSSValue(openVal)) {
+      delete valueList;
+      delete openVal;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    
+    nsROCSSPrimitiveValue* closeVal = GetROCSSPrimitiveValue();
+    if (!closeVal || !valueList->AppendCSSValue(closeVal)) {
+      delete valueList;
+      delete closeVal;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    nsString s;
+    nsStyleUtil::EscapeCSSString(*quotes->OpenQuoteAt(i), s);
+    s.Insert(PRUnichar('"'), 0);
+    s.Append(PRUnichar('"'));
+    openVal->SetString(s);
+    nsStyleUtil::EscapeCSSString(*quotes->CloseQuoteAt(i), s);
+    s.Insert(PRUnichar('"'), 0);
+    s.Append(PRUnichar('"'));
+    closeVal->SetString(s);
   }
 
   return CallQueryInterface(valueList, aValue);
@@ -917,6 +1058,51 @@ nsComputedDOMStyle::GetBackgroundOrigin(nsIDOMCSSValue** aValue)
   val->SetIdent(backgroundOrigin);
 
   return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetBackgroundPosition(nsIDOMCSSValue** aValue)
+{
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_FALSE);
+  NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
+
+  nsROCSSPrimitiveValue *valX = GetROCSSPrimitiveValue();
+  if (!valX || !valueList->AppendCSSValue(valX)) {
+    delete valueList;
+    delete valX;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsROCSSPrimitiveValue *valY = GetROCSSPrimitiveValue();
+  if (!valY || !valueList->AppendCSSValue(valY)) {
+    delete valueList;
+    delete valY;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  const nsStyleBackground *bg = GetStyleBackground();
+
+  if (NS_STYLE_BG_X_POSITION_LENGTH & bg->mBackgroundFlags) {
+    valX->SetAppUnits(bg->mBackgroundXPosition.mCoord);
+  }
+  else if (NS_STYLE_BG_X_POSITION_PERCENT & bg->mBackgroundFlags) {
+    valX->SetPercent(bg->mBackgroundXPosition.mFloat);
+  }
+  else {
+    valX->SetPercent(0.0f);
+  }
+
+  if (NS_STYLE_BG_Y_POSITION_LENGTH & bg->mBackgroundFlags) {
+    valY->SetAppUnits(bg->mBackgroundYPosition.mCoord);
+  }
+  else if (NS_STYLE_BG_Y_POSITION_PERCENT & bg->mBackgroundFlags) {
+    valY->SetPercent(bg->mBackgroundYPosition.mFloat);
+  }
+  else {
+    valY->SetPercent(0.0f);
+  }
+
+  return CallQueryInterface(valueList, aValue);  
 }
 
 nsresult
@@ -1896,6 +2082,17 @@ nsComputedDOMStyle::GetFloatEdge(nsIDOMCSSValue** aValue)
 }
 
 nsresult
+nsComputedDOMStyle::GetForceBrokenImageIcon(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  val->SetNumber(GetStyleUIReset()->mForceBrokenImageIcon);
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
 nsComputedDOMStyle::GetIMEMode(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
@@ -2184,6 +2381,40 @@ nsComputedDOMStyle::GetOverflowY(nsIDOMCSSValue** aValue)
       nsCSSProps::ValueToKeyword(display->mOverflowY,
                                  nsCSSProps::kOverflowSubKTable);
     val->SetIdent(overflow);
+  } else {
+    val->SetIdent(nsGkAtoms::_auto);
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetPageBreakAfter(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleDisplay *display = GetStyleDisplay();
+
+  if (display->mBreakAfter) {
+    val->SetIdent(nsGkAtoms::always);
+  } else {
+    val->SetIdent(nsGkAtoms::_auto);
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetPageBreakBefore(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleDisplay *display = GetStyleDisplay();
+
+  if (display->mBreakBefore) {
+    val->SetIdent(nsGkAtoms::always);
   } else {
     val->SetIdent(nsGkAtoms::_auto);
   }
@@ -3402,7 +3633,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(background_attachment,         BackgroundAttachment),
     COMPUTED_STYLE_MAP_ENTRY(background_color,              BackgroundColor),
     COMPUTED_STYLE_MAP_ENTRY(background_image,              BackgroundImage),
-    //// COMPUTED_STYLE_MAP_ENTRY(background_position,      BackgroundPosition),
+    COMPUTED_STYLE_MAP_ENTRY(background_position,           BackgroundPosition),
     COMPUTED_STYLE_MAP_ENTRY(background_repeat,             BackgroundRepeat),
     //// COMPUTED_STYLE_MAP_ENTRY(border,                   Border),
     //// COMPUTED_STYLE_MAP_ENTRY(border_bottom,            BorderBottom),
@@ -3431,7 +3662,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(clear,                         Clear),
     COMPUTED_STYLE_MAP_ENTRY(clip,                          Clip),
     COMPUTED_STYLE_MAP_ENTRY(color,                         Color),
-    // COMPUTED_STYLE_MAP_ENTRY(content,                    Content),
+    COMPUTED_STYLE_MAP_ENTRY(content,                       Content),
     COMPUTED_STYLE_MAP_ENTRY(counter_increment,             CounterIncrement),
     COMPUTED_STYLE_MAP_ENTRY(counter_reset,                 CounterReset),
     //// COMPUTED_STYLE_MAP_ENTRY(cue,                      Cue),
@@ -3487,8 +3718,8 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(padding_right,                 PaddingRight),
     COMPUTED_STYLE_MAP_ENTRY(padding_top,                   PaddingTop),
     // COMPUTED_STYLE_MAP_ENTRY(page,                       Page),
-    // COMPUTED_STYLE_MAP_ENTRY(page_break_after,           PageBreakAfter),
-    // COMPUTED_STYLE_MAP_ENTRY(page_break_before,          PageBreakBefore),
+    COMPUTED_STYLE_MAP_ENTRY(page_break_after,              PageBreakAfter),
+    COMPUTED_STYLE_MAP_ENTRY(page_break_before,             PageBreakBefore),
     // COMPUTED_STYLE_MAP_ENTRY(page_break_inside,          PageBreakInside),
     //// COMPUTED_STYLE_MAP_ENTRY(pause,                    Pause),
     // COMPUTED_STYLE_MAP_ENTRY(pause_after,                PauseAfter),
@@ -3496,7 +3727,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     // COMPUTED_STYLE_MAP_ENTRY(pitch,                      Pitch),
     // COMPUTED_STYLE_MAP_ENTRY(pitch_range,                PitchRange),
     COMPUTED_STYLE_MAP_ENTRY(position,                      Position),
-    // COMPUTED_STYLE_MAP_ENTRY(quotes,                     Quotes),
+    COMPUTED_STYLE_MAP_ENTRY(quotes,                        Quotes),
     // COMPUTED_STYLE_MAP_ENTRY(richness,                   Richness),
     COMPUTED_STYLE_MAP_ENTRY(right,                         Right),
     //// COMPUTED_STYLE_MAP_ENTRY(size,                     Size),
@@ -3552,6 +3783,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_width,             ColumnWidth),
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_gap,               ColumnGap),
     COMPUTED_STYLE_MAP_ENTRY(float_edge,                    FloatEdge),
+    COMPUTED_STYLE_MAP_ENTRY(force_broken_image_icon,  ForceBrokenImageIcon),
     COMPUTED_STYLE_MAP_ENTRY(image_region,                  ImageRegion),
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_bottomLeft, OutlineRadiusBottomLeft),
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_bottomRight,OutlineRadiusBottomRight),

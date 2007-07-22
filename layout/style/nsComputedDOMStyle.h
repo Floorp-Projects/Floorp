@@ -147,6 +147,7 @@ private:
   nsresult GetBackgroundAttachment(nsIDOMCSSValue** aValue);
   nsresult GetBackgroundColor(nsIDOMCSSValue** aValue);
   nsresult GetBackgroundImage(nsIDOMCSSValue** aValue);
+  nsresult GetBackgroundPosition(nsIDOMCSSValue** aValue);
   nsresult GetBackgroundRepeat(nsIDOMCSSValue** aValue);
   nsresult GetBackgroundClip(nsIDOMCSSValue** aValue);
   nsresult GetBackgroundInlinePolicy(nsIDOMCSSValue** aValue);
@@ -211,9 +212,13 @@ private:
   nsresult GetOutlineRadiusTopRight(nsIDOMCSSValue** aValue);
 
   /* Content Properties */
+  nsresult GetContent(nsIDOMCSSValue** aValue);
   nsresult GetCounterIncrement(nsIDOMCSSValue** aValue);
   nsresult GetCounterReset(nsIDOMCSSValue** aValue);
   nsresult GetMarkerOffset(nsIDOMCSSValue** aValue);
+
+  /* Quotes Properties */
+  nsresult GetQuotes(nsIDOMCSSValue** aValue);
 
   /* z-index */
   nsresult GetZIndex(nsIDOMCSSValue** aValue);
@@ -252,9 +257,12 @@ private:
   nsresult GetOverflow(nsIDOMCSSValue** aValue);
   nsresult GetOverflowX(nsIDOMCSSValue** aValue);
   nsresult GetOverflowY(nsIDOMCSSValue** aValue);
+  nsresult GetPageBreakAfter(nsIDOMCSSValue** aValue);
+  nsresult GetPageBreakBefore(nsIDOMCSSValue** aValue);
 
   /* User interface properties */
   nsresult GetCursor(nsIDOMCSSValue** aValue);
+  nsresult GetForceBrokenImageIcon(nsIDOMCSSValue** aValue);
   nsresult GetIMEMode(nsIDOMCSSValue** aValue);
   nsresult GetUserFocus(nsIDOMCSSValue** aValue);
   nsresult GetUserInput(nsIDOMCSSValue** aValue);
