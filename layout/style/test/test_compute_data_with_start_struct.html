@@ -20,21 +20,6 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var gNoComputedStyle = {
-  "-moz-border-end": true, // NB: shorthand
-  "-moz-border-end-color": true,
-  "-moz-border-end-style": true,
-  "-moz-border-end-width": true,
-  "-moz-border-start": true, // NB: shorthand
-  "-moz-border-start-color": true,
-  "-moz-border-start-style": true,
-  "-moz-border-start-width": true,
-  "-moz-margin-end": true,
-  "-moz-margin-start": true,
-  "-moz-padding-end": true,
-  "-moz-padding-start": true,
-};
-
 var gXFailComputed = {
   // The initial value of -moz-user-select can't be specified and isn't
   // serialized correctly.
@@ -42,7 +27,7 @@ var gXFailComputed = {
 };
 
 function xfail_computecheck(prop, roundnum) {
-    return prop in gNoComputedStyle || prop in gXFailComputed;
+    return prop in gXFailComputed;
 }
 
 function xfail_test(prop, roundnum) {
@@ -60,7 +45,7 @@ function round(lower_set, higher_set, roundnum) {
 
   for (var prop in gCSSProperties) {
     var info = gCSSProperties[prop];
-    if (info.backend_only || info.subproperties)
+    if (info.backend_only || info.subproperties || info.get_computed)
       continue;
     gRule1.style.setProperty(prop, info[lower_set][0], "");
     gRule2.style.setProperty(prop, info[higher_set][0], "");
@@ -68,7 +53,7 @@ function round(lower_set, higher_set, roundnum) {
 
   for (var prop in gCSSProperties) {
     var info = gCSSProperties[prop];
-    if (info.backend_only || info.subproperties)
+    if (info.backend_only || info.subproperties || info.get_computed)
       continue;
 
     if ("prerequisites" in info) {
