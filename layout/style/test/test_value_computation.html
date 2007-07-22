@@ -36,7 +36,6 @@
 /** Test for computation of values in property database **/
 
 var gNoComputedStyle = {
-  "-moz-force-broken-image-icon": true,
   "-moz-border-end": true, // NB: shorthand
   "-moz-border-end-color": true,
   "-moz-border-end-style": true,
@@ -49,11 +48,6 @@ var gNoComputedStyle = {
   "-moz-margin-start": true,
   "-moz-padding-end": true,
   "-moz-padding-start": true,
-  "background-position": true,
-  "content": true,
-  "page-break-after": true,
-  "page-break-before": true,
-  "quotes": true,
 };
 
 function xfail_diffcomputed(property) {
@@ -65,17 +59,6 @@ var gNotAccepted = {
   "-moz-user-select": [ "auto" ],
   "background-color": [ "rgb(255.0,0.387,3489)" ],
   "list-style": [ "none disc outside" ],
-};
-
-var gBackgroundValuesWithOnlyPosition = {
-  "top": true,
-  "left": true,
-  "50% 50%": true,
-  "center": true,
-  "bottom right scroll none transparent repeat": true,
-  "50% transparent": true,
-  "transparent 50%": true,
-  "50%": true,
 };
 
 var gBadComputed = {
@@ -93,6 +76,10 @@ var gBadComputed = {
 
   // 'normal' should compute to 0
   "word-spacing": [ "0", "0px", "-0em" ],
+
+  // These values are treated as auto.
+  "page-break-after": [ "avoid" ],
+  "page-break-before": [ "avoid" ],
 
   // These are probably bogus tests...
   "-moz-outline-radius": [ "0%" ],
@@ -130,10 +117,6 @@ function xfail_value(property, value, is_initial, has_frame) {
 
   if (!has_frame && (property in gBadComputedNoFrame) &&
       gBadComputedNoFrame[property].indexOf(value) != -1)
-    return true;
-
-  // One subproperty of 'background' is in gNoComputedStyle
-  if (property == "background" && value in gBackgroundValuesWithOnlyPosition)
     return true;
 
   return false;

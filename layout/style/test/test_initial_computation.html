@@ -36,7 +36,6 @@
 /** Test for computation of CSS '-moz-initial' **/
 
 var gNoComputedStyle = {
-  "-moz-force-broken-image-icon": true,
   "-moz-border-end": true, // NB: shorthand
   "-moz-border-end-color": true,
   "-moz-border-end-style": true,
@@ -49,11 +48,6 @@ var gNoComputedStyle = {
   "-moz-margin-start": true,
   "-moz-padding-end": true,
   "-moz-padding-start": true,
-  "background-position": true,
-  "content": true,
-  "page-break-after": true,
-  "page-break-before": true,
-  "quotes": true,
 };
 
 function xfail_diffcomputed(property) {
@@ -131,6 +125,7 @@ var gBrokenInitial = {
   "padding-right": true,
   "padding-top": true,
   "position": true,
+  "quotes": true,
   "right": true,
   "table-layout": true,
   "text-decoration": true,

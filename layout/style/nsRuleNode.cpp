@@ -2771,11 +2771,32 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
   }
 
   // temp fix for bug 24000
+  // Map 'auto' and 'avoid' to PR_FALSE, and 'always', 'left', and
+  // 'right' to PR_TRUE.
+  // "A conforming user agent may interpret the values 'left' and
+  // 'right' as 'always'." - CSS2.1, section 13.3.1
   if (eCSSUnit_Enumerated == displayData.mBreakBefore.GetUnit()) {
-    display->mBreakBefore = (NS_STYLE_PAGE_BREAK_ALWAYS == displayData.mBreakBefore.GetIntValue());
+    display->mBreakBefore = (NS_STYLE_PAGE_BREAK_AVOID != displayData.mBreakBefore.GetIntValue());
   }
+  else if (eCSSUnit_Auto == displayData.mBreakBefore.GetUnit() ||
+           eCSSUnit_Initial == displayData.mBreakBefore.GetUnit()) {
+    display->mBreakBefore = PR_FALSE;
+  }
+  else if (eCSSUnit_Inherit == displayData.mBreakBefore.GetUnit()) {
+    inherited = PR_TRUE;
+    display->mBreakBefore = parentDisplay->mBreakBefore;
+  }
+
   if (eCSSUnit_Enumerated == displayData.mBreakAfter.GetUnit()) {
-    display->mBreakAfter = (NS_STYLE_PAGE_BREAK_ALWAYS == displayData.mBreakAfter.GetIntValue());
+    display->mBreakAfter = (NS_STYLE_PAGE_BREAK_AVOID != displayData.mBreakAfter.GetIntValue());
+  }
+  else if (eCSSUnit_Auto == displayData.mBreakAfter.GetUnit() ||
+           eCSSUnit_Initial == displayData.mBreakAfter.GetUnit()) {
+    display->mBreakAfter = PR_FALSE;
+  }
+  else if (eCSSUnit_Inherit == displayData.mBreakAfter.GetUnit()) {
+    inherited = PR_TRUE;
+    display->mBreakAfter = parentDisplay->mBreakAfter;
   }
   // end temp fix
 
