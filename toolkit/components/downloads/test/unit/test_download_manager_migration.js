@@ -58,7 +58,7 @@ function test_count_entries()
 function test_random_download()
 {
   var stmt = dm.DBConnection.createStatement("SELECT COUNT(*), source, target," +
-                                           "  iconURL, state " +
+                                           "state " +
                                            "FROM moz_downloads " +
                                            "WHERE name = ?1");
   stmt.bindStringParameter(0, "Firefox 2.0.0.3.dmg");
@@ -67,8 +67,7 @@ function test_random_download()
   do_check_eq(1, stmt.getInt32(0));
   do_check_eq("http://ftp-mozilla.netscape.com/pub/mozilla.org/firefox/releases/2.0.0.3/mac/en-US/Firefox%202.0.0.3.dmg", stmt.getUTF8String(1));
   do_check_eq("file:///Users/sdwilsh/Desktop/Firefox 2.0.0.3.dmg", stmt.getUTF8String(2));
-  do_check_eq("", stmt.getString(3));
-  do_check_eq(1, stmt.getInt32(4));
+  do_check_eq(1, stmt.getInt32(3));
 
   stmt.reset();
 }
