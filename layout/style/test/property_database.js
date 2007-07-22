@@ -51,6 +51,8 @@ const CSS_TYPE_SHORTHAND_AND_LONGHAND = 2;
 //   inherited: Whether the property is inherited by default (stated as 
 //     yes or no in the property header in all CSS specs)
 //   type: see above
+//   get_computed: if present, the property's computed value shows up on
+//     another property, and this is a function used to get it
 //   initial_values: Values whose computed value should be the same as the
 //     computed value for the property's initial value.
 //   other_values: Values whose computed value should be different from the
@@ -122,6 +124,7 @@ var gCSSProperties = {
 		domProp: "MozBorderEndColor",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		get_computed: logical_box_prop_get_computed,
 		initial_values: [ "currentColor" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
 		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
@@ -130,6 +133,7 @@ var gCSSProperties = {
 		domProp: "MozBorderEndStyle",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		get_computed: logical_box_prop_get_computed,
 		/* XXX hidden is sometimes the same as initial */
 		initial_values: [ "none" ],
 		other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
@@ -139,6 +143,7 @@ var gCSSProperties = {
 		domProp: "MozBorderEndWidth",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		get_computed: logical_box_prop_get_computed,
 		prerequisites: { "-moz-border-end-style": "solid" },
 		initial_values: [ "medium", "3px" ],
 		other_values: [ "thin", "thick", "1px", "2em" ],
@@ -214,6 +219,7 @@ var gCSSProperties = {
 		domProp: "MozBorderStartColor",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		get_computed: logical_box_prop_get_computed,
 		initial_values: [ "currentColor" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
 		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
@@ -222,6 +228,7 @@ var gCSSProperties = {
 		domProp: "MozBorderStartStyle",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		get_computed: logical_box_prop_get_computed,
 		/* XXX hidden is sometimes the same as initial */
 		initial_values: [ "none" ],
 		other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
@@ -231,6 +238,7 @@ var gCSSProperties = {
 		domProp: "MozBorderStartWidth",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		get_computed: logical_box_prop_get_computed,
 		prerequisites: { "-moz-border-start-style": "solid" },
 		initial_values: [ "medium", "3px" ],
 		other_values: [ "thin", "thick", "1px", "2em" ],
@@ -355,6 +363,7 @@ var gCSSProperties = {
 		domProp: "MozMarginEnd",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		get_computed: logical_box_prop_get_computed,
 		/* no subproperties */
 		/* auto may or may not be initial */
 		initial_values: [ "0", "0px", "0%", "0em", "0ex" ],
@@ -365,6 +374,7 @@ var gCSSProperties = {
 		domProp: "MozMarginStart",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		get_computed: logical_box_prop_get_computed,
 		/* no subproperties */
 		/* auto may or may not be initial */
 		initial_values: [ "0", "0px", "0%", "0em", "0ex" ],
@@ -416,6 +426,7 @@ var gCSSProperties = {
 		domProp: "MozPaddingEnd",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		get_computed: logical_box_prop_get_computed,
 		/* no subproperties */
 		initial_values: [ "0", "0px", "0%", "0em", "0ex" ],
 		other_values: [ "1px", "3em" ],
@@ -425,6 +436,7 @@ var gCSSProperties = {
 		domProp: "MozPaddingStart",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		get_computed: logical_box_prop_get_computed,
 		/* no subproperties */
 		initial_values: [ "0", "0px", "0%", "0em", "0ex" ],
 		other_values: [ "1px", "3em" ],
@@ -1836,4 +1848,34 @@ var gCSSProperties = {
 		other_values: [ "optimizeSpeed", "optimizeLegibility", "geometricPrecision" ],
 		invalid_values: []
 	}
+}
+
+function logical_box_prop_get_computed(cs, property)
+{
+	if (! /^-moz-/.test(property))
+		throw "Unexpected property";
+	property = property.substring(5);
+	if (cs.getPropertyValue("direction") == "ltr")
+		property = property.replace("-start", "-left").replace("-end", "-right");
+	else
+		property = property.replace("-start", "-right").replace("-end", "-left");
+	return cs.getPropertyValue(property);
+}
+
+// Get the computed value for a property.  For shorthands, return the
+// computed values of all the subproperties, delimited by " ; ".
+function get_computed_value(cs, property)
+{
+	var info = gCSSProperties[property];
+	if ("subproperties" in info) {
+		var results = [];
+		for (var idx in info.subproperties) {
+			var subprop = info.subproperties[idx];
+			results.push(get_computed_value(cs, subprop));
+		}
+		return results.join(" ; ");
+	}
+	if (info.get_computed)
+		return info.get_computed(cs, property);
+	return cs.getPropertyValue(property);
 }
