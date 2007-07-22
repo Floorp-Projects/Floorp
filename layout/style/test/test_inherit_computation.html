@@ -23,18 +23,6 @@
 /** Test for computation of CSS 'inherit' **/
 
 var gNoComputedStyle = {
-  "-moz-border-end": true, // NB: shorthand
-  "-moz-border-end-color": true,
-  "-moz-border-end-style": true,
-  "-moz-border-end-width": true,
-  "-moz-border-start": true, // NB: shorthand
-  "-moz-border-start-color": true,
-  "-moz-border-start-style": true,
-  "-moz-border-start-width": true,
-  "-moz-margin-end": true,
-  "-moz-margin-start": true,
-  "-moz-padding-end": true,
-  "-moz-padding-start": true,
 };
 
 function xfail_diffcomputed(property) {
@@ -67,21 +55,10 @@ var gChildRule3 = gStyleSheet.cssRules[gStyleSheet.insertRule("#nchild.allother,
 var gChildRuleTop = gStyleSheet.cssRules[gStyleSheet.insertRule("#nchild, #nchild.allother, #fchild, #fchild.allother {}", gStyleSheet.cssRules.length)];
 var gParentRuleTop = gStyleSheet.cssRules[gStyleSheet.insertRule("#nparent, #fparent {}", gStyleSheet.cssRules.length)];
 
-// Get the computed value for a property.  For shorthands, return the
-// computed values of all the subproperties, delimited by " ; ".
-function get_computed_value(node, property)
+function get_computed_value_node(node, property)
 {
-  var info = gCSSProperties[property];
   var cs = getComputedStyle(node, "");
-  if (!("subproperties" in info)) {
-    return cs.getPropertyValue(property);
-  }
-  var results = [];
-  for (var idx in info.subproperties) {
-    var subprop = info.subproperties[idx];
-    results.push(cs.getPropertyValue(subprop));
-  }
-  return results.join(" ; ");
+  return get_computed_value(cs, property);
 }
 
 function test_property(property)
@@ -100,11 +77,11 @@ function test_property(property)
 
   if (info.inherited) {
     gParentRuleTop.style.setProperty(property, info.initial_values[0], "");
-    var initial_computed_n = get_computed_value(gNChild, property);
-    var initial_computed_f = get_computed_value(gFChild, property);
+    var initial_computed_n = get_computed_value_node(gNChild, property);
+    var initial_computed_f = get_computed_value_node(gFChild, property);
     gChildRule1.style.setProperty(property, info.other_values[0], "");
-    var other_computed_n = get_computed_value(gNChild, property);
-    var other_computed_f = get_computed_value(gFChild, property);
+    var other_computed_n = get_computed_value_node(gNChild, property);
+    var other_computed_f = get_computed_value_node(gFChild, property);
     (xfail_diffcomputed(property) ? todo_isnot : isnot)(
           other_computed_n, initial_computed_n,
           "should be testing with values that compute to different things " +
@@ -116,8 +93,8 @@ function test_property(property)
     gChildRule3.style.setProperty(property, "inherit", "");
     gFChild.className="allother";
     gNChild.className="allother";
-    var inherit_initial_computed_n = get_computed_value(gNChild, property);
-    var inherit_initial_computed_f = get_computed_value(gFChild, property);
+    var inherit_initial_computed_n = get_computed_value_node(gNChild, property);
+    var inherit_initial_computed_f = get_computed_value_node(gFChild, property);
     (xfail_inherit(property, true) ? todo_is : is)(
        inherit_initial_computed_n, initial_computed_n,
        "inherit should cause inheritance of initial value for '" +
@@ -127,8 +104,8 @@ function test_property(property)
        "inherit should cause inheritance of initial value for '" +
        property + "'");
     gParentRuleTop.style.setProperty(property, info.other_values[0], "");
-    var inherit_other_computed_n = get_computed_value(gNChild, property);
-    var inherit_other_computed_f = get_computed_value(gFChild, property);
+    var inherit_other_computed_n = get_computed_value_node(gNChild, property);
+    var inherit_other_computed_f = get_computed_value_node(gFChild, property);
     var xfail_inherit_other = xfail_inherit(property, false) ||
                               property == "font-family"; /* bug 385699 */
     (xfail_inherit_other ? todo_is : is)(
@@ -146,10 +123,10 @@ function test_property(property)
     gNChild.className="";
   } else {
     gParentRuleTop.style.setProperty(property, info.other_values[0], "");
-    var initial_computed_n = get_computed_value(gNChild, property);
-    var initial_computed_f = get_computed_value(gFChild, property);
-    var other_computed_n = get_computed_value(gNParent, property);
-    var other_computed_f = get_computed_value(gFParent, property);
+    var initial_computed_n = get_computed_value_node(gNChild, property);
+    var initial_computed_f = get_computed_value_node(gFChild, property);
+    var other_computed_n = get_computed_value_node(gNParent, property);
+    var other_computed_f = get_computed_value_node(gFParent, property);
     (xfail_diffcomputed(property) ? todo_isnot : isnot)(
           other_computed_n, initial_computed_n,
           "should be testing with values that compute to different things " +
@@ -159,8 +136,8 @@ function test_property(property)
           "should be testing with values that compute to different things " +
           "for '" + property + "'");
     gChildRule2.style.setProperty(property, "inherit", "");
-    var inherit_other_computed_n = get_computed_value(gNChild, property);
-    var inherit_other_computed_f = get_computed_value(gFChild, property);
+    var inherit_other_computed_n = get_computed_value_node(gNChild, property);
+    var inherit_other_computed_f = get_computed_value_node(gFChild, property);
     (xfail_inherit(property, false) ? todo_is : is)(
        inherit_other_computed_n, other_computed_n,
        "inherit should cause inheritance of other value for '" +
@@ -171,8 +148,8 @@ function test_property(property)
        property + "'");
     gParentRuleTop.style.removeProperty(property);
     gChildRule1.style.setProperty(property, info.other_values[0], "");
-    var inherit_initial_computed_n = get_computed_value(gNChild, property);
-    var inherit_initial_computed_f = get_computed_value(gFChild, property);
+    var inherit_initial_computed_n = get_computed_value_node(gNChild, property);
+    var inherit_initial_computed_f = get_computed_value_node(gFChild, property);
     (xfail_inherit(property, true) ? todo_is : is)(
        inherit_initial_computed_n, initial_computed_n,
        "inherit should cause inheritance of initial value for '" +

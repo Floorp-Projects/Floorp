@@ -36,18 +36,6 @@
 /** Test for computation of values in property database **/
 
 var gNoComputedStyle = {
-  "-moz-border-end": true, // NB: shorthand
-  "-moz-border-end-color": true,
-  "-moz-border-end-style": true,
-  "-moz-border-end-width": true,
-  "-moz-border-start": true, // NB: shorthand
-  "-moz-border-start-color": true,
-  "-moz-border-start-style": true,
-  "-moz-border-start-width": true,
-  "-moz-margin-end": true,
-  "-moz-margin-start": true,
-  "-moz-padding-end": true,
-  "-moz-padding-start": true,
 };
 
 function xfail_diffcomputed(property) {
@@ -72,6 +60,8 @@ var gBadComputed = {
   "border-right": [ "thin" ],
   "border-bottom": [ "thin" ],
   "border-left": [ "thin" ],
+  "-moz-border-start": [ "thin" ],
+  "-moz-border-end": [ "thin" ],
   "outline-width": [ "3px" ],
 
   // 'normal' should compute to 0
@@ -87,6 +77,11 @@ var gBadComputed = {
   "-moz-outline-radius-bottomright": [ "0%" ],
   "-moz-outline-radius-topleft": [ "0%" ],
   "-moz-outline-radius-topright": [ "0%" ],
+  // These are probably bogus tests... (why not just when no frame?)
+  "-moz-margin-end": [ "0%" ],
+  "-moz-margin-start": [ "0%" ],
+  "-moz-padding-end": [ "0%" ],
+  "-moz-padding-start": [ "0%" ],
 };
 
 var gBadComputedNoFrame = {
@@ -147,22 +142,6 @@ function setup_initial_values(id, ivalprop, prereqprop) {
                        iframe.contentDocument.documentElement.firstChild, "");
   var sheet = iframe.contentDocument.styleSheets[0];
   window[prereqprop] = sheet.cssRules[sheet.insertRule(":root > * {}", sheet.cssRules.length)];
-}
-
-// Get the computed value for a property.  For shorthands, return the
-// computed values of all the subproperties, delimited by " ; ".
-function get_computed_value(cs, property)
-{
-  var info = gCSSProperties[property];
-  if (!("subproperties" in info)) {
-    return cs.getPropertyValue(property);
-  }
-  var results = [];
-  for (var idx in info.subproperties) {
-    var subprop = info.subproperties[idx];
-    results.push(cs.getPropertyValue(subprop));
-  }
-  return results.join(" ; ");
 }
 
 function test_value(property, val, is_initial)
